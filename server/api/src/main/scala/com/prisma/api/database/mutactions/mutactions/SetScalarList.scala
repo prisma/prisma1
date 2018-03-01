@@ -21,7 +21,7 @@ case class SetScalarList(
     Future.successful(
       ClientSqlStatementResult(
         sqlAction = DBIO.seq(
-          DatabaseMutationBuilder.setScalarListPath(project.id, path, field.name, values)
+          DatabaseMutationBuilder.setScalarList(project.id, path, field.name, values)
         )))
   }
 

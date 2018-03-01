@@ -19,7 +19,7 @@ case class SetScalarListToEmpty(
     Future.successful(
       ClientSqlStatementResult(
         sqlAction = DBIO.seq(
-          DatabaseMutationBuilder.setScalarListToEmptyPath(project.id, path, field.name)
+          DatabaseMutationBuilder.setScalarListToEmpty(project.id, path, field.name)
         )))
   }
 }

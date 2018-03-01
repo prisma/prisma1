@@ -15,7 +15,7 @@ case class DeleteRelationMutaction(project: Project, path: Path) extends ClientS
 
   val relationFieldsWhereOtherSideIsRequired = path.lastModel.relationFields.filter(otherSideIsRequired)
   val extendedPaths                          = relationFieldsWhereOtherSideIsRequired.map(path.appendEdge(project, _))
-  val requiredCheck                          = extendedPaths.map(oldParentFailureTriggerByPath2(project, _))
+  val requiredCheck                          = extendedPaths.map(oldChildFailureTriggerByPath(project, _))
 
   override def execute = {
     Future.successful(ClientSqlStatementResult(DBIOAction.seq(requiredCheck: _*)))
@@ -32,7 +32,7 @@ case class DeleteRelationMutaction(project: Project, path: Path) extends ClientS
     extendedPaths.collectFirst { case p if causedByThisMutactionChildOnly(p, cause) => p.lastRelation_! }
 
   def causedByThisMutactionChildOnly(path: Path, cause: String) = {
-    val parentCheckString = s"`${path.lastRelation_!.id}` OLDPARENTPATHFAILURETRIGGER WHERE `${path.lastParentSide}`"
+    val parentCheckString = s"`${path.lastRelation_!.id}` OLDCHILDPATHFAILURETRIGGER WHERE `${path.lastParentSide}`"
 
     cause.contains(parentCheckString)
   }

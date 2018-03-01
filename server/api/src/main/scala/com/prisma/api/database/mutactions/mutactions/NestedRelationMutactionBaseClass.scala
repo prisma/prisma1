@@ -35,9 +35,9 @@ trait NestedRelationMutactionBaseClass extends ClientSqlDataChangeMutaction {
   def checkForOldChild = oldChildFailureTriggerByPath(project, path)
   def noCheckRequired  = List.empty
 
-  def removalByParent         = deleteRelationRowByParentPath(project.id, path)
-  def removalByChildWhere     = deleteRelationRowByChildPathWithWhere(project.id, path)
-  def removalByParentAndChild = deleteRelationRowByParentAndChildPath(project.id, path)
+  def removalByParent         = deleteRelationRowByParent(project.id, path)
+  def removalByChildWhere     = deleteRelationRowByChildWithWhere(project.id, path)
+  def removalByParentAndChild = deleteRelationRowByParentAndChild(project.id, path)
   def createRelationRow       = List(createRelationRowByPath(project.id, path))
   def noActionRequired        = List.empty
 
@@ -66,7 +66,7 @@ trait NestedRelationMutactionBaseClass extends ClientSqlDataChangeMutaction {
 
   def causedByThisMutaction(path: Path, cause: String) = {
     val parentCheckString = s"`${path.lastRelation_!.id}` OLDPARENTFAILURETRIGGER WHERE `${path.lastEdge_!.childRelationSide}`"
-    val childCheckString  = s"`${path.lastRelation_!.id}` OLDCHILDFAILURETRIGGER WHERE `${path.lastEdge_!.parentRelationSide}`"
+    val childCheckString  = s"`${path.lastRelation_!.id}` OLDCHILDPATHFAILURETRIGGER WHERE `${path.lastEdge_!.parentRelationSide}`"
 
 //    (cause.contains(parentCheckString) && cause.contains(parameterStringFromSQLException(where))) ||  //todo reintroduce check on parameter
 //    (cause.contains(childCheckString) && cause.contains(parameterStringFromSQLException(parentInfo.where)))

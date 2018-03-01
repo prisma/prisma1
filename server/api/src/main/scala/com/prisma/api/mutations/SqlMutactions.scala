@@ -93,8 +93,8 @@ case class SqlMutactions(dataResolver: DataResolver) {
       values <- args.subScalarList(field)
     } yield {
       values.values.isEmpty match {
-        case true  => DatabaseMutationBuilder.setScalarListToEmptyPath(project.id, path, field.name)
-        case false => DatabaseMutationBuilder.setScalarListPath(project.id, path, field.name, values.values)
+        case true  => DatabaseMutationBuilder.setScalarListToEmpty(project.id, path, field.name)
+        case false => DatabaseMutationBuilder.setScalarList(project.id, path, field.name, values.values)
       }
     }
     x.toVector

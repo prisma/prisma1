@@ -17,8 +17,8 @@ case class DeleteDataItem(project: Project, path: Path, previousValues: DataItem
     Future.successful(
       ClientSqlStatementResult(
         sqlAction = DBIO.seq(
-          DatabaseMutationBuilder.deleteRelayRowByPath(project.id, path),
-          DatabaseMutationBuilder.deleteDataItemByPath(project.id, path)
+          DatabaseMutationBuilder.deleteRelayRow(project.id, path),
+          DatabaseMutationBuilder.deleteDataItem(project.id, path)
         )
       )
     )

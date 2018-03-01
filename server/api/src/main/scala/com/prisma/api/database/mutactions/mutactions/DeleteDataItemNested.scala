@@ -15,8 +15,8 @@ case class DeleteDataItemNested(project: Project, path: Path) extends ClientSqlD
     Future.successful(
       ClientSqlStatementResult(
         sqlAction = DBIO.seq(
-          DatabaseMutationBuilder.deleteRelayRowByPath(project.id, path),
-          DatabaseMutationBuilder.deleteDataItemByPath(project.id, path)
+          DatabaseMutationBuilder.deleteRelayRow(project.id, path),
+          DatabaseMutationBuilder.deleteDataItem(project.id, path)
         )))
   }
 }
