@@ -20,16 +20,15 @@ object PrismaProdMain extends App {
   val word = if (includeClusterServer) "with" else "without"
   println(s"Will start $word cluster server")
 
-  val servers = List(
-    ApiServer(dependencies.apiSchemaBuilder),
+  val servers = includeClusterServer.toOption(ClusterServer("cluster")) ++ List(
     WebsocketServer(dependencies),
+    ApiServer(dependencies.apiSchemaBuilder),
     SimpleSubscriptionsServer(),
     WorkerServer(dependencies)
-  ) ++
-    includeClusterServer.toOption(ClusterServer("cluster"))
+  )
 
   ServerExecutor(
     port = port,
-    servers = servers: _*
+    servers = servers.toSeq: _*
   ).startBlocking()
 }
