@@ -163,7 +163,24 @@ abstract class UncachedInputTypesBuilder(project: Project) extends InputTypesBui
         )
       }
     } else {
-      None
+      for {
+        createArg <- computeInputObjectTypeForCreate(model, Some(omitRelation))
+      } yield {
+        val typeName = omitRelation.getField(project.schema, model) match {
+          case Some(field) => s"${model.name}UpsertWithout${field.name.capitalize}Input"
+          case None        => s"${model.name}UpsertNestedInput"
+        }
+
+        InputObjectType[Any](
+          name = typeName,
+          fieldsFn = () => {
+            List(
+              InputField[Any]("update", computeInputObjectTypeForNestedUpdateData(model, omitRelation)),
+              InputField[Any]("create", createArg)
+            )
+          }
+        )
+      }
     }
   }
 
@@ -185,7 +202,6 @@ abstract class UncachedInputTypesBuilder(project: Project) extends InputTypesBui
           }
         ))
     }
-
   }
 
   private def computeScalarInputFieldsForCreate(model: Model) = {
