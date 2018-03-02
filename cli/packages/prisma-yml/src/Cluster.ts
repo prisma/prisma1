@@ -74,7 +74,7 @@ export class Cluster {
 
       try {
         this.cachedToken = jwt.sign({ grants }, this.clusterSecret, {
-          expiresIn: '10 minutes',
+          expiresIn: '5y',
           algorithm: 'RS256',
         })
       } catch (e) {
