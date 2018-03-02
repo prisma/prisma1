@@ -10,7 +10,9 @@ Prisma services are deployed to so-called _clusters_. A cluster is a hosted envi
 In essence, there are two kinds of _clusters_ you can deploy to:
 
 - **Self-hosted / local clusters**: Self-hosted clusters are running on Docker. They are created and managed using the Prisma CLI. For the vast majority of use cases, _self-hosted clusters are the preferred option to deploy Prisma services_. This chapter explains how to create and manage your own self-hosted clusters.
-- **Public clusters** (based on Prisma Cloud): Allow to conventiently deploy your Prisma service to the web. Note that deploying to public clusters _does not require an account in the Prisma cloud_. Public clusters have certain limitations, such as rate limiting of incoming requests and an upperbound in storage capacity. Services deployed to public clusters are deleted after a certain period of inactivity.
+- **Development clusters** (based on Prisma Cloud): Allow to conventiently deploy your Prisma service to the web. Note that deploying to development clusters _does not require an account in the Prisma cloud_. Development clusters have certain limitations, such as rate limiting of incoming requests (10 requests per 10 seconds) and an upperbound in storage capacity (100 MB). Services deployed to development clusters are deleted after a certain period of inactivity.
+
+> **Note**: For the vast majority of use cases, hosted clusters are the preferred option to deploy Prisma services. Development clusters should only be used for learning, demo and prototyping purposes.
 
 ## Cluster registry
 

@@ -5,7 +5,7 @@ import com.prisma.akkautil.LogUnhandled
 import com.prisma.deploy.DatabaseSizeReporter.{DatabaseSize, Report}
 import com.prisma.deploy.database.persistence.ProjectPersistence
 import com.prisma.errors.{BugsnagErrorReporter, ErrorReporter}
-import com.prisma.metrics.{CustomTag, GaugeMetric, MetricsManager}
+import com.prisma.metrics.{CustomTag, GaugeMetric, LibratoGaugeMetric, MetricsManager}
 import com.prisma.profiling.JvmProfiler
 import com.prisma.shared.models.Project
 import slick.jdbc
@@ -42,7 +42,7 @@ case class DatabaseSizeReporter(
   scheduleReport()
 
   val projectIdTag = CustomTag("projectId")
-  val gauges       = mutable.Map.empty[String, GaugeMetric]
+  val gauges       = mutable.Map.empty[String, LibratoGaugeMetric]
 
   override def receive = logUnhandled {
     case Report =>
@@ -62,10 +62,11 @@ case class DatabaseSizeReporter(
 
   def scheduleReport() = context.system.scheduler.scheduleOnce(5.minutes, self, Report)
 
-  def gaugeForProject(project: Project): GaugeMetric = {
+  private val libratoFlushInterval = 60.minutes
+  def gaugeForProject(project: Project): LibratoGaugeMetric = {
     // these Metrics are consumed by the console to power the dashboard. Only change them with extreme caution!
     gauges.getOrElseUpdate(project.id, {
-      DeployMetrics.defineGauge("projectDatabase.sizeInMb", (projectIdTag, project.id))
+      DeployMetrics.defineLibratoGauge("projectDatabase.sizeInMb2", libratoFlushInterval, (projectIdTag, project.id))
     })
   }
 
