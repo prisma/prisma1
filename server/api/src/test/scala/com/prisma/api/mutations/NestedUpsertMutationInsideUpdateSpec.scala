@@ -7,405 +7,6 @@ import org.scalatest.{FlatSpec, Matchers}
 
 class NestedUpsertMutationInsideUpdateSpec extends FlatSpec with Matchers with ApiBaseSpec {
 
-  "a P1! to C1! relation" should "error  on create since old required parent relation would be broken" in {
-    val project = SchemaDsl() { schema =>
-      val parent = schema.model("Parent").field_!("p", _.String, isUnique = true)
-      val child  = schema.model("Child").field_!("c", _.String, isUnique = true)
-      child.oneToOneRelation_!("parentReq", "childReq", parent)
-    }
-    database.setup(project)
-
-    val res = server
-      .executeQuerySimple(
-        """mutation {
-          |  createParent(data: {
-          |    p: "p1"
-          |    childReq: {
-          |      create: {c: "c1"}
-          |    }
-          |  }){
-          |    id
-          |    childReq{
-          |       id
-          |    }
-          |  }
-          |}""".stripMargin,
-        project
-      )
-
-    val parentId = res.pathAsString("data.createParent.id")
-
-    database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "_ChildToParent").as[Int]) should be(Vector(1))
-
-    server.executeQuerySimpleThatMustFail(
-      s"""
-         |mutation {
-         |  updateParent(
-         |  where: {id: "$parentId"}
-         |  data:{
-         |    p: "p2"
-         |    childReq: {upsert: {
-         |    where: {c: "DOES NOT EXIST"}
-         |    update: {c: "DOES NOT MATTER"}
-         |    create :{c: "SomeC"}
-         |    }}
-         |  }){
-         |  p
-         |  childReq {
-         |      c
-         |    }
-         |  }
-         |}
-      """.stripMargin,
-      project,
-      errorCode = 3042,
-      errorContains = "The change you are trying to make would violate the required relation '_ChildToParent' between Child and Parent"
-    )
-
-    database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "_ChildToParent").as[Int]) should be(Vector(1))
-  }
-
-  "a P1! to C1! relation" should "succeed on update" in {
-    val project = SchemaDsl() { schema =>
-      val parent = schema.model("Parent").field_!("p", _.String, isUnique = true)
-      val child  = schema.model("Child").field_!("c", _.String, isUnique = true)
-      child.oneToOneRelation_!("parentReq", "childReq", parent)
-    }
-    database.setup(project)
-
-    val res = server
-      .executeQuerySimple(
-        """mutation {
-          |  createParent(data: {
-          |    p: "p1"
-          |    childReq: {
-          |      create: {c: "c1"}
-          |    }
-          |  }){
-          |    id
-          |    childReq{
-          |       id
-          |    }
-          |  }
-          |}""".stripMargin,
-        project
-      )
-
-    val parentId = res.pathAsString("data.createParent.id")
-
-    database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "_ChildToParent").as[Int]) should be(Vector(1))
-
-    val res2 = server.executeQuerySimple(
-      s"""
-         |mutation {
-         |  updateParent(
-         |  where: {id: "$parentId"}
-         |  data:{
-         |    p: "p2"
-         |    childReq: {upsert: {
-         |    where: {c: "c1"}
-         |    update: {c: "New c"}
-         |    create :{c: "DOES NOT MATTER"}
-         |    }}
-         |  }){
-         |  p
-         |  childReq {
-         |      c
-         |    }
-         |  }
-         |}
-      """.stripMargin,
-      project
-    )
-
-    res2.toString should be("""{"data":{"updateParent":{"p":"p2","childReq":{"c":"New c"}}}}""")
-    database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "_ChildToParent").as[Int]) should be(Vector(1))
-  }
-
-  "a P1! to C1 relation" should "work on create" in {
-    val project = SchemaDsl() { schema =>
-      val child  = schema.model("Child").field_!("c", _.String, isUnique = true)
-      val parent = schema.model("Parent").field_!("p", _.String, isUnique = true)
-      parent.oneToOneRelation_!("childReq", "parentOpt", child, isRequiredOnFieldB = false)
-    }
-    database.setup(project)
-
-    val res = server
-      .executeQuerySimple(
-        """mutation {
-          |  createParent(data: {
-          |    p: "p1"
-          |    childReq: {
-          |      create: {c: "c1"}
-          |    }
-          |  }){
-          |  id
-          |    childReq{
-          |       id
-          |    }
-          |  }
-          |}""".stripMargin,
-        project
-      )
-
-    val parentId = res.pathAsString("data.createParent.id")
-
-    database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "_ParentToChild").as[Int]) should be(Vector(1))
-
-    val res2 = server.executeQuerySimple(
-      s"""
-         |mutation {
-         |  updateParent(
-         |  where: {id: "$parentId"}
-         |  data:{
-         |    p: "p2"
-         |    childReq: {upsert: {
-         |    where: {c: "DOES NOT EXIST"}
-         |    update: {c: "DOES NOT MATTER"}
-         |    create :{c: "new C"}
-         |    }}
-         |  }){
-         |    childReq {
-         |      c
-         |    }
-         |  }
-         |}
-      """.stripMargin,
-      project
-    )
-
-    res2.toString should be("""{"data":{"updateParent":{"childReq":{"c":"new C"}}}}""")
-    database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "Parent").as[Int]) should be(Vector(1))
-    database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "Child").as[Int]) should be(Vector(2))
-    database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "_ParentToChild").as[Int]) should be(Vector(1))
-  }
-
-  "a P1! to C1 relation" should "work on update" in {
-    val project = SchemaDsl() { schema =>
-      val child  = schema.model("Child").field_!("c", _.String, isUnique = true)
-      val parent = schema.model("Parent").field_!("p", _.String, isUnique = true)
-      parent.oneToOneRelation_!("childReq", "parentOpt", child, isRequiredOnFieldB = false)
-    }
-    database.setup(project)
-
-    val res = server
-      .executeQuerySimple(
-        """mutation {
-          |  createParent(data: {
-          |    p: "p1"
-          |    childReq: {
-          |      create: {c: "c1"}
-          |    }
-          |  }){
-          |  id
-          |    childReq{
-          |       id
-          |    }
-          |  }
-          |}""".stripMargin,
-        project
-      )
-
-    val parentId = res.pathAsString("data.createParent.id")
-
-    database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "_ParentToChild").as[Int]) should be(Vector(1))
-
-    val res2 = server.executeQuerySimple(
-      s"""
-         |mutation {
-         |  updateParent(
-         |  where: {id: "$parentId"}
-         |  data:{
-         |    p: "p2"
-         |    childReq: {upsert: {
-         |    where: {c: "c1"}
-         |    update: {c: "updated C"}
-         |    create :{c: "DOES NOT MATTER"}
-         |    }}
-         |  }){
-         |    childReq {
-         |      c
-         |    }
-         |  }
-         |}
-      """.stripMargin,
-      project
-    )
-
-    res2.toString should be("""{"data":{"updateParent":{"childReq":{"c":"updated C"}}}}""")
-    database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "Parent").as[Int]) should be(Vector(1))
-    database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "Child").as[Int]) should be(Vector(1))
-    database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "_ParentToChild").as[Int]) should be(Vector(1))
-  }
-
-  "a P1 to C1 relation" should "work on update" in {
-    val project = SchemaDsl() { schema =>
-      val child  = schema.model("Child").field_!("c", _.String, isUnique = true)
-      val parent = schema.model("Parent").field_!("p", _.String, isUnique = true)
-      parent.oneToOneRelation("childOpt", "parentOpt", child)
-    }
-    database.setup(project)
-
-    val res = server
-      .executeQuerySimple(
-        """mutation {
-          |  createParent(data: {
-          |    p: "p1"
-          |    childOpt: {
-          |      create: {c: "c1"}
-          |    }
-          |  }){
-          |    id
-          |    childOpt{
-          |       id
-          |    }
-          |  }
-          |}""".stripMargin,
-        project
-      )
-
-    val parentId = res.pathAsString("data.createParent.id")
-
-    database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "_ParentToChild").as[Int]) should be(Vector(1))
-
-    val res2 = server.executeQuerySimple(
-      s"""
-         |mutation {
-         |  updateParent(
-         |  where:{id: "$parentId"}
-         |  data:{
-         |    p: "p2"
-         |    childOpt: {upsert: {
-         |    where: {c: "c1"}
-         |    update: {c: "updated C"}
-         |    create :{c: "DOES NOT MATTER"}
-         |    }}
-         |  }){
-         |    childOpt {
-         |      c
-         |    }
-         |  }
-         |}
-      """.stripMargin,
-      project
-    )
-
-    res2.toString should be("""{"data":{"updateParent":{"childOpt":{"c":"updated C"}}}}""")
-
-    database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "Parent").as[Int]) should be(Vector(1))
-    database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "Child").as[Int]) should be(Vector(1))
-    database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "_ParentToChild").as[Int]) should be(Vector(1))
-  }
-
-  "a P1 to C1 relation" should "work on create" in {
-    val project = SchemaDsl() { schema =>
-      val child  = schema.model("Child").field_!("c", _.String, isUnique = true)
-      val parent = schema.model("Parent").field_!("p", _.String, isUnique = true)
-      parent.oneToOneRelation("childOpt", "parentOpt", child)
-    }
-    database.setup(project)
-
-    val res = server
-      .executeQuerySimple(
-        """mutation {
-          |  createParent(data: {
-          |    p: "p1"
-          |    childOpt: {
-          |      create: {c: "c1"}
-          |    }
-          |  }){
-          |    id
-          |    childOpt{
-          |       id
-          |    }
-          |  }
-          |}""".stripMargin,
-        project
-      )
-
-    val parentId = res.pathAsString("data.createParent.id")
-
-    database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "_ParentToChild").as[Int]) should be(Vector(1))
-
-    val res2 = server.executeQuerySimple(
-      s"""
-         |mutation {
-         |  updateParent(
-         |  where:{id: "$parentId"}
-         |  data:{
-         |    p: "p2"
-         |    childOpt: {upsert: {
-         |    where: {c: "DOES NOT EXIST"}
-         |    update: {c: "DOES NOT MATTER"}
-         |    create :{c: "new C"}
-         |    }}
-         |  }){
-         |    childOpt {
-         |      c
-         |    }
-         |  }
-         |}
-      """.stripMargin,
-      project
-    )
-
-    res2.toString should be("""{"data":{"updateParent":{"childOpt":{"c":"new C"}}}}""")
-
-    database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "Parent").as[Int]) should be(Vector(1))
-    database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "Child").as[Int]) should be(Vector(2))
-    database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "_ParentToChild").as[Int]) should be(Vector(1))
-  }
-
-  "a P1 to C1  relation with the parent without a relation" should "work with create" in {
-    val project = SchemaDsl() { schema =>
-      val child = schema.model("Child").field_!("c", _.String, isUnique = true)
-      schema.model("Parent").field_!("p", _.String, isUnique = true).oneToOneRelation("childOpt", "parentOpt", child)
-    }
-    database.setup(project)
-
-    val parent1Id = server
-      .executeQuerySimple(
-        """mutation {
-          |  createParent(data: {p: "p1"})
-          |  {
-          |    id
-          |  }
-          |}""".stripMargin,
-        project
-      )
-      .pathAsString("data.createParent.id")
-
-    database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "_ParentToChild").as[Int]) should be(Vector(0))
-
-    val res = server.executeQuerySimple(
-      s"""
-         |mutation {
-         |  updateParent(
-         |  where:{id: "$parent1Id"}
-         |  data:{
-         |    p: "p2"
-         |    childOpt: {upsert: {
-         |    where: {c: "DOES NOT EXIST"}
-         |    update: {c: "DOES NOT MATTER"}
-         |    create :{c: "new C"}
-         |    }}
-         |  }){
-         |    childOpt {
-         |      c
-         |    }
-         |  }
-         |}
-      """.stripMargin,
-      project
-    )
-
-    res.toString should be("""{"data":{"updateParent":{"childOpt":{"c":"new C"}}}}""")
-    database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "Parent").as[Int]) should be(Vector(1))
-    database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "Child").as[Int]) should be(Vector(1))
-    database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "_RelayId").as[Int]) should be(Vector(2))
-    database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "_ParentToChild").as[Int]) should be(Vector(1))
-  }
-
   "a PM to C1!  relation with a child already in a relation" should "work with create" in {
     val project = SchemaDsl() { schema =>
       val child  = schema.model("Child").field_!("c", _.String, isUnique = true)
@@ -514,162 +115,6 @@ class NestedUpsertMutationInsideUpdateSpec extends FlatSpec with Matchers with A
     database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "Child").as[Int]) should be(Vector(1))
     database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "_RelayId").as[Int]) should be(Vector(2))
     database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "_ParentToChild").as[Int]) should be(Vector(1))
-  }
-
-  "a P1 to C1!  relation with the parent and a child already in a relation" should "error in a nested mutation by unique for create" in {
-    val project = SchemaDsl() { schema =>
-      val parent = schema.model("Parent").field_!("p", _.String, isUnique = true)
-      val child  = schema.model("Child").field_!("c", _.String, isUnique = true)
-      child.oneToOneRelation_!("parentReq", "childOpt", parent, isRequiredOnFieldB = false)
-    }
-    database.setup(project)
-
-    server.executeQuerySimple(
-      """mutation {
-        |  createParent(data: {
-        |    p: "p1"
-        |    childOpt: {
-        |      create: {c: "c1"}
-        |    }
-        |  }){
-        |    childOpt{
-        |       c
-        |    }
-        |  }
-        |}""".stripMargin,
-      project
-    )
-
-    database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "_ChildToParent").as[Int]) should be(Vector(1))
-
-    server.executeQuerySimpleThatMustFail(
-      s"""
-         |mutation {
-         |  updateParent(
-         |  where: {p: "p1"}
-         |  data:{
-         |    childOpt: {upsert: {
-         |    where: {c: "DOES NOT EXIST"}
-         |    update: {c: "DOES NOT MATTER"}
-         |    create :{c: "new C"}
-         |    }}
-         |  }){
-         |    childOpt {
-         |      c
-         |    }
-         |  }
-         |}
-      """.stripMargin,
-      project,
-      errorCode = 3042,
-      errorContains = "The change you are trying to make would violate the required relation '_ChildToParent' between Child and Parent"
-    )
-  }
-
-  "a P1 to C1!  relation with the parent and a child already in a relation" should "succeed in a nested mutation by unique for update" in {
-    val project = SchemaDsl() { schema =>
-      val parent = schema.model("Parent").field_!("p", _.String, isUnique = true)
-      val child  = schema.model("Child").field_!("c", _.String, isUnique = true)
-      child.oneToOneRelation_!("parentReq", "childOpt", parent, isRequiredOnFieldB = false)
-    }
-    database.setup(project)
-
-    server.executeQuerySimple(
-      """mutation {
-        |  createParent(data: {
-        |    p: "p1"
-        |    childOpt: {
-        |      create: {c: "c1"}
-        |    }
-        |  }){
-        |    childOpt{
-        |       c
-        |    }
-        |  }
-        |}""".stripMargin,
-      project
-    )
-
-    database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "_ChildToParent").as[Int]) should be(Vector(1))
-
-    val res = server.executeQuerySimple(
-      s"""
-         |mutation {
-         |  updateParent(
-         |  where: {p: "p1"}
-         |  data:{
-         |    childOpt: {upsert: {
-         |    where: {c: "c1"}
-         |    update: {c: "updated C"}
-         |    create :{c: "DOES NOT MATTER"}
-         |    }}
-         |  }){
-         |    childOpt {
-         |      c
-         |    }
-         |  }
-         |}
-      """.stripMargin,
-      project
-    )
-
-    res.toString should be("""{"data":{"updateParent":{"childOpt":{"c":"updated C"}}}}""")
-
-    database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "Parent").as[Int]) should be(Vector(1))
-    database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "Child").as[Int]) should be(Vector(1))
-    database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "_RelayId").as[Int]) should be(Vector(2))
-    database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "_ChildToParent").as[Int]) should be(Vector(1))
-  }
-
-  "a P1 to C1!  relation with the parent not already in a relation" should "work in a nested mutation by unique with create" in {
-    val project = SchemaDsl() { schema =>
-      val parent = schema.model("Parent").field_!("p", _.String, isUnique = true)
-      val child  = schema.model("Child").field_!("c", _.String, isUnique = true)
-      child.oneToOneRelation_!("parentReq", "childOpt", parent, isRequiredOnFieldB = false)
-    }
-    database.setup(project)
-
-    server.executeQuerySimple(
-      """mutation {
-        |  createParent(data: {
-        |    p: "p1"
-        |
-        |  }){
-        |    p
-        |  }
-        |}""".stripMargin,
-      project
-    )
-
-    database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "_ChildToParent").as[Int]) should be(Vector(0))
-
-    val res = server.executeQuerySimple(
-      s"""
-         |mutation {
-         |  updateParent(
-         |  where: {p: "p1"}
-         |  data:{
-         |    childOpt: {upsert: {
-         |    where: {c: "DOES NOT EXIST"}
-         |    update: {c: "DOES NOT MATTER"}
-         |    create :{c: "new C"}
-         |    }}
-         |  }){
-         |    childOpt {
-         |      c
-         |    }
-         |  }
-         |}
-      """.stripMargin,
-      project
-    )
-
-    res.toString should be("""{"data":{"updateParent":{"childOpt":{"c":"new C"}}}}""")
-
-    database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "Parent").as[Int]) should be(Vector(1))
-    database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "Child").as[Int]) should be(Vector(1))
-    database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "_RelayId").as[Int]) should be(Vector(2))
-    database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "_ChildToParent").as[Int]) should be(Vector(1))
   }
 
   "a PM to C1  relation with the parent already in a relation" should "work through a nested mutation by unique for create" in {
@@ -782,232 +227,6 @@ class NestedUpsertMutationInsideUpdateSpec extends FlatSpec with Matchers with A
     database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "Child").as[Int]) should be(Vector(2))
     database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "_RelayId").as[Int]) should be(Vector(3))
     database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "_ParentToChild").as[Int]) should be(Vector(2))
-  }
-
-  "a P1! to CM  relation with the parent already in a relation" should "work through a nested mutation by unique for update" in {
-    val project = SchemaDsl() { schema =>
-      val parent = schema.model("Parent").field_!("p", _.String, isUnique = true)
-      val child  = schema.model("Child").field_!("c", _.String, isUnique = true)
-      child.oneToManyRelation_!("parentsOpt", "childReq", parent)
-    }
-    database.setup(project)
-
-    server.executeQuerySimple(
-      """mutation {
-        |  createParent(data: {
-        |    p: "p1"
-        |    childReq: {
-        |      create: {c: "c1"}
-        |    }
-        |  }){
-        |    childReq{
-        |       c
-        |    }
-        |  }
-        |}""".stripMargin,
-      project
-    )
-
-    database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "_ChildToParent").as[Int]) should be(Vector(1))
-
-    val res = server.executeQuerySimple(
-      s"""
-         |mutation {
-         |  updateParent(
-         |  where: {p: "p1"}
-         |  data:{
-         |    childReq: {upsert: {
-         |    where: {c: "c1"}
-         |    update: {c: "updated C"}
-         |    create :{c: "DOES NOT MATTER"}
-         |    }}
-         |  }){
-         |    childReq {
-         |      c
-         |    }
-         |  }
-         |}
-      """.stripMargin,
-      project
-    )
-
-    res.toString should be("""{"data":{"updateParent":{"childReq":{"c":"updated C"}}}}""")
-
-    database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "Parent").as[Int]) should be(Vector(1))
-    database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "Child").as[Int]) should be(Vector(1))
-    database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "_RelayId").as[Int]) should be(Vector(2))
-    database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "_ChildToParent").as[Int]) should be(Vector(1))
-  }
-
-  "a P1! to CM  relation with the parent already in a relation" should "work through a nested mutation by unique for create" in {
-    val project = SchemaDsl() { schema =>
-      val parent = schema.model("Parent").field_!("p", _.String, isUnique = true)
-      val child  = schema.model("Child").field_!("c", _.String, isUnique = true)
-      child.oneToManyRelation_!("parentsOpt", "childReq", parent)
-    }
-    database.setup(project)
-
-    server.executeQuerySimple(
-      """mutation {
-        |  createParent(data: {
-        |    p: "p1"
-        |    childReq: {
-        |      create: {c: "c1"}
-        |    }
-        |  }){
-        |    childReq{
-        |       c
-        |    }
-        |  }
-        |}""".stripMargin,
-      project
-    )
-
-    database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "_ChildToParent").as[Int]) should be(Vector(1))
-
-    val res = server.executeQuerySimple(
-      s"""
-         |mutation {
-         |  updateParent(
-         |  where: {p: "p1"}
-         |  data:{
-         |    childReq: {upsert: {
-         |    where: {c: "DOES NOT EXIST"}
-         |    update: {c: "DOES NOT MATTER"}
-         |    create :{c: "new C"}
-         |    }}
-         |  }){
-         |    childReq {
-         |      c
-         |    }
-         |  }
-         |}
-      """.stripMargin,
-      project
-    )
-
-    res.toString should be("""{"data":{"updateParent":{"childReq":{"c":"new C"}}}}""")
-
-    database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "Parent").as[Int]) should be(Vector(1))
-    database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "Child").as[Int]) should be(Vector(2))
-    database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "_RelayId").as[Int]) should be(Vector(3))
-    database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "_ChildToParent").as[Int]) should be(Vector(1))
-  }
-
-  "a P1 to CM  relation with the child already in a relation" should "work through a nested mutation by unique for create" in {
-    val project = SchemaDsl() { schema =>
-      val parent = schema.model("Parent").field_!("p", _.String, isUnique = true)
-      val child  = schema.model("Child").field_!("c", _.String, isUnique = true)
-      child.oneToManyRelation("parentsOpt", "childOpt", parent)
-    }
-    database.setup(project)
-
-    server.executeQuerySimple(
-      """mutation {
-        |  createParent(data: {
-        |    p: "p1"
-        |    childOpt: {
-        |      create: {c: "c1"}
-        |    }
-        |  }){
-        |    childOpt{
-        |       c
-        |    }
-        |  }
-        |}""".stripMargin,
-      project
-    )
-
-    database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "_ChildToParent").as[Int]) should be(Vector(1))
-
-    val res = server.executeQuerySimple(
-      s"""
-         |mutation {
-         |  updateParent(
-         |    where: {p: "p1"}
-         |    data:{
-         |    childOpt: {upsert: {
-         |    where: {c: "DOES NOT EXIST"}
-         |    update: {c: "DOES NOT MATTER"}
-         |    create :{c: "new C"}
-         |    }}
-         |  }){
-         |    childOpt{
-         |      c
-         |    }
-         |  }
-         |}
-      """.stripMargin,
-      project
-    )
-
-    res.toString should be("""{"data":{"updateParent":{"childOpt":{"c":"new C"}}}}""")
-
-    server.executeQuerySimple(s"""query{children{c, parentsOpt{p}}}""", project).toString should be(
-      """{"data":{"children":[{"c":"c1","parentsOpt":[]},{"c":"new C","parentsOpt":[{"p":"p1"}]}]}}""")
-
-    database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "Parent").as[Int]) should be(Vector(1))
-    database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "Child").as[Int]) should be(Vector(2))
-    database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "_RelayId").as[Int]) should be(Vector(3))
-    database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "_ChildToParent").as[Int]) should be(Vector(1))
-  }
-
-  "a P1 to CM  relation with the child already in a relation" should "work through a nested mutation by unique for update" in {
-    val project = SchemaDsl() { schema =>
-      val parent = schema.model("Parent").field_!("p", _.String, isUnique = true)
-      val child  = schema.model("Child").field_!("c", _.String, isUnique = true)
-      child.oneToManyRelation("parentsOpt", "childOpt", parent)
-    }
-    database.setup(project)
-
-    server.executeQuerySimple(
-      """mutation {
-        |  createParent(data: {
-        |    p: "p1"
-        |    childOpt: {
-        |      create: {c: "c1"}
-        |    }
-        |  }){
-        |    childOpt{
-        |       c
-        |    }
-        |  }
-        |}""".stripMargin,
-      project
-    )
-
-    database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "_ChildToParent").as[Int]) should be(Vector(1))
-
-    val res = server.executeQuerySimple(
-      s"""
-         |mutation {
-         |  updateParent(
-         |    where: {p: "p1"}
-         |    data:{
-         |    childOpt: {upsert: {
-         |    where: {c: "c1"}
-         |    update: {c: "updated C"}
-         |    create :{c: "DOES NOT MATTER"}
-         |    }}
-         |  }){
-         |    childOpt{
-         |      c
-         |    }
-         |  }
-         |}
-      """.stripMargin,
-      project
-    )
-
-    res.toString should be("""{"data":{"updateParent":{"childOpt":{"c":"updated C"}}}}""")
-
-    server.executeQuerySimple(s"""query{children{c, parentsOpt{p}}}""", project).toString should be(
-      """{"data":{"children":[{"c":"updated C","parentsOpt":[{"p":"p1"}]}]}}""")
-
-    database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "Parent").as[Int]) should be(Vector(1))
-    database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "Child").as[Int]) should be(Vector(1))
-    database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "_RelayId").as[Int]) should be(Vector(2))
-    database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "_ChildToParent").as[Int]) should be(Vector(1))
   }
 
   "a PM to CM  relation with the children already in a relation" should "work through a nested mutation by unique for update" in {
@@ -1470,6 +689,1006 @@ class NestedUpsertMutationInsideUpdateSpec extends FlatSpec with Matchers with A
 
     val result = server.executeQuerySimple(updateMutation, project)
     result.pathAsString("data.updateList.todos.[0].tags.[0].name") should equal("the tag")
+  }
+
+  "a deeply nested mutation" should "execute all levels of the mutation if there are only node edges on the path for update case" in {
+    val project = SchemaDsl.fromString() { """type Top {
+                                             |  id: ID! @unique
+                                             |  nameTop: String! @unique
+                                             |  middles: [Middle!]!
+                                             |}
+                                             |
+                                             |type Middle {
+                                             |  id: ID! @unique
+                                             |  nameMiddle: String! @unique
+                                             |  tops: [Top!]!
+                                             |  bottoms: [Bottom!]!
+                                             |}
+                                             |
+                                             |type Bottom {
+                                             |  id: ID! @unique
+                                             |  nameBottom: String! @unique
+                                             |  middles: [Middle!]!
+                                             |}""".stripMargin }
+    database.setup(project)
+
+    val createMutation =
+      """
+        |mutation  {
+        |  createTop(data: {
+        |    nameTop: "the top",
+        |    middles: {
+        |      create:[ 
+        |        {
+        |          nameMiddle: "the middle"
+        |          bottoms: {
+        |            create: [{ nameBottom: "the bottom"}, { nameBottom: "the second bottom"}]
+        |          }
+        |        },
+        |        {
+        |          nameMiddle: "the second middle"
+        |          bottoms: {
+        |            create: [{nameBottom: "the third bottom"},{nameBottom: "the fourth bottom"}]
+        |          }
+        |        }
+        |     ]
+        |    }
+        |  }) {id}
+        |}
+      """.stripMargin
+
+    server.executeQuerySimple(createMutation, project)
+
+    val updateMutation =
+      s"""mutation b {
+         |  updateTop(
+         |    where: {nameTop: "the top"},
+         |    data: {
+         |      nameTop: "updated top",
+         |      middles: {
+         |        update: [{
+         |              where: {nameMiddle: "the middle"},
+         |              data:{  nameMiddle: "updated middle"
+         |                      bottoms: {upsert: [{ where: {nameBottom: "the bottom"},
+         |                                           create:  {nameBottom: "Should not matter"}
+         |                                           update:  {nameBottom: "updated bottom"}
+         |                      }]
+         |              }
+         |              }}]
+         |     }
+         |   }
+         |  ) {
+         |    nameTop
+         |    middles {
+         |      nameMiddle
+         |      bottoms {
+         |        nameBottom
+         |      }
+         |    }
+         |  }
+         |}
+      """.stripMargin
+
+    val result = server.executeQuerySimple(updateMutation, project)
+
+    result.toString should be(
+      """{"data":{"updateTop":{"nameTop":"updated top","middles":[{"nameMiddle":"updated middle","bottoms":[{"nameBottom":"updated bottom"},{"nameBottom":"the second bottom"}]},{"nameMiddle":"the second middle","bottoms":[{"nameBottom":"the third bottom"},{"nameBottom":"the fourth bottom"}]}]}}}""")
+
+    server.executeQuerySimple("query{bottoms{nameBottom}}", project).toString should be(
+      """{"data":{"bottoms":[{"nameBottom":"updated bottom"},{"nameBottom":"the second bottom"},{"nameBottom":"the third bottom"},{"nameBottom":"the fourth bottom"}]}}""")
+  }
+
+  "a deeply nested mutation" should "execute all levels of the mutation if there are only node edges on the path for create case" in {
+    val project = SchemaDsl.fromString() { """type Top {
+                                             |  id: ID! @unique
+                                             |  nameTop: String! @unique
+                                             |  middles: [Middle!]!
+                                             |}
+                                             |
+                                             |type Middle {
+                                             |  id: ID! @unique
+                                             |  nameMiddle: String! @unique
+                                             |  tops: [Top!]!
+                                             |  bottoms: [Bottom!]!
+                                             |}
+                                             |
+                                             |type Bottom {
+                                             |  id: ID! @unique
+                                             |  nameBottom: String! @unique
+                                             |  middles: [Middle!]!
+                                             |}""".stripMargin }
+    database.setup(project)
+
+    val createMutation =
+      """
+        |mutation  {
+        |  createTop(data: {
+        |    nameTop: "the top",
+        |    middles: {
+        |      create:[
+        |        {
+        |          nameMiddle: "the middle"
+        |          bottoms: {
+        |            create: [{ nameBottom: "the bottom"}, { nameBottom: "the second bottom"}]
+        |          }
+        |        },
+        |        {
+        |          nameMiddle: "the second middle"
+        |          bottoms: {
+        |            create: [{nameBottom: "the third bottom"},{nameBottom: "the fourth bottom"}]
+        |          }
+        |        }
+        |     ]
+        |    }
+        |  }) {id}
+        |}
+      """.stripMargin
+
+    server.executeQuerySimple(createMutation, project)
+
+    val updateMutation =
+      s"""mutation b {
+         |  updateTop(
+         |    where: {nameTop: "the top"},
+         |    data: {
+         |      nameTop: "updated top",
+         |      middles: {
+         |        update: [{
+         |              where: {nameMiddle: "the middle"},
+         |              data:{  nameMiddle: "updated middle"
+         |                      bottoms: {upsert: [{ where: {nameBottom: "does not exist"},
+         |                                           create:  {nameBottom: "created bottom"}
+         |                                           update:  {nameBottom: "should not matter"}
+         |                      }]
+         |              }
+         |              }}]
+         |     }
+         |   }
+         |  ) {
+         |    nameTop
+         |    middles {
+         |      nameMiddle
+         |      bottoms {
+         |        nameBottom
+         |      }
+         |    }
+         |  }
+         |}
+      """.stripMargin
+
+    val result = server.executeQuerySimple(updateMutation, project)
+
+    result.toString should be(
+      """{"data":{"updateTop":{"nameTop":"updated top","middles":[{"nameMiddle":"updated middle","bottoms":[{"nameBottom":"the bottom"},{"nameBottom":"the second bottom"},{"nameBottom":"created bottom"}]},{"nameMiddle":"the second middle","bottoms":[{"nameBottom":"the third bottom"},{"nameBottom":"the fourth bottom"}]}]}}}""")
+
+    server.executeQuerySimple("query{bottoms{nameBottom}}", project).toString should be(
+      """{"data":{"bottoms":[{"nameBottom":"the bottom"},{"nameBottom":"the second bottom"},{"nameBottom":"the third bottom"},{"nameBottom":"the fourth bottom"},{"nameBottom":"created bottom"}]}}""")
+  }
+
+  "a deeply nested mutation" should "execute all levels of the mutation if there are only node edges on the path for update case with no backrelations" in {
+    val project = SchemaDsl.fromString() { """type Top {
+                                             |  id: ID! @unique
+                                             |  nameTop: String! @unique
+                                             |  middles: [Middle!]!
+                                             |}
+                                             |
+                                             |type Middle {
+                                             |  id: ID! @unique
+                                             |  nameMiddle: String! @unique
+                                             |  bottoms: [Bottom!]!
+                                             |}
+                                             |
+                                             |type Bottom {
+                                             |  id: ID! @unique
+                                             |  nameBottom: String! @unique
+                                             |}""".stripMargin }
+    database.setup(project)
+
+    val createMutation =
+      """
+        |mutation  {
+        |  createTop(data: {
+        |    nameTop: "the top",
+        |    middles: {
+        |      create:[ 
+        |        {
+        |          nameMiddle: "the middle"
+        |          bottoms: {
+        |            create: [{ nameBottom: "the bottom"}, { nameBottom: "the second bottom"}]
+        |          }
+        |        },
+        |        {
+        |          nameMiddle: "the second middle"
+        |          bottoms: {
+        |            create: [{nameBottom: "the third bottom"},{nameBottom: "the fourth bottom"}]
+        |          }
+        |        }
+        |     ]
+        |    }
+        |  }) {id}
+        |}
+      """.stripMargin
+
+    server.executeQuerySimple(createMutation, project)
+
+    val updateMutation =
+      s"""mutation b {
+         |  updateTop(
+         |    where: {nameTop: "the top"},
+         |    data: {
+         |      nameTop: "updated top",
+         |      middles: {
+         |        update: [{
+         |              where: {nameMiddle: "the middle"},
+         |              data:{  nameMiddle: "updated middle"
+         |                      bottoms: {upsert: [{ where: {nameBottom: "the bottom"},
+         |                                           create:  {nameBottom: "Should not matter"}
+         |                                           update:  {nameBottom: "updated bottom"}
+         |                      }]
+         |              }
+         |              }}]
+         |     }
+         |   }
+         |  ) {
+         |    nameTop
+         |    middles {
+         |      nameMiddle
+         |      bottoms {
+         |        nameBottom
+         |      }
+         |    }
+         |  }
+         |}
+      """.stripMargin
+
+    val result = server.executeQuerySimple(updateMutation, project)
+
+    result.toString should be(
+      """{"data":{"updateTop":{"nameTop":"updated top","middles":[{"nameMiddle":"updated middle","bottoms":[{"nameBottom":"updated bottom"},{"nameBottom":"the second bottom"}]},{"nameMiddle":"the second middle","bottoms":[{"nameBottom":"the third bottom"},{"nameBottom":"the fourth bottom"}]}]}}}""")
+
+    server.executeQuerySimple("query{bottoms{nameBottom}}", project).toString should be(
+      """{"data":{"bottoms":[{"nameBottom":"updated bottom"},{"nameBottom":"the second bottom"},{"nameBottom":"the third bottom"},{"nameBottom":"the fourth bottom"}]}}""")
+  }
+
+  "a deeply nested mutation" should "execute all levels of the mutation if there are only node edges on the path for create case with no backrelations" in {
+    val project = SchemaDsl.fromString() { """type Top {
+                                             |  id: ID! @unique
+                                             |  nameTop: String! @unique
+                                             |  middles: [Middle!]!
+                                             |}
+                                             |
+                                             |type Middle {
+                                             |  id: ID! @unique
+                                             |  nameMiddle: String! @unique
+                                             |  bottoms: [Bottom!]!
+                                             |}
+                                             |
+                                             |type Bottom {
+                                             |  id: ID! @unique
+                                             |  nameBottom: String! @unique
+                                             |}""".stripMargin }
+    database.setup(project)
+
+    val createMutation =
+      """
+        |mutation  {
+        |  createTop(data: {
+        |    nameTop: "the top",
+        |    middles: {
+        |      create:[
+        |        {
+        |          nameMiddle: "the middle"
+        |          bottoms: {
+        |            create: [{ nameBottom: "the bottom"}, { nameBottom: "the second bottom"}]
+        |          }
+        |        },
+        |        {
+        |          nameMiddle: "the second middle"
+        |          bottoms: {
+        |            create: [{nameBottom: "the third bottom"},{nameBottom: "the fourth bottom"}]
+        |          }
+        |        }
+        |     ]
+        |    }
+        |  }) {id}
+        |}
+      """.stripMargin
+
+    server.executeQuerySimple(createMutation, project)
+
+    val updateMutation =
+      s"""mutation b {
+         |  updateTop(
+         |    where: {nameTop: "the top"},
+         |    data: {
+         |      nameTop: "updated top",
+         |      middles: {
+         |        update: [{
+         |              where: {nameMiddle: "the middle"},
+         |              data:{  nameMiddle: "updated middle"
+         |                      bottoms: {upsert: [{ where: {nameBottom: "does not exist"},
+         |                                           create:  {nameBottom: "created bottom"}
+         |                                           update:  {nameBottom: "should not matter"}
+         |                      }]
+         |              }
+         |              }}]
+         |     }
+         |   }
+         |  ) {
+         |    nameTop
+         |    middles {
+         |      nameMiddle
+         |      bottoms {
+         |        nameBottom
+         |      }
+         |    }
+         |  }
+         |}
+      """.stripMargin
+
+    val result = server.executeQuerySimple(updateMutation, project)
+
+    result.toString should be(
+      """{"data":{"updateTop":{"nameTop":"updated top","middles":[{"nameMiddle":"updated middle","bottoms":[{"nameBottom":"the bottom"},{"nameBottom":"the second bottom"},{"nameBottom":"created bottom"}]},{"nameMiddle":"the second middle","bottoms":[{"nameBottom":"the third bottom"},{"nameBottom":"the fourth bottom"}]}]}}}""")
+
+    server.executeQuerySimple("query{bottoms{nameBottom}}", project).toString should be(
+      """{"data":{"bottoms":[{"nameBottom":"the bottom"},{"nameBottom":"the second bottom"},{"nameBottom":"the third bottom"},{"nameBottom":"the fourth bottom"},{"nameBottom":"created bottom"}]}}""")
+  }
+
+  "a deeply nested mutation" should "execute all levels of the mutation if there are model and node edges on the path for update" in {
+    val project = SchemaDsl.fromString() { """type Top {
+                                             |  id: ID! @unique
+                                             |  nameTop: String! @unique
+                                             |  middles: [Middle!]!
+                                             |}
+                                             |
+                                             |type Middle {
+                                             |  id: ID! @unique
+                                             |  nameMiddle: String! @unique
+                                             |  tops: [Top!]!
+                                             |  bottom: Bottom
+                                             |}
+                                             |
+                                             |type Bottom {
+                                             |  id: ID! @unique
+                                             |  nameBottom: String! @unique
+                                             |  middle: Middle
+                                             |}""".stripMargin }
+    database.setup(project)
+
+    val createMutation =
+      """
+        |mutation  {
+        |  createTop(data: {
+        |    nameTop: "the top",
+        |    middles: {
+        |      create:[
+        |        {
+        |          nameMiddle: "the middle"
+        |          bottom: {create: { nameBottom: "the bottom"}}
+        |        },
+        |        {
+        |          nameMiddle: "the second middle"
+        |          bottom: {create: { nameBottom: "the second bottom"}}
+        |        }
+        |     ]
+        |    }
+        |  }) {id}
+        |}
+      """.stripMargin
+
+    server.executeQuerySimple(createMutation, project)
+
+    val updateMutation =
+      s"""mutation b {
+         |  updateTop(
+         |    where: {nameTop: "the top"},
+         |    data: {
+         |      nameTop: "updated top",
+         |      middles: {
+         |        update: [{
+         |              where: {nameMiddle: "the middle"},
+         |              data:{  nameMiddle: "updated middle"
+         |                      bottom: {upsert: {create: {nameBottom: "should not matter"},
+         |                                        update: {nameBottom: "updated bottom"}}}
+         |              }
+         |              }]
+         |     }
+         |   }
+         |  ) {
+         |    nameTop
+         |    middles {
+         |      nameMiddle
+         |      bottom {
+         |        nameBottom
+         |      }
+         |    }
+         |  }
+         |}
+      """.stripMargin
+
+    val result = server.executeQuerySimple(updateMutation, project)
+
+    result.toString should be(
+      """{"data":{"updateTop":{"nameTop":"updated top","middles":[{"nameMiddle":"updated middle","bottom":{"nameBottom":"updated bottom"}},{"nameMiddle":"the second middle","bottom":{"nameBottom":"the second bottom"}}]}}}""")
+
+    server.executeQuerySimple("query{bottoms{nameBottom}}", project).toString should be(
+      """{"data":{"bottoms":[{"nameBottom":"updated bottom"},{"nameBottom":"the second bottom"}]}}""")
+  }
+
+  "a deeply nested mutation" should "execute all levels of the mutation if there are model and node edges on the path for create" in {
+    val project = SchemaDsl.fromString() { """type Top {
+                                             |  id: ID! @unique
+                                             |  nameTop: String! @unique
+                                             |  middles: [Middle!]!
+                                             |}
+                                             |
+                                             |type Middle {
+                                             |  id: ID! @unique
+                                             |  nameMiddle: String! @unique
+                                             |  tops: [Top!]!
+                                             |  bottom: Bottom
+                                             |}
+                                             |
+                                             |type Bottom {
+                                             |  id: ID! @unique
+                                             |  nameBottom: String! @unique
+                                             |  middle: Middle
+                                             |}""".stripMargin }
+    database.setup(project)
+
+    val createMutation =
+      """
+        |mutation  {
+        |  createTop(data: {
+        |    nameTop: "the top",
+        |    middles: {
+        |      create:[
+        |        {
+        |          nameMiddle: "the middle"
+        |        },
+        |        {
+        |          nameMiddle: "the second middle"
+        |          bottom: {create: { nameBottom: "the second bottom"}}
+        |        }
+        |     ]
+        |    }
+        |  }) {id}
+        |}
+      """.stripMargin
+
+    server.executeQuerySimple(createMutation, project)
+
+    val updateMutation =
+      s"""mutation b {
+         |  updateTop(
+         |    where: {nameTop: "the top"},
+         |    data: {
+         |      nameTop: "updated top",
+         |      middles: {
+         |        update: [{
+         |              where: {nameMiddle: "the middle"},
+         |              data:{  nameMiddle: "updated middle"
+         |                      bottom: {upsert: {create: {nameBottom: "created bottom"},
+         |                                        update: {nameBottom: "should not matter"}}}
+         |              }
+         |              }]
+         |     }
+         |   }
+         |  ) {
+         |    nameTop
+         |    middles {
+         |      nameMiddle
+         |      bottom {
+         |        nameBottom
+         |      }
+         |    }
+         |  }
+         |}
+      """.stripMargin
+
+    val result = server.executeQuerySimple(updateMutation, project)
+
+    result.toString should be(
+      """{"data":{"updateTop":{"nameTop":"updated top","middles":[{"nameMiddle":"updated middle","bottom":{"nameBottom":"created bottom"}},{"nameMiddle":"the second middle","bottom":{"nameBottom":"the second bottom"}}]}}}""")
+
+    server.executeQuerySimple("query{bottoms{nameBottom}}", project).toString should be(
+      """{"data":{"bottoms":[{"nameBottom":"the second bottom"},{"nameBottom":"created bottom"}]}}""")
+  }
+
+  "a deeply nested mutation" should "execute all levels of the mutation if there are model and node edges on the path  and back relations are missing and node edges follow model edges for update" in {
+    val project = SchemaDsl.fromString() { """type Top {
+                                             |  id: ID! @unique
+                                             |  nameTop: String! @unique
+                                             |  middle: Middle
+                                             |}
+                                             |
+                                             |type Middle {
+                                             |  id: ID! @unique
+                                             |  nameMiddle: String! @unique
+                                             |  bottom: Bottom
+                                             |}
+                                             |
+                                             |type Bottom {
+                                             |  id: ID! @unique
+                                             |  nameBottom: String! @unique
+                                             |  below: [Below!]!
+                                             |}
+                                             |
+                                             |type Below {
+                                             |  id: ID! @unique
+                                             |  nameBelow: String! @unique
+                                             |}""".stripMargin }
+    database.setup(project)
+
+    val createMutation =
+      """
+        |mutation a {
+        |  createTop(data: {
+        |    nameTop: "the top",
+        |    middle: {
+        |      create:
+        |        {
+        |          nameMiddle: "the middle"
+        |          bottom: {
+        |            create: { nameBottom: "the bottom"
+        |            below: {
+        |            create: [{ nameBelow: "below"}, { nameBelow: "second below"}]}
+        |        }}}
+        |        }
+        |  }) {id}
+        |}
+      """.stripMargin
+
+    server.executeQuerySimple(createMutation, project)
+
+    val updateMutation =
+      s"""mutation b {
+         |  updateTop(
+         |    where: {nameTop: "the top"},
+         |    data: {
+         |      nameTop: "updated top",
+         |      middle: {
+         |        update: {
+         |               nameMiddle: "updated middle"
+         |               bottom: {
+         |                update: {
+         |                  nameBottom: "updated bottom"
+         |                  below: { upsert: {
+         |                    where: {nameBelow: "below"}
+         |                    create:{nameBelow: "should not matter"}
+         |                    update:{nameBelow: "updated below"}
+         |                  }
+         |          }
+         |                }
+         |          }
+         |       }
+         |     }
+         |   }
+         |  ) {
+         |    nameTop
+         |    middle {
+         |      nameMiddle
+         |      bottom {
+         |        nameBottom
+         |        below{
+         |           nameBelow
+         |        }
+         |        
+         |      }
+         |    }
+         |  }
+         |}
+      """.stripMargin
+
+    val result = server.executeQuerySimple(updateMutation, project)
+
+    result.toString should be(
+      """{"data":{"updateTop":{"nameTop":"updated top","middle":{"nameMiddle":"updated middle","bottom":{"nameBottom":"updated bottom","below":[{"nameBelow":"updated below"},{"nameBelow":"second below"}]}}}}}""")
+
+    server.executeQuerySimple("query{belows{nameBelow}}", project).toString should be(
+      """{"data":{"belows":[{"nameBelow":"updated below"},{"nameBelow":"second below"}]}}""")
+  }
+
+  "a deeply nested mutation" should "execute all levels of the mutation if there are model and node edges on the path  and back relations are missing and node edges follow model edges for create" in {
+    val project = SchemaDsl.fromString() { """type Top {
+                                             |  id: ID! @unique
+                                             |  nameTop: String! @unique
+                                             |  middle: Middle
+                                             |}
+                                             |
+                                             |type Middle {
+                                             |  id: ID! @unique
+                                             |  nameMiddle: String! @unique
+                                             |  bottom: Bottom
+                                             |}
+                                             |
+                                             |type Bottom {
+                                             |  id: ID! @unique
+                                             |  nameBottom: String! @unique
+                                             |  below: [Below!]!
+                                             |}
+                                             |
+                                             |type Below {
+                                             |  id: ID! @unique
+                                             |  nameBelow: String! @unique
+                                             |}""".stripMargin }
+    database.setup(project)
+
+    val createMutation =
+      """
+        |mutation a {
+        |  createTop(data: {
+        |    nameTop: "the top",
+        |    middle: {
+        |      create:
+        |        {
+        |          nameMiddle: "the middle"
+        |          bottom: {
+        |            create: { nameBottom: "the bottom"
+        |            below: {
+        |            create: [{ nameBelow: "below"}, { nameBelow: "second below"}]}
+        |        }}}
+        |        }
+        |  }) {id}
+        |}
+      """.stripMargin
+
+    server.executeQuerySimple(createMutation, project)
+
+    val updateMutation =
+      s"""mutation b {
+         |  updateTop(
+         |    where: {nameTop: "the top"},
+         |    data: {
+         |      nameTop: "updated top",
+         |      middle: {
+         |        update: {
+         |               nameMiddle: "updated middle"
+         |               bottom: {
+         |                update: {
+         |                  nameBottom: "updated bottom"
+         |                  below: { upsert: {
+         |                    where: {nameBelow: "Does not exist"}
+         |                    create:{nameBelow: "created below"}
+         |                    update:{nameBelow: "should not matter"}
+         |                  }
+         |          }
+         |                }
+         |          }
+         |       }
+         |     }
+         |   }
+         |  ) {
+         |    nameTop
+         |    middle {
+         |      nameMiddle
+         |      bottom {
+         |        nameBottom
+         |        below{
+         |           nameBelow
+         |        }
+         |
+         |      }
+         |    }
+         |  }
+         |}
+      """.stripMargin
+
+    val result = server.executeQuerySimple(updateMutation, project)
+
+    result.toString should be(
+      """{"data":{"updateTop":{"nameTop":"updated top","middle":{"nameMiddle":"updated middle","bottom":{"nameBottom":"updated bottom","below":[{"nameBelow":"below"},{"nameBelow":"second below"},{"nameBelow":"created below"}]}}}}}""")
+
+    server.executeQuerySimple("query{belows{nameBelow}}", project).toString should be(
+      """{"data":{"belows":[{"nameBelow":"below"},{"nameBelow":"second below"},{"nameBelow":"created below"}]}}""")
+  }
+
+  "a deeply nested mutation" should "execute all levels of the mutation if there are only model edges on the path for update" in {
+    val project = SchemaDsl.fromString() { """type Top {
+                                             |  id: ID! @unique
+                                             |  nameTop: String! @unique
+                                             |  middle: Middle
+                                             |}
+                                             |
+                                             |type Middle {
+                                             |  id: ID! @unique
+                                             |  nameMiddle: String! @unique
+                                             |  top: Top
+                                             |  bottom: Bottom
+                                             |}
+                                             |
+                                             |type Bottom {
+                                             |  id: ID! @unique
+                                             |  middle: Middle
+                                             |  nameBottom: String! @unique
+                                             |}""".stripMargin }
+    database.setup(project)
+
+    val createMutation =
+      """
+        |mutation  {
+        |  createTop(data: {
+        |    nameTop: "the top",
+        |    middle: {
+        |      create: 
+        |        {
+        |          nameMiddle: "the middle"
+        |          bottom: {
+        |            create: {
+        |              nameBottom: "the bottom"
+        |            }
+        |          }
+        |        }
+        |    }
+        |  }) {id}
+        |}
+      """.stripMargin
+
+    server.executeQuerySimple(createMutation, project)
+
+    val updateMutation =
+      s"""
+         |mutation  {
+         |  updateTop(
+         |    where: {
+         |      nameTop: "the top"
+         |    }
+         |    data: {
+         |      nameTop: "updated top",
+         |      middle: {
+         |        update: {
+         |              nameMiddle: "updated middle"
+         |              bottom: {upsert: {create: {nameBottom: "should not matter"},
+         |                                update: {nameBottom: "updated bottom"}
+         |                       }
+         |              }
+         |      }
+         |     }
+         |   }
+         |  ) {
+         |    nameTop
+         |    middle {
+         |      nameMiddle
+         |      bottom {
+         |        nameBottom
+         |      }
+         |    }
+         |  }
+         |}
+      """.stripMargin
+
+    val result = server.executeQuerySimple(updateMutation, project)
+
+    result.toString should be(
+      """{"data":{"updateTop":{"nameTop":"updated top","middle":{"nameMiddle":"updated middle","bottom":{"nameBottom":"updated bottom"}}}}}""")
+
+    server.executeQuerySimple("query{bottoms{nameBottom}}", project).toString should be("""{"data":{"bottoms":[{"nameBottom":"updated bottom"}]}}""")
+  }
+
+  "a deeply nested mutation" should "execute all levels of the mutation if there are only model edges on the path for create" in {
+    val project = SchemaDsl.fromString() { """type Top {
+                                             |  id: ID! @unique
+                                             |  nameTop: String! @unique
+                                             |  middle: Middle
+                                             |}
+                                             |
+                                             |type Middle {
+                                             |  id: ID! @unique
+                                             |  nameMiddle: String! @unique
+                                             |  top: Top
+                                             |  bottom: Bottom
+                                             |}
+                                             |
+                                             |type Bottom {
+                                             |  id: ID! @unique
+                                             |  middle: Middle
+                                             |  nameBottom: String! @unique
+                                             |}""".stripMargin }
+    database.setup(project)
+
+    val createMutation =
+      """
+        |mutation  {
+        |  createTop(data: {
+        |    nameTop: "the top",
+        |    middle: {
+        |      create:{nameMiddle: "the middle"}
+        |    }
+        |  }) {id}
+        |}
+      """.stripMargin
+
+    server.executeQuerySimple(createMutation, project)
+
+    val updateMutation =
+      s"""
+         |mutation  {
+         |  updateTop(
+         |    where: {
+         |      nameTop: "the top"
+         |    }
+         |    data: {
+         |      nameTop: "updated top",
+         |      middle: {
+         |        update: {
+         |              nameMiddle: "updated middle"
+         |              bottom: {upsert: {create: {nameBottom: "created bottom"},
+         |                                update: {nameBottom: "should not matter"}
+         |                       }
+         |              }
+         |      }
+         |     }
+         |   }
+         |  ) {
+         |    nameTop
+         |    middle {
+         |      nameMiddle
+         |      bottom {
+         |        nameBottom
+         |      }
+         |    }
+         |  }
+         |}
+      """.stripMargin
+
+    val result = server.executeQuerySimple(updateMutation, project)
+
+    result.toString should be(
+      """{"data":{"updateTop":{"nameTop":"updated top","middle":{"nameMiddle":"updated middle","bottom":{"nameBottom":"created bottom"}}}}}""")
+
+    server.executeQuerySimple("query{bottoms{nameBottom}}", project).toString should be("""{"data":{"bottoms":[{"nameBottom":"created bottom"}]}}""")
+  }
+  "a deeply nested mutation" should "execute all levels of the mutation if there are only model edges on the path for update when there are no backrelations" in {
+    val project = SchemaDsl.fromString() { """type Top {
+                                             |  id: ID! @unique
+                                             |  nameTop: String! @unique
+                                             |  middle: Middle
+                                             |}
+                                             |
+                                             |type Middle {
+                                             |  id: ID! @unique
+                                             |  nameMiddle: String! @unique
+                                             |  bottom: Bottom
+                                             |}
+                                             |
+                                             |type Bottom {
+                                             |  id: ID! @unique
+                                             |  nameBottom: String! @unique
+                                             |}""".stripMargin }
+    database.setup(project)
+
+    val createMutation =
+      """
+        |mutation  {
+        |  createTop(data: {
+        |    nameTop: "the top",
+        |    middle: {
+        |      create: 
+        |        {
+        |          nameMiddle: "the middle"
+        |          bottom: {
+        |            create: {
+        |              nameBottom: "the bottom"
+        |            }
+        |          }
+        |        }
+        |    }
+        |  }) {id}
+        |}
+      """.stripMargin
+
+    server.executeQuerySimple(createMutation, project)
+
+    val updateMutation =
+      s"""
+         |mutation  {
+         |  updateTop(
+         |    where: {
+         |      nameTop: "the top"
+         |    }
+         |    data: {
+         |      nameTop: "updated top",
+         |      middle: {
+         |        update: {
+         |              nameMiddle: "updated middle"
+         |              bottom: {upsert: {create: {nameBottom: "should not matter"},
+         |                                update: {nameBottom: "updated bottom"}
+         |                       }
+         |              }
+         |      }
+         |     }
+         |   }
+         |  ) {
+         |    nameTop
+         |    middle {
+         |      nameMiddle
+         |      bottom {
+         |        nameBottom
+         |      }
+         |    }
+         |  }
+         |}
+      """.stripMargin
+
+    val result = server.executeQuerySimple(updateMutation, project)
+
+    result.toString should be(
+      """{"data":{"updateTop":{"nameTop":"updated top","middle":{"nameMiddle":"updated middle","bottom":{"nameBottom":"updated bottom"}}}}}""")
+
+    server.executeQuerySimple("query{bottoms{nameBottom}}", project).toString should be("""{"data":{"bottoms":[{"nameBottom":"updated bottom"}]}}""")
+  }
+
+  "a deeply nested mutation" should "execute all levels of the mutation if there are only model edges on the path for create when there are no backrelations" in {
+    val project = SchemaDsl.fromString() { """type Top {
+                                             |  id: ID! @unique
+                                             |  nameTop: String! @unique
+                                             |  middle: Middle
+                                             |}
+                                             |
+                                             |type Middle {
+                                             |  id: ID! @unique
+                                             |  nameMiddle: String! @unique
+                                             |  bottom: Bottom
+                                             |}
+                                             |
+                                             |type Bottom {
+                                             |  id: ID! @unique
+                                             |  nameBottom: String! @unique
+                                             |}""".stripMargin }
+    database.setup(project)
+
+    val createMutation =
+      """
+        |mutation  {
+        |  createTop(data: {
+        |    nameTop: "the top",
+        |    middle: {
+        |      create:{nameMiddle: "the middle"}
+        |    }
+        |  }) {id}
+        |}
+      """.stripMargin
+
+    server.executeQuerySimple(createMutation, project)
+
+    val updateMutation =
+      s"""
+         |mutation  {
+         |  updateTop(
+         |    where: {
+         |      nameTop: "the top"
+         |    }
+         |    data: {
+         |      nameTop: "updated top",
+         |      middle: {
+         |        update: {
+         |              nameMiddle: "updated middle"
+         |              bottom: {upsert: {create: {nameBottom: "created bottom"},
+         |                                update: {nameBottom: "should not matter"}
+         |                       }
+         |              }
+         |      }
+         |     }
+         |   }
+         |  ) {
+         |    nameTop
+         |    middle {
+         |      nameMiddle
+         |      bottom {
+         |        nameBottom
+         |      }
+         |    }
+         |  }
+         |}
+      """.stripMargin
+
+    val result = server.executeQuerySimple(updateMutation, project)
+
+    result.toString should be(
+      """{"data":{"updateTop":{"nameTop":"updated top","middle":{"nameMiddle":"updated middle","bottom":{"nameBottom":"created bottom"}}}}}""")
+
+    server.executeQuerySimple("query{bottoms{nameBottom}}", project).toString should be("""{"data":{"bottoms":[{"nameBottom":"created bottom"}]}}""")
   }
 
 }

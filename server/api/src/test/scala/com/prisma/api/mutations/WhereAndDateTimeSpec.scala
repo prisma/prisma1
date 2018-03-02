@@ -123,7 +123,6 @@ class WhereAndDateTimeSpec extends FlatSpec with Matchers with ApiBaseSpec {
     server.executeQuerySimple(s"""query{todo(where:{innerDateTime:$innerWhere}){innerString}}""",
                               project,
                               dataContains = s"""{"todo":{"innerString":"Changed Inner String"}}""")
-
   }
 
 }

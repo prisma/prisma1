@@ -427,7 +427,7 @@ object OtherGCStuff {
   /**
     * This is used to parse SQL exceptions for references of specific GCValues
     */
-  def parameterStringFromSQLException(where: NodeSelector) = where.fieldValue match {
+  def parameterString(where: NodeSelector) = where.fieldValue match {
     case StringGCValue(x)      => s"parameters ['$x',"
     case IntGCValue(x)         => s"parameters [$x,"
     case FloatGCValue(x)       => s"parameters [$x,"

@@ -29,7 +29,7 @@ class CascadingDeletePathSpec extends FlatSpec with Matchers with ApiBaseSpec {
     database.setup(project)
 
     val parent = project.schema.getModelByName_!("P")
-    val res    = collectPaths(project, NodeSelector.forId(parent, "does not exist"), parent, List(parent))
+    val res    = collectCascadingPaths(project, Path.empty(NodeSelector.forId(parent, "does not exist")))
 
     res.length should be(1)
     res.head.edges should be(List.empty)
@@ -64,7 +64,8 @@ class CascadingDeletePathSpec extends FlatSpec with Matchers with ApiBaseSpec {
     database.setup(project)
 
     val parent = project.schema.getModelByName_!("P")
-    val res    = collectPaths(project, NodeSelector.forId(parent, "does not exist"), parent, List(parent))
+    val res    = collectCascadingPaths(project, Path.empty(NodeSelector.forId(parent, "does not exist")))
+
     res.foreach(x => println(x.pretty))
 
     val res2 = res.map(x => x.pretty).mkString("\n")
@@ -91,7 +92,8 @@ class CascadingDeletePathSpec extends FlatSpec with Matchers with ApiBaseSpec {
     database.setup(project)
 
     val parent = project.schema.getModelByName_!("P")
-    val res    = collectPaths(project, NodeSelector.forId(parent, "does not exist"), parent, List(parent))
+    val res    = collectCascadingPaths(project, Path.empty(NodeSelector.forId(parent, "does not exist")))
+
     res.foreach(x => println(x.pretty))
 
     val res2 = res.map(x => x.pretty).mkString("\n")
@@ -118,7 +120,7 @@ class CascadingDeletePathSpec extends FlatSpec with Matchers with ApiBaseSpec {
     database.setup(project)
 
     val parent = project.schema.getModelByName_!("P")
-    assertThrows[CascadingDeletePathLoops] { collectPaths(project, NodeSelector.forId(parent, "does not exist"), parent, List(parent)) }
+    assertThrows[CascadingDeletePathLoops] { collectCascadingPaths(project, Path.empty(NodeSelector.forId(parent, "does not exist"))) }
   }
 
   "Paths for graphs with  circles" should "detect the circle and error" in {
@@ -144,7 +146,8 @@ class CascadingDeletePathSpec extends FlatSpec with Matchers with ApiBaseSpec {
     database.setup(project)
 
     val parent = project.schema.getModelByName_!("P")
-    assertThrows[CascadingDeletePathLoops] { collectPaths(project, NodeSelector.forId(parent, "does not exist"), parent, List(parent)) }
+    assertThrows[CascadingDeletePathLoops] { collectCascadingPaths(project, Path.empty(NodeSelector.forId(parent, "does not exist"))) }
+
   }
 
   "Self relations that are only marked cascading on one side" should "error because they could loop indefinitely" in {
@@ -159,7 +162,8 @@ class CascadingDeletePathSpec extends FlatSpec with Matchers with ApiBaseSpec {
     database.setup(project)
 
     val parent = project.schema.getModelByName_!("P")
-    assertThrows[CascadingDeletePathLoops] { collectPaths(project, NodeSelector.forId(parent, "does not exist"), parent, List(parent)) }
+    assertThrows[CascadingDeletePathLoops] { collectCascadingPaths(project, Path.empty(NodeSelector.forId(parent, "does not exist"))) }
+
   }
 
   "Self relations that are marked cascading on both sides" should "error because they could loop indefinitely" in {
@@ -174,7 +178,8 @@ class CascadingDeletePathSpec extends FlatSpec with Matchers with ApiBaseSpec {
     database.setup(project)
 
     val parent = project.schema.getModelByName_!("P")
-    assertThrows[CascadingDeletePathLoops] { collectPaths(project, NodeSelector.forId(parent, "does not exist"), parent, List(parent)) }
+    assertThrows[CascadingDeletePathLoops] { collectCascadingPaths(project, Path.empty(NodeSelector.forId(parent, "does not exist"))) }
+
   }
   //endregion
 }

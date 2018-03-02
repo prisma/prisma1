@@ -115,12 +115,14 @@ cd hello-advanced
 now --dotenv .env
 ```
 
+> Note: you may obmit the path to the `.env` file since `now` by default uses a file named `.env`.
+
 </Instruction>
 
-If you deployed your Prisma service locally with Docker, your `.env` file will contain local references for the environment variables `PRISMA_ENDPOINT` and `PRISMA_CLUSTER` (such as `http://localhost:60000/hello-advanced/dev`). In that case you can create another `.env` file (e.g. called `.env.prod`) and make the `PRISMA_ENDPOINT` and `PRISMA_CLUSTER` are set to proper remote URLs (of course that requires that you properly deploy the Prisma service to some public cluster on the web before)  and then refer to that one during deployment:
+If you deployed your Prisma service locally with Docker, your `.env` file will contain local references for the environment variables `PRISMA_ENDPOINT` and `PRISMA_CLUSTER` (such as `http://localhost:60000/hello-advanced/dev`). In that case you can create another `.env` file (e.g. called `.env.prod`) and make sure the `PRISMA_ENDPOINT` and `PRISMA_CLUSTER` are set to proper remote URLs (of course that requires that you properly deploy the Prisma service to some public cluster on the web before)  and then refer to that one during deployment:
 
 ```sh
-now --dotenv .env
+now --dotenv .env.prod
 ```
 
 You can find some documentation about how to handle environment variables and secrets when using `now` [here](https://zeit.co/docs/features/env-and-secrets).

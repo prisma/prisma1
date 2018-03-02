@@ -1,11 +1,9 @@
 package com.prisma.api.mutations.mutations
 
-import akka.actor.ActorSystem
-import akka.stream.ActorMaterializer
 import com.prisma.api.ApiDependencies
 import com.prisma.api.database.DataResolver
 import com.prisma.api.database.Types.DataItemFilterCollection
-import com.prisma.api.database.mutactions.mutactions.{DeleteDataItems, UpdateDataItems}
+import com.prisma.api.database.mutactions.mutactions.UpdateDataItems
 import com.prisma.api.database.mutactions.{MutactionGroup, TransactionMutaction}
 import com.prisma.api.mutations._
 import com.prisma.shared.models.{Model, Project}

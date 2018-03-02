@@ -13,8 +13,10 @@ To use variables inside `prisma.yml`, you need to reference the values enclosed 
 # prisma.yml file
 yamlKeyXYZ: ${src:myVariable} # see list of current variable sources below
 # this is an example of providing a default value as the second parameter
-otherYamlKey: ${src:myVariable, defaultValue}
+otherYamlKey: ${src:myVariable, "someDefaultValue"}
 ```
+
+> **Note**: The quotes around the default value are required.
 
 A _variable source_ can be either of the following three options:
 
@@ -67,13 +69,13 @@ subscriptions:
   sendWelcomeEmail:
     query: database/subscriptions/createUserSubscription.graphql
     webhook:
-      url: ${self.custom.severlessEndpoint}/sendWelcomeEmail
-      headers: ${self.custom.headers}
+      url: ${self:custom.severlessEndpoint}/sendWelcomeEmail
+      headers: ${self:custom.headers}
   createCRMEntry:
     query: ${self:functions.subscriptions.sendWelcomeEmail.query}
     webhook:
-      url: ${self.custom.severlessEndpoint}/createCRMEntry
-      headers: ${self.custom.headers}
+      url: ${self:custom.severlessEndpoint}/createCRMEntry
+      headers: ${self:custom.headers}
 
 custom:
   serverlessEndpoint: 'https://bcdeaxokbj.execute-api.eu-west-1.amazonaws.com/dev'
@@ -89,3 +91,18 @@ When referencing a CLI option, the value that you put into the bracket is compos
 
 - the _prefix_ `opt:`
 - the _name_ of the CLI option
+
+As an example, consider this `prisma.yml` file:
+
+```yml
+service: example
+stage: ${opt:stage}
+secret: secret123
+datamodel: datamodel.graphql
+```
+
+Now, you can pass a `--stage` option when running `prisma deploy`. The CLI will pick the value provided value up and set it as the `stage` in `prisma.yml`.
+
+```sh
+prisma deploy --stage dev
+```
