@@ -339,6 +339,7 @@ case class Field(
     })
   }
 
+  //todo this is dangerous in combination with self relations since it will return the field itself as related field
   def relatedField(schema: Schema): Option[Field] = {
     val fields = relatedModel(schema).get.fields
 
@@ -356,6 +357,19 @@ case class Field(
     }
 
     returnField.orElse(fallback)
+  }
+
+  //this really does return None if there is no opposite field
+  def otherRelationField(schema: Schema): Option[Field] = {
+    val fields = relatedModel(schema).get.fields
+
+    fields.find { field =>
+      field.relation.exists { relation =>
+        val isTheSameField    = field.id == this.id
+        val isTheSameRelation = relation.id == this.relation.get.id
+        isTheSameRelation && !isTheSameField
+      }
+    }
   }
 
   def otherSideIsRequired(project: Project): Boolean = relatedField(project.schema) match {
