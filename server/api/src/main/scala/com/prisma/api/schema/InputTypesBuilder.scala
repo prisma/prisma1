@@ -99,88 +99,106 @@ abstract class UncachedInputTypesBuilder(project: Project) extends InputTypesBui
   }
 
   protected def computeInputObjectTypeForNestedUpdate(model: Model, omitRelation: Relation, isList: Boolean): Option[InputObjectType[Any]] = {
-    val updateDataInput = computeInputObjectTypeForNestedUpdateData(model, omitRelation)
-
-    if (isList) {
-      for {
-        whereArg <- computeInputObjectTypeForWhereUnique(model)
-      } yield {
-        val typeName = omitRelation.getField(project.schema, model) match {
-          case Some(field) => s"${model.name}UpdateWithWhereUniqueWithout${field.name.capitalize}Input"
-          case None        => s"${model.name}UpdateWithWhereUniqueNestedInput"
-        }
-
-        InputObjectType[Any](
-          name = typeName,
-          fieldsFn = () => {
-            List(
-              InputField[Any]("where", whereArg),
-              InputField[Any]("data", updateDataInput)
-            )
+    computeInputObjectTypeForNestedUpdateData(model, omitRelation).flatMap { updateDataInput =>
+      if (isList) {
+        for {
+          whereArg <- computeInputObjectTypeForWhereUnique(model)
+        } yield {
+          val typeName = omitRelation.getField(project.schema, model) match {
+            case Some(field) => s"${model.name}UpdateWithWhereUniqueWithout${field.name.capitalize}Input"
+            case None        => s"${model.name}UpdateWithWhereUniqueNestedInput"
           }
-        )
+
+          InputObjectType[Any](
+            name = typeName,
+            fieldsFn = () => {
+              List(
+                InputField[Any]("where", whereArg),
+                InputField[Any]("data", updateDataInput)
+              )
+            }
+          )
+        }
+      } else {
+        Some(updateDataInput)
       }
-    } else {
-      Some(updateDataInput)
     }
   }
 
-  protected def computeInputObjectTypeForNestedUpdateData(model: Model, omitRelation: Relation): InputObjectType[Any] = {
-    val typeName = omitRelation.getField(project.schema, model) match {
-      case Some(field) => s"${model.name}UpdateWithout${field.name.capitalize}DataInput"
-      case None        => s"${model.name}UpdateDataInput"
-    }
+  protected def computeInputObjectTypeForNestedUpdateData(model: Model, omitRelation: Relation): Option[InputObjectType[Any]] = {
 
-    InputObjectType[Any](
-      name = typeName,
-      fieldsFn = () => {
-        computeScalarInputFieldsForUpdate(model) ++ computeRelationalInputFieldsForUpdate(model, omitRelation = Some(omitRelation))
+    val fields = computeScalarInputFieldsForUpdate(model) ++ computeRelationalInputFieldsForUpdate(model, omitRelation = Some(omitRelation))
+
+    if (fields.nonEmpty) {
+      val typeName = omitRelation.getField(project.schema, model) match {
+        case Some(field) => s"${model.name}UpdateWithout${field.name.capitalize}DataInput"
+        case None        => s"${model.name}UpdateDataInput"
       }
-    )
+
+      Some(
+        InputObjectType[Any](
+          name = typeName,
+          fieldsFn = () => {
+            fields
+          }
+        )
+      )
+    } else {
+      None
+    }
   }
 
   protected def computeInputObjectTypeForNestedUpsert(model: Model, omitRelation: Relation, isList: Boolean): Option[InputObjectType[Any]] = {
-
-    if (isList) {
-      for {
-        whereArg  <- computeInputObjectTypeForWhereUnique(model)
-        createArg <- computeInputObjectTypeForCreate(model, Some(omitRelation))
-      } yield {
-        val typeName = omitRelation.getField(project.schema, model) match {
-          case Some(field) => s"${model.name}UpsertWithWhereUniqueWithout${field.name.capitalize}Input"
-          case None        => s"${model.name}UpsertWithWhereUniqueNestedInput"
-        }
-
-        InputObjectType[Any](
-          name = typeName,
-          fieldsFn = () => {
-            List(
-              InputField[Any]("where", whereArg),
-              InputField[Any]("update", computeInputObjectTypeForNestedUpdateData(model, omitRelation)),
-              InputField[Any]("create", createArg)
-            )
-          }
-        )
+    computeInputObjectTypeForNestedUpdateData(model, omitRelation).flatMap { updateDataInput =>
+      if (isList) {
+        computeInputObjectTypeForNestedUpsertList(model, omitRelation, updateDataInput)
+      } else {
+        computeInputObjectTypeForNestedUpsertNonList(model, omitRelation, updateDataInput)
       }
-    } else {
-      for {
-        createArg <- computeInputObjectTypeForCreate(model, Some(omitRelation))
-      } yield {
-        val typeName = omitRelation.getField(project.schema, model) match {
-          case Some(field) => s"${model.name}UpsertWithout${field.name.capitalize}Input"
-          case None        => s"${model.name}UpsertNestedInput"
-        }
+    }
+  }
 
-        InputObjectType[Any](
-          name = typeName,
-          fieldsFn = () => {
-            List(
-              InputField[Any]("update", computeInputObjectTypeForNestedUpdateData(model, omitRelation)),
-              InputField[Any]("create", createArg)
-            )
-          }
-        )
+  private def computeInputObjectTypeForNestedUpsertNonList(model: Model, omitRelation: Relation, updateDataInput: InputObjectType[Any]) = {
+    for {
+      createArg <- computeInputObjectTypeForCreate(model, Some(omitRelation))
+    } yield {
+      val typeName = omitRelation.getField(project.schema, model) match {
+        case Some(field) => s"${model.name}UpsertWithout${field.name.capitalize}Input"
+        case None        => s"${model.name}UpsertNestedInput"
       }
+
+      InputObjectType[Any](
+        name = typeName,
+        fieldsFn = () => {
+          List(
+            InputField[Any]("update", updateDataInput),
+            InputField[Any]("create", createArg)
+          )
+        }
+      )
+    }
+  }
+
+  private def computeInputObjectTypeForNestedUpsertList(model: Model, omitRelation: Relation, updateDataInput: InputObjectType[Any]) = {
+    for {
+      whereArg  <- computeInputObjectTypeForWhereUnique(model)
+      createArg <- computeInputObjectTypeForCreate(model, Some(omitRelation))
+    } yield {
+      val typeName = omitRelation.getField(project.schema, model) match {
+        case Some(field) => s"${model.name}UpsertWithWhereUniqueWithout${field.name.capitalize}Input"
+        case None        => s"${model.name}UpsertWithWhereUniqueNestedInput"
+      }
+
+      InputObjectType[Any](
+        name = typeName,
+        fieldsFn = () => {
+          List(
+            InputField[Any]("where", whereArg),
+            InputField[Any]("update", updateDataInput),
+            InputField[Any]("create", createArg)
+          )
+        }
+      )
     }
   }
 
