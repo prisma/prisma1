@@ -5,7 +5,7 @@ import com.prisma.api.mutations.NodeSelector
 import com.prisma.api.mutations.mutations.CascadingDeletes.{ModelEdge, NodeEdge, Path}
 import com.prisma.sangria.utils.ErrorWithCode
 import com.prisma.shared.models.{Project, Relation}
-import spray.json.JsValue
+import spray.json.{JsArray, JsNumber, JsObject, JsString, JsValue}
 
 abstract class GeneralError(message: String) extends Exception with MutactionExecutionResult with ErrorWithCode {
   override def getMessage: String = message
@@ -67,7 +67,7 @@ object APIErrors {
       )
 
   case class InvalidToken()
-      extends ClientApiError(s"Your token is invalid. It might have expired or you might be using a token from a different project.", 3015)
+      extends ClientApiError(s" Your token is invalid. It might have expired or you might be using a token from a different project.", 3015)
 
   case class ProjectNotFound(projectId: String) extends ClientApiError(s"Project not found: '$projectId'", 3016)
 
@@ -159,4 +159,9 @@ object APIErrors {
     }
   }
 
+  def errorJson(requestId: String, message: String, errorCode: Int): JsObject = errorJson(requestId, message, Some(errorCode))
+  def errorJson(requestId: String, message: String, errorCode: Option[Int] = None): JsObject = errorCode match {
+    case None       => JsObject("errors" -> JsArray(JsObject("message" -> JsString(message), "requestId" -> JsString(requestId))))
+    case Some(code) => JsObject("errors" -> JsArray(JsObject("message" -> JsString(message), "code"      -> JsNumber(code), "requestId" -> JsString(requestId))))
+  }
 }

@@ -7,26 +7,25 @@ import akka.http.scaladsl.model.headers.RawHeader
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.{ExceptionHandler, Route}
 import akka.stream.ActorMaterializer
-import com.typesafe.scalalogging.LazyLogging
 import com.prisma.akkautil.http.Server
 import com.prisma.akkautil.throttler.Throttler
 import com.prisma.akkautil.throttler.Throttler.ThrottleBufferFullException
 import com.prisma.api.schema.APIErrors.ProjectNotFound
 import com.prisma.api.schema.CommonErrors.ThrottlerBufferFullException
-import com.prisma.api.schema.{SchemaBuilder, UserFacingError}
+import com.prisma.api.schema.{APIErrors, SchemaBuilder, UserFacingError}
 import com.prisma.api.{ApiDependencies, ApiMetrics}
-import cool.graph.cuid.Cuid.createCuid
+import com.prisma.logging.LogDataWrites.logDataWrites
+import com.prisma.logging.{LogData, LogKey}
 import com.prisma.metrics.extensions.TimeResponseDirectiveImpl
 import com.prisma.shared.models.{ProjectId, ProjectWithClientId}
-import com.prisma.logging.{LogData, LogKey}
-import com.prisma.logging.LogDataWrites.logDataWrites
 import com.prisma.util.env.EnvUtils
+import com.typesafe.scalalogging.LazyLogging
+import cool.graph.cuid.Cuid.createCuid
 import play.api.libs.json.Json
 import spray.json._
 
 import scala.concurrent.Future
 import scala.language.postfixOps
-import scala.util.Try
 
 case class ApiServer(
     schemaBuilder: SchemaBuilder,
@@ -218,12 +217,12 @@ case class ApiServer(
 
   def toplevelExceptionHandler(requestId: String) = ExceptionHandler {
     case e: UserFacingError =>
-      complete(OK -> JsObject("code" -> JsNumber(e.code), "requestId" -> JsString(requestId), "error" -> JsString(e.getMessage)))
+      complete(OK -> APIErrors.errorJson(requestId, e.getMessage, e.code))
 
     case e: Throwable =>
       println(e.getMessage)
       e.printStackTrace()
       apiDependencies.reporter.report(e)
-      complete(InternalServerError -> JsObject("errors" -> JsArray(JsObject("requestId" -> JsString(requestId), "message" -> JsString(e.getMessage)))))
+      complete(InternalServerError -> APIErrors.errorJson(requestId, e.getMessage))
   }
 }
