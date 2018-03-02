@@ -60,7 +60,7 @@ subscriptions:
   sendWelcomeEmail:
     query: database/subscriptions/sendWelcomeEmail.graphql
     webhook:
-      url: https://${self.custom:serverlessEndpoint}/sendWelcomeEmail
+      url: https://${self:custom.serverlessEndpoint}/sendWelcomeEmail
       headers:
         Authorization: ${env:MY_ENDPOINT_SECRET}
 
@@ -83,10 +83,35 @@ This service definition expects the following file structure:
 .
 ├── prisma.yml
 ├── database
-│   ├── subscriptions
-│   │   └── welcomeEmail.graphql
-│   ├── types.graphql
-│   └── enums.graphql
+│   ├── subscriptions
+│   │   └── welcomeEmail.graphql
+│   ├── types.graphql
+│   └── enums.graphql
 └── schemas
-    └── prisma.graphql
+    └── prisma.graphql
 ```
+
+## Tooling integrations
+
+### Get autocompletion and validation while configuring `prisma.yml`
+
+If you wish to have autocompletion while configuring your `prisma.yml` configuration file, as well as static errors checking before deploying your service, a [JSON Schema](https://github.com/graphcool/prisma-json-schema) is available to provide this kind of experience.
+**For now though, it is only available for [VSCode](https://code.visualstudio.com/).**
+
+
+**Step 1.**
+
+Download and install [vs-code-yaml by redhat](https://github.com/redhat-developer/vscode-yaml) plugin.
+
+**Step 2.**
+
+Add the following to the [user and workspace settings](https://code.visualstudio.com/docs/getstarted/settings#_creating-user-and-workspace-settings):
+
+```
+"yaml.schemas": {
+  "http://json.schemastore.org/prisma": "prisma.yml"
+}
+```
+**Step 3.**
+
+Trigger the intellisense using your usual hotkey (*Ctrl + Space* by default) on your `prisma.yml` file. It should now display all the available fields, along with their descriptions. If any errors are made, VSCode will instantly catch them.

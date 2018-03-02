@@ -44,7 +44,6 @@ case class Create(
     val subscriptionMutactions = SubscriptionEvents.extractFromSqlMutactions(project, mutationId, createMutactionsResult)
     val sssActions             = ServerSideSubscription.extractFromMutactions(project, createMutactionsResult, requestId)
     val asyncMutactions        = sssActions.toList ++ subscriptionMutactions
-    ApiMetrics.subscriptionEventCounter.incBy(asyncMutactions.size, project.id)
 
     Future.successful {
       List(

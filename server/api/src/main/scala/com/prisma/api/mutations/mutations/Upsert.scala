@@ -4,6 +4,7 @@ import com.prisma.api.ApiDependencies
 import com.prisma.api.database.DataResolver
 import com.prisma.api.database.mutactions.{MutactionGroup, TransactionMutaction}
 import com.prisma.api.mutations._
+import com.prisma.api.mutations.mutations.CascadingDeletes.Path
 import com.prisma.shared.models.{Model, Project}
 import cool.graph.cuid.Cuid
 import sangria.schema
@@ -31,9 +32,11 @@ case class Upsert(
     case None    => outerWhere
   }
 
+  val path = Path.empty(outerWhere)
+
   override def prepareMutactions(): Future[List[MutactionGroup]] = {
 
-    val sqlMutactions        = SqlMutactions(dataResolver).getMutactionsForUpsert(outerWhere, createWhere, updatedWhere, CoolArgs(args.raw)).toList
+    val sqlMutactions        = SqlMutactions(dataResolver).getMutactionsForUpsert(path, createWhere, updatedWhere, CoolArgs(args.raw)).toList
     val transactionMutaction = TransactionMutaction(sqlMutactions, dataResolver)
 //    val subscriptionMutactions = SubscriptionEvents.extractFromSqlMutactions(project, mutationId, sqlMutactions).toList
 //    val sssActions             = ServerSideSubscription.extractFromMutactions(project, sqlMutactions, requestId = "").toList

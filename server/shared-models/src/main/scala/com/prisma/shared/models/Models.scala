@@ -188,6 +188,7 @@ case class Model(
 ) {
   def id = name
 
+  lazy val uniqueFields: List[Field]          = fields.filter(f => f.isUnique && f.isVisible)
   lazy val scalarFields: List[Field]          = fields.filter(_.isScalar)
   lazy val scalarListFields: List[Field]      = scalarFields.filter(_.isList)
   lazy val scalarNonListFields: List[Field]   = scalarFields.filter(!_.isList)
@@ -325,6 +326,7 @@ case class Field(
         case x                    => ??? //throw SystemErrors.InvalidStateException(message = s" relationSide was $x")
       }
     })
+
   }
 
   def model(schema: Schema): Option[Model] = {
@@ -354,6 +356,12 @@ case class Field(
     }
 
     returnField.orElse(fallback)
+  }
+
+  def otherSideIsRequired(project: Project): Boolean = relatedField(project.schema) match {
+    case Some(f) if f.isRequired => true
+    case Some(_)                 => false
+    case None                    => false
   }
 }
 

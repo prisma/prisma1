@@ -491,7 +491,14 @@ class CascadingDeleteSpec extends FlatSpec with Matchers with ApiBaseSpec {
 
   //region  NESTED DELETE
 
-  "NESTING P1!-C1! relation deleting the parent" should "work if parent is marked cascading but error on returning previous values" in {
+  "NESTING P1!-C1! relation deleting the parent" should "work if parent is marked cascading but error on returning previous values" ignore {
+
+    /* This is a case where the cascading delete starts at a point determined by a path and not by a unique where. The path created by the cascade directives
+       is appended to this path. If the second part intersects the first part we have a problem. Since the longest parts of the path are deleted first for the
+       cascading deletes actions, we cut the first part of the path at the intersection and therefore subsequent deletes will fail. At the moment we do not
+       generate cascading edges for relations already on the path even if they are marked cascading. This results in required relation errors even if stuff is
+       technically covered by cascade directives.*/
+
     //         P-C
     val project = SchemaDsl() { schema =>
       val parent = schema.model("P").field_!("p", _.String, isUnique = true)
@@ -504,7 +511,7 @@ class CascadingDeleteSpec extends FlatSpec with Matchers with ApiBaseSpec {
     server.executeQuerySimple("""mutation{createP(data:{p:"p", c: {create:{c: "c"}}}){p, c {c}}}""", project)
     server.executeQuerySimple("""mutation{createP(data:{p:"p2", c: {create:{c: "c2"}}}){p, c {c}}}""", project)
 
-    server.executeQuerySimpleThatMustFail("""mutation{updateC(where: {c:"c"} data: {p: {delete:{p:"P"}}}){id}}""",
+    server.executeQuerySimpleThatMustFail("""mutation{updateC(where: {c:"c"} data: {p: {delete: true}}){id}}""",
                                           project,
                                           errorCode = 3039,
                                           errorContains = "No Node for the model")
@@ -528,7 +535,7 @@ class CascadingDeleteSpec extends FlatSpec with Matchers with ApiBaseSpec {
     server.executeQuerySimple("""mutation{createP(data:{p:"p", c: {create:{c: "c", gc :{create:{gc: "gc"}}}}}){p, c {c, gc{gc}}}}""", project)
     server.executeQuerySimple("""mutation{createP(data:{p:"p2", c: {create:{c: "c2", gc :{create:{gc: "gc2"}}}}}){p, c {c,gc{gc}}}}""", project)
 
-    server.executeQuerySimple("""mutation{updateP(where: {p:"p"}, data: { c: {delete:{c:"c"}}}){id}}""", project)
+    server.executeQuerySimple("""mutation{updateP(where: {p:"p"}, data: { c: {delete: true}}){id}}""", project)
 
     server.executeQuerySimple("""query{ps{p, c {c, gc{gc}}}}""", project).toString should be(
       """{"data":{"ps":[{"p":"p","c":null},{"p":"p2","c":{"c":"c2","gc":{"gc":"gc2"}}}]}}""")
@@ -556,7 +563,7 @@ class CascadingDeleteSpec extends FlatSpec with Matchers with ApiBaseSpec {
     server.executeQuerySimple("""mutation{createP(data:{p:"p2", c: {create:{c: "c2", gc :{create:{gc: "gc2"}}}}}){p, c {c,gc{gc}}}}""", project)
 
     server.executeQuerySimpleThatMustFail(
-      """mutation{updateP(where: {p:"p"}, data: { c: {delete:{c:"c"}}}){id}}""",
+      """mutation{updateP(where: {p:"p"}, data: { c: {delete: true}}){id}}""",
       project,
       errorCode = 3042,
       errorContains = "The change you are trying to make would violate the required relation '_CToP' between C and P"

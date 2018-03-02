@@ -13,7 +13,7 @@ import com.prisma.utils.await.AwaitUtils
 import org.scalatest.{FlatSpec, Matchers}
 import pdi.jwt.{Jwt, JwtAlgorithm}
 import sangria.schema.{ObjectType, Schema, SchemaValidationRule}
-import spray.json.JsObject
+import spray.json.{JsObject, JsString}
 
 import scala.concurrent.Future
 
@@ -34,7 +34,8 @@ class RequestHandlerSpec extends FlatSpec with Matchers with ApiBaseSpec with Aw
 
   val projectWithSecret = TestProject().copy(secrets = Vector("secret"))
 
-  def request(authHeader: String) = RawRequest(id = "req-id", json = JsObject(), ip = "0.0.0.0", sourceHeader = null, authorizationHeader = Some(authHeader))
+  def request(authHeader: String) =
+    RawRequest(id = "req-id", json = JsObject("query" -> JsString("{users}")), ip = "0.0.0.0", sourceHeader = null, authorizationHeader = Some(authHeader))
 
   def handler(project: Project) = {
     RequestHandler(

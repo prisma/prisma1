@@ -1,6 +1,6 @@
 package com.prisma.api.database.mutactions.mutactions
 
-import com.prisma.api.ApiDependencies
+import com.prisma.api.{ApiDependencies, ApiMetrics}
 import com.prisma.api.database.DataItem
 import com.prisma.api.database.mutactions.{ClientSqlMutaction, Mutaction, MutactionExecutionResult, MutactionExecutionSuccess}
 import com.prisma.subscriptions.schema.QueryTransformer
@@ -25,9 +25,11 @@ object ServerSideSubscription {
     val updateMutactions = mutactions.collect { case x: UpdateDataItem => x }
     val deleteMutactions = mutactions.collect { case x: DeleteDataItem => x }
 
-    extractFromCreateMutactions(project, createMutactions, requestId) ++
+    val result = extractFromCreateMutactions(project, createMutactions, requestId) ++
       extractFromUpdateMutactions(project, updateMutactions, requestId) ++
       extractFromDeleteMutactions(project, deleteMutactions, requestId)
+    ApiMetrics.subscriptionEventCounter.incBy(result.size, project.id)
+    result
   }
 
   def extractFromCreateMutactions(
@@ -80,11 +82,11 @@ object ServerSideSubscription {
   )(implicit apiDependencies: ApiDependencies): Seq[ServerSideSubscription] = {
     for {
       mutaction <- mutactions
-      sssFn     <- serverSideSubscriptionFunctionsFor(project, mutaction.where.model, ModelMutationType.Deleted)
+      sssFn     <- serverSideSubscriptionFunctionsFor(project, mutaction.path.root.model, ModelMutationType.Deleted)
     } yield {
       ServerSideSubscription(
         project,
-        mutaction.where.model,
+        mutaction.path.root.model,
         ModelMutationType.Deleted,
         sssFn,
         nodeId = mutaction.id,

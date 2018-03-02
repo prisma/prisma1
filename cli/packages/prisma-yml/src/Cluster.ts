@@ -30,7 +30,12 @@ export class Cluster {
   ) {
     this.out = out
     this.name = name
-    this.baseUrl = baseUrl
+
+    // All `baseUrl` extension points in this class
+    // adds a trailing slash. Here we remove it from
+    // the passed `baseUrl` in order to avoid double
+    // slashes.
+    this.baseUrl = baseUrl.replace(/\/$/, "")
     this.clusterSecret = clusterSecret
     this.local = local
     this.shared = shared
@@ -74,7 +79,7 @@ export class Cluster {
 
       try {
         this.cachedToken = jwt.sign({ grants }, this.clusterSecret, {
-          expiresIn: '10 minutes',
+          expiresIn: '5y',
           algorithm: 'RS256',
         })
       } catch (e) {

@@ -6,7 +6,8 @@ import com.prisma.api.database.mutactions.GetFieldFromSQLUniqueException._
 import com.prisma.api.database.mutactions.validation.InputValueValidation
 import com.prisma.api.database.mutactions.{ClientSqlDataChangeMutaction, ClientSqlStatementResult, MutactionVerificationSuccess}
 import com.prisma.api.database.{DataResolver, DatabaseMutationBuilder}
-import com.prisma.api.mutations.{CoolArgs, NodeSelector, ParentInfo}
+import com.prisma.api.mutations.mutations.CascadingDeletes.Path
+import com.prisma.api.mutations.{CoolArgs, NodeSelector}
 import com.prisma.api.schema.APIErrors
 import com.prisma.api.schema.APIErrors.RequiredRelationWouldBeViolated
 import com.prisma.shared.models.Project
@@ -17,8 +18,7 @@ import scala.concurrent.Future
 import scala.util.{Success, Try}
 
 case class UpsertDataItemIfInRelationWith(project: Project,
-                                          parentInfo: ParentInfo,
-                                          where: NodeSelector,
+                                          path: Path,
                                           createWhere: NodeSelector,
                                           createArgs: CoolArgs,
                                           updateArgs: CoolArgs,
@@ -26,16 +26,17 @@ case class UpsertDataItemIfInRelationWith(project: Project,
                                           updateMutations: Vector[DBIOAction[Any, NoStream, Effect]])
     extends ClientSqlDataChangeMutaction {
 
-  val model            = where.model
+  val model            = path.lastModel
   val actualCreateArgs = CoolArgs(createArgs.raw).generateNonListCreateArgs(model, createWhere.fieldValueAsString)
   val actualUpdateArgs = updateArgs.nonListScalarArguments(model)
+  val createPath       = path.lastEdgeToNodeEdge(createWhere)
 
-  val createCheck: NestedCreateRelationMutaction = NestedCreateRelationMutaction(project, parentInfo, createWhere, false)
+  val createCheck: NestedCreateRelationMutaction = NestedCreateRelationMutaction(project, createPath, false)
 
   override def execute: Future[ClientSqlStatementResult[Any]] = Future.successful {
     ClientSqlStatementResult(
       DatabaseMutationBuilder
-        .upsertIfInRelationWith(project, parentInfo, where, createWhere, actualCreateArgs, actualUpdateArgs, createMutations, updateMutations, createCheck))
+        .upsertIfInRelationWith(project, path, createWhere, actualCreateArgs, actualUpdateArgs, createMutations, updateMutations, createCheck))
   }
 
   override def handleErrors = {
@@ -44,10 +45,10 @@ case class UpsertDataItemIfInRelationWith(project: Project,
       // https://dev.mysql.com/doc/refman/5.5/en/error-messages-server.html#error_er_dup_entry
       case e: SQLIntegrityConstraintViolationException if e.getErrorCode == 1062 && getFieldOption(List(createArgs, updateArgs), e).isDefined =>
         APIErrors.UniqueConstraintViolation(model.name, getFieldOption(List(createArgs, updateArgs), e).get)
-      case e: SQLIntegrityConstraintViolationException if e.getErrorCode == 1452 => APIErrors.NodeDoesNotExist(where.fieldValueAsString)
+      case e: SQLIntegrityConstraintViolationException if e.getErrorCode == 1452 => APIErrors.NodeDoesNotExist("") //todo
       case e: SQLIntegrityConstraintViolationException if e.getErrorCode == 1048 => APIErrors.FieldCannotBeNull()
-      case e: SQLException if e.getErrorCode == 1242 && createCheck.causedByThisMutaction(parentInfo, e.getCause.toString) =>
-        throw RequiredRelationWouldBeViolated(project, parentInfo.relation)
+      case e: SQLException if e.getErrorCode == 1242 && createCheck.causedByThisMutaction(createPath, e.getCause.toString) =>
+        throw RequiredRelationWouldBeViolated(project, path.lastRelation_!)
     })
   }
   override def verify(resolver: DataResolver): Future[Try[MutactionVerificationSuccess]] = {

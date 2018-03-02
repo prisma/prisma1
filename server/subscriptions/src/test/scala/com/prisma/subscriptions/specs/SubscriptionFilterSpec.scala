@@ -1,7 +1,8 @@
 package com.prisma.subscriptions.specs
 
-import com.prisma.api.database.mutactions.mutactions.{AddDataItemToManyRelationByUniqueField, CreateDataItem}
-import com.prisma.api.mutations.{CoolArgs, NodeSelector, ParentInfo}
+import com.prisma.api.database.mutactions.mutactions.{AddDataItemToManyRelationByPath, CreateDataItem}
+import com.prisma.api.mutations.mutations.CascadingDeletes.Path
+import com.prisma.api.mutations.{CoolArgs, NodeSelector}
 import com.prisma.messagebus.pubsub.Only
 import com.prisma.shared.models.{Enum, Model, Project}
 import com.prisma.shared.schema_dsl.SchemaDsl
@@ -30,18 +31,18 @@ class SubscriptionFilterSpec extends FlatSpec with Matchers with SpecBase with A
     TestData.createTodo("test-node-id", "some todo", JsString("[1,2,{\"a\":\"b\"}]"), None, project, model, testDatabase)
     TestData.createTodo("important-test-node-id", "important!", JsString("[1,2,{\"a\":\"b\"}]"), None, project, model, testDatabase)
 
+    val path = Path.empty(NodeSelector.forId(project.schema.getModelByName_!("Comment"), "comment-id"))
+
     testDatabase.runDbActionOnClientDb {
       CreateDataItem(
         project = project,
-        where = NodeSelector.forId(project.schema.getModelByName_!("Comment"), "comment-id"),
+        path = path,
         args = CoolArgs(Map("text" -> "some comment", "id" -> "comment-id"))
       ).execute.await.sqlAction
     }
 
-    val parentInfo = ParentInfo(model.getFieldByName_!("comments"), NodeSelector.forId(model, "test-node-id"))
-
-    val where = NodeSelector.forId(model, "comment-id")
-    testDatabase.runDbActionOnClientDb { AddDataItemToManyRelationByUniqueField(project, parentInfo, where).execute.await.sqlAction }
+    val extendedPath = path.appendEdge(project, model.getFieldByName_!("comments")).lastEdgeToNodeEdge(NodeSelector.forId(model, "comment-id"))
+    testDatabase.runDbActionOnClientDb { AddDataItemToManyRelationByPath(project, extendedPath).execute.await.sqlAction }
   }
 
   "The Filter" should "support enums in previous values" in {

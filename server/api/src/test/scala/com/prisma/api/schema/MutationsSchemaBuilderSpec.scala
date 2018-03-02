@@ -130,13 +130,13 @@ class MutationsSchemaBuilderSpec extends FlatSpec with Matchers with ApiBaseSpec
                                      "todoUnique: String"
                                    ))
 
-    schema should containInputType("TodoUpdateNestedInput",
+    schema should containInputType("TodoUpdateWithWhereUniqueNestedInput",
                                    fields = Vector(
                                      "where: TodoWhereUniqueInput!",
                                      "data: TodoUpdateDataInput!"
                                    ))
 
-    schema should containInputType("TodoUpsertNestedInput",
+    schema should containInputType("TodoUpsertWithWhereUniqueNestedInput",
                                    fields = Vector(
                                      "where: TodoWhereUniqueInput!",
                                      "update: TodoUpdateDataInput!",
@@ -201,8 +201,8 @@ class MutationsSchemaBuilderSpec extends FlatSpec with Matchers with ApiBaseSpec
         "connect: [CommentWhereUniqueInput!]",
         "disconnect: [CommentWhereUniqueInput!]",
         "delete: [CommentWhereUniqueInput!]",
-        "update: [CommentUpdateWithoutTodoInput!]",
-        "upsert: [CommentUpsertWithoutTodoInput!]"
+        "update: [CommentUpdateWithWhereUniqueWithoutTodoInput!]",
+        "upsert: [CommentUpsertWithWhereUniqueWithoutTodoInput!]"
       )
     )
 
@@ -211,7 +211,7 @@ class MutationsSchemaBuilderSpec extends FlatSpec with Matchers with ApiBaseSpec
                                      "text: String!"
                                    ))
 
-    schema should containInputType("CommentUpdateWithoutTodoInput",
+    schema should containInputType("CommentUpdateWithWhereUniqueWithoutTodoInput",
                                    fields = Vector(
                                      "where: CommentWhereUniqueInput!",
                                      "data: CommentUpdateWithoutTodoDataInput!"
@@ -223,7 +223,7 @@ class MutationsSchemaBuilderSpec extends FlatSpec with Matchers with ApiBaseSpec
                                    ))
 
     schema should containInputType(
-      "CommentUpsertWithoutTodoInput",
+      "CommentUpsertWithWhereUniqueWithoutTodoInput",
       fields = Vector(
         "where: CommentWhereUniqueInput!",
         "update: CommentUpdateWithoutTodoDataInput!",
@@ -243,10 +243,9 @@ class MutationsSchemaBuilderSpec extends FlatSpec with Matchers with ApiBaseSpec
       fields = Vector(
         "create: TodoCreateWithoutCommentsInput",
         "connect: TodoWhereUniqueInput",
-        "disconnect: TodoWhereUniqueInput",
-        "delete: TodoWhereUniqueInput",
-        "update: TodoUpdateWithoutCommentsInput",
-        "upsert: TodoUpsertWithoutCommentsInput"
+        "disconnect: Boolean",
+        "delete: Boolean",
+        "update: TodoUpdateWithoutCommentsDataInput"
       )
     )
 
@@ -256,26 +255,11 @@ class MutationsSchemaBuilderSpec extends FlatSpec with Matchers with ApiBaseSpec
                                      "tag: String"
                                    ))
 
-    schema should containInputType("TodoUpdateWithoutCommentsInput",
-                                   fields = Vector(
-                                     "where: TodoWhereUniqueInput!",
-                                     "data: TodoUpdateWithoutCommentsDataInput!"
-                                   ))
-
     schema should containInputType("TodoUpdateWithoutCommentsDataInput",
                                    fields = Vector(
                                      "title: String",
                                      "tag: String"
                                    ))
-
-    schema should containInputType(
-      "TodoUpsertWithoutCommentsInput",
-      fields = Vector(
-        "where: TodoWhereUniqueInput!",
-        "update: TodoUpdateWithoutCommentsDataInput!",
-        "create: TodoCreateWithoutCommentsInput!"
-      )
-    )
   }
 
   "the update and upsert Mutation for a model with omitted back relation" should "be generated correctly" in {
@@ -294,8 +278,8 @@ class MutationsSchemaBuilderSpec extends FlatSpec with Matchers with ApiBaseSpec
         "connect: [CommentWhereUniqueInput!]",
         "disconnect: [CommentWhereUniqueInput!]",
         "delete: [CommentWhereUniqueInput!]",
-        "update: [CommentUpdateNestedInput!]",
-        "upsert: [CommentUpsertNestedInput!]"
+        "update: [CommentUpdateWithWhereUniqueNestedInput!]",
+        "upsert: [CommentUpsertWithWhereUniqueNestedInput!]"
       )
     )
   }
@@ -341,7 +325,6 @@ class MutationsSchemaBuilderSpec extends FlatSpec with Matchers with ApiBaseSpec
                                      "unique: Int"
                                    ))
   }
-
   "the delete many Mutation for a model" should "be generated correctly" in {
     val project = SchemaDsl() { schema =>
       schema

@@ -1,12 +1,11 @@
 package com.prisma.api.database.mutactions.mutactions
 
-import com.prisma.api.mutations.{NodeSelector, ParentInfo}
+import com.prisma.api.mutations.mutations.CascadingDeletes.Path
 import com.prisma.shared.models.Project
 import slick.dbio.{Effect, NoStream}
 import slick.sql.{SqlAction, SqlStreamingAction}
 
-case class NestedCreateRelationMutaction(project: Project, parentInfo: ParentInfo, where: NodeSelector, topIsCreate: Boolean)
-    extends NestedRelationMutactionBaseClass {
+case class NestedCreateRelationMutaction(project: Project, path: Path, topIsCreate: Boolean) extends NestedRelationMutactionBaseClass {
 
   override def requiredCheck: List[SqlStreamingAction[Vector[Int], Int, Effect]] = topIsCreate match {
     case false =>

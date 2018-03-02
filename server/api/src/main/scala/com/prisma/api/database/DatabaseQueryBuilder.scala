@@ -1,9 +1,11 @@
 package com.prisma.api.database
 
+import com.prisma.api.database.DatabaseMutationBuilder.idFromWhereEquals
 import com.prisma.api.database.Types.DataItemFilterCollection
-import com.prisma.api.mutations.{NodeSelector, ParentInfo}
-import com.prisma.shared.models.IdType.Id
-import com.prisma.shared.models.{Field, Model, Project, Relation}
+import com.prisma.api.mutations.NodeSelector
+import com.prisma.api.mutations.mutations.CascadingDeletes
+import com.prisma.api.mutations.mutations.CascadingDeletes.{ModelEdge, NodeEdge, Path}
+import com.prisma.shared.models.{Field, Model, Project}
 import slick.dbio.DBIOAction
 import slick.dbio.Effect.Read
 import slick.jdbc.MySQLProfile.api._
@@ -148,17 +150,15 @@ object DatabaseQueryBuilder {
           )"""
   }
 
-  def existsNodeIsInRelationshipWith(project: Project, parentInfo: ParentInfo, where: NodeSelector) = {
-    val relationSide         = parentInfo.field.oppositeRelationSide.get
-    val oppositeRelationSide = parentInfo.field.relationSide.get
+  def existsNodeIsInRelationshipWith(project: Project, path: Path) = {
+    def nodeSelector(last: CascadingDeletes.Edge) = last match {
+      case edge: NodeEdge => sql" `id`" ++ idFromWhereEquals(project.id, edge.childWhere) ++ sql" AND "
+      case _: ModelEdge   => sql""
+    }
+
     sql"""select EXISTS (
-            select `id`from `#${project.id}`.`#${where.model.name}`
-            where  `#${where.field.name}` = ${where.fieldValue} and `id` IN (
-             select `#$relationSide`
-             from `#${project.id}`.`#${parentInfo.relation.id}`
-             where `#$oppositeRelationSide` = (select `id` from `#${project.id}`.`#${parentInfo.model.name}` where `#${parentInfo.where.field.name}` = ${parentInfo.where.fieldValue})
-           )
-          )"""
+            select `id`from `#${project.id}`.`#${path.lastModel.name}`
+            where""" ++ nodeSelector(path.lastEdge_!) ++ sql""" `id` IN""" ++ DatabaseMutationBuilder.pathQueryThatUsesWholePath(project.id, path) ++ sql")"
   }
 
   def existsByModelAndId(projectId: String, modelName: String, id: String) = {
@@ -179,6 +179,10 @@ object DatabaseQueryBuilder {
 
   def existsByWhere(projectId: String, where: NodeSelector) = {
     sql"select exists (select `id` from `#$projectId`.`#${where.model.name}` where  #${where.field.name} = ${where.fieldValue})"
+  }
+
+  def existsByPath(projectId: String, path: Path) = {
+    sql"select exists" ++ DatabaseMutationBuilder.pathQueryForLastChild(projectId, path)
   }
 
   def selectFromScalarList(projectId: String, modelName: String, fieldName: String, nodeIds: Vector[String]): SQLActionBuilder = {

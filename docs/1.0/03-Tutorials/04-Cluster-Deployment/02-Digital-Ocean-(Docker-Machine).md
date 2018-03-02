@@ -112,7 +112,7 @@ services:
       - db-persistence:/var/lib/mysql
 
   prisma:
-    image: prismagraphql/prisma:1.0.0-beta4.2
+    image: prismagraphql/prisma:1.0
     restart: always
     ports:
       - "0.0.0.0:${PORT}:${PORT}"

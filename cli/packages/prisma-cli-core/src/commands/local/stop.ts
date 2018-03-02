@@ -16,7 +16,7 @@ export default class Stop extends Command {
   }
   async run() {
     const docker = new Docker(this.out, this.config, this.env, this.flags.name)
-    this.out.action.start('Booting local development cluster')
+    this.out.action.start('Shutting down local development cluster')
     const before = Date.now()
     await docker.stop()
     this.out.action.stop(prettyTime(Date.now() - before))

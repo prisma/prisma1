@@ -2,6 +2,7 @@ package com.prisma.subscriptions.protocol
 
 import akka.actor.{Actor, ActorRef, Stash}
 import com.prisma.akkautil.{LogUnhandled, LogUnhandledExceptions}
+import com.prisma.api.ApiMetrics
 import com.prisma.auth.AuthImpl
 import com.prisma.messagebus.PubSubPublisher
 import com.prisma.messagebus.pubsub.Only
@@ -114,6 +115,7 @@ case class SubscriptionSessionActor(
       publishToResponseQueue(GqlError(subscriptionId, "Schema changed"))
 
     case SubscriptionEvent(subscriptionId, payload) =>
+      ApiMetrics.subscriptionEventCounter.inc(projectId)
       val response = GqlData(subscriptionId, payload)
       publishToResponseQueue(response)
   }

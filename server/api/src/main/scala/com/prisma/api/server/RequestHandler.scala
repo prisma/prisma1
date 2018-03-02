@@ -13,8 +13,9 @@ import com.prisma.auth.Auth
 import com.prisma.client.server.GraphQlRequestHandler
 import com.prisma.shared.models.{Project, ProjectWithClientId}
 import com.prisma.utils.`try`.TryExtensions._
+import io.netty.channel.unix.Errors
 import sangria.schema.Schema
-import spray.json.{JsObject, JsString, JsValue}
+import spray.json.{JsArray, JsNumber, JsObject, JsString, JsValue}
 
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.Failure
@@ -49,7 +50,7 @@ case class RequestHandler(
         result         <- handleGraphQlRequest(graphQlRequest)
       } yield result
     }.recoverWith {
-      case e: InvalidGraphQlRequest => Future.successful(OK -> JsObject("error" -> JsString(e.underlying.getMessage)))
+      case e: InvalidGraphQlRequest => Future.successful(OK -> APIErrors.errorJson(rawRequest.id, e.underlying.getMessage))
     }
   }
 
@@ -103,4 +104,5 @@ case class RequestHandler(
       case Some(schema) => schema
     }
   }
+
 }
