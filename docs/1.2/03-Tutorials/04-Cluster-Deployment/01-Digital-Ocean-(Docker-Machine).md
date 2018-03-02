@@ -1,3 +1,4 @@
+
 ---
 alias: texoo9aemu
 description: Learn how to deploy your Prisma database service to Digital Ocean using Docker Machine.
@@ -148,7 +149,7 @@ services:
       - db-persistence:/var/lib/mysql
 
   prisma-database:
-    image: prismagraphql/prisma:1.0
+    image: prismagraphql/prisma:1.2
     restart: always
     ports:
       - "0.0.0.0:${PORT}:${PORT}"
