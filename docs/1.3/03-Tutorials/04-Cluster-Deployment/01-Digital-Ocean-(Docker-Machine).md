@@ -477,7 +477,7 @@ clusters:
 
 That's it - from now on all deploys to the cluster will be authenticated using the `clusterSecret`.
 
-<!-- 
+<!--
 ## Enable Cluster Security
 
 By default, anyone can connect to the new cluster using the Prisma CLI and deploy services. To lock down access, you need to configure a public/private keypair.

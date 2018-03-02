@@ -60,7 +60,7 @@ subscriptions:
   sendWelcomeEmail:
     query: database/subscriptions/sendWelcomeEmail.graphql
     webhook:
-      url: https://${self.custom:serverlessEndpoint}/sendWelcomeEmail
+      url: https://${self:custom.serverlessEndpoint}/sendWelcomeEmail
       headers:
         Authorization: ${env:MY_ENDPOINT_SECRET}
 
