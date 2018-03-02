@@ -49,7 +49,6 @@ case class Update(
         val subscriptionMutactions = SubscriptionEvents.extractFromSqlMutactions(project, mutationId, sqlMutactions).toList
         val sssActions             = ServerSideSubscription.extractFromMutactions(project, sqlMutactions, requestId = "").toList
         val asyncMutactions        = sssActions ++ subscriptionMutactions
-        ApiMetrics.subscriptionEventCounter.incBy(asyncMutactions.size, project.id)
 
         List(
           MutactionGroup(mutactions = List(transactionMutaction), async = false),
