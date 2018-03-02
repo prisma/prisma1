@@ -80,11 +80,11 @@ object ServerSideSubscription {
   )(implicit apiDependencies: ApiDependencies): Seq[ServerSideSubscription] = {
     for {
       mutaction <- mutactions
-      sssFn     <- serverSideSubscriptionFunctionsFor(project, mutaction.where.model, ModelMutationType.Deleted)
+      sssFn     <- serverSideSubscriptionFunctionsFor(project, mutaction.path.root.model, ModelMutationType.Deleted)
     } yield {
       ServerSideSubscription(
         project,
-        mutaction.where.model,
+        mutaction.path.root.model,
         ModelMutationType.Deleted,
         sssFn,
         nodeId = mutaction.id,

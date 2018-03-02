@@ -7,7 +7,7 @@ import com.prisma.api.database.mutactions.{ClientSqlDataChangeMutaction, ClientS
 import com.prisma.api.mutations.NodeSelector
 import com.prisma.api.schema.APIErrors
 import com.prisma.shared.models.Project
-import com.prisma.util.gc_value.OtherGCStuff.parameterStringFromSQLException
+import com.prisma.util.gc_value.OtherGCStuff.parameterString
 
 import scala.concurrent.Future
 
@@ -23,6 +23,6 @@ case class VerifyWhere(project: Project, where: NodeSelector) extends ClientSqlD
 
   def causedByThisMutaction(cause: String) = {
     val modelString = s"`${where.model.name}` WHEREFAILURETRIGGER WHERE `${where.field.name}`"
-    cause.contains(modelString) && cause.contains(parameterStringFromSQLException(where))
+    cause.contains(modelString) && cause.contains(parameterString(where))
   }
 }

@@ -2,12 +2,13 @@ package com.prisma.api.mutations.mutations
 
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
-import com.prisma.api.{ApiDependencies, ApiMetrics}
 import com.prisma.api.database.mutactions.mutactions.ServerSideSubscription
-import com.prisma.api.database.mutactions.{ClientSqlMutaction, MutactionGroup, TransactionMutaction}
+import com.prisma.api.database.mutactions.{MutactionGroup, TransactionMutaction}
 import com.prisma.api.database.{DataItem, DataResolver}
 import com.prisma.api.mutations._
+import com.prisma.api.mutations.mutations.CascadingDeletes.Path
 import com.prisma.api.schema.APIErrors
+import com.prisma.api.{ApiDependencies, ApiMetrics}
 import com.prisma.shared.models.{Model, Project}
 import sangria.schema
 
@@ -43,7 +44,7 @@ case class Update(
         val validatedDataItem = dataItem // todo: use GC Values
         // = dataItem.copy(userData = GraphcoolDataTypes.fromSql(dataItem.userData, model.fields))
 
-        val sqlMutactions          = SqlMutactions(dataResolver).getMutactionsForUpdate(where, coolArgs, dataItem.id, validatedDataItem).toList
+        val sqlMutactions          = SqlMutactions(dataResolver).getMutactionsForUpdate(Path.empty(where), coolArgs, dataItem.id, validatedDataItem).toList
         val transactionMutaction   = TransactionMutaction(sqlMutactions, dataResolver)
         val subscriptionMutactions = SubscriptionEvents.extractFromSqlMutactions(project, mutationId, sqlMutactions).toList
         val sssActions             = ServerSideSubscription.extractFromMutactions(project, sqlMutactions, requestId = "").toList

@@ -8,7 +8,7 @@ import com.prisma.util.gc_value.{GCAnyConverter, GCValueExtractor}
 import scala.collection.immutable.Seq
 
 /**
-  * It's called CoolArgs to easily differentiate from Sangrias Args class.
+  * It's called CoolArgs to easily differentiate from Sangria's Args class.
   *
   * - implement subclasses
   *   - nonlistscalarCoolArgs
@@ -21,48 +21,42 @@ case class CoolArgs(raw: Map[String, Any]) {
   def isEmpty: Boolean    = raw.isEmpty
   def isNonEmpty: Boolean = raw.nonEmpty
 
-  def subNestedMutation(relationField: Field, subModel: Model): NestedMutation = {
+  def subNestedMutation(relationField: Field, subModel: Model): NestedMutations = {
     subArgsOption(relationField) match {
-      case None             => NestedMutation.empty
-      case Some(None)       => NestedMutation.empty
+      case None             => NestedMutations.empty
+      case Some(None)       => NestedMutations.empty
       case Some(Some(args)) => args.asNestedMutation(relationField, subModel)
     }
   }
 
-  private def asNestedMutation(relationField: Field, subModel: Model): NestedMutation = {
+  private def asNestedMutation(relationField: Field, subModel: Model): NestedMutations = {
     if (relationField.isList) {
-      NestedMutation(
+      NestedMutations(
         creates = subArgsVector("create").getOrElse(Vector.empty).map(CreateOne),
         updates = subArgsVector("update").getOrElse(Vector.empty).map { args =>
-          UpdateOne(args.extractNodeSelectorFromWhereField(subModel), args.subArgsOption("data").get.get)
+          UpdateByWhere(args.extractNodeSelectorFromWhereField(subModel), args.subArgsOption("data").get.get)
         },
         upserts = subArgsVector("upsert").getOrElse(Vector.empty).map { args =>
-          UpsertOne(
+          UpsertByWhere(
             where = args.extractNodeSelectorFromWhereField(subModel),
             update = args.subArgsOption("update").get.get,
             create = args.subArgsOption("create").get.get
           )
         },
-        deletes = subArgsVector("delete").getOrElse(Vector.empty).map(args => DeleteOne(args.extractNodeSelector(subModel))),
-        connects = subArgsVector("connect").getOrElse(Vector.empty).map(args => ConnectOne(args.extractNodeSelector(subModel))),
-        disconnects = subArgsVector("disconnect").getOrElse(Vector.empty).map(args => DisconnectOne(args.extractNodeSelector(subModel)))
+        deletes = subArgsVector("delete").getOrElse(Vector.empty).map(args => DeleteByWhere(args.extractNodeSelector(subModel))),
+        connects = subArgsVector("connect").getOrElse(Vector.empty).map(args => ConnectByWhere(args.extractNodeSelector(subModel))),
+        disconnects = subArgsVector("disconnect").getOrElse(Vector.empty).map(args => DisconnectByWhere(args.extractNodeSelector(subModel)))
       )
     } else {
-      NestedMutation(
+      NestedMutations(
         creates = subArgsOption("create").flatten.map(CreateOne).toVector,
-        updates = subArgsOption("update").flatten.map { args =>
-          UpdateOne(args.extractNodeSelectorFromWhereField(subModel), args.subArgsOption("data").get.get)
-        }.toVector,
-        upserts = subArgsOption("upsert").flatten.map { args =>
-          UpsertOne(
-            where = args.extractNodeSelectorFromWhereField(subModel),
-            update = args.subArgsOption("update").get.get,
-            create = args.subArgsOption("create").get.get
-          )
-        }.toVector,
-        deletes = subArgsOption("delete").flatten.map(args => DeleteOne(args.extractNodeSelector(subModel))).toVector,
-        connects = subArgsOption("connect").flatten.map(args => ConnectOne(args.extractNodeSelector(subModel))).toVector,
-        disconnects = subArgsOption("disconnect").flatten.map(args => DisconnectOne(args.extractNodeSelector(subModel))).toVector
+        updates = subArgsOption("update").flatten.map(UpdateByRelation).toVector,
+        upserts = subArgsOption("upsert").flatten
+          .map(args => UpsertByRelation(update = args.subArgsOption("update").get.get, create = args.subArgsOption("create").get.get))
+          .toVector,
+        deletes = getFieldValueAs[Boolean]("delete").flatten.collect { case x if x => DeleteByRelation(x) }.toVector,
+        connects = subArgsOption("connect").flatten.map(args => ConnectByWhere(args.extractNodeSelector(subModel))).toVector,
+        disconnects = getFieldValueAs[Boolean]("disconnect").flatten.collect { case x if x => DisconnectByRelation(x) }.toVector
       )
     }
   }
@@ -209,7 +203,6 @@ case class CoolArgs(raw: Map[String, Any]) {
       throw APIErrors.NullProvidedForWhereError(model.name)
     }
   }
-
 }
 
 object NodeSelector {
@@ -230,14 +223,4 @@ case class NodeSelector(model: Model, field: Field, fieldValue: GCValue) {
     val newGCValue = GCAnyConverter(field.typeIdentifier, isList = false).toGCValue(unwrapped).get
     this.copy(fieldValue = newGCValue)
   }
-//  lazy val unwrappedFieldValue: Any   = {
-//    fieldValue match {
-//      case x: DateTimeGCValue => x.toMySqlDateTimeFormat
-//      case _ => GCDBValueConverter().fromGCValue(fieldValue)
-//    }
-//  }
-//  lazy val fieldValueAsString: String = fieldValue match {
-//    case x: DateTimeGCValue => x.toMySqlDateTimeFormat
-//    case _ => GCDBValueConverter().fromGCValueToString(fieldValue)
-//  }
 }
