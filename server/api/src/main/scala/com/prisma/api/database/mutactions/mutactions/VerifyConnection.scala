@@ -27,8 +27,8 @@ case class VerifyConnection(project: Project, path: Path) extends ClientSqlDataC
     val string = s"`${path.lastRelation_!.id}` CONNECTIONFAILURETRIGGERPATH WHERE "
 
     path.lastEdge_! match {
-      case _: ModelEdge   => cause.contains(string ++ s"`${path.lastParentSide}`")
-      case edge: NodeEdge => cause.contains(string ++ s"`${path.lastChildSide}`") && cause.contains(parameterString(edge.childWhere))
+      case _: ModelEdge   => cause.contains(string ++ s" `${path.parentSideOfLastEdge}`")
+      case edge: NodeEdge => cause.contains(string ++ s" `${path.childSideOfLastEdge}`") && cause.contains(parameterString(edge.childWhere))
     }
   }
 }

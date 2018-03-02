@@ -21,17 +21,17 @@ case class CoolArgs(raw: Map[String, Any]) {
   def isEmpty: Boolean    = raw.isEmpty
   def isNonEmpty: Boolean = raw.nonEmpty
 
-  def subNestedMutation(relationField: Field, subModel: Model): NestedMutation = {
+  def subNestedMutation(relationField: Field, subModel: Model): NestedMutations = {
     subArgsOption(relationField) match {
-      case None             => NestedMutation.empty
-      case Some(None)       => NestedMutation.empty
+      case None             => NestedMutations.empty
+      case Some(None)       => NestedMutations.empty
       case Some(Some(args)) => args.asNestedMutation(relationField, subModel)
     }
   }
 
-  private def asNestedMutation(relationField: Field, subModel: Model): NestedMutation = {
+  private def asNestedMutation(relationField: Field, subModel: Model): NestedMutations = {
     if (relationField.isList) {
-      NestedMutation(
+      NestedMutations(
         creates = subArgsVector("create").getOrElse(Vector.empty).map(CreateOne),
         updates = subArgsVector("update").getOrElse(Vector.empty).map { args =>
           UpdateByWhere(args.extractNodeSelectorFromWhereField(subModel), args.subArgsOption("data").get.get)
@@ -48,15 +48,15 @@ case class CoolArgs(raw: Map[String, Any]) {
         disconnects = subArgsVector("disconnect").getOrElse(Vector.empty).map(args => DisconnectByWhere(args.extractNodeSelector(subModel)))
       )
     } else {
-      NestedMutation(
+      NestedMutations(
         creates = subArgsOption("create").flatten.map(CreateOne).toVector,
         updates = subArgsOption("update").flatten.map(UpdateByRelation).toVector,
         upserts = subArgsOption("upsert").flatten
           .map(args => UpsertByRelation(update = args.subArgsOption("update").get.get, create = args.subArgsOption("create").get.get))
           .toVector,
-        deletes = getFieldValueAs[Boolean]("delete").flatten.collect { case x: Boolean if x => DeleteByRelation(x) }.toVector,
+        deletes = getFieldValueAs[Boolean]("delete").flatten.collect { case x if x => DeleteByRelation(x) }.toVector,
         connects = subArgsOption("connect").flatten.map(args => ConnectByWhere(args.extractNodeSelector(subModel))).toVector,
-        disconnects = getFieldValueAs[Boolean]("disconnect").flatten.collect { case x: Boolean if x => DisconnectByRelation(x) }.toVector
+        disconnects = getFieldValueAs[Boolean]("disconnect").flatten.collect { case x if x => DisconnectByRelation(x) }.toVector
       )
     }
   }

@@ -1,6 +1,6 @@
 package com.prisma.api.mutations.mutations
 
-import com.prisma.api.mutations.{CoolArgs, NestedMutationBase, NestedWhere, NodeSelector}
+import com.prisma.api.mutations.{CoolArgs, NestedMutation, NestedWhere, NodeSelector}
 import com.prisma.api.schema.APIErrors
 import com.prisma.shared.models.RelationSide.RelationSide
 import com.prisma.shared.models.{Field, Model, Project, Relation}
@@ -22,6 +22,8 @@ object CascadingDeletes {
   case class ModelEdge(parent: Model, parentField: Field, child: Model, childField: Option[Field], relation: Relation)                          extends Edge
   case class NodeEdge(parent: Model, parentField: Field, child: Model, childField: Option[Field], childWhere: NodeSelector, relation: Relation) extends Edge
 
+//  case class NodePath(root: NodeSelector, edges: List[Edge], last: NodeEdge)
+
   case class Path(root: NodeSelector, edges: List[Edge]) {
 
     def relations                    = edges.map(_.relation)
@@ -29,8 +31,8 @@ object CascadingDeletes {
     def otherCascadingRelationFields = lastModel.cascadingRelationFields.filter(relationField => !relations.contains(relationField.relation.get))
     def lastEdge_!                   = edges.last
     def lastRelation_!               = lastRelation.get
-    def lastParentSide               = lastEdge_!.parentRelationSide
-    def lastChildSide                = lastEdge_!.childRelationSide
+    def parentSideOfLastEdge         = lastEdge_!.parentRelationSide
+    def childSideOfLastEdge          = lastEdge_!.childRelationSide
 
     def removeLastEdge: Path = edges match {
       case Nil => sys.error("Don't call this on an empty path")
@@ -49,6 +51,14 @@ object CascadingDeletes {
     }
 
     def append(edge: Edge): Path = copy(root, edges :+ edge)
+
+    def extend(project: Project, field: Field, nestedMutation: NestedMutation): Path = {
+      nestedMutation match {
+        case x: NestedWhere =>
+          this.append(NodeEdge(lastModel, field, field.relatedModel(project.schema).get, field.relatedField(project.schema), x.where, field.relation.get))
+        case _ => this.append(ModelEdge(lastModel, field, field.relatedModel(project.schema).get, field.relatedField(project.schema), field.relation.get))
+      }
+    }
 
     def lastModel = edges match {
       case Nil => root.model
@@ -73,7 +83,7 @@ object CascadingDeletes {
 
     def lastEdgeToNodeEdge(where: NodeSelector): Path = this.copy(edges = removeLastEdge.edges :+ lastEdge_!.toNodeEdge(where))
 
-    def lastEdgeToNodeEdgeIfNecessary(nested: NestedMutationBase): Path = nested match {
+    def lastEdgeToNodeEdgeIfNecessary(nested: NestedMutation): Path = nested match {
       case x: NestedWhere => this.copy(edges = removeLastEdge.edges :+ lastEdge_!.toNodeEdge(x.where))
       case _              => this
     }
