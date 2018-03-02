@@ -338,6 +338,34 @@ class MutationsSchemaBuilderSpec extends FlatSpec with Matchers with ApiBaseSpec
     schema should containInputType("TodoWhereInput")
   }
 
+  "Sample schema with relation and id only types" should "be generated correctly" in {
+
+    val project = SchemaDsl.fromString() {
+
+      """type User {
+        |  id: ID! @unique
+        |  name: String!
+        |}
+        |
+        |type B {
+        |  id: ID! @unique
+        |  rel: User
+        |  c: C
+        |}
+        |
+        |type C {
+        |  id: ID! @unique
+        |  b: B
+        |}""".stripMargin
+    }
+
+    val schema = SchemaRenderer.renderSchema(schemaBuilder(project))
+
+    println(schema)
+
+    // todo validate the full schema
+  }
+
   "Sample schema with optional back relations" should "be generated correctly" ignore {
 
     val project = SchemaDsl.fromString() {
