@@ -39,7 +39,7 @@ case class CascadingDeleteRelationMutactions(project: Project, path: Path) exten
   }
 
   private def causedByThisMutactionChildOnly(path: Path, cause: String) = {
-    val parentCheckString = s"`${path.lastRelation_!.id}` OLDPARENTPATHFAILURETRIGGER WHERE `${path.lastChildSide}`"
+    val parentCheckString = s"`${path.lastRelation_!.id}` OLDPARENTPATHFAILURETRIGGER WHERE `${path.childSideOfLastEdge}`"
 
     path.lastEdge_! match {
       case edge: NodeEdge => cause.contains(parentCheckString) && cause.contains(parameterString(edge.childWhere))

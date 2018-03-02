@@ -148,7 +148,7 @@ services:
       - db-persistence:/var/lib/mysql
 
   prisma-database:
-    image: prismagraphql/prisma:1.0
+    image: prismagraphql/prisma:1.3
     restart: always
     ports:
       - "0.0.0.0:${PORT}:${PORT}"
@@ -477,7 +477,7 @@ clusters:
 
 That's it - from now on all deploys to the cluster will be authenticated using the `clusterSecret`.
 
-<!-- 
+<!--
 ## Enable Cluster Security
 
 By default, anyone can connect to the new cluster using the Prisma CLI and deploy services. To lock down access, you need to configure a public/private keypair.

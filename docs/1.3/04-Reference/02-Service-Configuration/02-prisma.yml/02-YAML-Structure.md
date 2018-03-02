@@ -282,7 +282,7 @@ seed:
 
 ## `custom` (optional)
 
-The `custom` property lets you specify any sorts of values you want to reuse elsewhere in your `prisma.yml`. It thus doesn't have a predefined structure. You can reference the values using variables with the `self` variable source, e.g.: `${self.custom.myVariable}`.
+The `custom` property lets you specify any sorts of values you want to reuse elsewhere in your `prisma.yml`. It thus doesn't have a predefined structure. You can reference the values using variables with the [`self` variable source](!alias-nu5oith4da#self-references), e.g.: `${self:custom.myVariable}`.
 
 #### Type
 
@@ -299,6 +299,6 @@ custom:
 
 subscriptions:
   sendWelcomeEmail:
-    query: ${self.custom:subscriptionQueries}/sendWelcomeEmail.graphql
-    webhook: https://${self.custom:serverlessEndpoint}/sendWelcomeEmail
+    query: ${self:custom.subscriptionQueries}/sendWelcomeEmail.graphql
+    webhook: https://${self:custom.serverlessEndpoint}/sendWelcomeEmail
 ```

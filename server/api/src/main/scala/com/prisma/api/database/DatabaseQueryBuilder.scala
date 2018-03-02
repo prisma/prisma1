@@ -182,7 +182,7 @@ object DatabaseQueryBuilder {
   }
 
   def existsByPath(projectId: String, path: Path) = {
-    sql"select exists" ++ DatabaseMutationBuilder.pathQuery(projectId, path)
+    sql"select exists" ++ DatabaseMutationBuilder.pathQueryForLastChild(projectId, path)
   }
 
   def selectFromScalarList(projectId: String, modelName: String, fieldName: String, nodeIds: Vector[String]): SQLActionBuilder = {

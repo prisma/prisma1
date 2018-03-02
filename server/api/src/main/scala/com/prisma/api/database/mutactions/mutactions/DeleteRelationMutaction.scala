@@ -33,7 +33,7 @@ case class DeleteRelationMutaction(project: Project, path: Path) extends ClientS
     extendedPaths.collectFirst { case p if causedByThisMutactionChildOnly(p, cause) => p.lastRelation_! }
 
   private def causedByThisMutactionChildOnly(path: Path, cause: String) = {
-    val parentCheckString = s"`${path.lastRelation_!.id}` OLDCHILDPATHFAILURETRIGGER WHERE `${path.lastParentSide}`"
+    val parentCheckString = s"`${path.lastRelation_!.id}` OLDCHILDPATHFAILURETRIGGER WHERE `${path.parentSideOfLastEdge}`"
 
     path.lastEdge_! match {
       case edge: NodeEdge => cause.contains(parentCheckString) && cause.contains(parameterString(edge.childWhere))
