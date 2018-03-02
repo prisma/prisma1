@@ -361,9 +361,20 @@ class MutationsSchemaBuilderSpec extends FlatSpec with Matchers with ApiBaseSpec
 
     val schema = SchemaRenderer.renderSchema(schemaBuilder(project))
 
-    println(schema)
+    schema should containInputType(
+      "CUpdateOneWithoutBInput",
+      fields = Vector(
+        "connect: CWhereUniqueInput",
+        "disconnect: Boolean",
+        "delete: Boolean"
+      )
+    )
 
-    // todo validate the full schema
+    schema.toString should include("""input CUpdateOneWithoutBInput {
+                                     |  connect: CWhereUniqueInput
+                                     |  disconnect: Boolean
+                                     |  delete: Boolean
+                                     |}""".stripMargin)
   }
 
   "Sample schema with optional back relations" should "be generated correctly" ignore {
