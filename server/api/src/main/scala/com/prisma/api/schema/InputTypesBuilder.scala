@@ -272,12 +272,15 @@ abstract class UncachedInputTypesBuilder(project: Project) extends InputTypesBui
       if (fieldIsOppositeRelationField) {
         None
       } else {
+
+        val disconnectIfPossible = if (!field.isList && field.isRequired) None else nestedDisconnectInputField(field)
+
         val inputObjectType = InputObjectType[Any](
           name = inputObjectTypeName,
           fieldsFn = () =>
             nestedCreateInputField(field).toList ++
               nestedConnectInputField(field) ++
-              nestedDisconnectInputField(field) ++
+              disconnectIfPossible ++
               nestedDeleteInputField(field) ++
               nestedUpdateInputField(field) ++
               nestedUpsertInputField(field)

@@ -314,7 +314,6 @@ class InputTypesSchemaBuilderSpec extends FlatSpec with Matchers with ApiBaseSpe
                        |input UserUpdateOneWithoutFriendInput {
                        |  create: UserCreateWithoutFriendInput
                        |  connect: UserWhereUniqueInput
-                       |  disconnect: Boolean
                        |  delete: Boolean
                        |  update: UserUpdateWithoutFriendDataInput
                        |  upsert: UserUpsertWithoutFriendInput
@@ -323,7 +322,6 @@ class InputTypesSchemaBuilderSpec extends FlatSpec with Matchers with ApiBaseSpe
                        |input UserUpdateOneWithoutFriendOfInput {
                        |  create: UserCreateWithoutFriendOfInput
                        |  connect: UserWhereUniqueInput
-                       |  disconnect: Boolean
                        |  delete: Boolean
                        |  update: UserUpdateWithoutFriendOfDataInput
                        |  upsert: UserUpsertWithoutFriendOfInput
@@ -402,6 +400,112 @@ class InputTypesSchemaBuilderSpec extends FlatSpec with Matchers with ApiBaseSpe
                        |}
                        |
                        |input UserWhereUniqueInput {
+                       |  name: String
+                       |}"""
+
+    inputTypes.split("input").map(inputType => schema should include(inputType.stripMargin))
+  }
+
+  "Disconnect" should "not be generated on required to-One Relations" in {
+
+    val project = SchemaDsl.fromString() {
+      """type Parent{
+        |   name: String! @unique
+        |   child: [Child!]!
+        |}
+        |
+        |type Child{
+        |   name: String! @unique
+        |   parent: Parent!
+        |}""".stripMargin
+    }
+
+    val schema = SchemaRenderer.renderSchema(schemaBuilder(project)).toString
+
+    val inputTypes = """input ChildCreateInput {
+                       |  name: String!
+                       |  parent: ParentCreateOneWithoutChildInput!
+                       |}
+                       |
+                       |input ChildCreateManyWithoutParentInput {
+                       |  create: [ChildCreateWithoutParentInput!]
+                       |  connect: [ChildWhereUniqueInput!]
+                       |}
+                       |
+                       |input ChildCreateWithoutParentInput {
+                       |  name: String!
+                       |}
+                       |
+                       |input ChildUpdateInput {
+                       |  name: String
+                       |  parent: ParentUpdateOneWithoutChildInput
+                       |}
+                       |
+                       |input ChildUpdateManyWithoutParentInput {
+                       |  create: [ChildCreateWithoutParentInput!]
+                       |  connect: [ChildWhereUniqueInput!]
+                       |  disconnect: [ChildWhereUniqueInput!]
+                       |  delete: [ChildWhereUniqueInput!]
+                       |  update: [ChildUpdateWithWhereUniqueWithoutParentInput!]
+                       |  upsert: [ChildUpsertWithWhereUniqueWithoutParentInput!]
+                       |}
+                       |
+                       |input ChildUpdateWithWhereUniqueWithoutParentInput {
+                       |  where: ChildWhereUniqueInput!
+                       |  data: ChildUpdateWithoutParentDataInput!
+                       |}
+                       |
+                       |input ChildUpdateWithoutParentDataInput {
+                       |  name: String
+                       |}
+                       |
+                       |input ChildUpsertWithWhereUniqueWithoutParentInput {
+                       |  where: ChildWhereUniqueInput!
+                       |  update: ChildUpdateWithoutParentDataInput!
+                       |  create: ChildCreateWithoutParentInput!
+                       |}
+                       |
+                       |input ChildWhereUniqueInput {
+                       |  name: String
+                       |}
+                       |
+                       |input ParentCreateInput {
+                       |  name: String!
+                       |  child: ChildCreateManyWithoutParentInput
+                       |}
+                       |
+                       |input ParentCreateOneWithoutChildInput {
+                       |  create: ParentCreateWithoutChildInput
+                       |  connect: ParentWhereUniqueInput
+                       |}
+                       |
+                       |input ParentCreateWithoutChildInput {
+                       |  name: String!
+                       |}
+                       |
+                       |input ParentUpdateInput {
+                       |  name: String
+                       |  child: ChildUpdateManyWithoutParentInput
+                       |}
+                       |
+                       |input ParentUpdateOneWithoutChildInput {
+                       |  create: ParentCreateWithoutChildInput
+                       |  connect: ParentWhereUniqueInput
+                       |  delete: Boolean
+                       |  update: ParentUpdateWithoutChildDataInput
+                       |  upsert: ParentUpsertWithoutChildInput
+                       |}
+                       |
+                       |input ParentUpdateWithoutChildDataInput {
+                       |  name: String
+                       |}
+                       |
+                       |input ParentUpsertWithoutChildInput {
+                       |  update: ParentUpdateWithoutChildDataInput!
+                       |  create: ParentCreateWithoutChildInput!
+                       |}
+                       |
+                       |input ParentWhereUniqueInput {
                        |  name: String
                        |}"""
 
