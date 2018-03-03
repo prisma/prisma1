@@ -37,9 +37,7 @@ case class ErrorHandler(
       HandledException(internalErrorMessage, commonFields(marshaller))
   }
 
-  lazy val sangriaExceptionHandler: Executor.ExceptionHandler = sangria.execution.ExceptionHandler(
-    onException = handler
-  )
+  lazy val sangriaExceptionHandler: Executor.ExceptionHandler = sangria.execution.ExceptionHandler(onException = handler)
 
   private def commonFields(marshaller: ResultMarshaller) = Map(
     "requestId" -> marshaller.scalarNode(requestId, "Int", Set.empty)
