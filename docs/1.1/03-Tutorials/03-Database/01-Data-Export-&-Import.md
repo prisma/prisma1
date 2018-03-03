@@ -63,7 +63,7 @@ type User {
 type Post {
   id: ID! @unique
   title: String!
-  author: User!
+  author: User
 }
 ```
 
