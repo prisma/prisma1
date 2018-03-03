@@ -297,10 +297,12 @@ class InputTypesSchemaBuilderSpec extends FlatSpec with Matchers with ApiBaseSpe
                        |
                        |input UserCreateWithoutFriendInput {
                        |  name: String!
+                       |  friendOf: UserCreateOneWithoutFriendInput!
                        |}
                        |
                        |input UserCreateWithoutFriendOfInput {
                        |  name: String!
+                       |  friend: UserCreateOneWithoutFriendOfInput!
                        |}
                        |
                        |input UserUpdateInput {
@@ -329,10 +331,12 @@ class InputTypesSchemaBuilderSpec extends FlatSpec with Matchers with ApiBaseSpe
                        |
                        |input UserUpdateWithoutFriendDataInput {
                        |  name: String
+                       |  friendOf: UserUpdateOneWithoutFriendInput
                        |}
                        |
                        |input UserUpdateWithoutFriendOfDataInput {
                        |  name: String
+                       |  friend: UserUpdateOneWithoutFriendOfInput
                        |}
                        |
                        |input UserUpsertWithoutFriendInput {
@@ -352,63 +356,55 @@ class InputTypesSchemaBuilderSpec extends FlatSpec with Matchers with ApiBaseSpe
     inputTypes.split("input").map(inputType => schema should include(inputType.stripMargin))
   }
 
-  "Sample schema with selfrelations and optional backrelations" should "be generated correctly" ignore {
-
-    //todo at the moment this does not pass the schema validator although it should probably be valid
+  "Sample schema with selfrelation and optional backrelation" should "be generated correctly" in {
 
     val project = SchemaDsl.fromString() {
-
       """type User{
         |   name: String! @unique
-        |   friends: [User!]!  @relation(name: "UserFriends")
-        |   friendOf: [User!]! @relation(name: "UserFriends")
-        |   bestFriend: User   @relation(name: "BestFriend")
-        |   bestFriendOf: User @relation(name: "BestFriend")
         |   bestBuddy: User
         |}""".stripMargin
     }
 
-    val schema = SchemaRenderer.renderSchema(schemaBuilder(project))
+    val schema = SchemaRenderer.renderSchema(schemaBuilder(project)).toString
 
-    // todo also generates invalid inputtypes for selfrelations
+    val inputTypes = """input UserCreateInput {
+                       |  name: String!
+                       |  bestBuddy: UserCreateOneInput
+                       |}
+                       |
+                       |input UserCreateOneInput {
+                       |  create: UserCreateInput
+                       |  connect: UserWhereUniqueInput
+                       |}
+                       |
+                       |input UserUpdateDataInput {
+                       |  name: String
+                       |  bestBuddy: UserUpdateOneInput
+                       |}
+                       |
+                       |input UserUpdateInput {
+                       |  name: String
+                       |  bestBuddy: UserUpdateOneInput
+                       |}
+                       |
+                       |input UserUpdateOneInput {
+                       |  create: UserCreateInput
+                       |  connect: UserWhereUniqueInput
+                       |  disconnect: Boolean
+                       |  delete: Boolean
+                       |  update: UserUpdateDataInput
+                       |  upsert: UserUpsertNestedInput
+                       |}
+                       |
+                       |input UserUpsertNestedInput {
+                       |  update: UserUpdateDataInput!
+                       |  create: UserCreateInput!
+                       |}
+                       |
+                       |input UserWhereUniqueInput {
+                       |  name: String
+                       |}"""
 
-//    """input UserCreateManyWithoutFriendOfInput {
-//      |  create: [UserCreateWithoutFriendsInput!]
-//      |  connect: [UserWhereUniqueInput!]
-//      |}"""
-
-    // todo also generates invalid inputtypes for optional backrelations
-
-//    """input UserCreateWithoutFriendsInput {
-//      |  name: String!
-//      |  bestFriend: UserCreateOneWithoutBestFriendOfInput
-//      |  bestFriendOf: UserCreateOneWithoutBestFriendInput
-//      |  bestBuddy: UserCreateOneWithoutBestFriendInput
-//      |}"""
-  }
-
-  "Sample schema with optional back relations" should "be generated correctly" ignore {
-
-    val project = SchemaDsl.fromString() {
-
-      """type User{
-        |   name: String! @unique
-        |   friends: [OtherUser!]!  @relation(name: "UserFriends")
-        |   bestFriend: OtherUser   @relation(name: "BestFriend")
-        |   bestBuddy: OtherUser
-        |}
-        |
-        |type OtherUser{
-        |   name: String! @unique
-        |   friendOf: [User!]! @relation(name: "UserFriends")
-        |   bestFriendOf: User @relation(name: "BestFriend")
-        |}""".stripMargin
-    }
-
-    val schema = SchemaRenderer.renderSchema(schemaBuilder(project))
-
-    println(schema)
-
-    // todo validate the full schema
+    inputTypes.split("input").map(inputType => schema should include(inputType.stripMargin))
   }
 }

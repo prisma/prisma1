@@ -65,7 +65,7 @@ abstract class UncachedInputTypesBuilder(project: Project) extends InputTypesBui
       case Some(field) => s"${model.name}CreateWithout${field.name.capitalize}Input"
     }
 
-    val fields = computeScalarInputFieldsForCreate(model) ++ computeRelationalInputFieldsForCreate(model, parentField.flatMap(_.relation))
+    val fields = computeScalarInputFieldsForCreate(model) ++ computeRelationalInputFieldsForCreate(model, parentField)
 
     if (fields.nonEmpty) {
       Some(
@@ -82,7 +82,7 @@ abstract class UncachedInputTypesBuilder(project: Project) extends InputTypesBui
   }
 
   protected def computeInputObjectTypeForUpdate(model: Model): Option[InputObjectType[Any]] = {
-    val fields = computeScalarInputFieldsForUpdate(model) ++ computeRelationalInputFieldsForUpdate(model, omitRelation = None)
+    val fields = computeScalarInputFieldsForUpdate(model) ++ computeRelationalInputFieldsForUpdate(model, parentField = None)
 
     if (fields.nonEmpty) {
       Some(
@@ -127,7 +127,7 @@ abstract class UncachedInputTypesBuilder(project: Project) extends InputTypesBui
 
   protected def computeInputObjectTypeForNestedUpdateData(model: Model, field: Field): Option[InputObjectType[Any]] = {
 
-    val fields = computeScalarInputFieldsForUpdate(model) ++ computeRelationalInputFieldsForUpdate(model, omitRelation = field.relation)
+    val fields = computeScalarInputFieldsForUpdate(model) ++ computeRelationalInputFieldsForUpdate(model, parentField = Some(field))
 
     if (fields.nonEmpty) {
       val typeName = field.otherRelationField(project.schema) match {
@@ -251,11 +251,10 @@ abstract class UncachedInputTypesBuilder(project: Project) extends InputTypesBui
     nonListFields ++ listFields
   }
 
-  private def computeRelationalInputFieldsForUpdate(model: Model, omitRelation: Option[Relation]): List[InputField[Any]] = {
+  private def computeRelationalInputFieldsForUpdate(model: Model, parentField: Option[Field]): List[InputField[Any]] = {
     model.relationFields.flatMap { field =>
-      val subModel              = field.relatedModel_!(project.schema)
-      val relatedField          = field.otherRelationField(project.schema)
-      val relationMustBeOmitted = omitRelation.exists(rel => field.isRelationWithId(rel.id))
+      val subModel     = field.relatedModel_!(project.schema)
+      val relatedField = field.otherRelationField(project.schema)
 
       val inputObjectTypeName = {
         val arityPart = if (field.isList) "Many" else "One"
@@ -266,7 +265,9 @@ abstract class UncachedInputTypesBuilder(project: Project) extends InputTypesBui
         s"${subModel.name}Update${arityPart}${withoutPart}Input"
       }
 
-      if (relationMustBeOmitted) {
+      val fieldIsOppositeRelationField = parentField.flatMap(_.otherRelationField(project.schema)).contains(field)
+
+      if (fieldIsOppositeRelationField) {
         None
       } else {
         val inputObjectType = InputObjectType[Any](
@@ -284,11 +285,10 @@ abstract class UncachedInputTypesBuilder(project: Project) extends InputTypesBui
     }
   }
 
-  private def computeRelationalInputFieldsForCreate(model: Model, omitRelation: Option[Relation]): List[InputField[Any]] = {
+  private def computeRelationalInputFieldsForCreate(model: Model, parentField: Option[Field]): List[InputField[Any]] = {
     model.relationFields.flatMap { field =>
-      val subModel              = field.relatedModel_!(project.schema)
-      val relatedField          = field.otherRelationField(project.schema)
-      val relationMustBeOmitted = omitRelation.exists(rel => field.isRelationWithId(rel.id))
+      val subModel     = field.relatedModel_!(project.schema)
+      val relatedField = field.otherRelationField(project.schema)
 
       val inputObjectTypeName = {
         val arityPart = if (field.isList) "Many" else "One"
@@ -299,7 +299,9 @@ abstract class UncachedInputTypesBuilder(project: Project) extends InputTypesBui
         s"${subModel.name}Create${arityPart}${withoutPart}Input"
       }
 
-      if (relationMustBeOmitted) {
+      val fieldIsOppositeRelationField = parentField.flatMap(_.otherRelationField(project.schema)).contains(field)
+
+      if (fieldIsOppositeRelationField) {
         None
       } else {
         val inputObjectType = InputObjectType[Any](
