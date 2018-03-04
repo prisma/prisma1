@@ -561,7 +561,7 @@ Data model directives describe additional information about types or fields in t
 
 #### Unique scalar fields
 
-The `@unique` directive marks a scalar field as [unique](#unique). Unique fields will have a unique _index_ applied in the underlying database.
+The `@unique` directive marks a scalar field as unique. Unique fields will have a unique _index_ applied in the underlying database.
 
 ```graphql
 # the `User` type has a unique `email` field
@@ -569,8 +569,6 @@ type User {
   email: String @unique
 }
 ```
-
-Find more info about the `@unique` directive [above](#unique).
 
 #### Relation fields
 
