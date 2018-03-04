@@ -9,7 +9,7 @@ Deploys service definition changes. Every time you're making a local change to a
 
 Upon the very first deploy of a service, the command will perform initial data seeding if the [`seed`](!alias-ufeshusai8#seed-optional) property in `prisma.yml` is provided. You can prevent this by passing the `--no-seed` option.
 
-If no [`cluster`](!alias-ufeshusai8#cluster-optional) property is specifed in `prisma.yml`, the command will prompt you to interactively select a [cluster](!alias-eu2ood0she) as a deployment target. After you selected the cluster, it will write it to `prisma.yml` as the default deployment target for future deploys. To bring up the interactive prompt again, either remove the `cluster` property manually or pass the `--interactice` option to the command.
+If no [`cluster`](!alias-ufeshusai8#cluster-optional) property is specifed in `prisma.yml`, the command will prompt you to interactively select a [cluster](!alias-eu2ood0she) as a deployment target. After you selected the cluster, it will write it to `prisma.yml` as the default deployment target for future deploys. To bring up the interactive prompt again, either remove the `cluster` property manually or pass the `--interactive` option to the command.
 
 #### Usage
 
