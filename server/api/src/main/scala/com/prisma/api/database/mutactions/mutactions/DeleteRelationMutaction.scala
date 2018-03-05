@@ -14,19 +14,13 @@ import scala.concurrent.Future
 
 case class DeleteRelationMutaction(project: Project, path: Path) extends ClientSqlDataChangeMutaction {
 
-  val nonParentFieldsWhereThisModelIsRequired =
-    project.schema.allFields
-      .filter(f => f.isRequired && !f.isList && f.relatedModel(project.schema).contains(path.lastModel))
-      .filter(f =>
-        path.lastEdge match {
-          case Some(edge) => !f.relation.contains(edge.relation) && f != edge.parentField
-          case None       => true
-      })
-  val relationFieldsWhereOtherSideIsRequired = nonParentFieldsWhereThisModelIsRequired
+  val fieldsWhereThisModelIsRequired =
+    project.schema.allFields.filter(f => f.isRequired && !f.isList && f.relatedModel(project.schema).contains(path.lastModel))
+  val requiredCheck = fieldsWhereThisModelIsRequired.map(oldParentFailureTriggerByField(project, path, _))
 
 //  val relationFieldsWhereOtherSideIsRequired = path.lastModel.relationFields.filter(_.otherSideIsRequired(project))
-  val extendedPaths = relationFieldsWhereOtherSideIsRequired.map(path.appendEdge(project, _))
-  val requiredCheck = extendedPaths.map(oldChildFailureTrigger(project, _))
+//  val extendedPaths                          = relationFieldsWhereOtherSideIsRequired.map(path.appendEdge(project, _))
+//  val requiredCheck                          = extendedPaths.map(oldChildFailureTrigger(project, _))
 
   override def execute = {
     Future.successful(ClientSqlStatementResult(DBIOAction.seq(requiredCheck: _*)))
@@ -39,8 +33,8 @@ case class DeleteRelationMutaction(project: Project, path: Path) extends ClientS
     })
   }
 
-  private def otherFailingRequiredRelationOnChild(cause: String): Option[Relation] =
-    extendedPaths.collectFirst { case p if causedByThisMutactionChildOnly(p, cause) => p.lastRelation_! }
+  private def otherFailingRequiredRelationOnChild(cause: String): Option[Relation] = None
+//    relationFieldsWhereOtherSideIsRequired.collectFirst { case p if causedByThisMutactionChildOnly(p, cause) => p.lastRelation_! }
 
   private def causedByThisMutactionChildOnly(path: Path, cause: String) = {
     val parentCheckString = s"`${path.lastRelation_!.id}` OLDCHILDPATHFAILURETRIGGER WHERE `${path.parentSideOfLastEdge}`"
