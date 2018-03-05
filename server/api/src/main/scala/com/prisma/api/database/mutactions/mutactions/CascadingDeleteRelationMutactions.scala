@@ -13,12 +13,6 @@ import slick.dbio.DBIOAction
 import scala.concurrent.Future
 
 case class CascadingDeleteRelationMutactions(project: Project, path: Path) extends ClientSqlDataChangeMutaction {
-
-//  val relationFieldsNotOnPath         = path.lastModel.relationFields.filter(f => !path.edges.map(_.relation).contains(f.relation.get))
-//  val requiredRelationFieldsNotOnPath = relationFieldsNotOnPath.filter(_.otherSideIsRequired(project))
-//  val extendedPaths = requiredRelationFieldsNotOnPath.map(path.appendEdge(project, _))
-//  val requiredCheck = extendedPaths.map(oldParentFailureTrigger(project, _))
-
   val fieldsWhereThisModelIsRequired =
     project.schema.allFields.filter(f => f.isRequired && !f.isList && f.relatedModel(project.schema).contains(path.lastModel))
 
