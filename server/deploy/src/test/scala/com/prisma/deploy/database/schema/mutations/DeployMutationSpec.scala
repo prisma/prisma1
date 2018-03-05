@@ -309,7 +309,7 @@ class DeployMutationSpec extends FlatSpec with Matchers with DeploySpecBase {
 
     val (project, _) = setupProject(schema)
 
-    val fnInput = FunctionInput(name = "my-function", query = "invalid query", url = "http://whatever.com", headers = Vector(HeaderInput("header1", "value1")))
+    val fnInput = FunctionInput(name = "failing", query = "invalid query", url = "http://whatever.com", headers = Vector(HeaderInput("header1", "value1")))
 
     val result = {
       val ProjectId(name, stage) = project.projectId

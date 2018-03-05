@@ -2,20 +2,21 @@ package com.prisma.deploy
 
 import akka.actor.{ActorSystem, Props}
 import akka.stream.ActorMaterializer
-import com.prisma.auth.{Auth, AuthImpl}
-import com.prisma.errors.{BugsnagErrorReporter, ErrorReporter}
+import com.prisma.auth.Auth
 import com.prisma.deploy.database.persistence.{MigrationPersistenceImpl, ProjectPersistenceImpl}
 import com.prisma.deploy.database.schema.InternalDatabaseSchema
-import com.prisma.deploy.migration.migrator.{AsyncMigrator, Migrator}
+import com.prisma.deploy.migration.migrator.Migrator
 import com.prisma.deploy.schema.SchemaBuilder
+import com.prisma.deploy.schema.mutations.FunctionValidator
 import com.prisma.deploy.seed.InternalDatabaseSeedActions
-import com.prisma.deploy.server.{ClusterAuth, ClusterAuthImpl, DummyClusterAuth}
+import com.prisma.deploy.server.ClusterAuth
+import com.prisma.errors.ErrorReporter
 import com.prisma.graphql.GraphQlClient
 import com.prisma.messagebus.PubSubPublisher
 import slick.jdbc.MySQLProfile
 import slick.jdbc.MySQLProfile.api._
 
-import scala.concurrent.duration.{Duration, _}
+import scala.concurrent.duration._
 import scala.concurrent.{Await, Awaitable, ExecutionContext}
 
 trait DeployDependencies {
@@ -31,6 +32,7 @@ trait DeployDependencies {
   def graphQlClient: GraphQlClient
   def invalidationPublisher: PubSubPublisher[String]
   def apiAuth: Auth
+  def functionValidator: FunctionValidator
 
   lazy val internalDb           = setupAndGetInternalDatabase()
   lazy val clientDb             = Database.forConfig("client")

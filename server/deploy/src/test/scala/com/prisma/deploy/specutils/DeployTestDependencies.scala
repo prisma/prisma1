@@ -5,9 +5,15 @@ import akka.stream.ActorMaterializer
 import com.prisma.auth.AuthImpl
 import com.prisma.errors.{BugsnagErrorReporter, ErrorReporter}
 import com.prisma.deploy.DeployDependencies
+import com.prisma.deploy.migration.validation.SchemaError
+import com.prisma.deploy.schema.mutations.{FunctionInput, FunctionValidator}
 import com.prisma.deploy.server.DummyClusterAuth
 import com.prisma.graphql.GraphQlClient
 import com.prisma.messagebus.pubsub.inmemory.InMemoryAkkaPubSub
+import com.prisma.shared.models.Project
+import play.api.libs.json.{JsArray, JsObject, JsString}
+
+import scala.concurrent.Future
 
 case class DeployTestDependencies()(implicit val system: ActorSystem, val materializer: ActorMaterializer) extends DeployDependencies {
   override implicit def self: DeployDependencies = this
@@ -30,4 +36,12 @@ case class DeployTestDependencies()(implicit val system: ActorSystem, val materi
   }
 
   override def apiAuth = AuthImpl
+  override def functionValidator: FunctionValidator = new FunctionValidator {
+    override def validateFunctionInput(project: Project, fn: FunctionInput): Future[Vector[SchemaError]] = {
+      if (fn.name == "failing") { Future.successful(Vector(SchemaError(`type` = "model", field = "field", description = "error"))) } else {
+        Future.successful(Vector.empty)
+
+      }
+    }
+  }
 }

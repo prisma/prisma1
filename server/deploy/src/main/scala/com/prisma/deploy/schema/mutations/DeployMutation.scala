@@ -8,9 +8,8 @@ import com.prisma.deploy.migration.migrator.Migrator
 import com.prisma.deploy.migration.validation.{SchemaError, SchemaSyntaxValidator}
 import com.prisma.deploy.schema.InvalidQuery
 import com.prisma.messagebus.pubsub.Only
-import com.prisma.shared.models.{Function, Migration, MigrationStep, Project, ProjectId, Schema, ServerSideSubscriptionFunction, WebhookDelivery}
+import com.prisma.shared.models.{Function, Migration, MigrationStep, Project, Schema, ServerSideSubscriptionFunction, WebhookDelivery}
 import org.scalactic.{Bad, Good, Or}
-import play.api.libs.json.JsString
 import sangria.parser.QueryParser
 
 import scala.collection.Seq
@@ -107,27 +106,8 @@ case class DeployMutation(
     }
   }
 
-  private def validateFunctionInputs(fns: Vector[FunctionInput]): Future[Vector[SchemaError]] = Future.sequence(fns.map(validateFunctionInput)).map(_.flatten)
-
-  private def validateFunctionInput(fn: FunctionInput): Future[Vector[SchemaError]] = {
-    val ProjectId(name, stage) = project.projectId
-    dependencies.graphQlClient
-      .sendQuery(
-        query = s"""{
-       |  validateSubscriptionQuery(query: ${JsString(fn.query).toString()}){
-       |    errors
-       |  }
-       |}""".stripMargin,
-        path = s"/$name/$stage/private",
-        headers = Map("Authorization" -> s"Bearer ${project.secrets.headOption.getOrElse("empty")}")
-      )
-      .map { response =>
-        response.bodyAs[Vector[String]]("data.validateSubscriptionQuery.errors").get
-      }
-      .map { errorMessages =>
-        errorMessages.map(error => SchemaError(`type` = "Subscription", field = fn.name, description = error))
-      }
-  }
+  private def validateFunctionInputs(fns: Vector[FunctionInput]): Future[Vector[SchemaError]] =
+    Future.sequence(fns.map(dependencies.functionValidator.validateFunctionInput(project, _))).map(_.flatten)
 
   private def convertFunctionInput(fnInput: FunctionInput): ServerSideSubscriptionFunction = {
     ServerSideSubscriptionFunction(
