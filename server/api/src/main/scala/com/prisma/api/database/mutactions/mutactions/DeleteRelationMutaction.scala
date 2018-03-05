@@ -14,9 +14,19 @@ import scala.concurrent.Future
 
 case class DeleteRelationMutaction(project: Project, path: Path) extends ClientSqlDataChangeMutaction {
 
-  val relationFieldsWhereOtherSideIsRequired = path.lastModel.relationFields.filter(_.otherSideIsRequired(project))
-  val extendedPaths                          = relationFieldsWhereOtherSideIsRequired.map(path.appendEdge(project, _))
-  val requiredCheck                          = extendedPaths.map(oldChildFailureTrigger(project, _))
+  val nonParentFieldsWhereThisModelIsRequired =
+    project.schema.allFields
+      .filter(f => f.isRequired && !f.isList && f.relatedModel(project.schema).contains(path.lastModel))
+      .filter(f =>
+        path.lastEdge match {
+          case Some(edge) => !f.relation.contains(edge.relation) && f != edge.parentField
+          case None       => true
+      })
+  val relationFieldsWhereOtherSideIsRequired = nonParentFieldsWhereThisModelIsRequired
+
+//  val relationFieldsWhereOtherSideIsRequired = path.lastModel.relationFields.filter(_.otherSideIsRequired(project))
+  val extendedPaths = relationFieldsWhereOtherSideIsRequired.map(path.appendEdge(project, _))
+  val requiredCheck = extendedPaths.map(oldChildFailureTrigger(project, _))
 
   override def execute = {
     Future.successful(ClientSqlStatementResult(DBIOAction.seq(requiredCheck: _*)))

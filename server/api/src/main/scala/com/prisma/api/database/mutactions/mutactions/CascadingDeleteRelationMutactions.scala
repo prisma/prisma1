@@ -14,9 +14,20 @@ import scala.concurrent.Future
 
 case class CascadingDeleteRelationMutactions(project: Project, path: Path) extends ClientSqlDataChangeMutaction {
 
-  val relationFieldsNotOnPath         = path.lastModel.relationFields.filter(f => !path.edges.map(_.relation).contains(f.relation.get))
-  val requiredRelationFieldsNotOnPath = relationFieldsNotOnPath.filter(_.otherSideIsRequired(project))
-  val extendedPaths                   = requiredRelationFieldsNotOnPath.map(path.appendEdge(project, _))
+  val nonParentFieldsWhereThisModelIsRequired =
+    project.schema.allFields
+      .filter(f => f.isRequired && !f.isList)
+      .filter(f =>
+        path.lastEdge match {
+          case Some(edge) => f.relation.contains(edge.relation) && f != edge.parentField
+          case None       => true
+      })
+  val requiredRelationFieldsNotOnPath = nonParentFieldsWhereThisModelIsRequired
+
+//  val relationFieldsNotOnPath = path.lastModel.relationFields.filter(f => !path.edges.map(_.relation).contains(f.relation.get))
+//  val requiredRelationFieldsNotOnPath = relationFieldsNotOnPath.filter(_.otherSideIsRequired(project))
+
+  val extendedPaths = requiredRelationFieldsNotOnPath.map(path.appendEdge(project, _))
 
   val requiredCheck = extendedPaths.map(oldParentFailureTrigger(project, _))
 
