@@ -85,35 +85,28 @@ export class Environment {
           json.data.me.memberships &&
           Array.isArray(json.data.me.memberships)
         ) {
-          const clusters = _.flattenDeep(
-            json.data.me.memberships.map(m => m.workspace.clusters),
-          )
           const euIndex = this.clusters.findIndex(c => c.name === 'prisma-eu1')
           this.clusters.splice(euIndex, 1)
           const usIndex = this.clusters.findIndex(c => c.name === 'prisma-us1')
           this.clusters.splice(usIndex, 1)
           json.data.me.memberships.forEach(m => {
-            m.workspace.clusters
-              // .filter(
-              //   (c: any) => !['prisma-eu1', 'prisma-us1'].includes(c.name),
-              // )
-              .forEach(cluster => {
-                const endpoint = cluster.connectInfo
-                  ? cluster.connectInfo.endpoint
-                  : this.clusterEndpointMap[cluster.name]
-                this.addCluster(
-                  new Cluster(
-                    this.out,
-                    cluster.name,
-                    endpoint,
-                    this.globalRC.cloudSessionKey,
-                    false,
-                    ['prisma-eu1', 'prisma-us1'].includes(cluster.name),
-                    !['prisma-eu1', 'prisma-us1'].includes(cluster.name),
-                    m.workspace.slug,
-                  ),
-                )
-              })
+            m.workspace.clusters.forEach(cluster => {
+              const endpoint = cluster.connectInfo
+                ? cluster.connectInfo.endpoint
+                : this.clusterEndpointMap[cluster.name]
+              this.addCluster(
+                new Cluster(
+                  this.out,
+                  cluster.name,
+                  endpoint,
+                  this.globalRC.cloudSessionKey,
+                  false,
+                  ['prisma-eu1', 'prisma-us1'].includes(cluster.name),
+                  !['prisma-eu1', 'prisma-us1'].includes(cluster.name),
+                  m.workspace.slug,
+                ),
+              )
+            })
           })
           debug(this.sharedClusters)
           debug(this.clusterEndpointMap)
@@ -146,9 +139,15 @@ export class Environment {
   }
 
   addCluster(cluster: Cluster) {
-    const existingClusterIndex = this.clusters.findIndex(
-      c => c.name === cluster.name,
-    )
+    const existingClusterIndex = this.clusters.findIndex(c => {
+      if (cluster.workspaceSlug) {
+        return (
+          c.workspaceSlug === cluster.workspaceSlug && c.name === cluster.name
+        )
+      } else {
+        return c.name === cluster.name
+      }
+    })
     if (existingClusterIndex > -1) {
       this.clusters.splice(existingClusterIndex, 1)
     }
@@ -252,7 +251,10 @@ export class Environment {
 
   private getLocalClusterConfig() {
     return this.clusters
-      .filter(c => !c.shared && c.clusterSecret !== this.cloudSessionKey && !c.isPrivate)
+      .filter(
+        c =>
+          !c.shared && c.clusterSecret !== this.cloudSessionKey && !c.isPrivate,
+      )
       .reduce((acc, cluster) => {
         return {
           ...acc,

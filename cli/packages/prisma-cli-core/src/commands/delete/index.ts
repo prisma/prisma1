@@ -45,7 +45,11 @@ export default class Delete extends Command {
 
     const before = Date.now()
     this.out.action.start(`${chalk.red.bold(`Deleting service ${prettyName}`)}`)
-    await this.client.deleteProject(this.definition.getDeployName(), stage)
+    await this.client.deleteProject(
+      this.definition.definition!.service,
+      stage,
+      this.definition.getWorkspace(),
+    )
     this.out.action.stop(prettyTime(Date.now() - before))
 
     // const foundTarget = await this.env.getTargetWithName(stage)
