@@ -311,25 +311,8 @@ class DeployMutationSpec extends FlatSpec with Matchers with DeploySpecBase {
 
     val fnInput = FunctionInput(name = "failing", query = "invalid query", url = "http://whatever.com", headers = Vector(HeaderInput("header1", "value1")))
 
-    val result = {
-      val ProjectId(name, stage) = project.projectId
-      val stub = Request("POST", s"/$name/$stage/private")
-        .stub(
-          200,
-          """{
-          |  "data": {
-          |    "validateSubscriptionQuery": {
-          |      "errors": ["This did not work!"]
-          |    }
-          |  }
-          |}
-        """.stripMargin
-        )
-        .ignoreBody
-      withStubs(stub) {
-        deploySchema(project, schema, Vector(fnInput))
-      }
-    }
+    val result = deploySchema(project, schema, Vector(fnInput))
+
     result.pathAsSeq("data.deploy.errors") should not(be(empty))
 
     val reloadedProject = projectPersistence.load(project.id).await.get
@@ -347,26 +330,8 @@ class DeployMutationSpec extends FlatSpec with Matchers with DeploySpecBase {
     val (project, _) = setupProject(schema)
 
     val fnInput = FunctionInput(name = "my-function", query = "my query", url = "http://whatever.com", headers = Vector(HeaderInput("header1", "value1")))
-    val result = {
-      val ProjectId(name, stage) = project.projectId
-      val stub = Request("POST", s"/$name/$stage/private")
-        .stub(
-          200,
-          """{
-            |  "data": {
-            |    "validateSubscriptionQuery": {
-            |      "errors": []
-            |    }
-            |  }
-            |}
-          """.stripMargin
-        )
-        .ignoreBody
+    val result  = deploySchema(project, schema, Vector(fnInput))
 
-      withStubs(stub) {
-        deploySchema(project, schema, Vector(fnInput))
-      }
-    }
     result.pathAsSeq("data.deploy.errors") should be(empty)
 
     val reloadedProject = projectPersistence.load(project.id).await.get
@@ -377,11 +342,6 @@ class DeployMutationSpec extends FlatSpec with Matchers with DeploySpecBase {
     val delivery = function.delivery.asInstanceOf[WebhookDelivery]
     delivery.url should equal(fnInput.url)
     delivery.headers should equal(Vector("header1" -> "value1"))
-  }
-
-  def withStubs(stubs: Stub*) = {
-    // use a fixed port for every test because we instantiate the client only once in the dependencies
-    withStubServer(List(stubs: _*), stubNotFoundStatusCode = 418, port = 8777)
   }
 
   def deploySchema(project: Project, schema: String, functions: Vector[FunctionInput] = Vector.empty) = {
