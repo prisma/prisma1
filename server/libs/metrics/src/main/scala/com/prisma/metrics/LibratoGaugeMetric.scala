@@ -28,8 +28,10 @@ case class LibratoGaugeMetric(
   private def flush(): Unit = {
     val gaugeMeasure = new GaugeMeasure(name, value.get)
     val tagged       = new TaggedMeasure(gaugeMeasure)
-    customTags.foreach { customTag =>
-      tagged.addTag(new Tag(customTag._1.name, customTag._2))
+    customTags.foreach { tuple =>
+      val customTag = tuple._1
+      val tagValue  = tuple._2
+      tagged.addTag(new Tag(customTag.name, customTag.sanitizeValue(tagValue)))
     }
     baseTags.foreach { baseTag =>
       tagged.addTag(new Tag(baseTag._1, baseTag._2))
