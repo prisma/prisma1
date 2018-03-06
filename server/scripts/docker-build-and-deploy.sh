@@ -80,5 +80,5 @@ echo "Replacing images..."
 CLUSTER_ELEMENTS=(${CLUSTERS//,/ })
 for cluster in "${CLUSTER_ELEMENTS[@]}"
 do
-    ./cb service launch prisma-primary ${NEXT_DOCKER_TAG} --customer graphcool --cluster ${cluster}
+    ./cb service launch prisma-primary ${NEXT_DOCKER_TAG} --customer graphcool --cluster ${cluster} --silent
 done
