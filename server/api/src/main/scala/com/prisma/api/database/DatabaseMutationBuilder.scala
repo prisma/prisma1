@@ -330,6 +330,17 @@ object DatabaseMutationBuilder {
     triggerFailureWhenExists(project, query, table)
   }
 
+  def oldParentFailureTriggerByFieldAndFilter(project: Project, model: Model, filter: DataItemFilterCollection, field: Field) = {
+    val table = field.relation.get.id
+    val whereSql = QueryArguments.generateFilterConditions(project.id, model.name, filter) match {
+      case None    => sql""
+      case Some(x) => sql"WHERE " ++ x
+    }
+
+    val query = sql"SELECT `id` FROM `#${project.id}`.`#$table` OLDPARENTPATHFAILURETRIGGERBYFIELDANDFILTER WHERE `#${field.oppositeRelationSide.get}` IN (SELECT `id` FROM `#${project.id}`.`#${model.name}` " ++ whereSql ++ sql")"
+    triggerFailureWhenExists(project, query, table)
+  }
+
   def oldChildFailureTrigger(project: Project, path: Path) = {
     val table = path.lastRelation_!.id
     val query = sql"SELECT `id` FROM `#${project.id}`.`#$table` OLDCHILDPATHFAILURETRIGGER WHERE `#${path.parentSideOfLastEdge}` IN " ++ pathQueryForLastParent(
