@@ -678,6 +678,7 @@ ${chalk.gray(
     const remoteClusters = this.env.clusters.filter(
       c => c.shared || c.isPrivate,
     )
+
     remoteClusters.forEach(cluster => {
       const label = this.env.sharedClusters.includes(cluster.name)
         ? 'Free development cluster (hosted on Prisma Cloud)'

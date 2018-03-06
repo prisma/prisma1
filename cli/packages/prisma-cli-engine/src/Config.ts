@@ -57,7 +57,8 @@ export class Config {
   /**
    * Urls
    */
-  cloudApiEndpoint = 'https://api.cloud.prisma.sh'
+  cloudApiEndpoint = process.env.CLOUD_API_ENDPOINT ||
+    'https://api.cloud.prisma.sh'
   consoleEndpoint = isDevConsole
     ? 'http://localhost:3000'
     : 'https://app.prisma.sh'

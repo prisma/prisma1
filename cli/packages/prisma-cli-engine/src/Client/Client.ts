@@ -23,6 +23,7 @@ import { introspectionQuery } from './introspectionQuery'
 import { User, Migration, DeployPayload, Workspace, Service } from './types'
 import boolean from '../Flags/boolean'
 import * as opn from 'opn'
+import { concatName } from '../../../prisma-yml/dist/PrismaDefinition'
 
 const debug = require('debug')('client')
 
@@ -595,8 +596,14 @@ To reset the key pair, please run ${chalk.bold.green('prisma local start')}
     return project
   }
 
-  async deleteProject(name: string, stage: string): Promise<void> {
-    const mutation = `\
+  async deleteProject(
+    name: string,
+    stage: string,
+    workspaceSlug: string | null,
+  ): Promise<void> {
+    const cluster = this.env.activeCluster
+    if (!this.env.activeCluster.shared && !this.env.activeCluster.isPrivate) {
+      const mutation = `\
       mutation ($input: DeleteProjectInput!) {
         deleteProject(input: $input) {
           clientMutationId
@@ -604,12 +611,30 @@ To reset the key pair, please run ${chalk.bold.green('prisma local start')}
       }
       `
 
-    await this.client.request(mutation, {
-      input: {
-        name,
-        stage,
-      },
-    })
+      await this.client.request(mutation, {
+        input: {
+          name: concatName(cluster, name, workspaceSlug),
+          stage,
+        },
+      })
+    } else {
+      const mutation = `\
+        mutation ($input: ServiceDeletionInput!) {
+          deleteService(input: $input) {
+            id
+          }
+        }
+      `
+
+      await this.cloudClient.request(mutation, {
+        input: {
+          name,
+          clusterName: cluster.name,
+          workspaceSlug,
+          stage,
+        },
+      })
+    }
   }
 
   async deploy(
