@@ -29,7 +29,6 @@ trait DeployDependencies {
 
   def migrator: Migrator
   def clusterAuth: ClusterAuth
-  def graphQlClient: GraphQlClient
   def invalidationPublisher: PubSubPublisher[String]
   def apiAuth: Auth
   def functionValidator: FunctionValidator

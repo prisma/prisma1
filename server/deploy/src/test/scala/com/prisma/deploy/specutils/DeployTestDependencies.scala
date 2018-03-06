@@ -30,11 +30,6 @@ case class DeployTestDependencies()(implicit val system: ActorSystem, val materi
   override lazy val clusterAuth           = DummyClusterAuth()
   override lazy val invalidationPublisher = InMemoryAkkaPubSub[String]()
 
-  override lazy val graphQlClient = {
-    val port = sys.props.getOrElse("STUB_SERVER_PORT", sys.error("No running stub server detected! Can't instantiate GraphQlClient."))
-    GraphQlClient(s"http://localhost:$port")
-  }
-
   override def apiAuth = AuthImpl
   override def functionValidator: FunctionValidator = new FunctionValidator {
     override def validateFunctionInput(project: Project, fn: FunctionInput): Future[Vector[SchemaError]] = {

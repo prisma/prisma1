@@ -87,7 +87,6 @@ case class PrismaLocalDependencies()(implicit val system: ActorSystem, val mater
   override lazy val webhookPublisher = webhooksQueue
   override lazy val webhooksConsumer = webhooksQueue.map[WorkerWebhook](Converters.apiWebhook2WorkerWebhook)
   override lazy val httpClient       = SimpleHttpClient()
-  override lazy val graphQlClient    = GraphQlClient(sys.env.getOrElse("CLUSTER_ADDRESS", sys.error("env var CLUSTER_ADDRESS is not set")))
 
   override def apiAuth = AuthImpl
 
