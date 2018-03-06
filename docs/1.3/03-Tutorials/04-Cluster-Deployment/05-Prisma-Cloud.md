@@ -9,6 +9,12 @@ This guide gets you up and running with [Prisma Cloud](https://www.prismagraphql
 
 > AWS RDS is eligible for the AWS Free Tier. This is great for development clusters or to just get things started. If you're looking for more advanced features we recommend using [AWS Aurora](https://aws.amazon.com/rds/aurora) instead.
 
+In the following sections, you are going to learn how to:
+
+- Provision a MySQL database instance using AWS RDS
+- Set up a new Prisma cluster using the Prisma Cloud Console
+- Use the MySQL database as a backing data store for your Prisma cluster
+
 ## 1. Signing up to AWS
 
 <Instruction>
@@ -28,7 +34,7 @@ In this section, you'll spin up a new AWS RDS instance in the `us-east-1` AWS re
 * `ap-northeast-1` / Asia Pacific (Tokyo)
 * `eu-west-1` / EU West (Ireland)
 
-### 2.1 Get Started
+### 2.1 Get started
 
 <Instruction>
 
@@ -36,7 +42,7 @@ To setup a new RDS instance in the `us-east-1` region, go [here](https://us-east
 
 </Instruction>
 
-### 2.2 Select DB Engine
+### 2.2 Select DB engine
 
 <Instruction>
 
@@ -56,7 +62,7 @@ When prompted to select a use case, select the **Dev/Test - MySQL** option for t
 
 </Instruction>
 
-### 2.4 Specify DB Details
+### 2.4 Specify DB details
 
 <Instruction>
 
@@ -112,7 +118,7 @@ No other changes need to be made for the remaining sections, but feel free to ad
 
 > **Note**: In this guide, we disable backup options but you can setup any backup retention period you want. Consider using AWS Aurora instead if you're interested in more options here.
 
-### 2.6 Instance Settings
+### 2.6 Instance settings
 
 Once the instance is available, go ahead and click **View DB instance details**.
 
@@ -120,7 +126,7 @@ Once the instance is available, go ahead and click **View DB instance details**.
 
 <Instruction>
 
-In your instance settings, locate the **Endpoint** and take note of it for later.
+In your instance settings, locate the **Endpoint** and take note of it for later. You will need it when setting up the cluster.
 
 </Instruction>
 
@@ -150,10 +156,140 @@ If such an inbound rule does not exist, click the **Edit** button and setup a ne
 
 ![](https://imgur.com/wmu4Ucw.png)
 
-## 3. Creating a Prisma Cluster
+## 3. Creating a Prisma cluster
 
-You can follow [this guide](https://gist.github.com/marktani/2cbbe6467cb66bc9959b63313a248988) to create a Prisma Cluster that is connected to your newly created MySQL database.
+> **Note**: Creating your own Prisma Cluster requires you to provide valid credit card information. Pricing starts at  **$45 / month** per cluster in a **pay-as-you-go** fashion. Find more info about the pricing [here](https://www.prismagraphql.com/cloud/pricing).
 
-## Questions and Feedback
+### 3.1 Signing into Prisma Cloud
 
-Send us an [email](mailto:nilan@graph.cool) if you have any questions along the way, or want to share some feedback with us.
+<Instruction>
+
+Navigate to the [Prisma Cloud Console](https://app.prisma.sh) and login or sign up.
+
+</Instruction>
+
+### 3.2 Cluster Vvew
+
+<Instruction>
+
+To create a new Prisma cluster that is connected to your newly created MySQL database, navigate to the **Clusters** view by selecting the corresponding tab in the top-menu.
+
+</Instruction>
+
+![](https://imgur.com/qKOvKKs.png)
+
+<Instruction>
+
+To move on to the form where you can provide the details about your database to connect it with your cluster, click the **Create Clusters** button.
+
+</Instruction>
+
+![](https://imgur.com/7qDNQP2.png)
+
+### 3.3 Database and cluster information
+
+> **Note**: To learn more about the required information to create a new cluster, you can check out this 3-min tutorial [video](https://www.youtube.com/watch?v=jELE4KXJPn4&lc).
+
+<Instruction>
+
+Insert the required data:
+
+- **Host**: This is the _endpoint_ from the previous section **2.6 Instance settings**
+- **Port**: If you haven't made any changes, the default port if **3306**
+- **User**: The username you chose in section **2.4 Specify DB details** (e.g. `myusername`)
+- **Password**: The password you chose in section **2.4 Specify DB details** (e.g. `prismagraphql`)
+
+</Instruction>
+
+![](https://imgur.com/kABLZZb.png)
+
+<Instruction>
+
+When you're done with that, select click **Test connection**.
+
+</Instruction>
+
+<Instruction>
+
+After the connection was successfully tested, you need to provide a **Cluster name** (e.g. `my-cluster`) and optionally a **Description**.
+
+</Instruction>
+
+<Instruction>
+
+Finally, you need to select a **Cluster region** - choose the one that's closest to where the majority of your users is supposably located.
+
+</Instruction>
+
+<Instruction>
+
+If you haven't done so before, you need now need to provide your credit card information. Finally, click **Create Cluster**.
+
+</Instruction>
+
+### 3.4 Provisioning a cluster
+
+The process of setting up a cluster takes around 10 minutes. The provisioning status of your cluster will be printed continuously.
+
+![](https://imgur.com/JYKXoEM.png)
+
+You can navigate back to the cluster overview and follow the provisioning status. Once your cluster is up and running, the status says **Healthy**.
+
+![](https://imgur.com/ZWGfWYj.png)
+
+## 4. Deploying a Prisma service to the cluster
+
+Now that you provisioned a cluster, you can use it as a runtime environment for your Prisma services by using it as a deployment target.
+
+<Instruction>
+
+Install the latest CLI version with the following command:
+
+```sh
+npm install -g prisma
+```
+
+</Instruction>
+
+<Instruction>
+
+Then, log into your Prisma Cloud account:
+
+```sh
+prisma login
+```
+
+</Instruction>
+
+This will store your _cloud session key_ in `~/.prisma/config.yml`. This key is used by the CLI to authenticate you against Prisma Cloud.
+
+<Instruction>
+
+Next, go ahead and create a new service:
+
+```sh
+prisma init hello-world
+```
+
+</Instruction>
+
+<Instruction>
+
+When prompted by the CLI, choose the `Minimal setup: database-only` option. Then navigate into the newly created directory and deploy the service:
+
+```sh
+cd hello-world
+prisma deploy
+```
+
+</Instruction>
+
+After running `prisma deploy`, the Prisma CLI will prompt you to choose a cluster you'd like to use as a deployment target. Among the options, you'll find the cluster that you've just setup.
+
+<Instruction>
+
+Select the cluster that you just created in the CLI.
+
+</Instruction>
+
+This is it - your Prisma service is now deployed to your own Prisma Cloud cluster 🚀
