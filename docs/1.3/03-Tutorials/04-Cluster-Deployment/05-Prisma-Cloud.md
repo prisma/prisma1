@@ -21,77 +21,132 @@ This process might take a little while, but you'll get there! Note that you'll h
 
 ## 2. Creating a new AWS RDS instance
 
-<Instruction>
-
-Once your account is ready, navigate to the **Relational Database Service** in the [AWS Console](https://console.aws.amazon.com/console/home) by typing `RDS` in the **AWS Services** search bar.
-
-</Instruction>
-
-![](https://imgur.com/Xmkgl8O.png)
-
-<InfoBox>
-
-We recommend to setup your database in one of the following regions:
+In this section, you'll spin up a new AWS RDS instance in the `us-east-1` AWS region. If you prefer, feel free to choose any of the other supported regions instead:
 
 * `us-east-1` / US East (N. Virgina)
 * `us-west-2` / US West (Oregon)
 * `ap-northeast-1` / Asia Pacific (Tokyo)
 * `eu-west-1` / EU West (Ireland)
 
-</InfoBox>
-
-
 ### 2.1 Get Started
 
-To setup a new RDS instance in `us-east-1` , [go here](https://us-east-1.console.aws.amazon.com/rds/home?region=us-east-1#gettingStarted:) and click "Get Started Now".
+<Instruction>
+
+To setup a new RDS instance in the `us-east-1` region, go [here](https://us-east-1.console.aws.amazon.com/rds/home?region=us-east-1#gettingStarted:) and click **Get Started Now**.
+
+</Instruction>
 
 ### 2.2 Select DB Engine
 
-In the "Select engine" dialog, activate the checkbox "Only enable options eligible for RDS Free Usage Tier" and choose MySQL.
+<Instruction>
+
+In the **Select engine** dialog, select **MySQL**. Then click **Next**.
+
+</Instruction>
 
 ![](https://imgur.com/RVQS5CW.png)
 
-### 2.3 Specify Details
+> **Note**: Some of the displayed engine options are not eligible for the RDS Free Usage Tier. If you want to select a different DB and ensure it's free, you can check the **Only enable options eligible for RDS Free Usage Tier** checkbox.
 
-In the "Specify Details" dialog, choose the most recent MySQL 5.7 version and enter a DB instance identifier, a master username and a master password. Click next.
+### 2.3 Choose use case
+
+<Instruction>
+
+When prompted to select a use case, select the **Dev/Test - MySQL** option for the purpose of this tutorial.
+
+</Instruction>
+
+### 2.4 Specify DB Details
+
+<Instruction>
+
+In the **Specify DB details** dialog, choose the most recent **MySQL 5.7.\*** version from the dropdown for the **DB engine version**.
+
+</Instruction>
+
+<Instruction>
+
+Select anything you like for the **DB instance class** - a `db.t2.micro - 1 vCPU, 1GiB RAM` instance will definitely do for this tutorial
+
+</Instruction>
+
+<Instruction>
+
+Leave the following settings as they are and enter a **DB instance identifier**, a **Master username** and a **Master password**, for example:
+
+- **DB instance identifier**: `my-prisma-demo`
+- **Master username**: `myusername`
+- **Master password**: `prismagraphql`
+
+</Instruction>
+
+<Instruction>
+
+Then click **Next**.
+
+</Instruction>
 
 ![](https://imgur.com/7pYA5uo.png)
 
-> Note: Choose a strong password for your master access, as this account will be used to access your database. Click next.
+### 2.5 Configure advanced settings
 
-### 2.4 Configure Advanced Settings
+<Instruction>
 
-In the "Configure advanced settings" dialog, activate public accessiblity.
+In the **Configure advanced settings** dialog, activate public accessiblity by selecting the **Yes** checkbox.
+
+</Instruction>
 
 ![](https://imgur.com/gSsLqaz.png)
 
-Set the backup retention period to 0 days.
+<Instruction>
+
+Leave the following settings as they are and scroll down to the **Backup** section. Set the **Backup retention period** to **0 days** in dropdown. This means there will be no automatic backups for this database instance.
+
+</Instruction>
 
 ![](https://imgur.com/viVXbp8.png)
 
-No other changes need to be made for the "Database options", "Encryption", "Monitoring", and "Log exports" areas, but feel free to adjust them as you wish. Then launch your DB instance.
+No other changes need to be made for the remaining sections, but feel free to adjust them as you wish. Then launch your DB instance by clicking the **Launch DB instance** button.
 
 ![](https://imgur.com/OiBdWtp.png)
 
-> Note: In this guide, we disable backup options but you can setup any backup retention period you want. Consider using AWS Aurora instead if you're interested in more options here.
+> **Note**: In this guide, we disable backup options but you can setup any backup retention period you want. Consider using AWS Aurora instead if you're interested in more options here.
 
-### 2.5 Instance Settings
+### 2.6 Instance Settings
 
-Now click "View DB instance details".
+Once the instance is available, go ahead and click **View DB instance details**.
 
 ![](https://imgur.com/hERfJiF.png)
 
-In your instance settings, locate the endpoint and take note of it for later. If it is not shown here, that means your DB is still being setup. In this case, don't worry and carry on. You can collect the endpoint afterwards.
+<Instruction>
 
-Then, open the security groups by clicking the link in the security groups section.
+In your instance settings, locate the **Endpoint** and take note of it for later.
+
+</Instruction>
+
+If it is not shown here, that means your DB is still being setup. In this case, don't worry and carry on. You can collect the endpoint afterwards.
+
+<Instruction>
+
+Then, find the **Details** section and open the security groups by clicking the link right beneath the **Security groups** label.
+
+</Instruction>
 
 ![](https://imgur.com/bAc1L3q.png)
 
-In the security group settings, verify that a `Custom TCP Rule` inbound rule as shown is listed. It's important that it is set to source `0.0.0.0/0`.
+<Instruction>
+
+In the security group settings, select the **Inbound** tab at the bottom of the page and verify that a `Custom TCP Rule` inbound rule is listed. **It's important that it is set to source `0.0.0.0/0`.**
+
+</Instruction>
 
 ![](https://imgur.com/pJ1iXYM.png)
 
-If such an inbound rule does not exist, click the edit button and setup a new inbound rule with the source `Anywhere`. Click save.
+<Instruction>
+
+If such an inbound rule does not exist, click the **Edit** button and setup a new inbound rule with the source `Anywhere`. Click **Save**.
+
+</Instruction>
 
 ![](https://imgur.com/wmu4Ucw.png)
 
