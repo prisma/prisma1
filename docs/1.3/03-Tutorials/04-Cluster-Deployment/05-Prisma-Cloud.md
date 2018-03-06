@@ -5,15 +5,31 @@ description: Learn how to deploy your Prisma services with Prisma Cloud.
 
 # Setting up Clusters with Prisma Cloud and AWS RDS
 
-This guide gets you up and running with Prisma Cloud and AWS RDS. AWS RDS is eligible for the AWS Free Tier. This is great for development clusters or to just get things started.
+This guide gets you up and running with [Prisma Cloud](https://www.prismagraphql.com/cloud/) and [AWS Relational Database Service](https://aws.amazon.com/rds/) (RDS).
 
-If you're looking for more advanced features we recommend using AWS Aurora instead.
+> AWS RDS is eligible for the AWS Free Tier. This is great for development clusters or to just get things started. If you're looking for more advanced features we recommend using [AWS Aurora](https://aws.amazon.com/rds/aurora) instead.
 
 ## 1. Signing up to AWS
 
-If you have no AWS account yet, [sign up here](https://aws.amazon.com/). This process might take some while, but you'll get there! Keep your credit card and phone number ready! :)
+<Instruction>
+
+If you don't have an AWS account yet, [sign up here](https://aws.amazon.com/).
+
+</Instruction>
+
+This process might take a little while, but you'll get there! Note that you'll have to provide credit card info as well as your phone number at some point during the process.
 
 ## 2. Creating a new AWS RDS instance
+
+<Instruction>
+
+Once your account is ready, navigate to the **Relational Database Service** in the [AWS Console](https://console.aws.amazon.com/console/home) by typing `RDS` in the **AWS Services** search bar.
+
+</Instruction>
+
+![](https://imgur.com/Xmkgl8O.png)
+
+<InfoBox>
 
 We recommend to setup your database in one of the following regions:
 
@@ -21,6 +37,9 @@ We recommend to setup your database in one of the following regions:
 * `us-west-2` / US West (Oregon)
 * `ap-northeast-1` / Asia Pacific (Tokyo)
 * `eu-west-1` / EU West (Ireland)
+
+</InfoBox>
+
 
 ### 2.1 Get Started
 
