@@ -176,7 +176,7 @@ case class MigrationStepsInferrerImpl(previousSchema: Schema, nextSchema: Schema
       nextModelBName   = renames.getNextModelName(previousRelation.modelBId)
       nextRelation <- nextSchema // TODO: this needs to be adapted once we allow rename of relations
                        .getRelationByName(previousRelation.name)
-                       .orElse(UnambigousRelation.unambiguousRelationThatConnectsModels(nextSchema, nextModelAName, nextModelBName))
+                       .orElse(UnambiguousRelation.unambiguousRelationThatConnectsModels(nextSchema, nextModelAName, nextModelBName))
     } yield {
       UpdateRelation(
         name = previousRelation.name,

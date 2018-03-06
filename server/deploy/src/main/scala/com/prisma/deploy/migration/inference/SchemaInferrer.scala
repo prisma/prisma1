@@ -155,7 +155,7 @@ case class SchemaInferrerImpl(
 
       // TODO: this needs to be adapted once we allow rename of relations
       val oldEquivalentRelation = relationField.relationName.flatMap(baseSchema.getRelationByName).orElse {
-        UnambigousRelation.unambiguousRelationThatConnectsModels(baseSchema, previousModelAName, previousModelBName)
+        UnambiguousRelation.unambiguousRelationThatConnectsModels(baseSchema, previousModelAName, previousModelBName)
       }
 
       oldEquivalentRelation match {

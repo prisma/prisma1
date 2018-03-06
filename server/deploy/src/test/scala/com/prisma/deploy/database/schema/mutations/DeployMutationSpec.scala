@@ -629,7 +629,7 @@ class DeployMutationSpec extends FlatSpec with Matchers with DeploySpecBase {
     migrations.head.revision shouldEqual 3 // order is DESC
   }
 
-  "DeployMutation" should "be able to add two relations at the same time" in {
+  "DeployMutation" should "throw a proper error if detecting an ambiguous relation update" in {
     val (project, _) = setupProject(basicTypesGql)
     val nameAndStage = ProjectId.fromEncodedString(project.id)
     val schema =
