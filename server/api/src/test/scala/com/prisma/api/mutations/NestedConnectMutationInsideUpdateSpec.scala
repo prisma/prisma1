@@ -1322,4 +1322,45 @@ class NestedConnectMutationInsideUpdateSpec extends FlatSpec with Matchers with 
     mustBeEqual(result.pathAsJsValue("data.updateTodo.comments").toString, """[{"text":"comment1"},{"text":"comment2"}]""")
   }
 
+  "a PM to CM  self relation with the child not already in a relation" should "be connectable through a nested mutation by unique" in {
+    val project = SchemaDsl.fromString() { """type Technology {
+                                             |  name: String! @unique
+                                             |  childTechnologies: [Technology!]! @relation(name: "ChildTechnologies")
+                                             |  parentTechnologies: [Technology!]! @relation(name: "ChildTechnologies")
+                                             |}""".stripMargin }
+    database.setup(project)
+
+    server.executeQuerySimple("""mutation {createTechnology(data: {name: "techA"}){name}}""", project)
+
+    server.executeQuerySimple("""mutation {createTechnology(data: {name: "techB"}){name}}""", project)
+
+    val res = server.executeQuerySimple(
+      s"""mutation {
+         |  updateTechnology(where: {name: "techA"},
+         |                   data:  {childTechnologies: {connect: {name: "techB"}}})
+         |      {name,
+         |       childTechnologies  {name}
+         |       parentTechnologies {name}}
+         |}
+      """.stripMargin,
+      project
+    )
+
+    res.toString should be("""{"data":{"updateTechnology":{"name":"techA","childTechnologies":[{"name":"techB"}],"parentTechnologies":[]}}}""")
+
+    val res2 = server.executeQuerySimple(
+      s"""query {
+         |  technologies{name,
+         |       childTechnologies  {name}
+         |       parentTechnologies {name}
+         |  }
+         |}
+      """.stripMargin,
+      project
+    )
+
+    res2.toString should be(
+      """{"data":{"technologies":[{"name":"techA","childTechnologies":[{"name":"techB"}],"parentTechnologies":[]},{"name":"techB","childTechnologies":[],"parentTechnologies":[{"name":"techA"}]}]}}""")
+  }
+
 }
