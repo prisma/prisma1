@@ -10,13 +10,12 @@ import scala.concurrent.{ExecutionContext, Future}
 
 case class FunctionValidatorImpl()(implicit ec: ExecutionContext, dependencies: PrismaLocalDependencies) extends FunctionValidator {
 
-  override def validateFunctionInput(project: Project, fn: FunctionInput): Future[Vector[SchemaError]] = {
+  override def validateFunctionInput(project: Project, fn: FunctionInput): Vector[SchemaError] = {
     val validator                                      = SubscriptionQueryValidator(project)
     val result: Or[Model, Seq[SubscriptionQueryError]] = validator.validate(fn.query)
     result match {
-      case Bad(errors) =>
-        Future.successful(errors.map(error => SchemaError(`type` = "Subscription", field = fn.name, description = error.errorMessage)).toVector)
-      case Good(_) => Future.successful(Vector.empty)
+      case Bad(errors) => errors.map(error => SchemaError(`type` = "Subscription", field = fn.name, description = error.errorMessage)).toVector
+      case Good(_)     => Vector.empty
     }
   }
 }

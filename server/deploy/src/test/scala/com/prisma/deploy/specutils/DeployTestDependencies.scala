@@ -32,11 +32,8 @@ case class DeployTestDependencies()(implicit val system: ActorSystem, val materi
 
   override def apiAuth = AuthImpl
   override def functionValidator: FunctionValidator = new FunctionValidator {
-    override def validateFunctionInput(project: Project, fn: FunctionInput): Future[Vector[SchemaError]] = {
-      if (fn.name == "failing") { Future.successful(Vector(SchemaError(`type` = "model", field = "field", description = "error"))) } else {
-        Future.successful(Vector.empty)
-
-      }
+    override def validateFunctionInput(project: Project, fn: FunctionInput): Vector[SchemaError] = {
+      if (fn.name == "failing") Vector(SchemaError(`type` = "model", field = "field", description = "error")) else Vector.empty
     }
   }
 }

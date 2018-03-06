@@ -61,7 +61,7 @@ case class DeployMutation(
         val steps = migrationStepsInferrer.infer(project.schema, inferredNextSchema, schemaMapping)
         for {
           _         <- handleProjectUpdate()
-          functions <- getFunctionModelsOrErrors(args.functions)
+          functions = getFunctionModelsOrErrors(args.functions)
           migration <- functions match {
                         case Bad(_)                  => Future.successful(Some(Migration.empty(project.id)))
                         case Good(functionsForInput) => handleMigration(inferredNextSchema, steps, functionsForInput)
@@ -96,18 +96,17 @@ case class DeployMutation(
     }
   }
 
-  def getFunctionModelsOrErrors(fns: Vector[FunctionInput]): Future[Vector[Function] Or Vector[SchemaError]] = {
-    validateFunctionInputs(fns).map { errors =>
-      if (errors.nonEmpty) {
-        Bad(errors)
-      } else {
-        Good(args.functions.map(convertFunctionInput))
-      }
+  def getFunctionModelsOrErrors(fns: Vector[FunctionInput]): Vector[Function] Or Vector[SchemaError] = {
+    val errors = validateFunctionInputs(fns)
+    if (errors.nonEmpty) {
+      Bad(errors)
+    } else {
+      Good(args.functions.map(convertFunctionInput))
     }
   }
 
-  private def validateFunctionInputs(fns: Vector[FunctionInput]): Future[Vector[SchemaError]] =
-    Future.sequence(fns.map(dependencies.functionValidator.validateFunctionInput(project, _))).map(_.flatten)
+  private def validateFunctionInputs(fns: Vector[FunctionInput]): Vector[SchemaError] =
+    fns.flatMap(dependencies.functionValidator.validateFunctionInput(project, _))
 
   private def convertFunctionInput(fnInput: FunctionInput): ServerSideSubscriptionFunction = {
     ServerSideSubscriptionFunction(

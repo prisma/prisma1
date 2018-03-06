@@ -7,5 +7,5 @@ import scala.concurrent.Future
 
 trait FunctionValidator {
 
-  def validateFunctionInput(project: Project, fn: FunctionInput): Future[Vector[SchemaError]]
+  def validateFunctionInput(project: Project, fn: FunctionInput): Vector[SchemaError]
 }
