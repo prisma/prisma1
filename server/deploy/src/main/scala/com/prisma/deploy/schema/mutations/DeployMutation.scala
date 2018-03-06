@@ -60,6 +60,10 @@ case class DeployMutation(
     schemaInferrer.infer(project.schema, schemaMapping, graphQlSdl) match {
       case Good(inferredNextSchema) =>
         val steps = migrationStepsInferrer.infer(project.schema, inferredNextSchema, schemaMapping)
+
+        //generate warnings in migrationstepsinferrer
+        //if there are warnings require force flag
+
         for {
           _         <- handleProjectUpdate()
           functions <- getFunctionModelsOrErrors(args.functions)

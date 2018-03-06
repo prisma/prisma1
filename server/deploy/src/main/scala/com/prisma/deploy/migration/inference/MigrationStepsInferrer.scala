@@ -41,18 +41,18 @@ case class MigrationStepsInferrerImpl(previousSchema: Schema, nextSchema: Schema
     * all steps, instead of knowing the next project state as well.
     */
   def evaluate(): Vector[MigrationStep] = {
-    relationsToDelete ++
-      fieldsToDelete ++
-      modelsToDelete ++
-      enumsToDelete ++
+    relationsToDelete ++ //data loss
+      fieldsToDelete ++  //data loss
+      modelsToDelete ++  //data loss
+      enumsToDelete ++   //data loss
       enumsToCreate ++
       modelsToCreate ++
       fieldsToCreate ++
-      relationsToCreate ++
-      enumsToUpdate ++
-      fieldsToUpdate ++
-      modelsToUpdate ++
-      relationsToUpdate
+      relationsToCreate ++ // if required and there are already nodes we also have a problem
+      enumsToUpdate ++     //data loss
+      fieldsToUpdate ++    //data loss
+      modelsToUpdate ++    //data loss
+      relationsToUpdate //data loss
   }
 
   lazy val modelsToCreate: Vector[CreateModel] = {
