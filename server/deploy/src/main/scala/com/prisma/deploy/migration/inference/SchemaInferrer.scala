@@ -3,7 +3,7 @@ package com.prisma.deploy.migration.inference
 import com.prisma.deploy.gc_value.GCStringConverter
 import com.prisma.deploy.migration.DataSchemaAstExtensions._
 import com.prisma.deploy.migration.ReservedFields
-import com.prisma.deploy.schema.InvalidRelationName
+import com.prisma.deploy.schema.{InvalidRelationName, UpdatedRelationAmbigous}
 import com.prisma.deploy.validation.NameConstraints
 import com.prisma.gc_values.{GCValue, InvalidValueForScalarType}
 import com.prisma.shared.models.{OnDelete, _}
@@ -155,7 +155,7 @@ case class SchemaInferrerImpl(
 
       // TODO: this needs to be adapted once we allow rename of relations
       val oldEquivalentRelation = relationField.relationName.flatMap(baseSchema.getRelationByName).orElse {
-        baseSchema.getUnambiguousRelationThatConnectsModels_!(previousModelAName, previousModelBName)
+        UnambigousRelation.unambiguousRelationThatConnectsModels(baseSchema, previousModelAName, previousModelBName)
       }
 
       oldEquivalentRelation match {

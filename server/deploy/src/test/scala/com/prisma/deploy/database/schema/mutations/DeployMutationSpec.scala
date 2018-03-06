@@ -680,7 +680,7 @@ class DeployMutationSpec extends FlatSpec with Matchers with DeploySpecBase {
         |}
       """.stripMargin
 
-    server.query(
+    server.queryThatMustFail(
       s"""
          |mutation {
          |  deploy(input:{name: "${nameAndStage.name}", stage: "${nameAndStage.stage}", types: ${formatSchema(schema2)}}){
@@ -692,13 +692,11 @@ class DeployMutationSpec extends FlatSpec with Matchers with DeploySpecBase {
          |    }
          |  }
          |}
-      """.stripMargin
+      """.stripMargin,
+      errorCode = 3018,
+      errorContains =
+        "There is a relation ambiguity during the migration. Please first name the old relation on your schema. The ambiguity is on a relation between Mote and User."
     )
-
-    val migrations2 = migrationPersistence.loadAll(project.id).await
-    migrations2 should have(size(3))
-    migrations2.exists(x => x.status != MigrationStatus.Success) shouldEqual false
-    migrations2.head.revision shouldEqual 3 // order is DESC
   }
 
   private def formatFunctions(functions: Vector[FunctionInput]) = {
