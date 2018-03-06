@@ -229,7 +229,7 @@ If you haven't done so before, you need now need to provide your credit card inf
 
 ### 3.4 Provisioning a cluster
 
-The process of setting up a cluster takes around 10 minutes. The provisioning status of your cluster will be printed continuously.
+The process of setting up a cluster usually shouldn't take longer than a few seconds. The provisioning status of your cluster will be printed continuously.
 
 ![](https://imgur.com/JYKXoEM.png)
 
