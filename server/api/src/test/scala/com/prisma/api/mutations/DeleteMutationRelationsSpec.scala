@@ -7,6 +7,51 @@ import org.scalatest.{FlatSpec, Matchers}
 
 class DeleteMutationRelationsSpec extends FlatSpec with Matchers with ApiBaseSpec {
 
+  "a P0 to C1! relation " should "error when deleting the parent" in {
+    val project = SchemaDsl() { schema =>
+      val parent = schema.model("Parent").field_!("p", _.String, isUnique = true)
+      val child  = schema.model("Child").field_!("c", _.String, isUnique = true)
+      child.oneToOneRelation_!("parentReq", "DOESNOTEXIST", parent, isRequiredOnFieldB = false, includeFieldB = false)
+    }
+    database.setup(project)
+
+    server
+      .executeQuerySimple(
+        """mutation {
+          |  createChild(data: {
+          |    c: "c1"
+          |    parentReq: {
+          |      create: {p: "p1"}
+          |    }
+          |  }){
+          |    id
+          |  }
+          |}""".stripMargin,
+        project
+      )
+
+    database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "_ChildToParent").as[Int]) should be(Vector(1))
+
+    server.executeQuerySimpleThatMustFail(
+      s"""
+         |mutation {
+         |  deleteParent(
+         |  where: {p: "p1"}
+         |  ){
+         |  p
+         |  }
+         |}
+      """.stripMargin,
+      project,
+      errorCode = 3042,
+      errorContains = "The change you are trying to make would violate the required relation '_ChildToParent' between Child and Parent"
+    )
+
+    database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "Parent").as[Int]) should be(Vector(1))
+    database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "Child").as[Int]) should be(Vector(1))
+    database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "_ChildToParent").as[Int]) should be(Vector(1))
+  }
+
   "a P1! to C1! relation " should "error when deleting the parent" in {
     val project = SchemaDsl() { schema =>
       val parent = schema.model("Parent").field_!("p", _.String, isUnique = true)

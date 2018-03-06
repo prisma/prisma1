@@ -254,7 +254,7 @@ object DatabaseMutationBuilder {
     sql"(SELECT `id` FROM (SELECT  * From `#$projectId`.`#${where.model.name}`) IDFROMWHEREPATH WHERE `#${where.field.name}` = ${where.fieldValue})"
   }
 
-  //we could probably save even more queries if we start the paths always at the last node edge
+  //we could probably save even more joins if we start the paths always at the last node edge
 
   def pathQueryForLastParent(projectId: String, path: Path): SQLActionBuilder = pathQueryForLastChild(projectId, path.removeLastEdge)
 
@@ -316,7 +316,15 @@ object DatabaseMutationBuilder {
 
   def oldParentFailureTrigger(project: Project, path: Path) = {
     val table = path.lastRelation_!.id
-    val query = sql"SELECT `id` FROM `#${project.id}`.`#$table` OLDPARENTPATHFAILURETRIGGER WHERE `#${path.childSideOfLastEdge}` = " ++ pathQueryForLastChild(
+    val query = sql"SELECT `id` FROM `#${project.id}`.`#$table` OLDPARENTPATHFAILURETRIGGER WHERE `#${path.childSideOfLastEdge}` IN " ++ pathQueryForLastChild(
+      project.id,
+      path)
+    triggerFailureWhenExists(project, query, table)
+  }
+
+  def oldParentFailureTriggerByField(project: Project, path: Path, field: Field) = {
+    val table = field.relation.get.id
+    val query = sql"SELECT `id` FROM `#${project.id}`.`#$table` OLDPARENTPATHFAILURETRIGGERBYFIELD WHERE `#${field.oppositeRelationSide.get}` IN " ++ pathQueryForLastChild(
       project.id,
       path)
     triggerFailureWhenExists(project, query, table)
@@ -324,7 +332,7 @@ object DatabaseMutationBuilder {
 
   def oldChildFailureTrigger(project: Project, path: Path) = {
     val table = path.lastRelation_!.id
-    val query = sql"SELECT `id` FROM `#${project.id}`.`#$table` OLDCHILDPATHFAILURETRIGGER WHERE `#${path.parentSideOfLastEdge}` = " ++ pathQueryForLastParent(
+    val query = sql"SELECT `id` FROM `#${project.id}`.`#$table` OLDCHILDPATHFAILURETRIGGER WHERE `#${path.parentSideOfLastEdge}` IN " ++ pathQueryForLastParent(
       project.id,
       path)
     triggerFailureWhenExists(project, query, table)
