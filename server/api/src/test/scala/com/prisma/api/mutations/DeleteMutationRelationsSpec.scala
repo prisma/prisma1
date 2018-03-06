@@ -698,4 +698,54 @@ class DeleteMutationRelationsSpec extends FlatSpec with Matchers with ApiBaseSpe
     database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "Child").as[Int]) should be(Vector(2))
     database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "StepChild").as[Int]) should be(Vector(1))
   }
+
+  // deleteMany
+
+  "a P1! to C1! relation " should "error when deleting the parent using deleteMany" in {
+    val project = SchemaDsl() { schema =>
+      val parent = schema.model("Parent").field_!("p", _.String, isUnique = true)
+      val child  = schema.model("Child").field_!("c", _.String, isUnique = true)
+      child.oneToOneRelation_!("parentReq", "childReq", parent)
+    }
+    database.setup(project)
+
+    server.executeQuerySimple(
+      """mutation {
+          |  createParent(data: {
+          |    p: "p1"
+          |    childReq: {
+          |      create: {c: "c1"}
+          |    }
+          |  }){
+          |    id
+          |    childReq{
+          |       id
+          |    }
+          |  }
+          |}""".stripMargin,
+      project
+    )
+
+    database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "_ChildToParent").as[Int]) should be(Vector(1))
+
+    server.executeQuerySimpleThatMustFail(
+      s"""
+         |mutation {
+         |  deleteManyParents(
+         |  where: {}
+         |  ){
+         |  count
+         |  }
+         |}
+      """.stripMargin,
+      project,
+      errorCode = 3042,
+      errorContains = "The change you are trying to make would violate the required relation '_ChildToParent' between Child and Parent"
+    )
+
+    database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "Parent").as[Int]) should be(Vector(1))
+    database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "Child").as[Int]) should be(Vector(1))
+    database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "_ChildToParent").as[Int]) should be(Vector(1))
+  }
+
 }
