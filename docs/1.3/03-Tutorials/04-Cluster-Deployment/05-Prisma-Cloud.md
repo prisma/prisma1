@@ -15,7 +15,7 @@ In the following sections, you are going to learn how to:
 - Set up a new Prisma cluster using the Prisma Cloud Console
 - Use the MySQL database as a backing data store for your Prisma cluster
 
-## 1. Signing up to AWS
+## 1. Signing up for AWS
 
 <Instruction>
 
