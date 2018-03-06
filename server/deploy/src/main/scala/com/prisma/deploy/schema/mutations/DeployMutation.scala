@@ -58,21 +58,41 @@ case class DeployMutation(
     val schemaMapping = schemaMapper.createMapping(graphQlSdl)
 
     schemaInferrer.infer(project.schema, schemaMapping, graphQlSdl) match {
+//      case Good(inferredNextSchema) =>
+//        val steps = migrationStepsInferrer.infer(project.schema, inferredNextSchema, schemaMapping)
+//        for {
+//          secretsUpdated <- updateSecretsIfNecessary()
+//          functions      <- getFunctionModelsOrErrors(args.functions)
+//          migration <- functions match {
+//                        case Bad(_)                  =>
+//                          Future.successful(Some(Migration.empty(project.id)))
+//                        case Good(functionsForInput) =>
+//                          handleMigration(inferredNextSchema, steps ++ secretsUpdated, functionsForInput)
+//                      }
+//        } yield {
+//          val functionErrors = functions.swap.getOrElse(Vector.empty)
+//
+//          MutationSuccess {
+//            DeployMutationPayload(args.clientMutationId, migration = migration, errors = schemaErrors ++ functionErrors)
+//          }
+//        }
       case Good(inferredNextSchema) =>
         val steps = migrationStepsInferrer.infer(project.schema, inferredNextSchema, schemaMapping)
-        for {
-          secretsUpdated <- handleProjectUpdate()
-          functions      <- getFunctionModelsOrErrors(args.functions)
-          migration <- functions match {
-                        case Bad(_)                  => Future.successful(Some(Migration.empty(project.id)))
-                        case Good(functionsForInput) => handleMigration(inferredNextSchema, steps ++ secretsUpdated, functionsForInput)
-                      }
-        } yield {
-          val functionErrors = functions.swap.getOrElse(Vector.empty)
 
-          MutationSuccess {
-            DeployMutationPayload(args.clientMutationId, migration = migration, errors = schemaErrors ++ functionErrors)
+        val functionOrErrorsFuture = getFunctionModelsOrErrors(args.functions)
+
+        functionOrErrorsFuture.flatMap { functionsOrErrors =>
+          val migration = functionsOrErrors match {
+            case Bad(errors) =>
+              Future.successful(Some(Migration.empty(project.id)))
+
+            case Good(functionsForInput) =>
+              val secretsUpdatedFuture = updateSecretsIfNecessary()
+              secretsUpdatedFuture.flatMap(secret => handleMigration(inferredNextSchema, steps ++ secret, functionsForInput))
           }
+          val functionErrors = functionsOrErrors.swap.getOrElse(Vector.empty)
+
+          migration.map(mig => MutationSuccess(DeployMutationPayload(args.clientMutationId, migration = mig, errors = schemaErrors ++ functionErrors)))
         }
 
       case Bad(err) =>
@@ -90,7 +110,7 @@ case class DeployMutation(
     }
   }
 
-  private def handleProjectUpdate(): Future[Option[MigrationStep]] = {
+  private def updateSecretsIfNecessary(): Future[Option[MigrationStep]] = {
     if (project.secrets != args.secrets && !args.dryRun.getOrElse(false)) {
       projectPersistence.update(project.copy(secrets = args.secrets)).map(_ => Some(UpdateSecrets("Secrets have been changed.")))
     } else {
