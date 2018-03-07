@@ -121,6 +121,7 @@ lazy val deployPersistencePlugin = normalProject("deploy-persistence-plugin")
 
 lazy val deployPersistencePluginForMySql = normalProject("deploy-persistence-plugin-mysql")
   .dependsOn(deployPersistencePlugin % "compile")
+  .dependsOn(scalaUtils % "compile")
   .settings(
     libraryDependencies ++= slick
   )
@@ -315,7 +316,9 @@ val allServerProjects = List(
   api,
   deploy,
   subscriptions,
-  workers
+  workers,
+  deployPersistencePlugin,
+  deployPersistencePluginForMySql
 )
 
 val allLibProjects = List(

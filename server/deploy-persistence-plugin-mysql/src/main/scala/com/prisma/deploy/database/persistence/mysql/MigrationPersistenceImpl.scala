@@ -1,9 +1,10 @@
 package com.prisma.deploy.database.persistence.mysql
 
-import com.prisma.deploy.database.persistence.MigrationPersistence
+import com.prisma.deploy.database.persistence.{DbToModelMapper, MigrationPersistence, ModelToDbMapper}
 import com.prisma.deploy.database.tables.MigrationTable
 import com.prisma.shared.models.MigrationStatus.MigrationStatus
 import com.prisma.shared.models.{Migration, MigrationId}
+import com.prisma.utils.future.FutureUtils.FutureOpt
 import org.joda.time.DateTime
 import play.api.libs.json.Json
 import slick.jdbc.MySQLProfile.api._
@@ -30,7 +31,7 @@ case class MigrationPersistenceImpl(
 
   override def byId(migrationId: MigrationId): Future[Option[Migration]] = {
     val baseQuery = for {
-      migration <- Tables.Migrations
+      migration <- table
       if migration.projectId === migrationId.projectId
       if migration.revision === migrationId.revision
     } yield migration
@@ -40,7 +41,7 @@ case class MigrationPersistenceImpl(
 
   override def loadAll(projectId: String): Future[Seq[Migration]] = {
     val baseQuery = for {
-      migration <- Tables.Migrations
+      migration <- table
       if migration.projectId === projectId
     } yield migration
 
@@ -53,7 +54,7 @@ case class MigrationPersistenceImpl(
       lastRevision       <- internalDatabase.run(MigrationTable.lastRevision(migration.projectId))
       dbMigration        = ModelToDbMapper.convert(migration)
       withRevisionBumped = dbMigration.copy(revision = lastRevision.getOrElse(0) + 1)
-      addMigration       = Tables.Migrations += withRevisionBumped
+      addMigration       = table += withRevisionBumped
       _                  <- internalDatabase.run(addMigration)
     } yield migration.copy(revision = withRevisionBumped.revision)
   }
