@@ -90,6 +90,7 @@ lazy val sharedModels = normalProject("shared-models")
 )
 
 lazy val deploy = serverProject("deploy")
+  .dependsOn(deployPersistencePlugin % "compile")
   .dependsOn(sharedModels % "compile")
   .dependsOn(akkaUtils % "compile")
   .dependsOn(metrics % "compile")
@@ -111,6 +112,12 @@ lazy val deploy = serverProject("deploy")
 //    buildInfoKeys := Seq[BuildInfoKey](name, version, "imageTag" -> betaImageTag),
 //    buildInfoPackage := "build_info"
 //  )
+
+lazy val deployPersistencePlugin = normalProject("deploy-persistence-plugin")
+  .dependsOn(sharedModels % "compile")
+  .settings(
+    libraryDependencies ++= slick
+  )
 
 lazy val api = serverProject("api")
   .dependsOn(sharedModels % "compile")

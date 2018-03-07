@@ -1,7 +1,7 @@
 package com.prisma.deploy.database.persistence
 
-import com.prisma.shared.models.{Migration, MigrationId}
 import com.prisma.shared.models.MigrationStatus.MigrationStatus
+import com.prisma.shared.models.{Migration, MigrationId}
 import org.joda.time.DateTime
 
 import scala.concurrent.Future

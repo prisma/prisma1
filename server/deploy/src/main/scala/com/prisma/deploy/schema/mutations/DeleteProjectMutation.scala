@@ -2,6 +2,7 @@ package com.prisma.deploy.schema.mutations
 
 import com.prisma.deploy.database.persistence.{MigrationPersistence, ProjectPersistence}
 import com.prisma.deploy.migration.mutactions.DeleteClientDatabaseForProject
+import com.prisma.deploy.persistence.DeployPersistencePlugin
 import com.prisma.deploy.schema.InvalidServiceName
 import com.prisma.messagebus.PubSubPublisher
 import com.prisma.messagebus.pubsub.Only
@@ -14,7 +15,8 @@ case class DeleteProjectMutation(
     args: DeleteProjectInput,
     projectPersistence: ProjectPersistence,
     clientDb: DatabaseDef,
-    invalidationPubSub: PubSubPublisher[String]
+    invalidationPubSub: PubSubPublisher[String],
+    persistencePlugin: DeployPersistencePlugin
 )(
     implicit ec: ExecutionContext
 ) extends Mutation[DeleteProjectMutationPayload] {
@@ -27,9 +29,10 @@ case class DeleteProjectMutation(
       projectOpt <- projectPersistence.load(projectId)
       project    = validate(projectOpt)
       _          <- projectPersistence.delete(projectId)
-      stmt       <- DeleteClientDatabaseForProject(projectId).execute
-      _          <- clientDb.run(stmt.sqlAction)
-      _          = invalidationPubSub.publish(Only(projectId), projectId)
+//      stmt       <- DeleteClientDatabaseForProject(projectId).execute
+//      _          <- clientDb.run(stmt.sqlAction)
+      _ <- persistencePlugin.deleteProjectDatabase(projectId)
+      _ = invalidationPubSub.publish(Only(projectId), projectId)
     } yield MutationSuccess(DeleteProjectMutationPayload(args.clientMutationId, project))
   }
 

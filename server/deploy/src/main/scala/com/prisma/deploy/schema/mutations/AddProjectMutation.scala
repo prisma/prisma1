@@ -2,6 +2,7 @@ package com.prisma.deploy.schema.mutations
 
 import com.prisma.deploy.database.persistence.{MigrationPersistence, ProjectPersistence}
 import com.prisma.deploy.migration.mutactions.CreateClientDatabaseForProject
+import com.prisma.deploy.persistence.DeployPersistencePlugin
 import com.prisma.deploy.schema.{InvalidServiceName, InvalidServiceStage, ProjectAlreadyExists}
 import com.prisma.deploy.validation.NameConstraints
 import com.prisma.shared.models._
@@ -14,7 +15,8 @@ case class AddProjectMutation(
     args: AddProjectInput,
     projectPersistence: ProjectPersistence,
     migrationPersistence: MigrationPersistence,
-    clientDb: DatabaseDef
+    clientDb: DatabaseDef,
+    persistencePlugin: DeployPersistencePlugin
 )(
     implicit ec: ExecutionContext
 ) extends Mutation[AddProjectMutationPayload]
@@ -44,10 +46,11 @@ case class AddProjectMutation(
     )
 
     for {
-      _    <- projectPersistence.create(newProject)
-      stmt <- CreateClientDatabaseForProject(newProject.id).execute
-      _    <- clientDb.run(stmt.sqlAction)
-      _    <- migrationPersistence.create(migration)
+      _ <- projectPersistence.create(newProject)
+//      stmt <- CreateClientDatabaseForProject(newProject.id).execute
+//      _    <- clientDb.run(stmt.sqlAction)
+      _ <- persistencePlugin.createProjectDatabase(newProject.id)
+      _ <- migrationPersistence.create(migration)
     } yield MutationSuccess(AddProjectMutationPayload(args.clientMutationId, newProject))
   }
 

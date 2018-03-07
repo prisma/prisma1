@@ -4,6 +4,7 @@ import akka.actor.ActorSystem
 import com.prisma.deploy.database.persistence.MigrationPersistence
 import com.prisma.deploy.migration.MigrationStepMapperImpl
 import com.prisma.deploy.migration.migrator.{MigrationApplierImpl, Migrator}
+import com.prisma.deploy.migration.mutactions.FailingAnyMutactionExecutor
 import com.prisma.shared.models._
 import com.prisma.utils.await.AwaitUtils
 import slick.jdbc.MySQLProfile.backend.DatabaseDef
@@ -22,7 +23,7 @@ case class TestMigrator(
   // For tests, the schedule directly does all the migration work to remove the asynchronous component
   override def schedule(projectId: String, nextSchema: Schema, steps: Vector[MigrationStep], functions: Vector[Function]): Future[Migration] = {
     val stepMapper = MigrationStepMapperImpl(projectId)
-    val applier    = MigrationApplierImpl(migrationPersistence, clientDatabase, stepMapper)
+    val applier    = MigrationApplierImpl(migrationPersistence, clientDatabase, stepMapper, FailingAnyMutactionExecutor)
 
     val result: Future[Migration] = for {
       savedMigration <- migrationPersistence.create(Migration(projectId, nextSchema, steps, functions))

@@ -2,6 +2,7 @@ package com.prisma.deploy.migration.migrator
 
 import akka.actor.{Actor, ActorRef, Props, Stash, Terminated}
 import com.prisma.deploy.database.persistence.{MigrationPersistence, ProjectPersistence}
+import com.prisma.deploy.persistence.DeployPersistencePlugin
 
 import scala.collection.mutable
 import scala.concurrent.Future
@@ -11,7 +12,8 @@ import slick.jdbc.MySQLProfile.backend.DatabaseDef
 case class DeploymentSchedulerActor(
     migrationPersistence: MigrationPersistence,
     projectPersistence: ProjectPersistence,
-    clientDatabase: DatabaseDef
+    clientDatabase: DatabaseDef,
+    persistencePlugin: DeployPersistencePlugin
 ) extends Actor
     with Stash {
   import DeploymentProtocol._
@@ -69,7 +71,7 @@ case class DeploymentSchedulerActor(
   }
 
   def workerForProject(projectId: String): ActorRef = {
-    val newWorker = context.actorOf(Props(ProjectDeploymentActor(projectId, migrationPersistence, clientDatabase)))
+    val newWorker = context.actorOf(Props(ProjectDeploymentActor(projectId, migrationPersistence, clientDatabase, persistencePlugin)))
 
     context.watch(newWorker)
     projectWorkers += (projectId -> newWorker)

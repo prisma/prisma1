@@ -39,7 +39,6 @@ case class SchemaBuilderImpl(
   import ManualMarshallerHelpers._
   import system.dispatcher
 
-  val internalDb: DatabaseDef                        = dependencies.internalDb
   val clientDb: DatabaseDef                          = dependencies.clientDb
   val projectPersistence: ProjectPersistence         = dependencies.projectPersistence
   val migrationPersistence: MigrationPersistence     = dependencies.migrationPersistence
@@ -216,7 +215,8 @@ case class SchemaBuilderImpl(
             args = args,
             projectPersistence = projectPersistence,
             migrationPersistence = migrationPersistence,
-            clientDb = clientDb
+            clientDb = clientDb,
+            persistencePlugin = dependencies.persistencePlugin
           ).execute
       }
     )
@@ -238,7 +238,8 @@ case class SchemaBuilderImpl(
             args = args,
             projectPersistence = projectPersistence,
             clientDb = clientDb,
-            invalidationPubSub = dependencies.invalidationPublisher
+            invalidationPubSub = dependencies.invalidationPublisher,
+            persistencePlugin = dependencies.persistencePlugin
           ).execute
       }
     )

@@ -2,7 +2,7 @@ package com.prisma.deploy.migration.migrator
 
 import com.prisma.deploy.database.persistence.MigrationPersistence
 import com.prisma.deploy.migration.MigrationStepMapper
-import com.prisma.deploy.migration.mutactions.ClientSqlMutaction
+import com.prisma.deploy.migration.mutactions.{AnyMutactionExecutor, ClientSqlMutaction}
 import com.prisma.shared.models.{Migration, MigrationStatus, MigrationStep, Schema}
 import com.prisma.utils.exceptions.StackTraceUtils
 import org.joda.time.DateTime
@@ -19,7 +19,8 @@ case class MigrationApplierResult(succeeded: Boolean)
 case class MigrationApplierImpl(
     migrationPersistence: MigrationPersistence,
     clientDatabase: DatabaseDef,
-    migrationStepMapper: MigrationStepMapper
+    migrationStepMapper: MigrationStepMapper,
+    mutactionExecutor: AnyMutactionExecutor
 )(implicit ec: ExecutionContext)
     extends MigrationApplier {
 
@@ -107,16 +108,18 @@ case class MigrationApplierImpl(
   }
 
   def executeClientMutaction(mutaction: ClientSqlMutaction): Future[Unit] = {
-    for {
-      statements <- mutaction.execute
-      _          <- clientDatabase.run(statements.sqlAction)
-    } yield ()
+//    for {
+//      statements <- mutaction.execute
+//      _          <- clientDatabase.run(statements.sqlAction)
+//    } yield ()
+    mutactionExecutor.execute(mutaction)
   }
 
   def executeClientMutactionRollback(mutaction: ClientSqlMutaction): Future[Unit] = {
-    for {
-      statements <- mutaction.rollback.get
-      _          <- clientDatabase.run(statements.sqlAction)
-    } yield ()
+//    for {
+//      statements <- mutaction.rollback.get
+//      _          <- clientDatabase.run(statements.sqlAction)
+//    } yield ()
+    mutactionExecutor.rollback(mutaction)
   }
 }

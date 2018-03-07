@@ -6,7 +6,8 @@ import akka.stream.ActorMaterializer
 import akka.util.Timeout
 import com.prisma.deploy.database.persistence.{MigrationPersistence, ProjectPersistence}
 import com.prisma.deploy.migration.migrator.DeploymentProtocol.{Initialize, Schedule}
-import com.prisma.shared.models.{Migration, MigrationStep, Schema, Function}
+import com.prisma.deploy.persistence.DeployPersistencePlugin
+import com.prisma.shared.models.{Function, Migration, MigrationStep, Schema}
 import slick.jdbc.MySQLProfile.backend.DatabaseDef
 
 import scala.concurrent.Future
@@ -16,14 +17,15 @@ import scala.util.{Failure, Success}
 case class AsyncMigrator(
     clientDatabase: DatabaseDef,
     migrationPersistence: MigrationPersistence,
-    projectPersistence: ProjectPersistence
+    projectPersistence: ProjectPersistence,
+    persistencePlugin: DeployPersistencePlugin
 )(
     implicit val system: ActorSystem,
     materializer: ActorMaterializer
 ) extends Migrator {
   import system.dispatcher
 
-  val deploymentScheduler = system.actorOf(Props(DeploymentSchedulerActor(migrationPersistence, projectPersistence, clientDatabase)))
+  val deploymentScheduler = system.actorOf(Props(DeploymentSchedulerActor(migrationPersistence, projectPersistence, clientDatabase, persistencePlugin)))
   implicit val timeout    = new Timeout(5.minutes)
 
   (deploymentScheduler ? Initialize).onComplete {

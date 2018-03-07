@@ -5,6 +5,7 @@ import akka.stream.ActorMaterializer
 import com.prisma.auth.AuthImpl
 import com.prisma.errors.{BugsnagErrorReporter, ErrorReporter}
 import com.prisma.deploy.DeployDependencies
+import com.prisma.deploy.persistence.DeployPersistencePlugin
 import com.prisma.deploy.server.DummyClusterAuth
 import com.prisma.graphql.GraphQlClient
 import com.prisma.messagebus.pubsub.inmemory.InMemoryAkkaPubSub
@@ -17,10 +18,9 @@ case class DeployTestDependencies()(implicit val system: ActorSystem, val materi
   val internalTestDb = new InternalTestDatabase()
   val clientTestDb   = new ClientTestDatabase()
 
-  override lazy val internalDb = internalTestDb.internalDatabase
-  override lazy val clientDb   = clientTestDb.clientDatabase
+  override lazy val clientDb = clientTestDb.clientDatabase
 
-  override lazy val migrator              = TestMigrator(clientDb, internalDb, migrationPersistence)
+  override lazy val migrator              = TestMigrator(clientDb, internalTestDb.internalDatabase, migrationPersistence)
   override lazy val clusterAuth           = DummyClusterAuth()
   override lazy val invalidationPublisher = InMemoryAkkaPubSub[String]()
 
@@ -30,4 +30,6 @@ case class DeployTestDependencies()(implicit val system: ActorSystem, val materi
   }
 
   override def apiAuth = AuthImpl
+
+  override def persistencePlugin: DeployPersistencePlugin = ???
 }

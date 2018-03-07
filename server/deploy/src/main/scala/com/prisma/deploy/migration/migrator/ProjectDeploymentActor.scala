@@ -3,8 +3,9 @@ package com.prisma.deploy.migration.migrator
 import akka.actor.{Actor, Stash}
 import com.prisma.deploy.database.persistence.MigrationPersistence
 import com.prisma.deploy.migration.MigrationStepMapperImpl
+import com.prisma.deploy.persistence.DeployPersistencePlugin
 import com.prisma.deploy.schema.DeploymentInProgress
-import com.prisma.shared.models.{Migration, MigrationStep, Schema, Function}
+import com.prisma.shared.models.{Function, Migration, MigrationStep, Schema}
 import slick.jdbc.MySQLProfile.backend.DatabaseDef
 
 import scala.concurrent.Future
@@ -33,14 +34,15 @@ object DeploymentProtocol {
 case class ProjectDeploymentActor(
     projectId: String,
     migrationPersistence: MigrationPersistence,
-    clientDatabase: DatabaseDef
+    clientDatabase: DatabaseDef,
+    persistencePlugin: DeployPersistencePlugin
 ) extends Actor
     with Stash {
   import DeploymentProtocol._
 
   implicit val ec          = context.system.dispatcher
-  val stepMapper           = MigrationStepMapperImpl(projectId)
-  val applier              = MigrationApplierImpl(migrationPersistence, clientDatabase, stepMapper)
+  val stepMapper           = persistencePlugin.migrationStepMapper
+  val applier              = MigrationApplierImpl(migrationPersistence, clientDatabase, stepMapper, persistencePlugin.mutactionExecutor)
   var activeSchema: Schema = _
 
   // Possible enhancement: Periodically scan the DB for migrations if signal was lost -> Wait and see if this is an issue at all

@@ -2,14 +2,13 @@ package com.prisma.deploy
 
 import akka.actor.Actor
 import com.prisma.akkautil.LogUnhandled
-import com.prisma.deploy.DatabaseSizeReporter.{DatabaseSize, Report}
+import com.prisma.deploy.DatabaseSizeReporter.Report
 import com.prisma.deploy.database.persistence.ProjectPersistence
+import com.prisma.deploy.persistence.{DatabaseSize, DeployPersistencePlugin}
 import com.prisma.errors.{BugsnagErrorReporter, ErrorReporter}
-import com.prisma.metrics.{CustomTag, GaugeMetric, LibratoGaugeMetric, MetricsManager}
+import com.prisma.metrics.{CustomTag, LibratoGaugeMetric, MetricsManager}
 import com.prisma.profiling.JvmProfiler
 import com.prisma.shared.models.Project
-import slick.jdbc
-import slick.jdbc.MySQLProfile.api._
 
 import scala.collection.mutable
 import scala.concurrent.Future
@@ -28,11 +27,11 @@ object DeployMetrics extends MetricsManager(BugsnagErrorReporter(sys.env.getOrEl
 object DatabaseSizeReporter {
   object Report
 
-  case class DatabaseSize(name: String, total: Double)
+//  case class DatabaseSize(name: String, total: Double)
 }
 case class DatabaseSizeReporter(
     projectPersistence: ProjectPersistence,
-    database: jdbc.MySQLProfile.backend.Database
+    persistencePlugin: DeployPersistencePlugin
 ) extends Actor
     with LogUnhandled {
   import context.dispatcher
@@ -70,16 +69,18 @@ case class DatabaseSizeReporter(
     })
   }
 
-  def getAllDatabaseSizes(): Future[Vector[DatabaseSize]] = database.run(action)
+  def getAllDatabaseSizes(): Future[Vector[DatabaseSize]] = persistencePlugin.getAllDatabaseSizes()
 
-  val action = {
-    val query = sql"""
-         SELECT table_schema, sum( data_length + index_length) / 1024 / 1024 FROM information_schema.TABLES GROUP BY table_schema
-       """
-    query.as[(String, Double)].map { tuples =>
-      tuples.map { tuple =>
-        DatabaseSize(tuple._1, tuple._2)
-      }
-    }
-  }
+//  def getAllDatabaseSizes(): Future[Vector[DatabaseSize]] = database.run(action)
+//
+//  val action = {
+//    val query = sql"""
+//         SELECT table_schema, sum( data_length + index_length) / 1024 / 1024 FROM information_schema.TABLES GROUP BY table_schema
+//       """
+//    query.as[(String, Double)].map { tuples =>
+//      tuples.map { tuple =>
+//        DatabaseSize(tuple._1, tuple._2)
+//      }
+//    }
+//  }
 }

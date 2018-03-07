@@ -9,8 +9,8 @@ import slick.jdbc.MySQLProfile.api._
 
 class MigrationPersistenceImplSpec extends FlatSpec with Matchers with DeploySpecBase {
 
-  val migrationPersistence: MigrationPersistenceImpl = testDependencies.migrationPersistence
-  val projectPersistence: ProjectPersistenceImpl     = testDependencies.projectPersistence
+  val migrationPersistence: MigrationPersistence = testDependencies.migrationPersistence
+  val projectPersistence: ProjectPersistence     = testDependencies.projectPersistence
 
   ".byId()" should "load a migration by project ID and revision" in {
     val (project1, _) = setupProject(basicTypesGql)

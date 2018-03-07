@@ -10,6 +10,7 @@ import com.prisma.api.schema.{CachedSchemaBuilder, SchemaBuilder}
 import com.prisma.auth.AuthImpl
 import com.prisma.deploy.DeployDependencies
 import com.prisma.deploy.migration.migrator.{AsyncMigrator, Migrator}
+import com.prisma.deploy.persistence.DeployPersistencePlugin
 import com.prisma.deploy.server.{ClusterAuthImpl, DummyClusterAuth}
 import com.prisma.graphql.GraphQlClient
 import com.prisma.messagebus._
@@ -45,7 +46,7 @@ case class PrismaProdDependencies()(implicit val system: ActorSystem, val materi
     CachedProjectFetcherImpl(fetcher, invalidationPubSub)
   }
 
-  override val migrator: Migrator = AsyncMigrator(clientDb, migrationPersistence, projectPersistence)
+  override val migrator: Migrator = AsyncMigrator(clientDb, migrationPersistence, projectPersistence, persistencePlugin)
   override val clusterAuth = {
     sys.env.get("CLUSTER_PUBLIC_KEY") match {
       case Some(publicKey) if publicKey.nonEmpty => ClusterAuthImpl(publicKey)
@@ -100,4 +101,6 @@ case class PrismaProdDependencies()(implicit val system: ActorSystem, val materi
   override lazy val graphQlClient = GraphQlClient(sys.env.getOrElse("CLUSTER_ADDRESS", sys.error("env var CLUSTER_ADDRESS is not set")))
 
   override def apiAuth = AuthImpl
+
+  override def persistencePlugin: DeployPersistencePlugin = ???
 }

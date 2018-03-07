@@ -1,7 +1,7 @@
 package com.prisma.deploy.migration.migrator
 
 import com.prisma.deploy.migration.MigrationStepMapper
-import com.prisma.deploy.migration.mutactions.{ClientSqlMutaction, ClientSqlStatementResult}
+import com.prisma.deploy.migration.mutactions.{AnyMutactionExecutor, ClientSqlMutaction, ClientSqlStatementResult, FailingAnyMutactionExecutor}
 import com.prisma.deploy.specutils.DeploySpecBase
 import com.prisma.shared.models._
 import com.prisma.utils.await.AwaitUtils
@@ -88,7 +88,7 @@ class MigrationApplierSpec extends FlatSpec with Matchers with DeploySpecBase wi
 
   def loadMigrationFromDb: Migration = persistence.byId(migration.id).await.get
 
-  def migrationApplier(stepMapper: MigrationStepMapper) = MigrationApplierImpl(persistence, clientDb.clientDatabase, stepMapper)
+  def migrationApplier(stepMapper: MigrationStepMapper) = MigrationApplierImpl(persistence, clientDb.clientDatabase, stepMapper, FailingAnyMutactionExecutor)
 
   lazy val succeedingSqlMutactionWithSucceedingRollback = clientSqlMutaction(succeedingStatementResult, rollback = succeedingStatementResult)
   lazy val succeedingSqlMutactionWithFailingRollback    = clientSqlMutaction(succeedingStatementResult, rollback = failingStatementResult)
