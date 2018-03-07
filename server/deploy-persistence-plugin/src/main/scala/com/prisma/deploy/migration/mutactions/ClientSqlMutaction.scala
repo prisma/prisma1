@@ -1,6 +1,6 @@
 package com.prisma.deploy.migration.mutactions
 
-import com.prisma.shared.models.{Field, Model}
+import com.prisma.shared.models.{Field, Model, Relation, Schema}
 import slick.dbio.{DBIOAction, Effect, NoStream}
 
 import scala.concurrent.Future
@@ -26,6 +26,9 @@ case class UpdateColumn(projectId: String, model: Model, oldField: Field, newFie
 case class CreateModelTable(projectId: String, model: String)                                                            extends ClientSqlMutaction
 case class DeleteModelTable(projectId: String, model: String, scalarListFields: Vector[String])                          extends ClientSqlMutaction
 case class RenameTable(projectId: String, previousName: String, nextName: String, scalarListFieldsNames: Vector[String]) extends ClientSqlMutaction
+
+case class CreateRelationTable(projectId: String, schema: Schema, relation: Relation) extends ClientSqlMutaction
+case class DeleteRelationTable(projectId: String, schema: Schema, relation: Relation) extends ClientSqlMutaction
 
 trait AnyMutactionExecutor {
   def execute(mutaction: ClientSqlMutaction): Future[Unit]
