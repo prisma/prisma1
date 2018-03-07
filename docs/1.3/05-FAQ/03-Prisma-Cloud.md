@@ -17,7 +17,7 @@ You can roughly think of a workspace similar to a GitHub organization. It is a c
 
 ### How do I manage access rights and permissions among my team members?
 
-Right now, every team member that's invited to join a project on Prisma Cloud has full access rights. More fine-grained management of access and permissions for team members is coming soon. 
+Right now, every team member that's invited to join a project on Prisma Cloud has full access rights. More fine-grained management of access and permissions for team members is coming soon.
 
 ### What are clusters? How do they relate to services?
 
@@ -38,6 +38,8 @@ Private clusters are created through the Prisma Cloud Console. Follow this [tuto
 Because one cluster can host many services, you can deploy your services that represent the stages / environments (e.g. `dev`, `staging` and `prod`) to the same cluster. It is not _required_ to use multiple clusters for your multiple stages.
 
 However, to be certain that nothing that's happening in `dev` or `staging` can have negative effects on your `prod` stage, it is recommended to deploy your production environment to its own cluster. Ideally, you do the same for other stages / environments as well just to minimize the risk they're affecting each other.
+
+It is of course also possible to use local clusters or the Prisma Cloud development cluster as development environments when appropriate.
 
 ### Is there a free version of Prisma Cloud?
 
