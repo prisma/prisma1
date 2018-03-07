@@ -15,6 +15,10 @@ You can roughly think of a workspace similar to a GitHub organization. It is a c
 
 > **Note**: The clusters above all refer to private clusters that were setup in the Prisma Clouds (as opposed to self-hosted and development clusters for which above statements might not be true).
 
+### How do I manage access rights and permissions among my team members?
+
+Right now, every team member that's invited to join a project on Prisma Cloud has full access rights. More fine-grained management of access and permissions for team members is coming soon. 
+
 ### What are clusters? How do they relate to services?
 
 A cluster is the _runtime environment_ for Prisma services. This means in order to deploy a Prisma service (using the `prisma deploy` command), you need to have _some_ cluster available.
