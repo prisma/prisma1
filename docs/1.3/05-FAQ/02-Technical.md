@@ -9,12 +9,12 @@ description: Frequently asked questions about any technical matters regarding Pr
 
 There are basically two ways for hosting Prisma:
 
-- Do it yourself (using any available cloud provider, such as Digital Ocean, AWS, Google Cloud, ...)
-- In the Prisma Cloud (coming soon)
+- Do it yourself (using any available cloud provider, such as Digital Ocean, AWS, Google Cloud, ...). Follow [this](!alias-texoo9aemu) tutorial to started.
+- With [Prisma Cloud](https://www.prismagraphql.com/cloud/). Follow [this](!alias-ua9gai4kie) tutorial to started.
 
 ### How do I connect my database to Prisma?
 
-At the moment, Prisma only supports MySQL as a database technology (with [a lot more](https://github.com/graphcool/graphcool/issues/1006) planned in the future). Connecting an existing MySQL database will require the following steps:
+At the moment, Prisma supports MySQL as a database technology (with [a lot more](https://github.com/graphcool/prisma/issues/1751) coming in the future). Connecting an existing MySQL database will require the following steps:
 
 1. Translate your SQL schema into a GraphQL data model written in [SDL](https://blog.graph.cool/graphql-sdl-schema-definition-language-6755bcb9ce51)
 1. Deploy a Prisma service with that data model
