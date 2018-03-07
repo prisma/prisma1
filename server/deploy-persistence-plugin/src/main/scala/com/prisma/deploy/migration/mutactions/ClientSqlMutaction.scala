@@ -1,5 +1,6 @@
 package com.prisma.deploy.migration.mutactions
 
+import com.prisma.shared.models.TypeIdentifier.TypeIdentifier
 import com.prisma.shared.models.{Field, Model, Relation, Schema}
 import slick.dbio.{DBIOAction, Effect, NoStream}
 
@@ -22,6 +23,10 @@ case class DeleteClientDatabaseForProject(projectId: String) extends ClientSqlMu
 case class CreateColumn(projectId: String, model: Model, field: Field)                     extends ClientSqlMutaction
 case class DeleteColumn(projectId: String, model: Model, field: Field)                     extends ClientSqlMutaction
 case class UpdateColumn(projectId: String, model: Model, oldField: Field, newField: Field) extends ClientSqlMutaction
+
+case class CreateScalarListTable(projectId: String, model: String, field: String, typeIdentifier: TypeIdentifier)       extends ClientSqlMutaction
+case class DeleteScalarListTable(projectId: String, model: String, field: String, typeIdentifier: TypeIdentifier)       extends ClientSqlMutaction
+case class UpdateScalarListTable(projectId: String, oldModel: Model, newModel: Model, oldField: Field, newField: Field) extends ClientSqlMutaction
 
 case class CreateModelTable(projectId: String, model: String)                                                            extends ClientSqlMutaction
 case class DeleteModelTable(projectId: String, model: String, scalarListFields: Vector[String])                          extends ClientSqlMutaction
