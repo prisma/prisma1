@@ -23,6 +23,10 @@ case class CreateColumn(projectId: String, model: Model, field: Field)          
 case class DeleteColumn(projectId: String, model: Model, field: Field)                     extends ClientSqlMutaction
 case class UpdateColumn(projectId: String, model: Model, oldField: Field, newField: Field) extends ClientSqlMutaction
 
+case class CreateModelTable(projectId: String, model: String)                                                            extends ClientSqlMutaction
+case class DeleteModelTable(projectId: String, model: String, scalarListFields: Vector[String])                          extends ClientSqlMutaction
+case class RenameTable(projectId: String, previousName: String, nextName: String, scalarListFieldsNames: Vector[String]) extends ClientSqlMutaction
+
 trait AnyMutactionExecutor {
   def execute(mutaction: ClientSqlMutaction): Future[Unit]
   def rollback(mutaction: ClientSqlMutaction): Future[Unit]
