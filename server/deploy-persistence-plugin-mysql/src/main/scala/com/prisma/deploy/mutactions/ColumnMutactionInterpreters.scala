@@ -1,31 +1,8 @@
 package com.prisma.deploy.mutactions
 
 import com.prisma.deploy.database.DatabaseMutationBuilder
-import com.prisma.deploy.migration.mutactions._
-import com.prisma.shared.models.Field
-import slick.dbio.{DBIOAction, Effect, NoStream}
+import com.prisma.deploy.migration.mutactions.{CreateColumn, DeleteColumn, UpdateColumn}
 import slick.jdbc.MySQLProfile.api._
-
-import scala.collection.immutable
-import scala.concurrent.Future
-
-object CreateClientDatabaseForProjectInterpreter extends SqlMutactionInterpreter[CreateClientDatabaseForProject] {
-  override def execute(mutaction: CreateClientDatabaseForProject) =
-    DatabaseMutationBuilder.createClientDatabaseForProject(projectId = mutaction.projectId)
-
-  override def rollback(mutaction: CreateClientDatabaseForProject) = Some {
-    DatabaseMutationBuilder.deleteProjectDatabase(projectId = mutaction.projectId)
-  }
-}
-
-object DeleteClientDatabaseForProjectInterpreter extends SqlMutactionInterpreter[DeleteClientDatabaseForProject] {
-  override def execute(mutaction: DeleteClientDatabaseForProject) =
-    DatabaseMutationBuilder.deleteProjectDatabase(projectId = mutaction.projectId)
-
-  override def rollback(mutaction: DeleteClientDatabaseForProject) = Some {
-    DatabaseMutationBuilder.createClientDatabaseForProject(projectId = mutaction.projectId)
-  }
-}
 
 object CreateColumnInterpreter extends SqlMutactionInterpreter[CreateColumn] {
   override def execute(mutaction: CreateColumn) = {
