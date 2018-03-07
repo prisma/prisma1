@@ -10,6 +10,8 @@ import com.prisma.api.schema.{CachedSchemaBuilder, SchemaBuilder}
 import com.prisma.auth.AuthImpl
 import com.prisma.deploy.DeployDependencies
 import com.prisma.deploy.migration.migrator.{AsyncMigrator, Migrator}
+import com.prisma.deploy.migration.validation.SchemaError
+import com.prisma.deploy.schema.mutations.FunctionInput
 import com.prisma.deploy.server.{ClusterAuthImpl, DummyClusterAuth}
 import com.prisma.graphql.GraphQlClient
 import com.prisma.messagebus._
@@ -26,6 +28,8 @@ import com.prisma.workers.dependencies.WorkerDependencies
 import com.prisma.workers.payloads.{JsonConversions, Webhook => WorkerWebhook}
 import com.prisma.websocket.protocol.{Request => WebsocketRequest}
 import play.api.libs.json.Json
+
+import scala.concurrent.Future
 
 case class PrismaProdDependencies()(implicit val system: ActorSystem, val materializer: ActorMaterializer)
     extends DeployDependencies
@@ -96,8 +100,9 @@ case class PrismaProdDependencies()(implicit val system: ActorSystem, val materi
     RabbitQueue.publisher[Webhook](rabbitUri, "webhooks")(reporter, Webhook.marshaller).asInstanceOf[QueuePublisher[Webhook]]
   override lazy val webhooksConsumer =
     RabbitQueue.consumer[WorkerWebhook](rabbitUri, "webhooks")(reporter, JsonConversions.webhookUnmarshaller).asInstanceOf[QueueConsumer[WorkerWebhook]]
-  override lazy val httpClient    = SimpleHttpClient()
-  override lazy val graphQlClient = GraphQlClient(sys.env.getOrElse("CLUSTER_ADDRESS", sys.error("env var CLUSTER_ADDRESS is not set")))
+  override lazy val httpClient = SimpleHttpClient()
 
   override def apiAuth = AuthImpl
+
+  override def functionValidator: FunctionValidatorImpl = FunctionValidatorImpl()
 }
