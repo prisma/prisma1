@@ -10,7 +10,7 @@ description: Frequently asked questions about any technical matters regarding Pr
 There are basically two ways for hosting Prisma:
 
 - Do it yourself (using any available cloud provider, such as Digital Ocean, AWS, Google Cloud, ...)
-- In the Prisma Cloud (coming soon)
+- In the [Prisma Cloud](https://www.prismagraphql.com/cloud/)
 
 ### How do I connect my database to Prisma?
 
