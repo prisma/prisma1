@@ -109,11 +109,7 @@ case class Schema(
 
   def getFieldsByRelationId(id: Id): List[Field] = models.flatMap(_.fields).filter(f => f.relation.isDefined && f.relation.get.id == id)
 
-  def getUnambiguousRelationThatConnectsModels_!(modelA: String, modelB: String): Option[Relation] = {
-    val candidates = relations.filter(_.connectsTheModels(modelA, modelB))
-    require(candidates.size < 2, "This method must only be called for unambiguous relations!")
-    candidates.headOption
-  }
+  def getRelationsThatConnectModels(modelA: String, modelB: String): List[Relation] = relations.filter(_.connectsTheModels(modelA, modelB))
 
   def getRelatedModelForField(field: Field): Option[Model] = {
     val relation = field.relation.getOrElse {
