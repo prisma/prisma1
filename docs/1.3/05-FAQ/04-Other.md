@@ -23,4 +23,4 @@ The Graphcool Framework is a strongly opinionated open-source solution based on 
 
 Prisma is the result of many learnings and a lot of feedback from customers and the community, that focuses on the core of Graphcool Framework: the automatic mapping from your database to a GraphQL API. This enables you to take full control of your GraphQL server while still being able to benefit from an auto-generated and powerful GraphQL API.
 
-If you have further questions about how the Graphcool Framework and Prisma compare, go [join the discussion in the Forum](https://www.graph.cool/forum/t/graphcool-framework-and-prisma/2237?u=nilan).
+If you have further questions about how the Graphcool Framework and Prisma compare, check out [this](https://www.graph.cool/forum/t/graphcool-framework-and-prisma/2237?u=nilan) forum post.

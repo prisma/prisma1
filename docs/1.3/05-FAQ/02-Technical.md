@@ -9,8 +9,8 @@ description: Frequently asked questions about any technical matters regarding Pr
 
 There are basically two ways for hosting Prisma:
 
+- With [Prisma Cloud](https://www.prismagraphql.com/cloud/). Follow [this](!alias-ua9gai4kie) tutorial to started with Digital Ocean.
 - Do it yourself (using any available cloud provider, such as Digital Ocean, AWS, Google Cloud, ...). Follow [this](!alias-texoo9aemu) tutorial to started.
-- With [Prisma Cloud](https://www.prismagraphql.com/cloud/). Follow [this](!alias-ua9gai4kie) tutorial to started.
 
 ### How do I connect my database to Prisma?
 
@@ -38,8 +38,8 @@ GraphQL comes with a plethora of benefits for application development:
 - GraphQL has an **amazing ecosystem of tooling** which greatly improve workflows and overall developer experience. For example, [GraphQL Playground](!alias-chaha125ho) which provides an interactive IDE for sending queries and mutations to an API (which can even be used by non-technical audiences). Another example are [GraphQL bindings](!alias-quaidah9ph) which enable to compose existing GraphQL APIs like LEGO bricks.
 - The GraphQL ecosystem is made the **fantastic GraphQL community** who is putting in a lot of thought as well as hard work for how GraphQL can be evolved in the future and what other tools developers will benefit from.
 
-### How do backups work
+### How do backups work?
 
-Since Prisma is only a layer _on top of your database_ but you still have full control over the database itself, you have the full power and flexibility regarding your own backup strategy.
+Because Prisma is only a layer _on top of your database_, you still have full control over the database itself. This means you have the full power and flexibility regarding your own backup strategy.
 
 Prisma also offers a [data export](!alias-pa0aip3loh) feature which you can use to create continuous backups for your data from the API layer.
