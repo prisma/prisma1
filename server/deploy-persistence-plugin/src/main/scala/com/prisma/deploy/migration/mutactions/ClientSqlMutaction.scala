@@ -2,7 +2,6 @@ package com.prisma.deploy.migration.mutactions
 
 import com.prisma.shared.models.TypeIdentifier.TypeIdentifier
 import com.prisma.shared.models.{Field, Model, Relation, Schema}
-import slick.dbio.{DBIOAction, Effect, NoStream}
 
 import scala.concurrent.Future
 import scala.util.{Success, Try}
@@ -15,7 +14,7 @@ trait ClientSqlMutaction {
 //  def rollback: Option[Future[ClientSqlStatementResult[Any]]] = None
 }
 
-case class ClientSqlStatementResult[A <: Any](sqlAction: DBIOAction[A, NoStream, Effect.All])
+//case class ClientSqlStatementResult[A <: Any](sqlAction: DBIOAction[A, NoStream, Effect.All])
 
 case class CreateClientDatabaseForProject(projectId: String) extends ClientSqlMutaction
 case class DeleteClientDatabaseForProject(projectId: String) extends ClientSqlMutaction
@@ -38,12 +37,6 @@ case class DeleteRelationTable(projectId: String, schema: Schema, relation: Rela
 trait AnyMutactionExecutor {
   def execute(mutaction: ClientSqlMutaction): Future[Unit]
   def rollback(mutaction: ClientSqlMutaction): Future[Unit]
-}
-
-trait MutactionExecutor[T <: ClientSqlMutaction] {
-  import slick.jdbc.MySQLProfile.backend.DatabaseDef
-  def execute(mutaction: T, database: DatabaseDef): Future[Unit]
-  def rollback(mutaction: T, database: DatabaseDef): Future[Unit]
 }
 
 object FailingAnyMutactionExecutor extends AnyMutactionExecutor {

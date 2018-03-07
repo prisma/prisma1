@@ -10,8 +10,6 @@ import com.prisma.deploy.server.ClusterAuth
 import com.prisma.errors.ErrorReporter
 import com.prisma.graphql.GraphQlClient
 import com.prisma.messagebus.PubSubPublisher
-import slick.jdbc.MySQLProfile
-import slick.jdbc.MySQLProfile.api._
 
 import scala.concurrent.duration._
 import scala.concurrent.{Await, Awaitable, ExecutionContext}
@@ -32,12 +30,12 @@ trait DeployDependencies {
   def persistencePlugin: DeployPersistencePlugin
 
   setupAndGetInternalDatabase()
-  lazy val clientDb             = Database.forConfig("client")
+//  lazy val clientDb             = Database.forConfig("client")
   lazy val projectPersistence   = persistencePlugin.projectPersistence
   lazy val migrationPersistence = persistencePlugin.migrationPersistence
   lazy val clusterSchemaBuilder = SchemaBuilder()
 
-  def setupAndGetInternalDatabase()(implicit ec: ExecutionContext): MySQLProfile.backend.Database = {
+  def setupAndGetInternalDatabase()(implicit ec: ExecutionContext): Unit = {
 //    val rootDb = Database.forConfig(s"internalRoot")
 //    await(rootDb.run(InternalDatabaseSchema.createSchemaActions(recreate = false)))
 //    rootDb.close()
@@ -48,7 +46,6 @@ trait DeployDependencies {
 
     startDatabaseSizeReporting()
 
-    null
   }
 
   def startDatabaseSizeReporting(): Unit = {

@@ -2,7 +2,7 @@ package com.prisma.deploy.persistence
 
 import com.prisma.deploy.database.persistence.{MigrationPersistence, ProjectPersistence}
 import com.prisma.deploy.migration.MigrationStepMapper
-import com.prisma.deploy.migration.mutactions.{AnyMutactionExecutor, MutactionExecutor}
+import com.prisma.deploy.migration.mutactions.AnyMutactionExecutor
 
 import scala.concurrent.Future
 

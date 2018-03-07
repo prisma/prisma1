@@ -7,12 +7,10 @@ import com.prisma.deploy.persistence.DeployPersistencePlugin
 import scala.collection.mutable
 import scala.concurrent.Future
 import scala.util.{Failure, Success}
-import slick.jdbc.MySQLProfile.backend.DatabaseDef
 
 case class DeploymentSchedulerActor(
     migrationPersistence: MigrationPersistence,
     projectPersistence: ProjectPersistence,
-    clientDatabase: DatabaseDef,
     persistencePlugin: DeployPersistencePlugin
 ) extends Actor
     with Stash {
@@ -71,7 +69,7 @@ case class DeploymentSchedulerActor(
   }
 
   def workerForProject(projectId: String): ActorRef = {
-    val newWorker = context.actorOf(Props(ProjectDeploymentActor(projectId, migrationPersistence, clientDatabase, persistencePlugin)))
+    val newWorker = context.actorOf(Props(ProjectDeploymentActor(projectId, migrationPersistence, persistencePlugin)))
 
     context.watch(newWorker)
     projectWorkers += (projectId -> newWorker)

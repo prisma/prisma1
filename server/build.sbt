@@ -115,9 +115,6 @@ lazy val deploy = serverProject("deploy")
 
 lazy val deployPersistencePlugin = normalProject("deploy-persistence-plugin")
   .dependsOn(sharedModels % "compile")
-  .settings(
-    libraryDependencies ++= slick
-  )
 
 lazy val deployPersistencePluginForMySql = normalProject("deploy-persistence-plugin-mysql")
   .dependsOn(deployPersistencePlugin % "compile")
@@ -137,7 +134,7 @@ lazy val api = serverProject("api")
   .dependsOn(auth % "compile")
   .dependsOn(sangriaUtils % "compile")
   .settings(
-    libraryDependencies ++= Seq(
+    libraryDependencies ++= slick ++ Seq(
       playJson,
       scalaTest
     )

@@ -6,7 +6,6 @@ import com.prisma.deploy.migration.mutactions.{AnyMutactionExecutor, ClientSqlMu
 import com.prisma.shared.models.{Migration, MigrationStatus, MigrationStep, Schema}
 import com.prisma.utils.exceptions.StackTraceUtils
 import org.joda.time.DateTime
-import slick.jdbc.MySQLProfile.backend.DatabaseDef
 
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Failure, Success}
@@ -18,7 +17,6 @@ case class MigrationApplierResult(succeeded: Boolean)
 
 case class MigrationApplierImpl(
     migrationPersistence: MigrationPersistence,
-    clientDatabase: DatabaseDef,
     migrationStepMapper: MigrationStepMapper,
     mutactionExecutor: AnyMutactionExecutor
 )(implicit ec: ExecutionContext)

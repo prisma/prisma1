@@ -1,13 +1,11 @@
 package com.prisma.deploy.schema.mutations
 
 import com.prisma.deploy.database.persistence.{MigrationPersistence, ProjectPersistence}
-import com.prisma.deploy.migration.mutactions.CreateClientDatabaseForProject
 import com.prisma.deploy.persistence.DeployPersistencePlugin
 import com.prisma.deploy.schema.{InvalidServiceName, InvalidServiceStage, ProjectAlreadyExists}
 import com.prisma.deploy.validation.NameConstraints
 import com.prisma.shared.models._
 import com.prisma.utils.await.AwaitUtils
-import slick.jdbc.MySQLProfile.backend.DatabaseDef
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -15,7 +13,6 @@ case class AddProjectMutation(
     args: AddProjectInput,
     projectPersistence: ProjectPersistence,
     migrationPersistence: MigrationPersistence,
-    clientDb: DatabaseDef,
     persistencePlugin: DeployPersistencePlugin
 )(
     implicit ec: ExecutionContext

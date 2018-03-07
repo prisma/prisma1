@@ -13,10 +13,8 @@ import com.prisma.shared.models.{Project, ProjectId}
 import com.prisma.utils.future.FutureUtils.FutureOpt
 import sangria.relay.Mutation
 import sangria.schema._
-import slick.jdbc.MySQLProfile.backend.DatabaseDef
 
 import scala.concurrent.Future
-import scala.util.{Failure, Try}
 
 case class SystemUserContext(authorizationHeader: Option[String])
 
@@ -39,7 +37,6 @@ case class SchemaBuilderImpl(
   import ManualMarshallerHelpers._
   import system.dispatcher
 
-  val clientDb: DatabaseDef                          = dependencies.clientDb
   val projectPersistence: ProjectPersistence         = dependencies.projectPersistence
   val migrationPersistence: MigrationPersistence     = dependencies.migrationPersistence
   val migrator: Migrator                             = dependencies.migrator
@@ -215,7 +212,6 @@ case class SchemaBuilderImpl(
             args = args,
             projectPersistence = projectPersistence,
             migrationPersistence = migrationPersistence,
-            clientDb = clientDb,
             persistencePlugin = dependencies.persistencePlugin
           ).execute
       }
@@ -237,7 +233,6 @@ case class SchemaBuilderImpl(
           DeleteProjectMutation(
             args = args,
             projectPersistence = projectPersistence,
-            clientDb = clientDb,
             invalidationPubSub = dependencies.invalidationPublisher,
             persistencePlugin = dependencies.persistencePlugin
           ).execute

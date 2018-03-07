@@ -86,7 +86,7 @@ object Dependencies {
   val logstash     = "net.logstash.logback"       % "logstash-logback-encoder" % "4.7"
   val librato      = "com.librato.metrics"        % "librato-java"             % "2.1.0"
 
-  lazy val common: Seq[ModuleID] = sangria ++ slick ++ joda ++ Seq(
+  lazy val common: Seq[ModuleID] = sangria ++ joda ++ Seq(
     guava,
     akkaTestKit,
     akkaHttp,
