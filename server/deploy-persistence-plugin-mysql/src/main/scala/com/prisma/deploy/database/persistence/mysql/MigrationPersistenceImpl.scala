@@ -1,13 +1,14 @@
-package com.prisma.deploy.database.persistence
+package com.prisma.deploy.database.persistence.mysql
 
-import com.prisma.deploy.database.tables.{MigrationTable, Tables}
-import com.prisma.shared.models.{Migration, MigrationId}
+import com.prisma.deploy.database.persistence.MigrationPersistence
+import com.prisma.deploy.database.tables.MigrationTable
 import com.prisma.shared.models.MigrationStatus.MigrationStatus
-import com.prisma.utils.future.FutureUtils.FutureOpt
+import com.prisma.shared.models.{Migration, MigrationId}
 import org.joda.time.DateTime
 import play.api.libs.json.Json
 import slick.jdbc.MySQLProfile.api._
 import slick.jdbc.MySQLProfile.backend.DatabaseDef
+import slick.lifted.TableQuery
 
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Failure, Success}
@@ -16,6 +17,8 @@ case class MigrationPersistenceImpl(
     internalDatabase: DatabaseDef
 )(implicit ec: ExecutionContext)
     extends MigrationPersistence {
+
+  val table = TableQuery[MigrationTable]
 
   def lock(): Future[Int] = {
     // todo Possible enhancement: Canary row in a separate table to prevent serious damage to data in case another instance spins up and circumvents this protection.

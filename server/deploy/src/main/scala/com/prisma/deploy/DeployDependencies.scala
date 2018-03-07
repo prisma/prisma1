@@ -4,7 +4,7 @@ import akka.actor.{ActorSystem, Props}
 import akka.stream.ActorMaterializer
 import com.prisma.auth.{Auth, AuthImpl}
 import com.prisma.errors.{BugsnagErrorReporter, ErrorReporter}
-import com.prisma.deploy.database.persistence.{MigrationPersistenceImpl, ProjectPersistenceImpl}
+import com.prisma.deploy.database.persistence.ProjectPersistenceImpl
 import com.prisma.deploy.database.schema.InternalDatabaseSchema
 import com.prisma.deploy.migration.migrator.{AsyncMigrator, Migrator}
 import com.prisma.deploy.persistence.DeployPersistencePlugin

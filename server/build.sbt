@@ -119,6 +119,12 @@ lazy val deployPersistencePlugin = normalProject("deploy-persistence-plugin")
     libraryDependencies ++= slick
   )
 
+lazy val deployPersistencePluginForMySql = normalProject("deploy-persistence-plugin-mysql")
+  .dependsOn(deployPersistencePlugin % "compile")
+  .settings(
+    libraryDependencies ++= slick
+  )
+
 lazy val api = serverProject("api")
   .dependsOn(sharedModels % "compile")
   .dependsOn(deploy % "test->test")
