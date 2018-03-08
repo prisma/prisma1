@@ -26,5 +26,19 @@ case class DeployTestDependencies()(implicit val system: ActorSystem, val materi
 
   override def apiAuth = AuthImpl
 
-  override def deployPersistencePlugin: DeployPersistencePlugin = MySqlDeployPersistencePlugin()(system.dispatcher)
+  override def deployPersistencePlugin: DeployPersistencePlugin = {
+    import slick.jdbc.MySQLProfile.api._
+    val sqlInternalHost     = sys.env("SQL_CLIENT_HOST")
+    val sqlInternalPort     = sys.env("SQL_CLIENT_PORT")
+    val sqlInternalUser     = sys.env("SQL_CLIENT_USER")
+    val sqlInternalPassword = sys.env("SQL_CLIENT_PASSWORD")
+    val clientDb = Database.forURL(
+      url =
+        s"jdbc:mariadb://$sqlInternalHost:$sqlInternalPort?autoReconnect=true&useSSL=false&serverTimeZone=UTC&useUnicode=true&characterEncoding=UTF-8&usePipelineAuth=false",
+      user = sqlInternalUser,
+      password = sqlInternalPassword,
+      driver = "org.mariadb.jdbc.Driver"
+    )
+    MySqlDeployPersistencePlugin(clientDatabase = clientDb)(system.dispatcher)
+  }
 }
