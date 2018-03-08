@@ -92,8 +92,16 @@ case class SchemaInferrerImpl(
           relation = relation,
           relationSide = relation.map { relation =>
             if (relation.modelAId == relation.modelBId) { //selfrelation
-              val relationFields = objectType.fields.filter(f => f.relationName.contains(relation.name)).map(_.name)
-              if (relationFields.exists(name => name < fieldDef.name)) RelationSide.B else RelationSide.A
+
+              val oldFieldName            = schemaMapping.getPreviousFieldName(objectType.name, fieldDef.name)
+              val oldModelName            = schemaMapping.getPreviousModelName(objectType.name)
+              val oldField: Option[Field] = baseSchema.getFieldByName(oldModelName, oldFieldName)
+              if (oldField.isDefined && oldField.get.relationSide.isDefined) {
+                oldField.get.relationSide.get
+              } else {
+                val relationFields = objectType.fields.filter(f => f.relationName.contains(relation.name)).map(_.name)
+                if (relationFields.exists(name => name < fieldDef.name)) RelationSide.B else RelationSide.A
+              }
             } else {
               if (relation.modelAId == objectType.name) RelationSide.A else RelationSide.B
             }

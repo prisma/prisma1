@@ -207,22 +207,69 @@ class SchemaInfererSpec extends WordSpec with Matchers {
     }
   }
 
-  "infer relations with provided name if only one relation directive is given" in {
-    val types =
-      """|type Technology {
+  "For self-relations the inferer" should {
+    "assign fieldA to the field with the lower lexicographic order" in {
+      val types =
+        """|type Technology {
          |  name: String! @unique
          |  childTechnologies: [Technology!]! @relation(name: "ChildTechnologies")
          |  parentTechnologies: [Technology!]! @relation(name: "ChildTechnologies")
          |}""".stripMargin.trim()
-    val schema = infer(emptyProject.schema, types).get
+      val schema = infer(emptyProject.schema, types).get
 
-    schema.relations should have(size(1))
-    val relation = schema.getRelationByName_!("ChildTechnologies")
-    relation.modelAId should equal("Technology")
-    relation.modelBId should equal("Technology")
-    relation.getModelAField(schema).get.name should be("childTechnologies")
-    relation.getModelBField(schema).get.name should be("parentTechnologies")
+      schema.relations should have(size(1))
+      val relation = schema.getRelationByName_!("ChildTechnologies")
+      relation.modelAId should equal("Technology")
+      relation.modelBId should equal("Technology")
+      relation.getModelAField(schema).get.name should be("childTechnologies")
+      relation.getModelBField(schema).get.name should be("parentTechnologies")
 
+    }
+
+    "keep assignments after renames" in {
+      val types =
+        """|type Technology {
+           |  name: String! @unique
+           |  childTechnologies: [Technology!]! @relation(name: "ChildTechnologies")
+           |  parentTechnologies: [Technology!]! @relation(name: "ChildTechnologies")
+           |}""".stripMargin.trim()
+      val schema = infer(emptyProject.schema, types).get
+
+      schema.relations should have(size(1))
+      val relation = schema.getRelationByName_!("ChildTechnologies")
+      relation.modelAId should equal("Technology")
+      relation.modelBId should equal("Technology")
+      relation.getModelAField(schema).get.name should be("childTechnologies")
+      relation.getModelBField(schema).get.name should be("parentTechnologies")
+
+      val newTypes =
+        """|type NewTechnology {
+           |  name: String! @unique
+           |  xTechnologies: [NewTechnology!]! @relation(name: "ChildTechnologies")
+           |  parentTechnologies: [NewTechnology!]! @relation(name: "ChildTechnologies")
+           |}""".stripMargin.trim()
+
+      val renames = SchemaMapping(
+        models = Vector(Mapping(previous = "Technology", next = "NewTechnology")),
+        fields =
+          Vector(FieldMapping(previousModel = "Technology", previousField = "childTechnologies", nextModel = "NewTechnology", nextField = "xTechnologies"))
+      )
+
+      val newSchema = infer(schema, newTypes, renames).get
+      newSchema.relations.foreach(println(_))
+
+      val newRelation = newSchema.getRelationByName_!("ChildTechnologies")
+      newRelation.modelAId should be("NewTechnology")
+      newRelation.modelBId should be("NewTechnology")
+
+      val field1 = newSchema.getModelByName_!("NewTechnology").getFieldByName_!("xTechnologies")
+      field1.relation should be(Some(newRelation))
+      field1.relationSide.get.toString should be("A")
+
+      val field2 = newSchema.getModelByName_!("NewTechnology").getFieldByName_!("parentTechnologies")
+      field2.relation should be(Some(newRelation))
+      field2.relationSide.get.toString should be("B")
+    }
   }
 
   def infer(schema: Schema, types: String, mapping: SchemaMapping = SchemaMapping.empty): Or[Schema, ProjectSyntaxError] = {
