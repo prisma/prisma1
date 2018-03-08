@@ -1,11 +1,9 @@
 package com.prisma.deploy.mutactions
 
 import com.prisma.deploy.database.DatabaseMutationBuilder
-import com.prisma.deploy.migration.mutactions.{ClientSqlStatementResult, CreateModelTable, DeleteModelTable, RenameTable}
+import com.prisma.deploy.migration.mutactions.{CreateModelTable, DeleteModelTable, RenameTable}
 import slick.dbio.{DBIOAction, Effect, NoStream}
 import slick.jdbc.MySQLProfile.api._
-
-import scala.concurrent.Future
 
 object CreateModelInterpreter extends SqlMutactionInterpreter[CreateModelTable] {
   override def execute(mutaction: CreateModelTable) = {

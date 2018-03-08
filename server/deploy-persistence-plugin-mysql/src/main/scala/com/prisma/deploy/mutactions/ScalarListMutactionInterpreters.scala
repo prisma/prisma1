@@ -1,10 +1,8 @@
 package com.prisma.deploy.mutactions
 
 import com.prisma.deploy.database.DatabaseMutationBuilder
-import com.prisma.deploy.migration.mutactions.{ClientSqlStatementResult, CreateScalarListTable, DeleteScalarListTable, UpdateScalarListTable}
+import com.prisma.deploy.migration.mutactions.{CreateScalarListTable, DeleteScalarListTable, UpdateScalarListTable}
 import slick.jdbc.MySQLProfile.api._
-
-import scala.concurrent.Future
 
 object CreateScalarListInterpreter extends SqlMutactionInterpreter[CreateScalarListTable] {
   override def execute(mutaction: CreateScalarListTable) = {

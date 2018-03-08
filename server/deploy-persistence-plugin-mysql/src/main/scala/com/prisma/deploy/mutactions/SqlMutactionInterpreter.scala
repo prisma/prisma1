@@ -1,6 +1,6 @@
 package com.prisma.deploy.mutactions
 
-import com.prisma.deploy.migration.mutactions.{ClientSqlMutaction, ClientSqlStatementResult}
+import com.prisma.deploy.migration.mutactions.ClientSqlMutaction
 import slick.dbio.{DBIOAction, Effect, NoStream}
 
 trait SqlMutactionInterpreter[T <: ClientSqlMutaction] {
