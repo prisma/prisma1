@@ -8,7 +8,7 @@ import com.prisma.deploy.migration.migrator.Migrator
 import com.prisma.deploy.migration.validation.{SchemaError, SchemaSyntaxValidator}
 import com.prisma.deploy.schema.InvalidQuery
 import com.prisma.messagebus.pubsub.Only
-import com.prisma.shared.models.{Function, Migration, MigrationStep, Project, Schema, ServerSideSubscriptionFunction, WebhookDelivery}
+import com.prisma.shared.models.{Function, Migration, MigrationStep, Project, Schema, ServerSideSubscriptionFunction, UpdateSecrets, WebhookDelivery}
 import org.scalactic.{Bad, Good, Or}
 import sangria.parser.QueryParser
 
@@ -59,25 +59,18 @@ case class DeployMutation(
 
     schemaInferrer.infer(project.schema, schemaMapping, graphQlSdl) match {
       case Good(inferredNextSchema) =>
-        val steps = migrationStepsInferrer.infer(project.schema, inferredNextSchema, schemaMapping)
+        val functionsOrErrors = getFunctionModelsOrErrors(args.functions)
 
-        //generate warnings in migrationstepsinferrer
-        //if there are warnings require force flag
+        functionsOrErrors match {
+          case Bad(errors) =>
+            Future.successful(MutationSuccess(DeployMutationPayload(args.clientMutationId, Some(Migration.empty(project.id)), errors = schemaErrors ++ errors)))
 
-        for {
-          _         <- handleProjectUpdate()
-          functions = getFunctionModelsOrErrors(args.functions)
-          migration <- functions match {
-                        case Bad(_)                  => Future.successful(Some(Migration.empty(project.id)))
-                        case Good(functionsForInput) => handleMigration(inferredNextSchema, steps, functionsForInput)
-                      }
-        } yield {
-          val functionErrors = functions.swap.getOrElse(Vector.empty)
-          MutationSuccess {
-            DeployMutationPayload(args.clientMutationId, migration = migration, errors = schemaErrors ++ functionErrors)
-          }
+          case Good(functionsForInput) =>
+            val steps                = migrationStepsInferrer.infer(project.schema, inferredNextSchema, schemaMapping)
+            val secretsUpdatedFuture = updateSecretsIfNecessary()
+            val migration            = secretsUpdatedFuture.flatMap(secret => handleMigration(inferredNextSchema, steps ++ secret, functionsForInput))
+            migration.map(mig => MutationSuccess(DeployMutationPayload(args.clientMutationId, mig, errors = schemaErrors)))
         }
-
       case Bad(err) =>
         Future.successful {
           MutationSuccess(
@@ -93,11 +86,11 @@ case class DeployMutation(
     }
   }
 
-  private def handleProjectUpdate(): Future[_] = {
+  private def updateSecretsIfNecessary(): Future[Option[MigrationStep]] = {
     if (project.secrets != args.secrets && !args.dryRun.getOrElse(false)) {
-      projectPersistence.update(project.copy(secrets = args.secrets))
+      projectPersistence.update(project.copy(secrets = args.secrets)).map(_ => Some(UpdateSecrets("Secrets have been changed.")))
     } else {
-      Future.unit
+      Future.successful(None)
     }
   }
 
@@ -164,6 +157,6 @@ case class HeaderInput(
 case class DeployMutationPayload(
     clientMutationId: Option[String],
     migration: Option[Migration],
-    errors: Seq[SchemaError],
+    errors: Seq[SchemaError]
 //    warnings: Seq[SchemaWarning]
 ) extends sangria.relay.Mutation

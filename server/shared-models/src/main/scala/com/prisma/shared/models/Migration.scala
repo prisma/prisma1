@@ -132,3 +132,5 @@ case class UpdateRelation(
 case class DeleteRelation(
     name: String
 ) extends MigrationStep
+
+case class UpdateSecrets(message: String) extends MigrationStep

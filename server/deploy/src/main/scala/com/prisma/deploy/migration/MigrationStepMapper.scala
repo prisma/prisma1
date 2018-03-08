@@ -79,5 +79,7 @@ case class MigrationStepMapperImpl(projectId: String) extends MigrationStepMappe
         val nextRelation     = nextSchema.getRelationByName_!(newName)
         RenameTable(projectId = projectId, previousName = previousRelation.id, nextName = nextRelation.id, scalarListFieldsNames = Vector.empty)
       }
+    case x: UpdateSecrets =>
+      None
   }
 }

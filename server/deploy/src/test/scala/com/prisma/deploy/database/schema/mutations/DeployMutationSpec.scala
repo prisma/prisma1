@@ -3,12 +3,9 @@ package com.prisma.deploy.database.schema.mutations
 import com.prisma.deploy.schema.mutations.{FunctionInput, HeaderInput}
 import com.prisma.deploy.specutils.DeploySpecBase
 import com.prisma.shared.models._
-import com.prisma.stub.Stub
 import org.scalatest.{FlatSpec, Matchers}
 
 class DeployMutationSpec extends FlatSpec with Matchers with DeploySpecBase {
-
-  import com.prisma.stub.Import._
 
   val projectPersistence   = testDependencies.projectPersistence
   val migrationPersistence = testDependencies.migrationPersistence
@@ -587,6 +584,88 @@ class DeployMutationSpec extends FlatSpec with Matchers with DeploySpecBase {
     migrations should have(size(3))
     migrations.exists(x => x.status != MigrationStatus.Success) shouldEqual false
     migrations.head.revision shouldEqual 3 // order is DESC
+  }
+
+  "DeployMutation" should "detect and report addition and removal of secrets if that is the only change" in {
+    val (project, _) = setupProject(basicTypesGql)
+    val nameAndStage = ProjectId.fromEncodedString(project.id)
+
+    server.query(
+      s"""
+         |mutation {
+         |  deploy(input:{name: "${nameAndStage.name}", stage: "${nameAndStage.stage}", types: ${formatSchema(basicTypesGql)}, secrets: ["secret"]}){
+         |    migration {
+         |      applied
+         |    }
+         |    errors {
+         |      description
+         |    }
+         |  }
+         |}
+      """.stripMargin
+    )
+
+    val updatedProject: Seq[Project] = projectPersistence.loadAll().await
+    updatedProject.head.secrets.head should be("secret")
+    val migrations = migrationPersistence.loadAll(project.id).await
+    migrations should have(size(3))
+    migrations.exists(x => x.status != MigrationStatus.Success) shouldEqual false
+    migrations.head.revision shouldEqual 3 // order is DESC
+
+    server.query(
+      s"""
+         |mutation {
+         |  deploy(input:{name: "${nameAndStage.name}", stage: "${nameAndStage.stage}", types: ${formatSchema(basicTypesGql)}}){
+         |    migration {
+         |      applied
+         |    }
+         |    errors {
+         |      description
+         |    }
+         |  }
+         |}
+      """.stripMargin
+    )
+
+    val updatedProject2: Seq[Project] = projectPersistence.loadAll().await
+    updatedProject2.head.secrets should be(List.empty)
+    val migrations2 = migrationPersistence.loadAll(project.id).await
+    migrations2 should have(size(4))
+    migrations2.exists(x => x.status != MigrationStatus.Success) shouldEqual false
+    migrations2.head.revision shouldEqual 4 // order is DESC
+  }
+
+  "DeployMutation" should "not change secrets if there are errors in the deploy (invalid functions)" in {
+    val (project, _) = setupProject(basicTypesGql)
+    val nameAndStage = ProjectId.fromEncodedString(project.id)
+    val schema =
+      """
+        |{
+        |  id: ID! @unique
+        |}
+      """.stripMargin
+
+    server.queryThatMustFail(
+      s"""
+         |mutation {
+         |  deploy(input:{name: "${nameAndStage.name}", stage: "${nameAndStage.stage}", types: ${formatSchema(schema)}, secrets: ["new Secret"]}){
+         |    migration {
+         |      applied
+         |    }
+         |    errors {
+         |      description
+         |    }
+         |  }
+         |}
+      """.stripMargin,
+      3017
+    )
+    val updatedProject: Seq[Project] = projectPersistence.loadAll().await
+    updatedProject.head.secrets should be(List.empty)
+    val migrations = migrationPersistence.loadAll(project.id).await
+    migrations should have(size(2))
+    migrations.exists(x => x.status != MigrationStatus.Success) shouldEqual false
+    migrations.head.revision shouldEqual 2 // order is DESC
   }
 
   "DeployMutation" should "throw a proper error if detecting an ambiguous relation update" in {
