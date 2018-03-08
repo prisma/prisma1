@@ -14,14 +14,14 @@ import slick.jdbc.meta.MTable
 
 import scala.concurrent.{ExecutionContext, Future}
 
-case class MySqlDeployPersistencePlugin()(implicit ec: ExecutionContext) extends DeployPersistencePlugin with TableTruncationHelpers {
+case class MySqlDeployPersistencePlugin(clientDatabase: Database)(implicit ec: ExecutionContext) extends DeployPersistencePlugin with TableTruncationHelpers {
   lazy val internalDatabaseDefs = InternalDatabaseDefs()
   lazy val internalDatabaseRoot = internalDatabaseDefs.internalDatabaseRoot
   lazy val internalDatabase     = internalDatabaseDefs.internalDatabase
 
   override val projectPersistence: ProjectPersistence           = ProjectPersistenceImpl(internalDatabase)
   override val migrationPersistence: MigrationPersistence       = MigrationPersistenceImpl(internalDatabase)
-  override val deployMutactionExecutor: DeployMutactionExecutor = DeployMutactionExectutorImpl(internalDatabase)
+  override val deployMutactionExecutor: DeployMutactionExecutor = DeployMutactionExectutorImpl(clientDatabase)
 
   override def createProjectDatabase(id: String): Future[Unit] = {
     val action = DatabaseMutationBuilder.createClientDatabaseForProject(projectId = id)

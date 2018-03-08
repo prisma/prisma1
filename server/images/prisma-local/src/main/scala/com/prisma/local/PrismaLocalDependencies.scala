@@ -92,5 +92,5 @@ case class PrismaLocalDependencies()(implicit val system: ActorSystem, val mater
 
   override def apiAuth = AuthImpl
 
-  override def deployPersistencePlugin: DeployPersistencePlugin = MySqlDeployPersistencePlugin()(system.dispatcher)
+  override def deployPersistencePlugin: DeployPersistencePlugin = MySqlDeployPersistencePlugin(databases.master)(system.dispatcher)
 }
