@@ -1,7 +1,7 @@
 package com.prisma.deploy.migration.migrator
 
 import com.prisma.deploy.database.persistence.MigrationPersistence
-import com.prisma.deploy.migration.MigrationStepMapper
+import com.prisma.deploy.migration.{MigrationStepMapper, MigrationStepMapperImpl}
 import com.prisma.deploy.migration.mutactions.{AnyMutactionExecutor, ClientSqlMutaction}
 import com.prisma.shared.models.{Migration, MigrationStatus, MigrationStep, Schema}
 import com.prisma.utils.exceptions.StackTraceUtils

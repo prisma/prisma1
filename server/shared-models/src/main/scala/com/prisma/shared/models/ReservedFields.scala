@@ -1,6 +1,4 @@
-package com.prisma.deploy.migration
-
-import com.prisma.shared.models.{Field, TypeIdentifier}
+package com.prisma.shared.models
 
 object ReservedFields {
   val idFieldName        = "id"

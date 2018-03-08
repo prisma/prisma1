@@ -6,7 +6,7 @@ import com.prisma.shared.models.{Field, Model, Relation, Schema}
 import scala.concurrent.Future
 import scala.util.{Success, Try}
 
-trait ClientSqlMutaction {
+sealed trait ClientSqlMutaction {
 //  def verify(): Future[Try[Unit]] = Future.successful(Success(()))
 //
 //  def execute: Future[ClientSqlStatementResult[Any]]

@@ -15,12 +15,7 @@ case class DeployTestDependencies()(implicit val system: ActorSystem, val materi
 
   implicit val reporter: ErrorReporter = BugsnagErrorReporter(sys.env.getOrElse("BUGSNAG_API_KEY", ""))
 
-  val internalTestDb = new InternalTestDatabase()
-  val clientTestDb   = new ClientTestDatabase()
-
-  override lazy val clientDb = clientTestDb.clientDatabase
-
-  override lazy val migrator              = TestMigrator(clientDb, internalTestDb.internalDatabase, migrationPersistence)
+  override lazy val migrator              = TestMigrator(migrationPersistence, persistencePlugin.mutactionExecutor)
   override lazy val clusterAuth           = DummyClusterAuth()
   override lazy val invalidationPublisher = InMemoryAkkaPubSub[String]()
 

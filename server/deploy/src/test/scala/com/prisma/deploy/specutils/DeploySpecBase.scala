@@ -16,9 +16,8 @@ trait DeploySpecBase extends BeforeAndAfterEach with BeforeAndAfterAll with Awai
   implicit lazy val materializer                             = ActorMaterializer()
   implicit lazy val testDependencies: DeployTestDependencies = DeployTestDependencies()
 
-  val server            = DeployTestServer()
-  val internalDb        = testDependencies.internalTestDb
-  val clientDb          = testDependencies.clientTestDb
+  val server = DeployTestServer()
+//  val clientDb          = testDependencies.clientTestDb
   val projectsToCleanUp = new ArrayBuffer[String]
 
   val basicTypesGql =
@@ -30,19 +29,19 @@ trait DeploySpecBase extends BeforeAndAfterEach with BeforeAndAfterAll with Awai
 
   override protected def beforeAll(): Unit = {
     super.beforeAll()
-    internalDb.createInternalDatabaseSchema()
+    testDependencies.persistencePlugin.initialize().await()
   }
 
   override protected def afterAll(): Unit = {
     super.afterAll()
-    internalDb.shutdown()
-    clientDb.shutdown()
+    testDependencies.persistencePlugin.shutdown().await()
+//    clientDb.shutdown()
   }
 
   override protected def beforeEach(): Unit = {
     super.beforeEach()
-    internalDb.truncateTables()
-    projectsToCleanUp.foreach(clientDb.delete)
+    testDependencies.persistencePlugin.reset()
+//    projectsToCleanUp.foreach(clientDb.delete)
     projectsToCleanUp.clear()
   }
 

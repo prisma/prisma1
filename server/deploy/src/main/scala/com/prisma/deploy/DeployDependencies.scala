@@ -39,7 +39,7 @@ trait DeployDependencies {
 //    val rootDb = Database.forConfig(s"internalRoot")
 //    await(rootDb.run(InternalDatabaseSchema.createSchemaActions(recreate = false)))
 //    rootDb.close()
-    await(persistencePlugin.createInternalSchema())
+    await(persistencePlugin.initialize())
 
 //    val db = Database.forConfig("internal")
 //    await(db.run(InternalDatabaseSeedActions.seedActions()))

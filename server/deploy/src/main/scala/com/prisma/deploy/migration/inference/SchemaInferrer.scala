@@ -2,11 +2,10 @@ package com.prisma.deploy.migration.inference
 
 import com.prisma.deploy.gc_value.GCStringConverter
 import com.prisma.deploy.migration.DataSchemaAstExtensions._
-import com.prisma.deploy.migration.ReservedFields
 import com.prisma.deploy.schema.InvalidRelationName
 import com.prisma.deploy.validation.NameConstraints
 import com.prisma.gc_values.{GCValue, InvalidValueForScalarType}
-import com.prisma.shared.models.{OnDelete, _}
+import com.prisma.shared.models.{OnDelete, ReservedFields, _}
 import com.prisma.utils.or.OrExtensions
 import cool.graph.cuid.Cuid
 import org.scalactic.{Bad, Good, Or}
