@@ -14,29 +14,21 @@ class MigrationPersistenceImplSpec extends FlatSpec with Matchers with SpecBase 
     val (project2, _) = setupProject(basicTypesGql)
 
     val migration0Project1 = migrationPersistence.byId(MigrationId(project1.id, 1)).await.get
-    val migration1Project1 = migrationPersistence.byId(MigrationId(project1.id, 2)).await.get
-
     migration0Project1.projectId shouldEqual project1.id
     migration0Project1.revision shouldEqual 1
-    migration1Project1.projectId shouldEqual project1.id
-    migration1Project1.revision shouldEqual 2
 
     val migration0Project2 = migrationPersistence.byId(MigrationId(project2.id, 1)).await.get
-    val migration1Project2 = migrationPersistence.byId(MigrationId(project2.id, 2)).await.get
-
     migration0Project2.projectId shouldEqual project2.id
     migration0Project2.revision shouldEqual 1
-    migration1Project2.projectId shouldEqual project2.id
-    migration1Project2.revision shouldEqual 2
   }
 
   ".create()" should "store the migration in the db and increment the revision accordingly" in {
     val (project, _) = setupProject(basicTypesGql)
-    assertNumberOfRowsInMigrationTable(2)
+    assertNumberOfRowsInMigrationTable(1)
 
     val savedMigration = migrationPersistence.create(Migration.empty(project.id)).await()
-    assertNumberOfRowsInMigrationTable(3)
-    savedMigration.revision shouldEqual 3
+    assertNumberOfRowsInMigrationTable(2)
+    savedMigration.revision shouldEqual 2
   }
 
   ".create()" should "store the migration with its function in the db" in {
@@ -57,13 +49,13 @@ class MigrationPersistenceImplSpec extends FlatSpec with Matchers with SpecBase 
   ".loadAll()" should "return all migrations for a project" in {
     val (project, _) = setupProject(basicTypesGql)
 
-    // 1 successful, 2 pending migrations (+ 2 from setup)
+    // 1 successful, 2 pending migrations (+ 1 from setup)
     migrationPersistence.create(Migration.empty(project.id).copy(status = MigrationStatus.Success)).await
     migrationPersistence.create(Migration.empty(project.id)).await
     migrationPersistence.create(Migration.empty(project.id)).await
 
     val migrations = migrationPersistence.loadAll(project.id).await
-    migrations should have(size(5))
+    migrations should have(size(4))
   }
 
   ".updateMigrationStatus()" should "update a migration status correctly" in {
@@ -131,7 +123,9 @@ class MigrationPersistenceImplSpec extends FlatSpec with Matchers with SpecBase 
   }
 
   ".getLastMigration()" should "get the last migration applied to a project" in {
-    val (project, _) = setupProject(basicTypesGql)
+    val (project, _)     = setupProject(basicTypesGql)
+    val createdMigration = migrationPersistence.create(Migration.empty(project.id)).await
+    migrationPersistence.updateMigrationStatus(createdMigration.id, MigrationStatus.Success).await
     migrationPersistence.getLastMigration(project.id).await.get.revision shouldEqual 2
   }
 

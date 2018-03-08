@@ -2,7 +2,7 @@ package com.prisma.deploy.specutils
 
 import com.prisma.deploy.database.persistence.ProjectPersistenceImpl
 import com.prisma.deploy.database.persistence.mysql.MigrationPersistenceImpl
-import com.prisma.shared.models.{Migration, MigrationId, Project, Schema}
+import com.prisma.shared.models._
 import com.prisma.utils.await.AwaitUtils
 import cool.graph.cuid.Cuid
 import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach, Suite}
@@ -53,6 +53,7 @@ trait SpecBase extends BeforeAndAfterEach with BeforeAndAfterAll with AwaitUtils
 
     val migration = Migration.empty(project.id)
     val result    = migrationPersistence.create(migration).await()
+    migrationPersistence.updateMigrationStatus(result.id, MigrationStatus.Success).await()
 
     (
       projectPersistence.load(projectId).await.get,

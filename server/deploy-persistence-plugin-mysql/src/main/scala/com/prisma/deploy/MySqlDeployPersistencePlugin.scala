@@ -1,13 +1,12 @@
 package com.prisma.deploy
 
 import com.prisma.deploy.database.DatabaseMutationBuilder
-import com.prisma.deploy.database.persistence.{MigrationPersistence, ProjectPersistence, ProjectPersistenceImpl}
 import com.prisma.deploy.database.persistence.mysql.MigrationPersistenceImpl
+import com.prisma.deploy.database.persistence.{MigrationPersistence, ProjectPersistence, ProjectPersistenceImpl}
 import com.prisma.deploy.database.schema.InternalDatabaseSchema
-import com.prisma.deploy.migration.MigrationStepMapper
-import com.prisma.deploy.migration.mutactions.AnyMutactionExecutor
+import com.prisma.deploy.migration.mutactions.DeployMutactionExecutor
+import com.prisma.deploy.persistence.mysql.DeployMutactionExectutorImpl
 import com.prisma.deploy.persistence.{DatabaseSize, DeployPersistencePlugin}
-import com.prisma.deploy.persistence.mysql.AnyMutactionExectutorImpl
 import slick.dbio.Effect.Read
 import slick.dbio.{DBIOAction, NoStream}
 import slick.jdbc.MySQLProfile.api._
@@ -20,9 +19,9 @@ class MySqlDeployPersistencePlugin()(implicit ec: ExecutionContext) extends Depl
   val internalDatabaseRoot = Database.forConfig("internalRoot", driver = dbDriver)
   val internalDatabase     = Database.forConfig("internal", driver = dbDriver)
 
-  override val projectPersistence: ProjectPersistence     = ProjectPersistenceImpl(internalDatabase)
-  override val migrationPersistence: MigrationPersistence = MigrationPersistenceImpl(internalDatabase)
-  override val mutactionExecutor: AnyMutactionExecutor    = AnyMutactionExectutorImpl(internalDatabase)
+  override val projectPersistence: ProjectPersistence           = ProjectPersistenceImpl(internalDatabase)
+  override val migrationPersistence: MigrationPersistence       = MigrationPersistenceImpl(internalDatabase)
+  override val deployMutactionExecutor: DeployMutactionExecutor = DeployMutactionExectutorImpl(internalDatabase)
 
   override def createProjectDatabase(id: String): Future[Unit] = {
     val action = DatabaseMutationBuilder.createClientDatabaseForProject(projectId = id)

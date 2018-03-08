@@ -113,7 +113,7 @@ class MigrationApplierSpec extends FlatSpec with Matchers with DeploySpecBase wi
 
   def loadMigrationFromDb: Migration = persistence.byId(migration.id).await.get
 
-  def migrationApplier(stepMapper: MigrationStepMapper, mutactionExecutor: AnyMutactionExecutor) = {
+  def migrationApplier(stepMapper: MigrationStepMapper, mutactionExecutor: DeployMutactionExecutor) = {
     MigrationApplierImpl(persistence, stepMapper, mutactionExecutor)
   }
 
@@ -137,25 +137,25 @@ class MigrationApplierSpec extends FlatSpec with Matchers with DeploySpecBase wi
 //    }
 //  }
 
-  def stepMapper(pf: PartialFunction[MigrationStep, ClientSqlMutaction]) = new MigrationStepMapper {
-    override def mutactionFor(previousSchema: Schema, nextSchema: Schema, step: MigrationStep): Option[ClientSqlMutaction] = {
+  def stepMapper(pf: PartialFunction[MigrationStep, DeployMutaction]) = new MigrationStepMapper {
+    override def mutactionFor(previousSchema: Schema, nextSchema: Schema, step: MigrationStep): Option[DeployMutaction] = {
       pf.lift.apply(step)
     }
   }
 
   def mutactionExecutor(
-      execute: PartialFunction[ClientSqlMutaction, Option[Throwable]],
-      rollback: PartialFunction[ClientSqlMutaction, Option[Throwable]]
-  ): AnyMutactionExecutor = {
+      execute: PartialFunction[DeployMutaction, Option[Throwable]],
+      rollback: PartialFunction[DeployMutaction, Option[Throwable]]
+  ): DeployMutactionExecutor = {
     val executePf  = execute
     val rollbackPf = rollback
 
-    new AnyMutactionExecutor {
-      override def execute(mutaction: ClientSqlMutaction) = doit(executePf, mutaction)
+    new DeployMutactionExecutor {
+      override def execute(mutaction: DeployMutaction) = doit(executePf, mutaction)
 
-      override def rollback(mutaction: ClientSqlMutaction) = doit(rollbackPf, mutaction)
+      override def rollback(mutaction: DeployMutaction) = doit(rollbackPf, mutaction)
 
-      def doit(pf: PartialFunction[ClientSqlMutaction, Option[Throwable]], mutaction: ClientSqlMutaction) = {
+      def doit(pf: PartialFunction[DeployMutaction, Option[Throwable]], mutaction: DeployMutaction) = {
         pf.lift.apply(mutaction).flatten match {
           case Some(exception) => Future.failed[Unit](exception)
           case None            => Future.unit

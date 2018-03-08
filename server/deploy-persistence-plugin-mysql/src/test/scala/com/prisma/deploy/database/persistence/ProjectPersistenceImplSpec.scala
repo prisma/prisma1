@@ -25,12 +25,12 @@ class ProjectPersistenceImplSpec extends FlatSpec with Matchers with SpecBase {
       result
     }
 
-    // Only load the applied revision, which is 2 (setup does add + deploy = revisions 0, 1)
-    loadProject.get.revision shouldEqual 2
+    // Load the applied revision, which is 1 (setup does add revision 1)
+    loadProject.get.revision shouldEqual 1
 
     // After another migration is completed, the revision is bumped to the revision of the latest migration
-    migrationPersistence.updateMigrationStatus(MigrationId(project.id, 3), MigrationStatus.Success).await
-    loadProject.get.revision shouldEqual 3
+    migrationPersistence.updateMigrationStatus(MigrationId(project.id, 2), MigrationStatus.Success).await
+    loadProject.get.revision shouldEqual 2
   }
 
   ".create()" should "store the project in the db" in {

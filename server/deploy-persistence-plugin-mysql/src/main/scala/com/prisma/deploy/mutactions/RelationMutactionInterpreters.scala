@@ -16,7 +16,7 @@ object CreateRelationInterpreter extends SqlMutactionInterpreter[CreateRelationT
     )
   }
 
-  override def rollback(mutaction: CreateRelationTable) = Some {
+  override def rollback(mutaction: CreateRelationTable) = {
     DatabaseMutationBuilder.dropTable(projectId = mutaction.projectId, tableName = mutaction.relation.id)
   }
 }
@@ -26,7 +26,7 @@ object DeleteRelationInterpreter extends SqlMutactionInterpreter[DeleteRelationT
     DatabaseMutationBuilder.dropTable(projectId = mutaction.projectId, tableName = mutaction.relation.id)
   }
 
-  override def rollback(mutaction: DeleteRelationTable) = Some {
+  override def rollback(mutaction: DeleteRelationTable) = {
     val createRelation = CreateRelationTable(mutaction.projectId, mutaction.schema, mutaction.relation)
     CreateRelationInterpreter.execute(createRelation)
   }

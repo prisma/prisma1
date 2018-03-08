@@ -14,7 +14,7 @@ object CreateScalarListInterpreter extends SqlMutactionInterpreter[CreateScalarL
     )
   }
 
-  override def rollback(mutaction: CreateScalarListTable) = Some {
+  override def rollback(mutaction: CreateScalarListTable) = {
     DBIO.seq(DatabaseMutationBuilder.dropScalarListTable(projectId = mutaction.projectId, modelName = mutaction.model, fieldName = mutaction.field))
   }
 }
@@ -24,7 +24,7 @@ object DeleteScalarListInterpreter extends SqlMutactionInterpreter[DeleteScalarL
     DBIO.seq(DatabaseMutationBuilder.dropScalarListTable(projectId = mutaction.projectId, modelName = mutaction.model, fieldName = mutaction.field))
   }
 
-  override def rollback(mutaction: DeleteScalarListTable) = Some {
+  override def rollback(mutaction: DeleteScalarListTable) = {
     DatabaseMutationBuilder.createScalarListTable(
       projectId = mutaction.projectId,
       modelName = mutaction.model,
@@ -63,7 +63,7 @@ object UpdateScalarListInterpreter extends SqlMutactionInterpreter[UpdateScalarL
     }
   }
 
-  override def rollback(mutaction: UpdateScalarListTable) = Some {
+  override def rollback(mutaction: UpdateScalarListTable) = {
     val oppositeMutaction = UpdateScalarListTable(
       projectId = mutaction.projectId,
       oldModel = mutaction.newModel,

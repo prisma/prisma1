@@ -17,7 +17,7 @@ object CreateColumnInterpreter extends SqlMutactionInterpreter[CreateColumn] {
     )
   }
 
-  override def rollback(mutaction: CreateColumn) = Some {
+  override def rollback(mutaction: CreateColumn) = {
     DatabaseMutationBuilder.deleteColumn(
       projectId = mutaction.projectId,
       tableName = mutaction.model.name,
@@ -35,7 +35,7 @@ object DeleteColumnInterpreter extends SqlMutactionInterpreter[DeleteColumn] {
     )
   }
 
-  override def rollback(mutaction: DeleteColumn) = Some {
+  override def rollback(mutaction: DeleteColumn) = {
     DatabaseMutationBuilder.createColumn(
       projectId = mutaction.projectId,
       tableName = mutaction.model.name,
@@ -60,7 +60,7 @@ object UpdateColumnInterpreter extends SqlMutactionInterpreter[UpdateColumn] {
     }
   }
 
-  override def rollback(mutaction: UpdateColumn) = Some {
+  override def rollback(mutaction: UpdateColumn) = {
     val oppositeMutaction = mutaction.copy(oldField = mutaction.newField, newField = mutaction.oldField)
     execute(oppositeMutaction)
   }

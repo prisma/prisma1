@@ -10,7 +10,7 @@ object CreateModelInterpreter extends SqlMutactionInterpreter[CreateModelTable] 
     DatabaseMutationBuilder.createTable(projectId = mutaction.projectId, name = mutaction.model)
   }
 
-  override def rollback(mutaction: CreateModelTable) = Some {
+  override def rollback(mutaction: CreateModelTable) = {
     DatabaseMutationBuilder.dropTable(projectId = mutaction.projectId, tableName = mutaction.model)
   }
 }
@@ -19,13 +19,14 @@ object DeleteModelInterpreter extends SqlMutactionInterpreter[DeleteModelTable] 
   // TODO: this is not symmetric
 
   override def execute(mutaction: DeleteModelTable) = {
-    val dropTable            = DatabaseMutationBuilder.dropTable(projectId = mutaction.projectId, tableName = mutaction.model)
-    val dropScalarListFields = mutaction.scalarListFields.map(field => DatabaseMutationBuilder.dropScalarListTable(mutaction.projectId, mutaction.model, field))
+    val dropTable = DatabaseMutationBuilder.dropTable(projectId = mutaction.projectId, tableName = mutaction.model)
+    val dropScalarListFields =
+      mutaction.scalarListFields.map(field => DatabaseMutationBuilder.dropScalarListTable(mutaction.projectId, mutaction.model, field))
 
     DBIO.seq(dropScalarListFields :+ dropTable: _*)
   }
 
-  override def rollback(mutaction: DeleteModelTable) = Some {
+  override def rollback(mutaction: DeleteModelTable) = {
     DatabaseMutationBuilder.createTable(projectId = mutaction.projectId, name = mutaction.model)
   }
 }
@@ -33,7 +34,7 @@ object DeleteModelInterpreter extends SqlMutactionInterpreter[DeleteModelTable] 
 object RenameModelInterpreter extends SqlMutactionInterpreter[RenameTable] {
   override def execute(mutaction: RenameTable) = setName(mutaction, mutaction.previousName, mutaction.nextName)
 
-  override def rollback(mutaction: RenameTable) = Some(setName(mutaction, mutaction.nextName, mutaction.previousName))
+  override def rollback(mutaction: RenameTable) = setName(mutaction, mutaction.nextName, mutaction.previousName)
 
   private def setName(mutaction: RenameTable, previousName: String, nextName: String): DBIOAction[Any, NoStream, Effect.All] = {
     val changeModelTableName = DatabaseMutationBuilder.renameTable(projectId = mutaction.projectId, name = previousName, newName = nextName)

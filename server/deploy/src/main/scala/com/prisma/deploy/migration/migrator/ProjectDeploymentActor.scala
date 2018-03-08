@@ -39,7 +39,7 @@ case class ProjectDeploymentActor(
   import DeploymentProtocol._
 
   implicit val ec          = context.system.dispatcher
-  val applier              = MigrationApplierImpl(migrationPersistence, MigrationStepMapperImpl(projectId), persistencePlugin.mutactionExecutor)
+  val applier              = MigrationApplierImpl(migrationPersistence, MigrationStepMapperImpl(projectId), persistencePlugin.deployMutactionExecutor)
   var activeSchema: Schema = _
 
   // Possible enhancement: Periodically scan the DB for migrations if signal was lost -> Wait and see if this is an issue at all

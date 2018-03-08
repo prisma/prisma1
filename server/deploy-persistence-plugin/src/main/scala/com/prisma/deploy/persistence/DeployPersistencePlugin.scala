@@ -1,14 +1,14 @@
 package com.prisma.deploy.persistence
 
 import com.prisma.deploy.database.persistence.{MigrationPersistence, ProjectPersistence}
-import com.prisma.deploy.migration.mutactions.AnyMutactionExecutor
+import com.prisma.deploy.migration.mutactions.DeployMutactionExecutor
 
 import scala.concurrent.Future
 
 trait DeployPersistencePlugin {
   def projectPersistence: ProjectPersistence
   def migrationPersistence: MigrationPersistence
-  def mutactionExecutor: AnyMutactionExecutor
+  def deployMutactionExecutor: DeployMutactionExecutor
 
   // other methods
   def createProjectDatabase(id: String): Future[Unit]

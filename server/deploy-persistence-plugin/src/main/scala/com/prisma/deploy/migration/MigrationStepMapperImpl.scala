@@ -4,7 +4,7 @@ import com.prisma.deploy.migration.mutactions._
 import com.prisma.shared.models._
 
 case class MigrationStepMapperImpl(projectId: String) extends MigrationStepMapper {
-  def mutactionFor(previousSchema: Schema, nextSchema: Schema, step: MigrationStep): Option[ClientSqlMutaction] = step match {
+  def mutactionFor(previousSchema: Schema, nextSchema: Schema, step: MigrationStep): Option[DeployMutaction] = step match {
     case x: CreateModel =>
       Some(CreateModelTable(projectId, x.name))
 
