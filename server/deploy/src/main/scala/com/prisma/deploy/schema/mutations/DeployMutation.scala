@@ -47,6 +47,7 @@ case class DeployMutation(
             clientMutationId = args.clientMutationId,
             migration = None,
             errors = schemaErrors
+            //warnings
           ))
       }
     } else {
@@ -66,7 +67,7 @@ case class DeployMutation(
 
         for {
           _         <- handleProjectUpdate()
-          functions <- getFunctionModelsOrErrors(args.functions)
+          functions <- getFunctionModelsOrErrors(args.functions) // this is sync now
           migration <- functions match {
                         case Bad(_)                  => Future.successful(Some(Migration.empty(project.id)))
                         case Good(functionsForInput) => handleMigration(inferredNextSchema, steps, functionsForInput)
