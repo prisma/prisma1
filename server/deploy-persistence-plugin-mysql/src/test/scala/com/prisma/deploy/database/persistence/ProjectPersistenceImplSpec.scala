@@ -1,15 +1,12 @@
 package com.prisma.deploy.database.persistence
 
 import com.prisma.deploy.database.tables.Tables
-import com.prisma.deploy.specutils.{DeploySpecBase, TestProject}
+import com.prisma.deploy.specutils.SpecBase
 import com.prisma.shared.models.{Migration, MigrationId, MigrationStatus}
 import org.scalatest.{FlatSpec, Matchers}
 import slick.jdbc.MySQLProfile.api._
 
-class ProjectPersistenceImplSpec extends FlatSpec with Matchers with DeploySpecBase {
-
-  val projectPersistence   = testDependencies.projectPersistence
-  val migrationPersistence = testDependencies.migrationPersistence
+class ProjectPersistenceImplSpec extends FlatSpec with Matchers with SpecBase {
 
   ".load()" should "return None if there's no project yet in the database" in {
     val result = projectPersistence.load("non-existent-id@some-stage").await()
@@ -38,7 +35,7 @@ class ProjectPersistenceImplSpec extends FlatSpec with Matchers with DeploySpecB
 
   ".create()" should "store the project in the db" in {
     assertNumberOfRowsInProjectTable(0)
-    projectPersistence.create(TestProject()).await()
+    projectPersistence.create(newTestProject()).await()
     assertNumberOfRowsInProjectTable(1)
   }
 

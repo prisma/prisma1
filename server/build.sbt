@@ -120,7 +120,10 @@ lazy val deployPersistencePluginForMySql = normalProject("deploy-persistence-plu
   .dependsOn(deployPersistencePlugin % "compile")
   .dependsOn(scalaUtils % "compile")
   .settings(
-    libraryDependencies ++= slick
+    libraryDependencies ++= slick ++ Seq(
+      mariaDbClient,
+      scalaTest
+    )
   )
 
 lazy val api = serverProject("api")

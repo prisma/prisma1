@@ -1,16 +1,13 @@
 package com.prisma.deploy.database.persistence
 
 import com.prisma.deploy.database.tables.Tables
-import com.prisma.deploy.specutils.{DeploySpecBase, TestProject}
+import com.prisma.deploy.specutils.SpecBase
 import com.prisma.shared.models._
 import org.joda.time.DateTime
 import org.scalatest.{FlatSpec, Matchers}
 import slick.jdbc.MySQLProfile.api._
 
-class MigrationPersistenceImplSpec extends FlatSpec with Matchers with DeploySpecBase {
-
-  val migrationPersistence: MigrationPersistence = testDependencies.migrationPersistence
-  val projectPersistence: ProjectPersistence     = testDependencies.projectPersistence
+class MigrationPersistenceImplSpec extends FlatSpec with Matchers with SpecBase {
 
   ".byId()" should "load a migration by project ID and revision" in {
     val (project1, _) = setupProject(basicTypesGql)
@@ -146,9 +143,9 @@ class MigrationPersistenceImplSpec extends FlatSpec with Matchers with DeploySpe
   }
 
   "loadDistinctUnmigratedProjectIds()" should "load all distinct project ids that have open migrations" in {
-    val migratedProject               = TestProject()
-    val unmigratedProject             = TestProject()
-    val unmigratedProjectWithMultiple = TestProject()
+    val migratedProject               = newTestProject()
+    val unmigratedProject             = newTestProject()
+    val unmigratedProjectWithMultiple = newTestProject()
 
     // Create base projects
     projectPersistence.create(migratedProject).await()
