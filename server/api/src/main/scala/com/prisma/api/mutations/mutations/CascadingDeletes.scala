@@ -29,6 +29,7 @@ object CascadingDeletes {
     def relations                    = edges.map(_.relation)
     def models                       = root.model +: edges.map(_.child)
     def otherCascadingRelationFields = lastModel.cascadingRelationFields.filter(relationField => !relations.contains(relationField.relation.get))
+    def lastEdge                     = edges.lastOption
     def lastEdge_!                   = edges.last
     def lastRelation_!               = lastRelation.get
     def parentSideOfLastEdge         = lastEdge_!.parentRelationSide

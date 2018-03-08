@@ -274,9 +274,9 @@ Note: Enum values can at most be 191 characters long.
 
 In queries or mutations, Enum fields have to be specified without any enclosing characters. You can only use values that you defined for the enum: `enum: COMPACT`, `enum: WIDE`.
 
-#### JSON
+#### Json
 
-Sometimes you need to store arbitrary JSON values for loosely structured data. The `JSON` type makes sure that it is actually valid Json and returns the value as a parsed Json object/array instead of a string.
+Sometimes you need to store arbitrary Json values for loosely structured data. The `Json` type makes sure that it is actually valid Json and returns the value as a parsed Json object/array instead of a string.
 
 Note: Json values are currently limited to 256KB in size on the shared demo cluster. This limit can be increased on other clusters using [the cluster configuration](https://github.com/graphcool/framework/issues/748).
 

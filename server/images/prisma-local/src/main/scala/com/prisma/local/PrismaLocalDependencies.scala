@@ -8,15 +8,15 @@ import com.prisma.api.database.Databases
 import com.prisma.api.project.{CachedProjectFetcherImpl, ProjectFetcher}
 import com.prisma.api.schema.{CachedSchemaBuilder, SchemaBuilder}
 import com.prisma.auth.AuthImpl
-import com.prisma.subscriptions.Webhook
 import com.prisma.deploy.DeployDependencies
 import com.prisma.deploy.migration.migrator.{AsyncMigrator, Migrator}
+import com.prisma.deploy.schema.mutations.FunctionValidator
 import com.prisma.deploy.server.{ClusterAuthImpl, DummyClusterAuth}
 import com.prisma.graphql.GraphQlClient
 import com.prisma.messagebus.pubsub.inmemory.InMemoryAkkaPubSub
 import com.prisma.messagebus.queue.inmemory.InMemoryAkkaQueue
 import com.prisma.messagebus.{PubSubPublisher, PubSubSubscriber, QueueConsumer, QueuePublisher}
-import com.prisma.subscriptions.SubscriptionDependencies
+import com.prisma.subscriptions.{SubscriptionDependencies, Webhook}
 import com.prisma.subscriptions.protocol.SubscriptionProtocolV05.Responses.SubscriptionSessionResponseV05
 import com.prisma.subscriptions.protocol.SubscriptionProtocolV07.Responses.SubscriptionSessionResponse
 import com.prisma.subscriptions.protocol.SubscriptionRequest
@@ -87,7 +87,8 @@ case class PrismaLocalDependencies()(implicit val system: ActorSystem, val mater
   override lazy val webhookPublisher = webhooksQueue
   override lazy val webhooksConsumer = webhooksQueue.map[WorkerWebhook](Converters.apiWebhook2WorkerWebhook)
   override lazy val httpClient       = SimpleHttpClient()
-  override lazy val graphQlClient    = GraphQlClient(sys.env.getOrElse("CLUSTER_ADDRESS", sys.error("env var CLUSTER_ADDRESS is not set")))
 
   override def apiAuth = AuthImpl
+
+  override def functionValidator: FunctionValidator = FunctionValidatorImpl()
 }

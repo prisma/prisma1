@@ -34,6 +34,8 @@ object TokenExpired extends AbstractDeployApiError(s"Authentication token is exp
 
 case class InvalidQuery(reason: String) extends AbstractDeployApiError(reason, 3017)
 
+case class UpdatedRelationAmbigous(reason: String) extends AbstractDeployApiError(reason, 3018)
+
 object DeploymentInProgress
     extends AbstractDeployApiError(
       "You can not deploy to a service stage while there is a deployment in progress or a pending deployment scheduled already. Please try again after the deployment finished.",
