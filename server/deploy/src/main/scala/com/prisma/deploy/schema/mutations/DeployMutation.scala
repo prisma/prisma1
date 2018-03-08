@@ -165,6 +165,7 @@ case class DeployMutationInput(
     projectId: String,
     types: String,
     dryRun: Option[Boolean],
+    force: Option[Boolean],
     secrets: Vector[String],
     functions: Vector[FunctionInput]
 ) extends sangria.relay.Mutation
@@ -184,5 +185,6 @@ case class HeaderInput(
 case class DeployMutationPayload(
     clientMutationId: Option[String],
     migration: Option[Migration],
-    errors: Seq[SchemaError]
+    errors: Seq[SchemaError],
+//    warnings: Seq[SchemaWarning]
 ) extends sangria.relay.Mutation

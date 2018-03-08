@@ -41,6 +41,7 @@ object DeployField {
         projectId = node.projectId,
         types = node.requiredArgAsString("types"),
         dryRun = node.optionalArgAsBoolean("dryRun"),
+        force = node.optionalArgAsBoolean("force"),
         secrets = node.optionalArgAs[Vector[String]]("secrets").getOrElse(Vector.empty),
         functions = {
           val functionNodes = node.optionalArgAs[Vector[marshaller.Node]]("subscriptions").getOrElse(Vector.empty)
