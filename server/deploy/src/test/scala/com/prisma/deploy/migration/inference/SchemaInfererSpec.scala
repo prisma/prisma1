@@ -207,6 +207,24 @@ class SchemaInfererSpec extends WordSpec with Matchers {
     }
   }
 
+  "infer relations with provided name if only one relation directive is given" in {
+    val types =
+      """|type Technology {
+         |  name: String! @unique
+         |  childTechnologies: [Technology!]! @relation(name: "ChildTechnologies")
+         |  parentTechnologies: [Technology!]! @relation(name: "ChildTechnologies")
+         |}""".stripMargin.trim()
+    val schema = infer(emptyProject.schema, types).get
+
+    schema.relations should have(size(1))
+    val relation = schema.getRelationByName_!("ChildTechnologies")
+    relation.modelAId should equal("Technology")
+    relation.modelBId should equal("Technology")
+    relation.getModelAField(schema).get.name should be("childTechnologies")
+    relation.getModelBField(schema).get.name should be("parentTechnologies")
+
+  }
+
   def infer(schema: Schema, types: String, mapping: SchemaMapping = SchemaMapping.empty): Or[Schema, ProjectSyntaxError] = {
     val document = QueryParser.parse(types).get
     inferrer.infer(schema, mapping, document)

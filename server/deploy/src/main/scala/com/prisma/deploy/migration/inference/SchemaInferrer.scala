@@ -91,10 +91,11 @@ case class SchemaInferrerImpl(
           defaultValue = default,
           relation = relation,
           relationSide = relation.map { relation =>
-            if (relation.modelAId == objectType.name) {
-              RelationSide.A
+            if (relation.modelAId == relation.modelBId) { //selfrelation
+              val relationFields = objectType.fields.filter(f => f.relationName.contains(relation.name)).map(_.name)
+              if (relationFields.exists(name => name < fieldDef.name)) RelationSide.B else RelationSide.A
             } else {
-              RelationSide.B
+              if (relation.modelAId == objectType.name) RelationSide.A else RelationSide.B
             }
           }
         )
