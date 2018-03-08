@@ -8,7 +8,7 @@ import com.prisma.api.database.Databases
 import com.prisma.api.project.{CachedProjectFetcherImpl, ProjectFetcher}
 import com.prisma.api.schema.{CachedSchemaBuilder, SchemaBuilder}
 import com.prisma.auth.AuthImpl
-import com.prisma.deploy.DeployDependencies
+import com.prisma.deploy.{DeployDependencies, MySqlDeployPersistencePlugin}
 import com.prisma.deploy.migration.migrator.{AsyncMigrator, Migrator}
 import com.prisma.deploy.persistence.DeployPersistencePlugin
 import com.prisma.deploy.server.{ClusterAuthImpl, DummyClusterAuth}
@@ -102,5 +102,5 @@ case class PrismaProdDependencies()(implicit val system: ActorSystem, val materi
 
   override def apiAuth = AuthImpl
 
-  override def persistencePlugin: DeployPersistencePlugin = ???
+  override def persistencePlugin: DeployPersistencePlugin = MySqlDeployPersistencePlugin()(system.dispatcher)
 }
