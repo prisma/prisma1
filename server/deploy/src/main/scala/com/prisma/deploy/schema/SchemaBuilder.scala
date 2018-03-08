@@ -212,7 +212,7 @@ case class SchemaBuilderImpl(
             args = args,
             projectPersistence = projectPersistence,
             migrationPersistence = migrationPersistence,
-            persistencePlugin = dependencies.persistencePlugin
+            persistencePlugin = dependencies.deployPersistencePlugin
           ).execute
       }
     )
@@ -234,7 +234,7 @@ case class SchemaBuilderImpl(
             args = args,
             projectPersistence = projectPersistence,
             invalidationPubSub = dependencies.invalidationPublisher,
-            persistencePlugin = dependencies.persistencePlugin
+            persistencePlugin = dependencies.deployPersistencePlugin
           ).execute
       }
     )

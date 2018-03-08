@@ -27,19 +27,19 @@ trait DeployDependencies {
   def graphQlClient: GraphQlClient
   def invalidationPublisher: PubSubPublisher[String]
   def apiAuth: Auth
-  def persistencePlugin: DeployPersistencePlugin
+  def deployPersistencePlugin: DeployPersistencePlugin
 
   setupAndGetInternalDatabase()
 //  lazy val clientDb             = Database.forConfig("client")
-  lazy val projectPersistence   = persistencePlugin.projectPersistence
-  lazy val migrationPersistence = persistencePlugin.migrationPersistence
+  lazy val projectPersistence   = deployPersistencePlugin.projectPersistence
+  lazy val migrationPersistence = deployPersistencePlugin.migrationPersistence
   lazy val clusterSchemaBuilder = SchemaBuilder()
 
   def setupAndGetInternalDatabase()(implicit ec: ExecutionContext): Unit = {
 //    val rootDb = Database.forConfig(s"internalRoot")
 //    await(rootDb.run(InternalDatabaseSchema.createSchemaActions(recreate = false)))
 //    rootDb.close()
-    await(persistencePlugin.initialize())
+    await(deployPersistencePlugin.initialize())
 
 //    val db = Database.forConfig("internal")
 //    await(db.run(InternalDatabaseSeedActions.seedActions()))
@@ -49,7 +49,7 @@ trait DeployDependencies {
   }
 
   def startDatabaseSizeReporting(): Unit = {
-    system.actorOf(Props(DatabaseSizeReporter(projectPersistence, persistencePlugin)))
+    system.actorOf(Props(DatabaseSizeReporter(projectPersistence, deployPersistencePlugin)))
   }
 
   private def await[T](awaitable: Awaitable[T]): T = Await.result(awaitable, 30.seconds)

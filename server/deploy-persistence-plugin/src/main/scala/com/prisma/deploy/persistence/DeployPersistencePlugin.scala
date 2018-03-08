@@ -10,14 +10,14 @@ trait DeployPersistencePlugin {
   def migrationPersistence: MigrationPersistence
   def deployMutactionExecutor: DeployMutactionExecutor
 
+  def initialize(): Future[Unit]
+  def reset(): Future[Unit]
+  def shutdown(): Future[Unit]
+
   // other methods
   def createProjectDatabase(id: String): Future[Unit]
   def deleteProjectDatabase(id: String): Future[Unit]
   def getAllDatabaseSizes(): Future[Vector[DatabaseSize]]
-
-  def initialize(): Future[Unit]
-  def reset(): Future[Unit]
-  def shutdown(): Future[Unit]
 }
 
 case class DatabaseSize(name: String, total: Double)

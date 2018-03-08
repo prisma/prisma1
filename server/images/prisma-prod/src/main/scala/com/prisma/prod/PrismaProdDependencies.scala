@@ -46,7 +46,7 @@ case class PrismaProdDependencies()(implicit val system: ActorSystem, val materi
     CachedProjectFetcherImpl(fetcher, invalidationPubSub)
   }
 
-  override val migrator: Migrator = AsyncMigrator(migrationPersistence, projectPersistence, persistencePlugin)
+  override val migrator: Migrator = AsyncMigrator(migrationPersistence, projectPersistence, deployPersistencePlugin)
   override val clusterAuth = {
     sys.env.get("CLUSTER_PUBLIC_KEY") match {
       case Some(publicKey) if publicKey.nonEmpty => ClusterAuthImpl(publicKey)
@@ -102,5 +102,5 @@ case class PrismaProdDependencies()(implicit val system: ActorSystem, val materi
 
   override def apiAuth = AuthImpl
 
-  override def persistencePlugin: DeployPersistencePlugin = MySqlDeployPersistencePlugin()(system.dispatcher)
+  override def deployPersistencePlugin: DeployPersistencePlugin = MySqlDeployPersistencePlugin()(system.dispatcher)
 }

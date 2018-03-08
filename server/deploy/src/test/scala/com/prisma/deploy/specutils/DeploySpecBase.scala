@@ -29,18 +29,18 @@ trait DeploySpecBase extends BeforeAndAfterEach with BeforeAndAfterAll with Awai
 
   override protected def beforeAll(): Unit = {
     super.beforeAll()
-    testDependencies.persistencePlugin.initialize().await()
+    testDependencies.deployPersistencePlugin.initialize().await()
   }
 
   override protected def afterAll(): Unit = {
     super.afterAll()
-    testDependencies.persistencePlugin.shutdown().await()
+    testDependencies.deployPersistencePlugin.shutdown().await()
 //    clientDb.shutdown()
   }
 
   override protected def beforeEach(): Unit = {
     super.beforeEach()
-    testDependencies.persistencePlugin.reset().await
+    testDependencies.deployPersistencePlugin.reset().await
 //    projectsToCleanUp.foreach(clientDb.delete)
     projectsToCleanUp.clear()
   }
