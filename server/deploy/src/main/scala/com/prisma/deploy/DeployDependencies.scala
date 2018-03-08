@@ -29,26 +29,13 @@ trait DeployDependencies {
   def apiAuth: Auth
   def deployPersistencePlugin: DeployPersistencePlugin
 
-  setupAndGetInternalDatabase()
 //  lazy val clientDb             = Database.forConfig("client")
   lazy val projectPersistence   = deployPersistencePlugin.projectPersistence
   lazy val migrationPersistence = deployPersistencePlugin.migrationPersistence
   lazy val clusterSchemaBuilder = SchemaBuilder()
 
-  def setupAndGetInternalDatabase()(implicit ec: ExecutionContext): Unit = {
-//    val rootDb = Database.forConfig(s"internalRoot")
-//    await(rootDb.run(InternalDatabaseSchema.createSchemaActions(recreate = false)))
-//    rootDb.close()
+  def initialize()(implicit ec: ExecutionContext): Unit = {
     await(deployPersistencePlugin.initialize())
-
-//    val db = Database.forConfig("internal")
-//    await(db.run(InternalDatabaseSeedActions.seedActions()))
-
-    startDatabaseSizeReporting()
-
-  }
-
-  def startDatabaseSizeReporting(): Unit = {
     system.actorOf(Props(DatabaseSizeReporter(projectPersistence, deployPersistencePlugin)))
   }
 
