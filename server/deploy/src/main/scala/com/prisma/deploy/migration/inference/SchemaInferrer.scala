@@ -68,6 +68,7 @@ case class SchemaInferrerImpl(
   }
 
   def fieldsForType(objectType: ObjectTypeDefinition): Or[Vector[Field], InvalidGCValue] = {
+
     val fields: Vector[Or[Field, InvalidGCValue]] = objectType.fields.flatMap { fieldDef =>
       val typeIdentifier = typeIdentifierForTypename(fieldDef.typeName)
 
@@ -77,6 +78,25 @@ case class SchemaInferrerImpl(
         fieldDef.relationName match {
           case Some(name) => nextRelations.find(_.name == name)
           case None       => nextRelations.find(relation => relation.connectsTheModels(objectType.name, fieldDef.typeName))
+        }
+      }
+
+      def inferRelationSide(relation: Option[Relation]) = {
+        relation.map { relation =>
+          if (relation.isSameModelRelation) {
+            val oldFieldName = schemaMapping.getPreviousFieldName(objectType.name, fieldDef.name)
+            val oldModelName = schemaMapping.getPreviousModelName(objectType.name)
+            val oldField     = baseSchema.getFieldByName(oldModelName, oldFieldName)
+
+            if (oldField.isDefined && oldField.get.relationSide.isDefined) {
+              oldField.get.relationSide.get
+            } else {
+              val relationFieldNames = objectType.fields.filter(f => f.relationName.contains(relation.name)).map(_.name)
+              if (relationFieldNames.exists(name => name < fieldDef.name)) RelationSide.B else RelationSide.A
+            }
+          } else {
+            if (relation.modelAId == objectType.name) RelationSide.A else RelationSide.B
+          }
         }
       }
 
@@ -90,22 +110,7 @@ case class SchemaInferrerImpl(
           enum = nextEnums.find(_.name == fieldDef.typeName),
           defaultValue = default,
           relation = relation,
-          relationSide = relation.map { relation =>
-            if (relation.isSameModelRelation) {
-
-              val oldFieldName            = schemaMapping.getPreviousFieldName(objectType.name, fieldDef.name)
-              val oldModelName            = schemaMapping.getPreviousModelName(objectType.name)
-              val oldField: Option[Field] = baseSchema.getFieldByName(oldModelName, oldFieldName)
-              if (oldField.isDefined && oldField.get.relationSide.isDefined) {
-                oldField.get.relationSide.get
-              } else {
-                val relationFieldNames = objectType.fields.filter(f => f.relationName.contains(relation.name)).map(_.name)
-                if (relationFieldNames.exists(name => name < fieldDef.name)) RelationSide.B else RelationSide.A
-              }
-            } else {
-              if (relation.modelAId == objectType.name) RelationSide.A else RelationSide.B
-            }
-          }
+          relationSide = inferRelationSide(relation)
         )
       }
 
