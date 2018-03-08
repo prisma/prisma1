@@ -91,7 +91,7 @@ case class SchemaInferrerImpl(
           defaultValue = default,
           relation = relation,
           relationSide = relation.map { relation =>
-            if (relation.modelAId == relation.modelBId) { //selfrelation
+            if (relation.isSameModelRelation) {
 
               val oldFieldName            = schemaMapping.getPreviousFieldName(objectType.name, fieldDef.name)
               val oldModelName            = schemaMapping.getPreviousModelName(objectType.name)
@@ -99,8 +99,8 @@ case class SchemaInferrerImpl(
               if (oldField.isDefined && oldField.get.relationSide.isDefined) {
                 oldField.get.relationSide.get
               } else {
-                val relationFields = objectType.fields.filter(f => f.relationName.contains(relation.name)).map(_.name)
-                if (relationFields.exists(name => name < fieldDef.name)) RelationSide.B else RelationSide.A
+                val relationFieldNames = objectType.fields.filter(f => f.relationName.contains(relation.name)).map(_.name)
+                if (relationFieldNames.exists(name => name < fieldDef.name)) RelationSide.B else RelationSide.A
               }
             } else {
               if (relation.modelAId == objectType.name) RelationSide.A else RelationSide.B
