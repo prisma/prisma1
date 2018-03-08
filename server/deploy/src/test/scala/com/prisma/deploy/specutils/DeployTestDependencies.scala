@@ -4,7 +4,7 @@ import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
 import com.prisma.auth.AuthImpl
 import com.prisma.errors.{BugsnagErrorReporter, ErrorReporter}
-import com.prisma.deploy.DeployDependencies
+import com.prisma.deploy.{DeployDependencies, MySqlDeployPersistencePlugin}
 import com.prisma.deploy.persistence.DeployPersistencePlugin
 import com.prisma.deploy.server.DummyClusterAuth
 import com.prisma.graphql.GraphQlClient
@@ -26,5 +26,5 @@ case class DeployTestDependencies()(implicit val system: ActorSystem, val materi
 
   override def apiAuth = AuthImpl
 
-  override def persistencePlugin: DeployPersistencePlugin = ???
+  override def persistencePlugin: DeployPersistencePlugin = MySqlDeployPersistencePlugin()(system.dispatcher)
 }

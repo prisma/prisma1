@@ -40,7 +40,7 @@ trait DeploySpecBase extends BeforeAndAfterEach with BeforeAndAfterAll with Awai
 
   override protected def beforeEach(): Unit = {
     super.beforeEach()
-    testDependencies.persistencePlugin.reset()
+    testDependencies.persistencePlugin.reset().await
 //    projectsToCleanUp.foreach(clientDb.delete)
     projectsToCleanUp.clear()
   }

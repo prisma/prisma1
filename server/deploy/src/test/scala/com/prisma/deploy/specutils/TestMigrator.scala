@@ -4,7 +4,7 @@ import akka.actor.ActorSystem
 import com.prisma.deploy.database.persistence.MigrationPersistence
 import com.prisma.deploy.migration.MigrationStepMapperImpl
 import com.prisma.deploy.migration.migrator.{MigrationApplierImpl, Migrator}
-import com.prisma.deploy.migration.mutactions.{DeployMutactionExecutor, FailingAnyMutactionExecutor}
+import com.prisma.deploy.migration.mutactions.DeployMutactionExecutor
 import com.prisma.shared.models._
 import com.prisma.utils.await.AwaitUtils
 

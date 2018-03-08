@@ -91,6 +91,7 @@ lazy val sharedModels = normalProject("shared-models")
 
 lazy val deploy = serverProject("deploy")
   .dependsOn(deployPersistencePlugin % "compile")
+  .dependsOn(deployPersistencePluginForMySql % "test->test")
   .dependsOn(sharedModels % "compile")
   .dependsOn(akkaUtils % "compile")
   .dependsOn(metrics % "compile")
