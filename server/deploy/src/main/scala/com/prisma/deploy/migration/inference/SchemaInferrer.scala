@@ -82,17 +82,24 @@ case class SchemaInferrerImpl(
       }
 
       def inferRelationSide(relation: Option[Relation]) = {
+        def oldRelationSidesNotBothEqual(oldField: Field) = oldField.otherRelationField(baseSchema) match {
+          case Some(relatedField) => oldField.relationSide.isDefined && oldField.relationSide != relatedField.relationSide
+          case None               => true
+        }
+
         relation.map { relation =>
           if (relation.isSameModelRelation) {
             val oldFieldName = schemaMapping.getPreviousFieldName(objectType.name, fieldDef.name)
             val oldModelName = schemaMapping.getPreviousModelName(objectType.name)
             val oldField     = baseSchema.getFieldByName(oldModelName, oldFieldName)
 
-            if (oldField.isDefined && oldField.get.relationSide.isDefined) {
-              oldField.get.relationSide.get
-            } else {
-              val relationFieldNames = objectType.fields.filter(f => f.relationName.contains(relation.name)).map(_.name)
-              if (relationFieldNames.exists(name => name < fieldDef.name)) RelationSide.B else RelationSide.A
+            oldField match {
+              case Some(field) if oldRelationSidesNotBothEqual(field) =>
+                field.relationSide.get
+
+              case _ =>
+                val relationFieldNames = objectType.fields.filter(f => f.relationName.contains(relation.name)).map(_.name)
+                if (relationFieldNames.exists(name => name < fieldDef.name)) RelationSide.B else RelationSide.A
             }
           } else {
             if (relation.modelAId == objectType.name) RelationSide.A else RelationSide.B

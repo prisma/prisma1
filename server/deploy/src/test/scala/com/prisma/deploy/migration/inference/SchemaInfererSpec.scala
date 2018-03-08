@@ -1,6 +1,6 @@
 package com.prisma.deploy.migration.inference
 
-import com.prisma.shared.models.{OnDelete, Schema}
+import com.prisma.shared.models.{OnDelete, RelationSide, Schema}
 import com.prisma.shared.schema_dsl.SchemaDsl
 import org.scalactic.Or
 import org.scalatest.{Matchers, WordSpec}
@@ -211,10 +211,10 @@ class SchemaInfererSpec extends WordSpec with Matchers {
     "assign fieldA to the field with the lower lexicographic order" in {
       val types =
         """|type Technology {
-         |  name: String! @unique
-         |  childTechnologies: [Technology!]! @relation(name: "ChildTechnologies")
-         |  parentTechnologies: [Technology!]! @relation(name: "ChildTechnologies")
-         |}""".stripMargin.trim()
+           |  name: String! @unique
+           |  childTechnologies: [Technology!]! @relation(name: "ChildTechnologies")
+           |  parentTechnologies: [Technology!]! @relation(name: "ChildTechnologies")
+           |}""".stripMargin.trim()
       val schema = infer(emptyProject.schema, types).get
 
       schema.relations should have(size(1))
@@ -270,6 +270,59 @@ class SchemaInfererSpec extends WordSpec with Matchers {
       field2.relation should be(Some(newRelation))
       field2.relationSide.get.toString should be("B")
     }
+  }
+
+  "repair invalid assignments" in {
+    val types =
+      """|type Technology {
+         |  name: String! @unique
+         |  childTechnologies: [Technology!]! @relation(name: "ChildTechnologies")
+         |  parentTechnologies: [Technology!]! @relation(name: "ChildTechnologies")
+         |}""".stripMargin.trim()
+    val schema = infer(emptyProject.schema, types).get
+
+    schema.relations should have(size(1))
+    val relation = schema.getRelationByName_!("ChildTechnologies")
+    relation.modelAId should equal("Technology")
+    relation.modelBId should equal("Technology")
+    relation.getModelAField(schema).get.name should be("childTechnologies")
+    relation.getModelBField(schema).get.name should be("parentTechnologies")
+
+    val techModel   = schema.models.head
+    val parentField = techModel.getFieldByName_!("parentTechnologies")
+
+    val updatedModel  = techModel.copy(fields = techModel.fields.filter(_ != parentField) :+ parentField.copy(relationSide = Some(RelationSide.A)))
+    val invalidSchema = schema.copy(models = List(updatedModel))
+
+    val newSchema = infer(invalidSchema, types).get
+    newSchema.relations.foreach(println(_))
+
+    val newRelation = newSchema.getRelationByName_!("ChildTechnologies")
+    newRelation.modelAId should be("Technology")
+    newRelation.modelBId should be("Technology")
+
+    val field1 = newSchema.getModelByName_!("Technology").getFieldByName_!("childTechnologies")
+    field1.relation should be(Some(newRelation))
+    field1.relationSide.get.toString should be("A")
+
+    val field2 = newSchema.getModelByName_!("Technology").getFieldByName_!("parentTechnologies")
+    field2.relation should be(Some(newRelation))
+    field2.relationSide.get.toString should be("B")
+  }
+
+  "handle optional backrelations" in {
+    val types =
+      """|type Technology {
+         |  name: String! @unique
+         |  childTechnologies: [Technology!]!
+         |}""".stripMargin.trim()
+    val schema = infer(emptyProject.schema, types).get
+
+    schema.relations should have(size(1))
+    val relation = schema.relations.head
+    relation.modelAId should equal("Technology")
+    relation.modelBId should equal("Technology")
+    relation.getModelAField(schema).get.name should be("childTechnologies")
   }
 
   def infer(schema: Schema, types: String, mapping: SchemaMapping = SchemaMapping.empty): Or[Schema, ProjectSyntaxError] = {
