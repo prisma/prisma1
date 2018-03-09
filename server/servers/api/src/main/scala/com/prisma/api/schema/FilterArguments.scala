@@ -1,4 +1,4 @@
-package com.prisma.api.database
+package com.prisma.api.schema
 
 import com.prisma.shared.models.{Field, Model, TypeIdentifier}
 

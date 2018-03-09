@@ -1,11 +1,8 @@
 package com.prisma.api.schema
-//
-//import com.prisma.client.database.{FilterArgument, FilterArguments}
-//import com.prisma.client.schema.ModelMutationType
-import com.prisma.api.database.{FilterArgument, FilterArguments}
+
+import com.prisma.api.schema.CustomScalarTypes.{DateTimeType, JsonType}
 import com.prisma.shared.models
 import com.prisma.shared.models.{Model, Project, TypeIdentifier}
-import com.prisma.api.schema.CustomScalarTypes.{DateTimeType, JsonType}
 import sangria.schema._
 
 object SchemaBuilderUtils {
