@@ -116,7 +116,7 @@ case class ApiServer(
         case scala.util.Failure(_: ThrottleBufferFullException) =>
           throw ThrottlerBufferFullException()
 
-        case scala.util.Failure(exception) => // just propagate the exception
+        case scala.util.Failure(exception) =>
           throw exception
       }
     }

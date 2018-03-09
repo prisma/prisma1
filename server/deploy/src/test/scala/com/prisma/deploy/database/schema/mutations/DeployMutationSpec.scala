@@ -309,27 +309,10 @@ class DeployMutationSpec extends FlatSpec with Matchers with DeploySpecBase {
 
     val (project, _) = setupProject(schema)
 
-    val fnInput = FunctionInput(name = "my-function", query = "invalid query", url = "http://whatever.com", headers = Vector(HeaderInput("header1", "value1")))
+    val fnInput = FunctionInput(name = "failing", query = "invalid query", url = "http://whatever.com", headers = Vector(HeaderInput("header1", "value1")))
 
-    val result = {
-      val ProjectId(name, stage) = project.projectId
-      val stub = Request("POST", s"/$name/$stage/private")
-        .stub(
-          200,
-          """{
-          |  "data": {
-          |    "validateSubscriptionQuery": {
-          |      "errors": ["This did not work!"]
-          |    }
-          |  }
-          |}
-        """.stripMargin
-        )
-        .ignoreBody
-      withStubs(stub) {
-        deploySchema(project, schema, Vector(fnInput))
-      }
-    }
+    val result = deploySchema(project, schema, Vector(fnInput))
+
     result.pathAsSeq("data.deploy.errors") should not(be(empty))
 
     val reloadedProject = projectPersistence.load(project.id).await.get
@@ -347,26 +330,8 @@ class DeployMutationSpec extends FlatSpec with Matchers with DeploySpecBase {
     val (project, _) = setupProject(schema)
 
     val fnInput = FunctionInput(name = "my-function", query = "my query", url = "http://whatever.com", headers = Vector(HeaderInput("header1", "value1")))
-    val result = {
-      val ProjectId(name, stage) = project.projectId
-      val stub = Request("POST", s"/$name/$stage/private")
-        .stub(
-          200,
-          """{
-            |  "data": {
-            |    "validateSubscriptionQuery": {
-            |      "errors": []
-            |    }
-            |  }
-            |}
-          """.stripMargin
-        )
-        .ignoreBody
+    val result  = deploySchema(project, schema, Vector(fnInput))
 
-      withStubs(stub) {
-        deploySchema(project, schema, Vector(fnInput))
-      }
-    }
     result.pathAsSeq("data.deploy.errors") should be(empty)
 
     val reloadedProject = projectPersistence.load(project.id).await.get
@@ -377,11 +342,6 @@ class DeployMutationSpec extends FlatSpec with Matchers with DeploySpecBase {
     val delivery = function.delivery.asInstanceOf[WebhookDelivery]
     delivery.url should equal(fnInput.url)
     delivery.headers should equal(Vector("header1" -> "value1"))
-  }
-
-  def withStubs(stubs: Stub*) = {
-    // use a fixed port for every test because we instantiate the client only once in the dependencies
-    withStubServer(List(stubs: _*), stubNotFoundStatusCode = 418, port = 8777)
   }
 
   def deploySchema(project: Project, schema: String, functions: Vector[FunctionInput] = Vector.empty) = {
@@ -627,6 +587,76 @@ class DeployMutationSpec extends FlatSpec with Matchers with DeploySpecBase {
     migrations should have(size(3))
     migrations.exists(x => x.status != MigrationStatus.Success) shouldEqual false
     migrations.head.revision shouldEqual 3 // order is DESC
+  }
+
+  "DeployMutation" should "throw a proper error if detecting an ambiguous relation update" in {
+    val (project, _) = setupProject(basicTypesGql)
+    val nameAndStage = ProjectId.fromEncodedString(project.id)
+    val schema =
+      """
+        |type Mote {
+        | name: String! @unique
+        | # creator: User!
+        | members: [User!]!
+        |}
+        |
+        |type User {
+        | name: String! @unique
+        |}
+      """.stripMargin
+
+    server.query(
+      s"""
+         |mutation {
+         |  deploy(input:{name: "${nameAndStage.name}", stage: "${nameAndStage.stage}", types: ${formatSchema(schema)}}){
+         |    migration {
+         |      applied
+         |    }
+         |    errors {
+         |      description
+         |    }
+         |  }
+         |}
+      """.stripMargin
+    )
+
+    val migrations = migrationPersistence.loadAll(project.id).await
+    migrations should have(size(3))
+    migrations.exists(x => x.status != MigrationStatus.Success) shouldEqual false
+    migrations.head.revision shouldEqual 3 // order is DESC
+
+    val schema2 =
+      """
+        |type Mote {
+        | name: String! @unique
+        | creator: User! @relation(name: "Creator")
+        | members: [User!]! @relation(name: "MemberOf")
+        |}
+        |
+        |type User {
+        | name: String! @unique
+        | motes: [Mote!]! @relation(name: "Creator")
+        | memberOf: [Mote!]! @relation(name: "MemberOf")
+        |}
+      """.stripMargin
+
+    server.queryThatMustFail(
+      s"""
+         |mutation {
+         |  deploy(input:{name: "${nameAndStage.name}", stage: "${nameAndStage.stage}", types: ${formatSchema(schema2)}}){
+         |    migration {
+         |      applied
+         |    }
+         |    errors {
+         |      description
+         |    }
+         |  }
+         |}
+      """.stripMargin,
+      errorCode = 3018,
+      errorContains =
+        "There is a relation ambiguity during the migration. Please first name the old relation on your schema. The ambiguity is on a relation between Mote and User."
+    )
   }
 
   private def formatFunctions(functions: Vector[FunctionInput]) = {
