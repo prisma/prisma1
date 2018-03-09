@@ -15,6 +15,7 @@ The service definition file `prisma.yml` has the following root properties:
 - `cluster`: The cluster name to deploy to. Can be omitted to prompt interactive cluster selection.
 - `disableAuth`: Disable authentication for the endpoint
 - `secret`: Secret for securing the API endpoint
+- `schema`: Path to the Prisma database schema
 - `subscriptions`: Configuration of subscription functions
 - `seed`: Instructions for data seeding
 - `custom`: Use to provide variables which can be referenced from other fields
@@ -182,6 +183,12 @@ Upon every deploy of your service, the CLI will generate the service's _database
 The `schema` property specifies the file path indicating where the CLI should store the generated file.
 
 Specifying `schema` is optional. If not set, the CLI will not generate and store the database schema!
+
+<InfoBox type=warning>
+
+When you're using [`graphql-config`](https://github.com/graphcool/graphql-config) in your project and have a `.graphqlconfig`-file with the `schemaPath` property set, this `schemaPath` property takes precedence over the `schema` property in `prisma.yml` and overrides it.
+
+</InfoBox>
 
 #### Type
 
