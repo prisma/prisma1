@@ -6,8 +6,9 @@ import com.prisma.shared.models._
 
 import scala.concurrent.Future
 
-case class DestructiveChanges(project: Project, steps: Vector[MigrationStep])(implicit val dependencies: DeployDependencies) {
+case class DestructiveChanges(project: Project, nextSchema: Schema, steps: Vector[MigrationStep])(implicit val dependencies: DeployDependencies) {
   val clientDataResolver = dependencies.clientDbQueries(project)
+  val previousSchema     = project.schema
 
   def generateWarnings: Future[Vector[SchemaWarning]] = {
     import scala.concurrent.ExecutionContext.Implicits.global

@@ -69,7 +69,7 @@ case class DeployMutation(
 
           case Good(functionsForInput) =>
             val steps         = migrationStepsInferrer.infer(project.schema, inferredNextSchema, schemaMapping)
-            val warningsCheck = DestructiveChanges(project, steps).generateWarnings
+            val warningsCheck = DestructiveChanges(project, project.schema, inferredNextSchema, steps).generateWarnings
 
             warningsCheck.flatMap { warnings =>
               (warnings, args.force) match {
