@@ -16,6 +16,5 @@ steps:
 
   - wait
 
-  - label: ":docker: Build and deploy US1 & EU1"
-    command: ./server/scripts/docker-build-and-deploy.sh public-us-west-2,public-eu-west-1
-
+  - label: ":docker: Build stable channel"
+    command: ./server/scripts/docker-build.sh stable

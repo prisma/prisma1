@@ -3,7 +3,7 @@
 set -e
 
 TOKEN=${GITHUB_TOKEN}
-CLUSTERS="${1:?Provide the clusters as comma separated list that you want to deploy}"
+CHANNEL="${1:?Provide the channel this script is run on (stable, unstable)}"
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
 $DIR/kill-all-docker-containers.sh
@@ -65,20 +65,13 @@ do
   fi
 done
 
-echo "Fetching cb binary..."
-curl --header "Authorization: token $TOKEN" \
-     --header 'Accept: application/vnd.github.v3.raw' \
-     --location "https://api.github.com/repos/graphcool/coolbelt/releases/latest" -sSL | \
-     jq '.assets[] | select(.name == "coolbelt_linux") | .url' | \
-     xargs -I "{}" \
-         curl -sSL --header 'Accept: application/octet-stream' -o cb \
-         --location "{}?access_token=$TOKEN"
-
-chmod +x cb
-
-echo "Replacing images..."
-CLUSTER_ELEMENTS=(${CLUSTERS//,/ })
-for cluster in "${CLUSTER_ELEMENTS[@]}"
-do
-    ./cb service launch prisma-primary ${NEXT_DOCKER_TAG} --customer graphcool --cluster ${cluster} --silent
-done
+cat << EOF
+- trigger: "prisma-cloud"
+  label: ":cloud: Trigger Prisma Cloud Tasks :cloud:"
+  branches: "master"
+  async: true
+  build:
+    env:
+        BUILD_TAG: "${NEXT_DOCKER_TAG}"
+        CHANNEL: ${CHANNEL}
+EOF | buildkite-agent pipeline upload
