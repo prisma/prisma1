@@ -1,5 +1,6 @@
 package com.prisma.deploy.specutils
 
+import com.prisma.deploy.connector.mysql.InternalDatabaseDefs
 import com.prisma.deploy.connector.mysql.database.InternalDatabaseSchema
 import com.prisma.utils.await.AwaitUtils
 import slick.dbio.Effect.Read
@@ -7,12 +8,12 @@ import slick.dbio.{DBIOAction, NoStream}
 import slick.jdbc.MySQLProfile.api._
 import slick.jdbc.meta.MTable
 
-class InternalTestDatabase extends AwaitUtils { //this: Suite =>
+class InternalTestDatabase extends AwaitUtils {
   import scala.concurrent.ExecutionContext.Implicits.global
 
-  val dbDriver             = new org.mariadb.jdbc.Driver
-  val internalDatabaseRoot = Database.forConfig("internalRoot", driver = dbDriver)
-  val internalDatabase     = Database.forConfig("internal", driver = dbDriver)
+  val databaseDefs         = InternalDatabaseDefs()
+  val internalDatabaseRoot = databaseDefs.internalDatabaseRoot
+  val internalDatabase     = databaseDefs.internalDatabase
 
   def createInternalDatabaseSchema() = internalDatabaseRoot.run(InternalDatabaseSchema.createSchemaActions(recreate = true)).await(10)
 
