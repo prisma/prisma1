@@ -1,11 +1,12 @@
 package com.prisma.deploy.schema.mutations
 
 import com.prisma.deploy.DeployDependencies
+import com.prisma.deploy.database.DestructiveChanges
 import com.prisma.deploy.database.persistence.{MigrationPersistence, ProjectPersistence}
 import com.prisma.deploy.migration._
 import com.prisma.deploy.migration.inference.{InvalidGCValue, MigrationStepsInferrer, RelationDirectiveNeeded, SchemaInferrer}
 import com.prisma.deploy.migration.migrator.Migrator
-import com.prisma.deploy.migration.validation.{SchemaError, SchemaSyntaxValidator}
+import com.prisma.deploy.migration.validation.{SchemaError, SchemaSyntaxValidator, SchemaWarning}
 import com.prisma.deploy.schema.InvalidQuery
 import com.prisma.messagebus.pubsub.Only
 import com.prisma.shared.models.{Function, Migration, MigrationStep, Project, Schema, ServerSideSubscriptionFunction, UpdateSecrets, WebhookDelivery}
@@ -45,8 +46,8 @@ case class DeployMutation(
           DeployMutationPayload(
             clientMutationId = args.clientMutationId,
             migration = None,
-            errors = schemaErrors
-            //warnings
+            errors = schemaErrors,
+            warnings = Seq.empty
           ))
       }
     } else {
@@ -63,14 +64,31 @@ case class DeployMutation(
 
         functionsOrErrors match {
           case Bad(errors) =>
-            Future.successful(MutationSuccess(DeployMutationPayload(args.clientMutationId, Some(Migration.empty(project.id)), errors = schemaErrors ++ errors)))
+            Future.successful(
+              MutationSuccess(DeployMutationPayload(args.clientMutationId, Some(Migration.empty(project.id)), errors = schemaErrors ++ errors, Seq.empty)))
 
           case Good(functionsForInput) =>
-            val steps                = migrationStepsInferrer.infer(project.schema, inferredNextSchema, schemaMapping)
-            val secretsUpdatedFuture = updateSecretsIfNecessary()
-            val migration            = secretsUpdatedFuture.flatMap(secret => handleMigration(inferredNextSchema, steps ++ secret, functionsForInput))
-            migration.map(mig => MutationSuccess(DeployMutationPayload(args.clientMutationId, mig, errors = schemaErrors)))
+            val steps         = migrationStepsInferrer.infer(project.schema, inferredNextSchema, schemaMapping)
+            val warningsCheck = DestructiveChanges(project, steps).generateWarnings
+
+            warningsCheck.flatMap { warnings =>
+              (warnings, args.force) match {
+                case (x, _) if x.isEmpty =>
+                  val secretsUpdatedFuture = updateSecretsIfNecessary()
+                  val migration            = secretsUpdatedFuture.flatMap(secret => handleMigration(inferredNextSchema, steps ++ secret, functionsForInput))
+                  migration.map(mig => MutationSuccess(DeployMutationPayload(args.clientMutationId, mig, errors = schemaErrors, Seq.empty)))
+
+                case (warnings, Some(true)) =>
+                  val secretsUpdatedFuture = updateSecretsIfNecessary()
+                  val migration            = secretsUpdatedFuture.flatMap(secret => handleMigration(inferredNextSchema, steps ++ secret, functionsForInput))
+                  migration.map(mig => MutationSuccess(DeployMutationPayload(args.clientMutationId, mig, errors = schemaErrors, Seq.empty))) // todo
+
+                case (warnings, _) =>
+                  sys.error(warnings.toString)
+              }
+            }
         }
+
       case Bad(err) =>
         Future.successful {
           MutationSuccess(
@@ -80,7 +98,8 @@ case class DeployMutation(
               errors = List(err match {
                 case RelationDirectiveNeeded(t1, _, t2, _) => SchemaError.global(s"Relation directive required for types $t1 and $t2.")
                 case InvalidGCValue(err)                   => SchemaError.global(s"Invalid value '${err.value}' for type ${err.typeIdentifier}.")
-              })
+              }),
+              warnings = Seq.empty
             ))
         }
     }
@@ -157,6 +176,6 @@ case class HeaderInput(
 case class DeployMutationPayload(
     clientMutationId: Option[String],
     migration: Option[Migration],
-    errors: Seq[SchemaError]
-//    warnings: Seq[SchemaWarning]
+    errors: Seq[SchemaError],
+    warnings: Seq[SchemaWarning]
 ) extends sangria.relay.Mutation

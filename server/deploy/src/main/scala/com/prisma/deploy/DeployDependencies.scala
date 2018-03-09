@@ -3,6 +3,7 @@ package com.prisma.deploy
 import akka.actor.{ActorSystem, Props}
 import akka.stream.ActorMaterializer
 import com.prisma.auth.Auth
+import com.prisma.deploy.database.ClientDbQueries
 import com.prisma.deploy.database.persistence.{MigrationPersistenceImpl, ProjectPersistenceImpl}
 import com.prisma.deploy.database.schema.InternalDatabaseSchema
 import com.prisma.deploy.migration.migrator.Migrator
@@ -11,8 +12,8 @@ import com.prisma.deploy.schema.mutations.FunctionValidator
 import com.prisma.deploy.seed.InternalDatabaseSeedActions
 import com.prisma.deploy.server.ClusterAuth
 import com.prisma.errors.ErrorReporter
-import com.prisma.graphql.GraphQlClient
 import com.prisma.messagebus.PubSubPublisher
+import com.prisma.shared.models.Project
 import slick.jdbc.MySQLProfile
 import slick.jdbc.MySQLProfile.api._
 
@@ -32,6 +33,7 @@ trait DeployDependencies {
   def invalidationPublisher: PubSubPublisher[String]
   def apiAuth: Auth
   def functionValidator: FunctionValidator
+  def clientDbQueries(project: Project): ClientDbQueries
 
   lazy val internalDb           = setupAndGetInternalDatabase()
   lazy val clientDb             = Database.forConfig("client")

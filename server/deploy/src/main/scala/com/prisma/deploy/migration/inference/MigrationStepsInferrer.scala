@@ -1,6 +1,5 @@
 package com.prisma.deploy.migration.inference
 
-import com.prisma.deploy.schema.UpdatedRelationAmbigous
 import com.prisma.shared.models._
 
 trait MigrationStepsInferrer {
@@ -42,18 +41,18 @@ case class MigrationStepsInferrerImpl(previousSchema: Schema, nextSchema: Schema
     * all steps, instead of knowing the next project state as well.
     */
   def evaluate(): Vector[MigrationStep] = {
-    relationsToDelete ++ //data loss
-      fieldsToDelete ++  //data loss
-      modelsToDelete ++  //data loss
-      enumsToDelete ++   //data loss
+    relationsToDelete ++
+      fieldsToDelete ++
+      modelsToDelete ++
+      enumsToDelete ++
       enumsToCreate ++
       modelsToCreate ++
       fieldsToCreate ++
-      relationsToCreate ++ // if required and there are already nodes we also have a problem
-      enumsToUpdate ++     //data loss
-      fieldsToUpdate ++    //data loss
-      modelsToUpdate ++    //data loss
-      relationsToUpdate //data loss
+      relationsToCreate ++
+      enumsToUpdate ++
+      fieldsToUpdate ++
+      modelsToUpdate ++
+      relationsToUpdate
   }
 
   lazy val modelsToCreate: Vector[CreateModel] = {

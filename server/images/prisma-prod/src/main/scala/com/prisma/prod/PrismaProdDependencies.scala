@@ -9,6 +9,7 @@ import com.prisma.api.project.{CachedProjectFetcherImpl, ProjectFetcher}
 import com.prisma.api.schema.{CachedSchemaBuilder, SchemaBuilder}
 import com.prisma.auth.AuthImpl
 import com.prisma.deploy.DeployDependencies
+import com.prisma.deploy.database.{ClientDbQueries, ClientDbQueriesImpl}
 import com.prisma.deploy.migration.migrator.{AsyncMigrator, Migrator}
 import com.prisma.deploy.migration.validation.SchemaError
 import com.prisma.deploy.schema.mutations.FunctionInput
@@ -19,6 +20,7 @@ import com.prisma.messagebus.pubsub.inmemory.InMemoryAkkaPubSub
 import com.prisma.messagebus.pubsub.rabbit.RabbitAkkaPubSub
 import com.prisma.messagebus.queue.inmemory.InMemoryAkkaQueue
 import com.prisma.messagebus.queue.rabbit.RabbitQueue
+import com.prisma.shared.models.Project
 import com.prisma.subscriptions.{SubscriptionDependencies, Webhook}
 import com.prisma.subscriptions.protocol.SubscriptionProtocolV05.Responses.SubscriptionSessionResponseV05
 import com.prisma.subscriptions.protocol.SubscriptionProtocolV07.Responses.SubscriptionSessionResponse
@@ -39,6 +41,8 @@ case class PrismaProdDependencies()(implicit val system: ActorSystem, val materi
   import com.prisma.prod.Converters._
 
   val rabbitUri: String = sys.env("RABBITMQ_URI")
+
+  override def clientDbQueries(project: Project): ClientDbQueries = ClientDbQueriesImpl(project)
 
   override implicit def self: PrismaProdDependencies = this
 
