@@ -1,6 +1,6 @@
 package com.prisma.deploy.migration.inference
 
-import com.prisma.shared.models.{OnDelete, RelationSide, Schema}
+import com.prisma.shared.models.{RelationSide, Schema}
 import com.prisma.shared.schema_dsl.SchemaDsl
 import org.scalactic.Or
 import org.scalatest.{Matchers, WordSpec}
