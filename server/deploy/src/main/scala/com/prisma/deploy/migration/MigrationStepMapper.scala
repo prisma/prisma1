@@ -23,10 +23,9 @@ case class MigrationStepMapperImpl(projectId: String) extends MigrationStepMappe
       Some(RenameTable(projectId = projectId, previousName = x.name, nextName = x.newName, scalarListFieldsNames = scalarListFieldNames))
 
     case x: CreateField =>
-      // todo I think those validations should be somewhere else, preferably preventing a step being created
       val model = nextSchema.getModelByName_!(x.model)
       val field = model.getFieldByName_!(x.name)
-      if (ReservedFields.isReservedFieldName(field.name) || !field.isScalar) {
+      if (field.isRelation) {
         None
       } else {
         if (field.isList) {
@@ -39,7 +38,7 @@ case class MigrationStepMapperImpl(projectId: String) extends MigrationStepMappe
     case x: DeleteField =>
       val model = previousSchema.getModelByName_!(x.model)
       val field = model.getFieldByName_!(x.name)
-      if (field.isList && !field.isRelation) {
+      if (field.isList && field.isScalar) {
         Some(DeleteScalarListTable(projectId, model.name, field.name, field.typeIdentifier))
       } else if (field.isScalar) {
         // TODO: add test case for not deleting columns for relation fields
