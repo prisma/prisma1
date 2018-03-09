@@ -76,10 +76,10 @@ def dockerImageProject(name: String, imageName: String): Project = {
     .settings(commonDockerImageSettings(imageName): _*)
 }
 
-def serverProject(name: String): Project = Project(id = name, base = file(s"./$name")).settings(commonServerSettings: _*).dependsOn(scalaUtils)
 def normalProject(name: String): Project = Project(id = name, base = file(s"./$name")).settings(commonSettings: _*)
+def serverProject(name: String): Project = Project(id = name, base = file(s"./servers/$name")).settings(commonServerSettings: _*).dependsOn(scalaUtils)
 def libProject(name: String): Project =  Project(id = name, base = file(s"./libs/$name")).settings(commonSettings: _*)
-def connectorProject(name: String): Project =  Project(id = name, base = file(s"./connectors/$name")).settings(commonSettings: _*)
+def connectorProject(name: String): Project =  Project(id = name, base = file(s"./connectors/$name")).settings(commonSettings: _*).dependsOn(scalaUtils)
 
 // ####################
 //       IMAGES
@@ -322,6 +322,7 @@ val allLibProjects = List(
 lazy val libs = (project in file("libs")).aggregate(allLibProjects.map(Project.projectToRef): _*)
 lazy val images = (project in file("images")).aggregate(allDockerImageProjects.map(Project.projectToRef): _*)
 lazy val connectors = (project in file("connectors")).aggregate(allConnectorProjects.map(Project.projectToRef): _*)
+lazy val servers = (project in file("servers")).aggregate(allServerProjects.map(Project.projectToRef): _*)
 
 lazy val root = (project in file("."))
   .aggregate((allServerProjects ++ allDockerImageProjects ++ allConnectorProjects).map(Project.projectToRef): _*)
