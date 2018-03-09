@@ -1,4 +1,4 @@
-package com.prisma.deploy.database.tables
+package com.prisma.deploy.connector.mysql.database
 
 import slick.lifted.TableQuery
 

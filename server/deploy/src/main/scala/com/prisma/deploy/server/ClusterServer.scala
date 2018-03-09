@@ -12,8 +12,8 @@ import com.prisma.errors.RequestMetadata
 import com.prisma.sangria.utils.ErrorHandler
 import com.typesafe.scalalogging.LazyLogging
 import com.prisma.akkautil.http.Server
+import com.prisma.deploy.connector.ProjectPersistence
 import cool.graph.cuid.Cuid.createCuid
-import com.prisma.deploy.database.persistence.ProjectPersistence
 import com.prisma.deploy.schema.{DeployApiError, InvalidProjectId, SchemaBuilder, SystemUserContext}
 import com.prisma.deploy.{DeployDependencies, DeployMetrics}
 import com.prisma.metrics.extensions.TimeResponseDirectiveImpl

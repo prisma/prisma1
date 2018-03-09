@@ -1,6 +1,6 @@
-package com.prisma.deploy.database.persistence
+package com.prisma.deploy.connector.mysql.impls
 
-import com.prisma.deploy.database.tables.{Migration, Project}
+import com.prisma.deploy.connector.mysql.database.{Migration, Project}
 import com.prisma.shared.models
 import com.prisma.shared.models.{MigrationStep, Schema}
 

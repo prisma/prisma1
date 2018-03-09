@@ -1,6 +1,5 @@
-package com.prisma.deploy.migration
+package com.prisma.deploy.connector
 
-import com.prisma.deploy.migration.mutactions.DeployMutaction
 import com.prisma.shared.models.{MigrationStep, Schema}
 
 trait MigrationStepMapper {

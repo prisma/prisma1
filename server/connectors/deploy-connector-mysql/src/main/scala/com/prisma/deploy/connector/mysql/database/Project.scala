@@ -1,4 +1,4 @@
-package com.prisma.deploy.database.tables
+package com.prisma.deploy.connector.mysql.database
 
 import com.prisma.shared.models.MigrationStatus
 import play.api.libs.json.JsValue

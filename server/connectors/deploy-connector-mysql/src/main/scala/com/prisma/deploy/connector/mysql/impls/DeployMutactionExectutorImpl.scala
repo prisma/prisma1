@@ -1,7 +1,7 @@
-package com.prisma.deploy.connector.mysql
+package com.prisma.deploy.connector.mysql.impls
 
-import com.prisma.deploy.migration.mutactions.{DeployMutactionExecutor, DeployMutaction}
-import com.prisma.deploy.mutactions.AnyMutactionInterpreterImpl
+import com.prisma.deploy.connector.{DeployMutaction, DeployMutactionExecutor}
+import com.prisma.deploy.connector.mysql.impls.mutactions.AnyMutactionInterpreterImpl
 import slick.jdbc.MySQLProfile.api._
 
 import scala.concurrent.{ExecutionContext, Future}

@@ -1,8 +1,5 @@
 package com.prisma.deploy.connector
 
-import com.prisma.deploy.database.persistence.{MigrationPersistence, ProjectPersistence}
-import com.prisma.deploy.migration.mutactions.DeployMutactionExecutor
-
 import scala.concurrent.Future
 
 trait DeployConnector {

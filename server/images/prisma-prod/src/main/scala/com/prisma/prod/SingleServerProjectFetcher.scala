@@ -1,7 +1,7 @@
 package com.prisma.prod
 
 import com.prisma.api.project.RefreshableProjectFetcher
-import com.prisma.deploy.database.persistence.ProjectPersistence
+import com.prisma.deploy.connector.ProjectPersistence
 import com.prisma.shared.models.ProjectWithClientId
 
 import scala.concurrent.{ExecutionContext, Future}

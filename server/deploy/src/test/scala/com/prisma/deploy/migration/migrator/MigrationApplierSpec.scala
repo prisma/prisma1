@@ -1,7 +1,6 @@
 package com.prisma.deploy.migration.migrator
 
-import com.prisma.deploy.migration.MigrationStepMapper
-import com.prisma.deploy.migration.mutactions._
+import com.prisma.deploy.connector.{CreateModelTable, DeployMutaction, DeployMutactionExecutor, MigrationStepMapper}
 import com.prisma.deploy.specutils.DeploySpecBase
 import com.prisma.shared.models._
 import com.prisma.utils.await.AwaitUtils

@@ -1,7 +1,6 @@
 package com.prisma.deploy.schema.mutations
 
-import com.prisma.deploy.database.persistence.{MigrationPersistence, ProjectPersistence}
-import com.prisma.deploy.connector.DeployConnector
+import com.prisma.deploy.connector.{DeployConnector, MigrationPersistence, ProjectPersistence}
 import com.prisma.deploy.schema.{InvalidServiceName, InvalidServiceStage, ProjectAlreadyExists}
 import com.prisma.deploy.validation.NameConstraints
 import com.prisma.shared.models._

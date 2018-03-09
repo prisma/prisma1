@@ -1,4 +1,4 @@
-package com.prisma.deploy.database.schema
+package com.prisma.deploy.connector.mysql.database
 
 import slick.jdbc.MySQLProfile.api._
 

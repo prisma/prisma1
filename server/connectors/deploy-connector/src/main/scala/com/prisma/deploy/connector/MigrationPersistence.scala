@@ -1,4 +1,4 @@
-package com.prisma.deploy.database.persistence
+package com.prisma.deploy.connector
 
 import com.prisma.shared.models.MigrationStatus.MigrationStatus
 import com.prisma.shared.models.{Migration, MigrationId}

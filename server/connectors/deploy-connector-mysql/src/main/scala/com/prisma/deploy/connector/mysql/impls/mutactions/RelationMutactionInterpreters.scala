@@ -1,7 +1,7 @@
-package com.prisma.deploy.mutactions
+package com.prisma.deploy.connector.mysql.impls.mutactions
 
-import com.prisma.deploy.database.DatabaseMutationBuilder
-import com.prisma.deploy.migration.mutactions.{CreateRelationTable, DeleteRelationTable}
+import com.prisma.deploy.connector.mysql.database.DatabaseMutationBuilder
+import com.prisma.deploy.connector.{CreateRelationTable, DeleteRelationTable}
 
 object CreateRelationInterpreter extends SqlMutactionInterpreter[CreateRelationTable] {
   override def execute(mutaction: CreateRelationTable) = {

@@ -3,9 +3,10 @@ package com.prisma.deploy.specutils
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
 import com.prisma.auth.AuthImpl
-import com.prisma.deploy.{DeployDependencies, MySqlDeployConnector}
+import com.prisma.deploy.DeployDependencies
 import com.prisma.deploy.migration.validation.SchemaError
 import com.prisma.deploy.connector.DeployConnector
+import com.prisma.deploy.connector.mysql.MySqlDeployConnector
 import com.prisma.deploy.schema.mutations.{FunctionInput, FunctionValidator}
 import com.prisma.deploy.server.DummyClusterAuth
 import com.prisma.errors.{BugsnagErrorReporter, ErrorReporter}

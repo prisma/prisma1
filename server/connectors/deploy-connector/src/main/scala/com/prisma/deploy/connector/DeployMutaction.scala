@@ -1,9 +1,7 @@
-package com.prisma.deploy.migration.mutactions
+package com.prisma.deploy.connector
 
 import com.prisma.shared.models.TypeIdentifier.TypeIdentifier
 import com.prisma.shared.models.{Field, Model, Relation, Schema}
-
-import scala.concurrent.Future
 
 sealed trait DeployMutaction
 
@@ -22,8 +20,3 @@ case class RenameTable(projectId: String, previousName: String, nextName: String
 
 case class CreateRelationTable(projectId: String, schema: Schema, relation: Relation) extends DeployMutaction
 case class DeleteRelationTable(projectId: String, schema: Schema, relation: Relation) extends DeployMutaction
-
-trait DeployMutactionExecutor {
-  def execute(mutaction: DeployMutaction): Future[Unit]
-  def rollback(mutaction: DeployMutaction): Future[Unit]
-}

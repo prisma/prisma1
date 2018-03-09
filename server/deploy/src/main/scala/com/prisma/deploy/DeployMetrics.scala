@@ -3,8 +3,7 @@ package com.prisma.deploy
 import akka.actor.Actor
 import com.prisma.akkautil.LogUnhandled
 import com.prisma.deploy.DatabaseSizeReporter.Report
-import com.prisma.deploy.database.persistence.ProjectPersistence
-import com.prisma.deploy.connector.{DatabaseSize, DeployConnector}
+import com.prisma.deploy.connector.{DatabaseSize, DeployConnector, ProjectPersistence}
 import com.prisma.errors.{BugsnagErrorReporter, ErrorReporter}
 import com.prisma.metrics.{CustomTag, LibratoGaugeMetric, MetricsManager}
 import com.prisma.profiling.JvmProfiler

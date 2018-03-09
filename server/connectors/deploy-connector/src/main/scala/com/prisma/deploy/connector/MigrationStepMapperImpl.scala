@@ -1,6 +1,5 @@
-package com.prisma.deploy.migration
+package com.prisma.deploy.connector
 
-import com.prisma.deploy.migration.mutactions._
 import com.prisma.shared.models._
 
 case class MigrationStepMapperImpl(projectId: String) extends MigrationStepMapper {

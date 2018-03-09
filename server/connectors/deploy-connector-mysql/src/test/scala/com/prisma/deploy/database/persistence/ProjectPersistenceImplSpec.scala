@@ -1,6 +1,6 @@
 package com.prisma.deploy.database.persistence
 
-import com.prisma.deploy.database.tables.Tables
+import com.prisma.deploy.connector.mysql.database.Tables
 import com.prisma.deploy.specutils.SpecBase
 import com.prisma.shared.models.{Migration, MigrationId, MigrationStatus}
 import org.scalatest.{FlatSpec, Matchers}

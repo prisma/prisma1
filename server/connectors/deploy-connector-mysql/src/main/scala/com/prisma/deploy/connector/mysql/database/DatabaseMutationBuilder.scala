@@ -1,4 +1,4 @@
-package com.prisma.deploy.database
+package com.prisma.deploy.connector.mysql.database
 
 import com.prisma.shared.models.TypeIdentifier
 import com.prisma.shared.models.TypeIdentifier.TypeIdentifier

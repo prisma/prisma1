@@ -1,4 +1,4 @@
-package com.prisma.deploy
+package com.prisma.deploy.connector.mysql
 
 case class InternalDatabaseDefs() {
   import slick.jdbc.MySQLProfile.api._

@@ -1,12 +1,8 @@
-package com.prisma.deploy
+package com.prisma.deploy.connector.mysql
 
-import com.prisma.deploy.database.DatabaseMutationBuilder
-import com.prisma.deploy.database.persistence.mysql.MigrationPersistenceImpl
-import com.prisma.deploy.database.persistence.{MigrationPersistence, ProjectPersistence, ProjectPersistenceImpl}
-import com.prisma.deploy.database.schema.InternalDatabaseSchema
-import com.prisma.deploy.migration.mutactions.DeployMutactionExecutor
-import com.prisma.deploy.connector.mysql.DeployMutactionExectutorImpl
-import com.prisma.deploy.connector.{DatabaseSize, DeployConnector}
+import com.prisma.deploy.connector._
+import com.prisma.deploy.connector.mysql.database.{DatabaseMutationBuilder, InternalDatabaseSchema}
+import com.prisma.deploy.connector.mysql.impls.{DeployMutactionExectutorImpl, MigrationPersistenceImpl, ProjectPersistenceImpl}
 import slick.dbio.Effect.Read
 import slick.dbio.{DBIOAction, NoStream}
 import slick.jdbc.MySQLProfile.api._

@@ -1,4 +1,4 @@
-package com.prisma.deploy.database.tables
+package com.prisma.deploy.connector.mysql.database
 
 import com.github.tototoshi.slick.MySQLJodaSupport
 import com.prisma.shared.models.MigrationStatus

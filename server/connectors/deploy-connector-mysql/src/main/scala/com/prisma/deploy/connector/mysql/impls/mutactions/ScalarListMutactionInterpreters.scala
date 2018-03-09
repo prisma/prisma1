@@ -1,7 +1,7 @@
-package com.prisma.deploy.mutactions
+package com.prisma.deploy.connector.mysql.impls.mutactions
 
-import com.prisma.deploy.database.DatabaseMutationBuilder
-import com.prisma.deploy.migration.mutactions.{CreateScalarListTable, DeleteScalarListTable, UpdateScalarListTable}
+import com.prisma.deploy.connector.mysql.database.DatabaseMutationBuilder
+import com.prisma.deploy.connector.{CreateScalarListTable, DeleteScalarListTable, UpdateScalarListTable}
 import slick.jdbc.MySQLProfile.api._
 
 object CreateScalarListInterpreter extends SqlMutactionInterpreter[CreateScalarListTable] {

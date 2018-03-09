@@ -1,7 +1,7 @@
-package com.prisma.deploy.mutactions
+package com.prisma.deploy.connector.mysql.impls.mutactions
 
-import com.prisma.deploy.database.DatabaseMutationBuilder
-import com.prisma.deploy.migration.mutactions.{CreateModelTable, DeleteModelTable, RenameTable}
+import com.prisma.deploy.connector.mysql.database.DatabaseMutationBuilder
+import com.prisma.deploy.connector.{CreateModelTable, DeleteModelTable, RenameTable}
 import slick.dbio.{DBIOAction, Effect, NoStream}
 import slick.jdbc.MySQLProfile.api._
 

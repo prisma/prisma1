@@ -1,4 +1,4 @@
-package com.prisma.deploy.database.tables
+package com.prisma.deploy.connector.mysql.database
 
 import play.api.libs.json.{JsArray, JsString, JsValue}
 import slick.jdbc.MySQLProfile.api._

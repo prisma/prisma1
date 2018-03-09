@@ -1,6 +1,6 @@
-package com.prisma.deploy.mutactions
+package com.prisma.deploy.connector.mysql.impls.mutactions
 
-import com.prisma.deploy.migration.mutactions.DeployMutaction
+import com.prisma.deploy.connector.DeployMutaction
 import slick.dbio.{DBIOAction, Effect, NoStream}
 
 trait SqlMutactionInterpreter[T <: DeployMutaction] {

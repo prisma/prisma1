@@ -1,7 +1,6 @@
 package com.prisma.deploy.specutils
 
-import com.prisma.deploy.database.persistence.ProjectPersistenceImpl
-import com.prisma.deploy.database.persistence.mysql.MigrationPersistenceImpl
+import com.prisma.deploy.connector.mysql.impls.{MigrationPersistenceImpl, ProjectPersistenceImpl}
 import com.prisma.shared.models._
 import com.prisma.utils.await.AwaitUtils
 import cool.graph.cuid.Cuid

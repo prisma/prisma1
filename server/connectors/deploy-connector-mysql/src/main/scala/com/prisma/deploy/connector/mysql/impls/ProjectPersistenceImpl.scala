@@ -1,7 +1,7 @@
-package com.prisma.deploy.database.persistence
+package com.prisma.deploy.connector.mysql.impls
 
-import com.prisma.deploy.database.tables
-import com.prisma.deploy.database.tables.{Migration, ProjectTable, Tables}
+import com.prisma.deploy.connector.ProjectPersistence
+import com.prisma.deploy.connector.mysql.database.{ProjectTable, Tables}
 import com.prisma.shared.models.Project
 import slick.jdbc.MySQLProfile.api._
 import slick.jdbc.MySQLProfile.backend.DatabaseDef

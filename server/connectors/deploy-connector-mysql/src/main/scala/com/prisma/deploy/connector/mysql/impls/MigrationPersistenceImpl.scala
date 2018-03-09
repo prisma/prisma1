@@ -1,7 +1,7 @@
-package com.prisma.deploy.database.persistence.mysql
+package com.prisma.deploy.connector.mysql.impls
 
-import com.prisma.deploy.database.persistence.{DbToModelMapper, MigrationPersistence, ModelToDbMapper}
-import com.prisma.deploy.database.tables.MigrationTable
+import com.prisma.deploy.connector.MigrationPersistence
+import com.prisma.deploy.connector.mysql.database.MigrationTable
 import com.prisma.shared.models.MigrationStatus.MigrationStatus
 import com.prisma.shared.models.{Migration, MigrationId}
 import com.prisma.utils.future.FutureUtils.FutureOpt

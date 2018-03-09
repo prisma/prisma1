@@ -1,6 +1,6 @@
-package com.prisma.deploy.mutactions
+package com.prisma.deploy.connector.mysql.impls.mutactions
 
-import com.prisma.deploy.migration.mutactions._
+import com.prisma.deploy.connector._
 
 object AnyMutactionInterpreterImpl extends SqlMutactionInterpreter[DeployMutaction] {
   override def execute(mutaction: DeployMutaction) = {

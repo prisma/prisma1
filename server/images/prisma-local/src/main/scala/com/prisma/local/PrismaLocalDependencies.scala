@@ -9,10 +9,11 @@ import com.prisma.api.project.{CachedProjectFetcherImpl, ProjectFetcher}
 import com.prisma.api.schema.{CachedSchemaBuilder, SchemaBuilder}
 import com.prisma.auth.AuthImpl
 import com.prisma.subscriptions.Webhook
-import com.prisma.deploy.{DeployDependencies, MySqlDeployConnector}
+import com.prisma.deploy.DeployDependencies
 import com.prisma.deploy.migration.migrator.{AsyncMigrator, Migrator}
 import com.prisma.deploy.connector.DeployConnector
 import com.prisma.deploy.DeployDependencies
+import com.prisma.deploy.connector.mysql.MySqlDeployConnector
 import com.prisma.deploy.migration.migrator.{AsyncMigrator, Migrator}
 import com.prisma.deploy.schema.mutations.FunctionValidator
 import com.prisma.deploy.server.{ClusterAuthImpl, DummyClusterAuth}
