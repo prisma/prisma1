@@ -78,6 +78,7 @@ def dockerImageProject(name: String, imageName: String): Project = {
 def serverProject(name: String): Project = Project(id = name, base = file(s"./$name")).settings(commonServerSettings: _*).dependsOn(scalaUtils)
 def normalProject(name: String): Project = Project(id = name, base = file(s"./$name")).settings(commonSettings: _*)
 def libProject(name: String): Project =  Project(id = name, base = file(s"./libs/$name")).settings(commonSettings: _*)
+def connectorProject(name: String): Project =  Project(id = name, base = file(s"./connectors/$name")).settings(commonSettings: _*)
 
 lazy val sharedModels = normalProject("shared-models")
   .dependsOn(gcValues % "compile")
@@ -114,10 +115,10 @@ lazy val deploy = serverProject("deploy")
 //    buildInfoPackage := "build_info"
 //  )
 
-lazy val deployPersistencePlugin = normalProject("deploy-persistence-plugin")
+lazy val deployPersistencePlugin = connectorProject("deploy-persistence-plugin")
   .dependsOn(sharedModels % "compile")
 
-lazy val deployPersistencePluginForMySql = normalProject("deploy-persistence-plugin-mysql")
+lazy val deployPersistencePluginForMySql = connectorProject("deploy-persistence-plugin-mysql")
   .dependsOn(deployPersistencePlugin % "compile")
   .dependsOn(scalaUtils % "compile")
   .settings(
@@ -319,7 +320,10 @@ val allServerProjects = List(
   api,
   deploy,
   subscriptions,
-  workers,
+  workers
+)
+
+val allConnectorProjects = List(
   deployPersistencePlugin,
   deployPersistencePluginForMySql
 )
@@ -341,9 +345,10 @@ val allLibProjects = List(
 
 lazy val libs = (project in file("libs")).aggregate(allLibProjects.map(Project.projectToRef): _*)
 lazy val images = (project in file("images")).aggregate(allDockerImageProjects.map(Project.projectToRef): _*)
+lazy val connectors = (project in file("connectors")).aggregate(allConnectorProjects.map(Project.projectToRef): _*)
 
 lazy val root = (project in file("."))
-  .aggregate((allServerProjects ++ allDockerImageProjects).map(Project.projectToRef): _*)
+  .aggregate((allServerProjects ++ allDockerImageProjects ++ allConnectorProjects).map(Project.projectToRef): _*)
   .settings(
     publish := { } // do not publish a JAR for the root project
   )
