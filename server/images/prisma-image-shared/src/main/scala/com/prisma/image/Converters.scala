@@ -1,4 +1,4 @@
-package com.prisma.prod
+package com.prisma.image
 
 import com.prisma.messagebus.Conversions.Converter
 import com.prisma.subscriptions.protocol.SubscriptionRequest

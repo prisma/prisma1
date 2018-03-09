@@ -13,9 +13,10 @@ import com.prisma.deploy.migration.migrator.{AsyncMigrator, Migrator}
 import com.prisma.deploy.connector.DeployConnector
 import com.prisma.deploy.connector.mysql.MySqlDeployConnector
 import com.prisma.deploy.migration.validation.SchemaError
-import com.prisma.deploy.schema.mutations.FunctionInput
+import com.prisma.deploy.schema.mutations.{FunctionInput, FunctionValidator}
 import com.prisma.deploy.server.{ClusterAuthImpl, DummyClusterAuth}
 import com.prisma.graphql.GraphQlClient
+import com.prisma.image.{Converters, FunctionValidatorImpl, SingleServerProjectFetcher}
 import com.prisma.messagebus._
 import com.prisma.messagebus.pubsub.inmemory.InMemoryAkkaPubSub
 import com.prisma.messagebus.pubsub.rabbit.RabbitAkkaPubSub
@@ -106,6 +107,6 @@ case class PrismaProdDependencies()(implicit val system: ActorSystem, val materi
 
   override def apiAuth = AuthImpl
 
-  override def deployPersistencePlugin: DeployConnector = MySqlDeployConnector(databases.master)(system.dispatcher)
-  override def functionValidator: FunctionValidatorImpl = FunctionValidatorImpl()
+  override lazy val deployPersistencePlugin: DeployConnector = MySqlDeployConnector(databases.master)(system.dispatcher)
+  override lazy val functionValidator: FunctionValidator     = FunctionValidatorImpl()
 }

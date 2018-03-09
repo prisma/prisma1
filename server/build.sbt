@@ -1,5 +1,6 @@
 import com.typesafe.sbt.SbtGit.GitKeys
 import com.typesafe.sbt.git.ConsoleGitRunner
+import sbt.Keys.name
 import sbt._
 
 name := "server"
@@ -70,29 +71,20 @@ def commonDockerImageSettings(imageName: String) = commonServerSettings ++ Seq(
   )
 )
 
-def dockerImageProject(name: String, imageName: String): Project = {
-  Project(id = name, base = file(s"./images/$name"))
-    .enablePlugins(sbtdocker.DockerPlugin, JavaAppPackaging)
-    .settings(commonDockerImageSettings(imageName): _*)
-}
-
-def normalProject(name: String): Project = Project(id = name, base = file(s"./$name")).settings(commonSettings: _*)
+def imageProject(name: String, imageName: String): Project = imageProject(name).enablePlugins(sbtdocker.DockerPlugin, JavaAppPackaging).settings(commonDockerImageSettings(imageName): _*)
+def imageProject(name: String): Project = Project(id = name, base = file(s"./images/$name"))
 def serverProject(name: String): Project = Project(id = name, base = file(s"./servers/$name")).settings(commonServerSettings: _*).dependsOn(scalaUtils)
-def libProject(name: String): Project =  Project(id = name, base = file(s"./libs/$name")).settings(commonSettings: _*)
 def connectorProject(name: String): Project =  Project(id = name, base = file(s"./connectors/$name")).settings(commonSettings: _*).dependsOn(scalaUtils)
+def libProject(name: String): Project =  Project(id = name, base = file(s"./libs/$name")).settings(commonSettings: _*)
+def normalProject(name: String): Project = Project(id = name, base = file(s"./$name")).settings(commonSettings: _*)
 
 // ####################
 //       IMAGES
 // ####################
-lazy val prismaLocal = dockerImageProject("prisma-local", imageName = "prisma")
-  .dependsOn(api% "compile")
-  .dependsOn(deploy % "compile")
-  .dependsOn(deployConnectorMySql % "compile")
-  .dependsOn(subscriptions % "compile")
-  .dependsOn(workers % "compile")
-  .dependsOn(graphQlClient % "compile")
+lazy val prismaLocal = imageProject("prisma-local", imageName = "prisma").dependsOn(prismaImageShared % "compile")
+lazy val prismaProd = imageProject("prisma-prod", imageName = "prisma-prod").dependsOn(prismaImageShared % "compile")
 
-lazy val prismaProd = dockerImageProject("prisma-prod", imageName = "prisma-prod")
+lazy val prismaImageShared = imageProject("prisma-image-shared")
   .dependsOn(api% "compile")
   .dependsOn(deploy % "compile")
   .dependsOn(deployConnectorMySql % "compile")

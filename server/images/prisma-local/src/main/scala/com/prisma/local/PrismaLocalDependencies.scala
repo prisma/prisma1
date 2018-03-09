@@ -8,24 +8,21 @@ import com.prisma.api.database.Databases
 import com.prisma.api.project.{CachedProjectFetcherImpl, ProjectFetcher}
 import com.prisma.api.schema.{CachedSchemaBuilder, SchemaBuilder}
 import com.prisma.auth.AuthImpl
-import com.prisma.subscriptions.Webhook
 import com.prisma.deploy.DeployDependencies
-import com.prisma.deploy.migration.migrator.{AsyncMigrator, Migrator}
 import com.prisma.deploy.connector.DeployConnector
-import com.prisma.deploy.DeployDependencies
 import com.prisma.deploy.connector.mysql.MySqlDeployConnector
 import com.prisma.deploy.migration.migrator.{AsyncMigrator, Migrator}
 import com.prisma.deploy.schema.mutations.FunctionValidator
 import com.prisma.deploy.server.{ClusterAuthImpl, DummyClusterAuth}
-import com.prisma.graphql.GraphQlClient
+import com.prisma.image.{Converters, FunctionValidatorImpl, SingleServerProjectFetcher}
 import com.prisma.messagebus.pubsub.inmemory.InMemoryAkkaPubSub
 import com.prisma.messagebus.queue.inmemory.InMemoryAkkaQueue
 import com.prisma.messagebus.{PubSubPublisher, PubSubSubscriber, QueueConsumer, QueuePublisher}
-import com.prisma.subscriptions.{SubscriptionDependencies, Webhook}
 import com.prisma.subscriptions.protocol.SubscriptionProtocolV05.Responses.SubscriptionSessionResponseV05
 import com.prisma.subscriptions.protocol.SubscriptionProtocolV07.Responses.SubscriptionSessionResponse
 import com.prisma.subscriptions.protocol.SubscriptionRequest
 import com.prisma.subscriptions.resolving.SubscriptionsManagerForProject.{SchemaInvalidated, SchemaInvalidatedMessage}
+import com.prisma.subscriptions.{SubscriptionDependencies, Webhook}
 import com.prisma.websocket.protocol.{Request => WebsocketRequest}
 import com.prisma.workers.dependencies.WorkerDependencies
 import com.prisma.workers.payloads.{Webhook => WorkerWebhook}
@@ -95,6 +92,6 @@ case class PrismaLocalDependencies()(implicit val system: ActorSystem, val mater
 
   override def apiAuth = AuthImpl
 
-  override def deployPersistencePlugin: DeployConnector = MySqlDeployConnector(databases.master)(system.dispatcher)
-  override def functionValidator: FunctionValidator = FunctionValidatorImpl()
+  override lazy val deployPersistencePlugin: DeployConnector = MySqlDeployConnector(databases.master)(system.dispatcher)
+  override lazy val functionValidator: FunctionValidator     = FunctionValidatorImpl()
 }

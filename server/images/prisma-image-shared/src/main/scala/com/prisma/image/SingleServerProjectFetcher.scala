@@ -1,4 +1,4 @@
-package com.prisma.local
+package com.prisma.image
 
 import com.prisma.api.project.RefreshableProjectFetcher
 import com.prisma.deploy.connector.ProjectPersistence
