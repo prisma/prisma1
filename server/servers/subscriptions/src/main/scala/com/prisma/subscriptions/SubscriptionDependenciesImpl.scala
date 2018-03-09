@@ -3,7 +3,6 @@ package com.prisma.subscriptions
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
 import com.prisma.api.ApiDependencies
-import com.prisma.auth.AuthImpl
 import com.prisma.messagebus._
 import com.prisma.subscriptions.protocol.SubscriptionProtocolV05.Responses.SubscriptionSessionResponseV05
 import com.prisma.subscriptions.protocol.SubscriptionProtocolV07.Responses.SubscriptionSessionResponse
@@ -22,8 +21,5 @@ trait SubscriptionDependencies extends ApiDependencies {
   def requestsQueueConsumer: QueueConsumer[SubscriptionRequest]
   def requestsQueuePublisher: QueuePublisher[Request]
   def responsePubSubSubscriber: PubSubSubscriber[String]
-
-  lazy val apiMetricsFlushInterval = 10
-  lazy val clientAuth              = AuthImpl
-  val keepAliveIntervalSeconds: Long
+  def keepAliveIntervalSeconds: Long
 }

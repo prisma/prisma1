@@ -3,7 +3,6 @@ package com.prisma.image
 import com.prisma.api.ApiDependencies
 import com.prisma.deploy.migration.validation.SchemaError
 import com.prisma.deploy.schema.mutations.{FunctionInput, FunctionValidator}
-import com.prisma.local.PrismaLocalDependencies
 import com.prisma.shared.models.{Model, Project}
 import com.prisma.subscriptions.schema.{SubscriptionQueryError, SubscriptionQueryValidator}
 import org.scalactic.{Bad, Good, Or}

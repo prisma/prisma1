@@ -9,10 +9,8 @@ import com.prisma.api.project.{CachedProjectFetcherImpl, ProjectFetcher}
 import com.prisma.api.schema.{CachedSchemaBuilder, SchemaBuilder}
 import com.prisma.auth.AuthImpl
 import com.prisma.deploy.DeployDependencies
-import com.prisma.deploy.connector.DeployConnector
 import com.prisma.deploy.connector.mysql.MySqlDeployConnector
 import com.prisma.deploy.migration.migrator.{AsyncMigrator, Migrator}
-import com.prisma.deploy.schema.mutations.FunctionValidator
 import com.prisma.deploy.server.{ClusterAuthImpl, DummyClusterAuth}
 import com.prisma.image.{Converters, FunctionValidatorImpl, SingleServerProjectFetcher}
 import com.prisma.messagebus.pubsub.inmemory.InMemoryAkkaPubSub
@@ -35,22 +33,22 @@ case class PrismaLocalDependencies()(implicit val system: ActorSystem, val mater
     with SubscriptionDependencies {
   override implicit def self = this
 
-  override val databases        = Databases.initialize(config)
-  override val apiSchemaBuilder = CachedSchemaBuilder(SchemaBuilder(), invalidationPubSub)
-  override val projectFetcher: ProjectFetcher = {
+  override lazy val databases        = Databases.initialize(config)
+  override lazy val apiSchemaBuilder = CachedSchemaBuilder(SchemaBuilder(), invalidationPubSub)
+  override lazy val projectFetcher: ProjectFetcher = {
     val fetcher = SingleServerProjectFetcher(projectPersistence)
     CachedProjectFetcherImpl(fetcher, invalidationPubSub)
   }
 
-  override val migrator: Migrator = AsyncMigrator(migrationPersistence, projectPersistence, deployPersistencePlugin)
-  override val clusterAuth = {
+  override lazy val migrator: Migrator = AsyncMigrator(migrationPersistence, projectPersistence, deployPersistencePlugin)
+  override lazy val clusterAuth = {
     sys.env.get("CLUSTER_PUBLIC_KEY") match {
       case Some(publicKey) if publicKey.nonEmpty => ClusterAuthImpl(publicKey)
       case _                                     => DummyClusterAuth()
     }
   }
 
-  lazy val invalidationPubSub: InMemoryAkkaPubSub[String] = InMemoryAkkaPubSub[String]()
+  private lazy val invalidationPubSub: InMemoryAkkaPubSub[String] = InMemoryAkkaPubSub[String]()
 
   override lazy val invalidationPublisher = invalidationPubSub
   override lazy val invalidationSubscriber: PubSubSubscriber[SchemaInvalidatedMessage] =
@@ -59,39 +57,37 @@ case class PrismaLocalDependencies()(implicit val system: ActorSystem, val mater
   override lazy val sssEventsPubSub: InMemoryAkkaPubSub[String]   = InMemoryAkkaPubSub[String]()
   override lazy val sssEventsSubscriber: PubSubSubscriber[String] = sssEventsPubSub
 
-  lazy val requestsQueue: InMemoryAkkaQueue[WebsocketRequest]                = InMemoryAkkaQueue[WebsocketRequest]()
+  private lazy val requestsQueue: InMemoryAkkaQueue[WebsocketRequest]        = InMemoryAkkaQueue[WebsocketRequest]()
   override lazy val requestsQueuePublisher: QueuePublisher[WebsocketRequest] = requestsQueue
   override lazy val requestsQueueConsumer: QueueConsumer[SubscriptionRequest] =
     requestsQueue.map[SubscriptionRequest](Converters.websocketRequest2SubscriptionRequest)
 
-  lazy val responsePubSub: InMemoryAkkaPubSub[String]                  = InMemoryAkkaPubSub[String]()
+  private lazy val responsePubSub: InMemoryAkkaPubSub[String]          = InMemoryAkkaPubSub[String]()
   override lazy val responsePubSubSubscriber: PubSubSubscriber[String] = responsePubSub
 
-  lazy val converterResponse07ToString: SubscriptionSessionResponse => String = (response: SubscriptionSessionResponse) => {
+  private lazy val converterResponse07ToString: SubscriptionSessionResponse => String = (response: SubscriptionSessionResponse) => {
     import com.prisma.subscriptions.protocol.ProtocolV07.SubscriptionResponseWriters._
     Json.toJson(response).toString
   }
 
-  lazy val converterResponse05ToString: SubscriptionSessionResponseV05 => String = (response: SubscriptionSessionResponseV05) => {
+  private lazy val converterResponse05ToString: SubscriptionSessionResponseV05 => String = (response: SubscriptionSessionResponseV05) => {
     import com.prisma.subscriptions.protocol.ProtocolV05.SubscriptionResponseWriters._
     Json.toJson(response).toString
   }
 
-  lazy val responsePubSubPublisherV05: PubSubPublisher[SubscriptionSessionResponseV05] =
+  override lazy val responsePubSubPublisherV05: PubSubPublisher[SubscriptionSessionResponseV05] =
     responsePubSub.map[SubscriptionSessionResponseV05](converterResponse05ToString)
-  lazy val responsePubSubPublisherV07: PubSubPublisher[SubscriptionSessionResponse] =
+  override lazy val responsePubSubPublisherV07: PubSubPublisher[SubscriptionSessionResponse] =
     responsePubSub.map[SubscriptionSessionResponse](converterResponse07ToString)
 
-  override val keepAliveIntervalSeconds = 10
+  override lazy val keepAliveIntervalSeconds = 10
 
-  lazy val webhooksQueue = InMemoryAkkaQueue[Webhook]()
+  private lazy val webhooksQueue = InMemoryAkkaQueue[Webhook]()
 
-  override lazy val webhookPublisher = webhooksQueue
-  override lazy val webhooksConsumer = webhooksQueue.map[WorkerWebhook](Converters.apiWebhook2WorkerWebhook)
-  override lazy val httpClient       = SimpleHttpClient()
-
-  override def apiAuth = AuthImpl
-
-  override lazy val deployPersistencePlugin: DeployConnector = MySqlDeployConnector(databases.master)(system.dispatcher)
-  override lazy val functionValidator: FunctionValidator     = FunctionValidatorImpl()
+  override lazy val webhookPublisher        = webhooksQueue
+  override lazy val webhooksConsumer        = webhooksQueue.map[WorkerWebhook](Converters.apiWebhook2WorkerWebhook)
+  override lazy val httpClient              = SimpleHttpClient()
+  override lazy val apiAuth                 = AuthImpl
+  override lazy val deployPersistencePlugin = MySqlDeployConnector(databases.master)(system.dispatcher)
+  override lazy val functionValidator       = FunctionValidatorImpl()
 }
