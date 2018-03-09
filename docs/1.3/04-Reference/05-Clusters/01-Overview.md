@@ -10,9 +10,19 @@ Prisma services are deployed to so-called _clusters_. A cluster is a hosted envi
 In essence, there are two kinds of _clusters_ you can deploy your Prisma service to:
 
 - **Self-hosted / local clusters**: Self-hosted (or locally deployed) clusters are running on [Docker](https://www.docker.com). They are created and managed using the Prisma CLI which governs the underlying Docker _images_ and _containers_ for you.
-- **Development clusters** (based on Prisma Cloud): Development clusters allow to conventiently deploy your Prisma service to the web without the overhead of configuring your own cluster. Note that development clusters have certain limitations, such as rate limiting of incoming requests (max 10 requests per 10 seconds) and an upper bound in storage capacity (100 MB).
+- **Development clusters** (based on Prisma Cloud): Development clusters allow to conventiently deploy your Prisma service to the web without the overhead of configuring your own cluster. Note that development clusters have certain limitations, such as rate limiting of incoming requests and an upper bound in storage capacity (see the info box below for further info).
 
-> For the vast majority of use cases, **self-hosted clusters are the preferred option to deploy Prisma services**. This chapter explains how to create and manage your own self-hosted clusters.
+For the vast majority of use cases, **self-hosted clusters are the preferred option to deploy Prisma services**. This chapter explains how to create and manage your own self-hosted clusters.
+
+<InfoBox>
+
+Development clusters are rate limited:
+
+- 10 requests per 10 seconds (on average)
+- If this rate is exceeded, requests are being queued in memory. If this queue exceeds 25 requests, an error is returned immediately.
+- The header field `throttled-by` is included in HTTP responses. It indicates how long the request was delayed due to throttling (in milli seconds).
+
+</InfoBox>
 
 ## Cluster registry
 
