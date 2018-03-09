@@ -22,6 +22,8 @@ Development clusters are rate limited:
 - If this rate is exceeded, requests are being queued in memory. If this queue exceeds 25 requests, an error is returned immediately.
 - The header field `throttled-by` is included in HTTP responses. It indicates how long the request was delayed due to throttling (in milli seconds).
 
+The upper bound in storage capacity for a Prisma service that's running on a development cluster is 100 MB.
+
 </InfoBox>
 
 ## Cluster registry
