@@ -1,8 +1,7 @@
-package com.prisma.api.database.deferreds
+package com.prisma.api.resolver
 
 import com.prisma.api.database.DataResolver
 import com.prisma.api.database.DeferredTypes._
-import com.prisma.api.schema.ApiUserContext
 import sangria.execution.deferred.{Deferred, DeferredResolver}
 
 import scala.concurrent.{ExecutionContext, Future}

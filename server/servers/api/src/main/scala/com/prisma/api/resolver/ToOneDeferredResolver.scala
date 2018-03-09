@@ -1,8 +1,9 @@
-package com.prisma.api.database.deferreds
+package com.prisma.api.resolver
 
-import com.prisma.api.database.{DataItem, DataResolver}
 import com.prisma.api.database.DeferredTypes.{OneDeferredResultType, OrderedDeferred, OrderedDeferredFutureResult, ToOneDeferred}
+import com.prisma.api.database.{DataItem, DataResolver}
 import com.prisma.shared.models.Project
+
 import scala.concurrent.ExecutionContext.Implicits.global
 
 class ToOneDeferredResolver(dataResolver: DataResolver) {

@@ -1,7 +1,8 @@
-package com.prisma.api.database.deferreds
+package com.prisma.api.resolver
 
 import com.prisma.api.database.DataResolver
 import com.prisma.api.database.DeferredTypes.{CountToManyDeferred, OrderedDeferred, OrderedDeferredFutureResult}
+
 import scala.concurrent.ExecutionContext.Implicits.global
 
 class CountToManyDeferredResolver(dataResolver: DataResolver) {

@@ -1,7 +1,8 @@
-package com.prisma.api.database.deferreds
+package com.prisma.api.resolver
 
-import com.prisma.api.database._
 import com.prisma.api.database.DeferredTypes._
+import com.prisma.api.database._
+
 import scala.concurrent.ExecutionContext.Implicits.global
 
 class ManyModelDeferredResolver(resolver: DataResolver) {

@@ -2,9 +2,9 @@ package com.prisma.api
 
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
-import com.prisma.api.database.deferreds.DeferredResolverProvider
 import com.prisma.api.database.{DataResolver, Databases}
 import com.prisma.api.project.ProjectFetcher
+import com.prisma.api.resolver.DeferredResolverProvider
 import com.prisma.api.schema.{ApiUserContext, SchemaBuilder}
 import com.prisma.api.server.RequestHandler
 import com.prisma.auth.{Auth, AuthImpl}

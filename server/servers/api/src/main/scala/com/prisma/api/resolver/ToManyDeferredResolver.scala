@@ -1,7 +1,7 @@
-package com.prisma.api.database.deferreds
+package com.prisma.api.resolver
 
-import com.prisma.api.database._
 import com.prisma.api.database.DeferredTypes._
+import com.prisma.api.database._
 import com.prisma.shared.models.Project
 
 import scala.concurrent.ExecutionContext.Implicits.global

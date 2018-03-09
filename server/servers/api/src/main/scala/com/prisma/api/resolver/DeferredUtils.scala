@@ -1,4 +1,4 @@
-package com.prisma.api.database.deferreds
+package com.prisma.api.resolver
 
 import com.prisma.api.database.DeferredTypes._
 import com.prisma.api.database.QueryArguments

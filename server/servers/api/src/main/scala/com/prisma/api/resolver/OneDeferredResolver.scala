@@ -1,4 +1,4 @@
-package com.prisma.api.database.deferreds
+package com.prisma.api.resolver
 
 import com.prisma.api.database.DeferredTypes.{OneDeferred, OneDeferredResultType, OrderedDeferred, OrderedDeferredFutureResult}
 import com.prisma.api.database.{DataItem, DataResolver}
@@ -37,9 +37,9 @@ class OneDeferredResolver(dataResolver: DataResolver) {
       case _ =>
         dataItems.find { dataItem =>
           val itemValue = dataItem.getOption(deferred.key)
-          val field = deferred.model.getFieldByName_!(deferred.key)
-          val gcValue = GCDBValueConverter(field.typeIdentifier, field.isList).toGCValue(itemValue.get)
-          val bla = GCAnyConverter(field.typeIdentifier, field.isList).toGCValue(deferred.value)
+          val field     = deferred.model.getFieldByName_!(deferred.key)
+          val gcValue   = GCDBValueConverter(field.typeIdentifier, field.isList).toGCValue(itemValue.get)
+          val bla       = GCAnyConverter(field.typeIdentifier, field.isList).toGCValue(deferred.value)
           bla == gcValue
         }
     }
