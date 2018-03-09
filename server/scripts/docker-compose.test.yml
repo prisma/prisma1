@@ -6,7 +6,6 @@ services:
     links:
     - client-db
     - internal-db
-    - redis
     - rabbit
     environment:
       SQL_CLIENT_HOST: "client-db"
@@ -28,8 +27,6 @@ services:
       JWT_SECRET: "abbaabbaabbaabbaabbaabba"
       AUTH0_CLIENT_SECRET: "ZXVmNmFoa29oZzdJZGFlNVF1YWg0b2NoZWVwaG9oY2hhaGdoaWk2ZQ=="
       SYSTEM_API_SECRET: "systemApiSecret"
-      TEST_REDIS_HOST: "redis"
-      TEST_REDIS_PORT: "6379"
       RABBITMQ_URI: "amqp://rabbit"
       GLOBAL_RABBIT_URI: "amqp://rabbit"
       INITIAL_PRICING_PLAN: "initial-plan"
@@ -90,6 +87,3 @@ services:
     - internal-db
     environment:
       MYSQL_PWD: graphcool
-
-  redis:
-    image: redis

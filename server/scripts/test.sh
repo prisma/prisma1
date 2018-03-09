@@ -16,7 +16,7 @@ DC_ARGS="--project-name $PROJECT_NAME --file $DIR/docker-compose.test.yml"
 
 
 echo "Starting dependency services..."
-docker-compose $DC_ARGS up -d client-db internal-db redis rabbit
+docker-compose $DC_ARGS up -d client-db internal-db rabbit
 
 until docker-compose $DC_ARGS run ping-db mysqladmin ping -h client-db -u root --protocol=TCP > /dev/null; do
     echo "$(date) - waiting for mysql (client)"
