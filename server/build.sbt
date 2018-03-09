@@ -99,7 +99,6 @@ lazy val prismaImageShared = imageProject("prisma-image-shared")
 lazy val deploy = serverProject("deploy")
   .dependsOn(deployConnector % "compile")
   .dependsOn(deployConnectorMySql % "test->test")
-  .dependsOn(sharedModels % "compile")
   .dependsOn(akkaUtils % "compile")
   .dependsOn(metrics % "compile")
   .dependsOn(jvmProfiler % "compile")
@@ -110,7 +109,8 @@ lazy val deploy = serverProject("deploy")
   .dependsOn(auth % "compile")
 
 lazy val api = serverProject("api")
-  .dependsOn(sharedModels % "compile")
+  .dependsOn(apiConnector % "compile")
+  .dependsOn(apiConnectorMySql % "test->test")
   .dependsOn(deploy % "test->test")
   .dependsOn(messageBus % "compile")
   .dependsOn(akkaUtils % "compile")
@@ -145,6 +145,16 @@ lazy val deployConnector = connectorProject("deploy-connector")
 
 lazy val deployConnectorMySql = connectorProject("deploy-connector-mysql")
   .dependsOn(deployConnector % "compile")
+  .dependsOn(scalaUtils % "compile")
+  .settings(
+    libraryDependencies ++= slick ++ Seq(mariaDbClient)
+  )
+
+lazy val apiConnector = connectorProject("api-connector")
+  .dependsOn(sharedModels % "compile")
+
+lazy val apiConnectorMySql = connectorProject("api-connector-mysql")
+  .dependsOn(apiConnector % "compile")
   .dependsOn(scalaUtils % "compile")
   .settings(
     libraryDependencies ++= slick ++ Seq(mariaDbClient)
@@ -293,7 +303,9 @@ val allServerProjects = List(
 
 val allConnectorProjects = List(
   deployConnector,
-  deployConnectorMySql
+  deployConnectorMySql,
+  apiConnector,
+  apiConnectorMySql
 )
 
 val allLibProjects = List(
