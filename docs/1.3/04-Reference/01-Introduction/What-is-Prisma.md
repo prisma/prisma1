@@ -96,4 +96,4 @@ To make it easier to operate Prisma in production, **Prisma Cloud** offers a set
 * Team management & collaboration
 * DevOps and hosting (even on private infrastructure, for example with your own AWS account or inside an AWS VPC).
 
-Note that the **Prisma Cloud also has a free public cluster** allowing you to instantly deploy your Prisma services to the web.
+Note that the **Prisma Cloud also has a free development cluster** allowing you to instantly deploy your Prisma services to the web.
