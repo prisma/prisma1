@@ -1,4 +1,4 @@
-package com.prisma.deploy.persistence.mysql
+package com.prisma.deploy.connector.mysql
 
 import com.prisma.deploy.migration.mutactions.{DeployMutactionExecutor, DeployMutaction}
 import com.prisma.deploy.mutactions.AnyMutactionInterpreterImpl

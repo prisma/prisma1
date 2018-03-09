@@ -4,7 +4,7 @@ import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
 import com.prisma.api.database.DatabaseQueryBuilder
 import com.prisma.deploy.migration.mutactions.{CreateRelationTable, DeployMutaction}
-import com.prisma.deploy.persistence.mysql.DeployMutactionExectutorImpl
+import com.prisma.deploy.connector.mysql.DeployMutactionExectutorImpl
 import com.prisma.shared.models._
 import com.prisma.utils.await.AwaitUtils
 import slick.jdbc.MySQLProfile.api._

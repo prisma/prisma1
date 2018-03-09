@@ -91,8 +91,8 @@ lazy val sharedModels = normalProject("shared-models")
 )
 
 lazy val deploy = serverProject("deploy")
-  .dependsOn(deployPersistencePlugin % "compile")
-  .dependsOn(deployPersistencePluginForMySql % "test->test")
+  .dependsOn(deployConnector % "compile")
+  .dependsOn(deployConnectorMySql % "test->test")
   .dependsOn(sharedModels % "compile")
   .dependsOn(akkaUtils % "compile")
   .dependsOn(metrics % "compile")
@@ -115,11 +115,11 @@ lazy val deploy = serverProject("deploy")
 //    buildInfoPackage := "build_info"
 //  )
 
-lazy val deployPersistencePlugin = connectorProject("deploy-persistence-plugin")
+lazy val deployConnector = connectorProject("deploy-connector")
   .dependsOn(sharedModels % "compile")
 
-lazy val deployPersistencePluginForMySql = connectorProject("deploy-persistence-plugin-mysql")
-  .dependsOn(deployPersistencePlugin % "compile")
+lazy val deployConnectorMySql = connectorProject("deploy-connector-mysql")
+  .dependsOn(deployConnector % "compile")
   .dependsOn(scalaUtils % "compile")
   .settings(
     libraryDependencies ++= slick ++ Seq(
@@ -298,7 +298,7 @@ lazy val auth = libProject("auth").settings(libraryDependencies ++= Seq(jwt, sca
 lazy val prismaLocal = dockerImageProject("prisma-local", imageName = "prisma")
   .dependsOn(api% "compile")
   .dependsOn(deploy % "compile")
-  .dependsOn(deployPersistencePluginForMySql % "compile")
+  .dependsOn(deployConnectorMySql % "compile")
   .dependsOn(subscriptions % "compile")
   .dependsOn(workers % "compile")
   .dependsOn(graphQlClient % "compile")
@@ -306,7 +306,7 @@ lazy val prismaLocal = dockerImageProject("prisma-local", imageName = "prisma")
 lazy val prismaProd = dockerImageProject("prisma-prod", imageName = "prisma-prod")
   .dependsOn(api% "compile")
   .dependsOn(deploy % "compile")
-  .dependsOn(deployPersistencePluginForMySql % "compile")
+  .dependsOn(deployConnectorMySql % "compile")
   .dependsOn(subscriptions % "compile")
   .dependsOn(workers % "compile")
   .dependsOn(graphQlClient % "compile")
@@ -324,8 +324,8 @@ val allServerProjects = List(
 )
 
 val allConnectorProjects = List(
-  deployPersistencePlugin,
-  deployPersistencePluginForMySql
+  deployConnector,
+  deployConnectorMySql
 )
 
 val allLibProjects = List(

@@ -1,7 +1,7 @@
 package com.prisma.deploy.schema.mutations
 
 import com.prisma.deploy.database.persistence.{MigrationPersistence, ProjectPersistence}
-import com.prisma.deploy.persistence.DeployPersistencePlugin
+import com.prisma.deploy.connector.DeployConnector
 import com.prisma.deploy.schema.{InvalidServiceName, InvalidServiceStage, ProjectAlreadyExists}
 import com.prisma.deploy.validation.NameConstraints
 import com.prisma.shared.models._
@@ -13,7 +13,7 @@ case class AddProjectMutation(
     args: AddProjectInput,
     projectPersistence: ProjectPersistence,
     migrationPersistence: MigrationPersistence,
-    persistencePlugin: DeployPersistencePlugin
+    persistencePlugin: DeployConnector
 )(
     implicit ec: ExecutionContext
 ) extends Mutation[AddProjectMutationPayload]

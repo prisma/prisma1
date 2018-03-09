@@ -1,11 +1,11 @@
-package com.prisma.deploy.persistence
+package com.prisma.deploy.connector
 
 import com.prisma.deploy.database.persistence.{MigrationPersistence, ProjectPersistence}
 import com.prisma.deploy.migration.mutactions.DeployMutactionExecutor
 
 import scala.concurrent.Future
 
-trait DeployPersistencePlugin {
+trait DeployConnector {
   def projectPersistence: ProjectPersistence
   def migrationPersistence: MigrationPersistence
   def deployMutactionExecutor: DeployMutactionExecutor

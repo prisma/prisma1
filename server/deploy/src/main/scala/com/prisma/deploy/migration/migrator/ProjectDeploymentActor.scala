@@ -3,7 +3,7 @@ package com.prisma.deploy.migration.migrator
 import akka.actor.{Actor, Stash}
 import com.prisma.deploy.database.persistence.MigrationPersistence
 import com.prisma.deploy.migration.MigrationStepMapperImpl
-import com.prisma.deploy.persistence.DeployPersistencePlugin
+import com.prisma.deploy.connector.DeployConnector
 import com.prisma.deploy.schema.DeploymentInProgress
 import com.prisma.shared.models.{Function, Migration, MigrationStep, Schema}
 
@@ -33,7 +33,7 @@ object DeploymentProtocol {
 case class ProjectDeploymentActor(
     projectId: String,
     migrationPersistence: MigrationPersistence,
-    persistencePlugin: DeployPersistencePlugin
+    persistencePlugin: DeployConnector
 ) extends Actor
     with Stash {
   import DeploymentProtocol._

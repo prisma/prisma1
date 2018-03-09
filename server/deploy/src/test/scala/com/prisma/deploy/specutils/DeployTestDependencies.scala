@@ -3,9 +3,9 @@ package com.prisma.deploy.specutils
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
 import com.prisma.auth.AuthImpl
-import com.prisma.deploy.{DeployDependencies, MySqlDeployPersistencePlugin}
+import com.prisma.deploy.{DeployDependencies, MySqlDeployConnector}
 import com.prisma.deploy.migration.validation.SchemaError
-import com.prisma.deploy.persistence.DeployPersistencePlugin
+import com.prisma.deploy.connector.DeployConnector
 import com.prisma.deploy.schema.mutations.{FunctionInput, FunctionValidator}
 import com.prisma.deploy.server.DummyClusterAuth
 import com.prisma.errors.{BugsnagErrorReporter, ErrorReporter}
@@ -23,7 +23,7 @@ case class DeployTestDependencies()(implicit val system: ActorSystem, val materi
 
   override def apiAuth = AuthImpl
 
-  override def deployPersistencePlugin: DeployPersistencePlugin = {
+  override def deployPersistencePlugin: DeployConnector = {
     import slick.jdbc.MySQLProfile.api._
     val sqlInternalHost     = sys.env("SQL_CLIENT_HOST")
     val sqlInternalPort     = sys.env("SQL_CLIENT_PORT")
@@ -36,7 +36,7 @@ case class DeployTestDependencies()(implicit val system: ActorSystem, val materi
       password = sqlInternalPassword,
       driver = "org.mariadb.jdbc.Driver"
     )
-    MySqlDeployPersistencePlugin(clientDatabase = clientDb)(system.dispatcher)
+    MySqlDeployConnector(clientDatabase = clientDb)(system.dispatcher)
   }
 
   override def functionValidator: FunctionValidator = new FunctionValidator {

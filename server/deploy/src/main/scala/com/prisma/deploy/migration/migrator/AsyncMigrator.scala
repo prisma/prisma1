@@ -6,7 +6,7 @@ import akka.stream.ActorMaterializer
 import akka.util.Timeout
 import com.prisma.deploy.database.persistence.{MigrationPersistence, ProjectPersistence}
 import com.prisma.deploy.migration.migrator.DeploymentProtocol.{Initialize, Schedule}
-import com.prisma.deploy.persistence.DeployPersistencePlugin
+import com.prisma.deploy.connector.DeployConnector
 import com.prisma.shared.models.{Function, Migration, MigrationStep, Schema}
 
 import scala.concurrent.Future
@@ -16,7 +16,7 @@ import scala.util.{Failure, Success}
 case class AsyncMigrator(
     migrationPersistence: MigrationPersistence,
     projectPersistence: ProjectPersistence,
-    persistencePlugin: DeployPersistencePlugin
+    persistencePlugin: DeployConnector
 )(
     implicit val system: ActorSystem,
     materializer: ActorMaterializer

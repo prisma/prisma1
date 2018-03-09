@@ -8,9 +8,9 @@ import com.prisma.api.database.Databases
 import com.prisma.api.project.{CachedProjectFetcherImpl, ProjectFetcher}
 import com.prisma.api.schema.{CachedSchemaBuilder, SchemaBuilder}
 import com.prisma.auth.AuthImpl
-import com.prisma.deploy.{DeployDependencies, MySqlDeployPersistencePlugin}
+import com.prisma.deploy.{DeployDependencies, MySqlDeployConnector}
 import com.prisma.deploy.migration.migrator.{AsyncMigrator, Migrator}
-import com.prisma.deploy.persistence.DeployPersistencePlugin
+import com.prisma.deploy.connector.DeployConnector
 import com.prisma.deploy.migration.validation.SchemaError
 import com.prisma.deploy.schema.mutations.FunctionInput
 import com.prisma.deploy.server.{ClusterAuthImpl, DummyClusterAuth}
@@ -105,6 +105,6 @@ case class PrismaProdDependencies()(implicit val system: ActorSystem, val materi
 
   override def apiAuth = AuthImpl
 
-  override def deployPersistencePlugin: DeployPersistencePlugin = MySqlDeployPersistencePlugin(databases.master)(system.dispatcher)
+  override def deployPersistencePlugin: DeployConnector = MySqlDeployConnector(databases.master)(system.dispatcher)
   override def functionValidator: FunctionValidatorImpl = FunctionValidatorImpl()
 }

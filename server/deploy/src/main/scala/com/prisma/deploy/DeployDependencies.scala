@@ -4,7 +4,7 @@ import akka.actor.{ActorSystem, Props}
 import akka.stream.ActorMaterializer
 import com.prisma.auth.Auth
 import com.prisma.deploy.migration.migrator.Migrator
-import com.prisma.deploy.persistence.DeployPersistencePlugin
+import com.prisma.deploy.connector.DeployConnector
 import com.prisma.deploy.schema.SchemaBuilder
 import com.prisma.deploy.schema.mutations.FunctionValidator
 import com.prisma.deploy.server.ClusterAuth
@@ -25,7 +25,7 @@ trait DeployDependencies {
   def clusterAuth: ClusterAuth
   def invalidationPublisher: PubSubPublisher[String]
   def apiAuth: Auth
-  def deployPersistencePlugin: DeployPersistencePlugin
+  def deployPersistencePlugin: DeployConnector
   def functionValidator: FunctionValidator
 
 //  lazy val clientDb             = Database.forConfig("client")

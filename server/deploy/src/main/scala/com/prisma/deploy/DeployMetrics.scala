@@ -4,7 +4,7 @@ import akka.actor.Actor
 import com.prisma.akkautil.LogUnhandled
 import com.prisma.deploy.DatabaseSizeReporter.Report
 import com.prisma.deploy.database.persistence.ProjectPersistence
-import com.prisma.deploy.persistence.{DatabaseSize, DeployPersistencePlugin}
+import com.prisma.deploy.connector.{DatabaseSize, DeployConnector}
 import com.prisma.errors.{BugsnagErrorReporter, ErrorReporter}
 import com.prisma.metrics.{CustomTag, LibratoGaugeMetric, MetricsManager}
 import com.prisma.profiling.JvmProfiler
@@ -31,7 +31,7 @@ object DatabaseSizeReporter {
 }
 case class DatabaseSizeReporter(
     projectPersistence: ProjectPersistence,
-    persistencePlugin: DeployPersistencePlugin
+    persistencePlugin: DeployConnector
 ) extends Actor
     with LogUnhandled {
   import context.dispatcher

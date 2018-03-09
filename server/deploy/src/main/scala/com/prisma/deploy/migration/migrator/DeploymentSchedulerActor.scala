@@ -2,7 +2,7 @@ package com.prisma.deploy.migration.migrator
 
 import akka.actor.{Actor, ActorRef, Props, Stash, Terminated}
 import com.prisma.deploy.database.persistence.{MigrationPersistence, ProjectPersistence}
-import com.prisma.deploy.persistence.DeployPersistencePlugin
+import com.prisma.deploy.connector.DeployConnector
 
 import scala.collection.mutable
 import scala.concurrent.Future
@@ -11,7 +11,7 @@ import scala.util.{Failure, Success}
 case class DeploymentSchedulerActor(
     migrationPersistence: MigrationPersistence,
     projectPersistence: ProjectPersistence,
-    persistencePlugin: DeployPersistencePlugin
+    persistencePlugin: DeployConnector
 ) extends Actor
     with Stash {
   import DeploymentProtocol._

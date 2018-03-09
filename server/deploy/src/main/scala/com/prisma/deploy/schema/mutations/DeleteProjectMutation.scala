@@ -1,7 +1,7 @@
 package com.prisma.deploy.schema.mutations
 
 import com.prisma.deploy.database.persistence.ProjectPersistence
-import com.prisma.deploy.persistence.DeployPersistencePlugin
+import com.prisma.deploy.connector.DeployConnector
 import com.prisma.deploy.schema.InvalidServiceName
 import com.prisma.messagebus.PubSubPublisher
 import com.prisma.messagebus.pubsub.Only
@@ -13,7 +13,7 @@ case class DeleteProjectMutation(
     args: DeleteProjectInput,
     projectPersistence: ProjectPersistence,
     invalidationPubSub: PubSubPublisher[String],
-    persistencePlugin: DeployPersistencePlugin
+    persistencePlugin: DeployConnector
 )(
     implicit ec: ExecutionContext
 ) extends Mutation[DeleteProjectMutationPayload] {
