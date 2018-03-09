@@ -25,12 +25,12 @@ case class MySqlDeployPersistencePlugin(clientDatabase: Database)(implicit ec: E
 
   override def createProjectDatabase(id: String): Future[Unit] = {
     val action = DatabaseMutationBuilder.createClientDatabaseForProject(projectId = id)
-    internalDatabase.run(action)
+    clientDatabase.run(action)
   }
 
   override def deleteProjectDatabase(id: String): Future[Unit] = {
     val action = DatabaseMutationBuilder.deleteProjectDatabase(projectId = id).map(_ => ())
-    internalDatabase.run(action)
+    clientDatabase.run(action)
   }
 
   override def getAllDatabaseSizes(): Future[Vector[DatabaseSize]] = {
@@ -44,7 +44,7 @@ case class MySqlDeployPersistencePlugin(clientDatabase: Database)(implicit ec: E
         }
       }
     }
-    internalDatabase.run(action)
+    clientDatabase.run(action)
   }
 
   override def initialize(): Future[Unit] = {
