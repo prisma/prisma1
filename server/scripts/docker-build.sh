@@ -68,7 +68,6 @@ fi
 printf "
 - trigger: \"prisma-cloud\"
   label: \":cloud: Trigger Prisma Cloud Tasks :cloud:\"
-  branches: \"master\"
   async: true
   build:
     env:
