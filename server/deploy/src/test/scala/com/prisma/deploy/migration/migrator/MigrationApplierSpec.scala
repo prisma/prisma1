@@ -35,7 +35,7 @@ class MigrationApplierSpec extends FlatSpec with Matchers with DeploySpecBase wi
 
   "the applier" should "succeed when all steps succeed" in {
     persistence.create(migration).await
-    val mapper  = stepMapper { case _ => succeedingSqlMutactionWithSucceedingRollback }
+    val mapper  = stepMapper { case _ => Vector(succeedingSqlMutactionWithSucceedingRollback) }
     val applier = migrationApplier(mapper)
     val result  = applier.apply(previousSchema = emptySchema, migration = migration).await
     result.succeeded should be(true)
@@ -52,9 +52,9 @@ class MigrationApplierSpec extends FlatSpec with Matchers with DeploySpecBase wi
     persistence.create(migration).await
 
     val mapper = stepMapper({
-      case CreateModel("Step1") => succeedingSqlMutactionWithSucceedingRollback
-      case CreateModel("Step2") => failingSqlMutactionWithSucceedingRollback
-      case CreateModel("Step3") => succeedingSqlMutactionWithSucceedingRollback
+      case CreateModel("Step1") => Vector(succeedingSqlMutactionWithSucceedingRollback)
+      case CreateModel("Step2") => Vector(failingSqlMutactionWithSucceedingRollback)
+      case CreateModel("Step3") => Vector(succeedingSqlMutactionWithSucceedingRollback)
     })
 
     val applier = migrationApplier(mapper)
@@ -71,9 +71,9 @@ class MigrationApplierSpec extends FlatSpec with Matchers with DeploySpecBase wi
     persistence.create(migration).await
 
     val mapper = stepMapper({
-      case CreateModel("Step1") => succeedingSqlMutactionWithFailingRollback
-      case CreateModel("Step2") => succeedingSqlMutactionWithSucceedingRollback
-      case CreateModel("Step3") => failingSqlMutactionWithSucceedingRollback
+      case CreateModel("Step1") => Vector(succeedingSqlMutactionWithFailingRollback)
+      case CreateModel("Step2") => Vector(succeedingSqlMutactionWithSucceedingRollback)
+      case CreateModel("Step3") => Vector(failingSqlMutactionWithSucceedingRollback)
     })
 
     val applier = migrationApplier(mapper)
@@ -110,9 +110,7 @@ class MigrationApplierSpec extends FlatSpec with Matchers with DeploySpecBase wi
     }
   }
 
-  def stepMapper(pf: PartialFunction[MigrationStep, ClientSqlMutaction]) = new MigrationStepMapper {
-    override def mutactionFor(previousSchema: Schema, nextSchema: Schema, step: MigrationStep): Option[ClientSqlMutaction] = {
-      pf.lift.apply(step)
-    }
+  def stepMapper(pf: PartialFunction[MigrationStep, Vector[ClientSqlMutaction]]) = new MigrationStepMapper {
+    override def mutactionFor(previousSchema: Schema, nextSchema: Schema, step: MigrationStep): Vector[ClientSqlMutaction] = pf.apply(step)
   }
 }
