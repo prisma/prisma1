@@ -25,9 +25,9 @@ A cluster is the _runtime environment_ for Prisma services. This means in order 
 
 In general, there are three types of clusters:
 
-- Local / self-hosted (using Docker): You can create your own Prisma clusters locally or host them using a cloud provider of your choice. For example, follow [this](!alias-texoo9aemu) tutorial to learn how to host your own Prisma Cluste on Digital Ocean.
-- Development clusters (Prisma Cloud): Prisma Cloud offers free development clusters which you can use for learning, prototyping and development. Note that when deployed to a development cluster, your services will be rate limited (at 10 requests per 10 seconds) and have an upper bound in storage (100 MB). Note that you don't need a Prisma Cloud account to deploy to a development cluster.
-- Private clusters (Prisma Cloud): A private cluster is connected to your own database which you're provisioning when initially setting up the cluster.
+- **Local / self-hosted** (using [Docker](https://www.docker.com/)): You can create your own Prisma clusters locally or host them using a cloud provider of your choice. For example, follow [this](!alias-texoo9aemu) tutorial to learn how to host your own Prisma Cluste on Digital Ocean.
+- **Development clusters** ([Prisma Cloud](https://www.prismagraphql.com/cloud)): Prisma Cloud offers free development clusters which you can use for learning, prototyping and development. Note that when deployed to a development cluster, your services will be rate limited (at 10 requests per 10 seconds) and have an upper bound in storage (100 MB). Note that you don't need a Prisma Cloud account to deploy to a development cluster.
+- **Private clusters** ([Prisma Cloud](https://www.prismagraphql.com/cloud)): A private cluster is connected to your own database which you're provisioning when initially setting up the cluster.
 
 ### How do I create a new private cluster?
 

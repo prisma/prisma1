@@ -96,7 +96,7 @@ Like before, when prompted where to deploy the service, choose either `prisma-eu
 
 </Instruction>
 
-The service is now deployed to a public cluster.
+The service is now deployed to a development cluster.
 
 ### Deploy the server with `now`
 
