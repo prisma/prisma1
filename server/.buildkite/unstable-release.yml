@@ -18,4 +18,4 @@ steps:
 
   - label: ":docker: Build unstable channel"
     command: ./server/scripts/docker-build.sh unstable
-    branches: master
+#    branches: master
