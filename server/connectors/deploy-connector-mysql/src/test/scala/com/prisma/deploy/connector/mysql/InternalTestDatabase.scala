@@ -1,6 +1,5 @@
-package com.prisma.deploy.specutils
+package com.prisma.deploy.connector.mysql
 
-import com.prisma.deploy.connector.mysql.InternalDatabaseDefs
 import com.prisma.deploy.connector.mysql.database.InternalDatabaseSchema
 import com.prisma.utils.await.AwaitUtils
 import slick.dbio.Effect.Read

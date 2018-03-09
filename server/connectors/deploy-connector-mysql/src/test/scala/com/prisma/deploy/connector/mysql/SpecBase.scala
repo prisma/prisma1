@@ -1,4 +1,4 @@
-package com.prisma.deploy.specutils
+package com.prisma.deploy.connector.mysql
 
 import com.prisma.deploy.connector.mysql.impls.{MigrationPersistenceImpl, ProjectPersistenceImpl}
 import com.prisma.shared.models._

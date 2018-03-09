@@ -1,7 +1,7 @@
-package com.prisma.deploy.database.persistence
+package com.prisma.deploy.connector.mysql.impls
 
+import com.prisma.deploy.connector.mysql.SpecBase
 import com.prisma.deploy.connector.mysql.database.Tables
-import com.prisma.deploy.specutils.SpecBase
 import com.prisma.shared.models._
 import org.joda.time.DateTime
 import org.scalatest.{FlatSpec, Matchers}
