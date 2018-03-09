@@ -5,14 +5,15 @@ description: Overview
 
 # Overview
 
-Prisma services are deployed to so-called _clusters_. A cluster is a hosted environment for Prisma services.
+Prisma services are deployed to so-called _clusters_. Cluster are the _runtime environment_ for Prisma services.
 
-In essence, there are two kinds of _clusters_ you can deploy your Prisma service to:
+In essence, there are three kinds of _clusters_ you can deploy your Prisma service to:
 
-- **Self-hosted / local clusters**: Self-hosted (or locally deployed) clusters are running on [Docker](https://www.docker.com). They are created and managed using the Prisma CLI which governs the underlying Docker _images_ and _containers_ for you.
-- **Development clusters** (based on Prisma Cloud): Development clusters allow to conventiently deploy your Prisma service to the web without the overhead of configuring your own cluster. Note that development clusters have certain limitations, such as rate limiting of incoming requests and an upper bound in storage capacity (see the info box below for further info).
+- **Local / self-hosted** (using [Docker](https://www.docker.com/)): You can create your own Prisma clusters locally or host them using a cloud provider of your choice. They are managed with the Prisma CLI which governs the underlying Docker _images_ and _containers_ for you. Follow [this](!alias-texoo9aemu) tutorial to learn how to host your own Prisma Cluste on Digital Ocean.
+- **Development clusters** ([Prisma Cloud](https://www.prismagraphql.com/cloud)): Prisma Cloud offers free development clusters which you can use for learning, prototyping and development. Note that when deployed to a development cluster, your services will be rate limited and have an upper bound in storage capacity (see the info box below for further info).
+- **Private clusters** ([Prisma Cloud](https://www.prismagraphql.com/cloud)): A private cluster is connected to your own database which you're provisioning when initially setting up the cluster.
 
-For the vast majority of use cases, **self-hosted clusters are the preferred option to deploy Prisma services**. This chapter explains how to create and manage your own self-hosted clusters.
+For production use cases, **private and self-hosted clusters are the preferred option to deploy Prisma services**. This chapter is about self-hosted clusters, you can learn more about Prisma Cloud [here](!alias-fae2ooth2u).
 
 <InfoBox>
 
