@@ -50,7 +50,7 @@ clusters:
 When you're running `prisma deploy` for a Prisma service, there are two scenarios with respect to the target cluster:
 
 - The `cluster` property in `prisma.yml` is **specified**. In this case, the CLI will directly deploy the specified cluster.
-- The `cluster` property in `prisma.yml` is **not specified**. In this case, the CLI will prompt you with an interactive selection of your available clusters. After you selected a cluster, it will write your decision to `prisma.yml`, so the selected cluster will be used as the default cluster for future deploys. To bring up the interactive selection prompt again, you can invoke `prisma deploy --interactive` or simply remove the `cluster` property from `prisma.yml`.
+- The `cluster` property in `prisma.yml` is **not specified**. In this case, the CLI will prompt you with an interactive selection of your available clusters. After you selected a cluster, it will write your decision to `prisma.yml`, so the selected cluster will be used as the default cluster for future deploys. To bring up the interactive selection prompt again, simply remove the `cluster` property from `prisma.yml` again.
 
 In any case, the value of [`cluster`](!alias-ufeshusai8#clusters-optional) needs to be the identical to the key of an entry in the `clusters` map from the cluster registry (_or_ refer to one of the clusters configured through your Prisma Cloud account).
 
