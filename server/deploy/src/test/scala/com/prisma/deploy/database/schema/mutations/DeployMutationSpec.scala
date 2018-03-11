@@ -272,29 +272,29 @@ class DeployMutationSpec extends FlatSpec with Matchers with DeploySpecBase {
     // todo assert client db cols?
   }
 
-//  "DeployMutation" should "should not blow up on consecutive deploys" in {
-//    val project = setupProject(basicTypesGql)
-//
-//    val schema =
-//      """
-//        |type A {
-//        |  id: ID!@unique
-//        |  i: Int
-//        |  b: B @relation(name: "TADA")
-//        |}
-//        |type B {
-//        |  i: Int
-//        |  a: A
-//        |}""".stripMargin
-//
-//    deploySchema(project, schema)
-//    Thread.sleep(10000)
-//    deploySchema(project, schema)
-//    Thread.sleep(10000)
-//    deploySchema(project, schema)
-//
-//    Thread.sleep(30000)
-//  }
+  "DeployMutation" should "should not blow up on consecutive deploys" in {
+    val (project, _) = setupProject(basicTypesGql)
+
+    val schema =
+      """
+        |type A {
+        |  id: ID!@unique
+        |  i: Int
+        |  b: B @relation(name: "TADA")
+        |}
+        |type B {
+        |  i: Int
+        |  a: A
+        |}""".stripMargin
+
+    deploySchema(project, schema)
+    Thread.sleep(10000)
+    deploySchema(project, schema)
+    Thread.sleep(10000)
+    deploySchema(project, schema)
+
+    Thread.sleep(30000)
+  }
 
   "DeployMutation" should "return an error if a subscription query is invalid" in {
     val schema = """
@@ -654,6 +654,66 @@ class DeployMutationSpec extends FlatSpec with Matchers with DeploySpecBase {
       errorContains =
         "There is a relation ambiguity during the migration. Please first name the old relation on your schema. The ambiguity is on a relation between Mote and User."
     )
+  }
+
+  "DeployMutation" should "be able to change a field from scalar non-list to scalar list" in {
+    val (project, _) = setupProject(basicTypesGql)
+    val nameAndStage = ProjectId.fromEncodedString(project.id)
+    val schema =
+      """
+        |type A {
+        | name: String! @unique
+        | value: Int
+        |}
+      """.stripMargin
+
+    server.query(
+      s"""
+         |mutation {
+         |  deploy(input:{name: "${nameAndStage.name}", stage: "${nameAndStage.stage}", types: ${formatSchema(schema)}}){
+         |    migration {
+         |      applied
+         |    }
+         |    errors {
+         |      description
+         |    }
+         |  }
+         |}
+      """.stripMargin
+    )
+
+    val migrations = migrationPersistence.loadAll(project.id).await
+    migrations should have(size(3))
+    migrations.exists(x => x.status != MigrationStatus.Success) shouldEqual false
+    migrations.head.revision shouldEqual 3 // order is DESC
+
+    val schema2 =
+      """
+        |type A {
+        | name: String! @unique
+        | value: [Int!]!
+        |}
+      """.stripMargin
+
+    server.query(
+      s"""
+         |mutation {
+         |  deploy(input:{name: "${nameAndStage.name}", stage: "${nameAndStage.stage}", types: ${formatSchema(schema2)}}){
+         |    migration {
+         |      applied
+         |    }
+         |    errors {
+         |      description
+         |    }
+         |  }
+         |}
+      """.stripMargin
+    )
+
+    val migrations2 = migrationPersistence.loadAll(project.id).await
+    migrations2 should have(size(4))
+    migrations2.exists(x => x.status != MigrationStatus.Success) shouldEqual false
+    migrations2.head.revision shouldEqual 4 // order is DESC
   }
 
   private def formatFunctions(functions: Vector[FunctionInput]) = {
