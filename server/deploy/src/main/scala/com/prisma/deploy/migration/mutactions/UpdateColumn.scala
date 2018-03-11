@@ -35,7 +35,6 @@ case class UpdateColumn(projectId: String, model: Model, oldField: Field, newFie
       oldField.isRequired != newField.isRequired ||
       oldField.name != newField.name ||
       oldField.typeIdentifier != newField.typeIdentifier ||
-      oldField.isList != newField.isList ||
       oldField.isUnique != newField.isUnique
     else false
   }
@@ -45,7 +44,7 @@ case class UpdateColumn(projectId: String, model: Model, oldField: Field, newFie
     val hasIndex     = before.isUnique
     val indexIsDirty = before.isRequired != after.isRequired || before.name != after.name || before.typeIdentifier != after.typeIdentifier
 
-    val updateColumnMutation = DatabaseMutationBuilder.updateColumn(
+    val updateColumn = DatabaseMutationBuilder.updateColumn(
       projectId = projectId,
       tableName = model.name,
       oldColumnName = before.name,
@@ -56,17 +55,13 @@ case class UpdateColumn(projectId: String, model: Model, oldField: Field, newFie
       newTypeIdentifier = after.typeIdentifier
     )
 
-    val removeUniqueConstraint =
-      Future.successful(DatabaseMutationBuilder.removeUniqueConstraint(projectId = projectId, tableName = model.name, columnName = before.name))
+    val removeUniqueConstraint = DatabaseMutationBuilder.removeUniqueConstraint(projectId = projectId, tableName = model.name, columnName = before.name)
 
-    val addUniqueConstraint = Future.successful(
-      DatabaseMutationBuilder.addUniqueConstraint(projectId = projectId,
-                                                  tableName = model.name,
-                                                  columnName = after.name,
-                                                  typeIdentifier = after.typeIdentifier,
-                                                  isList = after.isList))
-
-    val updateColumn = Future.successful(updateColumnMutation)
+    val addUniqueConstraint = DatabaseMutationBuilder.addUniqueConstraint(projectId = projectId,
+                                                                          tableName = model.name,
+                                                                          columnName = after.name,
+                                                                          typeIdentifier = after.typeIdentifier,
+                                                                          isList = after.isList)
 
     val updateColumnActions = (hasIndex, indexIsDirty, after.isUnique) match {
       case (true, true, true)  => List(removeUniqueConstraint, updateColumn, addUniqueConstraint)
@@ -76,7 +71,6 @@ case class UpdateColumn(projectId: String, model: Model, oldField: Field, newFie
       case (false, _, true)    => List(updateColumn, addUniqueConstraint)
     }
 
-    Future.sequence(updateColumnActions).map(sqlActions => ClientSqlStatementResult(sqlAction = DBIO.seq(sqlActions: _*)))
-
+    Future.successful(ClientSqlStatementResult(sqlAction = DBIO.seq(updateColumnActions: _*)))
   }
 }
