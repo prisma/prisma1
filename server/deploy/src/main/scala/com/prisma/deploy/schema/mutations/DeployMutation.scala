@@ -68,22 +68,31 @@ case class DeployMutation(
               MutationSuccess(DeployMutationPayload(args.clientMutationId, Some(Migration.empty(project.id)), errors = schemaErrors ++ errors, Seq.empty)))
 
           case Good(functionsForInput) =>
-            val steps         = migrationStepsInferrer.infer(project.schema, inferredNextSchema, schemaMapping)
-            val warningsCheck = DestructiveChanges(project, project.schema, inferredNextSchema, steps).generateWarnings
+            val steps                  = migrationStepsInferrer.infer(project.schema, inferredNextSchema, schemaMapping)
+            val existingDataValidation = DestructiveChanges(project, inferredNextSchema, steps)
+            val checkResults           = existingDataValidation.checkAgainstExistingData
 
-            warningsCheck.flatMap { warnings =>
-              (warnings, args.force) match {
-                case (x, _) if x.isEmpty =>
+            checkResults.flatMap { results =>
+              val warnings = results.collect { case x if x.isInstanceOf[SchemaWarning] => x.asInstanceOf[SchemaWarning] } //todo
+              val errors   = results.collect { case x if x.isInstanceOf[SchemaError]   => x.asInstanceOf[SchemaError] }
+
+              (errors, warnings, args.force) match {
+
+                case (errors, warnings, _) if errors.nonEmpty =>
+                  Future.successful(
+                    MutationSuccess(DeployMutationPayload(args.clientMutationId, Some(Migration.empty(project.id)), errors = schemaErrors ++ errors, warnings)))
+
+                case (_, x, _) if x.isEmpty =>
                   val secretsUpdatedFuture = updateSecretsIfNecessary()
                   val migration            = secretsUpdatedFuture.flatMap(secret => handleMigration(inferredNextSchema, steps ++ secret, functionsForInput))
                   migration.map(mig => MutationSuccess(DeployMutationPayload(args.clientMutationId, mig, errors = schemaErrors, Seq.empty)))
 
-                case (warnings, Some(true)) =>
+                case (_, warnings, Some(true)) =>
                   val secretsUpdatedFuture = updateSecretsIfNecessary()
                   val migration            = secretsUpdatedFuture.flatMap(secret => handleMigration(inferredNextSchema, steps ++ secret, functionsForInput))
                   migration.map(mig => MutationSuccess(DeployMutationPayload(args.clientMutationId, mig, errors = schemaErrors, Seq.empty))) // todo
 
-                case (warnings, _) =>
+                case (_, warnings, _) =>
                   sys.error(warnings.toString)
               }
             }

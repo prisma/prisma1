@@ -4,12 +4,14 @@ abstract class UserFacingError(message: String, errorCode: Int) extends Exceptio
   val code: Int = errorCode
 }
 
+trait SchemaCheckResult
+
 trait WithSchemaError {
   def schemaError: Option[SchemaError] = None
 }
 
-abstract class SystemApiError(message: String, errorCode: Int) extends UserFacingError(message, errorCode) with WithSchemaError
-case class SchemaError(`type`: String, description: String, field: Option[String])
+abstract class SystemApiError(message: String, errorCode: Int)                     extends UserFacingError(message, errorCode) with WithSchemaError
+case class SchemaError(`type`: String, description: String, field: Option[String]) extends SchemaCheckResult
 
 object SchemaError {
   def apply(`type`: String, field: String, description: String): SchemaError = {

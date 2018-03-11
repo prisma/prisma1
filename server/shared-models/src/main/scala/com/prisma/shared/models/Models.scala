@@ -368,7 +368,7 @@ case class Field(
     }
   }
 
-  def otherSideIsRequired(project: Project): Boolean = relatedField(project.schema) match {
+  def otherSideIsRequired(project: Project): Boolean = otherRelationField(project.schema) match {
     case Some(f) if f.isRequired => true
     case Some(_)                 => false
     case None                    => false

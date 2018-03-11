@@ -1,6 +1,8 @@
 package com.prisma.deploy.migration.validation
 
-case class SchemaWarning(`type`: String, description: String, field: Option[String])
+import com.prisma.shared.errors.SchemaCheckResult
+
+case class SchemaWarning(`type`: String, description: String, field: Option[String]) extends SchemaCheckResult
 
 object SchemaWarning {
   def apply(`type`: String, field: String, description: String): SchemaWarning = {
