@@ -23,29 +23,23 @@ case class MigrationStepMapperImpl(projectId: String) extends MigrationStepMappe
       Vector(RenameTable(projectId = projectId, previousName = x.name, nextName = x.newName, scalarListFieldsNames = scalarListFieldNames))
 
     case x: CreateField =>
-      // todo I think those validations should be somewhere else, preferably preventing a step being created
       val model = nextSchema.getModelByName_!(x.model)
       val field = model.getFieldByName_!(x.name)
-      if (ReservedFields.isReservedFieldName(field.name) || !field.isScalar) {
-        Vector.empty
-      } else {
-        if (field.isList) {
-          Vector(CreateScalarListTable(projectId, model.name, field.name, field.typeIdentifier))
-        } else {
-          Vector(CreateColumn(projectId, model, field))
-        }
+
+      () match {
+        case _ if field.isRelation      => Vector.empty
+        case _ if field.isScalarList    => Vector(CreateScalarListTable(projectId, model.name, field.name, field.typeIdentifier))
+        case _ if field.isScalarNonList => Vector(CreateColumn(projectId, model, field))
       }
 
     case x: DeleteField =>
       val model = previousSchema.getModelByName_!(x.model)
       val field = model.getFieldByName_!(x.name)
-      if (field.isList && !field.isRelation) {
-        Vector(DeleteScalarListTable(projectId, model.name, field.name, field.typeIdentifier))
-      } else if (field.isScalar) {
-        // TODO: add test case for not deleting columns for relation fields
-        Vector(DeleteColumn(projectId, model, field))
-      } else {
-        Vector.empty
+
+      () match {
+        case _ if field.isRelation      => Vector.empty
+        case _ if field.isScalarList    => Vector(DeleteScalarListTable(projectId, model.name, field.name, field.typeIdentifier))
+        case _ if field.isScalarNonList => Vector(DeleteColumn(projectId, model, field))
       }
 
     case x: UpdateField =>
@@ -61,15 +55,15 @@ case class MigrationStepMapperImpl(projectId: String) extends MigrationStepMappe
       lazy val deleteScalarListTable = DeleteScalarListTable(projectId, model.name, previous.name, previous.typeIdentifier)
 
       () match {
-        case _ if previous.isScalarNonList && next.isScalarNonList => Vector(updateColumn)
-        case _ if previous.isScalarNonList && next.isScalarList    => Vector(createScalarListTable, deleteColumn)
-        case _ if previous.isScalarNonList && next.isRelation      => Vector(deleteColumn)
-        case _ if previous.isScalarList && next.isScalarList       => Vector(updateScalarListTable)
-        case _ if previous.isScalarList && next.isScalarNonList    => Vector(createColumn, deleteScalarListTable)
-        case _ if previous.isScalarList && next.isRelation         => Vector(deleteScalarListTable)
         case _ if previous.isRelation && next.isRelation           => Vector.empty
         case _ if previous.isRelation && next.isScalarNonList      => Vector(createColumn)
         case _ if previous.isRelation && next.isScalarList         => Vector(createScalarListTable)
+        case _ if previous.isScalarList && next.isScalarList       => Vector(updateScalarListTable)
+        case _ if previous.isScalarList && next.isScalarNonList    => Vector(createColumn, deleteScalarListTable)
+        case _ if previous.isScalarList && next.isRelation         => Vector(deleteScalarListTable)
+        case _ if previous.isScalarNonList && next.isScalarNonList => Vector(updateColumn)
+        case _ if previous.isScalarNonList && next.isScalarList    => Vector(createScalarListTable, deleteColumn)
+        case _ if previous.isScalarNonList && next.isRelation      => Vector(deleteColumn)
       }
 
     case x: EnumMigrationStep =>
