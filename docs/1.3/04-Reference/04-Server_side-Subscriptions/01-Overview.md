@@ -37,14 +37,16 @@ subscriptions:
         Authorization: Bearer cha2eiheiphesash3shoofo7eceexaequeebuyaequ1reishiujuu6weisao7ohc
     query: |
       {
-        user({
+        user(
           where: {
             mutation_in: [UPDATED],
             updatedFields_contains: "email"
           }
-        }) {
-          name
-          email
+        ) {
+          node {
+            name
+            email
+          }
         }
       }
 ```
