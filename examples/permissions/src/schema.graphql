@@ -39,7 +39,7 @@ type AuthPayload {
 
 # The `User` type is a reduced version ("mask") of the `User` 
 # type from the data model (and database schema).
-# It does not expose the `password` and `role` fields.
+# It does not expose the `password` field.
 type User {
   id: ID!
   createdAt: DateTime!
