@@ -58,7 +58,7 @@ Here is an example `curl` command for uploading some JSON data (of NDF type `nod
 ```sh
 curl 'http://localhost:60000/my-app/dev/export' \
 -H 'Content-Type: application/json' \
--H 'Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJPbmxpbmUgSldUIEJ1aWxkZXIiLCJpYXQiOjE1MTM1OTQzMTEsImV4cCI6MTU0NTEzMDMxMSwiYXVkIjasd3d3LmV4YW1wbGUuY29tIiwic3ViIjoianJvY2tldEBleGFtcGxlLmNvbSIsIkdpdmVuTmFtZSI6IkpvaG5ueSIsIlN1cm5hbWUiOiJSb2NrZXQiLCJFbWFpbCI6Impyb2NrZXRAZXhhbXBsZS5jb20iLCJSb2xlIjpbIk1hbmFnZXIiLCJQcm9qZWN0IEFkbWluaXN0cmF0b3IiXX0.L7DwH7vIfTSmuwfxBI82D64DlgoLBLXOwR5iMjZ_7nI' \
+-H 'Authorization: eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJPbmxpbmUgSldUIEJ1aWxkZXIiLCJpYXQiOjE1MTM1OTQzMTEsImV4cCI6MTU0NTEzMDMxMSwiYXVkIjasd3d3LmV4YW1wbGUuY29tIiwic3ViIjoianJvY2tldEBleGFtcGxlLmNvbSIsIkdpdmVuTmFtZSI6IkpvaG5ueSIsIlN1cm5hbWUiOiJSb2NrZXQiLCJFbWFpbCI6Impyb2NrZXRAZXhhbXBsZS5jb20iLCJSb2xlIjpbIk1hbmFnZXIiLCJQcm9qZWN0IEFkbWluaXN0cmF0b3IiXX0.L7DwH7vIfTSmuwfxBI82D64DlgoLBLXOwR5iMjZ_7nI' \
 -d '{"fileType":"nodes","cursor":{"table":0,"row":0,"field":0,"array":0}}' \
 -sSv
 ```
@@ -68,7 +68,7 @@ The generic version for `curl` (using placeholders) would look as follows:
 ```sh
 curl '__SERVICE_ENDPOINT__/export' \
 -H 'Content-Type: application/json' \
--H 'Authorization: Bearer __JWT_AUTH_TOKEN__' \
+-H 'Authorization: __JWT_AUTH_TOKEN__' \
 -d '{"fileType":"__NDF_TYPE__","cursor": {"table":__TABLE__,"row":__ROW__,"field":__FIELD__,"array":__ARRAY__}} }' \
 -sSv
 ```

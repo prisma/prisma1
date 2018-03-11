@@ -197,7 +197,7 @@ The GraphQL API of a Prisma service is typically protected by a [service secret]
 The `secret` is used to sign a [JWT](https://jwt.io/) which can then be used in the `Authorization` field of the HTTP header:
 
 ```
-Authorization: Bearer __TOKEN__
+Authorization: __TOKEN__
 ```
 
 This is a sample payload for a JWT:
