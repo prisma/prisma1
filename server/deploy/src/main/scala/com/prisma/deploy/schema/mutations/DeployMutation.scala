@@ -68,9 +68,7 @@ case class DeployMutation(
                       }
         } yield {
           val functionErrors = functions.swap.getOrElse(Vector.empty)
-          MutationSuccess {
-            DeployMutationPayload(args.clientMutationId, migration = migration, errors = schemaErrors ++ functionErrors)
-          }
+          MutationSuccess(DeployMutationPayload(args.clientMutationId, migration = migration, errors = schemaErrors ++ functionErrors))
         }
 
       case Bad(err) =>
