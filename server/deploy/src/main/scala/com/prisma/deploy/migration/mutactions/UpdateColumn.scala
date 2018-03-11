@@ -50,7 +50,6 @@ case class UpdateColumn(projectId: String, model: Model, oldField: Field, newFie
       oldColumnName = before.name,
       newColumnName = after.name,
       newIsRequired = after.isRequired,
-      newIsUnique = after.isUnique,
       newIsList = after.isList,
       newTypeIdentifier = after.typeIdentifier
     )
