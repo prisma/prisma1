@@ -1,9 +1,6 @@
 steps:
-  - label: ":scala: libs"
-    command: cd server && ./scripts/test.sh libs
-
-  - label: ":scala: subscriptions"
-    command: cd server && ./scripts/test.sh subscriptions
+  - label: ":scala: images"
+    command: cd server && ./scripts/test.sh images
 
   - label: ":scala: deploy"
     command: cd server && ./scripts/test.sh deploy
@@ -11,8 +8,17 @@ steps:
   - label: ":scala: api"
     command: cd server && ./scripts/test.sh api
 
-  - label: ":scala: images"
-    command: cd server && ./scripts/test.sh images
+  - label: ":scala: subscriptions"
+    command: cd server && ./scripts/test.sh subscriptions
+
+  - label: ":scala: workers"
+    command: cd server && ./scripts/test.sh api
+
+  - label: ":scala: connectors"
+    command: cd server && ./scripts/test.sh connectors
+
+  - label: ":scala: libs"
+    command: cd server && ./scripts/test.sh libs
 
   - wait
 
