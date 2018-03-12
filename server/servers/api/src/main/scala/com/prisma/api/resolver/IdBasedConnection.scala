@@ -1,5 +1,6 @@
-package com.prisma.api.database
+package com.prisma.api.resolver
 
+import com.prisma.api.database._
 import com.prisma.shared.models
 import sangria.schema._
 

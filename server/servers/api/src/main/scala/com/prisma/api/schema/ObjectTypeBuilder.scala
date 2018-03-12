@@ -5,6 +5,7 @@ import com.prisma.api.database._
 import com.prisma.api.resolver.DeferredTypes._
 import com.prisma.api.database.Types.DataItemFilterCollection
 import com.prisma.api.mutations.BatchPayload
+import com.prisma.api.resolver.{IdBasedConnection, IdBasedConnectionDefinition}
 import com.prisma.shared.models
 import com.prisma.shared.models.{Field, Model, TypeIdentifier}
 import org.joda.time.{DateTime, DateTimeZone}
