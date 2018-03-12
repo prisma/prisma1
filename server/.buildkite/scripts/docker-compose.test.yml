@@ -2,7 +2,7 @@ version: "2"
 services:
 
   app:
-    image: schickling/scala-sbt-docker
+    image: graphcool/scala-sbt-docker
     links:
     - client-db
     - internal-db
@@ -41,9 +41,8 @@ services:
       PACKAGECLOUD_PW: "${PACKAGECLOUD_PW}"
       CLUSTER_VERSION: "latest"
       COMMIT_SHA: "123abcd"
-
     volumes:
-      - ../..:/root
+      - ../../..:/root
       - ~/.ivy2:/root/.ivy2
       - ~/.coursier:/root/.coursier
     working_dir: /root/server
