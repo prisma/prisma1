@@ -20,7 +20,7 @@ class UpsertDesignSpec extends FlatSpec with Matchers with ApiBaseSpec {
     database.setup(project)
 
     server
-      .executeQuerySimple(
+      .query(
         s"""mutation {upsertList(
            |                     where:{uList: "Does not Exist"}
            |                     create:{uList:"A" todo: {create: {uTodo: "B"}}}
@@ -29,10 +29,10 @@ class UpsertDesignSpec extends FlatSpec with Matchers with ApiBaseSpec {
         project
       )
 
-    val result = server.executeQuerySimple(s"""query{lists {uList, todo {uTodo}}}""", project)
+    val result = server.query(s"""query{lists {uList, todo {uTodo}}}""", project)
     result.toString should equal("""{"data":{"lists":[{"uList":"A","todo":{"uTodo":"B"}}]}}""")
 
-    server.executeQuerySimple(s"""query{todoes {uTodo}}""", project).toString should be("""{"data":{"todoes":[{"uTodo":"B"}]}}""")
+    server.query(s"""query{todoes {uTodo}}""", project).toString should be("""{"data":{"todoes":[{"uTodo":"B"}]}}""")
 
     countItems(project, "lists") should be(1)
     countItems(project, "todoes") should be(1)
@@ -48,10 +48,10 @@ class UpsertDesignSpec extends FlatSpec with Matchers with ApiBaseSpec {
 
     database.setup(project)
 
-    server.executeQuerySimple("""mutation {createList(data: {uList: "A"}){id}}""", project)
+    server.query("""mutation {createList(data: {uList: "A"}){id}}""", project)
 
     server
-      .executeQuerySimple(
+      .query(
         s"""mutation upsertListValues {upsertList(
            |                             where:{uList: "A"}
            |                             create:{uList:"B"  todo: {create: {uTodo: "B"}}}
@@ -60,10 +60,10 @@ class UpsertDesignSpec extends FlatSpec with Matchers with ApiBaseSpec {
         project
       )
 
-    val result = server.executeQuerySimple(s"""query{lists {uList, todo {uTodo}}}""", project)
+    val result = server.query(s"""query{lists {uList, todo {uTodo}}}""", project)
     result.toString should equal("""{"data":{"lists":[{"uList":"C","todo":{"uTodo":"C"}}]}}""")
 
-    server.executeQuerySimple(s"""query{todoes {uTodo}}""", project).toString should be("""{"data":{"todoes":[{"uTodo":"C"}]}}""")
+    server.query(s"""query{todoes {uTodo}}""", project).toString should be("""{"data":{"todoes":[{"uTodo":"C"}]}}""")
 
     countItems(project, "lists") should be(1)
     countItems(project, "todoes") should be(1)
@@ -80,7 +80,7 @@ class UpsertDesignSpec extends FlatSpec with Matchers with ApiBaseSpec {
     database.setup(project)
 
     server
-      .executeQuerySimple(
+      .query(
         s"""mutation upsertListValues {upsertList(
            |                             where:{uList: "Does not Exist"}
            |                             create:{uList:"A" listInts:{set: [70, 80]}}
@@ -89,7 +89,7 @@ class UpsertDesignSpec extends FlatSpec with Matchers with ApiBaseSpec {
         project
       )
 
-    val result = server.executeQuerySimple(s"""query{lists {uList, listInts}}""", project)
+    val result = server.query(s"""query{lists {uList, listInts}}""", project)
     result.toString should equal("""{"data":{"lists":[{"uList":"A","listInts":[70,80]}]}}""")
     countItems(project, "lists") should be(1)
     countItems(project, "todoes") should be(0)
@@ -106,7 +106,7 @@ class UpsertDesignSpec extends FlatSpec with Matchers with ApiBaseSpec {
     database.setup(project)
 
     server
-      .executeQuerySimple(
+      .query(
         s"""mutation upsertListValues {upsertList(
            |                             where:{uList: "Does not Exist"}
            |                             create:{uList:"A" listInts:{set: [70, 80]}}
@@ -115,13 +115,13 @@ class UpsertDesignSpec extends FlatSpec with Matchers with ApiBaseSpec {
         project
       )
 
-    val result = server.executeQuerySimple(s"""query{lists {uList, listInts}}""", project)
+    val result = server.query(s"""query{lists {uList, listInts}}""", project)
     result.toString should equal("""{"data":{"lists":[{"uList":"A","listInts":[70,80]}]}}""")
     countItems(project, "lists") should be(1)
     countItems(project, "todoes") should be(0)
 
     server
-      .executeQuerySimple(
+      .query(
         s"""mutation upsertListValues {upsertList(
            |                             where:{uList: "A"}
            |                             create:{uList:"A" listInts:{set: [70, 80]}}
@@ -130,7 +130,7 @@ class UpsertDesignSpec extends FlatSpec with Matchers with ApiBaseSpec {
         project
       )
 
-    val result2 = server.executeQuerySimple(s"""query{lists {uList, listInts}}""", project)
+    val result2 = server.query(s"""query{lists {uList, listInts}}""", project)
     result2.toString should equal("""{"data":{"lists":[{"uList":"A","listInts":[]}]}}""")
     countItems(project, "lists") should be(1)
     countItems(project, "todoes") should be(0)
@@ -146,10 +146,10 @@ class UpsertDesignSpec extends FlatSpec with Matchers with ApiBaseSpec {
 
     database.setup(project)
 
-    server.executeQuerySimple("""mutation {createList(data: {uList: "A" listInts: {set: [1, 2]}}){id}}""", project)
+    server.query("""mutation {createList(data: {uList: "A" listInts: {set: [1, 2]}}){id}}""", project)
 
     server
-      .executeQuerySimple(
+      .query(
         s"""mutation upsertListValues {upsertList(
            |                             where:{uList: "A"}
            |                             create:{uList:"A" listInts:{set: [70, 80]}}
@@ -158,7 +158,7 @@ class UpsertDesignSpec extends FlatSpec with Matchers with ApiBaseSpec {
         project
       )
 
-    val result = server.executeQuerySimple(s"""query{lists {uList, listInts}}""", project)
+    val result = server.query(s"""query{lists {uList, listInts}}""", project)
 
     result.toString should equal("""{"data":{"lists":[{"uList":"A","listInts":[75,85]}]}}""")
 
@@ -178,10 +178,10 @@ class UpsertDesignSpec extends FlatSpec with Matchers with ApiBaseSpec {
 
     database.setup(project)
 
-    server.executeQuerySimple("""mutation {createList(data: {uList: "A" todoes: {create: {uTodo: "B", todoInts: {set: [3, 4]}}}}){id}}""", project)
+    server.query("""mutation {createList(data: {uList: "A" todoes: {create: {uTodo: "B", todoInts: {set: [3, 4]}}}}){id}}""", project)
 
     server
-      .executeQuerySimple(
+      .query(
         s"""mutation{updateList(where:{uList: "A"}
         |                       data:{todoes: { upsert:{
         |                               where:{uTodo: "B"}
@@ -192,7 +192,7 @@ class UpsertDesignSpec extends FlatSpec with Matchers with ApiBaseSpec {
         project
       )
 
-    val result = server.executeQuerySimple(s"""query{lists {uList, todoes {uTodo, todoInts}}}""", project)
+    val result = server.query(s"""query{lists {uList, todoes {uTodo, todoInts}}}""", project)
     result.toString should equal("""{"data":{"lists":[{"uList":"A","todoes":[{"uTodo":"C","todoInts":[700,800]}]}]}}""")
 
     countItems(project, "lists") should be(1)
@@ -209,10 +209,10 @@ class UpsertDesignSpec extends FlatSpec with Matchers with ApiBaseSpec {
 
     database.setup(project)
 
-    server.executeQuerySimple("""mutation {createList(data: {uList: "A" todoes: {create: {uTodo: "B", todoInts: {set: [3, 4]}}}}){id}}""", project)
+    server.query("""mutation {createList(data: {uList: "A" todoes: {create: {uTodo: "B", todoInts: {set: [3, 4]}}}}){id}}""", project)
 
     server
-      .executeQuerySimple(
+      .query(
         s"""mutation{updateList(where:{uList: "A"}
            |                    data:{todoes: { upsert:{
            |                               where:{uTodo: "Does not Matter"}
@@ -223,7 +223,7 @@ class UpsertDesignSpec extends FlatSpec with Matchers with ApiBaseSpec {
         project
       )
 
-    val result = server.executeQuerySimple(s"""query{lists {uList, todoes {uTodo, todoInts}}}""", project)
+    val result = server.query(s"""query{lists {uList, todoes {uTodo, todoInts}}}""", project)
     result.toString should equal("""{"data":{"lists":[{"uList":"A","todoes":[{"uTodo":"B","todoInts":[3,4]},{"uTodo":"C","todoInts":[100,200]}]}]}}""")
 
     countItems(project, "lists") should be(1)
@@ -240,10 +240,10 @@ class UpsertDesignSpec extends FlatSpec with Matchers with ApiBaseSpec {
 
     database.setup(project)
 
-    server.executeQuerySimple("""mutation {createList(data: {uList: "A" todoes: {create: {uTodo: "B", todoInts: {set: [3, 4]}}}}){id}}""", project)
+    server.query("""mutation {createList(data: {uList: "A" todoes: {create: {uTodo: "B", todoInts: {set: [3, 4]}}}}){id}}""", project)
 
     server
-      .executeQuerySimple(
+      .query(
         s"""mutation{updateList(where:{uList: "A"}
            |                    data:{todoes: { upsert:{
            |                               where:{uTodo: "Does not Matter"}
@@ -254,7 +254,7 @@ class UpsertDesignSpec extends FlatSpec with Matchers with ApiBaseSpec {
         project
       )
 
-    val result = server.executeQuerySimple(s"""query{lists {uList, todoes {uTodo, todoInts}}}""", project)
+    val result = server.query(s"""query{lists {uList, todoes {uTodo, todoInts}}}""", project)
     result.toString should equal("""{"data":{"lists":[{"uList":"A","todoes":[{"uTodo":"B","todoInts":[3,4]},{"uTodo":"C","todoInts":[100,200]}]}]}}""")
 
     countItems(project, "lists") should be(1)
@@ -271,10 +271,10 @@ class UpsertDesignSpec extends FlatSpec with Matchers with ApiBaseSpec {
 
     database.setup(project)
 
-    server.executeQuerySimple("""mutation {createList(data: {uList: "A" todoes: {create: {uTodo: "B", todoInts: {set: [3, 4]}}}}){id}}""", project)
+    server.query("""mutation {createList(data: {uList: "A" todoes: {create: {uTodo: "B", todoInts: {set: [3, 4]}}}}){id}}""", project)
 
     server
-      .executeQuerySimple(
+      .query(
         s"""mutation{updateList(where:{uList: "A"}
            |                    data:{todoes: { upsert:{
            |                               where:{uTodo: "B"}
@@ -285,7 +285,7 @@ class UpsertDesignSpec extends FlatSpec with Matchers with ApiBaseSpec {
         project
       )
 
-    val result = server.executeQuerySimple(s"""query{lists {uList, todoes {uTodo, todoInts}}}""", project)
+    val result = server.query(s"""query{lists {uList, todoes {uTodo, todoInts}}}""", project)
     result.toString should equal("""{"data":{"lists":[{"uList":"A","todoes":[{"uTodo":"B","todoInts":[]}]}]}}""")
 
     countItems(project, "lists") should be(1)
@@ -302,10 +302,10 @@ class UpsertDesignSpec extends FlatSpec with Matchers with ApiBaseSpec {
 
     database.setup(project)
 
-    server.executeQuerySimple("""mutation {createList(data: {uList: "A" todo: {create: {uTodo: "B"}}}){id}}""", project)
+    server.query("""mutation {createList(data: {uList: "A" todo: {create: {uTodo: "B"}}}){id}}""", project)
 
     server
-      .executeQuerySimple(
+      .query(
         s"""mutation{updateList(where:{uList: "A"}
            |                       data:{todo: { upsert:{
            |                               where:{uTodo: "B"}
@@ -316,7 +316,7 @@ class UpsertDesignSpec extends FlatSpec with Matchers with ApiBaseSpec {
         project
       )
 
-    val result = server.executeQuerySimple(s"""query{lists {uList, todo {uTodo, tag {uTag }}}}""", project)
+    val result = server.query(s"""query{lists {uList, todo {uTodo, tag {uTag }}}}""", project)
     result.toString should equal("""{"data":{"lists":[{"uList":"A","todo":{"uTodo":"C","tag":{"uTag":"E"}}}]}}""")
 
     countItems(project, "lists") should be(1)
@@ -335,10 +335,10 @@ class UpsertDesignSpec extends FlatSpec with Matchers with ApiBaseSpec {
 
     database.setup(project)
 
-    server.executeQuerySimple("""mutation {createList(data: {uList: "A"}){id}}""", project)
+    server.query("""mutation {createList(data: {uList: "A"}){id}}""", project)
 
     server
-      .executeQuerySimple(
+      .query(
         s"""mutation{updateList(where:{uList: "A"}
            |                       data:{todo: { upsert:{
            |                               where:{uTodo: "Does not exist"}
@@ -349,7 +349,7 @@ class UpsertDesignSpec extends FlatSpec with Matchers with ApiBaseSpec {
         project
       )
 
-    val result = server.executeQuerySimple(s"""query{lists {uList, todo {uTodo, tag {uTag }}}}""", project)
+    val result = server.query(s"""query{lists {uList, todo {uTodo, tag {uTag }}}}""", project)
     result.toString should equal("""{"data":{"lists":[{"uList":"A","todo":{"uTodo":"D","tag":{"uTag":"D"}}}]}}""")
 
     countItems(project, "lists") should be(1)
@@ -359,7 +359,7 @@ class UpsertDesignSpec extends FlatSpec with Matchers with ApiBaseSpec {
   }
 
   def countItems(project: Project, name: String): Int = {
-    server.executeQuerySimple(s"""query{$name{id}}""", project).pathAsSeq(s"data.$name").length
+    server.query(s"""query{$name{id}}""", project).pathAsSeq(s"data.$name").length
   }
 
 }

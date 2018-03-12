@@ -28,7 +28,7 @@ class UpdateMutationSpec extends FlatSpec with Matchers with ApiBaseSpec {
     }
     database.setup(project)
 
-    val createResult = server.executeQuerySimple(
+    val createResult = server.query(
       """mutation {
         |  createScalarModel(data: {
         |  })
@@ -38,7 +38,7 @@ class UpdateMutationSpec extends FlatSpec with Matchers with ApiBaseSpec {
     )
     val id = createResult.pathAsString("data.createScalarModel.id")
 
-    val updateResult = server.executeQuerySimple(
+    val updateResult = server.query(
       s"""
         |mutation {
         |  updateScalarModel(
@@ -59,7 +59,7 @@ class UpdateMutationSpec extends FlatSpec with Matchers with ApiBaseSpec {
     updateResult.pathAsJsValue("data.updateScalarModel").toString should be(
       s"""{"optJson":[1,2,3],"optInt":1337,"optBoolean":true,"optDateTime":"2016-07-31T23:59:01.000Z","optString":"lala${TroubleCharacters.value}","optEnum":"A","optFloat":1.234}""")
 
-    val query = server.executeQuerySimple(
+    val query = server.query(
       s"""
          |{
          |  scalarModels {
@@ -79,7 +79,7 @@ class UpdateMutationSpec extends FlatSpec with Matchers with ApiBaseSpec {
     database.setup(project)
 
     val alias = "the-alias"
-    server.executeQuerySimple(
+    server.query(
       s"""
         |mutation {
         |  createTodo(
@@ -94,7 +94,7 @@ class UpdateMutationSpec extends FlatSpec with Matchers with ApiBaseSpec {
       project
     )
 
-    val updateResult = server.executeQuerySimple(
+    val updateResult = server.query(
       s"""
         |mutation {
         |  updateTodo(
@@ -120,7 +120,7 @@ class UpdateMutationSpec extends FlatSpec with Matchers with ApiBaseSpec {
     database.setup(project)
 
     val alias = "the-alias"
-    server.executeQuerySimple(
+    server.query(
       s"""
          |mutation {
          |  createTodo(
@@ -135,7 +135,7 @@ class UpdateMutationSpec extends FlatSpec with Matchers with ApiBaseSpec {
       project
     )
 
-    server.executeQuerySimpleThatMustFail(
+    server.queryThatMustFail(
       s"""
          |mutation {
          |  updateTodo(
@@ -162,7 +162,7 @@ class UpdateMutationSpec extends FlatSpec with Matchers with ApiBaseSpec {
     database.setup(project)
 
     val alias = "the-alias"
-    server.executeQuerySimple(
+    server.query(
       s"""
          |mutation {
          |  createTodo(
@@ -179,7 +179,7 @@ class UpdateMutationSpec extends FlatSpec with Matchers with ApiBaseSpec {
       project
     )
 
-    val res = server.executeQuerySimple(
+    val res = server.query(
       s"""
          |mutation {
          |  updateTodo(
@@ -199,7 +199,7 @@ class UpdateMutationSpec extends FlatSpec with Matchers with ApiBaseSpec {
 
     res.toString should be("""{"data":{"updateTodo":{"title":null,"text":"some text"}}}""")
 
-    server.executeQuerySimple("""query{todoes{title, text}}""", project).toString should be("""{"data":{"todoes":[{"title":null,"text":"some text"}]}}""")
+    server.query("""query{todoes{title, text}}""", project).toString should be("""{"data":{"todoes":[{"title":null,"text":"some text"}]}}""")
   }
 
 }
