@@ -47,31 +47,30 @@ else
     fi
 fi
 
-#docker run -e "BRANCH=$BUILDKITE_BRANCH" -e "COMMIT_SHA=$BUILDKITE_COMMIT" -e "CLUSTER_VERSION=$NEXT_DOCKER_TAG" -v $(pwd):/root/build -w /root/build/server -v ~/.ivy2:/root/.ivy2 -v ~/.coursier:/root/.coursier  -v /var/run/docker.sock:/var/run/docker.sock graphcool/scala-sbt-docker sbt docker
-#docker images
+docker run -e "BRANCH=$BUILDKITE_BRANCH" -e "COMMIT_SHA=$BUILDKITE_COMMIT" -e "CLUSTER_VERSION=$NEXT_DOCKER_TAG" -v $(pwd):/root/build -w /root/build/server -v ~/.ivy2:/root/.ivy2 -v ~/.coursier:/root/.coursier  -v /var/run/docker.sock:/var/run/docker.sock graphcool/scala-sbt-docker sbt docker
+docker images
 
-#for service in prisma prisma-prod;
-#do
-#  echo "Tagging prismagraphql/$service:latest image with $NEXT_DOCKER_TAG..."
-#  docker tag prismagraphql/${service}:latest prismagraphql/${service}:${NEXT_DOCKER_TAG}
-#
-#  echo "Pushing prismagraphql/$service:$NEXT_DOCKER_TAG..."
-#  docker push prismagraphql/${service}:${NEXT_DOCKER_TAG}
-#
-#  if [ ! -z "$ADDITIONALLY_RELEASE" ]; then
-#    echo "Additionally tagging and pushing prismagraphql/$service:latest image with $ADDITIONALLY_RELEASE..."
-#    docker tag prismagraphql/${service}:latest prismagraphql/${service}:${ADDITIONALLY_RELEASE}
-#    docker push prismagraphql/${service}:${ADDITIONALLY_RELEASE}
-#  fi
-#done
-# BUILD_TAG: \"${NEXT_DOCKER_TAG}\"
+for service in prisma prisma-prod;
+do
+  echo "Tagging prismagraphql/$service:latest image with $NEXT_DOCKER_TAG..."
+  docker tag prismagraphql/${service}:latest prismagraphql/${service}:${NEXT_DOCKER_TAG}
+
+  echo "Pushing prismagraphql/$service:$NEXT_DOCKER_TAG..."
+  docker push prismagraphql/${service}:${NEXT_DOCKER_TAG}
+
+  if [ ! -z "$ADDITIONALLY_RELEASE" ]; then
+    echo "Additionally tagging and pushing prismagraphql/$service:latest image with $ADDITIONALLY_RELEASE..."
+    docker tag prismagraphql/${service}:latest prismagraphql/${service}:${ADDITIONALLY_RELEASE}
+    docker push prismagraphql/${service}:${ADDITIONALLY_RELEASE}
+  fi
+done
+
 printf "
 - trigger: \"prisma-cloud\"
   label: \":cloud: Trigger Prisma Cloud Tasks :cloud:\"
   async: true
   build:
     env:
-        BUILD_TAG: \"1.3.5\"
+        BUILD_TAG: \"BUILD_TAG: \"${NEXT_DOCKER_TAG}\"\"
         CHANNEL: \"${CHANNEL}\"
 " | buildkite-agent pipeline upload
-
