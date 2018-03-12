@@ -1,7 +1,7 @@
 package com.prisma.api.resolver
 
 import com.prisma.api.database.DataResolver
-import com.prisma.api.database.DeferredTypes.{ManyModelExistsDeferred, OrderedDeferred, OrderedDeferredFutureResult}
+import DeferredTypes.{ManyModelExistsDeferred, OrderedDeferred, OrderedDeferredFutureResult}
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future

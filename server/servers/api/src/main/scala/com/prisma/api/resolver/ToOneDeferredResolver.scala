@@ -1,6 +1,6 @@
 package com.prisma.api.resolver
 
-import com.prisma.api.database.DeferredTypes.{OneDeferredResultType, OrderedDeferred, OrderedDeferredFutureResult, ToOneDeferred}
+import DeferredTypes.{OneDeferredResultType, OrderedDeferred, OrderedDeferredFutureResult, ToOneDeferred}
 import com.prisma.api.database.{DataItem, DataResolver}
 import com.prisma.shared.models.Project
 

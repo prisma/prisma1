@@ -1,6 +1,6 @@
 package com.prisma.api.resolver
 
-import com.prisma.api.database.DeferredTypes.{OneDeferred, OneDeferredResultType, OrderedDeferred, OrderedDeferredFutureResult}
+import DeferredTypes.{OneDeferred, OneDeferredResultType, OrderedDeferred, OrderedDeferredFutureResult}
 import com.prisma.api.database.{DataItem, DataResolver}
 import com.prisma.shared.models.Project
 import com.prisma.util.gc_value.{GCAnyConverter, GCDBValueConverter}

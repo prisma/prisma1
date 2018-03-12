@@ -1,5 +1,6 @@
-package com.prisma.api.database
+package com.prisma.api.resolver
 
+import com.prisma.api.database.{DataItem, IdBasedConnection, QueryArguments}
 import com.prisma.shared.models.{Field, Model}
 import sangria.execution.deferred.Deferred
 

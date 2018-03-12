@@ -1,7 +1,7 @@
 package com.prisma.api.resolver
 
 import com.prisma.api.database.DataResolver
-import com.prisma.api.database.DeferredTypes.{CountManyModelDeferred, OrderedDeferred, OrderedDeferredFutureResult}
+import DeferredTypes.{CountManyModelDeferred, OrderedDeferred, OrderedDeferredFutureResult}
 
 class CountManyModelDeferredResolver(dataResolver: DataResolver) {
   def resolve(orderedDeferreds: Vector[OrderedDeferred[CountManyModelDeferred]]): Vector[OrderedDeferredFutureResult[Int]] = {

@@ -1,6 +1,6 @@
 package com.prisma.api.resolver
 
-import com.prisma.api.database.DeferredTypes._
+import DeferredTypes._
 import com.prisma.api.database.QueryArguments
 import com.prisma.shared.models.IdType.Id
 import com.prisma.shared.models.{Field, Model}

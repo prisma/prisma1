@@ -2,7 +2,7 @@ package com.prisma.api.schema
 
 import com.prisma.api.schema.CustomScalarTypes.{DateTimeType, JsonType}
 import com.prisma.api.database._
-import com.prisma.api.database.DeferredTypes._
+import com.prisma.api.resolver.DeferredTypes._
 import com.prisma.api.database.Types.DataItemFilterCollection
 import com.prisma.api.mutations.BatchPayload
 import com.prisma.shared.models

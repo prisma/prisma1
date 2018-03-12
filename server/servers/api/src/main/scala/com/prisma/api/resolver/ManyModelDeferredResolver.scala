@@ -1,6 +1,6 @@
 package com.prisma.api.resolver
 
-import com.prisma.api.database.DeferredTypes._
+import DeferredTypes._
 import com.prisma.api.database._
 
 import scala.concurrent.ExecutionContext.Implicits.global
