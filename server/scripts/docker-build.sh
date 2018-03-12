@@ -64,13 +64,14 @@ fi
 #    docker push prismagraphql/${service}:${ADDITIONALLY_RELEASE}
 #  fi
 #done
-
+# BUILD_TAG: \"${NEXT_DOCKER_TAG}\"
 printf "
 - trigger: \"prisma-cloud\"
   label: \":cloud: Trigger Prisma Cloud Tasks :cloud:\"
   async: true
   build:
     env:
-        BUILD_TAG: \"${NEXT_DOCKER_TAG}\"
+        BUILD_TAG: \"1.3.5\"
         CHANNEL: \"${CHANNEL}\"
 " | buildkite-agent pipeline upload
+
