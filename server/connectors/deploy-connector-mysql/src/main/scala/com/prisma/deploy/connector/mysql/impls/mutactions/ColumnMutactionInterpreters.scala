@@ -91,7 +91,6 @@ object UpdateColumnInterpreter extends SqlMutactionInterpreter[UpdateColumn] {
       oldColumnName = before.name,
       newColumnName = after.name,
       newIsRequired = after.isRequired,
-      newIsUnique = after.isUnique,
       newIsList = after.isList,
       newTypeIdentifier = after.typeIdentifier
     )
