@@ -24,9 +24,6 @@ case class ApiTestServer()(implicit dependencies: ApiDependencies) extends Spray
   /**
     * Execute a Query that must succeed.
     */
-  def querySimple(query: String)(implicit project: Project): JsValue                       = executeQuerySimple(query, project)
-  def querySimple(query: String, dataContains: String)(implicit project: Project): JsValue = executeQuerySimple(query, project, dataContains)
-
   def executeQuerySimple(
       query: String,
       project: Project,
@@ -48,28 +45,6 @@ case class ApiTestServer()(implicit dependencies: ApiDependencies) extends Spray
   /**
     * Execute a Query that must fail.
     */
-  def querySimpleThatMustFail(query: String, errorCode: Int)(implicit project: Project): JsValue = executeQuerySimpleThatMustFail(query, project, errorCode)
-  def querySimpleThatMustFail(query: String, errorCode: Int, errorCount: Int)(implicit project: Project): JsValue =
-    executeQuerySimpleThatMustFail(query = query, project = project, errorCode = errorCode, errorCount = errorCount)
-  def querySimpleThatMustFail(query: String, errorCode: Int, errorContains: String)(implicit project: Project): JsValue =
-    executeQuerySimpleThatMustFail(query = query, project = project, errorCode = errorCode, errorContains = errorContains)
-  def querySimpleThatMustFail(query: String, errorCode: Int, errorContains: String, errorCount: Int)(implicit project: Project): JsValue =
-    executeQuerySimpleThatMustFail(query = query, project = project, errorCode = errorCode, errorCount = errorCount, errorContains = errorContains)
-
-  def executeQuerySimpleThatMustFail(query: String, project: Project, userId: String, errorCode: Int): JsValue =
-    executeQuerySimpleThatMustFail(query = query, project = project, userId = Some(userId), errorCode = errorCode)
-  def executeQuerySimpleThatMustFail(query: String, project: Project, userId: String, errorCode: Int, errorCount: Int): JsValue =
-    executeQuerySimpleThatMustFail(query = query, project = project, userId = Some(userId), errorCode = errorCode, errorCount = errorCount)
-  def executeQuerySimpleThatMustFail(query: String, project: Project, errorCode: Int, errorContains: String, userId: String): JsValue =
-    executeQuerySimpleThatMustFail(query = query, project = project, userId = Some(userId), errorCode = errorCode, errorContains = errorContains)
-  def executeQuerySimpleThatMustFail(query: String, project: Project, userId: String, errorCode: Int, errorCount: Int, errorContains: String): JsValue =
-    executeQuerySimpleThatMustFail(query = query,
-                                   project = project,
-                                   userId = Some(userId),
-                                   errorCode = errorCode,
-                                   errorCount = errorCount,
-                                   errorContains = errorContains)
-
   def executeQuerySimpleThatMustFail(query: String,
                                      project: Project,
                                      errorCode: Int,

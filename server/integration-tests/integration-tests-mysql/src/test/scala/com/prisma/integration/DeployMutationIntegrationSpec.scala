@@ -22,7 +22,7 @@ class DeployMutationIntegrationSpec extends FlatSpec with Matchers with Integrat
         | value: [Int!]!
         |}""".stripMargin
 
-    val updatedProject = deployServer.deploySchema(project, schema2).await.get
+    val updatedProject = deployServer.deploySchema(project, schema2)
 
     apiServer.executeQuerySimple("""query{as{name, value}}""", updatedProject).toString should be("""{"data":{"as":[{"name":"A","value":[]}]}}""")
 
@@ -49,7 +49,7 @@ class DeployMutationIntegrationSpec extends FlatSpec with Matchers with Integrat
         | value: Int
         |}""".stripMargin
 
-    val updatedProject = deployServer.deploySchema(project, schema2).await.get
+    val updatedProject = deployServer.deploySchema(project, schema2)
 
     apiServer.executeQuerySimple("""query{as{name, value}}""", updatedProject).toString should be("""{"data":{"as":[{"name":"A","value":null}]}}""")
 
