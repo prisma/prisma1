@@ -133,31 +133,41 @@ case class DeployTestServer()(implicit dependencies: DeployDependencies) extends
     dependencies.projectPersistence.load(project.id).await.get
   }
 
+  def deploySchemaThatMustFail(project: Project, schema: String): Project = {
+    val nameAndStage = ProjectId.fromEncodedString(project.id)
+    deployHelper(nameAndStage.name, nameAndStage.stage, schema, Vector.empty, true)
+    dependencies.projectPersistence.load(project.id).await.get
+  }
+
   def deploySchema(name: String, stage: String, schema: String, secrets: Vector[String] = Vector.empty): (Project, Migration) = {
     val projectId = name + "@" + stage
     val revision  = deployHelper(name, stage, schema, secrets)
     (dependencies.projectPersistence.load(projectId).await.get, dependencies.migrationPersistence.byId(MigrationId(projectId, revision.toInt)).await.get)
   }
 
-  private def deployHelper(name: String, stage: String, schema: String, secrets: Vector[String]) = {
+  private def deployHelper(name: String, stage: String, schema: String, secrets: Vector[String], shouldFail: Boolean = false) = {
     val formattedSchema  = JsString(schema).toString
     val secretsFormatted = JsArray(secrets.map(JsString)).toString()
 
-    val deployResult = query(
-      s"""
-         |mutation {
-         |  deploy(input:{name: "$name", stage: "$stage", types: $formattedSchema, secrets: $secretsFormatted}){
-         |    migration {
-         |      applied
-         |      revision
-         |    }
-         |    errors {
-         |      description
-         |    }
-         |  }
-         |}
+    val queryString = s"""
+                         |mutation {
+                         |  deploy(input:{name: "$name", stage: "$stage", types: $formattedSchema, secrets: $secretsFormatted}){
+                         |    migration {
+                         |      applied
+                         |      revision
+                         |    }
+                         |    errors {
+                         |      description
+                         |    }
+                         |  }
+                         |}
       """.stripMargin
-    )
+
+    val deployResult = query(queryString)
+    val errors       = deployResult.pathAsSeq("data.deploy.errors")
+
+    if (shouldFail) require(requirement = errors.nonEmpty, message = s"The query had to result in a failure but it returned no errors.")
+    else require(requirement = errors.isEmpty, message = s"The query had to result in a success but it returned errors.")
 
     deployResult.pathAsLong("data.deploy.migration.revision")
   }

@@ -12,7 +12,6 @@ class DeployMutationSpec extends FlatSpec with Matchers with DeploySpecBase {
 
   "DeployMutation" should "succeed for valid input" in {
     val (project, _) = setupProject(basicTypesGql)
-    val nameAndStage = ProjectId.fromEncodedString(project.id)
 
     // Full feature set deploy
     val schema = basicTypesGql +
@@ -75,18 +74,7 @@ class DeployMutationSpec extends FlatSpec with Matchers with DeploySpecBase {
         |}
       """.stripMargin
 
-    val result = server.query(s"""
-       |mutation {
-       |  deploy(input:{name: "${nameAndStage.name}", stage: "${nameAndStage.stage}", types: ${formatSchema(schema)}}){
-       |    migration {
-       |      applied
-       |    }
-       |    errors {
-       |      description
-       |    }
-       |  }
-       |}
-      """.stripMargin)
+    server.deploySchema(project, schema)
 
     val migrations = migrationPersistence.loadAll(project.id).await
     migrations should have(size(3))
@@ -96,7 +84,6 @@ class DeployMutationSpec extends FlatSpec with Matchers with DeploySpecBase {
 
   "DeployMutation" should "create, update and delete scalar list" in {
     val (project, _) = setupProject(basicTypesGql)
-    val nameAndStage = ProjectId.fromEncodedString(project.id)
 
     val schema1 =
       """
@@ -122,44 +109,9 @@ class DeployMutationSpec extends FlatSpec with Matchers with DeploySpecBase {
         |}
       """.stripMargin
 
-    val result1 = server.query(s"""
-                                 |mutation {
-                                 |  deploy(input:{name: "${nameAndStage.name}", stage: "${nameAndStage.stage}", types: ${formatSchema(schema1)}}){
-                                 |    migration {
-                                 |      applied
-                                 |    }
-                                 |    errors {
-                                 |      description
-                                 |    }
-                                 |  }
-                                 |}
-      """.stripMargin)
-
-    server.query(s"""
-                                  |mutation {
-                                  |  deploy(input:{name: "${nameAndStage.name}", stage: "${nameAndStage.stage}", types: ${formatSchema(schema2)}}){
-                                  |    migration {
-                                  |      applied
-                                  |    }
-                                  |    errors {
-                                  |      description
-                                  |    }
-                                  |  }
-                                  |}
-      """.stripMargin)
-
-    server.query(s"""
-                                  |mutation {
-                                  |  deploy(input:{name: "${nameAndStage.name}", stage: "${nameAndStage.stage}", types: ${formatSchema(schema3)}}){
-                                  |    migration {
-                                  |      applied
-                                  |    }
-                                  |    errors {
-                                  |      description
-                                  |    }
-                                  |  }
-                                  |}
-      """.stripMargin)
+    server.deploySchema(project, schema1)
+    server.deploySchema(project, schema2)
+    server.deploySchema(project, schema3)
 
     val migrations = migrationPersistence.loadAll(project.id).await
     migrations should have(size(5))
@@ -234,7 +186,6 @@ class DeployMutationSpec extends FlatSpec with Matchers with DeploySpecBase {
                  """.stripMargin
 
     val (project, _)  = setupProject(schema)
-    val nameAndStage  = ProjectId.fromEncodedString(project.id)
     val loadedProject = projectPersistence.load(project.id).await.get
 
     loadedProject.schema.getModelByName("TestModel").get.getFieldByName("id").get.isVisible shouldEqual true
@@ -249,19 +200,7 @@ class DeployMutationSpec extends FlatSpec with Matchers with DeploySpecBase {
                           |}
                         """.stripMargin
 
-    val updateResult = server.query(s"""
-         |mutation {
-         |  deploy(input:{name: "${nameAndStage.name}", stage: "${nameAndStage.stage}", types: ${formatSchema(updatedSchema)}}){
-         |    migration {
-         |      applied
-         |    }
-         |    errors {
-         |      description
-         |    }
-         |  }
-         |}""".stripMargin)
-
-    updateResult.pathAsSeq("data.deploy.errors") should be(empty)
+    server.deploySchema(project, updatedSchema)
 
     val reloadedProject = projectPersistence.load(project.id).await.get
 
@@ -272,7 +211,7 @@ class DeployMutationSpec extends FlatSpec with Matchers with DeploySpecBase {
     // todo assert client db cols?
   }
 
-  "DeployMutation" should "should not blow up on consecutive deploys" in {
+  "DeployMutation" should "should not blow up on consecutive deploys" ignore {
     val (project, _) = setupProject(basicTypesGql)
 
     val schema =
@@ -287,11 +226,11 @@ class DeployMutationSpec extends FlatSpec with Matchers with DeploySpecBase {
         |  a: A
         |}""".stripMargin
 
-    deploySchema(project, schema)
+    server.deploySchema(project, schema)
     Thread.sleep(10000)
-    deploySchema(project, schema)
+    server.deploySchema(project, schema)
     Thread.sleep(10000)
-    deploySchema(project, schema)
+    server.deploySchema(project, schema)
 
     Thread.sleep(30000)
   }
@@ -307,11 +246,8 @@ class DeployMutationSpec extends FlatSpec with Matchers with DeploySpecBase {
     val (project, _) = setupProject(schema)
 
     val fnInput = FunctionInput(name = "failing", query = "invalid query", url = "http://whatever.com", headers = Vector(HeaderInput("header1", "value1")))
-
-    val result = deploySchema(project, schema, Vector(fnInput))
-
+    val result  = deploySchema(project, schema, Vector(fnInput))
     result.pathAsSeq("data.deploy.errors") should not(be(empty))
-
     val reloadedProject = projectPersistence.load(project.id).await.get
     reloadedProject.functions should have(size(0))
   }
@@ -419,7 +355,6 @@ class DeployMutationSpec extends FlatSpec with Matchers with DeploySpecBase {
                  """.stripMargin
 
     val (project, _)  = setupProject(schema)
-    val nameAndStage  = ProjectId.fromEncodedString(project.id)
     val loadedProject = projectPersistence.load(project.id).await.get
 
     loadedProject.schema.getModelByName("TestModel").get.getFieldByName("id").get.isVisible shouldEqual true
@@ -440,19 +375,7 @@ class DeployMutationSpec extends FlatSpec with Matchers with DeploySpecBase {
                           |}
                         """.stripMargin
 
-    val updateResult = server.query(s"""
-                                       |mutation {
-                                       |  deploy(input:{name: "${nameAndStage.name}", stage: "${nameAndStage.stage}", types: ${formatSchema(updatedSchema)}}){
-                                       |    migration {
-                                       |      applied
-                                       |    }
-                                       |    errors {
-                                       |      description
-                                       |    }
-                                       |  }
-                                       |}""".stripMargin)
-
-    updateResult.pathAsSeq("data.deploy.errors") should be(empty)
+    server.deploySchema(project, updatedSchema)
 
     val reloadedProject = projectPersistence.load(project.id).await.get
 
@@ -515,7 +438,6 @@ class DeployMutationSpec extends FlatSpec with Matchers with DeploySpecBase {
 
   "DeployMutation" should "work with self relations" in {
     val (project, _) = setupProject(basicTypesGql)
-    val nameAndStage = ProjectId.fromEncodedString(project.id)
     val schema =
       """
         |type Comment{
@@ -526,20 +448,7 @@ class DeployMutationSpec extends FlatSpec with Matchers with DeploySpecBase {
         |}
       """.stripMargin
 
-    server.query(
-      s"""
-         |mutation {
-         |  deploy(input:{name: "${nameAndStage.name}", stage: "${nameAndStage.stage}", types: ${formatSchema(schema)}}){
-         |    migration {
-         |      applied
-         |    }
-         |    errors {
-         |      description
-         |    }
-         |  }
-         |}
-      """.stripMargin
-    )
+    server.deploySchema(project, schema)
 
     val migrations = migrationPersistence.loadAll(project.id).await
     migrations should have(size(3))
@@ -549,7 +458,6 @@ class DeployMutationSpec extends FlatSpec with Matchers with DeploySpecBase {
 
   "DeployMutation" should "work with cascading delete directives" in {
     val (project, _) = setupProject(basicTypesGql)
-    val nameAndStage = ProjectId.fromEncodedString(project.id)
     val schema =
       """
         |type Author{
@@ -565,20 +473,7 @@ class DeployMutationSpec extends FlatSpec with Matchers with DeploySpecBase {
         |}
       """.stripMargin
 
-    server.query(
-      s"""
-         |mutation {
-         |  deploy(input:{name: "${nameAndStage.name}", stage: "${nameAndStage.stage}", types: ${formatSchema(schema)}}){
-         |    migration {
-         |      applied
-         |    }
-         |    errors {
-         |      description
-         |    }
-         |  }
-         |}
-      """.stripMargin
-    )
+    server.deploySchema(project, schema)
 
     val migrations = migrationPersistence.loadAll(project.id).await
     migrations should have(size(3))
@@ -602,20 +497,7 @@ class DeployMutationSpec extends FlatSpec with Matchers with DeploySpecBase {
         |}
       """.stripMargin
 
-    server.query(
-      s"""
-         |mutation {
-         |  deploy(input:{name: "${nameAndStage.name}", stage: "${nameAndStage.stage}", types: ${formatSchema(schema)}}){
-         |    migration {
-         |      applied
-         |    }
-         |    errors {
-         |      description
-         |    }
-         |  }
-         |}
-      """.stripMargin
-    )
+    server.deploySchema(project, schema)
 
     val migrations = migrationPersistence.loadAll(project.id).await
     migrations should have(size(3))
@@ -658,7 +540,6 @@ class DeployMutationSpec extends FlatSpec with Matchers with DeploySpecBase {
 
   "DeployMutation" should "be able to change a field from scalar non-list to scalar list" in {
     val (project, _) = setupProject(basicTypesGql)
-    val nameAndStage = ProjectId.fromEncodedString(project.id)
     val schema =
       """
         |type A {
@@ -667,20 +548,7 @@ class DeployMutationSpec extends FlatSpec with Matchers with DeploySpecBase {
         |}
       """.stripMargin
 
-    server.query(
-      s"""
-         |mutation {
-         |  deploy(input:{name: "${nameAndStage.name}", stage: "${nameAndStage.stage}", types: ${formatSchema(schema)}}){
-         |    migration {
-         |      applied
-         |    }
-         |    errors {
-         |      description
-         |    }
-         |  }
-         |}
-      """.stripMargin
-    )
+    server.deploySchema(project, schema)
 
     val migrations = migrationPersistence.loadAll(project.id).await
     migrations should have(size(3))
@@ -695,20 +563,7 @@ class DeployMutationSpec extends FlatSpec with Matchers with DeploySpecBase {
         |}
       """.stripMargin
 
-    server.query(
-      s"""
-         |mutation {
-         |  deploy(input:{name: "${nameAndStage.name}", stage: "${nameAndStage.stage}", types: ${formatSchema(schema2)}}){
-         |    migration {
-         |      applied
-         |    }
-         |    errors {
-         |      description
-         |    }
-         |  }
-         |}
-      """.stripMargin
-    )
+    server.deploySchema(project, schema2)
 
     val migrations2 = migrationPersistence.loadAll(project.id).await
     migrations2 should have(size(4))
