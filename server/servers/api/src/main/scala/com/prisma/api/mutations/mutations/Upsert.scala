@@ -34,20 +34,17 @@ case class Upsert(
 
   val path = Path.empty(outerWhere)
 
-  override def prepareMutactions(): Future[List[MutactionGroup]] = {
-
-    val sqlMutactions        = SqlMutactions(dataResolver).getMutactionsForUpsert(path, createWhere, updatedWhere, CoolArgs(args.raw)).toList
-    val transactionMutaction = TransactionMutaction(sqlMutactions, dataResolver)
+  override def prepareMutactions(): Future[PreparedMutactions] = {
+    val sqlMutactions = SqlMutactions(dataResolver).getMutactionsForUpsert(path, createWhere, updatedWhere, CoolArgs(args.raw))
 //    val subscriptionMutactions = SubscriptionEvents.extractFromSqlMutactions(project, mutationId, sqlMutactions).toList
 //    val sssActions             = ServerSideSubscription.extractFromMutactions(project, sqlMutactions, requestId = "").toList
 
-    Future(
-      List(
-        MutactionGroup(mutactions = List(transactionMutaction), async = false)
-//    ,  MutactionGroup(mutactions = sssActions ++ subscriptionMutactions, async = true)
-      ))
-//    val transaction = TransactionMutaction(List(upsert), dataResolver)
-//    Future.successful(List(MutactionGroup(List(transaction), async = false)))
+    Future.successful {
+      PreparedMutactions(
+        databaseMutactions = sqlMutactions.toVector,
+        sideEffectMutactions = Vector.empty
+      )
+    }
   }
 
   override def getReturnValue: Future[ReturnValueResult] = {

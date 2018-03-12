@@ -11,17 +11,15 @@ import scala.util.Failure
 
 object ClientMutationRunner {
 
-  import com.prisma.utils.future.FutureUtils._
-
   def run[T](
       clientMutation: ClientMutation[T],
       dataResolver: DataResolver
   ): Future[T] = {
     for {
-      mutactionGroups  <- clientMutation.prepareMutactions()
-      errors           = verifyMutactions(mutactionGroups, dataResolver)
-      _                = if (errors.nonEmpty) throw errors.head
-      executionResults <- performMutactions(mutactionGroups, dataResolver.project.id)
+      preparedMutactions <- clientMutation.prepareMutactions()
+      errors             = verifyMutactions(preparedMutactions)
+      _                  = if (errors.nonEmpty) throw errors.head
+      executionResults   <- performMutactions(preparedMutactions, dataResolver)
       dataItem <- {
         executionResults
           .filter(_.isInstanceOf[GeneralError])
@@ -33,26 +31,23 @@ object ClientMutationRunner {
     } yield dataItem
   }
 
-  private def verifyMutactions(mutactionGroups: List[MutactionGroup], dataResolver: DataResolver): List[GeneralError] = {
-    val verifications = mutactionGroups.flatMap(_.mutactions).map(_.verify())
-    val errors = verifications.collect { case Failure(x: GeneralError) => x }
+  private def verifyMutactions(preparedMutactions: PreparedMutactions): Vector[GeneralError] = {
+    val verifications = preparedMutactions.allMutactions.map(_.verify())
+    val errors        = verifications.collect { case Failure(x: GeneralError) => x }
     errors
   }
 
-  private def performMutactions(mutactionGroups: List[MutactionGroup], projectId: String): Future[List[MutactionExecutionResult]] = {
-    // Cancel further Mutactions and MutactionGroups when a Mutaction fails
-    // Failures in async MutactionGroups don't stop other Mutactions in same group
-    mutactionGroups.map(group => () => performGroup(group, projectId)).runSequentially.map(_.flatten)
+  private def performMutactions(preparedMutactions: PreparedMutactions, dataResolver: DataResolver): Future[Vector[MutactionExecutionResult]] = {
+    val projectId   = dataResolver.project.id
+    val transaction = TransactionMutaction(preparedMutactions.databaseMutactions.toList, dataResolver)
+    for {
+      dbResults         <- runWithTiming(transaction, projectId)
+      sideEffectResults <- performInParallel(preparedMutactions.sideEffectMutactions, projectId)
+    } yield Vector(dbResults) ++ sideEffectResults
   }
 
-  private def performGroup(group: MutactionGroup, projectId: String): Future[List[MutactionExecutionResult]] = {
-    group match {
-      case MutactionGroup(mutactions, true) =>
-        Future.sequence(mutactions.map(m => runWithTiming(m, projectId)))
-
-      case MutactionGroup(mutactions: List[Mutaction], false) =>
-        mutactions.map(m => () => runWithTiming(m, projectId)).runSequentially
-    }
+  private def performInParallel(mutactions: Vector[Mutaction], projectId: String): Future[Vector[MutactionExecutionResult]] = {
+    Future.sequence(mutactions.map(m => runWithTiming(m, projectId)))
   }
 
   private def runWithTiming(mutaction: Mutaction, projectId: String): Future[MutactionExecutionResult] = {

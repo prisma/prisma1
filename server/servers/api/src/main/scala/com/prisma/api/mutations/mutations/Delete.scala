@@ -35,7 +35,7 @@ case class Delete(
   val coolArgs            = CoolArgs(args.raw)
   val where: NodeSelector = coolArgs.extractNodeSelectorFromWhereField(model)
 
-  override def prepareMutactions(): Future[List[MutactionGroup]] = {
+  override def prepareMutactions(): Future[PreparedMutactions] = {
     dataResolver
       .resolveByUnique(where)
       .andThen {
@@ -43,20 +43,17 @@ case class Delete(
         // todo: do we need the fromSql stuff?
         //GraphcoolDataTypes.fromSql(dataItem.userData, model.fields)
       }
-      .map(_ => {
-        val itemToDelete = deletedItemOpt.getOrElse(throw APIErrors.NodeNotFoundForWhereError(where))
-
+      .map { _ =>
+        val itemToDelete           = deletedItemOpt.getOrElse(throw APIErrors.NodeNotFoundForWhereError(where))
         val sqlMutactions          = SqlMutactions(dataResolver).getMutactionsForDelete(Path.empty(where), itemToDelete, itemToDelete.id).toList
-        val transactionMutaction   = TransactionMutaction(sqlMutactions, dataResolver)
         val subscriptionMutactions = SubscriptionEvents.extractFromSqlMutactions(project, mutationId, sqlMutactions).toList
         val sssActions             = ServerSideSubscription.extractFromMutactions(project, sqlMutactions, requestId).toList
-        val asyncMutactions        = sssActions ++ subscriptionMutactions
 
-        List(
-          MutactionGroup(mutactions = List(transactionMutaction), async = false),
-          MutactionGroup(mutactions = asyncMutactions, async = true)
+        PreparedMutactions(
+          databaseMutactions = sqlMutactions.toVector,
+          sideEffectMutactions = (subscriptionMutactions ++ sssActions).toVector
         )
-      })
+      }
   }
 
   override def getReturnValue: Future[ReturnValueResult] = {

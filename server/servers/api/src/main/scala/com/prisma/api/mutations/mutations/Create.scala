@@ -2,14 +2,13 @@ package com.prisma.api.mutations.mutations
 
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
-import com.prisma.api.{ApiDependencies, ApiMetrics}
+import com.prisma.api.ApiDependencies
 import com.prisma.api.database.DataResolver
-import com.prisma.api.database.mutactions.mutactions.{CreateDataItem, ServerSideSubscription}
-import com.prisma.api.database.mutactions.{MutactionGroup, TransactionMutaction}
+import com.prisma.api.database.mutactions.mutactions.ServerSideSubscription
 import com.prisma.api.mutations._
-import cool.graph.cuid.Cuid
 import com.prisma.shared.models.IdType.Id
 import com.prisma.shared.models._
+import cool.graph.cuid.Cuid
 import sangria.schema
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -38,20 +37,17 @@ case class Create(
     CoolArgs(argsPointer)
   }
 
-  def prepareMutactions(): Future[List[MutactionGroup]] = {
+  def prepareMutactions(): Future[PreparedMutactions] = {
     val createMutactionsResult = SqlMutactions(dataResolver).getMutactionsForCreate(model, coolArgs, id)
-    val transactionMutaction   = TransactionMutaction(createMutactionsResult.toList, dataResolver)
     val subscriptionMutactions = SubscriptionEvents.extractFromSqlMutactions(project, mutationId, createMutactionsResult)
     val sssActions             = ServerSideSubscription.extractFromMutactions(project, createMutactionsResult, requestId)
-    val asyncMutactions        = sssActions.toList ++ subscriptionMutactions
 
     Future.successful {
-      List(
-        MutactionGroup(mutactions = List(transactionMutaction), async = false),
-        MutactionGroup(mutactions = asyncMutactions, async = true)
+      PreparedMutactions(
+        databaseMutactions = createMutactionsResult.toVector,
+        sideEffectMutactions = sssActions.toVector ++ subscriptionMutactions
       )
     }
-
   }
 
   override def getReturnValue: Future[ReturnValueResult] = {

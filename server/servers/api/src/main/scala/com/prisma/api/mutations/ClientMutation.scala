@@ -11,7 +11,7 @@ import scala.concurrent.Future
 trait ClientMutation[T] {
   val mutationId: Id = Cuid.createCuid()
   def dataResolver: DataResolver
-  def prepareMutactions(): Future[List[MutactionGroup]]
+  def prepareMutactions(): Future[PreparedMutactions]
   def getReturnValue: Future[T]
 }
 
@@ -22,6 +22,13 @@ trait SingleItemClientMutation extends ClientMutation[ReturnValueResult] {
       case None           => NoReturnValue(where)
     }
   }
+}
+
+case class PreparedMutactions(
+    databaseMutactions: Vector[ClientSqlMutaction], // DatabaseMutaction
+    sideEffectMutactions: Vector[Mutaction] // SideEffectMutaction
+) {
+  lazy val allMutactions = databaseMutactions ++ sideEffectMutactions
 }
 
 sealed trait ReturnValueResult

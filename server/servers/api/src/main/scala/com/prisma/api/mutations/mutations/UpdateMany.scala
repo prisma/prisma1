@@ -4,7 +4,6 @@ import com.prisma.api.ApiDependencies
 import com.prisma.api.database.DataResolver
 import com.prisma.api.database.Types.DataItemFilterCollection
 import com.prisma.api.database.mutactions.mutactions.UpdateDataItems
-import com.prisma.api.database.mutactions.{MutactionGroup, TransactionMutaction}
 import com.prisma.api.mutations._
 import com.prisma.shared.models.{Model, Project}
 import sangria.schema
@@ -31,14 +30,14 @@ case class UpdateMany(
     CoolArgs(argsPointer)
   }
 
-  def prepareMutactions(): Future[List[MutactionGroup]] = {
+  def prepareMutactions(): Future[PreparedMutactions] = {
     for {
       _ <- count // make sure that count query has been resolved before proceeding
     } yield {
-      val updateItems          = UpdateDataItems(project, model, coolArgs, where)
-      val transactionMutaction = TransactionMutaction(List(updateItems), dataResolver)
-      List(
-        MutactionGroup(mutactions = List(transactionMutaction), async = false)
+      val updateItems = UpdateDataItems(project, model, coolArgs, where)
+      PreparedMutactions(
+        databaseMutactions = Vector(updateItems),
+        sideEffectMutactions = Vector.empty
       )
     }
   }

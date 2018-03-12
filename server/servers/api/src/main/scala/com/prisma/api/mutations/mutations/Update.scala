@@ -38,23 +38,20 @@ case class Update(
 
   lazy val dataItem: Future[Option[DataItem]] = dataResolver.resolveByUnique(where)
 
-  def prepareMutactions(): Future[List[MutactionGroup]] = {
+  def prepareMutactions(): Future[PreparedMutactions] = {
     dataItem map {
       case Some(dataItem) =>
         val validatedDataItem = dataItem // todo: use GC Values
         // = dataItem.copy(userData = GraphcoolDataTypes.fromSql(dataItem.userData, model.fields))
 
-        val sqlMutactions          = SqlMutactions(dataResolver).getMutactionsForUpdate(Path.empty(where), coolArgs, dataItem.id, validatedDataItem).toList
-        val transactionMutaction   = TransactionMutaction(sqlMutactions, dataResolver)
-        val subscriptionMutactions = SubscriptionEvents.extractFromSqlMutactions(project, mutationId, sqlMutactions).toList
-        val sssActions             = ServerSideSubscription.extractFromMutactions(project, sqlMutactions, requestId = "").toList
-        val asyncMutactions        = sssActions ++ subscriptionMutactions
+        val sqlMutactions          = SqlMutactions(dataResolver).getMutactionsForUpdate(Path.empty(where), coolArgs, dataItem.id, validatedDataItem)
+        val subscriptionMutactions = SubscriptionEvents.extractFromSqlMutactions(project, mutationId, sqlMutactions)
+        val sssActions             = ServerSideSubscription.extractFromMutactions(project, sqlMutactions, requestId = "")
 
-        List(
-          MutactionGroup(mutactions = List(transactionMutaction), async = false),
-          MutactionGroup(mutactions = asyncMutactions, async = true)
+        PreparedMutactions(
+          databaseMutactions = sqlMutactions.toVector,
+          sideEffectMutactions = (sssActions ++ subscriptionMutactions).toVector
         )
-
       case None =>
         throw APIErrors.NodeNotFoundForWhereError(where)
     }
