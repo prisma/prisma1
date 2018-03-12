@@ -4,12 +4,14 @@ import akka.http.scaladsl.model.HttpRequest
 import com.prisma.sangria.utils.ErrorHandler
 import com.prisma.deploy.DeployDependencies
 import com.prisma.deploy.schema.{SchemaBuilder, SystemUserContext}
+import com.prisma.shared.models.{Project, ProjectId}
+import play.api.libs.json.JsString
 import sangria.execution.{Executor, QueryAnalysisError}
 import sangria.parser.QueryParser
 import sangria.renderer.SchemaRenderer
 import spray.json._
 
-import scala.concurrent.Await
+import scala.concurrent.{Await, Future}
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration.Duration
 import scala.reflect.io.File
@@ -114,10 +116,38 @@ case class DeployTestServer()(implicit dependencies: DeployDependencies) extends
         )
         .recover {
           case error: QueryAnalysisError => error.resolveError
+          case e                         => sys.error(e.toString)
         },
       Duration.Inf
     )
     println("Request Result: " + result)
     result
   }
+
+  /**
+    * Deploy a schema and return a project
+    */
+  def deploySchema(project: Project, schema: String): Future[Option[Project]] = {
+
+    val nameAndStage                         = ProjectId.fromEncodedString(project.id)
+    def formatSchema(schema: String): String = JsString(schema).toString
+
+    query(
+      s"""
+         |mutation {
+         |  deploy(input:{name: "${nameAndStage.name}", stage: "${nameAndStage.stage}", types: ${formatSchema(schema)}}){
+         |    migration {
+         |      applied
+         |    }
+         |    errors {
+         |      description
+         |    }
+         |  }
+         |}
+      """.stripMargin
+    )
+
+    dependencies.projectPersistence.load(project.id)
+  }
+
 }
