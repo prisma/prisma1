@@ -5,14 +5,27 @@ description: Overview
 
 # Overview
 
-Prisma services are deployed to so-called _clusters_. A cluster is a hosted environment for Prisma services.
+Prisma services are deployed to so-called _clusters_. Cluster are the _runtime environment_ for Prisma services.
 
-In essence, there are two kinds of _clusters_ you can deploy your Prisma service to:
+In essence, there are three kinds of _clusters_ you can deploy your Prisma service to:
 
-- **Self-hosted / local clusters**: Self-hosted (or locally deployed) clusters are running on [Docker](https://www.docker.com). They are created and managed using the Prisma CLI which governs the underlying Docker _images_ and _containers_ for you.
-- **Development clusters** (based on Prisma Cloud): Development clusters allow to conventiently deploy your Prisma service to the web without the overhead of configuring your own cluster. Note that development clusters have certain limitations, such as rate limiting of incoming requests (max 10 requests per 10 seconds) and an upper bound in storage capacity (100 MB).
+- **Local / self-hosted** (using [Docker](https://www.docker.com/)): You can create your own Prisma clusters locally or host them using a cloud provider of your choice. They are managed with the Prisma CLI which governs the underlying Docker _images_ and _containers_ for you. Follow [this](!alias-texoo9aemu) tutorial to learn how to host your own Prisma cluster on Digital Ocean.
+- **Development clusters** ([Prisma Cloud](https://www.prismagraphql.com/cloud)): Prisma Cloud offers free development clusters which you can use for learning, prototyping and development. Note that when deployed to a development cluster, your services will be rate limited and have an upper bound in storage capacity (see the info box below for further info).
+- **Private clusters** ([Prisma Cloud](https://www.prismagraphql.com/cloud)): A private cluster is connected to your own database which you're provisioning when initially setting up the cluster.
 
-> For the vast majority of use cases, **self-hosted clusters are the preferred option to deploy Prisma services**. This chapter explains how to create and manage your own self-hosted clusters.
+For production use cases, **private and self-hosted clusters are the preferred option to deploy Prisma services**. This chapter is about self-hosted clusters, you can learn more about Prisma Cloud [here](!alias-fae2ooth2u).
+
+<InfoBox>
+
+Development clusters are rate limited:
+
+- 10 requests per 10 seconds (on average)
+- If this rate is exceeded, requests are being queued in memory. If this queue exceeds 25 requests, an error is returned immediately.
+- The header field `throttled-by` is included in HTTP responses. It indicates how long the request was delayed due to throttling (in milli seconds).
+
+The upper bound in storage capacity for a Prisma service that's running on a development cluster is 100 MB.
+
+</InfoBox>
 
 ## Cluster registry
 
@@ -37,7 +50,7 @@ clusters:
 When you're running `prisma deploy` for a Prisma service, there are two scenarios with respect to the target cluster:
 
 - The `cluster` property in `prisma.yml` is **specified**. In this case, the CLI will directly deploy the specified cluster.
-- The `cluster` property in `prisma.yml` is **not specified**. In this case, the CLI will prompt you with an interactive selection of your available clusters. After you selected a cluster, it will write your decision to `prisma.yml`, so the selected cluster will be used as the default cluster for future deploys. To bring up the interactive selection prompt again, you can invoke `prisma deploy --interactive` or simply remove the `cluster` property from `prisma.yml`.
+- The `cluster` property in `prisma.yml` is **not specified**. In this case, the CLI will prompt you with an interactive selection of your available clusters. After you selected a cluster, it will write your decision to `prisma.yml`, so the selected cluster will be used as the default cluster for future deploys. To bring up the interactive selection prompt again, simply remove the `cluster` property from `prisma.yml` again.
 
 In any case, the value of [`cluster`](!alias-ufeshusai8#clusters-optional) needs to be the identical to the key of an entry in the `clusters` map from the cluster registry (_or_ refer to one of the clusters configured through your Prisma Cloud account).
 
