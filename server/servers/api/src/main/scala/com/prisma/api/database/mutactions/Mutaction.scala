@@ -1,6 +1,5 @@
 package com.prisma.api.database.mutactions
 
-import com.prisma.api.database.DataResolver
 import slick.dbio.{DBIOAction, Effect, NoStream}
 
 import scala.concurrent.Future

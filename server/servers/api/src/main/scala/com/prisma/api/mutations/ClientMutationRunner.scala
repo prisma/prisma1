@@ -38,12 +38,39 @@ object ClientMutationRunner {
   }
 
   private def performMutactions(preparedMutactions: PreparedMutactions, dataResolver: DataResolver): Future[Vector[MutactionExecutionResult]] = {
-    val projectId   = dataResolver.project.id
-    val transaction = TransactionMutaction(preparedMutactions.databaseMutactions.toList, dataResolver)
     for {
-      dbResults         <- runWithTiming(transaction, projectId)
-      sideEffectResults <- performInParallel(preparedMutactions.sideEffectMutactions, projectId)
+      dbResults         <- performDatabaseMutactions(preparedMutactions.databaseMutactions, dataResolver)
+      sideEffectResults <- performInParallel(preparedMutactions.sideEffectMutactions, dataResolver.project.id)
     } yield Vector(dbResults) ++ sideEffectResults
+  }
+
+  private def performDatabaseMutactions(mutactions: Vector[ClientSqlMutaction], dataResolver: DataResolver): Future[MutactionExecutionResult] = {
+    import slick.dbio.{DBIO, DBIOAction, Effect, NoStream}
+    import slick.jdbc.MySQLProfile.api._
+
+    val statements: Future[Vector[DBIOAction[Any, NoStream, Effect.All]]] =
+      Future.sequence(mutactions.map(_.execute)).map(_.collect { case ClientSqlStatementResult(sqlAction) => sqlAction })
+
+    type ErrorHandler = PartialFunction[Throwable, MutactionExecutionResult]
+    val combinedErrorHandler: Option[ErrorHandler] = mutactions.flatMap(_.handleErrors) match {
+      case errorHandlers if errorHandlers.isEmpty => None
+      case errorHandlers                          => Some(errorHandlers reduceLeft (_ orElse _))
+    }
+
+    val executionResult = statements
+      .flatMap { sqlActions =>
+        dataResolver.runOnClientDatabase("Transaction", DBIO.seq(sqlActions: _*).transactionally)
+      }
+      .map { _ =>
+        MutactionExecutionSuccess()
+      }
+
+    val executionResult2 = combinedErrorHandler match {
+      case Some(errorHandler) => executionResult.recover(errorHandler)
+      case None               => executionResult
+    }
+
+    executionResult2
   }
 
   private def performInParallel(mutactions: Vector[Mutaction], projectId: String): Future[Vector[MutactionExecutionResult]] = {

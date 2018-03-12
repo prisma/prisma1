@@ -2,7 +2,6 @@ package com.prisma.api.mutations.mutations
 
 import com.prisma.api.ApiDependencies
 import com.prisma.api.database.DataResolver
-import com.prisma.api.database.mutactions.{MutactionGroup, TransactionMutaction}
 import com.prisma.api.mutations._
 import com.prisma.api.mutations.mutations.CascadingDeletes.Path
 import com.prisma.shared.models.{Model, Project}
