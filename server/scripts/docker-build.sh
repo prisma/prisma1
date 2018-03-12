@@ -71,6 +71,7 @@ printf "
   async: true
   build:
     env:
-        BUILD_TAG: \"BUILD_TAG: \"${NEXT_DOCKER_TAG}\"\"
+        BUILD_TAG: \"${NEXT_DOCKER_TAG}\"
         CHANNEL: \"${CHANNEL}\"
 " | buildkite-agent pipeline upload
+
