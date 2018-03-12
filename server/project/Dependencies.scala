@@ -28,7 +28,7 @@ object Dependencies {
   val cuid      = "cool.graph"    % "cuid-java"   % v.cuid
   val scalactic = "org.scalactic" %% "scalactic"  % v.scalactic
   val scalaTest = "org.scalatest" %% "scalatest"  % v.scalaTest % Test
-  val spray     = "io.spray"      %% "spray-json" % v.spray
+  val sprayJson = "io.spray"      %% "spray-json" % v.spray
 
   val slickCore   = "com.typesafe.slick" %% "slick" % v.slick
   val slickHikari = "com.typesafe.slick" %% "slick-hikaricp" % v.slick
@@ -74,47 +74,45 @@ object Dependencies {
   val jacksonDataformatCbor = "com.fasterxml.jackson.dataformat" % "jackson-dataformat-cbor" % v.jackson
   val jackson               = Seq(jacksonCore, jacksonDatabind, jacksonAnnotation, jacksonDataformatCbor)
 
-  val amqp         = "com.rabbitmq"               % "amqp-client"              % "4.1.0"
-  val java8Compat  = "org.scala-lang.modules"     %% "scala-java8-compat"      % "0.8.0"
-  val scalaLogging = "com.typesafe.scala-logging" %% "scala-logging"           % "3.7.0"
-  val jwt          = "com.pauldijou"              %% "jwt-core"                % "0.14.1"
-  val scalaj       = "org.scalaj"                 %% "scalaj-http"             % "2.3.0"
-  val evoInflector = "org.atteo"                  % "evo-inflector"            % "1.2"
-  val logBack      = "ch.qos.logback"             % "logback-classic"          % "1.1.7"
-  val snakeYML     = "org.yaml"                   % "snakeyaml"                % "1.17"
-  val moultingYML  = "net.jcazevedo"              %% "moultingyaml"            % "0.4.0"
-  val logstash     = "net.logstash.logback"       % "logstash-logback-encoder" % "4.7"
-  val librato      = "com.librato.metrics"        % "librato-java"             % "2.1.0"
+  val amqp              = "com.rabbitmq"               % "amqp-client"               % "4.1.0"
+  val java8Compat       = "org.scala-lang.modules"     %% "scala-java8-compat"       % "0.8.0"
+  val scalaLogging      = "com.typesafe.scala-logging" %% "scala-logging"            % "3.7.0"
+  val jwt               = "com.pauldijou"              %% "jwt-core"                 % "0.14.1"
+  val scalajHttp        = "org.scalaj"                 %% "scalaj-http"              % "2.3.0"
+  val evoInflector      = "org.atteo"                  % "evo-inflector"             % "1.2"
+  val logBack           = "ch.qos.logback"             % "logback-classic"           % "1.1.7"
+  val snakeYML          = "org.yaml"                   % "snakeyaml"                 % "1.17"
+  val moultingYML       = "net.jcazevedo"              %% "moultingyaml"             % "0.4.0"
+  val logstash          = "net.logstash.logback"       % "logstash-logback-encoder"  % "4.7"
+  val librato           = "com.librato.metrics"        % "librato-java"              % "2.1.0"
+  val jettyServer       = "org.eclipse.jetty"          % "jetty-server"              % "9.3.0.v20150612"
+  val scalaUri          = "com.netaporter"             %% "scala-uri"                % "0.4.16"
+  val parserCombinators = "org.scala-lang.modules"     %% "scala-parser-combinators" % "1.0.4"
 
-  lazy val common: Seq[ModuleID] = sangria ++ slick ++ joda ++ Seq(
+  lazy val common: Seq[ModuleID] = Seq(
+    java8Compat,
+    scalaTest,
+    scalactic
+  )
+
+  lazy val commonServerDependencies: Seq[ModuleID] = common ++ sangria ++ joda ++ Seq(
     guava,
     akkaTestKit,
     akkaHttp,
     akkaHttpSprayJson,
+    akkaHttpPlayJson,
     akkaHttpCors,
-    scalaj,
+    akkaHttpTestKit,
+    sprayJson,
+    playJson,
+    scalajHttp,
     scalaLogging,
     logBack,
+    logstash,
     evoInflector,
-    java8Compat,
-    mariaDbClient,
-    scalactic,
     cuid,
-    akkaHttpPlayJson,
     finagle,
-    scalaTest,
     snakeYML,
-    logstash
-
-    //    "io.spray"   %% "spray-json"  % "1.3.3",
-    //    "org.scaldi"           %% "scaldi"            % "0.5.8",
-    //    "org.scaldi"                 %% "scaldi-akka"       % "0.5.8",
-    //    "software.amazon.awssdk" % "lambda"          % "2.0.0-preview-4",
-    //    "software.amazon.awssdk" % "s3"                  % "2.0.0-preview-4",
-    //    "com.github.t3hnar"      %% "scala-bcrypt"       % "2.6",
-    //    "com.jsuereth" %% "scala-arm" % "2.0",
-    //    "com.google.code.findbugs" % "jsr305"                   % "3.0.1",
-    //    "com.stripe"               % "stripe-java"              % "3.9.0",
-    //    "com.fasterxml.jackson.dataformat" % "jackson-dataformat-cbor" % "2.8.4",
+    jwt
   )
 }
