@@ -75,6 +75,7 @@ def imageProject(name: String, imageName: String): Project = imageProject(name).
 def imageProject(name: String): Project = Project(id = name, base = file(s"./images/$name"))
 def serverProject(name: String): Project = Project(id = name, base = file(s"./servers/$name")).settings(commonServerSettings: _*).dependsOn(scalaUtils)
 def connectorProject(name: String): Project =  Project(id = name, base = file(s"./connectors/$name")).settings(commonSettings: _*).dependsOn(scalaUtils)
+def integrationTestProject(name: String): Project =  Project(id = name, base = file(s"./integration-tests/$name")).settings(commonSettings: _*)
 def libProject(name: String): Project =  Project(id = name, base = file(s"./libs/$name")).settings(commonSettings: _*)
 def normalProject(name: String): Project = Project(id = name, base = file(s"./$name")).settings(commonSettings: _*)
 
@@ -162,6 +163,13 @@ lazy val sharedModels = normalProject("shared-models")
     cuid
   ) ++ joda
 )
+
+// ####################
+//   INTEGRATION TESTS
+// ####################
+
+lazy val integrationTestsMySql = integrationTestProject("mysql").dependsOn(deploy).dependsOn(api).dependsOn(deployConnectorMySql)
+
 
 // ####################
 //       LIBS
@@ -311,13 +319,18 @@ val allLibProjects = List(
   sangriaUtils
 )
 
-lazy val libs = (project in file("libs")).aggregate(allLibProjects.map(Project.projectToRef): _*)
+val allIntegrationTestProjects = List(
+  integrationTestsMySql
+)
+
 lazy val images = (project in file("images")).aggregate(allDockerImageProjects.map(Project.projectToRef): _*)
-lazy val connectors = (project in file("connectors")).aggregate(allConnectorProjects.map(Project.projectToRef): _*)
 lazy val servers = (project in file("servers")).aggregate(allServerProjects.map(Project.projectToRef): _*)
+lazy val connectors = (project in file("connectors")).aggregate(allConnectorProjects.map(Project.projectToRef): _*)
+lazy val integrationTests = (project in file("integration-tests")).aggregate(allConnectorProjects.map(Project.projectToRef): _*)
+lazy val libs = (project in file("libs")).aggregate(allLibProjects.map(Project.projectToRef): _*)
 
 lazy val root = (project in file("."))
-  .aggregate((allServerProjects ++ allDockerImageProjects ++ allConnectorProjects).map(Project.projectToRef): _*)
+  .aggregate((allServerProjects ++ allDockerImageProjects ++ allConnectorProjects ++ allIntegrationTestProjects).map(Project.projectToRef): _*)
   .settings(
     publish := { } // do not publish a JAR for the root project
   )
