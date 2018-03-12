@@ -96,7 +96,7 @@ A resolver function always takes four arguments (in the following order):
 1. `parent` (also sometimes called `root`): Queries are resolved by the GraphQL engine which invokes the resolvers for the fields contained in the query. Because queries can contain *nested* fields, there might be multiple *levels* of resolver execution. The `parent` argument always represents the return value from the *previous* resolver call. See [here](https://blog.graph.cool/graphql-server-basics-the-schema-ac5e2950214e#9d03) for more info.
 2. `args`: Potential arguments that were provided for that field (e.g. the `name` of the `User` in the example of the `createUser` mutation above).
 3. `context`: An object that gets passed through the resolver chain that each resolver can write to and read from (basically a means for resolvers to communicate and share information).
-4. `info`: An AST representation of the query or mutation. You can read more about in details in this article: [Demystifying the `info` Argument in GraphQL Resolvers](https://blog.graph.cool/graphql-server-basics-demystifying-the-info-argument-in-graphql-resolvers-6f26249f613a.
+4. `info`: An AST representation of the query or mutation. You can read more about in details in this article: [Demystifying the `info` Argument in GraphQL Resolvers](https://blog.graph.cool/graphql-server-basics-demystifying-the-info-argument-in-graphql-resolvers-6f26249f613a).
 
 Here is a possible way how we could implement resolvers for the above schema definition (the implementation assumes there's some global object `db` that provides an interface to a database):
 
