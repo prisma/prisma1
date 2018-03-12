@@ -42,6 +42,7 @@ subscriptions:
         }) {
           node {
             name
+            email
           }
         }
       }
