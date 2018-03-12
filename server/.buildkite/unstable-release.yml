@@ -21,7 +21,7 @@ steps:
     command: cd server && ./.buildkite/scripts/test.sh libs
 
   - label: ":scala: integration-tests"
-    command: cd server && ./scripts/test.sh integrationTests
+    command: cd server && ./buildkite/scripts/test.sh integrationTests
 
   - wait
 
