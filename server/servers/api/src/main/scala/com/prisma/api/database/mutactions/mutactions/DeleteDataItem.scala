@@ -25,9 +25,6 @@ case class DeleteDataItem(project: Project, path: Path, previousValues: DataItem
   }
 
   override def verify(resolver: DataResolver): Future[Try[MutactionVerificationSuccess]] = {
-    resolver.existsByWhere(path.root) map {
-      case false => Failure(APIErrors.NodeNotFoundForWhereError(path.root))
-      case true  => Success(MutactionVerificationSuccess())
-    }
+    Future.successful(Success(MutactionVerificationSuccess()))
   }
 }
