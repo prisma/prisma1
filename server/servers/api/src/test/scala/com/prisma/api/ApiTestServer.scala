@@ -24,7 +24,7 @@ case class ApiTestServer()(implicit dependencies: ApiDependencies) extends Spray
   /**
     * Execute a Query that must succeed.
     */
-  def executeQuerySimple(
+  def query(
       query: String,
       project: Project,
       dataContains: String = "",
@@ -45,15 +45,15 @@ case class ApiTestServer()(implicit dependencies: ApiDependencies) extends Spray
   /**
     * Execute a Query that must fail.
     */
-  def executeQuerySimpleThatMustFail(query: String,
-                                     project: Project,
-                                     errorCode: Int,
-                                     errorCount: Int = 1,
-                                     errorContains: String = "",
-                                     userId: Option[String] = None,
-                                     variables: JsValue = JsObject(),
-                                     requestId: String = "CombinedTestDatabase.requestId",
-                                     graphcoolHeader: Option[String] = None): JsValue = {
+  def queryThatMustFail(query: String,
+                        project: Project,
+                        errorCode: Int,
+                        errorCount: Int = 1,
+                        errorContains: String = "",
+                        userId: Option[String] = None,
+                        variables: JsValue = JsObject(),
+                        requestId: String = "CombinedTestDatabase.requestId",
+                        graphcoolHeader: Option[String] = None): JsValue = {
     val result = executeQuerySimpleWithAuthentication(
       query = query,
       project = project,

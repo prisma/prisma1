@@ -13,9 +13,9 @@ class NestedConnectMutationInsideUpsertSpec extends FlatSpec with Matchers with 
     }
     database.setup(project)
 
-    val tenantId = server.executeQuerySimple("""mutation { createTenant(data: {name:"Gustav G"}){ id } }""", project).pathAsString("data.createTenant.id")
+    val tenantId = server.query("""mutation { createTenant(data: {name:"Gustav G"}){ id } }""", project).pathAsString("data.createTenant.id")
 
-    val result = server.executeQuerySimple(
+    val result = server.query(
       s"""mutation{upsertCustomer(where: {id: "DOESNOTEXIST"}, create: {name: "Paul P", tenant:{connect:{id:"$tenantId"}}}, update: {name: "Paul P"}) {
          |    tenant{name}
          |  }
@@ -34,10 +34,10 @@ class NestedConnectMutationInsideUpsertSpec extends FlatSpec with Matchers with 
     }
     database.setup(project)
 
-    val tenantId   = server.executeQuerySimple("""mutation { createTenant(data: {name:"Gustav G"}){ id } }""", project).pathAsString("data.createTenant.id")
-    val customerId = server.executeQuerySimple("""mutation { createCustomer(data: {name:"Paul P"}){ id } }""", project).pathAsString("data.createCustomer.id")
+    val tenantId   = server.query("""mutation { createTenant(data: {name:"Gustav G"}){ id } }""", project).pathAsString("data.createTenant.id")
+    val customerId = server.query("""mutation { createCustomer(data: {name:"Paul P"}){ id } }""", project).pathAsString("data.createCustomer.id")
 
-    val result = server.executeQuerySimple(
+    val result = server.query(
       s"""mutation{upsertCustomer(where: {id: "$customerId"}, create: {name: "Bernd B"}, update: {name: "Bernd B",tenant:{connect:{id:"$tenantId"}}}) {
          |    tenant{name}
          |  }
@@ -56,10 +56,10 @@ class NestedConnectMutationInsideUpsertSpec extends FlatSpec with Matchers with 
     }
     database.setup(project)
 
-    server.executeQuerySimple("""mutation { createTenant(data: {name:"Gustav G"}){ id } }""", project)
-    server.executeQuerySimple("""mutation { createCustomer(data: {name:"Paul P"}){ id } }""", project)
+    server.query("""mutation { createTenant(data: {name:"Gustav G"}){ id } }""", project)
+    server.query("""mutation { createCustomer(data: {name:"Paul P"}){ id } }""", project)
 
-    val result = server.executeQuerySimple(
+    val result = server.query(
       s"""mutation{upsertCustomer(where: {name: "Paul P"}, create: {name: "Bernd B"}, update: {name: "Bernd B",tenant:{connect:{name:"Gustav G"}}}) {
          |    tenant{name}
          |  }

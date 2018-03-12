@@ -13,7 +13,7 @@ class MultiItemConnectionQuerySpec extends FlatSpec with Matchers with ApiBaseSp
     }
     database.setup(project)
 
-    val result = server.executeQuerySimple(
+    val result = server.query(
       s"""{
          |  todoesConnection{
          |    edges {
@@ -37,7 +37,7 @@ class MultiItemConnectionQuerySpec extends FlatSpec with Matchers with ApiBaseSp
 
     val title = "Hello World!"
     val id = server
-      .executeQuerySimple(
+      .query(
         s"""mutation {
            |  createTodo(data: {title: "$title"}) {
            |    id
@@ -47,7 +47,7 @@ class MultiItemConnectionQuerySpec extends FlatSpec with Matchers with ApiBaseSp
       )
       .pathAsString("data.createTodo.id")
 
-    val result = server.executeQuerySimple(
+    val result = server.query(
       s"""{
          |  todoesConnection{
          |    edges {
@@ -71,7 +71,7 @@ class MultiItemConnectionQuerySpec extends FlatSpec with Matchers with ApiBaseSp
 
     val title = "Hello World!"
     val id = server
-      .executeQuerySimple(
+      .query(
         s"""mutation {
            |  createTodo(data: {title: "$title"}) {
            |    id
@@ -82,7 +82,7 @@ class MultiItemConnectionQuerySpec extends FlatSpec with Matchers with ApiBaseSp
       .pathAsString("data.createTodo.id")
 
     server
-      .executeQuerySimple(
+      .query(
         s"""{
          |  todoesConnection(where: {title: "INVALID"}){
          |    edges {
@@ -97,7 +97,7 @@ class MultiItemConnectionQuerySpec extends FlatSpec with Matchers with ApiBaseSp
       .toString should equal("""{"data":{"todoesConnection":{"edges":[]}}}""")
 
     server
-      .executeQuerySimple(
+      .query(
         s"""{
          |  todoesConnection(where: {title: "${title}"}){
          |    edges {

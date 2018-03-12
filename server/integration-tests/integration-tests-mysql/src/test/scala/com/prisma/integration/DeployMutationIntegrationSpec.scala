@@ -14,7 +14,7 @@ class DeployMutationIntegrationSpec extends FlatSpec with Matchers with Integrat
 
     val (project, _) = setupProject(schema)
 
-    apiServer.executeQuerySimple("""mutation{createA(data:{name: "A", value: 1}){name}}""", project)
+    apiServer.query("""mutation{createA(data:{name: "A", value: 1}){name}}""", project)
 
     val schema2 =
       """type A {
@@ -24,9 +24,9 @@ class DeployMutationIntegrationSpec extends FlatSpec with Matchers with Integrat
 
     val updatedProject = deployServer.deploySchema(project, schema2)
 
-    apiServer.executeQuerySimple("""query{as{name, value}}""", updatedProject).toString should be("""{"data":{"as":[{"name":"A","value":[]}]}}""")
+    apiServer.query("""query{as{name, value}}""", updatedProject).toString should be("""{"data":{"as":[{"name":"A","value":[]}]}}""")
 
-    apiServer.executeQuerySimple("""mutation{updateA(where:{name: "A"} data:{ value: {set: [1,2,3]}}){value}}""", updatedProject).toString should be(
+    apiServer.query("""mutation{updateA(where:{name: "A"} data:{ value: {set: [1,2,3]}}){value}}""", updatedProject).toString should be(
       """{"data":{"updateA":{"value":[1,2,3]}}}""")
   }
 
@@ -40,7 +40,7 @@ class DeployMutationIntegrationSpec extends FlatSpec with Matchers with Integrat
 
     val (project, _) = setupProject(schema)
 
-    apiServer.executeQuerySimple("""mutation{createA(data:{ name: "A", value: {set: [1,2,3]}}){value}}""", project).toString should be(
+    apiServer.query("""mutation{createA(data:{ name: "A", value: {set: [1,2,3]}}){value}}""", project).toString should be(
       """{"data":{"createA":{"value":[1,2,3]}}}""")
 
     val schema2 =
@@ -51,9 +51,9 @@ class DeployMutationIntegrationSpec extends FlatSpec with Matchers with Integrat
 
     val updatedProject = deployServer.deploySchema(project, schema2)
 
-    apiServer.executeQuerySimple("""query{as{name, value}}""", updatedProject).toString should be("""{"data":{"as":[{"name":"A","value":null}]}}""")
+    apiServer.query("""query{as{name, value}}""", updatedProject).toString should be("""{"data":{"as":[{"name":"A","value":null}]}}""")
 
-    apiServer.executeQuerySimple("""mutation{updateA(where:{name: "A"}, data:{value: 1}){name}}""", updatedProject).toString should be(
+    apiServer.query("""mutation{updateA(where:{name: "A"}, data:{value: 1}){name}}""", updatedProject).toString should be(
       """{"data":{"updateA":{"name":"A"}}}""")
   }
 }

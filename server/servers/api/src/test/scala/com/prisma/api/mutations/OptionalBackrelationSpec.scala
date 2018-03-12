@@ -25,7 +25,7 @@ class OptionalBackrelationSpec extends FlatSpec with Matchers with ApiBaseSpec {
     }
     database.setup(project)
 
-    server.executeQuerySimple(
+    server.query(
       """mutation {createOwner(data: {ownerName: "jon", cat: {create: {catName: "garfield"}}}) {
         |    ownerName
         |    cat {
@@ -36,7 +36,7 @@ class OptionalBackrelationSpec extends FlatSpec with Matchers with ApiBaseSpec {
       project
     )
 
-    val res = server.executeQuerySimple(
+    val res = server.query(
       """mutation {updateOwner(where: {ownerName: "jon"},
         |data: {cat: {update:{catName: "azrael"}}}) {
         |    ownerName
@@ -69,7 +69,7 @@ class OptionalBackrelationSpec extends FlatSpec with Matchers with ApiBaseSpec {
     }
     database.setup(project)
 
-    server.executeQuerySimple(
+    server.query(
       """mutation {createOwner(data: {ownerName: "jon", cats: {create: {catName: "garfield"}}}) {
         |    ownerName
         |    cats {
@@ -80,7 +80,7 @@ class OptionalBackrelationSpec extends FlatSpec with Matchers with ApiBaseSpec {
       project
     )
 
-    val res = server.executeQuerySimple(
+    val res = server.query(
       """mutation {updateOwner(where: {ownerName: "jon"},
         |data: {cats: {upsert: {
         |                   where:{catName: "garfield"},
@@ -118,7 +118,7 @@ class OptionalBackrelationSpec extends FlatSpec with Matchers with ApiBaseSpec {
     }
     database.setup(project)
 
-    server.executeQuerySimple(
+    server.query(
       """mutation {createOwner(data: {ownerName: "jon", cats: {create: {catName: "garfield"}}}) {
         |    ownerName
         |    cats {
@@ -129,7 +129,7 @@ class OptionalBackrelationSpec extends FlatSpec with Matchers with ApiBaseSpec {
       project
     )
 
-    val res = server.executeQuerySimple(
+    val res = server.query(
       """mutation {updateOwner(where: {ownerName: "jon"},
         |data: {cats: {upsert: {
         |                   where:{catName: "DOES NOT EXIST"},

@@ -16,7 +16,7 @@ class DeleteMutationRelationsSpec extends FlatSpec with Matchers with ApiBaseSpe
     database.setup(project)
 
     server
-      .executeQuerySimple(
+      .query(
         """mutation {
           |  createChild(data: {
           |    c: "c1"
@@ -32,7 +32,7 @@ class DeleteMutationRelationsSpec extends FlatSpec with Matchers with ApiBaseSpe
 
     database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "_ChildToParent").as[Int]) should be(Vector(1))
 
-    server.executeQuerySimpleThatMustFail(
+    server.queryThatMustFail(
       s"""
          |mutation {
          |  deleteParent(
@@ -60,7 +60,7 @@ class DeleteMutationRelationsSpec extends FlatSpec with Matchers with ApiBaseSpe
     database.setup(project)
 
     val res = server
-      .executeQuerySimple(
+      .query(
         """mutation {
           |  createParent(data: {
           |    p: "p1"
@@ -81,7 +81,7 @@ class DeleteMutationRelationsSpec extends FlatSpec with Matchers with ApiBaseSpe
 
     database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "_ChildToParent").as[Int]) should be(Vector(1))
 
-    server.executeQuerySimpleThatMustFail(
+    server.queryThatMustFail(
       s"""
          |mutation {
          |  deleteParent(
@@ -109,7 +109,7 @@ class DeleteMutationRelationsSpec extends FlatSpec with Matchers with ApiBaseSpe
     database.setup(project)
 
     val res = server
-      .executeQuerySimple(
+      .query(
         """mutation {
           |  createParent(data: {
           |    p: "p1"
@@ -130,7 +130,7 @@ class DeleteMutationRelationsSpec extends FlatSpec with Matchers with ApiBaseSpe
 
     database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "_ParentToChild").as[Int]) should be(Vector(1))
 
-    server.executeQuerySimple(
+    server.query(
       s"""
          |mutation {
          |  deleteParent(
@@ -155,7 +155,7 @@ class DeleteMutationRelationsSpec extends FlatSpec with Matchers with ApiBaseSpe
     database.setup(project)
 
     val res = server
-      .executeQuerySimple(
+      .query(
         """mutation {
           |  createParent(data: {
           |    p: "p1"
@@ -176,7 +176,7 @@ class DeleteMutationRelationsSpec extends FlatSpec with Matchers with ApiBaseSpe
 
     database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "_ParentToChild").as[Int]) should be(Vector(1))
 
-    server.executeQuerySimple(
+    server.query(
       s"""
          |mutation {
          |  deleteParent(
@@ -202,7 +202,7 @@ class DeleteMutationRelationsSpec extends FlatSpec with Matchers with ApiBaseSpe
     database.setup(project)
 
     server
-      .executeQuerySimple(
+      .query(
         """mutation {
           |  createParent(data: {
           |    p: "p1"
@@ -215,7 +215,7 @@ class DeleteMutationRelationsSpec extends FlatSpec with Matchers with ApiBaseSpe
 
     database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "_ParentToChild").as[Int]) should be(Vector(0))
 
-    server.executeQuerySimple(
+    server.query(
       s"""
          |mutation {
          |  deleteParent(
@@ -240,7 +240,7 @@ class DeleteMutationRelationsSpec extends FlatSpec with Matchers with ApiBaseSpe
     }
     database.setup(project)
 
-    server.executeQuerySimple(
+    server.query(
       """mutation {
         |  createParent(data: {
         |    p: "p1"
@@ -258,7 +258,7 @@ class DeleteMutationRelationsSpec extends FlatSpec with Matchers with ApiBaseSpe
 
     database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "_ParentToChild").as[Int]) should be(Vector(1))
 
-    server.executeQuerySimpleThatMustFail(
+    server.queryThatMustFail(
       s"""
          |mutation {
          |  deleteParent(
@@ -283,7 +283,7 @@ class DeleteMutationRelationsSpec extends FlatSpec with Matchers with ApiBaseSpe
     }
     database.setup(project)
 
-    server.executeQuerySimple(
+    server.query(
       """mutation {
         |  createParent(data: {
         |    p: "p1"
@@ -300,7 +300,7 @@ class DeleteMutationRelationsSpec extends FlatSpec with Matchers with ApiBaseSpe
     database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "Child").as[Int]) should be(Vector(0))
     database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "_ParentToChild").as[Int]) should be(Vector(0))
 
-    server.executeQuerySimple(
+    server.query(
       s"""
          |mutation {
          |  deleteParent(
@@ -326,7 +326,7 @@ class DeleteMutationRelationsSpec extends FlatSpec with Matchers with ApiBaseSpe
     }
     database.setup(project)
 
-    server.executeQuerySimple(
+    server.query(
       """mutation {
         |  createParent(data: {
         |    p: "p1"
@@ -344,7 +344,7 @@ class DeleteMutationRelationsSpec extends FlatSpec with Matchers with ApiBaseSpe
 
     database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "_ChildToParent").as[Int]) should be(Vector(1))
 
-    server.executeQuerySimpleThatMustFail(
+    server.queryThatMustFail(
       s"""
          |mutation {
          |  deleteParent(
@@ -370,7 +370,7 @@ class DeleteMutationRelationsSpec extends FlatSpec with Matchers with ApiBaseSpe
     }
     database.setup(project)
 
-    server.executeQuerySimple(
+    server.query(
       """mutation {
         |  createParent(data: {
         |    p: "p1"
@@ -386,7 +386,7 @@ class DeleteMutationRelationsSpec extends FlatSpec with Matchers with ApiBaseSpe
     database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "Child").as[Int]) should be(Vector(0))
     database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "_ChildToParent").as[Int]) should be(Vector(0))
 
-    server.executeQuerySimple(
+    server.query(
       s"""
          |mutation {
          |  deleteParent(
@@ -411,7 +411,7 @@ class DeleteMutationRelationsSpec extends FlatSpec with Matchers with ApiBaseSpe
     database.setup(project)
 
     server
-      .executeQuerySimple(
+      .query(
         """mutation {
           |  createParent(data: {
           |    p: "p1"
@@ -429,7 +429,7 @@ class DeleteMutationRelationsSpec extends FlatSpec with Matchers with ApiBaseSpe
 
     database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "_ParentToChild").as[Int]) should be(Vector(2))
 
-    server.executeQuerySimple(
+    server.query(
       s"""
          |mutation {
          |  deleteParent(
@@ -455,7 +455,7 @@ class DeleteMutationRelationsSpec extends FlatSpec with Matchers with ApiBaseSpe
     database.setup(project)
 
     server
-      .executeQuerySimple(
+      .query(
         """mutation {
           |  createParent(data: {
           |    p: "p1"
@@ -468,7 +468,7 @@ class DeleteMutationRelationsSpec extends FlatSpec with Matchers with ApiBaseSpe
 
     database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "_ParentToChild").as[Int]) should be(Vector(0))
 
-    server.executeQuerySimple(
+    server.query(
       s"""
          |mutation {
          |  deleteParent(
@@ -493,7 +493,7 @@ class DeleteMutationRelationsSpec extends FlatSpec with Matchers with ApiBaseSpe
     }
     database.setup(project)
 
-    server.executeQuerySimple(
+    server.query(
       """mutation {
         |  createParent(data: {
         |    p: "p1"
@@ -511,7 +511,7 @@ class DeleteMutationRelationsSpec extends FlatSpec with Matchers with ApiBaseSpe
 
     database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "_ChildToParent").as[Int]) should be(Vector(1))
 
-    server.executeQuerySimple(
+    server.query(
       s"""
          |mutation {
          |  deleteParent(
@@ -536,7 +536,7 @@ class DeleteMutationRelationsSpec extends FlatSpec with Matchers with ApiBaseSpe
     }
     database.setup(project)
 
-    server.executeQuerySimple(
+    server.query(
       """mutation {
         |  createParent(data: {
         |    p: "p1"
@@ -554,7 +554,7 @@ class DeleteMutationRelationsSpec extends FlatSpec with Matchers with ApiBaseSpe
 
     database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "_ChildToParent").as[Int]) should be(Vector(1))
 
-    server.executeQuerySimple(
+    server.query(
       s"""
          |mutation {
          |  deleteParent(
@@ -579,7 +579,7 @@ class DeleteMutationRelationsSpec extends FlatSpec with Matchers with ApiBaseSpe
     }
     database.setup(project)
 
-    server.executeQuerySimple(
+    server.query(
       """mutation {
         |  createParent(data: {
         |    p: "p1"
@@ -593,7 +593,7 @@ class DeleteMutationRelationsSpec extends FlatSpec with Matchers with ApiBaseSpe
 
     database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "_ChildToParent").as[Int]) should be(Vector(0))
 
-    server.executeQuerySimple(
+    server.query(
       s"""
          |mutation {
          |  deleteParent(
@@ -618,7 +618,7 @@ class DeleteMutationRelationsSpec extends FlatSpec with Matchers with ApiBaseSpe
     }
     database.setup(project)
 
-    server.executeQuerySimple(
+    server.query(
       """mutation {
         |  createParent(data: {
         |    p: "p1"
@@ -636,7 +636,7 @@ class DeleteMutationRelationsSpec extends FlatSpec with Matchers with ApiBaseSpe
 
     database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "_ChildToParent").as[Int]) should be(Vector(2))
 
-    server.executeQuerySimple(
+    server.query(
       s"""
          |mutation {
          |  deleteParent(
@@ -662,7 +662,7 @@ class DeleteMutationRelationsSpec extends FlatSpec with Matchers with ApiBaseSpe
     }
     database.setup(project)
 
-    server.executeQuerySimple(
+    server.query(
       """mutation {
         |  createParent(data: {
         |    p: "p1"
@@ -676,7 +676,7 @@ class DeleteMutationRelationsSpec extends FlatSpec with Matchers with ApiBaseSpe
 
     database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "_ChildToParent").as[Int]) should be(Vector(0))
 
-    server.executeQuerySimple(
+    server.query(
       s"""
          |mutation {
          |  deleteParent(
@@ -704,7 +704,7 @@ class DeleteMutationRelationsSpec extends FlatSpec with Matchers with ApiBaseSpe
     }
     database.setup(project)
 
-    server.executeQuerySimple(
+    server.query(
       """mutation {
         |  createParent(data: {
         |    p: "p1"
@@ -724,7 +724,7 @@ class DeleteMutationRelationsSpec extends FlatSpec with Matchers with ApiBaseSpe
     database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "_StepChildToParent").as[Int]) should be(Vector(1))
     database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "_ChildToParent").as[Int]) should be(Vector(2))
 
-    server.executeQuerySimple(
+    server.query(
       s"""
          |mutation {
          |  deleteParent(
