@@ -2,7 +2,7 @@ version: "2"
 services:
 
   app:
-    image: graphcool/scala-sbt-docker
+    image: schickling/scala-sbt-docker
     links:
     - client-db
     - internal-db
