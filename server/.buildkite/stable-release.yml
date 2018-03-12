@@ -20,6 +20,9 @@ steps:
   - label: ":scala: libs"
     command: cd server && ./scripts/test.sh libs
 
+  - label: ":scala: integration-tests"
+    command: cd server && ./scripts/test.sh integration-tests
+
   - wait
 
   - label: ":docker: Build and deploy US1 & EU1"
