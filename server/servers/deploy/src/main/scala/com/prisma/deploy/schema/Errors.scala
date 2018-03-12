@@ -26,7 +26,7 @@ case class InvalidServiceStage(stage: String) extends AbstractDeployApiError(Inv
 
 case class InvalidDeployment(deployErrorMessage: String) extends AbstractDeployApiError(deployErrorMessage, 4003)
 
-case class InvalidRelationName(relationName: String) extends AbstractDeployApiError(InvalidNames.forService(relationName, "relation"), 4004)
+case class InvalidRelationName(relationName: String) extends AbstractDeployApiError(InvalidNames.forRelation(relationName, "relation"), 4004)
 
 case class InvalidToken(reason: String) extends AbstractDeployApiError(s"Authentication token is invalid: $reason", 3015)
 
