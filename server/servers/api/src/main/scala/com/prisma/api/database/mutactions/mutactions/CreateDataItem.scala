@@ -55,10 +55,6 @@ case class CreateDataItem(
   override def verify(resolver: DataResolver): Future[Try[MutactionVerificationSuccess]] = {
     val (check, _) = InputValueValidation.validateDataItemInputs(model, args)
     if (check.isFailure) return Future.successful(check)
-
-    resolver.existsByModelAndId(model, id) map {
-      case true  => Failure(APIErrors.DataItemAlreadyExists(model.name, id))
-      case false => Success(MutactionVerificationSuccess())
-    }
+    Future.successful(Success(MutactionVerificationSuccess()))
   }
 }
