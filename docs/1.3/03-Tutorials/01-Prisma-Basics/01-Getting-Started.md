@@ -105,7 +105,7 @@ prisma deploy
 
 <!-- TODO: Enter screenshot of terminal -->
 
-Since `prisma.yml` doesn't yet contain the information about _where_ (meaning to which `cluster`) your service should be deployed, the CLI triggers a prompt for you to provide this information. At this point, you can choose to either deploy it locally with [Docker](https://www.docker.com) (which of course requires you to have Docker installed on your machine) or to a public Prisma cluster. You'll use a public cluster for the purpose of this tutorial.
+Since `prisma.yml` doesn't yet contain the information about _where_ (meaning to which `cluster`) your service should be deployed, the CLI triggers a prompt for you to provide this information. At this point, you can choose to either deploy it locally with [Docker](https://www.docker.com) (which of course requires you to have Docker installed on your machine) or to a development Prisma cluster. You'll use a development cluster for the purpose of this tutorial.
 
 <Instruction>
 

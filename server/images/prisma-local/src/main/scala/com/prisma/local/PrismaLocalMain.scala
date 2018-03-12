@@ -14,6 +14,7 @@ object PrismaLocalMain extends App {
   implicit val materializer = ActorMaterializer()
   val port                  = sys.env.getOrElse("PORT", "9000").toInt
   implicit val dependencies = PrismaLocalDependencies()
+  dependencies.initialize()(system.dispatcher)
 
   Version.check()
 
