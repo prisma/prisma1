@@ -42,6 +42,12 @@ Prisma is based on [Docker](https://www.docker.com/) which really makes it up to
 
 A few examples are [Digital Ocean](https://www.digitalocean.com/) (find a deployment tutorial [here](!alias-texoo9aemu)), [Microsoft Azure](https://azure.microsoft.com/en-us/), [Google Compute Engine](https://cloud.google.com/compute/), [AWS](https://aws.amazon.com/), [Heroku](https://www.heroku.com/).
 
+<InfoBox>
+
+The easiest way to run Prisma in production is with [Prisma Cloud](https://www.prismagraphql.com/cloud/).
+
+</InfoBox>
+
 ### Who should use Prisma?
 
 Prisma is _the_ tool for everyone who wants to build production-ready and scalable GraphQL servers - no matter the team size or project scope.

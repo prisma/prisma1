@@ -109,11 +109,7 @@ case class Schema(
 
   def getFieldsByRelationId(id: Id): List[Field] = models.flatMap(_.fields).filter(f => f.relation.isDefined && f.relation.get.id == id)
 
-  def getUnambiguousRelationThatConnectsModels_!(modelA: String, modelB: String): Option[Relation] = {
-    val candidates = relations.filter(_.connectsTheModels(modelA, modelB))
-    require(candidates.size < 2, "This method must only be called for unambiguous relations!")
-    candidates.headOption
-  }
+  def getRelationsThatConnectModels(modelA: String, modelB: String): List[Relation] = relations.filter(_.connectsTheModels(modelA, modelB))
 
   def getRelatedModelForField(field: Field): Option[Model] = {
     val relation = field.relation.getOrElse {
@@ -339,6 +335,7 @@ case class Field(
     })
   }
 
+  //todo this is dangerous in combination with self relations since it will return the field itself as related field
   def relatedField(schema: Schema): Option[Field] = {
     val fields = relatedModel(schema).get.fields
 
@@ -356,6 +353,19 @@ case class Field(
     }
 
     returnField.orElse(fallback)
+  }
+
+  //this really does return None if there is no opposite field
+  def otherRelationField(schema: Schema): Option[Field] = {
+    val fields = relatedModel(schema).get.fields
+
+    fields.find { field =>
+      field.relation.exists { relation =>
+        val isTheSameField    = field.id == this.id
+        val isTheSameRelation = relation.id == this.relation.get.id
+        isTheSameRelation && !isTheSameField
+      }
+    }
   }
 
   def otherSideIsRequired(project: Project): Boolean = relatedField(project.schema) match {
