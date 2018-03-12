@@ -10,10 +10,7 @@ trap "exit" INT
 SERVICE="${1:?Provide the service you want to test as a parameter}"
 TEST_PACKAGE=$2
 PROJECT_NAME=${BUILDKITE_JOB_ID:-TEST}
-
-
 DC_ARGS="--project-name $PROJECT_NAME --file $DIR/docker-compose.test.yml"
-
 
 echo "Starting dependency services..."
 docker-compose $DC_ARGS up -d client-db internal-db rabbit
