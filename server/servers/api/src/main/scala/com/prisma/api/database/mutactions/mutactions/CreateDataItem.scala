@@ -4,7 +4,7 @@ import java.sql.SQLIntegrityConstraintViolationException
 
 import com.prisma.api.database.mutactions._
 import com.prisma.api.database.mutactions.validation.InputValueValidation
-import com.prisma.api.database.{DataResolver, DatabaseMutationBuilder, ProjectRelayId, ProjectRelayIdTable}
+import com.prisma.api.database.{DatabaseMutationBuilder, ProjectRelayId, ProjectRelayIdTable}
 import com.prisma.api.mutations.CoolArgs
 import com.prisma.api.mutations.mutations.CascadingDeletes.{NodeEdge, Path}
 import com.prisma.api.schema.APIErrors
@@ -13,9 +13,8 @@ import com.prisma.util.json.JsonFormats
 import slick.jdbc.MySQLProfile.api._
 import slick.lifted.TableQuery
 
-import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
-import scala.util.{Failure, Success, Try}
+import scala.util.Try
 
 case class CreateDataItem(
     project: Project,
@@ -52,9 +51,8 @@ case class CreateDataItem(
     })
   }
 
-  override def verify(resolver: DataResolver): Future[Try[MutactionVerificationSuccess]] = {
+  override def verify(): Try[MutactionVerificationSuccess] = {
     val (check, _) = InputValueValidation.validateDataItemInputs(model, args)
-    if (check.isFailure) return Future.successful(check)
-    Future.successful(Success(MutactionVerificationSuccess()))
+    check
   }
 }

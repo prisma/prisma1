@@ -46,7 +46,7 @@ case class UpdateDataItem(project: Project,
     })
   }
 
-  override def verify(resolver: DataResolver): Future[Try[MutactionVerificationSuccess]] = {
+  override def verify(): Try[MutactionVerificationSuccess] = {
     lazy val (dataItemInputValidation, fieldsWithValues) = InputValueValidation.validateDataItemInputs(model, args)
 
     def isReadonly(field: Field): Boolean = {
@@ -57,13 +57,12 @@ case class UpdateDataItem(project: Project,
 
     lazy val readonlyFields = fieldsWithValues.filter(isReadonly)
 
-    val checkResult = itemExists match {
+    itemExists match {
       case false                                  => Failure(APIErrors.DataItemDoesNotExist(model.name, id))
       case _ if dataItemInputValidation.isFailure => dataItemInputValidation
       case _ if readonlyFields.nonEmpty           => Failure(APIErrors.ReadonlyField(readonlyFields.mkString(",")))
       case _                                      => Success(MutactionVerificationSuccess())
 
     }
-    Future.successful(checkResult)
   }
 }

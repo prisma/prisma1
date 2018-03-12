@@ -1,14 +1,13 @@
 package com.prisma.api.mutations
 
 import com.prisma.api.ApiMetrics
+import com.prisma.api.database.DataResolver
 import com.prisma.api.database.mutactions._
-import com.prisma.api.database.{DataItem, DataResolver}
-import com.prisma.api.schema.{APIErrors, GeneralError}
+import com.prisma.api.schema.GeneralError
 
-import scala.collection.immutable.Seq
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
-import scala.util.{Failure, Try}
+import scala.util.Failure
 
 object ClientMutationRunner {
 
@@ -20,7 +19,7 @@ object ClientMutationRunner {
   ): Future[T] = {
     for {
       mutactionGroups  <- clientMutation.prepareMutactions()
-      errors           <- verifyMutactions(mutactionGroups, dataResolver)
+      errors           = verifyMutactions(mutactionGroups, dataResolver)
       _                = if (errors.nonEmpty) throw errors.head
       executionResults <- performMutactions(mutactionGroups, dataResolver.project.id)
       dataItem <- {
@@ -34,18 +33,9 @@ object ClientMutationRunner {
     } yield dataItem
   }
 
-  private def verifyMutactions(mutactionGroups: List[MutactionGroup], dataResolver: DataResolver): Future[List[GeneralError]] = {
-    val mutactions = mutactionGroups.flatMap(_.mutactions)
-    val verifications: Seq[Future[Try[MutactionVerificationSuccess]]] = mutactions.map { mutaction =>
-      lazy val verifyCall = mutaction match {
-        case mutaction: ClientSqlDataChangeMutaction => mutaction.verify(dataResolver)
-        case mutaction                               => mutaction.verify()
-      }
-      performWithTiming(s"verify ${mutaction.getClass.getSimpleName}", verifyCall)
-    }
-    val sequenced: Future[Seq[Try[MutactionVerificationSuccess]]] = Future.sequence(verifications)
-    val errors                                                    = sequenced.map(_.collect { case Failure(x: GeneralError) => x }.toList)
-
+  private def verifyMutactions(mutactionGroups: List[MutactionGroup], dataResolver: DataResolver): List[GeneralError] = {
+    val verifications = mutactionGroups.flatMap(_.mutactions).map(_.verify())
+    val errors = verifications.collect { case Failure(x: GeneralError) => x }
     errors
   }
 

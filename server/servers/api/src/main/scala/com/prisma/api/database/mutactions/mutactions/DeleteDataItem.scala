@@ -3,13 +3,11 @@ package com.prisma.api.database.mutactions.mutactions
 import com.prisma.api.database._
 import com.prisma.api.database.mutactions.{ClientSqlDataChangeMutaction, ClientSqlStatementResult, MutactionVerificationSuccess}
 import com.prisma.api.mutations.mutations.CascadingDeletes.Path
-import com.prisma.api.schema.APIErrors
 import com.prisma.shared.models.Project
 import slick.jdbc.MySQLProfile.api._
 
-import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
-import scala.util.{Failure, Success, Try}
+import scala.util.{Success, Try}
 
 case class DeleteDataItem(project: Project, path: Path, previousValues: DataItem, id: String) extends ClientSqlDataChangeMutaction {
 
@@ -22,9 +20,5 @@ case class DeleteDataItem(project: Project, path: Path, previousValues: DataItem
         )
       )
     )
-  }
-
-  override def verify(resolver: DataResolver): Future[Try[MutactionVerificationSuccess]] = {
-    Future.successful(Success(MutactionVerificationSuccess()))
   }
 }

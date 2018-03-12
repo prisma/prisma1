@@ -7,7 +7,7 @@ import scala.concurrent.Future
 import scala.util.{Success, Try}
 
 abstract class Mutaction {
-  def verify(): Future[Try[MutactionVerificationSuccess]] = Future.successful(Success(MutactionVerificationSuccess()))
+  def verify(): Try[MutactionVerificationSuccess] = Success(MutactionVerificationSuccess())
   def execute: Future[MutactionExecutionResult]
   def handleErrors: Option[PartialFunction[Throwable, MutactionExecutionResult]] = None
 }
@@ -16,9 +16,7 @@ abstract class ClientSqlMutaction extends Mutaction {
   override def execute: Future[ClientSqlStatementResult[Any]]
 }
 
-trait ClientSqlDataChangeMutaction extends ClientSqlMutaction {
-  def verify(resolver: DataResolver): Future[Try[MutactionVerificationSuccess]] = Future.successful(Success(MutactionVerificationSuccess()))
-}
+trait ClientSqlDataChangeMutaction extends ClientSqlMutaction
 
 case class MutactionVerificationSuccess()
 

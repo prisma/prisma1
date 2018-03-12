@@ -30,13 +30,8 @@ case class TransactionMutaction(clientSqlMutactions: List[ClientSqlMutaction], d
     }
   }
 
-  override def verify(): Future[Try[MutactionVerificationSuccess]] = {
-    val results: Seq[Future[Try[MutactionVerificationSuccess]]] = clientSqlMutactions.map {
-      case action: ClientSqlDataChangeMutaction => action.verify(dataResolver)
-      case action                               => action.verify()
-    }
-    val sequenced: Future[Seq[Try[MutactionVerificationSuccess]]] = Future.sequence(results)
-
-    sequenced.map(results => results.find(_.isFailure).getOrElse(Success(MutactionVerificationSuccess())))
+  override def verify(): Try[MutactionVerificationSuccess] = {
+    val results = clientSqlMutactions.map(_.verify())
+    results.find(_.isFailure).getOrElse(Success(MutactionVerificationSuccess()))
   }
 }
