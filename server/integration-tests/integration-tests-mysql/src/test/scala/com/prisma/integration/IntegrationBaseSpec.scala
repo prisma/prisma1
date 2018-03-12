@@ -67,43 +67,11 @@ trait IntegrationBaseSpec extends BeforeAndAfterEach with BeforeAndAfterAll with
       stage: String = Cuid.createCuid(),
       secrets: Vector[String] = Vector.empty
   ): (Project, Migration) = {
-    deployServer.query(s"""
-                    |mutation {
-                    | addProject(input: {
-                    |   name: "$name",
-                    |   stage: "$stage"
-                    | }) {
-                    |   project {
-                    |     name
-                    |     stage
-                    |   }
-                    | }
-                    |}
-      """.stripMargin)
 
     val projectId = name + "@" + stage
     projectsToCleanUp :+ projectId
-    val secretsFormatted = JsArray(secrets.map(JsString)).toString()
-
-    val deployResult = deployServer.query(s"""
-                                       |mutation {
-                                       |  deploy(input:{name: "$name", stage: "$stage", types: ${formatSchema(schema)}, secrets: $secretsFormatted}){
-                                       |    migration {
-                                       |      revision
-                                       |    }
-                                       |    errors {
-                                       |      description
-                                       |    }
-                                       |  }
-                                       |}
-      """.stripMargin)
-
-    val revision = deployResult.pathAsLong("data.deploy.migration.revision")
-
-    (
-      deployTestDependencies.projectPersistence.load(projectId).await.get,
-      deployTestDependencies.migrationPersistence.byId(MigrationId(projectId, revision.toInt)).await.get
-    )
+    deployServer.addProject(name, stage)
+    deployServer.deploySchema(name, stage, schema, secrets)
   }
 
   def formatSchema(schema: String): String = JsString(schema).toString()

@@ -1,22 +1,23 @@
 package com.prisma.deploy.specutils
 
 import akka.http.scaladsl.model.HttpRequest
-import com.prisma.sangria.utils.ErrorHandler
 import com.prisma.deploy.DeployDependencies
 import com.prisma.deploy.schema.{SchemaBuilder, SystemUserContext}
-import com.prisma.shared.models.{Project, ProjectId}
-import play.api.libs.json.JsString
+import com.prisma.sangria.utils.ErrorHandler
+import com.prisma.shared.models.{Migration, MigrationId, Project, ProjectId}
+import com.prisma.utils.await.AwaitUtils
+import play.api.libs.json.{JsArray, JsString}
 import sangria.execution.{Executor, QueryAnalysisError}
 import sangria.parser.QueryParser
 import sangria.renderer.SchemaRenderer
 import spray.json._
 
-import scala.concurrent.{Await, Future}
+import scala.concurrent.Await
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration.Duration
 import scala.reflect.io.File
 
-case class DeployTestServer()(implicit dependencies: DeployDependencies) extends SprayJsonExtensions with GraphQLResponseAssertions {
+case class DeployTestServer()(implicit dependencies: DeployDependencies) extends SprayJsonExtensions with GraphQLResponseAssertions with AwaitUtils {
   import com.prisma.deploy.server.JsonMarshalling._
 
   def writeSchemaIntoFile(schema: String): Unit = File("schema").writeAll(schema)
@@ -28,8 +29,7 @@ case class DeployTestServer()(implicit dependencies: DeployDependencies) extends
   /**
     * Execute a Query that must succeed.
     */
-  def query(query: String): JsValue                       = executeQuery(query)
-  def query(query: String, dataContains: String): JsValue = executeQuery(query, dataContains)
+  def query(query: String): JsValue = executeQuery(query)
 
   def executeQuery(
       query: String,
@@ -51,21 +51,9 @@ case class DeployTestServer()(implicit dependencies: DeployDependencies) extends
     * Execute a Query that must fail.
     */
   def queryThatMustFail(query: String, errorCode: Int): JsValue = executeQueryThatMustFail(query, errorCode)
-  def queryThatMustFail(query: String, errorCode: Int, errorCount: Int): JsValue =
-    executeQueryThatMustFail(query = query, errorCode = errorCode, errorCount = errorCount)
+
   def queryThatMustFail(query: String, errorCode: Int, errorContains: String): JsValue =
     executeQueryThatMustFail(query = query, errorCode = errorCode, errorContains = errorContains)
-  def queryThatMustFail(query: String, errorCode: Int, errorContains: String, errorCount: Int): JsValue =
-    executeQueryThatMustFail(query = query, errorCode = errorCode, errorCount = errorCount, errorContains = errorContains)
-
-  def executeQueryThatMustFail(query: String, userId: String, errorCode: Int): JsValue =
-    executeQueryThatMustFail(query = query, userId = Some(userId), errorCode = errorCode)
-  def executeQueryThatMustFail(query: String, userId: String, errorCode: Int, errorCount: Int): JsValue =
-    executeQueryThatMustFail(query = query, userId = Some(userId), errorCode = errorCode, errorCount = errorCount)
-  def executeQueryThatMustFail(query: String, errorCode: Int, errorContains: String, userId: String): JsValue =
-    executeQueryThatMustFail(query = query, userId = Some(userId), errorCode = errorCode, errorContains = errorContains)
-  def executeQueryThatMustFail(query: String, userId: String, errorCode: Int, errorCount: Int, errorContains: String): JsValue =
-    executeQueryThatMustFail(query = query, userId = Some(userId), errorCode = errorCode, errorCount = errorCount, errorContains = errorContains)
 
   def executeQueryThatMustFail(query: String,
                                errorCode: Int,
@@ -116,7 +104,6 @@ case class DeployTestServer()(implicit dependencies: DeployDependencies) extends
         )
         .recover {
           case error: QueryAnalysisError => error.resolveError
-          case e                         => sys.error(e.toString)
         },
       Duration.Inf
     )
@@ -124,20 +111,45 @@ case class DeployTestServer()(implicit dependencies: DeployDependencies) extends
     result
   }
 
-  /**
-    * Deploy a schema and return a project
-    */
-  def deploySchema(project: Project, schema: String): Future[Option[Project]] = {
+  def addProject(name: String, stage: String) = {
+    query(s"""
+                    |mutation {
+                    | addProject(input: {
+                    |   name: "$name",
+                    |   stage: "$stage"
+                    | }) {
+                    |   project {
+                    |     name
+                    |     stage
+                    |   }
+                    | }
+                    |}
+      """.stripMargin)
+  }
 
-    val nameAndStage                         = ProjectId.fromEncodedString(project.id)
-    def formatSchema(schema: String): String = JsString(schema).toString
+  def deploySchema(project: Project, schema: String): Project = {
+    val nameAndStage = ProjectId.fromEncodedString(project.id)
+    deployHelper(nameAndStage.name, nameAndStage.stage, schema, Vector.empty)
+    dependencies.projectPersistence.load(project.id).await.get
+  }
 
-    query(
+  def deploySchema(name: String, stage: String, schema: String, secrets: Vector[String] = Vector.empty): (Project, Migration) = {
+    val projectId = name + "@" + stage
+    val revision  = deployHelper(name, stage, schema, secrets)
+    (dependencies.projectPersistence.load(projectId).await.get, dependencies.migrationPersistence.byId(MigrationId(projectId, revision.toInt)).await.get)
+  }
+
+  private def deployHelper(name: String, stage: String, schema: String, secrets: Vector[String]) = {
+    val formattedSchema  = JsString(schema).toString
+    val secretsFormatted = JsArray(secrets.map(JsString)).toString()
+
+    val deployResult = query(
       s"""
          |mutation {
-         |  deploy(input:{name: "${nameAndStage.name}", stage: "${nameAndStage.stage}", types: ${formatSchema(schema)}}){
+         |  deploy(input:{name: "$name", stage: "$stage", types: $formattedSchema, secrets: $secretsFormatted}){
          |    migration {
          |      applied
+         |      revision
          |    }
          |    errors {
          |      description
@@ -147,7 +159,6 @@ case class DeployTestServer()(implicit dependencies: DeployDependencies) extends
       """.stripMargin
     )
 
-    dependencies.projectPersistence.load(project.id)
+    deployResult.pathAsLong("data.deploy.migration.revision")
   }
-
 }
