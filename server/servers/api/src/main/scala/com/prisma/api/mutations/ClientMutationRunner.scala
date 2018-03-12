@@ -23,7 +23,6 @@ object ClientMutationRunner {
       errors           <- verifyMutactions(mutactionGroups, dataResolver)
       _                = if (errors.nonEmpty) throw errors.head
       executionResults <- performMutactions(mutactionGroups, dataResolver.project.id)
-      _                <- performPostExecutions(mutactionGroups)
       dataItem <- {
         executionResults
           .filter(_.isInstanceOf[GeneralError])
@@ -86,20 +85,6 @@ object ClientMutationRunner {
       case Some(errorHandler) => mutaction.execute.recover(errorHandler)
       case None               => mutaction.execute
     }
-  }
-
-  private def performPostExecutions(mutactionGroups: List[MutactionGroup]): Future[Boolean] = {
-    def performGroup(group: MutactionGroup) = {
-      group match {
-        case MutactionGroup(mutactions, true) =>
-          Future.sequence(mutactions.map(mutaction => performWithTiming(s"performPostExecution ${mutaction.getClass.getSimpleName}", mutaction.postExecute)))
-        case MutactionGroup(mutactions: List[Mutaction], false) =>
-          mutactions.map(m => () => performWithTiming(s"performPostExecution ${m.getClass.getSimpleName}", m.postExecute)).runSequentially
-      }
-    }
-
-    val mutationGroupResults: Future[List[Boolean]] = Future.sequence(mutactionGroups.map(performGroup)).map(_.flatten)
-    mutationGroupResults.map(_.forall(identity))
   }
 
   private def performWithTiming[A](name: String, f: Future[A]): Future[A] = {
