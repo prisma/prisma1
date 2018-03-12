@@ -1,21 +1,21 @@
 steps:
-#  - label: ":scala: libs"
-#    command: cd server && ./scripts/test.sh libs
-#
-#  - label: ":scala: subscriptions"
-#    command: cd server && ./scripts/test.sh subscriptions
-#
-#  - label: ":scala: deploy"
-#    command: cd server && ./scripts/test.sh deploy
-#
-#  - label: ":scala: api"
-#    command: cd server && ./scripts/test.sh api
-#
-#  - label: ":scala: images"
-#    command: cd server && ./scripts/test.sh images
-#
-#  - wait
+  - label: ":scala: libs"
+    command: cd server && ./scripts/test.sh libs
+
+  - label: ":scala: subscriptions"
+    command: cd server && ./scripts/test.sh subscriptions
+
+  - label: ":scala: deploy"
+    command: cd server && ./scripts/test.sh deploy
+
+  - label: ":scala: api"
+    command: cd server && ./scripts/test.sh api
+
+  - label: ":scala: images"
+    command: cd server && ./scripts/test.sh images
+
+  - wait
 
   - label: ":docker: Build unstable channel"
     command: ./server/scripts/docker-build.sh unstable
-#    branches: master
+    branches: master

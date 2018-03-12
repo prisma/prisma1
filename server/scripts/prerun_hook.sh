@@ -3,6 +3,9 @@
 # Replace this file / the contents of this file in your custom Dockerfile for Prisma,
 # to have the contents of the script run on Prisma startup.
 
-# Example line in dockerfile: COPY /path/to/my/script /app/prerun_hook.sh
+# Example Dockerfile:
+#   FROM prismagraphql/prisma:<desired version here>
+#   COPY ./my_hook_script.sh /app/prerun_hook.sh
 
-echo "Running prerun hook!"
+# If you want to trigger a webhook, for example, you will need to add additional packages. Prisma uses anapsix/alpine-java as base image.
+#   RUN apk --no-cache add curl
