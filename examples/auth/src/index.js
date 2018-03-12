@@ -11,6 +11,7 @@ const resolvers = {
     signup,
     login,
   },
+  AuthPayload
 }
 
 const server = new GraphQLServer({

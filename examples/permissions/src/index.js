@@ -18,6 +18,7 @@ const resolvers = {
     updateTitle,
     deletePost,
   },
+  AuthPayload,
 }
 
 const server = new GraphQLServer({
