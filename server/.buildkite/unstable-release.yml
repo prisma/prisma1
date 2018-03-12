@@ -21,7 +21,7 @@ steps:
     command: cd server && ./scripts/test.sh libs
 
   - label: ":scala: integration-tests"
-    command: cd server && ./scripts/test.sh integration-tests
+    command: cd server && ./scripts/test.sh integrationTests
 
   - wait
 
