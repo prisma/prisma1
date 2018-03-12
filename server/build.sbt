@@ -3,6 +3,8 @@ import com.typesafe.sbt.git.ConsoleGitRunner
 import sbt.Keys.name
 import sbt._
 
+import scala.io.Source
+
 name := "server"
 Revolver.settings
 
@@ -41,6 +43,7 @@ lazy val commonSettings = versionSettings ++ Seq(
 )
 
 lazy val commonServerSettings = commonSettings ++ Seq(libraryDependencies ++= commonServerDependencies)
+lazy val prerunHookFile = new java.io.File(sys.props("user.dir") + "/prerun_hook.sh")
 
 def commonDockerImageSettings(imageName: String) = commonServerSettings ++ Seq(
   imageNames in docker := Seq(
@@ -52,10 +55,17 @@ def commonDockerImageSettings(imageName: String) = commonServerSettings ++ Seq(
 
     new Dockerfile {
       from("anapsix/alpine-java")
-      entryPoint(s"$targetDir/bin/${executableScriptName.value}")
+      copy(appDir, targetDir)
+      copy(prerunHookFile , s"$targetDir/prerun_hook.sh")
+      runShell(s"touch", s"$targetDir/start.sh")
+      runShell("echo", "#!/usr/bin/env bash", ">>", s"$targetDir/start.sh")
+      runShell("echo", "set -e", ">>", s"$targetDir/start.sh")
+      runShell("echo", s".$targetDir/prerun_hook.sh", ">>", s"$targetDir/start.sh")
+      runShell("echo", s".$targetDir/bin/${executableScriptName.value}", ">>" ,s"$targetDir/start.sh")
+      runShell(s"chmod", "+x", s"$targetDir/start.sh")
       env("COMMIT_SHA", sys.env.getOrElse("COMMIT_SHA", sys.error("Env var COMMIT_SHA required but not found.")))
       env("CLUSTER_VERSION", sys.env.getOrElse("CLUSTER_VERSION", sys.error("Env var CLUSTER_VERSION required but not found.")))
-      copy(appDir, targetDir)
+      entryPointShell(s"$targetDir/start.sh")
     }
   },
   javaOptions in Universal ++= Seq(
