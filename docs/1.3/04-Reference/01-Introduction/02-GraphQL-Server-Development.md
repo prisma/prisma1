@@ -183,7 +183,7 @@ Another advantage is that your editor can now help you with making API requests,
 
 **Dynamic bindings** are commonly used in dynamic programming languages (such as JavaScript). They don't require an additional build step (as is the case for static bindings). The method invocations on the `binding` instance are translated to GraphQL queries only at runtime. This still provides the major benefit of using the concise and simple binding syntax. Benefits like build-time error checking and auto-completion can still be achieved using appropriate build tools.
 
-## Architecture primer: 2 GraphQL API layers
+## Architecture primer: Two GraphQL API layers
 
 When building GraphQL servers with Prisma, you're dealing with two GraphQL APIs:
 
