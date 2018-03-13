@@ -12,7 +12,7 @@ import java.util.concurrent.Callable
   * - This catches transient network errors in resolving the statsd host.
   * - Metrics are queued inmemory (defined in the client), nothing is lost on error here.
   */
-case class StatsdHostLookup(dnsName: String, port: Int, reachableTimeout: Int) extends Callable[InetSocketAddress] {
+case class StatsdHostLookup(dnsName: String, port: Int) extends Callable[InetSocketAddress] {
   var lookupCache: Option[InetSocketAddress] = None
   val healthChecker                          = StatsdHealthChecker()
 
