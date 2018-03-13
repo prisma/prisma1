@@ -12,26 +12,7 @@ import scala.concurrent.Await
 import scala.concurrent.duration._
 import scala.util.{Failure, Success, Try}
 
-/**
-  * Metrics management, should be inherited and instantiated _once per logical service_.
-  *
-  * The metrics structure reported from this code to the statsd backend is as follows:
-  *
-  * {service_name}.{metric_name}#env={env}container={container_id},instance={instance_id}[,{custom_tag}={custom_value}]
-  *
-  * - The basic metrics name that goes to statsd is simply the logical service name plus the metric name, e.g. "ApiSimpleService.OpenSessions"
-  * - After that, there is a series of tags:
-  *   - The env var "METRICS_PREFIX" is used to denote the env the service is running in, e.g. 'dev' or 'prod'.
-  *   - The EC2 instance this code is run from. Fetched from EC2
-  *   - The container ID this code is run from. Fetched from /etc/hostname, as it is identical to the container ID in ECS.
-  *   - Custom metric tags. These should be used sparsely and only if it delivers crucial insights, such as per-project distinctions.
-  *
-  * The final metric that arrives at Statsd looks for example like this:
-  * "ApiSimpleService.RequestCount#env=prod,instance=i-0d3c23cdd0c2f5d03,container=e065fc831976,projectId=someCUID
-  */
-abstract class MetricsManager(
-    reporter: ErrorReporter
-) {
+abstract class MetricsManager(reporter: ErrorReporter) {
   def serviceName: String
 
   // System used to periodically flush the state of individual gauges
