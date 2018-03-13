@@ -79,7 +79,7 @@ case class DeployMutation(
               val destructiveWarnings: Vector[SchemaWarning] = results.collect { case warning: SchemaWarning => warning }
               val inconsistencyErrors: Vector[SchemaError]   = results.collect { case error: SchemaError     => error }
 
-              (inconsistencyErrors, destructiveWarnings, args.force) match {
+              (inconsistencyErrors, destructiveWarnings, args.force.getOrElse(false)) match {
 
                 case (errors, warnings, _) if errors.nonEmpty =>
                   Future.successful(
@@ -90,12 +90,12 @@ case class DeployMutation(
                   val migration            = secretsUpdatedFuture.flatMap(secret => handleMigration(inferredNextSchema, steps ++ secret, functionsForInput))
                   migration.map(mig => MutationSuccess(DeployMutationPayload(args.clientMutationId, mig, errors = schemaErrors, warnings)))
 
-                case (_, warnings, Some(true)) =>
+                case (_, warnings, true) =>
                   val secretsUpdatedFuture = updateSecretsIfNecessary()
                   val migration            = secretsUpdatedFuture.flatMap(secret => handleMigration(inferredNextSchema, steps ++ secret, functionsForInput))
                   migration.map(mig => MutationSuccess(DeployMutationPayload(args.clientMutationId, mig, errors = schemaErrors, warnings)))
 
-                case (_, warnings, _) =>
+                case (_, warnings, false) =>
                   Future.successful(
                     MutationSuccess(DeployMutationPayload(args.clientMutationId, Some(Migration.empty(project.id)), errors = schemaErrors, warnings)))
               }

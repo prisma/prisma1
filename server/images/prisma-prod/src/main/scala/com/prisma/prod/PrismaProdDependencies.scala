@@ -20,7 +20,6 @@ import com.prisma.messagebus.pubsub.inmemory.InMemoryAkkaPubSub
 import com.prisma.messagebus.pubsub.rabbit.RabbitAkkaPubSub
 import com.prisma.messagebus.queue.inmemory.InMemoryAkkaQueue
 import com.prisma.messagebus.queue.rabbit.RabbitQueue
-import com.prisma.shared.models.Project
 import com.prisma.subscriptions.protocol.SubscriptionProtocolV05.Responses.SubscriptionSessionResponseV05
 import com.prisma.subscriptions.protocol.SubscriptionProtocolV07.Responses.SubscriptionSessionResponse
 import com.prisma.subscriptions.protocol.SubscriptionRequest
