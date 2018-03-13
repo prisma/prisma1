@@ -1,0 +1,43 @@
+package com.prisma.api.connector.mysql.impl
+
+import com.prisma.api.connector.mysql.DatabaseMutactionInterpreter
+import com.prisma.api.connector._
+import slick.jdbc.MySQLProfile.api._
+
+import scala.concurrent.{ExecutionContext, Future}
+
+case class DatabaseMutactionExecutorImpl(
+    clientDb: Database
+)(implicit ec: ExecutionContext)
+    extends DatabaseMutactionExecutor {
+
+  override def execute(mutactions: Vector[DatabaseMutaction]): Future[Unit] = {
+    val interpreters        = mutactions.map(interpreterFor)
+    val combinedErrorMapper = interpreters.map(_.errorMapper).reduceLeft(_ orElse _)
+    val singleAction        = DBIO.seq(interpreters.map(_.action): _*).transactionally
+    clientDb
+      .run(singleAction)
+      .recover {
+        case error =>
+          val mappedError = combinedErrorMapper.lift(error).getOrElse(error)
+          throw mappedError
+      }
+      .map(_ => ())
+  }
+
+  def interpreterFor(mutaction: DatabaseMutaction): DatabaseMutactionInterpreter = mutaction match {
+    case m: AddDataItemToManyRelationByPath   => AddDataItemToManyRelationByPathInterpreter(m)
+    case m: CascadingDeleteRelationMutactions => CascadingDeleteRelationMutactionsInterpreter(m)
+    case m: CreateDataItem                    => CreateDataItemInterpreter(m)
+    case m: DeleteDataItem                    => DeleteDataItemInterpreter(m)
+    case m: DeleteDataItemNested              => DeleteDataItemNestedInterpreter(m)
+    case m: DeleteDataItems                   => DeleteDataItemsInterpreter(m)
+    case m: DeleteManyRelationChecks          => DeleteManyRelationChecksInterpreter(m)
+    case m: DeleteRelationCheck               => DeleteRelationCheckInterpreter(m)
+    case DisableForeignKeyConstraintChecks    => DisableForeignKeyConstraintChecksInterpreter
+    case EnableForeignKeyConstraintChecks     => EnableForeignKeyConstraintChecksInterpreter
+    case m: NestedConnectRelation             => NestedConnectRelationInterpreter(m)
+    case m: NestedCreateRelation              => NestedCreateRelationInterpreter(m)
+    case m: NestedDisconnectRelation          => NestedDisconnectRelationInterpreter(m)
+  }
+}
