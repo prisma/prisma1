@@ -448,7 +448,7 @@ case class Relation(
 
   def isUnambiguous(schema: Schema): Boolean = (schema.relations.toSet - this).nonEmpty
 
-  def isSameModelRelation(schema: Schema): Boolean          = getModelA(schema) == getModelB(schema)
+  def isSameModelRelation: Boolean                          = modelAId == modelBId
   def isSameFieldSameModelRelation(schema: Schema): Boolean = getModelAField(schema) == getModelBField(schema)
 
   def getModelA(schema: Schema): Option[Model] = schema.getModelById(modelAId)
