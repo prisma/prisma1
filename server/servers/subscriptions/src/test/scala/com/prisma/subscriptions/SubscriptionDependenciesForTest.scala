@@ -51,4 +51,6 @@ class SubscriptionDependenciesForTest()(implicit val system: ActorSystem, val ma
   override val databases: Databases                 = Databases.initialize(config)
   override lazy val sssEventsPubSub                 = ???
   override lazy val webhookPublisher                = ???
+
+  override def apiConnector = ???
 }

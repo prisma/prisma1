@@ -1,9 +1,9 @@
 package com.prisma.api.mutations.mutations
 
 import com.prisma.api.ApiDependencies
+import com.prisma.api.connector.{DeleteDataItems, DeleteManyRelationChecks}
 import com.prisma.api.database.DataResolver
 import com.prisma.api.database.Types.DataItemFilterCollection
-import com.prisma.api.database.mutactions.mutactions.{DeleteDataItems, DeleteManyRelationMutaction}
 import com.prisma.api.mutations._
 import com.prisma.shared.models.{Model, Project}
 
@@ -25,7 +25,7 @@ case class DeleteMany(
     for {
       _ <- count // make sure that count query has been resolved before proceeding
     } yield {
-      val requiredRelationChecks = DeleteManyRelationMutaction(project, model, whereFilter)
+      val requiredRelationChecks = DeleteManyRelationChecks(project, model, whereFilter)
       val deleteItems            = DeleteDataItems(project, model, whereFilter)
       PreparedMutactions(
         databaseMutactions = Vector(requiredRelationChecks, deleteItems),

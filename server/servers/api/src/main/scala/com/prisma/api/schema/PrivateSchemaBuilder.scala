@@ -46,7 +46,7 @@ case class PrivateSchemaBuilder(
       fieldType = OptionType(BooleanType),
       resolve = (ctx) => {
         val mutation = ResetData(project = project, dataResolver = masterDataResolver)
-        ClientMutationRunner.run(mutation, dataResolver).map(_ => true)
+        ClientMutationRunner.run(mutation, apiDependencies.databaseMutactionExecutor).map(_ => true)
       }
     )
   }

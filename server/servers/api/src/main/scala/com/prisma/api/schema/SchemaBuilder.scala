@@ -127,7 +127,7 @@ case class SchemaBuilderImpl(
       arguments = argumentsBuilder.getSangriaArgumentsForCreate(model).getOrElse(List.empty),
       resolve = (ctx) => {
         val mutation       = Create(model = model, project = project, args = ctx.args, dataResolver = masterDataResolver)
-        val mutationResult = ClientMutationRunner.run(mutation, dataResolver)
+        val mutationResult = ClientMutationRunner.run(mutation, apiDependencies.databaseMutactionExecutor)
         mapReturnValueResult(mutationResult, ctx.args)
       }
     )
@@ -142,7 +142,7 @@ case class SchemaBuilderImpl(
         resolve = (ctx) => {
           val mutation = Update(model = model, project = project, args = ctx.args, dataResolver = masterDataResolver)
 
-          val mutationResult = ClientMutationRunner.run(mutation, dataResolver)
+          val mutationResult = ClientMutationRunner.run(mutation, apiDependencies.databaseMutactionExecutor)
           mapReturnValueResult(mutationResult, ctx.args)
         }
       )
@@ -158,7 +158,7 @@ case class SchemaBuilderImpl(
         resolve = (ctx) => {
           val where    = objectTypeBuilder.extractRequiredFilterFromContext(model, ctx)
           val mutation = UpdateMany(project, model, ctx.args, where, dataResolver = masterDataResolver)
-          ClientMutationRunner.run(mutation, dataResolver)
+          ClientMutationRunner.run(mutation, apiDependencies.databaseMutactionExecutor)
         }
       )
     }
@@ -172,7 +172,7 @@ case class SchemaBuilderImpl(
         arguments = args,
         resolve = (ctx) => {
           val mutation       = Upsert(model = model, project = project, args = ctx.args, dataResolver = masterDataResolver)
-          val mutationResult = ClientMutationRunner.run(mutation, dataResolver)
+          val mutationResult = ClientMutationRunner.run(mutation, apiDependencies.databaseMutactionExecutor)
           mapReturnValueResult(mutationResult, ctx.args)
         }
       )
@@ -193,7 +193,7 @@ case class SchemaBuilderImpl(
             args = ctx.args,
             dataResolver = masterDataResolver
           )
-          val mutationResult = ClientMutationRunner.run(mutation, dataResolver)
+          val mutationResult = ClientMutationRunner.run(mutation, apiDependencies.databaseMutactionExecutor)
           mapReturnValueResult(mutationResult, ctx.args)
         }
       )
@@ -208,7 +208,7 @@ case class SchemaBuilderImpl(
       resolve = (ctx) => {
         val where    = objectTypeBuilder.extractRequiredFilterFromContext(model, ctx)
         val mutation = DeleteMany(project, model, where, dataResolver = masterDataResolver)
-        ClientMutationRunner.run(mutation, dataResolver)
+        ClientMutationRunner.run(mutation, apiDependencies.databaseMutactionExecutor)
       }
     )
   }

@@ -1,21 +1,16 @@
 package com.prisma.api.mutations
 
 import com.prisma.api.ApiDependencies
-import com.prisma.api.connector.PublishSubscriptionEvent
-import com.prisma.api.database.mutactions.ClientSqlMutaction
-import com.prisma.api.database.mutactions.mutactions.{CreateDataItem, DeleteDataItem, UpdateDataItem}
+import com.prisma.api.connector._
 import com.prisma.shared.models.IdType.Id
 import com.prisma.shared.models.Project
 
-import scala.collection.immutable.Seq
-
-//todo this does not handle upsert
 object SubscriptionEvents {
   def extractFromSqlMutactions(
       project: Project,
       mutationId: Id,
-      mutactions: Seq[ClientSqlMutaction]
-  )(implicit apiDependencies: ApiDependencies): Seq[PublishSubscriptionEvent] = {
+      mutactions: Vector[DatabaseMutaction]
+  )(implicit apiDependencies: ApiDependencies): Vector[PublishSubscriptionEvent] = {
     mutactions.collect {
       case x: UpdateDataItem => fromUpdateMutaction(project, mutationId, x)
       case x: CreateDataItem => fromCreateMutaction(project, mutationId, x)

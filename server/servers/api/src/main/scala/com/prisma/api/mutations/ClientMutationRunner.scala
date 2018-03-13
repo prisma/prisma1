@@ -1,25 +1,24 @@
 package com.prisma.api.mutations
 
 import com.prisma.api.ApiMetrics
-import com.prisma.api.database.DataResolver
+import com.prisma.api.connector.DatabaseMutactionExecutor
 import com.prisma.api.database.mutactions._
 import com.prisma.api.schema.GeneralError
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
-import scala.util.Failure
 
 object ClientMutationRunner {
 
   def run[T](
       clientMutation: ClientMutation[T],
-      dataResolver: DataResolver
+      databaseMutactionExecutor: DatabaseMutactionExecutor
   ): Future[T] = {
     for {
       preparedMutactions <- clientMutation.prepareMutactions()
       errors             = verifyMutactions(preparedMutactions)
       _                  = if (errors.nonEmpty) throw errors.head
-      executionResults   <- performMutactions(preparedMutactions, dataResolver)
+      executionResults   <- performMutactions(preparedMutactions, clientMutation.projectId, databaseMutactionExecutor)
       dataItem <- {
         executionResults
           .filter(_.isInstanceOf[GeneralError])
@@ -32,53 +31,22 @@ object ClientMutationRunner {
   }
 
   private def verifyMutactions(preparedMutactions: PreparedMutactions): Vector[GeneralError] = {
-    val verifications = preparedMutactions.allMutactions.map(_.verify())
-    val errors        = verifications.collect { case Failure(x: GeneralError) => x }
-    errors
+//    val verifications = preparedMutactions.allMutactions.map(_.verify())
+//    val errors        = verifications.collect { case Failure(x: GeneralError) => x }
+//    errors
+    Vector.empty
   }
 
-  private def performMutactions(preparedMutactions: PreparedMutactions, dataResolver: DataResolver): Future[Vector[MutactionExecutionResult]] = {
+  private def performMutactions(
+      preparedMutactions: PreparedMutactions,
+      projectId: String,
+      databaseMutactionExecutor: DatabaseMutactionExecutor
+  ): Future[Vector[MutactionExecutionResult]] = {
+    // todo: execute SideEffectMutactions
     for {
-      dbResults         <- performDatabaseMutactions(preparedMutactions.databaseMutactions, dataResolver)
-      sideEffectResults <- performInParallel(preparedMutactions.sideEffectMutactions, dataResolver.project.id)
-    } yield Vector(dbResults) ++ sideEffectResults
-  }
-
-  private def performDatabaseMutactions(mutactions: Vector[ClientSqlMutaction], dataResolver: DataResolver): Future[MutactionExecutionResult] = {
-    import slick.dbio.{DBIO, DBIOAction, Effect, NoStream}
-    import slick.jdbc.MySQLProfile.api._
-
-    val statements: Future[Vector[DBIOAction[Any, NoStream, Effect.All]]] =
-      Future.sequence(mutactions.map(_.execute)).map(_.collect { case ClientSqlStatementResult(sqlAction) => sqlAction })
-
-    type ErrorHandler = PartialFunction[Throwable, GeneralError]
-    val combinedErrorHandler: Option[ErrorHandler] = mutactions.flatMap(_.handleErrors) match {
-      case errorHandlers if errorHandlers.isEmpty => None
-      case errorHandlers                          => Some(errorHandlers reduceLeft (_ orElse _))
-    }
-
-    val executionResult = statements
-      .flatMap { sqlActions =>
-        dataResolver.runOnClientDatabase("Transaction", DBIO.seq(sqlActions: _*).transactionally)
-      }
-      .map { _ =>
-        MutactionExecutionSuccess()
-      }
-
-    val executionResult2 = combinedErrorHandler match {
-      case Some(errorHandler) =>
-        executionResult.recoverWith {
-          case error =>
-            errorHandler.lift(error) match {
-              case Some(newError) => throw newError
-              case None           => throw error
-            }
-        }
-      case None =>
-        executionResult
-    }
-
-    executionResult2
+      _ <- databaseMutactionExecutor.execute(preparedMutactions.databaseMutactions)
+//      sideEffectResults <- performInParallel(preparedMutactions.sideEffectMutactions, projectId)
+    } yield Vector.empty
   }
 
   private def performInParallel(mutactions: Vector[Mutaction], projectId: String): Future[Vector[MutactionExecutionResult]] = {

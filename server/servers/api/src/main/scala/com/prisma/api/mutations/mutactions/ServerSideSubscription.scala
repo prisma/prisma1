@@ -1,9 +1,7 @@
 package com.prisma.api.mutations.mutactions
 
 import com.prisma.api.{ApiDependencies, ApiMetrics}
-import com.prisma.api.connector.ServerSideSubscription
-import com.prisma.api.database.mutactions.ClientSqlMutaction
-import com.prisma.api.database.mutactions.mutactions.{CreateDataItem, DeleteDataItem, UpdateDataItem}
+import com.prisma.api.connector._
 import com.prisma.shared.models.IdType.Id
 import com.prisma.shared.models.ModelMutationType.ModelMutationType
 import com.prisma.shared.models.{Model, ModelMutationType, Project, ServerSideSubscriptionFunction}
@@ -13,9 +11,9 @@ import sangria.parser.QueryParser
 object ServerSideSubscriptionExtractor {
   def extractFromMutactions(
       project: Project,
-      mutactions: Seq[ClientSqlMutaction],
+      mutactions: Vector[DatabaseMutaction],
       requestId: Id
-  )(implicit apiDependencies: ApiDependencies): Seq[ServerSideSubscription] = {
+  )(implicit apiDependencies: ApiDependencies): Vector[ServerSideSubscription] = {
     val createMutactions = mutactions.collect { case x: CreateDataItem => x }
     val updateMutactions = mutactions.collect { case x: UpdateDataItem => x }
     val deleteMutactions = mutactions.collect { case x: DeleteDataItem => x }
@@ -29,9 +27,9 @@ object ServerSideSubscriptionExtractor {
 
   def extractFromCreateMutactions(
       project: Project,
-      mutactions: Seq[CreateDataItem],
+      mutactions: Vector[CreateDataItem],
       requestId: Id
-  )(implicit apiDependencies: ApiDependencies): Seq[ServerSideSubscription] = {
+  )(implicit apiDependencies: ApiDependencies): Vector[ServerSideSubscription] = {
     for {
       mutaction <- mutactions
       sssFn     <- serverSideSubscriptionFunctionsFor(project, mutaction.model, ModelMutationType.Deleted)
@@ -49,9 +47,9 @@ object ServerSideSubscriptionExtractor {
 
   def extractFromUpdateMutactions(
       project: Project,
-      mutactions: Seq[UpdateDataItem],
+      mutactions: Vector[UpdateDataItem],
       requestId: Id
-  )(implicit apiDependencies: ApiDependencies): Seq[ServerSideSubscription] = {
+  )(implicit apiDependencies: ApiDependencies): Vector[ServerSideSubscription] = {
     for {
       mutaction <- mutactions
       sssFn     <- serverSideSubscriptionFunctionsFor(project, mutaction.model, ModelMutationType.Deleted)
@@ -72,9 +70,9 @@ object ServerSideSubscriptionExtractor {
 
   def extractFromDeleteMutactions(
       project: Project,
-      mutactions: Seq[DeleteDataItem],
+      mutactions: Vector[DeleteDataItem],
       requestId: Id
-  )(implicit apiDependencies: ApiDependencies): Seq[ServerSideSubscription] = {
+  )(implicit apiDependencies: ApiDependencies): Vector[ServerSideSubscription] = {
     for {
       mutaction <- mutactions
       sssFn     <- serverSideSubscriptionFunctionsFor(project, mutaction.path.root.model, ModelMutationType.Deleted)

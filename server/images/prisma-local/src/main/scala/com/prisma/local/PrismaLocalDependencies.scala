@@ -90,4 +90,6 @@ case class PrismaLocalDependencies()(implicit val system: ActorSystem, val mater
   override lazy val apiAuth                 = AuthImpl
   override lazy val deployPersistencePlugin = MySqlDeployConnector(databases.master)(system.dispatcher)
   override lazy val functionValidator       = FunctionValidatorImpl()
+
+  override def apiConnector = ???
 }

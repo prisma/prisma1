@@ -198,8 +198,6 @@ case class UpdateDataItemInterpreter(mutaction: UpdateDataItem) extends Database
   val model   = mutaction.model
   val id      = mutaction.id
   val args    = mutaction.args
-  // TODO filter for fields which actually did change
-  val namesOfUpdatedFields: Vector[String] = mutaction.args.raw.keys.toVector
 
   override val action = DatabaseMutationBuilder.updateDataItemByUnique(project.id, NodeSelector.forId(model, id), args)
 

@@ -1,8 +1,7 @@
 package com.prisma.api.mutations
 
-import com.prisma.api.connector.{DataItem, NodeSelector}
+import com.prisma.api.connector.{DataItem, DatabaseMutaction, NodeSelector, SideEffectMutaction}
 import com.prisma.api.database.DataResolver
-import com.prisma.api.database.mutactions._
 import com.prisma.shared.models.IdType.Id
 import cool.graph.cuid.Cuid
 
@@ -14,6 +13,8 @@ trait ClientMutation[T] {
   def dataResolver: DataResolver
   def prepareMutactions(): Future[PreparedMutactions]
   def getReturnValue: Future[T]
+
+  def projectId: String = dataResolver.project.id
 }
 
 trait SingleItemClientMutation extends ClientMutation[ReturnValueResult] {
@@ -26,8 +27,8 @@ trait SingleItemClientMutation extends ClientMutation[ReturnValueResult] {
 }
 
 case class PreparedMutactions(
-    databaseMutactions: Vector[ClientSqlMutaction], // DatabaseMutaction
-    sideEffectMutactions: Vector[Mutaction] // SideEffectMutaction
+    databaseMutactions: Vector[DatabaseMutaction], // DatabaseMutaction
+    sideEffectMutactions: Vector[SideEffectMutaction] // SideEffectMutaction
 ) {
   lazy val allMutactions = databaseMutactions ++ sideEffectMutactions
 }

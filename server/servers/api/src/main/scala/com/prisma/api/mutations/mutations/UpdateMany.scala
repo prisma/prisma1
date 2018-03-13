@@ -1,9 +1,9 @@
 package com.prisma.api.mutations.mutations
 
 import com.prisma.api.ApiDependencies
+import com.prisma.api.connector.UpdateDataItems
 import com.prisma.api.database.DataResolver
 import com.prisma.api.database.Types.DataItemFilterCollection
-import com.prisma.api.database.mutactions.mutactions.UpdateDataItems
 import com.prisma.api.mutations._
 import com.prisma.shared.models.{Model, Project}
 import sangria.schema

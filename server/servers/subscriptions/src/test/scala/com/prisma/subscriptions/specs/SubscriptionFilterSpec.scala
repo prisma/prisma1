@@ -1,8 +1,8 @@
 package com.prisma.subscriptions.specs
 
+import com.prisma.api.connector.{NodeSelector, Path}
 import com.prisma.api.database.mutactions.mutactions.{AddDataItemToManyRelationByPath, CreateDataItem}
-import com.prisma.api.mutations.mutations.CascadingDeletes.Path
-import com.prisma.api.mutations.{CoolArgs, NodeSelector}
+import com.prisma.api.mutations.CoolArgs
 import com.prisma.messagebus.pubsub.Only
 import com.prisma.shared.models.{Enum, Model, Project}
 import com.prisma.shared.schema_dsl.SchemaDsl
