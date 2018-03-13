@@ -9,6 +9,6 @@ if [ -z "$BUILDKITE_TAG" ]; then
       buildkite-agent pipeline upload ./server/.buildkite/unstable-release.yml
     fi
 else
-    # Build was triggerexd by a tagged commit
+    # Build was triggered by a tagged commit
     buildkite-agent pipeline upload ./server/.buildkite/stable-release.yml
 fi
