@@ -1,6 +1,5 @@
 package com.prisma.deploy.migration.inference
 
-import com.prisma.deploy.schema.UpdatedRelationAmbigous
 import com.prisma.shared.models._
 
 trait MigrationStepsInferrer {

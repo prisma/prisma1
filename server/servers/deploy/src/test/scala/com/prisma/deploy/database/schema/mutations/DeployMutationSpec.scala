@@ -530,7 +530,6 @@ class DeployMutationSpec extends FlatSpec with Matchers with DeploySpecBase {
     migrations2.exists(x => x.status != MigrationStatus.Success) shouldEqual false
     migrations2.head.revision shouldEqual 4 // order is DESC
     migrations2.head.steps.head should be(UpdateSecrets(Vector.empty))
-
   }
 
   "DeployMutation" should "not change secrets if there are errors in the deploy (invalid functions)" in {

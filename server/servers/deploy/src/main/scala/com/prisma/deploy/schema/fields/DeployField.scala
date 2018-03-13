@@ -11,7 +11,8 @@ object DeployField {
     InputField("types", StringType),
     InputField("dryRun", OptionInputType(BooleanType)),
     InputField("secrets", OptionInputType(ListInputType(StringType))),
-    InputField("subscriptions", OptionInputType(ListInputType(functionInputType)))
+    InputField("subscriptions", OptionInputType(ListInputType(functionInputType))),
+    InputField("force", OptionInputType(BooleanType))
   )
 
   lazy val functionInputType = InputObjectType(
@@ -41,6 +42,7 @@ object DeployField {
         projectId = node.projectId,
         types = node.requiredArgAsString("types"),
         dryRun = node.optionalArgAsBoolean("dryRun"),
+        force = node.optionalArgAsBoolean("force"),
         secrets = node.optionalArgAs[Vector[String]]("secrets").getOrElse(Vector.empty),
         functions = {
           val functionNodes = node.optionalArgAs[Vector[marshaller.Node]]("subscriptions").getOrElse(Vector.empty)

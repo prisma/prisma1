@@ -128,30 +128,45 @@ case class DeployTestServer()(implicit dependencies: DeployDependencies) extends
   }
 
   def deploySchema(project: Project, schema: String): Project = {
-    val nameAndStage = ProjectId.fromEncodedString(project.id)
-    deployHelper(nameAndStage.name, nameAndStage.stage, schema, Vector.empty)
+    deployHelper(project.id, schema, Vector.empty)
     dependencies.projectPersistence.load(project.id).await.get
   }
 
-  def deploySchemaThatMustFail(project: Project, schema: String): Project = {
-    val nameAndStage = ProjectId.fromEncodedString(project.id)
-    deployHelper(nameAndStage.name, nameAndStage.stage, schema, Vector.empty, true)
-    dependencies.projectPersistence.load(project.id).await.get
+  def deploySchemaThatMustFail(project: Project, schema: String, force: Boolean = false): JsValue = {
+    deployHelper(project.id, schema, Vector.empty, shouldFail = true, force = force)
+  }
+
+  def deploySchemaThatMustWarn(project: Project, schema: String, force: Boolean = false): JsValue = {
+    deployHelper(project.id, schema, Vector.empty, shouldFail = false, shouldWarn = true, force = force)
+  }
+
+  def deploySchemaThatMustFailAndWarn(project: Project, schema: String, force: Boolean = false): JsValue = {
+    deployHelper(project.id, schema, Vector.empty, shouldFail = true, shouldWarn = true, force = force)
   }
 
   def deploySchema(name: String, stage: String, schema: String, secrets: Vector[String] = Vector.empty): (Project, Migration) = {
     val projectId = name + "@" + stage
-    val revision  = deployHelper(name, stage, schema, secrets)
+    val result    = deployHelper(projectId, schema, secrets)
+    val revision  = result.pathAsLong("data.deploy.migration.revision")
     (dependencies.projectPersistence.load(projectId).await.get, dependencies.migrationPersistence.byId(MigrationId(projectId, revision.toInt)).await.get)
   }
 
-  private def deployHelper(name: String, stage: String, schema: String, secrets: Vector[String], shouldFail: Boolean = false) = {
+  private def deployHelper(projectId: String,
+                           schema: String,
+                           secrets: Vector[String],
+                           shouldFail: Boolean = false,
+                           shouldWarn: Boolean = false,
+                           force: Boolean = false): JsValue = {
+
+    val nameAndStage     = ProjectId.fromEncodedString(projectId)
+    val name             = nameAndStage.name
+    val stage            = nameAndStage.stage
     val formattedSchema  = JsString(schema).toString
     val secretsFormatted = JsArray(secrets.map(JsString)).toString()
 
     val queryString = s"""
                          |mutation {
-                         |  deploy(input:{name: "$name", stage: "$stage", types: $formattedSchema, secrets: $secretsFormatted}){
+                         |  deploy(input:{name: "$name", stage: "$stage", types: $formattedSchema, secrets: $secretsFormatted, force: $force}){
                          |    migration {
                          |      applied
                          |      revision
@@ -159,16 +174,15 @@ case class DeployTestServer()(implicit dependencies: DeployDependencies) extends
                          |    errors {
                          |      description
                          |    }
+                         |    warnings{
+                         |      description
+                         |    }
                          |  }
                          |}
       """.stripMargin
 
     val deployResult = query(queryString)
-    val errors       = deployResult.pathAsSeq("data.deploy.errors")
-
-    if (shouldFail) require(requirement = errors.nonEmpty, message = s"The query had to result in a failure but it returned no errors.")
-    else require(requirement = errors.isEmpty, message = s"The query had to result in a success but it returned errors.")
-
-    deployResult.pathAsLong("data.deploy.migration.revision")
+    deployResult.assertErrorsAndWarnings(shouldFail, shouldWarn)
+    deployResult
   }
 }
