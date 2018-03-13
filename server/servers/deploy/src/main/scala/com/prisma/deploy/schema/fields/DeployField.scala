@@ -11,7 +11,8 @@ object DeployField {
     InputField("types", StringType),
     InputField("dryRun", OptionInputType(BooleanType)),
     InputField("secrets", OptionInputType(ListInputType(StringType))),
-    InputField("subscriptions", OptionInputType(ListInputType(functionInputType)))
+    InputField("subscriptions", OptionInputType(ListInputType(functionInputType))),
+    InputField("force", OptionInputType(BooleanType))
   )
 
   lazy val functionInputType = InputObjectType(
