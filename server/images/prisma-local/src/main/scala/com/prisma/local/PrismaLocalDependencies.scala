@@ -36,7 +36,6 @@ case class PrismaLocalDependencies()(implicit val system: ActorSystem, val mater
   override lazy val databases        = Databases.initialize(config)
   override lazy val apiSchemaBuilder = CachedSchemaBuilder(SchemaBuilder(), invalidationPubSub)
   override lazy val projectFetcher: ProjectFetcher = {
-
     val fetcher = SingleServerProjectFetcher(projectPersistence)
     CachedProjectFetcherImpl(fetcher, invalidationPubSub)
   }
