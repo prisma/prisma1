@@ -27,7 +27,7 @@ class DeleteSpec extends FlatSpec with Matchers with ApiBaseSpec {
     createTodo("title2")
     todoAndRelayCountShouldBe(2)
 
-    server.executeQuerySimple(
+    server.query(
       """mutation {
         |  deleteTodo(
         |    where: { title: "title1" }
@@ -48,7 +48,7 @@ class DeleteSpec extends FlatSpec with Matchers with ApiBaseSpec {
     createTodo("title3")
     todoAndRelayCountShouldBe(3)
 
-    server.executeQuerySimpleThatMustFail(
+    server.queryThatMustFail(
       """mutation {
         |  deleteTodo(
         |    where: { title: "does not exist" }
@@ -66,7 +66,7 @@ class DeleteSpec extends FlatSpec with Matchers with ApiBaseSpec {
   }
 
   def todoAndRelayCountShouldBe(int: Int) = {
-    val result = server.executeQuerySimple(
+    val result = server.query(
       "{ todoes { id } }",
       project
     )
@@ -77,7 +77,7 @@ class DeleteSpec extends FlatSpec with Matchers with ApiBaseSpec {
   }
 
   def createTodo(title: String): Unit = {
-    server.executeQuerySimple(
+    server.query(
       s"""mutation {
         |  createTodo(
         |    data: {

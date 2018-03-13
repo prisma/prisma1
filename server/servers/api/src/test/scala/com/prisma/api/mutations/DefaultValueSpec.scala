@@ -13,7 +13,7 @@ class DefaultValueSpec extends FlatSpec with Matchers with ApiBaseSpec {
     }
     database.setup(project)
 
-    val res = server.executeQuerySimple(
+    val res = server.query(
       s"""mutation {
          |  createScalarModel(data: {
          |    }
@@ -26,7 +26,7 @@ class DefaultValueSpec extends FlatSpec with Matchers with ApiBaseSpec {
 
     res.toString should be(s"""{"data":{"createScalarModel":{"reqString":"default"}}}""")
 
-    val queryRes = server.executeQuerySimple("""{ scalarModels{reqString}}""", project = project)
+    val queryRes = server.query("""{ scalarModels{reqString}}""", project = project)
 
     queryRes.toString should be(s"""{"data":{"scalarModels":[{"reqString":"default"}]}}""")
   }
@@ -43,7 +43,7 @@ class DefaultValueSpec extends FlatSpec with Matchers with ApiBaseSpec {
     }
     database.setup(project)
 
-    val res = server.executeQuerySimple(
+    val res = server.query(
       s"""mutation createService{
          |  createService(
          |    data:{
@@ -79,7 +79,7 @@ class DefaultValueSpec extends FlatSpec with Matchers with ApiBaseSpec {
     }
     database.setup(project)
 
-    val res = server.executeQuerySimple(
+    val res = server.query(
       s"""mutation createService{
          |  createService(
          |    data:{

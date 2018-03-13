@@ -16,7 +16,7 @@ class ScalarListsQuerySpec extends FlatSpec with Matchers with ApiBaseSpec {
     database.setup(project)
 
     val id = server
-      .executeQuerySimple(
+      .query(
         s"""mutation {
            |  createModel(data: {strings: { set: [] }}) {
            |    id
@@ -27,7 +27,7 @@ class ScalarListsQuerySpec extends FlatSpec with Matchers with ApiBaseSpec {
       )
       .pathAsString("data.createModel.id")
 
-    val result = server.executeQuerySimple(
+    val result = server.query(
       s"""{
          |  model(where: {id:"$id"}) {
          |    ints
@@ -49,7 +49,7 @@ class ScalarListsQuerySpec extends FlatSpec with Matchers with ApiBaseSpec {
     database.setup(project)
 
     val id = server
-      .executeQuerySimple(
+      .query(
         s"""mutation {
            |  createModel(data: {ints: { set: [1] }, strings: { set: ["short", "looooooooooong"]}}) {
            |    id
@@ -61,7 +61,7 @@ class ScalarListsQuerySpec extends FlatSpec with Matchers with ApiBaseSpec {
       )
       .pathAsString("data.createModel.id")
 
-    val result = server.executeQuerySimple(
+    val result = server.query(
       s"""{
          |  model(where: {id:"$id"}) {
          |    ints
@@ -82,7 +82,7 @@ class ScalarListsQuerySpec extends FlatSpec with Matchers with ApiBaseSpec {
     database.setup(project)
 
     val id = server
-      .executeQuerySimple(
+      .query(
         s"""mutation {
            |  createModel(data: {ints: { set: [1,2] }, strings: { set: ["short", "looooooooooong"] }}) {
            |    id
@@ -93,7 +93,7 @@ class ScalarListsQuerySpec extends FlatSpec with Matchers with ApiBaseSpec {
       .pathAsString("data.createModel.id")
 
     server
-      .executeQuerySimple(
+      .query(
         s"""mutation {
            |  updateModel(where: {id: "$id"} data: {ints: { set: [2,1] }}) {
            |    id
@@ -104,7 +104,7 @@ class ScalarListsQuerySpec extends FlatSpec with Matchers with ApiBaseSpec {
         project
       )
 
-    val result = server.executeQuerySimple(
+    val result = server.query(
       s"""{
          |  model(where: {id:"$id"}) {
          |    ints
@@ -231,12 +231,12 @@ class ScalarListsQuerySpec extends FlatSpec with Matchers with ApiBaseSpec {
 
     database.setup(project)
 
-    server.executeQuerySimple(
+    server.query(
       s"""mutation{createList(data: {listInts: {set: [1, 2]}, todo: {create: {todoInts: {set: [3, 4]}}}}) {id}}""".stripMargin,
       project
     )
 
-    val result = server.executeQuerySimple(s"""query{lists {listInts, todo {todoInts}}}""".stripMargin, project)
+    val result = server.query(s"""query{lists {listInts, todo {todoInts}}}""".stripMargin, project)
 
     result.toString should equal("""{"data":{"lists":[{"listInts":[1,2],"todo":[{"todoInts":[3,4]}]}]}}""")
   }
@@ -251,12 +251,12 @@ class ScalarListsQuerySpec extends FlatSpec with Matchers with ApiBaseSpec {
 
     database.setup(project)
 
-    server.executeQuerySimple(
+    server.query(
       s"""mutation{createList(data: {listInts: {set: [1, 2]}, todo: {create: {todoInts: {set: [3, 4]}, tag: {create: {tagInts: {set: [5, 6]}}}}}}) {id}}""".stripMargin,
       project
     )
 
-    val result = server.executeQuerySimple(s"""query{lists {listInts, todo {todoInts, tag {tagInts}}}}""".stripMargin, project)
+    val result = server.query(s"""query{lists {listInts, todo {todoInts, tag {tagInts}}}}""".stripMargin, project)
 
     result.toString should equal("""{"data":{"lists":[{"listInts":[1,2],"todo":{"todoInts":[3,4],"tag":{"tagInts":[5,6]}}}]}}""")
   }
@@ -272,19 +272,19 @@ class ScalarListsQuerySpec extends FlatSpec with Matchers with ApiBaseSpec {
     database.setup(project)
 
     server
-      .executeQuerySimple(
+      .query(
         s"""mutation{createList(data: {uList: "A", listInts: {set: [1, 2]}, todo: {create: {uTodo: "B", todoInts: {set: [3, 4]}, tag: {create: {uTag: "C",tagInts: {set: [5, 6]}}}}}}) {id}}""".stripMargin,
         project
       )
 
-    server.executeQuerySimple(
+    server.query(
       s"""mutation{updateList(where: {uList: "A"}
          |                    data: {listInts: {set: [7, 8]},
          |                           todo: {update: {todoInts: {set: [9, 10]},
          |                                           tag: {update: { tagInts: {set: [11, 12]}}}}}}) {id}}""".stripMargin,
       project
     )
-    val result = server.executeQuerySimple(s"""query{lists {listInts, todo {todoInts, tag {tagInts}}}}""".stripMargin, project)
+    val result = server.query(s"""query{lists {listInts, todo {todoInts, tag {tagInts}}}}""".stripMargin, project)
 
     result.toString should equal("""{"data":{"lists":[{"listInts":[7,8],"todo":{"todoInts":[9,10],"tag":{"tagInts":[11,12]}}}]}}""")
   }
@@ -299,14 +299,14 @@ class ScalarListsQuerySpec extends FlatSpec with Matchers with ApiBaseSpec {
     database.setup(project)
 
     server
-      .executeQuerySimple(
+      .query(
         s"""mutation{createList(data: {uList: "A", listInts: {set: [1, 2]}, todo: {create: {uTodo: "B", todoInts: {set: [3, 4]}}}}) {id}}""".stripMargin,
         project
       )
       .pathAsString("data.createList.id")
 
     server
-      .executeQuerySimple(
+      .query(
         s"""mutation upsertListValues {upsertList(
         |                             where:{uList: "A"}
 	      |                             create:{uList:"Should Not Matter" listInts:{set: [75, 85]}}
@@ -316,7 +316,7 @@ class ScalarListsQuerySpec extends FlatSpec with Matchers with ApiBaseSpec {
       )
       .pathAsString("data.upsertList.id")
 
-    val result = server.executeQuerySimple(s"""query{lists {uList, listInts}}""".stripMargin, project)
+    val result = server.query(s"""query{lists {uList, listInts}}""".stripMargin, project)
 
     result.toString should equal("""{"data":{"lists":[{"uList":"A","listInts":[70,80]}]}}""")
   }
@@ -330,7 +330,7 @@ class ScalarListsQuerySpec extends FlatSpec with Matchers with ApiBaseSpec {
     database.setup(project)
 
     val id = server
-      .executeQuerySimple(
+      .query(
         s"""mutation {
            |  createModel(data: {ints: { set: [1] }, strings: { set: ["short", "looooooooooong"]}}) {
            |    id
@@ -342,7 +342,7 @@ class ScalarListsQuerySpec extends FlatSpec with Matchers with ApiBaseSpec {
       )
       .pathAsString("data.createModel.id")
 
-    val result = server.executeQuerySimple(
+    val result = server.query(
       s"""{
          |  model(where: {id:"$id"}) {
          |    ints
@@ -355,7 +355,7 @@ class ScalarListsQuerySpec extends FlatSpec with Matchers with ApiBaseSpec {
     result.toString should equal("""{"data":{"model":{"ints":[1],"strings":["short","looooooooooong"]}}}""")
 
     server
-      .executeQuerySimple(
+      .query(
         s"""mutation {
            |  updateModel(
            |  where: {id: "$id"}
@@ -367,7 +367,7 @@ class ScalarListsQuerySpec extends FlatSpec with Matchers with ApiBaseSpec {
            |}""".stripMargin,
         project
       )
-    val result2 = server.executeQuerySimple(
+    val result2 = server.query(
       s"""{
          |  model(where: {id:"$id"}) {
          |    ints
@@ -390,7 +390,7 @@ class ScalarListsQuerySpec extends FlatSpec with Matchers with ApiBaseSpec {
     database.setup(project)
 
     val id = server
-      .executeQuerySimple(
+      .query(
         s"""mutation {
            |  createModel(data: {ints: { set: [1] }, strings: { set: ["short", "looooooooooong", "three", "four", "five"]}}) {
            |    id
@@ -402,7 +402,7 @@ class ScalarListsQuerySpec extends FlatSpec with Matchers with ApiBaseSpec {
       )
       .pathAsString("data.createModel.id")
 
-    val result = server.executeQuerySimple(
+    val result = server.query(
       s"""{
          |  model(where: {id:"$id"}) {
          |    ints
@@ -415,7 +415,7 @@ class ScalarListsQuerySpec extends FlatSpec with Matchers with ApiBaseSpec {
     result.toString should equal("""{"data":{"model":{"ints":[1],"strings":["short","looooooooooong","three","four","five"]}}}""")
 
     server
-      .executeQuerySimple(
+      .query(
         s"""mutation {
            |  updateModel(
            |  where: {id: "$id"}
@@ -427,7 +427,7 @@ class ScalarListsQuerySpec extends FlatSpec with Matchers with ApiBaseSpec {
            |}""".stripMargin,
         project
       )
-    val result2 = server.executeQuerySimple(
+    val result2 = server.query(
       s"""{
          |  model(where: {id:"$id"}) {
          |    ints
@@ -445,7 +445,7 @@ class ScalarListsQuerySpec extends FlatSpec with Matchers with ApiBaseSpec {
     database.setup(project)
 
     val id = server
-      .executeQuerySimple(
+      .query(
         s"""mutation {
            |  createModel(data: {$fieldName: { set: [$inputValue] }}) {
            |    id
@@ -456,7 +456,7 @@ class ScalarListsQuerySpec extends FlatSpec with Matchers with ApiBaseSpec {
       )
       .pathAsString("data.createModel.id")
 
-    val result = server.executeQuerySimple(
+    val result = server.query(
       s"""{
          |  model(where: {id:"$id"}) {
          |    $fieldName

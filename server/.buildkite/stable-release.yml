@@ -20,6 +20,9 @@ steps:
   - label: ":scala: libs"
     command: cd server && ./.buildkite/scripts/test.sh libs
 
+  - label: ":scala: integration-tests"
+    command: cd server && ./.buildkite/scripts/test.sh integrationTests
+
   - wait
 
   - label: ":docker: Build stable channel"
