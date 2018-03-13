@@ -94,7 +94,7 @@ case class DeployMutation(
 
   private def updateSecretsIfNecessary(): Future[Option[MigrationStep]] = {
     if (project.secrets != args.secrets && !args.dryRun.getOrElse(false)) {
-      projectPersistence.update(project.copy(secrets = args.secrets)).map(_ => Some(UpdateSecrets("Secrets have been changed.")))
+      projectPersistence.update(project.copy(secrets = args.secrets)).map(_ => Some(UpdateSecrets(args.secrets)))
     } else {
       Future.successful(None)
     }
