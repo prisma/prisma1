@@ -107,6 +107,7 @@ mutation {
 ```
 
 > **Note**: `create` and `update` are of the same type as the `data` object in the `createUser` and `updateUser` mutations.
+> **Note**: Currently nested mutations are not supported within the `update` and `create`. You can only change or create scalar values, but not create or change values for relation fields.
 
 ### Deleting nodes
 
