@@ -133,19 +133,36 @@ case class DeployTestServer()(implicit dependencies: DeployDependencies) extends
     dependencies.projectPersistence.load(project.id).await.get
   }
 
-  def deploySchemaThatMustFail(project: Project, schema: String): Project = {
+  def deploySchemaThatMustFail(project: Project, schema: String): Vector[String] = {
     val nameAndStage = ProjectId.fromEncodedString(project.id)
-    deployHelper(nameAndStage.name, nameAndStage.stage, schema, Vector.empty, true)
-    dependencies.projectPersistence.load(project.id).await.get
+    val result       = deployHelper(nameAndStage.name, nameAndStage.stage, schema, Vector.empty, shouldFail = true)
+    val errors       = result.pathAsVector("data.deploy.errors")
+    errors.map(_.toString)
+  }
+
+  def deploySchemaThatMustWarn(project: Project, schema: String): Vector[String] = {
+    val nameAndStage = ProjectId.fromEncodedString(project.id)
+    val result       = deployHelper(nameAndStage.name, nameAndStage.stage, schema, Vector.empty, shouldFail = false, shouldWarn = true)
+    val warnings     = result.pathAsVector("data.deploy.warnings")
+    warnings.map(_.toString)
+  }
+
+  def deploySchemaThatMustFailAndWarn(project: Project, schema: String): (Vector[String], Vector[String]) = {
+    val nameAndStage = ProjectId.fromEncodedString(project.id)
+    val result       = deployHelper(nameAndStage.name, nameAndStage.stage, schema, Vector.empty, shouldFail = true, shouldWarn = true)
+    val warnings     = result.pathAsVector("data.deploy.warnings")
+    val errors       = result.pathAsVector("data.deploy.errors")
+    (errors.map(_.toString), warnings.map(_.toString))
   }
 
   def deploySchema(name: String, stage: String, schema: String, secrets: Vector[String] = Vector.empty): (Project, Migration) = {
     val projectId = name + "@" + stage
-    val revision  = deployHelper(name, stage, schema, secrets)
+    val result    = deployHelper(name, stage, schema, secrets)
+    val revision  = result.pathAsLong("data.deploy.migration.revision")
     (dependencies.projectPersistence.load(projectId).await.get, dependencies.migrationPersistence.byId(MigrationId(projectId, revision.toInt)).await.get)
   }
 
-  private def deployHelper(name: String, stage: String, schema: String, secrets: Vector[String], shouldFail: Boolean = false) = {
+  private def deployHelper(name: String, stage: String, schema: String, secrets: Vector[String], shouldFail: Boolean = false, shouldWarn: Boolean = false) = {
     val formattedSchema  = JsString(schema).toString
     val secretsFormatted = JsArray(secrets.map(JsString)).toString()
 
@@ -159,16 +176,34 @@ case class DeployTestServer()(implicit dependencies: DeployDependencies) extends
                          |    errors {
                          |      description
                          |    }
+                         |    warnings{
+                         |      description
+                         |    }
                          |  }
                          |}
       """.stripMargin
 
     val deployResult = query(queryString)
     val errors       = deployResult.pathAsSeq("data.deploy.errors")
+    val warnings     = deployResult.pathAsSeq("data.deploy.warnings")
 
-    if (shouldFail) require(requirement = errors.nonEmpty, message = s"The query had to result in a failure but it returned no errors.")
-    else require(requirement = errors.isEmpty, message = s"The query had to result in a success but it returned errors.")
+    (shouldFail, shouldWarn) match {
+      case (true, false) =>
+        require(requirement = errors.nonEmpty, message = s"The query had to result in a failure but it returned no errors.")
+        require(requirement = warnings.isEmpty, message = s"The query had to result in a success but it returned warnings.")
 
-    deployResult.pathAsLong("data.deploy.migration.revision")
+      case (false, false) =>
+        require(requirement = errors.isEmpty, message = s"The query had to result in a success but it returned errors.")
+        require(requirement = warnings.isEmpty, message = s"The query had to result in a success but it returned warnings.")
+
+      case (false, true) =>
+        require(requirement = errors.isEmpty, message = s"The query had to result in a success but it returned errors.")
+        require(requirement = warnings.nonEmpty, message = s"The query had to result in a warning but it returned no warnings.")
+
+      case (true, true) =>
+        require(requirement = errors.nonEmpty, message = s"The query had to result in a failure but it returned no errors.")
+        require(requirement = warnings.nonEmpty, message = s"The query had to result in a warning but it returned no warnings.")
+    }
+    deployResult
   }
 }
