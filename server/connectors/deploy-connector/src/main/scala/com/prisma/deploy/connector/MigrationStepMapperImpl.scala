@@ -62,9 +62,6 @@ case class MigrationStepMapperImpl(projectId: String) extends MigrationStepMappe
         case _ if previous.isScalarNonList && next.isRelation      => Vector(deleteColumn)
       }
 
-    case x: EnumMigrationStep =>
-      Vector.empty
-
     case x: CreateRelation =>
       val relation = nextSchema.getRelationByName_!(x.name)
       Vector(CreateRelationTable(projectId, nextSchema, relation))
@@ -78,12 +75,12 @@ case class MigrationStepMapperImpl(projectId: String) extends MigrationStepMappe
         val previousRelation = previousSchema.getRelationByName_!(x.name)
         val nextRelation     = nextSchema.getRelationByName_!(newName)
         RenameTable(projectId = projectId, previousName = previousRelation.id, nextName = nextRelation.id, scalarListFieldsNames = Vector.empty)
-<<<<<<< HEAD
-      }
-    case x: UpdateSecrets =>
-      None
-=======
       }.toVector
->>>>>>> master
+
+    case x: EnumMigrationStep =>
+      Vector.empty
+
+    case x: UpdateSecrets =>
+      Vector.empty
   }
 }
