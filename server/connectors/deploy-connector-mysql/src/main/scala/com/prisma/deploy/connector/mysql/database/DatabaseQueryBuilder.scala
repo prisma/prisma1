@@ -1,6 +1,8 @@
-package com.prisma.deploy.validation
+package com.prisma.deploy.connector.mysql.database
 
 import com.prisma.shared.models.Field
+import slick.jdbc.SQLActionBuilder
+import slick.jdbc.MySQLProfile.api._
 
 object DatabaseQueryBuilder {
 
@@ -26,6 +28,4 @@ object DatabaseQueryBuilder {
             (Select `#$projectId`.`#$relationId`.#$relationSide from `#$projectId`.`#$relationId`)
           )"""
   }
-  //EnumValues??
-
 }
