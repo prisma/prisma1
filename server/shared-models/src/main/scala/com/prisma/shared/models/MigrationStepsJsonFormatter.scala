@@ -136,8 +136,8 @@ object MigrationStepsJsonFormatter extends DefaultReads {
   }
 
   implicit val updateSecretsFormat: OFormat[UpdateSecrets] = {
-    val reads  = (JsPath \ "message").read[String].map(UpdateSecrets.apply)
-    val writes = OWrites[UpdateSecrets](update => Json.obj("message" -> update.message))
+    val reads  = (JsPath \ "secrets").read[Vector[String]].map(UpdateSecrets.apply)
+    val writes = OWrites[UpdateSecrets](update => Json.obj("secrets" -> update.secrets))
     OFormat(reads, writes)
   }
 
