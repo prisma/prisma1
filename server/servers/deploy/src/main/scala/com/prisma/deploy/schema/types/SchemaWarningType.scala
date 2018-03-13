@@ -9,7 +9,7 @@ object SchemaWarningType {
 
   lazy val Type: ObjectType[SystemUserContext, SchemaWarning] = ObjectType(
     "SchemaWarning",
-    "A warning created while validating the schema.",
+    "A warning created while validating the schema against existing data.",
     List.empty,
     fields[SystemUserContext, SchemaWarning](
       Field("type", StringType, resolve = _.value.`type`),
