@@ -21,7 +21,8 @@ object MigrationStepType {
     DeleteFieldType,
     CreateRelationType,
     UpdateRelationType,
-    DeleteRelationType
+    DeleteRelationType,
+    UpdateSecretsType
   )
 
   lazy val Type: InterfaceType[SystemUserContext, MigrationStep] = InterfaceType(
@@ -105,6 +106,10 @@ object MigrationStepType {
 
   lazy val DeleteRelationType = fieldsHelper[DeleteRelation](
     Field("name", StringType, resolve = _.value.name)
+  )
+
+  lazy val UpdateSecretsType = fieldsHelper[UpdateSecrets](
+    Field("message", StringType, resolve = _ => "Secrets have been updated.")
   )
 
   def fieldsHelper[T <: MigrationStep](fields: schema.Field[SystemUserContext, T]*)(implicit ct: ClassTag[T]) = {
