@@ -55,6 +55,6 @@ object InvalidNames {
     s"$value is not a valid name for a $tpe. It must start with a letter and may contain up to 30 letters, numbers, underscores and hyphens."
   }
   def forRelation(value: String, tpe: String) = {
-    s"The provided name: $value is not valid for a $tpe. It can only have up to 54 characters and must have the shape [A-Z][a-zA-Z0-9]*"
+    s"The provided name: $value is not a valid name for a $tpe. It can only have up to 54 characters and must have the shape [A-Z][a-zA-Z0-9]*"
   }
 }
