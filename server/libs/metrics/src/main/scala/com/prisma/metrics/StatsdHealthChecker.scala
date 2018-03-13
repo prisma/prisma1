@@ -47,7 +47,7 @@ case class StatsdHealthCheckerActor(httpClient: SimpleHttpClient) extends Actor 
   implicit val ec = context.system.dispatcher
 
   private var ipToCheck  = ""
-  private val statsdIsUp = new AtomicBoolean(true)
+  private var statsdIsUp = new AtomicBoolean(true)
   private val port       = sys.env.getOrElse("METRICS_HEALTH_PORT", sys.error("METRICS_HEALTH_PORT env var required but not found."))
 
   def receive = {
@@ -61,11 +61,11 @@ case class StatsdHealthCheckerActor(httpClient: SimpleHttpClient) extends Actor 
       timers.startPeriodicTimer(TickKey, Check, 5.seconds) // Check health every 5 seconds
 
     case Status =>
-      sender ! statsdIsUp
+      sender ! statsdIsUp.get()
   }
 
   private def checkAndWriteHealthStatus() = {
-    httpClient.get(s"http://$ipToCheck:$port", timeout = 2.seconds).onComplete {
+    httpClient.get(s"http://$ipToCheck:$port/status", timeout = 2.seconds).onComplete {
       case Success(resp) => statsdIsUp.set(true)
       case Failure(e)    => statsdIsUp.set(false)
     }
