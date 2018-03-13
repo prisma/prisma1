@@ -1,5 +1,6 @@
 package com.prisma.api.database.mutactions
 
+import com.prisma.api.schema.GeneralError
 import slick.dbio.{DBIOAction, Effect, NoStream}
 
 import scala.concurrent.Future
@@ -8,7 +9,7 @@ import scala.util.{Success, Try}
 abstract class Mutaction {
   def verify(): Try[MutactionVerificationSuccess] = Success(MutactionVerificationSuccess())
   def execute: Future[MutactionExecutionResult]
-  def handleErrors: Option[PartialFunction[Throwable, MutactionExecutionResult]] = None
+  def handleErrors: Option[PartialFunction[Throwable, GeneralError]] = None
 }
 
 abstract class ClientSqlMutaction extends Mutaction {

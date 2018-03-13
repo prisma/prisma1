@@ -1,6 +1,6 @@
 package com.prisma.util.gc_value
 
-import com.prisma.api.mutations.NodeSelector
+import com.prisma.api.connector.NodeSelector
 import com.prisma.gc_values._
 import com.prisma.shared.models.TypeIdentifier.TypeIdentifier
 import com.prisma.shared.models.{Field, TypeIdentifier}

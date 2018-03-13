@@ -1,5 +1,6 @@
 package com.prisma.api.mutations
 
+import com.prisma.api.connector.NodeSelector
 import com.prisma.api.database.mutactions._
 import com.prisma.api.database.{DataItem, DataResolver}
 import cool.graph.cuid.Cuid

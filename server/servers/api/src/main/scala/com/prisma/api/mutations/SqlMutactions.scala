@@ -3,7 +3,7 @@ import com.prisma.api.ApiMetrics
 import com.prisma.api.database.mutactions.mutactions._
 import com.prisma.api.database.mutactions.{ClientSqlDataChangeMutaction, ClientSqlMutaction}
 import com.prisma.api.database.{DataItem, DataResolver, DatabaseMutationBuilder}
-import com.prisma.api.mutations.mutations.CascadingDeletes.{ModelEdge, Path, collectCascadingPaths}
+import com.prisma.api.connector._
 import com.prisma.api.schema.APIErrors.RelationIsRequired
 import com.prisma.shared.models.IdType.Id
 import com.prisma.shared.models.{Field, Model, Project}
@@ -27,7 +27,8 @@ case class SqlMutactions(dataResolver: DataResolver) {
   }
 
   def getMutactionsForDelete(path: Path, previousValues: DataItem, id: String): Seq[ClientSqlMutaction] = report {
-    List(VerifyWhere(project, path.root)) ++ generateCascadingDeleteMutactions(path) ++ List(DeleteRelationMutaction(project, path), DeleteDataItem(project, path, previousValues, id))
+    List(VerifyWhere(project, path.root)) ++ generateCascadingDeleteMutactions(path) ++ List(DeleteRelationMutaction(project, path),
+                                                                                             DeleteDataItem(project, path, previousValues, id))
   }
 
   def getMutactionsForUpdate(path: Path, args: CoolArgs, id: Id, previousValues: DataItem): Seq[ClientSqlMutaction] = report {
@@ -235,44 +236,7 @@ case class SqlMutactions(dataResolver: DataResolver) {
       }
     }
 
-    val paths: List[Path] = collectCascadingPaths(project, startPoint)
+    val paths: List[Path] = Path.collectCascadingPaths(project, startPoint)
     getMutactionsForEdges(paths)
   }
 }
-
-case class NestedMutations(
-    creates: Vector[CreateOne],
-    updates: Vector[UpdateOne],
-    upserts: Vector[UpsertOne],
-    deletes: Vector[DeleteOne],
-    connects: Vector[ConnectByWhere],
-    disconnects: Vector[DisconnectOne]
-)
-
-object NestedMutations {
-  def empty = NestedMutations(Vector.empty, Vector.empty, Vector.empty, Vector.empty, Vector.empty, Vector.empty)
-}
-
-sealed trait NestedMutation
-sealed trait NestedWhere { def where: NodeSelector }
-case class CreateOne(data: CoolArgs) extends NestedMutation
-
-case class ConnectByWhere(where: NodeSelector) extends NestedMutation with NestedWhere
-
-sealed trait UpdateOne                                        extends NestedMutation { def data: CoolArgs }
-case class UpdateByRelation(data: CoolArgs)                   extends UpdateOne
-case class UpdateByWhere(where: NodeSelector, data: CoolArgs) extends UpdateOne with NestedWhere
-
-sealed trait UpsertOne                                                            extends NestedMutation { def create: CoolArgs; def update: CoolArgs }
-case class UpsertByRelation(create: CoolArgs, update: CoolArgs)                   extends UpsertOne
-case class UpsertByWhere(where: NodeSelector, create: CoolArgs, update: CoolArgs) extends UpsertOne with NestedWhere
-
-sealed trait DeleteOne                        extends NestedMutation
-case class DeleteByRelation(boolean: Boolean) extends DeleteOne
-case class DeleteByWhere(where: NodeSelector) extends DeleteOne with NestedWhere
-
-sealed trait DisconnectOne                        extends NestedMutation
-case class DisconnectByRelation(boolean: Boolean) extends DisconnectOne
-case class DisconnectByWhere(where: NodeSelector) extends DisconnectOne with NestedWhere
-
-case class ScalarListSet(values: Vector[Any])

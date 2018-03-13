@@ -152,12 +152,17 @@ lazy val deployConnectorMySql = connectorProject("deploy-connector-mysql")
 
 lazy val apiConnector = connectorProject("api-connector")
   .dependsOn(sharedModels % "compile")
+  .dependsOn(gcValues % "compile")
+  .dependsOn(sangriaUtils % "compile")
+  .settings(
+    libraryDependencies ++= Seq(sangriaGraphql, apacheCommons, sprayJson)
+  )
 
 lazy val apiConnectorMySql = connectorProject("api-connector-mysql")
   .dependsOn(apiConnector % "compile")
   .dependsOn(scalaUtils % "compile")
   .settings(
-    libraryDependencies ++= slick ++ Seq(mariaDbClient)
+    libraryDependencies ++= slick ++ Seq(mariaDbClient, sprayJson)
   )
 
 // ####################

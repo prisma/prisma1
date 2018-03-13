@@ -1,13 +1,11 @@
 package com.prisma.api.schema
 
-import com.prisma.api.database.mutactions.MutactionExecutionResult
-import com.prisma.api.mutations.NodeSelector
-import com.prisma.api.mutations.mutations.CascadingDeletes.{ModelEdge, NodeEdge, Path}
+import com.prisma.api.connector.{ModelEdge, NodeEdge, NodeSelector, Path}
 import com.prisma.sangria.utils.ErrorWithCode
 import com.prisma.shared.models.{Project, Relation}
 import spray.json.{JsArray, JsNumber, JsObject, JsString, JsValue}
 
-abstract class GeneralError(message: String) extends Exception with MutactionExecutionResult with ErrorWithCode {
+abstract class GeneralError(message: String) extends Exception with ErrorWithCode {
   override def getMessage: String = message
 }
 

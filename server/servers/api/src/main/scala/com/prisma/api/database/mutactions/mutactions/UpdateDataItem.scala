@@ -2,10 +2,11 @@ package com.prisma.api.database.mutactions.mutactions
 
 import java.sql.SQLIntegrityConstraintViolationException
 
+import com.prisma.api.connector.NodeSelector
 import com.prisma.api.database.mutactions.validation.InputValueValidation
 import com.prisma.api.database.mutactions.{ClientSqlDataChangeMutaction, ClientSqlStatementResult, GetFieldFromSQLUniqueException, MutactionVerificationSuccess}
-import com.prisma.api.database.{DataItem, DataResolver, DatabaseMutationBuilder}
-import com.prisma.api.mutations.{CoolArgs, NodeSelector}
+import com.prisma.api.database.{DataItem, DatabaseMutationBuilder}
+import com.prisma.api.mutations.CoolArgs
 import com.prisma.api.schema.APIErrors
 import com.prisma.shared.models.IdType.Id
 import com.prisma.shared.models.{Field, Model, Project}

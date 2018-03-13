@@ -2,9 +2,9 @@ package com.prisma.api.database.mutactions.mutactions
 
 import java.sql.SQLException
 
+import com.prisma.api.connector.{NodeEdge, Path}
 import com.prisma.api.database.DatabaseMutationBuilder._
 import com.prisma.api.database.mutactions.{ClientSqlDataChangeMutaction, ClientSqlStatementResult}
-import com.prisma.api.mutations.mutations.CascadingDeletes.{NodeEdge, Path}
 import com.prisma.api.schema.APIErrors.RequiredRelationWouldBeViolated
 import com.prisma.shared.models.{Field, Project, Relation}
 import com.prisma.util.gc_value.OtherGCStuff.parameterString

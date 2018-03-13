@@ -3,11 +3,10 @@ package com.prisma.api.database
 import com.prisma.api.database.SlickExtensions._
 import com.prisma.api.database.Types.DataItemFilterCollection
 import com.prisma.api.database.mutactions.mutactions.NestedCreateRelationMutaction
-import com.prisma.api.mutations.mutations.CascadingDeletes
-import com.prisma.api.mutations.mutations.CascadingDeletes.{ModelEdge, NodeEdge, Path}
-import com.prisma.api.mutations.{CoolArgs, NodeSelector}
+import com.prisma.api.mutations.{CoolArgs}
 import com.prisma.api.schema.GeneralError
 import com.prisma.shared.models.TypeIdentifier.TypeIdentifier
+import com.prisma.api.connector._
 import com.prisma.shared.models._
 import cool.graph.cuid.Cuid
 import slick.dbio.{DBIOAction, Effect, NoStream}

@@ -1,9 +1,9 @@
 package com.prisma.api.database
 
+import com.prisma.api.connector.NodeSelector
 import com.prisma.api.{ApiDependencies, ApiMetrics}
 import com.prisma.api.database.DatabaseQueryBuilder._
 import com.prisma.api.database.Types.DataItemFilterCollection
-import com.prisma.api.mutations.NodeSelector
 import com.prisma.api.schema.APIErrors
 import com.prisma.gc_values.{GCValue, GraphQLIdGCValue, JsonGCValue}
 import com.prisma.shared.models.IdType.Id

@@ -51,7 +51,7 @@ object ClientMutationRunner {
     val statements: Future[Vector[DBIOAction[Any, NoStream, Effect.All]]] =
       Future.sequence(mutactions.map(_.execute)).map(_.collect { case ClientSqlStatementResult(sqlAction) => sqlAction })
 
-    type ErrorHandler = PartialFunction[Throwable, MutactionExecutionResult]
+    type ErrorHandler = PartialFunction[Throwable, GeneralError]
     val combinedErrorHandler: Option[ErrorHandler] = mutactions.flatMap(_.handleErrors) match {
       case errorHandlers if errorHandlers.isEmpty => None
       case errorHandlers                          => Some(errorHandlers reduceLeft (_ orElse _))
@@ -66,8 +66,16 @@ object ClientMutationRunner {
       }
 
     val executionResult2 = combinedErrorHandler match {
-      case Some(errorHandler) => executionResult.recover(errorHandler)
-      case None               => executionResult
+      case Some(errorHandler) =>
+        executionResult.recoverWith {
+          case error =>
+            errorHandler.lift(error) match {
+              case Some(newError) => throw newError
+              case None           => throw error
+            }
+        }
+      case None =>
+        executionResult
     }
 
     executionResult2
@@ -94,8 +102,17 @@ object ClientMutationRunner {
 
   private def runWithErrorHandler(mutaction: Mutaction): Future[MutactionExecutionResult] = {
     mutaction.handleErrors match {
-      case Some(errorHandler) => mutaction.execute.recover(errorHandler)
-      case None               => mutaction.execute
+      case Some(errorHandler) =>
+//        mutaction.execute.recover(errorHandler)
+        mutaction.execute.recoverWith {
+          case error =>
+            errorHandler.lift(error) match {
+              case Some(newError) => throw newError
+              case None           => throw error
+            }
+        }
+      case None =>
+        mutaction.execute
     }
   }
 

@@ -3,10 +3,10 @@ package com.prisma.api.mutations.mutations
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
 import com.prisma.api.ApiDependencies
+import com.prisma.api.connector.{NodeSelector, Path}
 import com.prisma.api.database.mutactions.mutactions.ServerSideSubscription
 import com.prisma.api.database.{DataItem, DataResolver}
 import com.prisma.api.mutations._
-import com.prisma.api.mutations.mutations.CascadingDeletes.Path
 import com.prisma.api.schema.APIErrors
 import com.prisma.shared.models.{Model, Project}
 import sangria.schema

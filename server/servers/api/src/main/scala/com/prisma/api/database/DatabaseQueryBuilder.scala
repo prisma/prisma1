@@ -2,9 +2,7 @@ package com.prisma.api.database
 
 import com.prisma.api.database.DatabaseMutationBuilder.idFromWhereEquals
 import com.prisma.api.database.Types.DataItemFilterCollection
-import com.prisma.api.mutations.NodeSelector
-import com.prisma.api.mutations.mutations.CascadingDeletes
-import com.prisma.api.mutations.mutations.CascadingDeletes.{ModelEdge, NodeEdge, Path}
+import com.prisma.api.connector._
 import com.prisma.shared.models.{Field, Model, Project}
 import slick.dbio.DBIOAction
 import slick.dbio.Effect.Read
@@ -151,7 +149,7 @@ object DatabaseQueryBuilder {
   }
 
   def existsNodeIsInRelationshipWith(project: Project, path: Path) = {
-    def nodeSelector(last: CascadingDeletes.Edge) = last match {
+    def nodeSelector(last: Edge) = last match {
       case edge: NodeEdge => sql" `id`" ++ idFromWhereEquals(project.id, edge.childWhere) ++ sql" AND "
       case _: ModelEdge   => sql""
     }

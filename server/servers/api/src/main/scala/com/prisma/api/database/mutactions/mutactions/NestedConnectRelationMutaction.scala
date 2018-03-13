@@ -1,6 +1,6 @@
 package com.prisma.api.database.mutactions.mutactions
 
-import com.prisma.api.mutations.mutations.CascadingDeletes.Path
+import com.prisma.api.connector.Path
 import com.prisma.shared.models.Project
 import slick.dbio.{Effect, NoStream}
 import slick.sql.{SqlAction, SqlStreamingAction}
