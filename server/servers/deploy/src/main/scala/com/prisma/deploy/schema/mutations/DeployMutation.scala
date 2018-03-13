@@ -7,11 +7,11 @@ import com.prisma.deploy.migration.inference.{InvalidGCValue, MigrationStepsInfe
 import com.prisma.deploy.migration.migrator.Migrator
 import com.prisma.deploy.migration.validation.{SchemaError, SchemaSyntaxValidator}
 import com.prisma.deploy.schema.InvalidQuery
+import com.prisma.deploy.validation.DestructiveChanges
 import com.prisma.messagebus.pubsub.Only
 import com.prisma.shared.models.{Function, Migration, MigrationStep, Project, Schema, ServerSideSubscriptionFunction, UpdateSecrets, WebhookDelivery}
 import org.scalactic.{Bad, Good, Or}
 import sangria.parser.QueryParser
-import com.prisma.deploy.database.DestructiveChanges
 
 import scala.collection.Seq
 import scala.concurrent.{ExecutionContext, Future}
