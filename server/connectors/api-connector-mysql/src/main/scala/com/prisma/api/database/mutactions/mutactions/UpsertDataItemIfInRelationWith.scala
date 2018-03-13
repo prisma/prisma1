@@ -3,15 +3,14 @@ package com.prisma.api.database.mutactions.mutactions
 import java.sql.{SQLException, SQLIntegrityConstraintViolationException}
 
 import com.prisma.api.connector.{NodeSelector, Path}
+import com.prisma.api.database.DatabaseMutationBuilder
 import com.prisma.api.database.mutactions.GetFieldFromSQLUniqueException._
 import com.prisma.api.database.mutactions.validation.InputValueValidation
 import com.prisma.api.database.mutactions.{ClientSqlDataChangeMutaction, ClientSqlStatementResult, MutactionVerificationSuccess}
-import com.prisma.api.database.{DataResolver, DatabaseMutationBuilder}
 import com.prisma.api.mutations.CoolArgs
 import com.prisma.api.schema.APIErrors
 import com.prisma.api.schema.APIErrors.RequiredRelationWouldBeViolated
 import com.prisma.shared.models.Project
-import com.prisma.util.json.JsonFormats
 import slick.dbio.{DBIOAction, Effect, NoStream}
 
 import scala.concurrent.Future
@@ -40,7 +39,6 @@ case class UpsertDataItemIfInRelationWith(project: Project,
   }
 
   override def handleErrors = {
-    implicit val anyFormat = JsonFormats.AnyJsonFormat
     Some({
       // https://dev.mysql.com/doc/refman/5.5/en/error-messages-server.html#error_er_dup_entry
       case e: SQLIntegrityConstraintViolationException if e.getErrorCode == 1062 && getFieldOption(List(createArgs, updateArgs), e).isDefined =>

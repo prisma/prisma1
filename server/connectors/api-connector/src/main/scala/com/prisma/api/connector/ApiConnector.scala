@@ -3,9 +3,9 @@ package com.prisma.api.connector
 import scala.concurrent.Future
 
 trait ApiConnector {
-  def apiMutactionExecutor: ApiMutactionExecutor
+  def databaseMutactionExecutor: DatabaseMutactionExecutor
 }
 
-trait ApiMutactionExecutor {
-  def execute(mutaction: ApiMutaction): Future[Unit]
+trait DatabaseMutactionExecutor {
+  def execute(mutaction: DatabaseMutaction): Future[Unit]
 }

@@ -1,8 +1,9 @@
 package com.prisma.api.mutations.mutations
 
 import com.prisma.api.ApiDependencies
+import com.prisma.api.connector.DataItem
+import com.prisma.api.database.DataResolver
 import com.prisma.api.database.mutactions.mutactions._
-import com.prisma.api.database.{DataItem, DataResolver}
 import com.prisma.api.mutations.{PreparedMutactions, ReturnValue, ReturnValueResult, SingleItemClientMutation}
 import com.prisma.shared.models._
 

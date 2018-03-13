@@ -1,13 +1,12 @@
 package com.prisma.api.database.mutactions.mutactions
 
-import com.prisma.api.connector.Path
+import com.prisma.api.connector.{DataItem, Path}
 import com.prisma.api.database._
-import com.prisma.api.database.mutactions.{ClientSqlDataChangeMutaction, ClientSqlStatementResult, MutactionVerificationSuccess}
+import com.prisma.api.database.mutactions.{ClientSqlDataChangeMutaction, ClientSqlStatementResult}
 import com.prisma.shared.models.Project
 import slick.jdbc.MySQLProfile.api._
 
 import scala.concurrent.Future
-import scala.util.{Success, Try}
 
 case class DeleteDataItem(project: Project, path: Path, previousValues: DataItem, id: String) extends ClientSqlDataChangeMutaction {
 

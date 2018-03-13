@@ -1,32 +1,29 @@
 package com.prisma.api.database
 
-import com.prisma.api.connector.NodeSelector
 import com.prisma.api.{ApiDependencies, ApiMetrics}
-import com.prisma.api.database.DatabaseQueryBuilder._
+import com.prisma.api.connector.{DataItem, NodeSelector}
 import com.prisma.api.database.Types.DataItemFilterCollection
-import com.prisma.api.schema.APIErrors
 import com.prisma.gc_values.{GCValue, GraphQLIdGCValue, JsonGCValue}
 import com.prisma.shared.models.IdType.Id
-import com.prisma.shared.models.TypeIdentifier.TypeIdentifier
 import com.prisma.shared.models._
-import com.prisma.util.gc_value.{GCJsonConverter, GCValueExtractor}
-import com.prisma.utils.future.FutureUtils.FutureOpt
+import com.prisma.shared.models.TypeIdentifier.TypeIdentifier
+import com.prisma.util.gc_value.GCValueExtractor
 import org.joda.time.DateTime
 import org.joda.time.format.DateTimeFormat
 import slick.dbio.Effect.Read
 import slick.dbio.{DBIOAction, Effect, NoStream}
-import slick.jdbc.MySQLProfile.api._
 import slick.jdbc.{MySQLProfile, SQLActionBuilder}
 import slick.lifted.TableQuery
 import slick.sql.{SqlAction, SqlStreamingAction}
-import spray.json._
+import slick.jdbc.MySQLProfile.api._
 
 import scala.collection.immutable.Seq
-import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
-import scala.util.{Failure, Success, Try}
 
 case class DataResolver(project: Project, useMasterDatabaseOnly: Boolean = false)(implicit apiDependencies: ApiDependencies) {
+  import scala.concurrent.ExecutionContext.Implicits.global
+  import SlickExtensions._
+  import DatabaseQueryBuilder.{GetDataItem, GetScalarListValue}
 
   def masterClientDatabase: MySQLProfile.backend.DatabaseDef = apiDependencies.databases.master
   def readonlyClientDatabase: MySQLProfile.backend.DatabaseDef =
@@ -325,73 +322,5 @@ case class DataResolver(project: Project, useMasterDatabaseOnly: Boolean = false
       case x: GCValue => GCValueExtractor.fromGCValue(x)
       case x          => x
     }
-  }
-}
-
-case class ModelCounts(countsMap: Map[Model, Int]) {
-  def countForName(name: String): Int = {
-    val model = countsMap.keySet.find(_.name == name).getOrElse(sys.error(s"No count found for model $name"))
-    countsMap(model)
-  }
-}
-
-case class ResolverResult(items: Seq[DataItem], hasNextPage: Boolean = false, hasPreviousPage: Boolean = false, parentModelId: Option[String] = None)
-case class ResolverListResult(items: Seq[ScalarListValue], hasNextPage: Boolean = false, hasPreviousPage: Boolean = false)
-
-case class DataResolverValidations(f: String, v: Option[Any], model: Model, validate: Boolean) {
-
-  private val field: Field = model.getFieldByName_!(f)
-
-  private def enumOnFieldContainsValue(field: Field, value: Any): Boolean = {
-    val enum = field.enum.getOrElse(sys.error("Field should have an Enum"))
-    enum.values.contains(value)
-  }
-
-  def validateSingleJson(value: String) = {
-    def parseJson = Try(value.parseJson) match {
-      case Success(json) ⇒ Some(json)
-      case Failure(_)    ⇒ if (validate) throw APIErrors.ValueNotAValidJson(f, value) else None
-    }
-    (f, parseJson)
-  }
-
-  def validateSingleBoolean = {
-    (f, v.map {
-      case v: Boolean => v
-      case v: Integer => v == 1
-      case v: String  => v.toBoolean
-    })
-  }
-
-  def validateSingleEnum = {
-    val validatedEnum = v match {
-      case Some(value) if enumOnFieldContainsValue(field, value) => Some(value)
-      case Some(_)                                               => if (validate) throw APIErrors.StoredValueForFieldNotValid(field.name, model.name) else None
-      case _                                                     => None
-    }
-    (f, validatedEnum)
-  }
-
-  def validateListEnum = {
-    def enumListValueValid(input: Any): Boolean = {
-      val inputWithoutWhitespace = input.asInstanceOf[String].replaceAll(" ", "")
-
-      inputWithoutWhitespace match {
-        case "[]" =>
-          true
-
-        case _ =>
-          val values        = inputWithoutWhitespace.stripPrefix("[").stripSuffix("]").split(",")
-          val invalidValues = values.collect { case value if !enumOnFieldContainsValue(field, value.stripPrefix("\"").stripSuffix("\"")) => value }
-          invalidValues.isEmpty
-      }
-    }
-
-    val validatedEnumList = v match {
-      case Some(x) if enumListValueValid(x) => Some(x)
-      case Some(_)                          => if (validate) throw APIErrors.StoredValueForFieldNotValid(field.name, model.name) else None
-      case _                                => None
-    }
-    (f, validatedEnumList)
   }
 }

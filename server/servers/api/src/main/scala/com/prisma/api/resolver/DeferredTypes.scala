@@ -1,6 +1,7 @@
 package com.prisma.api.resolver
 
-import com.prisma.api.database.{DataItem, QueryArguments}
+import com.prisma.api.connector.DataItem
+import com.prisma.api.database.QueryArguments
 import com.prisma.shared.models.{Field, Model}
 import sangria.execution.deferred.Deferred
 
@@ -44,10 +45,7 @@ object DeferredTypes {
   }
 
   type OneDeferredResultType = Option[DataItem]
-  case class OneDeferred(model: Model, key: String, value: Any)                                      extends Deferred[OneDeferredResultType] {
-
-
-  }
+  case class OneDeferred(model: Model, key: String, value: Any)                                      extends Deferred[OneDeferredResultType] {}
   case class ToOneDeferred(relationField: Field, parentNodeId: String, args: Option[QueryArguments]) extends RelationDeferred[OneDeferredResultType]
 
   case class ToManyDeferred(relationField: Field, parentNodeId: String, args: Option[QueryArguments]) extends RelationDeferred[RelayConnectionOutputType]

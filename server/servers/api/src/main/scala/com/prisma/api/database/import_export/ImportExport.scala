@@ -1,6 +1,7 @@
 package com.prisma.api.database.import_export
 
-import com.prisma.api.database.{DataItem, DataResolver}
+import com.prisma.api.connector.DataItem
+import com.prisma.api.database.DataResolver
 import com.prisma.shared.models.{Model, Project, Relation}
 import spray.json.{DefaultJsonProtocol, JsArray, JsBoolean, JsFalse, JsNull, JsNumber, JsObject, JsString, JsTrue, JsValue, JsonFormat, RootJsonFormat}
 

@@ -1,10 +1,10 @@
 package com.prisma.api.mutations
 
-import com.prisma.api.connector.NodeSelector
+import com.prisma.api.connector.{DataItem, NodeSelector}
+import com.prisma.api.database.DataResolver
 import com.prisma.api.database.mutactions._
-import com.prisma.api.database.{DataItem, DataResolver}
-import cool.graph.cuid.Cuid
 import com.prisma.shared.models.IdType.Id
+import cool.graph.cuid.Cuid
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future

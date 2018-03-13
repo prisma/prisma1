@@ -1,14 +1,13 @@
 package com.prisma.api.mutations
 import com.prisma.api.ApiMetrics
+import com.prisma.api.connector._
 import com.prisma.api.database.mutactions.mutactions._
 import com.prisma.api.database.mutactions.{ClientSqlDataChangeMutaction, ClientSqlMutaction}
-import com.prisma.api.database.{DataItem, DataResolver, DatabaseMutationBuilder}
-import com.prisma.api.connector._
+import com.prisma.api.database.{DataResolver, DatabaseMutationBuilder}
 import com.prisma.api.schema.APIErrors.RelationIsRequired
 import com.prisma.shared.models.IdType.Id
 import com.prisma.shared.models.{Field, Model, Project}
 import cool.graph.cuid.Cuid.createCuid
-import slick.dbio.{DBIOAction, Effect, NoStream}
 
 import scala.collection.immutable.Seq
 
@@ -49,7 +48,7 @@ case class SqlMutactions(dataResolver: DataResolver) {
   // we need to rethink this thoroughly, we need to prevent both branches of executing their nested mutations
   def getMutactionsForUpsert(path: Path, createWhere: NodeSelector, updatedWhere: NodeSelector, allArgs: CoolArgs): Seq[ClientSqlMutaction] =
     report {
-      val upsertMutaction = UpsertDataItem(project, path, createWhere, updatedWhere, allArgs, dataResolver)
+      val upsertMutaction = UpsertDataItem(project, path, createWhere, updatedWhere, allArgs)
 
 //    val updateNested = getMutactionsForNestedMutation(allArgs.updateArgumentsAsCoolArgs, updatedOuterWhere, triggeredFromCreate = false)
 //    val createNested = getMutactionsForNestedMutation(allArgs.createArgumentsAsCoolArgs, createWhere, triggeredFromCreate = true)
@@ -83,19 +82,6 @@ case class SqlMutactions(dataResolver: DataResolver) {
       values.values.isEmpty match {
         case true  => SetScalarListToEmpty(project, path, field)
         case false => getSetScalarList(path, field, values.values)
-      }
-    }
-    x.toVector
-  }
-
-  def getDbActionsForUpsertScalarLists(path: Path, args: CoolArgs): Vector[DBIOAction[Any, NoStream, Effect]] = {
-    val x = for {
-      field  <- path.lastModel.scalarListFields
-      values <- args.subScalarList(field)
-    } yield {
-      values.values.isEmpty match {
-        case true  => DatabaseMutationBuilder.setScalarListToEmpty(project.id, path, field.name)
-        case false => DatabaseMutationBuilder.setScalarList(project.id, path, field.name, values.values)
       }
     }
     x.toVector
@@ -186,15 +172,19 @@ case class SqlMutactions(dataResolver: DataResolver) {
   // generate default value in create case
   def getMutactionsForNestedUpsertMutation(nestedMutation: NestedMutations, path: Path, field: Field): Seq[ClientSqlMutaction] = {
     nestedMutation.upserts.flatMap { upsert =>
-      val extendedPath      = path.extend(project, field, upsert)
-      val id                = createCuid()
-      val createWhere       = NodeSelector.forId(extendedPath.lastModel, id)
-      val createArgsWithId  = CoolArgs(upsert.create.raw + ("id" -> id))
-      val scalarListsCreate = getDbActionsForUpsertScalarLists(extendedPath.lastEdgeToNodeEdge(createWhere), createArgsWithId)
+      val extendedPath     = path.extend(project, field, upsert)
+      val id               = createCuid()
+      val createWhere      = NodeSelector.forId(extendedPath.lastModel, id)
+      val createArgsWithId = CoolArgs(upsert.create.raw + ("id" -> id))
+      val scalarListsCreate =
+        DatabaseMutationBuilder.getDbActionsForUpsertScalarLists(project.id, extendedPath.lastEdgeToNodeEdge(createWhere), createArgsWithId)
 
       val upsertItem = upsert match {
         case upsert: UpsertByWhere =>
-          val scalarListsUpdate = getDbActionsForUpsertScalarLists(extendedPath.lastEdgeToNodeEdge(currentWhere(upsert.where, upsert.update)), upsert.update)
+          val scalarListsUpdate =
+            DatabaseMutationBuilder.getDbActionsForUpsertScalarLists(project.id,
+                                                                     extendedPath.lastEdgeToNodeEdge(currentWhere(upsert.where, upsert.update)),
+                                                                     upsert.update)
           UpsertDataItemIfInRelationWith(project,
                                          extendedPath.lastEdgeToNodeEdge(upsert.where),
                                          createWhere,
@@ -204,7 +194,7 @@ case class SqlMutactions(dataResolver: DataResolver) {
                                          scalarListsUpdate)
 
         case upsert: UpsertByRelation =>
-          val scalarListsUpdate = getDbActionsForUpsertScalarLists(extendedPath, upsert.update)
+          val scalarListsUpdate = DatabaseMutationBuilder.getDbActionsForUpsertScalarLists(project.id, extendedPath, upsert.update)
           UpsertDataItemIfInRelationWith(project, extendedPath, createWhere, createArgsWithId, upsert.update, scalarListsCreate, scalarListsUpdate)
       }
 

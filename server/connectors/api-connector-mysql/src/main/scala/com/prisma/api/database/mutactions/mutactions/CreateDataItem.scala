@@ -9,7 +9,6 @@ import com.prisma.api.database.{DatabaseMutationBuilder, ProjectRelayId, Project
 import com.prisma.api.mutations.CoolArgs
 import com.prisma.api.schema.APIErrors
 import com.prisma.shared.models._
-import com.prisma.util.json.JsonFormats
 import slick.jdbc.MySQLProfile.api._
 import slick.lifted.TableQuery
 
@@ -42,7 +41,6 @@ case class CreateDataItem(
   }
 
   override def handleErrors = {
-    implicit val anyFormat = JsonFormats.AnyJsonFormat
     Some({
       case e: SQLIntegrityConstraintViolationException if e.getErrorCode == 1062 && GetFieldFromSQLUniqueException.getFieldOption(List(args), e).isDefined =>
         APIErrors.UniqueConstraintViolation(model.name, GetFieldFromSQLUniqueException.getFieldOption(List(args), e).get)

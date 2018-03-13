@@ -1,6 +1,5 @@
 package com.prisma.api.mutations
 
-import com.prisma.api.database.Types.UserData
 import com.prisma.api.schema.APIErrors.ValueNotAValidJson
 import com.prisma.shared.models.TypeIdentifier.TypeIdentifier
 import com.prisma.shared.models.{Field, TypeIdentifier}
@@ -44,6 +43,8 @@ import scala.util.Try
   * In the future we will introduce a case class hierarchy to represent valid internal types
   */
 object GraphcoolDataTypes {
+  type UserData = Map[String, Option[Any]]
+
   def fromJson(data: play.api.libs.json.JsObject, fields: List[Field]): UserData = {
     val printedJson = play.api.libs.json.Json.prettyPrint(data)
     val sprayJson   = printedJson.parseJson.asJsObject

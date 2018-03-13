@@ -1,5 +1,6 @@
 package com.prisma.api.schema
 
+import com.prisma.api.connector.DataItem
 import com.prisma.api.schema.CustomScalarTypes.{DateTimeType, JsonType}
 import com.prisma.api.database._
 import com.prisma.api.resolver.DeferredTypes._

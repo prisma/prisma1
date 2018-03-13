@@ -3,10 +3,10 @@ package com.prisma.api.database.import_export
 import java.sql.Timestamp
 
 import com.prisma.api.ApiDependencies
-import com.prisma.api.database.Types.UserData
+import com.prisma.api.connector.DataItem
 import com.prisma.api.database.import_export.ImportExport.MyJsonProtocol._
 import com.prisma.api.database.import_export.ImportExport._
-import com.prisma.api.database.{DataItem, DataResolver, QueryArguments}
+import com.prisma.api.database.{DataResolver, QueryArguments}
 import com.prisma.shared.models.IdType.Id
 import com.prisma.shared.models.{Project, TypeIdentifier}
 import org.joda.time.format.DateTimeFormat
@@ -131,7 +131,7 @@ class BulkExport(project: Project)(implicit apiDependencies: ApiDependencies) {
   }
 
   private def dataItemToExportNode(item: DataItem, info: NodeInfo): JsonBundle = {
-    val dataValueMap: UserData                        = item.userData
+    val dataValueMap                                  = item.userData
     val createdAtUpdatedAtMap                         = dataValueMap.collect { case (k, Some(v)) if k == "createdAt" || k == "updatedAt" => (k, v) }
     val withoutHiddenFields: Map[String, Option[Any]] = dataValueMap.collect { case (k, v) if k != "createdAt" && k != "updatedAt" => (k, v) }
     val nonListFieldsWithValues: Map[String, Any]     = withoutHiddenFields.collect { case (k, Some(v)) if !info.current.getFieldByName_!(k).isList => (k, v) }

@@ -227,6 +227,19 @@ object DatabaseMutationBuilder {
         ))
       .map(_.last)
   }
+
+  def getDbActionsForUpsertScalarLists(projectId: String, path: Path, args: CoolArgs): Vector[DBIOAction[Any, NoStream, Effect]] = {
+    val x = for {
+      field  <- path.lastModel.scalarListFields
+      values <- args.subScalarList(field)
+    } yield {
+      values.values.isEmpty match {
+        case true  => setScalarListToEmpty(projectId, path, field.name)
+        case false => setScalarList(projectId, path, field.name, values.values)
+      }
+    }
+    x.toVector
+  }
   //endregion
 
   //region RESET DATA

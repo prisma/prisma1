@@ -1,8 +1,9 @@
 package com.prisma.api.mutations
 
 import com.prisma.api.ApiDependencies
+import com.prisma.api.connector.PublishSubscriptionEvent
 import com.prisma.api.database.mutactions.ClientSqlMutaction
-import com.prisma.api.database.mutactions.mutactions.{CreateDataItem, DeleteDataItem, PublishSubscriptionEvent, UpdateDataItem}
+import com.prisma.api.database.mutactions.mutactions.{CreateDataItem, DeleteDataItem, UpdateDataItem}
 import com.prisma.shared.models.IdType.Id
 import com.prisma.shared.models.Project
 

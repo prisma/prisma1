@@ -3,10 +3,10 @@ package com.prisma.api.mutations.mutations
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
 import com.prisma.api.ApiDependencies
-import com.prisma.api.connector.{NodeSelector, Path}
-import com.prisma.api.database.mutactions.mutactions.ServerSideSubscription
-import com.prisma.api.database.{DataItem, DataResolver}
+import com.prisma.api.connector.{DataItem, NodeSelector, Path}
+import com.prisma.api.database.DataResolver
 import com.prisma.api.mutations._
+import com.prisma.api.mutations.mutactions.ServerSideSubscriptionExtractor
 import com.prisma.api.schema.APIErrors
 import com.prisma.shared.models.{Model, Project}
 import sangria.schema
@@ -45,11 +45,11 @@ case class Update(
 
         val sqlMutactions          = SqlMutactions(dataResolver).getMutactionsForUpdate(Path.empty(where), coolArgs, dataItem.id, validatedDataItem)
         val subscriptionMutactions = SubscriptionEvents.extractFromSqlMutactions(project, mutationId, sqlMutactions)
-        val sssActions             = ServerSideSubscription.extractFromMutactions(project, sqlMutactions, requestId = "")
+        val sssActions             = ServerSideSubscriptionExtractor.extractFromMutactions(project, sqlMutactions, requestId = "")
 
         PreparedMutactions(
           databaseMutactions = sqlMutactions.toVector,
-          sideEffectMutactions = (sssActions ++ subscriptionMutactions).toVector
+          sideEffectMutactions = Vector.empty //(sssActions ++ subscriptionMutactions).toVector
         )
       case None =>
         throw APIErrors.NodeNotFoundForWhereError(where)

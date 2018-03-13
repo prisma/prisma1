@@ -1,5 +1,6 @@
 package com.prisma.api.database
 
+import com.prisma.api.connector.DataItem
 import com.prisma.api.database.DatabaseQueryBuilder.{ResultListTransform, ResultTransform}
 import com.prisma.api.database.Types.DataItemFilterCollection
 import com.prisma.api.schema.APIErrors

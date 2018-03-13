@@ -1,13 +1,13 @@
 package com.prisma.subscriptions
 
 import akka.http.scaladsl.model.HttpRequest
-import com.prisma.sangria.utils.ErrorHandler
 import com.prisma.api.ApiDependencies
-import com.prisma.api.database.DataItem
+import com.prisma.api.connector.DataItem
 import com.prisma.api.resolver.DeferredResolverProvider
-import com.prisma.subscriptions.schema.{QueryTransformer, SubscriptionSchema}
+import com.prisma.sangria.utils.ErrorHandler
 import com.prisma.shared.models.ModelMutationType.ModelMutationType
 import com.prisma.shared.models._
+import com.prisma.subscriptions.schema.{QueryTransformer, SubscriptionSchema}
 import com.prisma.util.json.SprayJsonExtensions
 import sangria.ast.Document
 import sangria.execution.Executor
