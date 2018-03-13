@@ -12,7 +12,7 @@ class AggregationQuerySpec extends FlatSpec with Matchers with ApiBaseSpec {
     }
     database.setup(project)
 
-    val result = server.executeQuerySimple(
+    val result = server.query(
       s"""{
          |  todoesConnection{
          |    aggregate {
@@ -33,7 +33,7 @@ class AggregationQuerySpec extends FlatSpec with Matchers with ApiBaseSpec {
     database.setup(project)
 
     server
-      .executeQuerySimple(
+      .query(
         s"""mutation {
            |  createTodo(data: {title: "Hello World!"}) {
            |    id
@@ -42,7 +42,7 @@ class AggregationQuerySpec extends FlatSpec with Matchers with ApiBaseSpec {
         project
       )
 
-    val result = server.executeQuerySimple(
+    val result = server.query(
       s"""{
          |  todoesConnection{
          |    aggregate {
@@ -64,7 +64,7 @@ class AggregationQuerySpec extends FlatSpec with Matchers with ApiBaseSpec {
 
     val title = "Hello World!"
     server
-      .executeQuerySimple(
+      .query(
         s"""mutation {
            |  createTodo(data: {title: "$title"}) {
            |    id
@@ -74,7 +74,7 @@ class AggregationQuerySpec extends FlatSpec with Matchers with ApiBaseSpec {
       )
 
     server
-      .executeQuerySimple(
+      .query(
         s"""{
            |  todoesConnection(where: {title: "INVALID"}){
            |    aggregate {
@@ -87,7 +87,7 @@ class AggregationQuerySpec extends FlatSpec with Matchers with ApiBaseSpec {
       .pathAsLong("data.todoesConnection.aggregate.count") should be(0)
 
     server
-      .executeQuerySimple(
+      .query(
         s"""{
            |  todoesConnection(where: {title: "$title"}){
            |    aggregate {

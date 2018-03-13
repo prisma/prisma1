@@ -15,7 +15,7 @@ class NestedCreateMutationInsideCreateSpec extends FlatSpec with Matchers with A
     database.setup(project)
 
     val res = server
-      .executeQuerySimple(
+      .query(
         """mutation {
           |  createParent(data: {
           |    p: "p1"
@@ -46,7 +46,7 @@ class NestedCreateMutationInsideCreateSpec extends FlatSpec with Matchers with A
     database.setup(project)
 
     val child1Id = server
-      .executeQuerySimple(
+      .query(
         """mutation {
           |  createParent(data: {
           |    p: "p1"
@@ -75,7 +75,7 @@ class NestedCreateMutationInsideCreateSpec extends FlatSpec with Matchers with A
     database.setup(project)
 
     val res = server
-      .executeQuerySimple(
+      .query(
         """mutation {
           |  createParent(data: {
           |    p: "p1"
@@ -105,7 +105,7 @@ class NestedCreateMutationInsideCreateSpec extends FlatSpec with Matchers with A
     database.setup(project)
 
     val res = server
-      .executeQuerySimple(
+      .query(
         """mutation {
           |  createParent(data: {
           |    p: "p1"
@@ -134,7 +134,7 @@ class NestedCreateMutationInsideCreateSpec extends FlatSpec with Matchers with A
     database.setup(project)
 
     val res = server
-      .executeQuerySimple(
+      .query(
         """mutation {
           |  createParent(data: {
           |    p: "p1"
@@ -163,7 +163,7 @@ class NestedCreateMutationInsideCreateSpec extends FlatSpec with Matchers with A
     database.setup(project)
 
     val res = server
-      .executeQuerySimple(
+      .query(
         """mutation {
           |  createParent(data: {
           |    p: "p1"
@@ -192,7 +192,7 @@ class NestedCreateMutationInsideCreateSpec extends FlatSpec with Matchers with A
     database.setup(project)
 
     val res = server
-      .executeQuerySimple(
+      .query(
         """mutation {
           |  createParent(data: {
           |    p: "p1"
@@ -221,7 +221,7 @@ class NestedCreateMutationInsideCreateSpec extends FlatSpec with Matchers with A
     database.setup(project)
 
     val res = server
-      .executeQuerySimple(
+      .query(
         """mutation {
           |  createParent(data: {
           |    p: "p1"
@@ -250,7 +250,7 @@ class NestedCreateMutationInsideCreateSpec extends FlatSpec with Matchers with A
     database.setup(project)
 
     val res = server
-      .executeQuerySimple(
+      .query(
         """mutation {
           |  createParent(data: {
           |    p: "p1"
@@ -279,7 +279,7 @@ class NestedCreateMutationInsideCreateSpec extends FlatSpec with Matchers with A
     database.setup(project)
 
     val res = server
-      .executeQuerySimple(
+      .query(
         """mutation {
           |  createParent(data: {
           |    p: "p1"
@@ -307,7 +307,7 @@ class NestedCreateMutationInsideCreateSpec extends FlatSpec with Matchers with A
     }
     database.setup(project)
 
-    val result = server.executeQuerySimple(
+    val result = server.query(
       """
         |mutation {
         |  createTodo(data:{
@@ -334,7 +334,7 @@ class NestedCreateMutationInsideCreateSpec extends FlatSpec with Matchers with A
     }
     database.setup(project)
 
-    val result = server.executeQuerySimple(
+    val result = server.query(
       """
         |mutation {
         |  createComment(data: {
@@ -363,7 +363,7 @@ class NestedCreateMutationInsideCreateSpec extends FlatSpec with Matchers with A
     database.setup(project)
 
     val result = server
-      .executeQuerySimple(
+      .query(
         """
         |mutation {
         |  createTodo(data:{
@@ -384,7 +384,7 @@ class NestedCreateMutationInsideCreateSpec extends FlatSpec with Matchers with A
 
     mustBeEqual(result.pathAsJsValue("data.createTodo.tags").toString, """[{"name":"tag1"},{"name":"tag2"}]""")
 
-    val result2 = server.executeQuerySimple(
+    val result2 = server.query(
       """
         |mutation {
         |  createTag(data:{
@@ -412,7 +412,7 @@ class NestedCreateMutationInsideCreateSpec extends FlatSpec with Matchers with A
     }
     database.setup(project)
 
-    server.executeQuerySimple(
+    server.query(
       """mutation{
         |  createUser(data:{
         |    name: "Paul"
@@ -426,10 +426,10 @@ class NestedCreateMutationInsideCreateSpec extends FlatSpec with Matchers with A
       project
     )
 
-    server.executeQuerySimple("query{users{id}}", project).pathAsSeq("data.users").length should be(1)
-    server.executeQuerySimple("query{posts{id}}", project).pathAsSeq("data.posts").length should be(1)
+    server.query("query{users{id}}", project).pathAsSeq("data.users").length should be(1)
+    server.query("query{posts{id}}", project).pathAsSeq("data.posts").length should be(1)
 
-    server.executeQuerySimpleThatMustFail(
+    server.queryThatMustFail(
       """mutation{
         |  createUser(data:{
         |    name: "Paul2"
@@ -445,10 +445,10 @@ class NestedCreateMutationInsideCreateSpec extends FlatSpec with Matchers with A
       errorContains = "A unique constraint would be violated on User. Details: Field name = unique"
     )
 
-    server.executeQuerySimple("query{users{id}}", project).pathAsSeq("data.users").length should be(1)
-    server.executeQuerySimple("query{posts{id}}", project).pathAsSeq("data.posts").length should be(1)
+    server.query("query{users{id}}", project).pathAsSeq("data.users").length should be(1)
+    server.query("query{posts{id}}", project).pathAsSeq("data.posts").length should be(1)
 
-    server.executeQuerySimpleThatMustFail(
+    server.queryThatMustFail(
       """mutation{
         |  createUser(data:{
         |    name: "Paul2"
@@ -464,8 +464,8 @@ class NestedCreateMutationInsideCreateSpec extends FlatSpec with Matchers with A
       errorContains = "A unique constraint would be violated on Post. Details: Field name = uniquePost"
     )
 
-    server.executeQuerySimple("query{users{id}}", project).pathAsSeq("data.users").length should be(1)
-    server.executeQuerySimple("query{posts{id}}", project).pathAsSeq("data.posts").length should be(1)
+    server.query("query{users{id}}", project).pathAsSeq("data.users").length should be(1)
+    server.query("query{posts{id}}", project).pathAsSeq("data.posts").length should be(1)
   }
 
   "a deeply nested mutation" should "execute all levels of the mutation" in {
@@ -508,7 +508,7 @@ class NestedCreateMutationInsideCreateSpec extends FlatSpec with Matchers with A
         |}
       """.stripMargin
 
-    val result = server.executeQuerySimple(mutation, project)
+    val result = server.query(mutation, project)
     result.pathAsString("data.createList.name") should equal("the list")
     result.pathAsString("data.createList.todos.[0].title") should equal("the todo")
     result.pathAsString("data.createList.todos.[0].tag.name") should equal("the tag")
@@ -521,7 +521,7 @@ class NestedCreateMutationInsideCreateSpec extends FlatSpec with Matchers with A
     }
     database.setup(project)
 
-    val result = server.executeQuerySimple(
+    val result = server.query(
       """
         |mutation {
         |  createComment(data: {
@@ -539,7 +539,7 @@ class NestedCreateMutationInsideCreateSpec extends FlatSpec with Matchers with A
     )
     mustBeEqual(result.pathAsString("data.createComment.todo.reqOnTodo"), "todo1")
 
-    server.executeQuerySimpleThatMustFail(
+    server.queryThatMustFail(
       """
         |mutation {
         |  createComment(data: {
@@ -570,7 +570,7 @@ class NestedCreateMutationInsideCreateSpec extends FlatSpec with Matchers with A
     }
     database.setup(project)
 
-    val result = server.executeQuerySimple(
+    val result = server.query(
       """
         |mutation {
         |  createComment(data: {
@@ -590,10 +590,10 @@ class NestedCreateMutationInsideCreateSpec extends FlatSpec with Matchers with A
     )
     mustBeEqual(result.pathAsString("data.createComment.todo.reqOnTodo"), "todo1")
 
-    server.executeQuerySimple("{ todoes { id } }", project).pathAsSeq("data.todoes").size should be(1)
-    server.executeQuerySimple("{ comments { id } }", project).pathAsSeq("data.comments").size should be(1)
+    server.query("{ todoes { id } }", project).pathAsSeq("data.todoes").size should be(1)
+    server.query("{ comments { id } }", project).pathAsSeq("data.comments").size should be(1)
 
-    server.executeQuerySimpleThatMustFail(
+    server.queryThatMustFail(
       """
         |mutation {
         |  createComment(data: {
@@ -612,11 +612,11 @@ class NestedCreateMutationInsideCreateSpec extends FlatSpec with Matchers with A
       errorContains = "The field 'todo' on type 'Comment' is required. Performing this mutation would violate that constraint"
     )
 
-    server.executeQuerySimple("{ todoes { id } }", project).pathAsSeq("data.todoes").size should be(1)
-    server.executeQuerySimple("{ comments { id } }", project).pathAsSeq("data.comments").size should be(1)
+    server.query("{ todoes { id } }", project).pathAsSeq("data.todoes").size should be(1)
+    server.query("{ comments { id } }", project).pathAsSeq("data.comments").size should be(1)
 
     val todoId = server
-      .executeQuerySimple(
+      .query(
         """
         |mutation {
         |  createTodo(data: {
@@ -630,10 +630,10 @@ class NestedCreateMutationInsideCreateSpec extends FlatSpec with Matchers with A
       )
       .pathAsString("data.createTodo.id")
 
-    server.executeQuerySimple("{ todoes { id } }", project).pathAsSeq("data.todoes").size should be(2)
-    server.executeQuerySimple("{ comments { id } }", project).pathAsSeq("data.comments").size should be(1)
+    server.query("{ todoes { id } }", project).pathAsSeq("data.todoes").size should be(2)
+    server.query("{ comments { id } }", project).pathAsSeq("data.comments").size should be(1)
 
-    server.executeQuerySimple(
+    server.query(
       s"""
         |mutation {
         |  createComment(data: {
@@ -652,8 +652,8 @@ class NestedCreateMutationInsideCreateSpec extends FlatSpec with Matchers with A
       project
     )
 
-    server.executeQuerySimple("{ todoes { id } }", project).pathAsSeq("data.todoes").size should be(2)
-    server.executeQuerySimple("{ comments { id } }", project).pathAsSeq("data.comments").size should be(2)
+    server.query("{ todoes { id } }", project).pathAsSeq("data.todoes").size should be(2)
+    server.query("{ comments { id } }", project).pathAsSeq("data.comments").size should be(2)
 
   }
 

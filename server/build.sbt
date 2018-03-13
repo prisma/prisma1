@@ -178,8 +178,10 @@ lazy val sharedModels = normalProject("shared-models")
 //   INTEGRATION TESTS
 // ####################
 
-lazy val integrationTestsMySql = integrationTestProject("integration-tests-mysql").dependsOn(deploy).dependsOn(api).dependsOn(deployConnectorMySql)
-
+lazy val integrationTestsMySql = integrationTestProject("integration-tests-mysql")
+  .dependsOn(deploy % "compile;test->test")
+  .dependsOn(api % "compile;test->test")
+  .dependsOn(deployConnectorMySql)
 
 // ####################
 //       LIBS
