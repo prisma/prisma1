@@ -1,0 +1,3 @@
+---
+description: Prisma Bindings
+---

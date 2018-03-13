@@ -15,7 +15,7 @@ class NestedDisconnectMutationInsideUpdateSpec extends FlatSpec with Matchers wi
     database.setup(project)
 
     val res = server
-      .executeQuerySimple(
+      .query(
         """mutation {
           |  createParent(data: {
           |    p: "p1"
@@ -37,7 +37,7 @@ class NestedDisconnectMutationInsideUpdateSpec extends FlatSpec with Matchers wi
 
     database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "_ParentToChild").as[Int]) should be(Vector(1))
 
-    val res2 = server.executeQuerySimple(
+    val res2 = server.query(
       s"""
          |mutation {
          |  updateParent(
@@ -68,7 +68,7 @@ class NestedDisconnectMutationInsideUpdateSpec extends FlatSpec with Matchers wi
     database.setup(project)
 
     val child1Id = server
-      .executeQuerySimple(
+      .query(
         """mutation {
           |  createChild(data: {c: "c1"})
           |  {
@@ -80,7 +80,7 @@ class NestedDisconnectMutationInsideUpdateSpec extends FlatSpec with Matchers wi
       .pathAsString("data.createChild.id")
 
     val parent1Id = server
-      .executeQuerySimple(
+      .query(
         """mutation {
           |  createParent(data: {p: "p1"})
           |  {
@@ -93,7 +93,7 @@ class NestedDisconnectMutationInsideUpdateSpec extends FlatSpec with Matchers wi
 
     database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "_ParentToChild").as[Int]) should be(Vector(0))
 
-    val res = server.executeQuerySimpleThatMustFail(
+    val res = server.queryThatMustFail(
       s"""
          |mutation {
          |  updateParent(
@@ -122,7 +122,7 @@ class NestedDisconnectMutationInsideUpdateSpec extends FlatSpec with Matchers wi
     }
     database.setup(project)
 
-    server.executeQuerySimple(
+    server.query(
       """mutation {
         |  createParent(data: {
         |    p: "p1"
@@ -140,7 +140,7 @@ class NestedDisconnectMutationInsideUpdateSpec extends FlatSpec with Matchers wi
 
     database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "_ParentToChild").as[Int]) should be(Vector(1))
 
-    server.executeQuerySimpleThatMustFail(
+    server.queryThatMustFail(
       s"""
          |mutation {
          |  updateParent(
@@ -168,7 +168,7 @@ class NestedDisconnectMutationInsideUpdateSpec extends FlatSpec with Matchers wi
     }
     database.setup(project)
 
-    server.executeQuerySimple(
+    server.query(
       """mutation {
         |  createParent(data: {
         |    p: "p1"
@@ -186,7 +186,7 @@ class NestedDisconnectMutationInsideUpdateSpec extends FlatSpec with Matchers wi
 
     database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "_ChildToParent").as[Int]) should be(Vector(1))
 
-    server.executeQuerySimpleThatMustFail(
+    server.queryThatMustFail(
       s"""
          |mutation {
          |  updateParent(
@@ -216,7 +216,7 @@ class NestedDisconnectMutationInsideUpdateSpec extends FlatSpec with Matchers wi
     database.setup(project)
 
     server
-      .executeQuerySimple(
+      .query(
         """mutation {
           |  createParent(data: {
           |    p: "p1"
@@ -234,7 +234,7 @@ class NestedDisconnectMutationInsideUpdateSpec extends FlatSpec with Matchers wi
 
     database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "_ParentToChild").as[Int]) should be(Vector(2))
 
-    val res = server.executeQuerySimple(
+    val res = server.query(
       s"""
          |mutation {
          |  updateParent(
@@ -263,7 +263,7 @@ class NestedDisconnectMutationInsideUpdateSpec extends FlatSpec with Matchers wi
     }
     database.setup(project)
 
-    server.executeQuerySimple(
+    server.query(
       """mutation {
         |  createParent(data: {
         |    p: "p1"
@@ -281,7 +281,7 @@ class NestedDisconnectMutationInsideUpdateSpec extends FlatSpec with Matchers wi
 
     database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "_ChildToParent").as[Int]) should be(Vector(1))
 
-    val res = server.executeQuerySimple(
+    val res = server.query(
       s"""
          |mutation {
          |  updateParent(
@@ -300,7 +300,7 @@ class NestedDisconnectMutationInsideUpdateSpec extends FlatSpec with Matchers wi
 
     res.toString should be("""{"data":{"updateParent":{"childOpt":null}}}""")
 
-    server.executeQuerySimple(s"""query{children{c, parentsOpt{p}}}""", project).toString should be("""{"data":{"children":[{"c":"c1","parentsOpt":[]}]}}""")
+    server.query(s"""query{children{c, parentsOpt{p}}}""", project).toString should be("""{"data":{"children":[{"c":"c1","parentsOpt":[]}]}}""")
 
     database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "_ChildToParent").as[Int]) should be(Vector(0))
   }
@@ -312,7 +312,7 @@ class NestedDisconnectMutationInsideUpdateSpec extends FlatSpec with Matchers wi
     }
     database.setup(project)
 
-    server.executeQuerySimple(
+    server.query(
       """mutation {
         |  createParent(data: {
         |    p: "p1"
@@ -330,7 +330,7 @@ class NestedDisconnectMutationInsideUpdateSpec extends FlatSpec with Matchers wi
 
     database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "_ChildToParent").as[Int]) should be(Vector(2))
 
-    val res = server.executeQuerySimple(
+    val res = server.query(
       s"""
          |mutation {
          |  updateParent(
@@ -349,7 +349,7 @@ class NestedDisconnectMutationInsideUpdateSpec extends FlatSpec with Matchers wi
 
     res.toString should be("""{"data":{"updateParent":{"childrenOpt":[{"c":"c2"}]}}}""")
 
-    server.executeQuerySimple(s"""query{children{c, parentsOpt{p}}}""", project).toString should be(
+    server.query(s"""query{children{c, parentsOpt{p}}}""", project).toString should be(
       """{"data":{"children":[{"c":"c1","parentsOpt":[]},{"c":"c2","parentsOpt":[{"p":"p1"}]}]}}""")
 
     database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "_ChildToParent").as[Int]) should be(Vector(1))
@@ -362,7 +362,7 @@ class NestedDisconnectMutationInsideUpdateSpec extends FlatSpec with Matchers wi
     }
     database.setup(project)
 
-    val createResult = server.executeQuerySimple(
+    val createResult = server.query(
       """mutation {
         |  createTodo(
         |    data: {
@@ -382,7 +382,7 @@ class NestedDisconnectMutationInsideUpdateSpec extends FlatSpec with Matchers wi
     val comment1Id = createResult.pathAsString("data.createTodo.comments.[0].id")
     val comment2Id = createResult.pathAsString("data.createTodo.comments.[1].id")
 
-    val result = server.executeQuerySimple(
+    val result = server.query(
       s"""mutation {
          |  updateTodo(
          |    where: {
@@ -413,7 +413,7 @@ class NestedDisconnectMutationInsideUpdateSpec extends FlatSpec with Matchers wi
     }
     database.setup(project)
 
-    val createResult = server.executeQuerySimple(
+    val createResult = server.query(
       """mutation {
         |  createTodo(
         |    data: {
@@ -430,7 +430,7 @@ class NestedDisconnectMutationInsideUpdateSpec extends FlatSpec with Matchers wi
     )
     val todoId = createResult.pathAsString("data.createTodo.id")
 
-    val result = server.executeQuerySimple(
+    val result = server.query(
       s"""mutation {
          |  updateTodo(
          |    where: {
@@ -461,7 +461,7 @@ class NestedDisconnectMutationInsideUpdateSpec extends FlatSpec with Matchers wi
     }
     database.setup(project)
 
-    val createResult = server.executeQuerySimple(
+    val createResult = server.query(
       """mutation {
         |  createTodo(
         |    data: {
@@ -479,7 +479,7 @@ class NestedDisconnectMutationInsideUpdateSpec extends FlatSpec with Matchers wi
     val todoId    = createResult.pathAsString("data.createTodo.id")
     val commentId = createResult.pathAsString("data.createTodo.comments.[0].id")
 
-    val result = server.executeQuerySimple(
+    val result = server.query(
       s"""
          |mutation {
          |  updateComment(
@@ -508,7 +508,7 @@ class NestedDisconnectMutationInsideUpdateSpec extends FlatSpec with Matchers wi
     }
     database.setup(project)
 
-    val createResult = server.executeQuerySimple(
+    val createResult = server.query(
       """mutation { 
         |  createNote(
         |    data: {
@@ -526,7 +526,7 @@ class NestedDisconnectMutationInsideUpdateSpec extends FlatSpec with Matchers wi
     val noteId = createResult.pathAsString("data.createNote.id")
     val todoId = createResult.pathAsString("data.createNote.todo.id")
 
-    val result = server.executeQuerySimple(
+    val result = server.query(
       s"""
          |mutation {
          |  updateNote(
@@ -555,11 +555,11 @@ class NestedDisconnectMutationInsideUpdateSpec extends FlatSpec with Matchers wi
     }
     database.setup(project)
 
-    server.executeQuerySimple("""mutation { createTodo(data: {title: "todo"}){ id } }""", project).pathAsString("data.createTodo.id")
-    server.executeQuerySimple("""mutation { createComment(data: {text: "comment1"}){ id } }""", project).pathAsString("data.createComment.id")
-    server.executeQuerySimple("""mutation { createComment(data: {text: "comment2"}){ id } }""", project).pathAsString("data.createComment.id")
+    server.query("""mutation { createTodo(data: {title: "todo"}){ id } }""", project).pathAsString("data.createTodo.id")
+    server.query("""mutation { createComment(data: {text: "comment1"}){ id } }""", project).pathAsString("data.createComment.id")
+    server.query("""mutation { createComment(data: {text: "comment2"}){ id } }""", project).pathAsString("data.createComment.id")
 
-    val result = server.executeQuerySimple(
+    val result = server.query(
       s"""mutation {
          |  updateTodo(
          |    where: {
@@ -582,7 +582,7 @@ class NestedDisconnectMutationInsideUpdateSpec extends FlatSpec with Matchers wi
 
     mustBeEqual(result.pathAsJsValue("data.updateTodo.comments").toString, """[{"text":"comment1"},{"text":"comment2"}]""")
 
-    val result2 = server.executeQuerySimple(
+    val result2 = server.query(
       s"""mutation {
          |  updateTodo(
          |    where: {
@@ -618,10 +618,10 @@ class NestedDisconnectMutationInsideUpdateSpec extends FlatSpec with Matchers wi
                                               |}""".stripMargin }
     database.setup(project)
 
-    server.executeQuerySimple("""mutation { createUser(data: {username: "Paul", password: "1234", salt: "so salty"}){ id } }""", project)
-    server.executeQuerySimple("""mutation { createUser(data: {username: "Peter", password: "abcd", salt: "so salty"}){ id } }""", project)
+    server.query("""mutation { createUser(data: {username: "Paul", password: "1234", salt: "so salty"}){ id } }""", project)
+    server.query("""mutation { createUser(data: {username: "Peter", password: "abcd", salt: "so salty"}){ id } }""", project)
 
-    val result = server.executeQuerySimple(
+    val result = server.query(
       s"""mutation {
          |  updateUser(
          |    where: {
@@ -645,7 +645,7 @@ class NestedDisconnectMutationInsideUpdateSpec extends FlatSpec with Matchers wi
 
     mustBeEqual(result.pathAsJsValue("data.updateUser.follows").toString, """[{"username":"Peter"}]""")
 
-    val result2 = server.executeQuerySimple(
+    val result2 = server.query(
       s"""mutation {
          |  updateUser(
          |    where: {
@@ -682,11 +682,11 @@ class NestedDisconnectMutationInsideUpdateSpec extends FlatSpec with Matchers wi
                                               |}""".stripMargin }
     database.setup(project)
 
-    server.executeQuerySimple("""mutation { createUser(data: {username: "Paul", password: "1234", salt: "so salty"}){ id } }""", project)
-    server.executeQuerySimple("""mutation { createUser(data: {username: "Peter", password: "abcd", salt: "so salty"}){ id } }""", project)
-    server.executeQuerySimple("""mutation { createUser(data: {username: "Anton", password: "abcd3", salt: "so salty"}){ id } }""", project)
+    server.query("""mutation { createUser(data: {username: "Paul", password: "1234", salt: "so salty"}){ id } }""", project)
+    server.query("""mutation { createUser(data: {username: "Peter", password: "abcd", salt: "so salty"}){ id } }""", project)
+    server.query("""mutation { createUser(data: {username: "Anton", password: "abcd3", salt: "so salty"}){ id } }""", project)
 
-    val result = server.executeQuerySimple(
+    val result = server.query(
       s"""mutation {
          |  updateUser(
          |    where: {
@@ -710,7 +710,7 @@ class NestedDisconnectMutationInsideUpdateSpec extends FlatSpec with Matchers wi
 
     mustBeEqual(result.pathAsJsValue("data.updateUser.follows").toString, """[{"username":"Peter"}]""")
 
-    server.executeQuerySimpleThatMustFail(
+    server.queryThatMustFail(
       s"""mutation {
          |  updateUser(
          |    where: {
@@ -783,7 +783,7 @@ class NestedDisconnectMutationInsideUpdateSpec extends FlatSpec with Matchers wi
         |}
       """.stripMargin
 
-    server.executeQuerySimple(createMutation, project)
+    server.query(createMutation, project)
 
     val updateMutation =
       s"""mutation b {
@@ -812,12 +812,12 @@ class NestedDisconnectMutationInsideUpdateSpec extends FlatSpec with Matchers wi
          |}
       """.stripMargin
 
-    val result = server.executeQuerySimple(updateMutation, project)
+    val result = server.query(updateMutation, project)
 
     result.toString should be(
       """{"data":{"updateTop":{"nameTop":"updated top","middles":[{"nameMiddle":"updated middle","bottoms":[{"nameBottom":"the second bottom"}]},{"nameMiddle":"the second middle","bottoms":[{"nameBottom":"the third bottom"},{"nameBottom":"the fourth bottom"}]}]}}}""")
 
-    server.executeQuerySimple("query{bottoms{nameBottom}}", project).toString should be(
+    server.query("query{bottoms{nameBottom}}", project).toString should be(
       """{"data":{"bottoms":[{"nameBottom":"the bottom"},{"nameBottom":"the second bottom"},{"nameBottom":"the third bottom"},{"nameBottom":"the fourth bottom"}]}}""")
   }
 
@@ -865,7 +865,7 @@ class NestedDisconnectMutationInsideUpdateSpec extends FlatSpec with Matchers wi
         |}
       """.stripMargin
 
-    server.executeQuerySimple(createMutation, project)
+    server.query(createMutation, project)
 
     val updateMutation =
       s"""mutation b {
@@ -894,12 +894,12 @@ class NestedDisconnectMutationInsideUpdateSpec extends FlatSpec with Matchers wi
          |}
       """.stripMargin
 
-    val result = server.executeQuerySimple(updateMutation, project)
+    val result = server.query(updateMutation, project)
 
     result.toString should be(
       """{"data":{"updateTop":{"nameTop":"updated top","middles":[{"nameMiddle":"updated middle","bottoms":[{"nameBottom":"the second bottom"}]},{"nameMiddle":"the second middle","bottoms":[{"nameBottom":"the third bottom"},{"nameBottom":"the fourth bottom"}]}]}}}""")
 
-    server.executeQuerySimple("query{bottoms{nameBottom}}", project).toString should be(
+    server.query("query{bottoms{nameBottom}}", project).toString should be(
       """{"data":{"bottoms":[{"nameBottom":"the bottom"},{"nameBottom":"the second bottom"},{"nameBottom":"the third bottom"},{"nameBottom":"the fourth bottom"}]}}""")
   }
 
@@ -945,7 +945,7 @@ class NestedDisconnectMutationInsideUpdateSpec extends FlatSpec with Matchers wi
         |}
       """.stripMargin
 
-    server.executeQuerySimple(createMutation, project)
+    server.query(createMutation, project)
 
     val updateMutation =
       s"""mutation b {
@@ -974,12 +974,12 @@ class NestedDisconnectMutationInsideUpdateSpec extends FlatSpec with Matchers wi
          |}
       """.stripMargin
 
-    val result = server.executeQuerySimple(updateMutation, project)
+    val result = server.query(updateMutation, project)
 
     result.toString should be(
       """{"data":{"updateTop":{"nameTop":"updated top","middles":[{"nameMiddle":"updated middle","bottom":null},{"nameMiddle":"the second middle","bottom":{"nameBottom":"the second bottom"}}]}}}""")
 
-    server.executeQuerySimple("query{bottoms{nameBottom}}", project).toString should be(
+    server.query("query{bottoms{nameBottom}}", project).toString should be(
       """{"data":{"bottoms":[{"nameBottom":"the bottom"},{"nameBottom":"the second bottom"}]}}""")
   }
 
@@ -1027,7 +1027,7 @@ class NestedDisconnectMutationInsideUpdateSpec extends FlatSpec with Matchers wi
         |}
       """.stripMargin
 
-    server.executeQuerySimple(createMutation, project)
+    server.query(createMutation, project)
 
     val updateMutation =
       s"""mutation b {
@@ -1065,13 +1065,12 @@ class NestedDisconnectMutationInsideUpdateSpec extends FlatSpec with Matchers wi
          |}
       """.stripMargin
 
-    val result = server.executeQuerySimple(updateMutation, project)
+    val result = server.query(updateMutation, project)
 
     result.toString should be(
       """{"data":{"updateTop":{"nameTop":"updated top","middle":{"nameMiddle":"updated middle","bottom":{"nameBottom":"updated bottom","below":[{"nameBelow":"second below"}]}}}}}""")
 
-    server.executeQuerySimple("query{belows{nameBelow}}", project).toString should be(
-      """{"data":{"belows":[{"nameBelow":"below"},{"nameBelow":"second below"}]}}""")
+    server.query("query{belows{nameBelow}}", project).toString should be("""{"data":{"belows":[{"nameBelow":"below"},{"nameBelow":"second below"}]}}""")
   }
 
   "a deeply nested mutation" should "execute all levels of the mutation if there are only model edges on the path" in {
@@ -1115,7 +1114,7 @@ class NestedDisconnectMutationInsideUpdateSpec extends FlatSpec with Matchers wi
         |}
       """.stripMargin
 
-    server.executeQuerySimple(createMutation, project)
+    server.query(createMutation, project)
 
     val updateMutation =
       s"""
@@ -1145,11 +1144,11 @@ class NestedDisconnectMutationInsideUpdateSpec extends FlatSpec with Matchers wi
          |}
       """.stripMargin
 
-    val result = server.executeQuerySimple(updateMutation, project)
+    val result = server.query(updateMutation, project)
 
     result.toString should be("""{"data":{"updateTop":{"nameTop":"updated top","middle":{"nameMiddle":"updated middle","bottom":null}}}}""")
 
-    server.executeQuerySimple("query{bottoms{nameBottom}}", project).toString should be("""{"data":{"bottoms":[{"nameBottom":"the bottom"}]}}""")
+    server.query("query{bottoms{nameBottom}}", project).toString should be("""{"data":{"bottoms":[{"nameBottom":"the bottom"}]}}""")
   }
 
   "a deeply nested mutation" should "execute all levels of the mutation if there are only model edges on the path and there are no backrelations" in {
@@ -1191,7 +1190,7 @@ class NestedDisconnectMutationInsideUpdateSpec extends FlatSpec with Matchers wi
         |}
       """.stripMargin
 
-    server.executeQuerySimple(createMutation, project)
+    server.query(createMutation, project)
 
     val updateMutation =
       s"""
@@ -1221,10 +1220,10 @@ class NestedDisconnectMutationInsideUpdateSpec extends FlatSpec with Matchers wi
          |}
       """.stripMargin
 
-    val result = server.executeQuerySimple(updateMutation, project)
+    val result = server.query(updateMutation, project)
 
     result.toString should be("""{"data":{"updateTop":{"nameTop":"updated top","middle":{"nameMiddle":"updated middle","bottom":null}}}}""")
 
-    server.executeQuerySimple("query{bottoms{nameBottom}}", project).toString should be("""{"data":{"bottoms":[{"nameBottom":"the bottom"}]}}""")
+    server.query("query{bottoms{nameBottom}}", project).toString should be("""{"data":{"bottoms":[{"nameBottom":"the bottom"}]}}""")
   }
 }

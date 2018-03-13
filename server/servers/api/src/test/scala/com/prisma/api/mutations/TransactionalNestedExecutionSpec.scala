@@ -182,7 +182,7 @@ class TransactionalNestedExecutionSpec extends FlatSpec with Matchers with ApiBa
     }
     database.setup(project)
 
-    val createResult = server.executeQuerySimple(
+    val createResult = server.query(
       s"""mutation {
          |  createNote(
          |    data: {
@@ -202,7 +202,7 @@ class TransactionalNestedExecutionSpec extends FlatSpec with Matchers with ApiBa
       project
     )
 
-    server.executeQuerySimpleThatMustFail(
+    server.queryThatMustFail(
       s"""
          |mutation {
          |  updateNote(
@@ -226,17 +226,11 @@ class TransactionalNestedExecutionSpec extends FlatSpec with Matchers with ApiBa
       errorContains = s"No Node for the model Todo with value $falseWhereInError2 for innerUnique found."
     )
 
-    server.executeQuerySimple(s"""query{note(where:{outerUnique:$outerWhere}){outerString}}""",
-                              project,
-                              dataContains = s"""{"note":{"outerString":"Outer String"}}""")
-    server.executeQuerySimple(s"""query{todo(where:{innerUnique:$innerWhere}){innerString}}""",
-                              project,
-                              dataContains = s"""{"todo":{"innerString":"Inner String"}}""")
-    server.executeQuerySimple(s"""query{todo(where:{innerUnique:$innerWhere2}){innerString}}""",
-                              project,
-                              dataContains = s"""{"todo":{"innerString":"Inner String"}}""")
+    server.query(s"""query{note(where:{outerUnique:$outerWhere}){outerString}}""", project, dataContains = s"""{"note":{"outerString":"Outer String"}}""")
+    server.query(s"""query{todo(where:{innerUnique:$innerWhere}){innerString}}""", project, dataContains = s"""{"todo":{"innerString":"Inner String"}}""")
+    server.query(s"""query{todo(where:{innerUnique:$innerWhere2}){innerString}}""", project, dataContains = s"""{"todo":{"innerString":"Inner String"}}""")
 
-    server.executeQuerySimpleThatMustFail(
+    server.queryThatMustFail(
       s"""
          |mutation {
          |  updateNote(
@@ -260,15 +254,9 @@ class TransactionalNestedExecutionSpec extends FlatSpec with Matchers with ApiBa
       errorContains = s"No Node for the model Todo with value $falseWhereInError for innerUnique found."
     )
 
-    server.executeQuerySimple(s"""query{note(where:{outerUnique:$outerWhere}){outerString}}""",
-                              project,
-                              dataContains = s"""{"note":{"outerString":"Outer String"}}""")
-    server.executeQuerySimple(s"""query{todo(where:{innerUnique:$innerWhere}){innerString}}""",
-                              project,
-                              dataContains = s"""{"todo":{"innerString":"Inner String"}}""")
-    server.executeQuerySimple(s"""query{todo(where:{innerUnique:$innerWhere2}){innerString}}""",
-                              project,
-                              dataContains = s"""{"todo":{"innerString":"Inner String"}}""")
+    server.query(s"""query{note(where:{outerUnique:$outerWhere}){outerString}}""", project, dataContains = s"""{"note":{"outerString":"Outer String"}}""")
+    server.query(s"""query{todo(where:{innerUnique:$innerWhere}){innerString}}""", project, dataContains = s"""{"todo":{"innerString":"Inner String"}}""")
+    server.query(s"""query{todo(where:{innerUnique:$innerWhere2}){innerString}}""", project, dataContains = s"""{"todo":{"innerString":"Inner String"}}""")
   }
 
   "a many2many relation" should "fail gracefully on wrong GRAPHQLID for multiple nested updates where one of them is not connected" in {
@@ -283,7 +271,7 @@ class TransactionalNestedExecutionSpec extends FlatSpec with Matchers with ApiBa
     }
     database.setup(project)
 
-    val createResult = server.executeQuerySimple(
+    val createResult = server.query(
       s"""mutation {
          |  createNote(
          |    data: {
@@ -302,9 +290,9 @@ class TransactionalNestedExecutionSpec extends FlatSpec with Matchers with ApiBa
       project
     )
 
-    server.executeQuerySimple(s"""mutation {createTodo(data:{innerString: "Inner String", innerUnique: $innerWhere2}){id}}""".stripMargin, project)
+    server.query(s"""mutation {createTodo(data:{innerString: "Inner String", innerUnique: $innerWhere2}){id}}""".stripMargin, project)
 
-    server.executeQuerySimpleThatMustFail(
+    server.queryThatMustFail(
       s"""
          |mutation {
          |  updateNote(
@@ -329,19 +317,13 @@ class TransactionalNestedExecutionSpec extends FlatSpec with Matchers with ApiBa
         s"The relation TodoToNote has no node for the model Note with the value 'Some Outer ID' for the field 'outerUnique' connected to a node for the model Todo with the value 'Some Inner ID2' for the field 'innerUnique'"
     )
 
-    server.executeQuerySimple(s"""query{note(where:{outerUnique:$outerWhere}){outerString}}""",
-                              project,
-                              dataContains = s"""{"note":{"outerString":"Outer String"}}""")
-    server.executeQuerySimple(s"""query{todo(where:{innerUnique:$innerWhere}){innerString}}""",
-                              project,
-                              dataContains = s"""{"todo":{"innerString":"Inner String"}}""")
-    server.executeQuerySimple(s"""query{todo(where:{innerUnique:$innerWhere2}){innerString}}""",
-                              project,
-                              dataContains = s"""{"todo":{"innerString":"Inner String"}}""")
+    server.query(s"""query{note(where:{outerUnique:$outerWhere}){outerString}}""", project, dataContains = s"""{"note":{"outerString":"Outer String"}}""")
+    server.query(s"""query{todo(where:{innerUnique:$innerWhere}){innerString}}""", project, dataContains = s"""{"todo":{"innerString":"Inner String"}}""")
+    server.query(s"""query{todo(where:{innerUnique:$innerWhere2}){innerString}}""", project, dataContains = s"""{"todo":{"innerString":"Inner String"}}""")
   }
 
   private def verifyTransactionalExecutionAndErrorMessage(outerWhere: Any, innerWhere: Any, falseWhere: Any, falseWhereInError: Any, project: Project) = {
-    val createResult = server.executeQuerySimple(
+    val createResult = server.query(
       s"""mutation {
          |  createNote(
          |    data: {
@@ -361,7 +343,7 @@ class TransactionalNestedExecutionSpec extends FlatSpec with Matchers with ApiBa
       project
     )
 
-    server.executeQuerySimpleThatMustFail(
+    server.queryThatMustFail(
       s"""
          |mutation {
          |  updateNote(
@@ -385,14 +367,10 @@ class TransactionalNestedExecutionSpec extends FlatSpec with Matchers with ApiBa
       errorContains = s"No Node for the model Todo with value $falseWhereInError for innerUnique found."
     )
 
-    server.executeQuerySimple(s"""query{note(where:{outerUnique:$outerWhere}){outerString}}""",
-                              project,
-                              dataContains = s"""{"note":{"outerString":"Outer String"}}""")
-    server.executeQuerySimple(s"""query{todo(where:{innerUnique:$innerWhere}){innerString}}""",
-                              project,
-                              dataContains = s"""{"todo":{"innerString":"Inner String"}}""")
+    server.query(s"""query{note(where:{outerUnique:$outerWhere}){outerString}}""", project, dataContains = s"""{"note":{"outerString":"Outer String"}}""")
+    server.query(s"""query{todo(where:{innerUnique:$innerWhere}){innerString}}""", project, dataContains = s"""{"todo":{"innerString":"Inner String"}}""")
 
-    server.executeQuerySimpleThatMustFail(
+    server.queryThatMustFail(
       s"""
          |mutation {
          |  updateNote(
@@ -416,11 +394,7 @@ class TransactionalNestedExecutionSpec extends FlatSpec with Matchers with ApiBa
       errorContains = s"No Node for the model Note with value $falseWhereInError for outerUnique found."
     )
 
-    server.executeQuerySimple(s"""query{note(where:{outerUnique:$outerWhere}){outerString}}""",
-                              project,
-                              dataContains = s"""{"note":{"outerString":"Outer String"}}""")
-    server.executeQuerySimple(s"""query{todo(where:{innerUnique:$innerWhere}){innerString}}""",
-                              project,
-                              dataContains = s"""{"todo":{"innerString":"Inner String"}}""")
+    server.query(s"""query{note(where:{outerUnique:$outerWhere}){outerString}}""", project, dataContains = s"""{"note":{"outerString":"Outer String"}}""")
+    server.query(s"""query{todo(where:{innerUnique:$innerWhere}){innerString}}""", project, dataContains = s"""{"todo":{"innerString":"Inner String"}}""")
   }
 }

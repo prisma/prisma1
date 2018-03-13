@@ -12,7 +12,7 @@ class SingleItemQuerySpec extends FlatSpec with Matchers with ApiBaseSpec {
     }
     database.setup(project)
 
-    val result = server.executeQuerySimple(
+    val result = server.query(
       s"""{
          |  todo(where: {id: "non-existent-id"}){
          |    id
@@ -33,21 +33,21 @@ class SingleItemQuerySpec extends FlatSpec with Matchers with ApiBaseSpec {
 
     val title = "Hello World!"
     val id = server
-      .executeQuerySimple(s"""mutation {
+      .query(s"""mutation {
         |  createTodo(data: {title: "$title"}) {
         |    id
         |  }
         |}""".stripMargin,
-                          project)
+             project)
       .pathAsString("data.createTodo.id")
 
-    val result = server.executeQuerySimple(s"""{
+    val result = server.query(s"""{
         |  todo(where: {id: "$id"}){
         |    id
         |    title
         |  }
         |}""".stripMargin,
-                                           project)
+                              project)
 
     result.pathAsString("data.todo.title") should equal(title)
   }
@@ -60,7 +60,7 @@ class SingleItemQuerySpec extends FlatSpec with Matchers with ApiBaseSpec {
 
     val title = "Hello World!"
     val alias = "my-alias"
-    server.executeQuerySimple(
+    server.query(
       s"""mutation {
          |  createTodo(data: {title: "$title", alias: "$alias"}) {
          |    id
@@ -69,7 +69,7 @@ class SingleItemQuerySpec extends FlatSpec with Matchers with ApiBaseSpec {
       project
     )
 
-    val result = server.executeQuerySimple(
+    val result = server.query(
       s"""{
           |  todo(where: {alias: "$alias"}){
           |    id

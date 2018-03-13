@@ -2,7 +2,8 @@ package com.prisma.deploy.connector.mysql
 
 import com.prisma.deploy.connector._
 import com.prisma.deploy.connector.mysql.database.{DatabaseMutationBuilder, InternalDatabaseSchema}
-import com.prisma.deploy.connector.mysql.impls.{DeployMutactionExectutorImpl, MigrationPersistenceImpl, ProjectPersistenceImpl}
+import com.prisma.deploy.connector.mysql.impls.{ClientDbQueriesImpl, DeployMutactionExectutorImpl, MigrationPersistenceImpl, ProjectPersistenceImpl}
+import com.prisma.shared.models.Project
 import slick.dbio.Effect.Read
 import slick.dbio.{DBIOAction, NoStream}
 import slick.jdbc.MySQLProfile.api._
@@ -40,8 +41,11 @@ case class MySqlDeployConnector(clientDatabase: Database)(implicit ec: Execution
         }
       }
     }
+
     clientDatabase.run(action)
   }
+
+  override def clientDBQueries(project: Project): ClientDbQueries = ClientDbQueriesImpl(project, clientDatabase)
 
   override def initialize(): Future[Unit] = {
     val action = InternalDatabaseSchema.createSchemaActions(recreate = false)

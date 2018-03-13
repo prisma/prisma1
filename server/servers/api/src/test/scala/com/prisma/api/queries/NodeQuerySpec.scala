@@ -18,7 +18,7 @@ class NodeQuerySpec extends FlatSpec with Matchers with ApiBaseSpec {
     }
     database.setup(project)
 
-    val result = server.executeQuerySimple(
+    val result = server.query(
       s"""{
          |  node(id: "non-existent-id"){
          |    id
@@ -46,7 +46,7 @@ class NodeQuerySpec extends FlatSpec with Matchers with ApiBaseSpec {
 
     val title = "Hello World!"
     val id = server
-      .executeQuerySimple(
+      .query(
         s"""mutation {
         |  createTodo(data: {title: "$title"}) {
         |    id
@@ -56,7 +56,7 @@ class NodeQuerySpec extends FlatSpec with Matchers with ApiBaseSpec {
       )
       .pathAsString("data.createTodo.id")
 
-    val result = server.executeQuerySimple(
+    val result = server.query(
       s"""{
         |  node(id: "$id"){
         |    id
@@ -84,7 +84,7 @@ class NodeQuerySpec extends FlatSpec with Matchers with ApiBaseSpec {
 
     val title = "Hello World!"
     val id = server
-      .executeQuerySimple(
+      .query(
         s"""mutation {
            |  createTodo(data: {title: "$title"}) {
            |    id
@@ -103,7 +103,7 @@ class NodeQuerySpec extends FlatSpec with Matchers with ApiBaseSpec {
     // update table name of Model
     database.runDbActionOnClientDb(sqlu"""RENAME TABLE `#${project.id}`.`Todo` TO `#${project.id}`.`TodoNew`;""")
 
-    val result = server.executeQuerySimple(
+    val result = server.query(
       s"""{
          |  node(id: "$id"){
          |    id

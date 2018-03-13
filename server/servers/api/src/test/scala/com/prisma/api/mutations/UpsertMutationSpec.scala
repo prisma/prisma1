@@ -27,7 +27,7 @@ class UpsertMutationSpec extends FlatSpec with Matchers with ApiBaseSpec {
     todoCount should be(0)
 
     val todoId = "non-existent-id"
-    val result = server.executeQuerySimple(
+    val result = server.query(
       s"""mutation {
         |  upsertTodo(
         |    where: {id: "$todoId"}
@@ -56,7 +56,7 @@ class UpsertMutationSpec extends FlatSpec with Matchers with ApiBaseSpec {
     todoCount should be(0)
 
     val id = "non-existent-id"
-    val result = server.executeQuerySimple(
+    val result = server.query(
       s"""mutation {
          |  upsertMultipleFields(
          |    where: {id: "$id"}
@@ -92,7 +92,7 @@ class UpsertMutationSpec extends FlatSpec with Matchers with ApiBaseSpec {
 
   "an item" should "be created if it does not exist yet and use the defaultValue if necessary" in {
     val todoId = "non-existent-id"
-    val result = server.executeQuerySimple(
+    val result = server.query(
       s"""mutation {
          |  upsertWithDefaultValue(
          |    where: {id: "$todoId"}
@@ -116,7 +116,7 @@ class UpsertMutationSpec extends FlatSpec with Matchers with ApiBaseSpec {
   }
 
   "an item" should "note be created when trying to set a required value to null even if there is a default value for that field" in {
-    server.executeQuerySimpleThatMustFail(
+    server.queryThatMustFail(
       s"""mutation {
          |  upsertWithDefaultValue(
          |    where: {id: "NonExistantID"}
@@ -141,7 +141,7 @@ class UpsertMutationSpec extends FlatSpec with Matchers with ApiBaseSpec {
 
   "an item" should "be updated if it already exists (by id)" in {
     val todoId = server
-      .executeQuerySimple(
+      .query(
         """mutation {
         |  createTodo(
         |    data: {
@@ -159,7 +159,7 @@ class UpsertMutationSpec extends FlatSpec with Matchers with ApiBaseSpec {
 
     todoCount should be(1)
 
-    val result = server.executeQuerySimple(
+    val result = server.query(
       s"""mutation {
          |  upsertTodo(
          |    where: {id: "$todoId"}
@@ -186,7 +186,7 @@ class UpsertMutationSpec extends FlatSpec with Matchers with ApiBaseSpec {
 
   "an item" should "be updated if it already exists (by any unique argument)" in {
     val todoAlias = server
-      .executeQuerySimple(
+      .query(
         """mutation {
           |  createTodo(
           |    data: {
@@ -204,7 +204,7 @@ class UpsertMutationSpec extends FlatSpec with Matchers with ApiBaseSpec {
 
     todoCount should be(1)
 
-    server.executeQuerySimpleThatMustFail(
+    server.queryThatMustFail(
       s"""mutation {
          |  upsertTodo(
          |    where: {alias: "$todoAlias"}
@@ -229,7 +229,7 @@ class UpsertMutationSpec extends FlatSpec with Matchers with ApiBaseSpec {
 
   "Inputvaluevalidations" should "fire if an ID is too long" in {
     val todoAlias = server
-      .executeQuerySimple(
+      .query(
         """mutation {
           |  createTodo(
           |    data: {
@@ -247,7 +247,7 @@ class UpsertMutationSpec extends FlatSpec with Matchers with ApiBaseSpec {
 
     todoCount should be(1)
 
-    val result = server.executeQuerySimple(
+    val result = server.query(
       s"""mutation {
          |  upsertTodo(
          |    where: {alias: "$todoAlias"}
@@ -274,7 +274,7 @@ class UpsertMutationSpec extends FlatSpec with Matchers with ApiBaseSpec {
 
   "An upsert" should "perform only an update if the update changes the unique field used in the where clause" in {
     val todoId = server
-      .executeQuerySimple(
+      .query(
         """mutation {
           |  createTodo(
           |    data: {
@@ -292,7 +292,7 @@ class UpsertMutationSpec extends FlatSpec with Matchers with ApiBaseSpec {
 
     todoCount should be(1)
 
-    val result = server.executeQuerySimple(
+    val result = server.query(
       s"""mutation {
          |  upsertTodo(
          |    where: {alias: "todo1"}
@@ -317,7 +317,7 @@ class UpsertMutationSpec extends FlatSpec with Matchers with ApiBaseSpec {
     todoCount should be(1)
     // the original node has been updated
     server
-      .executeQuerySimple(
+      .query(
         s"""{
         |  todo(where: {id: "$todoId"}){
         |    title
@@ -331,7 +331,7 @@ class UpsertMutationSpec extends FlatSpec with Matchers with ApiBaseSpec {
 
   "An upsert" should "perform only an update if the update changes nothing" in {
     val todoId = server
-      .executeQuerySimple(
+      .query(
         """mutation {
           |  createTodo(
           |    data: {
@@ -349,7 +349,7 @@ class UpsertMutationSpec extends FlatSpec with Matchers with ApiBaseSpec {
 
     todoCount should be(1)
 
-    val result = server.executeQuerySimple(
+    val result = server.query(
       s"""mutation {
          |  upsertTodo(
          |    where: {alias: "todo1"}
@@ -374,7 +374,7 @@ class UpsertMutationSpec extends FlatSpec with Matchers with ApiBaseSpec {
     todoCount should be(1)
     // the original node has been updated
     server
-      .executeQuerySimple(
+      .query(
         s"""{
            |  todo(where: {id: "$todoId"}){
            |    title
@@ -387,7 +387,7 @@ class UpsertMutationSpec extends FlatSpec with Matchers with ApiBaseSpec {
   }
 
   def todoCount: Int = {
-    val result = server.executeQuerySimple(
+    val result = server.query(
       "{ todoes { id } }",
       project
     )

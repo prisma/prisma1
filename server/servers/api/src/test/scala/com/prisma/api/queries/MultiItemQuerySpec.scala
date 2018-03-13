@@ -13,7 +13,7 @@ class MultiItemQuerySpec extends FlatSpec with Matchers with ApiBaseSpec {
     }
     database.setup(project)
 
-    val result = server.executeQuerySimple(
+    val result = server.query(
       s"""{
          |  todoes {
          |    title
@@ -33,7 +33,7 @@ class MultiItemQuerySpec extends FlatSpec with Matchers with ApiBaseSpec {
 
     val title = "Hello World!"
     val id = server
-      .executeQuerySimple(
+      .query(
         s"""mutation {
            |  createTodo(data: {title: "$title"}) {
            |    id
@@ -43,7 +43,7 @@ class MultiItemQuerySpec extends FlatSpec with Matchers with ApiBaseSpec {
       )
       .pathAsString("data.createTodo.id")
 
-    val result = server.executeQuerySimple(
+    val result = server.query(
       s"""{
          |  todoes {
          |    title
@@ -63,7 +63,7 @@ class MultiItemQuerySpec extends FlatSpec with Matchers with ApiBaseSpec {
 
     val title = "Hello World!"
     val id = server
-      .executeQuerySimple(
+      .query(
         s"""mutation {
            |  createTodo(data: {title: "$title"}) {
            |    id
@@ -74,7 +74,7 @@ class MultiItemQuerySpec extends FlatSpec with Matchers with ApiBaseSpec {
       .pathAsString("data.createTodo.id")
 
     server
-      .executeQuerySimple(
+      .query(
         s"""{
            |  todoes(where: {title: "INVALID"}) {
            |    title
@@ -85,7 +85,7 @@ class MultiItemQuerySpec extends FlatSpec with Matchers with ApiBaseSpec {
       .toString should equal("""{"data":{"todoes":[]}}""")
 
     server
-      .executeQuerySimple(
+      .query(
         s"""{
            |  todoes(where: {title: "${title}"}) {
            |    title

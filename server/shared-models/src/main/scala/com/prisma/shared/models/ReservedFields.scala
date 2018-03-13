@@ -67,6 +67,4 @@ object ReservedFields {
       case _                            => throw new Exception(s"Unknown reserved field: $name")
     }
   }
-
-  def isReservedFieldName(name: String): Boolean = reservedFieldNames.contains(name)
 }
