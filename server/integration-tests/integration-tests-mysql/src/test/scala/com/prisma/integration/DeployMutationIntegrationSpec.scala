@@ -56,4 +56,74 @@ class DeployMutationIntegrationSpec extends FlatSpec with Matchers with Integrat
     apiServer.query("""mutation{updateA(where:{name: "A"}, data:{value: 1}){name}}""", updatedProject).toString should be(
       """{"data":{"updateA":{"name":"A"}}}""")
   }
+
+  "DeployMutation" should "throw an error if a new required field without a default value is added and there are existing nodes." ignore {
+
+    val schema =
+      """type A {
+        | name: String! @unique
+        |}""".stripMargin
+
+    val (project, _) = setupProject(schema)
+
+    apiServer.query("""mutation{createA(data:{name:"A"}){name}}""", project).toString should be("""{"data":{"createA":{"name":"A"}}}""")
+
+    val schema2 =
+      """type A {
+        | name: String! @unique
+        | value: Int!
+        |}""".stripMargin
+
+    val errors = deployServer.deploySchemaThatMustFail(project, schema2)
+  }
+
+  "DeployMutation" should "throw a warning if a field is deleted and there are existing nodes. Without `force` it should not proceed." ignore {
+
+    val schema =
+      """type A {
+        | name: String! @unique
+        | dummy: String
+        |}""".stripMargin
+
+    val (project, _) = setupProject(schema)
+
+    apiServer.query("""mutation{createA(data:{name:"A", dummy: "test"}){name, dummy}}""", project).toString should be(
+      """{"data":{"createA":{"name":"A","dummy":"test"}}}""")
+
+    val schema2 =
+      """type A {
+        | name: String! @unique
+        |}""".stripMargin
+
+    val response = deployServer.deploySchemaThatMustWarn(project, schema2)
+
+    response.pathAsLong("data.deploy.migration.revision") should be(0)
+    response.pathAsString("data.deploy.warnings.[0].description") should be("You already have nodes for this model. This change may result in data loss.")
+
+  }
+
+  "DeployMutation" should "throw a warning if a field is deleted and there are existing nodes. With `force` it should proceed." ignore {
+
+    val schema =
+      """type A {
+        | name: String! @unique
+        | dummy: String
+        |}""".stripMargin
+
+    val (project, _) = setupProject(schema)
+
+    apiServer.query("""mutation{createA(data:{name:"A", dummy: "test"}){name, dummy}}""", project).toString should be(
+      """{"data":{"createA":{"name":"A","dummy":"test"}}}""")
+
+    val schema2 =
+      """type A {
+        | name: String! @unique
+        |}""".stripMargin
+
+    val response = deployServer.deploySchemaThatMustWarn(project, schema2, force = true)
+
+    response.pathAsLong("data.deploy.migration.revision") should be(3)
+    response.pathAsString("data.deploy.warnings.[0].description") should be("You already have nodes for this model. This change may result in data loss.")
+  }
+
 }

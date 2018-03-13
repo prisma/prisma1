@@ -1,8 +1,9 @@
 package com.prisma.deploy.migration.validation
 
+import com.prisma.shared.errors.SchemaCheckResult
 import sangria.ast.{EnumTypeDefinition, TypeDefinition}
 
-case class SchemaError(`type`: String, description: String, field: Option[String])
+case class SchemaError(`type`: String, description: String, field: Option[String]) extends SchemaCheckResult
 
 object SchemaError {
   def apply(`type`: String, field: String, description: String): SchemaError = {

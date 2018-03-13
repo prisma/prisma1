@@ -59,5 +59,28 @@ trait GraphQLResponseAssertions extends SprayJsonExtensions {
     private def dataContainsString(assertData: String): Boolean   = json.asJsObject.fields.get("data").toString.contains(assertData)
     private def errorContainsString(assertError: String): Boolean = json.asJsObject.fields.get("errors").toString.contains(assertError)
 
+    def assertErrorsAndWarnings(shouldFail: Boolean, shouldWarn: Boolean) = {
+      val errors   = json.pathAsSeq("data.deploy.errors")
+      val warnings = json.pathAsSeq("data.deploy.warnings")
+
+      (shouldFail, shouldWarn) match {
+        case (true, false) =>
+          require(requirement = errors.nonEmpty, message = s"The query had to result in a failure but it returned no errors.")
+          require(requirement = warnings.isEmpty, message = s"The query had to result in a success but it returned warnings.")
+
+        case (false, false) =>
+          require(requirement = errors.isEmpty, message = s"The query had to result in a success but it returned errors.")
+          require(requirement = warnings.isEmpty, message = s"The query had to result in a success but it returned warnings.")
+
+        case (false, true) =>
+          require(requirement = errors.isEmpty, message = s"The query had to result in a success but it returned errors.")
+          require(requirement = warnings.nonEmpty, message = s"The query had to result in a warning but it returned no warnings.")
+
+        case (true, true) =>
+          require(requirement = errors.nonEmpty, message = s"The query had to result in a failure but it returned no errors.")
+          require(requirement = warnings.nonEmpty, message = s"The query had to result in a warning but it returned no warnings.")
+      }
+    }
+
   }
 }
