@@ -57,7 +57,7 @@ class DeployMutationIntegrationSpec extends FlatSpec with Matchers with Integrat
       """{"data":{"updateA":{"name":"A"}}}""")
   }
 
-  "DeployMutation" should "throw an error if a new required field without a default value is added and there are existing nodes." in {
+  "DeployMutation" should "throw an error if a new required field without a default value is added and there are existing nodes." ignore {
 
     val schema =
       """type A {
@@ -77,7 +77,7 @@ class DeployMutationIntegrationSpec extends FlatSpec with Matchers with Integrat
     val errors = deployServer.deploySchemaThatMustFail(project, schema2)
   }
 
-  "DeployMutation" should "throw a warning if a field is deleted and there are existing nodes." in {
+  "DeployMutation" should "throw a warning if a field is deleted and there are existing nodes." ignore {
 
     val schema =
       """type A {

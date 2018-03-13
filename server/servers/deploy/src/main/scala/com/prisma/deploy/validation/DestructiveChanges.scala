@@ -31,73 +31,9 @@ case class DestructiveChanges(persistencePlugin: DeployConnector, project: Proje
     Future.sequence(checkResults).map(_.flatten)
   }
 
-  private def updateRelationValidation = {
-    // todo cardinality change? how is that handled?
-    validationSuccessful
-  }
-
-  private def createRelationValidation = {
-    //todo
-
-    //probably caught by the relationfields checks
-
-    validationSuccessful
-  }
-
-  private def updateEnumValidation = {
-    //todo
-
-    //error if deleted case in use
-
-    validationSuccessful
-  }
-
-  private def deleteEnumValidation = {
-    //todo
-
-    //error if in use
-
-    validationSuccessful
-  }
-
-  private def updateFieldValidation = {
-    //todo
-    //data loss
-    // to relation -> warning
-    // to from list -> warning
-    // typechange -> warning
-
-    //changing to required and no defValue
-    // existing data -> error
-    // relations -> maybe error
-
-    //existing unchanged required is also dangerous
-    // to/from  relation change -> error
-
-    //cardinality change -> warning
-
-    validationSuccessful
-  }
-
-  private def deleteRelationValidation(x: DeleteRelation) = {
-    clientDataResolver.existsByRelation(x.name).map {
-      case true  => Vector(SchemaWarning(x.name, ""))
-      case false => Vector.empty
-    }
-  }
-
-  private def deleteFieldValidation(x: DeleteField) = {
-    val model = project.schema.getModelByName_!(x.model)
-
-    clientDataResolver.existsByModel(model.name).map {
-      case true  => Vector(SchemaWarning(x.name, ""))
-      case false => Vector.empty
-    }
-  }
-
   private def deleteModelValidation(x: DeleteModel) = {
     clientDataResolver.existsByModel(x.name).map {
-      case true  => Vector(SchemaWarning(x.name, ""))
+      case true  => Vector(SchemaWarning.dataLossModel(x.name))
       case false => Vector.empty
     }
   }
@@ -119,6 +55,70 @@ case class DestructiveChanges(persistencePlugin: DeployConnector, project: Proje
       case None =>
         validationSuccessful
     }
+  }
+
+  private def deleteFieldValidation(x: DeleteField) = {
+    val model = project.schema.getModelByName_!(x.model)
+
+    clientDataResolver.existsByModel(model.name).map {
+      case true  => Vector(SchemaWarning.dataLossField(x.name, x.name))
+      case false => Vector.empty
+    }
+  }
+
+  private def updateFieldValidation = {
+    //todo
+    //data loss
+    // to relation -> warning
+    // to from list -> warning
+    // typechange -> warning
+
+    //changing to required and no defValue
+    // existing data -> error
+    // relations -> maybe error
+
+    //existing unchanged required is also dangerous
+    // to/from  relation change -> error
+
+    //cardinality change -> warning
+
+    validationSuccessful
+  }
+
+  private def deleteEnumValidation = {
+    //todo
+
+    //error if in use
+
+    validationSuccessful
+  }
+
+  private def updateEnumValidation = {
+    //todo
+
+    //error if deleted case in use
+
+    validationSuccessful
+  }
+
+  private def createRelationValidation = {
+    //todo
+
+    //probably caught by the relationfields checks
+
+    validationSuccessful
+  }
+
+  private def deleteRelationValidation(x: DeleteRelation) = {
+    clientDataResolver.existsByRelation(x.name).map {
+      case true  => Vector(SchemaWarning.dataLossModel(x.name)) //todo
+      case false => Vector.empty
+    }
+  }
+
+  private def updateRelationValidation = {
+    // todo cardinality change? how is that handled?
+    validationSuccessful
   }
 
   private def validationSuccessful = {
