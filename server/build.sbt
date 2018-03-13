@@ -1,6 +1,9 @@
 import com.typesafe.sbt.SbtGit.GitKeys
 import com.typesafe.sbt.git.ConsoleGitRunner
+import sbt.Keys.name
 import sbt._
+
+import scala.io.Source
 
 name := "server"
 Revolver.settings
@@ -35,10 +38,12 @@ lazy val commonSettings = versionSettings ++ Seq(
   resolvers ++= Seq(
     "Sonatype snapshots" at "https://oss.sonatype.org/content/repositories/snapshots/",
     "scalaz-bintray" at "http://dl.bintray.com/scalaz/releases"
-  )
+  ),
+  libraryDependencies := common
 )
 
-lazy val commonServerSettings = commonSettings ++ Seq(libraryDependencies ++= common)
+lazy val commonServerSettings = commonSettings ++ Seq(libraryDependencies ++= commonServerDependencies)
+lazy val prerunHookFile = new java.io.File(sys.props("user.dir") + "/prerun_hook.sh")
 
 def commonDockerImageSettings(imageName: String) = commonServerSettings ++ Seq(
   imageNames in docker := Seq(
@@ -50,10 +55,17 @@ def commonDockerImageSettings(imageName: String) = commonServerSettings ++ Seq(
 
     new Dockerfile {
       from("anapsix/alpine-java")
-      entryPoint(s"$targetDir/bin/${executableScriptName.value}")
+      copy(appDir, targetDir)
+      copy(prerunHookFile , s"$targetDir/prerun_hook.sh")
+      runShell(s"touch", s"$targetDir/start.sh")
+      runShell("echo", "#!/usr/bin/env bash", ">>", s"$targetDir/start.sh")
+      runShell("echo", "set -e", ">>", s"$targetDir/start.sh")
+      runShell("echo", s".$targetDir/prerun_hook.sh", ">>", s"$targetDir/start.sh")
+      runShell("echo", s".$targetDir/bin/${executableScriptName.value}", ">>" ,s"$targetDir/start.sh")
+      runShell(s"chmod", "+x", s"$targetDir/start.sh")
       env("COMMIT_SHA", sys.env.getOrElse("COMMIT_SHA", sys.error("Env var COMMIT_SHA required but not found.")))
       env("CLUSTER_VERSION", sys.env.getOrElse("CLUSTER_VERSION", sys.error("Env var CLUSTER_VERSION required but not found.")))
-      copy(appDir, targetDir)
+      entryPointShell(s"$targetDir/start.sh")
     }
   },
   javaOptions in Universal ++= Seq(
@@ -69,27 +81,35 @@ def commonDockerImageSettings(imageName: String) = commonServerSettings ++ Seq(
   )
 )
 
-def dockerImageProject(name: String, imageName: String): Project = {
-  Project(id = name, base = file(s"./images/$name"))
-    .enablePlugins(sbtdocker.DockerPlugin, JavaAppPackaging)
-    .settings(commonDockerImageSettings(imageName): _*)
-}
-
-def serverProject(name: String): Project = Project(id = name, base = file(s"./$name")).settings(commonServerSettings: _*).dependsOn(scalaUtils)
-def normalProject(name: String): Project = Project(id = name, base = file(s"./$name")).settings(commonSettings: _*)
+def imageProject(name: String, imageName: String): Project = imageProject(name).enablePlugins(sbtdocker.DockerPlugin, JavaAppPackaging).settings(commonDockerImageSettings(imageName): _*)
+def imageProject(name: String): Project = Project(id = name, base = file(s"./images/$name"))
+def serverProject(name: String): Project = Project(id = name, base = file(s"./servers/$name")).settings(commonServerSettings: _*).dependsOn(scalaUtils)
+def connectorProject(name: String): Project =  Project(id = name, base = file(s"./connectors/$name")).settings(commonSettings: _*).dependsOn(scalaUtils)
+def integrationTestProject(name: String): Project =  Project(id = name, base = file(s"./integration-tests/$name")).settings(commonSettings: _*)
 def libProject(name: String): Project =  Project(id = name, base = file(s"./libs/$name")).settings(commonSettings: _*)
+def normalProject(name: String): Project = Project(id = name, base = file(s"./$name")).settings(commonSettings: _*)
 
-lazy val sharedModels = normalProject("shared-models")
-  .dependsOn(gcValues % "compile")
-  .dependsOn(jsonUtils % "compile")
-  .settings(
-  libraryDependencies ++= Seq(
-    cuid,
-    scalaTest
-  ) ++ joda
-)
+// ####################
+//       IMAGES
+// ####################
+lazy val prismaLocal = imageProject("prisma-local", imageName = "prisma").dependsOn(prismaImageShared % "compile")
+lazy val prismaProd = imageProject("prisma-prod", imageName = "prisma-prod").dependsOn(prismaImageShared % "compile")
+
+lazy val prismaImageShared = imageProject("prisma-image-shared")
+  .dependsOn(api% "compile")
+  .dependsOn(deploy % "compile")
+  .dependsOn(deployConnectorMySql % "compile")
+  .dependsOn(subscriptions % "compile")
+  .dependsOn(workers % "compile")
+  .dependsOn(graphQlClient % "compile")
+
+// ####################
+//       SERVERS
+// ####################
 
 lazy val deploy = serverProject("deploy")
+  .dependsOn(deployConnector % "compile")
+  .dependsOn(deployConnectorMySql % "test->test")
   .dependsOn(sharedModels % "compile")
   .dependsOn(akkaUtils % "compile")
   .dependsOn(metrics % "compile")
@@ -99,18 +119,6 @@ lazy val deploy = serverProject("deploy")
   .dependsOn(stubServer % "test")
   .dependsOn(sangriaUtils % "compile")
   .dependsOn(auth % "compile")
-  .settings(
-    libraryDependencies ++= Seq(
-      playJson,
-      scalaTest,
-      jwt
-    )
-  )
-//  .enablePlugins(BuildInfoPlugin)
-//  .settings(
-//    buildInfoKeys := Seq[BuildInfoKey](name, version, "imageTag" -> betaImageTag),
-//    buildInfoPackage := "build_info"
-//  )
 
 lazy val api = serverProject("api")
   .dependsOn(sharedModels % "compile")
@@ -123,34 +131,65 @@ lazy val api = serverProject("api")
   .dependsOn(auth % "compile")
   .dependsOn(sangriaUtils % "compile")
   .settings(
-    libraryDependencies ++= Seq(
-      playJson,
-      scalaTest
-    )
+    libraryDependencies ++= slick ++ Seq(mariaDbClient)
   )
 
 lazy val subscriptions = serverProject("subscriptions")
   .dependsOn(api % "compile;test->test")
   .dependsOn(stubServer % "compile")
   .settings(
-    libraryDependencies ++= Seq(
-      playJson,
-      playStreams,
-      akkaHttpPlayJson,
-      akkaHttpTestKit
-    )
+    libraryDependencies ++= Seq(playStreams)
   )
 
 lazy val workers = serverProject("workers")
-    .dependsOn(errorReporting % "compile")
-    .dependsOn(messageBus % "compile")
-    .dependsOn(scalaUtils % "compile")
-    .dependsOn(stubServer % "test")
+  .dependsOn(errorReporting % "compile")
+  .dependsOn(messageBus % "compile")
+  .dependsOn(scalaUtils % "compile")
+  .dependsOn(stubServer % "test")
+
+// ####################
+//       CONNECTORS
+// ####################
+
+lazy val deployConnector = connectorProject("deploy-connector")
+  .dependsOn(sharedModels % "compile")
+
+lazy val deployConnectorMySql = connectorProject("deploy-connector-mysql")
+  .dependsOn(deployConnector % "compile")
+  .dependsOn(scalaUtils % "compile")
+  .settings(
+    libraryDependencies ++= slick ++ Seq(mariaDbClient)
+  )
+
+// ####################
+//       SHARED
+// ####################
+
+lazy val sharedModels = normalProject("shared-models")
+  .dependsOn(gcValues % "compile")
+  .dependsOn(jsonUtils % "compile")
+  .settings(
+  libraryDependencies ++= Seq(
+    cuid
+  ) ++ joda
+)
+
+// ####################
+//   INTEGRATION TESTS
+// ####################
+
+lazy val integrationTestsMySql = integrationTestProject("integration-tests-mysql")
+  .dependsOn(deploy % "compile;test->test")
+  .dependsOn(api % "compile;test->test")
+  .dependsOn(deployConnectorMySql)
+
+// ####################
+//       LIBS
+// ####################
 
 lazy val gcValues = libProject("gc-values")
   .settings(libraryDependencies ++= Seq(
-    playJson,
-    scalactic
+    playJson
   ) ++ joda)
 
 lazy val akkaUtils = libProject("akka-utils")
@@ -162,7 +201,6 @@ lazy val akkaUtils = libProject("akka-utils")
     akkaContrib,
     akkaHttp,
     akkaTestKit,
-    scalaTest,
     finagle,
     akkaHttpCors,
     playJson,
@@ -194,25 +232,23 @@ lazy val rabbitProcessor = libProject("rabbit-processor")
   .dependsOn(errorReporting % "compile")
 
 lazy val messageBus = libProject("message-bus")
-  .settings(commonSettings: _*)
   .dependsOn(errorReporting % "compile")
   .dependsOn(akkaUtils % "compile")
   .dependsOn(rabbitProcessor % "compile")
   .settings(libraryDependencies ++= Seq(
     akka,
     specs2,
-    scalaTest,
     akkaTestKit,
     playJson
   ))
 
 
-lazy val jvmProfiler = Project(id = "jvm-profiler", base = file("./libs/jvm-profiler"))
+lazy val jvmProfiler = libProject("jvm-profiler")
   .settings(commonSettings: _*)
   .dependsOn(metrics % "compile")
   .settings(libraryDependencies += scalaTest)
 
-lazy val graphQlClient = Project(id = "graphql-client", base = file("./libs/graphql-client"))
+lazy val graphQlClient = libProject("graphql-client")
   .settings(commonSettings: _*)
   .settings(libraryDependencies ++= Seq(
     scalaTest,
@@ -226,72 +262,42 @@ lazy val graphQlClient = Project(id = "graphql-client", base = file("./libs/grap
 lazy val stubServer = libProject("stub-server")
     .settings(
       libraryDependencies ++= Seq(
-        "org.eclipse.jetty"      % "jetty-server"              % "9.3.0.v20150612",
-        "com.netaporter"         %% "scala-uri"                % "0.4.16",
-        "org.scala-lang.modules" %% "scala-parser-combinators" % "1.0.4",
-        "org.scalaj"             %% "scalaj-http"              % "2.3.0" % "test",
-        "org.scalatest"          %% "scalatest"                % "3.0.4" % "test",
-        "org.specs2"             %% "specs2-core"              % "3.8.8" % "test"
+        jettyServer,
+        scalaUri,
+        parserCombinators,
+        scalajHttp,
+        specs2
       )
     )
 
-lazy val scalaUtils =
-  Project(id = "scala-utils", base = file("./libs/scala-utils"))
-    .settings(commonSettings: _*)
-    .settings(libraryDependencies ++= Seq(
-      scalaTest,
-      scalactic
-    ))
+lazy val scalaUtils = libProject("scala-utils")
 
-lazy val errorReporting =
-  Project(id = "error-reporting", base = file("./libs/error-reporting"))
-    .settings(commonSettings: _*)
+
+lazy val errorReporting = libProject("error-reporting")
     .settings(libraryDependencies ++= Seq(
       bugsnagClient,
       playJson
     ))
 
-lazy val sangriaUtils =
-  Project(id = "sangria-utils", base = file("./libs/sangria-utils"))
-    .settings(commonSettings: _*)
+lazy val sangriaUtils = libProject("sangria-utils")
     .dependsOn(errorReporting % "compile")
     .settings(libraryDependencies ++= Seq(
       akkaHttp,
     ) ++ sangria)
 
-lazy val jsonUtils =
-  Project(id = "json-utils", base = file("./libs/json-utils"))
-    .settings(commonSettings: _*)
+lazy val jsonUtils = libProject("json-utils")
     .settings(libraryDependencies ++= Seq(
       playJson,
       scalaTest
     ) ++ joda)
 
-lazy val cache =
-  Project(id = "cache", base = file("./libs/cache"))
-    .settings(commonSettings: _*)
+lazy val cache = libProject("cache")
     .settings(libraryDependencies ++= Seq(
-      scalaTest,
       caffeine,
-      java8Compat,
       jsr305
     ))
 
-lazy val auth = libProject("auth").settings(libraryDependencies ++= Seq(jwt, scalaTest))
-
-lazy val prismaLocal = dockerImageProject("prisma-local", imageName = "prisma")
-  .dependsOn(api% "compile")
-  .dependsOn(deploy % "compile")
-  .dependsOn(subscriptions % "compile")
-  .dependsOn(workers % "compile")
-  .dependsOn(graphQlClient % "compile")
-
-lazy val prismaProd = dockerImageProject("prisma-prod", imageName = "prisma-prod")
-  .dependsOn(api% "compile")
-  .dependsOn(deploy % "compile")
-  .dependsOn(subscriptions % "compile")
-  .dependsOn(workers % "compile")
-  .dependsOn(graphQlClient % "compile")
+lazy val auth = libProject("auth").settings(libraryDependencies ++= Seq(jwt))
 
 val allDockerImageProjects = List(
   prismaLocal,
@@ -303,6 +309,11 @@ val allServerProjects = List(
   deploy,
   subscriptions,
   workers
+)
+
+val allConnectorProjects = List(
+  deployConnector,
+  deployConnectorMySql
 )
 
 val allLibProjects = List(
@@ -320,11 +331,18 @@ val allLibProjects = List(
   sangriaUtils
 )
 
-lazy val libs = (project in file("libs")).aggregate(allLibProjects.map(Project.projectToRef): _*)
+val allIntegrationTestProjects = List(
+  integrationTestsMySql
+)
+
 lazy val images = (project in file("images")).aggregate(allDockerImageProjects.map(Project.projectToRef): _*)
+lazy val servers = (project in file("servers")).aggregate(allServerProjects.map(Project.projectToRef): _*)
+lazy val connectors = (project in file("connectors")).aggregate(allConnectorProjects.map(Project.projectToRef): _*)
+lazy val integrationTests = (project in file("integration-tests")).aggregate(allConnectorProjects.map(Project.projectToRef): _*)
+lazy val libs = (project in file("libs")).aggregate(allLibProjects.map(Project.projectToRef): _*)
 
 lazy val root = (project in file("."))
-  .aggregate((allServerProjects ++ allDockerImageProjects).map(Project.projectToRef): _*)
+  .aggregate((allServerProjects ++ allDockerImageProjects ++ allConnectorProjects ++ allIntegrationTestProjects).map(Project.projectToRef): _*)
   .settings(
     publish := { } // do not publish a JAR for the root project
   )
