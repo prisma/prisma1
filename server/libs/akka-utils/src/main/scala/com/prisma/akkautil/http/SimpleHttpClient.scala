@@ -6,6 +6,7 @@ import akka.http.scaladsl.model.HttpHeader.ParsingResult.{Error, Ok}
 import akka.http.scaladsl.model._
 import akka.http.scaladsl.server.RejectionError
 import akka.http.scaladsl.unmarshalling.Unmarshal
+import akka.http.scaladsl.settings.{ClientConnectionSettings, ConnectionPoolSettings}
 import akka.stream.ActorMaterializer
 import com.prisma.utils.future.FutureUtils._
 import play.api.libs.json._
@@ -13,6 +14,7 @@ import play.api.libs.json._
 import scala.collection.immutable.Seq
 import scala.concurrent.Future
 import scala.util.{Failure, Success, Try}
+import scala.concurrent.duration._
 
 /**
   * Simplified abstraction over akka HTTP, allowing to easily execute common HTTP requests, which makes it suitable to
@@ -31,7 +33,8 @@ case class SimpleHttpClient()(implicit val system: ActorSystem, materializer: Ac
   def get(
       uri: String,
       headers: Seq[(String, String)] = Seq.empty,
-      statusCodeValidator: StatusCodeValidator = defaultStatusCodeValidator
+      statusCodeValidator: StatusCodeValidator = defaultStatusCodeValidator,
+      timeout: FiniteDuration = 30.seconds
   ): Future[SimpleHttpResponse] = {
     parseHeaders(headers).flatMap { akkaHeaders =>
       val akkaRequest = HttpRequest(
@@ -40,7 +43,7 @@ case class SimpleHttpClient()(implicit val system: ActorSystem, materializer: Ac
         headers = akkaHeaders
       )
 
-      execute(akkaRequest, statusCodeValidator)
+      execute(akkaRequest, statusCodeValidator, timeout)
     }
   }
 
@@ -48,9 +51,10 @@ case class SimpleHttpClient()(implicit val system: ActorSystem, materializer: Ac
       uri: String,
       body: T,
       headers: Seq[(String, String)] = Seq.empty,
-      statusCodeValidator: StatusCodeValidator = defaultStatusCodeValidator
+      statusCodeValidator: StatusCodeValidator = defaultStatusCodeValidator,
+      timeout: FiniteDuration = 30.seconds
   )(implicit bodyWrites: Writes[T]) = {
-    post(uri, Json.toJson(body).toString(), ContentTypes.`application/json`, headers, statusCodeValidator)
+    post(uri, Json.toJson(body).toString(), ContentTypes.`application/json`, headers, statusCodeValidator, timeout)
   }
 
   def post(
@@ -58,7 +62,8 @@ case class SimpleHttpClient()(implicit val system: ActorSystem, materializer: Ac
       body: String,
       contentType: ContentType.NonBinary = ContentTypes.`text/plain(UTF-8)`,
       headers: Seq[(String, String)] = Seq.empty,
-      statusCodeValidator: StatusCodeValidator = defaultStatusCodeValidator
+      statusCodeValidator: StatusCodeValidator = defaultStatusCodeValidator,
+      timeout: FiniteDuration = 30.seconds
   ) = {
     parseHeaders(headers).flatMap { akkaHeaders =>
       val akkaRequest = HttpRequest(
@@ -68,7 +73,7 @@ case class SimpleHttpClient()(implicit val system: ActorSystem, materializer: Ac
         entity = HttpEntity(contentType, body)
       )
 
-      execute(akkaRequest, statusCodeValidator)
+      execute(akkaRequest, statusCodeValidator, timeout)
     }
   }
 
@@ -80,8 +85,11 @@ case class SimpleHttpClient()(implicit val system: ActorSystem, materializer: Ac
     */
   def defaultStatusCodeValidator(statusCode: Int): Boolean = statusCode >= 200 && statusCode < 300
 
-  protected def execute(req: HttpRequest, isValidStatusCode: StatusCodeValidator): Future[SimpleHttpResponse] = {
-    akkaClient.singleRequest(req).flatMap { response =>
+  protected def execute(req: HttpRequest, isValidStatusCode: StatusCodeValidator, timeout: FiniteDuration): Future[SimpleHttpResponse] = {
+    val connectionSettings     = ClientConnectionSettings(system).withIdleTimeout(timeout)
+    val connectionPoolSettings = ConnectionPoolSettings(system).withConnectionSettings(connectionSettings)
+
+    akkaClient.singleRequest(req, settings = connectionPoolSettings).flatMap { response =>
       Unmarshal(response)
         .to[String]
         .toFutureTry
