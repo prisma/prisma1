@@ -2,7 +2,7 @@ package com.prisma.deploy.schema
 
 import akka.actor.ActorSystem
 import com.prisma.deploy.DeployDependencies
-import com.prisma.deploy.connector.{MigrationPersistence, ProjectPersistence}
+import com.prisma.deploy.connector.{DeployConnector, MigrationPersistence, ProjectPersistence}
 import com.prisma.deploy.migration.SchemaMapper
 import com.prisma.deploy.migration.inference.{MigrationStepsInferrer, SchemaInferrer}
 import com.prisma.deploy.migration.migrator.Migrator
@@ -39,6 +39,7 @@ case class SchemaBuilderImpl(
 
   val projectPersistence: ProjectPersistence         = dependencies.projectPersistence
   val migrationPersistence: MigrationPersistence     = dependencies.migrationPersistence
+  val persistencePlugin: DeployConnector             = dependencies.deployPersistencePlugin
   val migrator: Migrator                             = dependencies.migrator
   val schemaInferrer: SchemaInferrer                 = SchemaInferrer()
   val migrationStepsInferrer: MigrationStepsInferrer = MigrationStepsInferrer()
@@ -188,6 +189,7 @@ case class SchemaBuilderImpl(
                        schemaMapper = schemaMapper,
                        migrationPersistence = migrationPersistence,
                        projectPersistence = projectPersistence,
+                       persistencePlugin = persistencePlugin,
                        migrator = migrator
                      ).execute
           } yield result

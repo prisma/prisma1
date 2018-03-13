@@ -8,9 +8,9 @@ import slick.jdbc.SQLActionBuilder
 import slick.sql.SqlStreamingAction
 import slick.jdbc.MySQLProfile.api._
 
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
 
-case class ClientDbQueriesImpl(project: Project, clientDatabase: Database) extends ClientDbQueries {
+case class ClientDbQueriesImpl(project: Project, clientDatabase: Database)(implicit ec: ExecutionContext) extends ClientDbQueries {
 
   def existsByModel(modelName: String): Future[Boolean] = {
     val query = DatabaseQueryBuilder.existsByModel(project.id, modelName)
