@@ -71,7 +71,7 @@ services:
       - "3306"
 
   rabbit:
-    image: rabbitmq:3-management
+    image: rabbitmq:3.7.2-management
     restart: always
     hostname: rabbit-host
     ports:

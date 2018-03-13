@@ -60,6 +60,7 @@ case class DeployMutation(
 
       case Good(inferredNextSchema) =>
         val steps = migrationStepsInferrer.infer(project.schema, inferredNextSchema, schemaMapping)
+<<<<<<< HEAD
 
         val functionsOrErrors: Or[Vector[Function], Vector[SchemaError]] = getFunctionModelsOrErrors(args.functions)
 
@@ -70,6 +71,18 @@ case class DeployMutation(
           case Good(functionsForInput) =>
             val secretsUpdatedFuture = updateSecretsIfNecessary()
             secretsUpdatedFuture.flatMap(secret => handleMigration(inferredNextSchema, steps ++ secret, functionsForInput))
+=======
+        for {
+          _         <- handleProjectUpdate()
+          functions = getFunctionModelsOrErrors(args.functions)
+          migration <- functions match {
+                        case Bad(_)                  => Future.successful(Some(Migration.empty(project.id)))
+                        case Good(functionsForInput) => handleMigration(inferredNextSchema, steps, functionsForInput)
+                      }
+        } yield {
+          val functionErrors = functions.swap.getOrElse(Vector.empty)
+          MutationSuccess(DeployMutationPayload(args.clientMutationId, migration = migration, errors = schemaErrors ++ functionErrors))
+>>>>>>> master
         }
 
         val functionErrors = functionsOrErrors.swap.getOrElse(Vector.empty)

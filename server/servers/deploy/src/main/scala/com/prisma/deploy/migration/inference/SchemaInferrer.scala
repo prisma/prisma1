@@ -67,6 +67,7 @@ case class SchemaInferrerImpl(
   }
 
   def fieldsForType(objectType: ObjectTypeDefinition): Or[Vector[Field], InvalidGCValue] = {
+
     val fields: Vector[Or[Field, InvalidGCValue]] = objectType.fields.flatMap { fieldDef =>
       val typeIdentifier = typeIdentifierForTypename(fieldDef.typeName)
 
@@ -76,6 +77,34 @@ case class SchemaInferrerImpl(
         fieldDef.relationName match {
           case Some(name) => nextRelations.find(_.name == name)
           case None       => nextRelations.find(relation => relation.connectsTheModels(objectType.name, fieldDef.typeName))
+        }
+      }
+
+      //For self relations we were inferring the relationSide A for both sides, this now assigns A to the lexicographically lower field name and B to the other
+      //If in the previous schema whether both relationSides are A we reassign the relationsides otherwise we keep the one from the previous schema.
+      def inferRelationSide(relation: Option[Relation]) = {
+        def oldRelationSidesNotBothEqual(oldField: Field) = oldField.otherRelationField(baseSchema) match {
+          case Some(relatedField) => oldField.relationSide.isDefined && oldField.relationSide != relatedField.relationSide
+          case None               => true
+        }
+
+        relation.map { relation =>
+          if (relation.isSameModelRelation) {
+            val oldFieldName = schemaMapping.getPreviousFieldName(objectType.name, fieldDef.name)
+            val oldModelName = schemaMapping.getPreviousModelName(objectType.name)
+            val oldField     = baseSchema.getFieldByName(oldModelName, oldFieldName)
+
+            oldField match {
+              case Some(field) if oldRelationSidesNotBothEqual(field) =>
+                field.relationSide.get
+
+              case _ =>
+                val relationFieldNames = objectType.fields.filter(f => f.relationName.contains(relation.name)).map(_.name)
+                if (relationFieldNames.exists(name => name < fieldDef.name)) RelationSide.B else RelationSide.A
+            }
+          } else {
+            if (relation.modelAId == objectType.name) RelationSide.A else RelationSide.B
+          }
         }
       }
 
@@ -89,13 +118,7 @@ case class SchemaInferrerImpl(
           enum = nextEnums.find(_.name == fieldDef.typeName),
           defaultValue = default,
           relation = relation,
-          relationSide = relation.map { relation =>
-            if (relation.modelAId == objectType.name) {
-              RelationSide.A
-            } else {
-              RelationSide.B
-            }
-          }
+          relationSide = inferRelationSide(relation)
         )
       }
 

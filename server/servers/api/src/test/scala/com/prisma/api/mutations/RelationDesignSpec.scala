@@ -17,17 +17,17 @@ class RelationDesignSpec extends FlatSpec with Matchers with ApiBaseSpec {
 
     database.setup(project)
 
-    server.executeQuerySimple(s"""mutation {createList(data: {uList: "A", todo : { create: {uTodo: "B"}}}){id}}""", project)
+    server.query(s"""mutation {createList(data: {uList: "A", todo : { create: {uTodo: "B"}}}){id}}""", project)
 
-    val result = server.executeQuerySimple(s"""query{lists {uList, todo {uTodo}}}""", project)
+    val result = server.query(s"""query{lists {uList, todo {uTodo}}}""", project)
     result.toString should equal("""{"data":{"lists":[{"uList":"A","todo":{"uTodo":"B"}}]}}""")
 
-    server.executeQuerySimple(s"""query{todoes {uTodo}}""", project).toString should be("""{"data":{"todoes":[{"uTodo":"B"}]}}""")
+    server.query(s"""query{todoes {uTodo}}""", project).toString should be("""{"data":{"todoes":[{"uTodo":"B"}]}}""")
 
     countItems(project, "lists") should be(1)
     countItems(project, "todoes") should be(1)
 
-    server.executeQuerySimple(s"""mutation{deleteList(where: {uList:"A"}){id}}""", project)
+    server.query(s"""mutation{deleteList(where: {uList:"A"}){id}}""", project)
 
     countItems(project, "lists") should be(0)
     database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "_RelayId").as[Int]) should be(Vector(1))
@@ -42,24 +42,24 @@ class RelationDesignSpec extends FlatSpec with Matchers with ApiBaseSpec {
 
     database.setup(project)
 
-    server.executeQuerySimple(s"""mutation {createList(data: {uList: "A", todo : { create: {uTodo: "B"}}}){id}}""", project)
+    server.query(s"""mutation {createList(data: {uList: "A", todo : { create: {uTodo: "B"}}}){id}}""", project)
 
-    val result = server.executeQuerySimple(s"""query{lists {uList, todo {uTodo}}}""", project)
+    val result = server.query(s"""query{lists {uList, todo {uTodo}}}""", project)
     result.toString should equal("""{"data":{"lists":[{"uList":"A","todo":{"uTodo":"B"}}]}}""")
 
-    server.executeQuerySimple(s"""query{todoes {uTodo}}""", project).toString should be("""{"data":{"todoes":[{"uTodo":"B"}]}}""")
+    server.query(s"""query{todoes {uTodo}}""", project).toString should be("""{"data":{"todoes":[{"uTodo":"B"}]}}""")
 
     countItems(project, "lists") should be(1)
     countItems(project, "todoes") should be(1)
 
-    server.executeQuerySimple(s"""mutation{deleteTodo(where: {uTodo:"B"}){id}}""", project)
+    server.query(s"""mutation{deleteTodo(where: {uTodo:"B"}){id}}""", project)
 
     countItems(project, "todoes") should be(0)
     database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "_RelayId").as[Int]) should be(Vector(1))
   }
 
   def countItems(project: Project, name: String): Int = {
-    server.executeQuerySimple(s"""query{$name{id}}""", project).pathAsSeq(s"data.$name").length
+    server.query(s"""query{$name{id}}""", project).pathAsSeq(s"data.$name").length
   }
 
 }
