@@ -1,19 +1,20 @@
 package com.prisma.deploy.schema.mutations
 
 import com.prisma.deploy.DeployDependencies
-import com.prisma.deploy.connector.{MigrationPersistence, ProjectPersistence}
+import com.prisma.deploy.connector.{DeployConnector, MigrationPersistence, ProjectPersistence}
 import com.prisma.deploy.migration._
 import com.prisma.deploy.migration.inference.{InvalidGCValue, MigrationStepsInferrer, RelationDirectiveNeeded, SchemaInferrer}
 import com.prisma.deploy.migration.migrator.Migrator
-import com.prisma.deploy.migration.validation.{SchemaError, SchemaSyntaxValidator}
+import com.prisma.deploy.migration.validation.{SchemaError, SchemaSyntaxValidator, SchemaWarning}
 import com.prisma.deploy.schema.InvalidQuery
 import com.prisma.deploy.validation.DestructiveChanges
 import com.prisma.messagebus.pubsub.Only
 import com.prisma.shared.models.{Function, Migration, MigrationStep, Project, Schema, ServerSideSubscriptionFunction, UpdateSecrets, WebhookDelivery}
 import org.scalactic.{Bad, Good, Or}
+import sangria.ast.Document
 import sangria.parser.QueryParser
 
-import scala.collection.Seq
+import scala.collection.{Seq, immutable}
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Failure, Success}
 
@@ -25,19 +26,20 @@ case class DeployMutation(
     schemaMapper: SchemaMapper,
     migrationPersistence: MigrationPersistence,
     projectPersistence: ProjectPersistence,
+    persistencePlugin: DeployConnector,
     migrator: Migrator
 )(
     implicit ec: ExecutionContext,
     dependencies: DeployDependencies
 ) extends Mutation[DeployMutationPayload] {
 
-  val graphQlSdl = QueryParser.parse(args.types) match {
+  val graphQlSdl: Document = QueryParser.parse(args.types) match {
     case Success(res) => res
     case Failure(e)   => throw InvalidQuery(e.getMessage)
   }
 
-  val validator    = SchemaSyntaxValidator(args.types)
-  val schemaErrors = validator.validate()
+  val validator                                = SchemaSyntaxValidator(args.types)
+  val schemaErrors: immutable.Seq[SchemaError] = validator.validate()
 
   override def execute: Future[MutationResult[DeployMutationPayload]] = {
     if (schemaErrors.nonEmpty) {
@@ -69,31 +71,32 @@ case class DeployMutation(
 
           case Good(functionsForInput) =>
             val steps                  = migrationStepsInferrer.infer(project.schema, inferredNextSchema, schemaMapping)
-            val existingDataValidation = DestructiveChanges(project, inferredNextSchema, steps)
+            val existingDataValidation = DestructiveChanges(persistencePlugin, project, inferredNextSchema, steps)
             val checkResults           = existingDataValidation.checkAgainstExistingData
 
             checkResults.flatMap { results =>
-              val warnings = results.collect { case x if x.isInstanceOf[SchemaWarning] => x.asInstanceOf[SchemaWarning] } //todo
-              val errors   = results.collect { case x if x.isInstanceOf[SchemaError]   => x.asInstanceOf[SchemaError] }
+              val destructiveWarnings = results.collect { case x if x.isInstanceOf[SchemaWarning] => x.asInstanceOf[SchemaWarning] }
+              val inconsistencyErrors = results.collect { case x if x.isInstanceOf[SchemaError]   => x.asInstanceOf[SchemaError] }
 
-              (errors, warnings, args.force) match {
+              (inconsistencyErrors, destructiveWarnings, args.force) match {
 
                 case (errors, warnings, _) if errors.nonEmpty =>
                   Future.successful(
                     MutationSuccess(DeployMutationPayload(args.clientMutationId, Some(Migration.empty(project.id)), errors = schemaErrors ++ errors, warnings)))
 
-                case (_, x, _) if x.isEmpty =>
+                case (_, warnings, _) if warnings.isEmpty =>
                   val secretsUpdatedFuture = updateSecretsIfNecessary()
                   val migration            = secretsUpdatedFuture.flatMap(secret => handleMigration(inferredNextSchema, steps ++ secret, functionsForInput))
-                  migration.map(mig => MutationSuccess(DeployMutationPayload(args.clientMutationId, mig, errors = schemaErrors, Seq.empty)))
+                  migration.map(mig => MutationSuccess(DeployMutationPayload(args.clientMutationId, mig, errors = schemaErrors, warnings)))
 
                 case (_, warnings, Some(true)) =>
                   val secretsUpdatedFuture = updateSecretsIfNecessary()
                   val migration            = secretsUpdatedFuture.flatMap(secret => handleMigration(inferredNextSchema, steps ++ secret, functionsForInput))
-                  migration.map(mig => MutationSuccess(DeployMutationPayload(args.clientMutationId, mig, errors = schemaErrors, Seq.empty))) // todo
+                  migration.map(mig => MutationSuccess(DeployMutationPayload(args.clientMutationId, mig, errors = schemaErrors, warnings)))
 
                 case (_, warnings, _) =>
-                  sys.error(warnings.toString)
+                  Future.successful(
+                    MutationSuccess(DeployMutationPayload(args.clientMutationId, Some(Migration.empty(project.id)), errors = schemaErrors, warnings)))
               }
             }
         }
@@ -106,7 +109,7 @@ case class DeployMutation(
               migration = None,
               errors = List(err match {
                 case RelationDirectiveNeeded(t1, _, t2, _) => SchemaError.global(s"Relation directive required for types $t1 and $t2.")
-                case InvalidGCValue(err)                   => SchemaError.global(s"Invalid value '${err.value}' for type ${err.typeIdentifier}.")
+                case InvalidGCValue(gcError)               => SchemaError.global(s"Invalid value '${gcError.value}' for type ${gcError.typeIdentifier}.")
               }),
               warnings = Seq.empty
             ))

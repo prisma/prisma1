@@ -1,18 +1,15 @@
 package com.prisma.deploy.validation
 
-import com.prisma.deploy.DeployDependencies
+import com.prisma.deploy.connector.DeployConnector
+import com.prisma.deploy.migration.validation.SchemaWarning
 import com.prisma.shared.errors.{SchemaCheckResult, SchemaError}
 import com.prisma.shared.models._
 
 import scala.concurrent.Future
 
-case class DestructiveChanges(project: Project, nextSchema: Schema, steps: Vector[MigrationStep])(implicit val dependencies: DeployDependencies) {
-  val clientDataResolver = dependencies.clientDbQueries(project)
+case class DestructiveChanges(persistencePlugin: DeployConnector, project: Project, nextSchema: Schema, steps: Vector[MigrationStep]) {
+  val clientDataResolver = persistencePlugin.clientDBQueries(project)
   val previousSchema     = project.schema
-
-  //every step might need to go to the db and do an exist check
-  //the result can be a combination of warnings and errors
-  //in the end i want a vector of warnings and a vector of errors
 
   def checkAgainstExistingData: Future[Vector[SchemaCheckResult]] = {
     import scala.concurrent.ExecutionContext.Implicits.global

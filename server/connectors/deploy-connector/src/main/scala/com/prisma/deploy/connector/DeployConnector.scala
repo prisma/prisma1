@@ -8,7 +8,7 @@ trait DeployConnector {
   def projectPersistence: ProjectPersistence
   def migrationPersistence: MigrationPersistence
   def deployMutactionExecutor: DeployMutactionExecutor
-  def clientDBQueries(project: Project): ClientDbQueries //todo
+  def clientDBQueries(project: Project): ClientDbQueries
 
   def initialize(): Future[Unit]
   def reset(): Future[Unit]

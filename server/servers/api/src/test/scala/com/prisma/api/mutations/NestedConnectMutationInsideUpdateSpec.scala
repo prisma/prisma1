@@ -1329,11 +1329,11 @@ class NestedConnectMutationInsideUpdateSpec extends FlatSpec with Matchers with 
                                              |}""".stripMargin }
     database.setup(project)
 
-    server.executeQuerySimple("""mutation {createTechnology(data: {name: "techA"}){name}}""", project)
+    server.query("""mutation {createTechnology(data: {name: "techA"}){name}}""", project)
 
-    server.executeQuerySimple("""mutation {createTechnology(data: {name: "techB"}){name}}""", project)
+    server.query("""mutation {createTechnology(data: {name: "techB"}){name}}""", project)
 
-    val res = server.executeQuerySimple(
+    val res = server.query(
       s"""mutation {
          |  updateTechnology(where: {name: "techA"},
          |                   data:  {childTechnologies: {connect: {name: "techB"}}})
@@ -1347,7 +1347,7 @@ class NestedConnectMutationInsideUpdateSpec extends FlatSpec with Matchers with 
 
     res.toString should be("""{"data":{"updateTechnology":{"name":"techA","childTechnologies":[{"name":"techB"}],"parentTechnologies":[]}}}""")
 
-    val res2 = server.executeQuerySimple(
+    val res2 = server.query(
       s"""query {
          |  technologies{name,
          |       childTechnologies  {name}
