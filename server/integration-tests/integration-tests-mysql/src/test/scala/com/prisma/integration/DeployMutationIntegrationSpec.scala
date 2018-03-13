@@ -56,4 +56,46 @@ class DeployMutationIntegrationSpec extends FlatSpec with Matchers with Integrat
     apiServer.query("""mutation{updateA(where:{name: "A"}, data:{value: 1}){name}}""", updatedProject).toString should be(
       """{"data":{"updateA":{"name":"A"}}}""")
   }
+
+  "DeployMutation" should "throw an error if a new required field without a default value is added and there are existing nodes." in {
+
+    val schema =
+      """type A {
+        | name: String! @unique
+        |}""".stripMargin
+
+    val (project, _) = setupProject(schema)
+
+    apiServer.query("""mutation{createA(data:{name:"A"}){name}}""", project).toString should be("""{"data":{"createA":{"name":"A"}}}""")
+
+    val schema2 =
+      """type A {
+        | name: String! @unique
+        | value: Int!
+        |}""".stripMargin
+
+    val errors = deployServer.deploySchemaThatMustFail(project, schema2)
+  }
+
+  "DeployMutation" should "throw a warning if a field is deleted and there are existing nodes." in {
+
+    val schema =
+      """type A {
+        | name: String! @unique
+        | dummy: String
+        |}""".stripMargin
+
+    val (project, _) = setupProject(schema)
+
+    apiServer.query("""mutation{createA(data:{name:"A", dummy: "test"}){name, dummy}}""", project).toString should be(
+      """{"data":{"createA":{"name":"A","dummy":"test"}}}""")
+
+    val schema2 =
+      """type A {
+        | name: String! @unique
+        |}""".stripMargin
+
+    val errors = deployServer.deploySchemaThatMustWarn(project, schema2)
+  }
+
 }
