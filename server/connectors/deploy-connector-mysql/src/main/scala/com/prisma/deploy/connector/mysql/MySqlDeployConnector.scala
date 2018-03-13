@@ -45,7 +45,7 @@ case class MySqlDeployConnector(clientDatabase: Database)(implicit ec: Execution
     clientDatabase.run(action)
   }
 
-  override def clientDBQueries(project: Project): ClientDbQueries = ClientDbQueriesImpl(project, clientDatabase) //todo
+  override def clientDBQueries(project: Project): ClientDbQueries = ClientDbQueriesImpl(project, clientDatabase)
 
   override def initialize(): Future[Unit] = {
     val action = InternalDatabaseSchema.createSchemaActions(recreate = false)

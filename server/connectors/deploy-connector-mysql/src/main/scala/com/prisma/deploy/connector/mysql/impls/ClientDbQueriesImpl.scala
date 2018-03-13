@@ -34,17 +34,3 @@ case class ClientDbQueriesImpl(project: Project, clientDatabase: Database)(impli
 
   private def readOnlyBoolean(query: SQLActionBuilder): SqlStreamingAction[Vector[Boolean], Boolean, Read] = query.as[Boolean]
 }
-
-object EmptyClientDbQueries extends ClientDbQueries {
-  override def existsByModel(modelName: String): Future[Boolean]                              = Future.successful(false)
-  override def existsByRelation(relationId: String): Future[Boolean]                          = Future.successful(false)
-  override def existsNullByModelAndScalarField(model: Model, field: Field): Future[Boolean]   = Future.successful(false)
-  override def existsNullByModelAndRelationField(model: Model, field: Field): Future[Boolean] = Future.successful(false)
-}
-
-object FullClientDbQueries extends ClientDbQueries {
-  override def existsByModel(modelName: String): Future[Boolean]                              = Future.successful(true)
-  override def existsByRelation(relationId: String): Future[Boolean]                          = Future.successful(true)
-  override def existsNullByModelAndScalarField(model: Model, field: Field): Future[Boolean]   = Future.successful(true)
-  override def existsNullByModelAndRelationField(model: Model, field: Field): Future[Boolean] = Future.successful(true)
-}
