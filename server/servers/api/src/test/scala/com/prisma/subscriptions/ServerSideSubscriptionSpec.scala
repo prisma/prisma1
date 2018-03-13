@@ -89,7 +89,7 @@ class ServerSideSubscriptionSpec extends FlatSpec with Matchers with ApiBaseSpec
          |  }
          |}
       """.stripMargin
-    val id = server.executeQuerySimple(createTodo, actualProject).pathAsString("data.createTodo.id")
+    val id = server.query(createTodo, actualProject).pathAsString("data.createTodo.id")
 
     webhookTestKit.expectPublishCount(1)
 
@@ -128,7 +128,7 @@ class ServerSideSubscriptionSpec extends FlatSpec with Matchers with ApiBaseSpec
          |  }
          |}
       """.stripMargin
-    val id = server.executeQuerySimple(createTodo, actualProject).pathAsString("data.createTodo.id")
+    val id = server.query(createTodo, actualProject).pathAsString("data.createTodo.id")
 
     webhookTestKit.expectNoPublishedMsg()
 
@@ -143,7 +143,7 @@ class ServerSideSubscriptionSpec extends FlatSpec with Matchers with ApiBaseSpec
          |  }
          |}
       """.stripMargin
-    server.executeQuerySimple(updateTodo, actualProject).pathAsString("data.updateTodo.id")
+    server.query(updateTodo, actualProject).pathAsString("data.updateTodo.id")
 
     webhookTestKit.expectPublishCount(1)
 
@@ -184,7 +184,7 @@ class ServerSideSubscriptionSpec extends FlatSpec with Matchers with ApiBaseSpec
          |}
       """.stripMargin
 
-    val id = server.executeQuerySimple(createTodo, actualProject).pathAsString("data.createTodo.id")
+    val id = server.query(createTodo, actualProject).pathAsString("data.createTodo.id")
 
     webhookTestKit.expectNoPublishedMsg()
 
@@ -199,7 +199,7 @@ class ServerSideSubscriptionSpec extends FlatSpec with Matchers with ApiBaseSpec
          |}
       """.stripMargin
 
-    server.executeQuerySimple(deleteTodo, actualProject).pathAsString("data.deleteTodo.id")
+    server.query(deleteTodo, actualProject).pathAsString("data.deleteTodo.id")
     webhookTestKit.expectPublishCount(1)
 
     val webhook = webhookTestKit.messagesPublished.head
@@ -244,7 +244,7 @@ class ServerSideSubscriptionSpec extends FlatSpec with Matchers with ApiBaseSpec
          |}
       """.stripMargin
 
-    server.executeQuerySimple(createCommentWithNestedTodo, actualProject).pathAsString("data.createComment.id")
+    server.query(createCommentWithNestedTodo, actualProject).pathAsString("data.createComment.id")
     webhookTestKit.expectPublishCount(1)
 
     val webhook = webhookTestKit.messagesPublished.head
@@ -284,7 +284,7 @@ class ServerSideSubscriptionSpec extends FlatSpec with Matchers with ApiBaseSpec
          |  }
          |}
       """.stripMargin
-    val commentId = server.executeQuerySimple(createComment, actualProject).pathAsString("data.createComment.id")
+    val commentId = server.query(createComment, actualProject).pathAsString("data.createComment.id")
 
     webhookTestKit.expectNoPublishedMsg()
 
@@ -308,7 +308,7 @@ class ServerSideSubscriptionSpec extends FlatSpec with Matchers with ApiBaseSpec
          |}
        """.stripMargin
 
-    server.executeQuerySimple(updateCommentWithNestedTodo, actualProject).pathAsString("data.updateComment.id")
+    server.query(updateCommentWithNestedTodo, actualProject).pathAsString("data.updateComment.id")
 
     webhookTestKit.expectPublishCount(1)
 
@@ -348,12 +348,12 @@ class ServerSideSubscriptionSpec extends FlatSpec with Matchers with ApiBaseSpec
          |  }
          |}
       """.stripMargin
-    val id = server.executeQuerySimple(createTodo, actualProject).pathAsString("data.createTodo.id")
+    val id = server.query(createTodo, actualProject).pathAsString("data.createTodo.id")
 
     webhookTestKit.expectPublishCount(1)
 
     server
-      .executeQuerySimple(
+      .query(
         s"""
          |mutation {
          |  updateTodo(

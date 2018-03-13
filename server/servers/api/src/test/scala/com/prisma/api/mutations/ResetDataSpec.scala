@@ -73,31 +73,31 @@ class ResetDataSpec extends FlatSpec with Matchers with ApiBaseSpec with AwaitUt
     importer.executeImport(lists).await(5)
     importer.executeImport(relations).await(5)
 
-    val res0 = server.executeQuerySimple("query{model0s{id, a, b}}", project).toString
+    val res0 = server.query("query{model0s{id, a, b}}", project).toString
     res0 should be("""{"data":{"model0s":[{"id":"0","a":"test","b":0},{"id":"3","a":"test","b":3}]}}""")
 
-    val res1 = server.executeQuerySimple("query{model1s{id, a, b, listField}}", project).toString
+    val res1 = server.query("query{model1s{id, a, b, listField}}", project).toString
     res1 should be("""{"data":{"model1s":[{"id":"1","a":"test","b":1,"listField":[2,3,4,5]}]}}""")
 
-    val res2 = server.executeQuerySimple("query{model2s{id, a, b, name}}", project).toString
+    val res2 = server.query("query{model2s{id, a, b, name}}", project).toString
     res2 should be("""{"data":{"model2s":[{"id":"2","a":"test","b":2,"name":null}]}}""")
 
-    val rel0 = server.executeQuerySimple("query{model0s{id, model1{id}, relation0top{id}, relation0bottom{id}}}", project).toString
+    val rel0 = server.query("query{model0s{id, model1{id}, relation0top{id}, relation0bottom{id}}}", project).toString
     rel0 should be(
       """{"data":{"model0s":[{"id":"0","model1":{"id":"1"},"relation0top":{"id":"0"},"relation0bottom":{"id":"0"}},{"id":"3","model1":null,"relation0top":{"id":"3"},"relation0bottom":{"id":"3"}}]}}""")
 
-    val rel1 = server.executeQuerySimple("query{model1s{id, model0{id}, model2{id}}}", project).toString
+    val rel1 = server.query("query{model1s{id, model0{id}, model2{id}}}", project).toString
     rel1 should be("""{"data":{"model1s":[{"id":"1","model0":{"id":"0"},"model2":{"id":"2"}}]}}""")
 
-    val rel2 = server.executeQuerySimple("query{model2s{id, model1{id}}}", project).toString
+    val rel2 = server.query("query{model2s{id, model1{id}}}", project).toString
     rel2 should be("""{"data":{"model2s":[{"id":"2","model1":{"id":"1"}}]}}""")
 
     val result = server.queryPrivateSchema("mutation{resetData}", project)
     result.pathAsBool("data.resetData") should equal(true)
 
-    server.executeQuerySimple("query{model0s{id}}", project, dataContains = """{"model0s":[]}""")
-    server.executeQuerySimple("query{model1s{id}}", project, dataContains = """{"model1s":[]}""")
-    server.executeQuerySimple("query{model2s{id}}", project, dataContains = """{"model2s":[]}""")
+    server.query("query{model0s{id}}", project, dataContains = """{"model0s":[]}""")
+    server.query("query{model1s{id}}", project, dataContains = """{"model1s":[]}""")
+    server.query("query{model2s{id}}", project, dataContains = """{"model2s":[]}""")
 
     database.runDbActionOnClientDb(DatabaseQueryBuilder.existsByModel(project.id, "_RelayId").as[Boolean]).toString should be("Vector(false)")
     database.runDbActionOnClientDb(DatabaseQueryBuilder.existsByModel(project.id, "_Relation0").as[Boolean]).toString should be("Vector(false)")
@@ -119,9 +119,9 @@ class ResetDataSpec extends FlatSpec with Matchers with ApiBaseSpec with AwaitUt
     val result = server.queryPrivateSchema("mutation{resetData}", project)
     result.pathAsBool("data.resetData") should equal(true)
 
-    server.executeQuerySimple("query{model0s{id}}", project, dataContains = """{"model0s":[]}""")
-    server.executeQuerySimple("query{model1s{id}}", project, dataContains = """{"model1s":[]}""")
-    server.executeQuerySimple("query{model2s{id}}", project, dataContains = """{"model2s":[]}""")
+    server.query("query{model0s{id}}", project, dataContains = """{"model0s":[]}""")
+    server.query("query{model1s{id}}", project, dataContains = """{"model1s":[]}""")
+    server.query("query{model2s{id}}", project, dataContains = """{"model2s":[]}""")
 
     database.runDbActionOnClientDb(DatabaseQueryBuilder.existsByModel(project.id, "_RelayId").as[Boolean]).toString should be("Vector(false)")
 

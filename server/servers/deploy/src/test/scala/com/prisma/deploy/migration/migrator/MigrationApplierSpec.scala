@@ -27,9 +27,9 @@ class MigrationApplierSpec extends FlatSpec with Matchers with DeploySpecBase wi
   )
 
   val mapper = stepMapper({
-    case CreateModel("Step1") => CreateModelTable(projectId, "Step1")
-    case CreateModel("Step2") => CreateModelTable(projectId, "Step2")
-    case CreateModel("Step3") => CreateModelTable(projectId, "Step3")
+    case CreateModel("Step1") => Vector(CreateModelTable(projectId, "Step1"))
+    case CreateModel("Step2") => Vector(CreateModelTable(projectId, "Step2"))
+    case CreateModel("Step3") => Vector(CreateModelTable(projectId, "Step3"))
   })
 
   override protected def beforeEach(): Unit = {
@@ -136,10 +136,8 @@ class MigrationApplierSpec extends FlatSpec with Matchers with DeploySpecBase wi
 //    }
 //  }
 
-  def stepMapper(pf: PartialFunction[MigrationStep, DeployMutaction]) = new MigrationStepMapper {
-    override def mutactionFor(previousSchema: Schema, nextSchema: Schema, step: MigrationStep): Option[DeployMutaction] = {
-      pf.lift.apply(step)
-    }
+  def stepMapper(pf: PartialFunction[MigrationStep, Vector[DeployMutaction]]) = new MigrationStepMapper {
+    override def mutactionFor(previousSchema: Schema, nextSchema: Schema, step: MigrationStep): Vector[DeployMutaction] = pf.apply(step)
   }
 
   def mutactionExecutor(

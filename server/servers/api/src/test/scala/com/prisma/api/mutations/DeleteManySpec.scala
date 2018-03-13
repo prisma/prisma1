@@ -27,7 +27,7 @@ class DeleteManySpec extends FlatSpec with Matchers with ApiBaseSpec {
     createTodo("title2")
     todoAndRelayCountShouldBe(2)
 
-    val result = server.executeQuerySimple(
+    val result = server.query(
       """mutation {
         |  deleteManyTodoes(
         |    where: { title: "title1" }
@@ -49,7 +49,7 @@ class DeleteManySpec extends FlatSpec with Matchers with ApiBaseSpec {
     createTodo("title3")
     todoAndRelayCountShouldBe(3)
 
-    val result = server.executeQuerySimple(
+    val result = server.query(
       """mutation {
         |  deleteManyTodoes(
         |    where: { }
@@ -70,7 +70,7 @@ class DeleteManySpec extends FlatSpec with Matchers with ApiBaseSpec {
     createTodo("title2")
     createTodo("title3")
 
-    val result = server.executeQuerySimple(
+    val result = server.query(
       """mutation {
         |  deleteManyTodoes(
         |    where: { title_in: [ "title1", "title2" ]}
@@ -92,7 +92,7 @@ class DeleteManySpec extends FlatSpec with Matchers with ApiBaseSpec {
     createTodo("title2")
     createTodo("title3")
 
-    val result = server.executeQuerySimple(
+    val result = server.query(
       """mutation {
         |  deleteManyTodoes(
         |    where: { title_not_in: [ "DoesNotExist", "AlsoDoesntExist" ]}
@@ -113,7 +113,7 @@ class DeleteManySpec extends FlatSpec with Matchers with ApiBaseSpec {
     createTodo("title2")
     createTodo("title3")
 
-    val query = server.executeQuerySimple(
+    val query = server.query(
       """query {
         |  todoes(
         |    where: { OR: [{title: "title1"}, {title: "title2"}]}
@@ -127,7 +127,7 @@ class DeleteManySpec extends FlatSpec with Matchers with ApiBaseSpec {
 
     query.toString should be("""{"data":{"todoes":[{"title":"title1"},{"title":"title2"}]}}""")
 
-    val result = server.executeQuerySimple(
+    val result = server.query(
       """mutation {
         |  deleteManyTodoes(
         |    where: { OR: [{title: "title1"}, {title: "title2"}]}
@@ -148,7 +148,7 @@ class DeleteManySpec extends FlatSpec with Matchers with ApiBaseSpec {
     createTodo("title2")
     createTodo("title3")
 
-    val query = server.executeQuerySimple(
+    val query = server.query(
       """query {
         |  todoes(
         |    where: { AND: [{title: "title1"}, {title: "title2"}]}
@@ -162,7 +162,7 @@ class DeleteManySpec extends FlatSpec with Matchers with ApiBaseSpec {
 
     query.toString should be("""{"data":{"todoes":[]}}""")
 
-    val result = server.executeQuerySimple(
+    val result = server.query(
       """mutation {
         |  deleteManyTodoes(
         |    where: { AND: [{title: "title1"}, {title: "title2"}]}
@@ -179,7 +179,7 @@ class DeleteManySpec extends FlatSpec with Matchers with ApiBaseSpec {
   }
 
   def todoCount: Int = {
-    val result = server.executeQuerySimple(
+    val result = server.query(
       "{ todoes { id } }",
       project
     )
@@ -187,7 +187,7 @@ class DeleteManySpec extends FlatSpec with Matchers with ApiBaseSpec {
   }
 
   def todoAndRelayCountShouldBe(int: Int) = {
-    val result = server.executeQuerySimple(
+    val result = server.query(
       "{ todoes { id } }",
       project
     )
@@ -198,7 +198,7 @@ class DeleteManySpec extends FlatSpec with Matchers with ApiBaseSpec {
   }
 
   def createTodo(title: String): Unit = {
-    server.executeQuerySimple(
+    server.query(
       s"""mutation {
         |  createTodo(
         |    data: {
