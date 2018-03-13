@@ -2,7 +2,6 @@ package com.prisma.api.database.deferreds
 
 import com.prisma.api.database.DataResolver
 import com.prisma.api.database.DeferredTypes._
-import com.prisma.api.schema.ApiUserContext
 import sangria.execution.deferred.{Deferred, DeferredResolver}
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -70,23 +69,17 @@ class DeferredResolverProvider[CtxType](dataResolver: DataResolver) extends Defe
     }
 
     // for every group, further break them down by their arguments
-    val manyModelDeferredsMap = DeferredUtils
-      .groupModelDeferred[ManyModelDeferred](manyModelDeferreds)
+    val manyModelDeferredsMap = DeferredUtils.groupModelDeferred[ManyModelDeferred](manyModelDeferreds)
 
-    val manyModelExistsDeferredsMap = DeferredUtils
-      .groupModelExistsDeferred[ManyModelExistsDeferred](manyModelExistsDeferreds)
+    val manyModelExistsDeferredsMap = DeferredUtils.groupModelExistsDeferred[ManyModelExistsDeferred](manyModelExistsDeferreds)
 
-    val countManyModelDeferredsMap = DeferredUtils
-      .groupModelDeferred[CountManyModelDeferred](countManyModelDeferreds)
+    val countManyModelDeferredsMap = DeferredUtils.groupModelDeferred[CountManyModelDeferred](countManyModelDeferreds)
 
-    val toManyDeferredsMap =
-      DeferredUtils.groupRelatedDeferred[ToManyDeferred](toManyDeferreds)
+    val toManyDeferredsMap = DeferredUtils.groupRelatedDeferred[ToManyDeferred](toManyDeferreds)
 
-    val countToManyDeferredsMap =
-      DeferredUtils.groupRelatedDeferred[CountToManyDeferred](countToManyDeferreds)
+    val countToManyDeferredsMap = DeferredUtils.groupRelatedDeferred[CountToManyDeferred](countToManyDeferreds)
 
-    val toOneDeferredMap =
-      DeferredUtils.groupRelatedDeferred[ToOneDeferred](toOneDeferreds)
+    val toOneDeferredMap = DeferredUtils.groupRelatedDeferred[ToOneDeferred](toOneDeferreds)
 
     val oneDeferredsMap = DeferredUtils.groupOneDeferred(oneDeferreds)
 

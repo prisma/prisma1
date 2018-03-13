@@ -25,7 +25,7 @@ class UpdateManySpec extends FlatSpec with Matchers with ApiBaseSpec {
     createTodo("title1")
     createTodo("title2")
 
-    val result = server.executeQuerySimple(
+    val result = server.query(
       """mutation {
         |  updateManyTodoes(
         |    where: { title: "title1" }
@@ -39,7 +39,7 @@ class UpdateManySpec extends FlatSpec with Matchers with ApiBaseSpec {
     )
     result.pathAsLong("data.updateManyTodoes.count") should equal(1)
 
-    val todoes = server.executeQuerySimple(
+    val todoes = server.query(
       """{
         |  todoes {
         |    title
@@ -59,7 +59,7 @@ class UpdateManySpec extends FlatSpec with Matchers with ApiBaseSpec {
     createTodo("title2")
     createTodo("title3")
 
-    val result = server.executeQuerySimple(
+    val result = server.query(
       """mutation {
         |  updateManyTodoes(
         |    where: { }
@@ -73,7 +73,7 @@ class UpdateManySpec extends FlatSpec with Matchers with ApiBaseSpec {
     )
     result.pathAsLong("data.updateManyTodoes.count") should equal(3)
 
-    val todoes = server.executeQuerySimple(
+    val todoes = server.query(
       """{
         |  todoes {
         |    title
@@ -90,7 +90,7 @@ class UpdateManySpec extends FlatSpec with Matchers with ApiBaseSpec {
   }
 
   def createTodo(title: String): Unit = {
-    server.executeQuerySimple(
+    server.query(
       s"""mutation {
         |  createTodo(
         |    data: {

@@ -274,6 +274,10 @@ case class Field(
   def id                                            = name
   def isScalar: Boolean                             = typeIdentifier != TypeIdentifier.Relation
   def isRelation: Boolean                           = typeIdentifier == TypeIdentifier.Relation
+  def isScalarList: Boolean                         = isScalar && isList
+  def isScalarNonList: Boolean                      = isScalar && !isList
+  def isRelationList: Boolean                       = isRelation && isList
+  def isRelationNonList: Boolean                    = isRelation && !isList
   def isRelationWithId(relationId: String): Boolean = relation.exists(_.id == relationId)
 
   def isRelationWithIdAndSide(relationId: String, relationSide: RelationSide.Value): Boolean = {
@@ -444,7 +448,7 @@ case class Relation(
 
   def isUnambiguous(schema: Schema): Boolean = (schema.relations.toSet - this).nonEmpty
 
-  def isSameModelRelation(schema: Schema): Boolean          = getModelA(schema) == getModelB(schema)
+  def isSameModelRelation: Boolean                          = modelAId == modelBId
   def isSameFieldSameModelRelation(schema: Schema): Boolean = getModelAField(schema) == getModelBField(schema)
 
   def getModelA(schema: Schema): Option[Model] = schema.getModelById(modelAId)

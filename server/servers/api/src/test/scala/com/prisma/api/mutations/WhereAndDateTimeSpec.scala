@@ -17,7 +17,7 @@ class WhereAndDateTimeSpec extends FlatSpec with Matchers with ApiBaseSpec {
     }
     database.setup(project)
 
-    val createResult = server.executeQuerySimple(
+    val createResult = server.query(
       s"""mutation {
          |  createNote(
          |    data: {
@@ -36,7 +36,7 @@ class WhereAndDateTimeSpec extends FlatSpec with Matchers with ApiBaseSpec {
       project
     )
 
-    server.executeQuerySimple(
+    server.query(
       s"""
          |mutation {
          |  updateNote(
@@ -57,12 +57,12 @@ class WhereAndDateTimeSpec extends FlatSpec with Matchers with ApiBaseSpec {
       project
     )
 
-    server.executeQuerySimple(s"""query{note(where:{outerDateTime:$outerWhere}){outerString}}""",
-                              project,
-                              dataContains = s"""{"note":{"outerString":"Changed Outer String"}}""")
-    server.executeQuerySimple(s"""query{todo(where:{innerDateTime:$innerWhere}){innerString}}""",
-                              project,
-                              dataContains = s"""{"todo":{"innerString":"Changed Inner String"}}""")
+    server.query(s"""query{note(where:{outerDateTime:$outerWhere}){outerString}}""",
+                 project,
+                 dataContains = s"""{"note":{"outerString":"Changed Outer String"}}""")
+    server.query(s"""query{todo(where:{innerDateTime:$innerWhere}){innerString}}""",
+                 project,
+                 dataContains = s"""{"todo":{"innerString":"Changed Inner String"}}""")
 
   }
 
@@ -77,7 +77,7 @@ class WhereAndDateTimeSpec extends FlatSpec with Matchers with ApiBaseSpec {
     }
     database.setup(project)
 
-    val createResult = server.executeQuerySimple(
+    val createResult = server.query(
       s"""mutation {
          |  createNote(
          |    data: {
@@ -96,7 +96,7 @@ class WhereAndDateTimeSpec extends FlatSpec with Matchers with ApiBaseSpec {
       project
     )
 
-    server.executeQuerySimple(
+    server.query(
       s"""
          |mutation {
          |  updateNote(
@@ -117,12 +117,12 @@ class WhereAndDateTimeSpec extends FlatSpec with Matchers with ApiBaseSpec {
       project
     )
 
-    server.executeQuerySimple(s"""query{note(where:{outerDateTime:$outerWhere}){outerString}}""",
-                              project,
-                              dataContains = s"""{"note":{"outerString":"Changed Outer String"}}""")
-    server.executeQuerySimple(s"""query{todo(where:{innerDateTime:$innerWhere}){innerString}}""",
-                              project,
-                              dataContains = s"""{"todo":{"innerString":"Changed Inner String"}}""")
+    server.query(s"""query{note(where:{outerDateTime:$outerWhere}){outerString}}""",
+                 project,
+                 dataContains = s"""{"note":{"outerString":"Changed Outer String"}}""")
+    server.query(s"""query{todo(where:{innerDateTime:$innerWhere}){innerString}}""",
+                 project,
+                 dataContains = s"""{"todo":{"innerString":"Changed Inner String"}}""")
   }
 
 }

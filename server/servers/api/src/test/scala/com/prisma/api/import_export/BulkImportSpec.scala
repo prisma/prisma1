@@ -72,23 +72,23 @@ class BulkImportSpec extends FlatSpec with Matchers with ApiBaseSpec with AwaitU
     importer.executeImport(relations).await(5)
     importer.executeImport(lists).await(5)
 
-    val res0 = server.executeQuerySimple("query{model0s{id, a, b}}", project).toString
+    val res0 = server.query("query{model0s{id, a, b}}", project).toString
     res0 should be("""{"data":{"model0s":[{"id":"0","a":"test","b":0},{"id":"3","a":"test","b":3}]}}""")
 
-    val res1 = server.executeQuerySimple("query{model1s{id, a, b, listField}}", project).toString
+    val res1 = server.query("query{model1s{id, a, b, listField}}", project).toString
     res1 should be("""{"data":{"model1s":[{"id":"1","a":"test","b":1,"listField":[2,3,4,5,2,3,4,5,2,3,4,5]}]}}""")
 
-    val res2 = server.executeQuerySimple("query{model2s{id, a, b, name}}", project).toString
+    val res2 = server.query("query{model2s{id, a, b, name}}", project).toString
     res2 should be("""{"data":{"model2s":[{"id":"2","a":"test","b":2,"name":null}]}}""")
 
-    val rel0 = server.executeQuerySimple("query{model0s{id, model1{id}, relation0top{id}, relation0bottom{id}}}", project).toString
+    val rel0 = server.query("query{model0s{id, model1{id}, relation0top{id}, relation0bottom{id}}}", project).toString
     rel0 should be(
       """{"data":{"model0s":[{"id":"0","model1":{"id":"1"},"relation0top":{"id":"0"},"relation0bottom":{"id":"0"}},{"id":"3","model1":null,"relation0top":{"id":"3"},"relation0bottom":{"id":"3"}}]}}""")
 
-    val rel1 = server.executeQuerySimple("query{model1s{id, model0{id}, model2{id}}}", project).toString
+    val rel1 = server.query("query{model1s{id, model0{id}, model2{id}}}", project).toString
     rel1 should be("""{"data":{"model1s":[{"id":"1","model0":{"id":"0"},"model2":{"id":"2"}}]}}""")
 
-    val rel2 = server.executeQuerySimple("query{model2s{id, model1{id}}}", project).toString
+    val rel2 = server.query("query{model2s{id, model1{id}}}", project).toString
     rel2 should be("""{"data":{"model2s":[{"id":"2","model1":{"id":"1"}}]}}""")
   }
 
@@ -96,7 +96,7 @@ class BulkImportSpec extends FlatSpec with Matchers with ApiBaseSpec with AwaitU
     val nodes = """{ "valueType": "nodes", "values": [{"_typeName": "Model0", "id": "just-some-id", "a": "test"}]}""".parseJson
     importer.executeImport(nodes).await(5)
 
-    val res = server.executeQuerySimple("query{model0s{id, a}}", project)
+    val res = server.query("query{model0s{id, a}}", project)
     res.toString should be("""{"data":{"model0s":[{"id":"just-some-id","a":"test"}]}}""")
   }
 
@@ -109,7 +109,7 @@ class BulkImportSpec extends FlatSpec with Matchers with ApiBaseSpec with AwaitU
 
     importer.executeImport(nodes).await(5)
 
-    val res = server.executeQuerySimple("query{model0s{id, b}}", project)
+    val res = server.query("query{model0s{id, b}}", project)
     res.toString should be("""{"data":{"model0s":[{"id":"just-some-id","b":12},{"id":"just-some-id2","b":13}]}}""")
   }
 
@@ -125,7 +125,7 @@ class BulkImportSpec extends FlatSpec with Matchers with ApiBaseSpec with AwaitU
 
     res2.toString should be("""[{"index":1,"message":" Unknown column 'c' in 'field list'"}]""")
 
-    val res = server.executeQuerySimple("query{model0s{id, b}}", project)
+    val res = server.query("query{model0s{id, b}}", project)
 
     res.toString should be("""{"data":{"model0s":[{"id":"just-some-id0","b":12},{"id":"just-some-id2","b":13}]}}""")
   }
@@ -145,7 +145,7 @@ class BulkImportSpec extends FlatSpec with Matchers with ApiBaseSpec with AwaitU
       or be(
         """[{"index":1,"message":" Duplicate entry 'just-some-id5' for key 'PRIMARY'"},{"index":1,"message":" Duplicate entry 'just-some-id5' for key 'PRIMARY'"}]"""))
 
-    val res = server.executeQuerySimple("query{model0s{id, b}}", project)
+    val res = server.query("query{model0s{id, b}}", project)
     res.toString should (be("""{"data":{"model0s":[{"id":"just-some-id4","b":12},{"id":"just-some-id5","b":13}]}}""") or
       be("""{"data":{"model0s":[{"id":"just-some-id4","b":12},{"id":"just-some-id5","b":15}]}}"""))
   }
