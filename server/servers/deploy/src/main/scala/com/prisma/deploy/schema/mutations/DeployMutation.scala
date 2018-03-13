@@ -8,7 +8,7 @@ import com.prisma.deploy.migration.migrator.Migrator
 import com.prisma.deploy.migration.validation.{SchemaError, SchemaSyntaxValidator}
 import com.prisma.deploy.schema.InvalidQuery
 import com.prisma.messagebus.pubsub.Only
-import com.prisma.shared.models.{Function, Migration, MigrationStep, Project, Schema, ServerSideSubscriptionFunction, WebhookDelivery}
+import com.prisma.shared.models._
 import org.scalactic.{Bad, Good, Or}
 import sangria.parser.QueryParser
 
@@ -57,19 +57,25 @@ case class DeployMutation(
     val schemaMapping = schemaMapper.createMapping(graphQlSdl)
 
     schemaInferrer.infer(project.schema, schemaMapping, graphQlSdl) match {
+
       case Good(inferredNextSchema) =>
         val steps = migrationStepsInferrer.infer(project.schema, inferredNextSchema, schemaMapping)
-        for {
-          _         <- handleProjectUpdate()
-          functions = getFunctionModelsOrErrors(args.functions)
-          migration <- functions match {
-                        case Bad(_)                  => Future.successful(Some(Migration.empty(project.id)))
-                        case Good(functionsForInput) => handleMigration(inferredNextSchema, steps, functionsForInput)
-                      }
-        } yield {
-          val functionErrors = functions.swap.getOrElse(Vector.empty)
-          MutationSuccess(DeployMutationPayload(args.clientMutationId, migration = migration, errors = schemaErrors ++ functionErrors))
+
+        val functionsOrErrors: Or[Vector[Function], Vector[SchemaError]] = getFunctionModelsOrErrors(args.functions)
+
+        val migration = functionsOrErrors match {
+          case Bad(errors) =>
+            Future.successful(Some(Migration.empty(project.id)))
+
+          case Good(functionsForInput) =>
+            val secretsUpdatedFuture = updateSecretsIfNecessary()
+            secretsUpdatedFuture.flatMap(secret => handleMigration(inferredNextSchema, steps ++ secret, functionsForInput))
+
         }
+
+        val functionErrors = functionsOrErrors.swap.getOrElse(Vector.empty)
+
+        migration.map(mig => MutationSuccess(DeployMutationPayload(args.clientMutationId, migration = mig, errors = schemaErrors ++ functionErrors)))
 
       case Bad(err) =>
         Future.successful {
@@ -86,11 +92,11 @@ case class DeployMutation(
     }
   }
 
-  private def handleProjectUpdate(): Future[_] = {
+  private def updateSecretsIfNecessary(): Future[Option[MigrationStep]] = {
     if (project.secrets != args.secrets && !args.dryRun.getOrElse(false)) {
-      projectPersistence.update(project.copy(secrets = args.secrets))
+      projectPersistence.update(project.copy(secrets = args.secrets)).map(_ => Some(UpdateSecrets(args.secrets)))
     } else {
-      Future.unit
+      Future.successful(None)
     }
   }
 
