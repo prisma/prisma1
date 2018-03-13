@@ -13,18 +13,11 @@ object SchemaWarning {
     SchemaWarning(`type`, description, None)
   }
 
-  def apply(fieldAndType: FieldAndType, description: String): SchemaWarning = {
-    apply(fieldAndType.objectType.name, fieldAndType.fieldDef.name, description)
+  def dataLossModel(`type`: String): SchemaWarning = {
+    SchemaWarning(`type`, "You already have nodes for this model. This change will result in data loss.", None)
   }
 
-  def global(description: String): SchemaWarning = {
-    SchemaWarning("Global", description, None)
-  }
-}
-
-object SchemaWarnings {
-  def forceArgumentRequired: SchemaWarning = {
-    SchemaWarning.global(
-      "Your migration includes potentially destructive changes. Review using `prisma deploy --dry-run` and continue using `prisma deploy --force`.")
+  def dataLossField(`type`: String, field: String): SchemaWarning = {
+    SchemaWarning(`type`, "You already have nodes for this model. This change may result in data loss.", Some(field))
   }
 }

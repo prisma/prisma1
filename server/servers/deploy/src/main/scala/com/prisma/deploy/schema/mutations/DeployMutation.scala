@@ -70,10 +70,10 @@ case class DeployMutation(
               MutationSuccess(DeployMutationPayload(args.clientMutationId, Some(Migration.empty(project.id)), errors = schemaErrors ++ errors, Seq.empty)))
 
           case Good(functionsForInput) =>
-            val steps                  = migrationStepsInferrer.infer(project.schema, inferredNextSchema, schemaMapping)
-            val existingDataValidation = DestructiveChanges(persistencePlugin, project, inferredNextSchema, steps)
-            val checkResults           = existingDataValidation.checkAgainstExistingData
-//            val checkResults = Future.successful(Vector.empty)
+            val steps = migrationStepsInferrer.infer(project.schema, inferredNextSchema, schemaMapping)
+//            val existingDataValidation = DestructiveChanges(persistencePlugin, project, inferredNextSchema, steps)
+//            val checkResults           = existingDataValidation.checkAgainstExistingData
+            val checkResults = Future.successful(Vector.empty)
 
             checkResults.flatMap { results =>
               val destructiveWarnings = results.collect { case x if x.isInstanceOf[SchemaWarning] => x.asInstanceOf[SchemaWarning] }
