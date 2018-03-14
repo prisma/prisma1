@@ -62,7 +62,7 @@ case class RequestHandler(
 
   def handleRawRequestForExport(projectId: String, rawRequest: RawRequest): Future[(StatusCode, JsValue)] = {
     handleRawRequest(projectId, rawRequest) { project =>
-      val resolver = DataResolver(project = project)
+      val resolver = apiDependencies.dataResolver(project)
       val exporter = new BulkExport(project)
       exporter.executeExport(resolver, rawRequest.json).map(x => (200, x))
     }
