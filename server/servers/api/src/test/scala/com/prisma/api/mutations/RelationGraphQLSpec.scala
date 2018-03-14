@@ -22,7 +22,7 @@ class RelationGraphQLSpec extends FlatSpec with Matchers with ApiBaseSpec {
     createItem(project, "Owner", "gargamel")
 
     //set initial owner
-    val res = server.executeQuerySimple(
+    val res = server.query(
       """mutation {updateCat(where: {catName: "garfield"},
         |data: {owner: {connect: {ownerName: "jon"}}}) {
         |    catName
@@ -36,15 +36,15 @@ class RelationGraphQLSpec extends FlatSpec with Matchers with ApiBaseSpec {
 
     res.toString should be("""{"data":{"updateCat":{"catName":"garfield","owner":{"ownerName":"jon"}}}}""")
 
-    val res2 = server.executeQuerySimple("""query{owner(where:{ownerName:"jon"}){ownerName, cat{catName}}}""", project)
+    val res2 = server.query("""query{owner(where:{ownerName:"jon"}){ownerName, cat{catName}}}""", project)
     res2.toString should be("""{"data":{"owner":{"ownerName":"jon","cat":{"catName":"garfield"}}}}""")
 
-    val res3 = server.executeQuerySimple("""query{owner(where:{ownerName:"gargamel"}){ownerName, cat{catName}}}""", project)
+    val res3 = server.query("""query{owner(where:{ownerName:"gargamel"}){ownerName, cat{catName}}}""", project)
     res3.toString should be("""{"data":{"owner":{"ownerName":"gargamel","cat":null}}}""")
 
     //change owner
 
-    val res4 = server.executeQuerySimple(
+    val res4 = server.query(
       """mutation {updateCat(where: {catName: "garfield"},
         |data: {owner: {connect: {ownerName: "gargamel"}}}) {
         |    catName
@@ -58,10 +58,10 @@ class RelationGraphQLSpec extends FlatSpec with Matchers with ApiBaseSpec {
 
     res4.toString should be("""{"data":{"updateCat":{"catName":"garfield","owner":{"ownerName":"gargamel"}}}}""")
 
-    val res5 = server.executeQuerySimple("""query{owner(where:{ownerName:"jon"}){ownerName, cat{catName}}}""", project)
+    val res5 = server.query("""query{owner(where:{ownerName:"jon"}){ownerName, cat{catName}}}""", project)
     res5.toString should be("""{"data":{"owner":{"ownerName":"jon","cat":null}}}""")
 
-    val res6 = server.executeQuerySimple("""query{owner(where:{ownerName:"gargamel"}){ownerName, cat{catName}}}""", project)
+    val res6 = server.query("""query{owner(where:{ownerName:"gargamel"}){ownerName, cat{catName}}}""", project)
     res6.toString should be("""{"data":{"owner":{"ownerName":"gargamel","cat":{"catName":"garfield"}}}}""")
   }
 
@@ -75,7 +75,7 @@ class RelationGraphQLSpec extends FlatSpec with Matchers with ApiBaseSpec {
     database.setup(project)
 
     //set initial owner
-    val res = server.executeQuerySimple(
+    val res = server.query(
       """mutation {createOwner(
         |data: {ownerName: "jon", cat : {create: {catName: "garfield"}}}) {
         |    ownerName
@@ -89,12 +89,12 @@ class RelationGraphQLSpec extends FlatSpec with Matchers with ApiBaseSpec {
 
     res.toString should be("""{"data":{"createOwner":{"ownerName":"jon","cat":{"catName":"garfield"}}}}""")
 
-    val res2 = server.executeQuerySimple("""query{owner(where:{ownerName:"jon"}){ownerName, cat{catName}}}""", project)
+    val res2 = server.query("""query{owner(where:{ownerName:"jon"}){ownerName, cat{catName}}}""", project)
     res2.toString should be("""{"data":{"owner":{"ownerName":"jon","cat":{"catName":"garfield"}}}}""")
 
     //create new owner and connect to garfield
 
-    server.executeQuerySimpleThatMustFail(
+    server.queryThatMustFail(
       """mutation {createOwner(
         |data: {ownerName: "gargamel", cat : {connect: {catName: "garfield"}}}) {
         |    ownerName
@@ -108,22 +108,22 @@ class RelationGraphQLSpec extends FlatSpec with Matchers with ApiBaseSpec {
       errorContains = "The change you are trying to make would violate the required relation '_OwnerToCat' between Owner and Cat"
     )
 
-    val res5 = server.executeQuerySimple("""query{owner(where:{ownerName:"jon"}){ownerName, cat{catName}}}""", project)
+    val res5 = server.query("""query{owner(where:{ownerName:"jon"}){ownerName, cat{catName}}}""", project)
     res5.toString should be("""{"data":{"owner":{"ownerName":"jon","cat":{"catName":"garfield"}}}}""")
 
-    val res6 = server.executeQuerySimple("""query{owner(where:{ownerName:"gargamel"}){ownerName, cat{catName}}}""", project)
+    val res6 = server.query("""query{owner(where:{ownerName:"gargamel"}){ownerName, cat{catName}}}""", project)
     res6.toString should be("""{"data":{"owner":null}}""")
   }
 
   def createItem(project: Project, modelName: String, name: String): Unit = {
     modelName match {
-      case "Cat"   => server.executeQuerySimple(s"""mutation {createCat(data: {catName: "$name"}){id}}""", project)
-      case "Owner" => server.executeQuerySimple(s"""mutation {createOwner(data: {ownerName: "$name"}){id}}""", project)
+      case "Cat"   => server.query(s"""mutation {createCat(data: {catName: "$name"}){id}}""", project)
+      case "Owner" => server.query(s"""mutation {createOwner(data: {ownerName: "$name"}){id}}""", project)
     }
   }
 
   def countItems(project: Project, name: String): Int = {
-    server.executeQuerySimple(s"""query{$name{id}}""", project).pathAsSeq(s"data.$name").length
+    server.query(s"""query{$name{id}}""", project).pathAsSeq(s"data.$name").length
   }
 
 }

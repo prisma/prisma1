@@ -16,12 +16,10 @@ class ManyModelDeferredResolver(resolver: DataResolver) {
     val args                  = headDeferred.args
     val futureResolverResults = resolver.resolveByModel(model, args)
 
-    val results = orderedDeferreds.map {
+    orderedDeferreds.map {
       case OrderedDeferred(deferred, order) =>
         OrderedDeferredFutureResult(futureResolverResults.map(mapToConnectionOutputType(_, deferred)), order)
     }
-
-    results
   }
 
   def mapToConnectionOutputType(input: ResolverResult, deferred: ManyModelDeferred): RelayConnectionOutputType = {

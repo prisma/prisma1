@@ -20,12 +20,12 @@ class CascadingDeleteSpec extends FlatSpec with Matchers with ApiBaseSpec {
     }
     database.setup(project)
 
-    server.executeQuerySimple("""mutation{createP(data:{p:"p", c: {create:{c: "c"}}}){p, c {c}}}""", project)
-    server.executeQuerySimple("""mutation{createP(data:{p:"p2", c: {create:{c: "c2"}}}){p, c {c}}}""", project)
+    server.query("""mutation{createP(data:{p:"p", c: {create:{c: "c"}}}){p, c {c}}}""", project)
+    server.query("""mutation{createP(data:{p:"p2", c: {create:{c: "c2"}}}){p, c {c}}}""", project)
 
-    server.executeQuerySimple("""mutation{deleteP(where: {p:"p"}){id}}""", project)
-    server.executeQuerySimple("""query{ps{p, c {c}}}""", project).toString should be("""{"data":{"ps":[{"p":"p2","c":{"c":"c2"}}]}}""")
-    server.executeQuerySimple("""query{cs{c, p {p}}}""", project).toString should be("""{"data":{"cs":[{"c":"c2","p":{"p":"p2"}}]}}""")
+    server.query("""mutation{deleteP(where: {p:"p"}){id}}""", project)
+    server.query("""query{ps{p, c {c}}}""", project).toString should be("""{"data":{"ps":[{"p":"p2","c":{"c":"c2"}}]}}""")
+    server.query("""query{cs{c, p {p}}}""", project).toString should be("""{"data":{"cs":[{"c":"c2","p":{"p":"p2"}}]}}""")
     database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "_RelayId").as[Int]) should be(Vector(2))
   }
 
@@ -39,15 +39,13 @@ class CascadingDeleteSpec extends FlatSpec with Matchers with ApiBaseSpec {
     }
     database.setup(project)
 
-    server.executeQuerySimple("""mutation{createP(data:{p:"p",  c: {create:[{c: "c"},  {c: "c2"}]}}){p, c {c}}}""", project)
-    server.executeQuerySimple("""mutation{createP(data:{p:"p2", c: {create:[{c: "cx"}, {c: "cx2"}]}}){p, c {c}}}""", project)
-    server.executeQuerySimple("""mutation{updateC(where:{c:"c2"}, data:{p: {create:{p: "pz"}}}){id}}""", project)
+    server.query("""mutation{createP(data:{p:"p",  c: {create:[{c: "c"},  {c: "c2"}]}}){p, c {c}}}""", project)
+    server.query("""mutation{createP(data:{p:"p2", c: {create:[{c: "cx"}, {c: "cx2"}]}}){p, c {c}}}""", project)
+    server.query("""mutation{updateC(where:{c:"c2"}, data:{p: {create:{p: "pz"}}}){id}}""", project)
 
-    server.executeQuerySimple("""mutation{deleteP(where: {p:"p"}){id}}""", project)
-    server.executeQuerySimple("""query{ps{p, c {c}}}""", project).toString should be(
-      """{"data":{"ps":[{"p":"p2","c":[{"c":"cx"},{"c":"cx2"}]},{"p":"pz","c":[]}]}}""")
-    server.executeQuerySimple("""query{cs{c, p {p}}}""", project).toString should be(
-      """{"data":{"cs":[{"c":"cx","p":[{"p":"p2"}]},{"c":"cx2","p":[{"p":"p2"}]}]}}""")
+    server.query("""mutation{deleteP(where: {p:"p"}){id}}""", project)
+    server.query("""query{ps{p, c {c}}}""", project).toString should be("""{"data":{"ps":[{"p":"p2","c":[{"c":"cx"},{"c":"cx2"}]},{"p":"pz","c":[]}]}}""")
+    server.query("""query{cs{c, p {p}}}""", project).toString should be("""{"data":{"cs":[{"c":"cx","p":[{"p":"p2"}]},{"c":"cx2","p":[{"p":"p2"}]}]}}""")
     database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "_RelayId").as[Int]) should be(Vector(4))
   }
 
@@ -61,11 +59,11 @@ class CascadingDeleteSpec extends FlatSpec with Matchers with ApiBaseSpec {
     }
     database.setup(project)
 
-    server.executeQuerySimple("""mutation{createP(data:{p:"p",  c: {create:[{c: "c"},  {c: "c2"}]}}){p, c {c}}}""", project)
-    server.executeQuerySimple("""mutation{updateC(where:{c:"c2"}, data:{p: {create:{p: "pz"}}}){id}}""", project)
+    server.query("""mutation{createP(data:{p:"p",  c: {create:[{c: "c"},  {c: "c2"}]}}){p, c {c}}}""", project)
+    server.query("""mutation{updateC(where:{c:"c2"}, data:{p: {create:{p: "pz"}}}){id}}""", project)
 
-    server.executeQuerySimpleThatMustFail("""mutation{deleteP(where: {p:"p"}){id}}""", project, errorCode = 3043)
-    server.executeQuerySimple("""query{ps{p, c {c}}}""", project).toString should be(
+    server.queryThatMustFail("""mutation{deleteP(where: {p:"p"}){id}}""", project, errorCode = 3043)
+    server.query("""query{ps{p, c {c}}}""", project).toString should be(
       """{"data":{"ps":[{"p":"p","c":[{"c":"c"},{"c":"c2"}]},{"p":"pz","c":[{"c":"c2"}]}]}}""")
     database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "_RelayId").as[Int]) should be(Vector(4))
   }
@@ -80,10 +78,10 @@ class CascadingDeleteSpec extends FlatSpec with Matchers with ApiBaseSpec {
     }
     database.setup(project)
 
-    server.executeQuerySimple("""mutation{createP(data:{p:"p", c: {create:{c: "c"}}}){p, c {c}}}""", project)
+    server.query("""mutation{createP(data:{p:"p", c: {create:{c: "c"}}}){p, c {c}}}""", project)
 
-    server.executeQuerySimpleThatMustFail("""mutation{deleteP(where: {p:"p"}){id}}""", project, errorCode = 3043)
-    server.executeQuerySimple("""query{ps{p, c {c}}}""", project).toString should be("""{"data":{"ps":[{"p":"p","c":{"c":"c"}}]}}""")
+    server.queryThatMustFail("""mutation{deleteP(where: {p:"p"}){id}}""", project, errorCode = 3043)
+    server.query("""query{ps{p, c {c}}}""", project).toString should be("""{"data":{"ps":[{"p":"p","c":{"c":"c"}}]}}""")
     database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "_RelayId").as[Int]) should be(Vector(2))
   }
 
@@ -97,12 +95,12 @@ class CascadingDeleteSpec extends FlatSpec with Matchers with ApiBaseSpec {
     }
     database.setup(project)
 
-    server.executeQuerySimple("""mutation{createP(data:{p:"p", c: {create:{c: "c"}}}){p, c {c}}}""", project)
-    server.executeQuerySimple("""mutation{createP(data:{p:"p2", c: {create:{c: "c2"}}}){p, c {c}}}""", project)
+    server.query("""mutation{createP(data:{p:"p", c: {create:{c: "c"}}}){p, c {c}}}""", project)
+    server.query("""mutation{createP(data:{p:"p2", c: {create:{c: "c2"}}}){p, c {c}}}""", project)
 
-    server.executeQuerySimpleThatMustFail("""mutation{deleteP(where: {p:"p"}){id}}""", project, errorCode = 3042)
-    server.executeQuerySimple("""query{ps{p, c {c}}}""", project).toString should be("""{"data":{"ps":[{"p":"p","c":{"c":"c"}},{"p":"p2","c":{"c":"c2"}}]}}""")
-    server.executeQuerySimple("""query{cs{c, p {p}}}""", project).toString should be("""{"data":{"cs":[{"c":"c","p":{"p":"p"}},{"c":"c2","p":{"p":"p2"}}]}}""")
+    server.queryThatMustFail("""mutation{deleteP(where: {p:"p"}){id}}""", project, errorCode = 3042)
+    server.query("""query{ps{p, c {c}}}""", project).toString should be("""{"data":{"ps":[{"p":"p","c":{"c":"c"}},{"p":"p2","c":{"c":"c2"}}]}}""")
+    server.query("""query{cs{c, p {p}}}""", project).toString should be("""{"data":{"cs":[{"c":"c","p":{"p":"p"}},{"c":"c2","p":{"p":"p2"}}]}}""")
 
     database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "_RelayId").as[Int]) should be(Vector(4))
   }
@@ -119,17 +117,14 @@ class CascadingDeleteSpec extends FlatSpec with Matchers with ApiBaseSpec {
     }
     database.setup(project)
 
-    server.executeQuerySimple("""mutation{createP(data:{p:"p", c: {create:{c: "c", gc :{create:{gc: "gc"}}}}}){p, c {c, gc{gc}}}}""", project)
-    server.executeQuerySimple("""mutation{createP(data:{p:"p2", c: {create:{c: "c2", gc :{create:{gc: "gc2"}}}}}){p, c {c,gc{gc}}}}""", project)
+    server.query("""mutation{createP(data:{p:"p", c: {create:{c: "c", gc :{create:{gc: "gc"}}}}}){p, c {c, gc{gc}}}}""", project)
+    server.query("""mutation{createP(data:{p:"p2", c: {create:{c: "c2", gc :{create:{gc: "gc2"}}}}}){p, c {c,gc{gc}}}}""", project)
 
-    server.executeQuerySimple("""mutation{deleteP(where: {p:"p"}){id}}""", project)
+    server.query("""mutation{deleteP(where: {p:"p"}){id}}""", project)
 
-    server.executeQuerySimple("""query{ps{p, c {c, gc{gc}}}}""", project).toString should be(
-      """{"data":{"ps":[{"p":"p2","c":{"c":"c2","gc":{"gc":"gc2"}}}]}}""")
-    server.executeQuerySimple("""query{cs{c, gc{gc}, p {p}}}""", project).toString should be(
-      """{"data":{"cs":[{"c":"c2","gc":{"gc":"gc2"},"p":{"p":"p2"}}]}}""")
-    server.executeQuerySimple("""query{gCs{gc, c {c, p{p}}}}""", project).toString should be(
-      """{"data":{"gCs":[{"gc":"gc2","c":{"c":"c2","p":{"p":"p2"}}}]}}""")
+    server.query("""query{ps{p, c {c, gc{gc}}}}""", project).toString should be("""{"data":{"ps":[{"p":"p2","c":{"c":"c2","gc":{"gc":"gc2"}}}]}}""")
+    server.query("""query{cs{c, gc{gc}, p {p}}}""", project).toString should be("""{"data":{"cs":[{"c":"c2","gc":{"gc":"gc2"},"p":{"p":"p2"}}]}}""")
+    server.query("""query{gCs{gc, c {c, p{p}}}}""", project).toString should be("""{"data":{"gCs":[{"gc":"gc2","c":{"c":"c2","p":{"p":"p2"}}}]}}""")
 
     database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "_RelayId").as[Int]) should be(Vector(3))
   }
@@ -146,16 +141,14 @@ class CascadingDeleteSpec extends FlatSpec with Matchers with ApiBaseSpec {
     }
     database.setup(project)
 
-    server.executeQuerySimple("""mutation{createP(data:{p:"p", c: {create:{c: "c", gc :{create:{gc: "gc"}}}}}){p, c {c, gc{gc}}}}""", project)
-    server.executeQuerySimple("""mutation{createP(data:{p:"p2", c: {create:{c: "c2", gc :{create:{gc: "gc2"}}}}}){p, c {c,gc{gc}}}}""", project)
+    server.query("""mutation{createP(data:{p:"p", c: {create:{c: "c", gc :{create:{gc: "gc"}}}}}){p, c {c, gc{gc}}}}""", project)
+    server.query("""mutation{createP(data:{p:"p2", c: {create:{c: "c2", gc :{create:{gc: "gc2"}}}}}){p, c {c,gc{gc}}}}""", project)
 
-    server.executeQuerySimple("""mutation{deleteP(where: {p:"p"}){id}}""", project)
+    server.query("""mutation{deleteP(where: {p:"p"}){id}}""", project)
 
-    server.executeQuerySimple("""query{ps{p, c {c, gc{gc}}}}""", project).toString should be(
-      """{"data":{"ps":[{"p":"p2","c":{"c":"c2","gc":{"gc":"gc2"}}}]}}""")
-    server.executeQuerySimple("""query{cs{c, gc{gc}, p {p}}}""", project).toString should be(
-      """{"data":{"cs":[{"c":"c2","gc":{"gc":"gc2"},"p":{"p":"p2"}}]}}""")
-    server.executeQuerySimple("""query{gCs{gc, c {c, p{p}}}}""", project).toString should be(
+    server.query("""query{ps{p, c {c, gc{gc}}}}""", project).toString should be("""{"data":{"ps":[{"p":"p2","c":{"c":"c2","gc":{"gc":"gc2"}}}]}}""")
+    server.query("""query{cs{c, gc{gc}, p {p}}}""", project).toString should be("""{"data":{"cs":[{"c":"c2","gc":{"gc":"gc2"},"p":{"p":"p2"}}]}}""")
+    server.query("""query{gCs{gc, c {c, p{p}}}}""", project).toString should be(
       """{"data":{"gCs":[{"gc":"gc","c":null},{"gc":"gc2","c":{"c":"c2","p":{"p":"p2"}}}]}}""")
 
     database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "_RelayId").as[Int]) should be(Vector(4))
@@ -173,12 +166,12 @@ class CascadingDeleteSpec extends FlatSpec with Matchers with ApiBaseSpec {
     }
     database.setup(project)
 
-    server.executeQuerySimple("""mutation{createP(data:{p:"p", c: {create:{c: "c", gc :{create:{gc: "gc"}}}}}){p, c {c, gc{gc}}}}""", project)
-    server.executeQuerySimple("""mutation{createP(data:{p:"p2", c: {create:{c: "c2", gc :{create:{gc: "gc2"}}}}}){p, c {c,gc{gc}}}}""", project)
+    server.query("""mutation{createP(data:{p:"p", c: {create:{c: "c", gc :{create:{gc: "gc"}}}}}){p, c {c, gc{gc}}}}""", project)
+    server.query("""mutation{createP(data:{p:"p2", c: {create:{c: "c2", gc :{create:{gc: "gc2"}}}}}){p, c {c,gc{gc}}}}""", project)
 
-    server.executeQuerySimpleThatMustFail("""mutation{deleteP(where: {p:"p"}){id}}""", project, errorCode = 3042)
-    server.executeQuerySimple("""query{ps{p, c {c}}}""", project).toString should be("""{"data":{"ps":[{"p":"p","c":{"c":"c"}},{"p":"p2","c":{"c":"c2"}}]}}""")
-    server.executeQuerySimple("""query{cs{c, p {p}}}""", project).toString should be("""{"data":{"cs":[{"c":"c","p":{"p":"p"}},{"c":"c2","p":{"p":"p2"}}]}}""")
+    server.queryThatMustFail("""mutation{deleteP(where: {p:"p"}){id}}""", project, errorCode = 3042)
+    server.query("""query{ps{p, c {c}}}""", project).toString should be("""{"data":{"ps":[{"p":"p","c":{"c":"c"}},{"p":"p2","c":{"c":"c2"}}]}}""")
+    server.query("""query{cs{c, p {p}}}""", project).toString should be("""{"data":{"cs":[{"c":"c","p":{"p":"p"}},{"c":"c2","p":{"p":"p2"}}]}}""")
 
     database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "_RelayId").as[Int]) should be(Vector(6))
   }
@@ -195,12 +188,12 @@ class CascadingDeleteSpec extends FlatSpec with Matchers with ApiBaseSpec {
     }
     database.setup(project)
 
-    server.executeQuerySimple("""mutation{createP(data:{p:"p", c: {create:{c: "c", gc :{create:{gc: "gc"}}}}}){p, c {c, gc{gc}}}}""", project)
+    server.query("""mutation{createP(data:{p:"p", c: {create:{c: "c", gc :{create:{gc: "gc"}}}}}){p, c {c, gc{gc}}}}""", project)
 
-    server.executeQuerySimple("""mutation{deleteP(where: {p:"p"}){id}}""", project)
-    server.executeQuerySimple("""query{ps{p, c {c}}}""", project).toString should be("""{"data":{"ps":[]}}""")
-    server.executeQuerySimple("""query{cs{c, p {p}}}""", project).toString should be("""{"data":{"cs":[{"c":"c","p":null}]}}""")
-    server.executeQuerySimple("""query{gCs{gc, c {c}}}""", project).toString should be("""{"data":{"gCs":[{"gc":"gc","c":{"c":"c"}}]}}""")
+    server.query("""mutation{deleteP(where: {p:"p"}){id}}""", project)
+    server.query("""query{ps{p, c {c}}}""", project).toString should be("""{"data":{"ps":[]}}""")
+    server.query("""query{cs{c, p {p}}}""", project).toString should be("""{"data":{"cs":[{"c":"c","p":null}]}}""")
+    server.query("""query{gCs{gc, c {c}}}""", project).toString should be("""{"data":{"gCs":[{"gc":"gc","c":{"c":"c"}}]}}""")
 
     database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "_RelayId").as[Int]) should be(Vector(2))
   }
@@ -221,16 +214,15 @@ class CascadingDeleteSpec extends FlatSpec with Matchers with ApiBaseSpec {
 
     database.setup(project)
 
-    server.executeQuerySimple("""mutation{createP(data:{p:"p", c: {create:{c: "c"}}, scs: {create:[{sc: "sc1"},{sc: "sc2"}]}}){p, c {c},scs{sc}}}""", project)
-    server.executeQuerySimple("""mutation{createP(data:{p:"p2", c: {create:{c: "c2"}}, scs: {create:[{sc: "sc3"},{sc: "sc4"}]}}){p, c {c},scs{sc}}}""", project)
+    server.query("""mutation{createP(data:{p:"p", c: {create:{c: "c"}}, scs: {create:[{sc: "sc1"},{sc: "sc2"}]}}){p, c {c},scs{sc}}}""", project)
+    server.query("""mutation{createP(data:{p:"p2", c: {create:{c: "c2"}}, scs: {create:[{sc: "sc3"},{sc: "sc4"}]}}){p, c {c},scs{sc}}}""", project)
 
-    server.executeQuerySimple("""mutation{deleteP(where: {p:"p"}){id}}""", project)
+    server.query("""mutation{deleteP(where: {p:"p"}){id}}""", project)
 
-    server.executeQuerySimple("""query{ps{p, c {c}, scs {sc}}}""", project).toString should be(
+    server.query("""query{ps{p, c {c}, scs {sc}}}""", project).toString should be(
       """{"data":{"ps":[{"p":"p2","c":{"c":"c2"},"scs":[{"sc":"sc3"},{"sc":"sc4"}]}]}}""")
-    server.executeQuerySimple("""query{cs{c, p {p}}}""", project).toString should be("""{"data":{"cs":[{"c":"c2","p":{"p":"p2"}}]}}""")
-    server.executeQuerySimple("""query{sCs{sc,  p{p}}}""", project).toString should be(
-      """{"data":{"sCs":[{"sc":"sc3","p":{"p":"p2"}},{"sc":"sc4","p":{"p":"p2"}}]}}""")
+    server.query("""query{cs{c, p {p}}}""", project).toString should be("""{"data":{"cs":[{"c":"c2","p":{"p":"p2"}}]}}""")
+    server.query("""query{sCs{sc,  p{p}}}""", project).toString should be("""{"data":{"sCs":[{"sc":"sc3","p":{"p":"p2"}},{"sc":"sc4","p":{"p":"p2"}}]}}""")
 
     database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "_RelayId").as[Int]) should be(Vector(4))
   }
@@ -252,15 +244,15 @@ class CascadingDeleteSpec extends FlatSpec with Matchers with ApiBaseSpec {
 
     database.setup(project)
 
-    server.executeQuerySimple("""mutation{createC(data:{c:"c", sc: {create:{sc: "sc"}}}){c, sc{sc}}}""", project)
-    server.executeQuerySimple("""mutation{createC(data:{c:"c2", sc: {create:{sc: "sc2"}}}){c, sc{sc}}}""", project)
-    server.executeQuerySimple("""mutation{createP(data:{p:"p", c: {connect:{c: "c"}}, scs: {connect:[{sc: "sc"},{sc: "sc2"}]}}){p, c {c}, scs{sc}}}""", project)
+    server.query("""mutation{createC(data:{c:"c", sc: {create:{sc: "sc"}}}){c, sc{sc}}}""", project)
+    server.query("""mutation{createC(data:{c:"c2", sc: {create:{sc: "sc2"}}}){c, sc{sc}}}""", project)
+    server.query("""mutation{createP(data:{p:"p", c: {connect:{c: "c"}}, scs: {connect:[{sc: "sc"},{sc: "sc2"}]}}){p, c {c}, scs{sc}}}""", project)
 
-    server.executeQuerySimple("""mutation{deleteP(where: {p:"p"}){id}}""", project)
+    server.query("""mutation{deleteP(where: {p:"p"}){id}}""", project)
 
-    server.executeQuerySimple("""query{ps{p, c {c}, scs {sc}}}""", project).toString should be("""{"data":{"ps":[]}}""")
-    server.executeQuerySimple("""query{cs{c}}""", project).toString should be("""{"data":{"cs":[{"c":"c2"}]}}""")
-    server.executeQuerySimple("""query{sCs{sc}}""", project).toString should be("""{"data":{"sCs":[]}}""")
+    server.query("""query{ps{p, c {c}, scs {sc}}}""", project).toString should be("""{"data":{"ps":[]}}""")
+    server.query("""query{cs{c}}""", project).toString should be("""{"data":{"cs":[{"c":"c2"}]}}""")
+    server.query("""query{sCs{sc}}""", project).toString should be("""{"data":{"sCs":[]}}""")
 
     database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "_RelayId").as[Int]) should be(Vector(1))
   }
@@ -281,18 +273,17 @@ class CascadingDeleteSpec extends FlatSpec with Matchers with ApiBaseSpec {
     }
     database.setup(project)
 
-    server.executeQuerySimple("""mutation{createP(data:{p:"p", c: {create:{c: "c", gc :{create:{gc: "gc"}}}}}){p, c {c, gc{gc}}}}""", project)
-    server.executeQuerySimple("""mutation{createP(data:{p:"p2", c: {create:{c: "c2", gc :{create:{gc: "gc2"}}}}}){p, c {c,gc{gc}}}}""", project)
+    server.query("""mutation{createP(data:{p:"p", c: {create:{c: "c", gc :{create:{gc: "gc"}}}}}){p, c {c, gc{gc}}}}""", project)
+    server.query("""mutation{createP(data:{p:"p2", c: {create:{c: "c2", gc :{create:{gc: "gc2"}}}}}){p, c {c,gc{gc}}}}""", project)
 
-    server.executeQuerySimple("""mutation{createD(data:{d:"d", e: {create:[{e: "e"}]}}){d}}""", project)
+    server.query("""mutation{createD(data:{d:"d", e: {create:[{e: "e"}]}}){d}}""", project)
 
-    server.executeQuerySimple("""mutation{deleteP(where: {p:"p"}){id}}""", project)
-    server.executeQuerySimple("""query{ps{p, c {c}}}""", project).toString should be("""{"data":{"ps":[{"p":"p2","c":{"c":"c2"}}]}}""")
-    server.executeQuerySimple("""query{cs{c, p {p}, gc {gc}}}""", project).toString should be(
-      """{"data":{"cs":[{"c":"c2","p":{"p":"p2"},"gc":{"gc":"gc2"}}]}}""")
-    server.executeQuerySimple("""query{gCs{gc, c {c}, d {d}}}""", project).toString should be("""{"data":{"gCs":[{"gc":"gc2","c":{"c":"c2"},"d":[]}]}}""")
-    server.executeQuerySimple("""query{ds{d, gc {gc},e {e}}}""", project).toString should be("""{"data":{"ds":[{"d":"d","gc":[],"e":[{"e":"e"}]}]}}""")
-    server.executeQuerySimple("""query{es{e, d {d}}}""", project).toString should be("""{"data":{"es":[{"e":"e","d":[{"d":"d"}]}]}}""")
+    server.query("""mutation{deleteP(where: {p:"p"}){id}}""", project)
+    server.query("""query{ps{p, c {c}}}""", project).toString should be("""{"data":{"ps":[{"p":"p2","c":{"c":"c2"}}]}}""")
+    server.query("""query{cs{c, p {p}, gc {gc}}}""", project).toString should be("""{"data":{"cs":[{"c":"c2","p":{"p":"p2"},"gc":{"gc":"gc2"}}]}}""")
+    server.query("""query{gCs{gc, c {c}, d {d}}}""", project).toString should be("""{"data":{"gCs":[{"gc":"gc2","c":{"c":"c2"},"d":[]}]}}""")
+    server.query("""query{ds{d, gc {gc},e {e}}}""", project).toString should be("""{"data":{"ds":[{"d":"d","gc":[],"e":[{"e":"e"}]}]}}""")
+    server.query("""query{es{e, d {d}}}""", project).toString should be("""{"data":{"es":[{"e":"e","d":[{"d":"d"}]}]}}""")
 
     database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "_RelayId").as[Int]) should be(Vector(5))
   }
@@ -313,18 +304,17 @@ class CascadingDeleteSpec extends FlatSpec with Matchers with ApiBaseSpec {
     }
     database.setup(project)
 
-    server.executeQuerySimple("""mutation{createP(data:{p:"p", c: {create:{c: "c", gc :{create:{gc: "gc"}}}}}){p, c {c, gc{gc}}}}""", project)
-    server.executeQuerySimple("""mutation{createP(data:{p:"p2", c: {create:{c: "c2", gc :{create:{gc: "gc2"}}}}}){p, c {c,gc{gc}}}}""", project)
+    server.query("""mutation{createP(data:{p:"p", c: {create:{c: "c", gc :{create:{gc: "gc"}}}}}){p, c {c, gc{gc}}}}""", project)
+    server.query("""mutation{createP(data:{p:"p2", c: {create:{c: "c2", gc :{create:{gc: "gc2"}}}}}){p, c {c,gc{gc}}}}""", project)
 
-    server.executeQuerySimple("""mutation{createD(data:{d:"d", e: {create:[{e: "e"}]}, gc: {connect:{gc: "gc"}}}){d}}""", project)
+    server.query("""mutation{createD(data:{d:"d", e: {create:[{e: "e"}]}, gc: {connect:{gc: "gc"}}}){d}}""", project)
 
-    server.executeQuerySimple("""mutation{deleteP(where: {p:"p"}){id}}""", project)
-    server.executeQuerySimple("""query{ps{p, c {c}}}""", project).toString should be("""{"data":{"ps":[{"p":"p2","c":{"c":"c2"}}]}}""")
-    server.executeQuerySimple("""query{cs{c, p {p}, gc {gc}}}""", project).toString should be(
-      """{"data":{"cs":[{"c":"c2","p":{"p":"p2"},"gc":{"gc":"gc2"}}]}}""")
-    server.executeQuerySimple("""query{gCs{gc, c {c}, d {d}}}""", project).toString should be("""{"data":{"gCs":[{"gc":"gc2","c":{"c":"c2"},"d":[]}]}}""")
-    server.executeQuerySimple("""query{ds{d, gc {gc},e {e}}}""", project).toString should be("""{"data":{"ds":[]}}""")
-    server.executeQuerySimple("""query{es{e, d {d}}}""", project).toString should be("""{"data":{"es":[]}}""")
+    server.query("""mutation{deleteP(where: {p:"p"}){id}}""", project)
+    server.query("""query{ps{p, c {c}}}""", project).toString should be("""{"data":{"ps":[{"p":"p2","c":{"c":"c2"}}]}}""")
+    server.query("""query{cs{c, p {p}, gc {gc}}}""", project).toString should be("""{"data":{"cs":[{"c":"c2","p":{"p":"p2"},"gc":{"gc":"gc2"}}]}}""")
+    server.query("""query{gCs{gc, c {c}, d {d}}}""", project).toString should be("""{"data":{"gCs":[{"gc":"gc2","c":{"c":"c2"},"d":[]}]}}""")
+    server.query("""query{ds{d, gc {gc},e {e}}}""", project).toString should be("""{"data":{"ds":[]}}""")
+    server.query("""query{es{e, d {d}}}""", project).toString should be("""{"data":{"es":[]}}""")
 
     database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "_RelayId").as[Int]) should be(Vector(3))
   }
@@ -347,25 +337,24 @@ class CascadingDeleteSpec extends FlatSpec with Matchers with ApiBaseSpec {
     }
     database.setup(project)
 
-    server.executeQuerySimple("""mutation{createP(data:{p:"p", c: {create:{c: "c", gc :{create:{gc: "gc"}}}}}){p, c {c, gc{gc}}}}""", project)
-    server.executeQuerySimple("""mutation{createP(data:{p:"p2", c: {create:{c: "c2", gc :{create:{gc: "gc2"}}}}}){p, c {c,gc{gc}}}}""", project)
-    server.executeQuerySimple("""mutation{createD(data:{d:"d", e: {create:[{e: "e", f: {create :{f:"f"}}}]}, gc: {connect:{gc: "gc"}}}){d}}""", project)
+    server.query("""mutation{createP(data:{p:"p", c: {create:{c: "c", gc :{create:{gc: "gc"}}}}}){p, c {c, gc{gc}}}}""", project)
+    server.query("""mutation{createP(data:{p:"p2", c: {create:{c: "c2", gc :{create:{gc: "gc2"}}}}}){p, c {c,gc{gc}}}}""", project)
+    server.query("""mutation{createD(data:{d:"d", e: {create:[{e: "e", f: {create :{f:"f"}}}]}, gc: {connect:{gc: "gc"}}}){d}}""", project)
 
-    server.executeQuerySimpleThatMustFail(
+    server.queryThatMustFail(
       """mutation{deleteP(where: {p:"p"}){id}}""",
       project,
       errorCode = 3042,
       errorContains = """The change you are trying to make would violate the required relation '_FToE' between F and E"""
     )
 
-    server.executeQuerySimple("""query{ps{p, c {c}}}""", project).toString should be("""{"data":{"ps":[{"p":"p","c":{"c":"c"}},{"p":"p2","c":{"c":"c2"}}]}}""")
-    server.executeQuerySimple("""query{cs{c, p {p}, gc {gc}}}""", project).toString should be(
+    server.query("""query{ps{p, c {c}}}""", project).toString should be("""{"data":{"ps":[{"p":"p","c":{"c":"c"}},{"p":"p2","c":{"c":"c2"}}]}}""")
+    server.query("""query{cs{c, p {p}, gc {gc}}}""", project).toString should be(
       """{"data":{"cs":[{"c":"c","p":{"p":"p"},"gc":{"gc":"gc"}},{"c":"c2","p":{"p":"p2"},"gc":{"gc":"gc2"}}]}}""")
-    server.executeQuerySimple("""query{gCs{gc, c {c}, d {d}}}""", project).toString should be(
+    server.query("""query{gCs{gc, c {c}, d {d}}}""", project).toString should be(
       """{"data":{"gCs":[{"gc":"gc","c":{"c":"c"},"d":[{"d":"d"}]},{"gc":"gc2","c":{"c":"c2"},"d":[]}]}}""")
-    server.executeQuerySimple("""query{ds{d, gc {gc},e {e}}}""", project).toString should be(
-      """{"data":{"ds":[{"d":"d","gc":[{"gc":"gc"}],"e":[{"e":"e"}]}]}}""")
-    server.executeQuerySimple("""query{fs{f, e {e}}}""", project).toString should be("""{"data":{"fs":[{"f":"f","e":{"e":"e"}}]}}""")
+    server.query("""query{ds{d, gc {gc},e {e}}}""", project).toString should be("""{"data":{"ds":[{"d":"d","gc":[{"gc":"gc"}],"e":[{"e":"e"}]}]}}""")
+    server.query("""query{fs{f, e {e}}}""", project).toString should be("""{"data":{"fs":[{"f":"f","e":{"e":"e"}}]}}""")
 
     database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "_RelayId").as[Int]) should be(Vector(9))
   }
@@ -394,13 +383,13 @@ class CascadingDeleteSpec extends FlatSpec with Matchers with ApiBaseSpec {
     }
     database.setup(project)
 
-    server.executeQuerySimple("""mutation{createA(data:{a:"2020", b: {create:{b: "2021", c :{create:{c: "2022", e: {create:{e: "2023"}}}}}}}){a}}""", project)
-    server.executeQuerySimple("""mutation{createA(data:{a:"2030", b: {create:{b: "2031", c :{create:{c: "2032", e: {create:{e: "2033"}}}}}}}){a}}""", project)
+    server.query("""mutation{createA(data:{a:"2020", b: {create:{b: "2021", c :{create:{c: "2022", e: {create:{e: "2023"}}}}}}}){a}}""", project)
+    server.query("""mutation{createA(data:{a:"2030", b: {create:{b: "2031", c :{create:{c: "2032", e: {create:{e: "2033"}}}}}}}){a}}""", project)
 
-    server.executeQuerySimple("""mutation{updateC(where: {c: "2022"}, data:{d: {create:[{d: "2024"},{d: "2025"}] }}){c}}""", project)
-    server.executeQuerySimple("""mutation{updateC(where: {c: "2032"}, data:{d: {create:[{d: "2034"},{d: "2035"}] }}){c}}""", project)
+    server.query("""mutation{updateC(where: {c: "2022"}, data:{d: {create:[{d: "2024"},{d: "2025"}] }}){c}}""", project)
+    server.query("""mutation{updateC(where: {c: "2032"}, data:{d: {create:[{d: "2034"},{d: "2035"}] }}){c}}""", project)
 
-    server.executeQuerySimpleThatMustFail(
+    server.queryThatMustFail(
       """mutation{deleteA(where: {a:"2020"}){a}}""",
       project,
       errorCode = 3042,
@@ -430,7 +419,7 @@ class CascadingDeleteSpec extends FlatSpec with Matchers with ApiBaseSpec {
     }
     database.setup(project)
 
-    server.executeQuerySimple(
+    server.query(
       """mutation{createA(data:{a:"a", 
         |                       b: {create: {b: "b"}},
         |                       c: {create:[{c: "c1", e: {create:{e: "e"}}},{c: "c2", e: {create:{e: "e2"}}}]}, 
@@ -439,7 +428,7 @@ class CascadingDeleteSpec extends FlatSpec with Matchers with ApiBaseSpec {
       project
     )
 
-    server.executeQuerySimpleThatMustFail(
+    server.queryThatMustFail(
       """mutation{deleteA(where: {a:"a"}){a}}""",
       project,
       errorCode = 3042,
@@ -472,20 +461,20 @@ class CascadingDeleteSpec extends FlatSpec with Matchers with ApiBaseSpec {
     }
     database.setup(project)
 
-    server.executeQuerySimple("""mutation{createA(data:{a: 10.10, b: {create:{b: 11.11}}}){a}}""", project)
+    server.query("""mutation{createA(data:{a: 10.10, b: {create:{b: 11.11}}}){a}}""", project)
 
-    server.executeQuerySimple("""mutation{updateB(where: {b: 11.11}, data:{cs: {create:[{c: 12.12},{c: 12.13}]}}){b}}""", project)
-    server.executeQuerySimple("""mutation{updateB(where: {b: 11.11}, data:{c: {create:{c: 12.99}}}){b}}""", project)
+    server.query("""mutation{updateB(where: {b: 11.11}, data:{cs: {create:[{c: 12.12},{c: 12.13}]}}){b}}""", project)
+    server.query("""mutation{updateB(where: {b: 11.11}, data:{c: {create:{c: 12.99}}}){b}}""", project)
 
-    server.executeQuerySimple("""mutation{updateC(where: {c: 12.12}, data:{d: {create:{d: 13.13}}}){c}}""", project)
-    server.executeQuerySimple("""mutation{updateC(where: {c: 12.99}, data:{d: {create:{d: 13.99}}}){c}}""", project)
+    server.query("""mutation{updateC(where: {c: 12.12}, data:{d: {create:{d: 13.13}}}){c}}""", project)
+    server.query("""mutation{updateC(where: {c: 12.99}, data:{d: {create:{d: 13.99}}}){c}}""", project)
 
-    server.executeQuerySimple("""mutation{deleteA(where: {a:10.10}){a}}""", project)
+    server.query("""mutation{deleteA(where: {a:10.10}){a}}""", project)
 
-    server.executeQuerySimple("""query{as{a, b {b}}}""", project).toString should be("""{"data":{"as":[]}}""")
-    server.executeQuerySimple("""query{bs{b, c {c}, cs {c}}}""", project).toString should be("""{"data":{"bs":[]}}""")
-    server.executeQuerySimple("""query{cs{c, d {d}}}""", project).toString should be("""{"data":{"cs":[{"c":12.99,"d":[{"d":13.99}]}]}}""")
-    server.executeQuerySimple("""query{ds{d}}""", project).toString should be("""{"data":{"ds":[{"d":13.99}]}}""")
+    server.query("""query{as{a, b {b}}}""", project).toString should be("""{"data":{"as":[]}}""")
+    server.query("""query{bs{b, c {c}, cs {c}}}""", project).toString should be("""{"data":{"bs":[]}}""")
+    server.query("""query{cs{c, d {d}}}""", project).toString should be("""{"data":{"cs":[{"c":12.99,"d":[{"d":13.99}]}]}}""")
+    server.query("""query{ds{d}}""", project).toString should be("""{"data":{"ds":[{"d":13.99}]}}""")
   }
   //endregion
 
@@ -508,15 +497,15 @@ class CascadingDeleteSpec extends FlatSpec with Matchers with ApiBaseSpec {
     }
     database.setup(project)
 
-    server.executeQuerySimple("""mutation{createP(data:{p:"p", c: {create:{c: "c"}}}){p, c {c}}}""", project)
-    server.executeQuerySimple("""mutation{createP(data:{p:"p2", c: {create:{c: "c2"}}}){p, c {c}}}""", project)
+    server.query("""mutation{createP(data:{p:"p", c: {create:{c: "c"}}}){p, c {c}}}""", project)
+    server.query("""mutation{createP(data:{p:"p2", c: {create:{c: "c2"}}}){p, c {c}}}""", project)
 
-    server.executeQuerySimpleThatMustFail("""mutation{updateC(where: {c:"c"} data: {p: {delete: true}}){id}}""",
-                                          project,
-                                          errorCode = 3039,
-                                          errorContains = "No Node for the model")
-    server.executeQuerySimple("""query{ps{p, c {c}}}""", project).toString should be("""{"data":{"ps":[{"p":"p2","c":{"c":"c2"}}]}}""")
-    server.executeQuerySimple("""query{cs{c, p {p}}}""", project).toString should be("""{"data":{"cs":[{"c":"c2","p":{"p":"p2"}}]}}""")
+    server.queryThatMustFail("""mutation{updateC(where: {c:"c"} data: {p: {delete: true}}){id}}""",
+                             project,
+                             errorCode = 3039,
+                             errorContains = "No Node for the model")
+    server.query("""query{ps{p, c {c}}}""", project).toString should be("""{"data":{"ps":[{"p":"p2","c":{"c":"c2"}}]}}""")
+    server.query("""query{cs{c, p {p}}}""", project).toString should be("""{"data":{"cs":[{"c":"c2","p":{"p":"p2"}}]}}""")
     database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "_RelayId").as[Int]) should be(Vector(2))
   }
 
@@ -532,17 +521,15 @@ class CascadingDeleteSpec extends FlatSpec with Matchers with ApiBaseSpec {
     }
     database.setup(project)
 
-    server.executeQuerySimple("""mutation{createP(data:{p:"p", c: {create:{c: "c", gc :{create:{gc: "gc"}}}}}){p, c {c, gc{gc}}}}""", project)
-    server.executeQuerySimple("""mutation{createP(data:{p:"p2", c: {create:{c: "c2", gc :{create:{gc: "gc2"}}}}}){p, c {c,gc{gc}}}}""", project)
+    server.query("""mutation{createP(data:{p:"p", c: {create:{c: "c", gc :{create:{gc: "gc"}}}}}){p, c {c, gc{gc}}}}""", project)
+    server.query("""mutation{createP(data:{p:"p2", c: {create:{c: "c2", gc :{create:{gc: "gc2"}}}}}){p, c {c,gc{gc}}}}""", project)
 
-    server.executeQuerySimple("""mutation{updateP(where: {p:"p"}, data: { c: {delete: true}}){id}}""", project)
+    server.query("""mutation{updateP(where: {p:"p"}, data: { c: {delete: true}}){id}}""", project)
 
-    server.executeQuerySimple("""query{ps{p, c {c, gc{gc}}}}""", project).toString should be(
+    server.query("""query{ps{p, c {c, gc{gc}}}}""", project).toString should be(
       """{"data":{"ps":[{"p":"p","c":null},{"p":"p2","c":{"c":"c2","gc":{"gc":"gc2"}}}]}}""")
-    server.executeQuerySimple("""query{cs{c, gc{gc}, p {p}}}""", project).toString should be(
-      """{"data":{"cs":[{"c":"c2","gc":{"gc":"gc2"},"p":{"p":"p2"}}]}}""")
-    server.executeQuerySimple("""query{gCs{gc, c {c, p{p}}}}""", project).toString should be(
-      """{"data":{"gCs":[{"gc":"gc2","c":{"c":"c2","p":{"p":"p2"}}}]}}""")
+    server.query("""query{cs{c, gc{gc}, p {p}}}""", project).toString should be("""{"data":{"cs":[{"c":"c2","gc":{"gc":"gc2"},"p":{"p":"p2"}}]}}""")
+    server.query("""query{gCs{gc, c {c, p{p}}}}""", project).toString should be("""{"data":{"gCs":[{"gc":"gc2","c":{"c":"c2","p":{"p":"p2"}}}]}}""")
 
     database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "_RelayId").as[Int]) should be(Vector(4))
   }
@@ -559,21 +546,21 @@ class CascadingDeleteSpec extends FlatSpec with Matchers with ApiBaseSpec {
     }
     database.setup(project)
 
-    server.executeQuerySimple("""mutation{createP(data:{p:"p", c: {create:{c: "c", gc :{create:{gc: "gc"}}}}}){p, c {c, gc{gc}}}}""", project)
-    server.executeQuerySimple("""mutation{createP(data:{p:"p2", c: {create:{c: "c2", gc :{create:{gc: "gc2"}}}}}){p, c {c,gc{gc}}}}""", project)
+    server.query("""mutation{createP(data:{p:"p", c: {create:{c: "c", gc :{create:{gc: "gc"}}}}}){p, c {c, gc{gc}}}}""", project)
+    server.query("""mutation{createP(data:{p:"p2", c: {create:{c: "c2", gc :{create:{gc: "gc2"}}}}}){p, c {c,gc{gc}}}}""", project)
 
-    server.executeQuerySimpleThatMustFail(
+    server.queryThatMustFail(
       """mutation{updateP(where: {p:"p"}, data: { c: {delete: true}}){id}}""",
       project,
       errorCode = 3042,
       errorContains = "The change you are trying to make would violate the required relation '_CToP' between C and P"
     )
 
-    server.executeQuerySimple("""query{ps{p, c {c, gc{gc}}}}""", project).toString should be(
+    server.query("""query{ps{p, c {c, gc{gc}}}}""", project).toString should be(
       """{"data":{"ps":[{"p":"p","c":{"c":"c","gc":{"gc":"gc"}}},{"p":"p2","c":{"c":"c2","gc":{"gc":"gc2"}}}]}}""")
-    server.executeQuerySimple("""query{cs{c, gc{gc}, p {p}}}""", project).toString should be(
+    server.query("""query{cs{c, gc{gc}, p {p}}}""", project).toString should be(
       """{"data":{"cs":[{"c":"c","gc":{"gc":"gc"},"p":{"p":"p"}},{"c":"c2","gc":{"gc":"gc2"},"p":{"p":"p2"}}]}}""")
-    server.executeQuerySimple("""query{gCs{gc, c {c, p{p}}}}""", project).toString should be(
+    server.query("""query{gCs{gc, c {c, p{p}}}}""", project).toString should be(
       """{"data":{"gCs":[{"gc":"gc","c":{"c":"c","p":{"p":"p"}}},{"gc":"gc2","c":{"c":"c2","p":{"p":"p2"}}}]}}""")
 
     database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "_RelayId").as[Int]) should be(Vector(6))

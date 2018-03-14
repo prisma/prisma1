@@ -122,7 +122,6 @@ object DatabaseMutationBuilder {
                    oldColumnName: String,
                    newColumnName: String,
                    newIsRequired: Boolean,
-                   newIsUnique: Boolean,
                    newIsList: Boolean,
                    newTypeIdentifier: TypeIdentifier) = {
     val nulls   = if (newIsRequired) { "NOT NULL" } else { "NULL" }

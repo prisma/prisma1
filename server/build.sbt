@@ -3,6 +3,8 @@ import com.typesafe.sbt.git.ConsoleGitRunner
 import sbt.Keys.name
 import sbt._
 
+import scala.io.Source
+
 name := "server"
 Revolver.settings
 
@@ -41,6 +43,7 @@ lazy val commonSettings = versionSettings ++ Seq(
 )
 
 lazy val commonServerSettings = commonSettings ++ Seq(libraryDependencies ++= commonServerDependencies)
+lazy val prerunHookFile = new java.io.File(sys.props("user.dir") + "/prerun_hook.sh")
 
 def commonDockerImageSettings(imageName: String) = commonServerSettings ++ Seq(
   imageNames in docker := Seq(
@@ -52,10 +55,17 @@ def commonDockerImageSettings(imageName: String) = commonServerSettings ++ Seq(
 
     new Dockerfile {
       from("anapsix/alpine-java")
-      entryPoint(s"$targetDir/bin/${executableScriptName.value}")
+      copy(appDir, targetDir)
+      copy(prerunHookFile , s"$targetDir/prerun_hook.sh")
+      runShell(s"touch", s"$targetDir/start.sh")
+      runShell("echo", "#!/usr/bin/env bash", ">>", s"$targetDir/start.sh")
+      runShell("echo", "set -e", ">>", s"$targetDir/start.sh")
+      runShell("echo", s".$targetDir/prerun_hook.sh", ">>", s"$targetDir/start.sh")
+      runShell("echo", s".$targetDir/bin/${executableScriptName.value}", ">>" ,s"$targetDir/start.sh")
+      runShell(s"chmod", "+x", s"$targetDir/start.sh")
       env("COMMIT_SHA", sys.env.getOrElse("COMMIT_SHA", sys.error("Env var COMMIT_SHA required but not found.")))
       env("CLUSTER_VERSION", sys.env.getOrElse("CLUSTER_VERSION", sys.error("Env var CLUSTER_VERSION required but not found.")))
-      copy(appDir, targetDir)
+      entryPointShell(s"$targetDir/start.sh")
     }
   },
   javaOptions in Universal ++= Seq(
@@ -75,6 +85,7 @@ def imageProject(name: String, imageName: String): Project = imageProject(name).
 def imageProject(name: String): Project = Project(id = name, base = file(s"./images/$name"))
 def serverProject(name: String): Project = Project(id = name, base = file(s"./servers/$name")).settings(commonServerSettings: _*).dependsOn(scalaUtils)
 def connectorProject(name: String): Project =  Project(id = name, base = file(s"./connectors/$name")).settings(commonSettings: _*).dependsOn(scalaUtils)
+def integrationTestProject(name: String): Project =  Project(id = name, base = file(s"./integration-tests/$name")).settings(commonSettings: _*)
 def libProject(name: String): Project =  Project(id = name, base = file(s"./libs/$name")).settings(commonSettings: _*)
 def normalProject(name: String): Project = Project(id = name, base = file(s"./$name")).settings(commonSettings: _*)
 
@@ -177,6 +188,15 @@ lazy val sharedModels = normalProject("shared-models")
     cuid
   ) ++ joda
 )
+
+// ####################
+//   INTEGRATION TESTS
+// ####################
+
+lazy val integrationTestsMySql = integrationTestProject("integration-tests-mysql")
+  .dependsOn(deploy % "compile;test->test")
+  .dependsOn(api % "compile;test->test")
+  .dependsOn(deployConnectorMySql)
 
 // ####################
 //       LIBS
@@ -328,13 +348,18 @@ val allLibProjects = List(
   sangriaUtils
 )
 
-lazy val libs = (project in file("libs")).aggregate(allLibProjects.map(Project.projectToRef): _*)
+val allIntegrationTestProjects = List(
+  integrationTestsMySql
+)
+
 lazy val images = (project in file("images")).aggregate(allDockerImageProjects.map(Project.projectToRef): _*)
-lazy val connectors = (project in file("connectors")).aggregate(allConnectorProjects.map(Project.projectToRef): _*)
 lazy val servers = (project in file("servers")).aggregate(allServerProjects.map(Project.projectToRef): _*)
+lazy val connectors = (project in file("connectors")).aggregate(allConnectorProjects.map(Project.projectToRef): _*)
+lazy val integrationTests = (project in file("integration-tests")).aggregate(allConnectorProjects.map(Project.projectToRef): _*)
+lazy val libs = (project in file("libs")).aggregate(allLibProjects.map(Project.projectToRef): _*)
 
 lazy val root = (project in file("."))
-  .aggregate((allServerProjects ++ allDockerImageProjects ++ allConnectorProjects).map(Project.projectToRef): _*)
+  .aggregate((allServerProjects ++ allDockerImageProjects ++ allConnectorProjects ++ allIntegrationTestProjects).map(Project.projectToRef): _*)
   .settings(
     publish := { } // do not publish a JAR for the root project
   )

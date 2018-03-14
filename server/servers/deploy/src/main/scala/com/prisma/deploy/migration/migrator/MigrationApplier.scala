@@ -91,15 +91,15 @@ case class MigrationApplierImpl(
 
   def applyStep(previousSchema: Schema, migration: Migration, step: MigrationStep): Future[Unit] = {
     migrationStepMapper.mutactionFor(previousSchema, migration.schema, step) match {
-      case Some(mutaction) => executeClientMutaction(mutaction)
-      case None            => Future.unit
+      case x if x.isEmpty => Future.unit
+      case list           => Future.sequence(list.map(executeClientMutaction)).map(_ => ())
     }
   }
 
   def unapplyStep(previousSchema: Schema, migration: Migration, step: MigrationStep): Future[Unit] = {
     migrationStepMapper.mutactionFor(previousSchema, migration.schema, step) match {
-      case Some(mutaction) => executeClientMutactionRollback(mutaction)
-      case None            => Future.unit
+      case x if x.isEmpty => Future.unit
+      case list           => Future.sequence(list.map(executeClientMutactionRollback)).map(_ => ())
     }
   }
 

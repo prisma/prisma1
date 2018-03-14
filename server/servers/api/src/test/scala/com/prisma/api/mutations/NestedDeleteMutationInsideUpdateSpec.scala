@@ -15,7 +15,7 @@ class NestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matchers with A
     database.setup(project)
 
     val res = server
-      .executeQuerySimple(
+      .query(
         """mutation {
           |  createParent(data: {
           |    p: "p1"
@@ -36,7 +36,7 @@ class NestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matchers with A
 
     database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "_ChildToParent").as[Int]) should be(Vector(1))
 
-    server.executeQuerySimpleThatMustFail(
+    server.queryThatMustFail(
       s"""
          |mutation {
          |  updateParent(
@@ -67,7 +67,7 @@ class NestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matchers with A
     database.setup(project)
 
     val res = server
-      .executeQuerySimple(
+      .query(
         """mutation {
           |  createParent(data: {
           |    p: "p1"
@@ -89,7 +89,7 @@ class NestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matchers with A
 
     database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "_ParentToChild").as[Int]) should be(Vector(1))
 
-    server.executeQuerySimpleThatMustFail(
+    server.queryThatMustFail(
       s"""
          |mutation {
          |  updateParent(
@@ -120,7 +120,7 @@ class NestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matchers with A
     database.setup(project)
 
     val res = server
-      .executeQuerySimple(
+      .query(
         """mutation {
           |  createParent(data: {
           |    p: "p1"
@@ -142,7 +142,7 @@ class NestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matchers with A
 
     database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "_ParentToChild").as[Int]) should be(Vector(1))
 
-    val res2 = server.executeQuerySimple(
+    val res2 = server.query(
       s"""
          |mutation {
          |  updateParent(
@@ -173,7 +173,7 @@ class NestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matchers with A
     database.setup(project)
 
     val child1Id = server
-      .executeQuerySimple(
+      .query(
         """mutation {
           |  createChild(data: {c: "c1"})
           |  {
@@ -185,7 +185,7 @@ class NestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matchers with A
       .pathAsString("data.createChild.id")
 
     val parent1Id = server
-      .executeQuerySimple(
+      .query(
         """mutation {
           |  createParent(data: {p: "p1"})
           |  {
@@ -198,7 +198,7 @@ class NestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matchers with A
 
     database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "_ParentToChild").as[Int]) should be(Vector(0))
 
-    val res = server.executeQuerySimpleThatMustFail(
+    val res = server.queryThatMustFail(
       s"""
          |mutation {
          |  updateParent(
@@ -230,7 +230,7 @@ class NestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matchers with A
     }
     database.setup(project)
 
-    server.executeQuerySimple(
+    server.query(
       """mutation {
         |  createParent(data: {
         |    p: "p1"
@@ -248,7 +248,7 @@ class NestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matchers with A
 
     database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "_ParentToChild").as[Int]) should be(Vector(1))
 
-    server.executeQuerySimple(
+    server.query(
       s"""
          |mutation {
          |  updateParent(
@@ -277,7 +277,7 @@ class NestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matchers with A
     }
     database.setup(project)
 
-    server.executeQuerySimple(
+    server.query(
       """mutation {
         |  createParent(data: {
         |    p: "p1"
@@ -295,7 +295,7 @@ class NestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matchers with A
 
     database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "_ChildToParent").as[Int]) should be(Vector(1))
 
-    server.executeQuerySimple(
+    server.query(
       s"""
          |mutation {
          |  updateParent(
@@ -325,7 +325,7 @@ class NestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matchers with A
     database.setup(project)
 
     server
-      .executeQuerySimple(
+      .query(
         """mutation {
           |  createParent(data: {
           |    p: "p1"
@@ -343,7 +343,7 @@ class NestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matchers with A
 
     database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "_ParentToChild").as[Int]) should be(Vector(2))
 
-    val res = server.executeQuerySimple(
+    val res = server.query(
       s"""
          |mutation {
          |  updateParent(
@@ -374,7 +374,7 @@ class NestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matchers with A
     }
     database.setup(project)
 
-    server.executeQuerySimple(
+    server.query(
       """mutation {
         |  createParent(data: {
         |    p: "p1"
@@ -392,7 +392,7 @@ class NestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matchers with A
 
     database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "_ChildToParent").as[Int]) should be(Vector(1))
 
-    server.executeQuerySimpleThatMustFail(
+    server.queryThatMustFail(
       s"""
          |mutation {
          |  updateParent(
@@ -420,7 +420,7 @@ class NestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matchers with A
     }
     database.setup(project)
 
-    server.executeQuerySimple(
+    server.query(
       """mutation {
         |  createParent(data: {
         |    p: "p1"
@@ -438,7 +438,7 @@ class NestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matchers with A
 
     database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "_ChildToParent").as[Int]) should be(Vector(1))
 
-    val res = server.executeQuerySimple(
+    val res = server.query(
       s"""
          |mutation {
          |  updateParent(
@@ -457,7 +457,7 @@ class NestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matchers with A
 
     res.toString should be("""{"data":{"updateParent":{"childOpt":null}}}""")
 
-    server.executeQuerySimple(s"""query{children{c, parentsOpt{p}}}""", project).toString should be("""{"data":{"children":[]}}""")
+    server.query(s"""query{children{c, parentsOpt{p}}}""", project).toString should be("""{"data":{"children":[]}}""")
 
     database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "_ChildToParent").as[Int]) should be(Vector(0))
   }
@@ -469,7 +469,7 @@ class NestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matchers with A
     }
     database.setup(project)
 
-    server.executeQuerySimple(
+    server.query(
       """mutation {
         |  createParent(data: {
         |    p: "p1"
@@ -487,7 +487,7 @@ class NestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matchers with A
 
     database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "_ChildToParent").as[Int]) should be(Vector(2))
 
-    val res = server.executeQuerySimple(
+    val res = server.query(
       s"""
          |mutation {
          |  updateParent(
@@ -506,7 +506,7 @@ class NestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matchers with A
 
     res.toString should be("""{"data":{"updateParent":{"childrenOpt":[]}}}""")
 
-    server.executeQuerySimple(s"""query{children{c, parentsOpt{p}}}""", project).toString should be("""{"data":{"children":[]}}""")
+    server.query(s"""query{children{c, parentsOpt{p}}}""", project).toString should be("""{"data":{"children":[]}}""")
 
     database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "_ChildToParent").as[Int]) should be(Vector(0))
   }
@@ -519,7 +519,7 @@ class NestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matchers with A
     }
     database.setup(project)
 
-    server.executeQuerySimple(
+    server.query(
       """mutation {
         |  createReqOther(data: {
         |    r: "r1"
@@ -535,7 +535,7 @@ class NestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matchers with A
 
     database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "_ReqOtherToChild").as[Int]) should be(Vector(1))
 
-    server.executeQuerySimple(
+    server.query(
       """mutation {
         |  createParent(data: {
         |    p: "p1"
@@ -551,7 +551,7 @@ class NestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matchers with A
 
     database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "_ChildToParent").as[Int]) should be(Vector(1))
 
-    server.executeQuerySimpleThatMustFail(
+    server.queryThatMustFail(
       s"""
          |mutation {
          |  updateParent(
@@ -584,7 +584,7 @@ class NestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matchers with A
     }
     database.setup(project)
 
-    server.executeQuerySimple(
+    server.query(
       """mutation {
         |  createOptOther(data: {
         |    o: "o1"
@@ -600,7 +600,7 @@ class NestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matchers with A
 
     database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "_OptOtherToChild").as[Int]) should be(Vector(1))
 
-    server.executeQuerySimple(
+    server.query(
       """mutation {
         |  createParent(data: {
         |    p: "p1"
@@ -616,7 +616,7 @@ class NestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matchers with A
 
     database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "_ChildToParent").as[Int]) should be(Vector(1))
 
-    val res = server.executeQuerySimple(
+    val res = server.query(
       s"""
          |mutation {
          |  updateParent(
@@ -635,7 +635,7 @@ class NestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matchers with A
 
     res.toString should be("""{"data":{"updateParent":{"childrenOpt":[]}}}""")
 
-    server.executeQuerySimple(s"""query{children{c, parentsOpt{p}}}""", project).toString should be("""{"data":{"children":[]}}""")
+    server.query(s"""query{children{c, parentsOpt{p}}}""", project).toString should be("""{"data":{"children":[]}}""")
 
     database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "_ChildToParent").as[Int]) should be(Vector(0))
     database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "_OptOtherToChild").as[Int]) should be(Vector(0))
@@ -648,7 +648,7 @@ class NestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matchers with A
     }
     database.setup(project)
 
-    val createResult = server.executeQuerySimple(
+    val createResult = server.query(
       """mutation {
         |  createTodo(
         |    data: {
@@ -668,7 +668,7 @@ class NestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matchers with A
     val comment1Id = createResult.pathAsString("data.createTodo.comments.[0].id")
     val comment2Id = createResult.pathAsString("data.createTodo.comments.[1].id")
 
-    val result = server.executeQuerySimple(
+    val result = server.query(
       s"""mutation {
          |  updateTodo(
          |    where: {
@@ -691,7 +691,7 @@ class NestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matchers with A
 
     mustBeEqual(result.pathAsJsValue("data.updateTodo.comments").toString, """[]""")
 
-    val query = server.executeQuerySimple("""{ comments { id }}""", project)
+    val query = server.query("""{ comments { id }}""", project)
     mustBeEqual(query.toString, """{"data":{"comments":[]}}""")
     database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "_RelayId").as[Int]) should be(Vector(1))
 
@@ -704,7 +704,7 @@ class NestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matchers with A
     }
     database.setup(project)
 
-    val createResult = server.executeQuerySimple(
+    val createResult = server.query(
       """mutation {
         |  createTodo(
         |    data: {
@@ -721,7 +721,7 @@ class NestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matchers with A
     )
     val todoId = createResult.pathAsString("data.createTodo.id")
 
-    val result = server.executeQuerySimple(
+    val result = server.query(
       s"""mutation {
          |  updateTodo(
          |    where: {
@@ -744,7 +744,7 @@ class NestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matchers with A
 
     mustBeEqual(result.pathAsJsValue("data.updateTodo.comments").toString, """[]""")
 
-    val query = server.executeQuerySimple("""{ comments { id }}""", project)
+    val query = server.query("""{ comments { id }}""", project)
     mustBeEqual(query.toString, """{"data":{"comments":[]}}""")
     database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "_RelayId").as[Int]) should be(Vector(1))
 
@@ -757,7 +757,7 @@ class NestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matchers with A
     }
     database.setup(project)
 
-    val createResult = server.executeQuerySimple(
+    val createResult = server.query(
       """mutation {
         |  createTodo(
         |    data: {
@@ -775,7 +775,7 @@ class NestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matchers with A
     val todoId    = createResult.pathAsString("data.createTodo.id")
     val commentId = createResult.pathAsString("data.createTodo.comments.[0].id")
 
-    val result = server.executeQuerySimple(
+    val result = server.query(
       s"""
          |mutation {
          |  updateComment(
@@ -798,7 +798,7 @@ class NestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matchers with A
     )
     mustBeEqual(result.pathAsJsValue("data.updateComment").toString, """{"todo":null}""")
 
-    val query = server.executeQuerySimple("""{ todoes { id }}""", project)
+    val query = server.query("""{ todoes { id }}""", project)
     mustBeEqual(query.toString, """{"data":{"todoes":[]}}""")
   }
 
@@ -809,7 +809,7 @@ class NestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matchers with A
     }
     database.setup(project)
 
-    val createResult = server.executeQuerySimple(
+    val createResult = server.query(
       """mutation { 
         |  createNote(
         |    data: {
@@ -827,7 +827,7 @@ class NestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matchers with A
     val noteId = createResult.pathAsString("data.createNote.id")
     val todoId = createResult.pathAsString("data.createNote.todo.id")
 
-    val result = server.executeQuerySimple(
+    val result = server.query(
       s"""
          |mutation {
          |  updateNote(
@@ -850,7 +850,7 @@ class NestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matchers with A
     )
     mustBeEqual(result.pathAsJsValue("data.updateNote").toString, """{"todo":null}""")
 
-    val query = server.executeQuerySimple("""{ todoes { id }}""", project)
+    val query = server.query("""{ todoes { id }}""", project)
     mustBeEqual(query.toString, """{"data":{"todoes":[]}}""")
   }
 
@@ -861,7 +861,7 @@ class NestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matchers with A
     }
     database.setup(project)
 
-    val createResult = server.executeQuerySimple(
+    val createResult = server.query(
       """mutation {
         |  createNote(
         |    data: {
@@ -877,7 +877,7 @@ class NestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matchers with A
       project
     )
 
-    val result = server.executeQuerySimple(
+    val result = server.query(
       s"""
          |mutation {
          |  updateNote(
@@ -901,10 +901,10 @@ class NestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matchers with A
 
     mustBeEqual(result.pathAsJsValue("data.updateNote").toString, """{"todo":null}""")
 
-    val query = server.executeQuerySimple("""{ todoes { id }}""", project)
+    val query = server.query("""{ todoes { id }}""", project)
     mustBeEqual(query.toString, """{"data":{"todoes":[]}}""")
 
-    val query2 = server.executeQuerySimple("""{ notes { text }}""", project)
+    val query2 = server.query("""{ notes { text }}""", project)
     mustBeEqual(query2.toString, """{"data":{"notes":[{"text":"FirstUnique"}]}}""")
   }
 
@@ -915,7 +915,7 @@ class NestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matchers with A
     }
     database.setup(project)
 
-    val createResult = server.executeQuerySimple(
+    val createResult = server.query(
       """mutation {
         |  createNote(
         |    data: {
@@ -930,7 +930,7 @@ class NestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matchers with A
     )
     val noteId = createResult.pathAsString("data.createNote.id")
 
-    val result = server.executeQuerySimpleThatMustFail(
+    val result = server.queryThatMustFail(
       s"""
          |mutation {
          |  updateNote(
@@ -953,10 +953,10 @@ class NestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matchers with A
         s"The relation TodoToNote has no node for the model Note with the value '$noteId' for the field 'id' connected to a node for the model Todo on your mutation path."
     )
 
-    val query = server.executeQuerySimple("""{ todoes { title }}""", project)
+    val query = server.query("""{ todoes { title }}""", project)
     mustBeEqual(query.toString, """{"data":{"todoes":[]}}""")
 
-    val query2 = server.executeQuerySimple("""{ notes { text }}""", project)
+    val query2 = server.query("""{ notes { text }}""", project)
     mustBeEqual(query2.toString, """{"data":{"notes":[{"text":"Note"}]}}""")
   }
 
@@ -1006,7 +1006,7 @@ class NestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matchers with A
         |}
       """.stripMargin
 
-    server.executeQuerySimple(createMutation, project)
+    server.query(createMutation, project)
 
     val updateMutation =
       s"""mutation b {
@@ -1035,7 +1035,7 @@ class NestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matchers with A
          |}
       """.stripMargin
 
-    val result = server.executeQuerySimple(updateMutation, project)
+    val result = server.query(updateMutation, project)
 
     result.toString should be(
       """{"data":{"updateTop":{"nameTop":"updated top","middles":[{"nameMiddle":"updated middle","bottoms":[{"nameBottom":"the second bottom"}]},{"nameMiddle":"the second middle","bottoms":[{"nameBottom":"the third bottom"},{"nameBottom":"the fourth bottom"}]}]}}}""")
@@ -1085,7 +1085,7 @@ class NestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matchers with A
         |}
       """.stripMargin
 
-    server.executeQuerySimple(createMutation, project)
+    server.query(createMutation, project)
 
     val updateMutation =
       s"""mutation b {
@@ -1114,7 +1114,7 @@ class NestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matchers with A
          |}
       """.stripMargin
 
-    val result = server.executeQuerySimple(updateMutation, project)
+    val result = server.query(updateMutation, project)
 
     result.toString should be(
       """{"data":{"updateTop":{"nameTop":"updated top","middles":[{"nameMiddle":"updated middle","bottoms":[{"nameBottom":"the second bottom"}]},{"nameMiddle":"the second middle","bottoms":[{"nameBottom":"the third bottom"},{"nameBottom":"the fourth bottom"}]}]}}}""")
@@ -1162,7 +1162,7 @@ class NestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matchers with A
         |}
       """.stripMargin
 
-    server.executeQuerySimple(createMutation, project)
+    server.query(createMutation, project)
 
     val updateMutation =
       s"""mutation b {
@@ -1191,7 +1191,7 @@ class NestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matchers with A
          |}
       """.stripMargin
 
-    val result = server.executeQuerySimple(updateMutation, project)
+    val result = server.query(updateMutation, project)
 
     result.toString should be(
       """{"data":{"updateTop":{"nameTop":"updated top","middles":[{"nameMiddle":"updated middle","bottom":null},{"nameMiddle":"the second middle","bottom":{"nameBottom":"the second bottom"}}]}}}""")
@@ -1241,7 +1241,7 @@ class NestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matchers with A
         |}
       """.stripMargin
 
-    server.executeQuerySimple(createMutation, project)
+    server.query(createMutation, project)
 
     val updateMutation =
       s"""mutation b {
@@ -1279,7 +1279,7 @@ class NestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matchers with A
          |}
       """.stripMargin
 
-    val result = server.executeQuerySimple(updateMutation, project)
+    val result = server.query(updateMutation, project)
 
     result.toString should be(
       """{"data":{"updateTop":{"nameTop":"updated top","middle":{"nameMiddle":"updated middle","bottom":{"nameBottom":"updated bottom","below":[{"nameBelow":"second below"}]}}}}}""")
@@ -1326,7 +1326,7 @@ class NestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matchers with A
         |}
       """.stripMargin
 
-    server.executeQuerySimple(createMutation, project)
+    server.query(createMutation, project)
 
     val updateMutation =
       s"""
@@ -1356,7 +1356,7 @@ class NestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matchers with A
          |}
       """.stripMargin
 
-    val result = server.executeQuerySimple(updateMutation, project)
+    val result = server.query(updateMutation, project)
 
     result.toString should be("""{"data":{"updateTop":{"nameTop":"updated top","middle":{"nameMiddle":"updated middle","bottom":null}}}}""")
   }
@@ -1400,7 +1400,7 @@ class NestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matchers with A
         |}
       """.stripMargin
 
-    server.executeQuerySimple(createMutation, project)
+    server.query(createMutation, project)
 
     val updateMutation =
       s"""
@@ -1430,7 +1430,7 @@ class NestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matchers with A
          |}
       """.stripMargin
 
-    val result = server.executeQuerySimple(updateMutation, project)
+    val result = server.query(updateMutation, project)
 
     result.toString should be("""{"data":{"updateTop":{"nameTop":"updated top","middle":{"nameMiddle":"updated middle","bottom":null}}}}""")
   }

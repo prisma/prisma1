@@ -3,7 +3,6 @@ package com.prisma.api.schema
 import akka.actor.ActorSystem
 import com.prisma.api.connector.DataItem
 import com.prisma.api.mutations._
-import com.prisma.api.mutations.mutations._
 import com.prisma.api.resolver.DeferredTypes.{ManyModelDeferred, OneDeferred}
 import com.prisma.api.{ApiDependencies, ApiMetrics}
 import com.prisma.shared.models.{Model, Project}

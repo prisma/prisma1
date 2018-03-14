@@ -61,17 +61,17 @@ class OptionalBackRelationImportExportSpec extends FlatSpec with Matchers with A
     importer.executeImport(nodes).await(5)
     importer.executeImport(relations).await(5)
 
-    val res0 = server.executeQuerySimple("query{model0s{id, a}}", project).toString
+    val res0 = server.query("query{model0s{id, a}}", project).toString
     res0 should be("""{"data":{"model0s":[{"id":"0","a":"test"},{"id":"3","a":"test"},{"id":"4","a":"test"},{"id":"5","a":"test"},{"id":"6","a":"test"}]}}""")
 
-    val res1 = server.executeQuerySimple("query{model1s{id, a}}", project).toString
+    val res1 = server.query("query{model1s{id, a}}", project).toString
     res1 should be("""{"data":{"model1s":[{"id":"1","a":"test"}]}}""")
 
-    val rel0 = server.executeQuerySimple("query{model0s{id, model0self{id}}}", project).toString
+    val rel0 = server.query("query{model0s{id, model0self{id}}}", project).toString
     rel0 should be(
       """{"data":{"model0s":[{"id":"0","model0self":null},{"id":"3","model0self":{"id":"4"}},{"id":"4","model0self":null},{"id":"5","model0self":{"id":"6"}},{"id":"6","model0self":null}]}}""")
 
-    val rel1 = server.executeQuerySimple("query{model1s{id, model0{id}}}", project).toString
+    val rel1 = server.query("query{model1s{id, model0{id}}}", project).toString
     rel1 should be("""{"data":{"model1s":[{"id":"1","model0":{"id":"0"}}]}}""")
   }
 
@@ -97,17 +97,17 @@ class OptionalBackRelationImportExportSpec extends FlatSpec with Matchers with A
     importer.executeImport(nodes).await(5)
     importer.executeImport(relations).await(5)
 
-    val res0 = server.executeQuerySimple("query{model0s{id, a}}", project).toString
+    val res0 = server.query("query{model0s{id, a}}", project).toString
     res0 should be("""{"data":{"model0s":[{"id":"0","a":"test"},{"id":"3","a":"test"},{"id":"4","a":"test"},{"id":"5","a":"test"},{"id":"6","a":"test"}]}}""")
 
-    val res1 = server.executeQuerySimple("query{model1s{id, a}}", project).toString
+    val res1 = server.query("query{model1s{id, a}}", project).toString
     res1 should be("""{"data":{"model1s":[{"id":"1","a":"test"}]}}""")
 
-    val rel0 = server.executeQuerySimple("query{model0s{id, model0self{id}}}", project).toString
+    val rel0 = server.query("query{model0s{id, model0self{id}}}", project).toString
     rel0 should be(
       """{"data":{"model0s":[{"id":"0","model0self":null},{"id":"3","model0self":{"id":"4"}},{"id":"4","model0self":null},{"id":"5","model0self":{"id":"6"}},{"id":"6","model0self":null}]}}""")
 
-    val rel1 = server.executeQuerySimple("query{model1s{id, model0{id}}}", project).toString
+    val rel1 = server.query("query{model1s{id, model0{id}}}", project).toString
     rel1 should be("""{"data":{"model1s":[{"id":"1","model0":{"id":"0"}}]}}""")
   }
 
