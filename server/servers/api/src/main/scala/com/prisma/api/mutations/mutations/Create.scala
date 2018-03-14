@@ -39,7 +39,7 @@ case class Create(
   }
 
   def prepareMutactions(): Future[PreparedMutactions] = {
-    val createMutactionsResult = SqlMutactions(dataResolver).getMutactionsForCreate(model, coolArgs, id).toVector
+    val createMutactionsResult = DatabaseMutactions(project).getMutactionsForCreate(model, coolArgs, id).toVector
     val subscriptionMutactions = SubscriptionEvents.extractFromSqlMutactions(project, mutationId, createMutactionsResult)
     val sssActions             = ServerSideSubscriptionExtractor.extractFromMutactions(project, createMutactionsResult, requestId)
 

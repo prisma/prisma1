@@ -1,7 +1,6 @@
 package com.prisma.api.mutations
 import com.prisma.api.ApiMetrics
 import com.prisma.api.connector._
-import com.prisma.api.database.DataResolver
 import com.prisma.api.schema.APIErrors.RelationIsRequired
 import com.prisma.shared.models.IdType.Id
 import com.prisma.shared.models.{Field, Model, Project}
@@ -17,8 +16,7 @@ case class CreateMutactionsResult(
   def allMutactions: Vector[DatabaseMutaction] = Vector(createMutaction) ++ scalarListMutactions ++ nestedMutactions
 }
 
-case class SqlMutactions(dataResolver: DataResolver) {
-  val project: Project = dataResolver.project
+case class DatabaseMutactions(project: Project) {
 
   def report[T](mutactions: Seq[T]): Seq[T] = {
     ApiMetrics.mutactionCount.incBy(mutactions.size, project.id)

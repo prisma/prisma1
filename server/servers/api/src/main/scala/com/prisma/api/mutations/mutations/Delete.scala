@@ -44,7 +44,7 @@ case class Delete(
       }
       .map { _ =>
         val itemToDelete           = deletedItemOpt.getOrElse(throw APIErrors.NodeNotFoundForWhereError(where))
-        val sqlMutactions          = SqlMutactions(dataResolver).getMutactionsForDelete(Path.empty(where), itemToDelete, itemToDelete.id).toVector
+        val sqlMutactions          = DatabaseMutactions(project).getMutactionsForDelete(Path.empty(where), itemToDelete, itemToDelete.id).toVector
         val subscriptionMutactions = SubscriptionEvents.extractFromSqlMutactions(project, mutationId, sqlMutactions)
         val sssActions             = ServerSideSubscriptionExtractor.extractFromMutactions(project, sqlMutactions, requestId)
 
