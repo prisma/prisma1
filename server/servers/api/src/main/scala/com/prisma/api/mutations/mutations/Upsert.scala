@@ -3,8 +3,8 @@ package com.prisma.api.mutations.mutations
 import com.prisma.api.ApiDependencies
 import com.prisma.api.connector.{NodeSelector, Path}
 import com.prisma.api.database.DataResolver
+import com.prisma.api.mutactions.{DatabaseMutactions, ServerSideSubscriptions, SubscriptionEvents}
 import com.prisma.api.mutations._
-import com.prisma.api.mutations.mutactions.ServerSideSubscriptionExtractor
 import com.prisma.shared.models.{Model, Project}
 import cool.graph.cuid.Cuid
 import sangria.schema
@@ -37,7 +37,7 @@ case class Upsert(
   override def prepareMutactions(): Future[PreparedMutactions] = {
     val sqlMutactions          = DatabaseMutactions(project).getMutactionsForUpsert(path, createWhere, updatedWhere, CoolArgs(args.raw)).toVector
     val subscriptionMutactions = SubscriptionEvents.extractFromSqlMutactions(project, mutationId, sqlMutactions)
-    val sssActions             = ServerSideSubscriptionExtractor.extractFromMutactions(project, sqlMutactions, requestId = "")
+    val sssActions             = ServerSideSubscriptions.extractFromMutactions(project, sqlMutactions, requestId = "")
 
     Future.successful {
       PreparedMutactions(

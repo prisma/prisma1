@@ -5,8 +5,8 @@ import akka.stream.ActorMaterializer
 import com.prisma.api.ApiDependencies
 import com.prisma.api.connector.NodeSelector
 import com.prisma.api.database.DataResolver
+import com.prisma.api.mutactions.{DatabaseMutactions, ServerSideSubscriptions, SubscriptionEvents}
 import com.prisma.api.mutations._
-import com.prisma.api.mutations.mutactions.ServerSideSubscriptionExtractor
 import com.prisma.shared.models.IdType.Id
 import com.prisma.shared.models._
 import cool.graph.cuid.Cuid
@@ -41,7 +41,7 @@ case class Create(
   def prepareMutactions(): Future[PreparedMutactions] = {
     val createMutactionsResult = DatabaseMutactions(project).getMutactionsForCreate(model, coolArgs, id).toVector
     val subscriptionMutactions = SubscriptionEvents.extractFromSqlMutactions(project, mutationId, createMutactionsResult)
-    val sssActions             = ServerSideSubscriptionExtractor.extractFromMutactions(project, createMutactionsResult, requestId)
+    val sssActions             = ServerSideSubscriptions.extractFromMutactions(project, createMutactionsResult, requestId)
 
     Future.successful {
       PreparedMutactions(

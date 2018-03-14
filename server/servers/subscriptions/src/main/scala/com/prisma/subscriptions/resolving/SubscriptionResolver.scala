@@ -3,7 +3,7 @@ package com.prisma.subscriptions.resolving
 import java.util.concurrent.TimeUnit
 
 import com.prisma.api.connector.DataItem
-import com.prisma.api.mutations.GraphcoolDataTypes
+import com.prisma.api.mutactions.GraphcoolDataTypes
 import com.prisma.shared.models.ModelMutationType.ModelMutationType
 import com.prisma.shared.models.{Model, ModelMutationType, Project}
 import com.prisma.subscriptions.{SubscriptionDependencies, SubscriptionExecutor}

@@ -5,8 +5,8 @@ import akka.stream.ActorMaterializer
 import com.prisma.api.ApiDependencies
 import com.prisma.api.connector.{DataItem, NodeSelector, Path}
 import com.prisma.api.database.DataResolver
+import com.prisma.api.mutactions.{DatabaseMutactions, ServerSideSubscriptions, SubscriptionEvents}
 import com.prisma.api.mutations._
-import com.prisma.api.mutations.mutactions.ServerSideSubscriptionExtractor
 import com.prisma.api.schema.APIErrors
 import com.prisma.shared.models.{Model, Project}
 import sangria.schema
@@ -45,7 +45,7 @@ case class Update(
 
         val sqlMutactions          = DatabaseMutactions(project).getMutactionsForUpdate(Path.empty(where), coolArgs, dataItem.id, validatedDataItem).toVector
         val subscriptionMutactions = SubscriptionEvents.extractFromSqlMutactions(project, mutationId, sqlMutactions)
-        val sssActions             = ServerSideSubscriptionExtractor.extractFromMutactions(project, sqlMutactions, requestId = "")
+        val sssActions             = ServerSideSubscriptions.extractFromMutactions(project, sqlMutactions, requestId = "")
 
         PreparedMutactions(
           databaseMutactions = sqlMutactions.toVector,
