@@ -1,9 +1,9 @@
-package com.prisma.api.database.import_export
+package com.prisma.api.import_export
 
 import com.prisma.api.ApiDependencies
 import com.prisma.api.connector.CoolArgs
-import com.prisma.api.database.import_export.ImportExport.MyJsonProtocol._
-import com.prisma.api.database.import_export.ImportExport._
+import com.prisma.api.import_export.ImportExport.MyJsonProtocol._
+import com.prisma.api.import_export.ImportExport._
 import com.prisma.api.database.{DatabaseMutationBuilder, ProjectRelayId, ProjectRelayIdTable}
 import cool.graph.cuid.Cuid
 import com.prisma.shared.models._

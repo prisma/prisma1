@@ -1,4 +1,4 @@
-package com.prisma.api.database.import_export
+package com.prisma.api.import_export
 
 import com.prisma.api.connector.DataItem
 import com.prisma.api.database.DataResolver

@@ -5,7 +5,7 @@ import akka.http.scaladsl.model._
 import com.prisma.errors.{ErrorReporter, ProjectMetadata}
 import com.prisma.api.ApiDependencies
 import com.prisma.api.database.DataResolver
-import com.prisma.api.database.import_export.{BulkExport, BulkImport}
+import com.prisma.api.import_export.{BulkExport, BulkImport}
 import com.prisma.api.project.ProjectFetcher
 import com.prisma.api.schema.APIErrors.InvalidToken
 import com.prisma.api.schema._

@@ -2,14 +2,13 @@ package com.prisma.api.import_export
 
 import com.prisma.api.ApiBaseSpec
 import com.prisma.api.database.DataResolver
-import com.prisma.api.database.import_export.ImportExport.{Cursor, ExportRequest, ResultFormat}
-import com.prisma.api.database.import_export.{BulkExport, BulkImport}
+import com.prisma.api.import_export.ImportExport.MyJsonProtocol._
+import com.prisma.api.import_export.ImportExport.{Cursor, ExportRequest, ResultFormat}
 import com.prisma.shared.models.Project
 import com.prisma.shared.schema_dsl.SchemaDsl
 import com.prisma.utils.await.AwaitUtils
 import org.scalatest.{FlatSpec, Matchers}
 import spray.json._
-import com.prisma.api.database.import_export.ImportExport.MyJsonProtocol._
 
 class ExportDataDateTimeFormatSpec extends FlatSpec with Matchers with ApiBaseSpec with AwaitUtils {
 
