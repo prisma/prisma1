@@ -22,7 +22,6 @@ import scala.concurrent.Future
 
 case class DataResolver(project: Project, useMasterDatabaseOnly: Boolean = false)(implicit apiDependencies: ApiDependencies) {
   import scala.concurrent.ExecutionContext.Implicits.global
-  import SlickExtensions._
   import DatabaseQueryBuilder.{GetDataItem, GetScalarListValue}
 
   def masterClientDatabase: MySQLProfile.backend.DatabaseDef = apiDependencies.databases.master
