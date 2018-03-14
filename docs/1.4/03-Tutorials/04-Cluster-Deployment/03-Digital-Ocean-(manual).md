@@ -3,7 +3,6 @@ alias: texoo6aemu
 description: Learn how to deploy your Prisma database service to Digital Ocean manually.
 ---
 
-
 # Digital Ocean (manual)
 
 This section describes how to set up a fully functioning Prisma server on Digital Ocean in less than 20 minutes.
@@ -158,7 +157,7 @@ Hooks:
 
 Running $ graphql prepare...
 
-Your GraphQL database endpoint is live:
+Your Prisma database service endpoint is live:
 
   HTTP:  http://37.139.15.166:4466/demo/dev
   WS:    ws://37.139.15.166:4466/demo/dev
