@@ -4,6 +4,7 @@ import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
 import com.prisma.api.connector.{ApiConnector, DatabaseMutactionExecutor}
 import com.prisma.api.database.{DataResolver, Databases}
+import com.prisma.api.mutactions.SideEffectMutactionExecutor
 import com.prisma.api.project.ProjectFetcher
 import com.prisma.api.resolver.DeferredResolverProvider
 import com.prisma.api.schema.{ApiUserContext, SchemaBuilder}
@@ -32,6 +33,7 @@ trait ApiDependencies extends AwaitUtils {
   def webhookPublisher: QueuePublisher[Webhook]
   def apiConnector: ApiConnector
   def databaseMutactionExecutor: DatabaseMutactionExecutor = apiConnector.databaseMutactionExecutor
+  def sideEffectMutactionExecutor: SideEffectMutactionExecutor
 
   implicit lazy val executionContext: ExecutionContext  = system.dispatcher
   implicit lazy val reporter: ErrorReporter             = BugsnagErrorReporter(sys.env("BUGSNAG_API_KEY"))

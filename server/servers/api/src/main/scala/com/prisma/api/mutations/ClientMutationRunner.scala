@@ -3,6 +3,7 @@ package com.prisma.api.mutations
 import com.prisma.api.ApiMetrics
 import com.prisma.api.connector.DatabaseMutactionExecutor
 import com.prisma.api.database.mutactions._
+import com.prisma.api.mutactions.SideEffectMutactionExecutor
 import com.prisma.api.schema.GeneralError
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -12,21 +13,15 @@ object ClientMutationRunner {
 
   def run[T](
       clientMutation: ClientMutation[T],
-      databaseMutactionExecutor: DatabaseMutactionExecutor
+      databaseMutactionExecutor: DatabaseMutactionExecutor,
+      sideEffectMutactionExecutor: SideEffectMutactionExecutor
   ): Future[T] = {
     for {
       preparedMutactions <- clientMutation.prepareMutactions()
       errors             = verifyMutactions(preparedMutactions)
       _                  = if (errors.nonEmpty) throw errors.head
-      executionResults   <- performMutactions(preparedMutactions, clientMutation.projectId, databaseMutactionExecutor)
-      dataItem <- {
-        executionResults
-          .filter(_.isInstanceOf[GeneralError])
-          .map(_.asInstanceOf[GeneralError]) match {
-          case errors if errors.nonEmpty => throw errors.head
-          case _                         => clientMutation.getReturnValue
-        }
-      }
+      _                  <- performMutactions(preparedMutactions, clientMutation.projectId, databaseMutactionExecutor, sideEffectMutactionExecutor)
+      dataItem           <- clientMutation.getReturnValue
     } yield dataItem
   }
 
@@ -40,18 +35,18 @@ object ClientMutationRunner {
   private def performMutactions(
       preparedMutactions: PreparedMutactions,
       projectId: String,
-      databaseMutactionExecutor: DatabaseMutactionExecutor
-  ): Future[Vector[MutactionExecutionResult]] = {
-    // todo: execute SideEffectMutactions
+      databaseMutactionExecutor: DatabaseMutactionExecutor,
+      sideEffectMutactionExecutor: SideEffectMutactionExecutor
+  ): Future[Unit] = {
     for {
       _ <- databaseMutactionExecutor.execute(preparedMutactions.databaseMutactions)
-//      sideEffectResults <- performInParallel(preparedMutactions.sideEffectMutactions, projectId)
-    } yield Vector.empty
+      _ <- sideEffectMutactionExecutor.execute(preparedMutactions.sideEffectMutactions)
+    } yield ()
   }
-
-  private def performInParallel(mutactions: Vector[Mutaction], projectId: String): Future[Vector[MutactionExecutionResult]] = {
-    Future.sequence(mutactions.map(m => runWithTiming(m, projectId)))
-  }
+//
+//  private def performInParallel(mutactions: Vector[Mutaction], projectId: String): Future[Vector[MutactionExecutionResult]] = {
+//    Future.sequence(mutactions.map(m => runWithTiming(m, projectId)))
+//  }
 
   private def runWithTiming(mutaction: Mutaction, projectId: String): Future[MutactionExecutionResult] = {
     performWithTiming(
