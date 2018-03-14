@@ -3,8 +3,7 @@ package com.prisma.api.mutations
 import com.prisma.api.ApiMetrics
 import com.prisma.api.connector.DatabaseMutactionExecutor
 import com.prisma.api.database.mutactions._
-import com.prisma.api.mutactions.SideEffectMutactionExecutor
-import com.prisma.api.schema.GeneralError
+import com.prisma.api.mutactions.{DatabaseMutactionVerifier, SideEffectMutactionExecutor}
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
@@ -14,22 +13,16 @@ object ClientMutationRunner {
   def run[T](
       clientMutation: ClientMutation[T],
       databaseMutactionExecutor: DatabaseMutactionExecutor,
-      sideEffectMutactionExecutor: SideEffectMutactionExecutor
+      sideEffectMutactionExecutor: SideEffectMutactionExecutor,
+      databaseMutactionVerifier: DatabaseMutactionVerifier
   ): Future[T] = {
     for {
       preparedMutactions <- clientMutation.prepareMutactions()
-      errors             = verifyMutactions(preparedMutactions)
+      errors             = databaseMutactionVerifier.verify(preparedMutactions.databaseMutactions)
       _                  = if (errors.nonEmpty) throw errors.head
       _                  <- performMutactions(preparedMutactions, clientMutation.projectId, databaseMutactionExecutor, sideEffectMutactionExecutor)
       dataItem           <- clientMutation.getReturnValue
     } yield dataItem
-  }
-
-  private def verifyMutactions(preparedMutactions: PreparedMutactions): Vector[GeneralError] = {
-//    val verifications = preparedMutactions.allMutactions.map(_.verify())
-//    val errors        = verifications.collect { case Failure(x: GeneralError) => x }
-//    errors
-    Vector.empty
   }
 
   private def performMutactions(
@@ -43,10 +36,6 @@ object ClientMutationRunner {
       _ <- sideEffectMutactionExecutor.execute(preparedMutactions.sideEffectMutactions)
     } yield ()
   }
-//
-//  private def performInParallel(mutactions: Vector[Mutaction], projectId: String): Future[Vector[MutactionExecutionResult]] = {
-//    Future.sequence(mutactions.map(m => runWithTiming(m, projectId)))
-//  }
 
   private def runWithTiming(mutaction: Mutaction, projectId: String): Future[MutactionExecutionResult] = {
     performWithTiming(

@@ -17,6 +17,7 @@ case class PrivateSchemaBuilder(
   val masterDataResolver          = apiDependencies.masterDataResolver(project)
   val databaseMutactionExecutor   = apiDependencies.databaseMutactionExecutor
   val sideEffectMutactionExecutor = apiDependencies.sideEffectMutactionExecutor
+  val mutactionVerifier           = apiDependencies.mutactionVerifier
 
   import system.dispatcher
 
@@ -48,7 +49,7 @@ case class PrivateSchemaBuilder(
       fieldType = OptionType(BooleanType),
       resolve = (ctx) => {
         val mutation = ResetData(project = project, dataResolver = masterDataResolver)
-        ClientMutationRunner.run(mutation, databaseMutactionExecutor, sideEffectMutactionExecutor).map(_ => true)
+        ClientMutationRunner.run(mutation, databaseMutactionExecutor, sideEffectMutactionExecutor, mutactionVerifier).map(_ => true)
       }
     )
   }
