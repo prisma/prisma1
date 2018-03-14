@@ -38,7 +38,8 @@ subscriptions:
     query: |
       subscription {
         user(where: {
-          mutation_in: [UPDATED]
+          mutation_in: [UPDATED],
+          updatedFields_contains: "email"
         }) {
           node {
             name
