@@ -1,4 +1,4 @@
-package com.prisma.api.database.mutactions.validation
+package com.prisma.api.mutactions.validation
 
 import com.prisma.api.database.DatabaseConstraints
 import com.prisma.api.mutations.CoolArgs

@@ -1,7 +1,7 @@
 package com.prisma.api.mutactions
 
 import com.prisma.api.connector._
-import com.prisma.api.database.mutactions.validation.InputValueValidation
+import com.prisma.api.mutactions.validation.InputValueValidation
 import com.prisma.api.mutations.CoolArgs
 import com.prisma.api.schema.APIErrors.ClientApiError
 import com.prisma.api.schema.GeneralError
