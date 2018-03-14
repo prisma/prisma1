@@ -7,7 +7,7 @@ import com.prisma.shared.models.ModelMutationType.ModelMutationType
 import com.prisma.shared.models.{Field, Model, Project, ServerSideSubscriptionFunction}
 
 sealed trait ApiMutaction
-sealed trait DatabaseMutaction   extends ApiMutaction // by default transactionally?
+sealed trait DatabaseMutaction   extends ApiMutaction
 sealed trait SideEffectMutaction extends ApiMutaction
 
 case class AddDataItemToManyRelationByPath(project: Project, path: Path)   extends DatabaseMutaction

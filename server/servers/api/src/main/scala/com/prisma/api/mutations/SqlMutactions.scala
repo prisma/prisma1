@@ -1,10 +1,7 @@
 package com.prisma.api.mutations
 import com.prisma.api.ApiMetrics
 import com.prisma.api.connector._
-//import com.prisma.api.database.mutactions.mutactions.DeleteRelationMutaction
-//import com.prisma.api.database.mutactions.mutactions._
-//import com.prisma.api.database.mutactions.{ClientSqlDataChangeMutaction, ClientSqlMutaction}
-import com.prisma.api.database.{DataResolver, DatabaseMutationBuilder}
+import com.prisma.api.database.DataResolver
 import com.prisma.api.schema.APIErrors.RelationIsRequired
 import com.prisma.shared.models.IdType.Id
 import com.prisma.shared.models.{Field, Model, Project}
@@ -23,15 +20,14 @@ case class CreateMutactionsResult(
 case class SqlMutactions(dataResolver: DataResolver) {
   val project: Project = dataResolver.project
 
-  // TODO: FIX THIS SHIT
   def report[T](mutactions: Seq[T]): Seq[T] = {
     ApiMetrics.mutactionCount.incBy(mutactions.size, project.id)
     mutactions
   }
 
   def getMutactionsForDelete(path: Path, previousValues: DataItem, id: String): Seq[DatabaseMutaction] = report {
-    List(VerifyWhere(project, path.root)) ++ generateCascadingDeleteMutactions(path) ++ List(DeleteRelationCheck(project, path),
-                                                                                             DeleteDataItem(project, path, previousValues, id))
+    List(VerifyWhere(project, path.root)) ++ generateCascadingDeleteMutactions(path) ++
+      List(DeleteRelationCheck(project, path), DeleteDataItem(project, path, previousValues, id))
   }
 
   def getMutactionsForUpdate(path: Path, args: CoolArgs, id: Id, previousValues: DataItem): Seq[DatabaseMutaction] = report {
