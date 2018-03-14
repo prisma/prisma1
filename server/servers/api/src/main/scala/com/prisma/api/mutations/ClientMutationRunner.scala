@@ -1,12 +1,9 @@
 package com.prisma.api.mutations
 
-import com.prisma.api.ApiMetrics
 import com.prisma.api.connector.DatabaseMutactionExecutor
-import com.prisma.api.database.mutactions._
 import com.prisma.api.mutactions.{DatabaseMutactionVerifier, SideEffectMutactionExecutor}
 
-import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
 
 object ClientMutationRunner {
 
@@ -15,7 +12,7 @@ object ClientMutationRunner {
       databaseMutactionExecutor: DatabaseMutactionExecutor,
       sideEffectMutactionExecutor: SideEffectMutactionExecutor,
       databaseMutactionVerifier: DatabaseMutactionVerifier
-  ): Future[T] = {
+  )(implicit ec: ExecutionContext): Future[T] = {
     for {
       preparedMutactions <- clientMutation.prepareMutactions()
       errors             = databaseMutactionVerifier.verify(preparedMutactions.databaseMutactions)
@@ -30,7 +27,7 @@ object ClientMutationRunner {
       projectId: String,
       databaseMutactionExecutor: DatabaseMutactionExecutor,
       sideEffectMutactionExecutor: SideEffectMutactionExecutor
-  ): Future[Unit] = {
+  )(implicit ec: ExecutionContext): Future[Unit] = {
     for {
       _ <- databaseMutactionExecutor.execute(preparedMutactions.databaseMutactions)
       _ <- sideEffectMutactionExecutor.execute(preparedMutactions.sideEffectMutactions)
