@@ -2,8 +2,8 @@ package com.prisma.api
 
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
+import com.prisma.api.connector.mysql.database.{DataResolver, DataResolverImpl, Databases}
 import com.prisma.api.connector.{ApiConnector, DatabaseMutactionExecutor}
-import com.prisma.api.connector.mysql.database.{DataResolverImpl, Databases}
 import com.prisma.api.mutactions.{DatabaseMutactionVerifier, SideEffectMutactionExecutor}
 import com.prisma.api.project.ProjectFetcher
 import com.prisma.api.resolver.DeferredResolverProvider
@@ -46,9 +46,9 @@ trait ApiDependencies extends AwaitUtils {
   val sssEventsPubSub: PubSub[String]
   lazy val sssEventsPublisher: PubSubPublisher[String] = sssEventsPubSub
 
-  def dataResolver(project: Project): DataResolverImpl       = DataResolverImpl(project, databases.readOnly)
-  def masterDataResolver(project: Project): DataResolverImpl = DataResolverImpl(project, databases.master)
-  def deferredResolverProvider(project: Project)             = new DeferredResolverProvider[ApiUserContext](dataResolver(project))
+  def dataResolver(project: Project): DataResolver       = DataResolverImpl(project, databases.readOnly)
+  def masterDataResolver(project: Project): DataResolver = DataResolverImpl(project, databases.master)
+  def deferredResolverProvider(project: Project)         = new DeferredResolverProvider[ApiUserContext](dataResolver(project))
 
   def destroy = {
     println("ApiDependencies [DESTROY]")

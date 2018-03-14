@@ -1,7 +1,7 @@
 package com.prisma.api.import_export
 
 import com.prisma.api.connector.DataItem
-import com.prisma.api.connector.mysql.database.DataResolverImpl
+import com.prisma.api.connector.mysql.database.DataResolver
 import com.prisma.shared.models.{Model, Project, Relation}
 import spray.json.{DefaultJsonProtocol, JsArray, JsBoolean, JsFalse, JsNull, JsNumber, JsObject, JsString, JsTrue, JsValue, JsonFormat, RootJsonFormat}
 
@@ -34,13 +34,13 @@ package object ImportExport {
       case info: RelationInfo => info.copy(cursor = info.cursor.copy(table = info.cursor.table + 1, row = 0))
     }
   }
-  case class NodeInfo(dataResolver: DataResolverImpl, models: List[(Model, Int)], cursor: Cursor) extends ExportInfo {
+  case class NodeInfo(dataResolver: DataResolver, models: List[(Model, Int)], cursor: Cursor) extends ExportInfo {
     val length: Int         = models.length
     val hasNext: Boolean    = cursor.table < length - 1
     lazy val current: Model = models.find(_._2 == cursor.table).get._1
   }
 
-  case class ListInfo(dataResolver: DataResolverImpl, listFieldTables: List[(String, String, Int)], cursor: Cursor) extends ExportInfo {
+  case class ListInfo(dataResolver: DataResolver, listFieldTables: List[(String, String, Int)], cursor: Cursor) extends ExportInfo {
     val length: Int               = listFieldTables.length
     val hasNext: Boolean          = cursor.table < length - 1
     lazy val currentModel: String = listFieldTables.find(_._3 == cursor.table).get._1
@@ -48,7 +48,7 @@ package object ImportExport {
     lazy val currentTable: String = s"${currentModel}_$currentField"
   }
 
-  case class RelationInfo(dataResolver: DataResolverImpl, relations: List[(RelationData, Int)], cursor: Cursor) extends ExportInfo {
+  case class RelationInfo(dataResolver: DataResolver, relations: List[(RelationData, Int)], cursor: Cursor) extends ExportInfo {
     val length: Int                = relations.length
     val hasNext: Boolean           = cursor.table < length - 1
     lazy val current: RelationData = relations.find(_._2 == cursor.table).get._1

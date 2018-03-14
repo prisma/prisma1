@@ -6,7 +6,7 @@ import org.joda.time.format.DateTimeFormat
 import org.joda.time.{DateTime, DateTimeZone}
 import sangria.ast
 import sangria.schema._
-import sangria.validation.{ValueCoercionViolation}
+import sangria.validation.ValueCoercionViolation
 import spray.json._
 
 import scala.util.{Failure, Success, Try}

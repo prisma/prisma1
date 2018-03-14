@@ -1,11 +1,11 @@
 package com.prisma.api.resolver
 
-import com.prisma.api.connector.mysql.database.DataResolverImpl
-import DeferredTypes.{CountToManyDeferred, OrderedDeferred, OrderedDeferredFutureResult}
+import com.prisma.api.connector.mysql.database.DataResolver
+import com.prisma.api.resolver.DeferredTypes.{CountToManyDeferred, OrderedDeferred, OrderedDeferredFutureResult}
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
-class CountToManyDeferredResolver(dataResolver: DataResolverImpl) {
+class CountToManyDeferredResolver(dataResolver: DataResolver) {
   def resolve(orderedDeferreds: Vector[OrderedDeferred[CountToManyDeferred]]): Vector[OrderedDeferredFutureResult[Int]] = {
     val deferreds = orderedDeferreds.map(_.deferred)
 

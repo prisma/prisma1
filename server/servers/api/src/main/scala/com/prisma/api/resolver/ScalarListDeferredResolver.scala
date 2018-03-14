@@ -1,12 +1,12 @@
 package com.prisma.api.resolver
 
-import DeferredTypes._
-import com.prisma.api.connector.mysql.database.{DataResolverImpl, ScalarListValue}
+import com.prisma.api.connector.mysql.database.{DataResolver, ScalarListValue}
+import com.prisma.api.resolver.DeferredTypes._
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-class ScalarListDeferredResolver(dataResolver: DataResolverImpl) {
+class ScalarListDeferredResolver(dataResolver: DataResolver) {
   def resolve(orderedDeferreds: Vector[OrderedDeferred[ScalarListDeferred]]): Vector[OrderedDeferredFutureResult[ScalarListDeferredResultType]] = {
     val deferreds = orderedDeferreds.map(_.deferred)
 

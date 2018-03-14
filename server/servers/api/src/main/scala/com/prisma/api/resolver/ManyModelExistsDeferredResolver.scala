@@ -1,12 +1,12 @@
 package com.prisma.api.resolver
 
-import com.prisma.api.connector.mysql.database.DataResolverImpl
-import DeferredTypes.{ManyModelExistsDeferred, OrderedDeferred, OrderedDeferredFutureResult}
+import com.prisma.api.connector.mysql.database.DataResolver
+import com.prisma.api.resolver.DeferredTypes.{ManyModelExistsDeferred, OrderedDeferred, OrderedDeferredFutureResult}
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-class ManyModelExistsDeferredResolver(dataResolver: DataResolverImpl) {
+class ManyModelExistsDeferredResolver(dataResolver: DataResolver) {
   def resolve(orderedDeferreds: Vector[OrderedDeferred[ManyModelExistsDeferred]]): Vector[OrderedDeferredFutureResult[Boolean]] = {
     val deferreds = orderedDeferreds.map(_.deferred)
 

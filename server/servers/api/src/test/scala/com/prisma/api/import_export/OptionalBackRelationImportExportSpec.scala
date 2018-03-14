@@ -1,7 +1,7 @@
 package com.prisma.api.import_export
 
 import com.prisma.api.ApiBaseSpec
-import com.prisma.api.connector.mysql.database.DataResolverImpl
+import com.prisma.api.connector.mysql.database.DataResolver
 import com.prisma.api.import_export.ImportExport.MyJsonProtocol._
 import com.prisma.api.import_export.ImportExport.{Cursor, ExportRequest, ResultFormat}
 import com.prisma.shared.models.Project
@@ -34,9 +34,9 @@ class OptionalBackRelationImportExportSpec extends FlatSpec with Matchers with A
     database.truncate(project)
   }
 
-  val importer                       = new BulkImport(project)
-  val exporter                       = new BulkExport(project)
-  val dataResolver: DataResolverImpl = this.dataResolver(project)
+  val importer                   = new BulkImport(project)
+  val exporter                   = new BulkExport(project)
+  val dataResolver: DataResolver = this.dataResolver(project)
 
   "Relations without back relation" should "be able to be imported if one fieldName is null" in {
 

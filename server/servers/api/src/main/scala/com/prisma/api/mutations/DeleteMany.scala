@@ -1,9 +1,9 @@
 package com.prisma.api.mutations
 
 import com.prisma.api.ApiDependencies
-import com.prisma.api.connector.{DeleteDataItems, DeleteManyRelationChecks}
-import com.prisma.api.connector.mysql.database.DataResolverImpl
+import com.prisma.api.connector.mysql.database.DataResolver
 import com.prisma.api.connector.mysql.database.Types.DataItemFilterCollection
+import com.prisma.api.connector.{DeleteDataItems, DeleteManyRelationChecks}
 import com.prisma.shared.models.{Model, Project}
 
 import scala.concurrent.Future
@@ -12,7 +12,7 @@ case class DeleteMany(
     project: Project,
     model: Model,
     whereFilter: DataItemFilterCollection,
-    dataResolver: DataResolverImpl
+    dataResolver: DataResolver
 )(implicit apiDependencies: ApiDependencies)
     extends ClientMutation[BatchPayload] {
 

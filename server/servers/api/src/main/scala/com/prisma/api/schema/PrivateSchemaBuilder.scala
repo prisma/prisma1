@@ -3,8 +3,8 @@ package com.prisma.api.schema
 import akka.actor.ActorSystem
 import com.prisma.api.ApiDependencies
 import com.prisma.api.mutations.{ClientMutationRunner, ResetData}
-import com.prisma.subscriptions.schema.{SubscriptionQueryError, SubscriptionQueryValidator}
 import com.prisma.shared.models.{Model, Project}
+import com.prisma.subscriptions.schema.{SubscriptionQueryError, SubscriptionQueryValidator}
 import org.scalactic.{Bad, Good, Or}
 import sangria.schema.{Argument, BooleanType, Context, Field, ListType, ObjectType, OptionType, Schema, SchemaValidationRule, StringType}
 

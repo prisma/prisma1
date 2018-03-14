@@ -1,7 +1,7 @@
 package com.prisma.api.import_export
 
 import com.prisma.api.ApiBaseSpec
-import com.prisma.api.connector.mysql.database.DataResolverImpl
+import com.prisma.api.connector.mysql.database.DataResolver
 import com.prisma.api.import_export.ImportExport.MyJsonProtocol._
 import com.prisma.api.import_export.ImportExport.{Cursor, ExportRequest, ResultFormat}
 import com.prisma.shared.models.Project
@@ -22,7 +22,7 @@ class ExportDataDateTimeFormatSpec extends FlatSpec with Matchers with ApiBaseSp
 
     database.setup(project)
     database.truncate(project)
-    val dataResolver: DataResolverImpl = this.dataResolver(project)
+    val dataResolver: DataResolver = this.dataResolver(project)
 
     val nodes =
       """{ "valueType": "nodes", "values": [{"_typeName": "Model0", "id": "0","a": "test1", "b": 0, "createdAt": "2017-12-05T12:34:23.000Z", "updatedAt": "2017-12-05T12:34:23.000Z"}]}""".parseJson

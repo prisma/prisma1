@@ -4,9 +4,9 @@ import java.sql.Timestamp
 
 import com.prisma.api.ApiDependencies
 import com.prisma.api.connector.DataItem
+import com.prisma.api.connector.mysql.database.{DataResolver, QueryArguments}
 import com.prisma.api.import_export.ImportExport.MyJsonProtocol._
 import com.prisma.api.import_export.ImportExport._
-import com.prisma.api.connector.mysql.database.{DataResolverImpl, QueryArguments}
 import com.prisma.shared.models.IdType.Id
 import com.prisma.shared.models.{Project, TypeIdentifier}
 import org.joda.time.format.DateTimeFormat
@@ -20,7 +20,7 @@ class BulkExport(project: Project)(implicit apiDependencies: ApiDependencies) {
 
   val maxImportExportSize: Int = apiDependencies.maxImportExportSize
 
-  def executeExport(dataResolver: DataResolverImpl, json: JsValue): Future[JsValue] = {
+  def executeExport(dataResolver: DataResolver, json: JsValue): Future[JsValue] = {
 
     val start           = JsonBundle(Vector.empty, 0)
     val request         = json.convertTo[ExportRequest]

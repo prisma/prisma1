@@ -3,8 +3,8 @@ package com.prisma.api.mutations
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
 import com.prisma.api.ApiDependencies
+import com.prisma.api.connector.mysql.database.DataResolver
 import com.prisma.api.connector.{CoolArgs, NodeSelector}
-import com.prisma.api.connector.mysql.database.DataResolverImpl
 import com.prisma.api.mutactions.{DatabaseMutactions, ServerSideSubscriptions, SubscriptionEvents}
 import com.prisma.shared.models.IdType.Id
 import com.prisma.shared.models._
@@ -18,7 +18,7 @@ case class Create(
     model: Model,
     project: Project,
     args: schema.Args,
-    dataResolver: DataResolverImpl
+    dataResolver: DataResolver
 )(implicit apiDependencies: ApiDependencies)
     extends SingleItemClientMutation {
 

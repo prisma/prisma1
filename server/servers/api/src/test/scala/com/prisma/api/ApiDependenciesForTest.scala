@@ -7,9 +7,9 @@ import com.prisma.api.connector.mysql.database.Databases
 import com.prisma.api.mutactions.{DatabaseMutactionVerifierImpl, SideEffectMutactionExecutorImpl}
 import com.prisma.api.project.ProjectFetcher
 import com.prisma.api.schema.SchemaBuilder
-import com.prisma.subscriptions.Webhook
 import com.prisma.messagebus.pubsub.inmemory.InMemoryAkkaPubSub
 import com.prisma.messagebus.testkits.InMemoryQueueTestKit
+import com.prisma.subscriptions.Webhook
 
 case class ApiDependenciesForTest()(implicit val system: ActorSystem, val materializer: ActorMaterializer) extends ApiDependencies {
   override implicit def self: ApiDependencies = this

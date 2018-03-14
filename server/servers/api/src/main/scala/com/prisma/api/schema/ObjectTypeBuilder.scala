@@ -1,22 +1,22 @@
 package com.prisma.api.schema
 
 import com.prisma.api.connector.DataItem
-import com.prisma.api.schema.CustomScalarTypes.{DateTimeType, JsonType}
-import com.prisma.api.connector.mysql.database._
-import com.prisma.api.resolver.DeferredTypes._
 import com.prisma.api.connector.mysql.database.Types.DataItemFilterCollection
+import com.prisma.api.connector.mysql.database._
 import com.prisma.api.mutations.BatchPayload
+import com.prisma.api.resolver.DeferredTypes._
 import com.prisma.api.resolver.{IdBasedConnection, IdBasedConnectionDefinition}
+import com.prisma.api.schema.CustomScalarTypes.{DateTimeType, JsonType}
 import com.prisma.shared.models
 import com.prisma.shared.models.{Field, Model, TypeIdentifier}
-import org.joda.time.{DateTime, DateTimeZone}
 import org.joda.time.format.DateTimeFormat
+import org.joda.time.{DateTime, DateTimeZone}
 import sangria.schema.{Field => SangriaField, _}
 import spray.json.DefaultJsonProtocol._
 import spray.json.{JsValue, _}
 
-import scala.util.{Failure, Success, Try}
 import scala.concurrent.ExecutionContext.Implicits.global
+import scala.util.{Failure, Success, Try}
 
 class ObjectTypeBuilder(
     project: models.Project,
