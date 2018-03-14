@@ -36,10 +36,13 @@ subscriptions:
         Content-Type: application/json
         Authorization: Bearer cha2eiheiphesash3shoofo7eceexaequeebuyaequ1reishiujuu6weisao7ohc
     query: |
-      subscription {
-        user(where: {
-          mutation_in: [UPDATED]
-        }) {
+      {
+        user(
+          where: {
+            mutation_in: [UPDATED],
+            updatedFields_contains: "email"
+          }
+        ) {
           node {
             name
             email
