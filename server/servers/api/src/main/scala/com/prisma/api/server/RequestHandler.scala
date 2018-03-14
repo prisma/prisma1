@@ -3,7 +3,7 @@ package com.prisma.api.server
 import akka.http.scaladsl.model.StatusCodes.OK
 import akka.http.scaladsl.model._
 import com.prisma.api.ApiDependencies
-import com.prisma.api.database.DataResolver
+import com.prisma.api.connector.mysql.database.DataResolver
 import com.prisma.api.import_export.{BulkExport, BulkImport}
 import com.prisma.api.project.ProjectFetcher
 import com.prisma.api.schema.APIErrors.InvalidToken

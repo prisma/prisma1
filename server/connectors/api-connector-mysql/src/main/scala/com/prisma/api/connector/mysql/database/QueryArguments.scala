@@ -1,8 +1,8 @@
-package com.prisma.api.database
+package com.prisma.api.connector.mysql.database
 
 import com.prisma.api.connector.DataItem
-import com.prisma.api.database.DatabaseQueryBuilder.{ResultListTransform, ResultTransform}
-import com.prisma.api.database.Types.DataItemFilterCollection
+import com.prisma.api.connector.mysql.database.DatabaseQueryBuilder.{ResultListTransform, ResultTransform}
+import com.prisma.api.connector.mysql.database.Types.DataItemFilterCollection
 import com.prisma.api.schema.APIErrors
 import com.prisma.api.schema.APIErrors.{InvalidFirstArgument, InvalidLastArgument, InvalidSkipArgument}
 import com.prisma.shared.models.{Field, TypeIdentifier}

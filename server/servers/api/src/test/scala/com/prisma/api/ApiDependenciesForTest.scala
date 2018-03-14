@@ -3,7 +3,7 @@ package com.prisma.api
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
 import com.prisma.api.connector.mysql.ApiConnectorImpl
-import com.prisma.api.database.Databases
+import com.prisma.api.connector.mysql.database.Databases
 import com.prisma.api.mutactions.{DatabaseMutactionVerifierImpl, SideEffectMutactionExecutorImpl}
 import com.prisma.api.project.ProjectFetcher
 import com.prisma.api.schema.SchemaBuilder

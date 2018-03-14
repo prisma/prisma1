@@ -4,7 +4,7 @@ import java.sql.SQLException
 
 import com.prisma.api.connector.mysql.DatabaseMutactionInterpreter
 import com.prisma.api.connector.{ModelEdge, NodeEdge, Path}
-import com.prisma.api.database.DatabaseMutationBuilder._
+import com.prisma.api.connector.mysql.database.DatabaseMutationBuilder._
 import com.prisma.api.schema.APIErrors.RequiredRelationWouldBeViolated
 import com.prisma.shared.models.Project
 import com.prisma.util.gc_value.OtherGCStuff.parameterString

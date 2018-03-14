@@ -4,9 +4,13 @@ import java.sql.{SQLException, SQLIntegrityConstraintViolationException}
 
 import com.prisma.api.connector._
 import com.prisma.api.connector.mysql.DatabaseMutactionInterpreter
-import com.prisma.api.database.DatabaseMutationBuilder.{cascadingDeleteChildActions, oldParentFailureTriggerByField, oldParentFailureTriggerByFieldAndFilter}
+import com.prisma.api.connector.mysql.database.DatabaseMutationBuilder.{
+  cascadingDeleteChildActions,
+  oldParentFailureTriggerByField,
+  oldParentFailureTriggerByFieldAndFilter
+}
 import GetFieldFromSQLUniqueException.getFieldOption
-import com.prisma.api.database.{DatabaseMutationBuilder, ProjectRelayId, ProjectRelayIdTable}
+import com.prisma.api.connector.mysql.database.{DatabaseMutationBuilder, ProjectRelayId, ProjectRelayIdTable}
 import com.prisma.api.schema.APIErrors
 import com.prisma.api.schema.APIErrors.RequiredRelationWouldBeViolated
 import com.prisma.shared.models.{Field, Relation}

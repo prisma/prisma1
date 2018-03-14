@@ -3,7 +3,7 @@ package com.prisma.api
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
 import com.prisma.api.connector.{ApiConnector, DatabaseMutactionExecutor}
-import com.prisma.api.database.{DataResolver, Databases}
+import com.prisma.api.connector.mysql.database.{DataResolver, Databases}
 import com.prisma.api.mutactions.{DatabaseMutactionVerifier, SideEffectMutactionExecutor}
 import com.prisma.api.project.ProjectFetcher
 import com.prisma.api.resolver.DeferredResolverProvider

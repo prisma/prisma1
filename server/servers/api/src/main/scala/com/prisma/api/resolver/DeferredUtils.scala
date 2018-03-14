@@ -1,7 +1,7 @@
 package com.prisma.api.resolver
 
 import DeferredTypes._
-import com.prisma.api.database.QueryArguments
+import com.prisma.api.connector.mysql.database.QueryArguments
 import com.prisma.shared.models.IdType.Id
 import com.prisma.shared.models.{Field, Model}
 import sangria.execution.deferred.Deferred

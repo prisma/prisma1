@@ -1,6 +1,6 @@
 package com.prisma.api.resolver
 
-import com.prisma.api.database.DataResolver
+import com.prisma.api.connector.mysql.database.DataResolver
 import DeferredTypes.{CountManyModelDeferred, OrderedDeferred, OrderedDeferredFutureResult}
 
 class CountManyModelDeferredResolver(dataResolver: DataResolver) {

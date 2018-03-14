@@ -1,4 +1,4 @@
-package com.prisma.api.database
+package com.prisma.api.connector.mysql.database
 
 import com.typesafe.config.Config
 import slick.jdbc.MySQLProfile.api._

@@ -1,7 +1,7 @@
 package com.prisma.api.resolver
 
 import com.prisma.api.connector.DataItem
-import com.prisma.api.database.QueryArguments
+import com.prisma.api.connector.mysql.database.QueryArguments
 import com.prisma.shared.models.{Field, Model}
 import sangria.execution.deferred.Deferred
 

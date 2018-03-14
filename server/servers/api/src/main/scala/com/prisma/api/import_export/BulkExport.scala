@@ -6,7 +6,7 @@ import com.prisma.api.ApiDependencies
 import com.prisma.api.connector.DataItem
 import com.prisma.api.import_export.ImportExport.MyJsonProtocol._
 import com.prisma.api.import_export.ImportExport._
-import com.prisma.api.database.{DataResolver, QueryArguments}
+import com.prisma.api.connector.mysql.database.{DataResolver, QueryArguments}
 import com.prisma.shared.models.IdType.Id
 import com.prisma.shared.models.{Project, TypeIdentifier}
 import org.joda.time.format.DateTimeFormat

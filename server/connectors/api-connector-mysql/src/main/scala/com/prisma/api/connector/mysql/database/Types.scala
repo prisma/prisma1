@@ -1,7 +1,7 @@
-package com.prisma.api.database
+package com.prisma.api.connector.mysql.database
 
 import com.prisma.api.connector.DataItem
-import com.prisma.api.database.Types.{DataItemFilterCollection}
+import com.prisma.api.connector.mysql.database.Types.{DataItemFilterCollection}
 import com.prisma.shared.models.IdType.Id
 import com.prisma.shared.models.{Field, Model, Relation}
 import sangria.relay.Node

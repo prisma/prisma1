@@ -1,7 +1,7 @@
 package com.prisma.api.import_export
 
 import com.prisma.api.ApiBaseSpec
-import com.prisma.api.database.DataResolver
+import com.prisma.api.connector.mysql.database.DataResolver
 import com.prisma.api.import_export.ImportExport.MyJsonProtocol._
 import com.prisma.api.import_export.ImportExport.{Cursor, ExportRequest, ResultFormat}
 import com.prisma.shared.models.Project

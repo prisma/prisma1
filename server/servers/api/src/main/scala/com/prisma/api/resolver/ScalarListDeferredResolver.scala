@@ -1,7 +1,7 @@
 package com.prisma.api.resolver
 
 import DeferredTypes._
-import com.prisma.api.database.{DataResolver, ScalarListValue}
+import com.prisma.api.connector.mysql.database.{DataResolver, ScalarListValue}
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future

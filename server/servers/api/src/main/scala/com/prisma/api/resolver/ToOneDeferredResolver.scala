@@ -2,7 +2,7 @@ package com.prisma.api.resolver
 
 import DeferredTypes.{OneDeferredResultType, OrderedDeferred, OrderedDeferredFutureResult, ToOneDeferred}
 import com.prisma.api.connector.DataItem
-import com.prisma.api.database.DataResolver
+import com.prisma.api.connector.mysql.database.DataResolver
 import com.prisma.shared.models.Project
 
 import scala.concurrent.ExecutionContext.Implicits.global

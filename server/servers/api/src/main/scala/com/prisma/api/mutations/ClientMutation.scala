@@ -1,7 +1,7 @@
 package com.prisma.api.mutations
 
 import com.prisma.api.connector.{DataItem, DatabaseMutaction, NodeSelector, SideEffectMutaction}
-import com.prisma.api.database.DataResolver
+import com.prisma.api.connector.mysql.database.DataResolver
 import com.prisma.shared.models.IdType.Id
 import cool.graph.cuid.Cuid
 

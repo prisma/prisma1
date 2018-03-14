@@ -1,4 +1,4 @@
-package com.prisma.api.database
+package com.prisma.api.connector.mysql.database
 
 import com.prisma.shared.models.Field
 

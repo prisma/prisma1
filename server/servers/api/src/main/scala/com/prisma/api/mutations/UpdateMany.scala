@@ -2,8 +2,8 @@ package com.prisma.api.mutations
 
 import com.prisma.api.ApiDependencies
 import com.prisma.api.connector.{CoolArgs, UpdateDataItems}
-import com.prisma.api.database.DataResolver
-import com.prisma.api.database.Types.DataItemFilterCollection
+import com.prisma.api.connector.mysql.database.DataResolver
+import com.prisma.api.connector.mysql.database.Types.DataItemFilterCollection
 import com.prisma.shared.models.{Model, Project}
 import sangria.schema
 

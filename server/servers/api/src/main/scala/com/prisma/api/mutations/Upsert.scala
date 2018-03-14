@@ -2,7 +2,7 @@ package com.prisma.api.mutations
 
 import com.prisma.api.ApiDependencies
 import com.prisma.api.connector.{CoolArgs, NodeSelector, Path}
-import com.prisma.api.database.DataResolver
+import com.prisma.api.connector.mysql.database.DataResolver
 import com.prisma.api.mutactions.{DatabaseMutactions, ServerSideSubscriptions, SubscriptionEvents}
 import com.prisma.shared.models.{Model, Project}
 import cool.graph.cuid.Cuid

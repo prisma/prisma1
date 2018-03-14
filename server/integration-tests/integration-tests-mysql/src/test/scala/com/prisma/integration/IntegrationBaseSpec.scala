@@ -2,7 +2,7 @@ package com.prisma.integration
 
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
-import com.prisma.api.database.DataResolver
+import com.prisma.api.connector.mysql.database.DataResolver
 import com.prisma.api.util.StringMatchers
 import com.prisma.api.{ApiDependenciesForTest, ApiTestDatabase, ApiTestServer}
 import com.prisma.deploy.specutils.{DeployTestDependencies, DeployTestServer}
