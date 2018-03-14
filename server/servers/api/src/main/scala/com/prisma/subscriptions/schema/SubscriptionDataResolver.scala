@@ -1,6 +1,6 @@
 package com.prisma.subscriptions.schema
 
-import com.prisma.api.connector.mysql.database.DataResolver
+import com.prisma.api.connector.mysql.database.DataResolverImpl
 import com.prisma.api.schema.{ObjectTypeBuilder, SimpleResolveOutput}
 import com.prisma.subscriptions.SubscriptionUserContext
 import com.prisma.subscriptions.resolving.FilteredResolver
@@ -12,7 +12,7 @@ import scala.concurrent.Future
 
 object SubscriptionDataResolver {
 
-  def resolve(dataResolver: DataResolver,
+  def resolve(dataResolver: DataResolverImpl,
               modelObjectTypes: ObjectTypeBuilder,
               model: Model,
               ctx: Context[SubscriptionUserContext, Unit]): Future[Option[SimpleResolveOutput]] = {

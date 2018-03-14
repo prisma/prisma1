@@ -2,7 +2,7 @@ package com.prisma.subscriptions.resolving
 
 import com.prisma.api.connector.DataItem
 import com.prisma.api.connector.mysql.database.Types.DataItemFilterCollection
-import com.prisma.api.connector.mysql.database.{DataResolver, FilterElement, QueryArguments}
+import com.prisma.api.connector.mysql.database.{DataResolverImpl, FilterElement, QueryArguments}
 import com.prisma.api.schema.ObjectTypeBuilder
 import com.prisma.shared.models.Model
 import sangria.schema.Context
@@ -16,7 +16,7 @@ object FilteredResolver {
       model: Model,
       id: String,
       ctx: Context[_, Unit],
-      dataResolver: DataResolver
+      dataResolver: DataResolverImpl
   ): Future[Option[DataItem]] = {
 
     val filterInput: DataItemFilterCollection = modelObjectTypes

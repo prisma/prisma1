@@ -2,12 +2,12 @@ package com.prisma.api.mutations
 
 import com.prisma.api.ApiDependencies
 import com.prisma.api.connector.{DataItem, DisableForeignKeyConstraintChecks, EnableForeignKeyConstraintChecks, TruncateTable}
-import com.prisma.api.connector.mysql.database.DataResolver
+import com.prisma.api.connector.mysql.database.DataResolverImpl
 import com.prisma.shared.models._
 
 import scala.concurrent.Future
 
-case class ResetData(project: Project, dataResolver: DataResolver)(implicit apiDependencies: ApiDependencies) extends SingleItemClientMutation {
+case class ResetData(project: Project, dataResolver: DataResolverImpl)(implicit apiDependencies: ApiDependencies) extends SingleItemClientMutation {
 
   override def prepareMutactions(): Future[PreparedMutactions] = {
     val disableChecks   = Vector(DisableForeignKeyConstraintChecks)

@@ -1,7 +1,7 @@
 package com.prisma.api.import_export
 
 import com.prisma.api.ApiBaseSpec
-import com.prisma.api.connector.mysql.database.DataResolver
+import com.prisma.api.connector.mysql.database.DataResolverImpl
 import com.prisma.api.import_export.ImportExport.MyJsonProtocol._
 import com.prisma.api.import_export.ImportExport.{Cursor, ExportRequest, ResultFormat}
 import com.prisma.shared.models.Project
@@ -22,7 +22,7 @@ class ImportJsonFormatSpec extends FlatSpec with Matchers with ApiBaseSpec with 
 
     database.setup(project)
     database.truncate(project)
-    val dataResolver: DataResolver = this.dataResolver(project)
+    val dataResolver: DataResolverImpl = this.dataResolver(project)
 
     val nodes =
       ("""{ "valueType": "nodes", "values": [""" +

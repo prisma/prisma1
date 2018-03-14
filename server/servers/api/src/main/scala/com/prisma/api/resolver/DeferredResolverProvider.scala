@@ -1,13 +1,13 @@
 package com.prisma.api.resolver
 
-import com.prisma.api.connector.mysql.database.DataResolver
+import com.prisma.api.connector.mysql.database.DataResolverImpl
 import DeferredTypes._
 import sangria.execution.deferred.{Deferred, DeferredResolver}
 
 import scala.concurrent.{ExecutionContext, Future}
 import scala.language.reflectiveCalls
 
-class DeferredResolverProvider[CtxType](dataResolver: DataResolver) extends DeferredResolver[CtxType] {
+class DeferredResolverProvider[CtxType](dataResolver: DataResolverImpl) extends DeferredResolver[CtxType] {
 
   val toManyDeferredResolver: ToManyDeferredResolver       = new ToManyDeferredResolver(dataResolver)
   val manyModelDeferredResolver: ManyModelDeferredResolver = new ManyModelDeferredResolver(dataResolver)

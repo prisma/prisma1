@@ -7,7 +7,7 @@ import com.prisma.shared.models.Project
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-class ToManyDeferredResolver(dataResolver: DataResolver) {
+class ToManyDeferredResolver(dataResolver: DataResolverImpl) {
   def resolve(orderedDeferreds: Vector[OrderedDeferred[ToManyDeferred]]): Vector[OrderedDeferredFutureResult[RelayConnectionOutputType]] = {
     val deferreds = orderedDeferreds.map(_.deferred)
 

@@ -20,7 +20,7 @@ import slick.sql.{SqlAction, SqlStreamingAction}
 import scala.collection.immutable.Seq
 import scala.concurrent.Future
 
-case class DataResolver(
+case class DataResolverImpl(
     project: Project,
     readonlyClientDatabase: MySQLProfile.backend.DatabaseDef
 ) {

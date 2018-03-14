@@ -2,7 +2,7 @@ package com.prisma.integration
 
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
-import com.prisma.api.connector.mysql.database.DataResolver
+import com.prisma.api.connector.mysql.database.DataResolverImpl
 import com.prisma.api.util.StringMatchers
 import com.prisma.api.{ApiDependenciesForTest, ApiTestDatabase, ApiTestServer}
 import com.prisma.deploy.specutils.{DeployTestDependencies, DeployTestServer}
@@ -34,7 +34,7 @@ trait IntegrationBaseSpec extends BeforeAndAfterEach with BeforeAndAfterAll with
   val apiServer                         = ApiTestServer()
   val apiDatabase                       = ApiTestDatabase()
 
-  def dataResolver(project: Project): DataResolver = apiTestDependencies.dataResolver(project)
+  def dataResolver(project: Project): DataResolverImpl = apiTestDependencies.dataResolver(project)
 
   // DEPLOY
 

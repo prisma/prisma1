@@ -1,7 +1,7 @@
 package com.prisma.api.import_export
 
 import com.prisma.api.ApiBaseSpec
-import com.prisma.api.connector.mysql.database.DataResolver
+import com.prisma.api.connector.mysql.database.DataResolverImpl
 import com.prisma.api.import_export.ImportExport.MyJsonProtocol._
 import com.prisma.api.import_export.ImportExport.{Cursor, ExportRequest, JsonBundle, ResultFormat}
 import com.prisma.shared.models.Project
@@ -35,8 +35,8 @@ class BulkExportNullHandlingSpec extends FlatSpec with Matchers with ApiBaseSpec
 
     server.query("""mutation{createModel0(data: { nonList: "Model0", bla: {create: {test: "Model1"}}}){id}}""", project)
 
-    val exporter                   = new BulkExport(project)
-    val dataResolver: DataResolver = this.dataResolver(project)
+    val exporter                       = new BulkExport(project)
+    val dataResolver: DataResolverImpl = this.dataResolver(project)
 
     val nodeRequest = ExportRequest("nodes", start)
     val nodeResult  = exporter.executeExport(dataResolver, nodeRequest.toJson).await(5).convertTo[ResultFormat]
@@ -69,8 +69,8 @@ class BulkExportNullHandlingSpec extends FlatSpec with Matchers with ApiBaseSpec
     server.query("""mutation{createModel0(data: { test: "Model0"}){id}}""", project)
     server.query("""mutation{createModel0(data: { test: "Model0"}){id}}""", project)
 
-    val exporter                   = new BulkExport(project)
-    val dataResolver: DataResolver = this.dataResolver(project)
+    val exporter                       = new BulkExport(project)
+    val dataResolver: DataResolverImpl = this.dataResolver(project)
 
     val nodeRequest = ExportRequest("nodes", start)
     val nodeResult  = exporter.executeExport(dataResolver, nodeRequest.toJson).await(5).convertTo[ResultFormat]

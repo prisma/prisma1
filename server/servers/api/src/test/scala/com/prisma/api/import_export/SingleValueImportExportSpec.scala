@@ -1,7 +1,7 @@
 package com.prisma.api.import_export
 
 import com.prisma.api.ApiBaseSpec
-import com.prisma.api.connector.mysql.database.DataResolver
+import com.prisma.api.connector.mysql.database.DataResolverImpl
 import com.prisma.api.import_export.ImportExport.MyJsonProtocol._
 import com.prisma.api.import_export.ImportExport.{Cursor, ExportRequest, ResultFormat}
 import com.prisma.shared.models.Project
@@ -34,9 +34,9 @@ class SingleValueImportExportSpec extends FlatSpec with Matchers with ApiBaseSpe
   override def beforeEach(): Unit = {
     database.truncate(project)
   }
-  val importer                   = new BulkImport(project)
-  val exporter                   = new BulkExport(project)
-  val dataResolver: DataResolver = this.dataResolver(project)
+  val importer                       = new BulkImport(project)
+  val exporter                       = new BulkExport(project)
+  val dataResolver: DataResolverImpl = this.dataResolver(project)
 
   "Exporting nodes" should "work (with filesize limit set to 1000 for test)" in {
 

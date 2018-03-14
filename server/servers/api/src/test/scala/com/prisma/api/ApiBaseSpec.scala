@@ -2,7 +2,7 @@ package com.prisma.api
 
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
-import com.prisma.api.connector.mysql.database.DataResolver
+import com.prisma.api.connector.mysql.database.DataResolverImpl
 import com.prisma.api.util.StringMatchers
 import com.prisma.shared.models.Project
 import com.prisma.util.json.SprayJsonExtensions
@@ -17,7 +17,7 @@ trait ApiBaseSpec extends BeforeAndAfterEach with BeforeAndAfterAll with SprayJs
   val server                         = ApiTestServer()
   val database                       = ApiTestDatabase()
 
-  def dataResolver(project: Project): DataResolver = testDependencies.dataResolver(project)
+  def dataResolver(project: Project): DataResolverImpl = testDependencies.dataResolver(project)
 
   override protected def afterAll(): Unit = {
     super.afterAll()
