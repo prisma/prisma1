@@ -67,11 +67,11 @@ done
 
 printf "
 - trigger: \"prisma-cloud\"
-  label: \":cloud: Trigger Prisma Cloud Tasks :cloud:\"
+  label: \":cloud: Trigger Prisma Cloud Tasks ${NEXT_DOCKER_TAG} :cloud:\"
   async: true
   build:
     env:
-        BUILD_TAG: \"${NEXT_DOCKER_TAG}\"
+        BUILD_TAGS: \"${NEXT_DOCKER_TAG},${ADDITIONALLY_RELEASE}\"
         CHANNEL: \"${CHANNEL}\"
 " | buildkite-agent pipeline upload
 
