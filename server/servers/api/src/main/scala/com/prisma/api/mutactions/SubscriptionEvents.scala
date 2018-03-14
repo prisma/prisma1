@@ -2,7 +2,6 @@ package com.prisma.api.mutactions
 
 import com.prisma.api.ApiDependencies
 import com.prisma.api.connector._
-import GraphcoolDataTypes
 import com.prisma.shared.models.IdType.Id
 import com.prisma.shared.models.Project
 

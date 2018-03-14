@@ -1,4 +1,4 @@
-package com.prisma.api.mutations.mutations
+package com.prisma.api.mutations
 
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
@@ -6,7 +6,6 @@ import com.prisma.api.ApiDependencies
 import com.prisma.api.connector.{DataItem, NodeSelector, Path}
 import com.prisma.api.database.DataResolver
 import com.prisma.api.mutactions.{DatabaseMutactions, ServerSideSubscriptions, SubscriptionEvents}
-import com.prisma.api.mutations._
 import com.prisma.api.schema.APIErrors
 import com.prisma.shared.models.{Model, Project}
 import sangria.schema

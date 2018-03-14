@@ -1,9 +1,8 @@
-package com.prisma.api.mutations.mutations
+package com.prisma.api.mutations
 
 import com.prisma.api.ApiDependencies
 import com.prisma.api.connector.{DataItem, DisableForeignKeyConstraintChecks, EnableForeignKeyConstraintChecks, TruncateTable}
 import com.prisma.api.database.DataResolver
-import com.prisma.api.mutations.{PreparedMutactions, ReturnValue, ReturnValueResult, SingleItemClientMutation}
 import com.prisma.shared.models._
 
 import scala.concurrent.Future
