@@ -1,7 +1,7 @@
 package com.prisma.api.mutactions.validation
 
+import com.prisma.api.connector.CoolArgs
 import com.prisma.api.database.DatabaseConstraints
-import com.prisma.api.mutations.CoolArgs
 import com.prisma.api.schema.APIErrors
 import com.prisma.api.schema.APIErrors.ClientApiError
 import com.prisma.shared.models.{Field, Model}

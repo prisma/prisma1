@@ -8,7 +8,6 @@ import com.prisma.api.database.DatabaseMutationBuilder.{cascadingDeleteChildActi
 import com.prisma.api.database.mutactions.GetFieldFromSQLUniqueException
 import com.prisma.api.database.mutactions.GetFieldFromSQLUniqueException.getFieldOption
 import com.prisma.api.database.{DatabaseMutationBuilder, ProjectRelayId, ProjectRelayIdTable}
-import com.prisma.api.mutations.CoolArgs
 import com.prisma.api.schema.APIErrors
 import com.prisma.api.schema.APIErrors.RequiredRelationWouldBeViolated
 import com.prisma.shared.models.{Field, Relation}

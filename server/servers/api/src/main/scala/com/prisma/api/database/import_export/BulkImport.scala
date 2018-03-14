@@ -1,10 +1,10 @@
 package com.prisma.api.database.import_export
 
 import com.prisma.api.ApiDependencies
+import com.prisma.api.connector.CoolArgs
 import com.prisma.api.database.import_export.ImportExport.MyJsonProtocol._
 import com.prisma.api.database.import_export.ImportExport._
 import com.prisma.api.database.{DatabaseMutationBuilder, ProjectRelayId, ProjectRelayIdTable}
-import com.prisma.api.mutations.CoolArgs
 import cool.graph.cuid.Cuid
 import com.prisma.shared.models._
 import slick.dbio.{DBIOAction, Effect, NoStream}

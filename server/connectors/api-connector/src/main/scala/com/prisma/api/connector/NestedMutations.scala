@@ -1,6 +1,4 @@
-package com.prisma.api.mutations
-
-import com.prisma.api.connector.NodeSelector
+package com.prisma.api.connector
 
 case class NestedMutations(
     creates: Vector[CreateOne],

@@ -1,7 +1,8 @@
 package com.prisma.api.database.mutactions
 
 import java.sql.SQLIntegrityConstraintViolationException
-import com.prisma.api.mutations.CoolArgs
+
+import com.prisma.api.connector.CoolArgs
 
 object GetFieldFromSQLUniqueException {
 

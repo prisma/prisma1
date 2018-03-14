@@ -1,8 +1,7 @@
 package com.prisma.subscriptions.specs
 
 import com.prisma.api.connector.mysql.impl.{AddDataItemToManyRelationByPathInterpreter, CreateDataItemInterpreter}
-import com.prisma.api.connector.{AddDataItemToManyRelationByPath, CreateDataItem, NodeSelector, Path}
-import com.prisma.api.mutations.CoolArgs
+import com.prisma.api.connector._
 import com.prisma.messagebus.pubsub.Only
 import com.prisma.shared.models.{Enum, Model, Project}
 import com.prisma.shared.schema_dsl.SchemaDsl

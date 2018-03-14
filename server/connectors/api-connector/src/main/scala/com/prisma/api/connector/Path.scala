@@ -1,6 +1,5 @@
 package com.prisma.api.connector
 
-import com.prisma.api.mutations.{CoolArgs, NestedMutation, NestedWhere}
 import com.prisma.api.schema.APIErrors
 import com.prisma.shared.models.RelationSide.RelationSide
 import com.prisma.shared.models.{Field, Model, Project, Relation}

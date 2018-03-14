@@ -1,8 +1,7 @@
 package com.prisma.subscriptions.specs
 
 import com.prisma.api.ApiTestDatabase
-import com.prisma.api.connector.{CreateDataItem, NodeSelector, Path}
-import com.prisma.api.mutations.CoolArgs
+import com.prisma.api.connector.{CoolArgs, CreateDataItem, NodeSelector, Path}
 import com.prisma.shared.models.{Model, Project}
 import com.prisma.utils.await.AwaitUtils
 import spray.json.JsValue

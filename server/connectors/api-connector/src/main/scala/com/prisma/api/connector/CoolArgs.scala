@@ -1,8 +1,6 @@
-package com.prisma.api.mutations
+package com.prisma.api.connector
 
-import com.prisma.api.connector.NodeSelector
 import com.prisma.api.schema.APIErrors
-import com.prisma.gc_values.{GCValue, GraphQLIdGCValue}
 import com.prisma.shared.models._
 import com.prisma.util.gc_value.{GCAnyConverter, GCValueExtractor}
 
