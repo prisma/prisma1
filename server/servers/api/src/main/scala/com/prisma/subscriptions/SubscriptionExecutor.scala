@@ -86,7 +86,7 @@ object SubscriptionExecutor extends SprayJsonExtensions {
       queryAst = Some(actualQuery)
     )
     val dataResolver = if (alwaysQueryMasterDatabase) {
-      dependencies.dataResolver(project).copy(useMasterDatabaseOnly = true)
+      dependencies.masterDataResolver(project)
     } else {
       dependencies.dataResolver(project)
     }

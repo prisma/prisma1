@@ -1,33 +1,32 @@
 package com.prisma.api.database
 
-import com.prisma.api.{ApiDependencies, ApiMetrics}
+import com.prisma.api.ApiMetrics
 import com.prisma.api.connector.{DataItem, NodeSelector}
 import com.prisma.api.database.Types.DataItemFilterCollection
 import com.prisma.gc_values.{GCValue, GraphQLIdGCValue, JsonGCValue}
 import com.prisma.shared.models.IdType.Id
-import com.prisma.shared.models._
 import com.prisma.shared.models.TypeIdentifier.TypeIdentifier
+import com.prisma.shared.models._
 import com.prisma.util.gc_value.GCValueExtractor
 import org.joda.time.DateTime
 import org.joda.time.format.DateTimeFormat
 import slick.dbio.Effect.Read
-import slick.dbio.{DBIOAction, Effect, NoStream}
+import slick.dbio.NoStream
+import slick.jdbc.MySQLProfile.api._
 import slick.jdbc.{MySQLProfile, SQLActionBuilder}
 import slick.lifted.TableQuery
 import slick.sql.{SqlAction, SqlStreamingAction}
-import slick.jdbc.MySQLProfile.api._
 
 import scala.collection.immutable.Seq
 import scala.concurrent.Future
 
-case class DataResolver(project: Project, useMasterDatabaseOnly: Boolean = false)(implicit apiDependencies: ApiDependencies) {
-  import scala.concurrent.ExecutionContext.Implicits.global
+case class DataResolver(
+    project: Project,
+    readonlyClientDatabase: MySQLProfile.backend.DatabaseDef
+) {
   import DatabaseQueryBuilder.{GetDataItem, GetScalarListValue}
 
-  def masterClientDatabase: MySQLProfile.backend.DatabaseDef = apiDependencies.databases.master
-  def readonlyClientDatabase: MySQLProfile.backend.DatabaseDef =
-    if (useMasterDatabaseOnly) apiDependencies.databases.master
-    else apiDependencies.databases.readOnly
+  import scala.concurrent.ExecutionContext.Implicits.global
 
   protected def performWithTiming[A](name: String, f: => Future[A]): Future[A] = {
     ApiMetrics.sqlQueryTimer.timeFuture(project.id, name) {
@@ -253,9 +252,6 @@ case class DataResolver(project: Project, useMasterDatabaseOnly: Boolean = false
 
     action
   }
-
-  def runOnClientDatabase[A](name: String, sqlAction: DBIOAction[A, NoStream, Effect.All]): Future[A] =
-    performWithTiming(name, masterClientDatabase.run(sqlAction))
 
   protected def mapDataItem(model: Model)(dataItem: DataItem): DataItem = {
     mapDataItemHelper(model, dataItem)

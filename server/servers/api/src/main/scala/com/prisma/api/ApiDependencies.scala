@@ -46,8 +46,8 @@ trait ApiDependencies extends AwaitUtils {
   val sssEventsPubSub: PubSub[String]
   lazy val sssEventsPublisher: PubSubPublisher[String] = sssEventsPubSub
 
-  def dataResolver(project: Project): DataResolver       = DataResolver(project)
-  def masterDataResolver(project: Project): DataResolver = DataResolver(project, useMasterDatabaseOnly = true)
+  def dataResolver(project: Project): DataResolver       = DataResolver(project, databases.readOnly)
+  def masterDataResolver(project: Project): DataResolver = DataResolver(project, databases.master)
   def deferredResolverProvider(project: Project)         = new DeferredResolverProvider[ApiUserContext](dataResolver(project))
 
   def destroy = {
