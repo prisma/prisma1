@@ -7,7 +7,6 @@ import com.prisma.api.connector.mysql.DatabaseMutactionInterpreter
 import com.prisma.api.database.DatabaseMutationBuilder.{cascadingDeleteChildActions, oldParentFailureTriggerByField, oldParentFailureTriggerByFieldAndFilter}
 import com.prisma.api.database.mutactions.GetFieldFromSQLUniqueException
 import com.prisma.api.database.mutactions.GetFieldFromSQLUniqueException.getFieldOption
-import com.prisma.api.database.mutactions.mutactions.NestedCreateRelationMutaction
 import com.prisma.api.database.{DatabaseMutationBuilder, ProjectRelayId, ProjectRelayIdTable}
 import com.prisma.api.mutations.CoolArgs
 import com.prisma.api.schema.APIErrors
@@ -269,9 +268,9 @@ case class UpsertDataItemIfInRelationWithInterpreter(mutaction: UpsertDataItemIf
   val actualCreateArgs    = CoolArgs(createArgsWithId.raw).generateNonListCreateArgs(model, createWhere.fieldValueAsString)
   val actualUpdateArgs    = mutaction.updateArgs.nonListScalarArguments(model)
 
-  val scalarListsCreate                          = DatabaseMutationBuilder.getDbActionsForUpsertScalarLists(project.id, pathForCreateBranch, createArgsWithId)
-  val scalarListsUpdate                          = DatabaseMutationBuilder.getDbActionsForUpsertScalarLists(project.id, pathForUpdateBranch, mutaction.updateArgs)
-  val createCheck: NestedCreateRelationMutaction = NestedCreateRelationMutaction(project, pathForCreateBranch, false)
+  val scalarListsCreate = DatabaseMutationBuilder.getDbActionsForUpsertScalarLists(project.id, pathForCreateBranch, createArgsWithId)
+  val scalarListsUpdate = DatabaseMutationBuilder.getDbActionsForUpsertScalarLists(project.id, pathForUpdateBranch, mutaction.updateArgs)
+  val createCheck       = NestedCreateRelationInterpreter(NestedCreateRelation(project, pathForCreateBranch, false))
 
   override val action = DatabaseMutationBuilder.upsertIfInRelationWith(
     project = project,

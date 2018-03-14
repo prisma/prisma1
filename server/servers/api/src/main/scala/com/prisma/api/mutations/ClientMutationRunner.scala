@@ -36,46 +36,4 @@ object ClientMutationRunner {
       _ <- sideEffectMutactionExecutor.execute(preparedMutactions.sideEffectMutactions)
     } yield ()
   }
-
-  private def runWithTiming(mutaction: Mutaction, projectId: String): Future[MutactionExecutionResult] = {
-    performWithTiming(
-      s"execute ${mutaction.getClass.getSimpleName}", {
-        mutaction match {
-          case mut: ClientSqlDataChangeMutaction =>
-            ApiMetrics.mutactionTimer.timeFuture(projectId) {
-              runWithErrorHandler(mut)
-            }
-          case mut =>
-            runWithErrorHandler(mut)
-        }
-      }
-    )
-  }
-
-  private def runWithErrorHandler(mutaction: Mutaction): Future[MutactionExecutionResult] = {
-    mutaction.handleErrors match {
-      case Some(errorHandler) =>
-//        mutaction.execute.recover(errorHandler)
-        mutaction.execute.recoverWith {
-          case error =>
-            errorHandler.lift(error) match {
-              case Some(newError) => throw newError
-              case None           => throw error
-            }
-        }
-      case None =>
-        mutaction.execute
-    }
-  }
-
-  private def performWithTiming[A](name: String, f: Future[A]): Future[A] = {
-    //    val begin = System.currentTimeMillis()
-    //    f andThen {
-    //      case x =>
-    //        mutactionTimings :+= Timing(name, System.currentTimeMillis() - begin)
-    //        x
-    //    }
-
-    f
-  }
 }

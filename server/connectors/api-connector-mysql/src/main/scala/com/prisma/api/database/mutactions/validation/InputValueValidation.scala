@@ -1,7 +1,6 @@
 package com.prisma.api.database.mutactions.validation
 
 import com.prisma.api.database.DatabaseConstraints
-import com.prisma.api.database.mutactions.MutactionVerificationSuccess
 import com.prisma.api.mutations.CoolArgs
 import com.prisma.api.schema.APIErrors
 import com.prisma.shared.models.{Field, Model}
@@ -11,7 +10,7 @@ import scala.util.{Failure, Success, Try}
 
 object InputValueValidation {
 
-  def validateDataItemInputs(model: Model, args: CoolArgs): (Try[MutactionVerificationSuccess], List[Field]) = {
+  def validateDataItemInputs(model: Model, args: CoolArgs): (Try[Unit], List[Field]) = {
 
     val fieldsWithValues              = InputValueValidation.scalarFieldsWithValues(model, args)
     val fieldsWithIllegallySizedValue = InputValueValidation.checkValueSize(args, fieldsWithValues)
@@ -22,7 +21,7 @@ object InputValueValidation {
       case _ if extraValues.nonEmpty                   => Failure(APIErrors.ExtraArguments(extraValues, model.name))
       case _ if fieldsWithIllegallySizedValue.nonEmpty => Failure(APIErrors.ValueTooLong(fieldsWithIllegallySizedValue.head.name))
 //      case _ if constraintErrors.nonEmpty              => Failure(APIErrors.ConstraintViolated(constraintErrors))
-      case _ => Success(MutactionVerificationSuccess())
+      case _ => Success(())
     }
 
     (validationResult, fieldsWithValues)

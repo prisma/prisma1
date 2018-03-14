@@ -1,8 +1,7 @@
 package com.prisma.subscriptions.specs
 
 import com.prisma.api.ApiTestDatabase
-import com.prisma.api.connector.{NodeSelector, Path}
-import com.prisma.api.database.mutactions.mutactions.CreateDataItem
+import com.prisma.api.connector.{CreateDataItem, NodeSelector, Path}
 import com.prisma.api.mutations.CoolArgs
 import com.prisma.shared.models.{Model, Project}
 import com.prisma.utils.await.AwaitUtils
@@ -18,10 +17,11 @@ object TestData extends AwaitUtils {
       model: Model,
       testDatabase: ApiTestDatabase
   ) = {
-    val mutaction = CreateDataItem(project = project,
-                                   path = Path.empty(NodeSelector.forId(model, id)),
-                                   args = CoolArgs(Map("text" -> text, "id" -> id, "done" -> done.getOrElse(true), "json" -> json)))
-    val action = mutaction.execute.await.sqlAction
-    testDatabase.runDbActionOnClientDb(action)
+    val mutaction = CreateDataItem(
+      project = project,
+      path = Path.empty(NodeSelector.forId(model, id)),
+      args = CoolArgs(Map("text" -> text, "id" -> id, "done" -> done.getOrElse(true), "json" -> json))
+    )
+    testDatabase.runDatabaseMutactionOnClientDb(mutaction)
   }
 }
