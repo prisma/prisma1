@@ -1,6 +1,6 @@
 package com.prisma.api.database
 
-import com.prisma.api.ApiMetrics
+import com.prisma.api.connector.mysql.Metrics
 import com.prisma.api.connector.{DataItem, NodeSelector}
 import com.prisma.api.database.Types.DataItemFilterCollection
 import com.prisma.gc_values.{GCValue, GraphQLIdGCValue, JsonGCValue}
@@ -29,7 +29,7 @@ case class DataResolver(
   import scala.concurrent.ExecutionContext.Implicits.global
 
   protected def performWithTiming[A](name: String, f: => Future[A]): Future[A] = {
-    ApiMetrics.sqlQueryTimer.timeFuture(project.id, name) {
+    Metrics.sqlQueryTimer.timeFuture(project.id, name) {
       f
     }
   }
