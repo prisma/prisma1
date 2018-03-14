@@ -112,7 +112,7 @@ Here is an example `curl` command for uploading some JSON data (of NDF type `nod
 ```sh
 curl 'http://localhost:60000/my-app/dev/import' \
 -H 'Content-Type: application/json' \
--H 'Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJPbmxpbmUgSldUIEJ1aWxkZXIiLCJpYXQiOjE1MTM1OTQzMTEsImV4cCI6MTU0NTEzMDMxMSwiYXVkIjasd3d3LmV4YW1wbGUuY29tIiwic3ViIjoianJvY2tldEBleGFtcGxlLmNvbSIsIkdpdmVuTmFtZSI6IkpvaG5ueSIsIlN1cm5hbWUiOiJSb2NrZXQiLCJFbWFpbCI6Impyb2NrZXRAZXhhbXBsZS5jb20iLCJSb2xlIjpbIk1hbmFnZXIiLCJQcm9qZWN0IEFkbWluaXN0cmF0b3IiXX0.L7DwH7vIfTSmuwfxBI82D64DlgoLBLXOwR5iMjZ_7nI' \
+-H 'Authorization: eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJPbmxpbmUgSldUIEJ1aWxkZXIiLCJpYXQiOjE1MTM1OTQzMTEsImV4cCI6MTU0NTEzMDMxMSwiYXVkIjasd3d3LmV4YW1wbGUuY29tIiwic3ViIjoianJvY2tldEBleGFtcGxlLmNvbSIsIkdpdmVuTmFtZSI6IkpvaG5ueSIsIlN1cm5hbWUiOiJSb2NrZXQiLCJFbWFpbCI6Impyb2NrZXRAZXhhbXBsZS5jb20iLCJSb2xlIjpbIk1hbmFnZXIiLCJQcm9qZWN0IEFkbWluaXN0cmF0b3IiXX0.L7DwH7vIfTSmuwfxBI82D64DlgoLBLXOwR5iMjZ_7nI' \
 -d '{"valueType":"nodes","values":[{"_typeName":"Model0","id":"0","a":"test","b":0,"createdAt":"2017-11-29 14:35:13"},{"_typeName":"Model1","id":"1","a":"test","b":1},{"_typeName":"Model2","id":"2","a":"test","b":2,"createdAt":"2017-11-29 14:35:13"},{"_typeName":"Model0","id":"3","a":"test","b":3},{"_typeName":"Model3","id":"4","a":"test","b":4,"createdAt":"2017-11-29 14:35:13","updatedAt":"2017-11-29 14:35:13"},{"_typeName":"Model3","id":"5","a":"test","b":5},{"_typeName":"Model3","id":"6","a":"test","b":6},{"_typeName":"Model4","id":"7"},{"_typeName":"Model4","id":"8","string":"test","int":4,"boolean":true,"dateTime":"1015-11-29 14:35:13","float":13.333,"createdAt":"2017-11-29 14:35:13","updatedAt":"2017-11-29 14:35:13"},{"_typeName":"Model5","id":"9","string":"test","int":4,"boolean":true,"dateTime":"1015-11-29 14:35:13","float":13.333,"createdAt":"2017-11-29 14:35:13","updatedAt":"2017-11-29 14:35:13"}]}' \
 -sSv
 ```
@@ -122,7 +122,7 @@ The generic version for `curl` (using placeholders) would look as follows:
 ```sh
 curl '__SERVICE_ENDPOINT__/import' \
 -H 'Content-Type: application/json' \
--H 'Authorization: Bearer __JWT_AUTH_TOKEN__' \
+-H 'Authorization: __JWT_AUTH_TOKEN__' \
 -d '{"valueType":"__NDF_TYPE__","values": __DATA__ }' \
 -sSv
 ```
