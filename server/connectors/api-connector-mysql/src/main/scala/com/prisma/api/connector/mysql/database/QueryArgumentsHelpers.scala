@@ -1,5 +1,6 @@
 package com.prisma.api.connector.mysql.database
 
+import com.prisma.api.connector.{FilterElement, FilterElementRelation}
 import com.prisma.api.schema.APIErrors
 import com.prisma.shared.models.{Field, TypeIdentifier}
 import slick.jdbc.SQLActionBuilder

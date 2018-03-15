@@ -1,7 +1,7 @@
 package com.prisma.api.connector
 
 import com.prisma.api.connector.Types.DataItemFilterCollection
-import com.prisma.shared.models.{Field, Model}
+import com.prisma.shared.models.{Field, Model, Relation}
 
 import scala.collection.immutable.Seq
 
@@ -48,4 +48,19 @@ object SortOrder extends Enumeration {
 case class OrderBy(
     field: Field,
     sortOrder: SortOrder.Value
+)
+
+case class FilterElement(
+    key: String,
+    value: Any,
+    field: Option[Field] = None,
+    filterName: String = "",
+    relatedFilterElement: Option[FilterElementRelation] = None
+)
+
+case class FilterElementRelation(
+    fromModel: Model,
+    toModel: Model,
+    relation: Relation,
+    filter: DataItemFilterCollection
 )
