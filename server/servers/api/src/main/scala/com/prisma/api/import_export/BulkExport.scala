@@ -3,8 +3,8 @@ package com.prisma.api.import_export
 import java.sql.Timestamp
 
 import com.prisma.api.ApiDependencies
-import com.prisma.api.connector.DataItem
-import com.prisma.api.connector.mysql.database.{DataResolver, QueryArguments}
+import com.prisma.api.connector.{DataItem, QueryArguments}
+import com.prisma.api.connector.mysql.database.DataResolver
 import com.prisma.api.import_export.ImportExport.MyJsonProtocol._
 import com.prisma.api.import_export.ImportExport._
 import com.prisma.shared.models.IdType.Id

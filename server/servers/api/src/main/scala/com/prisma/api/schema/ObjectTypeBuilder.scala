@@ -1,6 +1,6 @@
 package com.prisma.api.schema
 
-import com.prisma.api.connector.DataItem
+import com.prisma.api.connector.{DataItem, OrderBy, QueryArguments}
 import com.prisma.api.connector.mysql.database.Types.DataItemFilterCollection
 import com.prisma.api.connector.mysql.database._
 import com.prisma.api.mutations.BatchPayload

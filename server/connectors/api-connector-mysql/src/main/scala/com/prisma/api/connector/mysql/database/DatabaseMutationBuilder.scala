@@ -64,7 +64,7 @@ object DatabaseMutationBuilder {
 
   def updateDataItems(projectId: String, model: Model, args: CoolArgs, whereFilter: DataItemFilterCollection) = {
     val updateValues = combineByComma(args.raw.map { case (k, v) => escapeKey(k) ++ sql" = " ++ escapeUnsafeParam(v) })
-    val whereSql     = QueryArguments.generateFilterConditions(projectId, model.name, whereFilter)
+    val whereSql     = QueryArgumentsHelpers.generateFilterConditions(projectId, model.name, whereFilter)
     (sql"UPDATE `#${projectId}`.`#${model.name}`" ++ sql"SET " ++ updateValues ++ prefixIfNotNone("where", whereSql)).asUpdate
   }
 
@@ -144,12 +144,12 @@ object DatabaseMutationBuilder {
   //region DELETE
 
   def deleteDataItems(project: Project, model: Model, whereFilter: DataItemFilterCollection) = {
-    val whereSql = QueryArguments.generateFilterConditions(project.id, model.name, whereFilter)
+    val whereSql = QueryArgumentsHelpers.generateFilterConditions(project.id, model.name, whereFilter)
     (sql"DELETE FROM `#${project.id}`.`#${model.name}`" ++ prefixIfNotNone("where", whereSql)).asUpdate
   }
 
   def deleteRelayIds(project: Project, model: Model, whereFilter: DataItemFilterCollection) = {
-    val whereSql = QueryArguments.generateFilterConditions(project.id, model.name, whereFilter)
+    val whereSql = QueryArgumentsHelpers.generateFilterConditions(project.id, model.name, whereFilter)
     (sql"DELETE FROM `#${project.id}`.`_RelayId`" ++
       (sql"WHERE `id` IN (" ++
         sql"SELECT `id`" ++
@@ -343,7 +343,7 @@ object DatabaseMutationBuilder {
 
   def oldParentFailureTriggerByFieldAndFilter(project: Project, model: Model, filter: DataItemFilterCollection, field: Field) = {
     val table = field.relation.get.id
-    val whereSql = QueryArguments.generateFilterConditions(project.id, model.name, filter) match {
+    val whereSql = QueryArgumentsHelpers.generateFilterConditions(project.id, model.name, filter) match {
       case None    => sql""
       case Some(x) => sql"WHERE " ++ x
     }

@@ -15,6 +15,7 @@ import scala.concurrent.ExecutionContext.Implicits.global
 object DatabaseQueryBuilder {
 
   import SlickExtensions._
+  import QueryArgumentsExtensions._
 
   implicit object GetDataItem extends GetResult[DataItem] {
     def apply(ps: PositionedResult): DataItem = {
@@ -75,7 +76,7 @@ object DatabaseQueryBuilder {
 
   def countAllFromModel(project: Project, model: Model, where: Option[DataItemFilterCollection]): SQLActionBuilder = {
     val whereSql = where.flatMap { where =>
-      QueryArguments.generateFilterConditions(project.id, model.name, where)
+      QueryArgumentsHelpers.generateFilterConditions(project.id, model.name, where)
     }
     sql"select count(*) from `#${project.id}`.`#${model.name}`" ++ prefixIfNotNone("where", whereSql)
   }
