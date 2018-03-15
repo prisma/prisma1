@@ -94,6 +94,32 @@ object SlickExtensions {
     }
   }
 
+  def escapeUnsafeParamToString(param: Any): String = {
+    def unwrapSome(x: Any): Any = {
+      x match {
+        case Some(x) => x
+        case x       => x
+      }
+    }
+    unwrapSome(param) match {
+      case param: String       => s"'$param'"
+      case param: PlayJsValue  => s"'${param.toString}'"
+      case param: SprayJsValue => s"'${param.compactPrint}'"
+      case param: Boolean      => param.toString
+      case param: Int          => param.toString
+      case param: Long         => param.toString
+      case param: Float        => param.toString
+      case param: Double       => param.toString
+      case param: BigInt       => param.toString
+      case param: BigDecimal   => param.toString
+      case param: DateTime     => s"'${param.toString(DateTimeFormat.forPattern("yyyy-MM-dd'T'HH:mm:ss.SSS").withZoneUTC())}'"
+      case param: Vector[_]    => s"${listToJson(param.toList)}"
+      case None                => s"NULL"
+      case null                => s"NULL"
+      case _                   => throw new IllegalArgumentException("Unsupported scalar value in SlickExtensions: " + param.toString)
+    }
+  }
+
   def listToJsonList(param: List[Any]): String = {
     val x = listToJson(param)
     x.substring(1, x.length - 1)
@@ -102,6 +128,8 @@ object SlickExtensions {
   def escapeUnsafeParamListValue(param: Vector[Any]) = sql"${listToJsonList(param.toList)}"
 
   def escapeKey(key: String) = sql"`#$key`"
+
+  def escapeKeyToString(key: String) = s"`$key`"
 
   def combineByAnd(actions: Iterable[SQLActionBuilder]) = generateParentheses(combineBy(actions, "and"))
 
