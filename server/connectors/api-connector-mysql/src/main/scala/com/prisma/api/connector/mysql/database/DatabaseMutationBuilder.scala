@@ -21,15 +21,15 @@ object DatabaseMutationBuilder {
   // region CREATE
 
   private def combineKeysAndValuesSeparately(args: CoolArgs) = {
-    val escapedKeyValueTuples = args.raw.toList.map(x => (escapeKey(x._1), escapeUnsafeParam(x._2)))
-    val escapedKeys           = combineByComma(escapedKeyValueTuples.map(_._1))
-    val escapedValues         = combineByComma(escapedKeyValueTuples.map(_._2))
+    val escapedKeyValueTuples = args.raw.toList.map(x => (escapeKeyToString(x._1), escapeUnsafeParamToString(x._2)))
+    val escapedKeys           = escapedKeyValueTuples.map(_._1).mkString(",")
+    val escapedValues         = escapedKeyValueTuples.map(_._2).mkString(",")
     (escapedKeys, escapedValues)
   }
 
   def createDataItem(projectId: String, modelName: String, args: CoolArgs): SqlStreamingAction[Vector[Int], Int, Effect]#ResultAction[Int, NoStream, Effect] = {
-    val (escapedKeys: Option[SQLActionBuilder], escapedValues: Option[SQLActionBuilder]) = combineKeysAndValuesSeparately(args)
-    (sql"INSERT INTO `#$projectId`.`#$modelName` (" ++ escapedKeys ++ sql") VALUES (" ++ escapedValues ++ sql")").asUpdate
+    val (escapedKeys: String, escapedValues: String) = combineKeysAndValuesSeparately(args)
+    sql"INSERT INTO `#$projectId`.`#$modelName` (#$escapedKeys) VALUES (#$escapedValues)".asUpdate
   }
 
   def createRelayRow(projectId: String, where: NodeSelector): SqlStreamingAction[Vector[Int], Int, Effect]#ResultAction[Int, NoStream, Effect] = {
@@ -42,8 +42,7 @@ object DatabaseMutationBuilder {
                         a: String,
                         b: String): SqlStreamingAction[Vector[Int], Int, Effect]#ResultAction[Int, NoStream, Effect] = {
 
-    (sql"insert into `#$projectId`.`#$relationTableName` (" ++ combineByComma(List(sql"`id`, `A`, `B`")) ++ sql") values (" ++ combineByComma(
-      List(sql"$id, $a, $b")) ++ sql") on duplicate key update id=id").asUpdate
+    (sql"insert into `#$projectId`.`#$relationTableName` (`id`, `A`, `B`) values ($id, $a, $b) on duplicate key update id = id").asUpdate
   }
 
   def createRelationRowByPath(projectId: String, path: Path): SqlAction[Int, NoStream, Effect] = {
@@ -65,7 +64,7 @@ object DatabaseMutationBuilder {
   def updateDataItems(projectId: String, model: Model, args: CoolArgs, whereFilter: DataItemFilterCollection) = {
     val updateValues = combineByComma(args.raw.map { case (k, v) => escapeKey(k) ++ sql" = " ++ escapeUnsafeParam(v) })
     val whereSql     = QueryArguments.generateFilterConditions(projectId, model.name, whereFilter)
-    (sql"UPDATE `#${projectId}`.`#${model.name}`" ++ sql"SET " ++ updateValues ++ prefixIfNotNone("where", whereSql)).asUpdate
+    (sql"UPDATE `#${projectId}`.`#${model.name}` SET " ++ updateValues ++ prefixIfNotNone("where", whereSql)).asUpdate
   }
 
   def updateDataItemByUnique(projectId: String, where: NodeSelector, updateArgs: CoolArgs) = {
@@ -213,16 +212,18 @@ object DatabaseMutationBuilder {
   def pushScalarList(projectId: String, modelName: String, fieldName: String, nodeId: String, values: Vector[Any]): DBIOAction[Int, NoStream, Effect] = {
 
     val escapedValueTuples = for {
-      (escapedValue, position) <- values.map(escapeUnsafeParam).zip((1 to values.length).map(_ * 1000))
+      (escapedValue, position) <- values.map(escapeUnsafeParamToString).zip((1 to values.length).map(_ * 1000))
     } yield {
-      sql"($nodeId, @baseline + $position, " ++ escapedValue ++ sql")"
+      s"($nodeId, @baseline + $position, $escapedValue)"
     }
+
+    val combinedValues = escapedValueTuples.mkString(",")
 
     DBIO
       .sequence(
         List(
           sqlu"""set @baseline := ifnull((select max(position) from `#$projectId`.`#${modelName}_#${fieldName}` where nodeId = $nodeId), 0) + 1000""",
-          (sql"insert into `#$projectId`.`#${modelName}_#${fieldName}` (`nodeId`, `position`, `value`) values " ++ combineByComma(escapedValueTuples)).asUpdate
+          (sql"insert into `#$projectId`.`#${modelName}_#${fieldName}` (`nodeId`, `position`, `value`) values #${combinedValues}").asUpdate
         ))
       .map(_.last)
   }
