@@ -5,10 +5,11 @@ import com.prisma.api.connector._
 import com.prisma.api.import_export.ImportExport.MyJsonProtocol._
 import com.prisma.api.import_export.ImportExport._
 import com.prisma.shared.models._
+import org.scalactic.{Bad, Good, Or}
 import spray.json._
 
 import scala.concurrent.Future
-import scala.util.Try
+import scala.util.{Failure, Try}
 
 class BulkImport(project: Project)(implicit apiDependencies: ApiDependencies) {
   import com.prisma.utils.future.FutureUtils._
@@ -19,16 +20,20 @@ class BulkImport(project: Project)(implicit apiDependencies: ApiDependencies) {
     val bundle = json.convertTo[ImportBundle]
     val count  = bundle.values.elements.length
 
-    val mutactions: Vector[DatabaseMutaction] =
+    val mutactions: Vector[DatabaseMutaction Or Exception] =
       bundle.valueType match {
         case "nodes"     => generateImportNodesDBActions(bundle.values.elements.map(convertToImportNode))
-        case "relations" => generateImportRelationsDBActions(bundle.values.elements.map(convertToImportRelation))
-        case "lists"     => generateImportListsDBActions(bundle.values.elements.map(convertToImportList))
+        case "relations" => generateImportRelationsDBActions(bundle.values.elements.map(convertToImportRelation)).map(Good(_))
+        case "lists"     => generateImportListsDBActions(bundle.values.elements.map(convertToImportList)).map(Good(_))
 
       }
 
     val res = mutactions.map { mutaction => () =>
-      apiDependencies.databaseMutactionExecutor.execute(Vector(mutaction)).toFutureTry
+      mutaction match {
+        case Good(m)        => apiDependencies.databaseMutactionExecutor.execute(Vector(m)).toFutureTry
+        case Bad(exception) => Future.successful(Failure(exception))
+      }
+
     }.runSequentially
 
     def messageWithOutConnection(tryelem: Try[Any]): String = tryelem.failed.get.getMessage.substring(tryelem.failed.get.getMessage.indexOf(")") + 1)
@@ -75,23 +80,28 @@ class BulkImport(project: Project)(implicit apiDependencies: ApiDependencies) {
     string.replace("T", " ").replace("Z", " ")
   }
 
-  private def generateImportNodesDBActions(nodes: Vector[ImportNode]): Vector[CreateDataItem] = {
+  private def generateImportNodesDBActions(nodes: Vector[ImportNode]): Vector[CreateDataItem Or Exception] = {
     nodes.map { element =>
       val id    = element.identifier.id
       val model = project.schema.getModelByName_!(element.identifier.typeName)
 
-      val formatedValues = element.values.map {
-        case (k, v) if k == "createdAt" || k == "updatedAt"                                => (k, dateTimeFromISO8601(v))
-        case (k, v) if !model.fields.map(_.name).contains(k)                               => (k, v) // let it fail at db level
-        case (k, v) if model.getFieldByName_!(k).typeIdentifier == TypeIdentifier.DateTime => (k, dateTimeFromISO8601(v))
-        case (k, v) if model.getFieldByName_!(k).typeIdentifier == TypeIdentifier.Json     => (k, v.toJson)
-        case (k, v)                                                                        => (k, v)
+      val elementReferenceToNonExistentField = element.values.keys.find(key => model.getFieldByName(key).isEmpty)
+
+      elementReferenceToNonExistentField match {
+        case Some(key) =>
+          Bad(new Exception(s"Unknown field '$key' in field list"))
+
+        case None =>
+          val formattedValues = element.values.collect {
+            case (k, v) if k == "createdAt" || k == "updatedAt"                                => (k, dateTimeFromISO8601(v))
+            case (k, v) if model.getFieldByName_!(k).typeIdentifier == TypeIdentifier.DateTime => (k, dateTimeFromISO8601(v))
+            case (k, v) if model.getFieldByName_!(k).typeIdentifier == TypeIdentifier.Json     => (k, v.toJson)
+            case (k, v)                                                                        => (k, v)
+          }
+          val values = CoolArgs(formattedValues + ("id" -> id))
+          val path   = Path.empty(NodeSelector.forId(model, id))
+          Good(CreateDataItem(project, path, values))
       }
-
-      val values: CoolArgs = CoolArgs(formatedValues + ("id" -> id))
-
-      val path = Path.empty(NodeSelector.forId(model, id))
-      CreateDataItem(project, path, values)
     }
   }
 
