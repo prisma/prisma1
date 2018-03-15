@@ -1,6 +1,6 @@
 package com.prisma.api.connector.mysql.database
 
-import com.prisma.api.connector.DataItem
+import com.prisma.api.connector.{DataItem, ScalarListValue}
 import com.prisma.api.schema.APIErrors
 import com.prisma.shared.models._
 import spray.json._
@@ -8,14 +8,6 @@ import spray.json._
 import scala.collection.immutable.Seq
 import scala.util.{Failure, Success, Try}
 
-case class ModelCounts(countsMap: Map[Model, Int]) {
-  def countForName(name: String): Int = {
-    val model = countsMap.keySet.find(_.name == name).getOrElse(sys.error(s"No count found for model $name"))
-    countsMap(model)
-  }
-}
-
-case class ResolverResult(items: Seq[DataItem], hasNextPage: Boolean = false, hasPreviousPage: Boolean = false, parentModelId: Option[String] = None)
 case class ResolverListResult(items: Seq[ScalarListValue], hasNextPage: Boolean = false, hasPreviousPage: Boolean = false)
 
 case class DataResolverValidations(f: String, v: Option[Any], model: Model, validate: Boolean) {

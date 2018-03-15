@@ -1,6 +1,6 @@
 package com.prisma.api.connector.mysql.database
 
-import com.prisma.api.connector.{DataItem, QueryArguments}
+import com.prisma.api.connector.{DataItem, QueryArguments, ResolverResult, ScalarListValue}
 import com.prisma.api.connector.mysql.database.DatabaseQueryBuilder.{ResultListTransform, ResultTransform}
 import com.prisma.api.schema.APIErrors
 import com.prisma.api.schema.APIErrors.{InvalidFirstArgument, InvalidLastArgument, InvalidSkipArgument}

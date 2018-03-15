@@ -1,11 +1,32 @@
 package com.prisma.api.connector
 
 import com.prisma.api.connector.Types.DataItemFilterCollection
-import com.prisma.shared.models.Field
+import com.prisma.shared.models.{Field, Model}
+
+import scala.collection.immutable.Seq
 
 object Types {
   type DataItemFilterCollection = Seq[_ >: Seq[Any] <: Any]
   //  type UserData                 = Map[String, Option[Any]]
+}
+
+case class ScalarListValue(
+    nodeId: String,
+    position: Int,
+    value: Any
+)
+case class ResolverResult(
+    items: Seq[DataItem],
+    hasNextPage: Boolean = false,
+    hasPreviousPage: Boolean = false,
+    parentModelId: Option[String] = None
+)
+
+case class ModelCounts(countsMap: Map[Model, Int]) {
+  def countForName(name: String): Int = {
+    val model = countsMap.keySet.find(_.name == name).getOrElse(sys.error(s"No count found for model $name"))
+    countsMap(model)
+  }
 }
 
 case class QueryArguments(

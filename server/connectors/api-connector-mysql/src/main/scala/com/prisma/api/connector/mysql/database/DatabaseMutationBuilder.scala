@@ -1,9 +1,9 @@
 package com.prisma.api.connector.mysql.database
 
+import com.prisma.api.connector.Types.DataItemFilterCollection
 import com.prisma.api.connector._
-import com.prisma.api.connector.mysql.impl.NestedCreateRelationInterpreter
 import com.prisma.api.connector.mysql.database.SlickExtensions._
-import com.prisma.api.connector.mysql.database.Types.DataItemFilterCollection
+import com.prisma.api.connector.mysql.impl.NestedCreateRelationInterpreter
 import com.prisma.api.schema.GeneralError
 import com.prisma.shared.models.TypeIdentifier.TypeIdentifier
 import com.prisma.shared.models._

@@ -1,6 +1,6 @@
 package com.prisma.api.resolver
 
-import com.prisma.api.connector.mysql.database.DataResolver
+import com.prisma.api.connector.DataResolver
 import com.prisma.api.resolver.DeferredTypes.{ManyModelExistsDeferred, OrderedDeferred, OrderedDeferredFutureResult}
 
 import scala.concurrent.ExecutionContext.Implicits.global

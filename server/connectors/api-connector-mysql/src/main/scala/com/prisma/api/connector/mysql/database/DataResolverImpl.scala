@@ -1,8 +1,8 @@
 package com.prisma.api.connector.mysql.database
 
+import com.prisma.api.connector.Types.DataItemFilterCollection
+import com.prisma.api.connector._
 import com.prisma.api.connector.mysql.Metrics
-import com.prisma.api.connector.{DataItem, NodeSelector, QueryArguments}
-import com.prisma.api.connector.mysql.database.Types.DataItemFilterCollection
 import com.prisma.gc_values.{GCValue, GraphQLIdGCValue, JsonGCValue}
 import com.prisma.shared.models.IdType.Id
 import com.prisma.shared.models.TypeIdentifier.TypeIdentifier

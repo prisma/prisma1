@@ -1,8 +1,8 @@
 package com.prisma.api.connector.mysql.database
 
-import com.prisma.api.connector.mysql.database.DatabaseMutationBuilder.idFromWhereEquals
-import com.prisma.api.connector.mysql.database.Types.DataItemFilterCollection
+import com.prisma.api.connector.Types.DataItemFilterCollection
 import com.prisma.api.connector._
+import com.prisma.api.connector.mysql.database.DatabaseMutationBuilder.idFromWhereEquals
 import com.prisma.shared.models.{Field, Model, Project}
 import slick.dbio.DBIOAction
 import slick.dbio.Effect.Read
@@ -14,8 +14,8 @@ import scala.concurrent.ExecutionContext.Implicits.global
 
 object DatabaseQueryBuilder {
 
-  import SlickExtensions._
   import QueryArgumentsExtensions._
+  import SlickExtensions._
 
   implicit object GetDataItem extends GetResult[DataItem] {
     def apply(ps: PositionedResult): DataItem = {

@@ -1,8 +1,8 @@
 package com.prisma.subscriptions.resolving
 
-import com.prisma.api.connector.{DataItem, QueryArguments}
-import com.prisma.api.connector.mysql.database.Types.DataItemFilterCollection
-import com.prisma.api.connector.mysql.database.{DataResolver, FilterElement}
+import com.prisma.api.connector.Types.DataItemFilterCollection
+import com.prisma.api.connector.mysql.database.FilterElement
+import com.prisma.api.connector.{DataItem, DataResolver, QueryArguments}
 import com.prisma.api.schema.ObjectTypeBuilder
 import com.prisma.shared.models.Model
 import sangria.schema.Context

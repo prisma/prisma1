@@ -1,6 +1,6 @@
-package com.prisma.api.connector.mysql.database
-import com.prisma.api.connector.{DataItem, NodeSelector, QueryArguments}
-import com.prisma.api.connector.mysql.database.Types.DataItemFilterCollection
+package com.prisma.api.connector
+
+import com.prisma.api.connector.Types.DataItemFilterCollection
 import com.prisma.shared.models.IdType.Id
 import com.prisma.shared.models.{Field, Model, Project, Relation}
 
