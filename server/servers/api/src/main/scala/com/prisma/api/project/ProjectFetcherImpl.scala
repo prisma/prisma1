@@ -5,7 +5,6 @@ import com.prisma.shared.models.ProjectJsonFormatter._
 import com.prisma.shared.models.ProjectWithClientId
 import com.prisma.twitterFutures.TwitterFutureImplicits._
 import com.twitter.conversions.time._
-import com.typesafe.config.Config
 import play.api.libs.json.Json
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -13,7 +12,6 @@ import scala.concurrent.Future
 
 case class ProjectFetcherImpl(
     blockedProjectIds: Vector[String],
-    config: Config,
     schemaManagerEndpoint: String,
     schemaManagerSecret: String
 ) extends RefreshableProjectFetcher {
