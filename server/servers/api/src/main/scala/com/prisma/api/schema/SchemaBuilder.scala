@@ -7,7 +7,7 @@ import com.prisma.api.resolver.DeferredTypes.{ManyModelDeferred, OneDeferred}
 import com.prisma.api.{ApiDependencies, ApiMetrics}
 import com.prisma.shared.models.{Model, Project}
 import org.atteo.evo.inflector.English
-import sangria.relay.{Node, NodeDefinition, PossibleNodeObject}
+import sangria.relay._
 import sangria.schema._
 
 import scala.collection.mutable
@@ -226,6 +226,8 @@ case class SchemaBuilderImpl(
     )
   }
 
+  implicit val nodeEvidence = SangriaEvidences.DataItemNodeEvidence
+
   lazy val NodeDefinition(nodeInterface: InterfaceType[ApiUserContext, DataItem], nodeField, nodeRes) = Node.definitionById(
     resolve = (id: String, ctx: Context[ApiUserContext, Unit]) => {
       dataResolver.resolveByGlobalId(id)
@@ -233,7 +235,7 @@ case class SchemaBuilderImpl(
     possibleTypes = {
       objectTypes.values.flatMap { o =>
         if (o.allInterfaces.exists(_.name == "Node")) {
-          Some(PossibleNodeObject(o))
+          Some(PossibleNodeObject[ApiUserContext, Node, DataItem](o))
         } else {
           None
         }
@@ -248,6 +250,12 @@ case class SchemaBuilderImpl(
       case ReturnValue(dataItem) => outputTypesBuilder.mapResolve(dataItem, args)
       case NoReturnValue(where)  => throw APIErrors.NodeNotFoundForWhereError(where)
     }
+  }
+}
+
+object SangriaEvidences {
+  implicit object DataItemNodeEvidence extends IdentifiableNode[ApiUserContext, DataItem] {
+    override def id(ctx: Context[ApiUserContext, DataItem]) = ctx.value.id
   }
 }
 
