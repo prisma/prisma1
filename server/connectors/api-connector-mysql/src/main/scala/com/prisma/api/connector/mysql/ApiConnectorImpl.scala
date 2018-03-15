@@ -1,17 +1,16 @@
 package com.prisma.api.connector.mysql
 
 import com.prisma.api.connector.mysql.database.{DataResolverImpl, Databases}
-import com.prisma.api.connector.{ApiConnector, DatabaseMutactionExecutor}
 import com.prisma.api.connector.mysql.impl.DatabaseMutactionExecutorImpl
+import com.prisma.api.connector.{ApiConnector, DatabaseMutactionExecutor}
 import com.prisma.shared.models.Project
 import com.typesafe.config.{Config, ConfigFactory}
-import slick.jdbc.MySQLProfile.backend.DatabaseDef
 
 import scala.concurrent.{ExecutionContext, Future}
 
-case class ApiConnectorImpl(clientDb: DatabaseDef)(implicit ec: ExecutionContext) extends ApiConnector {
-  private lazy val config: Config = ConfigFactory.load()
-  private lazy val databases      = Databases.initialize(config)
+case class ApiConnectorImpl()(implicit ec: ExecutionContext) extends ApiConnector {
+  lazy val config: Config = ConfigFactory.load()
+  lazy val databases      = Databases.initialize(config)
 
   override def initialize() = {
     databases
@@ -25,7 +24,7 @@ case class ApiConnectorImpl(clientDb: DatabaseDef)(implicit ec: ExecutionContext
     } yield ()
   }
 
-  override def databaseMutactionExecutor: DatabaseMutactionExecutor = DatabaseMutactionExecutorImpl(clientDb)
+  override def databaseMutactionExecutor: DatabaseMutactionExecutor = DatabaseMutactionExecutorImpl(databases.master)
   override def dataResolver(project: Project)                       = DataResolverImpl(project, databases.readOnly)
   override def masterDataResolver(project: Project)                 = DataResolverImpl(project, databases.master)
 
