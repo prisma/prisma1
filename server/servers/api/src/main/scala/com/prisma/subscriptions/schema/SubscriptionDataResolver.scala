@@ -1,10 +1,10 @@
 package com.prisma.subscriptions.schema
 
-import com.prisma.api.database.DataResolver
+import com.prisma.api.connector.mysql.database.DataResolver
 import com.prisma.api.schema.{ObjectTypeBuilder, SimpleResolveOutput}
+import com.prisma.shared.models.Model
 import com.prisma.subscriptions.SubscriptionUserContext
 import com.prisma.subscriptions.resolving.FilteredResolver
-import com.prisma.shared.models.Model
 import sangria.schema.{Args, Context}
 
 import scala.concurrent.ExecutionContext.Implicits.global

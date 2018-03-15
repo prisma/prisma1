@@ -55,7 +55,7 @@ object JsonFormats {
     def read(value: JsValue) = throw new UnsupportedOperationException()
   }
 
-  class AnyJsonWriter extends JsonWriter[Map[String, Any]] {
+  implicit object MapJsonWriter extends JsonWriter[Map[String, Any]] {
     override def write(obj: Map[String, Any]): JsValue =
       AnyJsonFormat.write(obj)
   }

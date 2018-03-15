@@ -2,12 +2,11 @@ package com.prisma.client.server
 
 import akka.http.scaladsl.model.StatusCodes.OK
 import akka.http.scaladsl.model._
-import com.prisma.sangria.utils.ErrorHandler
 import com.prisma.api.ApiDependencies
 import com.prisma.api.schema.ApiUserContext
 import com.prisma.api.server.{GraphQlQuery, GraphQlRequest}
+import com.prisma.sangria.utils.ErrorHandler
 import sangria.execution.{Executor, QueryAnalysisError}
-import sangria.parser.SyntaxError
 import spray.json.{JsArray, JsValue}
 
 import scala.collection.immutable.Seq

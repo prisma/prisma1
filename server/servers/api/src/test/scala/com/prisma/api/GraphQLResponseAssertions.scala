@@ -1,9 +1,8 @@
 package com.prisma.api
 
-import com.prisma.util.json.SprayJsonExtensions
-import com.prisma.util.json.PlaySprayConversions
-import spray.json._
+import com.prisma.util.json.{PlaySprayConversions, SprayJsonExtensions}
 import play.api.libs.json.{JsValue => PJsValue}
+import spray.json._
 
 trait GraphQLResponseAssertions extends SprayJsonExtensions {
   import PlaySprayConversions._

@@ -1,8 +1,7 @@
 package com.prisma.subscriptions.specs
 
-import com.prisma.api.database.mutactions.mutactions.{AddDataItemToManyRelationByPath, CreateDataItem}
-import com.prisma.api.mutations.mutations.CascadingDeletes.Path
-import com.prisma.api.mutations.{CoolArgs, NodeSelector}
+import com.prisma.api.connector.mysql.impl.{AddDataItemToManyRelationByPathInterpreter, CreateDataItemInterpreter}
+import com.prisma.api.connector._
 import com.prisma.messagebus.pubsub.Only
 import com.prisma.shared.models.{Enum, Model, Project}
 import com.prisma.shared.schema_dsl.SchemaDsl
@@ -33,16 +32,16 @@ class SubscriptionFilterSpec extends FlatSpec with Matchers with SpecBase with A
 
     val path = Path.empty(NodeSelector.forId(project.schema.getModelByName_!("Comment"), "comment-id"))
 
-    testDatabase.runDbActionOnClientDb {
+    testDatabase.runDatabaseMutactionOnClientDb {
       CreateDataItem(
         project = project,
         path = path,
         args = CoolArgs(Map("text" -> "some comment", "id" -> "comment-id"))
-      ).execute.await.sqlAction
+      )
     }
 
     val extendedPath = path.appendEdge(project, model.getFieldByName_!("comments")).lastEdgeToNodeEdge(NodeSelector.forId(model, "comment-id"))
-    testDatabase.runDbActionOnClientDb { AddDataItemToManyRelationByPath(project, extendedPath).execute.await.sqlAction }
+    testDatabase.runDatabaseMutactionOnClientDb(AddDataItemToManyRelationByPath(project, extendedPath))
   }
 
   "The Filter" should "support enums in previous values" in {

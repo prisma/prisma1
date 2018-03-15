@@ -2,20 +2,18 @@ package com.prisma.api.server
 
 import akka.http.scaladsl.model.StatusCodes.OK
 import akka.http.scaladsl.model._
-import com.prisma.errors.{ErrorReporter, ProjectMetadata}
 import com.prisma.api.ApiDependencies
-import com.prisma.api.database.DataResolver
-import com.prisma.api.database.import_export.{BulkExport, BulkImport}
+import com.prisma.api.import_export.{BulkExport, BulkImport}
 import com.prisma.api.project.ProjectFetcher
 import com.prisma.api.schema.APIErrors.InvalidToken
 import com.prisma.api.schema._
 import com.prisma.auth.Auth
 import com.prisma.client.server.GraphQlRequestHandler
+import com.prisma.errors.{ErrorReporter, ProjectMetadata}
 import com.prisma.shared.models.{Project, ProjectWithClientId}
 import com.prisma.utils.`try`.TryExtensions._
-import io.netty.channel.unix.Errors
 import sangria.schema.Schema
-import spray.json.{JsArray, JsNumber, JsObject, JsString, JsValue}
+import spray.json.JsValue
 
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.Failure
@@ -63,7 +61,7 @@ case class RequestHandler(
 
   def handleRawRequestForExport(projectId: String, rawRequest: RawRequest): Future[(StatusCode, JsValue)] = {
     handleRawRequest(projectId, rawRequest) { project =>
-      val resolver = DataResolver(project = project)
+      val resolver = apiDependencies.dataResolver(project)
       val exporter = new BulkExport(project)
       exporter.executeExport(resolver, rawRequest.json).map(x => (200, x))
     }

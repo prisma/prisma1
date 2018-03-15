@@ -137,7 +137,7 @@ case class SubscriptionsManagerForModel(
         performOnlyTheFirstAndReuseResult
     }
 
-    optimizedProcessEventFns.toList.runInChunksOf(maxParallelism = 10)
+    optimizedProcessEventFns.toVector.runInChunksOf(maxParallelism = 10)
   }
 
   def processDatabaseAndNotifySubscribersEventFn(

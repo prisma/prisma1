@@ -1,10 +1,9 @@
 package com.prisma.api.import_export
 
 import com.prisma.api.ApiBaseSpec
-import com.prisma.api.database.DataResolver
-import com.prisma.api.database.import_export.BulkExport
-import com.prisma.api.database.import_export.ImportExport.MyJsonProtocol._
-import com.prisma.api.database.import_export.ImportExport.{Cursor, ExportRequest, JsonBundle, ResultFormat}
+import com.prisma.api.connector.mysql.database.DataResolver
+import com.prisma.api.import_export.ImportExport.MyJsonProtocol._
+import com.prisma.api.import_export.ImportExport.{Cursor, ExportRequest, JsonBundle, ResultFormat}
 import com.prisma.shared.models.Project
 import com.prisma.shared.schema_dsl.SchemaDsl
 import com.prisma.utils.await.AwaitUtils

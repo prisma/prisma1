@@ -2,10 +2,9 @@ package com.prisma.api.schema
 
 import akka.actor.ActorSystem
 import com.prisma.api.ApiDependencies
-import com.prisma.api.mutations.ClientMutationRunner
-import com.prisma.api.mutations.mutations.ResetData
-import com.prisma.subscriptions.schema.{SubscriptionQueryError, SubscriptionQueryValidator}
+import com.prisma.api.mutations.{ClientMutationRunner, ResetData}
 import com.prisma.shared.models.{Model, Project}
+import com.prisma.subscriptions.schema.{SubscriptionQueryError, SubscriptionQueryValidator}
 import org.scalactic.{Bad, Good, Or}
 import sangria.schema.{Argument, BooleanType, Context, Field, ListType, ObjectType, OptionType, Schema, SchemaValidationRule, StringType}
 
@@ -13,8 +12,11 @@ case class PrivateSchemaBuilder(
     project: Project
 )(implicit apiDependencies: ApiDependencies, system: ActorSystem) {
 
-  val dataResolver       = apiDependencies.dataResolver(project)
-  val masterDataResolver = apiDependencies.masterDataResolver(project)
+  val dataResolver                = apiDependencies.dataResolver(project)
+  val masterDataResolver          = apiDependencies.masterDataResolver(project)
+  val databaseMutactionExecutor   = apiDependencies.databaseMutactionExecutor
+  val sideEffectMutactionExecutor = apiDependencies.sideEffectMutactionExecutor
+  val mutactionVerifier           = apiDependencies.mutactionVerifier
 
   import system.dispatcher
 
@@ -46,7 +48,7 @@ case class PrivateSchemaBuilder(
       fieldType = OptionType(BooleanType),
       resolve = (ctx) => {
         val mutation = ResetData(project = project, dataResolver = masterDataResolver)
-        ClientMutationRunner.run(mutation, dataResolver).map(_ => true)
+        ClientMutationRunner.run(mutation, databaseMutactionExecutor, sideEffectMutactionExecutor, mutactionVerifier).map(_ => true)
       }
     )
   }
