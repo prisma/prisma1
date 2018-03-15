@@ -1,7 +1,6 @@
 package com.prisma.api.resolver
 
 import com.prisma.api.connector.{DataResolver, ResolverResult}
-import com.prisma.api.connector.mysql.database._
 import com.prisma.api.resolver.DeferredTypes._
 
 import scala.concurrent.ExecutionContext.Implicits.global
