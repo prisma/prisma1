@@ -13,12 +13,12 @@ import com.prisma.subscriptions.Webhook
 case class ApiDependenciesForTest()(implicit val system: ActorSystem, val materializer: ActorMaterializer) extends ApiDependencies {
   override implicit def self: ApiDependencies = this
 
-  val apiSchemaBuilder                       = SchemaBuilder()(system, this)
-  lazy val projectFetcher: ProjectFetcher    = ???
-  override lazy val maxImportExportSize: Int = 1000
-  override val sssEventsPubSub               = InMemoryAkkaPubSub[String]()
-  override val webhookPublisher              = InMemoryQueueTestKit[Webhook]()
-  override def apiConnector                  = ApiConnectorImpl()
-  override def sideEffectMutactionExecutor   = SideEffectMutactionExecutorImpl()
-  override def mutactionVerifier             = DatabaseMutactionVerifierImpl
+  lazy val apiSchemaBuilder                     = SchemaBuilder()(system, this)
+  lazy val projectFetcher: ProjectFetcher       = ???
+  override lazy val maxImportExportSize: Int    = 1000
+  override lazy val sssEventsPubSub             = InMemoryAkkaPubSub[String]()
+  override lazy val webhookPublisher            = InMemoryQueueTestKit[Webhook]()
+  override lazy val apiConnector                = ApiConnectorImpl()
+  override lazy val sideEffectMutactionExecutor = SideEffectMutactionExecutorImpl()
+  override lazy val mutactionVerifier           = DatabaseMutactionVerifierImpl
 }
