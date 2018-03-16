@@ -122,7 +122,7 @@ lazy val deploy = serverProject("deploy")
 
 lazy val api = serverProject("api")
   .dependsOn(apiConnector % "compile")
-  .dependsOn(apiConnectorMySql % "compile;test->test")
+  .dependsOn(apiConnectorMySql % "test->test")
   .dependsOn(deploy % "test->test")
   .dependsOn(messageBus % "compile")
   .dependsOn(akkaUtils % "compile")
