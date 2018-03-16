@@ -131,9 +131,6 @@ lazy val api = serverProject("api")
   .dependsOn(cache % "compile")
   .dependsOn(auth % "compile")
   .dependsOn(sangriaUtils % "compile")
-  .settings(
-    libraryDependencies ++= slick ++ Seq(mariaDbClient)
-  )
 
 lazy val subscriptions = serverProject("subscriptions")
   .dependsOn(api % "compile;test->test")
