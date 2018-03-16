@@ -1,6 +1,6 @@
 package com.prisma.api.connector.mysql.database
 
-import com.prisma.api.connector.{DataItem, ScalarListValue}
+import com.prisma.api.connector.ScalarListValue
 import com.prisma.api.schema.APIErrors
 import com.prisma.shared.models._
 import spray.json._
