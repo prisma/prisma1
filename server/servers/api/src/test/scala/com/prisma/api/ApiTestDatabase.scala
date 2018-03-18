@@ -2,7 +2,8 @@ package com.prisma.api
 
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
-import com.prisma.api.database.DatabaseQueryBuilder
+import com.prisma.api.connector.DatabaseMutaction
+import com.prisma.api.connector.mysql.database.DatabaseQueryBuilder
 import com.prisma.deploy.connector.mysql.impls.DeployMutactionExectutorImpl
 import com.prisma.deploy.connector.{CreateRelationTable, DeployMutaction}
 import com.prisma.shared.models._
@@ -57,5 +58,6 @@ case class ApiTestDatabase()(implicit dependencies: ApiDependencies) extends Awa
   }
 
   private def runMutaction(mutaction: DeployMutaction): Unit                    = DeployMutactionExectutorImpl(clientDatabase)(system.dispatcher).execute(mutaction).await
+  def runDatabaseMutactionOnClientDb(mutaction: DatabaseMutaction)              = dependencies.databaseMutactionExecutor.execute(Vector(mutaction)).await()
   def runDbActionOnClientDb(action: DBIOAction[Any, NoStream, Effect.All]): Any = clientDatabase.run(action).await()
 }

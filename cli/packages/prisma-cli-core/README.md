@@ -2,7 +2,7 @@
 
 [Website](https://www.prismagraphql.com) • [Docs](https://www.prismagraphql.com/docs/) • [Blog](https://blog.graph.cool/) • [Forum](https://www.graph.cool/forum) • [Slack](https://slack.graph.cool/) • [Twitter](https://twitter.com/graphcool)
 
-[![Slack Status](https://slack.graph.cool/badge.svg)](https://slack.graph.cool) [![npm version](https://badge.fury.io/js/graphcool.svg)](https://badge.fury.io/js/graphcool)
+[![CircleCI](https://circleci.com/gh/graphcool/prisma.svg?style=shield)](https://circleci.com/gh/graphcool/prisma) [![Slack Status](https://slack.graph.cool/badge.svg)](https://slack.graph.cool) [![npm version](https://badge.fury.io/js/prisma.svg)](https://badge.fury.io/js/prisma)
 
 **Prisma - turn your database into a GraphQL API**. Prisma lets you design your data model and have a production ready [GraphQL](https://www.howtographql.com/) API online in minutes.
 
@@ -23,18 +23,18 @@ The Prisma GraphQL API provides powerful abstractions and building blocks to dev
 * [Quickstart](#quickstart)
 * [Examples](#examples)
 * [Architecture](#architecture)
-* [Supported Database](#supported-databases)
+* [Supported Databases](#supported-databases)
 * [GraphQL API](#graphql-api)
 * [Community](#community)
 * [Contributing](#contributing)
 
 ## Quickstart
 
-[Watch this 5 min tutorial](https://www.youtube.com/watch?v=g0wFABHMzL4) or follow the steps below to get started with Prisma:
+[Watch this 4 min tutorial](https://www.youtube.com/watch?v=20zGexpEitc) or follow the steps below to get started with Prisma:
 
 1. **Install the CLI via NPM:**
 
-```sh
+```console
 npm install -g prisma
 ```
 
@@ -42,7 +42,7 @@ npm install -g prisma
 
 The following command creates all files you need for a new [service](https://www.prismagraphql.com/docs/reference/service-configuration/overview-ieshoo5ohm).
 
-```sh
+```console
 prisma init
 ```
 
@@ -78,7 +78,7 @@ type Location {
 
 To deploy your service simply run the following command and select one of the hosted development clusters or setup a local Docker-based development environment:
 
-```sh
+```console
 prisma deploy
 ```
 
@@ -86,7 +86,7 @@ prisma deploy
 
 Use the endpoint from the previous step in your frontend (or backend) applications to connect to your GraphQL API.
 
-7 **Read more in the dedicated quickstarts for your favorite technology**
+7. **Read more in the dedicated quickstarts for your favorite technology**
 
 [![](https://imgur.com/T5nakij.png)](https://www.prismagraphql.com/docs/quickstart/)
 
@@ -94,11 +94,10 @@ Use the endpoint from the previous step in your frontend (or backend) applicatio
 
 - [demo-application](https://github.com/graphcool/graphql-server-example)
 - [auth](examples/auth)
-- [file-api](examples/file-handling-s3)
+- [file-handling-s3](examples/file-handling-s3)
 - [github-auth](examples/github-auth)
 - [permissions](examples/permissions)
 - [resolver-forwarding](examples/resolver-forwarding)
-- [rest-wrapper](examples/rest-wrapper)
 - [subscriptions](examples/subscriptions)
 
 
@@ -110,7 +109,7 @@ Prisma is a secure API layer that sits in front of your database. Acting as a pr
 
 ## Supported Databases
 
-Prisma can be used for MySQL Databases out of the box. More databases connectors will follow:
+Prisma can be used for MySQL Databases out of the box. More database connectors will follow:
 
 * [PostgreSQL Connector](https://github.com/graphcool/prisma/issues/1641)
 * [MS SQL Connector](https://github.com/graphcool/prisma/issues/1642)
@@ -120,6 +119,15 @@ Prisma can be used for MySQL Databases out of the box. More databases connectors
 * [Neo4j Connector](https://github.com/graphcool/prisma/issues/1646)
 * [Druid Connector](https://github.com/graphcool/prisma/issues/1647)
 * [Dgraph Connector](https://github.com/graphcool/prisma/issues/1648)
+* [DynamoDB Connector](https://github.com/graphcool/prisma/issues/1655)
+* [Elastic Search Connector](https://github.com/graphcool/prisma/issues/1665)
+* [Cloud Firestore Connector](https://github.com/graphcool/prisma/issues/1660)
+* [CockroachDB Connector](https://github.com/graphcool/prisma/issues/1705)
+* [Cassandra Connector](https://github.com/graphcool/prisma/issues/1750)
+* [Redis Connector](https://github.com/graphcool/prisma/issues/1722)
+* [AWS Neptune Connector](https://github.com/graphcool/prisma/issues/1752)
+* [CosmosDB Connector](https://github.com/graphcool/prisma/issues/1663)
+* [Influx Connector](https://github.com/graphcool/prisma/issues/1857)
 
 Join the discussion or contribute to influence which we'll work on next!
 
@@ -145,10 +153,5 @@ Prisma has a community of thousands of amazing developers and contributors. Welc
 
 ## Contributing
 
-Your feedback is **very helpful**, please share your opinion and thoughts!
-
-* [Request a new feature](https://github.com/graphcool/prisma/issues/new)
-* [Report a bug](https://github.com/graphcool/prisma/issues/new)
-* [Participate in existing discussions](https://github.com/graphcool/prisma/issues)
-
-
+Contributions are **welcome and extremely helpful** 🙌
+Please refer [to the contribution guide](https://github.com/graphcool/prisma/blob/master/CONTRIBUTING.md) for more information.

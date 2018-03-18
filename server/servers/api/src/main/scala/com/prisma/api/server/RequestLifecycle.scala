@@ -3,7 +3,7 @@ package com.prisma.api.server
 import com.prisma.api.schema.APIErrors.VariablesParsingError
 import com.prisma.api.schema.ApiUserContext
 import com.prisma.api.schema.CommonErrors.InputCompletelyMalformed
-import com.prisma.shared.models.{Project, ProjectWithClientId}
+import com.prisma.shared.models.Project
 import com.prisma.utils.`try`.TryUtil
 import sangria.parser.QueryParser
 import sangria.schema.Schema

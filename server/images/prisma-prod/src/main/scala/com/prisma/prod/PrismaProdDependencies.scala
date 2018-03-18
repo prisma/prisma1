@@ -4,7 +4,9 @@ import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
 import com.prisma.akkautil.http.SimpleHttpClient
 import com.prisma.api.ApiDependencies
-import com.prisma.api.database.Databases
+import com.prisma.api.connector.mysql.ApiConnectorImpl
+import com.prisma.api.connector.mysql.database.Databases
+import com.prisma.api.mutactions.{DatabaseMutactionVerifierImpl, SideEffectMutactionExecutorImpl}
 import com.prisma.api.project.{CachedProjectFetcherImpl, ProjectFetcher}
 import com.prisma.api.schema.{CachedSchemaBuilder, SchemaBuilder}
 import com.prisma.auth.AuthImpl
@@ -102,4 +104,8 @@ case class PrismaProdDependencies()(implicit val system: ActorSystem, val materi
   override lazy val apiAuth                                  = AuthImpl
   override lazy val deployPersistencePlugin: DeployConnector = MySqlDeployConnector(databases.master)(system.dispatcher)
   override lazy val functionValidator: FunctionValidator     = FunctionValidatorImpl()
+
+  override def apiConnector                = ApiConnectorImpl(databases.master)
+  override def sideEffectMutactionExecutor = SideEffectMutactionExecutorImpl()
+  override def mutactionVerifier           = DatabaseMutactionVerifierImpl
 }

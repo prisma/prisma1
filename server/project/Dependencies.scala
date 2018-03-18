@@ -88,6 +88,7 @@ object Dependencies {
   val jettyServer       = "org.eclipse.jetty"          % "jetty-server"              % "9.3.0.v20150612"
   val scalaUri          = "com.netaporter"             %% "scala-uri"                % "0.4.16"
   val parserCombinators = "org.scala-lang.modules"     %% "scala-parser-combinators" % "1.0.4"
+  val apacheCommons     = "commons-lang"               % "commons-lang"              % "2.6"
 
   lazy val common: Seq[ModuleID] = Seq(
     java8Compat,

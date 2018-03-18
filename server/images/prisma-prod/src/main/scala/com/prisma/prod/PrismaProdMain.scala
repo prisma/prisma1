@@ -6,9 +6,9 @@ import com.prisma.akkautil.http.ServerExecutor
 import com.prisma.api.server.ApiServer
 import com.prisma.deploy.server.ClusterServer
 import com.prisma.subscriptions.SimpleSubscriptionsServer
+import com.prisma.utils.boolean.BooleanUtils._
 import com.prisma.websocket.WebsocketServer
 import com.prisma.workers.WorkerServer
-import com.prisma.utils.boolean.BooleanUtils._
 
 object PrismaProdMain extends App {
   implicit val system       = ActorSystem("single-server")

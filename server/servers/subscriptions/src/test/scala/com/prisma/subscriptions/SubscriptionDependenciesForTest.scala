@@ -2,7 +2,9 @@ package com.prisma.subscriptions
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
 import com.prisma.api.ApiDependencies
-import com.prisma.api.database.Databases
+import com.prisma.api.connector.mysql.ApiConnectorImpl
+import com.prisma.api.connector.mysql.database.Databases
+import com.prisma.api.mutactions.{DatabaseMutactionVerifierImpl, SideEffectMutactionExecutorImpl}
 import com.prisma.api.project.{ProjectFetcher, ProjectFetcherImpl}
 import com.prisma.api.schema.SchemaBuilder
 import com.prisma.messagebus.testkits.{InMemoryPubSubTestKit, InMemoryQueueTestKit}
@@ -51,4 +53,8 @@ class SubscriptionDependenciesForTest()(implicit val system: ActorSystem, val ma
   override val databases: Databases                 = Databases.initialize(config)
   override lazy val sssEventsPubSub                 = ???
   override lazy val webhookPublisher                = ???
+
+  override def apiConnector                = ApiConnectorImpl(databases.master)
+  override def sideEffectMutactionExecutor = SideEffectMutactionExecutorImpl()
+  override def mutactionVerifier           = DatabaseMutactionVerifierImpl
 }

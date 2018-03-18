@@ -6,7 +6,7 @@ github: https://github.com/graphql-boilerplates/react-fullstack-graphql/tree/mas
 
 # React & Apollo Quickstart
 
-In this quickstart tutorial, you'll learn how to build a fullstack app with React, GraphQL and Node.js. You will use [`graphql-yoga`](https://github.com/graphcool/graphql-yoga/) as your web server which is connected to a "GraphQL database" using [`prisma-binding`](https://github.com/graphcool/prisma-binding).
+In this quickstart tutorial, you'll learn how to build a fullstack app with React, GraphQL and Node.js. You will use [`graphql-yoga`](https://github.com/graphcool/graphql-yoga/) as your web server. The server is connected to a Prisma database service using [`prisma-binding`](https://github.com/graphcool/prisma-binding). To learn more about GraphQL server development and the required architecture, read the corresponding [Introduction](!alias-quohj3yahv) chapters.
 
 > The code for this project can be found as a _GraphQL boilerplate_ project on [GitHub](https://github.com/graphql-boilerplates/react-fullstack-graphql/tree/master/basic).
 
@@ -78,7 +78,7 @@ Based on this data model Prisma generates the **database schema**, a [GraphQL sc
 
 ## Step 3: Deploy the Prisma database service
 
-Before you can start the server, you first need to make sure your GraphQL database is available. You can do so by deploying the correspdonding Prisma service that's responsible for the database.
+Before you can start the server, you first need to make sure your Prisma database service is available. You can do so by deploying it with the `prisma deploy` command.
 
 In this case, you'll deploy the Prisma database service to the **free development cluster** of Prisma Cloud. Note that this cluster is not intended for production use, but rather for development and demo purposes.
 

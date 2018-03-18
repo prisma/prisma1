@@ -2,12 +2,11 @@ package com.prisma.subscriptions.resolving
 
 import java.util.concurrent.TimeUnit
 
-import com.prisma.api.database.DataItem
-import com.prisma.api.mutations.GraphcoolDataTypes
-import com.prisma.subscriptions.SubscriptionExecutor
+import com.prisma.api.connector.DataItem
+import com.prisma.api.mutactions.GraphcoolDataTypes
 import com.prisma.shared.models.ModelMutationType.ModelMutationType
 import com.prisma.shared.models.{Model, ModelMutationType, Project}
-import com.prisma.subscriptions.SubscriptionDependencies
+import com.prisma.subscriptions.{SubscriptionDependencies, SubscriptionExecutor}
 import com.prisma.subscriptions.metrics.SubscriptionMetrics.handleDatabaseEventTimer
 import com.prisma.subscriptions.resolving.SubscriptionsManagerForModel.Requests.StartSubscription
 import com.prisma.subscriptions.util.PlayJson
