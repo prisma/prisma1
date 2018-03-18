@@ -220,3 +220,51 @@ yarn start # open http://localhost:3000 in your browser
 ```
 
 </Instruction>
+
+## Optional: Deploy the GraphQL server and the front-end app with Now
+
+You locally launched your app in the last step. Congratulations!
+
+If you want to make your app available for the world to see you need to deploy both a) The GraphQL server, and b) the front-end app.
+
+For this there are several options, an easy one is deploying with [Now](https://zeit.co/now), a simple tool from the [Zeit](https://zeit.co/) team.
+
+To do this, after downloading the [Now](https://zeit.co/now) tool: 
+
+<Instruction>
+
+Deploy your GraphQL server:
+```sh
+cd server
+now
+```
+You'll then get the URL of your GraphQL server.
+
+> Note: Even though locally your GraphQL server ran on port 4000, Now always redirects all (the only one) port to 443.
+
+</Instruction>
+
+<Instruction>
+
+Update the ApolloClient link to the new GraphQL server endpoint:
+
+In src/index.js change the HttpLink `uri` from `localhost:4000` to the url obtained from Now on the previous instruction.
+
+> Remember to not include a port this time.
+
+> Tip: When productionizing you can do this automatically using env variables, if so, remember that `create-react-app` upon which this example was built requires env variables to have the prefix `REACT_APP_`.
+
+</Instruction>
+
+<Instruction>
+
+Now deploy your front-end app:
+
+```sh(path="server")
+cd ..
+now
+```
+
+Congratulations! You can now use the returned URL to access your app live in the public web 🎉.
+
+</Instruction>
