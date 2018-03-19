@@ -7,8 +7,8 @@ import com.prisma.api.import_export.ImportExport._
 import com.prisma.shared.models._
 import org.scalactic.{Bad, Good, Or}
 import spray.json._
-import scala.concurrent.ExecutionContext.Implicits.global
 
+import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 import scala.util.{Failure, Try}
 
@@ -106,46 +106,48 @@ class BulkImport(project: Project)(implicit apiDependencies: ApiDependencies) {
     if (exceptions.nonEmpty) {
       exceptions
     } else {
-      val creates      = createDataItems.collect { case x: Good[CreateDataItemImport] => x.get }
-      val groupedItems = creates.groupBy(_.model)
-      groupedItems.values.map(group => Good(CreateDataItemsImport(group))).toVector
+      val creates                                                = createDataItems.collect { case x: Good[CreateDataItemImport] => x.get }
+      val groupedItems: Map[Model, Vector[CreateDataItemImport]] = creates.groupBy(_.model)
+      groupedItems.map { case (model, group) => Good(CreateDataItemsImport(project, model, group.map(_.args))) }.toVector
     }
   }
 
-  private def generateImportRelationsDBActions(relations: Vector[ImportRelation]): Vector[AddDataItemToManyRelationByPath] = {
-    relations.map { element =>
+  private def generateImportRelationsDBActions(relations: Vector[ImportRelation]): Vector[CreateRelationRowsImport] = {
+    val createRows = relations.map { element =>
       val (left, right) = (element.left, element.right) match {
         case (l, r) if l.fieldName.isDefined => (l, r)
         case (l, r) if r.fieldName.isDefined => (r, l)
         case _                               => throw sys.error("Invalid ImportRelation at least one fieldName needs to be defined.")
       }
-
-      val fromModel = project.schema.getModelByName_!(left.identifier.typeName)
-      val toModel   = project.schema.getModelByName_!(right.identifier.typeName)
-      val fromField = fromModel.getFieldByName_!(left.fieldName.get)
-
-      val path = Path
-        .empty(NodeSelector.forId(fromModel, left.identifier.id))
-        .appendEdge(project, fromField)
-        .lastEdgeToNodeEdge(NodeSelector.forId(toModel, right.identifier.id))
-      AddDataItemToManyRelationByPath(project, path)
+      val fromModel                                                 = project.schema.getModelByName_!(left.identifier.typeName)
+      val fromField                                                 = fromModel.getFieldByName_!(left.fieldName.get)
+      val relationSide: com.prisma.shared.models.RelationSide.Value = fromField.relationSide.get
+      val relation: Relation                                        = fromField.relation.get
+      val aValue: String                                            = if (relationSide == RelationSide.A) left.identifier.id else right.identifier.id
+      val bValue: String                                            = if (relationSide == RelationSide.A) right.identifier.id else left.identifier.id
+      CreateRelationRow(project, relation, aValue, bValue)
     }
+    val groupedItems = createRows.groupBy(_.relation)
+    groupedItems.map { case (relation, group) => CreateRelationRowsImport(project, relation, group.map(item => (item.a, item.b))) }.toVector
   }
 
-  private def generateImportListsDBActions(lists: Vector[ImportList]): Vector[PushScalarListImport] = {
-    lists.flatMap { element =>
+  private def generateImportListsDBActions(lists: Vector[ImportList]): Vector[PushScalarListsImport] = {
+    val listsCreate = lists.flatMap { element =>
       val model                         = project.schema.getModelByName_!(element.identifier.typeName)
       def isDateTime(fieldName: String) = model.getFieldByName_!(fieldName).typeIdentifier == TypeIdentifier.DateTime
       def isJson(fieldName: String)     = model.getFieldByName_!(fieldName).typeIdentifier == TypeIdentifier.Json
 
       element.values.map {
         case (fieldName, values) if isDateTime(fieldName) =>
-          PushScalarListImport(project, model, fieldName, element.identifier.id, values.map(dateTimeFromISO8601))
+          PushScalarListImport(project, s"${model.name}_{$fieldName}", element.identifier.id, values.map(dateTimeFromISO8601))
         case (fieldName, values) if isJson(fieldName) =>
-          PushScalarListImport(project, model, fieldName, element.identifier.id, values.map(v => v.toJson))
+          PushScalarListImport(project, s"${model.name}_{$fieldName}", element.identifier.id, values.map(v => v.toJson))
         case (fieldName, values) =>
-          PushScalarListImport(project, model, fieldName, element.identifier.id, values)
+          PushScalarListImport(project, s"${model.name}_{$fieldName}", element.identifier.id, values)
       }
     }
+
+    val groupedItems = listsCreate.groupBy(_.tableName)
+    groupedItems.map { case (tableName, group) => PushScalarListsImport(project, tableName, group.map(item => (item.id, item.values))) }.toVector
   }
 }

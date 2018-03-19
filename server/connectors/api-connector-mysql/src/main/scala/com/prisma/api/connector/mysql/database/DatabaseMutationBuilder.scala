@@ -2,6 +2,7 @@ package com.prisma.api.connector.mysql.database
 
 import java.sql.PreparedStatement
 
+import com.librato.metrics.client.Json
 import com.prisma.api.connector._
 import com.prisma.api.connector.mysql.database.SlickExtensions._
 import com.prisma.api.connector.mysql.database.Types.DataItemFilterCollection
@@ -10,6 +11,7 @@ import com.prisma.api.schema.GeneralError
 import com.prisma.shared.models.TypeIdentifier.TypeIdentifier
 import com.prisma.shared.models._
 import cool.graph.cuid.Cuid
+import play.api.libs.json.JsValue
 import slick.dbio.{DBIOAction, Effect, NoStream}
 import slick.jdbc.MySQLProfile.api._
 import slick.jdbc.SQLActionBuilder
@@ -200,23 +202,6 @@ object DatabaseMutationBuilder {
 
   def setScalarListToEmpty(projectId: String, path: Path, fieldName: String) = {
     (sql"DELETE FROM `#$projectId`.`#${path.lastModel.name}_#${fieldName}` WHERE `nodeId` = " ++ pathQueryForLastChild(projectId, path)).asUpdate
-  }
-
-  def pushScalarList(projectId: String, modelName: String, fieldName: String, nodeId: String, values: Vector[Any]): DBIOAction[Int, NoStream, Effect] = {
-
-    val escapedValueTuples = for {
-      (escapedValue, position) <- values.map(escapeUnsafeParam).zip((1 to values.length).map(_ * 1000))
-    } yield {
-      sql"($nodeId, @baseline + $position, " ++ escapedValue ++ sql")"
-    }
-
-    DBIO
-      .sequence(
-        List(
-          sqlu"""set @baseline := ifnull((select max(position) from `#$projectId`.`#${modelName}_#${fieldName}` where nodeId = $nodeId), 0) + 1000""",
-          (sql"insert into `#$projectId`.`#${modelName}_#${fieldName}` (`nodeId`, `position`, `value`) values " ++ combineByComma(escapedValueTuples)).asUpdate
-        ))
-      .map(_.last)
   }
 
   def getDbActionsForUpsertScalarLists(projectId: String, path: Path, args: CoolArgs): Vector[DBIOAction[Any, NoStream, Effect]] = {
@@ -418,27 +403,31 @@ object DatabaseMutationBuilder {
   }
   //endregion
 
-  def createDataItemsImport(mutations: Vector[CreateDataItemImport]): SimpleDBIO[Int] = {
+  def createDataItemsImport(mutaction: CreateDataItemsImport): SimpleDBIO[Int] = {
     SimpleDBIO[Int] { x =>
-      val model        = mutations.head.model
+      val model        = mutaction.model
       val columns      = model.scalarNonListFields.map(_.name)
       val escapedKeys  = columns.mkString(",")
       val placeHolders = columns.map(_ => "?").mkString(",")
 
-      val query                         = s"INSERT INTO `${mutations.head.project.id}`.`${mutations.head.model.name}` ($escapedKeys) VALUES ($placeHolders)"
+      val query                         = s"INSERT INTO `${mutaction.project.id}`.`${model.name}` ($escapedKeys) VALUES ($placeHolders)"
       val itemInsert: PreparedStatement = x.connection.prepareStatement(query)
 
-      mutations.foreach { mutation =>
+      mutaction.args.foreach { arg =>
         columns.zipWithIndex.foreach { columnAndIndex =>
           val index  = columnAndIndex._2 + 1
           val column = columnAndIndex._1
-          mutation.args.raw.get(column) match {
+          arg.raw.get(column) match {
             case Some(s: String)                                        => itemInsert.setString(index, s)
             case Some(i: Int)                                           => itemInsert.setInt(index, i)
-            case Some(bd: BigDecimal)                                   => itemInsert.setInt(index, bd.toIntExact)
+            case Some(bd: BigDecimal)                                   => itemInsert.setInt(index, bd.toInt)
+            case Some(f: Float)                                         => itemInsert.setDouble(index, f.toDouble)
+            case Some(d: Double)                                        => itemInsert.setDouble(index, d)
+            case Some(b: Boolean)                                       => itemInsert.setBoolean(index, b)
+            case Some(j: JsValue)                                       => itemInsert.setString(index, j.toString)
             case None if column == "createdAt" || column == "updatedAt" => itemInsert.setString(index, "2017-11-29 14:35:13")
             case None                                                   => itemInsert.setNull(index, java.sql.Types.NULL)
-            case Some(x)                                                => sys.error("""fngfgfd""")
+            case Some(x)                                                => sys.error("""fngfgfd     """ + x)
           }
         }
         itemInsert.addBatch()
@@ -446,20 +435,85 @@ object DatabaseMutationBuilder {
 
       itemInsert.executeBatch()
 
-      val relayQuery = s"INSERT INTO `${mutations.head.project.id}`.`_RelayId` (`id`, `stableModelIdentifier`) VALUES (?,?)"
+      val relayQuery = s"INSERT INTO `${mutaction.project.id}`.`_RelayId` (`id`, `stableModelIdentifier`) VALUES (?,?)"
       val relayInsert: PreparedStatement = {
         x.connection.prepareStatement(relayQuery)
       }
 
-      mutations.foreach { mutation =>
-        relayInsert.setString(1, mutation.args.raw("id").toString)
+      mutaction.args.foreach { arg =>
+        relayInsert.setString(1, arg.raw("id").toString)
         relayInsert.setString(2, model.stableIdentifier)
         relayInsert.addBatch()
       }
       relayInsert.executeBatch()
 
-      mutations.size
+      mutaction.args.size
     }
+  }
+
+  def createRelationRowsImport(mutaction: CreateRelationRowsImport): SimpleDBIO[Int] = {
+    SimpleDBIO[Int] { x =>
+      val query                             = s"INSERT INTO `${mutaction.project.id}`.`${mutaction.relation.id}` (`id`, `a`, `b`) VALUES (?,?,?)"
+      val relationInsert: PreparedStatement = x.connection.prepareStatement(query)
+      mutaction.args.foreach { arg =>
+        relationInsert.setString(1, Cuid.createCuid())
+        relationInsert.setString(2, arg._1)
+        relationInsert.setString(3, arg._2)
+        relationInsert.addBatch()
+      }
+      relationInsert.executeBatch()
+      mutaction.args.size
+    }
+  }
+
+  def pushScalarListsImport(mutaction: PushScalarListsImport): SimpleDBIO[Int] = {
+    SimpleDBIO[Int] { x =>
+      val query                         = s"insert into `${mutaction.project.id}`.`${mutaction.tableName}` (`nodeId`, `position`, `value`) values (?,?,?)"
+      val listInsert: PreparedStatement = x.connection.prepareStatement(query)
+
+      for {
+        base  <- mutaction.args
+        value <- base._2.zipWithIndex
+        tuple = (base._1, value._1, value._2 * 1000)
+      } yield {
+
+        listInsert.setString(1, tuple._1)
+
+        tuple._2 match {
+          case s: String      => listInsert.setString(2, s)
+          case i: Int         => listInsert.setInt(2, i)
+          case bd: BigDecimal => listInsert.setInt(3, bd.toInt)
+          case _              => sys.error("""fngfgfd""")
+        }
+
+        listInsert.setInt(3, tuple._3)
+        listInsert.addBatch()
+      }
+
+      listInsert.executeBatch()
+      mutaction.args.size
+    }
+  }
+
+  def pushScalarListsImportTemp(projectId: String,
+                                modelName: String,
+                                fieldName: String,
+                                nodeId: String,
+                                values: Vector[Any]): DBIOAction[Int, NoStream, Effect] = {
+
+    val escapedValueTuples = for {
+      (escapedValue, position) <- values.map(escapeUnsafeParam).zip((1 to values.length).map(_ * 1000))
+    } yield {
+      sql"($nodeId, @baseline + $position, " ++ escapedValue ++ sql")"
+    }
+
+    DBIO
+      .sequence(
+        List(
+          sqlu"""set @baseline := ifnull((select max(position) from `#$projectId`.`#${modelName}_#${fieldName}` where nodeId = $nodeId), 0) + 1000""",
+          (sql"insert into `#$projectId`.`#${modelName}_#${fieldName}` (`nodeId`, `position`, `value`) values " ++ combineByComma(escapedValueTuples)).asUpdate
+        ))
+      .map(_.last)
   }
 
 }

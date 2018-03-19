@@ -51,7 +51,7 @@ case class DatabaseMutactionExecutorImpl(
     case m: VerifyConnection                            => VerifyConnectionInterpreter(m)
     case m: VerifyWhere                                 => VerifyWhereInterpreter(m)
     case m: CreateDataItemsImport                       => CreateDataItemsImportInterpreter(m)
-    case m: CreateRelationRowImport                     => CreateRelationRowImportInterpreter(m)
-    case m: PushScalarListImport                        => PushScalarListImportInterpreter(m)
+    case m: CreateRelationRowsImport                    => CreateRelationRowsImportInterpreter(m)
+    case m: PushScalarListsImport                       => PushScalarListsImportInterpreter(m)
   }
 }

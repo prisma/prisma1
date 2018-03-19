@@ -24,6 +24,8 @@ class SingleValueImportExportSpec extends FlatSpec with Matchers with ApiBaseSpe
       .field("datetime", _.DateTime)
       .field("enum", _.Enum, enum = Some(enum))
       .field("json", _.Json)
+      .field("updatedAt", _.DateTime)
+      .field("createdAt", _.DateTime)
   }
 
   override protected def beforeAll(): Unit = {
