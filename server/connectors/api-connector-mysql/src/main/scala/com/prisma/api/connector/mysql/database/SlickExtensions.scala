@@ -131,4 +131,37 @@ object SlickExtensions {
   def prefixIfNotNone(prefix: String, action: Option[SQLActionBuilder]): Option[SQLActionBuilder] = {
     if (action.isEmpty) None else Some(sql"#$prefix " concat action.get)
   }
+
+  //region Import
+
+  import org.apache.commons.lang.StringEscapeUtils.escapeSql
+
+  def escapeKeyToString(key: String) = s"`${escapeSql(key)}`"
+
+  def escapeUnsafeParamToString(param: Any): String = {
+    def unwrapSome(x: Any): Any = {
+      x match {
+        case Some(x) => x
+        case x       => x
+      }
+    }
+    unwrapSome(param) match {
+      case param: String       => s"'${escapeSql(param)}'"
+      case param: PlayJsValue  => s"'${escapeSql(param.toString())}'"
+      case param: SprayJsValue => s"'${escapeSql(param.compactPrint)}'"
+      case param: Boolean      => param.toString
+      case param: Int          => param.toString
+      case param: Long         => param.toString
+      case param: Float        => param.toString
+      case param: Double       => param.toString
+      case param: BigInt       => param.toString
+      case param: BigDecimal   => param.toString
+      case param: DateTime     => s"'${param.toString(DateTimeFormat.forPattern("yyyy-MM-dd'T'HH:mm:ss.SSS").withZoneUTC())}'"
+      case param: Vector[_]    => s"${listToJson(param.toList)}"
+      case None                => s"NULL"
+      case null                => s"NULL"
+      case _                   => throw new IllegalArgumentException("Unsupported scalar value in SlickExtensions: " + param.toString)
+    }
+  }
+
 }

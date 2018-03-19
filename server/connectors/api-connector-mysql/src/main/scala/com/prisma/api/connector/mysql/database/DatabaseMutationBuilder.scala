@@ -1,5 +1,7 @@
 package com.prisma.api.connector.mysql.database
 
+import java.sql.PreparedStatement
+
 import com.prisma.api.connector._
 import com.prisma.api.connector.mysql.impl.NestedCreateRelationInterpreter
 import com.prisma.api.connector.mysql.database.SlickExtensions._
@@ -10,7 +12,7 @@ import com.prisma.shared.models._
 import cool.graph.cuid.Cuid
 import slick.dbio.{DBIOAction, Effect, NoStream}
 import slick.jdbc.MySQLProfile.api._
-import slick.jdbc.SQLActionBuilder
+import slick.jdbc.{PositionedParameters, SQLActionBuilder}
 import slick.sql.{SqlAction, SqlStreamingAction}
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -425,4 +427,60 @@ object DatabaseMutationBuilder {
     }
   }
   //endregion
+
+  def createDataItemImport(projectId: String, modelName: String, args: CoolArgs): SimpleDBIO[Int] = {
+    val escapedKeyValueTuples = args.raw.toList.map(x => (escapeKeyToString(x._1), escapeUnsafeParamToString(x._2)))
+    val escapedKeys           = escapedKeyValueTuples.map(_._1).mkString(",")
+    val escapedValues         = escapedKeyValueTuples.map(_._2).mkString(",")
+    SimpleDBIO[Int] { x =>
+      val res: PreparedStatement = x.connection.prepareStatement(s"INSERT INTO `$projectId`.`$modelName` ($escapedKeys) VALUES ($escapedValues)")
+      res.execute()
+      1
+    }
+  }
+
+  def createDataItemsImport(mutations: Vector[CreateDataItemImport]): SimpleDBIO[Int] = {
+    SimpleDBIO[Int] { x =>
+      val model        = mutations.head.model
+      val columns      = model.scalarNonListFields.map(_.name)
+      val escapedKeys  = columns.mkString(",")
+      val placeHolders = columns.map(_ => "?").mkString(",")
+
+      val query                         = s"INSERT INTO `${mutations.head.project.id}`.`${mutations.head.model.name}` ($escapedKeys) VALUES ($placeHolders)"
+      val itemInsert: PreparedStatement = x.connection.prepareStatement(query)
+
+      mutations.foreach { mutation =>
+        columns.zipWithIndex.foreach { columnAndIndex =>
+          val index  = columnAndIndex._2 + 1
+          val column = columnAndIndex._1
+          mutation.args.raw.get(column) match {
+            case Some(s: String)                                        => itemInsert.setString(index, s)
+            case Some(i: Int)                                           => itemInsert.setInt(index, i)
+            case Some(bd: BigDecimal)                                   => itemInsert.setInt(index, bd.toIntExact)
+            case None if column == "createdAt" || column == "updatedAt" => itemInsert.setString(index, "2017-11-29 14:35:13")
+            case None                                                   => itemInsert.setNull(index, java.sql.Types.NULL)
+            case Some(x)                                                => sys.error("""fngfgfd""")
+          }
+        }
+        itemInsert.addBatch()
+      }
+
+      itemInsert.executeBatch()
+
+      val relayQuery = s"INSERT INTO `${mutations.head.project.id}`.`_RelayId` (`id`, `stableModelIdentifier`) VALUES (?,?)"
+      val relayInsert: PreparedStatement = {
+        x.connection.prepareStatement(relayQuery)
+      }
+
+      mutations.foreach { mutation =>
+        relayInsert.setString(1, mutation.args.raw("id").toString)
+        relayInsert.setString(2, model.stableIdentifier)
+        relayInsert.addBatch()
+      }
+      relayInsert.executeBatch()
+
+      mutations.size
+    }
+  }
+
 }

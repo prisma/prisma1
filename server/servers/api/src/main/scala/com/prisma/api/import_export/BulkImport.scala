@@ -1,7 +1,7 @@
 package com.prisma.api.import_export
 
 import com.prisma.api.ApiDependencies
-import com.prisma.api.connector.CoolArgs
+import com.prisma.api.connector.{CoolArgs, CreateDataItem, CreateDataItemImport}
 import com.prisma.api.connector.mysql.database.{DatabaseMutationBuilder, ProjectRelayId, ProjectRelayIdTable}
 import com.prisma.api.import_export.ImportExport.MyJsonProtocol._
 import com.prisma.api.import_export.ImportExport._
@@ -14,9 +14,11 @@ import slick.lifted.TableQuery
 import spray.json._
 
 import scala.concurrent.Future
-import scala.util.Try
+import scala.util.{Failure, Success, Try}
 
 class BulkImport(project: Project)(implicit apiDependencies: ApiDependencies) {
+  import com.prisma.utils.future.FutureUtils._
+  import apiDependencies.executionContext
 
   val db = apiDependencies.databases
 
@@ -34,17 +36,22 @@ class BulkImport(project: Project)(implicit apiDependencies: ApiDependencies) {
 
       }
 
-    val res: Future[Vector[Try[Int]]] = runDBActions(actions)
+    val res = runDBActions(actions.transactionally)
 
     def messageWithOutConnection(tryelem: Try[Any]): String = tryelem.failed.get.getMessage.substring(tryelem.failed.get.getMessage.indexOf(")") + 1)
 
-    res
-      .map(vector =>
-        vector.zipWithIndex.collect {
-          case (elem, idx) if elem.isFailure && idx < count  => Map("index" -> idx, "message"           -> messageWithOutConnection(elem)).toJson
-          case (elem, idx) if elem.isFailure && idx >= count => Map("index" -> (idx - count), "message" -> messageWithOutConnection(elem)).toJson
-      })
-      .map(x => JsArray(x))
+//    res
+//      .map(vector =>
+//        vector.zipWithIndex.collect {
+//          case (elem, idx) if elem.isFailure && idx < count  => Map("index" -> idx, "message"           -> messageWithOutConnection(elem)).toJson
+//          case (elem, idx) if elem.isFailure && idx >= count => Map("index" -> (idx - count), "message" -> messageWithOutConnection(elem)).toJson
+//      })
+//      .map(x => JsArray(x))
+
+    res.toFutureTry.map {
+      case Success(_) => JsArray(JsString("funktioniert"))
+      case Failure(e) => JsArray(JsString(s"funktioniert nicht, ${e.printStackTrace()}"))
+    }
   }
 
   private def getImportIdentifier(map: Map[String, Any]): ImportIdentifier =
@@ -80,8 +87,8 @@ class BulkImport(project: Project)(implicit apiDependencies: ApiDependencies) {
     string.replace("T", " ").replace("Z", " ")
   }
 
-  private def generateImportNodesDBActions(nodes: Vector[ImportNode]): DBIOAction[Vector[Try[Int]], NoStream, Effect.Write] = {
-    val items = nodes.map { element =>
+  private def generateImportNodesDBActions(nodes: Vector[ImportNode]): DBIOAction[_, NoStream, Effect.All] = {
+    val createDataItems = nodes.map { element =>
       val id    = element.identifier.id
       val model = project.schema.getModelByName_!(element.identifier.typeName)
 
@@ -95,17 +102,16 @@ class BulkImport(project: Project)(implicit apiDependencies: ApiDependencies) {
 
       val values: CoolArgs = CoolArgs(formatedValues + ("id" -> id))
 
-      DatabaseMutationBuilder.createDataItem(project.id, model.name, values).asTry
+      CreateDataItemImport(project, model, values)
     }
 
-    val relayIds: TableQuery[ProjectRelayIdTable] = TableQuery(new ProjectRelayIdTable(_, project.id))
-    val relay = nodes.map { element =>
-      val id    = element.identifier.id
-      val model = project.schema.getModelByName_!(element.identifier.typeName)
-      val x     = relayIds += ProjectRelayId(id = id, stableModelIdentifier = model.stableIdentifier)
-      x.asTry
-    }
-    DBIO.sequence(items ++ relay)
+    val groupedItems = createDataItems.groupBy(_.model)
+
+    val items = groupedItems.values.map { group =>
+      DatabaseMutationBuilder.createDataItemsImport(group)
+    }.toVector
+
+    DBIO.sequence(items)
   }
 
   private def generateImportRelationsDBActions(relations: Vector[ImportRelation]): DBIOAction[Vector[Try[Int]], NoStream, Effect.Write] = {
@@ -152,5 +158,5 @@ class BulkImport(project: Project)(implicit apiDependencies: ApiDependencies) {
     DBIO.sequence(updateListValueActions)
   }
 
-  private def runDBActions(actions: DBIOAction[Vector[Try[Int]], NoStream, Effect.Write]): Future[Vector[Try[Int]]] = db.master.run(actions)
+  private def runDBActions(actions: DBIOAction[Any, NoStream, Effect.All]): Future[Unit] = db.master.run(actions).map(_ => ())
 }
