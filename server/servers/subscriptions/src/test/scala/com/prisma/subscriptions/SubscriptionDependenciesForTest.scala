@@ -53,7 +53,7 @@ class SubscriptionDependenciesForTest()(implicit val system: ActorSystem, val ma
   override lazy val sssEventsPubSub                 = ???
   override lazy val webhookPublisher                = ???
 
-  override def apiConnector                = ApiConnectorImpl()
-  override def sideEffectMutactionExecutor = SideEffectMutactionExecutorImpl()
-  override def mutactionVerifier           = DatabaseMutactionVerifierImpl
+  override lazy val apiConnector                = ApiConnectorImpl()
+  override lazy val sideEffectMutactionExecutor = SideEffectMutactionExecutorImpl()
+  override lazy val mutactionVerifier           = DatabaseMutactionVerifierImpl
 }
