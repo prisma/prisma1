@@ -337,3 +337,42 @@ case class VerifyWhereInterpreter(mutaction: VerifyWhere) extends DatabaseMutact
     cause.contains(modelString) && cause.contains(parameterString(where))
   }
 }
+
+case class CreateDataItemsImportInterpreter(mutaction: CreateDataItemsImport) extends DatabaseMutactionInterpreter {
+
+  override val action = DatabaseMutationBuilder.createDataItemsImport(mutaction.mutactions)
+//  override val errorMapper = {
+//    case e: SQLException if e.getErrorCode == 1242 && causedByThisMutaction(e.getCause.toString) => throw APIErrors.NodeNotFoundForWhereError(where)
+//  }
+//
+//  def causedByThisMutaction(cause: String) = {
+//    val modelString = s"`${where.model.name}` WHEREFAILURETRIGGER WHERE `${where.field.name}`"
+//    cause.contains(modelString) && cause.contains(parameterString(where))
+//  }
+}
+
+case class CreateRelationRowImportInterpreter(mutaction: CreateRelationRowImport) extends DatabaseMutactionInterpreter {
+
+  override val action = ???
+  //  override val errorMapper = {
+  //    case e: SQLException if e.getErrorCode == 1242 && causedByThisMutaction(e.getCause.toString) => throw APIErrors.NodeNotFoundForWhereError(where)
+  //  }
+  //
+  //  def causedByThisMutaction(cause: String) = {
+  //    val modelString = s"`${where.model.name}` WHEREFAILURETRIGGER WHERE `${where.field.name}`"
+  //    cause.contains(modelString) && cause.contains(parameterString(where))
+  //  }
+}
+
+case class PushScalarListImportInterpreter(mutaction: PushScalarListImport) extends DatabaseMutactionInterpreter {
+
+  override val action = ???
+  //  override val errorMapper = {
+  //    case e: SQLException if e.getErrorCode == 1242 && causedByThisMutaction(e.getCause.toString) => throw APIErrors.NodeNotFoundForWhereError(where)
+  //  }
+  //
+  //  def causedByThisMutaction(cause: String) = {
+  //    val modelString = s"`${where.model.name}` WHEREFAILURETRIGGER WHERE `${where.field.name}`"
+  //    cause.contains(modelString) && cause.contains(parameterString(where))
+  //  }
+}

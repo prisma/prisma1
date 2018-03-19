@@ -1,57 +1,48 @@
 package com.prisma.api.import_export
 
 import com.prisma.api.ApiDependencies
-import com.prisma.api.connector.{CoolArgs, CreateDataItem, CreateDataItemImport}
-import com.prisma.api.connector.mysql.database.{DatabaseMutationBuilder, ProjectRelayId, ProjectRelayIdTable}
+import com.prisma.api.connector._
 import com.prisma.api.import_export.ImportExport.MyJsonProtocol._
 import com.prisma.api.import_export.ImportExport._
 import com.prisma.shared.models._
-import cool.graph.cuid.Cuid
-import slick.dbio.{DBIOAction, Effect, NoStream}
-import slick.jdbc
-import slick.jdbc.MySQLProfile.api._
-import slick.lifted.TableQuery
+import org.scalactic.{Bad, Good, Or}
 import spray.json._
+import scala.concurrent.ExecutionContext.Implicits.global
 
 import scala.concurrent.Future
-import scala.util.{Failure, Success, Try}
+import scala.util.{Failure, Try}
 
 class BulkImport(project: Project)(implicit apiDependencies: ApiDependencies) {
   import com.prisma.utils.future.FutureUtils._
-  import apiDependencies.executionContext
-
-  val db = apiDependencies.databases
-
   def executeImport(json: JsValue): Future[JsValue] = {
-    import apiDependencies.system.dispatcher
 
     val bundle = json.convertTo[ImportBundle]
     val count  = bundle.values.elements.length
 
-    val actions =
+    val mutactions: Vector[DatabaseMutaction Or Exception] =
       bundle.valueType match {
         case "nodes"     => generateImportNodesDBActions(bundle.values.elements.map(convertToImportNode))
-        case "relations" => generateImportRelationsDBActions(bundle.values.elements.map(convertToImportRelation))
-        case "lists"     => generateImportListsDBActions(bundle.values.elements.map(convertToImportList))
+        case "relations" => generateImportRelationsDBActions(bundle.values.elements.map(convertToImportRelation)).map(Good(_))
+        case "lists"     => generateImportListsDBActions(bundle.values.elements.map(convertToImportList)).map(Good(_))
 
       }
 
-    val res = runDBActions(actions.transactionally)
+    val res = Future.sequence(
+      mutactions.map {
+        case Good(m)        => apiDependencies.databaseMutactionExecutor.execute(Vector(m)).toFutureTry
+        case Bad(exception) => Future.successful(Failure(exception))
+      }
+    )
 
     def messageWithOutConnection(tryelem: Try[Any]): String = tryelem.failed.get.getMessage.substring(tryelem.failed.get.getMessage.indexOf(")") + 1)
 
-//    res
-//      .map(vector =>
-//        vector.zipWithIndex.collect {
-//          case (elem, idx) if elem.isFailure && idx < count  => Map("index" -> idx, "message"           -> messageWithOutConnection(elem)).toJson
-//          case (elem, idx) if elem.isFailure && idx >= count => Map("index" -> (idx - count), "message" -> messageWithOutConnection(elem)).toJson
-//      })
-//      .map(x => JsArray(x))
-
-    res.toFutureTry.map {
-      case Success(_) => JsArray(JsString("funktioniert"))
-      case Failure(e) => JsArray(JsString(s"funktioniert nicht, ${e.printStackTrace()}"))
-    }
+    res
+      .map(vector =>
+        vector.zipWithIndex.collect {
+          case (elem, idx) if elem.isFailure && idx < count  => Map("index" -> idx, "message"           -> messageWithOutConnection(elem)).toJson
+          case (elem, idx) if elem.isFailure && idx >= count => Map("index" -> (idx - count), "message" -> messageWithOutConnection(elem)).toJson
+      })
+      .map(x => JsArray(x))
   }
 
   private def getImportIdentifier(map: Map[String, Any]): ImportIdentifier =
@@ -87,76 +78,74 @@ class BulkImport(project: Project)(implicit apiDependencies: ApiDependencies) {
     string.replace("T", " ").replace("Z", " ")
   }
 
-  private def generateImportNodesDBActions(nodes: Vector[ImportNode]): DBIOAction[_, NoStream, Effect.All] = {
-    val createDataItems = nodes.map { element =>
+  private def generateImportNodesDBActions(nodes: Vector[ImportNode]): Vector[CreateDataItemsImport Or Exception] = {
+    val createDataItems: Vector[Or[CreateDataItemImport, Exception]] = nodes.map { element =>
       val id    = element.identifier.id
       val model = project.schema.getModelByName_!(element.identifier.typeName)
 
-      val formatedValues = element.values.map {
-        case (k, v) if k == "createdAt" || k == "updatedAt"                                => (k, dateTimeFromISO8601(v))
-        case (k, v) if !model.fields.map(_.name).contains(k)                               => (k, v) // let it fail at db level
-        case (k, v) if model.getFieldByName_!(k).typeIdentifier == TypeIdentifier.DateTime => (k, dateTimeFromISO8601(v))
-        case (k, v) if model.getFieldByName_!(k).typeIdentifier == TypeIdentifier.Json     => (k, v.toJson)
-        case (k, v)                                                                        => (k, v)
+      val elementReferenceToNonExistentField = element.values.keys.find(key => model.getFieldByName(key).isEmpty)
+
+      elementReferenceToNonExistentField match {
+        case Some(key) =>
+          Bad(new Exception(s"Unknown field '$key' in field list"))
+
+        case None =>
+          val formattedValues = element.values.collect {
+            case (k, v) if k == "createdAt" || k == "updatedAt"                                => (k, dateTimeFromISO8601(v))
+            case (k, v) if model.getFieldByName_!(k).typeIdentifier == TypeIdentifier.DateTime => (k, dateTimeFromISO8601(v))
+            case (k, v) if model.getFieldByName_!(k).typeIdentifier == TypeIdentifier.Json     => (k, v.toJson)
+            case (k, v)                                                                        => (k, v)
+          }
+          val values = CoolArgs(formattedValues + ("id" -> id))
+          Good(CreateDataItemImport(project, model, values))
       }
-
-      val values: CoolArgs = CoolArgs(formatedValues + ("id" -> id))
-
-      CreateDataItemImport(project, model, values)
     }
 
-    val groupedItems = createDataItems.groupBy(_.model)
+    val exceptions: Vector[Bad[Exception]] = createDataItems.collect { case x: Bad[Exception] => x }
 
-    val items = groupedItems.values.map { group =>
-      DatabaseMutationBuilder.createDataItemsImport(group)
-    }.toVector
-
-    DBIO.sequence(items)
+    if (exceptions.nonEmpty) {
+      exceptions
+    } else {
+      val creates      = createDataItems.collect { case x: Good[CreateDataItemImport] => x.get }
+      val groupedItems = creates.groupBy(_.model)
+      groupedItems.values.map(group => Good(CreateDataItemsImport(group))).toVector
+    }
   }
 
-  private def generateImportRelationsDBActions(relations: Vector[ImportRelation]): DBIOAction[Vector[Try[Int]], NoStream, Effect.Write] = {
-    val x = relations.map { element =>
+  private def generateImportRelationsDBActions(relations: Vector[ImportRelation]): Vector[AddDataItemToManyRelationByPath] = {
+    relations.map { element =>
       val (left, right) = (element.left, element.right) match {
         case (l, r) if l.fieldName.isDefined => (l, r)
         case (l, r) if r.fieldName.isDefined => (r, l)
         case _                               => throw sys.error("Invalid ImportRelation at least one fieldName needs to be defined.")
       }
 
-      val fromModel                                                 = project.schema.getModelByName_!(left.identifier.typeName)
-      val fromField                                                 = fromModel.getFieldByName_!(left.fieldName.get)
-      val relationSide: com.prisma.shared.models.RelationSide.Value = fromField.relationSide.get
-      val relation: Relation                                        = fromField.relation.get
+      val fromModel = project.schema.getModelByName_!(left.identifier.typeName)
+      val toModel   = project.schema.getModelByName_!(right.identifier.typeName)
+      val fromField = fromModel.getFieldByName_!(left.fieldName.get)
 
-      val aValue: String = if (relationSide == RelationSide.A) left.identifier.id else right.identifier.id
-      val bValue: String = if (relationSide == RelationSide.A) right.identifier.id else left.identifier.id
-      // the empty list is for the RelationFieldMirrors
-      DatabaseMutationBuilder.createRelationRow(project.id, relation.id, Cuid.createCuid(), aValue, bValue).asTry
+      val path = Path
+        .empty(NodeSelector.forId(fromModel, left.identifier.id))
+        .appendEdge(project, fromField)
+        .lastEdgeToNodeEdge(NodeSelector.forId(toModel, right.identifier.id))
+      AddDataItemToManyRelationByPath(project, path)
     }
-    DBIO.sequence(x)
   }
 
-  private def generateImportListsDBActions(lists: Vector[ImportList]): DBIOAction[Vector[Try[Int]], NoStream, jdbc.MySQLProfile.api.Effect] = {
-    val updateListValueActions = lists.flatMap { element =>
-      def isDateTime(fieldName: String) =
-        project.schema.getModelByName_!(element.identifier.typeName).getFieldByName_!(fieldName).typeIdentifier == TypeIdentifier.DateTime
-      def isJson(fieldName: String) =
-        project.schema.getModelByName_!(element.identifier.typeName).getFieldByName_!(fieldName).typeIdentifier == TypeIdentifier.Json
+  private def generateImportListsDBActions(lists: Vector[ImportList]): Vector[PushScalarListImport] = {
+    lists.flatMap { element =>
+      val model                         = project.schema.getModelByName_!(element.identifier.typeName)
+      def isDateTime(fieldName: String) = model.getFieldByName_!(fieldName).typeIdentifier == TypeIdentifier.DateTime
+      def isJson(fieldName: String)     = model.getFieldByName_!(fieldName).typeIdentifier == TypeIdentifier.Json
 
       element.values.map {
         case (fieldName, values) if isDateTime(fieldName) =>
-          DatabaseMutationBuilder
-            .pushScalarList(project.id, element.identifier.typeName, fieldName, element.identifier.id, values.map(dateTimeFromISO8601))
-            .asTry
+          PushScalarListImport(project, model, fieldName, element.identifier.id, values.map(dateTimeFromISO8601))
         case (fieldName, values) if isJson(fieldName) =>
-          DatabaseMutationBuilder
-            .pushScalarList(project.id, element.identifier.typeName, fieldName, element.identifier.id, values.map(v => v.toJson))
-            .asTry
+          PushScalarListImport(project, model, fieldName, element.identifier.id, values.map(v => v.toJson))
         case (fieldName, values) =>
-          DatabaseMutationBuilder.pushScalarList(project.id, element.identifier.typeName, fieldName, element.identifier.id, values).asTry
+          PushScalarListImport(project, model, fieldName, element.identifier.id, values)
       }
     }
-    DBIO.sequence(updateListValueActions)
   }
-
-  private def runDBActions(actions: DBIOAction[Any, NoStream, Effect.All]): Future[Unit] = db.master.run(actions).map(_ => ())
 }

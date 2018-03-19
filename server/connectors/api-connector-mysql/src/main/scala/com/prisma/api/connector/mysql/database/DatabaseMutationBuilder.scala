@@ -3,16 +3,16 @@ package com.prisma.api.connector.mysql.database
 import java.sql.PreparedStatement
 
 import com.prisma.api.connector._
-import com.prisma.api.connector.mysql.impl.NestedCreateRelationInterpreter
 import com.prisma.api.connector.mysql.database.SlickExtensions._
 import com.prisma.api.connector.mysql.database.Types.DataItemFilterCollection
+import com.prisma.api.connector.mysql.impl.NestedCreateRelationInterpreter
 import com.prisma.api.schema.GeneralError
 import com.prisma.shared.models.TypeIdentifier.TypeIdentifier
 import com.prisma.shared.models._
 import cool.graph.cuid.Cuid
 import slick.dbio.{DBIOAction, Effect, NoStream}
 import slick.jdbc.MySQLProfile.api._
-import slick.jdbc.{PositionedParameters, SQLActionBuilder}
+import slick.jdbc.SQLActionBuilder
 import slick.sql.{SqlAction, SqlStreamingAction}
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -36,16 +36,6 @@ object DatabaseMutationBuilder {
 
   def createRelayRow(projectId: String, where: NodeSelector): SqlStreamingAction[Vector[Int], Int, Effect]#ResultAction[Int, NoStream, Effect] = {
     (sql"INSERT INTO `#$projectId`.`_RelayId` (`id`, `stableModelIdentifier`) VALUES (${where.fieldValue}, ${where.model.stableIdentifier})").asUpdate
-  }
-
-  def createRelationRow(projectId: String,
-                        relationTableName: String,
-                        id: String,
-                        a: String,
-                        b: String): SqlStreamingAction[Vector[Int], Int, Effect]#ResultAction[Int, NoStream, Effect] = {
-
-    (sql"insert into `#$projectId`.`#$relationTableName` (" ++ combineByComma(List(sql"`id`, `A`, `B`")) ++ sql") values (" ++ combineByComma(
-      List(sql"$id, $a, $b")) ++ sql") on duplicate key update id=id").asUpdate
   }
 
   def createRelationRowByPath(projectId: String, path: Path): SqlAction[Int, NoStream, Effect] = {
@@ -427,17 +417,6 @@ object DatabaseMutationBuilder {
     }
   }
   //endregion
-
-  def createDataItemImport(projectId: String, modelName: String, args: CoolArgs): SimpleDBIO[Int] = {
-    val escapedKeyValueTuples = args.raw.toList.map(x => (escapeKeyToString(x._1), escapeUnsafeParamToString(x._2)))
-    val escapedKeys           = escapedKeyValueTuples.map(_._1).mkString(",")
-    val escapedValues         = escapedKeyValueTuples.map(_._2).mkString(",")
-    SimpleDBIO[Int] { x =>
-      val res: PreparedStatement = x.connection.prepareStatement(s"INSERT INTO `$projectId`.`$modelName` ($escapedKeys) VALUES ($escapedValues)")
-      res.execute()
-      1
-    }
-  }
 
   def createDataItemsImport(mutations: Vector[CreateDataItemImport]): SimpleDBIO[Int] = {
     SimpleDBIO[Int] { x =>
