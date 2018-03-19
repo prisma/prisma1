@@ -46,7 +46,9 @@ object InputValueValidation {
   }
 
   private def isValueSizeValid(value: Any, field: Field): Boolean = {
-    require(field.isScalarNonList)
+    if (field.isScalarList) {
+      return true
+    }
     field.typeIdentifier match {
       case TypeIdentifier.String | TypeIdentifier.Json =>
         value.toString.length <= 262144
