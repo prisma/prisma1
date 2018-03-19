@@ -27,6 +27,17 @@ object FutureUtils {
     * Returns a future containing a list of the result values of all futures.
     */
   implicit class DeferredFutureCollectionExtensions[T](val futures: Vector[() => Future[T]]) extends AnyVal {
+    def runSequentially(implicit executor: ExecutionContext): Future[Vector[T]] = {
+      val accumulator = Future.successful(Vector.empty[T])
+
+      futures.foldLeft(accumulator)((prevFutures, nextFuture) => {
+        for {
+          list <- prevFutures
+          next <- nextFuture()
+        } yield list :+ next
+      })
+    }
+
     def runInChunksOf(maxParallelism: Int)(implicit executor: ExecutionContext): Future[Vector[T]] = {
       require(maxParallelism >= 1, "parallelism must be >= 1")
       futures match {

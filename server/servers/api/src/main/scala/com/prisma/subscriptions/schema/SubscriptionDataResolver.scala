@@ -1,6 +1,6 @@
 package com.prisma.subscriptions.schema
 
-import com.prisma.api.connector.mysql.database.DataResolver
+import com.prisma.api.connector.DataResolver
 import com.prisma.api.schema.{ObjectTypeBuilder, SimpleResolveOutput}
 import com.prisma.shared.models.Model
 import com.prisma.subscriptions.SubscriptionUserContext

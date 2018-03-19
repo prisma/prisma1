@@ -1,7 +1,6 @@
 package com.prisma.api.resolver
 
-import com.prisma.api.connector.DataItem
-import com.prisma.api.connector.mysql.database.DataResolver
+import com.prisma.api.connector.{DataItem, DataResolver}
 import com.prisma.api.resolver.DeferredTypes.{OneDeferred, OneDeferredResultType, OrderedDeferred, OrderedDeferredFutureResult}
 import com.prisma.shared.models.Project
 import com.prisma.util.gc_value.{GCAnyConverter, GCDBValueConverter}

@@ -12,7 +12,7 @@ steps:
     command: cd server && ./.buildkite/scripts/test.sh subscriptions
 
   - label: ":scala: workers"
-    command: cd server && ./.buildkite/scripts/test.sh api
+    command: cd server && ./.buildkite/scripts/test.sh workers
 
   - label: ":scala: connectors"
     command: cd server && ./.buildkite/scripts/test.sh connectors
