@@ -136,7 +136,7 @@ class BulkExport(project: Project)(implicit apiDependencies: ApiDependencies) {
     val nonListFieldsWithValues: Map[String, Any]     = withoutHiddenFields.collect { case (k, Some(v)) if !info.current.getFieldByName_!(k).isList => (k, v) }
     val outputMap: Map[String, Any]                   = nonListFieldsWithValues ++ createdAtUpdatedAtMap
 
-    val mapWithCorrectDateTimeFormat = outputMap.map {
+    val mapWithCorrectDateTimeFormat: Map[String, Any] = outputMap.map {
       case (k, v) if k == "createdAt" || k == "updatedAt"                                       => (k, dateTimeToISO8601(v))
       case (k, v) if info.current.getFieldByName_!(k).typeIdentifier == TypeIdentifier.DateTime => (k, dateTimeToISO8601(v))
       case (k, v)                                                                               => (k, v)

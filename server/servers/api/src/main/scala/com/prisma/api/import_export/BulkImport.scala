@@ -2,16 +2,14 @@ package com.prisma.api.import_export
 
 import com.prisma.api.ApiDependencies
 import com.prisma.api.connector._
-import com.prisma.api.import_export.GCValueJsonFormatter.UnknownFieldException
+import com.prisma.api.import_export.GCValueJsonFormatter.{DateTimeGCValueReads, UnknownFieldException}
 import com.prisma.api.import_export.ImportExport.MyJsonProtocol._
 import com.prisma.api.import_export.ImportExport._
 import com.prisma.shared.models._
 import com.prisma.util.json.PlaySprayConversions
 import org.scalactic.{Bad, Good, Or}
-import play.api.libs.json.{JsError, JsSuccess}
 import spray.json._
 
-import scala.collection.immutable
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 import scala.util.{Failure, Success, Try}
@@ -35,20 +33,21 @@ class BulkImport(project: Project)(implicit apiDependencies: ApiDependencies) ex
         case "lists"     => generateImportListsDBActions(bundle.values.elements.map(convertToImportList)).map(Good(_))
       }
 
-    val res = Future.sequence(
-      mutactions.map {
-        case Good(m)        => apiDependencies.databaseMutactionExecutor.execute(Vector(m), runTransactionally = false).toFutureTry
-        case Bad(exception) => Future.successful(Failure(exception))
-      }
-    )
+    //use different run configurations depending on whether its lists or not since sequentially 60 go from 40s to 60s
+
+    val res: Future[Vector[Try[Unit]]] = mutactions.map {
+      case Good(m) =>
+        () =>
+          apiDependencies.databaseMutactionExecutor.execute(Vector(m), runTransactionally = false).toFutureTry
+      case Bad(exception) =>
+        () =>
+          Future.successful(Failure(exception))
+    }.runSequentially
 
     res
       .map(vector => vector.collect { case elem if elem.isFailure => elem.failed.get.getMessage.split("-@-").map(_.toJson) }.flatten)
       .map(x => JsArray(x))
   }
-
-  private def getImportIdentifier(map: Map[String, Any]): ImportIdentifier =
-    ImportIdentifier(map("_typeName").asInstanceOf[String], map("id").asInstanceOf[String])
 
   private def convertToImportNode(json: JsValue): ImportNode Or Exception = {
     val jsObject = json.asJsObject
@@ -68,10 +67,15 @@ class BulkImport(project: Project)(implicit apiDependencies: ApiDependencies) ex
   }
 
   private def convertToImportList(json: JsValue): ImportList = {
-    val map      = json.convertTo[Map[String, Any]]
-    val valueMap = map.collect { case (k, v) if k != "_typeName" && k != "id" => (k, v.asInstanceOf[List[Any]].toVector) }
+    val jsObject     = json.asJsObject
+    val typeName     = jsObject.fields("_typeName").asInstanceOf[JsString].value
+    val id           = jsObject.fields("id").asInstanceOf[JsString].value
+    val fieldName    = jsObject.fields.filterKeys(k => k != "_typeName" && k != "id").keys.head
+    val jsonForField = jsObject.fields(fieldName)
+    val field        = project.schema.getModelByName_!(typeName).getFieldByName_!(fieldName)
 
-    ImportList(getImportIdentifier(map), valueMap)
+    val gcValue = GCValueJsonFormatter.readListGCValue(field)(jsonForField.toPlay()).get
+    ImportList(ImportIdentifier(typeName, id), fieldName, gcValue)
   }
 
   private def convertToImportRelation(json: JsValue): ImportRelation = {
@@ -84,21 +88,10 @@ class BulkImport(project: Project)(implicit apiDependencies: ApiDependencies) ex
     ImportRelation(left, right)
   }
 
-  private def dateTimeFromISO8601(v: Any) = {
-    val string = v.asInstanceOf[String]
-    //"2017-12-05T12:34:23.000Z" to "2017-12-05 12:34:23.000 " which MySQL will accept
-    string.replace("T", " ").replace("Z", " ")
-  }
-
   private def generateImportNodesDBActions(nodes: Vector[ImportNode]): Vector[CreateDataItemsImport] = {
-    val creates = nodes.map { node =>
-      val model = node.model
-      CreateDataItemImport(project, model, ReallyCoolArgs(node.values))
-    }
+    val creates                                                = nodes.map(node => CreateDataItemImport(project, node.model, ReallyCoolArgs(node.values)))
     val groupedItems: Map[Model, Vector[CreateDataItemImport]] = creates.groupBy(_.model)
-    val createDataItemsImports                                 = groupedItems.map { case (model, group) => CreateDataItemsImport(project, model, group.map(_.args)) }.toVector
-
-    createDataItemsImports
+    groupedItems.map { case (model, group) => CreateDataItemsImport(project, model, group.map(_.args)) }.toVector
   }
 
   private def generateImportRelationsDBActions(relations: Vector[ImportRelation]): Vector[CreateRelationRowsImport] = {
@@ -121,25 +114,7 @@ class BulkImport(project: Project)(implicit apiDependencies: ApiDependencies) ex
     groupedItems.map { case (relation, group) => CreateRelationRowsImport(project, relation, group.map(item => (item.a, item.b))) }.toVector
   }
 
-  private def generateImportListsDBActions(lists: Vector[ImportList]): Vector[PushScalarListsImport] = {
-    val listsCreate = lists.flatMap { element =>
-      val model = project.schema.getModelByName_!(element.identifier.typeName)
-
-      def isDateTime(fieldName: String) = model.getFieldByName_!(fieldName).typeIdentifier == TypeIdentifier.DateTime
-      def isJson(fieldName: String)     = model.getFieldByName_!(fieldName).typeIdentifier == TypeIdentifier.Json
-
-      element.values.map {
-        case (fieldName, values) if isDateTime(fieldName) =>
-          PushScalarListImport(project, s"${model.name}_{$fieldName}", element.identifier.id, values.map(dateTimeFromISO8601))
-        case (fieldName, values) if isJson(fieldName) =>
-          PushScalarListImport(project, s"${model.name}_{$fieldName}", element.identifier.id, values.map(v => v.toJson))
-        case (fieldName, values) =>
-          PushScalarListImport(project, s"${model.name}_{$fieldName}", element.identifier.id, values)
-      }
-    }
-
-    val groupedItems = listsCreate.groupBy(_.tableName)
-    groupedItems.map { case (tableName, group) => PushScalarListsImport(project, tableName, group.map(item => (item.id, item.values))) }.toVector
-
+  private def generateImportListsDBActions(lists: Vector[ImportList]): Vector[PushScalarListsImport] = lists.map { element =>
+    PushScalarListsImport(project, s"${element.identifier.typeName}_${element.fieldName}", element.identifier.id, element.values)
   }
 }

@@ -521,54 +521,47 @@ object DatabaseMutationBuilder {
     }
   }
 
-  def pushScalarListsImport(mutaction: PushScalarListsImport): SimpleDBIO[Int] = {
-    SimpleDBIO[Int] { x =>
-      val query                         = s"insert into `${mutaction.project.id}`.`${mutaction.tableName}` (`nodeId`, `position`, `value`) values (?,?,?)"
-      val listInsert: PreparedStatement = x.connection.prepareStatement(query)
+  def pushScalarListsImport(mutaction: PushScalarListsImport): SimpleDBIO[Vector[String]] = {
+    val projectId = mutaction.project.id
+    val args      = mutaction.args
+    val tableName = mutaction.tableName
+    val nodeId    = mutaction.id
 
-      for {
-        base  <- mutaction.args
-        value <- base._2.zipWithIndex
-        tuple = (base._1, value._1, value._2 * 1000)
-      } yield {
+    import java.sql.Statement
+    import JdbcExtensions._
 
-        listInsert.setString(1, tuple._1)
+    SimpleDBIO[Vector[String]] { x =>
+      val setBaseline: Vector[String] = try {
+        val query                       = s"set @baseline := ifnull((select max(position) from `$projectId`.`$tableName` where nodeId = ?), 0) + 1000"
+        val baseLine: PreparedStatement = x.connection.prepareStatement(query)
 
-        tuple._2 match {
-          case s: String      => listInsert.setString(2, s)
-          case i: Int         => listInsert.setInt(2, i)
-          case bd: BigDecimal => listInsert.setInt(3, bd.toInt)
-          case _              => sys.error("""fngfgfd""")
-        }
+        baseLine.setString(1, nodeId)
 
-        listInsert.setInt(3, tuple._3)
-        listInsert.addBatch()
+        baseLine.execute()
+
+        Vector.empty
+      } catch {
+        case e: Exception => Vector(e.getCause.toString)
       }
 
-      listInsert.executeBatch()
-      mutaction.args.size
+      val rowResult: Vector[String] = try {
+        val query                         = s"insert into `$projectId`.`$tableName` (`nodeId`, `position`, `value`) values (?, @baseline + ? , ?)"
+        val insertRows: PreparedStatement = x.connection.prepareStatement(query)
+
+        mutaction.args.values.zipWithIndex.foreach { argWithIndex =>
+          insertRows.setString(1, nodeId)
+          insertRows.setInt(2, argWithIndex._2 * 1000)
+          insertRows.setGcValue(3, argWithIndex._1)
+          insertRows.addBatch()
+        }
+        insertRows.executeBatch()
+
+        Vector.empty
+      } catch {
+        case e: Exception => Vector(e.getCause.toString)
+      }
+
+      setBaseline ++ rowResult
     }
   }
-
-  def pushScalarListsImportTemp(projectId: String,
-                                modelName: String,
-                                fieldName: String,
-                                nodeId: String,
-                                values: Vector[Any]): DBIOAction[Int, NoStream, Effect] = {
-
-    val escapedValueTuples = for {
-      (escapedValue, position) <- values.map(escapeUnsafeParam).zip((1 to values.length).map(_ * 1000))
-    } yield {
-      sql"($nodeId, @baseline + $position, " ++ escapedValue ++ sql")"
-    }
-
-    DBIO
-      .sequence(
-        List(
-          sqlu"""set @baseline := ifnull((select max(position) from `#$projectId`.`#${modelName}_#${fieldName}` where nodeId = $nodeId), 0) + 1000""",
-          (sql"insert into `#$projectId`.`#${modelName}_#${fieldName}` (`nodeId`, `position`, `value`) values " ++ combineByComma(escapedValueTuples)).asUpdate
-        ))
-      .map(_.last)
-  }
-
 }
