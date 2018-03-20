@@ -2,7 +2,7 @@ package com.prisma.api.import_export
 
 import com.prisma.api.ApiDependencies
 import com.prisma.api.connector._
-import com.prisma.api.import_export.GCValueJsonFormatter.{DateTimeGCValueReads, UnknownFieldException}
+import com.prisma.api.import_export.GCValueJsonFormatter.UnknownFieldException
 import com.prisma.api.import_export.ImportExport.MyJsonProtocol._
 import com.prisma.api.import_export.ImportExport._
 import com.prisma.shared.models._
@@ -21,28 +21,28 @@ class BulkImport(project: Project)(implicit apiDependencies: ApiDependencies) ex
 
     val bundle = json.convertTo[ImportBundle]
 
-    val mutactions: Vector[DatabaseMutaction Or Exception] =
+    val res: Future[Vector[Try[Unit]]] =
       bundle.valueType match {
         case "nodes" =>
-          val x        = bundle.values.elements.map(convertToImportNode)
-          val goods    = x.collect { case Good(x) => x }
-          val bads     = x.collect { case x: Bad[Exception] => x }
-          val newGoods = generateImportNodesDBActions(goods).map(Good(_))
-          newGoods ++ bads
-        case "relations" => generateImportRelationsDBActions(bundle.values.elements.map(convertToImportRelation)).map(Good(_))
-        case "lists"     => generateImportListsDBActions(bundle.values.elements.map(convertToImportList)).map(Good(_))
+          val x                                                        = bundle.values.elements.map(convertToImportNode)
+          val goods                                                    = x.collect { case Good(x) => x }
+          val bads                                                     = x.collect { case x: Bad[Exception] => x }
+          val newGoods                                                 = generateImportNodesDBActions(goods).map(Good(_))
+          val mutactions: Vector[Or[CreateDataItemsImport, Exception]] = newGoods ++ bads
+
+          Future.sequence(mutactions.map {
+            case Good(m)        => apiDependencies.databaseMutactionExecutor.execute(Vector(m), runTransactionally = false).toFutureTry
+            case Bad(exception) => Future.successful(Failure(exception))
+          })
+
+        case "relations" =>
+          val mutactions = generateImportRelationsDBActions(bundle.values.elements.map(convertToImportRelation))
+          Future.sequence(mutactions.map(m => apiDependencies.databaseMutactionExecutor.execute(Vector(m), runTransactionally = false).toFutureTry))
+
+        case "lists" =>
+          val mutactions = generateImportListsDBActions(bundle.values.elements.map(convertToImportList))
+          mutactions.map(m => () => apiDependencies.databaseMutactionExecutor.execute(Vector(m), runTransactionally = false).toFutureTry).runSequentially
       }
-
-    //use different run configurations depending on whether its lists or not since sequentially 60 go from 40s to 60s
-
-    val res: Future[Vector[Try[Unit]]] = mutactions.map {
-      case Good(m) =>
-        () =>
-          apiDependencies.databaseMutactionExecutor.execute(Vector(m), runTransactionally = false).toFutureTry
-      case Bad(exception) =>
-        () =>
-          Future.successful(Failure(exception))
-    }.runSequentially
 
     res
       .map(vector => vector.collect { case elem if elem.isFailure => elem.failed.get.getMessage.split("-@-").map(_.toJson) }.flatten)
