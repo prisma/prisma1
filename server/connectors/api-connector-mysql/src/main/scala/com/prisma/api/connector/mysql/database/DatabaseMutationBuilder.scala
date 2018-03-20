@@ -7,7 +7,7 @@ import com.prisma.api.connector._
 import com.prisma.api.connector.mysql.database.SlickExtensions._
 import com.prisma.api.connector.mysql.impl.NestedCreateRelationInterpreter
 import com.prisma.api.schema.GeneralError
-import com.prisma.gc_values.StringGCValue
+import com.prisma.gc_values.{GraphQLIdGCValue, StringGCValue}
 import com.prisma.shared.models.TypeIdentifier.TypeIdentifier
 import com.prisma.shared.models._
 import cool.graph.cuid.Cuid
@@ -446,8 +446,9 @@ object DatabaseMutationBuilder {
           val index  = columnAndIndex._2 + 1
           val column = columnAndIndex._1
           args.raw.asRoot.map.get(column) match {
-            case Some(x) => itemInsert.setGcValue(index, x)
-            case None    => itemInsert.setNull(index, java.sql.Types.NULL)
+            case Some(x)                                                => itemInsert.setGcValue(index, x)
+            case None if column == "createdAt" || column == "updatedAt" => itemInsert.setString(index, "2017-11-29 14:35:13")
+            case None                                                   => itemInsert.setNull(index, java.sql.Types.NULL)
           }
         }
         itemInsert.addBatch()
@@ -461,7 +462,7 @@ object DatabaseMutationBuilder {
       }
 
       importItems.args.foreach { args =>
-        relayInsert.setString(1, args.raw.asRoot.map("id").asInstanceOf[StringGCValue].value)
+        relayInsert.setString(1, args.raw.asRoot.map("id").asInstanceOf[GraphQLIdGCValue].value)
         relayInsert.setString(2, model.stableIdentifier)
         relayInsert.addBatch()
       }

@@ -2,8 +2,10 @@ package com.prisma.api.import_export
 
 import com.prisma.gc_values._
 import com.prisma.shared.models.{Enum, Field, Model, TypeIdentifier}
-import org.joda.time.format.ISODateTimeFormat
+import org.joda.time.format.{DateTimeFormat, ISODateTimeFormat}
 import play.api.libs.json._
+
+import scala.util.Try
 
 object GCValueJsonFormatter {
 
@@ -48,12 +50,14 @@ object GCValueJsonFormatter {
   }
 
   implicit object DateTimeGCValueReads extends Reads[DateTimeGCValue] {
-    val formatter = ISODateTimeFormat.basicDateTime
+    val isoFormatter      = ISODateTimeFormat.basicDateTime
+    val fallbackFormatter = DateTimeFormat.forPattern("yyyy-MM-dd HH:mm:ss")
 
     override def reads(json: JsValue) = {
       json.validate[JsString].map { jsString =>
-        val dateTime = formatter.parseDateTime(jsString.value)
-        DateTimeGCValue(dateTime)
+        val dateTime    = Try { isoFormatter.parseDateTime(jsString.value) }
+        val withRecover = dateTime.recover { case _ => fallbackFormatter.parseDateTime(jsString.value) }
+        DateTimeGCValue(withRecover.get)
       }
     }
   }
@@ -99,6 +103,7 @@ object GCValueJsonFormatter {
   }
 
   def readListGCValue(field: Field)(json: JsValue): JsResult[ListGCValue] = {
+    require(field.isList)
     for {
       jsArray        <- json.validate[JsArray]
       gcValueResults = jsArray.value.map(element => readLeafGCValueForField(field)(element)).toVector
@@ -107,7 +112,6 @@ object GCValueJsonFormatter {
   }
 
   def readLeafGCValueForField(field: Field)(json: JsValue): JsResult[LeafGCValue] = {
-    require(field.isList)
     field.typeIdentifier match {
       case TypeIdentifier.String    => json.validate[StringGCValue]
       case TypeIdentifier.GraphQLID => json.validate[GraphQLIdGCValue]
