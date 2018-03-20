@@ -1,6 +1,7 @@
 package com.prisma.api.import_export
 
-import com.prisma.api.connector.{DataItem, DataResolver}
+import com.prisma.api.connector.{CoolArgs, DataItem, DataResolver, ReallyCoolArgs}
+import com.prisma.gc_values.RootGCValue
 import com.prisma.shared.models.{Model, Project, Relation}
 import spray.json.{DefaultJsonProtocol, JsArray, JsBoolean, JsFalse, JsNull, JsNumber, JsObject, JsString, JsTrue, JsValue, JsonFormat, RootJsonFormat}
 
@@ -12,11 +13,15 @@ package object ImportExport {
   case class ImportBundle(valueType: String, values: JsArray)
   case class ImportIdentifier(typeName: String, id: String)
   case class ImportRelationSide(identifier: ImportIdentifier, fieldName: Option[String])
-  case class ImportNode(identifier: ImportIdentifier, values: Map[String, Any])
+  case class ImportNode(id: String, model: Model, values: RootGCValue)
   case class ImportRelation(left: ImportRelationSide, right: ImportRelationSide)
   case class ImportList(identifier: ImportIdentifier, values: Map[String, Vector[Any]])
   case class JsonBundle(jsonElements: Vector[JsValue], size: Int)
   case class ExportRelationSide(_typeName: String, id: String, fieldName: Option[String])
+
+  case class CreateDataItemImport(project: Project, model: Model, args: ReallyCoolArgs)
+  case class CreateRelationRow(project: Project, relation: Relation, a: String, b: String)
+  case class PushScalarListImport(project: Project, tableName: String, id: String, values: Vector[Any])
 
   sealed trait ExportInfo {
     val cursor: Cursor
@@ -106,7 +111,6 @@ package object ImportExport {
     implicit val importBundle: RootJsonFormat[ImportBundle]             = jsonFormat2(ImportBundle)
     implicit val importIdentifier: RootJsonFormat[ImportIdentifier]     = jsonFormat2(ImportIdentifier)
     implicit val importRelationSide: RootJsonFormat[ImportRelationSide] = jsonFormat2(ImportRelationSide)
-    implicit val importNodeValue: RootJsonFormat[ImportNode]            = jsonFormat2(ImportNode)
     implicit val importListValue: RootJsonFormat[ImportList]            = jsonFormat2(ImportList)
     implicit val importRelation: RootJsonFormat[ImportRelation]         = jsonFormat2(ImportRelation)
     implicit val cursor: RootJsonFormat[Cursor]                         = jsonFormat4(Cursor)

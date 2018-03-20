@@ -7,6 +7,7 @@ import com.prisma.api.connector._
 import com.prisma.api.connector.mysql.database.SlickExtensions._
 import com.prisma.api.connector.mysql.impl.NestedCreateRelationInterpreter
 import com.prisma.api.schema.GeneralError
+import com.prisma.gc_values.GraphQLIdGCValue
 import com.prisma.shared.models.TypeIdentifier.TypeIdentifier
 import com.prisma.shared.models._
 import cool.graph.cuid.Cuid
@@ -404,6 +405,7 @@ object DatabaseMutationBuilder {
 
   def createDataItemsImport(mutaction: CreateDataItemsImport): SimpleDBIO[Vector[String]] = {
     import java.sql.Statement
+    import JdbcExtensions._
     SimpleDBIO[Vector[String]] { x =>
       val model         = mutaction.model
       val argsWithIndex = mutaction.args.zipWithIndex
@@ -420,17 +422,10 @@ object DatabaseMutationBuilder {
           columns.zipWithIndex.foreach { columnAndIndex =>
             val index  = columnAndIndex._2 + 1
             val column = columnAndIndex._1
-            arg.raw.get(column) match {
-              case Some(s: String)                                        => itemInsert.setString(index, s)
-              case Some(i: Int)                                           => itemInsert.setInt(index, i)
-              case Some(bd: BigDecimal)                                   => itemInsert.setInt(index, bd.toInt)
-              case Some(f: Float)                                         => itemInsert.setDouble(index, f.toDouble)
-              case Some(d: Double)                                        => itemInsert.setDouble(index, d)
-              case Some(b: Boolean)                                       => itemInsert.setBoolean(index, b)
-              case Some(j: JsValue)                                       => itemInsert.setString(index, j.toString)
+            arg.raw.asRoot.map.get(column) match {
+              case Some(x)                                                => itemInsert.setGcValue(index, x)
               case None if column == "createdAt" || column == "updatedAt" => itemInsert.setString(index, "2017-11-29 14:35:13")
               case None                                                   => itemInsert.setNull(index, java.sql.Types.NULL)
-              case Some(x)                                                => sys.error("""fngfgfd     """ + x)
             }
           }
           itemInsert.addBatch()
@@ -444,7 +439,7 @@ object DatabaseMutationBuilder {
           e.getUpdateCounts.zipWithIndex
             .filter(element => element._1 == Statement.EXECUTE_FAILED)
             .map { failed =>
-              val failedId = argsWithIndex.find(_._2 == failed._2).get._1.raw("id")
+              val failedId = argsWithIndex.find(_._2 == failed._2).get._1.raw.asRoot.idField.value
               s"Failure inserting ${model.name} with Id: $failedId. Cause: ${removeConnectionInfoFromCause(e.getCause.toString)}"
             }
             .toVector
@@ -456,7 +451,7 @@ object DatabaseMutationBuilder {
         val relayInsert: PreparedStatement = x.connection.prepareStatement(relayQuery)
 
         mutaction.args.foreach { arg =>
-          relayInsert.setString(1, arg.raw("id").toString) //todo get id separately??
+          relayInsert.setString(1, arg.raw.asRoot.idField.value)
           relayInsert.setString(2, model.stableIdentifier)
           relayInsert.addBatch()
         }
@@ -468,7 +463,7 @@ object DatabaseMutationBuilder {
           e.getUpdateCounts.zipWithIndex
             .filter(element => element._1 == Statement.EXECUTE_FAILED)
             .map { failed =>
-              val failedId = argsWithIndex.find(_._2 == failed._2).get._1.raw("id")
+              val failedId = argsWithIndex.find(_._2 == failed._2).get._1.raw.asRoot.idField.value
               s"Failure inserting RelayRow with Id: $failedId. Cause: ${removeConnectionInfoFromCause(e.getCause.toString)}"
             }
             .toVector

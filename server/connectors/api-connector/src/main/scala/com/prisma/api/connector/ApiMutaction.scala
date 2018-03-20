@@ -19,12 +19,10 @@ case class CreateDataItem(project: Project, path: Path, args: CoolArgs) extends 
   }
   val id = where.fieldValueAsString
 }
-case class CreateDataItemImport(project: Project, model: Model, args: CoolArgs)
-case class CreateRelationRow(project: Project, relation: Relation, a: String, b: String)
-case class PushScalarListImport(project: Project, tableName: String, id: String, values: Vector[Any])
+
 case class PushScalarListsImport(project: Project, tableName: String, args: Vector[(String, Vector[Any])]) extends DatabaseMutaction
 case class CreateRelationRowsImport(project: Project, relation: Relation, args: Vector[(String, String)])  extends DatabaseMutaction
-case class CreateDataItemsImport(project: Project, model: Model, args: Vector[CoolArgs])                   extends DatabaseMutaction
+case class CreateDataItemsImport(project: Project, model: Model, args: Vector[ReallyCoolArgs])             extends DatabaseMutaction
 case class DeleteDataItem(project: Project, path: Path, previousValues: DataItem, id: String)              extends DatabaseMutaction
 case class DeleteDataItemNested(project: Project, path: Path)                                              extends DatabaseMutaction
 case class DeleteDataItems(project: Project, model: Model, whereFilter: DataItemFilterCollection)          extends DatabaseMutaction

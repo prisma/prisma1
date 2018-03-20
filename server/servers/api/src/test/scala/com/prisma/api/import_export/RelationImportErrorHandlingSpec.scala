@@ -1,9 +1,7 @@
 package com.prisma.api.import_export
 
 import com.prisma.api.ApiBaseSpec
-import com.prisma.api.connector.mysql.database.DataResolver
-import com.prisma.api.import_export.ImportExport.MyJsonProtocol._
-import com.prisma.api.import_export.ImportExport.{Cursor, ExportRequest, ResultFormat}
+import com.prisma.api.connector.DataResolver
 import com.prisma.shared.models.Project
 import com.prisma.shared.schema_dsl.SchemaDsl
 import com.prisma.utils.await.AwaitUtils
@@ -55,8 +53,6 @@ class RelationImportErrorHandlingSpec extends FlatSpec with Matchers with ApiBas
 
     importer.executeImport(nodes).await(5)
     val res = importer.executeImport(relations).await(5)
-
-    println(res)
 
     res.toString should be(
       """["Failure inserting into relationtable _Relation0to0 with ids 1 and 7. Cause: java.sql.SQLIntegrityConstraintViolationException: Cannot add or update a child row: a foreign key constraint fails (\"test-project-id@test-stage\".\"_relation0to0\", CONSTRAINT \"_relation0to0_ibfk_1\" FOREIGN KEY (\"A\") REFERENCES \"Model0\" (\"id\") ON DELETE CASCADE)","Failure inserting into relationtable _Relation0to1 with ids 7 and 0. Cause: java.sql.SQLIntegrityConstraintViolationException: Cannot add or update a child row: a foreign key constraint fails (\"test-project-id@test-stage\".\"_relation0to1\", CONSTRAINT \"_relation0to1_ibfk_1\" FOREIGN KEY (\"A\") REFERENCES \"Model1\" (\"id\") ON DELETE CASCADE)"]""")

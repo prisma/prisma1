@@ -5,6 +5,7 @@ import com.prisma.api.connector._
 import com.prisma.api.import_export.ImportExport.MyJsonProtocol._
 import com.prisma.api.import_export.ImportExport._
 import com.prisma.shared.models._
+import com.prisma.util.json.PlaySprayConversions
 import org.scalactic.{Bad, Good, Or}
 import spray.json._
 
@@ -12,7 +13,7 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 import scala.util.Failure
 
-class BulkImport(project: Project)(implicit apiDependencies: ApiDependencies) {
+class BulkImport(project: Project)(implicit apiDependencies: ApiDependencies) extends PlaySprayConversions {
   import com.prisma.utils.future.FutureUtils._
 
   def executeImport(json: JsValue): Future[JsValue] = {
@@ -43,10 +44,13 @@ class BulkImport(project: Project)(implicit apiDependencies: ApiDependencies) {
     ImportIdentifier(map("_typeName").asInstanceOf[String], map("id").asInstanceOf[String])
 
   private def convertToImportNode(json: JsValue): ImportNode = {
-    val map      = json.convertTo[Map[String, Any]]
-    val valueMap = map.collect { case (k, v) if k != "_typeName" && k != "id" => (k, v) }
+    val jsObject = json.asJsObject
+    val typeName = jsObject.fields("_typeName").asInstanceOf[JsString].value
+    val id       = jsObject.fields("id").asInstanceOf[JsString].value
+    val model    = project.schema.getModelByName_!(typeName)
 
-    ImportNode(getImportIdentifier(map), valueMap)
+    val gcValueResult = GCValueJsonFormatter.readModelAwareGcValue(model)(jsObject.toPlay())
+    ImportNode(id, model, gcValueResult.get)
   }
 
   private def convertToImportList(json: JsValue): ImportList = {
@@ -74,23 +78,12 @@ class BulkImport(project: Project)(implicit apiDependencies: ApiDependencies) {
 
   private def generateImportNodesDBActions(nodes: Vector[ImportNode]): Vector[CreateDataItemsImport Or Exception] = {
     val createDataItems: Vector[Or[CreateDataItemImport, Exception]] = nodes.map { element =>
-      val id    = element.identifier.id
-      val model = project.schema.getModelByName_!(element.identifier.typeName)
-
-      val elementReferenceToNonExistentField = element.values.keys.find(key => model.getFieldByName(key).isEmpty)
+      val model                              = element.model
+      val elementReferenceToNonExistentField = element.values.asRoot.map.keys.find(key => model.getFieldByName(key).isEmpty)
 
       elementReferenceToNonExistentField match {
-        case Some(key) =>
-          Bad(new Exception(s"The model ${model.name} with id $id has an unknown field '$key' in field list."))
-        case None =>
-          val formattedValues = element.values.collect {
-            case (k, v) if k == "createdAt" || k == "updatedAt"                                => (k, dateTimeFromISO8601(v))
-            case (k, v) if model.getFieldByName_!(k).typeIdentifier == TypeIdentifier.DateTime => (k, dateTimeFromISO8601(v))
-            case (k, v) if model.getFieldByName_!(k).typeIdentifier == TypeIdentifier.Json     => (k, v.toJson)
-            case (k, v)                                                                        => (k, v)
-          }
-          val values = CoolArgs(formattedValues + ("id" -> id))
-          Good(CreateDataItemImport(project, model, values))
+        case Some(key) => Bad(new Exception(s"The model ${model.name} with id ${element.id} has an unknown field '$key' in field list."))
+        case None      => Good(CreateDataItemImport(project, model, ReallyCoolArgs(element.values)))
       }
     }
 

@@ -11,9 +11,17 @@ import play.api.libs.json.JsValue
   *   - move the spot where we do the validations further back? out of the AddFieldMutation to AddField Input already?
   *   - Where do we need Good/Bad Error handling, where can we call get?
   */
-sealed trait GCValue
+sealed trait GCValue {
+  def asRoot: RootGCValue = this.asInstanceOf[RootGCValue]
 
-case class RootGCValue(map: Map[String, GCValue]) extends GCValue
+}
+
+case class RootGCValue(map: Map[String, GCValue]) extends GCValue {
+  def idField = map.get("id") match {
+    case Some(id) => id.asInstanceOf[GraphQLIdGCValue]
+    case None     => sys.error("There was no field with name 'id'.")
+  }
+}
 
 case class ListGCValue(values: Vector[GCValue]) extends GCValue {
   def getStringVector: Vector[String] = values.asInstanceOf[Vector[StringGCValue]].map(_.value)
