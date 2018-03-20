@@ -12,7 +12,12 @@ To understand what Prisma is and how it works, it is crucial that you have a sol
 - [GraphQL Server Basics: The Schema](https://blog.graph.cool/ac5e2950214e)
 - [How to build a GraphQL Server](https://blog.graph.cool/6da86f346e68)
 
-Note that if you have used Graphcool to manage your GraphQL server in the past, you will greatly benefit from reading through above articles to get a clearer understanding of Prisma and the value it provides.
+If you've used Graphcool before and don't have any experience in building your own GraphQL server, be sure to also check the following two forum posts to get an understanding of the major differences between Graphcool and Prisma:
+
+- [Graphcool Framework and Prisma](https://www.graph.cool/forum/t/graphcool-framework-and-prisma/2237)
+- [What are the edge cases that make Prisma necessary?](https://www.graph.cool/forum/t/what-are-the-edge-cases-that-make-prisma-necessary/2857/8)
+
+## Migrating to Prisma
 
 </InfoBox>
 

@@ -110,18 +110,18 @@ case class CoolArgs(raw: Map[String, Any]) {
     CoolArgs(values.toMap)
   }
 
-  def subArgsVector(field: String): Option[Vector[CoolArgs]] = subArgsList(field).map(_.toVector)
+  private def subArgsVector(field: String): Option[Vector[CoolArgs]] = subArgsList(field).map(_.toVector)
 
-  def subArgsList(field: String): Option[Seq[CoolArgs]] = {
+  private def subArgsList(field: String): Option[Seq[CoolArgs]] = {
     getFieldValuesAs[Map[String, Any]](field) match {
       case None    => None
       case Some(x) => Some(x.map(CoolArgs))
     }
   }
 
-  def subArgsOption(field: Field): Option[Option[CoolArgs]] = subArgsOption(field.name)
+  private def subArgsOption(field: Field): Option[Option[CoolArgs]] = subArgsOption(field.name)
 
-  def subArgsOption(name: String): Option[Option[CoolArgs]] = {
+  private def subArgsOption(name: String): Option[Option[CoolArgs]] = {
     val fieldValue: Option[Option[Map[String, Any]]] = getFieldValueAs[Map[String, Any]](name)
     fieldValue match {
       case None          => None
@@ -137,9 +137,9 @@ case class CoolArgs(raw: Map[String, Any]) {
     * The inner option is empty if a null value was sent for this field. If the option is defined it contains a non null value
     * for this field.
     */
-  def getFieldValueAs[T](field: Field): Option[Option[T]] = getFieldValueAs(field.name)
+  private def getFieldValueAs[T](field: Field): Option[Option[T]] = getFieldValueAs(field.name)
 
-  def getFieldValueAs[T](name: String): Option[Option[T]] = {
+  private def getFieldValueAs[T](name: String): Option[Option[T]] = {
     raw.get(name).map { fieldValue =>
       try {
         fieldValue.asInstanceOf[Option[T]]
@@ -150,33 +150,14 @@ case class CoolArgs(raw: Map[String, Any]) {
     }
   }
 
-  def getFieldValueAsSeq[T](name: String): Option[Seq[T]] = {
-    raw.get(name).map { fieldValue =>
-      try {
-        fieldValue.asInstanceOf[Option[T]] match {
-          case Some(x) => Seq(x)
-          case None    => Seq.empty
-        }
-      } catch {
-        case _: ClassCastException =>
-          Seq(fieldValue.asInstanceOf[T])
-      }
-    }
-  }
+  private def getFieldValue(field: Field): Any = raw(field.name)
 
-  def getFieldValue(field: Field): Any = raw(field.name)
   def getUnwrappedFieldValue(field: Field): Any = getFieldValue(field) match {
     case Some(x) => x
     case x       => x
   }
 
-  /**
-    * The outer option is defined if the field key was specified in the arguments at all.
-    * The inner sequence then contains all the values specified.
-    */
-  def getFieldValuesAs[T](field: Field): Option[Seq[T]] = getFieldValuesAs(field.name)
-
-  def getFieldValuesAs[T](field: String): Option[Seq[T]] = {
+  private def getFieldValuesAs[T](field: String): Option[Seq[T]] = {
     raw.get(field).map { fieldValue =>
       try {
         fieldValue.asInstanceOf[Option[Seq[T]]].getOrElse(Seq.empty)
