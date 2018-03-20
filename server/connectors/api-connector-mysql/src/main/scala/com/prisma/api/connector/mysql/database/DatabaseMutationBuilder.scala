@@ -7,17 +7,13 @@ import com.prisma.api.connector._
 import com.prisma.api.connector.mysql.database.SlickExtensions._
 import com.prisma.api.connector.mysql.impl.NestedCreateRelationInterpreter
 import com.prisma.api.schema.GeneralError
-import com.prisma.gc_values.GraphQLIdGCValue
 import com.prisma.shared.models.TypeIdentifier.TypeIdentifier
 import com.prisma.shared.models._
 import cool.graph.cuid.Cuid
-import play.api.libs.json.JsValue
 import slick.dbio.{DBIOAction, Effect, NoStream}
 import slick.jdbc.MySQLProfile.api._
 import slick.jdbc.SQLActionBuilder
 import slick.sql.{SqlAction, SqlStreamingAction}
-
-import scala.concurrent.ExecutionContext.Implicits.global
 
 object DatabaseMutationBuilder {
   val implicitlyCreatedColumns = List("id", "createdAt", "updatedAt")
@@ -405,6 +401,7 @@ object DatabaseMutationBuilder {
 
   def createDataItemsImport(mutaction: CreateDataItemsImport): SimpleDBIO[Vector[String]] = {
     import java.sql.Statement
+
     import JdbcExtensions._
 
     SimpleDBIO[Vector[String]] { x =>
@@ -523,11 +520,9 @@ object DatabaseMutationBuilder {
 
   def pushScalarListsImport(mutaction: PushScalarListsImport): SimpleDBIO[Vector[String]] = {
     val projectId = mutaction.project.id
-    val args      = mutaction.args
     val tableName = mutaction.tableName
     val nodeId    = mutaction.id
 
-    import java.sql.Statement
     import JdbcExtensions._
 
     SimpleDBIO[Vector[String]] { x =>

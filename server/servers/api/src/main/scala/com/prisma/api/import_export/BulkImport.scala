@@ -24,16 +24,14 @@ class BulkImport(project: Project)(implicit apiDependencies: ApiDependencies) ex
     val res: Future[Vector[Try[Unit]]] =
       bundle.valueType match {
         case "nodes" =>
-          val x                                                        = bundle.values.elements.map(convertToImportNode)
-          val goods                                                    = x.collect { case Good(x) => x }
-          val bads                                                     = x.collect { case x: Bad[Exception] => x }
-          val newGoods                                                 = generateImportNodesDBActions(goods).map(Good(_))
-          val mutactions: Vector[Or[CreateDataItemsImport, Exception]] = newGoods ++ bads
+          val importNodes                             = bundle.values.elements.map(convertToImportNode)
+          val goods: Vector[ImportNode]               = importNodes.collect { case Good(x) => x }
+          val bads: Vector[Exception]                 = importNodes.collect { case x: Bad[Exception] => x.b }
+          val newGoods: Vector[CreateDataItemsImport] = generateImportNodesDBActions(goods)
 
-          Future.sequence(mutactions.map {
-            case Good(m)        => apiDependencies.databaseMutactionExecutor.execute(Vector(m), runTransactionally = false).toFutureTry
-            case Bad(exception) => Future.successful(Failure(exception))
-          })
+          val creates = newGoods.map(m => apiDependencies.databaseMutactionExecutor.execute(Vector(m), runTransactionally = false).toFutureTry)
+          val errors  = bads.map(exception => Future.successful(Failure(exception)))
+          Future.sequence(creates ++ errors)
 
         case "relations" =>
           val mutactions = generateImportRelationsDBActions(bundle.values.elements.map(convertToImportRelation))
