@@ -7,5 +7,5 @@ trait ApiConnector {
 }
 
 trait DatabaseMutactionExecutor {
-  def execute(mutactions: Vector[DatabaseMutaction]): Future[Unit]
+  def execute(mutactions: Vector[DatabaseMutaction], runTransactionally: Boolean = true): Future[Unit]
 }

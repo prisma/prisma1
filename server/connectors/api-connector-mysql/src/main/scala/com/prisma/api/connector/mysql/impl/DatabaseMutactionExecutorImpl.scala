@@ -11,10 +11,14 @@ case class DatabaseMutactionExecutorImpl(
 )(implicit ec: ExecutionContext)
     extends DatabaseMutactionExecutor {
 
-  override def execute(mutactions: Vector[DatabaseMutaction]): Future[Unit] = {
+  override def execute(mutactions: Vector[DatabaseMutaction], runTransactionally: Boolean): Future[Unit] = {
     val interpreters        = mutactions.map(interpreterFor)
     val combinedErrorMapper = interpreters.map(_.errorMapper).reduceLeft(_ orElse _)
-    val singleAction        = DBIO.seq(interpreters.map(_.action): _*).transactionally
+
+    val singleAction = runTransactionally match {
+      case true  => DBIO.seq(interpreters.map(_.action): _*).transactionally
+      case false => DBIO.seq(interpreters.map(_.action): _*)
+    }
     clientDb
       .run(singleAction)
       .recover {

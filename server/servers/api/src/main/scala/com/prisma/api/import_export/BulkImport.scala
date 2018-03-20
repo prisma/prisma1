@@ -29,19 +29,13 @@ class BulkImport(project: Project)(implicit apiDependencies: ApiDependencies) {
 
     val res = Future.sequence(
       mutactions.map {
-        case Good(m)        => apiDependencies.databaseMutactionExecutor.execute(Vector(m)).toFutureTry
+        case Good(m)        => apiDependencies.databaseMutactionExecutor.execute(Vector(m), false).toFutureTry
         case Bad(exception) => Future.successful(Failure(exception))
       }
     )
 
-    def messageWithOutConnection(tryelem: Try[Any]): String = tryelem.failed.get.getMessage.substring(tryelem.failed.get.getMessage.indexOf(")") + 1)
-
     res
-      .map(vector =>
-        vector.zipWithIndex.collect {
-          case (elem, idx) if elem.isFailure && idx < count  => Map("index" -> idx, "message"           -> messageWithOutConnection(elem)).toJson
-          case (elem, idx) if elem.isFailure && idx >= count => Map("index" -> (idx - count), "message" -> messageWithOutConnection(elem)).toJson
-      })
+      .map(vector => vector.collect { case elem if elem.isFailure => elem.failed.get.getMessage.split("-@-").map(_.toJson) }.flatten)
       .map(x => JsArray(x))
   }
 
@@ -87,7 +81,7 @@ class BulkImport(project: Project)(implicit apiDependencies: ApiDependencies) {
 
       elementReferenceToNonExistentField match {
         case Some(key) =>
-          Bad(new Exception(s"Unknown field '$key' in field list"))
+          Bad(new Exception(s"The model ${model.name} with id $id has an unknown field '$key' in field list."))
 
         case None =>
           val formattedValues = element.values.collect {
@@ -101,15 +95,12 @@ class BulkImport(project: Project)(implicit apiDependencies: ApiDependencies) {
       }
     }
 
-    val exceptions: Vector[Bad[Exception]] = createDataItems.collect { case x: Bad[Exception] => x }
+    val exceptions: Vector[Bad[Exception]]                     = createDataItems.collect { case x: Bad[Exception] => x }
+    val creates                                                = createDataItems.collect { case x: Good[CreateDataItemImport] => x.get }
+    val groupedItems: Map[Model, Vector[CreateDataItemImport]] = creates.groupBy(_.model)
+    val createDataItemsImports                                 = groupedItems.map { case (model, group) => Good(CreateDataItemsImport(project, model, group.map(_.args))) }.toVector
 
-    if (exceptions.nonEmpty) {
-      exceptions
-    } else {
-      val creates                                                = createDataItems.collect { case x: Good[CreateDataItemImport] => x.get }
-      val groupedItems: Map[Model, Vector[CreateDataItemImport]] = creates.groupBy(_.model)
-      groupedItems.map { case (model, group) => Good(CreateDataItemsImport(project, model, group.map(_.args))) }.toVector
-    }
+    createDataItemsImports ++ exceptions
   }
 
   private def generateImportRelationsDBActions(relations: Vector[ImportRelation]): Vector[CreateRelationRowsImport] = {

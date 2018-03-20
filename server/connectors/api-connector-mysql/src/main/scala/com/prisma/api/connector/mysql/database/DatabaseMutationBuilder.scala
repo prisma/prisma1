@@ -1,6 +1,6 @@
 package com.prisma.api.connector.mysql.database
 
-import java.sql.PreparedStatement
+import java.sql.{PreparedStatement, Statement}
 
 import com.librato.metrics.client.Json
 import com.prisma.api.connector._
@@ -403,66 +403,122 @@ object DatabaseMutationBuilder {
   }
   //endregion
 
-  def createDataItemsImport(mutaction: CreateDataItemsImport): SimpleDBIO[Int] = {
-    SimpleDBIO[Int] { x =>
-      val model        = mutaction.model
-      val columns      = model.scalarNonListFields.map(_.name)
-      val escapedKeys  = columns.mkString(",")
-      val placeHolders = columns.map(_ => "?").mkString(",")
+  def createDataItemsImport(mutaction: CreateDataItemsImport): SimpleDBIO[Vector[String]] = {
+    import java.sql.Statement
+    SimpleDBIO[Vector[String]] { x =>
+      val model         = mutaction.model
+      val argsWithIndex = mutaction.args.zipWithIndex
 
-      val query                         = s"INSERT INTO `${mutaction.project.id}`.`${model.name}` ($escapedKeys) VALUES ($placeHolders)"
-      val itemInsert: PreparedStatement = x.connection.prepareStatement(query)
+      val nodeResult: Vector[String] = try {
+        val columns      = model.scalarNonListFields.map(_.name)
+        val escapedKeys  = columns.mkString(",")
+        val placeHolders = columns.map(_ => "?").mkString(",")
 
-      mutaction.args.foreach { arg =>
-        columns.zipWithIndex.foreach { columnAndIndex =>
-          val index  = columnAndIndex._2 + 1
-          val column = columnAndIndex._1
-          arg.raw.get(column) match {
-            case Some(s: String)                                        => itemInsert.setString(index, s)
-            case Some(i: Int)                                           => itemInsert.setInt(index, i)
-            case Some(bd: BigDecimal)                                   => itemInsert.setInt(index, bd.toInt)
-            case Some(f: Float)                                         => itemInsert.setDouble(index, f.toDouble)
-            case Some(d: Double)                                        => itemInsert.setDouble(index, d)
-            case Some(b: Boolean)                                       => itemInsert.setBoolean(index, b)
-            case Some(j: JsValue)                                       => itemInsert.setString(index, j.toString)
-            case None if column == "createdAt" || column == "updatedAt" => itemInsert.setString(index, "2017-11-29 14:35:13")
-            case None                                                   => itemInsert.setNull(index, java.sql.Types.NULL)
-            case Some(x)                                                => sys.error("""fngfgfd     """ + x)
+        val query                         = s"INSERT INTO `${mutaction.project.id}`.`${model.name}` ($escapedKeys) VALUES ($placeHolders)"
+        val itemInsert: PreparedStatement = x.connection.prepareStatement(query)
+
+        mutaction.args.foreach { arg =>
+          columns.zipWithIndex.foreach { columnAndIndex =>
+            val index  = columnAndIndex._2 + 1
+            val column = columnAndIndex._1
+            arg.raw.get(column) match {
+              case Some(s: String)                                        => itemInsert.setString(index, s)
+              case Some(i: Int)                                           => itemInsert.setInt(index, i)
+              case Some(bd: BigDecimal)                                   => itemInsert.setInt(index, bd.toInt)
+              case Some(f: Float)                                         => itemInsert.setDouble(index, f.toDouble)
+              case Some(d: Double)                                        => itemInsert.setDouble(index, d)
+              case Some(b: Boolean)                                       => itemInsert.setBoolean(index, b)
+              case Some(j: JsValue)                                       => itemInsert.setString(index, j.toString)
+              case None if column == "createdAt" || column == "updatedAt" => itemInsert.setString(index, "2017-11-29 14:35:13")
+              case None                                                   => itemInsert.setNull(index, java.sql.Types.NULL)
+              case Some(x)                                                => sys.error("""fngfgfd     """ + x)
+            }
           }
+          itemInsert.addBatch()
         }
-        itemInsert.addBatch()
+
+        itemInsert.executeBatch()
+
+        Vector.empty
+      } catch {
+        case e: java.sql.BatchUpdateException =>
+          e.getUpdateCounts.zipWithIndex
+            .filter(element => element._1 == Statement.EXECUTE_FAILED)
+            .map { failed =>
+              val failedId = argsWithIndex.find(_._2 == failed._2).get._1.raw("id")
+              s"Failure inserting ${model.name} with Id: $failedId. Cause: ${removeConnectionInfoFromCause(e.getCause.toString)}"
+            }
+            .toVector
+        case e: Exception => Vector(e.getCause.toString)
       }
 
-      itemInsert.executeBatch()
+      val relayResult: Vector[String] = try {
+        val relayQuery                     = s"INSERT INTO `${mutaction.project.id}`.`_RelayId` (`id`, `stableModelIdentifier`) VALUES (?,?)"
+        val relayInsert: PreparedStatement = x.connection.prepareStatement(relayQuery)
 
-      val relayQuery = s"INSERT INTO `${mutaction.project.id}`.`_RelayId` (`id`, `stableModelIdentifier`) VALUES (?,?)"
-      val relayInsert: PreparedStatement = {
-        x.connection.prepareStatement(relayQuery)
+        mutaction.args.foreach { arg =>
+          relayInsert.setString(1, arg.raw("id").toString) //todo get id separately??
+          relayInsert.setString(2, model.stableIdentifier)
+          relayInsert.addBatch()
+        }
+        relayInsert.executeBatch()
+
+        Vector.empty
+      } catch {
+        case e: java.sql.BatchUpdateException =>
+          e.getUpdateCounts.zipWithIndex
+            .filter(element => element._1 == Statement.EXECUTE_FAILED)
+            .map { failed =>
+              val failedId = argsWithIndex.find(_._2 == failed._2).get._1.raw("id")
+              s"Failure inserting RelayRow with Id: $failedId. Cause: ${removeConnectionInfoFromCause(e.getCause.toString)}"
+            }
+            .toVector
+        case e: Exception => Vector(e.getCause.toString)
       }
 
-      mutaction.args.foreach { arg =>
-        relayInsert.setString(1, arg.raw("id").toString)
-        relayInsert.setString(2, model.stableIdentifier)
-        relayInsert.addBatch()
-      }
-      relayInsert.executeBatch()
-
-      mutaction.args.size
+      val res = nodeResult ++ relayResult
+      if (res.nonEmpty) throw new Exception(res.mkString("-@-"))
+      res
     }
   }
 
-  def createRelationRowsImport(mutaction: CreateRelationRowsImport): SimpleDBIO[Int] = {
-    SimpleDBIO[Int] { x =>
-      val query                             = s"INSERT INTO `${mutaction.project.id}`.`${mutaction.relation.id}` (`id`, `a`, `b`) VALUES (?,?,?)"
-      val relationInsert: PreparedStatement = x.connection.prepareStatement(query)
-      mutaction.args.foreach { arg =>
-        relationInsert.setString(1, Cuid.createCuid())
-        relationInsert.setString(2, arg._1)
-        relationInsert.setString(3, arg._2)
-        relationInsert.addBatch()
+  def removeConnectionInfoFromCause(cause: String): String = {
+    val connectionSubStringStart = cause.indexOf("(conn=")
+    val firstPart                = cause.substring(0, connectionSubStringStart)
+    val temp                     = cause.substring(connectionSubStringStart + 6)
+    val endOfConnectionSubstring = temp.indexOf(")") + 2
+    val secondPart               = temp.substring(endOfConnectionSubstring)
+
+    firstPart + secondPart
+  }
+
+  def createRelationRowsImport(mutaction: CreateRelationRowsImport): SimpleDBIO[Vector[String]] = {
+    val argsWithIndex: Seq[((String, String), Int)] = mutaction.args.zipWithIndex
+
+    SimpleDBIO[Vector[String]] { x =>
+      try {
+        val query                             = s"INSERT INTO `${mutaction.project.id}`.`${mutaction.relation.id}` (`id`, `a`, `b`) VALUES (?,?,?)"
+        val relationInsert: PreparedStatement = x.connection.prepareStatement(query)
+        mutaction.args.foreach { arg =>
+          relationInsert.setString(1, Cuid.createCuid())
+          relationInsert.setString(2, arg._1)
+          relationInsert.setString(3, arg._2)
+          relationInsert.addBatch()
+        }
+        relationInsert.executeBatch()
+        Vector.empty
+      } catch {
+        case e: java.sql.BatchUpdateException =>
+          e.getUpdateCounts.zipWithIndex
+            .filter(element => element._1 == Statement.EXECUTE_FAILED)
+            .map { failed =>
+              val failedA = argsWithIndex.find(_._2 == failed._2).get._1._1
+              val failedB = argsWithIndex.find(_._2 == failed._2).get._1._2
+              s"Failure inserting into relationtable ${mutaction.relation.id} with ids $failedA and $failedB. Cause: ${removeConnectionInfoFromCause(e.getCause.toString)}"
+            }
+            .toVector
+        case e: Exception => Vector(e.getCause.toString)
       }
-      relationInsert.executeBatch()
-      mutaction.args.size
     }
   }
 
