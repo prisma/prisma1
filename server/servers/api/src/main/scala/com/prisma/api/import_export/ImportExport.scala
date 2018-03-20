@@ -1,8 +1,25 @@
 package com.prisma.api.import_export
 
 import com.prisma.api.connector.{DataItem, DataResolver}
+import com.prisma.gc_values._
 import com.prisma.shared.models.{Model, Project, Relation}
-import spray.json.{DefaultJsonProtocol, JsArray, JsBoolean, JsFalse, JsNull, JsNumber, JsObject, JsString, JsTrue, JsValue, JsonFormat, RootJsonFormat}
+import com.prisma.util.json.PlaySprayConversions
+import org.joda.time.format.ISODateTimeFormat
+import spray.json.{
+  DefaultJsonProtocol,
+  JsArray,
+  JsBoolean,
+  JsFalse,
+  JsNull,
+  JsNumber,
+  JsObject,
+  JsString,
+  JsTrue,
+  JsValue,
+  JsonFormat,
+  JsonReader,
+  RootJsonFormat
+}
 
 package object ImportExport {
 
@@ -102,6 +119,36 @@ package object ImportExport {
       }
     }
 
+    implicit object GcValueFormat extends JsonReader[GCValue] with PlaySprayConversions {
+      val formatter = ISODateTimeFormat.dateHourMinuteSecondFraction()
+
+//      def write(x: GCValue): JsValue = x match {
+//        case gcValue: RootGCValue      => JsObject(gcValue.map.mapValues(write))
+//        case gcValue: ListGCValue      => JsArray(gcValue.values.map(write))
+//        case NullGCValue               => JsNull
+//        case gcValue: StringGCValue    => JsString(gcValue.value)
+//        case gcValue: BooleanGCValue   => JsBoolean(gcValue.value)
+//        case gcValue: IntGCValue       => JsNumber(gcValue.value)
+//        case gcValue: FloatGCValue     => JsNumber(gcValue.value)
+//        case gcValue: GraphQLIdGCValue => JsString(gcValue.value)
+//        case gcValue: DateTimeGCValue  => JsString(formatter.print(gcValue.value))
+//        case gcValue: EnumGCValue      => JsString(gcValue.value)
+//        case gcValue: JsonGCValue      => gcValue.value.toSpray
+//      }
+
+      def read(x: JsValue): GCValue = {
+        x match {
+          case l: JsArray   => ListGCValue(l.elements.map(read))
+          case m: JsObject  => RootGCValue(m.fields.mapValues(read))
+          case s: JsString  => StringGCValue(s.value)
+          case n: JsNumber  => FloatGCValue(n.value.toDouble)
+          case b: JsBoolean => BooleanGCValue(b.value)
+          case JsNull       => NullGCValue
+          case _            => sys.error("implement all scalar types!")
+        }
+      }
+    }
+
     implicit val jsonBundle: RootJsonFormat[JsonBundle]                 = jsonFormat2(JsonBundle)
     implicit val importBundle: RootJsonFormat[ImportBundle]             = jsonFormat2(ImportBundle)
     implicit val importIdentifier: RootJsonFormat[ImportIdentifier]     = jsonFormat2(ImportIdentifier)
@@ -113,6 +160,6 @@ package object ImportExport {
     implicit val exportRequest: RootJsonFormat[ExportRequest]           = jsonFormat2(ExportRequest)
     implicit val resultFormat: RootJsonFormat[ResultFormat]             = jsonFormat3(ResultFormat)
     implicit val exportRelationSide: RootJsonFormat[ExportRelationSide] = jsonFormat3(ExportRelationSide)
-  }
 
+  }
 }
