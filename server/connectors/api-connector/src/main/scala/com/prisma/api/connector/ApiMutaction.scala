@@ -31,6 +31,7 @@ case class NestedCreateRelation(project: Project, path: Path, topIsCreate: Boole
 case class NestedDisconnectRelation(project: Project, path: Path, topIsCreate: Boolean = false)       extends DatabaseMutaction
 case class SetScalarList(project: Project, path: Path, field: Field, values: Vector[Any])             extends DatabaseMutaction
 case class SetScalarListToEmpty(project: Project, path: Path, field: Field)                           extends DatabaseMutaction
+case class PushToScalarList(project: Project, path: Path, field: Field, values: Vector[Any])          extends DatabaseMutaction
 case class TruncateTable(projectId: String, tableName: String)                                        extends DatabaseMutaction
 case class UpdateDataItem(project: Project, model: Model, id: Id, args: CoolArgs, previousValues: DataItem) extends DatabaseMutaction {
   // TODO filter for fields which actually did change

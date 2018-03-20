@@ -1,8 +1,8 @@
 package com.prisma.api.connector.mysql.database
 
-import com.prisma.api.connector.mysql.database.DatabaseMutationBuilder.idFromWhereEquals
-import com.prisma.api.connector.mysql.database.Types.DataItemFilterCollection
+import com.prisma.api.connector.Types.DataItemFilterCollection
 import com.prisma.api.connector._
+import com.prisma.api.connector.mysql.database.DatabaseMutationBuilder.idFromWhereEquals
 import com.prisma.shared.models.{Field, Model, Project}
 import slick.dbio.DBIOAction
 import slick.dbio.Effect.Read
@@ -14,6 +14,7 @@ import scala.concurrent.ExecutionContext.Implicits.global
 
 object DatabaseQueryBuilder {
 
+  import QueryArgumentsExtensions._
   import SlickExtensions._
 
   implicit object GetDataItem extends GetResult[DataItem] {
@@ -75,7 +76,7 @@ object DatabaseQueryBuilder {
 
   def countAllFromModel(project: Project, model: Model, where: Option[DataItemFilterCollection]): SQLActionBuilder = {
     val whereSql = where.flatMap { where =>
-      QueryArguments.generateFilterConditions(project.id, model.name, where)
+      QueryArgumentsHelpers.generateFilterConditions(project.id, model.name, where)
     }
     sql"select count(*) from `#${project.id}`.`#${model.name}`" ++ prefixIfNotNone("where", whereSql)
   }

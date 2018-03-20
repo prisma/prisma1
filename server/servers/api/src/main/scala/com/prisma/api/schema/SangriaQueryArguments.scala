@@ -1,7 +1,7 @@
 package com.prisma.api.schema
 
-import com.prisma.api.connector.mysql.database.Types.DataItemFilterCollection
-import com.prisma.api.connector.mysql.database.{OrderBy, QueryArguments, SortOrder}
+import com.prisma.api.connector.Types.DataItemFilterCollection
+import com.prisma.api.connector.{OrderBy, QueryArguments, SortOrder}
 import com.prisma.shared.models
 import com.prisma.shared.models.Model
 import sangria.schema.{EnumType, EnumValue, _}

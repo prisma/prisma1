@@ -1,8 +1,7 @@
 package com.prisma.api.mutations
 
 import com.prisma.api.ApiDependencies
-import com.prisma.api.connector.mysql.database.DataResolver
-import com.prisma.api.connector.{DataItem, DisableForeignKeyConstraintChecks, EnableForeignKeyConstraintChecks, TruncateTable}
+import com.prisma.api.connector._
 import com.prisma.shared.models._
 
 import scala.concurrent.Future

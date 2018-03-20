@@ -1,10 +1,9 @@
 package com.prisma.api.mutactions.validation
 
 import com.prisma.api.connector.CoolArgs
-import com.prisma.api.connector.mysql.database.DatabaseConstraints
 import com.prisma.api.schema.APIErrors
 import com.prisma.api.schema.APIErrors.ClientApiError
-import com.prisma.shared.models.{Field, Model}
+import com.prisma.shared.models.{Field, Model, TypeIdentifier}
 import spray.json._
 
 import scala.util.{Failure, Success, Try}
@@ -43,7 +42,38 @@ object InputValueValidation {
   def checkValueSize(args: CoolArgs, updatedFields: List[Field]): List[Field] = {
     updatedFields
       .filter(field => args.hasArgFor(field) && args.getUnwrappedFieldValue(field) != None)
-      .filter(field => !DatabaseConstraints.isValueSizeValid(args.getUnwrappedFieldValue(field), field))
+      .filter(field => !isValueSizeValid(args.getUnwrappedFieldValue(field), field))
+  }
+
+  private def isValueSizeValid(value: Any, field: Field): Boolean = {
+    if (field.isScalarList) {
+      return true
+    }
+    field.typeIdentifier match {
+      case TypeIdentifier.String | TypeIdentifier.Json =>
+        value.toString.length <= 262144
+
+      case TypeIdentifier.Boolean | TypeIdentifier.Int | TypeIdentifier.DateTime =>
+        true
+
+      case TypeIdentifier.GraphQLID =>
+        value.toString.length <= 25
+
+      case TypeIdentifier.Enum =>
+        value.toString.length <= 191
+
+      case TypeIdentifier.Float =>
+        val asDouble = value match {
+          case x: Double     => x
+          case x: String     => x.toDouble
+          case x: BigDecimal => x.toDouble
+          case x: Any        => sys.error("Received an invalid type here. Class: " + x.getClass.toString + " value: " + x.toString)
+        }
+        BigDecimal(asDouble).underlying().toPlainString.length <= 35
+
+      case TypeIdentifier.Relation =>
+        sys.error("Relation is not a scalar type. Are you trying to create a db column for a relation?")
+    }
   }
 
   def scalarFieldsWithValues(model: Model, args: CoolArgs): List[Field] = {
