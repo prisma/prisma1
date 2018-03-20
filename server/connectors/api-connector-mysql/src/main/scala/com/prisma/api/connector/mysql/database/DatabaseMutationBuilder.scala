@@ -496,7 +496,7 @@ object DatabaseMutationBuilder {
     val argsWithIndex: Seq[((String, String), Int)] = mutaction.args.zipWithIndex
 
     SimpleDBIO[Vector[String]] { x =>
-      try {
+      val res = try {
         val query                             = s"INSERT INTO `${mutaction.project.id}`.`${mutaction.relation.id}` (`id`, `a`, `b`) VALUES (?,?,?)"
         val relationInsert: PreparedStatement = x.connection.prepareStatement(query)
         mutaction.args.foreach { arg =>
@@ -519,6 +519,9 @@ object DatabaseMutationBuilder {
             .toVector
         case e: Exception => Vector(e.getCause.toString)
       }
+
+      if (res.nonEmpty) throw new Exception(res.mkString("-@-"))
+      res
     }
   }
 

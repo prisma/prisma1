@@ -10,7 +10,7 @@ import spray.json._
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
-import scala.util.{Failure, Try}
+import scala.util.Failure
 
 class BulkImport(project: Project)(implicit apiDependencies: ApiDependencies) {
   import com.prisma.utils.future.FutureUtils._
