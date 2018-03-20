@@ -5,20 +5,26 @@ import com.prisma.shared.models.{Enum, Field, Model, TypeIdentifier}
 import org.joda.time.format.{DateTimeFormat, ISODateTimeFormat}
 import play.api.libs.json._
 
+import scala.collection.immutable
 import scala.util.Try
 
 object GCValueJsonFormatter {
 
+  case class UnknownFieldException(field: String, model: Model) extends Exception
+
   def readModelAwareGcValue(model: Model)(json: JsValue): JsResult[RootGCValue] = {
     for {
       jsObject <- json.validate[JsObject]
-      formattedValues = jsObject.fields.toVector.flatMap { tuple =>
+      formattedValues = jsObject.fields.toVector.map { tuple =>
         val (key, value) = tuple
-        model.getFieldByName(key).map { field =>
-          readLeafGCValueForField(field)(value) match {
-            case JsSuccess(gcValue, _) => JsSuccess(key -> gcValue)
-            case e: JsError            => e
-          }
+        model.getFieldByName(key) match {
+          case Some(field) =>
+            readLeafGCValueForField(field)(value) match {
+              case JsSuccess(gcValue, _) => JsSuccess(key -> gcValue)
+              case e: JsError            => e
+            }
+          case None =>
+            throw UnknownFieldException(key, model)
         }
       }
       tuples <- sequenceJsResult(formattedValues)
@@ -50,14 +56,18 @@ object GCValueJsonFormatter {
   }
 
   implicit object DateTimeGCValueReads extends Reads[DateTimeGCValue] {
-    val isoFormatter      = ISODateTimeFormat.basicDateTime
-    val fallbackFormatter = DateTimeFormat.forPattern("yyyy-MM-dd HH:mm:ss")
+    ISODateTimeFormat.basicDateTime()
+    val isoFormatter            = DateTimeFormat.forPattern("yyyy-MM-dd'T'HH:mm:ss.SSSZ")
+    val fallbackIsoFormatter    = DateTimeFormat.forPattern("yyyy-MM-dd'T'HH:mm:ssZ")
+    val secondFallbackFormatter = DateTimeFormat.forPattern("yyyy-MM-dd HH:mm:ss")
 
     override def reads(json: JsValue) = {
       json.validate[JsString].map { jsString =>
-        val dateTime    = Try { isoFormatter.parseDateTime(jsString.value) }
-        val withRecover = dateTime.recover { case _ => fallbackFormatter.parseDateTime(jsString.value) }
-        DateTimeGCValue(withRecover.get)
+        val dateTime = Try { isoFormatter.parseDateTime(jsString.value) }
+          .recover { case _ => fallbackIsoFormatter.parseDateTime(jsString.value) }
+          .recover { case _ => secondFallbackFormatter.parseDateTime(jsString.value) }
+
+        DateTimeGCValue(dateTime.get)
       }
     }
   }

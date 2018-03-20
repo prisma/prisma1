@@ -1,6 +1,6 @@
 package com.prisma.api.connector.mysql.database
 
-import java.sql.PreparedStatement
+import java.sql.{PreparedStatement, Timestamp}
 
 import com.prisma.gc_values._
 import org.joda.time.format.DateTimeFormat
@@ -15,7 +15,7 @@ object JdbcExtensions {
       case gcValue: IntGCValue       => ps.setInt(index, gcValue.value)
       case gcValue: FloatGCValue     => ps.setDouble(index, gcValue.value)
       case gcValue: GraphQLIdGCValue => ps.setString(index, gcValue.value)
-      case gcValue: DateTimeGCValue  => ps.setDate(index, new java.sql.Date(gcValue.value.getMillis))
+      case gcValue: DateTimeGCValue  => ps.setTimestamp(index, new Timestamp(gcValue.value.getMillis))
       case gcValue: EnumGCValue      => ps.setString(index, gcValue.value)
       case gcValue: JsonGCValue      => ps.setString(index, gcValue.value.toString)
       case NullGCValue               => ps.setNull(index, java.sql.Types.NULL)

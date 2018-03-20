@@ -148,10 +148,7 @@ class BulkExport(project: Project)(implicit apiDependencies: ApiDependencies) {
     JsonBundle(jsonElements = Vector(json), size = json.toString.length)
   }
 
-  private def dateTimeToISO8601(v: Any) = v.isInstanceOf[Timestamp] match {
-    case true  => DateTime.parse(v.asInstanceOf[Timestamp].toString, DateTimeFormat.forPattern("yyyy-MM-dd HH:mm:ss.SSS").withZoneUTC())
-    case false => new DateTime(v.asInstanceOf[String], DateTimeZone.UTC)
-  }
+  private def dateTimeToISO8601(v: Any): DateTime = new DateTime(v.asInstanceOf[Timestamp].getTime).withZone(DateTimeZone.UTC)
 
   private def dataItemToExportRelation(item: DataItem, info: RelationInfo): JsonBundle = {
     val idA      = item.userData("A").get.toString.trim

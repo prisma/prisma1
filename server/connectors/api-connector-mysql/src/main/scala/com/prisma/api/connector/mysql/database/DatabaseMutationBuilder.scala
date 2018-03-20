@@ -1,6 +1,6 @@
 package com.prisma.api.connector.mysql.database
 
-import java.sql.{PreparedStatement, Statement}
+import java.sql.{PreparedStatement, Statement, Timestamp}
 
 import com.prisma.api.connector.Types.DataItemFilterCollection
 import com.prisma.api.connector._
@@ -406,13 +406,14 @@ object DatabaseMutationBuilder {
   def createDataItemsImport(mutaction: CreateDataItemsImport): SimpleDBIO[Vector[String]] = {
     import java.sql.Statement
     import JdbcExtensions._
+
     SimpleDBIO[Vector[String]] { x =>
       val model         = mutaction.model
       val argsWithIndex = mutaction.args.zipWithIndex
 
       val nodeResult: Vector[String] = try {
         val columns      = model.scalarNonListFields.map(_.name)
-        val escapedKeys  = columns.mkString(",")
+        val escapedKeys  = columns.map(column => s"`$column`").mkString(",")
         val placeHolders = columns.map(_ => "?").mkString(",")
 
         val query                         = s"INSERT INTO `${mutaction.project.id}`.`${model.name}` ($escapedKeys) VALUES ($placeHolders)"
@@ -422,9 +423,10 @@ object DatabaseMutationBuilder {
           columns.zipWithIndex.foreach { columnAndIndex =>
             val index  = columnAndIndex._2 + 1
             val column = columnAndIndex._1
+
             arg.raw.asRoot.map.get(column) match {
               case Some(x)                                                => itemInsert.setGcValue(index, x)
-              case None if column == "createdAt" || column == "updatedAt" => itemInsert.setString(index, "2017-11-29 14:35:13")
+              case None if column == "createdAt" || column == "updatedAt" => itemInsert.setTimestamp(index, new Timestamp(System.currentTimeMillis()))
               case None                                                   => itemInsert.setNull(index, java.sql.Types.NULL)
             }
           }
