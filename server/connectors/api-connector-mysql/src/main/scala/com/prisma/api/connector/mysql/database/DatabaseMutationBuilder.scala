@@ -1,10 +1,13 @@
 package com.prisma.api.connector.mysql.database
 
+import java.sql.PreparedStatement
+
 import com.prisma.api.connector.Types.DataItemFilterCollection
 import com.prisma.api.connector._
 import com.prisma.api.connector.mysql.database.SlickExtensions._
 import com.prisma.api.connector.mysql.impl.NestedCreateRelationInterpreter
 import com.prisma.api.schema.GeneralError
+import com.prisma.gc_values.StringGCValue
 import com.prisma.shared.models.TypeIdentifier.TypeIdentifier
 import com.prisma.shared.models._
 import cool.graph.cuid.Cuid
@@ -425,4 +428,46 @@ object DatabaseMutationBuilder {
     }
   }
   //endregion
+
+  def createDataItemsImport(importItems: CreateDataItemsImport): SimpleDBIO[Int] = {
+    import JdbcExtensions._
+
+    SimpleDBIO[Int] { x =>
+      val model        = importItems.model
+      val columns      = model.scalarNonListFields.map(_.name)
+      val escapedKeys  = columns.mkString(",")
+      val placeHolders = columns.map(_ => "?").mkString(",")
+
+      val query                         = s"INSERT INTO `${importItems.project.id}`.`${model.name}` ($escapedKeys) VALUES ($placeHolders)"
+      val itemInsert: PreparedStatement = x.connection.prepareStatement(query)
+
+      importItems.args.foreach { args =>
+        columns.zipWithIndex.foreach { columnAndIndex =>
+          val index  = columnAndIndex._2 + 1
+          val column = columnAndIndex._1
+          args.raw.asRoot.map.get(column) match {
+            case Some(x) => itemInsert.setGcValue(index, x)
+            case None    => itemInsert.setNull(index, java.sql.Types.NULL)
+          }
+        }
+        itemInsert.addBatch()
+      }
+
+      itemInsert.executeBatch()
+
+      val relayQuery = s"INSERT INTO `${importItems.project.id}`.`_RelayId` (`id`, `stableModelIdentifier`) VALUES (?,?)"
+      val relayInsert: PreparedStatement = {
+        x.connection.prepareStatement(relayQuery)
+      }
+
+      importItems.args.foreach { args =>
+        relayInsert.setString(1, args.raw.asRoot.map("id").asInstanceOf[StringGCValue].value)
+        relayInsert.setString(2, model.stableIdentifier)
+        relayInsert.addBatch()
+      }
+      relayInsert.executeBatch()
+
+      importItems.args.size
+    }
+  }
 }

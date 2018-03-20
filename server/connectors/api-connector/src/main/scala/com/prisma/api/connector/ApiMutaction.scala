@@ -52,6 +52,8 @@ case class UpsertDataItemIfInRelationWith(
 case class VerifyConnection(project: Project, path: Path)     extends DatabaseMutaction
 case class VerifyWhere(project: Project, where: NodeSelector) extends DatabaseMutaction
 
+case class CreateDataItemsImport(project: Project, model: Model, args: Vector[ReallyCoolArgs]) extends DatabaseMutaction
+
 case class PublishSubscriptionEvent(project: Project, value: Map[String, Any], mutationName: String) extends SideEffectMutaction
 case class ServerSideSubscription(
     project: Project,

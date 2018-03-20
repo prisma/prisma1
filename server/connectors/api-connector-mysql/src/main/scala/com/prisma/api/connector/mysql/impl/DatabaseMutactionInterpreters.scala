@@ -347,3 +347,7 @@ case class VerifyWhereInterpreter(mutaction: VerifyWhere) extends DatabaseMutact
     cause.contains(modelString) && cause.contains(parameterString(where))
   }
 }
+
+case class CreateDataItemsImportInterpreter(mutaction: CreateDataItemsImport) extends DatabaseMutactionInterpreter {
+  override def action = DatabaseMutationBuilder.createDataItemsImport(mutaction)
+}

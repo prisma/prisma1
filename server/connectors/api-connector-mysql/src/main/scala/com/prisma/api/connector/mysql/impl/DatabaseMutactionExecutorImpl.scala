@@ -51,5 +51,6 @@ case class DatabaseMutactionExecutorImpl(
     case m: UpsertDataItemIfInRelationWith              => UpsertDataItemIfInRelationWithInterpreter(m)
     case m: VerifyConnection                            => VerifyConnectionInterpreter(m)
     case m: VerifyWhere                                 => VerifyWhereInterpreter(m)
+    case m: CreateDataItemsImport                       => CreateDataItemsImportInterpreter(m)
   }
 }
