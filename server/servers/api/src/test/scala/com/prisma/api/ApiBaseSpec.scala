@@ -2,7 +2,7 @@ package com.prisma.api
 
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
-import com.prisma.api.connector.mysql.database.DataResolver
+import com.prisma.api.connector.DataResolver
 import com.prisma.api.util.StringMatchers
 import com.prisma.shared.models.Project
 import com.prisma.util.json.SprayJsonExtensions

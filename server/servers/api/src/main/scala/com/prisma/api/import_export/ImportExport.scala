@@ -1,7 +1,6 @@
 package com.prisma.api.import_export
 
-import com.prisma.api.connector.DataItem
-import com.prisma.api.connector.mysql.database.DataResolver
+import com.prisma.api.connector.{DataItem, DataResolver}
 import com.prisma.shared.models.{Model, Project, Relation}
 import spray.json.{DefaultJsonProtocol, JsArray, JsBoolean, JsFalse, JsNull, JsNumber, JsObject, JsString, JsTrue, JsValue, JsonFormat, RootJsonFormat}
 

@@ -1,7 +1,7 @@
 package com.prisma.api.import_export
 
 import com.prisma.api.ApiBaseSpec
-import com.prisma.api.connector.mysql.database.DataResolver
+import com.prisma.api.connector.DataResolver
 import com.prisma.api.import_export.ImportExport.MyJsonProtocol._
 import com.prisma.api.import_export.ImportExport.{Cursor, ExportRequest, ResultFormat}
 import com.prisma.shared.models.Project
@@ -20,6 +20,7 @@ class ImportJsonFormatSpec extends FlatSpec with Matchers with ApiBaseSpec with 
         .field("b", _.Json)
         .field("updatedAt", _.DateTime)
         .field("createdAt", _.DateTime)
+
     }
 
     database.setup(project)

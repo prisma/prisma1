@@ -12,12 +12,14 @@ class BulkImportSpec extends FlatSpec with Matchers with ApiBaseSpec with AwaitU
   val project: Project = SchemaDsl() { schema =>
     val model1: SchemaDsl.ModelBuilder = schema
       .model("Model1")
+      .field("createdAt", _.DateTime)
       .field("a", _.String)
       .field("b", _.Int)
       .field("listField", _.Int, isList = true)
 
     val model0: SchemaDsl.ModelBuilder = schema
       .model("Model0")
+      .field("createdAt", _.DateTime)
       .field("a", _.String)
       .field("b", _.Int)
       .oneToOneRelation("model1", "model0", model1, Some("Relation1"))
@@ -26,6 +28,7 @@ class BulkImportSpec extends FlatSpec with Matchers with ApiBaseSpec with AwaitU
 
     val model2: SchemaDsl.ModelBuilder = schema
       .model("Model2")
+      .field("createdAt", _.DateTime)
       .field("a", _.String)
       .field("b", _.Int)
       .field("name", _.String)
@@ -141,7 +144,6 @@ class BulkImportSpec extends FlatSpec with Matchers with ApiBaseSpec with AwaitU
 
     res2.toString should be(
       """["Failure inserting Model0 with Id: just-some-id5. Cause: java.sql.SQLIntegrityConstraintViolationException: Duplicate entry 'just-some-id5' for key 'PRIMARY'","Failure inserting RelayRow with Id: just-some-id5. Cause: java.sql.SQLIntegrityConstraintViolationException: Duplicate entry 'just-some-id5' for key 'PRIMARY'"]""")
-
     val res = server.query("query{model0s{id, b}}", project)
     res.toString should (be("""{"data":{"model0s":[{"id":"just-some-id4","b":12},{"id":"just-some-id5","b":13}]}}""") or
       be("""{"data":{"model0s":[{"id":"just-some-id4","b":12},{"id":"just-some-id5","b":15}]}}"""))

@@ -1,8 +1,7 @@
 package com.prisma.api.schema
 
-import com.prisma.api.connector.DataItem
-import com.prisma.api.connector.mysql.database.Types.DataItemFilterCollection
-import com.prisma.api.connector.mysql.database._
+import com.prisma.api.connector.Types.DataItemFilterCollection
+import com.prisma.api.connector._
 import com.prisma.api.mutations.BatchPayload
 import com.prisma.api.resolver.DeferredTypes._
 import com.prisma.api.resolver.{IdBasedConnection, IdBasedConnectionDefinition}

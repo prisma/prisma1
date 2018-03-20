@@ -186,6 +186,16 @@ case class SetScalarListInterpreter(mutaction: SetScalarList) extends DatabaseMu
   override val action = DatabaseMutationBuilder.setScalarList(mutaction.project.id, mutaction.path, mutaction.field.name, mutaction.values)
 }
 
+case class PushToScalarListInterpreter(mutaction: PushToScalarList) extends DatabaseMutactionInterpreter {
+  override def action = DatabaseMutationBuilder.pushScalarList(
+    projectId = mutaction.project.id,
+    modelName = mutaction.path.lastModel.name,
+    fieldName = mutaction.field.name,
+    nodeId = mutaction.path.root.fieldValueAsString,
+    mutaction.values
+  )
+}
+
 case class SetScalarListToEmptyInterpreter(mutaction: SetScalarListToEmpty) extends DatabaseMutactionInterpreter {
   override val action = DatabaseMutationBuilder.setScalarListToEmpty(mutaction.project.id, mutaction.path, mutaction.field.name)
 }

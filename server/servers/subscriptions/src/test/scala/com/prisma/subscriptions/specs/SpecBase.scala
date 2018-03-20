@@ -20,7 +20,6 @@ trait SpecBase extends TestFrameworkInterface with BeforeAndAfterEach with Befor
   val testDatabase                          = ApiTestDatabase()
   implicit val actorSytem                   = ActorSystem("test")
   implicit val mat                          = ActorMaterializer()
-  val config                                = dependencies.config
   val sssEventsTestKit                      = dependencies.sssEventsTestKit
   val invalidationTestKit                   = dependencies.invalidationTestKit
   val requestsTestKit                       = dependencies.requestsQueueTestKit

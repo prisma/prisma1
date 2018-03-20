@@ -1,7 +1,7 @@
 package com.prisma.api.import_export
 
 import com.prisma.api.ApiBaseSpec
-import com.prisma.api.connector.mysql.database.DataResolver
+import com.prisma.api.connector.DataResolver
 import com.prisma.api.import_export.ImportExport.MyJsonProtocol._
 import com.prisma.api.import_export.ImportExport.{Cursor, ExportRequest, ResultFormat}
 import com.prisma.shared.models.Project
@@ -24,8 +24,8 @@ class SingleValueImportExportSpec extends FlatSpec with Matchers with ApiBaseSpe
       .field("datetime", _.DateTime)
       .field("enum", _.Enum, enum = Some(enum))
       .field("json", _.Json)
-      .field("updatedAt", _.DateTime)
       .field("createdAt", _.DateTime)
+      .field("updatedAt", _.DateTime)
   }
 
   override protected def beforeAll(): Unit = {

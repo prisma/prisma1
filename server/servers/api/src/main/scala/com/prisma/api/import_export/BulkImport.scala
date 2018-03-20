@@ -14,6 +14,7 @@ import scala.util.Failure
 
 class BulkImport(project: Project)(implicit apiDependencies: ApiDependencies) {
   import com.prisma.utils.future.FutureUtils._
+
   def executeImport(json: JsValue): Future[JsValue] = {
 
     val bundle = json.convertTo[ImportBundle]
@@ -24,12 +25,11 @@ class BulkImport(project: Project)(implicit apiDependencies: ApiDependencies) {
         case "nodes"     => generateImportNodesDBActions(bundle.values.elements.map(convertToImportNode))
         case "relations" => generateImportRelationsDBActions(bundle.values.elements.map(convertToImportRelation)).map(Good(_))
         case "lists"     => generateImportListsDBActions(bundle.values.elements.map(convertToImportList)).map(Good(_))
-
       }
 
     val res = Future.sequence(
       mutactions.map {
-        case Good(m)        => apiDependencies.databaseMutactionExecutor.execute(Vector(m), false).toFutureTry
+        case Good(m)        => apiDependencies.databaseMutactionExecutor.execute(Vector(m), runTransactionally = false).toFutureTry
         case Bad(exception) => Future.successful(Failure(exception))
       }
     )
@@ -82,7 +82,6 @@ class BulkImport(project: Project)(implicit apiDependencies: ApiDependencies) {
       elementReferenceToNonExistentField match {
         case Some(key) =>
           Bad(new Exception(s"The model ${model.name} with id $id has an unknown field '$key' in field list."))
-
         case None =>
           val formattedValues = element.values.collect {
             case (k, v) if k == "createdAt" || k == "updatedAt"                                => (k, dateTimeFromISO8601(v))
@@ -110,6 +109,7 @@ class BulkImport(project: Project)(implicit apiDependencies: ApiDependencies) {
         case (l, r) if r.fieldName.isDefined => (r, l)
         case _                               => throw sys.error("Invalid ImportRelation at least one fieldName needs to be defined.")
       }
+
       val fromModel                                                 = project.schema.getModelByName_!(left.identifier.typeName)
       val fromField                                                 = fromModel.getFieldByName_!(left.fieldName.get)
       val relationSide: com.prisma.shared.models.RelationSide.Value = fromField.relationSide.get
@@ -124,7 +124,8 @@ class BulkImport(project: Project)(implicit apiDependencies: ApiDependencies) {
 
   private def generateImportListsDBActions(lists: Vector[ImportList]): Vector[PushScalarListsImport] = {
     val listsCreate = lists.flatMap { element =>
-      val model                         = project.schema.getModelByName_!(element.identifier.typeName)
+      val model = project.schema.getModelByName_!(element.identifier.typeName)
+
       def isDateTime(fieldName: String) = model.getFieldByName_!(fieldName).typeIdentifier == TypeIdentifier.DateTime
       def isJson(fieldName: String)     = model.getFieldByName_!(fieldName).typeIdentifier == TypeIdentifier.Json
 
@@ -140,5 +141,6 @@ class BulkImport(project: Project)(implicit apiDependencies: ApiDependencies) {
 
     val groupedItems = listsCreate.groupBy(_.tableName)
     groupedItems.map { case (tableName, group) => PushScalarListsImport(project, tableName, group.map(item => (item.id, item.values))) }.toVector
+
   }
 }
