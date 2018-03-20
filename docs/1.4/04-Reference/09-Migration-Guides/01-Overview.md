@@ -22,7 +22,10 @@ The **Graphcool Framework** is the open-source version of the former Graphcool B
 
 While the Graphcool Framework offers an opinionated setup for your GraphQL backend and doesn't require you to write a lot of server-side code, Prisma provides more flexibility and leaves many decisions up to the preferences of the developer.
 
-To get an overview of the major differences between Prisma and the Graphcool Framework, read [this](https://www.graph.cool/forum/t/graphcool-framework-and-prisma/2237) forum post.
+To get an overview of the major differences between Prisma and the Graphcool Framework, read the following forum posts:
+
+- [Graphcool Framework and Prisma](https://www.graph.cool/forum/t/graphcool-framework-and-prisma/2237)
+- [What are the edge cases that make Prisma necessary?](https://www.graph.cool/forum/t/what-are-the-edge-cases-that-make-prisma-necessary/2857/8)
 
 ## Migrating to Prisma
 
