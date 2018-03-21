@@ -40,6 +40,6 @@ class ExportDataDateTimeFormatSpec extends FlatSpec with Matchers with ApiBaseSp
     println(firstChunk)
 
     JsArray(firstChunk.out.jsonElements).toString should be(
-      """[{"updatedAt":"2017-12-05T12:34:23.000Z","_typeName":"Model0","a":"test1","id":"0","b":0,"createdAt":"2017-12-05T12:34:23.000Z"}]""")
+      """[{"_typeName":"Model0","id":"0","a":"test1","b":0,"createdAt":"2017-12-05T12:34:23.000Z","updatedAt":"2017-12-05T12:34:23.000Z"}]""")
   }
 }
