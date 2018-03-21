@@ -21,6 +21,7 @@ import com.prisma.shared.models.{ProjectId, ProjectWithClientId}
 import com.prisma.util.env.EnvUtils
 import com.typesafe.scalalogging.LazyLogging
 import cool.graph.cuid.Cuid.createCuid
+import de.heikoseeberger.akkahttpplayjson.PlayJsonSupport
 import play.api.libs.json.Json
 import spray.json._
 
@@ -35,6 +36,7 @@ case class ApiServer(
     system: ActorSystem,
     materializer: ActorMaterializer
 ) extends Server
+    with PlayJsonSupport
     with LazyLogging {
   import system.dispatcher
 
