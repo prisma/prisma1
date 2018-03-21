@@ -11,6 +11,7 @@ import com.prisma.auth.Auth
 import com.prisma.client.server.GraphQlRequestHandler
 import com.prisma.errors.{ErrorReporter, ProjectMetadata}
 import com.prisma.shared.models.{Project, ProjectWithClientId}
+import com.prisma.util.json.PlaySprayConversions
 import com.prisma.utils.`try`.TryExtensions._
 import sangria.schema.Schema
 import spray.json.JsValue
@@ -24,7 +25,8 @@ case class RequestHandler(
     graphQlRequestHandler: GraphQlRequestHandler,
     auth: Auth,
     log: Function[String, Unit]
-)(implicit reporter: ErrorReporter, ec: ExecutionContext, apiDependencies: ApiDependencies) {
+)(implicit reporter: ErrorReporter, ec: ExecutionContext, apiDependencies: ApiDependencies)
+    extends PlaySprayConversions {
 
   def handleRawRequestForPublicApi(
       projectId: String,
@@ -63,7 +65,7 @@ case class RequestHandler(
     handleRawRequest(projectId, rawRequest) { project =>
       val resolver = apiDependencies.dataResolver(project)
       val exporter = new BulkExport(project)
-      exporter.executeExport(resolver, rawRequest.json).map(x => (200, x))
+      exporter.executeExport(resolver, rawRequest.json.toPlay).map(x => (200, x.toSpray))
     }
   }
 

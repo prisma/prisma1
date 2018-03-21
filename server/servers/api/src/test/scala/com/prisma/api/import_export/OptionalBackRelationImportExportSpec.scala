@@ -153,7 +153,7 @@ class OptionalBackRelationImportExportSpec extends FlatSpec with Matchers with A
 
     val cursor     = Cursor(0, 0, 0, 0)
     val request    = ExportRequest("relations", cursor)
-    val firstChunk = exporter.executeExport(dataResolver, request.toJson).await(5).convertTo[ResultFormat]
+    val firstChunk = exporter.executeExport(dataResolver, request).await(5).as[ResultFormat]
 
     JsArray(firstChunk.out.jsonElements).toString should be(
       """[""" concat

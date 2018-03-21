@@ -92,7 +92,7 @@ class ListValueImportExportSpec extends FlatSpec with Matchers with ApiBaseSpec 
 
     val cursor     = Cursor(0, 0, 0, 0)
     val request    = ExportRequest("lists", cursor)
-    val firstChunk = exporter.executeExport(dataResolver, request.toJson).await().convertTo[ResultFormat]
+    val firstChunk = exporter.executeExport(dataResolver, request).await().as[ResultFormat]
 
     JsArray(firstChunk.out.jsonElements).toString should be(
       "[" ++
@@ -103,7 +103,7 @@ class ListValueImportExportSpec extends FlatSpec with Matchers with ApiBaseSpec 
     firstChunk.cursor.row should be(0)
 
     val request2    = request.copy(cursor = firstChunk.cursor)
-    val secondChunk = exporter.executeExport(dataResolver, request2.toJson).await().convertTo[ResultFormat]
+    val secondChunk = exporter.executeExport(dataResolver, request2).await().as[ResultFormat]
 
     JsArray(secondChunk.out.jsonElements).toString should be("[" ++
       """{"_typeName":"Model0","id":"1","floatList":[1.423423,3.1234324234,4.23432424,4.234234324234,1.423423,3.1234324234,4.23432424,4.234234324234]},""" ++
@@ -137,7 +137,7 @@ class ListValueImportExportSpec extends FlatSpec with Matchers with ApiBaseSpec 
 
     val cursor     = Cursor(0, 0, 0, 0)
     val request    = ExportRequest("lists", cursor)
-    val firstChunk = exporter.executeExport(dataResolver, request.toJson).await().convertTo[ResultFormat]
+    val firstChunk = exporter.executeExport(dataResolver, request).await().as[ResultFormat]
 
     JsArray(firstChunk.out.jsonElements).toString should be(
       "[" ++
@@ -170,7 +170,7 @@ class ListValueImportExportSpec extends FlatSpec with Matchers with ApiBaseSpec 
 
     val cursor     = Cursor(0, 0, 0, 0)
     val request    = ExportRequest("lists", cursor)
-    val firstChunk = exporter.executeExport(dataResolver, request.toJson).await().convertTo[ResultFormat]
+    val firstChunk = exporter.executeExport(dataResolver, request).await().as[ResultFormat]
 
     JsArray(firstChunk.out.jsonElements).toString should be(
       "[" ++

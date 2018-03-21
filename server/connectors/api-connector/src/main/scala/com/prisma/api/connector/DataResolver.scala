@@ -32,7 +32,7 @@ trait DataResolver {
 
   def loadListRowsForExport(tableName: String, args: Option[QueryArguments] = None): Future[ResolverResult]
 
-  def loadRelationRowsForExport(relationId: String, args: Option[QueryArguments] = None): Future[ResolverResult]
+  def loadRelationRowsForExport(relationId: String, args: Option[QueryArguments] = None): Future[ResolverResultNew]
 
   def batchResolveByUnique(model: Model, key: String, values: List[Any]): Future[List[DataItem]]
 

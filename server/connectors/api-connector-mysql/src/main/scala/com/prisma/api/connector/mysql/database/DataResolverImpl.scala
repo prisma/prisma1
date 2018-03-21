@@ -3,7 +3,7 @@ package com.prisma.api.connector.mysql.database
 import com.prisma.api.connector.Types.DataItemFilterCollection
 import com.prisma.api.connector._
 import com.prisma.api.connector.mysql.Metrics
-import com.prisma.gc_values.{GCValue, GraphQLIdGCValue, JsonGCValue}
+import com.prisma.gc_values.{GCValue, GraphQLIdGCValue, JsonGCValue, RootGCValue}
 import com.prisma.shared.models.IdType.Id
 import com.prisma.shared.models.TypeIdentifier.TypeIdentifier
 import com.prisma.shared.models._
@@ -93,9 +93,18 @@ case class DataResolverImpl(
     performWithTiming("loadListRowsForExport", readonlyClientDatabase.run(readOnlyScalarListValue(query))).map(_.toList).map(resultTransform(_))
   }
 
-  override def loadRelationRowsForExport(relationId: String, args: Option[QueryArguments] = None): Future[ResolverResult] = {
-    val (query, resultTransform) = DatabaseQueryBuilder.selectAllFromTable(project.id, relationId, args, None)
-    performWithTiming("loadRelationRowsForExport", readonlyClientDatabase.run(readOnlyDataItem(query))).map(_.toList).map(resultTransform(_))
+  override def loadRelationRowsForExport(relationId: String, args: Option[QueryArguments] = None): Future[ResolverResultNew] = {
+    val query                           = DatabaseQueryBuilder.selectAllFromRelationTable(project.id, relationId, args)
+    val x: Future[Vector[RelationNode]] = performWithTiming("loadModelRowsForExport", readonlyClientDatabase.run(query))
+    x.map { relations =>
+      val nodes = relations.map { relation =>
+        val gcValue = RootGCValue(
+          Map("id" -> GraphQLIdGCValue(relation.id), "A" -> GraphQLIdGCValue(relation.a), "B" -> GraphQLIdGCValue(relation.b))
+        )
+        PrismaNode(relation.id, gcValue)
+      }
+      ResolverResultNew(nodes, hasNextPage = false, hasPreviousPage = false)
+    }
   }
 
   override def batchResolveByUnique(model: Model, key: String, values: List[Any]): Future[List[DataItem]] = {
@@ -140,9 +149,10 @@ case class DataResolverImpl(
 
   override def resolveRelation(relationId: String, aId: String, bId: String): Future[ResolverResult] = {
     val (query, resultTransform) = DatabaseQueryBuilder.selectAllFromTable(
-      project.id,
-      relationId,
-      Some(QueryArguments(None, None, None, None, None, Some(List(FilterElement("A", aId), FilterElement("B", bId))), None)))
+      projectId = project.id,
+      tableName = relationId,
+      args = Some(QueryArguments(None, None, None, None, None, Some(List(FilterElement("A", aId), FilterElement("B", bId))), None))
+    )
 
     performWithTiming("resolveRelation", readonlyClientDatabase.run(readOnlyDataItem(query)).map(_.toList).map(resultTransform))
   }

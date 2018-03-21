@@ -36,7 +36,7 @@ class ExportDataDateTimeFormatSpec extends FlatSpec with Matchers with ApiBaseSp
 
     val cursor     = Cursor(0, 0, 0, 0)
     val request    = ExportRequest("nodes", cursor)
-    val firstChunk = exporter.executeExport(dataResolver, request.toJson).await(5).convertTo[ResultFormat]
+    val firstChunk = exporter.executeExport(dataResolver, request).await(5).as[ResultFormat]
     println(firstChunk)
 
     JsArray(firstChunk.out.jsonElements).toString should be(

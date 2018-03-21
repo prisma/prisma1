@@ -5,7 +5,7 @@ import com.prisma.gc_values.RootGCValue
 import com.prisma.shared.models.{Model, Project, Relation}
 import com.prisma.util.json.PlaySprayConversions
 import spray.json.{DefaultJsonProtocol, JsArray, JsBoolean, JsFalse, JsNull, JsNumber, JsObject, JsString, JsTrue, JsValue, JsonFormat, RootJsonFormat}
-import play.api.libs.json.{JsValue => PlayJsValue}
+import play.api.libs.json.{Json, JsValue => PlayJsValue}
 
 package object ImportExport {
 
@@ -116,15 +116,16 @@ package object ImportExport {
     }
 
     implicit val jsonBundle: RootJsonFormat[JsonBundle]                 = jsonFormat2(JsonBundle)
+    implicit val jsonBundleWithPlay                                     = Json.format[JsonBundle]
     implicit val importBundle: RootJsonFormat[ImportBundle]             = jsonFormat2(ImportBundle)
     implicit val importIdentifier: RootJsonFormat[ImportIdentifier]     = jsonFormat2(ImportIdentifier)
     implicit val importRelationSide: RootJsonFormat[ImportRelationSide] = jsonFormat2(ImportRelationSide)
     implicit val importListValue: RootJsonFormat[ImportList]            = jsonFormat2(ImportList)
     implicit val importRelation: RootJsonFormat[ImportRelation]         = jsonFormat2(ImportRelation)
-    implicit val cursor: RootJsonFormat[Cursor]                         = jsonFormat4(Cursor)
-    implicit val exportRequest: RootJsonFormat[ExportRequest]           = jsonFormat2(ExportRequest)
-    implicit val resultFormat: RootJsonFormat[ResultFormat]             = jsonFormat3(ResultFormat)
-    implicit val exportRelationSide: RootJsonFormat[ExportRelationSide] = jsonFormat3(ExportRelationSide)
+    implicit val cursor                                                 = Json.format[Cursor]
+    implicit val exportRequest                                          = Json.format[ExportRequest]
+    implicit val resultFormat                                           = Json.format[ResultFormat]
+    implicit val exportRelationSide                                     = Json.format[ExportRelationSide]
   }
 
 }

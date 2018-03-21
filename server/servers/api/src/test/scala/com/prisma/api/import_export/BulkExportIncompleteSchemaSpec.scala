@@ -31,16 +31,16 @@ class BulkExportIncompleteSchemaSpec extends FlatSpec with Matchers with ApiBase
 
   "Exporting nodes" should "fail gracefully if no models are defined" in {
     val request = ExportRequest("nodes", start)
-    exporter.executeExport(dataResolver, request.toJson).await(5).convertTo[ResultFormat] should be(emptyResult)
+    exporter.executeExport(dataResolver, request).await(5).as[ResultFormat] should be(emptyResult)
   }
 
   "Exporting lists" should "fail gracefully if no lists are defined" in {
     val request = ExportRequest("lists", start)
-    exporter.executeExport(dataResolver, request.toJson).await(5).convertTo[ResultFormat] should be(emptyResult)
+    exporter.executeExport(dataResolver, request).await(5).as[ResultFormat] should be(emptyResult)
   }
 
   "Exporting relations" should "fail gracefully if no relations are defined" in {
     val request = ExportRequest("relations", start)
-    exporter.executeExport(dataResolver, request.toJson).await(5).convertTo[ResultFormat] should be(emptyResult)
+    exporter.executeExport(dataResolver, request).await(5).as[ResultFormat] should be(emptyResult)
   }
 }

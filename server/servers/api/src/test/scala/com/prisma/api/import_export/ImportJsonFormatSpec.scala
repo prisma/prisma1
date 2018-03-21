@@ -42,7 +42,7 @@ class ImportJsonFormatSpec extends FlatSpec with Matchers with ApiBaseSpec with 
 
     val cursor     = Cursor(0, 0, 0, 0)
     val request    = ExportRequest("nodes", cursor)
-    val firstChunk = exporter.executeExport(dataResolver, request.toJson).await(5).convertTo[ResultFormat]
+    val firstChunk = exporter.executeExport(dataResolver, request).await(5).as[ResultFormat]
 
     JsArray(firstChunk.out.jsonElements).toString should be(
       """[{"updatedAt":"2017-12-05T12:34:23.000Z","_typeName":"Model0","a":"test1","id":"0","createdAt":"2017-12-05T12:34:23.000Z"},""" +

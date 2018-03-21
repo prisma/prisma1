@@ -39,14 +39,14 @@ class BulkExportNullHandlingSpec extends FlatSpec with Matchers with ApiBaseSpec
     val dataResolver: DataResolver = this.dataResolver(project)
 
     val nodeRequest = ExportRequest("nodes", start)
-    val nodeResult  = exporter.executeExport(dataResolver, nodeRequest.toJson).await(5).convertTo[ResultFormat]
+    val nodeResult  = exporter.executeExport(dataResolver, nodeRequest).await(5).as[ResultFormat]
     nodeResult.out.jsonElements.length should be(2)
 
     val listRequest = ExportRequest("lists", start)
-    exporter.executeExport(dataResolver, listRequest.toJson).await(5).convertTo[ResultFormat] should be(emptyResult)
+    exporter.executeExport(dataResolver, listRequest).await(5).as[ResultFormat] should be(emptyResult)
 
     val relationRequest = ExportRequest("relations", start)
-    val relationResult  = exporter.executeExport(dataResolver, relationRequest.toJson).await(5).convertTo[ResultFormat]
+    val relationResult  = exporter.executeExport(dataResolver, relationRequest).await(5).as[ResultFormat]
     relationResult.out.jsonElements.length should be(1)
   }
 
@@ -73,14 +73,14 @@ class BulkExportNullHandlingSpec extends FlatSpec with Matchers with ApiBaseSpec
     val dataResolver: DataResolver = this.dataResolver(project)
 
     val nodeRequest = ExportRequest("nodes", start)
-    val nodeResult  = exporter.executeExport(dataResolver, nodeRequest.toJson).await(5).convertTo[ResultFormat]
+    val nodeResult  = exporter.executeExport(dataResolver, nodeRequest).await(5).as[ResultFormat]
     nodeResult.out.jsonElements.length should be(3)
 
     val listRequest = ExportRequest("lists", start)
-    exporter.executeExport(dataResolver, listRequest.toJson).await(5).convertTo[ResultFormat] should be(emptyResult)
+    exporter.executeExport(dataResolver, listRequest).await(5).as[ResultFormat] should be(emptyResult)
 
     val relationRequest = ExportRequest("relations", start)
-    val relationResult  = exporter.executeExport(dataResolver, relationRequest.toJson).await(5).convertTo[ResultFormat]
+    val relationResult  = exporter.executeExport(dataResolver, relationRequest).await(5).as[ResultFormat]
     relationResult.out.jsonElements.length should be(0)
   }
 

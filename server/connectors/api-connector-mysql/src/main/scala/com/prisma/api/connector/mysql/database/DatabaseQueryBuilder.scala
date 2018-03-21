@@ -4,7 +4,7 @@ import com.prisma.api.connector.Types.DataItemFilterCollection
 import com.prisma.api.connector._
 import com.prisma.api.connector.mysql.database.DatabaseMutationBuilder.idFromWhereEquals
 import com.prisma.gc_values._
-import com.prisma.shared.models.{Field, Model, Project, TypeIdentifier}
+import com.prisma.shared.models.{Function => _, _}
 import org.joda.time.DateTime
 import play.api.libs.json.Json
 import slick.dbio.DBIOAction
@@ -61,6 +61,16 @@ object DatabaseQueryBuilder {
     PrismaNode(id = id, data = RootGCValue(data))
   }
 
+  implicit object GetRelationNode extends GetResult[RelationNode] {
+    override def apply(ps: PositionedResult): RelationNode = {
+      val resultSet = ps.rs
+      val id        = resultSet.getString("id")
+      val a         = resultSet.getString("A")
+      val b         = resultSet.getString("B")
+      RelationNode(id, a, b)
+    }
+  }
+
   implicit object GetScalarListValue extends GetResult[ScalarListValue] {
     def apply(ps: PositionedResult): ScalarListValue = {
       val rs = ps.rs
@@ -102,6 +112,24 @@ object DatabaseQueryBuilder {
       prefixIfNotNone("limit", limitCommand)
 
     query.as[PrismaNode](getResultForModel(model))
+  }
+
+  def selectAllFromRelationTable(
+      projectId: String,
+      relationId: String,
+      args: Option[QueryArguments],
+      overrideMaxNodeCount: Option[Int] = None
+  ): SqlStreamingAction[Vector[RelationNode], RelationNode, Read] = {
+
+    val tableName                                           = relationId
+    val (conditionCommand, orderByCommand, limitCommand, _) = extractQueryArgs(projectId, tableName, args, overrideMaxNodeCount = overrideMaxNodeCount)
+
+    val query = sql"select * from `#$projectId`.`#$tableName`" concat
+      prefixIfNotNone("where", conditionCommand) concat
+      prefixIfNotNone("order by", orderByCommand) concat
+      prefixIfNotNone("limit", limitCommand)
+
+    query.as[RelationNode]
   }
 
   def selectAllFromListTable(projectId: String,

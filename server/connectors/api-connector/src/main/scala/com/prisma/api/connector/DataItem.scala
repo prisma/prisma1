@@ -10,3 +10,4 @@ case class DataItem(id: Id, userData: Map[String, Option[Any]] = Map.empty, type
 }
 
 case class PrismaNode(id: Id, data: RootGCValue)
+case class RelationNode(id: Id, a: Id, b: Id)

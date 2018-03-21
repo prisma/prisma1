@@ -59,7 +59,7 @@ class SingleValueImportExportSpec extends FlatSpec with Matchers with ApiBaseSpe
 
     val cursor     = Cursor(0, 0, 0, 0)
     val request    = ExportRequest("nodes", cursor)
-    val firstChunk = exporter.executeExport(dataResolver, request.toJson).await(5).convertTo[ResultFormat]
+    val firstChunk = exporter.executeExport(dataResolver, request).await(5).as[ResultFormat]
 
     val res = JsArray(firstChunk.out.jsonElements).toString
 
@@ -75,7 +75,7 @@ class SingleValueImportExportSpec extends FlatSpec with Matchers with ApiBaseSpe
     firstChunk.cursor.row should be(7)
 
     val request2    = ExportRequest("nodes", firstChunk.cursor)
-    val secondChunk = exporter.executeExport(dataResolver, request2.toJson).await(5).convertTo[ResultFormat]
+    val secondChunk = exporter.executeExport(dataResolver, request2).await(5).as[ResultFormat]
 
     val res2 = JsArray(secondChunk.out.jsonElements).toString
 
