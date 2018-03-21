@@ -4,7 +4,7 @@ import com.prisma.api.ApiDependencies
 import com.prisma.api.connector.{DataResolver, PrismaNode, QueryArguments}
 import com.prisma.api.import_export.ImportExport.MyJsonProtocol._
 import com.prisma.api.import_export.ImportExport._
-import com.prisma.gc_values.{GraphQLIdGCValue, ListGCValue}
+import com.prisma.gc_values.{GraphQLIdGCValue, JsonGCValue, ListGCValue, StringGCValue}
 import com.prisma.shared.models.Project
 import play.api.libs.json._
 
@@ -111,7 +111,14 @@ class BulkExport(project: Project)(implicit apiDependencies: ApiDependencies) {
     distinctIds.map { id =>
       val itemsForId    = dataItems.filter(_.id == id).toVector
       val asListGcValue = ListGCValue(itemsForId.map(_.data.map("value")))
-      val json          = Json.obj("_typeName" -> info.currentModel, "id" -> id, info.currentField -> Json.toJson(asListGcValue))
+
+      // the old implementation directly passed the JSON as String instead directly embedding it as JSON. Reproducing this behaviour here.
+      val blackMagic = ListGCValue(asListGcValue.values.map {
+        case x: JsonGCValue => StringGCValue(x.value.toString)
+        case x              => x
+      })
+
+      val json = Json.obj("_typeName" -> info.currentModel, "id" -> id, info.currentField -> blackMagic)
       JsonBundle(Vector(json), json.toString.length)
     }
   }
