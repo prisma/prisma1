@@ -30,7 +30,7 @@ trait DataResolver {
 
   def loadModelRowsForExport(model: Model, args: Option[QueryArguments] = None): Future[ResolverResultNew]
 
-  def loadListRowsForExport(tableName: String, args: Option[QueryArguments] = None): Future[ResolverResult]
+  def loadListRowsForExport(model: Model, field: Field, args: Option[QueryArguments] = None): Future[ResolverResultNew]
 
   def loadRelationRowsForExport(relationId: String, args: Option[QueryArguments] = None): Future[ResolverResultNew]
 

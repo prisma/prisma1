@@ -1,14 +1,11 @@
 package com.prisma.api.import_export
 
-import java.sql.Timestamp
-
 import com.prisma.api.ApiDependencies
 import com.prisma.api.connector.{DataResolver, PrismaNode, QueryArguments}
 import com.prisma.api.import_export.ImportExport.MyJsonProtocol._
 import com.prisma.api.import_export.ImportExport._
-import com.prisma.gc_values.GraphQLIdGCValue
+import com.prisma.gc_values.{GraphQLIdGCValue, ListGCValue}
 import com.prisma.shared.models.Project
-import org.joda.time.{DateTime, DateTimeZone}
 import play.api.libs.json._
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -68,7 +65,7 @@ class BulkExport(project: Project)(implicit apiDependencies: ApiDependencies) {
     for {
       result <- info match {
                  case x: NodeInfo     => x.dataResolver.loadModelRowsForExport(x.current, Some(queryArguments))
-                 case x: ListInfo     => ??? //x.dataResolver.loadListRowsForExport(x.currentTable, Some(queryArguments))
+                 case x: ListInfo     => x.dataResolver.loadListRowsForExport(x.currentModelModel, x.currentFieldModel, Some(queryArguments))
                  case x: RelationInfo => x.dataResolver.loadRelationRowsForExport(x.current.relationId, Some(queryArguments))
                }
     } yield {
@@ -93,7 +90,7 @@ class BulkExport(project: Project)(implicit apiDependencies: ApiDependencies) {
     val bundles: Seq[JsonBundle] = info match {
       case info: NodeInfo     => dataItems.map(item => dataItemToExportNode(item, info))
       case info: RelationInfo => dataItems.map(item => dataItemToExportRelation(item, info))
-      case info: ListInfo     => ??? //dataItemToExportList(dataItems, info)
+      case info: ListInfo     => dataItemToExportList(dataItems, info)
     }
     val combinedElements = in.jsonElements ++ bundles.flatMap(_.jsonElements).toVector
     val combinedSize = bundles.map(_.size).fold(in.size) { (a, b) =>
@@ -108,25 +105,16 @@ class BulkExport(project: Project)(implicit apiDependencies: ApiDependencies) {
     }
   }
 
-//  def dataItemToExportList(dataItems: Seq[DataItem], info: ListInfo): Vector[JsonBundle] = {
-//    val outputs: Seq[(Id, Any)] = project.schema.getModelByName_!(info.currentModel).getFieldByName_!(info.currentField).typeIdentifier match {
-//      case TypeIdentifier.DateTime => dataItems.map(item => item.id -> dateTimeToISO8601(item.userData("value").get))
-//      case TypeIdentifier.Float    => dataItems.map(item => item.id -> item.userData("value").get.toString.toDouble)
-//      case _                       => dataItems.map(item => item.id -> item.userData("value").get)
-//    }
-//
-//    val distinctIds = outputs.map(_._1).distinct
-//
-//    val x = distinctIds.map { id =>
-//      val values: Seq[Any]         = outputs.filter(_._1 == id).map(_._2)
-//      val result: Map[String, Any] = Map("_typeName" -> info.currentModel, "id" -> id, info.currentField -> values)
-//      val json                     = result.toJson
-//      val combinedSize             = json.toString.length
-//
-//      JsonBundle(Vector(json), combinedSize)
-//    }
-//    Vector.empty ++ x
-//  }
+  def dataItemToExportList(dataItems: Seq[PrismaNode], info: ListInfo): Vector[JsonBundle] = {
+    import GCValueJsonFormatter.GcValueWrites
+    val distinctIds = dataItems.map(_.id).distinct.toVector
+    distinctIds.map { id =>
+      val itemsForId    = dataItems.filter(_.id == id).toVector
+      val asListGcValue = ListGCValue(itemsForId.map(_.data.map("value")))
+      val json          = Json.obj("_typeName" -> info.currentModel, "id" -> id, info.currentField -> Json.toJson(asListGcValue))
+      JsonBundle(Vector(json), json.toString.length)
+    }
+  }
 
   private def dataItemToExportNode(item: PrismaNode, info: NodeInfo): JsonBundle = {
     import GCValueJsonFormatter.RootGcValueWritesWithoutNulls
@@ -135,8 +123,6 @@ class BulkExport(project: Project)(implicit apiDependencies: ApiDependencies) {
 
     JsonBundle(jsonElements = Vector(jsonObj), size = jsonObj.toString.length)
   }
-
-  private def dateTimeToISO8601(v: Any): DateTime = new DateTime(v.asInstanceOf[Timestamp].getTime).withZone(DateTimeZone.UTC)
 
   private def dataItemToExportRelation(item: PrismaNode, info: RelationInfo): JsonBundle = {
     val idA       = item.data.map("A").asInstanceOf[GraphQLIdGCValue].value

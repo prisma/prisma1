@@ -20,6 +20,7 @@ object DatabaseQueryBuilder {
 
   import QueryArgumentsExtensions._
   import SlickExtensions._
+  import JdbcExtensions._
 
   implicit object GetDataItem extends GetResult[DataItem] {
     def apply(ps: PositionedResult): DataItem = {
@@ -81,6 +82,14 @@ object DatabaseQueryBuilder {
       val b         = resultSet.getString("B")
       RelationNode(id, a, b)
     }
+  }
+
+  def getResultForScalarListField(field: Field): GetResult[ScalarListElement] = GetResult { ps: PositionedResult =>
+    val resultSet = ps.rs
+    val nodeId    = resultSet.getString("nodeId")
+    val position  = resultSet.getInt("position")
+    val value     = resultSet.getGcValue("value", field.typeIdentifier)
+    ScalarListElement(nodeId, position, value)
   }
 
   implicit object GetScalarListValue extends GetResult[ScalarListValue] {
@@ -145,12 +154,13 @@ object DatabaseQueryBuilder {
   }
 
   def selectAllFromListTable(projectId: String,
-                             tableName: String,
+                             model: Model,
+                             field: Field,
                              args: Option[QueryArguments],
-                             overrideMaxNodeCount: Option[Int] = None): (SQLActionBuilder, ResultListTransform) = {
+                             overrideMaxNodeCount: Option[Int] = None): SqlStreamingAction[Vector[ScalarListElement], ScalarListElement, Read] = {
 
-    val (conditionCommand, orderByCommand, limitCommand, resultTransform) =
-      extractListQueryArgs(projectId, tableName, args, overrideMaxNodeCount = overrideMaxNodeCount)
+    val tableName                                           = s"${model.name}_${field.name}"
+    val (conditionCommand, orderByCommand, limitCommand, _) = extractListQueryArgs(projectId, tableName, args, overrideMaxNodeCount = overrideMaxNodeCount)
 
     val query =
       sql"select * from `#$projectId`.`#$tableName`" concat
@@ -158,7 +168,7 @@ object DatabaseQueryBuilder {
         prefixIfNotNone("order by", orderByCommand) concat
         prefixIfNotNone("limit", limitCommand)
 
-    (query, resultTransform)
+    query.as[ScalarListElement](getResultForScalarListField(field))
   }
 
   def countAllFromModel(project: Project, model: Model, where: Option[DataItemFilterCollection]): SQLActionBuilder = {

@@ -52,6 +52,9 @@ package object ImportExport {
     lazy val currentModel: String = listFieldTables.find(_._3 == cursor.table).get._1
     lazy val currentField: String = listFieldTables.find(_._3 == cursor.table).get._2
     lazy val currentTable: String = s"${currentModel}_$currentField"
+
+    lazy val currentModelModel = dataResolver.project.schema.getModelByName_!(currentModel)
+    lazy val currentFieldModel = currentModelModel.getFieldByName_!(currentField)
   }
 
   case class RelationInfo(dataResolver: DataResolver, relations: List[(RelationData, Int)], cursor: Cursor) extends ExportInfo {

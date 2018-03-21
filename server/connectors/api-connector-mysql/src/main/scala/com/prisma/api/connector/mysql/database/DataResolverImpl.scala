@@ -88,9 +88,20 @@ case class DataResolverImpl(
     }
   }
 
-  override def loadListRowsForExport(tableName: String, args: Option[QueryArguments] = None): Future[ResolverResult] = {
-    val (query, resultTransform) = DatabaseQueryBuilder.selectAllFromListTable(project.id, tableName, args, None)
-    performWithTiming("loadListRowsForExport", readonlyClientDatabase.run(readOnlyScalarListValue(query))).map(_.toList).map(resultTransform(_))
+  override def loadListRowsForExport(model: Model, field: Field, args: Option[QueryArguments] = None): Future[ResolverResultNew] = {
+    val query                                = DatabaseQueryBuilder.selectAllFromListTable(project.id, model, field, args, None)
+    val x: Future[Vector[ScalarListElement]] = performWithTiming("loadListRowsForExport", readonlyClientDatabase.run(query))
+    x.map { scalarListElements =>
+      val nodes = scalarListElements.map { scalarListElement =>
+        val gcValue = RootGCValue(
+          "id"       -> GraphQLIdGCValue(scalarListElement.nodeId),
+          "position" -> IntGCValue(scalarListElement.position),
+          "value"    -> scalarListElement.value
+        )
+        PrismaNode(scalarListElement.nodeId, gcValue)
+      }
+      ResolverResultNew(nodes, hasNextPage = false, hasPreviousPage = false)
+    }
   }
 
   override def loadRelationRowsForExport(relationId: String, args: Option[QueryArguments] = None): Future[ResolverResultNew] = {
