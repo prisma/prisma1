@@ -1,6 +1,7 @@
 package com.prisma.api.connector
 
 import com.prisma.api.connector.Types.DataItemFilterCollection
+import com.prisma.gc_values.ListGCValue
 import com.prisma.shared.models.IdType.Id
 import com.prisma.shared.models.ModelMutationType.ModelMutationType
 import com.prisma.shared.models._
@@ -20,22 +21,22 @@ case class CreateDataItem(project: Project, path: Path, args: CoolArgs) extends 
   val id = where.fieldValueAsString
 }
 
-case class PushScalarListsImport(project: Project, tableName: String, args: Vector[(String, Vector[Any])]) extends DatabaseMutaction
-case class CreateRelationRowsImport(project: Project, relation: Relation, args: Vector[(String, String)])  extends DatabaseMutaction
-case class CreateDataItemsImport(project: Project, model: Model, args: Vector[ReallyCoolArgs])             extends DatabaseMutaction
-case class DeleteDataItem(project: Project, path: Path, previousValues: DataItem, id: String)              extends DatabaseMutaction
-case class DeleteDataItemNested(project: Project, path: Path)                                              extends DatabaseMutaction
-case class DeleteDataItems(project: Project, model: Model, whereFilter: DataItemFilterCollection)          extends DatabaseMutaction
-case class DeleteManyRelationChecks(project: Project, model: Model, filter: DataItemFilterCollection)      extends DatabaseMutaction
-case class DeleteRelationCheck(project: Project, path: Path)                                               extends DatabaseMutaction
-object DisableForeignKeyConstraintChecks                                                                   extends DatabaseMutaction
-object EnableForeignKeyConstraintChecks                                                                    extends DatabaseMutaction
-case class NestedConnectRelation(project: Project, path: Path, topIsCreate: Boolean)                       extends DatabaseMutaction
-case class NestedCreateRelation(project: Project, path: Path, topIsCreate: Boolean)                        extends DatabaseMutaction
-case class NestedDisconnectRelation(project: Project, path: Path, topIsCreate: Boolean = false)            extends DatabaseMutaction
-case class SetScalarList(project: Project, path: Path, field: Field, values: Vector[Any])                  extends DatabaseMutaction
-case class SetScalarListToEmpty(project: Project, path: Path, field: Field)                                extends DatabaseMutaction
-case class TruncateTable(projectId: String, tableName: String)                                             extends DatabaseMutaction
+case class PushScalarListsImport(project: Project, tableName: String, id: String, args: ListGCValue)      extends DatabaseMutaction
+case class CreateRelationRowsImport(project: Project, relation: Relation, args: Vector[(String, String)]) extends DatabaseMutaction
+case class CreateDataItemsImport(project: Project, model: Model, args: Vector[ReallyCoolArgs])            extends DatabaseMutaction
+case class DeleteDataItem(project: Project, path: Path, previousValues: DataItem, id: String)             extends DatabaseMutaction
+case class DeleteDataItemNested(project: Project, path: Path)                                             extends DatabaseMutaction
+case class DeleteDataItems(project: Project, model: Model, whereFilter: DataItemFilterCollection)         extends DatabaseMutaction
+case class DeleteManyRelationChecks(project: Project, model: Model, filter: DataItemFilterCollection)     extends DatabaseMutaction
+case class DeleteRelationCheck(project: Project, path: Path)                                              extends DatabaseMutaction
+object DisableForeignKeyConstraintChecks                                                                  extends DatabaseMutaction
+object EnableForeignKeyConstraintChecks                                                                   extends DatabaseMutaction
+case class NestedConnectRelation(project: Project, path: Path, topIsCreate: Boolean)                      extends DatabaseMutaction
+case class NestedCreateRelation(project: Project, path: Path, topIsCreate: Boolean)                       extends DatabaseMutaction
+case class NestedDisconnectRelation(project: Project, path: Path, topIsCreate: Boolean = false)           extends DatabaseMutaction
+case class SetScalarList(project: Project, path: Path, field: Field, values: Vector[Any])                 extends DatabaseMutaction
+case class SetScalarListToEmpty(project: Project, path: Path, field: Field)                               extends DatabaseMutaction
+case class TruncateTable(projectId: String, tableName: String)                                            extends DatabaseMutaction
 case class UpdateDataItem(project: Project, model: Model, id: Id, args: CoolArgs, previousValues: DataItem) extends DatabaseMutaction {
   // TODO filter for fields which actually did change
   val namesOfUpdatedFields: Vector[String] = args.raw.keys.toVector

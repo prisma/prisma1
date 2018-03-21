@@ -120,7 +120,6 @@ class BulkExport(project: Project)(implicit apiDependencies: ApiDependencies) {
     import GCValueJsonFormatter.RootGcValueWritesWithoutNulls
     val jsonForNode = Json.toJsObject(item.data)
     val jsonObj     = Json.obj("_typeName" -> info.current.name, "id" -> item.id) ++ jsonForNode
-
     JsonBundle(jsonElements = Vector(jsonObj), size = jsonObj.toString.length)
   }
 
