@@ -35,8 +35,6 @@ class BulkExport(project: Project)(implicit apiDependencies: ApiDependencies) {
     response.map(Json.toJson(_))
   }
 
-  private def isLimitReached(bundle: JsonBundle): Boolean = bundle.size > maxImportExportSize
-
   private def resForCursor(in: JsonBundle, info: ExportInfo): Future[ResultFormat] = {
     for {
       result <- resultForTable(in, info)
@@ -61,16 +59,67 @@ class BulkExport(project: Project)(implicit apiDependencies: ApiDependencies) {
   }
 
   private def fetchDataItemsPage(info: ExportInfo): Future[DataItemsPage] = {
-    val queryArguments = QueryArguments(skip = Some(info.cursor.row), after = None, first = Some(1000), None, None, None, None)
-    for {
-      result <- info match {
-                 case x: NodeInfo     => x.dataResolver.loadModelRowsForExport(x.current, Some(queryArguments))
-                 case x: ListInfo     => x.dataResolver.loadListRowsForExport(x.currentModelModel, x.currentFieldModel, Some(queryArguments))
-                 case x: RelationInfo => x.dataResolver.loadRelationRowsForExport(x.current.relationId, Some(queryArguments))
-               }
-    } yield {
-      DataItemsPage(result.nodes, hasMore = result.hasNextPage)
+    info match {
+      case x: NodeInfo     => fetch(x)
+      case x: ListInfo     => fetch(x)
+      case x: RelationInfo => fetch(x)
     }
+  }
+
+  private def fetch(info: NodeInfo): Future[DataItemsPage] = {
+    val queryArguments = QueryArguments(skip = Some(info.cursor.row), after = None, first = Some(1000), None, None, None, None)
+    info.dataResolver.loadModelRowsForExport(info.current, Some(queryArguments)).map { resolverResult =>
+      val jsons = resolverResult.nodes.map(node => dataItemToExportNode(node, info))
+      DataItemsPage(jsons, hasMore = resolverResult.hasNextPage)
+    }
+  }
+
+  private def fetch(info: ListInfo): Future[DataItemsPage] = {
+    val queryArguments = QueryArguments(skip = Some(info.cursor.row), after = None, first = Some(1000), None, None, None, None)
+    info.dataResolver.loadListRowsForExport(info.currentModelModel, info.currentFieldModel, Some(queryArguments)).map { resolverResult =>
+      val jsons = dataItemToExportList(resolverResult.nodes, info)
+      DataItemsPage(jsons, hasMore = resolverResult.hasNextPage)
+    }
+  }
+
+  private def fetch(info: RelationInfo): Future[DataItemsPage] = {
+    val queryArguments = QueryArguments(skip = Some(info.cursor.row), after = None, first = Some(1000), None, None, None, None)
+    info.dataResolver.loadRelationRowsForExport(info.current.relationId, Some(queryArguments)).map { resolverResult =>
+      val jsons = resolverResult.nodes.map(node => dataItemToExportRelation(node, info))
+      DataItemsPage(jsons, hasMore = resolverResult.hasNextPage)
+    }
+  }
+
+  private def dataItemToExportNode(item: PrismaNode, info: NodeInfo): JsValue = {
+    import GCValueJsonFormatter.RootGcValueWritesWithoutNulls
+    val jsonForNode = Json.toJsObject(item.data)
+    Json.obj("_typeName" -> info.current.name, "id" -> item.id) ++ jsonForNode
+  }
+
+  def dataItemToExportList(dataItems: Seq[PrismaNode], info: ListInfo): Vector[JsValue] = {
+    import GCValueJsonFormatter.GcValueWrites
+    val distinctIds = dataItems.map(_.id).distinct.toVector
+    distinctIds.map { id =>
+      val itemsForId    = dataItems.filter(_.id == id).toVector
+      val asListGcValue = ListGCValue(itemsForId.map(_.data.map("value")))
+
+      // the old implementation directly passed the JSON as String instead directly embedding it as JSON. Reproducing this behaviour here.
+      val blackMagic = ListGCValue(asListGcValue.values.map {
+        case x: JsonGCValue => StringGCValue(x.value.toString)
+        case x              => x
+      })
+
+      Json.obj("_typeName" -> info.currentModel, "id" -> id, info.currentField -> blackMagic)
+    }
+  }
+
+  private def dataItemToExportRelation(item: PrismaNode, info: RelationInfo): JsValue = {
+    val idA       = item.data.map("A").asInstanceOf[GraphQLIdGCValue].value
+    val idB       = item.data.map("B").asInstanceOf[GraphQLIdGCValue].value
+    val leftSide  = ExportRelationSide(info.current.modelBName, idB, info.current.fieldBName)
+    val rightSide = ExportRelationSide(info.current.modelAName, idA, info.current.fieldAName)
+
+    JsArray(Seq(Json.toJson(leftSide), Json.toJson(rightSide)))
   }
 
   private def serializePage(in: JsonBundle, page: DataItemsPage, info: ExportInfo, startOnPage: Int = 0, amount: Int = 1000): ResultFormat = {
@@ -86,57 +135,18 @@ class BulkExport(project: Project)(implicit apiDependencies: ApiDependencies) {
     }
   }
 
-  private def serializeDataItems(in: JsonBundle, dataItems: Seq[PrismaNode], info: ExportInfo): ResultFormat = {
-    val bundles: Seq[JsonBundle] = info match {
-      case info: NodeInfo     => dataItems.map(item => dataItemToExportNode(item, info))
-      case info: RelationInfo => dataItems.map(item => dataItemToExportRelation(item, info))
-      case info: ListInfo     => dataItemToExportList(dataItems, info)
-    }
-    val combinedElements = in.jsonElements ++ bundles.flatMap(_.jsonElements).toVector
-    val combinedSize = bundles.map(_.size).fold(in.size) { (a, b) =>
-      a + b
-    }
+  private def serializeDataItems(in: JsonBundle, dataItems: Seq[JsValue], info: ExportInfo): ResultFormat = {
+    val combinedElements = in.jsonElements ++ dataItems
+    val combinedSize     = in.size + dataItems.map(_.toString.size).sum
     val out              = JsonBundle(combinedElements, combinedSize)
     val numberSerialized = dataItems.length
 
     isLimitReached(out) match {
-      case true  => ResultFormat(in, info.cursor, isFull = true)
-      case false => ResultFormat(out, info.cursor.copy(row = info.cursor.row + numberSerialized), isFull = false)
+      case true if combinedElements.size == 1 => ResultFormat(out, info.cursor, isFull = true)
+      case true                               => ResultFormat(in, info.cursor, isFull = true)
+      case false                              => ResultFormat(out, info.cursor.copy(row = info.cursor.row + numberSerialized), isFull = false)
     }
   }
 
-  def dataItemToExportList(dataItems: Seq[PrismaNode], info: ListInfo): Vector[JsonBundle] = {
-    import GCValueJsonFormatter.GcValueWrites
-    val distinctIds = dataItems.map(_.id).distinct.toVector
-    distinctIds.map { id =>
-      val itemsForId    = dataItems.filter(_.id == id).toVector
-      val asListGcValue = ListGCValue(itemsForId.map(_.data.map("value")))
-
-      // the old implementation directly passed the JSON as String instead directly embedding it as JSON. Reproducing this behaviour here.
-      val blackMagic = ListGCValue(asListGcValue.values.map {
-        case x: JsonGCValue => StringGCValue(x.value.toString)
-        case x              => x
-      })
-
-      val json = Json.obj("_typeName" -> info.currentModel, "id" -> id, info.currentField -> blackMagic)
-      JsonBundle(Vector(json), json.toString.length)
-    }
-  }
-
-  private def dataItemToExportNode(item: PrismaNode, info: NodeInfo): JsonBundle = {
-    import GCValueJsonFormatter.RootGcValueWritesWithoutNulls
-    val jsonForNode = Json.toJsObject(item.data)
-    val jsonObj     = Json.obj("_typeName" -> info.current.name, "id" -> item.id) ++ jsonForNode
-    JsonBundle(jsonElements = Vector(jsonObj), size = jsonObj.toString.length)
-  }
-
-  private def dataItemToExportRelation(item: PrismaNode, info: RelationInfo): JsonBundle = {
-    val idA       = item.data.map("A").asInstanceOf[GraphQLIdGCValue].value
-    val idB       = item.data.map("B").asInstanceOf[GraphQLIdGCValue].value
-    val leftSide  = ExportRelationSide(info.current.modelBName, idB, info.current.fieldBName)
-    val rightSide = ExportRelationSide(info.current.modelAName, idA, info.current.fieldAName)
-
-    val json = JsArray(Seq(Json.toJson(leftSide), Json.toJson(rightSide)))
-    JsonBundle(jsonElements = Vector(json), size = json.toString.length)
-  }
+  private def isLimitReached(bundle: JsonBundle): Boolean = bundle.size > maxImportExportSize
 }
