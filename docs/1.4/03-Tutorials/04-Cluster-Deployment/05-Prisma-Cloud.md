@@ -372,3 +372,6 @@ Select the cluster that you just created in the CLI.
 </Instruction>
 
 This is it - your Prisma service is now deployed to your own Prisma Cloud cluster 🚀
+
+## Author
+Google Cloud SQL - [Maarten Coppens](https://github.com/maarteNNNN)
