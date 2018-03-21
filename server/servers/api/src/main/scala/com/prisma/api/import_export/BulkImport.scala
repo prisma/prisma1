@@ -71,7 +71,7 @@ class BulkImport(project: Project)(implicit apiDependencies: ApiDependencies) ex
     val fieldName    = jsObject.fields.filterKeys(k => k != "_typeName" && k != "id").keys.head
     val jsonForField = jsObject.fields(fieldName)
     val field        = project.schema.getModelByName_!(typeName).getFieldByName_!(fieldName)
-    val tableName    = s"${typeName}_$fieldName}"
+    val tableName    = s"${typeName}_$fieldName"
     val gcValue      = GCValueJsonFormatter.readListGCValue(field)(jsonForField.toPlay()).get
     ImportList(ImportIdentifier(typeName, id), tableName, gcValue)
   }
@@ -112,7 +112,6 @@ class BulkImport(project: Project)(implicit apiDependencies: ApiDependencies) ex
     groupedItems.map { case (relation, group) => CreateRelationRowsImport(project, relation, group.map(item => (item.a, item.b))) }.toVector
   }
 
-  //group and run sequentially within an ID?
   private def generateImportListsDBActions(lists: Vector[ImportList]): Vector[PushScalarListsImport] = lists.map { element =>
     PushScalarListsImport(project, element.tableName, element.identifier.id, element.values)
   }
