@@ -13,7 +13,8 @@ import com.prisma.utils.await.AwaitUtils
 import org.scalatest.{FlatSpec, Matchers}
 import pdi.jwt.{Jwt, JwtAlgorithm}
 import sangria.schema.{ObjectType, Schema, SchemaValidationRule}
-import spray.json.{JsObject, JsString}
+import play.api.libs.json._
+import spray.json.{JsObject => SprayJsObject}
 
 import scala.concurrent.Future
 
@@ -35,7 +36,7 @@ class RequestHandlerSpec extends FlatSpec with Matchers with ApiBaseSpec with Aw
   val projectWithSecret = TestProject().copy(secrets = Vector("secret"))
 
   def request(authHeader: String) =
-    RawRequest(id = "req-id", json = JsObject("query" -> JsString("{users}")), ip = "0.0.0.0", sourceHeader = null, authorizationHeader = Some(authHeader))
+    RawRequest(id = "req-id", json = Json.obj("query" -> "{users}"), ip = "0.0.0.0", sourceHeader = null, authorizationHeader = Some(authHeader))
 
   def handler(project: Project) = {
     RequestHandler(
@@ -50,7 +51,7 @@ class RequestHandlerSpec extends FlatSpec with Matchers with ApiBaseSpec with Aw
 
 object SucceedingGraphQlRequestHandler extends GraphQlRequestHandler {
   override def handle(graphQlRequest: GraphQlRequest) = Future.successful {
-    StatusCodes.ImATeapot -> JsObject()
+    StatusCodes.ImATeapot -> SprayJsObject.empty
   }
 
   override def healthCheck = Future.unit

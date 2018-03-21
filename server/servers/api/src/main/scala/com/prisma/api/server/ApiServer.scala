@@ -22,8 +22,7 @@ import com.prisma.util.env.EnvUtils
 import com.typesafe.scalalogging.LazyLogging
 import cool.graph.cuid.Cuid.createCuid
 import de.heikoseeberger.akkahttpplayjson.PlayJsonSupport
-import play.api.libs.json.Json
-import spray.json._
+import play.api.libs.json._
 
 import scala.concurrent.Future
 import scala.language.postfixOps
