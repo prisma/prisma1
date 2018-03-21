@@ -8,7 +8,8 @@ import com.prisma.api.import_export.ImportExport._
 import com.prisma.shared.models._
 import com.prisma.util.json.PlaySprayConversions
 import org.scalactic.{Bad, Good, Or}
-import spray.json._
+import play.api.libs.json._
+import spray.json.{JsValue => SprayJsValue}
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
@@ -17,14 +18,16 @@ import scala.util.{Failure, Success, Try}
 class BulkImport(project: Project)(implicit apiDependencies: ApiDependencies) extends PlaySprayConversions {
   import com.prisma.utils.future.FutureUtils._
 
-  def executeImport(json: JsValue): Future[JsValue] = {
+  def executeImport(json: SprayJsValue): Future[JsValue] = executeImport(json.toPlay())
 
-    val bundle = json.convertTo[ImportBundle]
+  def executeImport(json: JsValue): Future[JsValue] = executeImport(json.as[ImportBundle])
+
+  def executeImport(bundle: ImportBundle): Future[JsValue] = {
 
     val res: Future[Vector[Try[Unit]]] =
       bundle.valueType match {
         case "nodes" =>
-          val importNodes                             = bundle.values.elements.map(convertToImportNode)
+          val importNodes                             = bundle.values.value.map(convertToImportNode).toVector
           val goods: Vector[ImportNode]               = importNodes.collect { case Good(x) => x }
           val bads: Vector[Exception]                 = importNodes.collect { case x: Bad[Exception] => x.b }
           val newGoods: Vector[CreateDataItemsImport] = generateImportNodesDBActions(goods)
@@ -34,29 +37,29 @@ class BulkImport(project: Project)(implicit apiDependencies: ApiDependencies) ex
           Future.sequence(creates ++ errors)
 
         case "relations" =>
-          val mutactions = generateImportRelationsDBActions(bundle.values.elements.map(convertToImportRelation))
+          val mutactions = generateImportRelationsDBActions(bundle.values.value.map(convertToImportRelation).toVector)
           Future.sequence(mutactions.map(m => apiDependencies.databaseMutactionExecutor.execute(Vector(m), runTransactionally = false).toFutureTry))
 
         case "lists" =>
-          val mutactions = generateImportListsDBActions(bundle.values.elements.map(convertToImportList))
+          val mutactions = generateImportListsDBActions(bundle.values.value.map(convertToImportList).toVector)
           mutactions.map(m => () => apiDependencies.databaseMutactionExecutor.execute(Vector(m), runTransactionally = false).toFutureTry).runSequentially
       }
 
     res
-      .map(vector => vector.collect { case elem if elem.isFailure => elem.failed.get.getMessage.split("-@-").map(_.toJson) }.flatten)
+      .map(vector => vector.collect { case elem if elem.isFailure => elem.failed.get.getMessage.split("-@-").map(Json.toJson(_)) }.flatten)
       .map(x => JsArray(x))
   }
 
   private def convertToImportNode(json: JsValue): ImportNode Or Exception = {
-    val jsObject = json.asJsObject
-    val typeName = jsObject.fields("_typeName").asInstanceOf[JsString].value
-    val id       = jsObject.fields("id").asInstanceOf[JsString].value
+    val jsObject = json.as[JsObject]
+    val typeName = jsObject.value("_typeName").as[String]
+    val id       = jsObject.value("id").as[String]
     val model    = project.schema.getModelByName_!(typeName)
 
     val newJsObject = JsObject(jsObject.fields.filter(_._1 != "_typeName"))
 
     Try {
-      GCValueJsonFormatter.readModelAwareGcValue(model)(newJsObject.toPlay()).get
+      GCValueJsonFormatter.readModelAwareGcValue(model)(newJsObject).get
     } match {
       case Success(x)                        => Good(ImportNode(id, model, x))
       case Failure(e: UnknownFieldException) => Bad(new Exception(s"The model ${model.name} with id $id has an unknown field '${e.field}' in field list."))
@@ -65,23 +68,25 @@ class BulkImport(project: Project)(implicit apiDependencies: ApiDependencies) ex
   }
 
   private def convertToImportList(json: JsValue): ImportList = {
-    val jsObject     = json.asJsObject
-    val typeName     = jsObject.fields("_typeName").asInstanceOf[JsString].value
-    val id           = jsObject.fields("id").asInstanceOf[JsString].value
-    val fieldName    = jsObject.fields.filterKeys(k => k != "_typeName" && k != "id").keys.head
-    val jsonForField = jsObject.fields(fieldName)
+    val jsObject     = json.as[JsObject]
+    val typeName     = jsObject.value("_typeName").as[String]
+    val id           = jsObject.value("id").as[String]
+    val fieldName    = jsObject.value.filterKeys(k => k != "_typeName" && k != "id").keys.head
+    val jsonForField = jsObject.value(fieldName)
     val field        = project.schema.getModelByName_!(typeName).getFieldByName_!(fieldName)
     val tableName    = s"${typeName}_$fieldName"
-    val gcValue      = GCValueJsonFormatter.readListGCValue(field)(jsonForField.toPlay()).get
+    val gcValue      = GCValueJsonFormatter.readListGCValue(field)(jsonForField).get
     ImportList(ImportIdentifier(typeName, id), tableName, gcValue)
   }
 
   private def convertToImportRelation(json: JsValue): ImportRelation = {
-    val array    = json.convertTo[JsArray]
-    val leftMap  = array.elements.head.convertTo[Map[String, Option[String]]]
-    val rightMap = array.elements.last.convertTo[Map[String, Option[String]]]
-    val left     = ImportRelationSide(ImportIdentifier(leftMap("_typeName").get, leftMap("id").get), leftMap.get("fieldName").flatten)
-    val right    = ImportRelationSide(ImportIdentifier(rightMap("_typeName").get, rightMap("id").get), rightMap.get("fieldName").flatten)
+    val array    = json.as[JsArray]
+    val leftMap  = array.value.head.as[JsObject].value
+    val rightMap = array.value.last.as[JsObject].value
+    val left =
+      ImportRelationSide(ImportIdentifier(leftMap("_typeName").as[String], leftMap("id").as[String]), leftMap.get("fieldName").flatMap(_.asOpt[String]))
+    val right =
+      ImportRelationSide(ImportIdentifier(rightMap("_typeName").as[String], rightMap("id").as[String]), rightMap.get("fieldName").flatMap(_.asOpt[String]))
 
     ImportRelation(left, right)
   }

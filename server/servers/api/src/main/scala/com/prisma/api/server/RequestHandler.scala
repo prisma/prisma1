@@ -57,7 +57,7 @@ case class RequestHandler(
   def handleRawRequestForImport(projectId: String, rawRequest: RawRequest): Future[(StatusCode, JsValue)] = {
     handleRawRequest(projectId, rawRequest) { project =>
       val importer = new BulkImport(project)
-      importer.executeImport(rawRequest.json).map(x => (200, x))
+      importer.executeImport(rawRequest.json.toPlay).map(x => (200, x.toSpray))
     }
   }
 
