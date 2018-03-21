@@ -15,7 +15,7 @@ package object ImportExport {
   case class ImportRelationSide(identifier: ImportIdentifier, fieldName: Option[String])
   case class ImportNode(id: String, model: Model, values: RootGCValue)
   case class ImportRelation(left: ImportRelationSide, right: ImportRelationSide)
-  case class ImportList(identifier: ImportIdentifier, fieldName: String, values: ListGCValue)
+  case class ImportList(identifier: ImportIdentifier, tableName: String, values: ListGCValue)
   case class JsonBundle(jsonElements: Vector[JsValue], size: Int)
   case class ExportRelationSide(_typeName: String, id: String, fieldName: Option[String])
   case class CreateDataItemImport(project: Project, model: Model, args: ReallyCoolArgs)
