@@ -28,7 +28,7 @@ trait DataResolver {
 
   def resolveByUniqueWithoutValidation(model: Model, key: String, value: Any): Future[Option[DataItem]]
 
-  def loadModelRowsForExport(model: Model, args: Option[QueryArguments] = None): Future[ResolverResult]
+  def loadModelRowsForExport(model: Model, args: Option[QueryArguments] = None): Future[ResolverResultNew]
 
   def loadListRowsForExport(tableName: String, args: Option[QueryArguments] = None): Future[ResolverResult]
 

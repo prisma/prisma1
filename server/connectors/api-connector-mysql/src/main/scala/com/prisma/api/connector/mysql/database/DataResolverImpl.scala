@@ -80,11 +80,12 @@ case class DataResolverImpl(
     batchResolveByUniqueWithoutValidation(model, key, List(value)).map(_.headOption)
   }
 
-  override def loadModelRowsForExport(model: Model, args: Option[QueryArguments] = None): Future[ResolverResult] = {
-    val (query, resultTransform) = DatabaseQueryBuilder.selectAllFromTable(project.id, model.name, args, None)
-    performWithTiming("loadModelRowsForExport", readonlyClientDatabase.run(readOnlyDataItem(query)))
-      .map(_.toList.map(mapDataItem(model)(_)))
-      .map(resultTransform(_))
+  override def loadModelRowsForExport(model: Model, args: Option[QueryArguments] = None): Future[ResolverResultNew] = {
+    val query                         = DatabaseQueryBuilder.selectAllFromTableNew(project.id, model, args)
+    val x: Future[Vector[PrismaNode]] = performWithTiming("loadModelRowsForExport", readonlyClientDatabase.run(query))
+    x.map { nodes =>
+      ResolverResultNew(nodes, hasNextPage = false, hasPreviousPage = false)
+    }
   }
 
   override def loadListRowsForExport(tableName: String, args: Option[QueryArguments] = None): Future[ResolverResult] = {

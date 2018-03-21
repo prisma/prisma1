@@ -1,9 +1,11 @@
 package com.prisma.api.import_export
 
-import com.prisma.api.connector.{CoolArgs, DataItem, DataResolver, ReallyCoolArgs}
+import com.prisma.api.connector._
 import com.prisma.gc_values.RootGCValue
 import com.prisma.shared.models.{Model, Project, Relation}
+import com.prisma.util.json.PlaySprayConversions
 import spray.json.{DefaultJsonProtocol, JsArray, JsBoolean, JsFalse, JsNull, JsNumber, JsObject, JsString, JsTrue, JsValue, JsonFormat, RootJsonFormat}
+import play.api.libs.json.{JsValue => PlayJsValue}
 
 package object ImportExport {
 
@@ -16,7 +18,7 @@ package object ImportExport {
   case class ImportNode(id: String, model: Model, values: RootGCValue)
   case class ImportRelation(left: ImportRelationSide, right: ImportRelationSide)
   case class ImportList(identifier: ImportIdentifier, values: Map[String, Vector[Any]])
-  case class JsonBundle(jsonElements: Vector[JsValue], size: Int)
+  case class JsonBundle(jsonElements: Vector[PlayJsValue], size: Int)
   case class ExportRelationSide(_typeName: String, id: String, fieldName: Option[String])
 
   case class CreateDataItemImport(project: Project, model: Model, args: ReallyCoolArgs)
@@ -72,7 +74,7 @@ package object ImportExport {
     )
   }
 
-  case class DataItemsPage(items: Seq[DataItem], hasMore: Boolean) { def itemCount: Int = items.length }
+  case class DataItemsPage(items: Seq[PrismaNode], hasMore: Boolean) { def itemCount: Int = items.length }
 
   object MyJsonProtocol extends DefaultJsonProtocol {
 
@@ -105,6 +107,12 @@ package object ImportExport {
           case _            => sys.error("implement all scalar types!")
         }
       }
+    }
+
+    implicit object PlayJsonFormat extends JsonFormat[PlayJsValue] with PlaySprayConversions {
+      override def write(obj: PlayJsValue) = obj.toSpray()
+
+      override def read(json: JsValue) = json.toPlay()
     }
 
     implicit val jsonBundle: RootJsonFormat[JsonBundle]                 = jsonFormat2(JsonBundle)

@@ -21,6 +21,8 @@ case class RootGCValue(map: Map[String, GCValue]) extends GCValue {
     case Some(id) => id.asInstanceOf[GraphQLIdGCValue]
     case None     => sys.error("There was no field with name 'id'.")
   }
+
+  def filterValues(p: GCValue => Boolean) = copy(map = map.filter(t => p(t._2)))
 }
 
 case class ListGCValue(values: Vector[GCValue]) extends GCValue {

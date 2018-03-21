@@ -3,7 +3,7 @@ package com.prisma.api.import_export
 import java.sql.Timestamp
 
 import com.prisma.api.ApiDependencies
-import com.prisma.api.connector.{DataItem, DataResolver, QueryArguments}
+import com.prisma.api.connector.{DataItem, DataResolver, PrismaNode, QueryArguments}
 import com.prisma.api.import_export.ImportExport.MyJsonProtocol._
 import com.prisma.api.import_export.ImportExport._
 import com.prisma.shared.models.IdType.Id
@@ -11,6 +11,7 @@ import com.prisma.shared.models.{Project, TypeIdentifier}
 import org.joda.time.format.DateTimeFormat
 import org.joda.time.{DateTime, DateTimeZone}
 import spray.json.{JsValue, _}
+import play.api.libs.json.{Json, JsValue => PlayJsValue, JsObject => PlayJsObject}
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
@@ -73,7 +74,7 @@ class BulkExport(project: Project)(implicit apiDependencies: ApiDependencies) {
                  case x: RelationInfo => x.dataResolver.loadRelationRowsForExport(x.current.relationId, Some(queryArguments))
                }
     } yield {
-      DataItemsPage(result.items, hasMore = result.hasNextPage)
+      DataItemsPage(result.nodes, hasMore = result.hasNextPage)
     }
   }
 
@@ -90,7 +91,7 @@ class BulkExport(project: Project)(implicit apiDependencies: ApiDependencies) {
     }
   }
 
-  private def serializeDataItems(in: JsonBundle, dataItems: Seq[DataItem], info: ExportInfo): ResultFormat = {
+  private def serializeDataItems(in: JsonBundle, dataItems: Seq[PrismaNode], info: ExportInfo): ResultFormat = {
     val bundles: Seq[JsonBundle] = info match {
       case info: NodeInfo     => dataItems.map(item => dataItemToExportNode(item, info))
       case info: RelationInfo => dataItems.map(item => dataItemToExportRelation(item, info))
@@ -129,23 +130,12 @@ class BulkExport(project: Project)(implicit apiDependencies: ApiDependencies) {
     Vector.empty ++ x
   }
 
-  private def dataItemToExportNode(item: DataItem, info: NodeInfo): JsonBundle = {
-    val dataValueMap                                  = item.userData
-    val createdAtUpdatedAtMap                         = dataValueMap.collect { case (k, Some(v)) if k == "createdAt" || k == "updatedAt" => (k, v) }
-    val withoutHiddenFields: Map[String, Option[Any]] = dataValueMap.collect { case (k, v) if k != "createdAt" && k != "updatedAt" => (k, v) }
-    val nonListFieldsWithValues: Map[String, Any]     = withoutHiddenFields.collect { case (k, Some(v)) if !info.current.getFieldByName_!(k).isList => (k, v) }
-    val outputMap: Map[String, Any]                   = nonListFieldsWithValues ++ createdAtUpdatedAtMap
+  private def dataItemToExportNode(item: PrismaNode, info: NodeInfo): JsonBundle = {
+    import GCValueJsonFormatter.RootGcValueWritesWithoutNulls
+    val jsonForNode: PlayJsObject = Json.toJsObject(item.data)
+    val jsonObj                   = Json.obj("_typeName" -> info.current.name, "id" -> item.id) ++ jsonForNode
 
-    val mapWithCorrectDateTimeFormat = outputMap.map {
-      case (k, v) if k == "createdAt" || k == "updatedAt"                                       => (k, dateTimeToISO8601(v))
-      case (k, v) if info.current.getFieldByName_!(k).typeIdentifier == TypeIdentifier.DateTime => (k, dateTimeToISO8601(v))
-      case (k, v)                                                                               => (k, v)
-    }
-
-    val result: Map[String, Any] = Map("_typeName" -> info.current.name, "id" -> item.id) ++ mapWithCorrectDateTimeFormat
-    val json                     = result.toJson
-
-    JsonBundle(jsonElements = Vector(json), size = json.toString.length)
+    JsonBundle(jsonElements = Vector(jsonObj), size = jsonObj.toString.length)
   }
 
   private def dateTimeToISO8601(v: Any): DateTime = new DateTime(v.asInstanceOf[Timestamp].getTime).withZone(DateTimeZone.UTC)

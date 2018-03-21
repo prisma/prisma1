@@ -22,6 +22,12 @@ case class ResolverResult(
     parentModelId: Option[String] = None
 )
 
+case class ResolverResultNew(
+    nodes: Vector[PrismaNode],
+    hasNextPage: Boolean,
+    hasPreviousPage: Boolean
+)
+
 case class ModelCounts(countsMap: Map[Model, Int]) {
   def countForName(name: String): Int = {
     val model = countsMap.keySet.find(_.name == name).getOrElse(sys.error(s"No count found for model $name"))

@@ -3,12 +3,16 @@ package com.prisma.api.connector.mysql.database
 import com.prisma.api.connector.Types.DataItemFilterCollection
 import com.prisma.api.connector._
 import com.prisma.api.connector.mysql.database.DatabaseMutationBuilder.idFromWhereEquals
-import com.prisma.shared.models.{Field, Model, Project}
+import com.prisma.gc_values._
+import com.prisma.shared.models.{Field, Model, Project, TypeIdentifier}
+import org.joda.time.DateTime
+import play.api.libs.json.Json
 import slick.dbio.DBIOAction
 import slick.dbio.Effect.Read
 import slick.jdbc.MySQLProfile.api._
 import slick.jdbc.meta.{DatabaseMeta, MTable}
 import slick.jdbc.{SQLActionBuilder, _}
+import slick.sql.SqlStreamingAction
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
@@ -32,6 +36,31 @@ object DatabaseQueryBuilder {
     }
   }
 
+  def getResultForModel(model: Model): GetResult[PrismaNode] = GetResult { ps: PositionedResult =>
+    val resultSet = ps.rs
+    val id        = resultSet.getString("id")
+    val data = model.scalarNonListFields.map { field =>
+      val gcValue: GCValue = field.typeIdentifier match {
+        case TypeIdentifier.String    => StringGCValue(resultSet.getString(field.name))
+        case TypeIdentifier.DateTime  => DateTimeGCValue(new DateTime(resultSet.getTimestamp(field.name).getTime))
+        case TypeIdentifier.GraphQLID => GraphQLIdGCValue(resultSet.getString(field.name))
+        case TypeIdentifier.Enum      => EnumGCValue(resultSet.getString(field.name))
+        case TypeIdentifier.Json      => JsonGCValue(Json.parse(resultSet.getString(field.name)))
+        case TypeIdentifier.Int       => IntGCValue(resultSet.getInt(field.name))
+        case TypeIdentifier.Float     => FloatGCValue(resultSet.getDouble(field.name))
+        case TypeIdentifier.Boolean   => BooleanGCValue(resultSet.getBoolean(field.name))
+        case TypeIdentifier.Relation  => sys.error("TypeIdentifier.Relation is not supported here")
+      }
+      if (resultSet.wasNull) { // todo: should we throw here if the field is required but it is null?
+        field.name -> NullGCValue
+      } else {
+        field.name -> gcValue
+      }
+    }.toMap
+
+    PrismaNode(id = id, data = RootGCValue(data))
+  }
+
   implicit object GetScalarListValue extends GetResult[ScalarListValue] {
     def apply(ps: PositionedResult): ScalarListValue = {
       val rs = ps.rs
@@ -40,13 +69,13 @@ object DatabaseQueryBuilder {
     }
   }
 
-  def selectAllFromTable(projectId: String,
-                         tableName: String,
-                         args: Option[QueryArguments],
-                         overrideMaxNodeCount: Option[Int] = None): (SQLActionBuilder, ResultTransform) = {
+  def selectAllFromTable(
+      projectId: String,
+      tableName: String,
+      args: Option[QueryArguments]
+  ): (SQLActionBuilder, ResultTransform) = {
 
-    val (conditionCommand, orderByCommand, limitCommand, resultTransform) =
-      extractQueryArgs(projectId, tableName, args, overrideMaxNodeCount = overrideMaxNodeCount)
+    val (conditionCommand, orderByCommand, limitCommand, resultTransform) = extractQueryArgs(projectId, tableName, args, overrideMaxNodeCount = None)
 
     val query =
       sql"select * from `#$projectId`.`#$tableName`" concat
@@ -55,6 +84,24 @@ object DatabaseQueryBuilder {
         prefixIfNotNone("limit", limitCommand)
 
     (query, resultTransform)
+  }
+
+  def selectAllFromTableNew(
+      projectId: String,
+      model: Model,
+      args: Option[QueryArguments],
+      overrideMaxNodeCount: Option[Int] = None
+  ): SqlStreamingAction[Vector[PrismaNode], PrismaNode, Read] = {
+
+    val tableName                                           = model.name
+    val (conditionCommand, orderByCommand, limitCommand, _) = extractQueryArgs(projectId, tableName, args, overrideMaxNodeCount = overrideMaxNodeCount)
+
+    val query = sql"select * from `#$projectId`.`#$tableName`" concat
+      prefixIfNotNone("where", conditionCommand) concat
+      prefixIfNotNone("order by", orderByCommand) concat
+      prefixIfNotNone("limit", limitCommand)
+
+    query.as[PrismaNode](getResultForModel(model))
   }
 
   def selectAllFromListTable(projectId: String,

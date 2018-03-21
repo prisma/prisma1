@@ -1,15 +1,51 @@
 package com.prisma.api.import_export
 
+import com.prisma.api.import_export.GCValueJsonFormatter.GcValueWrites.writes
 import com.prisma.gc_values._
 import com.prisma.shared.models.{Enum, Field, Model, TypeIdentifier}
+import org.joda.time.DateTimeZone
 import org.joda.time.format.{DateTimeFormat, ISODateTimeFormat}
 import play.api.libs.json._
 
-import scala.collection.immutable
 import scala.util.Try
 
 object GCValueJsonFormatter {
 
+  /**
+    * WRITERS
+    */
+  implicit object GcValueWrites extends Writes[GCValue] {
+    val isoFormatter = DateTimeFormat.forPattern("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'")
+
+    override def writes(gcValue: GCValue): JsValue = gcValue match {
+      case v: StringGCValue    => JsString(v.value)
+      case v: GraphQLIdGCValue => JsString(v.value)
+      case v: EnumGCValue      => JsString(v.value)
+      case v: DateTimeGCValue  => JsString(isoFormatter.print(v.value.withZone(DateTimeZone.UTC)))
+      case v: BooleanGCValue   => JsBoolean(v.value)
+      case v: IntGCValue       => JsNumber(v.value)
+      case v: FloatGCValue     => JsNumber(v.value)
+      case v: JsonGCValue      => v.value
+      case NullGCValue         => JsNull
+      case v: ListGCValue      => JsArray(v.values.map(writes))
+      case v: RootGCValue      => JsObject(v.map.mapValues(writes))
+    }
+  }
+
+  implicit object RootGcValueWrites extends OWrites[RootGCValue] {
+    override def writes(v: RootGCValue): JsObject = JsObject(v.map.mapValues(GcValueWrites.writes))
+  }
+
+  implicit object RootGcValueWritesWithoutNulls extends OWrites[RootGCValue] {
+    override def writes(v: RootGCValue) = {
+      val withoutNulls = v.filterValues(_ != NullGCValue)
+      RootGcValueWrites.writes(withoutNulls)
+    }
+  }
+
+  /**
+    * READERS
+    */
   case class UnknownFieldException(field: String, model: Model) extends Exception
 
   def readModelAwareGcValue(model: Model)(json: JsValue): JsResult[RootGCValue] = {
