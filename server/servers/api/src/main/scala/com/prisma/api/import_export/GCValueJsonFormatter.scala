@@ -7,6 +7,7 @@ import org.joda.time.DateTimeZone
 import org.joda.time.format.{DateTimeFormat, ISODateTimeFormat}
 import play.api.libs.json._
 
+import scala.collection.immutable.SortedMap
 import scala.util.Try
 
 object GCValueJsonFormatter {
@@ -65,7 +66,7 @@ object GCValueJsonFormatter {
       }
       tuples <- sequenceJsResult(formattedValues)
     } yield {
-      RootGCValue(tuples.toMap)
+      RootGCValue(SortedMap(tuples: _*))
     }
   }
 

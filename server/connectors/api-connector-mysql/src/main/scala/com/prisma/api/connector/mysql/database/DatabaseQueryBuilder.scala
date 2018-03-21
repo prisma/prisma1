@@ -68,9 +68,9 @@ object DatabaseQueryBuilder {
       } else {
         field.name -> gcValue
       }
-    }.toMap
+    }
 
-    PrismaNode(id = id, data = RootGCValue(data))
+    PrismaNode(id = id, data = RootGCValue(data: _*))
   }
 
   implicit object GetRelationNode extends GetResult[RelationNode] {

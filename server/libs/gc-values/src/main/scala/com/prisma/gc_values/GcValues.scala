@@ -3,6 +3,8 @@ package com.prisma.gc_values
 import org.joda.time.DateTime
 import play.api.libs.json.JsValue
 
+import scala.collection.immutable.SortedMap
+
 /**
   * GCValues should be the sole way to represent data within our system.
   * We will try to use them to get rid of the Any, and get better type safety.
@@ -16,7 +18,10 @@ sealed trait GCValue {
 
 }
 
-case class RootGCValue(map: Map[String, GCValue]) extends GCValue {
+object RootGCValue {
+  def apply(elements: (String, GCValue)*): RootGCValue = RootGCValue(SortedMap(elements: _*))
+}
+case class RootGCValue(map: SortedMap[String, GCValue]) extends GCValue {
   def idField = map.get("id") match {
     case Some(id) => id.asInstanceOf[GraphQLIdGCValue]
     case None     => sys.error("There was no field with name 'id'.")

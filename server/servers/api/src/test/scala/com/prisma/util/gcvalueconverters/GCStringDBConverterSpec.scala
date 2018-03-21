@@ -29,7 +29,7 @@ class GCStringDBConverterSpec extends FlatSpec with Matchers {
   val enums     = ListGCValue(Vector(EnumGCValue("HA"), EnumGCValue("HA")))
   val jsons     = ListGCValue(Vector(JsonGCValue(JsObject(Seq(("hello", JsString("there"))))), JsonGCValue(JsObject(Seq(("hello", JsString("there")))))))
 
-  val rootValue = RootGCValue(Map("test" -> strings, "test2" -> datetimes))
+  val rootValue = RootGCValue("test" -> strings, "test2" -> datetimes)
   val nullValue = NullGCValue
 
   "It should take non-list GCValues and" should "convert them to DBString and back" in {

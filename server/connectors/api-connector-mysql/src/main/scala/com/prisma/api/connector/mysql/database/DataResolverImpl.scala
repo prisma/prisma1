@@ -3,7 +3,7 @@ package com.prisma.api.connector.mysql.database
 import com.prisma.api.connector.Types.DataItemFilterCollection
 import com.prisma.api.connector._
 import com.prisma.api.connector.mysql.Metrics
-import com.prisma.gc_values.{GCValue, GraphQLIdGCValue, JsonGCValue, RootGCValue}
+import com.prisma.gc_values._
 import com.prisma.shared.models.IdType.Id
 import com.prisma.shared.models.TypeIdentifier.TypeIdentifier
 import com.prisma.shared.models._
@@ -95,11 +95,13 @@ case class DataResolverImpl(
 
   override def loadRelationRowsForExport(relationId: String, args: Option[QueryArguments] = None): Future[ResolverResultNew] = {
     val query                           = DatabaseQueryBuilder.selectAllFromRelationTable(project.id, relationId, args)
-    val x: Future[Vector[RelationNode]] = performWithTiming("loadModelRowsForExport", readonlyClientDatabase.run(query))
+    val x: Future[Vector[RelationNode]] = performWithTiming("loadRelationRowsForExport", readonlyClientDatabase.run(query))
     x.map { relations =>
       val nodes = relations.map { relation =>
         val gcValue = RootGCValue(
-          Map("id" -> GraphQLIdGCValue(relation.id), "A" -> GraphQLIdGCValue(relation.a), "B" -> GraphQLIdGCValue(relation.b))
+          "id" -> GraphQLIdGCValue(relation.id),
+          "A"  -> GraphQLIdGCValue(relation.a),
+          "B"  -> GraphQLIdGCValue(relation.b)
         )
         PrismaNode(relation.id, gcValue)
       }
