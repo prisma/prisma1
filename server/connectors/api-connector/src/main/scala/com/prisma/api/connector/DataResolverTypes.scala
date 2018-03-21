@@ -28,6 +28,12 @@ case class ResolverResultNew(
     hasPreviousPage: Boolean
 )
 
+case class RelationResult(
+    relations: Vector[RelationNode],
+    hasNextPage: Boolean,
+    hasPreviousPage: Boolean
+)
+
 case class ModelCounts(countsMap: Map[Model, Int]) {
   def countForName(name: String): Int = {
     val model = countsMap.keySet.find(_.name == name).getOrElse(sys.error(s"No count found for model $name"))

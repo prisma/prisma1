@@ -42,14 +42,26 @@ object DatabaseQueryBuilder {
     val data = model.scalarNonListFields.map { field =>
       val gcValue: GCValue = field.typeIdentifier match {
         case TypeIdentifier.String    => StringGCValue(resultSet.getString(field.name))
-        case TypeIdentifier.DateTime  => DateTimeGCValue(new DateTime(resultSet.getTimestamp(field.name).getTime))
         case TypeIdentifier.GraphQLID => GraphQLIdGCValue(resultSet.getString(field.name))
         case TypeIdentifier.Enum      => EnumGCValue(resultSet.getString(field.name))
-        case TypeIdentifier.Json      => JsonGCValue(Json.parse(resultSet.getString(field.name)))
         case TypeIdentifier.Int       => IntGCValue(resultSet.getInt(field.name))
         case TypeIdentifier.Float     => FloatGCValue(resultSet.getDouble(field.name))
         case TypeIdentifier.Boolean   => BooleanGCValue(resultSet.getBoolean(field.name))
-        case TypeIdentifier.Relation  => sys.error("TypeIdentifier.Relation is not supported here")
+        case TypeIdentifier.DateTime =>
+          val sqlType = resultSet.getTimestamp(field.name)
+          if (sqlType != null) {
+            DateTimeGCValue(new DateTime(sqlType.getTime))
+          } else {
+            NullGCValue
+          }
+        case TypeIdentifier.Json =>
+          val sqlType = resultSet.getString(field.name)
+          if (sqlType != null) {
+            JsonGCValue(Json.parse(sqlType))
+          } else {
+            NullGCValue
+          }
+        case TypeIdentifier.Relation => sys.error("TypeIdentifier.Relation is not supported here")
       }
       if (resultSet.wasNull) { // todo: should we throw here if the field is required but it is null?
         field.name -> NullGCValue
