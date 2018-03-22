@@ -147,7 +147,7 @@ object DatabaseQueryBuilder {
       relationId: String,
       args: Option[QueryArguments],
       overrideMaxNodeCount: Option[Int] = None
-  ): SqlStreamingAction[Vector[RelationNode], RelationNode, Read] = {
+  ): DBIOAction[ResolverResultNew[RelationNode], NoStream, Effect] = {
 
     val tableName                                           = relationId
     val (conditionCommand, orderByCommand, limitCommand, _) = extractQueryArgs(projectId, tableName, args, overrideMaxNodeCount = overrideMaxNodeCount)
@@ -157,10 +157,16 @@ object DatabaseQueryBuilder {
       prefixIfNotNone("order by", orderByCommand) concat
       prefixIfNotNone("limit", limitCommand)
 
-    query.as[RelationNode]
+    query.as[RelationNode].map { nodes =>
+      ResolverResultNew(
+        nodes = nodes,
+        hasNextPage = args.get.hasNext(nodes),
+        hasPreviousPage = args.get.hasPrevious(nodes)
+      )
+    }
   }
 
-  def selectAllFromListTable(projectId: String,
+  def selectAllFromListTable(projectId: String, //order in DB instead of in scala
                              model: Model,
                              field: Field,
                              args: Option[QueryArguments],
@@ -288,6 +294,7 @@ object DatabaseQueryBuilder {
     sql"select exists" ++ DatabaseMutationBuilder.pathQueryForLastChild(projectId, path)
   }
 
+  //todo sort in db
   def selectFromScalarList(projectId: String, modelName: String, fieldName: String, nodeIds: Vector[String]): SQLActionBuilder = {
     sql"select nodeId, position, value from `#$projectId`.`#${modelName}_#$fieldName` where nodeId in (" concat combineByComma(nodeIds.map(escapeUnsafeParam)) concat sql")"
   }

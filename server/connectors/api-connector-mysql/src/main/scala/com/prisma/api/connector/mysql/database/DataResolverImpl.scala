@@ -96,16 +96,13 @@ case class DataResolverImpl(
           val gcValues = values.sortBy(_.position).map(_.value)
           ScalarListValues(id, ListGCValue(gcValues))
       }.toVector
-      ResolverResultNew(result, hasNextPage = false, hasPreviousPage = false)
+      ResolverResultNew(result, hasNextPage = false, hasPreviousPage = false) // todo still needs to implement hasNext and hasPrevious
     }
   }
 
   override def loadRelationRowsForExport(relationId: String, args: Option[QueryArguments] = None): Future[ResolverResultNew[RelationNode]] = {
     val query = DatabaseQueryBuilder.selectAllFromRelationTable(project.id, relationId, args)
-
-    performWithTiming("loadRelationRowsForExport", readonlyClientDatabase.run(query)).map { relations =>
-      ResolverResultNew(relations, hasNextPage = false, hasPreviousPage = false)
-    }
+    performWithTiming("loadRelationRowsForExport", readonlyClientDatabase.run(query))
   }
 
   override def batchResolveByUnique(model: Model, key: String, values: List[Any]): Future[List[DataItem]] = {
