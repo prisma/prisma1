@@ -22,8 +22,8 @@ case class ResolverResult(
     parentModelId: Option[String] = None
 )
 
-case class ResolverResultNew(
-    nodes: Vector[PrismaNode],
+case class ResolverResultNew[T](
+    nodes: Vector[T],
     hasNextPage: Boolean,
     hasPreviousPage: Boolean
 )
