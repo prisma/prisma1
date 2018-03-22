@@ -133,6 +133,48 @@ object QueryArgumentsExtensions {
       }
     }
 
+    def hasNext[T](items: Vector[T]): Boolean = {
+      (first, last) match {
+        case (Some(f), _) =>
+          if (items.size > f) {
+            true
+          } else {
+            false
+          }
+
+        case (_, Some(l)) =>
+          if (items.size > l) {
+            false
+          } else {
+            false
+          }
+
+        case _ =>
+          false
+      }
+    }
+
+    def hasPrevious[T](items: Vector[T]): Boolean = {
+      (first, last) match {
+        case (Some(f), _) =>
+          if (items.size > f) {
+            false
+          } else {
+            false
+          }
+
+        case (_, Some(l)) =>
+          if (items.size > l) {
+            true
+          } else {
+            false
+          }
+
+        case _ =>
+          false
+      }
+    }
+
     def extractWhereConditionCommand(projectId: String, modelId: String): Option[SQLActionBuilder] = {
 
       if (first.isDefined && last.isDefined) throw APIErrors.InvalidConnectionArguments()

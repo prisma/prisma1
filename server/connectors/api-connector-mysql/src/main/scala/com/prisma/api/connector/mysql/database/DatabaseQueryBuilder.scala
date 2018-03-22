@@ -123,7 +123,7 @@ object DatabaseQueryBuilder {
       model: Model,
       args: Option[QueryArguments],
       overrideMaxNodeCount: Option[Int] = None
-  ): SqlStreamingAction[Vector[PrismaNode], PrismaNode, Read] = {
+  ): DBIOAction[ResolverResultNew[PrismaNode], NoStream, Effect] = {
 
     val tableName                                           = model.name
     val (conditionCommand, orderByCommand, limitCommand, _) = extractQueryArgs(projectId, tableName, args, overrideMaxNodeCount = overrideMaxNodeCount)
@@ -133,7 +133,13 @@ object DatabaseQueryBuilder {
       prefixIfNotNone("order by", orderByCommand) concat
       prefixIfNotNone("limit", limitCommand)
 
-    query.as[PrismaNode](getResultForModel(model))
+    query.as[PrismaNode](getResultForModel(model)).map { nodes =>
+      ResolverResultNew(
+        nodes = nodes,
+        hasNextPage = args.get.hasNext(nodes),
+        hasPreviousPage = args.get.hasPrevious(nodes)
+      )
+    }
   }
 
   def selectAllFromRelationTable(

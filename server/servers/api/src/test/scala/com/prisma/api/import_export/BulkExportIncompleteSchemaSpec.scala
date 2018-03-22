@@ -12,8 +12,7 @@ import spray.json._
 
 class BulkExportIncompleteSchemaSpec extends FlatSpec with Matchers with ApiBaseSpec with AwaitUtils {
 
-  val project: Project = SchemaDsl() { schema =>
-    }
+  val project: Project = SchemaDsl()(_ => ())
 
   override protected def beforeAll(): Unit = {
     super.beforeAll()

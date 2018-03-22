@@ -82,11 +82,8 @@ case class DataResolverImpl(
   }
 
   override def loadModelRowsForExport(model: Model, args: Option[QueryArguments] = None): Future[ResolverResultNew[PrismaNode]] = {
-    val query                         = DatabaseQueryBuilder.selectAllFromTableNew(project.id, model, args)
-    val x: Future[Vector[PrismaNode]] = performWithTiming("loadModelRowsForExport", readonlyClientDatabase.run(query))
-    x.map { nodes =>
-      ResolverResultNew(nodes, hasNextPage = false, hasPreviousPage = false)
-    }
+    val query = DatabaseQueryBuilder.selectAllFromTableNew(project.id, model, args)
+    performWithTiming("loadModelRowsForExport", readonlyClientDatabase.run(query))
   }
 
   override def loadListRowsForExport(model: Model, field: Field, args: Option[QueryArguments] = None): Future[ResolverResultNew[ScalarListValues]] = {
