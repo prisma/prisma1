@@ -215,7 +215,7 @@ case class Model(
   def getFieldById(id: Id): Option[Field] = fields.find(_.id == id)
 
   def getFieldByName_!(name: String): Field =
-    getFieldByName(name).getOrElse(sys.error(s"field $name is not part of the model $name")) // .getOrElse(throw FieldNotInModel(fieldName = name, modelName = this.name))
+    getFieldByName(name).getOrElse(sys.error(s"field $name is not part of the model ${this.name}")) // .getOrElse(throw FieldNotInModel(fieldName = name, modelName = this.name))
   def getFieldByName(name: String): Option[Field] = fields.find(_.name == name)
 
   def hasVisibleIdField: Boolean = getFieldByName_!("id").isVisible
