@@ -12,7 +12,7 @@ import com.prisma.workers.WorkerServer
 object PrismaLocalMain extends App {
   implicit val system       = ActorSystem("single-server")
   implicit val materializer = ActorMaterializer()
-  val port                  = 4466 /// sys.env.getOrElse("PORT", "9000").toInt
+  val port                  = sys.env.getOrElse("PORT", "9000").toInt
   implicit val dependencies = PrismaLocalDependencies()
   dependencies.initialize()(system.dispatcher)
 

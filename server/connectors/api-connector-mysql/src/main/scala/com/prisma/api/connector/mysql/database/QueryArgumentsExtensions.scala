@@ -113,9 +113,9 @@ object QueryArgumentsExtensions {
       }
 
       (first, last) match {
-        case (Some(f), _) if (items.size > f) => ResolverResult(items.dropRight(1), hasNextPage = true)
-        case (_, Some(l)) if (items.size > l) => ResolverResult(items.tail, hasPreviousPage = true)
-        case _                                => ResolverResult(items)
+        case (Some(f), _) if items.size > f => ResolverResult(items.dropRight(1), hasNextPage = true)
+        case (_, Some(l)) if items.size > l => ResolverResult(items.tail, hasPreviousPage = true)
+        case _                              => ResolverResult(items)
       }
     }
 

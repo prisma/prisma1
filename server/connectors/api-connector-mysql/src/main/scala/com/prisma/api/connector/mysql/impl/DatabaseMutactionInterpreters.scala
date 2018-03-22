@@ -339,40 +339,13 @@ case class VerifyWhereInterpreter(mutaction: VerifyWhere) extends DatabaseMutact
 }
 
 case class CreateDataItemsImportInterpreter(mutaction: CreateDataItemsImport) extends DatabaseMutactionInterpreter {
-
   override val action = DatabaseMutationBuilder.createDataItemsImport(mutaction)
-//  override val errorMapper = {
-//    case e: SQLException if e.getErrorCode == 1242 && causedByThisMutaction(e.getCause.toString) => throw APIErrors.NodeNotFoundForWhereError(where)
-//  }
-//
-//  def causedByThisMutaction(cause: String) = {
-//    val modelString = s"`${where.model.name}` WHEREFAILURETRIGGER WHERE `${where.field.name}`"
-//    cause.contains(modelString) && cause.contains(parameterString(where))
-//  }
 }
 
 case class CreateRelationRowsImportInterpreter(mutaction: CreateRelationRowsImport) extends DatabaseMutactionInterpreter {
-
   override val action = DatabaseMutationBuilder.createRelationRowsImport(mutaction)
-  //  override val errorMapper = {
-  //    case e: SQLException if e.getErrorCode == 1242 && causedByThisMutaction(e.getCause.toString) => throw APIErrors.NodeNotFoundForWhereError(where)
-  //  }
-  //
-  //  def causedByThisMutaction(cause: String) = {
-  //    val modelString = s"`${where.model.name}` WHEREFAILURETRIGGER WHERE `${where.field.name}`"
-  //    cause.contains(modelString) && cause.contains(parameterString(where))
-  //  }
 }
 
 case class PushScalarListsImportInterpreter(mutaction: PushScalarListsImport) extends DatabaseMutactionInterpreter {
-
   override val action = DatabaseMutationBuilder.pushScalarListsImport(mutaction)
-  //  override val errorMapper = {
-  //    case e: SQLException if e.getErrorCode == 1242 && causedByThisMutaction(e.getCause.toString) => throw APIErrors.NodeNotFoundForWhereError(where)
-  //  }
-  //
-  //  def causedByThisMutaction(cause: String) = {
-  //    val modelString = s"`${where.model.name}` WHEREFAILURETRIGGER WHERE `${where.field.name}`"
-  //    cause.contains(modelString) && cause.contains(parameterString(where))
-  //  }
 }
