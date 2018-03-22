@@ -96,7 +96,7 @@ case class DataResolverImpl(
       val grouped: Map[Id, Vector[ScalarListElement]] = scalarListElements.groupBy(_.nodeId)
       val result = grouped.map {
         case (id, values) =>
-          val gcValues = values.map(_.value)
+          val gcValues = values.sortBy(_.position).map(_.value)
           ScalarListValues(id, ListGCValue(gcValues))
       }.toVector
       ResolverResultNew(result, hasNextPage = false, hasPreviousPage = false)
