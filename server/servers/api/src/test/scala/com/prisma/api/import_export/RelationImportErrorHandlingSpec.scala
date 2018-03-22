@@ -54,8 +54,10 @@ class RelationImportErrorHandlingSpec extends FlatSpec with Matchers with ApiBas
     importer.executeImport(nodes).await(5)
     val res = importer.executeImport(relations).await(5)
 
-    res.toString should be(
-      """["Failure inserting into relationtable _Relation0to0 with ids 1 and 7. Cause: java.sql.SQLIntegrityConstraintViolationException: Cannot add or update a child row: a foreign key constraint fails (\"test-project-id@test-stage\".\"_relation0to0\", CONSTRAINT \"_relation0to0_ibfk_1\" FOREIGN KEY (\"A\") REFERENCES \"Model0\" (\"id\") ON DELETE CASCADE)","Failure inserting into relationtable _Relation0to1 with ids 7 and 0. Cause: java.sql.SQLIntegrityConstraintViolationException: Cannot add or update a child row: a foreign key constraint fails (\"test-project-id@test-stage\".\"_relation0to1\", CONSTRAINT \"_relation0to1_ibfk_1\" FOREIGN KEY (\"A\") REFERENCES \"Model1\" (\"id\") ON DELETE CASCADE)"]""")
+    res.toString should include(
+      """Failure inserting into relationtable _Relation0to0 with ids 1 and 7. Cause: java.sql.SQLIntegrityConstraintViolationException: Cannot add or update a child row: a foreign key constraint fails """)
+    res.toString should include(
+      """Failure inserting into relationtable _Relation0to1 with ids 7 and 0. Cause: java.sql.SQLIntegrityConstraintViolationException: Cannot add or update a child row: a foreign key constraint fails """)
 
     val res0 = server.query("query{model0s{id, a}}", project).toString
     res0 should be("""{"data":{"model0s":[{"id":"0","a":"test"}]}}""")
