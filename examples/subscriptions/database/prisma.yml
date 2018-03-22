@@ -17,5 +17,4 @@ secret: mysecret123
 
 # The cluster your service is deployed to. Cluster information (such as
 # host and cluster secret) are stored in `~/.prisma/config.yml`.
-# cluster: local
 cluster: local
