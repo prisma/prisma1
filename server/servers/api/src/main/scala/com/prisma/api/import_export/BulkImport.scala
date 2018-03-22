@@ -42,7 +42,7 @@ class BulkImport(project: Project)(implicit apiDependencies: ApiDependencies) ex
 
         case "lists" =>
           val mutactions = generateImportListsDBActions(bundle.values.value.map(convertToImportList).toVector)
-          mutactions.map(m => () => apiDependencies.databaseMutactionExecutor.execute(Vector(m), runTransactionally = false).toFutureTry).runSequentially
+          Future.sequence(mutactions.map(m => apiDependencies.databaseMutactionExecutor.execute(m, runTransactionally = false).toFutureTry))
       }
 
     res
@@ -117,7 +117,10 @@ class BulkImport(project: Project)(implicit apiDependencies: ApiDependencies) ex
     groupedItems.map { case (relation, group) => CreateRelationRowsImport(project, relation, group.map(item => (item.a, item.b))) }.toVector
   }
 
-  private def generateImportListsDBActions(lists: Vector[ImportList]): Vector[PushScalarListsImport] = lists.map { element =>
-    PushScalarListsImport(project, element.tableName, element.identifier.id, element.values)
-  }
+  private def generateImportListsDBActions(lists: Vector[ImportList]): Vector[Vector[PushScalarListsImport]] =
+    lists
+      .map(element => PushScalarListsImport(project, element.tableName, element.identifier.id, element.values))
+      .groupBy(_.id)
+      .values
+      .toVector
 }
