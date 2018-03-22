@@ -3,6 +3,7 @@ package com.prisma.api.connector.mysql.database
 import com.prisma.api.connector.Types.DataItemFilterCollection
 import com.prisma.api.connector._
 import com.prisma.api.connector.mysql.database.DatabaseMutationBuilder.idFromWhereEquals
+import com.prisma.api.connector.mysql.database.HelperTypes.ScalarListElement
 import com.prisma.gc_values._
 import com.prisma.shared.models.{Function => _, _}
 import org.joda.time.DateTime
