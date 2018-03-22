@@ -1,7 +1,7 @@
 package com.prisma.api.import_export
 
 import com.prisma.api.ApiDependencies
-import com.prisma.api.connector.{DataResolver, PrismaNode, QueryArguments}
+import com.prisma.api.connector.{DataResolver, PrismaNode, QueryArguments, RelationNode}
 import com.prisma.api.import_export.ImportExport.MyJsonProtocol._
 import com.prisma.api.import_export.ImportExport._
 import com.prisma.gc_values.{GraphQLIdGCValue, JsonGCValue, ListGCValue, StringGCValue}
@@ -113,12 +113,9 @@ class BulkExport(project: Project)(implicit apiDependencies: ApiDependencies) {
     }
   }
 
-  private def dataItemToExportRelation(item: PrismaNode, info: RelationInfo): JsValue = {
-    val idA       = item.data.map("A").asInstanceOf[GraphQLIdGCValue].value
-    val idB       = item.data.map("B").asInstanceOf[GraphQLIdGCValue].value
-    val leftSide  = ExportRelationSide(info.current.modelBName, idB, info.current.fieldBName)
-    val rightSide = ExportRelationSide(info.current.modelAName, idA, info.current.fieldAName)
-
+  private def dataItemToExportRelation(item: RelationNode, info: RelationInfo): JsValue = {
+    val leftSide  = ExportRelationSide(info.current.modelBName, item.b, info.current.fieldBName)
+    val rightSide = ExportRelationSide(info.current.modelAName, item.a, info.current.fieldAName)
     JsArray(Seq(Json.toJson(leftSide), Json.toJson(rightSide)))
   }
 

@@ -32,7 +32,7 @@ trait DataResolver {
 
   def loadListRowsForExport(model: Model, field: Field, args: Option[QueryArguments] = None): Future[ResolverResultNew[PrismaNode]]
 
-  def loadRelationRowsForExport(relationId: String, args: Option[QueryArguments] = None): Future[ResolverResultNew[PrismaNode]]
+  def loadRelationRowsForExport(relationId: String, args: Option[QueryArguments] = None): Future[ResolverResultNew[RelationNode]]
 
   def batchResolveByUnique(model: Model, key: String, values: List[Any]): Future[List[DataItem]]
 

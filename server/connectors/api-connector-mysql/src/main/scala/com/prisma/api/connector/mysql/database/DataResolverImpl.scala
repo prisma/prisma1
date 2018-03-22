@@ -104,19 +104,11 @@ case class DataResolverImpl(
     }
   }
 
-  override def loadRelationRowsForExport(relationId: String, args: Option[QueryArguments] = None): Future[ResolverResultNew[PrismaNode]] = {
-    val query                           = DatabaseQueryBuilder.selectAllFromRelationTable(project.id, relationId, args)
-    val x: Future[Vector[RelationNode]] = performWithTiming("loadRelationRowsForExport", readonlyClientDatabase.run(query))
-    x.map { relations =>
-      val nodes = relations.map { relation =>
-        val gcValue = RootGCValue(
-          "id" -> GraphQLIdGCValue(relation.id),
-          "A"  -> GraphQLIdGCValue(relation.a),
-          "B"  -> GraphQLIdGCValue(relation.b)
-        )
-        PrismaNode(relation.id, gcValue)
-      }
-      ResolverResultNew(nodes, hasNextPage = false, hasPreviousPage = false)
+  override def loadRelationRowsForExport(relationId: String, args: Option[QueryArguments] = None): Future[ResolverResultNew[RelationNode]] = {
+    val query = DatabaseQueryBuilder.selectAllFromRelationTable(project.id, relationId, args)
+
+    performWithTiming("loadRelationRowsForExport", readonlyClientDatabase.run(query)).map { relations =>
+      ResolverResultNew(relations, hasNextPage = false, hasPreviousPage = false)
     }
   }
 
