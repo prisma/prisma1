@@ -12,8 +12,8 @@ import spray.json._
 
 class BulkExportNullHandlingSpec extends FlatSpec with Matchers with ApiBaseSpec with AwaitUtils {
 
-  val start       = Cursor(0, 0, 0, 0)
-  val emptyResult = ResultFormat(JsonBundle(Vector.empty, 0), Cursor(-1, -1, -1, -1), isFull = false)
+  val start       = Cursor(0, 0)
+  val emptyResult = ResultFormat(JsonBundle(Vector.empty, 0), Cursor(-1, -1), isFull = false)
 
   "Exporting nodes" should "be able to handle null in lists or nodes" in {
     val project: Project = SchemaDsl() { schema =>

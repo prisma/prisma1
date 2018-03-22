@@ -151,7 +151,7 @@ class OptionalBackRelationImportExportSpec extends FlatSpec with Matchers with A
     importer.executeImport(nodes).await(5)
     importer.executeImport(relations).await(5)
 
-    val cursor     = Cursor(0, 0, 0, 0)
+    val cursor     = Cursor(0, 0)
     val request    = ExportRequest("relations", cursor)
     val firstChunk = exporter.executeExport(dataResolver, request).await(5).as[ResultFormat]
 

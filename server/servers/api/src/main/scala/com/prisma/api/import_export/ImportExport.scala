@@ -8,8 +8,8 @@ import play.api.libs.json._
 package object ImportExport {
 
   // EXPORT
-  case class ExportRequest(fileType: String, cursor: Cursor)      //{"fileType":"nodes","cursor":{"table":INT,"row":INT,"field":INT,"array":INT}} // TODO make CLI agnostic to this, get rid of field and array columns
-  case class Cursor(table: Int, row: Int, field: Int, array: Int) //{"table":INT,"row":INT,"field":INT,"array":INT}
+  case class ExportRequest(fileType: String, cursor: Cursor) //{"fileType":"nodes","cursor":{"table":INT,"row":INT,"field":INT,"array":INT}} // TODO make CLI agnostic to this, get rid of field and array columns
+  case class Cursor(table: Int, row: Int)                    //{"table":INT,"row":INT}
   case class ResultFormat(out: JsonBundle, cursor: Cursor, isFull: Boolean)
   case class JsonBundle(jsonElements: Vector[JsValue], size: Int)
   case class ExportRelationSide(_typeName: String, id: String, fieldName: Option[String])
@@ -82,15 +82,23 @@ package object ImportExport {
   case class DataItemsPage(items: Seq[JsValue], hasMore: Boolean) { def itemCount: Int = items.length }
 
   object MyJsonProtocol {
+    val cursorReads = Json.reads[Cursor]
+    val cursorWrites = new Writes[Cursor] {
+      override def writes(o: Cursor): JsValue = {
+        val dummyValue = if (o.table == -1 && o.row == -1) -1 else 0
+        Json.obj("table" -> o.table, "row" -> o.row, "field" -> dummyValue, "array" -> dummyValue)
+      }
+    }
+    implicit val cursorFormat       = Format(cursorReads, cursorWrites)
     implicit val jsonBundle         = Json.format[JsonBundle]
     implicit val importBundle       = Json.format[ImportBundle]
     implicit val importIdentifier   = Json.format[ImportIdentifier]
     implicit val importRelationSide = Json.format[ImportRelationSide]
     implicit val importRelation     = Json.format[ImportRelation]
-    implicit val cursor             = Json.format[Cursor]
     implicit val exportRequest      = Json.format[ExportRequest]
     implicit val resultFormat       = Json.format[ResultFormat]
     implicit val exportRelationSide = Json.format[ExportRelationSide]
+
   }
 
 }

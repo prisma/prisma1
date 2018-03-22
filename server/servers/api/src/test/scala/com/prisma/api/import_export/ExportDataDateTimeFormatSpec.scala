@@ -34,7 +34,7 @@ class ExportDataDateTimeFormatSpec extends FlatSpec with Matchers with ApiBaseSp
     val exporter = new BulkExport(project)
     importer.executeImport(nodes).await(5).toString should be("[]")
 
-    val cursor     = Cursor(0, 0, 0, 0)
+    val cursor     = Cursor(0, 0)
     val request    = ExportRequest("nodes", cursor)
     val firstChunk = exporter.executeExport(dataResolver, request).await(5).as[ResultFormat]
     println(firstChunk)

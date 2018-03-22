@@ -29,7 +29,7 @@ class BulkExport(project: Project)(implicit apiDependencies: ApiDependencies) {
       case "nodes" if project.models.nonEmpty        => resForCursor(start, NodeInfo(dataResolver, project.models.zipWithIndex, request.cursor))
       case "lists" if hasListFields                  => resForCursor(start, ListInfo(dataResolver, listFieldTableNames, request.cursor))
       case "relations" if project.relations.nonEmpty => resForCursor(start, zippedRelations)
-      case _                                         => Future.successful(ResultFormat(start, Cursor(-1, -1, -1, -1), isFull = false))
+      case _                                         => Future.successful(ResultFormat(start, Cursor(-1, -1), isFull = false))
     }
 
     response.map(Json.toJson(_))
@@ -40,7 +40,7 @@ class BulkExport(project: Project)(implicit apiDependencies: ApiDependencies) {
       result <- resultForTable(in, info)
       x <- result.isFull match {
             case false if info.hasNext  => resForCursor(result.out, info.cursorAtNextModel)
-            case false if !info.hasNext => Future.successful(result.copy(cursor = Cursor(-1, -1, -1, -1)))
+            case false if !info.hasNext => Future.successful(result.copy(cursor = Cursor(-1, -1)))
             case true                   => Future.successful(result)
           }
     } yield x
@@ -134,7 +134,7 @@ class BulkExport(project: Project)(implicit apiDependencies: ApiDependencies) {
     val numberSerialized = dataItems.length
 
     isLimitReached(out) match {
-      case true if combinedElements.size == 1 => ResultFormat(out, info.cursor, isFull = true)
+      case true if combinedElements.size == 1 => ResultFormat(out, info.cursor.copy(row = info.cursor.row + numberSerialized), isFull = true)
       case true                               => ResultFormat(in, info.cursor, isFull = true)
       case false                              => ResultFormat(out, info.cursor.copy(row = info.cursor.row + numberSerialized), isFull = false)
     }
