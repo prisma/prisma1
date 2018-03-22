@@ -19,9 +19,9 @@ import scala.concurrent.ExecutionContext.Implicits.global
 
 object DatabaseQueryBuilder {
 
+  import JdbcExtensions._
   import QueryArgumentsExtensions._
   import SlickExtensions._
-  import JdbcExtensions._
 
   implicit object GetDataItem extends GetResult[DataItem] {
     def apply(ps: PositionedResult): DataItem = {
@@ -136,8 +136,8 @@ object DatabaseQueryBuilder {
     query.as[PrismaNode](getResultForModel(model)).map { nodes =>
       ResolverResultNew(
         nodes = nodes,
-        hasNextPage = args.get.hasNext(nodes),
-        hasPreviousPage = args.get.hasPrevious(nodes)
+        hasNextPage = args.get.hasNext(nodes.size),
+        hasPreviousPage = args.get.hasPrevious(nodes.size)
       )
     }
   }
@@ -160,13 +160,13 @@ object DatabaseQueryBuilder {
     query.as[RelationNode].map { nodes =>
       ResolverResultNew(
         nodes = nodes,
-        hasNextPage = args.get.hasNext(nodes),
-        hasPreviousPage = args.get.hasPrevious(nodes)
+        hasNextPage = args.get.hasNext(nodes.size),
+        hasPreviousPage = args.get.hasPrevious(nodes.size)
       )
     }
   }
 
-  def selectAllFromListTable(projectId: String, //order in DB instead of in scala
+  def selectAllFromListTable(projectId: String,
                              model: Model,
                              field: Field,
                              args: Option[QueryArguments],
@@ -294,7 +294,6 @@ object DatabaseQueryBuilder {
     sql"select exists" ++ DatabaseMutationBuilder.pathQueryForLastChild(projectId, path)
   }
 
-  //todo sort in db
   def selectFromScalarList(projectId: String, modelName: String, fieldName: String, nodeIds: Vector[String]): SQLActionBuilder = {
     sql"select nodeId, position, value from `#$projectId`.`#${modelName}_#$fieldName` where nodeId in (" concat combineByComma(nodeIds.map(escapeUnsafeParam)) concat sql")"
   }

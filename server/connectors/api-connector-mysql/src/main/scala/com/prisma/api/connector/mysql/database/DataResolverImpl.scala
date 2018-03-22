@@ -96,7 +96,8 @@ case class DataResolverImpl(
           val gcValues = values.sortBy(_.position).map(_.value)
           ScalarListValues(id, ListGCValue(gcValues))
       }.toVector
-      ResolverResultNew(result, hasNextPage = false, hasPreviousPage = false) // todo still needs to implement hasNext and hasPrevious
+      import QueryArgumentsExtensions._
+      ResolverResultNew(result, hasNextPage = args.get.hasNext(scalarListElements.size), hasPreviousPage = args.get.hasPrevious(scalarListElements.size))
     }
   }
 
@@ -232,42 +233,19 @@ case class DataResolverImpl(
 
   // note: Explicitly mark queries generated from raw sql as readonly to make aurora endpoint selection work
   // see also http://danielwestheide.com/blog/2015/06/28/put-your-writes-where-your-master-is-compile-time-restriction-of-slick-effect-types.html
-  private def readOnlyDataItem(query: SQLActionBuilder): SqlStreamingAction[Vector[DataItem], DataItem, Read] = {
-    val action: SqlStreamingAction[Vector[DataItem], DataItem, Read] = query.as[DataItem]
+  private def readOnlyDataItem(query: SQLActionBuilder): SqlStreamingAction[Vector[DataItem], DataItem, Read] = query.as[DataItem]
 
-    action
-  }
+  private def readOnlyScalarListValue(query: SQLActionBuilder): SqlStreamingAction[Vector[ScalarListValue], Any, Read] = query.as[ScalarListValue]
 
-  private def readOnlyScalarListValue(query: SQLActionBuilder): SqlStreamingAction[Vector[ScalarListValue], Any, Read] = {
-    val action: SqlStreamingAction[Vector[ScalarListValue], Any, Read] = query.as[ScalarListValue]
+  private def readOnlyInt(query: SQLActionBuilder): SqlStreamingAction[Vector[Int], Int, Read] = query.as[Int]
 
-    action
-  }
+  private def readOnlyBoolean(query: SQLActionBuilder): SqlStreamingAction[Vector[Boolean], Boolean, Read] = query.as[Boolean]
 
-  private def readOnlyInt(query: SQLActionBuilder): SqlStreamingAction[Vector[Int], Int, Read] = {
-    val action: SqlStreamingAction[Vector[Int], Int, Read] = query.as[Int]
+  private def readOnlyStringInt(query: SQLActionBuilder): SqlStreamingAction[Vector[(String, Int)], (String, Int), Read] = query.as[(String, Int)]
 
-    action
-  }
+  protected def mapDataItem(model: Model)(dataItem: DataItem): DataItem = mapDataItemHelper(model, dataItem)
 
-  private def readOnlyBoolean(query: SQLActionBuilder): SqlStreamingAction[Vector[Boolean], Boolean, Read] = {
-    val action: SqlStreamingAction[Vector[Boolean], Boolean, Read] = query.as[Boolean]
-
-    action
-  }
-
-  private def readOnlyStringInt(query: SQLActionBuilder): SqlStreamingAction[Vector[(String, Int)], (String, Int), Read] = {
-    val action: SqlStreamingAction[Vector[(String, Int)], (String, Int), Read] = query.as[(String, Int)]
-
-    action
-  }
-
-  protected def mapDataItem(model: Model)(dataItem: DataItem): DataItem = {
-    mapDataItemHelper(model, dataItem)
-  }
-  protected def mapDataItemWithoutValidation(model: Model)(dataItem: DataItem): DataItem = {
-    mapDataItemHelper(model, dataItem, validate = false)
-  }
+  protected def mapDataItemWithoutValidation(model: Model)(dataItem: DataItem): DataItem = mapDataItemHelper(model, dataItem, validate = false)
 
   protected def mapScalarListValueWithoutValidation(model: Model, field: Field)(scalarListValue: ScalarListValue): ScalarListValue = {
     mapScalarListValueHelper(model, field, scalarListValue, validate = false)

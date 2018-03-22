@@ -41,7 +41,7 @@ object QueryArgumentsExtensions {
       val nodeIdField   = s"`$projectId`.`$modelId`.`nodeId`"
       val positionField = s"`$projectId`.`$modelId`.`position`"
 
-      // First order by the orderByField, then by id to break ties
+      //always order by nodeId, then positionfield ascending
       Some(sql"#$nodeIdField #$order, #$positionField #$idOrder")
     }
 
@@ -88,10 +88,9 @@ object QueryArgumentsExtensions {
           }
           // Increase by 1 to know if we have a next page / previous page for relay queries
           val limitedCount: String = count match {
-            case None => maxNodeCount.toString
-            case Some(x) if x > maxNodeCount =>
-              throw APIErrors.TooManyNodesRequested(x)
-            case Some(x) => (x + 1).toString
+            case None                        => maxNodeCount.toString
+            case Some(x) if x > maxNodeCount => throw APIErrors.TooManyNodesRequested(x)
+            case Some(x)                     => (x + 1).toString
           }
           Some(sql"${skip.getOrElse(0)}, #$limitedCount")
       }
@@ -133,17 +132,17 @@ object QueryArgumentsExtensions {
       }
     }
 
-    def hasNext[T](items: Vector[T]): Boolean = {
+    def hasNext(count: Int): Boolean = {
       (first, last) match {
         case (Some(f), _) =>
-          if (items.size > f) {
+          if (count > f) {
             true
           } else {
             false
           }
 
         case (_, Some(l)) =>
-          if (items.size > l) {
+          if (count > l) {
             false
           } else {
             false
@@ -154,17 +153,17 @@ object QueryArgumentsExtensions {
       }
     }
 
-    def hasPrevious[T](items: Vector[T]): Boolean = {
+    def hasPrevious(count: Int): Boolean = {
       (first, last) match {
         case (Some(f), _) =>
-          if (items.size > f) {
+          if (count > f) {
             false
           } else {
             false
           }
 
         case (_, Some(l)) =>
-          if (items.size > l) {
+          if (count > l) {
             true
           } else {
             false
