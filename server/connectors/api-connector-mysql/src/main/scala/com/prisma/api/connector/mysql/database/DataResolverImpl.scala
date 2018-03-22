@@ -87,16 +87,18 @@ case class DataResolverImpl(
   }
 
   override def loadListRowsForExport(model: Model, field: Field, args: Option[QueryArguments] = None): Future[ResolverResultNew[ScalarListValues]] = {
+    import QueryArgumentsExtensions._
     val query                                = DatabaseQueryBuilder.selectAllFromListTable(project.id, model, field, args, None)
     val x: Future[Vector[ScalarListElement]] = performWithTiming("loadListRowsForExport", readonlyClientDatabase.run(query))
     x.map { scalarListElements =>
-      val grouped: Map[Id, Vector[ScalarListElement]] = scalarListElements.groupBy(_.nodeId)
+      val withoutExtraItem = args.get.dropExtraLimitItem(scalarListElements)
+
+      val grouped: Map[Id, Vector[ScalarListElement]] = withoutExtraItem.groupBy(_.nodeId)
       val result = grouped.map {
         case (id, values) =>
           val gcValues = values.sortBy(_.position).map(_.value)
           ScalarListValues(id, ListGCValue(gcValues))
       }.toVector
-      import QueryArgumentsExtensions._
       ResolverResultNew(result, hasNextPage = args.get.hasNext(scalarListElements.size), hasPreviousPage = args.get.hasPrevious(scalarListElements.size))
     }
   }

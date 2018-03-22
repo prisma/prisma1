@@ -135,7 +135,7 @@ object DatabaseQueryBuilder {
 
     query.as[PrismaNode](getResultForModel(model)).map { nodes =>
       ResolverResultNew(
-        nodes = nodes,
+        nodes = args.get.dropExtraLimitItem(nodes),
         hasNextPage = args.get.hasNext(nodes.size),
         hasPreviousPage = args.get.hasPrevious(nodes.size)
       )
@@ -159,7 +159,7 @@ object DatabaseQueryBuilder {
 
     query.as[RelationNode].map { nodes =>
       ResolverResultNew(
-        nodes = nodes,
+        nodes = args.get.dropExtraLimitItem(nodes),
         hasNextPage = args.get.hasNext(nodes.size),
         hasPreviousPage = args.get.hasPrevious(nodes.size)
       )

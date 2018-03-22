@@ -113,65 +113,26 @@ object QueryArgumentsExtensions {
       }
 
       (first, last) match {
-        case (Some(f), _) =>
-          if (items.size > f) {
-            ResolverResult(items.dropRight(1), hasNextPage = true)
-          } else {
-            ResolverResult(items)
-          }
-
-        case (_, Some(l)) =>
-          if (items.size > l) {
-            ResolverResult(items.tail, hasPreviousPage = true)
-          } else {
-            ResolverResult(items)
-          }
-
-        case _ =>
-          ResolverResult(items)
+        case (Some(f), _) if (items.size > f) => ResolverResult(items.dropRight(1), hasNextPage = true)
+        case (_, Some(l)) if (items.size > l) => ResolverResult(items.tail, hasPreviousPage = true)
+        case _                                => ResolverResult(items)
       }
     }
 
-    def hasNext(count: Int): Boolean = {
-      (first, last) match {
-        case (Some(f), _) =>
-          if (count > f) {
-            true
-          } else {
-            false
-          }
-
-        case (_, Some(l)) =>
-          if (count > l) {
-            false
-          } else {
-            false
-          }
-
-        case _ =>
-          false
-      }
+    def dropExtraLimitItem[T](items: Vector[T]): Vector[T] = (first, last) match {
+      case (Some(f), _) if items.size > f => items.dropRight(1)
+      case (_, Some(l)) if items.size > l => items.tail
+      case _                              => items
     }
 
-    def hasPrevious(count: Int): Boolean = {
-      (first, last) match {
-        case (Some(f), _) =>
-          if (count > f) {
-            false
-          } else {
-            false
-          }
+    def hasNext(count: Int): Boolean = (first, last) match {
+      case (Some(f), _) if count > f => true
+      case (_, _)                    => false
+    }
 
-        case (_, Some(l)) =>
-          if (count > l) {
-            true
-          } else {
-            false
-          }
-
-        case _ =>
-          false
-      }
+    def hasPrevious(count: Int): Boolean = (first, last) match {
+      case (_, Some(l)) if count > l => true
+      case (_, _)                    => false
     }
 
     def extractWhereConditionCommand(projectId: String, modelId: String): Option[SQLActionBuilder] = {
