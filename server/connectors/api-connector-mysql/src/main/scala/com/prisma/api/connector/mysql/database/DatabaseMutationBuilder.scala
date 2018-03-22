@@ -7,6 +7,7 @@ import com.prisma.api.connector._
 import com.prisma.api.connector.mysql.database.SlickExtensions._
 import com.prisma.api.connector.mysql.impl.NestedCreateRelationInterpreter
 import com.prisma.api.schema.GeneralError
+import com.prisma.gc_values.GCValue
 import com.prisma.shared.models.TypeIdentifier.TypeIdentifier
 import com.prisma.shared.models._
 import cool.graph.cuid.Cuid
@@ -539,11 +540,12 @@ object DatabaseMutationBuilder {
         case e: Exception => Vector(e.getCause.toString)
       }
 
+      val argsWithIndex = mutaction.args.values.zipWithIndex
       val rowResult: Vector[String] = try {
         val query                         = s"insert into `$projectId`.`$tableName` (`nodeId`, `position`, `value`) values (?, @baseline + ? , ?)"
         val insertRows: PreparedStatement = x.connection.prepareStatement(query)
 
-        mutaction.args.values.zipWithIndex.foreach { argWithIndex =>
+        argsWithIndex.foreach { argWithIndex =>
           insertRows.setString(1, nodeId)
           insertRows.setInt(2, argWithIndex._2 * 1000)
           insertRows.setGcValue(3, argWithIndex._1)
@@ -553,10 +555,21 @@ object DatabaseMutationBuilder {
 
         Vector.empty
       } catch {
+        case e: java.sql.BatchUpdateException =>
+          e.getUpdateCounts.zipWithIndex
+            .filter(element => element._1 == Statement.EXECUTE_FAILED)
+            .map { failed =>
+              val failedValue: GCValue = argsWithIndex.find(_._2 == failed._2).get._1
+              s"Failure inserting into listTable $tableName for the id $nodeId for value $failedValue. Cause: ${removeConnectionInfoFromCause(e.getCause.toString)}"
+            }
+            .toVector
+
         case e: Exception => Vector(e.getCause.toString)
       }
 
-      setBaseline ++ rowResult
+      val res = setBaseline ++ rowResult
+      if (res.nonEmpty) throw new Exception(res.mkString("-@-"))
+      res
     }
   }
 }
