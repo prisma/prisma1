@@ -129,7 +129,7 @@ class BulkExport(project: Project)(implicit apiDependencies: ApiDependencies) {
 
   private def serializeDataItems(in: JsonBundle, dataItems: Seq[JsValue], info: ExportInfo): ResultFormat = {
     val combinedElements = in.jsonElements ++ dataItems
-    val combinedSize     = in.size + dataItems.map(_.toString.size).sum
+    val combinedSize     = in.size + dataItems.map(_.toString.length).sum
     val out              = JsonBundle(combinedElements, combinedSize)
     val numberSerialized = dataItems.length
 
