@@ -88,10 +88,18 @@ case class DataResolverImpl(
     performWithTiming("batchResolveByUnique", readonlyClientDatabase.run(readOnlyDataItem(query))).map(_.toList).map(_.map(mapDataItem(model)))
   }
 
-  override def batchResolveScalarList(model: Model, field: Field, nodeIds: Vector[String]): Future[Vector[ScalarListValue]] = {
-    val query = DatabaseQueryBuilder.selectFromScalarList(project.id, model.name, field.name, nodeIds)
-    performWithTiming("batchResolveScalarList", readonlyClientDatabase.run(readOnlyScalarListValue(query)))
-      .map(_.map(mapScalarListValueWithoutValidation(model, field)))
+  override def batchResolveScalarList(model: Model, field: Field, nodeIds: Vector[String]): Future[Vector[ScalarListValues]] = {
+    val query = DatabaseQueryBuilder.selectFromScalarList(project.id, model.name, field, nodeIds)
+    val x     = performWithTiming("batchResolveScalarList", readonlyClientDatabase.run(query))
+
+    x.map { scalarListElements =>
+      val grouped: Map[Id, Vector[ScalarListElement]] = scalarListElements.groupBy(_.nodeId)
+      grouped.map {
+        case (id, values) =>
+          val gcValues = values.sortBy(_.position).map(_.value)
+          ScalarListValues(id, ListGCValue(gcValues))
+      }.toVector
+    }
   }
 
   override def resolveByGlobalId(globalId: String): Future[Option[DataItem]] = {
@@ -152,8 +160,6 @@ case class DataResolverImpl(
   // see also http://danielwestheide.com/blog/2015/06/28/put-your-writes-where-your-master-is-compile-time-restriction-of-slick-effect-types.html
   private def readOnlyDataItem(query: SQLActionBuilder): SqlStreamingAction[Vector[DataItem], DataItem, Read] = query.as[DataItem]
 
-  private def readOnlyScalarListValue(query: SQLActionBuilder): SqlStreamingAction[Vector[ScalarListValue], Any, Read] = query.as[ScalarListValue]
-
   private def readOnlyInt(query: SQLActionBuilder): SqlStreamingAction[Vector[Int], Int, Read] = query.as[Int]
 
   private def readOnlyStringInt(query: SQLActionBuilder): SqlStreamingAction[Vector[(String, Int)], (String, Int), Read] = query.as[(String, Int)]
@@ -211,7 +217,10 @@ case class DataResolverImpl(
 
     listValue.copy(value = value)
   }
-//  override def existsByModelAndId(model: Model, id: String): Future[Boolean] = {
+
+  //  private def readOnlyScalarListValue(query: SQLActionBuilder): SqlStreamingAction[Vector[ScalarListValue], Any, Read] = query.as[ScalarListValue]
+
+  //  override def existsByModelAndId(model: Model, id: String): Future[Boolean] = {
 //    val query = DatabaseQueryBuilder.existsByModelAndId(project.id, model.name, id)
 //    performWithTiming("existsByModelAndId", readonlyClientDatabase.run(readOnlyBoolean(query))).map(_.head)
 //  }

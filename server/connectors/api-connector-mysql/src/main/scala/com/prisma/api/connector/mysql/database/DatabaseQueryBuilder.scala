@@ -294,8 +294,14 @@ object DatabaseQueryBuilder {
     sql"select exists" ++ DatabaseMutationBuilder.pathQueryForLastChild(projectId, path)
   }
 
-  def selectFromScalarList(projectId: String, modelName: String, fieldName: String, nodeIds: Vector[String]): SQLActionBuilder = {
-    sql"select nodeId, position, value from `#$projectId`.`#${modelName}_#$fieldName` where nodeId in (" concat combineByComma(nodeIds.map(escapeUnsafeParam)) concat sql")"
+  def selectFromScalarList(projectId: String,
+                           modelName: String,
+                           field: Field,
+                           nodeIds: Vector[String]): SqlStreamingAction[Vector[ScalarListElement], ScalarListElement, Read] = {
+    val query = sql"select nodeId, position, value from `#$projectId`.`#${modelName}_#${field.name}` where nodeId in (" concat combineByComma(
+      nodeIds.map(escapeUnsafeParam)) concat sql")"
+
+    query.as[ScalarListElement](getResultForScalarListField(field))
   }
 
   def whereClauseByCombiningPredicatesByOr(predicates: Vector[NodeSelector]) = {

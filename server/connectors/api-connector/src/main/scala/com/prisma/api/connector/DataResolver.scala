@@ -25,7 +25,7 @@ trait DataResolver {
 
   def batchResolveByUnique(model: Model, key: String, values: List[Any]): Future[List[DataItem]]
 
-  def batchResolveScalarList(model: Model, field: Field, nodeIds: Vector[String]): Future[Vector[ScalarListValue]]
+  def batchResolveScalarList(model: Model, field: Field, nodeIds: Vector[String]): Future[Vector[ScalarListValues]]
 
   def resolveByGlobalId(globalId: String): Future[Option[DataItem]]
 

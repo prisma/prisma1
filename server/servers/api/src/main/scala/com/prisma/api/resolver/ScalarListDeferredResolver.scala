@@ -1,6 +1,6 @@
 package com.prisma.api.resolver
 
-import com.prisma.api.connector.{DataResolver, ScalarListValue}
+import com.prisma.api.connector.{DataResolver, ScalarListValues}
 import com.prisma.api.resolver.DeferredTypes._
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -15,13 +15,13 @@ class ScalarListDeferredResolver(dataResolver: DataResolver) {
 
     val headDeferred = deferreds.head
 
-    val futureValues: Future[Vector[ScalarListValue]] = dataResolver.batchResolveScalarList(headDeferred.model, headDeferred.field, deferreds.map(_.nodeId))
+    val futureValues: Future[Vector[ScalarListValues]] = dataResolver.batchResolveScalarList(headDeferred.model, headDeferred.field, deferreds.map(_.nodeId))
 
     // assign and sort the scalarListValues that was requested by each deferred
     val results = orderedDeferreds.map {
       case OrderedDeferred(deferred, order) =>
         OrderedDeferredFutureResult[ScalarListDeferredResultType](futureValues.map {
-          _.filter(_.nodeId == deferred.nodeId).sortBy(_.position).map(_.value)
+          _.filter(_.nodeId == deferred.nodeId).map(_.value)
         }, order)
     }
 
