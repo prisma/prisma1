@@ -93,31 +93,6 @@ object DatabaseQueryBuilder {
     ScalarListElement(nodeId, position, value)
   }
 
-  implicit object GetScalarListValue extends GetResult[ScalarListValue] {
-    def apply(ps: PositionedResult): ScalarListValue = {
-      val rs = ps.rs
-
-      ScalarListValue(nodeId = rs.getString("nodeId").trim, position = rs.getInt("position"), value = rs.getObject("value"))
-    }
-  }
-
-  def selectAllFromTable(
-      projectId: String,
-      tableName: String,
-      args: Option[QueryArguments]
-  ): (SQLActionBuilder, ResultTransform) = {
-
-    val (conditionCommand, orderByCommand, limitCommand, resultTransform) = extractQueryArgs(projectId, tableName, args, overrideMaxNodeCount = None)
-
-    val query =
-      sql"select * from `#$projectId`.`#$tableName`" concat
-        prefixIfNotNone("where", conditionCommand) concat
-        prefixIfNotNone("order by", orderByCommand) concat
-        prefixIfNotNone("limit", limitCommand)
-
-    (query, resultTransform)
-  }
-
   def selectAllFromTableNew(
       projectId: String,
       model: Model,
@@ -240,23 +215,8 @@ object DatabaseQueryBuilder {
     }
   }
 
-  def itemCountForTable(projectId: String, modelName: String) = {
+  def itemCountForTable(projectId: String, modelName: String) = { // todo use count all from model
     sql"SELECT COUNT(*) AS Count FROM `#$projectId`.`#$modelName`"
-  }
-
-  def existsNullByModelAndScalarField(projectId: String, modelName: String, fieldName: String) = {
-    sql"""SELECT EXISTS(Select `id` FROM `#$projectId`.`#$modelName`
-          WHERE `#$projectId`.`#$modelName`.#$fieldName IS NULL)"""
-  }
-
-  def existsNullByModelAndRelationField(projectId: String, modelName: String, field: Field) = {
-    val relationId   = field.relation.get.id
-    val relationSide = field.relationSide.get.toString
-    sql"""select EXISTS (
-            select `id`from `#$projectId`.`#$modelName`
-            where `id` Not IN
-            (Select `#$projectId`.`#$relationId`.#$relationSide from `#$projectId`.`#$relationId`)
-          )"""
   }
 
   def existsNodeIsInRelationshipWith(project: Project, path: Path) = {
@@ -270,26 +230,17 @@ object DatabaseQueryBuilder {
             where""" ++ nodeSelector(path.lastEdge_!) ++ sql""" `id` IN""" ++ DatabaseMutationBuilder.pathQueryThatUsesWholePath(project.id, path) ++ sql")"
   }
 
-  def existsByModelAndId(projectId: String, modelName: String, id: String) = {
-    sql"select exists (select `id` from `#$projectId`.`#$modelName` where `id` = '#$id')"
-  }
-
-  def existsByModel(projectId: String, modelName: String): SQLActionBuilder = {
+  def existsByModel(projectId: String, modelName: String): SQLActionBuilder = { //todo also replace in tests with count
     sql"select exists (select `id` from `#$projectId`.`#$modelName`)"
   }
 
-  def batchSelectFromModelByUnique(projectId: String, modelName: String, key: String, values: List[Any]): SQLActionBuilder = {
-    sql"select * from `#$projectId`.`#$modelName` where `#$key` in (" concat combineByComma(values.map(escapeUnsafeParam)) concat sql")"
+  def batchSelectFromModelByUnique(projectId: String,
+                                   model: Model,
+                                   key: String,
+                                   values: List[Any]): SqlStreamingAction[Vector[PrismaNode], PrismaNode, Effect] = {
+    val query = sql"select * from `#$projectId`.`#${model.name}` where `#$key` in (" concat combineByComma(values.map(escapeUnsafeParam)) concat sql")"
+    query.as[PrismaNode](getResultForModel(model))
   }
-
-  def selectFromModelsByUniques(project: Project, model: Model, predicates: Vector[NodeSelector]) = {
-    sql"select * from `#${project.id}`.`#${model.name}`" ++ whereClauseByCombiningPredicatesByOr(predicates)
-  }
-
-  def existsByWhere(projectId: String, where: NodeSelector) = {
-    sql"select exists (select `id` from `#$projectId`.`#${where.model.name}` where  #${where.field.name} = ${where.fieldValue})"
-  }
-
   def existsByPath(projectId: String, path: Path) = {
     sql"select exists" ++ DatabaseMutationBuilder.pathQueryForLastChild(projectId, path)
   }
@@ -302,17 +253,6 @@ object DatabaseQueryBuilder {
       nodeIds.map(escapeUnsafeParam)) concat sql")"
 
     query.as[ScalarListElement](getResultForScalarListField(field))
-  }
-
-  def whereClauseByCombiningPredicatesByOr(predicates: Vector[NodeSelector]) = {
-    if (predicates.isEmpty) {
-      sql""
-    } else {
-      val firstPredicate = predicates.head
-      predicates.tail.foldLeft(sql"where #${firstPredicate.field.name} = ${firstPredicate.fieldValue}") { (sqlActionBuilder, predicate) =>
-        sqlActionBuilder ++ sql" OR #${predicate.field.name} = ${predicate.fieldValue}"
-      }
-    }
   }
 
   def batchSelectAllFromRelatedModel(project: Project,
@@ -337,13 +277,6 @@ object DatabaseQueryBuilder {
         prefixIfNotNone("order by", orderByCommand) concat
         prefixIfNotNone("limit", limitCommand) concat sql")"
     }
-
-    def unionIfNotFirst(index: Int): SQLActionBuilder =
-      if (index == 0) {
-        sql""
-      } else {
-        sql"union all "
-      }
 
     // see https://github.com/graphcool/internal-docs/blob/master/relations.md#findings
     val resolveFromBothSidesAndMerge = relationField.relation.get
@@ -389,23 +322,16 @@ object DatabaseQueryBuilder {
         prefixIfNotNone("limit", limitCommand) concat sql")"
     }
 
-    def unionIfNotFirst(index: Int): SQLActionBuilder =
-      if (index == 0) {
-        sql""
-      } else {
-        sql"union all "
-      }
-
     val query =
       parentNodeIds.distinct.view.zipWithIndex.foldLeft(sql"")((a, b) => a concat unionIfNotFirst(b._2) concat createQuery(b._1))
 
     (query, resultTransform)
   }
 
-  case class ColumnDescription(name: String, isNullable: Boolean, typeName: String, size: Option[Int])
-  case class IndexDescription(name: Option[String], nonUnique: Boolean, column: Option[String])
+//  case class ColumnDescription(name: String, isNullable: Boolean, typeName: String, size: Option[Int])
+//  case class IndexDescription(name: Option[String], nonUnique: Boolean, column: Option[String])
   case class ForeignKeyDescription(name: Option[String], column: String, foreignTable: String, foreignColumn: String)
-  case class TableInfo(columns: List[ColumnDescription], indexes: List[IndexDescription], foreignKeys: List[ForeignKeyDescription])
+//  case class TableInfo(columns: List[ColumnDescription], indexes: List[IndexDescription], foreignKeys: List[ForeignKeyDescription])
 
   def getTables(projectId: String): DBIOAction[Vector[String], NoStream, Read] = {
     for {
@@ -419,7 +345,75 @@ object DatabaseQueryBuilder {
     } yield catalogs
   }
 
+  def unionIfNotFirst(index: Int): SQLActionBuilder =
+    if (index == 0) {
+      sql""
+    } else {
+      sql"union all "
+    }
+
   type ResultTransform     = Function[List[DataItem], ResolverResult]
   type ResultListTransform = Function[List[ScalarListValue], ResolverResult]
 
+//  def existsNullByModelAndScalarField(projectId: String, modelName: String, fieldName: String) = {
+//    sql"""SELECT EXISTS(Select `id` FROM `#$projectId`.`#$modelName`
+//          WHERE `#$projectId`.`#$modelName`.#$fieldName IS NULL)"""
+//  }
+
+//  def existsNullByModelAndRelationField(projectId: String, modelName: String, field: Field) = {
+//    val relationId   = field.relation.get.id
+//    val relationSide = field.relationSide.get.toString
+//    sql"""select EXISTS (
+//            select `id`from `#$projectId`.`#$modelName`
+//            where `id` Not IN
+//            (Select `#$projectId`.`#$relationId`.#$relationSide from `#$projectId`.`#$relationId`)
+//          )"""
+//  }
+
+//  implicit object GetScalarListValue extends GetResult[ScalarListValue] {
+//    def apply(ps: PositionedResult): ScalarListValue = {
+//      val rs = ps.rs
+//
+//      ScalarListValue(nodeId = rs.getString("nodeId").trim, position = rs.getInt("position"), value = rs.getObject("value"))
+//    }
+//  }
+
+//  def selectAllFromTable(
+//      projectId: String,
+//      tableName: String,
+//      args: Option[QueryArguments]
+//  ): (SQLActionBuilder, ResultTransform) = {
+//
+//    val (conditionCommand, orderByCommand, limitCommand, resultTransform) = extractQueryArgs(projectId, tableName, args, overrideMaxNodeCount = None)
+//
+//    val query =
+//      sql"select * from `#$projectId`.`#$tableName`" concat
+//        prefixIfNotNone("where", conditionCommand) concat
+//        prefixIfNotNone("order by", orderByCommand) concat
+//        prefixIfNotNone("limit", limitCommand)
+//
+//    (query, resultTransform)
+//  }
+
+//  def existsByModelAndId(projectId: String, modelName: String, id: String) = {
+//    sql"select exists (select `id` from `#$projectId`.`#$modelName` where `id` = '#$id')"
+//  }
+
+//  def selectFromModelsByUniques(project: Project, model: Model, predicates: Vector[NodeSelector]) = {
+//    sql"select * from `#${project.id}`.`#${model.name}`" ++ whereClauseByCombiningPredicatesByOr(predicates)
+//  }
+
+//  def existsByWhere(projectId: String, where: NodeSelector) = {
+//    sql"select exists (select `id` from `#$projectId`.`#${where.model.name}` where  #${where.field.name} = ${where.fieldValue})"
+//  }
+//  def whereClauseByCombiningPredicatesByOr(predicates: Vector[NodeSelector]) = {
+//    if (predicates.isEmpty) {
+//      sql""
+//    } else {
+//      val firstPredicate = predicates.head
+//      predicates.tail.foldLeft(sql"where #${firstPredicate.field.name} = ${firstPredicate.fieldValue}") { (sqlActionBuilder, predicate) =>
+//        sqlActionBuilder ++ sql" OR #${predicate.field.name} = ${predicate.fieldValue}"
+//      }
+//    }
+//  }
 }

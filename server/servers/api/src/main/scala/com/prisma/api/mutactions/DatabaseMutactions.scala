@@ -29,7 +29,7 @@ case class DatabaseMutactions(project: Project) {
       List(DeleteRelationCheck(project, path), DeleteDataItem(project, path, previousValues, id))
   }
 
-  def getMutactionsForUpdate(path: Path, args: CoolArgs, id: Id, previousValues: DataItem): Seq[DatabaseMutaction] = report {
+  def getMutactionsForUpdate(path: Path, args: CoolArgs, id: Id, previousValues: PrismaNode): Seq[DatabaseMutaction] = report {
     val updateMutaction = getUpdateMutactions(path, args, id, previousValues)
     val nested          = getMutactionsForNestedMutation(args, path.updatedRoot(args), triggeredFromCreate = false)
 
@@ -55,7 +55,7 @@ case class DatabaseMutactions(project: Project) {
       List(upsertMutaction) //++ updateNested ++ createNested
     }
 
-  def getUpdateMutactions(path: Path, args: CoolArgs, id: Id, previousValues: DataItem): Vector[DatabaseMutaction] = {
+  def getUpdateMutactions(path: Path, args: CoolArgs, id: Id, previousValues: PrismaNode): Vector[DatabaseMutaction] = {
     val updateNonLists = UpdateDataItem(
       project = project,
       model = path.lastModel,

@@ -230,7 +230,7 @@ case class SchemaBuilderImpl(
 
   lazy val NodeDefinition(nodeInterface: InterfaceType[ApiUserContext, DataItem], nodeField, nodeRes) = Node.definitionById(
     resolve = (id: String, ctx: Context[ApiUserContext, Unit]) => {
-      dataResolver.resolveByGlobalId(id)
+      dataResolver.resolveByGlobalId(id).map(x => x.map(_.toDataItem))
     },
     possibleTypes = {
       objectTypes.values.flatMap { o =>

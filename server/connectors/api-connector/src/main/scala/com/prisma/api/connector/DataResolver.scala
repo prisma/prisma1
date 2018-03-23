@@ -9,31 +9,30 @@ import scala.concurrent.Future
 trait DataResolver {
   def project: Project
 
-  def resolveByModel(model: Model, args: Option[QueryArguments] = None): Future[ResolverResult]
+  def resolveByGlobalId(globalId: String): Future[Option[PrismaNode]]
+
+  def resolveByModel(model: Model, args: Option[QueryArguments] = None): Future[ResolverResultNew[PrismaNode]]
+
+  def resolveByUnique(where: NodeSelector): Future[Option[PrismaNode]]
 
   def countByModel(model: Model, where: DataItemFilterCollection): Future[Int]
 
   def countByModel(model: Model, where: Option[DataItemFilterCollection] = None): Future[Int]
 
-  def resolveByUnique(where: NodeSelector): Future[Option[DataItem]]
-
-  def loadModelRowsForExport(model: Model, args: Option[QueryArguments] = None): Future[ResolverResultNew[PrismaNode]]
-
-  def loadListRowsForExport(model: Model, field: Field, args: Option[QueryArguments] = None): Future[ResolverResultNew[ScalarListValues]]
-
-  def loadRelationRowsForExport(relationId: String, args: Option[QueryArguments] = None): Future[ResolverResultNew[RelationNode]]
-
-  def batchResolveByUnique(model: Model, key: String, values: List[Any]): Future[List[DataItem]]
+  def batchResolveByUnique(model: Model, key: String, values: List[Any]): Future[Vector[PrismaNode]]
 
   def batchResolveScalarList(model: Model, field: Field, nodeIds: Vector[String]): Future[Vector[ScalarListValues]]
-
-  def resolveByGlobalId(globalId: String): Future[Option[DataItem]]
 
   def resolveByRelationManyModels(fromField: Field, fromModelIds: List[String], args: Option[QueryArguments]): Future[immutable.Seq[ResolverResult]]
 
   def countByRelationManyModels(fromField: Field, fromNodeIds: List[String], args: Option[QueryArguments]): Future[List[(String, Int)]]
 
-  //  def existsByModelAndId(model: Model, id: String): Future[Boolean]
+  def loadListRowsForExport(model: Model, field: Field, args: Option[QueryArguments] = None): Future[ResolverResultNew[ScalarListValues]]
+
+  def loadRelationRowsForExport(relationId: String, args: Option[QueryArguments] = None): Future[ResolverResultNew[RelationNode]]
+  //  def loadModelRowsForExport(model: Model, args: Option[QueryArguments] = None): Future[ResolverResultNew[PrismaNode]]
+
+//  def existsByModelAndId(model: Model, id: String): Future[Boolean]
 //
 //  def existsByWhere(where: NodeSelector): Future[Boolean]
 //

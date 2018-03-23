@@ -42,7 +42,7 @@ object GCValueExtractor {
 
   def fromGCValue(t: GCValue): Any = {
     t match {
-      case NullGCValue         => None
+      case NullGCValue         => None // todo danger!!!
       case x: StringGCValue    => x.value
       case x: EnumGCValue      => x.value
       case x: GraphQLIdGCValue => x.value
@@ -51,10 +51,28 @@ object GCValueExtractor {
       case x: FloatGCValue     => x.value
       case x: BooleanGCValue   => x.value
       case x: JsonGCValue      => x.value
-      case x: ListGCValue      => x.values.map(this.fromGCValue)
-      case x: RootGCValue      => sys.error("RootGCValues not implemented yet in GCDBValueConverter")
+      case x: ListGCValue      => x.values.map(fromGCValue)
+      case x: RootGCValue      => sys.error("RootGCValues not implemented yet in GCValueExtractor")
     }
   }
+
+  def fromGCValueToOption(t: GCValue): Option[Any] = {
+    t match {
+      case NullGCValue         => None // todo danger!!!
+      case x: StringGCValue    => Some(x.value)
+      case x: EnumGCValue      => Some(x.value)
+      case x: GraphQLIdGCValue => Some(x.value)
+      case x: DateTimeGCValue  => Some(x.value)
+      case x: IntGCValue       => Some(x.value)
+      case x: FloatGCValue     => Some(x.value)
+      case x: BooleanGCValue   => Some(x.value)
+      case x: JsonGCValue      => Some(x.value)
+      case x: ListGCValue      => Some(x.values.map(fromGCValue))
+      case x: RootGCValue      => sys.error("RootGCValues not implemented yet in GCValueExtractor")
+    }
+  }
+
+  def fromListGCValue(t: ListGCValue): Vector[Any] = t.values.map(fromGCValue)
 }
 
 /**

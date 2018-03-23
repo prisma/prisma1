@@ -50,7 +50,7 @@ object SubscriptionEvents {
         "nodeId"        -> mutaction.id,
         "changedFields" -> mutaction.namesOfUpdatedFields.toList, // must be a List as Vector is printed verbatim
         "previousValues" -> GraphcoolDataTypes
-          .convertToJson(mutaction.previousValues.userData)
+          .convertToJson(mutaction.previousValues.toDataItem.userData)
           .compactPrint,
         "modelId"      -> mutaction.model.id,
         "mutationType" -> "UpdateNode"

@@ -1,6 +1,6 @@
 package com.prisma.api.resolver
 
-import com.prisma.api.connector.{DataResolver, ResolverResult}
+import com.prisma.api.connector.{DataResolver, PrismaNode, ResolverResult, ResolverResultNew}
 import com.prisma.api.resolver.DeferredTypes._
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -22,15 +22,15 @@ class ManyModelDeferredResolver(resolver: DataResolver) {
     }
   }
 
-  def mapToConnectionOutputType(input: ResolverResult, deferred: ManyModelDeferred): RelayConnectionOutputType = {
+  def mapToConnectionOutputType(input: ResolverResultNew[PrismaNode], deferred: ManyModelDeferred): RelayConnectionOutputType = {
     DefaultIdBasedConnection(
       PageInfo(
         hasNextPage = input.hasNextPage,
         hasPreviousPage = input.hasPreviousPage,
-        input.items.headOption.map(_.id),
-        input.items.lastOption.map(_.id)
+        input.nodes.headOption.map(_.id),
+        input.nodes.lastOption.map(_.id)
       ),
-      input.items.map(x => DefaultEdge(x, x.id)),
+      input.nodes.map(x => DefaultEdge(x.toDataItem, x.id)),
       ConnectionParentElement(None, None, deferred.args)
     )
   }

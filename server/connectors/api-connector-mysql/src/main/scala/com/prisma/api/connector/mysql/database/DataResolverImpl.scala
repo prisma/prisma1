@@ -20,28 +20,34 @@ import slick.sql.{SqlAction, SqlStreamingAction}
 import scala.collection.immutable.Seq
 import scala.concurrent.Future
 
-case class DataResolverImpl(
-    project: Project,
-    readonlyClientDatabase: MySQLProfile.backend.DatabaseDef
-) extends DataResolver {
-  import DatabaseQueryBuilder.{GetDataItem, GetScalarListValue}
+case class DataResolverImpl(project: Project, readonlyClientDatabase: MySQLProfile.backend.DatabaseDef) extends DataResolver {
+  import DatabaseQueryBuilder.GetDataItem
 
   import scala.concurrent.ExecutionContext.Implicits.global
 
-  protected def performWithTiming[A](name: String, f: => Future[A]): Future[A] = {
-    Metrics.sqlQueryTimer.timeFuture(project.id, name) {
-      f
-    }
+  protected def performWithTiming[A](name: String, f: => Future[A]): Future[A] = Metrics.sqlQueryTimer.timeFuture(project.id, name) { f }
+
+  override def resolveByGlobalId(globalId: String): Future[Option[PrismaNode]] = {
+    if (globalId == "viewer-fixed") return Future.successful(Some(PrismaNode(globalId, RootGCValue.empty, Some("Viewer"))))
+
+    val query: SqlAction[Option[String], NoStream, Read] = TableQuery(new ProjectRelayIdTable(_, project.id))
+      .filter(_.id === globalId)
+      .map(_.stableModelIdentifier)
+      .take(1)
+      .result
+      .headOption
+
+    readonlyClientDatabase
+      .run(query)
+      .flatMap {
+        case Some(stableModelIdentifier) =>
+          val model = project.schema.getModelByStableIdentifier_!(stableModelIdentifier.trim)
+          resolveByUnique(NodeSelector.forId(model, globalId))
+
+        case _ =>
+          Future.successful(None)
+      }
   }
-
-  override def resolveByModel(model: Model, args: Option[QueryArguments] = None): Future[ResolverResult] = {
-    val (query, resultTransform) = DatabaseQueryBuilder.selectAllFromTable(project.id, model.name, args)
-
-    performWithTiming("resolveByModel", readonlyClientDatabase.run(readOnlyDataItem(query)))
-      .map(_.toList.map(mapDataItem(model)(_)))
-      .map(resultTransform(_))
-  }
-
   override def countByModel(model: Model, where: DataItemFilterCollection): Future[Int] = countByModel(model, Some(where))
 
   override def countByModel(model: Model, where: Option[DataItemFilterCollection] = None): Future[Int] = {
@@ -49,14 +55,14 @@ case class DataResolverImpl(
     performWithTiming("countByModel", readonlyClientDatabase.run(readOnlyInt(query))).map(_.head)
   }
 
-  override def resolveByUnique(where: NodeSelector): Future[Option[DataItem]] = {
+  override def resolveByUnique(where: NodeSelector): Future[Option[PrismaNode]] = {
     where.fieldValue match {
       case JsonGCValue(x) => batchResolveByUnique(where.model, where.field.name, List(where.fieldValueAsString)).map(_.headOption)
       case _              => batchResolveByUnique(where.model, where.field.name, List(where.unwrappedFieldValue)).map(_.headOption)
     }
   }
 
-  override def loadModelRowsForExport(model: Model, args: Option[QueryArguments] = None): Future[ResolverResultNew[PrismaNode]] = {
+  override def resolveByModel(model: Model, args: Option[QueryArguments] = None): Future[ResolverResultNew[PrismaNode]] = {
     val query = DatabaseQueryBuilder.selectAllFromTableNew(project.id, model, args)
     performWithTiming("loadModelRowsForExport", readonlyClientDatabase.run(query))
   }
@@ -83,9 +89,9 @@ case class DataResolverImpl(
     performWithTiming("loadRelationRowsForExport", readonlyClientDatabase.run(query))
   }
 
-  override def batchResolveByUnique(model: Model, key: String, values: List[Any]): Future[List[DataItem]] = {
-    val query = DatabaseQueryBuilder.batchSelectFromModelByUnique(project.id, model.name, key, values)
-    performWithTiming("batchResolveByUnique", readonlyClientDatabase.run(readOnlyDataItem(query))).map(_.toList).map(_.map(mapDataItem(model)))
+  override def batchResolveByUnique(model: Model, key: String, values: List[Any]): Future[Vector[PrismaNode]] = {
+    val query = DatabaseQueryBuilder.batchSelectFromModelByUnique(project.id, model, key, values)
+    performWithTiming("batchResolveByUnique", readonlyClientDatabase.run(query))
   }
 
   override def batchResolveScalarList(model: Model, field: Field, nodeIds: Vector[String]): Future[Vector[ScalarListValues]] = {
@@ -100,30 +106,6 @@ case class DataResolverImpl(
           ScalarListValues(id, ListGCValue(gcValues))
       }.toVector
     }
-  }
-
-  override def resolveByGlobalId(globalId: String): Future[Option[DataItem]] = {
-    if (globalId == "viewer-fixed") {
-      return Future.successful(Some(DataItem(globalId, Map(), Some("Viewer"))))
-    }
-
-    val query: SqlAction[Option[String], NoStream, Read] = TableQuery(new ProjectRelayIdTable(_, project.id))
-      .filter(_.id === globalId)
-      .map(_.stableModelIdentifier)
-      .take(1)
-      .result
-      .headOption
-
-    readonlyClientDatabase
-      .run(query)
-      .flatMap {
-        case Some(stableModelIdentifier) =>
-          val model = project.schema.getModelByStableIdentifier_!(stableModelIdentifier.trim)
-          resolveByUnique(NodeSelector.forId(model, globalId)).map(_.map(mapDataItem(model)))
-
-        case _ =>
-          Future.successful(None)
-      }
   }
 
   override def resolveByRelationManyModels(fromField: Field, fromModelIds: List[String], args: Option[QueryArguments]): Future[Seq[ResolverResult]] = {
@@ -217,6 +199,14 @@ case class DataResolverImpl(
 
     listValue.copy(value = value)
   }
+
+//  override def resolveByModel(model: Model, args: Option[QueryArguments] = None): Future[ResolverResult] = {
+//    val (query, resultTransform) = DatabaseQueryBuilder.selectAllFromTable(project.id, model.name, args)
+//
+//    performWithTiming("resolveByModel", readonlyClientDatabase.run(readOnlyDataItem(query)))
+//      .map(_.toList.map(mapDataItem(model)(_)))
+//      .map(resultTransform(_))
+//  }
 
   //  private def readOnlyScalarListValue(query: SQLActionBuilder): SqlStreamingAction[Vector[ScalarListValue], Any, Read] = query.as[ScalarListValue]
 

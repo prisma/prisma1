@@ -68,7 +68,7 @@ class BulkExport(project: Project)(implicit apiDependencies: ApiDependencies) {
 
   private def fetch(info: NodeInfo): Future[DataItemsPage] = {
     val queryArguments = QueryArguments(skip = Some(info.cursor.row), after = None, first = Some(1000), None, None, None, None)
-    info.dataResolver.loadModelRowsForExport(info.current, Some(queryArguments)).map { resolverResult =>
+    info.dataResolver.resolveByModel(info.current, Some(queryArguments)).map { resolverResult =>
       val jsons = resolverResult.nodes.map(node => dataItemToExportNode(node, info))
       DataItemsPage(jsons, hasMore = resolverResult.hasNextPage)
     }

@@ -37,7 +37,7 @@ case class NestedDisconnectRelation(project: Project, path: Path, topIsCreate: B
 case class SetScalarList(project: Project, path: Path, field: Field, values: Vector[Any])                 extends DatabaseMutaction
 case class SetScalarListToEmpty(project: Project, path: Path, field: Field)                               extends DatabaseMutaction
 case class TruncateTable(projectId: String, tableName: String)                                            extends DatabaseMutaction
-case class UpdateDataItem(project: Project, model: Model, id: Id, args: CoolArgs, previousValues: DataItem) extends DatabaseMutaction {
+case class UpdateDataItem(project: Project, model: Model, id: Id, args: CoolArgs, previousValues: PrismaNode) extends DatabaseMutaction {
   // TODO filter for fields which actually did change
   val namesOfUpdatedFields: Vector[String] = args.raw.keys.toVector
 }

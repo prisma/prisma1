@@ -33,15 +33,15 @@ case class Update(
 
   val where = CoolArgs(args.raw).extractNodeSelectorFromWhereField(model)
 
-  lazy val dataItem: Future[Option[DataItem]] = dataResolver.resolveByUnique(where)
+  lazy val prismaNodes: Future[Option[PrismaNode]] = dataResolver.resolveByUnique(where)
 
   def prepareMutactions(): Future[PreparedMutactions] = {
-    dataItem map {
-      case Some(dataItem) =>
-        val validatedDataItem = dataItem // todo: use GC Values
-        // = dataItem.copy(userData = GraphcoolDataTypes.fromSql(dataItem.userData, model.fields))
+    prismaNodes map {
+      case Some(prismaNode) =>
+        val validatedDataItem = prismaNode // todo: use GC Values
+        // = prismaNode.copy(userData = GraphcoolDataTypes.fromSql(prismaNode.userData, model.fields))
 
-        val sqlMutactions          = DatabaseMutactions(project).getMutactionsForUpdate(Path.empty(where), coolArgs, dataItem.id, validatedDataItem).toVector
+        val sqlMutactions          = DatabaseMutactions(project).getMutactionsForUpdate(Path.empty(where), coolArgs, prismaNode.id, validatedDataItem).toVector
         val subscriptionMutactions = SubscriptionEvents.extractFromSqlMutactions(project, mutationId, sqlMutactions)
         val sssActions             = ServerSideSubscriptions.extractFromMutactions(project, sqlMutactions, requestId = "")
 
@@ -55,7 +55,7 @@ case class Update(
   }
 
   override def getReturnValue: Future[ReturnValueResult] = {
-    dataItem flatMap {
+    prismaNodes flatMap {
       case Some(dataItem) => returnValueByUnique(NodeSelector.forId(model, dataItem.id))
       case None           => Future.successful(NoReturnValue(where))
     }

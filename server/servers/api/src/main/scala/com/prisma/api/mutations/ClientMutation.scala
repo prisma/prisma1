@@ -19,7 +19,7 @@ trait ClientMutation[T] {
 trait SingleItemClientMutation extends ClientMutation[ReturnValueResult] {
   def returnValueByUnique(where: NodeSelector): Future[ReturnValueResult] = {
     dataResolver.resolveByUnique(where).map {
-      case Some(dataItem) => ReturnValue(dataItem)
+      case Some(dataItem) => ReturnValue(dataItem.toDataItem)
       case None           => NoReturnValue(where)
     }
   }

@@ -36,7 +36,7 @@ case class Delete(
     dataResolver
       .resolveByUnique(where)
       .andThen {
-        case Success(x) => deletedItemOpt = x.map(dataItem => dataItem) // todo: replace with GC Values
+        case Success(x) => deletedItemOpt = x.map(dataItem => dataItem.toDataItem) // todo: replace with GC Values
         // todo: do we need the fromSql stuff?
         //GraphcoolDataTypes.fromSql(dataItem.userData, model.fields)
       }
@@ -46,15 +46,9 @@ case class Delete(
         val subscriptionMutactions = SubscriptionEvents.extractFromSqlMutactions(project, mutationId, sqlMutactions)
         val sssActions             = ServerSideSubscriptions.extractFromMutactions(project, sqlMutactions, requestId)
 
-        PreparedMutactions(
-          databaseMutactions = sqlMutactions,
-          sideEffectMutactions = (subscriptionMutactions ++ sssActions)
-        )
+        PreparedMutactions(databaseMutactions = sqlMutactions, sideEffectMutactions = subscriptionMutactions ++ sssActions)
       }
   }
 
-  override def getReturnValue: Future[ReturnValueResult] = {
-    val dataItem = deletedItemOpt.get
-    Future.successful(ReturnValue(dataItem))
-  }
+  override def getReturnValue: Future[ReturnValueResult] = Future.successful(ReturnValue(deletedItemOpt.get))
 }

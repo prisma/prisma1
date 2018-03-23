@@ -36,6 +36,6 @@ object FilteredResolver {
         model,
         Some(QueryArguments(filter = Some(filter), skip = None, after = None, first = None, before = None, last = None, orderBy = None))
       )
-      .map(_.items.headOption)
+      .map(_.nodes.map(_.toDataItem).headOption)
   }
 }

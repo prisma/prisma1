@@ -63,8 +63,8 @@ case class Upsert(
       updateItem <- upsertItemFuture
     } yield {
       (createItem, updateItem) match {
-        case (Some(create), _) => ReturnValue(create)
-        case (_, Some(update)) => ReturnValue(update)
+        case (Some(create), _) => ReturnValue(create.toDataItem)
+        case (_, Some(update)) => ReturnValue(update.toDataItem)
         case (None, None)      => sys.error("Could not find an item after an Upsert. This should not be possible.")
       }
     }

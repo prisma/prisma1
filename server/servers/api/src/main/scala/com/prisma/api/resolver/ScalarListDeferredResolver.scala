@@ -2,6 +2,7 @@ package com.prisma.api.resolver
 
 import com.prisma.api.connector.{DataResolver, ScalarListValues}
 import com.prisma.api.resolver.DeferredTypes._
+import com.prisma.util.gc_value.GCValueExtractor
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
@@ -9,6 +10,7 @@ import scala.concurrent.Future
 class ScalarListDeferredResolver(dataResolver: DataResolver) {
   def resolve(orderedDeferreds: Vector[OrderedDeferred[ScalarListDeferred]]): Vector[OrderedDeferredFutureResult[ScalarListDeferredResultType]] = {
     val deferreds = orderedDeferreds.map(_.deferred)
+    val extractor = GCValueExtractor
 
     // check if we really can satisfy all deferreds with one database query
     DeferredUtils.checkSimilarityOfScalarListDeferredsAndThrow(deferreds)
@@ -20,9 +22,12 @@ class ScalarListDeferredResolver(dataResolver: DataResolver) {
     // assign and sort the scalarListValues that was requested by each deferred
     val results = orderedDeferreds.map {
       case OrderedDeferred(deferred, order) =>
-        OrderedDeferredFutureResult[ScalarListDeferredResultType](futureValues.map {
-          _.filter(_.nodeId == deferred.nodeId).map(_.value)
-        }, order)
+        OrderedDeferredFutureResult[ScalarListDeferredResultType](
+          futureValues.map { values =>
+            values.filter(_.nodeId == deferred.nodeId).flatMap(values => extractor.fromListGCValue(values.value))
+          },
+          order
+        )
     }
 
     results

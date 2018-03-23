@@ -15,11 +15,14 @@ import scala.collection.immutable.SortedMap
   */
 sealed trait GCValue {
   def asRoot: RootGCValue = this.asInstanceOf[RootGCValue]
-
 }
 
 object RootGCValue {
   def apply(elements: (String, GCValue)*): RootGCValue = RootGCValue(SortedMap(elements: _*))
+  def empty: RootGCValue = {
+    val empty: SortedMap[String, GCValue] = SortedMap.empty
+    RootGCValue(empty)
+  }
 }
 case class RootGCValue(map: SortedMap[String, GCValue]) extends GCValue {
   def idField = map.get("id") match {

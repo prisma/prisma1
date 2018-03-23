@@ -22,8 +22,8 @@ class OneDeferredResolver(dataResolver: DataResolver) {
     // assign the dataitem that was requested by each deferred
     val results = orderedDeferreds.map {
       case OrderedDeferred(deferred, order) =>
-        OrderedDeferredFutureResult[OneDeferredResultType](futureDataItems.map {
-          dataItemsToToOneDeferredResultType(dataResolver.project, deferred, _)
+        OrderedDeferredFutureResult[OneDeferredResultType](futureDataItems.map { vector =>
+          dataItemsToToOneDeferredResultType(dataResolver.project, deferred, vector.map(_.toDataItem))
         }, order)
     }
 

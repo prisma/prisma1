@@ -21,7 +21,7 @@ class ManyModelExistsDeferredResolver(dataResolver: DataResolver) {
 
     val results = orderedDeferreds.map {
       case OrderedDeferred(deferred, order) =>
-        OrderedDeferredFutureResult[Boolean](futureDataItems.flatMap(identity).map(_.items.nonEmpty), order)
+        OrderedDeferredFutureResult[Boolean](futureDataItems.flatMap(identity).map(_.nodes.nonEmpty), order)
     }
 
     results
