@@ -186,16 +186,6 @@ case class SetScalarListInterpreter(mutaction: SetScalarList) extends DatabaseMu
   override val action = DatabaseMutationBuilder.setScalarList(mutaction.project.id, mutaction.path, mutaction.field.name, mutaction.values)
 }
 
-case class PushToScalarListInterpreter(mutaction: PushToScalarList) extends DatabaseMutactionInterpreter {
-  override def action = DatabaseMutationBuilder.pushScalarList(
-    projectId = mutaction.project.id,
-    modelName = mutaction.path.lastModel.name,
-    fieldName = mutaction.field.name,
-    nodeId = mutaction.path.root.fieldValueAsString,
-    mutaction.values
-  )
-}
-
 case class SetScalarListToEmptyInterpreter(mutaction: SetScalarListToEmpty) extends DatabaseMutactionInterpreter {
   override val action = DatabaseMutationBuilder.setScalarListToEmpty(mutaction.project.id, mutaction.path, mutaction.field.name)
 }
@@ -346,4 +336,16 @@ case class VerifyWhereInterpreter(mutaction: VerifyWhere) extends DatabaseMutact
     val modelString = s"`${where.model.name}` WHEREFAILURETRIGGER WHERE `${where.field.name}`"
     cause.contains(modelString) && cause.contains(parameterString(where))
   }
+}
+
+case class CreateDataItemsImportInterpreter(mutaction: CreateDataItemsImport) extends DatabaseMutactionInterpreter {
+  override val action = DatabaseMutationBuilder.createDataItemsImport(mutaction)
+}
+
+case class CreateRelationRowsImportInterpreter(mutaction: CreateRelationRowsImport) extends DatabaseMutactionInterpreter {
+  override val action = DatabaseMutationBuilder.createRelationRowsImport(mutaction)
+}
+
+case class PushScalarListsImportInterpreter(mutaction: PushScalarListsImport) extends DatabaseMutactionInterpreter {
+  override val action = DatabaseMutationBuilder.pushScalarListsImport(mutaction)
 }

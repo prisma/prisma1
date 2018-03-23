@@ -11,10 +11,14 @@ case class DatabaseMutactionExecutorImpl(
 )(implicit ec: ExecutionContext)
     extends DatabaseMutactionExecutor {
 
-  override def execute(mutactions: Vector[DatabaseMutaction]): Future[Unit] = {
+  override def execute(mutactions: Vector[DatabaseMutaction], runTransactionally: Boolean): Future[Unit] = {
     val interpreters        = mutactions.map(interpreterFor)
     val combinedErrorMapper = interpreters.map(_.errorMapper).reduceLeft(_ orElse _)
-    val singleAction        = DBIO.seq(interpreters.map(_.action): _*).transactionally
+
+    val singleAction = runTransactionally match {
+      case true  => DBIO.seq(interpreters.map(_.action): _*).transactionally
+      case false => DBIO.seq(interpreters.map(_.action): _*)
+    }
     clientDb
       .run(singleAction)
       .recover {
@@ -41,7 +45,6 @@ case class DatabaseMutactionExecutorImpl(
     case m: NestedDisconnectRelation                    => NestedDisconnectRelationInterpreter(m)
     case m: SetScalarList                               => SetScalarListInterpreter(m)
     case m: SetScalarListToEmpty                        => SetScalarListToEmptyInterpreter(m)
-    case m: PushToScalarList                            => PushToScalarListInterpreter(m)
     case m: TruncateTable                               => TruncateTableInterpreter(m)
     case m: UpdateDataItem                              => UpdateDataItemInterpreter(m)
     case m: UpdateDataItemByUniqueFieldIfInRelationWith => UpdateDataItemByUniqueFieldIfInRelationWithInterpreter(m)
@@ -51,5 +54,8 @@ case class DatabaseMutactionExecutorImpl(
     case m: UpsertDataItemIfInRelationWith              => UpsertDataItemIfInRelationWithInterpreter(m)
     case m: VerifyConnection                            => VerifyConnectionInterpreter(m)
     case m: VerifyWhere                                 => VerifyWhereInterpreter(m)
+    case m: CreateDataItemsImport                       => CreateDataItemsImportInterpreter(m)
+    case m: CreateRelationRowsImport                    => CreateRelationRowsImportInterpreter(m)
+    case m: PushScalarListsImport                       => PushScalarListsImportInterpreter(m)
   }
 }

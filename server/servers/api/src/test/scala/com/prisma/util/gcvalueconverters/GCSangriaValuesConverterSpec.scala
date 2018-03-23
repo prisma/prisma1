@@ -9,7 +9,6 @@ import org.scalactic.{Bad, Good}
 import org.scalatest.{FlatSpec, Matchers}
 import play.api.libs.json._
 
-
 class GCSangriaValuesConverterSpec extends FlatSpec with Matchers {
 
   val string   = StringGCValue("{\"testValue\": 1}")
@@ -31,7 +30,7 @@ class GCSangriaValuesConverterSpec extends FlatSpec with Matchers {
   val jsons     = ListGCValue(Vector(JsonGCValue(JsObject(Seq(("hello", JsString("there"))))), JsonGCValue(JsObject(Seq(("hello", JsString("there")))))))
   val jsons2    = ListGCValue(Vector())
 
-  val rootValue = RootGCValue(Map("test" -> strings, "test2" -> datetimes))
+  val rootValue = RootGCValue("test" -> strings, "test2" -> datetimes)
   val nullValue = NullGCValue
 
   "It should take non-list GCValues and" should "convert them to SangriaValues and back without loss" in {
