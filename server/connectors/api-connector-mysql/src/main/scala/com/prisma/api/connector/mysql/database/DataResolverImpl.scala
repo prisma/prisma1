@@ -8,7 +8,6 @@ import com.prisma.gc_values._
 import com.prisma.shared.models.IdType.Id
 import com.prisma.shared.models.TypeIdentifier.TypeIdentifier
 import com.prisma.shared.models._
-import com.prisma.util.gc_value.GCValueExtractor
 import org.joda.time.DateTime
 import org.joda.time.format.DateTimeFormat
 import slick.dbio.Effect.Read
@@ -50,35 +49,11 @@ case class DataResolverImpl(
     performWithTiming("countByModel", readonlyClientDatabase.run(readOnlyInt(query))).map(_.head)
   }
 
-  override def existsByModelAndId(model: Model, id: String): Future[Boolean] = {
-    val query = DatabaseQueryBuilder.existsByModelAndId(project.id, model.name, id)
-    performWithTiming("existsByModelAndId", readonlyClientDatabase.run(readOnlyBoolean(query))).map(_.head)
-  }
-
-  override def existsByWhere(where: NodeSelector): Future[Boolean] = {
-    val query = DatabaseQueryBuilder.existsByWhere(project.id, where)
-    performWithTiming("existsByWhere", readonlyClientDatabase.run(readOnlyBoolean(query))).map(_.head)
-  }
-
-  override def existsByModel(model: Model): Future[Boolean] = {
-    val query = DatabaseQueryBuilder.existsByModel(project.id, model.name)
-    performWithTiming("existsByModel", readonlyClientDatabase.run(readOnlyBoolean(query))).map(_.head)
-  }
-
   override def resolveByUnique(where: NodeSelector): Future[Option[DataItem]] = {
     where.fieldValue match {
       case JsonGCValue(x) => batchResolveByUnique(where.model, where.field.name, List(where.fieldValueAsString)).map(_.headOption)
       case _              => batchResolveByUnique(where.model, where.field.name, List(where.unwrappedFieldValue)).map(_.headOption)
     }
-  }
-
-  override def resolveByUniques(model: Model, uniques: Vector[NodeSelector]): Future[Vector[DataItem]] = {
-    val query = DatabaseQueryBuilder.selectFromModelsByUniques(project, model, uniques)
-    readonlyClientDatabase.run(readOnlyDataItem(query)).map(_.map(mapDataItem(model)))
-  }
-
-  override def resolveByUniqueWithoutValidation(model: Model, key: String, value: Any): Future[Option[DataItem]] = {
-    batchResolveByUniqueWithoutValidation(model, key, List(value)).map(_.headOption)
   }
 
   override def loadModelRowsForExport(model: Model, args: Option[QueryArguments] = None): Future[ResolverResultNew[PrismaNode]] = {
@@ -119,11 +94,6 @@ case class DataResolverImpl(
       .map(_.map(mapScalarListValueWithoutValidation(model, field)))
   }
 
-  override def batchResolveByUniqueWithoutValidation(model: Model, key: String, values: List[Any]): Future[List[DataItem]] = {
-    val query = DatabaseQueryBuilder.batchSelectFromModelByUnique(project.id, model.name, key, values)
-    performWithTiming("batchResolveByUnique", readonlyClientDatabase.run(readOnlyDataItem(query))).map(_.toList).map(_.map(mapDataItemWithoutValidation(model)))
-  }
-
   override def resolveByGlobalId(globalId: String): Future[Option[DataItem]] = {
     if (globalId == "viewer-fixed") {
       return Future.successful(Some(DataItem(globalId, Map(), Some("Viewer"))))
@@ -146,28 +116,6 @@ case class DataResolverImpl(
         case _ =>
           Future.successful(None)
       }
-  }
-
-  override def resolveRelation(relationId: String, aId: String, bId: String): Future[ResolverResult] = {
-    val (query, resultTransform) = DatabaseQueryBuilder.selectAllFromTable(
-      projectId = project.id,
-      tableName = relationId,
-      args = Some(QueryArguments(None, None, None, None, None, Some(List(FilterElement("A", aId), FilterElement("B", bId))), None))
-    )
-
-    performWithTiming("resolveRelation", readonlyClientDatabase.run(readOnlyDataItem(query)).map(_.toList).map(resultTransform))
-  }
-
-  override def resolveByRelation(fromField: Field, fromModelId: String, args: Option[QueryArguments]): Future[ResolverResult] = {
-    val (query, resultTransform) = DatabaseQueryBuilder.batchSelectAllFromRelatedModel(project, fromField, List(fromModelId), args)
-
-    performWithTiming(
-      "resolveByRelation",
-      readonlyClientDatabase
-        .run(readOnlyDataItem(query))
-        .map(_.toList.map(mapDataItem(fromField.relatedModel(project.schema).get)))
-        .map(resultTransform)
-    )
   }
 
   override def resolveByRelationManyModels(fromField: Field, fromModelIds: List[String], args: Option[QueryArguments]): Future[Seq[ResolverResult]] = {
@@ -195,42 +143,9 @@ case class DataResolverImpl(
     )
   }
 
-  override def resolveByModelAndId(model: Model, id: Id): Future[Option[DataItem]] =
-    resolveByUnique(NodeSelector(model, model.getFieldByName_!("id"), GraphQLIdGCValue(id)))
-  override def resolveByModelAndIdWithoutValidation(model: Model, id: Id): Future[Option[DataItem]] = resolveByUniqueWithoutValidation(model, "id", id)
-
   override def countByRelationManyModels(fromField: Field, fromNodeIds: List[String], args: Option[QueryArguments]): Future[List[(String, Int)]] = {
     val (query, _) = DatabaseQueryBuilder.countAllFromRelatedModels(project, fromField, fromNodeIds, args)
     performWithTiming("countByRelation", readonlyClientDatabase.run(readOnlyStringInt(query)).map(_.toList))
-  }
-
-  override def itemCountForModel(model: Model): Future[Int] = {
-    val query = DatabaseQueryBuilder.itemCountForTable(project.id, model.name)
-    performWithTiming("itemCountForModel", readonlyClientDatabase.run(readOnlyInt(query)).map(_.head))
-  }
-
-  override def existsNullByModelAndScalarField(model: Model, field: Field): Future[Boolean] = {
-    val query = DatabaseQueryBuilder.existsNullByModelAndScalarField(project.id, model.name, field.name)
-    performWithTiming("existsNullByModelAndScalarField", readonlyClientDatabase.run(readOnlyBoolean(query)).map(_.head))
-  }
-
-  override def existsNullByModelAndRelationField(model: Model, field: Field): Future[Boolean] = {
-    val query = DatabaseQueryBuilder.existsNullByModelAndRelationField(project.id, model.name, field)
-    performWithTiming("existsNullByModelAndRelationField", readonlyClientDatabase.run(readOnlyBoolean(query)).map(_.head))
-  }
-
-  override def itemCountForRelation(relation: Relation): Future[Int] = {
-    val query = DatabaseQueryBuilder.itemCountForTable(project.id, relation.id)
-    performWithTiming("itemCountForRelation", readonlyClientDatabase.run(readOnlyInt(query))).map(_.head)
-  }
-
-  override def itemCountsForAllModels(project: Project): Future[ModelCounts] = {
-    val x: Seq[Future[(Model, Int)]] = project.models.map { model =>
-      itemCountForModel(model).map { count =>
-        model -> count
-      }
-    }
-    Future.sequence(x).map(counts => ModelCounts(counts.toMap))
   }
 
   // note: Explicitly mark queries generated from raw sql as readonly to make aurora endpoint selection work
@@ -241,13 +156,9 @@ case class DataResolverImpl(
 
   private def readOnlyInt(query: SQLActionBuilder): SqlStreamingAction[Vector[Int], Int, Read] = query.as[Int]
 
-  private def readOnlyBoolean(query: SQLActionBuilder): SqlStreamingAction[Vector[Boolean], Boolean, Read] = query.as[Boolean]
-
   private def readOnlyStringInt(query: SQLActionBuilder): SqlStreamingAction[Vector[(String, Int)], (String, Int), Read] = query.as[(String, Int)]
 
   protected def mapDataItem(model: Model)(dataItem: DataItem): DataItem = mapDataItemHelper(model, dataItem)
-
-  protected def mapDataItemWithoutValidation(model: Model)(dataItem: DataItem): DataItem = mapDataItemHelper(model, dataItem, validate = false)
 
   protected def mapScalarListValueWithoutValidation(model: Model, field: Field)(scalarListValue: ScalarListValue): ScalarListValue = {
     mapScalarListValueHelper(model, field, scalarListValue, validate = false)
@@ -300,11 +211,96 @@ case class DataResolverImpl(
 
     listValue.copy(value = value)
   }
+//  override def existsByModelAndId(model: Model, id: String): Future[Boolean] = {
+//    val query = DatabaseQueryBuilder.existsByModelAndId(project.id, model.name, id)
+//    performWithTiming("existsByModelAndId", readonlyClientDatabase.run(readOnlyBoolean(query))).map(_.head)
+//  }
+//
+//  override def existsByWhere(where: NodeSelector): Future[Boolean] = {
+//    val query = DatabaseQueryBuilder.existsByWhere(project.id, where)
+//    performWithTiming("existsByWhere", readonlyClientDatabase.run(readOnlyBoolean(query))).map(_.head)
+//  }
+//
+//  override def existsByModel(model: Model): Future[Boolean] = {
+//    val query = DatabaseQueryBuilder.existsByModel(project.id, model.name)
+//    performWithTiming("existsByModel", readonlyClientDatabase.run(readOnlyBoolean(query))).map(_.head)
+//  }
 
-  private def unwrapGcValue(value: Any): Any = {
-    value match {
-      case x: GCValue => GCValueExtractor.fromGCValue(x)
-      case x          => x
-    }
-  }
+//  override def resolveByUniques(model: Model, uniques: Vector[NodeSelector]): Future[Vector[DataItem]] = {
+//    val query = DatabaseQueryBuilder.selectFromModelsByUniques(project, model, uniques)
+//    readonlyClientDatabase.run(readOnlyDataItem(query)).map(_.map(mapDataItem(model)))
+//  }
+//
+//  override def resolveByUniqueWithoutValidation(model: Model, key: String, value: Any): Future[Option[DataItem]] = {
+//    batchResolveByUniqueWithoutValidation(model, key, List(value)).map(_.headOption)
+//  }
+
+//  override def batchResolveByUniqueWithoutValidation(model: Model, key: String, values: List[Any]): Future[List[DataItem]] = {
+//    val query = DatabaseQueryBuilder.batchSelectFromModelByUnique(project.id, model.name, key, values)
+//    performWithTiming("batchResolveByUnique", readonlyClientDatabase.run(readOnlyDataItem(query))).map(_.toList).map(_.map(mapDataItemWithoutValidation(model)))
+//  }
+//  override def resolveRelation(relationId: String, aId: String, bId: String): Future[ResolverResult] = {
+//    val (query, resultTransform) = DatabaseQueryBuilder.selectAllFromTable(
+//      projectId = project.id,
+//      tableName = relationId,
+//      args = Some(QueryArguments(None, None, None, None, None, Some(List(FilterElement("A", aId), FilterElement("B", bId))), None))
+//    )
+//
+//    performWithTiming("resolveRelation", readonlyClientDatabase.run(readOnlyDataItem(query)).map(_.toList).map(resultTransform))
+//  }
+//
+//  override def resolveByRelation(fromField: Field, fromModelId: String, args: Option[QueryArguments]): Future[ResolverResult] = {
+//    val (query, resultTransform) = DatabaseQueryBuilder.batchSelectAllFromRelatedModel(project, fromField, List(fromModelId), args)
+//
+//    performWithTiming(
+//      "resolveByRelation",
+//      readonlyClientDatabase
+//        .run(readOnlyDataItem(query))
+//        .map(_.toList.map(mapDataItem(fromField.relatedModel(project.schema).get)))
+//        .map(resultTransform)
+//    )
+//  }
+
+//  override def resolveByModelAndId(model: Model, id: Id): Future[Option[DataItem]] =
+//    resolveByUnique(NodeSelector(model, model.getFieldByName_!("id"), GraphQLIdGCValue(id)))
+//  override def resolveByModelAndIdWithoutValidation(model: Model, id: Id): Future[Option[DataItem]] = resolveByUniqueWithoutValidation(model, "id", id)
+
+//  override def itemCountForModel(model: Model): Future[Int] = {
+//    val query = DatabaseQueryBuilder.itemCountForTable(project.id, model.name)
+//    performWithTiming("itemCountForModel", readonlyClientDatabase.run(readOnlyInt(query)).map(_.head))
+//  }
+//
+//  override def existsNullByModelAndScalarField(model: Model, field: Field): Future[Boolean] = {
+//    val query = DatabaseQueryBuilder.existsNullByModelAndScalarField(project.id, model.name, field.name)
+//    performWithTiming("existsNullByModelAndScalarField", readonlyClientDatabase.run(readOnlyBoolean(query)).map(_.head))
+//  }
+//
+//  override def existsNullByModelAndRelationField(model: Model, field: Field): Future[Boolean] = {
+//    val query = DatabaseQueryBuilder.existsNullByModelAndRelationField(project.id, model.name, field)
+//    performWithTiming("existsNullByModelAndRelationField", readonlyClientDatabase.run(readOnlyBoolean(query)).map(_.head))
+//  }
+//
+//  override def itemCountForRelation(relation: Relation): Future[Int] = {
+//    val query = DatabaseQueryBuilder.itemCountForTable(project.id, relation.id)
+//    performWithTiming("itemCountForRelation", readonlyClientDatabase.run(readOnlyInt(query))).map(_.head)
+//  }
+//
+//  override def itemCountsForAllModels(project: Project): Future[ModelCounts] = {
+//    val x: Seq[Future[(Model, Int)]] = project.models.map { model =>
+//      itemCountForModel(model).map { count =>
+//        model -> count
+//      }
+//    }
+//    Future.sequence(x).map(counts => ModelCounts(counts.toMap))
+//  }
+
+//  private def readOnlyBoolean(query: SQLActionBuilder): SqlStreamingAction[Vector[Boolean], Boolean, Read] = query.as[Boolean]
+
+//  protected def mapDataItemWithoutValidation(model: Model)(dataItem: DataItem): DataItem = mapDataItemHelper(model, dataItem, validate = false)
+//  private def unwrapGcValue(value: Any): Any = {
+//    value match {
+//      case x: GCValue => GCValueExtractor.fromGCValue(x)
+//      case x          => x
+//    }
+//  }
 }
