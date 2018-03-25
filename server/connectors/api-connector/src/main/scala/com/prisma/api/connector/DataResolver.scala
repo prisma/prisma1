@@ -15,21 +15,22 @@ trait DataResolver {
 
   def resolveByUnique(where: NodeSelector): Future[Option[PrismaNode]]
 
-  def countByModel(model: Model, where: DataItemFilterCollection): Future[Int]
-
   def countByModel(model: Model, where: Option[DataItemFilterCollection] = None): Future[Int]
 
   def batchResolveByUnique(model: Model, key: String, values: List[Any]): Future[Vector[PrismaNode]]
 
   def batchResolveScalarList(model: Model, field: Field, nodeIds: Vector[String]): Future[Vector[ScalarListValues]]
 
-  def resolveByRelationManyModels(fromField: Field, fromModelIds: List[String], args: Option[QueryArguments]): Future[immutable.Seq[ResolverResult]]
+  def resolveByRelationManyModels(fromField: Field,
+                                  fromModelIds: List[String],
+                                  args: Option[QueryArguments]): Future[Vector[ResolverResultNew[PrismaNodeWithParent]]]
 
-  def countByRelationManyModels(fromField: Field, fromNodeIds: List[String], args: Option[QueryArguments]): Future[List[(String, Int)]]
+  def countByRelationManyModels(fromField: Field, fromNodeIds: List[String], args: Option[QueryArguments]): Future[Vector[(String, Int)]]
 
   def loadListRowsForExport(model: Model, field: Field, args: Option[QueryArguments] = None): Future[ResolverResultNew[ScalarListValues]]
 
   def loadRelationRowsForExport(relationId: String, args: Option[QueryArguments] = None): Future[ResolverResultNew[RelationNode]]
+
   //  def loadModelRowsForExport(model: Model, args: Option[QueryArguments] = None): Future[ResolverResultNew[PrismaNode]]
 
 //  def existsByModelAndId(model: Model, id: String): Future[Boolean]

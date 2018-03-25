@@ -1,10 +1,11 @@
 package com.prisma.api.resolver
 
-import com.prisma.api.connector.{DataItem, DataResolver}
+import com.prisma.api.connector.{DataItem, DataResolver, PrismaNodeWithParent}
 import com.prisma.api.resolver.DeferredTypes.{OneDeferredResultType, OrderedDeferred, OrderedDeferredFutureResult, ToOneDeferred}
 import com.prisma.shared.models.Project
 
 import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.Future
 
 class ToOneDeferredResolver(dataResolver: DataResolver) {
   def resolve(orderedDeferreds: Vector[OrderedDeferred[ToOneDeferred]]): Vector[OrderedDeferredFutureResult[OneDeferredResultType]] = {
@@ -21,43 +22,37 @@ class ToOneDeferredResolver(dataResolver: DataResolver) {
     val relatedModelIds = deferreds.map(_.parentNodeId).toList
 
     // fetch dataitems
-    val futureDataItems =
-      dataResolver.resolveByRelationManyModels(relatedField, relatedModelIds, args).map(_.flatMap(_.items))
+    val futureDataItems: Future[Vector[PrismaNodeWithParent]] =
+      dataResolver.resolveByRelationManyModels(relatedField, relatedModelIds, args).map(_.flatMap(_.nodes))
 
     // assign the dataitem that was requested by each deferred
     val results = orderedDeferreds.map {
       case OrderedDeferred(deferred, order) =>
-        OrderedDeferredFutureResult[OneDeferredResultType](futureDataItems.map {
-          dataItemsToToOneDeferredResultType(dataResolver.project, deferred, _)
+        OrderedDeferredFutureResult[OneDeferredResultType](futureDataItems.map { items =>
+          dataItemsToToOneDeferredResultType(dataResolver.project, deferred, items)
         }, order)
     }
 
     results
   }
 
-  private def dataItemsToToOneDeferredResultType(project: Project, deferred: ToOneDeferred, dataItems: Seq[DataItem]): Option[DataItem] = {
+  private def dataItemsToToOneDeferredResultType(project: Project, deferred: ToOneDeferred, nodes: Vector[PrismaNodeWithParent]): Option[DataItem] = {
 
-    def matchesRelation(dataItem: DataItem, relationSide: String) =
-      dataItem.userData
-        .get(relationSide)
-        .flatten
-        .contains(deferred.parentNodeId)
+    def matchesRelation(prismaNodeWithParent: PrismaNodeWithParent, relationSide: String) =
+      prismaNodeWithParent.parentId.contains(deferred.parentNodeId)
 
     // see https://github.com/graphcool/internal-docs/blob/master/relations.md#findings
-    val resolveFromBothSidesAndMerge =
-      deferred.relationField.relation.get.isSameFieldSameModelRelation(project.schema)
+    val resolveFromBothSidesAndMerge = deferred.relationField.relation.get.isSameFieldSameModelRelation(project.schema)
 
-    dataItems.find(
-      dataItem => {
+    nodes
+      .find(node => {
         resolveFromBothSidesAndMerge match {
-          case false =>
-            matchesRelation(dataItem, deferred.relationField.relationSide.get.toString)
-
+          case false => matchesRelation(node, deferred.relationField.relationSide.get.toString)
           case true =>
-            dataItem.id != deferred.parentNodeId && (matchesRelation(dataItem, deferred.relationField.relationSide.get.toString) ||
-              matchesRelation(dataItem, deferred.relationField.oppositeRelationSide.get.toString))
+            node.prismaNode.id != deferred.parentNodeId && (matchesRelation(node, deferred.relationField.relationSide.get.toString) ||
+              matchesRelation(node, deferred.relationField.oppositeRelationSide.get.toString))
         }
-      }
-    )
+      })
+      .map(_.prismaNode.toDataItem)
   }
 }

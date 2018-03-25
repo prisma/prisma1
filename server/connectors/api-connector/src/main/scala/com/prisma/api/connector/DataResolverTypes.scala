@@ -25,7 +25,8 @@ case class ResolverResult(
 case class ResolverResultNew[T](
     nodes: Vector[T],
     hasNextPage: Boolean,
-    hasPreviousPage: Boolean
+    hasPreviousPage: Boolean,
+    parentModelId: Option[String] = None
 )
 
 case class RelationResult(

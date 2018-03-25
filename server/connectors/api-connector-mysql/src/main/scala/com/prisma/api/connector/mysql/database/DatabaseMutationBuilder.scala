@@ -100,7 +100,9 @@ object DatabaseMutationBuilder {
              create: Vector[DBIOAction[Any, NoStream, Effect]],
              update: Vector[DBIOAction[Any, NoStream, Effect]]) = {
 
-    val q       = DatabaseQueryBuilder.existsByPath(projectId, path).as[Boolean]
+    def existsByPath(projectId: String, path: Path) = sql"select exists" ++ DatabaseMutationBuilder.pathQueryForLastChild(projectId, path)
+
+    val q       = existsByPath(projectId, path).as[Boolean]
     val qInsert = DBIOAction.seq(createDataItem(projectId, path.lastModel.name, createArgs), createRelayRow(projectId, createWhere), DBIOAction.seq(create: _*))
     val qUpdate = DBIOAction.seq(updateDataItemByUnique(projectId, path.root, updateArgs), DBIOAction.seq(update: _*))
 
@@ -118,7 +120,18 @@ object DatabaseMutationBuilder {
       relationMutactions: NestedCreateRelationInterpreter,
   ) = {
 
-    val q = DatabaseQueryBuilder.existsNodeIsInRelationshipWith(project, path).as[Boolean]
+    def existsNodeIsInRelationshipWith(project: Project, path: Path) = {
+      def nodeSelector(last: Edge) = last match {
+        case edge: NodeEdge => sql" `id`" ++ idFromWhereEquals(project.id, edge.childWhere) ++ sql" AND "
+        case _: ModelEdge   => sql""
+      }
+
+      sql"""select EXISTS (
+            select `id`from `#${project.id}`.`#${path.lastModel.name}`
+            where""" ++ nodeSelector(path.lastEdge_!) ++ sql""" `id` IN""" ++ DatabaseMutationBuilder.pathQueryThatUsesWholePath(project.id, path) ++ sql")"
+    }
+
+    val q = existsNodeIsInRelationshipWith(project, path).as[Boolean]
     val qInsert =
       DBIOAction.seq(
         createDataItem(project.id, path.lastModel.name, createArgs),

@@ -2,9 +2,9 @@ package com.prisma.api.connector.mysql.database
 
 import com.prisma.api.connector.Types.DataItemFilterCollection
 import com.prisma.api.connector._
-import com.prisma.api.connector.mysql.database.DatabaseMutationBuilder.idFromWhereEquals
 import com.prisma.api.connector.mysql.database.HelperTypes.ScalarListElement
 import com.prisma.gc_values._
+import com.prisma.shared.models.IdType.Id
 import com.prisma.shared.models.{Function => _, _}
 import org.joda.time.DateTime
 import play.api.libs.json.Json
@@ -37,8 +37,46 @@ object DatabaseQueryBuilder {
       DataItem(id = rs.getString("id").trim, userData = userData)
     }
   }
+  def extractQueryArgs(projectId: String, //todo unify both, only order by command is different
+                       modelName: String,
+                       args: Option[QueryArguments],
+                       defaultOrderShortcut: Option[String] = None,
+                       overrideMaxNodeCount: Option[Int] = None): (Option[SQLActionBuilder], Option[SQLActionBuilder], Option[SQLActionBuilder]) = {
+    args match {
+      case None => (None, None, None)
+      case Some(givenArgs: QueryArguments) =>
+        (givenArgs.extractWhereConditionCommand(projectId, modelName),
+         givenArgs.extractOrderByCommand(projectId, modelName, defaultOrderShortcut),
+         overrideMaxNodeCount match {
+           case None                => givenArgs.extractLimitCommand(projectId, modelName)
+           case Some(maxCount: Int) => givenArgs.extractLimitCommand(projectId, modelName, maxCount)
+         })
+    }
+  }
 
+  def extractListQueryArgs(projectId: String, //todo unify both, only order by command is different
+                           modelName: String,
+                           args: Option[QueryArguments],
+                           defaultOrderShortcut: Option[String] = None,
+                           overrideMaxNodeCount: Option[Int] = None): (Option[SQLActionBuilder], Option[SQLActionBuilder], Option[SQLActionBuilder]) = {
+    args match {
+      case None => (None, None, None)
+      case Some(givenArgs: QueryArguments) =>
+        (
+          givenArgs.extractWhereConditionCommand(projectId, modelName),
+          givenArgs.extractOrderByCommandForLists(projectId, modelName, defaultOrderShortcut),
+          overrideMaxNodeCount match {
+            case None                => givenArgs.extractLimitCommand(projectId, modelName)
+            case Some(maxCount: Int) => givenArgs.extractLimitCommand(projectId, modelName, maxCount)
+          }
+        )
+    }
+  }
   def getResultForModel(model: Model): GetResult[PrismaNode] = GetResult { ps: PositionedResult =>
+    prismaNodeCore(model, ps)
+  }
+
+  private def prismaNodeCore(model: Model, ps: PositionedResult) = {
     val resultSet = ps.rs
     val id        = resultSet.getString("id")
     val data = model.scalarNonListFields.map { field =>
@@ -75,6 +113,14 @@ object DatabaseQueryBuilder {
     PrismaNode(id = id, data = RootGCValue(data: _*))
   }
 
+  def getResultForModelAndRelationSide(model: Model, side: String): GetResult[PrismaNodeWithParent] = GetResult { ps: PositionedResult =>
+    val resultSet = ps.rs
+
+    val parentId = resultSet.getString("__Relation__" + side)
+    val node     = prismaNodeCore(model, ps)
+    PrismaNodeWithParent(parentId, node)
+  }
+
   implicit object GetRelationNode extends GetResult[RelationNode] {
     override def apply(ps: PositionedResult): RelationNode = {
       val resultSet = ps.rs
@@ -100,21 +146,15 @@ object DatabaseQueryBuilder {
       overrideMaxNodeCount: Option[Int] = None
   ): DBIOAction[ResolverResultNew[PrismaNode], NoStream, Effect] = {
 
-    val tableName                                           = model.name
-    val (conditionCommand, orderByCommand, limitCommand, _) = extractQueryArgs(projectId, tableName, args, overrideMaxNodeCount = overrideMaxNodeCount)
+    val tableName                                        = model.name
+    val (conditionCommand, orderByCommand, limitCommand) = extractQueryArgs(projectId, tableName, args, overrideMaxNodeCount = overrideMaxNodeCount)
 
     val query = sql"select * from `#$projectId`.`#$tableName`" concat
       prefixIfNotNone("where", conditionCommand) concat
       prefixIfNotNone("order by", orderByCommand) concat
       prefixIfNotNone("limit", limitCommand)
 
-    query.as[PrismaNode](getResultForModel(model)).map { nodes =>
-      ResolverResultNew(
-        nodes = args.get.dropExtraLimitItem(nodes),
-        hasNextPage = args.get.hasNext(nodes.size),
-        hasPreviousPage = args.get.hasPrevious(nodes.size)
-      )
-    }
+    query.as[PrismaNode](getResultForModel(model)).map(args.get.resultTransform)
   }
 
   def selectAllFromRelationTable(
@@ -124,31 +164,25 @@ object DatabaseQueryBuilder {
       overrideMaxNodeCount: Option[Int] = None
   ): DBIOAction[ResolverResultNew[RelationNode], NoStream, Effect] = {
 
-    val tableName                                           = relationId
-    val (conditionCommand, orderByCommand, limitCommand, _) = extractQueryArgs(projectId, tableName, args, overrideMaxNodeCount = overrideMaxNodeCount)
+    val tableName                                        = relationId
+    val (conditionCommand, orderByCommand, limitCommand) = extractQueryArgs(projectId, tableName, args, overrideMaxNodeCount = overrideMaxNodeCount)
 
     val query = sql"select * from `#$projectId`.`#$tableName`" concat
       prefixIfNotNone("where", conditionCommand) concat
       prefixIfNotNone("order by", orderByCommand) concat
       prefixIfNotNone("limit", limitCommand)
 
-    query.as[RelationNode].map { nodes =>
-      ResolverResultNew(
-        nodes = args.get.dropExtraLimitItem(nodes),
-        hasNextPage = args.get.hasNext(nodes.size),
-        hasPreviousPage = args.get.hasPrevious(nodes.size)
-      )
-    }
+    query.as[RelationNode].map(args.get.resultTransform)
   }
 
   def selectAllFromListTable(projectId: String,
                              model: Model,
                              field: Field,
                              args: Option[QueryArguments],
-                             overrideMaxNodeCount: Option[Int] = None): SqlStreamingAction[Vector[ScalarListElement], ScalarListElement, Read] = {
+                             overrideMaxNodeCount: Option[Int] = None): DBIOAction[ResolverResultNew[ScalarListValues], NoStream, Effect] = {
 
-    val tableName                                           = s"${model.name}_${field.name}"
-    val (conditionCommand, orderByCommand, limitCommand, _) = extractListQueryArgs(projectId, tableName, args, overrideMaxNodeCount = overrideMaxNodeCount)
+    val tableName                                        = s"${model.name}_${field.name}"
+    val (conditionCommand, orderByCommand, limitCommand) = extractListQueryArgs(projectId, tableName, args, overrideMaxNodeCount = overrideMaxNodeCount)
 
     val query =
       sql"select * from `#$projectId`.`#$tableName`" concat
@@ -156,82 +190,18 @@ object DatabaseQueryBuilder {
         prefixIfNotNone("order by", orderByCommand) concat
         prefixIfNotNone("limit", limitCommand)
 
-    query.as[ScalarListElement](getResultForScalarListField(field))
-  }
-
-  def countAllFromModel(project: Project, model: Model, where: Option[DataItemFilterCollection]): SQLActionBuilder = {
-    val whereSql = where.flatMap { where =>
-      QueryArgumentsHelpers.generateFilterConditions(project.id, model.name, where)
-    }
-    sql"select count(*) from `#${project.id}`.`#${model.name}`" ++ prefixIfNotNone("where", whereSql)
-  }
-
-  def extractQueryArgs(
-      projectId: String,
-      modelName: String,
-      args: Option[QueryArguments],
-      defaultOrderShortcut: Option[String] = None,
-      overrideMaxNodeCount: Option[Int] = None): (Option[SQLActionBuilder], Option[SQLActionBuilder], Option[SQLActionBuilder], ResultTransform) = {
-    args match {
-      case None => (None, None, None, x => ResolverResult(x))
-      case Some(givenArgs: QueryArguments) =>
-        (
-          givenArgs.extractWhereConditionCommand(projectId, modelName),
-          givenArgs.extractOrderByCommand(projectId, modelName, defaultOrderShortcut),
-          overrideMaxNodeCount match {
-            case None                => givenArgs.extractLimitCommand(projectId, modelName)
-            case Some(maxCount: Int) => givenArgs.extractLimitCommand(projectId, modelName, maxCount)
-          },
-          givenArgs.extractResultTransform(projectId, modelName)
-        )
+    query.as[ScalarListElement](getResultForScalarListField(field)).map { scalarListElements =>
+      val res = args.get.resultTransform(scalarListElements)
+      val convertedValues =
+        res.nodes.groupBy(_.nodeId).map { case (id, values) => ScalarListValues(id, ListGCValue(values.sortBy(_.position).map(_.value))) }.toVector
+      res.copy(nodes = convertedValues)
     }
   }
 
-  def extractListQueryArgs(
-      projectId: String,
-      modelName: String,
-      args: Option[QueryArguments],
-      defaultOrderShortcut: Option[String] = None,
-      overrideMaxNodeCount: Option[Int] = None): (Option[SQLActionBuilder], Option[SQLActionBuilder], Option[SQLActionBuilder], ResultListTransform) = {
-    args match {
-      case None =>
-        (None,
-         None,
-         None,
-         x =>
-           ResolverResult(x.map { listValue =>
-             DataItem(id = listValue.nodeId, userData = Map("value" -> Some(listValue.value)))
-           }))
-      case Some(givenArgs: QueryArguments) =>
-        (
-          givenArgs.extractWhereConditionCommand(projectId, modelName),
-          givenArgs.extractOrderByCommandForLists(projectId, modelName, defaultOrderShortcut),
-          overrideMaxNodeCount match {
-            case None                => givenArgs.extractLimitCommand(projectId, modelName)
-            case Some(maxCount: Int) => givenArgs.extractLimitCommand(projectId, modelName, maxCount)
-          },
-          givenArgs.extractListResultTransform(projectId, modelName)
-        )
-    }
-  }
-
-  def itemCountForTable(projectId: String, modelName: String) = { // todo use count all from model
-    sql"SELECT COUNT(*) AS Count FROM `#$projectId`.`#$modelName`"
-  }
-
-  def existsNodeIsInRelationshipWith(project: Project, path: Path) = {
-    def nodeSelector(last: Edge) = last match {
-      case edge: NodeEdge => sql" `id`" ++ idFromWhereEquals(project.id, edge.childWhere) ++ sql" AND "
-      case _: ModelEdge   => sql""
-    }
-
-    sql"""select EXISTS (
-            select `id`from `#${project.id}`.`#${path.lastModel.name}`
-            where""" ++ nodeSelector(path.lastEdge_!) ++ sql""" `id` IN""" ++ DatabaseMutationBuilder.pathQueryThatUsesWholePath(project.id, path) ++ sql")"
-  }
-
-  def existsByModel(projectId: String, modelName: String): SQLActionBuilder = { //todo also replace in tests with count
-    sql"select exists (select `id` from `#$projectId`.`#$modelName`)"
+  def countAllFromModel(project: Project, model: Model, where: Option[DataItemFilterCollection]): DBIOAction[Int, NoStream, Effect] = {
+    val whereSql = where.flatMap(where => QueryArgumentsHelpers.generateFilterConditions(project.id, model.name, where))
+    val query    = sql"select count(*) from `#${project.id}`.`#${model.name}`" ++ prefixIfNotNone("where", whereSql)
+    query.as[Int].map(_.head)
   }
 
   def batchSelectFromModelByUnique(projectId: String,
@@ -241,35 +211,41 @@ object DatabaseQueryBuilder {
     val query = sql"select * from `#$projectId`.`#${model.name}` where `#$key` in (" concat combineByComma(values.map(escapeUnsafeParam)) concat sql")"
     query.as[PrismaNode](getResultForModel(model))
   }
-  def existsByPath(projectId: String, path: Path) = {
-    sql"select exists" ++ DatabaseMutationBuilder.pathQueryForLastChild(projectId, path)
-  }
 
   def selectFromScalarList(projectId: String,
                            modelName: String,
                            field: Field,
-                           nodeIds: Vector[String]): SqlStreamingAction[Vector[ScalarListElement], ScalarListElement, Read] = {
+                           nodeIds: Vector[String]): DBIOAction[Vector[ScalarListValues], NoStream, Effect] = {
     val query = sql"select nodeId, position, value from `#$projectId`.`#${modelName}_#${field.name}` where nodeId in (" concat combineByComma(
       nodeIds.map(escapeUnsafeParam)) concat sql")"
 
-    query.as[ScalarListElement](getResultForScalarListField(field))
+    query.as[ScalarListElement](getResultForScalarListField(field)).map { scalarListElements =>
+      val grouped: Map[Id, Vector[ScalarListElement]] = scalarListElements.groupBy(_.nodeId)
+      grouped.map {
+        case (id, values) =>
+          val gcValues = values.sortBy(_.position).map(_.value)
+          ScalarListValues(id, ListGCValue(gcValues))
+      }.toVector
+    }
   }
 
   def batchSelectAllFromRelatedModel(project: Project,
-                                     relationField: Field,
-                                     parentNodeIds: List[String],
-                                     args: Option[QueryArguments]): (SQLActionBuilder, ResultTransform) = {
+                                     fromField: Field,
+                                     fromModelIds: Vector[String],
+                                     args: Option[QueryArguments]): DBIOAction[Vector[ResolverResultNew[PrismaNodeWithParent]], NoStream, Effect] = {
 
-    val fieldTable        = relationField.relatedModel(project.schema).get.name
-    val unsafeRelationId  = relationField.relation.get.id
-    val modelRelationSide = relationField.relationSide.get.toString
-    val fieldRelationSide = relationField.oppositeRelationSide.get.toString
+    val relatedModel      = fromField.relatedModel(project.schema).get
+    val fieldTable        = fromField.relatedModel(project.schema).get.name
+    val unsafeRelationId  = fromField.relation.get.id
+    val modelRelationSide = fromField.relationSide.get.toString
+    val fieldRelationSide = fromField.oppositeRelationSide.get.toString
 
-    val (conditionCommand, orderByCommand, limitCommand, resultTransform) =
+    val (conditionCommand, orderByCommand, limitCommand) =
       extractQueryArgs(project.id, fieldTable, args, defaultOrderShortcut = Some(s"""`${project.id}`.`$unsafeRelationId`.$fieldRelationSide"""))
 
     def createQuery(id: String, modelRelationSide: String, fieldRelationSide: String) = {
-      sql"""(select * from `#${project.id}`.`#$fieldTable`
+      sql"""(select `#${project.id}`.`#$fieldTable`.*, `#${project.id}`.`#$unsafeRelationId`.A as __Relation__A,  `#${project.id}`.`#$unsafeRelationId`.B as __Relation__B
+            from `#${project.id}`.`#$fieldTable`
            inner join `#${project.id}`.`#$unsafeRelationId`
            on `#${project.id}`.`#$fieldTable`.id = `#${project.id}`.`#$unsafeRelationId`.#$fieldRelationSide
            where `#${project.id}`.`#$unsafeRelationId`.#$modelRelationSide = '#$id' """ concat
@@ -279,16 +255,15 @@ object DatabaseQueryBuilder {
     }
 
     // see https://github.com/graphcool/internal-docs/blob/master/relations.md#findings
-    val resolveFromBothSidesAndMerge = relationField.relation.get
-      .isSameFieldSameModelRelation(project.schema) && !relationField.isList
+    val resolveFromBothSidesAndMerge = fromField.relation.get.isSameFieldSameModelRelation(project.schema) && !fromField.isList
 
     val query = resolveFromBothSidesAndMerge match {
       case false =>
-        parentNodeIds.distinct.view.zipWithIndex.foldLeft(sql"")((a, b) =>
+        fromModelIds.distinct.view.zipWithIndex.foldLeft(sql"")((a, b) =>
           a concat unionIfNotFirst(b._2) concat createQuery(b._1, modelRelationSide, fieldRelationSide))
 
       case true =>
-        parentNodeIds.distinct.view.zipWithIndex.foldLeft(sql"")(
+        fromModelIds.distinct.view.zipWithIndex.foldLeft(sql"")(
           (a, b) =>
             a concat unionIfNotFirst(b._2) concat createQuery(b._1, modelRelationSide, fieldRelationSide) concat sql"union all " concat createQuery(
               b._1,
@@ -296,20 +271,33 @@ object DatabaseQueryBuilder {
               modelRelationSide))
     }
 
-    (query, resultTransform)
+    query
+      .as[PrismaNodeWithParent](getResultForModelAndRelationSide(relatedModel, fromField.relationSide.get.toString))
+      .map { items =>
+        val itemGroupsByModelId = items.groupBy(_.parentId)
+
+        val res = fromModelIds
+          .map(id =>
+            itemGroupsByModelId.find(_._1 == id) match {
+              case Some((_, itemsForId)) => args.get.resultTransform(itemsForId).copy(parentModelId = Some(id))
+              case None                  => ResolverResultNew(Vector.empty[PrismaNodeWithParent], hasPreviousPage = false, hasNextPage = false, parentModelId = Some(id))
+          })
+
+        res
+      }
   }
 
   def countAllFromRelatedModels(project: Project,
                                 relationField: Field,
                                 parentNodeIds: List[String],
-                                args: Option[QueryArguments]): (SQLActionBuilder, ResultTransform) = {
+                                args: Option[QueryArguments]): SqlStreamingAction[Vector[(String, Int)], (String, Int), Effect] = {
 
     val fieldTable        = relationField.relatedModel(project.schema).get.name
     val unsafeRelationId  = relationField.relation.get.id
     val modelRelationSide = relationField.relationSide.get.toString
     val fieldRelationSide = relationField.oppositeRelationSide.get.toString
 
-    val (conditionCommand, orderByCommand, limitCommand, resultTransform) =
+    val (conditionCommand, orderByCommand, limitCommand) =
       extractQueryArgs(project.id, fieldTable, args, defaultOrderShortcut = Some(s"""`${project.id}`.`$unsafeRelationId`.$fieldRelationSide"""))
 
     def createQuery(id: String) = {
@@ -325,13 +313,8 @@ object DatabaseQueryBuilder {
     val query =
       parentNodeIds.distinct.view.zipWithIndex.foldLeft(sql"")((a, b) => a concat unionIfNotFirst(b._2) concat createQuery(b._1))
 
-    (query, resultTransform)
+    query.as[(String, Int)]
   }
-
-//  case class ColumnDescription(name: String, isNullable: Boolean, typeName: String, size: Option[Int])
-//  case class IndexDescription(name: Option[String], nonUnique: Boolean, column: Option[String])
-  case class ForeignKeyDescription(name: Option[String], column: String, foreignTable: String, foreignColumn: String)
-//  case class TableInfo(columns: List[ColumnDescription], indexes: List[IndexDescription], foreignKeys: List[ForeignKeyDescription])
 
   def getTables(projectId: String): DBIOAction[Vector[String], NoStream, Read] = {
     for {
@@ -345,15 +328,23 @@ object DatabaseQueryBuilder {
     } yield catalogs
   }
 
-  def unionIfNotFirst(index: Int): SQLActionBuilder =
-    if (index == 0) {
-      sql""
-    } else {
-      sql"union all "
-    }
+  def unionIfNotFirst(index: Int): SQLActionBuilder = if (index == 0) sql"" else sql"union all "
 
-  type ResultTransform     = Function[List[DataItem], ResolverResult]
-  type ResultListTransform = Function[List[ScalarListValue], ResolverResult]
+// tests only
+  def itemCountForTable(projectId: String, modelName: String) = { // todo use count all from model
+    sql"SELECT COUNT(*) AS Count FROM `#$projectId`.`#$modelName`"
+  }
+
+  def existsByModel(projectId: String, modelName: String): SQLActionBuilder = { //todo also replace in tests with count
+    sql"select exists (select `id` from `#$projectId`.`#$modelName`)"
+  }
+
+  //  case class ColumnDescription(name: String, isNullable: Boolean, typeName: String, size: Option[Int])
+//  case class IndexDescription(name: Option[String], nonUnique: Boolean, column: Option[String])
+//  case class ForeignKeyDescription(name: Option[String], column: String, foreignTable: String, foreignColumn: String)
+//  case class TableInfo(columns: List[ColumnDescription], indexes: List[IndexDescription], foreignKeys: List[ForeignKeyDescription])
+
+  //  type ResultTransform = Function[List[DataItem], ResolverResult]
 
 //  def existsNullByModelAndScalarField(projectId: String, modelName: String, fieldName: String) = {
 //    sql"""SELECT EXISTS(Select `id` FROM `#$projectId`.`#$modelName`

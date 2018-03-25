@@ -12,7 +12,9 @@ case class DataItem(id: Id, userData: Map[String, Option[Any]] = Map.empty, type
 
 case class PrismaNode(id: Id, data: RootGCValue, typeName: Option[String] = None) {
   def toDataItem = DataItem(id, data.map.map { case (k, v) => (k, GCValueExtractor.fromGCValueToOption(v)) })
-
 }
+
+case class PrismaNodeWithParent(parentId: Id, prismaNode: PrismaNode)
+
 case class RelationNode(id: Id, a: Id, b: Id)
 case class ScalarListValues(nodeId: Id, value: ListGCValue)
