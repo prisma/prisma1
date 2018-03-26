@@ -33,7 +33,7 @@ case class Upsert(
   val path = Path.empty(outerWhere)
 
   override def prepareMutactions(): Future[PreparedMutactions] = {
-    val sqlMutactions          = DatabaseMutactions(project).getMutactionsForUpsert(path, createWhere, updatedWhere, CoolArgs(args.raw)).toVector
+    val sqlMutactions          = DatabaseMutactions(project).getMutactionsForUpsert(path, createWhere, updatedWhere, CoolArgs(args.raw))
     val subscriptionMutactions = SubscriptionEvents.extractFromSqlMutactions(project, mutationId, sqlMutactions)
     val sssActions             = ServerSideSubscriptions.extractFromMutactions(project, sqlMutactions, requestId = "")
 
@@ -63,8 +63,8 @@ case class Upsert(
       updateItem <- upsertItemFuture
     } yield {
       (createItem, updateItem) match {
-        case (Some(create), _) => ReturnValue(create.toDataItem)
-        case (_, Some(update)) => ReturnValue(update.toDataItem)
+        case (Some(create), _) => ReturnValue(create)
+        case (_, Some(update)) => ReturnValue(update)
         case (None, None)      => sys.error("Could not find an item after an Upsert. This should not be possible.")
       }
     }

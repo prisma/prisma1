@@ -26,8 +26,8 @@ case class Delete(
   implicit val system: ActorSystem             = apiDependencies.system
   implicit val materializer: ActorMaterializer = apiDependencies.materializer
 
-  var deletedItemOpt: Option[DataItem] = None
-  val requestId: Id                    = "" // dataResolver.requestContext.map(_.requestId).getOrElse("")
+  var deletedItemOpt: Option[PrismaNode] = None
+  val requestId: Id                      = "" // dataResolver.requestContext.map(_.requestId).getOrElse("")
 
   val coolArgs            = CoolArgs(args.raw)
   val where: NodeSelector = coolArgs.extractNodeSelectorFromWhereField(model)
@@ -36,13 +36,11 @@ case class Delete(
     dataResolver
       .resolveByUnique(where)
       .andThen {
-        case Success(x) => deletedItemOpt = x.map(dataItem => dataItem.toDataItem) // todo: replace with GC Values
-        // todo: do we need the fromSql stuff?
-        //GraphcoolDataTypes.fromSql(dataItem.userData, model.fields)
+        case Success(x) => deletedItemOpt = x.map(dataItem => dataItem)
       }
       .map { _ =>
         val itemToDelete           = deletedItemOpt.getOrElse(throw APIErrors.NodeNotFoundForWhereError(where))
-        val sqlMutactions          = DatabaseMutactions(project).getMutactionsForDelete(Path.empty(where), itemToDelete, itemToDelete.id).toVector
+        val sqlMutactions          = DatabaseMutactions(project).getMutactionsForDelete(Path.empty(where), itemToDelete).toVector
         val subscriptionMutactions = SubscriptionEvents.extractFromSqlMutactions(project, mutationId, sqlMutactions)
         val sssActions             = ServerSideSubscriptions.extractFromMutactions(project, sqlMutactions, requestId)
 

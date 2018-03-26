@@ -1,6 +1,6 @@
 package com.prisma.api.schema
 
-import com.prisma.api.connector.{DataItem, DataResolver}
+import com.prisma.api.connector.{DataItem, DataResolver, PrismaNode}
 import com.prisma.shared.models.ModelMutationType.ModelMutationType
 import com.prisma.shared.models.{Model, Project}
 import sangria.schema
@@ -19,7 +19,7 @@ case class OutputTypesBuilder(project: Project, objectTypes: Map[String, ObjectT
             field.copy(
               resolve = { outerCtx: Context[C, SimpleResolveOutput] =>
                 val castedCtx = outerCtx.asInstanceOf[Context[C, DataItem]]
-                field.resolve(castedCtx.copy(value = outerCtx.value.item))
+                field.resolve(castedCtx.copy(value = outerCtx.value.node.toDataItem))
               }
             )
           }
@@ -114,7 +114,7 @@ case class OutputTypesBuilder(project: Project, objectTypes: Map[String, ObjectT
 
   type R = SimpleResolveOutput
 
-  def mapResolve(item: DataItem, args: Args): SimpleResolveOutput = SimpleResolveOutput(item, args)
+  def mapResolve(node: PrismaNode, args: Args): SimpleResolveOutput = SimpleResolveOutput(node, args)
 }
 
-case class SimpleResolveOutput(item: DataItem, args: Args)
+case class SimpleResolveOutput(node: PrismaNode, args: Args)

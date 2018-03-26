@@ -247,8 +247,8 @@ case class SchemaBuilderImpl(
 
   private def mapReturnValueResult(result: Future[ReturnValueResult], args: Args): Future[SimpleResolveOutput] = {
     result.map {
-      case ReturnValue(dataItem) => outputTypesBuilder.mapResolve(dataItem, args)
-      case NoReturnValue(where)  => throw APIErrors.NodeNotFoundForWhereError(where)
+      case ReturnValue(prismaNode) => outputTypesBuilder.mapResolve(prismaNode, args)
+      case NoReturnValue(where)    => throw APIErrors.NodeNotFoundForWhereError(where)
     }
   }
 }

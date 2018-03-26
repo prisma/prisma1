@@ -52,7 +52,7 @@ case class Create(
   override def getReturnValue: Future[ReturnValueResult] = {
     for {
       returnValue <- returnValueByUnique(NodeSelector.forId(model, id))
-      dataItem    = returnValue.asInstanceOf[ReturnValue].dataItem
+      dataItem    = returnValue.asInstanceOf[ReturnValue].prismaNode
     } yield {
       ReturnValue(dataItem)
     }

@@ -282,7 +282,8 @@ object DatabaseQueryBuilder {
 
   def unionIfNotFirst(index: Int): SQLActionBuilder = if (index == 0) sql"" else sql"union all "
 
-// tests only
+// used in tests only
+
   def itemCountForTable(projectId: String, modelName: String) = { // todo use count all from model
     sql"SELECT COUNT(*) AS Count FROM `#$projectId`.`#$modelName`"
   }

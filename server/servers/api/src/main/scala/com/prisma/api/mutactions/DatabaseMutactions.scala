@@ -19,14 +19,14 @@ case class CreateMutactionsResult(
 
 case class DatabaseMutactions(project: Project) {
 
-  def report[T](mutactions: Seq[T]): Seq[T] = {
+  def report[T](mutactions: Vector[T]): Vector[T] = {
     ApiMetrics.mutactionCount.incBy(mutactions.size, project.id)
     mutactions
   }
 
-  def getMutactionsForDelete(path: Path, previousValues: DataItem, id: String): Seq[DatabaseMutaction] = report {
-    List(VerifyWhere(project, path.root)) ++ generateCascadingDeleteMutactions(path) ++
-      List(DeleteRelationCheck(project, path), DeleteDataItem(project, path, previousValues, id))
+  def getMutactionsForDelete(path: Path, previousValues: PrismaNode): Vector[DatabaseMutaction] = report {
+    Vector(VerifyWhere(project, path.root)) ++ generateCascadingDeleteMutactions(path) ++
+      Vector(DeleteRelationCheck(project, path), DeleteDataItem(project, path, previousValues))
   }
 
   def getMutactionsForUpdate(path: Path, args: CoolArgs, id: Id, previousValues: PrismaNode): Seq[DatabaseMutaction] = report {
@@ -45,14 +45,14 @@ case class DatabaseMutactions(project: Project) {
   }
 
   // we need to rethink this thoroughly, we need to prevent both branches of executing their nested mutations
-  def getMutactionsForUpsert(path: Path, createWhere: NodeSelector, updatedWhere: NodeSelector, allArgs: CoolArgs): Seq[DatabaseMutaction] =
+  def getMutactionsForUpsert(path: Path, createWhere: NodeSelector, updatedWhere: NodeSelector, allArgs: CoolArgs): Vector[DatabaseMutaction] =
     report {
       val upsertMutaction = UpsertDataItem(project, path, createWhere, updatedWhere, allArgs)
 
 //    val updateNested = getMutactionsForNestedMutation(allArgs.updateArgumentsAsCoolArgs, updatedOuterWhere, triggeredFromCreate = false)
 //    val createNested = getMutactionsForNestedMutation(allArgs.createArgumentsAsCoolArgs, createWhere, triggeredFromCreate = true)
 
-      List(upsertMutaction) //++ updateNested ++ createNested
+      Vector(upsertMutaction) //++ updateNested ++ createNested
     }
 
   def getUpdateMutactions(path: Path, args: CoolArgs, id: Id, previousValues: PrismaNode): Vector[DatabaseMutaction] = {

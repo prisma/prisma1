@@ -24,7 +24,7 @@ case class CreateDataItem(project: Project, path: Path, args: CoolArgs) extends 
 case class PushScalarListsImport(project: Project, tableName: String, id: String, args: ListGCValue)      extends DatabaseMutaction
 case class CreateRelationRowsImport(project: Project, relation: Relation, args: Vector[(String, String)]) extends DatabaseMutaction
 case class CreateDataItemsImport(project: Project, model: Model, args: Vector[ReallyCoolArgs])            extends DatabaseMutaction
-case class DeleteDataItem(project: Project, path: Path, previousValues: DataItem, id: String)             extends DatabaseMutaction
+case class DeleteDataItem(project: Project, path: Path, previousValues: PrismaNode)                       extends DatabaseMutaction
 case class DeleteDataItemNested(project: Project, path: Path)                                             extends DatabaseMutaction
 case class DeleteDataItems(project: Project, model: Model, whereFilter: DataItemFilterCollection)         extends DatabaseMutaction
 case class DeleteManyRelationChecks(project: Project, model: Model, filter: DataItemFilterCollection)     extends DatabaseMutaction

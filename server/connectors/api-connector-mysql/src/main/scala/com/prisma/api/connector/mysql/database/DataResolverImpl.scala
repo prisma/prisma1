@@ -17,7 +17,7 @@ import scala.concurrent.Future
 
 case class DataResolverImpl(project: Project, readonlyClientDatabase: MySQLProfile.backend.DatabaseDef) extends DataResolver {
 
-  override def resolveByGlobalId(globalId: String): Future[Option[PrismaNode]] = {
+  override def resolveByGlobalId(globalId: String): Future[Option[PrismaNode]] = { //todo rewrite this to use normal query?
     if (globalId == "viewer-fixed") return Future.successful(Some(PrismaNode(globalId, RootGCValue.empty, Some("Viewer"))))
 
     val query: SqlAction[Option[String], NoStream, Read] = TableQuery(new ProjectRelayIdTable(_, project.id))
