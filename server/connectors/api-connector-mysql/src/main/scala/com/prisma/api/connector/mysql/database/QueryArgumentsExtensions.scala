@@ -91,21 +91,6 @@ object QueryArgumentsExtensions {
       }
     }
 
-//    def extractResultTransform(projectId: String, modelId: String): ResultTransform = (list: List[DataItem]) => { generateResultTransform(list) }
-//
-//    private def generateResultTransform(list: List[DataItem]) = {
-//      val items = isReverseOrder match {
-//        case true  => list.reverse
-//        case false => list
-//      }
-//
-//      (first, last) match {
-//        case (Some(f), _) if items.size > f => ResolverResult(items.dropRight(1), hasNextPage = true)
-//        case (_, Some(l)) if items.size > l => ResolverResult(items.tail, hasPreviousPage = true)
-//        case _                              => ResolverResult(items)
-//      }
-//    }
-
     // If order is inverted we have to reverse the returned data items. We do this in-mem to keep the sql query simple.
     // Also, remove excess items from limit + 1 queries and set page info (hasNext, hasPrevious).
     def resultTransform[T](vector: Vector[T]) = {
@@ -120,22 +105,6 @@ object QueryArgumentsExtensions {
         case _                              => ResolverResultNew(items, hasPreviousPage = false, hasNextPage = false)
       }
     }
-
-//    def dropExtraLimitItem[T](items: Vector[T]): Vector[T] = (first, last) match {
-//      case (Some(f), _) if items.size > f => items.dropRight(1)
-//      case (_, Some(l)) if items.size > l => items.tail
-//      case _                              => items
-//    }
-//
-//    def hasNext(count: Int): Boolean = (first, last) match {
-//      case (Some(f), _) if count > f => true
-//      case (_, _)                    => false
-//    }
-//
-//    def hasPrevious(count: Int): Boolean = (first, last) match {
-//      case (_, Some(l)) if count > l => true
-//      case (_, _)                    => false
-//    }
 
     def extractWhereConditionCommand(projectId: String, modelId: String): Option[SQLActionBuilder] = {
 

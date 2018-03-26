@@ -63,11 +63,6 @@ class DeferredResolverProvider[CtxType](dataResolver: DataResolver) extends Defe
         OrderedDeferred(deferred, order)
     }
 
-//    val checkScalarFieldPermissionsDeferreds = orderedDeferred.collect {
-//      case OrderedDeferred(deferred: CheckPermissionDeferred, order) =>
-//        OrderedDeferred(deferred, order)
-//    }
-
     // for every group, further break them down by their arguments
     val manyModelDeferredsMap = DeferredUtils.groupModelDeferred[ManyModelDeferred](manyModelDeferreds)
 
