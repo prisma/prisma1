@@ -19,7 +19,7 @@ class ToOneDeferredResolver(dataResolver: DataResolver) {
     val args         = headDeferred.args
 
     // get ids of dataitems in related model we need to fetch
-    val relatedModelIds = deferreds.map(_.parentNodeId).toList
+    val relatedModelIds = deferreds.map(_.parentNodeId)
 
     // fetch dataitems
     val futureDataItems: Future[Vector[PrismaNodeWithParent]] =

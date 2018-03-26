@@ -4,7 +4,6 @@ import com.prisma.api.connector.Types.DataItemFilterCollection
 import com.prisma.gc_values.GCValue
 import com.prisma.shared.models.{Field, Model, Project}
 
-import scala.collection.immutable
 import scala.concurrent.Future
 
 trait DataResolver {
@@ -23,10 +22,10 @@ trait DataResolver {
   def batchResolveScalarList(model: Model, field: Field, nodeIds: Vector[String]): Future[Vector[ScalarListValues]]
 
   def resolveByRelationManyModels(fromField: Field,
-                                  fromModelIds: List[String],
+                                  fromModelIds: Vector[String],
                                   args: Option[QueryArguments]): Future[Vector[ResolverResultNew[PrismaNodeWithParent]]]
 
-  def countByRelationManyModels(fromField: Field, fromNodeIds: List[String], args: Option[QueryArguments]): Future[Vector[(String, Int)]]
+  def countByRelationManyModels(fromField: Field, fromNodeIds: Vector[String], args: Option[QueryArguments]): Future[Vector[(String, Int)]]
 
   def loadListRowsForExport(model: Model, field: Field, args: Option[QueryArguments] = None): Future[ResolverResultNew[ScalarListValues]]
 

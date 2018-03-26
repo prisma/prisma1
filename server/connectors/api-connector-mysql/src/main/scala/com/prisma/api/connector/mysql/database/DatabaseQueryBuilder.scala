@@ -242,7 +242,7 @@ object DatabaseQueryBuilder {
 
   def countAllFromRelatedModels(project: Project,
                                 relationField: Field,
-                                parentNodeIds: List[String],
+                                parentNodeIds: Vector[String],
                                 args: Option[QueryArguments]): SqlStreamingAction[Vector[(String, Int)], (String, Int), Effect] = {
 
     val fieldTable        = relationField.relatedModel(project.schema).get.name

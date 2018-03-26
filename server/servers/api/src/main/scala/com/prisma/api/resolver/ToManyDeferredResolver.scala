@@ -19,17 +19,17 @@ class ToManyDeferredResolver(dataResolver: DataResolver) {
     val args         = headDeferred.args
 
     // Get ids of nodes in related model we need to fetch (actual rows of data)
-    val relatedModelInstanceIds = deferreds.map(_.parentNodeId).toList
+    val relatedModelInstanceIds: Vector[String] = deferreds.map(_.parentNodeId)
 
     // As we are using `union all` as our batching mechanism there is very little gain from batching,
     // and 500 items seems to be the cutoff point where there is no more value to be had.
-    val batchFutures: Seq[Future[Vector[ResolverResultNew[PrismaNodeWithParent]]]] = relatedModelInstanceIds
+    val batchFutures: Vector[Future[Vector[ResolverResultNew[PrismaNodeWithParent]]]] = relatedModelInstanceIds
       .grouped(500)
-      .toList
+      .toVector
       .map(dataResolver.resolveByRelationManyModels(relatedField, _, args))
 
     // Fetch resolver results
-    val futureResolverResults: Future[Seq[ResolverResultNew[PrismaNodeWithParent]]] = Future
+    val futureResolverResults: Future[Vector[ResolverResultNew[PrismaNodeWithParent]]] = Future
       .sequence(batchFutures)
       .map(_.flatten)
 
