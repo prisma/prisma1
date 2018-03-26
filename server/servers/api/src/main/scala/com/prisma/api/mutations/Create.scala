@@ -37,7 +37,7 @@ case class Create(
   }
 
   def prepareMutactions(): Future[PreparedMutactions] = {
-    val createMutactionsResult = DatabaseMutactions(project).getMutactionsForCreate(model, coolArgs, id).toVector
+    val createMutactionsResult = DatabaseMutactions(project).getMutactionsForCreate(model, coolArgs, id)
     val subscriptionMutactions = SubscriptionEvents.extractFromSqlMutactions(project, mutationId, createMutactionsResult)
     val sssActions             = ServerSideSubscriptions.extractFromMutactions(project, createMutactionsResult, requestId)
 
@@ -52,9 +52,9 @@ case class Create(
   override def getReturnValue: Future[ReturnValueResult] = {
     for {
       returnValue <- returnValueByUnique(NodeSelector.forId(model, id))
-      dataItem    = returnValue.asInstanceOf[ReturnValue].prismaNode
+      prismaNode  = returnValue.asInstanceOf[ReturnValue].prismaNode
     } yield {
-      ReturnValue(dataItem)
+      ReturnValue(prismaNode)
     }
   }
 }

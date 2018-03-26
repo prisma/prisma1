@@ -19,7 +19,7 @@ object SubscriptionEvents {
   }
 
   def fromDeleteMutaction(project: Project, mutationId: Id, mutaction: DeleteDataItem)(implicit apiDependencies: ApiDependencies): PublishSubscriptionEvent = {
-    val nodeData: Map[String, Any] = mutaction.previousValues.userData
+    val nodeData: Map[String, Any] = mutaction.previousValues.toDataItem.userData
       .collect {
         case (key, Some(value)) =>
           (key, value match {

@@ -46,15 +46,6 @@ case class Upsert(
   }
 
   override def getReturnValue: Future[ReturnValueResult] = {
-
-//    val uniques = Vector(createWhere, updatedWhere)
-//    dataResolver.resolveByUniques(model, uniques).map { items =>
-//      items.headOption match {
-//        case Some(item) => ReturnValue(item)
-//        case None       => sys.error("Could not find an item after an Upsert. This should not be possible.") // Todo: what should we do here?
-//      }
-//    }
-
     val createItemFuture = dataResolver.resolveByUnique(createWhere)
     val upsertItemFuture = dataResolver.resolveByUnique(updatedWhere)
 

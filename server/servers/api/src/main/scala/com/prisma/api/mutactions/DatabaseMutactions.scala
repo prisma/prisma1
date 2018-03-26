@@ -5,6 +5,7 @@ import com.prisma.api.connector._
 import com.prisma.api.schema.APIErrors.RelationIsRequired
 import com.prisma.shared.models.IdType.Id
 import com.prisma.shared.models.{Field, Model, Project}
+import com.prisma.util.gc_value.{GCAnyConverter, GCCreateReallyCoolArgsConverter}
 import cool.graph.cuid.Cuid.createCuid
 
 import scala.collection.immutable.Seq
@@ -36,10 +37,13 @@ case class DatabaseMutactions(project: Project) {
     updateMutaction ++ nested
   }
 
-  def getMutactionsForCreate(model: Model, args: CoolArgs, id: Id): Seq[DatabaseMutaction] = report {
-    val path             = Path.empty(NodeSelector.forId(model, id))
-    val createMutactions = CreateDataItem(project, path, args) +: getMutactionsForScalarLists(path, args)
-    val nestedMutactions = getMutactionsForNestedMutation(args, path, triggeredFromCreate = true)
+  def getMutactionsForCreate(model: Model, args: CoolArgs, id: Id): Vector[DatabaseMutaction] = report {
+    val path                        = Path.empty(NodeSelector.forId(model, id))
+    val nonListCreateArgs: CoolArgs = args.generateNonListCreateArgs(model, id)
+    val converter                   = GCCreateReallyCoolArgsConverter(model)
+    val reallyCoolArgs              = converter.toReallyCoolArgs(nonListCreateArgs)
+    val createMutactions            = CreateDataItem(project, path, reallyCoolArgs) +: getMutactionsForScalarLists(path, args)
+    val nestedMutactions            = getMutactionsForNestedMutation(args, path, triggeredFromCreate = true)
 
     createMutactions ++ nestedMutactions
   }
@@ -126,8 +130,13 @@ case class DatabaseMutactions(project: Project) {
                                            field: Field,
                                            triggeredFromCreate: Boolean): Seq[DatabaseMutaction] = {
     nestedMutation.creates.flatMap { create =>
-      val extendedPath     = path.extend(project, field, create).lastEdgeToNodeEdge(NodeSelector.forId(model, createCuid()))
-      val createMutactions = List(CreateDataItem(project, extendedPath, create.data))
+      val id                          = createCuid()
+      val extendedPath                = path.extend(project, field, create).lastEdgeToNodeEdge(NodeSelector.forId(model, id))
+      val nonListCreateArgs: CoolArgs = create.data.generateNonListCreateArgs(model, id)
+      val converter                   = GCCreateReallyCoolArgsConverter(model)
+      val reallyCoolArgs              = converter.toReallyCoolArgs(nonListCreateArgs)
+
+      val createMutactions = List(CreateDataItem(project, extendedPath, reallyCoolArgs))
       val listMutactions   = getMutactionsForScalarLists(extendedPath, create.data)
       val connectItem      = List(NestedCreateRelation(project, extendedPath, triggeredFromCreate))
 

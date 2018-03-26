@@ -4,10 +4,11 @@ import java.sql.{PreparedStatement, Statement, Timestamp}
 
 import com.prisma.api.connector.Types.DataItemFilterCollection
 import com.prisma.api.connector._
+import com.prisma.api.connector.mysql.database.JdbcExtensions._
 import com.prisma.api.connector.mysql.database.SlickExtensions._
 import com.prisma.api.connector.mysql.impl.NestedCreateRelationInterpreter
 import com.prisma.api.schema.GeneralError
-import com.prisma.gc_values.GCValue
+import com.prisma.gc_values.{GCValue, NullGCValue}
 import com.prisma.shared.models.TypeIdentifier.TypeIdentifier
 import com.prisma.shared.models._
 import cool.graph.cuid.Cuid
@@ -31,6 +32,31 @@ object DatabaseMutationBuilder {
   def createDataItem(projectId: String, modelName: String, args: CoolArgs): SqlStreamingAction[Vector[Int], Int, Effect]#ResultAction[Int, NoStream, Effect] = {
     val (escapedKeys: Option[SQLActionBuilder], escapedValues: Option[SQLActionBuilder]) = combineKeysAndValuesSeparately(args)
     (sql"INSERT INTO `#$projectId`.`#$modelName` (" ++ escapedKeys ++ sql") VALUES (" ++ escapedValues ++ sql")").asUpdate
+  }
+
+  def createReallyCoolDataItem(projectId: String, model: Model, args: ReallyCoolArgs) = {
+
+    SimpleDBIO[Vector[String]] { x =>
+      val columns      = model.scalarNonListFields.map(_.name)
+      val escapedKeys  = columns.map(column => s"`$column`").mkString(",")
+      val placeHolders = columns.map(_ => "?").mkString(",")
+
+      val query                         = s"INSERT INTO `$projectId`.`${model.name}` ($escapedKeys) VALUES ($placeHolders)"
+      val itemInsert: PreparedStatement = x.connection.prepareStatement(query)
+
+      columns.zipWithIndex.foreach {
+        case (column, index) =>
+          args.raw.asRoot.map.get(column) match {
+            case Some(NullGCValue) if column == "createdAt" || column == "updatedAt" =>
+              itemInsert.setTimestamp(index + 1, new Timestamp(System.currentTimeMillis()))
+            case Some(gCValue)                                          => itemInsert.setGcValue(index + 1, gCValue)
+            case None if column == "createdAt" || column == "updatedAt" => itemInsert.setTimestamp(index + 1, new Timestamp(System.currentTimeMillis()))
+            case None                                                   => itemInsert.setNull(index + 1, java.sql.Types.NULL)
+          }
+      }
+      itemInsert.execute()
+      Vector.empty
+    }
   }
 
   def createRelayRow(projectId: String, where: NodeSelector): SqlStreamingAction[Vector[Int], Int, Effect]#ResultAction[Int, NoStream, Effect] = {
@@ -414,9 +440,6 @@ object DatabaseMutationBuilder {
   //endregion
 
   def createDataItemsImport(mutaction: CreateDataItemsImport): SimpleDBIO[Vector[String]] = {
-    import java.sql.Statement
-
-    import JdbcExtensions._
 
     SimpleDBIO[Vector[String]] { x =>
       val model         = mutaction.model
@@ -536,8 +559,6 @@ object DatabaseMutationBuilder {
     val projectId = mutaction.project.id
     val tableName = mutaction.tableName
     val nodeId    = mutaction.id
-
-    import JdbcExtensions._
 
     SimpleDBIO[Vector[String]] { x =>
       val setBaseline: Vector[String] = try {

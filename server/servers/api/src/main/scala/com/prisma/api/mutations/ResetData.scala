@@ -2,6 +2,7 @@ package com.prisma.api.mutations
 
 import com.prisma.api.ApiDependencies
 import com.prisma.api.connector._
+import com.prisma.gc_values.RootGCValue
 import com.prisma.shared.models._
 
 import scala.concurrent.Future
@@ -25,5 +26,5 @@ case class ResetData(project: Project, dataResolver: DataResolver)(implicit apiD
     }
   }
 
-  override def getReturnValue: Future[ReturnValueResult] = Future.successful(ReturnValue(DataItem("", Map.empty)))
+  override def getReturnValue: Future[ReturnValueResult] = Future.successful(ReturnValue(PrismaNode("", RootGCValue.empty)))
 }

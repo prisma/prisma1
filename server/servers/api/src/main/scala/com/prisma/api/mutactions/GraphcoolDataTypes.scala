@@ -137,72 +137,6 @@ object GraphcoolDataTypes {
     write(unwrapSomes(data)).asJsObject
   }
 
-  // todo: This should be used as close to db as possible
-  // todo: this should replace DataResolver.mapDataItem
-  def fromSql(data: UserData, fields: List[Field]): UserData = {
-
-    def typeIdentifier(key: String): Option[TypeIdentifier] = fields.find(_.name == key).map(_.typeIdentifier)
-    def isList(key: String): Boolean                        = fields.find(_.name == key).exists(_.isList)
-    def verifyIsTopLevelJsonValue(key: String, jsValue: JsValue): JsValue = {
-      if (!(jsValue.isInstanceOf[JsObject] || jsValue.isInstanceOf[JsArray])) {
-        throw ValueNotAValidJson(key, jsValue.prettyPrint)
-      }
-      jsValue
-    }
-    def mapTo[T](value: Any, convert: JsValue => T): Seq[T] = {
-      value match {
-        case x: String =>
-          Try {
-            x.parseJson
-              .asInstanceOf[JsArray]
-              .elements
-              .map(convert)
-          }.getOrElse(List.empty)
-        case x: Vector[_] => x.map(_.asInstanceOf[T])
-      }
-    }
-
-    try {
-      data
-        .flatMap({
-          // OTHER
-          case (key, Some(value)) if typeIdentifier(key).isEmpty => None
-          case (key, None)                                       => Some((key, None))
-
-          // SCALAR LISTS
-          case (key, Some(value)) if typeIdentifier(key).contains(TypeIdentifier.DateTime) && isList(key) =>
-            Some((key, Some(mapTo(value, x => new DateTime(x.convertTo[JsValue], DateTimeZone.UTC)))))
-          case (key, Some(value)) if typeIdentifier(key).contains(TypeIdentifier.String) && isList(key) => Some((key, Some(mapTo(value, _.convertTo[String]))))
-          case (key, Some(value)) if typeIdentifier(key).contains(TypeIdentifier.GraphQLID) && isList(key) =>
-            Some((key, Some(mapTo(value, _.convertTo[String]))))
-          case (key, Some(value)) if typeIdentifier(key).contains(TypeIdentifier.Relation) && isList(key) => None // consider: recurse
-          case (key, Some(value)) if typeIdentifier(key).contains(TypeIdentifier.Json) && isList(key) =>
-            Some((key, Some(mapTo(value, x => verifyIsTopLevelJsonValue(key, x.convertTo[JsValue])))))
-          case (key, Some(value)) if typeIdentifier(key).contains(TypeIdentifier.Boolean) && isList(key) =>
-            Some((key, Some(mapTo(value, _.convertTo[Boolean]))))
-          case (key, Some(value)) if typeIdentifier(key).contains(TypeIdentifier.Float) && isList(key) => Some((key, Some(mapTo(value, _.convertTo[Double]))))
-          case (key, Some(value)) if typeIdentifier(key).contains(TypeIdentifier.Int) && isList(key)   => Some((key, Some(mapTo(value, _.convertTo[Int]))))
-          case (key, Some(value)) if typeIdentifier(key).contains(TypeIdentifier.Enum) && isList(key)  => Some((key, Some(mapTo(value, _.convertTo[String]))))
-
-          // SCALARS
-          case (key, Some(value)) if typeIdentifier(key).contains(TypeIdentifier.DateTime) =>
-            Some(
-              (key, Some(DateTime.parse(value.asInstanceOf[java.sql.Timestamp].toString, DateTimeFormat.forPattern("yyyy-MM-dd HH:mm:ss.SSS").withZoneUTC()))))
-          case (key, Some(value)) if typeIdentifier(key).contains(TypeIdentifier.String)    => Some((key, Some(value.asInstanceOf[String])))
-          case (key, Some(value)) if typeIdentifier(key).contains(TypeIdentifier.GraphQLID) => Some((key, Some(value.asInstanceOf[String])))
-          case (key, Some(value)) if typeIdentifier(key).contains(TypeIdentifier.Relation)  => None
-          case (key, Some(value)) if typeIdentifier(key).contains(TypeIdentifier.Json) =>
-            Some((key, Some(verifyIsTopLevelJsonValue(key, value.asInstanceOf[JsValue]))))
-          case (key, Some(value)) if typeIdentifier(key).contains(TypeIdentifier.Boolean) => Some((key, Some(value.asInstanceOf[Boolean])))
-          case (key, Some(value)) if typeIdentifier(key).contains(TypeIdentifier.Float)   => Some((key, Some(value.asInstanceOf[Double])))
-          case (key, Some(value)) if typeIdentifier(key).contains(TypeIdentifier.Int)     => Some((key, Some(value.asInstanceOf[Int])))
-          case (key, Some(value)) if typeIdentifier(key).contains(TypeIdentifier.Enum)    => Some((key, Some(value.asInstanceOf[String])))
-        })
-    } catch {
-      case e: DeserializationException => sys.error(s" parsing DataItem from SQL failed: ${e.getMessage}")
-    }
-  }
-
   def unwrapSomes(map: UserData): Map[String, Any] = {
     map.map {
       case (field, Some(value)) => (field, value)
@@ -210,11 +144,77 @@ object GraphcoolDataTypes {
     }
   }
 
-  def wrapSomes(map: Map[String, Any]): UserData = {
-    map.map {
-      case (field, Some(value)) => (field, Some(value))
-      case (field, None)        => (field, None)
-      case (field, value)       => (field, Some(value))
-    }
-  }
+//  // todo: This should be used as close to db as possible
+//  // todo: this should replace DataResolver.mapDataItem
+//  def fromSql(data: UserData, fields: List[Field]): UserData = {
+//
+//    def typeIdentifier(key: String): Option[TypeIdentifier] = fields.find(_.name == key).map(_.typeIdentifier)
+//    def isList(key: String): Boolean                        = fields.find(_.name == key).exists(_.isList)
+//    def verifyIsTopLevelJsonValue(key: String, jsValue: JsValue): JsValue = {
+//      if (!(jsValue.isInstanceOf[JsObject] || jsValue.isInstanceOf[JsArray])) {
+//        throw ValueNotAValidJson(key, jsValue.prettyPrint)
+//      }
+//      jsValue
+//    }
+//    def mapTo[T](value: Any, convert: JsValue => T): Seq[T] = {
+//      value match {
+//        case x: String =>
+//          Try {
+//            x.parseJson
+//              .asInstanceOf[JsArray]
+//              .elements
+//              .map(convert)
+//          }.getOrElse(List.empty)
+//        case x: Vector[_] => x.map(_.asInstanceOf[T])
+//      }
+//    }
+//
+//    try {
+//      data
+//        .flatMap({
+//          // OTHER
+//          case (key, Some(value)) if typeIdentifier(key).isEmpty => None
+//          case (key, None)                                       => Some((key, None))
+//
+//          // SCALAR LISTS
+//          case (key, Some(value)) if typeIdentifier(key).contains(TypeIdentifier.DateTime) && isList(key) =>
+//            Some((key, Some(mapTo(value, x => new DateTime(x.convertTo[JsValue], DateTimeZone.UTC)))))
+//          case (key, Some(value)) if typeIdentifier(key).contains(TypeIdentifier.String) && isList(key) => Some((key, Some(mapTo(value, _.convertTo[String]))))
+//          case (key, Some(value)) if typeIdentifier(key).contains(TypeIdentifier.GraphQLID) && isList(key) =>
+//            Some((key, Some(mapTo(value, _.convertTo[String]))))
+//          case (key, Some(value)) if typeIdentifier(key).contains(TypeIdentifier.Relation) && isList(key) => None // consider: recurse
+//          case (key, Some(value)) if typeIdentifier(key).contains(TypeIdentifier.Json) && isList(key) =>
+//            Some((key, Some(mapTo(value, x => verifyIsTopLevelJsonValue(key, x.convertTo[JsValue])))))
+//          case (key, Some(value)) if typeIdentifier(key).contains(TypeIdentifier.Boolean) && isList(key) =>
+//            Some((key, Some(mapTo(value, _.convertTo[Boolean]))))
+//          case (key, Some(value)) if typeIdentifier(key).contains(TypeIdentifier.Float) && isList(key) => Some((key, Some(mapTo(value, _.convertTo[Double]))))
+//          case (key, Some(value)) if typeIdentifier(key).contains(TypeIdentifier.Int) && isList(key)   => Some((key, Some(mapTo(value, _.convertTo[Int]))))
+//          case (key, Some(value)) if typeIdentifier(key).contains(TypeIdentifier.Enum) && isList(key)  => Some((key, Some(mapTo(value, _.convertTo[String]))))
+//
+//          // SCALARS
+//          case (key, Some(value)) if typeIdentifier(key).contains(TypeIdentifier.DateTime) =>
+//            Some(
+//              (key, Some(DateTime.parse(value.asInstanceOf[java.sql.Timestamp].toString, DateTimeFormat.forPattern("yyyy-MM-dd HH:mm:ss.SSS").withZoneUTC()))))
+//          case (key, Some(value)) if typeIdentifier(key).contains(TypeIdentifier.String)    => Some((key, Some(value.asInstanceOf[String])))
+//          case (key, Some(value)) if typeIdentifier(key).contains(TypeIdentifier.GraphQLID) => Some((key, Some(value.asInstanceOf[String])))
+//          case (key, Some(value)) if typeIdentifier(key).contains(TypeIdentifier.Relation)  => None
+//          case (key, Some(value)) if typeIdentifier(key).contains(TypeIdentifier.Json) =>
+//            Some((key, Some(verifyIsTopLevelJsonValue(key, value.asInstanceOf[JsValue]))))
+//          case (key, Some(value)) if typeIdentifier(key).contains(TypeIdentifier.Boolean) => Some((key, Some(value.asInstanceOf[Boolean])))
+//          case (key, Some(value)) if typeIdentifier(key).contains(TypeIdentifier.Float)   => Some((key, Some(value.asInstanceOf[Double])))
+//          case (key, Some(value)) if typeIdentifier(key).contains(TypeIdentifier.Int)     => Some((key, Some(value.asInstanceOf[Int])))
+//          case (key, Some(value)) if typeIdentifier(key).contains(TypeIdentifier.Enum)    => Some((key, Some(value.asInstanceOf[String])))
+//        })
+//    } catch {
+//      case e: DeserializationException => sys.error(s" parsing DataItem from SQL failed: ${e.getMessage}")
+//    }
+//  }
+
+//  def wrapSomes(map: Map[String, Any]): UserData = {
+//    map.map {
+//      case (field, Some(value)) => (field, Some(value))
+//      case (field, None)        => (field, None)
+//      case (field, value)       => (field, Some(value))
+//    }
+//  }
 }

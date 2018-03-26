@@ -165,8 +165,7 @@ case class CoolArgs(raw: Map[String, Any]) {
       try {
         fieldValue.asInstanceOf[Option[Seq[T]]].getOrElse(Seq.empty)
       } catch {
-        case _: ClassCastException =>
-          fieldValue.asInstanceOf[Seq[T]]
+        case _: ClassCastException => fieldValue.asInstanceOf[Seq[T]]
       }
     }
   }

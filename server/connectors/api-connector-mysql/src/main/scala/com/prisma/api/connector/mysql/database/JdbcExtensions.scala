@@ -1,6 +1,7 @@
 package com.prisma.api.connector.mysql.database
 
 import java.sql.{PreparedStatement, ResultSet, Timestamp}
+import java.time.{LocalDateTime, ZoneOffset}
 
 import com.prisma.gc_values._
 import com.prisma.shared.models.TypeIdentifier
@@ -16,11 +17,14 @@ object JdbcExtensions {
       case gcValue: IntGCValue       => ps.setInt(index, gcValue.value)
       case gcValue: FloatGCValue     => ps.setDouble(index, gcValue.value)
       case gcValue: GraphQLIdGCValue => ps.setString(index, gcValue.value)
-      case gcValue: DateTimeGCValue  => ps.setTimestamp(index, new Timestamp(gcValue.value.getMillis)) // todo this is wrong goes from UTC to GMT
-      case gcValue: EnumGCValue      => ps.setString(index, gcValue.value)
-      case gcValue: JsonGCValue      => ps.setString(index, gcValue.value.toString)
-      case NullGCValue               => ps.setNull(index, java.sql.Types.NULL)
-      case x                         => sys.error(s"This method must only be called with LeafGCValues. Was called with: ${x.getClass}")
+      case gcValue: DateTimeGCValue =>
+        val res2 = Timestamp.valueOf(LocalDateTime.ofEpochSecond(gcValue.value.getMillis / 1000, 0, ZoneOffset.UTC))
+
+        ps.setTimestamp(index, res2)
+      case gcValue: EnumGCValue => ps.setString(index, gcValue.value)
+      case gcValue: JsonGCValue => ps.setString(index, gcValue.value.toString)
+      case NullGCValue          => ps.setNull(index, java.sql.Types.NULL)
+      case x                    => sys.error(s"This method must only be called with LeafGCValues. Was called with: ${x.getClass}")
     }
   }
 

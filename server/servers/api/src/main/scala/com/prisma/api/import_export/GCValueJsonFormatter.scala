@@ -1,12 +1,10 @@
 package com.prisma.api.import_export
 
-import com.prisma.api.import_export.GCValueJsonFormatter.GcValueWrites.writes
 import com.prisma.gc_values._
 import com.prisma.shared.models.{Enum, Field, Model, TypeIdentifier}
 import org.joda.time.DateTimeZone
 import org.joda.time.format.{DateTimeFormat, ISODateTimeFormat}
 import play.api.libs.json._
-
 import scala.collection.immutable.SortedMap
 import scala.util.Try
 

@@ -1,9 +1,9 @@
 package com.prisma.util.gc_value
 
-import com.prisma.api.connector.NodeSelector
+import com.prisma.api.connector.{CoolArgs, NodeSelector, ReallyCoolArgs}
 import com.prisma.gc_values._
 import com.prisma.shared.models.TypeIdentifier.TypeIdentifier
-import com.prisma.shared.models.{Field, TypeIdentifier}
+import com.prisma.shared.models.{Field, Model, TypeIdentifier}
 import com.prisma.util.gc_value.OtherGCStuff.sequence
 import org.apache.commons.lang.StringEscapeUtils
 import org.joda.time.format.{DateTimeFormat, ISODateTimeFormat}
@@ -57,6 +57,7 @@ object GCValueExtractor {
   }
 
   def fromGCValueToOption(t: GCValue): Option[Any] = {
+    import spray.json._
     t match {
       case NullGCValue         => None // todo danger!!!
       case x: StringGCValue    => Some(x.value)
@@ -66,7 +67,7 @@ object GCValueExtractor {
       case x: IntGCValue       => Some(x.value)
       case x: FloatGCValue     => Some(x.value)
       case x: BooleanGCValue   => Some(x.value)
-      case x: JsonGCValue      => Some(x.value)
+      case x: JsonGCValue      => Some(x.value.toString.parseJson)
       case x: ListGCValue      => Some(x.values.map(fromGCValue))
       case x: RootGCValue      => sys.error("RootGCValues not implemented yet in GCValueExtractor")
     }
@@ -367,9 +368,10 @@ case class GCStringConverter(typeIdentifier: TypeIdentifier, isList: Boolean) ex
   */
 case class GCAnyConverter(typeIdentifier: TypeIdentifier, isList: Boolean) extends GCConverter[Any] {
   import OtherGCStuff._
-
   import play.api.libs.json.{JsObject => PlayJsObject}
   import spray.json.{JsObject => SprayJsObject}
+  import play.api.libs.json.{JsArray => PlayJsArray}
+  import spray.json.{JsArray => SprayJsArray}
 
   override def toGCValue(t: Any): Or[GCValue, InvalidValueForScalarType] = {
     try {
@@ -384,13 +386,15 @@ case class GCAnyConverter(typeIdentifier: TypeIdentifier, isList: Boolean) exten
         case (x: Float, TypeIdentifier.Float)                                         => FloatGCValue(x)
         case (x: Double, TypeIdentifier.Float)                                        => FloatGCValue(x)
         case (x: Boolean, TypeIdentifier.Boolean)                                     => BooleanGCValue(x)
-        case (x: String, TypeIdentifier.DateTime)                                     => DateTimeGCValue(new DateTime(x, DateTimeZone.UTC))
-        case (x: DateTime, TypeIdentifier.DateTime)                                   => DateTimeGCValue(new DateTime(x, DateTimeZone.UTC))
+        case (x: String, TypeIdentifier.DateTime)                                     => DateTimeGCValue(new DateTime(x))
+        case (x: DateTime, TypeIdentifier.DateTime)                                   => DateTimeGCValue(x)
         case (x: String, TypeIdentifier.GraphQLID)                                    => GraphQLIdGCValue(x)
         case (x: String, TypeIdentifier.Enum)                                         => EnumGCValue(x)
         case (x: PlayJsObject, TypeIdentifier.Json)                                   => JsonGCValue(x)
         case (x: SprayJsObject, TypeIdentifier.Json)                                  => JsonGCValue(Json.parse(x.compactPrint))
         case (x: String, TypeIdentifier.Json)                                         => JsonGCValue(Json.parse(x))
+        case (x: SprayJsArray, TypeIdentifier.Json)                                   => JsonGCValue(Json.parse(x.compactPrint))
+        case (x: PlayJsArray, TypeIdentifier.Json)                                    => JsonGCValue(x)
         case (x: List[Any], _) if isList                                              => sequence(x.map(this.toGCValue).toVector).map(seq => ListGCValue(seq)).get
         case _                                                                        => sys.error("Error in toGCValue. Value: " + t)
       }
@@ -401,7 +405,29 @@ case class GCAnyConverter(typeIdentifier: TypeIdentifier, isList: Boolean) exten
     }
   }
 
-  override def fromGCValue(t: GCValue): Any = ???
+  override def fromGCValue(t: GCValue): Any = GCValueExtractor.fromGCValue(t)
+}
+
+/**
+  * 7. CoolArgs <-> ReallyCoolArgs - This is used to transform from Coolargs for create on a model to typed ReallyCoolArgs
+  */
+case class GCCreateReallyCoolArgsConverter(model: Model) {
+
+  def toReallyCoolArgs(input: CoolArgs): ReallyCoolArgs = {
+
+    val res = model.scalarNonListFields.map { field =>
+      val converter = GCAnyConverter(field.typeIdentifier, false)
+
+      val gCValue = input.raw.get(field.name) match {
+        case Some(Some(x)) => converter.toGCValue(x).get
+        case Some(None)    => NullGCValue
+        case Some(x)       => converter.toGCValue(x).get
+        case None          => NullGCValue
+      }
+      field.name -> gCValue
+    }
+    ReallyCoolArgs(RootGCValue(res: _*))
+  }
 }
 
 /**
