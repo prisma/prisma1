@@ -36,7 +36,7 @@ trait ApiDependencies extends AwaitUtils {
   lazy val graphQlRequestHandler: GraphQlRequestHandler = GraphQlRequestHandlerImpl(println)
   lazy val auth: Auth                                   = AuthImpl
   lazy val requestHandler: RequestHandler               = RequestHandler(projectFetcher, apiSchemaBuilder, graphQlRequestHandler, auth, println)
-  lazy val maxImportExportSize: Int                     = 10000000
+  lazy val maxImportExportSize: Int                     = 1000000
 
   val sssEventsPubSub: PubSub[String]
   lazy val sssEventsPublisher: PubSubPublisher[String] = sssEventsPubSub

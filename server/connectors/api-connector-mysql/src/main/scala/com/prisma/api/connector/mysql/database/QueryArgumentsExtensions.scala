@@ -41,7 +41,7 @@ object QueryArgumentsExtensions {
       val nodeIdField   = s"`$projectId`.`$modelId`.`nodeId`"
       val positionField = s"`$projectId`.`$modelId`.`position`"
 
-      // First order by the orderByField, then by id to break ties
+      //always order by nodeId, then positionfield ascending
       Some(sql"#$nodeIdField #$order, #$positionField #$idOrder")
     }
 
@@ -88,10 +88,9 @@ object QueryArgumentsExtensions {
           }
           // Increase by 1 to know if we have a next page / previous page for relay queries
           val limitedCount: String = count match {
-            case None => maxNodeCount.toString
-            case Some(x) if x > maxNodeCount =>
-              throw APIErrors.TooManyNodesRequested(x)
-            case Some(x) => (x + 1).toString
+            case None                        => maxNodeCount.toString
+            case Some(x) if x > maxNodeCount => throw APIErrors.TooManyNodesRequested(x)
+            case Some(x)                     => (x + 1).toString
           }
           Some(sql"${skip.getOrElse(0)}, #$limitedCount")
       }
@@ -114,23 +113,26 @@ object QueryArgumentsExtensions {
       }
 
       (first, last) match {
-        case (Some(f), _) =>
-          if (items.size > f) {
-            ResolverResult(items.dropRight(1), hasNextPage = true)
-          } else {
-            ResolverResult(items)
-          }
-
-        case (_, Some(l)) =>
-          if (items.size > l) {
-            ResolverResult(items.tail, hasPreviousPage = true)
-          } else {
-            ResolverResult(items)
-          }
-
-        case _ =>
-          ResolverResult(items)
+        case (Some(f), _) if items.size > f => ResolverResult(items.dropRight(1), hasNextPage = true)
+        case (_, Some(l)) if items.size > l => ResolverResult(items.tail, hasPreviousPage = true)
+        case _                              => ResolverResult(items)
       }
+    }
+
+    def dropExtraLimitItem[T](items: Vector[T]): Vector[T] = (first, last) match {
+      case (Some(f), _) if items.size > f => items.dropRight(1)
+      case (_, Some(l)) if items.size > l => items.tail
+      case _                              => items
+    }
+
+    def hasNext(count: Int): Boolean = (first, last) match {
+      case (Some(f), _) if count > f => true
+      case (_, _)                    => false
+    }
+
+    def hasPrevious(count: Int): Boolean = (first, last) match {
+      case (_, Some(l)) if count > l => true
+      case (_, _)                    => false
     }
 
     def extractWhereConditionCommand(projectId: String, modelId: String): Option[SQLActionBuilder] = {

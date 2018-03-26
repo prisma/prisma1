@@ -125,7 +125,7 @@ class BulkImportSpec extends FlatSpec with Matchers with ApiBaseSpec with AwaitU
 
     val res2 = importer.executeImport(nodes).await(5)
 
-    res2.toString should be("""[{"index":1,"message":"Unknown field 'c' in field list"}]""")
+    res2.toString should be("""["The model Model0 with id just-some-id3 has an unknown field 'c' in field list."]""")
 
     val res = server.query("query{model0s{id, b}}", project)
 
@@ -142,11 +142,8 @@ class BulkImportSpec extends FlatSpec with Matchers with ApiBaseSpec with AwaitU
 
     val res2 = importer.executeImport(nodes).await(5)
 
-    println(res2.toString())
-
-    res2.toString should (be("""[{"index":2,"message":" Duplicate entry 'just-some-id5' for key 'PRIMARY'"}]""")
-      or be("""[{"index":1,"message":" Duplicate entry 'just-some-id5' for key 'PRIMARY'"}]"""))
-
+    res2.toString should be(
+      """["Failure inserting Model0 with Id: just-some-id5. Cause: java.sql.SQLIntegrityConstraintViolationException: Duplicate entry 'just-some-id5' for key 'PRIMARY'","Failure inserting RelayRow with Id: just-some-id5. Cause: java.sql.SQLIntegrityConstraintViolationException: Duplicate entry 'just-some-id5' for key 'PRIMARY'"]""")
     val res = server.query("query{model0s{id, b}}", project)
     res.toString should (be("""{"data":{"model0s":[{"id":"just-some-id4","b":12},{"id":"just-some-id5","b":13}]}}""") or
       be("""{"data":{"model0s":[{"id":"just-some-id4","b":12},{"id":"just-some-id5","b":15}]}}"""))

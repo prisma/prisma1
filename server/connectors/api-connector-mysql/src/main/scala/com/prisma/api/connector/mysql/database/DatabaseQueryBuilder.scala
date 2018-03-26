@@ -3,17 +3,23 @@ package com.prisma.api.connector.mysql.database
 import com.prisma.api.connector.Types.DataItemFilterCollection
 import com.prisma.api.connector._
 import com.prisma.api.connector.mysql.database.DatabaseMutationBuilder.idFromWhereEquals
-import com.prisma.shared.models.{Field, Model, Project}
+import com.prisma.api.connector.mysql.database.HelperTypes.ScalarListElement
+import com.prisma.gc_values._
+import com.prisma.shared.models.{Function => _, _}
+import org.joda.time.DateTime
+import play.api.libs.json.Json
 import slick.dbio.DBIOAction
 import slick.dbio.Effect.Read
 import slick.jdbc.MySQLProfile.api._
 import slick.jdbc.meta.{DatabaseMeta, MTable}
 import slick.jdbc.{SQLActionBuilder, _}
+import slick.sql.SqlStreamingAction
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
 object DatabaseQueryBuilder {
 
+  import JdbcExtensions._
   import QueryArgumentsExtensions._
   import SlickExtensions._
 
@@ -32,6 +38,61 @@ object DatabaseQueryBuilder {
     }
   }
 
+  def getResultForModel(model: Model): GetResult[PrismaNode] = GetResult { ps: PositionedResult =>
+    val resultSet = ps.rs
+    val id        = resultSet.getString("id")
+    val data = model.scalarNonListFields.map { field =>
+      val gcValue: GCValue = field.typeIdentifier match {
+        case TypeIdentifier.String    => StringGCValue(resultSet.getString(field.name))
+        case TypeIdentifier.GraphQLID => GraphQLIdGCValue(resultSet.getString(field.name))
+        case TypeIdentifier.Enum      => EnumGCValue(resultSet.getString(field.name))
+        case TypeIdentifier.Int       => IntGCValue(resultSet.getInt(field.name))
+        case TypeIdentifier.Float     => FloatGCValue(resultSet.getDouble(field.name))
+        case TypeIdentifier.Boolean   => BooleanGCValue(resultSet.getBoolean(field.name))
+        case TypeIdentifier.DateTime =>
+          val sqlType = resultSet.getTimestamp(field.name)
+          if (sqlType != null) {
+            DateTimeGCValue(new DateTime(sqlType.getTime))
+          } else {
+            NullGCValue
+          }
+        case TypeIdentifier.Json =>
+          val sqlType = resultSet.getString(field.name)
+          if (sqlType != null) {
+            JsonGCValue(Json.parse(sqlType))
+          } else {
+            NullGCValue
+          }
+        case TypeIdentifier.Relation => sys.error("TypeIdentifier.Relation is not supported here")
+      }
+      if (resultSet.wasNull) { // todo: should we throw here if the field is required but it is null?
+        field.name -> NullGCValue
+      } else {
+        field.name -> gcValue
+      }
+    }
+
+    PrismaNode(id = id, data = RootGCValue(data: _*))
+  }
+
+  implicit object GetRelationNode extends GetResult[RelationNode] {
+    override def apply(ps: PositionedResult): RelationNode = {
+      val resultSet = ps.rs
+      val id        = resultSet.getString("id")
+      val a         = resultSet.getString("A")
+      val b         = resultSet.getString("B")
+      RelationNode(id, a, b)
+    }
+  }
+
+  def getResultForScalarListField(field: Field): GetResult[ScalarListElement] = GetResult { ps: PositionedResult =>
+    val resultSet = ps.rs
+    val nodeId    = resultSet.getString("nodeId")
+    val position  = resultSet.getInt("position")
+    val value     = resultSet.getGcValue("value", field.typeIdentifier)
+    ScalarListElement(nodeId, position, value)
+  }
+
   implicit object GetScalarListValue extends GetResult[ScalarListValue] {
     def apply(ps: PositionedResult): ScalarListValue = {
       val rs = ps.rs
@@ -40,13 +101,13 @@ object DatabaseQueryBuilder {
     }
   }
 
-  def selectAllFromTable(projectId: String,
-                         tableName: String,
-                         args: Option[QueryArguments],
-                         overrideMaxNodeCount: Option[Int] = None): (SQLActionBuilder, ResultTransform) = {
+  def selectAllFromTable(
+      projectId: String,
+      tableName: String,
+      args: Option[QueryArguments]
+  ): (SQLActionBuilder, ResultTransform) = {
 
-    val (conditionCommand, orderByCommand, limitCommand, resultTransform) =
-      extractQueryArgs(projectId, tableName, args, overrideMaxNodeCount = overrideMaxNodeCount)
+    val (conditionCommand, orderByCommand, limitCommand, resultTransform) = extractQueryArgs(projectId, tableName, args, overrideMaxNodeCount = None)
 
     val query =
       sql"select * from `#$projectId`.`#$tableName`" concat
@@ -57,13 +118,62 @@ object DatabaseQueryBuilder {
     (query, resultTransform)
   }
 
-  def selectAllFromListTable(projectId: String,
-                             tableName: String,
-                             args: Option[QueryArguments],
-                             overrideMaxNodeCount: Option[Int] = None): (SQLActionBuilder, ResultListTransform) = {
+  def selectAllFromTableNew(
+      projectId: String,
+      model: Model,
+      args: Option[QueryArguments],
+      overrideMaxNodeCount: Option[Int] = None
+  ): DBIOAction[ResolverResultNew[PrismaNode], NoStream, Effect] = {
 
-    val (conditionCommand, orderByCommand, limitCommand, resultTransform) =
-      extractListQueryArgs(projectId, tableName, args, overrideMaxNodeCount = overrideMaxNodeCount)
+    val tableName                                           = model.name
+    val (conditionCommand, orderByCommand, limitCommand, _) = extractQueryArgs(projectId, tableName, args, overrideMaxNodeCount = overrideMaxNodeCount)
+
+    val query = sql"select * from `#$projectId`.`#$tableName`" concat
+      prefixIfNotNone("where", conditionCommand) concat
+      prefixIfNotNone("order by", orderByCommand) concat
+      prefixIfNotNone("limit", limitCommand)
+
+    query.as[PrismaNode](getResultForModel(model)).map { nodes =>
+      ResolverResultNew(
+        nodes = args.get.dropExtraLimitItem(nodes),
+        hasNextPage = args.get.hasNext(nodes.size),
+        hasPreviousPage = args.get.hasPrevious(nodes.size)
+      )
+    }
+  }
+
+  def selectAllFromRelationTable(
+      projectId: String,
+      relationId: String,
+      args: Option[QueryArguments],
+      overrideMaxNodeCount: Option[Int] = None
+  ): DBIOAction[ResolverResultNew[RelationNode], NoStream, Effect] = {
+
+    val tableName                                           = relationId
+    val (conditionCommand, orderByCommand, limitCommand, _) = extractQueryArgs(projectId, tableName, args, overrideMaxNodeCount = overrideMaxNodeCount)
+
+    val query = sql"select * from `#$projectId`.`#$tableName`" concat
+      prefixIfNotNone("where", conditionCommand) concat
+      prefixIfNotNone("order by", orderByCommand) concat
+      prefixIfNotNone("limit", limitCommand)
+
+    query.as[RelationNode].map { nodes =>
+      ResolverResultNew(
+        nodes = args.get.dropExtraLimitItem(nodes),
+        hasNextPage = args.get.hasNext(nodes.size),
+        hasPreviousPage = args.get.hasPrevious(nodes.size)
+      )
+    }
+  }
+
+  def selectAllFromListTable(projectId: String,
+                             model: Model,
+                             field: Field,
+                             args: Option[QueryArguments],
+                             overrideMaxNodeCount: Option[Int] = None): SqlStreamingAction[Vector[ScalarListElement], ScalarListElement, Read] = {
+
+    val tableName                                           = s"${model.name}_${field.name}"
+    val (conditionCommand, orderByCommand, limitCommand, _) = extractListQueryArgs(projectId, tableName, args, overrideMaxNodeCount = overrideMaxNodeCount)
 
     val query =
       sql"select * from `#$projectId`.`#$tableName`" concat
@@ -71,7 +181,7 @@ object DatabaseQueryBuilder {
         prefixIfNotNone("order by", orderByCommand) concat
         prefixIfNotNone("limit", limitCommand)
 
-    (query, resultTransform)
+    query.as[ScalarListElement](getResultForScalarListField(field))
   }
 
   def countAllFromModel(project: Project, model: Model, where: Option[DataItemFilterCollection]): SQLActionBuilder = {

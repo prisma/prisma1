@@ -8,6 +8,7 @@ import com.prisma.shared.models.Project
 import com.prisma.shared.schema_dsl.SchemaDsl
 import com.prisma.utils.await.AwaitUtils
 import org.scalatest.{FlatSpec, Matchers}
+import play.api.libs.json.JsArray
 import spray.json._
 
 class ListValueImportExportSpec extends FlatSpec with Matchers with ApiBaseSpec with AwaitUtils {
@@ -89,9 +90,9 @@ class ListValueImportExportSpec extends FlatSpec with Matchers with ApiBaseSpec 
 
     importer.executeImport(lists).await().toString should be("[]")
 
-    val cursor     = Cursor(0, 0, 0, 0)
+    val cursor     = Cursor(0, 0)
     val request    = ExportRequest("lists", cursor)
-    val firstChunk = exporter.executeExport(dataResolver, request.toJson).await().convertTo[ResultFormat]
+    val firstChunk = exporter.executeExport(dataResolver, request).await().as[ResultFormat]
 
     JsArray(firstChunk.out.jsonElements).toString should be(
       "[" ++
@@ -102,7 +103,7 @@ class ListValueImportExportSpec extends FlatSpec with Matchers with ApiBaseSpec 
     firstChunk.cursor.row should be(0)
 
     val request2    = request.copy(cursor = firstChunk.cursor)
-    val secondChunk = exporter.executeExport(dataResolver, request2.toJson).await().convertTo[ResultFormat]
+    val secondChunk = exporter.executeExport(dataResolver, request2).await().as[ResultFormat]
 
     JsArray(secondChunk.out.jsonElements).toString should be("[" ++
       """{"_typeName":"Model0","id":"1","floatList":[1.423423,3.1234324234,4.23432424,4.234234324234,1.423423,3.1234324234,4.23432424,4.234234324234]},""" ++
@@ -134,9 +135,9 @@ class ListValueImportExportSpec extends FlatSpec with Matchers with ApiBaseSpec 
 
     importer.executeImport(lists).await().toString should be("[]")
 
-    val cursor     = Cursor(0, 0, 0, 0)
+    val cursor     = Cursor(0, 0)
     val request    = ExportRequest("lists", cursor)
-    val firstChunk = exporter.executeExport(dataResolver, request.toJson).await().convertTo[ResultFormat]
+    val firstChunk = exporter.executeExport(dataResolver, request).await().as[ResultFormat]
 
     JsArray(firstChunk.out.jsonElements).toString should be(
       "[" ++
@@ -167,9 +168,10 @@ class ListValueImportExportSpec extends FlatSpec with Matchers with ApiBaseSpec 
 
     importer.executeImport(lists).await().toString should be("[]")
 
-    val cursor     = Cursor(0, 0, 0, 0)
-    val request    = ExportRequest("lists", cursor)
-    val firstChunk = exporter.executeExport(dataResolver, request.toJson).await().convertTo[ResultFormat]
+    val cursor       = Cursor(0, 0)
+    val request      = ExportRequest("lists", cursor)
+    val exportResult = exporter.executeExport(dataResolver, request).await()
+    val firstChunk   = exportResult.as[ResultFormat]
 
     JsArray(firstChunk.out.jsonElements).toString should be(
       "[" ++

@@ -1,10 +1,13 @@
 package com.prisma.api.connector.mysql.database
 
+import java.sql.{PreparedStatement, Statement, Timestamp}
+
 import com.prisma.api.connector.Types.DataItemFilterCollection
 import com.prisma.api.connector._
 import com.prisma.api.connector.mysql.database.SlickExtensions._
 import com.prisma.api.connector.mysql.impl.NestedCreateRelationInterpreter
 import com.prisma.api.schema.GeneralError
+import com.prisma.gc_values.GCValue
 import com.prisma.shared.models.TypeIdentifier.TypeIdentifier
 import com.prisma.shared.models._
 import cool.graph.cuid.Cuid
@@ -12,8 +15,6 @@ import slick.dbio.{DBIOAction, Effect, NoStream}
 import slick.jdbc.MySQLProfile.api._
 import slick.jdbc.SQLActionBuilder
 import slick.sql.{SqlAction, SqlStreamingAction}
-
-import scala.concurrent.ExecutionContext.Implicits.global
 
 object DatabaseMutationBuilder {
   val implicitlyCreatedColumns = List("id", "createdAt", "updatedAt")
@@ -34,16 +35,6 @@ object DatabaseMutationBuilder {
 
   def createRelayRow(projectId: String, where: NodeSelector): SqlStreamingAction[Vector[Int], Int, Effect]#ResultAction[Int, NoStream, Effect] = {
     (sql"INSERT INTO `#$projectId`.`_RelayId` (`id`, `stableModelIdentifier`) VALUES (${where.fieldValue}, ${where.model.stableIdentifier})").asUpdate
-  }
-
-  def createRelationRow(projectId: String,
-                        relationTableName: String,
-                        id: String,
-                        a: String,
-                        b: String): SqlStreamingAction[Vector[Int], Int, Effect]#ResultAction[Int, NoStream, Effect] = {
-
-    (sql"insert into `#$projectId`.`#$relationTableName` (" ++ combineByComma(List(sql"`id`, `A`, `B`")) ++ sql") values (" ++ combineByComma(
-      List(sql"$id, $a, $b")) ++ sql") on duplicate key update id=id").asUpdate
   }
 
   def createRelationRowByPath(projectId: String, path: Path): SqlAction[Int, NoStream, Effect] = {
@@ -208,23 +199,6 @@ object DatabaseMutationBuilder {
 
   def setScalarListToEmpty(projectId: String, path: Path, fieldName: String) = {
     (sql"DELETE FROM `#$projectId`.`#${path.lastModel.name}_#${fieldName}` WHERE `nodeId` = " ++ pathQueryForLastChild(projectId, path)).asUpdate
-  }
-
-  def pushScalarList(projectId: String, modelName: String, fieldName: String, nodeId: String, values: Vector[Any]): DBIOAction[Int, NoStream, Effect] = {
-
-    val escapedValueTuples = for {
-      (escapedValue, position) <- values.map(escapeUnsafeParam).zip((1 to values.length).map(_ * 1000))
-    } yield {
-      sql"($nodeId, @baseline + $position, " ++ escapedValue ++ sql")"
-    }
-
-    DBIO
-      .sequence(
-        List(
-          sqlu"""set @baseline := ifnull((select max(position) from `#$projectId`.`#${modelName}_#${fieldName}` where nodeId = $nodeId), 0) + 1000""",
-          (sql"insert into `#$projectId`.`#${modelName}_#${fieldName}` (`nodeId`, `position`, `value`) values " ++ combineByComma(escapedValueTuples)).asUpdate
-        ))
-      .map(_.last)
   }
 
   def getDbActionsForUpsertScalarLists(projectId: String, path: Path, args: CoolArgs): Vector[DBIOAction[Any, NoStream, Effect]] = {
@@ -425,4 +399,177 @@ object DatabaseMutationBuilder {
     }
   }
   //endregion
+
+  def createDataItemsImport(mutaction: CreateDataItemsImport): SimpleDBIO[Vector[String]] = {
+    import java.sql.Statement
+
+    import JdbcExtensions._
+
+    SimpleDBIO[Vector[String]] { x =>
+      val model         = mutaction.model
+      val argsWithIndex = mutaction.args.zipWithIndex
+
+      val nodeResult: Vector[String] = try {
+        val columns      = model.scalarNonListFields.map(_.name)
+        val escapedKeys  = columns.map(column => s"`$column`").mkString(",")
+        val placeHolders = columns.map(_ => "?").mkString(",")
+
+        val query                         = s"INSERT INTO `${mutaction.project.id}`.`${model.name}` ($escapedKeys) VALUES ($placeHolders)"
+        val itemInsert: PreparedStatement = x.connection.prepareStatement(query)
+
+        mutaction.args.foreach { arg =>
+          columns.zipWithIndex.foreach { columnAndIndex =>
+            val index  = columnAndIndex._2 + 1
+            val column = columnAndIndex._1
+
+            arg.raw.asRoot.map.get(column) match {
+              case Some(x)                                                => itemInsert.setGcValue(index, x)
+              case None if column == "createdAt" || column == "updatedAt" => itemInsert.setTimestamp(index, new Timestamp(System.currentTimeMillis()))
+              case None                                                   => itemInsert.setNull(index, java.sql.Types.NULL)
+            }
+          }
+          itemInsert.addBatch()
+        }
+
+        itemInsert.executeBatch()
+
+        Vector.empty
+      } catch {
+        case e: java.sql.BatchUpdateException =>
+          e.getUpdateCounts.zipWithIndex
+            .filter(element => element._1 == Statement.EXECUTE_FAILED)
+            .map { failed =>
+              val failedId = argsWithIndex.find(_._2 == failed._2).get._1.raw.asRoot.idField.value
+              s"Failure inserting ${model.name} with Id: $failedId. Cause: ${removeConnectionInfoFromCause(e.getCause.toString)}"
+            }
+            .toVector
+        case e: Exception => Vector(e.getCause.toString)
+      }
+
+      val relayResult: Vector[String] = try {
+        val relayQuery                     = s"INSERT INTO `${mutaction.project.id}`.`_RelayId` (`id`, `stableModelIdentifier`) VALUES (?,?)"
+        val relayInsert: PreparedStatement = x.connection.prepareStatement(relayQuery)
+
+        mutaction.args.foreach { arg =>
+          relayInsert.setString(1, arg.raw.asRoot.idField.value)
+          relayInsert.setString(2, model.stableIdentifier)
+          relayInsert.addBatch()
+        }
+        relayInsert.executeBatch()
+
+        Vector.empty
+      } catch {
+        case e: java.sql.BatchUpdateException =>
+          e.getUpdateCounts.zipWithIndex
+            .filter(element => element._1 == Statement.EXECUTE_FAILED)
+            .map { failed =>
+              val failedId = argsWithIndex.find(_._2 == failed._2).get._1.raw.asRoot.idField.value
+              s"Failure inserting RelayRow with Id: $failedId. Cause: ${removeConnectionInfoFromCause(e.getCause.toString)}"
+            }
+            .toVector
+        case e: Exception => Vector(e.getCause.toString)
+      }
+
+      val res = nodeResult ++ relayResult
+      if (res.nonEmpty) throw new Exception(res.mkString("-@-"))
+      res
+    }
+  }
+
+  def removeConnectionInfoFromCause(cause: String): String = {
+    val connectionSubStringStart = cause.indexOf("(conn=")
+    val firstPart                = cause.substring(0, connectionSubStringStart)
+    val temp                     = cause.substring(connectionSubStringStart + 6)
+    val endOfConnectionSubstring = temp.indexOf(")") + 2
+    val secondPart               = temp.substring(endOfConnectionSubstring)
+
+    firstPart + secondPart
+  }
+
+  def createRelationRowsImport(mutaction: CreateRelationRowsImport): SimpleDBIO[Vector[String]] = {
+    val argsWithIndex: Seq[((String, String), Int)] = mutaction.args.zipWithIndex
+
+    SimpleDBIO[Vector[String]] { x =>
+      val res = try {
+        val query                             = s"INSERT INTO `${mutaction.project.id}`.`${mutaction.relation.id}` (`id`, `a`, `b`) VALUES (?,?,?)"
+        val relationInsert: PreparedStatement = x.connection.prepareStatement(query)
+        mutaction.args.foreach { arg =>
+          relationInsert.setString(1, Cuid.createCuid())
+          relationInsert.setString(2, arg._1)
+          relationInsert.setString(3, arg._2)
+          relationInsert.addBatch()
+        }
+        relationInsert.executeBatch()
+        Vector.empty
+      } catch {
+        case e: java.sql.BatchUpdateException =>
+          e.getUpdateCounts.zipWithIndex
+            .filter(element => element._1 == Statement.EXECUTE_FAILED)
+            .map { failed =>
+              val failedA = argsWithIndex.find(_._2 == failed._2).get._1._1
+              val failedB = argsWithIndex.find(_._2 == failed._2).get._1._2
+              s"Failure inserting into relationtable ${mutaction.relation.id} with ids $failedA and $failedB. Cause: ${removeConnectionInfoFromCause(e.getCause.toString)}"
+            }
+            .toVector
+        case e: Exception => Vector(e.getCause.toString)
+      }
+
+      if (res.nonEmpty) throw new Exception(res.mkString("-@-"))
+      res
+    }
+  }
+
+  def pushScalarListsImport(mutaction: PushScalarListsImport): SimpleDBIO[Vector[String]] = {
+    val projectId = mutaction.project.id
+    val tableName = mutaction.tableName
+    val nodeId    = mutaction.id
+
+    import JdbcExtensions._
+
+    SimpleDBIO[Vector[String]] { x =>
+      val setBaseline: Vector[String] = try {
+        val query                       = s"set @baseline := ifnull((select max(position) from `$projectId`.`$tableName` where nodeId = ?), 0) + 1000"
+        val baseLine: PreparedStatement = x.connection.prepareStatement(query)
+
+        baseLine.setString(1, nodeId)
+
+        baseLine.execute()
+
+        Vector.empty
+      } catch {
+        case e: Exception => Vector(e.getCause.toString)
+      }
+
+      val argsWithIndex = mutaction.args.values.zipWithIndex
+      val rowResult: Vector[String] = try {
+        val query                         = s"insert into `$projectId`.`$tableName` (`nodeId`, `position`, `value`) values (?, @baseline + ? , ?)"
+        val insertRows: PreparedStatement = x.connection.prepareStatement(query)
+
+        argsWithIndex.foreach { argWithIndex =>
+          insertRows.setString(1, nodeId)
+          insertRows.setInt(2, argWithIndex._2 * 1000)
+          insertRows.setGcValue(3, argWithIndex._1)
+          insertRows.addBatch()
+        }
+        insertRows.executeBatch()
+
+        Vector.empty
+      } catch {
+        case e: java.sql.BatchUpdateException =>
+          e.getUpdateCounts.zipWithIndex
+            .filter(element => element._1 == Statement.EXECUTE_FAILED)
+            .map { failed =>
+              val failedValue: GCValue = argsWithIndex.find(_._2 == failed._2).get._1
+              s"Failure inserting into listTable $tableName for the id $nodeId for value $failedValue. Cause: ${removeConnectionInfoFromCause(e.getCause.toString)}"
+            }
+            .toVector
+
+        case e: Exception => Vector(e.getCause.toString)
+      }
+
+      val res = setBaseline ++ rowResult
+      if (res.nonEmpty) throw new Exception(res.mkString("-@-"))
+      res
+    }
+  }
 }

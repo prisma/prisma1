@@ -1,6 +1,7 @@
 package com.prisma.api.connector
 
 import com.prisma.api.schema.APIErrors
+import com.prisma.gc_values.GCValue
 import com.prisma.shared.models._
 import com.prisma.util.gc_value.{GCAnyConverter, GCValueExtractor}
 
@@ -16,6 +17,8 @@ import scala.collection.immutable.Seq
   *   - Upsert Create/Delete CoolArgs
   *
   */
+case class ReallyCoolArgs(raw: GCValue)
+
 case class CoolArgs(raw: Map[String, Any]) {
   def isEmpty: Boolean    = raw.isEmpty
   def isNonEmpty: Boolean = raw.nonEmpty

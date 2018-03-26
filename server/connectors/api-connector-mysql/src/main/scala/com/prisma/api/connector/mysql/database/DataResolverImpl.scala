@@ -3,7 +3,8 @@ package com.prisma.api.connector.mysql.database
 import com.prisma.api.connector.Types.DataItemFilterCollection
 import com.prisma.api.connector._
 import com.prisma.api.connector.mysql.Metrics
-import com.prisma.gc_values.{GCValue, GraphQLIdGCValue, JsonGCValue}
+import com.prisma.api.connector.mysql.database.HelperTypes.ScalarListElement
+import com.prisma.gc_values._
 import com.prisma.shared.models.IdType.Id
 import com.prisma.shared.models.TypeIdentifier.TypeIdentifier
 import com.prisma.shared.models._
@@ -80,21 +81,31 @@ case class DataResolverImpl(
     batchResolveByUniqueWithoutValidation(model, key, List(value)).map(_.headOption)
   }
 
-  override def loadModelRowsForExport(model: Model, args: Option[QueryArguments] = None): Future[ResolverResult] = {
-    val (query, resultTransform) = DatabaseQueryBuilder.selectAllFromTable(project.id, model.name, args, None)
-    performWithTiming("loadModelRowsForExport", readonlyClientDatabase.run(readOnlyDataItem(query)))
-      .map(_.toList.map(mapDataItem(model)(_)))
-      .map(resultTransform(_))
+  override def loadModelRowsForExport(model: Model, args: Option[QueryArguments] = None): Future[ResolverResultNew[PrismaNode]] = {
+    val query = DatabaseQueryBuilder.selectAllFromTableNew(project.id, model, args)
+    performWithTiming("loadModelRowsForExport", readonlyClientDatabase.run(query))
   }
 
-  override def loadListRowsForExport(tableName: String, args: Option[QueryArguments] = None): Future[ResolverResult] = {
-    val (query, resultTransform) = DatabaseQueryBuilder.selectAllFromListTable(project.id, tableName, args, None)
-    performWithTiming("loadListRowsForExport", readonlyClientDatabase.run(readOnlyScalarListValue(query))).map(_.toList).map(resultTransform(_))
+  override def loadListRowsForExport(model: Model, field: Field, args: Option[QueryArguments] = None): Future[ResolverResultNew[ScalarListValues]] = {
+    import QueryArgumentsExtensions._
+    val query                                = DatabaseQueryBuilder.selectAllFromListTable(project.id, model, field, args, None)
+    val x: Future[Vector[ScalarListElement]] = performWithTiming("loadListRowsForExport", readonlyClientDatabase.run(query))
+    x.map { scalarListElements =>
+      val withoutExtraItem = args.get.dropExtraLimitItem(scalarListElements)
+
+      val grouped: Map[Id, Vector[ScalarListElement]] = withoutExtraItem.groupBy(_.nodeId)
+      val result = grouped.map {
+        case (id, values) =>
+          val gcValues = values.sortBy(_.position).map(_.value)
+          ScalarListValues(id, ListGCValue(gcValues))
+      }.toVector
+      ResolverResultNew(result, hasNextPage = args.get.hasNext(scalarListElements.size), hasPreviousPage = args.get.hasPrevious(scalarListElements.size))
+    }
   }
 
-  override def loadRelationRowsForExport(relationId: String, args: Option[QueryArguments] = None): Future[ResolverResult] = {
-    val (query, resultTransform) = DatabaseQueryBuilder.selectAllFromTable(project.id, relationId, args, None)
-    performWithTiming("loadRelationRowsForExport", readonlyClientDatabase.run(readOnlyDataItem(query))).map(_.toList).map(resultTransform(_))
+  override def loadRelationRowsForExport(relationId: String, args: Option[QueryArguments] = None): Future[ResolverResultNew[RelationNode]] = {
+    val query = DatabaseQueryBuilder.selectAllFromRelationTable(project.id, relationId, args)
+    performWithTiming("loadRelationRowsForExport", readonlyClientDatabase.run(query))
   }
 
   override def batchResolveByUnique(model: Model, key: String, values: List[Any]): Future[List[DataItem]] = {
@@ -139,9 +150,10 @@ case class DataResolverImpl(
 
   override def resolveRelation(relationId: String, aId: String, bId: String): Future[ResolverResult] = {
     val (query, resultTransform) = DatabaseQueryBuilder.selectAllFromTable(
-      project.id,
-      relationId,
-      Some(QueryArguments(None, None, None, None, None, Some(List(FilterElement("A", aId), FilterElement("B", bId))), None)))
+      projectId = project.id,
+      tableName = relationId,
+      args = Some(QueryArguments(None, None, None, None, None, Some(List(FilterElement("A", aId), FilterElement("B", bId))), None))
+    )
 
     performWithTiming("resolveRelation", readonlyClientDatabase.run(readOnlyDataItem(query)).map(_.toList).map(resultTransform))
   }
@@ -223,42 +235,19 @@ case class DataResolverImpl(
 
   // note: Explicitly mark queries generated from raw sql as readonly to make aurora endpoint selection work
   // see also http://danielwestheide.com/blog/2015/06/28/put-your-writes-where-your-master-is-compile-time-restriction-of-slick-effect-types.html
-  private def readOnlyDataItem(query: SQLActionBuilder): SqlStreamingAction[Vector[DataItem], DataItem, Read] = {
-    val action: SqlStreamingAction[Vector[DataItem], DataItem, Read] = query.as[DataItem]
+  private def readOnlyDataItem(query: SQLActionBuilder): SqlStreamingAction[Vector[DataItem], DataItem, Read] = query.as[DataItem]
 
-    action
-  }
+  private def readOnlyScalarListValue(query: SQLActionBuilder): SqlStreamingAction[Vector[ScalarListValue], Any, Read] = query.as[ScalarListValue]
 
-  private def readOnlyScalarListValue(query: SQLActionBuilder): SqlStreamingAction[Vector[ScalarListValue], Any, Read] = {
-    val action: SqlStreamingAction[Vector[ScalarListValue], Any, Read] = query.as[ScalarListValue]
+  private def readOnlyInt(query: SQLActionBuilder): SqlStreamingAction[Vector[Int], Int, Read] = query.as[Int]
 
-    action
-  }
+  private def readOnlyBoolean(query: SQLActionBuilder): SqlStreamingAction[Vector[Boolean], Boolean, Read] = query.as[Boolean]
 
-  private def readOnlyInt(query: SQLActionBuilder): SqlStreamingAction[Vector[Int], Int, Read] = {
-    val action: SqlStreamingAction[Vector[Int], Int, Read] = query.as[Int]
+  private def readOnlyStringInt(query: SQLActionBuilder): SqlStreamingAction[Vector[(String, Int)], (String, Int), Read] = query.as[(String, Int)]
 
-    action
-  }
+  protected def mapDataItem(model: Model)(dataItem: DataItem): DataItem = mapDataItemHelper(model, dataItem)
 
-  private def readOnlyBoolean(query: SQLActionBuilder): SqlStreamingAction[Vector[Boolean], Boolean, Read] = {
-    val action: SqlStreamingAction[Vector[Boolean], Boolean, Read] = query.as[Boolean]
-
-    action
-  }
-
-  private def readOnlyStringInt(query: SQLActionBuilder): SqlStreamingAction[Vector[(String, Int)], (String, Int), Read] = {
-    val action: SqlStreamingAction[Vector[(String, Int)], (String, Int), Read] = query.as[(String, Int)]
-
-    action
-  }
-
-  protected def mapDataItem(model: Model)(dataItem: DataItem): DataItem = {
-    mapDataItemHelper(model, dataItem)
-  }
-  protected def mapDataItemWithoutValidation(model: Model)(dataItem: DataItem): DataItem = {
-    mapDataItemHelper(model, dataItem, validate = false)
-  }
+  protected def mapDataItemWithoutValidation(model: Model)(dataItem: DataItem): DataItem = mapDataItemHelper(model, dataItem, validate = false)
 
   protected def mapScalarListValueWithoutValidation(model: Model, field: Field)(scalarListValue: ScalarListValue): ScalarListValue = {
     mapScalarListValueHelper(model, field, scalarListValue, validate = false)
