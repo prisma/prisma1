@@ -44,17 +44,15 @@ case class DataResolverImpl(project: Project, readonlyClientDatabase: MySQLProfi
     performWithTiming("loadModelRowsForExport", readonlyClientDatabase.run(query))
   }
 
-  override def resolveByUnique(where: NodeSelector): Future[Option[PrismaNode]] = where.fieldValue match {
-    case JsonGCValue(x) => batchResolveByUnique(where.model, where.field.name, List(where.fieldValueAsString)).map(_.headOption)
-    case _              => batchResolveByUnique(where.model, where.field.name, List(where.unwrappedFieldValue)).map(_.headOption)
-  }
+  override def resolveByUnique(where: NodeSelector): Future[Option[PrismaNode]] =
+    batchResolveByUnique(where.model, where.field.name, Vector(where.fieldValue)).map(_.headOption)
 
   override def countByModel(model: Model, where: Option[DataItemFilterCollection] = None): Future[Int] = {
     val query = DatabaseQueryBuilder.countAllFromModel(project, model, where)
     performWithTiming("countByModel", readonlyClientDatabase.run(query))
   }
 
-  override def batchResolveByUnique(model: Model, key: String, values: List[Any]): Future[Vector[PrismaNode]] = {
+  override def batchResolveByUnique(model: Model, key: String, values: Vector[GCValue]): Future[Vector[PrismaNode]] = {
     val query = DatabaseQueryBuilder.batchSelectFromModelByUnique(project.id, model, key, values)
     performWithTiming("batchResolveByUnique", readonlyClientDatabase.run(query))
   }

@@ -1,9 +1,9 @@
 package com.prisma.api.resolver
 
-import com.prisma.api.connector.{DataItem, DataResolver}
-import com.prisma.api.resolver.DeferredTypes.{OneDeferred, OneDeferredResultType, OrderedDeferred, OrderedDeferredFutureResult}
+import com.prisma.api.connector.{DataResolver, PrismaNode}
+import com.prisma.api.resolver.DeferredTypes._
 import com.prisma.shared.models.Project
-import com.prisma.util.gc_value.{GCAnyConverter, GCDBValueConverter}
+import com.prisma.util.gc_value.GCAnyConverter
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
@@ -15,32 +15,33 @@ class OneDeferredResolver(dataResolver: DataResolver) {
     DeferredUtils.checkSimilarityOfOneDeferredsAndThrow(deferreds)
 
     val headDeferred = deferreds.head
-
-    // fetch dataitems
-    val futureDataItems = dataResolver.batchResolveByUnique(headDeferred.model, headDeferred.key, deferreds.map(_.value).toList)
-
-    // assign the dataitem that was requested by each deferred
-    val results = orderedDeferreds.map {
-      case OrderedDeferred(deferred, order) =>
-        OrderedDeferredFutureResult[OneDeferredResultType](futureDataItems.map { vector =>
-          dataItemsToToOneDeferredResultType(dataResolver.project, deferred, vector.map(_.toDataItem))
-        }, order)
+    val converter    = GCAnyConverter(headDeferred.model.getFieldByName_!(headDeferred.key).typeIdentifier, false)
+    val deferredsWithGCValues = deferreds.map { deferred =>
+      val convertedValue = converter.toGCValue(deferred.value).get
+      OneDeferredGC(deferred.model, deferred.key, convertedValue)
     }
 
-    results
+    // fetch prismaNodes
+    val futurePrismaNodes = dataResolver.batchResolveByUnique(headDeferred.model, headDeferred.key, deferredsWithGCValues.map(_.value))
+
+    // assign the dataitem that was requested by each deferred
+    orderedDeferreds.map {
+      case OrderedDeferred(deferred, order) =>
+        OrderedDeferredFutureResult[OneDeferredResultType](futurePrismaNodes.map { vector =>
+          dataItemsToToOneDeferredResultType(dataResolver.project, deferred, vector).map(_.toDataItem)
+        }, order)
+    }
   }
 
-  private def dataItemsToToOneDeferredResultType(project: Project, deferred: OneDeferred, dataItems: Seq[DataItem]): Option[DataItem] = {
-
+  private def dataItemsToToOneDeferredResultType(project: Project, deferred: OneDeferred, prismaNodes: Vector[PrismaNode]): Option[PrismaNode] = {
     deferred.key match {
-      case "id" => dataItems.find(_.id == deferred.value)
+      case "id" => prismaNodes.find(_.id == deferred.value)
       case _ =>
-        dataItems.find { dataItem =>
-          val itemValue = dataItem.getOption(deferred.key)
-          val field     = deferred.model.getFieldByName_!(deferred.key)
-          val gcValue   = GCDBValueConverter(field.typeIdentifier, field.isList).toGCValue(itemValue.get)
-          val bla       = GCAnyConverter(field.typeIdentifier, field.isList).toGCValue(deferred.value)
-          bla == gcValue
+        prismaNodes.find { dataItem =>
+          val itemValue       = dataItem.data.map(deferred.key)
+          val field           = deferred.model.getFieldByName_!(deferred.key)
+          val whereFieldValue = GCAnyConverter(field.typeIdentifier, field.isList).toGCValue(deferred.value).get
+          whereFieldValue == itemValue
         }
     }
   }

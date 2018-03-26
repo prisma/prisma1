@@ -6,8 +6,6 @@ import com.prisma.api.connector.mysql.database.HelperTypes.ScalarListElement
 import com.prisma.gc_values._
 import com.prisma.shared.models.IdType.Id
 import com.prisma.shared.models.{Function => _, _}
-import org.joda.time.DateTime
-import play.api.libs.json.Json
 import slick.dbio.DBIOAction
 import slick.dbio.Effect.Read
 import slick.jdbc.MySQLProfile.api._
@@ -37,34 +35,23 @@ object DatabaseQueryBuilder {
       DataItem(id = rs.getString("id").trim, userData = userData)
     }
   }
-  def extractQueryArgs(projectId: String, //todo unify both, only order by command is different
+
+  def extractQueryArgs(projectId: String,
                        modelName: String,
                        args: Option[QueryArguments],
-                       defaultOrderShortcut: Option[String] = None,
-                       overrideMaxNodeCount: Option[Int] = None): (Option[SQLActionBuilder], Option[SQLActionBuilder], Option[SQLActionBuilder]) = {
+                       defaultOrderShortcut: Option[String],
+                       overrideMaxNodeCount: Option[Int],
+                       forList: Boolean = false): (Option[SQLActionBuilder], Option[SQLActionBuilder], Option[SQLActionBuilder]) = {
     args match {
       case None => (None, None, None)
       case Some(givenArgs: QueryArguments) =>
-        (givenArgs.extractWhereConditionCommand(projectId, modelName),
-         givenArgs.extractOrderByCommand(projectId, modelName, defaultOrderShortcut),
-         overrideMaxNodeCount match {
-           case None                => givenArgs.extractLimitCommand(projectId, modelName)
-           case Some(maxCount: Int) => givenArgs.extractLimitCommand(projectId, modelName, maxCount)
-         })
-    }
-  }
+        val orderByCommand =
+          if (forList) givenArgs.extractOrderByCommandForLists(projectId, modelName, defaultOrderShortcut)
+          else givenArgs.extractOrderByCommand(projectId, modelName, defaultOrderShortcut)
 
-  def extractListQueryArgs(projectId: String, //todo unify both, only order by command is different
-                           modelName: String,
-                           args: Option[QueryArguments],
-                           defaultOrderShortcut: Option[String] = None,
-                           overrideMaxNodeCount: Option[Int] = None): (Option[SQLActionBuilder], Option[SQLActionBuilder], Option[SQLActionBuilder]) = {
-    args match {
-      case None => (None, None, None)
-      case Some(givenArgs: QueryArguments) =>
         (
           givenArgs.extractWhereConditionCommand(projectId, modelName),
-          givenArgs.extractOrderByCommandForLists(projectId, modelName, defaultOrderShortcut),
+          orderByCommand,
           overrideMaxNodeCount match {
             case None                => givenArgs.extractLimitCommand(projectId, modelName)
             case Some(maxCount: Int) => givenArgs.extractLimitCommand(projectId, modelName, maxCount)
@@ -72,52 +59,21 @@ object DatabaseQueryBuilder {
         )
     }
   }
+
   def getResultForModel(model: Model): GetResult[PrismaNode] = GetResult { ps: PositionedResult =>
-    prismaNodeCore(model, ps)
+    getPrismaNode(model, ps)
   }
 
-  private def prismaNodeCore(model: Model, ps: PositionedResult) = {
-    val resultSet = ps.rs
-    val id        = resultSet.getString("id")
-    val data = model.scalarNonListFields.map { field =>
-      val gcValue: GCValue = field.typeIdentifier match {
-        case TypeIdentifier.String    => StringGCValue(resultSet.getString(field.name))
-        case TypeIdentifier.GraphQLID => GraphQLIdGCValue(resultSet.getString(field.name))
-        case TypeIdentifier.Enum      => EnumGCValue(resultSet.getString(field.name))
-        case TypeIdentifier.Int       => IntGCValue(resultSet.getInt(field.name))
-        case TypeIdentifier.Float     => FloatGCValue(resultSet.getDouble(field.name))
-        case TypeIdentifier.Boolean   => BooleanGCValue(resultSet.getBoolean(field.name))
-        case TypeIdentifier.DateTime =>
-          val sqlType = resultSet.getTimestamp(field.name)
-          if (sqlType != null) {
-            DateTimeGCValue(new DateTime(sqlType.getTime))
-          } else {
-            NullGCValue
-          }
-        case TypeIdentifier.Json =>
-          val sqlType = resultSet.getString(field.name)
-          if (sqlType != null) {
-            JsonGCValue(Json.parse(sqlType))
-          } else {
-            NullGCValue
-          }
-        case TypeIdentifier.Relation => sys.error("TypeIdentifier.Relation is not supported here")
-      }
-      if (resultSet.wasNull) { // todo: should we throw here if the field is required but it is null?
-        field.name -> NullGCValue
-      } else {
-        field.name -> gcValue
-      }
-    }
+  private def getPrismaNode(model: Model, ps: PositionedResult) = {
+    val id   = ps.rs.getString("id")
+    val data = model.scalarNonListFields.map(field => field.name -> ps.rs.getGcValue(field.name, field.typeIdentifier))
 
     PrismaNode(id = id, data = RootGCValue(data: _*))
   }
 
   def getResultForModelAndRelationSide(model: Model, side: String): GetResult[PrismaNodeWithParent] = GetResult { ps: PositionedResult =>
-    val resultSet = ps.rs
-
-    val parentId = resultSet.getString("__Relation__" + side)
-    val node     = prismaNodeCore(model, ps)
+    val parentId = ps.rs.getString("__Relation__" + side)
+    val node     = getPrismaNode(model, ps)
     PrismaNodeWithParent(parentId, node)
   }
 
@@ -147,7 +103,7 @@ object DatabaseQueryBuilder {
   ): DBIOAction[ResolverResultNew[PrismaNode], NoStream, Effect] = {
 
     val tableName                                        = model.name
-    val (conditionCommand, orderByCommand, limitCommand) = extractQueryArgs(projectId, tableName, args, overrideMaxNodeCount = overrideMaxNodeCount)
+    val (conditionCommand, orderByCommand, limitCommand) = extractQueryArgs(projectId, tableName, args, None, overrideMaxNodeCount = overrideMaxNodeCount)
 
     val query = sql"select * from `#$projectId`.`#$tableName`" concat
       prefixIfNotNone("where", conditionCommand) concat
@@ -165,7 +121,7 @@ object DatabaseQueryBuilder {
   ): DBIOAction[ResolverResultNew[RelationNode], NoStream, Effect] = {
 
     val tableName                                        = relationId
-    val (conditionCommand, orderByCommand, limitCommand) = extractQueryArgs(projectId, tableName, args, overrideMaxNodeCount = overrideMaxNodeCount)
+    val (conditionCommand, orderByCommand, limitCommand) = extractQueryArgs(projectId, tableName, args, None, overrideMaxNodeCount = overrideMaxNodeCount)
 
     val query = sql"select * from `#$projectId`.`#$tableName`" concat
       prefixIfNotNone("where", conditionCommand) concat
@@ -182,7 +138,7 @@ object DatabaseQueryBuilder {
                              overrideMaxNodeCount: Option[Int] = None): DBIOAction[ResolverResultNew[ScalarListValues], NoStream, Effect] = {
 
     val tableName                                        = s"${model.name}_${field.name}"
-    val (conditionCommand, orderByCommand, limitCommand) = extractListQueryArgs(projectId, tableName, args, overrideMaxNodeCount = overrideMaxNodeCount)
+    val (conditionCommand, orderByCommand, limitCommand) = extractQueryArgs(projectId, tableName, args, None, overrideMaxNodeCount = overrideMaxNodeCount, true)
 
     val query =
       sql"select * from `#$projectId`.`#$tableName`" concat
@@ -207,7 +163,7 @@ object DatabaseQueryBuilder {
   def batchSelectFromModelByUnique(projectId: String,
                                    model: Model,
                                    key: String,
-                                   values: List[Any]): SqlStreamingAction[Vector[PrismaNode], PrismaNode, Effect] = {
+                                   values: Vector[GCValue]): SqlStreamingAction[Vector[PrismaNode], PrismaNode, Effect] = {
     val query = sql"select * from `#$projectId`.`#${model.name}` where `#$key` in (" concat combineByComma(values.map(escapeUnsafeParam)) concat sql")"
     query.as[PrismaNode](getResultForModel(model))
   }
@@ -241,7 +197,7 @@ object DatabaseQueryBuilder {
     val fieldRelationSide = fromField.oppositeRelationSide.get.toString
 
     val (conditionCommand, orderByCommand, limitCommand) =
-      extractQueryArgs(project.id, fieldTable, args, defaultOrderShortcut = Some(s"""`${project.id}`.`$unsafeRelationId`.$fieldRelationSide"""))
+      extractQueryArgs(project.id, fieldTable, args, defaultOrderShortcut = Some(s"""`${project.id}`.`$unsafeRelationId`.$fieldRelationSide"""), None)
 
     def createQuery(id: String, modelRelationSide: String, fieldRelationSide: String) = {
       sql"""(select `#${project.id}`.`#$fieldTable`.*, `#${project.id}`.`#$unsafeRelationId`.A as __Relation__A,  `#${project.id}`.`#$unsafeRelationId`.B as __Relation__B
@@ -275,15 +231,12 @@ object DatabaseQueryBuilder {
       .as[PrismaNodeWithParent](getResultForModelAndRelationSide(relatedModel, fromField.relationSide.get.toString))
       .map { items =>
         val itemGroupsByModelId = items.groupBy(_.parentId)
-
-        val res = fromModelIds
+        fromModelIds
           .map(id =>
             itemGroupsByModelId.find(_._1 == id) match {
               case Some((_, itemsForId)) => args.get.resultTransform(itemsForId).copy(parentModelId = Some(id))
               case None                  => ResolverResultNew(Vector.empty[PrismaNodeWithParent], hasPreviousPage = false, hasNextPage = false, parentModelId = Some(id))
           })
-
-        res
       }
   }
 
@@ -298,7 +251,7 @@ object DatabaseQueryBuilder {
     val fieldRelationSide = relationField.oppositeRelationSide.get.toString
 
     val (conditionCommand, orderByCommand, limitCommand) =
-      extractQueryArgs(project.id, fieldTable, args, defaultOrderShortcut = Some(s"""`${project.id}`.`$unsafeRelationId`.$fieldRelationSide"""))
+      extractQueryArgs(project.id, fieldTable, args, defaultOrderShortcut = Some(s"""`${project.id}`.`$unsafeRelationId`.$fieldRelationSide"""), None)
 
     def createQuery(id: String) = {
       sql"""(select '#$id', count(*) from `#${project.id}`.`#$fieldTable`
@@ -310,8 +263,7 @@ object DatabaseQueryBuilder {
         prefixIfNotNone("limit", limitCommand) concat sql")"
     }
 
-    val query =
-      parentNodeIds.distinct.view.zipWithIndex.foldLeft(sql"")((a, b) => a concat unionIfNotFirst(b._2) concat createQuery(b._1))
+    val query = parentNodeIds.distinct.view.zipWithIndex.foldLeft(sql"")((a, b) => a concat unionIfNotFirst(b._2) concat createQuery(b._1))
 
     query.as[(String, Int)]
   }

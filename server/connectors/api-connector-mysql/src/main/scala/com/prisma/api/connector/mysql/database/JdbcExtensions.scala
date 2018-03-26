@@ -3,14 +3,11 @@ package com.prisma.api.connector.mysql.database
 import java.sql.{PreparedStatement, ResultSet, Timestamp}
 
 import com.prisma.gc_values._
-import com.prisma.shared.models.{Field, TypeIdentifier}
-import com.prisma.shared.models.TypeIdentifier.TypeIdentifier
-import org.joda.time.DateTime
+import com.prisma.shared.models.TypeIdentifier
 import org.joda.time.format.DateTimeFormat
 import play.api.libs.json.Json
 
 object JdbcExtensions {
-  val dateTimeFormat = DateTimeFormat.forPattern("yyyy-MM-dd'T'HH:mm:ss.SSS").withZoneUTC()
 
   implicit class PreparedStatementExtensions(val ps: PreparedStatement) extends AnyVal {
     def setGcValue(index: Int, value: GCValue): Unit = value match {
@@ -19,7 +16,7 @@ object JdbcExtensions {
       case gcValue: IntGCValue       => ps.setInt(index, gcValue.value)
       case gcValue: FloatGCValue     => ps.setDouble(index, gcValue.value)
       case gcValue: GraphQLIdGCValue => ps.setString(index, gcValue.value)
-      case gcValue: DateTimeGCValue  => ps.setTimestamp(index, new Timestamp(gcValue.value.getMillis))
+      case gcValue: DateTimeGCValue  => ps.setTimestamp(index, new Timestamp(gcValue.value.getMillis)) // todo this is wrong goes from UTC to GMT
       case gcValue: EnumGCValue      => ps.setString(index, gcValue.value)
       case gcValue: JsonGCValue      => ps.setString(index, gcValue.value.toString)
       case NullGCValue               => ps.setNull(index, java.sql.Types.NULL)
@@ -30,6 +27,8 @@ object JdbcExtensions {
   implicit class ResultSetExtensions(val resultSet: ResultSet) extends AnyVal {
 
     def getGcValue(name: String, typeIdentifier: TypeIdentifier.Value): GCValue = {
+      val dateTimeFormat = DateTimeFormat.forPattern("yyyy-MM-dd HH:mm:ss.SSS").withZoneUTC()
+
       val gcValue: GCValue = typeIdentifier match {
         case TypeIdentifier.String    => StringGCValue(resultSet.getString(name))
         case TypeIdentifier.GraphQLID => GraphQLIdGCValue(resultSet.getString(name))
@@ -38,9 +37,9 @@ object JdbcExtensions {
         case TypeIdentifier.Float     => FloatGCValue(resultSet.getDouble(name))
         case TypeIdentifier.Boolean   => BooleanGCValue(resultSet.getBoolean(name))
         case TypeIdentifier.DateTime =>
-          val sqlType = resultSet.getTimestamp(name)
+          val sqlType = resultSet.getString(name)
           if (sqlType != null) {
-            DateTimeGCValue(new DateTime(sqlType.getTime))
+            DateTimeGCValue(dateTimeFormat.parseDateTime(sqlType))
           } else {
             NullGCValue
           }

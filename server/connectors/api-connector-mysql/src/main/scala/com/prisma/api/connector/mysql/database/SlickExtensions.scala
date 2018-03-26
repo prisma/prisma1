@@ -1,6 +1,7 @@
 package com.prisma.api.connector.mysql.database
 
 import com.prisma.gc_values._
+import com.prisma.util.gc_value.{GCAnyConverter, GCValueExtractor}
 import org.joda.time.DateTime
 import org.joda.time.format.DateTimeFormat
 import slick.jdbc.MySQLProfile.api._
@@ -90,6 +91,7 @@ object SlickExtensions {
       case param: Vector[_]    => sql"${listToJson(param.toList)}"
       case None                => sql"NULL"
       case null                => sql"NULL"
+      case param: GCValue      => sql"${GCValueExtractor.fromGCValueToString(param)}"
       case _                   => throw new IllegalArgumentException("Unsupported scalar value in SlickExtensions: " + param.toString)
     }
   }

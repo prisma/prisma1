@@ -385,7 +385,7 @@ case class GCAnyConverter(typeIdentifier: TypeIdentifier, isList: Boolean) exten
         case (x: Double, TypeIdentifier.Float)                                        => FloatGCValue(x)
         case (x: Boolean, TypeIdentifier.Boolean)                                     => BooleanGCValue(x)
         case (x: String, TypeIdentifier.DateTime)                                     => DateTimeGCValue(new DateTime(x, DateTimeZone.UTC))
-        case (x: DateTime, TypeIdentifier.DateTime)                                   => DateTimeGCValue(x)
+        case (x: DateTime, TypeIdentifier.DateTime)                                   => DateTimeGCValue(new DateTime(x, DateTimeZone.UTC))
         case (x: String, TypeIdentifier.GraphQLID)                                    => GraphQLIdGCValue(x)
         case (x: String, TypeIdentifier.Enum)                                         => EnumGCValue(x)
         case (x: PlayJsObject, TypeIdentifier.Json)                                   => JsonGCValue(x)

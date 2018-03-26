@@ -1,6 +1,7 @@
 package com.prisma.api.connector
 
 import com.prisma.api.connector.Types.DataItemFilterCollection
+import com.prisma.gc_values.GCValue
 import com.prisma.shared.models.{Field, Model, Project}
 
 import scala.collection.immutable
@@ -17,7 +18,7 @@ trait DataResolver {
 
   def countByModel(model: Model, where: Option[DataItemFilterCollection] = None): Future[Int]
 
-  def batchResolveByUnique(model: Model, key: String, values: List[Any]): Future[Vector[PrismaNode]]
+  def batchResolveByUnique(model: Model, key: String, values: Vector[GCValue]): Future[Vector[PrismaNode]]
 
   def batchResolveScalarList(model: Model, field: Field, nodeIds: Vector[String]): Future[Vector[ScalarListValues]]
 
