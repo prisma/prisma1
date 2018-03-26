@@ -90,8 +90,8 @@ case class Path(root: NodeSelector, edges: List[Edge]) {
 object Path {
   def empty(where: NodeSelector) = Path(where, List.empty)
 
-  def collectCascadingPaths(project: Project, path: Path): List[Path] = path.otherCascadingRelationFields match {
-    case Nil   => List(path)
-    case edges => edges.flatMap(field => collectCascadingPaths(project, path.appendCascadingEdge(project, field)))
+  def collectCascadingPaths(project: Project, path: Path): Vector[Path] = path.otherCascadingRelationFields match {
+    case Nil   => Vector(path)
+    case edges => edges.flatMap(field => collectCascadingPaths(project, path.appendCascadingEdge(project, field))).toVector
   }
 }

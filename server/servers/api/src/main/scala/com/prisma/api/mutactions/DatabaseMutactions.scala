@@ -5,7 +5,7 @@ import com.prisma.api.connector._
 import com.prisma.api.schema.APIErrors.RelationIsRequired
 import com.prisma.shared.models.IdType.Id
 import com.prisma.shared.models.{Field, Model, Project}
-import com.prisma.util.gc_value.{GCAnyConverter, GCCreateReallyCoolArgsConverter}
+import com.prisma.util.gc_value.GCCreateReallyCoolArgsConverter
 import cool.graph.cuid.Cuid.createCuid
 
 import scala.collection.immutable.Seq
@@ -30,7 +30,7 @@ case class DatabaseMutactions(project: Project) {
       Vector(DeleteRelationCheck(project, path), DeleteDataItem(project, path, previousValues))
   }
 
-  def getMutactionsForUpdate(path: Path, args: CoolArgs, id: Id, previousValues: PrismaNode): Seq[DatabaseMutaction] = report {
+  def getMutactionsForUpdate(path: Path, args: CoolArgs, id: Id, previousValues: PrismaNode): Vector[DatabaseMutaction] = report {
     val updateMutaction = getUpdateMutactions(path, args, id, previousValues)
     val nested          = getMutactionsForNestedMutation(args, path.updatedRoot(args), triggeredFromCreate = false)
 
@@ -89,7 +89,7 @@ case class DatabaseMutactions(project: Project) {
   }
 
   // Todo filter for duplicates here? multiple identical where checks for example?
-  def getMutactionsForNestedMutation(args: CoolArgs, path: Path, triggeredFromCreate: Boolean): Seq[DatabaseMutaction] = {
+  def getMutactionsForNestedMutation(args: CoolArgs, path: Path, triggeredFromCreate: Boolean): Vector[DatabaseMutaction] = {
 
     val x = for {
       field           <- path.lastModel.relationFields.filter(f => f.relation != path.lastRelation) //todo move into path
@@ -111,10 +111,10 @@ case class DatabaseMutactions(project: Project) {
 
       checkMutactions ++ mutactionsThatACreateCanTrigger ++ otherMutactions
     }
-    x.flatten
+    x.flatten.toVector
   }
 
-  def getMutactionsForWhereChecks(nestedMutation: NestedMutations): Seq[DatabaseMutaction] = {
+  def getMutactionsForWhereChecks(nestedMutation: NestedMutations): Vector[DatabaseMutaction] = {
     (nestedMutation.updates ++ nestedMutation.deletes ++ nestedMutation.connects ++ nestedMutation.disconnects).collect {
       case x: NestedWhere => VerifyWhere(project, x.where)
     }
@@ -128,7 +128,7 @@ case class DatabaseMutactions(project: Project) {
                                            nestedMutation: NestedMutations,
                                            path: Path,
                                            field: Field,
-                                           triggeredFromCreate: Boolean): Seq[DatabaseMutaction] = {
+                                           triggeredFromCreate: Boolean): Vector[DatabaseMutaction] = {
     nestedMutation.creates.flatMap { create =>
       val id                          = createCuid()
       val extendedPath                = path.extend(project, field, create).lastEdgeToNodeEdge(NodeSelector.forId(model, id))
@@ -144,15 +144,15 @@ case class DatabaseMutactions(project: Project) {
     }
   }
 
-  def getMutactionsForNestedConnectMutation(nestedMutation: NestedMutations, path: Path, field: Field, topIsCreate: Boolean): Seq[DatabaseMutaction] = {
+  def getMutactionsForNestedConnectMutation(nestedMutation: NestedMutations, path: Path, field: Field, topIsCreate: Boolean): Vector[DatabaseMutaction] = {
     nestedMutation.connects.map(connect => NestedConnectRelation(project, path.extend(project, field, connect), topIsCreate))
   }
 
-  def getMutactionsForNestedDisconnectMutation(nestedMutation: NestedMutations, path: Path, field: Field): Seq[DatabaseMutaction] = {
+  def getMutactionsForNestedDisconnectMutation(nestedMutation: NestedMutations, path: Path, field: Field): Vector[DatabaseMutaction] = {
     nestedMutation.disconnects.map(disconnect => NestedDisconnectRelation(project, path.extend(project, field, disconnect)))
   }
 
-  def getMutactionsForNestedDeleteMutation(nestedMutation: NestedMutations, path: Path, field: Field): Seq[DatabaseMutaction] = {
+  def getMutactionsForNestedDeleteMutation(nestedMutation: NestedMutations, path: Path, field: Field): Vector[DatabaseMutaction] = {
     nestedMutation.deletes.flatMap { delete =>
       val extendedPath              = path.extend(project, field, delete)
       val cascadingDeleteMutactions = generateCascadingDeleteMutactions(extendedPath)
@@ -160,7 +160,7 @@ case class DatabaseMutactions(project: Project) {
     }
   }
 
-  def getMutactionsForNestedUpdateMutation(nestedMutation: NestedMutations, path: Path, field: Field): Seq[DatabaseMutaction] = {
+  def getMutactionsForNestedUpdateMutation(nestedMutation: NestedMutations, path: Path, field: Field): Vector[DatabaseMutaction] = {
     nestedMutation.updates.flatMap { update =>
       val extendedPath = path.extend(project, field, update)
       val updatedPath = update match {
@@ -176,7 +176,7 @@ case class DatabaseMutactions(project: Project) {
 
   // we need to rethink this thoroughly, we need to prevent both branches of executing their nested mutations
   // generate default value in create case
-  def getMutactionsForNestedUpsertMutation(nestedMutation: NestedMutations, path: Path, field: Field): Seq[DatabaseMutaction] = {
+  def getMutactionsForNestedUpsertMutation(nestedMutation: NestedMutations, path: Path, field: Field): Vector[DatabaseMutaction] = {
     nestedMutation.upserts.flatMap { upsert =>
       val extendedPath     = path.extend(project, field, upsert)
       val id               = createCuid()
@@ -216,11 +216,11 @@ case class DatabaseMutactions(project: Project) {
     updatedWhere
   }
 
-  def generateCascadingDeleteMutactions(startPoint: Path): List[DatabaseMutaction] = {
-    def getMutactionsForEdges(paths: List[Path]): List[DatabaseMutaction] = {
+  def generateCascadingDeleteMutactions(startPoint: Path): Vector[DatabaseMutaction] = {
+    def getMutactionsForEdges(paths: Vector[Path]): Vector[DatabaseMutaction] = {
       paths.filter(_.edges.length > startPoint.edges.length) match {
-        case Nil =>
-          List.empty
+        case x if x.isEmpty =>
+          Vector.empty
 
         case pathsList =>
           val maxPathLength     = pathsList.map(_.edges.length).max
@@ -233,7 +233,7 @@ case class DatabaseMutactions(project: Project) {
       }
     }
 
-    val paths: List[Path] = Path.collectCascadingPaths(project, startPoint)
+    val paths: Vector[Path] = Path.collectCascadingPaths(project, startPoint)
     getMutactionsForEdges(paths)
   }
 }

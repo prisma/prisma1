@@ -1,8 +1,9 @@
 package com.prisma.api.mutactions.validation
 
-import com.prisma.api.connector.CoolArgs
+import com.prisma.api.connector.{CoolArgs, ReallyCoolArgs}
 import com.prisma.api.schema.APIErrors
 import com.prisma.api.schema.APIErrors.ClientApiError
+import com.prisma.gc_values._
 import com.prisma.shared.models.{Field, Model, TypeIdentifier}
 import spray.json._
 
@@ -13,6 +14,15 @@ object InputValueValidation {
   def validateDataItemInputs(model: Model, args: CoolArgs): Option[ClientApiError] = {
     val fieldsWithValues              = InputValueValidation.scalarFieldsWithValues(model, args)
     val fieldsWithIllegallySizedValue = InputValueValidation.checkValueSize(args, fieldsWithValues)
+    () match {
+      case _ if fieldsWithIllegallySizedValue.nonEmpty => Some(APIErrors.ValueTooLong(fieldsWithIllegallySizedValue.head.name))
+      case _                                           => None
+    }
+  }
+
+  def validateDataItemInputsGC(model: Model, args: ReallyCoolArgs): Option[ClientApiError] = {
+    val fieldsWithValues              = InputValueValidation.scalarFieldsWithValuesGC(model, args)
+    val fieldsWithIllegallySizedValue = InputValueValidation.checkValueSizeGC(args, fieldsWithValues)
     () match {
       case _ if fieldsWithIllegallySizedValue.nonEmpty => Some(APIErrors.ValueTooLong(fieldsWithIllegallySizedValue.head.name))
       case _                                           => None
@@ -43,6 +53,12 @@ object InputValueValidation {
     updatedFields
       .filter(field => args.hasArgFor(field) && args.getUnwrappedFieldValue(field) != None)
       .filter(field => !isValueSizeValid(args.getUnwrappedFieldValue(field), field))
+  }
+
+  def checkValueSizeGC(args: ReallyCoolArgs, updatedFields: List[Field]): List[Field] = {
+    updatedFields
+      .filter(field => args.raw.asRoot.map.get(field.name).isDefined && args.getFieldValue(field.name).isDefined)
+      .filter(field => !isValueSizeValidGC(args.getFieldValue(field.name).get))
   }
 
   private def isValueSizeValid(value: Any, field: Field): Boolean = {
@@ -76,7 +92,25 @@ object InputValueValidation {
     }
   }
 
+  private def isValueSizeValidGC(value: GCValue) = value match {
+    case x: StringGCValue    => x.value.length <= 262144
+    case x: JsonGCValue      => x.value.toString.length <= 262144
+    case x: IntGCValue       => true
+    case x: BooleanGCValue   => true
+    case x: DateTimeGCValue  => true
+    case x: EnumGCValue      => x.value.length <= 191
+    case x: GraphQLIdGCValue => x.value.length <= 25
+    case x: FloatGCValue     => BigDecimal(x.value).underlying().toPlainString.length <= 35
+    case x: ListGCValue      => sys.error("handle this case")
+    case x: RootGCValue      => sys.error("handle this case")
+    case NullGCValue         => true
+  }
+
   def scalarFieldsWithValues(model: Model, args: CoolArgs): List[Field] = {
     model.scalarFields.filter(field => args.hasArgFor(field)).filter(_.name != "id")
+  }
+
+  def scalarFieldsWithValuesGC(model: Model, args: ReallyCoolArgs): List[Field] = {
+    model.scalarFields.filter(field => args.raw.asRoot.map.get(field.name).isDefined).filter(_.name != "id")
   }
 }

@@ -17,7 +17,12 @@ import scala.collection.immutable.Seq
   *   - Upsert Create/Delete CoolArgs
   *
   */
-case class ReallyCoolArgs(raw: GCValue)
+case class ReallyCoolArgs(raw: GCValue) {
+  def hasArgFor(field: Field) = raw.asRoot.map.get(field.name).isDefined
+
+  def getFieldValue(name: String): Option[GCValue] = raw.asRoot.map.get(name)
+
+}
 
 case class CoolArgs(raw: Map[String, Any]) {
   def isEmpty: Boolean    = raw.isEmpty
