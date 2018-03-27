@@ -34,7 +34,7 @@ case class DeleteProjectMutation(
 
   private def validate(project: Option[Project]): Project = {
     project match {
-      case None    => throw InvalidServiceName(args.name)
+      case None    => throw InvalidProjectId(projectId)
       case Some(p) => p
     }
   }
