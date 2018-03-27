@@ -38,16 +38,13 @@ case class Update(
   def prepareMutactions(): Future[PreparedMutactions] = {
     prismaNodes map {
       case Some(prismaNode) =>
-        val validatedDataItem = prismaNode // todo: use GC Values
-        // = prismaNode.copy(userData = GraphcoolDataTypes.fromSql(prismaNode.userData, model.fields))
-
-        val sqlMutactions          = DatabaseMutactions(project).getMutactionsForUpdate(Path.empty(where), coolArgs, prismaNode.id, validatedDataItem).toVector
+        val sqlMutactions          = DatabaseMutactions(project).getMutactionsForUpdate(Path.empty(where), coolArgs, prismaNode.id, prismaNode)
         val subscriptionMutactions = SubscriptionEvents.extractFromSqlMutactions(project, mutationId, sqlMutactions)
         val sssActions             = ServerSideSubscriptions.extractFromMutactions(project, sqlMutactions, requestId = "")
 
         PreparedMutactions(
-          databaseMutactions = sqlMutactions.toVector,
-          sideEffectMutactions = (sssActions ++ subscriptionMutactions).toVector
+          databaseMutactions = sqlMutactions,
+          sideEffectMutactions = sssActions ++ subscriptionMutactions
         )
       case None =>
         throw APIErrors.NodeNotFoundForWhereError(where)

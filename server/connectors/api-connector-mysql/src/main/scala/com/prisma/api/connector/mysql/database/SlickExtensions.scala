@@ -1,5 +1,6 @@
 package com.prisma.api.connector.mysql.database
 
+import com.prisma.api.connector.mysql.database.SlickExtensions.SetGcValueParam.dateTimeFormat
 import com.prisma.gc_values._
 import com.prisma.util.gc_value.{GCAnyConverter, GCValueExtractor}
 import org.joda.time.DateTime
@@ -91,9 +92,22 @@ object SlickExtensions {
       case param: Vector[_]    => sql"${listToJson(param.toList)}"
       case None                => sql"NULL"
       case null                => sql"NULL"
-      case param: GCValue      => sql"${GCValueExtractor.fromGCValueToString(param)}"
       case _                   => throw new IllegalArgumentException("Unsupported scalar value in SlickExtensions: " + param.toString)
     }
+  }
+
+  def gcValueToSQLBuilder(value: GCValue): SQLActionBuilder = value match {
+    case NullGCValue         => sql"NULL"
+    case x: StringGCValue    => sql"${x.value}"
+    case x: EnumGCValue      => sql"${x.value}"
+    case x: GraphQLIdGCValue => sql"${x.value}"
+    case x: DateTimeGCValue  => sql"${dateTimeFormat.print(x.value)}"
+    case x: IntGCValue       => sql"${x.value}"
+    case x: FloatGCValue     => sql"${x.value}"
+    case x: BooleanGCValue   => sql"${x.value}"
+    case x: JsonGCValue      => sql"${x.value.toString}"
+    case x: ListGCValue      => sys.error("ListGCValue not implemented here yet.")
+    case x: RootGCValue      => sys.error("RootGCValues not implemented here yet.")
   }
 
   def listToJsonList(param: List[Any]): String = {

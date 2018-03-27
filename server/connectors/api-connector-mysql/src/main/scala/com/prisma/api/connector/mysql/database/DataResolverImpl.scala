@@ -53,7 +53,7 @@ case class DataResolverImpl(project: Project, readonlyClientDatabase: MySQLProfi
   }
 
   override def batchResolveByUnique(model: Model, key: String, values: Vector[GCValue]): Future[Vector[PrismaNode]] = {
-    val query = DatabaseQueryBuilder.batchSelectFromModelByUnique(project.id, model, key, values)
+    val query = DatabaseQueryBuilder.batchSelectFromModelByUniqueSimple(project.id, model, key, values)
     performWithTiming("batchResolveByUnique", readonlyClientDatabase.run(query))
   }
 

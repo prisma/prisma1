@@ -1,11 +1,15 @@
 package com.prisma.api.connector.mysql.database
 
+import java.sql.{PreparedStatement, ResultSet, Statement}
+
 import com.prisma.api.connector.Types.DataItemFilterCollection
 import com.prisma.api.connector._
+import com.prisma.api.connector.mysql.database.DatabaseMutationBuilder.removeConnectionInfoFromCause
 import com.prisma.api.connector.mysql.database.HelperTypes.ScalarListElement
 import com.prisma.gc_values._
 import com.prisma.shared.models.IdType.Id
 import com.prisma.shared.models.{Function => _, _}
+import cool.graph.cuid.Cuid
 import slick.dbio.DBIOAction
 import slick.dbio.Effect.Read
 import slick.jdbc.MySQLProfile.api._
@@ -164,9 +168,29 @@ object DatabaseQueryBuilder {
                                    model: Model,
                                    key: String,
                                    values: Vector[GCValue]): SqlStreamingAction[Vector[PrismaNode], PrismaNode, Effect] = {
-    val query = sql"select * from `#$projectId`.`#${model.name}` where `#$key` in (" concat combineByComma(values.map(escapeUnsafeParam)) concat sql")"
+    val query = sql"select * from `#$projectId`.`#${model.name}` where `#$key` in (" concat combineByComma(values.map(gcValueToSQLBuilder)) concat sql")"
     query.as[PrismaNode](getResultForModel(model))
   }
+
+  def batchSelectFromModelByUniqueSimple(projectId: String, model: Model, key: String, values: Vector[GCValue]): SimpleDBIO[Vector[PrismaNode]] =
+    SimpleDBIO[Vector[PrismaNode]] { x =>
+      val placeHolders                   = values.map(_ => "?").mkString(",")
+      val query                          = s"select * from `$projectId`.`${model.name}` where `$key` in ($placeHolders)"
+      val batchSelect: PreparedStatement = x.connection.prepareStatement(query)
+      values.zipWithIndex.foreach { gcValueWithIndex =>
+        batchSelect.setGcValue(gcValueWithIndex._2 + 1, gcValueWithIndex._1)
+      }
+      val rs: ResultSet = batchSelect.executeQuery()
+
+      var result: Vector[PrismaNode] = Vector.empty
+      while (rs.next) {
+        val id   = rs.getString("id")
+        val data = model.scalarNonListFields.map(field => field.name -> rs.getGcValue(field.name, field.typeIdentifier))
+        result = result :+ PrismaNode(id = id, data = RootGCValue(data: _*))
+      }
+
+      result
+    }
 
   def selectFromScalarList(projectId: String,
                            modelName: String,
