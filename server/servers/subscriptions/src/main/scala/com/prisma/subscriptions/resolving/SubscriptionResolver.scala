@@ -28,6 +28,7 @@ case class SubscriptionResolver(
     ec: ExecutionContext
 ) {
   import DatabaseEvents._
+  val converter = GCCreateReallyCoolArgsConverter(model)
 
   def handleDatabaseMessage(event: String): Future[Option[JsValue]] = {
     import DatabaseEventReaders._
@@ -40,13 +41,8 @@ case class SubscriptionResolver(
     }
 
     dbEvent match {
-      case JsError(_) =>
-        Future.successful(None)
-
-      case JsSuccess(event, _) =>
-        handleDatabaseEventTimer.timeFuture(project.id) {
-          delayed(handleDatabaseMessage(event))
-        }
+      case JsError(_)          => Future.successful(None)
+      case JsSuccess(event, _) => handleDatabaseEventTimer.timeFuture(project.id) { delayed(handleDatabaseMessage(event)) }
     }
   }
 
@@ -67,33 +63,25 @@ case class SubscriptionResolver(
   }
 
   def handleDatabaseUpdateEvent(event: DatabaseUpdateEvent): Future[Option[JsValue]] = {
-    val values: UserData = GraphcoolDataTypes.fromJson(event.previousValues, model.fields)
-//    val previousValues = DataItem(event.nodeId, values)
-    val converter                      = GCCreateReallyCoolArgsConverter(model)
+    val values: UserData               = GraphcoolDataTypes.fromJson(event.previousValues, model.fields)
     val reallyCoolArgs: ReallyCoolArgs = converter.toReallyCoolArgs(values)
     val previousValues                 = PrismaNode(event.nodeId, reallyCoolArgs.raw.asRoot)
 
-    executeQuery(event.nodeId, Some(previousValues), updatedFields = Some(event.changedFields.toList)) //todo
+    executeQuery(event.nodeId, Some(previousValues), updatedFields = Some(event.changedFields.toList))
   }
 
   def handleDatabaseDeleteEvent(event: DatabaseDeleteEvent): Future[Option[JsValue]] = {
-    val values: UserData = GraphcoolDataTypes.fromJson(event.node, model.fields)
-//    val previousValues = DataItem(event.nodeId, values)
-    val converter                      = GCCreateReallyCoolArgsConverter(model)
+    val values: UserData               = GraphcoolDataTypes.fromJson(event.node, model.fields)
     val reallyCoolArgs: ReallyCoolArgs = converter.toReallyCoolArgs(values)
     val previousValues                 = PrismaNode(event.nodeId, reallyCoolArgs.raw.asRoot)
 
-    executeQuery(event.nodeId, Some(previousValues), updatedFields = None) //todo
+    executeQuery(event.nodeId, Some(previousValues), updatedFields = None)
   }
 
   def executeQuery(nodeId: String, previousValues: Option[PrismaNode], updatedFields: Option[List[String]]): Future[Option[JsValue]] = {
     val variables: spray.json.JsValue = subscription.variables match {
-      case None =>
-        spray.json.JsObject.empty
-
-      case Some(vars) =>
-        val str = vars.toString
-        VariablesParser.parseVariables(str)
+      case None       => spray.json.JsObject.empty
+      case Some(vars) => VariablesParser.parseVariables(vars.toString)
     }
 
     SubscriptionExecutor
@@ -111,10 +99,6 @@ case class SubscriptionResolver(
         skipPermissionCheck = false,
         alwaysQueryMasterDatabase = false
       )
-      .map { x =>
-        x.map { sprayJsonResult =>
-          Json.parse(sprayJsonResult.toString)
-        }
-      }
+      .map(x => x.map(sprayJsonResult => Json.parse(sprayJsonResult.toString)))
   }
 }

@@ -1,12 +1,14 @@
 package com.prisma.subscriptions.specs
 
 import com.prisma.api.ApiTestDatabase
-import com.prisma.api.connector.{CoolArgs, CreateDataItem, NodeSelector, Path}
+import com.prisma.api.connector._
+import com.prisma.gc_values._
 import com.prisma.shared.models.{Model, Project}
+import com.prisma.util.json.PlaySprayConversions
 import com.prisma.utils.await.AwaitUtils
 import spray.json.JsValue
 
-object TestData extends AwaitUtils {
+object TestData extends AwaitUtils with PlaySprayConversions {
   def createTodo(
       id: String,
       text: String,
@@ -16,10 +18,15 @@ object TestData extends AwaitUtils {
       model: Model,
       testDatabase: ApiTestDatabase
   ) = {
+
+    val raw: List[(String, GCValue)] =
+      List(("text", StringGCValue(text)), ("id", GraphQLIdGCValue(id)), ("done", BooleanGCValue(done.getOrElse(true))), ("json", JsonGCValue(json.toPlay())))
+    val args = ReallyCoolArgs(RootGCValue(raw: _*))
+
     val mutaction = CreateDataItem(
       project = project,
       path = Path.empty(NodeSelector.forId(model, id)),
-      args = CoolArgs(Map("text" -> text, "id" -> id, "done" -> done.getOrElse(true), "json" -> json))
+      args = args
     )
     testDatabase.runDatabaseMutactionOnClientDb(mutaction)
   }
