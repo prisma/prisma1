@@ -41,7 +41,7 @@ case class DatabaseMutactions(project: Project) {
     val path                        = Path.empty(NodeSelector.forId(model, id))
     val nonListCreateArgs: CoolArgs = args.generateNonListCreateArgs(model, id)
     val converter                   = GCCreateReallyCoolArgsConverter(model)
-    val reallyCoolArgs              = converter.toReallyCoolArgs(nonListCreateArgs)
+    val reallyCoolArgs              = converter.toReallyCoolArgs(nonListCreateArgs.raw)
     val createMutactions            = CreateDataItem(project, path, reallyCoolArgs) +: getMutactionsForScalarLists(path, args)
     val nestedMutactions            = getMutactionsForNestedMutation(args, path, triggeredFromCreate = true)
 
@@ -134,7 +134,7 @@ case class DatabaseMutactions(project: Project) {
       val extendedPath                = path.extend(project, field, create).lastEdgeToNodeEdge(NodeSelector.forId(model, id))
       val nonListCreateArgs: CoolArgs = create.data.generateNonListCreateArgs(model, id)
       val converter                   = GCCreateReallyCoolArgsConverter(model)
-      val reallyCoolArgs              = converter.toReallyCoolArgs(nonListCreateArgs)
+      val reallyCoolArgs              = converter.toReallyCoolArgs(nonListCreateArgs.raw)
 
       val createMutactions = List(CreateDataItem(project, extendedPath, reallyCoolArgs))
       val listMutactions   = getMutactionsForScalarLists(extendedPath, create.data)

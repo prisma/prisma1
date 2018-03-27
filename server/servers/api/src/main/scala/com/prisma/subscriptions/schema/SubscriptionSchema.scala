@@ -1,8 +1,9 @@
 package com.prisma.subscriptions.schema
 
 import com.prisma.api.ApiDependencies
-import com.prisma.api.connector.DataItem
+import com.prisma.api.connector.{DataItem, PrismaNode}
 import com.prisma.api.schema._
+import com.prisma.gc_values.RootGCValue
 import com.prisma.shared.models.ModelMutationType.ModelMutationType
 import com.prisma.shared.models.{Model, ModelMutationType, Project}
 import com.prisma.subscriptions.SubscriptionUserContext
@@ -15,7 +16,7 @@ case class SubscriptionSchema(
     project: Project,
     updatedFields: Option[List[String]],
     mutation: ModelMutationType,
-    previousValues: Option[DataItem],
+    previousValues: Option[PrismaNode],
     externalSchema: Boolean = false
 )(implicit dependencies: ApiDependencies) {
   val isDelete: Boolean = mutation == ModelMutationType.Deleted
@@ -36,10 +37,10 @@ case class SubscriptionSchema(
           modelObjectTypes(model.name),
           updatedFields,
           mutation,
-          previousValues,
+          previousValues.map(_.toDataItem),
           isDelete match {
             case false => None
-            case true  => Some(SimpleResolveOutput(DataItem("", Map.empty), Args.empty))
+            case true  => Some(SimpleResolveOutput(PrismaNode("", RootGCValue.empty), Args.empty))
           }
         )),
     arguments = List(

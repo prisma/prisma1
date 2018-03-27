@@ -62,7 +62,7 @@ object ServerSideSubscriptions {
         nodeId = mutaction.id,
         requestId = requestId,
         updatedFields = Some(mutaction.namesOfUpdatedFields.toList),
-        previousValues = Some(mutaction.previousValues.toDataItem)
+        previousValues = Some(mutaction.previousValues)
       )
     }
 

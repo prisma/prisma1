@@ -2,14 +2,16 @@ package com.prisma.subscriptions.resolving
 
 import java.util.concurrent.TimeUnit
 
-import com.prisma.api.connector.DataItem
+import com.prisma.api.connector.{PrismaNode, ReallyCoolArgs}
 import com.prisma.api.mutactions.GraphcoolDataTypes
+import com.prisma.api.mutactions.GraphcoolDataTypes.UserData
 import com.prisma.shared.models.ModelMutationType.ModelMutationType
 import com.prisma.shared.models.{Model, ModelMutationType, Project}
-import com.prisma.subscriptions.{SubscriptionDependencies, SubscriptionExecutor}
 import com.prisma.subscriptions.metrics.SubscriptionMetrics.handleDatabaseEventTimer
 import com.prisma.subscriptions.resolving.SubscriptionsManagerForModel.Requests.StartSubscription
 import com.prisma.subscriptions.util.PlayJson
+import com.prisma.subscriptions.{SubscriptionDependencies, SubscriptionExecutor}
+import com.prisma.util.gc_value.GCCreateReallyCoolArgsConverter
 import play.api.libs.json._
 
 import scala.concurrent.duration.Duration
@@ -65,20 +67,26 @@ case class SubscriptionResolver(
   }
 
   def handleDatabaseUpdateEvent(event: DatabaseUpdateEvent): Future[Option[JsValue]] = {
-    val values         = GraphcoolDataTypes.fromJson(event.previousValues, model.fields)
-    val previousValues = DataItem(event.nodeId, values)
+    val values: UserData = GraphcoolDataTypes.fromJson(event.previousValues, model.fields)
+//    val previousValues = DataItem(event.nodeId, values)
+    val converter                      = GCCreateReallyCoolArgsConverter(model)
+    val reallyCoolArgs: ReallyCoolArgs = converter.toReallyCoolArgs(values)
+    val previousValues                 = PrismaNode(event.nodeId, reallyCoolArgs.raw.asRoot)
 
-    executeQuery(event.nodeId, Some(previousValues), updatedFields = Some(event.changedFields.toList))
+    executeQuery(event.nodeId, Some(previousValues), updatedFields = Some(event.changedFields.toList)) //todo
   }
 
   def handleDatabaseDeleteEvent(event: DatabaseDeleteEvent): Future[Option[JsValue]] = {
-    val values         = GraphcoolDataTypes.fromJson(event.node, model.fields)
-    val previousValues = DataItem(event.nodeId, values)
+    val values: UserData = GraphcoolDataTypes.fromJson(event.node, model.fields)
+//    val previousValues = DataItem(event.nodeId, values)
+    val converter                      = GCCreateReallyCoolArgsConverter(model)
+    val reallyCoolArgs: ReallyCoolArgs = converter.toReallyCoolArgs(values)
+    val previousValues                 = PrismaNode(event.nodeId, reallyCoolArgs.raw.asRoot)
 
-    executeQuery(event.nodeId, Some(previousValues), updatedFields = None)
+    executeQuery(event.nodeId, Some(previousValues), updatedFields = None) //todo
   }
 
-  def executeQuery(nodeId: String, previousValues: Option[DataItem], updatedFields: Option[List[String]]): Future[Option[JsValue]] = {
+  def executeQuery(nodeId: String, previousValues: Option[PrismaNode], updatedFields: Option[List[String]]): Future[Option[JsValue]] = {
     val variables: spray.json.JsValue = subscription.variables match {
       case None =>
         spray.json.JsObject.empty

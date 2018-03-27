@@ -68,5 +68,5 @@ case class ServerSideSubscription(
     nodeId: Id,
     requestId: String,
     updatedFields: Option[List[String]] = None,
-    previousValues: Option[DataItem] = None
+    previousValues: Option[PrismaNode] = None
 ) extends SideEffectMutaction

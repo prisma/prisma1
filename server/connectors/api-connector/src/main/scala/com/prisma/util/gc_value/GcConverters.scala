@@ -413,12 +413,12 @@ case class GCAnyConverter(typeIdentifier: TypeIdentifier, isList: Boolean) exten
   */
 case class GCCreateReallyCoolArgsConverter(model: Model) {
 
-  def toReallyCoolArgs(input: CoolArgs): ReallyCoolArgs = {
+  def toReallyCoolArgs(raw: Map[String, Any]): ReallyCoolArgs = {
 
     val res = model.scalarNonListFields.map { field =>
       val converter = GCAnyConverter(field.typeIdentifier, false)
 
-      val gCValue = input.raw.get(field.name) match {
+      val gCValue = raw.get(field.name) match {
         case Some(Some(x)) => converter.toGCValue(x).get
         case Some(None)    => NullGCValue
         case Some(x)       => converter.toGCValue(x).get
