@@ -1,7 +1,7 @@
 package com.prisma.deploy.schema.mutations
 
 import com.prisma.deploy.connector.{DeployConnector, ProjectPersistence}
-import com.prisma.deploy.schema.InvalidServiceName
+import com.prisma.deploy.schema.InvalidProjectId
 import com.prisma.messagebus.PubSubPublisher
 import com.prisma.messagebus.pubsub.Only
 import com.prisma.shared.models._
@@ -17,10 +17,9 @@ case class DeleteProjectMutation(
     implicit ec: ExecutionContext
 ) extends Mutation[DeleteProjectMutationPayload] {
 
+  val projectId = ProjectId.toEncodedString(name = args.name, stage = args.stage)
+
   override def execute: Future[MutationResult[DeleteProjectMutationPayload]] = {
-
-    val projectId = ProjectId.toEncodedString(name = args.name, stage = args.stage)
-
     for {
       projectOpt <- projectPersistence.load(projectId)
       project    = validate(projectOpt)
