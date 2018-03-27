@@ -1,6 +1,6 @@
 package com.prisma.api.resolver
 
-import com.prisma.api.connector.{DataResolver, PrismaNode, ResolverResult, ResolverResultNew}
+import com.prisma.api.connector._
 import com.prisma.api.resolver.DeferredTypes._
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -11,10 +11,10 @@ class ManyModelDeferredResolver(resolver: DataResolver) {
 
     DeferredUtils.checkSimilarityOfModelDeferredsAndThrow(deferreds)
 
-    val headDeferred          = deferreds.head
-    val model                 = headDeferred.model
-    val args                  = headDeferred.args
-    val futureResolverResults = resolver.resolveByModel(model, args)
+    val headDeferred                 = deferreds.head
+    val model                        = headDeferred.model
+    val args: Option[QueryArguments] = headDeferred.args
+    val futureResolverResults        = resolver.resolveByModel(model, args)
 
     orderedDeferreds.map {
       case OrderedDeferred(deferred, order) =>

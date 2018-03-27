@@ -9,6 +9,8 @@ import scala.concurrent.Future
 trait DataResolver {
   def project: Project
 
+  //todo ID's to GCValues
+
   def resolveByGlobalId(globalId: String): Future[Option[PrismaNode]]
 
   def resolveByModel(model: Model, args: Option[QueryArguments] = None): Future[ResolverResultNew[PrismaNode]]
@@ -17,9 +19,9 @@ trait DataResolver {
 
   def countByModel(model: Model, where: Option[DataItemFilterCollection] = None): Future[Int]
 
-  def batchResolveByUnique(model: Model, key: String, values: Vector[GCValue]): Future[Vector[PrismaNode]]
+  def batchResolveByUnique(model: Model, fieldName: String, values: Vector[GCValue]): Future[Vector[PrismaNode]]
 
-  def batchResolveScalarList(model: Model, field: Field, nodeIds: Vector[String]): Future[Vector[ScalarListValues]]
+  def batchResolveScalarList(model: Model, listField: Field, nodeIds: Vector[String]): Future[Vector[ScalarListValues]]
 
   def resolveByRelationManyModels(fromField: Field,
                                   fromModelIds: Vector[String],
@@ -27,7 +29,7 @@ trait DataResolver {
 
   def countByRelationManyModels(fromField: Field, fromNodeIds: Vector[String], args: Option[QueryArguments]): Future[Vector[(String, Int)]]
 
-  def loadListRowsForExport(model: Model, field: Field, args: Option[QueryArguments] = None): Future[ResolverResultNew[ScalarListValues]]
+  def loadListRowsForExport(model: Model, listField: Field, args: Option[QueryArguments] = None): Future[ResolverResultNew[ScalarListValues]]
 
   def loadRelationRowsForExport(relationId: String, args: Option[QueryArguments] = None): Future[ResolverResultNew[RelationNode]]
 

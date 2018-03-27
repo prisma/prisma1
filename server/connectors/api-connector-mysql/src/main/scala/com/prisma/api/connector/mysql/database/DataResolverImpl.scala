@@ -47,18 +47,18 @@ case class DataResolverImpl(project: Project, readonlyClientDatabase: MySQLProfi
   override def resolveByUnique(where: NodeSelector): Future[Option[PrismaNode]] =
     batchResolveByUnique(where.model, where.field.name, Vector(where.fieldValue)).map(_.headOption)
 
-  override def countByModel(model: Model, where: Option[DataItemFilterCollection] = None): Future[Int] = {
-    val query = DatabaseQueryBuilder.countAllFromModel(project, model, where)
+  override def countByModel(model: Model, whereFilter: Option[DataItemFilterCollection] = None): Future[Int] = {
+    val query = DatabaseQueryBuilder.countAllFromModel(project, model, whereFilter)
     performWithTiming("countByModel", readonlyClientDatabase.run(query))
   }
 
-  override def batchResolveByUnique(model: Model, key: String, values: Vector[GCValue]): Future[Vector[PrismaNode]] = {
-    val query = DatabaseQueryBuilder.batchSelectFromModelByUniqueSimple(project.id, model, key, values)
+  override def batchResolveByUnique(model: Model, fieldName: String, values: Vector[GCValue]): Future[Vector[PrismaNode]] = {
+    val query = DatabaseQueryBuilder.batchSelectFromModelByUniqueSimple(project.id, model, fieldName, values)
     performWithTiming("batchResolveByUnique", readonlyClientDatabase.run(query))
   }
 
-  override def batchResolveScalarList(model: Model, field: Field, nodeIds: Vector[String]): Future[Vector[ScalarListValues]] = {
-    val query = DatabaseQueryBuilder.selectFromScalarList(project.id, model.name, field, nodeIds)
+  override def batchResolveScalarList(model: Model, listField: Field, nodeIds: Vector[String]): Future[Vector[ScalarListValues]] = {
+    val query = DatabaseQueryBuilder.selectFromScalarList(project.id, model.name, listField, nodeIds)
     performWithTiming("batchResolveScalarList", readonlyClientDatabase.run(query))
   }
 

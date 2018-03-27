@@ -37,8 +37,8 @@ class OneDeferredResolver(dataResolver: DataResolver) {
     deferred.key match {
       case "id" => prismaNodes.find(_.id == deferred.value)
       case _ =>
-        prismaNodes.find { dataItem =>
-          val itemValue       = dataItem.data.map(deferred.key)
+        prismaNodes.find { prismaNode =>
+          val itemValue       = prismaNode.data.map(deferred.key)
           val field           = deferred.model.getFieldByName_!(deferred.key)
           val whereFieldValue = GCAnyConverter(field.typeIdentifier, field.isList).toGCValue(deferred.value).get
           whereFieldValue == itemValue

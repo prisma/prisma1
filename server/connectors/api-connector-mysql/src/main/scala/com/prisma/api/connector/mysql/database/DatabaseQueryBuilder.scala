@@ -1,15 +1,13 @@
 package com.prisma.api.connector.mysql.database
 
-import java.sql.{PreparedStatement, ResultSet, Statement}
+import java.sql.{PreparedStatement, ResultSet}
 
 import com.prisma.api.connector.Types.DataItemFilterCollection
 import com.prisma.api.connector._
-import com.prisma.api.connector.mysql.database.DatabaseMutationBuilder.removeConnectionInfoFromCause
 import com.prisma.api.connector.mysql.database.HelperTypes.ScalarListElement
 import com.prisma.gc_values._
 import com.prisma.shared.models.IdType.Id
 import com.prisma.shared.models.{Function => _, _}
-import cool.graph.cuid.Cuid
 import slick.dbio.DBIOAction
 import slick.dbio.Effect.Read
 import slick.jdbc.MySQLProfile.api._
@@ -24,21 +22,6 @@ object DatabaseQueryBuilder {
   import JdbcExtensions._
   import QueryArgumentsExtensions._
   import SlickExtensions._
-
-  implicit object GetDataItem extends GetResult[DataItem] {
-    def apply(ps: PositionedResult): DataItem = {
-      val rs = ps.rs
-      val md = rs.getMetaData
-      val colNames = for (i <- 1 to md.getColumnCount)
-        yield md.getColumnName(i)
-
-      val userData = (for (n <- colNames.filter(_ != "id"))
-        // note: getObject(string) is case insensitive, so we get the index in scala land instead
-        yield n -> Option(rs.getObject(colNames.indexOf(n) + 1))).toMap
-
-      DataItem(id = rs.getString("id").trim, userData = userData)
-    }
-  }
 
   def extractQueryArgs(projectId: String,
                        modelName: String,
@@ -158,8 +141,8 @@ object DatabaseQueryBuilder {
     }
   }
 
-  def countAllFromModel(project: Project, model: Model, where: Option[DataItemFilterCollection]): DBIOAction[Int, NoStream, Effect] = {
-    val whereSql = where.flatMap(where => QueryArgumentsHelpers.generateFilterConditions(project.id, model.name, where))
+  def countAllFromModel(project: Project, model: Model, whereFilter: Option[DataItemFilterCollection]): DBIOAction[Int, NoStream, Effect] = {
+    val whereSql = whereFilter.flatMap(where => QueryArgumentsHelpers.generateFilterConditions(project.id, model.name, where))
     val query    = sql"select count(*) from `#${project.id}`.`#${model.name}`" ++ prefixIfNotNone("where", whereSql)
     query.as[Int].map(_.head)
   }
@@ -172,10 +155,10 @@ object DatabaseQueryBuilder {
     query.as[PrismaNode](getResultForModel(model))
   }
 
-  def batchSelectFromModelByUniqueSimple(projectId: String, model: Model, key: String, values: Vector[GCValue]): SimpleDBIO[Vector[PrismaNode]] =
+  def batchSelectFromModelByUniqueSimple(projectId: String, model: Model, fieldName: String, values: Vector[GCValue]): SimpleDBIO[Vector[PrismaNode]] =
     SimpleDBIO[Vector[PrismaNode]] { x =>
       val placeHolders                   = values.map(_ => "?").mkString(",")
-      val query                          = s"select * from `$projectId`.`${model.name}` where `$key` in ($placeHolders)"
+      val query                          = s"select * from `$projectId`.`${model.name}` where `$fieldName` in ($placeHolders)"
       val batchSelect: PreparedStatement = x.connection.prepareStatement(query)
       values.zipWithIndex.foreach { gcValueWithIndex =>
         batchSelect.setGcValue(gcValueWithIndex._2 + 1, gcValueWithIndex._1)
@@ -292,6 +275,8 @@ object DatabaseQueryBuilder {
     query.as[(String, Int)]
   }
 
+// used in tests only
+
   def getTables(projectId: String): DBIOAction[Vector[String], NoStream, Read] = {
     for {
       metaTables <- MTable.getTables(cat = Some(projectId), schemaPattern = None, namePattern = None, types = None)
@@ -305,8 +290,6 @@ object DatabaseQueryBuilder {
   }
 
   def unionIfNotFirst(index: Int): SQLActionBuilder = if (index == 0) sql"" else sql"union all "
-
-// used in tests only
 
   def itemCountForTable(projectId: String, modelName: String) = { // todo use count all from model
     sql"SELECT COUNT(*) AS Count FROM `#$projectId`.`#$modelName`"
