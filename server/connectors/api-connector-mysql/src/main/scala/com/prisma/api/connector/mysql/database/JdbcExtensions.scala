@@ -30,6 +30,9 @@ object JdbcExtensions {
 
   implicit class ResultSetExtensions(val resultSet: ResultSet) extends AnyVal {
 
+    def getId                     = GraphQLIdGCValue(resultSet.getString("id"))
+    def getParentId(side: String) = GraphQLIdGCValue(resultSet.getString("__Relation__" + side))
+
     def getGcValue(name: String, typeIdentifier: TypeIdentifier.Value): GCValue = {
       val dateTimeFormat = DateTimeFormat.forPattern("yyyy-MM-dd HH:mm:ss.SSS").withZoneUTC()
 

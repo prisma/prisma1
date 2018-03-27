@@ -17,11 +17,11 @@ import scala.concurrent.Future
 
 case class DataResolverImpl(project: Project, readonlyClientDatabase: MySQLProfile.backend.DatabaseDef) extends DataResolver {
 
-  override def resolveByGlobalId(globalId: String): Future[Option[PrismaNode]] = { //todo rewrite this to use normal query?
-    if (globalId == "viewer-fixed") return Future.successful(Some(PrismaNode(globalId, RootGCValue.empty, Some("Viewer"))))
+  override def resolveByGlobalId(globalId: GraphQLIdGCValue): Future[Option[PrismaNode]] = { //todo rewrite this to use normal query?
+    if (globalId.value == "viewer-fixed") return Future.successful(Some(PrismaNode(globalId, RootGCValue.empty, Some("Viewer"))))
 
     val query: SqlAction[Option[String], NoStream, Read] = TableQuery(new ProjectRelayIdTable(_, project.id))
-      .filter(_.id === globalId)
+      .filter(_.id === globalId.value)
       .map(_.stableModelIdentifier)
       .take(1)
       .result
@@ -32,7 +32,7 @@ case class DataResolverImpl(project: Project, readonlyClientDatabase: MySQLProfi
       .flatMap {
         case Some(stableModelIdentifier) =>
           val model = project.schema.getModelByStableIdentifier_!(stableModelIdentifier.trim)
-          resolveByUnique(NodeSelector.forId(model, globalId))
+          resolveByUnique(NodeSelector.forGraphQLIdGCValue(model, globalId))
 
         case _ =>
           Future.successful(None)
@@ -53,23 +53,25 @@ case class DataResolverImpl(project: Project, readonlyClientDatabase: MySQLProfi
   }
 
   override def batchResolveByUnique(model: Model, fieldName: String, values: Vector[GCValue]): Future[Vector[PrismaNode]] = {
-    val query = DatabaseQueryBuilder.batchSelectFromModelByUniqueSimple(project.id, model, fieldName, values)
+    val query = DatabaseQueryBuilder.batchSelectFromModelByUnique(project.id, model, fieldName, values)
     performWithTiming("batchResolveByUnique", readonlyClientDatabase.run(query))
   }
 
-  override def batchResolveScalarList(model: Model, listField: Field, nodeIds: Vector[String]): Future[Vector[ScalarListValues]] = {
+  override def batchResolveScalarList(model: Model, listField: Field, nodeIds: Vector[GraphQLIdGCValue]): Future[Vector[ScalarListValues]] = {
     val query = DatabaseQueryBuilder.selectFromScalarList(project.id, model.name, listField, nodeIds)
     performWithTiming("batchResolveScalarList", readonlyClientDatabase.run(query))
   }
 
   override def resolveByRelationManyModels(fromField: Field,
-                                           fromModelIds: Vector[String],
+                                           fromNodeIds: Vector[GraphQLIdGCValue],
                                            args: Option[QueryArguments]): Future[Vector[ResolverResultNew[PrismaNodeWithParent]]] = {
-    val query = DatabaseQueryBuilder.batchSelectAllFromRelatedModel(project, fromField, fromModelIds, args)
+    val query = DatabaseQueryBuilder.batchSelectAllFromRelatedModel(project, fromField, fromNodeIds, args)
     performWithTiming("resolveByRelation", readonlyClientDatabase.run(query))
   }
 
-  override def countByRelationManyModels(fromField: Field, fromNodeIds: Vector[String], args: Option[QueryArguments]): Future[Vector[(String, Int)]] = {
+  override def countByRelationManyModels(fromField: Field,
+                                         fromNodeIds: Vector[GraphQLIdGCValue],
+                                         args: Option[QueryArguments]): Future[Vector[(String, Int)]] = {
     val query = DatabaseQueryBuilder.countAllFromRelatedModels(project, fromField, fromNodeIds, args)
     performWithTiming("countByRelation", readonlyClientDatabase.run(query))
   }

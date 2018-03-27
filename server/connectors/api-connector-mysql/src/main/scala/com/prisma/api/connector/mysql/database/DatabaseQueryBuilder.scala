@@ -52,25 +52,21 @@ object DatabaseQueryBuilder {
   }
 
   private def getPrismaNode(model: Model, ps: PositionedResult) = {
-    val id   = ps.rs.getString("id")
     val data = model.scalarNonListFields.map(field => field.name -> ps.rs.getGcValue(field.name, field.typeIdentifier))
 
-    PrismaNode(id = id, data = RootGCValue(data: _*))
+    PrismaNode(id = ps.rs.getId, data = RootGCValue(data: _*))
   }
 
   def getResultForModelAndRelationSide(model: Model, side: String): GetResult[PrismaNodeWithParent] = GetResult { ps: PositionedResult =>
-    val parentId = ps.rs.getString("__Relation__" + side)
-    val node     = getPrismaNode(model, ps)
-    PrismaNodeWithParent(parentId, node)
+    val node = getPrismaNode(model, ps)
+    PrismaNodeWithParent(ps.rs.getParentId(side), node)
   }
 
   implicit object GetRelationNode extends GetResult[RelationNode] {
     override def apply(ps: PositionedResult): RelationNode = {
-      val resultSet = ps.rs
-      val id        = resultSet.getString("id")
-      val a         = resultSet.getString("A")
-      val b         = resultSet.getString("B")
-      RelationNode(id, a, b)
+      val a = ps.rs.getString("A") //todo these are also IDS
+      val b = ps.rs.getString("B")
+      RelationNode(ps.rs.getId, a, b)
     }
   }
 
@@ -167,9 +163,8 @@ object DatabaseQueryBuilder {
 
       var result: Vector[PrismaNode] = Vector.empty
       while (rs.next) {
-        val id   = rs.getString("id")
         val data = model.scalarNonListFields.map(field => field.name -> rs.getGcValue(field.name, field.typeIdentifier))
-        result = result :+ PrismaNode(id = id, data = RootGCValue(data: _*))
+        result = result :+ PrismaNode(id = rs.getId, data = RootGCValue(data: _*))
       }
 
       result
@@ -178,7 +173,7 @@ object DatabaseQueryBuilder {
   def selectFromScalarList(projectId: String,
                            modelName: String,
                            field: Field,
-                           nodeIds: Vector[String]): DBIOAction[Vector[ScalarListValues], NoStream, Effect] = {
+                           nodeIds: Vector[GraphQLIdGCValue]): DBIOAction[Vector[ScalarListValues], NoStream, Effect] = {
     val query = sql"select nodeId, position, value from `#$projectId`.`#${modelName}_#${field.name}` where nodeId in (" concat combineByComma(
       nodeIds.map(escapeUnsafeParam)) concat sql")"
 
@@ -194,7 +189,7 @@ object DatabaseQueryBuilder {
 
   def batchSelectAllFromRelatedModel(project: Project,
                                      fromField: Field,
-                                     fromModelIds: Vector[String],
+                                     fromModelIds: Vector[GraphQLIdGCValue],
                                      args: Option[QueryArguments]): DBIOAction[Vector[ResolverResultNew[PrismaNodeWithParent]], NoStream, Effect] = {
 
     val relatedModel      = fromField.relatedModel(project.schema).get
@@ -223,13 +218,13 @@ object DatabaseQueryBuilder {
     val query = resolveFromBothSidesAndMerge match {
       case false =>
         fromModelIds.distinct.view.zipWithIndex.foldLeft(sql"")((a, b) =>
-          a concat unionIfNotFirst(b._2) concat createQuery(b._1, modelRelationSide, fieldRelationSide))
+          a concat unionIfNotFirst(b._2) concat createQuery(b._1.value, modelRelationSide, fieldRelationSide))
 
       case true =>
         fromModelIds.distinct.view.zipWithIndex.foldLeft(sql"")(
           (a, b) =>
-            a concat unionIfNotFirst(b._2) concat createQuery(b._1, modelRelationSide, fieldRelationSide) concat sql"union all " concat createQuery(
-              b._1,
+            a concat unionIfNotFirst(b._2) concat createQuery(b._1.value, modelRelationSide, fieldRelationSide) concat sql"union all " concat createQuery(
+              b._1.value,
               fieldRelationSide,
               modelRelationSide))
     }
@@ -249,7 +244,7 @@ object DatabaseQueryBuilder {
 
   def countAllFromRelatedModels(project: Project,
                                 relationField: Field,
-                                parentNodeIds: Vector[String],
+                                parentNodeIds: Vector[GraphQLIdGCValue],
                                 args: Option[QueryArguments]): SqlStreamingAction[Vector[(String, Int)], (String, Int), Effect] = {
 
     val fieldTable        = relationField.relatedModel(project.schema).get.name
@@ -270,7 +265,7 @@ object DatabaseQueryBuilder {
         prefixIfNotNone("limit", limitCommand) concat sql")"
     }
 
-    val query = parentNodeIds.distinct.view.zipWithIndex.foldLeft(sql"")((a, b) => a concat unionIfNotFirst(b._2) concat createQuery(b._1))
+    val query = parentNodeIds.distinct.view.zipWithIndex.foldLeft(sql"")((a, b) => a concat unionIfNotFirst(b._2) concat createQuery(b._1.value))
 
     query.as[(String, Int)]
   }

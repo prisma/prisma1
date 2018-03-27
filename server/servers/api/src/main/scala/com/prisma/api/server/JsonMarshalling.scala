@@ -26,7 +26,7 @@ object JsonMarshalling {
       case None    ⇒ nullNode
     }
 
-    def scalarNode(value: Any, typeName: String, info: Set[ScalarValueInfo]) =
+    def scalarNode(value: Any, typeName: String, info: Set[ScalarValueInfo]) = //todo prisma nodes up to here
       value match {
         case v: String     ⇒ JsString(v)
         case v: Boolean    ⇒ JsBoolean(v)

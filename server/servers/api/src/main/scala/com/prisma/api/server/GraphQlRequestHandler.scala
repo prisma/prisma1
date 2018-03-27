@@ -52,7 +52,7 @@ case class GraphQlRequestHandlerImpl(
       projectId = Some(request.project.id)
     )
 
-    val result = Executor.execute(
+    val result: Future[JsValue] = Executor.execute(
       schema = request.schema,
       queryAst = query.query,
       userContext = context,

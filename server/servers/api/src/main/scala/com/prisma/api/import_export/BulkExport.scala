@@ -69,7 +69,7 @@ class BulkExport(project: Project)(implicit apiDependencies: ApiDependencies) {
   private def fetch(info: NodeInfo): Future[DataItemsPage] = {
     val queryArguments = QueryArguments(skip = Some(info.cursor.row), after = None, first = Some(1000), None, None, None, None)
     info.dataResolver.resolveByModel(info.current, Some(queryArguments)).map { resolverResult =>
-      val jsons = resolverResult.nodes.map(node => dataItemToExportNode(node, info))
+      val jsons = resolverResult.nodes.map(node => prismaNodeToExportNode(node, info))
       DataItemsPage(jsons, hasMore = resolverResult.hasNextPage)
     }
   }
@@ -90,10 +90,10 @@ class BulkExport(project: Project)(implicit apiDependencies: ApiDependencies) {
     }
   }
 
-  private def dataItemToExportNode(item: PrismaNode, info: NodeInfo): JsValue = {
+  private def prismaNodeToExportNode(item: PrismaNode, info: NodeInfo): JsValue = {
     import GCValueJsonFormatter.RootGcValueWritesWithoutNulls
     val jsonForNode = Json.toJsObject(item.data)
-    Json.obj("_typeName" -> info.current.name, "id" -> item.id) ++ jsonForNode
+    Json.obj("_typeName" -> info.current.name, "id" -> item.id.value) ++ jsonForNode
   }
 
   def dataItemToExportList(dataItems: Vector[ScalarListValues], info: ListInfo): Vector[JsValue] = {
