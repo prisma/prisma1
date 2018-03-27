@@ -2,9 +2,10 @@ package com.prisma.api
 
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
-import com.prisma.api.database.deferreds.DeferredResolverProvider
-import com.prisma.api.database.{DataResolver, Databases}
+import com.prisma.api.connector.{ApiConnector, DataResolver, DatabaseMutactionExecutor}
+import com.prisma.api.mutactions.{DatabaseMutactionVerifier, SideEffectMutactionExecutor}
 import com.prisma.api.project.ProjectFetcher
+import com.prisma.api.resolver.DeferredResolverProvider
 import com.prisma.api.schema.{ApiUserContext, SchemaBuilder}
 import com.prisma.api.server.RequestHandler
 import com.prisma.auth.{Auth, AuthImpl}
@@ -14,40 +15,39 @@ import com.prisma.messagebus.{PubSub, PubSubPublisher, QueuePublisher}
 import com.prisma.shared.models.Project
 import com.prisma.subscriptions.Webhook
 import com.prisma.utils.await.AwaitUtils
-import com.typesafe.config.{Config, ConfigFactory}
 
 import scala.concurrent.ExecutionContext
 
 trait ApiDependencies extends AwaitUtils {
   implicit def self: ApiDependencies
 
-  val config: Config = ConfigFactory.load()
-
   implicit val system: ActorSystem
   val materializer: ActorMaterializer
   def projectFetcher: ProjectFetcher
   def apiSchemaBuilder: SchemaBuilder
-  def databases: Databases
   def webhookPublisher: QueuePublisher[Webhook]
+  def apiConnector: ApiConnector
+  def databaseMutactionExecutor: DatabaseMutactionExecutor = apiConnector.databaseMutactionExecutor
+  def sideEffectMutactionExecutor: SideEffectMutactionExecutor
+  def mutactionVerifier: DatabaseMutactionVerifier
 
   implicit lazy val executionContext: ExecutionContext  = system.dispatcher
   implicit lazy val reporter: ErrorReporter             = BugsnagErrorReporter(sys.env("BUGSNAG_API_KEY"))
   lazy val graphQlRequestHandler: GraphQlRequestHandler = GraphQlRequestHandlerImpl(println)
   lazy val auth: Auth                                   = AuthImpl
   lazy val requestHandler: RequestHandler               = RequestHandler(projectFetcher, apiSchemaBuilder, graphQlRequestHandler, auth, println)
-  lazy val maxImportExportSize: Int                     = 10000000
+  lazy val maxImportExportSize: Int                     = 1000000
 
   val sssEventsPubSub: PubSub[String]
   lazy val sssEventsPublisher: PubSubPublisher[String] = sssEventsPubSub
 
-  def dataResolver(project: Project): DataResolver       = DataResolver(project)
-  def masterDataResolver(project: Project): DataResolver = DataResolver(project, useMasterDatabaseOnly = true)
+  def dataResolver(project: Project): DataResolver       = apiConnector.dataResolver(project)
+  def masterDataResolver(project: Project): DataResolver = apiConnector.masterDataResolver(project)
   def deferredResolverProvider(project: Project)         = new DeferredResolverProvider[ApiUserContext](dataResolver(project))
 
   def destroy = {
     println("ApiDependencies [DESTROY]")
-    databases.master.shutdown.await()
-    databases.readOnly.shutdown.await()
+    apiConnector.shutdown().await()
     materializer.shutdown()
     system.terminate().await()
   }

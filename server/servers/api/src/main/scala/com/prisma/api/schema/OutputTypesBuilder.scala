@@ -1,6 +1,6 @@
 package com.prisma.api.schema
 
-import com.prisma.api.database.{DataItem, DataResolver}
+import com.prisma.api.connector.{DataItem, DataResolver}
 import com.prisma.shared.models.ModelMutationType.ModelMutationType
 import com.prisma.shared.models.{Model, Project}
 import sangria.schema

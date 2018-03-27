@@ -2,12 +2,12 @@ package com.prisma.client.server
 
 import akka.http.scaladsl.model.StatusCodes.OK
 import akka.http.scaladsl.model._
-import com.prisma.sangria.utils.ErrorHandler
 import com.prisma.api.ApiDependencies
 import com.prisma.api.schema.ApiUserContext
 import com.prisma.api.server.{GraphQlQuery, GraphQlRequest}
+import com.prisma.sangria.utils.ErrorHandler
+import com.prisma.util.json.PlaySprayConversions
 import sangria.execution.{Executor, QueryAnalysisError}
-import sangria.parser.SyntaxError
 import spray.json.{JsArray, JsValue}
 
 import scala.collection.immutable.Seq
@@ -22,7 +22,8 @@ trait GraphQlRequestHandler {
 case class GraphQlRequestHandlerImpl(
     log: String => Unit
 )(implicit apiDependencies: ApiDependencies)
-    extends GraphQlRequestHandler {
+    extends GraphQlRequestHandler
+    with PlaySprayConversions {
 
   import apiDependencies.system.dispatcher
   import com.prisma.api.server.JsonMarshalling._
@@ -55,7 +56,7 @@ case class GraphQlRequestHandlerImpl(
       schema = request.schema,
       queryAst = query.query,
       userContext = context,
-      variables = query.variables,
+      variables = query.variables.toSpray,
       exceptionHandler = errorHandler.sangriaExceptionHandler,
       operationName = query.operationName,
       deferredResolver = apiDependencies.deferredResolverProvider(request.project)

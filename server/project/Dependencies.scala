@@ -48,7 +48,7 @@ object Dependencies {
   val akkaHttpTestKit   = "com.typesafe.akka" %% "akka-http-testkit"    % v.akkaHttp
   val akkaHttpSprayJson = "com.typesafe.akka" %% "akka-http-spray-json" % v.akkaHttp
   val akkaHttpCors      = "ch.megard"         %% "akka-http-cors"       % "0.2.2"
-  val akkaHttpPlayJson = "de.heikoseeberger" %% "akka-http-play-json" % "1.18.0" excludeAll (
+  val akkaHttpPlayJson = "de.heikoseeberger" %% "akka-http-play-json" % "1.20.0" excludeAll (
     ExclusionRule(organization = "com.typesafe.akka"),
     ExclusionRule(organization = "com.typesafe.play")
   )
@@ -88,6 +88,7 @@ object Dependencies {
   val jettyServer       = "org.eclipse.jetty"          % "jetty-server"              % "9.3.0.v20150612"
   val scalaUri          = "com.netaporter"             %% "scala-uri"                % "0.4.16"
   val parserCombinators = "org.scala-lang.modules"     %% "scala-parser-combinators" % "1.0.4"
+  val apacheCommons     = "commons-lang"               % "commons-lang"              % "2.6"
 
   lazy val common: Seq[ModuleID] = Seq(
     java8Compat,

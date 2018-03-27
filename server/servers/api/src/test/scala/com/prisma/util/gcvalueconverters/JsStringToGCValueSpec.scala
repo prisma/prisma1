@@ -1,17 +1,10 @@
 package com.prisma.util.gcvalueconverters
 
-import com.prisma.gc_values._
-import com.prisma.shared.models.Field
-import org.joda.time.{DateTime, DateTimeZone}
 import org.scalatest.{FlatSpec, Matchers}
-import play.api.libs.json.{JsNumber, JsObject, Json}
-import com.prisma.shared.models.ProjectJsonFormatter._
 
 class JsStringToGCValueSpec extends FlatSpec with Matchers {
 
   //the JsonFormatter can currently not read the defaultValue since it is defined as an GCValue on field
-
-
 //  "The SchemaSerializer" should "be able to parse the old and the new format for Enums" in {
 //
 //    val fieldOld = Json.parse("""{

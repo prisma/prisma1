@@ -1,14 +1,13 @@
 package com.prisma.api.schema
 
 import akka.actor.ActorSystem
-import com.prisma.api.{ApiDependencies, ApiMetrics}
-import com.prisma.api.database.DataItem
-import com.prisma.api.database.DeferredTypes.{ManyModelDeferred, OneDeferred}
+import com.prisma.api.connector.{CoolArgs, DataItem}
 import com.prisma.api.mutations._
-import com.prisma.api.mutations.mutations._
+import com.prisma.api.resolver.DeferredTypes.{ManyModelDeferred, OneDeferred}
+import com.prisma.api.{ApiDependencies, ApiMetrics}
 import com.prisma.shared.models.{Model, Project}
 import org.atteo.evo.inflector.English
-import sangria.relay.{Node, NodeDefinition, PossibleNodeObject}
+import sangria.relay._
 import sangria.schema._
 
 import scala.collection.mutable
@@ -39,6 +38,9 @@ case class SchemaBuilderImpl(
   val connectionTypes                      = objectTypeBuilder.modelConnectionTypes
   val outputTypesBuilder                   = OutputTypesBuilder(project, objectTypes, dataResolver)
   val pluralsCache                         = new PluralsCache
+  val databaseMutactionExecutor            = apiDependencies.databaseMutactionExecutor
+  val sideEffectMutactionExecutor          = apiDependencies.sideEffectMutactionExecutor
+  val mutactionVerifier                    = apiDependencies.mutactionVerifier
 
   def build(): Schema[ApiUserContext, Unit] = ApiMetrics.schemaBuilderTimer.time(project.id) {
     val query        = buildQuery()
@@ -127,7 +129,7 @@ case class SchemaBuilderImpl(
       arguments = argumentsBuilder.getSangriaArgumentsForCreate(model).getOrElse(List.empty),
       resolve = (ctx) => {
         val mutation       = Create(model = model, project = project, args = ctx.args, dataResolver = masterDataResolver)
-        val mutationResult = ClientMutationRunner.run(mutation, dataResolver)
+        val mutationResult = ClientMutationRunner.run(mutation, databaseMutactionExecutor, sideEffectMutactionExecutor, mutactionVerifier)
         mapReturnValueResult(mutationResult, ctx.args)
       }
     )
@@ -142,7 +144,7 @@ case class SchemaBuilderImpl(
         resolve = (ctx) => {
           val mutation = Update(model = model, project = project, args = ctx.args, dataResolver = masterDataResolver)
 
-          val mutationResult = ClientMutationRunner.run(mutation, dataResolver)
+          val mutationResult = ClientMutationRunner.run(mutation, databaseMutactionExecutor, sideEffectMutactionExecutor, mutactionVerifier)
           mapReturnValueResult(mutationResult, ctx.args)
         }
       )
@@ -158,7 +160,7 @@ case class SchemaBuilderImpl(
         resolve = (ctx) => {
           val where    = objectTypeBuilder.extractRequiredFilterFromContext(model, ctx)
           val mutation = UpdateMany(project, model, ctx.args, where, dataResolver = masterDataResolver)
-          ClientMutationRunner.run(mutation, dataResolver)
+          ClientMutationRunner.run(mutation, databaseMutactionExecutor, sideEffectMutactionExecutor, mutactionVerifier)
         }
       )
     }
@@ -172,7 +174,7 @@ case class SchemaBuilderImpl(
         arguments = args,
         resolve = (ctx) => {
           val mutation       = Upsert(model = model, project = project, args = ctx.args, dataResolver = masterDataResolver)
-          val mutationResult = ClientMutationRunner.run(mutation, dataResolver)
+          val mutationResult = ClientMutationRunner.run(mutation, databaseMutactionExecutor, sideEffectMutactionExecutor, mutactionVerifier)
           mapReturnValueResult(mutationResult, ctx.args)
         }
       )
@@ -193,7 +195,7 @@ case class SchemaBuilderImpl(
             args = ctx.args,
             dataResolver = masterDataResolver
           )
-          val mutationResult = ClientMutationRunner.run(mutation, dataResolver)
+          val mutationResult = ClientMutationRunner.run(mutation, databaseMutactionExecutor, sideEffectMutactionExecutor, mutactionVerifier)
           mapReturnValueResult(mutationResult, ctx.args)
         }
       )
@@ -208,7 +210,7 @@ case class SchemaBuilderImpl(
       resolve = (ctx) => {
         val where    = objectTypeBuilder.extractRequiredFilterFromContext(model, ctx)
         val mutation = DeleteMany(project, model, where, dataResolver = masterDataResolver)
-        ClientMutationRunner.run(mutation, dataResolver)
+        ClientMutationRunner.run(mutation, databaseMutactionExecutor, sideEffectMutactionExecutor, mutactionVerifier)
       }
     )
   }
@@ -224,6 +226,8 @@ case class SchemaBuilderImpl(
     )
   }
 
+  implicit val nodeEvidence = SangriaEvidences.DataItemNodeEvidence
+
   lazy val NodeDefinition(nodeInterface: InterfaceType[ApiUserContext, DataItem], nodeField, nodeRes) = Node.definitionById(
     resolve = (id: String, ctx: Context[ApiUserContext, Unit]) => {
       dataResolver.resolveByGlobalId(id)
@@ -231,7 +235,7 @@ case class SchemaBuilderImpl(
     possibleTypes = {
       objectTypes.values.flatMap { o =>
         if (o.allInterfaces.exists(_.name == "Node")) {
-          Some(PossibleNodeObject(o))
+          Some(PossibleNodeObject[ApiUserContext, Node, DataItem](o))
         } else {
           None
         }
@@ -246,6 +250,12 @@ case class SchemaBuilderImpl(
       case ReturnValue(dataItem) => outputTypesBuilder.mapResolve(dataItem, args)
       case NoReturnValue(where)  => throw APIErrors.NodeNotFoundForWhereError(where)
     }
+  }
+}
+
+object SangriaEvidences {
+  implicit object DataItemNodeEvidence extends IdentifiableNode[ApiUserContext, DataItem] {
+    override def id(ctx: Context[ApiUserContext, DataItem]) = ctx.value.id
   }
 }
 

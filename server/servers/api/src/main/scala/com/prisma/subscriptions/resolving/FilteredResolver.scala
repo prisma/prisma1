@@ -1,7 +1,7 @@
 package com.prisma.subscriptions.resolving
 
-import com.prisma.api.database.Types.DataItemFilterCollection
-import com.prisma.api.database.{DataItem, DataResolver, FilterElement, QueryArguments}
+import com.prisma.api.connector.Types.DataItemFilterCollection
+import com.prisma.api.connector.{DataItem, DataResolver, FilterElement, QueryArguments}
 import com.prisma.api.schema.ObjectTypeBuilder
 import com.prisma.shared.models.Model
 import sangria.schema.Context

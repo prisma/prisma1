@@ -17,7 +17,6 @@ object ApiMetrics extends MetricsManager(BugsnagErrorReporter(sys.env.getOrElse(
   val projectCacheGetCount  = defineCounter("projectCache.get.count")
   val projectCacheMissCount = defineCounter("projectCache.miss.count")
   val schemaBuilderTimer    = defineTimer("schemaBuilder.time", CustomTag("projectId", recordingThreshold = 600))
-  val sqlQueryTimer         = defineTimer("sql.query.time", CustomTag("projectId", recordingThreshold = 1000), CustomTag("queryName", recordingThreshold = 1000))
   val mutactionTimer        = defineTimer("mutaction.time", CustomTag("projectId", recordingThreshold = 1000))
   val mutactionCount        = defineCounter("mutaction.count", CustomTag("projectId", recordingThreshold = 100))
 

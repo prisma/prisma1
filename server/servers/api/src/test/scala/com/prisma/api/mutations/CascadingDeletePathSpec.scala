@@ -1,13 +1,14 @@
 package com.prisma.api.mutations
 
 import com.prisma.api.ApiBaseSpec
-import com.prisma.api.mutations.mutations.CascadingDeletes._
+import com.prisma.api.connector.{NodeSelector, Path}
 import com.prisma.api.schema.APIErrors.CascadingDeletePathLoops
 import com.prisma.shared.models._
 import com.prisma.shared.schema_dsl.SchemaDsl
 import org.scalatest.{FlatSpec, Matchers}
 
 class CascadingDeletePathSpec extends FlatSpec with Matchers with ApiBaseSpec {
+  import Path.collectCascadingPaths
 
   "Paths" should "not be generated for non-cascading relations" in {
     //                                P

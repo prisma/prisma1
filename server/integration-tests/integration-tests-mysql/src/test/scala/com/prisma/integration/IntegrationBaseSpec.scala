@@ -2,16 +2,17 @@ package com.prisma.integration
 
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
-import com.prisma.api.{ApiDependenciesForTest, ApiTestDatabase, ApiTestServer}
-import com.prisma.api.database.DataResolver
+import com.prisma.api.connector.DataResolver
+import com.prisma.api.connector.mysql.database.DataResolverImpl
 import com.prisma.api.util.StringMatchers
+import com.prisma.api.{ApiDependenciesForTest, ApiTestDatabase, ApiTestServer}
 import com.prisma.deploy.specutils.{DeployTestDependencies, DeployTestServer}
-import com.prisma.shared.models.{Migration, MigrationId, Project}
+import com.prisma.shared.models.{Migration, Project}
 import com.prisma.util.json.SprayJsonExtensions
 import com.prisma.utils.await.AwaitUtils
 import cool.graph.cuid.Cuid
 import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach, Suite}
-import play.api.libs.json.{JsArray, JsString}
+import play.api.libs.json.JsString
 
 import scala.collection.mutable.ArrayBuffer
 
@@ -34,7 +35,7 @@ trait IntegrationBaseSpec extends BeforeAndAfterEach with BeforeAndAfterAll with
   val apiServer                         = ApiTestServer()
   val apiDatabase                       = ApiTestDatabase()
 
-  def dataResolver(project: Project): DataResolver = DataResolver(project = project)
+  def dataResolver(project: Project): DataResolver = apiTestDependencies.dataResolver(project)
 
   // DEPLOY
 

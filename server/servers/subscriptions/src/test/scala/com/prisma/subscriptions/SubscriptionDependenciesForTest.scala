@@ -2,7 +2,9 @@ package com.prisma.subscriptions
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
 import com.prisma.api.ApiDependencies
-import com.prisma.api.database.Databases
+import com.prisma.api.connector.mysql.ApiConnectorImpl
+import com.prisma.api.connector.mysql.database.Databases
+import com.prisma.api.mutactions.{DatabaseMutactionVerifierImpl, SideEffectMutactionExecutorImpl}
 import com.prisma.api.project.{ProjectFetcher, ProjectFetcherImpl}
 import com.prisma.api.schema.SchemaBuilder
 import com.prisma.messagebus.testkits.{InMemoryPubSubTestKit, InMemoryQueueTestKit}
@@ -45,10 +47,13 @@ class SubscriptionDependenciesForTest()(implicit val system: ActorSystem, val ma
   override val keepAliveIntervalSeconds = 1000
   val projectFetcherPath                = "project-fetcher"
   override val projectFetcher: ProjectFetcher = {
-    ProjectFetcherImpl(Vector.empty, config, schemaManagerEndpoint = s"http://localhost:$projectFetcherPort/$projectFetcherPath", schemaManagerSecret = "empty")
+    ProjectFetcherImpl(Vector.empty, schemaManagerEndpoint = s"http://localhost:$projectFetcherPort/$projectFetcherPath", schemaManagerSecret = "empty")
   }
   override lazy val apiSchemaBuilder: SchemaBuilder = ???
-  override val databases: Databases                 = Databases.initialize(config)
   override lazy val sssEventsPubSub                 = ???
   override lazy val webhookPublisher                = ???
+
+  override lazy val apiConnector                = ApiConnectorImpl()
+  override lazy val sideEffectMutactionExecutor = SideEffectMutactionExecutorImpl()
+  override lazy val mutactionVerifier           = DatabaseMutactionVerifierImpl
 }

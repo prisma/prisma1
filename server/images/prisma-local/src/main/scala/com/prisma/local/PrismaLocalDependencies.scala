@@ -4,7 +4,8 @@ import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
 import com.prisma.akkautil.http.SimpleHttpClient
 import com.prisma.api.ApiDependencies
-import com.prisma.api.database.Databases
+import com.prisma.api.connector.mysql.ApiConnectorImpl
+import com.prisma.api.mutactions.{DatabaseMutactionVerifierImpl, SideEffectMutactionExecutorImpl}
 import com.prisma.api.project.{CachedProjectFetcherImpl, ProjectFetcher}
 import com.prisma.api.schema.{CachedSchemaBuilder, SchemaBuilder}
 import com.prisma.auth.AuthImpl
@@ -33,7 +34,6 @@ case class PrismaLocalDependencies()(implicit val system: ActorSystem, val mater
     with SubscriptionDependencies {
   override implicit def self = this
 
-  override lazy val databases        = Databases.initialize(config)
   override lazy val apiSchemaBuilder = CachedSchemaBuilder(SchemaBuilder(), invalidationPubSub)
   override lazy val projectFetcher: ProjectFetcher = {
     val fetcher = SingleServerProjectFetcher(projectPersistence)
@@ -88,6 +88,10 @@ case class PrismaLocalDependencies()(implicit val system: ActorSystem, val mater
   override lazy val webhooksConsumer        = webhooksQueue.map[WorkerWebhook](Converters.apiWebhook2WorkerWebhook)
   override lazy val httpClient              = SimpleHttpClient()
   override lazy val apiAuth                 = AuthImpl
-  override lazy val deployPersistencePlugin = MySqlDeployConnector(databases.master)(system.dispatcher)
+  override lazy val deployPersistencePlugin = MySqlDeployConnector(apiConnector.databases.master)(system.dispatcher)
   override lazy val functionValidator       = FunctionValidatorImpl()
+
+  override lazy val apiConnector                = ApiConnectorImpl()
+  override lazy val sideEffectMutactionExecutor = SideEffectMutactionExecutorImpl()
+  override lazy val mutactionVerifier           = DatabaseMutactionVerifierImpl
 }
