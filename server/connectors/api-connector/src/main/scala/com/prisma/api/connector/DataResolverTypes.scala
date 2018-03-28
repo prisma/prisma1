@@ -1,7 +1,7 @@
 package com.prisma.api.connector
 
 import com.prisma.api.connector.Types.DataItemFilterCollection
-import com.prisma.gc_values.GraphQLIdGCValue
+import com.prisma.gc_values.IdGCValue
 import com.prisma.shared.models.{Field, Model, Relation}
 
 import scala.collection.immutable.Seq
@@ -27,7 +27,7 @@ case class ResolverResultNew[T](
     nodes: Vector[T],
     hasNextPage: Boolean,
     hasPreviousPage: Boolean,
-    parentModelId: Option[GraphQLIdGCValue] = None
+    parentModelId: Option[IdGCValue] = None
 )
 
 case class RelationResult(

@@ -19,17 +19,17 @@ object SlickExtensions {
 
     override def apply(gcValue: GCValue, pp: PositionedParameters): Unit = {
       gcValue match {
-        case NullGCValue         => pp.setNull(java.sql.Types.NULL)
-        case x: StringGCValue    => pp.setString(x.value)
-        case x: EnumGCValue      => pp.setString(x.value)
-        case x: GraphQLIdGCValue => pp.setString(x.value)
-        case x: DateTimeGCValue  => pp.setString(dateTimeFormat.print(x.value))
-        case x: IntGCValue       => pp.setInt(x.value)
-        case x: FloatGCValue     => pp.setDouble(x.value)
-        case x: BooleanGCValue   => pp.setBoolean(x.value)
-        case x: JsonGCValue      => pp.setString(x.value.toString)
-        case x: ListGCValue      => sys.error("ListGCValue not implemented here yet.")
-        case x: RootGCValue      => sys.error("RootGCValues not implemented here yet.")
+        case NullGCValue        => pp.setNull(java.sql.Types.NULL)
+        case x: StringGCValue   => pp.setString(x.value)
+        case x: EnumGCValue     => pp.setString(x.value)
+        case x: IdGCValue       => pp.setString(x.value)
+        case x: DateTimeGCValue => pp.setString(dateTimeFormat.print(x.value))
+        case x: IntGCValue      => pp.setInt(x.value)
+        case x: FloatGCValue    => pp.setDouble(x.value)
+        case x: BooleanGCValue  => pp.setBoolean(x.value)
+        case x: JsonGCValue     => pp.setString(x.value.toString)
+        case x: ListGCValue     => sys.error("ListGCValue not implemented here yet.")
+        case x: RootGCValue     => sys.error("RootGCValues not implemented here yet.")
       }
     }
   }
@@ -97,17 +97,17 @@ object SlickExtensions {
   }
 
   def gcValueToSQLBuilder(value: GCValue): SQLActionBuilder = value match {
-    case NullGCValue         => sql"NULL"
-    case x: StringGCValue    => sql"${x.value}"
-    case x: EnumGCValue      => sql"${x.value}"
-    case x: GraphQLIdGCValue => sql"${x.value}"
-    case x: DateTimeGCValue  => sql"${dateTimeFormat.print(x.value)}"
-    case x: IntGCValue       => sql"${x.value}"
-    case x: FloatGCValue     => sql"${x.value}"
-    case x: BooleanGCValue   => sql"${x.value}"
-    case x: JsonGCValue      => sql"${x.value.toString}"
-    case x: ListGCValue      => sys.error("ListGCValue not implemented here yet.")
-    case x: RootGCValue      => sys.error("RootGCValues not implemented here yet.")
+    case NullGCValue        => sql"NULL"
+    case x: StringGCValue   => sql"${x.value}"
+    case x: EnumGCValue     => sql"${x.value}"
+    case x: IdGCValue       => sql"${x.value}"
+    case x: DateTimeGCValue => sql"${dateTimeFormat.print(x.value)}"
+    case x: IntGCValue      => sql"${x.value}"
+    case x: FloatGCValue    => sql"${x.value}"
+    case x: BooleanGCValue  => sql"${x.value}"
+    case x: JsonGCValue     => sql"${x.value.toString}"
+    case x: ListGCValue     => sys.error("ListGCValue not implemented here yet.")
+    case x: RootGCValue     => sys.error("RootGCValues not implemented here yet.")
   }
 
   def listToJsonList(param: List[Any]): String = {

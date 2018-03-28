@@ -5,7 +5,7 @@ import com.prisma.api.connector.{CoolArgs, DataItem}
 import com.prisma.api.mutations._
 import com.prisma.api.resolver.DeferredTypes.{ManyModelDeferred, OneDeferred}
 import com.prisma.api.{ApiDependencies, ApiMetrics}
-import com.prisma.gc_values.GraphQLIdGCValue
+import com.prisma.gc_values.IdGCValue
 import com.prisma.shared.models.{Model, Project}
 import org.atteo.evo.inflector.English
 import sangria.relay._
@@ -231,7 +231,7 @@ case class SchemaBuilderImpl(
 
   lazy val NodeDefinition(nodeInterface: InterfaceType[ApiUserContext, DataItem], nodeField, nodeRes) = Node.definitionById(
     resolve = (id: String, ctx: Context[ApiUserContext, Unit]) => {
-      dataResolver.resolveByGlobalId(GraphQLIdGCValue(id)).map(x => x.map(_.toDataItem))
+      dataResolver.resolveByGlobalId(IdGCValue(id)).map(x => x.map(_.toDataItem))
     },
     possibleTypes = {
       objectTypes.values.flatMap { o =>

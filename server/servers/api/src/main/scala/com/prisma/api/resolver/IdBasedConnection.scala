@@ -1,7 +1,7 @@
 package com.prisma.api.resolver
 
 import com.prisma.api.connector.QueryArguments
-import com.prisma.gc_values.GraphQLIdGCValue
+import com.prisma.gc_values.IdGCValue
 import com.prisma.shared.models
 import sangria.schema._
 
@@ -114,19 +114,16 @@ case class DefaultIdBasedConnection[T](pageInfo: PageInfo, edges: Seq[Edge[T]], 
 
 trait Edge[T] {
   def node: T
-  def cursor: GraphQLIdGCValue
+  def cursor: IdGCValue
 }
 
 object Edge {
-  def apply[T](node: T, cursor: GraphQLIdGCValue) = DefaultEdge(node, cursor)
+  def apply[T](node: T, cursor: IdGCValue) = DefaultEdge(node, cursor)
 }
 
-case class DefaultEdge[T](node: T, cursor: GraphQLIdGCValue) extends Edge[T]
+case class DefaultEdge[T](node: T, cursor: IdGCValue) extends Edge[T]
 
-case class PageInfo(hasNextPage: Boolean = false,
-                    hasPreviousPage: Boolean = false,
-                    startCursor: Option[GraphQLIdGCValue] = None,
-                    endCursor: Option[GraphQLIdGCValue] = None)
+case class PageInfo(hasNextPage: Boolean = false, hasPreviousPage: Boolean = false, startCursor: Option[IdGCValue] = None, endCursor: Option[IdGCValue] = None)
 
 object PageInfo {
   def empty = PageInfo()

@@ -26,7 +26,7 @@ object RootGCValue {
 }
 case class RootGCValue(map: SortedMap[String, GCValue]) extends GCValue {
   def idField = map.get("id") match {
-    case Some(id) => id.asInstanceOf[GraphQLIdGCValue]
+    case Some(id) => id.asInstanceOf[IdGCValue]
     case None     => sys.error("There was no field with name 'id'.")
   }
 
@@ -38,13 +38,13 @@ case class ListGCValue(values: Vector[GCValue]) extends GCValue {
   def getEnumVector: Vector[String]   = values.asInstanceOf[Vector[EnumGCValue]].map(_.value)
 }
 
-sealed trait LeafGCValue                   extends GCValue
-object NullGCValue                         extends LeafGCValue
-case class StringGCValue(value: String)    extends LeafGCValue
-case class IntGCValue(value: Int)          extends LeafGCValue
-case class FloatGCValue(value: Double)     extends LeafGCValue
-case class BooleanGCValue(value: Boolean)  extends LeafGCValue
-case class GraphQLIdGCValue(value: String) extends LeafGCValue
+sealed trait LeafGCValue                  extends GCValue
+object NullGCValue                        extends LeafGCValue
+case class StringGCValue(value: String)   extends LeafGCValue
+case class IntGCValue(value: Int)         extends LeafGCValue
+case class FloatGCValue(value: Double)    extends LeafGCValue
+case class BooleanGCValue(value: Boolean) extends LeafGCValue
+case class IdGCValue(value: String)       extends LeafGCValue
 case class DateTimeGCValue(value: DateTime) extends LeafGCValue {
   //the DateTime value should have ISO 8601 format like so "2017-12-05T12:34:23.000Z"
 

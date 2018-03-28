@@ -2,7 +2,7 @@ package com.prisma.subscriptions.schema
 
 import com.prisma.api.connector.{DataResolver, PrismaNode}
 import com.prisma.api.schema.{ObjectTypeBuilder, SimpleResolveOutput}
-import com.prisma.gc_values.GraphQLIdGCValue
+import com.prisma.gc_values.IdGCValue
 import com.prisma.shared.models.Model
 import com.prisma.subscriptions.SubscriptionUserContext
 import com.prisma.subscriptions.resolving.FilteredResolver
@@ -24,7 +24,7 @@ object SubscriptionDataResolver {
         val converter      = GCCreateReallyCoolArgsConverter(model)
         val reallyCoolArgs = converter.toReallyCoolArgs(dataItem.userData)
 
-        val node = PrismaNode(GraphQLIdGCValue(dataItem.id), reallyCoolArgs.raw.asRoot, dataItem.typeName)
+        val node = PrismaNode(IdGCValue(dataItem.id), reallyCoolArgs.raw.asRoot, dataItem.typeName)
 
         SimpleResolveOutput(node, Args.empty)
       })

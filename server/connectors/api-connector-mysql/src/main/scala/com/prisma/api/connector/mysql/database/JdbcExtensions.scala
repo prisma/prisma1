@@ -12,11 +12,11 @@ object JdbcExtensions {
 
   implicit class PreparedStatementExtensions(val ps: PreparedStatement) extends AnyVal {
     def setGcValue(index: Int, value: GCValue): Unit = value match {
-      case gcValue: StringGCValue    => ps.setString(index, gcValue.value)
-      case gcValue: BooleanGCValue   => ps.setBoolean(index, gcValue.value)
-      case gcValue: IntGCValue       => ps.setInt(index, gcValue.value)
-      case gcValue: FloatGCValue     => ps.setDouble(index, gcValue.value)
-      case gcValue: GraphQLIdGCValue => ps.setString(index, gcValue.value)
+      case gcValue: StringGCValue  => ps.setString(index, gcValue.value)
+      case gcValue: BooleanGCValue => ps.setBoolean(index, gcValue.value)
+      case gcValue: IntGCValue     => ps.setInt(index, gcValue.value)
+      case gcValue: FloatGCValue   => ps.setDouble(index, gcValue.value)
+      case gcValue: IdGCValue      => ps.setString(index, gcValue.value)
       case gcValue: DateTimeGCValue =>
         val res2 = Timestamp.valueOf(LocalDateTime.ofEpochSecond(gcValue.value.getMillis / 1000, 0, ZoneOffset.UTC))
 
@@ -30,15 +30,15 @@ object JdbcExtensions {
 
   implicit class ResultSetExtensions(val resultSet: ResultSet) extends AnyVal {
 
-    def getId                     = GraphQLIdGCValue(resultSet.getString("id"))
-    def getParentId(side: String) = GraphQLIdGCValue(resultSet.getString("__Relation__" + side))
+    def getId                     = IdGCValue(resultSet.getString("id"))
+    def getParentId(side: String) = IdGCValue(resultSet.getString("__Relation__" + side))
 
     def getGcValue(name: String, typeIdentifier: TypeIdentifier.Value): GCValue = {
       val dateTimeFormat = DateTimeFormat.forPattern("yyyy-MM-dd HH:mm:ss.SSS").withZoneUTC()
 
       val gcValue: GCValue = typeIdentifier match {
         case TypeIdentifier.String    => StringGCValue(resultSet.getString(name))
-        case TypeIdentifier.GraphQLID => GraphQLIdGCValue(resultSet.getString(name))
+        case TypeIdentifier.GraphQLID => IdGCValue(resultSet.getString(name))
         case TypeIdentifier.Enum      => EnumGCValue(resultSet.getString(name))
         case TypeIdentifier.Int       => IntGCValue(resultSet.getInt(name))
         case TypeIdentifier.Float     => FloatGCValue(resultSet.getDouble(name))

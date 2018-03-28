@@ -93,17 +93,17 @@ object InputValueValidation {
   }
 
   private def isValueSizeValidGC(value: GCValue) = value match {
-    case x: StringGCValue    => x.value.length <= 262144
-    case x: JsonGCValue      => x.value.toString.length <= 262144
-    case x: IntGCValue       => true
-    case x: BooleanGCValue   => true
-    case x: DateTimeGCValue  => true
-    case x: EnumGCValue      => x.value.length <= 191
-    case x: GraphQLIdGCValue => x.value.length <= 25
-    case x: FloatGCValue     => BigDecimal(x.value).underlying().toPlainString.length <= 35
-    case x: ListGCValue      => sys.error("handle this case")
-    case x: RootGCValue      => sys.error("handle this case")
-    case NullGCValue         => true
+    case x: StringGCValue   => x.value.length <= 262144
+    case x: JsonGCValue     => x.value.toString.length <= 262144
+    case x: IntGCValue      => true
+    case x: BooleanGCValue  => true
+    case x: DateTimeGCValue => true
+    case x: EnumGCValue     => x.value.length <= 191
+    case x: IdGCValue       => x.value.length <= 25
+    case x: FloatGCValue    => BigDecimal(x.value).underlying().toPlainString.length <= 35
+    case x: ListGCValue     => sys.error("handle this case")
+    case x: RootGCValue     => sys.error("handle this case")
+    case NullGCValue        => true
   }
 
   def scalarFieldsWithValues(model: Model, args: CoolArgs): List[Field] = {

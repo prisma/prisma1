@@ -32,7 +32,7 @@ class SubscriptionFilterSpec extends FlatSpec with Matchers with SpecBase with A
 
     val path = Path.empty(NodeSelector.forId(project.schema.getModelByName_!("Comment"), "comment-id"))
 
-    val raw: List[(String, GCValue)] = List(("text", StringGCValue("some comment")), ("id", GraphQLIdGCValue("comment-id")))
+    val raw: List[(String, GCValue)] = List(("text", StringGCValue("some comment")), ("id", IdGCValue("comment-id")))
     val args                         = ReallyCoolArgs(RootGCValue(raw: _*))
 
     testDatabase.runDatabaseMutactionOnClientDb(CreateDataItem(project = project, path = path, args = args))

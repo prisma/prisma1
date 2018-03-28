@@ -2,7 +2,7 @@ package com.prisma.api.resolver
 
 import com.prisma.api.connector.DataResolver
 import com.prisma.api.resolver.DeferredTypes.{CountToManyDeferred, OrderedDeferred, OrderedDeferredFutureResult}
-import com.prisma.gc_values.GraphQLIdGCValue
+import com.prisma.gc_values.IdGCValue
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
@@ -19,10 +19,10 @@ class CountToManyDeferredResolver(dataResolver: DataResolver) {
     val args         = headDeferred.args
 
     // get ids of dataitems in related model we need to fetch
-    val relatedModelIds = deferreds.map(deferred => GraphQLIdGCValue(deferred.parentNodeId))
+    val relatedModelIds = deferreds.map(deferred => IdGCValue(deferred.parentNodeId))
 
     // fetch dataitems
-    val futureNodeCounts: Future[Vector[(GraphQLIdGCValue, Int)]] = dataResolver.countByRelationManyModels(relatedField, relatedModelIds, args)
+    val futureNodeCounts: Future[Vector[(IdGCValue, Int)]] = dataResolver.countByRelationManyModels(relatedField, relatedModelIds, args)
 
     // assign the dataitems that were requested by each deferred
 

@@ -17,7 +17,7 @@ import scala.concurrent.Future
 
 case class DataResolverImpl(project: Project, readonlyClientDatabase: MySQLProfile.backend.DatabaseDef) extends DataResolver {
 
-  override def resolveByGlobalId(globalId: GraphQLIdGCValue): Future[Option[PrismaNode]] = { //todo rewrite this to use normal query?
+  override def resolveByGlobalId(globalId: IdGCValue): Future[Option[PrismaNode]] = { //todo rewrite this to use normal query?
     if (globalId.value == "viewer-fixed") return Future.successful(Some(PrismaNode(globalId, RootGCValue.empty, Some("Viewer"))))
 
     val query: SqlAction[Option[String], NoStream, Read] = TableQuery(new ProjectRelayIdTable(_, project.id))
@@ -57,21 +57,19 @@ case class DataResolverImpl(project: Project, readonlyClientDatabase: MySQLProfi
     performWithTiming("batchResolveByUnique", readonlyClientDatabase.run(query))
   }
 
-  override def batchResolveScalarList(model: Model, listField: Field, nodeIds: Vector[GraphQLIdGCValue]): Future[Vector[ScalarListValues]] = {
+  override def batchResolveScalarList(model: Model, listField: Field, nodeIds: Vector[IdGCValue]): Future[Vector[ScalarListValues]] = {
     val query = DatabaseQueryBuilder.selectFromScalarList(project.id, model.name, listField, nodeIds)
     performWithTiming("batchResolveScalarList", readonlyClientDatabase.run(query))
   }
 
   override def resolveByRelationManyModels(fromField: Field,
-                                           fromNodeIds: Vector[GraphQLIdGCValue],
+                                           fromNodeIds: Vector[IdGCValue],
                                            args: Option[QueryArguments]): Future[Vector[ResolverResultNew[PrismaNodeWithParent]]] = {
     val query = DatabaseQueryBuilder.batchSelectAllFromRelatedModel(project, fromField, fromNodeIds, args)
     performWithTiming("resolveByRelation", readonlyClientDatabase.run(query))
   }
 
-  override def countByRelationManyModels(fromField: Field,
-                                         fromNodeIds: Vector[GraphQLIdGCValue],
-                                         args: Option[QueryArguments]): Future[Vector[(GraphQLIdGCValue, Int)]] = {
+  override def countByRelationManyModels(fromField: Field, fromNodeIds: Vector[IdGCValue], args: Option[QueryArguments]): Future[Vector[(IdGCValue, Int)]] = {
     val query = DatabaseQueryBuilder.countAllFromRelatedModels(project, fromField, fromNodeIds, args)
     performWithTiming("countByRelation", readonlyClientDatabase.run(query))
   }

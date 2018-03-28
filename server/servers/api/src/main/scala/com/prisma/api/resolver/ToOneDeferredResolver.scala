@@ -2,7 +2,7 @@ package com.prisma.api.resolver
 
 import com.prisma.api.connector.{DataItem, DataResolver, PrismaNodeWithParent}
 import com.prisma.api.resolver.DeferredTypes.{OneDeferredResultType, OrderedDeferred, OrderedDeferredFutureResult, ToOneDeferred}
-import com.prisma.gc_values.GraphQLIdGCValue
+import com.prisma.gc_values.IdGCValue
 import com.prisma.shared.models.Project
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -20,7 +20,7 @@ class ToOneDeferredResolver(dataResolver: DataResolver) {
     val args         = headDeferred.args
 
     // get ids of dataitems in related model we need to fetch
-    val relatedModelIds = deferreds.map(deferred => GraphQLIdGCValue(deferred.parentNodeId))
+    val relatedModelIds = deferreds.map(deferred => IdGCValue(deferred.parentNodeId))
 
     // fetch dataitems
     val futureprismaNodes = dataResolver.resolveByRelationManyModels(relatedField, relatedModelIds, args).map(_.flatMap(_.nodes))

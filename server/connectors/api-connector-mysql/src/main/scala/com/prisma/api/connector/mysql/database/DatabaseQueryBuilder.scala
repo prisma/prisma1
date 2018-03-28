@@ -64,12 +64,12 @@ object DatabaseQueryBuilder {
     override def apply(ps: PositionedResult): RelationNode = {
       val a = ps.rs.getString("A") //todo these are also IDS
       val b = ps.rs.getString("B")
-      RelationNode(ps.rs.getId, GraphQLIdGCValue(a), GraphQLIdGCValue(b))
+      RelationNode(ps.rs.getId, IdGCValue(a), IdGCValue(b))
     }
   }
 
-  implicit object GetRelationCount extends GetResult[(GraphQLIdGCValue, Int)] {
-    override def apply(ps: PositionedResult): (GraphQLIdGCValue, Int) = (ps.rs.getId, ps.rs.getInt("Count"))
+  implicit object GetRelationCount extends GetResult[(IdGCValue, Int)] {
+    override def apply(ps: PositionedResult): (IdGCValue, Int) = (ps.rs.getId, ps.rs.getInt("Count"))
   }
 
   def getResultForScalarListField(field: Field): GetResult[ScalarListElement] = GetResult { ps: PositionedResult =>
@@ -136,7 +136,7 @@ object DatabaseQueryBuilder {
       val convertedValues =
         res.nodes
           .groupBy(_.nodeId)
-          .map { case (id, values) => ScalarListValues(GraphQLIdGCValue(id), ListGCValue(values.sortBy(_.position).map(_.value))) }
+          .map { case (id, values) => ScalarListValues(IdGCValue(id), ListGCValue(values.sortBy(_.position).map(_.value))) }
           .toVector
       res.copy(nodes = convertedValues)
     }
@@ -178,7 +178,7 @@ object DatabaseQueryBuilder {
   def selectFromScalarList(projectId: String,
                            modelName: String,
                            field: Field,
-                           nodeIds: Vector[GraphQLIdGCValue]): DBIOAction[Vector[ScalarListValues], NoStream, Effect] = {
+                           nodeIds: Vector[IdGCValue]): DBIOAction[Vector[ScalarListValues], NoStream, Effect] = {
     val query = sql"select nodeId, position, value from `#$projectId`.`#${modelName}_#${field.name}` where nodeId in (" concat combineByComma(
       nodeIds.map(gcValueToSQLBuilder)) concat sql")"
 
@@ -187,14 +187,14 @@ object DatabaseQueryBuilder {
       grouped.map {
         case (id, values) =>
           val gcValues = values.sortBy(_.position).map(_.value)
-          ScalarListValues(GraphQLIdGCValue(id), ListGCValue(gcValues))
+          ScalarListValues(IdGCValue(id), ListGCValue(gcValues))
       }.toVector
     }
   }
 
   def batchSelectAllFromRelatedModel(project: Project,
                                      fromField: Field,
-                                     fromModelIds: Vector[GraphQLIdGCValue],
+                                     fromModelIds: Vector[IdGCValue],
                                      args: Option[QueryArguments]): DBIOAction[Vector[ResolverResultNew[PrismaNodeWithParent]], NoStream, Effect] = {
 
     val relatedModel      = fromField.relatedModel(project.schema).get
@@ -249,8 +249,8 @@ object DatabaseQueryBuilder {
 
   def countAllFromRelatedModels(project: Project,
                                 relationField: Field,
-                                parentNodeIds: Vector[GraphQLIdGCValue],
-                                args: Option[QueryArguments]): SqlStreamingAction[Vector[(GraphQLIdGCValue, Int)], (GraphQLIdGCValue, Int), Effect] = {
+                                parentNodeIds: Vector[IdGCValue],
+                                args: Option[QueryArguments]): SqlStreamingAction[Vector[(IdGCValue, Int)], (IdGCValue, Int), Effect] = {
 
     val fieldTable        = relationField.relatedModel(project.schema).get.name
     val unsafeRelationId  = relationField.relation.get.id
@@ -272,7 +272,7 @@ object DatabaseQueryBuilder {
 
     val query = parentNodeIds.distinct.view.zipWithIndex.foldLeft(sql"")((a, b) => a concat unionIfNotFirst(b._2) concat createQuery(b._1.value))
 
-    query.as[(GraphQLIdGCValue, Int)]
+    query.as[(IdGCValue, Int)]
   }
 
 // used in tests only
