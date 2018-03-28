@@ -57,8 +57,8 @@ case class ApiServer(
     } yield {
       val per = EnvUtils.asInt("THROTTLING_RATE_PER_SECONDS").getOrElse(1)
       Throttler[ProjectId](
-        groupBy = pid => pid.name + "_" + pid.stage,
-        amount = throttlingRate.toInt,
+        groupBy = pid => pid.name + "~" + pid.stage,
+        amount = throttlingRate,
         per = per.seconds,
         timeout = 25.seconds,
         maxCallsInFlight = maxCallsInFlights.toInt
