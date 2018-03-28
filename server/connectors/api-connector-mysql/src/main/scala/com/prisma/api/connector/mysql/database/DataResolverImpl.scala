@@ -71,7 +71,7 @@ case class DataResolverImpl(project: Project, readonlyClientDatabase: MySQLProfi
 
   override def countByRelationManyModels(fromField: Field,
                                          fromNodeIds: Vector[GraphQLIdGCValue],
-                                         args: Option[QueryArguments]): Future[Vector[(String, Int)]] = {
+                                         args: Option[QueryArguments]): Future[Vector[(GraphQLIdGCValue, Int)]] = {
     val query = DatabaseQueryBuilder.countAllFromRelatedModels(project, fromField, fromNodeIds, args)
     performWithTiming("countByRelation", readonlyClientDatabase.run(query))
   }

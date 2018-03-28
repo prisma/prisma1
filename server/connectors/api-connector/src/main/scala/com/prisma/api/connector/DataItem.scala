@@ -20,5 +20,5 @@ object PrismaNode {
 
 case class PrismaNodeWithParent(parentId: GraphQLIdGCValue, prismaNode: PrismaNode)
 
-case class RelationNode(id: GraphQLIdGCValue, a: Id, b: Id)
-case class ScalarListValues(nodeId: Id, value: ListGCValue)
+case class RelationNode(id: GraphQLIdGCValue, a: GraphQLIdGCValue, b: GraphQLIdGCValue)
+case class ScalarListValues(nodeId: GraphQLIdGCValue, value: ListGCValue)

@@ -26,7 +26,7 @@ class ScalarListDeferredResolver(dataResolver: DataResolver) {
       case OrderedDeferred(deferred, order) =>
         OrderedDeferredFutureResult[ScalarListDeferredResultType](
           futureValues.map { values =>
-            values.filter(_.nodeId == deferred.nodeId).flatMap(values => extractor.fromListGCValue(values.value))
+            values.filter(_.nodeId == GraphQLIdGCValue(deferred.nodeId)).flatMap(values => extractor.fromListGCValue(values.value))
           },
           order
         )

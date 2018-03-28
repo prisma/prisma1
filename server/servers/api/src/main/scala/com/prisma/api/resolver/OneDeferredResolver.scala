@@ -15,16 +15,12 @@ class OneDeferredResolver(dataResolver: DataResolver) {
     DeferredUtils.checkSimilarityOfOneDeferredsAndThrow(deferreds)
 
     val headDeferred = deferreds.head
-    val converter    = GCAnyConverter(headDeferred.model.getFieldByName_!(headDeferred.key).typeIdentifier, false)
-    val deferredsWithGCValues = deferreds.map { deferred =>
-      val convertedValue = converter.toGCValue(deferred.value).get
-      OneDeferredGC(deferred.model, deferred.key, convertedValue)
-    }
 
     // fetch prismaNodes
-    val futurePrismaNodes = dataResolver.batchResolveByUnique(headDeferred.model, headDeferred.key, deferredsWithGCValues.map(_.value))
+    val futurePrismaNodes =
+      dataResolver.batchResolveByUnique(headDeferred.model, headDeferred.where.fieldName, deferreds.map(deferred => deferred.where.fieldValue))
 
-    // assign the dataitem that was requested by each deferred
+    // assign the prismaNode that was requested by each deferred
     orderedDeferreds.map {
       case OrderedDeferred(deferred, order) =>
         OrderedDeferredFutureResult[OneDeferredResultType](futurePrismaNodes.map { vector =>
@@ -34,15 +30,9 @@ class OneDeferredResolver(dataResolver: DataResolver) {
   }
 
   private def dataItemsToToOneDeferredResultType(project: Project, deferred: OneDeferred, prismaNodes: Vector[PrismaNode]): Option[PrismaNode] = {
-    deferred.key match {
-      case "id" => prismaNodes.find(_.id == deferred.value)
-      case _ =>
-        prismaNodes.find { prismaNode =>
-          val itemValue       = prismaNode.data.map(deferred.key)
-          val field           = deferred.model.getFieldByName_!(deferred.key)
-          val whereFieldValue = GCAnyConverter(field.typeIdentifier, field.isList).toGCValue(deferred.value).get
-          whereFieldValue == itemValue
-        }
+    deferred.where.fieldName match {
+      case "id" => prismaNodes.find(_.id == deferred.where.fieldValue)
+      case _    => prismaNodes.find(prismaNode => deferred.where.fieldValue == prismaNode.data.map(deferred.where.fieldName))
     }
   }
 }

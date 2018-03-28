@@ -14,11 +14,9 @@ import slick.jdbc.MySQLProfile.api._
 import slick.jdbc.meta.{DatabaseMeta, MTable}
 import slick.jdbc.{SQLActionBuilder, _}
 import slick.sql.SqlStreamingAction
-
 import scala.concurrent.ExecutionContext.Implicits.global
 
 object DatabaseQueryBuilder {
-
   import JdbcExtensions._
   import QueryArgumentsExtensions._
   import SlickExtensions._
@@ -66,8 +64,12 @@ object DatabaseQueryBuilder {
     override def apply(ps: PositionedResult): RelationNode = {
       val a = ps.rs.getString("A") //todo these are also IDS
       val b = ps.rs.getString("B")
-      RelationNode(ps.rs.getId, a, b)
+      RelationNode(ps.rs.getId, GraphQLIdGCValue(a), GraphQLIdGCValue(b))
     }
+  }
+
+  implicit object GetRelationCount extends GetResult[(GraphQLIdGCValue, Int)] {
+    override def apply(ps: PositionedResult): (GraphQLIdGCValue, Int) = (ps.rs.getId, ps.rs.getInt("Count"))
   }
 
   def getResultForScalarListField(field: Field): GetResult[ScalarListElement] = GetResult { ps: PositionedResult =>
@@ -132,7 +134,10 @@ object DatabaseQueryBuilder {
     query.as[ScalarListElement](getResultForScalarListField(field)).map { scalarListElements =>
       val res = args.get.resultTransform(scalarListElements)
       val convertedValues =
-        res.nodes.groupBy(_.nodeId).map { case (id, values) => ScalarListValues(id, ListGCValue(values.sortBy(_.position).map(_.value))) }.toVector
+        res.nodes
+          .groupBy(_.nodeId)
+          .map { case (id, values) => ScalarListValues(GraphQLIdGCValue(id), ListGCValue(values.sortBy(_.position).map(_.value))) }
+          .toVector
       res.copy(nodes = convertedValues)
     }
   }
@@ -182,7 +187,7 @@ object DatabaseQueryBuilder {
       grouped.map {
         case (id, values) =>
           val gcValues = values.sortBy(_.position).map(_.value)
-          ScalarListValues(id, ListGCValue(gcValues))
+          ScalarListValues(GraphQLIdGCValue(id), ListGCValue(gcValues))
       }.toVector
     }
   }
@@ -245,7 +250,7 @@ object DatabaseQueryBuilder {
   def countAllFromRelatedModels(project: Project,
                                 relationField: Field,
                                 parentNodeIds: Vector[GraphQLIdGCValue],
-                                args: Option[QueryArguments]): SqlStreamingAction[Vector[(String, Int)], (String, Int), Effect] = {
+                                args: Option[QueryArguments]): SqlStreamingAction[Vector[(GraphQLIdGCValue, Int)], (GraphQLIdGCValue, Int), Effect] = {
 
     val fieldTable        = relationField.relatedModel(project.schema).get.name
     val unsafeRelationId  = relationField.relation.get.id
@@ -267,7 +272,7 @@ object DatabaseQueryBuilder {
 
     val query = parentNodeIds.distinct.view.zipWithIndex.foldLeft(sql"")((a, b) => a concat unionIfNotFirst(b._2) concat createQuery(b._1.value))
 
-    query.as[(String, Int)]
+    query.as[(GraphQLIdGCValue, Int)]
   }
 
 // used in tests only

@@ -74,7 +74,7 @@ object DeferredUtils {
     val headDeferred = deferreds.head
 
     val countSimilarDeferreds = deferreds.count { d =>
-      d.key == headDeferred.key &&
+      d.where.field == headDeferred.where.field &&
       d.model == headDeferred.model
     }
 

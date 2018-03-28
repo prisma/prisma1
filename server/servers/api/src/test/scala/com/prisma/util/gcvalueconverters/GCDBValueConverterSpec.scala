@@ -30,7 +30,6 @@ class GCDBValueConverterSpec extends FlatSpec with Matchers {
   val jsons     = ListGCValue(Vector(JsonGCValue(JsObject(Seq(("hello", JsString("there"))))), JsonGCValue(JsObject(Seq(("hello", JsString("there")))))))
   val nullValue = NullGCValue
 
-
   "It should take non-list GCValues and" should "convert them to DBValues and back without loss if the type and list status are correct." in {
     forthAndBack(string, TypeIdentifier.String, false) should be(Result.Equal)
     forthAndBack(int, TypeIdentifier.Int, false) should be(Result.Equal)

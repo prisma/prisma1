@@ -109,8 +109,8 @@ class BulkExport(project: Project)(implicit apiDependencies: ApiDependencies) {
   }
 
   private def dataItemToExportRelation(item: RelationNode, info: RelationInfo): JsValue = {
-    val leftSide  = ExportRelationSide(info.current.modelBName, item.b, info.current.fieldBName)
-    val rightSide = ExportRelationSide(info.current.modelAName, item.a, info.current.fieldAName)
+    val leftSide  = ExportRelationSide(info.current.modelBName, item.b.value, info.current.fieldBName)
+    val rightSide = ExportRelationSide(info.current.modelAName, item.a.value, info.current.fieldAName)
     JsArray(Seq(Json.toJson(leftSide), Json.toJson(rightSide)))
   }
 
