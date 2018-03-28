@@ -1,7 +1,6 @@
 package com.prisma.api.resolver
 
 import com.prisma.api.connector.{DataItem, NodeSelector, QueryArguments}
-import com.prisma.gc_values.GCValue
 import com.prisma.shared.models.{Field, Model}
 import sangria.execution.deferred.Deferred
 
@@ -45,7 +44,6 @@ object DeferredTypes {
   }
 
   type OneDeferredResultType = Option[DataItem]
-  case class OneDeferredGC(model: Model, key: String, value: GCValue)
 
   case class OneDeferred(model: Model, where: NodeSelector)                                          extends Deferred[OneDeferredResultType] {}
   case class ToOneDeferred(relationField: Field, parentNodeId: String, args: Option[QueryArguments]) extends RelationDeferred[OneDeferredResultType]

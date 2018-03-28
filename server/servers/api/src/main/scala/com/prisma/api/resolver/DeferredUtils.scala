@@ -3,6 +3,7 @@ package com.prisma.api.resolver
 import com.prisma.api.connector.QueryArguments
 import com.prisma.api.resolver.DeferredTypes._
 import com.prisma.shared.models.IdType.Id
+import com.prisma.shared.models.RelationSide.RelationSide
 import com.prisma.shared.models.{Field, Model}
 import sangria.execution.deferred.Deferred
 
@@ -32,14 +33,13 @@ object DeferredUtils {
   }
 
   def groupRelatedDeferred[T <: RelationDeferred[Any]](
-      relatedDeferral: Vector[OrderedDeferred[T]]): Map[(Id, String, Option[QueryArguments]), Vector[OrderedDeferred[T]]] = {
+      relatedDeferral: Vector[OrderedDeferred[T]]): Map[(String, RelationSide, Option[QueryArguments]), Vector[OrderedDeferred[T]]] = {
     relatedDeferral.groupBy(ordered =>
-      (ordered.deferred.relationField.relation.get.id, ordered.deferred.relationField.relationSide.get.toString, ordered.deferred.args))
+      (ordered.deferred.relationField.relation.get.relationTableName, ordered.deferred.relationField.relationSide.get, ordered.deferred.args))
   }
 
   def checkSimilarityOfModelDeferredsAndThrow(deferreds: Vector[ModelDeferred[Any]]) = {
     val headDeferred = deferreds.head
-    val model        = headDeferred.model
     val args         = headDeferred.args
 
     val countSimilarDeferreds = deferreds.count { deferred =>

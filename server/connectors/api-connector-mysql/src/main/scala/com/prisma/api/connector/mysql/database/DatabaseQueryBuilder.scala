@@ -199,7 +199,7 @@ object DatabaseQueryBuilder {
 
     val relatedModel      = fromField.relatedModel(project.schema).get
     val fieldTable        = fromField.relatedModel(project.schema).get.name
-    val unsafeRelationId  = fromField.relation.get.id
+    val unsafeRelationId  = fromField.relation.get.relationTableName
     val modelRelationSide = fromField.relationSide.get.toString
     val fieldRelationSide = fromField.oppositeRelationSide.get.toString
 
@@ -253,7 +253,7 @@ object DatabaseQueryBuilder {
                                 args: Option[QueryArguments]): SqlStreamingAction[Vector[(IdGCValue, Int)], (IdGCValue, Int), Effect] = {
 
     val fieldTable        = relationField.relatedModel(project.schema).get.name
-    val unsafeRelationId  = relationField.relation.get.id
+    val unsafeRelationId  = relationField.relation.get.relationTableName
     val modelRelationSide = relationField.relationSide.get.toString
     val fieldRelationSide = relationField.oppositeRelationSide.get.toString
 

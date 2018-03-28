@@ -9,7 +9,7 @@ case class ResetData(project: Project, dataResolver: DataResolver)(implicit apiD
 
   override def prepareMutactions(): Future[PreparedMutactions] = {
     val disableChecks    = Vector(DisableForeignKeyConstraintChecks)
-    val removeRelations  = project.relations.map(relation => TruncateTable(projectId = project.id, tableName = relation.id)).toVector
+    val removeRelations  = project.relations.map(relation => TruncateTable(projectId = project.id, tableName = relation.relationTableName)).toVector
     val removeDataItems  = project.models.map(model => TruncateTable(projectId = project.id, tableName = model.name)).toVector
     val listTableNames   = project.models.flatMap(model => model.scalarListFields.map(field => s"${model.name}_${field.name}"))
     val removeListValues = listTableNames.map(tableName => TruncateTable(projectId = project.id, tableName = tableName))

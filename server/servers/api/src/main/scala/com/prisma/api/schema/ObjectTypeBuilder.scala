@@ -53,10 +53,7 @@ class ObjectTypeBuilder(
           SangriaField(
             "aggregate",
             aggregateTypeForModel(model),
-            resolve = (ctx: Context[ApiUserContext, IdBasedConnection[DataItem]]) => {
-              val emptyQueryArguments = QueryArguments(None, None, None, None, None, None, None)
-              ctx.value.parent.args.getOrElse(emptyQueryArguments)
-            }
+            resolve = (ctx: Context[ApiUserContext, IdBasedConnection[DataItem]]) => ctx.value.parent.args.getOrElse(QueryArguments.empty)
           )
         )
       }
@@ -112,7 +109,7 @@ class ObjectTypeBuilder(
     fieldType = mapToOutputType(Some(model), field),
     description = field.description,
     arguments = mapToListConnectionArguments(model, field),
-    resolve = (ctx: Context[ApiUserContext, DataItem]) => { mapToOutputResolve(model, field)(ctx) },
+    resolve = (ctx: Context[ApiUserContext, DataItem]) => mapToOutputResolve(model, field)(ctx),
     tags = List()
   )
 
@@ -261,21 +258,21 @@ class ObjectTypeBuilder(
     generateFilterElement(unwrappedValues, model, isSubscriptionFilter = false)
   }
 
-  def extractUniqueArgument(model: models.Model, ctx: Context[ApiUserContext, Unit]): Argument[_] = {
-
-    import com.prisma.util.coolSangria.FromInputImplicit.DefaultScalaResultMarshaller
-
-    val args = model.scalarNonListFields
-      .filter(_.isUnique)
-      .map(field => Argument(field.name, SchemaBuilderUtils.mapToOptionalInputType(field), description = field.description.getOrElse("")))
-
-    val arg = args.find(a => ctx.args.argOpt(a.name).isDefined) match {
-      case Some(value) => value
-      case None        => ??? //throw UserAPIErrors.GraphQLArgumentsException(s"None of the following arguments provided: ${args.map(_.name)}")
-    }
-
-    arg
-  }
+//  def extractUniqueArgument(model: models.Model, ctx: Context[ApiUserContext, Unit]): Argument[_] = {
+//
+//    import com.prisma.util.coolSangria.FromInputImplicit.DefaultScalaResultMarshaller
+//
+//    val args = model.scalarNonListFields
+//      .filter(_.isUnique)
+//      .map(field => Argument(field.name, SchemaBuilderUtils.mapToOptionalInputType(field), description = field.description.getOrElse("")))
+//
+//    val arg = args.find(a => ctx.args.argOpt(a.name).isDefined) match {
+//      case Some(value) => value
+//      case None        => ??? //throw UserAPIErrors.GraphQLArgumentsException(s"None of the following arguments provided: ${args.map(_.name)}")
+//    }
+//
+//    arg
+//  }
 
   def mapToOutputResolve[C <: ApiUserContext](model: models.Model, field: models.Field)(ctx: Context[C, DataItem]): sangria.schema.Action[ApiUserContext, _] = {
 

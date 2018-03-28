@@ -9,7 +9,7 @@ import scala.concurrent.Future
 
 class CountToManyDeferredResolver(dataResolver: DataResolver) {
   def resolve(orderedDeferreds: Vector[OrderedDeferred[CountToManyDeferred]]): Vector[OrderedDeferredFutureResult[Int]] = {
-    val deferreds = orderedDeferreds.map(_.deferred)
+    val deferreds: Vector[CountToManyDeferred] = orderedDeferreds.map(_.deferred)
 
     // check if we really can satisfy all deferreds with one database query
     DeferredUtils.checkSimilarityOfRelatedDeferredsAndThrow(deferreds)
