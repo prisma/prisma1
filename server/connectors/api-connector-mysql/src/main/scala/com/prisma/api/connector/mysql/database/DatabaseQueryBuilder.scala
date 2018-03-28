@@ -145,9 +145,9 @@ object DatabaseQueryBuilder {
 
   def batchSelectFromModelByUnique(projectId: String,
                                    model: Model,
-                                   key: String,
+                                   fieldName: String,
                                    values: Vector[GCValue]): SqlStreamingAction[Vector[PrismaNode], PrismaNode, Effect] = {
-    val query = sql"select * from `#$projectId`.`#${model.name}` where `#$key` in (" concat combineByComma(values.map(gcValueToSQLBuilder)) concat sql")"
+    val query = sql"select * from `#$projectId`.`#${model.name}` where `#$fieldName` in (" concat combineByComma(values.map(gcValueToSQLBuilder)) concat sql")"
     query.as[PrismaNode](getResultForModel(model))
   }
 
@@ -175,7 +175,7 @@ object DatabaseQueryBuilder {
                            field: Field,
                            nodeIds: Vector[GraphQLIdGCValue]): DBIOAction[Vector[ScalarListValues], NoStream, Effect] = {
     val query = sql"select nodeId, position, value from `#$projectId`.`#${modelName}_#${field.name}` where nodeId in (" concat combineByComma(
-      nodeIds.map(escapeUnsafeParam)) concat sql")"
+      nodeIds.map(gcValueToSQLBuilder)) concat sql")"
 
     query.as[ScalarListElement](getResultForScalarListField(field)).map { scalarListElements =>
       val grouped: Map[Id, Vector[ScalarListElement]] = scalarListElements.groupBy(_.nodeId)

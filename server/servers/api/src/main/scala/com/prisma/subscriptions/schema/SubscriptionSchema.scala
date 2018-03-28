@@ -40,7 +40,7 @@ case class SubscriptionSchema(
           previousValues.map(_.toDataItem),
           isDelete match {
             case false => None
-            case true  => Some(SimpleResolveOutput(PrismaNode("", RootGCValue.empty), Args.empty))
+            case true  => Some(SimpleResolveOutput(PrismaNode.dummy, Args.empty))
           }
         )),
     arguments = List(

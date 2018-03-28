@@ -27,7 +27,7 @@ trait DataResolver {
                                   fromNodeIds: Vector[GraphQLIdGCValue],
                                   args: Option[QueryArguments]): Future[Vector[ResolverResultNew[PrismaNodeWithParent]]]
 
-  def countByRelationManyModels(fromField: Field, fromNodeIds: Vector[GraphQLIdGCValue], args: Option[QueryArguments]): Future[Vector[(String, Int)]]
+  def countByRelationManyModels(fromField: Field, fromNodeIds: Vector[GraphQLIdGCValue], args: Option[QueryArguments]): Future[Vector[(GraphQLIdGCValue, Int)]]
 
   def loadListRowsForExport(model: Model, listField: Field, args: Option[QueryArguments] = None): Future[ResolverResultNew[ScalarListValues]]
 

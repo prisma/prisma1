@@ -53,8 +53,8 @@ case class Update(
 
   override def getReturnValue: Future[ReturnValueResult] = {
     prismaNodes flatMap {
-      case Some(dataItem) => returnValueByUnique(NodeSelector.forId(model, dataItem.id))
-      case None           => Future.successful(NoReturnValue(where))
+      case Some(prismaNode) => returnValueByUnique(NodeSelector.forGraphQLIdGCValue(model, prismaNode.id))
+      case None             => Future.successful(NoReturnValue(where))
     }
   }
 

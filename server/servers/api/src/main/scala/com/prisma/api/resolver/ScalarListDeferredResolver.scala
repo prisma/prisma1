@@ -2,6 +2,7 @@ package com.prisma.api.resolver
 
 import com.prisma.api.connector.{DataResolver, ScalarListValues}
 import com.prisma.api.resolver.DeferredTypes._
+import com.prisma.gc_values.GraphQLIdGCValue
 import com.prisma.util.gc_value.GCValueExtractor
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -16,11 +17,12 @@ class ScalarListDeferredResolver(dataResolver: DataResolver) {
     DeferredUtils.checkSimilarityOfScalarListDeferredsAndThrow(deferreds)
 
     val headDeferred = deferreds.head
+    val deferredIds  = deferreds.map(deferred => GraphQLIdGCValue(deferred.nodeId))
 
-    val futureValues: Future[Vector[ScalarListValues]] = dataResolver.batchResolveScalarList(headDeferred.model, headDeferred.field, deferreds.map(_.nodeId))
+    val futureValues: Future[Vector[ScalarListValues]] = dataResolver.batchResolveScalarList(headDeferred.model, headDeferred.field, deferredIds)
 
     // assign and sort the scalarListValues that was requested by each deferred
-    val results = orderedDeferreds.map {
+    orderedDeferreds.map {
       case OrderedDeferred(deferred, order) =>
         OrderedDeferredFutureResult[ScalarListDeferredResultType](
           futureValues.map { values =>
@@ -29,7 +31,5 @@ class ScalarListDeferredResolver(dataResolver: DataResolver) {
           order
         )
     }
-
-    results
   }
 }

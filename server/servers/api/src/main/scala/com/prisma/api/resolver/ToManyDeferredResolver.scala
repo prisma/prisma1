@@ -2,6 +2,7 @@ package com.prisma.api.resolver
 
 import com.prisma.api.connector._
 import com.prisma.api.resolver.DeferredTypes._
+import com.prisma.gc_values.GraphQLIdGCValue
 import com.prisma.shared.models.Project
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -19,14 +20,14 @@ class ToManyDeferredResolver(dataResolver: DataResolver) {
     val args         = headDeferred.args
 
     // Get ids of nodes in related model we need to fetch (actual rows of data)
-    val relatedModelInstanceIds: Vector[String] = deferreds.map(_.parentNodeId)
+    val relatedModelInstanceIds: Vector[GraphQLIdGCValue] = deferreds.map(deferred => GraphQLIdGCValue(deferred.parentNodeId))
 
     // As we are using `union all` as our batching mechanism there is very little gain from batching,
     // and 500 items seems to be the cutoff point where there is no more value to be had.
     val batchFutures: Vector[Future[Vector[ResolverResultNew[PrismaNodeWithParent]]]] = relatedModelInstanceIds
       .grouped(500)
       .toVector
-      .map(dataResolver.resolveByRelationManyModels(relatedField, _, args))
+      .map(ids => dataResolver.resolveByRelationManyModels(relatedField, ids, args))
 
     // Fetch resolver results
     val futureResolverResults: Future[Vector[ResolverResultNew[PrismaNodeWithParent]]] = Future
@@ -39,7 +40,7 @@ class ToManyDeferredResolver(dataResolver: DataResolver) {
         OrderedDeferredFutureResult(
           futureResolverResults.map { resolverResults =>
             // Each deferred has exactly one ResolverResult
-            val found: ResolverResultNew[PrismaNodeWithParent] = resolverResults.find(_.parentModelId.contains(deferred.parentNodeId)).get
+            val found: ResolverResultNew[PrismaNodeWithParent] = resolverResults.find(_.parentModelId.contains(GraphQLIdGCValue(deferred.parentNodeId))).get
 
             mapToConnectionOutputType(found, deferred, dataResolver.project)
           },

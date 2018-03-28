@@ -3,6 +3,7 @@ package com.prisma.api.mutactions
 import com.prisma.api.ApiMetrics
 import com.prisma.api.connector._
 import com.prisma.api.schema.APIErrors.RelationIsRequired
+import com.prisma.gc_values.GraphQLIdGCValue
 import com.prisma.shared.models.IdType.Id
 import com.prisma.shared.models.{Field, Model, Project}
 import com.prisma.util.gc_value.GCCreateReallyCoolArgsConverter
@@ -30,8 +31,8 @@ case class DatabaseMutactions(project: Project) {
       Vector(DeleteRelationCheck(project, path), DeleteDataItem(project, path, previousValues))
   }
 
-  def getMutactionsForUpdate(path: Path, args: CoolArgs, id: Id, previousValues: PrismaNode): Vector[DatabaseMutaction] = report {
-    val updateMutaction = getUpdateMutactions(path, args, id, previousValues)
+  def getMutactionsForUpdate(path: Path, args: CoolArgs, id: GraphQLIdGCValue, previousValues: PrismaNode): Vector[DatabaseMutaction] = report {
+    val updateMutaction = getUpdateMutactions(path, args, id.value, previousValues)
     val nested          = getMutactionsForNestedMutation(args, path.updatedRoot(args), triggeredFromCreate = false)
 
     updateMutaction ++ nested

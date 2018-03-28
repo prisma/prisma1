@@ -14,6 +14,10 @@ case class PrismaNode(id: GraphQLIdGCValue, data: RootGCValue, typeName: Option[
   def toDataItem = DataItem(id.value, data.map.map { case (k, v) => (k, GCValueExtractor.fromGCValueToOption(v)) })
 }
 
+object PrismaNode {
+  def dummy: PrismaNode = PrismaNode(GraphQLIdGCValue(""), RootGCValue.empty)
+}
+
 case class PrismaNodeWithParent(parentId: GraphQLIdGCValue, prismaNode: PrismaNode)
 
 case class RelationNode(id: GraphQLIdGCValue, a: Id, b: Id)
