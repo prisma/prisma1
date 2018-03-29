@@ -246,10 +246,13 @@ export class Validator {
           return false
         }
 
-        let listBoolean = true
-        if (!field) {
-          debugger
+        const typeName = this.getDeepType(field).name.value
+        // if there is no validator, it's a relation or enum
+        if (!this.validators[typeName]) {
+          return false
         }
+
+        let listBoolean = true
         const isList = this.isList(field)
         if ((listsOnly && !isList) || (!listsOnly && isList)) {
           listBoolean = false
