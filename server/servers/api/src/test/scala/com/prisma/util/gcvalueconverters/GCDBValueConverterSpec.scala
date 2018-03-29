@@ -15,7 +15,7 @@ class GCDBValueConverterSpec extends FlatSpec with Matchers {
   val int      = IntGCValue(234)
   val float    = FloatGCValue(2.234324324)
   val boolean  = BooleanGCValue(true)
-  val id       = GraphQLIdGCValue("2424sdfasg234222434sg")
+  val id       = IdGCValue("2424sdfasg234222434sg")
   val datetime = DateTimeGCValue(new DateTime("2018", DateTimeZone.UTC))
   val enum     = EnumGCValue("HA")
   val json     = JsonGCValue(JsObject(Seq(("hello", JsString("there")))))
@@ -24,12 +24,11 @@ class GCDBValueConverterSpec extends FlatSpec with Matchers {
   val ints      = ListGCValue(Vector(IntGCValue(234), IntGCValue(234)))
   val floats    = ListGCValue(Vector(FloatGCValue(2.234324324), FloatGCValue(2.234324324)))
   val booleans  = ListGCValue(Vector(BooleanGCValue(true), BooleanGCValue(true)))
-  val ids       = ListGCValue(Vector(GraphQLIdGCValue("2424sdfasg234222434sg"), GraphQLIdGCValue("2424sdfasg234222434sg")))
+  val ids       = ListGCValue(Vector(IdGCValue("2424sdfasg234222434sg"), IdGCValue("2424sdfasg234222434sg")))
   val datetimes = ListGCValue(Vector(DateTimeGCValue(new DateTime("2018", DateTimeZone.UTC)), DateTimeGCValue(new DateTime("2018", DateTimeZone.UTC))))
   val enums     = ListGCValue(Vector(EnumGCValue("HA"), EnumGCValue("HA")))
   val jsons     = ListGCValue(Vector(JsonGCValue(JsObject(Seq(("hello", JsString("there"))))), JsonGCValue(JsObject(Seq(("hello", JsString("there")))))))
   val nullValue = NullGCValue
-
 
   "It should take non-list GCValues and" should "convert them to DBValues and back without loss if the type and list status are correct." in {
     forthAndBack(string, TypeIdentifier.String, false) should be(Result.Equal)

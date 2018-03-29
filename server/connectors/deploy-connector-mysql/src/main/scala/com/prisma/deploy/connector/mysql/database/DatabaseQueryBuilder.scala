@@ -20,7 +20,7 @@ object DatabaseQueryBuilder {
   }
 
   def existsNullByModelAndRelationField(projectId: String, modelName: String, field: Field) = {
-    val relationId   = field.relation.get.id
+    val relationId   = field.relation.get.relationTableName
     val relationSide = field.relationSide.get.toString
     sql"""select EXISTS (
             select `id`from `#$projectId`.`#$modelName`

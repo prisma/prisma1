@@ -20,11 +20,9 @@ object JsonFormats {
         case (v, i) =>
           val key = fields(i).getName
           val value = v match {
-            case v: Product if !v.isInstanceOf[Option[_]] =>
-              getIdValue(v).getOrElse("...")
-            case Some(v: Product) =>
-              getIdValue(v).getOrElse("...")
-            case v => v
+            case v: Product if !v.isInstanceOf[Option[_]] => getIdValue(v).getOrElse("...")
+            case Some(v: Product)                         => getIdValue(v).getOrElse("...")
+            case v                                        => v
           }
 
           key -> value

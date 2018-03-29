@@ -100,14 +100,14 @@ case class Schema(
   // note: mysql columns are case insensitive, so we have to be as well
   def getEnumByName(name: String): Option[Enum] = enums.find(_.name.toLowerCase == name.toLowerCase)
 
-  def getRelationById(id: Id): Option[Relation] = relations.find(_.id == id)
+  def getRelationById(id: Id): Option[Relation] = relations.find(_.relationTableName == id)
   def getRelationById_!(id: Id): Relation       = getRelationById(id).get //OrElse(throw SystemErrors.InvalidRelationId(id))
 
   def getRelationByName(name: String): Option[Relation] = relations.find(_.name == name)
   def getRelationByName_!(name: String): Relation =
     getRelationByName(name).get //OrElse(throw SystemErrors.InvalidRelation("There is no relation with name: " + name))
 
-  def getFieldsByRelationId(id: Id): List[Field] = models.flatMap(_.fields).filter(f => f.relation.isDefined && f.relation.get.id == id)
+  def getFieldsByRelationId(id: Id): List[Field] = models.flatMap(_.fields).filter(f => f.relation.isDefined && f.relation.get.relationTableName == id)
 
   def getRelationsThatConnectModels(modelA: String, modelB: String): List[Relation] = relations.filter(_.connectsTheModels(modelA, modelB))
 
@@ -204,7 +204,7 @@ case class Model(
   def withoutFieldsForRelations(relations: Seq[Relation]): Model = {
     val newFields = for {
       field <- fields
-      if relations.forall(relation => !field.isRelationWithId(relation.id))
+      if relations.forall(relation => !field.isRelationWithId(relation.relationTableName))
     } yield field
     copy(fields = newFields)
   }
@@ -278,7 +278,7 @@ case class Field(
   def isScalarNonList: Boolean                      = isScalar && !isList
   def isRelationList: Boolean                       = isRelation && isList
   def isRelationNonList: Boolean                    = isRelation && !isList
-  def isRelationWithId(relationId: String): Boolean = relation.exists(_.id == relationId)
+  def isRelationWithId(relationId: String): Boolean = relation.exists(_.relationTableName == relationId)
 
   def isRelationWithIdAndSide(relationId: String, relationSide: RelationSide.Value): Boolean = {
     isRelationWithId(relationId) && this.relationSide.contains(relationSide)
@@ -346,13 +346,13 @@ case class Field(
     val returnField = fields.find { field =>
       field.relation.exists { relation =>
         val isTheSameField    = field.id == this.id
-        val isTheSameRelation = relation.id == this.relation.get.id
+        val isTheSameRelation = relation.relationTableName == this.relation.get.relationTableName
         isTheSameRelation && !isTheSameField
       }
     }
     val fallback = fields.find { relatedField =>
       relatedField.relation.exists { relation =>
-        relation.id == this.relation.get.id
+        relation.relationTableName == this.relation.get.relationTableName
       }
     }
 
@@ -366,7 +366,7 @@ case class Field(
     fields.find { field =>
       field.relation.exists { relation =>
         val isTheSameField    = field.id == this.id
-        val isTheSameRelation = relation.id == this.relation.get.id
+        val isTheSameRelation = relation.relationTableName == this.relation.get.relationTableName
         isTheSameRelation && !isTheSameField
       }
     }
@@ -441,7 +441,7 @@ case class Relation(
     modelAOnDelete: OnDelete.Value,
     modelBOnDelete: OnDelete.Value
 ) {
-  val id = "_" + name
+  val relationTableName = "_" + name
 
   def connectsTheModels(model1: Model, model2: Model): Boolean   = connectsTheModels(model1.id, model2.id)
   def connectsTheModels(model1: String, model2: String): Boolean = (modelAId == model1 && modelBId == model2) || (modelAId == model2 && modelBId == model1)
@@ -483,7 +483,7 @@ case class Relation(
   private def modelFieldFor(schema: Schema, modelId: String, relationSide: RelationSide.Value): Option[Field] = {
     for {
       model <- schema.getModelById(modelId)
-      field <- model.relationFieldForIdAndSide(relationId = id, relationSide = relationSide)
+      field <- model.relationFieldForIdAndSide(relationId = relationTableName, relationSide = relationSide)
     } yield field
   }
 

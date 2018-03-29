@@ -1,6 +1,8 @@
 package com.prisma.api.connector.mysql.database
 
+import com.prisma.api.connector.mysql.database.SlickExtensions.SetGcValueParam.dateTimeFormat
 import com.prisma.gc_values._
+import com.prisma.util.gc_value.{GCAnyConverter, GCValueExtractor}
 import org.joda.time.DateTime
 import org.joda.time.format.DateTimeFormat
 import slick.jdbc.MySQLProfile.api._
@@ -17,17 +19,17 @@ object SlickExtensions {
 
     override def apply(gcValue: GCValue, pp: PositionedParameters): Unit = {
       gcValue match {
-        case NullGCValue         => pp.setNull(java.sql.Types.NULL)
-        case x: StringGCValue    => pp.setString(x.value)
-        case x: EnumGCValue      => pp.setString(x.value)
-        case x: GraphQLIdGCValue => pp.setString(x.value)
-        case x: DateTimeGCValue  => pp.setString(dateTimeFormat.print(x.value))
-        case x: IntGCValue       => pp.setInt(x.value)
-        case x: FloatGCValue     => pp.setDouble(x.value)
-        case x: BooleanGCValue   => pp.setBoolean(x.value)
-        case x: JsonGCValue      => pp.setString(x.value.toString)
-        case x: ListGCValue      => sys.error("ListGCValue not implemented here yet.")
-        case x: RootGCValue      => sys.error("RootGCValues not implemented here yet.")
+        case NullGCValue        => pp.setNull(java.sql.Types.NULL)
+        case x: StringGCValue   => pp.setString(x.value)
+        case x: EnumGCValue     => pp.setString(x.value)
+        case x: IdGCValue       => pp.setString(x.value)
+        case x: DateTimeGCValue => pp.setString(dateTimeFormat.print(x.value))
+        case x: IntGCValue      => pp.setInt(x.value)
+        case x: FloatGCValue    => pp.setDouble(x.value)
+        case x: BooleanGCValue  => pp.setBoolean(x.value)
+        case x: JsonGCValue     => pp.setString(x.value.toString)
+        case x: ListGCValue     => sys.error("ListGCValue not implemented here yet.")
+        case x: RootGCValue     => sys.error("RootGCValues not implemented here yet.")
       }
     }
   }
@@ -94,6 +96,20 @@ object SlickExtensions {
     }
   }
 
+  def gcValueToSQLBuilder(value: GCValue): SQLActionBuilder = value match {
+    case NullGCValue        => sql"NULL"
+    case x: StringGCValue   => sql"${x.value}"
+    case x: EnumGCValue     => sql"${x.value}"
+    case x: IdGCValue       => sql"${x.value}"
+    case x: DateTimeGCValue => sql"${dateTimeFormat.print(x.value)}"
+    case x: IntGCValue      => sql"${x.value}"
+    case x: FloatGCValue    => sql"${x.value}"
+    case x: BooleanGCValue  => sql"${x.value}"
+    case x: JsonGCValue     => sql"${x.value.toString}"
+    case x: ListGCValue     => sys.error("ListGCValue not implemented here yet.")
+    case x: RootGCValue     => sys.error("RootGCValues not implemented here yet.")
+  }
+
   def listToJsonList(param: List[Any]): String = {
     val x = listToJson(param)
     x.substring(1, x.length - 1)
@@ -131,37 +147,4 @@ object SlickExtensions {
   def prefixIfNotNone(prefix: String, action: Option[SQLActionBuilder]): Option[SQLActionBuilder] = {
     if (action.isEmpty) None else Some(sql"#$prefix " concat action.get)
   }
-
-  //region Import
-
-  import org.apache.commons.lang.StringEscapeUtils.escapeSql
-
-  def escapeKeyToString(key: String) = s"`${escapeSql(key)}`"
-
-  def escapeUnsafeParamToString(param: Any): String = {
-    def unwrapSome(x: Any): Any = {
-      x match {
-        case Some(x) => x
-        case x       => x
-      }
-    }
-    unwrapSome(param) match {
-      case param: String       => s"'${escapeSql(param)}'"
-      case param: PlayJsValue  => s"'${escapeSql(param.toString())}'"
-      case param: SprayJsValue => s"'${escapeSql(param.compactPrint)}'"
-      case param: Boolean      => param.toString
-      case param: Int          => param.toString
-      case param: Long         => param.toString
-      case param: Float        => param.toString
-      case param: Double       => param.toString
-      case param: BigInt       => param.toString
-      case param: BigDecimal   => param.toString
-      case param: DateTime     => s"'${param.toString(DateTimeFormat.forPattern("yyyy-MM-dd'T'HH:mm:ss.SSS").withZoneUTC())}'"
-      case param: Vector[_]    => s"${listToJson(param.toList)}"
-      case None                => s"NULL"
-      case null                => s"NULL"
-      case _                   => throw new IllegalArgumentException("Unsupported scalar value in SlickExtensions: " + param.toString)
-    }
-  }
-
 }

@@ -16,7 +16,7 @@ case class DeleteMany(
     extends ClientMutation[BatchPayload] {
   import apiDependencies.system.dispatcher
 
-  val count = dataResolver.countByModel(model, whereFilter)
+  val count = dataResolver.countByModel(model, Some(whereFilter))
 
   def prepareMutactions(): Future[PreparedMutactions] = {
     for {

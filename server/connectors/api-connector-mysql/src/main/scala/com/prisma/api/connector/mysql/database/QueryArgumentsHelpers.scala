@@ -135,8 +135,8 @@ object QueryArgumentsHelpers {
             throw new APIErrors.FilterCannotBeNullOnToManyField(field.name)
           }
           Some(sql""" not exists (select  *
-                                  from    `#$projectId`.`#${field.relation.get.id}`
-                                  where   `#$projectId`.`#${field.relation.get.id}`.`#${field.relationSide.get}` = `#$projectId`.`#$tableName`.`id`
+                                  from    `#$projectId`.`#${field.relation.get.relationTableName}`
+                                  where   `#$projectId`.`#${field.relation.get.relationTableName}`.`#${field.relationSide.get}` = `#$projectId`.`#$tableName`.`id`
                                   )""")
 
         case FilterElement(key, null, Some(field), filterName, None) if field.typeIdentifier != TypeIdentifier.Relation =>
@@ -149,36 +149,36 @@ object QueryArgumentsHelpers {
           val (alias, modTableName) = getAliasAndTableName(relatedFilter.fromModel.name, relatedFilter.toModel.name)
           Some(sql"""exists (
             select * from `#$projectId`.`#${relatedFilter.toModel.name}` as `#$alias`
-            inner join `#$projectId`.`#${relatedFilter.relation.id}`
-            on `#$alias`.`id` = `#$projectId`.`#${relatedFilter.relation.id}`.`#${field.oppositeRelationSide.get}`
-            where `#$projectId`.`#${relatedFilter.relation.id}`.`#${field.relationSide.get}` = `#$modTableName`.`id`
+            inner join `#$projectId`.`#${relatedFilter.relation.relationTableName}`
+            on `#$alias`.`id` = `#$projectId`.`#${relatedFilter.relation.relationTableName}`.`#${field.oppositeRelationSide.get}`
+            where `#$projectId`.`#${relatedFilter.relation.relationTableName}`.`#${field.relationSide.get}` = `#$modTableName`.`id`
             and""" concat filterOnRelation(alias, relatedFilter) concat sql")")
 
         case FilterElement(key, value, Some(field), filterName, Some(relatedFilter)) if filterName == "_every" =>
           val (alias, modTableName) = getAliasAndTableName(relatedFilter.fromModel.name, relatedFilter.toModel.name)
           Some(sql"""not exists (
             select * from `#$projectId`.`#${relatedFilter.toModel.name}` as `#$alias`
-            inner join `#$projectId`.`#${relatedFilter.relation.id}`
-            on `#$alias`.`id` = `#$projectId`.`#${relatedFilter.relation.id}`.`#${field.oppositeRelationSide.get}`
-            where `#$projectId`.`#${relatedFilter.relation.id}`.`#${field.relationSide.get}` = `#$modTableName`.`id`
+            inner join `#$projectId`.`#${relatedFilter.relation.relationTableName}`
+            on `#$alias`.`id` = `#$projectId`.`#${relatedFilter.relation.relationTableName}`.`#${field.oppositeRelationSide.get}`
+            where `#$projectId`.`#${relatedFilter.relation.relationTableName}`.`#${field.relationSide.get}` = `#$modTableName`.`id`
             and not""" concat filterOnRelation(alias, relatedFilter) concat sql")")
 
         case FilterElement(key, value, Some(field), filterName, Some(relatedFilter)) if filterName == "_none" =>
           val (alias, modTableName) = getAliasAndTableName(relatedFilter.fromModel.name, relatedFilter.toModel.name)
           Some(sql"""not exists (
             select * from `#$projectId`.`#${relatedFilter.toModel.name}` as `#$alias`
-            inner join `#$projectId`.`#${relatedFilter.relation.id}`
-            on `#$alias`.`id` = `#$projectId`.`#${relatedFilter.relation.id}`.`#${field.oppositeRelationSide.get}`
-            where `#$projectId`.`#${relatedFilter.relation.id}`.`#${field.relationSide.get}` = `#$modTableName`.`id`
+            inner join `#$projectId`.`#${relatedFilter.relation.relationTableName}`
+            on `#$alias`.`id` = `#$projectId`.`#${relatedFilter.relation.relationTableName}`.`#${field.oppositeRelationSide.get}`
+            where `#$projectId`.`#${relatedFilter.relation.relationTableName}`.`#${field.relationSide.get}` = `#$modTableName`.`id`
             and """ concat filterOnRelation(alias, relatedFilter) concat sql")")
 
         case FilterElement(key, value, Some(field), filterName, Some(relatedFilter)) if filterName == "" =>
           val (alias, modTableName) = getAliasAndTableName(relatedFilter.fromModel.name, relatedFilter.toModel.name)
           Some(sql"""exists (
             select * from `#$projectId`.`#${relatedFilter.toModel.name}` as `#$alias`
-            inner join `#$projectId`.`#${relatedFilter.relation.id}`
-            on `#$alias`.`id` = `#$projectId`.`#${relatedFilter.relation.id}`.`#${field.oppositeRelationSide.get}`
-            where `#$projectId`.`#${relatedFilter.relation.id}`.`#${field.relationSide.get}` = `#$modTableName`.`id`
+            inner join `#$projectId`.`#${relatedFilter.relation.relationTableName}`
+            on `#$alias`.`id` = `#$projectId`.`#${relatedFilter.relation.relationTableName}`.`#${field.oppositeRelationSide.get}`
+            where `#$projectId`.`#${relatedFilter.relation.relationTableName}`.`#${field.relationSide.get}` = `#$modTableName`.`id`
             and""" concat filterOnRelation(alias, relatedFilter) concat sql")")
 
         // this is used for the node: {} field in the Subscription Filter
