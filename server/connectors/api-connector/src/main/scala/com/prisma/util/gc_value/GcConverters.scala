@@ -458,15 +458,16 @@ case class GCCreateReallyCoolArgsConverter(model: Model) {
 
     val res = model.scalarNonListFields.map { field =>
       val gCValue: JsLookupResult = json \ field.name
-
-      val converted = gCValue.toOption match {
+      val asOption                = gCValue.toOption
+      val converted = asOption match {
         case None                                                              => NullGCValue
+        case Some(JsNull)                                                      => NullGCValue
         case Some(JsString(x))                                                 => StringGCValue(x)
         case Some(JsNumber(x)) if field.typeIdentifier == TypeIdentifier.Int   => IntGCValue(x.toInt)
         case Some(JsNumber(x)) if field.typeIdentifier == TypeIdentifier.Float => FloatGCValue(x.toDouble)
         case Some(JsBoolean(x))                                                => BooleanGCValue(x)
         case Some(JsArray(x)) if field.isList                                  => ListGCValue(Vector.empty) //todo
-        case _                                                                 => sys.error("Not implemented yet")
+        case x                                                                 => sys.error("Not implemented yet: " + x)
 
       }
       field.name -> converted
