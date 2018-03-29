@@ -1,6 +1,6 @@
 package com.prisma.util.gc_value
 
-import com.prisma.api.connector.{CoolArgs, NodeSelector, ReallyCoolArgs}
+import com.prisma.api.connector.{NodeSelector, ReallyCoolArgs}
 import com.prisma.gc_values._
 import com.prisma.shared.models.TypeIdentifier.TypeIdentifier
 import com.prisma.shared.models.{Field, Model, TypeIdentifier}
@@ -10,7 +10,7 @@ import org.joda.time.format.{DateTimeFormat, ISODateTimeFormat}
 import org.joda.time.{DateTime, DateTimeZone}
 import org.parboiled2.{Parser, ParserInput}
 import org.scalactic.{Bad, Good, Or}
-import play.api.libs.json._
+import play.api.libs.json.{JsValue, _}
 import sangria.ast.{Field => SangriaField, Value => SangriaValue, _}
 import sangria.parser._
 
@@ -393,10 +393,8 @@ case class GCStringConverter(typeIdentifier: TypeIdentifier, isList: Boolean) ex
   */
 case class GCAnyConverter(typeIdentifier: TypeIdentifier, isList: Boolean) extends GCConverter[Any] {
   import OtherGCStuff._
-  import play.api.libs.json.{JsObject => PlayJsObject}
-  import spray.json.{JsObject => SprayJsObject}
-  import play.api.libs.json.{JsArray => PlayJsArray}
-  import spray.json.{JsArray => SprayJsArray}
+  import play.api.libs.json.{JsArray => PlayJsArray, JsObject => PlayJsObject}
+  import spray.json.{JsArray => SprayJsArray, JsObject => SprayJsObject}
 
   override def toGCValue(t: Any): Or[GCValue, InvalidValueForScalarType] = {
     try {
@@ -467,6 +465,7 @@ case class GCCreateReallyCoolArgsConverter(model: Model) {
         case Some(JsNumber(x)) if field.typeIdentifier == TypeIdentifier.Float => FloatGCValue(x.toDouble)
         case Some(JsBoolean(x))                                                => BooleanGCValue(x)
         case Some(JsArray(x)) if field.isList                                  => ListGCValue(Vector.empty) //todo
+        case Some(x: JsValue) if field.typeIdentifier == TypeIdentifier.Json   => JsonGCValue(x)
         case x                                                                 => sys.error("Not implemented yet: " + x)
 
       }
