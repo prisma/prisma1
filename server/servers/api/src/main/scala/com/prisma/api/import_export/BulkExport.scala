@@ -58,7 +58,7 @@ class BulkExport(project: Project)(implicit apiDependencies: ApiDependencies) {
     }
   }
 
-  private def fetchDataItemsPage(info: ExportInfo): Future[DataItemsPage] = {
+  private def fetchDataItemsPage(info: ExportInfo): Future[PrismaNodesPage] = {
     info match {
       case x: NodeInfo     => fetch(x)
       case x: ListInfo     => fetch(x)
@@ -66,27 +66,27 @@ class BulkExport(project: Project)(implicit apiDependencies: ApiDependencies) {
     }
   }
 
-  private def fetch(info: NodeInfo): Future[DataItemsPage] = {
+  private def fetch(info: NodeInfo): Future[PrismaNodesPage] = {
     val queryArguments = QueryArguments(skip = Some(info.cursor.row), after = None, first = Some(1000), None, None, None, None)
     info.dataResolver.resolveByModel(info.current, Some(queryArguments)).map { resolverResult =>
       val jsons = resolverResult.nodes.map(node => prismaNodeToExportNode(node, info))
-      DataItemsPage(jsons, hasMore = resolverResult.hasNextPage)
+      PrismaNodesPage(jsons, hasMore = resolverResult.hasNextPage)
     }
   }
 
-  private def fetch(info: ListInfo): Future[DataItemsPage] = {
+  private def fetch(info: ListInfo): Future[PrismaNodesPage] = {
     val queryArguments = QueryArguments(skip = Some(info.cursor.row), after = None, first = Some(1000), None, None, None, None)
     info.dataResolver.loadListRowsForExport(info.currentModelModel, info.currentFieldModel, Some(queryArguments)).map { resolverResult =>
       val jsons = dataItemToExportList(resolverResult.nodes, info)
-      DataItemsPage(jsons, hasMore = resolverResult.hasNextPage)
+      PrismaNodesPage(jsons, hasMore = resolverResult.hasNextPage)
     }
   }
 
-  private def fetch(info: RelationInfo): Future[DataItemsPage] = {
+  private def fetch(info: RelationInfo): Future[PrismaNodesPage] = {
     val queryArguments = QueryArguments(skip = Some(info.cursor.row), after = None, first = Some(1000), None, None, None, None)
     info.dataResolver.loadRelationRowsForExport(info.current.relationId, Some(queryArguments)).map { resolverResult =>
       val jsons = resolverResult.nodes.map(node => dataItemToExportRelation(node, info))
-      DataItemsPage(jsons, hasMore = resolverResult.hasNextPage)
+      PrismaNodesPage(jsons, hasMore = resolverResult.hasNextPage)
     }
   }
 
@@ -114,7 +114,7 @@ class BulkExport(project: Project)(implicit apiDependencies: ApiDependencies) {
     JsArray(Seq(Json.toJson(leftSide), Json.toJson(rightSide)))
   }
 
-  private def serializePage(in: JsonBundle, page: DataItemsPage, info: ExportInfo, startOnPage: Int = 0, amount: Int = 1000): ResultFormat = {
+  private def serializePage(in: JsonBundle, page: PrismaNodesPage, info: ExportInfo, startOnPage: Int = 0, amount: Int = 1000): ResultFormat = {
     val dataItems = page.items.slice(startOnPage, startOnPage + amount)
     val result    = serializeDataItems(in, dataItems, info)
     val noneLeft  = startOnPage + amount >= page.itemCount

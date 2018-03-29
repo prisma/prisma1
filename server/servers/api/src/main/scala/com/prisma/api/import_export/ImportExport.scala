@@ -79,7 +79,7 @@ package object ImportExport {
     )
   }
 
-  case class DataItemsPage(items: Seq[JsValue], hasMore: Boolean) { def itemCount: Int = items.length }
+  case class PrismaNodesPage(items: Seq[JsValue], hasMore: Boolean) { def itemCount: Int = items.length }
 
   object MyJsonProtocol {
     val cursorReads = Json.reads[Cursor]
