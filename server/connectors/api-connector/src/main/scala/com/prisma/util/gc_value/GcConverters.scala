@@ -42,6 +42,14 @@ object GCValueExtractor {
 
   def fromGCValue(t: GCValue): Any = {
     t match {
+      case x: ListGCValue => x.values.map(fromGCValue)
+      case x: RootGCValue => sys.error("RootGCValues not implemented yet in GCValueExtractor")
+      case x: LeafGCValue => fromLeafGCValue(x)
+    }
+  }
+
+  def fromLeafGCValue(t: LeafGCValue): Any = {
+    t match {
       case NullGCValue        => None // todo danger!!!
       case x: StringGCValue   => x.value
       case x: EnumGCValue     => x.value
@@ -51,8 +59,6 @@ object GCValueExtractor {
       case x: FloatGCValue    => x.value
       case x: BooleanGCValue  => x.value
       case x: JsonGCValue     => x.value
-      case x: ListGCValue     => x.values.map(fromGCValue)
-      case x: RootGCValue     => sys.error("RootGCValues not implemented yet in GCValueExtractor")
     }
   }
 

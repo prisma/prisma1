@@ -6,8 +6,10 @@ import com.prisma.api.mutations.BatchPayload
 import com.prisma.api.resolver.DeferredTypes._
 import com.prisma.api.resolver.{IdBasedConnection, IdBasedConnectionDefinition}
 import com.prisma.api.schema.CustomScalarTypes.{DateTimeType, JsonType}
+import com.prisma.gc_values._
 import com.prisma.shared.models
 import com.prisma.shared.models.{Field, Model, TypeIdentifier}
+import com.prisma.util.gc_value.GCValueExtractor
 import org.joda.time.{DateTime, DateTimeZone}
 import sangria.schema.{Field => SangriaField, _}
 import spray.json.DefaultJsonProtocol._
@@ -257,47 +259,17 @@ class ObjectTypeBuilder(
     generateFilterElement(unwrappedValues, model, isSubscriptionFilter = false)
   }
 
-//  def extractUniqueArgument(model: models.Model, ctx: Context[ApiUserContext, Unit]): Argument[_] = {
-//
-//    import com.prisma.util.coolSangria.FromInputImplicit.DefaultScalaResultMarshaller
-//
-//    val args = model.scalarNonListFields
-//      .filter(_.isUnique)
-//      .map(field => Argument(field.name, SchemaBuilderUtils.mapToOptionalInputType(field), description = field.description.getOrElse("")))
-//
-//    val arg = args.find(a => ctx.args.argOpt(a.name).isDefined) match {
-//      case Some(value) => value
-//      case None        => ??? //throw UserAPIErrors.GraphQLArgumentsException(s"None of the following arguments provided: ${args.map(_.name)}")
-//    }
-//
-//    arg
-//  }
-
   def mapToOutputResolve[C <: ApiUserContext](model: models.Model, field: models.Field)(
       ctx: Context[C, PrismaNode]): sangria.schema.Action[ApiUserContext, _] = {
 
     val item: PrismaNode = unwrapDataItemFromContext(ctx)
+    lazy val arguments   = extractQueryArgumentsFromContext(field.relatedModel(project.schema).get, ctx.asInstanceOf[Context[ApiUserContext, Unit]])
 
-    if (!field.isScalar) {
-      val arguments = extractQueryArgumentsFromContext(field.relatedModel(project.schema).get, ctx.asInstanceOf[Context[ApiUserContext, Unit]])
-
-      if (field.isList) {
-        DeferredValue(
-          ToManyDeferred(
-            field,
-            item.id,
-            arguments
-          )).map(_.toNodes)
-      } else {
-        ToOneDeferred(field, item.id, arguments)
-      }
-
-    } else {
-      if (field.isList) {
-        ScalarListDeferred(model, field, item.id)
-      } else {
-        ObjectTypeBuilder.convertScalarFieldValueFromDatabase(field, item)
-      }
+    (field.isScalar, field.isList) match {
+      case (true, true)   => ScalarListDeferred(model, field, item.id)
+      case (true, false)  => ObjectTypeBuilder.convertScalarFieldValueFromDatabase(field, item)
+      case (false, true)  => DeferredValue(ToManyDeferred(field, item.id, arguments)).map(_.toNodes)
+      case (false, false) => ToOneDeferred(field, item.id, arguments)
     }
   }
 
@@ -315,74 +287,22 @@ class ObjectTypeBuilder(
 
 object ObjectTypeBuilder {
 
-  // todo: this entire thing should rely on GraphcoolDataTypes instead
   def convertScalarFieldValueFromDatabase(field: models.Field, item: PrismaNode): Any = {
-    field.name match {
-      case "id" =>
-        item.id.value.trim
+    import com.prisma.util.json.PlaySprayConversions._
 
-      case _ =>
-        (item.data.map.get(field.name), field.isList) match {
-          case (None, _) =>
-            if (field.isRequired) {
-              // todo: handle this case
-            }
-            None
-
-          case (Some(value), true) =>
-            def mapTo[T](value: Any, convert: JsValue => T): Seq[T] = {
-              value match {
-                case x: String =>
-                  Try {
-                    x.parseJson.asInstanceOf[JsArray].elements.map(convert)
-                  } match {
-                    case Success(x) => x
-                    case Failure(e) => e.printStackTrace(); Vector.empty
-                  }
-
-                case x: Vector[_] =>
-                  x.map(_.asInstanceOf[T])
-              }
-            }
-
-            field.typeIdentifier match {
-              case TypeIdentifier.String    => mapTo(value, x => x.convertTo[String])
-              case TypeIdentifier.Int       => mapTo(value, x => x.convertTo[Int])
-              case TypeIdentifier.Float     => mapTo(value, x => x.convertTo[Double])
-              case TypeIdentifier.Boolean   => mapTo(value, x => x.convertTo[Boolean])
-              case TypeIdentifier.GraphQLID => mapTo(value, x => x.convertTo[String])
-
-              case TypeIdentifier.DateTime => mapTo(value, x => new DateTime(x.convertTo[String], DateTimeZone.UTC))
-              case TypeIdentifier.Enum     => mapTo(value, x => x.convertTo[String])
-              case TypeIdentifier.Json     => mapTo(value, x => x.convertTo[JsValue])
-            }
-
-          case (Some(value), false) =>
-            def mapTo[T](value: Any) = value.asInstanceOf[T]
-
-            field.typeIdentifier match {
-              case TypeIdentifier.String    => mapTo[String](value)
-              case TypeIdentifier.Int       => mapTo[Int](value)
-              case TypeIdentifier.Float     => mapTo[Double](value)
-              case TypeIdentifier.Boolean   => mapTo[Boolean](value)
-              case TypeIdentifier.GraphQLID => mapTo[String](value)
-//              case TypeIdentifier.DateTime =>
-//                value.isInstanceOf[DateTime] match {
-//                  case true => value
-//                  case false =>
-//                    value.isInstanceOf[java.sql.Timestamp] match {
-//                      case true =>
-//                        DateTime.parse(value.asInstanceOf[java.sql.Timestamp].toString,
-//                                       DateTimeFormat
-//                                         .forPattern("yyyy-MM-dd HH:mm:ss.SSS")
-//                                         .withZoneUTC())
-//                      case false => new DateTime(value.asInstanceOf[String], DateTimeZone.UTC)
-//                    }
-//                }
-              case TypeIdentifier.Enum => mapTo[String](value)
-              case TypeIdentifier.Json => mapTo[JsValue](value)
-            }
-        }
+    //todo use GCValueextractor once we got rid of Spray
+    item.data.map(field.name) match {
+      case StringGCValue(value)   => value
+      case IntGCValue(value)      => value
+      case FloatGCValue(value)    => value
+      case BooleanGCValue(value)  => value
+      case JsonGCValue(value)     => value.toSpray
+      case IdGCValue(value)       => value
+      case EnumGCValue(value)     => value
+      case NullGCValue            => None
+      case DateTimeGCValue(value) => value
+      case ListGCValue(values)    => sys.error("should not be called on ListValues")
+      case x: RootGCValue         => sys.error("should not be called on RootGCValues")
     }
   }
 }
