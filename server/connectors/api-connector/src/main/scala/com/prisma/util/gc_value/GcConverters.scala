@@ -212,57 +212,9 @@ case class GCSangriaValueConverter(typeIdentifier: TypeIdentifier, isList: Boole
 
 /**
   * 3. DBString <-> GCValue - This is used to write the defaultValue as a String to the SystemDB and read it from there
+  *
+  * NOT USED ANYMORE SINCE WE STORE THE SCHEMA AS JSON
   */
-case class GCStringDBConverter(typeIdentifier: TypeIdentifier, isList: Boolean) extends GCConverter[String] {
-  override def toGCValue(t: String): Or[GCValue, InvalidValueForScalarType] = {
-    try {
-      val result = (typeIdentifier, isList) match {
-        case (_, _) if t == "null"             => NullGCValue
-        case (TypeIdentifier.String, false)    => StringGCValue(t)
-        case (TypeIdentifier.Int, false)       => IntGCValue(Integer.parseInt(t))
-        case (TypeIdentifier.Float, false)     => FloatGCValue(t.toDouble)
-        case (TypeIdentifier.Boolean, false)   => BooleanGCValue(t.toBoolean)
-        case (TypeIdentifier.DateTime, false)  => DateTimeGCValue(new DateTime(t, DateTimeZone.UTC))
-        case (TypeIdentifier.GraphQLID, false) => IdGCValue(t)
-        case (TypeIdentifier.Enum, false)      => EnumGCValue(t)
-        case (TypeIdentifier.Json, false)      => JsonGCValue(Json.parse(t))
-        case (_, true)                         => GCJsonConverter(typeIdentifier, isList).toGCValue(Json.parse(t)).get
-      }
-
-      Good(result)
-    } catch {
-      case NonFatal(_) => Bad(InvalidValueForScalarType(t, typeIdentifier.toString))
-    }
-  }
-
-  // this is temporarily used since we still have old string formats in the db
-  def toGCValueCanReadOldAndNewFormat(t: String): Or[GCValue, InvalidValueForScalarType] = {
-    toGCValue(t) match {
-      case Good(x) => Good(x)
-      case Bad(_)  => GCStringConverter(typeIdentifier, isList).toGCValue(t)
-    }
-  }
-
-  override def fromGCValue(gcValue: GCValue): String = {
-
-    val formatter = ISODateTimeFormat.dateHourMinuteSecondFraction()
-
-    gcValue match {
-      case NullGCValue        => "null"
-      case x: StringGCValue   => x.value
-      case x: IntGCValue      => x.value.toString
-      case x: FloatGCValue    => x.value.toString
-      case x: BooleanGCValue  => x.value.toString
-      case x: IdGCValue       => x.value
-      case x: DateTimeGCValue => formatter.print(x.value)
-      case x: EnumGCValue     => x.value
-      case x: JsonGCValue     => Json.prettyPrint(x.value)
-      case x: ListGCValue     => GCJsonConverter(typeIdentifier, isList).fromGCValue(x).toString
-      case x: RootGCValue     => sys.error("This should not be a RootGCValue. Value " + x)
-    }
-  }
-}
-
 /**
   * 4. Json <-> GC Value - This is used to encode and decode the Schema in the SchemaSerializer.
   */
