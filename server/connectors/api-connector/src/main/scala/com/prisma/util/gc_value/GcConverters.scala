@@ -79,6 +79,25 @@ object GCValueExtractor {
     }
   }
 
+  def fromGCValueToJson(t: GCValue): JsValue = {
+
+    val formatter = ISODateTimeFormat.dateHourMinuteSecondFraction()
+
+    t match {
+      case NullGCValue         => JsNull
+      case StringGCValue(x)    => JsString(x)
+      case EnumGCValue(x)      => JsString(x)
+      case IdGCValue(x)        => JsString(x)
+      case DateTimeGCValue(x)  => JsString(formatter.print(x))
+      case IntGCValue(x)       => JsNumber(x)
+      case FloatGCValue(x)     => JsNumber(x)
+      case BooleanGCValue(x)   => JsBoolean(x)
+      case JsonGCValue(x)      => x
+      case ListGCValue(values) => JsArray(values.map(fromGCValueToJson))
+      case RootGCValue(map)    => JsObject(map.map { case (k, v) => (k, fromGCValueToJson(v)) })
+    }
+  }
+
   def fromListGCValue(t: ListGCValue): Vector[Any] = t.values.map(fromGCValue)
 }
 

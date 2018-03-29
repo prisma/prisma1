@@ -116,31 +116,31 @@ object GraphcoolDataTypes {
 
   // todo: tighten this up according to types described above
   // todo: use this in all places and get rid of all AnyJsonFormats
-  def convertToJson(data: UserData): JsObject = {
-    def write(x: Any): JsValue = x match {
-      case m: Map[_, _]   => JsObject(m.asInstanceOf[Map[String, Any]].mapValues(write))
-      case l: List[Any]   => JsArray(l.map(write).toVector)
-      case l: Vector[Any] => JsArray(l.map(write))
-      case l: Seq[Any]    => JsArray(l.map(write).toVector)
-      case n: Int         => JsNumber(n)
-      case n: Long        => JsNumber(n)
-      case n: BigDecimal  => JsNumber(n)
-      case n: Double      => JsNumber(n)
-      case s: String      => JsString(s)
-      case true           => JsTrue
-      case false          => JsFalse
-      case v: JsValue     => v
-      case null           => JsNull
-      case r              => JsString(r.toString + "00")
-    }
+//  def convertToJson(data: UserData): JsObject = {
+//    def write(x: Any): JsValue = x match {
+//      case m: Map[_, _]   => JsObject(m.asInstanceOf[Map[String, Any]].mapValues(write))
+//      case l: List[Any]   => JsArray(l.map(write).toVector)
+//      case l: Vector[Any] => JsArray(l.map(write))
+//      case l: Seq[Any]    => JsArray(l.map(write).toVector)
+//      case n: Int         => JsNumber(n)
+//      case n: Long        => JsNumber(n)
+//      case n: BigDecimal  => JsNumber(n)
+//      case n: Double      => JsNumber(n)
+//      case s: String      => JsString(s)
+//      case true           => JsTrue
+//      case false          => JsFalse
+//      case v: JsValue     => v
+//      case null           => JsNull
+//      case r              => JsString(r.toString + "00")
+//    }
+//
+//    write(unwrapSomes(data)).asJsObject
+//  }
 
-    write(unwrapSomes(data)).asJsObject
-  }
-
-  def unwrapSomes(map: UserData): Map[String, Any] = {
-    map.map {
-      case (field, Some(value)) => (field, value)
-      case (field, None)        => (field, null)
-    }
-  }
+//  def unwrapSomes(map: UserData): Map[String, Any] = {
+//    map.map {
+//      case (field, Some(value)) => (field, value)
+//      case (field, None)        => (field, null)
+//    }
+//  }
 }

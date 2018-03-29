@@ -1,7 +1,8 @@
 package com.prisma.gc_values
 
 import org.joda.time.DateTime
-import play.api.libs.json.JsValue
+import org.joda.time.format.ISODateTimeFormat
+import play.api.libs.json._
 
 import scala.collection.immutable.SortedMap
 
@@ -23,6 +24,7 @@ object RootGCValue {
     val empty: SortedMap[String, GCValue] = SortedMap.empty
     RootGCValue(empty)
   }
+
 }
 case class RootGCValue(map: SortedMap[String, GCValue]) extends GCValue {
   def idField = map.get("id") match {
@@ -31,6 +33,9 @@ case class RootGCValue(map: SortedMap[String, GCValue]) extends GCValue {
   }
 
   def filterValues(p: GCValue => Boolean) = copy(map = map.filter(t => p(t._2)))
+
+  def toJson: JsValue = GCValueExtractor.fromGCValueToJson(this)
+
 }
 
 case class ListGCValue(values: Vector[GCValue]) extends GCValue {
@@ -53,3 +58,25 @@ case class DateTimeGCValue(value: DateTime) extends LeafGCValue {
 }
 case class EnumGCValue(value: String)  extends LeafGCValue
 case class JsonGCValue(value: JsValue) extends LeafGCValue
+
+object GCValueExtractor {
+
+  def fromGCValueToJson(t: GCValue): JsValue = {
+
+    val formatter = ISODateTimeFormat.dateHourMinuteSecondFraction()
+
+    t match {
+      case NullGCValue         => JsNull
+      case StringGCValue(x)    => JsString(x)
+      case EnumGCValue(x)      => JsString(x)
+      case IdGCValue(x)        => JsString(x)
+      case DateTimeGCValue(x)  => JsString(formatter.print(x))
+      case IntGCValue(x)       => JsNumber(x)
+      case FloatGCValue(x)     => JsNumber(x)
+      case BooleanGCValue(x)   => JsBoolean(x)
+      case JsonGCValue(x)      => x
+      case ListGCValue(values) => JsArray(values.map(fromGCValueToJson))
+      case RootGCValue(map)    => JsObject(map.map { case (k, v) => (k, fromGCValueToJson(v)) })
+    }
+  }
+}

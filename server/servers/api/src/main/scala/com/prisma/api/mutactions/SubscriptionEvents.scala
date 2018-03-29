@@ -44,16 +44,15 @@ object SubscriptionEvents {
   }
 
   def fromUpdateMutaction(project: Project, mutationId: Id, mutaction: UpdateDataItem)(implicit apiDependencies: ApiDependencies): PublishSubscriptionEvent = {
+    import play.api.libs.json.Json
     PublishSubscriptionEvent(
       project = project,
       value = Map(
-        "nodeId"        -> mutaction.id,
-        "changedFields" -> mutaction.namesOfUpdatedFields.toList, // must be a List as Vector is printed verbatim
-        "previousValues" -> GraphcoolDataTypes
-          .convertToJson(mutaction.previousValues.toDataItem.userData) //todo use GCValues directly
-          .compactPrint,
-        "modelId"      -> mutaction.model.id,
-        "mutationType" -> "UpdateNode"
+        "nodeId"         -> mutaction.id,
+        "changedFields"  -> mutaction.namesOfUpdatedFields.toList, // must be a List as Vector is printed verbatim
+        "previousValues" -> Json.prettyPrint(mutaction.previousValues.data.toJson),
+        "modelId"        -> mutaction.model.id,
+        "mutationType"   -> "UpdateNode"
       ),
       mutationName = s"update${mutaction.model.name}"
     )
