@@ -3,8 +3,6 @@ package com.prisma.subscriptions.resolving
 import java.util.concurrent.TimeUnit
 
 import com.prisma.api.connector.{PrismaNode, ReallyCoolArgs}
-import com.prisma.api.mutactions.GraphcoolDataTypes
-import com.prisma.api.mutactions.GraphcoolDataTypes.UserData
 import com.prisma.gc_values.IdGCValue
 import com.prisma.shared.models.ModelMutationType.ModelMutationType
 import com.prisma.shared.models.{Model, ModelMutationType, Project}
@@ -64,16 +62,14 @@ case class SubscriptionResolver(
   }
 
   def handleDatabaseUpdateEvent(event: DatabaseUpdateEvent): Future[Option[JsValue]] = {
-    val values: UserData               = GraphcoolDataTypes.fromJson(event.previousValues, model.fields)
-    val reallyCoolArgs: ReallyCoolArgs = converter.toReallyCoolArgs(values)
+    val reallyCoolArgs: ReallyCoolArgs = converter.toReallyCoolArgsFromJson(event.previousValues)
     val previousValues                 = PrismaNode(IdGCValue(event.nodeId), reallyCoolArgs.raw.asRoot)
 
     executeQuery(event.nodeId, Some(previousValues), updatedFields = Some(event.changedFields.toList))
   }
 
   def handleDatabaseDeleteEvent(event: DatabaseDeleteEvent): Future[Option[JsValue]] = {
-    val values: UserData               = GraphcoolDataTypes.fromJson(event.node, model.fields)
-    val reallyCoolArgs: ReallyCoolArgs = converter.toReallyCoolArgs(values)
+    val reallyCoolArgs: ReallyCoolArgs = converter.toReallyCoolArgsFromJson(event.node)
     val previousValues                 = PrismaNode(IdGCValue(event.nodeId), reallyCoolArgs.raw.asRoot)
 
     executeQuery(event.nodeId, Some(previousValues), updatedFields = None)

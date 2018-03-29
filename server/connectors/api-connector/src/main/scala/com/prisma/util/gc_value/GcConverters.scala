@@ -453,6 +453,26 @@ case class GCCreateReallyCoolArgsConverter(model: Model) {
     }
     ReallyCoolArgs(RootGCValue(res: _*))
   }
+
+  def toReallyCoolArgsFromJson(json: JsValue): ReallyCoolArgs = {
+
+    val res = model.scalarNonListFields.map { field =>
+      val gCValue: JsLookupResult = json \ field.name
+
+      val converted = gCValue.toOption match {
+        case None                                                              => NullGCValue
+        case Some(JsString(x))                                                 => StringGCValue(x)
+        case Some(JsNumber(x)) if field.typeIdentifier == TypeIdentifier.Int   => IntGCValue(x.toInt)
+        case Some(JsNumber(x)) if field.typeIdentifier == TypeIdentifier.Float => FloatGCValue(x.toDouble)
+        case Some(JsBoolean(x))                                                => BooleanGCValue(x)
+        case Some(JsArray(x)) if field.isList                                  => ListGCValue(Vector.empty) //todo
+        case _                                                                 => sys.error("Not implemented yet")
+
+      }
+      field.name -> converted
+    }
+    ReallyCoolArgs(RootGCValue(res: _*))
+  }
 }
 
 /**
