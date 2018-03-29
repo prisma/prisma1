@@ -33,7 +33,7 @@ This means you're keeping full ownership over your data while having the comfort
 
 Another core strength of Prisma is that it retains the individual "specializations" of the databases it's abstracting away. A good example for this are time series databases or geodatabases. When using Prisma to interact with these kinds of databases, you're still getting the performance you'd expect while being leveraging GraphQL as simple interface.
 
-### Benfits of multi-layered architectures
+### Benefits of multi-layered architectures
 
 Multi-layered architectures are an architectural trend that has emerged over the last years and by now has become a best practice for designing backend infrastructure. The core motivation behind it is a clear separation of concerns between the different layers of your stack.
 
