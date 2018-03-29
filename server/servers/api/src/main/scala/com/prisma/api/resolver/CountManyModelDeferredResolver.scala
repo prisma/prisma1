@@ -9,18 +9,12 @@ class CountManyModelDeferredResolver(dataResolver: DataResolver) {
 
     DeferredUtils.checkSimilarityOfModelDeferredsAndThrow(deferreds)
 
-    val headDeferred = deferreds.head
-    val model        = headDeferred.model
-    val args         = headDeferred.args
-    val where        = args.flatMap(_.filter)
+    val headDeferred      = deferreds.head
+    val model             = headDeferred.model
+    val args              = headDeferred.args
+    val whereFilter       = args.flatMap(_.filter)
+    val futurePrismaNodes = dataResolver.countByModel(model, whereFilter)
 
-    val futureDataItems = dataResolver.countByModel(model, where)
-
-    val results = orderedDeferreds.map {
-      case OrderedDeferred(deferred, order) =>
-        OrderedDeferredFutureResult[Int](futureDataItems, order)
-    }
-
-    results
+    orderedDeferreds.map { case OrderedDeferred(deferred, order) => OrderedDeferredFutureResult[Int](futurePrismaNodes, order) }
   }
 }

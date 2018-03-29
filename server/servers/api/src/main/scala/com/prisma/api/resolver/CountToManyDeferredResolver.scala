@@ -18,13 +18,13 @@ class CountToManyDeferredResolver(dataResolver: DataResolver) {
     val relatedField = headDeferred.relationField
     val args         = headDeferred.args
 
-    // get ids of dataitems in related model we need to fetch
+    // get ids of prismaNodes in related model we need to fetch
     val relatedModelIds = deferreds.map(deferred => deferred.parentNodeId)
 
-    // fetch dataitems
+    // fetch prismaNodes
     val futureNodeCounts: Future[Vector[(IdGCValue, Int)]] = dataResolver.countByRelationManyModels(relatedField, relatedModelIds, args)
 
-    // assign the dataitems that were requested by each deferred
+    // assign the prismaNodes that were requested by each deferred
 
     orderedDeferreds.map {
       case OrderedDeferred(deferred, order) =>

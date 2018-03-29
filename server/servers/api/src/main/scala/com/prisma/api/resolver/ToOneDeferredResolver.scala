@@ -18,25 +18,23 @@ class ToOneDeferredResolver(dataResolver: DataResolver) {
     val relatedField = headDeferred.relationField
     val args         = headDeferred.args
 
-    // get ids of dataitems in related model we need to fetch
+    // get ids of prismaNodes in related model we need to fetch
     val relatedModelIds = deferreds.map(deferred => deferred.parentNodeId)
 
-    // fetch dataitems
-    val futureprismaNodes: Future[Vector[PrismaNodeWithParent]] =
+    // fetch prismaNodes
+    val futurePrismaNodes: Future[Vector[PrismaNodeWithParent]] =
       dataResolver.resolveByRelationManyModels(relatedField, relatedModelIds, args).map(_.flatMap(_.nodes))
 
-    // assign the dataitem that was requested by each deferred
-    val results = orderedDeferreds.map {
+    // assign the prismaNode that was requested by each deferred
+    orderedDeferreds.map {
       case OrderedDeferred(deferred, order) =>
-        OrderedDeferredFutureResult[OneDeferredResultType](futureprismaNodes.map { items =>
-          dataItemsToToOneDeferredResultType(dataResolver.project, deferred, items)
+        OrderedDeferredFutureResult[OneDeferredResultType](futurePrismaNodes.map { nodes =>
+          prismaNodesToToOneDeferredResultType(dataResolver.project, deferred, nodes)
         }, order)
     }
-
-    results
   }
 
-  private def dataItemsToToOneDeferredResultType(project: Project, deferred: ToOneDeferred, nodes: Vector[PrismaNodeWithParent]): Option[PrismaNode] = {
+  private def prismaNodesToToOneDeferredResultType(project: Project, deferred: ToOneDeferred, nodes: Vector[PrismaNodeWithParent]): Option[PrismaNode] = {
 
     def matchesRelation(prismaNodeWithParent: PrismaNodeWithParent, relationSide: String) =
       prismaNodeWithParent.parentId == deferred.parentNodeId

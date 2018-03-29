@@ -36,11 +36,9 @@ object SlickExtensions {
 
   implicit class SQLActionBuilderConcat(val a: SQLActionBuilder) extends AnyVal {
     def concat(b: SQLActionBuilder): SQLActionBuilder = {
-      SQLActionBuilder(a.queryParts ++ " " ++ b.queryParts, new SetParameter[Unit] {
-        def apply(p: Unit, pp: PositionedParameters): Unit = {
-          a.unitPConv.apply(p, pp)
-          b.unitPConv.apply(p, pp)
-        }
+      SQLActionBuilder(a.queryParts ++ " " ++ b.queryParts, (p: Unit, pp: PositionedParameters) => {
+        a.unitPConv.apply(p, pp)
+        b.unitPConv.apply(p, pp)
       })
     }
     def concat(b: Option[SQLActionBuilder]): SQLActionBuilder = b match {

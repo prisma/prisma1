@@ -132,7 +132,7 @@ object QueryArgumentsHelpers {
 
         case FilterElement(key, null, Some(field: Field), filterName, None) if field.typeIdentifier == TypeIdentifier.Relation =>
           if (field.isList) {
-            throw new APIErrors.FilterCannotBeNullOnToManyField(field.name)
+            throw APIErrors.FilterCannotBeNullOnToManyField(field.name)
           }
           Some(sql""" not exists (select  *
                                   from    `#$projectId`.`#${field.relation.get.relationTableName}`

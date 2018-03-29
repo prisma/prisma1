@@ -11,9 +11,8 @@ object MigrationStepsInferrer {
     apply((previous, next, renames) => MigrationStepsInferrerImpl(previous, next, renames).evaluate())
   }
 
-  def apply(fn: (Schema, Schema, SchemaMapping) => Vector[MigrationStep]): MigrationStepsInferrer = new MigrationStepsInferrer {
-    override def infer(previousSchema: Schema, nextSchema: Schema, renames: SchemaMapping): Vector[MigrationStep] = fn(previousSchema, nextSchema, renames)
-  }
+  def apply(fn: (Schema, Schema, SchemaMapping) => Vector[MigrationStep]): MigrationStepsInferrer =
+    (previousSchema: Schema, nextSchema: Schema, renames: SchemaMapping) => fn(previousSchema, nextSchema, renames)
 }
 
 case class MigrationStepsInferrerImpl(previousSchema: Schema, nextSchema: Schema, renames: SchemaMapping) {

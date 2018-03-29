@@ -9,14 +9,9 @@ import com.prisma.api.schema.CustomScalarTypes.{DateTimeType, JsonType}
 import com.prisma.gc_values._
 import com.prisma.shared.models
 import com.prisma.shared.models.{Field, Model, TypeIdentifier}
-import com.prisma.util.gc_value.GCValueExtractor
-import org.joda.time.{DateTime, DateTimeZone}
 import sangria.schema.{Field => SangriaField, _}
-import spray.json.DefaultJsonProtocol._
-import spray.json.{JsValue, _}
 
 import scala.concurrent.ExecutionContext.Implicits.global
-import scala.util.{Failure, Success, Try}
 
 class ObjectTypeBuilder(
     project: models.Project,

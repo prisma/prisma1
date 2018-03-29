@@ -21,9 +21,7 @@ trait SchemaBuilder {
 }
 
 object SchemaBuilder {
-  def apply()(implicit system: ActorSystem, apiDependencies: ApiDependencies): SchemaBuilder = new SchemaBuilder {
-    override def apply(project: Project) = SchemaBuilderImpl(project).build()
-  }
+  def apply()(implicit system: ActorSystem, apiDependencies: ApiDependencies): SchemaBuilder = (project: Project) => SchemaBuilderImpl(project).build()
 }
 
 case class SchemaBuilderImpl(

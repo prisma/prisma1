@@ -17,11 +17,11 @@ class ManyModelExistsDeferredResolver(dataResolver: DataResolver) {
     val args         = headDeferred.args
 
     // all deferred have the same return value
-    val futureDataItems = Future.successful(dataResolver.resolveByModel(model, args))
+    val futurePrismaNodes = Future.successful(dataResolver.resolveByModel(model, args))
 
     val results = orderedDeferreds.map {
       case OrderedDeferred(deferred, order) =>
-        OrderedDeferredFutureResult[Boolean](futureDataItems.flatMap(identity).map(_.nodes.nonEmpty), order)
+        OrderedDeferredFutureResult[Boolean](futurePrismaNodes.flatMap(identity).map(_.nodes.nonEmpty), order)
     }
 
     results

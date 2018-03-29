@@ -24,12 +24,12 @@ class OneDeferredResolver(dataResolver: DataResolver) {
     orderedDeferreds.map {
       case OrderedDeferred(deferred, order) =>
         OrderedDeferredFutureResult[OneDeferredResultType](futurePrismaNodes.map { vector =>
-          dataItemsToToOneDeferredResultType(dataResolver.project, deferred, vector)
+          prismaNodesToToOneDeferredResultType(dataResolver.project, deferred, vector)
         }, order)
     }
   }
 
-  private def dataItemsToToOneDeferredResultType(project: Project, deferred: OneDeferred, prismaNodes: Vector[PrismaNode]): Option[PrismaNode] = {
+  private def prismaNodesToToOneDeferredResultType(project: Project, deferred: OneDeferred, prismaNodes: Vector[PrismaNode]): Option[PrismaNode] = {
     deferred.where.fieldName match {
       case "id" => prismaNodes.find(_.id == deferred.where.fieldValue)
       case _    => prismaNodes.find(prismaNode => deferred.where.fieldValue == prismaNode.data.map(deferred.where.fieldName))
