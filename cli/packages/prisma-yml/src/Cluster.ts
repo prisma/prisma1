@@ -35,7 +35,7 @@ export class Cluster {
     // adds a trailing slash. Here we remove it from
     // the passed `baseUrl` in order to avoid double
     // slashes.
-    this.baseUrl = baseUrl.replace(/\/$/, "")
+    this.baseUrl = baseUrl.replace(/\/$/, '')
     this.clusterSecret = clusterSecret
     this.local = local
     this.shared = shared
@@ -115,8 +115,6 @@ export class Cluster {
       }
     `
 
-    debug('generateClusterToken', cloudApiEndpoint)
-
     const {
       generateClusterToken: { clusterToken },
     } = await this.cloudClient.request<{
@@ -131,8 +129,6 @@ export class Cluster {
         stageName,
       },
     })
-
-    debug('generated cluster token')
 
     return clusterToken
   }
