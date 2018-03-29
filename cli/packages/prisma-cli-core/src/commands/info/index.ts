@@ -26,14 +26,15 @@ export default class InfoCommand extends Command {
       char: 'j',
       description: 'Json Output',
     }),
-    current: flags.boolean({
-      char: 'c',
-      description: 'Only show info for current service',
-    }),
     secret: flags.boolean({
       char: 's',
       description: 'Print secret in json output',
     }),
+    current: flags.boolean({
+      char: 'c',
+      description: 'Deprecated.',
+    }),
+
     ['env-file']: flags.string({
       description: 'Path to .env file to inject env vars',
       char: 'e',
@@ -47,7 +48,6 @@ export default class InfoCommand extends Command {
     const stage = this.definition.definition!.stage
     const workspace = this.definition.getWorkspace()
 
-    // if (current) {
     const clusterName = this.definition.getClusterName()
     if (!clusterName) {
       throw new Error(
