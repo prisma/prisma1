@@ -8,7 +8,6 @@ import com.prisma.api.resolver.{IdBasedConnection, IdBasedConnectionDefinition}
 import com.prisma.api.schema.CustomScalarTypes.{DateTimeType, JsonType}
 import com.prisma.shared.models
 import com.prisma.shared.models.{Field, Model, TypeIdentifier}
-import org.joda.time.format.DateTimeFormat
 import org.joda.time.{DateTime, DateTimeZone}
 import sangria.schema.{Field => SangriaField, _}
 import spray.json.DefaultJsonProtocol._
@@ -19,7 +18,7 @@ import scala.util.{Failure, Success, Try}
 
 class ObjectTypeBuilder(
     project: models.Project,
-    nodeInterface: Option[InterfaceType[ApiUserContext, DataItem]] = None,
+    nodeInterface: Option[InterfaceType[ApiUserContext, PrismaNode]] = None,
     withRelations: Boolean = true,
     onlyId: Boolean = false
 ) {
@@ -38,13 +37,13 @@ class ObjectTypeBuilder(
     }
   )
 
-  val modelObjectTypes: Map[String, ObjectType[ApiUserContext, DataItem]] = project.models.map(model => (model.name, modelToObjectType(model))).toMap
+  val modelObjectTypes: Map[String, ObjectType[ApiUserContext, PrismaNode]] = project.models.map(model => (model.name, modelToObjectType(model))).toMap
 
-  val modelConnectionTypes: Map[String, ObjectType[ApiUserContext, IdBasedConnection[DataItem]]] =
+  val modelConnectionTypes: Map[String, ObjectType[ApiUserContext, IdBasedConnection[PrismaNode]]] =
     project.models.map(model => (model.name, modelToConnectionType(model).connectionType)).toMap
 
-  def modelToConnectionType(model: Model): IdBasedConnectionDefinition[ApiUserContext, IdBasedConnection[DataItem], DataItem] = {
-    IdBasedConnection.definition[ApiUserContext, IdBasedConnection, DataItem](
+  def modelToConnectionType(model: Model): IdBasedConnectionDefinition[ApiUserContext, IdBasedConnection[PrismaNode], PrismaNode] = {
+    IdBasedConnection.definition[ApiUserContext, IdBasedConnection, PrismaNode](
       name = model.name,
       nodeType = modelObjectTypes(model.name),
       connectionFields = {
@@ -53,7 +52,7 @@ class ObjectTypeBuilder(
           SangriaField(
             "aggregate",
             aggregateTypeForModel(model),
-            resolve = (ctx: Context[ApiUserContext, IdBasedConnection[DataItem]]) => ctx.value.parent.args.getOrElse(QueryArguments.empty)
+            resolve = (ctx: Context[ApiUserContext, IdBasedConnection[PrismaNode]]) => ctx.value.parent.args.getOrElse(QueryArguments.empty)
           )
         )
       }
@@ -73,7 +72,7 @@ class ObjectTypeBuilder(
     )
   }
 
-  protected def modelToObjectType(model: models.Model): ObjectType[ApiUserContext, DataItem] = {
+  protected def modelToObjectType(model: models.Model): ObjectType[ApiUserContext, PrismaNode] = {
     new ObjectType(
       name = model.name,
       description = model.description,
@@ -96,20 +95,20 @@ class ObjectTypeBuilder(
       },
       instanceCheck = (value: Any, valClass: Class[_], tpe: ObjectType[ApiUserContext, _]) =>
         value match {
-          case DataItem(_, _, Some(tpe.name)) => true
-          case DataItem(_, _, Some(_))        => false
-          case _                              => valClass.isAssignableFrom(value.getClass)
+          case PrismaNode(_, _, Some(tpe.name)) => true
+          case PrismaNode(_, _, Some(_))        => false
+          case _                                => valClass.isAssignableFrom(value.getClass)
       },
       astDirectives = Vector.empty
     )
   }
 
-  def mapClientField(model: models.Model)(field: models.Field): SangriaField[ApiUserContext, DataItem] = SangriaField(
+  def mapClientField(model: models.Model)(field: models.Field): SangriaField[ApiUserContext, PrismaNode] = SangriaField(
     field.name,
     fieldType = mapToOutputType(Some(model), field),
     description = field.description,
     arguments = mapToListConnectionArguments(model, field),
-    resolve = (ctx: Context[ApiUserContext, DataItem]) => mapToOutputResolve(model, field)(ctx),
+    resolve = (ctx: Context[ApiUserContext, PrismaNode]) => mapToOutputResolve(model, field)(ctx),
     tags = List()
   )
 
@@ -274,9 +273,10 @@ class ObjectTypeBuilder(
 //    arg
 //  }
 
-  def mapToOutputResolve[C <: ApiUserContext](model: models.Model, field: models.Field)(ctx: Context[C, DataItem]): sangria.schema.Action[ApiUserContext, _] = {
+  def mapToOutputResolve[C <: ApiUserContext](model: models.Model, field: models.Field)(
+      ctx: Context[C, PrismaNode]): sangria.schema.Action[ApiUserContext, _] = {
 
-    val item: DataItem = unwrapDataItemFromContext(ctx)
+    val item: PrismaNode = unwrapDataItemFromContext(ctx)
 
     if (!field.isScalar) {
       val arguments = extractQueryArgumentsFromContext(field.relatedModel(project.schema).get, ctx.asInstanceOf[Context[ApiUserContext, Unit]])
@@ -301,14 +301,14 @@ class ObjectTypeBuilder(
     }
   }
 
-  def unwrapDataItemFromContext[C <: ApiUserContext](ctx: Context[C, DataItem]) = {
+  def unwrapDataItemFromContext[C <: ApiUserContext](ctx: Context[C, PrismaNode]) = {
     // note: ctx.value is sometimes of type Some[DataItem] at runtime even though the type is DataItem
     //metacounts of relations being required or not is one cause see RequiredRelationMetaQueriesSpec
     // todo: figure out why and fix issue at source
     ctx.value.asInstanceOf[Any] match {
-      case Some(x: DataItem) => x
-      case x: DataItem       => x
-      case None              => throw new Exception("Resolved DataItem was None. This is unexpected - please investigate why and fix.")
+      case Some(x: PrismaNode) => x
+      case x: PrismaNode       => x
+      case None                => throw new Exception("Resolved DataItem was None. This is unexpected - please investigate why and fix.")
     }
   }
 }
@@ -316,13 +316,13 @@ class ObjectTypeBuilder(
 object ObjectTypeBuilder {
 
   // todo: this entire thing should rely on GraphcoolDataTypes instead
-  def convertScalarFieldValueFromDatabase(field: models.Field, item: DataItem): Any = {
+  def convertScalarFieldValueFromDatabase(field: models.Field, item: PrismaNode): Any = {
     field.name match {
       case "id" =>
-        item.id.trim
+        item.id.value.trim
 
       case _ =>
-        (item(field.name), field.isList) match {
+        (item.data.map.get(field.name), field.isList) match {
           case (None, _) =>
             if (field.isRequired) {
               // todo: handle this case
@@ -366,19 +366,19 @@ object ObjectTypeBuilder {
               case TypeIdentifier.Float     => mapTo[Double](value)
               case TypeIdentifier.Boolean   => mapTo[Boolean](value)
               case TypeIdentifier.GraphQLID => mapTo[String](value)
-              case TypeIdentifier.DateTime =>
-                value.isInstanceOf[DateTime] match {
-                  case true => value
-                  case false =>
-                    value.isInstanceOf[java.sql.Timestamp] match {
-                      case true =>
-                        DateTime.parse(value.asInstanceOf[java.sql.Timestamp].toString,
-                                       DateTimeFormat
-                                         .forPattern("yyyy-MM-dd HH:mm:ss.SSS")
-                                         .withZoneUTC())
-                      case false => new DateTime(value.asInstanceOf[String], DateTimeZone.UTC)
-                    }
-                }
+//              case TypeIdentifier.DateTime =>
+//                value.isInstanceOf[DateTime] match {
+//                  case true => value
+//                  case false =>
+//                    value.isInstanceOf[java.sql.Timestamp] match {
+//                      case true =>
+//                        DateTime.parse(value.asInstanceOf[java.sql.Timestamp].toString,
+//                                       DateTimeFormat
+//                                         .forPattern("yyyy-MM-dd HH:mm:ss.SSS")
+//                                         .withZoneUTC())
+//                      case false => new DateTime(value.asInstanceOf[String], DateTimeZone.UTC)
+//                    }
+//                }
               case TypeIdentifier.Enum => mapTo[String](value)
               case TypeIdentifier.Json => mapTo[JsValue](value)
             }

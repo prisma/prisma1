@@ -53,8 +53,9 @@ case class QueryArguments(
     orderBy: Option[OrderBy]
 )
 object QueryArguments {
-  def empty = QueryArguments(None, None, None, None, None, None, None)
-
+  def empty = QueryArguments(skip = None, after = None, first = None, before = None, last = None, filter = None, orderBy = None)
+  def filterOnly(filter: Option[DataItemFilterCollection]) =
+    QueryArguments(skip = None, after = None, first = None, before = None, last = None, filter = filter, orderBy = None)
 }
 
 object SortOrder extends Enumeration {

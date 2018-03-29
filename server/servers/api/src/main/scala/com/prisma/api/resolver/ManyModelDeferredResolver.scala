@@ -30,7 +30,7 @@ class ManyModelDeferredResolver(resolver: DataResolver) {
         input.nodes.headOption.map(_.id),
         input.nodes.lastOption.map(_.id)
       ),
-      input.nodes.map(x => DefaultEdge(x.toDataItem, x.id)),
+      input.nodes.map(x => DefaultEdge(x, x.id)),
       ConnectionParentElement(None, None, deferred.args)
     )
   }

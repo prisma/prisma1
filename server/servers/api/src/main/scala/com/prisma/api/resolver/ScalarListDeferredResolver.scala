@@ -17,7 +17,7 @@ class ScalarListDeferredResolver(dataResolver: DataResolver) {
     DeferredUtils.checkSimilarityOfScalarListDeferredsAndThrow(deferreds)
 
     val headDeferred = deferreds.head
-    val deferredIds  = deferreds.map(deferred => IdGCValue(deferred.nodeId))
+    val deferredIds  = deferreds.map(deferred => deferred.nodeId)
 
     val futureValues: Future[Vector[ScalarListValues]] = dataResolver.batchResolveScalarList(headDeferred.model, headDeferred.field, deferredIds)
 
@@ -26,7 +26,7 @@ class ScalarListDeferredResolver(dataResolver: DataResolver) {
       case OrderedDeferred(deferred, order) =>
         OrderedDeferredFutureResult[ScalarListDeferredResultType](
           futureValues.map { values =>
-            values.filter(_.nodeId == IdGCValue(deferred.nodeId)).flatMap(values => extractor.fromListGCValue(values.value))
+            values.filter(_.nodeId == deferred.nodeId).flatMap(values => extractor.fromListGCValue(values.value))
           },
           order
         )

@@ -19,7 +19,7 @@ object SubscriptionEvents {
   }
 
   def fromDeleteMutaction(project: Project, mutationId: Id, mutaction: DeleteDataItem)(implicit apiDependencies: ApiDependencies): PublishSubscriptionEvent = {
-    val nodeData: Map[String, Any] = mutaction.previousValues.toDataItem.userData
+    val nodeData: Map[String, Any] = mutaction.previousValues.toDataItem.userData //todo use GCValue here
       .collect {
         case (key, Some(value)) =>
           (key, value match {
@@ -50,7 +50,7 @@ object SubscriptionEvents {
         "nodeId"        -> mutaction.id,
         "changedFields" -> mutaction.namesOfUpdatedFields.toList, // must be a List as Vector is printed verbatim
         "previousValues" -> GraphcoolDataTypes
-          .convertToJson(mutaction.previousValues.toDataItem.userData)
+          .convertToJson(mutaction.previousValues.toDataItem.userData) //todo use GCValues directly
           .compactPrint,
         "modelId"      -> mutaction.model.id,
         "mutationType" -> "UpdateNode"

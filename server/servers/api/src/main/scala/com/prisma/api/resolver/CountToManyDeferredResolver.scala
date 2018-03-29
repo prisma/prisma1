@@ -19,7 +19,7 @@ class CountToManyDeferredResolver(dataResolver: DataResolver) {
     val args         = headDeferred.args
 
     // get ids of dataitems in related model we need to fetch
-    val relatedModelIds = deferreds.map(deferred => IdGCValue(deferred.parentNodeId))
+    val relatedModelIds = deferreds.map(deferred => deferred.parentNodeId)
 
     // fetch dataitems
     val futureNodeCounts: Future[Vector[(IdGCValue, Int)]] = dataResolver.countByRelationManyModels(relatedField, relatedModelIds, args)

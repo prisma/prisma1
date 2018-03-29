@@ -24,7 +24,7 @@ class OneDeferredResolver(dataResolver: DataResolver) {
     orderedDeferreds.map {
       case OrderedDeferred(deferred, order) =>
         OrderedDeferredFutureResult[OneDeferredResultType](futurePrismaNodes.map { vector =>
-          dataItemsToToOneDeferredResultType(dataResolver.project, deferred, vector).map(_.toDataItem)
+          dataItemsToToOneDeferredResultType(dataResolver.project, deferred, vector)
         }, order)
     }
   }

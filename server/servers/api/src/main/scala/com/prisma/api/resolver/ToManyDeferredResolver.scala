@@ -20,7 +20,7 @@ class ToManyDeferredResolver(dataResolver: DataResolver) {
     val args         = headDeferred.args
 
     // Get ids of nodes in related model we need to fetch (actual rows of data)
-    val relatedModelInstanceIds: Vector[IdGCValue] = deferreds.map(deferred => IdGCValue(deferred.parentNodeId))
+    val relatedModelInstanceIds: Vector[IdGCValue] = deferreds.map(deferred => deferred.parentNodeId)
 
     // As we are using `union all` as our batching mechanism there is very little gain from batching,
     // and 500 items seems to be the cutoff point where there is no more value to be had.
@@ -40,7 +40,7 @@ class ToManyDeferredResolver(dataResolver: DataResolver) {
         OrderedDeferredFutureResult(
           futureResolverResults.map { resolverResults =>
             // Each deferred has exactly one ResolverResult
-            val found: ResolverResultNew[PrismaNodeWithParent] = resolverResults.find(_.parentModelId.contains(IdGCValue(deferred.parentNodeId))).get
+            val found: ResolverResultNew[PrismaNodeWithParent] = resolverResults.find(_.parentModelId.contains(deferred.parentNodeId)).get
 
             mapToConnectionOutputType(found, deferred, dataResolver.project)
           },
@@ -59,7 +59,7 @@ class ToManyDeferredResolver(dataResolver: DataResolver) {
         input.nodes.map(_.prismaNode).headOption.map(_.id),
         input.nodes.map(_.prismaNode).lastOption.map(_.id)
       ),
-      input.nodes.map(_.prismaNode).map(x => DefaultEdge(x.toDataItem, x.id)),
+      input.nodes.map(_.prismaNode).map(x => DefaultEdge(x, x.id)),
       ConnectionParentElement(nodeId = Some(deferred.parentNodeId), field = Some(deferred.relationField), args = deferred.args)
     )
   }

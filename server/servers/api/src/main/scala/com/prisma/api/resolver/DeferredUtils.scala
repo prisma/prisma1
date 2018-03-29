@@ -94,17 +94,4 @@ object DeferredUtils {
       throw new Error("Passed deferreds should not have different field or model.")
     }
   }
-
-  def checkSimilarityOfPermissionDeferredsAndThrow(deferreds: Vector[CheckPermissionDeferred]) = {
-    val headDeferred = deferreds.head
-
-    val countSimilarDeferreds = deferreds.count { d =>
-      headDeferred.nodeId == d.nodeId &&
-      headDeferred.model == headDeferred.model
-    }
-
-    if (countSimilarDeferreds != deferreds.length) {
-      throw new Error("Passed deferreds should not have dirrefent nodeIds, models or userIds.")
-    }
-  }
 }

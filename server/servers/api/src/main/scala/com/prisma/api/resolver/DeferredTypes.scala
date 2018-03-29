@@ -1,6 +1,7 @@
 package com.prisma.api.resolver
 
-import com.prisma.api.connector.{DataItem, NodeSelector, QueryArguments}
+import com.prisma.api.connector.{NodeSelector, PrismaNode, QueryArguments}
+import com.prisma.gc_values.IdGCValue
 import com.prisma.shared.models.{Field, Model}
 import sangria.execution.deferred.Deferred
 
@@ -33,31 +34,28 @@ object DeferredTypes {
 
   trait RelatedArgs {
     def relationField: Field
-    def parentNodeId: String
+    def parentNodeId: IdGCValue
     def args: Option[QueryArguments]
   }
 
   trait RelationDeferred[+T] extends RelatedArgs with Deferred[T] {
     def relationField: Field
-    def parentNodeId: String
+    def parentNodeId: IdGCValue
     def args: Option[QueryArguments]
   }
 
-  type OneDeferredResultType = Option[DataItem]
+  type OneDeferredResultType = Option[PrismaNode]
 
-  case class OneDeferred(model: Model, where: NodeSelector)                                          extends Deferred[OneDeferredResultType] {}
-  case class ToOneDeferred(relationField: Field, parentNodeId: String, args: Option[QueryArguments]) extends RelationDeferred[OneDeferredResultType]
+  case class OneDeferred(model: Model, where: NodeSelector)                                             extends Deferred[OneDeferredResultType] {}
+  case class ToOneDeferred(relationField: Field, parentNodeId: IdGCValue, args: Option[QueryArguments]) extends RelationDeferred[OneDeferredResultType]
 
-  case class ToManyDeferred(relationField: Field, parentNodeId: String, args: Option[QueryArguments]) extends RelationDeferred[RelayConnectionOutputType]
+  case class ToManyDeferred(relationField: Field, parentNodeId: IdGCValue, args: Option[QueryArguments]) extends RelationDeferred[RelayConnectionOutputType]
 
-  case class CountToManyDeferred(relationField: Field, parentNodeId: String, args: Option[QueryArguments]) extends RelationDeferred[Int]
+  case class CountToManyDeferred(relationField: Field, parentNodeId: IdGCValue, args: Option[QueryArguments]) extends RelationDeferred[Int]
 
-  type SimpleConnectionOutputType = Seq[DataItem]
-  type RelayConnectionOutputType  = IdBasedConnection[DataItem]
-
-  case class CheckPermissionDeferred(model: Model, field: Field, nodeId: String, value: Any, node: DataItem, alwaysQueryMasterDatabase: Boolean)
-      extends Deferred[Boolean]
-
+  type SimpleConnectionOutputType   = Seq[PrismaNode]
+  type RelayConnectionOutputType    = IdBasedConnection[PrismaNode]
   type ScalarListDeferredResultType = Vector[Any]
-  case class ScalarListDeferred(model: Model, field: Field, nodeId: String) extends Deferred[ScalarListDeferredResultType]
+
+  case class ScalarListDeferred(model: Model, field: Field, nodeId: IdGCValue) extends Deferred[ScalarListDeferredResultType]
 }

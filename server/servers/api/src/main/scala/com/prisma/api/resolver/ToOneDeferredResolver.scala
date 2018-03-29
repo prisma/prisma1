@@ -1,8 +1,7 @@
 package com.prisma.api.resolver
 
-import com.prisma.api.connector.{DataItem, DataResolver, PrismaNodeWithParent}
+import com.prisma.api.connector.{DataResolver, PrismaNode, PrismaNodeWithParent}
 import com.prisma.api.resolver.DeferredTypes.{OneDeferredResultType, OrderedDeferred, OrderedDeferredFutureResult, ToOneDeferred}
-import com.prisma.gc_values.IdGCValue
 import com.prisma.shared.models.Project
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -20,10 +19,11 @@ class ToOneDeferredResolver(dataResolver: DataResolver) {
     val args         = headDeferred.args
 
     // get ids of dataitems in related model we need to fetch
-    val relatedModelIds = deferreds.map(deferred => IdGCValue(deferred.parentNodeId))
+    val relatedModelIds = deferreds.map(deferred => deferred.parentNodeId)
 
     // fetch dataitems
-    val futureprismaNodes = dataResolver.resolveByRelationManyModels(relatedField, relatedModelIds, args).map(_.flatMap(_.nodes))
+    val futureprismaNodes: Future[Vector[PrismaNodeWithParent]] =
+      dataResolver.resolveByRelationManyModels(relatedField, relatedModelIds, args).map(_.flatMap(_.nodes))
 
     // assign the dataitem that was requested by each deferred
     val results = orderedDeferreds.map {
@@ -36,10 +36,10 @@ class ToOneDeferredResolver(dataResolver: DataResolver) {
     results
   }
 
-  private def dataItemsToToOneDeferredResultType(project: Project, deferred: ToOneDeferred, nodes: Vector[PrismaNodeWithParent]): Option[DataItem] = {
+  private def dataItemsToToOneDeferredResultType(project: Project, deferred: ToOneDeferred, nodes: Vector[PrismaNodeWithParent]): Option[PrismaNode] = {
 
     def matchesRelation(prismaNodeWithParent: PrismaNodeWithParent, relationSide: String) =
-      prismaNodeWithParent.parentId.value == deferred.parentNodeId
+      prismaNodeWithParent.parentId == deferred.parentNodeId
 
     // see https://github.com/graphcool/internal-docs/blob/master/relations.md#findings
     val resolveFromBothSidesAndMerge = deferred.relationField.relation.get.isSameFieldSameModelRelation(project.schema)
@@ -49,10 +49,10 @@ class ToOneDeferredResolver(dataResolver: DataResolver) {
         resolveFromBothSidesAndMerge match {
           case false => matchesRelation(node, deferred.relationField.relationSide.get.toString)
           case true =>
-            node.prismaNode.id.value != deferred.parentNodeId && (matchesRelation(node, deferred.relationField.relationSide.get.toString) ||
+            node.prismaNode.id != deferred.parentNodeId && (matchesRelation(node, deferred.relationField.relationSide.get.toString) ||
               matchesRelation(node, deferred.relationField.oppositeRelationSide.get.toString))
         }
       })
-      .map(_.prismaNode.toDataItem)
+      .map(_.prismaNode)
   }
 }

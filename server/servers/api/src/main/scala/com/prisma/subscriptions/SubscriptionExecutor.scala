@@ -2,7 +2,7 @@ package com.prisma.subscriptions
 
 import akka.http.scaladsl.model.HttpRequest
 import com.prisma.api.ApiDependencies
-import com.prisma.api.connector.{DataItem, PrismaNode}
+import com.prisma.api.connector.PrismaNode
 import com.prisma.api.resolver.DeferredResolverProvider
 import com.prisma.sangria.utils.ErrorHandler
 import com.prisma.shared.models.ModelMutationType.ModelMutationType

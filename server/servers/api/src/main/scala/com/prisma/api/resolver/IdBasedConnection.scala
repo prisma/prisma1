@@ -9,7 +9,7 @@ import scala.annotation.implicitNotFound
 import scala.language.higherKinds
 import scala.reflect.ClassTag
 
-case class ConnectionParentElement(nodeId: Option[String], field: Option[models.Field], args: Option[QueryArguments])
+case class ConnectionParentElement(nodeId: Option[IdGCValue], field: Option[models.Field], args: Option[QueryArguments])
 
 trait IdBasedConnection[T] {
   def pageInfo: PageInfo
