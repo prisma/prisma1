@@ -1,6 +1,8 @@
 package com.prisma.api.connector.mysql.database
 
 import java.sql.{PreparedStatement, Statement, Timestamp}
+import java.time.{LocalDateTime, ZoneOffset}
+import java.util.Date
 
 import com.prisma.api.connector.Types.DataItemFilterCollection
 import com.prisma.api.connector._
@@ -12,6 +14,7 @@ import com.prisma.gc_values.{GCValue, NullGCValue}
 import com.prisma.shared.models.TypeIdentifier.TypeIdentifier
 import com.prisma.shared.models._
 import cool.graph.cuid.Cuid
+import org.joda.time.{DateTime, DateTimeZone}
 import slick.dbio.{DBIOAction, Effect, NoStream}
 import slick.jdbc.MySQLProfile.api._
 import slick.jdbc.SQLActionBuilder
@@ -47,11 +50,10 @@ object DatabaseMutationBuilder {
       columns.zipWithIndex.foreach {
         case (column, index) =>
           args.raw.asRoot.map.get(column) match {
-            case Some(NullGCValue) if column == "createdAt" || column == "updatedAt" =>
-              itemInsert.setTimestamp(index + 1, new Timestamp(System.currentTimeMillis()))
-            case Some(gCValue)                                          => itemInsert.setGcValue(index + 1, gCValue)
-            case None if column == "createdAt" || column == "updatedAt" => itemInsert.setTimestamp(index + 1, new Timestamp(System.currentTimeMillis()))
-            case None                                                   => itemInsert.setNull(index + 1, java.sql.Types.NULL)
+            case Some(NullGCValue) if column == "createdAt" || column == "updatedAt" => itemInsert.setTimestamp(index + 1, currentTimeStampUTC)
+            case Some(gCValue)                                                       => itemInsert.setGcValue(index + 1, gCValue)
+            case None if column == "createdAt" || column == "updatedAt"              => itemInsert.setTimestamp(index + 1, currentTimeStampUTC)
+            case None                                                                => itemInsert.setNull(index + 1, java.sql.Types.NULL)
           }
       }
       itemInsert.execute()
@@ -453,6 +455,7 @@ object DatabaseMutationBuilder {
 
         val query                         = s"INSERT INTO `${mutaction.project.id}`.`${model.name}` ($escapedKeys) VALUES ($placeHolders)"
         val itemInsert: PreparedStatement = x.connection.prepareStatement(query)
+        val currentTimeStamp              = currentTimeStampUTC
 
         mutaction.args.foreach { arg =>
           columns.zipWithIndex.foreach { columnAndIndex =>
@@ -461,7 +464,7 @@ object DatabaseMutationBuilder {
 
             arg.raw.asRoot.map.get(column) match {
               case Some(x)                                                => itemInsert.setGcValue(index, x)
-              case None if column == "createdAt" || column == "updatedAt" => itemInsert.setTimestamp(index, new Timestamp(System.currentTimeMillis()))
+              case None if column == "createdAt" || column == "updatedAt" => itemInsert.setTimestamp(index, currentTimeStamp)
               case None                                                   => itemInsert.setNull(index, java.sql.Types.NULL)
             }
           }

@@ -2,29 +2,36 @@ package com.prisma.api.connector.mysql.database
 
 import java.sql.{PreparedStatement, ResultSet, Timestamp}
 import java.time.{LocalDateTime, ZoneOffset}
+import java.util.Date
 
 import com.prisma.gc_values._
 import com.prisma.shared.models.TypeIdentifier
+import org.joda.time.{DateTime, DateTimeZone}
 import org.joda.time.format.DateTimeFormat
 import play.api.libs.json.Json
 
 object JdbcExtensions {
 
+  def currentTimeStampUTC = {
+    val now        = new Date()
+    val exactlyNow = new DateTime(now).withZone(DateTimeZone.UTC)
+    timeStampUTC(exactlyNow)
+  }
+
+  def timeStampUTC(dateTime: DateTime) = Timestamp.valueOf(LocalDateTime.ofEpochSecond(dateTime.getMillis / 1000, 0, ZoneOffset.UTC))
+
   implicit class PreparedStatementExtensions(val ps: PreparedStatement) extends AnyVal {
     def setGcValue(index: Int, value: GCValue): Unit = value match {
-      case gcValue: StringGCValue  => ps.setString(index, gcValue.value)
-      case gcValue: BooleanGCValue => ps.setBoolean(index, gcValue.value)
-      case gcValue: IntGCValue     => ps.setInt(index, gcValue.value)
-      case gcValue: FloatGCValue   => ps.setDouble(index, gcValue.value)
-      case gcValue: IdGCValue      => ps.setString(index, gcValue.value)
-      case gcValue: DateTimeGCValue =>
-        val res2 = Timestamp.valueOf(LocalDateTime.ofEpochSecond(gcValue.value.getMillis / 1000, 0, ZoneOffset.UTC))
-
-        ps.setTimestamp(index, res2)
-      case gcValue: EnumGCValue => ps.setString(index, gcValue.value)
-      case gcValue: JsonGCValue => ps.setString(index, gcValue.value.toString)
-      case NullGCValue          => ps.setNull(index, java.sql.Types.NULL)
-      case x                    => sys.error(s"This method must only be called with LeafGCValues. Was called with: ${x.getClass}")
+      case StringGCValue(string)     => ps.setString(index, string)
+      case BooleanGCValue(boolean)   => ps.setBoolean(index, boolean)
+      case IntGCValue(int)           => ps.setInt(index, int)
+      case FloatGCValue(float)       => ps.setDouble(index, float)
+      case IdGCValue(id)             => ps.setString(index, id)
+      case DateTimeGCValue(dateTime) => ps.setTimestamp(index, timeStampUTC(dateTime))
+      case EnumGCValue(enum)         => ps.setString(index, enum)
+      case JsonGCValue(json)         => ps.setString(index, json.toString)
+      case NullGCValue               => ps.setNull(index, java.sql.Types.NULL)
+      case x                         => sys.error(s"This method must only be called with LeafGCValues. Was called with: ${x.getClass}")
     }
   }
 
