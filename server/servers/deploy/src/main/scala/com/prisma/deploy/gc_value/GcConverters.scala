@@ -18,39 +18,13 @@ import scala.util.control.NonFatal
 /**
   * We need a bunch of different converters from / to GC values
   *
-  * 1.  DBValue       <->  GCValue     for writing into typed value fields in the Client-DB
+  * 1.  DBValue       <->  GCValue     for writing into typed value fields in the Client-DB -> Deploy does not need to write GCValues anymore
   * 2.  SangriaValue  <->  GCValue     for transforming the Any we get from Sangria per field back and forth
   * 3.  DBString      <->  GCValue     for writing default values in the System-DB since they are always a String, and JSArray for Lists
   * 4.  Json          <->  GCValue     for SchemaSerialization
   * 5.  SangriaValue  <->  String      for reading and writing default values
   * 6.  InputString   <->  GCValue     chains String -> SangriaValue -> GCValue and back
   */
-/**
-  * 1. DBValue <-> GCValue - This is used write and read GCValues to typed Db fields in the ClientDB
-  */
-case class GCDBValueConverter(typeIdentifier: TypeIdentifier, isList: Boolean) extends GCConverter[Any] {
-
-  override def toGCValue(t: Any): Or[GCValue, InvalidValueForScalarType] = {
-    ???
-  }
-
-  override def fromGCValue(t: GCValue): Any = {
-    t match {
-      case NullGCValue        => None
-      case x: StringGCValue   => x.value
-      case x: EnumGCValue     => x.value
-      case x: IdGCValue       => x.value
-      case x: DateTimeGCValue => x.value
-      case x: IntGCValue      => x.value
-      case x: FloatGCValue    => x.value
-      case x: BooleanGCValue  => x.value
-      case x: JsonGCValue     => x.value
-      case x: ListGCValue     => x.values.map(this.fromGCValue)
-      case x: RootGCValue     => sys.error("RootGCValues not implemented yet in GCDBValueConverter")
-    }
-  }
-}
-
 /**
   * 2. SangriaAST <-> GCValue - This is used to transform Sangria parsed values into GCValue and back
   */

@@ -34,8 +34,17 @@ case class RootGCValue(map: SortedMap[String, GCValue]) extends GCValue {
 
   def filterValues(p: GCValue => Boolean) = copy(map = map.filter(t => p(t._2)))
 
-  def toJson: JsValue = GCValueExtractor.fromGCValueToJson(this)
+//  def toJson: JsValue = GCValueExtractor.fromGCValueToJson(this)
 
+  def toMapStringAny: Map[String, Any] = map.collect {
+    case (key, value) =>
+      val convertedValue = value match {
+        case v: LeafGCValue => GCValueExtractor.fromLeafGCValue(v)
+        case v: ListGCValue => GCValueExtractor.fromListGCValue(v).toList
+        case v: RootGCValue => sys.error("RootGCValue not handled yet")
+      }
+      (key, convertedValue)
+  }
 }
 
 case class ListGCValue(values: Vector[GCValue]) extends GCValue {
@@ -61,22 +70,46 @@ case class JsonGCValue(value: JsValue) extends LeafGCValue
 
 object GCValueExtractor {
 
-  def fromGCValueToJson(t: GCValue): JsValue = {
+//  def fromGCValueToJson(t: GCValue): JsValue = {
+//
+//    val formatter = ISODateTimeFormat.dateHourMinuteSecondFraction()
+//
+//    t match {
+//      case NullGCValue         => JsNull
+//      case StringGCValue(x)    => JsString(x)
+//      case EnumGCValue(x)      => JsString(x)
+//      case IdGCValue(x)        => JsString(x)
+//      case DateTimeGCValue(x)  => JsString(formatter.print(x))
+//      case IntGCValue(x)       => JsNumber(x)
+//      case FloatGCValue(x)     => JsNumber(x)
+//      case BooleanGCValue(x)   => JsBoolean(x)
+//      case JsonGCValue(x)      => x
+//      case ListGCValue(values) => JsArray(values.map(fromGCValueToJson))
+//      case RootGCValue(map)    => JsObject(map.map { case (k, v) => (k, fromGCValueToJson(v)) })
+//    }
+//  }
 
-    val formatter = ISODateTimeFormat.dateHourMinuteSecondFraction()
+  def fromListGCValue(t: ListGCValue): Vector[Any] = t.values.map(fromGCValue)
 
+  def fromGCValue(t: GCValue): Any = {
     t match {
-      case NullGCValue         => JsNull
-      case StringGCValue(x)    => JsString(x)
-      case EnumGCValue(x)      => JsString(x)
-      case IdGCValue(x)        => JsString(x)
-      case DateTimeGCValue(x)  => JsString(formatter.print(x))
-      case IntGCValue(x)       => JsNumber(x)
-      case FloatGCValue(x)     => JsNumber(x)
-      case BooleanGCValue(x)   => JsBoolean(x)
-      case JsonGCValue(x)      => x
-      case ListGCValue(values) => JsArray(values.map(fromGCValueToJson))
-      case RootGCValue(map)    => JsObject(map.map { case (k, v) => (k, fromGCValueToJson(v)) })
+      case x: ListGCValue => fromListGCValue(x)
+      case x: RootGCValue => sys.error("RootGCValues not implemented yet in GCValueExtractor")
+      case x: LeafGCValue => fromLeafGCValue(x)
+    }
+  }
+
+  def fromLeafGCValue(t: LeafGCValue): Any = {
+    t match {
+      case NullGCValue        => None // todo danger!!!
+      case StringGCValue(x)   => x
+      case EnumGCValue(x)     => x
+      case IdGCValue(x)       => x
+      case DateTimeGCValue(x) => x
+      case IntGCValue(x)      => x
+      case FloatGCValue(x)    => x
+      case BooleanGCValue(x)  => x
+      case JsonGCValue(x)     => x
     }
   }
 }

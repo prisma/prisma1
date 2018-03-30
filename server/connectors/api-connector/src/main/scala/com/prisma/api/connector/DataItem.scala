@@ -11,7 +11,7 @@ case class DataItem(id: Id, userData: Map[String, Option[Any]] = Map.empty, type
 }
 
 case class PrismaNode(id: IdGCValue, data: RootGCValue, typeName: Option[String] = None) {
-  def toDataItem = DataItem(id.value, data.map.map { case (k, v) => (k, GCValueExtractor.fromGCValueToOption(v)) })
+//  def toDataItem = DataItem(id.value, data.map.map { case (k, v) => (k, GCValueExtractor.fromGCValueToOption(v)) })
 }
 
 object PrismaNode {
