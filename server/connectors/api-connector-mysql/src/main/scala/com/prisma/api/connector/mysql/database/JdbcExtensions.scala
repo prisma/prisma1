@@ -31,6 +31,7 @@ object JdbcExtensions {
   implicit class ResultSetExtensions(val resultSet: ResultSet) extends AnyVal {
 
     def getId                     = IdGCValue(resultSet.getString("id"))
+    def getAsID(column: String)   = IdGCValue(resultSet.getString(column))
     def getParentId(side: String) = IdGCValue(resultSet.getString("__Relation__" + side))
 
     def getGcValue(name: String, typeIdentifier: TypeIdentifier.Value): GCValue = {

@@ -39,6 +39,7 @@ case class RootGCValue(map: SortedMap[String, GCValue]) extends GCValue {
   def toMapStringAny: Map[String, Any] = map.collect {
     case (key, value) =>
       val convertedValue = value match {
+        case NullGCValue    => sys.error("This should not be used on NullGCValues")
         case v: LeafGCValue => GCValueExtractor.fromLeafGCValue(v)
         case v: ListGCValue => GCValueExtractor.fromListGCValue(v).toList
         case v: RootGCValue => sys.error("RootGCValue not handled yet")
@@ -63,7 +64,7 @@ case class DateTimeGCValue(value: DateTime) extends LeafGCValue {
   //the DateTime value should have ISO 8601 format like so "2017-12-05T12:34:23.000Z"
 
   //but MySql will not accept this for DateTime fields we need to convert to this to "2017-12-05 12:34:23.000"
-  def toMySqlDateTimeFormat = value.toString.replace("T", " ").replace("Z", "")
+//  def toMySqlDateTimeFormat = value.toString.replace("T", " ").replace("Z", "")
 }
 case class EnumGCValue(value: String)  extends LeafGCValue
 case class JsonGCValue(value: JsValue) extends LeafGCValue

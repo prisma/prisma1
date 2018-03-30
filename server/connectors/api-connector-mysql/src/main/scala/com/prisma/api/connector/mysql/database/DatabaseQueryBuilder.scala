@@ -61,11 +61,8 @@ object DatabaseQueryBuilder {
   }
 
   implicit object GetRelationNode extends GetResult[RelationNode] {
-    override def apply(ps: PositionedResult): RelationNode = {
-      val a = ps.rs.getString("A") //todo these are also IDS
-      val b = ps.rs.getString("B")
-      RelationNode(ps.rs.getId, IdGCValue(a), IdGCValue(b))
-    }
+    override def apply(ps: PositionedResult): RelationNode = RelationNode(ps.rs.getId, ps.rs.getAsID("A"), ps.rs.getAsID("B"))
+
   }
 
   implicit object GetRelationCount extends GetResult[(IdGCValue, Int)] {
@@ -275,6 +272,8 @@ object DatabaseQueryBuilder {
     query.as[(IdGCValue, Int)]
   }
 
+  def unionIfNotFirst(index: Int): SQLActionBuilder = if (index == 0) sql"" else sql"union all "
+
 // used in tests only
 
   def getTables(projectId: String): DBIOAction[Vector[String], NoStream, Read] = {
@@ -288,8 +287,6 @@ object DatabaseQueryBuilder {
       catalogs <- DatabaseMeta.getCatalogs
     } yield catalogs
   }
-
-  def unionIfNotFirst(index: Int): SQLActionBuilder = if (index == 0) sql"" else sql"union all "
 
   def itemCountForTable(projectId: String, modelName: String) = { // todo use count all from model
     sql"SELECT COUNT(*) AS Count FROM `#$projectId`.`#$modelName`"

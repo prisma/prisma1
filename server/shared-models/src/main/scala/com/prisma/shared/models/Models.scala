@@ -66,6 +66,8 @@ case class Schema(
 ) {
   def allFields: Seq[Field] = models.flatMap(_.fields)
 
+  def fieldsWhereThisModelIsRequired(model: Model) = allFields.filter(f => f.isRequired && !f.isList && f.relatedModel(this).contains(model))
+
   def hasSchemaNameConflict(name: String, id: String): Boolean = {
     val conflictingType = this.models.exists(model => List(s"create${model.name}", s"update${model.name}", s"delete${model.name}").contains(name))
     conflictingType

@@ -28,9 +28,7 @@ case class CascadingDeleteRelationMutactionsInterpreter(mutaction: CascadingDele
   val path    = mutaction.path
   val project = mutaction.project
 
-  val fieldsWhereThisModelIsRequired = project.schema.allFields.filter { f =>
-    f.isRequired && !f.isList && f.relatedModel(project.schema).contains(path.lastModel)
-  }
+  val fieldsWhereThisModelIsRequired = project.schema.fieldsWhereThisModelIsRequired(path.lastModel)
 
   val otherFieldsWhereThisModelIsRequired = path.lastEdge match {
     case Some(edge) => fieldsWhereThisModelIsRequired.filter(f => f != edge.parentField)
@@ -120,9 +118,7 @@ case class DeleteManyRelationChecksInterpreter(mutaction: DeleteManyRelationChec
   val model   = mutaction.model
   val filter  = mutaction.filter
 
-  val fieldsWhereThisModelIsRequired = project.schema.allFields.filter { f =>
-    f.isRequired && !f.isList && f.relatedModel(project.schema).contains(model)
-  }
+  val fieldsWhereThisModelIsRequired = project.schema.fieldsWhereThisModelIsRequired(model)
 
   override val action = {
     val requiredChecks = fieldsWhereThisModelIsRequired.map(oldParentFailureTriggerByFieldAndFilter(project, model, filter, _))
@@ -148,9 +144,7 @@ case class DeleteRelationCheckInterpreter(mutaction: DeleteRelationCheck) extend
   val project = mutaction.project
   val path    = mutaction.path
 
-  val fieldsWhereThisModelIsRequired = project.schema.allFields.filter { f =>
-    f.isRequired && !f.isList && f.relatedModel(project.schema).contains(path.lastModel)
-  }
+  val fieldsWhereThisModelIsRequired = project.schema.fieldsWhereThisModelIsRequired(path.lastModel)
 
   override val action = {
     val requiredCheck = fieldsWhereThisModelIsRequired.map(oldParentFailureTriggerByField(project, path, _))
@@ -315,7 +309,7 @@ case class VerifyConnectionInterpreter(mutaction: VerifyConnection) extends Data
     case e: SQLException if e.getErrorCode == 1242 && causedByThisMutaction(e.getCause.toString) => throw APIErrors.NodesNotConnectedError(path)
   }
 
-  def causedByThisMutaction(cause: String) = {
+  private def causedByThisMutaction(cause: String) = {
     val string = s"`${path.lastRelation_!.relationTableName}` CONNECTIONFAILURETRIGGERPATH WHERE "
 
     path.lastEdge_! match {
@@ -335,7 +329,7 @@ case class VerifyWhereInterpreter(mutaction: VerifyWhere) extends DatabaseMutact
     case e: SQLException if e.getErrorCode == 1242 && causedByThisMutaction(e.getCause.toString) => throw APIErrors.NodeNotFoundForWhereError(where)
   }
 
-  def causedByThisMutaction(cause: String) = {
+  private def causedByThisMutaction(cause: String) = {
     val modelString = s"`${where.model.name}` WHEREFAILURETRIGGER WHERE `${where.field.name}`"
     cause.contains(modelString) && cause.contains(parameterString(where))
   }

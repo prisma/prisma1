@@ -36,7 +36,7 @@ object DatabaseMutationBuilder {
 
   def createReallyCoolDataItem(projectId: String, model: Model, args: ReallyCoolArgs) = {
 
-    SimpleDBIO[Vector[String]] { x =>
+    SimpleDBIO[Unit] { x =>
       val columns      = model.scalarNonListFields.map(_.name)
       val escapedKeys  = columns.map(column => s"`$column`").mkString(",")
       val placeHolders = columns.map(_ => "?").mkString(",")
@@ -55,7 +55,6 @@ object DatabaseMutationBuilder {
           }
       }
       itemInsert.execute()
-      Vector.empty
     }
   }
 

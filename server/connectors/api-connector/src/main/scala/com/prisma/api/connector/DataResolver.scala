@@ -9,8 +9,6 @@ import scala.concurrent.Future
 trait DataResolver {
   def project: Project
 
-  //todo ID's to GCValues
-
   def resolveByGlobalId(globalId: IdGCValue): Future[Option[PrismaNode]]
 
   def resolveByModel(model: Model, args: Option[QueryArguments] = None): Future[ResolverResultNew[PrismaNode]]
@@ -31,6 +29,6 @@ trait DataResolver {
 
   def loadListRowsForExport(model: Model, listField: Field, args: Option[QueryArguments] = None): Future[ResolverResultNew[ScalarListValues]]
 
-  def loadRelationRowsForExport(relationId: String, args: Option[QueryArguments] = None): Future[ResolverResultNew[RelationNode]]
+  def loadRelationRowsForExport(relationTableName: String, args: Option[QueryArguments] = None): Future[ResolverResultNew[RelationNode]]
 
 }

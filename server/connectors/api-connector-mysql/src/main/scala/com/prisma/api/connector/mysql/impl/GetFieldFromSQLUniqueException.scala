@@ -7,8 +7,8 @@ object GetFieldFromSQLUniqueException {
   def getFieldOption(fieldNames: Vector[String], e: SQLIntegrityConstraintViolationException): Option[String] = {
 
     fieldNames.filter(x => e.getCause.getMessage.contains("\'" + x + "_")) match {
-      case x if x.nonEmpty => Some("Field name = " + x.head)
-      case _               => None
+      case x +: _ => Some("Field name = " + x)
+      case _      => None
     }
   }
 }

@@ -32,7 +32,7 @@ case class DataResolverImpl(project: Project, readonlyClientDatabase: MySQLProfi
       .flatMap {
         case Some(stableModelIdentifier) =>
           val model = project.schema.getModelByStableIdentifier_!(stableModelIdentifier.trim)
-          resolveByUnique(NodeSelector.forGraphQLIdGCValue(model, globalId))
+          resolveByUnique(NodeSelector.forIdGCValue(model, globalId))
 
         case _ =>
           Future.successful(None)
