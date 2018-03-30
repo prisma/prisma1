@@ -32,7 +32,7 @@ object ServerSideSubscriptions {
   )(implicit apiDependencies: ApiDependencies): Vector[ServerSideSubscription] = {
     for {
       mutaction <- mutactions
-      sssFn     <- serverSideSubscriptionFunctionsFor(project, mutaction.model, ModelMutationType.Deleted)
+      sssFn     <- serverSideSubscriptionFunctionsFor(project, mutaction.model, ModelMutationType.Created)
     } yield {
       ServerSideSubscription(
         project,
@@ -52,7 +52,7 @@ object ServerSideSubscriptions {
   )(implicit apiDependencies: ApiDependencies): Vector[ServerSideSubscription] = {
     for {
       mutaction <- mutactions
-      sssFn     <- serverSideSubscriptionFunctionsFor(project, mutaction.model, ModelMutationType.Deleted)
+      sssFn     <- serverSideSubscriptionFunctionsFor(project, mutaction.model, ModelMutationType.Updated)
     } yield {
       ServerSideSubscription(
         project,

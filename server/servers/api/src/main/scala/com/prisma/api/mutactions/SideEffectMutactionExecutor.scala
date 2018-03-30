@@ -16,15 +16,11 @@ trait SideEffectMutactionExecutor {
 
 case class SideEffectMutactionExecutorImpl()(implicit apiDependencies: ApiDependencies, ec: ExecutionContext) extends SideEffectMutactionExecutor {
 
-  override def execute(mutactions: Vector[SideEffectMutaction]): Future[Unit] = {
-    Future.sequence(mutactions.map(execute)).map(_ => ())
-  }
+  override def execute(mutactions: Vector[SideEffectMutaction]): Future[Unit] = Future.sequence(mutactions.map(execute)).map(_ => ())
 
   def execute(mutaction: SideEffectMutaction): Future[Unit] = mutaction match {
-    case mutaction: PublishSubscriptionEvent =>
-      PublishSubscriptionEventExecutor.execute(mutaction, apiDependencies.sssEventsPubSub)
-    case mutaction: ServerSideSubscription =>
-      ServerSideSubscriptionExecutor.execute(mutaction)
+    case mutaction: PublishSubscriptionEvent => PublishSubscriptionEventExecutor.execute(mutaction, apiDependencies.sssEventsPubSub)
+    case mutaction: ServerSideSubscription   => ServerSideSubscriptionExecutor.execute(mutaction)
   }
 
 }
@@ -44,10 +40,8 @@ object PublishSubscriptionEventExecutor {
 object ServerSideSubscriptionExecutor {
   def execute(mutaction: ServerSideSubscription)(implicit apiDependencies: ApiDependencies): Future[Unit] = {
     mutaction.function.delivery match {
-      case webhookDelivery: WebhookDelivery =>
-        deliverWebhook(mutaction, webhookDelivery)
-      case _ =>
-        Future.unit
+      case webhookDelivery: WebhookDelivery => deliverWebhook(mutaction, webhookDelivery)
+      case _                                => Future.unit
     }
   }
 
