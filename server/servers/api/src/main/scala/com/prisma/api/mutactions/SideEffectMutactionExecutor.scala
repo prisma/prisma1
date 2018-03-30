@@ -6,6 +6,7 @@ import com.prisma.messagebus.PubSubPublisher
 import com.prisma.messagebus.pubsub.Only
 import com.prisma.shared.models.WebhookDelivery
 import com.prisma.subscriptions.{SubscriptionExecutor, Webhook}
+import com.prisma.util.json.JsonFormats
 import spray.json._
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -25,7 +26,7 @@ case class SideEffectMutactionExecutorImpl()(implicit apiDependencies: ApiDepend
 }
 
 object PublishSubscriptionEventExecutor {
-  implicit val anyFormat = com.prisma.util.json.JsonFormats.MapJsonWriter
+  implicit val anyFormat: JsonFormats.MapJsonWriter.type = com.prisma.util.json.JsonFormats.MapJsonWriter
 
   def execute(mutaction: PublishSubscriptionEvent, subscriptionEventsPublisher: PubSubPublisher[String]): Future[Unit] = {
     val PublishSubscriptionEvent(project, value, mutationName) = mutaction

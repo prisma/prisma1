@@ -19,7 +19,6 @@ class ServerSideSubscriptionSpec extends FlatSpec with Matchers with ApiBaseSpec
 
   override def beforeEach = {
     super.beforeEach()
-
     database.truncate(project)
     webhookTestKit.reset
   }
@@ -33,14 +32,14 @@ class ServerSideSubscriptionSpec extends FlatSpec with Matchers with ApiBaseSpec
       .model("Todo")
       .field("title", _.String)
       .field("status", _.Enum, enum = Some(status))
-      .oneToManyRelation("comments", "todo", comment)
+    todo.oneToManyRelation("comments", "todo", comment)
   }
 
-  val subscriptionQueryForCreates: String =
-    """
+  def subscriptionQueryFor(mutation: String): String =
+    s"""
       |subscription {
       |  todo(where: {
-      |    mutation_in : [CREATED, UPDATED, DELETED]
+      |    mutation_in : [$mutation]
       |    node: {
       |      status: Active
       |    }
@@ -61,17 +60,37 @@ class ServerSideSubscriptionSpec extends FlatSpec with Matchers with ApiBaseSpec
 
   val webhookUrl     = "http://www.mywebhooks.com"
   val webhookHeaders = Vector("header" -> "value")
-  val sssFunction = ServerSideSubscriptionFunction(
-    name = "Test Function",
+  val sssFunctionForCreate = ServerSideSubscriptionFunction(
+    name = "Test Function CREATED",
     isActive = true,
-    query = subscriptionQueryForCreates,
+    query = subscriptionQueryFor("CREATED"),
     delivery = WebhookDelivery(
       url = webhookUrl,
       headers = webhookHeaders
     )
   )
 
-  val actualProject: Project = project.copy(functions = List(sssFunction))
+  val sssFunctionForUpdate = ServerSideSubscriptionFunction(
+    name = "Test Function UPDATED",
+    isActive = true,
+    query = subscriptionQueryFor("UPDATED"),
+    delivery = WebhookDelivery(
+      url = webhookUrl,
+      headers = webhookHeaders
+    )
+  )
+
+  val sssFunctionForDeleted = ServerSideSubscriptionFunction(
+    name = "Test Function DELETED",
+    isActive = true,
+    query = subscriptionQueryFor("DELETED"),
+    delivery = WebhookDelivery(
+      url = webhookUrl,
+      headers = webhookHeaders
+    )
+  )
+
+  val actualProject: Project = project.copy(functions = List(sssFunctionForCreate, sssFunctionForUpdate, sssFunctionForDeleted))
 
   val newTodoTitle     = "The title of the new todo"
   val newTodoStatus    = "Active"
@@ -89,13 +108,14 @@ class ServerSideSubscriptionSpec extends FlatSpec with Matchers with ApiBaseSpec
          |  }
          |}
       """.stripMargin
+
     val id = server.query(createTodo, actualProject).pathAsString("data.createTodo.id")
 
     webhookTestKit.expectPublishCount(1)
 
     val webhook = webhookTestKit.messagesPublished.head
 
-    webhook.functionName shouldEqual sssFunction.name
+    webhook.functionName shouldEqual sssFunctionForCreate.name
     webhook.projectId shouldEqual project.id
 //    webhook.requestId shouldNot be(empty)
 //    webhook.id shouldNot be(empty)
@@ -149,7 +169,7 @@ class ServerSideSubscriptionSpec extends FlatSpec with Matchers with ApiBaseSpec
 
     val webhook = webhookTestKit.messagesPublished.head
 
-    webhook.functionName shouldEqual sssFunction.name
+    webhook.functionName shouldEqual sssFunctionForUpdate.name
     webhook.projectId shouldEqual project.id
 //    webhook.requestId shouldNot be(empty)
 //    webhook.id shouldNot be(empty)
@@ -172,7 +192,7 @@ class ServerSideSubscriptionSpec extends FlatSpec with Matchers with ApiBaseSpec
     webhook.headers shouldEqual Map("header" -> "value")
   }
 
-  "ServerSideSubscription" should "send a message to our Webhook Queue if the SSS Query matches on an Delete" in {
+  "ServerSideSubscription" should "send a message to our Webhook Queue if the SSS Query matches on a Delete" in {
     val createTodo =
       s"""
          |mutation {
@@ -204,7 +224,7 @@ class ServerSideSubscriptionSpec extends FlatSpec with Matchers with ApiBaseSpec
 
     val webhook = webhookTestKit.messagesPublished.head
 
-    webhook.functionName shouldEqual sssFunction.name
+    webhook.functionName shouldEqual sssFunctionForDeleted.name
     webhook.projectId shouldEqual project.id
 //    webhook.requestId shouldNot be(empty)
 //    webhook.id shouldNot be(empty)
@@ -249,7 +269,7 @@ class ServerSideSubscriptionSpec extends FlatSpec with Matchers with ApiBaseSpec
 
     val webhook = webhookTestKit.messagesPublished.head
 
-    webhook.functionName shouldEqual sssFunction.name
+    webhook.functionName shouldEqual sssFunctionForCreate.name
     webhook.projectId shouldEqual project.id
 //    webhook.requestId shouldNot be(empty)
 //    webhook.id shouldNot be(empty)
@@ -314,7 +334,7 @@ class ServerSideSubscriptionSpec extends FlatSpec with Matchers with ApiBaseSpec
 
     val webhook = webhookTestKit.messagesPublished.head
 
-    webhook.functionName shouldEqual sssFunction.name
+    webhook.functionName shouldEqual sssFunctionForCreate.name
     webhook.projectId shouldEqual project.id
 //    webhook.requestId shouldNot be(empty)
 //    webhook.id shouldNot be(empty)
