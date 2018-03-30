@@ -404,8 +404,15 @@ case class GCCreateReallyCoolArgsConverter(model: Model) {
     ReallyCoolArgs(RootGCValue(res: _*))
   }
 
-  //todo this is not done yet
   def toReallyCoolArgsFromJson(json: JsValue): ReallyCoolArgs = {
+
+    def fromSingleJsValue(jsValue: JsValue, field: Field): GCValue = jsValue match {
+      case JsString(x)                                                    => StringGCValue(x)
+      case JsNumber(x) if field.typeIdentifier == TypeIdentifier.Int      => IntGCValue(x.toInt)
+      case JsNumber(x) if field.typeIdentifier == TypeIdentifier.Float    => FloatGCValue(x.toDouble)
+      case JsBoolean(x) if field.typeIdentifier == TypeIdentifier.Boolean => BooleanGCValue(x)
+      case _                                                              => sys.error("Unhandled JsValue")
+    }
 
     val res = model.scalarNonListFields.map { field =>
       val gCValue: JsLookupResult = json \ field.name
@@ -417,7 +424,7 @@ case class GCCreateReallyCoolArgsConverter(model: Model) {
         case Some(JsNumber(x)) if field.typeIdentifier == TypeIdentifier.Int   => IntGCValue(x.toInt)
         case Some(JsNumber(x)) if field.typeIdentifier == TypeIdentifier.Float => FloatGCValue(x.toDouble)
         case Some(JsBoolean(x))                                                => BooleanGCValue(x)
-        case Some(JsArray(x)) if field.isList                                  => ListGCValue(Vector.empty) //todo
+        case Some(JsArray(x)) if field.isList                                  => ListGCValue(x.map(v => fromSingleJsValue(v, field)).toVector)
         case Some(x: JsValue) if field.typeIdentifier == TypeIdentifier.Json   => JsonGCValue(x)
         case x                                                                 => sys.error("Not implemented yet: " + x)
 
