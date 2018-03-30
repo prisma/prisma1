@@ -404,6 +404,7 @@ case class GCCreateReallyCoolArgsConverter(model: Model) {
     ReallyCoolArgs(RootGCValue(res: _*))
   }
 
+  //todo this is not done yet
   def toReallyCoolArgsFromJson(json: JsValue): ReallyCoolArgs = {
 
     val res = model.scalarNonListFields.map { field =>
