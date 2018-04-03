@@ -35,7 +35,7 @@ class SubscriptionFilterSpec extends FlatSpec with Matchers with SpecBase with A
     val raw: List[(String, GCValue)] = List(("text", StringGCValue("some comment")), ("id", IdGCValue("comment-id")))
     val args                         = ReallyCoolArgs(RootGCValue(raw: _*))
 
-    testDatabase.runDatabaseMutactionOnClientDb(CreateDataItem(project = project, path = path, args = args))
+    testDatabase.runDatabaseMutactionOnClientDb(CreateDataItem(project = project, path = path, nonListArgs = args, listArgs = Vector.empty))
 
     val extendedPath = path.appendEdge(project, model.getFieldByName_!("comments")).lastEdgeToNodeEdge(NodeSelector.forId(model, "comment-id"))
     testDatabase.runDatabaseMutactionOnClientDb(AddDataItemToManyRelationByPath(project, extendedPath))

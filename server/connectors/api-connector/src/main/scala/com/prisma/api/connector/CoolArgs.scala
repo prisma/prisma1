@@ -1,7 +1,7 @@
 package com.prisma.api.connector
 
 import com.prisma.api.schema.APIErrors
-import com.prisma.gc_values.GCValue
+import com.prisma.gc_values.{GCValue, ListGCValue}
 import com.prisma.shared.models._
 import com.prisma.util.gc_value.{GCAnyConverter, GCValueExtractor}
 
@@ -68,11 +68,15 @@ case class CoolArgs(raw: Map[String, Any]) {
     }
   }
 
-  def subScalarList(scalarListField: Field): Option[ScalarListSet] = {
+  def subScalarList(scalarListField: Field): Option[ListGCValue] = {
     subArgsOption(scalarListField).flatten.flatMap { args =>
       args.getFieldValuesAs[Any]("set") match {
-        case None         => None
-        case Some(values) => Some(ScalarListSet(values = values.toVector))
+        case None =>
+          None
+
+        case Some(values) =>
+          val converter = GCAnyConverter(scalarListField.typeIdentifier, false)
+          Some(ListGCValue(values.map(converter.toGCValue(_).get).toVector))
       }
     }
   }

@@ -26,7 +26,8 @@ object TestData extends AwaitUtils with PlaySprayConversions {
     val mutaction = CreateDataItem(
       project = project,
       path = Path.empty(NodeSelector.forId(model, id)),
-      args = args
+      nonListArgs = args,
+      listArgs = Vector.empty
     )
     testDatabase.runDatabaseMutactionOnClientDb(mutaction)
   }

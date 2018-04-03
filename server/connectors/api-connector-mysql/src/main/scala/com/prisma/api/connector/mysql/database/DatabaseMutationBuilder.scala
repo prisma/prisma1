@@ -1,8 +1,6 @@
 package com.prisma.api.connector.mysql.database
 
-import java.sql.{PreparedStatement, Statement, Timestamp}
-import java.time.{LocalDateTime, ZoneOffset}
-import java.util.Date
+import java.sql.{PreparedStatement, Statement}
 
 import com.prisma.api.connector.Types.DataItemFilterCollection
 import com.prisma.api.connector._
@@ -10,11 +8,10 @@ import com.prisma.api.connector.mysql.database.JdbcExtensions._
 import com.prisma.api.connector.mysql.database.SlickExtensions._
 import com.prisma.api.connector.mysql.impl.NestedCreateRelationInterpreter
 import com.prisma.api.schema.GeneralError
-import com.prisma.gc_values.{GCValue, NullGCValue}
+import com.prisma.gc_values.{GCValue, ListGCValue, NullGCValue, RootGCValue}
 import com.prisma.shared.models.TypeIdentifier.TypeIdentifier
 import com.prisma.shared.models._
 import cool.graph.cuid.Cuid
-import org.joda.time.{DateTime, DateTimeZone}
 import slick.dbio.{DBIOAction, Effect, NoStream}
 import slick.jdbc.MySQLProfile.api._
 import slick.jdbc.SQLActionBuilder
@@ -86,35 +83,30 @@ object DatabaseMutationBuilder {
     (sql"UPDATE `#${projectId}`.`#${model.name}`" ++ sql"SET " ++ updateValues ++ prefixIfNotNone("where", whereSql)).asUpdate
   }
 
-  def updateDataItemByUnique(projectId: String, where: NodeSelector, updateArgs: CoolArgs) = {
-    val updateValues = combineByComma(updateArgs.raw.map { case (k, v) => escapeKey(k) ++ sql" = " ++ escapeUnsafeParam(v) })
-    if (updateArgs.isNonEmpty) {
-      (sql"UPDATE `#${projectId}`.`#${where.model.name}`" ++
-        sql"SET " ++ updateValues ++
-        sql"WHERE `#${where.field.name}` = ${where.fieldValue};").asUpdate
-    } else {
-      DBIOAction.successful(())
-    }
-  }
-
   def updateDataItemByPath(projectId: String, path: Path, updateArgs: CoolArgs) = {
     val updateValues = combineByComma(updateArgs.raw.map { case (k, v) => escapeKey(k) ++ sql" = " ++ escapeUnsafeParam(v) })
-    val lastChildWhere = path.lastEdge_! match {
+    def fromEdge(edge: Edge) = edge match {
       case edge: NodeEdge => sql" `#${path.childSideOfLastEdge}`" ++ idFromWhereEquals(projectId, edge.childWhere) ++ sql" AND "
       case _: ModelEdge   => sql""
     }
 
+    val baseQuery = sql"UPDATE `#${projectId}`.`#${path.lastModel.name}` SET " ++ updateValues ++ sql"WHERE `id` ="
+
     if (updateArgs.isNonEmpty) {
-      val res = sql"UPDATE `#${projectId}`.`#${path.lastModel.name}`" ++
-        sql"SET " ++ updateValues ++
-        sql"WHERE `id` = (SELECT `#${path.childSideOfLastEdge}` " ++
-        sql"FROM `#${projectId}`.`#${path.lastRelation_!.relationTableName}`" ++
-        sql"WHERE" ++ lastChildWhere ++ sql"`#${path.parentSideOfLastEdge}` = " ++ pathQueryForLastParent(projectId, path) ++ sql")"
-      res.asUpdate
+      val query = path.lastEdge match {
+        case Some(edge) =>
+          baseQuery ++ sql"(SELECT `#${path.childSideOfLastEdge}` " ++
+            sql"FROM `#${projectId}`.`#${path.lastRelation_!.relationTableName}`" ++
+            sql"WHERE" ++ fromEdge(edge) ++ sql"`#${path.parentSideOfLastEdge}` = " ++ pathQueryForLastParent(projectId, path) ++ sql")"
+        case None => baseQuery ++ idFromWhere(projectId, path.root)
+      }
+
+      query.asUpdate
     } else {
       DBIOAction.successful(())
     }
   }
+
   //endregion
 
   //region UPSERT
@@ -131,7 +123,7 @@ object DatabaseMutationBuilder {
 
     val q       = existsByPath(projectId, path).as[Boolean]
     val qInsert = DBIOAction.seq(createDataItem(projectId, path.lastModel.name, createArgs), createRelayRow(projectId, createWhere), DBIOAction.seq(create: _*))
-    val qUpdate = DBIOAction.seq(updateDataItemByUnique(projectId, path.root, updateArgs), DBIOAction.seq(update: _*))
+    val qUpdate = DBIOAction.seq(updateDataItemByPath(projectId, path, updateArgs), DBIOAction.seq(update: _*))
 
     ifThenElse(q, qUpdate, qInsert)
   }
@@ -155,7 +147,8 @@ object DatabaseMutationBuilder {
 
       sql"""select EXISTS (
             select `id`from `#${project.id}`.`#${path.lastModel.name}`
-            where""" ++ nodeSelector(path.lastEdge_!) ++ sql""" `id` IN""" ++ DatabaseMutationBuilder.pathQueryThatUsesWholePath(project.id, path) ++ sql")"
+            where""" ++ nodeSelector(path.lastEdge_!) ++
+        sql""" `id` IN""" ++ DatabaseMutationBuilder.pathQueryThatUsesWholePath(project.id, path) ++ sql")"
     }
 
     val q = existsNodeIsInRelationshipWith(project, path).as[Boolean]
@@ -170,6 +163,7 @@ object DatabaseMutationBuilder {
 
     ifThenElseNestedUpsert(q, qUpdate, qInsert)
   }
+
   //endregion
 
   //region DELETE
@@ -225,9 +219,9 @@ object DatabaseMutationBuilder {
 
   //region SCALAR LISTS
 
-  def setScalarList(projectId: String, path: Path, fieldName: String, values: Vector[Any]) = {
+  def setScalarList(projectId: String, path: Path, fieldName: String, listGCValue: ListGCValue) = {
     val escapedValueTuples = for {
-      (escapedValue, position) <- values.map(escapeUnsafeParam).zip((1 to values.length).map(_ * 1000))
+      (escapedValue, position) <- listGCValue.values.map(gcValueToSQLBuilder).zip((1 to listGCValue.size).map(_ * 1000))
     } yield {
       sql"(@nodeId, $position, " ++ escapedValue ++ sql")"
     }
@@ -243,18 +237,34 @@ object DatabaseMutationBuilder {
     (sql"DELETE FROM `#$projectId`.`#${path.lastModel.name}_#${fieldName}` WHERE `nodeId` = " ++ pathQueryForLastChild(projectId, path)).asUpdate
   }
 
-  def getDbActionsForUpsertScalarLists(projectId: String, path: Path, args: CoolArgs): Vector[DBIOAction[Any, NoStream, Effect]] = {
+  def getDbActionsForScalarLists(projectId: String, path: Path, args: CoolArgs): Vector[DBIOAction[Any, NoStream, Effect]] = {
     val x = for {
-      field  <- path.lastModel.scalarListFields
-      values <- args.subScalarList(field)
+      field       <- path.lastModel.scalarListFields
+      listGCValue <- args.subScalarList(field)
     } yield {
-      values.values.isEmpty match {
+      listGCValue.isEmpty match {
         case true  => setScalarListToEmpty(projectId, path, field.name)
-        case false => setScalarList(projectId, path, field.name, values.values)
+        case false => setScalarList(projectId, path, field.name, listGCValue)
       }
     }
     x.toVector
   }
+
+  def getDbActionsForNewScalarLists(project: Project, path: Path, args: Vector[(String, ListGCValue)]) = {
+    if (args.isEmpty) {
+      val res = DBIOAction.successful(())
+      Vector(res)
+    } else {
+      args.map {
+        case (fieldName, listGCValue) =>
+          listGCValue.isEmpty match {
+            case true  => setScalarListToEmpty(project.id, path, fieldName)
+            case false => setScalarList(project.id, path, fieldName, listGCValue)
+          }
+      }
+    }
+  }
+
   //endregion
 
   //region RESET DATA

@@ -1,7 +1,7 @@
 package com.prisma.api.connector
 
 import com.prisma.api.connector.Types.DataItemFilterCollection
-import com.prisma.gc_values.ListGCValue
+import com.prisma.gc_values.{ListGCValue, RootGCValue}
 import com.prisma.shared.models.IdType.Id
 import com.prisma.shared.models.ModelMutationType.ModelMutationType
 import com.prisma.shared.models._
@@ -13,7 +13,7 @@ sealed trait SideEffectMutaction extends ApiMutaction
 
 case class AddDataItemToManyRelationByPath(project: Project, path: Path)   extends DatabaseMutaction
 case class CascadingDeleteRelationMutactions(project: Project, path: Path) extends DatabaseMutaction
-case class CreateDataItem(project: Project, path: Path, args: ReallyCoolArgs) extends DatabaseMutaction {
+case class CreateDataItem(project: Project, path: Path, nonListArgs: ReallyCoolArgs, listArgs: Vector[(String, ListGCValue)]) extends DatabaseMutaction {
   val model = path.lastModel
   val where = path.edges match {
     case x if x.isEmpty => path.root
@@ -38,14 +38,14 @@ case class TruncateTable(projectId: String, tableName: String)                  
 case class NestedConnectRelation(project: Project, path: Path, topIsCreate: Boolean)                  extends DatabaseMutaction
 case class NestedCreateRelation(project: Project, path: Path, topIsCreate: Boolean)                   extends DatabaseMutaction
 case class NestedDisconnectRelation(project: Project, path: Path, topIsCreate: Boolean = false)       extends DatabaseMutaction
-case class SetScalarList(project: Project, path: Path, field: Field, values: Vector[Any])             extends DatabaseMutaction //todo
+case class SetScalarList(project: Project, path: Path, field: Field, listGCValue: ListGCValue)        extends DatabaseMutaction
 case class SetScalarListToEmpty(project: Project, path: Path, field: Field)                           extends DatabaseMutaction
-case class UpdateDataItem(project: Project, model: Model, id: Id, args: CoolArgs, previousValues: PrismaNode) extends DatabaseMutaction { //todo
+case class UpdateDataItem(project: Project, path: Path, nonListArgs: CoolArgs, listArgs: Vector[(String, ListGCValue)], previousValues: PrismaNode)
+    extends DatabaseMutaction { //todo
   // TODO filter for fields which actually did change
-  val namesOfUpdatedFields: Vector[String] = args.raw.keys.toVector
+  val namesOfUpdatedFields: Vector[String] = nonListArgs.raw.keys.toVector
 }
-case class UpdateDataItemByUniqueFieldIfInRelationWith(project: Project, path: Path, args: CoolArgs)                              extends DatabaseMutaction //todo
-case class UpdateDataItemIfInRelationWith(project: Project, path: Path, args: CoolArgs)                                           extends DatabaseMutaction //todo
+case class NestedUpdateDataItem(project: Project, path: Path, args: CoolArgs, listArgs: Vector[(String, ListGCValue)])            extends DatabaseMutaction //todo
 case class UpdateDataItems(project: Project, model: Model, updateArgs: CoolArgs, where: DataItemFilterCollection)                 extends DatabaseMutaction //todo
 case class UpsertDataItem(project: Project, path: Path, createWhere: NodeSelector, updatedWhere: NodeSelector, allArgs: CoolArgs) extends DatabaseMutaction //todo
 case class UpsertDataItemIfInRelationWith(

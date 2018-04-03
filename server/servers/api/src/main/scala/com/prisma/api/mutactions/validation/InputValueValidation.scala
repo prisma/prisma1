@@ -57,7 +57,7 @@ object InputValueValidation {
 
   def checkValueSizeGC(args: ReallyCoolArgs, updatedFields: List[Field]): List[Field] = {
     updatedFields
-      .filter(field => args.raw.asRoot.map.get(field.name).isDefined && args.getFieldValue(field.name).isDefined)
+      .filter(field => args.hasArgFor(field))
       .filter(field => !isValueSizeValidGC(args.getFieldValue(field.name).get))
   }
 

@@ -63,7 +63,7 @@ case class CascadingDeleteRelationMutactionsInterpreter(mutaction: CascadingDele
 case class CreateDataItemInterpreter(mutaction: CreateDataItem) extends DatabaseMutactionInterpreter {
   val project = mutaction.project
   val path    = mutaction.path
-  val args    = mutaction.args
+  val args    = mutaction.nonListArgs
   val model   = path.lastModel
   val where = path.edges match {
     case x if x.isEmpty => path.root
@@ -72,11 +72,13 @@ case class CreateDataItemInterpreter(mutaction: CreateDataItem) extends Database
   val id = where.fieldValueAsString
 
   override val action = {
-    val relayIds = TableQuery(new ProjectRelayIdTable(_, project.id))
-    DBIO.seq(
-      DatabaseMutationBuilder.createReallyCoolDataItem(project.id, model, args),
-      relayIds += ProjectRelayId(id = id, model.stableIdentifier)
-    )
+    val relayIds      = TableQuery(new ProjectRelayIdTable(_, project.id))
+    val relayQuery    = relayIds += ProjectRelayId(id = id, model.stableIdentifier)
+    val createNonList = DatabaseMutationBuilder.createReallyCoolDataItem(project.id, model, args)
+    val listActions   = DatabaseMutationBuilder.getDbActionsForNewScalarLists(project, path, mutaction.listArgs)
+    val allActions    = List(createNonList, relayQuery) ++ listActions
+
+    DBIO.seq(allActions: _*)
   }
 
   override val errorMapper = {
@@ -178,7 +180,7 @@ object EnableForeignKeyConstraintChecksInterpreter extends DatabaseMutactionInte
 }
 
 case class SetScalarListInterpreter(mutaction: SetScalarList) extends DatabaseMutactionInterpreter {
-  override val action = DatabaseMutationBuilder.setScalarList(mutaction.project.id, mutaction.path, mutaction.field.name, mutaction.values)
+  override val action = DatabaseMutationBuilder.setScalarList(mutaction.project.id, mutaction.path, mutaction.field.name, mutaction.listGCValue)
 }
 
 case class SetScalarListToEmptyInterpreter(mutaction: SetScalarListToEmpty) extends DatabaseMutactionInterpreter {
@@ -190,38 +192,52 @@ case class TruncateTableInterpreter(mutaction: TruncateTable) extends DatabaseMu
 }
 
 case class UpdateDataItemInterpreter(mutaction: UpdateDataItem) extends DatabaseMutactionInterpreter {
-  val project = mutaction.project
-  val model   = mutaction.model
-  val id      = mutaction.id
-  val args    = mutaction.args
+  val project        = mutaction.project
+  val path           = mutaction.path
+  val nonListArgs    = mutaction.nonListArgs
+  val nonListActions = DatabaseMutationBuilder.updateDataItemByPath(project.id, path, nonListArgs)
+  val listActions    = DatabaseMutationBuilder.getDbActionsForNewScalarLists(project, path, mutaction.listArgs)
 
-  override val action = DatabaseMutationBuilder.updateDataItemByUnique(project.id, NodeSelector.forId(model, id), args)
+  val allActions = listActions :+ nonListActions
+
+  override val action = DBIO.seq(allActions: _*)
 
   override val errorMapper = {
     // https://dev.mysql.com/doc/refman/5.5/en/error-messages-server.html#error_er_dup_entry
     case e: SQLIntegrityConstraintViolationException
-        if e.getErrorCode == 1062 && GetFieldFromSQLUniqueException.getFieldOption(args.raw.keys.toVector, e).isDefined =>
-      APIErrors.UniqueConstraintViolation(model.name, GetFieldFromSQLUniqueException.getFieldOption(args.raw.keys.toVector, e).get)
+        if e.getErrorCode == 1062 && GetFieldFromSQLUniqueException.getFieldOption(nonListArgs.raw.keys.toVector, e).isDefined =>
+      APIErrors.UniqueConstraintViolation(path.lastModel.name, GetFieldFromSQLUniqueException.getFieldOption(nonListArgs.raw.keys.toVector, e).get)
 
     case e: SQLIntegrityConstraintViolationException if e.getErrorCode == 1452 =>
-      APIErrors.NodeDoesNotExist(id)
+      APIErrors.NodeNotFoundForWhereError(path.root)
 
     case e: SQLIntegrityConstraintViolationException if e.getErrorCode == 1048 =>
       APIErrors.FieldCannotBeNull()
   }
 }
 
-case class UpdateDataItemByUniqueFieldIfInRelationWithInterpreter(mutaction: UpdateDataItemByUniqueFieldIfInRelationWith) extends DatabaseMutactionInterpreter {
-  override val action = {
-    val scalarArgs = mutaction.args.nonListScalarArguments(mutaction.path.lastModel)
-    DatabaseMutationBuilder.updateDataItemByPath(mutaction.project.id, mutaction.path, scalarArgs)
-  }
-}
+case class NestedUpdateDataItemInterpreter(mutaction: NestedUpdateDataItem) extends DatabaseMutactionInterpreter { //todo kick this out
+  val project        = mutaction.project
+  val path           = mutaction.path
+  val args           = mutaction.args
+  val nonListActions = DatabaseMutationBuilder.updateDataItemByPath(project.id, path, args)
+  val listActions    = DatabaseMutationBuilder.getDbActionsForNewScalarLists(project, path, mutaction.listArgs)
 
-case class UpdateDataItemIfInRelationWithInterpreter(mutaction: UpdateDataItemIfInRelationWith) extends DatabaseMutactionInterpreter {
-  override val action = {
-    val scalarArgs = mutaction.args.nonListScalarArguments(mutaction.path.lastModel)
-    DatabaseMutationBuilder.updateDataItemByPath(mutaction.project.id, mutaction.path, scalarArgs)
+  val allActions = listActions :+ nonListActions
+
+  override val action = DBIO.seq(allActions: _*)
+
+  override val errorMapper = {
+    // https://dev.mysql.com/doc/refman/5.5/en/error-messages-server.html#error_er_dup_entry
+    case e: SQLIntegrityConstraintViolationException
+        if e.getErrorCode == 1062 && GetFieldFromSQLUniqueException.getFieldOption(args.raw.keys.toVector, e).isDefined =>
+      APIErrors.UniqueConstraintViolation(path.lastModel.name, GetFieldFromSQLUniqueException.getFieldOption(args.raw.keys.toVector, e).get)
+
+    case e: SQLIntegrityConstraintViolationException if e.getErrorCode == 1452 =>
+      APIErrors.NodeNotFoundForWhereError(path.root)
+
+    case e: SQLIntegrityConstraintViolationException if e.getErrorCode == 1048 =>
+      APIErrors.FieldCannotBeNull()
   }
 }
 
@@ -238,8 +254,8 @@ case class UpsertDataItemInterpreter(mutaction: UpsertDataItem) extends Database
   val updateArgs = mutaction.allArgs.updateArgumentsAsCoolArgs.generateNonListUpdateArgs(model)
 
   override val action = {
-    val createActions = DatabaseMutationBuilder.getDbActionsForUpsertScalarLists(project.id, path.updatedRoot(createArgs), allArgs.createArgumentsAsCoolArgs)
-    val updateActions = DatabaseMutationBuilder.getDbActionsForUpsertScalarLists(project.id, path.updatedRoot(updateArgs), allArgs.updateArgumentsAsCoolArgs)
+    val createActions = DatabaseMutationBuilder.getDbActionsForScalarLists(project.id, path.updatedRoot(createArgs), allArgs.createArgumentsAsCoolArgs)
+    val updateActions = DatabaseMutationBuilder.getDbActionsForScalarLists(project.id, path.updatedRoot(updateArgs), allArgs.updateArgumentsAsCoolArgs)
     DatabaseMutationBuilder.upsert(project.id, path, mutaction.createWhere, createArgs, updateArgs, createActions, updateActions)
   }
 
@@ -267,8 +283,8 @@ case class UpsertDataItemIfInRelationWithInterpreter(mutaction: UpsertDataItemIf
   val actualCreateArgs    = CoolArgs(createArgsWithId.raw).generateNonListCreateArgs(model, createWhere.fieldValueAsString)
   val actualUpdateArgs    = mutaction.updateArgs.nonListScalarArguments(model)
 
-  val scalarListsCreate = DatabaseMutationBuilder.getDbActionsForUpsertScalarLists(project.id, pathForCreateBranch, createArgsWithId)
-  val scalarListsUpdate = DatabaseMutationBuilder.getDbActionsForUpsertScalarLists(project.id, pathForUpdateBranch, mutaction.updateArgs)
+  val scalarListsCreate = DatabaseMutationBuilder.getDbActionsForScalarLists(project.id, pathForCreateBranch, createArgsWithId)
+  val scalarListsUpdate = DatabaseMutationBuilder.getDbActionsForScalarLists(project.id, pathForUpdateBranch, mutaction.updateArgs)
   val createCheck       = NestedCreateRelationInterpreter(NestedCreateRelation(project, pathForCreateBranch, false))
 
   override val action = DatabaseMutationBuilder.upsertIfInRelationWith(

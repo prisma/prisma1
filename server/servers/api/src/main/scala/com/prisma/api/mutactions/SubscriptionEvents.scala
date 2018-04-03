@@ -39,17 +39,19 @@ object SubscriptionEvents {
   }
 
   def fromUpdateMutaction(project: Project, mutationId: Id, mutaction: UpdateDataItem)(implicit apiDependencies: ApiDependencies): PublishSubscriptionEvent = {
-    val previousValues = mutaction.previousValues.data.filterValues(_ != NullGCValue).toMapStringAny + ("id" -> mutaction.id)
+    val previousValues: Map[String, Any] = mutaction.previousValues.data
+      .filterValues(_ != NullGCValue)
+      .toMapStringAny + ("id" -> mutaction.previousValues.id.value)
     PublishSubscriptionEvent(
       project = project,
       value = Map(
-        "nodeId"         -> mutaction.id,
+        "nodeId"         -> previousValues("id"),
         "changedFields"  -> mutaction.namesOfUpdatedFields.toList, // must be a List as Vector is printed verbatim
         "previousValues" -> previousValues,
-        "modelId"        -> mutaction.model.id,
+        "modelId"        -> mutaction.path.lastModel.id,
         "mutationType"   -> "UpdateNode"
       ),
-      mutationName = s"update${mutaction.model.name}"
+      mutationName = s"update${mutaction.path.lastModel.name}"
     )
   }
 }

@@ -46,11 +46,15 @@ case class RootGCValue(map: SortedMap[String, GCValue]) extends GCValue {
       }
       (key, convertedValue)
   }
+
+  def isEmpty = map.isEmpty
 }
 
 case class ListGCValue(values: Vector[GCValue]) extends GCValue {
   def getStringVector: Vector[String] = values.asInstanceOf[Vector[StringGCValue]].map(_.value)
   def getEnumVector: Vector[String]   = values.asInstanceOf[Vector[EnumGCValue]].map(_.value)
+  def isEmpty: Boolean                = values.isEmpty
+  def size: Int                       = values.size
 }
 
 sealed trait LeafGCValue                  extends GCValue

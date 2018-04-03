@@ -28,8 +28,8 @@ case class ErrorHandler(
       HandledException(error.getMessage, additionalFields ++ commonFields(marshaller))
 
     case (marshaller, error: Throwable) =>
-      logError(LogKey.UnhandledError, error, requestId, query, variables, projectId)
       error.printStackTrace()
+      logError(LogKey.UnhandledError, error, requestId, query, variables, projectId)
       val requestMetadata = RequestMetadata(requestId, request.method.value, request.uri.toString(), request.headers.map(h => h.name() -> h.value()))
       val graphQlMetadata = GraphQlMetadata(query, variables)
       val projectMetadata = projectId.map(pid => ProjectMetadata(pid))

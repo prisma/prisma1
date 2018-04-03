@@ -3,7 +3,7 @@ package com.prisma.api.mutactions
 import com.prisma.api.ApiMetrics
 import com.prisma.api.connector._
 import com.prisma.api.schema.APIErrors.RelationIsRequired
-import com.prisma.gc_values.IdGCValue
+import com.prisma.gc_values.{IdGCValue, ListGCValue, RootGCValue}
 import com.prisma.shared.models.IdType.Id
 import com.prisma.shared.models.{Field, Model, Project}
 import com.prisma.util.gc_value.GCCreateReallyCoolArgsConverter
@@ -31,8 +31,8 @@ case class DatabaseMutactions(project: Project) {
       Vector(DeleteRelationCheck(project, path), DeleteDataItem(project, path, previousValues))
   }
 
-  def getMutactionsForUpdate(path: Path, args: CoolArgs, id: IdGCValue, previousValues: PrismaNode): Vector[DatabaseMutaction] = report {
-    val updateMutaction = getUpdateMutactions(path, args, id.value, previousValues)
+  def getMutactionsForUpdate(path: Path, args: CoolArgs, previousValues: PrismaNode): Vector[DatabaseMutaction] = report {
+    val updateMutaction = getUpdateMutactions(path, args, previousValues)
     val nested          = getMutactionsForNestedMutation(args, path.updatedRoot(args), triggeredFromCreate = false)
 
     updateMutaction ++ nested
@@ -42,11 +42,12 @@ case class DatabaseMutactions(project: Project) {
     val path                        = Path.empty(NodeSelector.forId(model, id))
     val nonListCreateArgs: CoolArgs = args.generateNonListCreateArgs(model, id)
     val converter                   = GCCreateReallyCoolArgsConverter(model)
-    val reallyCoolArgs              = converter.toReallyCoolArgs(nonListCreateArgs.raw)
-    val createMutactions            = CreateDataItem(project, path, reallyCoolArgs) +: getMutactionsForScalarLists(path, args)
+    val reallyCoolNonListArgs       = converter.toReallyCoolArgs(nonListCreateArgs.raw)
+    val reallyCoolListArgs          = getScalarListArgs(path, args)
+    val createMutactions            = CreateDataItem(project, path, reallyCoolNonListArgs, reallyCoolListArgs) //+: getMutactionsForScalarLists(path, args)
     val nestedMutactions            = getMutactionsForNestedMutation(args, path, triggeredFromCreate = true)
 
-    createMutactions ++ nestedMutactions
+    createMutactions +: nestedMutactions
   }
 
   // we need to rethink this thoroughly, we need to prevent both branches of executing their nested mutations
@@ -60,31 +61,23 @@ case class DatabaseMutactions(project: Project) {
       Vector(upsertMutaction) //++ updateNested ++ createNested
     }
 
-  def getUpdateMutactions(path: Path, args: CoolArgs, id: Id, previousValues: PrismaNode): Vector[DatabaseMutaction] = {
-    val updateNonLists = UpdateDataItem(
-      project = project,
-      model = path.lastModel,
-      id = id,
-      args = args.nonListScalarArguments(path.lastModel),
-      previousValues = previousValues
-    )
-
-    val updateLists = getMutactionsForScalarLists(path, args)
-
-    updateNonLists +: updateLists
+  def getUpdateMutactions(path: Path, args: CoolArgs, previousValues: PrismaNode): Vector[DatabaseMutaction] = {
+    Vector(
+      UpdateDataItem(
+        project = project,
+        path = path,
+        nonListArgs = args.nonListScalarArguments(path.lastModel),
+        listArgs = getScalarListArgs(path, args), //todo move this onto args
+        previousValues = previousValues
+      ))
   }
 
-  def getSetScalarList(path: Path, field: Field, values: Vector[Any]): SetScalarList = SetScalarList(project, path, field, values)
-
-  def getMutactionsForScalarLists(path: Path, args: CoolArgs): Vector[DatabaseMutaction] = {
+  def getScalarListArgs(path: Path, args: CoolArgs): Vector[(String, ListGCValue)] = {
     val x = for {
-      field  <- path.lastModel.scalarListFields
-      values <- args.subScalarList(field)
+      field       <- path.lastModel.scalarListFields
+      listGCValue <- args.subScalarList(field)
     } yield {
-      values.values.isEmpty match {
-        case true  => SetScalarListToEmpty(project, path, field)
-        case false => getSetScalarList(path, field, values.values)
-      }
+      (field.name, listGCValue)
     }
     x.toVector
   }
@@ -136,12 +129,12 @@ case class DatabaseMutactions(project: Project) {
       val nonListCreateArgs: CoolArgs = create.data.generateNonListCreateArgs(model, id)
       val converter                   = GCCreateReallyCoolArgsConverter(model)
       val reallyCoolArgs              = converter.toReallyCoolArgs(nonListCreateArgs.raw)
+      val listArgs                    = getScalarListArgs(path, create.data)
 
-      val createMutactions = List(CreateDataItem(project, extendedPath, reallyCoolArgs))
-      val listMutactions   = getMutactionsForScalarLists(extendedPath, create.data)
+      val createMutactions = List(CreateDataItem(project, extendedPath, reallyCoolArgs, listArgs))
       val connectItem      = List(NestedCreateRelation(project, extendedPath, triggeredFromCreate))
 
-      createMutactions ++ connectItem ++ listMutactions ++ getMutactionsForNestedMutation(create.data, extendedPath, triggeredFromCreate = true)
+      createMutactions ++ connectItem ++ getMutactionsForNestedMutation(create.data, extendedPath, triggeredFromCreate = true)
     }
   }
 
@@ -168,10 +161,12 @@ case class DatabaseMutactions(project: Project) {
         case x: UpdateByWhere    => extendedPath.lastEdgeToNodeEdge(currentWhere(x.where, x.data))
         case _: UpdateByRelation => extendedPath
       }
-      val updateMutaction = List(UpdateDataItemByUniqueFieldIfInRelationWith(project, extendedPath, update.data))
-      val scalarLists     = getMutactionsForScalarLists(updatedPath, update.data)
 
-      updateMutaction ++ scalarLists ++ getMutactionsForNestedMutation(update.data, updatedPath, triggeredFromCreate = false)
+      val scalarNonListArgs = update.data.nonListScalarArguments(extendedPath.lastModel)
+      val scalarListArgs    = getScalarListArgs(path, update.data)
+      val updateMutaction   = NestedUpdateDataItem(project, extendedPath, scalarNonListArgs, scalarListArgs)
+
+      updateMutaction +: getMutactionsForNestedMutation(update.data, updatedPath, triggeredFromCreate = false)
     }
   }
 
