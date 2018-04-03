@@ -24,6 +24,19 @@ object RootGCValue {
     val empty: SortedMap[String, GCValue] = SortedMap.empty
     RootGCValue(empty)
   }
+  def fromSchemaArgs(args: Map[String, Any]): RootGCValue = {
+
+    val argsPointer: Map[String, Any] = args.get("data") match {
+      case Some(value) => value.asInstanceOf[Map[String, Any]]
+      case None        => args
+    }
+
+    //scalarNonListField -> LeafGCValue
+    //scalarListField -> ListGCValue
+    //relationNonListField -> nestedMutation
+    //relationListField -> nestedMutation
+    RootGCValue.empty
+  }
 
 }
 case class RootGCValue(map: SortedMap[String, GCValue]) extends GCValue {

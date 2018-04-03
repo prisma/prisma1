@@ -28,18 +28,18 @@ case class CreateDataItemsImport(project: Project, model: Model, args: Vector[Re
 case class DeleteDataItem(project: Project, path: Path, previousValues: PrismaNode) extends DatabaseMutaction {
   val id = GCValueExtractor.fromGCValueToString(previousValues.data.map("id"))
 }
-case class DeleteDataItemNested(project: Project, path: Path)                                         extends DatabaseMutaction
-case class DeleteDataItems(project: Project, model: Model, whereFilter: DataItemFilterCollection)     extends DatabaseMutaction
-case class DeleteManyRelationChecks(project: Project, model: Model, filter: DataItemFilterCollection) extends DatabaseMutaction
-case class DeleteRelationCheck(project: Project, path: Path)                                          extends DatabaseMutaction
-object DisableForeignKeyConstraintChecks                                                              extends DatabaseMutaction //combine
-object EnableForeignKeyConstraintChecks                                                               extends DatabaseMutaction //combine
-case class TruncateTable(projectId: String, tableName: String)                                        extends DatabaseMutaction //combine
-case class NestedConnectRelation(project: Project, path: Path, topIsCreate: Boolean)                  extends DatabaseMutaction
-case class NestedCreateRelation(project: Project, path: Path, topIsCreate: Boolean)                   extends DatabaseMutaction
-case class NestedDisconnectRelation(project: Project, path: Path, topIsCreate: Boolean = false)       extends DatabaseMutaction
-case class SetScalarList(project: Project, path: Path, field: Field, listGCValue: ListGCValue)        extends DatabaseMutaction
-case class SetScalarListToEmpty(project: Project, path: Path, field: Field)                           extends DatabaseMutaction
+case class DeleteDataItemNested(project: Project, path: Path)                                              extends DatabaseMutaction
+case class DeleteDataItems(project: Project, model: Model, whereFilter: DataItemFilterCollection)          extends DatabaseMutaction
+case class DeleteManyRelationChecks(project: Project, model: Model, whereFilter: DataItemFilterCollection) extends DatabaseMutaction
+case class DeleteRelationCheck(project: Project, path: Path)                                               extends DatabaseMutaction
+object DisableForeignKeyConstraintChecks                                                                   extends DatabaseMutaction //combine
+object EnableForeignKeyConstraintChecks                                                                    extends DatabaseMutaction //combine
+case class TruncateTable(projectId: String, tableName: String)                                             extends DatabaseMutaction //combine
+case class NestedConnectRelation(project: Project, path: Path, topIsCreate: Boolean)                       extends DatabaseMutaction
+case class NestedCreateRelation(project: Project, path: Path, topIsCreate: Boolean)                        extends DatabaseMutaction
+case class NestedDisconnectRelation(project: Project, path: Path, topIsCreate: Boolean = false)            extends DatabaseMutaction
+case class SetScalarList(project: Project, path: Path, field: Field, listGCValue: ListGCValue)             extends DatabaseMutaction
+case class SetScalarListToEmpty(project: Project, path: Path, field: Field)                                extends DatabaseMutaction
 case class UpdateDataItem(project: Project, path: Path, nonListArgs: CoolArgs, listArgs: Vector[(String, ListGCValue)], previousValues: PrismaNode)
     extends DatabaseMutaction { //todo
   // TODO filter for fields which actually did change

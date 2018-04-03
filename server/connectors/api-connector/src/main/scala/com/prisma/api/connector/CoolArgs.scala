@@ -110,19 +110,6 @@ case class CoolArgs(raw: Map[String, Any]) {
   }
 
   def generateNonListUpdateArgs(model: Model): CoolArgs = {
-    CoolArgs(
-      model.scalarNonListFields
-        .filter(_.name != "id")
-        .flatMap { field =>
-          raw.get(field.name) match {
-            case Some(value) => Some((field.name, value))
-            case None        => None
-          }
-        }
-        .toMap)
-  }
-
-  def nonListScalarArguments(model: Model): CoolArgs = {
     val values: Seq[(String, Any)] = for {
       field      <- model.scalarNonListFields.toVector
       fieldValue <- getFieldValueAs[Any](field)
@@ -132,13 +119,9 @@ case class CoolArgs(raw: Map[String, Any]) {
     CoolArgs(values.toMap)
   }
 
-  private def subArgsVector(field: String): Option[Vector[CoolArgs]] = subArgsList(field).map(_.toVector)
-
-  private def subArgsList(field: String): Option[Seq[CoolArgs]] = {
-    getFieldValuesAs[Map[String, Any]](field) match {
-      case None    => None
-      case Some(x) => Some(x.map(CoolArgs))
-    }
+  private def subArgsVector(field: String): Option[Vector[CoolArgs]] = getFieldValuesAs[Map[String, Any]](field) match {
+    case None    => None
+    case Some(x) => Some(x.map(CoolArgs).toVector)
   }
 
   private def subArgsOption(field: Field): Option[Option[CoolArgs]] = subArgsOption(field.name)

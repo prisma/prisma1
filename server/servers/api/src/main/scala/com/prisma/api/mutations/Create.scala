@@ -5,6 +5,7 @@ import akka.stream.ActorMaterializer
 import com.prisma.api.ApiDependencies
 import com.prisma.api.connector.{CoolArgs, DataResolver, NodeSelector}
 import com.prisma.api.mutactions.{DatabaseMutactions, ServerSideSubscriptions, SubscriptionEvents}
+import com.prisma.gc_values.RootGCValue
 import com.prisma.shared.models.IdType.Id
 import com.prisma.shared.models._
 import cool.graph.cuid.Cuid
@@ -32,7 +33,6 @@ case class Create(
       case Some(value) => value.asInstanceOf[Map[String, Any]]
       case None        => args.raw
     }
-
     CoolArgs(argsPointer)
   }
 

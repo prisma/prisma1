@@ -118,7 +118,7 @@ case class DeleteDataItemsInterpreter(mutaction: DeleteDataItems) extends Databa
 case class DeleteManyRelationChecksInterpreter(mutaction: DeleteManyRelationChecks) extends DatabaseMutactionInterpreter {
   val project = mutaction.project
   val model   = mutaction.model
-  val filter  = mutaction.filter
+  val filter  = mutaction.whereFilter
 
   val fieldsWhereThisModelIsRequired = project.schema.fieldsWhereThisModelIsRequired(model)
 
@@ -284,7 +284,7 @@ case class UpsertDataItemIfInRelationWithInterpreter(mutaction: UpsertDataItemIf
   val pathForCreateBranch = path.lastEdgeToNodeEdge(createWhere)
   val pathForUpdateBranch = mutaction.pathForUpdateBranch
   val actualCreateArgs    = mutaction.createArgs.generateNonListCreateArgs(model, createWhere.fieldValueAsString)
-  val actualUpdateArgs    = mutaction.updateArgs.nonListScalarArguments(model)
+  val actualUpdateArgs    = mutaction.updateArgs.generateNonListUpdateArgs(model)
 
   val scalarListsCreate =
     DatabaseMutationBuilder.getDbActionsForNewScalarLists(project, pathForCreateBranch, mutaction.createArgs.getScalarListArgs(pathForCreateBranch))

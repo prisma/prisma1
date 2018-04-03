@@ -85,6 +85,8 @@ case class Path(root: NodeSelector, edges: List[Edge]) {
     case x: NestedWhere => this.copy(edges = removeLastEdge.edges :+ lastEdge_!.toNodeEdge(x.where))
     case _              => this
   }
+
+  def relationFieldsNotOnPathOnLastModel = lastModel.relationFields.filter(f => f.relation != lastRelation)
 }
 
 object Path {
@@ -94,4 +96,5 @@ object Path {
     case Nil   => Vector(path)
     case edges => edges.flatMap(field => collectCascadingPaths(project, path.appendCascadingEdge(project, field))).toVector
   }
+
 }
