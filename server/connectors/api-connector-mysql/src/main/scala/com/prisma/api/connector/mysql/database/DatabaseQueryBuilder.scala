@@ -1,7 +1,5 @@
 package com.prisma.api.connector.mysql.database
 
-import java.sql.{PreparedStatement, ResultSet}
-
 import com.prisma.api.connector.Types.DataItemFilterCollection
 import com.prisma.api.connector._
 import com.prisma.api.connector.mysql.database.HelperTypes.ScalarListElement
@@ -14,6 +12,7 @@ import slick.jdbc.MySQLProfile.api._
 import slick.jdbc.meta.{DatabaseMeta, MTable}
 import slick.jdbc.{SQLActionBuilder, _}
 import slick.sql.SqlStreamingAction
+
 import scala.concurrent.ExecutionContext.Implicits.global
 
 object DatabaseQueryBuilder {
@@ -153,24 +152,24 @@ object DatabaseQueryBuilder {
     query.as[PrismaNode](getResultForModel(model))
   }
 
-  def batchSelectFromModelByUniqueSimple(projectId: String, model: Model, fieldName: String, values: Vector[GCValue]): SimpleDBIO[Vector[PrismaNode]] =
-    SimpleDBIO[Vector[PrismaNode]] { x =>
-      val placeHolders                   = values.map(_ => "?").mkString(",")
-      val query                          = s"select * from `$projectId`.`${model.name}` where `$fieldName` in ($placeHolders)"
-      val batchSelect: PreparedStatement = x.connection.prepareStatement(query)
-      values.zipWithIndex.foreach { gcValueWithIndex =>
-        batchSelect.setGcValue(gcValueWithIndex._2 + 1, gcValueWithIndex._1)
-      }
-      val rs: ResultSet = batchSelect.executeQuery()
-
-      var result: Vector[PrismaNode] = Vector.empty
-      while (rs.next) {
-        val data = model.scalarNonListFields.map(field => field.name -> rs.getGcValue(field.name, field.typeIdentifier))
-        result = result :+ PrismaNode(id = rs.getId, data = RootGCValue(data: _*))
-      }
-
-      result
-    }
+//  def batchSelectFromModelByUniqueSimple(projectId: String, model: Model, fieldName: String, values: Vector[GCValue]): SimpleDBIO[Vector[PrismaNode]] =
+//    SimpleDBIO[Vector[PrismaNode]] { x =>
+//      val placeHolders                   = values.map(_ => "?").mkString(",")
+//      val query                          = s"select * from `$projectId`.`${model.name}` where `$fieldName` in ($placeHolders)"
+//      val batchSelect: PreparedStatement = x.connection.prepareStatement(query)
+//      values.zipWithIndex.foreach { gcValueWithIndex =>
+//        batchSelect.setGcValue(gcValueWithIndex._2 + 1, gcValueWithIndex._1)
+//      }
+//      val rs: ResultSet = batchSelect.executeQuery()
+//
+//      var result: Vector[PrismaNode] = Vector.empty
+//      while (rs.next) {
+//        val data = model.scalarNonListFields.map(field => field.name -> rs.getGcValue(field.name, field.typeIdentifier))
+//        result = result :+ PrismaNode(id = rs.getId, data = RootGCValue(data: _*))
+//      }
+//
+//      result
+//    }
 
   def selectFromScalarList(projectId: String,
                            modelName: String,
@@ -186,6 +185,18 @@ object DatabaseQueryBuilder {
           val gcValues = values.sortBy(_.position).map(_.value)
           ScalarListValues(IdGCValue(id), ListGCValue(gcValues))
       }.toVector
+
+    }
+  }
+
+  def whereClauseByCombiningPredicatesByOr(predicates: Vector[NodeSelector]) = {
+    if (predicates.isEmpty) {
+      sql""
+    } else {
+      val firstPredicate = predicates.head
+      predicates.tail.foldLeft(sql"where #${firstPredicate.field.name} = ${firstPredicate.fieldValue}") { (sqlActionBuilder, predicate) =>
+        sqlActionBuilder ++ sql" OR #${predicate.field.name} = ${predicate.fieldValue}"
+      }
     }
   }
 
