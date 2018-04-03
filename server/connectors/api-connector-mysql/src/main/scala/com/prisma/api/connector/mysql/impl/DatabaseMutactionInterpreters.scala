@@ -254,8 +254,12 @@ case class UpsertDataItemInterpreter(mutaction: UpsertDataItem) extends Database
   val updateArgs = mutaction.allArgs.updateArgumentsAsCoolArgs.generateNonListUpdateArgs(model)
 
   override val action = {
-    val createActions = DatabaseMutationBuilder.getDbActionsForScalarLists(project.id, path.updatedRoot(createArgs), allArgs.createArgumentsAsCoolArgs)
-    val updateActions = DatabaseMutationBuilder.getDbActionsForScalarLists(project.id, path.updatedRoot(updateArgs), allArgs.updateArgumentsAsCoolArgs)
+    val createActions = DatabaseMutationBuilder.getDbActionsForNewScalarLists(project,
+                                                                              path.updatedRoot(createArgs),
+                                                                              allArgs.createArgumentsAsCoolArgs.getScalarListArgs(path.updatedRoot(createArgs)))
+    val updateActions = DatabaseMutationBuilder.getDbActionsForNewScalarLists(project,
+                                                                              path.updatedRoot(updateArgs),
+                                                                              allArgs.updateArgumentsAsCoolArgs.getScalarListArgs(path.updatedRoot(updateArgs)))
     DatabaseMutationBuilder.upsert(project.id, path, mutaction.createWhere, createArgs, updateArgs, createActions, updateActions)
   }
 
@@ -282,9 +286,11 @@ case class UpsertDataItemIfInRelationWithInterpreter(mutaction: UpsertDataItemIf
   val actualCreateArgs    = mutaction.createArgs.generateNonListCreateArgs(model, createWhere.fieldValueAsString)
   val actualUpdateArgs    = mutaction.updateArgs.nonListScalarArguments(model)
 
-  val scalarListsCreate = DatabaseMutationBuilder.getDbActionsForScalarLists(project.id, pathForCreateBranch, mutaction.createArgs)
-  val scalarListsUpdate = DatabaseMutationBuilder.getDbActionsForScalarLists(project.id, pathForUpdateBranch, mutaction.updateArgs)
-  val createCheck       = NestedCreateRelationInterpreter(NestedCreateRelation(project, pathForCreateBranch, false))
+  val scalarListsCreate =
+    DatabaseMutationBuilder.getDbActionsForNewScalarLists(project, pathForCreateBranch, mutaction.createArgs.getScalarListArgs(pathForCreateBranch))
+  val scalarListsUpdate =
+    DatabaseMutationBuilder.getDbActionsForNewScalarLists(project, pathForUpdateBranch, mutaction.updateArgs.getScalarListArgs(pathForUpdateBranch))
+  val createCheck = NestedCreateRelationInterpreter(NestedCreateRelation(project, pathForCreateBranch, false))
 
   override val action = DatabaseMutationBuilder.upsertIfInRelationWith(
     project = project,

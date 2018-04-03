@@ -36,6 +36,16 @@ case class CoolArgs(raw: Map[String, Any]) {
     }
   }
 
+  def getScalarListArgs(path: Path): Vector[(String, ListGCValue)] = {
+    val x = for {
+      field       <- path.lastModel.scalarListFields
+      listGCValue <- this.subScalarList(field)
+    } yield {
+      (field.name, listGCValue)
+    }
+    x.toVector
+  }
+
   private def asNestedMutation(relationField: Field, subModel: Model): NestedMutations = {
     if (relationField.isList) {
       NestedMutations(

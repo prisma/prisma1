@@ -237,23 +237,9 @@ object DatabaseMutationBuilder {
     (sql"DELETE FROM `#$projectId`.`#${path.lastModel.name}_#${fieldName}` WHERE `nodeId` = " ++ pathQueryForLastChild(projectId, path)).asUpdate
   }
 
-  def getDbActionsForScalarLists(projectId: String, path: Path, args: CoolArgs): Vector[DBIOAction[Any, NoStream, Effect]] = {
-    val x = for {
-      field       <- path.lastModel.scalarListFields
-      listGCValue <- args.subScalarList(field)
-    } yield {
-      listGCValue.isEmpty match {
-        case true  => setScalarListToEmpty(projectId, path, field.name)
-        case false => setScalarList(projectId, path, field.name, listGCValue)
-      }
-    }
-    x.toVector
-  }
-
   def getDbActionsForNewScalarLists(project: Project, path: Path, args: Vector[(String, ListGCValue)]) = {
     if (args.isEmpty) {
-      val res = DBIOAction.successful(())
-      Vector(res)
+      Vector(DBIOAction.successful(()))
     } else {
       args.map {
         case (fieldName, listGCValue) =>

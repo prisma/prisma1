@@ -43,7 +43,7 @@ case class DatabaseMutactions(project: Project) {
     val nonListCreateArgs: CoolArgs = args.generateNonListCreateArgs(model, id)
     val converter                   = GCCreateReallyCoolArgsConverter(model)
     val reallyCoolNonListArgs       = converter.toReallyCoolArgs(nonListCreateArgs.raw)
-    val reallyCoolListArgs          = getScalarListArgs(path, args)
+    val reallyCoolListArgs          = args.getScalarListArgs(path)
     val createMutactions            = CreateDataItem(project, path, reallyCoolNonListArgs, reallyCoolListArgs) //+: getMutactionsForScalarLists(path, args)
     val nestedMutactions            = getMutactionsForNestedMutation(args, path, triggeredFromCreate = true)
 
@@ -67,19 +67,9 @@ case class DatabaseMutactions(project: Project) {
         project = project,
         path = path,
         nonListArgs = args.nonListScalarArguments(path.lastModel),
-        listArgs = getScalarListArgs(path, args), //todo move this onto args
+        listArgs = args.getScalarListArgs(path),
         previousValues = previousValues
       ))
-  }
-
-  def getScalarListArgs(path: Path, args: CoolArgs): Vector[(String, ListGCValue)] = {
-    val x = for {
-      field       <- path.lastModel.scalarListFields
-      listGCValue <- args.subScalarList(field)
-    } yield {
-      (field.name, listGCValue)
-    }
-    x.toVector
   }
 
   // Todo filter for duplicates here? multiple identical where checks for example?
@@ -129,7 +119,7 @@ case class DatabaseMutactions(project: Project) {
       val nonListCreateArgs: CoolArgs = create.data.generateNonListCreateArgs(model, id)
       val converter                   = GCCreateReallyCoolArgsConverter(model)
       val reallyCoolArgs              = converter.toReallyCoolArgs(nonListCreateArgs.raw)
-      val listArgs                    = getScalarListArgs(extendedPath, create.data)
+      val listArgs                    = create.data.getScalarListArgs(extendedPath)
 
       val createMutactions = List(CreateDataItem(project, extendedPath, reallyCoolArgs, listArgs))
       val connectItem      = List(NestedCreateRelation(project, extendedPath, triggeredFromCreate))
@@ -163,7 +153,7 @@ case class DatabaseMutactions(project: Project) {
       }
 
       val scalarNonListArgs = update.data.nonListScalarArguments(extendedPath.lastModel)
-      val scalarListArgs    = getScalarListArgs(extendedPath, update.data)
+      val scalarListArgs    = update.data.getScalarListArgs(extendedPath)
       val updateMutaction   = NestedUpdateDataItem(project, extendedPath, scalarNonListArgs, scalarListArgs)
 
       updateMutaction +: getMutactionsForNestedMutation(update.data, updatedPath, triggeredFromCreate = false)
