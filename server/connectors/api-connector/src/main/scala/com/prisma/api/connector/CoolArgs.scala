@@ -21,7 +21,6 @@ case class ReallyCoolArgs(raw: GCValue) {
   def hasArgFor(field: Field) = raw.asRoot.map.get(field.name).isDefined
 
   def getFieldValue(name: String): Option[GCValue] = raw.asRoot.map.get(name)
-
 }
 
 case class CoolArgs(raw: Map[String, Any]) {
@@ -29,7 +28,7 @@ case class CoolArgs(raw: Map[String, Any]) {
   def isNonEmpty: Boolean = raw.nonEmpty
 
   def subNestedMutation(relationField: Field, subModel: Model): NestedMutations = {
-    subArgsOption(relationField) match {
+    subArgsOption(relationField.name) match {
       case None             => NestedMutations.empty
       case Some(None)       => NestedMutations.empty
       case Some(Some(args)) => args.asNestedMutation(relationField, subModel)
@@ -79,7 +78,7 @@ case class CoolArgs(raw: Map[String, Any]) {
   }
 
   def subScalarList(scalarListField: Field): Option[ListGCValue] = {
-    subArgsOption(scalarListField).flatten.flatMap { args =>
+    subArgsOption(scalarListField.name).flatten.flatMap { args =>
       args.getFieldValuesAs[Any]("set") match {
         case None =>
           None
@@ -112,7 +111,7 @@ case class CoolArgs(raw: Map[String, Any]) {
   def generateNonListUpdateArgs(model: Model): CoolArgs = {
     val values: Seq[(String, Any)] = for {
       field      <- model.scalarNonListFields.toVector
-      fieldValue <- getFieldValueAs[Any](field)
+      fieldValue <- getFieldValueAs[Any](field.name)
     } yield {
       field.name -> fieldValue
     }
@@ -123,8 +122,6 @@ case class CoolArgs(raw: Map[String, Any]) {
     case None    => None
     case Some(x) => Some(x.map(CoolArgs).toVector)
   }
-
-  private def subArgsOption(field: Field): Option[Option[CoolArgs]] = subArgsOption(field.name)
 
   private def subArgsOption(name: String): Option[Option[CoolArgs]] = {
     val fieldValue: Option[Option[Map[String, Any]]] = getFieldValueAs[Map[String, Any]](name)
@@ -142,15 +139,12 @@ case class CoolArgs(raw: Map[String, Any]) {
     * The inner option is empty if a null value was sent for this field. If the option is defined it contains a non null value
     * for this field.
     */
-  private def getFieldValueAs[T](field: Field): Option[Option[T]] = getFieldValueAs(field.name)
-
   private def getFieldValueAs[T](name: String): Option[Option[T]] = {
     raw.get(name).map { fieldValue =>
       try {
         fieldValue.asInstanceOf[Option[T]]
       } catch {
-        case _: ClassCastException =>
-          Option(fieldValue.asInstanceOf[T])
+        case _: ClassCastException => Option(fieldValue.asInstanceOf[T])
       }
     }
   }
