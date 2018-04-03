@@ -291,7 +291,11 @@ object DatabaseQueryBuilder {
   }
 
   def existsByPath(projectId: String, path: Path) = {
-    sql"select exists" ++ DatabaseMutationBuilder.pathQueryForLastChild(projectId, path)
+    if (path.edges.isEmpty && path.root.isId) {
+      sql"select exists (SELECT * FROM `#$projectId`.`#${path.root.model.name}` WHERE `id` = ${path.root.fieldValue})"
+    } else {
+      sql"select exists" ++ DatabaseMutationBuilder.pathQueryForLastChild(projectId, path)
+    }
   }
 
   def selectFromScalarList(projectId: String, modelName: String, fieldName: String, nodeIds: Vector[String]): SQLActionBuilder = {
