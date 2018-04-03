@@ -8,8 +8,8 @@ class WhereAndDateTimeSpec extends FlatSpec with Matchers with ApiBaseSpec {
 
   "Using the same input in an update using where as used during creation of the item" should "work" in {
 
-    val outerWhere = """"2018""""
-    val innerWhere = """"2019""""
+    val outerWhere = """"2018-12-05T12:34:23.000Z""""
+    val innerWhere = """"2019-12-05T12:34:23.000Z""""
 
     val project = SchemaDsl() { schema =>
       val note = schema.model("Note").field("outerString", _.String).field("outerDateTime", _.DateTime, isUnique = true)
@@ -59,12 +59,12 @@ class WhereAndDateTimeSpec extends FlatSpec with Matchers with ApiBaseSpec {
     server.query(
       s"""query{note(where:{outerDateTime:$outerWhere}){outerString, outerDateTime}}""",
       project,
-      dataContains = """{"note":{"outerString":"Changed Outer String","outerDateTime":"2018-01-01T00:00:00.000Z"}}"""
+      dataContains = """{"note":{"outerString":"Changed Outer String","outerDateTime":"2018-12-05T12:34:23.000Z"}}"""
     )
     server.query(
       s"""query{todo(where:{innerDateTime:$innerWhere}){innerString, innerDateTime}}""",
       project,
-      dataContains = """{"todo":{"innerString":"Changed Inner String","innerDateTime":"2019-01-01T00:00:00.000Z"}}"""
+      dataContains = """{"todo":{"innerString":"Changed Inner String","innerDateTime":"2019-12-05T12:34:23.000Z"}}"""
     )
   }
 
