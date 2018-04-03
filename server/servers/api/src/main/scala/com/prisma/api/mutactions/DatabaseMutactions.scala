@@ -129,7 +129,7 @@ case class DatabaseMutactions(project: Project) {
       val nonListCreateArgs: CoolArgs = create.data.generateNonListCreateArgs(model, id)
       val converter                   = GCCreateReallyCoolArgsConverter(model)
       val reallyCoolArgs              = converter.toReallyCoolArgs(nonListCreateArgs.raw)
-      val listArgs                    = getScalarListArgs(path, create.data)
+      val listArgs                    = getScalarListArgs(extendedPath, create.data)
 
       val createMutactions = List(CreateDataItem(project, extendedPath, reallyCoolArgs, listArgs))
       val connectItem      = List(NestedCreateRelation(project, extendedPath, triggeredFromCreate))
@@ -163,7 +163,7 @@ case class DatabaseMutactions(project: Project) {
       }
 
       val scalarNonListArgs = update.data.nonListScalarArguments(extendedPath.lastModel)
-      val scalarListArgs    = getScalarListArgs(path, update.data)
+      val scalarListArgs    = getScalarListArgs(extendedPath, update.data)
       val updateMutaction   = NestedUpdateDataItem(project, extendedPath, scalarNonListArgs, scalarListArgs)
 
       updateMutaction +: getMutactionsForNestedMutation(update.data, updatedPath, triggeredFromCreate = false)
@@ -179,29 +179,20 @@ case class DatabaseMutactions(project: Project) {
       val createWhere      = NodeSelector.forId(extendedPath.lastModel, id)
       val createArgsWithId = CoolArgs(upsert.create.raw + ("id" -> id))
 
-      val upsertItem = upsert match {
-        case upsert: UpsertByWhere =>
-          UpsertDataItemIfInRelationWith(
-            project = project,
-            path = extendedPath,
-            createWhere = createWhere,
-            createArgs = createArgsWithId,
-            updateArgs = upsert.update,
-            pathForUpdateBranch = extendedPath.lastEdgeToNodeEdge(currentWhere(upsert.where, upsert.update))
-          )
-
-        case upsert: UpsertByRelation =>
-          UpsertDataItemIfInRelationWith(
-            project = project,
-            path = extendedPath,
-            createWhere = createWhere,
-            createArgs = createArgsWithId,
-            updateArgs = upsert.update,
-            pathForUpdateBranch = extendedPath
-          )
+      val finalPath = upsert match {
+        case upsert: UpsertByWhere => extendedPath.lastEdgeToNodeEdge(currentWhere(upsert.where, upsert.update))
+        case _: UpsertByRelation   => extendedPath
       }
 
-      Vector(upsertItem) //++ getMutactionsForNestedMutation(upsert.update, upsert.where, triggeredFromCreate = false) ++
+      Vector(
+        UpsertDataItemIfInRelationWith(
+          project = project,
+          path = extendedPath,
+          createWhere = createWhere,
+          createArgs = createArgsWithId,
+          updateArgs = upsert.update,
+          pathForUpdateBranch = finalPath
+        )) //++ getMutactionsForNestedMutation(upsert.update, upsert.where, triggeredFromCreate = false) ++
     //getMutactionsForNestedMutation(upsert.create, createWhere, triggeredFromCreate = true)
     }
   }

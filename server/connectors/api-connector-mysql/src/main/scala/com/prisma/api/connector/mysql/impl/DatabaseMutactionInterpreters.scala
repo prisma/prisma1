@@ -274,22 +274,21 @@ case class UpsertDataItemInterpreter(mutaction: UpsertDataItem) extends Database
 
 case class UpsertDataItemIfInRelationWithInterpreter(mutaction: UpsertDataItemIfInRelationWith) extends DatabaseMutactionInterpreter {
   val project             = mutaction.project
-  val extendedPath        = mutaction.path
-  val model               = extendedPath.lastModel
+  val path                = mutaction.path
+  val model               = path.lastModel
   val createWhere         = mutaction.createWhere
-  val createArgsWithId    = mutaction.createArgs
-  val pathForCreateBranch = extendedPath.lastEdgeToNodeEdge(createWhere)
+  val pathForCreateBranch = path.lastEdgeToNodeEdge(createWhere)
   val pathForUpdateBranch = mutaction.pathForUpdateBranch
-  val actualCreateArgs    = CoolArgs(createArgsWithId.raw).generateNonListCreateArgs(model, createWhere.fieldValueAsString)
+  val actualCreateArgs    = mutaction.createArgs.generateNonListCreateArgs(model, createWhere.fieldValueAsString)
   val actualUpdateArgs    = mutaction.updateArgs.nonListScalarArguments(model)
 
-  val scalarListsCreate = DatabaseMutationBuilder.getDbActionsForScalarLists(project.id, pathForCreateBranch, createArgsWithId)
+  val scalarListsCreate = DatabaseMutationBuilder.getDbActionsForScalarLists(project.id, pathForCreateBranch, mutaction.createArgs)
   val scalarListsUpdate = DatabaseMutationBuilder.getDbActionsForScalarLists(project.id, pathForUpdateBranch, mutaction.updateArgs)
   val createCheck       = NestedCreateRelationInterpreter(NestedCreateRelation(project, pathForCreateBranch, false))
 
   override val action = DatabaseMutationBuilder.upsertIfInRelationWith(
     project = project,
-    path = extendedPath,
+    path = path,
     createWhere = createWhere,
     createArgs = actualCreateArgs,
     updateArgs = actualUpdateArgs,
@@ -311,7 +310,7 @@ case class UpsertDataItemIfInRelationWithInterpreter(mutaction: UpsertDataItemIf
       APIErrors.FieldCannotBeNull()
 
     case e: SQLException if e.getErrorCode == 1242 && createCheck.causedByThisMutaction(pathForCreateBranch, e.getCause.toString) =>
-      throw RequiredRelationWouldBeViolated(project, extendedPath.lastRelation_!)
+      throw RequiredRelationWouldBeViolated(project, path.lastRelation_!)
   }
 }
 
