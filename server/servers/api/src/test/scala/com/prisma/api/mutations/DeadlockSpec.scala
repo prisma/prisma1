@@ -173,4 +173,50 @@ class DeadlockSpec extends FlatSpec with Matchers with ApiBaseSpec {
     Await.result(Future.traverse(0 to 50)((i) => exec(i)), Duration.Inf)
   }
 
+  "deleting many items" should "not cause deadlocks" in {
+    val project = SchemaDsl() { schema =>
+      val comment = schema.model("Comment").field("text", _.String)
+      schema.model("Todo").oneToManyRelation("comments", "todo", comment).field("a", _.String)
+    }
+    database.setup(project)
+
+    def create() =
+      Future(
+        server.query(
+          """mutation {
+        |  createTodo(
+        |    data: {
+        |      a: "b",
+        |      comments: {
+        |        create: [{text: "comment1"}, {text: "comment2"}]
+        |      }
+        |    }
+        |  ){
+        |    id
+        |    comments { id }
+        |  }
+        |}""".stripMargin,
+          project
+        ))
+
+    val todoIds = Await.result(Future.traverse(0 to 50)((i) => create()), Duration.Inf).map(_.pathAsString("data.createTodo.id"))
+
+    def exec(id: String) =
+      Future(
+        server.query(
+          s"""mutation {
+             |  deleteTodo(
+             |    where: { id: "${id}" }
+             |  ){
+             |    a
+             |  }
+             |}
+      """.stripMargin,
+          project
+        )
+      )
+
+    Await.result(Future.traverse(todoIds)((i) => exec(i)), Duration.Inf)
+  }
+
 }

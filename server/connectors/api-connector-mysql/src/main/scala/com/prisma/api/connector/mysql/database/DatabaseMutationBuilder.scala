@@ -227,13 +227,14 @@ object DatabaseMutationBuilder {
   // region HELPERS
 
   def idFromWhere(projectId: String, where: NodeSelector): SQLActionBuilder = {
-    sql"(SELECT `id` FROM (SELECT * FROM `#$projectId`.`#${where.model.name}`) IDFROMWHERE WHERE `#${where.field.name}` = ${where.fieldValue})"
+    if (where.isId) {
+      sql"${where.fieldValue}"
+    } else {
+      sql"(SELECT `id` FROM (SELECT * FROM `#$projectId`.`#${where.model.name}`) IDFROMWHERE WHERE `#${where.field.name}` = ${where.fieldValue})"
+    }
   }
 
-  def idFromWhereEquals(projectId: String, where: NodeSelector): SQLActionBuilder = where.isId match {
-    case true  => sql" = ${where.fieldValue}"
-    case false => sql" = " ++ idFromWhere(projectId, where)
-  }
+  def idFromWhereEquals(projectId: String, where: NodeSelector): SQLActionBuilder = sql" = " ++ idFromWhere(projectId, where)
 
   def idFromWherePath(projectId: String, where: NodeSelector): SQLActionBuilder = {
     sql"(SELECT `id` FROM (SELECT  * From `#$projectId`.`#${where.model.name}`) IDFROMWHEREPATH WHERE `#${where.field.name}` = ${where.fieldValue})"
