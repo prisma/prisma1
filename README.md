@@ -1,6 +1,6 @@
-<a href="https://www.prismagraphql.com"><img src="https://imgur.com/HUu10rH.png" width="248" /></a>
+<a href="https://www.prisma.io"><img src="https://imgur.com/HUu10rH.png" width="248" /></a>
 
-[Website](https://www.prismagraphql.com) • [Docs](https://www.prismagraphql.com/docs/) • [Blog](https://blog.graph.cool/) • [Forum](https://www.graph.cool/forum) • [Slack](https://slack.graph.cool/) • [Twitter](https://twitter.com/graphcool)
+[Website](https://www.prisma.io) • [Docs](https://www.prisma.io/docs/) • [Blog](https://blog.graph.cool/) • [Forum](https://www.graph.cool/forum) • [Slack](https://slack.graph.cool/) • [Twitter](https://twitter.com/graphcool)
 
 [![CircleCI](https://circleci.com/gh/graphcool/prisma.svg?style=shield)](https://circleci.com/gh/graphcool/prisma) [![Slack Status](https://slack.graph.cool/badge.svg)](https://slack.graph.cool) [![npm version](https://badge.fury.io/js/prisma.svg)](https://badge.fury.io/js/prisma)
 
@@ -12,7 +12,7 @@ The Prisma GraphQL API provides powerful abstractions and building blocks to dev
 2. **Data modeling** with declarative SDL. Prisma migrates your underlying database automatically.
 3. **Realtime API** using GraphQL Subscriptions.
 4. **Advanced API composition** using GraphQL Bindings and schema stitching.
-5. **Works with all frontend frameworks** like React, Vue.js, Angular ([Quickstart Examples](https://www.prismagraphql.com/docs/quickstart/)).
+5. **Works with all frontend frameworks** like React, Vue.js, Angular ([Quickstart Examples](https://www.prisma.io/docs/quickstart/)).
 
 ## Contents
 
@@ -40,7 +40,7 @@ npm install -g prisma
 
 2. **Create a new service:**
 
-The following command creates all files you need for a new [service](https://www.prismagraphql.com/docs/reference/service-configuration/overview-ieshoo5ohm).
+The following command creates all files you need for a new [service](https://www.prisma.io/docs/reference/service-configuration/overview-ieshoo5ohm).
 
 ```console
 prisma init
@@ -48,7 +48,7 @@ prisma init
 
 3. **Define your data model:**
 
-Edit `datamodel.graphql` to define your data model using the [GraphQL SDL notation](https://www.prismagraphql.com/docs/reference/service-configuration/data-modelling-(sdl)-eiroozae8u).
+Edit `datamodel.graphql` to define your data model using the [GraphQL SDL notation](https://www.prisma.io/docs/reference/service-configuration/data-modelling-(sdl)-eiroozae8u).
 
 ```graphql
 type Tweet {
@@ -88,7 +88,7 @@ Use the endpoint from the previous step in your frontend (or backend) applicatio
 
 7. **Read more in the dedicated quickstarts for your favorite technology**
 
-[![](https://imgur.com/T5nakij.png)](https://www.prismagraphql.com/docs/quickstart/)
+[![](https://imgur.com/T5nakij.png)](https://www.prisma.io/docs/quickstart/)
 
 ## Examples
 
@@ -138,7 +138,7 @@ The most important component in Prisma is the GraphQL API:
 * Query, mutate & stream data via GraphQL CRUD API
 * Define and evolve your data model using GraphQL SDL
 
-Try the online demo: [open GraphQL Playground](https://www.prismagraphql.com/features)
+Try the online demo: [open GraphQL Playground](https://www.prisma.io/features)
 
 ## Community
 
