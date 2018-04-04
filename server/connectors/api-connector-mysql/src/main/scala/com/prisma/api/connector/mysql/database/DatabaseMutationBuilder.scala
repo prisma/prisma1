@@ -174,8 +174,9 @@ object DatabaseMutationBuilder {
   }
 
   def cascadingDeleteChildActions(projectId: String, path: Path) = {
-    val deleteRelayIds  = (sql"DELETE FROM `#$projectId`.`_RelayId` WHERE `id` IN " ++ pathQueryForLastChild(projectId, path)).asUpdate
-    val deleteDataItems = (sql"DELETE FROM `#$projectId`.`#${path.lastModel.name}` WHERE `id` IN " ++ pathQueryForLastChild(projectId, path)).asUpdate
+    val deleteRelayIds = (sql"DELETE FROM `#$projectId`.`_RelayId` WHERE `id` IN (" ++ pathQueryForLastChild(projectId, path) ++ sql")").asUpdate
+    val deleteDataItems =
+      (sql"DELETE FROM `#$projectId`.`#${path.lastModel.name}` WHERE `id` IN (" ++ pathQueryForLastChild(projectId, path) ++ sql")").asUpdate
     DBIO.seq(deleteRelayIds, deleteDataItems)
   }
 
@@ -227,13 +228,14 @@ object DatabaseMutationBuilder {
   // region HELPERS
 
   def idFromWhere(projectId: String, where: NodeSelector): SQLActionBuilder = {
-    sql"(SELECT `id` FROM (SELECT * FROM `#$projectId`.`#${where.model.name}`) IDFROMWHERE WHERE `#${where.field.name}` = ${where.fieldValue})"
+    if (where.isId) {
+      sql"${where.fieldValue}"
+    } else {
+      sql"(SELECT `id` FROM (SELECT * FROM `#$projectId`.`#${where.model.name}`) IDFROMWHERE WHERE `#${where.field.name}` = ${where.fieldValue})"
+    }
   }
 
-  def idFromWhereEquals(projectId: String, where: NodeSelector): SQLActionBuilder = where.isId match {
-    case true  => sql" = ${where.fieldValue}"
-    case false => sql" = " ++ idFromWhere(projectId, where)
-  }
+  def idFromWhereEquals(projectId: String, where: NodeSelector): SQLActionBuilder = sql" = " ++ idFromWhere(projectId, where)
 
   def idFromWherePath(projectId: String, where: NodeSelector): SQLActionBuilder = {
     sql"(SELECT `id` FROM (SELECT  * From `#$projectId`.`#${where.model.name}`) IDFROMWHEREPATH WHERE `#${where.field.name}` = ${where.fieldValue})"
@@ -266,7 +268,7 @@ object DatabaseMutationBuilder {
 
         sql"(SELECT `#${last.childRelationSide}`" ++
           sql" FROM (SELECT * FROM `#$projectId`.`#${last.relation.id}`) PATHQUERY" ++
-          sql" WHERE " ++ childWhere ++ sql"`#${last.parentRelationSide}` IN " ++ pathQueryForLastParent(projectId, path) ++ sql")"
+          sql" WHERE " ++ childWhere ++ sql"`#${last.parentRelationSide}` IN (" ++ pathQueryForLastParent(projectId, path) ++ sql"))"
     }
   }
 
@@ -301,17 +303,17 @@ object DatabaseMutationBuilder {
 
   def oldParentFailureTrigger(project: Project, path: Path) = {
     val table = path.lastRelation_!.id
-    val query = sql"SELECT `id` FROM `#${project.id}`.`#$table` OLDPARENTPATHFAILURETRIGGER WHERE `#${path.childSideOfLastEdge}` IN " ++ pathQueryForLastChild(
+    val query = sql"SELECT `id` FROM `#${project.id}`.`#$table` OLDPARENTPATHFAILURETRIGGER WHERE `#${path.childSideOfLastEdge}` IN (" ++ pathQueryForLastChild(
       project.id,
-      path)
+      path) ++ sql")"
     triggerFailureWhenExists(project, query, table)
   }
 
   def oldParentFailureTriggerByField(project: Project, path: Path, field: Field) = {
     val table = field.relation.get.id
-    val query = sql"SELECT `id` FROM `#${project.id}`.`#$table` OLDPARENTPATHFAILURETRIGGERBYFIELD WHERE `#${field.oppositeRelationSide.get}` IN " ++ pathQueryForLastChild(
+    val query = sql"SELECT `id` FROM `#${project.id}`.`#$table` OLDPARENTPATHFAILURETRIGGERBYFIELD WHERE `#${field.oppositeRelationSide.get}` IN (" ++ pathQueryForLastChild(
       project.id,
-      path)
+      path) ++ sql")"
     triggerFailureWhenExists(project, query, table)
   }
 
@@ -328,9 +330,9 @@ object DatabaseMutationBuilder {
 
   def oldChildFailureTrigger(project: Project, path: Path) = {
     val table = path.lastRelation_!.id
-    val query = sql"SELECT `id` FROM `#${project.id}`.`#$table` OLDCHILDPATHFAILURETRIGGER WHERE `#${path.parentSideOfLastEdge}` IN " ++ pathQueryForLastParent(
+    val query = sql"SELECT `id` FROM `#${project.id}`.`#$table` OLDCHILDPATHFAILURETRIGGER WHERE `#${path.parentSideOfLastEdge}` IN (" ++ pathQueryForLastParent(
       project.id,
-      path)
+      path) ++ sql")"
     triggerFailureWhenExists(project, query, table)
   }
 
