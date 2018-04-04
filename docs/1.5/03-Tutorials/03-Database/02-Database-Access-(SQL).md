@@ -10,6 +10,7 @@ Follow this guide to connect directly to the MySQL database powering your local 
 If you used `prisma local start` to start your local Prisma cluster, you will have two containers running:
 
 `prisma` is running the main Prisma service
+
 `prisma-db` is running the MySQL server that stores your data
 
 This guide explains how to connect to your local MySQL server in order to query and update data directly.
