@@ -1,9 +1,9 @@
 package com.prisma.api.connector
 
 import com.prisma.api.schema.APIErrors
-import com.prisma.gc_values.{GCValue, ListGCValue}
+import com.prisma.gc_values.{GCValue, ListGCValue, RootGCValue}
 import com.prisma.shared.models._
-import com.prisma.util.gc_value.{GCAnyConverter, GCValueExtractor}
+import com.prisma.util.gc_value.{GCAnyConverter, GCCreateReallyCoolArgsConverter, GCUpdateReallyCoolArgsConverter, GCValueExtractor}
 
 import scala.collection.immutable.Seq
 
@@ -21,6 +21,8 @@ case class ReallyCoolArgs(raw: GCValue) {
   def hasArgFor(field: Field) = raw.asRoot.map.get(field.name).isDefined
 
   def getFieldValue(name: String): Option[GCValue] = raw.asRoot.map.get(name)
+
+  def keys: Vector[String] = raw.asRoot.map.keys.toVector
 }
 
 case class CoolArgs(raw: Map[String, Any]) {
@@ -119,6 +121,18 @@ case class CoolArgs(raw: Map[String, Any]) {
     CoolArgs(values.toMap)
   }
 
+  def generateNonListUpdateGCValues(model: Model): ReallyCoolArgs = {
+
+    val values = for {
+      field      <- model.scalarNonListFields.toVector
+      fieldValue <- getFieldValueAs[Any](field.name) if fieldValue.isDefined
+    } yield {
+      val converter = GCAnyConverter(field.typeIdentifier, false)
+      field.name -> converter.toGCValue(fieldValue.get).get
+    }
+    ReallyCoolArgs(RootGCValue(values: _*))
+  }
+
   private def subArgsVector(field: String): Option[Vector[CoolArgs]] = getFieldValuesAs[Map[String, Any]](field) match {
     case None    => None
     case Some(x) => Some(x.map(CoolArgs).toVector)
@@ -181,5 +195,21 @@ case class CoolArgs(raw: Map[String, Any]) {
     } getOrElse {
       throw APIErrors.NullProvidedForWhereError(model.name)
     }
+  }
+
+  def getCreateArgs(path: Path) = {
+    val nonListCreateArgs: CoolArgs = generateNonListCreateArgs(path.root)
+    val converter                   = GCCreateReallyCoolArgsConverter(path.lastModel)
+    val nonListArgs                 = converter.toReallyCoolArgs(nonListCreateArgs.raw)
+    val listArgs                    = getScalarListArgs(path)
+
+    (nonListArgs, listArgs)
+  }
+
+  def getUpdateArgs(path: Path) = {
+    val nonListArgs = generateNonListUpdateGCValues(path.lastModel)
+    val listArgs    = getScalarListArgs(path)
+
+    (nonListArgs, listArgs)
   }
 }

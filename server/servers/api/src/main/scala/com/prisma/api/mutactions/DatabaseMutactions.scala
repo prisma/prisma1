@@ -3,7 +3,6 @@ package com.prisma.api.mutactions
 import com.prisma.api.ApiMetrics
 import com.prisma.api.connector._
 import com.prisma.api.schema.APIErrors.RelationIsRequired
-import com.prisma.shared.models.IdType.Id
 import com.prisma.shared.models.{Field, Model, Project}
 import com.prisma.util.gc_value.GCCreateReallyCoolArgsConverter
 import cool.graph.cuid.Cuid.createCuid
@@ -30,24 +29,18 @@ case class DatabaseMutactions(project: Project) {
       Vector(DeleteRelationCheck(project, path), DeleteDataItem(project, path, previousValues))
   }
 
-  def getMutactionsForUpdate(path: Path, args: CoolArgs, previousValues: PrismaNode): Vector[DatabaseMutaction] = report { //todo
-    val nonListArgs = args.generateNonListUpdateArgs(path.lastModel)
-    val listArgs    = args.getScalarListArgs(path)
-
-    val updateMutaction = UpdateDataItem(project, path, nonListArgs, listArgs, previousValues)
-    val nested          = getMutactionsForNestedMutation(args, path.updatedRoot(args), triggeredFromCreate = false)
+  def getMutactionsForUpdate(path: Path, args: CoolArgs, previousValues: PrismaNode): Vector[DatabaseMutaction] = report {
+    val (nonListArgs, listArgs) = args.getUpdateArgs(path)
+    val updateMutaction         = UpdateDataItem(project, path, nonListArgs, listArgs, previousValues)
+    val nested                  = getMutactionsForNestedMutation(args, path.updatedRoot(args), triggeredFromCreate = false)
 
     updateMutaction +: nested
   }
 
-  def getMutactionsForCreate(path: Path, args: CoolArgs): Vector[DatabaseMutaction] = report { //todo switch to path
-    val nonListCreateArgs: CoolArgs = args.generateNonListCreateArgs(path.root)
-    val converter                   = GCCreateReallyCoolArgsConverter(path.lastModel)
-    val reallyCoolNonListArgs       = converter.toReallyCoolArgs(nonListCreateArgs.raw)
-    val reallyCoolListArgs          = args.getScalarListArgs(path)
-
-    val createMutaction  = CreateDataItem(project, path, reallyCoolNonListArgs, reallyCoolListArgs)
-    val nestedMutactions = getMutactionsForNestedMutation(args, path, triggeredFromCreate = true)
+  def getMutactionsForCreate(path: Path, args: CoolArgs): Vector[DatabaseMutaction] = report {
+    val (nonListArgs, listArgs) = args.getCreateArgs(path)
+    val createMutaction         = CreateDataItem(project, path, nonListArgs, listArgs)
+    val nestedMutactions        = getMutactionsForNestedMutation(args, path, triggeredFromCreate = true)
 
     createMutaction +: nestedMutactions
   }
@@ -55,7 +48,11 @@ case class DatabaseMutactions(project: Project) {
   // we need to rethink this thoroughly, we need to prevent both branches from executing their nested mutations
   def getMutactionsForUpsert(path: Path, createWhere: NodeSelector, updatedWhere: NodeSelector, allArgs: CoolArgs): Vector[DatabaseMutaction] = // Todo
     report {
-      val upsertMutaction = UpsertDataItem(project, path, createWhere, updatedWhere, allArgs)
+
+      val (nonListCreateArgs, listCreateArgs) = allArgs.createArgumentsAsCoolArgs.getCreateArgs(path)
+      val (nonListUpdateArgs, listUpdateArgs) = allArgs.updateArgumentsAsCoolArgs.getUpdateArgs(path)
+
+      val upsertMutaction = UpsertDataItem(project, path, createWhere, updatedWhere, nonListCreateArgs, listCreateArgs, nonListUpdateArgs, listUpdateArgs)
 
 //    val updateNested = getMutactionsForNestedMutation(allArgs.updateArgumentsAsCoolArgs, updatedOuterWhere, triggeredFromCreate = false)
 //    val createNested = getMutactionsForNestedMutation(allArgs.createArgumentsAsCoolArgs, createWhere, triggeredFromCreate = true)
@@ -142,10 +139,9 @@ case class DatabaseMutactions(project: Project) {
         case x: UpdateByWhere    => extendedPath.lastEdgeToNodeEdge(currentWhere(x.where, x.data))
         case _: UpdateByRelation => extendedPath
       }
+      val (nonListArgs, listArgs) = update.data.getUpdateArgs(extendedPath)
 
-      val scalarNonListArgs = update.data.generateNonListUpdateArgs(extendedPath.lastModel)
-      val scalarListArgs    = update.data.getScalarListArgs(extendedPath)
-      val updateMutaction   = NestedUpdateDataItem(project, extendedPath, scalarNonListArgs, scalarListArgs)
+      val updateMutaction = NestedUpdateDataItem(project, extendedPath, nonListArgs, listArgs)
 
       updateMutaction +: getMutactionsForNestedMutation(update.data, updatedPath, triggeredFromCreate = false)
     }
@@ -165,13 +161,18 @@ case class DatabaseMutactions(project: Project) {
         case _: UpsertByRelation   => extendedPath
       }
 
+      val (nonListCreateArgs, listCreateArgs) = upsert.create.getCreateArgs(extendedPath)
+      val (nonListUpdateArgs, listUpdateArgs) = upsert.update.getUpdateArgs(extendedPath)
+
       Vector(
         UpsertDataItemIfInRelationWith(
           project = project,
           path = extendedPath,
           createWhere = createWhere,
-          createArgs = createArgsWithId,
-          updateArgs = upsert.update,
+          createListArgs = listCreateArgs,
+          createNonListArgs = nonListCreateArgs,
+          updateListArgs = listUpdateArgs,
+          updateNonListArgs = nonListUpdateArgs,
           pathForUpdateBranch = finalPath
         )) //++ getMutactionsForNestedMutation(upsert.update, upsert.where, triggeredFromCreate = false) ++
     //getMutactionsForNestedMutation(upsert.create, createWhere, triggeredFromCreate = true)

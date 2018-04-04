@@ -1,7 +1,7 @@
 package com.prisma.api.connector
 
 import com.prisma.api.connector.Types.DataItemFilterCollection
-import com.prisma.gc_values.ListGCValue
+import com.prisma.gc_values.{ListGCValue, RootGCValue}
 import com.prisma.shared.models.IdType.Id
 import com.prisma.shared.models.ModelMutationType.ModelMutationType
 import com.prisma.shared.models._
@@ -40,20 +40,30 @@ case class NestedCreateRelation(project: Project, path: Path, topIsCreate: Boole
 case class NestedDisconnectRelation(project: Project, path: Path, topIsCreate: Boolean = false)            extends DatabaseMutaction
 case class SetScalarList(project: Project, path: Path, field: Field, listGCValue: ListGCValue)             extends DatabaseMutaction
 case class SetScalarListToEmpty(project: Project, path: Path, field: Field)                                extends DatabaseMutaction
-case class UpdateDataItem(project: Project, path: Path, nonListArgs: CoolArgs, listArgs: Vector[(String, ListGCValue)], previousValues: PrismaNode)
-    extends DatabaseMutaction { //todo
+case class UpdateDataItem(project: Project, path: Path, nonListArgs: ReallyCoolArgs, listArgs: Vector[(String, ListGCValue)], previousValues: PrismaNode)
+    extends DatabaseMutaction {
   // TODO filter for fields which actually did change
-  val namesOfUpdatedFields: Vector[String] = nonListArgs.raw.keys.toVector
+  val namesOfUpdatedFields: Vector[String] = nonListArgs.raw.asRoot.map.keys.toVector
 }
-case class NestedUpdateDataItem(project: Project, path: Path, args: CoolArgs, listArgs: Vector[(String, ListGCValue)])            extends DatabaseMutaction //todo
-case class UpdateDataItems(project: Project, model: Model, updateArgs: CoolArgs, where: DataItemFilterCollection)                 extends DatabaseMutaction //todo
-case class UpsertDataItem(project: Project, path: Path, createWhere: NodeSelector, updatedWhere: NodeSelector, allArgs: CoolArgs) extends DatabaseMutaction //todo
+case class NestedUpdateDataItem(project: Project, path: Path, args: ReallyCoolArgs, listArgs: Vector[(String, ListGCValue)]) extends DatabaseMutaction
+case class UpdateDataItems(project: Project, model: Model, updateArgs: CoolArgs, where: DataItemFilterCollection)            extends DatabaseMutaction //todo
+case class UpsertDataItem(project: Project,
+                          path: Path,
+                          createWhere: NodeSelector,
+                          updatedWhere: NodeSelector,
+                          nonListCreateArgs: ReallyCoolArgs,
+                          listCreateArgs: Vector[(String, ListGCValue)],
+                          nonListUpdateArgs: ReallyCoolArgs,
+                          listUpdateArgs: Vector[(String, ListGCValue)])
+    extends DatabaseMutaction //todo
 case class UpsertDataItemIfInRelationWith(
     project: Project,
     path: Path,
     createWhere: NodeSelector,
-    createArgs: CoolArgs,
-    updateArgs: CoolArgs,
+    createListArgs: Vector[(String, ListGCValue)],
+    createNonListArgs: ReallyCoolArgs,
+    updateListArgs: Vector[(String, ListGCValue)],
+    updateNonListArgs: ReallyCoolArgs,
     pathForUpdateBranch: Path
 ) extends DatabaseMutaction //todo
 case class VerifyConnection(project: Project, path: Path)     extends DatabaseMutaction

@@ -22,17 +22,17 @@ object DatabaseMutationBuilder {
 
   // region CREATE
 
-  private def combineKeysAndValuesSeparately(args: CoolArgs) = {
-    val escapedKeyValueTuples = args.raw.toList.map(x => (escapeKey(x._1), escapeUnsafeParam(x._2)))
-    val escapedKeys           = combineByComma(escapedKeyValueTuples.map(_._1))
-    val escapedValues         = combineByComma(escapedKeyValueTuples.map(_._2))
-    (escapedKeys, escapedValues)
-  }
-
-  def createDataItem(projectId: String, modelName: String, args: CoolArgs): SqlStreamingAction[Vector[Int], Int, Effect]#ResultAction[Int, NoStream, Effect] = {
-    val (escapedKeys: Option[SQLActionBuilder], escapedValues: Option[SQLActionBuilder]) = combineKeysAndValuesSeparately(args)
-    (sql"INSERT INTO `#$projectId`.`#$modelName` (" ++ escapedKeys ++ sql") VALUES (" ++ escapedValues ++ sql")").asUpdate
-  }
+//  private def combineKeysAndValuesSeparately(args: CoolArgs) = {
+//    val escapedKeyValueTuples = args.raw.toList.map(x => (escapeKey(x._1), escapeUnsafeParam(x._2)))
+//    val escapedKeys           = combineByComma(escapedKeyValueTuples.map(_._1))
+//    val escapedValues         = combineByComma(escapedKeyValueTuples.map(_._2))
+//    (escapedKeys, escapedValues)
+//  }
+//
+//  def createDataItem(projectId: String, modelName: String, args: CoolArgs): SqlStreamingAction[Vector[Int], Int, Effect]#ResultAction[Int, NoStream, Effect] = {
+//    val (escapedKeys: Option[SQLActionBuilder], escapedValues: Option[SQLActionBuilder]) = combineKeysAndValuesSeparately(args)
+//    (sql"INSERT INTO `#$projectId`.`#$modelName` (" ++ escapedKeys ++ sql") VALUES (" ++ escapedValues ++ sql")").asUpdate
+//  }
 
   def createReallyCoolDataItem(projectId: String, model: Model, args: ReallyCoolArgs) = {
 
@@ -83,8 +83,8 @@ object DatabaseMutationBuilder {
     (sql"UPDATE `#${projectId}`.`#${model.name}`" ++ sql"SET " ++ updateValues ++ prefixIfNotNone("where", whereSql)).asUpdate
   }
 
-  def updateDataItemByPath(projectId: String, path: Path, updateArgs: CoolArgs) = {
-    val updateValues = combineByComma(updateArgs.raw.map { case (k, v) => escapeKey(k) ++ sql" = " ++ escapeUnsafeParam(v) })
+  def updateDataItemByPath(projectId: String, path: Path, updateArgs: ReallyCoolArgs) = {
+    val updateValues = combineByComma(updateArgs.raw.asRoot.map.map { case (k, v) => escapeKey(k) ++ sql" = " ++ gcValueToSQLBuilder(v) })
     def fromEdge(edge: Edge) = edge match {
       case edge: NodeEdge => sql" `#${path.childSideOfLastEdge}`" ++ idFromWhereEquals(projectId, edge.childWhere) ++ sql" AND "
       case _: ModelEdge   => sql""
@@ -92,7 +92,7 @@ object DatabaseMutationBuilder {
 
     val baseQuery = sql"UPDATE `#${projectId}`.`#${path.lastModel.name}` SET " ++ updateValues ++ sql"WHERE `id` ="
 
-    if (updateArgs.isNonEmpty) {
+    if (updateArgs.raw.asRoot.map.nonEmpty) {
       val query = path.lastEdge match {
         case Some(edge) =>
           baseQuery ++ sql"(SELECT `#${path.childSideOfLastEdge}` " ++
@@ -114,15 +114,16 @@ object DatabaseMutationBuilder {
   def upsert(projectId: String,
              path: Path,
              createWhere: NodeSelector,
-             createArgs: CoolArgs,
-             updateArgs: CoolArgs,
+             createArgs: ReallyCoolArgs,
+             updateArgs: ReallyCoolArgs,
              create: Vector[DBIOAction[Any, NoStream, Effect]],
              update: Vector[DBIOAction[Any, NoStream, Effect]]) = {
 
     def existsByPath(projectId: String, path: Path) = sql"select exists" ++ DatabaseMutationBuilder.pathQueryForLastChild(projectId, path)
 
-    val q       = existsByPath(projectId, path).as[Boolean]
-    val qInsert = DBIOAction.seq(createDataItem(projectId, path.lastModel.name, createArgs), createRelayRow(projectId, createWhere), DBIOAction.seq(create: _*))
+    val q = existsByPath(projectId, path).as[Boolean]
+    val qInsert =
+      DBIOAction.seq(createReallyCoolDataItem(projectId, path.lastModel, createArgs), createRelayRow(projectId, createWhere), DBIOAction.seq(create: _*))
     val qUpdate = DBIOAction.seq(updateDataItemByPath(projectId, path, updateArgs), DBIOAction.seq(update: _*))
 
     ifThenElse(q, qUpdate, qInsert)
@@ -132,8 +133,8 @@ object DatabaseMutationBuilder {
       project: Project,
       path: Path,
       createWhere: NodeSelector,
-      createArgs: CoolArgs,
-      updateArgs: CoolArgs,
+      createArgs: ReallyCoolArgs,
+      updateArgs: ReallyCoolArgs,
       create: Vector[DBIOAction[Any, NoStream, Effect]],
       update: Vector[DBIOAction[Any, NoStream, Effect]],
       relationMutactions: NestedCreateRelationInterpreter,
@@ -154,7 +155,7 @@ object DatabaseMutationBuilder {
     val q = existsNodeIsInRelationshipWith(project, path).as[Boolean]
     val qInsert =
       DBIOAction.seq(
-        createDataItem(project.id, path.lastModel.name, createArgs),
+        createReallyCoolDataItem(project.id, path.lastModel, createArgs),
         createRelayRow(project.id, createWhere),
         DBIOAction.seq(relationMutactions.allActions: _*),
         DBIOAction.seq(create: _*)
@@ -373,8 +374,8 @@ object DatabaseMutationBuilder {
   }
 
   def ifThenElse(condition: SqlStreamingAction[Vector[Boolean], Boolean, Effect],
-                 thenMutactions: DBIOAction[Unit, NoStream, Effect],
-                 elseMutactions: DBIOAction[Unit, NoStream, Effect]) = {
+                 thenMutactions: DBIOAction[Unit, NoStream, Effect.All],
+                 elseMutactions: DBIOAction[Unit, NoStream, Effect.All]) = {
     import scala.concurrent.ExecutionContext.Implicits.global
     for {
       exists <- condition
@@ -383,8 +384,8 @@ object DatabaseMutationBuilder {
   }
 
   def ifThenElseNestedUpsert(condition: SqlStreamingAction[Vector[Boolean], Boolean, Effect],
-                             thenMutactions: DBIOAction[Unit, NoStream, Effect],
-                             elseMutactions: DBIOAction[Unit, NoStream, Effect]) = {
+                             thenMutactions: DBIOAction[Unit, NoStream, Effect.All],
+                             elseMutactions: DBIOAction[Unit, NoStream, Effect.All]) = {
     import scala.concurrent.ExecutionContext.Implicits.global
     for {
       exists <- condition

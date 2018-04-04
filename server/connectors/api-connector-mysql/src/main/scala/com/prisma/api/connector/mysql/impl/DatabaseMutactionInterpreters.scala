@@ -82,9 +82,8 @@ case class CreateDataItemInterpreter(mutaction: CreateDataItem) extends Database
   }
 
   override val errorMapper = {
-    case e: SQLIntegrityConstraintViolationException
-        if e.getErrorCode == 1062 && GetFieldFromSQLUniqueException.getFieldOption(args.raw.asRoot.map.keys.toVector, e).isDefined =>
-      APIErrors.UniqueConstraintViolation(model.name, GetFieldFromSQLUniqueException.getFieldOption(args.raw.asRoot.map.keys.toVector, e).get)
+    case e: SQLIntegrityConstraintViolationException if e.getErrorCode == 1062 && GetFieldFromSQLUniqueException.getFieldOption(args.keys, e).isDefined =>
+      APIErrors.UniqueConstraintViolation(model.name, GetFieldFromSQLUniqueException.getFieldOption(args.keys, e).get)
     case e: SQLIntegrityConstraintViolationException if e.getErrorCode == 1452 =>
       APIErrors.NodeDoesNotExist("")
   }
@@ -205,8 +204,8 @@ case class UpdateDataItemInterpreter(mutaction: UpdateDataItem) extends Database
   override val errorMapper = {
     // https://dev.mysql.com/doc/refman/5.5/en/error-messages-server.html#error_er_dup_entry
     case e: SQLIntegrityConstraintViolationException
-        if e.getErrorCode == 1062 && GetFieldFromSQLUniqueException.getFieldOption(nonListArgs.raw.keys.toVector, e).isDefined =>
-      APIErrors.UniqueConstraintViolation(path.lastModel.name, GetFieldFromSQLUniqueException.getFieldOption(nonListArgs.raw.keys.toVector, e).get)
+        if e.getErrorCode == 1062 && GetFieldFromSQLUniqueException.getFieldOption(nonListArgs.keys, e).isDefined =>
+      APIErrors.UniqueConstraintViolation(path.lastModel.name, GetFieldFromSQLUniqueException.getFieldOption(nonListArgs.keys, e).get)
 
     case e: SQLIntegrityConstraintViolationException if e.getErrorCode == 1452 =>
       APIErrors.NodeNotFoundForWhereError(path.root)
@@ -229,9 +228,8 @@ case class NestedUpdateDataItemInterpreter(mutaction: NestedUpdateDataItem) exte
 
   override val errorMapper = {
     // https://dev.mysql.com/doc/refman/5.5/en/error-messages-server.html#error_er_dup_entry
-    case e: SQLIntegrityConstraintViolationException
-        if e.getErrorCode == 1062 && GetFieldFromSQLUniqueException.getFieldOption(args.raw.keys.toVector, e).isDefined =>
-      APIErrors.UniqueConstraintViolation(path.lastModel.name, GetFieldFromSQLUniqueException.getFieldOption(args.raw.keys.toVector, e).get)
+    case e: SQLIntegrityConstraintViolationException if e.getErrorCode == 1062 && GetFieldFromSQLUniqueException.getFieldOption(args.keys, e).isDefined =>
+      APIErrors.UniqueConstraintViolation(path.lastModel.name, GetFieldFromSQLUniqueException.getFieldOption(args.keys, e).get)
 
     case e: SQLIntegrityConstraintViolationException if e.getErrorCode == 1452 =>
       APIErrors.NodeNotFoundForWhereError(path.root)
@@ -249,24 +247,24 @@ case class UpsertDataItemInterpreter(mutaction: UpsertDataItem) extends Database
   val model      = mutaction.path.lastModel
   val project    = mutaction.project
   val path       = mutaction.path
-  val allArgs    = mutaction.allArgs
-  val createArgs = mutaction.allArgs.createArgumentsAsCoolArgs.generateNonListCreateArgs(mutaction.createWhere)
-  val updateArgs = mutaction.allArgs.updateArgumentsAsCoolArgs.generateNonListUpdateArgs(model)
+  val createArgs = mutaction.nonListCreateArgs
+  val updateArgs = mutaction.nonListUpdateArgs
+
+  def updatedRoot(path: Path, args: ReallyCoolArgs): Path = {
+    val whereFieldValue = args.getFieldValue(path.root.field.name)
+    val updatedWhere    = whereFieldValue.map(path.root.updateValue).getOrElse(path.root)
+    path.copy(root = updatedWhere)
+  }
 
   override val action = {
-    val createActions = DatabaseMutationBuilder.getDbActionsForNewScalarLists(project,
-                                                                              path.updatedRoot(createArgs),
-                                                                              allArgs.createArgumentsAsCoolArgs.getScalarListArgs(path.updatedRoot(createArgs)))
-    val updateActions = DatabaseMutationBuilder.getDbActionsForNewScalarLists(project,
-                                                                              path.updatedRoot(updateArgs),
-                                                                              allArgs.updateArgumentsAsCoolArgs.getScalarListArgs(path.updatedRoot(updateArgs)))
+    val createActions = DatabaseMutationBuilder.getDbActionsForNewScalarLists(project, updatedRoot(path, createArgs), mutaction.listCreateArgs)
+    val updateActions = DatabaseMutationBuilder.getDbActionsForNewScalarLists(project, updatedRoot(path, updateArgs), mutaction.listUpdateArgs)
     DatabaseMutationBuilder.upsert(project.id, path, mutaction.createWhere, createArgs, updateArgs, createActions, updateActions)
   }
 
   override val errorMapper = {
-    case e: SQLIntegrityConstraintViolationException
-        if e.getErrorCode == 1062 && getFieldOption(createArgs.raw.keys.toVector ++ updateArgs.raw.keys, e).isDefined =>
-      APIErrors.UniqueConstraintViolation(model.name, getFieldOption(createArgs.raw.keys.toVector ++ updateArgs.raw.keys, e).get)
+    case e: SQLIntegrityConstraintViolationException if e.getErrorCode == 1062 && getFieldOption(createArgs.keys ++ updateArgs.keys, e).isDefined =>
+      APIErrors.UniqueConstraintViolation(model.name, getFieldOption(createArgs.keys ++ updateArgs.keys, e).get)
 
     case e: SQLIntegrityConstraintViolationException if e.getErrorCode == 1452 =>
       APIErrors.NodeDoesNotExist("") //todo
@@ -283,21 +281,19 @@ case class UpsertDataItemIfInRelationWithInterpreter(mutaction: UpsertDataItemIf
   val createWhere         = mutaction.createWhere
   val pathForCreateBranch = path.lastEdgeToNodeEdge(createWhere)
   val pathForUpdateBranch = mutaction.pathForUpdateBranch
-  val actualCreateArgs    = mutaction.createArgs.generateNonListCreateArgs(createWhere)
-  val actualUpdateArgs    = mutaction.updateArgs.generateNonListUpdateArgs(model)
 
   val scalarListsCreate =
-    DatabaseMutationBuilder.getDbActionsForNewScalarLists(project, pathForCreateBranch, mutaction.createArgs.getScalarListArgs(pathForCreateBranch))
+    DatabaseMutationBuilder.getDbActionsForNewScalarLists(project, pathForCreateBranch, mutaction.createListArgs)
   val scalarListsUpdate =
-    DatabaseMutationBuilder.getDbActionsForNewScalarLists(project, pathForUpdateBranch, mutaction.updateArgs.getScalarListArgs(pathForUpdateBranch))
+    DatabaseMutationBuilder.getDbActionsForNewScalarLists(project, pathForUpdateBranch, mutaction.updateListArgs)
   val createCheck = NestedCreateRelationInterpreter(NestedCreateRelation(project, pathForCreateBranch, false))
 
   override val action = DatabaseMutationBuilder.upsertIfInRelationWith(
     project = project,
     path = path,
     createWhere = createWhere,
-    createArgs = actualCreateArgs,
-    updateArgs = actualUpdateArgs,
+    createArgs = mutaction.createNonListArgs,
+    updateArgs = mutaction.updateNonListArgs,
     create = scalarListsCreate,
     update = scalarListsUpdate,
     relationMutactions = createCheck
@@ -306,8 +302,8 @@ case class UpsertDataItemIfInRelationWithInterpreter(mutaction: UpsertDataItemIf
   override val errorMapper = {
     // https://dev.mysql.com/doc/refman/5.5/en/error-messages-server.html#error_er_dup_entry
     case e: SQLIntegrityConstraintViolationException
-        if e.getErrorCode == 1062 && getFieldOption(mutaction.createArgs.raw.keys.toVector ++ mutaction.updateArgs.raw.keys, e).isDefined =>
-      APIErrors.UniqueConstraintViolation(model.name, getFieldOption(mutaction.createArgs.raw.keys.toVector ++ mutaction.updateArgs.raw.keys, e).get)
+        if e.getErrorCode == 1062 && getFieldOption(mutaction.createNonListArgs.keys ++ mutaction.updateNonListArgs.keys, e).isDefined =>
+      APIErrors.UniqueConstraintViolation(model.name, getFieldOption(mutaction.createNonListArgs.keys ++ mutaction.updateNonListArgs.keys, e).get)
 
     case e: SQLIntegrityConstraintViolationException if e.getErrorCode == 1452 =>
       APIErrors.NodeDoesNotExist("") //todo

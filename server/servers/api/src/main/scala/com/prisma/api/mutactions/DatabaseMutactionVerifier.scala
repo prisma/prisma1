@@ -22,22 +22,22 @@ object DatabaseMutactionVerifierImpl extends DatabaseMutactionVerifier {
   }
 
   def verify(mutaction: CreateDataItem): Option[ClientApiError] = InputValueValidation.validateDataItemInputsGC(mutaction.model, mutaction.nonListArgs)
-  def verify(mutaction: UpdateDataItem): Option[ClientApiError] = InputValueValidation.validateDataItemInputs(mutaction.path.lastModel, mutaction.nonListArgs)
+  def verify(mutaction: UpdateDataItem): Option[ClientApiError] = InputValueValidation.validateDataItemInputsGC(mutaction.path.lastModel, mutaction.nonListArgs)
 
   def verify(mutaction: UpsertDataItem): Iterable[ClientApiError] = {
     val model      = mutaction.path.lastModel
-    val createArgs = mutaction.allArgs.createArgumentsAsCoolArgs.generateNonListCreateArgs(mutaction.createWhere)
-    val updateArgs = mutaction.allArgs.updateArgumentsAsCoolArgs.generateNonListUpdateArgs(model)
+    val createArgs = mutaction.nonListCreateArgs
+    val updateArgs = mutaction.nonListUpdateArgs
     verifyUpsert(model, createArgs, updateArgs)
   }
 
   def verify(mutaction: UpsertDataItemIfInRelationWith): Iterable[ClientApiError] = {
-    verifyUpsert(mutaction.path.lastModel, mutaction.createArgs, mutaction.updateArgs)
+    verifyUpsert(mutaction.path.lastModel, mutaction.createNonListArgs, mutaction.updateNonListArgs)
   }
 
-  def verifyUpsert(model: Model, createArgs: CoolArgs, updateArgs: CoolArgs): Iterable[ClientApiError] = {
-    val createCheck = InputValueValidation.validateDataItemInputs(model, createArgs)
-    val updateCheck = InputValueValidation.validateDataItemInputs(model, updateArgs)
+  def verifyUpsert(model: Model, createArgs: ReallyCoolArgs, updateArgs: ReallyCoolArgs): Iterable[ClientApiError] = {
+    val createCheck = InputValueValidation.validateDataItemInputsGC(model, createArgs)
+    val updateCheck = InputValueValidation.validateDataItemInputsGC(model, updateArgs)
     createCheck ++ updateCheck
   }
 }

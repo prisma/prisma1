@@ -436,6 +436,28 @@ case class GCCreateReallyCoolArgsConverter(model: Model) {
 }
 
 /**
+  * 8. CoolArgs <-> ReallyCoolArgs - This is used to transform from Coolargs for create on a model to typed ReallyCoolArgs
+  */
+case class GCUpdateReallyCoolArgsConverter(model: Model) {
+
+  def toReallyCoolArgs(raw: Map[String, Any]): ReallyCoolArgs = {
+
+    val res = model.scalarNonListFields.map { field =>
+      val converter = GCAnyConverter(field.typeIdentifier, false)
+
+      val gCValue = raw.get(field.name) match {
+        case Some(Some(x)) => converter.toGCValue(x).get
+        case Some(None)    => NullGCValue
+        case Some(x)       => converter.toGCValue(x).get
+        case None          => NullGCValue
+      }
+      field.name -> gCValue
+    }
+    ReallyCoolArgs(RootGCValue(res: _*))
+  }
+}
+
+/**
   * This validates a GCValue against the field it is being used on, for example after an UpdateFieldMutation
   */
 object OtherGCStuff {
