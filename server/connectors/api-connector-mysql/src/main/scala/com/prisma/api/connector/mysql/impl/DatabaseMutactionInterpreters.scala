@@ -250,7 +250,7 @@ case class UpsertDataItemInterpreter(mutaction: UpsertDataItem) extends Database
   val project    = mutaction.project
   val path       = mutaction.path
   val allArgs    = mutaction.allArgs
-  val createArgs = mutaction.allArgs.createArgumentsAsCoolArgs.generateNonListCreateArgs(model, mutaction.createWhere.fieldValueAsString)
+  val createArgs = mutaction.allArgs.createArgumentsAsCoolArgs.generateNonListCreateArgs(mutaction.createWhere)
   val updateArgs = mutaction.allArgs.updateArgumentsAsCoolArgs.generateNonListUpdateArgs(model)
 
   override val action = {
@@ -283,7 +283,7 @@ case class UpsertDataItemIfInRelationWithInterpreter(mutaction: UpsertDataItemIf
   val createWhere         = mutaction.createWhere
   val pathForCreateBranch = path.lastEdgeToNodeEdge(createWhere)
   val pathForUpdateBranch = mutaction.pathForUpdateBranch
-  val actualCreateArgs    = mutaction.createArgs.generateNonListCreateArgs(model, createWhere.fieldValueAsString)
+  val actualCreateArgs    = mutaction.createArgs.generateNonListCreateArgs(createWhere)
   val actualUpdateArgs    = mutaction.updateArgs.generateNonListUpdateArgs(model)
 
   val scalarListsCreate =

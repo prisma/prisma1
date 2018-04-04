@@ -93,19 +93,20 @@ case class CoolArgs(raw: Map[String, Any]) {
   def createArgumentsAsCoolArgs: CoolArgs = CoolArgs(raw("create").asInstanceOf[Map[String, Any]])
   def updateArgumentsAsCoolArgs: CoolArgs = CoolArgs(raw("update").asInstanceOf[Map[String, Any]])
 
-  def generateNonListCreateArgs(model: Model, id: String): CoolArgs = {
+  def generateNonListCreateArgs(where: NodeSelector): CoolArgs = {
+    require(where.isId)
     CoolArgs(
-      model.scalarNonListFields
+      where.model.scalarNonListFields
         .filter(_.name != "id")
         .flatMap { field =>
           raw.get(field.name) match {
-            case Some(None) if field.defaultValue.isDefined && field.isRequired => throw APIErrors.InputInvalid("null", field.name, model.name)
+            case Some(None) if field.defaultValue.isDefined && field.isRequired => throw APIErrors.InputInvalid("null", field.name, where.model.name)
             case Some(value)                                                    => Some((field.name, value))
             case None if field.defaultValue.isDefined                           => Some((field.name, GCValueExtractor.fromGCValue(field.defaultValue.get)))
             case None                                                           => None
           }
         }
-        .toMap + ("id" -> id))
+        .toMap + ("id" -> where.fieldValueAsString))
   }
 
   def generateNonListUpdateArgs(model: Model): CoolArgs = {

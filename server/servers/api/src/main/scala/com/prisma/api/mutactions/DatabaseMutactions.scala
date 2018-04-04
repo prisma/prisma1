@@ -30,27 +30,30 @@ case class DatabaseMutactions(project: Project) {
       Vector(DeleteRelationCheck(project, path), DeleteDataItem(project, path, previousValues))
   }
 
-  def getMutactionsForUpdate(path: Path, args: CoolArgs, previousValues: PrismaNode): Vector[DatabaseMutaction] = report {
-    val updateMutaction = getUpdateMutactions(path, args, previousValues)
+  def getMutactionsForUpdate(path: Path, args: CoolArgs, previousValues: PrismaNode): Vector[DatabaseMutaction] = report { //todo
+    val nonListArgs = args.generateNonListUpdateArgs(path.lastModel)
+    val listArgs    = args.getScalarListArgs(path)
+
+    val updateMutaction = UpdateDataItem(project, path, nonListArgs, listArgs, previousValues)
     val nested          = getMutactionsForNestedMutation(args, path.updatedRoot(args), triggeredFromCreate = false)
 
-    updateMutaction ++ nested
+    updateMutaction +: nested
   }
 
-  def getMutactionsForCreate(model: Model, args: CoolArgs, id: Id): Vector[DatabaseMutaction] = report {
-    val path                        = Path.empty(NodeSelector.forId(model, id))
-    val nonListCreateArgs: CoolArgs = args.generateNonListCreateArgs(model, id)
-    val converter                   = GCCreateReallyCoolArgsConverter(model)
+  def getMutactionsForCreate(path: Path, args: CoolArgs): Vector[DatabaseMutaction] = report { //todo switch to path
+    val nonListCreateArgs: CoolArgs = args.generateNonListCreateArgs(path.root)
+    val converter                   = GCCreateReallyCoolArgsConverter(path.lastModel)
     val reallyCoolNonListArgs       = converter.toReallyCoolArgs(nonListCreateArgs.raw)
     val reallyCoolListArgs          = args.getScalarListArgs(path)
-    val createMutactions            = CreateDataItem(project, path, reallyCoolNonListArgs, reallyCoolListArgs)
-    val nestedMutactions            = getMutactionsForNestedMutation(args, path, triggeredFromCreate = true)
 
-    createMutactions +: nestedMutactions
+    val createMutaction  = CreateDataItem(project, path, reallyCoolNonListArgs, reallyCoolListArgs)
+    val nestedMutactions = getMutactionsForNestedMutation(args, path, triggeredFromCreate = true)
+
+    createMutaction +: nestedMutactions
   }
 
   // we need to rethink this thoroughly, we need to prevent both branches from executing their nested mutations
-  def getMutactionsForUpsert(path: Path, createWhere: NodeSelector, updatedWhere: NodeSelector, allArgs: CoolArgs): Vector[DatabaseMutaction] =
+  def getMutactionsForUpsert(path: Path, createWhere: NodeSelector, updatedWhere: NodeSelector, allArgs: CoolArgs): Vector[DatabaseMutaction] = // Todo
     report {
       val upsertMutaction = UpsertDataItem(project, path, createWhere, updatedWhere, allArgs)
 
@@ -59,17 +62,6 @@ case class DatabaseMutactions(project: Project) {
 
       Vector(upsertMutaction) //++ updateNested ++ createNested
     }
-
-  def getUpdateMutactions(path: Path, args: CoolArgs, previousValues: PrismaNode): Vector[DatabaseMutaction] = {
-    Vector(
-      UpdateDataItem(
-        project = project,
-        path = path,
-        nonListArgs = args.generateNonListUpdateArgs(path.lastModel),
-        listArgs = args.getScalarListArgs(path),
-        previousValues = previousValues
-      ))
-  }
 
   // Todo filter for duplicates here? multiple identical where checks for example?
   def getMutactionsForNestedMutation(args: CoolArgs, path: Path, triggeredFromCreate: Boolean): Vector[DatabaseMutaction] = {
@@ -113,9 +105,9 @@ case class DatabaseMutactions(project: Project) {
                                            field: Field,
                                            triggeredFromCreate: Boolean): Vector[DatabaseMutaction] = {
     nestedMutation.creates.flatMap { create =>
-      val id                          = createCuid()
-      val extendedPath                = path.extend(project, field, create).lastEdgeToNodeEdge(NodeSelector.forId(model, id))
-      val nonListCreateArgs: CoolArgs = create.data.generateNonListCreateArgs(model, id)
+      val createWhere                 = NodeSelector.forId(model, createCuid())
+      val extendedPath                = path.extend(project, field, create).lastEdgeToNodeEdge(createWhere)
+      val nonListCreateArgs: CoolArgs = create.data.generateNonListCreateArgs(createWhere)
       val converter                   = GCCreateReallyCoolArgsConverter(model)
       val reallyCoolArgs              = converter.toReallyCoolArgs(nonListCreateArgs.raw)
       val listArgs                    = create.data.getScalarListArgs(extendedPath)

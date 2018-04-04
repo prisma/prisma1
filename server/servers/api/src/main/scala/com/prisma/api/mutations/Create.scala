@@ -3,9 +3,8 @@ package com.prisma.api.mutations
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
 import com.prisma.api.ApiDependencies
-import com.prisma.api.connector.{CoolArgs, DataResolver, NodeSelector}
+import com.prisma.api.connector.{CoolArgs, DataResolver, NodeSelector, Path}
 import com.prisma.api.mutactions.{DatabaseMutactions, ServerSideSubscriptions, SubscriptionEvents}
-import com.prisma.gc_values.RootGCValue
 import com.prisma.shared.models.IdType.Id
 import com.prisma.shared.models._
 import cool.graph.cuid.Cuid
@@ -35,9 +34,10 @@ case class Create(
     }
     CoolArgs(argsPointer)
   }
+  val path = Path.empty(NodeSelector.forId(model, id))
 
   def prepareMutactions(): Future[PreparedMutactions] = {
-    val createMutactionsResult = DatabaseMutactions(project).getMutactionsForCreate(model, coolArgs, id)
+    val createMutactionsResult = DatabaseMutactions(project).getMutactionsForCreate(path, coolArgs)
     val subscriptionMutactions = SubscriptionEvents.extractFromSqlMutactions(project, mutationId, createMutactionsResult)
     val sssActions             = ServerSideSubscriptions.extractFromMutactions(project, createMutactionsResult, requestId)
 
