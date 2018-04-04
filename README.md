@@ -107,20 +107,31 @@ Prisma is a secure API layer that sits in front of your database. Acting as a pr
 
 ![](https://imgur.com/SdssPgT.png)
 
-## Supported Databases
+## Database Connectors
 
-Prisma can be used for MySQL Databases out of the box. More database connectors will follow:
+[Database connectors](https://github.com/graphcool/prisma/issues/1751) provide the link between Prisma and the underlying database.
+
+Prisma can be used for MySQL Databases out of the box. More database connectors will follow.
+
+### Upcoming Connectors
+
+If you are interested to participate in the preview for one of the following connectors, please reach out in our [Slack](https://slack.graph.cool).
 
 * [PostgreSQL Connector](https://github.com/graphcool/prisma/issues/1641)
-* [MS SQL Connector](https://github.com/graphcool/prisma/issues/1642)
 * [MongoDB Connector](https://github.com/graphcool/prisma/issues/1643)
+* [Elastic Search Connector](https://github.com/graphcool/prisma/issues/1665)
+
+### Further Connectors
+
+We are still collecting use cases and feedback for the API design and feature set of the following connectors:
+
+* [MS SQL Connector](https://github.com/graphcool/prisma/issues/1642)
 * [Oracle Connector](https://github.com/graphcool/prisma/issues/1644)
 * [ArangoDB Connector](https://github.com/graphcool/prisma/issues/1645)
 * [Neo4j Connector](https://github.com/graphcool/prisma/issues/1646)
 * [Druid Connector](https://github.com/graphcool/prisma/issues/1647)
 * [Dgraph Connector](https://github.com/graphcool/prisma/issues/1648)
 * [DynamoDB Connector](https://github.com/graphcool/prisma/issues/1655)
-* [Elastic Search Connector](https://github.com/graphcool/prisma/issues/1665)
 * [Cloud Firestore Connector](https://github.com/graphcool/prisma/issues/1660)
 * [CockroachDB Connector](https://github.com/graphcool/prisma/issues/1705)
 * [Cassandra Connector](https://github.com/graphcool/prisma/issues/1750)
