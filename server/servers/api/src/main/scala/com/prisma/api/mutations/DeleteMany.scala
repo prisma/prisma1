@@ -18,6 +18,7 @@ case class DeleteMany(
 
   val count = dataResolver.countByModel(model, Some(whereFilter))
 
+  //todo this does not support cascading delete behavior at the moment
   def prepareMutactions(): Future[PreparedMutactions] = {
     for {
       _ <- count // make sure that count query has been resolved before proceeding

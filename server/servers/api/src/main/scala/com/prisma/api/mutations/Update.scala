@@ -23,13 +23,7 @@ case class Update(
   implicit val system: ActorSystem             = apiDependencies.system
   implicit val materializer: ActorMaterializer = apiDependencies.materializer
 
-  val coolArgs: CoolArgs = {
-    val argsPointer: Map[String, Any] = args.raw.get("data") match {
-      case Some(value) => value.asInstanceOf[Map[String, Any]]
-      case None        => args.raw
-    }
-    CoolArgs(argsPointer)
-  }
+  val coolArgs: CoolArgs = CoolArgs.fromSchemaArgs(args.raw)
 
   val where = CoolArgs(args.raw).extractNodeSelectorFromWhereField(model)
 

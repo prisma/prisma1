@@ -68,6 +68,8 @@ case class Path(root: NodeSelector, edges: List[Edge]) {
     case x   => Some(x.last.relation)
   }
 
+  def lastCreateWhere_! : NodeSelector = if (edges.isEmpty) root else lastEdge_!.asInstanceOf[NodeEdge].childWhere
+
   def pretty: String =
     s"Where: ${root.model.name}, ${root.field.name}, ${root.fieldValueAsString} |  " + edges
       .map(edge => s"${edge.parent.name}<->${edge.child.name}")

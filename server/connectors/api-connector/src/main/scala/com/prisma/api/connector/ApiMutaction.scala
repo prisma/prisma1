@@ -48,9 +48,8 @@ case class UpdateDataItem(project: Project, path: Path, nonListArgs: ReallyCoolA
 case class NestedUpdateDataItem(project: Project, path: Path, args: ReallyCoolArgs, listArgs: Vector[(String, ListGCValue)]) extends DatabaseMutaction
 case class UpdateDataItems(project: Project, model: Model, updateArgs: CoolArgs, where: DataItemFilterCollection)            extends DatabaseMutaction //todo
 case class UpsertDataItem(project: Project,
-                          path: Path,
-                          createWhere: NodeSelector,
-                          updatedWhere: NodeSelector,
+                          createPath: Path,
+                          updatePath: Path,
                           nonListCreateArgs: ReallyCoolArgs,
                           listCreateArgs: Vector[(String, ListGCValue)],
                           nonListUpdateArgs: ReallyCoolArgs,
@@ -58,13 +57,12 @@ case class UpsertDataItem(project: Project,
     extends DatabaseMutaction //todo
 case class UpsertDataItemIfInRelationWith(
     project: Project,
-    path: Path,
-    createWhere: NodeSelector,
+    createPath: Path,
+    updatePath: Path,
     createListArgs: Vector[(String, ListGCValue)],
     createNonListArgs: ReallyCoolArgs,
     updateListArgs: Vector[(String, ListGCValue)],
-    updateNonListArgs: ReallyCoolArgs,
-    pathForUpdateBranch: Path
+    updateNonListArgs: ReallyCoolArgs
 ) extends DatabaseMutaction //todo
 case class VerifyConnection(project: Project, path: Path)     extends DatabaseMutaction
 case class VerifyWhere(project: Project, where: NodeSelector) extends DatabaseMutaction

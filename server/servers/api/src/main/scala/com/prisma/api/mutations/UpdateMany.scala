@@ -19,14 +19,10 @@ case class UpdateMany(
 
   import apiDependencies.system.dispatcher
 
-  val count = dataResolver.countByModel(model, Some(where))
-  val coolArgs: CoolArgs = {
-    val argsPointer: Map[String, Any] = args.raw.get("data") match {
-      case Some(value) => value.asInstanceOf[Map[String, Any]]
-      case None        => args.raw
-    }
-    CoolArgs(argsPointer)
-  }
+  //todo this does not support scalar lists at the moment
+
+  val count              = dataResolver.countByModel(model, Some(where))
+  val coolArgs: CoolArgs = CoolArgs.fromSchemaArgs(args.raw)
 
   def prepareMutactions(): Future[PreparedMutactions] = {
     for {

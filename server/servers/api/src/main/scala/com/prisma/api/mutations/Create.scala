@@ -27,13 +27,8 @@ case class Create(
   val id: Id            = Cuid.createCuid()
   val requestId: String = "" //                        = dataResolver.requestContext.map(_.requestId).getOrElse("")
 
-  val coolArgs: CoolArgs = {
-    val argsPointer: Map[String, Any] = args.raw.get("data") match {
-      case Some(value) => value.asInstanceOf[Map[String, Any]]
-      case None        => args.raw
-    }
-    CoolArgs(argsPointer)
-  }
+  val coolArgs: CoolArgs = CoolArgs.fromSchemaArgs(args.raw)
+
   val path = Path.empty(NodeSelector.forId(model, id))
 
   def prepareMutactions(): Future[PreparedMutactions] = {

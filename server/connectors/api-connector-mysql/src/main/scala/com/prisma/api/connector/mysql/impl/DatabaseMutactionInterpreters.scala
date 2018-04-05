@@ -75,7 +75,7 @@ case class CreateDataItemInterpreter(mutaction: CreateDataItem) extends Database
     val relayIds      = TableQuery(new ProjectRelayIdTable(_, project.id))
     val relayQuery    = relayIds += ProjectRelayId(id = id, model.stableIdentifier)
     val createNonList = DatabaseMutationBuilder.createReallyCoolDataItem(project.id, model, args)
-    val listActions   = DatabaseMutationBuilder.getDbActionsForNewScalarLists(project, path, mutaction.listArgs)
+    val listActions   = DatabaseMutationBuilder.getDbActionsForScalarLists(project, path, mutaction.listArgs)
     val allActions    = List(createNonList, relayQuery) ++ listActions
 
     DBIO.seq(allActions: _*)
@@ -195,7 +195,7 @@ case class UpdateDataItemInterpreter(mutaction: UpdateDataItem) extends Database
   val path           = mutaction.path
   val nonListArgs    = mutaction.nonListArgs
   val nonListActions = DatabaseMutationBuilder.updateDataItemByPath(project.id, path, nonListArgs)
-  val listActions    = DatabaseMutationBuilder.getDbActionsForNewScalarLists(project, path, mutaction.listArgs)
+  val listActions    = DatabaseMutationBuilder.getDbActionsForScalarLists(project, path, mutaction.listArgs)
 
   val allActions = listActions :+ nonListActions
 
@@ -220,7 +220,7 @@ case class NestedUpdateDataItemInterpreter(mutaction: NestedUpdateDataItem) exte
   val path           = mutaction.path
   val args           = mutaction.args
   val nonListActions = DatabaseMutationBuilder.updateDataItemByPath(project.id, path, args)
-  val listActions    = DatabaseMutationBuilder.getDbActionsForNewScalarLists(project, path, mutaction.listArgs)
+  val listActions    = DatabaseMutationBuilder.getDbActionsForScalarLists(project, path, mutaction.listArgs)
 
   val allActions = listActions :+ nonListActions
 
@@ -244,9 +244,8 @@ case class UpdateDataItemsInterpreter(mutaction: UpdateDataItems) extends Databa
 }
 
 case class UpsertDataItemInterpreter(mutaction: UpsertDataItem) extends DatabaseMutactionInterpreter {
-  val model      = mutaction.path.lastModel
+  val model      = mutaction.updatePath.lastModel
   val project    = mutaction.project
-  val path       = mutaction.path
   val createArgs = mutaction.nonListCreateArgs
   val updateArgs = mutaction.nonListUpdateArgs
 
@@ -257,9 +256,9 @@ case class UpsertDataItemInterpreter(mutaction: UpsertDataItem) extends Database
   }
 
   override val action = {
-    val createActions = DatabaseMutationBuilder.getDbActionsForNewScalarLists(project, updatedRoot(path, createArgs), mutaction.listCreateArgs)
-    val updateActions = DatabaseMutationBuilder.getDbActionsForNewScalarLists(project, updatedRoot(path, updateArgs), mutaction.listUpdateArgs)
-    DatabaseMutationBuilder.upsert(project.id, path, mutaction.createWhere, createArgs, updateArgs, createActions, updateActions)
+    val createActions = DatabaseMutationBuilder.getDbActionsForScalarLists(project, mutaction.createPath, mutaction.listCreateArgs)
+    val updateActions = DatabaseMutationBuilder.getDbActionsForScalarLists(project, mutaction.updatePath, mutaction.listUpdateArgs)
+    DatabaseMutationBuilder.upsert(project.id, mutaction.createPath, mutaction.updatePath, createArgs, updateArgs, createActions, updateActions)
   }
 
   override val errorMapper = {
@@ -275,27 +274,20 @@ case class UpsertDataItemInterpreter(mutaction: UpsertDataItem) extends Database
 }
 
 case class UpsertDataItemIfInRelationWithInterpreter(mutaction: UpsertDataItemIfInRelationWith) extends DatabaseMutactionInterpreter {
-  val project             = mutaction.project
-  val path                = mutaction.path
-  val model               = path.lastModel
-  val createWhere         = mutaction.createWhere
-  val pathForCreateBranch = path.lastEdgeToNodeEdge(createWhere)
-  val pathForUpdateBranch = mutaction.pathForUpdateBranch
+  val project = mutaction.project
 
-  val scalarListsCreate =
-    DatabaseMutationBuilder.getDbActionsForNewScalarLists(project, pathForCreateBranch, mutaction.createListArgs)
-  val scalarListsUpdate =
-    DatabaseMutationBuilder.getDbActionsForNewScalarLists(project, pathForUpdateBranch, mutaction.updateListArgs)
-  val createCheck = NestedCreateRelationInterpreter(NestedCreateRelation(project, pathForCreateBranch, false))
+  val scalarListsCreate = DatabaseMutationBuilder.getDbActionsForScalarLists(project, mutaction.createPath, mutaction.createListArgs)
+  val scalarListsUpdate = DatabaseMutationBuilder.getDbActionsForScalarLists(project, mutaction.updatePath, mutaction.updateListArgs)
+  val createCheck       = NestedCreateRelationInterpreter(NestedCreateRelation(project, mutaction.createPath, false))
 
   override val action = DatabaseMutationBuilder.upsertIfInRelationWith(
     project = project,
-    path = path,
-    createWhere = createWhere,
+    createPath = mutaction.createPath,
+    updatePath = mutaction.updatePath,
     createArgs = mutaction.createNonListArgs,
     updateArgs = mutaction.updateNonListArgs,
-    create = scalarListsCreate,
-    update = scalarListsUpdate,
+    scalarListCreate = scalarListsCreate,
+    scalarListUpdate = scalarListsUpdate,
     relationMutactions = createCheck
   )
 
@@ -303,7 +295,8 @@ case class UpsertDataItemIfInRelationWithInterpreter(mutaction: UpsertDataItemIf
     // https://dev.mysql.com/doc/refman/5.5/en/error-messages-server.html#error_er_dup_entry
     case e: SQLIntegrityConstraintViolationException
         if e.getErrorCode == 1062 && getFieldOption(mutaction.createNonListArgs.keys ++ mutaction.updateNonListArgs.keys, e).isDefined =>
-      APIErrors.UniqueConstraintViolation(model.name, getFieldOption(mutaction.createNonListArgs.keys ++ mutaction.updateNonListArgs.keys, e).get)
+      APIErrors.UniqueConstraintViolation(mutaction.createPath.lastModel.name,
+                                          getFieldOption(mutaction.createNonListArgs.keys ++ mutaction.updateNonListArgs.keys, e).get)
 
     case e: SQLIntegrityConstraintViolationException if e.getErrorCode == 1452 =>
       APIErrors.NodeDoesNotExist("") //todo
@@ -311,8 +304,8 @@ case class UpsertDataItemIfInRelationWithInterpreter(mutaction: UpsertDataItemIf
     case e: SQLIntegrityConstraintViolationException if e.getErrorCode == 1048 =>
       APIErrors.FieldCannotBeNull()
 
-    case e: SQLException if e.getErrorCode == 1242 && createCheck.causedByThisMutaction(pathForCreateBranch, e.getCause.toString) =>
-      throw RequiredRelationWouldBeViolated(project, path.lastRelation_!)
+    case e: SQLException if e.getErrorCode == 1242 && createCheck.causedByThisMutaction(mutaction.createPath, e.getCause.toString) =>
+      throw RequiredRelationWouldBeViolated(project, mutaction.createPath.lastRelation_!)
   }
 }
 
