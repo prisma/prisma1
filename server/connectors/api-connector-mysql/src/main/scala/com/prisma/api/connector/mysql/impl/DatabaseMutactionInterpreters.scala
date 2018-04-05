@@ -286,6 +286,7 @@ case class VerifyWhereInterpreter(mutaction: VerifyWhere) extends DatabaseMutact
 
   private def causedByThisMutaction(cause: String) = {
     val modelString = s"`${where.model.name}` WHEREFAILURETRIGGER WHERE `${where.field.name}`"
+    val parameter   = parameterString(where)
     cause.contains(modelString) && cause.contains(parameterString(where))
   }
 }

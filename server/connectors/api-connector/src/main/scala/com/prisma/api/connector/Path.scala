@@ -83,11 +83,6 @@ case class Path(root: NodeSelector, edges: List[Edge]) {
 
   def lastEdgeToNodeEdge(where: NodeSelector): Path = this.copy(edges = removeLastEdge.edges :+ lastEdge_!.toNodeEdge(where))
 
-  def lastEdgeToNodeEdgeIfNecessary(nested: NestedMutation): Path = nested match {
-    case x: NestedWhere => this.copy(edges = removeLastEdge.edges :+ lastEdge_!.toNodeEdge(x.where))
-    case _              => this
-  }
-
   def relationFieldsNotOnPathOnLastModel = lastModel.relationFields.filter(f => f.relation != lastRelation)
 }
 

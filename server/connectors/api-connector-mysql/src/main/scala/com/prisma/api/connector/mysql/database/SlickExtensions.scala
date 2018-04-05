@@ -9,24 +9,15 @@ import spray.json.DefaultJsonProtocol._
 import spray.json._
 import spray.json.{JsValue => SprayJsValue}
 import play.api.libs.json.{Json, JsValue => PlayJsValue}
+import JdbcExtensions._
 
 object SlickExtensions {
 
   implicit object SetGcValueParam extends SetParameter[GCValue] {
-    val dateTimeFormat = DateTimeFormat.forPattern("yyyy-MM-dd'T'HH:mm:ss.SSS").withZoneUTC()
-
-    override def apply(gcValue: GCValue, pp: PositionedParameters): Unit = gcValue match {
-      case NullGCValue        => pp.setNull(java.sql.Types.NULL)
-      case x: StringGCValue   => pp.setString(x.value)
-      case x: EnumGCValue     => pp.setString(x.value)
-      case x: IdGCValue       => pp.setString(x.value)
-      case x: DateTimeGCValue => pp.setString(dateTimeFormat.print(x.value))
-      case x: IntGCValue      => pp.setInt(x.value)
-      case x: FloatGCValue    => pp.setDouble(x.value)
-      case x: BooleanGCValue  => pp.setBoolean(x.value)
-      case x: JsonGCValue     => pp.setString(x.value.toString)
-      case x: ListGCValue     => sys.error("ListGCValue not implemented here yet.")
-      case x: RootGCValue     => sys.error("RootGCValues not implemented here yet.")
+    override def apply(gcValue: GCValue, pp: PositionedParameters): Unit = {
+      val npos = pp.pos + 1
+      pp.ps.setGcValue(npos, gcValue)
+      pp.pos = npos
     }
   }
 

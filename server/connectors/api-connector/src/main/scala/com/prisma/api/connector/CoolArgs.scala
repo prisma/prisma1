@@ -15,7 +15,6 @@ import scala.collection.immutable.Seq
   *   - listscalarCoolArgs
   *   - relationCoolArgs
   *   - Upsert Create/Delete CoolArgs
-  *
   */
 case class PrismaArgs(raw: GCValue) {
   def hasArgFor(field: Field) = raw.asRoot.map.get(field.name).isDefined
