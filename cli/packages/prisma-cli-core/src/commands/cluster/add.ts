@@ -8,12 +8,46 @@ export default class ClusterAdd extends Command {
   static command = 'add'
   static description = 'Add an existing cluster'
   static group = 'cluster'
+  static flags: Flags = {
+    name: flags.string({
+      char: 'n',
+      description: 'Cluster name',
+    }),
+    endpoint: flags.string({
+      char: 'e',
+      description: 'Cluster endpoint',
+    }),
+    secret: flags.string({
+      char: 's',
+      description: 'Cluster secret',
+    })
+  }
   async run() {
-    const endpoint = await this.endpointSelector()
-    const clusterSecret = await this.clusterSecretSelector()
-    const name = await this.nameSelector()
+    const nameFlag = this.flags['name']
+    const endpointFlag = this.flags['endpoint']
+    const secretFlag = this.flags['secret']
 
-    const cluster = new Cluster(this.out, name, endpoint, clusterSecret)
+    let name
+    let endpoint
+    let secret
+
+    if(nameFlag || endpointFlag || secretFlag){
+      if(!endpointFlag || !nameFlag){
+        throw new Error(
+          `You must define flags with cluster name, endpoint and optional secret.`,
+        )
+      }
+
+      endpoint = endpointFlag
+      secret = secretFlag || ''
+      name = nameFlag
+    } else {
+      endpoint = await this.endpointSelector()
+      secret = await this.secretSelector()
+      name = await this.nameSelector()
+    }
+
+    const cluster = new Cluster(this.out, name, endpoint, secret)
     debug('Saving cluster', cluster)
     this.env.addCluster(cluster)
     this.env.saveGlobalRC()
@@ -50,15 +84,15 @@ export default class ClusterAdd extends Command {
     return endpoint
   }
 
-  private async clusterSecretSelector(): Promise<string> {
+  private async secretSelector(): Promise<string> {
     const question = {
-      name: 'clusterSecret',
+      name: 'secret',
       type: 'input',
       message: 'Please provide the cluster secret',
     }
 
-    const { clusterSecret } = await this.out.prompt(question)
+    const { secret } = await this.out.prompt(question)
 
-    return clusterSecret
+    return secret
   }
 }
