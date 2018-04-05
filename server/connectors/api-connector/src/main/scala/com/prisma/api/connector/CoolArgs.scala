@@ -104,6 +104,61 @@ case class CoolArgs(raw: Map[String, Any]) {
     }
   }
 
+  private def subArgsVector(field: String): Option[Vector[CoolArgs]] = getFieldValuesAs[Map[String, Any]](field) match {
+    case None    => None
+    case Some(x) => Some(x.map(CoolArgs(_)).toVector)
+  }
+
+  private def subArgsOption(name: String): Option[Option[CoolArgs]] = {
+    val fieldValue: Option[Option[Map[String, Any]]] = getFieldValueAs[Map[String, Any]](name)
+    fieldValue match {
+      case None          => None
+      case Some(None)    => Some(None)
+      case Some(Some(x)) => Some(Some(CoolArgs(x)))
+    }
+  }
+
+  /**
+    * The outer option is defined if the field key was specified in the arguments at all.
+    * The inner option is empty if a null value was sent for this field. If the option is defined it contains a non null value
+    * for this field.
+    */
+  private def getFieldValueAs[T](name: String): Option[Option[T]] = {
+    raw.get(name).map { fieldValue =>
+      try {
+        fieldValue.asInstanceOf[Option[T]]
+      } catch {
+        case _: ClassCastException => Option(fieldValue.asInstanceOf[T])
+      }
+    }
+  }
+
+  private def getFieldValuesAs[T](field: String): Option[Seq[T]] = {
+    raw.get(field).map { fieldValue =>
+      try {
+        fieldValue.asInstanceOf[Option[Seq[T]]].getOrElse(Seq.empty)
+      } catch {
+        case _: ClassCastException => fieldValue.asInstanceOf[Seq[T]]
+      }
+    }
+  }
+
+  def extractNodeSelectorFromWhereField(model: Model): NodeSelector = {
+    val whereArgs = raw("where").asInstanceOf[Map[String, Option[Any]]]
+    CoolArgs(whereArgs).extractNodeSelector(model)
+  }
+
+  def extractNodeSelector(model: Model): NodeSelector = {
+    raw.asInstanceOf[Map[String, Option[Any]]].collectFirst {
+      case (fieldName, Some(value)) =>
+        NodeSelector(model,
+                     model.getFieldByName_!(fieldName),
+                     GCAnyConverter(model.getFieldByName_!(fieldName).typeIdentifier, isList = false).toGCValue(value).get)
+    } getOrElse {
+      throw APIErrors.NullProvidedForWhereError(model.name)
+    }
+  }
+
   def createArgumentsAsCoolArgs: CoolArgs = CoolArgs(raw("create").asInstanceOf[Map[String, Any]])
   def updateArgumentsAsCoolArgs: CoolArgs = CoolArgs(raw("update").asInstanceOf[Map[String, Any]])
 
@@ -135,70 +190,6 @@ case class CoolArgs(raw: Map[String, Any]) {
       }
     }
     PrismaArgs(RootGCValue(values: _*))
-  }
-
-  private def subArgsVector(field: String): Option[Vector[CoolArgs]] = getFieldValuesAs[Map[String, Any]](field) match {
-    case None    => None
-    case Some(x) => Some(x.map(CoolArgs(_)).toVector)
-  }
-
-  private def subArgsOption(name: String): Option[Option[CoolArgs]] = {
-    val fieldValue: Option[Option[Map[String, Any]]] = getFieldValueAs[Map[String, Any]](name)
-    fieldValue match {
-      case None          => None
-      case Some(None)    => Some(None)
-      case Some(Some(x)) => Some(Some(CoolArgs(x)))
-    }
-  }
-
-  def hasArgFor(field: Field) = raw.get(field.name).isDefined
-
-  /**
-    * The outer option is defined if the field key was specified in the arguments at all.
-    * The inner option is empty if a null value was sent for this field. If the option is defined it contains a non null value
-    * for this field.
-    */
-  private def getFieldValueAs[T](name: String): Option[Option[T]] = {
-    raw.get(name).map { fieldValue =>
-      try {
-        fieldValue.asInstanceOf[Option[T]]
-      } catch {
-        case _: ClassCastException => Option(fieldValue.asInstanceOf[T])
-      }
-    }
-  }
-
-  private def getFieldValue(field: Field): Any = raw(field.name)
-
-  def getUnwrappedFieldValue(field: Field): Any = getFieldValue(field) match {
-    case Some(x) => x
-    case x       => x
-  }
-
-  private def getFieldValuesAs[T](field: String): Option[Seq[T]] = {
-    raw.get(field).map { fieldValue =>
-      try {
-        fieldValue.asInstanceOf[Option[Seq[T]]].getOrElse(Seq.empty)
-      } catch {
-        case _: ClassCastException => fieldValue.asInstanceOf[Seq[T]]
-      }
-    }
-  }
-
-  def extractNodeSelectorFromWhereField(model: Model): NodeSelector = {
-    val whereArgs = raw("where").asInstanceOf[Map[String, Option[Any]]]
-    CoolArgs(whereArgs).extractNodeSelector(model)
-  }
-
-  def extractNodeSelector(model: Model): NodeSelector = {
-    raw.asInstanceOf[Map[String, Option[Any]]].collectFirst {
-      case (fieldName, Some(value)) =>
-        NodeSelector(model,
-                     model.getFieldByName_!(fieldName),
-                     GCAnyConverter(model.getFieldByName_!(fieldName).typeIdentifier, isList = false).toGCValue(value).get)
-    } getOrElse {
-      throw APIErrors.NullProvidedForWhereError(model.name)
-    }
   }
 
   def getCreateArgs(path: Path) = { //todo rewrite this
