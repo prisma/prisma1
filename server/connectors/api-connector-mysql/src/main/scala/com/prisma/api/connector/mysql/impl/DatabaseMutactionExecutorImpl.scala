@@ -38,14 +38,12 @@ case class DatabaseMutactionExecutorImpl(
     case m: DeleteDataItems                   => DeleteDataItemsInterpreter(m)
     case m: DeleteManyRelationChecks          => DeleteManyRelationChecksInterpreter(m)
     case m: DeleteRelationCheck               => DeleteRelationCheckInterpreter(m)
-    case DisableForeignKeyConstraintChecks    => DisableForeignKeyConstraintChecksInterpreter
-    case EnableForeignKeyConstraintChecks     => EnableForeignKeyConstraintChecksInterpreter
     case m: NestedConnectRelation             => NestedConnectRelationInterpreter(m)
     case m: NestedCreateRelation              => NestedCreateRelationInterpreter(m)
     case m: NestedDisconnectRelation          => NestedDisconnectRelationInterpreter(m)
     case m: SetScalarList                     => SetScalarListInterpreter(m)
     case m: SetScalarListToEmpty              => SetScalarListToEmptyInterpreter(m)
-    case m: TruncateTable                     => TruncateTableInterpreter(m)
+    case m: ResetDataMutaction                => ResetDataInterpreter(m)
     case m: UpdateDataItem                    => UpdateDataItemInterpreter(m)
     case m: NestedUpdateDataItem              => NestedUpdateDataItemInterpreter(m) //todo this can probably go
     case m: UpdateDataItems                   => UpdateDataItemsInterpreter(m)

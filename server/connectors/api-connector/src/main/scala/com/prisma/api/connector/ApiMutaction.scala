@@ -32,9 +32,7 @@ case class DeleteDataItemNested(project: Project, path: Path)                   
 case class DeleteDataItems(project: Project, model: Model, whereFilter: DataItemFilterCollection)          extends DatabaseMutaction
 case class DeleteManyRelationChecks(project: Project, model: Model, whereFilter: DataItemFilterCollection) extends DatabaseMutaction
 case class DeleteRelationCheck(project: Project, path: Path)                                               extends DatabaseMutaction
-object DisableForeignKeyConstraintChecks                                                                   extends DatabaseMutaction //combine
-object EnableForeignKeyConstraintChecks                                                                    extends DatabaseMutaction //combine
-case class TruncateTable(projectId: String, tableName: String)                                             extends DatabaseMutaction //combine
+case class ResetDataMutaction(project: Project, tableNames: Vector[String])                                extends DatabaseMutaction
 case class NestedConnectRelation(project: Project, path: Path, topIsCreate: Boolean)                       extends DatabaseMutaction
 case class NestedCreateRelation(project: Project, path: Path, topIsCreate: Boolean)                        extends DatabaseMutaction
 case class NestedDisconnectRelation(project: Project, path: Path, topIsCreate: Boolean = false)            extends DatabaseMutaction

@@ -237,11 +237,9 @@ object DatabaseMutationBuilder {
   //endregion
 
   //region RESET DATA
-
-  // todo roll this into one query
-  def disableForeignKeyConstraintChecks                   = sqlu"SET FOREIGN_KEY_CHECKS=0"
-  def truncateTable(projectId: String, tableName: String) = sqlu"TRUNCATE TABLE `#$projectId`.`#$tableName`"
-  def enableForeignKeyConstraintChecks                    = sqlu"SET FOREIGN_KEY_CHECKS=1"
+  def disableForeignKeyConstraintChecks               = sqlu"SET FOREIGN_KEY_CHECKS=0"
+  def resetData(projectId: String, tableName: String) = sqlu"TRUNCATE TABLE `#$projectId`.`#$tableName`"
+  def enableForeignKeyConstraintChecks                = sqlu"SET FOREIGN_KEY_CHECKS=1"
 
   //endregion
 
