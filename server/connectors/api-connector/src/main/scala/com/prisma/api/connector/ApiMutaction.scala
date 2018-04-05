@@ -36,12 +36,10 @@ case class ResetDataMutaction(project: Project, tableNames: Vector[String])     
 case class NestedConnectRelation(project: Project, path: Path, topIsCreate: Boolean)                       extends DatabaseMutaction
 case class NestedCreateRelation(project: Project, path: Path, topIsCreate: Boolean)                        extends DatabaseMutaction
 case class NestedDisconnectRelation(project: Project, path: Path, topIsCreate: Boolean = false)            extends DatabaseMutaction
-case class SetScalarList(project: Project, path: Path, field: Field, listGCValue: ListGCValue)             extends DatabaseMutaction
-case class SetScalarListToEmpty(project: Project, path: Path, field: Field)                                extends DatabaseMutaction
 case class UpdateDataItem(project: Project, path: Path, nonListArgs: PrismaArgs, listArgs: Vector[(String, ListGCValue)], previousValues: PrismaNode)
     extends DatabaseMutaction {
   // TODO filter for fields which actually did change
-  val namesOfUpdatedFields: Vector[String] = nonListArgs.raw.asRoot.map.keys.toVector
+  val namesOfUpdatedFields: Vector[String] = nonListArgs.keys
 }
 case class NestedUpdateDataItem(project: Project, path: Path, args: PrismaArgs, listArgs: Vector[(String, ListGCValue)]) extends DatabaseMutaction
 case class UpdateDataItems(project: Project, model: Model, where: DataItemFilterCollection, updateArgs: PrismaArgs, listArgs: Vector[(String, ListGCValue)])

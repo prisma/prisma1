@@ -160,14 +160,6 @@ case class DeleteRelationCheckInterpreter(mutaction: DeleteRelationCheck) extend
   }
 }
 
-case class SetScalarListInterpreter(mutaction: SetScalarList) extends DatabaseMutactionInterpreter {
-  override val action = DatabaseMutationBuilder.setScalarList(mutaction.project.id, mutaction.path, mutaction.field.name, mutaction.listGCValue)
-}
-
-case class SetScalarListToEmptyInterpreter(mutaction: SetScalarListToEmpty) extends DatabaseMutactionInterpreter {
-  override val action = DatabaseMutationBuilder.setScalarListToEmpty(mutaction.project.id, mutaction.path, mutaction.field.name)
-}
-
 case class ResetDataInterpreter(mutaction: ResetDataMutaction) extends DatabaseMutactionInterpreter {
   val disableConstraints = DatabaseMutationBuilder.disableForeignKeyConstraintChecks
   val truncateTables     = DBIOAction.seq(mutaction.tableNames.map(DatabaseMutationBuilder.resetData(mutaction.project.id, _)): _*)

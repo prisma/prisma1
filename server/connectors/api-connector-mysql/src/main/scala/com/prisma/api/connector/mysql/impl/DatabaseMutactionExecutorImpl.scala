@@ -41,8 +41,6 @@ case class DatabaseMutactionExecutorImpl(
     case m: NestedConnectRelation             => NestedConnectRelationInterpreter(m)
     case m: NestedCreateRelation              => NestedCreateRelationInterpreter(m)
     case m: NestedDisconnectRelation          => NestedDisconnectRelationInterpreter(m)
-    case m: SetScalarList                     => SetScalarListInterpreter(m)
-    case m: SetScalarListToEmpty              => SetScalarListToEmptyInterpreter(m)
     case m: ResetDataMutaction                => ResetDataInterpreter(m)
     case m: UpdateDataItem                    => UpdateDataItemInterpreter(m)
     case m: NestedUpdateDataItem              => NestedUpdateDataItemInterpreter(m) //todo this can probably go
