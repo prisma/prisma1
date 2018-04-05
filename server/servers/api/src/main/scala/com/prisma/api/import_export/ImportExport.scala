@@ -1,6 +1,6 @@
 package com.prisma.api.import_export
 
-import com.prisma.api.connector.{DataResolver, ReallyCoolArgs, _}
+import com.prisma.api.connector.{DataResolver, PrismaArgs, _}
 import com.prisma.gc_values.{ListGCValue, RootGCValue}
 import com.prisma.shared.models.{Model, Project, Relation}
 import play.api.libs.json._
@@ -23,7 +23,7 @@ package object ImportExport {
   case class ImportList(identifier: ImportIdentifier, tableName: String, values: ListGCValue)
 
   // TEMP STRUCTURES
-  case class CreateDataItemImport(project: Project, model: Model, args: ReallyCoolArgs)
+  case class CreateDataItemImport(project: Project, model: Model, args: PrismaArgs)
   case class CreateRelationRow(project: Project, relation: Relation, a: String, b: String)
   case class PushScalarListImport(project: Project, tableName: String, id: String, values: Vector[Any])
 

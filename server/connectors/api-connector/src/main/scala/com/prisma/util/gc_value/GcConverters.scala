@@ -1,6 +1,6 @@
 package com.prisma.util.gc_value
 
-import com.prisma.api.connector.{NodeSelector, ReallyCoolArgs}
+import com.prisma.api.connector.{NodeSelector, PrismaArgs}
 import com.prisma.gc_values._
 import com.prisma.shared.models.TypeIdentifier.TypeIdentifier
 import com.prisma.shared.models.{Field, Model, TypeIdentifier}
@@ -388,7 +388,7 @@ case class GCAnyConverter(typeIdentifier: TypeIdentifier, isList: Boolean) exten
   */
 case class GCCreateReallyCoolArgsConverter(model: Model) {
 
-  def toReallyCoolArgs(raw: Map[String, Any]): ReallyCoolArgs = {
+  def toReallyCoolArgs(raw: Map[String, Any]): PrismaArgs = {
 
     val res = model.scalarNonListFields.map { field =>
       val converter = GCAnyConverter(field.typeIdentifier, false)
@@ -401,10 +401,10 @@ case class GCCreateReallyCoolArgsConverter(model: Model) {
       }
       field.name -> gCValue
     }
-    ReallyCoolArgs(RootGCValue(res: _*))
+    PrismaArgs(RootGCValue(res: _*))
   }
 
-  def toReallyCoolArgsFromJson(json: JsValue): ReallyCoolArgs = {
+  def toReallyCoolArgsFromJson(json: JsValue): PrismaArgs = {
 
     def fromSingleJsValue(jsValue: JsValue, field: Field): GCValue = jsValue match {
       case JsString(x)                                                    => StringGCValue(x)
@@ -431,7 +431,7 @@ case class GCCreateReallyCoolArgsConverter(model: Model) {
       }
       field.name -> converted
     }
-    ReallyCoolArgs(RootGCValue(res: _*))
+    PrismaArgs(RootGCValue(res: _*))
   }
 }
 
@@ -440,7 +440,7 @@ case class GCCreateReallyCoolArgsConverter(model: Model) {
   */
 case class GCUpdateReallyCoolArgsConverter(model: Model) {
 
-  def toReallyCoolArgs(raw: Map[String, Any]): ReallyCoolArgs = {
+  def toReallyCoolArgs(raw: Map[String, Any]): PrismaArgs = {
 
     val res = model.scalarNonListFields.map { field =>
       val converter = GCAnyConverter(field.typeIdentifier, false)
@@ -453,7 +453,7 @@ case class GCUpdateReallyCoolArgsConverter(model: Model) {
       }
       field.name -> gCValue
     }
-    ReallyCoolArgs(RootGCValue(res: _*))
+    PrismaArgs(RootGCValue(res: _*))
   }
 }
 

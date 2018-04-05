@@ -21,7 +21,7 @@ object DatabaseMutationBuilder {
 
   // region CREATE
 
-  def createDataItem(projectId: String, path: Path, args: ReallyCoolArgs) = {
+  def createDataItem(projectId: String, path: Path, args: PrismaArgs) = {
 
     SimpleDBIO[Unit] { x =>
       val columns      = path.lastModel.scalarNonListFields.map(_.name)
@@ -65,13 +65,13 @@ object DatabaseMutationBuilder {
 
   //region UPDATE
 
-  def updateDataItems(projectId: String, model: Model, args: ReallyCoolArgs, whereFilter: DataItemFilterCollection) = {
+  def updateDataItems(projectId: String, model: Model, args: PrismaArgs, whereFilter: DataItemFilterCollection) = {
     val updateValues = combineByComma(args.raw.asRoot.map.map { case (k, v) => escapeKey(k) ++ sql" = " ++ gcValueToSQLBuilder(v) })
     val whereSql     = QueryArgumentsHelpers.generateFilterConditions(projectId, model.name, whereFilter)
     (sql"UPDATE `#${projectId}`.`#${model.name}`" ++ sql"SET " ++ updateValues ++ prefixIfNotNone("where", whereSql)).asUpdate
   }
 
-  def updateDataItemByPath(projectId: String, path: Path, updateArgs: ReallyCoolArgs) = {
+  def updateDataItemByPath(projectId: String, path: Path, updateArgs: PrismaArgs) = {
     val updateValues = combineByComma(updateArgs.raw.asRoot.map.map { case (k, v) => escapeKey(k) ++ sql" = " ++ gcValueToSQLBuilder(v) })
     def fromEdge(edge: Edge) = edge match {
       case edge: NodeEdge => sql" `#${path.childSideOfLastEdge}`" ++ idFromWhereEquals(projectId, edge.childWhere) ++ sql" AND "
@@ -101,8 +101,8 @@ object DatabaseMutationBuilder {
   def upsert(projectId: String,
              createPath: Path,
              updatePath: Path,
-             createArgs: ReallyCoolArgs,
-             updateArgs: ReallyCoolArgs,
+             createArgs: PrismaArgs,
+             updateArgs: PrismaArgs,
              create: DBIOAction[Any, NoStream, Effect],
              update: DBIOAction[Any, NoStream, Effect]) = {
 
@@ -119,8 +119,8 @@ object DatabaseMutationBuilder {
       project: Project,
       createPath: Path,
       updatePath: Path,
-      createArgs: ReallyCoolArgs,
-      updateArgs: ReallyCoolArgs,
+      createArgs: PrismaArgs,
+      updateArgs: PrismaArgs,
       scalarListCreate: DBIOAction[Any, NoStream, Effect],
       scalarListUpdate: DBIOAction[Any, NoStream, Effect],
       createCheck: DBIOAction[Any, NoStream, Effect],

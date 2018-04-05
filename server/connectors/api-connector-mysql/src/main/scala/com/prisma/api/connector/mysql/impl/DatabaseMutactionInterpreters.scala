@@ -234,7 +234,7 @@ case class UpsertDataItemInterpreter(mutaction: UpsertDataItem) extends Database
   val createArgs = mutaction.nonListCreateArgs
   val updateArgs = mutaction.nonListUpdateArgs
 
-  def updatedRoot(path: Path, args: ReallyCoolArgs): Path = {
+  def updatedRoot(path: Path, args: PrismaArgs): Path = {
     val whereFieldValue = args.getFieldValue(path.root.field.name)
     val updatedWhere    = whereFieldValue.map(path.root.updateValue).getOrElse(path.root)
     path.copy(root = updatedWhere)

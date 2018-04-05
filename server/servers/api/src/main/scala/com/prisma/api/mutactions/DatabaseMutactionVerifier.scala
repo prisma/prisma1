@@ -35,7 +35,7 @@ object DatabaseMutactionVerifierImpl extends DatabaseMutactionVerifier {
     verifyUpsert(mutaction.createPath.lastModel, mutaction.createNonListArgs, mutaction.updateNonListArgs)
   }
 
-  def verifyUpsert(model: Model, createArgs: ReallyCoolArgs, updateArgs: ReallyCoolArgs): Iterable[ClientApiError] = {
+  def verifyUpsert(model: Model, createArgs: PrismaArgs, updateArgs: PrismaArgs): Iterable[ClientApiError] = {
     val createCheck = InputValueValidation.validateDataItemInputsGC(model, createArgs)
     val updateCheck = InputValueValidation.validateDataItemInputsGC(model, updateArgs)
     createCheck ++ updateCheck

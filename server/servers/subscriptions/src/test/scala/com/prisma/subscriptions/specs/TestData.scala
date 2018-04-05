@@ -21,7 +21,7 @@ object TestData extends AwaitUtils with PlaySprayConversions {
 
     val raw: List[(String, GCValue)] =
       List(("text", StringGCValue(text)), ("id", IdGCValue(id)), ("done", BooleanGCValue(done.getOrElse(true))), ("json", JsonGCValue(json.toPlay())))
-    val args = ReallyCoolArgs(RootGCValue(raw: _*))
+    val args = PrismaArgs(RootGCValue(raw: _*))
 
     val mutaction = CreateDataItem(
       project = project,

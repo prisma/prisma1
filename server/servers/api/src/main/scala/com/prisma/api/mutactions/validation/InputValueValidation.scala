@@ -1,6 +1,6 @@
 package com.prisma.api.mutactions.validation
 
-import com.prisma.api.connector.{CoolArgs, ReallyCoolArgs}
+import com.prisma.api.connector.{CoolArgs, PrismaArgs}
 import com.prisma.api.schema.APIErrors
 import com.prisma.api.schema.APIErrors.ClientApiError
 import com.prisma.gc_values._
@@ -20,7 +20,7 @@ object InputValueValidation {
     }
   }
 
-  def validateDataItemInputsGC(model: Model, args: ReallyCoolArgs): Option[ClientApiError] = {
+  def validateDataItemInputsGC(model: Model, args: PrismaArgs): Option[ClientApiError] = {
     val fieldsWithValues              = InputValueValidation.scalarFieldsWithValuesGC(model, args)
     val fieldsWithIllegallySizedValue = InputValueValidation.checkValueSizeGC(args, fieldsWithValues)
     () match {
@@ -55,7 +55,7 @@ object InputValueValidation {
       .filter(field => !isValueSizeValid(args.getUnwrappedFieldValue(field), field))
   }
 
-  def checkValueSizeGC(args: ReallyCoolArgs, updatedFields: List[Field]): List[Field] = {
+  def checkValueSizeGC(args: PrismaArgs, updatedFields: List[Field]): List[Field] = {
     updatedFields
       .filter(field => args.hasArgFor(field))
       .filter(field => !isValueSizeValidGC(args.getFieldValue(field.name).get))
@@ -110,7 +110,7 @@ object InputValueValidation {
     model.scalarFields.filter(field => args.hasArgFor(field)).filter(_.name != "id")
   }
 
-  def scalarFieldsWithValuesGC(model: Model, args: ReallyCoolArgs): List[Field] = {
+  def scalarFieldsWithValuesGC(model: Model, args: PrismaArgs): List[Field] = {
     model.scalarFields.filter(field => args.raw.asRoot.map.get(field.name).isDefined).filter(_.name != "id")
   }
 }

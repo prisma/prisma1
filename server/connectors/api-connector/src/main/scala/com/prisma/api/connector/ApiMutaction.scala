@@ -13,7 +13,7 @@ sealed trait SideEffectMutaction extends ApiMutaction
 
 case class AddDataItemToManyRelationByPath(project: Project, path: Path)   extends DatabaseMutaction
 case class CascadingDeleteRelationMutactions(project: Project, path: Path) extends DatabaseMutaction
-case class CreateDataItem(project: Project, path: Path, nonListArgs: ReallyCoolArgs, listArgs: Vector[(String, ListGCValue)]) extends DatabaseMutaction {
+case class CreateDataItem(project: Project, path: Path, nonListArgs: PrismaArgs, listArgs: Vector[(String, ListGCValue)]) extends DatabaseMutaction {
   val model = path.lastModel
   val where = path.edges match {
     case x if x.isEmpty => path.root
@@ -24,7 +24,7 @@ case class CreateDataItem(project: Project, path: Path, nonListArgs: ReallyCoolA
 
 case class PushScalarListsImport(project: Project, tableName: String, id: String, args: ListGCValue)      extends DatabaseMutaction
 case class CreateRelationRowsImport(project: Project, relation: Relation, args: Vector[(String, String)]) extends DatabaseMutaction
-case class CreateDataItemsImport(project: Project, model: Model, args: Vector[ReallyCoolArgs])            extends DatabaseMutaction
+case class CreateDataItemsImport(project: Project, model: Model, args: Vector[PrismaArgs])                extends DatabaseMutaction
 case class DeleteDataItem(project: Project, path: Path, previousValues: PrismaNode) extends DatabaseMutaction {
   val id = GCValueExtractor.fromGCValueToString(previousValues.data.map("id"))
 }
@@ -40,20 +40,20 @@ case class NestedCreateRelation(project: Project, path: Path, topIsCreate: Boole
 case class NestedDisconnectRelation(project: Project, path: Path, topIsCreate: Boolean = false)            extends DatabaseMutaction
 case class SetScalarList(project: Project, path: Path, field: Field, listGCValue: ListGCValue)             extends DatabaseMutaction
 case class SetScalarListToEmpty(project: Project, path: Path, field: Field)                                extends DatabaseMutaction
-case class UpdateDataItem(project: Project, path: Path, nonListArgs: ReallyCoolArgs, listArgs: Vector[(String, ListGCValue)], previousValues: PrismaNode)
+case class UpdateDataItem(project: Project, path: Path, nonListArgs: PrismaArgs, listArgs: Vector[(String, ListGCValue)], previousValues: PrismaNode)
     extends DatabaseMutaction {
   // TODO filter for fields which actually did change
   val namesOfUpdatedFields: Vector[String] = nonListArgs.raw.asRoot.map.keys.toVector
 }
-case class NestedUpdateDataItem(project: Project, path: Path, args: ReallyCoolArgs, listArgs: Vector[(String, ListGCValue)]) extends DatabaseMutaction
-case class UpdateDataItems(project: Project, model: Model, where: DataItemFilterCollection, updateArgs: ReallyCoolArgs, listArgs: Vector[(String, ListGCValue)])
+case class NestedUpdateDataItem(project: Project, path: Path, args: PrismaArgs, listArgs: Vector[(String, ListGCValue)]) extends DatabaseMutaction
+case class UpdateDataItems(project: Project, model: Model, where: DataItemFilterCollection, updateArgs: PrismaArgs, listArgs: Vector[(String, ListGCValue)])
     extends DatabaseMutaction
 case class UpsertDataItem(project: Project,
                           createPath: Path,
                           updatePath: Path,
-                          nonListCreateArgs: ReallyCoolArgs,
+                          nonListCreateArgs: PrismaArgs,
                           listCreateArgs: Vector[(String, ListGCValue)],
-                          nonListUpdateArgs: ReallyCoolArgs,
+                          nonListUpdateArgs: PrismaArgs,
                           listUpdateArgs: Vector[(String, ListGCValue)])
     extends DatabaseMutaction
 case class UpsertDataItemIfInRelationWith(
@@ -61,9 +61,9 @@ case class UpsertDataItemIfInRelationWith(
     createPath: Path,
     updatePath: Path,
     createListArgs: Vector[(String, ListGCValue)],
-    createNonListArgs: ReallyCoolArgs,
+    createNonListArgs: PrismaArgs,
     updateListArgs: Vector[(String, ListGCValue)],
-    updateNonListArgs: ReallyCoolArgs
+    updateNonListArgs: PrismaArgs
 ) extends DatabaseMutaction
 case class VerifyConnection(project: Project, path: Path)     extends DatabaseMutaction
 case class VerifyWhere(project: Project, where: NodeSelector) extends DatabaseMutaction

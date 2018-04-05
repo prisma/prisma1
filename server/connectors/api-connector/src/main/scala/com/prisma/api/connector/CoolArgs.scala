@@ -17,7 +17,7 @@ import scala.collection.immutable.Seq
   *   - Upsert Create/Delete CoolArgs
   *
   */
-case class ReallyCoolArgs(raw: GCValue) {
+case class PrismaArgs(raw: GCValue) {
   def hasArgFor(field: Field) = raw.asRoot.map.get(field.name).isDefined
 
   def getFieldValue(name: String): Option[GCValue] = raw.asRoot.map.get(name)
@@ -123,7 +123,7 @@ case class CoolArgs(raw: Map[String, Any]) {
         .toMap + ("id" -> where.fieldValueAsString))
   }
 
-  def generateNonListUpdateGCValues(model: Model): ReallyCoolArgs = {
+  def generateNonListUpdateGCValues(model: Model): PrismaArgs = {
     val values = for {
       field      <- model.scalarNonListFields.toVector
       fieldValue <- getFieldValueAs[Any](field.name)
@@ -134,7 +134,7 @@ case class CoolArgs(raw: Map[String, Any]) {
         case None        => field.name -> NullGCValue
       }
     }
-    ReallyCoolArgs(RootGCValue(values: _*))
+    PrismaArgs(RootGCValue(values: _*))
   }
 
   private def subArgsVector(field: String): Option[Vector[CoolArgs]] = getFieldValuesAs[Map[String, Any]](field) match {
