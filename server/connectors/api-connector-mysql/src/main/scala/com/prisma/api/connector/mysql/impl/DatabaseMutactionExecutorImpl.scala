@@ -43,7 +43,7 @@ case class DatabaseMutactionExecutorImpl(
     case m: NestedDisconnectRelation          => NestedDisconnectRelationInterpreter(m)
     case m: ResetDataMutaction                => ResetDataInterpreter(m)
     case m: UpdateDataItem                    => UpdateDataItemInterpreter(m)
-    case m: NestedUpdateDataItem              => NestedUpdateDataItemInterpreter(m) //todo this can probably go
+    case m: NestedUpdateDataItem              => UpdateDataItemInterpreter(m)
     case m: UpdateDataItems                   => UpdateDataItemsInterpreter(m)
     case m: UpsertDataItem                    => UpsertDataItemInterpreter(m)
     case m: UpsertDataItemIfInRelationWith    => UpsertDataItemIfInRelationWithInterpreter(m)

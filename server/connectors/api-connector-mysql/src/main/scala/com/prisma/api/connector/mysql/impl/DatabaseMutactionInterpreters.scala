@@ -168,44 +168,25 @@ case class ResetDataInterpreter(mutaction: ResetDataMutaction) extends DatabaseM
   override val action = DBIOAction.seq(disableConstraints, truncateTables, enableConstraints)
 }
 
-case class UpdateDataItemInterpreter(mutaction: UpdateDataItem) extends DatabaseMutactionInterpreter {
-  val project       = mutaction.project
-  val path          = mutaction.path
-  val nonListAction = DatabaseMutationBuilder.updateDataItemByPath(project.id, path, mutaction.nonListArgs)
-  val listAction    = DatabaseMutationBuilder.getDbActionForScalarLists(project, path, mutaction.listArgs)
+case class UpdateDataItemInterpreter(mutaction: UpdateWrapper) extends DatabaseMutactionInterpreter {
+  val (project, path, nonListArgs, listArgs) = mutaction match {
+    case x: UpdateDataItem       => (x.project, x.path, x.nonListArgs, x.listArgs)
+    case x: NestedUpdateDataItem => (x.project, x.path, x.nonListArgs, x.listArgs)
+  }
+
+  val nonListAction = DatabaseMutationBuilder.updateDataItemByPath(project.id, path, nonListArgs)
+  val listAction    = DatabaseMutationBuilder.getDbActionForScalarLists(project, path, listArgs)
 
   override val action = DBIO.seq(listAction, nonListAction)
 
   override val errorMapper = {
     // https://dev.mysql.com/doc/refman/5.5/en/error-messages-server.html#error_er_dup_entry
     case e: SQLIntegrityConstraintViolationException
-        if e.getErrorCode == 1062 && GetFieldFromSQLUniqueException.getFieldOption(mutaction.nonListArgs.keys, e).isDefined =>
-      APIErrors.UniqueConstraintViolation(path.lastModel.name, GetFieldFromSQLUniqueException.getFieldOption(mutaction.nonListArgs.keys, e).get)
+        if e.getErrorCode == 1062 && GetFieldFromSQLUniqueException.getFieldOption(nonListArgs.keys, e).isDefined =>
+      APIErrors.UniqueConstraintViolation(path.lastModel.name, GetFieldFromSQLUniqueException.getFieldOption(nonListArgs.keys, e).get)
 
     case e: SQLIntegrityConstraintViolationException if e.getErrorCode == 1452 =>
       APIErrors.NodeNotFoundForWhereError(path.root)
-
-    case e: SQLIntegrityConstraintViolationException if e.getErrorCode == 1048 =>
-      APIErrors.FieldCannotBeNull()
-  }
-}
-
-case class NestedUpdateDataItemInterpreter(mutaction: NestedUpdateDataItem) extends DatabaseMutactionInterpreter { //todo kick this out
-  val project       = mutaction.project
-  val path          = mutaction.path
-  val args          = mutaction.args
-  val nonListAction = DatabaseMutationBuilder.updateDataItemByPath(project.id, path, args)
-  val listAction    = DatabaseMutationBuilder.getDbActionForScalarLists(project, path, mutaction.listArgs)
-
-  override val action = DBIO.seq(listAction, nonListAction)
-
-  override val errorMapper = {
-    // https://dev.mysql.com/doc/refman/5.5/en/error-messages-server.html#error_er_dup_entry
-    case e: SQLIntegrityConstraintViolationException if e.getErrorCode == 1062 && GetFieldFromSQLUniqueException.getFieldOption(args.keys, e).isDefined =>
-      APIErrors.UniqueConstraintViolation(path.lastModel.name, GetFieldFromSQLUniqueException.getFieldOption(args.keys, e).get)
-
-    case e: SQLIntegrityConstraintViolationException if e.getErrorCode == 1452 =>
-      APIErrors.NodeNotFoundForWhereError(path.root) // todo check this
 
     case e: SQLIntegrityConstraintViolationException if e.getErrorCode == 1048 =>
       APIErrors.FieldCannotBeNull()

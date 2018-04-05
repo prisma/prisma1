@@ -37,11 +37,16 @@ case class NestedConnectRelation(project: Project, path: Path, topIsCreate: Bool
 case class NestedCreateRelation(project: Project, path: Path, topIsCreate: Boolean)                        extends DatabaseMutaction
 case class NestedDisconnectRelation(project: Project, path: Path, topIsCreate: Boolean = false)            extends DatabaseMutaction
 case class UpdateDataItem(project: Project, path: Path, nonListArgs: PrismaArgs, listArgs: Vector[(String, ListGCValue)], previousValues: PrismaNode)
-    extends DatabaseMutaction {
+    extends DatabaseMutaction
+    with UpdateWrapper {
   // TODO filter for fields which actually did change
   val namesOfUpdatedFields: Vector[String] = nonListArgs.keys
 }
-case class NestedUpdateDataItem(project: Project, path: Path, args: PrismaArgs, listArgs: Vector[(String, ListGCValue)]) extends DatabaseMutaction
+
+sealed trait UpdateWrapper
+case class NestedUpdateDataItem(project: Project, path: Path, nonListArgs: PrismaArgs, listArgs: Vector[(String, ListGCValue)])
+    extends DatabaseMutaction
+    with UpdateWrapper
 case class UpdateDataItems(project: Project, model: Model, where: DataItemFilterCollection, updateArgs: PrismaArgs, listArgs: Vector[(String, ListGCValue)])
     extends DatabaseMutaction
 case class UpsertDataItem(project: Project,
