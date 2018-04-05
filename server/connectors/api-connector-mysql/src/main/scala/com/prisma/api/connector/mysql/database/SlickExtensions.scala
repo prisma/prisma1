@@ -1,8 +1,6 @@
 package com.prisma.api.connector.mysql.database
 
-import com.prisma.api.connector.mysql.database.SlickExtensions.SetGcValueParam.dateTimeFormat
 import com.prisma.gc_values._
-import com.prisma.util.gc_value.{GCAnyConverter, GCValueExtractor}
 import org.joda.time.DateTime
 import org.joda.time.format.DateTimeFormat
 import slick.jdbc.MySQLProfile.api._
@@ -90,18 +88,21 @@ object SlickExtensions {
     }
   }
 
-  def gcValueToSQLBuilder(value: GCValue): SQLActionBuilder = value match {
-    case NullGCValue        => sql"NULL"
-    case x: StringGCValue   => sql"${x.value}"
-    case x: EnumGCValue     => sql"${x.value}"
-    case x: IdGCValue       => sql"${x.value}"
-    case x: DateTimeGCValue => sql"${dateTimeFormat.print(x.value)}"
-    case x: IntGCValue      => sql"${x.value}"
-    case x: FloatGCValue    => sql"${x.value}"
-    case x: BooleanGCValue  => sql"${x.value}"
-    case x: JsonGCValue     => sql"${x.value.toString}"
-    case x: ListGCValue     => sys.error("ListGCValue not implemented here yet.")
-    case x: RootGCValue     => sys.error("RootGCValues not implemented here yet.")
+  def gcValueToSQLBuilder(value: GCValue): SQLActionBuilder = {
+    val dateTimeFormat = DateTimeFormat.forPattern("yyyy-MM-dd'T'HH:mm:ss.SSS").withZoneUTC()
+    value match {
+      case NullGCValue        => sql"NULL"
+      case x: StringGCValue   => sql"${x.value}"
+      case x: EnumGCValue     => sql"${x.value}"
+      case x: IdGCValue       => sql"${x.value}"
+      case x: DateTimeGCValue => sql"${dateTimeFormat.print(x.value)}"
+      case x: IntGCValue      => sql"${x.value}"
+      case x: FloatGCValue    => sql"${x.value}"
+      case x: BooleanGCValue  => sql"${x.value}"
+      case x: JsonGCValue     => sql"${x.value.toString}"
+      case x: ListGCValue     => sys.error("ListGCValue not implemented here yet.")
+      case x: RootGCValue     => sys.error("RootGCValues not implemented here yet.")
+    }
   }
 
   def listToJsonList(param: List[Any]): String = {

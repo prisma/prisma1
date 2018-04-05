@@ -13,8 +13,8 @@ import play.api.libs.json.Json
 object JdbcExtensions {
 
   def currentTimeStampUTC = {
-    val now        = new Date()
-    val exactlyNow = new DateTime(now).withZone(DateTimeZone.UTC)
+    val today      = new Date()
+    val exactlyNow = new DateTime(today).withZone(DateTimeZone.UTC)
     timeStampUTC(exactlyNow)
   }
 

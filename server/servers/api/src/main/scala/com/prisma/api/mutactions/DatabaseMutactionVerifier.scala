@@ -21,8 +21,8 @@ object DatabaseMutactionVerifierImpl extends DatabaseMutactionVerifier {
     }
   }
 
-  def verify(mutaction: CreateDataItem): Option[ClientApiError] = InputValueValidation.validateDataItemInputsGC(mutaction.model, mutaction.nonListArgs)
-  def verify(mutaction: UpdateDataItem): Option[ClientApiError] = InputValueValidation.validateDataItemInputsGC(mutaction.path.lastModel, mutaction.nonListArgs)
+  def verify(mutaction: CreateDataItem): Option[ClientApiError] = InputValueValidation.validateDataItemInputs(mutaction.model, mutaction.nonListArgs)
+  def verify(mutaction: UpdateDataItem): Option[ClientApiError] = InputValueValidation.validateDataItemInputs(mutaction.path.lastModel, mutaction.nonListArgs)
 
   def verify(mutaction: UpsertDataItem): Iterable[ClientApiError] = {
     val model      = mutaction.createPath.lastModel
@@ -36,8 +36,8 @@ object DatabaseMutactionVerifierImpl extends DatabaseMutactionVerifier {
   }
 
   def verifyUpsert(model: Model, createArgs: PrismaArgs, updateArgs: PrismaArgs): Iterable[ClientApiError] = {
-    val createCheck = InputValueValidation.validateDataItemInputsGC(model, createArgs)
-    val updateCheck = InputValueValidation.validateDataItemInputsGC(model, updateArgs)
+    val createCheck = InputValueValidation.validateDataItemInputs(model, createArgs)
+    val updateCheck = InputValueValidation.validateDataItemInputs(model, updateArgs)
     createCheck ++ updateCheck
   }
 }

@@ -163,9 +163,6 @@ case class GCCreateReallyCoolArgsConverter(model: Model) {
   }
 }
 
-/**
-  * This validates a GCValue against the field it is being used on, for example after an UpdateFieldMutation
-  */
 object OtherGCStuff {
 
   /**
