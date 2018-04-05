@@ -6,10 +6,7 @@ import slick.jdbc.MySQLProfile.api._
 
 import scala.concurrent.{ExecutionContext, Future}
 
-case class DatabaseMutactionExecutorImpl(
-    clientDb: Database
-)(implicit ec: ExecutionContext)
-    extends DatabaseMutactionExecutor {
+case class DatabaseMutactionExecutorImpl(clientDb: Database)(implicit ec: ExecutionContext) extends DatabaseMutactionExecutor {
 
   override def execute(mutactions: Vector[DatabaseMutaction], runTransactionally: Boolean): Future[Unit] = {
     val interpreters        = mutactions.map(interpreterFor)
@@ -21,11 +18,7 @@ case class DatabaseMutactionExecutorImpl(
     }
     clientDb
       .run(singleAction)
-      .recover {
-        case error =>
-          val mappedError = combinedErrorMapper.lift(error).getOrElse(error)
-          throw mappedError
-      }
+      .recover { case error => throw combinedErrorMapper.lift(error).getOrElse(error) }
       .map(_ => ())
   }
 

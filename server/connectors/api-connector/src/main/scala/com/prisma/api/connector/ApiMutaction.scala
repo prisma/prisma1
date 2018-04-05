@@ -39,8 +39,7 @@ case class NestedDisconnectRelation(project: Project, path: Path, topIsCreate: B
 case class UpdateDataItem(project: Project, path: Path, nonListArgs: PrismaArgs, listArgs: Vector[(String, ListGCValue)], previousValues: PrismaNode)
     extends DatabaseMutaction
     with UpdateWrapper {
-  // TODO filter for fields which actually did change
-  val namesOfUpdatedFields: Vector[String] = nonListArgs.keys
+  val namesOfUpdatedFields: Vector[String] = nonListArgs.keys // TODO filter for fields which actually did change
 }
 
 sealed trait UpdateWrapper
@@ -75,8 +74,8 @@ case class ServerSideSubscription(
     model: Model,
     mutationType: ModelMutationType,
     function: ServerSideSubscriptionFunction,
-    nodeId: Id,
+    nodeId: Id, //todo
     requestId: String,
     updatedFields: Option[List[String]] = None,
     previousValues: Option[PrismaNode] = None
-) extends SideEffectMutaction //todo
+) extends SideEffectMutaction
