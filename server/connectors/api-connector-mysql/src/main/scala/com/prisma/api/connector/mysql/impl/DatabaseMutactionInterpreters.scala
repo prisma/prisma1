@@ -94,13 +94,9 @@ case class DeleteDataItemNestedInterpreter(mutaction: DeleteDataItemNested) exte
 }
 
 case class DeleteDataItemsInterpreter(mutaction: DeleteDataItems) extends DatabaseMutactionInterpreter {
-  val project     = mutaction.project
-  val model       = mutaction.model
-  val whereFilter = mutaction.whereFilter
-
   override val action = DBIOAction.seq(
-    DatabaseMutationBuilder.deleteRelayIds(project, model, whereFilter),
-    DatabaseMutationBuilder.deleteDataItems(project, model, whereFilter)
+    DatabaseMutationBuilder.deleteRelayIds(mutaction.project, mutaction.model, mutaction.whereFilter),
+    DatabaseMutationBuilder.deleteDataItems(mutaction.project, mutaction.model, mutaction.whereFilter)
   )
 }
 
@@ -202,12 +198,6 @@ case class UpsertDataItemInterpreter(mutaction: UpsertDataItem) extends Database
   val project    = mutaction.project
   val createArgs = mutaction.nonListCreateArgs
   val updateArgs = mutaction.nonListUpdateArgs
-
-  def updatedRoot(path: Path, args: PrismaArgs): Path = {
-    val whereFieldValue = args.getFieldValue(path.root.field.name)
-    val updatedWhere    = whereFieldValue.map(path.root.updateValue).getOrElse(path.root)
-    path.copy(root = updatedWhere)
-  }
 
   override val action = {
     val createAction = DatabaseMutationBuilder.getDbActionForScalarLists(project, mutaction.createPath, mutaction.listCreateArgs)
