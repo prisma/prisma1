@@ -65,8 +65,8 @@ object DatabaseMutationBuilder {
 
   //region UPDATE
 
-  def updateDataItems(projectId: String, model: Model, args: CoolArgs, whereFilter: DataItemFilterCollection) = {
-    val updateValues = combineByComma(args.raw.map { case (k, v) => escapeKey(k) ++ sql" = " ++ escapeUnsafeParam(v) })
+  def updateDataItems(projectId: String, model: Model, args: ReallyCoolArgs, whereFilter: DataItemFilterCollection) = {
+    val updateValues = combineByComma(args.raw.asRoot.map.map { case (k, v) => escapeKey(k) ++ sql" = " ++ gcValueToSQLBuilder(v) })
     val whereSql     = QueryArgumentsHelpers.generateFilterConditions(projectId, model.name, whereFilter)
     (sql"UPDATE `#${projectId}`.`#${model.name}`" ++ sql"SET " ++ updateValues ++ prefixIfNotNone("where", whereSql)).asUpdate
   }

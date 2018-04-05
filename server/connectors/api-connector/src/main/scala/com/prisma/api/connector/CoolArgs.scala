@@ -49,9 +49,9 @@ case class CoolArgs(raw: Map[String, Any]) {
     }
   }
 
-  def getScalarListArgs(path: Path): Vector[(String, ListGCValue)] = {
+  def getScalarListArgs(model: Model): Vector[(String, ListGCValue)] = {
     val x = for {
-      field       <- path.lastModel.scalarListFields
+      field       <- model.scalarListFields
       listGCValue <- this.subScalarList(field)
     } yield {
       (field.name, listGCValue)
@@ -201,18 +201,18 @@ case class CoolArgs(raw: Map[String, Any]) {
     }
   }
 
-  def getCreateArgs(path: Path) = {
+  def getCreateArgs(path: Path) = { //todo rewrite this
     val nonListCreateArgs = generateNonListCreateArgs(path.lastCreateWhere_!)
     val converter         = GCCreateReallyCoolArgsConverter(path.lastModel)
     val nonListArgs       = converter.toReallyCoolArgs(nonListCreateArgs.raw)
-    val listArgs          = getScalarListArgs(path)
+    val listArgs          = getScalarListArgs(path.lastModel)
 
     (nonListArgs, listArgs)
   }
 
-  def getUpdateArgs(path: Path) = {
-    val nonListArgs = generateNonListUpdateGCValues(path.lastModel)
-    val listArgs    = getScalarListArgs(path)
+  def getUpdateArgs(model: Model) = {
+    val nonListArgs = generateNonListUpdateGCValues(model)
+    val listArgs    = getScalarListArgs(model)
 
     (nonListArgs, listArgs)
   }

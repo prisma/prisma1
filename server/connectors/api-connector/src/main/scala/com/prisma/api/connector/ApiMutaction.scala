@@ -1,7 +1,7 @@
 package com.prisma.api.connector
 
 import com.prisma.api.connector.Types.DataItemFilterCollection
-import com.prisma.gc_values.{ListGCValue, RootGCValue}
+import com.prisma.gc_values.ListGCValue
 import com.prisma.shared.models.IdType.Id
 import com.prisma.shared.models.ModelMutationType.ModelMutationType
 import com.prisma.shared.models._
@@ -46,7 +46,8 @@ case class UpdateDataItem(project: Project, path: Path, nonListArgs: ReallyCoolA
   val namesOfUpdatedFields: Vector[String] = nonListArgs.raw.asRoot.map.keys.toVector
 }
 case class NestedUpdateDataItem(project: Project, path: Path, args: ReallyCoolArgs, listArgs: Vector[(String, ListGCValue)]) extends DatabaseMutaction
-case class UpdateDataItems(project: Project, model: Model, updateArgs: CoolArgs, where: DataItemFilterCollection)            extends DatabaseMutaction //todo
+case class UpdateDataItems(project: Project, model: Model, where: DataItemFilterCollection, updateArgs: ReallyCoolArgs, listArgs: Vector[(String, ListGCValue)])
+    extends DatabaseMutaction
 case class UpsertDataItem(project: Project,
                           createPath: Path,
                           updatePath: Path,
@@ -54,7 +55,7 @@ case class UpsertDataItem(project: Project,
                           listCreateArgs: Vector[(String, ListGCValue)],
                           nonListUpdateArgs: ReallyCoolArgs,
                           listUpdateArgs: Vector[(String, ListGCValue)])
-    extends DatabaseMutaction //todo
+    extends DatabaseMutaction
 case class UpsertDataItemIfInRelationWith(
     project: Project,
     createPath: Path,
@@ -63,7 +64,7 @@ case class UpsertDataItemIfInRelationWith(
     createNonListArgs: ReallyCoolArgs,
     updateListArgs: Vector[(String, ListGCValue)],
     updateNonListArgs: ReallyCoolArgs
-) extends DatabaseMutaction //todo
+) extends DatabaseMutaction
 case class VerifyConnection(project: Project, path: Path)     extends DatabaseMutaction
 case class VerifyWhere(project: Project, where: NodeSelector) extends DatabaseMutaction
 
