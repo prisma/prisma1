@@ -4,7 +4,6 @@ import com.prisma.api.ApiMetrics
 import com.prisma.api.connector._
 import com.prisma.api.schema.APIErrors.RelationIsRequired
 import com.prisma.shared.models.{Field, Model, Project}
-import com.prisma.util.gc_value.GCCreateReallyCoolArgsConverter
 import cool.graph.cuid.Cuid.createCuid
 
 import scala.collection.immutable.Seq

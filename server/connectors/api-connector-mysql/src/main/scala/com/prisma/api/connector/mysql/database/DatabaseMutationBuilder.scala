@@ -6,7 +6,6 @@ import com.prisma.api.connector.Types.DataItemFilterCollection
 import com.prisma.api.connector._
 import com.prisma.api.connector.mysql.database.JdbcExtensions._
 import com.prisma.api.connector.mysql.database.SlickExtensions._
-import com.prisma.api.connector.mysql.impl.NestedCreateRelationInterpreter
 import com.prisma.api.schema.GeneralError
 import com.prisma.gc_values.{GCValue, ListGCValue, NullGCValue}
 import com.prisma.shared.models.TypeIdentifier.TypeIdentifier
@@ -22,14 +21,14 @@ object DatabaseMutationBuilder {
 
   // region CREATE
 
-  def createReallyCoolDataItem(projectId: String, model: Model, args: ReallyCoolArgs) = {
+  def createDataItem(projectId: String, path: Path, args: ReallyCoolArgs) = {
 
     SimpleDBIO[Unit] { x =>
-      val columns      = model.scalarNonListFields.map(_.name)
+      val columns      = path.lastModel.scalarNonListFields.map(_.name)
       val escapedKeys  = columns.map(column => s"`$column`").mkString(",")
       val placeHolders = columns.map(_ => "?").mkString(",")
 
-      val query                         = s"INSERT INTO `$projectId`.`${model.name}` ($escapedKeys) VALUES ($placeHolders)"
+      val query                         = s"INSERT INTO `$projectId`.`${path.lastModel.name}` ($escapedKeys) VALUES ($placeHolders)"
       val itemInsert: PreparedStatement = x.connection.prepareStatement(query)
 
       columns.zipWithIndex.foreach {
@@ -45,7 +44,8 @@ object DatabaseMutationBuilder {
     }
   }
 
-  def createRelayRow(projectId: String, where: NodeSelector): SqlStreamingAction[Vector[Int], Int, Effect]#ResultAction[Int, NoStream, Effect] = {
+  def createRelayRow(projectId: String, path: Path): SqlStreamingAction[Vector[Int], Int, Effect]#ResultAction[Int, NoStream, Effect] = {
+    val where = path.lastCreateWhere_!
     (sql"INSERT INTO `#$projectId`.`_RelayId` (`id`, `stableModelIdentifier`) VALUES (${where.fieldValue}, ${where.model.stableIdentifier})").asUpdate
   }
 
@@ -80,7 +80,9 @@ object DatabaseMutationBuilder {
 
     val baseQuery = sql"UPDATE `#${projectId}`.`#${path.lastModel.name}` SET " ++ updateValues ++ sql"WHERE `id` ="
 
-    if (updateArgs.raw.asRoot.map.nonEmpty) {
+    if (updateArgs.raw.asRoot.map.isEmpty) {
+      DBIOAction.successful(())
+    } else {
       val query = path.lastEdge match {
         case Some(edge) =>
           baseQuery ++ sql"(SELECT `#${path.childSideOfLastEdge}` " ++
@@ -88,10 +90,7 @@ object DatabaseMutationBuilder {
             sql"WHERE" ++ fromEdge(edge) ++ sql"`#${path.parentSideOfLastEdge}` = " ++ pathQueryForLastParent(projectId, path) ++ sql")"
         case None => baseQuery ++ idFromWhere(projectId, path.root)
       }
-
       query.asUpdate
-    } else {
-      DBIOAction.successful(())
     }
   }
 
@@ -104,20 +103,14 @@ object DatabaseMutationBuilder {
              updatePath: Path,
              createArgs: ReallyCoolArgs,
              updateArgs: ReallyCoolArgs,
-             create: Vector[DBIOAction[Any, NoStream, Effect]],
-             update: Vector[DBIOAction[Any, NoStream, Effect]]) = {
+             create: DBIOAction[Any, NoStream, Effect],
+             update: DBIOAction[Any, NoStream, Effect]) = {
 
-    def existsByPath(projectId: String, path: Path) = sql"select exists" ++ DatabaseMutationBuilder.pathQueryForLastChild(projectId, path)
-
-    val q = existsByPath(projectId, updatePath).as[Boolean]
-
+    val q = (sql"select exists" ++ DatabaseMutationBuilder.pathQueryForLastChild(projectId, updatePath)).as[Boolean]
     // insert creates item first, then the list values
-    val qInsert =
-      DBIOAction.seq(createReallyCoolDataItem(projectId, createPath.lastModel, createArgs),
-                     createRelayRow(projectId, createPath.lastCreateWhere_!),
-                     DBIOAction.seq(create: _*))
+    val qInsert = DBIOAction.seq(createDataItem(projectId, createPath, createArgs), createRelayRow(projectId, createPath), create)
     // update first sets the lists, then updates the item
-    val qUpdate = DBIOAction.seq(DBIOAction.seq(update: _*), updateDataItemByPath(projectId, updatePath, updateArgs))
+    val qUpdate = DBIOAction.seq(update, updateDataItemByPath(projectId, updatePath, updateArgs))
 
     ifThenElse(q, qUpdate, qInsert)
   }
@@ -128,9 +121,9 @@ object DatabaseMutationBuilder {
       updatePath: Path,
       createArgs: ReallyCoolArgs,
       updateArgs: ReallyCoolArgs,
-      scalarListCreate: Vector[DBIOAction[Any, NoStream, Effect]],
-      scalarListUpdate: Vector[DBIOAction[Any, NoStream, Effect]],
-      relationMutactions: NestedCreateRelationInterpreter,
+      scalarListCreate: DBIOAction[Any, NoStream, Effect],
+      scalarListUpdate: DBIOAction[Any, NoStream, Effect],
+      createCheck: DBIOAction[Any, NoStream, Effect],
   ) = {
 
     def existsNodeIsInRelationshipWith = {
@@ -146,17 +139,10 @@ object DatabaseMutationBuilder {
     }
 
     val q = existsNodeIsInRelationshipWith.as[Boolean]
-
     //insert creates item first and then the listvalues
-    val qInsert =
-      DBIOAction.seq(
-        createReallyCoolDataItem(project.id, createPath.lastModel, createArgs),
-        createRelayRow(project.id, createPath.lastCreateWhere_!),
-        DBIOAction.seq(relationMutactions.allActions: _*),
-        DBIOAction.seq(scalarListCreate: _*)
-      )
+    val qInsert = DBIOAction.seq(createDataItem(project.id, createPath, createArgs), createRelayRow(project.id, createPath), createCheck, scalarListCreate)
     //update updates list values first and then the item
-    val qUpdate = DBIOAction.seq(DBIOAction.seq(scalarListUpdate: _*), updateDataItemByPath(project.id, updatePath, updateArgs))
+    val qUpdate = DBIOAction.seq(scalarListUpdate, updateDataItemByPath(project.id, updatePath, updateArgs))
 
     ifThenElseNestedUpsert(q, qUpdate, qInsert)
   }
@@ -215,17 +201,18 @@ object DatabaseMutationBuilder {
   //endregion
 
   //region SCALAR LISTS
-  def getDbActionsForScalarLists(project: Project, path: Path, args: Vector[(String, ListGCValue)]) = {
+  def getDbActionForScalarLists(project: Project, path: Path, args: Vector[(String, ListGCValue)]) = {
     if (args.isEmpty) {
-      Vector(DBIOAction.successful(()))
+      DBIOAction.successful(())
     } else {
-      args.map {
+      val actions = args.map {
         case (fieldName, listGCValue) =>
           listGCValue.isEmpty match {
             case true  => setScalarListToEmpty(project.id, path, fieldName)
             case false => setScalarList(project.id, path, fieldName, listGCValue)
           }
       }
+      DBIOAction.seq(actions: _*)
     }
   }
 
