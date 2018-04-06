@@ -21,8 +21,8 @@ import com.prisma.shared.models.{ProjectId, ProjectWithClientId}
 import com.prisma.util.env.EnvUtils
 import com.typesafe.scalalogging.LazyLogging
 import cool.graph.cuid.Cuid.createCuid
-import play.api.libs.json.Json
-import spray.json._
+import de.heikoseeberger.akkahttpplayjson.PlayJsonSupport
+import play.api.libs.json._
 
 import scala.concurrent.Future
 import scala.language.postfixOps
@@ -35,6 +35,7 @@ case class ApiServer(
     system: ActorSystem,
     materializer: ActorMaterializer
 ) extends Server
+    with PlayJsonSupport
     with LazyLogging {
   import system.dispatcher
 
@@ -56,8 +57,8 @@ case class ApiServer(
     } yield {
       val per = EnvUtils.asInt("THROTTLING_RATE_PER_SECONDS").getOrElse(1)
       Throttler[ProjectId](
-        groupBy = pid => pid.name + "_" + pid.stage,
-        amount = throttlingRate.toInt,
+        groupBy = pid => pid.name + "~" + pid.stage,
+        amount = throttlingRate,
         per = per.seconds,
         timeout = 25.seconds,
         maxCallsInFlight = maxCallsInFlights.toInt

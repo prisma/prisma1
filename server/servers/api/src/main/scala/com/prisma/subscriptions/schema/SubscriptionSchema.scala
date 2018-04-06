@@ -1,7 +1,7 @@
 package com.prisma.subscriptions.schema
 
 import com.prisma.api.ApiDependencies
-import com.prisma.api.connector.DataItem
+import com.prisma.api.connector.PrismaNode
 import com.prisma.api.schema._
 import com.prisma.shared.models.ModelMutationType.ModelMutationType
 import com.prisma.shared.models.{Model, ModelMutationType, Project}
@@ -15,16 +15,16 @@ case class SubscriptionSchema(
     project: Project,
     updatedFields: Option[List[String]],
     mutation: ModelMutationType,
-    previousValues: Option[DataItem],
+    previousValues: Option[PrismaNode],
     externalSchema: Boolean = false
 )(implicit dependencies: ApiDependencies) {
   val isDelete: Boolean = mutation == ModelMutationType.Deleted
 
   import dependencies.system
 
-  val schemaBuilder                                                       = SchemaBuilderImpl(project)
-  val modelObjectTypes: Map[String, ObjectType[ApiUserContext, DataItem]] = schemaBuilder.objectTypes
-  val outputMapper                                                        = OutputTypesBuilder(project, modelObjectTypes, dependencies.dataResolver(project))
+  val schemaBuilder    = SchemaBuilderImpl(project)
+  val modelObjectTypes = schemaBuilder.objectTypes
+  val outputMapper     = OutputTypesBuilder(project, modelObjectTypes, dependencies.dataResolver(project))
 
   val subscriptionField: Field[SubscriptionUserContext, Unit] = Field(
     camelCase(model.name),
@@ -39,7 +39,7 @@ case class SubscriptionSchema(
           previousValues,
           isDelete match {
             case false => None
-            case true  => Some(SimpleResolveOutput(DataItem("", Map.empty), Args.empty))
+            case true  => Some(SimpleResolveOutput(PrismaNode.dummy, Args.empty))
           }
         )),
     arguments = List(

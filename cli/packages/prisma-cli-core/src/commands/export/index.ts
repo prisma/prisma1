@@ -18,11 +18,11 @@ export default class Export extends Command {
     }),
   }
   async run() {
-    const exportPath =
+    let exportPath =
       this.flags['path'] || `export-${new Date().toISOString()}.zip`
 
     if (!exportPath.endsWith('.zip')) {
-      throw new Error(`export-path must point to a .zip file`)
+      exportPath += `.zip`
     }
 
     const envFile = this.flags['env-file']

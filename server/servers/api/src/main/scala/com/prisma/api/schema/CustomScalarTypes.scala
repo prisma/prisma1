@@ -1,7 +1,5 @@
 package com.prisma.api.schema
 
-import com.prisma.shared.models.TypeIdentifier.TypeIdentifier
-import com.prisma.shared.models.{Field, TypeIdentifier}
 import org.joda.time.format.DateTimeFormat
 import org.joda.time.{DateTime, DateTimeZone}
 import sangria.ast
@@ -69,74 +67,4 @@ object CustomScalarTypes {
       case _                                    ⇒ Left(JsonCoercionViolation)
     }
   )
-
-  def parseValueFromString(value: String, typeIdentifier: TypeIdentifier, isList: Boolean): Option[Any] = {
-
-    def parseOne(value: String): Option[Any] =
-      try {
-        typeIdentifier match {
-          case TypeIdentifier.String    => Some(value)
-          case TypeIdentifier.Int       => Some(Integer.parseInt(value))
-          case TypeIdentifier.Float     => Some((if (value == null) { "0" } else { value }).toDouble)
-          case TypeIdentifier.Boolean   => Some(value.toBoolean)
-          case TypeIdentifier.DateTime  => Some(new DateTime(value, DateTimeZone.UTC))
-          case TypeIdentifier.GraphQLID => Some(value)
-          case TypeIdentifier.Enum      => Some(value)
-          case TypeIdentifier.Json      => Some(value.parseJson)
-          case _                        => None
-        }
-      } catch {
-        case e: Exception => None
-      }
-
-    if (isList) {
-      var elements: Option[Vector[Option[Any]]] = None
-
-      def trySplitting(function: => Option[Vector[Option[Any]]]) = {
-        elements = try { function } catch { case e: Exception => None }
-      }
-
-      def stripBrackets = {
-        if (!value.startsWith("[") || !value.endsWith("]")) { throw new Exception() }
-        value.stripPrefix("[").stripSuffix("]").split(",").map(_.trim()).to[Vector]
-      }
-
-      def stripQuotes(x: String) = {
-        if (!x.startsWith("\"") || !x.endsWith("\"")) { throw new Exception() }
-        x.stripPrefix("\"").stripSuffix("\"")
-      }
-
-      def dateTimeList = { Some(stripBrackets.map(x => stripQuotes(x)).map(e => parseOne(e))) }
-      def stringList   = { Some(stripBrackets.map(x => stripQuotes(x)).map(e => parseOne(e))) }
-      def enumList     = { Some(stripBrackets.map(e => parseOne(e))) }
-      def otherList    = { Some(value.parseJson.asInstanceOf[JsArray].elements.map(e => parseOne(e.toString()))) }
-
-      if (value.replace(" ", "") == "[]") {
-        return Some(value)
-      } else {
-        typeIdentifier match {
-          case TypeIdentifier.DateTime => trySplitting(dateTimeList)
-          case TypeIdentifier.String   => trySplitting(stringList)
-          case TypeIdentifier.Enum     => trySplitting(enumList)
-          case _                       => trySplitting(otherList)
-        }
-      }
-
-      if (elements.isEmpty || elements.get.exists(_.isEmpty)) {
-        None
-      } else {
-        Some(elements.map(_ collect { case Some(x) => x }))
-      }
-    } else {
-      parseOne(value)
-    }
-  }
-
-  def isValidScalarType(value: String, field: Field) = parseValueFromString(value, field.typeIdentifier, field.isList).isDefined
-
-  def parseTypeIdentifier(typeIdentifier: String) =
-    TypeIdentifier.values.map(_.toString).contains(typeIdentifier) match {
-      case true  => TypeIdentifier.withName(typeIdentifier)
-      case false => TypeIdentifier.Relation
-    }
 }

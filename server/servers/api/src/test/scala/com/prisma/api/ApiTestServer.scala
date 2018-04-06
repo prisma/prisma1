@@ -106,17 +106,19 @@ case class ApiTestServer()(implicit dependencies: ApiDependencies) extends Spray
       requestId: String,
       graphcoolHeader: Option[String]
   ): JsValue = {
+    import com.prisma.util.json.PlaySprayConversions._
+
     val queryAst = QueryParser.parse(query).get
 
     lazy val renderedSchema = SchemaRenderer.renderSchema(schema)
     if (printSchema) println(renderedSchema)
     if (writeSchemaToFile) writeSchemaIntoFile(renderedSchema)
 
-    val graphqlQuery = GraphQlQuery(query = queryAst, operationName = None, variables = variables, queryString = query)
+    val graphqlQuery = GraphQlQuery(query = queryAst, operationName = None, variables = variables.toPlay(), queryString = query)
     val graphQlRequest = GraphQlRequest(
       id = requestId,
       ip = "test.ip",
-      json = JsObject.empty,
+      json = JsObject.empty.toPlay(),
       sourceHeader = graphcoolHeader,
       project = project,
       schema = schema,

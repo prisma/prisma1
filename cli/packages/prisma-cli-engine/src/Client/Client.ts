@@ -130,7 +130,6 @@ export class Client {
     stageName?: string,
   ) {
     const token = await cluster.getToken(serviceName, workspaceSlug, stageName)
-    debug(`Token`, token)
     this.clusterClient = new GraphQLClient(cluster.getDeployEndpoint(), {
       headers: {
         Authorization: `Bearer ${token}`,
@@ -219,7 +218,7 @@ To reset the key pair, please run ${chalk.bold.green('prisma local start')}
     token?: string,
     workspaceSlug?: string,
   ): Promise<any> {
-    debug('introspecting', serviceName, stageName, token)
+    debug('introspecting', serviceName, stageName)
     const headers: any = {}
     if (token) {
       headers.Authorization = `Bearer ${token}`
@@ -244,7 +243,7 @@ To reset the key pair, please run ${chalk.bold.green('prisma local start')}
     token?: string,
     workspaceSlug?: string,
   ): Promise<any> {
-    debug('executing query', serviceName, stageName, query, token)
+    debug('executing query', serviceName, stageName, query)
     const headers: any = {}
     if (token) {
       headers.Authorization = `Bearer ${token}`
@@ -426,7 +425,6 @@ To reset the key pair, please run ${chalk.bold.green('prisma local start')}
     }
 
     this.env.saveGlobalRC()
-    debug(`Saved token ${token}`)
     await this.env.getClusters()
 
     this.out.action.stop()

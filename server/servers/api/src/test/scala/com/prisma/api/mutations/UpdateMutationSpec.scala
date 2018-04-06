@@ -155,7 +155,7 @@ class UpdateMutationSpec extends FlatSpec with Matchers with ApiBaseSpec {
     )
   }
 
-  "The Update Mutation" should "be able to set an optional value to null missing values unchanged" in {
+  "The Update Mutation" should "be able to set an optional value to null and leave missing values unchanged" in {
     val project = SchemaDsl() { schema =>
       schema.model("Todo").field("title", _.String).field("text", _.String).field("alias", _.String, isUnique = true)
     }

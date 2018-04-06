@@ -3,6 +3,7 @@ package com.prisma.api.resolver
 import com.prisma.api.connector.QueryArguments
 import com.prisma.api.resolver.DeferredTypes._
 import com.prisma.shared.models.IdType.Id
+import com.prisma.shared.models.RelationSide.RelationSide
 import com.prisma.shared.models.{Field, Model}
 import sangria.execution.deferred.Deferred
 
@@ -32,14 +33,13 @@ object DeferredUtils {
   }
 
   def groupRelatedDeferred[T <: RelationDeferred[Any]](
-      relatedDeferral: Vector[OrderedDeferred[T]]): Map[(Id, String, Option[QueryArguments]), Vector[OrderedDeferred[T]]] = {
+      relatedDeferral: Vector[OrderedDeferred[T]]): Map[(String, RelationSide, Option[QueryArguments]), Vector[OrderedDeferred[T]]] = {
     relatedDeferral.groupBy(ordered =>
-      (ordered.deferred.relationField.relation.get.id, ordered.deferred.relationField.relationSide.get.toString, ordered.deferred.args))
+      (ordered.deferred.relationField.relation.get.relationTableName, ordered.deferred.relationField.relationSide.get, ordered.deferred.args))
   }
 
   def checkSimilarityOfModelDeferredsAndThrow(deferreds: Vector[ModelDeferred[Any]]) = {
     val headDeferred = deferreds.head
-    val model        = headDeferred.model
     val args         = headDeferred.args
 
     val countSimilarDeferreds = deferreds.count { deferred =>
@@ -74,7 +74,7 @@ object DeferredUtils {
     val headDeferred = deferreds.head
 
     val countSimilarDeferreds = deferreds.count { d =>
-      d.key == headDeferred.key &&
+      d.where.field == headDeferred.where.field &&
       d.model == headDeferred.model
     }
 
@@ -92,19 +92,6 @@ object DeferredUtils {
 
     if (countSimilarDeferreds != deferreds.length) {
       throw new Error("Passed deferreds should not have different field or model.")
-    }
-  }
-
-  def checkSimilarityOfPermissionDeferredsAndThrow(deferreds: Vector[CheckPermissionDeferred]) = {
-    val headDeferred = deferreds.head
-
-    val countSimilarDeferreds = deferreds.count { d =>
-      headDeferred.nodeId == d.nodeId &&
-      headDeferred.model == headDeferred.model
-    }
-
-    if (countSimilarDeferreds != deferreds.length) {
-      throw new Error("Passed deferreds should not have dirrefent nodeIds, models or userIds.")
     }
   }
 }

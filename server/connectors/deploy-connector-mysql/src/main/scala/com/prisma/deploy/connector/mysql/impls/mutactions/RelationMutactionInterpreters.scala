@@ -10,20 +10,20 @@ object CreateRelationInterpreter extends SqlMutactionInterpreter[CreateRelationT
 
     DatabaseMutationBuilder.createRelationTable(
       projectId = mutaction.projectId,
-      tableName = mutaction.relation.id,
+      tableName = mutaction.relation.relationTableName,
       aTableName = aModel.name,
       bTableName = bModel.name
     )
   }
 
   override def rollback(mutaction: CreateRelationTable) = {
-    DatabaseMutationBuilder.dropTable(projectId = mutaction.projectId, tableName = mutaction.relation.id)
+    DatabaseMutationBuilder.dropTable(projectId = mutaction.projectId, tableName = mutaction.relation.relationTableName)
   }
 }
 
 object DeleteRelationInterpreter extends SqlMutactionInterpreter[DeleteRelationTable] {
   override def execute(mutaction: DeleteRelationTable) = {
-    DatabaseMutationBuilder.dropTable(projectId = mutaction.projectId, tableName = mutaction.relation.id)
+    DatabaseMutationBuilder.dropTable(projectId = mutaction.projectId, tableName = mutaction.relation.relationTableName)
   }
 
   override def rollback(mutaction: DeleteRelationTable) = {

@@ -1,22 +1,31 @@
 package com.prisma.api.import_export
 
-import com.prisma.api.connector.{DataItem, DataResolver}
+import com.prisma.api.connector.{DataResolver, PrismaArgs}
+import com.prisma.gc_values.{ListGCValue, RootGCValue}
 import com.prisma.shared.models.{Model, Project, Relation}
-import spray.json.{DefaultJsonProtocol, JsArray, JsBoolean, JsFalse, JsNull, JsNumber, JsObject, JsString, JsTrue, JsValue, JsonFormat, RootJsonFormat}
+import play.api.libs.json._
 
 package object ImportExport {
 
-  case class ExportRequest(fileType: String, cursor: Cursor)      //{"fileType":"nodes","cursor":{"table":INT,"row":INT,"field":INT,"array":INT}} // TODO make CLI agnostic to this, get rid of field and array columns
-  case class Cursor(table: Int, row: Int, field: Int, array: Int) //{"table":INT,"row":INT,"field":INT,"array":INT}
+  // EXPORT
+  case class ExportRequest(fileType: String, cursor: Cursor) //{"fileType":"nodes","cursor":{"table":INT,"row":INT,"field":INT,"array":INT}} // TODO make CLI agnostic to this, get rid of field and array columns
+  case class Cursor(table: Int, row: Int)                    //{"table":INT,"row":INT}
   case class ResultFormat(out: JsonBundle, cursor: Cursor, isFull: Boolean)
+  case class JsonBundle(jsonElements: Vector[JsValue], size: Int)
+  case class ExportRelationSide(_typeName: String, id: String, fieldName: Option[String])
+
+  // IMPORT
   case class ImportBundle(valueType: String, values: JsArray)
   case class ImportIdentifier(typeName: String, id: String)
   case class ImportRelationSide(identifier: ImportIdentifier, fieldName: Option[String])
-  case class ImportNode(identifier: ImportIdentifier, values: Map[String, Any])
+  case class ImportNode(id: String, model: Model, values: RootGCValue)
   case class ImportRelation(left: ImportRelationSide, right: ImportRelationSide)
-  case class ImportList(identifier: ImportIdentifier, values: Map[String, Vector[Any]])
-  case class JsonBundle(jsonElements: Vector[JsValue], size: Int)
-  case class ExportRelationSide(_typeName: String, id: String, fieldName: Option[String])
+  case class ImportList(identifier: ImportIdentifier, tableName: String, values: ListGCValue)
+
+  // TEMP STRUCTURES
+  case class CreateDataItemImport(project: Project, model: Model, args: PrismaArgs)
+  case class CreateRelationRow(project: Project, relation: Relation, a: String, b: String)
+  case class PushScalarListImport(project: Project, tableName: String, id: String, values: Vector[Any])
 
   sealed trait ExportInfo {
     val cursor: Cursor
@@ -45,6 +54,9 @@ package object ImportExport {
     lazy val currentModel: String = listFieldTables.find(_._3 == cursor.table).get._1
     lazy val currentField: String = listFieldTables.find(_._3 == cursor.table).get._2
     lazy val currentTable: String = s"${currentModel}_$currentField"
+
+    lazy val currentModelModel = dataResolver.project.schema.getModelByName_!(currentModel)
+    lazy val currentFieldModel = currentModelModel.getFieldByName_!(currentField)
   }
 
   case class RelationInfo(dataResolver: DataResolver, relations: List[(RelationData, Int)], cursor: Cursor) extends ExportInfo {
@@ -59,7 +71,7 @@ package object ImportExport {
 
   def toRelationData(r: Relation, project: Project): RelationData = {
     RelationData(
-      r.id,
+      r.relationTableName,
       r.getModelB_!(project.schema).name,
       r.getModelBField(project.schema).map(_.name),
       r.getModelA_!(project.schema).name,
@@ -67,52 +79,26 @@ package object ImportExport {
     )
   }
 
-  case class DataItemsPage(items: Seq[DataItem], hasMore: Boolean) { def itemCount: Int = items.length }
+  case class PrismaNodesPage(items: Seq[JsValue], hasMore: Boolean) { def itemCount: Int = items.length }
 
-  object MyJsonProtocol extends DefaultJsonProtocol {
-
-    implicit object AnyJsonFormat extends JsonFormat[Any] {
-      def write(x: Any): JsValue = x match {
-        case m: Map[_, _]   => JsObject(m.asInstanceOf[Map[String, Any]].mapValues(write))
-        case l: List[Any]   => JsArray(l.map(write).toVector)
-        case l: Vector[Any] => JsArray(l.map(write))
-        case l: Seq[Any]    => JsArray(l.map(write).toVector)
-        case n: Int         => JsNumber(n)
-        case n: Long        => JsNumber(n)
-        case n: BigDecimal  => JsNumber(n)
-        case n: Double      => JsNumber(n)
-        case s: String      => JsString(s)
-        case true           => JsTrue
-        case false          => JsFalse
-        case v: JsValue     => v
-        case null           => JsNull
-        case r              => JsString(r.toString)
-      }
-
-      def read(x: JsValue): Any = {
-        x match {
-          case l: JsArray   => l.elements.map(read).toList
-          case m: JsObject  => m.fields.mapValues(read)
-          case s: JsString  => s.value
-          case n: JsNumber  => n.value
-          case b: JsBoolean => b.value
-          case JsNull       => null
-          case _            => sys.error("implement all scalar types!")
-        }
+  object MyJsonProtocol {
+    val cursorReads = Json.reads[Cursor]
+    val cursorWrites = new Writes[Cursor] {
+      override def writes(o: Cursor): JsValue = {
+        val dummyValue = if (o.table == -1 && o.row == -1) -1 else 0
+        Json.obj("table" -> o.table, "row" -> o.row, "field" -> dummyValue, "array" -> dummyValue)
       }
     }
+    implicit val cursorFormat       = Format(cursorReads, cursorWrites)
+    implicit val jsonBundle         = Json.format[JsonBundle]
+    implicit val importBundle       = Json.format[ImportBundle]
+    implicit val importIdentifier   = Json.format[ImportIdentifier]
+    implicit val importRelationSide = Json.format[ImportRelationSide]
+    implicit val importRelation     = Json.format[ImportRelation]
+    implicit val exportRequest      = Json.format[ExportRequest]
+    implicit val resultFormat       = Json.format[ResultFormat]
+    implicit val exportRelationSide = Json.format[ExportRelationSide]
 
-    implicit val jsonBundle: RootJsonFormat[JsonBundle]                 = jsonFormat2(JsonBundle)
-    implicit val importBundle: RootJsonFormat[ImportBundle]             = jsonFormat2(ImportBundle)
-    implicit val importIdentifier: RootJsonFormat[ImportIdentifier]     = jsonFormat2(ImportIdentifier)
-    implicit val importRelationSide: RootJsonFormat[ImportRelationSide] = jsonFormat2(ImportRelationSide)
-    implicit val importNodeValue: RootJsonFormat[ImportNode]            = jsonFormat2(ImportNode)
-    implicit val importListValue: RootJsonFormat[ImportList]            = jsonFormat2(ImportList)
-    implicit val importRelation: RootJsonFormat[ImportRelation]         = jsonFormat2(ImportRelation)
-    implicit val cursor: RootJsonFormat[Cursor]                         = jsonFormat4(Cursor)
-    implicit val exportRequest: RootJsonFormat[ExportRequest]           = jsonFormat2(ExportRequest)
-    implicit val resultFormat: RootJsonFormat[ResultFormat]             = jsonFormat3(ResultFormat)
-    implicit val exportRelationSide: RootJsonFormat[ExportRelationSide] = jsonFormat3(ExportRelationSide)
   }
 
 }

@@ -19,7 +19,7 @@ When hosting your GraphQL server (e.g. with Zeit Now, AWS Lambda or some other h
 
 ## Deployment with Apex Up
 
-[Apex Up](https://up.docs.apex.sh) allows you to deploy traditional web servers to AWS Lambda.
+[Apex Up](https://up.docs.apex.sh) allows you to deploy traditional web servers to AWS Lambda. You can find a comprehensive tutorial explaining how to deploy and host your Prisma-based GraphQL server with Up [here](https://blog.graph.cool/deploying-graphql-servers-with-apex-up-522f2b75a2ac).
 
 ## Deployment with the Serverless Framework
 

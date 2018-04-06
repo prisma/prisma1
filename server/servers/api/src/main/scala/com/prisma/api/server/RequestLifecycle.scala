@@ -7,10 +7,9 @@ import com.prisma.shared.models.Project
 import com.prisma.utils.`try`.TryUtil
 import sangria.parser.QueryParser
 import sangria.schema.Schema
-import spray.json.JsonParser.ParsingException
-import spray.json.{JsArray, JsObject, JsValue}
+import play.api.libs.json._
 
-import scala.util.{Failure, Try}
+import scala.util.{Failure, Success, Try}
 
 trait RawRequestAttributes {
   val id: String
@@ -33,7 +32,7 @@ case class RawRequest(
   ): Try[GraphQlRequest] = {
     val queries: Try[Vector[GraphQlQuery]] = TryUtil.sequence {
       json match {
-        case JsArray(requests) => requests.map(GraphQlQuery.tryFromJson)
+        case JsArray(requests) => requests.map(GraphQlQuery.tryFromJson).toVector
         case request: JsObject => Vector(GraphQlQuery.tryFromJson(request))
         case malformed         => Vector(Failure(InputCompletelyMalformed(malformed.toString)))
       }
@@ -87,7 +86,6 @@ case class GraphQlQuery(
 
 object GraphQlQuery {
   def tryFromJson(requestJson: JsValue): Try[GraphQlQuery] = {
-    import spray.json._
     val JsObject(fields) = requestJson
     val query = fields.get("query") match {
       case Some(JsString(query)) => query
@@ -99,15 +97,16 @@ object GraphQlQuery {
     }
 
     val variables = fields.get("variables") match {
-      case Some(obj: JsObject) => obj
+      case Some(obj: JsObject) =>
+        obj
       case Some(JsString(s)) if s.trim.nonEmpty =>
-        (try { s.parseJson } catch {
-          case e: ParsingException => throw VariablesParsingError(s)
-        }) match {
-          case json: JsObject => json
-          case _              => JsObject.empty
+        Try { Json.parse(s) } match {
+          case Success(json: JsObject) => json
+          case Success(_)              => JsObject.empty
+          case Failure(_)              => throw VariablesParsingError(s)
         }
-      case _ => JsObject.empty
+      case _ =>
+        JsObject.empty
     }
 
     QueryParser.parse(query).map { queryAst =>
