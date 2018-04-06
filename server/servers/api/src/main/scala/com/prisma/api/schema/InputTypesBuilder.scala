@@ -10,8 +10,6 @@ trait InputTypesBuilder {
   def inputObjectTypeForUpdate(model: Model): Option[InputObjectType[Any]]
 
   def inputObjectTypeForWhereUnique(model: Model): Option[InputObjectType[Any]]
-
-  def inputObjectTypeForWhere(model: Model): InputObjectType[Any]
 }
 
 case class CachedInputTypesBuilder(project: Project) extends UncachedInputTypesBuilder(project) {
@@ -52,10 +50,6 @@ abstract class UncachedInputTypesBuilder(project: Project) extends InputTypesBui
 
   override def inputObjectTypeForWhereUnique(model: Model): Option[InputObjectType[Any]] = {
     computeInputObjectTypeForWhereUnique(model)
-  }
-
-  override def inputObjectTypeForWhere(model: Model): InputObjectType[Any] = {
-    computeInputObjectTypeForWhere(model)
   }
 
   protected def computeInputObjectTypeForCreate(model: Model, parentField: Option[Field]): Option[InputObjectType[Any]] = {

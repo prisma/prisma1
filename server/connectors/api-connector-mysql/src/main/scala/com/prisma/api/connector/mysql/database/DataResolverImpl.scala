@@ -40,7 +40,7 @@ case class DataResolverImpl(project: Project, readonlyClientDatabase: MySQLProfi
   }
 
   override def resolveByModel(model: Model, args: Option[QueryArguments] = None): Future[ResolverResult[PrismaNode]] = {
-    val query = DatabaseQueryBuilder.selectAllFromTableNew(project.id, model, args)
+    val query = DatabaseQueryBuilder.selectAllFromTable(project.id, model, args)
     performWithTiming("loadModelRowsForExport", readonlyClientDatabase.run(query))
   }
 

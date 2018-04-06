@@ -65,10 +65,9 @@ object DatabaseMutationBuilder {
 
   //region UPDATE
 
-  def updateDataItems(projectId: String, model: Model, args: PrismaArgs, whereFilter: DataItemFilterCollection) = {
+  def updateDataItems(projectId: String, model: Model, args: PrismaArgs, whereFilter: Option[DataItemFilterCollection]) = {
     val updateValues = combineByComma(args.raw.asRoot.map.map { case (k, v) => escapeKey(k) ++ sql" = " ++ gcValueToSQLBuilder(v) })
-    val whereSql     = QueryArgumentsHelpers.generateFilterConditions(projectId, model.name, whereFilter)
-    (sql"UPDATE `#${projectId}`.`#${model.name}`" ++ sql"SET " ++ updateValues ++ prefixIfNotNone("where", whereSql)).asUpdate
+    (sql"UPDATE `#${projectId}`.`#${model.name}`" ++ sql"SET " ++ updateValues ++ whereFilterAppendix(projectId, model, whereFilter)).asUpdate
   }
 
   def updateDataItemByPath(projectId: String, path: Path, updateArgs: PrismaArgs) = {
@@ -153,18 +152,15 @@ object DatabaseMutationBuilder {
 
   //region DELETE
 
-  def deleteDataItems(project: Project, model: Model, whereFilter: DataItemFilterCollection) = {
-    val whereSql = QueryArgumentsHelpers.generateFilterConditions(project.id, model.name, whereFilter)
-    (sql"DELETE FROM `#${project.id}`.`#${model.name}`" ++ prefixIfNotNone("where", whereSql)).asUpdate
+  def deleteDataItems(project: Project, model: Model, whereFilter: Option[DataItemFilterCollection]) = {
+    (sql"DELETE FROM `#${project.id}`.`#${model.name}`" ++ whereFilterAppendix(project.id, model, whereFilter)).asUpdate
   }
 
-  def deleteRelayIds(project: Project, model: Model, whereFilter: DataItemFilterCollection) = {
-    val whereSql = QueryArgumentsHelpers.generateFilterConditions(project.id, model.name, whereFilter)
+  def deleteRelayIds(project: Project, model: Model, whereFilter: Option[DataItemFilterCollection]) = {
     (sql"DELETE FROM `#${project.id}`.`_RelayId`" ++
       (sql"WHERE `id` IN (" ++
         sql"SELECT `id`" ++
-        sql"FROM `#${project.id}`.`#${model.name}`" ++
-        prefixIfNotNone("where", whereSql) ++ sql")")).asUpdate
+        sql"FROM `#${project.id}`.`#${model.name}`" ++ whereFilterAppendix(project.id, model, whereFilter) ++ sql")")).asUpdate
   }
 
   def deleteDataItem(projectId: String, path: Path) =
@@ -338,14 +334,11 @@ object DatabaseMutationBuilder {
     triggerFailureWhenExists(project, query, table)
   }
 
-  def oldParentFailureTriggerByFieldAndFilter(project: Project, model: Model, filter: DataItemFilterCollection, field: Field) = {
+  def oldParentFailureTriggerByFieldAndFilter(project: Project, model: Model, whereFilter: Option[DataItemFilterCollection], field: Field) = {
     val table = field.relation.get.relationTableName
-    val whereSql = QueryArgumentsHelpers.generateFilterConditions(project.id, model.name, filter) match {
-      case None    => sql""
-      case Some(x) => sql"WHERE " ++ x
-    }
-
-    val query = sql"SELECT `id` FROM `#${project.id}`.`#$table` OLDPARENTPATHFAILURETRIGGERBYFIELDANDFILTER WHERE `#${field.oppositeRelationSide.get}` IN (SELECT `id` FROM `#${project.id}`.`#${model.name}` " ++ whereSql ++ sql")"
+    val query = sql"SELECT `id` FROM `#${project.id}`.`#$table` OLDPARENTPATHFAILURETRIGGERBYFIELDANDFILTER" ++
+      sql"WHERE `#${field.oppositeRelationSide.get}` IN (SELECT `id` FROM `#${project.id}`.`#${model.name}` " ++
+      whereFilterAppendix(project.id, model, whereFilter) ++ sql")"
     triggerFailureWhenExists(project, query, table)
   }
 
