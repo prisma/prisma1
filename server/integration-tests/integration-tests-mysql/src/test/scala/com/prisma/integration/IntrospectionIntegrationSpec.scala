@@ -23,8 +23,6 @@ class IntrospectionIntegrationSpec extends FlatSpec with Matchers with Integrati
         |}
       """.stripMargin)
 
-    println(result)
-
     result.toString should include(""""schema":"type A {\n  id: String!\n  createdAt: DateTime!\n  updatedAt: DateTime!\n  name: String!\n  value: Int\n}""")
   }
 }

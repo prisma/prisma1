@@ -24,10 +24,6 @@ case class DatabaseIntrospectorImpl(clientDb: Database)(implicit ec: ExecutionCo
         }
         .mkString("", System.getProperty("line.separator") + "  ", "")
     }
-//    Future("""|type A {
-//              |  id: String!
-//              |  name: String
-//              |}""".stripMargin)
   }
 
   private def printColumn(column: ColumnDescription) = {

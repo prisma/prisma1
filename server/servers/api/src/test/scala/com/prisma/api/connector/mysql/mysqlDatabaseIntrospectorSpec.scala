@@ -7,7 +7,6 @@ import com.prisma.deploy.specutils.DeployDependenciesForTest
 import org.scalatest.{BeforeAndAfterEach, FlatSpec, Matchers}
 import slick.jdbc.MySQLProfile.api._
 import slick.jdbc.MySQLProfile.backend.DatabaseDef
-import slick.sql.SqlAction
 
 import scala.concurrent.Await
 import scala.concurrent.duration.Duration
