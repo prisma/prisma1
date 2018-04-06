@@ -93,11 +93,14 @@ In the **Select MySQL**, click **Next**. And you will be prompted between First 
 For the the purpose of this you can use whatever you want.
 For example:
 - **Instance ID**: prisma
-- **Root password**: graphcool12345
+- **Root password**: prisma12345
 - **Region**: `us-east1`
 - **Zone**: Any
 
 ![](https://docs.google.com/drawings/d/e/2PACX-1vQe9jXKBCe_KZCFn1pK9GizD3U4h-MMQ_PNa06gDajSquy0byLIx7aA5Wf1BXP5P-b40IY-Qx7cgALY/pub?w=428&h=342)
+
+
+> You can change the advanced configurations. But for the purpose of this tutorial we won't get in it.
 
 And click **Create**
 
@@ -113,9 +116,23 @@ Now your instance is being created. This can take some time.
 
 <Instruction>
 
-Click the name of your instance, in this case `prisma`. And continue to the tab **Authorization**. Here a network needs to be added. Click **Add Network**. And put `0.0.0.0/0` in the Network input. Click **Done** to save the changes. Now Prisma Cloud should be able to reach your Google Cloud SQL instance using user `root` and the password you defined using the public ip of the instance.
+Click the name of your instance, in this case `prisma`. 
+
+![](https://docs.google.com/drawings/d/e/2PACX-1vRaEIf7jVHI6bF2l-NnGLNPZlLlt85xEaYruGlrzt4PS3-94BXzqCXJUM4H4sBR5ileshtc6jwx1uYt/pub?w=914&h=100)
+
+And continue to the tab **Authorization**. 
+
+![](https://docs.google.com/drawings/d/e/2PACX-1vTD7T6AxRezR-CJFKtP6ype_Q8W5_TSVrXXrlILnJ4Nx2E1zmjw7fF0YujF5cocPs626mLPoPtsEB7F/pub?w=462&h=179)
+
+Here a network needs to be added. Click **Add Network** (Step 1), and a box above will appear (Step 2.). And put `0.0.0.0/0` in the Network input (Step 3.), name is optional.
+
+![](https://docs.google.com/drawings/d/e/2PACX-1vTnBttt5s2Dl6dgp0JkZeTD7mNcxAwhTiEe6868hfRBYbBxNJRmSchpZZ02zObpjzREUWduc0Qv1s2Y/pub?w=462&h=307)
+
+Click **Done** (Step 4.) to save the changes. Now Prisma Cloud should be able to reach your Google Cloud SQL instance using user `root` and the password you defined using the public ip of the instance.
 
 The public ip can be found in the tab **Overview** of your instance located on **Connect to this instance**.
+
+![](https://docs.google.com/drawings/d/e/2PACX-1vT70ZVEI7cIIhy-_LBFXWZ0quCZx-ijWIyuB5IVrCMkamwnau3OvAJX3FubapgT0Jc93_B_NLnOxLWn/pub?w=461&h=270)
 
 </Instruction>
 
@@ -181,7 +198,7 @@ After the connection was successfully tested, you need to provide a **Cluster na
 <Instruction>
 
 Finally, you need to select a **Cluster region** - choose the one that's closest to where the majority of your users is supposably located.
-
+https://docs.google.com/drawings/d/e/2PACX-1vTnBttt5s2Dl6dgp0JkZeTD7mNcxAwhTiEe6868hfRBYbBxNJRmSchpZZ02zObpjzREUWduc0Qv1s2Y/pub?w=462&h=307
 </Instruction>
 
 <Instruction>
