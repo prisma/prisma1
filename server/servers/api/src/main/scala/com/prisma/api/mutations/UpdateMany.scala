@@ -2,7 +2,7 @@ package com.prisma.api.mutations
 
 import com.prisma.api.ApiDependencies
 import com.prisma.api.connector.Types.DataItemFilterCollection
-import com.prisma.api.connector.{DataResolver, UpdateDataItems}
+import com.prisma.api.connector.{DataResolver, QueryArguments, UpdateDataItems}
 import com.prisma.api.mutactions.DatabaseMutactions
 import com.prisma.shared.models.{Model, Project}
 import com.prisma.util.coolArgs.CoolArgs
@@ -14,7 +14,7 @@ case class UpdateMany(
     project: Project,
     model: Model,
     args: schema.Args,
-    whereFilter: DataItemFilterCollection,
+    whereFilter: Option[DataItemFilterCollection],
     dataResolver: DataResolver
 )(implicit apiDependencies: ApiDependencies)
     extends ClientMutation[BatchPayload] {
@@ -22,7 +22,7 @@ case class UpdateMany(
   import apiDependencies.system.dispatcher
 
   val coolArgs   = CoolArgs.fromSchemaArgs(args.raw)
-  lazy val count = dataResolver.countByModel(model, Some(whereFilter))
+  lazy val count = dataResolver.countByModel(model, whereFilter)
 
   def prepareMutactions(): Future[PreparedMutactions] = {
     count map { _ =>
