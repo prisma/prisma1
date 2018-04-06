@@ -1,6 +1,5 @@
-<Can you provide a right alias>
 ---
-alias: ua9gai4kie
+alias: mof4vo9gae
 description: Learn how to deploy your Prisma services with Prisma Cloud.
 ---
 
