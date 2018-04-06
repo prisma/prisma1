@@ -158,8 +158,8 @@ case class SchemaBuilderImpl(
         fieldType = objectTypeBuilder.batchPayloadType,
         arguments = args,
         resolve = (ctx) => {
-          val where    = objectTypeBuilder.extractRequiredFilterFromContext(model, ctx)
-          val mutation = UpdateMany(project, model, ctx.args, where, dataResolver = masterDataResolver)
+          val queryArguments = objectTypeBuilder.extractQueryArgumentsFromContext(model, ctx).flatMap(_.filter)
+          val mutation       = UpdateMany(project, model, ctx.args, queryArguments, dataResolver = masterDataResolver)
           ClientMutationRunner.run(mutation, databaseMutactionExecutor, sideEffectMutactionExecutor, mutactionVerifier)
         }
       )
@@ -208,8 +208,8 @@ case class SchemaBuilderImpl(
       fieldType = objectTypeBuilder.batchPayloadType,
       arguments = argumentsBuilder.getSangriaArgumentsForDeleteMany(model),
       resolve = (ctx) => {
-        val where    = objectTypeBuilder.extractRequiredFilterFromContext(model, ctx)
-        val mutation = DeleteMany(project, model, where, dataResolver = masterDataResolver)
+        val arguments = objectTypeBuilder.extractQueryArgumentsFromContext(model, ctx).flatMap(_.filter)
+        val mutation  = DeleteMany(project, model, arguments, dataResolver = masterDataResolver)
         ClientMutationRunner.run(mutation, databaseMutactionExecutor, sideEffectMutactionExecutor, mutactionVerifier)
       }
     )

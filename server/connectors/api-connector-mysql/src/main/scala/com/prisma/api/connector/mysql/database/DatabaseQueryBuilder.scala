@@ -77,7 +77,7 @@ object DatabaseQueryBuilder {
     ScalarListElement(nodeId, position, value)
   }
 
-  def selectAllFromTableNew(
+  def selectAllFromTable(
       projectId: String,
       model: Model,
       args: Option[QueryArguments],

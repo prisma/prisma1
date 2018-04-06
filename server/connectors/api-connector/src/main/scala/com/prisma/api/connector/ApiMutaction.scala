@@ -28,14 +28,14 @@ case class CreateDataItemsImport(project: Project, model: Model, args: Vector[Pr
 case class DeleteDataItem(project: Project, path: Path, previousValues: PrismaNode) extends DatabaseMutaction {
   val id = GCValueExtractor.fromGCValueToString(previousValues.data.map("id"))
 }
-case class DeleteDataItemNested(project: Project, path: Path)                                              extends DatabaseMutaction
-case class DeleteDataItems(project: Project, model: Model, whereFilter: DataItemFilterCollection)          extends DatabaseMutaction
-case class DeleteManyRelationChecks(project: Project, model: Model, whereFilter: DataItemFilterCollection) extends DatabaseMutaction
-case class DeleteRelationCheck(project: Project, path: Path)                                               extends DatabaseMutaction
-case class ResetDataMutaction(project: Project, tableNames: Vector[String])                                extends DatabaseMutaction
-case class NestedConnectRelation(project: Project, path: Path, topIsCreate: Boolean)                       extends DatabaseMutaction
-case class NestedCreateRelation(project: Project, path: Path, topIsCreate: Boolean)                        extends DatabaseMutaction
-case class NestedDisconnectRelation(project: Project, path: Path, topIsCreate: Boolean = false)            extends DatabaseMutaction
+case class DeleteDataItemNested(project: Project, path: Path)                                                      extends DatabaseMutaction
+case class DeleteDataItems(project: Project, model: Model, whereFilter: Option[DataItemFilterCollection])          extends DatabaseMutaction
+case class DeleteManyRelationChecks(project: Project, model: Model, whereFilter: Option[DataItemFilterCollection]) extends DatabaseMutaction
+case class DeleteRelationCheck(project: Project, path: Path)                                                       extends DatabaseMutaction
+case class ResetDataMutaction(project: Project, tableNames: Vector[String])                                        extends DatabaseMutaction
+case class NestedConnectRelation(project: Project, path: Path, topIsCreate: Boolean)                               extends DatabaseMutaction
+case class NestedCreateRelation(project: Project, path: Path, topIsCreate: Boolean)                                extends DatabaseMutaction
+case class NestedDisconnectRelation(project: Project, path: Path, topIsCreate: Boolean = false)                    extends DatabaseMutaction
 case class UpdateDataItem(project: Project, path: Path, nonListArgs: PrismaArgs, listArgs: Vector[(String, ListGCValue)], previousValues: PrismaNode)
     extends DatabaseMutaction
     with UpdateWrapper {
@@ -46,7 +46,11 @@ sealed trait UpdateWrapper
 case class NestedUpdateDataItem(project: Project, path: Path, nonListArgs: PrismaArgs, listArgs: Vector[(String, ListGCValue)])
     extends DatabaseMutaction
     with UpdateWrapper
-case class UpdateDataItems(project: Project, model: Model, where: DataItemFilterCollection, updateArgs: PrismaArgs, listArgs: Vector[(String, ListGCValue)])
+case class UpdateDataItems(project: Project,
+                           model: Model,
+                           whereFilter: Option[DataItemFilterCollection],
+                           updateArgs: PrismaArgs,
+                           listArgs: Vector[(String, ListGCValue)])
     extends DatabaseMutaction
 case class UpsertDataItem(project: Project,
                           createPath: Path,

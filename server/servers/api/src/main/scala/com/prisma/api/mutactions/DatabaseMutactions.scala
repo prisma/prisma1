@@ -23,7 +23,7 @@ case class DatabaseMutactions(project: Project) {
   }
 
   //todo this does not support cascading delete behavior at the moment
-  def getMutactionsForDeleteMany(model: Model, whereFilter: DataItemFilterCollection): Vector[DatabaseMutaction] = report {
+  def getMutactionsForDeleteMany(model: Model, whereFilter: Option[DataItemFilterCollection]): Vector[DatabaseMutaction] = report {
     val requiredRelationChecks = DeleteManyRelationChecks(project, model, whereFilter)
     val deleteItems            = DeleteDataItems(project, model, whereFilter)
     Vector(requiredRelationChecks, deleteItems)
@@ -42,7 +42,7 @@ case class DatabaseMutactions(project: Project) {
   }
 
   //todo this does not support scalar lists at the moment
-  def getMutactionsForUpdateMany(model: Model, whereFilter: DataItemFilterCollection, args: CoolArgs): Vector[DatabaseMutaction] = report {
+  def getMutactionsForUpdateMany(model: Model, whereFilter: Option[DataItemFilterCollection], args: CoolArgs): Vector[DatabaseMutaction] = report {
     val (nonListArgs, listArgs) = args.getUpdateArgs(model)
     Vector(UpdateDataItems(project, model, whereFilter, nonListArgs, listArgs))
   }
