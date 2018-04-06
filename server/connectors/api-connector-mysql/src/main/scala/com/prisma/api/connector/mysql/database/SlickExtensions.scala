@@ -131,6 +131,6 @@ object SlickExtensions {
 
   def whereFilterAppendix(projectId: String, model: Model, filter: Option[DataItemFilterCollection]) = {
     val whereSql = filter.flatMap(where => QueryArgumentsHelpers.generateFilterConditions(projectId, model.name, where))
-    prefixIfNotNone("where", whereSql)
+    prefixIfNotNone("WHERE", whereSql)
   }
 }
