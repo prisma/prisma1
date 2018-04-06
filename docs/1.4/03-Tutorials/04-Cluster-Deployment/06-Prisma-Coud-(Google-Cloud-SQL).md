@@ -106,7 +106,7 @@ Navigate to the [Prisma Cloud Console](https://app.prisma.sh) and login or sign 
 
 </Instruction>
 
-### 2.2 Cluster Vvew
+### 2.2 Cluster View
 
 <Instruction>
 
