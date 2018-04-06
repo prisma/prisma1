@@ -23,7 +23,7 @@ The Prisma GraphQL API provides powerful abstractions and building blocks to dev
 * [Quickstart](#quickstart)
 * [Examples](#examples)
 * [Architecture](#architecture)
-* [Supported Databases](#supported-databases)
+* [Database Connectors](#database-connectors)
 * [GraphQL API](#graphql-api)
 * [Community](#community)
 * [Contributing](#contributing)
