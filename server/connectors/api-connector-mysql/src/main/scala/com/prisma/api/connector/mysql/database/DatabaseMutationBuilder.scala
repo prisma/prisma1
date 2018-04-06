@@ -400,27 +400,6 @@ object DatabaseMutationBuilder {
       sql"where table_schema = ${project.id} AND TABLE_NAME = $table)end;").as[Int]
   }
 
-  // note: utf8mb4 requires up to 4 bytes per character and includes full utf8 support, including emoticons
-  // utf8 requires up to 3 bytes per character and does not have full utf8 support.
-  // mysql indexes have a max size of 767 bytes or 191 utf8mb4 characters.
-  // We limit enums to 191, and create text indexes over the first 191 characters of the string, but
-  // allow the actual content to be much larger.
-  // Key columns are utf8_general_ci as this collation is ~10% faster when sorting and requires less memory
-  def sqlTypeForScalarTypeIdentifier(isList: Boolean, typeIdentifier: TypeIdentifier): String = {
-    if (isList) return "mediumtext"
-
-    typeIdentifier match {
-      case TypeIdentifier.String    => "mediumtext"
-      case TypeIdentifier.Boolean   => "boolean"
-      case TypeIdentifier.Int       => "int"
-      case TypeIdentifier.Float     => "Decimal(65,30)"
-      case TypeIdentifier.GraphQLID => "char(25)"
-      case TypeIdentifier.Enum      => "varchar(191)"
-      case TypeIdentifier.Json      => "mediumtext"
-      case TypeIdentifier.DateTime  => "datetime(3)"
-      case TypeIdentifier.Relation  => sys.error("Relation is not a scalar type. Are you trying to create a db column for a relation?")
-    }
-  }
   //endregion
 
   def createDataItemsImport(mutaction: CreateDataItemsImport): SimpleDBIO[Vector[String]] = {
