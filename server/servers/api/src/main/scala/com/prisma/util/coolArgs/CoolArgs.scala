@@ -1,5 +1,6 @@
-package com.prisma.api.connector
+package com.prisma.util.coolArgs
 
+import com.prisma.api.connector._
 import com.prisma.api.schema.APIErrors
 import com.prisma.gc_values.{GCValue, ListGCValue, NullGCValue, RootGCValue}
 import com.prisma.shared.models._
@@ -16,14 +17,6 @@ import scala.collection.immutable.Seq
   *   - relationCoolArgs
   *   - Upsert Create/Delete CoolArgs
   */
-case class PrismaArgs(raw: GCValue) {
-  def hasArgFor(field: Field) = raw.asRoot.map.get(field.name).isDefined
-
-  def getFieldValue(name: String): Option[GCValue] = raw.asRoot.map.get(name)
-
-  def keys: Vector[String] = raw.asRoot.map.keys.toVector
-}
-
 object CoolArgs {
   def apply(raw: Map[String, Any]): CoolArgs = new CoolArgs(raw)
 

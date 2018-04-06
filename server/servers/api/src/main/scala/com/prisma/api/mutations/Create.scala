@@ -3,10 +3,11 @@ package com.prisma.api.mutations
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
 import com.prisma.api.ApiDependencies
-import com.prisma.api.connector.{CoolArgs, DataResolver, NodeSelector, Path}
+import com.prisma.api.connector.{DataResolver, NodeSelector, Path}
 import com.prisma.api.mutactions.{DatabaseMutactions, ServerSideSubscriptions, SubscriptionEvents}
 import com.prisma.shared.models.IdType.Id
 import com.prisma.shared.models._
+import com.prisma.util.coolArgs.CoolArgs
 import cool.graph.cuid.Cuid
 import sangria.schema
 

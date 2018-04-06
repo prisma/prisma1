@@ -1,6 +1,6 @@
 package com.prisma.api.import_export
 
-import com.prisma.api.connector.{DataResolver, PrismaArgs, _}
+import com.prisma.api.connector.{DataResolver, PrismaArgs}
 import com.prisma.gc_values.{ListGCValue, RootGCValue}
 import com.prisma.shared.models.{Model, Project, Relation}
 import play.api.libs.json._

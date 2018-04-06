@@ -2,9 +2,10 @@ package com.prisma.api.mutations
 
 import com.prisma.api.ApiDependencies
 import com.prisma.api.connector.Types.DataItemFilterCollection
-import com.prisma.api.connector.{CoolArgs, DataResolver, UpdateDataItems}
+import com.prisma.api.connector.{DataResolver, UpdateDataItems}
 import com.prisma.api.mutactions.DatabaseMutactions
 import com.prisma.shared.models.{Model, Project}
+import com.prisma.util.coolArgs.CoolArgs
 import sangria.schema
 
 import scala.concurrent.Future

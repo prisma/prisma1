@@ -7,6 +7,7 @@ import com.prisma.api.connector._
 import com.prisma.api.mutactions.{DatabaseMutactions, ServerSideSubscriptions, SubscriptionEvents}
 import com.prisma.api.schema.APIErrors
 import com.prisma.shared.models.{Model, Project}
+import com.prisma.util.coolArgs.CoolArgs
 import sangria.schema
 
 import scala.concurrent.ExecutionContext.Implicits.global

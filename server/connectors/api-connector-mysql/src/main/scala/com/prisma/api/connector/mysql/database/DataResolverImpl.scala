@@ -39,7 +39,7 @@ case class DataResolverImpl(project: Project, readonlyClientDatabase: MySQLProfi
       }
   }
 
-  override def resolveByModel(model: Model, args: Option[QueryArguments] = None): Future[ResolverResultNew[PrismaNode]] = {
+  override def resolveByModel(model: Model, args: Option[QueryArguments] = None): Future[ResolverResult[PrismaNode]] = {
     val query = DatabaseQueryBuilder.selectAllFromTableNew(project.id, model, args)
     performWithTiming("loadModelRowsForExport", readonlyClientDatabase.run(query))
   }
@@ -64,7 +64,7 @@ case class DataResolverImpl(project: Project, readonlyClientDatabase: MySQLProfi
 
   override def resolveByRelationManyModels(fromField: Field,
                                            fromNodeIds: Vector[IdGCValue],
-                                           args: Option[QueryArguments]): Future[Vector[ResolverResultNew[PrismaNodeWithParent]]] = {
+                                           args: Option[QueryArguments]): Future[Vector[ResolverResult[PrismaNodeWithParent]]] = {
     val query = DatabaseQueryBuilder.batchSelectAllFromRelatedModel(project, fromField, fromNodeIds, args)
     performWithTiming("resolveByRelation", readonlyClientDatabase.run(query))
   }
@@ -74,12 +74,12 @@ case class DataResolverImpl(project: Project, readonlyClientDatabase: MySQLProfi
     performWithTiming("countByRelation", readonlyClientDatabase.run(query))
   }
 
-  override def loadListRowsForExport(model: Model, field: Field, args: Option[QueryArguments] = None): Future[ResolverResultNew[ScalarListValues]] = {
+  override def loadListRowsForExport(model: Model, field: Field, args: Option[QueryArguments] = None): Future[ResolverResult[ScalarListValues]] = {
     val query = DatabaseQueryBuilder.selectAllFromListTable(project.id, model, field, args, None)
     performWithTiming("loadListRowsForExport", readonlyClientDatabase.run(query))
   }
 
-  override def loadRelationRowsForExport(relationId: String, args: Option[QueryArguments] = None): Future[ResolverResultNew[RelationNode]] = {
+  override def loadRelationRowsForExport(relationId: String, args: Option[QueryArguments] = None): Future[ResolverResult[RelationNode]] = {
     val query = DatabaseQueryBuilder.selectAllFromRelationTable(project.id, relationId, args)
     performWithTiming("loadRelationRowsForExport", readonlyClientDatabase.run(query))
   }

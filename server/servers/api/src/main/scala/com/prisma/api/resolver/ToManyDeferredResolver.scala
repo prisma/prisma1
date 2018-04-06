@@ -24,13 +24,13 @@ class ToManyDeferredResolver(dataResolver: DataResolver) {
 
     // As we are using `union all` as our batching mechanism there is very little gain from batching,
     // and 500 items seems to be the cutoff point where there is no more value to be had.
-    val batchFutures: Vector[Future[Vector[ResolverResultNew[PrismaNodeWithParent]]]] = relatedModelInstanceIds
+    val batchFutures: Vector[Future[Vector[ResolverResult[PrismaNodeWithParent]]]] = relatedModelInstanceIds
       .grouped(500)
       .toVector
       .map(ids => dataResolver.resolveByRelationManyModels(relatedField, ids, args))
 
     // Fetch resolver results
-    val futureResolverResults: Future[Vector[ResolverResultNew[PrismaNodeWithParent]]] = Future
+    val futureResolverResults: Future[Vector[ResolverResult[PrismaNodeWithParent]]] = Future
       .sequence(batchFutures)
       .map(_.flatten)
 
@@ -40,7 +40,7 @@ class ToManyDeferredResolver(dataResolver: DataResolver) {
         OrderedDeferredFutureResult(
           futureResolverResults.map { resolverResults =>
             // Each deferred has exactly one ResolverResult
-            val found: ResolverResultNew[PrismaNodeWithParent] = resolverResults.find(_.parentModelId.contains(deferred.parentNodeId)).get
+            val found: ResolverResult[PrismaNodeWithParent] = resolverResults.find(_.parentModelId.contains(deferred.parentNodeId)).get
 
             mapToConnectionOutputType(found, deferred, dataResolver.project)
           },
@@ -51,7 +51,7 @@ class ToManyDeferredResolver(dataResolver: DataResolver) {
     results
   }
 
-  def mapToConnectionOutputType(input: ResolverResultNew[PrismaNodeWithParent], deferred: ToManyDeferred, project: Project): RelayConnectionOutputType = {
+  def mapToConnectionOutputType(input: ResolverResult[PrismaNodeWithParent], deferred: ToManyDeferred, project: Project): RelayConnectionOutputType = {
     DefaultIdBasedConnection(
       PageInfo(
         hasNextPage = input.hasNextPage,

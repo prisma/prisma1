@@ -82,7 +82,7 @@ object DatabaseQueryBuilder {
       model: Model,
       args: Option[QueryArguments],
       overrideMaxNodeCount: Option[Int] = None
-  ): DBIOAction[ResolverResultNew[PrismaNode], NoStream, Effect] = {
+  ): DBIOAction[ResolverResult[PrismaNode], NoStream, Effect] = {
 
     val tableName                                        = model.name
     val (conditionCommand, orderByCommand, limitCommand) = extractQueryArgs(projectId, tableName, args, None, overrideMaxNodeCount = overrideMaxNodeCount)
@@ -100,7 +100,7 @@ object DatabaseQueryBuilder {
       relationId: String,
       args: Option[QueryArguments],
       overrideMaxNodeCount: Option[Int] = None
-  ): DBIOAction[ResolverResultNew[RelationNode], NoStream, Effect] = {
+  ): DBIOAction[ResolverResult[RelationNode], NoStream, Effect] = {
 
     val tableName                                        = relationId
     val (conditionCommand, orderByCommand, limitCommand) = extractQueryArgs(projectId, tableName, args, None, overrideMaxNodeCount = overrideMaxNodeCount)
@@ -117,7 +117,7 @@ object DatabaseQueryBuilder {
                              model: Model,
                              field: Field,
                              args: Option[QueryArguments],
-                             overrideMaxNodeCount: Option[Int] = None): DBIOAction[ResolverResultNew[ScalarListValues], NoStream, Effect] = {
+                             overrideMaxNodeCount: Option[Int] = None): DBIOAction[ResolverResult[ScalarListValues], NoStream, Effect] = {
 
     val tableName                                        = s"${model.name}_${field.name}"
     val (conditionCommand, orderByCommand, limitCommand) = extractQueryArgs(projectId, tableName, args, None, overrideMaxNodeCount = overrideMaxNodeCount, true)
@@ -192,7 +192,7 @@ object DatabaseQueryBuilder {
   def batchSelectAllFromRelatedModel(project: Project,
                                      fromField: Field,
                                      fromModelIds: Vector[IdGCValue],
-                                     args: Option[QueryArguments]): DBIOAction[Vector[ResolverResultNew[PrismaNodeWithParent]], NoStream, Effect] = {
+                                     args: Option[QueryArguments]): DBIOAction[Vector[ResolverResult[PrismaNodeWithParent]], NoStream, Effect] = {
 
     val relatedModel      = fromField.relatedModel(project.schema).get
     val fieldTable        = fromField.relatedModel(project.schema).get.name
@@ -239,7 +239,7 @@ object DatabaseQueryBuilder {
           .map(id =>
             itemGroupsByModelId.find(_._1 == id) match {
               case Some((_, itemsForId)) => args.get.resultTransform(itemsForId).copy(parentModelId = Some(id))
-              case None                  => ResolverResultNew(Vector.empty[PrismaNodeWithParent], hasPreviousPage = false, hasNextPage = false, parentModelId = Some(id))
+              case None                  => ResolverResult(Vector.empty[PrismaNodeWithParent], hasPreviousPage = false, hasNextPage = false, parentModelId = Some(id))
           })
       }
   }

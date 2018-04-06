@@ -1,12 +1,13 @@
 package com.prisma.api.schema
 
 import akka.actor.ActorSystem
-import com.prisma.api.connector.{CoolArgs, PrismaNode}
+import com.prisma.api.connector.PrismaNode
 import com.prisma.api.mutations._
 import com.prisma.api.resolver.DeferredTypes.{ManyModelDeferred, OneDeferred}
 import com.prisma.api.{ApiDependencies, ApiMetrics}
 import com.prisma.gc_values.IdGCValue
 import com.prisma.shared.models.{Model, Project}
+import com.prisma.util.coolArgs.CoolArgs
 import org.atteo.evo.inflector.English
 import sangria.relay._
 import sangria.schema._

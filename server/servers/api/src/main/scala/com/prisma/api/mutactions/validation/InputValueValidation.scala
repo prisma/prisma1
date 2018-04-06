@@ -38,6 +38,6 @@ object InputValueValidation {
   }
 
   def scalarFieldsWithValues(model: Model, args: PrismaArgs): List[Field] = {
-    model.scalarFields.filter(field => args.raw.asRoot.map.get(field.name).isDefined).filter(_.name != "id")
+    model.scalarFields.filter(field => args.getFieldValue(field.name).isDefined).filter(_.name != "id")
   }
 }

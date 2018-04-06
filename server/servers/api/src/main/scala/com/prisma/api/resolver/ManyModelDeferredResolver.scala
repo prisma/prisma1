@@ -22,7 +22,7 @@ class ManyModelDeferredResolver(resolver: DataResolver) {
     }
   }
 
-  def mapToConnectionOutputType(input: ResolverResultNew[PrismaNode], deferred: ManyModelDeferred): RelayConnectionOutputType = {
+  def mapToConnectionOutputType(input: ResolverResult[PrismaNode], deferred: ManyModelDeferred): RelayConnectionOutputType = {
     DefaultIdBasedConnection(
       PageInfo(
         hasNextPage = input.hasNextPage,

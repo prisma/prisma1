@@ -7,7 +7,7 @@ import com.prisma.shared.models.{Field, Model, Relation}
 import scala.collection.immutable.Seq
 
 object Types {
-  type DataItemFilterCollection = Seq[_ >: Seq[Any] <: Any]
+  type DataItemFilterCollection = Seq[_ >: Seq[Any] <: Any] //todo
   //  type UserData                 = Map[String, Option[Any]]
 }
 
@@ -16,14 +16,8 @@ case class ScalarListValue(
     position: Int,
     value: Any
 )
-case class ResolverResult(
-    items: Seq[DataItem],
-    hasNextPage: Boolean = false,
-    hasPreviousPage: Boolean = false,
-    parentModelId: Option[String] = None
-)
 
-case class ResolverResultNew[T](
+case class ResolverResult[T](
     nodes: Vector[T],
     hasNextPage: Boolean,
     hasPreviousPage: Boolean,
