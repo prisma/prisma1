@@ -208,7 +208,7 @@ class ObjectTypeBuilder(
               }
 
             case value: Seq[Any] if value.nonEmpty && value.head.isInstanceOf[Map[_, _]] =>
-              FilterElement(key, value.asInstanceOf[Seq[Map[String, Any]]].map(generateFilterElement(_, model, isSubscriptionFilter)), None, filter.name)
+              FilterElement(key, value.asInstanceOf[Seq[Map[String, Any]]].map(x => generateFilterElement(x, model, isSubscriptionFilter)), None, filter.name)
 
             case value: Seq[Any] =>
               FilterElement(key, value, field, filter.name)
