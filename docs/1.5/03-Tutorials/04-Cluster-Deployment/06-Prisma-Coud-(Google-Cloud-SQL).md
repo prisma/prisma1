@@ -69,9 +69,9 @@ In this section, you'll spin up a new Google Cloud SQL instance in the `us-east1
 
 <Instruction>
 
-First you need to make a project.
-
 To setup a new Google Cloud SQL instance in the `us-east1` region, go in the navigation on the left to Storage/SQL. And click the button **Create Instance**
+
+![](https://docs.google.com/drawings/d/e/2PACX-1vTNgCZwLOuc2NBi3Gd2LUriOIyxMRBTbRpV3w6ByfXcfOiIDBvgsomTv3fxS84gBP9pctv9suxkl1c_/pub?w=410&h=231)
 
 </Instruction>
 
@@ -80,6 +80,9 @@ To setup a new Google Cloud SQL instance in the `us-east1` region, go in the nav
 <Instruction>
 
 In the **Select MySQL**, click **Next**. And you will be prompted between First and Second Generation. Click **Choose Second Generation**.
+
+![](https://docs.google.com/drawings/d/e/2PACX-1vS_nerpJbeE8JrHlmABvODPnbpn0nz-B4E_ADxK-dN7-nF7NHGPr6zzBRDLUOc37cBJOr1V-ixtftgv/pub?w=429&h=292)
+![](https://docs.google.com/drawings/d/e/2PACX-1vQneur_q0SFy4SR20Ql8yGf5sBszE75jZpwaMzhiHjBNz4eXyRJjXjjrrzIaRrrBP9eHwAkNKJ7xGe_/pub?w=350&h=342)
 
 </Instruction>
 
@@ -94,13 +97,15 @@ For example:
 - **Region**: `us-east1`
 - **Zone**: Any
 
+![](https://docs.google.com/drawings/d/e/2PACX-1vQe9jXKBCe_KZCFn1pK9GizD3U4h-MMQ_PNa06gDajSquy0byLIx7aA5Wf1BXP5P-b40IY-Qx7cgALY/pub?w=428&h=342)
+
 And click **Create**
 
 </Instruction>
 
 <Instruction>
 
-Now your instance is being created.
+Now your instance is being created. This can take some time.
 
 </Instruction>
 
