@@ -3,6 +3,7 @@ package com.prisma.api.connector.mysql.impl
 import com.prisma.api.connector.mysql.DatabaseMutactionInterpreter
 import com.prisma.api.connector._
 import slick.jdbc.MySQLProfile.api._
+import slick.jdbc.TransactionIsolation
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -16,8 +17,9 @@ case class DatabaseMutactionExecutorImpl(clientDb: Database)(implicit ec: Execut
       case true  => DBIO.seq(interpreters.map(_.action): _*).transactionally
       case false => DBIO.seq(interpreters.map(_.action): _*)
     }
+
     clientDb
-      .run(singleAction)
+      .run(singleAction.withTransactionIsolation(TransactionIsolation.ReadCommitted))
       .recover { case error => throw combinedErrorMapper.lift(error).getOrElse(error) }
       .map(_ => ())
   }

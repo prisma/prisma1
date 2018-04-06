@@ -61,4 +61,4 @@ name            version        endpoint
 local           1.0.0-beta4.2  http://localhost:4466/cluster
 ```
 
-> To learn how you can directly your MySQL database, follow [this](!alias-eechaeth3l) tutorial.
+> To learn how you can access your MySQL database directly, follow [this](!alias-eechaeth3l) tutorial.
