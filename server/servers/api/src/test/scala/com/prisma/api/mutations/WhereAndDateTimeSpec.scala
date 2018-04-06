@@ -8,16 +8,17 @@ class WhereAndDateTimeSpec extends FlatSpec with Matchers with ApiBaseSpec {
 
   "Using the same input in an update using where as used during creation of the item" should "work" in {
 
-    val outerWhere = """"2018""""
-    val innerWhere = """"2019""""
+    val outerWhere = """"2018-12-05T12:34:23.000Z""""
+    val innerWhere = """"2019-12-05T12:34:23.000Z""""
 
     val project = SchemaDsl() { schema =>
       val note = schema.model("Note").field("outerString", _.String).field("outerDateTime", _.DateTime, isUnique = true)
-      schema.model("Todo").field_!("innerString", _.String).field("innerDateTime", _.DateTime, isUnique = true).manyToManyRelation("notes", "todos", note)
+      val todo = schema.model("Todo").field_!("innerString", _.String).field("innerDateTime", _.DateTime, isUnique = true)
+      todo.manyToManyRelation("notes", "todos", note)
     }
     database.setup(project)
 
-    val createResult = server.query(
+    server.query(
       s"""mutation {
          |  createNote(
          |    data: {
@@ -44,9 +45,7 @@ class WhereAndDateTimeSpec extends FlatSpec with Matchers with ApiBaseSpec {
          |    data: {
          |      outerString: "Changed Outer String"
          |      todos: {
-         |        update: [
-         |        {where: { innerDateTime: $innerWhere },data:{ innerString: "Changed Inner String"}}
-         |        ]
+         |        update: [{where: { innerDateTime: $innerWhere },data:{ innerString: "Changed Inner String"}}]
          |      }
          |    }
          |  ){
@@ -57,13 +56,16 @@ class WhereAndDateTimeSpec extends FlatSpec with Matchers with ApiBaseSpec {
       project
     )
 
-    server.query(s"""query{note(where:{outerDateTime:$outerWhere}){outerString}}""",
-                 project,
-                 dataContains = s"""{"note":{"outerString":"Changed Outer String"}}""")
-    server.query(s"""query{todo(where:{innerDateTime:$innerWhere}){innerString}}""",
-                 project,
-                 dataContains = s"""{"todo":{"innerString":"Changed Inner String"}}""")
-
+    server.query(
+      s"""query{note(where:{outerDateTime:$outerWhere}){outerString, outerDateTime}}""",
+      project,
+      dataContains = """{"note":{"outerString":"Changed Outer String","outerDateTime":"2018-12-05T12:34:23.000Z"}}"""
+    )
+    server.query(
+      s"""query{todo(where:{innerDateTime:$innerWhere}){innerString, innerDateTime}}""",
+      project,
+      dataContains = """{"todo":{"innerString":"Changed Inner String","innerDateTime":"2019-12-05T12:34:23.000Z"}}"""
+    )
   }
 
   "Using the same input in an update using where as used during creation of the item" should "work 2" in {

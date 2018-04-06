@@ -116,12 +116,7 @@ case class SubscriptionsManagerForProject(
   }
 
   def removeManagerForModel(ref: ActorRef) = {
-    resolversByModel.retain {
-      case (_, resolver) => resolver != ref
-    }
-
-    resolversBySubscriptionId.retain {
-      case (_, resolver) => resolver != ref
-    }
+    resolversByModel.retain { case (_, resolver)          => resolver != ref }
+    resolversBySubscriptionId.retain { case (_, resolver) => resolver != ref }
   }
 }

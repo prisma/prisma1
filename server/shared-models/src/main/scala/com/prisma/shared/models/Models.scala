@@ -66,10 +66,7 @@ case class Schema(
 ) {
   def allFields: Seq[Field] = models.flatMap(_.fields)
 
-  def hasSchemaNameConflict(name: String, id: String): Boolean = {
-    val conflictingType = this.models.exists(model => List(s"create${model.name}", s"update${model.name}", s"delete${model.name}").contains(name))
-    conflictingType
-  }
+  def fieldsWhereThisModelIsRequired(model: Model) = allFields.filter(f => f.isRequired && !f.isList && f.relatedModel(this).contains(model))
 
   def getModelById(id: Id): Option[Model] = models.find(_.id == id)
   def getModelById_!(id: Id): Model       = getModelById(id).getOrElse(throw SharedErrors.InvalidModel(id))
@@ -82,11 +79,6 @@ case class Schema(
   def getModelByName(name: String): Option[Model] = models.find(_.name.toLowerCase() == name.toLowerCase())
   def getModelByName_!(name: String): Model       = getModelByName(name).getOrElse(throw SharedErrors.InvalidModel(s"No model with name: $name found."))
 
-  def getModelByFieldId(id: Id): Option[Model] = models.find(_.fields.exists(_.id == id))
-  def getModelByFieldId_!(id: Id): Model       = getModelByFieldId(id).get //OrElse(throw SystemErrors.InvalidModel(s"No model with a field with id: $id found."))
-
-  def getFieldById(id: Id): Option[Field]                        = models.flatMap(_.fields).find(_.id == id)
-  def getFieldById_!(id: Id): Field                              = getFieldById(id).get //OrElse(throw SystemErrors.InvalidFieldId(id))
   def getFieldByName(model: String, name: String): Option[Field] = getModelByName(model).flatMap(_.getFieldByName(name))
   def getFieldByName_!(model: String, name: String): Field       = getModelByName_!(model).getFieldByName_!(name)
 
@@ -100,51 +92,12 @@ case class Schema(
   // note: mysql columns are case insensitive, so we have to be as well
   def getEnumByName(name: String): Option[Enum] = enums.find(_.name.toLowerCase == name.toLowerCase)
 
-  def getRelationById(id: Id): Option[Relation] = relations.find(_.id == id)
-  def getRelationById_!(id: Id): Relation       = getRelationById(id).get //OrElse(throw SystemErrors.InvalidRelationId(id))
-
   def getRelationByName(name: String): Option[Relation] = relations.find(_.name == name)
   def getRelationByName_!(name: String): Relation =
     getRelationByName(name).get //OrElse(throw SystemErrors.InvalidRelation("There is no relation with name: " + name))
 
-  def getFieldsByRelationId(id: Id): List[Field] = models.flatMap(_.fields).filter(f => f.relation.isDefined && f.relation.get.id == id)
-
   def getRelationsThatConnectModels(modelA: String, modelB: String): List[Relation] = relations.filter(_.connectsTheModels(modelA, modelB))
 
-  def getRelatedModelForField(field: Field): Option[Model] = {
-    val relation = field.relation.getOrElse {
-      return None
-    }
-
-    val modelId = field.relationSide match {
-      case Some(side) if side == RelationSide.A => Some(relation.modelBId)
-      case Some(side) if side == RelationSide.B => Some(relation.modelAId)
-      case _                                    => None
-    }
-
-    modelId.flatMap(id => getModelById(id))
-  }
-
-  def getReverseRelationField(field: Field): Option[Field] = {
-    val relation     = field.relation.getOrElse { return None }
-    val relationSide = field.relationSide.getOrElse { return None }
-
-    val relatedModelId = relationSide match {
-      case RelationSide.A => relation.modelBId
-      case RelationSide.B => relation.modelAId
-    }
-
-    val relatedModel = getModelById_!(relatedModelId)
-
-    relatedModel.fields.find(
-      relatedField =>
-        relatedField.relation
-          .contains(relation) && relatedField.id != field.id) match {
-      case Some(relatedField) => Some(relatedField)
-      case None               => relatedModel.fields.find(relatedField => relatedField.relation.contains(relation))
-    }
-
-  }
 }
 
 case class Project(
@@ -165,8 +118,6 @@ case class Project(
   lazy val projectId: ProjectId       = ProjectId.fromEncodedString(id)
   val serverSideSubscriptionFunctions = functions.collect { case x: ServerSideSubscriptionFunction => x }
 
-  def getFunctionByName(name: String): Option[Function] = functions.find(_.name == name)
-  def getFunctionByName_!(name: String): Function       = getFunctionByName(name).get //OrElse(throw SystemErrors.InvalidFunctionName(name))
 }
 object ProjectWithClientId {
   def apply(project: Project): ProjectWithClientId = ProjectWithClientId(project, project.ownerId)
@@ -197,16 +148,6 @@ case class Model(
 
   def relationFieldForIdAndSide(relationId: String, relationSide: RelationSide.Value): Option[Field] = {
     fields.find(_.isRelationWithIdAndSide(relationId, relationSide))
-  }
-
-  def withoutFieldsForRelation(relation: Relation): Model = withoutFieldsForRelations(Seq(relation))
-
-  def withoutFieldsForRelations(relations: Seq[Relation]): Model = {
-    val newFields = for {
-      field <- fields
-      if relations.forall(relation => !field.isRelationWithId(relation.id))
-    } yield field
-    copy(fields = newFields)
   }
 
   def filterFields(fn: Field => Boolean): Model = copy(fields = this.fields.filter(fn))
@@ -278,25 +219,10 @@ case class Field(
   def isScalarNonList: Boolean                      = isScalar && !isList
   def isRelationList: Boolean                       = isRelation && isList
   def isRelationNonList: Boolean                    = isRelation && !isList
-  def isRelationWithId(relationId: String): Boolean = relation.exists(_.id == relationId)
+  def isRelationWithId(relationId: String): Boolean = relation.exists(_.relationTableName == relationId)
 
   def isRelationWithIdAndSide(relationId: String, relationSide: RelationSide.Value): Boolean = {
     isRelationWithId(relationId) && this.relationSide.contains(relationSide)
-  }
-
-  def isOneToOneRelation(project: Project): Boolean = {
-    val otherField = this.relatedField(project.schema).get
-    !this.isList && !otherField.isList
-  }
-
-  def isManyToManyRelation(project: Project): Boolean = {
-    val otherField = this.relatedField(project.schema).get
-    this.isList && otherField.isList
-  }
-
-  def isOneToManyRelation(project: Project): Boolean = {
-    val otherField = this.relatedField(project.schema).get
-    (this.isList && !otherField.isList) || (!this.isList && otherField.isList)
   }
 
   private val excludedFromMutations = Vector("updatedAt", "createdAt", "id")
@@ -340,19 +266,20 @@ case class Field(
   }
 
   //todo this is dangerous in combination with self relations since it will return the field itself as related field
+  //this should be removed where possible
   def relatedField(schema: Schema): Option[Field] = {
     val fields = relatedModel(schema).get.fields
 
     val returnField = fields.find { field =>
       field.relation.exists { relation =>
         val isTheSameField    = field.id == this.id
-        val isTheSameRelation = relation.id == this.relation.get.id
+        val isTheSameRelation = relation.relationTableName == this.relation.get.relationTableName
         isTheSameRelation && !isTheSameField
       }
     }
     val fallback = fields.find { relatedField =>
       relatedField.relation.exists { relation =>
-        relation.id == this.relation.get.id
+        relation.relationTableName == this.relation.get.relationTableName
       }
     }
 
@@ -366,16 +293,10 @@ case class Field(
     fields.find { field =>
       field.relation.exists { relation =>
         val isTheSameField    = field.id == this.id
-        val isTheSameRelation = relation.id == this.relation.get.id
+        val isTheSameRelation = relation.relationTableName == this.relation.get.relationTableName
         isTheSameRelation && !isTheSameField
       }
     }
-  }
-
-  def otherSideIsRequired(project: Project): Boolean = otherRelationField(project.schema) match {
-    case Some(f) if f.isRequired => true
-    case Some(_)                 => false
-    case None                    => false
   }
 }
 
@@ -441,9 +362,8 @@ case class Relation(
     modelAOnDelete: OnDelete.Value,
     modelBOnDelete: OnDelete.Value
 ) {
-  val id = "_" + name
+  val relationTableName = "_" + name
 
-  def connectsTheModels(model1: Model, model2: Model): Boolean   = connectsTheModels(model1.id, model2.id)
   def connectsTheModels(model1: String, model2: String): Boolean = (modelAId == model1 && modelBId == model2) || (modelAId == model2 && modelBId == model1)
 
   def isUnambiguous(schema: Schema): Boolean = (schema.relations.toSet - this).nonEmpty
@@ -457,23 +377,6 @@ case class Relation(
   def getModelB(schema: Schema): Option[Model] = schema.getModelById(modelBId)
   def getModelB_!(schema: Schema): Model       = getModelB(schema).get //OrElse(throw SystemErrors.InvalidRelation("A relation should have a valid Model B."))
 
-  def getOtherModel_!(schema: Schema, model: Model): Model = {
-    model.id match {
-      case `modelAId` => getModelB_!(schema)
-      case `modelBId` => getModelA_!(schema)
-      case _          => ??? //throw SystemErrors.InvalidRelation(s"The model with the id ${model.id} is not part of this relation.")
-    }
-  }
-
-  def getField(schema: Schema, model: Model): Option[Field] = {
-    model.id match {
-      case `modelAId` => getModelAField(schema)
-      case `modelBId` => getModelBField(schema)
-      case _ =>
-        sys.error(s"The model with the id ${model.id} is not part of this relation.") //throw SystemErrors.InvalidRelation(s"The model with the id ${model.id} is not part of this relation.")
-    }
-  }
-
   def getModelAField(schema: Schema): Option[Field] = modelFieldFor(schema, modelAId, RelationSide.A)
   def getModelBField(schema: Schema): Option[Field] = {
     // note: defaults to modelAField to handle same model, same field relations
@@ -483,26 +386,8 @@ case class Relation(
   private def modelFieldFor(schema: Schema, modelId: String, relationSide: RelationSide.Value): Option[Field] = {
     for {
       model <- schema.getModelById(modelId)
-      field <- model.relationFieldForIdAndSide(relationId = id, relationSide = relationSide)
+      field <- model.relationFieldForIdAndSide(relationId = relationTableName, relationSide = relationSide)
     } yield field
-  }
-
-  def fieldSide(schema: Schema, field: Field): com.prisma.shared.models.RelationSide.Value = {
-    val fieldModel = schema.getModelByFieldId_!(field.id)
-    fieldModel.id match {
-      case `modelAId` => RelationSide.A
-      case `modelBId` => RelationSide.B
-    }
-  }
-
-  def sideOf(model: Model): RelationSide.Value = {
-    if (model.id == modelAId) {
-      RelationSide.A
-    } else if (model.id == modelBId) {
-      RelationSide.B
-    } else {
-      sys.error(s"The model ${model.name} is not part of the relation $name")
-    }
   }
 
   def sideOfModelCascades(model: Model): Boolean = {
@@ -516,13 +401,6 @@ case class Relation(
   }
 
   def bothSidesCascade: Boolean = modelAOnDelete == OnDelete.Cascade && modelBOnDelete == OnDelete.Cascade
-
-  def oppositeSideOf(model: Model): RelationSide.Value = {
-    sideOf(model) match {
-      case RelationSide.A => RelationSide.B
-      case RelationSide.B => RelationSide.A
-    }
-  }
 }
 
 object ModelMutationType extends Enumeration {

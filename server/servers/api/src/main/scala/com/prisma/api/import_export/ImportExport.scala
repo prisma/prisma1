@@ -1,6 +1,6 @@
 package com.prisma.api.import_export
 
-import com.prisma.api.connector.{DataResolver, ReallyCoolArgs, _}
+import com.prisma.api.connector.{DataResolver, PrismaArgs}
 import com.prisma.gc_values.{ListGCValue, RootGCValue}
 import com.prisma.shared.models.{Model, Project, Relation}
 import play.api.libs.json._
@@ -23,7 +23,7 @@ package object ImportExport {
   case class ImportList(identifier: ImportIdentifier, tableName: String, values: ListGCValue)
 
   // TEMP STRUCTURES
-  case class CreateDataItemImport(project: Project, model: Model, args: ReallyCoolArgs)
+  case class CreateDataItemImport(project: Project, model: Model, args: PrismaArgs)
   case class CreateRelationRow(project: Project, relation: Relation, a: String, b: String)
   case class PushScalarListImport(project: Project, tableName: String, id: String, values: Vector[Any])
 
@@ -71,7 +71,7 @@ package object ImportExport {
 
   def toRelationData(r: Relation, project: Project): RelationData = {
     RelationData(
-      r.id,
+      r.relationTableName,
       r.getModelB_!(project.schema).name,
       r.getModelBField(project.schema).map(_.name),
       r.getModelA_!(project.schema).name,
@@ -79,7 +79,7 @@ package object ImportExport {
     )
   }
 
-  case class DataItemsPage(items: Seq[JsValue], hasMore: Boolean) { def itemCount: Int = items.length }
+  case class PrismaNodesPage(items: Seq[JsValue], hasMore: Boolean) { def itemCount: Int = items.length }
 
   object MyJsonProtocol {
     val cursorReads = Json.reads[Cursor]

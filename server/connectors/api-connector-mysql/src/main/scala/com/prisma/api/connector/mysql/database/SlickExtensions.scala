@@ -9,36 +9,23 @@ import spray.json.DefaultJsonProtocol._
 import spray.json._
 import spray.json.{JsValue => SprayJsValue}
 import play.api.libs.json.{Json, JsValue => PlayJsValue}
+import JdbcExtensions._
 
 object SlickExtensions {
 
   implicit object SetGcValueParam extends SetParameter[GCValue] {
-    val dateTimeFormat = DateTimeFormat.forPattern("yyyy-MM-dd'T'HH:mm:ss.SSS").withZoneUTC()
-
     override def apply(gcValue: GCValue, pp: PositionedParameters): Unit = {
-      gcValue match {
-        case NullGCValue         => pp.setNull(java.sql.Types.NULL)
-        case x: StringGCValue    => pp.setString(x.value)
-        case x: EnumGCValue      => pp.setString(x.value)
-        case x: GraphQLIdGCValue => pp.setString(x.value)
-        case x: DateTimeGCValue  => pp.setString(dateTimeFormat.print(x.value))
-        case x: IntGCValue       => pp.setInt(x.value)
-        case x: FloatGCValue     => pp.setDouble(x.value)
-        case x: BooleanGCValue   => pp.setBoolean(x.value)
-        case x: JsonGCValue      => pp.setString(x.value.toString)
-        case x: ListGCValue      => sys.error("ListGCValue not implemented here yet.")
-        case x: RootGCValue      => sys.error("RootGCValues not implemented here yet.")
-      }
+      val npos = pp.pos + 1
+      pp.ps.setGcValue(npos, gcValue)
+      pp.pos = npos
     }
   }
 
   implicit class SQLActionBuilderConcat(val a: SQLActionBuilder) extends AnyVal {
     def concat(b: SQLActionBuilder): SQLActionBuilder = {
-      SQLActionBuilder(a.queryParts ++ " " ++ b.queryParts, new SetParameter[Unit] {
-        def apply(p: Unit, pp: PositionedParameters): Unit = {
-          a.unitPConv.apply(p, pp)
-          b.unitPConv.apply(p, pp)
-        }
+      SQLActionBuilder(a.queryParts ++ " " ++ b.queryParts, (p: Unit, pp: PositionedParameters) => {
+        a.unitPConv.apply(p, pp)
+        b.unitPConv.apply(p, pp)
       })
     }
     def concat(b: Option[SQLActionBuilder]): SQLActionBuilder = b match {
@@ -50,7 +37,7 @@ object SlickExtensions {
     def ++(b: Option[SQLActionBuilder]): SQLActionBuilder = concat(b)
   }
 
-  def listToJson(param: List[Any]): String = {
+  def listToJson(param: List[Any]): String =
     param
       .map {
         case v: String     => v.toJson
@@ -66,15 +53,13 @@ object SlickExtensions {
       }
       .toJson
       .toString
-  }
 
   def escapeUnsafeParam(param: Any): SQLActionBuilder = {
-    def unwrapSome(x: Any): Any = {
-      x match {
-        case Some(x) => x
-        case x       => x
-      }
+    def unwrapSome(x: Any): Any = x match {
+      case Some(x) => x
+      case x       => x
     }
+
     unwrapSome(param) match {
       case param: String       => sql"$param"
       case param: PlayJsValue  => sql"${param.toString}"
@@ -94,6 +79,23 @@ object SlickExtensions {
     }
   }
 
+  def gcValueToSQLBuilder(value: GCValue): SQLActionBuilder = {
+    val dateTimeFormat = DateTimeFormat.forPattern("yyyy-MM-dd'T'HH:mm:ss.SSS").withZoneUTC()
+    value match {
+      case NullGCValue        => sql"NULL"
+      case x: StringGCValue   => sql"${x.value}"
+      case x: EnumGCValue     => sql"${x.value}"
+      case x: IdGCValue       => sql"${x.value}"
+      case x: DateTimeGCValue => sql"${dateTimeFormat.print(x.value)}"
+      case x: IntGCValue      => sql"${x.value}"
+      case x: FloatGCValue    => sql"${x.value}"
+      case x: BooleanGCValue  => sql"${x.value}"
+      case x: JsonGCValue     => sql"${x.value.toString}"
+      case x: ListGCValue     => sys.error("ListGCValue not implemented here yet.")
+      case x: RootGCValue     => sys.error("RootGCValues not implemented here yet.")
+    }
+  }
+
   def listToJsonList(param: List[Any]): String = {
     val x = listToJson(param)
     x.substring(1, x.length - 1)
@@ -109,59 +111,19 @@ object SlickExtensions {
 
   def combineByComma(actions: Iterable[SQLActionBuilder]) = combineBy(actions, ",")
 
-  def generateParentheses(sql: Option[SQLActionBuilder]) = {
-    sql match {
-      case None => None
-      case Some(sql) =>
-        Some(
-          sql"(" concat sql concat sql")"
-        )
-    }
+  def generateParentheses(sql: Option[SQLActionBuilder]) = sql match {
+    case None      => None
+    case Some(sql) => Some(sql"(" concat sql concat sql")")
   }
 
   // Use this with caution, since combinator is not escaped!
-  def combineBy(actions: Iterable[SQLActionBuilder], combinator: String): Option[SQLActionBuilder] =
-    actions.toList match {
-      case Nil         => None
-      case head :: Nil => Some(head)
-      case _ =>
-        Some(actions.reduceLeft((a, b) => a concat sql"#$combinator" concat b))
-    }
+  def combineBy(actions: Iterable[SQLActionBuilder], combinator: String): Option[SQLActionBuilder] = actions.toList match {
+    case Nil         => None
+    case head :: Nil => Some(head)
+    case _           => Some(actions.reduceLeft((a, b) => a concat sql"#$combinator" concat b))
+  }
 
   def prefixIfNotNone(prefix: String, action: Option[SQLActionBuilder]): Option[SQLActionBuilder] = {
     if (action.isEmpty) None else Some(sql"#$prefix " concat action.get)
   }
-
-  //region Import
-
-  import org.apache.commons.lang.StringEscapeUtils.escapeSql
-
-  def escapeKeyToString(key: String) = s"`${escapeSql(key)}`"
-
-  def escapeUnsafeParamToString(param: Any): String = {
-    def unwrapSome(x: Any): Any = {
-      x match {
-        case Some(x) => x
-        case x       => x
-      }
-    }
-    unwrapSome(param) match {
-      case param: String       => s"'${escapeSql(param)}'"
-      case param: PlayJsValue  => s"'${escapeSql(param.toString())}'"
-      case param: SprayJsValue => s"'${escapeSql(param.compactPrint)}'"
-      case param: Boolean      => param.toString
-      case param: Int          => param.toString
-      case param: Long         => param.toString
-      case param: Float        => param.toString
-      case param: Double       => param.toString
-      case param: BigInt       => param.toString
-      case param: BigDecimal   => param.toString
-      case param: DateTime     => s"'${param.toString(DateTimeFormat.forPattern("yyyy-MM-dd'T'HH:mm:ss.SSS").withZoneUTC())}'"
-      case param: Vector[_]    => s"${listToJson(param.toList)}"
-      case None                => s"NULL"
-      case null                => s"NULL"
-      case _                   => throw new IllegalArgumentException("Unsupported scalar value in SlickExtensions: " + param.toString)
-    }
-  }
-
 }
