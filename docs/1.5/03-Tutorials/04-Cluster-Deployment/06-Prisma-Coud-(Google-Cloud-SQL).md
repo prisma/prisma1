@@ -197,7 +197,7 @@ After the connection was successfully tested, you need to provide a **Cluster na
 <Instruction>
 
 Finally, you need to select a **Cluster region** - choose the one that's closest to where the majority of your users is supposably located.
-https://docs.google.com/drawings/d/e/2PACX-1vTnBttt5s2Dl6dgp0JkZeTD7mNcxAwhTiEe6868hfRBYbBxNJRmSchpZZ02zObpjzREUWduc0Qv1s2Y/pub?w=462&h=307
+
 </Instruction>
 
 <Instruction>
