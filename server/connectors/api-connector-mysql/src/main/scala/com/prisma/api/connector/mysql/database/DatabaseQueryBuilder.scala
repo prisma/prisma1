@@ -140,8 +140,7 @@ object DatabaseQueryBuilder {
   }
 
   def countAllFromModel(project: Project, model: Model, whereFilter: Option[DataItemFilterCollection]): DBIOAction[Int, NoStream, Effect] = {
-    val whereSql = whereFilter.flatMap(where => QueryArgumentsHelpers.generateFilterConditions(project.id, model.name, where))
-    val query    = sql"select count(*) from `#${project.id}`.`#${model.name}`" ++ prefixIfNotNone("where", whereSql)
+    val query = sql"select count(*) from `#${project.id}`.`#${model.name}`" ++ whereFilterAppendix(project.id, model, whereFilter)
     query.as[Int].map(_.head)
   }
 

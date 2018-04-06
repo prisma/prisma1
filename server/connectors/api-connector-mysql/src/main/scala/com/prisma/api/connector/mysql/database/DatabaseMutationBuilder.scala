@@ -5,7 +5,7 @@ import java.sql.{PreparedStatement, Statement}
 import com.prisma.api.connector.Types.DataItemFilterCollection
 import com.prisma.api.connector._
 import com.prisma.api.connector.mysql.database.JdbcExtensions._
-import com.prisma.api.connector.mysql.database.SlickExtensions.{prefixIfNotNone, _}
+import com.prisma.api.connector.mysql.database.SlickExtensions._
 import com.prisma.api.schema.GeneralError
 import com.prisma.gc_values.{GCValue, ListGCValue, NullGCValue}
 import com.prisma.shared.models.TypeIdentifier.TypeIdentifier
@@ -67,8 +67,7 @@ object DatabaseMutationBuilder {
 
   def updateDataItems(projectId: String, model: Model, args: PrismaArgs, whereFilter: Option[DataItemFilterCollection]) = {
     val updateValues = combineByComma(args.raw.asRoot.map.map { case (k, v) => escapeKey(k) ++ sql" = " ++ gcValueToSQLBuilder(v) })
-    val whereSql     = whereFilter.flatMap(where => QueryArgumentsHelpers.generateFilterConditions(projectId, model.name, where))
-    (sql"UPDATE `#${projectId}`.`#${model.name}`" ++ sql"SET " ++ updateValues ++ prefixIfNotNone("where", whereSql)).asUpdate
+    (sql"UPDATE `#${projectId}`.`#${model.name}`" ++ sql"SET " ++ updateValues ++ whereFilterAppendix(projectId, model, whereFilter)).asUpdate
   }
 
   def updateDataItemByPath(projectId: String, path: Path, updateArgs: PrismaArgs) = {
@@ -154,17 +153,14 @@ object DatabaseMutationBuilder {
   //region DELETE
 
   def deleteDataItems(project: Project, model: Model, whereFilter: Option[DataItemFilterCollection]) = {
-    val whereSql = whereFilter.flatMap(where => QueryArgumentsHelpers.generateFilterConditions(project.id, model.name, where))
-    (sql"DELETE FROM `#${project.id}`.`#${model.name}`" ++ prefixIfNotNone("where", whereSql)).asUpdate
+    (sql"DELETE FROM `#${project.id}`.`#${model.name}`" ++ whereFilterAppendix(project.id, model, whereFilter)).asUpdate
   }
 
   def deleteRelayIds(project: Project, model: Model, whereFilter: Option[DataItemFilterCollection]) = {
-    val whereSql = whereFilter.flatMap(where => QueryArgumentsHelpers.generateFilterConditions(project.id, model.name, where))
     (sql"DELETE FROM `#${project.id}`.`_RelayId`" ++
       (sql"WHERE `id` IN (" ++
         sql"SELECT `id`" ++
-        sql"FROM `#${project.id}`.`#${model.name}`" ++
-        prefixIfNotNone("where", whereSql) ++ sql")")).asUpdate
+        sql"FROM `#${project.id}`.`#${model.name}`" ++ whereFilterAppendix(project.id, model, whereFilter) ++ sql")")).asUpdate
   }
 
   def deleteDataItem(projectId: String, path: Path) =
@@ -339,11 +335,10 @@ object DatabaseMutationBuilder {
   }
 
   def oldParentFailureTriggerByFieldAndFilter(project: Project, model: Model, whereFilter: Option[DataItemFilterCollection], field: Field) = {
-    val table    = field.relation.get.relationTableName
-    val whereSql = whereFilter.flatMap(where => QueryArgumentsHelpers.generateFilterConditions(project.id, model.name, where))
-    val query = sql"SELECT `id` FROM `#${project.id}`.`#$table` OLDPARENTPATHFAILURETRIGGERBYFIELDANDFILTER WHERE `#${field.oppositeRelationSide.get}` IN (SELECT `id` FROM `#${project.id}`.`#${model.name}` " ++ prefixIfNotNone(
-      "where",
-      whereSql) ++ sql")"
+    val table = field.relation.get.relationTableName
+    val query = sql"SELECT `id` FROM `#${project.id}`.`#$table` OLDPARENTPATHFAILURETRIGGERBYFIELDANDFILTER" ++
+      sql" WHERE `#${field.oppositeRelationSide.get}` IN (SELECT `id` FROM `#${project.id}`.`#${model.name}` " ++
+      whereFilterAppendix(project.id, model, whereFilter) ++ sql")"
     triggerFailureWhenExists(project, query, table)
   }
 

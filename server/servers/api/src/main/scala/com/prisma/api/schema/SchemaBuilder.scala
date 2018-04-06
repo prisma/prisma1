@@ -158,8 +158,8 @@ case class SchemaBuilderImpl(
         fieldType = objectTypeBuilder.batchPayloadType,
         arguments = args,
         resolve = (ctx) => {
-          val queryArguments = objectTypeBuilder.extractQueryArgumentsFromContext(model, ctx).flatMap(_.filter)
-          val mutation       = UpdateMany(project, model, ctx.args, queryArguments, dataResolver = masterDataResolver)
+          val arguments = objectTypeBuilder.extractQueryArgumentsFromContext(model, ctx).flatMap(_.filter)
+          val mutation  = UpdateMany(project, model, ctx.args, arguments, dataResolver = masterDataResolver)
           ClientMutationRunner.run(mutation, databaseMutactionExecutor, sideEffectMutactionExecutor, mutactionVerifier)
         }
       )

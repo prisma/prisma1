@@ -10,6 +10,8 @@ import spray.json._
 import spray.json.{JsValue => SprayJsValue}
 import play.api.libs.json.{Json, JsValue => PlayJsValue}
 import JdbcExtensions._
+import com.prisma.api.connector.Types.DataItemFilterCollection
+import com.prisma.shared.models.Model
 
 object SlickExtensions {
 
@@ -125,5 +127,10 @@ object SlickExtensions {
 
   def prefixIfNotNone(prefix: String, action: Option[SQLActionBuilder]): Option[SQLActionBuilder] = {
     if (action.isEmpty) None else Some(sql"#$prefix " concat action.get)
+  }
+
+  def whereFilterAppendix(projectId: String, model: Model, filter: Option[DataItemFilterCollection]) = {
+    val whereSql = filter.flatMap(where => QueryArgumentsHelpers.generateFilterConditions(projectId, model.name, where))
+    prefixIfNotNone("where", whereSql)
   }
 }
