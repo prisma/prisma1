@@ -20,13 +20,33 @@ In the following sections, you are going to learn how to:
 
 <Instruction>
 
-If you don't have an Google account yet, [sign up here](https://cloud.google.com/).
+If you don't have an Google account yet, [sign up here](https://cloud.google.com/). If you have you can use your Google account.
+
+![](https://docs.google.com/drawings/d/e/2PACX-1vSqef3ZhzbSBvUbipefCw0vYeFP1DTx6PbXcjONMEIo_sQtF8rlC4oXtnKHsOr5QSsaOimIapBb2ZxS/pub?w=926&h=100)
+![](https://docs.google.com/drawings/d/e/2PACX-1vRyVThd5vJfKoLx0kHUoeB0jOetiQu-v34O8FepAPvqOPFz7BWojZRDOcO0puGeFEwbJWsFS3ptEjqF/pub?w=311&h=344)
 
 </Instruction>
 
 This process might take a little while, but you'll get there! Note that you'll have to provide credit card info as well as your phone number at some point during the process.
 
+![](https://docs.google.com/drawings/d/e/2PACX-1vR2kRhRrOovIoRq_KRumWPhhf23LKS3u5sZiLKofmMxChG3aIyvMyEXEL8GhZYf-IH5uqXguG6COEeO/pub?w=297&h=96)
+
+Follow the steps to add your credit card, ...
+
 ### 1.1 Creating a new Google Cloud SQL instance
+#### Create a new project
+
+Click on the red box shown below in the image to create a new project.
+
+![](https://docs.google.com/drawings/d/e/2PACX-1vSAfvUVtOFaWTaTYvNj2j6NipxHGzWhM627zWYJyMxtBlwAvOS-OjJPQMia3nsbp3FYwz_Higjap-u4/pub?w=805&h=100)
+
+Create a name for your project.
+
+![](https://docs.google.com/drawings/d/e/2PACX-1vRlUTPMhXbkD_Z3B6_DG6zIPof32eHL8tcSmq5TF5o6KAGyYfJvRZXDfaaPRc1thm-Zgfc-uCZ0908X/pub?w=462&h=272)
+#### Navigate to Google Cloud SQL
+
+![](https://docs.google.com/drawings/d/e/2PACX-1vRfcE1Rris9sIjekACbmU6k90VP3nNxDXLpMERUkFXaxP9Jw-7XOLK8oPk_bssS5j8A-Z7c7vMBbM5Y/pub?w=120&h=334)
+
 
 In this section, you'll spin up a new Google Cloud SQL instance in the `us-east1` region. If you prefer, feel free to choose any of the other supported regions instead:
 
