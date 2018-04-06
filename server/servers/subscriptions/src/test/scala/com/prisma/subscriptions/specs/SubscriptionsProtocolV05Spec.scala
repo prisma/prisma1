@@ -227,7 +227,7 @@ class SubscriptionsProtocolV05Spec extends FlatSpec with Matchers with SpecBase 
       )
 
       wsClient.expectMessage(
-        """{"id":"3","payload":{"data":{"todo":{"mutation":"UPDATED","previousValues":{"id":"test-node-id","json":null,"int":8},"node":{"id":"test-node-id"}}}},"type":"subscription_data"}""")
+        """{"id":"3","payload":{"data":{"todo":{"mutation":"UPDATED","previousValues":{"id":"text-node-id","json":null,"int":8},"node":{"id":"test-node-id"}}}},"type":"subscription_data"}""")
     }
   }
 

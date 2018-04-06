@@ -164,7 +164,7 @@ class SubscriptionsProtocolV07Spec extends FlatSpec with Matchers with SpecBase 
     }
   }
 
-  "Using the URPDATED mutation filter" should "work" in {
+  "Using the UPDATED mutation filter" should "work" in {
     testInitializedWebsocket(project) { wsClient =>
       wsClient.sendMessage(
         startMessage(
@@ -239,7 +239,7 @@ class SubscriptionsProtocolV07Spec extends FlatSpec with Matchers with SpecBase 
       wsClient.expectMessage(
         dataMessage(
           id = "3",
-          payload = """{"todo":{"mutation":"UPDATED","previousValues":{"id":"test-node-id","json":null,"int":8},"node":{"id":"test-node-id"}}}"""
+          payload = """{"todo":{"mutation":"UPDATED","previousValues":{"id":"text-node-id","json":null,"int":8},"node":{"id":"test-node-id"}}}"""
         )
       )
     }

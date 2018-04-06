@@ -21,7 +21,7 @@ object DatabaseMutactionVerifierImpl extends DatabaseMutactionVerifier {
     }
   }
 
-  def verify(mutaction: CreateDataItem): Option[ClientApiError] = InputValueValidation.validateDataItemInputs(mutaction.model, mutaction.args)
+  def verify(mutaction: CreateDataItem): Option[ClientApiError] = InputValueValidation.validateDataItemInputsGC(mutaction.model, mutaction.args)
   def verify(mutaction: UpdateDataItem): Option[ClientApiError] = InputValueValidation.validateDataItemInputs(mutaction.model, mutaction.args)
 
   def verify(mutaction: UpsertDataItem): Iterable[ClientApiError] = {

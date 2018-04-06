@@ -60,8 +60,8 @@ trait NestedRelationInterpreterBase extends DatabaseMutactionInterpreter {
   def sysError = sys.error("This should not happen, since it means a many side is required")
 
   def causedByThisMutaction(path: Path, cause: String) = {
-    val parentCheckString = s"`${path.lastRelation_!.id}` OLDPARENTFAILURETRIGGER WHERE `${path.lastEdge_!.childRelationSide}`"
-    val childCheckString  = s"`${path.lastRelation_!.id}` OLDCHILDPATHFAILURETRIGGER WHERE `${path.lastEdge_!.parentRelationSide}`"
+    val parentCheckString = s"`${path.lastRelation_!.relationTableName}` OLDPARENTFAILURETRIGGER WHERE `${path.lastEdge_!.childRelationSide}`"
+    val childCheckString  = s"`${path.lastRelation_!.relationTableName}` OLDCHILDPATHFAILURETRIGGER WHERE `${path.lastEdge_!.parentRelationSide}`"
 
     val parentParameterString = path.lastEdge_! match {
       case edge: NodeEdge => parameterString(edge.childWhere)

@@ -82,7 +82,7 @@ object ProjectJsonFormatter {
       case (`nullType`, _)                  => JsSuccess(NullGCValue)
       case (`stringType`, JsString(str))    => JsSuccess(StringGCValue(str))
       case (`enumType`, JsString(str))      => JsSuccess(EnumGCValue(str))
-      case (`graphQlIdType`, JsString(str)) => JsSuccess(GraphQLIdGCValue(str))
+      case (`graphQlIdType`, JsString(str)) => JsSuccess(IdGCValue(str))
       case (`dateTimeType`, JsString(str))  => JsSuccess(DateTimeGCValue(new DateTime(str, DateTimeZone.UTC)))
       case (`intType`, JsNumber(x))         => JsSuccess(IntGCValue(x.toInt))
       case (`floatType`, JsNumber(x))       => JsSuccess(FloatGCValue(x.toDouble))
@@ -101,17 +101,17 @@ object ProjectJsonFormatter {
       val formatter = ISODateTimeFormat.dateHourMinuteSecondFraction()
 
       gcValue match {
-        case NullGCValue         => json(nullType, JsNull)
-        case x: StringGCValue    => json(stringType, JsString(x.value))
-        case x: EnumGCValue      => json(enumType, JsString(x.value))
-        case x: GraphQLIdGCValue => json(graphQlIdType, JsString(x.value))
-        case x: DateTimeGCValue  => json(dateTimeType, JsString(formatter.print(x.value)))
-        case x: IntGCValue       => json(intType, JsNumber(x.value))
-        case x: FloatGCValue     => json(floatType, JsNumber(x.value))
-        case x: BooleanGCValue   => json(booleanType, JsBoolean(x.value))
-        case x: JsonGCValue      => json(jsonType, x.value)
-        case x: ListGCValue      => json(listType, JsArray(x.values.map(this.writes)), isList = true)
-        case x: RootGCValue      => json(rootType, JsObject(x.map.mapValues(this.writes)))
+        case NullGCValue        => json(nullType, JsNull)
+        case x: StringGCValue   => json(stringType, JsString(x.value))
+        case x: EnumGCValue     => json(enumType, JsString(x.value))
+        case x: IdGCValue       => json(graphQlIdType, JsString(x.value))
+        case x: DateTimeGCValue => json(dateTimeType, JsString(formatter.print(x.value)))
+        case x: IntGCValue      => json(intType, JsNumber(x.value))
+        case x: FloatGCValue    => json(floatType, JsNumber(x.value))
+        case x: BooleanGCValue  => json(booleanType, JsBoolean(x.value))
+        case x: JsonGCValue     => json(jsonType, x.value)
+        case x: ListGCValue     => json(listType, JsArray(x.values.map(this.writes)), isList = true)
+        case x: RootGCValue     => json(rootType, JsObject(x.map.mapValues(this.writes)))
       }
     }
 

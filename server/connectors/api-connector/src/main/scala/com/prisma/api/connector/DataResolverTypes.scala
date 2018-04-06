@@ -1,6 +1,7 @@
 package com.prisma.api.connector
 
 import com.prisma.api.connector.Types.DataItemFilterCollection
+import com.prisma.gc_values.IdGCValue
 import com.prisma.shared.models.{Field, Model, Relation}
 
 import scala.collection.immutable.Seq
@@ -25,7 +26,8 @@ case class ResolverResult(
 case class ResolverResultNew[T](
     nodes: Vector[T],
     hasNextPage: Boolean,
-    hasPreviousPage: Boolean
+    hasPreviousPage: Boolean,
+    parentModelId: Option[IdGCValue] = None
 )
 
 case class RelationResult(
@@ -50,6 +52,11 @@ case class QueryArguments(
     filter: Option[DataItemFilterCollection],
     orderBy: Option[OrderBy]
 )
+object QueryArguments {
+  def empty = QueryArguments(skip = None, after = None, first = None, before = None, last = None, filter = None, orderBy = None)
+  def filterOnly(filter: Option[DataItemFilterCollection]) =
+    QueryArguments(skip = None, after = None, first = None, before = None, last = None, filter = filter, orderBy = None)
+}
 
 object SortOrder extends Enumeration {
   type SortOrder = Value

@@ -59,10 +59,10 @@ object JavaServletRequest {
   def headers(request: HttpServletRequest): Map[String, String] = {
     import scala.collection.mutable
     val map: mutable.Map[String, String] = mutable.Map.empty
-    val headerNames                      = request.getHeaderNames;
+    val headerNames                      = request.getHeaderNames
 
     while (headerNames.hasMoreElements) {
-      val key = Option(headerNames.nextElement());
+      val key = Option(headerNames.nextElement())
       val value = for {
         k <- key
         v <- Option(request.getHeader(k))

@@ -2,7 +2,7 @@ package com.prisma.api.server
 
 import org.joda.time.DateTime
 import org.joda.time.format.DateTimeFormat
-import sangria.marshalling.{ArrayMapBuilder, InputUnmarshaller, ResultMarshaller, ScalarValueInfo}
+import sangria.marshalling._
 import spray.json.{JsArray, JsBoolean, JsNull, JsNumber, JsObject, JsString, JsValue}
 
 object JsonMarshalling {
@@ -26,7 +26,7 @@ object JsonMarshalling {
       case None    ⇒ nullNode
     }
 
-    def scalarNode(value: Any, typeName: String, info: Set[ScalarValueInfo]) =
+    def scalarNode(value: Any, typeName: String, info: Set[ScalarValueInfo]): JsValue =
       value match {
         case v: String     ⇒ JsString(v)
         case v: Boolean    ⇒ JsBoolean(v)

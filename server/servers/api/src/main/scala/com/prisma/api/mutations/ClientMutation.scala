@@ -19,8 +19,8 @@ trait ClientMutation[T] {
 trait SingleItemClientMutation extends ClientMutation[ReturnValueResult] {
   def returnValueByUnique(where: NodeSelector): Future[ReturnValueResult] = {
     dataResolver.resolveByUnique(where).map {
-      case Some(dataItem) => ReturnValue(dataItem)
-      case None           => NoReturnValue(where)
+      case Some(prismaNode) => ReturnValue(prismaNode)
+      case None             => NoReturnValue(where)
     }
   }
 }
@@ -34,5 +34,5 @@ case class PreparedMutactions(
 
 sealed trait ReturnValueResult
 case class BatchPayload(count: Long)
-case class ReturnValue(dataItem: DataItem)    extends ReturnValueResult
-case class NoReturnValue(where: NodeSelector) extends ReturnValueResult
+case class ReturnValue(prismaNode: PrismaNode) extends ReturnValueResult
+case class NoReturnValue(where: NodeSelector)  extends ReturnValueResult

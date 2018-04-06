@@ -71,7 +71,7 @@ package object ImportExport {
 
   def toRelationData(r: Relation, project: Project): RelationData = {
     RelationData(
-      r.id,
+      r.relationTableName,
       r.getModelB_!(project.schema).name,
       r.getModelBField(project.schema).map(_.name),
       r.getModelA_!(project.schema).name,
@@ -79,7 +79,7 @@ package object ImportExport {
     )
   }
 
-  case class DataItemsPage(items: Seq[JsValue], hasMore: Boolean) { def itemCount: Int = items.length }
+  case class PrismaNodesPage(items: Seq[JsValue], hasMore: Boolean) { def itemCount: Int = items.length }
 
   object MyJsonProtocol {
     val cursorReads = Json.reads[Cursor]

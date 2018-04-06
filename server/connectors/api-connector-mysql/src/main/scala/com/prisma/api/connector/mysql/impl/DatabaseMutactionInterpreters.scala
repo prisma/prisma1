@@ -28,9 +28,7 @@ case class CascadingDeleteRelationMutactionsInterpreter(mutaction: CascadingDele
   val path    = mutaction.path
   val project = mutaction.project
 
-  val fieldsWhereThisModelIsRequired = project.schema.allFields.filter { f =>
-    f.isRequired && !f.isList && f.relatedModel(project.schema).contains(path.lastModel)
-  }
+  val fieldsWhereThisModelIsRequired = project.schema.fieldsWhereThisModelIsRequired(path.lastModel)
 
   val otherFieldsWhereThisModelIsRequired = path.lastEdge match {
     case Some(edge) => fieldsWhereThisModelIsRequired.filter(f => f != edge.parentField)
@@ -53,7 +51,7 @@ case class CascadingDeleteRelationMutactionsInterpreter(mutaction: CascadingDele
     otherFieldsWhereThisModelIsRequired.collectFirst { case f if causedByThisMutactionChildOnly(f, cause) => f.relation.get }
 
   private def causedByThisMutactionChildOnly(field: Field, cause: String) = {
-    val parentCheckString = s"`${field.relation.get.id}` OLDPARENTPATHFAILURETRIGGERBYFIELD WHERE `${field.oppositeRelationSide.get}`"
+    val parentCheckString = s"`${field.relation.get.relationTableName}` OLDPARENTPATHFAILURETRIGGERBYFIELD WHERE `${field.oppositeRelationSide.get}`"
 
     path.lastEdge match {
       case Some(edge: NodeEdge) => cause.contains(parentCheckString) && cause.contains(parameterString(edge.childWhere))
@@ -76,14 +74,15 @@ case class CreateDataItemInterpreter(mutaction: CreateDataItem) extends Database
   override val action = {
     val relayIds = TableQuery(new ProjectRelayIdTable(_, project.id))
     DBIO.seq(
-      DatabaseMutationBuilder.createDataItem(project.id, model.name, args.generateNonListCreateArgs(model, id)),
+      DatabaseMutationBuilder.createReallyCoolDataItem(project.id, model, args),
       relayIds += ProjectRelayId(id = id, model.stableIdentifier)
     )
   }
 
   override val errorMapper = {
-    case e: SQLIntegrityConstraintViolationException if e.getErrorCode == 1062 && GetFieldFromSQLUniqueException.getFieldOption(List(args), e).isDefined =>
-      APIErrors.UniqueConstraintViolation(model.name, GetFieldFromSQLUniqueException.getFieldOption(List(args), e).get)
+    case e: SQLIntegrityConstraintViolationException
+        if e.getErrorCode == 1062 && GetFieldFromSQLUniqueException.getFieldOption(args.raw.asRoot.map.keys.toVector, e).isDefined =>
+      APIErrors.UniqueConstraintViolation(model.name, GetFieldFromSQLUniqueException.getFieldOption(args.raw.asRoot.map.keys.toVector, e).get)
     case e: SQLIntegrityConstraintViolationException if e.getErrorCode == 1452 =>
       APIErrors.NodeDoesNotExist("")
   }
@@ -119,9 +118,7 @@ case class DeleteManyRelationChecksInterpreter(mutaction: DeleteManyRelationChec
   val model   = mutaction.model
   val filter  = mutaction.filter
 
-  val fieldsWhereThisModelIsRequired = project.schema.allFields.filter { f =>
-    f.isRequired && !f.isList && f.relatedModel(project.schema).contains(model)
-  }
+  val fieldsWhereThisModelIsRequired = project.schema.fieldsWhereThisModelIsRequired(model)
 
   override val action = {
     val requiredChecks = fieldsWhereThisModelIsRequired.map(oldParentFailureTriggerByFieldAndFilter(project, model, filter, _))
@@ -138,7 +135,7 @@ case class DeleteManyRelationChecksInterpreter(mutaction: DeleteManyRelationChec
   }
 
   private def causedByThisMutactionChildOnly(field: Field, cause: String) = {
-    val parentCheckString = s"`${field.relation.get.id}` OLDPARENTPATHFAILURETRIGGERBYFIELDANDFILTER WHERE `${field.oppositeRelationSide.get}`"
+    val parentCheckString = s"`${field.relation.get.relationTableName}` OLDPARENTPATHFAILURETRIGGERBYFIELDANDFILTER WHERE `${field.oppositeRelationSide.get}`"
     cause.contains(parentCheckString) //todo add filter
   }
 }
@@ -147,9 +144,7 @@ case class DeleteRelationCheckInterpreter(mutaction: DeleteRelationCheck) extend
   val project = mutaction.project
   val path    = mutaction.path
 
-  val fieldsWhereThisModelIsRequired = project.schema.allFields.filter { f =>
-    f.isRequired && !f.isList && f.relatedModel(project.schema).contains(path.lastModel)
-  }
+  val fieldsWhereThisModelIsRequired = project.schema.fieldsWhereThisModelIsRequired(path.lastModel)
 
   override val action = {
     val requiredCheck = fieldsWhereThisModelIsRequired.map(oldParentFailureTriggerByField(project, path, _))
@@ -165,7 +160,7 @@ case class DeleteRelationCheckInterpreter(mutaction: DeleteRelationCheck) extend
     fieldsWhereThisModelIsRequired.collectFirst { case f if causedByThisMutactionChildOnly(f, cause) => f.relation.get }
 
   private def causedByThisMutactionChildOnly(field: Field, cause: String) = {
-    val parentCheckString = s"`${field.relation.get.id}` OLDPARENTPATHFAILURETRIGGERBYFIELD WHERE `${field.oppositeRelationSide.get}`"
+    val parentCheckString = s"`${field.relation.get.relationTableName}` OLDPARENTPATHFAILURETRIGGERBYFIELD WHERE `${field.oppositeRelationSide.get}`"
 
     path.lastEdge match {
       case Some(edge: NodeEdge) => cause.contains(parentCheckString) && cause.contains(parameterString(edge.childWhere))
@@ -204,8 +199,9 @@ case class UpdateDataItemInterpreter(mutaction: UpdateDataItem) extends Database
 
   override val errorMapper = {
     // https://dev.mysql.com/doc/refman/5.5/en/error-messages-server.html#error_er_dup_entry
-    case e: SQLIntegrityConstraintViolationException if e.getErrorCode == 1062 && GetFieldFromSQLUniqueException.getFieldOption(List(args), e).isDefined =>
-      APIErrors.UniqueConstraintViolation(model.name, GetFieldFromSQLUniqueException.getFieldOption(List(args), e).get)
+    case e: SQLIntegrityConstraintViolationException
+        if e.getErrorCode == 1062 && GetFieldFromSQLUniqueException.getFieldOption(args.raw.keys.toVector, e).isDefined =>
+      APIErrors.UniqueConstraintViolation(model.name, GetFieldFromSQLUniqueException.getFieldOption(args.raw.keys.toVector, e).get)
 
     case e: SQLIntegrityConstraintViolationException if e.getErrorCode == 1452 =>
       APIErrors.NodeDoesNotExist(id)
@@ -248,8 +244,9 @@ case class UpsertDataItemInterpreter(mutaction: UpsertDataItem) extends Database
   }
 
   override val errorMapper = {
-    case e: SQLIntegrityConstraintViolationException if e.getErrorCode == 1062 && getFieldOption(List(createArgs, updateArgs), e).isDefined =>
-      APIErrors.UniqueConstraintViolation(model.name, getFieldOption(List(createArgs, updateArgs), e).get)
+    case e: SQLIntegrityConstraintViolationException
+        if e.getErrorCode == 1062 && getFieldOption(createArgs.raw.keys.toVector ++ updateArgs.raw.keys, e).isDefined =>
+      APIErrors.UniqueConstraintViolation(model.name, getFieldOption(createArgs.raw.keys.toVector ++ updateArgs.raw.keys, e).get)
 
     case e: SQLIntegrityConstraintViolationException if e.getErrorCode == 1452 =>
       APIErrors.NodeDoesNotExist("") //todo
@@ -288,8 +285,8 @@ case class UpsertDataItemIfInRelationWithInterpreter(mutaction: UpsertDataItemIf
   override val errorMapper = {
     // https://dev.mysql.com/doc/refman/5.5/en/error-messages-server.html#error_er_dup_entry
     case e: SQLIntegrityConstraintViolationException
-        if e.getErrorCode == 1062 && getFieldOption(List(mutaction.createArgs, mutaction.updateArgs), e).isDefined =>
-      APIErrors.UniqueConstraintViolation(model.name, getFieldOption(List(mutaction.createArgs, mutaction.updateArgs), e).get)
+        if e.getErrorCode == 1062 && getFieldOption(mutaction.createArgs.raw.keys.toVector ++ mutaction.updateArgs.raw.keys, e).isDefined =>
+      APIErrors.UniqueConstraintViolation(model.name, getFieldOption(mutaction.createArgs.raw.keys.toVector ++ mutaction.updateArgs.raw.keys, e).get)
 
     case e: SQLIntegrityConstraintViolationException if e.getErrorCode == 1452 =>
       APIErrors.NodeDoesNotExist("") //todo
@@ -312,8 +309,8 @@ case class VerifyConnectionInterpreter(mutaction: VerifyConnection) extends Data
     case e: SQLException if e.getErrorCode == 1242 && causedByThisMutaction(e.getCause.toString) => throw APIErrors.NodesNotConnectedError(path)
   }
 
-  def causedByThisMutaction(cause: String) = {
-    val string = s"`${path.lastRelation_!.id}` CONNECTIONFAILURETRIGGERPATH WHERE "
+  private def causedByThisMutaction(cause: String) = {
+    val string = s"`${path.lastRelation_!.relationTableName}` CONNECTIONFAILURETRIGGERPATH WHERE "
 
     path.lastEdge_! match {
       case _: ModelEdge   => cause.contains(string ++ s" `${path.parentSideOfLastEdge}`")
@@ -332,7 +329,7 @@ case class VerifyWhereInterpreter(mutaction: VerifyWhere) extends DatabaseMutact
     case e: SQLException if e.getErrorCode == 1242 && causedByThisMutaction(e.getCause.toString) => throw APIErrors.NodeNotFoundForWhereError(where)
   }
 
-  def causedByThisMutaction(cause: String) = {
+  private def causedByThisMutaction(cause: String) = {
     val modelString = s"`${where.model.name}` WHEREFAILURETRIGGER WHERE `${where.field.name}`"
     cause.contains(modelString) && cause.contains(parameterString(where))
   }

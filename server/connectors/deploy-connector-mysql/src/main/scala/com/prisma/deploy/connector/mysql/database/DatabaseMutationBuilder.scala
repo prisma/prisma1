@@ -55,8 +55,8 @@ object DatabaseMutationBuilder {
   }
 
   def updateScalarListType(projectId: String, modelName: String, fieldName: String, typeIdentifier: TypeIdentifier) = {
-    val sqlType       = sqlTypeForScalarTypeIdentifier(false, typeIdentifier)
-    val charsetString = charsetTypeForScalarTypeIdentifier(false, typeIdentifier)
+    val sqlType = sqlTypeForScalarTypeIdentifier(false, typeIdentifier)
+//    val charsetString = charsetTypeForScalarTypeIdentifier(false, typeIdentifier)
     val indexSize = sqlType match {
       case "text" | "mediumtext" => "(191)"
       case _                     => ""

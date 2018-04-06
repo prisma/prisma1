@@ -74,7 +74,10 @@ case class MigrationStepMapperImpl(projectId: String) extends MigrationStepMappe
       x.newName.map { newName =>
         val previousRelation = previousSchema.getRelationByName_!(x.name)
         val nextRelation     = nextSchema.getRelationByName_!(newName)
-        RenameTable(projectId = projectId, previousName = previousRelation.id, nextName = nextRelation.id, scalarListFieldsNames = Vector.empty)
+        RenameTable(projectId = projectId,
+                    previousName = previousRelation.relationTableName,
+                    nextName = nextRelation.relationTableName,
+                    scalarListFieldsNames = Vector.empty)
       }.toVector
 
     case x: EnumMigrationStep =>
