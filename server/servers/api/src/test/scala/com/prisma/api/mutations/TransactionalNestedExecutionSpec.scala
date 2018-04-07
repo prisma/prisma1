@@ -270,7 +270,7 @@ class TransactionalNestedExecutionSpec extends FlatSpec with Matchers with ApiBa
     }
     database.setup(project)
 
-    val createResult = server.query(
+    server.query(
       s"""mutation {
          |  createNote(
          |    data: {
@@ -322,7 +322,7 @@ class TransactionalNestedExecutionSpec extends FlatSpec with Matchers with ApiBa
   }
 
   private def verifyTransactionalExecutionAndErrorMessage(outerWhere: Any, innerWhere: Any, falseWhere: Any, falseWhereInError: Any, project: Project) = {
-    val createResult = server.query(
+    server.query(
       s"""mutation {
          |  createNote(
          |    data: {

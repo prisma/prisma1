@@ -22,9 +22,9 @@ You configure a server-side subscription by adding the [`subscriptions`](!alias-
 ```yml
 service: my-service
 
-stage: ${env:GRAPHCOOL_STAGE}
-secret: ${env:GRAPHCOOL_SECRET}
-cluster: ${env:GRAPHCOOL_CLUSTER}
+stage: ${env:PRISMA_STAGE}
+secret: ${env:PRISMA_SECRET}
+cluster: ${env:PRISMA_CLUSTER}
 
 datamodel: database/datamodel.graphql
 

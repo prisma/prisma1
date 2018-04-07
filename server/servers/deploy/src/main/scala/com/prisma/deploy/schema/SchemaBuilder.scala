@@ -24,11 +24,7 @@ trait SchemaBuilder {
 
 object SchemaBuilder {
   def apply()(implicit system: ActorSystem, dependencies: DeployDependencies): SchemaBuilder =
-    new SchemaBuilder {
-      override def apply(userContext: SystemUserContext) = {
-        SchemaBuilderImpl(userContext).build()
-      }
-    }
+    (userContext: SystemUserContext) => { SchemaBuilderImpl(userContext).build() }
 }
 
 case class SchemaBuilderImpl(

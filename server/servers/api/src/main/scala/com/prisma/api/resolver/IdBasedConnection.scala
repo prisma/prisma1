@@ -1,6 +1,7 @@
 package com.prisma.api.resolver
 
 import com.prisma.api.connector.QueryArguments
+import com.prisma.gc_values.IdGCValue
 import com.prisma.shared.models
 import sangria.schema._
 
@@ -8,7 +9,7 @@ import scala.annotation.implicitNotFound
 import scala.language.higherKinds
 import scala.reflect.ClassTag
 
-case class ConnectionParentElement(nodeId: Option[String], field: Option[models.Field], args: Option[QueryArguments])
+case class ConnectionParentElement(nodeId: Option[IdGCValue], field: Option[models.Field], args: Option[QueryArguments])
 
 trait IdBasedConnection[T] {
   def pageInfo: PageInfo
@@ -52,7 +53,7 @@ object IdBasedConnection {
         () ⇒ {
           List[Field[Ctx, Edge[Val]]](
             Field("node", nodeType, Some("The item at the end of the edge."), resolve = _.value.node),
-            Field("cursor", StringType, Some("A cursor for use in pagination."), resolve = _.value.cursor)
+            Field("cursor", StringType, Some("A cursor for use in pagination."), resolve = _.value.cursor.value)
           ) ++ edgeFields
         }
       ))
@@ -94,9 +95,9 @@ object IdBasedConnection {
           "startCursor",
           OptionType(StringType),
           Some("When paginating backwards, the cursor to continue."),
-          resolve = _.value.startCursor
+          resolve = _.value.startCursor.map(_.value)
         ),
-        Field("endCursor", OptionType(StringType), Some("When paginating forwards, the cursor to continue."), resolve = _.value.endCursor)
+        Field("endCursor", OptionType(StringType), Some("When paginating forwards, the cursor to continue."), resolve = _.value.endCursor.map(_.value))
       )
     )
 
@@ -113,16 +114,16 @@ case class DefaultIdBasedConnection[T](pageInfo: PageInfo, edges: Seq[Edge[T]], 
 
 trait Edge[T] {
   def node: T
-  def cursor: String
+  def cursor: IdGCValue
 }
 
 object Edge {
-  def apply[T](node: T, cursor: String) = DefaultEdge(node, cursor)
+  def apply[T](node: T, cursor: IdGCValue) = DefaultEdge(node, cursor)
 }
 
-case class DefaultEdge[T](node: T, cursor: String) extends Edge[T]
+case class DefaultEdge[T](node: T, cursor: IdGCValue) extends Edge[T]
 
-case class PageInfo(hasNextPage: Boolean = false, hasPreviousPage: Boolean = false, startCursor: Option[String] = None, endCursor: Option[String] = None)
+case class PageInfo(hasNextPage: Boolean = false, hasPreviousPage: Boolean = false, startCursor: Option[IdGCValue] = None, endCursor: Option[IdGCValue] = None)
 
 object PageInfo {
   def empty = PageInfo()

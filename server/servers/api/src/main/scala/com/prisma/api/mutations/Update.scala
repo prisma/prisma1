@@ -7,6 +7,7 @@ import com.prisma.api.connector._
 import com.prisma.api.mutactions.{DatabaseMutactions, ServerSideSubscriptions, SubscriptionEvents}
 import com.prisma.api.schema.APIErrors
 import com.prisma.shared.models.{Model, Project}
+import com.prisma.util.coolArgs.CoolArgs
 import sangria.schema
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -23,31 +24,21 @@ case class Update(
   implicit val system: ActorSystem             = apiDependencies.system
   implicit val materializer: ActorMaterializer = apiDependencies.materializer
 
-  val coolArgs: CoolArgs = {
-    val argsPointer: Map[String, Any] = args.raw.get("data") match {
-      case Some(value) => value.asInstanceOf[Map[String, Any]]
-      case None        => args.raw
-    }
-    CoolArgs(argsPointer)
-  }
+  val coolArgs = CoolArgs.fromSchemaArgs(args.raw)
+  val where    = CoolArgs(args.raw).extractNodeSelectorFromWhereField(model)
 
-  val where = CoolArgs(args.raw).extractNodeSelectorFromWhereField(model)
-
-  lazy val dataItem: Future[Option[DataItem]] = dataResolver.resolveByUnique(where)
+  lazy val prismaNodes: Future[Option[PrismaNode]] = dataResolver.resolveByUnique(where)
 
   def prepareMutactions(): Future[PreparedMutactions] = {
-    dataItem map {
-      case Some(dataItem) =>
-        val validatedDataItem = dataItem // todo: use GC Values
-        // = dataItem.copy(userData = GraphcoolDataTypes.fromSql(dataItem.userData, model.fields))
-
-        val sqlMutactions          = DatabaseMutactions(project).getMutactionsForUpdate(Path.empty(where), coolArgs, dataItem.id, validatedDataItem).toVector
+    prismaNodes map {
+      case Some(prismaNode) =>
+        val sqlMutactions          = DatabaseMutactions(project).getMutactionsForUpdate(Path.empty(where), coolArgs, prismaNode)
         val subscriptionMutactions = SubscriptionEvents.extractFromSqlMutactions(project, mutationId, sqlMutactions)
         val sssActions             = ServerSideSubscriptions.extractFromMutactions(project, sqlMutactions, requestId = "")
 
         PreparedMutactions(
-          databaseMutactions = sqlMutactions.toVector,
-          sideEffectMutactions = (sssActions ++ subscriptionMutactions).toVector
+          databaseMutactions = sqlMutactions,
+          sideEffectMutactions = sssActions ++ subscriptionMutactions
         )
       case None =>
         throw APIErrors.NodeNotFoundForWhereError(where)
@@ -55,9 +46,9 @@ case class Update(
   }
 
   override def getReturnValue: Future[ReturnValueResult] = {
-    dataItem flatMap {
-      case Some(dataItem) => returnValueByUnique(NodeSelector.forId(model, dataItem.id))
-      case None           => Future.successful(NoReturnValue(where))
+    prismaNodes flatMap {
+      case Some(prismaNode) => returnValueByUnique(NodeSelector.forIdGCValue(model, prismaNode.id))
+      case None             => Future.successful(NoReturnValue(where))
     }
   }
 

@@ -18,39 +18,13 @@ import scala.util.control.NonFatal
 /**
   * We need a bunch of different converters from / to GC values
   *
-  * 1.  DBValue       <->  GCValue     for writing into typed value fields in the Client-DB
+  * 1.  DBValue       <->  GCValue     for writing into typed value fields in the Client-DB -> Deploy does not need to write GCValues anymore
   * 2.  SangriaValue  <->  GCValue     for transforming the Any we get from Sangria per field back and forth
   * 3.  DBString      <->  GCValue     for writing default values in the System-DB since they are always a String, and JSArray for Lists
   * 4.  Json          <->  GCValue     for SchemaSerialization
   * 5.  SangriaValue  <->  String      for reading and writing default values
   * 6.  InputString   <->  GCValue     chains String -> SangriaValue -> GCValue and back
   */
-/**
-  * 1. DBValue <-> GCValue - This is used write and read GCValues to typed Db fields in the ClientDB
-  */
-case class GCDBValueConverter(typeIdentifier: TypeIdentifier, isList: Boolean) extends GCConverter[Any] {
-
-  override def toGCValue(t: Any): Or[GCValue, InvalidValueForScalarType] = {
-    ???
-  }
-
-  override def fromGCValue(t: GCValue): Any = {
-    t match {
-      case NullGCValue         => None
-      case x: StringGCValue    => x.value
-      case x: EnumGCValue      => x.value
-      case x: GraphQLIdGCValue => x.value
-      case x: DateTimeGCValue  => x.value
-      case x: IntGCValue       => x.value
-      case x: FloatGCValue     => x.value
-      case x: BooleanGCValue   => x.value
-      case x: JsonGCValue      => x.value
-      case x: ListGCValue      => x.values.map(this.fromGCValue)
-      case x: RootGCValue      => sys.error("RootGCValues not implemented yet in GCDBValueConverter")
-    }
-  }
-}
-
 /**
   * 2. SangriaAST <-> GCValue - This is used to transform Sangria parsed values into GCValue and back
   */
@@ -69,7 +43,7 @@ case class GCSangriaValueConverter(typeIdentifier: TypeIdentifier, isList: Boole
         case (x: FloatValue, TypeIdentifier.Float)                                               => FloatGCValue(x.value)
         case (x: BooleanValue, TypeIdentifier.Boolean)                                           => BooleanGCValue(x.value)
         case (x: StringValue, TypeIdentifier.DateTime)                                           => DateTimeGCValue(new DateTime(x.value, DateTimeZone.UTC))
-        case (x: StringValue, TypeIdentifier.GraphQLID)                                          => GraphQLIdGCValue(x.value)
+        case (x: StringValue, TypeIdentifier.GraphQLID)                                          => IdGCValue(x.value)
         case (x: EnumValue, TypeIdentifier.Enum)                                                 => EnumGCValue(x.value)
         case (x: StringValue, TypeIdentifier.Json)                                               => JsonGCValue(Json.parse(x.value))
         case (x: ListValue, _) if isList                                                         => sequence(x.values.map(this.toGCValue)).map(seq => ListGCValue(seq)).get
@@ -87,17 +61,17 @@ case class GCSangriaValueConverter(typeIdentifier: TypeIdentifier, isList: Boole
     val formatter = ISODateTimeFormat.dateHourMinuteSecondFraction()
 
     gcValue match {
-      case NullGCValue         => NullValue()
-      case x: StringGCValue    => StringValue(value = x.value)
-      case x: IntGCValue       => BigIntValue(x.value)
-      case x: FloatGCValue     => FloatValue(x.value)
-      case x: BooleanGCValue   => BooleanValue(x.value)
-      case x: GraphQLIdGCValue => StringValue(x.value)
-      case x: DateTimeGCValue  => StringValue(formatter.print(x.value))
-      case x: EnumGCValue      => EnumValue(x.value)
-      case x: JsonGCValue      => StringValue(Json.prettyPrint(x.value))
-      case x: ListGCValue      => ListValue(values = x.values.map(this.fromGCValue))
-      case x: RootGCValue      => sys.error("Default Value cannot be a RootGCValue. Value " + x.toString)
+      case NullGCValue        => NullValue()
+      case x: StringGCValue   => StringValue(value = x.value)
+      case x: IntGCValue      => BigIntValue(x.value)
+      case x: FloatGCValue    => FloatValue(x.value)
+      case x: BooleanGCValue  => BooleanValue(x.value)
+      case x: IdGCValue       => StringValue(x.value)
+      case x: DateTimeGCValue => StringValue(formatter.print(x.value))
+      case x: EnumGCValue     => EnumValue(x.value)
+      case x: JsonGCValue     => StringValue(Json.prettyPrint(x.value))
+      case x: ListGCValue     => ListValue(values = x.values.map(this.fromGCValue))
+      case x: RootGCValue     => sys.error("Default Value cannot be a RootGCValue. Value " + x.toString)
     }
   }
 }
@@ -115,7 +89,7 @@ case class GCStringDBConverter(typeIdentifier: TypeIdentifier, isList: Boolean) 
         case (TypeIdentifier.Float, false)     => FloatGCValue(t.toDouble)
         case (TypeIdentifier.Boolean, false)   => BooleanGCValue(t.toBoolean)
         case (TypeIdentifier.DateTime, false)  => DateTimeGCValue(new DateTime(t, DateTimeZone.UTC))
-        case (TypeIdentifier.GraphQLID, false) => GraphQLIdGCValue(t)
+        case (TypeIdentifier.GraphQLID, false) => IdGCValue(t)
         case (TypeIdentifier.Enum, false)      => EnumGCValue(t)
         case (TypeIdentifier.Json, false)      => JsonGCValue(Json.parse(t))
         case (_, true)                         => GCJsonConverter(typeIdentifier, isList).toGCValue(Json.parse(t)).get
@@ -140,17 +114,17 @@ case class GCStringDBConverter(typeIdentifier: TypeIdentifier, isList: Boolean) 
     val formatter = ISODateTimeFormat.dateHourMinuteSecondFraction()
 
     gcValue match {
-      case NullGCValue         => "null"
-      case x: StringGCValue    => x.value
-      case x: IntGCValue       => x.value.toString
-      case x: FloatGCValue     => x.value.toString
-      case x: BooleanGCValue   => x.value.toString
-      case x: GraphQLIdGCValue => x.value
-      case x: DateTimeGCValue  => formatter.print(x.value)
-      case x: EnumGCValue      => x.value
-      case x: JsonGCValue      => Json.prettyPrint(x.value)
-      case x: ListGCValue      => GCJsonConverter(typeIdentifier, isList).fromGCValue(x).toString
-      case x: RootGCValue      => sys.error("This should not be a RootGCValue. Value " + x)
+      case NullGCValue        => "null"
+      case x: StringGCValue   => x.value
+      case x: IntGCValue      => x.value.toString
+      case x: FloatGCValue    => x.value.toString
+      case x: BooleanGCValue  => x.value.toString
+      case x: IdGCValue       => x.value
+      case x: DateTimeGCValue => formatter.print(x.value)
+      case x: EnumGCValue     => x.value
+      case x: JsonGCValue     => Json.prettyPrint(x.value)
+      case x: ListGCValue     => GCJsonConverter(typeIdentifier, isList).fromGCValue(x).toString
+      case x: RootGCValue     => sys.error("This should not be a RootGCValue. Value " + x)
     }
   }
 }
@@ -170,7 +144,7 @@ case class GCJsonConverter(typeIdentifier: TypeIdentifier, isList: Boolean) exte
       case (x: JsNumber, TypeIdentifier.Float)     => Good(FloatGCValue(x.value.toDouble))
       case (x: JsBoolean, TypeIdentifier.Boolean)  => Good(BooleanGCValue(x.value))
       case (x: JsString, TypeIdentifier.DateTime)  => Good(DateTimeGCValue(new DateTime(x.value, DateTimeZone.UTC)))
-      case (x: JsString, TypeIdentifier.GraphQLID) => Good(GraphQLIdGCValue(x.value))
+      case (x: JsString, TypeIdentifier.GraphQLID) => Good(IdGCValue(x.value))
       case (x: JsString, TypeIdentifier.Enum)      => Good(EnumGCValue(x.value))
       case (x: JsArray, _) if isList               => sequence(x.value.toVector.map(this.toGCValue)).map(seq => ListGCValue(seq))
       case (x: JsValue, TypeIdentifier.Json)       => Good(JsonGCValue(x))
@@ -182,17 +156,17 @@ case class GCJsonConverter(typeIdentifier: TypeIdentifier, isList: Boolean) exte
     val formatter = ISODateTimeFormat.dateHourMinuteSecondFraction()
 
     gcValue match {
-      case NullGCValue         => JsNull
-      case x: StringGCValue    => JsString(x.value)
-      case x: EnumGCValue      => JsString(x.value)
-      case x: GraphQLIdGCValue => JsString(x.value)
-      case x: DateTimeGCValue  => JsString(formatter.print(x.value))
-      case x: IntGCValue       => JsNumber(x.value)
-      case x: FloatGCValue     => JsNumber(x.value)
-      case x: BooleanGCValue   => JsBoolean(x.value)
-      case x: JsonGCValue      => x.value
-      case x: ListGCValue      => JsArray(x.values.map(this.fromGCValue))
-      case x: RootGCValue      => JsObject(x.map.mapValues(this.fromGCValue))
+      case NullGCValue        => JsNull
+      case x: StringGCValue   => JsString(x.value)
+      case x: EnumGCValue     => JsString(x.value)
+      case x: IdGCValue       => JsString(x.value)
+      case x: DateTimeGCValue => JsString(formatter.print(x.value))
+      case x: IntGCValue      => JsNumber(x.value)
+      case x: FloatGCValue    => JsNumber(x.value)
+      case x: BooleanGCValue  => JsBoolean(x.value)
+      case x: JsonGCValue     => x.value
+      case x: ListGCValue     => JsArray(x.values.map(this.fromGCValue))
+      case x: RootGCValue     => JsObject(x.map.mapValues(this.fromGCValue))
     }
   }
 }
@@ -286,18 +260,18 @@ case class GCStringConverter(typeIdentifier: TypeIdentifier, isList: Boolean) ex
 object OtherGCStuff {
   def isValidGCValueForField(value: GCValue, field: Field): Boolean = {
     (value, field.typeIdentifier) match {
-      case (NullGCValue, _)                                => true
-      case (_: StringGCValue, TypeIdentifier.String)       => true
-      case (_: GraphQLIdGCValue, TypeIdentifier.GraphQLID) => true
-      case (_: EnumGCValue, TypeIdentifier.Enum)           => true
-      case (_: JsonGCValue, TypeIdentifier.Json)           => true
-      case (_: DateTimeGCValue, TypeIdentifier.DateTime)   => true
-      case (_: IntGCValue, TypeIdentifier.Int)             => true
-      case (_: FloatGCValue, TypeIdentifier.Float)         => true
-      case (_: BooleanGCValue, TypeIdentifier.Boolean)     => true
-      case (x: ListGCValue, _) if field.isList             => x.values.map(isValidGCValueForField(_, field)).forall(identity)
-      case (_: RootGCValue, _)                             => false
-      case (_, _)                                          => false
+      case (NullGCValue, _)                              => true
+      case (_: StringGCValue, TypeIdentifier.String)     => true
+      case (_: IdGCValue, TypeIdentifier.GraphQLID)      => true
+      case (_: EnumGCValue, TypeIdentifier.Enum)         => true
+      case (_: JsonGCValue, TypeIdentifier.Json)         => true
+      case (_: DateTimeGCValue, TypeIdentifier.DateTime) => true
+      case (_: IntGCValue, TypeIdentifier.Int)           => true
+      case (_: FloatGCValue, TypeIdentifier.Float)       => true
+      case (_: BooleanGCValue, TypeIdentifier.Boolean)   => true
+      case (x: ListGCValue, _) if field.isList           => x.values.map(isValidGCValueForField(_, field)).forall(identity)
+      case (_: RootGCValue, _)                           => false
+      case (_, _)                                        => false
     }
   }
 

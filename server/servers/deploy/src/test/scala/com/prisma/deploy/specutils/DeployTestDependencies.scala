@@ -39,9 +39,7 @@ case class DeployTestDependencies()(implicit val system: ActorSystem, val materi
     MySqlDeployConnector(clientDatabase = clientDb)(system.dispatcher)
   }
 
-  override def functionValidator: FunctionValidator = new FunctionValidator {
-    override def validateFunctionInput(project: Project, fn: FunctionInput): Vector[SchemaError] = {
-      if (fn.name == "failing") Vector(SchemaError(`type` = "model", field = "field", description = "error")) else Vector.empty
-    }
+  override def functionValidator: FunctionValidator = (project: Project, fn: FunctionInput) => {
+    if (fn.name == "failing") Vector(SchemaError(`type` = "model", field = "field", description = "error")) else Vector.empty
   }
 }

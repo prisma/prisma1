@@ -11,9 +11,8 @@ object MigrationStepsInferrer {
     apply((previous, next, renames) => MigrationStepsInferrerImpl(previous, next, renames).evaluate())
   }
 
-  def apply(fn: (Schema, Schema, SchemaMapping) => Vector[MigrationStep]): MigrationStepsInferrer = new MigrationStepsInferrer {
-    override def infer(previousSchema: Schema, nextSchema: Schema, renames: SchemaMapping): Vector[MigrationStep] = fn(previousSchema, nextSchema, renames)
-  }
+  def apply(fn: (Schema, Schema, SchemaMapping) => Vector[MigrationStep]): MigrationStepsInferrer =
+    (previousSchema: Schema, nextSchema: Schema, renames: SchemaMapping) => fn(previousSchema, nextSchema, renames)
 }
 
 case class MigrationStepsInferrerImpl(previousSchema: Schema, nextSchema: Schema, renames: SchemaMapping) {
@@ -126,7 +125,7 @@ case class MigrationStepsInferrerImpl(previousSchema: Schema, nextSchema: Schema
         isList = diff(previousField.isList, fieldOfNextModel.isList),
         isUnique = diff(previousField.isUnique, fieldOfNextModel.isUnique),
         isHidden = diff(previousField.isHidden, fieldOfNextModel.isHidden),
-        relation = diff(previousField.relation.map(_.id), fieldOfNextModel.relation.map(_.id)),
+        relation = diff(previousField.relation.map(_.relationTableName), fieldOfNextModel.relation.map(_.relationTableName)),
         defaultValue = diff(previousField.defaultValue, fieldOfNextModel.defaultValue).map(_.map(_.toString)),
         enum = diff(previousField.enum.map(_.name), fieldOfNextModel.enum.map(_.name))
       )

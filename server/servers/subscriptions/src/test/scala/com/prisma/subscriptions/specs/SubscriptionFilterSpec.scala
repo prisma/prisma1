@@ -1,7 +1,7 @@
 package com.prisma.subscriptions.specs
 
-import com.prisma.api.connector.mysql.impl.{AddDataItemToManyRelationByPathInterpreter, CreateDataItemInterpreter}
 import com.prisma.api.connector._
+import com.prisma.gc_values._
 import com.prisma.messagebus.pubsub.Only
 import com.prisma.shared.models.{Enum, Model, Project}
 import com.prisma.shared.schema_dsl.SchemaDsl
@@ -32,13 +32,10 @@ class SubscriptionFilterSpec extends FlatSpec with Matchers with SpecBase with A
 
     val path = Path.empty(NodeSelector.forId(project.schema.getModelByName_!("Comment"), "comment-id"))
 
-    testDatabase.runDatabaseMutactionOnClientDb {
-      CreateDataItem(
-        project = project,
-        path = path,
-        args = CoolArgs(Map("text" -> "some comment", "id" -> "comment-id"))
-      )
-    }
+    val raw: List[(String, GCValue)] = List(("text", StringGCValue("some comment")), ("id", IdGCValue("comment-id")))
+    val args                         = PrismaArgs(RootGCValue(raw: _*))
+
+    testDatabase.runDatabaseMutactionOnClientDb(CreateDataItem(project = project, path = path, nonListArgs = args, listArgs = Vector.empty))
 
     val extendedPath = path.appendEdge(project, model.getFieldByName_!("comments")).lastEdgeToNodeEdge(NodeSelector.forId(model, "comment-id"))
     testDatabase.runDatabaseMutactionOnClientDb(AddDataItemToManyRelationByPath(project, extendedPath))

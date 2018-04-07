@@ -2,7 +2,7 @@ package com.prisma.subscriptions
 
 import akka.http.scaladsl.model.HttpRequest
 import com.prisma.api.ApiDependencies
-import com.prisma.api.connector.DataItem
+import com.prisma.api.connector.PrismaNode
 import com.prisma.api.resolver.DeferredResolverProvider
 import com.prisma.sangria.utils.ErrorHandler
 import com.prisma.shared.models.ModelMutationType.ModelMutationType
@@ -21,7 +21,7 @@ object SubscriptionExecutor extends SprayJsonExtensions {
       project: Project,
       model: Model,
       mutationType: ModelMutationType,
-      previousValues: Option[DataItem],
+      previousValues: Option[PrismaNode],
       updatedFields: Option[List[String]],
       query: String,
       variables: spray.json.JsValue,
@@ -54,7 +54,7 @@ object SubscriptionExecutor extends SprayJsonExtensions {
       project: Project,
       model: Model,
       mutationType: ModelMutationType,
-      previousValues: Option[DataItem],
+      previousValues: Option[PrismaNode],
       updatedFields: Option[List[String]],
       query: Document,
       variables: spray.json.JsValue,

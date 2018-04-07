@@ -92,7 +92,7 @@ class BulkImport(project: Project)(implicit apiDependencies: ApiDependencies) ex
   }
 
   private def generateImportNodesDBActions(nodes: Vector[ImportNode]): Vector[CreateDataItemsImport] = {
-    val creates                                                = nodes.map(node => CreateDataItemImport(project, node.model, ReallyCoolArgs(node.values)))
+    val creates                                                = nodes.map(node => CreateDataItemImport(project, node.model, PrismaArgs(node.values)))
     val groupedItems: Map[Model, Vector[CreateDataItemImport]] = creates.groupBy(_.model)
     groupedItems.map { case (model, group) => CreateDataItemsImport(project, model, group.map(_.args)) }.toVector
   }

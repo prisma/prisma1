@@ -1,4 +1,6 @@
-package com.prisma.api.connector
+package com.prisma.util.coolArgs
+
+import com.prisma.api.connector._
 
 case class NestedMutations(
     creates: Vector[CreateOne],

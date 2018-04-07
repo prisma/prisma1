@@ -1,12 +1,10 @@
 package com.prisma.api.import_export
 
-import com.prisma.api.import_export.GCValueJsonFormatter.GcValueWrites.writes
 import com.prisma.gc_values._
 import com.prisma.shared.models.{Enum, Field, Model, TypeIdentifier}
 import org.joda.time.DateTimeZone
 import org.joda.time.format.{DateTimeFormat, ISODateTimeFormat}
 import play.api.libs.json._
-
 import scala.collection.immutable.SortedMap
 import scala.util.Try
 
@@ -19,17 +17,17 @@ object GCValueJsonFormatter {
     val isoFormatter = DateTimeFormat.forPattern("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'")
 
     override def writes(gcValue: GCValue): JsValue = gcValue match {
-      case v: StringGCValue    => JsString(v.value)
-      case v: GraphQLIdGCValue => JsString(v.value)
-      case v: EnumGCValue      => JsString(v.value)
-      case v: DateTimeGCValue  => JsString(isoFormatter.print(v.value.withZone(DateTimeZone.UTC)))
-      case v: BooleanGCValue   => JsBoolean(v.value)
-      case v: IntGCValue       => JsNumber(v.value)
-      case v: FloatGCValue     => JsNumber(v.value)
-      case v: JsonGCValue      => v.value
-      case NullGCValue         => JsNull
-      case v: ListGCValue      => JsArray(v.values.map(writes))
-      case v: RootGCValue      => JsObject(v.map.mapValues(writes))
+      case v: StringGCValue   => JsString(v.value)
+      case v: IdGCValue       => JsString(v.value)
+      case v: EnumGCValue     => JsString(v.value)
+      case v: DateTimeGCValue => JsString(isoFormatter.print(v.value.withZone(DateTimeZone.UTC)))
+      case v: BooleanGCValue  => JsBoolean(v.value)
+      case v: IntGCValue      => JsNumber(v.value)
+      case v: FloatGCValue    => JsNumber(v.value)
+      case v: JsonGCValue     => v.value
+      case NullGCValue        => JsNull
+      case v: ListGCValue     => JsArray(v.values.map(writes))
+      case v: RootGCValue     => JsObject(v.map.mapValues(writes))
     }
   }
 
@@ -83,10 +81,10 @@ object GCValueJsonFormatter {
     }
   }
 
-  implicit object GraphQLIDValueReads extends Reads[GraphQLIdGCValue] {
+  implicit object GraphQLIDValueReads extends Reads[IdGCValue] {
     override def reads(json: JsValue) = {
       json.validate[JsString] match {
-        case JsSuccess(json, _) => JsSuccess(GraphQLIdGCValue(json.value))
+        case JsSuccess(json, _) => JsSuccess(IdGCValue(json.value))
         case e: JsError         => e
       }
     }
@@ -161,7 +159,7 @@ object GCValueJsonFormatter {
   def readLeafGCValueForField(field: Field)(json: JsValue): JsResult[LeafGCValue] = {
     field.typeIdentifier match {
       case TypeIdentifier.String    => json.validate[StringGCValue]
-      case TypeIdentifier.GraphQLID => json.validate[GraphQLIdGCValue]
+      case TypeIdentifier.GraphQLID => json.validate[IdGCValue]
       case TypeIdentifier.Enum      => readEnumGCValue(field.enum.get)(json)
       case TypeIdentifier.DateTime  => json.validate[DateTimeGCValue]
       case TypeIdentifier.Boolean   => json.validate[BooleanGCValue]

@@ -144,17 +144,6 @@ class MutationsSchemaBuilderSpec extends FlatSpec with Matchers with ApiBaseSpec
                                    ))
   }
 
-  "the update many Mutation for a model" should "be generated correctly" in {
-    val project = SchemaDsl() { schema =>
-      schema.model("Todo").field_!("title", _.String).field("alias", _.String, isUnique = true)
-    }
-
-    val schema = SchemaRenderer.renderSchema(schemaBuilder(project))
-
-    schema should containMutation("updateManyTodoes(data: TodoUpdateInput!, where: TodoWhereInput!): BatchPayload!")
-    schema should containInputType("TodoWhereInput")
-  }
-
   "the many update Mutation for a model" should "not be generated for an empty model" in {
     val project = SchemaDsl() { schema =>
       val model = schema.model("Todo")
@@ -325,7 +314,7 @@ class MutationsSchemaBuilderSpec extends FlatSpec with Matchers with ApiBaseSpec
                                      "unique: Int"
                                    ))
   }
-  "the delete many Mutation for a model" should "be generated correctly" in {
+  "the deleteMany Mutation for a model" should "be generated correctly" in {
     val project = SchemaDsl() { schema =>
       schema
         .model("Todo")
@@ -334,7 +323,20 @@ class MutationsSchemaBuilderSpec extends FlatSpec with Matchers with ApiBaseSpec
 
     val schema = SchemaRenderer.renderSchema(schemaBuilder(project))
 
-    schema should containMutation("deleteManyTodoes(where: TodoWhereInput!): BatchPayload!")
+    schema should containMutation("deleteManyTodoes(where: TodoWhereInput): BatchPayload!")
+    schema should containInputType("TodoWhereInput")
+  }
+
+  "the updateMany Mutation for a model" should "be generated correctly" in {
+    val project = SchemaDsl() { schema =>
+      schema
+        .model("Todo")
+        .field_!("title", _.String)
+    }
+
+    val schema = SchemaRenderer.renderSchema(schemaBuilder(project))
+
+    schema should containMutation("updateManyTodoes(data: TodoUpdateInput!, where: TodoWhereInput): BatchPayload!")
     schema should containInputType("TodoWhereInput")
   }
 }
