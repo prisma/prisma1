@@ -9,6 +9,7 @@ import com.prisma.api.schema.CustomScalarTypes.{DateTimeType, JsonType}
 import com.prisma.gc_values._
 import com.prisma.shared.models
 import com.prisma.shared.models.{Field, Model, TypeIdentifier}
+import com.prisma.util.gc_value.GCAnyConverter
 import sangria.schema.{Field => SangriaField, _}
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -122,13 +123,9 @@ class ObjectTypeBuilder(
       case TypeIdentifier.Relation  => resolveConnection(field)
     }
 
-    if (field.isScalar && field.isList) {
-      outputType = ListType(outputType)
-    }
+    if (field.isScalar && field.isList) outputType = ListType(outputType)
 
-    if (!field.isRequired) {
-      outputType = OptionType(outputType)
-    }
+    if (!field.isRequired) outputType = OptionType(outputType)
 
     outputType
   }
@@ -188,33 +185,42 @@ class ObjectTypeBuilder(
           value match {
             case value: Map[_, _] =>
               val typedValue = value.asInstanceOf[Map[String, Any]]
-              if (List("AND", "OR").contains(key) || (isSubscriptionFilter && key == "node")) {
+              if (List("AND", "OR").contains(key) || (isSubscriptionFilter && key == "node")) { //todo pull list(and, or) out into companion object
                 generateFilterElement(typedValue, model, isSubscriptionFilter)
               } else {
                 // this must be a relation filter
-                FilterElement(
-                  key,
-                  null,
-                  field,
+                TransitiveRelationFilter(
+                  field.get,
+                  model,
+                  field.get.relatedModel(project.schema).get,
+                  field.get.relation.get,
                   filter.name,
-                  Some(
-                    FilterElementRelation(
-                      fromModel = model,
-                      toModel = field.get.relatedModel(project.schema).get,
-                      relation = field.get.relation.get,
-                      filter = generateFilterElement(typedValue, field.get.relatedModel(project.schema).get, isSubscriptionFilter)
-                    ))
+                  generateFilterElement(typedValue, field.get.relatedModel(project.schema).get, isSubscriptionFilter)
                 )
               }
 
             case value: Seq[Any] if value.nonEmpty && value.head.isInstanceOf[Map[_, _]] =>
               FilterElement(key, value.asInstanceOf[Seq[Map[String, Any]]].map(x => generateFilterElement(x, model, isSubscriptionFilter)), None, filter.name)
 
-            case value: Seq[Any] =>
-              FilterElement(key, value, field, filter.name)
+            //-------- non recursive
 
-            case Some(filterValue) =>
-              FilterElement(key, filterValue, field, filter.name)
+            case value: Seq[Any] if field.isDefined && field.get.isScalar =>
+              val converter = GCAnyConverter(field.get.typeIdentifier, isList = false)
+              FinalValueFilter(key, ListGCValue(value.map(x => converter.toGCValue(x).get).toVector), field.get, filter.name)
+
+            case Some(filterValue) if field.isDefined && field.get.isScalar =>
+              val converter = GCAnyConverter(field.get.typeIdentifier, isList = false)
+              FinalValueFilter(key, converter.toGCValue(filterValue).get, field.get, filter.name)
+
+            case Some(filterValue) if field.isDefined && field.get.isRelation =>
+              FinalRelationFilter(key, filterValue, field.get, filter.name)
+
+            case valueNew if field.isDefined && field.get.isRelation =>
+              FinalRelationFilter(key, valueNew, field.get, filter.name)
+
+            case valueNew if field.isDefined && field.get.isScalar =>
+              val converter = GCAnyConverter(field.get.typeIdentifier, isList = false)
+              FinalValueFilter(key, converter.toGCValue(valueNew).get, field.get, filter.name)
 
             case _ =>
               FilterElement(key, value, field, filter.name)
@@ -296,8 +302,8 @@ object ObjectTypeBuilder {
       case EnumGCValue(value)     => value
       case NullGCValue            => None
       case DateTimeGCValue(value) => value
-      case ListGCValue(values)    => sys.error("should not be called on ListValues")
-      case x: RootGCValue         => sys.error("should not be called on RootGCValues")
+      case ListGCValue(_)         => sys.error("should not be called on ListValues")
+      case RootGCValue(_)         => sys.error("should not be called on RootGCValues")
     }
   }
 }

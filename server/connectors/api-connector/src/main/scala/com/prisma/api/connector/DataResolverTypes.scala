@@ -51,20 +51,28 @@ case class FilterElement(
     key: String,
     value: Any,
     field: Option[Field] = None,
-    filterName: String = "",
-    relatedFilterElement: Option[FilterElementRelation] = None
+    filterName: String = ""
 )
 
-case class FilterElementGC(
+case class FinalValueFilter(
     key: String,
     value: GCValue,
     field: Field,
     filterName: String = ""
 )
 
-case class FilterElementRelation(
+case class FinalRelationFilter(
+    key: String,
+    value: Any,
+    field: Field,
+    filterName: String = ""
+)
+
+case class TransitiveRelationFilter(
+    field: Field,
     fromModel: Model,
     toModel: Model,
     relation: Relation,
-    filter: DataItemFilterCollection
+    filterName: String = "",
+    nestedFilter: DataItemFilterCollection
 )

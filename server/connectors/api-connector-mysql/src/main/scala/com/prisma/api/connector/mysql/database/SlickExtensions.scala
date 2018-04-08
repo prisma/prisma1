@@ -81,20 +81,20 @@ object SlickExtensions {
     }
   }
 
-  def gcValueToSQLBuilder(value: GCValue): SQLActionBuilder = {
+  def gcValueToSQLBuilder(gcValue: GCValue): SQLActionBuilder = {
     val dateTimeFormat = DateTimeFormat.forPattern("yyyy-MM-dd'T'HH:mm:ss.SSS").withZoneUTC()
-    value match {
-      case NullGCValue        => sql"NULL"
-      case x: StringGCValue   => sql"${x.value}"
-      case x: EnumGCValue     => sql"${x.value}"
-      case x: IdGCValue       => sql"${x.value}"
-      case x: DateTimeGCValue => sql"${dateTimeFormat.print(x.value)}"
-      case x: IntGCValue      => sql"${x.value}"
-      case x: FloatGCValue    => sql"${x.value}"
-      case x: BooleanGCValue  => sql"${x.value}"
-      case x: JsonGCValue     => sql"${x.value.toString}"
-      case x: ListGCValue     => sys.error("ListGCValue not implemented here yet.")
-      case x: RootGCValue     => sys.error("RootGCValues not implemented here yet.")
+    gcValue match {
+      case NullGCValue            => sql"NULL"
+      case StringGCValue(value)   => sql"$value"
+      case EnumGCValue(value)     => sql"$value"
+      case IdGCValue(value)       => sql"$value"
+      case DateTimeGCValue(value) => sql"${dateTimeFormat.print(value)}"
+      case IntGCValue(value)      => sql"$value"
+      case FloatGCValue(value)    => sql"$value"
+      case BooleanGCValue(value)  => sql"$value"
+      case JsonGCValue(value)     => sql"${value.toString}"
+      case ListGCValue(_)         => sys.error("ListGCValue not implemented here yet.")
+      case RootGCValue(_)         => sys.error("RootGCValues not implemented here yet.")
     }
   }
 
