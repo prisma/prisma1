@@ -115,18 +115,18 @@ object SlickExtensions {
 
   def generateParentheses(sql: Option[SQLActionBuilder]) = sql match {
     case None      => None
-    case Some(sql) => Some(sql"(" concat sql concat sql")")
+    case Some(sql) => Some(sql"(" ++ sql ++ sql")")
   }
 
   // Use this with caution, since combinator is not escaped!
   def combineBy(actions: Iterable[SQLActionBuilder], combinator: String): Option[SQLActionBuilder] = actions.toList match {
     case Nil         => None
     case head :: Nil => Some(head)
-    case _           => Some(actions.reduceLeft((a, b) => a concat sql"#$combinator" concat b))
+    case _           => Some(actions.reduceLeft((a, b) => a ++ sql"#$combinator" ++ b))
   }
 
   def prefixIfNotNone(prefix: String, action: Option[SQLActionBuilder]): Option[SQLActionBuilder] = {
-    if (action.isEmpty) None else Some(sql"#$prefix " concat action.get)
+    if (action.isEmpty) None else Some(sql"#$prefix " ++ action.get)
   }
 
   def whereFilterAppendix(projectId: String, model: Model, filter: Option[DataItemFilterCollection]) = {

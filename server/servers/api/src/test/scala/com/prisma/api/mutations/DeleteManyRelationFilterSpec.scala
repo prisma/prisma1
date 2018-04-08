@@ -14,7 +14,6 @@ class DeleteManyRelationFilterSpec extends FlatSpec with Matchers with ApiBaseSp
     val veryBottom = schema.model("VeryBottom").field_!("veryBottom", _.String, isUnique = true)
     top.oneToOneRelation("bottom", "top", bottom)
     bottom.oneToOneRelation("veryBottom", "bottom", veryBottom)
-
   }
 
   override protected def beforeAll(): Unit = {

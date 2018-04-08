@@ -11,9 +11,7 @@ class FilterArguments(model: Model, isSubscriptionFilter: Boolean = false) {
     .flatMap(field => {
       FilterArguments
         .getFieldFilters(field)
-        .map(filter => {
-          (field.name + filter.name, FieldFilterTuple(Some(field), filter))
-        })
+        .map(filter => { (field.name + filter.name, FieldFilterTuple(Some(field), filter)) })
     })
     .toMap
 
