@@ -81,6 +81,20 @@ class FilterSpec extends FlatSpec with Matchers with ApiBaseSpec {
     userUniques(filter) should be(Vector(1))
   }
 
+  "Contains filter" should "work" in {
+
+    val filter = """(where: {name_contains: "n"})"""
+
+    userUniques(filter) should be(Vector(2, 4))
+  }
+
+  "Greater than filter" should "work with floats" in {
+
+    val filter = """(where: {size_gt: 100.500000000001})"""
+
+    lotUniques(filter) should be(Vector(1))
+  }
+
   def userUniques(filter: String)    = server.query(s"{ users $filter{ unique } }", project).pathAsSeq("data.users").map(_.pathAsLong("unique")).toVector
   def vehicleUniques(filter: String) = server.query(s"{ vehicles $filter{ unique } }", project).pathAsSeq("data.vehicles").map(_.pathAsLong("unique")).toVector
   def lotUniques(filter: String) =

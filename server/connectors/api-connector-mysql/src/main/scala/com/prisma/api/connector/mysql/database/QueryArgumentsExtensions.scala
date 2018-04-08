@@ -106,16 +106,16 @@ object QueryArgumentsExtensions {
       }
     }
 
-    def extractWhereConditionCommand(projectId: String, modelId: String): Option[SQLActionBuilder] = {
+    def extractWhereConditionCommand(projectId: String, tableName: String): Option[SQLActionBuilder] = {
 
       if (first.isDefined && last.isDefined) throw APIErrors.InvalidConnectionArguments()
 
       val standardCondition = filter match {
-        case Some(filterArg) => generateFilterConditions(projectId, modelId, filterArg)
+        case Some(filterArg) => QueryArgumentsHelpers.generateFilterConditions(projectId, tableName, filterArg)
         case None            => None
       }
 
-      val cursorCondition = buildCursorCondition(projectId, modelId, standardCondition)
+      val cursorCondition = buildCursorCondition(projectId, tableName, standardCondition)
 
       cursorCondition match {
         case None                     => standardCondition
@@ -173,10 +173,6 @@ object QueryArgumentsExtensions {
       val whereCommand = combineByAnd(List(injectedFilter, afterCursorFilter, beforeCursorFilter).flatten)
 
       whereCommand.map(c => sql"" concat c)
-    }
-
-    def generateFilterConditions(projectId: String, tableName: String, filter: Seq[Any]): Option[SQLActionBuilder] = {
-      QueryArgumentsHelpers.generateFilterConditions(projectId, tableName, filter)
     }
   }
 }

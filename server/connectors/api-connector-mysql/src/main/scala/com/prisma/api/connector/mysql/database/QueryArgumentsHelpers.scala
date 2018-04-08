@@ -2,12 +2,12 @@ package com.prisma.api.connector.mysql.database
 
 import com.prisma.api.connector.Types.DataItemFilterCollection
 import com.prisma.api.connector._
+import com.prisma.api.connector.mysql.database.SlickExtensions._
 import com.prisma.api.schema.APIErrors
 import com.prisma.gc_values.{GCValue, GCValueExtractor, ListGCValue, NullGCValue}
-import com.prisma.shared.models.{Field, Model, Relation, TypeIdentifier}
-import slick.jdbc.SQLActionBuilder
-import SlickExtensions._
+import com.prisma.shared.models.{Field, Model, Relation}
 import slick.jdbc.MySQLProfile.api._
+import slick.jdbc.SQLActionBuilder
 
 object QueryArgumentsHelpers {
 
@@ -98,13 +98,13 @@ object QueryArgumentsHelpers {
           Some(sql"`#$projectId`.`#$tableName`.`#${field.name}` NOT LIKE " ++ escapeUnsafeParam(s"%${GCValueExtractor.fromGCValue(value)}%"))
 
         case FinalValueFilter(key, value, field, filterName) if filterName == "_starts_with" =>
-          val res = Some(sql"`#$projectId`.`#$tableName`.`#${field.name}` LIKE " ++ escapeUnsafeParam(s"${GCValueExtractor.fromGCValue(value)}%"))
-          res
+          Some(sql"`#$projectId`.`#$tableName`.`#${field.name}` LIKE " ++ escapeUnsafeParam(s"${GCValueExtractor.fromGCValue(value)}%"))
+
         case FinalValueFilter(key, value, field, filterName) if filterName == "_not_starts_with" =>
           Some(sql"`#$projectId`.`#$tableName`.`#${field.name}` NOT LIKE " ++ escapeUnsafeParam(s"${GCValueExtractor.fromGCValue(value)}%"))
 
         case FinalValueFilter(key, value, field, filterName) if filterName == "_ends_with" =>
-          Some(sql"`#$projectId`.`#$tableName`.`#${field.name}` LIKE " ++ sql"%" ++ escapeUnsafeParam(s"%${GCValueExtractor.fromGCValue(value)}"))
+          Some(sql"`#$projectId`.`#$tableName`.`#${field.name}` LIKE " ++ escapeUnsafeParam(s"%${GCValueExtractor.fromGCValue(value)}"))
 
         case FinalValueFilter(key, value, field, filterName) if filterName == "_not_ends_with" =>
           Some(sql"`#$projectId`.`#$tableName`.`#${field.name}` NOT LIKE " ++ escapeUnsafeParam(s"%${GCValueExtractor.fromGCValue(value)}"))
@@ -145,13 +145,12 @@ object QueryArgumentsHelpers {
         case FinalValueFilter(key, value, field, filterName) if filterName == "_not" =>
           Some(sql"`#$projectId`.`#$tableName`.`#${field.name}` != " ++ gcValueToSQLBuilder(value))
 
-        case FinalValueFilter(key, NullGCValue, field, filterName) if field.typeIdentifier != TypeIdentifier.Relation =>
+        case FinalValueFilter(key, NullGCValue, field, filterName) =>
           Some(sql"`#$projectId`.`#$tableName`.`#$key` IS NULL")
 
         case FinalValueFilter(key, value, field, filterName) =>
           Some(sql"`#$projectId`.`#$tableName`.`#$key` = " ++ gcValueToSQLBuilder(value))
-
-        case FinalRelationFilter(key, null, field, filterName) if field.typeIdentifier == TypeIdentifier.Relation =>
+        case FinalRelationFilter(key, null, field, filterName) =>
           if (field.isList) throw APIErrors.FilterCannotBeNullOnToManyField(field.name)
 
           Some(sql""" not exists (select  *
