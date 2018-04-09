@@ -223,20 +223,21 @@ case class MigrationStepsInferrerImpl(previousSchema: Schema, nextSchema: Schema
 
   def containsRelation(schema: Schema, ambiguityCheck: Schema, relation: Relation, adjacentModelName: String => String): Boolean = {
     schema.relations.exists { rel =>
-      val adjacentModelAId  = adjacentModelName(relation.modelAId)
-      val adajacentModelBId = adjacentModelName(relation.modelBId)
-      val adjacentGeneratedRelationName = if (adjacentModelAId < adajacentModelBId) {
-        s"${adjacentModelAId}To${adajacentModelBId}"
+      val adjacentModelAId = adjacentModelName(relation.modelAId)
+      val adjacentModelBId = adjacentModelName(relation.modelBId)
+      val adjacentGeneratedRelationName = if (adjacentModelAId < adjacentModelBId) {
+        s"${adjacentModelAId}To${adjacentModelBId}"
       } else {
-        s"${adajacentModelBId}To${adjacentModelAId}"
+        s"${adjacentModelBId}To${adjacentModelAId}"
       }
 
-      val refersToModelsExactlyRight = rel.modelAId == adjacentModelAId && rel.modelBId == adajacentModelBId
-      val refersToModelsSwitched     = rel.modelAId == adajacentModelBId && rel.modelBId == adjacentModelAId
+      val refersToModelsExactlyRight = rel.modelAId == adjacentModelAId && rel.modelBId == adjacentModelBId
+      val refersToModelsSwitched     = rel.modelAId == adjacentModelBId && rel.modelBId == adjacentModelAId
       val relationNameMatches        = rel.name == adjacentGeneratedRelationName || rel.name == relation.name
-      val relationIsUnambiguous      = rel.isUnambiguous(ambiguityCheck)
+//      val relationIsUnambiguous      = rel.isUnambiguous(ambiguityCheck)
 
-      (relationNameMatches || relationIsUnambiguous) && (refersToModelsExactlyRight || refersToModelsSwitched)
+//      (relationNameMatches || relationIsUnambiguous) && (refersToModelsExactlyRight || refersToModelsSwitched)
+      relationNameMatches && (refersToModelsExactlyRight || refersToModelsSwitched)
     }
   }
 
