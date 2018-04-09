@@ -173,7 +173,7 @@ case class MigrationStepsInferrerImpl(previousSchema: Schema, nextSchema: Schema
       previousRelation <- previousSchema.relations.toVector
       nextModelAName   = renames.getNextModelName(previousRelation.modelAId)
       nextModelBName   = renames.getNextModelName(previousRelation.modelBId)
-      nextRelation <- nextSchema // TODO: this needs to be adapted once we allow rename of relations
+      nextRelation <- nextSchema
                        .getRelationByName(previousRelation.name)
                        .orElse(UnambiguousRelation.unambiguousRelationThatConnectsModels(nextSchema, nextModelAName, nextModelBName))
     } yield {
