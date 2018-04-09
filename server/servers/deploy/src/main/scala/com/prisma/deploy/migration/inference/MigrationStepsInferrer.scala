@@ -148,7 +148,7 @@ case class MigrationStepsInferrerImpl(previousSchema: Schema, nextSchema: Schema
   lazy val relationsToCreate: Vector[CreateRelation] = {
     for {
       nextRelation <- nextSchema.relations.toVector
-      if !containsRelation(previousSchema, ambiguityCheck = nextSchema, nextRelation, renames.getPreviousModelName, renames.getPreviousRelationName)
+      if relationNotInPreviousSchema(previousSchema, nextSchema = nextSchema, nextRelation, renames.getPreviousModelName, renames.getPreviousRelationName)
     } yield {
       CreateRelation(
         name = nextRelation.name,
@@ -163,7 +163,7 @@ case class MigrationStepsInferrerImpl(previousSchema: Schema, nextSchema: Schema
   lazy val relationsToDelete: Vector[DeleteRelation] = {
     for {
       previousRelation <- previousSchema.relations.toVector
-      if !containsRelation(nextSchema, ambiguityCheck = previousSchema, previousRelation, renames.getNextModelName, renames.getNextRelationName)
+      if relationNotInNextSchema(nextSchema, previousSchema = previousSchema, previousRelation, renames.getNextModelName, renames.getNextRelationName)
     } yield DeleteRelation(previousRelation.name)
   }
 
@@ -221,26 +221,52 @@ case class MigrationStepsInferrerImpl(previousSchema: Schema, nextSchema: Schema
 
   lazy val emptyModel = Model(name = "", stableIdentifier = "", fields = List.empty)
 
-  def containsRelation(schema: Schema,
-                       ambiguityCheck: Schema,
-                       relation: Relation,
-                       adjacentModelName: String => String,
-                       adjacentRelationName: String => String): Boolean = {
-    schema.relations.exists { rel =>
-      val adjacentModelAId = adjacentModelName(relation.modelAId)
-      val adjacentModelBId = adjacentModelName(relation.modelBId)
-      val adjacentGeneratedRelationName = if (adjacentModelAId < adjacentModelBId) {
-        s"${adjacentModelAId}To${adjacentModelBId}"
-      } else {
-        s"${adjacentModelBId}To${adjacentModelAId}"
-      }
+  def relationNotInPreviousSchema(previousSchema: Schema,
+                                  nextSchema: Schema,
+                                  nextRelation: Relation,
+                                  previousModelName: String => String,
+                                  previousRelationName: String => String): Boolean = {
+    val relationInPreviousSchema = previousSchema.relations.exists { previousRelation =>
+      val previousModelAId = previousModelName(nextRelation.modelAId)
+      val previousModelBId = previousModelName(nextRelation.modelBId)
+      val previousGeneratedRelationName =
+        if (previousModelAId < previousModelBId) s"${previousModelAId}To${previousModelBId}" else s"${previousModelBId}To${previousModelAId}"
 
-      val refersToModelsExactlyRight = rel.modelAId == adjacentModelAId && rel.modelBId == adjacentModelBId
-      val refersToModelsSwitched     = rel.modelAId == adjacentModelBId && rel.modelBId == adjacentModelAId
-      val relationNameMatches        = rel.name == adjacentGeneratedRelationName || rel.name == relation.name || rel.name == adjacentRelationName(relation.name)
+      val refersToModelsExactlyRight = previousRelation.modelAId == previousModelAId && previousRelation.modelBId == previousModelBId
+      val refersToModelsSwitched     = previousRelation.modelAId == previousModelBId && previousRelation.modelBId == previousModelAId
+      val relationNameMatches = previousRelation.name == previousGeneratedRelationName || previousRelation.name == nextRelation.name || previousRelation.name == previousRelationName(
+        nextRelation.name)
 
       relationNameMatches && (refersToModelsExactlyRight || refersToModelsSwitched)
     }
+    !relationInPreviousSchema
+  }
+
+  def relationNotInNextSchema(nextSchema: Schema,
+                              previousSchema: Schema,
+                              previousRelation: Relation,
+                              nextModelName: String => String,
+                              nextRelationName: String => String): Boolean = {
+    val relationInNextSchema = nextSchema.relations.exists { nextRelation =>
+      val nextModelAId              = nextModelName(previousRelation.modelAId)
+      val nextModelBId              = nextModelName(previousRelation.modelBId)
+      val nextGeneratedRelationName = if (nextModelAId < nextModelBId) s"${nextModelAId}To${nextModelBId}" else s"${nextModelBId}To${nextModelAId}"
+
+      val refersToModelsExactlyRight = nextRelation.modelAId == nextModelAId && nextRelation.modelBId == nextModelBId
+      val refersToModelsSwitched     = nextRelation.modelAId == nextModelBId && nextRelation.modelBId == nextModelAId
+      val relationNameMatches = nextRelation.name == nextGeneratedRelationName || nextRelation.name == previousRelation.name || nextRelation.name == nextRelationName(
+        previousRelation.name)
+
+      val previousGeneratedRelationName =
+        if (previousRelation.modelAId < previousRelation.modelBId) s"${previousRelation.modelAId}To${previousRelation.modelBId}"
+        else s"${previousRelation.modelBId}To${previousRelation.modelAId}"
+      val isRenameOfPreviouslyUnnamedRelation = previousRelation.name == previousGeneratedRelationName && nextSchema.relations.count(relation =>
+        relation.connectsTheModels(nextModelAId, nextModelBId)) == 1
+
+      (relationNameMatches || isRenameOfPreviouslyUnnamedRelation) && (refersToModelsExactlyRight || refersToModelsSwitched)
+    }
+
+    !relationInNextSchema
   }
 
   def containsEnum(schema: Schema, enumName: String): Boolean = schema.enums.exists(_.name == enumName)
