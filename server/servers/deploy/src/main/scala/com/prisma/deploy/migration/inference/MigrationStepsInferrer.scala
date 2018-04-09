@@ -227,25 +227,27 @@ case class MigrationStepsInferrerImpl(previousSchema: Schema, nextSchema: Schema
                                   nextRelation: Relation,
                                   previousModelName: String => String,
                                   previousRelationName: String => String): Boolean = {
+
+    val nextGeneratedRelationName      = generateRelationName(nextRelation.modelAId, nextRelation.modelBId)
+    val nextRelationCountBetweenModels = nextSchema.relations.count(relation => relation.connectsTheModels(nextRelation.modelAId, nextRelation.modelBId))
+
     val relationInPreviousSchema = previousSchema.relations.exists { previousRelation =>
       val previousModelAId              = previousModelName(nextRelation.modelAId)
       val previousModelBId              = previousModelName(nextRelation.modelBId)
       val previousGeneratedRelationName = generateRelationName(previousModelAId, previousModelBId)
-      val nextGeneratedRelationName     = generateRelationName(nextRelation.modelAId, nextRelation.modelBId)
 
       val refersToModelsExactlyRight = previousRelation.modelAId == previousModelAId && previousRelation.modelBId == previousModelBId
       val refersToModelsSwitched     = previousRelation.modelAId == previousModelBId && previousRelation.modelBId == previousModelAId
       val relationNameMatches = previousRelation.name == previousGeneratedRelationName || previousRelation.name == nextRelation.name || previousRelation.name == previousRelationName(
         nextRelation.name)
 
-      val nextRelationCountBetweenModels     = nextSchema.relations.count(relation => relation.connectsTheModels(nextRelation.modelAId, nextRelation.modelBId))
       val previousRelationCountBetweenModels = previousSchema.relations.count(relation => relation.connectsTheModels(previousModelAId, previousModelBId))
 
-      val isNameRemovalOfPreviouslyNamedRelation = nextRelation.name == nextGeneratedRelationName && nextRelationCountBetweenModels == 1 && previousRelationCountBetweenModels == 1
       if (nextRelation.name == nextGeneratedRelationName && nextRelationCountBetweenModels == 1 && previousRelationCountBetweenModels > 1)
         throw UpdatedRelationAmbigous(
-          s"There is a relation ambiguity during the migration. Please first name the old relation on your schema. The ambiguity is on a relation between ${previousRelation.modelAId} and ${previousRelation.modelBId}.")
+          s"There is a relation ambiguity during the migration. The ambiguity is on a relation between ${previousRelation.modelAId} and ${previousRelation.modelBId}.")
 
+      val isNameRemovalOfPreviouslyNamedRelation = nextRelation.name == nextGeneratedRelationName && nextRelationCountBetweenModels == 1 && previousRelationCountBetweenModels == 1
       (relationNameMatches || isNameRemovalOfPreviouslyNamedRelation) && (refersToModelsExactlyRight || refersToModelsSwitched)
     }
     !relationInPreviousSchema
@@ -256,26 +258,27 @@ case class MigrationStepsInferrerImpl(previousSchema: Schema, nextSchema: Schema
                               previousRelation: Relation,
                               nextModelName: String => String,
                               nextRelationName: String => String): Boolean = {
+    val previousGeneratedRelationName = generateRelationName(previousRelation.modelAId, previousRelation.modelBId)
+    val previousRelationCountBetweenModels =
+      previousSchema.relations.count(relation => relation.connectsTheModels(previousRelation.modelAId, previousRelation.modelBId))
+
     val relationInNextSchema = nextSchema.relations.exists { nextRelation =>
-      val nextModelAId                  = nextModelName(previousRelation.modelAId)
-      val nextModelBId                  = nextModelName(previousRelation.modelBId)
-      val nextGeneratedRelationName     = generateRelationName(nextModelAId, nextModelBId)
-      val previousGeneratedRelationName = generateRelationName(previousRelation.modelAId, previousRelation.modelBId)
+      val nextModelAId              = nextModelName(previousRelation.modelAId)
+      val nextModelBId              = nextModelName(previousRelation.modelBId)
+      val nextGeneratedRelationName = generateRelationName(nextModelAId, nextModelBId)
 
       val refersToModelsExactlyRight = nextRelation.modelAId == nextModelAId && nextRelation.modelBId == nextModelBId
       val refersToModelsSwitched     = nextRelation.modelAId == nextModelBId && nextRelation.modelBId == nextModelAId
       val relationNameMatches = nextRelation.name == nextGeneratedRelationName || nextRelation.name == previousRelation.name || nextRelation.name == nextRelationName(
         previousRelation.name)
 
-      val previousRelationCountBetweenModels =
-        previousSchema.relations.count(relation => relation.connectsTheModels(previousRelation.modelAId, previousRelation.modelBId))
       val nextRelationCountBetweenModels = nextSchema.relations.count(relation => relation.connectsTheModels(nextModelAId, nextModelBId))
-
-      val isRenameOfPreviouslyUnnamedRelation = previousRelation.name == previousGeneratedRelationName && nextRelationCountBetweenModels == 1 && previousRelationCountBetweenModels == 1
 
       if (previousRelation.name == previousGeneratedRelationName && nextRelationCountBetweenModels > 1 && previousRelationCountBetweenModels == 1)
         throw UpdatedRelationAmbigous(
           s"There is a relation ambiguity during the migration. Please first name the old relation on your schema. The ambiguity is on a relation between ${previousRelation.modelAId} and ${previousRelation.modelBId}.")
+
+      val isRenameOfPreviouslyUnnamedRelation = previousRelation.name == previousGeneratedRelationName && nextRelationCountBetweenModels == 1 && previousRelationCountBetweenModels == 1
 
       (relationNameMatches || isRenameOfPreviouslyUnnamedRelation) && (refersToModelsExactlyRight || refersToModelsSwitched)
     }
