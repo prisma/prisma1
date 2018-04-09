@@ -228,13 +228,10 @@ case class MigrationStepsInferrerImpl(previousSchema: Schema, nextSchema: Schema
                                   previousModelName: String => String,
                                   previousRelationName: String => String): Boolean = {
     val relationInPreviousSchema = previousSchema.relations.exists { previousRelation =>
-      val previousModelAId = previousModelName(nextRelation.modelAId)
-      val previousModelBId = previousModelName(nextRelation.modelBId)
-      val previousGeneratedRelationName =
-        if (previousModelAId < previousModelBId) s"${previousModelAId}To${previousModelBId}" else s"${previousModelBId}To${previousModelAId}"
-      val nextGeneratedRelationName =
-        if (nextRelation.modelAId < nextRelation.modelBId) s"${nextRelation.modelAId}To${nextRelation.modelBId}"
-        else s"${nextRelation.modelBId}To${nextRelation.modelAId}"
+      val previousModelAId              = previousModelName(nextRelation.modelAId)
+      val previousModelBId              = previousModelName(nextRelation.modelBId)
+      val previousGeneratedRelationName = generateRelationName(previousModelAId, previousModelBId)
+      val nextGeneratedRelationName     = generateRelationName(nextRelation.modelAId, nextRelation.modelBId)
 
       val refersToModelsExactlyRight = previousRelation.modelAId == previousModelAId && previousRelation.modelBId == previousModelBId
       val refersToModelsSwitched     = previousRelation.modelAId == previousModelBId && previousRelation.modelBId == previousModelAId
@@ -260,18 +257,15 @@ case class MigrationStepsInferrerImpl(previousSchema: Schema, nextSchema: Schema
                               nextModelName: String => String,
                               nextRelationName: String => String): Boolean = {
     val relationInNextSchema = nextSchema.relations.exists { nextRelation =>
-      val nextModelAId              = nextModelName(previousRelation.modelAId)
-      val nextModelBId              = nextModelName(previousRelation.modelBId)
-      val nextGeneratedRelationName = if (nextModelAId < nextModelBId) s"${nextModelAId}To${nextModelBId}" else s"${nextModelBId}To${nextModelAId}"
+      val nextModelAId                  = nextModelName(previousRelation.modelAId)
+      val nextModelBId                  = nextModelName(previousRelation.modelBId)
+      val nextGeneratedRelationName     = generateRelationName(nextModelAId, nextModelBId)
+      val previousGeneratedRelationName = generateRelationName(previousRelation.modelAId, previousRelation.modelBId)
 
       val refersToModelsExactlyRight = nextRelation.modelAId == nextModelAId && nextRelation.modelBId == nextModelBId
       val refersToModelsSwitched     = nextRelation.modelAId == nextModelBId && nextRelation.modelBId == nextModelAId
       val relationNameMatches = nextRelation.name == nextGeneratedRelationName || nextRelation.name == previousRelation.name || nextRelation.name == nextRelationName(
         previousRelation.name)
-
-      val previousGeneratedRelationName =
-        if (previousRelation.modelAId < previousRelation.modelBId) s"${previousRelation.modelAId}To${previousRelation.modelBId}"
-        else s"${previousRelation.modelBId}To${previousRelation.modelAId}"
 
       val previousRelationCountBetweenModels =
         previousSchema.relations.count(relation => relation.connectsTheModels(previousRelation.modelAId, previousRelation.modelBId))
@@ -288,6 +282,8 @@ case class MigrationStepsInferrerImpl(previousSchema: Schema, nextSchema: Schema
 
     !relationInNextSchema
   }
+
+  def generateRelationName(first: String, second: String): String = if (first < second) s"${first}To${second}" else s"${second}To${first}"
 
   def containsEnum(schema: Schema, enumName: String): Boolean = schema.enums.exists(_.name == enumName)
 
