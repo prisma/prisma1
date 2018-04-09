@@ -72,7 +72,7 @@ trait IntegrationBaseSpec extends BeforeAndAfterEach with BeforeAndAfterAll with
     val projectId = name + "@" + stage
     projectsToCleanUp :+ projectId
     deployServer.addProject(name, stage)
-    deployServer.deploySchema(name, stage, schema, secrets)
+    deployServer.deploySchema(name, stage, schema.stripMargin, secrets)
   }
 
   def formatSchema(schema: String): String = JsString(schema).toString()
