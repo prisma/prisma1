@@ -5,14 +5,14 @@ import com.prisma.shared.models.Project
 import com.prisma.shared.schema_dsl.SchemaDsl
 import org.scalatest.{FlatSpec, Matchers}
 
-class ManyToManySelfRelationSpec extends FlatSpec with Matchers with ApiBaseSpec {
+class SameFieldSameModelRelationSpec extends FlatSpec with Matchers with ApiBaseSpec {
 
   "A Many to Many Self Relation" should "be accessible from both sides" in {
     val project: Project = SchemaDsl.fromString() { """type Post {
                                                       |  id: ID! @unique
                                                       |  identifier: Int @unique
                                                       |  related: [Post!]! @relation(name: "RelatedPosts")
-                                                      |}""".stripMargin }
+                                                      |}""" }
 
     database.setup(project)
 
@@ -34,7 +34,7 @@ class ManyToManySelfRelationSpec extends FlatSpec with Matchers with ApiBaseSpec
                    |  ) {
                    |    identifier
                    |  }
-                   |}""".stripMargin,
+                   |}""",
       project
     )
 
@@ -49,7 +49,7 @@ class ManyToManySelfRelationSpec extends FlatSpec with Matchers with ApiBaseSpec
                                                       |  id: ID! @unique
                                                       |  identifier: Int @unique
                                                       |  related: Post @relation(name: "RelatedPosts")
-                                                      |}""".stripMargin }
+                                                      |}""" }
 
     database.setup(project)
 
@@ -71,7 +71,7 @@ class ManyToManySelfRelationSpec extends FlatSpec with Matchers with ApiBaseSpec
         |  ) {
         |    identifier
         |  }
-        |}""".stripMargin,
+        |}""",
       project
     )
 
