@@ -148,7 +148,7 @@ case class MigrationStepsInferrerImpl(previousSchema: Schema, nextSchema: Schema
   lazy val relationsToCreate: Vector[CreateRelation] = {
     for {
       nextRelation <- nextSchema.relations.toVector
-      if !containsRelation(previousSchema, ambiguityCheck = nextSchema, nextRelation, renames.getPreviousModelName)
+      if !containsRelation(previousSchema, ambiguityCheck = nextSchema, nextRelation, renames.getPreviousModelName, renames.getPreviousRelationName)
     } yield {
       CreateRelation(
         name = nextRelation.name,
@@ -163,7 +163,7 @@ case class MigrationStepsInferrerImpl(previousSchema: Schema, nextSchema: Schema
   lazy val relationsToDelete: Vector[DeleteRelation] = {
     for {
       previousRelation <- previousSchema.relations.toVector
-      if !containsRelation(nextSchema, ambiguityCheck = previousSchema, previousRelation, renames.getNextModelName)
+      if !containsRelation(nextSchema, ambiguityCheck = previousSchema, previousRelation, renames.getNextModelName, renames.getNextRelationName)
     } yield DeleteRelation(previousRelation.name)
   }
 
@@ -221,7 +221,11 @@ case class MigrationStepsInferrerImpl(previousSchema: Schema, nextSchema: Schema
 
   lazy val emptyModel = Model(name = "", stableIdentifier = "", fields = List.empty)
 
-  def containsRelation(schema: Schema, ambiguityCheck: Schema, relation: Relation, adjacentModelName: String => String): Boolean = {
+  def containsRelation(schema: Schema,
+                       ambiguityCheck: Schema,
+                       relation: Relation,
+                       adjacentModelName: String => String,
+                       adjacentRelationName: String => String): Boolean = {
     schema.relations.exists { rel =>
       val adjacentModelAId = adjacentModelName(relation.modelAId)
       val adjacentModelBId = adjacentModelName(relation.modelBId)
@@ -233,10 +237,8 @@ case class MigrationStepsInferrerImpl(previousSchema: Schema, nextSchema: Schema
 
       val refersToModelsExactlyRight = rel.modelAId == adjacentModelAId && rel.modelBId == adjacentModelBId
       val refersToModelsSwitched     = rel.modelAId == adjacentModelBId && rel.modelBId == adjacentModelAId
-      val relationNameMatches        = rel.name == adjacentGeneratedRelationName || rel.name == relation.name
-//      val relationIsUnambiguous      = rel.isUnambiguous(ambiguityCheck)
+      val relationNameMatches        = rel.name == adjacentGeneratedRelationName || rel.name == relation.name || rel.name == adjacentRelationName(relation.name)
 
-//      (relationNameMatches || relationIsUnambiguous) && (refersToModelsExactlyRight || refersToModelsSwitched)
       relationNameMatches && (refersToModelsExactlyRight || refersToModelsSwitched)
     }
   }

@@ -366,8 +366,6 @@ case class Relation(
 
   def connectsTheModels(model1: String, model2: String): Boolean = (modelAId == model1 && modelBId == model2) || (modelAId == model2 && modelBId == model1)
 
-//  def isUnambiguous(schema: Schema): Boolean = (schema.relations.toSet - this).nonEmpty
-
   def isSameModelRelation: Boolean = modelAId == modelBId
   def isSameFieldSameModelRelation(schema: Schema): Boolean = {
     // note: defaults to modelAField to handle same model, same field relations

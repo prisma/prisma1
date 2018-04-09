@@ -78,47 +78,52 @@ class SeveralRelationsBetweenSameModelsIntegrationSpec extends FlatSpec with Mat
 
     val unchangedRelationContent = apiServer.query("""{as{title, b1{title},b2{title},b3{title}}}""", updatedProject2)
 
-    unchangedRelationContent should be("""{"data":{"as":[{"title":"A1","b1":{"title":"B1"},"b2":{"title":"B2"},"b3":null}]}}""")
+    unchangedRelationContent.toString should be("""{"data":{"as":[{"title":"A1","b1":{"title":"B1"},"b2":{"title":"B2"},"b3":null}]}}""")
   }
 
-//  "DeployMutation" should "be able to handle renaming relations" in {
-//
-//    val schema =
-//      """type A {
-//        |  id: ID! @unique
-//        |  title: String
-//        |  b1: B @relation(name: "AB1")
-//        | }
-//        |
-//        |type B {
-//        |  id: ID! @unique
-//        |  title: String
-//        |  a1: A @relation(name: "AB1")
-//        | }"""
-//
-//    val (project, _) = setupProject(schema)
-//
-//    project.schema.relations.size should be(1)
-//    project.schema.relations.head.name should be("""AB1""")
-//
-//    val schema1 =
-//      """type A {
-//        |  id: ID! @unique
-//        |  title: String
-//        |  b1: B @relation(oldName: "AB1", name: "NewName")
-//        |}
-//        |
-//        |
-//        |type B {
-//        |  id: ID! @unique
-//        |  title: String
-//        |  a1: A @relation(oldName: "AB1", name: "NewName")
-//        |}"""
-//
-//    val updatedProject = deployServer.deploySchema(project, schema1)
-//
-//    updatedProject.schema.relations.size should be(1)
-//    updatedProject.schema.relations.head.name should be("""NewName""")
-//  }
+  "DeployMutation" should "be able to handle renaming relations" in {
+
+    val schema =
+      """type A {
+        |  id: ID! @unique
+        |  title: String
+        |  b1: B @relation(name: "AB1")
+        | }
+        |
+        |type B {
+        |  id: ID! @unique
+        |  title: String
+        |  a1: A @relation(name: "AB1")
+        | }"""
+
+    val (project, _) = setupProject(schema)
+
+    project.schema.relations.size should be(1)
+    project.schema.relations.head.name should be("""AB1""")
+
+    apiServer.query("""mutation{createA(data:{title:"A1" b1:{create:{title: "B1"}}}){id}}""", project)
+
+    val schema1 =
+      """type A {
+        |  id: ID! @unique
+        |  title: String
+        |  b1: B @relation(oldName: "AB1", name: "NewName")
+        |}
+        |
+        |type B {
+        |  id: ID! @unique
+        |  title: String
+        |  a1: A @relation(oldName: "AB1", name: "NewName")
+        |}"""
+
+    val updatedProject = deployServer.deploySchema(project, schema1)
+
+    updatedProject.schema.relations.size should be(1)
+    updatedProject.schema.relations.head.name should be("""NewName""")
+
+    val unchangedRelationContent = apiServer.query("""{as{title, b1{title}}}""", updatedProject)
+
+    unchangedRelationContent.toString should be("""{"data":{"as":[{"title":"A1","b1":{"title":"B1"}}]}}""")
+  }
 
 }
