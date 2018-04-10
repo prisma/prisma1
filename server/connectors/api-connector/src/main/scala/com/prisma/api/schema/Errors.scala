@@ -4,7 +4,7 @@ import com.prisma.api.connector.{ModelEdge, NodeEdge, NodeSelector, Path}
 import com.prisma.shared.models.{Project, Relation}
 import spray.json.{JsArray, JsNumber, JsObject, JsString, JsValue}
 
-abstract class UserFacingError(val message: String, val code: Int, val functionError: Option[JsValue] = None) extends Exception
+abstract class UserFacingError(val message: String, val code: Int, val functionError: Option[JsValue] = None) extends Exception(message)
 
 object CommonErrors {
   case class TimeoutExceeded()                       extends UserFacingError("The query took too long to process. Either try again later or try a simpler query.", 1000)
