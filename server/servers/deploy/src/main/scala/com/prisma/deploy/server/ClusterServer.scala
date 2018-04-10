@@ -18,6 +18,7 @@ import com.prisma.logging.{LogData, LogKey}
 import com.prisma.metrics.extensions.TimeResponseDirectiveImpl
 import com.prisma.sangria.utils.ErrorHandler
 import com.prisma.shared.models.ProjectWithClientId
+import com.prisma.util.json.PlaySprayConversions
 import com.typesafe.scalalogging.LazyLogging
 import cool.graph.cuid.Cuid.createCuid
 import play.api.libs.json.Json
@@ -34,7 +35,8 @@ case class ClusterServer(prefix: String = "")(
     materializer: ActorMaterializer,
     dependencies: DeployDependencies
 ) extends Server
-    with LazyLogging {
+    with LazyLogging
+    with PlaySprayConversions {
   import com.prisma.deploy.server.JsonMarshalling._
   import system.dispatcher
 
@@ -104,7 +106,7 @@ case class ClusterServer(prefix: String = "")(
                             schema = schemaBuilder(userContext),
                             queryAst = queryAst,
                             userContext = userContext,
-                            variables = variables,
+                            variables = variables.toPlay,
                             operationName = operationName,
                             middleware = List.empty,
                             exceptionHandler = errorHandler.sangriaExceptionHandler
@@ -112,7 +114,7 @@ case class ClusterServer(prefix: String = "")(
                           .recover {
                             case e: QueryAnalysisError => e.resolveError
                           }
-                          .map(node => OK -> node)
+                          .map(node => OK -> node.toSpray)
 
                       result.onComplete(_ => logRequestEnd(None, None))
                       result

@@ -18,6 +18,8 @@ trait JsonUtils {
   implicit class JsValueExtensions(val json: JsValue) {
     def prettyPrint  = Json.prettyPrint(json)
     def compactPrint = Json.stringify(json)
+
+    def asJsObject = json.as[JsObject]
   }
 
   def enumFormat[T <: scala.Enumeration](enu: T): Format[T#Value] = new EnumJsonConverter[T](enu)

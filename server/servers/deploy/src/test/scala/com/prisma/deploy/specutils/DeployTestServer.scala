@@ -10,14 +10,14 @@ import play.api.libs.json.{JsArray, JsString}
 import sangria.execution.{Executor, QueryAnalysisError}
 import sangria.parser.QueryParser
 import sangria.renderer.SchemaRenderer
-import spray.json._
+import play.api.libs.json._
 
 import scala.concurrent.Await
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration.Duration
 import scala.reflect.io.File
 
-case class DeployTestServer()(implicit dependencies: DeployDependencies) extends SprayJsonExtensions with GraphQLResponseAssertions with AwaitUtils {
+case class DeployTestServer()(implicit dependencies: DeployDependencies) extends PlayJsonExtensions with GraphQLResponseAssertions with AwaitUtils {
   import com.prisma.deploy.server.JsonMarshalling._
 
   def writeSchemaIntoFile(schema: String): Unit = File("schema").writeAll(schema)
@@ -60,7 +60,7 @@ case class DeployTestServer()(implicit dependencies: DeployDependencies) extends
                                errorCount: Int = 1,
                                errorContains: String = "",
                                userId: Option[String] = None,
-                               variables: JsValue = JsObject(),
+                               variables: JsValue = JsObject.empty,
                                requestId: String = "CombinedTestDatabase.requestId",
                                graphcoolHeader: Option[String] = None): JsValue = {
     val result = executeQueryWithAuthentication(
@@ -83,7 +83,7 @@ case class DeployTestServer()(implicit dependencies: DeployDependencies) extends
   }
 
   def executeQueryWithAuthentication(query: String,
-                                     variables: JsValue = JsObject(),
+                                     variables: JsValue = JsObject.empty,
                                      requestId: String = "CombinedTestDatabase.requestId",
                                      graphcoolHeader: Option[String] = None): JsValue = {
 

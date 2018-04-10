@@ -6,7 +6,7 @@ import play.api.libs.json._
 
 import scala.util.Try
 
-object JsonUtils {
+object JsonUtils2 {
   implicit class JsonStringExtension(val str: String) extends AnyVal {
     def tryParseJson(): Try[JsValue] = Try { play.api.libs.json.Json.parse(str) }
   }

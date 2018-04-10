@@ -4,9 +4,10 @@ import org.joda.time.DateTime
 import org.joda.time.format.DateTimeFormat
 import play.api.libs.json._
 import sangria.marshalling._
+
 object JsonMarshalling {
 
-  implicit object CustomSprayJsonResultMarshaller extends ResultMarshaller {
+  implicit object CustomPlayJsonResultMarshaller extends ResultMarshaller {
     type Node       = JsValue
     type MapBuilder = ArrayMapBuilder[Node]
 
@@ -49,7 +50,7 @@ object JsonMarshalling {
     def renderPretty(node: JsValue) = Json.prettyPrint(node)
   }
 
-  implicit object SprayJsonInputUnmarshaller extends InputUnmarshaller[JsValue] {
+  implicit object PlayJsonInputUnmarshaller extends InputUnmarshaller[JsValue] {
 
     def getRootMapValue(node: JsValue, key: String): Option[JsValue] = node.asInstanceOf[JsObject].value.get(key)
 

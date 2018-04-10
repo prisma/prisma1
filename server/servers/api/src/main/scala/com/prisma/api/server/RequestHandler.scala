@@ -11,7 +11,6 @@ import com.prisma.auth.Auth
 import com.prisma.client.server.GraphQlRequestHandler
 import com.prisma.errors.{ErrorReporter, ProjectMetadata}
 import com.prisma.shared.models.{Project, ProjectWithClientId}
-import com.prisma.util.json.PlaySprayConversions
 import com.prisma.utils.`try`.TryExtensions._
 import play.api.libs.json._
 import sangria.schema.Schema
@@ -25,8 +24,7 @@ case class RequestHandler(
     graphQlRequestHandler: GraphQlRequestHandler,
     auth: Auth,
     log: Function[String, Unit]
-)(implicit reporter: ErrorReporter, ec: ExecutionContext, apiDependencies: ApiDependencies)
-    extends PlaySprayConversions {
+)(implicit reporter: ErrorReporter, ec: ExecutionContext, apiDependencies: ApiDependencies) {
 
   def handleRawRequestForPublicApi(
       projectId: String,

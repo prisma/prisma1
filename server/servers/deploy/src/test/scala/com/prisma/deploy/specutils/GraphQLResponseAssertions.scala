@@ -1,20 +1,10 @@
 package com.prisma.deploy.specutils
 
-import com.prisma.util.json.PlaySprayConversions
-import play.api.libs.json.{JsValue => PJsValue}
-import spray.json._
+import play.api.libs.json._
 
-trait GraphQLResponseAssertions extends SprayJsonExtensions {
-  import PlaySprayConversions._
+trait GraphQLResponseAssertions extends PlayJsonExtensions {
 
-  implicit class PlayJsonAssertionsExtension(json: PJsValue) {
-    def assertSuccessfulResponse(dataContains: String): Unit = json.toSpray().assertSuccessfulResponse(dataContains)
-
-    def assertFailingResponse(errorCode: Int, errorCount: Int, errorContains: String): Unit =
-      json.toSpray().assertFailingResponse(errorCode, errorCount, errorContains)
-  }
-
-  implicit class SprayJsonAssertionsExtension(json: JsValue) {
+  implicit class PlayJsonAssertionsExtension(json: JsValue) {
     def assertSuccessfulResponse(dataContains: String): Unit = {
       require(
         requirement = !hasErrors,
@@ -55,9 +45,9 @@ trait GraphQLResponseAssertions extends SprayJsonExtensions {
       }
     }
 
-    private def hasErrors: Boolean                                = json.asJsObject.fields.get("errors").isDefined
-    private def dataContainsString(assertData: String): Boolean   = json.asJsObject.fields.get("data").toString.contains(assertData)
-    private def errorContainsString(assertError: String): Boolean = json.asJsObject.fields.get("errors").toString.contains(assertError)
+    private def hasErrors: Boolean                                = json.asJsObject.value.get("errors").isDefined
+    private def dataContainsString(assertData: String): Boolean   = json.asJsObject.value.get("data").toString.contains(assertData)
+    private def errorContainsString(assertError: String): Boolean = json.asJsObject.value.get("errors").toString.contains(assertError)
 
     def assertErrorsAndWarnings(shouldFail: Boolean, shouldWarn: Boolean) = {
       val errors   = json.pathAsSeq("data.deploy.errors")
@@ -81,6 +71,5 @@ trait GraphQLResponseAssertions extends SprayJsonExtensions {
           require(requirement = warnings.nonEmpty, message = s"The query had to result in a warning but it returned no warnings.")
       }
     }
-
   }
 }

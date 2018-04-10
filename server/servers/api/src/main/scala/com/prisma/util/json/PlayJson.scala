@@ -1,10 +1,11 @@
 package com.prisma.util.json
 
-import spray.json._
+import com.prisma.utils.json.JsonUtils
 
 import scala.util.{Failure, Success, Try}
+import play.api.libs.json._
 
-object Json extends SprayJsonExtensions {
+object PlayJson extends PlayJsonExtensions with JsonUtils {
 
   /**
     * extracts a nested json value by a given path like "foo.bar.fizz"
@@ -19,7 +20,7 @@ object Json extends SprayJsonExtensions {
         Try(json.asInstanceOf[JsArray]) match {
           case Success(jsList) =>
             val index = getArrayIndex(pathElements.head).get
-            val subJson = jsList.elements
+            val subJson = jsList.value
               .lift(index)
               .getOrElse(sys.error(s"Could not find pathElement [${pathElements.head} in this json $json]"))
             getPathAsInternal(subJson, pathElements.tail)
@@ -28,7 +29,7 @@ object Json extends SprayJsonExtensions {
       } else {
         Try(json.asJsObject) match {
           case Success(jsObject) =>
-            val subJson = jsObject.fields.getOrElse(pathElements.head, sys.error(s"Could not find pathElement [${pathElements.head} in this json $json]"))
+            val subJson = jsObject.value.getOrElse(pathElements.head, sys.error(s"Could not find pathElement [${pathElements.head} in this json $json]"))
             getPathAsInternal(subJson, pathElements.tail)
           case Failure(e) => Failure(e) //sys.error(s"[$json] is not a Jsbject!")
         }
@@ -44,27 +45,26 @@ object Json extends SprayJsonExtensions {
   }
 
   def getPathAs[T <: JsValue](jsonString: String, path: String): T = {
-    import spray.json._
     getPathAs(jsonString.parseJson, path)
   }
 
 }
 
-trait SprayJsonExtensions {
+trait PlayJsonExtensions extends JsonUtils {
   implicit class StringExtensions(string: String) {
     def tryParseJson(): Try[JsValue] = Try { string.parseJson }
   }
 
   implicit class JsValueParsingExtensions(jsValue: JsValue) {
-    def pathAs[T <: JsValue](path: String): T = Json.getPathAs[T](jsValue, path)
+    def pathAs[T <: JsValue](path: String): T = PlayJson.getPathAs[T](jsValue, path)
 
     def pathAsJsValue(path: String): JsValue   = pathAs[JsValue](path)
     def pathAsJsObject(path: String): JsObject = pathAs[JsObject](path)
     def pathExists(path: String): Boolean      = Try(pathAsJsValue(path)).map(_ => true).getOrElse(false)
 
-    def pathAsSeq(path: String): Seq[JsValue] = Json.getPathAs[JsArray](jsValue, path).elements
-    def pathAsSeqOfType[T](path: String)(implicit format: JsonFormat[T]): Seq[T] =
-      Json.getPathAs[JsArray](jsValue, path).elements.map(_.convertTo[T])
+    def pathAsSeq(path: String): Seq[JsValue] = PlayJson.getPathAs[JsArray](jsValue, path).value
+    def pathAsSeqOfType[T](path: String)(implicit format: Format[T]): Seq[T] =
+      PlayJson.getPathAs[JsArray](jsValue, path).value.map(_.as[T])
 
     def pathAsString(path: String): String = pathAs[JsString](path).value
 

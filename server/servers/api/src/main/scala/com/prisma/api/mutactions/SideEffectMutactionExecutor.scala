@@ -6,9 +6,7 @@ import com.prisma.messagebus.PubSubPublisher
 import com.prisma.messagebus.pubsub.Only
 import com.prisma.shared.models.WebhookDelivery
 import com.prisma.subscriptions.{SubscriptionExecutor, Webhook}
-import com.prisma.util.json.PlaySprayConversions
-import play.api.libs.json.Json
-import spray.json._
+import play.api.libs.json.{JsObject, Json}
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -38,7 +36,7 @@ object PublishSubscriptionEventExecutor {
   }
 }
 
-object ServerSideSubscriptionExecutor extends PlaySprayConversions {
+object ServerSideSubscriptionExecutor {
   def execute(mutaction: ServerSideSubscription)(implicit apiDependencies: ApiDependencies): Future[Unit] = mutaction.function.delivery match {
     case webhookDelivery: WebhookDelivery => deliverWebhook(mutaction, webhookDelivery)
     case _                                => Future.unit
@@ -54,21 +52,21 @@ object ServerSideSubscriptionExecutor extends PlaySprayConversions {
       previousValues = previousValues,
       updatedFields = updatedFields,
       query = function.query,
-      variables = JsObject.empty.toPlay(),
+      variables = JsObject.empty,
       nodeId = nodeId,
       requestId = s"subscription:server_side:${project.id}",
       operationName = None,
       skipPermissionCheck = true,
       alwaysQueryMasterDatabase = true
     )
-    subscriptionResult.map(_.map(_.toSpray)).map {
-      case Some(JsObject(fields)) if fields.contains("data") =>
+    subscriptionResult.map {
+      case Some(json) if json.as[JsObject].keys.contains("data") =>
         val webhook = Webhook(
           projectId = project.id,
           functionName = function.name,
           requestId = requestId,
           url = webhookDelivery.url,
-          payload = JsObject(fields).compactPrint,
+          payload = json.toString,
           id = requestId,
           headers = webhookDelivery.headers.toMap
         )
