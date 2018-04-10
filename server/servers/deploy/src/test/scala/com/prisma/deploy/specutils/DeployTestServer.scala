@@ -4,6 +4,7 @@ import akka.http.scaladsl.model.HttpRequest
 import com.prisma.deploy.DeployDependencies
 import com.prisma.deploy.schema.{SchemaBuilder, SystemUserContext}
 import com.prisma.sangria.utils.ErrorHandler
+import com.prisma.shared.errors.UserFacingError
 import com.prisma.shared.models.{Migration, MigrationId, Project, ProjectId}
 import com.prisma.utils.await.AwaitUtils
 import play.api.libs.json.{JsArray, JsString}
@@ -77,6 +78,11 @@ case class DeployTestServer()(implicit dependencies: DeployDependencies) extends
   /**
     * Execute a Query without Checks.
     */
+  def errorExtractor(t: Throwable): Option[Int] = t match {
+    case e: UserFacingError => Some(e.code)
+    case _                  => None
+  }
+
   def executeQueryWithAuthentication(query: String,
                                      variables: JsValue = JsObject(),
                                      requestId: String = "CombinedTestDatabase.requestId",
@@ -86,7 +92,7 @@ case class DeployTestServer()(implicit dependencies: DeployDependencies) extends
     val userContext    = SystemUserContext(None)
     val schema         = schemaBuilder(userContext)
     val renderedSchema = SchemaRenderer.renderSchema(schema)
-    val errorHandler   = ErrorHandler(requestId, HttpRequest(), query, variables.toString(), dependencies.reporter)
+    val errorHandler   = ErrorHandler(requestId, HttpRequest(), query, variables.toString(), dependencies.reporter, errorCodeExtractor = errorExtractor)
 
     if (printSchema) println(renderedSchema)
     if (writeSchemaToFile) writeSchemaIntoFile(renderedSchema)
