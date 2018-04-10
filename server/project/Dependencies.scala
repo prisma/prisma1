@@ -17,7 +17,6 @@ object Dependencies {
     val scalactic   = "3.0.4"
     val scalaTest   = "3.0.4"
     val slick       = "3.2.0"
-    val spray       = "1.3.3"
     val jackson     = "2.8.4"
   }
 
@@ -25,10 +24,9 @@ object Dependencies {
   val jodaConvert = "org.joda" % "joda-convert" % v.jodaConvert
   val joda        = Seq(jodaTime, jodaConvert)
 
-  val cuid      = "cool.graph"    % "cuid-java"   % v.cuid
-  val scalactic = "org.scalactic" %% "scalactic"  % v.scalactic
-  val scalaTest = "org.scalatest" %% "scalatest"  % v.scalaTest % Test
-  val sprayJson = "io.spray"      %% "spray-json" % v.spray
+  val cuid      = "cool.graph"    % "cuid-java"  % v.cuid
+  val scalactic = "org.scalactic" %% "scalactic" % v.scalactic
+  val scalaTest = "org.scalatest" %% "scalatest" % v.scalaTest % Test
 
   val slickCore   = "com.typesafe.slick" %% "slick" % v.slick
   val slickHikari = "com.typesafe.slick" %% "slick-hikaricp" % v.slick
@@ -104,7 +102,6 @@ object Dependencies {
     akkaHttpPlayJson,
     akkaHttpCors,
     akkaHttpTestKit,
-    sprayJson,
     playJson,
     scalajHttp,
     scalaLogging,

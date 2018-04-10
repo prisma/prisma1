@@ -1,7 +1,6 @@
 package com.prisma.deploy.server
 
 import akka.actor.ActorSystem
-import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport._
 import akka.http.scaladsl.model.StatusCode
 import akka.http.scaladsl.model.StatusCodes._
 import akka.http.scaladsl.model.headers.RawHeader
@@ -18,13 +17,13 @@ import com.prisma.logging.{LogData, LogKey}
 import com.prisma.metrics.extensions.TimeResponseDirectiveImpl
 import com.prisma.sangria.utils.ErrorHandler
 import com.prisma.shared.models.ProjectWithClientId
-import com.prisma.util.json.PlaySprayConversions
 import com.typesafe.scalalogging.LazyLogging
 import cool.graph.cuid.Cuid.createCuid
 import play.api.libs.json.Json
 import sangria.execution.{Executor, QueryAnalysisError}
 import sangria.parser.QueryParser
-import spray.json._
+import play.api.libs.json._
+import de.heikoseeberger.akkahttpplayjson.PlayJsonSupport
 
 import scala.concurrent.Future
 import scala.language.postfixOps
@@ -36,7 +35,7 @@ case class ClusterServer(prefix: String = "")(
     dependencies: DeployDependencies
 ) extends Server
     with LazyLogging
-    with PlaySprayConversions {
+    with PlayJsonSupport {
   import com.prisma.deploy.server.JsonMarshalling._
   import system.dispatcher
 
@@ -89,13 +88,13 @@ case class ClusterServer(prefix: String = "")(
 
                   val variables = fields.get("variables") match {
                     case Some(obj: JsObject)                  => obj
-                    case Some(JsString(s)) if s.trim.nonEmpty => s.parseJson
+                    case Some(JsString(s)) if s.trim.nonEmpty => Json.parse(s)
                     case _                                    => JsObject.empty
                   }
 
                   QueryParser.parse(query) match {
                     case Failure(error) =>
-                      Future.successful(BadRequest -> JsObject("error" -> JsString(error.getMessage)))
+                      Future.successful(BadRequest -> Json.obj("error" -> error.getMessage))
 
                     case Success(queryAst) =>
                       val userContext  = SystemUserContext(authorizationHeader = authorizationHeader)
@@ -106,7 +105,7 @@ case class ClusterServer(prefix: String = "")(
                             schema = schemaBuilder(userContext),
                             queryAst = queryAst,
                             userContext = userContext,
-                            variables = variables.toPlay,
+                            variables = variables,
                             operationName = operationName,
                             middleware = List.empty,
                             exceptionHandler = errorHandler.sangriaExceptionHandler
@@ -114,7 +113,7 @@ case class ClusterServer(prefix: String = "")(
                           .recover {
                             case e: QueryAnalysisError => e.resolveError
                           }
-                          .map(node => OK -> node.toSpray)
+                          .map(node => OK -> node)
 
                       result.onComplete(_ => logRequestEnd(None, None))
                       result
@@ -173,14 +172,14 @@ case class ClusterServer(prefix: String = "")(
 
   def toplevelExceptionHandler(requestId: String) = ExceptionHandler {
     case e: DeployApiError =>
-      complete(OK -> JsObject("code" -> JsNumber(e.code), "requestId" -> JsString(requestId), "error" -> JsString(e.getMessage)))
+      complete(OK -> Json.obj("code" -> e.code, "requestId" -> requestId, "error" -> e.getMessage))
 
     case e: Throwable =>
       extractRequest { req =>
         println(e.getMessage)
         e.printStackTrace()
         dependencies.reporter.report(e, RequestMetadata(requestId, req.method.value, req.uri.toString(), req.headers.map(h => h.name() -> h.value())))
-        complete(InternalServerError -> JsObject("errors" -> JsArray(JsObject("requestId" -> JsString(requestId), "message" -> JsString(e.getMessage)))))
+        complete(InternalServerError -> Json.obj("errors" -> Json.arr(Json.obj("requestId" -> requestId), "message" -> e.getMessage)))
       }
   }
 }

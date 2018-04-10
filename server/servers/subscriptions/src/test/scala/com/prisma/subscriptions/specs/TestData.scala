@@ -4,10 +4,9 @@ import com.prisma.api.ApiTestDatabase
 import com.prisma.api.connector._
 import com.prisma.gc_values._
 import com.prisma.shared.models.{Model, Project}
-import com.prisma.util.json.PlaySprayConversions
 import com.prisma.utils.await.AwaitUtils
 import play.api.libs.json._
-object TestData extends AwaitUtils with PlaySprayConversions {
+object TestData extends AwaitUtils {
   def createTodo(
       id: String,
       text: String,
