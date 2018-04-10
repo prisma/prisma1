@@ -67,7 +67,12 @@ object DatabaseMutationBuilder {
 
   def updateDataItems(projectId: String, model: Model, args: PrismaArgs, whereFilter: Option[DataItemFilterCollection]) = {
     val updateValues = combineByComma(args.raw.asRoot.map.map { case (k, v) => escapeKey(k) ++ sql" = " ++ gcValueToSQLBuilder(v) })
-    (sql"UPDATE `#${projectId}`.`#${model.name}`" ++ sql"SET " ++ updateValues ++ whereFilterAppendix(projectId, model, whereFilter)).asUpdate
+
+    if (updateValues.isDefined) {
+      (sql"UPDATE `#${projectId}`.`#${model.name}`" ++ sql"SET " ++ updateValues ++ whereFilterAppendix(projectId, model, whereFilter)).asUpdate
+    } else {
+      DBIOAction.successful(())
+    }
   }
 
   def updateDataItemByPath(projectId: String, path: Path, updateArgs: PrismaArgs) = {
@@ -239,34 +244,39 @@ object DatabaseMutationBuilder {
     val idQuery: SqlStreamingAction[Vector[String], String, Effect] =
       (sql"SELECT `id` FROM `#${projectId}`.`#${model.name}`" ++ whereFilterAppendix(projectId, model, whereFilter)).as[String]
 
-    def listInsert(ids: Vector[String]): SimpleDBIO[Unit] = {
-      SimpleDBIO[Unit] { x =>
-        def valueTuplesForListField(listGCValue: ListGCValue) =
-          for {
-            nodeId                   <- ids
-            (escapedValue, position) <- listGCValue.values.zip((1 to listGCValue.size).map(_ * 1000))
-          } yield {
-            (nodeId, position, escapedValue)
-          }
+    def listInsert(ids: Vector[String]) = {
+      if (ids.isEmpty) {
+        DBIOAction.successful(())
+      } else {
 
-        val combinedNodeIdsString = ids.map(id => s"'$id'") mkString ("(", ",", ")")
-
-        listFieldMap.foreach {
-          case (fieldName, listGCValue) =>
-            val wipe                             = s"DELETE  FROM `$projectId`.`${model.name}_$fieldName` WHERE `nodeId` IN $combinedNodeIdsString"
-            val wipeOldValues: PreparedStatement = x.connection.prepareStatement(wipe)
-            wipeOldValues.executeUpdate()
-
-            val insert                             = s"INSERT INTO `$projectId`.`${model.name}_$fieldName` (`nodeId`, `position`, `value`) VALUES (?,?,?)"
-            val insertNewValues: PreparedStatement = x.connection.prepareStatement(insert)
-            val newValueTuples                     = valueTuplesForListField(listGCValue)
-            newValueTuples.foreach { tuple =>
-              insertNewValues.setString(1, tuple._1)
-              insertNewValues.setInt(2, tuple._2)
-              insertNewValues.setGcValue(3, tuple._3)
-              insertNewValues.addBatch()
+        SimpleDBIO[Unit] { x =>
+          def valueTuplesForListField(listGCValue: ListGCValue) =
+            for {
+              nodeId                   <- ids
+              (escapedValue, position) <- listGCValue.values.zip((1 to listGCValue.size).map(_ * 1000))
+            } yield {
+              (nodeId, position, escapedValue)
             }
-            insertNewValues.executeBatch()
+
+          val combinedNodeIdsString = ids.map(id => s"'$id'") mkString ("(", ",", ")")
+
+          listFieldMap.foreach {
+            case (fieldName, listGCValue) =>
+              val wipe                             = s"DELETE  FROM `$projectId`.`${model.name}_$fieldName` WHERE `nodeId` IN $combinedNodeIdsString"
+              val wipeOldValues: PreparedStatement = x.connection.prepareStatement(wipe)
+              wipeOldValues.executeUpdate()
+
+              val insert                             = s"INSERT INTO `$projectId`.`${model.name}_$fieldName` (`nodeId`, `position`, `value`) VALUES (?,?,?)"
+              val insertNewValues: PreparedStatement = x.connection.prepareStatement(insert)
+              val newValueTuples                     = valueTuplesForListField(listGCValue)
+              newValueTuples.foreach { tuple =>
+                insertNewValues.setString(1, tuple._1)
+                insertNewValues.setInt(2, tuple._2)
+                insertNewValues.setGcValue(3, tuple._3)
+                insertNewValues.addBatch()
+              }
+              insertNewValues.executeBatch()
+          }
         }
       }
     }
