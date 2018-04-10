@@ -17,7 +17,7 @@ object SchemaDsl {
   def fromString(id: String = TestIds.testProjectId)(sdlString: String): Project = {
     val emptyBaseSchema    = Schema()
     val emptySchemaMapping = SchemaMapping.empty
-    val sqlDocument        = QueryParser.parse(sdlString).get
+    val sqlDocument        = QueryParser.parse(sdlString.stripMargin).get
     val schema             = SchemaInferrer().infer(emptyBaseSchema, emptySchemaMapping, sqlDocument).get
 
     TestProject().copy(id = id, schema = schema)

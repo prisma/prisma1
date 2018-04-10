@@ -128,7 +128,7 @@ case class DeployTestServer()(implicit dependencies: DeployDependencies) extends
   }
 
   def deploySchema(project: Project, schema: String): Project = {
-    deployHelper(project.id, schema, Vector.empty)
+    deployHelper(project.id, schema.stripMargin, Vector.empty)
     dependencies.projectPersistence.load(project.id).await.get
   }
 

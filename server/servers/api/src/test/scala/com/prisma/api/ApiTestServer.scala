@@ -32,7 +32,7 @@ case class ApiTestServer()(implicit dependencies: ApiDependencies) extends Spray
       requestId: String = "CombinedTestDatabase.requestId"
   ): JsValue = {
     val result = executeQuerySimpleWithAuthentication(
-      query = query,
+      query = query.stripMargin,
       project = project,
       variables = variables,
       requestId = requestId

@@ -34,10 +34,23 @@ object SchemaMapper extends SchemaMapper {
         )
       }
 
+    val relationMapping: Vector[Mapping] =
+      for {
+        objectType <- graphQlSdl.objectTypes
+        fieldDef   <- objectType.fields
+        if fieldDef.directiveArgumentAsString("relation", "oldName").isDefined
+      } yield {
+        Mapping(
+          previous = fieldDef.directiveArgumentAsString("relation", "oldName").get,
+          next = fieldDef.directiveArgumentAsString("relation", "name").get
+        )
+      }
+
     inference.SchemaMapping(
       models = modelMapping,
       enums = enumMapping,
-      fields = fieldMapping
+      fields = fieldMapping,
+      relations = relationMapping
     )
   }
 }

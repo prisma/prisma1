@@ -69,7 +69,7 @@ class OptionalBackRelationImportExportSpec extends FlatSpec with Matchers with A
 
     val rel0 = server.query("query{model0s{id, model0self{id}}}", project).toString
     rel0 should be(
-      """{"data":{"model0s":[{"id":"0","model0self":null},{"id":"3","model0self":{"id":"4"}},{"id":"4","model0self":null},{"id":"5","model0self":{"id":"6"}},{"id":"6","model0self":null}]}}""")
+      """{"data":{"model0s":[{"id":"0","model0self":null},{"id":"3","model0self":{"id":"4"}},{"id":"4","model0self":{"id":"3"}},{"id":"5","model0self":{"id":"6"}},{"id":"6","model0self":{"id":"5"}}]}}""")
 
     val rel1 = server.query("query{model1s{id, model0{id}}}", project).toString
     rel1 should be("""{"data":{"model1s":[{"id":"1","model0":{"id":"0"}}]}}""")
@@ -105,7 +105,7 @@ class OptionalBackRelationImportExportSpec extends FlatSpec with Matchers with A
 
     val rel0 = server.query("query{model0s{id, model0self{id}}}", project).toString
     rel0 should be(
-      """{"data":{"model0s":[{"id":"0","model0self":null},{"id":"3","model0self":{"id":"4"}},{"id":"4","model0self":null},{"id":"5","model0self":{"id":"6"}},{"id":"6","model0self":null}]}}""")
+      """{"data":{"model0s":[{"id":"0","model0self":null},{"id":"3","model0self":{"id":"4"}},{"id":"4","model0self":{"id":"3"}},{"id":"5","model0self":{"id":"6"}},{"id":"6","model0self":{"id":"5"}}]}}""")
 
     val rel1 = server.query("query{model1s{id, model0{id}}}", project).toString
     rel1 should be("""{"data":{"model1s":[{"id":"1","model0":{"id":"0"}}]}}""")
