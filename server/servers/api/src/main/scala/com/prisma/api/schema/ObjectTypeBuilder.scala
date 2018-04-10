@@ -9,7 +9,7 @@ import com.prisma.api.schema.CustomScalarTypes.{DateTimeType, JsonType}
 import com.prisma.gc_values._
 import com.prisma.shared.models
 import com.prisma.shared.models.{Field, Model, TypeIdentifier}
-import com.prisma.util.gc_value.GCAnyConverter
+import com.prisma.util.coolArgs.GCAnyConverter
 import sangria.schema.{Field => SangriaField, _}
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -249,15 +249,6 @@ class ObjectTypeBuilder(
     val lastOpt                                = ctx.argOpt[Int](IdBasedConnection.Args.Last.name)
 
     Some(SangriaQueryArguments.createSimpleQueryArguments(skipOpt, afterOpt, firstOpt, beforeOpt, lastOpt, filterOpt, orderByOpt))
-  }
-
-  def extractRequiredFilterFromContext(model: Model, ctx: Context[ApiUserContext, Unit]): Types.DataItemFilterCollection = {
-    val rawFilter: Map[String, Any] = ctx.arg[Map[String, Any]]("where")
-    val unwrappedValues = rawFilter.map {
-      case (k, Some(x)) => (k, x)
-      case (k, v)       => (k, v)
-    }
-    generateFilterElement(unwrappedValues, model, isSubscriptionFilter = false)
   }
 
   def mapToOutputResolve[C <: ApiUserContext](model: models.Model, field: models.Field)(

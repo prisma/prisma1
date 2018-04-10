@@ -1,73 +1,15 @@
-package com.prisma.util.gc_value
+package com.prisma.util.coolArgs
 
 import com.prisma.api.connector.{NodeSelector, PrismaArgs}
 import com.prisma.gc_values._
 import com.prisma.shared.models.TypeIdentifier.TypeIdentifier
 import com.prisma.shared.models.{Field, Model, TypeIdentifier}
 import org.joda.time.DateTime
-import org.joda.time.format.ISODateTimeFormat
 import org.scalactic.{Bad, Good, Or}
 import play.api.libs.json.{JsValue, _}
 import sangria.ast._
 
 import scala.util.control.NonFatal
-
-/**
-  * 0. This gets us a GCValue as String or Any without requiring context like field it therefore only works from GCValue
-  * Can be made a singleton
-  */
-object GCValueExtractor {
-
-  def fromGCValueToString(t: GCValue): String = {
-    fromGCValue(t) match {
-      case x: Vector[Any] => x.map(_.toString).mkString(start = "[", sep = ",", end = "]")
-      case x              => x.toString
-    }
-  }
-
-  def fromGCValue(t: GCValue): Any = {
-    t match {
-      case ListGCValue(values)      => values.map(fromGCValue)
-      case RootGCValue(_)           => sys.error("RootGCValues not implemented yet in GCValueExtractor")
-      case leafGCValue: LeafGCValue => fromLeafGCValue(leafGCValue)
-    }
-  }
-
-  def fromLeafGCValue(t: LeafGCValue): Any = {
-    t match {
-      case NullGCValue            => None // todo danger!!!
-      case StringGCValue(value)   => value
-      case EnumGCValue(value)     => value
-      case IdGCValue(value)       => value
-      case DateTimeGCValue(value) => value
-      case IntGCValue(value)      => value
-      case FloatGCValue(value)    => value
-      case BooleanGCValue(value)  => value
-      case JsonGCValue(value)     => value
-    }
-  }
-
-  def fromGCValueToJson(t: GCValue): JsValue = {
-
-    val formatter = ISODateTimeFormat.dateHourMinuteSecondFraction()
-
-    t match {
-      case NullGCValue         => JsNull
-      case StringGCValue(x)    => JsString(x)
-      case EnumGCValue(x)      => JsString(x)
-      case IdGCValue(x)        => JsString(x)
-      case DateTimeGCValue(x)  => JsString(formatter.print(x))
-      case IntGCValue(x)       => JsNumber(x)
-      case FloatGCValue(x)     => JsNumber(x)
-      case BooleanGCValue(x)   => JsBoolean(x)
-      case JsonGCValue(x)      => x
-      case ListGCValue(values) => JsArray(values.map(fromGCValueToJson))
-      case RootGCValue(map)    => JsObject(map.map { case (k, v) => (k, fromGCValueToJson(v)) })
-    }
-  }
-
-  def fromListGCValue(t: ListGCValue): Vector[Any] = t.values.map(fromGCValue)
-}
 
 /**
   * 7. Any <-> GCValue - This is used to transform Sangria arguments
@@ -183,29 +125,4 @@ object OtherGCStuff {
     }
     recurse(seq)(Vector.empty)
   }
-
-  /**
-    * This is used to parse SQL exceptions for references of specific GCValues
-    */
-  def parameterString(where: NodeSelector) = where.fieldValue match {
-    case StringGCValue(x)      => s"parameters ['$x',"
-    case IntGCValue(x)         => s"parameters [$x,"
-    case FloatGCValue(x)       => s"parameters [$x,"
-    case BooleanGCValue(false) => s"parameters [0,"
-    case BooleanGCValue(true)  => s"parameters [1,"
-    case IdGCValue(x)          => s"parameters ['$x',"
-    case EnumGCValue(x)        => s"parameters ['$x',"
-    case DateTimeGCValue(x)    => s"parameters ['${dateTimeFromISO8601(x)}"
-    case JsonGCValue(x)        => s"parameters ['$x'," // Todo
-    case ListGCValue(_)        => sys.error("Not an acceptable Where")
-    case RootGCValue(_)        => sys.error("Not an acceptable Where")
-    case NullGCValue           => sys.error("Not an acceptable Where")
-  }
-
-  private def dateTimeFromISO8601(v: Any) = {
-    val string = v.toString
-    //"2017-12-05T12:34:23.000Z" to "2017-12-05T12:34:23.000" which MySQL will accept
-    string.replace("T", " ").substring(0, string.length - 3) //todo pretty hacky
-  }
-
 }

@@ -10,7 +10,7 @@ import com.prisma.subscriptions.metrics.SubscriptionMetrics.handleDatabaseEventT
 import com.prisma.subscriptions.resolving.SubscriptionsManagerForModel.Requests.StartSubscription
 import com.prisma.subscriptions.util.PlayJson
 import com.prisma.subscriptions.{SubscriptionDependencies, SubscriptionExecutor}
-import com.prisma.util.gc_value.GCCreateReallyCoolArgsConverter
+import com.prisma.util.coolArgs.GCCreateReallyCoolArgsConverter
 import play.api.libs.json._
 
 import scala.concurrent.duration.Duration

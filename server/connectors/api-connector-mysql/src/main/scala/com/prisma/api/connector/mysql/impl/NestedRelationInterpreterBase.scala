@@ -7,8 +7,8 @@ import com.prisma.api.connector.{ModelEdge, NodeEdge, Path}
 import com.prisma.api.connector.mysql.database.DatabaseMutationBuilder._
 import com.prisma.api.schema.APIErrors.RequiredRelationWouldBeViolated
 import com.prisma.shared.models.Project
-import com.prisma.util.gc_value.OtherGCStuff.parameterString
 import slick.dbio.{DBIOAction, Effect, NoStream}
+import com.prisma.api.connector.mysql.database.ErrorMessageParameterHelper.parameterString
 
 trait NestedRelationInterpreterBase extends DatabaseMutactionInterpreter {
 

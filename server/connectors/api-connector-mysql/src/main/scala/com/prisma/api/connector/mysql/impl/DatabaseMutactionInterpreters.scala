@@ -13,9 +13,9 @@ import com.prisma.api.connector.mysql.impl.GetFieldFromSQLUniqueException.getFie
 import com.prisma.api.schema.APIErrors
 import com.prisma.api.schema.APIErrors.RequiredRelationWouldBeViolated
 import com.prisma.shared.models.{Field, Relation}
-import com.prisma.util.gc_value.OtherGCStuff.parameterString
 import slick.dbio.DBIOAction
 import slick.jdbc.MySQLProfile.api._
+import com.prisma.api.connector.mysql.database.ErrorMessageParameterHelper.parameterString
 
 case class AddDataItemToManyRelationByPathInterpreter(mutaction: AddDataItemToManyRelationByPath) extends DatabaseMutactionInterpreter {
 

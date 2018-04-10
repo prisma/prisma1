@@ -126,7 +126,7 @@ object QueryArgumentsHelpers {
 
         case FinalValueFilter(key, ListGCValue(values), field, filterName) if filterName == "_in" =>
           values.nonEmpty match {
-            case true  => Some(sql"`#$projectId`.`#$tableName`.`#${field.name}` " ++ generateInStatementGC(values))
+            case true  => Some(sql"`#$projectId`.`#$tableName`.`#${field.name}` " ++ generateInStatement(values))
             case false => Some(sql"false")
           }
 
@@ -135,7 +135,7 @@ object QueryArgumentsHelpers {
 
         case FinalValueFilter(key, ListGCValue(values), field, filterName) if filterName == "_not_in" =>
           values.nonEmpty match {
-            case true  => Some(sql"`#$projectId`.`#$tableName`.`#${field.name}` NOT " ++ generateInStatementGC(values))
+            case true  => Some(sql"`#$projectId`.`#$tableName`.`#${field.name}` NOT " ++ generateInStatement(values))
             case false => Some(sql"true")
           }
 
@@ -168,8 +168,6 @@ object QueryArgumentsHelpers {
     if (sqlParts.isEmpty) None else combineByAnd(sqlParts)
   }
 
-  def generateInStatement(items: Seq[Any]) = sql" IN (" ++ combineByComma(items.map(escapeUnsafeParam)) ++ sql")"
-
-  def generateInStatementGC(items: Vector[GCValue]) = sql" IN (" ++ combineByComma(items.map(gcValueToSQLBuilder)) ++ sql")"
+  def generateInStatement(items: Vector[GCValue]) = sql" IN (" ++ combineByComma(items.map(gcValueToSQLBuilder)) ++ sql")"
 
 }

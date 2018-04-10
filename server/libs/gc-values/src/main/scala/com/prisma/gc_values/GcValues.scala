@@ -1,7 +1,6 @@
 package com.prisma.gc_values
 
 import org.joda.time.DateTime
-import org.joda.time.format.ISODateTimeFormat
 import play.api.libs.json._
 
 import scala.collection.immutable.SortedMap
@@ -67,27 +66,34 @@ case class JsonGCValue(value: JsValue)      extends LeafGCValue
 
 object GCValueExtractor {
 
-  def fromListGCValue(t: ListGCValue): Vector[Any] = t.values.map(fromGCValue)
+  def fromGCValueToString(t: GCValue): String = {
+    fromGCValue(t) match {
+      case x: Vector[Any] => x.map(_.toString).mkString(start = "[", sep = ",", end = "]")
+      case x              => x.toString
+    }
+  }
 
   def fromGCValue(t: GCValue): Any = {
     t match {
-      case x: ListGCValue => fromListGCValue(x)
-      case x: RootGCValue => sys.error("RootGCValues not implemented yet in GCValueExtractor")
-      case x: LeafGCValue => fromLeafGCValue(x)
+      case ListGCValue(values)      => values.map(fromGCValue)
+      case RootGCValue(_)           => sys.error("RootGCValues not implemented yet in GCValueExtractor")
+      case leafGCValue: LeafGCValue => fromLeafGCValue(leafGCValue)
     }
   }
 
   def fromLeafGCValue(t: LeafGCValue): Any = {
     t match {
-      case NullGCValue        => None
-      case StringGCValue(x)   => x
-      case EnumGCValue(x)     => x
-      case IdGCValue(x)       => x
-      case DateTimeGCValue(x) => x
-      case IntGCValue(x)      => x
-      case FloatGCValue(x)    => x
-      case BooleanGCValue(x)  => x
-      case JsonGCValue(x)     => x
+      case NullGCValue            => None // todo danger!!!
+      case StringGCValue(value)   => value
+      case EnumGCValue(value)     => value
+      case IdGCValue(value)       => value
+      case DateTimeGCValue(value) => value
+      case IntGCValue(value)      => value
+      case FloatGCValue(value)    => value
+      case BooleanGCValue(value)  => value
+      case JsonGCValue(value)     => value
     }
   }
+
+  def fromListGCValue(t: ListGCValue): Vector[Any] = t.values.map(fromGCValue)
 }
