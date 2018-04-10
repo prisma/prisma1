@@ -2,8 +2,8 @@ package com.prisma.api.server
 
 import org.joda.time.DateTime
 import org.joda.time.format.DateTimeFormat
-import sangria.marshalling._
 import play.api.libs.json._
+import sangria.marshalling._
 object JsonMarshalling {
 
   implicit object CustomSprayJsonResultMarshaller extends ResultMarshaller {

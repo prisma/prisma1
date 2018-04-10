@@ -3,7 +3,6 @@ package com.prisma.api.resolver
 import com.prisma.api.connector.{DataResolver, PrismaNode}
 import com.prisma.api.resolver.DeferredTypes._
 import com.prisma.shared.models.Project
-import com.prisma.util.coolArgs.GCAnyConverter
 
 import scala.concurrent.ExecutionContext.Implicits.global
 

@@ -2,8 +2,8 @@ package com.prisma.subscriptions.specs
 
 import akka.http.scaladsl.model.ws.TextMessage
 import akka.http.scaladsl.testkit.WSProbe
-import spray.json.JsValue
 import com.prisma.util.json.Json._
+import spray.json.JsValue
 
 object WSProbeExtensions {
   implicit class WSProbeExtensions(wsProbe: WSProbe) {

@@ -5,6 +5,7 @@ import com.prisma.shared.models.{Enum, Field, Model, TypeIdentifier}
 import org.joda.time.DateTimeZone
 import org.joda.time.format.{DateTimeFormat, ISODateTimeFormat}
 import play.api.libs.json._
+
 import scala.collection.immutable.SortedMap
 import scala.util.Try
 

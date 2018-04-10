@@ -13,8 +13,8 @@ import com.prisma.errors.{ErrorReporter, ProjectMetadata}
 import com.prisma.shared.models.{Project, ProjectWithClientId}
 import com.prisma.util.json.PlaySprayConversions
 import com.prisma.utils.`try`.TryExtensions._
-import sangria.schema.Schema
 import play.api.libs.json._
+import sangria.schema.Schema
 
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.Failure

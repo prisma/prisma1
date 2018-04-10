@@ -12,8 +12,8 @@ import com.prisma.shared.schema_dsl.TestProject
 import com.prisma.utils.await.AwaitUtils
 import org.scalatest.{FlatSpec, Matchers}
 import pdi.jwt.{Jwt, JwtAlgorithm}
-import sangria.schema.{ObjectType, Schema, SchemaValidationRule}
 import play.api.libs.json._
+import sangria.schema.{ObjectType, Schema, SchemaValidationRule}
 
 import scala.concurrent.Future
 

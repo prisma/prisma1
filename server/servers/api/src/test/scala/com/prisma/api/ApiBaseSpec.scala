@@ -6,10 +6,11 @@ import com.prisma.api.connector.DataResolver
 import com.prisma.api.util.StringMatchers
 import com.prisma.shared.models.Project
 import com.prisma.util.json.SprayJsonExtensions
+import com.prisma.utils.json.JsonUtils
 import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach, Suite}
 import play.api.libs.json.JsString
 
-trait ApiBaseSpec extends BeforeAndAfterEach with BeforeAndAfterAll with SprayJsonExtensions with StringMatchers { self: Suite =>
+trait ApiBaseSpec extends BeforeAndAfterEach with BeforeAndAfterAll with SprayJsonExtensions with StringMatchers with JsonUtils { self: Suite =>
 
   implicit lazy val system           = ActorSystem()
   implicit lazy val materializer     = ActorMaterializer()

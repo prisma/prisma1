@@ -2,7 +2,6 @@ package com.prisma.workers
 
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
-import com.prisma.errors.ErrorReporter
 import com.prisma.akkautil.http.{Routes, Server}
 import com.prisma.workers.dependencies.WorkerDependencies
 

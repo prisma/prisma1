@@ -1,7 +1,7 @@
 package com.prisma.shared.schema_dsl
 
 import com.prisma.shared.models._
-import TestIds._
+import com.prisma.shared.schema_dsl.TestIds._
 
 object TestClient {
   def apply(project: Project): Client = apply(Some(project))

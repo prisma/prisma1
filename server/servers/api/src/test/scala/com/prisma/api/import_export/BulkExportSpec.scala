@@ -9,7 +9,6 @@ import com.prisma.util.json.PlaySprayConversions
 import com.prisma.utils.await.AwaitUtils
 import org.scalatest.{FlatSpec, Matchers}
 import play.api.libs.json.JsArray
-import spray.json._
 
 class BulkExportSpec extends FlatSpec with Matchers with ApiBaseSpec with AwaitUtils with PlaySprayConversions {
 

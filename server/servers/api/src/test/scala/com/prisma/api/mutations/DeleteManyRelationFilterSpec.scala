@@ -1,7 +1,6 @@
 package com.prisma.api.mutations
 
 import com.prisma.api.ApiBaseSpec
-import com.prisma.api.connector.mysql.database.DatabaseQueryBuilder
 import com.prisma.shared.models.Project
 import com.prisma.shared.schema_dsl.SchemaDsl
 import org.scalatest.{FlatSpec, Matchers}

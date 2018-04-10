@@ -1,8 +1,8 @@
 package com.prisma.deploy.specutils
 
 import com.prisma.util.json.PlaySprayConversions
-import spray.json._
 import play.api.libs.json.{JsValue => PJsValue}
+import spray.json._
 
 trait GraphQLResponseAssertions extends SprayJsonExtensions {
   import PlaySprayConversions._

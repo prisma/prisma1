@@ -6,14 +6,23 @@ import play.api.libs.json._
 
 import scala.util.Try
 
-object JsonUtils {
-  implicit class JsonStringExtension(val str: String) extends AnyVal {
+object JsonUtils extends JsonUtils
+
+trait JsonUtils {
+  implicit class JsonStringExtension(val str: String) {
     def tryParseJson(): Try[JsValue] = Try { Json.parse(str) }
+    def parseJson(): JsValue         = Json.parse(str)
+
+  }
+
+  implicit class JsValueExtensions(val json: JsValue) {
+    def prettyPrint  = Json.prettyPrint(json)
+    def compactPrint = Json.stringify(json)
   }
 
   def enumFormat[T <: scala.Enumeration](enu: T): Format[T#Value] = new EnumJsonConverter[T](enu)
 
-  implicit object DateTimeFormat extends Format[DateTime] {
+  implicit object DateTimeJsonFormat extends Format[DateTime] {
 
     val formatter = ISODateTimeFormat.basicDateTime
 
