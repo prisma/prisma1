@@ -190,7 +190,11 @@ case class UpdateDataItemInterpreter(mutaction: UpdateWrapper) extends DatabaseM
 }
 
 case class UpdateDataItemsInterpreter(mutaction: UpdateDataItems) extends DatabaseMutactionInterpreter {
-  override val action = DatabaseMutationBuilder.updateDataItems(mutaction.project.id, mutaction.model, mutaction.updateArgs, mutaction.whereFilter)
+  val nonListActions = DatabaseMutationBuilder.updateDataItems(mutaction.project.id, mutaction.model, mutaction.updateArgs, mutaction.whereFilter)
+  val listActions    = DatabaseMutationBuilder.setManyScalarLists(mutaction.project.id, mutaction.model, mutaction.listArgs, mutaction.whereFilter)
+
+  //update Lists before updating the nodes
+  override val action = DBIOAction.seq(listActions, nonListActions)
 }
 
 case class UpsertDataItemInterpreter(mutaction: UpsertDataItem) extends DatabaseMutactionInterpreter {
@@ -286,7 +290,6 @@ case class VerifyWhereInterpreter(mutaction: VerifyWhere) extends DatabaseMutact
 
   private def causedByThisMutaction(cause: String) = {
     val modelString = s"`${where.model.name}` WHEREFAILURETRIGGER WHERE `${where.field.name}`"
-    val parameter   = parameterString(where)
     cause.contains(modelString) && cause.contains(parameterString(where))
   }
 }
