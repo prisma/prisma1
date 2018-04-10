@@ -14,7 +14,7 @@ import com.prisma.shared.models.{Project, ProjectWithClientId}
 import com.prisma.util.json.PlaySprayConversions
 import com.prisma.utils.`try`.TryExtensions._
 import sangria.schema.Schema
-import spray.json.{JsValue => SprayJsValue}
+import spray.json.{JsArray, JsNumber, JsObject, JsString, JsValue => SprayJsValue}
 import play.api.libs.json.{JsValue => PlayJsValue}
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -51,7 +51,7 @@ case class RequestHandler(
         result         <- handleGraphQlRequest(graphQlRequest)
       } yield result
     }.recoverWith {
-      case e: InvalidGraphQlRequest => Future.successful(OK -> APIErrors.errorJson(rawRequest.id, e.underlying.getMessage))
+      case e: InvalidGraphQlRequest => Future.successful(OK -> JsonErrorHelper.errorJson(rawRequest.id, e.underlying.getMessage))
     }
   }
 
