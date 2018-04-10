@@ -8,22 +8,21 @@ import akka.http.scaladsl.model.headers.RawHeader
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.ExceptionHandler
 import akka.stream.ActorMaterializer
-import com.prisma.errors.RequestMetadata
-import com.prisma.sangria.utils.ErrorHandler
-import com.typesafe.scalalogging.LazyLogging
 import com.prisma.akkautil.http.Server
 import com.prisma.deploy.connector.ProjectPersistence
-import cool.graph.cuid.Cuid.createCuid
 import com.prisma.deploy.schema.{DeployApiError, InvalidProjectId, SchemaBuilder, SystemUserContext}
 import com.prisma.deploy.{DeployDependencies, DeployMetrics}
-import com.prisma.metrics.extensions.TimeResponseDirectiveImpl
-import com.prisma.shared.models.ProjectWithClientId
-import com.prisma.logging.{LogData, LogKey}
+import com.prisma.errors.RequestMetadata
 import com.prisma.logging.LogDataWrites.logDataWrites
-import com.prisma.shared.errors.UserFacingError
+import com.prisma.logging.{LogData, LogKey}
+import com.prisma.metrics.extensions.TimeResponseDirectiveImpl
+import com.prisma.sangria.utils.ErrorHandler
+import com.prisma.shared.models.ProjectWithClientId
+import com.typesafe.scalalogging.LazyLogging
+import cool.graph.cuid.Cuid.createCuid
 import play.api.libs.json.Json
-import sangria.execution.{Executor, QueryAnalysisError, ValidationError}
-import sangria.parser.{QueryParser, SyntaxError}
+import sangria.execution.{Executor, QueryAnalysisError}
+import sangria.parser.QueryParser
 import spray.json._
 
 import scala.concurrent.Future
@@ -46,8 +45,8 @@ case class ClusterServer(prefix: String = "")(
   val server2serverSecret                    = sys.env.getOrElse("SCHEMA_MANAGER_SECRET", sys.error("SCHEMA_MANAGER_SECRET env var required but not found"))
 
   def errorExtractor(t: Throwable): Option[Int] = t match {
-    case e: UserFacingError => Some(e.code)
-    case _                  => None
+    case e: DeployApiError => Some(e.code)
+    case _                 => None
   }
 
   val innerRoutes = extractRequest { req =>

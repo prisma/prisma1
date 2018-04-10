@@ -2,9 +2,8 @@ package com.prisma.deploy.specutils
 
 import akka.http.scaladsl.model.HttpRequest
 import com.prisma.deploy.DeployDependencies
-import com.prisma.deploy.schema.{SchemaBuilder, SystemUserContext}
+import com.prisma.deploy.schema.{DeployApiError, SchemaBuilder, SystemUserContext}
 import com.prisma.sangria.utils.ErrorHandler
-import com.prisma.shared.errors.UserFacingError
 import com.prisma.shared.models.{Migration, MigrationId, Project, ProjectId}
 import com.prisma.utils.await.AwaitUtils
 import play.api.libs.json.{JsArray, JsString}
@@ -79,8 +78,8 @@ case class DeployTestServer()(implicit dependencies: DeployDependencies) extends
     * Execute a Query without Checks.
     */
   def errorExtractor(t: Throwable): Option[Int] = t match {
-    case e: UserFacingError => Some(e.code)
-    case _                  => None
+    case e: DeployApiError => Some(e.code)
+    case _                 => None
   }
 
   def executeQueryWithAuthentication(query: String,
