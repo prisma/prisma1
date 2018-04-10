@@ -1,17 +1,15 @@
 package com.prisma.api.connector.mysql.database
 
+import com.prisma.api.connector.Types.DataItemFilterCollection
+import com.prisma.api.connector.mysql.database.JdbcExtensions._
 import com.prisma.gc_values._
+import com.prisma.shared.models.Model
 import org.joda.time.DateTime
 import org.joda.time.format.DateTimeFormat
+import play.api.libs.json.{JsValue => PlayJsValue}
 import slick.jdbc.MySQLProfile.api._
 import slick.jdbc.{PositionedParameters, SQLActionBuilder, SetParameter}
-import spray.json.DefaultJsonProtocol._
-import spray.json._
 import spray.json.{JsValue => SprayJsValue}
-import play.api.libs.json.{Json, JsValue => PlayJsValue}
-import JdbcExtensions._
-import com.prisma.api.connector.Types.DataItemFilterCollection
-import com.prisma.shared.models.Model
 
 object SlickExtensions {
 
@@ -39,23 +37,6 @@ object SlickExtensions {
     def ++(b: Option[SQLActionBuilder]): SQLActionBuilder = concat(b)
   }
 
-  def listToJson(param: List[Any]): String =
-    param
-      .map {
-        case v: String     => v.toJson
-        case v: JsValue    => v.toJson
-        case v: Boolean    => v.toJson
-        case v: Int        => v.toJson
-        case v: Long       => v.toJson
-        case v: Float      => v.toJson
-        case v: Double     => v.toJson
-        case v: BigInt     => v.toJson
-        case v: BigDecimal => v.toJson
-        case v: DateTime   => v.toString.toJson
-      }
-      .toJson
-      .toString
-
   def escapeUnsafeParam(param: Any): SQLActionBuilder = {
     def unwrapSome(x: Any): Any = x match {
       case Some(x) => x
@@ -74,7 +55,6 @@ object SlickExtensions {
       case param: BigInt       => sql"#${param.toString}"
       case param: BigDecimal   => sql"#${param.toString}"
       case param: DateTime     => sql"${param.toString(DateTimeFormat.forPattern("yyyy-MM-dd'T'HH:mm:ss.SSS").withZoneUTC())}"
-      case param: Vector[_]    => sql"${listToJson(param.toList)}"
       case None                => sql"NULL"
       case null                => sql"NULL"
       case _                   => throw new IllegalArgumentException("Unsupported scalar value in SlickExtensions: " + param.toString)
@@ -97,13 +77,6 @@ object SlickExtensions {
       case RootGCValue(_)         => sys.error("RootGCValues not implemented here yet.")
     }
   }
-
-  def listToJsonList(param: List[Any]): String = {
-    val x = listToJson(param)
-    x.substring(1, x.length - 1)
-  }
-
-  def escapeUnsafeParamListValue(param: Vector[Any]) = sql"${listToJsonList(param.toList)}"
 
   def escapeKey(key: String) = sql"`#$key`"
 

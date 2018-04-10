@@ -185,7 +185,7 @@ class ObjectTypeBuilder(
           value match {
             case value: Map[_, _] =>
               val typedValue = value.asInstanceOf[Map[String, Any]]
-              if (List("AND", "OR").contains(key) || (isSubscriptionFilter && key == "node")) { //todo pull list(and, or) out into companion object
+              if (List("AND", "OR").contains(key) || (isSubscriptionFilter && key == "node")) {
                 generateFilterElement(typedValue, model, isSubscriptionFilter)
               } else {
                 // this must be a relation filter

@@ -4,6 +4,7 @@ import akka.http.scaladsl.model.HttpRequest
 import com.prisma.api.ApiDependencies
 import com.prisma.api.connector.PrismaNode
 import com.prisma.api.resolver.DeferredResolverProvider
+import com.prisma.api.schema.UserFacingError
 import com.prisma.sangria.utils.ErrorHandler
 import com.prisma.shared.models.ModelMutationType.ModelMutationType
 import com.prisma.shared.models._
@@ -91,13 +92,19 @@ object SubscriptionExecutor extends SprayJsonExtensions {
       dependencies.dataResolver(project)
     }
 
+    def errorExtractor(t: Throwable): Option[Int] = t match {
+      case e: UserFacingError => Some(e.code)
+      case _                  => None
+    }
+
     val sangriaHandler = ErrorHandler(
       requestId,
       HttpRequest(),
       query.renderPretty,
       variables.compactPrint,
       dependencies.reporter,
-      Some(project.id)
+      Some(project.id),
+      errorCodeExtractor = errorExtractor
     ).sangriaExceptionHandler
 
     Executor

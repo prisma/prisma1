@@ -6,9 +6,8 @@ import com.prisma.api.connector.Types.DataItemFilterCollection
 import com.prisma.api.connector._
 import com.prisma.api.connector.mysql.database.JdbcExtensions._
 import com.prisma.api.connector.mysql.database.SlickExtensions._
-import com.prisma.api.schema.GeneralError
+import com.prisma.api.schema.UserFacingError
 import com.prisma.gc_values.{GCValue, ListGCValue, NullGCValue}
-import com.prisma.shared.models.TypeIdentifier.TypeIdentifier
 import com.prisma.shared.models._
 import cool.graph.cuid.Cuid
 import slick.dbio.{DBIOAction, Effect, NoStream}
@@ -372,7 +371,7 @@ object DatabaseMutationBuilder {
 
   def ifThenElseError(condition: SqlStreamingAction[Vector[Boolean], Boolean, Effect],
                       thenMutactions: DBIOAction[Unit, NoStream, Effect],
-                      elseError: GeneralError) = {
+                      elseError: UserFacingError) = {
     import scala.concurrent.ExecutionContext.Implicits.global
     for {
       exists <- condition

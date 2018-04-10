@@ -20,6 +20,7 @@ import com.prisma.metrics.extensions.TimeResponseDirectiveImpl
 import com.prisma.shared.models.ProjectWithClientId
 import com.prisma.logging.{LogData, LogKey}
 import com.prisma.logging.LogDataWrites.logDataWrites
+import com.prisma.shared.errors.UserFacingError
 import play.api.libs.json.Json
 import sangria.execution.{Executor, QueryAnalysisError, ValidationError}
 import sangria.parser.{QueryParser, SyntaxError}
@@ -43,6 +44,11 @@ case class ClusterServer(prefix: String = "")(
   val log: String => Unit                    = (msg: String) => logger.info(msg)
   val requestPrefix                          = "cluster"
   val server2serverSecret                    = sys.env.getOrElse("SCHEMA_MANAGER_SECRET", sys.error("SCHEMA_MANAGER_SECRET env var required but not found"))
+
+  def errorExtractor(t: Throwable): Option[Int] = t match {
+    case e: UserFacingError => Some(e.code)
+    case _                  => None
+  }
 
   val innerRoutes = extractRequest { req =>
     val requestId            = requestPrefix + ":cluster:" + createCuid()
@@ -92,7 +98,7 @@ case class ClusterServer(prefix: String = "")(
 
                     case Success(queryAst) =>
                       val userContext  = SystemUserContext(authorizationHeader = authorizationHeader)
-                      val errorHandler = ErrorHandler(requestId, req, query, variables.toString(), dependencies.reporter)
+                      val errorHandler = ErrorHandler(requestId, req, query, variables.toString(), dependencies.reporter, errorCodeExtractor = errorExtractor)
                       val result: Future[(StatusCode, JsValue)] =
                         Executor
                           .execute(

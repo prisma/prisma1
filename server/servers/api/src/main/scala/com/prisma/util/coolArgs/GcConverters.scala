@@ -1,6 +1,6 @@
 package com.prisma.util.coolArgs
 
-import com.prisma.api.connector.{NodeSelector, PrismaArgs}
+import com.prisma.api.connector.PrismaArgs
 import com.prisma.gc_values._
 import com.prisma.shared.models.TypeIdentifier.TypeIdentifier
 import com.prisma.shared.models.{Field, Model, TypeIdentifier}
