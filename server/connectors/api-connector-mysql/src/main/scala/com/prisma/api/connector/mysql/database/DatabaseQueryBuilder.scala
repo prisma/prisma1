@@ -54,9 +54,13 @@ object DatabaseQueryBuilder {
     PrismaNode(id = ps.rs.getId, data = RootGCValue(data: _*))
   }
 
-  def getResultForModelAndRelationSide(model: Model, side: String): GetResult[PrismaNodeWithParent] = GetResult { ps: PositionedResult =>
-    val node = getPrismaNode(model, ps)
-    PrismaNodeWithParent(ps.rs.getParentId(side), node)
+  def getResultForModelAndRelationSide(model: Model, side: String, oppositeSide: String): GetResult[PrismaNodeWithParent] = GetResult { ps: PositionedResult =>
+    val node       = getPrismaNode(model, ps)
+    val firstSide  = ps.rs.getParentId(side)
+    val secondSide = ps.rs.getParentId(oppositeSide)
+    val parentId   = if (firstSide == node.id) secondSide else firstSide
+
+    PrismaNodeWithParent(parentId, node)
   }
 
   implicit object GetRelationNode extends GetResult[RelationNode] {
@@ -86,9 +90,9 @@ object DatabaseQueryBuilder {
     val tableName                                        = model.name
     val (conditionCommand, orderByCommand, limitCommand) = extractQueryArgs(projectId, tableName, args, None, overrideMaxNodeCount = overrideMaxNodeCount)
 
-    val query = sql"select * from `#$projectId`.`#$tableName`" concat
-      prefixIfNotNone("where", conditionCommand) concat
-      prefixIfNotNone("order by", orderByCommand) concat
+    val query = sql"select * from `#$projectId`.`#$tableName`" ++
+      prefixIfNotNone("where", conditionCommand) ++
+      prefixIfNotNone("order by", orderByCommand) ++
       prefixIfNotNone("limit", limitCommand)
 
     query.as[PrismaNode](getResultForModel(model)).map(args.get.resultTransform)
@@ -104,9 +108,9 @@ object DatabaseQueryBuilder {
     val tableName                                        = relationId
     val (conditionCommand, orderByCommand, limitCommand) = extractQueryArgs(projectId, tableName, args, None, overrideMaxNodeCount = overrideMaxNodeCount)
 
-    val query = sql"select * from `#$projectId`.`#$tableName`" concat
-      prefixIfNotNone("where", conditionCommand) concat
-      prefixIfNotNone("order by", orderByCommand) concat
+    val query = sql"select * from `#$projectId`.`#$tableName`" ++
+      prefixIfNotNone("where", conditionCommand) ++
+      prefixIfNotNone("order by", orderByCommand) ++
       prefixIfNotNone("limit", limitCommand)
 
     query.as[RelationNode].map(args.get.resultTransform)
@@ -122,9 +126,9 @@ object DatabaseQueryBuilder {
     val (conditionCommand, orderByCommand, limitCommand) = extractQueryArgs(projectId, tableName, args, None, overrideMaxNodeCount = overrideMaxNodeCount, true)
 
     val query =
-      sql"select * from `#$projectId`.`#$tableName`" concat
-        prefixIfNotNone("where", conditionCommand) concat
-        prefixIfNotNone("order by", orderByCommand) concat
+      sql"select * from `#$projectId`.`#$tableName`" ++
+        prefixIfNotNone("where", conditionCommand) ++
+        prefixIfNotNone("order by", orderByCommand) ++
         prefixIfNotNone("limit", limitCommand)
 
     query.as[ScalarListElement](getResultForScalarListField(field)).map { scalarListElements =>
@@ -147,7 +151,7 @@ object DatabaseQueryBuilder {
                                    model: Model,
                                    fieldName: String,
                                    values: Vector[GCValue]): SqlStreamingAction[Vector[PrismaNode], PrismaNode, Effect] = {
-    val query = sql"select * from `#$projectId`.`#${model.name}` where `#$fieldName` in (" concat combineByComma(values.map(gcValueToSQLBuilder)) concat sql")"
+    val query = sql"select * from `#$projectId`.`#${model.name}` where `#$fieldName` in (" ++ combineByComma(values.map(gcValueToSQLBuilder)) ++ sql")"
     query.as[PrismaNode](getResultForModel(model))
   }
 
@@ -174,8 +178,8 @@ object DatabaseQueryBuilder {
                            modelName: String,
                            field: Field,
                            nodeIds: Vector[IdGCValue]): DBIOAction[Vector[ScalarListValues], NoStream, Effect] = {
-    val query = sql"select nodeId, position, value from `#$projectId`.`#${modelName}_#${field.name}` where nodeId in (" concat combineByComma(
-      nodeIds.map(gcValueToSQLBuilder)) concat sql")"
+    val query = sql"select nodeId, position, value from `#$projectId`.`#${modelName}_#${field.name}` where nodeId in (" ++ combineByComma(
+      nodeIds.map(gcValueToSQLBuilder)) ++ sql")"
 
     query.as[ScalarListElement](getResultForScalarListField(field)).map { scalarListElements =>
       val grouped: Map[Id, Vector[ScalarListElement]] = scalarListElements.groupBy(_.nodeId)
@@ -192,45 +196,43 @@ object DatabaseQueryBuilder {
                                      fromModelIds: Vector[IdGCValue],
                                      args: Option[QueryArguments]): DBIOAction[Vector[ResolverResult[PrismaNodeWithParent]], NoStream, Effect] = {
 
-    val relatedModel      = fromField.relatedModel(project.schema).get
-    val fieldTable        = fromField.relatedModel(project.schema).get.name
-    val unsafeRelationId  = fromField.relation.get.relationTableName
-    val modelRelationSide = fromField.relationSide.get.toString
-    val fieldRelationSide = fromField.oppositeRelationSide.get.toString
+    val relatedModel         = fromField.relatedModel(project.schema).get
+    val fieldTable           = fromField.relatedModel(project.schema).get.name
+    val unsafeRelationId     = fromField.relation.get.relationTableName
+    val modelRelationSide    = fromField.relationSide.get.toString
+    val oppositeRelationSide = fromField.oppositeRelationSide.get.toString
 
     val (conditionCommand, orderByCommand, limitCommand) =
-      extractQueryArgs(project.id, fieldTable, args, defaultOrderShortcut = Some(s"""`${project.id}`.`$unsafeRelationId`.$fieldRelationSide"""), None)
+      extractQueryArgs(project.id, fieldTable, args, defaultOrderShortcut = Some(s"""`${project.id}`.`$unsafeRelationId`.$oppositeRelationSide"""), None)
 
     def createQuery(id: String, modelRelationSide: String, fieldRelationSide: String) = {
       sql"""(select `#${project.id}`.`#$fieldTable`.*, `#${project.id}`.`#$unsafeRelationId`.A as __Relation__A,  `#${project.id}`.`#$unsafeRelationId`.B as __Relation__B
             from `#${project.id}`.`#$fieldTable`
            inner join `#${project.id}`.`#$unsafeRelationId`
            on `#${project.id}`.`#$fieldTable`.id = `#${project.id}`.`#$unsafeRelationId`.#$fieldRelationSide
-           where `#${project.id}`.`#$unsafeRelationId`.#$modelRelationSide = '#$id' """ concat
-        prefixIfNotNone("and", conditionCommand) concat
-        prefixIfNotNone("order by", orderByCommand) concat
-        prefixIfNotNone("limit", limitCommand) concat sql")"
+           where `#${project.id}`.`#$unsafeRelationId`.#$modelRelationSide = '#$id' """ ++
+        prefixIfNotNone("and", conditionCommand) ++
+        prefixIfNotNone("order by", orderByCommand) ++
+        prefixIfNotNone("limit", limitCommand) ++ sql")"
     }
 
     // see https://github.com/graphcool/internal-docs/blob/master/relations.md#findings
-    val resolveFromBothSidesAndMerge = fromField.relation.get.isSameFieldSameModelRelation(project.schema) && !fromField.isList
+    val resolveFromBothSidesAndMerge = fromField.relation.get.isSameFieldSameModelRelation(project.schema)
 
     val query = resolveFromBothSidesAndMerge match {
       case false =>
         fromModelIds.distinct.view.zipWithIndex.foldLeft(sql"")((a, b) =>
-          a concat unionIfNotFirst(b._2) concat createQuery(b._1.value, modelRelationSide, fieldRelationSide))
+          a ++ unionIfNotFirst(b._2) ++ createQuery(b._1.value, modelRelationSide, oppositeRelationSide))
 
       case true =>
-        fromModelIds.distinct.view.zipWithIndex.foldLeft(sql"")(
-          (a, b) =>
-            a concat unionIfNotFirst(b._2) concat createQuery(b._1.value, modelRelationSide, fieldRelationSide) concat sql"union all " concat createQuery(
-              b._1.value,
-              fieldRelationSide,
-              modelRelationSide))
+        fromModelIds.distinct.view.zipWithIndex.foldLeft(sql"")((a, b) =>
+          a ++ unionIfNotFirst(b._2) ++ createQuery(b._1.value, modelRelationSide, oppositeRelationSide) ++ sql"union all " ++ createQuery(b._1.value,
+                                                                                                                                           oppositeRelationSide,
+                                                                                                                                           modelRelationSide))
     }
 
     query
-      .as[PrismaNodeWithParent](getResultForModelAndRelationSide(relatedModel, fromField.relationSide.get.toString))
+      .as[PrismaNodeWithParent](getResultForModelAndRelationSide(relatedModel, modelRelationSide, oppositeRelationSide))
       .map { items =>
         val itemGroupsByModelId = items.groupBy(_.parentId)
         fromModelIds
@@ -259,13 +261,13 @@ object DatabaseQueryBuilder {
       sql"""(select '#$id', count(*) from `#${project.id}`.`#$fieldTable`
            inner join `#${project.id}`.`#$unsafeRelationId`
            on `#${project.id}`.`#$fieldTable`.id = `#${project.id}`.`#$unsafeRelationId`.#$fieldRelationSide
-           where `#${project.id}`.`#$unsafeRelationId`.#$modelRelationSide = '#$id' """ concat
-        prefixIfNotNone("and", conditionCommand) concat
-        prefixIfNotNone("order by", orderByCommand) concat
-        prefixIfNotNone("limit", limitCommand) concat sql")"
+           where `#${project.id}`.`#$unsafeRelationId`.#$modelRelationSide = '#$id' """ ++
+        prefixIfNotNone("and", conditionCommand) ++
+        prefixIfNotNone("order by", orderByCommand) ++
+        prefixIfNotNone("limit", limitCommand) ++ sql")"
     }
 
-    val query = parentNodeIds.distinct.view.zipWithIndex.foldLeft(sql"")((a, b) => a concat unionIfNotFirst(b._2) concat createQuery(b._1.value))
+    val query = parentNodeIds.distinct.view.zipWithIndex.foldLeft(sql"")((a, b) => a ++ unionIfNotFirst(b._2) ++ createQuery(b._1.value))
 
     query.as[(IdGCValue, Int)]
   }

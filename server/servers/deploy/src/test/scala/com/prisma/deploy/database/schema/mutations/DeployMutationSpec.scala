@@ -622,6 +622,62 @@ class DeployMutationSpec extends FlatSpec with Matchers with DeploySpecBase {
     )
   }
 
+  "DeployMutation" should "throw a proper error if detecting an ambiguous relation update 2" in {
+    val (project, _) = setupProject(basicTypesGql)
+    val nameAndStage = ProjectId.fromEncodedString(project.id)
+    val schema =
+      """
+        |type Mote {
+        | name: String! @unique
+        | creator: User! @relation(name: "Creator")
+        | members: [User!]! @relation(name: "MemberOf")
+        |}
+        |
+        |type User {
+        | name: String! @unique
+        | motes: [Mote!]! @relation(name: "Creator")
+        | memberOf: [Mote!]! @relation(name: "MemberOf")
+        |}
+      """.stripMargin
+
+    server.deploySchema(project, schema)
+
+    val migrations = migrationPersistence.loadAll(project.id).await
+    migrations should have(size(3))
+    migrations.exists(x => x.status != MigrationStatus.Success) shouldEqual false
+    migrations.head.revision shouldEqual 3 // order is DESC
+
+    val schema2 =
+      """
+        |type Mote {
+        | name: String! @unique
+        | # creator: User!
+        | members: [User!]!
+        |}
+        |
+        |type User {
+        | name: String! @unique
+        |}
+      """.stripMargin
+
+    server.queryThatMustFail(
+      s"""
+         |mutation {
+         |  deploy(input:{name: "${nameAndStage.name}", stage: "${nameAndStage.stage}", types: ${formatSchema(schema2)}}){
+         |    migration {
+         |      applied
+         |    }
+         |    errors {
+         |      description
+         |    }
+         |  }
+         |}
+      """.stripMargin,
+      errorCode = 3018,
+      errorContains = "There is a relation ambiguity during the migration. The ambiguity is on a relation between Mote and User."
+    )
+  }
+
   "DeployMutation" should "be able to change a field from scalar non-list to scalar list" in {
     val (project, _) = setupProject(basicTypesGql)
     val schema =

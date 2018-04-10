@@ -1,5 +1,6 @@
 package com.prisma.deploy.migration.inference
 
+import com.prisma.deploy.schema.UpdatedRelationAmbigous
 import com.prisma.shared.models._
 
 trait MigrationStepsInferrer {
@@ -148,7 +149,7 @@ case class MigrationStepsInferrerImpl(previousSchema: Schema, nextSchema: Schema
   lazy val relationsToCreate: Vector[CreateRelation] = {
     for {
       nextRelation <- nextSchema.relations.toVector
-      if !containsRelation(previousSchema, ambiguityCheck = nextSchema, nextRelation, renames.getPreviousModelName)
+      if relationNotInPreviousSchema(previousSchema, nextSchema = nextSchema, nextRelation, renames.getPreviousModelName, renames.getPreviousRelationName)
     } yield {
       CreateRelation(
         name = nextRelation.name,
@@ -163,7 +164,7 @@ case class MigrationStepsInferrerImpl(previousSchema: Schema, nextSchema: Schema
   lazy val relationsToDelete: Vector[DeleteRelation] = {
     for {
       previousRelation <- previousSchema.relations.toVector
-      if !containsRelation(nextSchema, ambiguityCheck = previousSchema, previousRelation, renames.getNextModelName)
+      if relationNotInNextSchema(nextSchema, previousSchema = previousSchema, previousRelation, renames.getNextModelName, renames.getNextRelationName)
     } yield DeleteRelation(previousRelation.name)
   }
 
@@ -172,7 +173,7 @@ case class MigrationStepsInferrerImpl(previousSchema: Schema, nextSchema: Schema
       previousRelation <- previousSchema.relations.toVector
       nextModelAName   = renames.getNextModelName(previousRelation.modelAId)
       nextModelBName   = renames.getNextModelName(previousRelation.modelBId)
-      nextRelation <- nextSchema // TODO: this needs to be adapted once we allow rename of relations
+      nextRelation <- nextSchema
                        .getRelationByName(previousRelation.name)
                        .orElse(UnambiguousRelation.unambiguousRelationThatConnectsModels(nextSchema, nextModelAName, nextModelBName))
     } yield {
@@ -221,24 +222,71 @@ case class MigrationStepsInferrerImpl(previousSchema: Schema, nextSchema: Schema
 
   lazy val emptyModel = Model(name = "", stableIdentifier = "", fields = List.empty)
 
-  def containsRelation(schema: Schema, ambiguityCheck: Schema, relation: Relation, adjacentModelName: String => String): Boolean = {
-    schema.relations.exists { rel =>
-      val adjacentModelAId  = adjacentModelName(relation.modelAId)
-      val adajacentModelBId = adjacentModelName(relation.modelBId)
-      val adjacentGeneratedRelationName = if (adjacentModelAId < adajacentModelBId) {
-        s"${adjacentModelAId}To${adajacentModelBId}"
-      } else {
-        s"${adajacentModelBId}To${adjacentModelAId}"
-      }
+  def relationNotInPreviousSchema(previousSchema: Schema,
+                                  nextSchema: Schema,
+                                  nextRelation: Relation,
+                                  previousModelName: String => String,
+                                  previousRelationName: String => String): Boolean = {
 
-      val refersToModelsExactlyRight = rel.modelAId == adjacentModelAId && rel.modelBId == adajacentModelBId
-      val refersToModelsSwitched     = rel.modelAId == adajacentModelBId && rel.modelBId == adjacentModelAId
-      val relationNameMatches        = rel.name == adjacentGeneratedRelationName || rel.name == relation.name
-      val relationIsUnambiguous      = rel.isUnambiguous(ambiguityCheck)
+    val nextGeneratedRelationName      = generateRelationName(nextRelation.modelAId, nextRelation.modelBId)
+    val nextRelationCountBetweenModels = nextSchema.relations.count(relation => relation.connectsTheModels(nextRelation.modelAId, nextRelation.modelBId))
 
-      (relationNameMatches || relationIsUnambiguous) && (refersToModelsExactlyRight || refersToModelsSwitched)
+    val relationInPreviousSchema = previousSchema.relations.exists { previousRelation =>
+      val previousModelAId              = previousModelName(nextRelation.modelAId)
+      val previousModelBId              = previousModelName(nextRelation.modelBId)
+      val previousGeneratedRelationName = generateRelationName(previousModelAId, previousModelBId)
+
+      val refersToModelsExactlyRight = previousRelation.modelAId == previousModelAId && previousRelation.modelBId == previousModelBId
+      val refersToModelsSwitched     = previousRelation.modelAId == previousModelBId && previousRelation.modelBId == previousModelAId
+      val relationNameMatches = previousRelation.name == previousGeneratedRelationName || previousRelation.name == nextRelation.name || previousRelation.name == previousRelationName(
+        nextRelation.name)
+
+      val previousRelationCountBetweenModels = previousSchema.relations.count(relation => relation.connectsTheModels(previousModelAId, previousModelBId))
+
+      if (nextRelation.name == nextGeneratedRelationName && nextRelationCountBetweenModels == 1 && previousRelationCountBetweenModels > 1)
+        throw UpdatedRelationAmbigous(
+          s"There is a relation ambiguity during the migration. The ambiguity is on a relation between ${previousRelation.modelAId} and ${previousRelation.modelBId}.")
+
+      val isNameRemovalOfPreviouslyNamedRelation = nextRelation.name == nextGeneratedRelationName && nextRelationCountBetweenModels == 1 && previousRelationCountBetweenModels == 1
+      (relationNameMatches || isNameRemovalOfPreviouslyNamedRelation) && (refersToModelsExactlyRight || refersToModelsSwitched)
     }
+    !relationInPreviousSchema
   }
+
+  def relationNotInNextSchema(nextSchema: Schema,
+                              previousSchema: Schema,
+                              previousRelation: Relation,
+                              nextModelName: String => String,
+                              nextRelationName: String => String): Boolean = {
+    val previousGeneratedRelationName = generateRelationName(previousRelation.modelAId, previousRelation.modelBId)
+    val previousRelationCountBetweenModels =
+      previousSchema.relations.count(relation => relation.connectsTheModels(previousRelation.modelAId, previousRelation.modelBId))
+
+    val relationInNextSchema = nextSchema.relations.exists { nextRelation =>
+      val nextModelAId              = nextModelName(previousRelation.modelAId)
+      val nextModelBId              = nextModelName(previousRelation.modelBId)
+      val nextGeneratedRelationName = generateRelationName(nextModelAId, nextModelBId)
+
+      val refersToModelsExactlyRight = nextRelation.modelAId == nextModelAId && nextRelation.modelBId == nextModelBId
+      val refersToModelsSwitched     = nextRelation.modelAId == nextModelBId && nextRelation.modelBId == nextModelAId
+      val relationNameMatches = nextRelation.name == nextGeneratedRelationName || nextRelation.name == previousRelation.name || nextRelation.name == nextRelationName(
+        previousRelation.name)
+
+      val nextRelationCountBetweenModels = nextSchema.relations.count(relation => relation.connectsTheModels(nextModelAId, nextModelBId))
+
+      if (previousRelation.name == previousGeneratedRelationName && nextRelationCountBetweenModels > 1 && previousRelationCountBetweenModels == 1)
+        throw UpdatedRelationAmbigous(
+          s"There is a relation ambiguity during the migration. Please first name the old relation on your schema. The ambiguity is on a relation between ${previousRelation.modelAId} and ${previousRelation.modelBId}.")
+
+      val isRenameOfPreviouslyUnnamedRelation = previousRelation.name == previousGeneratedRelationName && nextRelationCountBetweenModels == 1 && previousRelationCountBetweenModels == 1
+
+      (relationNameMatches || isRenameOfPreviouslyUnnamedRelation) && (refersToModelsExactlyRight || refersToModelsSwitched)
+    }
+
+    !relationInNextSchema
+  }
+
+  def generateRelationName(first: String, second: String): String = if (first < second) s"${first}To${second}" else s"${second}To${first}"
 
   def containsEnum(schema: Schema, enumName: String): Boolean = schema.enums.exists(_.name == enumName)
 

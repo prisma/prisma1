@@ -55,7 +55,7 @@ trait DeploySpecBase extends BeforeAndAfterEach with BeforeAndAfterAll with Awai
     val projectId = name + "@" + stage
     projectsToCleanUp :+ projectId
     server.addProject(name, stage)
-    server.deploySchema(name, stage, schema, secrets)
+    server.deploySchema(name, stage, schema.stripMargin, secrets)
   }
 
   def formatSchema(schema: String): String = JsString(schema).toString()

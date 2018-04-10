@@ -69,7 +69,12 @@ case class Path(root: NodeSelector, edges: List[Edge]) {
 
   def lastEdgeToNodeEdge(where: NodeSelector): Path = this.copy(edges = removeLastEdge.edges :+ lastEdge_!.toNodeEdge(where))
 
-  def relationFieldsNotOnPathOnLastModel = lastModel.relationFields.filter(f => f.relation != lastRelation)
+  def relationFieldsNotOnPathOnLastModel = lastModel.relationFields.filter { f =>
+    lastEdge match {
+      case Some(edge) => !edge.childField.contains(f)
+      case None       => true
+    }
+  }
 }
 
 object Path {

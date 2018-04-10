@@ -366,10 +366,11 @@ case class Relation(
 
   def connectsTheModels(model1: String, model2: String): Boolean = (modelAId == model1 && modelBId == model2) || (modelAId == model2 && modelBId == model1)
 
-  def isUnambiguous(schema: Schema): Boolean = (schema.relations.toSet - this).nonEmpty
-
-  def isSameModelRelation: Boolean                          = modelAId == modelBId
-  def isSameFieldSameModelRelation(schema: Schema): Boolean = getModelAField(schema) == getModelBField(schema)
+  def isSameModelRelation: Boolean = modelAId == modelBId
+  def isSameFieldSameModelRelation(schema: Schema): Boolean = {
+    // note: defaults to modelAField to handle same model, same field relations
+    getModelAField(schema) == getModelBField(schema).orElse(getModelAField(schema))
+  }
 
   def getModelA(schema: Schema): Option[Model] = schema.getModelById(modelAId)
   def getModelA_!(schema: Schema): Model       = getModelA(schema).get //OrElse(throw SystemErrors.InvalidRelation("A relation should have a valid Model A."))
@@ -379,8 +380,7 @@ case class Relation(
 
   def getModelAField(schema: Schema): Option[Field] = modelFieldFor(schema, modelAId, RelationSide.A)
   def getModelBField(schema: Schema): Option[Field] = {
-    // note: defaults to modelAField to handle same model, same field relations
-    modelFieldFor(schema, modelBId, RelationSide.B) //.orElse(getModelAField(project))
+    modelFieldFor(schema, modelBId, RelationSide.B)
   }
 
   private def modelFieldFor(schema: Schema, modelId: String, relationSide: RelationSide.Value): Option[Field] = {
