@@ -9,7 +9,7 @@ import com.prisma.sangria.utils.ErrorHandler
 import com.prisma.shared.models.ModelMutationType.ModelMutationType
 import com.prisma.shared.models._
 import com.prisma.subscriptions.schema.{QueryTransformer, SubscriptionSchema}
-import com.prisma.util.json.SprayJsonExtensions
+import com.prisma.util.json.{PlaySprayConversions, SprayJsonExtensions}
 import sangria.ast.Document
 import sangria.execution.Executor
 import sangria.parser.QueryParser
@@ -17,7 +17,7 @@ import spray.json._
 
 import scala.concurrent.{ExecutionContext, Future}
 
-object SubscriptionExecutor extends SprayJsonExtensions {
+object SubscriptionExecutor extends SprayJsonExtensions with PlaySprayConversions {
   def execute(
       project: Project,
       model: Model,
@@ -112,12 +112,14 @@ object SubscriptionExecutor extends SprayJsonExtensions {
         schema = schema,
         queryAst = actualQuery,
         userContext = context,
-        variables = variables,
+        variables = variables.toPlay(),
         exceptionHandler = sangriaHandler,
         operationName = operationName,
         deferredResolver = new DeferredResolverProvider(dataResolver)
       )
-      .map { result =>
+      .map { playResult =>
+        val result = playResult.toSpray()
+
         if (result.pathAs[JsValue](s"data.${camelCase(model.name)}") != JsNull) {
           Some(result)
         } else {

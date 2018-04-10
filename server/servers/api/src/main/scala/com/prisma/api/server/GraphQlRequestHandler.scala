@@ -6,9 +6,8 @@ import com.prisma.api.ApiDependencies
 import com.prisma.api.schema.{ApiUserContext, UserFacingError}
 import com.prisma.api.server.{GraphQlQuery, GraphQlRequest}
 import com.prisma.sangria.utils.ErrorHandler
-import com.prisma.util.json.PlaySprayConversions
+import play.api.libs.json.{JsArray, JsValue}
 import sangria.execution.{Executor, QueryAnalysisError}
-import spray.json.{JsArray, JsValue}
 
 import scala.collection.immutable.Seq
 import scala.concurrent.Future
@@ -22,8 +21,7 @@ trait GraphQlRequestHandler {
 case class GraphQlRequestHandlerImpl(
     log: String => Unit
 )(implicit apiDependencies: ApiDependencies)
-    extends GraphQlRequestHandler
-    with PlaySprayConversions {
+    extends GraphQlRequestHandler {
 
   import apiDependencies.system.dispatcher
   import com.prisma.api.server.JsonMarshalling._
@@ -62,7 +60,7 @@ case class GraphQlRequestHandlerImpl(
       schema = request.schema,
       queryAst = query.query,
       userContext = context,
-      variables = query.variables.toSpray,
+      variables = query.variables,
       exceptionHandler = errorHandler.sangriaExceptionHandler,
       operationName = query.operationName,
       deferredResolver = apiDependencies.deferredResolverProvider(request.project)

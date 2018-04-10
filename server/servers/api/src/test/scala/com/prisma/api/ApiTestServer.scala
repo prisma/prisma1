@@ -129,6 +129,6 @@ case class ApiTestServer()(implicit dependencies: ApiDependencies) extends Spray
     val result = Await.result(dependencies.graphQlRequestHandler.handle(graphQlRequest), Duration.Inf)._2
 
     println("Request Result: " + result)
-    result
+    result.toSpray()
   }
 }

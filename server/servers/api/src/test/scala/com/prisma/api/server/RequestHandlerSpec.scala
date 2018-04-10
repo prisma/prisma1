@@ -14,7 +14,6 @@ import org.scalatest.{FlatSpec, Matchers}
 import pdi.jwt.{Jwt, JwtAlgorithm}
 import sangria.schema.{ObjectType, Schema, SchemaValidationRule}
 import play.api.libs.json._
-import spray.json.{JsObject => SprayJsObject}
 
 import scala.concurrent.Future
 
@@ -51,7 +50,7 @@ class RequestHandlerSpec extends FlatSpec with Matchers with ApiBaseSpec with Aw
 
 object SucceedingGraphQlRequestHandler extends GraphQlRequestHandler {
   override def handle(graphQlRequest: GraphQlRequest) = Future.successful {
-    StatusCodes.ImATeapot -> SprayJsObject.empty
+    StatusCodes.ImATeapot -> JsObject.empty
   }
 
   override def healthCheck = Future.unit

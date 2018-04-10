@@ -14,8 +14,7 @@ import com.prisma.shared.models.{Project, ProjectWithClientId}
 import com.prisma.util.json.PlaySprayConversions
 import com.prisma.utils.`try`.TryExtensions._
 import sangria.schema.Schema
-import spray.json.{JsArray, JsNumber, JsObject, JsString, JsValue => SprayJsValue}
-import play.api.libs.json.{JsValue => PlayJsValue}
+import play.api.libs.json._
 
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.Failure
@@ -32,20 +31,20 @@ case class RequestHandler(
   def handleRawRequestForPublicApi(
       projectId: String,
       rawRequest: RawRequest
-  ): Future[(StatusCode, SprayJsValue)] = {
+  ): Future[(StatusCode, JsValue)] = {
     handleRawRequestWithSchemaBuilder(projectId, rawRequest) { project =>
       schemaBuilder(project)
     }
   }
 
-  def handleRawRequestForPrivateApi(projectId: String, rawRequest: RawRequest): Future[(StatusCode, SprayJsValue)] = {
+  def handleRawRequestForPrivateApi(projectId: String, rawRequest: RawRequest): Future[(StatusCode, JsValue)] = {
     handleRawRequestWithSchemaBuilder(projectId, rawRequest) { project =>
       PrivateSchemaBuilder(project)(apiDependencies, apiDependencies.system).build()
     }
   }
 
   def handleRawRequestWithSchemaBuilder(projectId: String, rawRequest: RawRequest)(schemaBuilderFn: Project => Schema[ApiUserContext, Unit]) = {
-    handleRawRequestSprayJson(projectId, rawRequest) { project =>
+    handleRawRequest(projectId, rawRequest) { project =>
       for {
         graphQlRequest <- rawRequest.toGraphQlRequest(project, schema = schemaBuilderFn(project)).toFuture
         result         <- handleGraphQlRequest(graphQlRequest)
@@ -55,37 +54,19 @@ case class RequestHandler(
     }
   }
 
-  def handleRawRequestForImport(projectId: String, rawRequest: RawRequest): Future[(StatusCode, PlayJsValue)] = {
-    handleRawRequestPlayJson(projectId, rawRequest) { project =>
+  def handleRawRequestForImport(projectId: String, rawRequest: RawRequest): Future[(StatusCode, JsValue)] = {
+    handleRawRequest(projectId, rawRequest) { project =>
       val importer = new BulkImport(project)
       importer.executeImport(rawRequest.json).map(x => (200, x))
     }
   }
 
-  def handleRawRequestForExport(projectId: String, rawRequest: RawRequest): Future[(StatusCode, PlayJsValue)] = {
-    handleRawRequestPlayJson(projectId, rawRequest) { project =>
+  def handleRawRequestForExport(projectId: String, rawRequest: RawRequest): Future[(StatusCode, JsValue)] = {
+    handleRawRequest(projectId, rawRequest) { project =>
       val resolver = apiDependencies.dataResolver(project)
       val exporter = new BulkExport(project)
       exporter.executeExport(resolver, rawRequest.json).map(x => (200, x))
     }
-  }
-
-  def handleRawRequestSprayJson(
-      projectId: String,
-      rawRequest: RawRequest,
-  )(
-      fn: Project => Future[(StatusCode, SprayJsValue)]
-  ): Future[(StatusCode, SprayJsValue)] = {
-    handleRawRequest(projectId, rawRequest)(fn)
-  }
-
-  def handleRawRequestPlayJson(
-      projectId: String,
-      rawRequest: RawRequest,
-  )(
-      fn: Project => Future[(StatusCode, PlayJsValue)]
-  ): Future[(StatusCode, PlayJsValue)] = {
-    handleRawRequest(projectId, rawRequest)(fn)
   }
 
   def handleRawRequest[T](
@@ -106,7 +87,7 @@ case class RequestHandler(
     if (authResult.isSuccess) Future.unit else Future.failed(InvalidToken())
   }
 
-  def handleGraphQlRequest(graphQlRequest: GraphQlRequest): Future[(StatusCode, SprayJsValue)] = {
+  def handleGraphQlRequest(graphQlRequest: GraphQlRequest): Future[(StatusCode, JsValue)] = {
     graphQlRequestHandler.handle(graphQlRequest)
   }
 
