@@ -86,7 +86,7 @@ class UpdateManyListSpec extends FlatSpec with Matchers with ApiBaseSpec {
     server
       .query("""mutation a {updateManyMyObjects(data:{jsons: { set: ["{\"a\": \"B\"}", "{\"a\": 12}"] }}){count}}""", project)
       .pathAsLong("data.updateManyMyObjects.count") should be(1)
-    server.query("""{myObjects{jsons}}""", project).toString should be("""{"data":{"myObjects":[{"jsons":["{\"a\": "\B\"}", "{"\a\": 12}"]}]}}""")
+    server.query("""{myObjects{jsons}}""", project).toString should be("""{"data":{"myObjects":[{"jsons":[{"a":"B"},{"a":12}]}]}}""")
     server.query("""mutation a {updateManyMyObjects(data:{jsons: { set: [] }}){count}}""", project).pathAsLong("data.updateManyMyObjects.count") should be(1)
     server.query("""{myObjects{jsons}}""", project).toString should be("""{"data":{"myObjects":[{"jsons":[]}]}}""")
   }
