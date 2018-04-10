@@ -9,15 +9,14 @@ import com.prisma.sangria.utils.ErrorHandler
 import com.prisma.shared.models.ModelMutationType.ModelMutationType
 import com.prisma.shared.models._
 import com.prisma.subscriptions.schema.{QueryTransformer, SubscriptionSchema}
-import com.prisma.util.json.{PlaySprayConversions, SprayJsonExtensions}
+import play.api.libs.json._
 import sangria.ast.Document
 import sangria.execution.Executor
 import sangria.parser.QueryParser
-import spray.json._
 
 import scala.concurrent.{ExecutionContext, Future}
 
-object SubscriptionExecutor extends SprayJsonExtensions with PlaySprayConversions {
+object SubscriptionExecutor {
   def execute(
       project: Project,
       model: Model,
@@ -25,7 +24,7 @@ object SubscriptionExecutor extends SprayJsonExtensions with PlaySprayConversion
       previousValues: Option[PrismaNode],
       updatedFields: Option[List[String]],
       query: String,
-      variables: spray.json.JsValue,
+      variables: JsValue,
       nodeId: String,
       requestId: String,
       operationName: Option[String],
@@ -58,7 +57,7 @@ object SubscriptionExecutor extends SprayJsonExtensions with PlaySprayConversion
       previousValues: Option[PrismaNode],
       updatedFields: Option[List[String]],
       query: Document,
-      variables: spray.json.JsValue,
+      variables: JsValue,
       nodeId: String,
       requestId: String,
       operationName: Option[String],
@@ -101,7 +100,7 @@ object SubscriptionExecutor extends SprayJsonExtensions with PlaySprayConversion
       requestId,
       HttpRequest(),
       query.renderPretty,
-      variables.compactPrint,
+      variables.toString,
       dependencies.reporter,
       Some(project.id),
       errorCodeExtractor = errorExtractor
@@ -112,15 +111,14 @@ object SubscriptionExecutor extends SprayJsonExtensions with PlaySprayConversion
         schema = schema,
         queryAst = actualQuery,
         userContext = context,
-        variables = variables.toPlay(),
+        variables = variables,
         exceptionHandler = sangriaHandler,
         operationName = operationName,
         deferredResolver = new DeferredResolverProvider(dataResolver)
       )
-      .map { playResult =>
-        val result = playResult.toSpray()
-
-        if (result.pathAs[JsValue](s"data.${camelCase(model.name)}") != JsNull) {
+      .map { result =>
+        val lookup = result.as[JsObject] \ "data" \ camelCase(model.name)
+        if (lookup.validate[JsValue].get != JsNull) {
           Some(result)
         } else {
           None

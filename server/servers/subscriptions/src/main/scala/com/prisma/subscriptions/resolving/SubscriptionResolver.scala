@@ -76,26 +76,19 @@ case class SubscriptionResolver(
   }
 
   def executeQuery(nodeId: String, previousValues: Option[PrismaNode], updatedFields: Option[List[String]]): Future[Option[JsValue]] = {
-    val variables: spray.json.JsValue = subscription.variables match {
-      case None       => spray.json.JsObject.empty
-      case Some(vars) => VariablesParser.parseVariables(vars.toString)
-    }
-
-    SubscriptionExecutor
-      .execute(
-        project = project,
-        model = model,
-        mutationType = mutationType,
-        previousValues = previousValues,
-        updatedFields = updatedFields,
-        query = subscription.query,
-        variables = variables,
-        nodeId = nodeId,
-        requestId = s"subscription:${subscription.sessionId}:${subscription.id.asString}",
-        operationName = subscription.operationName,
-        skipPermissionCheck = false,
-        alwaysQueryMasterDatabase = false
-      )
-      .map(x => x.map(sprayJsonResult => Json.parse(sprayJsonResult.toString)))
+    SubscriptionExecutor.execute(
+      project = project,
+      model = model,
+      mutationType = mutationType,
+      previousValues = previousValues,
+      updatedFields = updatedFields,
+      query = subscription.query,
+      variables = subscription.variables.getOrElse(JsObject.empty),
+      nodeId = nodeId,
+      requestId = s"subscription:${subscription.sessionId}:${subscription.id.asString}",
+      operationName = subscription.operationName,
+      skipPermissionCheck = false,
+      alwaysQueryMasterDatabase = false
+    )
   }
 }
