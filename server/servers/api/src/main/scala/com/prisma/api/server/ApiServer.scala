@@ -12,7 +12,7 @@ import com.prisma.akkautil.throttler.Throttler
 import com.prisma.akkautil.throttler.Throttler.ThrottleBufferFullException
 import com.prisma.api.schema.APIErrors.ProjectNotFound
 import com.prisma.api.schema.CommonErrors.ThrottlerBufferFullException
-import com.prisma.api.schema.{APIErrors, SchemaBuilder, UserFacingError}
+import com.prisma.api.schema.{SchemaBuilder, UserFacingError}
 import com.prisma.api.{ApiDependencies, ApiMetrics}
 import com.prisma.logging.LogDataWrites.logDataWrites
 import com.prisma.logging.{LogData, LogKey}
@@ -23,6 +23,7 @@ import com.typesafe.scalalogging.LazyLogging
 import cool.graph.cuid.Cuid.createCuid
 import de.heikoseeberger.akkahttpplayjson.PlayJsonSupport
 import play.api.libs.json._
+import spray.json.{JsArray, JsNumber, JsObject, JsString}
 
 import scala.concurrent.Future
 import scala.language.postfixOps
@@ -218,12 +219,18 @@ case class ApiServer(
 
   def toplevelExceptionHandler(requestId: String) = ExceptionHandler {
     case e: UserFacingError =>
-      complete(OK -> APIErrors.errorJson(requestId, e.getMessage, e.code))
+      complete(OK -> errorJson(requestId, e.getMessage, e.code))
 
     case e: Throwable =>
       println(e.getMessage)
       e.printStackTrace()
       apiDependencies.reporter.report(e)
-      complete(InternalServerError -> APIErrors.errorJson(requestId, e.getMessage))
+      complete(InternalServerError -> errorJson(requestId, e.getMessage))
+  }
+
+  def errorJson(requestId: String, message: String, errorCode: Int): JsObject = errorJson(requestId, message, Some(errorCode))
+  def errorJson(requestId: String, message: String, errorCode: Option[Int] = None): JsObject = errorCode match {
+    case None       => JsObject("errors" -> JsArray(JsObject("message" -> JsString(message), "requestId" -> JsString(requestId))))
+    case Some(code) => JsObject("errors" -> JsArray(JsObject("message" -> JsString(message), "code"      -> JsNumber(code), "requestId" -> JsString(requestId))))
   }
 }

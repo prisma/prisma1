@@ -9,7 +9,6 @@ import org.joda.time.format.DateTimeFormat
 import play.api.libs.json.{JsValue => PlayJsValue}
 import slick.jdbc.MySQLProfile.api._
 import slick.jdbc.{PositionedParameters, SQLActionBuilder, SetParameter}
-import spray.json.{JsValue => SprayJsValue}
 
 object SlickExtensions {
 
@@ -44,20 +43,20 @@ object SlickExtensions {
     }
 
     unwrapSome(param) match {
-      case param: String       => sql"$param"
-      case param: PlayJsValue  => sql"${param.toString}"
-      case param: SprayJsValue => sql"${param.compactPrint}"
-      case param: Boolean      => sql"$param"
-      case param: Int          => sql"$param"
-      case param: Long         => sql"$param"
-      case param: Float        => sql"$param"
-      case param: Double       => sql"$param"
-      case param: BigInt       => sql"#${param.toString}"
-      case param: BigDecimal   => sql"#${param.toString}"
-      case param: DateTime     => sql"${param.toString(DateTimeFormat.forPattern("yyyy-MM-dd'T'HH:mm:ss.SSS").withZoneUTC())}"
-      case None                => sql"NULL"
-      case null                => sql"NULL"
-      case _                   => throw new IllegalArgumentException("Unsupported scalar value in SlickExtensions: " + param.toString)
+      case param: String      => sql"$param"
+      case param: PlayJsValue => sql"${param.toString}"
+//      case param: SprayJsValue => sql"${param.compactPrint}"
+      case param: Boolean    => sql"$param"
+      case param: Int        => sql"$param"
+      case param: Long       => sql"$param"
+      case param: Float      => sql"$param"
+      case param: Double     => sql"$param"
+      case param: BigInt     => sql"#${param.toString}"
+      case param: BigDecimal => sql"#${param.toString}"
+      case param: DateTime   => sql"${param.toString(DateTimeFormat.forPattern("yyyy-MM-dd'T'HH:mm:ss.SSS").withZoneUTC())}"
+      case None              => sql"NULL"
+      case null              => sql"NULL"
+      case _                 => throw new IllegalArgumentException("Unsupported scalar value in SlickExtensions: " + param.toString)
     }
   }
 
