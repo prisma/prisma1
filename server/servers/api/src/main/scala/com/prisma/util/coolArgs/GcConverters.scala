@@ -16,9 +16,7 @@ import scala.util.control.NonFatal
   */
 case class GCAnyConverter(typeIdentifier: TypeIdentifier, isList: Boolean) extends GCConverter[Any] {
   import OtherGCStuff._
-  import play.api.libs.json.{JsArray => PlayJsArray, JsObject => PlayJsObject}
-  import spray.json.{JsArray => SprayJsArray, JsObject => SprayJsObject}
-
+  import play.api.libs.json._
   override def toGCValue(t: Any): Or[GCValue, InvalidValueForScalarType] = {
     try {
       val result = (t, typeIdentifier) match {
@@ -37,11 +35,9 @@ case class GCAnyConverter(typeIdentifier: TypeIdentifier, isList: Boolean) exten
         case (x: DateTime, TypeIdentifier.DateTime)                                   => DateTimeGCValue(x)
         case (x: String, TypeIdentifier.GraphQLID)                                    => IdGCValue(x)
         case (x: String, TypeIdentifier.Enum)                                         => EnumGCValue(x)
-        case (x: PlayJsObject, TypeIdentifier.Json)                                   => JsonGCValue(x)
-        case (x: SprayJsObject, TypeIdentifier.Json)                                  => JsonGCValue(Json.parse(x.compactPrint))
+        case (x: JsObject, TypeIdentifier.Json)                                       => JsonGCValue(x)
         case (x: String, TypeIdentifier.Json)                                         => JsonGCValue(Json.parse(x))
-        case (x: SprayJsArray, TypeIdentifier.Json)                                   => JsonGCValue(Json.parse(x.compactPrint))
-        case (x: PlayJsArray, TypeIdentifier.Json)                                    => JsonGCValue(x)
+        case (x: JsArray, TypeIdentifier.Json)                                        => JsonGCValue(x)
         case (x: List[Any], _) if isList                                              => sequence(x.map(this.toGCValue).toVector).map(seq => ListGCValue(seq)).get
         case _                                                                        => sys.error("Error in toGCValue. Value: " + t)
       }

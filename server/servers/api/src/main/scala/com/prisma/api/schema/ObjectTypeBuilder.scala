@@ -259,7 +259,7 @@ class ObjectTypeBuilder(
 
     (field.isScalar, field.isList) match {
       case (true, true)   => ScalarListDeferred(model, field, item.id)
-      case (true, false)  => ObjectTypeBuilder.convertScalarFieldValueFromDatabase(field, item)
+      case (true, false)  => GCValueExtractor.fromGCValue(item.data.map(field.name))
       case (false, true)  => DeferredValue(ToManyDeferred(field, item.id, arguments)).map(_.toNodes)
       case (false, false) => ToOneDeferred(field, item.id, arguments)
     }
@@ -273,28 +273,6 @@ class ObjectTypeBuilder(
       case Some(x: PrismaNode) => x
       case x: PrismaNode       => x
       case None                => throw new Exception("Resolved DataItem was None. This is unexpected - please investigate why and fix.")
-    }
-  }
-}
-
-object ObjectTypeBuilder {
-
-  def convertScalarFieldValueFromDatabase(field: models.Field, item: PrismaNode): Any = {
-    import com.prisma.util.json.PlaySprayConversions._
-
-    //todo use GCValueextractor once we got rid of Spray
-    item.data.map(field.name) match {
-      case StringGCValue(value)   => value
-      case IntGCValue(value)      => value
-      case FloatGCValue(value)    => value
-      case BooleanGCValue(value)  => value
-      case JsonGCValue(value)     => value.toSpray
-      case IdGCValue(value)       => value
-      case EnumGCValue(value)     => value
-      case NullGCValue            => None
-      case DateTimeGCValue(value) => value
-      case ListGCValue(_)         => sys.error("should not be called on ListValues")
-      case RootGCValue(_)         => sys.error("should not be called on RootGCValues")
     }
   }
 }
