@@ -33,8 +33,6 @@ case class RootGCValue(map: SortedMap[String, GCValue]) extends GCValue {
 
   def filterValues(p: GCValue => Boolean) = copy(map = map.filter(t => p(t._2)))
 
-//  def toJson: JsValue = GCValueExtractor.fromGCValueToJson(this)
-
   def toMapStringAny: Map[String, Any] = map.collect {
     case (key, value) =>
       val convertedValue = value match {
