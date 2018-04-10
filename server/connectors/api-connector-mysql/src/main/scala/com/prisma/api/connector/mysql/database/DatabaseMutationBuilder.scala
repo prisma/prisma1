@@ -1,13 +1,13 @@
 package com.prisma.api.connector.mysql.database
 
-import java.sql.{PreparedStatement, Statement}
+import java.sql.{PreparedStatement, ResultSet, Statement}
 
 import com.prisma.api.connector.Types.DataItemFilterCollection
 import com.prisma.api.connector._
 import com.prisma.api.connector.mysql.database.JdbcExtensions._
 import com.prisma.api.connector.mysql.database.SlickExtensions._
 import com.prisma.api.schema.GeneralError
-import com.prisma.gc_values.{GCValue, ListGCValue, NullGCValue}
+import com.prisma.gc_values._
 import com.prisma.shared.models.TypeIdentifier.TypeIdentifier
 import com.prisma.shared.models._
 import cool.graph.cuid.Cuid
@@ -231,6 +231,50 @@ object DatabaseMutationBuilder {
 
   def setScalarListToEmpty(projectId: String, path: Path, fieldName: String) = {
     (sql"DELETE FROM `#$projectId`.`#${path.lastModel.name}_#${fieldName}` WHERE `nodeId` = " ++ pathQueryForLastChild(projectId, path)).asUpdate
+  }
+
+  def setManyScalarLists(projectId: String, model: Model, listFieldMap: Vector[(String, ListGCValue)], whereFilter: Option[DataItemFilterCollection]) = {
+    import scala.concurrent.ExecutionContext.Implicits.global
+
+    val idQuery: SqlStreamingAction[Vector[String], String, Effect] =
+      (sql"SELECT `id` FROM `#${projectId}`.`#${model.name}`" ++ whereFilterAppendix(projectId, model, whereFilter)).as[String]
+
+    def listInsert(ids: Vector[String]): SimpleDBIO[Unit] = {
+      SimpleDBIO[Unit] { x =>
+        def valueTuplesForListField(listGCValue: ListGCValue) =
+          for {
+            nodeId                   <- ids
+            (escapedValue, position) <- listGCValue.values.zip((1 to listGCValue.size).map(_ * 1000))
+          } yield {
+            (nodeId, position, escapedValue)
+          }
+
+        val combinedNodeIdsString = ids.map(id => s"'$id'") mkString ("(", ",", ")")
+
+        listFieldMap.foreach {
+          case (fieldName, listGCValue) =>
+            val wipe                             = s"DELETE  FROM `$projectId`.`${model.name}_$fieldName` WHERE `nodeId` IN $combinedNodeIdsString"
+            val wipeOldValues: PreparedStatement = x.connection.prepareStatement(wipe)
+            wipeOldValues.executeUpdate()
+
+            val insert                             = s"INSERT INTO `$projectId`.`${model.name}_$fieldName` (`nodeId`, `position`, `value`) VALUES (?,?,?)"
+            val insertNewValues: PreparedStatement = x.connection.prepareStatement(insert)
+            val newValueTuples                     = valueTuplesForListField(listGCValue)
+            newValueTuples.foreach { tuple =>
+              insertNewValues.setString(1, tuple._1)
+              insertNewValues.setInt(2, tuple._2)
+              insertNewValues.setGcValue(3, tuple._3)
+              insertNewValues.addBatch()
+            }
+            insertNewValues.executeBatch()
+        }
+      }
+    }
+
+    for {
+      nodeIds <- idQuery
+      action  <- listInsert(nodeIds)
+    } yield action
   }
 
   //endregion
