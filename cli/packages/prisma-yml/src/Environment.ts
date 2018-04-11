@@ -46,8 +46,38 @@ export class Environment {
     return process.env.PRISMA_CLOUD_SESSION_KEY || this.globalRC.cloudSessionKey
   }
 
+  async renewToken() {
+    if (this.cloudSessionKey) {
+      try {
+        const res = await fetch('https://api.cloud.prisma.sh', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${this.cloudSessionKey}`,
+          } as any,
+          body: JSON.stringify({
+            query: `
+          mutation {
+            renewToken
+          }
+        `,
+          }),
+        })
+        const json = await res.json()
+
+        if (json && json.data && json.data.renewToken) {
+          this.globalRC.cloudSessionKey = json.data.renewToken
+          this.saveGlobalRC()
+        }
+      } catch (e) {
+        console.error(e)
+      }
+    }
+  }
+
   async getClusters() {
     if (this.cloudSessionKey) {
+      this.renewToken()
       try {
         const res = await fetch('https://api.cloud.prisma.sh', {
           method: 'POST',

@@ -416,18 +416,19 @@ To reset the key pair, please run ${chalk.bold.green('prisma local start')}
         await new Promise(r => setTimeout(r, 500))
       }
       this.env.globalRC.cloudSessionKey = token
+      this.out.action.stop()
     } else {
       this.env.globalRC.cloudSessionKey = token
       const authenticated = await this.isAuthenticated()
       if (!authenticated) {
         throw new Error('The provided key is invalid')
       }
+      this.out.action.stop()
+      this.out.log('Already signed in')
     }
 
     this.env.saveGlobalRC()
     await this.env.getClusters()
-
-    this.out.action.stop()
   }
 
   async getAccount(): Promise<User | null> {
