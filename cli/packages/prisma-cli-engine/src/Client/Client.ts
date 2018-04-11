@@ -406,7 +406,11 @@ To reset the key pair, please run ${chalk.bold.green('prisma local start')}
 
       this.out.log(`Opening ${url} in the browser\n`)
 
-      opn(url)
+      try {
+        opn(url)
+      } catch (e) {
+        this.out.log(`Could not open url. Please open ${url} manually`)
+      }
 
       while (!token) {
         const cloud = await this.cloudTokenRequest(secret)
