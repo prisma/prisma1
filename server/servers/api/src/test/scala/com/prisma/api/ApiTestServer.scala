@@ -13,7 +13,7 @@ import scala.concurrent.Await
 import scala.concurrent.duration.Duration
 import scala.reflect.io.File
 
-case class ApiTestServer()(implicit dependencies: ApiDependencies) extends GraphQLResponseAssertions {
+case class ApiTestServer()(implicit dependencies: ApiDependencies) extends PlayJsonExtensions {
 
   def writeSchemaIntoFile(schema: String): Unit = File("schema").writeAll(schema)
 

@@ -6,6 +6,7 @@ import com.prisma.deploy.schema.{DeployApiError, SchemaBuilder, SystemUserContex
 import com.prisma.sangria.utils.ErrorHandler
 import com.prisma.shared.models.{Migration, MigrationId, Project, ProjectId}
 import com.prisma.utils.await.AwaitUtils
+import com.prisma.utils.json.PlayJsonExtensions
 import play.api.libs.json.{JsArray, JsString}
 import sangria.execution.{Executor, QueryAnalysisError}
 import sangria.parser.QueryParser
@@ -17,7 +18,7 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration.Duration
 import scala.reflect.io.File
 
-case class DeployTestServer()(implicit dependencies: DeployDependencies) extends PlayJsonExtensions with GraphQLResponseAssertions with AwaitUtils {
+case class DeployTestServer()(implicit dependencies: DeployDependencies) extends PlayJsonExtensions with AwaitUtils {
   import com.prisma.deploy.server.JsonMarshalling._
 
   def writeSchemaIntoFile(schema: String): Unit = File("schema").writeAll(schema)

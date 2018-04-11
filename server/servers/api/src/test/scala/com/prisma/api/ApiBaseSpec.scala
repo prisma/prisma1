@@ -5,11 +5,11 @@ import akka.stream.ActorMaterializer
 import com.prisma.api.connector.DataResolver
 import com.prisma.api.util.StringMatchers
 import com.prisma.shared.models.Project
-import com.prisma.utils.json.{JsonUtils, PlayJsonExtensions}
+import com.prisma.utils.json.PlayJsonExtensions
 import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach, Suite}
 import play.api.libs.json.JsString
 
-trait ApiBaseSpec extends BeforeAndAfterEach with BeforeAndAfterAll with PlayJsonExtensions with StringMatchers with JsonUtils {
+trait ApiBaseSpec extends BeforeAndAfterEach with BeforeAndAfterAll with PlayJsonExtensions with StringMatchers {
   self: Suite =>
 
   implicit lazy val system           = ActorSystem()
