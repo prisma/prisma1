@@ -182,7 +182,7 @@ class ScalarListsQuerySpec extends FlatSpec with Matchers with ApiBaseSpec {
     verifySuccessfulSetAndRetrieval(fieldName, inputValue, outputValue, project)
   }
 
-  "full scalar list" should "return full list for json" ignore {
+  "full scalar list" should "return full list for json" in {
 
     val fieldName   = "jsons"
     val inputValue  = """"{\"a\":2}""""
