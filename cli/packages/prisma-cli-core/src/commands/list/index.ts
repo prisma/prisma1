@@ -17,8 +17,6 @@ export default class List extends Command {
   async run() {
     let projects: Project[] = []
 
-    await this.definition.load(this.flags)
-
     for (const cluster of this.env.clusters.filter(c => c.local)) {
       try {
         await this.client.initClusterClient(
