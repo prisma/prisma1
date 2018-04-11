@@ -1,16 +1,15 @@
 package com.prisma.api.server
 
 import akka.http.scaladsl.model.StatusCodes
+import com.prisma.api.ApiBaseSpec
 import com.prisma.api.project.ProjectFetcher
 import com.prisma.api.schema.APIErrors.InvalidToken
 import com.prisma.api.schema.{ApiUserContext, SchemaBuilder}
-import com.prisma.api.ApiBaseSpec
 import com.prisma.auth.AuthImpl
 import com.prisma.client.server.GraphQlRequestHandler
 import com.prisma.shared.models.{Project, ProjectWithClientId}
 import com.prisma.shared.schema_dsl.TestProject
 import com.prisma.utils.await.AwaitUtils
-import com.prisma.utils.json.PlayJsonExtensions
 import org.scalatest.{FlatSpec, Matchers}
 import pdi.jwt.{Jwt, JwtAlgorithm}
 import play.api.libs.json._
@@ -18,7 +17,7 @@ import sangria.schema.{ObjectType, Schema, SchemaValidationRule}
 
 import scala.concurrent.Future
 
-class RequestHandlerSpec extends FlatSpec with Matchers with ApiBaseSpec with AwaitUtils with PlayJsonExtensions {
+class RequestHandlerSpec extends FlatSpec with Matchers with ApiBaseSpec with AwaitUtils {
   import system.dispatcher
   import testDependencies.reporter
 

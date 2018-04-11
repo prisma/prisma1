@@ -1,7 +1,6 @@
 package com.prisma.utils.json
 
 import play.api.libs.json._
-
 import scala.util.{Failure, Success, Try}
 
 object PlayJson extends PlayJsonExtensions with JsonUtils {
@@ -10,6 +9,7 @@ object PlayJson extends PlayJsonExtensions with JsonUtils {
     * extracts a nested json value by a given path like "foo.bar.fizz"
     */
   def getPathAs[T <: JsValue](json: JsValue, path: String): T = {
+
     def getArrayIndex(pathElement: String): Option[Int] = Try(pathElement.replaceAllLiterally("[", "").replaceAllLiterally("]", "").toInt).toOption
 
     def getPathAsInternal[T <: JsValue](json: JsValue, pathElements: Seq[String]): Try[T] = {
@@ -43,10 +43,7 @@ object PlayJson extends PlayJsonExtensions with JsonUtils {
     }
   }
 
-  def getPathAs[T <: JsValue](jsonString: String, path: String): T = {
-    getPathAs(jsonString.parseJson, path)
-  }
-
+  def getPathAs[T <: JsValue](jsonString: String, path: String): T = getPathAs(jsonString.parseJson, path)
 }
 
 trait PlayJsonExtensions extends JsonUtils {
@@ -57,13 +54,15 @@ trait PlayJsonExtensions extends JsonUtils {
   implicit class JsValueParsingExtensions(jsValue: JsValue) {
     def pathAs[T <: JsValue](path: String): T = PlayJson.getPathAs[T](jsValue, path)
 
-    def pathAsJsValue(path: String): JsValue   = pathAs[JsValue](path)
+    def pathAsJsValue(path: String): JsValue = pathAs[JsValue](path)
+
     def pathAsJsObject(path: String): JsObject = pathAs[JsObject](path)
-    def pathExists(path: String): Boolean      = Try(pathAsJsValue(path)).map(_ => true).getOrElse(false)
+
+    def pathExists(path: String): Boolean = Try(pathAsJsValue(path)).map(_ => true).getOrElse(false)
 
     def pathAsSeq(path: String): Seq[JsValue] = PlayJson.getPathAs[JsArray](jsValue, path).value
-    def pathAsSeqOfType[T](path: String)(implicit format: Format[T]): Seq[T] =
-      PlayJson.getPathAs[JsArray](jsValue, path).value.map(_.as[T])
+
+    def pathAsSeqOfType[T](path: String)(implicit format: Format[T]): Seq[T] = PlayJson.getPathAs[JsArray](jsValue, path).value.map(_.as[T])
 
     def pathAsString(path: String): String = pathAs[JsString](path).value
 
