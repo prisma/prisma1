@@ -33,7 +33,7 @@ case class DatabaseMutactions(project: Project) {
     val (nonListArgs, listArgs) = args.getUpdateArgs(path.lastModel)
     val updateMutaction         = UpdateDataItem(project, path, nonListArgs, listArgs, previousValues)
     val whereFieldValue         = args.raw.get(path.root.field.name)
-    val updatedWhere            = whereFieldValue.map(path.root.updateValue).getOrElse(path.root)
+    val updatedWhere            = whereFieldValue.map(updateNodeSelectorValue(path.root)).getOrElse(path.root)
     val updatedPath             = path.copy(root = updatedWhere)
 
     val nested = getMutactionsForNestedMutation(args, updatedPath, triggeredFromCreate = false)
@@ -177,7 +177,7 @@ case class DatabaseMutactions(project: Project) {
 
   private def currentWhere(where: NodeSelector, args: CoolArgs) = {
     val whereFieldValue = args.raw.get(where.field.name)
-    val updatedWhere    = whereFieldValue.map(where.updateValue).getOrElse(where)
+    val updatedWhere    = whereFieldValue.map(updateNodeSelectorValue(where)).getOrElse(where)
     updatedWhere
   }
 
@@ -208,5 +208,15 @@ case class DatabaseMutactions(project: Project) {
         path.append(NodeEdge(path.lastModel, field, field.relatedModel(project.schema).get, field.relatedField(project.schema), x.where, field.relation.get))
       case _ => path.append(ModelEdge(path.lastModel, field, field.relatedModel(project.schema).get, field.relatedField(project.schema), field.relation.get))
     }
+  }
+
+  def updateNodeSelectorValue(nodeSelector: NodeSelector)(value: Any): NodeSelector = {
+    val unwrapped = value match {
+      case Some(x) => x
+      case x       => x
+    }
+
+    val newGCValue = GCAnyConverter(nodeSelector.field.typeIdentifier, isList = false).toGCValue(unwrapped).get
+    nodeSelector.copy(fieldValue = newGCValue)
   }
 }

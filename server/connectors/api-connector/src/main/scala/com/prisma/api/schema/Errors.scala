@@ -1,17 +1,9 @@
 package com.prisma.api.schema
 
 import com.prisma.api.connector.{ModelEdge, NodeEdge, NodeSelector, Path}
-import com.prisma.sangria.utils.ErrorWithCode
 import com.prisma.shared.models.{Project, Relation}
-import spray.json.{JsArray, JsNumber, JsObject, JsString, JsValue}
 
-abstract class GeneralError(message: String) extends Exception with ErrorWithCode {
-  override def getMessage: String = message
-}
-
-abstract class UserFacingError(message: String, errorCode: Int, val functionError: Option[JsValue] = None) extends GeneralError(message) {
-  val code: Int = errorCode
-}
+abstract class UserFacingError(val message: String, val code: Int) extends Exception(message)
 
 object CommonErrors {
   case class TimeoutExceeded()                       extends UserFacingError("The query took too long to process. Either try again later or try a simpler query.", 1000)
@@ -159,9 +151,4 @@ object APIErrors {
     }
   }
 
-  def errorJson(requestId: String, message: String, errorCode: Int): JsObject = errorJson(requestId, message, Some(errorCode))
-  def errorJson(requestId: String, message: String, errorCode: Option[Int] = None): JsObject = errorCode match {
-    case None       => JsObject("errors" -> JsArray(JsObject("message" -> JsString(message), "requestId" -> JsString(requestId))))
-    case Some(code) => JsObject("errors" -> JsArray(JsObject("message" -> JsString(message), "code"      -> JsNumber(code), "requestId" -> JsString(requestId))))
-  }
 }

@@ -1,7 +1,6 @@
 package com.prisma.api.server
 
 import akka.actor.ActorSystem
-import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport._
 import akka.http.scaladsl.model.StatusCodes._
 import akka.http.scaladsl.model.headers.RawHeader
 import akka.http.scaladsl.server.Directives._
@@ -12,7 +11,7 @@ import com.prisma.akkautil.throttler.Throttler
 import com.prisma.akkautil.throttler.Throttler.ThrottleBufferFullException
 import com.prisma.api.schema.APIErrors.ProjectNotFound
 import com.prisma.api.schema.CommonErrors.ThrottlerBufferFullException
-import com.prisma.api.schema.{APIErrors, SchemaBuilder, UserFacingError}
+import com.prisma.api.schema.{SchemaBuilder, UserFacingError}
 import com.prisma.api.{ApiDependencies, ApiMetrics}
 import com.prisma.logging.LogDataWrites.logDataWrites
 import com.prisma.logging.{LogData, LogKey}
@@ -218,12 +217,12 @@ case class ApiServer(
 
   def toplevelExceptionHandler(requestId: String) = ExceptionHandler {
     case e: UserFacingError =>
-      complete(OK -> APIErrors.errorJson(requestId, e.getMessage, e.code))
+      complete(OK -> JsonErrorHelper.errorJson(requestId, e.getMessage, e.code))
 
     case e: Throwable =>
       println(e.getMessage)
       e.printStackTrace()
       apiDependencies.reporter.report(e)
-      complete(InternalServerError -> APIErrors.errorJson(requestId, e.getMessage))
+      complete(InternalServerError -> JsonErrorHelper.errorJson(requestId, e.getMessage))
   }
 }

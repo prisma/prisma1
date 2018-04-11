@@ -7,7 +7,6 @@ import com.prisma.deploy.migration.inference.{InvalidGCValue, MigrationStepsInfe
 import com.prisma.deploy.migration.migrator.Migrator
 import com.prisma.deploy.migration.validation.{SchemaError, SchemaSyntaxValidator, SchemaWarning}
 import com.prisma.deploy.schema.InvalidQuery
-import com.prisma.deploy.validation.DestructiveChanges
 import com.prisma.messagebus.pubsub.Only
 import com.prisma.shared.models.{Function, Migration, MigrationStep, Project, Schema, ServerSideSubscriptionFunction, UpdateSecrets, WebhookDelivery}
 import org.scalactic.{Bad, Good, Or}

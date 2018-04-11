@@ -2,15 +2,16 @@ package com.prisma.deploy.specutils
 
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
-import cool.graph.cuid.Cuid
-import com.prisma.shared.models.{Migration, MigrationId, Project}
+import com.prisma.shared.models.{Migration, Project}
 import com.prisma.utils.await.AwaitUtils
+import com.prisma.utils.json.PlayJsonExtensions
+import cool.graph.cuid.Cuid
 import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach, Suite}
-import play.api.libs.json.{JsArray, JsString}
+import play.api.libs.json.JsString
 
 import scala.collection.mutable.ArrayBuffer
 
-trait DeploySpecBase extends BeforeAndAfterEach with BeforeAndAfterAll with AwaitUtils with SprayJsonExtensions { self: Suite =>
+trait DeploySpecBase extends BeforeAndAfterEach with BeforeAndAfterAll with AwaitUtils with PlayJsonExtensions { self: Suite =>
 
   implicit lazy val system                                   = ActorSystem()
   implicit lazy val materializer                             = ActorMaterializer()

@@ -1,9 +1,9 @@
 package com.prisma.api.schema
 
+import com.prisma.api.schema.SangriaQueryArguments.whereArgument
 import com.prisma.shared.models.{Model, Project}
 import com.prisma.util.coolSangria.FromInputImplicit
 import sangria.schema._
-import com.prisma.api.schema.SangriaQueryArguments.whereArgument
 
 case class ArgumentsBuilder(project: Project) {
 

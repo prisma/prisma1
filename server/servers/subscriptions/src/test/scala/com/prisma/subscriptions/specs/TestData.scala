@@ -4,11 +4,9 @@ import com.prisma.api.ApiTestDatabase
 import com.prisma.api.connector._
 import com.prisma.gc_values._
 import com.prisma.shared.models.{Model, Project}
-import com.prisma.util.json.PlaySprayConversions
 import com.prisma.utils.await.AwaitUtils
-import spray.json.JsValue
-
-object TestData extends AwaitUtils with PlaySprayConversions {
+import play.api.libs.json._
+object TestData extends AwaitUtils {
   def createTodo(
       id: String,
       text: String,
@@ -20,7 +18,7 @@ object TestData extends AwaitUtils with PlaySprayConversions {
   ) = {
 
     val raw: List[(String, GCValue)] =
-      List(("text", StringGCValue(text)), ("id", IdGCValue(id)), ("done", BooleanGCValue(done.getOrElse(true))), ("json", JsonGCValue(json.toPlay())))
+      List(("text", StringGCValue(text)), ("id", IdGCValue(id)), ("done", BooleanGCValue(done.getOrElse(true))), ("json", JsonGCValue(json)))
     val args = PrismaArgs(RootGCValue(raw: _*))
 
     val mutaction = CreateDataItem(

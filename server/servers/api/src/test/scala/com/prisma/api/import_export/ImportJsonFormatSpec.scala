@@ -9,7 +9,6 @@ import com.prisma.shared.schema_dsl.SchemaDsl
 import com.prisma.utils.await.AwaitUtils
 import org.scalatest.{FlatSpec, Matchers}
 import play.api.libs.json.JsArray
-import spray.json._
 
 class ImportJsonFormatSpec extends FlatSpec with Matchers with ApiBaseSpec with AwaitUtils {
 

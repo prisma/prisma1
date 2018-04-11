@@ -2,10 +2,9 @@ package com.prisma.api.mutactions
 
 import com.prisma.api.ApiDependencies
 import com.prisma.api.connector._
-import com.prisma.gc_values.{ListGCValue, NullGCValue}
+import com.prisma.gc_values.NullGCValue
 import com.prisma.shared.models.IdType.Id
 import com.prisma.shared.models.Project
-import com.prisma.util.gc_value.GCValueExtractor
 
 object SubscriptionEvents {
   def extractFromSqlMutactions(

@@ -5,13 +5,11 @@ import com.prisma.api.connector.DataResolver
 import com.prisma.api.import_export.ImportExport.MyJsonProtocol._
 import com.prisma.api.import_export.ImportExport.{Cursor, ExportRequest, ResultFormat}
 import com.prisma.shared.schema_dsl.SchemaDsl
-import com.prisma.util.json.PlaySprayConversions
 import com.prisma.utils.await.AwaitUtils
 import org.scalatest.{FlatSpec, Matchers}
 import play.api.libs.json.JsArray
-import spray.json._
 
-class BulkExportSpec extends FlatSpec with Matchers with ApiBaseSpec with AwaitUtils with PlaySprayConversions {
+class BulkExportSpec extends FlatSpec with Matchers with ApiBaseSpec with AwaitUtils {
 
   val project = SchemaDsl() { schema =>
     val model0: SchemaDsl.ModelBuilder = schema

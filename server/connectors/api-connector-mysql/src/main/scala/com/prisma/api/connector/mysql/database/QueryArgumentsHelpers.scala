@@ -1,185 +1,162 @@
 package com.prisma.api.connector.mysql.database
 
-import com.prisma.api.connector.{FilterElement, FilterElementRelation}
+import com.prisma.api.connector.Types.DataItemFilterCollection
+import com.prisma.api.connector._
+import com.prisma.api.connector.mysql.database.SlickExtensions._
 import com.prisma.api.schema.APIErrors
-import com.prisma.shared.models.{Field, TypeIdentifier}
+import com.prisma.gc_values.{GCValue, GCValueExtractor, ListGCValue, NullGCValue}
+import com.prisma.shared.models.{Field, Model, Relation}
+import slick.jdbc.MySQLProfile.api._
 import slick.jdbc.SQLActionBuilder
 
 object QueryArgumentsHelpers {
-  import SlickExtensions._
-  import slick.jdbc.MySQLProfile.api._
 
   def generateFilterConditions(projectId: String, tableName: String, filter: Seq[Any]): Option[SQLActionBuilder] = {
-    // don't allow options that are Some(value), options that are None are ok
-    //    assert(filter.count {
-    //      case (key, value) =>
-    //        value.isInstanceOf[Option[Any]] && (value match {
-    //          case Some(v) => true
-    //          case None => false
-    //        })
-    //    } == 0)
+
     def getAliasAndTableName(fromModel: String, toModel: String): (String, String) = {
       var modTableName = ""
-      if (!tableName.contains("_"))
-        modTableName = projectId + "`.`" + fromModel
-      else modTableName = tableName
+      if (!tableName.contains("_")) modTableName = projectId + "`.`" + fromModel else modTableName = tableName
       val alias = toModel + "_" + tableName
       (alias, modTableName)
     }
 
-    def filterOnRelation(relationTableName: String, relationFilter: FilterElementRelation) = {
-      Some(generateFilterConditions(projectId, relationTableName, relationFilter.filter).getOrElse(sql"True"))
+    def filterOnRelation(relationTableName: String, nestedFilter: DataItemFilterCollection) = {
+      Some(generateFilterConditions(projectId, relationTableName, nestedFilter).getOrElse(sql"True"))
     }
 
+    def joinRelations(relation: Relation, toModel: Model, alias: String, field: Field, modTableName: String) = {
+      sql"""select * from `#$projectId`.`#${toModel.name}` as `#$alias`
+                     inner join `#$projectId`.`#${relation.relationTableName}`
+                     on `#$alias`.`id` = `#$projectId`.`#${relation.relationTableName}`.`#${field.oppositeRelationSide.get}`
+                     where `#$projectId`.`#${relation.relationTableName}`.`#${field.relationSide.get}` = `#$modTableName`.`id`"""
+    }
+
+    //key, value, field, filterName, relationFilter
     val sqlParts = filter
       .map {
-        case FilterElement(key, None, Some(field), filterName, None) =>
+        case FilterElement(key, None, Some(field), filterName) =>
           None
-        case FilterElement(key, value, None, filterName, None) if filterName == "AND" =>
+
+        //combinationFilters
+
+        case FilterElement(key, value, None, filterName) if filterName == "AND" =>
           val values = value
             .asInstanceOf[Seq[Any]]
             .map(subFilter => generateFilterConditions(projectId, tableName, subFilter.asInstanceOf[Seq[Any]]))
-            .collect {
-              case Some(x) => x
-            }
+            .collect { case Some(x) => x }
+
           combineByAnd(values)
-        case FilterElement(key, value, None, filterName, None) if filterName == "AND" =>
+
+        case FilterElement(key, value, None, filterName) if filterName == "OR" =>
           val values = value
             .asInstanceOf[Seq[Any]]
             .map(subFilter => generateFilterConditions(projectId, tableName, subFilter.asInstanceOf[Seq[Any]]))
-            .collect {
-              case Some(x) => x
-            }
-          combineByAnd(values)
-        case FilterElement(key, value, None, filterName, None) if filterName == "OR" =>
-          val values = value
-            .asInstanceOf[Seq[Any]]
-            .map(subFilter => generateFilterConditions(projectId, tableName, subFilter.asInstanceOf[Seq[Any]]))
-            .collect {
-              case Some(x) => x
-            }
+            .collect { case Some(x) => x }
+
           combineByOr(values)
-        case FilterElement(key, value, None, filterName, None) if filterName == "node" =>
+        case FilterElement(key, value, None, filterName) if filterName == "node" =>
           val values = value
             .asInstanceOf[Seq[Any]]
             .map(subFilter => generateFilterConditions(projectId, tableName, subFilter.asInstanceOf[Seq[Any]]))
-            .collect {
-              case Some(x) => x
-            }
+            .collect { case Some(x) => x }
+
           combineByOr(values)
+
+        //transitive filters
+
+        case TransitiveRelationFilter(field, fromModel, toModel, relation, filterName, nestedFilter) if filterName == "_some" =>
+          val (alias, modTableName) = getAliasAndTableName(fromModel.name, toModel.name)
+          Some(sql"exists (" ++ joinRelations(relation, toModel, alias, field, modTableName) ++ sql"and" ++ filterOnRelation(alias, nestedFilter) ++ sql")")
+
+        case TransitiveRelationFilter(field, fromModel, toModel, relation, filterName, nestedFilter) if filterName == "_every" =>
+          val (alias, modTableName) = getAliasAndTableName(fromModel.name, toModel.name)
+          Some(
+            sql"not exists (" ++ joinRelations(relation, toModel, alias, field, modTableName) ++ sql"and not" ++ filterOnRelation(alias, nestedFilter) ++ sql")")
+
+        case TransitiveRelationFilter(field, fromModel, toModel, relation, filterName, nestedFilter) if filterName == "_none" =>
+          val (alias, modTableName) = getAliasAndTableName(fromModel.name, toModel.name)
+          Some(
+            sql"not exists (" ++ joinRelations(relation, toModel, alias, field, modTableName) ++ sql"and " ++ filterOnRelation(alias, nestedFilter) ++ sql")")
+
+        case TransitiveRelationFilter(field, fromModel, toModel, relation, filterName, nestedFilter) if filterName == "" =>
+          val (alias, modTableName) = getAliasAndTableName(fromModel.name, toModel.name)
+          Some(sql"exists (" ++ joinRelations(relation, toModel, alias, field, modTableName) ++ sql"and" ++ filterOnRelation(alias, nestedFilter) ++ sql")")
+
+        //--- non recursive
+
         // the boolean filter comes from precomputed fields
-        case FilterElement(key, value, None, filterName, None) if filterName == "boolean" =>
+        case FilterElement(key, value, None, filterName) if filterName == "boolean" => // todo probably useless
           value match {
-            case true =>
-              Some(sql"TRUE")
-            case false =>
-              Some(sql"FALSE")
+            case true  => Some(sql"TRUE")
+            case false => Some(sql"FALSE")
           }
-        case FilterElement(key, value, Some(field), filterName, None) if filterName == "_contains" =>
-          Some(sql"`#$projectId`.`#$tableName`.`#${field.name}` LIKE " concat escapeUnsafeParam(s"%$value%"))
 
-        case FilterElement(key, value, Some(field), filterName, None) if filterName == "_not_contains" =>
-          Some(sql"`#$projectId`.`#$tableName`.`#${field.name}` NOT LIKE " concat escapeUnsafeParam(s"%$value%"))
+        case FinalValueFilter(key, value, field, filterName) if filterName == "_contains" =>
+          Some(sql"`#$projectId`.`#$tableName`.`#${field.name}` LIKE " ++ escapeUnsafeParam(s"%${GCValueExtractor.fromGCValue(value)}%"))
 
-        case FilterElement(key, value, Some(field), filterName, None) if filterName == "_starts_with" =>
-          Some(sql"`#$projectId`.`#$tableName`.`#${field.name}` LIKE " concat escapeUnsafeParam(s"$value%"))
+        case FinalValueFilter(key, value, field, filterName) if filterName == "_not_contains" =>
+          Some(sql"`#$projectId`.`#$tableName`.`#${field.name}` NOT LIKE " ++ escapeUnsafeParam(s"%${GCValueExtractor.fromGCValue(value)}%"))
 
-        case FilterElement(key, value, Some(field), filterName, None) if filterName == "_not_starts_with" =>
-          Some(sql"`#$projectId`.`#$tableName`.`#${field.name}` NOT LIKE " concat escapeUnsafeParam(s"$value%"))
+        case FinalValueFilter(key, value, field, filterName) if filterName == "_starts_with" =>
+          Some(sql"`#$projectId`.`#$tableName`.`#${field.name}` LIKE " ++ escapeUnsafeParam(s"${GCValueExtractor.fromGCValue(value)}%"))
 
-        case FilterElement(key, value, Some(field), filterName, None) if filterName == "_ends_with" =>
-          Some(sql"`#$projectId`.`#$tableName`.`#${field.name}` LIKE " concat escapeUnsafeParam(s"%$value"))
+        case FinalValueFilter(key, value, field, filterName) if filterName == "_not_starts_with" =>
+          Some(sql"`#$projectId`.`#$tableName`.`#${field.name}` NOT LIKE " ++ escapeUnsafeParam(s"${GCValueExtractor.fromGCValue(value)}%"))
 
-        case FilterElement(key, value, Some(field), filterName, None) if filterName == "_not_ends_with" =>
-          Some(sql"`#$projectId`.`#$tableName`.`#${field.name}` NOT LIKE " concat escapeUnsafeParam(s"%$value"))
+        case FinalValueFilter(key, value, field, filterName) if filterName == "_ends_with" =>
+          Some(sql"`#$projectId`.`#$tableName`.`#${field.name}` LIKE " ++ escapeUnsafeParam(s"%${GCValueExtractor.fromGCValue(value)}"))
 
-        case FilterElement(key, value, Some(field), filterName, None) if filterName == "_lt" =>
-          Some(sql"`#$projectId`.`#$tableName`.`#${field.name}` < " concat escapeUnsafeParam(value))
+        case FinalValueFilter(key, value, field, filterName) if filterName == "_not_ends_with" =>
+          Some(sql"`#$projectId`.`#$tableName`.`#${field.name}` NOT LIKE " ++ escapeUnsafeParam(s"%${GCValueExtractor.fromGCValue(value)}"))
 
-        case FilterElement(key, value, Some(field), filterName, None) if filterName == "_gt" =>
-          Some(sql"`#$projectId`.`#$tableName`.`#${field.name}` > " concat escapeUnsafeParam(value))
+        case FinalValueFilter(key, value, field, filterName) if filterName == "_lt" =>
+          Some(sql"`#$projectId`.`#$tableName`.`#${field.name}` < " ++ gcValueToSQLBuilder(value))
 
-        case FilterElement(key, value, Some(field), filterName, None) if filterName == "_lte" =>
-          Some(sql"`#$projectId`.`#$tableName`.`#${field.name}` <= " concat escapeUnsafeParam(value))
+        case FinalValueFilter(key, value, field, filterName) if filterName == "_gt" =>
+          Some(sql"`#$projectId`.`#$tableName`.`#${field.name}` > " ++ gcValueToSQLBuilder(value))
 
-        case FilterElement(key, value, Some(field), filterName, None) if filterName == "_gte" =>
-          Some(sql"`#$projectId`.`#$tableName`.`#${field.name}` >= " concat escapeUnsafeParam(value))
+        case FinalValueFilter(key, value, field, filterName) if filterName == "_lte" =>
+          Some(sql"`#$projectId`.`#$tableName`.`#${field.name}` <= " ++ gcValueToSQLBuilder(value))
 
-        case FilterElement(key, null, Some(field), filterName, None) if filterName == "_in" =>
+        case FinalValueFilter(key, value, field, filterName) if filterName == "_gte" =>
+          Some(sql"`#$projectId`.`#$tableName`.`#${field.name}` >= " ++ gcValueToSQLBuilder(value))
+
+        case FinalValueFilter(key, NullGCValue, field, filterName) if filterName == "_in" =>
           Some(sql"false")
 
-        case FilterElement(key, value, Some(field), filterName, None) if filterName == "_in" =>
-          value.asInstanceOf[Seq[Any]].nonEmpty match {
-            case true  => Some(sql"`#$projectId`.`#$tableName`.`#${field.name}` " concat generateInStatement(value.asInstanceOf[Seq[Any]]))
+        case FinalValueFilter(key, ListGCValue(values), field, filterName) if filterName == "_in" =>
+          values.nonEmpty match {
+            case true  => Some(sql"`#$projectId`.`#$tableName`.`#${field.name}` " ++ generateInStatement(values))
             case false => Some(sql"false")
           }
 
-        case FilterElement(key, null, Some(field), filterName, None) if filterName == "_not_in" =>
+        case FinalValueFilter(key, NullGCValue, field, filterName) if filterName == "_not_in" =>
           Some(sql"false")
 
-        case FilterElement(key, value, Some(field), filterName, None) if filterName == "_not_in" =>
-          value.asInstanceOf[Seq[Any]].nonEmpty match {
-            case true =>
-              Some(sql"`#$projectId`.`#$tableName`.`#${field.name}` NOT " concat generateInStatement(value.asInstanceOf[Seq[Any]]))
+        case FinalValueFilter(key, ListGCValue(values), field, filterName) if filterName == "_not_in" =>
+          values.nonEmpty match {
+            case true  => Some(sql"`#$projectId`.`#$tableName`.`#${field.name}` NOT " ++ generateInStatement(values))
             case false => Some(sql"true")
           }
 
-        case FilterElement(key, null, Some(field), filterName, None) if filterName == "_not" =>
+        case FinalValueFilter(key, NullGCValue, field, filterName) if filterName == "_not" =>
           Some(sql"`#$projectId`.`#$tableName`.`#${field.name}` IS NOT NULL")
 
-        case FilterElement(key, value, Some(field), filterName, None) if filterName == "_not" =>
-          Some(sql"`#$projectId`.`#$tableName`.`#${field.name}` != " concat escapeUnsafeParam(value))
+        case FinalValueFilter(key, value, field, filterName) if filterName == "_not" =>
+          Some(sql"`#$projectId`.`#$tableName`.`#${field.name}` != " ++ gcValueToSQLBuilder(value))
 
-        case FilterElement(key, null, Some(field: Field), filterName, None) if field.typeIdentifier == TypeIdentifier.Relation =>
-          if (field.isList) {
-            throw APIErrors.FilterCannotBeNullOnToManyField(field.name)
-          }
+        case FinalValueFilter(key, NullGCValue, field, filterName) =>
+          Some(sql"`#$projectId`.`#$tableName`.`#$key` IS NULL")
+
+        case FinalValueFilter(key, value, field, filterName) =>
+          Some(sql"`#$projectId`.`#$tableName`.`#$key` = " ++ gcValueToSQLBuilder(value))
+        case FinalRelationFilter(key, null, field, filterName) =>
+          if (field.isList) throw APIErrors.FilterCannotBeNullOnToManyField(field.name)
+
           Some(sql""" not exists (select  *
                                   from    `#$projectId`.`#${field.relation.get.relationTableName}`
                                   where   `#$projectId`.`#${field.relation.get.relationTableName}`.`#${field.relationSide.get}` = `#$projectId`.`#$tableName`.`id`
                                   )""")
-
-        case FilterElement(key, null, Some(field), filterName, None) if field.typeIdentifier != TypeIdentifier.Relation =>
-          Some(sql"`#$projectId`.`#$tableName`.`#$key` IS NULL")
-
-        case FilterElement(key, value, _, filterName, None) =>
-          Some(sql"`#$projectId`.`#$tableName`.`#$key` = " concat escapeUnsafeParam(value))
-
-        case FilterElement(key, value, Some(field), filterName, Some(relatedFilter)) if filterName == "_some" =>
-          val (alias, modTableName) = getAliasAndTableName(relatedFilter.fromModel.name, relatedFilter.toModel.name)
-          Some(sql"""exists (
-            select * from `#$projectId`.`#${relatedFilter.toModel.name}` as `#$alias`
-            inner join `#$projectId`.`#${relatedFilter.relation.relationTableName}`
-            on `#$alias`.`id` = `#$projectId`.`#${relatedFilter.relation.relationTableName}`.`#${field.oppositeRelationSide.get}`
-            where `#$projectId`.`#${relatedFilter.relation.relationTableName}`.`#${field.relationSide.get}` = `#$modTableName`.`id`
-            and""" concat filterOnRelation(alias, relatedFilter) concat sql")")
-
-        case FilterElement(key, value, Some(field), filterName, Some(relatedFilter)) if filterName == "_every" =>
-          val (alias, modTableName) = getAliasAndTableName(relatedFilter.fromModel.name, relatedFilter.toModel.name)
-          Some(sql"""not exists (
-            select * from `#$projectId`.`#${relatedFilter.toModel.name}` as `#$alias`
-            inner join `#$projectId`.`#${relatedFilter.relation.relationTableName}`
-            on `#$alias`.`id` = `#$projectId`.`#${relatedFilter.relation.relationTableName}`.`#${field.oppositeRelationSide.get}`
-            where `#$projectId`.`#${relatedFilter.relation.relationTableName}`.`#${field.relationSide.get}` = `#$modTableName`.`id`
-            and not""" concat filterOnRelation(alias, relatedFilter) concat sql")")
-
-        case FilterElement(key, value, Some(field), filterName, Some(relatedFilter)) if filterName == "_none" =>
-          val (alias, modTableName) = getAliasAndTableName(relatedFilter.fromModel.name, relatedFilter.toModel.name)
-          Some(sql"""not exists (
-            select * from `#$projectId`.`#${relatedFilter.toModel.name}` as `#$alias`
-            inner join `#$projectId`.`#${relatedFilter.relation.relationTableName}`
-            on `#$alias`.`id` = `#$projectId`.`#${relatedFilter.relation.relationTableName}`.`#${field.oppositeRelationSide.get}`
-            where `#$projectId`.`#${relatedFilter.relation.relationTableName}`.`#${field.relationSide.get}` = `#$modTableName`.`id`
-            and """ concat filterOnRelation(alias, relatedFilter) concat sql")")
-
-        case FilterElement(key, value, Some(field), filterName, Some(relatedFilter)) if filterName == "" =>
-          val (alias, modTableName) = getAliasAndTableName(relatedFilter.fromModel.name, relatedFilter.toModel.name)
-          Some(sql"""exists (
-            select * from `#$projectId`.`#${relatedFilter.toModel.name}` as `#$alias`
-            inner join `#$projectId`.`#${relatedFilter.relation.relationTableName}`
-            on `#$alias`.`id` = `#$projectId`.`#${relatedFilter.relation.relationTableName}`.`#${field.oppositeRelationSide.get}`
-            where `#$projectId`.`#${relatedFilter.relation.relationTableName}`.`#${field.relationSide.get}` = `#$modTableName`.`id`
-            and""" concat filterOnRelation(alias, relatedFilter) concat sql")")
 
         // this is used for the node: {} field in the Subscription Filter
         case values: Seq[FilterElement @unchecked] =>
@@ -188,15 +165,9 @@ object QueryArgumentsHelpers {
       .filter(_.nonEmpty)
       .map(_.get)
 
-    if (sqlParts.isEmpty)
-      None
-    else
-      combineByAnd(sqlParts)
+    if (sqlParts.isEmpty) None else combineByAnd(sqlParts)
   }
 
-  def generateInStatement(items: Seq[Any]) = {
-    val combinedItems = combineByComma(items.map(escapeUnsafeParam))
-    sql" IN (" concat combinedItems concat sql")"
-  }
+  def generateInStatement(items: Vector[GCValue]) = sql" IN (" ++ combineByComma(items.map(gcValueToSQLBuilder)) ++ sql")"
 
 }

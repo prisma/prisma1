@@ -4,6 +4,7 @@ import com.prisma.deploy.connector.DeployConnector
 import com.prisma.deploy.migration.validation.{SchemaError, SchemaWarning}
 import com.prisma.shared.errors.SchemaCheckResult
 import com.prisma.shared.models._
+
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 

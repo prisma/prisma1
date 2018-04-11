@@ -5,9 +5,9 @@ import com.prisma.api.schema.ApiUserContext
 import com.prisma.api.schema.CommonErrors.InputCompletelyMalformed
 import com.prisma.shared.models.Project
 import com.prisma.utils.`try`.TryUtil
+import play.api.libs.json._
 import sangria.parser.QueryParser
 import sangria.schema.Schema
-import play.api.libs.json._
 
 import scala.util.{Failure, Success, Try}
 

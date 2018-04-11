@@ -4,8 +4,7 @@ import com.prisma.messagebus.pubsub.Only
 import com.prisma.shared.models.Model
 import com.prisma.shared.schema_dsl.SchemaDsl
 import org.scalatest._
-import spray.json.{JsArray, JsNumber, JsObject, JsString}
-
+import play.api.libs.json._
 import scala.concurrent.duration._
 
 class SubscriptionsProtocolV05Spec extends FlatSpec with Matchers with SpecBase {
@@ -22,7 +21,7 @@ class SubscriptionsProtocolV05Spec extends FlatSpec with Matchers with SpecBase 
   override def beforeEach() = {
     super.beforeEach()
     testDatabase.setup(project)
-    val json = JsArray(JsNumber(1), JsNumber(2), JsObject("a" -> JsString("b")))
+    val json = Json.arr(1, 2, Json.obj("a" -> "b"))
     TestData.createTodo("test-node-id", "some todo", json, None, project, model, testDatabase)
     TestData.createTodo("important-test-node-id", "important!", json, None, project, model, testDatabase)
   }

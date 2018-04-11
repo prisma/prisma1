@@ -9,6 +9,7 @@ import com.prisma.api.schema.CustomScalarTypes.{DateTimeType, JsonType}
 import com.prisma.gc_values._
 import com.prisma.shared.models
 import com.prisma.shared.models.{Field, Model, TypeIdentifier}
+import com.prisma.util.coolArgs.GCAnyConverter
 import sangria.schema.{Field => SangriaField, _}
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -122,13 +123,9 @@ class ObjectTypeBuilder(
       case TypeIdentifier.Relation  => resolveConnection(field)
     }
 
-    if (field.isScalar && field.isList) {
-      outputType = ListType(outputType)
-    }
+    if (field.isScalar && field.isList) outputType = ListType(outputType)
 
-    if (!field.isRequired) {
-      outputType = OptionType(outputType)
-    }
+    if (!field.isRequired) outputType = OptionType(outputType)
 
     outputType
   }
@@ -192,29 +189,38 @@ class ObjectTypeBuilder(
                 generateFilterElement(typedValue, model, isSubscriptionFilter)
               } else {
                 // this must be a relation filter
-                FilterElement(
-                  key,
-                  null,
-                  field,
+                TransitiveRelationFilter(
+                  field.get,
+                  model,
+                  field.get.relatedModel(project.schema).get,
+                  field.get.relation.get,
                   filter.name,
-                  Some(
-                    FilterElementRelation(
-                      fromModel = model,
-                      toModel = field.get.relatedModel(project.schema).get,
-                      relation = field.get.relation.get,
-                      filter = generateFilterElement(typedValue, field.get.relatedModel(project.schema).get, isSubscriptionFilter)
-                    ))
+                  generateFilterElement(typedValue, field.get.relatedModel(project.schema).get, isSubscriptionFilter)
                 )
               }
 
             case value: Seq[Any] if value.nonEmpty && value.head.isInstanceOf[Map[_, _]] =>
-              FilterElement(key, value.asInstanceOf[Seq[Map[String, Any]]].map(generateFilterElement(_, model, isSubscriptionFilter)), None, filter.name)
+              FilterElement(key, value.asInstanceOf[Seq[Map[String, Any]]].map(x => generateFilterElement(x, model, isSubscriptionFilter)), None, filter.name)
 
-            case value: Seq[Any] =>
-              FilterElement(key, value, field, filter.name)
+            //-------- non recursive
 
-            case Some(filterValue) =>
-              FilterElement(key, filterValue, field, filter.name)
+            case value: Seq[Any] if field.isDefined && field.get.isScalar =>
+              val converter = GCAnyConverter(field.get.typeIdentifier, isList = false)
+              FinalValueFilter(key, ListGCValue(value.map(x => converter.toGCValue(x).get).toVector), field.get, filter.name)
+
+            case Some(filterValue) if field.isDefined && field.get.isScalar =>
+              val converter = GCAnyConverter(field.get.typeIdentifier, isList = false)
+              FinalValueFilter(key, converter.toGCValue(filterValue).get, field.get, filter.name)
+
+            case Some(filterValue) if field.isDefined && field.get.isRelation =>
+              FinalRelationFilter(key, filterValue, field.get, filter.name)
+
+            case valueNew if field.isDefined && field.get.isRelation =>
+              FinalRelationFilter(key, valueNew, field.get, filter.name)
+
+            case valueNew if field.isDefined && field.get.isScalar =>
+              val converter = GCAnyConverter(field.get.typeIdentifier, isList = false)
+              FinalValueFilter(key, converter.toGCValue(valueNew).get, field.get, filter.name)
 
             case _ =>
               FilterElement(key, value, field, filter.name)
@@ -245,15 +251,6 @@ class ObjectTypeBuilder(
     Some(SangriaQueryArguments.createSimpleQueryArguments(skipOpt, afterOpt, firstOpt, beforeOpt, lastOpt, filterOpt, orderByOpt))
   }
 
-  def extractRequiredFilterFromContext(model: Model, ctx: Context[ApiUserContext, Unit]): Types.DataItemFilterCollection = {
-    val rawFilter: Map[String, Any] = ctx.arg[Map[String, Any]]("where")
-    val unwrappedValues = rawFilter.map {
-      case (k, Some(x)) => (k, x)
-      case (k, v)       => (k, v)
-    }
-    generateFilterElement(unwrappedValues, model, isSubscriptionFilter = false)
-  }
-
   def mapToOutputResolve[C <: ApiUserContext](model: models.Model, field: models.Field)(
       ctx: Context[C, PrismaNode]): sangria.schema.Action[ApiUserContext, _] = {
 
@@ -262,7 +259,7 @@ class ObjectTypeBuilder(
 
     (field.isScalar, field.isList) match {
       case (true, true)   => ScalarListDeferred(model, field, item.id)
-      case (true, false)  => ObjectTypeBuilder.convertScalarFieldValueFromDatabase(field, item)
+      case (true, false)  => GCValueExtractor.fromGCValue(item.data.map(field.name))
       case (false, true)  => DeferredValue(ToManyDeferred(field, item.id, arguments)).map(_.toNodes)
       case (false, false) => ToOneDeferred(field, item.id, arguments)
     }
@@ -276,28 +273,6 @@ class ObjectTypeBuilder(
       case Some(x: PrismaNode) => x
       case x: PrismaNode       => x
       case None                => throw new Exception("Resolved DataItem was None. This is unexpected - please investigate why and fix.")
-    }
-  }
-}
-
-object ObjectTypeBuilder {
-
-  def convertScalarFieldValueFromDatabase(field: models.Field, item: PrismaNode): Any = {
-    import com.prisma.util.json.PlaySprayConversions._
-
-    //todo use GCValueextractor once we got rid of Spray
-    item.data.map(field.name) match {
-      case StringGCValue(value)   => value
-      case IntGCValue(value)      => value
-      case FloatGCValue(value)    => value
-      case BooleanGCValue(value)  => value
-      case JsonGCValue(value)     => value.toSpray
-      case IdGCValue(value)       => value
-      case EnumGCValue(value)     => value
-      case NullGCValue            => None
-      case DateTimeGCValue(value) => value
-      case ListGCValue(values)    => sys.error("should not be called on ListValues")
-      case x: RootGCValue         => sys.error("should not be called on RootGCValues")
     }
   }
 }

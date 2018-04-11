@@ -4,8 +4,8 @@ import java.util.concurrent.TimeUnit
 
 import akka.actor.{Actor, ActorRef, PoisonPill, ReceiveTimeout, Stash, Terminated}
 import akka.http.scaladsl.model.ws.TextMessage
-import com.prisma.errors.ErrorReporter
 import com.prisma.akkautil.{LogUnhandled, LogUnhandledExceptions}
+import com.prisma.errors.ErrorReporter
 import com.prisma.messagebus.QueuePublisher
 import com.prisma.subscriptions.SubscriptionDependencies
 import com.prisma.websocket.protocol.Request

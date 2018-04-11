@@ -2,22 +2,23 @@ package com.prisma.deploy.specutils
 
 import akka.http.scaladsl.model.HttpRequest
 import com.prisma.deploy.DeployDependencies
-import com.prisma.deploy.schema.{SchemaBuilder, SystemUserContext}
+import com.prisma.deploy.schema.{DeployApiError, SchemaBuilder, SystemUserContext}
 import com.prisma.sangria.utils.ErrorHandler
 import com.prisma.shared.models.{Migration, MigrationId, Project, ProjectId}
 import com.prisma.utils.await.AwaitUtils
+import com.prisma.utils.json.PlayJsonExtensions
 import play.api.libs.json.{JsArray, JsString}
 import sangria.execution.{Executor, QueryAnalysisError}
 import sangria.parser.QueryParser
 import sangria.renderer.SchemaRenderer
-import spray.json._
+import play.api.libs.json._
 
 import scala.concurrent.Await
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration.Duration
 import scala.reflect.io.File
 
-case class DeployTestServer()(implicit dependencies: DeployDependencies) extends SprayJsonExtensions with GraphQLResponseAssertions with AwaitUtils {
+case class DeployTestServer()(implicit dependencies: DeployDependencies) extends PlayJsonExtensions with AwaitUtils {
   import com.prisma.deploy.server.JsonMarshalling._
 
   def writeSchemaIntoFile(schema: String): Unit = File("schema").writeAll(schema)
@@ -60,7 +61,7 @@ case class DeployTestServer()(implicit dependencies: DeployDependencies) extends
                                errorCount: Int = 1,
                                errorContains: String = "",
                                userId: Option[String] = None,
-                               variables: JsValue = JsObject(),
+                               variables: JsValue = JsObject.empty,
                                requestId: String = "CombinedTestDatabase.requestId",
                                graphcoolHeader: Option[String] = None): JsValue = {
     val result = executeQueryWithAuthentication(
@@ -77,8 +78,13 @@ case class DeployTestServer()(implicit dependencies: DeployDependencies) extends
   /**
     * Execute a Query without Checks.
     */
+  def errorExtractor(t: Throwable): Option[Int] = t match {
+    case e: DeployApiError => Some(e.code)
+    case _                 => None
+  }
+
   def executeQueryWithAuthentication(query: String,
-                                     variables: JsValue = JsObject(),
+                                     variables: JsValue = JsObject.empty,
                                      requestId: String = "CombinedTestDatabase.requestId",
                                      graphcoolHeader: Option[String] = None): JsValue = {
 
@@ -86,7 +92,7 @@ case class DeployTestServer()(implicit dependencies: DeployDependencies) extends
     val userContext    = SystemUserContext(None)
     val schema         = schemaBuilder(userContext)
     val renderedSchema = SchemaRenderer.renderSchema(schema)
-    val errorHandler   = ErrorHandler(requestId, HttpRequest(), query, variables.toString(), dependencies.reporter)
+    val errorHandler   = ErrorHandler(requestId, HttpRequest(), query, variables.toString(), dependencies.reporter, errorCodeExtractor = errorExtractor)
 
     if (printSchema) println(renderedSchema)
     if (writeSchemaToFile) writeSchemaIntoFile(renderedSchema)

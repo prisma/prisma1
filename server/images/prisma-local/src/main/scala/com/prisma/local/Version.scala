@@ -4,12 +4,11 @@ import akka.actor.ActorSystem
 import akka.http.scaladsl.Http
 import akka.stream.ActorMaterializer
 import com.prisma.graphql.GraphQlClientImpl
-import spray.json._
+import play.api.libs.json.Json
 
 import scala.concurrent.Future
 
 object Version {
-  import DefaultJsonProtocol._
 
   def check()(implicit system: ActorSystem, materializer: ActorMaterializer): Future[_] = {
     import system.dispatcher
@@ -26,14 +25,8 @@ object Version {
       """.stripMargin)
       .flatMap { resp =>
         if (resp.is200) {
-          val json = resp.body.parseJson
-          val updateStatus = json.asJsObject
-            .fields("data")
-            .asJsObject()
-            .fields("checkUpdate")
-            .asJsObject()
-            .fields("isUpToDate")
-            .convertTo[Boolean]
+          val json         = Json.parse(resp.body)
+          val updateStatus = (json \ "data" \ "checkUpdate" \ "isUpToDate").as[Boolean]
 
           if (updateStatus) println("Version is up to date.")
           else println("Update available.")

@@ -1,19 +1,19 @@
 package com.prisma.deploy.gc_value
 
 import com.prisma.gc_values._
-import com.prisma.shared.models.{Field, TypeIdentifier}
 import com.prisma.shared.models.TypeIdentifier.TypeIdentifier
+import com.prisma.shared.models.{Field, TypeIdentifier}
 import org.apache.commons.lang.StringEscapeUtils
-import org.joda.time.{DateTime, DateTimeZone}
 import org.joda.time.format.ISODateTimeFormat
+import org.joda.time.{DateTime, DateTimeZone}
 import org.parboiled2.{Parser, ParserInput}
 import org.scalactic.{Bad, Good, Or}
 import play.api.libs.json._
-import sangria.ast.{Field => SangriaField, Value => SangriaValue, _}
+import sangria.ast.{Value => SangriaValue, _}
 import sangria.parser._
 
-import scala.util.{Failure, Success}
 import scala.util.control.NonFatal
+import scala.util.{Failure, Success}
 
 /**
   * We need a bunch of different converters from / to GC values

@@ -13,7 +13,6 @@ import org.joda.time.format.DateTimeFormat
 import org.joda.time.{DateTime, DateTimeZone}
 import org.scalatest.{FlatSpec, Matchers}
 import play.api.libs.json.JsArray
-import spray.json._
 
 class DateTimeImportExportSpec extends FlatSpec with Matchers with ApiBaseSpec with AwaitUtils {
 

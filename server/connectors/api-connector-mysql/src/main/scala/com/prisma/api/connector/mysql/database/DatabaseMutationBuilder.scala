@@ -6,9 +6,8 @@ import com.prisma.api.connector.Types.DataItemFilterCollection
 import com.prisma.api.connector._
 import com.prisma.api.connector.mysql.database.JdbcExtensions._
 import com.prisma.api.connector.mysql.database.SlickExtensions._
-import com.prisma.api.schema.GeneralError
+import com.prisma.api.schema.UserFacingError
 import com.prisma.gc_values.{GCValue, ListGCValue, NullGCValue}
-import com.prisma.shared.models.TypeIdentifier.TypeIdentifier
 import com.prisma.shared.models._
 import cool.graph.cuid.Cuid
 import slick.dbio.{DBIOAction, Effect, NoStream}
@@ -67,7 +66,12 @@ object DatabaseMutationBuilder {
 
   def updateDataItems(projectId: String, model: Model, args: PrismaArgs, whereFilter: Option[DataItemFilterCollection]) = {
     val updateValues = combineByComma(args.raw.asRoot.map.map { case (k, v) => escapeKey(k) ++ sql" = " ++ gcValueToSQLBuilder(v) })
-    (sql"UPDATE `#${projectId}`.`#${model.name}`" ++ sql"SET " ++ updateValues ++ whereFilterAppendix(projectId, model, whereFilter)).asUpdate
+
+    if (updateValues.isDefined) {
+      (sql"UPDATE `#${projectId}`.`#${model.name}`" ++ sql"SET " ++ updateValues ++ whereFilterAppendix(projectId, model, whereFilter)).asUpdate
+    } else {
+      DBIOAction.successful(())
+    }
   }
 
   def updateDataItemByPath(projectId: String, path: Path, updateArgs: PrismaArgs) = {
@@ -233,6 +237,55 @@ object DatabaseMutationBuilder {
     (sql"DELETE FROM `#$projectId`.`#${path.lastModel.name}_#${fieldName}` WHERE `nodeId` = " ++ pathQueryForLastChild(projectId, path)).asUpdate
   }
 
+  def setManyScalarLists(projectId: String, model: Model, listFieldMap: Vector[(String, ListGCValue)], whereFilter: Option[DataItemFilterCollection]) = {
+    import scala.concurrent.ExecutionContext.Implicits.global
+
+    val idQuery: SqlStreamingAction[Vector[String], String, Effect] =
+      (sql"SELECT `id` FROM `#${projectId}`.`#${model.name}`" ++ whereFilterAppendix(projectId, model, whereFilter)).as[String]
+
+    def listInsert(ids: Vector[String]) = {
+      if (ids.isEmpty) {
+        DBIOAction.successful(())
+      } else {
+
+        SimpleDBIO[Unit] { x =>
+          def valueTuplesForListField(listGCValue: ListGCValue) =
+            for {
+              nodeId                   <- ids
+              (escapedValue, position) <- listGCValue.values.zip((1 to listGCValue.size).map(_ * 1000))
+            } yield {
+              (nodeId, position, escapedValue)
+            }
+
+          val combinedNodeIdsString = ids.map(id => s"'$id'") mkString ("(", ",", ")")
+
+          listFieldMap.foreach {
+            case (fieldName, listGCValue) =>
+              val wipe                             = s"DELETE  FROM `$projectId`.`${model.name}_$fieldName` WHERE `nodeId` IN $combinedNodeIdsString"
+              val wipeOldValues: PreparedStatement = x.connection.prepareStatement(wipe)
+              wipeOldValues.executeUpdate()
+
+              val insert                             = s"INSERT INTO `$projectId`.`${model.name}_$fieldName` (`nodeId`, `position`, `value`) VALUES (?,?,?)"
+              val insertNewValues: PreparedStatement = x.connection.prepareStatement(insert)
+              val newValueTuples                     = valueTuplesForListField(listGCValue)
+              newValueTuples.foreach { tuple =>
+                insertNewValues.setString(1, tuple._1)
+                insertNewValues.setInt(2, tuple._2)
+                insertNewValues.setGcValue(3, tuple._3)
+                insertNewValues.addBatch()
+              }
+              insertNewValues.executeBatch()
+          }
+        }
+      }
+    }
+
+    for {
+      nodeIds <- idQuery
+      action  <- listInsert(nodeIds)
+    } yield action
+  }
+
   //endregion
 
   //region RESET DATA
@@ -372,7 +425,7 @@ object DatabaseMutationBuilder {
 
   def ifThenElseError(condition: SqlStreamingAction[Vector[Boolean], Boolean, Effect],
                       thenMutactions: DBIOAction[Unit, NoStream, Effect],
-                      elseError: GeneralError) = {
+                      elseError: UserFacingError) = {
     import scala.concurrent.ExecutionContext.Implicits.global
     for {
       exists <- condition
@@ -393,27 +446,6 @@ object DatabaseMutationBuilder {
       sql"where table_schema = ${project.id} AND TABLE_NAME = $table)end;").as[Int]
   }
 
-  // note: utf8mb4 requires up to 4 bytes per character and includes full utf8 support, including emoticons
-  // utf8 requires up to 3 bytes per character and does not have full utf8 support.
-  // mysql indexes have a max size of 767 bytes or 191 utf8mb4 characters.
-  // We limit enums to 191, and create text indexes over the first 191 characters of the string, but
-  // allow the actual content to be much larger.
-  // Key columns are utf8_general_ci as this collation is ~10% faster when sorting and requires less memory
-  def sqlTypeForScalarTypeIdentifier(isList: Boolean, typeIdentifier: TypeIdentifier): String = {
-    if (isList) return "mediumtext"
-
-    typeIdentifier match {
-      case TypeIdentifier.String    => "mediumtext"
-      case TypeIdentifier.Boolean   => "boolean"
-      case TypeIdentifier.Int       => "int"
-      case TypeIdentifier.Float     => "Decimal(65,30)"
-      case TypeIdentifier.GraphQLID => "char(25)"
-      case TypeIdentifier.Enum      => "varchar(191)"
-      case TypeIdentifier.Json      => "mediumtext"
-      case TypeIdentifier.DateTime  => "datetime(3)"
-      case TypeIdentifier.Relation  => sys.error("Relation is not a scalar type. Are you trying to create a db column for a relation?")
-    }
-  }
   //endregion
 
   def createDataItemsImport(mutaction: CreateDataItemsImport): SimpleDBIO[Vector[String]] = {

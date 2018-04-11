@@ -5,7 +5,6 @@ import com.prisma.gc_values.ListGCValue
 import com.prisma.shared.models.IdType.Id
 import com.prisma.shared.models.ModelMutationType.ModelMutationType
 import com.prisma.shared.models._
-import com.prisma.util.gc_value.GCValueExtractor
 
 sealed trait ApiMutaction
 sealed trait DatabaseMutaction   extends ApiMutaction
@@ -26,7 +25,7 @@ case class PushScalarListsImport(project: Project, tableName: String, id: String
 case class CreateRelationRowsImport(project: Project, relation: Relation, args: Vector[(String, String)]) extends DatabaseMutaction
 case class CreateDataItemsImport(project: Project, model: Model, args: Vector[PrismaArgs])                extends DatabaseMutaction
 case class DeleteDataItem(project: Project, path: Path, previousValues: PrismaNode) extends DatabaseMutaction {
-  val id = GCValueExtractor.fromGCValueToString(previousValues.data.map("id"))
+  val id = previousValues.data.idField.value
 }
 case class DeleteDataItemNested(project: Project, path: Path)                                                      extends DatabaseMutaction
 case class DeleteDataItems(project: Project, model: Model, whereFilter: Option[DataItemFilterCollection])          extends DatabaseMutaction

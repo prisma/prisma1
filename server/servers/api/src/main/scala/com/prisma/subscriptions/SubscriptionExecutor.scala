@@ -4,19 +4,19 @@ import akka.http.scaladsl.model.HttpRequest
 import com.prisma.api.ApiDependencies
 import com.prisma.api.connector.PrismaNode
 import com.prisma.api.resolver.DeferredResolverProvider
+import com.prisma.api.schema.UserFacingError
 import com.prisma.sangria.utils.ErrorHandler
 import com.prisma.shared.models.ModelMutationType.ModelMutationType
 import com.prisma.shared.models._
 import com.prisma.subscriptions.schema.{QueryTransformer, SubscriptionSchema}
-import com.prisma.util.json.SprayJsonExtensions
+import play.api.libs.json._
 import sangria.ast.Document
 import sangria.execution.Executor
 import sangria.parser.QueryParser
-import spray.json._
 
 import scala.concurrent.{ExecutionContext, Future}
 
-object SubscriptionExecutor extends SprayJsonExtensions {
+object SubscriptionExecutor {
   def execute(
       project: Project,
       model: Model,
@@ -24,7 +24,7 @@ object SubscriptionExecutor extends SprayJsonExtensions {
       previousValues: Option[PrismaNode],
       updatedFields: Option[List[String]],
       query: String,
-      variables: spray.json.JsValue,
+      variables: JsValue,
       nodeId: String,
       requestId: String,
       operationName: Option[String],
@@ -57,7 +57,7 @@ object SubscriptionExecutor extends SprayJsonExtensions {
       previousValues: Option[PrismaNode],
       updatedFields: Option[List[String]],
       query: Document,
-      variables: spray.json.JsValue,
+      variables: JsValue,
       nodeId: String,
       requestId: String,
       operationName: Option[String],
@@ -91,13 +91,19 @@ object SubscriptionExecutor extends SprayJsonExtensions {
       dependencies.dataResolver(project)
     }
 
+    def errorExtractor(t: Throwable): Option[Int] = t match {
+      case e: UserFacingError => Some(e.code)
+      case _                  => None
+    }
+
     val sangriaHandler = ErrorHandler(
       requestId,
       HttpRequest(),
       query.renderPretty,
-      variables.compactPrint,
+      variables.toString,
       dependencies.reporter,
-      Some(project.id)
+      Some(project.id),
+      errorCodeExtractor = errorExtractor
     ).sangriaExceptionHandler
 
     Executor
@@ -111,7 +117,8 @@ object SubscriptionExecutor extends SprayJsonExtensions {
         deferredResolver = new DeferredResolverProvider(dataResolver)
       )
       .map { result =>
-        if (result.pathAs[JsValue](s"data.${camelCase(model.name)}") != JsNull) {
+        val lookup = result.as[JsObject] \ "data" \ camelCase(model.name)
+        if (lookup.validate[JsValue].get != JsNull) {
           Some(result)
         } else {
           None

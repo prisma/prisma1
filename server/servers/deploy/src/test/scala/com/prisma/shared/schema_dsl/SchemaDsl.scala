@@ -2,9 +2,9 @@ package com.prisma.shared.schema_dsl
 
 import com.prisma.deploy.migration.inference.{SchemaInferrer, SchemaMapping}
 import com.prisma.gc_values.GCValue
-import cool.graph.cuid.Cuid
 import com.prisma.shared.models.IdType.Id
 import com.prisma.shared.models._
+import cool.graph.cuid.Cuid
 import sangria.parser.QueryParser
 
 object SchemaDsl {

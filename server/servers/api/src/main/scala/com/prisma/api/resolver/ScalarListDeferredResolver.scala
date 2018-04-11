@@ -2,8 +2,7 @@ package com.prisma.api.resolver
 
 import com.prisma.api.connector.{DataResolver, ScalarListValues}
 import com.prisma.api.resolver.DeferredTypes._
-import com.prisma.gc_values.IdGCValue
-import com.prisma.util.gc_value.GCValueExtractor
+import com.prisma.gc_values.GCValueExtractor
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future

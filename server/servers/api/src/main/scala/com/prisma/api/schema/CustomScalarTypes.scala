@@ -5,8 +5,7 @@ import org.joda.time.{DateTime, DateTimeZone}
 import sangria.ast
 import sangria.schema._
 import sangria.validation.ValueCoercionViolation
-import spray.json._
-
+import play.api.libs.json._
 import scala.util.{Failure, Success, Try}
 
 object CustomScalarTypes {
@@ -36,7 +35,7 @@ object CustomScalarTypes {
 
   case object JsonCoercionViolation extends ValueCoercionViolation("Not valid JSON")
 
-  def parseJson(s: String) = Try(s.parseJson) match {
+  def parseJson(s: String) = Try(Json.parse(s)) match {
     case Success(json) ⇒ Right(json)
     case Failure(_)    ⇒ Left(JsonCoercionViolation)
   }
@@ -50,9 +49,9 @@ object CustomScalarTypes {
       case v: Boolean    ⇒ Right(JsBoolean(v))
       case v: Int        ⇒ Right(JsNumber(v))
       case v: Long       ⇒ Right(JsNumber(v))
-      case v: Float      ⇒ Right(JsNumber(v))
+      case v: Float      ⇒ Right(JsNumber(BigDecimal(v.toDouble)))
       case v: Double     ⇒ Right(JsNumber(v))
-      case v: BigInt     ⇒ Right(JsNumber(v))
+      case v: BigInt     ⇒ Right(JsNumber(BigDecimal(v)))
       case v: BigDecimal ⇒ Right(JsNumber(v))
       case v: DateTime ⇒
         Right(
