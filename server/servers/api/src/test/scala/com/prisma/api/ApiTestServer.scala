@@ -3,7 +3,7 @@ package com.prisma.api
 import com.prisma.api.schema.{ApiUserContext, PrivateSchemaBuilder, SchemaBuilder}
 import com.prisma.api.server.{GraphQlQuery, GraphQlRequest}
 import com.prisma.shared.models.Project
-import com.prisma.util.json.PlayJsonExtensions
+import com.prisma.utils.json.PlayJsonExtensions
 import play.api.libs.json._
 import sangria.parser.QueryParser
 import sangria.renderer.SchemaRenderer

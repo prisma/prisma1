@@ -7,8 +7,8 @@ import com.prisma.api.util.StringMatchers
 import com.prisma.api.{ApiDependenciesForTest, ApiTestDatabase, ApiTestServer}
 import com.prisma.deploy.specutils.{DeployTestDependencies, DeployTestServer}
 import com.prisma.shared.models.{Migration, Project}
-import com.prisma.util.json.PlayJsonExtensions
 import com.prisma.utils.await.AwaitUtils
+import com.prisma.utils.json.PlayJsonExtensions
 import cool.graph.cuid.Cuid
 import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach, Suite}
 import play.api.libs.json.JsString

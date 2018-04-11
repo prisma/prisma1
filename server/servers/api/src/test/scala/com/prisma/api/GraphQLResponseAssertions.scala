@@ -1,6 +1,6 @@
 package com.prisma.api
 
-import com.prisma.util.json.PlayJsonExtensions
+import com.prisma.utils.json.PlayJsonExtensions
 import play.api.libs.json.{JsValue => PJsValue}
 
 trait GraphQLResponseAssertions extends PlayJsonExtensions {

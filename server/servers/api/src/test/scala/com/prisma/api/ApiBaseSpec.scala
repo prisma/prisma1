@@ -5,8 +5,7 @@ import akka.stream.ActorMaterializer
 import com.prisma.api.connector.DataResolver
 import com.prisma.api.util.StringMatchers
 import com.prisma.shared.models.Project
-import com.prisma.util.json.PlayJsonExtensions
-import com.prisma.utils.json.JsonUtils
+import com.prisma.utils.json.{JsonUtils, PlayJsonExtensions}
 import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach, Suite}
 import play.api.libs.json.JsString
 

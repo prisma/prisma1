@@ -3,8 +3,29 @@ package com.prisma.utils.json
 import org.joda.time.DateTime
 import org.joda.time.format.ISODateTimeFormat
 import play.api.libs.json._
-
 import scala.util.Try
+
+object JsonFormats {
+  implicit object AnyJsonFormat extends Writes[Any] {
+    def writes(x: Any): JsValue = x match {
+      case m: Map[_, _] => JsObject(m.asInstanceOf[Map[String, Any]].mapValues(writes))
+      case l: List[Any] => JsArray(l.map(writes).toVector)
+      case n: Int       => JsNumber(n)
+      case n: Long      => JsNumber(n)
+      case n: Double    => JsNumber(n)
+      case s: String    => JsString(s)
+      case true         => JsTrue
+      case false        => JsFalse
+      case v: JsValue   => v
+      case null         => JsNull
+      case r            => JsString(r.toString)
+    }
+  }
+
+  implicit object MapJsonWriter extends Writes[Map[String, Any]] {
+    override def writes(obj: Map[String, Any]): JsValue = AnyJsonFormat.writes(obj)
+  }
+}
 
 object JsonUtils extends JsonUtils
 
