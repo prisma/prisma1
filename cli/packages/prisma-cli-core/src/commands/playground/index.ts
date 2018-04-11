@@ -48,7 +48,11 @@ export default class Playground extends Command {
       const graphqlBin = await getGraphQLCliBin()
       debug({ graphqlBin })
       this.out.log(`Running ${chalk.cyan(`$ graphql playground`)}...`)
-      await spawn(graphqlBin, ['playground'])
+      const args = ['playground']
+      if (web) {
+        args.push('--web')
+      }
+      await spawn(graphqlBin, args)
     } else {
       const localPlaygroundPath = `/Applications/GraphQL\ Playground.app/Contents/MacOS/GraphQL\ Playground`
 
