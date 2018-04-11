@@ -129,12 +129,35 @@ export class Client {
     serviceName: string,
     stageName?: string,
   ) {
-    const token = await cluster.getToken(serviceName, workspaceSlug, stageName)
-    this.clusterClient = new GraphQLClient(cluster.getDeployEndpoint(), {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    })
+    try {
+      const token = await cluster.getToken(
+        serviceName,
+        workspaceSlug,
+        stageName,
+      )
+      this.clusterClient = new GraphQLClient(cluster.getDeployEndpoint(), {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      })
+    } catch (e) {
+      if (e.message.includes('Not authorized')) {
+        await this.login()
+        if (cluster.shared) {
+          cluster.clusterSecret = this.env.cloudSessionKey
+        }
+        const token = await cluster.getToken(
+          serviceName,
+          workspaceSlug,
+          stageName,
+        )
+        this.clusterClient = new GraphQLClient(cluster.getDeployEndpoint(), {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        })
+      }
+    }
   }
   get client(): GraphQLClient {
     if (!this.env.activeCluster) {
