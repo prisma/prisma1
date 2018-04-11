@@ -160,7 +160,9 @@ export class Environment {
 
   saveGlobalRC() {
     const rc = {
-      cloudSessionKey: this.globalRC.cloudSessionKey,
+      cloudSessionKey: this.globalRC.cloudSessionKey
+        ? this.globalRC.cloudSessionKey.trim()
+        : undefined,
       clusters: this.getLocalClusterConfig(),
     }
     // parse & stringify to rm undefined for yaml parser
