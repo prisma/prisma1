@@ -152,7 +152,7 @@ ${chalk.bold('Usage:')} ${chalk.bold('prisma')} COMMAND`)
       'prisma help [command]',
     )} for more information about a command.
 Docs can be found here:
-https://www.prismagraphql.com/docs/reference/prisma-cli/commands-aiteerae6l
+https://www.prismagraphql.com/docs/reference/
 
 ${chalk.dim('Examples:')}
 
