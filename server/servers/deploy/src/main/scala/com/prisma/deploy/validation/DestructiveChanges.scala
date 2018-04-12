@@ -45,7 +45,7 @@ case class DestructiveChanges(persistencePlugin: DeployConnector, project: Proje
         x.isRequired && x.defaultValue.isEmpty match {
           case true =>
             clientDataResolver.existsByModel(existingModel.name).map {
-              case true  => Vector(SchemaError.global("There was an error"))
+              case true  => Vector(SchemaError.global("You are creating a required field without a defaultValue but there are already nodes present."))
               case false => Vector.empty
             }
 

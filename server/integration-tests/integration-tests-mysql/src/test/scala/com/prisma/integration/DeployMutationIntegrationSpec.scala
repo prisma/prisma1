@@ -4,6 +4,234 @@ import org.scalatest.{FlatSpec, Matchers}
 
 class DeployMutationIntegrationSpec extends FlatSpec with Matchers with IntegrationBaseSpec {
 
+  // test warning without -force
+  // test warning with -force
+  // test no warning
+  // test error
+  // test no error
+
+  //test multiple warnings
+  //test multiple warnings with -force
+  //test warnings and errors
+  //test warnings and errors with -force
+
+  //region Delete Model
+
+  "Deleting a model" should "throw a warning if nodes already exist" in {
+
+    val schema =
+      """|type A {
+         | name: String! @unique
+         | value: Int
+         |}
+         |
+         |type B {
+         | name: String! @unique
+         | value: Int
+         |}"""
+
+    val (project, _) = setupProject(schema)
+
+    apiServer.query("""mutation{createA(data:{name: "A", value: 1}){name}}""", project)
+
+    val schema2 =
+      """type B {
+        | name: String! @unique
+        | value: Int
+        |}"""
+
+    deployServer.deploySchemaThatMustWarn(project, schema2).toString should be(
+      """{"data":{"deploy":{"migration":{"applied":0,"revision":0},"errors":[],"warnings":[{"description":"You already have nodes for this model. This change will result in data loss."}]}}}""")
+  }
+
+  "Deleting a model" should "throw a warning if nodes already exist but proceed if the -force flag is present" in {
+
+    val schema =
+      """|type A {
+         | name: String! @unique
+         | value: Int
+         |}
+         |
+         |type B {
+         | name: String! @unique
+         | value: Int
+         |}"""
+
+    val (project, _) = setupProject(schema)
+
+    apiServer.query("""mutation{createA(data:{name: "A", value: 1}){name}}""", project)
+
+    val schema2 =
+      """type B {
+        | name: String! @unique
+        | value: Int
+        |}"""
+
+    deployServer.deploySchemaThatMustWarn(project, schema2, force = true).toString should be(
+      """{"data":{"deploy":{"migration":{"applied":0,"revision":3},"errors":[],"warnings":[{"description":"You already have nodes for this model. This change will result in data loss."}]}}}""")
+  }
+
+  "Deleting a model" should "not throw a warning or error if no nodes  exist" in {
+
+    val schema =
+      """|type A {
+         | name: String! @unique
+         | value: Int
+         |}
+         |
+         |type B {
+         | name: String! @unique
+         | value: Int
+         |}"""
+
+    val (project, _) = setupProject(schema)
+
+    val schema2 =
+      """type B {
+        | name: String! @unique
+        | value: Int
+        |}"""
+
+    deployServer.deploySchemaThatMustSucceed(project, schema2).toString should be(
+      """{"data":{"deploy":{"migration":{"applied":0,"revision":3},"errors":[],"warnings":[]}}}""")
+  }
+
+  //endregion
+
+  // region Create Field
+
+  "Creating a required Field" should "error when nodes already exist and there is no default value" in {
+
+    val schema =
+      """type A {
+        | name: String! @unique
+        |}""".stripMargin
+
+    val (project, _) = setupProject(schema)
+
+    apiServer.query("""mutation{createA(data:{name:"A"}){name}}""", project).toString should be("""{"data":{"createA":{"name":"A"}}}""")
+
+    val schema2 =
+      """type A {
+        | name: String! @unique
+        | value: Int!
+        |}""".stripMargin
+
+    deployServer.deploySchemaThatMustFail(project, schema2).toString should be(
+      """{"data":{"deploy":{"migration":{"applied":0,"revision":0},"errors":[{"description":"You are creating a required field without a defaultValue but there are already nodes present."}],"warnings":[]}}}""")
+  }
+
+  "Creating a required Field" should "succeed when nodes already exist but there is a defaultValue" in {
+
+    val schema =
+      """type A {
+        | name: String! @unique
+        |}""".stripMargin
+
+    val (project, _) = setupProject(schema)
+
+    apiServer.query("""mutation{createA(data:{name:"A"}){name}}""", project).toString should be("""{"data":{"createA":{"name":"A"}}}""")
+
+    val schema2 =
+      """type A {
+        | name: String! @unique
+        | value: Int! @default(value: 12)
+        |}""".stripMargin
+
+    deployServer.deploySchemaThatMustSucceed(project, schema2).toString should be(
+      """{"data":{"deploy":{"migration":{"applied":0,"revision":3},"errors":[],"warnings":[]}}}""")
+  }
+
+  "Creating a required Field" should "not error when there is no defaultValue but there are no nodes yet" in {
+
+    val schema =
+      """type A {
+        | name: String! @unique
+        |}""".stripMargin
+
+    val (project, _) = setupProject(schema)
+
+    val schema2 =
+      """type A {
+        | name: String! @unique
+        | value: Int!
+        |}""".stripMargin
+
+    deployServer.deploySchemaThatMustSucceed(project, schema2).toString should be(
+      """{"data":{"deploy":{"migration":{"applied":0,"revision":3},"errors":[],"warnings":[]}}}""")
+  }
+
+  // endregion
+
+  // region Delete Field
+
+  "Deleting a field" should "throw a warning if nodes are present" in {
+
+    val schema =
+      """type A {
+        | name: String! @unique
+        | dummy: String
+        |}""".stripMargin
+
+    val (project, _) = setupProject(schema)
+
+    apiServer.query("""mutation{createA(data:{name:"A", dummy: "test"}){name, dummy}}""", project).toString should be(
+      """{"data":{"createA":{"name":"A","dummy":"test"}}}""")
+
+    val schema2 =
+      """type A {
+        | name: String! @unique
+        |}""".stripMargin
+
+    deployServer.deploySchemaThatMustWarn(project, schema2).toString should be(
+      """{"data":{"deploy":{"migration":{"applied":0,"revision":0},"errors":[],"warnings":[{"description":"You already have nodes for this model. This change may result in data loss."}]}}}""")
+  }
+
+  "Deleting a field" should "throw a warning if nodes are present but proceed with -force flag" in {
+
+    val schema =
+      """type A {
+        | name: String! @unique
+        | dummy: String
+        |}""".stripMargin
+
+    val (project, _) = setupProject(schema)
+
+    apiServer.query("""mutation{createA(data:{name:"A", dummy: "test"}){name, dummy}}""", project).toString should be(
+      """{"data":{"createA":{"name":"A","dummy":"test"}}}""")
+
+    val schema2 =
+      """type A {
+        | name: String! @unique
+        |}""".stripMargin
+
+    deployServer.deploySchemaThatMustWarn(project, schema2, true).toString should be(
+      """{"data":{"deploy":{"migration":{"applied":0,"revision":3},"errors":[],"warnings":[{"description":"You already have nodes for this model. This change may result in data loss."}]}}}""")
+  }
+
+  "Deleting a field" should "succeed if no nodes are present" in {
+
+    val schema =
+      """type A {
+        | name: String! @unique
+        | dummy: String
+        |}""".stripMargin
+
+    val (project, _) = setupProject(schema)
+
+    val schema2 =
+      """type A {
+        | name: String! @unique
+        |}""".stripMargin
+
+    deployServer.deploySchemaThatMustSucceed(project, schema2).toString should be(
+      """{"data":{"deploy":{"migration":{"applied":0,"revision":3},"errors":[],"warnings":[]}}}""")
+  }
+
+  // endregion
+
+  //region Update Field
+
   "DeployMutation" should "be able to change a field from scalar non-list to scalar list" in {
 
     val schema =
@@ -57,73 +285,5 @@ class DeployMutationIntegrationSpec extends FlatSpec with Matchers with Integrat
       """{"data":{"updateA":{"name":"A"}}}""")
   }
 
-  "DeployMutation" should "throw an error if a new required field without a default value is added and there are existing nodes." in {
-
-    val schema =
-      """type A {
-        | name: String! @unique
-        |}""".stripMargin
-
-    val (project, _) = setupProject(schema)
-
-    apiServer.query("""mutation{createA(data:{name:"A"}){name}}""", project).toString should be("""{"data":{"createA":{"name":"A"}}}""")
-
-    val schema2 =
-      """type A {
-        | name: String! @unique
-        | value: Int!
-        |}""".stripMargin
-
-    val errors = deployServer.deploySchemaThatMustFail(project, schema2)
-  }
-
-  "DeployMutation" should "throw a warning if a field is deleted and there are existing nodes. Without `force` it should not proceed." in {
-
-    val schema =
-      """type A {
-        | name: String! @unique
-        | dummy: String
-        |}""".stripMargin
-
-    val (project, _) = setupProject(schema)
-
-    apiServer.query("""mutation{createA(data:{name:"A", dummy: "test"}){name, dummy}}""", project).toString should be(
-      """{"data":{"createA":{"name":"A","dummy":"test"}}}""")
-
-    val schema2 =
-      """type A {
-        | name: String! @unique
-        |}""".stripMargin
-
-    val response = deployServer.deploySchemaThatMustWarn(project, schema2)
-
-    response.pathAsLong("data.deploy.migration.revision") should be(0)
-    response.pathAsString("data.deploy.warnings.[0].description") should be("You already have nodes for this model. This change may result in data loss.")
-
-  }
-
-  "DeployMutation" should "throw a warning if a field is deleted and there are existing nodes. With `force` it should proceed." in {
-
-    val schema =
-      """type A {
-        | name: String! @unique
-        | dummy: String
-        |}""".stripMargin
-
-    val (project, _) = setupProject(schema)
-
-    apiServer.query("""mutation{createA(data:{name:"A", dummy: "test"}){name, dummy}}""", project).toString should be(
-      """{"data":{"createA":{"name":"A","dummy":"test"}}}""")
-
-    val schema2 =
-      """type A {
-        | name: String! @unique
-        |}""".stripMargin
-
-    val response = deployServer.deploySchemaThatMustWarn(project, schema2, force = true)
-
-    response.pathAsLong("data.deploy.migration.revision") should be(3)
-    response.pathAsString("data.deploy.warnings.[0].description") should be("You already have nodes for this model. This change may result in data loss.")
-  }
-
+  //endregion
 }
