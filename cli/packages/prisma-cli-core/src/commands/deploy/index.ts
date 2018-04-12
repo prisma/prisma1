@@ -91,8 +91,8 @@ ${chalk.gray(
         `Couldn’t find \`prisma.yml\` file. Are you in the right directory?`,
       )
     }
-    const serviceName = this.definition.definition!.service
-    const stage = this.definition.definition!.stage
+    const serviceName = this.definition.service!
+    const stage = this.definition.stage!
 
     let cluster = this.definition.getCluster(false)
     const clusterName = this.definition.getClusterName()
@@ -221,9 +221,9 @@ ${chalk.gray(
               await this.definition.load(this.flags)
               await this.deploy(
                 stage,
-                this.definition.definition!.service,
+                this.definition.service!,
                 cluster!,
-                this.definition.definition!.cluster!,
+                this.definition.cluster!,
                 force,
                 dryRun,
                 false,

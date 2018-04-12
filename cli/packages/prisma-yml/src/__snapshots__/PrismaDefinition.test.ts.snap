@@ -170,6 +170,30 @@ Array [
 ]
 `;
 
+exports[`parseEndpoint work for minimal url 1`] = `
+Object {
+  "clusterBaseUrl": "http://localhost:4466",
+  "service": "default",
+  "stage": "default",
+}
+`;
+
+exports[`parseEndpoint work for url with service 1`] = `
+Object {
+  "clusterBaseUrl": "http://localhost:4466",
+  "service": "service-name",
+  "stage": "default",
+}
+`;
+
+exports[`parseEndpoint work for url with service and stage 1`] = `
+Object {
+  "clusterBaseUrl": "http://localhost:4466",
+  "service": "service-name",
+  "stage": "stage",
+}
+`;
+
 exports[`prisma definition dont load yml with secret and env var in args 1`] = `[Error: Please either provide a secret in your prisma.yml or disableAuth: true]`;
 
 exports[`prisma definition load basic yml, provide cluster 1`] = `

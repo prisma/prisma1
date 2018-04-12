@@ -12,7 +12,9 @@ import { Environment } from './Environment'
 import { IOutput } from './Output'
 import { Cluster } from './Cluster'
 import { FunctionInput, Header } from './types/rc'
+import { URL } from 'url'
 import chalk from 'chalk'
+import { clusterEndpointMap } from './constants'
 
 interface ErrorMessage {
   message: string
@@ -80,11 +82,74 @@ export class PrismaDefinitionClass {
     }
   }
 
+  get clusterBaseUrl(): string | undefined {
+    if (
+      !this.definition ||
+      this.definition.cluster ||
+      !this.definition.endpoint
+    ) {
+      return undefined
+    }
+    const { clusterBaseUrl } = parseEndpoint(this.definition.endpoint)
+    return clusterBaseUrl
+  }
+
+  get service(): string | undefined {
+    if (!this.definition || !this.definition.endpoint) {
+      return undefined
+    }
+    if (this.definition.service) {
+      return this.definition.service
+    }
+    const { service } = parseEndpoint(this.definition.endpoint)
+    return service
+  }
+
+  get stage(): string | undefined {
+    if (!this.definition || !this.definition.endpoint) {
+      return undefined
+    }
+    if (this.definition.stage) {
+      return this.definition.stage
+    }
+    const { stage } = parseEndpoint(this.definition.endpoint)
+    return stage
+  }
+
+  get cluster(): string | undefined {
+    if (!this.definition || !this.definition.endpoint) {
+      return undefined
+    }
+    if (this.definition.cluster) {
+      return this.definition.cluster
+    }
+    const { clusterName } = parseEndpoint(this.definition.endpoint)
+    return clusterName
+  }
+
   validate() {
     const disableAuth = this.definition!.disableAuth
     if (this.secrets === null && !disableAuth) {
       throw new Error(
         'Please either provide a secret in your prisma.yml or disableAuth: true',
+      )
+    }
+
+    if (!this.service) {
+      throw new Error(
+        `Please either provide a service or endpoint property in your prisma.yml`,
+      )
+    }
+
+    if (!this.stage) {
+      throw new Error(
+        `Please either provide a stage or endpoint property in your prisma.yml`,
+      )
+    }
+
+    if (!this.clusterBaseUrl) {
+      throw new Error(
+        `Please either provide a cluster or endpoint property in your prisma.yml`,
       )
     }
 
@@ -142,6 +207,31 @@ If it is a private cluster, make sure that you're logged in with ${chalk.bold.gr
         }
       } else {
         return cluster
+      }
+    }
+
+    if (this.definition && this.definition.endpoint) {
+      const {
+        clusterBaseUrl,
+        isPrivate,
+        local,
+        shared,
+        workspaceSlug,
+        clusterName,
+      } = parseEndpoint(this.definition.endpoint)
+      if (clusterBaseUrl) {
+        const cluster = new Cluster(
+          this.out!,
+          clusterName,
+          clusterBaseUrl,
+          shared
+            ? this.env.cloudSessionKey
+            : process.env.PRISMA_MANAGEMENT_SECRET,
+          local,
+          shared,
+          isPrivate,
+          workspaceSlug,
+        )
       }
     }
 
@@ -261,3 +351,57 @@ function transformHeaders(headers?: { [key: string]: string }): Header[] {
     value: headers[key],
   }))
 }
+
+export function parseEndpoint(
+  endpoint: string,
+): {
+  service: string
+  clusterBaseUrl: string
+  stage: string
+  isPrivate: boolean
+  local: boolean
+  shared: boolean
+  workspaceSlug: string | undefined
+  clusterName: string
+} {
+  const url = new URL(endpoint)
+  const splittedPath = url.pathname.split('/')
+  const shared =
+    url.origin.includes('eu1.prisma') || url.origin.includes('us1.prisma')
+  const isPrivate = !shared
+  // assuming, that the pathname always starts with a leading /, we always can ignore the first element of the split array
+  const service =
+    splittedPath.length > 3 ? splittedPath[2] : splittedPath[1] || 'default'
+  const stage =
+    splittedPath.length > 3 ? splittedPath[3] : splittedPath[2] || 'default'
+  const workspaceSlug = splittedPath.length > 3 ? splittedPath[1] : undefined
+  return {
+    clusterBaseUrl: url.origin,
+    service,
+    stage,
+    local: isLocal(url.origin),
+    isPrivate,
+    shared,
+    workspaceSlug,
+    clusterName: getClusterName(url.origin),
+  }
+}
+
+function getClusterName(origin): string {
+  if (clusterEndpointMap[origin]) {
+    return clusterEndpointMap[origin]
+  }
+
+  if (origin.endsWith('prisma.sh')) {
+    return origin.split('_')[0].replace(/https?:\/\//, '')
+  }
+
+  if (isLocal(origin)) {
+    return 'local'
+  }
+
+  return 'default'
+}
+
+const isLocal = origin =>
+  origin.includes('localhost') || origin.includes('127.0.0.1')

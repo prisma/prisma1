@@ -104,7 +104,7 @@
     "opn": "^5.1.0",
     "pause": "^0.1.0",
     "portfinder": "^1.0.13",
-    "prisma-json-schema": "^0.0.1",
+    "prisma-json-schema": "0.0.3",
     "prisma-yml": "1.0.14-6",
     "scuid": "^1.0.2",
     "semver": "^5.4.1",
