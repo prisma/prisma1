@@ -7,6 +7,8 @@ case class ProjectId(name: String, stage: String) {
 object ProjectId {
   private val workspaceSeparator = '~'
   private val stageSeparator     = '@'
+  private val defaultService     = "default"
+  private val defaultStage       = "default"
 
   def fromEncodedString(str: String): ProjectId = {
     val parts = str.split(stageSeparator)
@@ -19,6 +21,12 @@ object ProjectId {
 
   def toEncodedString(segments: List[String]): String = {
     segments match {
+      case Nil =>
+        defaultService + stageSeparator + defaultStage
+
+      case name :: Nil =>
+        name + stageSeparator + defaultStage
+
       case name :: stage :: Nil =>
         name + stageSeparator + stage
 
@@ -26,7 +34,7 @@ object ProjectId {
         workspace + workspaceSeparator + name + stageSeparator + stage
 
       case _ =>
-        sys.error("provided segments must either have size 2 or 3")
+        sys.error("Unsupported project ID encoding. ")
     }
   }
 
