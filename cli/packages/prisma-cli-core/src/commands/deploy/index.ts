@@ -106,10 +106,7 @@ ${chalk.gray(
       cluster = this.definition.getCluster()
     }
     const isOnline = cluster ? await cluster.isOnline() : false
-    if (
-      this.definition.definition.cluster === 'local' &&
-      (!cluster || !isOnline)
-    ) {
+    if (this.definition.cluster === 'local' && (!cluster || !isOnline)) {
       cluster = await this.localUp()
     } else if (
       !isOnline &&
@@ -204,7 +201,7 @@ ${chalk.gray(
       stage,
       serviceName,
       cluster!,
-      this.definition.definition!.cluster!,
+      this.definition.cluster!,
       force,
       dryRun,
       projectNew,

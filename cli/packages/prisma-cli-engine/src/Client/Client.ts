@@ -157,6 +157,7 @@ export class Client {
           },
         })
       }
+      console.error(e)
     }
   }
   get client(): GraphQLClient {

@@ -14,7 +14,7 @@ import { Cluster } from './Cluster'
 import { FunctionInput, Header } from './types/rc'
 import { URL } from 'url'
 import chalk from 'chalk'
-import { clusterEndpointMap } from './constants'
+import { clusterEndpointMap, clusterEndpointMapReverse } from './constants'
 
 interface ErrorMessage {
   message: string
@@ -95,45 +95,54 @@ export class PrismaDefinitionClass {
   }
 
   get service(): string | undefined {
-    if (!this.definition || !this.definition.endpoint) {
+    if (!this.definition) {
       return undefined
     }
     if (this.definition.service) {
       return this.definition.service
+    }
+    if (!this.definition.endpoint) {
+      return undefined
     }
     const { service } = parseEndpoint(this.definition.endpoint)
     return service
   }
 
   get stage(): string | undefined {
-    if (!this.definition || !this.definition.endpoint) {
+    if (!this.definition) {
       return undefined
     }
     if (this.definition.stage) {
       return this.definition.stage
+    }
+    if (!this.definition.endpoint) {
+      return undefined
     }
     const { stage } = parseEndpoint(this.definition.endpoint)
     return stage
   }
 
   get cluster(): string | undefined {
-    if (!this.definition || !this.definition.endpoint) {
+    if (!this.definition) {
       return undefined
     }
     if (this.definition.cluster) {
       return this.definition.cluster
+    }
+    if (!this.definition.endpoint) {
+      return undefined
     }
     const { clusterName } = parseEndpoint(this.definition.endpoint)
     return clusterName
   }
 
   validate() {
-    const disableAuth = this.definition!.disableAuth
-    if (this.secrets === null && !disableAuth) {
-      throw new Error(
-        'Please either provide a secret in your prisma.yml or disableAuth: true',
-      )
-    }
+    // const disableAuth = this.definition!.disableAuth
+    // if (this.secrets === null && !disableAuth) {
+    //   throw new Error(
+    //     'Please either provide a secret in your prisma.yml or disableAuth: true',
+    //   )
+    // }
 
     if (!this.service) {
       throw new Error(
@@ -147,7 +156,7 @@ export class PrismaDefinitionClass {
       )
     }
 
-    if (!this.clusterBaseUrl) {
+    if (!this.cluster) {
       throw new Error(
         `Please either provide a cluster or endpoint property in your prisma.yml`,
       )
@@ -192,7 +201,7 @@ and execute ${chalk.bold.green(
     return undefined
   }
 
-  getCluster(throws: boolean = true): Cluster | undefined {
+  getCluster(throws: boolean = false): Cluster | undefined {
     const clusterName = this.getClusterName()
     if (clusterName) {
       const cluster = this.env.clusterByName(clusterName)
@@ -232,6 +241,9 @@ If it is a private cluster, make sure that you're logged in with ${chalk.bold.gr
           isPrivate,
           workspaceSlug,
         )
+        this.env.removeCluster(clusterName)
+        this.env.addCluster(cluster)
+        return cluster
       }
     }
 
@@ -264,7 +276,7 @@ If it is a private cluster, make sure that you're logged in with ${chalk.bold.gr
     if (this.definition && this.definition.cluster) {
       return this.definition!.cluster!.split('/').slice(-1)[0]
     }
-    return null
+    return this.cluster || null
   }
 
   getWorkspace(): string | null {
@@ -272,6 +284,13 @@ If it is a private cluster, make sure that you're logged in with ${chalk.bold.gr
       const splitted = this.definition!.cluster!.split('/')
       if (splitted.length > 1) {
         return splitted[0]
+      }
+    }
+
+    if (this.definition && this.definition.endpoint) {
+      const { workspaceSlug } = parseEndpoint(this.definition.endpoint)
+      if (workspaceSlug) {
+        return workspaceSlug
       }
     }
 
@@ -388,8 +407,8 @@ export function parseEndpoint(
 }
 
 function getClusterName(origin): string {
-  if (clusterEndpointMap[origin]) {
-    return clusterEndpointMap[origin]
+  if (clusterEndpointMapReverse[origin]) {
+    return clusterEndpointMapReverse[origin]
   }
 
   if (origin.endsWith('prisma.sh')) {

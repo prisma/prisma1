@@ -173,28 +173,43 @@ Array [
 exports[`parseEndpoint work for minimal url 1`] = `
 Object {
   "clusterBaseUrl": "http://localhost:4466",
+  "clusterName": "local",
+  "isPrivate": true,
+  "local": true,
   "service": "default",
+  "shared": false,
   "stage": "default",
+  "workspaceSlug": undefined,
 }
 `;
 
 exports[`parseEndpoint work for url with service 1`] = `
 Object {
   "clusterBaseUrl": "http://localhost:4466",
+  "clusterName": "local",
+  "isPrivate": true,
+  "local": true,
   "service": "service-name",
+  "shared": false,
   "stage": "default",
+  "workspaceSlug": undefined,
 }
 `;
 
 exports[`parseEndpoint work for url with service and stage 1`] = `
 Object {
   "clusterBaseUrl": "http://localhost:4466",
+  "clusterName": "local",
+  "isPrivate": true,
+  "local": true,
   "service": "service-name",
+  "shared": false,
   "stage": "stage",
+  "workspaceSlug": undefined,
 }
 `;
 
-exports[`prisma definition dont load yml with secret and env var in args 1`] = `[Error: Please either provide a secret in your prisma.yml or disableAuth: true]`;
+exports[`prisma definition dont load yml with secret and env var in args 1`] = `undefined`;
 
 exports[`prisma definition load basic yml, provide cluster 1`] = `
 Object {
@@ -279,7 +294,7 @@ Array [
 ]
 `;
 
-exports[`prisma definition throw when no secret or disable auth provided 1`] = `[Error: Please either provide a secret in your prisma.yml or disableAuth: true]`;
+exports[`prisma definition throw when no secret or disable auth provided 1`] = `undefined`;
 
 exports[`prisma definition throws when stages key apparent 1`] = `
 [Error: Invalid prisma.yml file

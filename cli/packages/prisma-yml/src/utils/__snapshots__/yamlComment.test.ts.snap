@@ -1,0 +1,19 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`replaceYamlValue when comments already exist 1`] = `
+"    #anothercomment: asdasd
+    #endpoint: https://eu1.prisma.sh/public-asdf/my-service/dev
+endpoint: http://localhost:4466
+    #endpoint: asdasd
+    datamodel: datamodel.graphql"
+`;
+
+exports[`replaceYamlValue when document is clean 1`] = `
+"    #endpoint: https://eu1.prisma.sh/public-asdf/my-service/dev
+endpoint: http://localhost:4466    datamodel: datamodel.graphql"
+`;
+
+exports[`replaceYamlValue when key does not yet exist 1`] = `
+"    datamodel: datamodel.graphql
+endpoint: http://localhost:4466"
+`;

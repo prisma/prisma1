@@ -20,11 +20,10 @@ export default class Import extends Command {
     const { data } = this.flags
     const envFile = this.flags['env-file']
     await this.definition.load(this.flags, envFile)
-    const serviceName = this.definition.definition!.service
-    const stage = this.definition.definition!.stage
+    const serviceName = this.definition.service!
+    const stage = this.definition.stage!
 
-    const clusterName = this.definition.getClusterName()
-    const cluster = this.env.clusterByName(clusterName!, true)
+    const cluster = this.definition.getCluster()
     this.env.setActiveCluster(cluster!)
 
     if (!fs.pathExistsSync(data)) {
