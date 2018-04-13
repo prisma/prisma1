@@ -3,15 +3,15 @@ package com.prisma.api.mutactions
 import com.prisma.api.connector._
 import com.prisma.api.mutactions.validation.InputValueValidation
 import com.prisma.api.schema.APIErrors.ClientApiError
-import com.prisma.api.schema.GeneralError
+import com.prisma.api.schema.UserFacingError
 import com.prisma.shared.models.Model
 
 trait DatabaseMutactionVerifier {
-  def verify(mutactions: Vector[DatabaseMutaction]): Vector[GeneralError]
+  def verify(mutactions: Vector[DatabaseMutaction]): Vector[UserFacingError]
 }
 
 object DatabaseMutactionVerifierImpl extends DatabaseMutactionVerifier {
-  override def verify(mutactions: Vector[DatabaseMutaction]): Vector[GeneralError] = {
+  override def verify(mutactions: Vector[DatabaseMutaction]): Vector[UserFacingError] = {
     mutactions.flatMap {
       case m: CreateDataItem                 => verify(m)
       case m: UpdateDataItem                 => verify(m)

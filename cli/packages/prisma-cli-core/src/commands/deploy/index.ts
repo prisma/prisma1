@@ -74,6 +74,7 @@ ${chalk.gray(
   private deploying: boolean = false
   private showedLines: number = 0
   private showedHooks: boolean = false
+  private loggedIn: boolean = false
   async run() {
     debug('run')
     const { force, watch, interactive } = this.flags
@@ -582,11 +583,11 @@ ${chalk.gray(
     serviceName: string,
     stage: string,
   ): Promise<{ cluster?: Cluster; workspace?: string }> {
-    const loggedIn = await this.client.isAuthenticated()
+    this.loggedIn = await this.client.isAuthenticated()
     let workspaceClusterCombination = await this.clusterSelection(
       serviceName,
       stage,
-      loggedIn,
+      this.loggedIn,
     )
     const splitted = workspaceClusterCombination.split('/')
     let workspace = splitted.length > 1 ? splitted[0] : null
@@ -594,7 +595,7 @@ ${chalk.gray(
     const exists = this.env.clusterByName(clusterName)
 
     // in this case it's a public cluster and we need to generate a workspace name
-    if (!loggedIn && exists && exists.shared) {
+    if (!this.loggedIn && exists && exists.shared) {
       workspace = this.getPublicName()
       debug(`silly name`, workspace)
       workspaceClusterCombination = `${workspace}/${clusterName}`
@@ -645,6 +646,7 @@ ${chalk.gray(
 
     if (cluster === 'login') {
       await this.client.login()
+      this.loggedIn = true
       return this.clusterSelection(serviceName, stage, true)
     }
 

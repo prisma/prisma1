@@ -6,19 +6,15 @@ import com.prisma.api.import_export.GCValueJsonFormatter.UnknownFieldException
 import com.prisma.api.import_export.ImportExport.MyJsonProtocol._
 import com.prisma.api.import_export.ImportExport._
 import com.prisma.shared.models._
-import com.prisma.util.json.PlaySprayConversions
 import org.scalactic.{Bad, Good, Or}
 import play.api.libs.json._
-import spray.json.{JsValue => SprayJsValue}
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 import scala.util.{Failure, Success, Try}
 
-class BulkImport(project: Project)(implicit apiDependencies: ApiDependencies) extends PlaySprayConversions {
+class BulkImport(project: Project)(implicit apiDependencies: ApiDependencies) {
   import com.prisma.utils.future.FutureUtils._
-
-  def executeImport(json: SprayJsValue): Future[JsValue] = executeImport(json.toPlay())
 
   def executeImport(json: JsValue): Future[JsValue] = executeImport(json.as[ImportBundle])
 

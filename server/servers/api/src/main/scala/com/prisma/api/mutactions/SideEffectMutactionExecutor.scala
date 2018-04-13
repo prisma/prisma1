@@ -6,8 +6,8 @@ import com.prisma.messagebus.PubSubPublisher
 import com.prisma.messagebus.pubsub.Only
 import com.prisma.shared.models.WebhookDelivery
 import com.prisma.subscriptions.{SubscriptionExecutor, Webhook}
-import com.prisma.util.json.JsonFormats
-import spray.json._
+import com.prisma.utils.json.JsonFormats.MapJsonWriter
+import play.api.libs.json.{JsObject, Json}
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -26,13 +26,11 @@ case class SideEffectMutactionExecutorImpl()(implicit apiDependencies: ApiDepend
 }
 
 object PublishSubscriptionEventExecutor {
-  implicit val anyFormat: JsonFormats.MapJsonWriter.type = com.prisma.util.json.JsonFormats.MapJsonWriter
-
   def execute(mutaction: PublishSubscriptionEvent, subscriptionEventsPublisher: PubSubPublisher[String]): Future[Unit] = {
     val PublishSubscriptionEvent(project, value, mutationName) = mutaction
     val topic                                                  = Only(s"subscription:event:${project.id}:$mutationName")
     println(s"PUBLISHING SUBSCRIPTION EVENT TO $topic")
-    subscriptionEventsPublisher.publish(topic, value.toJson.compactPrint)
+    subscriptionEventsPublisher.publish(topic, Json.toJson(value).toString)
     Future.unit
   }
 }
@@ -61,13 +59,13 @@ object ServerSideSubscriptionExecutor {
       alwaysQueryMasterDatabase = true
     )
     subscriptionResult.map {
-      case Some(JsObject(fields)) if fields.contains("data") =>
+      case Some(json) if json.as[JsObject].keys.contains("data") =>
         val webhook = Webhook(
           projectId = project.id,
           functionName = function.name,
           requestId = requestId,
           url = webhookDelivery.url,
-          payload = JsObject(fields).compactPrint,
+          payload = json.toString,
           id = requestId,
           headers = webhookDelivery.headers.toMap
         )

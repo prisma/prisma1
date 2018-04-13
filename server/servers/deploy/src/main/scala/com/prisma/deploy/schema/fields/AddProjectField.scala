@@ -2,7 +2,7 @@ package com.prisma.deploy.schema.fields
 
 import com.prisma.deploy.schema.mutations.AddProjectInput
 import sangria.marshalling.{CoercedScalaResultMarshaller, FromInput}
-import sangria.schema.{InputField, ListInputType, ListType, OptionInputType, StringType}
+import sangria.schema.{InputField, ListInputType, OptionInputType, StringType}
 
 object AddProjectField {
   import ManualMarshallerHelpers._

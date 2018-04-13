@@ -11,9 +11,7 @@ class FilterArguments(model: Model, isSubscriptionFilter: Boolean = false) {
     .flatMap(field => {
       FilterArguments
         .getFieldFilters(field)
-        .map(filter => {
-          (field.name + filter.name, FieldFilterTuple(Some(field), filter))
-        })
+        .map(filter => { (field.name + filter.name, FieldFilterTuple(Some(field), filter)) })
     })
     .toMap
 
@@ -71,33 +69,13 @@ object FilterArguments {
     FilterArgument("_not_ends_with", "All values not ending with the given string.")
   )
 
-//  private val listFilters = List(
-//    FilterArgument("_contains", "All values (list) containing the given value."),
-//    FilterArgument("_contains_all", "All values (list) containing all the values from the given list."),
-//    FilterArgument("_contains_any", "All values (list) containing at least one of the given values.")
-//  )
-//
-//  private val lengthFilters = List(
-//    FilterArgument("_length", "All values matching the given length."),
-//    FilterArgument("_length_not", "All values not matching the given length."),
-//    FilterArgument("_length_lt", "All values with a length less than the given length."),
-//    FilterArgument("_length_lte", "All values with a length less than or equal the given length."),
-//    FilterArgument("_length_gt", "All values with a length greater than the given length."),
-//    FilterArgument("_length_gte", "All values with a length less than or equal the given length."),
-//    FilterArgument("_length_in", "All values that have one of the lengths specified."),
-//    FilterArgument("_length_not_in", "All values that do not have any of the lengths specified.")
-//  )
-
   private val multiRelationFilters = List(
     FilterArgument("_every", "All nodes where all nodes in the relation satisfy the given condition."),
     FilterArgument("_some", "All nodes that have at least one node in the relation satisfying the given condition."),
     FilterArgument("_none", "All nodes that have no node in the relation satisfying the given condition.")
   )
 
-  private val oneRelationFilters = List(
-    FilterArgument("", "")
-//    "_is_null"
-  )
+  private val oneRelationFilters = List(FilterArgument("", ""))
 
   def getFieldFilters(field: Field): List[FilterArgument] = {
     val filters =

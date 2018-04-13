@@ -2,9 +2,8 @@ package com.prisma.util.coolArgs
 
 import com.prisma.api.connector._
 import com.prisma.api.schema.APIErrors
-import com.prisma.gc_values.{GCValue, ListGCValue, NullGCValue, RootGCValue}
+import com.prisma.gc_values.{GCValueExtractor, ListGCValue, NullGCValue, RootGCValue}
 import com.prisma.shared.models._
-import com.prisma.util.gc_value.{GCAnyConverter, GCCreateReallyCoolArgsConverter, GCValueExtractor}
 
 import scala.collection.immutable.Seq
 

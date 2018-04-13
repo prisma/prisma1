@@ -129,12 +129,35 @@ export class Client {
     serviceName: string,
     stageName?: string,
   ) {
-    const token = await cluster.getToken(serviceName, workspaceSlug, stageName)
-    this.clusterClient = new GraphQLClient(cluster.getDeployEndpoint(), {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    })
+    try {
+      const token = await cluster.getToken(
+        serviceName,
+        workspaceSlug,
+        stageName,
+      )
+      this.clusterClient = new GraphQLClient(cluster.getDeployEndpoint(), {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      })
+    } catch (e) {
+      if (e.message.includes('Not authorized')) {
+        await this.login()
+        if (cluster.shared) {
+          cluster.clusterSecret = this.env.cloudSessionKey
+        }
+        const token = await cluster.getToken(
+          serviceName,
+          workspaceSlug,
+          stageName,
+        )
+        this.clusterClient = new GraphQLClient(cluster.getDeployEndpoint(), {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        })
+      }
+    }
   }
   get client(): GraphQLClient {
     if (!this.env.activeCluster) {
@@ -397,37 +420,39 @@ To reset the key pair, please run ${chalk.bold.green('prisma local start')}
   }
 
   async login(key?: string): Promise<void> {
-    let token = key
+    let token: null | string = null
     this.out.action.start(`Authenticating`)
-    if (!token) {
-      const secret = await this.requestCloudToken()
-
-      const url = `${this.config.consoleEndpoint}/cli-auth?secret=${secret}`
-
-      this.out.log(`Opening ${url} in the browser\n`)
-
-      opn(url)
-
-      while (!token) {
-        const cloud = await this.cloudTokenRequest(secret)
-        if (cloud.token) {
-          token = cloud.token
-        }
-        await new Promise(r => setTimeout(r, 500))
-      }
-      this.env.globalRC.cloudSessionKey = token
-    } else {
-      this.env.globalRC.cloudSessionKey = token
-      const authenticated = await this.isAuthenticated()
-      if (!authenticated) {
-        throw new Error('The provided key is invalid')
-      }
+    const authenticated = await this.isAuthenticated()
+    if (authenticated) {
+      this.out.action.stop()
+      this.out.log('Already signed in')
+      return
     }
+    const secret = await this.requestCloudToken()
+
+    const url = `${this.config.consoleEndpoint}/cli-auth?secret=${secret}`
+
+    this.out.log(`Opening ${url} in the browser\n`)
+
+    try {
+      opn(url)
+    } catch (e) {
+      this.out.log(`Could not open url. Please open ${url} manually`)
+    }
+
+    while (!token) {
+      const cloud = await this.cloudTokenRequest(secret)
+      if (cloud.token) {
+        token = cloud.token
+      }
+      await new Promise(r => setTimeout(r, 500))
+    }
+    this.env.globalRC.cloudSessionKey = token
+
+    this.out.action.stop()
 
     this.env.saveGlobalRC()
     await this.env.getClusters()
-
-    this.out.action.stop()
   }
 
   async getAccount(): Promise<User | null> {

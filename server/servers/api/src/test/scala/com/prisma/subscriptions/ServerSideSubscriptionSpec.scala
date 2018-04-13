@@ -6,7 +6,6 @@ import com.prisma.shared.schema_dsl.SchemaDsl
 import com.prisma.shared.schema_dsl.SchemaDsl.ModelBuilder
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.{FlatSpec, Matchers}
-import spray.json._
 
 class ServerSideSubscriptionSpec extends FlatSpec with Matchers with ApiBaseSpec with ScalaFutures {
 

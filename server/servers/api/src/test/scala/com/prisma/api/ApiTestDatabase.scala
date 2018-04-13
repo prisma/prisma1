@@ -2,8 +2,8 @@ package com.prisma.api
 
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
+import com.prisma.api.connector.DatabaseMutaction
 import com.prisma.api.connector.mysql.ApiConnectorImpl
-import com.prisma.api.connector.{ApiConnector, DatabaseMutaction}
 import com.prisma.api.connector.mysql.database.DatabaseQueryBuilder
 import com.prisma.deploy.connector.mysql.impls.DeployMutactionExectutorImpl
 import com.prisma.deploy.connector.{CreateRelationTable, DeployMutaction}

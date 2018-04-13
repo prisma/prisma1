@@ -2,9 +2,9 @@ package com.prisma.shared.schema_dsl
 
 import com.prisma.deploy.migration.inference.{SchemaInferrer, SchemaMapping}
 import com.prisma.gc_values.GCValue
-import cool.graph.cuid.Cuid
 import com.prisma.shared.models.IdType.Id
 import com.prisma.shared.models._
+import cool.graph.cuid.Cuid
 import sangria.parser.QueryParser
 
 object SchemaDsl {
@@ -17,7 +17,7 @@ object SchemaDsl {
   def fromString(id: String = TestIds.testProjectId)(sdlString: String): Project = {
     val emptyBaseSchema    = Schema()
     val emptySchemaMapping = SchemaMapping.empty
-    val sqlDocument        = QueryParser.parse(sdlString).get
+    val sqlDocument        = QueryParser.parse(sdlString.stripMargin).get
     val schema             = SchemaInferrer().infer(emptyBaseSchema, emptySchemaMapping, sqlDocument).get
 
     TestProject().copy(id = id, schema = schema)

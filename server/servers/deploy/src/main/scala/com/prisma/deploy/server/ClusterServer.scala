@@ -1,29 +1,29 @@
 package com.prisma.deploy.server
 
 import akka.actor.ActorSystem
-import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport._
 import akka.http.scaladsl.model.StatusCode
 import akka.http.scaladsl.model.StatusCodes._
 import akka.http.scaladsl.model.headers.RawHeader
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.ExceptionHandler
 import akka.stream.ActorMaterializer
-import com.prisma.errors.RequestMetadata
-import com.prisma.sangria.utils.ErrorHandler
-import com.typesafe.scalalogging.LazyLogging
 import com.prisma.akkautil.http.Server
 import com.prisma.deploy.connector.ProjectPersistence
-import cool.graph.cuid.Cuid.createCuid
 import com.prisma.deploy.schema.{DeployApiError, InvalidProjectId, SchemaBuilder, SystemUserContext}
 import com.prisma.deploy.{DeployDependencies, DeployMetrics}
-import com.prisma.metrics.extensions.TimeResponseDirectiveImpl
-import com.prisma.shared.models.ProjectWithClientId
-import com.prisma.logging.{LogData, LogKey}
+import com.prisma.errors.RequestMetadata
 import com.prisma.logging.LogDataWrites.logDataWrites
+import com.prisma.logging.{LogData, LogKey}
+import com.prisma.metrics.extensions.TimeResponseDirectiveImpl
+import com.prisma.sangria.utils.ErrorHandler
+import com.prisma.shared.models.ProjectWithClientId
+import com.typesafe.scalalogging.LazyLogging
+import cool.graph.cuid.Cuid.createCuid
 import play.api.libs.json.Json
-import sangria.execution.{Executor, QueryAnalysisError, ValidationError}
-import sangria.parser.{QueryParser, SyntaxError}
-import spray.json._
+import sangria.execution.{Executor, QueryAnalysisError}
+import sangria.parser.QueryParser
+import play.api.libs.json._
+import de.heikoseeberger.akkahttpplayjson.PlayJsonSupport
 
 import scala.concurrent.Future
 import scala.language.postfixOps
@@ -34,7 +34,8 @@ case class ClusterServer(prefix: String = "")(
     materializer: ActorMaterializer,
     dependencies: DeployDependencies
 ) extends Server
-    with LazyLogging {
+    with LazyLogging
+    with PlayJsonSupport {
   import com.prisma.deploy.server.JsonMarshalling._
   import system.dispatcher
 
@@ -43,6 +44,11 @@ case class ClusterServer(prefix: String = "")(
   val log: String => Unit                    = (msg: String) => logger.info(msg)
   val requestPrefix                          = "cluster"
   val server2serverSecret                    = sys.env.getOrElse("SCHEMA_MANAGER_SECRET", sys.error("SCHEMA_MANAGER_SECRET env var required but not found"))
+
+  def errorExtractor(t: Throwable): Option[Int] = t match {
+    case e: DeployApiError => Some(e.code)
+    case _                 => None
+  }
 
   val innerRoutes = extractRequest { req =>
     val requestId            = requestPrefix + ":cluster:" + createCuid()
@@ -82,17 +88,17 @@ case class ClusterServer(prefix: String = "")(
 
                   val variables = fields.get("variables") match {
                     case Some(obj: JsObject)                  => obj
-                    case Some(JsString(s)) if s.trim.nonEmpty => s.parseJson
+                    case Some(JsString(s)) if s.trim.nonEmpty => Json.parse(s)
                     case _                                    => JsObject.empty
                   }
 
                   QueryParser.parse(query) match {
                     case Failure(error) =>
-                      Future.successful(BadRequest -> JsObject("error" -> JsString(error.getMessage)))
+                      Future.successful(BadRequest -> Json.obj("error" -> error.getMessage))
 
                     case Success(queryAst) =>
                       val userContext  = SystemUserContext(authorizationHeader = authorizationHeader)
-                      val errorHandler = ErrorHandler(requestId, req, query, variables.toString(), dependencies.reporter)
+                      val errorHandler = ErrorHandler(requestId, req, query, variables.toString(), dependencies.reporter, errorCodeExtractor = errorExtractor)
                       val result: Future[(StatusCode, JsValue)] =
                         Executor
                           .execute(
@@ -166,14 +172,14 @@ case class ClusterServer(prefix: String = "")(
 
   def toplevelExceptionHandler(requestId: String) = ExceptionHandler {
     case e: DeployApiError =>
-      complete(OK -> JsObject("code" -> JsNumber(e.code), "requestId" -> JsString(requestId), "error" -> JsString(e.getMessage)))
+      complete(OK -> Json.obj("code" -> e.code, "requestId" -> requestId, "error" -> e.getMessage))
 
     case e: Throwable =>
       extractRequest { req =>
         println(e.getMessage)
         e.printStackTrace()
         dependencies.reporter.report(e, RequestMetadata(requestId, req.method.value, req.uri.toString(), req.headers.map(h => h.name() -> h.value())))
-        complete(InternalServerError -> JsObject("errors" -> JsArray(JsObject("requestId" -> JsString(requestId), "message" -> JsString(e.getMessage)))))
+        complete(InternalServerError -> Json.obj("errors" -> Json.arr(Json.obj("requestId" -> requestId), "message" -> e.getMessage)))
       }
   }
 }

@@ -202,7 +202,7 @@ export class Config {
   private getCwd() {
     // get cwd
     let cwd = process.cwd()
-    if (process.env.NODE_ENV === 'test') {
+    if (process.env.NODE_ENV === 'test' && process.env.TEST_PRISMA_CLI) {
       cwd = path.join(os.tmpdir(), `${cuid()}/`)
       fs.mkdirpSync(cwd)
       debug('cwd', cwd)

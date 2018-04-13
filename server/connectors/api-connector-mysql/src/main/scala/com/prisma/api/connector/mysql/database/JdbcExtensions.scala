@@ -18,7 +18,15 @@ object JdbcExtensions {
     timeStampUTC(exactlyNow)
   }
 
-  def timeStampUTC(dateTime: DateTime) = Timestamp.valueOf(LocalDateTime.ofEpochSecond(dateTime.getMillis / 1000, 0, ZoneOffset.UTC))
+  def timeStampUTC(dateTime: DateTime) = {
+    val millies    = dateTime.getMillis
+    val seconds    = millies / 1000
+    val difference = millies - seconds * 1000
+    val nanos      = difference * 1000000
+
+    val res = Timestamp.valueOf(LocalDateTime.ofEpochSecond(seconds, nanos.toInt, ZoneOffset.UTC))
+    res
+  }
 
   implicit class PreparedStatementExtensions(val ps: PreparedStatement) extends AnyVal {
     def setGcValue(index: Int, value: GCValue): Unit = value match {

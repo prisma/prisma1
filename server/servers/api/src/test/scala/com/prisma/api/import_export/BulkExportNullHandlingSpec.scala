@@ -8,7 +8,6 @@ import com.prisma.shared.models.Project
 import com.prisma.shared.schema_dsl.SchemaDsl
 import com.prisma.utils.await.AwaitUtils
 import org.scalatest.{FlatSpec, Matchers}
-import spray.json._
 
 class BulkExportNullHandlingSpec extends FlatSpec with Matchers with ApiBaseSpec with AwaitUtils {
 

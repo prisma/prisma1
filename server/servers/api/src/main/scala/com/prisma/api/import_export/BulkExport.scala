@@ -4,7 +4,7 @@ import com.prisma.api.ApiDependencies
 import com.prisma.api.connector._
 import com.prisma.api.import_export.ImportExport.MyJsonProtocol._
 import com.prisma.api.import_export.ImportExport._
-import com.prisma.gc_values.{IdGCValue, JsonGCValue, ListGCValue, StringGCValue}
+import com.prisma.gc_values.{JsonGCValue, ListGCValue, StringGCValue}
 import com.prisma.shared.models.Project
 import play.api.libs.json._
 

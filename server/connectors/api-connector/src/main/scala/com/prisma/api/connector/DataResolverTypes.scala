@@ -1,7 +1,8 @@
 package com.prisma.api.connector
 
 import com.prisma.api.connector.Types.DataItemFilterCollection
-import com.prisma.gc_values.IdGCValue
+import com.prisma.gc_values.{GCValue, IdGCValue}
+import com.prisma.shared.models.IdType.Id
 import com.prisma.shared.models.{Field, Model, Relation}
 
 import scala.collection.immutable.Seq
@@ -11,11 +12,7 @@ object Types {
   //  type UserData                 = Map[String, Option[Any]]
 }
 
-case class ScalarListValue(
-    nodeId: String,
-    position: Int,
-    value: Any
-)
+case class ScalarListElement(nodeId: Id, position: Int, value: GCValue)
 
 case class ResolverResult[T](
     nodes: Vector[T],
@@ -23,19 +20,6 @@ case class ResolverResult[T](
     hasPreviousPage: Boolean,
     parentModelId: Option[IdGCValue] = None
 )
-
-case class RelationResult(
-    relations: Vector[RelationNode],
-    hasNextPage: Boolean,
-    hasPreviousPage: Boolean
-)
-
-case class ModelCounts(countsMap: Map[Model, Int]) {
-  def countForName(name: String): Int = {
-    val model = countsMap.keySet.find(_.name == name).getOrElse(sys.error(s"No count found for model $name"))
-    countsMap(model)
-  }
-}
 
 case class QueryArguments(
     skip: Option[Int],
@@ -67,13 +51,28 @@ case class FilterElement(
     key: String,
     value: Any,
     field: Option[Field] = None,
-    filterName: String = "",
-    relatedFilterElement: Option[FilterElementRelation] = None
+    filterName: String = ""
 )
 
-case class FilterElementRelation(
+case class FinalValueFilter(
+    key: String,
+    value: GCValue,
+    field: Field,
+    filterName: String = ""
+)
+
+case class FinalRelationFilter(
+    key: String,
+    value: Any,
+    field: Field,
+    filterName: String = ""
+)
+
+case class TransitiveRelationFilter(
+    field: Field,
     fromModel: Model,
     toModel: Model,
     relation: Relation,
-    filter: DataItemFilterCollection
+    filterName: String = "",
+    nestedFilter: DataItemFilterCollection
 )

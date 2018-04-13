@@ -1,7 +1,6 @@
 package com.prisma.api.mutations
 
 import com.prisma.api.ApiBaseSpec
-import com.prisma.api.connector.mysql.database.DatabaseQueryBuilder
 import com.prisma.shared.models.Project
 import com.prisma.shared.schema_dsl.SchemaDsl
 import org.scalatest.{FlatSpec, Matchers}
@@ -14,7 +13,6 @@ class DeleteManyRelationFilterSpec extends FlatSpec with Matchers with ApiBaseSp
     val veryBottom = schema.model("VeryBottom").field_!("veryBottom", _.String, isUnique = true)
     top.oneToOneRelation("bottom", "top", bottom)
     bottom.oneToOneRelation("veryBottom", "bottom", veryBottom)
-
   }
 
   override protected def beforeAll(): Unit = {
@@ -115,6 +113,41 @@ class DeleteManyRelationFilterSpec extends FlatSpec with Matchers with ApiBaseSp
     )
 
     val filter = """{ bottom: {veryBottom: {veryBottom: "veryBottom"}}}"""
+
+    val firstCount        = topCount
+    val filterQueryCount  = server.query(s"""{tops(where: $filter){id}}""", project).pathAsSeq("data.tops").length
+    val filterDeleteCount = server.query(s"""mutation {deleteManyTops(where: $filter){count}}""".stripMargin, project).pathAsLong("data.deleteManyTops.count")
+    val lastCount         = topCount
+
+    firstCount should be(3)
+    firstCount - filterQueryCount should be(lastCount)
+    firstCount - filterDeleteCount should be(lastCount)
+  }
+
+  "The delete many Mutation" should "work for named filters" in {
+    createTop("top1")
+    createTop("top2")
+
+    server.query(
+      s"""mutation {
+         |  createTop(
+         |    data: {
+         |      top: "top3"
+         |      bottom: {
+         |        create: {
+         |        bottom: "bottom1"
+         |        veryBottom: {create: {veryBottom: "veryBottom"}}}
+         |      }
+         |    }
+         |  ) {
+         |    id
+         |  }
+         |}
+      """.stripMargin,
+      project
+    )
+
+    val filter = """{ bottom: {veryBottom: {veryBottom_not: null}}}"""
 
     val firstCount        = topCount
     val filterQueryCount  = server.query(s"""{tops(where: $filter){id}}""", project).pathAsSeq("data.tops").length

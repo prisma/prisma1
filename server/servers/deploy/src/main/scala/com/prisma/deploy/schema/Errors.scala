@@ -1,9 +1,8 @@
 package com.prisma.deploy.schema
 
-import com.prisma.sangria.utils.ErrorWithCode
 import com.prisma.shared.models.ProjectId
 
-trait DeployApiError extends Exception with ErrorWithCode {
+trait DeployApiError extends Exception {
   def message: String
   val code: Int
 

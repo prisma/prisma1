@@ -43,7 +43,7 @@ class UpsertMutationSpec extends FlatSpec with Matchers with ApiBaseSpec {
         |    title
         |  }
         |}
-      """.stripMargin,
+      """,
       project
     )
 
@@ -80,7 +80,7 @@ class UpsertMutationSpec extends FlatSpec with Matchers with ApiBaseSpec {
          |    reqBoolean
          |  }
          |}
-      """.stripMargin,
+      """,
       project
     )
     result.pathAsString("data.upsertMultipleFields.reqString") should be("new title")
