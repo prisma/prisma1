@@ -15,6 +15,7 @@ import { FunctionInput, Header } from './types/rc'
 import { URL } from 'url'
 import chalk from 'chalk'
 import { clusterEndpointMap, clusterEndpointMapReverse } from './constants'
+import { replaceYamlValue } from './utils/yamlComment'
 
 interface ErrorMessage {
   message: string
@@ -144,23 +145,23 @@ export class PrismaDefinitionClass {
     //   )
     // }
 
-    if (!this.service) {
-      throw new Error(
-        `Please either provide a service or endpoint property in your prisma.yml`,
-      )
-    }
+    // if (!this.service) {
+    //   throw new Error(
+    //     `Please either provide a service or endpoint property in your prisma.yml`,
+    //   )
+    // }
 
-    if (!this.stage) {
-      throw new Error(
-        `Please either provide a stage or endpoint property in your prisma.yml`,
-      )
-    }
+    // if (!this.stage) {
+    //   throw new Error(
+    //     `Please either provide a stage or endpoint property in your prisma.yml`,
+    //   )
+    // }
 
-    if (!this.cluster) {
-      throw new Error(
-        `Please either provide a cluster or endpoint property in your prisma.yml`,
-      )
-    }
+    // if (!this.cluster) {
+    //   throw new Error(
+    //     `Please either provide a cluster or endpoint property in your prisma.yml`,
+    //   )
+    // }
 
     // shared clusters need a workspace
     const clusterName = this.getClusterName()
@@ -346,6 +347,28 @@ If it is a private cluster, make sure that you're logged in with ${chalk.bold.gr
       await this.load(args)
     }
   }
+
+  replaceEndpoint(newEndpoint) {
+    this.definitionString = replaceYamlValue(
+      this.definitionString,
+      'endpoint',
+      newEndpoint,
+    )
+    fs.writeFileSync(this.definitionPath!, this.definitionString)
+  }
+
+  getEndpoint(serviceInput?: string, stageInput?: string) {
+    const cluster = this.getCluster()
+    const service = serviceInput || this.service
+    const stage = stageInput || this.stage
+    const workspace = this.getWorkspace()
+
+    if (service && stage && cluster) {
+      return getEndpoint(cluster!, service!, stage!, workspace)
+    }
+
+    return null
+  }
 }
 
 export function concatName(
@@ -404,6 +427,26 @@ export function parseEndpoint(
     workspaceSlug,
     clusterName: getClusterName(url.origin),
   }
+}
+
+export function getEndpoint(
+  cluster: Cluster,
+  service: string,
+  stage: string,
+  workspace?: string | null,
+) {
+  let url = cluster.baseUrl
+  if (service === 'default' && stage === 'default' && !workspace) {
+    return url
+  }
+  if (stage === 'default' && !workspace) {
+    return `${url}/${service}`
+  }
+  if (workspace) {
+    return `${url}/${workspace}/${service}/${stage}`
+  }
+
+  return `${url}/${service}/${stage}`
 }
 
 function getClusterName(origin): string {

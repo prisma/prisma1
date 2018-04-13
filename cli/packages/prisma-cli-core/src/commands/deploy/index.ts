@@ -611,7 +611,10 @@ ${chalk.gray(
       }
     }
 
-    await this.definition.addCluster(workspaceClusterCombination, this.flags)
+    // await this.definition.addCluster(workspaceClusterCombination, this.flags)
+    await this.definition.replaceEndpoint(
+      this.definition.getEndpoint(serviceName, stage),
+    )
 
     return {
       cluster: this.env.clusterByName(clusterName) || undefined,
