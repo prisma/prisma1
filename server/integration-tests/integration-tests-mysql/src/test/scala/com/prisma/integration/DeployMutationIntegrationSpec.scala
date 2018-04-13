@@ -918,7 +918,7 @@ class DeployMutationIntegrationSpec extends FlatSpec with Matchers with Integrat
     deployServer.deploySchemaThatMustSucceed(project, schema2, 3)
   }
 
-  "Creating a relation that required" should "error if there are already nodes" in {
+  "Creating a relation that is required" should "error if there are already nodes" in {
 
     val schema =
       """|type A {
@@ -945,7 +945,116 @@ class DeployMutationIntegrationSpec extends FlatSpec with Matchers with Integrat
          | a: A
          |}"""
 
+    deployServer.deploySchemaThatMustError(project, schema2).toString should be(
+      """{"data":{"deploy":{"migration":{"applied":0,"revision":0},"errors":[{"description":"You are creating a required relation, but there are already nodes for the model 'A' that would violate that constraint."}],"warnings":[]}}}""")
+  }
+
+  "Creating a relation that is required together with a new model" should "error if there are already nodes" in {
+
+    val schema =
+      """|type A {
+         | name: String! @unique
+         |}"""
+
+    val (project, _) = setupProject(schema)
+
+    apiServer.query("""mutation{createA(data:{name: "A"}){name}}""", project)
+
+    val schema2 =
+      """|type A {
+         | name: String! @unique
+         | b: B!
+         |}
+         |
+         |type B {
+         | name: String! @unique
+         | a: A
+         |}"""
+
+    deployServer.deploySchemaThatMustError(project, schema2).toString should be(
+      """{"data":{"deploy":{"migration":{"applied":0,"revision":0},"errors":[{"description":"You are creating a required relation, but there are already nodes for the model 'A' that would violate that constraint."}],"warnings":[]}}}""")
+  }
+
+  "Creating a relation that is required with both models new" should "work" in {
+
+    val schema =
+      """|type C {
+         | name: String! @unique
+         |}
+         |"""
+
+    val (project, _) = setupProject(schema)
+
+    val schema2 =
+      """|type A {
+         | name: String! @unique
+         | b: B!
+         |}
+         |
+         |type B {
+         | name: String! @unique
+         | a: A
+         |}"""
+
     deployServer.deploySchemaThatMustSucceed(project, schema2, 3)
+  }
+
+  // endregion
+
+  // region Delete Relation
+
+  "Deleting a relation when there is no data" should "succeed" in {
+
+    val schema =
+      """|type A {
+         | name: String! @unique
+         | b: B!
+         |}
+         |
+         |type B {
+         | name: String! @unique
+         | a: A
+         |}"""
+
+    val (project, _) = setupProject(schema)
+
+    val schema2 =
+      """|type C {
+         | name: String! @unique
+         |}
+         |"""
+
+    deployServer.deploySchemaThatMustSucceed(project, schema2, 3)
+  }
+
+  "Deleting a relation when there is data" should "should warn" in {
+
+    val schema =
+      """|type A {
+         | name: String! @unique
+         | b: B!
+         |}
+         |
+         |type B {
+         | name: String! @unique
+         | a: A
+         |}"""
+
+    val (project, _) = setupProject(schema)
+
+    apiServer.query("""mutation{createA(data:{name: "A", b :{create:{name: "B"}}}){name}}""", project)
+
+    val schema2 =
+      """|type A {
+         | name: String! @unique
+         |}
+         |
+         |type B {
+         | name: String! @unique
+         |}"""
+
+    deployServer.deploySchemaThatMustWarn(project, schema2).toString should be(
+      """{"data":{"deploy":{"migration":{"applied":0,"revision":0},"errors":[],"warnings":[{"description":"You already have nodes for this relation. This change will result in data loss."}]}}}""")
   }
 
   // endregion

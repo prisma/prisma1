@@ -101,15 +101,6 @@ case class MigrationApplierImpl(
             _ <- executeClientMutaction(mutaction)
           } yield ()
         }
-//        val futures: Vector[() => Future[Unit]] = list.map(mutaction => () => executeClientMutaction(mutaction))
-//
-//        futures.map { future =>
-//          for {
-//            _ <- future()
-//          } yield ()
-//        }
-//
-//        Future.unit
     }
   }
 

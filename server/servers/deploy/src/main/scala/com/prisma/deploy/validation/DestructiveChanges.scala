@@ -59,11 +59,16 @@ case class DestructiveChanges(persistencePlugin: DeployConnector, project: Proje
   }
 
   private def deleteFieldValidation(x: DeleteField) = {
-    val model = project.schema.getModelByName_!(x.model)
+    val model    = project.schema.getModelByName_!(x.model)
+    val isScalar = model.fields.find(_.name == x.name).get.isScalar
 
-    clientDataResolver.existsByModel(model.name).map {
-      case true  => Vector(SchemaWarning.dataLossField(x.name, x.name))
-      case false => Vector.empty
+    if (isScalar) {
+      clientDataResolver.existsByModel(model.name).map {
+        case true  => Vector(SchemaWarning.dataLossField(x.name, x.name))
+        case false => Vector.empty
+      }
+    } else {
+      validationSuccessful
     }
   }
 
@@ -107,16 +112,6 @@ case class DestructiveChanges(persistencePlugin: DeployConnector, project: Proje
 
   private def deleteEnumValidation(x: DeleteEnum) = {
     //already covered by deleteField
-
-//    val modelsWithFieldsThatUseEnum = project.models.filter(m => m.fields.exists(f => f.enum.isDefined && f.enum.get.name == x.name))
-//    val res = modelsWithFieldsThatUseEnum.map(model =>
-//      clientDataResolver.existsByModel(model.name).map {
-//        case true  => Vector(SchemaWarning.dataLossModel(model.name))
-//        case false => Vector.empty
-//    })
-//
-//    Future.sequence(res).map(_.flatten.toVector)
-
     validationSuccessful
   }
 
@@ -144,42 +139,41 @@ case class DestructiveChanges(persistencePlugin: DeployConnector, project: Proje
 
   private def createRelationValidation(x: CreateRelation) = {
 
-    //check which models already existed
+    val nextRelation = nextSchema.relations.find(_.name == x.name).get
 
-//    for {
-//      model
-//
-//
-//    }
-//
-//
-//
-//
-//    project.schema.getModelByName(x.) match {
-//      case Some(existingModel) =>
-//        x.relation.isEmpty && x.isRequired && x.defaultValue.isEmpty match {
-//          case true =>
-//            clientDataResolver.existsByModel(existingModel.name).map {
-//              case true  => Vector(SchemaError.global("You are creating a required field without a defaultValue but there are already nodes present."))
-//              case false => Vector.empty
-//            }
-//
-//          case false =>
-//            validationSuccessful
-//        }
-//
-//      case None =>
-//        validationSuccessful
-//    }
+    def checkRelationSide(modelName: String) = {
+      val nextModelA      = nextSchema.models.find(_.name == modelName).get
+      val nextModelAField = nextModelA.fields.find(field => field.relation.contains(nextRelation))
 
-    // required relation and already nodes exist -> error
+      val modelARequired = nextModelAField match {
+        case None        => false
+        case Some(field) => field.isRequired
+      }
 
-    validationSuccessful
+      if (modelARequired) project.schema.models.find(_.name == modelName) match {
+        case Some(model) =>
+          clientDataResolver.existsByModel(model.name).map {
+            case true =>
+              Vector(
+                SchemaError.global(
+                  s"You are creating a required relation, but there are already nodes for the model '$modelName' that would violate that constraint."))
+            case false => Vector.empty
+          }
+
+        case None => validationSuccessful
+      } else {
+        validationSuccessful
+      }
+    }
+
+    val checks = Vector(checkRelationSide(x.modelAName), checkRelationSide(x.modelBName))
+
+    Future.sequence(checks).map(_.flatten)
   }
 
   private def deleteRelationValidation(x: DeleteRelation) = {
     clientDataResolver.existsByRelation(x.name).map {
-      case true  => Vector(SchemaWarning.dataLossModel(x.name)) //todo could also warn on the field level
+      case true  => Vector(SchemaWarning.dataLossRelation(x.name))
       case false => Vector.empty
     }
   }

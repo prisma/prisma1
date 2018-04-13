@@ -17,6 +17,10 @@ object SchemaWarning {
     SchemaWarning(`type`, "You already have nodes for this model. This change will result in data loss.", None)
   }
 
+  def dataLossRelation(`type`: String): SchemaWarning = {
+    SchemaWarning(`type`, "You already have nodes for this relation. This change will result in data loss.", None)
+  }
+
   def dataLossField(`type`: String, field: String): SchemaWarning = {
     SchemaWarning(`type`, "You already have nodes for this model. This change may result in data loss.", Some(field))
   }
