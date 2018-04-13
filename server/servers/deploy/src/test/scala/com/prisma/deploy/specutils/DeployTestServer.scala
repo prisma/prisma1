@@ -39,7 +39,7 @@ case class DeployTestServer()(implicit dependencies: DeployDependencies) extends
       requestId: String = "CombinedTestDatabase.requestId"
   ): JsValue = {
     val result = executeQueryWithAuthentication(
-      query = query,
+      query = query.stripMargin,
       variables = variables,
       requestId = requestId
     )
@@ -144,7 +144,7 @@ case class DeployTestServer()(implicit dependencies: DeployDependencies) extends
     res
   }
 
-  def deploySchemaThatMustFail(project: Project, schema: String, force: Boolean = false): JsValue = {
+  def deploySchemaThatMustError(project: Project, schema: String, force: Boolean = false): JsValue = {
     deployHelper(project.id, schema, Vector.empty, shouldFail = true, force = force)
   }
 

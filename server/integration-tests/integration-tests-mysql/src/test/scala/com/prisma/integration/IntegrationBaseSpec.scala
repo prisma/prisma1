@@ -4,7 +4,7 @@ import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
 import com.prisma.api.connector.DataResolver
 import com.prisma.api.util.StringMatchers
-import com.prisma.api.{ApiDependenciesForTest, ApiTestDatabase, ApiTestServer}
+import com.prisma.api.{ApiDependenciesForTest, ApiTestServer}
 import com.prisma.deploy.specutils.{DeployTestDependencies, DeployTestServer}
 import com.prisma.shared.models.{Migration, Project}
 import com.prisma.utils.await.AwaitUtils
@@ -22,8 +22,7 @@ trait IntegrationBaseSpec extends BeforeAndAfterEach with BeforeAndAfterAll with
 
   override protected def afterAll(): Unit = {
     super.afterAll()
-    projectsToCleanUp.foreach(internalDB.deleteProjectDatabase)
-    deployTestDependencies.deployPersistencePlugin.shutdown().await()
+    deployTestDependencies.deployPersistencePlugin.shutdown().await
     apiTestDependencies.destroy
   }
 
@@ -33,7 +32,6 @@ trait IntegrationBaseSpec extends BeforeAndAfterEach with BeforeAndAfterAll with
 
   implicit lazy val apiTestDependencies = new ApiDependenciesForTest
   val apiServer                         = ApiTestServer()
-  val apiDatabase                       = ApiTestDatabase()
 
   def dataResolver(project: Project): DataResolver = apiTestDependencies.dataResolver(project)
 
@@ -59,8 +57,7 @@ trait IntegrationBaseSpec extends BeforeAndAfterEach with BeforeAndAfterAll with
 
   override protected def beforeEach(): Unit = {
     super.beforeEach()
-    projectsToCleanUp.foreach(internalDB.deleteProjectDatabase)
-    deployTestDependencies.deployPersistencePlugin.reset().await
+    projectsToCleanUp.foreach(id => internalDB.deleteProjectDatabase(id).await)
     projectsToCleanUp.clear()
   }
 

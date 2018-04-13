@@ -21,8 +21,8 @@ case class DestructiveChanges(persistencePlugin: DeployConnector, project: Proje
       case x: DeleteField    => deleteFieldValidation(x)
       case x: UpdateField    => updateFieldValidation(x)
       case x: CreateEnum     => validationSuccessful
-      case x: DeleteEnum     => deleteEnumValidation
-      case x: UpdateEnum     => updateEnumValidation
+      case x: DeleteEnum     => deleteEnumValidation(x)
+      case x: UpdateEnum     => updateEnumValidation(x)
       case x: DeleteRelation => deleteRelationValidation(x)
       case x: CreateRelation => createRelationValidation
       case x: UpdateRelation => updateRelationValidation
@@ -68,62 +68,78 @@ case class DestructiveChanges(persistencePlugin: DeployConnector, project: Proje
   }
 
   private def updateFieldValidation(x: UpdateField) = {
-    val model = project.schema.getModelByName_!(x.model)
-    //data loss
-    // to relation -> warning
-    // to from list -> warning
-    // typechange -> warning
+    val model                               = project.schema.getModelByName_!(x.model)
+    val oldField                            = model.fields.find(_.name == x.name).get
+    val cardinalityChanges                  = x.isList.isDefined
+    val typeChanges                         = x.typeName.isDefined
+    val goesFromRelationToScalarOrViceVersa = x.relation.isDefined
 
-    //changing to required and no defValue
-    // existing data -> error
-    // relations -> maybe error
+    val becomesRequired = x.isRequired.contains(true)
 
-    //existing unchanged required is also dangerous
-    // to/from  relation change -> error
+    def warnings: Future[Vector[SchemaWarning]] = cardinalityChanges || typeChanges || goesFromRelationToScalarOrViceVersa match {
+      case true =>
+        clientDataResolver.existsByModel(model.name).map {
+          case true  => Vector(SchemaWarning.dataLossField(x.name, x.name))
+          case false => Vector.empty
+        }
+      case false =>
+        validationSuccessful
+    }
 
-    val cardinalityChanges                  = x.isList.isDefined   // warning
-    val typeChanges                         = x.typeName.isDefined // warning
-    val goesFromRelationToScalarOrViceVersa = x.relation.isDefined // warning
+    def errors: Future[Vector[SchemaError]] = becomesRequired match {
+      case true =>
+        clientDataResolver.existsNullByModelAndField(model, oldField).map {
+          case true  => Vector(SchemaError.global("You are making a field required, but there are already nodes that would violate that constraint."))
+          case false => Vector.empty
+        }
 
-    val becomesRequiredAndNoDefault = false //x.isRequired.contains(true) // todo error but needs to check defaultValue
+      case false =>
+        validationSuccessful
+    }
 
-    if (cardinalityChanges || typeChanges || goesFromRelationToScalarOrViceVersa || becomesRequiredAndNoDefault) {
+    for {
+      warnings: Vector[SchemaWarning] <- warnings
+      errors: Vector[SchemaError]     <- errors
+    } yield {
+      warnings ++ errors
+    }
+  }
 
-      clientDataResolver.existsByModel(model.name).map {
-        case true =>
-          val warning =
-            if (cardinalityChanges || typeChanges || goesFromRelationToScalarOrViceVersa) Vector(SchemaWarning.dataLossField(x.name, x.name)) else Vector.empty
-          val error = Vector.empty
-//            if (becomesRequiredAndNoDefault)
-//              Vector(SchemaError.global("You are setting a field required without a defaultValue but there are already nodes present."))
-//            else Vector.empty
+  private def deleteEnumValidation(x: DeleteEnum) = {
+    //already covered by deleteField
 
-          warning ++ error
+//    val modelsWithFieldsThatUseEnum = project.models.filter(m => m.fields.exists(f => f.enum.isDefined && f.enum.get.name == x.name))
+//    val res = modelsWithFieldsThatUseEnum.map(model =>
+//      clientDataResolver.existsByModel(model.name).map {
+//        case true  => Vector(SchemaWarning.dataLossModel(model.name))
+//        case false => Vector.empty
+//    })
+//
+//    Future.sequence(res).map(_.flatten.toVector)
 
-        case false => Vector.empty
-      }
+    validationSuccessful
+  }
+
+  private def updateEnumValidation(x: UpdateEnum) = {
+    val oldEnum = project.enums.find(_.name == x.name)
+    val deletedValues: Vector[String] = x.values match {
+      case None            => Vector.empty
+      case Some(newValues) => oldEnum.get.values.filter(value => !newValues.contains(value))
+    }
+
+    if (deletedValues.nonEmpty) {
+      val modelsWithFieldsThatUseEnum = project.models.filter(m => m.fields.exists(f => f.enum.isDefined && f.enum.get.name == x.name))
+      val res = modelsWithFieldsThatUseEnum.map(model =>
+        clientDataResolver.existsByModel(model.name).map {
+          case true  => Vector(SchemaError.global("You are deleting values of an Enum, but that enum is in use."))
+          case false => Vector.empty
+      })
+
+      Future.sequence(res).map(_.flatten.toVector)
 
     } else {
       validationSuccessful
     }
-  }
-
-  private def deleteEnumValidation = {
-    //potential data loss on all models that use that enum -> warning
-
-    //should be covered by SchemaValidation
-
-    validationSuccessful
-  }
-
-  private def updateEnumValidation = {
-    //todo
-
-    //deleted values in use somewhere? -> error
-
-    //error if deleted case in use
-
-    validationSuccessful
   }
 
   private def createRelationValidation = {

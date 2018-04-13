@@ -130,7 +130,7 @@ class DeployMutationSpec extends FlatSpec with Matchers with DeploySpecBase {
           |  $field
           |  test: String
           |}
-        """
+        """.stripMargin
 
       val result = server.query(
         s"""

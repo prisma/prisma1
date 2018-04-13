@@ -26,7 +26,7 @@ trait DeploySpecBase extends BeforeAndAfterEach with BeforeAndAfterAll with Awai
       |type TestModel {
       |  id: ID! @unique
       |}
-    """
+    """.stripMargin
 
   override protected def beforeAll(): Unit = {
     super.beforeAll()
@@ -35,15 +35,15 @@ trait DeploySpecBase extends BeforeAndAfterEach with BeforeAndAfterAll with Awai
 
   override protected def afterAll(): Unit = {
     super.afterAll()
-    projectsToCleanUp.foreach(internalDB.deleteProjectDatabase)
+//    projectsToCleanUp.foreach(internalDB.deleteProjectDatabase)
     testDependencies.deployPersistencePlugin.shutdown().await()
   }
 
   override protected def beforeEach(): Unit = {
     super.beforeEach()
+//    projectsToCleanUp.foreach(internalDB.deleteProjectDatabase)
+//    projectsToCleanUp.clear()
     testDependencies.deployPersistencePlugin.reset().await
-    projectsToCleanUp.foreach(internalDB.deleteProjectDatabase)
-    projectsToCleanUp.clear()
   }
 
   def setupProject(
@@ -53,8 +53,8 @@ trait DeploySpecBase extends BeforeAndAfterEach with BeforeAndAfterAll with Awai
       secrets: Vector[String] = Vector.empty
   ): (Project, Migration) = {
 
-    val projectId = name + "@" + stage
-    projectsToCleanUp += projectId
+//    val projectId = name + "@" + stage
+//    projectsToCleanUp += projectId
     server.addProject(name, stage)
     server.deploySchema(name, stage, schema.stripMargin, secrets)
   }

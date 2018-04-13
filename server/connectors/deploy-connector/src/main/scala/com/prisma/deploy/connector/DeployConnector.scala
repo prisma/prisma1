@@ -26,6 +26,5 @@ case class DatabaseSize(name: String, total: Double)
 trait ClientDbQueries {
   def existsByModel(modelName: String): Future[Boolean]
   def existsByRelation(relationId: String): Future[Boolean]
-  def existsNullByModelAndScalarField(model: Model, field: Field): Future[Boolean]
-  def existsNullByModelAndRelationField(model: Model, field: Field): Future[Boolean]
+  def existsNullByModelAndField(model: Model, field: Field): Future[Boolean]
 }
