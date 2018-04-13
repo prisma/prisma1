@@ -1,7 +1,7 @@
 package com.prisma.deploy.connector.mysql.database
 
-import com.prisma.shared.models.Field
-import slick.jdbc.SQLActionBuilder
+import com.prisma.shared.models.{Field, Model}
+import slick.jdbc.{PositionedParameters, SQLActionBuilder}
 import slick.jdbc.MySQLProfile.api._
 
 object DatabaseQueryBuilder {
@@ -27,5 +27,52 @@ object DatabaseQueryBuilder {
             where `id` Not IN
             (Select `#$projectId`.`#$relationId`.#$relationSide from `#$projectId`.`#$relationId`)
           )"""
+  }
+
+  def enumValueIsInUse(projectId: String, models: Vector[Model], enumName: String, value: String) = {
+
+    val nameTuples = for {
+      model <- models
+      field <- model.fields
+      if field.enum.isDefined && field.enum.get.name == enumName
+    } yield {
+      if (field.isList) ("nodeId", s"${model.name}_${field.name}", "value", value) else ("id", model.name, field.name, value)
+    }
+
+    val checks: Vector[SQLActionBuilder] = nameTuples.map { tuple =>
+      sql"""(Select Exists (
+                  Select `#${tuple._1}`
+                  From `#$projectId`.`#${tuple._2}`
+                  Where `#${tuple._3}` = ${tuple._4}) as existanceCheck)"""
+    }
+
+    val unionized = combineBy(checks, "Union")
+
+    sql"""Select Exists (
+               Select existanceCheck
+               From(""" concat unionized concat sql""") as combined
+               Where existanceCheck = 1)"""
+  }
+
+  def combineBy(actions: Iterable[SQLActionBuilder], combinator: String): Option[SQLActionBuilder] = actions.toList match {
+    case Nil         => None
+    case head :: Nil => Some(head)
+    case _           => Some(actions.reduceLeft((a, b) => a concat sql"#$combinator" concat b))
+  }
+
+  implicit class SQLActionBuilderConcat(val a: SQLActionBuilder) extends AnyVal {
+    def concat(b: SQLActionBuilder): SQLActionBuilder = {
+      SQLActionBuilder(a.queryParts ++ " " ++ b.queryParts, (p: Unit, pp: PositionedParameters) => {
+        a.unitPConv.apply(p, pp)
+        b.unitPConv.apply(p, pp)
+      })
+    }
+    def concat(b: Option[SQLActionBuilder]): SQLActionBuilder = b match {
+      case Some(b) => a concat b
+      case None    => a
+    }
+
+    def ++(b: SQLActionBuilder): SQLActionBuilder         = concat(b)
+    def ++(b: Option[SQLActionBuilder]): SQLActionBuilder = concat(b)
   }
 }

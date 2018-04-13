@@ -24,7 +24,7 @@ case class DestructiveChanges(persistencePlugin: DeployConnector, project: Proje
       case x: DeleteEnum     => deleteEnumValidation(x)
       case x: UpdateEnum     => updateEnumValidation(x)
       case x: DeleteRelation => deleteRelationValidation(x)
-      case x: CreateRelation => createRelationValidation
+      case x: CreateRelation => createRelationValidation(x)
       case x: UpdateRelation => updateRelationValidation
       case x: UpdateSecrets  => validationSuccessful
     }
@@ -42,7 +42,7 @@ case class DestructiveChanges(persistencePlugin: DeployConnector, project: Proje
   private def createFieldValidation(x: CreateField) = {
     project.schema.getModelByName(x.model) match {
       case Some(existingModel) =>
-        x.isRequired && x.defaultValue.isEmpty match {
+        x.relation.isEmpty && x.isRequired && x.defaultValue.isEmpty match {
           case true =>
             clientDataResolver.existsByModel(existingModel.name).map {
               case true  => Vector(SchemaError.global("You are creating a required field without a defaultValue but there are already nodes present."))
@@ -128,22 +128,49 @@ case class DestructiveChanges(persistencePlugin: DeployConnector, project: Proje
     }
 
     if (deletedValues.nonEmpty) {
-      val modelsWithFieldsThatUseEnum = project.models.filter(m => m.fields.exists(f => f.enum.isDefined && f.enum.get.name == x.name))
-      val res = modelsWithFieldsThatUseEnum.map(model =>
-        clientDataResolver.existsByModel(model.name).map {
-          case true  => Vector(SchemaError.global("You are deleting values of an Enum, but that enum is in use."))
+      val modelsWithFieldsThatUseEnum = project.models.filter(m => m.fields.exists(f => f.enum.isDefined && f.enum.get.name == x.name)).toVector
+      val res = deletedValues.map { deletedValue =>
+        clientDataResolver.enumValueIsInUse(modelsWithFieldsThatUseEnum, x.name, deletedValue).map {
+          case true  => Vector(SchemaError.global(s"You are deleting the value '$deletedValue' of the enum '${x.name}', but that value is in use."))
           case false => Vector.empty
-      })
-
-      Future.sequence(res).map(_.flatten.toVector)
+        }
+      }
+      Future.sequence(res).map(_.flatten)
 
     } else {
       validationSuccessful
     }
   }
 
-  private def createRelationValidation = {
-    //todo
+  private def createRelationValidation(x: CreateRelation) = {
+
+    //check which models already existed
+
+//    for {
+//      model
+//
+//
+//    }
+//
+//
+//
+//
+//    project.schema.getModelByName(x.) match {
+//      case Some(existingModel) =>
+//        x.relation.isEmpty && x.isRequired && x.defaultValue.isEmpty match {
+//          case true =>
+//            clientDataResolver.existsByModel(existingModel.name).map {
+//              case true  => Vector(SchemaError.global("You are creating a required field without a defaultValue but there are already nodes present."))
+//              case false => Vector.empty
+//            }
+//
+//          case false =>
+//            validationSuccessful
+//        }
+//
+//      case None =>
+//        validationSuccessful
+//    }
 
     // required relation and already nodes exist -> error
 

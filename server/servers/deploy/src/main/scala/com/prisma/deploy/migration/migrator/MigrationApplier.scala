@@ -91,8 +91,25 @@ case class MigrationApplierImpl(
 
   def applyStep(previousSchema: Schema, migration: Migration, step: MigrationStep): Future[Unit] = {
     migrationStepMapper.mutactionFor(previousSchema, migration.schema, step) match {
-      case x if x.isEmpty => Future.unit
-      case list           => Future.sequence(list.map(executeClientMutaction)).map(_ => ())
+      case x if x.isEmpty =>
+        Future.unit
+
+      case list =>
+        list.foldLeft(Future.unit) { (prev, mutaction) =>
+          for {
+            _ <- prev
+            _ <- executeClientMutaction(mutaction)
+          } yield ()
+        }
+//        val futures: Vector[() => Future[Unit]] = list.map(mutaction => () => executeClientMutaction(mutaction))
+//
+//        futures.map { future =>
+//          for {
+//            _ <- future()
+//          } yield ()
+//        }
+//
+//        Future.unit
     }
   }
 

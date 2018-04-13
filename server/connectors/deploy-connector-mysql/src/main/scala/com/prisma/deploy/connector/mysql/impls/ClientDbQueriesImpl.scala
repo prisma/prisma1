@@ -30,5 +30,10 @@ case class ClientDbQueriesImpl(project: Project, clientDatabase: Database)(impli
     clientDatabase.run(readOnlyBoolean(query)).map(_.head).recover { case _: java.sql.SQLSyntaxErrorException => false }
   }
 
+  override def enumValueIsInUse(models: Vector[Model], enumName: String, value: String): Future[Boolean] = {
+    val query = DatabaseQueryBuilder.enumValueIsInUse(project.id, models, enumName, value)
+    clientDatabase.run(readOnlyBoolean(query)).map(_.head).recover { case _: java.sql.SQLSyntaxErrorException => false }
+  }
+
   private def readOnlyBoolean(query: SQLActionBuilder): SqlStreamingAction[Vector[Boolean], Boolean, Read] = query.as[Boolean]
 }

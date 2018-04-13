@@ -27,4 +27,5 @@ trait ClientDbQueries {
   def existsByModel(modelName: String): Future[Boolean]
   def existsByRelation(relationId: String): Future[Boolean]
   def existsNullByModelAndField(model: Model, field: Field): Future[Boolean]
+  def enumValueIsInUse(models: Vector[Model], enumName: String, value: String): Future[Boolean]
 }
