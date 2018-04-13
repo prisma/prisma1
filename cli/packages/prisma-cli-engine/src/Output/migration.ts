@@ -32,7 +32,7 @@ export class MigrationPrinter {
     this.printRelations(steps)
   }
   printTypes(allSteps: MigrationStep[]) {
-    const steps = allSteps.filter(s => s.model || s.type === 'CreateModel')
+    const steps = allSteps.filter(s => s.model || (s.type === 'CreateModel' || s.type === 'DeleteModel'))
     const groupedByModel = groupBy(steps, s => s.model || s.name)
     Object.keys(groupedByModel).forEach(model => {
       this.out.log(`\n  ${chalk.bold(model)} (Type)`)
