@@ -17,8 +17,8 @@ trait DeploySpecBase extends BeforeAndAfterEach with BeforeAndAfterAll with Awai
   implicit lazy val materializer                             = ActorMaterializer()
   implicit lazy val testDependencies: DeployTestDependencies = DeployTestDependencies()
 
-  val server = DeployTestServer()
-//  val clientDb          = testDependencies.clientTestDb
+  val server            = DeployTestServer()
+  val internalDB        = testDependencies.deployPersistencePlugin
   val projectsToCleanUp = new ArrayBuffer[String]
 
   val basicTypesGql =
@@ -26,7 +26,7 @@ trait DeploySpecBase extends BeforeAndAfterEach with BeforeAndAfterAll with Awai
       |type TestModel {
       |  id: ID! @unique
       |}
-    """.stripMargin.trim()
+    """
 
   override protected def beforeAll(): Unit = {
     super.beforeAll()
@@ -35,14 +35,14 @@ trait DeploySpecBase extends BeforeAndAfterEach with BeforeAndAfterAll with Awai
 
   override protected def afterAll(): Unit = {
     super.afterAll()
+    projectsToCleanUp.foreach(internalDB.deleteProjectDatabase)
     testDependencies.deployPersistencePlugin.shutdown().await()
-//    clientDb.shutdown()
   }
 
   override protected def beforeEach(): Unit = {
     super.beforeEach()
     testDependencies.deployPersistencePlugin.reset().await
-//    projectsToCleanUp.foreach(clientDb.delete)
+    projectsToCleanUp.foreach(internalDB.deleteProjectDatabase)
     projectsToCleanUp.clear()
   }
 
@@ -54,7 +54,7 @@ trait DeploySpecBase extends BeforeAndAfterEach with BeforeAndAfterAll with Awai
   ): (Project, Migration) = {
 
     val projectId = name + "@" + stage
-    projectsToCleanUp :+ projectId
+    projectsToCleanUp += projectId
     server.addProject(name, stage)
     server.deploySchema(name, stage, schema.stripMargin, secrets)
   }

@@ -22,6 +22,7 @@ trait IntegrationBaseSpec extends BeforeAndAfterEach with BeforeAndAfterAll with
 
   override protected def afterAll(): Unit = {
     super.afterAll()
+    projectsToCleanUp.foreach(internalDB.deleteProjectDatabase)
     deployTestDependencies.deployPersistencePlugin.shutdown().await()
     apiTestDependencies.destroy
   }
@@ -42,6 +43,7 @@ trait IntegrationBaseSpec extends BeforeAndAfterEach with BeforeAndAfterAll with
 
   val deployServer      = DeployTestServer()
   val projectsToCleanUp = new ArrayBuffer[String]
+  val internalDB        = deployTestDependencies.deployPersistencePlugin
 
   val basicTypesGql =
     """
@@ -57,6 +59,7 @@ trait IntegrationBaseSpec extends BeforeAndAfterEach with BeforeAndAfterAll with
 
   override protected def beforeEach(): Unit = {
     super.beforeEach()
+    projectsToCleanUp.foreach(internalDB.deleteProjectDatabase)
     deployTestDependencies.deployPersistencePlugin.reset().await
     projectsToCleanUp.clear()
   }
@@ -69,7 +72,7 @@ trait IntegrationBaseSpec extends BeforeAndAfterEach with BeforeAndAfterAll with
   ): (Project, Migration) = {
 
     val projectId = name + "@" + stage
-    projectsToCleanUp :+ projectId
+    projectsToCleanUp += projectId
     deployServer.addProject(name, stage)
     deployServer.deploySchema(name, stage, schema.stripMargin, secrets)
   }

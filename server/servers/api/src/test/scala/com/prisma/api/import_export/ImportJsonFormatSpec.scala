@@ -24,7 +24,7 @@ class ImportJsonFormatSpec extends FlatSpec with Matchers with ApiBaseSpec with 
     }
 
     database.setup(project)
-    database.truncate(project)
+    database.truncate(project.id)
     val dataResolver: DataResolver = this.dataResolver(project)
 
     val nodes =

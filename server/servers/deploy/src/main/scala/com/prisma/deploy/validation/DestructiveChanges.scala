@@ -19,7 +19,7 @@ case class DestructiveChanges(persistencePlugin: DeployConnector, project: Proje
       case x: UpdateModel    => validationSuccessful
       case x: CreateField    => createFieldValidation(x)
       case x: DeleteField    => deleteFieldValidation(x)
-      case x: UpdateField    => updateFieldValidation
+      case x: UpdateField    => updateFieldValidation(x)
       case x: CreateEnum     => validationSuccessful
       case x: DeleteEnum     => deleteEnumValidation
       case x: UpdateEnum     => updateEnumValidation
@@ -67,8 +67,8 @@ case class DestructiveChanges(persistencePlugin: DeployConnector, project: Proje
     }
   }
 
-  private def updateFieldValidation = {
-    //todo
+  private def updateFieldValidation(x: UpdateField) = {
+    val model = project.schema.getModelByName_!(x.model)
     //data loss
     // to relation -> warning
     // to from list -> warning
@@ -81,21 +81,45 @@ case class DestructiveChanges(persistencePlugin: DeployConnector, project: Proje
     //existing unchanged required is also dangerous
     // to/from  relation change -> error
 
-    //cardinality change -> warning
+    val cardinalityChanges                  = x.isList.isDefined   // warning
+    val typeChanges                         = x.typeName.isDefined // warning
+    val goesFromRelationToScalarOrViceVersa = x.relation.isDefined // warning
 
-    validationSuccessful
+    val becomesRequiredAndNoDefault = false //x.isRequired.contains(true) // todo error but needs to check defaultValue
+
+    if (cardinalityChanges || typeChanges || goesFromRelationToScalarOrViceVersa || becomesRequiredAndNoDefault) {
+
+      clientDataResolver.existsByModel(model.name).map {
+        case true =>
+          val warning =
+            if (cardinalityChanges || typeChanges || goesFromRelationToScalarOrViceVersa) Vector(SchemaWarning.dataLossField(x.name, x.name)) else Vector.empty
+          val error = Vector.empty
+//            if (becomesRequiredAndNoDefault)
+//              Vector(SchemaError.global("You are setting a field required without a defaultValue but there are already nodes present."))
+//            else Vector.empty
+
+          warning ++ error
+
+        case false => Vector.empty
+      }
+
+    } else {
+      validationSuccessful
+    }
   }
 
   private def deleteEnumValidation = {
-    //todo
+    //potential data loss on all models that use that enum -> warning
 
-    //error if in use
+    //should be covered by SchemaValidation
 
     validationSuccessful
   }
 
   private def updateEnumValidation = {
     //todo
+
+    //deleted values in use somewhere? -> error
 
     //error if deleted case in use
 
@@ -105,19 +129,22 @@ case class DestructiveChanges(persistencePlugin: DeployConnector, project: Proje
   private def createRelationValidation = {
     //todo
 
-    //probably caught by the relationfields checks
+    // required relation and already nodes exist -> error
 
     validationSuccessful
   }
 
   private def deleteRelationValidation(x: DeleteRelation) = {
     clientDataResolver.existsByRelation(x.name).map {
-      case true  => Vector(SchemaWarning.dataLossModel(x.name)) //todo
+      case true  => Vector(SchemaWarning.dataLossModel(x.name)) //todo could also warn on the field level
       case false => Vector.empty
     }
   }
 
   private def updateRelationValidation = {
+    // becomes required -> nodes exist without relation -> error
+    // becomes to one -> possibly to many entries
+
     // todo cardinality change? how is that handled?
     validationSuccessful
   }

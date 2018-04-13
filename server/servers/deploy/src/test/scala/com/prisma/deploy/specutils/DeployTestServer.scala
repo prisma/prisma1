@@ -138,8 +138,10 @@ case class DeployTestServer()(implicit dependencies: DeployDependencies) extends
     dependencies.projectPersistence.load(project.id).await.get
   }
 
-  def deploySchemaThatMustSucceed(project: Project, schema: String, force: Boolean = false): JsValue = {
-    deployHelper(project.id, schema, Vector.empty, shouldFail = false, shouldWarn = false, force = force)
+  def deploySchemaThatMustSucceed(project: Project, schema: String, revision: Int, force: Boolean = false): JsValue = {
+    val res = deployHelper(project.id, schema, Vector.empty, shouldFail = false, shouldWarn = false, force = force)
+    require(res.pathAsDouble("data.deploy.migration.revision") == revision)
+    res
   }
 
   def deploySchemaThatMustFail(project: Project, schema: String, force: Boolean = false): JsValue = {
