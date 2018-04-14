@@ -11,7 +11,7 @@ object DatabaseQueryBuilder {
   }
 
   def existsByRelation(projectId: String, relationTableName: String): SQLActionBuilder = {
-    sql"select exists (select `id` from `#$projectId`.`_#$relationTableName`)"
+    sql"select exists (select `id` from `#$projectId`.`#$relationTableName`)"
   }
 
   def existsNullByModelAndScalarField(projectId: String, modelName: String, fieldName: String) = {
@@ -22,10 +22,11 @@ object DatabaseQueryBuilder {
   def existsNullByModelAndRelationField(projectId: String, modelName: String, field: Field) = {
     val relationTableName = field.relation.get.relationTableName
     val relationSide      = field.relationSide.get.toString
+
     sql"""select EXISTS (
             select `id`from `#$projectId`.`#$modelName`
             where `id` Not IN
-            (Select `#$projectId`.`#$relationTableName`.#$relationSide from `#$projectId`.`_#$relationTableName`)
+            (Select `#$projectId`.`#$relationTableName`.#$relationSide from `#$projectId`.`#$relationTableName`)
           )"""
   }
 

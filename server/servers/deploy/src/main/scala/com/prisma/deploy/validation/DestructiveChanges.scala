@@ -23,9 +23,9 @@ case class DestructiveChanges(persistencePlugin: DeployConnector, project: Proje
       case x: CreateEnum     => validationSuccessful
       case x: DeleteEnum     => deleteEnumValidation(x)
       case x: UpdateEnum     => updateEnumValidation(x)
-      case x: DeleteRelation => deleteRelationValidation(x)
       case x: CreateRelation => createRelationValidation(x)
-      case x: UpdateRelation => updateRelationValidation
+      case x: DeleteRelation => deleteRelationValidation(x)
+      case x: UpdateRelation => updateRelationValidation(x)
       case x: UpdateSecrets  => validationSuccessful
     }
 
@@ -40,7 +40,7 @@ case class DestructiveChanges(persistencePlugin: DeployConnector, project: Proje
   }
 
   private def createFieldValidation(x: CreateField) = {
-    project.schema.getModelByName(x.model) match {
+    previousSchema.getModelByName(x.model) match {
       case Some(existingModel) =>
         x.relation.isEmpty && x.isRequired && x.defaultValue.isEmpty match {
           case true =>
@@ -59,7 +59,7 @@ case class DestructiveChanges(persistencePlugin: DeployConnector, project: Proje
   }
 
   private def deleteFieldValidation(x: DeleteField) = {
-    val model    = project.schema.getModelByName_!(x.model)
+    val model    = previousSchema.getModelByName_!(x.model)
     val isScalar = model.fields.find(_.name == x.name).get.isScalar
 
     if (isScalar) {
@@ -73,7 +73,7 @@ case class DestructiveChanges(persistencePlugin: DeployConnector, project: Proje
   }
 
   private def updateFieldValidation(x: UpdateField) = {
-    val model                               = project.schema.getModelByName_!(x.model)
+    val model                               = previousSchema.getModelByName_!(x.model)
     val oldField                            = model.fields.find(_.name == x.name).get
     val cardinalityChanges                  = x.isList.isDefined
     val typeChanges                         = x.typeName.isDefined
@@ -116,14 +116,14 @@ case class DestructiveChanges(persistencePlugin: DeployConnector, project: Proje
   }
 
   private def updateEnumValidation(x: UpdateEnum) = {
-    val oldEnum = project.enums.find(_.name == x.name)
+    val oldEnum = previousSchema.enums.find(_.name == x.name)
     val deletedValues: Vector[String] = x.values match {
       case None            => Vector.empty
       case Some(newValues) => oldEnum.get.values.filter(value => !newValues.contains(value))
     }
 
     if (deletedValues.nonEmpty) {
-      val modelsWithFieldsThatUseEnum = project.models.filter(m => m.fields.exists(f => f.enum.isDefined && f.enum.get.name == x.name)).toVector
+      val modelsWithFieldsThatUseEnum = previousSchema.models.filter(m => m.fields.exists(f => f.enum.isDefined && f.enum.get.name == x.name)).toVector
       val res = deletedValues.map { deletedValue =>
         clientDataResolver.enumValueIsInUse(modelsWithFieldsThatUseEnum, x.name, deletedValue).map {
           case true  => Vector(SchemaError.global(s"You are deleting the value '$deletedValue' of the enum '${x.name}', but that value is in use."))
@@ -150,7 +150,7 @@ case class DestructiveChanges(persistencePlugin: DeployConnector, project: Proje
         case Some(field) => field.isRequired
       }
 
-      if (modelARequired) project.schema.models.find(_.name == modelName) match {
+      if (modelARequired) nextSchema.models.find(_.name == modelName) match {
         case Some(model) =>
           clientDataResolver.existsByModel(model.name).map {
             case true =>
@@ -172,21 +172,20 @@ case class DestructiveChanges(persistencePlugin: DeployConnector, project: Proje
   }
 
   private def deleteRelationValidation(x: DeleteRelation) = {
-    clientDataResolver.existsByRelation(x.name).map {
+    val previousRelation = previousSchema.relations.find(_.name == x.name).get
+
+    clientDataResolver.existsByRelation(previousRelation.relationTableName).map {
       case true  => Vector(SchemaWarning.dataLossRelation(x.name))
       case false => Vector.empty
     }
   }
 
-  private def updateRelationValidation = {
-    // becomes required -> nodes exist without relation -> error
-    // becomes to one -> possibly to many entries
+  private def updateRelationValidation(x: UpdateRelation) = {
+    // becomes required is handled by the change on the updateField
+    // todo cardinality change
 
-    // todo cardinality change? how is that handled?
     validationSuccessful
   }
 
-  private def validationSuccessful = {
-    Future.successful(Vector.empty)
-  }
+  private def validationSuccessful = Future.successful(Vector.empty)
 }
