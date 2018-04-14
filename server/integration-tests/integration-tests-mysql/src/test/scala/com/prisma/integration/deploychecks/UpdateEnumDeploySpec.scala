@@ -167,4 +167,41 @@ class UpdateEnumDeploySpec extends FlatSpec with Matchers with IntegrationBaseSp
     deployServer.deploySchemaThatMustError(project, schema2).toString should be(
       """{"data":{"deploy":{"migration":{"applied":0,"revision":0},"errors":[{"description":"You are deleting the value 'B' of the enum 'ABCD', but that value is in use."},{"description":"You are deleting the value 'C' of the enum 'ABCD', but that value is in use."},{"description":"You are deleting the value 'D' of the enum 'ABCD', but that value is in use."}],"warnings":[]}}}""")
   }
+
+  "Updating an Enum to rename it" should "succeed even if there is data" in {
+
+    val schema =
+      """|type A {
+         | name: String! @unique
+         | enum: ABCD
+         | enums: [ABCD!]!
+         |}
+         |
+         |enum ABCD{
+         |  A
+         |  B
+         |  C
+         |  D
+         |}"""
+
+    val (project, _) = setupProject(schema)
+
+    apiServer.query("""mutation{createA(data:{name: "A", enum: D, enums: {set:[C,B,A]}}){name}}""", project)
+
+    val schema2 =
+      """|type A {
+         | name: String! @unique
+         | enum: AB
+         | enums: [AB!]!
+         |}
+         |
+         |enum AB @rename(oldName: "ABCD"){
+         |  A
+         |  B
+         |  C
+         |  D
+         |}"""
+
+    deployServer.deploySchemaThatMustSucceed(project, schema2, 3)
+  }
 }
