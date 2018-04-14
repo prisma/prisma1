@@ -157,10 +157,6 @@ object SchemaErrors {
     SchemaError(theType, field, s"The field `$field` is a system field and cannot be removed.")
   }
 
-//  def systemTypeCannotBeRemoved(theType: String) = {
-//    SchemaError(theType, s"The type `$theType` is a system type and cannot be removed.")
-//  }
-
   def schemaFileHeaderIsMissing() = {
     SchemaError.global(s"""The schema must specify the project id and version as a front matter, e.g.:
                           |# projectId: your-project-id

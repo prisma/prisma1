@@ -4,7 +4,7 @@ import com.prisma.shared.errors.SchemaCheckResult
 
 case class SchemaWarning(`type`: String, description: String, field: Option[String]) extends SchemaCheckResult
 
-object SchemaWarning {
+object SchemaWarnings {
   def apply(`type`: String, field: String, description: String): SchemaWarning = {
     SchemaWarning(`type`, description, Some(field))
   }

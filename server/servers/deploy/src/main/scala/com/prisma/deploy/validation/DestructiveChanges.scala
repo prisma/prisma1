@@ -1,7 +1,7 @@
 package com.prisma.deploy.validation
 
 import com.prisma.deploy.connector.DeployConnector
-import com.prisma.deploy.migration.validation.{SchemaError, SchemaWarning}
+import com.prisma.deploy.migration.validation.{SchemaError, SchemaWarning, SchemaWarnings}
 import com.prisma.shared.errors.SchemaCheckResult
 import com.prisma.shared.models._
 
@@ -34,7 +34,7 @@ case class DestructiveChanges(persistencePlugin: DeployConnector, project: Proje
 
   private def deleteModelValidation(x: DeleteModel) = {
     clientDataResolver.existsByModel(x.name).map {
-      case true  => Vector(SchemaWarning.dataLossModel(x.name))
+      case true  => Vector(SchemaWarnings.dataLossModel(x.name))
       case false => Vector.empty
     }
   }
@@ -42,10 +42,11 @@ case class DestructiveChanges(persistencePlugin: DeployConnector, project: Proje
   private def createFieldValidation(x: CreateField) = {
     previousSchema.getModelByName(x.model) match {
       case Some(existingModel) =>
-        x.relation.isEmpty && x.isRequired && x.defaultValue.isEmpty match {
+        x.relation.isEmpty && x.isRequired match {
           case true =>
             clientDataResolver.existsByModel(existingModel.name).map {
-              case true  => Vector(SchemaError.global("You are creating a required field without a defaultValue but there are already nodes present."))
+              case true =>
+                Vector(SchemaError.global("You are creating a required field but there are already nodes present that would violate that constraint."))
               case false => Vector.empty
             }
 
@@ -64,7 +65,7 @@ case class DestructiveChanges(persistencePlugin: DeployConnector, project: Proje
 
     if (isScalar) {
       clientDataResolver.existsByModel(model.name).map {
-        case true  => Vector(SchemaWarning.dataLossField(x.name, x.name))
+        case true  => Vector(SchemaWarnings.dataLossField(x.name, x.name))
         case false => Vector.empty
       }
     } else {
@@ -84,7 +85,7 @@ case class DestructiveChanges(persistencePlugin: DeployConnector, project: Proje
     def warnings: Future[Vector[SchemaWarning]] = cardinalityChanges || typeChanges || goesFromRelationToScalarOrViceVersa match {
       case true =>
         clientDataResolver.existsByModel(model.name).map {
-          case true  => Vector(SchemaWarning.dataLossField(x.name, x.name))
+          case true  => Vector(SchemaWarnings.dataLossField(x.name, x.name))
           case false => Vector.empty
         }
       case false =>
@@ -175,7 +176,7 @@ case class DestructiveChanges(persistencePlugin: DeployConnector, project: Proje
     val previousRelation = previousSchema.relations.find(_.name == x.name).get
 
     clientDataResolver.existsByRelation(previousRelation.relationTableName).map {
-      case true  => Vector(SchemaWarning.dataLossRelation(x.name))
+      case true  => Vector(SchemaWarnings.dataLossRelation(x.name))
       case false => Vector.empty
     }
   }
