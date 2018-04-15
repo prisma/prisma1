@@ -3,14 +3,14 @@ package com.prisma.api
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
 import com.prisma.api.connector.DatabaseMutaction
-import com.prisma.api.connector.mysql.ApiConnectorImpl
-import com.prisma.api.connector.mysql.database.DatabaseQueryBuilder
+import com.prisma.api.connector.postgresql.ApiConnectorImpl
+import com.prisma.api.connector.postgresql.database.DatabaseQueryBuilder
 import com.prisma.deploy.connector.mysql.impls.DeployMutactionExectutorImpl
 import com.prisma.deploy.connector.{CreateRelationTable, DeployMutaction}
 import com.prisma.shared.models._
 import com.prisma.utils.await.AwaitUtils
-import slick.jdbc.MySQLProfile.api._
-import slick.jdbc.MySQLProfile.backend.DatabaseDef
+import slick.jdbc.PostgresProfile.api._
+import slick.jdbc.PostgresProfile.backend.DatabaseDef
 
 case class ApiTestDatabase()(implicit dependencies: ApiDependencies) extends AwaitUtils {
 
@@ -30,7 +30,7 @@ case class ApiTestDatabase()(implicit dependencies: ApiDependencies) extends Awa
   def truncate(project: Project): Unit = {
     val tables = clientDatabase.run(DatabaseQueryBuilder.getTables(project.id)).await
     val dbAction = {
-      val actions = List(sqlu"""USE `#${project.id}`;""") ++ List(DatabaseApiTestDatabaseMutationBuilder.dangerouslyTruncateTable(tables))
+      val actions = List(sqlu"""USE #${project.id};""") ++ List(DatabaseApiTestDatabaseMutationBuilderPG.dangerouslyTruncateTable(tables))
       DBIO.seq(actions: _*)
     }
     clientDatabase.run(dbAction).await()
@@ -38,9 +38,10 @@ case class ApiTestDatabase()(implicit dependencies: ApiDependencies) extends Awa
 
   def delete(project: Project): Unit = dropDatabases(Vector(project.id))
 
-  private def createProjectDatabase(project: Project) = runDbActionOnClientDb(DatabaseApiTestDatabaseMutationBuilder.createClientDatabaseForProject(project.id))
+  private def createProjectDatabase(project: Project) =
+    runDbActionOnClientDb(DatabaseApiTestDatabaseMutationBuilderPG.createClientDatabaseForProject(project.id))
   private def createModelTable(project: Project, model: Model) =
-    runDbActionOnClientDb(DatabaseApiTestDatabaseMutationBuilder.createTableForModel(project.id, model))
+    runDbActionOnClientDb(DatabaseApiTestDatabaseMutationBuilderPG.createTableForModel(project.id, model))
   private def createRelationTable(project: Project, relation: Relation) = runMutaction(CreateRelationTable(project.id, project.schema, relation = relation))
 
   def deleteExistingDatabases(): Unit = {
@@ -54,7 +55,7 @@ case class ApiTestDatabase()(implicit dependencies: ApiDependencies) extends Awa
   }
 
   private def dropDatabases(dbs: Vector[String]): Unit = {
-    val dbAction = DBIO.seq(dbs.map(db => DatabaseApiTestDatabaseMutationBuilder.dropDatabaseIfExists(database = db)): _*)
+    val dbAction = DBIO.seq(dbs.map(db => DatabaseApiTestDatabaseMutationBuilderPG.dropDatabaseIfExists(database = db)): _*)
     clientDatabase.run(dbAction).await(60)
   }
 

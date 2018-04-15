@@ -5,7 +5,7 @@ import akka.stream.ActorMaterializer
 import com.prisma.auth.AuthImpl
 import com.prisma.deploy.DeployDependencies
 import com.prisma.deploy.connector.DeployConnector
-import com.prisma.deploy.connector.mysql.MySqlDeployConnector
+import com.prisma.deploy.connector.mysql.PostGreSqlDeployConnector
 import com.prisma.deploy.migration.validation.SchemaError
 import com.prisma.deploy.schema.mutations.{FunctionInput, FunctionValidator}
 import com.prisma.deploy.server.DummyClusterAuth
@@ -24,19 +24,18 @@ case class DeployTestDependencies()(implicit val system: ActorSystem, val materi
   override def apiAuth = AuthImpl
 
   override def deployPersistencePlugin: DeployConnector = {
-    import slick.jdbc.MySQLProfile.api._
-    val sqlInternalHost     = sys.env("SQL_CLIENT_HOST")
-    val sqlInternalPort     = sys.env("SQL_CLIENT_PORT")
-    val sqlInternalUser     = sys.env("SQL_CLIENT_USER")
-    val sqlInternalPassword = sys.env("SQL_CLIENT_PASSWORD")
+    import slick.jdbc.PostgresProfile.api._
+    val sqlInternalHost     = sys.env("POSTGRES_CLIENT_HOST")
+    val sqlInternalPort     = sys.env("POSTGRES_CLIENT_PORT")
+    val sqlInternalUser     = sys.env("POSTGRES_CLIENT_USER")
+    val sqlInternalPassword = sys.env("POSTGRES_CLIENT_PASSWORD")
     val clientDb = Database.forURL(
-      url =
-        s"jdbc:mariadb://$sqlInternalHost:$sqlInternalPort?autoReconnect=true&useSSL=false&serverTimeZone=UTC&useUnicode=true&characterEncoding=UTF-8&usePipelineAuth=false",
+      url = s"jdbc:postgresql://$sqlInternalHost:$sqlInternalPort/",
       user = sqlInternalUser,
       password = sqlInternalPassword,
-      driver = "org.mariadb.jdbc.Driver"
+      driver = "org.postgresql.Driver"
     )
-    MySqlDeployConnector(clientDatabase = clientDb)(system.dispatcher)
+    PostGreSqlDeployConnector(clientDatabase = clientDb)(system.dispatcher)
   }
 
   override def functionValidator: FunctionValidator = (project: Project, fn: FunctionInput) => {

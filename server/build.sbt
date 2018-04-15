@@ -100,6 +100,7 @@ lazy val prismaImageShared = imageProject("prisma-image-shared")
 lazy val deploy = serverProject("deploy")
   .dependsOn(deployConnector % "compile")
   .dependsOn(deployConnectorMySql % "test->test")
+  .dependsOn(deployConnectorPostGreSql % "test->test")
   .dependsOn(akkaUtils % "compile")
   .dependsOn(metrics % "compile")
   .dependsOn(jvmProfiler % "compile")
@@ -112,6 +113,7 @@ lazy val deploy = serverProject("deploy")
 lazy val api = serverProject("api")
   .dependsOn(apiConnector % "compile")
   .dependsOn(apiConnectorMySql % "test->test")
+  .dependsOn(apiConnectorPostGreSql % "test->test")
   .dependsOn(deploy % "test->test")
   .dependsOn(messageBus % "compile")
   .dependsOn(akkaUtils % "compile")
@@ -148,6 +150,13 @@ lazy val deployConnectorMySql = connectorProject("deploy-connector-mysql")
     libraryDependencies ++= slick ++ Seq(mariaDbClient)
   )
 
+lazy val deployConnectorPostGreSql = connectorProject("deploy-connector-postgresql")
+  .dependsOn(deployConnector % "compile")
+  .dependsOn(scalaUtils % "compile")
+  .settings(
+    libraryDependencies ++= slick ++ Seq(postgresClient)
+  )
+
 lazy val apiConnector = connectorProject("api-connector")
   .dependsOn(sharedModels % "compile")
   .dependsOn(gcValues % "compile")
@@ -161,6 +170,14 @@ lazy val apiConnectorMySql = connectorProject("api-connector-mysql")
   .dependsOn(metrics % "compile")
   .settings(
     libraryDependencies ++= slick ++ Seq(mariaDbClient)
+  )
+
+lazy val apiConnectorPostGreSql = connectorProject("api-connector-postgresql")
+  .dependsOn(apiConnector % "compile")
+  .dependsOn(scalaUtils % "compile")
+  .dependsOn(metrics % "compile")
+  .settings(
+    libraryDependencies ++= slick ++ Seq(postgresClient)
   )
 
 // ####################
@@ -316,8 +333,10 @@ val allServerProjects = List(
 val allConnectorProjects = List(
   deployConnector,
   deployConnectorMySql,
+  deployConnectorPostGreSql,
   apiConnector,
-  apiConnectorMySql
+  apiConnectorMySql,
+  apiConnectorPostGreSql
 )
 
 val allLibProjects = List(

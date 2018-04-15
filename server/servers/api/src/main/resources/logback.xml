@@ -1,7 +1,7 @@
 <configuration>
     <logger name="slick" level="OFF" />
     <logger name="com.zaxxer.hikari" level="OFF" />
-    <!--<logger name="slick.jdbc.JdbcBackend.statement" level="DEBUG" />-->
+    <logger name="slick.jdbc.JdbcBackend.statement" level="DEBUG" />
     <!--<logger name="slick.jdbc.StatementInvoker.result" level="DEBUG" />-->
     <!--<logger name="slick.jdbc.JdbcBackend.benchmark" level="DEBUG" />-->
 
