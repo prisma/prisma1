@@ -6,10 +6,10 @@ import slick.jdbc.PostgresProfile.api._
 
 object DeployDatabaseMutationBuilder {
   def createClientDatabaseForProject(projectId: String) = {
-    val idCharset = charsetTypeForScalarTypeIdentifier(isList = false, TypeIdentifier.GraphQLID)
+//    val idCharset = charsetTypeForScalarTypeIdentifier(isList = false, TypeIdentifier.GraphQLID)
     DBIO.seq(
-      sqlu"""CREATE SCHEMA "#$projectId" DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci; """,
-      sqlu"""CREATE TABLE "#$projectId"."_RelayId" ("id" CHAR(25) #$idCharset NOT NULL, "stableModelIdentifier" CHAR(25) #$idCharset NOT NULL, PRIMARY KEY ("id"), UNIQUE INDEX "id_UNIQUE" ("id" ASC)) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci"""
+      sqlu"""CREATE SCHEMA "#$projectId";""",
+      sqlu"""CREATE TABLE "#$projectId"."_RelayId" ("id" CHAR(25) NOT NULL, "stableModelIdentifier" CHAR(25) NOT NULL, PRIMARY KEY ("id"))"""
     )
   }
 

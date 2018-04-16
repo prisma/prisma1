@@ -12,9 +12,9 @@ case class InternalDatabaseDefs() {
     val postgresInternalDatabase = sys.env("POSTGRES_INTERNAL_DATABASE")
     val postgresInternalUser     = sys.env("POSTGRES_INTERNAL_USER")
     val postgresInternalPassword = sys.env("POSTGRES_INTERNAL_PASSWORD")
-    val schemaPart               = if (root) "" else "/" + postgresInternalDatabase
+//    val schemaPart               = if (root) "" else "/" + postgresInternalDatabase
     Database.forURL(
-      url = s"jdbc:postgresql://$postgresInternalHost:$postgresInternalPort$schemaPart?autoReconnect=true&useSSL=false&serverTimeZone=UTC&usePipelineAuth=false",
+      url = s"jdbc:postgresql://$postgresInternalHost:$postgresInternalPort/",
       user = postgresInternalUser,
       password = postgresInternalPassword,
       driver = "org.postgresql.Driver"

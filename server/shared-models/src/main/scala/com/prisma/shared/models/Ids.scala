@@ -6,7 +6,7 @@ case class ProjectId(name: String, stage: String) {
 
 object ProjectId {
   private val workspaceSeparator = '~'
-  private val stageSeparator     = '@'
+  private val stageSeparator     = '$'
 
   def fromEncodedString(str: String): ProjectId = {
     val parts = str.split(stageSeparator)

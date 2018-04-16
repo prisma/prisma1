@@ -6,7 +6,7 @@ import slick.jdbc.PostgresProfile.api._
 
 import scala.concurrent.{ExecutionContext, Future}
 
-case class DeployMutactionExectutorImpl(
+case class DeployMutactionExecutorImpl(
     database: Database
 )(implicit ec: ExecutionContext)
     extends DeployMutactionExecutor {

@@ -1,6 +1,5 @@
-package com.prisma.deploy.connector.mysql
+package com.prisma.deploy.connector.postgresql
 
-import com.prisma.deploy.connector.postgresql.InternalDatabaseDefs
 import com.prisma.deploy.connector.postgresql.database.InternalDatabaseSchema
 import com.prisma.utils.await.AwaitUtils
 import slick.dbio.Effect.Read
@@ -19,15 +18,13 @@ class InternalTestDatabase extends AwaitUtils {
 
   def truncateTables(): Unit = {
     val schemas = internalDatabase.run(getTables("graphcool")).await()
+
+    println(schemas)
     internalDatabase.run(dangerouslyTruncateTables(schemas)).await()
   }
 
   private def dangerouslyTruncateTables(tableNames: Vector[String]): DBIOAction[Unit, NoStream, Effect] = {
-    DBIO.seq(
-      List(sqlu"""SET FOREIGN_KEY_CHECKS=0""") ++
-        tableNames.map(name => sqlu"TRUNCATE TABLE `#$name`") ++
-        List(sqlu"""SET FOREIGN_KEY_CHECKS=1"""): _*
-    )
+    DBIO.seq(tableNames.map(name => sqlu"""TRUNCATE TABLE "#$name" cascade"""): _*)
   }
 
   private def getTables(projectId: String): DBIOAction[Vector[String], NoStream, Read] = {

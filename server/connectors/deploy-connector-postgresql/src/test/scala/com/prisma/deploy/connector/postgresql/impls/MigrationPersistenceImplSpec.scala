@@ -1,6 +1,6 @@
-package com.prisma.deploy.connector.mysql.impls
+package com.prisma.deploy.connector.postgresql.impls
 
-import com.prisma.deploy.connector.mysql.SpecBase
+import com.prisma.deploy.connector.postgresql.SpecBase
 import com.prisma.deploy.connector.postgresql.database.Tables
 import com.prisma.shared.models._
 import org.joda.time.DateTime

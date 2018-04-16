@@ -1,4 +1,4 @@
-package com.prisma.deploy.connector.mysql
+package com.prisma.deploy.connector.postgresql
 
 import com.prisma.deploy.connector.postgresql.impls.{MigrationPersistenceImpl, ProjectPersistenceImpl}
 import com.prisma.shared.models._

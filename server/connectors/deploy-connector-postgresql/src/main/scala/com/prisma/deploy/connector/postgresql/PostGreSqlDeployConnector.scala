@@ -2,7 +2,7 @@ package com.prisma.deploy.connector.postgresql
 
 import com.prisma.deploy.connector._
 import com.prisma.deploy.connector.postgresql.database.{DeployDatabaseMutationBuilder, InternalDatabaseSchema}
-import com.prisma.deploy.connector.postgresql.impls.{ClientDbQueriesImpl, DeployMutactionExectutorImpl, MigrationPersistenceImpl, ProjectPersistenceImpl}
+import com.prisma.deploy.connector.postgresql.impls.{ClientDbQueriesImpl, DeployMutactionExecutorImpl, MigrationPersistenceImpl, ProjectPersistenceImpl}
 import com.prisma.shared.models.Project
 import slick.dbio.Effect.Read
 import slick.dbio.{DBIOAction, NoStream}
@@ -18,7 +18,7 @@ case class PostGreSqlDeployConnector(clientDatabase: Database)(implicit ec: Exec
 
   override val projectPersistence: ProjectPersistence           = ProjectPersistenceImpl(internalDatabase)
   override val migrationPersistence: MigrationPersistence       = MigrationPersistenceImpl(internalDatabase)
-  override val deployMutactionExecutor: DeployMutactionExecutor = DeployMutactionExectutorImpl(clientDatabase)
+  override val deployMutactionExecutor: DeployMutactionExecutor = DeployMutactionExecutorImpl(clientDatabase)
 
   override def createProjectDatabase(id: String): Future[Unit] = {
     val action = DeployDatabaseMutationBuilder.createClientDatabaseForProject(projectId = id)
@@ -79,10 +79,6 @@ trait TableTruncationHelpers {
   }
 
   private def dangerouslyTruncateTables(tableNames: Vector[String]): DBIOAction[Unit, NoStream, Effect] = {
-    DBIO.seq(
-      List(sqlu"""SET FOREIGN_KEY_CHECKS=0""") ++
-        tableNames.map(name => sqlu"TRUNCATE TABLE `#$name`") ++
-        List(sqlu"""SET FOREIGN_KEY_CHECKS=1"""): _*
-    )
+    DBIO.seq(tableNames.map(name => sqlu"""-- TRUNCATE TABLE "#$name" cascade"""): _*)
   }
 }

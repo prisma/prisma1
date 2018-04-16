@@ -2,7 +2,7 @@ package com.prisma.deploy.specutils
 
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
-import com.prisma.shared.models.{Migration, Project}
+import com.prisma.shared.models.{Migration, Project, ProjectId}
 import com.prisma.utils.await.AwaitUtils
 import com.prisma.utils.json.PlayJsonExtensions
 import cool.graph.cuid.Cuid
@@ -53,7 +53,7 @@ trait DeploySpecBase extends BeforeAndAfterEach with BeforeAndAfterAll with Awai
       secrets: Vector[String] = Vector.empty
   ): (Project, Migration) = {
 
-    val projectId = name + "@" + stage
+    val projectId = ProjectId.fromSegments(List(name, stage))
     projectsToCleanUp :+ projectId
     server.addProject(name, stage)
     server.deploySchema(name, stage, schema.stripMargin, secrets)
