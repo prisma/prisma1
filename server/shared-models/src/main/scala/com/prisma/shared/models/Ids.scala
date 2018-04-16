@@ -10,10 +10,13 @@ object ProjectId {
   private val defaultService     = "default"
   private val defaultStage       = "default"
 
+  val reservedServiceNames = Seq("cluster", "export", "import")
+
   def fromEncodedString(str: String): ProjectId = {
     val parts = str.split(stageSeparator)
     val name  = parts(0)
     val stage = parts(1)
+
     ProjectId(name, stage)
   }
 
