@@ -23,7 +23,7 @@ object ProjectId {
   def toEncodedString(name: String, stage: String): String = toEncodedString(List(name, stage))
 
   def toEncodedString(segments: List[String]): String = {
-    segments match {
+    segments.filter(_.nonEmpty) match {
       case Nil =>
         defaultService + stageSeparator + defaultStage
 
