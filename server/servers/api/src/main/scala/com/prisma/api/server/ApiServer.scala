@@ -199,7 +199,7 @@ case class ApiServer(
   }
 
   def splitReservedSegment(elements: List[String]): (List[String], Option[String]) = {
-    if (reservedSegments.contains(elements.last)) {
+    if (elements.nonEmpty && reservedSegments.contains(elements.last)) {
       (elements.dropRight(1), elements.lastOption)
     } else {
       (elements, None)

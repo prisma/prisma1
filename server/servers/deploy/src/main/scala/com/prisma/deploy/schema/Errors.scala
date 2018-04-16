@@ -42,11 +42,12 @@ case class ProjectAlreadyExists(name: String, stage: String)
     extends AbstractDeployApiError(s"Service with name '$name' and stage '$stage' already exists", 4005)
 
 case class ReservedServiceName(name: String) extends AbstractDeployApiError(s"Service name $name is reserved. Please choose a different name.", 4006)
+case class ReservedStageName(stage: String)  extends AbstractDeployApiError(s"Stage name $stage is reserved. Please choose a different stage name.", 4007)
 
 object DeploymentInProgress
     extends AbstractDeployApiError(
       "You can not deploy to a service stage while there is a deployment in progress or a pending deployment scheduled already. Please try again after the deployment finished.",
-      4007
+      4008
     )
 
 object InvalidNames {
