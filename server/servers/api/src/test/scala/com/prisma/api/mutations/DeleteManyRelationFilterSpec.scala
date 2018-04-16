@@ -22,7 +22,7 @@ class DeleteManyRelationFilterSpec extends FlatSpec with Matchers with ApiBaseSp
 
   override protected def beforeEach(): Unit = {
     super.beforeEach()
-    database.truncate(project)
+    database.truncateProjectTables(project)
   }
 
   "The delete many Mutation" should "delete the items matching the where relation filter" in {

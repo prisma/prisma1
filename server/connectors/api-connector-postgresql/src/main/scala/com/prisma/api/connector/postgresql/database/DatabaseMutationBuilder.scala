@@ -24,10 +24,10 @@ object DatabaseMutationBuilder {
 
     SimpleDBIO[Unit] { x =>
       val columns      = path.lastModel.scalarNonListFields.map(_.name)
-      val escapedKeys  = columns.map(column => s"$column").mkString(",")
+      val escapedKeys  = columns.map(column => s""""$column"""").mkString(",")
       val placeHolders = columns.map(_ => "?").mkString(",")
 
-      val query                         = s"INSERT INTO $projectId.${path.lastModel.name} ($escapedKeys) VALUES ($placeHolders)"
+      val query                         = s"""INSERT INTO "$projectId"."${path.lastModel.name}" ($escapedKeys) VALUES ($placeHolders)"""
       val itemInsert: PreparedStatement = x.connection.prepareStatement(query)
 
       columns.zipWithIndex.foreach {
@@ -45,7 +45,7 @@ object DatabaseMutationBuilder {
 
   def createRelayRow(projectId: String, path: Path): SqlStreamingAction[Vector[Int], Int, Effect]#ResultAction[Int, NoStream, Effect] = {
     val where = path.lastCreateWhere_!
-    (sql"INSERT INTO #$projectId._RelayId (id, stableModelIdentifier) VALUES (${where.fieldValue}, ${where.model.stableIdentifier})").asUpdate
+    (sql"""INSERT INTO "#$projectId"."_RelayId" ("id", "stableModelIdentifier") VALUES (${where.fieldValue}, ${where.model.stableIdentifier})""").asUpdate
   }
 
   def createRelationRowByPath(projectId: String, path: Path): SqlAction[Int, NoStream, Effect] = {

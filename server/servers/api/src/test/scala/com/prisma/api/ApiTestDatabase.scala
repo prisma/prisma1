@@ -9,6 +9,7 @@ import com.prisma.deploy.connector._
 import com.prisma.deploy.connector.postgresql.impls.DeployMutactionExecutorImpl
 import com.prisma.shared.models._
 import com.prisma.utils.await.AwaitUtils
+import slick.dbio.DBIOAction
 import slick.jdbc.PostgresProfile.api._
 import slick.jdbc.PostgresProfile.backend.DatabaseDef
 
@@ -19,7 +20,7 @@ case class ApiTestDatabase()(implicit dependencies: ApiDependencies) extends Awa
   private lazy val clientDatabase: DatabaseDef      = dependencies.apiConnector.asInstanceOf[ApiConnectorImpl].databases.master
 
   def setup(project: Project): Unit = {
-    delete(project)
+    deleteProjectDatabase(project)
     createProjectDatabase(project)
 
     // The order here is very important or foreign key constraints will fail
@@ -27,37 +28,13 @@ case class ApiTestDatabase()(implicit dependencies: ApiDependencies) extends Awa
     project.relations.foreach(createRelationTable(project, _))
   }
 
-  def truncate(project: Project): Unit = {
-    val listTableNames: List[String] =
-      project.models.flatMap(model => model.fields.collect { case field if field.isScalar && field.isList => s"${model.name}_${field.name}" })
+  def truncateProjectTables(project: Project): Unit = runMutaction(TruncateProject(project))
 
-    val tables   = Vector("_RelayId") ++ project.models.map(_.name) ++ project.relations.map(_.relationTableName) ++ listTableNames
-    val dbAction = DatabaseApiTestDatabaseMutationBuilderPG.dangerouslyTruncateTable(project.id, tables.map(_.toLowerCase))
+  def deleteProjectDatabase(project: Project): Unit = runMutaction(DeleteProject(project.id))
 
-    clientDatabase.run(dbAction).await()
-  }
-
-  def delete(project: Project): Unit = dropDatabases(Vector(project.id))
-
-  private def createProjectDatabase(project: Project) =
-    runDbActionOnClientDb(DatabaseApiTestDatabaseMutationBuilderPG.createClientDatabaseForProject(project.id))
+  private def createProjectDatabase(project: Project) = runMutaction(CreateProject(project.id))
 
   private def createRelationTable(project: Project, relation: Relation) = runMutaction(CreateRelationTable(project.id, project.schema, relation = relation))
-
-  def deleteExistingDatabases(): Unit = {
-    val schemas = {
-      clientDatabase
-        .run(DatabaseQueryBuilder.getSchemas)
-        .await
-        .filter(db => !Vector("information_schema", "mysql", "performance_schema", "sys", "innodb", "graphcool").contains(db))
-    }
-    dropDatabases(schemas)
-  }
-
-  private def dropDatabases(dbs: Vector[String]): Unit = {
-    val dbAction = DBIO.seq(dbs.map(db => DatabaseApiTestDatabaseMutationBuilderPG.dropDatabaseIfExists(database = db)): _*)
-    clientDatabase.run(dbAction).await(60)
-  }
 
   private def runMutaction(mutaction: DeployMutaction): Unit                    = DeployMutactionExecutorImpl(clientDatabase)(system.dispatcher).execute(mutaction).await
   def runDatabaseMutactionOnClientDb(mutaction: DatabaseMutaction)              = dependencies.databaseMutactionExecutor.execute(Vector(mutaction)).await()

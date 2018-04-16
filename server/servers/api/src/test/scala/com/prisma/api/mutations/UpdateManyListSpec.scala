@@ -31,7 +31,7 @@ class UpdateManyListSpec extends FlatSpec with Matchers with ApiBaseSpec {
 
   override protected def beforeEach(): Unit = {
     super.beforeEach()
-    database.truncate(project)
+    database.truncateProjectTables(project)
     server.query("""mutation{createMyObject(data:{name: "Test"}){name}}""", project)
   }
 

@@ -40,7 +40,7 @@ class BulkImportSpec extends FlatSpec with Matchers with ApiBaseSpec with AwaitU
   }
 
   override def beforeEach(): Unit = {
-    database.truncate(project)
+    database.truncateProjectTables(project)
   }
   val importer = new BulkImport(project)
 

@@ -1,12 +1,12 @@
-package com.prisma.deploy.connector.postgresql.database
+package com.prisma.deploy.connector.mysql.database
 
 import com.prisma.shared.models.MigrationStatus
 import play.api.libs.json.JsValue
 import slick.dbio.Effect.Read
-import slick.jdbc.PostgresProfile.api._
+import slick.jdbc.MySQLProfile.api._
 import slick.sql.SqlAction
 
-case class Project(
+case class ProjectDefinition(
     id: String,
     ownerId: Option[String],
     webhookUrl: Option[String],
@@ -16,7 +16,7 @@ case class Project(
     functions: JsValue
 )
 
-class ProjectTable(tag: Tag) extends Table[Project](tag, "Project") {
+class ProjectTable(tag: Tag) extends Table[ProjectDefinition](tag, "Project") {
   implicit val jsonMapper = MappedColumns.jsonMapper
 
   def id             = column[String]("id", O.PrimaryKey)
@@ -27,13 +27,13 @@ class ProjectTable(tag: Tag) extends Table[Project](tag, "Project") {
   def allowMutations = column[Boolean]("allowMutations")
   def functions      = column[JsValue]("functions")
 
-  def * = (id, ownerId, webhookUrl, secrets, allowQueries, allowMutations, functions) <> ((Project.apply _).tupled, Project.unapply)
+  def * = (id, ownerId, webhookUrl, secrets, allowQueries, allowMutations, functions) <> ((ProjectDefinition.apply _).tupled, ProjectDefinition.unapply)
 }
 
 object ProjectTable {
   implicit val statusMapper = MigrationTable.statusMapper
 
-  def byId(id: String): SqlAction[Option[Project], NoStream, Read] = {
+  def byId(id: String): SqlAction[Option[ProjectDefinition], NoStream, Read] = {
     Tables.Projects
       .filter {
         _.id === id
@@ -43,7 +43,7 @@ object ProjectTable {
       .headOption
   }
 
-  def byIdWithMigration(id: String): SqlAction[Option[(Project, Migration)], NoStream, Read] = {
+  def byIdWithMigration(id: String): SqlAction[Option[(ProjectDefinition, Migration)], NoStream, Read] = {
     val baseQuery = for {
       project   <- Tables.Projects
       migration <- Tables.Migrations
@@ -53,7 +53,7 @@ object ProjectTable {
     baseQuery.sortBy(_._2.revision.desc).take(1).result.headOption
   }
 
-  def loadAllWithMigration(): SqlAction[Seq[(Project, Migration)], NoStream, Read] = {
+  def loadAllWithMigration(): SqlAction[Seq[(ProjectDefinition, Migration)], NoStream, Read] = {
     // For each project, the latest successful migration (there has to be at least one, e.g. the initial migtation during create)
     val baseQuery = for {
       projectIdWithMax <- Tables.Migrations.filter(_.status === MigrationStatus.Success).groupBy(_.projectId).map(x => (x._1, x._2.map(_.revision).max))

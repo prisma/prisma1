@@ -1,6 +1,6 @@
 package com.prisma.deploy.connector.postgresql.impls
 
-import com.prisma.deploy.connector.postgresql.database.{Migration, Project}
+import com.prisma.deploy.connector.postgresql.database.{Migration, ProjectDefinition}
 import com.prisma.shared.models
 import play.api.libs.json.Json
 
@@ -8,11 +8,11 @@ object ModelToDbMapper {
   import com.prisma.shared.models.MigrationStepsJsonFormatter._
   import com.prisma.shared.models.ProjectJsonFormatter._
 
-  def convert(project: models.Project): Project = {
+  def convert(project: models.Project): ProjectDefinition = {
     val secretsJson   = Json.toJson(project.secrets)
     val functionsJson = Json.toJson(project.functions)
 
-    Project(
+    ProjectDefinition(
       id = project.id,
       ownerId = Some(project.ownerId), // todo ideally, owner id is not optional or it is optional on models.Project as well
       project.webhookUrl,

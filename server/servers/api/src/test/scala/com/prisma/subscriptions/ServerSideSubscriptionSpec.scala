@@ -18,7 +18,7 @@ class ServerSideSubscriptionSpec extends FlatSpec with Matchers with ApiBaseSpec
 
   override def beforeEach = {
     super.beforeEach()
-    database.truncate(project)
+    database.truncateProjectTables(project)
     webhookTestKit.reset
   }
 

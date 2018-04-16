@@ -18,7 +18,7 @@ class UpdateManySpec extends FlatSpec with Matchers with ApiBaseSpec {
 
   override protected def beforeEach(): Unit = {
     super.beforeEach()
-    database.truncate(project)
+    database.truncateProjectTables(project)
   }
 
   "The update items Mutation" should "update the items matching the where clause" in {

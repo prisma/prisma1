@@ -1,63 +1,56 @@
 package com.prisma.deploy.connector.postgresql.database
 
-import com.prisma.shared.models.TypeIdentifier
+import com.prisma.shared.models.{Project, TypeIdentifier}
 import com.prisma.shared.models.TypeIdentifier.TypeIdentifier
 import slick.jdbc.PostgresProfile.api._
 
 object DeployDatabaseMutationBuilder {
   def createClientDatabaseForProject(projectId: String) = {
-//    val idCharset = charsetTypeForScalarTypeIdentifier(isList = false, TypeIdentifier.GraphQLID)
     DBIO.seq(
       sqlu"""CREATE SCHEMA "#$projectId";""",
       sqlu"""CREATE TABLE "#$projectId"."_RelayId" ("id" CHAR(25) NOT NULL, "stableModelIdentifier" CHAR(25) NOT NULL, PRIMARY KEY ("id"))"""
     )
   }
 
-  def dropClientDatabaseForProject(projectId: String) = {
-    println(s"Dropping $projectId")
-    DBIO.seq(sqlu"""DROP SCHEMA IF EXISTS "#$projectId";""")
+  def truncateProjectTables(project: Project) = {
+    val listTableNames: List[String] =
+      project.models.flatMap(model => model.fields.collect { case field if field.isScalar && field.isList => s"${model.name}_${field.name}" })
+
+    val tables = Vector("_RelayId") ++ project.models.map(_.name) ++ project.relations.map(_.relationTableName) ++ listTableNames
+
+    DBIO.seq(tables.map(name => sqlu"""TRUNCATE TABLE  "#${project.id}"."#$name" CASCADE """): _*)
   }
 
-  def deleteProjectDatabase(projectId: String) = sqlu"""DROP DATABASE IF EXISTS "#$projectId""""
+  def deleteProjectDatabase(projectId: String) = sqlu"""DROP SCHEMA IF EXISTS "#$projectId" CASCADE"""
 
   def dropTable(projectId: String, tableName: String) = sqlu"""DROP TABLE "#$projectId"."#$tableName""""
 
   def createTable(projectId: String, name: String) = {
-//    val idCharset = charsetTypeForScalarTypeIdentifier(isList = false, TypeIdentifier.GraphQLID)
-
-    sqlu"""CREATE TABLE #$projectId.#$name
-    (id CHAR(25) NOT NULL,
-    createdAt TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updatedAt TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    PRIMARY KEY (id)
+    sqlu"""CREATE TABLE "#$projectId"."#$name"
+    ("id" CHAR(25) NOT NULL,
+    "createdAt" TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY ("id")
     )"""
   }
 
   def dropScalarListTable(projectId: String, modelName: String, fieldName: String) = sqlu"""DROP TABLE "#$projectId"."#${modelName}_#${fieldName}""""
 
   def createScalarListTable(projectId: String, modelName: String, fieldName: String, typeIdentifier: TypeIdentifier) = {
-//    val idCharset     = charsetTypeForScalarTypeIdentifier(isList = false, TypeIdentifier.GraphQLID)
-    val sqlType       = sqlTypeForScalarTypeIdentifier(typeIdentifier)
-    val charsetString = charsetTypeForScalarTypeIdentifier(false, typeIdentifier)
-    val indexSize = sqlType match {
-      case "text" => ""
-      case _      => ""
-    }
-
-    sqlu"""CREATE TABLE #$projectId.#${modelName}_#${fieldName}
-    (nodeId CHAR(25) NOT NULL,
-    position INT NOT NULL,
-    value #$sqlType NOT NULL,
-    PRIMARY KEY (nodeId, position)
+    val sqlType = sqlTypeForScalarTypeIdentifier(typeIdentifier)
+    sqlu"""CREATE TABLE "#$projectId"."#${modelName}_#${fieldName}"
+    ("nodeId" CHAR(25) NOT NULL,
+    "position" INT NOT NULL,
+    "value" #$sqlType NOT NULL,
+    PRIMARY KEY ("nodeId", "position")
     )"""
   }
 
   def updateScalarListType(projectId: String, modelName: String, fieldName: String, typeIdentifier: TypeIdentifier) = {
     val sqlType = sqlTypeForScalarTypeIdentifier(typeIdentifier)
-//    val charsetString = charsetTypeForScalarTypeIdentifier(false, typeIdentifier)
     val indexSize = sqlType match {
-      case "text" | "mediumtext" => "(191)"
-      case _                     => ""
+      case "text" => "(191)"
+      case _      => ""
     }
 
     sqlu"""ALTER TABLE "#$projectId"."#${modelName}_#${fieldName}" DROP INDEX "value", CHANGE COLUMN "value" "value" #$sqlType, ADD INDEX "value" ("value"#$indexSize ASC)"""
@@ -69,23 +62,6 @@ object DeployDatabaseMutationBuilder {
 
   def renameTable(projectId: String, name: String, newName: String) = sqlu"""RENAME TABLE "#$projectId"."#$name" TO "#$projectId"."#$newName";"""
 
-  def charsetTypeForScalarTypeIdentifier(isList: Boolean, typeIdentifier: TypeIdentifier): String = {
-    if (isList) {
-      return "CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci"
-    }
-
-    typeIdentifier match {
-      case TypeIdentifier.String    => "CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci"
-      case TypeIdentifier.Boolean   => ""
-      case TypeIdentifier.Int       => ""
-      case TypeIdentifier.Float     => ""
-      case TypeIdentifier.GraphQLID => "CHARACTER SET utf8 COLLATE utf8_general_ci"
-      case TypeIdentifier.Enum      => "CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci"
-      case TypeIdentifier.Json      => "CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci"
-      case TypeIdentifier.DateTime  => ""
-    }
-  }
-
   def createColumn(projectId: String,
                    tableName: String,
                    columnName: String,
@@ -94,8 +70,7 @@ object DeployDatabaseMutationBuilder {
                    isList: Boolean,
                    typeIdentifier: TypeIdentifier.TypeIdentifier) = {
 
-    val sqlType = sqlTypeForScalarTypeIdentifier(typeIdentifier)
-//    val charsetString = charsetTypeForScalarTypeIdentifier(isList, typeIdentifier)
+    val sqlType    = sqlTypeForScalarTypeIdentifier(typeIdentifier)
     val nullString = if (isRequired) "NOT NULL" else "NULL"
     val uniqueString =
       if (isUnique) {
@@ -107,7 +82,7 @@ object DeployDatabaseMutationBuilder {
         s""""""
       } else { "" }
 
-    sqlu"""ALTER TABLE #$projectId.#$tableName ADD COLUMN #$columnName
+    sqlu"""ALTER TABLE "#$projectId"."#$tableName" ADD COLUMN "#$columnName"
          #$sqlType #$nullString #$uniqueString"""
   }
 
@@ -147,12 +122,12 @@ object DeployDatabaseMutationBuilder {
   def createRelationTable(projectId: String, tableName: String, aTableName: String, bTableName: String) = {
 //    val idCharset = charsetTypeForScalarTypeIdentifier(isList = false, TypeIdentifier.GraphQLID)
 
-    sqlu"""CREATE TABLE #$projectId.#$tableName (id CHAR(25)  NOT NULL,
-           PRIMARY KEY (id),
-    A CHAR(25)  NOT NULL,
-    B CHAR(25)  NOT NULL,
-    FOREIGN KEY (A) REFERENCES #$projectId.#$aTableName(id) ON DELETE CASCADE,
-    FOREIGN KEY (B) REFERENCES #$projectId.#$bTableName(id) ON DELETE CASCADE)
+    sqlu"""CREATE TABLE "#$projectId"."#$tableName" ("id" CHAR(25)  NOT NULL,
+           PRIMARY KEY ("id"),
+    "A" CHAR(25)  NOT NULL,
+    "B" CHAR(25)  NOT NULL,
+    FOREIGN KEY ("A") REFERENCES "#$projectId"."#$aTableName"("id") ON DELETE CASCADE,
+    FOREIGN KEY ("B") REFERENCES "#$projectId"."#$bTableName"("id") ON DELETE CASCADE)
     ;"""
   }
 

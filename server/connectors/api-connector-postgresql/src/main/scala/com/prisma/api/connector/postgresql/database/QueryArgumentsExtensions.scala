@@ -36,11 +36,8 @@ object QueryArgumentsExtensions {
         case false => (defaultOrder, "asc")
       }
 
-      val nodeIdField   = s"$projectId.$modelId.nodeId"
-      val positionField = s"$projectId.$modelId.position"
-
       //always order by nodeId, then positionfield ascending
-      Some(sql"#$nodeIdField #$order, #$positionField #$idOrder")
+      Some(sql""""#$projectId"."#$modelId".nodeId" #$order, "#$projectId"."#$modelId".position" #$idOrder""")
     }
 
     def extractOrderByCommand(projectId: String, modelId: String, defaultOrderShortcut: Option[String] = None): Option[SQLActionBuilder] = {
@@ -54,11 +51,11 @@ object QueryArgumentsExtensions {
         case false => (defaultOrder, "asc")
       }
 
-      val idField = s"$projectId.$modelId.id"
+      val idField = s""""$projectId"."$modelId"."id""""
 
       orderBy match {
         case Some(orderByArg) if orderByArg.field.name != "id" =>
-          val orderByField = s"$projectId.$modelId.${orderByArg.field.name}"
+          val orderByField = s""""$projectId"."$modelId"."${orderByArg.field.name}""""
 
           // First order by the orderByField, then by id to break ties
           Some(sql"#$orderByField #$order, #$idField #$idOrder")
@@ -136,12 +133,12 @@ object QueryArgumentsExtensions {
       // If both params are empty, don't generate any query.
       if (before.isEmpty && after.isEmpty) return None
 
-      val idField = s"$projectId.$modelId.id"
+      val idField = s""""$projectId"."$modelId"."i""""
 
       // First, we fetch the ordering for the query. If none is passed, we order by id, ascending.
       // We need that since before/after are dependent on the order.
       val (orderByField, sortDirection) = orderBy match {
-        case Some(orderByArg) => (s"$projectId.$modelId.${orderByArg.field.name}", orderByArg.sortOrder.toString)
+        case Some(orderByArg) => (s""""$projectId"."$modelId"."${orderByArg.field.name}"""", orderByArg.sortOrder.toString)
         case None             => (idField, "asc")
       }
 

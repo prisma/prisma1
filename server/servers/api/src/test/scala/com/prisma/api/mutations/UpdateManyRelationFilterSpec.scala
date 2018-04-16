@@ -23,7 +23,7 @@ class UpdateManyRelationFilterSpec extends FlatSpec with Matchers with ApiBaseSp
 
   override protected def beforeEach(): Unit = {
     super.beforeEach()
-    database.truncate(project)
+    database.truncateProjectTables(project)
   }
 
   "The updateMany Mutation" should "update the items matching the where relation filter" in {

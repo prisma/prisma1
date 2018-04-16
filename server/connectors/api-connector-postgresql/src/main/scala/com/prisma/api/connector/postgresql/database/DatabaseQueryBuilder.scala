@@ -8,11 +8,10 @@ import com.prisma.gc_values._
 import com.prisma.shared.models.IdType.Id
 import com.prisma.shared.models.{Function => _, _}
 import slick.dbio.DBIOAction
-import slick.dbio.Effect.Read
 import slick.jdbc.PostgresProfile.api._
-import slick.jdbc.meta.{DatabaseMeta, MTable}
 import slick.jdbc.{SQLActionBuilder, _}
 import slick.sql.SqlStreamingAction
+
 import scala.concurrent.ExecutionContext.Implicits.global
 
 object DatabaseQueryBuilder {
@@ -90,7 +89,7 @@ object DatabaseQueryBuilder {
     val tableName                                        = model.name
     val (conditionCommand, orderByCommand, limitCommand) = extractQueryArgs(projectId, tableName, args, None, overrideMaxNodeCount = overrideMaxNodeCount)
 
-    val query = sql"select * from #$projectId.#$tableName" ++
+    val query = sql"""select * from "#$projectId"."#$tableName"""" ++
       prefixIfNotNone("where", conditionCommand) ++
       prefixIfNotNone("order by", orderByCommand) ++
       prefixIfNotNone("limit", limitCommand)
@@ -108,7 +107,7 @@ object DatabaseQueryBuilder {
     val tableName                                        = relationId
     val (conditionCommand, orderByCommand, limitCommand) = extractQueryArgs(projectId, tableName, args, None, overrideMaxNodeCount = overrideMaxNodeCount)
 
-    val query = sql"select * from #$projectId.#$tableName" ++
+    val query = sql"""select * from "#$projectId"."#$tableName"""" ++
       prefixIfNotNone("where", conditionCommand) ++
       prefixIfNotNone("order by", orderByCommand) ++
       prefixIfNotNone("limit", limitCommand)
@@ -126,7 +125,7 @@ object DatabaseQueryBuilder {
     val (conditionCommand, orderByCommand, limitCommand) = extractQueryArgs(projectId, tableName, args, None, overrideMaxNodeCount = overrideMaxNodeCount, true)
 
     val query =
-      sql"select * from #$projectId.#$tableName" ++
+      sql"""select * from "#$projectId"."#$tableName"""" ++
         prefixIfNotNone("where", conditionCommand) ++
         prefixIfNotNone("order by", orderByCommand) ++
         prefixIfNotNone("limit", limitCommand)
@@ -143,7 +142,7 @@ object DatabaseQueryBuilder {
   }
 
   def countAllFromModel(project: Project, model: Model, whereFilter: Option[DataItemFilterCollection]): DBIOAction[Int, NoStream, Effect] = {
-    val query = sql"select count(*) from #${project.id}.#${model.name}" ++ whereFilterAppendix(project.id, model, whereFilter)
+    val query = sql"""select count(*) from "#${project.id}"."#${model.name}"""" ++ whereFilterAppendix(project.id, model, whereFilter)
     query.as[Int].map(_.head)
   }
 
@@ -151,14 +150,14 @@ object DatabaseQueryBuilder {
                                    model: Model,
                                    fieldName: String,
                                    values: Vector[GCValue]): SqlStreamingAction[Vector[PrismaNode], PrismaNode, Effect] = {
-    val query = sql"select * from #$projectId.#${model.name} where #$fieldName in (" ++ combineByComma(values.map(gcValueToSQLBuilder)) ++ sql")"
+    val query = sql"""select * from "#$projectId"."#${model.name}" where "#$fieldName" in (""" ++ combineByComma(values.map(gcValueToSQLBuilder)) ++ sql")"
     query.as[PrismaNode](getResultForModel(model))
   }
 
   def batchSelectFromModelByUniqueSimple(projectId: String, model: Model, fieldName: String, values: Vector[GCValue]): SimpleDBIO[Vector[PrismaNode]] =
     SimpleDBIO[Vector[PrismaNode]] { x =>
       val placeHolders                   = values.map(_ => "?").mkString(",")
-      val query                          = s"select * from $projectId.${model.name} where $fieldName in ($placeHolders)"
+      val query                          = s"""select * from "$projectId"."${model.name}" where "$fieldName" in ($placeHolders)""""
       val batchSelect: PreparedStatement = x.connection.prepareStatement(query)
       values.zipWithIndex.foreach { gcValueWithIndex =>
         batchSelect.setGcValue(gcValueWithIndex._2 + 1, gcValueWithIndex._1)
@@ -178,7 +177,7 @@ object DatabaseQueryBuilder {
                            modelName: String,
                            field: Field,
                            nodeIds: Vector[IdGCValue]): DBIOAction[Vector[ScalarListValues], NoStream, Effect] = {
-    val query = sql"select nodeId, position, value from #$projectId.#${modelName}_#${field.name} where nodeId in (" ++ combineByComma(
+    val query = sql"""select "nodeId", "position", "value" from "#$projectId"."#${modelName}_#${field.name}" where "nodeId" in (""" ++ combineByComma(
       nodeIds.map(gcValueToSQLBuilder)) ++ sql")"
 
     query.as[ScalarListElement](getResultForScalarListField(field)).map { scalarListElements =>
@@ -206,11 +205,11 @@ object DatabaseQueryBuilder {
       extractQueryArgs(project.id, fieldTable, args, defaultOrderShortcut = Some(s"""${project.id}.$unsafeRelationId.$oppositeRelationSide"""), None)
 
     def createQuery(id: String, modelRelationSide: String, fieldRelationSide: String) = {
-      sql"""(select #${project.id}.#$fieldTable.*, #${project.id}.#$unsafeRelationId.A as __Relation__A,  #${project.id}.#$unsafeRelationId.B as __Relation__B
-            from #${project.id}.#$fieldTable
-           inner join #${project.id}.#$unsafeRelationId
-           on #${project.id}.#$fieldTable.id = #${project.id}.#$unsafeRelationId.#$fieldRelationSide
-           where #${project.id}.#$unsafeRelationId.#$modelRelationSide = #$id """ ++
+      sql"""(select "#${project.id}"."#$fieldTable".*, "#${project.id}"."#$unsafeRelationId"."A" as __Relation__A,  "#${project.id}"."#$unsafeRelationId"."B" as __Relation__B
+            from "#${project.id}"."#$fieldTable"
+           inner join "#${project.id}"."#$unsafeRelationId"
+           on "#${project.id}"."#$fieldTable"."id" = "#${project.id}"."#$unsafeRelationId"."#$fieldRelationSide"
+           where "#${project.id}"."#$unsafeRelationId"."#$modelRelationSide" = "#$id" """ ++
         prefixIfNotNone("and", conditionCommand) ++
         prefixIfNotNone("order by", orderByCommand) ++
         prefixIfNotNone("limit", limitCommand) ++ sql")"
@@ -258,7 +257,7 @@ object DatabaseQueryBuilder {
       extractQueryArgs(project.id, fieldTable, args, defaultOrderShortcut = Some(s"""${project.id}.$unsafeRelationId.$fieldRelationSide"""), None)
 
     def createQuery(id: String) = {
-      sql"""(select #$id, count(*) from #${project.id}.#$fieldTable
+      sql"""(select "#$id", count(*) from #${project.id}.#$fieldTable
            inner join #${project.id}.#$unsafeRelationId
            on #${project.id}.#$fieldTable.id = #${project.id}.#$unsafeRelationId.#$fieldRelationSide
            where #${project.id}.#$unsafeRelationId.#$modelRelationSide = #$id """ ++
@@ -276,19 +275,7 @@ object DatabaseQueryBuilder {
 
 // used in tests only
 
-  def getTables(projectId: String): DBIOAction[Vector[String], NoStream, Read] = {
-    for {
-      metaTables <- MTable.getTables(cat = Some(projectId), schemaPattern = None, namePattern = None, types = None)
-    } yield metaTables.map(table => table.name.name)
-  }
-
-  def getSchemas: DBIOAction[Vector[String], NoStream, Read] = {
-    for {
-      catalogs <- DatabaseMeta.getCatalogs
-    } yield catalogs
-  }
-
-  def itemCountForTable(projectId: String, modelName: String) = { // todo use count all from model
+  def itemCountForTable(projectId: String, modelName: String) = { // todo use count all from model -> doesnt work for relay
     sql"SELECT COUNT(*) AS Count FROM #$projectId.#$modelName"
   }
 

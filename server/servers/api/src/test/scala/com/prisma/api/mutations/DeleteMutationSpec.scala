@@ -19,7 +19,7 @@ class DeleteMutationSpec extends FlatSpec with Matchers with ApiBaseSpec {
     database.setup(project)
   }
 
-  override def beforeEach(): Unit = database.truncate(project)
+  override def beforeEach(): Unit = database.truncateProjectTables(project)
 
   "A Delete Mutation" should "delete and return item" in {
     val id =
