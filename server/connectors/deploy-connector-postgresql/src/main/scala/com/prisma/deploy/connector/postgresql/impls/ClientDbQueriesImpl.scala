@@ -1,12 +1,12 @@
-package com.prisma.deploy.connector.mysql.impls
+package com.prisma.deploy.connector.postgresql.impls
 
 import com.prisma.deploy.connector.ClientDbQueries
-import com.prisma.deploy.connector.mysql.database.DatabaseQueryBuilder
+import com.prisma.deploy.connector.postgresql.database.DatabaseQueryBuilder
 import com.prisma.shared.models.{Field, Model, Project}
 import slick.dbio.Effect.Read
+import slick.jdbc.PostgresProfile.api._
 import slick.jdbc.SQLActionBuilder
 import slick.sql.SqlStreamingAction
-import slick.jdbc.MySQLProfile.api._
 
 import scala.concurrent.{ExecutionContext, Future}
 

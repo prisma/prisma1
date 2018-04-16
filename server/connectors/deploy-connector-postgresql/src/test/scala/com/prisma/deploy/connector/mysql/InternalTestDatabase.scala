@@ -1,10 +1,11 @@
 package com.prisma.deploy.connector.mysql
 
-import com.prisma.deploy.connector.mysql.database.InternalDatabaseSchema
+import com.prisma.deploy.connector.postgresql.InternalDatabaseDefs
+import com.prisma.deploy.connector.postgresql.database.InternalDatabaseSchema
 import com.prisma.utils.await.AwaitUtils
 import slick.dbio.Effect.Read
 import slick.dbio.{DBIOAction, NoStream}
-import slick.jdbc.MySQLProfile.api._
+import slick.jdbc.PostgresProfile.api._
 import slick.jdbc.meta.MTable
 
 class InternalTestDatabase extends AwaitUtils {

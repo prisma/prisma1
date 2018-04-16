@@ -1,10 +1,10 @@
 package com.prisma.api
 
-import com.prisma.api.connector.mysql.database.DatabaseMutationBuilder
+import com.prisma.api.connector.postgresql.database.DatabaseMutationBuilder
 import com.prisma.shared.models.TypeIdentifier.TypeIdentifier
 import com.prisma.shared.models.{Model, TypeIdentifier}
 import slick.dbio.DBIOAction
-import slick.jdbc.MySQLProfile.api._
+import slick.jdbc.PostgresProfile.api._
 
 object DatabaseApiTestDatabaseMutationBuilderPG {
 
@@ -70,12 +70,8 @@ object DatabaseApiTestDatabaseMutationBuilderPG {
     """
   }
 
-  def dangerouslyTruncateTable(tableNames: Vector[String]): DBIOAction[Unit, NoStream, Effect] = {
-    DBIO.seq(
-      List(sqlu"""SET FOREIGN_KEY_CHECKS=0""") ++
-        tableNames.map(name => sqlu"TRUNCATE TABLE #$name") ++
-        List(sqlu"""SET FOREIGN_KEY_CHECKS=1"""): _*
-    )
+  def dangerouslyTruncateTable(projectId: String, tableNames: Vector[String]): DBIOAction[Unit, NoStream, Effect] = {
+    DBIO.seq(tableNames.map(name => sqlu"""TRUNCATE TABLE  #$projectId.#$name CASCADE """): _*)
   }
 
   def createColumn(projectId: String,

@@ -1,7 +1,7 @@
 package com.prisma.deploy.connector.mysql.impls
 
 import com.prisma.deploy.connector.mysql.SpecBase
-import com.prisma.deploy.connector.mysql.database.Tables
+import com.prisma.deploy.connector.postgresql.database.Tables
 import com.prisma.shared.models.{Migration, MigrationId, MigrationStatus}
 import org.scalatest.{FlatSpec, Matchers}
 import slick.jdbc.MySQLProfile.api._

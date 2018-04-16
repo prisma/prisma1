@@ -5,7 +5,7 @@ import akka.stream.ActorMaterializer
 import com.prisma.auth.AuthImpl
 import com.prisma.deploy.DeployDependencies
 import com.prisma.deploy.connector.DeployConnector
-import com.prisma.deploy.connector.mysql.PostGreSqlDeployConnector
+import com.prisma.deploy.connector.postgresql.PostGreSqlDeployConnector
 import com.prisma.deploy.migration.validation.SchemaError
 import com.prisma.deploy.schema.mutations.{FunctionInput, FunctionValidator}
 import com.prisma.deploy.server.DummyClusterAuth

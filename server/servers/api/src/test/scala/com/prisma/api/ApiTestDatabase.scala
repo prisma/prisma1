@@ -2,15 +2,17 @@ package com.prisma.api
 
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
+import com.prisma.api.DatabaseApiTestDatabaseMutationBuilderPG.{createColumn, createScalarListTable, createTable}
 import com.prisma.api.connector.DatabaseMutaction
 import com.prisma.api.connector.postgresql.ApiConnectorImpl
-import com.prisma.api.connector.postgresql.database.DatabaseQueryBuilder
-import com.prisma.deploy.connector.mysql.impls.DeployMutactionExectutorImpl
-import com.prisma.deploy.connector.{CreateRelationTable, DeployMutaction}
+import com.prisma.api.connector.postgresql.database.{DatabaseMutationBuilder, DatabaseQueryBuilder}
+import com.prisma.deploy.connector.postgresql.impls.DeployMutactionExectutorImpl
+import com.prisma.deploy.connector._
 import com.prisma.shared.models._
 import com.prisma.utils.await.AwaitUtils
 import slick.jdbc.PostgresProfile.api._
 import slick.jdbc.PostgresProfile.backend.DatabaseDef
+import slick.sql.SqlAction
 
 case class ApiTestDatabase()(implicit dependencies: ApiDependencies) extends AwaitUtils {
 
@@ -28,11 +30,16 @@ case class ApiTestDatabase()(implicit dependencies: ApiDependencies) extends Awa
   }
 
   def truncate(project: Project): Unit = {
-    val tables = clientDatabase.run(DatabaseQueryBuilder.getTables(project.id)).await
-    val dbAction = {
-      val actions = List(sqlu"""USE #${project.id};""") ++ List(DatabaseApiTestDatabaseMutationBuilderPG.dangerouslyTruncateTable(tables))
-      DBIO.seq(actions: _*)
-    }
+    val listTableNames: List[String] =
+      project.models.flatMap(model => model.fields.collect { case field if field.isScalar && field.isList => s"${model.name}_${field.name}" })
+
+    val tables   = Vector("_RelayId") ++ project.models.map(_.name) ++ project.relations.map(_.relationTableName) ++ listTableNames
+    val dbAction = DatabaseApiTestDatabaseMutationBuilderPG.dangerouslyTruncateTable(project.id, tables.map(_.toLowerCase))
+
+//    val dbAction = {
+//      val actions = List(sqlu"""USE #${project.id};""") ++ List(DatabaseApiTestDatabaseMutationBuilderPG.dangerouslyTruncateTable(tables))
+//      DBIO.seq(actions: _*)
+//    }
     clientDatabase.run(dbAction).await()
   }
 
@@ -40,8 +47,7 @@ case class ApiTestDatabase()(implicit dependencies: ApiDependencies) extends Awa
 
   private def createProjectDatabase(project: Project) =
     runDbActionOnClientDb(DatabaseApiTestDatabaseMutationBuilderPG.createClientDatabaseForProject(project.id))
-  private def createModelTable(project: Project, model: Model) =
-    runDbActionOnClientDb(DatabaseApiTestDatabaseMutationBuilderPG.createTableForModel(project.id, model))
+
   private def createRelationTable(project: Project, relation: Relation) = runMutaction(CreateRelationTable(project.id, project.schema, relation = relation))
 
   def deleteExistingDatabases(): Unit = {
@@ -62,4 +68,18 @@ case class ApiTestDatabase()(implicit dependencies: ApiDependencies) extends Awa
   private def runMutaction(mutaction: DeployMutaction): Unit                    = DeployMutactionExectutorImpl(clientDatabase)(system.dispatcher).execute(mutaction).await
   def runDatabaseMutactionOnClientDb(mutaction: DatabaseMutaction)              = dependencies.databaseMutactionExecutor.execute(Vector(mutaction)).await()
   def runDbActionOnClientDb(action: DBIOAction[Any, NoStream, Effect.All]): Any = clientDatabase.run(action).await()
+
+  private def createModelTable(project: Project, model: Model) = {
+
+    runMutaction(CreateModelTable(project.id, model.name))
+
+    model.scalarNonListFields
+      .filter(f => !DatabaseMutationBuilder.implicitlyCreatedColumns.contains(f.name))
+      .map(field => CreateColumn(project.id, model, field))
+      .map(runMutaction)
+
+    model.scalarListFields
+      .map(field => CreateScalarListTable(project.id, model.name, field.name, field.typeIdentifier))
+      .map(runMutaction)
+  }
 }

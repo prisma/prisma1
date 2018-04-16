@@ -1,9 +1,9 @@
-package com.prisma.deploy.connector.mysql.database
+package com.prisma.deploy.connector.postgresql.database
 
 import com.prisma.shared.models.MigrationStatus
 import play.api.libs.json.JsValue
 import slick.dbio.Effect.Read
-import slick.jdbc.MySQLProfile.api._
+import slick.jdbc.PostgresProfile.api._
 import slick.sql.SqlAction
 
 case class Project(

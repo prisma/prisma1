@@ -1,6 +1,6 @@
 package com.prisma.deploy.connector.mysql
 
-import com.prisma.deploy.connector.mysql.impls.{MigrationPersistenceImpl, ProjectPersistenceImpl}
+import com.prisma.deploy.connector.postgresql.impls.{MigrationPersistenceImpl, ProjectPersistenceImpl}
 import com.prisma.shared.models._
 import com.prisma.utils.await.AwaitUtils
 import cool.graph.cuid.Cuid

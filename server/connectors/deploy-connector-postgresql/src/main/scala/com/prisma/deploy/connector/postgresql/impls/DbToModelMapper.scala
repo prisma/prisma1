@@ -1,6 +1,6 @@
-package com.prisma.deploy.connector.mysql.impls
+package com.prisma.deploy.connector.postgresql.impls
 
-import com.prisma.deploy.connector.mysql.database.{Migration, Project}
+import com.prisma.deploy.connector.postgresql.database.{Migration, Project}
 import com.prisma.shared.models
 import com.prisma.shared.models.{MigrationStep, Schema}
 

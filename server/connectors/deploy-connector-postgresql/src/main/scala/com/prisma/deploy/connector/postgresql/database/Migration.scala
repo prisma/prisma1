@@ -1,4 +1,4 @@
-package com.prisma.deploy.connector.mysql.database
+package com.prisma.deploy.connector.postgresql.database
 
 import com.github.tototoshi.slick.MySQLJodaSupport
 import com.prisma.shared.models.MigrationStatus
@@ -6,7 +6,7 @@ import com.prisma.shared.models.MigrationStatus.MigrationStatus
 import org.joda.time.DateTime
 import play.api.libs.json.JsValue
 import slick.dbio.Effect.{Read, Write}
-import slick.jdbc.MySQLProfile.api._
+import slick.jdbc.PostgresProfile.api._
 import slick.sql.{FixedSqlAction, FixedSqlStreamingAction, SqlAction}
 
 case class Migration(

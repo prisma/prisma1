@@ -1,4 +1,4 @@
-package com.prisma.deploy.connector.mysql.impls.mutactions
+package com.prisma.deploy.connector.postgresql.impls.mutactions
 
 import com.prisma.deploy.connector.DeployMutaction
 import slick.dbio.{DBIOAction, Effect, NoStream}

@@ -1,7 +1,7 @@
-package com.prisma.deploy.connector.mysql.database
+package com.prisma.deploy.connector.postgresql.database
 
 import play.api.libs.json.{JsArray, JsString, JsValue}
-import slick.jdbc.MySQLProfile.api._
+import slick.jdbc.PostgresProfile.api._
 
 import scala.util.Success
 

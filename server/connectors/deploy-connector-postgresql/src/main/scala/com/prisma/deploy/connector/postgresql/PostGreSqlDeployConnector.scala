@@ -1,8 +1,8 @@
-package com.prisma.deploy.connector.mysql
+package com.prisma.deploy.connector.postgresql
 
 import com.prisma.deploy.connector._
-import com.prisma.deploy.connector.mysql.database.{DatabaseMutationBuilder, InternalDatabaseSchema}
-import com.prisma.deploy.connector.mysql.impls.{ClientDbQueriesImpl, DeployMutactionExectutorImpl, MigrationPersistenceImpl, ProjectPersistenceImpl}
+import com.prisma.deploy.connector.postgresql.database.{DeployDatabaseMutationBuilder, InternalDatabaseSchema}
+import com.prisma.deploy.connector.postgresql.impls.{ClientDbQueriesImpl, DeployMutactionExectutorImpl, MigrationPersistenceImpl, ProjectPersistenceImpl}
 import com.prisma.shared.models.Project
 import slick.dbio.Effect.Read
 import slick.dbio.{DBIOAction, NoStream}
@@ -21,12 +21,12 @@ case class PostGreSqlDeployConnector(clientDatabase: Database)(implicit ec: Exec
   override val deployMutactionExecutor: DeployMutactionExecutor = DeployMutactionExectutorImpl(clientDatabase)
 
   override def createProjectDatabase(id: String): Future[Unit] = {
-    val action = DatabaseMutationBuilder.createClientDatabaseForProject(projectId = id)
+    val action = DeployDatabaseMutationBuilder.createClientDatabaseForProject(projectId = id)
     clientDatabase.run(action)
   }
 
   override def deleteProjectDatabase(id: String): Future[Unit] = {
-    val action = DatabaseMutationBuilder.deleteProjectDatabase(projectId = id).map(_ => ())
+    val action = DeployDatabaseMutationBuilder.deleteProjectDatabase(projectId = id).map(_ => ())
     clientDatabase.run(action)
   }
 
@@ -52,7 +52,7 @@ case class PostGreSqlDeployConnector(clientDatabase: Database)(implicit ec: Exec
     internalDatabaseRoot.run(action)
   }
 
-  override def reset(): Future[Unit] = truncateTablesInDatabse(internalDatabase)
+  override def reset(): Future[Unit] = truncateTablesInDatabase(internalDatabase)
 
   override def shutdown() = {
     for {
@@ -65,7 +65,7 @@ case class PostGreSqlDeployConnector(clientDatabase: Database)(implicit ec: Exec
 trait TableTruncationHelpers {
   // copied from InternalTestDatabase
 
-  protected def truncateTablesInDatabse(database: Database)(implicit ec: ExecutionContext): Future[Unit] = {
+  protected def truncateTablesInDatabase(database: Database)(implicit ec: ExecutionContext): Future[Unit] = {
     for {
       schemas <- database.run(getTables("graphcool"))
       _       <- database.run(dangerouslyTruncateTables(schemas))

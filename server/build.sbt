@@ -99,7 +99,7 @@ lazy val prismaImageShared = imageProject("prisma-image-shared")
 
 lazy val deploy = serverProject("deploy")
   .dependsOn(deployConnector % "compile")
-  .dependsOn(deployConnectorMySql % "test->test")
+//  .dependsOn(deployConnectorMySql % "test->test")
   .dependsOn(deployConnectorPostGreSql % "test->test")
   .dependsOn(akkaUtils % "compile")
   .dependsOn(metrics % "compile")
@@ -112,7 +112,7 @@ lazy val deploy = serverProject("deploy")
 
 lazy val api = serverProject("api")
   .dependsOn(apiConnector % "compile")
-  .dependsOn(apiConnectorMySql % "test->test")
+//  .dependsOn(apiConnectorMySql % "test->test")
   .dependsOn(apiConnectorPostGreSql % "test->test")
   .dependsOn(deploy % "test->test")
   .dependsOn(messageBus % "compile")
@@ -332,12 +332,19 @@ val allServerProjects = List(
 
 val allConnectorProjects = List(
   deployConnector,
-  deployConnectorMySql,
   deployConnectorPostGreSql,
   apiConnector,
-  apiConnectorMySql,
   apiConnectorPostGreSql
 )
+
+//val allConnectorProjects = List(
+//  deployConnector,
+//  deployConnectorMySql,
+//  deployConnectorPostGreSql,
+//  apiConnector,
+//  apiConnectorMySql,
+//  apiConnectorPostGreSql
+//)
 
 val allLibProjects = List(
   akkaUtils,

@@ -1,8 +1,8 @@
-package com.prisma.deploy.connector.mysql.database
+package com.prisma.deploy.connector.postgresql.database
 
 import com.prisma.shared.models.Field
+import slick.jdbc.PostgresProfile.api._
 import slick.jdbc.SQLActionBuilder
-import slick.jdbc.MySQLProfile.api._
 
 object DatabaseQueryBuilder {
 

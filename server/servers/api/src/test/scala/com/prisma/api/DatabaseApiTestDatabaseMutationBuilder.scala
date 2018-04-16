@@ -1,6 +1,6 @@
 package com.prisma.api
 
-import com.prisma.api.connector.mysql.database.DatabaseMutationBuilder
+import com.prisma.api.connector.postgresql.database.DatabaseMutationBuilder
 import com.prisma.shared.models.TypeIdentifier.TypeIdentifier
 import com.prisma.shared.models.{Model, TypeIdentifier}
 import slick.dbio.DBIOAction

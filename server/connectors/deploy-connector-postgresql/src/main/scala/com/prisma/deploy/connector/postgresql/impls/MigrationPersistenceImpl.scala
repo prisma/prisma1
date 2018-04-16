@@ -1,7 +1,7 @@
-package com.prisma.deploy.connector.mysql.impls
+package com.prisma.deploy.connector.postgresql.impls
 
 import com.prisma.deploy.connector.MigrationPersistence
-import com.prisma.deploy.connector.mysql.database.MigrationTable
+import com.prisma.deploy.connector.postgresql.database.MigrationTable
 import com.prisma.shared.models.MigrationStatus.MigrationStatus
 import com.prisma.shared.models.{Migration, MigrationId}
 import com.prisma.utils.future.FutureUtils.FutureOpt

@@ -1,4 +1,4 @@
-package com.prisma.deploy.connector.mysql
+package com.prisma.deploy.connector.postgresql
 
 case class InternalDatabaseDefs() {
   import slick.jdbc.PostgresProfile.api._

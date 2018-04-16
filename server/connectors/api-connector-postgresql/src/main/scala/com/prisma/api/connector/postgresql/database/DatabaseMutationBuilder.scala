@@ -56,8 +56,11 @@ object DatabaseMutationBuilder {
     val relationId = Cuid.createCuid()
     (sql"insert into #$projectId.#${path.lastRelation_!.relationTableName} (id, #${path.parentSideOfLastEdge}, #${path.childSideOfLastEdge})" ++
       sql"Select '#$relationId'," ++ pathQueryForLastChild(projectId, path.removeLastEdge) ++ sql"," ++
-      sql"id FROM #$projectId.#${childWhere.model.name} where #${childWhere.field.name} = ${childWhere.fieldValue}" ++
-      sql"on duplicate key update #$projectId.#${path.lastRelation_!.relationTableName}.id = #$projectId.#${path.lastRelation_!.relationTableName}.id").asUpdate
+      sql"id FROM #$projectId.#${childWhere.model.name} where #${childWhere.field.name} = ${childWhere.fieldValue}").asUpdate
+
+//    https://stackoverflow.com/questions/1109061/insert-on-duplicate-update-in-postgresql
+//    ++
+//      sql"on conflict (id )  key update #$projectId.#${path.lastRelation_!.relationTableName}.id = #$projectId.#${path.lastRelation_!.relationTableName}.id").asUpdate
   }
 
   //endregion
