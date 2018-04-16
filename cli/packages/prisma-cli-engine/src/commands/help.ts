@@ -124,17 +124,23 @@ ${chalk.bold('Usage:')} ${chalk.bold('prisma')} COMMAND`)
         groupTopics.map(async (t: any) => {
           const cmds = await this.plugins.commandsForTopic(t.id)
           // console.log(cmds)
-          // if (t.id === 'local') {
+          // if (t.id === 'cluster') {
           //   debugger
           // }
           return cmds.filter(cmd => !cmd.hidden).map(cmd => {
             const cmdName = cmd.command ? ` ${cmd.command}` : ''
-            return [t.id + cmdName, chalk.dim(cmd.description || t.description)]
+            const deprecation = cmd.deprecated ? ' (deprecated)' : ''
+            return [
+              t.id + cmdName,
+              chalk.dim((cmd.description || t.description) + deprecation),
+            ]
           })
         }),
       )) as any
+      const name = group.deprecated ? `${group.name} (deprecated)` : group.name
       jobs.push({
-        group: group.name,
+        deprecated: group.deprecated,
+        group: name,
         list: flatten(list),
       })
     }
@@ -144,8 +150,10 @@ ${chalk.bold('Usage:')} ${chalk.bold('prisma')} COMMAND`)
 
     jobs.forEach(job => {
       this.out.log('')
-      this.out.log(chalk.bold(job.group + ':'))
-      this.out.log(renderList(job.list, globalMaxLeft))
+      const firstLine = chalk.bold(job.group + ':')
+      const secondLine = renderList(job.list, globalMaxLeft)
+      this.out.log(job.deprecated ? chalk.dim(firstLine) : firstLine)
+      this.out.log(job.deprecated ? chalk.dim(secondLine) : secondLine)
     })
 
     this.out.log(`\nUse ${chalk.green(
