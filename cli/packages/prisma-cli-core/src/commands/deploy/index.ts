@@ -8,7 +8,6 @@ import * as inquirer from 'inquirer'
 import * as path from 'path'
 import * as fs from 'fs-extra'
 import { fetchAndPrintSchema } from './printSchema'
-import Up from '../local/up'
 import { Seeder } from '../seed/Seeder'
 import * as childProcess from 'child_process'
 import * as semver from 'semver'
@@ -19,6 +18,8 @@ import * as sillyname from 'sillyname'
 import { getSchemaPathFromConfig } from './getSchemaPathFromConfig'
 import * as findUp from 'find-up'
 import getGraphQLCliBin from '../../utils/getGraphQLCliBin'
+import Up from '../local/up'
+import { EndpointDialog } from '../../utils/EndpointDialog'
 
 export default class Deploy extends Command {
   static topic = 'deploy'
@@ -51,8 +52,8 @@ ${chalk.gray(
       char: 'w',
       description: 'Watch for changes',
     }),
-    interactive: flags.boolean({
-      char: 'i',
+    new: flags.boolean({
+      char: 'n',
       description: 'Force interactive mode to select the cluster',
     }),
     'dry-run': flags.boolean({
@@ -76,7 +77,9 @@ ${chalk.gray(
   private showedHooks: boolean = false
   private loggedIn: boolean = false
   async run() {
-    debug('run')
+    /**
+     * Get Args
+     */
     const { force, watch, interactive } = this.flags
     const envFile = this.flags['env-file']
     const dryRun = this.flags['dry-run']
@@ -85,61 +88,46 @@ ${chalk.gray(
       await this.out.error(`--env-file path '${envFile}' does not exist`)
     }
 
+    /**
+     * Get prisma.yml content
+     */
     await this.definition.load(this.flags, envFile)
-    if (!this.definition.definition) {
-      throw new Error(
-        `Couldn’t find \`prisma.yml\` file. Are you in the right directory?`,
-      )
-    }
+
     const serviceName = this.definition.service!
     const stage = this.definition.stage!
 
-    let cluster = this.definition.getCluster(false)
-    const clusterName = this.definition.getClusterName()
-    if (!cluster && clusterName && clusterName !== 'local') {
+    /**
+     * If no endpoint or service provided, ask for it
+     */
+    let cluster
+    if (!serviceName || !stage || interactive) {
+      const endpointDialog = new EndpointDialog(this.out, this.client, this.env)
+      const results = await endpointDialog.getEndpoint({
+        folderName: path.dirname(this.config.definitionDir),
+      })
+      cluster = results.cluster
+      process.exit(0)
+    } else {
+      cluster = this.definition.getCluster(false)
+    }
+
+    /**
+     * If the cluster has been provided with the old "cluster: " key, check if the cluster could be found
+     */
+    if (this.definition.definition!.cluster && !cluster) {
       this.out.log(
         `You're not logged in and cluster ${chalk.bold(
-          clusterName!,
-        )} could not be found locally. Trying to authanticate.\n`,
+          cluster.name!,
+        )} could not be found locally. Trying to authenticate.\n`,
       )
+      // signs in and fetches clusters
       await this.client.login()
       cluster = this.definition.getCluster()
     }
-    const isOnline = cluster ? await cluster.isOnline() : false
-    if (this.definition.cluster === 'local' && (!cluster || !isOnline)) {
-      cluster = await this.localUp()
-    } else if (
-      !isOnline &&
-      cluster &&
-      cluster.local &&
-      (cluster.baseUrl.includes('127.0.0.1') ||
-        cluster.baseUrl.includes('localhost'))
-    ) {
-      cluster = await this.localUp()
-    } else if (cluster && !isOnline) {
-      throw new Error(
-        `Could not connect to cluster ${chalk.bold(cluster.name)} with host ${
-          cluster.baseUrl
-        }. Did you provide the right port?`,
-      )
-    }
-    let gotCluster = false
 
-    if (!cluster) {
-      if (this.definition.definition!.hasOwnProperty('cluster')) {
-        const value = this.definition.rawJson.cluster
-        const envNotice = value.toLowerCase().includes('env')
-          ? `Make sure that the env var ${value} is set correctly or remove the cluster property from the prisma.yml and execute deploy again to get a new cluster.`
-          : ''
-        throw new Error(
-          `Property cluster in prisma.yml is provided, but provided value ${value} could not be resolved. ${envNotice}`,
-        )
-      }
-      const clusterWorkspace = await this.getCluster(serviceName, stage)
-      cluster = clusterWorkspace.cluster
-      gotCluster = true
-    }
-
+    /**
+     * Abort when no cluster is set
+     */
     if (cluster) {
       this.env.setActiveCluster(cluster)
     } else {
@@ -148,14 +136,21 @@ ${chalk.gray(
       )
     }
 
-    if (this.showedLines > 0) {
-      this.out.up(this.showedLines)
+    const isOnline = cluster ? await cluster.isOnline() : false
+    if (this.definition.cluster === 'local' && (!cluster || !isOnline)) {
+      cluster = await this.localUp()
+    } else if (!isOnline && cluster && cluster.local) {
+      cluster = await this.localUp()
+    } else if (cluster && !isOnline) {
+      throw new Error(
+        `Could not connect to cluster ${chalk.bold(cluster.name)} with host ${
+          cluster.baseUrl
+        }. Did you provide the right port?`,
+      )
     }
 
-    if (gotCluster) {
-      this.out.log(
-        `Added ${chalk.bold(`cluster: ${cluster!.name}`)} to prisma.yml`,
-      )
+    if (this.showedLines > 0) {
+      this.out.up(this.showedLines)
     }
 
     if (cluster && !cluster.local) {
@@ -576,57 +571,11 @@ ${chalk.gray(
 `)
   }
 
-  private async getCluster(
-    serviceName: string,
-    stage: string,
-  ): Promise<{ cluster?: Cluster; workspace?: string }> {
-    this.loggedIn = await this.client.isAuthenticated()
-    let workspaceClusterCombination = await this.clusterSelection(
-      serviceName,
-      stage,
-      this.loggedIn,
-    )
-    const splitted = workspaceClusterCombination.split('/')
-    let workspace = splitted.length > 1 ? splitted[0] : null
-    const clusterName = splitted.slice(-1)[0]
-    const exists = this.env.clusterByName(clusterName)
-
-    // in this case it's a public cluster and we need to generate a workspace name
-    if (!this.loggedIn && exists && exists.shared) {
-      workspace = this.getPublicName()
-      debug(`silly name`, workspace)
-      workspaceClusterCombination = `${workspace}/${clusterName}`
-    }
-
-    if (!exists) {
-      if (clusterName === 'local') {
-        await this.localUp()
-      } else {
-        await this.out.error(`Could not find selected cluster ${clusterName}`)
-      }
-    } else {
-      // make sure that local clusters are booted
-      if (!exists.isPrivate && !exists.shared && !await exists.isOnline()) {
-        await this.localUp()
-      }
-    }
-
-    // await this.definition.addCluster(workspaceClusterCombination, this.flags)
-    await this.definition.replaceEndpoint(
-      this.definition.getEndpoint(serviceName, stage),
-    )
-
-    return {
-      cluster: this.env.clusterByName(clusterName) || undefined,
-      workspace: workspace || undefined,
-    }
+  private getCloudClusters(): Cluster[] {
+    return this.env.clusters.filter(c => c.shared || c.isPrivate)
   }
 
-  private async clusterSelection(
-    serviceName: string,
-    stage: string,
-    loggedIn: boolean,
-  ): Promise<string> {
+  private async clusterSelection(loggedIn: boolean): Promise<string> {
     debug({ loggedIn })
 
     const choices = loggedIn
@@ -636,7 +585,7 @@ ${chalk.gray(
     const question = {
       name: 'cluster',
       type: 'list',
-      message: `Please choose the cluster you want to deploy "${serviceName}@${stage}" to`,
+      message: `Please choose the cluster you want to deploy to`,
       choices,
       pageSize: 9,
     }
@@ -647,27 +596,28 @@ ${chalk.gray(
     if (cluster === 'login') {
       await this.client.login()
       this.loggedIn = true
-      return this.clusterSelection(serviceName, stage, true)
+      return this.clusterSelection(true)
     }
 
     return cluster
   }
 
   private getLocalClusterChoices(): string[][] {
-    const clusters = this.env.clusters.filter(c => !c.shared && !c.isPrivate)
+    // const clusters = this.env.clusters.filter(c => !c.shared && !c.isPrivate)
 
-    const clusterNames: string[][] = clusters.map(c => {
-      const note =
-        c.baseUrl.includes('localhost') || c.baseUrl.includes('127.0.0.1')
-          ? 'Local cluster (requires Docker)'
-          : 'Self-hosted'
-      return [c.name, note]
-    })
+    // const clusterNames: string[][] = clusters.map(c => {
+    //   const note =
+    //     c.baseUrl.includes('localhost') || c.baseUrl.includes('127.0.0.1')
+    //       ? 'Local cluster (requires Docker)'
+    //       : 'Self-hosted'
+    //   return [c.name, note]
+    // })
 
-    if (clusterNames.length === 0) {
-      clusterNames.push(['local', 'Local cluster (requires Docker)'])
-    }
-    return clusterNames
+    // if (clusterNames.length === 0) {
+    //   clusterNames.push(['local', 'Local cluster (requires Docker)'])
+    // }
+    // return clusterNames
+    return [['local', 'Local cluster (requires Docker)']]
   }
 
   private async getLoggedInChoices(): Promise<any[]> {
@@ -744,21 +694,6 @@ ${chalk.gray(
       ),
       new inquirer.Separator('                     '),
     ]
-  }
-
-  private async stageNameSelector(defaultName: string): Promise<string> {
-    const question = {
-      name: 'stage',
-      type: 'input',
-      message: 'Please choose the stage name',
-      default: defaultName,
-    }
-
-    const { stage } = await this.out.prompt(question)
-
-    this.showedLines += 1
-
-    return stage
   }
 }
 
