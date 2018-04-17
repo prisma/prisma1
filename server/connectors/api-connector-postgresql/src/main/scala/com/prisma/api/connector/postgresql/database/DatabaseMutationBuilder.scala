@@ -109,8 +109,8 @@ object DatabaseMutationBuilder {
              updatePath: Path,
              createArgs: PrismaArgs,
              updateArgs: PrismaArgs,
-             create: DBIOAction[Any, NoStream, Effect],
-             update: DBIOAction[Any, NoStream, Effect]) = {
+             create: slick.dbio.DBIOAction[Unit, slick.dbio.NoStream, slick.dbio.Effect with slick.dbio.Effect.All],
+             update: slick.dbio.DBIOAction[Unit, slick.dbio.NoStream, slick.dbio.Effect with slick.dbio.Effect.All]) = {
 
     val query = sql"""select exists ( SELECT "id" FROM "#$projectId"."#${updatePath.lastModel.name}" WHERE "id" = """ ++ pathQueryForLastChild(
       projectId,
@@ -130,8 +130,8 @@ object DatabaseMutationBuilder {
       updatePath: Path,
       createArgs: PrismaArgs,
       updateArgs: PrismaArgs,
-      scalarListCreate: DBIOAction[Any, NoStream, Effect],
-      scalarListUpdate: DBIOAction[Any, NoStream, Effect],
+      scalarListCreate: slick.dbio.DBIOAction[Unit, slick.dbio.NoStream, slick.dbio.Effect with slick.dbio.Effect.All],
+      scalarListUpdate: slick.dbio.DBIOAction[Unit, slick.dbio.NoStream, slick.dbio.Effect with slick.dbio.Effect.All],
       createCheck: DBIOAction[Any, NoStream, Effect],
   ) = {
 
@@ -208,47 +208,21 @@ object DatabaseMutationBuilder {
   //endregion
 
   //region SCALAR LISTS
-  def getDbActionForScalarLists(project: Project, path: Path, args: Vector[(String, ListGCValue)]) = {
-    if (args.isEmpty) {
-      DBIOAction.successful(())
-    } else {
-      val actions = args.map {
-        case (fieldName, listGCValue) =>
-          listGCValue.isEmpty match {
-            case true  => setScalarListToEmpty(project.id, path, fieldName)
-            case false => setScalarList(project.id, path, fieldName, listGCValue)
-          }
-      }
-      DBIOAction.seq(actions: _*)
-    }
-  }
-
-  //todo
-  def setScalarList(projectId: String, path: Path, fieldName: String, listGCValue: ListGCValue) = {
-    val escapedValueTuples = for {
-      (escapedValue, position) <- listGCValue.values.map(gcValueToSQLBuilder).zip((1 to listGCValue.size).map(_ * 1000))
-    } yield {
-      sql"(@nodeId, $position, " ++ escapedValue ++ sql")"
-    }
-
-    DBIO.seq(
-      (sql"set @nodeId := " ++ pathQueryForLastChild(projectId, path)).asUpdate,
-      sqlu"""delete from "#$projectId"."#${path.lastModel.name}_#${fieldName}" where "nodeId" = @nodeId""",
-      (sql"""insert into "#$projectId"."#${path.lastModel.name}_#${fieldName}" ("nodeId", "position", "value") values """ concat combineByComma(
-        escapedValueTuples)).asUpdate
-    )
-  }
-
-  //todo remove this
-  def setScalarListToEmpty(projectId: String, path: Path, fieldName: String) = {
-    (sql"""DELETE FROM "#$projectId"."#${path.lastModel.name}_#${fieldName}" WHERE "nodeId" = """ ++ pathQueryForLastChild(projectId, path)).asUpdate
+  def setScalarList(projectId: String, path: Path, listFieldMap: Vector[(String, ListGCValue)]) = {
+    val idQuery = (sql"""SELECT "id" FROM "#${projectId}"."#${path.lastModel.name}" WHERE "id" = """ ++ pathQueryForLastChild(projectId, path)).as[String]
+    if (listFieldMap.isEmpty) DBIOAction.successful(()) else setManyScalarListHelper(projectId, path.lastModel, listFieldMap, idQuery)
   }
 
   def setManyScalarLists(projectId: String, model: Model, listFieldMap: Vector[(String, ListGCValue)], whereFilter: Option[DataItemFilterCollection]) = {
-    import scala.concurrent.ExecutionContext.Implicits.global
+    val idQuery = (sql"""SELECT "id" FROM "#${projectId}"."#${model.name}"""" ++ whereFilterAppendix(projectId, model, whereFilter)).as[String]
+    if (listFieldMap.isEmpty) DBIOAction.successful(()) else setManyScalarListHelper(projectId, model, listFieldMap, idQuery)
+  }
 
-    val idQuery: SqlStreamingAction[Vector[String], String, Effect] =
-      (sql"""SELECT "id" FROM "#${projectId}"."#${model.name}"""" ++ whereFilterAppendix(projectId, model, whereFilter)).as[String]
+  def setManyScalarListHelper(projectId: String,
+                              model: Model,
+                              listFieldMap: Vector[(String, ListGCValue)],
+                              idQuery: SqlStreamingAction[Vector[String], String, Effect]) = {
+    import scala.concurrent.ExecutionContext.Implicits.global
 
     def listInsert(ids: Vector[String]) = {
       if (ids.isEmpty) {
@@ -264,11 +238,14 @@ object DatabaseMutationBuilder {
               (nodeId, position, escapedValue)
             }
 
-          val combinedNodeIdsString = ids.map(id => s"'$id'") mkString ("(", ",", ")")
+          val whereString = ids.length match {
+            case 1 => s""" WHERE "nodeId" =  '${ids.head}'"""
+            case _ => s""" WHERE "nodeId" in ${ids.map(id => s"'$id'").mkString("(", ",", ")")}"""
+          }
 
           listFieldMap.foreach {
             case (fieldName, listGCValue) =>
-              val wipe                             = s"""DELETE  FROM "$projectId"."${model.name}_$fieldName" WHERE "nodeId" IN $combinedNodeIdsString"""
+              val wipe                             = s"""DELETE  FROM "$projectId"."${model.name}_$fieldName" $whereString"""
               val wipeOldValues: PreparedStatement = x.connection.prepareStatement(wipe)
               wipeOldValues.executeUpdate()
 
@@ -391,12 +368,12 @@ object DatabaseMutationBuilder {
     triggerFailureWhenExists(project, query, table, triggerString)
   }
 
-  def oldParentFailureTriggerByField(project: Project, path: Path, field: Field) = {
+  def oldParentFailureTriggerByField(project: Project, path: Path, field: Field, triggerString: String) = {
     val table = field.relation.get.relationTableName
     val query = sql"""SELECT "id" FROM "#${project.id}"."#$table" OLDPARENTPATHFAILURETRIGGERBYFIELD WHERE "#${field.oppositeRelationSide.get}" IN (""" ++ pathQueryForLastChild(
       project.id,
       path) ++ sql")"
-    triggerFailureWhenExists(project, query, table, "OLDPARENTPATHFAILURETRIGGERBYFIELD")
+    triggerFailureWhenExists(project, query, table, triggerString)
   }
 
   def oldParentFailureTriggerByFieldAndFilter(project: Project, model: Model, whereFilter: Option[DataItemFilterCollection], field: Field) = {

@@ -50,8 +50,6 @@ object JdbcExtensions {
     def getParentId(side: String) = IdGCValue(resultSet.getString("__Relation__" + side))
 
     def getGcValue(name: String, typeIdentifier: TypeIdentifier.Value): GCValue = {
-      val dateTimeFormat = DateTimeFormat.forPattern("yyyy-MM-dd HH:mm:ss.SSS").withZoneUTC()
-
       val gcValue: GCValue = typeIdentifier match {
         case TypeIdentifier.String    => StringGCValue(resultSet.getString(name))
         case TypeIdentifier.GraphQLID => IdGCValue(resultSet.getString(name))
@@ -59,13 +57,7 @@ object JdbcExtensions {
         case TypeIdentifier.Int       => IntGCValue(resultSet.getInt(name))
         case TypeIdentifier.Float     => FloatGCValue(resultSet.getDouble(name))
         case TypeIdentifier.Boolean   => BooleanGCValue(resultSet.getBoolean(name))
-        case TypeIdentifier.DateTime =>
-          val sqlType = resultSet.getString(name)
-          if (sqlType != null) {
-            DateTimeGCValue(dateTimeFormat.parseDateTime(sqlType))
-          } else {
-            NullGCValue
-          }
+        case TypeIdentifier.DateTime  => DateTimeGCValue(new DateTime(resultSet.getTimestamp(name), DateTimeZone.UTC))
         case TypeIdentifier.Json =>
           val sqlType = resultSet.getString(name)
           if (sqlType != null) {

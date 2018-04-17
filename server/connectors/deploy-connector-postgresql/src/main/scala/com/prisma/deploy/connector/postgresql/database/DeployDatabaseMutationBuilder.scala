@@ -18,6 +18,7 @@ object DeployDatabaseMutationBuilder {
       val functionInsert: PreparedStatement = x.connection.prepareStatement(query)
       functionInsert.execute()
     }
+
     DBIO.seq(
       sqlu"""CREATE SCHEMA "#$projectId";""",
       sqlu"""CREATE TABLE "#$projectId"."_RelayId" ("id" CHAR(25) NOT NULL, "stableModelIdentifier" CHAR(25) NOT NULL, PRIMARY KEY ("id"))""",
@@ -41,8 +42,8 @@ object DeployDatabaseMutationBuilder {
   def createTable(projectId: String, name: String) = {
     sqlu"""CREATE TABLE "#$projectId"."#$name"
     ("id" CHAR(25) NOT NULL,
-    "createdAt" TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updatedAt" TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "createdAt" TIMESTAMP (3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP (3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY ("id")
     )"""
   }
@@ -159,7 +160,7 @@ object DeployDatabaseMutationBuilder {
       case TypeIdentifier.GraphQLID => "char(25)"
       case TypeIdentifier.Enum      => "text"
       case TypeIdentifier.Json      => "text"
-      case TypeIdentifier.DateTime  => "timestamp"
+      case TypeIdentifier.DateTime  => "timestamp (3)"
       case TypeIdentifier.Relation  => sys.error("Relation is not a scalar type. Are you trying to create a db column for a relation?")
     }
   }

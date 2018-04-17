@@ -36,27 +36,24 @@ case class CascadingDeleteRelationMutactionsInterpreter(mutaction: CascadingDele
   }
 
   override val action = {
-    val requiredCheck = otherFieldsWhereThisModelIsRequired.map(oldParentFailureTriggerByField(project, path, _))
+    val requiredCheck = otherFieldsWhereThisModelIsRequired.map(field => oldParentFailureTriggerByField(project, path, field, causeString(field)))
     val deleteAction  = List(cascadingDeleteChildActions(project.id, path))
     val allActions    = requiredCheck ++ deleteAction
     DBIOAction.seq(allActions: _*)
   }
 
   override def errorMapper = {
-    case e: SQLException if e.getErrorCode == 1242 && otherFailingRequiredRelationOnChild(e.getCause.toString).isDefined =>
-      throw RequiredRelationWouldBeViolated(project, otherFailingRequiredRelationOnChild(e.getCause.toString).get)
+    case e: PSQLException if otherFailingRequiredRelationOnChild(e.getMessage).isDefined =>
+      throw RequiredRelationWouldBeViolated(project, otherFailingRequiredRelationOnChild(e.getMessage).get)
   }
 
   private def otherFailingRequiredRelationOnChild(cause: String): Option[Relation] =
-    otherFieldsWhereThisModelIsRequired.collectFirst { case f if causedByThisMutactionChildOnly(f, cause) => f.relation.get }
+    otherFieldsWhereThisModelIsRequired.collectFirst { case f if cause.contains(causeString(f)) => f.relation.get }
 
-  private def causedByThisMutactionChildOnly(field: Field, cause: String) = {
-    val parentCheckString = s"`${field.relation.get.relationTableName}` OLDPARENTPATHFAILURETRIGGERBYFIELD WHERE `${field.oppositeRelationSide.get}`"
-
-    path.lastEdge match {
-      case Some(edge: NodeEdge) => cause.contains(parentCheckString) && cause.contains(parameterString(edge.childWhere))
-      case _                    => cause.contains(parentCheckString)
-    }
+  private def causeString(field: Field) = path.lastEdge match {
+    case Some(edge: NodeEdge) =>
+      s"-OLDPARENTPATHFAILURETRIGGERBYFIELD@${field.relation.get.relationTableName}@${field.oppositeRelationSide.get}@${edge.childWhere.fieldValueAsString}-"
+    case _ => s"-OLDPARENTPATHFAILURETRIGGERBYFIELD@${field.relation.get.relationTableName}@${field.oppositeRelationSide.get}-"
   }
 }
 
@@ -67,7 +64,7 @@ case class CreateDataItemInterpreter(mutaction: CreateDataItem) extends Database
   override val action = {
     val createNonList  = DatabaseMutationBuilder.createDataItem(project.id, path, mutaction.nonListArgs)
     val createRelayRow = DatabaseMutationBuilder.createRelayRow(project.id, path)
-    val listAction     = DatabaseMutationBuilder.getDbActionForScalarLists(project, path, mutaction.listArgs)
+    val listAction     = DatabaseMutationBuilder.setScalarList(project.id, path, mutaction.listArgs)
 
     DBIO.seq(createNonList, createRelayRow, listAction)
   }
@@ -136,7 +133,7 @@ case class DeleteRelationCheckInterpreter(mutaction: DeleteRelationCheck) extend
   val fieldsWhereThisModelIsRequired = project.schema.fieldsWhereThisModelIsRequired(path.lastModel)
 
   override val action = {
-    val requiredCheck = fieldsWhereThisModelIsRequired.map(oldParentFailureTriggerByField(project, path, _))
+    val requiredCheck = fieldsWhereThisModelIsRequired.map(field => oldParentFailureTriggerByField(project, path, field, causeString(field)))
     DBIOAction.seq(requiredCheck: _*)
   }
 
@@ -146,15 +143,12 @@ case class DeleteRelationCheckInterpreter(mutaction: DeleteRelationCheck) extend
   }
 
   private def otherFailingRequiredRelationOnChild(cause: String): Option[Relation] =
-    fieldsWhereThisModelIsRequired.collectFirst { case f if causedByThisMutactionChildOnly(f, cause) => f.relation.get }
+    fieldsWhereThisModelIsRequired.collectFirst { case f if cause.contains(causeString(f)) => f.relation.get }
 
-  private def causedByThisMutactionChildOnly(field: Field, cause: String) = {
-    val parentCheckString = s"`${field.relation.get.relationTableName}` OLDPARENTPATHFAILURETRIGGERBYFIELD WHERE `${field.oppositeRelationSide.get}`"
-
-    path.lastEdge match {
-      case Some(edge: NodeEdge) => cause.contains(parentCheckString) && cause.contains(parameterString(edge.childWhere))
-      case _                    => cause.contains(parentCheckString)
-    }
+  private def causeString(field: Field) = path.lastEdge match {
+    case Some(edge: NodeEdge) =>
+      s"-OLDPARENTPATHFAILURETRIGGERBYFIELD@${field.relation.get.relationTableName}@${field.oppositeRelationSide.get}@${edge.childWhere.fieldValueAsString}-"
+    case _ => s"-OLDPARENTPATHFAILURETRIGGERBYFIELD@${field.relation.get.relationTableName}@${field.oppositeRelationSide.get}-"
   }
 }
 
@@ -173,7 +167,7 @@ case class UpdateDataItemInterpreter(mutaction: UpdateWrapper) extends DatabaseM
   }
 
   val nonListAction = DatabaseMutationBuilder.updateDataItemByPath(project.id, path, nonListArgs)
-  val listAction    = DatabaseMutationBuilder.getDbActionForScalarLists(project, path, listArgs)
+  val listAction    = DatabaseMutationBuilder.setScalarList(project.id, path, listArgs)
 
   override val action = DBIO.seq(listAction, nonListAction)
 
@@ -206,8 +200,8 @@ case class UpsertDataItemInterpreter(mutaction: UpsertDataItem) extends Database
   val updateArgs = mutaction.nonListUpdateArgs
 
   override val action = {
-    val createAction = DatabaseMutationBuilder.getDbActionForScalarLists(project, mutaction.createPath, mutaction.listCreateArgs)
-    val updateAction = DatabaseMutationBuilder.getDbActionForScalarLists(project, mutaction.updatePath, mutaction.listUpdateArgs)
+    val createAction = DatabaseMutationBuilder.setScalarList(project.id, mutaction.createPath, mutaction.listCreateArgs)
+    val updateAction = DatabaseMutationBuilder.setScalarList(project.id, mutaction.updatePath, mutaction.listUpdateArgs)
     DatabaseMutationBuilder.upsert(project.id, mutaction.createPath, mutaction.updatePath, createArgs, updateArgs, createAction, updateAction)
   }
 
@@ -226,8 +220,8 @@ case class UpsertDataItemInterpreter(mutaction: UpsertDataItem) extends Database
 case class UpsertDataItemIfInRelationWithInterpreter(mutaction: UpsertDataItemIfInRelationWith) extends DatabaseMutactionInterpreter {
   val project = mutaction.project
 
-  val scalarListsCreate = DatabaseMutationBuilder.getDbActionForScalarLists(project, mutaction.createPath, mutaction.createListArgs)
-  val scalarListsUpdate = DatabaseMutationBuilder.getDbActionForScalarLists(project, mutaction.updatePath, mutaction.updateListArgs)
+  val scalarListsCreate = DatabaseMutationBuilder.setScalarList(project.id, mutaction.createPath, mutaction.createListArgs)
+  val scalarListsUpdate = DatabaseMutationBuilder.setScalarList(project.id, mutaction.updatePath, mutaction.updateListArgs)
   val relationChecker   = NestedCreateRelationInterpreter(NestedCreateRelation(project, mutaction.createPath, false))
   val createCheck       = DBIOAction.seq(relationChecker.allActions: _*)
 
