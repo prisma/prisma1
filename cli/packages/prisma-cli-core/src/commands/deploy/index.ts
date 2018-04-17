@@ -361,9 +361,10 @@ ${chalk.gray(
       dryRun,
       this.definition.getSubscriptions(),
       this.definition.secrets,
+      force,
     )
     this.out.action.stop(prettyTime(Date.now() - before))
-    this.printResult(migrationResult)
+    this.printResult(migrationResult, force)
 
     if (
       migrationResult.migration &&
@@ -537,12 +538,37 @@ ${chalk.gray(
     }
   }
 
-  private printResult(payload: DeployPayload) {
+  private printResult(payload: DeployPayload, force: boolean) {
     if (payload.errors && payload.errors.length > 0) {
-      this.out.log(`${chalk.bold.red('Errors:')}`)
+      this.out.log(`${chalk.bold.red('\nErrors:')}`)
       this.out.migration.printErrors(payload.errors)
-      this.out.log('')
+      this.out.log(
+        '\nDeployment canceled. Please fix the above errors to continue deploying.',
+      )
+      this.out.log(
+        'Read more about deployment errors here: https://bit.ly/prisma-force-flag',
+      )
+
       this.out.exit(1)
+    }
+
+    if (payload.warnings && payload.warnings.length > 0) {
+      this.out.log(`${chalk.bold.yellow('\nWarnings:')}`)
+      this.out.migration.printWarnings(payload.warnings)
+
+      if (force) {
+        this.out.log('\nIgnoring warnings because you provided --force.')
+      } else {
+        this.out.log(
+          `\nIf you want to ignore the warnings, please deploy with the --force flag: ${chalk.cyan(
+            '$ prisma deploy --force',
+          )}`,
+        )
+        this.out.log(
+          'Read more about deployment warnings here: https://bit.ly/prisma-force-flag',
+        )
+        this.out.exit(1)
+      }
     }
 
     if (!payload.migration || payload.migration.steps.length === 0) {
