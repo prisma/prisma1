@@ -20,6 +20,7 @@ import * as findUp from 'find-up'
 import getGraphQLCliBin from '../../utils/getGraphQLCliBin'
 import Up from '../local/up'
 import { EndpointDialog } from '../../utils/EndpointDialog'
+import { isDockerComposeInstalled } from '../../utils/dockerComposeInstalled'
 
 export default class Deploy extends Command {
   static topic = 'deploy'
@@ -124,6 +125,34 @@ ${chalk.gray(
     }
 
     /**
+     * If no cluster is running locally, don't start anymore but create docker-compose.yml and ask for starting
+     */
+    if (
+      cluster.local &&
+      !await cluster.isOnline() &&
+      !fs.readdirSync(this.config.definitionDir).includes('docker-compose.yml')
+    ) {
+      fs.copySync(
+        path.join(__dirname, '../init/boilerplate/docker-compose.yml'),
+        path.join(this.config.definitionDir, 'docker-compose.yml'),
+      )
+      this.out.log(
+        `Created docker-compose.yml with a local prisma server.
+Please run ${chalk.cyan('$ docker-compose up -d')} to start your local prisma.
+Note: prisma local start will be deprecated soon in favor of the direct usage of docker-compose.`,
+      )
+      const dockerComposeInstalled = await isDockerComposeInstalled()
+      if (!dockerComposeInstalled) {
+        this.out.log(
+          `To install docker-compose, please follow this link: ${chalk.cyan(
+            'https://docs.docker.com/compose/install/',
+          )}`,
+        )
+      }
+      process.exit(1)
+    }
+
+    /**
      * If the cluster has been provided with the old "cluster: " key, check if the cluster could be found
      */
     if (this.definition.definition!.cluster && !cluster) {
@@ -143,22 +172,7 @@ ${chalk.gray(
     if (cluster) {
       this.env.setActiveCluster(cluster)
     } else {
-      throw new Error(
-        `No cluster set. Please set the "cluster" property in your prisma.yml`,
-      )
-    }
-
-    const isOnline = cluster ? await cluster.isOnline() : false
-    if (this.definition.cluster === 'local' && (!cluster || !isOnline)) {
-      cluster = await this.localUp()
-    } else if (!isOnline && cluster && cluster.local) {
-      cluster = await this.localUp()
-    } else if (cluster && !isOnline) {
-      throw new Error(
-        `Could not connect to cluster ${chalk.bold(cluster.name)} with host ${
-          cluster.baseUrl
-        }. Did you provide the right port?`,
-      )
+      throw new Error(`Cluster ${cluster} does not exist.`)
     }
 
     if (this.showedLines > 0) {
@@ -210,7 +224,6 @@ ${chalk.gray(
               await this.definition.load(this.flags)
               await this.deploy(
                 stage,
-
                 serviceName,
                 cluster,
                 cluster.name,
