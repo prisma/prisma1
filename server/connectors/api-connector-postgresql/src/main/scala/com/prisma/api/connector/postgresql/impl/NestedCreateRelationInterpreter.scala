@@ -9,7 +9,7 @@ case class NestedCreateRelationInterpreter(mutaction: NestedCreateRelation) exte
   override def project     = mutaction.project
   override def topIsCreate = mutaction.topIsCreate
 
-  override def requiredCheck: List[SqlStreamingAction[Vector[Int], Int, Effect]] = topIsCreate match {
+  override def requiredCheck: List[SqlStreamingAction[Vector[String], String, Effect]] = topIsCreate match {
     case false =>
       (p.isList, p.isRequired, c.isList, c.isRequired) match {
         case (false, true, false, true)   => requiredRelationViolation

@@ -202,14 +202,14 @@ object DatabaseQueryBuilder {
     val oppositeRelationSide = fromField.oppositeRelationSide.get.toString
 
     val (conditionCommand, orderByCommand, limitCommand) =
-      extractQueryArgs(project.id, fieldTable, args, defaultOrderShortcut = Some(s"""${project.id}.$unsafeRelationId.$oppositeRelationSide"""), None)
+      extractQueryArgs(project.id, fieldTable, args, defaultOrderShortcut = Some(s""" "${project.id}"."$unsafeRelationId"."$oppositeRelationSide" """), None)
 
     def createQuery(id: String, modelRelationSide: String, fieldRelationSide: String) = {
       sql"""(select "#${project.id}"."#$fieldTable".*, "#${project.id}"."#$unsafeRelationId"."A" as __Relation__A,  "#${project.id}"."#$unsafeRelationId"."B" as __Relation__B
             from "#${project.id}"."#$fieldTable"
            inner join "#${project.id}"."#$unsafeRelationId"
            on "#${project.id}"."#$fieldTable"."id" = "#${project.id}"."#$unsafeRelationId"."#$fieldRelationSide"
-           where "#${project.id}"."#$unsafeRelationId"."#$modelRelationSide" = "#$id" """ ++
+           where "#${project.id}"."#$unsafeRelationId"."#$modelRelationSide" = '#$id' """ ++
         prefixIfNotNone("and", conditionCommand) ++
         prefixIfNotNone("order by", orderByCommand) ++
         prefixIfNotNone("limit", limitCommand) ++ sql")"
@@ -257,10 +257,10 @@ object DatabaseQueryBuilder {
       extractQueryArgs(project.id, fieldTable, args, defaultOrderShortcut = Some(s"""${project.id}.$unsafeRelationId.$fieldRelationSide"""), None)
 
     def createQuery(id: String) = {
-      sql"""(select "#$id", count(*) from #${project.id}.#$fieldTable
-           inner join #${project.id}.#$unsafeRelationId
-           on #${project.id}.#$fieldTable.id = #${project.id}.#$unsafeRelationId.#$fieldRelationSide
-           where #${project.id}.#$unsafeRelationId.#$modelRelationSide = #$id """ ++
+      sql"""(select "#$id", count(*) from "#${project.id}"."#$fieldTable"
+           inner join "#${project.id}"."#$unsafeRelationId"
+           on "#${project.id}"."#$fieldTable"."id" = "#${project.id}"."#$unsafeRelationId"."#$fieldRelationSide"
+           where "#${project.id}"."#$unsafeRelationId"."#$modelRelationSide" = '#$id' """ ++
         prefixIfNotNone("and", conditionCommand) ++
         prefixIfNotNone("order by", orderByCommand) ++
         prefixIfNotNone("limit", limitCommand) ++ sql")"
@@ -276,10 +276,10 @@ object DatabaseQueryBuilder {
 // used in tests only
 
   def itemCountForTable(projectId: String, modelName: String) = { // todo use count all from model -> doesnt work for relay
-    sql"SELECT COUNT(*) AS Count FROM #$projectId.#$modelName"
+    sql"""SELECT COUNT(*) AS Count FROM "#$projectId"."#$modelName""""
   }
 
   def existsByModel(projectId: String, modelName: String): SQLActionBuilder = { //todo also replace in tests with count
-    sql"select exists (select id from #$projectId.#$modelName)"
+    sql"""select exists (select "id" from "#$projectId"."#$modelName)""""
   }
 }

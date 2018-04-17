@@ -15,7 +15,7 @@ object QueryArgumentsHelpers {
 
     def getAliasAndTableName(fromModel: String, toModel: String): (String, String) = {
       var modTableName = ""
-      if (!tableName.contains("_")) modTableName = projectId + "." + fromModel else modTableName = tableName
+      if (!tableName.contains("_")) modTableName = projectId + """"."""" + fromModel else modTableName = tableName
       val alias = toModel + "_" + tableName
       (alias, modTableName)
     }
@@ -25,10 +25,11 @@ object QueryArgumentsHelpers {
     }
 
     def joinRelations(relation: Relation, toModel: Model, alias: String, field: Field, modTableName: String) = {
-      sql"""select * from "#$projectId"."#${toModel.name}" as "#$alias"
-                     inner join "#$projectId"."#${relation.relationTableName}"
-                     on "#$alias"."id" = "#$projectId"."#${relation.relationTableName}"."#${field.oppositeRelationSide.get}"
-                     where "#$projectId"."#${relation.relationTableName}"."#${field.relationSide.get}" = "#$modTableName"."id""""
+      sql"""select *
+            from "#$projectId"."#${toModel.name}" as "#$alias"
+            inner join "#$projectId"."#${relation.relationTableName}"
+            on "#$alias"."id" = "#$projectId"."#${relation.relationTableName}"."#${field.oppositeRelationSide.get}"
+            where "#$projectId"."#${relation.relationTableName}"."#${field.relationSide.get}" = "#$modTableName"."id""""
     }
 
     //key, value, field, filterName, relationFilter
@@ -92,41 +93,41 @@ object QueryArgumentsHelpers {
           }
 
         case FinalValueFilter(key, value, field, filterName) if filterName == "_contains" =>
-          Some(sql""""#$projectId"."#$tableName"."#${field.name}" LIKE """ ++ escapeUnsafeParam(s"%${GCValueExtractor.fromGCValue(value)}%"))
+          Some(sql""""#$tableName"."#${field.name}" LIKE """ ++ escapeUnsafeParam(s"%${GCValueExtractor.fromGCValue(value)}%"))
 
         case FinalValueFilter(key, value, field, filterName) if filterName == "_not_contains" =>
-          Some(sql""""#$projectId"."#$tableName"."#${field.name}" NOT LIKE """ ++ escapeUnsafeParam(s"%${GCValueExtractor.fromGCValue(value)}%"))
+          Some(sql""""#$tableName"."#${field.name}" NOT LIKE """ ++ escapeUnsafeParam(s"%${GCValueExtractor.fromGCValue(value)}%"))
 
         case FinalValueFilter(key, value, field, filterName) if filterName == "_starts_with" =>
-          Some(sql""""#$projectId"."#$tableName"."#${field.name}" LIKE """ ++ escapeUnsafeParam(s"${GCValueExtractor.fromGCValue(value)}%"))
+          Some(sql""""#$tableName"."#${field.name}" LIKE """ ++ escapeUnsafeParam(s"${GCValueExtractor.fromGCValue(value)}%"))
 
         case FinalValueFilter(key, value, field, filterName) if filterName == "_not_starts_with" =>
-          Some(sql""""#$projectId"."#$tableName"."#${field.name}" NOT LIKE """ ++ escapeUnsafeParam(s"${GCValueExtractor.fromGCValue(value)}%"))
+          Some(sql""""#$tableName"."#${field.name}" NOT LIKE """ ++ escapeUnsafeParam(s"${GCValueExtractor.fromGCValue(value)}%"))
 
         case FinalValueFilter(key, value, field, filterName) if filterName == "_ends_with" =>
-          Some(sql""""#$projectId"."#$tableName"."#${field.name}" LIKE """ ++ escapeUnsafeParam(s"%${GCValueExtractor.fromGCValue(value)}"))
+          Some(sql""""#$tableName"."#${field.name}" LIKE """ ++ escapeUnsafeParam(s"%${GCValueExtractor.fromGCValue(value)}"))
 
         case FinalValueFilter(key, value, field, filterName) if filterName == "_not_ends_with" =>
-          Some(sql""""#$projectId"."#$tableName"."#${field.name}" NOT LIKE """ ++ escapeUnsafeParam(s"%${GCValueExtractor.fromGCValue(value)}"))
+          Some(sql""""#$tableName"."#${field.name}" NOT LIKE """ ++ escapeUnsafeParam(s"%${GCValueExtractor.fromGCValue(value)}"))
 
         case FinalValueFilter(key, value, field, filterName) if filterName == "_lt" =>
-          Some(sql""""#$projectId"."#$tableName"."#${field.name}" < """ ++ gcValueToSQLBuilder(value))
+          Some(sql""""#$tableName"."#${field.name}" < """ ++ gcValueToSQLBuilder(value))
 
         case FinalValueFilter(key, value, field, filterName) if filterName == "_gt" =>
-          Some(sql""""#$projectId"."#$tableName"."#${field.name}" > """ ++ gcValueToSQLBuilder(value))
+          Some(sql""""#$tableName"."#${field.name}" > """ ++ gcValueToSQLBuilder(value))
 
         case FinalValueFilter(key, value, field, filterName) if filterName == "_lte" =>
-          Some(sql""""#$projectId"."#$tableName"."#${field.name}" <= """ ++ gcValueToSQLBuilder(value))
+          Some(sql""""#$tableName"."#${field.name}" <= """ ++ gcValueToSQLBuilder(value))
 
         case FinalValueFilter(key, value, field, filterName) if filterName == "_gte" =>
-          Some(sql""""#$projectId"."#$tableName"."#${field.name}" >= """ ++ gcValueToSQLBuilder(value))
+          Some(sql""""#$tableName"."#${field.name}" >= """ ++ gcValueToSQLBuilder(value))
 
         case FinalValueFilter(key, NullGCValue, field, filterName) if filterName == "_in" =>
           Some(sql"false")
 
         case FinalValueFilter(key, ListGCValue(values), field, filterName) if filterName == "_in" =>
           values.nonEmpty match {
-            case true  => Some(sql""""#$projectId"."#$tableName"."#${field.name}" """ ++ generateInStatement(values))
+            case true  => Some(sql""""#$tableName"."#${field.name}" """ ++ generateInStatement(values))
             case false => Some(sql"false")
           }
 
@@ -135,21 +136,21 @@ object QueryArgumentsHelpers {
 
         case FinalValueFilter(key, ListGCValue(values), field, filterName) if filterName == "_not_in" =>
           values.nonEmpty match {
-            case true  => Some(sql""""#$projectId"."#$tableName"."#${field.name}" NOT """ ++ generateInStatement(values))
+            case true  => Some(sql""""#$tableName"."#${field.name}" NOT """ ++ generateInStatement(values))
             case false => Some(sql"true")
           }
 
         case FinalValueFilter(key, NullGCValue, field, filterName) if filterName == "_not" =>
-          Some(sql""""#$projectId"."#$tableName"."#${field.name}" IS NOT NULL""")
+          Some(sql""""#$tableName"."#${field.name}" IS NOT NULL""")
 
         case FinalValueFilter(key, value, field, filterName) if filterName == "_not" =>
-          Some(sql""""#$projectId"."#$tableName"."#${field.name}" != """ ++ gcValueToSQLBuilder(value))
+          Some(sql""""#$tableName"."#${field.name}" != """ ++ gcValueToSQLBuilder(value))
 
         case FinalValueFilter(key, NullGCValue, field, filterName) =>
-          Some(sql""""#$projectId"."#$tableName"."#$key" IS NULL""")
+          Some(sql""""#$tableName"."#$key" IS NULL""")
 
         case FinalValueFilter(key, value, field, filterName) =>
-          Some(sql""""#$projectId"."#$tableName"."#$key" = """ ++ gcValueToSQLBuilder(value))
+          Some(sql""""#$tableName"."#$key" = """ ++ gcValueToSQLBuilder(value))
         case FinalRelationFilter(key, null, field, filterName) =>
           if (field.isList) throw APIErrors.FilterCannotBeNullOnToManyField(field.name)
 

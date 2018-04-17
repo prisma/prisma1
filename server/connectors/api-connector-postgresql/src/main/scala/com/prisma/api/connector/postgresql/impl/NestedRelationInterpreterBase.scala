@@ -26,7 +26,7 @@ trait NestedRelationInterpreterBase extends DatabaseMutactionInterpreter {
   }
 
   def checkForOldParent = oldParentFailureTrigger(project, path)
-  def checkForOldParentByChildWhere = path.lastEdge_! match {
+  def checkForOldParentByChildWhere: slick.sql.SqlStreamingAction[Vector[String], String, slick.dbio.Effect] = path.lastEdge_! match {
     case _: ModelEdge   => sys.error("Should be a node edge")
     case edge: NodeEdge => oldParentFailureTriggerForRequiredRelations(project, edge.relation, edge.childWhere, edge.childRelationSide)
   }

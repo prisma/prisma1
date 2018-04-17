@@ -77,7 +77,7 @@ object SlickExtensions {
     }
   }
 
-  def escapeKey(key: String) = sql"#$key"
+  def escapeKey(key: String) = sql""""#$key""""
 
   def combineByAnd(actions: Iterable[SQLActionBuilder]) = generateParentheses(combineBy(actions, "and"))
 
