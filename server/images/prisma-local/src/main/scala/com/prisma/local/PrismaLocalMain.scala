@@ -4,6 +4,7 @@ import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
 import com.prisma.akkautil.http.ServerExecutor
 import com.prisma.api.server.ApiServer
+import com.prisma.config.ConfigLoader
 import com.prisma.deploy.server.ClusterServer
 import com.prisma.subscriptions.SimpleSubscriptionsServer
 import com.prisma.websocket.WebsocketServer
@@ -18,12 +19,14 @@ object PrismaLocalMain extends App {
 
   Version.check()
 
-  ServerExecutor(
-    port = port,
-    ClusterServer("cluster"),
-    WebsocketServer(dependencies),
-    ApiServer(dependencies.apiSchemaBuilder),
-    SimpleSubscriptionsServer(),
-    WorkerServer(dependencies)
-  ).startBlocking()
+  ConfigLoader.load()
+
+//  ServerExecutor(
+//    port = port,
+//    ClusterServer("cluster"),
+//    WebsocketServer(dependencies),
+//    ApiServer(dependencies.apiSchemaBuilder),
+//    SimpleSubscriptionsServer(),
+//    WorkerServer(dependencies)
+//  ).startBlocking()
 }

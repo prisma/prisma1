@@ -79,8 +79,7 @@ object Dependencies {
   val scalajHttp        = "org.scalaj"                 %% "scalaj-http"              % "2.3.0"
   val evoInflector      = "org.atteo"                  % "evo-inflector"             % "1.2"
   val logBack           = "ch.qos.logback"             % "logback-classic"           % "1.1.7"
-  val snakeYML          = "org.yaml"                   % "snakeyaml"                 % "1.17"
-  val moultingYML       = "net.jcazevedo"              %% "moultingyaml"             % "0.4.0"
+  val snakeYML          = "org.yaml"                   % "snakeyaml"                 % "1.19"
   val logstash          = "net.logstash.logback"       % "logstash-logback-encoder"  % "4.7"
   val librato           = "com.librato.metrics"        % "librato-java"              % "2.1.0"
   val jettyServer       = "org.eclipse.jetty"          % "jetty-server"              % "9.3.0.v20150612"
@@ -110,7 +109,6 @@ object Dependencies {
     evoInflector,
     cuid,
     finagle,
-    snakeYML,
     jwt
   )
 }

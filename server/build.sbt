@@ -92,6 +92,7 @@ lazy val prismaImageShared = imageProject("prisma-image-shared")
   .dependsOn(subscriptions % "compile")
   .dependsOn(workers % "compile")
   .dependsOn(graphQlClient % "compile")
+  .dependsOn(prismaConfig % "compile")
 
 // ####################
 //       SERVERS
@@ -300,6 +301,8 @@ lazy val cache = libProject("cache")
     ))
 
 lazy val auth = libProject("auth").settings(libraryDependencies ++= Seq(jwt))
+
+lazy val prismaConfig = libProject("prisma-config").settings(libraryDependencies ++= Seq(snakeYML))
 
 val allDockerImageProjects = List(
   prismaLocal,
