@@ -668,9 +668,9 @@ To reset the key pair, please run ${chalk.bold.green('prisma local start')}
     dryRun: boolean,
     subscriptions: FunctionInput[],
     secrets: string[] | null,
+    force?: boolean,
   ): Promise<any> {
-    // TODO add dryRun to query as soon as the backend is ready
-    const mutation = `\
+    const oldMutation = `\
       mutation($name: String!, $stage: String! $types: String! $dryRun: Boolean $secrets: [String!], $subscriptions: [FunctionInput!]) {
         deploy(input: {
           name: $name
@@ -693,18 +693,69 @@ To reset the key pair, please run ${chalk.bold.green('prisma local start')}
       ${MIGRATION_FRAGMENT}
     `
 
-    const { deploy } = await this.client.request<{
-      deploy: DeployPayload
-    }>(mutation, {
-      name,
-      stage,
-      types,
-      dryRun,
-      secrets,
-      subscriptions,
-    })
+    const newMutation = `\
+      mutation($name: String!, $stage: String! $types: String! $dryRun: Boolean $secrets: [String!], $subscriptions: [FunctionInput!], $force: Boolean) {
+        deploy(input: {
+          name: $name
+          stage: $stage
+          types: $types
+          dryRun: $dryRun
+          secrets: $secrets
+          subscriptions: $subscriptions
+          force: $force
+        }) {
+          errors {
+            type
+            field
+            description
+          }
+          warnings {
+            type
+            field
+            description
+          }
+          migration {
+            ...MigrationFragment
+          }
+        }
+      }
+      ${MIGRATION_FRAGMENT}
+    `
 
-    return deploy
+    try {
+      const { deploy } = await this.client.request<{
+        deploy: DeployPayload
+      }>(newMutation, {
+        name,
+        stage,
+        types,
+        dryRun,
+        secrets,
+        subscriptions,
+        force,
+      })
+
+      return deploy
+    } catch (e) {
+      if (
+        e.message.includes(`Field 'force' is not defined in the input type`)
+      ) {
+        const { deploy } = await this.client.request<{
+          deploy: DeployPayload
+        }>(oldMutation, {
+          name,
+          stage,
+          types,
+          dryRun,
+          secrets,
+          subscriptions,
+        })
+
+        return deploy
+      } else {
+        throw e
+      }
+    }
   }
 
   async listProjects(): Promise<Project[]> {
