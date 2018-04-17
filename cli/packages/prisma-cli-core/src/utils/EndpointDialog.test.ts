@@ -3,15 +3,6 @@ import { Output, Config, Client } from 'prisma-cli-engine'
 import { Environment } from 'prisma-yml'
 import { getTmpDir } from '../test/getTmpDir'
 
-// var prompt = {
-//   type: 'input',
-//   name: 'q1',
-//   message: 'message',
-//   default: 'bar'
-// };
-
-// var promise = this.prompt(prompt);
-
 function makeDialog() {
   const config = new Config()
   const output = new Output(config)

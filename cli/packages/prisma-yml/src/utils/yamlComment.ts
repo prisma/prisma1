@@ -7,7 +7,7 @@ import * as yamlParser from 'yaml-ast-parser'
 export function replaceYamlValue(input, key, newValue) {
   const ast = yamlParser.safeLoad(input)
   const position = getPosition(ast, key)
-  const newEntry = `${key}: ${newValue}`
+  const newEntry = `${key}: ${newValue}\n`
   if (!position) {
     return input + '\n' + newEntry
   }
