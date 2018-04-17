@@ -350,14 +350,14 @@ object DatabaseMutationBuilder {
     }
   }
 
-  def whereFailureTrigger(project: Project, where: NodeSelector) = {
+  def whereFailureTrigger(project: Project, where: NodeSelector, causeString: String) = {
     val table = where.model.name
     val query = sql"""(SELECT "id" FROM "#${project.id}"."#${where.model.name}" WHEREFAILURETRIGGER WHERE "#${where.field.name}" = ${where.fieldValue})"""
 
-    triggerFailureWhenNotExists(project, query, table)
+    triggerFailureWhenNotExists(project, query, table, causeString)
   }
 
-  def connectionFailureTrigger(project: Project, path: Path) = {
+  def connectionFailureTrigger(project: Project, path: Path, causeString: String) = {
     val table = path.lastRelation.get.relationTableName
 
     val lastChildWhere = path.lastEdge_! match {
@@ -369,25 +369,26 @@ object DatabaseMutationBuilder {
       sql"""SELECT "id" FROM "#${project.id}"."#$table" CONNECTIONFAILURETRIGGERPATH""" ++
         sql"WHERE" ++ lastChildWhere ++ sql""""#${path.parentSideOfLastEdge}" = """ ++ pathQueryForLastParent(project.id, path)
 
-    triggerFailureWhenNotExists(project, query, table)
+    triggerFailureWhenNotExists(project, query, table, causeString)
   }
 
   def oldParentFailureTriggerForRequiredRelations(project: Project,
                                                   relation: Relation,
                                                   where: NodeSelector,
-                                                  childSide: RelationSide.Value): slick.sql.SqlStreamingAction[Vector[String], String, slick.dbio.Effect] = {
+                                                  childSide: RelationSide.Value,
+                                                  triggerString: String): slick.sql.SqlStreamingAction[Vector[String], String, slick.dbio.Effect] = {
     val table = relation.relationTableName
     val query = sql"""SELECT "id" FROM "#${project.id}"."#$table" OLDPARENTFAILURETRIGGER WHERE "#$childSide" """ ++ idFromWhereEquals(project.id, where)
 
-    triggerFailureWhenExists(project, query, table)
+    triggerFailureWhenExists(project, query, table, triggerString)
   }
 
-  def oldParentFailureTrigger(project: Project, path: Path) = {
+  def oldParentFailureTrigger(project: Project, path: Path, triggerString: String) = {
     val table = path.lastRelation_!.relationTableName
     val query = sql"""SELECT "id" FROM "#${project.id}"."#$table" OLDPARENTPATHFAILURETRIGGER WHERE "#${path.childSideOfLastEdge}" IN (""" ++ pathQueryForLastChild(
       project.id,
       path) ++ sql")"
-    triggerFailureWhenExists(project, query, table)
+    triggerFailureWhenExists(project, query, table, triggerString)
   }
 
   def oldParentFailureTriggerByField(project: Project, path: Path, field: Field) = {
@@ -395,7 +396,7 @@ object DatabaseMutationBuilder {
     val query = sql"""SELECT "id" FROM "#${project.id}"."#$table" OLDPARENTPATHFAILURETRIGGERBYFIELD WHERE "#${field.oppositeRelationSide.get}" IN (""" ++ pathQueryForLastChild(
       project.id,
       path) ++ sql")"
-    triggerFailureWhenExists(project, query, table)
+    triggerFailureWhenExists(project, query, table, "OLDPARENTPATHFAILURETRIGGERBYFIELD")
   }
 
   def oldParentFailureTriggerByFieldAndFilter(project: Project, model: Model, whereFilter: Option[DataItemFilterCollection], field: Field) = {
@@ -403,15 +404,15 @@ object DatabaseMutationBuilder {
     val query = sql"""SELECT "id" FROM "#${project.id}"."#$table" OLDPARENTPATHFAILURETRIGGERBYFIELDANDFILTER""" ++
       sql"""WHERE "#${field.oppositeRelationSide.get}" IN (SELECT "id" FROM "#${project.id}"."#${model.name}" """ ++
       whereFilterAppendix(project.id, model, whereFilter) ++ sql")"
-    triggerFailureWhenExists(project, query, table)
+    triggerFailureWhenExists(project, query, table, "OLDPARENTPATHFAILURETRIGGERBYFIELDANDFILTER")
   }
 
-  def oldChildFailureTrigger(project: Project, path: Path) = {
+  def oldChildFailureTrigger(project: Project, path: Path, triggerString: String) = {
     val table = path.lastRelation_!.relationTableName
     val query = sql"""SELECT "id" FROM "#${project.id}"."#$table" OLDCHILDPATHFAILURETRIGGER WHERE "#${path.parentSideOfLastEdge}" IN (""" ++ pathQueryForLastParent(
       project.id,
       path) ++ sql")"
-    triggerFailureWhenExists(project, query, table)
+    triggerFailureWhenExists(project, query, table, triggerString)
   }
 
   def ifThenElse(condition: SqlStreamingAction[Vector[Boolean], Boolean, Effect],
@@ -443,15 +444,17 @@ object DatabaseMutationBuilder {
       action <- if (exists.head) thenMutactions else throw elseError
     } yield action
   }
-  def triggerFailureWhenExists(project: Project, query: SQLActionBuilder, table: String)    = triggerFailureInternal(project, query, table, notExists = false)
-  def triggerFailureWhenNotExists(project: Project, query: SQLActionBuilder, table: String) = triggerFailureInternal(project, query, table, notExists = true)
+  def triggerFailureWhenExists(project: Project, query: SQLActionBuilder, table: String, triggerString: String) =
+    triggerFailureInternal(project, query, table, triggerString, notExists = false)
+  def triggerFailureWhenNotExists(project: Project, query: SQLActionBuilder, table: String, triggerString: String) =
+    triggerFailureInternal(project, query, table, triggerString, notExists = true)
 
-  private def triggerFailureInternal(project: Project, query: SQLActionBuilder, table: String, notExists: Boolean) = {
+  private def triggerFailureInternal(project: Project, query: SQLActionBuilder, table: String, triggerString: String, notExists: Boolean) = {
     val notValue = if (notExists) s"" else s"not"
 
     (sql"select case when #$notValue exists ( " ++ query ++ sql" )" ++
       sql"then '' " ++
-      sql"else (select COLUMN_NAME from information_schema.columns)end;").as[String]
+      sql"else (raise_exception($triggerString))end;").as[String]
   }
 
   //endregion

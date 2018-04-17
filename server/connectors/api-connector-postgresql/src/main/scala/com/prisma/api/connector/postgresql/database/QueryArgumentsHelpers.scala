@@ -156,7 +156,7 @@ object QueryArgumentsHelpers {
 
           Some(sql""" not exists (select  *
                                   from    "#$projectId"."#${field.relation.get.relationTableName}"
-                                  where   "#$projectId"."#${field.relation.get.relationTableName}"."#${field.relationSide.get}" = "#$projectId"."#$tableName"."id"
+                                  where   "#$projectId"."#${field.relation.get.relationTableName}"."#${field.relationSide.get}" = "#$tableName"."id"
                                   )""")
 
         // this is used for the node: {} field in the Subscription Filter

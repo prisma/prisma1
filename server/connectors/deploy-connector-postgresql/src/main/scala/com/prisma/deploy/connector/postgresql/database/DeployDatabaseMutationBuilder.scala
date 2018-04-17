@@ -1,14 +1,27 @@
 package com.prisma.deploy.connector.postgresql.database
 
-import com.prisma.shared.models.{Project, TypeIdentifier}
+import java.sql.PreparedStatement
+
 import com.prisma.shared.models.TypeIdentifier.TypeIdentifier
+import com.prisma.shared.models.{Project, TypeIdentifier}
 import slick.jdbc.PostgresProfile.api._
 
 object DeployDatabaseMutationBuilder {
   def createClientDatabaseForProject(projectId: String) = {
+
+    val createFunction = SimpleDBIO[Unit] { x =>
+      val query                             = """CREATE OR REPLACE FUNCTION raise_exception(text) RETURNS void as $$
+                                                     BEGIN
+                                                        RAISE EXCEPTION '%', $1;
+                                                     END;
+                                                     $$ Language plpgsql;"""
+      val functionInsert: PreparedStatement = x.connection.prepareStatement(query)
+      functionInsert.execute()
+    }
     DBIO.seq(
       sqlu"""CREATE SCHEMA "#$projectId";""",
-      sqlu"""CREATE TABLE "#$projectId"."_RelayId" ("id" CHAR(25) NOT NULL, "stableModelIdentifier" CHAR(25) NOT NULL, PRIMARY KEY ("id"))"""
+      sqlu"""CREATE TABLE "#$projectId"."_RelayId" ("id" CHAR(25) NOT NULL, "stableModelIdentifier" CHAR(25) NOT NULL, PRIMARY KEY ("id"))""",
+      createFunction
     )
   }
 

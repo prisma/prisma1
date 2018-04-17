@@ -9,6 +9,7 @@ import com.prisma.api.schema.APIErrors.RequiredRelationWouldBeViolated
 import com.prisma.shared.models.Project
 import slick.dbio.{DBIOAction, Effect, NoStream}
 import com.prisma.api.connector.postgresql.database.ErrorMessageParameterHelper.parameterString
+import org.postgresql.util.PSQLException
 
 trait NestedRelationInterpreterBase extends DatabaseMutactionInterpreter {
 
@@ -25,13 +26,30 @@ trait NestedRelationInterpreterBase extends DatabaseMutactionInterpreter {
     case None    => p.copy(isRequired = false, isList = true) //optional back-relation defaults to List-NonRequired
   }
 
-  def checkForOldParent = oldParentFailureTrigger(project, path)
-  def checkForOldParentByChildWhere: slick.sql.SqlStreamingAction[Vector[String], String, slick.dbio.Effect] = path.lastEdge_! match {
-    case _: ModelEdge   => sys.error("Should be a node edge")
-    case edge: NodeEdge => oldParentFailureTriggerForRequiredRelations(project, edge.relation, edge.childWhere, edge.childRelationSide)
+  val parentCauseString = path.lastEdge_! match {
+    case edge: NodeEdge =>
+      s"-OLDPARENTFAILURETRIGGER@${path.lastRelation_!.relationTableName}@${path.lastEdge_!.childRelationSide}@${edge.childWhere.fieldValueAsString}-"
+    case _: ModelEdge => s"-OLDPARENTFAILURETRIGGER@${path.lastRelation_!.relationTableName}@${path.lastEdge_!.childRelationSide}-"
   }
 
-  def checkForOldChild = oldChildFailureTrigger(project, path)
+  val childCauseString = path.edges.length match {
+    case 0 => sys.error("There should always be at least one edge on the path if this is called.")
+    case 1 => s"-OLDCHILDPATHFAILURETRIGGER@${path.lastRelation_!.relationTableName}@${path.lastEdge_!.parentRelationSide}@${path.root.fieldValueAsString}-"
+    case _ =>
+      path.removeLastEdge.lastEdge_! match {
+        case edge: NodeEdge =>
+          s"-OLDCHILDPATHFAILURETRIGGER@${path.lastRelation_!.relationTableName}@${path.lastEdge_!.parentRelationSide}@${edge.childWhere.fieldValueAsString}-"
+        case _: ModelEdge => s"-OLDCHILDPATHFAILURETRIGGER@${path.lastRelation_!.relationTableName}@${path.lastEdge_!.parentRelationSide}-"
+      }
+  }
+
+  def checkForOldParent = oldParentFailureTrigger(project, path, parentCauseString)
+  def checkForOldParentByChildWhere: slick.sql.SqlStreamingAction[Vector[String], String, slick.dbio.Effect] = path.lastEdge_! match {
+    case _: ModelEdge   => sys.error("Should be a node edge")
+    case edge: NodeEdge => oldParentFailureTriggerForRequiredRelations(project, edge.relation, edge.childWhere, edge.childRelationSide, parentCauseString)
+  }
+
+  def checkForOldChild = oldChildFailureTrigger(project, path, childCauseString)
   def noCheckRequired  = List.empty
 
   def removalByParent         = deleteRelationRowByParent(project.id, path)
@@ -51,38 +69,13 @@ trait NestedRelationInterpreterBase extends DatabaseMutactionInterpreter {
   override val action = DBIOAction.seq(allActions: _*)
 
   override val errorMapper = {
-    case e: SQLException if e.getErrorCode == 1242 && causedByThisMutaction(path, e.getCause.toString) =>
-      throw RequiredRelationWouldBeViolated(project, path.lastRelation_!)
+    case e: PSQLException if causedByThisMutaction(e.getMessage) => throw RequiredRelationWouldBeViolated(project, path.lastRelation_!)
   }
 
   def requiredRelationViolation = throw RequiredRelationWouldBeViolated(project, path.lastRelation_!)
 
   def sysError = sys.error("This should not happen, since it means a many side is required")
 
-  def causedByThisMutaction(path: Path, cause: String) = {
-    val parentCheckString = s"`${path.lastRelation_!.relationTableName}` OLDPARENTFAILURETRIGGER WHERE `${path.lastEdge_!.childRelationSide}`"
-    val childCheckString  = s"`${path.lastRelation_!.relationTableName}` OLDCHILDPATHFAILURETRIGGER WHERE `${path.lastEdge_!.parentRelationSide}`"
+  def causedByThisMutaction(cause: String) = cause.contains(parentCauseString) || cause.contains(childCauseString)
 
-    val parentParameterString = path.lastEdge_! match {
-      case edge: NodeEdge => parameterString(edge.childWhere)
-      case _: ModelEdge   => ""
-    }
-
-    val childParameterString = path.edges.length match {
-      case 0 =>
-        sys.error("There should always be at least one edge on the path if this is called.")
-
-      case 1 =>
-        parameterString(path.root)
-
-      case _ =>
-        path.removeLastEdge.lastEdge_! match {
-          case edge: NodeEdge => parameterString(edge.childWhere)
-          case _: ModelEdge   => ""
-        }
-    }
-
-    (cause.contains(parentCheckString) && cause.contains(parentParameterString)) ||
-    (cause.contains(childCheckString) && cause.contains(childParameterString))
-  }
 }

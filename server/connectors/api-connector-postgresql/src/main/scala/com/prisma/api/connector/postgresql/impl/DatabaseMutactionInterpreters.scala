@@ -1,6 +1,7 @@
 package com.prisma.api.connector.postgresql.impl
 
 import java.sql.{SQLException, SQLIntegrityConstraintViolationException}
+
 import com.prisma.api.connector._
 import com.prisma.api.connector.postgresql.DatabaseMutactionInterpreter
 import com.prisma.api.connector.postgresql.database.DatabaseMutationBuilder
@@ -16,6 +17,7 @@ import com.prisma.shared.models.{Field, Relation}
 import slick.dbio.DBIOAction
 import slick.jdbc.MySQLProfile.api._
 import com.prisma.api.connector.postgresql.database.ErrorMessageParameterHelper.parameterString
+import org.postgresql.util.PSQLException
 
 case class AddDataItemToManyRelationByPathInterpreter(mutaction: AddDataItemToManyRelationByPath) extends DatabaseMutactionInterpreter {
 
@@ -253,7 +255,7 @@ case class UpsertDataItemIfInRelationWithInterpreter(mutaction: UpsertDataItemIf
     case e: SQLIntegrityConstraintViolationException if e.getErrorCode == 1048 =>
       APIErrors.FieldCannotBeNull()
 
-    case e: SQLException if e.getErrorCode == 1242 && relationChecker.causedByThisMutaction(mutaction.createPath, e.getCause.toString) =>
+    case e: PSQLException if relationChecker.causedByThisMutaction(e.getMessage) =>
       throw RequiredRelationWouldBeViolated(project, mutaction.createPath.lastRelation_!)
   }
 }
@@ -261,36 +263,28 @@ case class UpsertDataItemIfInRelationWithInterpreter(mutaction: UpsertDataItemIf
 case class VerifyConnectionInterpreter(mutaction: VerifyConnection) extends DatabaseMutactionInterpreter {
   val project = mutaction.project
   val path    = mutaction.path
-
-  override val action = DatabaseMutationBuilder.connectionFailureTrigger(project, path)
-
-  override val errorMapper = {
-    case e: SQLException if e.getErrorCode == 1242 && causedByThisMutaction(e.getCause.toString) => throw APIErrors.NodesNotConnectedError(path)
+  val causeString = path.lastEdge_! match {
+    case _: ModelEdge => s"CONNECTIONFAILURETRIGGERPATH@${path.lastRelation_!.relationTableName}@${path.parentSideOfLastEdge}"
+    case edge: NodeEdge =>
+      s"CONNECTIONFAILURETRIGGERPATH@${path.lastRelation_!.relationTableName}@${path.parentSideOfLastEdge}@${path.childSideOfLastEdge}@${edge.childWhere.fieldValueAsString}}"
   }
 
-  private def causedByThisMutaction(cause: String) = {
-    val string = s"`${path.lastRelation_!.relationTableName}` CONNECTIONFAILURETRIGGERPATH WHERE "
+  override val action = DatabaseMutationBuilder.connectionFailureTrigger(project, path, causeString)
 
-    path.lastEdge_! match {
-      case _: ModelEdge   => cause.contains(string ++ s" `${path.parentSideOfLastEdge}`")
-      case edge: NodeEdge => cause.contains(string ++ s" `${path.childSideOfLastEdge}`") && cause.contains(parameterString(edge.childWhere))
-    }
+  override val errorMapper = {
+    case e: PSQLException if e.getMessage.contains(causeString) => throw APIErrors.NodesNotConnectedError(path)
   }
 }
 
 case class VerifyWhereInterpreter(mutaction: VerifyWhere) extends DatabaseMutactionInterpreter {
-  val project = mutaction.project
-  val where   = mutaction.where
+  val project     = mutaction.project
+  val where       = mutaction.where
+  val causeString = s"WHEREFAILURETRIGGER@${where.model.name}@${where.field.name}@${where.fieldValueAsString}"
 
-  override val action = DatabaseMutationBuilder.whereFailureTrigger(project, where)
+  override val action = DatabaseMutationBuilder.whereFailureTrigger(project, where, causeString)
 
   override val errorMapper = {
-    case e: SQLException if e.getErrorCode == 1242 && causedByThisMutaction(e.getCause.toString) => throw APIErrors.NodeNotFoundForWhereError(where)
-  }
-
-  private def causedByThisMutaction(cause: String) = {
-    val modelString = s"`${where.model.name}` WHEREFAILURETRIGGER WHERE `${where.field.name}`"
-    cause.contains(modelString) && cause.contains(parameterString(where))
+    case e: PSQLException if e.getMessage.contains(causeString) => throw APIErrors.NodeNotFoundForWhereError(where)
   }
 }
 
