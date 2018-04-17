@@ -175,10 +175,16 @@ Note: prisma local start will be deprecated soon in favor of the direct usage of
       throw new Error(`Cluster ${cluster} does not exist.`)
     }
 
+    /**
+     * Go up after dialogs have been shown
+     */
     if (this.showedLines > 0) {
       this.out.up(this.showedLines)
     }
 
+    /**
+     * Make sure we're logged in when a non-public cluster has been chosen
+     */
     if (cluster && !cluster.local) {
       if (!workspace) {
         workspace = this.definition.getWorkspace() || '*'
