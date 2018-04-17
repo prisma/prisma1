@@ -1,7 +1,7 @@
 package com.prisma.deploy.connector.postgresql
 
 import com.prisma.deploy.connector._
-import com.prisma.deploy.connector.postgresql.database.{DeployDatabaseMutationBuilder, InternalDatabaseSchema}
+import com.prisma.deploy.connector.postgresql.database.{DeployDatabaseMutationBuilderPostGres, InternalDatabaseSchema}
 import com.prisma.deploy.connector.postgresql.impls.{ClientDbQueriesImpl, DeployMutactionExecutorImpl, MigrationPersistenceImpl, ProjectPersistenceImpl}
 import com.prisma.shared.models.Project
 import slick.dbio.Effect.Read
@@ -21,12 +21,12 @@ case class PostGreSqlDeployConnector(clientDatabase: Database)(implicit ec: Exec
   override val deployMutactionExecutor: DeployMutactionExecutor = DeployMutactionExecutorImpl(clientDatabase)
 
   override def createProjectDatabase(id: String): Future[Unit] = {
-    val action = DeployDatabaseMutationBuilder.createClientDatabaseForProject(projectId = id)
+    val action = DeployDatabaseMutationBuilderPostGres.createClientDatabaseForProject(projectId = id)
     clientDatabase.run(action)
   }
 
   override def deleteProjectDatabase(id: String): Future[Unit] = {
-    val action = DeployDatabaseMutationBuilder.deleteProjectDatabase(projectId = id).map(_ => ())
+    val action = DeployDatabaseMutationBuilderPostGres.deleteProjectDatabase(projectId = id).map(_ => ())
     clientDatabase.run(action)
   }
 

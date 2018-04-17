@@ -1,7 +1,6 @@
 package com.prisma.api.connector.postgresql.impl
 
 import java.sql.{SQLException, SQLIntegrityConstraintViolationException}
-
 import com.prisma.api.connector._
 import com.prisma.api.connector.postgresql.DatabaseMutactionInterpreter
 import com.prisma.api.connector.postgresql.database.DatabaseMutationBuilder
@@ -14,10 +13,9 @@ import com.prisma.api.connector.postgresql.impl.GetFieldFromSQLUniqueException.g
 import com.prisma.api.schema.APIErrors
 import com.prisma.api.schema.APIErrors.RequiredRelationWouldBeViolated
 import com.prisma.shared.models.{Field, Relation}
+import org.postgresql.util.PSQLException
 import slick.dbio.DBIOAction
 import slick.jdbc.MySQLProfile.api._
-import com.prisma.api.connector.postgresql.database.ErrorMessageParameterHelper.parameterString
-import org.postgresql.util.PSQLException
 
 case class AddDataItemToManyRelationByPathInterpreter(mutaction: AddDataItemToManyRelationByPath) extends DatabaseMutactionInterpreter {
 
@@ -107,23 +105,22 @@ case class DeleteManyRelationChecksInterpreter(mutaction: DeleteManyRelationChec
   val fieldsWhereThisModelIsRequired = project.schema.fieldsWhereThisModelIsRequired(model)
 
   override val action = {
-    val requiredChecks = fieldsWhereThisModelIsRequired.map(oldParentFailureTriggerByFieldAndFilter(project, model, filter, _))
+    val requiredChecks = fieldsWhereThisModelIsRequired.map(field => oldParentFailureTriggerByFieldAndFilter(project, model, filter, field, causeString(field)))
     DBIOAction.seq(requiredChecks: _*)
   }
 
   override def errorMapper = {
-    case e: SQLException if e.getErrorCode == 1242 && otherFailingRequiredRelationOnChild(e.getCause.toString).isDefined =>
-      throw RequiredRelationWouldBeViolated(project, otherFailingRequiredRelationOnChild(e.getCause.toString).get)
+    case e: PSQLException if otherFailingRequiredRelationOnChild(e.getMessage).isDefined =>
+      throw RequiredRelationWouldBeViolated(project, otherFailingRequiredRelationOnChild(e.getMessage).get)
   }
 
   private def otherFailingRequiredRelationOnChild(cause: String): Option[Relation] = fieldsWhereThisModelIsRequired.collectFirst {
-    case f if causedByThisMutactionChildOnly(f, cause) => f.relation.get
+    case f if cause.contains(causeString(f)) => f.relation.get
   }
 
-  private def causedByThisMutactionChildOnly(field: Field, cause: String) = {
-    val parentCheckString = s"`${field.relation.get.relationTableName}` OLDPARENTPATHFAILURETRIGGERBYFIELDANDFILTER WHERE `${field.oppositeRelationSide.get}`"
-    cause.contains(parentCheckString) //todo add filter
-  }
+  private def causeString(field: Field) =
+    s"-OLDPARENTPATHFAILURETRIGGERBYFIELDANDFILTER@${field.relation.get.relationTableName}@${field.oppositeRelationSide.get}-"
+
 }
 
 case class DeleteRelationCheckInterpreter(mutaction: DeleteRelationCheck) extends DatabaseMutactionInterpreter {
@@ -138,8 +135,8 @@ case class DeleteRelationCheckInterpreter(mutaction: DeleteRelationCheck) extend
   }
 
   override val errorMapper = {
-    case e: SQLException if e.getErrorCode == 1242 && otherFailingRequiredRelationOnChild(e.getCause.toString).isDefined =>
-      throw RequiredRelationWouldBeViolated(project, otherFailingRequiredRelationOnChild(e.getCause.toString).get)
+    case e: PSQLException if otherFailingRequiredRelationOnChild(e.getMessage).isDefined =>
+      throw RequiredRelationWouldBeViolated(project, otherFailingRequiredRelationOnChild(e.getMessage).get)
   }
 
   private def otherFailingRequiredRelationOnChild(cause: String): Option[Relation] =

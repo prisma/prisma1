@@ -36,7 +36,7 @@ case class ApiTestDatabase()(implicit dependencies: ApiDependencies) extends Awa
 
   private def createRelationTable(project: Project, relation: Relation) = runMutaction(CreateRelationTable(project.id, project.schema, relation = relation))
 
-  private def runMutaction(mutaction: DeployMutaction): Unit                    = DeployMutactionExecutorImpl(clientDatabase)(system.dispatcher).execute(mutaction).await
+  def runMutaction(mutaction: DeployMutaction): Unit                            = DeployMutactionExecutorImpl(clientDatabase)(system.dispatcher).execute(mutaction).await
   def runDatabaseMutactionOnClientDb(mutaction: DatabaseMutaction)              = dependencies.databaseMutactionExecutor.execute(Vector(mutaction)).await()
   def runDbActionOnClientDb(action: DBIOAction[Any, NoStream, Effect.All]): Any = clientDatabase.run(action).await()
 

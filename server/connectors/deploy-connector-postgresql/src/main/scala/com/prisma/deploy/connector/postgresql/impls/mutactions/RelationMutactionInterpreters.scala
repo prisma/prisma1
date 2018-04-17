@@ -1,6 +1,6 @@
 package com.prisma.deploy.connector.postgresql.impls.mutactions
 
-import com.prisma.deploy.connector.postgresql.database.DeployDatabaseMutationBuilder
+import com.prisma.deploy.connector.postgresql.database.DeployDatabaseMutationBuilderPostGres
 import com.prisma.deploy.connector.{CreateRelationTable, DeleteRelationTable}
 
 object CreateRelationInterpreter extends SqlMutactionInterpreter[CreateRelationTable] {
@@ -8,22 +8,22 @@ object CreateRelationInterpreter extends SqlMutactionInterpreter[CreateRelationT
     val aModel = mutaction.schema.getModelById_!(mutaction.relation.modelAId)
     val bModel = mutaction.schema.getModelById_!(mutaction.relation.modelBId)
 
-    DeployDatabaseMutationBuilder.createRelationTable(
+    DeployDatabaseMutationBuilderPostGres.createRelationTable(
       projectId = mutaction.projectId,
-      tableName = mutaction.relation.relationTableName,
+      relationTableName = mutaction.relation.relationTableName,
       aTableName = aModel.name,
       bTableName = bModel.name
     )
   }
 
   override def rollback(mutaction: CreateRelationTable) = {
-    DeployDatabaseMutationBuilder.dropTable(projectId = mutaction.projectId, tableName = mutaction.relation.relationTableName)
+    DeployDatabaseMutationBuilderPostGres.dropTable(projectId = mutaction.projectId, tableName = mutaction.relation.relationTableName)
   }
 }
 
 object DeleteRelationInterpreter extends SqlMutactionInterpreter[DeleteRelationTable] {
   override def execute(mutaction: DeleteRelationTable) = {
-    DeployDatabaseMutationBuilder.dropTable(projectId = mutaction.projectId, tableName = mutaction.relation.relationTableName)
+    DeployDatabaseMutationBuilderPostGres.dropTable(projectId = mutaction.projectId, tableName = mutaction.relation.relationTableName)
   }
 
   override def rollback(mutaction: DeleteRelationTable) = {

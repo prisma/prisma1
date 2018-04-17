@@ -376,12 +376,16 @@ object DatabaseMutationBuilder {
     triggerFailureWhenExists(project, query, table, triggerString)
   }
 
-  def oldParentFailureTriggerByFieldAndFilter(project: Project, model: Model, whereFilter: Option[DataItemFilterCollection], field: Field) = {
+  def oldParentFailureTriggerByFieldAndFilter(project: Project,
+                                              model: Model,
+                                              whereFilter: Option[DataItemFilterCollection],
+                                              field: Field,
+                                              causeString: String) = {
     val table = field.relation.get.relationTableName
     val query = sql"""SELECT "id" FROM "#${project.id}"."#$table" OLDPARENTPATHFAILURETRIGGERBYFIELDANDFILTER""" ++
       sql"""WHERE "#${field.oppositeRelationSide.get}" IN (SELECT "id" FROM "#${project.id}"."#${model.name}" """ ++
       whereFilterAppendix(project.id, model, whereFilter) ++ sql")"
-    triggerFailureWhenExists(project, query, table, "OLDPARENTPATHFAILURETRIGGERBYFIELDANDFILTER")
+    triggerFailureWhenExists(project, query, table, causeString)
   }
 
   def oldChildFailureTrigger(project: Project, path: Path, triggerString: String) = {
@@ -511,13 +515,9 @@ object DatabaseMutationBuilder {
   }
 
   def removeConnectionInfoFromCause(cause: String): String = {
-    val connectionSubStringStart = cause.indexOf("(conn=")
-    val firstPart                = cause.substring(0, connectionSubStringStart)
-    val temp                     = cause.substring(connectionSubStringStart + 6)
-    val endOfConnectionSubstring = temp.indexOf(")") + 2
-    val secondPart               = temp.substring(endOfConnectionSubstring)
+    val connectionSubStringStart = cause.indexOf(": ERROR:")
+    cause.substring(connectionSubStringStart + 9)
 
-    firstPart + secondPart
   }
 
   def createRelationRowsImport(mutaction: CreateRelationRowsImport): SimpleDBIO[Vector[String]] = {

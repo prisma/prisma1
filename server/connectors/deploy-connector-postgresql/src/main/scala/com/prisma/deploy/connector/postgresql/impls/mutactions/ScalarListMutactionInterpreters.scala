@@ -1,12 +1,12 @@
 package com.prisma.deploy.connector.postgresql.impls.mutactions
 
-import com.prisma.deploy.connector.postgresql.database.DeployDatabaseMutationBuilder
+import com.prisma.deploy.connector.postgresql.database.DeployDatabaseMutationBuilderPostGres
 import com.prisma.deploy.connector.{CreateScalarListTable, DeleteScalarListTable, UpdateScalarListTable}
 import slick.jdbc.PostgresProfile.api._
 
 object CreateScalarListInterpreter extends SqlMutactionInterpreter[CreateScalarListTable] {
   override def execute(mutaction: CreateScalarListTable) = {
-    DeployDatabaseMutationBuilder.createScalarListTable(
+    DeployDatabaseMutationBuilderPostGres.createScalarListTable(
       projectId = mutaction.projectId,
       modelName = mutaction.model,
       fieldName = mutaction.field,
@@ -15,17 +15,19 @@ object CreateScalarListInterpreter extends SqlMutactionInterpreter[CreateScalarL
   }
 
   override def rollback(mutaction: CreateScalarListTable) = {
-    DBIO.seq(DeployDatabaseMutationBuilder.dropScalarListTable(projectId = mutaction.projectId, modelName = mutaction.model, fieldName = mutaction.field))
+    DBIO.seq(
+      DeployDatabaseMutationBuilderPostGres.dropScalarListTable(projectId = mutaction.projectId, modelName = mutaction.model, fieldName = mutaction.field))
   }
 }
 
 object DeleteScalarListInterpreter extends SqlMutactionInterpreter[DeleteScalarListTable] {
   override def execute(mutaction: DeleteScalarListTable) = {
-    DBIO.seq(DeployDatabaseMutationBuilder.dropScalarListTable(projectId = mutaction.projectId, modelName = mutaction.model, fieldName = mutaction.field))
+    DBIO.seq(
+      DeployDatabaseMutationBuilderPostGres.dropScalarListTable(projectId = mutaction.projectId, modelName = mutaction.model, fieldName = mutaction.field))
   }
 
   override def rollback(mutaction: DeleteScalarListTable) = {
-    DeployDatabaseMutationBuilder.createScalarListTable(
+    DeployDatabaseMutationBuilderPostGres.createScalarListTable(
       projectId = mutaction.projectId,
       modelName = mutaction.model,
       fieldName = mutaction.field,
@@ -43,13 +45,13 @@ object UpdateScalarListInterpreter extends SqlMutactionInterpreter[UpdateScalarL
     val newModel  = mutaction.newModel
 
     val updateType = if (oldField.typeIdentifier != newField.typeIdentifier) {
-      List(DeployDatabaseMutationBuilder.updateScalarListType(projectId, oldModel.name, oldField.name, newField.typeIdentifier))
+      List(DeployDatabaseMutationBuilderPostGres.updateScalarListType(projectId, oldModel.name, oldField.name, newField.typeIdentifier))
     } else {
       List.empty
     }
 
     val renameTable = if (oldField.name != newField.name || oldModel.name != newModel.name) {
-      List(DeployDatabaseMutationBuilder.renameScalarListTable(projectId, oldModel.name, oldField.name, newModel.name, newField.name))
+      List(DeployDatabaseMutationBuilderPostGres.renameScalarListTable(projectId, oldModel.name, oldField.name, newModel.name, newField.name))
     } else {
       List.empty
     }

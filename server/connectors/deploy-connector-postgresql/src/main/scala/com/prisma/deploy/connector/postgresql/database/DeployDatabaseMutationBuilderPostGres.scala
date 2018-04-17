@@ -4,9 +4,13 @@ import java.sql.PreparedStatement
 
 import com.prisma.shared.models.TypeIdentifier.TypeIdentifier
 import com.prisma.shared.models.{Project, TypeIdentifier}
+import slick.dbio.DBIOAction
 import slick.jdbc.PostgresProfile.api._
 
-object DeployDatabaseMutationBuilder {
+object DeployDatabaseMutationBuilderPostGres {
+
+  def itemCountForTable(projectId: String, tableName: String) = sql"""SELECT COUNT(*) AS Count FROM "#$projectId"."#$tableName""""
+
   def createClientDatabaseForProject(projectId: String) = {
 
     val createFunction = SimpleDBIO[Unit] { x =>
@@ -21,7 +25,7 @@ object DeployDatabaseMutationBuilder {
 
     DBIO.seq(
       sqlu"""CREATE SCHEMA "#$projectId";""",
-      sqlu"""CREATE TABLE "#$projectId"."_RelayId" ("id" CHAR(25) NOT NULL, "stableModelIdentifier" CHAR(25) NOT NULL, PRIMARY KEY ("id"))""",
+      sqlu"""CREATE TABLE "#$projectId"."_RelayId" ("id" VARCHAR (25) NOT NULL, "stableModelIdentifier" VARCHAR (25) NOT NULL, PRIMARY KEY ("id"))""",
       createFunction
     )
   }
@@ -41,7 +45,7 @@ object DeployDatabaseMutationBuilder {
 
   def createTable(projectId: String, name: String) = {
     sqlu"""CREATE TABLE "#$projectId"."#$name"
-    ("id" CHAR(25) NOT NULL,
+    ("id" VARCHAR (25) NOT NULL,
     "createdAt" TIMESTAMP (3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP (3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY ("id")
@@ -53,7 +57,7 @@ object DeployDatabaseMutationBuilder {
   def createScalarListTable(projectId: String, modelName: String, fieldName: String, typeIdentifier: TypeIdentifier) = {
     val sqlType = sqlTypeForScalarTypeIdentifier(typeIdentifier)
     sqlu"""CREATE TABLE "#$projectId"."#${modelName}_#${fieldName}"
-    ("nodeId" CHAR(25) NOT NULL,
+    ("nodeId" VARCHAR (25) NOT NULL,
     "position" INT NOT NULL,
     "value" #$sqlType NOT NULL,
     PRIMARY KEY ("nodeId", "position")
@@ -121,8 +125,8 @@ object DeployDatabaseMutationBuilder {
     val sqlType = sqlTypeForScalarTypeIdentifier(typeIdentifier = typeIdentifier)
 
     val indexSize = sqlType match {
-      case "text" | "mediumtext" => "(191)"
-      case _                     => ""
+      case "text" => "(191)"
+      case _      => ""
     }
 
     sqlu"""ALTER TABLE  "#$projectId"."#$tableName" ADD UNIQUE INDEX "#${columnName}_UNIQUE" ("#$columnName"#$indexSize ASC)"""
@@ -133,16 +137,20 @@ object DeployDatabaseMutationBuilder {
   }
 
   //todo indexes have to be added in a separate query
-  def createRelationTable(projectId: String, tableName: String, aTableName: String, bTableName: String) = {
+  def createRelationTable(projectId: String, relationTableName: String, aTableName: String, bTableName: String) = {
 //    val idCharset = charsetTypeForScalarTypeIdentifier(isList = false, TypeIdentifier.GraphQLID)
 
-    sqlu"""CREATE TABLE "#$projectId"."#$tableName" ("id" CHAR(25)  NOT NULL,
+    val tableCreate = sqlu"""CREATE TABLE "#$projectId"."#$relationTableName" ("id" CHAR(25)  NOT NULL,
            PRIMARY KEY ("id"),
-    "A" CHAR(25)  NOT NULL,
-    "B" CHAR(25)  NOT NULL,
+    "A" VARCHAR (25)  NOT NULL,
+    "B" VARCHAR (25)  NOT NULL,
     FOREIGN KEY ("A") REFERENCES "#$projectId"."#$aTableName"("id") ON DELETE CASCADE,
     FOREIGN KEY ("B") REFERENCES "#$projectId"."#$bTableName"("id") ON DELETE CASCADE)
     ;"""
+
+    val indexCreate = sqlu"""CREATE UNIQUE INDEX "#${relationTableName}_AB_unique" on  "#$projectId"."#$relationTableName" ("A" ASC, "B" ASC)"""
+
+    DBIOAction.seq(tableCreate, indexCreate)
   }
 
   // note: utf8mb4 requires up to 4 bytes per character and includes full utf8 support, including emoticons
@@ -157,7 +165,7 @@ object DeployDatabaseMutationBuilder {
       case TypeIdentifier.Boolean   => "boolean"
       case TypeIdentifier.Int       => "int"
       case TypeIdentifier.Float     => "Decimal(65,30)"
-      case TypeIdentifier.GraphQLID => "char(25)"
+      case TypeIdentifier.GraphQLID => "varchar (25)"
       case TypeIdentifier.Enum      => "text"
       case TypeIdentifier.Json      => "text"
       case TypeIdentifier.DateTime  => "timestamp (3)"
