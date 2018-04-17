@@ -91,8 +91,8 @@ ${chalk.gray(
         `Couldn’t find \`prisma.yml\` file. Are you in the right directory?`,
       )
     }
-    const serviceName = this.definition.service!
-    const stage = this.definition.stage!
+    const serviceName = this.definition.definition!.service!
+    const stage = this.definition.definition!.stage!
 
     let cluster = this.definition.getCluster(false)
     const clusterName = this.definition.getClusterName()
@@ -106,7 +106,10 @@ ${chalk.gray(
       cluster = this.definition.getCluster()
     }
     const isOnline = cluster ? await cluster.isOnline() : false
-    if (this.definition.cluster === 'local' && (!cluster || !isOnline)) {
+    if (
+      this.definition.definition.cluster === 'local' &&
+      (!cluster || !isOnline)
+    ) {
       cluster = await this.localUp()
     } else if (
       !isOnline &&
@@ -201,7 +204,7 @@ ${chalk.gray(
       stage,
       serviceName,
       cluster!,
-      this.definition.cluster!,
+      this.definition.definition!.cluster!,
       force,
       dryRun,
       projectNew,
@@ -218,9 +221,9 @@ ${chalk.gray(
               await this.definition.load(this.flags)
               await this.deploy(
                 stage,
-                this.definition.service!,
+                this.definition.definition!.service!,
                 cluster!,
-                this.definition.cluster!,
+                this.definition.definition!.cluster!,
                 force,
                 dryRun,
                 false,
@@ -611,10 +614,7 @@ ${chalk.gray(
       }
     }
 
-    // await this.definition.addCluster(workspaceClusterCombination, this.flags)
-    await this.definition.replaceEndpoint(
-      this.definition.getEndpoint(serviceName, stage),
-    )
+    await this.definition.addCluster(workspaceClusterCombination, this.flags)
 
     return {
       cluster: this.env.clusterByName(clusterName) || undefined,
