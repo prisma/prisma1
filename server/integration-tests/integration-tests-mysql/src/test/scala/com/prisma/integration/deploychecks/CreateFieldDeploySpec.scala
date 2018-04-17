@@ -23,7 +23,7 @@ class CreateFieldDeploySpec extends FlatSpec with Matchers with IntegrationBaseS
         |}"""
 
     deployServer.deploySchemaThatMustError(project, schema2).toString should be(
-      """{"data":{"deploy":{"migration":{"applied":0,"revision":0},"errors":[{"description":"You are creating a required field but there are already nodes present that would violate that constraint."}],"warnings":[]}}}""")
+      """{"data":{"deploy":{"migration":{"applied":0,"revision":0},"errors":[{"description":"You are creating a required field on model 'A' but there are already nodes present that would violate that constraint."}],"warnings":[]}}}""")
   }
 
   "Creating a required Field" should "error when nodes already exist and there is a defaultValue" in {
@@ -44,7 +44,7 @@ class CreateFieldDeploySpec extends FlatSpec with Matchers with IntegrationBaseS
         |}"""
 
     deployServer.deploySchemaThatMustError(project, schema2).toString should be(
-      """{"data":{"deploy":{"migration":{"applied":0,"revision":0},"errors":[{"description":"You are creating a required field but there are already nodes present that would violate that constraint."}],"warnings":[]}}}""")
+      """{"data":{"deploy":{"migration":{"applied":0,"revision":0},"errors":[{"description":"You are creating a required field on model 'A' but there are already nodes present that would violate that constraint."}],"warnings":[]}}}""")
   }
 
   "Creating a required Field" should "not error when there is no defaultValue but there are no nodes yet" in {
