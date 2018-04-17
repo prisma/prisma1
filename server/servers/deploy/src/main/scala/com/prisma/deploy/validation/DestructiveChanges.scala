@@ -46,7 +46,9 @@ case class DestructiveChanges(persistencePlugin: DeployConnector, project: Proje
           case true =>
             clientDataResolver.existsByModel(existingModel.name).map {
               case true =>
-                Vector(SchemaError.global("You are creating a required field but there are already nodes present that would violate that constraint."))
+                Vector(
+                  SchemaError.global(
+                    s"You are creating a required field on $existingModel but there are already nodes present that would violate that constraint."))
               case false => Vector.empty
             }
 
