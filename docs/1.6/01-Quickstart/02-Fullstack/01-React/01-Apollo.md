@@ -175,11 +175,24 @@ Paste the following mutation into the left pane of the `app` Playground and hit 
 
 ```grahpql
 mutation {
-  createPost(
-    description: "A rare look into the Prisma office"
-    imageUrl: "https://media2.giphy.com/media/xGWD6oKGmkp6E/200_s.gif"
+  createDraft(
+    title: "A rare look into the Prisma office"
+    text: "https://media2.giphy.com/media/xGWD6oKGmkp6E/200_s.gif"
   ) {
     id
+  }
+}
+```
+
+</Instruction>
+<Instruction>
+
+To publish the draft, aste the following mutation into the left pane of the `app` Playground and hit the _Play_-button (or use the keyboard shortcut `CMD+Enter`):
+
+```grahpql
+mutation{
+  publish(id:"cjg3fvin8003707135mmlg99t"){
+    isPublished
   }
 }
 ```
@@ -188,13 +201,13 @@ mutation {
 
 <Instruction>
 
-To retrieve the `Post` node that was just created, you can send the following query in the `app` Playground:
+To retrieve the `Post` node that was just created and published, you can send the following query in the `app` Playground:
 
 ```graphql
 {
   feed {
-    description
-    imageUrl
+    title
+    text
   }
 }
 ```
