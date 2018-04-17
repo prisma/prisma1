@@ -30,7 +30,7 @@ class DateTimeImportExportSpec extends FlatSpec with Matchers with ApiBaseSpec w
   }
 
   override def beforeEach(): Unit = {
-    database.truncate(project)
+    database.truncate(project.id)
   }
   val importer = new BulkImport(project)
 
@@ -70,7 +70,7 @@ class DateTimeImportExportSpec extends FlatSpec with Matchers with ApiBaseSpec w
     }
 
     database.setup(project)
-    database.truncate(project)
+    database.truncate(project.id)
     val dataResolver: DataResolver = this.dataResolver(project)
 
     val nodes =

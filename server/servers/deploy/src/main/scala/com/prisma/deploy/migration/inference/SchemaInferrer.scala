@@ -95,7 +95,7 @@ case class SchemaInferrerImpl(
             val oldField     = baseSchema.getFieldByName(oldModelName, oldFieldName)
 
             oldField match {
-              case Some(field) if oldRelationSidesNotBothEqual(field) =>
+              case Some(field) if field.isRelation && oldRelationSidesNotBothEqual(field) =>
                 field.relationSide.get
 
               case _ =>

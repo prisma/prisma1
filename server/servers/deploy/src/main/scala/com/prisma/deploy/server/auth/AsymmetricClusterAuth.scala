@@ -1,4 +1,4 @@
-package com.prisma.deploy.server
+package com.prisma.deploy.server.auth
 
 import java.time.Instant
 
@@ -7,22 +7,9 @@ import play.api.libs.json._
 
 import scala.util.{Failure, Success, Try}
 
-trait ClusterAuth {
-  def verify(name: String, stage: String, authHeaderOpt: Option[String]): Try[Unit]
-}
-
-case class DummyClusterAuth() extends ClusterAuth {
-  override def verify(name: String, stage: String, authHeaderOpt: Option[String]): Try[Unit] = {
-    println("Warning: Cluster authentication is disabled. To protect your cluster you should provide the environment variable 'CLUSTER_PUBLIC_KEY'.")
-    Success(())
-  }
-}
-
-case class ClusterAuthImpl(publicKey: String) extends ClusterAuth {
+case class AsymmetricClusterAuth(publicKey: String) extends ClusterAuth {
   import pdi.jwt.{Jwt, JwtAlgorithm, JwtOptions}
-
-  implicit val tokenGrantReads = Json.reads[TokenGrant]
-  implicit val tokenDataReads  = Json.reads[TokenData]
+  import ClusterAuth._
 
   override def verify(name: String, stage: String, authHeaderOpt: Option[String]): Try[Unit] = Try {
     authHeaderOpt match {
@@ -81,6 +68,3 @@ case class ClusterAuthImpl(publicKey: String) extends ClusterAuth {
     }
   }
 }
-
-case class TokenData(grants: Vector[TokenGrant], exp: Long)
-case class TokenGrant(target: String, action: String)

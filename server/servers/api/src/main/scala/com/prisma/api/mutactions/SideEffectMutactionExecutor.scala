@@ -29,7 +29,6 @@ object PublishSubscriptionEventExecutor {
   def execute(mutaction: PublishSubscriptionEvent, subscriptionEventsPublisher: PubSubPublisher[String]): Future[Unit] = {
     val PublishSubscriptionEvent(project, value, mutationName) = mutaction
     val topic                                                  = Only(s"subscription:event:${project.id}:$mutationName")
-    println(s"PUBLISHING SUBSCRIPTION EVENT TO $topic")
     subscriptionEventsPublisher.publish(topic, Json.toJson(value).toString)
     Future.unit
   }

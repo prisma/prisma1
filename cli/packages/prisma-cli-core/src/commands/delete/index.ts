@@ -23,11 +23,10 @@ export default class Delete extends Command {
 
     const envFile = this.flags['env-file']
     await this.definition.load(this.flags, envFile)
-    const serviceName = this.definition.definition!.service
+    const serviceName = this.definition.service!
     const workspaceName = this.definition.getWorkspace()
-    const stage = this.definition.definition!.stage
-    const clusterName = this.definition.getClusterName()
-    const cluster = this.env.clusterByName(clusterName!, true)
+    const stage = this.definition.stage!
+    const cluster = this.definition.getCluster()
     this.env.setActiveCluster(cluster!)
 
     await this.client.initClusterClient(
@@ -46,62 +45,11 @@ export default class Delete extends Command {
     const before = Date.now()
     this.out.action.start(`${chalk.red.bold(`Deleting service ${prettyName}`)}`)
     await this.client.deleteProject(
-      this.definition.definition!.service,
+      serviceName,
       stage,
       this.definition.getWorkspace(),
     )
     this.out.action.stop(prettyTime(Date.now() - before))
-
-    // const foundTarget = await this.env.getTargetWithName(stage)
-
-    // if (foundTarget && foundTarget.stage) {
-    //       if (!this.env.isSharedCluster(foundTarget.stage.cluster)) {
-    //         this.out.error(`Can't delete service in local cluster ${foundTarget.stage.cluster}.
-    // This command is only available in the hosted version of Prisma.`)
-    //       } else {
-    //         const id = foundTarget.stage.id
-    //         if (!force) {
-    //           await this.askForConfirmation(id)
-    //         }
-    //         this.out.action.start(`${chalk.bold.red('Deleting project')} ${id}`)
-    //         await this.client.deleteProjects([id])
-    //         this.env.save()
-    //         this.out.action.stop()
-    //       }
-    // } else {
-    // const projects = await this.client.fetchProjects()
-
-    // const question = {
-    //   name: 'projectsToDelete',
-    //   type: 'checkbox',
-    //   message: 'Select services to delete',
-    //   choices: projects.map(p => ({
-    //     name: prettyProject(p),
-    //     value: p,
-    //   })).concat(new inquirer.Separator(chalk.bold.green(repeat('-', 50)))),
-    //   pageSize: Math.min(process.stdout.rows!, projects.length) - 2,
-    // }
-
-    // const {projectsToDelete}: {projectsToDelete: Project[]} = await this.out.prompt(question)
-    // const projectIdsToDelete = projectsToDelete.map(p => p.id)
-
-    // if (projectsToDelete.length === 0) {
-    //   this.out.log(`You didn't select any services to delete, so none will be deleted`)
-    //   this.out.exit(0)
-    // }
-    // const prettyProjects = projectsToDelete.map(prettyProject).join(', ')
-
-    // if (!force) {
-    //   await this.askForConfirmation(prettyProjects)
-    // }
-
-    // this.out.log('')
-    // this.out.action.start(`${chalk.red.bold(`Deleting service${projectsToDelete.length > 1 ? 's': ''}`)} ${prettyProjects}`)
-    // await this.client.deleteProjects(projectIdsToDelete)
-    // this.env.deleteIfExist(projectIdsToDelete)
-    // this.env.save()
-    // this.out.action.stop()
-    // }
   }
 
   private async askForConfirmation(projects: string) {

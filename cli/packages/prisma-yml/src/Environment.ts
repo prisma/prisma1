@@ -12,16 +12,14 @@ import 'isomorphic-fetch'
 import { RC } from './index'
 import { ClusterNotSet } from './errors/ClusterNotSet'
 import * as _ from 'lodash'
+import { clusterEndpointMap } from './constants'
 const debug = require('debug')('Environment')
 
 const isDev = (process.env.ENV || '').toLowerCase() === 'dev'
 
 export class Environment {
   sharedClusters: string[] = ['prisma-eu1', 'prisma-us1']
-  clusterEndpointMap: { [key: string]: string } = {
-    'prisma-eu1': 'https://eu1.prisma.sh',
-    'prisma-us1': 'https://us1.prisma.sh',
-  }
+  clusterEndpointMap = clusterEndpointMap
   args: Args
   activeCluster: Cluster
   globalRC: RC = {}

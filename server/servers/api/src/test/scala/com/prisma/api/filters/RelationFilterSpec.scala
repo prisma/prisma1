@@ -28,7 +28,7 @@ class RelationFilterSpec extends FlatSpec with Matchers with ApiBaseSpec {
 
   override def beforeEach() = {
     super.beforeEach()
-    database.truncate(project)
+    database.truncate(project.id)
 
     // add data
     server.query(

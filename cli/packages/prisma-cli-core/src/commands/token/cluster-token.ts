@@ -14,12 +14,11 @@ export default class ClusterToken extends Command {
   async run() {
     const { copy } = this.flags
     await this.definition.load(this.flags)
-    const serviceName = this.definition.definition!.service
-    const stage = this.definition.definition!.stage
-    const clusterName = this.definition.getClusterName()
-    const cluster = this.env.clusterByName(clusterName!, true)
+    const serviceName = this.definition.service!
+    const stage = this.definition.stage!
+    const cluster = this.definition.getCluster()
 
-    if (!clusterName) {
+    if (!cluster) {
       throw new Error(`Please provide a cluster in your prisma.yml`)
     }
 

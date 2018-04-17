@@ -175,7 +175,7 @@ class SubscriptionsProtocolV07Spec extends FlatSpec with Matchers with SpecBase 
 
       sssEventsTestKit.publish(
         Only(s"subscription:event:${project.id}:updateTodo"),
-        s"""{"nodeId":"test-node-id","modelId":"${model.id}","mutationType":"UpdateNode","changedFields":["text"], "previousValues": "{\\"id\\": \\"text-node-id\\", \\"text\\": \\"asd\\", \\"json\\": [], \\"float\\": 1.23, \\"int\\": 1}"}"""
+        s"""{"nodeId":"test-node-id","modelId":"${model.id}","mutationType":"UpdateNode","changedFields":["text"], "previousValues": {"id": "text-node-id", "text": "asd", "json": [], "float": 1.23, "int": 1}}"""
       )
 
       wsClient.expectMessage(
@@ -232,7 +232,7 @@ class SubscriptionsProtocolV07Spec extends FlatSpec with Matchers with SpecBase 
 
       sssEventsTestKit.publish(
         Only(s"subscription:event:${project.id}:updateTodo"),
-        s"""{"nodeId":"test-node-id","modelId":"${model.id}","mutationType":"UpdateNode","changedFields":["text"], "previousValues": "{\\"id\\": \\"text-node-id\\", \\"text\\": \\"asd\\", \\"json\\": null, \\"int\\": 8, \\"createdAt\\": \\"2017\\"}"}"""
+        s"""{"nodeId":"test-node-id","modelId":"${model.id}","mutationType":"UpdateNode","changedFields":["text"], "previousValues": {"id": "text-node-id", "text": "asd", "json": null, "int": 8, "createdAt": "2017"}}"""
       )
 
       wsClient.expectMessage(
@@ -288,7 +288,7 @@ class SubscriptionsProtocolV07Spec extends FlatSpec with Matchers with SpecBase 
 
       sssEventsTestKit.publish(
         Only(s"subscription:event:${project.id}:updateTodo"),
-        s"""{"nodeId":"important-test-node-id","modelId":"${model.id}","mutationType":"UpdateNode","changedFields":["text"], "previousValues": "{\\"id\\": \\"text-node-id\\", \\"text\\": \\"asd\\", \\"json\\": null, \\"createdAt\\": \\"2017\\"}"}"""
+        s"""{"nodeId":"important-test-node-id","modelId":"${model.id}","mutationType":"UpdateNode","changedFields":["text"], "previousValues": {"id": "text-node-id", "text": "asd", "json": null, "createdAt": "2017"}}"""
       )
 
       wsClient.expectMessage(

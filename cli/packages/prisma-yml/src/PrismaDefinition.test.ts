@@ -1,4 +1,4 @@
-import { PrismaDefinitionClass } from './PrismaDefinition'
+import { PrismaDefinitionClass, parseEndpoint } from './PrismaDefinition'
 import * as fs from 'fs-extra'
 import * as path from 'path'
 import { getTmpDir } from './test/getTmpDir'
@@ -321,5 +321,21 @@ type User @model {
     }
 
     expect(error).toMatchSnapshot()
+  })
+})
+
+describe('parseEndpoint', () => {
+  test('work for minimal url', () => {
+    expect(parseEndpoint('http://localhost:4466')).toMatchSnapshot()
+  })
+  test('work for url with service', () => {
+    expect(
+      parseEndpoint('http://localhost:4466/service-name'),
+    ).toMatchSnapshot()
+  })
+  test('work for url with service and stage', () => {
+    expect(
+      parseEndpoint('http://localhost:4466/service-name/stage'),
+    ).toMatchSnapshot()
   })
 })

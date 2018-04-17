@@ -12,7 +12,7 @@ import com.prisma.auth.AuthImpl
 import com.prisma.deploy.DeployDependencies
 import com.prisma.deploy.connector.mysql.MySqlDeployConnector
 import com.prisma.deploy.migration.migrator.{AsyncMigrator, Migrator}
-import com.prisma.deploy.server.{ClusterAuthImpl, DummyClusterAuth}
+import com.prisma.deploy.server.auth.{AsymmetricClusterAuth, DummyClusterAuth, SymmetricClusterAuth}
 import com.prisma.image.{Converters, FunctionValidatorImpl, SingleServerProjectFetcher}
 import com.prisma.messagebus.pubsub.inmemory.InMemoryAkkaPubSub
 import com.prisma.messagebus.queue.inmemory.InMemoryAkkaQueue
@@ -42,9 +42,10 @@ case class PrismaLocalDependencies()(implicit val system: ActorSystem, val mater
 
   override lazy val migrator: Migrator = AsyncMigrator(migrationPersistence, projectPersistence, deployPersistencePlugin)
   override lazy val clusterAuth = {
-    sys.env.get("CLUSTER_PUBLIC_KEY") match {
-      case Some(publicKey) if publicKey.nonEmpty => ClusterAuthImpl(publicKey)
-      case _                                     => DummyClusterAuth()
+    (sys.env.get("PRISMA_MANAGEMENT_API_JWT_SECRET"), sys.env.get("CLUSTER_PUBLIC_KEY")) match {
+      case (Some(jwtSecret), _) if jwtSecret.nonEmpty => SymmetricClusterAuth(jwtSecret)
+      case (_, Some(publicKey)) if publicKey.nonEmpty => AsymmetricClusterAuth(publicKey)
+      case _                                          => DummyClusterAuth()
     }
   }
 
