@@ -48,7 +48,7 @@ export class EndpointDialog {
     const localClusterRunning = await this.isClusterOnline(
       'http://localhost:4466',
     )
-    const folderName = path.dirname(this.config.definitionDir)
+    const folderName = path.basename(this.config.definitionDir)
     const loggedIn = await this.client.isAuthenticated()
     const clusters = this.getCloudClusters()
     const files = this.listFiles()
@@ -121,11 +121,17 @@ export class EndpointDialog {
     this.env.setActiveCluster(cluster!)
 
     // TODO propose alternatives if folderName already taken to ensure global uniqueness
-    if (await this.projectExists(cluster, service, stage, workspace)) {
+    if (
+      !cluster.local ||
+      (await this.projectExists(cluster, service, stage, workspace))
+    ) {
       service = await this.askForService(folderName)
     }
 
-    if (await this.projectExists(cluster, service, stage, workspace)) {
+    if (
+      !cluster.local ||
+      (await this.projectExists(cluster, service, stage, workspace))
+    ) {
       stage = await this.askForStage('dev')
     }
 
@@ -320,7 +326,7 @@ export class EndpointDialog {
 
     const { service } = await this.out.prompt(question)
 
-    // this.showedLines += 1
+    this.out.up(1)
 
     return service
   }

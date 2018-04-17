@@ -93,12 +93,13 @@ ${chalk.gray(
      */
     await this.definition.load(this.flags, envFile)
 
-    const serviceName = this.definition.service!
-    const stage = this.definition.stage!
+    let serviceName = this.definition.service!
+    let stage = this.definition.stage!
 
     /**
      * If no endpoint or service provided, ask for it
      */
+    let workspace
     let cluster
     if (!serviceName || !stage || interactive) {
       const endpointDialog = new EndpointDialog(
@@ -108,9 +109,16 @@ ${chalk.gray(
         this.config,
       )
       const results = await endpointDialog.getEndpoint()
-      console.log(results)
       cluster = results.cluster
-      process.exit(0)
+      workspace = results.workspace
+      serviceName = results.service
+      stage = results.stage
+      this.definition.replaceEndpoint(results.endpoint)
+      this.out.log(
+        `\nWritten endpoint \`${chalk.bold(
+          results.endpoint,
+        )}\` to prisma.yml\n`,
+      )
     } else {
       cluster = this.definition.getCluster(false)
     }
@@ -158,7 +166,9 @@ ${chalk.gray(
     }
 
     if (cluster && !cluster.local) {
-      const workspace = this.definition.getWorkspace()
+      if (!workspace) {
+        workspace = this.definition.getWorkspace() || '*'
+      }
       if (
         workspace &&
         !workspace.startsWith('public-') &&
@@ -169,42 +179,25 @@ ${chalk.gray(
       }
     }
 
-    await this.client.initClusterClient(
-      cluster,
-      this.definition.getWorkspace() || '*',
-      serviceName,
-      stage,
-    )
+    await this.client.initClusterClient(cluster, workspace, serviceName, stage)
 
     await this.checkVersions(cluster!)
 
     let projectNew = false
-    if (
-      !await this.projectExists(
-        cluster,
-        serviceName,
-        stage,
-        this.definition.getWorkspace(),
-      )
-    ) {
-      await this.addProject(
-        cluster,
-        serviceName,
-        stage,
-        this.definition.getWorkspace(),
-      )
+    if (!await this.projectExists(cluster, serviceName, stage, workspace)) {
+      await this.addProject(cluster, serviceName, stage, workspace)
       projectNew = true
     }
 
     await this.deploy(
       stage,
       serviceName,
-      cluster!,
-      this.definition.cluster!,
+      cluster,
+      cluster.name,
       force,
       dryRun,
       projectNew,
-      this.definition.getWorkspace(),
+      workspace,
     )
 
     if (watch) {
@@ -217,13 +210,14 @@ ${chalk.gray(
               await this.definition.load(this.flags)
               await this.deploy(
                 stage,
-                this.definition.service!,
-                cluster!,
-                this.definition.cluster!,
+
+                serviceName,
+                cluster,
+                cluster.name,
                 force,
                 dryRun,
                 false,
-                this.definition.getWorkspace(),
+                workspace,
               )
               this.out.log('Watching for change...')
             }
