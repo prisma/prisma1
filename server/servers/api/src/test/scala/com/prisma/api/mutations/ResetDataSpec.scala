@@ -47,7 +47,7 @@ class ResetDataSpec extends FlatSpec with Matchers with ApiBaseSpec with AwaitUt
   }
 
   override def beforeEach(): Unit = {
-    database.truncate(project)
+    database.truncate(project.id)
   }
   val importer = new BulkImport(project)
 

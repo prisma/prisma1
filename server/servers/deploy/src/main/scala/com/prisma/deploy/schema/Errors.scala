@@ -11,7 +11,7 @@ trait DeployApiError extends Exception {
 
 abstract class AbstractDeployApiError(val message: String, val code: Int) extends DeployApiError
 
-case class InvalidName(name: String, entityType: String) extends AbstractDeployApiError(InvalidNames.default(name, entityType), 2008)
+//case class InvalidName(name: String, entityType: String) extends AbstractDeployApiError(InvalidNames.default(name, entityType), 2008)
 
 case class InvalidProjectId(projectId: String)
     extends AbstractDeployApiError({
@@ -23,7 +23,7 @@ case class InvalidServiceName(name: String) extends AbstractDeployApiError(Inval
 
 case class InvalidServiceStage(stage: String) extends AbstractDeployApiError(InvalidNames.forService(stage, "service stage"), 4002)
 
-case class InvalidDeployment(deployErrorMessage: String) extends AbstractDeployApiError(deployErrorMessage, 4003)
+//case class InvalidDeployment(deployErrorMessage: String) extends AbstractDeployApiError(deployErrorMessage, 4003)
 
 case class InvalidRelationName(relationName: String) extends AbstractDeployApiError(InvalidNames.forRelation(relationName, "relation"), 4004)
 

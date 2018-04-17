@@ -27,10 +27,10 @@ case class ApiTestDatabase()(implicit dependencies: ApiDependencies) extends Awa
     project.relations.foreach(createRelationTable(project, _))
   }
 
-  def truncate(project: Project): Unit = {
-    val tables = clientDatabase.run(DatabaseQueryBuilder.getTables(project.id)).await
+  def truncate(projectId: String): Unit = {
+    val tables = clientDatabase.run(DatabaseQueryBuilder.getTables(projectId)).await
     val dbAction = {
-      val actions = List(sqlu"""USE `#${project.id}`;""") ++ List(DatabaseApiTestDatabaseMutationBuilder.dangerouslyTruncateTable(tables))
+      val actions = sqlu"""USE `#${projectId}`;""" +: List(DatabaseApiTestDatabaseMutationBuilder.dangerouslyTruncateTables(tables))
       DBIO.seq(actions: _*)
     }
     clientDatabase.run(dbAction).await()

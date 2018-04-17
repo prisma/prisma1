@@ -252,7 +252,6 @@ case class Field(
         case x                    => ??? //throw SystemErrors.InvalidStateException(message = s" relationSide was $x")
       }
     })
-
   }
 
   def model(schema: Schema): Option[Model] = {

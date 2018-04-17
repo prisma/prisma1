@@ -20,7 +20,7 @@ class UpsertMutationSpec extends FlatSpec with Matchers with ApiBaseSpec {
 
   override protected def beforeEach(): Unit = {
     super.beforeEach()
-    database.truncate(project)
+    database.truncate(project.id)
   }
 
   "an item" should "be created if it does not exist yet" in {
