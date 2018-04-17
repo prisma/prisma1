@@ -30,6 +30,15 @@ export interface GetEndpointResult {
   service: string
   stage: string
   localClusterRunning: boolean
+  database?: DatabaseCredentials
+}
+
+export interface HandleChoiceInput {
+  choice: string
+  loggedIn: boolean
+  folderName: string
+  localClusterRunning: boolean
+  clusters?: Cluster[]
 }
 
 export class EndpointDialog {
@@ -59,12 +68,30 @@ export class EndpointDialog {
       clusters,
     )
 
+    const { choice } = await this.out.prompt(question)
+
+    return this.handleChoice({
+      choice,
+      loggedIn,
+      folderName,
+      localClusterRunning,
+      clusters,
+    })
+  }
+
+  async handleChoice({
+    choice,
+    loggedIn,
+    folderName,
+    localClusterRunning,
+    clusters = this.getCloudClusters(),
+  }: HandleChoiceInput): Promise<GetEndpointResult> {
     let clusterEndpoint
     let cluster: Cluster | undefined
     let workspace: string | undefined
     let service = 'default'
     let stage = 'default'
-    const { choice } = await this.out.prompt(question)
+    let credentials
 
     switch (choice) {
       case 'Use other server':
@@ -79,7 +106,7 @@ export class EndpointDialog {
       case 'local':
       case 'Create new database':
         cluster =
-          this.env.clusters.find(c => c.name === 'local') ||
+          (this.env.clusters || []).find(c => c.name === 'local') ||
           new Cluster(
             this.out,
             'local',
@@ -88,7 +115,7 @@ export class EndpointDialog {
           )
         break
       case 'Use existing database':
-        const credentials = await this.getDatabase()
+        credentials = await this.getDatabase()
         cluster = new Cluster(
           this.out,
           'custom',
@@ -144,6 +171,7 @@ export class EndpointDialog {
       service,
       stage,
       localClusterRunning,
+      database: credentials,
     }
   }
 
@@ -158,6 +186,9 @@ export class EndpointDialog {
   }
 
   private getCloudClusters(): Cluster[] {
+    if (!this.env.clusters) {
+      return []
+    }
     return this.env.clusters.filter(c => c.shared || c.isPrivate)
   }
 

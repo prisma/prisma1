@@ -196,4 +196,16 @@ export class Cluster {
 
     return null
   }
+
+  toJSON() {
+    return {
+      name: this.name,
+      baseUrl: this.baseUrl,
+      local: this.local,
+      clusterSecret: this.clusterSecret,
+      shared: this.shared,
+      isPrivate: this.isPrivate,
+      workspaceSlug: this.workspaceSlug,
+    }
+  }
 }

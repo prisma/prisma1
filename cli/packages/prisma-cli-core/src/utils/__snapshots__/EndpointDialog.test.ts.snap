@@ -1,0 +1,57 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`endpoint dialog local 1`] = `
+Object {
+  "input": Object {
+    "choice": "local",
+    "folderName": "some-folder",
+    "localClusterRunning": false,
+    "loggedIn": false,
+  },
+  "result": Object {
+    "cluster": Object {
+      "baseUrl": "http://localhost:4466",
+      "clusterSecret": undefined,
+      "isPrivate": false,
+      "local": true,
+      "name": "local",
+      "shared": false,
+      "workspaceSlug": undefined,
+    },
+    "database": undefined,
+    "endpoint": "http://localhost:4466",
+    "localClusterRunning": false,
+    "service": "default",
+    "stage": "default",
+    "workspace": undefined,
+  },
+}
+`;
+
+exports[`endpoint dialog local running 1`] = `
+Object {
+  "input": Object {
+    "choice": "local",
+    "folderName": "some-folder",
+    "localClusterRunning": true,
+    "loggedIn": false,
+  },
+  "result": Object {
+    "cluster": Object {
+      "baseUrl": "http://localhost:4466",
+      "clusterSecret": undefined,
+      "isPrivate": false,
+      "local": true,
+      "name": "local",
+      "shared": false,
+      "workspaceSlug": undefined,
+    },
+    "database": undefined,
+    "endpoint": "http://localhost:4466",
+    "localClusterRunning": true,
+    "service": "default",
+    "stage": "default",
+    "workspace": undefined,
+  },
+}
+`;
