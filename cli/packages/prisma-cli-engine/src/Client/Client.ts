@@ -157,7 +157,6 @@ export class Client {
           },
         })
       }
-      console.error(e)
     }
   }
   get client(): GraphQLClient {
@@ -185,15 +184,15 @@ export class Client {
             e.response.errors[0].message.includes('decoded') &&
             this.env.activeCluster.local
           ) {
-            if (!process.env.PRISMA_MANAGEMENT_SECRET) {
+            if (!process.env.PRISMA_MANAGEMENT_API_SECRET) {
               throw new Error(
                 `Cluster ${
                   this.env.activeCluster.name
-                } requires a cluster secret. Please provide it with the env var PRISMA_MANAGEMENT_SECRET`,
+                } requires a cluster secret. Please provide it with the env var PRISMA_MANAGEMENT_API_SECRET`,
               )
             } else {
               throw new Error(
-                `Cluster secret in env var PRISMA_MANAGEMENT_SECRET does not match for cluster ${
+                `Cluster secret in env var PRISMA_MANAGEMENT_API_SECRET does not match for cluster ${
                   this.env.activeCluster.name
                 }`,
               )

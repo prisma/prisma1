@@ -83,15 +83,18 @@ export class PrismaDefinitionClass {
     }
   }
 
+  get endpoint(): string | undefined {
+    return (
+      (this.definition && this.definition.endpoint) ||
+      process.env.PRISMA_MANAGEMENT_API_ENDPOINT
+    )
+  }
+
   get clusterBaseUrl(): string | undefined {
-    if (
-      !this.definition ||
-      this.definition.cluster ||
-      !this.definition.endpoint
-    ) {
+    if (!this.definition || this.definition.cluster || !this.endpoint) {
       return undefined
     }
-    const { clusterBaseUrl } = parseEndpoint(this.definition.endpoint)
+    const { clusterBaseUrl } = parseEndpoint(this.endpoint)
     return clusterBaseUrl
   }
 
@@ -102,10 +105,10 @@ export class PrismaDefinitionClass {
     if (this.definition.service) {
       return this.definition.service
     }
-    if (!this.definition.endpoint) {
+    if (!this.endpoint) {
       return undefined
     }
-    const { service } = parseEndpoint(this.definition.endpoint)
+    const { service } = parseEndpoint(this.endpoint)
     return service
   }
 
@@ -116,10 +119,10 @@ export class PrismaDefinitionClass {
     if (this.definition.stage) {
       return this.definition.stage
     }
-    if (!this.definition.endpoint) {
+    if (!this.endpoint) {
       return undefined
     }
-    const { stage } = parseEndpoint(this.definition.endpoint)
+    const { stage } = parseEndpoint(this.endpoint)
     return stage
   }
 
@@ -130,10 +133,10 @@ export class PrismaDefinitionClass {
     if (this.definition.cluster) {
       return this.definition.cluster
     }
-    if (!this.definition.endpoint) {
+    if (!this.endpoint) {
       return undefined
     }
-    const { clusterName } = parseEndpoint(this.definition.endpoint)
+    const { clusterName } = parseEndpoint(this.endpoint)
     return clusterName
   }
 
@@ -220,7 +223,7 @@ If it is a private cluster, make sure that you're logged in with ${chalk.bold.gr
       }
     }
 
-    if (this.definition && this.definition.endpoint) {
+    if (this.definition && this.endpoint) {
       const {
         clusterBaseUrl,
         isPrivate,
@@ -228,15 +231,13 @@ If it is a private cluster, make sure that you're logged in with ${chalk.bold.gr
         shared,
         workspaceSlug,
         clusterName,
-      } = parseEndpoint(this.definition.endpoint)
+      } = parseEndpoint(this.endpoint)
       if (clusterBaseUrl) {
         const cluster = new Cluster(
           this.out!,
           clusterName,
           clusterBaseUrl,
-          shared
-            ? this.env.cloudSessionKey
-            : process.env.PRISMA_MANAGEMENT_SECRET,
+          shared ? this.env.cloudSessionKey : undefined,
           local,
           shared,
           isPrivate,
@@ -288,8 +289,8 @@ If it is a private cluster, make sure that you're logged in with ${chalk.bold.gr
       }
     }
 
-    if (this.definition && this.definition.endpoint) {
-      const { workspaceSlug } = parseEndpoint(this.definition.endpoint)
+    if (this.definition && this.endpoint) {
+      const { workspaceSlug } = parseEndpoint(this.endpoint)
       if (workspaceSlug) {
         return workspaceSlug
       }

@@ -96,32 +96,17 @@ export class EndpointDialog {
     switch (choice) {
       case 'Use other server':
         clusterEndpoint = await this.customEndpointSelector(folderName)
-        cluster = new Cluster(
-          this.out,
-          'custom',
-          clusterEndpoint,
-          process.env.PRISMA_MANAGEMENT_SECRET,
-        )
+        cluster = new Cluster(this.out, 'custom', clusterEndpoint)
         break
       case 'local':
       case 'Create new database':
         cluster =
           (this.env.clusters || []).find(c => c.name === 'local') ||
-          new Cluster(
-            this.out,
-            'local',
-            'http://localhost:4466',
-            process.env.PRISMA_MANAGEMENT_SECRET,
-          )
+          new Cluster(this.out, 'local', 'http://localhost:4466')
         break
       case 'Use existing database':
         credentials = await this.getDatabase()
-        cluster = new Cluster(
-          this.out,
-          'custom',
-          'http://localhost:4466',
-          process.env.PRISMA_MANAGEMENT_SECRET,
-        )
+        cluster = new Cluster(this.out, 'custom', 'http://localhost:4466')
         break
       case 'sandbox-eu1':
         cluster = this.env.clusters.find(c => c.name === 'prisma-eu1')
