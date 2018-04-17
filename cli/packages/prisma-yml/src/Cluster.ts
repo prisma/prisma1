@@ -61,17 +61,6 @@ export class Cluster {
 
   getLocalToken(): string | null {
     if (!this.clusterSecret || this.clusterSecret === '') {
-      const localNote = isLocal(this.baseUrl)
-        ? `Please either provide a clusterSecret or run ${chalk.green.bold(
-            'prisma local start',
-          )} to generate a new one. `
-        : ''
-
-      this.out.warn(
-        `Property '${chalk.bold('clusterSecret')}' of cluster ${chalk.bold(
-          this.name,
-        )} in ~/.prisma/config.yml is empty. ${localNote}Read more here https://bit.ly/prisma-graphql-config-yml`,
-      )
       return null
     }
     if (!this.cachedToken) {

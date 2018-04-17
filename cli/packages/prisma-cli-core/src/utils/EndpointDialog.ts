@@ -78,12 +78,14 @@ export class EndpointDialog {
         break
       case 'local':
       case 'Create new database':
-        cluster = new Cluster(
-          this.out,
-          'custom',
-          'http://localhost:4466',
-          process.env.PRISMA_MANAGEMENT_SECRET,
-        )
+        cluster =
+          this.env.clusters.find(c => c.name === 'local') ||
+          new Cluster(
+            this.out,
+            'local',
+            'http://localhost:4466',
+            process.env.PRISMA_MANAGEMENT_SECRET,
+          )
         break
       case 'Use existing database':
         const credentials = await this.getDatabase()
