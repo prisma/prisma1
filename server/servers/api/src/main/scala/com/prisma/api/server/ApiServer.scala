@@ -39,7 +39,7 @@ case class ApiServer(
   import system.dispatcher
 
   val log: String => Unit = (msg: String) => logger.info(msg)
-  val requestPrefix       = "api"
+  val requestPrefix       = sys.env.getOrElse("ENV", "local")
   val projectFetcher      = apiDependencies.projectFetcher
 
   import scala.concurrent.duration._
