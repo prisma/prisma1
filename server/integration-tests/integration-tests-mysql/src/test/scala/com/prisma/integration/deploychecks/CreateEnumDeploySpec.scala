@@ -55,6 +55,6 @@ class CreateEnumDeploySpec extends FlatSpec with Matchers with IntegrationBaseSp
         |""".stripMargin
 
     deployServer.deploySchemaThatMustError(project, schema2).toString should be(
-      """{"data":{"deploy":{"migration":{"applied":0,"revision":0},"errors":[{"description":"You are creating a required field on model 'A' but there are already nodes present that would violate that constraint."}],"warnings":[]}}}""")
+      """{"data":{"deploy":{"migration":{"applied":0,"revision":0},"errors":[{"description":"You are creating a required field but there are already nodes present that would violate that constraint."}],"warnings":[]}}}""")
   }
 }

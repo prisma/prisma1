@@ -46,8 +46,9 @@ case class DestructiveChanges(persistencePlugin: DeployConnector, project: Proje
           case true =>
             clientDataResolver.existsByModel(existingModel.name).map {
               case true =>
-                Vector(SchemaError.global(
-                  s"You are creating a required field on model '${existingModel.name}' but there are already nodes present that would violate that constraint."))
+                Vector(
+                  SchemaError(`type` = existingModel.name,
+                              description = s"You are creating a required field but there are already nodes present that would violate that constraint."))
               case false => Vector.empty
             }
 
@@ -96,7 +97,11 @@ case class DestructiveChanges(persistencePlugin: DeployConnector, project: Proje
     def errors: Future[Vector[SchemaError]] = becomesRequired match {
       case true =>
         clientDataResolver.existsNullByModelAndField(model, oldField).map {
-          case true  => Vector(SchemaError.global("You are making a field required, but there are already nodes that would violate that constraint."))
+          case true =>
+            Vector(
+              SchemaError(`type` = model.name,
+                          field = oldField.name,
+                          "You are making a field required, but there are already nodes that would violate that constraint."))
           case false => Vector.empty
         }
 
@@ -156,9 +161,7 @@ case class DestructiveChanges(persistencePlugin: DeployConnector, project: Proje
         case Some(model) =>
           clientDataResolver.existsByModel(model.name).map {
             case true =>
-              Vector(
-                SchemaError.global(
-                  s"You are creating a required relation, but there are already nodes for the model '$modelName' that would violate that constraint."))
+              Vector(SchemaError(`type` = model.name, s"You are creating a required relation, but there are already nodes that would violate that constraint."))
             case false => Vector.empty
           }
 

@@ -90,7 +90,7 @@ class CreateRelationDeploySpec extends FlatSpec with Matchers with IntegrationBa
          |}"""
 
     deployServer.deploySchemaThatMustError(project, schema2).toString should be(
-      """{"data":{"deploy":{"migration":{"applied":0,"revision":0},"errors":[{"description":"You are creating a required relation, but there are already nodes for the model 'A' that would violate that constraint."}],"warnings":[]}}}""")
+      """{"data":{"deploy":{"migration":{"applied":0,"revision":0},"errors":[{"description":"You are creating a required relation, but there are already nodes that would violate that constraint."}],"warnings":[]}}}""")
   }
 
   "Creating a relation that is required together with a new model" should "error if there are already nodes" in {
@@ -116,7 +116,7 @@ class CreateRelationDeploySpec extends FlatSpec with Matchers with IntegrationBa
          |}"""
 
     deployServer.deploySchemaThatMustError(project, schema2).toString should be(
-      """{"data":{"deploy":{"migration":{"applied":0,"revision":0},"errors":[{"description":"You are creating a required relation, but there are already nodes for the model 'A' that would violate that constraint."}],"warnings":[]}}}""")
+      """{"data":{"deploy":{"migration":{"applied":0,"revision":0},"errors":[{"description":"You are creating a required relation, but there are already nodes that would violate that constraint."}],"warnings":[]}}}""")
   }
 
   "Creating a relation that is required with both models new" should "work" in {
