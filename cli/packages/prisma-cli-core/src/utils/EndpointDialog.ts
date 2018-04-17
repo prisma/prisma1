@@ -1,9 +1,11 @@
-import { Output, Client } from 'prisma-cli-engine'
+import { Output, Client, Config } from 'prisma-cli-engine'
 import * as inquirer from 'inquirer'
 import chalk from 'chalk'
 import { Cluster, Environment, getEndpoint } from 'prisma-yml'
 import { concatName } from '../util'
 import * as sillyname from 'sillyname'
+import * as path from 'path'
+import * as fs from 'fs'
 
 export interface GetEndpointParams {
   folderName: string
@@ -34,31 +36,35 @@ export class EndpointDialog {
   out: Output
   client: Client
   env: Environment
-  constructor(out: Output, client: Client, env: Environment) {
+  config: Config
+  constructor(out: Output, client: Client, env: Environment, config: Config) {
     this.out = out
     this.client = client
     this.env = env
+    this.config = config
   }
 
-  async getEndpoint({
-    folderName,
-  }: GetEndpointParams): Promise<GetEndpointResult> {
+  async getEndpoint(): Promise<GetEndpointResult> {
     const localClusterRunning = await this.isClusterOnline(
       'http://localhost:4466',
     )
+    const folderName = path.dirname(this.config.definitionDir)
     const loggedIn = await this.client.isAuthenticated()
     const clusters = this.getCloudClusters()
+    const files = this.listFiles()
+    const hasDockerComposeYml = files.includes('docker-compose.yml')
     const question = this.getClusterQuestion(
       !loggedIn && !localClusterRunning,
+      hasDockerComposeYml,
       clusters,
     )
-    const { choice } = await this.out.prompt(question)
 
     let clusterEndpoint
     let cluster: Cluster | undefined
     let workspace: string | undefined
     let service = 'default'
     let stage = 'default'
+    const { choice } = await this.out.prompt(question)
 
     switch (choice) {
       case 'Use other server':
@@ -93,9 +99,18 @@ export class EndpointDialog {
       case 'sandbox-us1':
         cluster = this.env.clusters.find(c => c.name === 'prisma-us1')
       default:
-        cluster = clusters.find(c => c.name === choice)
-        if (cluster) {
-          workspace = cluster.workspaceSlug
+        const result = this.getClusterAndWorkspaceFromChoice(choice)
+        if (!result.workspace) {
+          cluster = clusters.find(c => c.name === result.cluster)
+          if (!loggedIn && cluster && cluster.shared) {
+            workspace = this.getPublicName()
+          }
+        } else {
+          cluster = clusters.find(
+            c =>
+              c.name === result.cluster && c.workspaceSlug === result.workspace,
+          )
+          workspace = result.workspace
         }
     }
 
@@ -114,10 +129,6 @@ export class EndpointDialog {
       stage = await this.askForStage('dev')
     }
 
-    if (!loggedIn && cluster.shared) {
-      workspace = this.getPublicName()
-    }
-
     return {
       endpoint: getEndpoint(cluster, service, stage, workspace),
       cluster,
@@ -126,6 +137,16 @@ export class EndpointDialog {
       stage,
       localClusterRunning,
     }
+  }
+
+  private getClusterAndWorkspaceFromChoice(
+    choice: string,
+  ): { workspace: string | null; cluster: string } {
+    const splitted = choice.split('/')
+    const workspace = splitted.length > 1 ? splitted[0] : null
+    const cluster = splitted.slice(-1)[0]
+
+    return { workspace, cluster }
   }
 
   private getCloudClusters(): Cluster[] {
@@ -150,12 +171,20 @@ export class EndpointDialog {
     }
   }
 
+  private listFiles() {
+    return fs.readdirSync(this.config.definitionDir)
+  }
+
   private async isClusterOnline(endpoint: string): Promise<boolean> {
     const cluster = new Cluster(this.out, 'local', endpoint, undefined, true)
     return cluster.isOnline()
   }
 
-  private getClusterQuestion(fromScratch: boolean, clusters: Cluster[]) {
+  private getClusterQuestion(
+    fromScratch: boolean,
+    hasDockerComposeYml: boolean,
+    clusters: Cluster[],
+  ) {
     const sandboxChoices = [
       [
         'sandbox-eu1',
@@ -166,7 +195,7 @@ export class EndpointDialog {
         'Free development server on Prisma Cloud (incl. database)',
       ],
     ]
-    if (fromScratch) {
+    if (fromScratch && !hasDockerComposeYml) {
       const rawChoices = [
         ['Use existing database', 'Connect to existing database'],
         ['Create new database', 'Set up a local database using Docker'],
@@ -210,6 +239,16 @@ export class EndpointDialog {
         ['Create new database', 'Set up a local database using Docker'],
       ]
       const choices = this.convertChoices(rawChoices)
+      const dockerChoices = hasDockerComposeYml
+        ? []
+        : [
+            new inquirer.Separator(
+              chalk.bold(
+                'Set up a new Prisma server for local development (requires Docker):',
+              ),
+            ),
+            ...choices.slice(4, 6),
+          ]
       return {
         name: 'choice',
         type: 'list',
@@ -218,14 +257,9 @@ export class EndpointDialog {
           new inquirer.Separator(chalk.bold('Use an existing Prisma server')),
           ...choices.slice(0, 4),
           new inquirer.Separator('                       '),
-          new inquirer.Separator(
-            chalk.bold(
-              'Set up a new Prisma server for local development (requires Docker):',
-            ),
-          ),
-          ...choices.slice(4, 6),
+          ...dockerChoices,
         ],
-        pageSize: 9,
+        // pageSize: 9,
       }
     }
   }
@@ -245,7 +279,7 @@ export class EndpointDialog {
           value: 'MySQL      MySQL-compliat databases like MySQL, MariaDB',
         },
       ],
-      pageSize: 9,
+      // pageSize: 9,
     })
 
     return result

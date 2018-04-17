@@ -101,10 +101,14 @@ ${chalk.gray(
      */
     let cluster
     if (!serviceName || !stage || interactive) {
-      const endpointDialog = new EndpointDialog(this.out, this.client, this.env)
-      const results = await endpointDialog.getEndpoint({
-        folderName: path.dirname(this.config.definitionDir),
-      })
+      const endpointDialog = new EndpointDialog(
+        this.out,
+        this.client,
+        this.env,
+        this.config,
+      )
+      const results = await endpointDialog.getEndpoint()
+      console.log(results)
       cluster = results.cluster
       process.exit(0)
     } else {
