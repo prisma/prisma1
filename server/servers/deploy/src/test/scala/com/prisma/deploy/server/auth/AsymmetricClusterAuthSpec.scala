@@ -1,21 +1,20 @@
-package com.prisma.deploy
+package com.prisma.deploy.server.auth
 
 import java.time.Instant
 
-import com.prisma.deploy.server.ClusterAuthImpl
 import org.scalatest.{FlatSpec, Matchers}
 
-class ClusterAuthSpec extends FlatSpec with Matchers {
+class AsymmetricClusterAuthSpec extends FlatSpec with Matchers {
 
   "Grant with wildcard for service and stage" should "give access to any service and stage" in {
-    val auth = ClusterAuthImpl(publicKey)
+    val auth = AsymmetricClusterAuth(publicKey)
     val jwt  = createJwt("""[{"target": "*/*", "action": "*"}]""")
 
     auth.verify("service", "stage", Some(jwt)).isSuccess shouldBe true
   }
 
   "Grant with invalid target" should "not give access" in {
-    val auth  = ClusterAuthImpl(publicKey)
+    val auth  = AsymmetricClusterAuth(publicKey)
     val name  = "service"
     val stage = "stage"
 
@@ -30,7 +29,7 @@ class ClusterAuthSpec extends FlatSpec with Matchers {
   }
 
   "Grant with wildcard for stage" should "give access to defined service only" in {
-    val auth = ClusterAuthImpl(publicKey)
+    val auth = AsymmetricClusterAuth(publicKey)
     val jwt  = createJwt("""[{"target": "service/*", "action": "*"}]""")
 
     auth.verify("service", "stage", Some(jwt)).isSuccess shouldBe true
@@ -38,7 +37,7 @@ class ClusterAuthSpec extends FlatSpec with Matchers {
   }
 
   "An expired token" should "not give access" in {
-    val auth = ClusterAuthImpl(publicKey)
+    val auth = AsymmetricClusterAuth(publicKey)
     val jwt  = createJwt("""[{"target": "service/*", "action": "*"}]""", expiration = (Instant.now().toEpochMilli / 1000) - 5)
 
     auth.verify("service", "stage", Some(jwt)).isSuccess shouldBe false
