@@ -8,9 +8,10 @@ import scala.util.Try
 object ConfigLoader {
   import scala.collection.JavaConverters.mapAsScalaMap
 
-  val yaml                = new Yaml()
-  val configFile          = "prisma"
-  val commonYmlExtensions = Seq("yml", "yaml")
+  private val yaml                = new Yaml()
+  private val configFile          = "prisma"
+  private val commonYmlExtensions = Seq("yml", "yaml")
+  def emptyJavaMap                = new java.util.LinkedHashMap[String, Any]()
 
   private def findPrismaConfigFilePath(): Option[String] = {
     val searchPath = System.getProperty("user.dir") + File.pathSeparator
@@ -29,8 +30,8 @@ object ConfigLoader {
   }
 
   // should this be a thing?
+  val defaultConfig = """
   val defaultConfig =
-    """
       |port: 4466
       |managementApiSecret: somesecret
       |databases:
@@ -43,25 +44,28 @@ object ConfigLoader {
       |    password: prisma
     """.stripMargin
 
-  def load(): Try[PrismaConfig] = Try {
-    val configString = sys.env.get("PRISMA_CONFIG") match {
-      case Some(config) => config
-      case None =>
-        findPrismaConfigFilePath() match {
-          case Some(path) => scala.io.Source.fromFile(path).mkString
-          case None       => defaultConfig //sys.error("No prisma config found.")
-        }
-    }
+  def load(): Try[PrismaConfig] =
+    Try {
+      sys.env.get("PRISMA_CONFIG") match {
+        case Some(config) => config
+        case None =>
+          findPrismaConfigFilePath() match {
+            case Some(path) => scala.io.Source.fromFile(path).mkString
+            case None       => defaultConfig //sys.error("No prisma config found.")
+          }
+      }
+    }.flatMap(load)
 
-    convertToConfig(extractScalaMap(yaml.load(configString)))
+  def load(config: String): Try[PrismaConfig] = Try {
+    convertToConfig(extractScalaMap(yaml.load(config).asInstanceOf[java.util.Map[String, Any]], path = "root"))
   }
 
   def convertToConfig(map: mutable.Map[String, Any]): PrismaConfig = {
     val port   = extractInt("port", map, "4466")
     val secret = extractString("managementApiSecret", map)
-    val databases = extractScalaMap(map.getOrElse("databases", Map.empty)).map {
+    val databases = extractScalaMap(map.getOrElse("databases", emptyJavaMap), path = "databases").map {
       case (dbName, dbMap) =>
-        val db          = extractScalaMap(dbMap)
+        val db          = extractScalaMap(dbMap, path = dbName)
         val dbConnector = extractString("connector", db)
         val dbActive    = extractBoolean("active", db)
         val dbHost      = extractString("host", db)
@@ -74,8 +78,13 @@ object ConfigLoader {
     PrismaConfig(port, secret, databases)
   }
 
-  private def extractScalaMap[T <: java.util.Map[String, Any]](in: T): mutable.Map[String, Any] = {
-    mapAsScalaMap(in.asInstanceOf[java.util.Map[String, Any]])
+  private def extractScalaMap(in: Any, required: Boolean = true, path: String = ""): mutable.Map[String, Any] = {
+    val out = mapAsScalaMap(in.asInstanceOf[java.util.Map[String, Any]])
+    if (required && out.isEmpty) {
+      throw InvalidConfiguration(s"Expected hash under '$path' to be non-empty")
+    }
+
+    out
   }
 
   private def extractString(key: String, map: mutable.Map[String, Any], mapDefaultValue: String = "", required: Boolean = true): String = {
