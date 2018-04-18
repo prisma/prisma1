@@ -16,6 +16,7 @@ import { URL } from 'url'
 import chalk from 'chalk'
 import { clusterEndpointMap, clusterEndpointMapReverse } from './constants'
 import { replaceYamlValue } from './utils/yamlComment'
+import { DefinitionMigrator } from './utils/DefinitionMigrator'
 
 interface ErrorMessage {
   message: string
@@ -63,24 +64,35 @@ export class PrismaDefinitionClass {
     }
     dotenv.config({ path: envPath })
     if (this.definitionPath) {
-      const { definition, rawJson } = await readDefinition(
-        this.definitionPath,
-        args,
-        this.out,
-        this.envVars,
-      )
-      this.definition = definition
-      this.rawJson = rawJson
-      this.definitionString = fs.readFileSync(this.definitionPath, 'utf-8')
-      this.typesString = this.getTypesString(this.definition)
-      const secrets = this.definition.secret
-      this.secrets = secrets ? secrets.replace(/\s/g, '').split(',') : null
+      this.loadDefinition(args)
+      const migrator = new DefinitionMigrator(this)
+      const migrated = migrator.migrate(this.definitionPath)
+      // if there was a migration, reload the definition
+      if (migrated) {
+        this.loadDefinition(args)
+      }
+
       this.validate()
     } else {
       throw new Error(
         `Couldn’t find \`prisma.yml\` file. Are you in the right directory?`,
       )
     }
+  }
+
+  private async loadDefinition(args) {
+    const { definition, rawJson } = await readDefinition(
+      this.definitionPath!,
+      args,
+      this.out,
+      this.envVars,
+    )
+    this.definition = definition
+    this.rawJson = rawJson
+    this.definitionString = fs.readFileSync(this.definitionPath!, 'utf-8')
+    this.typesString = this.getTypesString(this.definition)
+    const secrets = this.definition.secret
+    this.secrets = secrets ? secrets.replace(/\s/g, '').split(',') : null
   }
 
   get endpoint(): string | undefined {
@@ -448,6 +460,16 @@ export function getEndpoint(
   }
 
   return `${url}/${service}/${stage}`
+}
+
+export function getEndpointFromRawProps(
+  clusterWorkspace: string,
+  service: string,
+  stage: string,
+) {
+  const splitted = clusterWorkspace.split('/')
+  const cluster = splitted.length > 1 ? splitted[1] : splitted[0]
+  const workspace = splitted.length > 1 ? splitted[0] : undefined
 }
 
 function getClusterName(origin): string {
