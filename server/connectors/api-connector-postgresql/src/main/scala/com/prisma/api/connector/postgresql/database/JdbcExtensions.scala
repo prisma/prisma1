@@ -2,12 +2,11 @@ package com.prisma.api.connector.postgresql.database
 
 import java.sql.{PreparedStatement, ResultSet, Timestamp}
 import java.time.{LocalDateTime, ZoneOffset}
-import java.util.Date
+import java.util.{Calendar, Date, TimeZone}
 
 import com.prisma.gc_values._
 import com.prisma.shared.models.TypeIdentifier
 import org.joda.time.{DateTime, DateTimeZone}
-import org.joda.time.format.DateTimeFormat
 import play.api.libs.json.Json
 
 object JdbcExtensions {
@@ -50,6 +49,8 @@ object JdbcExtensions {
     def getParentId(side: String) = IdGCValue(resultSet.getString("__Relation__" + side))
 
     def getGcValue(name: String, typeIdentifier: TypeIdentifier.Value): GCValue = {
+      val calendar: java.util.Calendar = Calendar.getInstance(TimeZone.getTimeZone("UTC"))
+
       val gcValue: GCValue = typeIdentifier match {
         case TypeIdentifier.String    => StringGCValue(resultSet.getString(name))
         case TypeIdentifier.GraphQLID => IdGCValue(resultSet.getString(name))
@@ -57,7 +58,13 @@ object JdbcExtensions {
         case TypeIdentifier.Int       => IntGCValue(resultSet.getInt(name))
         case TypeIdentifier.Float     => FloatGCValue(resultSet.getDouble(name))
         case TypeIdentifier.Boolean   => BooleanGCValue(resultSet.getBoolean(name))
-        case TypeIdentifier.DateTime  => DateTimeGCValue(new DateTime(resultSet.getTimestamp(name), DateTimeZone.UTC))
+        case TypeIdentifier.DateTime =>
+          val sqlType = resultSet.getTimestamp(name, calendar)
+          if (sqlType != null) {
+            DateTimeGCValue(new DateTime(sqlType, DateTimeZone.UTC))
+          } else {
+            NullGCValue
+          }
         case TypeIdentifier.Json =>
           val sqlType = resultSet.getString(name)
           if (sqlType != null) {

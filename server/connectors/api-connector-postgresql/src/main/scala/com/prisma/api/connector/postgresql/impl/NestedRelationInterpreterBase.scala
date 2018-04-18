@@ -1,15 +1,12 @@
 package com.prisma.api.connector.postgresql.impl
 
-import java.sql.SQLException
-
 import com.prisma.api.connector.postgresql.DatabaseMutactionInterpreter
-import com.prisma.api.connector.{ModelEdge, NodeEdge, Path}
 import com.prisma.api.connector.postgresql.database.DatabaseMutationBuilder._
+import com.prisma.api.connector.{ModelEdge, NodeEdge, Path}
 import com.prisma.api.schema.APIErrors.RequiredRelationWouldBeViolated
 import com.prisma.shared.models.Project
-import slick.dbio.{DBIOAction, Effect, NoStream}
-import com.prisma.api.connector.postgresql.database.ErrorMessageParameterHelper.parameterString
 import org.postgresql.util.PSQLException
+import slick.dbio.{DBIOAction, Effect, NoStream}
 
 trait NestedRelationInterpreterBase extends DatabaseMutactionInterpreter {
 
