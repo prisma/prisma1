@@ -1,0 +1,31 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Introspector relation with inline relation column 1`] = `
+"type Bill @postgres(table: \\"bill\\") {
+  bill: String!
+  id: Int!
+  product_id: Product @postgres(ownColumn: \\"product_id\\")
+}
+type Product @postgres(table: \\"product\\") {
+  description: String!
+  id: Int!
+  bills: [Bill] @postgres(foreignColumn: \\"product_id\\")
+}"
+`;
+
+exports[`Introspector relation with relation table 1`] = `
+"type Bill @postgres(table: \\"bill\\") {
+  bill: String!
+  id: Int!
+  bill_products: [Bill_product] @postgres(foreignColumn: \\"bill_id\\")
+}
+type Bill_product @postgres(table: \\"bill_product\\") {
+  bill_id: Bill @postgres(ownColumn: \\"bill_id\\")
+  product_id: Product @postgres(ownColumn: \\"product_id\\")
+}
+type Product @postgres(table: \\"product\\") {
+  id: Int!
+  product: String!
+  bill_products: [Bill_product] @postgres(foreignColumn: \\"product_id\\")
+}"
+`;
