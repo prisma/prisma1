@@ -64,12 +64,12 @@ export class PrismaDefinitionClass {
     }
     dotenv.config({ path: envPath })
     if (this.definitionPath) {
-      this.loadDefinition(args)
+      await this.loadDefinition(args)
       const migrator = new DefinitionMigrator(this)
       const migrated = migrator.migrate(this.definitionPath)
       // if there was a migration, reload the definition
       if (migrated) {
-        this.loadDefinition(args)
+        await this.loadDefinition(args)
       }
 
       this.validate()

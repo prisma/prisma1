@@ -81,7 +81,8 @@ ${chalk.gray(
     /**
      * Get Args
      */
-    const { force, watch, interactive } = this.flags
+    const { force, watch } = this.flags
+    const interactive = this.flags.new // new is a reserved keyword, so we use interactive instead
     const envFile = this.flags['env-file']
     const dryRun = this.flags['dry-run']
 
