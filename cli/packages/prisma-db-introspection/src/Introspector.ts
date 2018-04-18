@@ -1,11 +1,13 @@
 import { PostgresConnector } from './connectors/PostgresConnector'
 import { SdlPrinter } from './SdlPrinter'
+import { ClientConfig } from 'pg'
+import { PostgresConnectionDetails } from './types/common'
 
 export class Introspector {
-  connectionString: string
+  connectionString: string | ClientConfig
   connector: PostgresConnector
   printer = new SdlPrinter()
-  constructor(connectionString: string) {
+  constructor(connectionString: PostgresConnectionDetails) {
     this.connectionString = connectionString
     this.connector = new PostgresConnector(connectionString)
   }

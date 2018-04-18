@@ -1,12 +1,19 @@
-import { Table, Column, TypeIdentifier } from '../types/common'
+import {
+  Table,
+  Column,
+  TypeIdentifier,
+  PostgresConnectionDetails,
+} from '../types/common'
 import * as _ from 'lodash'
 import { Client } from 'pg'
 
 export class PostgresConnector {
   client
+  connectionPromise
 
-  constructor(connectionString: string) {
-    this.client = new Client({ connectionString: connectionString })
+  constructor(connectionDetails: PostgresConnectionDetails) {
+    this.client = new Client(connectionDetails)
+    this.connectionPromise = this.client.connect()
   }
 
   async queryRelations(schemaName: string) {
@@ -23,7 +30,7 @@ FROM
     JOIN information_schema.constraint_column_usage AS ccu
       ON ccu.constraint_name = tc.constraint_name
 WHERE constraint_type = 'FOREIGN KEY' AND tc.table_schema = $1::text;`,
-      [schemaName.toLowerCase()]
+      [schemaName.toLowerCase()],
     )
 
     return res.rows
@@ -32,7 +39,7 @@ WHERE constraint_type = 'FOREIGN KEY' AND tc.table_schema = $1::text;`,
   async queryTables(schemaName: string) {
     const res = await this.client.query(
       `select table_name, column_name, is_nullable, data_type, udt_name from information_schema.columns where table_schema = $1::text`,
-      [schemaName.toLowerCase()]
+      [schemaName.toLowerCase()],
     )
 
     const tables = _.groupBy(res.rows, 'table_name')
@@ -42,7 +49,7 @@ WHERE constraint_type = 'FOREIGN KEY' AND tc.table_schema = $1::text;`,
 
   async querySchemas() {
     const res = await this.client.query(
-      `select schema_name from information_schema.schemata WHERE schema_name NOT LIKE 'pg_%' AND schema_name NOT LIKE 'information_schema';`
+      `select schema_name from information_schema.schemata WHERE schema_name NOT LIKE 'pg_%' AND schema_name NOT LIKE 'information_schema';`,
     )
 
     return res.rows.map(x => x.schema_name)
@@ -51,7 +58,7 @@ WHERE constraint_type = 'FOREIGN KEY' AND tc.table_schema = $1::text;`,
   extractRelation(table, column, relations) {
     const candidate = relations.find(
       relation =>
-        relation.table_name === table && relation.column_name === column
+        relation.table_name === table && relation.column_name === column,
     )
 
     if (candidate) {
@@ -64,31 +71,28 @@ WHERE constraint_type = 'FOREIGN KEY' AND tc.table_schema = $1::text;`,
   }
 
   async listSchemas(): Promise<string[]> {
-    await this.client.connect()
+    await this.connectionPromise
 
     const schemas = await this.querySchemas()
-    await this.client.end()
 
     return schemas
   }
 
   async listTables(schemaName): Promise<Table[]> {
-    await this.client.connect()
+    await this.connectionPromise
 
     const relations = await this.queryRelations(schemaName)
     const tables = await this.queryTables(schemaName)
 
-    await this.client.end()
-
     const withColumns = _.map(tables, (originalColumns, key) => {
       const columns = _.map(originalColumns, column => {
         const { typeIdentifier, comment, error } = this.toTypeIdentifier(
-          column.data_type
+          column.data_type,
         )
         const relation = this.extractRelation(
           column.table_name,
           column.column_name,
-          relations
+          relations,
         )
 
         return {
@@ -115,7 +119,7 @@ WHERE constraint_type = 'FOREIGN KEY' AND tc.table_schema = $1::text;`,
   }
 
   toTypeIdentifier(
-    type: string
+    type: string,
   ): {
     typeIdentifier: TypeIdentifier | null
     comment: string | null

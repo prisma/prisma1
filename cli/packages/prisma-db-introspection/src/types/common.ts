@@ -1,3 +1,5 @@
+import { ClientConfig } from 'pg'
+
 export type TypeIdentifier =
   | 'String'
   | 'Int'
@@ -24,3 +26,5 @@ export interface Table {
   name: string
   columns: Column[]
 }
+
+export type PostgresConnectionDetails = string | ClientConfig

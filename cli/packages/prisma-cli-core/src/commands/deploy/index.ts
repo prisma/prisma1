@@ -360,9 +360,9 @@ Note: prisma local start will be deprecated soon in favor of the direct usage of
     const verb = dryRun ? 'Performing dry run for' : 'Deploying'
 
     this.out.action.start(
-      `${verb} service ${b(serviceName)} to stage ${b(
-        stageName,
-      )} on cluster ${b(completeClusterName)}`,
+      `${verb} service ${b(serviceName)} to stage ${b(stageName)} to server ${b(
+        completeClusterName,
+      )}`,
     )
 
     const migrationResult: DeployPayload = await this.client.deploy(
@@ -600,7 +600,9 @@ Note: prisma local start will be deprecated soon in favor of the direct usage of
     stageName: string,
     workspace?: string,
   ) {
-    this.out.log(`\n${chalk.bold('Your GraphQL database endpoint is live:')}
+    this.out.log(`\n${chalk.bold(
+      'Your Prisma GraphQL database endpoint is live:',
+    )}
 
   ${chalk.bold('HTTP:')}  ${cluster.getApiEndpoint(
       serviceName,

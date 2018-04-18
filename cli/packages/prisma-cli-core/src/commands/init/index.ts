@@ -105,7 +105,9 @@ Either try using a new directory name, or remove the files listed above.
       : `You now `
 
     this.out.log(`\
-Created 3 new files:                                                                          
+Created ${
+      results.cluster!.local ? 3 : 2
+    } new files:                                                                          
 
   ${chalk.cyan('prisma.yml')}           Prisma service definition
   ${chalk.cyan(

@@ -1,7 +1,7 @@
 import { Table, Column } from './types/common'
 import * as _ from 'lodash'
 
-interface RelationField {
+export interface RelationField {
   remoteColumn: Column
   remoteTable: string
 }
@@ -9,7 +9,7 @@ interface RelationField {
 export class SdlPrinter {
   async print(tables: Table[]): Promise<string> {
     const sdl = _.map(tables, table =>
-      this.printType(table, tables.filter(x => x != table))
+      this.printType(table, tables.filter(x => x != table)),
     )
 
     return sdl.join('\r\n')
@@ -24,27 +24,27 @@ export class SdlPrinter {
       .map(t =>
         t.columns
           .filter(filterFunction)
-          .map(c => ({ remoteColumn: c, remoteTable: t.name }))
+          .map(c => ({ remoteColumn: c, remoteTable: t.name })),
       )
       .reduce((acc, next) => acc.concat(next), [])
 
     return `type ${this.capitalizeFirstLetter(table.name)} @postgres(table: "${
       table.name
     }") {${_.map(nativeFields, column => this.printField(column)).join(
-      ''
+      '',
     )}${relationFields.map(field => this.printRelationField(field)).join('')}
 }`
   }
 
   printRelationField(field: RelationField) {
     return `\r\n  ${field.remoteTable}s: [${this.capitalizeFirstLetter(
-      field.remoteTable
+      field.remoteTable,
     )}] @postgres(foreignColumn: "${field.remoteColumn.name}")`
   }
 
   printField(column: Column) {
     return `\r\n  ${this.printFieldName(column)}: ${this.printFieldType(
-      column
+      column,
     )}${this.printFieldOptional(column)}${this.printFieldDirective(column)}`
   }
 
