@@ -1,7 +1,7 @@
 package com.prisma.api.mutations
 
 import com.prisma.api.ApiBaseSpec
-import com.prisma.api.connector.postgresql.database.DatabaseQueryBuilder
+import com.prisma.api.connector.postgresql.database.ApiDatabaseQueryBuilderPostGres
 import com.prisma.shared.models.Project
 import com.prisma.shared.schema_dsl.SchemaDsl
 import org.scalatest.{FlatSpec, Matchers}
@@ -30,7 +30,7 @@ class RelationDesignSpec extends FlatSpec with Matchers with ApiBaseSpec {
     server.query(s"""mutation{deleteList(where: {uList:"A"}){id}}""", project)
 
     countItems(project, "lists") should be(0)
-    database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "_RelayId").as[Int]) should be(Vector(1))
+    database.runDbActionOnClientDb(ApiDatabaseQueryBuilderPostGres.itemCountForTable(project.id, "_RelayId").as[Int]) should be(Vector(1))
   }
 
   "Deleting a child node" should "remove it from the relation and delete the relay id" in {
@@ -55,7 +55,7 @@ class RelationDesignSpec extends FlatSpec with Matchers with ApiBaseSpec {
     server.query(s"""mutation{deleteTodo(where: {uTodo:"B"}){id}}""", project)
 
     countItems(project, "todoes") should be(0)
-    database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "_RelayId").as[Int]) should be(Vector(1))
+    database.runDbActionOnClientDb(ApiDatabaseQueryBuilderPostGres.itemCountForTable(project.id, "_RelayId").as[Int]) should be(Vector(1))
   }
 
   def countItems(project: Project, name: String): Int = {

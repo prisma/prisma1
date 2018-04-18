@@ -68,8 +68,7 @@ case class CreateDataItemInterpreter(mutaction: CreateDataItem) extends Database
   }
 
   override val errorMapper = {
-    case e: SQLIntegrityConstraintViolationException
-        if e.getErrorCode == 1062 && GetFieldFromSQLUniqueException.getFieldOption(mutaction.nonListArgs.keys, e).isDefined =>
+    case e: PSQLException if e.getSQLState == "23505" && GetFieldFromSQLUniqueException.getFieldOption(mutaction.nonListArgs.keys, e).isDefined =>
       APIErrors.UniqueConstraintViolation(path.lastModel.name, GetFieldFromSQLUniqueException.getFieldOption(mutaction.nonListArgs.keys, e).get)
     case e: SQLIntegrityConstraintViolationException if e.getErrorCode == 1452 =>
       APIErrors.NodeDoesNotExist("")
@@ -170,8 +169,7 @@ case class UpdateDataItemInterpreter(mutaction: UpdateWrapper) extends DatabaseM
 
   override val errorMapper = {
     // https://dev.mysql.com/doc/refman/5.5/en/error-messages-server.html#error_er_dup_entry
-    case e: SQLIntegrityConstraintViolationException
-        if e.getErrorCode == 1062 && GetFieldFromSQLUniqueException.getFieldOption(nonListArgs.keys, e).isDefined =>
+    case e: PSQLException if e.getSQLState == "23505" && GetFieldFromSQLUniqueException.getFieldOption(nonListArgs.keys, e).isDefined =>
       APIErrors.UniqueConstraintViolation(path.lastModel.name, GetFieldFromSQLUniqueException.getFieldOption(nonListArgs.keys, e).get)
 
     case e: SQLIntegrityConstraintViolationException if e.getErrorCode == 1452 =>
@@ -203,7 +201,7 @@ case class UpsertDataItemInterpreter(mutaction: UpsertDataItem) extends Database
   }
 
   override val errorMapper = {
-    case e: SQLIntegrityConstraintViolationException if e.getErrorCode == 1062 && getFieldOption(createArgs.keys ++ updateArgs.keys, e).isDefined =>
+    case e: PSQLException if e.getSQLState == "23505" && getFieldOption(createArgs.keys ++ updateArgs.keys, e).isDefined =>
       APIErrors.UniqueConstraintViolation(model.name, getFieldOption(createArgs.keys ++ updateArgs.keys, e).get)
 
     case e: SQLIntegrityConstraintViolationException if e.getErrorCode == 1452 =>
@@ -235,8 +233,7 @@ case class UpsertDataItemIfInRelationWithInterpreter(mutaction: UpsertDataItemIf
 
   override val errorMapper = {
     // https://dev.mysql.com/doc/refman/5.5/en/error-messages-server.html#error_er_dup_entry
-    case e: SQLIntegrityConstraintViolationException
-        if e.getErrorCode == 1062 && getFieldOption(mutaction.createNonListArgs.keys ++ mutaction.updateNonListArgs.keys, e).isDefined =>
+    case e: PSQLException if e.getSQLState == "23505" && getFieldOption(mutaction.createNonListArgs.keys ++ mutaction.updateNonListArgs.keys, e).isDefined =>
       APIErrors.UniqueConstraintViolation(mutaction.createPath.lastModel.name,
                                           getFieldOption(mutaction.createNonListArgs.keys ++ mutaction.updateNonListArgs.keys, e).get)
 

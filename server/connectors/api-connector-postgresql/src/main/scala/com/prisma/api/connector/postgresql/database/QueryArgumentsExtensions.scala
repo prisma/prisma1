@@ -9,6 +9,30 @@ import slick.jdbc.SQLActionBuilder
 object QueryArgumentsExtensions {
   val MAX_NODE_COUNT = 1000
 
+  def extractQueryArgs(projectId: String,
+                       modelName: String,
+                       args: Option[QueryArguments],
+                       defaultOrderShortcut: Option[String],
+                       overrideMaxNodeCount: Option[Int],
+                       forList: Boolean = false): (Option[SQLActionBuilder], Option[SQLActionBuilder], Option[SQLActionBuilder]) = {
+    args match {
+      case None => (None, None, None)
+      case Some(givenArgs: QueryArguments) =>
+        val orderByCommand =
+          if (forList) givenArgs.extractOrderByCommandForLists(projectId, modelName, defaultOrderShortcut)
+          else givenArgs.extractOrderByCommand(projectId, modelName, defaultOrderShortcut)
+
+        (
+          givenArgs.extractWhereConditionCommand(projectId, modelName),
+          orderByCommand,
+          overrideMaxNodeCount match {
+            case None                => givenArgs.extractLimitCommand(projectId, modelName)
+            case Some(maxCount: Int) => givenArgs.extractLimitCommand(projectId, modelName, maxCount)
+          }
+        )
+    }
+  }
+
   implicit class QueryArgumentsExtensions(val queryArguments: QueryArguments) extends AnyVal {
     def skip    = queryArguments.skip
     def after   = queryArguments.after

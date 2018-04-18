@@ -1,7 +1,7 @@
 package com.prisma.api.mutations
 
 import com.prisma.api.ApiBaseSpec
-import com.prisma.api.connector.postgresql.database.DatabaseQueryBuilder
+import com.prisma.api.connector.postgresql.database.ApiDatabaseQueryBuilderPostGres
 import com.prisma.shared.schema_dsl.SchemaDsl
 import org.scalatest.{FlatSpec, Matchers}
 
@@ -34,7 +34,7 @@ class NestedCreateMutationInsideUpdateSpec extends FlatSpec with Matchers with A
 
     val parentId = res.pathAsString("data.createParent.id")
 
-    database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "_ChildToParent").as[Int]) should be(Vector(1))
+    database.runDbActionOnClientDb(ApiDatabaseQueryBuilderPostGres.itemCountForTable(project.id, "_ChildToParent").as[Int]) should be(Vector(1))
 
     server.queryThatMustFail(
       s"""
@@ -57,7 +57,7 @@ class NestedCreateMutationInsideUpdateSpec extends FlatSpec with Matchers with A
       errorContains = "The change you are trying to make would violate the required relation '_ChildToParent' between Child and Parent"
     )
 
-    database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "_ChildToParent").as[Int]) should be(Vector(1))
+    database.runDbActionOnClientDb(ApiDatabaseQueryBuilderPostGres.itemCountForTable(project.id, "_ChildToParent").as[Int]) should be(Vector(1))
   }
 
   "a P1! to C1 relation" should "work" in {
@@ -87,7 +87,7 @@ class NestedCreateMutationInsideUpdateSpec extends FlatSpec with Matchers with A
 
     val parentId = res.pathAsString("data.createParent.id")
 
-    database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "_ParentToChild").as[Int]) should be(Vector(1))
+    database.runDbActionOnClientDb(ApiDatabaseQueryBuilderPostGres.itemCountForTable(project.id, "_ParentToChild").as[Int]) should be(Vector(1))
 
     val res2 = server.query(
       s"""
@@ -109,7 +109,7 @@ class NestedCreateMutationInsideUpdateSpec extends FlatSpec with Matchers with A
 
     res2.toString should be("""{"data":{"updateParent":{"childReq":{"c":"SomeC"}}}}""")
 
-    database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "_ParentToChild").as[Int]) should be(Vector(1))
+    database.runDbActionOnClientDb(ApiDatabaseQueryBuilderPostGres.itemCountForTable(project.id, "_ParentToChild").as[Int]) should be(Vector(1))
   }
 
   "a P1 to C1  relation " should "work" in {
@@ -139,7 +139,7 @@ class NestedCreateMutationInsideUpdateSpec extends FlatSpec with Matchers with A
 
     val parentId = res.pathAsString("data.createParent.id")
 
-    database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "_ParentToChild").as[Int]) should be(Vector(1))
+    database.runDbActionOnClientDb(ApiDatabaseQueryBuilderPostGres.itemCountForTable(project.id, "_ParentToChild").as[Int]) should be(Vector(1))
 
     val res2 = server.query(
       s"""
@@ -161,7 +161,7 @@ class NestedCreateMutationInsideUpdateSpec extends FlatSpec with Matchers with A
 
     res2.toString should be("""{"data":{"updateParent":{"childOpt":{"c":"SomeC"}}}}""")
 
-    database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "_ParentToChild").as[Int]) should be(Vector(1))
+    database.runDbActionOnClientDb(ApiDatabaseQueryBuilderPostGres.itemCountForTable(project.id, "_ParentToChild").as[Int]) should be(Vector(1))
   }
 
   "a P1 to C1  relation with the parent without a relation" should "work" in {
@@ -183,7 +183,7 @@ class NestedCreateMutationInsideUpdateSpec extends FlatSpec with Matchers with A
       )
       .pathAsString("data.createParent.id")
 
-    database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "_ParentToChild").as[Int]) should be(Vector(0))
+    database.runDbActionOnClientDb(ApiDatabaseQueryBuilderPostGres.itemCountForTable(project.id, "_ParentToChild").as[Int]) should be(Vector(0))
 
     val res = server.query(
       s"""
@@ -205,7 +205,7 @@ class NestedCreateMutationInsideUpdateSpec extends FlatSpec with Matchers with A
 
     res.toString should be("""{"data":{"updateParent":{"childOpt":{"c":"SomeC"}}}}""")
 
-    database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "_ParentToChild").as[Int]) should be(Vector(1))
+    database.runDbActionOnClientDb(ApiDatabaseQueryBuilderPostGres.itemCountForTable(project.id, "_ParentToChild").as[Int]) should be(Vector(1))
   }
 
   "a PM to C1!  relation with a child already in a relation" should "work" in {
@@ -231,7 +231,7 @@ class NestedCreateMutationInsideUpdateSpec extends FlatSpec with Matchers with A
       project
     )
 
-    database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "_ParentToChild").as[Int]) should be(Vector(1))
+    database.runDbActionOnClientDb(ApiDatabaseQueryBuilderPostGres.itemCountForTable(project.id, "_ParentToChild").as[Int]) should be(Vector(1))
 
     val res = server.query(
       s"""
@@ -252,7 +252,7 @@ class NestedCreateMutationInsideUpdateSpec extends FlatSpec with Matchers with A
 
     res.toString should be("""{"data":{"updateParent":{"childrenOpt":[{"c":"c1"},{"c":"c2"}]}}}""")
 
-    database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "_ParentToChild").as[Int]) should be(Vector(2))
+    database.runDbActionOnClientDb(ApiDatabaseQueryBuilderPostGres.itemCountForTable(project.id, "_ParentToChild").as[Int]) should be(Vector(2))
   }
 
   "a P1 to C1!  relation with the parent and a child already in a relation" should "error in a nested mutation by unique" in {
@@ -278,7 +278,7 @@ class NestedCreateMutationInsideUpdateSpec extends FlatSpec with Matchers with A
       project
     )
 
-    database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "_ChildToParent").as[Int]) should be(Vector(1))
+    database.runDbActionOnClientDb(ApiDatabaseQueryBuilderPostGres.itemCountForTable(project.id, "_ChildToParent").as[Int]) should be(Vector(1))
 
     server.queryThatMustFail(
       s"""
@@ -319,7 +319,7 @@ class NestedCreateMutationInsideUpdateSpec extends FlatSpec with Matchers with A
       project
     )
 
-    database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "_ChildToParent").as[Int]) should be(Vector(0))
+    database.runDbActionOnClientDb(ApiDatabaseQueryBuilderPostGres.itemCountForTable(project.id, "_ChildToParent").as[Int]) should be(Vector(0))
 
     val res = server.query(
       s"""
@@ -340,7 +340,7 @@ class NestedCreateMutationInsideUpdateSpec extends FlatSpec with Matchers with A
 
     res.toString should be("""{"data":{"updateParent":{"childOpt":{"c":"c1"}}}}""")
 
-    database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "_ChildToParent").as[Int]) should be(Vector(1))
+    database.runDbActionOnClientDb(ApiDatabaseQueryBuilderPostGres.itemCountForTable(project.id, "_ChildToParent").as[Int]) should be(Vector(1))
   }
 
   "a PM to C1  relation with the parent already in a relation" should "work through a nested mutation by unique" in {
@@ -367,7 +367,7 @@ class NestedCreateMutationInsideUpdateSpec extends FlatSpec with Matchers with A
         project
       )
 
-    database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "_ParentToChild").as[Int]) should be(Vector(2))
+    database.runDbActionOnClientDb(ApiDatabaseQueryBuilderPostGres.itemCountForTable(project.id, "_ParentToChild").as[Int]) should be(Vector(2))
 
     val res = server.query(
       s"""
@@ -388,7 +388,7 @@ class NestedCreateMutationInsideUpdateSpec extends FlatSpec with Matchers with A
 
     res.toString should be("""{"data":{"updateParent":{"childrenOpt":[{"c":"c1"},{"c":"c2"},{"c":"c3"}]}}}""")
 
-    database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "_ParentToChild").as[Int]) should be(Vector(3))
+    database.runDbActionOnClientDb(ApiDatabaseQueryBuilderPostGres.itemCountForTable(project.id, "_ParentToChild").as[Int]) should be(Vector(3))
   }
 
   "a P1! to CM  relation with the parent already in a relation" should "work through a nested mutation by unique" in {
@@ -414,7 +414,7 @@ class NestedCreateMutationInsideUpdateSpec extends FlatSpec with Matchers with A
       project
     )
 
-    database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "_ChildToParent").as[Int]) should be(Vector(1))
+    database.runDbActionOnClientDb(ApiDatabaseQueryBuilderPostGres.itemCountForTable(project.id, "_ChildToParent").as[Int]) should be(Vector(1))
 
     val res = server.query(
       s"""
@@ -435,7 +435,7 @@ class NestedCreateMutationInsideUpdateSpec extends FlatSpec with Matchers with A
 
     res.toString should be("""{"data":{"updateParent":{"childReq":{"c":"c2"}}}}""")
 
-    database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "_ChildToParent").as[Int]) should be(Vector(1))
+    database.runDbActionOnClientDb(ApiDatabaseQueryBuilderPostGres.itemCountForTable(project.id, "_ChildToParent").as[Int]) should be(Vector(1))
   }
 
   "a P1 to CM  relation with the child already in a relation" should "work through a nested mutation by unique" in {
@@ -461,7 +461,7 @@ class NestedCreateMutationInsideUpdateSpec extends FlatSpec with Matchers with A
       project
     )
 
-    database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "_ChildToParent").as[Int]) should be(Vector(1))
+    database.runDbActionOnClientDb(ApiDatabaseQueryBuilderPostGres.itemCountForTable(project.id, "_ChildToParent").as[Int]) should be(Vector(1))
 
     val res = server.query(
       s"""
@@ -485,7 +485,7 @@ class NestedCreateMutationInsideUpdateSpec extends FlatSpec with Matchers with A
     server.query(s"""query{children{c, parentsOpt{p}}}""", project).toString should be(
       """{"data":{"children":[{"c":"c1","parentsOpt":[]},{"c":"c2","parentsOpt":[{"p":"p1"}]}]}}""")
 
-    database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "_ChildToParent").as[Int]) should be(Vector(1))
+    database.runDbActionOnClientDb(ApiDatabaseQueryBuilderPostGres.itemCountForTable(project.id, "_ChildToParent").as[Int]) should be(Vector(1))
   }
 
   "a PM to CM  relation with the children already in a relation" should "be disconnectable through a nested mutation by unique" in {
@@ -511,7 +511,7 @@ class NestedCreateMutationInsideUpdateSpec extends FlatSpec with Matchers with A
       project
     )
 
-    database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "_ChildToParent").as[Int]) should be(Vector(2))
+    database.runDbActionOnClientDb(ApiDatabaseQueryBuilderPostGres.itemCountForTable(project.id, "_ChildToParent").as[Int]) should be(Vector(2))
 
     val res = server.query(
       s"""
@@ -535,7 +535,7 @@ class NestedCreateMutationInsideUpdateSpec extends FlatSpec with Matchers with A
     server.query(s"""query{children{c, parentsOpt{p}}}""", project).toString should be(
       """{"data":{"children":[{"c":"c1","parentsOpt":[{"p":"p1"}]},{"c":"c2","parentsOpt":[{"p":"p1"}]},{"c":"c3","parentsOpt":[{"p":"p1"}]}]}}""")
 
-    database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "_ChildToParent").as[Int]) should be(Vector(3))
+    database.runDbActionOnClientDb(ApiDatabaseQueryBuilderPostGres.itemCountForTable(project.id, "_ChildToParent").as[Int]) should be(Vector(3))
   }
 
   "a one to many relation" should "be creatable through a nested mutation" in {

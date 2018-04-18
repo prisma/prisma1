@@ -3,7 +3,7 @@ package com.prisma.api.mutations
 import java.sql.SQLIntegrityConstraintViolationException
 
 import com.prisma.api.ApiBaseSpec
-import com.prisma.api.connector.postgresql.database.DatabaseQueryBuilder
+import com.prisma.api.connector.postgresql.database.ApiDatabaseQueryBuilderPostGres
 import com.prisma.api.import_export.BulkImport
 import com.prisma.shared.models.Project
 import com.prisma.shared.schema_dsl.SchemaDsl
@@ -104,10 +104,10 @@ class ResetDataSpec extends FlatSpec with Matchers with ApiBaseSpec with AwaitUt
     server.query("query{model1s{id}}", project, dataContains = """{"model1s":[]}""")
     server.query("query{model2s{id}}", project, dataContains = """{"model2s":[]}""")
 
-    database.runDbActionOnClientDb(DatabaseQueryBuilder.existsByModel(project.id, "_RelayId").as[Boolean]).toString should be("Vector(false)")
-    database.runDbActionOnClientDb(DatabaseQueryBuilder.existsByModel(project.id, "_Relation0").as[Boolean]).toString should be("Vector(false)")
-    database.runDbActionOnClientDb(DatabaseQueryBuilder.existsByModel(project.id, "_Relation1").as[Boolean]).toString should be("Vector(false)")
-    database.runDbActionOnClientDb(DatabaseQueryBuilder.existsByModel(project.id, "_Relation2").as[Boolean]).toString should be("Vector(false)")
+    database.runDbActionOnClientDb(ApiDatabaseQueryBuilderPostGres.existsByModel(project.id, "_RelayId").as[Boolean]).toString should be("Vector(false)")
+    database.runDbActionOnClientDb(ApiDatabaseQueryBuilderPostGres.existsByModel(project.id, "_Relation0").as[Boolean]).toString should be("Vector(false)")
+    database.runDbActionOnClientDb(ApiDatabaseQueryBuilderPostGres.existsByModel(project.id, "_Relation1").as[Boolean]).toString should be("Vector(false)")
+    database.runDbActionOnClientDb(ApiDatabaseQueryBuilderPostGres.existsByModel(project.id, "_Relation2").as[Boolean]).toString should be("Vector(false)")
   }
 
   "The ResetDataMutation" should "reinstate foreign key constraints again after wiping the data" in {
@@ -128,7 +128,7 @@ class ResetDataSpec extends FlatSpec with Matchers with ApiBaseSpec with AwaitUt
     server.query("query{model1s{id}}", project, dataContains = """{"model1s":[]}""")
     server.query("query{model2s{id}}", project, dataContains = """{"model2s":[]}""")
 
-    database.runDbActionOnClientDb(DatabaseQueryBuilder.existsByModel(project.id, "_RelayId").as[Boolean]).toString should be("Vector(false)")
+    database.runDbActionOnClientDb(ApiDatabaseQueryBuilderPostGres.existsByModel(project.id, "_RelayId").as[Boolean]).toString should be("Vector(false)")
 
     import slick.jdbc.MySQLProfile.api._
     val insert = sql"INSERT INTO `#${project.id}`.`_Relation1` VALUES ('someID', 'a', 'b')"

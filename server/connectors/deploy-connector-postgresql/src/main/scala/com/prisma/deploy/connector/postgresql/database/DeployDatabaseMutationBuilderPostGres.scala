@@ -66,12 +66,7 @@ object DeployDatabaseMutationBuilderPostGres {
 
   def updateScalarListType(projectId: String, modelName: String, fieldName: String, typeIdentifier: TypeIdentifier) = {
     val sqlType = sqlTypeForScalarTypeIdentifier(typeIdentifier)
-    val indexSize = sqlType match {
-      case "text" => "(191)"
-      case _      => ""
-    }
-
-    sqlu"""ALTER TABLE "#$projectId"."#${modelName}_#${fieldName}" DROP INDEX "value", CHANGE COLUMN "value" "value" #$sqlType, ADD INDEX "value" ("value"#$indexSize ASC)"""
+    sqlu"""ALTER TABLE "#$projectId"."#${modelName}_#${fieldName}" DROP INDEX "value", CHANGE COLUMN "value" "value" #$sqlType, ADD INDEX "value" ("value" ASC)"""
   }
 
   def renameScalarListTable(projectId: String, modelName: String, fieldName: String, newModelName: String, newFieldName: String) = {
@@ -90,22 +85,19 @@ object DeployDatabaseMutationBuilderPostGres {
 
     val sqlType    = sqlTypeForScalarTypeIdentifier(typeIdentifier)
     val nullString = if (isRequired) "NOT NULL" else "NULL"
-    val uniqueString =
-      if (isUnique) {
-        val indexSize = sqlType match {
-          case "text" => "(191)"
-          case _      => ""
-        }
+    val uniqueAction = isUnique match {
+      case true =>
+        sqlu"""CREATE UNIQUE INDEX "#$projectId.#$tableName.#$columnName._UNIQUE" ON "#$projectId"."#$tableName"("#$columnName" ASC);"""
+      case false => DBIOAction.successful(())
+    }
 
-        s""""""
-      } else { "" }
+    val addColumn = sqlu"""ALTER TABLE "#$projectId"."#$tableName" ADD COLUMN "#$columnName" #$sqlType #$nullString"""
 
-    sqlu"""ALTER TABLE "#$projectId"."#$tableName" ADD COLUMN "#$columnName"
-         #$sqlType #$nullString #$uniqueString"""
+    DBIOAction.seq(addColumn, uniqueAction)
   }
 
   def deleteColumn(projectId: String, tableName: String, columnName: String) = {
-    sqlu"""ALTER TABLE "#$projectId"."#$tableName" DROP COLUMN "#$columnName", ALGORITHM = INPLACE"""
+    sqlu"""ALTER TABLE "#$projectId"."#$tableName" DROP COLUMN "#$columnName""""
   }
 
   def updateColumn(projectId: String,
@@ -122,23 +114,14 @@ object DeployDatabaseMutationBuilderPostGres {
   }
 
   def addUniqueConstraint(projectId: String, tableName: String, columnName: String, typeIdentifier: TypeIdentifier, isList: Boolean) = {
-    val sqlType = sqlTypeForScalarTypeIdentifier(typeIdentifier = typeIdentifier)
-
-    val indexSize = sqlType match {
-      case "text" => "(191)"
-      case _      => ""
-    }
-
-    sqlu"""ALTER TABLE  "#$projectId"."#$tableName" ADD UNIQUE INDEX "#${columnName}_UNIQUE" ("#$columnName"#$indexSize ASC)"""
+    sqlu"""CREATE UNIQUE INDEX "#$projectId.#$tableName.#$columnName._UNIQUE" ON "#$projectId"."#$tableName"("#$columnName" ASC);"""
   }
 
   def removeUniqueConstraint(projectId: String, tableName: String, columnName: String) = {
-    sqlu"""ALTER TABLE  "#$projectId"."#$tableName" DROP INDEX "#${columnName}_UNIQUE""""
+    sqlu"""DROP INDEX "#$projectId.#$tableName.#$columnName._UNIQUE""""
   }
 
-  //todo indexes have to be added in a separate query
   def createRelationTable(projectId: String, relationTableName: String, aTableName: String, bTableName: String) = {
-//    val idCharset = charsetTypeForScalarTypeIdentifier(isList = false, TypeIdentifier.GraphQLID)
 
     val tableCreate = sqlu"""CREATE TABLE "#$projectId"."#$relationTableName" ("id" CHAR(25)  NOT NULL,
            PRIMARY KEY ("id"),
@@ -153,12 +136,6 @@ object DeployDatabaseMutationBuilderPostGres {
     DBIOAction.seq(tableCreate, indexCreate)
   }
 
-  // note: utf8mb4 requires up to 4 bytes per character and includes full utf8 support, including emoticons
-  // utf8 requires up to 3 bytes per character and does not have full utf8 support.
-  // mysql indexes have a max size of 767 bytes or 191 utf8mb4 characters.
-  // We limit enums to 191, and create text indexes over the first 191 characters of the string, but
-  // allow the actual content to be much larger.
-  // Key columns are utf8_general_ci as this collation is ~10% faster when sorting and requires less memory
   private def sqlTypeForScalarTypeIdentifier(typeIdentifier: TypeIdentifier): String = {
     typeIdentifier match {
       case TypeIdentifier.String    => "text"

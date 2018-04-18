@@ -14,34 +14,10 @@ import slick.sql.SqlStreamingAction
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
-object DatabaseQueryBuilder {
+object ApiDatabaseQueryBuilderPostGres {
   import JdbcExtensions._
   import QueryArgumentsExtensions._
   import SlickExtensions._
-
-  def extractQueryArgs(projectId: String,
-                       modelName: String,
-                       args: Option[QueryArguments],
-                       defaultOrderShortcut: Option[String],
-                       overrideMaxNodeCount: Option[Int],
-                       forList: Boolean = false): (Option[SQLActionBuilder], Option[SQLActionBuilder], Option[SQLActionBuilder]) = {
-    args match {
-      case None => (None, None, None)
-      case Some(givenArgs: QueryArguments) =>
-        val orderByCommand =
-          if (forList) givenArgs.extractOrderByCommandForLists(projectId, modelName, defaultOrderShortcut)
-          else givenArgs.extractOrderByCommand(projectId, modelName, defaultOrderShortcut)
-
-        (
-          givenArgs.extractWhereConditionCommand(projectId, modelName),
-          orderByCommand,
-          overrideMaxNodeCount match {
-            case None                => givenArgs.extractLimitCommand(projectId, modelName)
-            case Some(maxCount: Int) => givenArgs.extractLimitCommand(projectId, modelName, maxCount)
-          }
-        )
-    }
-  }
 
   def getResultForModel(model: Model): GetResult[PrismaNode] = GetResult { ps: PositionedResult =>
     getPrismaNode(model, ps)
@@ -146,18 +122,10 @@ object DatabaseQueryBuilder {
     query.as[Int].map(_.head)
   }
 
-  def batchSelectFromModelByUnique(projectId: String,
-                                   model: Model,
-                                   fieldName: String,
-                                   values: Vector[GCValue]): SqlStreamingAction[Vector[PrismaNode], PrismaNode, Effect] = {
-    val query = sql"""select * from "#$projectId"."#${model.name}" where "#$fieldName" in (""" ++ combineByComma(values.map(gcValueToSQLBuilder)) ++ sql")"
-    query.as[PrismaNode](getResultForModel(model))
-  }
-
-  def batchSelectFromModelByUniqueSimple(projectId: String, model: Model, fieldName: String, values: Vector[GCValue]): SimpleDBIO[Vector[PrismaNode]] =
+  def batchSelectFromModelByUnique(projectId: String, model: Model, fieldName: String, values: Vector[GCValue]): SimpleDBIO[Vector[PrismaNode]] =
     SimpleDBIO[Vector[PrismaNode]] { x =>
       val placeHolders                   = values.map(_ => "?").mkString(",")
-      val query                          = s"""select * from "$projectId"."${model.name}" where "$fieldName" in ($placeHolders)""""
+      val query                          = s"""select * from "$projectId"."${model.name}" where "$fieldName" in ($placeHolders)"""
       val batchSelect: PreparedStatement = x.connection.prepareStatement(query)
       values.zipWithIndex.foreach { gcValueWithIndex =>
         batchSelect.setGcValue(gcValueWithIndex._2 + 1, gcValueWithIndex._1)

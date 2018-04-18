@@ -160,8 +160,7 @@ object QueryArgumentsHelpers {
                                   )""")
 
         // this is used for the node: {} field in the Subscription Filter
-        case values: Seq[FilterElement @unchecked] =>
-          generateFilterConditions(projectId, tableName, values)
+        case values: Seq[FilterElement @unchecked] => generateFilterConditions(projectId, tableName, values)
       }
       .filter(_.nonEmpty)
       .map(_.get)

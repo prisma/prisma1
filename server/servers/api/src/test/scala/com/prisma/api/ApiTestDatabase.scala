@@ -4,7 +4,7 @@ import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
 import com.prisma.api.connector.DatabaseMutaction
 import com.prisma.api.connector.postgresql.ApiConnectorImpl
-import com.prisma.api.connector.postgresql.database.{DatabaseMutationBuilder, DatabaseQueryBuilder}
+import com.prisma.api.connector.postgresql.database.{DatabaseMutationBuilder, ApiDatabaseQueryBuilderPostGres}
 import com.prisma.deploy.connector._
 import com.prisma.deploy.connector.postgresql.impls.DeployMutactionExecutorImpl
 import com.prisma.shared.models._
