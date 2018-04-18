@@ -145,17 +145,13 @@ export class PrismaDefinitionClass {
     //   )
     // }
 
-    // if (!this.service) {
-    //   throw new Error(
-    //     `Please either provide a service or endpoint property in your prisma.yml`,
-    //   )
-    // }
+    if (!this.service) {
+      throw new Error(`Please provide a service property in your prisma.yml`)
+    }
 
-    // if (!this.stage) {
-    //   throw new Error(
-    //     `Please either provide a stage or endpoint property in your prisma.yml`,
-    //   )
-    // }
+    if (!this.stage) {
+      throw new Error(`Please provide a stage property in your prisma.yml`)
+    }
 
     // if (!this.cluster) {
     //   throw new Error(

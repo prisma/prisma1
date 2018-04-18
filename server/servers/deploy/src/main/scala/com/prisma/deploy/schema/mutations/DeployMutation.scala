@@ -7,6 +7,7 @@ import com.prisma.deploy.migration.inference.{InvalidGCValue, MigrationStepsInfe
 import com.prisma.deploy.migration.migrator.Migrator
 import com.prisma.deploy.migration.validation.{SchemaError, SchemaSyntaxValidator, SchemaWarning}
 import com.prisma.deploy.schema.InvalidQuery
+import com.prisma.deploy.validation.DestructiveChanges
 import com.prisma.messagebus.pubsub.Only
 import com.prisma.shared.models.{Function, Migration, MigrationStep, Project, Schema, ServerSideSubscriptionFunction, UpdateSecrets, WebhookDelivery}
 import org.scalactic.{Bad, Good, Or}
@@ -69,10 +70,9 @@ case class DeployMutation(
               MutationSuccess(DeployMutationPayload(args.clientMutationId, Some(Migration.empty(project.id)), errors = schemaErrors ++ errors, Seq.empty)))
 
           case Good(functionsForInput) =>
-            val steps = migrationStepsInferrer.infer(project.schema, inferredNextSchema, schemaMapping)
-//            val existingDataValidation = DestructiveChanges(persistencePlugin, project, inferredNextSchema, steps)
-//            val checkResults           = existingDataValidation.checkAgainstExistingData
-            val checkResults = Future.successful(Vector.empty)
+            val steps                  = migrationStepsInferrer.infer(project.schema, inferredNextSchema, schemaMapping)
+            val existingDataValidation = DestructiveChanges(persistencePlugin, project, inferredNextSchema, steps)
+            val checkResults           = existingDataValidation.checkAgainstExistingData
 
             checkResults.flatMap { results =>
               val destructiveWarnings: Vector[SchemaWarning] = results.collect { case warning: SchemaWarning => warning }

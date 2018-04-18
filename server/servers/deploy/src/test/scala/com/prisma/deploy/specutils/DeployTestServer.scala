@@ -39,7 +39,7 @@ case class DeployTestServer()(implicit dependencies: DeployDependencies) extends
       requestId: String = "CombinedTestDatabase.requestId"
   ): JsValue = {
     val result = executeQueryWithAuthentication(
-      query = query,
+      query = query.stripMargin,
       variables = variables,
       requestId = requestId
     )
@@ -138,7 +138,13 @@ case class DeployTestServer()(implicit dependencies: DeployDependencies) extends
     dependencies.projectPersistence.load(project.id).await.get
   }
 
-  def deploySchemaThatMustFail(project: Project, schema: String, force: Boolean = false): JsValue = {
+  def deploySchemaThatMustSucceed(project: Project, schema: String, revision: Int, force: Boolean = false): JsValue = {
+    val res = deployHelper(project.id, schema, Vector.empty, shouldFail = false, shouldWarn = false, force = force)
+    require(res.pathAsDouble("data.deploy.migration.revision") == revision)
+    res
+  }
+
+  def deploySchemaThatMustError(project: Project, schema: String, force: Boolean = false): JsValue = {
     deployHelper(project.id, schema, Vector.empty, shouldFail = true, force = force)
   }
 
@@ -167,7 +173,7 @@ case class DeployTestServer()(implicit dependencies: DeployDependencies) extends
     val nameAndStage     = ProjectId.fromEncodedString(projectId)
     val name             = nameAndStage.name
     val stage            = nameAndStage.stage
-    val formattedSchema  = JsString(schema).toString
+    val formattedSchema  = JsString(schema.stripMargin).toString
     val secretsFormatted = JsArray(secrets.map(JsString)).toString()
 
     val queryString = s"""

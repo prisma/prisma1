@@ -53,4 +53,46 @@ class AddProjectMutationSpec extends FlatSpec with Matchers with DeploySpecBase 
       4005
     )
   }
+
+  "AddProjectMutation" should "fail if a service name is reserved" in {
+    ProjectId.reservedServiceAndStageNames.foreach { reserved =>
+      server.queryThatMustFail(
+        s"""
+           |mutation {
+           |  addProject(input: {
+           |    name: "$reserved",
+           |    stage: "default"
+           |  }) {
+           |    project {
+           |      name
+           |      stage
+           |    }
+           |  }
+           |}
+      """.stripMargin,
+        4006
+      )
+    }
+  }
+
+  "AddProjectMutation" should "fail if a stage name is reserved" in {
+    ProjectId.reservedServiceAndStageNames.foreach { reserved =>
+      server.queryThatMustFail(
+        s"""
+           |mutation {
+           |  addProject(input: {
+           |    name: "default",
+           |    stage: "$reserved"
+           |  }) {
+           |    project {
+           |      name
+           |      stage
+           |    }
+           |  }
+           |}
+      """.stripMargin,
+        4007
+      )
+    }
+  }
 }

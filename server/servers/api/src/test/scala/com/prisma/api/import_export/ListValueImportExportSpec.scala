@@ -37,7 +37,7 @@ class ListValueImportExportSpec extends FlatSpec with Matchers with ApiBaseSpec 
   }
 
   override def beforeEach(): Unit = {
-    database.truncate(project)
+    database.truncate(project.id)
   }
   val importer                   = new BulkImport(project)
   val exporter                   = new BulkExport(project)
