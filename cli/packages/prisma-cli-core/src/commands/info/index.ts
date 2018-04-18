@@ -45,7 +45,7 @@ export default class InfoCommand extends Command {
     const envFile = this.flags['env-file']
     await this.definition.load(this.flags, envFile)
     const serviceName = this.definition.service!
-    const stage = this.definition.service!
+    const stage = this.definition.stage!
     const workspace = this.definition.getWorkspace()
 
     const cluster = this.definition.getCluster()
