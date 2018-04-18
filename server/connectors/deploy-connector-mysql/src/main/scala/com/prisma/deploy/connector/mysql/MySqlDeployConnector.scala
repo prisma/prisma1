@@ -32,9 +32,7 @@ case class MySqlDeployConnector(clientDatabase: Database)(implicit ec: Execution
 
   override def getAllDatabaseSizes(): Future[Vector[DatabaseSize]] = {
     val action = {
-      val query = sql"""
-           SELECT table_schema, sum( data_length + index_length) / 1024 / 1024 FROM information_schema.TABLES GROUP BY table_schema
-         """
+      val query = sql"""SELECT table_schema, sum( data_length + index_length) / 1024 / 1024 FROM information_schema.TABLES GROUP BY table_schema"""
       query.as[(String, Double)].map { tuples =>
         tuples.map { tuple =>
           DatabaseSize(tuple._1, tuple._2)
@@ -52,7 +50,7 @@ case class MySqlDeployConnector(clientDatabase: Database)(implicit ec: Execution
     internalDatabaseRoot.run(action)
   }
 
-  override def reset(): Future[Unit] = truncateTablesInDatabse(internalDatabase)
+  override def reset(): Future[Unit] = truncateTablesInDatabase(internalDatabase)
 
   override def shutdown() = {
     for {
@@ -65,7 +63,7 @@ case class MySqlDeployConnector(clientDatabase: Database)(implicit ec: Execution
 trait TableTruncationHelpers {
   // copied from InternalTestDatabase
 
-  protected def truncateTablesInDatabse(database: Database)(implicit ec: ExecutionContext): Future[Unit] = {
+  protected def truncateTablesInDatabase(database: Database)(implicit ec: ExecutionContext): Future[Unit] = {
     for {
       schemas <- database.run(getTables("graphcool"))
       _       <- database.run(dangerouslyTruncateTables(schemas))

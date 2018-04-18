@@ -42,7 +42,7 @@ case class ClusterServer(prefix: String = "")(
   val schemaBuilder: SchemaBuilder           = dependencies.clusterSchemaBuilder
   val projectPersistence: ProjectPersistence = dependencies.projectPersistence
   val log: String => Unit                    = (msg: String) => logger.info(msg)
-  val requestPrefix                          = "cluster"
+  val requestPrefix                          = sys.env.getOrElse("ENV", "local")
   val server2serverSecret                    = sys.env.getOrElse("SCHEMA_MANAGER_SECRET", sys.error("SCHEMA_MANAGER_SECRET env var required but not found"))
 
   def errorExtractor(t: Throwable): Option[Int] = t match {

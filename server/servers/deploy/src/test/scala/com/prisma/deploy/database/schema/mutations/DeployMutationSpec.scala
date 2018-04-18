@@ -91,7 +91,7 @@ class DeployMutationSpec extends FlatSpec with Matchers with DeploySpecBase {
         |  id: ID! @unique
         |  stringListField: [String!]
         |}
-      """.stripMargin
+      """
 
     val schema2 =
       """
@@ -99,7 +99,7 @@ class DeployMutationSpec extends FlatSpec with Matchers with DeploySpecBase {
         |  id: ID! @unique
         |  stringListField: [Int!]
         |}
-      """.stripMargin
+      """
 
     val schema3 =
       """
@@ -107,7 +107,7 @@ class DeployMutationSpec extends FlatSpec with Matchers with DeploySpecBase {
         |  id: ID! @unique
         |  intListField: [Int!]
         |}
-      """.stripMargin
+      """
 
     server.deploySchema(project, schema1)
     server.deploySchema(project, schema2)
@@ -144,7 +144,7 @@ class DeployMutationSpec extends FlatSpec with Matchers with DeploySpecBase {
          |    }
          |  }
          |}
-        """.stripMargin
+        """
       )
 
       // Query must fail
@@ -167,7 +167,7 @@ class DeployMutationSpec extends FlatSpec with Matchers with DeploySpecBase {
                    |type TestModel {
                    |  test: String
                    |}
-                 """.stripMargin
+                 """
 
     val (project, _)  = setupProject(schema)
     val loadedProject = projectPersistence.load(project.id).await.get
@@ -183,7 +183,7 @@ class DeployMutationSpec extends FlatSpec with Matchers with DeploySpecBase {
                    |  id: ID! @unique
                    |  test: String
                    |}
-                 """.stripMargin
+                 """
 
     val (project, _)  = setupProject(schema)
     val loadedProject = projectPersistence.load(project.id).await.get
@@ -198,7 +198,7 @@ class DeployMutationSpec extends FlatSpec with Matchers with DeploySpecBase {
                           |  createdAt: DateTime!
                           |  updatedAt: DateTime!
                           |}
-                        """.stripMargin
+                        """
 
     server.deploySchema(project, updatedSchema)
 

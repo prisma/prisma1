@@ -72,13 +72,6 @@ object DataSchemaAstExtensions {
       nameBeforeRename.getOrElse(fieldDefinition.name)
     }
 
-//    def isIdField: Boolean = fieldDefinition.name == "id"
-
-//    def isNotSystemField = {
-//      val name = fieldDefinition.name
-//      name != "id" && name != "updatedAt" && name != "createdAt"
-//    }
-
     def typeString: String = fieldDefinition.fieldType.renderPretty
 
     def typeName: String = fieldDefinition.fieldType.namedType.name

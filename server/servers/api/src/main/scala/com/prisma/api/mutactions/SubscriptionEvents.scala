@@ -41,6 +41,7 @@ object SubscriptionEvents {
     val previousValues: Map[String, Any] = mutaction.previousValues.data
       .filterValues(_ != NullGCValue)
       .toMapStringAny + ("id" -> mutaction.previousValues.id.value)
+
     PublishSubscriptionEvent(
       project = project,
       value = Map(

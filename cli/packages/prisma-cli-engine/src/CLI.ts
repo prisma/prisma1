@@ -141,6 +141,13 @@ export class CLI {
         }
 
         this.cmd = await foundCommand.run(this.config)
+        if (foundCommand.deprecated) {
+          this.cmd.out.log(
+            chalk.yellow(
+              `\nThis command is deprecated and will be removed in 1.9`,
+            ),
+          )
+        }
         this.setRavenUserContext()
         const checker = getStatusChecker()!
         checker.checkStatus(id, this.cmd.args, this.cmd.flags, this.cmd.argv)

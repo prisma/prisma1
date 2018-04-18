@@ -32,9 +32,7 @@ class CreateMutationListSpec extends FlatSpec with Matchers with ApiBaseSpec {
     database.setup(project)
   }
 
-  override def beforeEach(): Unit = {
-    database.truncateProjectTables(project)
-  }
+  override def beforeEach(): Unit = database.truncateProjectTables(project)
 
   "A Create Mutation" should "create and return items with listvalues" in {
 

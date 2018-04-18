@@ -29,9 +29,8 @@ class DateTimeImportExportSpec extends FlatSpec with Matchers with ApiBaseSpec w
     database.setup(project)
   }
 
-  override def beforeEach(): Unit = {
-    database.truncateProjectTables(project)
-  }
+  override def beforeEach(): Unit = database.truncateProjectTables(project)
+
   val importer = new BulkImport(project)
 
   "DateTimeFormat" should "work" in {
@@ -71,6 +70,7 @@ class DateTimeImportExportSpec extends FlatSpec with Matchers with ApiBaseSpec w
 
     database.setup(project)
     database.truncateProjectTables(project)
+
     val dataResolver: DataResolver = this.dataResolver(project)
 
     val nodes =

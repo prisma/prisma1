@@ -33,12 +33,10 @@ class SingleValueImportExportSpec extends FlatSpec with Matchers with ApiBaseSpe
     database.setup(project)
   }
 
-  override def beforeEach(): Unit = {
-    database.truncateProjectTables(project)
-  }
-  val importer                   = new BulkImport(project)
-  val exporter                   = new BulkExport(project)
-  val dataResolver: DataResolver = this.dataResolver(project)
+  override def beforeEach(): Unit = database.truncateProjectTables(project)
+  val importer                    = new BulkImport(project)
+  val exporter                    = new BulkExport(project)
+  val dataResolver: DataResolver  = this.dataResolver(project)
 
   "Exporting nodes" should "work (with filesize limit set to 1000 for test)" in {
 

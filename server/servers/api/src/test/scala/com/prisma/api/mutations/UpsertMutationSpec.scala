@@ -18,10 +18,7 @@ class UpsertMutationSpec extends FlatSpec with Matchers with ApiBaseSpec {
     database.setup(project)
   }
 
-  override protected def beforeEach(): Unit = {
-    super.beforeEach()
-    database.truncateProjectTables(project)
-  }
+  override def beforeEach(): Unit = database.truncateProjectTables(project)
 
   "an item" should "be created if it does not exist yet" in {
     todoCount should be(0)

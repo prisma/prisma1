@@ -17,10 +17,7 @@ class DeleteSpec extends FlatSpec with Matchers with ApiBaseSpec {
     database.setup(project)
   }
 
-  override protected def beforeEach(): Unit = {
-    super.beforeEach()
-    database.truncateProjectTables(project)
-  }
+  override def beforeEach(): Unit = database.truncateProjectTables(project)
 
   "The delete  mutation" should "delete the item matching the where clause" in {
     createTodo("title1")

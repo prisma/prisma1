@@ -11,6 +11,8 @@ Upon the very first deploy of a service, the command will perform initial data s
 
 If no [`cluster`](!alias-ufeshusai8#cluster-optional) property is specifed in `prisma.yml`, the command will prompt you to interactively select a [cluster](!alias-eu2ood0she) as a deployment target. After you selected the cluster, it will write it to `prisma.yml` as the default deployment target for future deploys. To bring up the interactive prompt again, simply remove the `cluster` property from `prisma.yml` manually.
 
+If your deploy results in data loss or brings your project into an incosistent state, the CLI will not perform the deploy and print a warning instead. In these cases, you can force the deploy by using the `--force` flag. 
+
 <!-- If no [`cluster`](!alias-ufeshusai8#cluster-optional) property is specifed in `prisma.yml`, the command will prompt you to interactively select a [cluster](!alias-eu2ood0she) as a deployment target. After you selected the cluster, it will write it to `prisma.yml` as the default deployment target for future deploys. To bring up the interactive prompt again, either remove the `cluster` property manually or pass the `--interactive` option to the command. -->
 
 #### Usage
@@ -62,4 +64,10 @@ prisma deploy --interactive
 
 ```sh
 prisma deploy --env-file .env.prod
+```
+
+##### Deploy service accepting data loss or brining the project into an incosistent state.
+
+```sh
+prisma deploy --force
 ```

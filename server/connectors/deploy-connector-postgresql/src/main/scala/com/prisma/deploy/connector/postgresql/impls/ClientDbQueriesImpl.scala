@@ -22,13 +22,16 @@ case class ClientDbQueriesImpl(project: Project, clientDatabase: Database)(impli
     clientDatabase.run(readOnlyBoolean(query)).map(_.head).recover { case _: java.sql.SQLSyntaxErrorException => false }
   }
 
-  def existsNullByModelAndScalarField(model: Model, field: Field): Future[Boolean] = {
-    val query = DatabaseQueryBuilder.existsNullByModelAndScalarField(project.id, model.name, field.name)
+  def existsNullByModelAndField(model: Model, field: Field): Future[Boolean] = {
+    val query = field.isScalar match {
+      case true  => DatabaseQueryBuilder.existsNullByModelAndScalarField(project.id, model.name, field.name)
+      case false => DatabaseQueryBuilder.existsNullByModelAndRelationField(project.id, model.name, field)
+    }
     clientDatabase.run(readOnlyBoolean(query)).map(_.head).recover { case _: java.sql.SQLSyntaxErrorException => false }
   }
 
-  def existsNullByModelAndRelationField(model: Model, field: Field): Future[Boolean] = {
-    val query = DatabaseQueryBuilder.existsNullByModelAndRelationField(project.id, model.name, field)
+  override def enumValueIsInUse(models: Vector[Model], enumName: String, value: String): Future[Boolean] = {
+    val query = DatabaseQueryBuilder.enumValueIsInUse(project.id, models, enumName, value)
     clientDatabase.run(readOnlyBoolean(query)).map(_.head).recover { case _: java.sql.SQLSyntaxErrorException => false }
   }
 

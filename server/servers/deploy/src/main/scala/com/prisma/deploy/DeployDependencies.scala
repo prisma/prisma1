@@ -7,7 +7,7 @@ import com.prisma.deploy.connector.DeployConnector
 import com.prisma.deploy.migration.migrator.Migrator
 import com.prisma.deploy.schema.SchemaBuilder
 import com.prisma.deploy.schema.mutations.FunctionValidator
-import com.prisma.deploy.server.ClusterAuth
+import com.prisma.deploy.server.auth.ClusterAuth
 import com.prisma.errors.ErrorReporter
 import com.prisma.messagebus.PubSubPublisher
 import com.prisma.utils.await.AwaitUtils

@@ -1,0 +1,86 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`migrateToEndpoint ignore when endpoint present 1`] = `
+Object {
+  "input": "endpoint: https://eu1.prisma.sh/public-asdf/my-service/dev
+datamodel: datamodel.graphql",
+  "output": "#endpoint: https://eu1.prisma.sh/public-asdf/my-service/dev
+endpoint: 
+datamodel: datamodel.graphql",
+}
+`;
+
+exports[`migrateToEndpoint work in simple case 1`] = `
+Object {
+  "input": "service: my-service
+stage: dev
+cluster: public-asdf/prisma-eu1
+datamodel: datamodel.graphql",
+  "output": "#service: my-service
+#stage: dev
+#cluster: public-asdf/prisma-eu1
+datamodel: datamodel.graphql
+endpoint: https://eu1.prisma.sh/public-asdf/my-service/dev
+",
+}
+`;
+
+exports[`migrateToEndpoint work with different order and respect comments 1`] = `
+Object {
+  "input": "# don't delete me
+stage: dev
+cluster: public-asdf/prisma-eu1
+
+service: my-service
+
+
+
+datamodel: datamodel.graphql",
+  "output": "# don't delete me
+#stage: dev
+#cluster: public-asdf/prisma-eu1
+
+#service: my-service
+
+
+
+datamodel: datamodel.graphql
+endpoint: https://eu1.prisma.sh/public-asdf/my-service/dev
+",
+}
+`;
+
+exports[`replaceYamlValue when comments already exist 1`] = `
+Object {
+  "input": "#anothercomment: asdasd
+endpoint: https://eu1.prisma.sh/public-asdf/my-service/dev
+
+#endpoint: asdasd
+datamodel: datamodel.graphql",
+  "output": "#anothercomment: asdasd
+#endpoint: https://eu1.prisma.sh/public-asdf/my-service/dev
+endpoint: http://localhost:4466
+
+#endpoint: asdasd
+datamodel: datamodel.graphql",
+}
+`;
+
+exports[`replaceYamlValue when document is clean 1`] = `
+Object {
+  "input": "endpoint: https://eu1.prisma.sh/public-asdf/my-service/dev
+datamodel: datamodel.graphql",
+  "output": "#endpoint: https://eu1.prisma.sh/public-asdf/my-service/dev
+endpoint: http://localhost:4466
+datamodel: datamodel.graphql",
+}
+`;
+
+exports[`replaceYamlValue when key does not yet exist 1`] = `
+Object {
+  "input": "datamodel: datamodel.graphql",
+  "output": "datamodel: datamodel.graphql
+endpoint: http://localhost:4466
+",
+}
+`;

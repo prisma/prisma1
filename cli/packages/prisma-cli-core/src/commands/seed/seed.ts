@@ -20,10 +20,9 @@ export default class Seed extends Command {
   async run() {
     const { stage, reset } = this.flags
     await this.definition.load(this.flags)
-    const serviceName = this.definition.definition!.service
+    const serviceName = this.definition.service!
 
-    const clusterName = this.definition.getClusterName()
-    const cluster = this.env.clusterByName(clusterName!, true)
+    const cluster = this.definition.getCluster()
     this.env.setActiveCluster(cluster!)
 
     const seeder = new Seeder(

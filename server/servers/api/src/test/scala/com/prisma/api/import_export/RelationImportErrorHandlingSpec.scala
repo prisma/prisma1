@@ -27,9 +27,7 @@ class RelationImportErrorHandlingSpec extends FlatSpec with Matchers with ApiBas
     database.setup(project)
   }
 
-  override def beforeEach(): Unit = {
-    database.truncateProjectTables(project)
-  }
+  override def beforeEach(): Unit = database.truncateProjectTables(project)
 
   val importer                   = new BulkImport(project)
   val exporter                   = new BulkExport(project)

@@ -46,9 +46,8 @@ class ResetDataSpec extends FlatSpec with Matchers with ApiBaseSpec with AwaitUt
     database.setup(project)
   }
 
-  override def beforeEach(): Unit = {
-    database.truncateProjectTables(project)
-  }
+  override def beforeEach(): Unit = database.truncateProjectTables(project)
+
   val importer = new BulkImport(project)
 
   "The ResetDataMutation" should "wipe all data" in {

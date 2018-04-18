@@ -4,7 +4,7 @@ import com.prisma.shared.errors.SchemaCheckResult
 
 case class SchemaWarning(`type`: String, description: String, field: Option[String]) extends SchemaCheckResult
 
-object SchemaWarning {
+object SchemaWarnings {
   def apply(`type`: String, field: String, description: String): SchemaWarning = {
     SchemaWarning(`type`, description, Some(field))
   }
@@ -15,6 +15,10 @@ object SchemaWarning {
 
   def dataLossModel(`type`: String): SchemaWarning = {
     SchemaWarning(`type`, "You already have nodes for this model. This change will result in data loss.", None)
+  }
+
+  def dataLossRelation(`type`: String): SchemaWarning = {
+    SchemaWarning(`type`, "You already have nodes for this relation. This change will result in data loss.", None)
   }
 
   def dataLossField(`type`: String, field: String): SchemaWarning = {

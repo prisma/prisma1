@@ -110,7 +110,7 @@
     "marked-terminal": "^2.0.0",
     "memfs": "^2.5.3",
     "opn": "^5.1.0",
-    "prisma-json-schema": "^0.0.1",
+    "prisma-json-schema": "0.0.4",
     "prisma-yml": "1.0.14-6",
     "raven": "2.3.0",
     "replaceall": "^0.1.6",
@@ -124,7 +124,6 @@
     "supports-color": "^4.4.0",
     "treeify": "^1.0.1",
     "update-notifier": "^2.3.0",
-    "validator": "^8.2.0",
-    "yaml-ast-parser": "^0.0.34"
+    "validator": "^8.2.0"
   }
 }

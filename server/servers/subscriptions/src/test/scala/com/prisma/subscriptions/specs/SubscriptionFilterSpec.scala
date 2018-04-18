@@ -74,7 +74,7 @@ class SubscriptionFilterSpec extends FlatSpec with Matchers with SpecBase with A
           payload = """{
               |  "todo":{
               |    "mutation":"UPDATED",
-              |    "previousValues":{"id":"test-node-id","text":"event1", "status":"Active"}
+              |    "previousValues":{"id":"test-node-id", "text":"event1", "status":"Active"}
               |  }
               |}""".stripMargin
         )
@@ -125,7 +125,6 @@ class SubscriptionFilterSpec extends FlatSpec with Matchers with SpecBase with A
                 changedFields: Seq[String],
                 previousValues: String): String = {
     Json.parse(previousValues) // throws if the string is not valid json
-    val json = JsString(previousValues).toString()
-    s"""{"nodeId":"test-node-id","modelId":"${model.id}","mutationType":"UpdateNode","changedFields":["text"], "previousValues": $json}"""
+    s"""{"nodeId":"test-node-id","modelId":"${model.id}","mutationType":"UpdateNode","changedFields":["text"], "previousValues": $previousValues}"""
   }
 }

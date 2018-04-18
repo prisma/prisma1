@@ -39,9 +39,8 @@ class BulkImportSpec extends FlatSpec with Matchers with ApiBaseSpec with AwaitU
     database.setup(project)
   }
 
-  override def beforeEach(): Unit = {
-    database.truncateProjectTables(project)
-  }
+  override def beforeEach(): Unit = database.truncateProjectTables(project)
+
   val importer = new BulkImport(project)
 
   "Combining the data from the three files" should "work" in {

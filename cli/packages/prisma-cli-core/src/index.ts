@@ -47,6 +47,7 @@ export const groups = [
   {
     key: 'local',
     name: 'Local development',
+    deprecated: true,
   },
   {
     key: 'cluster',

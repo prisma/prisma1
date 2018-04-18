@@ -49,7 +49,6 @@ trait SpecBase extends BeforeAndAfterEach with BeforeAndAfterAll with AwaitUtils
     val projectId = name + "@" + stage
     val project   = newTestProject(projectId)
     projectPersistence.create(project).await()
-
     val migration = Migration.empty(project.id)
     val result    = migrationPersistence.create(migration).await()
     migrationPersistence.updateMigrationStatus(result.id, MigrationStatus.Success).await()

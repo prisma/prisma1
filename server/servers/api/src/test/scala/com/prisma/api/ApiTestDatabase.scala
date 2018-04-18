@@ -4,7 +4,7 @@ import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
 import com.prisma.api.connector.DatabaseMutaction
 import com.prisma.api.connector.postgresql.ApiConnectorImpl
-import com.prisma.api.connector.postgresql.database.{DatabaseMutationBuilder, ApiDatabaseQueryBuilderPostGres}
+import com.prisma.api.connector.postgresql.database.DatabaseMutationBuilder
 import com.prisma.deploy.connector._
 import com.prisma.deploy.connector.postgresql.impls.DeployMutactionExecutorImpl
 import com.prisma.shared.models._
@@ -28,10 +28,8 @@ case class ApiTestDatabase()(implicit dependencies: ApiDependencies) extends Awa
     project.relations.foreach(createRelationTable(project, _))
   }
 
-  def truncateProjectTables(project: Project): Unit = runMutaction(TruncateProject(project))
-
-  def deleteProjectDatabase(project: Project): Unit = runMutaction(DeleteProject(project.id))
-
+  def truncateProjectTables(project: Project): Unit   = runMutaction(TruncateProject(project))
+  def deleteProjectDatabase(project: Project): Unit   = runMutaction(DeleteProject(project.id))
   private def createProjectDatabase(project: Project) = runMutaction(CreateProject(project.id))
 
   private def createRelationTable(project: Project, relation: Relation) = runMutaction(CreateRelationTable(project.id, project.schema, relation = relation))
