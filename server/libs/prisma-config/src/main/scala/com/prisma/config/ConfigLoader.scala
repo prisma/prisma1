@@ -1,7 +1,9 @@
 package com.prisma.config
 
 import java.io.File
+
 import org.yaml.snakeyaml.Yaml
+
 import scala.collection.mutable
 import scala.util.Try
 
@@ -62,7 +64,7 @@ object ConfigLoader {
 
   def convertToConfig(map: mutable.Map[String, Any]): PrismaConfig = {
     val port   = extractInt("port", map, "4466")
-    val secret = extractString("managementApiSecret", map)
+    val secret = extractStringOpt("managementApiSecret", map)
     val databases = extractScalaMap(map.getOrElse("databases", emptyJavaMap), path = "databases").map {
       case (dbName, dbMap) =>
         val db          = extractScalaMap(dbMap, path = dbName)
@@ -87,32 +89,53 @@ object ConfigLoader {
     out
   }
 
-  private def extractString(key: String, map: mutable.Map[String, Any], mapDefaultValue: String = "", required: Boolean = true): String = {
+  private def extractString(key: String, map: mutable.Map[String, Any], mapDefaultValue: String = ""): String = {
+    extractStringOpt(key, map, mapDefaultValue) match {
+      case Some(x) => x
+      case None    => throw InvalidConfiguration(s"Expected $key to be non-empty")
+    }
+  }
+
+  private def extractStringOpt(key: String, map: mutable.Map[String, Any], mapDefaultValue: String = ""): Option[String] = {
     val value = map.getOrElse(key, mapDefaultValue).toString
-    if (required && value.isEmpty) {
-      throw InvalidConfiguration(s"Expected $key to be non-empty")
+    if (value.isEmpty) {
+      return None
     }
 
-    value
+    Some(value)
   }
 
   private def extractBoolean(key: String, map: mutable.Map[String, Any], mapDefaultValue: String = ""): Boolean = {
+    extractBooleanOpt(key, map, mapDefaultValue) match {
+      case Some(x) => x
+      case None    => throw InvalidConfiguration(s"Expected Boolean for field $key, got ${map.getOrElse(key, mapDefaultValue).toString}")
+    }
+  }
+
+  private def extractBooleanOpt(key: String, map: mutable.Map[String, Any], mapDefaultValue: String = ""): Option[Boolean] = {
     map.getOrElse(key, mapDefaultValue).toString.toLowerCase() match {
-      case "true"  => true
-      case "false" => false
-      case x       => throw InvalidConfiguration(s"Expected Boolean for field $key, got: $x")
+      case "true"  => Some(true)
+      case "false" => Some(false)
+      case x       => None
     }
   }
 
   private def extractInt(key: String, map: mutable.Map[String, Any], mapDefaultValue: String = ""): Int = {
-    val field = map.getOrElse("port", mapDefaultValue).toString
-    try { field.toInt } catch {
-      case _: Throwable => throw InvalidConfiguration(s"Expected Int for field $key, got $field")
+    extractIntOpt(key, map, mapDefaultValue) match {
+      case Some(x) => x
+      case None    => throw InvalidConfiguration(s"Expected Int for field $key, got ${map.getOrElse(key, mapDefaultValue).toString}")
+    }
+  }
+
+  private def extractIntOpt(key: String, map: mutable.Map[String, Any], mapDefaultValue: String = ""): Option[Int] = {
+    val field = map.getOrElse(key, mapDefaultValue).toString
+    try { Some(field.toInt) } catch {
+      case _: Throwable => None
     }
   }
 }
 
-case class PrismaConfig(port: Int, managementApiSecret: String, databases: Seq[DatabaseConfig])
+case class PrismaConfig(port: Int, managementApiSecret: Option[String], databases: Seq[DatabaseConfig])
 case class DatabaseConfig(name: String, connector: String, active: Boolean, host: String, port: Int, user: String, password: String)
 
 abstract class ConfigError(reason: String)       extends Exception(reason)
