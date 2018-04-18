@@ -4034,9 +4034,9 @@ pretty-format@^21.2.1:
     ansi-regex "^3.0.0"
     ansi-styles "^3.2.0"
 
-prisma-json-schema@0.0.3:
-  version "0.0.3"
-  resolved "https://registry.yarnpkg.com/prisma-json-schema/-/prisma-json-schema-0.0.3.tgz#d5877fbf07300fe82b62f1bc04efe658843d9966"
+prisma-json-schema@0.0.4:
+  version "0.0.4"
+  resolved "https://registry.yarnpkg.com/prisma-json-schema/-/prisma-json-schema-0.0.4.tgz#4ecee29c351e382fb833dad83a38c62961380458"
 
 prisma-json-schema@^0.0.1:
   version "0.0.1"

@@ -439,14 +439,13 @@ Note: prisma local start will be deprecated soon in favor of the direct usage of
         )
       }
     }
-
-    const schemaChanged = await this.generateSchema(
-      cluster,
-      serviceName,
-      stageName,
-    )
-    if (schemaChanged) {
-      await this.graphqlPrepare()
+    const hooks = this.definition.getHooks('post-deploy')
+    for (const hook of hooks) {
+      const splittedHook = hook.split(' ')
+      this.out.action.start(`Running ${chalk.cyan(hook)}`)
+      const result = await spawn(splittedHook[0], splittedHook.slice(1))
+      this.out.action.stop()
+      this.out.log(result)
     }
   }
 

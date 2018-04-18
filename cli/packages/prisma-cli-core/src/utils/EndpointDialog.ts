@@ -97,7 +97,13 @@ export class EndpointDialog {
   }
 
   decodeName(name) {
-    return decodeMap[name] || name
+    let replaced = name
+    Object.keys(decodeMap).forEach(item => {
+      if (replaced.includes(item)) {
+        replaced = replaced.replace(item, decodeMap[item])
+      }
+    })
+    return replaced
   }
 
   async handleChoice({

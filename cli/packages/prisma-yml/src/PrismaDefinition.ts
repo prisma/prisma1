@@ -26,6 +26,8 @@ export interface EnvVars {
   [key: string]: string | undefined
 }
 
+export type HookType = 'post-deploy'
+
 export class PrismaDefinitionClass {
   definition?: PrismaDefinition
   rawJson?: any
@@ -377,6 +379,24 @@ If it is a private cluster, make sure that you're logged in with ${chalk.bold.gr
     }
 
     return null
+  }
+
+  getHooks(hookType: HookType): string[] {
+    if (
+      this.definition &&
+      this.definition.hooks &&
+      this.definition.hooks[hookType]
+    ) {
+      const hooks = this.definition.hooks[hookType]
+      if (typeof hooks !== 'string' && !Array.isArray(hooks)) {
+        throw new Error(
+          `Hook ${hookType} provided in prisma.yml must be string or an array of strings.`,
+        )
+      }
+      return typeof hooks === 'string' ? [hooks] : hooks
+    }
+
+    return []
   }
 }
 
