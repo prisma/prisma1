@@ -56,6 +56,7 @@ export class EndpointDialog {
   client: Client
   env: Environment
   config: Config
+  showedLines = 0
   constructor(out: Output, client: Client, env: Environment, config: Config) {
     this.out = out
     this.client = client
@@ -79,6 +80,7 @@ export class EndpointDialog {
     )
 
     const { choice } = await this.out.prompt(question)
+    this.showedLines += 2
 
     return this.handleChoice({
       choice: this.decodeName(choice),
@@ -166,6 +168,8 @@ export class EndpointDialog {
     ) {
       stage = await this.askForStage('dev')
     }
+
+    this.out.up(this.showedLines)
 
     return {
       endpoint: getEndpoint(cluster, service, stage, workspace),
@@ -357,7 +361,7 @@ export class EndpointDialog {
 
     const { stage } = await this.out.prompt(question)
 
-    // this.showedLines += 1
+    this.showedLines += 1
 
     return stage
   }
@@ -372,7 +376,7 @@ export class EndpointDialog {
 
     const { service } = await this.out.prompt(question)
 
-    this.out.up(1)
+    this.showedLines += 1
 
     return service
   }
@@ -387,7 +391,7 @@ export class EndpointDialog {
 
     const { endpoint } = await this.out.prompt(question)
 
-    // this.showedLines += 1
+    this.showedLines += 1
 
     return endpoint
   }
