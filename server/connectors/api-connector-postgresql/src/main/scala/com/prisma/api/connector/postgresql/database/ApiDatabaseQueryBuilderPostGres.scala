@@ -146,7 +146,7 @@ object ApiDatabaseQueryBuilderPostGres {
                            field: Field,
                            nodeIds: Vector[IdGCValue]): DBIOAction[Vector[ScalarListValues], NoStream, Effect] = {
     val query = sql"""select "nodeId", "position", "value" from "#$projectId"."#${modelName}_#${field.name}" where "nodeId" in (""" ++ combineByComma(
-      nodeIds.map(gcValueToSQLBuilder)) ++ sql")"
+      nodeIds.map(v => sql"$v")) ++ sql")"
 
     query.as[ScalarListElement](getResultForScalarListField(field)).map { scalarListElements =>
       val grouped: Map[Id, Vector[ScalarListElement]] = scalarListElements.groupBy(_.nodeId)
