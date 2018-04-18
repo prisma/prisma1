@@ -301,11 +301,11 @@ export class EndpointDialog {
                 'Set up a new Prisma server for local development (requires Docker):',
               ),
             ),
-            ...choices.slice(4, 6),
+            ...choices.slice(choices.length - 2),
           ]
       const finalChoices = [
         new inquirer.Separator(chalk.bold('Use an existing Prisma server')),
-        ...choices.slice(0, 4),
+        ...choices.slice(0, clusterChoices.length + 2),
         new inquirer.Separator('                       '),
         ...dockerChoices,
       ]
