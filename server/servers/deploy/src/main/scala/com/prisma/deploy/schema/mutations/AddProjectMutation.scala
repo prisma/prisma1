@@ -1,7 +1,7 @@
 package com.prisma.deploy.schema.mutations
 
 import com.prisma.deploy.connector.{DeployConnector, MigrationPersistence, ProjectPersistence}
-import com.prisma.deploy.schema.{InvalidServiceName, InvalidServiceStage, ProjectAlreadyExists}
+import com.prisma.deploy.schema._
 import com.prisma.deploy.validation.NameConstraints
 import com.prisma.shared.models._
 import com.prisma.utils.await.AwaitUtils
@@ -51,16 +51,13 @@ case class AddProjectMutation(
   }
 
   private def validate(): Unit = {
-    if (!NameConstraints.isValidServiceName(args.name)) {
-      throw InvalidServiceName(args.name)
-    }
-    if (!NameConstraints.isValidServiceStage(args.stage)) {
-      throw InvalidServiceStage(args.stage)
-    }
+    if (ProjectId.reservedServiceAndStageNames.contains(args.name)) throw ReservedServiceName(args.name)
+    if (ProjectId.reservedServiceAndStageNames.contains(args.stage)) throw ReservedStageName(args.stage)
+    if (!NameConstraints.isValidServiceName(args.name)) throw InvalidServiceName(args.name)
+    if (!NameConstraints.isValidServiceStage(args.stage)) throw InvalidServiceStage(args.stage)
+
     val projectForGivenId = projectPersistence.load(projectId).await()
-    if (projectForGivenId.isDefined) {
-      throw ProjectAlreadyExists(name = args.name, stage = args.stage)
-    }
+    if (projectForGivenId.isDefined) throw ProjectAlreadyExists(name = args.name, stage = args.stage)
   }
 }
 
