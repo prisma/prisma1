@@ -12,7 +12,7 @@ import { Seeder } from '../seed/Seeder'
 import * as childProcess from 'child_process'
 import * as semver from 'semver'
 const debug = require('debug')('deploy')
-import { prettyTime, concatName } from '../../util'
+import { prettyTime, concatName, defaultDockerCompose } from '../../util'
 import { spawn } from '../../spawn'
 import * as sillyname from 'sillyname'
 import { getSchemaPathFromConfig } from './getSchemaPathFromConfig'
@@ -103,6 +103,7 @@ ${chalk.gray(
      */
     let workspace
     let cluster
+    let dockerComposeYml = defaultDockerCompose
     if (!serviceName || !stage || interactive) {
       const endpointDialog = new EndpointDialog(
         this.out,
@@ -115,6 +116,7 @@ ${chalk.gray(
       workspace = results.workspace
       serviceName = results.service
       stage = results.stage
+      dockerComposeYml = results.dockerComposeYml
       this.definition.replaceEndpoint(results.endpoint)
       this.out.log(
         `\nWritten endpoint \`${chalk.bold(
@@ -134,9 +136,9 @@ ${chalk.gray(
       !await cluster.isOnline() &&
       !fs.readdirSync(this.config.definitionDir).includes('docker-compose.yml')
     ) {
-      fs.copySync(
-        path.join(__dirname, '../init/boilerplate/docker-compose.yml'),
+      fs.writeFileSync(
         path.join(this.config.definitionDir, 'docker-compose.yml'),
+        dockerComposeYml,
       )
       this.out.log(
         `Created docker-compose.yml with a local prisma server.

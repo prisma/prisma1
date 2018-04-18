@@ -76,14 +76,14 @@ Either try using a new directory name, or remove the files listed above.
       path.join(__dirname, 'boilerplate', 'prisma.yml'),
       path.join(this.config.definitionDir, 'prisma.yml'),
     )
-    fs.copySync(
-      path.join(__dirname, 'boilerplate', 'datamodel.graphql'),
+    fs.writeFileSync(
       path.join(this.config.definitionDir, 'datamodel.graphql'),
+      results.datamodel,
     )
     if (results.cluster!.local) {
-      fs.copySync(
-        path.join(__dirname, 'boilerplate', 'docker-compose.yml'),
+      fs.writeFileSync(
         path.join(this.config.definitionDir, 'docker-compose.yml'),
+        results.dockerComposeYml,
       )
     }
     let relativeDir = path.relative(process.cwd(), this.config.definitionDir)

@@ -37,13 +37,13 @@ export class SdlPrinter {
   }
 
   printRelationField(field: RelationField) {
-    return `\r\n  ${field.remoteTable}s: [${this.capitalizeFirstLetter(
+    return `\n  ${field.remoteTable}s: [${this.capitalizeFirstLetter(
       field.remoteTable,
     )}] @postgres(foreignColumn: "${field.remoteColumn.name}")`
   }
 
   printField(column: Column) {
-    return `\r\n  ${this.printFieldName(column)}: ${this.printFieldType(
+    return `\n  ${this.printFieldName(column)}: ${this.printFieldType(
       column,
     )}${this.printFieldOptional(column)}${this.printFieldDirective(column)}`
   }

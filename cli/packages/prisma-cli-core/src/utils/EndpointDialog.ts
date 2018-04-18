@@ -2,10 +2,11 @@ import { Output, Client, Config } from 'prisma-cli-engine'
 import * as inquirer from 'inquirer'
 import chalk from 'chalk'
 import { Cluster, Environment, getEndpoint } from 'prisma-yml'
-import { concatName } from '../util'
+import { concatName, defaultDataModel, defaultDockerCompose } from '../util'
 import * as sillyname from 'sillyname'
 import * as path from 'path'
 import * as fs from 'fs'
+import { Introspector } from 'prisma-db-introspection'
 
 export interface GetEndpointParams {
   folderName: string
@@ -31,6 +32,8 @@ export interface GetEndpointResult {
   stage: string
   localClusterRunning: boolean
   database?: DatabaseCredentials
+  dockerComposeYml: string
+  datamodel: string
 }
 
 export interface HandleChoiceInput {
@@ -119,6 +122,8 @@ export class EndpointDialog {
     let service = 'default'
     let stage = 'default'
     let credentials
+    let dockerComposeYml = defaultDockerCompose
+    let datamodel = defaultDataModel
 
     switch (choice) {
       case 'Use other server':
@@ -133,6 +138,32 @@ export class EndpointDialog {
         break
       case 'Use existing database':
         credentials = await this.getDatabase()
+        this.out.action.start(`Connecting to database`)
+        const introspector = new Introspector(credentials)
+        let schemas
+        try {
+          schemas = await introspector.listSchemas()
+        } catch (e) {
+          throw new Error(`Could not connect to database. ${e.message}`)
+        }
+        // TODO: ask for postres schema if more than one
+        if (schemas && schemas.length > 0) {
+          datamodel = await introspector.introspect(schemas[0])
+
+          dockerComposeYml += `\
+        databases:
+          default:
+            connector: postgres
+            active: ${!credentials.alreadyData}
+            host: ${credentials.host}
+            port: ${credentials.port || 5432} 
+            user: ${credentials.user}
+            password: ${credentials.password}
+            schema: ${schemas[0]}
+            database: ${credentials.database}
+`
+        }
+        this.out.action.stop()
         cluster = new Cluster(this.out, 'custom', 'http://localhost:4466')
         break
       case 'sandbox-eu1':
@@ -186,6 +217,8 @@ export class EndpointDialog {
       stage,
       localClusterRunning,
       database: credentials,
+      dockerComposeYml,
+      datamodel,
     }
   }
 
@@ -331,7 +364,7 @@ export class EndpointDialog {
     const { result } = await this.out.prompt({
       name: 'result',
       type: 'list',
-      message: `What kinf of database do you want to deploy to?`,
+      message: `What kind of database do you want to deploy to?`,
       choices: [
         {
           name: 'mysql',
