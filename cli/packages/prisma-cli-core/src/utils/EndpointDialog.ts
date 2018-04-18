@@ -80,7 +80,8 @@ export class EndpointDialog {
     )
 
     const { choice } = await this.out.prompt(question)
-    this.showedLines += 2
+    this.out.up(1)
+    this.showedLines += 1
 
     return this.handleChoice({
       choice: this.decodeName(choice),
@@ -248,26 +249,25 @@ export class EndpointDialog {
         ...sandboxChoices,
       ]
       const choices = this.convertChoices(rawChoices)
+      const finalChoices = [
+        new inquirer.Separator(
+          chalk.bold(
+            'You can set up Prisma  for local development (requires Docker)',
+          ),
+        ),
+        ...choices.slice(0, 2),
+        new inquirer.Separator('                       '),
+        new inquirer.Separator(
+          chalk.bold('Or use a free hosted Prisma sandbox (includes database)'),
+        ),
+        ...choices.slice(2, 4),
+      ]
       return {
         name: 'choice',
         type: 'list',
         message: `Connect to your database, set up a new one or use hosted sandbox?`,
-        choices: [
-          new inquirer.Separator(
-            chalk.bold(
-              'You can set up Prisma  for local development (requires Docker)',
-            ),
-          ),
-          ...choices.slice(0, 2),
-          new inquirer.Separator('                       '),
-          new inquirer.Separator(
-            chalk.bold(
-              'Or use a free hosted Prisma sandbox (includes database)',
-            ),
-          ),
-          ...choices.slice(2, 4),
-        ],
-        pageSize: 9,
+        choices: finalChoices,
+        pageSize: finalChoices.length,
       }
     } else {
       const clusterChoices =
@@ -297,17 +297,18 @@ export class EndpointDialog {
             ),
             ...choices.slice(4, 6),
           ]
+      const finalChoices = [
+        new inquirer.Separator(chalk.bold('Use an existing Prisma server')),
+        ...choices.slice(0, 4),
+        new inquirer.Separator('                       '),
+        ...dockerChoices,
+      ]
       return {
         name: 'choice',
         type: 'list',
         message: `Connect to your database, set up a new one or use existing Prisma server?`,
-        choices: [
-          new inquirer.Separator(chalk.bold('Use an existing Prisma server')),
-          ...choices.slice(0, 4),
-          new inquirer.Separator('                       '),
-          ...dockerChoices,
-        ],
-        // pageSize: 9,
+        choices: finalChoices,
+        pageSize: finalChoices.length,
       }
     }
   }
@@ -360,8 +361,9 @@ export class EndpointDialog {
     }
 
     const { stage } = await this.out.prompt(question)
+    this.out.up(1)
 
-    this.showedLines += 1
+    // this.showedLines += 1
 
     return stage
   }
@@ -375,8 +377,9 @@ export class EndpointDialog {
     }
 
     const { service } = await this.out.prompt(question)
+    this.out.up(1)
 
-    this.showedLines += 1
+    // this.showedLines += 1
 
     return service
   }
@@ -390,8 +393,9 @@ export class EndpointDialog {
     }
 
     const { endpoint } = await this.out.prompt(question)
+    this.out.up(1)
 
-    this.showedLines += 1
+    // this.showedLines += 1
 
     return endpoint
   }
