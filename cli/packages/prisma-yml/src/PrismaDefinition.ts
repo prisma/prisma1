@@ -16,6 +16,7 @@ import { URL } from 'url'
 import chalk from 'chalk'
 import { clusterEndpointMap, clusterEndpointMapReverse } from './constants'
 import { replaceYamlValue } from './utils/yamlComment'
+import { DefinitionMigrator } from './utils/DefinitionMigrator'
 
 interface ErrorMessage {
   message: string
@@ -63,18 +64,14 @@ export class PrismaDefinitionClass {
     }
     dotenv.config({ path: envPath })
     if (this.definitionPath) {
-      const { definition, rawJson } = await readDefinition(
-        this.definitionPath,
-        args,
-        this.out,
-        this.envVars,
-      )
-      this.definition = definition
-      this.rawJson = rawJson
-      this.definitionString = fs.readFileSync(this.definitionPath, 'utf-8')
-      this.typesString = this.getTypesString(this.definition)
-      const secrets = this.definition.secret
-      this.secrets = secrets ? secrets.replace(/\s/g, '').split(',') : null
+      await this.loadDefinition(args)
+      const migrator = new DefinitionMigrator(this)
+      const migrated = migrator.migrate(this.definitionPath)
+      // if there was a migration, reload the definition
+      if (migrated) {
+        await this.loadDefinition(args)
+      }
+
       this.validate()
     } else {
       throw new Error(
@@ -83,15 +80,33 @@ export class PrismaDefinitionClass {
     }
   }
 
+  private async loadDefinition(args) {
+    const { definition, rawJson } = await readDefinition(
+      this.definitionPath!,
+      args,
+      this.out,
+      this.envVars,
+    )
+    this.definition = definition
+    this.rawJson = rawJson
+    this.definitionString = fs.readFileSync(this.definitionPath!, 'utf-8')
+    this.typesString = this.getTypesString(this.definition)
+    const secrets = this.definition.secret
+    this.secrets = secrets ? secrets.replace(/\s/g, '').split(',') : null
+  }
+
+  get endpoint(): string | undefined {
+    return (
+      (this.definition && this.definition.endpoint) ||
+      process.env.PRISMA_MANAGEMENT_API_ENDPOINT
+    )
+  }
+
   get clusterBaseUrl(): string | undefined {
-    if (
-      !this.definition ||
-      this.definition.cluster ||
-      !this.definition.endpoint
-    ) {
+    if (!this.definition || this.definition.cluster || !this.endpoint) {
       return undefined
     }
-    const { clusterBaseUrl } = parseEndpoint(this.definition.endpoint)
+    const { clusterBaseUrl } = parseEndpoint(this.endpoint)
     return clusterBaseUrl
   }
 
@@ -102,10 +117,10 @@ export class PrismaDefinitionClass {
     if (this.definition.service) {
       return this.definition.service
     }
-    if (!this.definition.endpoint) {
+    if (!this.endpoint) {
       return undefined
     }
-    const { service } = parseEndpoint(this.definition.endpoint)
+    const { service } = parseEndpoint(this.endpoint)
     return service
   }
 
@@ -116,10 +131,10 @@ export class PrismaDefinitionClass {
     if (this.definition.stage) {
       return this.definition.stage
     }
-    if (!this.definition.endpoint) {
+    if (!this.endpoint) {
       return undefined
     }
-    const { stage } = parseEndpoint(this.definition.endpoint)
+    const { stage } = parseEndpoint(this.endpoint)
     return stage
   }
 
@@ -130,10 +145,10 @@ export class PrismaDefinitionClass {
     if (this.definition.cluster) {
       return this.definition.cluster
     }
-    if (!this.definition.endpoint) {
+    if (!this.endpoint) {
       return undefined
     }
-    const { clusterName } = parseEndpoint(this.definition.endpoint)
+    const { clusterName } = parseEndpoint(this.endpoint)
     return clusterName
   }
 
@@ -216,7 +231,7 @@ If it is a private cluster, make sure that you're logged in with ${chalk.bold.gr
       }
     }
 
-    if (this.definition && this.definition.endpoint) {
+    if (this.definition && this.endpoint) {
       const {
         clusterBaseUrl,
         isPrivate,
@@ -224,15 +239,13 @@ If it is a private cluster, make sure that you're logged in with ${chalk.bold.gr
         shared,
         workspaceSlug,
         clusterName,
-      } = parseEndpoint(this.definition.endpoint)
+      } = parseEndpoint(this.endpoint)
       if (clusterBaseUrl) {
         const cluster = new Cluster(
           this.out!,
           clusterName,
           clusterBaseUrl,
-          shared
-            ? this.env.cloudSessionKey
-            : process.env.PRISMA_MANAGEMENT_SECRET,
+          shared ? this.env.cloudSessionKey : undefined,
           local,
           shared,
           isPrivate,
@@ -284,8 +297,8 @@ If it is a private cluster, make sure that you're logged in with ${chalk.bold.gr
       }
     }
 
-    if (this.definition && this.definition.endpoint) {
-      const { workspaceSlug } = parseEndpoint(this.definition.endpoint)
+    if (this.definition && this.endpoint) {
+      const { workspaceSlug } = parseEndpoint(this.endpoint)
       if (workspaceSlug) {
         return workspaceSlug
       }
@@ -443,6 +456,16 @@ export function getEndpoint(
   }
 
   return `${url}/${service}/${stage}`
+}
+
+export function getEndpointFromRawProps(
+  clusterWorkspace: string,
+  service: string,
+  stage: string,
+) {
+  const splitted = clusterWorkspace.split('/')
+  const cluster = splitted.length > 1 ? splitted[1] : splitted[0]
+  const workspace = splitted.length > 1 ? splitted[0] : undefined
 }
 
 function getClusterName(origin): string {

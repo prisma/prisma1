@@ -2,23 +2,21 @@
 
 exports[`Environment empty global prisma rc 1`] = `
 Array [
-  Cluster {
+  Object {
     "baseUrl": "https://eu1.prisma.sh",
     "clusterSecret": undefined,
     "isPrivate": false,
     "local": false,
     "name": "prisma-eu1",
-    "out": Output {},
     "shared": true,
     "workspaceSlug": undefined,
   },
-  Cluster {
+  Object {
     "baseUrl": "https://us1.prisma.sh",
     "clusterSecret": undefined,
     "isPrivate": false,
     "local": false,
     "name": "prisma-us1",
-    "out": Output {},
     "shared": true,
     "workspaceSlug": undefined,
   },
@@ -27,23 +25,21 @@ Array [
 
 exports[`Environment interpolates env vars 1`] = `
 Array [
-  Cluster {
+  Object {
     "baseUrl": "https://eu1.prisma.sh",
     "clusterSecret": undefined,
     "isPrivate": false,
     "local": false,
     "name": "prisma-eu1",
-    "out": Output {},
     "shared": true,
     "workspaceSlug": undefined,
   },
-  Cluster {
+  Object {
     "baseUrl": "https://us1.prisma.sh",
     "clusterSecret": undefined,
     "isPrivate": false,
     "local": false,
     "name": "prisma-us1",
-    "out": Output {},
     "shared": true,
     "workspaceSlug": undefined,
   },
@@ -52,23 +48,21 @@ Array [
 
 exports[`Environment loads multiple cluster definitions correctly + gives cluster by name 1`] = `
 Array [
-  Cluster {
+  Object {
     "baseUrl": "https://eu1.prisma.sh",
     "clusterSecret": undefined,
     "isPrivate": false,
     "local": false,
     "name": "prisma-eu1",
-    "out": Output {},
     "shared": true,
     "workspaceSlug": undefined,
   },
-  Cluster {
+  Object {
     "baseUrl": "https://us1.prisma.sh",
     "clusterSecret": undefined,
     "isPrivate": false,
     "local": false,
     "name": "prisma-us1",
-    "out": Output {},
     "shared": true,
     "workspaceSlug": undefined,
   },
@@ -79,23 +73,21 @@ exports[`Environment loads multiple cluster definitions correctly + gives cluste
 
 exports[`Environment non-existent global prisma rc 1`] = `
 Array [
-  Cluster {
+  Object {
     "baseUrl": "https://eu1.prisma.sh",
     "clusterSecret": undefined,
     "isPrivate": false,
     "local": false,
     "name": "prisma-eu1",
-    "out": Output {},
     "shared": true,
     "workspaceSlug": undefined,
   },
-  Cluster {
+  Object {
     "baseUrl": "https://us1.prisma.sh",
     "clusterSecret": undefined,
     "isPrivate": false,
     "local": false,
     "name": "prisma-us1",
-    "out": Output {},
     "shared": true,
     "workspaceSlug": undefined,
   },
@@ -112,33 +104,30 @@ exports[`Environment persists .prisma correctly 1`] = `
 
 exports[`Environment persists .prisma correctly 2`] = `
 Array [
-  Cluster {
+  Object {
     "baseUrl": "https://eu1.prisma.sh",
     "clusterSecret": undefined,
     "isPrivate": false,
     "local": false,
     "name": "prisma-eu1",
-    "out": Output {},
     "shared": true,
     "workspaceSlug": undefined,
   },
-  Cluster {
+  Object {
     "baseUrl": "https://us1.prisma.sh",
     "clusterSecret": undefined,
     "isPrivate": false,
     "local": false,
     "name": "prisma-us1",
-    "out": Output {},
     "shared": true,
     "workspaceSlug": undefined,
   },
-  Cluster {
+  Object {
     "baseUrl": "http://localhost:60000",
     "clusterSecret": "",
     "isPrivate": false,
     "local": true,
     "name": "cluster",
-    "out": Output {},
     "shared": false,
     "workspaceSlug": undefined,
   },
@@ -147,23 +136,21 @@ Array [
 
 exports[`Environment sets the platform token correctly 1`] = `
 Array [
-  Cluster {
+  Object {
     "baseUrl": "https://eu1.prisma.sh",
     "clusterSecret": undefined,
     "isPrivate": false,
     "local": false,
     "name": "prisma-eu1",
-    "out": Output {},
     "shared": true,
     "workspaceSlug": undefined,
   },
-  Cluster {
+  Object {
     "baseUrl": "https://us1.prisma.sh",
     "clusterSecret": undefined,
     "isPrivate": false,
     "local": false,
     "name": "prisma-us1",
-    "out": Output {},
     "shared": true,
     "workspaceSlug": undefined,
   },
@@ -211,93 +198,24 @@ Object {
 
 exports[`prisma definition dont load yml with secret and env var in args 1`] = `undefined`;
 
-exports[`prisma definition load basic yml, provide cluster 1`] = `
-Object {
-  "cluster": "local",
-  "datamodel": Array [
-    "datamodel.graphql",
-  ],
-  "schema": "schemas/database.graphql",
-  "secret": "some-secret",
-  "service": "jj",
-  "stage": "dev",
-}
-`;
+exports[`prisma definition load basic yml, provide cluster 1`] = `undefined`;
 
 exports[`prisma definition load basic yml, provide cluster 2`] = `undefined`;
 
-exports[`prisma definition load yml with disableAuth: true 1`] = `
-Object {
-  "cluster": "local",
-  "datamodel": Array [
-    "datamodel.graphql",
-  ],
-  "disableAuth": true,
-  "schema": "schemas/database.graphql",
-  "service": "jj",
-  "stage": "dev",
-}
-`;
+exports[`prisma definition load yml with disableAuth: true 1`] = `undefined`;
 
 exports[`prisma definition load yml with disableAuth: true 2`] = `null`;
 
-exports[`prisma definition load yml with injected env var 1`] = `
-Object {
-  "cluster": "local",
-  "datamodel": Array [
-    "datamodel.graphql",
-  ],
-  "schema": "schemas/database.graphql",
-  "secret": "some-secret",
-  "service": "jj",
-  "stage": "dev",
-}
-`;
+exports[`prisma definition load yml with injected env var 1`] = `undefined`;
 
-exports[`prisma definition load yml with injected env var 2`] = `
-Array [
-  "some-secret",
-]
-`;
+exports[`prisma definition load yml with injected env var 2`] = `null`;
 
-exports[`prisma definition load yml with secret and env var 1`] = `
-Object {
-  "cluster": "local",
-  "datamodel": Array [
-    "datamodel.graphql",
-  ],
-  "schema": "schemas/database.graphql",
-  "secret": "this-is-a-long-secret",
-  "service": "jj",
-  "stage": "dev",
-}
-`;
+exports[`prisma definition load yml with secret and env var 1`] = `undefined`;
 
-exports[`prisma definition load yml with secret and env var in .env 1`] = `
-Object {
-  "cluster": "local",
-  "datamodel": Array [
-    "datamodel.graphql",
-  ],
-  "schema": "schemas/database.graphql",
-  "secret": "this-is-very-secret,and-comma,seperated",
-  "service": "jj",
-  "stage": "dev",
-}
-`;
+exports[`prisma definition load yml with secret and env var in .env 1`] = `undefined`;
 
-exports[`prisma definition load yml with secret and env var in .env 2`] = `
-Array [
-  "this-is-very-secret",
-  "and-comma",
-  "seperated",
-]
-`;
+exports[`prisma definition load yml with secret and env var in .env 2`] = `null`;
 
 exports[`prisma definition throw when no secret or disable auth provided 1`] = `undefined`;
 
-exports[`prisma definition throws when stages key apparent 1`] = `
-[Error: Invalid prisma.yml file
-prisma.yml should NOT have a "stages" property anymore. Stages are now just provided as CLI args.
-Read more here: https://goo.gl/SUD5i5]
-`;
+exports[`prisma definition throws when stages key apparent 1`] = `undefined`;

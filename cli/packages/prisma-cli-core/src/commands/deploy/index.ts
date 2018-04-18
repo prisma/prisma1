@@ -20,6 +20,7 @@ import * as findUp from 'find-up'
 import getGraphQLCliBin from '../../utils/getGraphQLCliBin'
 import Up from '../local/up'
 import { EndpointDialog } from '../../utils/EndpointDialog'
+import { isDockerComposeInstalled } from '../../utils/dockerComposeInstalled'
 
 export default class Deploy extends Command {
   static topic = 'deploy'
@@ -80,7 +81,8 @@ ${chalk.gray(
     /**
      * Get Args
      */
-    const { force, watch, interactive } = this.flags
+    const { force, watch } = this.flags
+    const interactive = this.flags.new // new is a reserved keyword, so we use interactive instead
     const envFile = this.flags['env-file']
     const dryRun = this.flags['dry-run']
 
@@ -93,22 +95,62 @@ ${chalk.gray(
      */
     await this.definition.load(this.flags, envFile)
 
-    const serviceName = this.definition.service!
-    const stage = this.definition.stage!
+    let serviceName = this.definition.service!
+    let stage = this.definition.stage!
 
     /**
      * If no endpoint or service provided, ask for it
      */
+    let workspace
     let cluster
     if (!serviceName || !stage || interactive) {
-      const endpointDialog = new EndpointDialog(this.out, this.client, this.env)
-      const results = await endpointDialog.getEndpoint({
-        folderName: path.dirname(this.config.definitionDir),
-      })
+      const endpointDialog = new EndpointDialog(
+        this.out,
+        this.client,
+        this.env,
+        this.config,
+      )
+      const results = await endpointDialog.getEndpoint()
       cluster = results.cluster
-      process.exit(0)
+      workspace = results.workspace
+      serviceName = results.service
+      stage = results.stage
+      this.definition.replaceEndpoint(results.endpoint)
+      this.out.log(
+        `\nWritten endpoint \`${chalk.bold(
+          results.endpoint,
+        )}\` to prisma.yml\n`,
+      )
     } else {
       cluster = this.definition.getCluster(false)
+    }
+
+    /**
+     * If no cluster is running locally, don't start anymore but create docker-compose.yml and ask for starting
+     */
+    if (
+      cluster.local &&
+      !await cluster.isOnline() &&
+      !fs.readdirSync(this.config.definitionDir).includes('docker-compose.yml')
+    ) {
+      fs.copySync(
+        path.join(__dirname, '../init/boilerplate/docker-compose.yml'),
+        path.join(this.config.definitionDir, 'docker-compose.yml'),
+      )
+      this.out.log(
+        `Created docker-compose.yml with a local prisma server.
+Please run ${chalk.cyan('$ docker-compose up -d')} to start your local prisma.
+Note: prisma local start will be deprecated soon in favor of the direct usage of docker-compose.`,
+      )
+      const dockerComposeInstalled = await isDockerComposeInstalled()
+      if (!dockerComposeInstalled) {
+        this.out.log(
+          `To install docker-compose, please follow this link: ${chalk.cyan(
+            'https://docs.docker.com/compose/install/',
+          )}`,
+        )
+      }
+      process.exit(1)
     }
 
     /**
@@ -131,33 +173,23 @@ ${chalk.gray(
     if (cluster) {
       this.env.setActiveCluster(cluster)
     } else {
-      throw new Error(
-        `No cluster set. Please set the "cluster" property in your prisma.yml`,
-      )
+      throw new Error(`Cluster ${cluster} does not exist.`)
     }
 
-    const isOnline = cluster ? await cluster.isOnline() : false
-    if (
-      this.definition.definition.cluster === 'local' &&
-      (!cluster || !isOnline)
-    ) {
-      cluster = await this.localUp()
-    } else if (!isOnline && cluster && cluster.local) {
-      cluster = await this.localUp()
-    } else if (cluster && !isOnline) {
-      throw new Error(
-        `Could not connect to cluster ${chalk.bold(cluster.name)} with host ${
-          cluster.baseUrl
-        }. Did you provide the right port?`,
-      )
-    }
-
+    /**
+     * Go up after dialogs have been shown
+     */
     if (this.showedLines > 0) {
       this.out.up(this.showedLines)
     }
 
+    /**
+     * Make sure we're logged in when a non-public cluster has been chosen
+     */
     if (cluster && !cluster.local) {
-      const workspace = this.definition.getWorkspace()
+      if (!workspace) {
+        workspace = this.definition.getWorkspace() || '*'
+      }
       if (
         workspace &&
         !workspace.startsWith('public-') &&
@@ -168,42 +200,25 @@ ${chalk.gray(
       }
     }
 
-    await this.client.initClusterClient(
-      cluster,
-      this.definition.getWorkspace() || '*',
-      serviceName,
-      stage,
-    )
+    await this.client.initClusterClient(cluster, workspace, serviceName, stage)
 
     await this.checkVersions(cluster!)
 
     let projectNew = false
-    if (
-      !await this.projectExists(
-        cluster,
-        serviceName,
-        stage,
-        this.definition.getWorkspace(),
-      )
-    ) {
-      await this.addProject(
-        cluster,
-        serviceName,
-        stage,
-        this.definition.getWorkspace(),
-      )
+    if (!await this.projectExists(cluster, serviceName, stage, workspace)) {
+      await this.addProject(cluster, serviceName, stage, workspace)
       projectNew = true
     }
 
     await this.deploy(
       stage,
       serviceName,
-      cluster!,
-      this.definition.definition!.cluster!,
+      cluster,
+      cluster.name,
       force,
       dryRun,
       projectNew,
-      this.definition.getWorkspace(),
+      workspace,
     )
 
     if (watch) {
@@ -216,13 +231,13 @@ ${chalk.gray(
               await this.definition.load(this.flags)
               await this.deploy(
                 stage,
-                this.definition.definition!.service!,
-                cluster!,
-                this.definition.definition!.cluster!,
+                serviceName,
+                cluster,
+                cluster.name,
                 force,
                 dryRun,
                 false,
-                this.definition.getWorkspace(),
+                workspace,
               )
               this.out.log('Watching for change...')
             }
