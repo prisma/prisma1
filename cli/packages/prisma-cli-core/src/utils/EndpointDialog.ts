@@ -41,6 +41,16 @@ export interface HandleChoiceInput {
   clusters?: Cluster[]
 }
 
+const encodeMap = {
+  'prisma-eu1': 'sandbox-eu1',
+  'prisma-us1': 'sandbox-us1',
+}
+
+const decodeMap = {
+  'sandbox-eu1': 'prisma-eu1',
+  'sandbox-us1': 'prisma-us1',
+}
+
 export class EndpointDialog {
   out: Output
   client: Client
@@ -71,12 +81,20 @@ export class EndpointDialog {
     const { choice } = await this.out.prompt(question)
 
     return this.handleChoice({
-      choice,
+      choice: this.decodeName(choice),
       loggedIn,
       folderName,
       localClusterRunning,
       clusters,
     })
+  }
+
+  encodeName(name) {
+    return encodeMap[name] || name
+  }
+
+  decodeName(name) {
+    return decodeMap[name] || name
   }
 
   async handleChoice({
@@ -251,8 +269,10 @@ export class EndpointDialog {
       const clusterChoices =
         clusters.length > 0
           ? clusters.map(c => [
-              `${c.workspaceSlug || ''}/${c.name}`,
-              `Production Prisma cluster`,
+              `${c.workspaceSlug ? `${c.workspaceSlug}/` : ''}${this.encodeName(
+                c.name,
+              )}`,
+              this.getClusterDescription(c),
             ])
           : sandboxChoices
       const rawChoices = [
@@ -286,6 +306,14 @@ export class EndpointDialog {
         // pageSize: 9,
       }
     }
+  }
+
+  private getClusterDescription(c: Cluster) {
+    if (c.shared) {
+      return 'Free development server on Prisma Cloud (incl. database)'
+    }
+
+    return `Production Prisma cluster`
   }
 
   private async askForDatabaseType() {

@@ -72,7 +72,20 @@ Either try using a new directory name, or remove the files listed above.
     const results = await endpointDialog.getEndpoint()
     this.out.up(3)
 
-    fs.copySync(path.join(__dirname, 'boilerplate'), this.config.definitionDir)
+    fs.copySync(
+      path.join(__dirname, 'boilerplate', 'prisma.yml'),
+      path.join(this.config.definitionDir, 'prisma.yml'),
+    )
+    fs.copySync(
+      path.join(__dirname, 'boilerplate', 'datamodel.graphql'),
+      path.join(this.config.definitionDir, 'datamodel.graphql'),
+    )
+    if (results.cluster!.local) {
+      fs.copySync(
+        path.join(__dirname, 'boilerplate', 'docker-compose.yml'),
+        path.join(this.config.definitionDir, 'docker-compose.yml'),
+      )
+    }
     let relativeDir = path.relative(process.cwd(), this.config.definitionDir)
     relativeDir = relativeDir.length === 0 ? '.' : relativeDir
 
@@ -98,7 +111,11 @@ Created 3 new files:
   ${chalk.cyan(
     'datamodel.graphql',
   )}    GraphQL SDL-based datamodel (foundation for database)
-  ${chalk.cyan('docker-compose.yml')}   Docker configuration file
+  ${
+    results.cluster!.local
+      ? `${chalk.cyan('docker-compose.yml')}   Docker configuration file`
+      : ''
+  }
 
 ${dirString}${deployString}can run ${chalk.cyan(
       '$ prisma deploy',
