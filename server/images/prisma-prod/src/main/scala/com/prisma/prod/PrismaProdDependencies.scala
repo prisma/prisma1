@@ -4,18 +4,17 @@ import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
 import com.prisma.akkautil.http.SimpleHttpClient
 import com.prisma.api.ApiDependencies
-import com.prisma.api.connector.mysql.ApiConnectorImpl
 import com.prisma.api.mutactions.{DatabaseMutactionVerifierImpl, SideEffectMutactionExecutorImpl}
 import com.prisma.api.project.{CachedProjectFetcherImpl, ProjectFetcher}
 import com.prisma.api.schema.{CachedSchemaBuilder, SchemaBuilder}
 import com.prisma.auth.AuthImpl
+import com.prisma.config.PrismaConfig
 import com.prisma.deploy.DeployDependencies
 import com.prisma.deploy.connector.DeployConnector
-import com.prisma.deploy.connector.mysql.MySqlDeployConnector
 import com.prisma.deploy.migration.migrator.{AsyncMigrator, Migrator}
 import com.prisma.deploy.schema.mutations.FunctionValidator
 import com.prisma.deploy.server.auth.{AsymmetricClusterAuth, DummyClusterAuth, SymmetricClusterAuth}
-import com.prisma.image.{Converters, FunctionValidatorImpl, SingleServerProjectFetcher}
+import com.prisma.image.{Converters, FunctionValidatorImpl, ImageUtils, SingleServerProjectFetcher}
 import com.prisma.messagebus._
 import com.prisma.messagebus.pubsub.inmemory.InMemoryAkkaPubSub
 import com.prisma.messagebus.pubsub.rabbit.RabbitAkkaPubSub
@@ -32,10 +31,13 @@ import com.prisma.workers.payloads.{JsonConversions, Webhook => WorkerWebhook}
 import play.api.libs.json.Json
 
 case class PrismaProdDependencies()(implicit val system: ActorSystem, val materializer: ActorMaterializer)
-    extends DeployDependencies
+    extends ImageUtils
+    with DeployDependencies
     with ApiDependencies
     with SubscriptionDependencies
     with WorkerDependencies {
+
+  val config: PrismaConfig = loadConfig()
 
   private val rabbitUri: String = sys.env("RABBITMQ_URI")
 
@@ -49,7 +51,7 @@ case class PrismaProdDependencies()(implicit val system: ActorSystem, val materi
 
   override lazy val migrator: Migrator = AsyncMigrator(migrationPersistence, projectPersistence, deployPersistencePlugin)
   override lazy val clusterAuth = {
-    (sys.env.get("PRISMA_MANAGEMENT_API_JWT_SECRET"), sys.env.get("CLUSTER_PUBLIC_KEY")) match {
+    (config.managementApiSecret, config.legacySecret) match {
       case (Some(jwtSecret), _) if jwtSecret.nonEmpty => SymmetricClusterAuth(jwtSecret)
       case (_, Some(publicKey)) if publicKey.nonEmpty => AsymmetricClusterAuth(publicKey)
       case _                                          => DummyClusterAuth()
@@ -101,10 +103,10 @@ case class PrismaProdDependencies()(implicit val system: ActorSystem, val materi
     RabbitQueue.consumer[WorkerWebhook](rabbitUri, "webhooks")(reporter, JsonConversions.webhookUnmarshaller).asInstanceOf[QueueConsumer[WorkerWebhook]]
   override lazy val httpClient                               = SimpleHttpClient()
   override lazy val apiAuth                                  = AuthImpl
-  override lazy val deployPersistencePlugin: DeployConnector = MySqlDeployConnector(apiConnector.databases.master)(system.dispatcher)
+  override lazy val deployPersistencePlugin: DeployConnector = loadDeployConnector(config)
   override lazy val functionValidator: FunctionValidator     = FunctionValidatorImpl()
 
-  override lazy val apiConnector                = ApiConnectorImpl()
+  override lazy val apiConnector                = loadApiConnector(config)
   override lazy val sideEffectMutactionExecutor = SideEffectMutactionExecutorImpl()
   override lazy val mutactionVerifier           = DatabaseMutactionVerifierImpl
 }

@@ -19,7 +19,7 @@ class ConfigLoaderSpec extends WordSpec with Matchers {
                           |    password: prisma
                         """.stripMargin
 
-      val config = ConfigLoader.load(validConfig)
+      val config = ConfigLoader.loadString(validConfig)
 
       config.isSuccess shouldBe true
       config.get.port shouldBe 4466
@@ -45,7 +45,7 @@ class ConfigLoaderSpec extends WordSpec with Matchers {
                             |    password: prisma
                           """.stripMargin
 
-      val config = ConfigLoader.load(validConfig)
+      val config = ConfigLoader.loadString(validConfig)
 
       config.isSuccess shouldBe true
       config.get.port shouldBe 4466
@@ -74,7 +74,7 @@ class ConfigLoaderSpec extends WordSpec with Matchers {
                             |    password: prisma
                           """.stripMargin
 
-      val config = ConfigLoader.load(invalidConfig)
+      val config = ConfigLoader.loadString(invalidConfig)
 
       config.isSuccess shouldBe false
       config.failed.get shouldBe a[InvalidConfiguration]
@@ -95,7 +95,7 @@ class ConfigLoaderSpec extends WordSpec with Matchers {
                           |    password: prisma
                         """.stripMargin
 
-    val config = ConfigLoader.load(invalidConfig)
+    val config = ConfigLoader.loadString(invalidConfig)
 
     config.isSuccess shouldBe false
     config.failed.get shouldBe a[InvalidConfiguration]
@@ -107,7 +107,7 @@ class ConfigLoaderSpec extends WordSpec with Matchers {
                           |managementApiSecret: somesecret
                         """.stripMargin
 
-    val config = ConfigLoader.load(invalidConfig)
+    val config = ConfigLoader.loadString(invalidConfig)
 
     config.isSuccess shouldBe false
     config.failed.get shouldBe a[InvalidConfiguration]

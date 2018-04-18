@@ -2,10 +2,11 @@ package com.prisma.subscriptions
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
 import com.prisma.api.ApiDependencies
-import com.prisma.api.connector.mysql.ApiConnectorImpl
+import com.prisma.api.connector.mysql.MySqlApiConnector
 import com.prisma.api.mutactions.{DatabaseMutactionVerifierImpl, SideEffectMutactionExecutorImpl}
 import com.prisma.api.project.{ProjectFetcher, ProjectFetcherImpl}
 import com.prisma.api.schema.SchemaBuilder
+import com.prisma.config.ConfigLoader
 import com.prisma.messagebus.testkits.{InMemoryPubSubTestKit, InMemoryQueueTestKit}
 import com.prisma.messagebus.{PubSubPublisher, PubSubSubscriber, QueueConsumer, QueuePublisher}
 import com.prisma.subscriptions.protocol.SubscriptionProtocolV05.Responses.SubscriptionSessionResponseV05
@@ -14,8 +15,15 @@ import com.prisma.subscriptions.protocol.{Converters, SubscriptionRequest}
 import com.prisma.subscriptions.resolving.SubscriptionsManagerForProject.{SchemaInvalidated, SchemaInvalidatedMessage}
 import com.prisma.websocket.protocol.Request
 
+import scala.util.{Failure, Success}
+
 class SubscriptionDependenciesForTest()(implicit val system: ActorSystem, val materializer: ActorMaterializer) extends SubscriptionDependencies {
   override implicit def self: ApiDependencies = this
+
+  val config = ConfigLoader.load() match {
+    case Success(c)   => c
+    case Failure(err) => sys.error(s"Unable to load Prisma config: $err")
+  }
 
   lazy val invalidationTestKit   = InMemoryPubSubTestKit[String]()
   lazy val sssEventsTestKit      = InMemoryPubSubTestKit[String]()
@@ -52,7 +60,7 @@ class SubscriptionDependenciesForTest()(implicit val system: ActorSystem, val ma
   override lazy val sssEventsPubSub                 = ???
   override lazy val webhookPublisher                = ???
 
-  override lazy val apiConnector                = ApiConnectorImpl()
+  override lazy val apiConnector                = MySqlApiConnector(config.databases.head)
   override lazy val sideEffectMutactionExecutor = SideEffectMutactionExecutorImpl()
   override lazy val mutactionVerifier           = DatabaseMutactionVerifierImpl
 }

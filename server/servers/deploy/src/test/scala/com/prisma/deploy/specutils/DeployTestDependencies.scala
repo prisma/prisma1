@@ -3,6 +3,7 @@ package com.prisma.deploy.specutils
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
 import com.prisma.auth.AuthImpl
+import com.prisma.config.DatabaseConfig
 import com.prisma.deploy.DeployDependencies
 import com.prisma.deploy.connector.DeployConnector
 import com.prisma.deploy.connector.mysql.MySqlDeployConnector
@@ -24,19 +25,18 @@ case class DeployTestDependencies()(implicit val system: ActorSystem, val materi
   override def apiAuth = AuthImpl
 
   override def deployPersistencePlugin: DeployConnector = {
-    import slick.jdbc.MySQLProfile.api._
-    val sqlInternalHost     = sys.env("SQL_CLIENT_HOST")
-    val sqlInternalPort     = sys.env("SQL_CLIENT_PORT")
-    val sqlInternalUser     = sys.env("SQL_CLIENT_USER")
-    val sqlInternalPassword = sys.env("SQL_CLIENT_PASSWORD")
-    val clientDb = Database.forURL(
-      url =
-        s"jdbc:mariadb://$sqlInternalHost:$sqlInternalPort?autoReconnect=true&useSSL=false&serverTimeZone=UTC&useUnicode=true&characterEncoding=UTF-8&usePipelineAuth=false",
-      user = sqlInternalUser,
-      password = sqlInternalPassword,
-      driver = "org.mariadb.jdbc.Driver"
+    val testConfig = DatabaseConfig(
+      "test",
+      "mysql",
+      active = true,
+      sys.env("SQL_CLIENT_HOST"),
+      sys.env("SQL_CLIENT_PORT").toInt,
+      sys.env("SQL_CLIENT_USER"),
+      sys.env("SQL_CLIENT_PASSWORD"),
+      connectionLimit = Some(10)
     )
-    MySqlDeployConnector(clientDatabase = clientDb)(system.dispatcher)
+
+    MySqlDeployConnector(testConfig)(system.dispatcher)
   }
 
   override def functionValidator: FunctionValidator = (project: Project, fn: FunctionInput) => {

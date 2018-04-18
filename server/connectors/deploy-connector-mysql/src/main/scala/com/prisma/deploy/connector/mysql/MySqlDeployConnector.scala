@@ -1,5 +1,6 @@
 package com.prisma.deploy.connector.mysql
 
+import com.prisma.config.DatabaseConfig
 import com.prisma.deploy.connector._
 import com.prisma.deploy.connector.mysql.database.{DatabaseMutationBuilder, InternalDatabaseSchema}
 import com.prisma.deploy.connector.mysql.impls.{ClientDbQueriesImpl, DeployMutactionExectutorImpl, MigrationPersistenceImpl, ProjectPersistenceImpl}
@@ -11,10 +12,11 @@ import slick.jdbc.meta.MTable
 
 import scala.concurrent.{ExecutionContext, Future}
 
-case class MySqlDeployConnector(clientDatabase: Database)(implicit ec: ExecutionContext) extends DeployConnector with TableTruncationHelpers {
-  lazy val internalDatabaseDefs = InternalDatabaseDefs()
+case class MySqlDeployConnector(config: DatabaseConfig)(implicit ec: ExecutionContext) extends DeployConnector with TableTruncationHelpers {
+  lazy val internalDatabaseDefs = InternalDatabaseDefs(config)
   lazy val internalDatabaseRoot = internalDatabaseDefs.internalDatabaseRoot
   lazy val internalDatabase     = internalDatabaseDefs.internalDatabase
+  lazy val clientDatabase       = internalDatabaseDefs.internalDatabaseRoot
 
   override val projectPersistence: ProjectPersistence           = ProjectPersistenceImpl(internalDatabase)
   override val migrationPersistence: MigrationPersistence       = MigrationPersistenceImpl(internalDatabase)

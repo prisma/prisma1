@@ -4,16 +4,15 @@ import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
 import com.prisma.akkautil.http.SimpleHttpClient
 import com.prisma.api.ApiDependencies
-import com.prisma.api.connector.mysql.ApiConnectorImpl
 import com.prisma.api.mutactions.{DatabaseMutactionVerifierImpl, SideEffectMutactionExecutorImpl}
 import com.prisma.api.project.{CachedProjectFetcherImpl, ProjectFetcher}
 import com.prisma.api.schema.{CachedSchemaBuilder, SchemaBuilder}
 import com.prisma.auth.AuthImpl
+import com.prisma.config.PrismaConfig
 import com.prisma.deploy.DeployDependencies
-import com.prisma.deploy.connector.mysql.MySqlDeployConnector
 import com.prisma.deploy.migration.migrator.{AsyncMigrator, Migrator}
 import com.prisma.deploy.server.auth.{AsymmetricClusterAuth, DummyClusterAuth, SymmetricClusterAuth}
-import com.prisma.image.{Converters, FunctionValidatorImpl, SingleServerProjectFetcher}
+import com.prisma.image.{Converters, FunctionValidatorImpl, ImageUtils, SingleServerProjectFetcher}
 import com.prisma.messagebus.pubsub.inmemory.InMemoryAkkaPubSub
 import com.prisma.messagebus.queue.inmemory.InMemoryAkkaQueue
 import com.prisma.messagebus.{PubSubPublisher, PubSubSubscriber, QueueConsumer, QueuePublisher}
@@ -28,11 +27,14 @@ import com.prisma.workers.payloads.{Webhook => WorkerWebhook}
 import play.api.libs.json.Json
 
 case class PrismaLocalDependencies()(implicit val system: ActorSystem, val materializer: ActorMaterializer)
-    extends DeployDependencies
+    extends ImageUtils
+    with DeployDependencies
     with ApiDependencies
     with WorkerDependencies
     with SubscriptionDependencies {
   override implicit def self = this
+
+  val config: PrismaConfig = loadConfig()
 
   override lazy val apiSchemaBuilder = CachedSchemaBuilder(SchemaBuilder(), invalidationPubSub)
   override lazy val projectFetcher: ProjectFetcher = {
@@ -42,7 +44,7 @@ case class PrismaLocalDependencies()(implicit val system: ActorSystem, val mater
 
   override lazy val migrator: Migrator = AsyncMigrator(migrationPersistence, projectPersistence, deployPersistencePlugin)
   override lazy val clusterAuth = {
-    (sys.env.get("PRISMA_MANAGEMENT_API_JWT_SECRET"), sys.env.get("CLUSTER_PUBLIC_KEY")) match {
+    (config.managementApiSecret, config.legacySecret) match {
       case (Some(jwtSecret), _) if jwtSecret.nonEmpty => SymmetricClusterAuth(jwtSecret)
       case (_, Some(publicKey)) if publicKey.nonEmpty => AsymmetricClusterAuth(publicKey)
       case _                                          => DummyClusterAuth()
@@ -89,10 +91,10 @@ case class PrismaLocalDependencies()(implicit val system: ActorSystem, val mater
   override lazy val webhooksConsumer        = webhooksQueue.map[WorkerWebhook](Converters.apiWebhook2WorkerWebhook)
   override lazy val httpClient              = SimpleHttpClient()
   override lazy val apiAuth                 = AuthImpl
-  override lazy val deployPersistencePlugin = MySqlDeployConnector(apiConnector.databases.master)(system.dispatcher)
+  override lazy val deployPersistencePlugin = loadDeployConnector(config) // MySqlDeployConnector(apiConnector.databases.master)(system.dispatcher)
   override lazy val functionValidator       = FunctionValidatorImpl()
 
-  override lazy val apiConnector                = ApiConnectorImpl()
+  override lazy val apiConnector                = loadApiConnector(config)
   override lazy val sideEffectMutactionExecutor = SideEffectMutactionExecutorImpl()
   override lazy val mutactionVerifier           = DatabaseMutactionVerifierImpl
 }
