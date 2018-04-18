@@ -129,6 +129,7 @@ ${chalk.gray(
      * If no cluster is running locally, don't start anymore but create docker-compose.yml and ask for starting
      */
     if (
+      cluster &&
       cluster.local &&
       !await cluster.isOnline() &&
       !fs.readdirSync(this.config.definitionDir).includes('docker-compose.yml')
@@ -159,7 +160,7 @@ Note: prisma local start will be deprecated soon in favor of the direct usage of
     if (this.definition.definition!.cluster && !cluster) {
       this.out.log(
         `You're not logged in and cluster ${chalk.bold(
-          cluster.name!,
+          this.definition.definition!.cluster!,
         )} could not be found locally. Trying to authenticate.\n`,
       )
       // signs in and fetches clusters
