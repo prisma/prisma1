@@ -27,7 +27,13 @@ export class DefinitionMigrator {
     }
 
     // check if service, stage and cluster exist and if they're not interpolated. Hence, the equality check
-    if (definition.service && definition.stage && definition.cluster) {
+    const endpoint = this.prismaDefinition.getEndpoint()
+    if (
+      definition.service &&
+      definition.stage &&
+      definition.cluster &&
+      endpoint
+    ) {
       const splittedCluster = definition.cluster.split('/')
       if (
         rawJson.service !== definition.service ||
@@ -45,7 +51,6 @@ To get the endpoint, run ${chalk.cyan(
       }
 
       const definitionString = fs.readFileSync(definitionPath, 'utf-8')
-      const endpoint = this.prismaDefinition.getEndpoint()
       const newDefinitionString = migrateToEndpoint(definitionString, endpoint)
       fs.writeFileSync(definitionPath, newDefinitionString)
       this.prismaDefinition.out!.log(`${chalk.yellow(
