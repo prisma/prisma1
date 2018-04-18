@@ -14,7 +14,7 @@ object ModelToDbMapper {
 
     ProjectDefinition(
       id = project.id,
-      ownerId = Some(project.ownerId), // todo ideally, owner id is not optional or it is optional on models.Project as well
+      ownerId = Some(project.ownerId),
       project.webhookUrl,
       secretsJson,
       project.allowQueries,

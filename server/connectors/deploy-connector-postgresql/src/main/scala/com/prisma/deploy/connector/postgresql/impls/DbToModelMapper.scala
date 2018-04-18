@@ -2,11 +2,11 @@ package com.prisma.deploy.connector.postgresql.impls
 
 import com.prisma.deploy.connector.postgresql.database.{Migration, ProjectDefinition}
 import com.prisma.shared.models
+import com.prisma.shared.models.MigrationStepsJsonFormatter._
+import com.prisma.shared.models.ProjectJsonFormatter._
 import com.prisma.shared.models.{MigrationStep, Schema}
 
 object DbToModelMapper {
-  import com.prisma.shared.models.MigrationStepsJsonFormatter._
-  import com.prisma.shared.models.ProjectJsonFormatter._
 
   def convert(project: ProjectDefinition, migration: Migration): models.Project = {
     models.Project(

@@ -79,6 +79,6 @@ trait TableTruncationHelpers {
   }
 
   private def dangerouslyTruncateTables(tableNames: Vector[String]): DBIOAction[Unit, NoStream, Effect] = {
-    DBIO.seq(tableNames.map(name => sqlu"""-- TRUNCATE TABLE "#$name" cascade"""): _*)
+    DBIO.seq(tableNames.map(name => sqlu"""TRUNCATE TABLE "#$name" cascade"""): _*)
   }
 }
