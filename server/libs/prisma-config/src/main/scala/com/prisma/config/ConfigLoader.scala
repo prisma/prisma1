@@ -31,40 +31,49 @@ object ConfigLoader {
       .find(_.nonEmpty)
   }
 
-  // should this be a thing?
-  val defaultConfig = """
-  val defaultConfig =
-      |port: 4466
-      |managementApiSecret: somesecret
-      |databases:
-      |  default:
-      |    connector: mysql
-      |    active: true
-      |    host: localhost
-      |    port: 3306
-      |    user: root
-      |    password: prisma
-    """.stripMargin
-
+  // Todo error propagation concept with meaningful user messages
   def load(): Try[PrismaConfig] =
     Try {
-      sys.env.get("PRISMA_CONFIG") match {
-        case Some(config) => config
-        case None =>
-          findPrismaConfigFilePath() match {
-            case Some(path) => scala.io.Source.fromFile(path).mkString
-            case None       => defaultConfig //sys.error("No prisma config found.")
-          }
-      }
-    }.flatMap(load)
+      sys.env
+        .get("PRISMA_CONFIG")
+        .orElse(findPrismaConfigFilePath().map(scala.io.Source.fromFile(_).mkString))
+        .orElse(legacyConfig())
+        .getOrElse(sys.error("No valid Prisma config could be loaded."))
+    }.flatMap(loadString)
 
-  def load(config: String): Try[PrismaConfig] = Try {
+  def loadString(config: String): Try[PrismaConfig] = Try {
     convertToConfig(extractScalaMap(yaml.load(config).asInstanceOf[java.util.Map[String, Any]], path = "root"))
   }
 
+  private def legacyConfig(): Option[String] =
+    Try {
+      val port         = sys.env.getOrElse("PORT", "4466").toInt
+      val secret       = sys.env.getOrElse("PRISMA_MANAGEMENT_API_JWT_SECRET", "")
+      val legacySecret = sys.env.getOrElse("CLUSTER_PUBLIC_KEY", "")
+      val dbHost       = sys.env.getOrElse("SQL_CLIENT_HOST", sys.error("Env var SQL_CLIENT_HOST required but not found"))
+      val dbPort       = sys.env.getOrElse("SQL_CLIENT_PORT", "3306").toInt
+      val dbUser       = sys.env.getOrElse("SQL_CLIENT_USER", sys.error("Env var SQL_CLIENT_USER required but not found"))
+      val dbPass       = sys.env.getOrElse("SQL_CLIENT_PASSWORD", sys.error("Env var SQL_CLIENT_PASSWORD required but not found"))
+
+      s"""
+        |port: $port
+        |managementApiSecret: $secret
+        |legacySecret: $legacySecret
+        |databases:
+        |  default:
+        |    connector: mysql
+        |    active: true
+        |    host: $dbHost
+        |    port: $dbPort
+        |    user: $dbUser
+        |    password: $dbPass
+      """.stripMargin
+    }.toOption
+
   def convertToConfig(map: mutable.Map[String, Any]): PrismaConfig = {
-    val port   = extractInt("port", map, "4466")
-    val secret = extractStringOpt("managementApiSecret", map)
+    val port         = extractInt("port", map, "4466")
+    val secret       = extractStringOpt("managementApiSecret", map)
+    val legacySecret = extractStringOpt("clusterPublicKey", map)
     val databases = extractScalaMap(map.getOrElse("databases", emptyJavaMap), path = "databases").map {
       case (dbName, dbMap) =>
         val db          = extractScalaMap(dbMap, path = dbName)
@@ -77,7 +86,7 @@ object ConfigLoader {
         DatabaseConfig(dbName, dbConnector, dbActive, dbHost, dbPort, dbUser, dbPass)
     }.toSeq
 
-    PrismaConfig(port, secret, databases)
+    PrismaConfig(port, secret, legacySecret, databases)
   }
 
   private def extractScalaMap(in: Any, required: Boolean = true, path: String = ""): mutable.Map[String, Any] = {
@@ -135,7 +144,8 @@ object ConfigLoader {
   }
 }
 
-case class PrismaConfig(port: Int, managementApiSecret: Option[String], databases: Seq[DatabaseConfig])
+// connection limit?
+case class PrismaConfig(port: Int, managementApiSecret: Option[String], legacySecret: Option[String], databases: Seq[DatabaseConfig])
 case class DatabaseConfig(name: String, connector: String, active: Boolean, host: String, port: Int, user: String, password: String)
 
 abstract class ConfigError(reason: String)       extends Exception(reason)
