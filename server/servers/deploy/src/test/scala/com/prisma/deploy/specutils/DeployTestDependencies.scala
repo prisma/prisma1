@@ -33,7 +33,7 @@ case class DeployTestDependencies()(implicit val system: ActorSystem, val materi
       sys.env("SQL_CLIENT_PORT").toInt,
       sys.env("SQL_CLIENT_USER"),
       sys.env("SQL_CLIENT_PASSWORD"),
-      connectionLimit = Some(10)
+      connectionLimit = Some(5)
     )
 
     MySqlDeployConnector(testConfig)(system.dispatcher)
