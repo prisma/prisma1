@@ -5,9 +5,9 @@ jobs:
     docker:
       - image: circleci/node:8
       - image: circleci/postgres:10.3-alpine
-        #environment:
-          #POSTGRES_USER: prisma
-          #POSTGRES_DB: prisma
+        environment:
+          # POSTGRES_USER: prisma
+          POSTGRES_DB: prisma
     steps:
       - checkout
       - run: sudo apt install postgresql-client
