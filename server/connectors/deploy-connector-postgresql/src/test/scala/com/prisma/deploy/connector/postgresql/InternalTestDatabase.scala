@@ -8,6 +8,7 @@ import slick.dbio.{DBIOAction, NoStream}
 import slick.jdbc.PostgresProfile.api._
 import slick.jdbc.meta.MTable
 
+import scala.concurrent.ExecutionContext
 import scala.util.{Failure, Success}
 
 class InternalTestDatabase extends AwaitUtils {
@@ -25,20 +26,20 @@ class InternalTestDatabase extends AwaitUtils {
   def createInternalDatabaseSchema() = internalDatabaseRoot.run(InternalDatabaseSchema.createSchemaActions(recreate = true)).await(10)
 
   def truncateTables(): Unit = {
-    val schemas = internalDatabase.run(getTables("graphcool")).await()
-
-    println(schemas)
+    val schemas = internalDatabase.run(getTables).await()
     internalDatabase.run(dangerouslyTruncateTables(schemas)).await()
   }
 
+  //todo set up prisma schema and only wipe within that schema
   private def dangerouslyTruncateTables(tableNames: Vector[String]): DBIOAction[Unit, NoStream, Effect] = {
     DBIO.seq(tableNames.map(name => sqlu"""TRUNCATE TABLE "#$name" cascade"""): _*)
   }
 
-  private def getTables(projectId: String): DBIOAction[Vector[String], NoStream, Read] = {
-    for {
-      metaTables <- MTable.getTables(cat = Some(projectId), schemaPattern = None, namePattern = None, types = None)
-    } yield metaTables.map(table => table.name.name)
+  private def getTables = {
+    sql"""SELECT table_name
+          FROM information_schema.tables
+          WHERE table_schema = 'public'
+          AND table_type = 'BASE TABLE';""".as[String]
   }
 
   def run[R](a: DBIOAction[R, NoStream, Nothing]) = internalDatabase.run(a).await()
