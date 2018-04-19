@@ -38,6 +38,21 @@ services:
       BUGSNAG_API_KEY: \\"\\"
       PRISMA_CONFIG: |
         port: 4466
+        databases:
+          default:
+            connector: mysql
+            active: true
+            host: db
+            port: 3306 
+            user: root
+            password: prisma
+  db:
+    container_name: prisma-db
+    image: mysql:5.7
+    restart: always
+    environment:
+      MYSQL_USER: prisma
+      MYSQL_ROOT_PASSWORD: prisma
 ",
     "endpoint": "http://localhost:4466",
     "localClusterRunning": false,
@@ -86,6 +101,21 @@ services:
       BUGSNAG_API_KEY: \\"\\"
       PRISMA_CONFIG: |
         port: 4466
+        databases:
+          default:
+            connector: mysql
+            active: true
+            host: db
+            port: 3306 
+            user: root
+            password: prisma
+  db:
+    container_name: prisma-db
+    image: mysql:5.7
+    restart: always
+    environment:
+      MYSQL_USER: prisma
+      MYSQL_ROOT_PASSWORD: prisma
 ",
     "endpoint": "http://localhost:4466",
     "localClusterRunning": true,

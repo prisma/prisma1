@@ -182,7 +182,6 @@ export class EndpointDialog {
           choice === 'Create new database'
             ? await this.askForDatabaseType()
             : 'mysql'
-        console.log({ type })
         dockerComposeYml += this.printDatabaseConfig({
           user: type === 'mysql' ? 'root' : 'prisma',
           password: 'prisma',
