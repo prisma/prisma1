@@ -177,18 +177,20 @@ export class EndpointDialog {
         cluster =
           (this.env.clusters || []).find(c => c.name === 'local') ||
           new Cluster(this.out, 'local', 'http://localhost:4466')
-        if (choice === 'Create new database') {
-          const type = await this.askForDatabaseType()
-          console.log({ type })
-          dockerComposeYml += this.printDatabaseConfig({
-            user: type === 'mysql' ? 'root' : 'prisma',
-            password: 'prisma',
-            type,
-            host: 'db',
-            port: defaultPorts[type],
-          })
-          dockerComposeYml += this.printDatabaseService(type)
-        }
+
+        const type =
+          choice === 'Create new database'
+            ? await this.askForDatabaseType()
+            : 'mysql'
+        console.log({ type })
+        dockerComposeYml += this.printDatabaseConfig({
+          user: type === 'mysql' ? 'root' : 'prisma',
+          password: 'prisma',
+          type,
+          host: 'db',
+          port: defaultPorts[type],
+        })
+        dockerComposeYml += this.printDatabaseService(type)
         break
       case 'Use existing database':
         credentials = await this.getDatabase()
