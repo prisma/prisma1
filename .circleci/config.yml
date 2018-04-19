@@ -3,6 +3,10 @@ jobs:
   cli:
     docker:
       - image: circleci/node:8
+      - image: circleci/postgres:9.6-alpine
+        environment:
+          POSTGRES_USER: prisma
+          POSTGRES_DB: prisma
     steps:
       - checkout
       - run: echo "//registry.npmjs.org/:_authToken=${NPM_TOKEN}" > ~/.npmrc

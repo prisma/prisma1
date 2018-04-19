@@ -1,8 +1,9 @@
 import { Introspector } from '../../Introspector'
 import { Client } from 'pg'
+import { connectionDetails } from './connectionDetails'
 
 function introspect(): Promise<string> {
-  return new Introspector('').introspect('DatabaseIntrospector')
+  return new Introspector(connectionDetails).introspect('DatabaseIntrospector')
 }
 
 async function testSchema(sql: string) {
