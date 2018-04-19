@@ -15,7 +15,7 @@ import slick.sql.SqlAction
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-case class DataResolverImpl(project: Project, readonlyClientDatabase: MySQLProfile.backend.DatabaseDef) extends DataResolver {
+case class MySqlDataResolver(project: Project, readonlyClientDatabase: MySQLProfile.backend.DatabaseDef) extends DataResolver {
 
   override def resolveByGlobalId(globalId: IdGCValue): Future[Option[PrismaNode]] = { //todo rewrite this to use normal query?
     if (globalId.value == "viewer-fixed") return Future.successful(Some(PrismaNode(globalId, RootGCValue.empty, Some("Viewer"))))
@@ -47,8 +47,8 @@ case class DataResolverImpl(project: Project, readonlyClientDatabase: MySQLProfi
   override def resolveByUnique(where: NodeSelector): Future[Option[PrismaNode]] =
     batchResolveByUnique(where.model, where.field.name, Vector(where.fieldValue)).map(_.headOption)
 
-  override def countByModel(model: Model, whereFilter: Option[DataItemFilterCollection] = None): Future[Int] = {
-    val query = DatabaseQueryBuilder.countAllFromModel(project, model, whereFilter)
+  override def countByTable(table: String, whereFilter: Option[DataItemFilterCollection] = None): Future[Int] = {
+    val query = DatabaseQueryBuilder.countAllFromTable(project, table, whereFilter)
     performWithTiming("countByModel", readonlyClientDatabase.run(query))
   }
 

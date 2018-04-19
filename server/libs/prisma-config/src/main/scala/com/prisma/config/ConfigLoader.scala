@@ -54,7 +54,7 @@ object ConfigLoader {
       val dbPort       = sys.env.getOrElse("SQL_CLIENT_PORT", "3306").toInt
       val dbUser       = sys.env.getOrElse("SQL_CLIENT_USER", sys.error("Env var SQL_CLIENT_USER required but not found"))
       val dbPass       = sys.env.getOrElse("SQL_CLIENT_PASSWORD", sys.error("Env var SQL_CLIENT_PASSWORD required but not found"))
-      val dbConn       = sys.env.getOrElse("SQL_INTERNAL_CONNECTION_LIMIT", "10")
+      val dbConn       = sys.env.getOrElse("SQL_INTERNAL_CONNECTION_LIMIT", "1")
 
       s"""
         |port: $port

@@ -15,7 +15,7 @@ import slick.sql.SqlAction
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-case class DataResolverImpl(project: Project, readonlyClientDatabase: PostgresProfile.backend.DatabaseDef) extends DataResolver {
+case class PostgresDataResolver(project: Project, readonlyClientDatabase: PostgresProfile.backend.DatabaseDef) extends DataResolver {
 
   override def resolveByGlobalId(globalId: IdGCValue): Future[Option[PrismaNode]] = { //todo rewrite this to use normal query?
     if (globalId.value == "viewer-fixed") return Future.successful(Some(PrismaNode(globalId, RootGCValue.empty, Some("Viewer"))))
@@ -40,49 +40,50 @@ case class DataResolverImpl(project: Project, readonlyClientDatabase: PostgresPr
   }
 
   override def resolveByModel(model: Model, args: Option[QueryArguments] = None): Future[ResolverResult[PrismaNode]] = {
-    val query = ApiDatabaseQueryBuilderPostGres.selectAllFromTable(project.id, model, args)
+    val query = PostgresApiDatabaseQueryBuilder.selectAllFromTable(project.id, model, args)
     performWithTiming("loadModelRowsForExport", readonlyClientDatabase.run(query))
   }
 
   override def resolveByUnique(where: NodeSelector): Future[Option[PrismaNode]] =
     batchResolveByUnique(where.model, where.field.name, Vector(where.fieldValue)).map(_.headOption)
 
-  override def countByModel(model: Model, whereFilter: Option[DataItemFilterCollection] = None): Future[Int] = {
-    val query = ApiDatabaseQueryBuilderPostGres.countAllFromModel(project, model, whereFilter)
+  override def countByTable(table: String, whereFilter: Option[DataItemFilterCollection] = None): Future[Int] = {
+    val query = PostgresApiDatabaseQueryBuilder.countAllFromTable(project, table, whereFilter)
     performWithTiming("countByModel", readonlyClientDatabase.run(query))
   }
 
   override def batchResolveByUnique(model: Model, fieldName: String, values: Vector[GCValue]): Future[Vector[PrismaNode]] = {
-    val query = ApiDatabaseQueryBuilderPostGres.batchSelectFromModelByUnique(project.id, model, fieldName, values)
+    val query = PostgresApiDatabaseQueryBuilder.batchSelectFromModelByUnique(project.id, model, fieldName, values)
     performWithTiming("batchResolveByUnique", readonlyClientDatabase.run(query))
   }
 
   override def batchResolveScalarList(model: Model, listField: Field, nodeIds: Vector[IdGCValue]): Future[Vector[ScalarListValues]] = {
-    val query = ApiDatabaseQueryBuilderPostGres.selectFromScalarList(project.id, model.name, listField, nodeIds)
+    val query = PostgresApiDatabaseQueryBuilder.selectFromScalarList(project.id, model.name, listField, nodeIds)
     performWithTiming("batchResolveScalarList", readonlyClientDatabase.run(query))
   }
 
   override def resolveByRelationManyModels(fromField: Field,
                                            fromNodeIds: Vector[IdGCValue],
                                            args: Option[QueryArguments]): Future[Vector[ResolverResult[PrismaNodeWithParent]]] = {
-    val query = ApiDatabaseQueryBuilderPostGres.batchSelectAllFromRelatedModel(project, fromField, fromNodeIds, args)
+    val query = PostgresApiDatabaseQueryBuilder.batchSelectAllFromRelatedModel(project, fromField, fromNodeIds, args)
     performWithTiming("resolveByRelation", readonlyClientDatabase.run(query))
   }
 
   override def countByRelationManyModels(fromField: Field, fromNodeIds: Vector[IdGCValue], args: Option[QueryArguments]): Future[Vector[(IdGCValue, Int)]] = {
-    val query = ApiDatabaseQueryBuilderPostGres.countAllFromRelatedModels(project, fromField, fromNodeIds, args)
+    val query = PostgresApiDatabaseQueryBuilder.countAllFromRelatedModels(project, fromField, fromNodeIds, args)
     performWithTiming("countByRelation", readonlyClientDatabase.run(query))
   }
 
   override def loadListRowsForExport(model: Model, field: Field, args: Option[QueryArguments] = None): Future[ResolverResult[ScalarListValues]] = {
-    val query = ApiDatabaseQueryBuilderPostGres.selectAllFromListTable(project.id, model, field, args, None)
+    val query = PostgresApiDatabaseQueryBuilder.selectAllFromListTable(project.id, model, field, args, None)
     performWithTiming("loadListRowsForExport", readonlyClientDatabase.run(query))
   }
 
   override def loadRelationRowsForExport(relationId: String, args: Option[QueryArguments] = None): Future[ResolverResult[RelationNode]] = {
-    val query = ApiDatabaseQueryBuilderPostGres.selectAllFromRelationTable(project.id, relationId, args)
+    val query = PostgresApiDatabaseQueryBuilder.selectAllFromRelationTable(project.id, relationId, args)
     performWithTiming("loadRelationRowsForExport", readonlyClientDatabase.run(query))
   }
 
   protected def performWithTiming[A](name: String, f: => Future[A]): Future[A] = Metrics.sqlQueryTimer.timeFuture(project.id, name) { f }
+
 }

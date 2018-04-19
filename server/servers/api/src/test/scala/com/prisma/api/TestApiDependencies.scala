@@ -3,18 +3,19 @@ package com.prisma.api
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
 import com.prisma.api.connector.postgresql.PostgresApiConnector
-//import com.prisma.api.connector.mysql.MySqlApiConnector
 import com.prisma.api.mutactions.{DatabaseMutactionVerifierImpl, SideEffectMutactionExecutorImpl}
 import com.prisma.api.project.ProjectFetcher
 import com.prisma.api.schema.SchemaBuilder
 import com.prisma.config.ConfigLoader
+import com.prisma.deploy.DeployDependencies
+import com.prisma.deploy.connector.postgresql.PostgresDeployConnector
 import com.prisma.messagebus.pubsub.inmemory.InMemoryAkkaPubSub
 import com.prisma.messagebus.testkits.InMemoryQueueTestKit
 import com.prisma.subscriptions.Webhook
 
 import scala.util.{Failure, Success}
 
-case class ApiDependenciesForTest()(implicit val system: ActorSystem, val materializer: ActorMaterializer) extends ApiDependencies {
+case class TestApiDependencies()(implicit val system: ActorSystem, val materializer: ActorMaterializer) extends ApiDependencies {
   override implicit def self: ApiDependencies = this
 
   val config = ConfigLoader.load() match {
@@ -30,4 +31,6 @@ case class ApiDependenciesForTest()(implicit val system: ActorSystem, val materi
   override lazy val apiConnector                = PostgresApiConnector(config.databases.head)
   override lazy val sideEffectMutactionExecutor = SideEffectMutactionExecutorImpl()
   override lazy val mutactionVerifier           = DatabaseMutactionVerifierImpl
+
+  lazy val deployConnector = PostgresDeployConnector(config.databases.head)
 }

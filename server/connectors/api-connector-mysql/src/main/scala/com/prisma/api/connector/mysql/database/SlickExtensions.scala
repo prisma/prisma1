@@ -59,8 +59,8 @@ object SlickExtensions {
     if (action.isEmpty) None else Some(sql"#$prefix " ++ action.get)
   }
 
-  def whereFilterAppendix(projectId: String, model: Model, filter: Option[DataItemFilterCollection]) = {
-    val whereSql = filter.flatMap(where => QueryArgumentsHelpers.generateFilterConditions(projectId, model.name, where))
+  def whereFilterAppendix(projectId: String, table: String, filter: Option[DataItemFilterCollection]) = {
+    val whereSql = filter.flatMap(where => QueryArgumentsHelpers.generateFilterConditions(projectId, table, where))
     prefixIfNotNone("WHERE", whereSql)
   }
 }

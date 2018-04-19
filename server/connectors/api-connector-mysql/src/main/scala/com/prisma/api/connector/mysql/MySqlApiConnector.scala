@@ -1,6 +1,6 @@
 package com.prisma.api.connector.mysql
 
-import com.prisma.api.connector.mysql.database.{DataResolverImpl, Databases}
+import com.prisma.api.connector.mysql.database.{MySqlDataResolver, Databases}
 import com.prisma.api.connector.mysql.impl.DatabaseMutactionExecutorImpl
 import com.prisma.api.connector.{ApiConnector, DatabaseMutactionExecutor}
 import com.prisma.config.DatabaseConfig
@@ -24,6 +24,6 @@ case class MySqlApiConnector(config: DatabaseConfig)(implicit ec: ExecutionConte
   }
 
   override def databaseMutactionExecutor: DatabaseMutactionExecutor = DatabaseMutactionExecutorImpl(databases.master)
-  override def dataResolver(project: Project)                       = DataResolverImpl(project, databases.readOnly)
-  override def masterDataResolver(project: Project)                 = DataResolverImpl(project, databases.master)
+  override def dataResolver(project: Project)                       = MySqlDataResolver(project, databases.readOnly)
+  override def masterDataResolver(project: Project)                 = MySqlDataResolver(project, databases.master)
 }

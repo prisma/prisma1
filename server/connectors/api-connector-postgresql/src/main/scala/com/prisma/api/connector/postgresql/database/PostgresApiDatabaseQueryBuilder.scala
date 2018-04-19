@@ -14,7 +14,7 @@ import slick.sql.SqlStreamingAction
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
-object ApiDatabaseQueryBuilderPostGres {
+object PostgresApiDatabaseQueryBuilder {
   import JdbcExtensions._
   import QueryArgumentsExtensions._
   import SlickExtensions._
@@ -117,8 +117,8 @@ object ApiDatabaseQueryBuilderPostGres {
     }
   }
 
-  def countAllFromModel(project: Project, model: Model, whereFilter: Option[DataItemFilterCollection]): DBIOAction[Int, NoStream, Effect] = {
-    val query = sql"""select count(*) from "#${project.id}"."#${model.name}"""" ++ whereFilterAppendix(project.id, model, whereFilter)
+  def countAllFromTable(project: Project, table: String, whereFilter: Option[DataItemFilterCollection]): DBIOAction[Int, NoStream, Effect] = {
+    val query = sql"""select count(*) from "#${project.id}"."#$table"""" ++ whereFilterAppendix(project.id, table, whereFilter)
     query.as[Int].map(_.head)
   }
 

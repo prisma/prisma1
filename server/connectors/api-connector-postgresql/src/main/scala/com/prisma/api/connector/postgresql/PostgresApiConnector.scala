@@ -1,6 +1,6 @@
 package com.prisma.api.connector.postgresql
 
-import com.prisma.api.connector.postgresql.database.{DataResolverImpl, Databases}
+import com.prisma.api.connector.postgresql.database.{PostgresDataResolver, Databases}
 import com.prisma.api.connector.postgresql.impl.DatabaseMutactionExecutorImpl
 import com.prisma.api.connector.{ApiConnector, DatabaseMutactionExecutor}
 import com.prisma.config.DatabaseConfig
@@ -24,6 +24,6 @@ case class PostgresApiConnector(config: DatabaseConfig)(implicit ec: ExecutionCo
   }
 
   override def databaseMutactionExecutor: DatabaseMutactionExecutor = DatabaseMutactionExecutorImpl(databases.master)
-  override def dataResolver(project: Project)                       = DataResolverImpl(project, databases.readOnly)
-  override def masterDataResolver(project: Project)                 = DataResolverImpl(project, databases.master)
+  override def dataResolver(project: Project)                       = PostgresDataResolver(project, databases.readOnly)
+  override def masterDataResolver(project: Project)                 = PostgresDataResolver(project, databases.master)
 }

@@ -68,7 +68,7 @@ object DatabaseMutationBuilder {
     val updateValues = combineByComma(args.raw.asRoot.map.map { case (k, v) => escapeKey(k) ++ sql" = $v" })
 
     if (updateValues.isDefined) {
-      (sql"UPDATE `#${projectId}`.`#${model.name}`" ++ sql"SET " ++ updateValues ++ whereFilterAppendix(projectId, model, whereFilter)).asUpdate
+      (sql"UPDATE `#${projectId}`.`#${model.name}`" ++ sql"SET " ++ updateValues ++ whereFilterAppendix(projectId, model.name, whereFilter)).asUpdate
     } else {
       DBIOAction.successful(())
     }
@@ -157,14 +157,14 @@ object DatabaseMutationBuilder {
   //region DELETE
 
   def deleteDataItems(project: Project, model: Model, whereFilter: Option[DataItemFilterCollection]) = {
-    (sql"DELETE FROM `#${project.id}`.`#${model.name}`" ++ whereFilterAppendix(project.id, model, whereFilter)).asUpdate
+    (sql"DELETE FROM `#${project.id}`.`#${model.name}`" ++ whereFilterAppendix(project.id, model.name, whereFilter)).asUpdate
   }
 
   def deleteRelayIds(project: Project, model: Model, whereFilter: Option[DataItemFilterCollection]) = {
     (sql"DELETE FROM `#${project.id}`.`_RelayId`" ++
       (sql"WHERE `id` IN (" ++
         sql"SELECT `id`" ++
-        sql"FROM `#${project.id}`.`#${model.name}`" ++ whereFilterAppendix(project.id, model, whereFilter) ++ sql")")).asUpdate
+        sql"FROM `#${project.id}`.`#${model.name}`" ++ whereFilterAppendix(project.id, model.name, whereFilter) ++ sql")")).asUpdate
   }
 
   def deleteDataItem(projectId: String, path: Path) =
@@ -241,7 +241,7 @@ object DatabaseMutationBuilder {
     import scala.concurrent.ExecutionContext.Implicits.global
 
     val idQuery: SqlStreamingAction[Vector[String], String, Effect] =
-      (sql"SELECT `id` FROM `#${projectId}`.`#${model.name}`" ++ whereFilterAppendix(projectId, model, whereFilter)).as[String]
+      (sql"SELECT `id` FROM `#${projectId}`.`#${model.name}`" ++ whereFilterAppendix(projectId, model.name, whereFilter)).as[String]
 
     def listInsert(ids: Vector[String]) = {
       if (ids.isEmpty) {
@@ -391,7 +391,7 @@ object DatabaseMutationBuilder {
     val table = field.relation.get.relationTableName
     val query = sql"SELECT `id` FROM `#${project.id}`.`#$table` OLDPARENTPATHFAILURETRIGGERBYFIELDANDFILTER" ++
       sql"WHERE `#${field.oppositeRelationSide.get}` IN (SELECT `id` FROM `#${project.id}`.`#${model.name}` " ++
-      whereFilterAppendix(project.id, model, whereFilter) ++ sql")"
+      whereFilterAppendix(project.id, model.name, whereFilter) ++ sql")"
     triggerFailureWhenExists(project, query, table)
   }
 

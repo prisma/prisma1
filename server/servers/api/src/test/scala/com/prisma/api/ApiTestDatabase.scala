@@ -3,25 +3,15 @@ package com.prisma.api
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
 import com.prisma.api.connector.DatabaseMutaction
-import com.prisma.api.connector.postgresql.PostgresApiConnector
-//import com.prisma.api.connector.mysql.MySqlApiConnector
 import com.prisma.deploy.connector._
-import com.prisma.deploy.connector.postgresql.impls.DeployMutactionExecutorImpl
 import com.prisma.shared.models._
 import com.prisma.utils.await.AwaitUtils
-import slick.dbio.DBIOAction
 
-import slick.jdbc.PostgresProfile.api._
-import slick.jdbc.PostgresProfile.backend.DatabaseDef
-
-//import slick.jdbc.MySQLProfile.api._
-//import slick.jdbc.MySQLProfile.backend.DatabaseDef
-
-case class ApiTestDatabase()(implicit dependencies: ApiDependencies) extends AwaitUtils {
+case class ApiTestDatabase()(implicit dependencies: TestApiDependencies) extends AwaitUtils {
 
   implicit lazy val system: ActorSystem             = dependencies.system
   implicit lazy val materializer: ActorMaterializer = dependencies.materializer
-  private lazy val clientDatabase: DatabaseDef      = dependencies.apiConnector.asInstanceOf[PostgresApiConnector].databases.master
+//  private lazy val clientDatabase: DatabaseDef      = dependencies.apiConnector.asInstanceOf[PostgresApiConnector].databases.master
 
   def setup(project: Project): Unit = {
     deleteProjectDatabase(project)
@@ -38,9 +28,8 @@ case class ApiTestDatabase()(implicit dependencies: ApiDependencies) extends Awa
 
   private def createRelationTable(project: Project, relation: Relation) = runMutaction(CreateRelationTable(project.id, project.schema, relation = relation))
 
-  def runMutaction(mutaction: DeployMutaction): Unit                            = DeployMutactionExecutorImpl(clientDatabase)(system.dispatcher).execute(mutaction).await
-  def runDatabaseMutactionOnClientDb(mutaction: DatabaseMutaction)              = dependencies.databaseMutactionExecutor.execute(Vector(mutaction)).await()
-  def runDbActionOnClientDb(action: DBIOAction[Any, NoStream, Effect.All]): Any = clientDatabase.run(action).await()
+  def runMutaction(mutaction: DeployMutaction)                     = dependencies.deployConnector.deployMutactionExecutor.execute(mutaction).await
+  def runDatabaseMutactionOnClientDb(mutaction: DatabaseMutaction) = dependencies.databaseMutactionExecutor.execute(Vector(mutaction)).await
 
   private def createModelTable(project: Project, model: Model) = {
     runMutaction(CreateModelTable(project.id, model.name))

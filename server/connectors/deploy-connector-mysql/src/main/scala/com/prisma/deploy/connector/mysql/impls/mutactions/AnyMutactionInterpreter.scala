@@ -2,7 +2,7 @@ package com.prisma.deploy.connector.mysql.impls.mutactions
 
 import com.prisma.deploy.connector._
 
-object AnyMutactionInterpreterImpl extends SqlMutactionInterpreter[DeployMutaction] {
+object MySqlAnyMutactionInterpreter extends SqlMutactionInterpreter[DeployMutaction] {
   override def execute(mutaction: DeployMutaction) = {
     mutaction match {
       case x: CreateProject         => CreateProjectInterpreter.execute(x)

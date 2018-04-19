@@ -1,7 +1,7 @@
 package com.prisma.api.mutations
 
 import com.prisma.api.ApiBaseSpec
-import com.prisma.api.connector.postgresql.database.ApiDatabaseQueryBuilderPostGres
+import com.prisma.api.connector.postgresql.database.PostgresApiDatabaseQueryBuilder
 import com.prisma.shared.models.Project
 import com.prisma.shared.schema_dsl.SchemaDsl
 import org.scalatest.{FlatSpec, Matchers}
@@ -190,7 +190,7 @@ class DeleteManySpec extends FlatSpec with Matchers with ApiBaseSpec {
     )
     result.pathAsSeq("data.todoes").size should be(int)
 
-    database.runDbActionOnClientDb(ApiDatabaseQueryBuilderPostGres.itemCountForTable(project.id, "_RelayId")) should be(Vector(int))
+    dataResolver(project).countByTable("_RelayId").await should be(int)
 
   }
 
