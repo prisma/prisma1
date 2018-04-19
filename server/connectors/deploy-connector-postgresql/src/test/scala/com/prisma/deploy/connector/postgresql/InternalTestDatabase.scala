@@ -3,16 +3,12 @@ package com.prisma.deploy.connector.postgresql
 import com.prisma.config.ConfigLoader
 import com.prisma.deploy.connector.postgresql.database.InternalDatabaseSchema
 import com.prisma.utils.await.AwaitUtils
-import slick.dbio.Effect.Read
 import slick.dbio.{DBIOAction, NoStream}
 import slick.jdbc.PostgresProfile.api._
-import slick.jdbc.meta.MTable
 
-import scala.concurrent.ExecutionContext
 import scala.util.{Failure, Success}
 
 class InternalTestDatabase extends AwaitUtils {
-  import scala.concurrent.ExecutionContext.Implicits.global
 
   val config = ConfigLoader.load() match {
     case Success(c)   => c
