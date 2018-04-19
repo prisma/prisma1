@@ -1,7 +1,7 @@
 package com.prisma.api.mutations
 
 import com.prisma.api.ApiBaseSpec
-import com.prisma.api.connector.mysql.database.DatabaseQueryBuilder
+import com.prisma.api.connector.postgresql.database.ApiDatabaseQueryBuilderPostGres
 import com.prisma.shared.schema_dsl.SchemaDsl
 import org.scalatest.{FlatSpec, Matchers}
 
@@ -34,7 +34,7 @@ class NestedCreateMutationInsideCreateSpec extends FlatSpec with Matchers with A
 
     res.toString should be("""{"data":{"createParent":{"p":"p1","childReq":{"c":"c1"}}}}""")
 
-    database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "_ChildToParent").as[Int]) should be(Vector(1))
+    database.runDbActionOnClientDb(ApiDatabaseQueryBuilderPostGres.itemCountForTable(project.id, "_ChildToParent")) should be(Vector(1))
 
   }
 
@@ -63,7 +63,7 @@ class NestedCreateMutationInsideCreateSpec extends FlatSpec with Matchers with A
       )
       .pathAsString("data.createParent.childReq.id")
 
-    database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "_ParentToChild").as[Int]) should be(Vector(1))
+    database.runDbActionOnClientDb(ApiDatabaseQueryBuilderPostGres.itemCountForTable(project.id, "_ParentToChild")) should be(Vector(1))
 
   }
 
@@ -93,7 +93,7 @@ class NestedCreateMutationInsideCreateSpec extends FlatSpec with Matchers with A
 
     res.toString should be("""{"data":{"createParent":{"childReq":{"c":"c1"}}}}""")
 
-    database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "_ParentToChild").as[Int]) should be(Vector(1))
+    database.runDbActionOnClientDb(ApiDatabaseQueryBuilderPostGres.itemCountForTable(project.id, "_ParentToChild")) should be(Vector(1))
 
   }
 
@@ -123,7 +123,7 @@ class NestedCreateMutationInsideCreateSpec extends FlatSpec with Matchers with A
 
     res.toString should be("""{"data":{"createParent":{"childOpt":{"c":"c1"}}}}""")
 
-    database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "_ParentToChild").as[Int]) should be(Vector(1))
+    database.runDbActionOnClientDb(ApiDatabaseQueryBuilderPostGres.itemCountForTable(project.id, "_ParentToChild")) should be(Vector(1))
   }
 
   "a PM to C1! " should "work" in {
@@ -152,7 +152,7 @@ class NestedCreateMutationInsideCreateSpec extends FlatSpec with Matchers with A
 
     res.toString should be("""{"data":{"createParent":{"childrenOpt":[{"c":"c1"},{"c":"c2"}]}}}""")
 
-    database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "_ParentToChild").as[Int]) should be(Vector(2))
+    database.runDbActionOnClientDb(ApiDatabaseQueryBuilderPostGres.itemCountForTable(project.id, "_ParentToChild")) should be(Vector(2))
   }
 
   "a P1 to C1!  relation " should "work" in {
@@ -181,7 +181,7 @@ class NestedCreateMutationInsideCreateSpec extends FlatSpec with Matchers with A
 
     res.toString should be("""{"data":{"createParent":{"childOpt":{"c":"c1"}}}}""")
 
-    database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "_ChildToParent").as[Int]) should be(Vector(1))
+    database.runDbActionOnClientDb(ApiDatabaseQueryBuilderPostGres.itemCountForTable(project.id, "_ChildToParent")) should be(Vector(1))
   }
 
   "a PM to C1  relation" should "work" in {
@@ -210,7 +210,7 @@ class NestedCreateMutationInsideCreateSpec extends FlatSpec with Matchers with A
 
     res.toString should be("""{"data":{"createParent":{"childrenOpt":[{"c":"c1"},{"c":"c2"}]}}}""")
 
-    database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "_ParentToChild").as[Int]) should be(Vector(2))
+    database.runDbActionOnClientDb(ApiDatabaseQueryBuilderPostGres.itemCountForTable(project.id, "_ParentToChild")) should be(Vector(2))
   }
 
   "a P1! to CM  relation " should "work" in {
@@ -239,7 +239,7 @@ class NestedCreateMutationInsideCreateSpec extends FlatSpec with Matchers with A
 
     res.toString should be("""{"data":{"createParent":{"childReq":{"c":"c1"}}}}""")
 
-    database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "_ChildToParent").as[Int]) should be(Vector(1))
+    database.runDbActionOnClientDb(ApiDatabaseQueryBuilderPostGres.itemCountForTable(project.id, "_ChildToParent")) should be(Vector(1))
   }
 
   "a P1 to CM relation" should "work" in {
@@ -268,7 +268,7 @@ class NestedCreateMutationInsideCreateSpec extends FlatSpec with Matchers with A
 
     res.toString should be("""{"data":{"createParent":{"childOpt":{"c":"c1"}}}}""")
 
-    database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "_ChildToParent").as[Int]) should be(Vector(1))
+    database.runDbActionOnClientDb(ApiDatabaseQueryBuilderPostGres.itemCountForTable(project.id, "_ChildToParent")) should be(Vector(1))
   }
 
   "a PM to CM  relation " should "work" in {
@@ -297,7 +297,7 @@ class NestedCreateMutationInsideCreateSpec extends FlatSpec with Matchers with A
 
     res.toString should be("""{"data":{"createParent":{"childrenOpt":[{"c":"c1"},{"c":"c2"}]}}}""")
 
-    database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "_ChildToParent").as[Int]) should be(Vector(2))
+    database.runDbActionOnClientDb(ApiDatabaseQueryBuilderPostGres.itemCountForTable(project.id, "_ChildToParent")) should be(Vector(2))
   }
 
   "a one to many relation" should "be creatable through a nested mutation" in {

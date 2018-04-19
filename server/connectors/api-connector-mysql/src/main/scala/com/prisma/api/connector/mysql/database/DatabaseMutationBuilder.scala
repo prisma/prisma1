@@ -65,7 +65,7 @@ object DatabaseMutationBuilder {
   //region UPDATE
 
   def updateDataItems(projectId: String, model: Model, args: PrismaArgs, whereFilter: Option[DataItemFilterCollection]) = {
-    val updateValues = combineByComma(args.raw.asRoot.map.map { case (k, v) => escapeKey(k) ++ sql" = " ++ gcValueToSQLBuilder(v) })
+    val updateValues = combineByComma(args.raw.asRoot.map.map { case (k, v) => escapeKey(k) ++ sql" = $v" })
 
     if (updateValues.isDefined) {
       (sql"UPDATE `#${projectId}`.`#${model.name}`" ++ sql"SET " ++ updateValues ++ whereFilterAppendix(projectId, model, whereFilter)).asUpdate
@@ -75,7 +75,7 @@ object DatabaseMutationBuilder {
   }
 
   def updateDataItemByPath(projectId: String, path: Path, updateArgs: PrismaArgs) = {
-    val updateValues = combineByComma(updateArgs.raw.asRoot.map.map { case (k, v) => escapeKey(k) ++ sql" = " ++ gcValueToSQLBuilder(v) })
+    val updateValues = combineByComma(updateArgs.raw.asRoot.map.map { case (k, v) => escapeKey(k) ++ sql" = $v" })
     def fromEdge(edge: Edge) = edge match {
       case edge: NodeEdge => sql" `#${path.childSideOfLastEdge}`" ++ idFromWhereEquals(projectId, edge.childWhere) ++ sql" AND "
       case _: ModelEdge   => sql""
@@ -221,9 +221,9 @@ object DatabaseMutationBuilder {
 
   def setScalarList(projectId: String, path: Path, fieldName: String, listGCValue: ListGCValue) = {
     val escapedValueTuples = for {
-      (escapedValue, position) <- listGCValue.values.map(gcValueToSQLBuilder).zip((1 to listGCValue.size).map(_ * 1000))
+      (value, position) <- listGCValue.values.zip((1 to listGCValue.size).map(_ * 1000))
     } yield {
-      sql"(@nodeId, $position, " ++ escapedValue ++ sql")"
+      sql"(@nodeId, $position, $value)"
     }
 
     DBIO.seq(

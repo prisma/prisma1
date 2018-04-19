@@ -5,11 +5,10 @@ case class ProjectId(name: String, stage: String) {
 }
 
 object ProjectId {
-  private val workspaceSeparator = '~'
-  private val stageSeparator     = '@'
-  private val defaultService     = "default"
-  private val defaultStage       = "default"
-
+  private val workspaceSeparator   = '~'
+  private val stageSeparator       = '$'
+  private val defaultService       = "default"
+  private val defaultStage         = "default"
   val reservedServiceAndStageNames = Seq("cluster", "export", "import")
 
   def fromEncodedString(str: String): ProjectId = {

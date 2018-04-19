@@ -36,12 +36,10 @@ class ListValueImportExportSpec extends FlatSpec with Matchers with ApiBaseSpec 
     database.setup(project)
   }
 
-  override def beforeEach(): Unit = {
-    database.truncate(project.id)
-  }
-  val importer                   = new BulkImport(project)
-  val exporter                   = new BulkExport(project)
-  val dataResolver: DataResolver = this.dataResolver(project)
+  override def beforeEach(): Unit = database.truncateProjectTables(project)
+  val importer                    = new BulkImport(project)
+  val exporter                    = new BulkExport(project)
+  val dataResolver: DataResolver  = this.dataResolver(project)
 
   "Importing ListValues for a wrong Id" should "fail" in {
 

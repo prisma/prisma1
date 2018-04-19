@@ -32,7 +32,7 @@ class PortedFiltersSpec extends FlatSpec with Matchers with ApiBaseSpec {
 
   override protected def beforeEach(): Unit = {
     super.beforeEach()
-    database.truncate(project.id)
+    database.truncateProjectTables(project)
   }
 
   def createTest(id: String, optString: String, optInt: Int, optFloat: Float, optBoolean: Boolean, optEnum: String, optDateTime: String): Unit = {

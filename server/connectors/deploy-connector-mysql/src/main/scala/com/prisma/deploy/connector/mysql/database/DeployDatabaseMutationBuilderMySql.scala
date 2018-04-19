@@ -1,10 +1,10 @@
 package com.prisma.deploy.connector.mysql.database
 
-import com.prisma.shared.models.TypeIdentifier
+import com.prisma.shared.models.{Project, TypeIdentifier}
 import com.prisma.shared.models.TypeIdentifier.TypeIdentifier
 import slick.jdbc.MySQLProfile.api._
 
-object DatabaseMutationBuilder {
+object DeployDatabaseMutationBuilderMySql {
   def createClientDatabaseForProject(projectId: String) = {
     val idCharset = charsetTypeForScalarTypeIdentifier(isList = false, TypeIdentifier.GraphQLID)
     DBIO.seq(
@@ -16,6 +16,15 @@ object DatabaseMutationBuilder {
   def dropClientDatabaseForProject(projectId: String) = {
     println(s"Dropping $projectId")
     DBIO.seq(sqlu"""DROP SCHEMA IF EXISTS `#$projectId`;""")
+  }
+
+  def truncateProjectTables(project: Project) = {
+    val listTableNames: List[String] =
+      project.models.flatMap(model => model.fields.collect { case field if field.isScalar && field.isList => s"${model.name}_${field.name}" })
+
+    val tables = Vector("_RelayId") ++ project.models.map(_.name) ++ project.relations.map(_.relationTableName) ++ listTableNames
+
+    DBIO.seq(tables.map(name => sqlu"""TRUNCATE TABLE  #${project.id}.#$name CASCADE """): _*)
   }
 
   def deleteProjectDatabase(projectId: String) = sqlu"DROP DATABASE IF EXISTS `#$projectId`"
