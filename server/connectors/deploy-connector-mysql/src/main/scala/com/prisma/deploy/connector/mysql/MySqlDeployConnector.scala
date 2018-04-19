@@ -3,7 +3,7 @@ package com.prisma.deploy.connector.mysql
 import com.prisma.config.DatabaseConfig
 import com.prisma.deploy.connector._
 import com.prisma.deploy.connector.mysql.database.{DeployDatabaseMutationBuilderMySql, InternalDatabaseSchema}
-import com.prisma.deploy.connector.mysql.impls.{ClientDbQueriesImpl, MySqlDeployMutactionExectutor, MigrationPersistenceImpl, ProjectPersistenceImpl}
+import com.prisma.deploy.connector.mysql.impls.{ClientDbQueriesImpl, MigrationPersistenceImpl, MySqlDeployMutactionExectutor, ProjectPersistenceImpl}
 import com.prisma.shared.models.Project
 import slick.dbio.Effect.Read
 import slick.dbio.{DBIOAction, NoStream}

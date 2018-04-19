@@ -1,7 +1,7 @@
 package com.prisma.deploy.connector.mysql.database
 
-import com.prisma.shared.models.{Project, TypeIdentifier}
 import com.prisma.shared.models.TypeIdentifier.TypeIdentifier
+import com.prisma.shared.models.{Project, TypeIdentifier}
 import slick.jdbc.MySQLProfile.api._
 
 object DeployDatabaseMutationBuilderMySql {

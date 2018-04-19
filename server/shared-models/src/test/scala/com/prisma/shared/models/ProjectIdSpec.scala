@@ -1,6 +1,6 @@
 package com.prisma.shared.models
 
-import org.scalatest.{WordSpec, Matchers}
+import org.scalatest.{Matchers, WordSpec}
 
 class ProjectIdSpec extends WordSpec with Matchers {
   ".toEncodedString" when {

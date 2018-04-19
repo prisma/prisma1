@@ -1,7 +1,7 @@
 package com.prisma.api.connector.postgresql.impl
 
-import com.prisma.api.connector.postgresql.DatabaseMutactionInterpreter
 import com.prisma.api.connector._
+import com.prisma.api.connector.postgresql.DatabaseMutactionInterpreter
 import slick.jdbc.MySQLProfile.api._
 import slick.jdbc.TransactionIsolation
 

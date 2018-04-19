@@ -19,11 +19,10 @@ import com.prisma.sangria.utils.ErrorHandler
 import com.prisma.shared.models.ProjectWithClientId
 import com.typesafe.scalalogging.LazyLogging
 import cool.graph.cuid.Cuid.createCuid
-import play.api.libs.json.Json
+import de.heikoseeberger.akkahttpplayjson.PlayJsonSupport
+import play.api.libs.json.{Json, _}
 import sangria.execution.{Executor, QueryAnalysisError}
 import sangria.parser.QueryParser
-import play.api.libs.json._
-import de.heikoseeberger.akkahttpplayjson.PlayJsonSupport
 
 import scala.concurrent.Future
 import scala.language.postfixOps

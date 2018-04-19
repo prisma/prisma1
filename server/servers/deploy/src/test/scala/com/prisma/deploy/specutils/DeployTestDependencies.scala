@@ -6,7 +6,6 @@ import com.prisma.auth.AuthImpl
 import com.prisma.config.DatabaseConfig
 import com.prisma.deploy.DeployDependencies
 import com.prisma.deploy.connector.DeployConnector
-import com.prisma.deploy.connector.mysql.MySqlDeployConnector
 import com.prisma.deploy.connector.postgresql.PostgresDeployConnector
 import com.prisma.deploy.migration.validation.SchemaError
 import com.prisma.deploy.schema.mutations.{FunctionInput, FunctionValidator}

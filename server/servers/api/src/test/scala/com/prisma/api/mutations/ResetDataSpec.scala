@@ -1,14 +1,10 @@
 package com.prisma.api.mutations
 
-import java.sql.SQLIntegrityConstraintViolationException
-
 import com.prisma.api.ApiBaseSpec
-import com.prisma.api.connector.postgresql.database.PostgresApiDatabaseQueryBuilder
 import com.prisma.api.import_export.BulkImport
 import com.prisma.shared.models.Project
 import com.prisma.shared.schema_dsl.SchemaDsl
 import com.prisma.utils.await.AwaitUtils
-import org.postgresql.util.PSQLException
 import org.scalatest.{FlatSpec, Matchers}
 
 class ResetDataSpec extends FlatSpec with Matchers with ApiBaseSpec with AwaitUtils {

@@ -1,6 +1,7 @@
 package com.prisma.api.connector.mysql.impl
 
 import java.sql.{SQLException, SQLIntegrityConstraintViolationException}
+
 import com.prisma.api.connector._
 import com.prisma.api.connector.mysql.DatabaseMutactionInterpreter
 import com.prisma.api.connector.mysql.database.DatabaseMutationBuilder
@@ -9,13 +10,13 @@ import com.prisma.api.connector.mysql.database.DatabaseMutationBuilder.{
   oldParentFailureTriggerByField,
   oldParentFailureTriggerByFieldAndFilter
 }
+import com.prisma.api.connector.mysql.database.ErrorMessageParameterHelper.parameterString
 import com.prisma.api.connector.mysql.impl.GetFieldFromSQLUniqueException.getFieldOption
 import com.prisma.api.schema.APIErrors
 import com.prisma.api.schema.APIErrors.RequiredRelationWouldBeViolated
 import com.prisma.shared.models.{Field, Relation}
 import slick.dbio.DBIOAction
 import slick.jdbc.MySQLProfile.api._
-import com.prisma.api.connector.mysql.database.ErrorMessageParameterHelper.parameterString
 
 case class AddDataItemToManyRelationByPathInterpreter(mutaction: AddDataItemToManyRelationByPath) extends DatabaseMutactionInterpreter {
 

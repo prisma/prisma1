@@ -3,8 +3,8 @@ package com.prisma.rabbit
 import java.nio.charset.StandardCharsets
 
 import com.prisma.errors.ErrorReporter
-import com.rabbitmq.client.{Channel => RabbitChannel, Consumer => RabbitConsumer, _}
 import com.prisma.rabbit.Bindings.Binding
+import com.rabbitmq.client.{Channel => RabbitChannel, Consumer => RabbitConsumer, _}
 
 import scala.util.Try
 

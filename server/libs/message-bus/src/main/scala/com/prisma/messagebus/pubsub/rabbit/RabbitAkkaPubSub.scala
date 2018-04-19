@@ -1,8 +1,8 @@
 package com.prisma.messagebus.pubsub.rabbit
 
 import akka.actor.{ActorRef, ActorSystem}
-import com.prisma.errors.ErrorReporter
 import com.prisma.akkautil.SingleThreadedActorSystem
+import com.prisma.errors.ErrorReporter
 import com.prisma.messagebus.Conversions.{ByteMarshaller, ByteUnmarshaller, Converter}
 import com.prisma.messagebus._
 import com.prisma.messagebus.pubsub.{Message, Only, Subscription, Topic}

@@ -1,7 +1,7 @@
 package com.prisma.api.connector.mysql.impl
 
-import com.prisma.api.connector.mysql.DatabaseMutactionInterpreter
 import com.prisma.api.connector._
+import com.prisma.api.connector.mysql.DatabaseMutactionInterpreter
 import slick.jdbc.MySQLProfile.api._
 import slick.jdbc.TransactionIsolation
 

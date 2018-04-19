@@ -1,6 +1,7 @@
 package com.prisma.utils.json
 
 import play.api.libs.json._
+
 import scala.util.{Failure, Success, Try}
 
 object PlayJson extends PlayJsonExtensions with JsonUtils {

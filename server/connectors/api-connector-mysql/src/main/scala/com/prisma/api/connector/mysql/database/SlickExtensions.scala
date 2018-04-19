@@ -3,7 +3,6 @@ package com.prisma.api.connector.mysql.database
 import com.prisma.api.connector.Types.DataItemFilterCollection
 import com.prisma.api.connector.mysql.database.JdbcExtensions._
 import com.prisma.gc_values._
-import com.prisma.shared.models.Model
 import slick.jdbc.MySQLProfile.api._
 import slick.jdbc.{PositionedParameters, SQLActionBuilder, SetParameter}
 

@@ -1,7 +1,7 @@
 package com.prisma.deploy.connector.postgresql.impls.mutactions
 
-import com.prisma.deploy.connector.postgresql.database.DeployDatabaseMutationBuilderPostGres
 import com.prisma.deploy.connector._
+import com.prisma.deploy.connector.postgresql.database.DeployDatabaseMutationBuilderPostGres
 import slick.jdbc.PostgresProfile.api._
 
 object CreateColumnInterpreter extends SqlMutactionInterpreter[CreateColumn] {

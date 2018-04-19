@@ -1,7 +1,6 @@
 package com.prisma.api.mutations
 
 import com.prisma.api.ApiBaseSpec
-import com.prisma.api.connector.postgresql.database.PostgresApiDatabaseQueryBuilder
 import com.prisma.shared.models._
 import com.prisma.shared.schema_dsl.SchemaDsl
 import org.scalatest.{FlatSpec, Matchers}

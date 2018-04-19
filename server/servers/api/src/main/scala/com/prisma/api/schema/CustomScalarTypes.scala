@@ -2,10 +2,11 @@ package com.prisma.api.schema
 
 import org.joda.time.format.DateTimeFormat
 import org.joda.time.{DateTime, DateTimeZone}
+import play.api.libs.json._
 import sangria.ast
 import sangria.schema._
 import sangria.validation.ValueCoercionViolation
-import play.api.libs.json._
+
 import scala.util.{Failure, Success, Try}
 
 object CustomScalarTypes {

@@ -7,7 +7,6 @@ import com.prisma.api.mutactions.{DatabaseMutactionVerifierImpl, SideEffectMutac
 import com.prisma.api.project.ProjectFetcher
 import com.prisma.api.schema.SchemaBuilder
 import com.prisma.config.ConfigLoader
-import com.prisma.deploy.DeployDependencies
 import com.prisma.deploy.connector.postgresql.PostgresDeployConnector
 import com.prisma.messagebus.pubsub.inmemory.InMemoryAkkaPubSub
 import com.prisma.messagebus.testkits.InMemoryQueueTestKit

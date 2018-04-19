@@ -1,9 +1,5 @@
-import com.typesafe.sbt.SbtGit.GitKeys
-import com.typesafe.sbt.git.ConsoleGitRunner
 import sbt.Keys.name
 import sbt._
-
-import scala.io.Source
 
 name := "server"
 Revolver.settings

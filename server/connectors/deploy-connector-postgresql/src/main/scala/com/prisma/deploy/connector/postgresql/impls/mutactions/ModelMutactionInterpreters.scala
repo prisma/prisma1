@@ -1,10 +1,10 @@
 package com.prisma.deploy.connector.postgresql.impls.mutactions
 
 import com.prisma.deploy.connector.postgresql.database.DeployDatabaseMutationBuilderPostGres
+import com.prisma.deploy.connector.postgresql.database.DeployDatabaseMutationBuilderPostGres._
 import com.prisma.deploy.connector.{CreateModelTable, DeleteModelTable, RenameTable}
 import slick.dbio.{DBIOAction, Effect, NoStream}
 import slick.jdbc.PostgresProfile.api._
-import DeployDatabaseMutationBuilderPostGres._
 
 object CreateModelInterpreter extends SqlMutactionInterpreter[CreateModelTable] {
   override def execute(mutaction: CreateModelTable)  = createTable(projectId = mutaction.projectId, name = mutaction.model)

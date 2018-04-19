@@ -1,6 +1,7 @@
 package com.prisma.api.connector.postgresql.impl
 
-import java.sql.{SQLException, SQLIntegrityConstraintViolationException}
+import java.sql.SQLIntegrityConstraintViolationException
+
 import com.prisma.api.connector._
 import com.prisma.api.connector.postgresql.DatabaseMutactionInterpreter
 import com.prisma.api.connector.postgresql.database.DatabaseMutationBuilder

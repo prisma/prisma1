@@ -7,11 +7,10 @@ import com.prisma.sangria.utils.ErrorHandler
 import com.prisma.shared.models.{Migration, MigrationId, Project, ProjectId}
 import com.prisma.utils.await.AwaitUtils
 import com.prisma.utils.json.PlayJsonExtensions
-import play.api.libs.json.{JsArray, JsString}
+import play.api.libs.json.{JsArray, JsString, _}
 import sangria.execution.{Executor, QueryAnalysisError}
 import sangria.parser.QueryParser
 import sangria.renderer.SchemaRenderer
-import play.api.libs.json._
 
 import scala.concurrent.Await
 import scala.concurrent.ExecutionContext.Implicits.global

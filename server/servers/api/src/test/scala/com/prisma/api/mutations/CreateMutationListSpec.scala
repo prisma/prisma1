@@ -4,7 +4,6 @@ import com.prisma.api.ApiBaseSpec
 import com.prisma.api.util.TroubleCharacters
 import com.prisma.shared.schema_dsl.SchemaDsl
 import org.scalatest.{FlatSpec, Matchers}
-import play.api.libs.json._
 
 class CreateMutationListSpec extends FlatSpec with Matchers with ApiBaseSpec {
 

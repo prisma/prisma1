@@ -5,7 +5,7 @@ import java.io.File
 import org.yaml.snakeyaml.Yaml
 
 import scala.collection.mutable
-import scala.util.{Failure, Success, Try}
+import scala.util.Try
 
 object ConfigLoader {
   import scala.collection.JavaConverters.mapAsScalaMap

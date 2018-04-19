@@ -1,6 +1,6 @@
 package com.prisma.api.connector.mysql
 
-import com.prisma.api.connector.mysql.database.{MySqlDataResolver, Databases}
+import com.prisma.api.connector.mysql.database.{Databases, MySqlDataResolver}
 import com.prisma.api.connector.mysql.impl.DatabaseMutactionExecutorImpl
 import com.prisma.api.connector.{ApiConnector, DatabaseMutactionExecutor}
 import com.prisma.config.DatabaseConfig

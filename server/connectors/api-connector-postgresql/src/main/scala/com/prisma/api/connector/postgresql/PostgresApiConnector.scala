@@ -1,6 +1,6 @@
 package com.prisma.api.connector.postgresql
 
-import com.prisma.api.connector.postgresql.database.{PostgresDataResolver, Databases}
+import com.prisma.api.connector.postgresql.database.{Databases, PostgresDataResolver}
 import com.prisma.api.connector.postgresql.impl.DatabaseMutactionExecutorImpl
 import com.prisma.api.connector.{ApiConnector, DatabaseMutactionExecutor}
 import com.prisma.config.DatabaseConfig

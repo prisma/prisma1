@@ -3,7 +3,6 @@ package com.prisma.api.connector.postgresql.database
 import com.prisma.api.connector.Types.DataItemFilterCollection
 import com.prisma.api.connector.postgresql.database.JdbcExtensions._
 import com.prisma.gc_values._
-import com.prisma.shared.models.Model
 import slick.jdbc.PostgresProfile.api._
 import slick.jdbc.{PositionedParameters, SQLActionBuilder, SetParameter}
 
