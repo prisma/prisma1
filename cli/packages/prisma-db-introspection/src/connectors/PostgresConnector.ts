@@ -12,9 +12,12 @@ export class PostgresConnector {
   connectionPromise
 
   constructor(connectionDetails: PostgresConnectionDetails) {
-    console.log({ connectionDetails })
     this.client = new Client(connectionDetails)
     this.connectionPromise = this.client.connect()
+    // auto disconnect. end waits for queries to succeed
+    setTimeout(() => {
+      this.client.end()
+    }, 3000)
   }
 
   async queryRelations(schemaName: string) {
