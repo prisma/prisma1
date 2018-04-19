@@ -10,6 +10,7 @@ jobs:
           #POSTGRES_DB: prisma
     steps:
       - checkout
+      - run: sudo apt install postgresql-client
       - run: echo "//registry.npmjs.org/:_authToken=${NPM_TOKEN}" > ~/.npmrc
       - run: cd cli && yarn
       - run:
