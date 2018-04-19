@@ -12,6 +12,7 @@ export class PostgresConnector {
   connectionPromise
 
   constructor(connectionDetails: PostgresConnectionDetails) {
+    console.log({ connectionDetails })
     this.client = new Client(connectionDetails)
     this.connectionPromise = this.client.connect()
   }
@@ -156,6 +157,9 @@ WHERE constraint_type = 'FOREIGN KEY' AND tc.table_schema = $1::text;`,
       return { typeIdentifier: 'Boolean', comment: null, error: null }
     }
     if (type === 'timestamp without time zone') {
+      return { typeIdentifier: 'DateTime', comment: null, error: null }
+    }
+    if (type === 'timestamp with time zone') {
       return { typeIdentifier: 'DateTime', comment: null, error: null }
     }
     if (type === 'timestamp') {
