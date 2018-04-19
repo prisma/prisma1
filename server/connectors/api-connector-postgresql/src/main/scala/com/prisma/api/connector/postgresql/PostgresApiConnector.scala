@@ -3,14 +3,13 @@ package com.prisma.api.connector.postgresql
 import com.prisma.api.connector.postgresql.database.{DataResolverImpl, Databases}
 import com.prisma.api.connector.postgresql.impl.DatabaseMutactionExecutorImpl
 import com.prisma.api.connector.{ApiConnector, DatabaseMutactionExecutor}
+import com.prisma.config.DatabaseConfig
 import com.prisma.shared.models.Project
-import com.typesafe.config.{Config, ConfigFactory}
 
 import scala.concurrent.{ExecutionContext, Future}
 
-case class ApiConnectorImpl()(implicit ec: ExecutionContext) extends ApiConnector {
-  lazy val config: Config = ConfigFactory.load()
-  lazy val databases      = Databases.initialize(config)
+case class PostgresApiConnector(config: DatabaseConfig)(implicit ec: ExecutionContext) extends ApiConnector {
+  lazy val databases = Databases.initialize(config)
 
   override def initialize() = {
     databases
@@ -27,5 +26,4 @@ case class ApiConnectorImpl()(implicit ec: ExecutionContext) extends ApiConnecto
   override def databaseMutactionExecutor: DatabaseMutactionExecutor = DatabaseMutactionExecutorImpl(databases.master)
   override def dataResolver(project: Project)                       = DataResolverImpl(project, databases.readOnly)
   override def masterDataResolver(project: Project)                 = DataResolverImpl(project, databases.master)
-
 }

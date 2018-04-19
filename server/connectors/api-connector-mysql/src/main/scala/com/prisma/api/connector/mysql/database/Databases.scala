@@ -9,26 +9,14 @@ case class Databases(master: DatabaseDef, readOnly: DatabaseDef)
 
 object Databases {
   private lazy val dbDriver = new org.mariadb.jdbc.Driver
-//  private val configRoot    = "clientDatabases"
 
   def initialize(dbConfig: DatabaseConfig): Databases = {
-//    import scala.collection.JavaConverters._
     val config   = typeSafeConfigFromDatabaseConfig(dbConfig)
     val masterDb = Database.forConfig("database", config, driver = dbDriver)
     val dbs = Databases(
       master = masterDb,
       readOnly = masterDb //if (config.hasPath(readOnlyPath)) readOnlyDb else masterDb
     )
-
-//    val databasesMap = for {
-//      dbName <- asScalaSet(config.getObject(configRoot).keySet())
-//    } yield {
-////      val readOnlyPath = s"$configRoot.$dbName.readonly"
-//      val masterDb = Database.forConfig("database", config, driver = dbDriver)
-////      lazy val readOnlyDb = Database.forConfig(readOnlyPath, config, driver = dbDriver)
-//
-//      dbName -> dbs
-//    }
 
     dbs
   }

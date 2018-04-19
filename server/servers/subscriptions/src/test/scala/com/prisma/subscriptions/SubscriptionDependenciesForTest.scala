@@ -2,7 +2,8 @@ package com.prisma.subscriptions
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
 import com.prisma.api.ApiDependencies
-import com.prisma.api.connector.mysql.MySqlApiConnector
+import com.prisma.api.connector.postgresql.PostgresApiConnector
+//import com.prisma.api.connector.mysql.MySqlApiConnector
 import com.prisma.api.mutactions.{DatabaseMutactionVerifierImpl, SideEffectMutactionExecutorImpl}
 import com.prisma.api.project.{ProjectFetcher, ProjectFetcherImpl}
 import com.prisma.api.schema.SchemaBuilder
@@ -60,7 +61,7 @@ class SubscriptionDependenciesForTest()(implicit val system: ActorSystem, val ma
   override lazy val sssEventsPubSub                 = ???
   override lazy val webhookPublisher                = ???
 
-  override lazy val apiConnector                = MySqlApiConnector(config.databases.head)
+  override lazy val apiConnector                = PostgresApiConnector(config.databases.head)
   override lazy val sideEffectMutactionExecutor = SideEffectMutactionExecutorImpl()
   override lazy val mutactionVerifier           = DatabaseMutactionVerifierImpl
 }

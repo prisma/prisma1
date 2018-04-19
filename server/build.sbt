@@ -89,6 +89,8 @@ lazy val prismaImageShared = imageProject("prisma-image-shared")
   .dependsOn(deploy % "compile")
   .dependsOn(deployConnectorMySql % "compile")
   .dependsOn(apiConnectorMySql % "compile")
+  .dependsOn(deployConnectorPostgres % "compile")
+  .dependsOn(apiConnectorPostgres % "compile")
   .dependsOn(subscriptions % "compile")
   .dependsOn(workers % "compile")
   .dependsOn(graphQlClient % "compile")
@@ -101,7 +103,7 @@ lazy val prismaImageShared = imageProject("prisma-image-shared")
 lazy val deploy = serverProject("deploy")
   .dependsOn(deployConnector % "compile")
   .dependsOn(deployConnectorMySql % "test->test")
-  .dependsOn(deployConnectorPostGreSql % "test->test")
+  .dependsOn(deployConnectorPostgres % "test->test")
   .dependsOn(akkaUtils % "compile")
   .dependsOn(metrics % "compile")
   .dependsOn(jvmProfiler % "compile")
@@ -114,7 +116,7 @@ lazy val deploy = serverProject("deploy")
 lazy val api = serverProject("api")
   .dependsOn(apiConnector % "compile")
   .dependsOn(apiConnectorMySql % "test->test")
-  .dependsOn(apiConnectorPostGreSql % "test->test")
+  .dependsOn(apiConnectorPostgres % "test->test")
   .dependsOn(deploy % "test->test")
   .dependsOn(messageBus % "compile")
   .dependsOn(akkaUtils % "compile")
@@ -151,7 +153,7 @@ lazy val deployConnectorMySql = connectorProject("deploy-connector-mysql")
     libraryDependencies ++= slick ++ Seq(mariaDbClient)
   )
 
-lazy val deployConnectorPostGreSql = connectorProject("deploy-connector-postgresql")
+lazy val deployConnectorPostgres = connectorProject("deploy-connector-postgresql")
   .dependsOn(deployConnector % "compile")
   .dependsOn(scalaUtils % "compile")
   .settings(
@@ -173,7 +175,7 @@ lazy val apiConnectorMySql = connectorProject("api-connector-mysql")
     libraryDependencies ++= slick ++ Seq(mariaDbClient)
   )
 
-lazy val apiConnectorPostGreSql = connectorProject("api-connector-postgresql")
+lazy val apiConnectorPostgres = connectorProject("api-connector-postgresql")
   .dependsOn(apiConnector % "compile")
   .dependsOn(scalaUtils % "compile")
   .dependsOn(metrics % "compile")
@@ -336,10 +338,10 @@ val allServerProjects = List(
 val allConnectorProjects = List(
   deployConnector,
   deployConnectorMySql,
-  deployConnectorPostGreSql,
+  deployConnectorPostgres,
   apiConnector,
   apiConnectorMySql,
-  apiConnectorPostGreSql
+  apiConnectorPostgres
 )
 
 val allLibProjects = List(

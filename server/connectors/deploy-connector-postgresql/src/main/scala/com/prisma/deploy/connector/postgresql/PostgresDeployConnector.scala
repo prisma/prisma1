@@ -1,5 +1,6 @@
 package com.prisma.deploy.connector.postgresql
 
+import com.prisma.config.DatabaseConfig
 import com.prisma.deploy.connector._
 import com.prisma.deploy.connector.postgresql.database.{DeployDatabaseMutationBuilderPostGres, InternalDatabaseSchema}
 import com.prisma.deploy.connector.postgresql.impls.{ClientDbQueriesImpl, DeployMutactionExecutorImpl, MigrationPersistenceImpl, ProjectPersistenceImpl}
@@ -11,10 +12,11 @@ import slick.jdbc.meta.MTable
 
 import scala.concurrent.{ExecutionContext, Future}
 
-case class PostGreSqlDeployConnector(clientDatabase: Database)(implicit ec: ExecutionContext) extends DeployConnector with TableTruncationHelpers {
-  lazy val internalDatabaseDefs = InternalDatabaseDefs()
+case class PostgresDeployConnector(dbConfig: DatabaseConfig)(implicit ec: ExecutionContext) extends DeployConnector with TableTruncationHelpers {
+  lazy val internalDatabaseDefs = InternalDatabaseDefs(dbConfig)
   lazy val internalDatabaseRoot = internalDatabaseDefs.internalDatabaseRoot
   lazy val internalDatabase     = internalDatabaseDefs.internalDatabase
+  lazy val clientDatabase       = internalDatabaseRoot
 
   override val projectPersistence: ProjectPersistence           = ProjectPersistenceImpl(internalDatabase)
   override val migrationPersistence: MigrationPersistence       = MigrationPersistenceImpl(internalDatabase)

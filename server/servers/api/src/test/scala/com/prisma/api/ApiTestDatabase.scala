@@ -3,24 +3,25 @@ package com.prisma.api
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
 import com.prisma.api.connector.DatabaseMutaction
-import com.prisma.api.connector.mysql.MySqlApiConnector
+import com.prisma.api.connector.postgresql.PostgresApiConnector
+//import com.prisma.api.connector.mysql.MySqlApiConnector
 import com.prisma.deploy.connector._
 import com.prisma.deploy.connector.postgresql.impls.DeployMutactionExecutorImpl
 import com.prisma.shared.models._
 import com.prisma.utils.await.AwaitUtils
 import slick.dbio.DBIOAction
 
-//import slick.jdbc.PostgresProfile.api._
-//import slick.jdbc.PostgresProfile.backend.DatabaseDef
+import slick.jdbc.PostgresProfile.api._
+import slick.jdbc.PostgresProfile.backend.DatabaseDef
 
-import slick.jdbc.MySQLProfile.api._
-import slick.jdbc.MySQLProfile.backend.DatabaseDef
+//import slick.jdbc.MySQLProfile.api._
+//import slick.jdbc.MySQLProfile.backend.DatabaseDef
 
 case class ApiTestDatabase()(implicit dependencies: ApiDependencies) extends AwaitUtils {
 
   implicit lazy val system: ActorSystem             = dependencies.system
   implicit lazy val materializer: ActorMaterializer = dependencies.materializer
-  private lazy val clientDatabase: DatabaseDef      = dependencies.apiConnector.asInstanceOf[MySqlApiConnector].databases.master
+  private lazy val clientDatabase: DatabaseDef      = dependencies.apiConnector.asInstanceOf[PostgresApiConnector].databases.master
 
   def setup(project: Project): Unit = {
     deleteProjectDatabase(project)

@@ -1,23 +1,35 @@
 package com.prisma.deploy.connector.postgresql
 
-case class InternalDatabaseDefs() {
+import com.prisma.config.DatabaseConfig
+import com.typesafe.config.{Config, ConfigFactory}
+
+case class InternalDatabaseDefs(dbConfig: DatabaseConfig) {
   import slick.jdbc.PostgresProfile.api._
 
-  lazy val internalDatabaseRoot = database(root = true)
-  lazy val internalDatabase     = database(root = false)
+  lazy val internalDatabaseRoot = database
+  lazy val internalDatabase     = database
 
-  def database(root: Boolean) = {
-    val postgresInternalHost     = sys.env("POSTGRES_INTERNAL_HOST")
-    val postgresInternalPort     = sys.env("POSTGRES_INTERNAL_PORT")
-    val postgresInternalDatabase = sys.env("POSTGRES_INTERNAL_DATABASE")
-    val postgresInternalUser     = sys.env("POSTGRES_INTERNAL_USER")
-    val postgresInternalPassword = sys.env("POSTGRES_INTERNAL_PASSWORD")
-//    val schemaPart               = if (root) "" else "/" + postgresInternalDatabase
-    Database.forURL(
-      url = s"jdbc:postgresql://$postgresInternalHost:$postgresInternalPort/",
-      user = postgresInternalUser,
-      password = postgresInternalPassword,
-      driver = "org.postgresql.Driver"
-    )
+  private lazy val dbDriver = new org.postgresql.Driver
+
+  lazy val database = {
+    val config = typeSafeConfigFromDatabaseConfig(dbConfig)
+    Database.forConfig("database", config, driver = dbDriver)
+  }
+
+  def typeSafeConfigFromDatabaseConfig(dbConfig: DatabaseConfig): Config = {
+    ConfigFactory
+      .parseString(s"""
+        |database {
+        |  dataSourceClass = "slick.jdbc.DriverDataSource"
+        |  properties {
+        |    url = "jdbc:postgresql://${dbConfig.host}:${dbConfig.port}/"
+        |    user = ${dbConfig.user}
+        |    password = ${dbConfig.password}
+        |  }
+        |  numThreads = ${dbConfig.connectionLimit.getOrElse(10)}
+        |  connectionTimeout = 5000
+        |}
+      """.stripMargin)
+      .resolve
   }
 }

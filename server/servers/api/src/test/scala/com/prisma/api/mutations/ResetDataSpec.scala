@@ -130,7 +130,7 @@ class ResetDataSpec extends FlatSpec with Matchers with ApiBaseSpec with AwaitUt
 
     database.runDbActionOnClientDb(ApiDatabaseQueryBuilderPostGres.itemCountForTable(project.id, "_RelayId")) should be(Vector(0))
 
-    import slick.jdbc.MySQLProfile.api._
+    import slick.jdbc.PostgresProfile.api._
     val insert = sql"INSERT INTO `#${project.id}`.`_Relation1` VALUES ('someID', 'a', 'b')"
 
     intercept[PSQLException] { database.runDbActionOnClientDb(insert.asUpdate) }

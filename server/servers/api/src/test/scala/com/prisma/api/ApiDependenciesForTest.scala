@@ -2,7 +2,8 @@ package com.prisma.api
 
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
-import com.prisma.api.connector.mysql.MySqlApiConnector
+import com.prisma.api.connector.postgresql.PostgresApiConnector
+//import com.prisma.api.connector.mysql.MySqlApiConnector
 import com.prisma.api.mutactions.{DatabaseMutactionVerifierImpl, SideEffectMutactionExecutorImpl}
 import com.prisma.api.project.ProjectFetcher
 import com.prisma.api.schema.SchemaBuilder
@@ -26,7 +27,7 @@ case class ApiDependenciesForTest()(implicit val system: ActorSystem, val materi
   override lazy val maxImportExportSize: Int    = 1000
   override lazy val sssEventsPubSub             = InMemoryAkkaPubSub[String]()
   override lazy val webhookPublisher            = InMemoryQueueTestKit[Webhook]()
-  override lazy val apiConnector                = MySqlApiConnector(config.databases.head)
+  override lazy val apiConnector                = PostgresApiConnector(config.databases.head)
   override lazy val sideEffectMutactionExecutor = SideEffectMutactionExecutorImpl()
   override lazy val mutactionVerifier           = DatabaseMutactionVerifierImpl
 }

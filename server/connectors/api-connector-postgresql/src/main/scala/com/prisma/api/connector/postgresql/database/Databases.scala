@@ -1,6 +1,7 @@
 package com.prisma.api.connector.postgresql.database
 
-import com.typesafe.config.Config
+import com.prisma.config.DatabaseConfig
+import com.typesafe.config.{Config, ConfigFactory}
 import slick.jdbc.PostgresProfile.api._
 import slick.jdbc.PostgresProfile.backend.DatabaseDef
 
@@ -8,27 +9,32 @@ case class Databases(master: DatabaseDef, readOnly: DatabaseDef)
 
 object Databases {
   private lazy val dbDriver = new org.postgresql.Driver
-  private val configRoot    = "clientDatabasesPG"
 
-  def initialize(config: Config): Databases = {
-    import scala.collection.JavaConverters._
-    config.resolve()
+  def initialize(dbConfig: DatabaseConfig): Databases = {
+    val config   = typeSafeConfigFromDatabaseConfig(dbConfig)
+    val masterDb = Database.forConfig("database", config, driver = dbDriver)
+    val dbs = Databases(
+      master = masterDb,
+      readOnly = masterDb
+    )
 
-    val databasesMap = for {
-      dbName <- asScalaSet(config.getObject(configRoot).keySet())
-    } yield {
-      val readOnlyPath    = s"$configRoot.$dbName.readonly"
-      val masterDb        = Database.forConfig(s"$configRoot.$dbName.master", config, driver = dbDriver)
-      lazy val readOnlyDb = Database.forConfig(readOnlyPath, config, driver = dbDriver)
+    dbs
+  }
 
-      val dbs = Databases(
-        master = masterDb,
-        readOnly = if (config.hasPath(readOnlyPath)) readOnlyDb else masterDb
-      )
-
-      dbName -> dbs
-    }
-
-    databasesMap.head._2
+  def typeSafeConfigFromDatabaseConfig(dbConfig: DatabaseConfig): Config = {
+    ConfigFactory
+      .parseString(s"""
+        |database {
+        |  dataSourceClass = "slick.jdbc.DriverDataSource"
+        |  properties {
+        |    url = "jdbc:postgresql://${dbConfig.host}:${dbConfig.port}/"
+        |    user = ${dbConfig.user}
+        |    password = ${dbConfig.password}
+        |  }
+        |  numThreads = ${dbConfig.connectionLimit.getOrElse(10)}
+        |  connectionTimeout = 5000
+        |}
+      """.stripMargin)
+      .resolve
   }
 }
