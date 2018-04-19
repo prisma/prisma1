@@ -8,10 +8,8 @@ import com.prisma.shared.models._
 import com.prisma.utils.await.AwaitUtils
 
 case class ApiTestDatabase()(implicit dependencies: TestApiDependencies) extends AwaitUtils {
-
   implicit lazy val system: ActorSystem             = dependencies.system
   implicit lazy val materializer: ActorMaterializer = dependencies.materializer
-//  private lazy val clientDatabase: DatabaseDef      = dependencies.apiConnector.asInstanceOf[PostgresApiConnector].databases.master
 
   def setup(project: Project): Unit = {
     deleteProjectDatabase(project)

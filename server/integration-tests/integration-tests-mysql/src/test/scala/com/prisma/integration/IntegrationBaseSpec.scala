@@ -4,7 +4,7 @@ import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
 import com.prisma.api.connector.DataResolver
 import com.prisma.api.util.StringMatchers
-import com.prisma.api.{ApiTestServer, TestApiDependencies}
+import com.prisma.api.{ApiTestServer, TestApiDependenciesImpl}
 import com.prisma.deploy.specutils.{DeployTestDependencies, DeployTestServer}
 import com.prisma.shared.models.{Migration, Project}
 import com.prisma.utils.await.AwaitUtils
@@ -30,7 +30,7 @@ trait IntegrationBaseSpec extends BeforeAndAfterEach with BeforeAndAfterAll with
 
   // API
 
-  implicit lazy val apiTestDependencies = new TestApiDependencies
+  implicit lazy val apiTestDependencies = new TestApiDependenciesImpl
   val apiServer                         = ApiTestServer()
 
   def dataResolver(project: Project): DataResolver = apiTestDependencies.dataResolver(project)

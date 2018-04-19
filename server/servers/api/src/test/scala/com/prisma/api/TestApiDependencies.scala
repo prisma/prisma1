@@ -2,11 +2,13 @@ package com.prisma.api
 
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
+import com.prisma.api.connector.DatabaseMutactionExecutor
 import com.prisma.api.connector.postgresql.PostgresApiConnector
 import com.prisma.api.mutactions.{DatabaseMutactionVerifierImpl, SideEffectMutactionExecutorImpl}
 import com.prisma.api.project.ProjectFetcher
 import com.prisma.api.schema.SchemaBuilder
 import com.prisma.config.ConfigLoader
+import com.prisma.deploy.connector.DeployConnector
 import com.prisma.deploy.connector.postgresql.PostgresDeployConnector
 import com.prisma.messagebus.pubsub.inmemory.InMemoryAkkaPubSub
 import com.prisma.messagebus.testkits.InMemoryQueueTestKit
@@ -14,7 +16,15 @@ import com.prisma.subscriptions.Webhook
 
 import scala.util.{Failure, Success}
 
-case class TestApiDependencies()(implicit val system: ActorSystem, val materializer: ActorMaterializer) extends ApiDependencies {
+trait TestApiDependencies extends ApiDependencies {
+  implicit val system: ActorSystem
+  implicit val materializer: ActorMaterializer
+
+  def deployConnector: DeployConnector
+  def databaseMutactionExecutor: DatabaseMutactionExecutor
+}
+
+case class TestApiDependenciesImpl()(implicit val system: ActorSystem, val materializer: ActorMaterializer) extends TestApiDependencies {
   override implicit def self: ApiDependencies = this
 
   val config = ConfigLoader.load() match {
