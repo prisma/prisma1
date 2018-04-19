@@ -8,7 +8,6 @@ import com.prisma.shared.models.Project
 import slick.dbio.Effect.Read
 import slick.dbio.{DBIOAction, NoStream}
 import slick.jdbc.PostgresProfile.api._
-import slick.jdbc.meta.MTable
 
 import scala.concurrent.{ExecutionContext, Future}
 

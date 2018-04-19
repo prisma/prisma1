@@ -24,7 +24,7 @@ case class DeployTestDependencies()(implicit val system: ActorSystem, val materi
 
   override def apiAuth = AuthImpl
 
-  override def deployPersistencePlugin: DeployConnector = {
+  def deployPersistencePlugin: DeployConnector = {
     val testConfig = DatabaseConfig(
       "test",
       "postgres",
