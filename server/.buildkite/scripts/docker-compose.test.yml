@@ -40,8 +40,8 @@ services:
     image: postgres:10.3
     restart: always
     environment:
-      POSTGRES_USER: root
-      POSTGRES_PASSWORD: $SQL_CLIENT_PASSWORD
+      POSTGRES_USER: "root"
+      POSTGRES_PASSWORD: "graphcool"
     ports:
       - "5432"
 
