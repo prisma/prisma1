@@ -15,7 +15,7 @@ trait ApiBaseSpec extends BeforeAndAfterEach with BeforeAndAfterAll with PlayJso
 
   implicit lazy val system           = ActorSystem()
   implicit lazy val materializer     = ActorMaterializer()
-  implicit lazy val testDependencies = new TestApiDependencies
+  implicit lazy val testDependencies = new TestApiDependenciesImpl
   val server                         = ApiTestServer()
   val database                       = ApiTestDatabase()
 
