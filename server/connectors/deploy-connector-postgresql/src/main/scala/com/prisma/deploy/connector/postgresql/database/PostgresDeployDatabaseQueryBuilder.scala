@@ -23,7 +23,7 @@ object PostgresDeployDatabaseQueryBuilder {
     val relationId   = field.relation.get.relationTableName
     val relationSide = field.relationSide.get.toString
     sql"""select EXISTS (
-            select "id"from "#$projectId"."#$modelName"
+            select "id" from "#$projectId"."#$modelName"
             where "id" Not IN
             (Select "#$projectId"."#$relationId"."#$relationSide" from "#$projectId"."#$relationId")
           )"""
