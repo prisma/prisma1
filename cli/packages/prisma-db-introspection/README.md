@@ -152,5 +152,5 @@ Prisma has a community of thousands of amazing developers and contributors. Welc
 
 ## Contributing
 
-Contributions are **welcome and extremely helpful** 🙌
+Contributions are **welcome and extremely helpful**
 Please refer [to the contribution guide](https://github.com/graphcool/prisma/blob/master/CONTRIBUTING.md) for more information.
