@@ -1,6 +1,6 @@
 export const connectionDetails = {
-  database: 'prisma',
-  user: 'prisma',
-  password: 'prisma',
+  database: process.env.TEST_PG_DB,
+  user: process.env.TEST_PG_USER,
+  password: process.env.TEST_PG_PASSWORD,
   host: 'localhost',
 }
