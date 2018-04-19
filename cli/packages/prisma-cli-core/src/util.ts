@@ -53,15 +53,21 @@ export const defaultDockerCompose = `\
 version: '3'
 services:
   prisma:
-    image: prismagraphql/prisma
+    image: prismagraphql/prisma:experimental
     restart: always
     ports:
     - "4466:4466"
     environment:
+      CLUSTER_ADDRESS: ""
+      SCHEMA_MANAGER_SECRET: ""
+      SCHEMA_MANAGER_ENDPOINT: ""
+      BUGSNAG_API_KEY: ""
       PRISMA_CONFIG: |
         port: 4466
-        managementApiSecret: somesecret
 `
+
+// legacySecret: old public key
+// managementApiSecret: somesecret
 
 //
 //     databases:

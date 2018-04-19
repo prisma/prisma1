@@ -54,6 +54,32 @@ const decodeMap = {
   'sandbox-us1': 'prisma-us1',
 }
 
+const defaultPorts = {
+  postgres: 5432,
+  mysql: 3306,
+}
+
+const databaseServiceDefinitions = {
+  postgres: `\
+  db:
+    image: postgres
+    restart: always
+    environment:
+      POSTGRES_USER: prisma
+      POSTGRES_PASSWORD: prisma
+`,
+  mysql: `\
+  db:
+    container_name: prisma-db
+    image: mysql:5.7
+    restart: always
+    command: mysqld --max-connections=1000 --sql-mode="ALLOW_INVALID_DATES,ANSI_QUOTES,ERROR_FOR_DIVISION_BY_ZERO,HIGH_NOT_PRECEDENCE,IGNORE_SPACE,NO_AUTO_CREATE_USER,NO_AUTO_VALUE_ON_ZERO,NO_BACKSLASH_ESCAPES,NO_DIR_IN_CREATE,NO_ENGINE_SUBSTITUTION,NO_FIELD_OPTIONS,NO_KEY_OPTIONS,NO_TABLE_OPTIONS,NO_UNSIGNED_SUBTRACTION,NO_ZERO_DATE,NO_ZERO_IN_DATE,ONLY_FULL_GROUP_BY,PIPES_AS_CONCAT,REAL_AS_FLOAT,STRICT_ALL_TABLES,STRICT_TRANS_TABLES,ANSI,DB2,MAXDB,MSSQL,MYSQL323,MYSQL40,ORACLE,POSTGRESQL,TRADITIONAL"
+    environment:
+      MYSQL_USER: prisma
+      MYSQL_ROOT_PASSWORD: prisma
+`,
+}
+
 export class EndpointDialog {
   out: Output
   client: Client
@@ -109,6 +135,23 @@ export class EndpointDialog {
     return replaced
   }
 
+  printDatabaseConfig(credentials: DatabaseCredentials) {
+    return `\
+        databases:
+          default:
+            connector: ${credentials.type}
+            active: ${!credentials.alreadyData}
+            host: ${credentials.host}
+            port: ${credentials.port || defaultPorts[credentials.type]} 
+            user: ${credentials.user}
+            password: ${credentials.password}
+`
+  }
+
+  printDatabaseService(type: DatabaseType) {
+    return databaseServiceDefinitions[type]
+  }
+
   async handleChoice({
     choice,
     loggedIn,
@@ -135,6 +178,16 @@ export class EndpointDialog {
         cluster =
           (this.env.clusters || []).find(c => c.name === 'local') ||
           new Cluster(this.out, 'local', 'http://localhost:4466')
+        const type = await this.askForDatabaseType()
+        console.log({ type })
+        dockerComposeYml += this.printDatabaseConfig({
+          user: type === 'mysql' ? 'root' : 'prisma',
+          password: 'prisma',
+          type,
+          host: 'db',
+          port: defaultPorts[type],
+        })
+        dockerComposeYml += this.printDatabaseService(type)
         break
       case 'Use existing database':
         credentials = await this.getDatabase()
@@ -150,18 +203,7 @@ export class EndpointDialog {
         if (schemas && schemas.length > 0) {
           datamodel = await introspector.introspect(schemas[0])
 
-          dockerComposeYml += `\
-        databases:
-          default:
-            connector: postgres
-            active: ${!credentials.alreadyData}
-            host: ${credentials.host}
-            port: ${credentials.port || 5432} 
-            user: ${credentials.user}
-            password: ${credentials.password}
-            schema: ${schemas[0]}
-            database: ${credentials.database}
-`
+          dockerComposeYml += this.printDatabaseConfig(credentials)
         }
         this.out.action.stop()
         cluster = new Cluster(this.out, 'custom', 'http://localhost:4466')
@@ -367,12 +409,12 @@ export class EndpointDialog {
       message: `What kind of database do you want to deploy to?`,
       choices: [
         {
-          name: 'mysql',
-          value: 'MySQL      MySQL-compliat databases like MySQL, MariaDB',
+          value: 'mysql',
+          name: 'MySQL',
         },
         {
-          name: 'postgres',
-          value: 'MySQL      MySQL-compliat databases like MySQL, MariaDB',
+          value: 'postgres',
+          name: 'PostgreSQL',
         },
       ],
       // pageSize: 9,
@@ -445,14 +487,22 @@ export class EndpointDialog {
     const port = await this.ask('Enter database port')
     const user = await this.ask('Enter database user')
     const password = await this.ask('Enter database password')
-    const database = await this.ask(
-      'Enter database name (only needed when you already have data)',
-    )
-    const alreadyData = await this.ask(
-      'Do you already have data in the database? (yes/no)',
-    )
+    // const database = await this.ask(
+    //   'Enter database name (only needed when you already have data)',
+    // )
+    // const alreadyData = await this.ask(
+    //   'Do you already have data in the database? (yes/no)',
+    // )
 
-    return { type, host, port, user, password, database, alreadyData }
+    return {
+      type,
+      host,
+      port,
+      user,
+      password,
+      database: undefined,
+      alreadyData: false,
+    }
   }
 
   private async ask(message: string, defaultValue?: string) {
