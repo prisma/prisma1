@@ -15,7 +15,7 @@ class InternalTestDatabase extends AwaitUtils {
 
   val config = ConfigLoader.load() match {
     case Success(c)   => c
-    case Failure(err) => sys.error(s"Unable to load Prisma config: $err")
+    case Failure(err) => err.printStackTrace(); sys.error(s"Unable to load Prisma config: $err")
   }
 
   val databaseDefs         = InternalDatabaseDefs(config.databases.head)

@@ -34,21 +34,48 @@ class ConfigLoaderSpec extends WordSpec with Matchers {
 
     "be parsed without errors if an optional field is missing" in {
       val validConfig = """
-                            |port: 4466
-                            |databases:
-                            |  default:
-                            |    connector: mysql
-                            |    active: true
-                            |    host: localhost
-                            |    port: 3306
-                            |    user: root
-                            |    password: prisma
-                          """.stripMargin
+                          |port: 4466
+                          |databases:
+                          |  default:
+                          |    connector: mysql
+                          |    active: true
+                          |    host: localhost
+                          |    port: 3306
+                          |    user: root
+                          |    password: prisma
+                        """.stripMargin
 
       val config = ConfigLoader.loadString(validConfig)
 
       config.isSuccess shouldBe true
-      config.get.port shouldBe 4466
+      config.get.port should contain(4466)
+      config.get.managementApiSecret shouldBe None
+      config.get.databases.length shouldBe 1
+      config.get.databases.head.connector shouldBe "mysql"
+      config.get.databases.head.active shouldBe true
+      config.get.databases.head.port shouldBe 3306
+      config.get.databases.head.user shouldBe "root"
+      config.get.databases.head.password shouldBe "prisma"
+    }
+
+    "be parsed without errors if an optional field is missing but set to nothing" in {
+      val validConfig = """
+                          |port: 4466
+                          |managementApiSecret:
+                          |databases:
+                          |  default:
+                          |    connector: mysql
+                          |    active: true
+                          |    host: localhost
+                          |    port: 3306
+                          |    user: root
+                          |    password: prisma
+                        """.stripMargin
+
+      val config = ConfigLoader.loadString(validConfig)
+
+      config.isSuccess shouldBe true
+      config.get.port should contain(4466)
       config.get.managementApiSecret shouldBe None
       config.get.databases.length shouldBe 1
       config.get.databases.head.connector shouldBe "mysql"

@@ -5,7 +5,7 @@ import java.io.File
 import org.yaml.snakeyaml.Yaml
 
 import scala.collection.mutable
-import scala.util.Try
+import scala.util.{Failure, Success, Try}
 
 object ConfigLoader {
   import scala.collection.JavaConverters.mapAsScalaMap
@@ -98,7 +98,7 @@ object ConfigLoader {
   }
 
   private def extractScalaMap(in: Any, required: Boolean = true, path: String = ""): mutable.Map[String, Any] = {
-    val out = mapAsScalaMap(in.asInstanceOf[java.util.Map[String, Any]])
+    val out = mapAsScalaMap(in.asInstanceOf[java.util.Map[String, Any]]).filter(kv => kv._2 != null)
     if (required && out.isEmpty) {
       throw InvalidConfiguration(s"Expected hash under '$path' to be non-empty")
     }

@@ -4,7 +4,7 @@ import com.prisma.deploy.connector.postgresql.SpecBase
 import com.prisma.deploy.connector.postgresql.database.Tables
 import com.prisma.shared.models.{Migration, MigrationId, MigrationStatus}
 import org.scalatest.{FlatSpec, Matchers}
-import slick.jdbc.MySQLProfile.api._
+import slick.jdbc.PostgresProfile.api._
 
 class ProjectPersistenceImplSpec extends FlatSpec with Matchers with SpecBase {
 

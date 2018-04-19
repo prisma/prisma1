@@ -5,7 +5,7 @@ import com.prisma.deploy.connector.postgresql.database.Tables
 import com.prisma.shared.models._
 import org.joda.time.DateTime
 import org.scalatest.{FlatSpec, Matchers}
-import slick.jdbc.MySQLProfile.api._
+import slick.jdbc.PostgresProfile.api._
 
 class MigrationPersistenceImplSpec extends FlatSpec with Matchers with SpecBase {
 
