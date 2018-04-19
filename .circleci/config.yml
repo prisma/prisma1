@@ -6,7 +6,8 @@ jobs:
       - image: circleci/node:8
       - image: circleci/postgres:10.3-alpine
         environment:
-          # POSTGRES_USER: prisma
+          POSTGRES_USER: prisma
+          POSTGRES_PASSWORD: prisma
           POSTGRES_DB: prisma
     steps:
       - checkout
