@@ -22,10 +22,9 @@ case class MigrationPersistenceImpl(
   val table = TableQuery[MigrationTable]
 
   def lock(): Future[Int] = {
-    // todo Possible enhancement: Canary row in a separate table to prevent serious damage to data in case another instance spins up and circumvents this protection.
     internalDatabase.run(sql"SELECT pg_advisory_lock(1000);".as[String].head.withPinnedSession).transformWith {
-      case Success(result) => if (result == "t") Future.successful(1) else lock()
-      case Failure(err)    => Future.failed(err)
+      case Success(_)   => Future.successful(1)
+      case Failure(err) => Future.failed(err)
     }
   }
 

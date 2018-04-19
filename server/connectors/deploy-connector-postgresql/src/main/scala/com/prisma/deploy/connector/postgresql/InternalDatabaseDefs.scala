@@ -20,6 +20,7 @@ case class InternalDatabaseDefs(dbConfig: DatabaseConfig) {
     ConfigFactory
       .parseString(s"""
         |database {
+        |  connectionPool = disabled
         |  dataSourceClass = "slick.jdbc.DriverDataSource"
         |  properties {
         |    url = "jdbc:postgresql://${dbConfig.host}:${dbConfig.port}/"

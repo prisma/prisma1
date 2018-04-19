@@ -35,5 +35,6 @@ trait DeployDependencies extends AwaitUtils {
   def initialize()(implicit ec: ExecutionContext): Unit = {
     await(deployPersistencePlugin.initialize(), seconds = 30)
     system.actorOf(Props(DatabaseSizeReporter(projectPersistence, deployPersistencePlugin)))
+    migrator
   }
 }
