@@ -149,11 +149,8 @@ case class DeleteRelationCheckInterpreter(mutaction: DeleteRelationCheck) extend
 }
 
 case class ResetDataInterpreter(mutaction: ResetDataMutaction) extends DatabaseMutactionInterpreter {
-  val disableConstraints = DatabaseMutationBuilder.disableForeignKeyConstraintChecks
-  val truncateTables     = DBIOAction.seq(mutaction.tableNames.map(DatabaseMutationBuilder.resetData(mutaction.project.id, _)): _*)
-  val enableConstraints  = DatabaseMutationBuilder.enableForeignKeyConstraintChecks
-
-  override val action = DBIOAction.seq(disableConstraints, truncateTables, enableConstraints)
+  val truncateTables  = DBIOAction.seq(mutaction.tableNames.map(DatabaseMutationBuilder.resetData(mutaction.project.id, _)): _*)
+  override val action = DBIOAction.seq(truncateTables)
 }
 
 case class UpdateDataItemInterpreter(mutaction: UpdateWrapper) extends DatabaseMutactionInterpreter {

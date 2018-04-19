@@ -69,7 +69,7 @@ class DeleteSpec extends FlatSpec with Matchers with ApiBaseSpec {
     )
     result.pathAsSeq("data.todoes").size should be(int)
 
-    database.runDbActionOnClientDb(ApiDatabaseQueryBuilderPostGres.itemCountForTable(project.id, "_RelayId").as[Int]) should be(Vector(int))
+    database.runDbActionOnClientDb(ApiDatabaseQueryBuilderPostGres.itemCountForTable(project.id, "_RelayId")) should be(Vector(int))
 
   }
 

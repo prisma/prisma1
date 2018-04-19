@@ -243,11 +243,6 @@ object ApiDatabaseQueryBuilderPostGres {
 
 // used in tests only
 
-  def itemCountForTable(projectId: String, modelName: String) = { // todo use count all from model -> doesnt work for relay
-    sql"""SELECT COUNT(*) AS Count FROM "#$projectId"."#$modelName""""
-  }
+  def itemCountForTable(projectId: String, modelName: String) = sql"""SELECT COUNT(*) AS Count FROM "#$projectId"."#$modelName"""".as[Int]
 
-  def existsByModel(projectId: String, modelName: String): SQLActionBuilder = { //todo also replace in tests with count
-    sql"""select exists (select "id" from "#$projectId"."#$modelName)""""
-  }
 }

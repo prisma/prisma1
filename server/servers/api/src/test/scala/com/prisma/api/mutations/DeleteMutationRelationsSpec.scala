@@ -30,7 +30,7 @@ class DeleteMutationRelationsSpec extends FlatSpec with Matchers with ApiBaseSpe
         project
       )
 
-    database.runDbActionOnClientDb(ApiDatabaseQueryBuilderPostGres.itemCountForTable(project.id, "_ChildToParent").as[Int]) should be(Vector(1))
+    database.runDbActionOnClientDb(ApiDatabaseQueryBuilderPostGres.itemCountForTable(project.id, "_ChildToParent")) should be(Vector(1))
 
     server.queryThatMustFail(
       s"""
@@ -47,9 +47,9 @@ class DeleteMutationRelationsSpec extends FlatSpec with Matchers with ApiBaseSpe
       errorContains = "The change you are trying to make would violate the required relation '_ChildToParent' between Child and Parent"
     )
 
-    database.runDbActionOnClientDb(ApiDatabaseQueryBuilderPostGres.itemCountForTable(project.id, "Parent").as[Int]) should be(Vector(1))
-    database.runDbActionOnClientDb(ApiDatabaseQueryBuilderPostGres.itemCountForTable(project.id, "Child").as[Int]) should be(Vector(1))
-    database.runDbActionOnClientDb(ApiDatabaseQueryBuilderPostGres.itemCountForTable(project.id, "_ChildToParent").as[Int]) should be(Vector(1))
+    database.runDbActionOnClientDb(ApiDatabaseQueryBuilderPostGres.itemCountForTable(project.id, "Parent")) should be(Vector(1))
+    database.runDbActionOnClientDb(ApiDatabaseQueryBuilderPostGres.itemCountForTable(project.id, "Child")) should be(Vector(1))
+    database.runDbActionOnClientDb(ApiDatabaseQueryBuilderPostGres.itemCountForTable(project.id, "_ChildToParent")) should be(Vector(1))
   }
 
   "a P1! to C1! relation " should "error when deleting the parent" in {
@@ -79,7 +79,7 @@ class DeleteMutationRelationsSpec extends FlatSpec with Matchers with ApiBaseSpe
     val childId  = res.pathAsString("data.createParent.childReq.id")
     val parentId = res.pathAsString("data.createParent.id")
 
-    database.runDbActionOnClientDb(ApiDatabaseQueryBuilderPostGres.itemCountForTable(project.id, "_ChildToParent").as[Int]) should be(Vector(1))
+    database.runDbActionOnClientDb(ApiDatabaseQueryBuilderPostGres.itemCountForTable(project.id, "_ChildToParent")) should be(Vector(1))
 
     server.queryThatMustFail(
       s"""
@@ -96,9 +96,9 @@ class DeleteMutationRelationsSpec extends FlatSpec with Matchers with ApiBaseSpe
       errorContains = "The change you are trying to make would violate the required relation '_ChildToParent' between Child and Parent"
     )
 
-    database.runDbActionOnClientDb(ApiDatabaseQueryBuilderPostGres.itemCountForTable(project.id, "Parent").as[Int]) should be(Vector(1))
-    database.runDbActionOnClientDb(ApiDatabaseQueryBuilderPostGres.itemCountForTable(project.id, "Child").as[Int]) should be(Vector(1))
-    database.runDbActionOnClientDb(ApiDatabaseQueryBuilderPostGres.itemCountForTable(project.id, "_ChildToParent").as[Int]) should be(Vector(1))
+    database.runDbActionOnClientDb(ApiDatabaseQueryBuilderPostGres.itemCountForTable(project.id, "Parent")) should be(Vector(1))
+    database.runDbActionOnClientDb(ApiDatabaseQueryBuilderPostGres.itemCountForTable(project.id, "Child")) should be(Vector(1))
+    database.runDbActionOnClientDb(ApiDatabaseQueryBuilderPostGres.itemCountForTable(project.id, "_ChildToParent")) should be(Vector(1))
   }
 
   "a P1! to C1 relation" should "succeed when trying to delete the parent" in {
@@ -128,7 +128,7 @@ class DeleteMutationRelationsSpec extends FlatSpec with Matchers with ApiBaseSpe
 
     val parentId = res.pathAsString("data.createParent.id")
 
-    database.runDbActionOnClientDb(ApiDatabaseQueryBuilderPostGres.itemCountForTable(project.id, "_ParentToChild").as[Int]) should be(Vector(1))
+    database.runDbActionOnClientDb(ApiDatabaseQueryBuilderPostGres.itemCountForTable(project.id, "_ParentToChild")) should be(Vector(1))
 
     server.query(
       s"""
@@ -142,9 +142,9 @@ class DeleteMutationRelationsSpec extends FlatSpec with Matchers with ApiBaseSpe
       """.stripMargin,
       project
     )
-    database.runDbActionOnClientDb(ApiDatabaseQueryBuilderPostGres.itemCountForTable(project.id, "Parent").as[Int]) should be(Vector(0))
-    database.runDbActionOnClientDb(ApiDatabaseQueryBuilderPostGres.itemCountForTable(project.id, "Child").as[Int]) should be(Vector(1))
-    database.runDbActionOnClientDb(ApiDatabaseQueryBuilderPostGres.itemCountForTable(project.id, "_ParentToChild").as[Int]) should be(Vector(0))
+    database.runDbActionOnClientDb(ApiDatabaseQueryBuilderPostGres.itemCountForTable(project.id, "Parent")) should be(Vector(0))
+    database.runDbActionOnClientDb(ApiDatabaseQueryBuilderPostGres.itemCountForTable(project.id, "Child")) should be(Vector(1))
+    database.runDbActionOnClientDb(ApiDatabaseQueryBuilderPostGres.itemCountForTable(project.id, "_ParentToChild")) should be(Vector(0))
   }
 
   "a P1 to C1  relation " should "succeed when trying to delete the parent" in {
@@ -174,7 +174,7 @@ class DeleteMutationRelationsSpec extends FlatSpec with Matchers with ApiBaseSpe
 
     val parentId = res.pathAsString("data.createParent.id")
 
-    database.runDbActionOnClientDb(ApiDatabaseQueryBuilderPostGres.itemCountForTable(project.id, "_ParentToChild").as[Int]) should be(Vector(1))
+    database.runDbActionOnClientDb(ApiDatabaseQueryBuilderPostGres.itemCountForTable(project.id, "_ParentToChild")) should be(Vector(1))
 
     server.query(
       s"""
@@ -189,9 +189,9 @@ class DeleteMutationRelationsSpec extends FlatSpec with Matchers with ApiBaseSpe
       project
     )
 
-    database.runDbActionOnClientDb(ApiDatabaseQueryBuilderPostGres.itemCountForTable(project.id, "Parent").as[Int]) should be(Vector(0))
-    database.runDbActionOnClientDb(ApiDatabaseQueryBuilderPostGres.itemCountForTable(project.id, "Child").as[Int]) should be(Vector(1))
-    database.runDbActionOnClientDb(ApiDatabaseQueryBuilderPostGres.itemCountForTable(project.id, "_ParentToChild").as[Int]) should be(Vector(0))
+    database.runDbActionOnClientDb(ApiDatabaseQueryBuilderPostGres.itemCountForTable(project.id, "Parent")) should be(Vector(0))
+    database.runDbActionOnClientDb(ApiDatabaseQueryBuilderPostGres.itemCountForTable(project.id, "Child")) should be(Vector(1))
+    database.runDbActionOnClientDb(ApiDatabaseQueryBuilderPostGres.itemCountForTable(project.id, "_ParentToChild")) should be(Vector(0))
   }
 
   "a P1 to C1  relation " should "succeed when trying to delete the parent if there are no children" in {
@@ -213,7 +213,7 @@ class DeleteMutationRelationsSpec extends FlatSpec with Matchers with ApiBaseSpe
         project
       )
 
-    database.runDbActionOnClientDb(ApiDatabaseQueryBuilderPostGres.itemCountForTable(project.id, "_ParentToChild").as[Int]) should be(Vector(0))
+    database.runDbActionOnClientDb(ApiDatabaseQueryBuilderPostGres.itemCountForTable(project.id, "_ParentToChild")) should be(Vector(0))
 
     server.query(
       s"""
@@ -228,9 +228,9 @@ class DeleteMutationRelationsSpec extends FlatSpec with Matchers with ApiBaseSpe
       project
     )
 
-    database.runDbActionOnClientDb(ApiDatabaseQueryBuilderPostGres.itemCountForTable(project.id, "Parent").as[Int]) should be(Vector(0))
-    database.runDbActionOnClientDb(ApiDatabaseQueryBuilderPostGres.itemCountForTable(project.id, "Child").as[Int]) should be(Vector(0))
-    database.runDbActionOnClientDb(ApiDatabaseQueryBuilderPostGres.itemCountForTable(project.id, "_ParentToChild").as[Int]) should be(Vector(0))
+    database.runDbActionOnClientDb(ApiDatabaseQueryBuilderPostGres.itemCountForTable(project.id, "Parent")) should be(Vector(0))
+    database.runDbActionOnClientDb(ApiDatabaseQueryBuilderPostGres.itemCountForTable(project.id, "Child")) should be(Vector(0))
+    database.runDbActionOnClientDb(ApiDatabaseQueryBuilderPostGres.itemCountForTable(project.id, "_ParentToChild")) should be(Vector(0))
   }
 
   "a PM to C1!  relation " should "error when deleting the parent" in {
@@ -256,7 +256,7 @@ class DeleteMutationRelationsSpec extends FlatSpec with Matchers with ApiBaseSpe
       project
     )
 
-    database.runDbActionOnClientDb(ApiDatabaseQueryBuilderPostGres.itemCountForTable(project.id, "_ParentToChild").as[Int]) should be(Vector(1))
+    database.runDbActionOnClientDb(ApiDatabaseQueryBuilderPostGres.itemCountForTable(project.id, "_ParentToChild")) should be(Vector(1))
 
     server.queryThatMustFail(
       s"""
@@ -273,7 +273,7 @@ class DeleteMutationRelationsSpec extends FlatSpec with Matchers with ApiBaseSpe
       errorContains = "The change you are trying to make would violate the required relation '_ParentToChild' between Parent and Child"
     )
 
-    database.runDbActionOnClientDb(ApiDatabaseQueryBuilderPostGres.itemCountForTable(project.id, "_ParentToChild").as[Int]) should be(Vector(1))
+    database.runDbActionOnClientDb(ApiDatabaseQueryBuilderPostGres.itemCountForTable(project.id, "_ParentToChild")) should be(Vector(1))
   }
 
   "a PM to C1!  relation " should "succeed if no child exists that requires the parent" in {
@@ -296,9 +296,9 @@ class DeleteMutationRelationsSpec extends FlatSpec with Matchers with ApiBaseSpe
       project
     )
 
-    database.runDbActionOnClientDb(ApiDatabaseQueryBuilderPostGres.itemCountForTable(project.id, "Parent").as[Int]) should be(Vector(1))
-    database.runDbActionOnClientDb(ApiDatabaseQueryBuilderPostGres.itemCountForTable(project.id, "Child").as[Int]) should be(Vector(0))
-    database.runDbActionOnClientDb(ApiDatabaseQueryBuilderPostGres.itemCountForTable(project.id, "_ParentToChild").as[Int]) should be(Vector(0))
+    database.runDbActionOnClientDb(ApiDatabaseQueryBuilderPostGres.itemCountForTable(project.id, "Parent")) should be(Vector(1))
+    database.runDbActionOnClientDb(ApiDatabaseQueryBuilderPostGres.itemCountForTable(project.id, "Child")) should be(Vector(0))
+    database.runDbActionOnClientDb(ApiDatabaseQueryBuilderPostGres.itemCountForTable(project.id, "_ParentToChild")) should be(Vector(0))
 
     server.query(
       s"""
@@ -313,9 +313,9 @@ class DeleteMutationRelationsSpec extends FlatSpec with Matchers with ApiBaseSpe
       project
     )
 
-    database.runDbActionOnClientDb(ApiDatabaseQueryBuilderPostGres.itemCountForTable(project.id, "_ParentToChild").as[Int]) should be(Vector(0))
-    database.runDbActionOnClientDb(ApiDatabaseQueryBuilderPostGres.itemCountForTable(project.id, "Parent").as[Int]) should be(Vector(0))
-    database.runDbActionOnClientDb(ApiDatabaseQueryBuilderPostGres.itemCountForTable(project.id, "Child").as[Int]) should be(Vector(0))
+    database.runDbActionOnClientDb(ApiDatabaseQueryBuilderPostGres.itemCountForTable(project.id, "_ParentToChild")) should be(Vector(0))
+    database.runDbActionOnClientDb(ApiDatabaseQueryBuilderPostGres.itemCountForTable(project.id, "Parent")) should be(Vector(0))
+    database.runDbActionOnClientDb(ApiDatabaseQueryBuilderPostGres.itemCountForTable(project.id, "Child")) should be(Vector(0))
 
   }
 
@@ -342,7 +342,7 @@ class DeleteMutationRelationsSpec extends FlatSpec with Matchers with ApiBaseSpe
       project
     )
 
-    database.runDbActionOnClientDb(ApiDatabaseQueryBuilderPostGres.itemCountForTable(project.id, "_ChildToParent").as[Int]) should be(Vector(1))
+    database.runDbActionOnClientDb(ApiDatabaseQueryBuilderPostGres.itemCountForTable(project.id, "_ChildToParent")) should be(Vector(1))
 
     server.queryThatMustFail(
       s"""
@@ -358,9 +358,9 @@ class DeleteMutationRelationsSpec extends FlatSpec with Matchers with ApiBaseSpe
       errorCode = 3042,
       errorContains = "The change you are trying to make would violate the required relation '_ChildToParent' between Child and Parent"
     )
-    database.runDbActionOnClientDb(ApiDatabaseQueryBuilderPostGres.itemCountForTable(project.id, "Parent").as[Int]) should be(Vector(1))
-    database.runDbActionOnClientDb(ApiDatabaseQueryBuilderPostGres.itemCountForTable(project.id, "Child").as[Int]) should be(Vector(1))
-    database.runDbActionOnClientDb(ApiDatabaseQueryBuilderPostGres.itemCountForTable(project.id, "_ChildToParent").as[Int]) should be(Vector(1))
+    database.runDbActionOnClientDb(ApiDatabaseQueryBuilderPostGres.itemCountForTable(project.id, "Parent")) should be(Vector(1))
+    database.runDbActionOnClientDb(ApiDatabaseQueryBuilderPostGres.itemCountForTable(project.id, "Child")) should be(Vector(1))
+    database.runDbActionOnClientDb(ApiDatabaseQueryBuilderPostGres.itemCountForTable(project.id, "_ChildToParent")) should be(Vector(1))
   }
 
   "a P1 to C1!  relation " should "succeed when trying to delete the parent if there is no child" in {
@@ -382,9 +382,9 @@ class DeleteMutationRelationsSpec extends FlatSpec with Matchers with ApiBaseSpe
       project
     )
 
-    database.runDbActionOnClientDb(ApiDatabaseQueryBuilderPostGres.itemCountForTable(project.id, "Parent").as[Int]) should be(Vector(1))
-    database.runDbActionOnClientDb(ApiDatabaseQueryBuilderPostGres.itemCountForTable(project.id, "Child").as[Int]) should be(Vector(0))
-    database.runDbActionOnClientDb(ApiDatabaseQueryBuilderPostGres.itemCountForTable(project.id, "_ChildToParent").as[Int]) should be(Vector(0))
+    database.runDbActionOnClientDb(ApiDatabaseQueryBuilderPostGres.itemCountForTable(project.id, "Parent")) should be(Vector(1))
+    database.runDbActionOnClientDb(ApiDatabaseQueryBuilderPostGres.itemCountForTable(project.id, "Child")) should be(Vector(0))
+    database.runDbActionOnClientDb(ApiDatabaseQueryBuilderPostGres.itemCountForTable(project.id, "_ChildToParent")) should be(Vector(0))
 
     server.query(
       s"""
@@ -398,9 +398,9 @@ class DeleteMutationRelationsSpec extends FlatSpec with Matchers with ApiBaseSpe
       """.stripMargin,
       project
     )
-    database.runDbActionOnClientDb(ApiDatabaseQueryBuilderPostGres.itemCountForTable(project.id, "Parent").as[Int]) should be(Vector(0))
-    database.runDbActionOnClientDb(ApiDatabaseQueryBuilderPostGres.itemCountForTable(project.id, "Child").as[Int]) should be(Vector(0))
-    database.runDbActionOnClientDb(ApiDatabaseQueryBuilderPostGres.itemCountForTable(project.id, "_ChildToParent").as[Int]) should be(Vector(0))
+    database.runDbActionOnClientDb(ApiDatabaseQueryBuilderPostGres.itemCountForTable(project.id, "Parent")) should be(Vector(0))
+    database.runDbActionOnClientDb(ApiDatabaseQueryBuilderPostGres.itemCountForTable(project.id, "Child")) should be(Vector(0))
+    database.runDbActionOnClientDb(ApiDatabaseQueryBuilderPostGres.itemCountForTable(project.id, "_ChildToParent")) should be(Vector(0))
   }
 
   "a PM to C1 " should "succeed in deleting the parent" in {
@@ -427,7 +427,7 @@ class DeleteMutationRelationsSpec extends FlatSpec with Matchers with ApiBaseSpe
         project
       )
 
-    database.runDbActionOnClientDb(ApiDatabaseQueryBuilderPostGres.itemCountForTable(project.id, "_ParentToChild").as[Int]) should be(Vector(2))
+    database.runDbActionOnClientDb(ApiDatabaseQueryBuilderPostGres.itemCountForTable(project.id, "_ParentToChild")) should be(Vector(2))
 
     server.query(
       s"""
@@ -442,9 +442,9 @@ class DeleteMutationRelationsSpec extends FlatSpec with Matchers with ApiBaseSpe
       project
     )
 
-    database.runDbActionOnClientDb(ApiDatabaseQueryBuilderPostGres.itemCountForTable(project.id, "_ParentToChild").as[Int]) should be(Vector(0))
-    database.runDbActionOnClientDb(ApiDatabaseQueryBuilderPostGres.itemCountForTable(project.id, "Parent").as[Int]) should be(Vector(0))
-    database.runDbActionOnClientDb(ApiDatabaseQueryBuilderPostGres.itemCountForTable(project.id, "Child").as[Int]) should be(Vector(2))
+    database.runDbActionOnClientDb(ApiDatabaseQueryBuilderPostGres.itemCountForTable(project.id, "_ParentToChild")) should be(Vector(0))
+    database.runDbActionOnClientDb(ApiDatabaseQueryBuilderPostGres.itemCountForTable(project.id, "Parent")) should be(Vector(0))
+    database.runDbActionOnClientDb(ApiDatabaseQueryBuilderPostGres.itemCountForTable(project.id, "Child")) should be(Vector(2))
   }
 
   "a PM to C1 " should "succeed in deleting the parent if there is no child" in {
@@ -466,7 +466,7 @@ class DeleteMutationRelationsSpec extends FlatSpec with Matchers with ApiBaseSpe
         project
       )
 
-    database.runDbActionOnClientDb(ApiDatabaseQueryBuilderPostGres.itemCountForTable(project.id, "_ParentToChild").as[Int]) should be(Vector(0))
+    database.runDbActionOnClientDb(ApiDatabaseQueryBuilderPostGres.itemCountForTable(project.id, "_ParentToChild")) should be(Vector(0))
 
     server.query(
       s"""
@@ -481,9 +481,9 @@ class DeleteMutationRelationsSpec extends FlatSpec with Matchers with ApiBaseSpe
       project
     )
 
-    database.runDbActionOnClientDb(ApiDatabaseQueryBuilderPostGres.itemCountForTable(project.id, "_ParentToChild").as[Int]) should be(Vector(0))
-    database.runDbActionOnClientDb(ApiDatabaseQueryBuilderPostGres.itemCountForTable(project.id, "Parent").as[Int]) should be(Vector(0))
-    database.runDbActionOnClientDb(ApiDatabaseQueryBuilderPostGres.itemCountForTable(project.id, "Child").as[Int]) should be(Vector(0))
+    database.runDbActionOnClientDb(ApiDatabaseQueryBuilderPostGres.itemCountForTable(project.id, "_ParentToChild")) should be(Vector(0))
+    database.runDbActionOnClientDb(ApiDatabaseQueryBuilderPostGres.itemCountForTable(project.id, "Parent")) should be(Vector(0))
+    database.runDbActionOnClientDb(ApiDatabaseQueryBuilderPostGres.itemCountForTable(project.id, "Child")) should be(Vector(0))
   }
 
   "a P1! to CM  relation" should "should succeed in deleting the parent " in {
@@ -509,7 +509,7 @@ class DeleteMutationRelationsSpec extends FlatSpec with Matchers with ApiBaseSpe
       project
     )
 
-    database.runDbActionOnClientDb(ApiDatabaseQueryBuilderPostGres.itemCountForTable(project.id, "_ChildToParent").as[Int]) should be(Vector(1))
+    database.runDbActionOnClientDb(ApiDatabaseQueryBuilderPostGres.itemCountForTable(project.id, "_ChildToParent")) should be(Vector(1))
 
     server.query(
       s"""
@@ -524,9 +524,9 @@ class DeleteMutationRelationsSpec extends FlatSpec with Matchers with ApiBaseSpe
       project
     )
 
-    database.runDbActionOnClientDb(ApiDatabaseQueryBuilderPostGres.itemCountForTable(project.id, "_ChildToParent").as[Int]) should be(Vector(0))
-    database.runDbActionOnClientDb(ApiDatabaseQueryBuilderPostGres.itemCountForTable(project.id, "Parent").as[Int]) should be(Vector(0))
-    database.runDbActionOnClientDb(ApiDatabaseQueryBuilderPostGres.itemCountForTable(project.id, "Child").as[Int]) should be(Vector(1))
+    database.runDbActionOnClientDb(ApiDatabaseQueryBuilderPostGres.itemCountForTable(project.id, "_ChildToParent")) should be(Vector(0))
+    database.runDbActionOnClientDb(ApiDatabaseQueryBuilderPostGres.itemCountForTable(project.id, "Parent")) should be(Vector(0))
+    database.runDbActionOnClientDb(ApiDatabaseQueryBuilderPostGres.itemCountForTable(project.id, "Child")) should be(Vector(1))
   }
 
   "a P1 to CM  relation " should " should succeed in deleting the parent" in {
@@ -552,7 +552,7 @@ class DeleteMutationRelationsSpec extends FlatSpec with Matchers with ApiBaseSpe
       project
     )
 
-    database.runDbActionOnClientDb(ApiDatabaseQueryBuilderPostGres.itemCountForTable(project.id, "_ChildToParent").as[Int]) should be(Vector(1))
+    database.runDbActionOnClientDb(ApiDatabaseQueryBuilderPostGres.itemCountForTable(project.id, "_ChildToParent")) should be(Vector(1))
 
     server.query(
       s"""
@@ -567,9 +567,9 @@ class DeleteMutationRelationsSpec extends FlatSpec with Matchers with ApiBaseSpe
       project
     )
 
-    database.runDbActionOnClientDb(ApiDatabaseQueryBuilderPostGres.itemCountForTable(project.id, "_ChildToParent").as[Int]) should be(Vector(0))
-    database.runDbActionOnClientDb(ApiDatabaseQueryBuilderPostGres.itemCountForTable(project.id, "Parent").as[Int]) should be(Vector(0))
-    database.runDbActionOnClientDb(ApiDatabaseQueryBuilderPostGres.itemCountForTable(project.id, "Child").as[Int]) should be(Vector(1))
+    database.runDbActionOnClientDb(ApiDatabaseQueryBuilderPostGres.itemCountForTable(project.id, "_ChildToParent")) should be(Vector(0))
+    database.runDbActionOnClientDb(ApiDatabaseQueryBuilderPostGres.itemCountForTable(project.id, "Parent")) should be(Vector(0))
+    database.runDbActionOnClientDb(ApiDatabaseQueryBuilderPostGres.itemCountForTable(project.id, "Child")) should be(Vector(1))
   }
 
   "a P1 to CM  relation " should " should succeed in deleting the parent if there is no child" in {
@@ -591,7 +591,7 @@ class DeleteMutationRelationsSpec extends FlatSpec with Matchers with ApiBaseSpe
       project
     )
 
-    database.runDbActionOnClientDb(ApiDatabaseQueryBuilderPostGres.itemCountForTable(project.id, "_ChildToParent").as[Int]) should be(Vector(0))
+    database.runDbActionOnClientDb(ApiDatabaseQueryBuilderPostGres.itemCountForTable(project.id, "_ChildToParent")) should be(Vector(0))
 
     server.query(
       s"""
@@ -606,9 +606,9 @@ class DeleteMutationRelationsSpec extends FlatSpec with Matchers with ApiBaseSpe
       project
     )
 
-    database.runDbActionOnClientDb(ApiDatabaseQueryBuilderPostGres.itemCountForTable(project.id, "_ChildToParent").as[Int]) should be(Vector(0))
-    database.runDbActionOnClientDb(ApiDatabaseQueryBuilderPostGres.itemCountForTable(project.id, "Parent").as[Int]) should be(Vector(0))
-    database.runDbActionOnClientDb(ApiDatabaseQueryBuilderPostGres.itemCountForTable(project.id, "Child").as[Int]) should be(Vector(0))
+    database.runDbActionOnClientDb(ApiDatabaseQueryBuilderPostGres.itemCountForTable(project.id, "_ChildToParent")) should be(Vector(0))
+    database.runDbActionOnClientDb(ApiDatabaseQueryBuilderPostGres.itemCountForTable(project.id, "Parent")) should be(Vector(0))
+    database.runDbActionOnClientDb(ApiDatabaseQueryBuilderPostGres.itemCountForTable(project.id, "Child")) should be(Vector(0))
   }
 
   "a PM to CM  relation" should "succeed in deleting the parent" in {
@@ -634,7 +634,7 @@ class DeleteMutationRelationsSpec extends FlatSpec with Matchers with ApiBaseSpe
       project
     )
 
-    database.runDbActionOnClientDb(ApiDatabaseQueryBuilderPostGres.itemCountForTable(project.id, "_ChildToParent").as[Int]) should be(Vector(2))
+    database.runDbActionOnClientDb(ApiDatabaseQueryBuilderPostGres.itemCountForTable(project.id, "_ChildToParent")) should be(Vector(2))
 
     server.query(
       s"""
@@ -649,9 +649,9 @@ class DeleteMutationRelationsSpec extends FlatSpec with Matchers with ApiBaseSpe
       project
     )
 
-    database.runDbActionOnClientDb(ApiDatabaseQueryBuilderPostGres.itemCountForTable(project.id, "_ChildToParent").as[Int]) should be(Vector(0))
-    database.runDbActionOnClientDb(ApiDatabaseQueryBuilderPostGres.itemCountForTable(project.id, "Parent").as[Int]) should be(Vector(0))
-    database.runDbActionOnClientDb(ApiDatabaseQueryBuilderPostGres.itemCountForTable(project.id, "Child").as[Int]) should be(Vector(2))
+    database.runDbActionOnClientDb(ApiDatabaseQueryBuilderPostGres.itemCountForTable(project.id, "_ChildToParent")) should be(Vector(0))
+    database.runDbActionOnClientDb(ApiDatabaseQueryBuilderPostGres.itemCountForTable(project.id, "Parent")) should be(Vector(0))
+    database.runDbActionOnClientDb(ApiDatabaseQueryBuilderPostGres.itemCountForTable(project.id, "Child")) should be(Vector(2))
 
   }
 
@@ -674,7 +674,7 @@ class DeleteMutationRelationsSpec extends FlatSpec with Matchers with ApiBaseSpe
       project
     )
 
-    database.runDbActionOnClientDb(ApiDatabaseQueryBuilderPostGres.itemCountForTable(project.id, "_ChildToParent").as[Int]) should be(Vector(0))
+    database.runDbActionOnClientDb(ApiDatabaseQueryBuilderPostGres.itemCountForTable(project.id, "_ChildToParent")) should be(Vector(0))
 
     server.query(
       s"""
@@ -689,9 +689,9 @@ class DeleteMutationRelationsSpec extends FlatSpec with Matchers with ApiBaseSpe
       project
     )
 
-    database.runDbActionOnClientDb(ApiDatabaseQueryBuilderPostGres.itemCountForTable(project.id, "_ChildToParent").as[Int]) should be(Vector(0))
-    database.runDbActionOnClientDb(ApiDatabaseQueryBuilderPostGres.itemCountForTable(project.id, "Parent").as[Int]) should be(Vector(0))
-    database.runDbActionOnClientDb(ApiDatabaseQueryBuilderPostGres.itemCountForTable(project.id, "Child").as[Int]) should be(Vector(0))
+    database.runDbActionOnClientDb(ApiDatabaseQueryBuilderPostGres.itemCountForTable(project.id, "_ChildToParent")) should be(Vector(0))
+    database.runDbActionOnClientDb(ApiDatabaseQueryBuilderPostGres.itemCountForTable(project.id, "Parent")) should be(Vector(0))
+    database.runDbActionOnClientDb(ApiDatabaseQueryBuilderPostGres.itemCountForTable(project.id, "Child")) should be(Vector(0))
 
   }
 
@@ -721,8 +721,8 @@ class DeleteMutationRelationsSpec extends FlatSpec with Matchers with ApiBaseSpe
       project
     )
 
-    database.runDbActionOnClientDb(ApiDatabaseQueryBuilderPostGres.itemCountForTable(project.id, "_StepChildToParent").as[Int]) should be(Vector(1))
-    database.runDbActionOnClientDb(ApiDatabaseQueryBuilderPostGres.itemCountForTable(project.id, "_ChildToParent").as[Int]) should be(Vector(2))
+    database.runDbActionOnClientDb(ApiDatabaseQueryBuilderPostGres.itemCountForTable(project.id, "_StepChildToParent")) should be(Vector(1))
+    database.runDbActionOnClientDb(ApiDatabaseQueryBuilderPostGres.itemCountForTable(project.id, "_ChildToParent")) should be(Vector(2))
 
     server.query(
       s"""
@@ -737,10 +737,10 @@ class DeleteMutationRelationsSpec extends FlatSpec with Matchers with ApiBaseSpe
       project
     )
 
-    database.runDbActionOnClientDb(ApiDatabaseQueryBuilderPostGres.itemCountForTable(project.id, "_ChildToParent").as[Int]) should be(Vector(0))
-    database.runDbActionOnClientDb(ApiDatabaseQueryBuilderPostGres.itemCountForTable(project.id, "_StepChildToParent").as[Int]) should be(Vector(0))
-    database.runDbActionOnClientDb(ApiDatabaseQueryBuilderPostGres.itemCountForTable(project.id, "Parent").as[Int]) should be(Vector(0))
-    database.runDbActionOnClientDb(ApiDatabaseQueryBuilderPostGres.itemCountForTable(project.id, "Child").as[Int]) should be(Vector(2))
-    database.runDbActionOnClientDb(ApiDatabaseQueryBuilderPostGres.itemCountForTable(project.id, "StepChild").as[Int]) should be(Vector(1))
+    database.runDbActionOnClientDb(ApiDatabaseQueryBuilderPostGres.itemCountForTable(project.id, "_ChildToParent")) should be(Vector(0))
+    database.runDbActionOnClientDb(ApiDatabaseQueryBuilderPostGres.itemCountForTable(project.id, "_StepChildToParent")) should be(Vector(0))
+    database.runDbActionOnClientDb(ApiDatabaseQueryBuilderPostGres.itemCountForTable(project.id, "Parent")) should be(Vector(0))
+    database.runDbActionOnClientDb(ApiDatabaseQueryBuilderPostGres.itemCountForTable(project.id, "Child")) should be(Vector(2))
+    database.runDbActionOnClientDb(ApiDatabaseQueryBuilderPostGres.itemCountForTable(project.id, "StepChild")) should be(Vector(1))
   }
 }

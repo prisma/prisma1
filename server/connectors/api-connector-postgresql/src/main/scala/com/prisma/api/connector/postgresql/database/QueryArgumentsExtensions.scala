@@ -61,7 +61,7 @@ object QueryArgumentsExtensions {
       }
 
       //always order by nodeId, then positionfield ascending
-      Some(sql""""#$projectId"."#$modelId".nodeId" #$order, "#$projectId"."#$modelId".position" #$idOrder""")
+      Some(sql""""#$projectId"."#$modelId"."nodeId" #$order, "#$projectId"."#$modelId"."position" #$idOrder""")
     }
 
     def extractOrderByCommand(projectId: String, modelId: String, defaultOrderShortcut: Option[String] = None): Option[SQLActionBuilder] = {

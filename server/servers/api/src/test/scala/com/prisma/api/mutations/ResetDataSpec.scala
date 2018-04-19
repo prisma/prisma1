@@ -8,6 +8,7 @@ import com.prisma.api.import_export.BulkImport
 import com.prisma.shared.models.Project
 import com.prisma.shared.schema_dsl.SchemaDsl
 import com.prisma.utils.await.AwaitUtils
+import org.postgresql.util.PSQLException
 import org.scalatest.{FlatSpec, Matchers}
 
 class ResetDataSpec extends FlatSpec with Matchers with ApiBaseSpec with AwaitUtils {
@@ -103,10 +104,10 @@ class ResetDataSpec extends FlatSpec with Matchers with ApiBaseSpec with AwaitUt
     server.query("query{model1s{id}}", project, dataContains = """{"model1s":[]}""")
     server.query("query{model2s{id}}", project, dataContains = """{"model2s":[]}""")
 
-    database.runDbActionOnClientDb(ApiDatabaseQueryBuilderPostGres.existsByModel(project.id, "_RelayId").as[Boolean]).toString should be("Vector(false)")
-    database.runDbActionOnClientDb(ApiDatabaseQueryBuilderPostGres.existsByModel(project.id, "_Relation0").as[Boolean]).toString should be("Vector(false)")
-    database.runDbActionOnClientDb(ApiDatabaseQueryBuilderPostGres.existsByModel(project.id, "_Relation1").as[Boolean]).toString should be("Vector(false)")
-    database.runDbActionOnClientDb(ApiDatabaseQueryBuilderPostGres.existsByModel(project.id, "_Relation2").as[Boolean]).toString should be("Vector(false)")
+    database.runDbActionOnClientDb(ApiDatabaseQueryBuilderPostGres.itemCountForTable(project.id, "_RelayId")) should be(Vector(0))
+    database.runDbActionOnClientDb(ApiDatabaseQueryBuilderPostGres.itemCountForTable(project.id, "_Relation0")) should be(Vector(0))
+    database.runDbActionOnClientDb(ApiDatabaseQueryBuilderPostGres.itemCountForTable(project.id, "_Relation1")) should be(Vector(0))
+    database.runDbActionOnClientDb(ApiDatabaseQueryBuilderPostGres.itemCountForTable(project.id, "_Relation2")) should be(Vector(0))
   }
 
   "The ResetDataMutation" should "reinstate foreign key constraints again after wiping the data" in {
@@ -127,11 +128,11 @@ class ResetDataSpec extends FlatSpec with Matchers with ApiBaseSpec with AwaitUt
     server.query("query{model1s{id}}", project, dataContains = """{"model1s":[]}""")
     server.query("query{model2s{id}}", project, dataContains = """{"model2s":[]}""")
 
-    database.runDbActionOnClientDb(ApiDatabaseQueryBuilderPostGres.existsByModel(project.id, "_RelayId").as[Boolean]).toString should be("Vector(false)")
+    database.runDbActionOnClientDb(ApiDatabaseQueryBuilderPostGres.itemCountForTable(project.id, "_RelayId")) should be(Vector(0))
 
     import slick.jdbc.MySQLProfile.api._
     val insert = sql"INSERT INTO `#${project.id}`.`_Relation1` VALUES ('someID', 'a', 'b')"
 
-    intercept[SQLIntegrityConstraintViolationException] { database.runDbActionOnClientDb(insert.asUpdate) }
+    intercept[PSQLException] { database.runDbActionOnClientDb(insert.asUpdate) }
   }
 }

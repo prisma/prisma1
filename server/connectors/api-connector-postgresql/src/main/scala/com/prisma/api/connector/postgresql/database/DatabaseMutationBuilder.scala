@@ -272,11 +272,8 @@ object DatabaseMutationBuilder {
 
   //endregion
 
-  //todo maybe rework
   //region RESET DATA
-  def disableForeignKeyConstraintChecks               = sqlu"SET FOREIGN_KEY_CHECKS=0"
-  def resetData(projectId: String, tableName: String) = sqlu"TRUNCATE TABLE #$projectId.#$tableName"
-  def enableForeignKeyConstraintChecks                = sqlu"SET FOREIGN_KEY_CHECKS=1"
+  def resetData(projectId: String, tableName: String) = sqlu"""TRUNCATE TABLE "#$projectId"."#$tableName" CASCADE"""
 
   //endregion
 
@@ -546,7 +543,9 @@ object DatabaseMutationBuilder {
                 e.getCause.toString)}"
             }
             .toVector
-        case e: Exception => Vector(e.getCause.toString)
+        case e: Exception =>
+          println(e.getMessage)
+          Vector(e.getMessage)
       }
 
       if (res.nonEmpty) throw new Exception(res.mkString("-@-"))
@@ -554,28 +553,27 @@ object DatabaseMutationBuilder {
     }
   }
 
-  def pushScalarListsImport(mutaction: PushScalarListsImport): SimpleDBIO[Vector[String]] = {
+  def pushScalarListsImport(mutaction: PushScalarListsImport) = {
+
     val projectId = mutaction.project.id
     val tableName = mutaction.tableName
     val nodeId    = mutaction.id
 
-    SimpleDBIO[Vector[String]] { x =>
-      val setBaseline: Vector[String] = try {
-        val query                       = s"""set @baseline := ifnull((select max(position) from "$projectId"."$tableName" where "nodeId" = ?), 0) + 1000"""
-        val baseLine: PreparedStatement = x.connection.prepareStatement(query)
+    val idQuery =
+      sql"""Select "case" from (
+            Select max("position"),
+            CASE WHEN max("position") IS NULL THEN 1000
+            ELSE max("position") +1000
+            END
+            FROM "#$projectId"."#$tableName"
+            WHERE "nodeId" = $nodeId
+            ) as "ALIAS"
+      """.as[Int]
 
-        baseLine.setString(1, nodeId)
-
-        baseLine.execute()
-
-        Vector.empty
-      } catch {
-        case e: Exception => Vector(e.getCause.toString)
-      }
-
+    def pushQuery(baseLine: Int) = SimpleDBIO[Vector[String]] { x =>
       val argsWithIndex = mutaction.args.values.zipWithIndex
       val rowResult: Vector[String] = try {
-        val query                         = s"""insert into "$projectId"."$tableName" ("nodeId", "position", "value") values (?, @baseline + ? , ?)"""
+        val query                         = s"""insert into "$projectId"."$tableName" ("nodeId", "position", "value") values (?, $baseLine + ? , ?)"""
         val insertRows: PreparedStatement = x.connection.prepareStatement(query)
 
         argsWithIndex.foreach { argWithIndex =>
@@ -597,12 +595,20 @@ object DatabaseMutationBuilder {
             }
             .toVector
 
-        case e: Exception => Vector(e.getCause.toString)
+        case e: Exception =>
+          println(e.getMessage)
+          Vector(e.getMessage)
       }
 
-      val res = setBaseline ++ rowResult
-      if (res.nonEmpty) throw new Exception(res.mkString("-@-"))
-      res
+      if (rowResult.nonEmpty) throw new Exception(rowResult.mkString("-@-"))
+      rowResult
     }
+
+    import scala.concurrent.ExecutionContext.Implicits.global
+
+    for {
+      nodeIds <- idQuery
+      action  <- pushQuery(nodeIds.head)
+    } yield action
   }
 }
