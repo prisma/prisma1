@@ -7,7 +7,7 @@ function introspect(): Promise<string> {
 }
 
 async function testSchema(sql: string) {
-  const client = new Client({ connectionString: '' })
+  const client = new Client(connectionDetails)
   await client.connect()
   await client.query('DROP SCHEMA IF EXISTS DatabaseIntrospector cascade;')
   await client.query('CREATE SCHEMA DatabaseIntrospector;')
