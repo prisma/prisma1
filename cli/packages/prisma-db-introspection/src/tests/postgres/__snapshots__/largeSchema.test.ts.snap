@@ -1,0 +1,194 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Introspector large example database 1`] = `
+"type Actor @postgres(table: \\"actor\\") {
+  actor_id: Int!
+  first_name: String!
+  last_name: String!
+  last_update: DateTime!
+  film_actors: [Film_actor] @postgres(foreignColumn: \\"actor_id\\")
+}
+type Actor_info @postgres(table: \\"actor_info\\") {
+  actor_id: Int
+  film_info: String
+  first_name: String
+  last_name: String
+}
+type Address @postgres(table: \\"address\\") {
+  address: String!
+  address2: String
+  address_id: Int!
+  city_id: City @postgres(ownColumn: \\"city_id\\")!
+  district: String!
+  last_update: DateTime!
+  phone: String!
+  postal_code: String
+  customers: [Customer] @postgres(foreignColumn: \\"address_id\\")
+  staffs: [Staff] @postgres(foreignColumn: \\"address_id\\")
+  stores: [Store] @postgres(foreignColumn: \\"address_id\\")
+}
+type Category @postgres(table: \\"category\\") {
+  category_id: Int!
+  last_update: DateTime!
+  name: String!
+  film_categorys: [Film_category] @postgres(foreignColumn: \\"category_id\\")
+}
+type City @postgres(table: \\"city\\") {
+  city: String!
+  city_id: Int!
+  country_id: Country @postgres(ownColumn: \\"country_id\\")!
+  last_update: DateTime!
+  addresss: [Address] @postgres(foreignColumn: \\"city_id\\")
+}
+type Country @postgres(table: \\"country\\") {
+  country: String!
+  country_id: Int!
+  last_update: DateTime!
+  citys: [City] @postgres(foreignColumn: \\"country_id\\")
+}
+type Customer @postgres(table: \\"customer\\") {
+  active: Int
+  activebool: Boolean!
+  address_id: Address @postgres(ownColumn: \\"address_id\\")!
+  create_date: null!
+  customer_id: Int!
+  email: String
+  first_name: String!
+  last_name: String!
+  last_update: DateTime
+  store_id: Int!
+  payments: [Payment] @postgres(foreignColumn: \\"customer_id\\")
+  rentals: [Rental] @postgres(foreignColumn: \\"customer_id\\")
+}
+type Customer_list @postgres(table: \\"customer_list\\") {
+  address: String
+  city: String
+  country: String
+  id: Int
+  name: String
+  notes: String
+  phone: String
+  sid: Int
+  zip code: String
+}
+type Film @postgres(table: \\"film\\") {
+  description: String
+  film_id: Int!
+  fulltext: null!
+  language_id: Language @postgres(ownColumn: \\"language_id\\")!
+  last_update: DateTime!
+  length: Int
+  rating: null
+  release_year: Int
+  rental_duration: Int!
+  rental_rate: Float!
+  replacement_cost: Float!
+  special_features: null
+  title: String!
+  film_actors: [Film_actor] @postgres(foreignColumn: \\"film_id\\")
+  film_categorys: [Film_category] @postgres(foreignColumn: \\"film_id\\")
+  inventorys: [Inventory] @postgres(foreignColumn: \\"film_id\\")
+}
+type Film_actor @postgres(table: \\"film_actor\\") {
+  actor_id: Actor @postgres(ownColumn: \\"actor_id\\")!
+  film_id: Film @postgres(ownColumn: \\"film_id\\")!
+  last_update: DateTime!
+}
+type Film_category @postgres(table: \\"film_category\\") {
+  category_id: Category @postgres(ownColumn: \\"category_id\\")!
+  film_id: Film @postgres(ownColumn: \\"film_id\\")!
+  last_update: DateTime!
+}
+type Film_list @postgres(table: \\"film_list\\") {
+  actors: String
+  category: String
+  description: String
+  fid: Int
+  length: Int
+  price: Float
+  rating: null
+  title: String
+}
+type Inventory @postgres(table: \\"inventory\\") {
+  film_id: Film @postgres(ownColumn: \\"film_id\\")!
+  inventory_id: Int!
+  last_update: DateTime!
+  store_id: Int!
+  rentals: [Rental] @postgres(foreignColumn: \\"inventory_id\\")
+}
+type Language @postgres(table: \\"language\\") {
+  language_id: Int!
+  last_update: DateTime!
+  name: String!
+  films: [Film] @postgres(foreignColumn: \\"language_id\\")
+}
+type Nicer_but_slower_film_list @postgres(table: \\"nicer_but_slower_film_list\\") {
+  actors: String
+  category: String
+  description: String
+  fid: Int
+  length: Int
+  price: Float
+  rating: null
+  title: String
+}
+type Payment @postgres(table: \\"payment\\") {
+  amount: Float!
+  customer_id: Customer @postgres(ownColumn: \\"customer_id\\")!
+  payment_date: DateTime!
+  payment_id: Int!
+  rental_id: Rental @postgres(ownColumn: \\"rental_id\\")!
+  staff_id: Staff @postgres(ownColumn: \\"staff_id\\")!
+}
+type Rental @postgres(table: \\"rental\\") {
+  customer_id: Customer @postgres(ownColumn: \\"customer_id\\")!
+  inventory_id: Inventory @postgres(ownColumn: \\"inventory_id\\")!
+  last_update: DateTime!
+  rental_date: DateTime!
+  rental_id: Int!
+  return_date: DateTime
+  staff_id: Staff @postgres(ownColumn: \\"staff_id\\")!
+  payments: [Payment] @postgres(foreignColumn: \\"rental_id\\")
+}
+type Sales_by_film_category @postgres(table: \\"sales_by_film_category\\") {
+  category: String
+  total_sales: Float
+}
+type Sales_by_store @postgres(table: \\"sales_by_store\\") {
+  manager: String
+  store: String
+  total_sales: Float
+}
+type Staff @postgres(table: \\"staff\\") {
+  active: Boolean!
+  address_id: Address @postgres(ownColumn: \\"address_id\\")!
+  email: String
+  first_name: String!
+  last_name: String!
+  last_update: DateTime!
+  password: String
+  picture: null
+  staff_id: Int!
+  store_id: Int!
+  username: String!
+  payments: [Payment] @postgres(foreignColumn: \\"staff_id\\")
+  rentals: [Rental] @postgres(foreignColumn: \\"staff_id\\")
+  stores: [Store] @postgres(foreignColumn: \\"manager_staff_id\\")
+}
+type Staff_list @postgres(table: \\"staff_list\\") {
+  address: String
+  city: String
+  country: String
+  id: Int
+  name: String
+  phone: String
+  sid: Int
+  zip code: String
+}
+type Store @postgres(table: \\"store\\") {
+  address_id: Address @postgres(ownColumn: \\"address_id\\")!
+  last_update: DateTime!
+  manager_staff_id: Staff @postgres(ownColumn: \\"manager_staff_id\\")!
+  store_id: Int!
+}"
+`;

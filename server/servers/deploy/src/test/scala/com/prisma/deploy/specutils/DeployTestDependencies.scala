@@ -7,6 +7,7 @@ import com.prisma.config.DatabaseConfig
 import com.prisma.deploy.DeployDependencies
 import com.prisma.deploy.connector.DeployConnector
 import com.prisma.deploy.connector.mysql.MySqlDeployConnector
+import com.prisma.deploy.connector.postgresql.PostGreSqlDeployConnector
 import com.prisma.deploy.migration.validation.SchemaError
 import com.prisma.deploy.schema.mutations.{FunctionInput, FunctionValidator}
 import com.prisma.deploy.server.auth.DummyClusterAuth
@@ -25,18 +26,31 @@ case class DeployTestDependencies()(implicit val system: ActorSystem, val materi
   override def apiAuth = AuthImpl
 
   override def deployPersistencePlugin: DeployConnector = {
+//    val testConfig = DatabaseConfig(
+//      "test",
+//      "mysql",
+//      active = true,
+//      sys.env("SQL_CLIENT_HOST"),
+//      sys.env("SQL_CLIENT_PORT").toInt,
+//      sys.env("SQL_CLIENT_USER"),
+//      sys.env("SQL_CLIENT_PASSWORD"),
+//      connectionLimit = Some(1)
+//    )
+//
+//    MySqlDeployConnector(testConfig)(system.dispatcher)
+
     val testConfig = DatabaseConfig(
       "test",
       "mysql",
       active = true,
-      sys.env("SQL_CLIENT_HOST"),
+      sys.env("SQL_CLIENT_HOST") SubscriptionDependenciesForTest,
       sys.env("SQL_CLIENT_PORT").toInt,
       sys.env("SQL_CLIENT_USER"),
       sys.env("SQL_CLIENT_PASSWORD"),
       connectionLimit = Some(1)
     )
 
-    MySqlDeployConnector(testConfig)(system.dispatcher)
+    PostGreSqlDeployConnector(testConfig)(system.dispatcher)
   }
 
   override def functionValidator: FunctionValidator = (project: Project, fn: FunctionInput) => {

@@ -39,7 +39,7 @@ case class WebsocketServer(dependencies: SubscriptionDependencies, prefix: Strin
   override def onStop: Future[_] = Future { responseSubscription.unsubscribe }
 
   val innerRoutes =
-    pathPrefix(Segments(min = 2, max = 3)) { segments =>
+    pathPrefix(Segments(min = 0, max = 3)) { segments =>
       get {
         val projectId = ProjectId.fromSegments(segments).asString
 

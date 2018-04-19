@@ -1,6 +1,7 @@
 package com.prisma.api.server
 
 import akka.actor.ActorSystem
+import akka.http.scaladsl.model.StatusCodes
 import akka.http.scaladsl.model.StatusCodes._
 import akka.http.scaladsl.model.headers.RawHeader
 import akka.http.scaladsl.server.Directives._
@@ -41,6 +42,7 @@ case class ApiServer(
   val log: String => Unit = (msg: String) => logger.info(msg)
   val requestPrefix       = sys.env.getOrElse("ENV", "local")
   val projectFetcher      = apiDependencies.projectFetcher
+  val reservedSegments    = Set("private", "import", "export")
 
   import scala.concurrent.duration._
 
@@ -130,49 +132,39 @@ case class ApiServer(
     }
 
     logger.info(Json.toJson(LogData(LogKey.RequestNew, requestId)).toString())
-    pathPrefix(Segments(min = 2, max = 4)) { segments =>
+    pathPrefix(Segments(min = 0, max = 4)) { segments =>
       post {
-        def removeLastElementIfInSet(elements: List[String], set: Set[String]) = {
-          if (set.contains(elements.last)) {
-            elements.dropRight(1)
-          } else {
-            elements
-          }
-        }
-        val actualSegments    = removeLastElementIfInSet(segments, Set("private", "import", "export"))
-        val projectId         = ProjectId.fromSegments(actualSegments)
-        val projectIdAsString = projectId.asString
-
-        val apiSegment = if (segments.size == 3 || segments.size == 4) {
-          segments.last
-        } else {
-          ""
-        }
+        val (projectSegments, reservedSegment) = splitReservedSegment(segments)
+        val projectId                          = ProjectId.fromSegments(projectSegments)
+        val projectIdAsString                  = projectId.asString
 
         handleExceptions(toplevelExceptionHandler(requestId)) {
           extractRawRequest(requestId) { rawRequest =>
-            apiSegment match {
-              case "private" =>
+            reservedSegment match {
+              case None =>
+                throttleApiCallIfNeeded(projectId, rawRequest)
+
+              case Some("private") =>
                 val result = apiDependencies.requestHandler.handleRawRequestForPrivateApi(projectId = projectIdAsString, rawRequest = rawRequest)
                 result.onComplete(_ => logRequestEnd(projectIdAsString))
                 complete(result)
 
-              case "import" =>
+              case Some("import") =>
                 withRequestTimeout(5.minutes) {
                   val result = apiDependencies.requestHandler.handleRawRequestForImport(projectId = projectIdAsString, rawRequest = rawRequest)
                   result.onComplete(_ => logRequestEnd(projectIdAsString))
                   complete(result)
                 }
 
-              case "export" =>
+              case Some("export") =>
                 withRequestTimeout(5.minutes) {
                   val result = apiDependencies.requestHandler.handleRawRequestForExport(projectId = projectIdAsString, rawRequest = rawRequest)
                   result.onComplete(_ => logRequestEnd(projectIdAsString))
                   complete(result)
                 }
 
-              case _ =>
-                throttleApiCallIfNeeded(projectId, rawRequest)
+              case Some(x) =>
+                complete(StatusCodes.BadRequest, s"Invalid path segment $x")
             }
           }
         }
@@ -203,6 +195,14 @@ case class ApiServer(
           }
         }
       }
+    }
+  }
+
+  def splitReservedSegment(elements: List[String]): (List[String], Option[String]) = {
+    if (elements.nonEmpty && reservedSegments.contains(elements.last)) {
+      (elements.dropRight(1), elements.lastOption)
+    } else {
+      (elements, None)
     }
   }
 

@@ -157,7 +157,7 @@ case class DeployTestServer()(implicit dependencies: DeployDependencies) extends
   }
 
   def deploySchema(name: String, stage: String, schema: String, secrets: Vector[String] = Vector.empty): (Project, Migration) = {
-    val projectId = name + "@" + stage
+    val projectId = ProjectId.toEncodedString(List(name, stage))
     val result    = deployHelper(projectId, schema, secrets)
     val revision  = result.pathAsLong("data.deploy.migration.revision")
     (dependencies.projectPersistence.load(projectId).await.get, dependencies.migrationPersistence.byId(MigrationId(projectId, revision.toInt)).await.get)

@@ -4,11 +4,15 @@ import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
 import com.prisma.api.connector.DatabaseMutaction
 import com.prisma.api.connector.mysql.MySqlApiConnector
-import com.prisma.api.connector.mysql.database.DatabaseQueryBuilder
-import com.prisma.deploy.connector.mysql.impls.DeployMutactionExectutorImpl
-import com.prisma.deploy.connector.{CreateRelationTable, DeployMutaction}
+import com.prisma.deploy.connector._
+import com.prisma.deploy.connector.postgresql.impls.DeployMutactionExecutorImpl
 import com.prisma.shared.models._
 import com.prisma.utils.await.AwaitUtils
+import slick.dbio.DBIOAction
+
+//import slick.jdbc.PostgresProfile.api._
+//import slick.jdbc.PostgresProfile.backend.DatabaseDef
+
 import slick.jdbc.MySQLProfile.api._
 import slick.jdbc.MySQLProfile.backend.DatabaseDef
 
@@ -19,7 +23,7 @@ case class ApiTestDatabase()(implicit dependencies: ApiDependencies) extends Awa
   private lazy val clientDatabase: DatabaseDef      = dependencies.apiConnector.asInstanceOf[MySqlApiConnector].databases.master
 
   def setup(project: Project): Unit = {
-    delete(project)
+    deleteProjectDatabase(project)
     createProjectDatabase(project)
 
     // The order here is very important or foreign key constraints will fail
@@ -27,38 +31,26 @@ case class ApiTestDatabase()(implicit dependencies: ApiDependencies) extends Awa
     project.relations.foreach(createRelationTable(project, _))
   }
 
-  def truncate(projectId: String): Unit = {
-    val tables = clientDatabase.run(DatabaseQueryBuilder.getTables(projectId)).await
-    val dbAction = {
-      val actions = sqlu"""USE `#${projectId}`;""" +: List(DatabaseApiTestDatabaseMutationBuilder.dangerouslyTruncateTables(tables))
-      DBIO.seq(actions: _*)
-    }
-    clientDatabase.run(dbAction).await()
-  }
+  def truncateProjectTables(project: Project): Unit   = runMutaction(TruncateProject(project))
+  def deleteProjectDatabase(project: Project): Unit   = runMutaction(DeleteProject(project.id))
+  private def createProjectDatabase(project: Project) = runMutaction(CreateProject(project.id))
 
-  def delete(project: Project): Unit = dropDatabases(Vector(project.id))
-
-  private def createProjectDatabase(project: Project) = runDbActionOnClientDb(DatabaseApiTestDatabaseMutationBuilder.createClientDatabaseForProject(project.id))
-  private def createModelTable(project: Project, model: Model) =
-    runDbActionOnClientDb(DatabaseApiTestDatabaseMutationBuilder.createTableForModel(project.id, model))
   private def createRelationTable(project: Project, relation: Relation) = runMutaction(CreateRelationTable(project.id, project.schema, relation = relation))
 
-  def deleteExistingDatabases(): Unit = {
-    val schemas = {
-      clientDatabase
-        .run(DatabaseQueryBuilder.getSchemas)
-        .await
-        .filter(db => !Vector("information_schema", "mysql", "performance_schema", "sys", "innodb", "graphcool").contains(db))
-    }
-    dropDatabases(schemas)
-  }
-
-  private def dropDatabases(dbs: Vector[String]): Unit = {
-    val dbAction = DBIO.seq(dbs.map(db => DatabaseApiTestDatabaseMutationBuilder.dropDatabaseIfExists(database = db)): _*)
-    clientDatabase.run(dbAction).await(60)
-  }
-
-  private def runMutaction(mutaction: DeployMutaction): Unit                    = DeployMutactionExectutorImpl(clientDatabase)(system.dispatcher).execute(mutaction).await
+  def runMutaction(mutaction: DeployMutaction): Unit                            = DeployMutactionExecutorImpl(clientDatabase)(system.dispatcher).execute(mutaction).await
   def runDatabaseMutactionOnClientDb(mutaction: DatabaseMutaction)              = dependencies.databaseMutactionExecutor.execute(Vector(mutaction)).await()
   def runDbActionOnClientDb(action: DBIOAction[Any, NoStream, Effect.All]): Any = clientDatabase.run(action).await()
+
+  private def createModelTable(project: Project, model: Model) = {
+    runMutaction(CreateModelTable(project.id, model.name))
+
+    model.scalarNonListFields
+      .filter(f => !ReservedFields.reservedFieldNames.contains(f.name))
+      .map(field => CreateColumn(project.id, model, field))
+      .map(runMutaction)
+
+    model.scalarListFields
+      .map(field => CreateScalarListTable(project.id, model.name, field.name, field.typeIdentifier))
+      .map(runMutaction)
+  }
 }

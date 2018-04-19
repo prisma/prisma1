@@ -98,10 +98,10 @@ class NodeQuerySpec extends FlatSpec with Matchers with ApiBaseSpec {
     val updatedModel                = model.copy(name = "TodoNew")
     val projectWithUpdatedModelName = project.copy(schema = project.schema.copy(models = List(updatedModel)))
 
-    model.stableIdentifier should equal(updatedModel.stableIdentifier) // this invriant must be guaranteed by the SchemaInferer
+    model.stableIdentifier should equal(updatedModel.stableIdentifier) // this invariant must be guaranteed by the SchemaInferer
 
     // update table name of Model
-    database.runDbActionOnClientDb(sqlu"""RENAME TABLE `#${project.id}`.`Todo` TO `#${project.id}`.`TodoNew`;""")
+    database.runDbActionOnClientDb(sqlu"""ALTER Table "#${project.id}"."Todo" RENAME TO "TodoNew";""")
 
     val result = server.query(
       s"""{

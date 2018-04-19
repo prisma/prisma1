@@ -151,7 +151,7 @@ object DatabaseQueryBuilder {
                                    model: Model,
                                    fieldName: String,
                                    values: Vector[GCValue]): SqlStreamingAction[Vector[PrismaNode], PrismaNode, Effect] = {
-    val query = sql"select * from `#$projectId`.`#${model.name}` where `#$fieldName` in (" ++ combineByComma(values.map(gcValueToSQLBuilder)) ++ sql")"
+    val query = sql"select * from `#$projectId`.`#${model.name}` where `#$fieldName` in (" ++ combineByComma(values.map(v => sql"$v")) ++ sql")"
     query.as[PrismaNode](getResultForModel(model))
   }
 
@@ -179,7 +179,7 @@ object DatabaseQueryBuilder {
                            field: Field,
                            nodeIds: Vector[IdGCValue]): DBIOAction[Vector[ScalarListValues], NoStream, Effect] = {
     val query = sql"select nodeId, position, value from `#$projectId`.`#${modelName}_#${field.name}` where nodeId in (" ++ combineByComma(
-      nodeIds.map(gcValueToSQLBuilder)) ++ sql")"
+      nodeIds.map(v => sql"$v")) ++ sql")"
 
     query.as[ScalarListElement](getResultForScalarListField(field)).map { scalarListElements =>
       val grouped: Map[Id, Vector[ScalarListElement]] = scalarListElements.groupBy(_.nodeId)

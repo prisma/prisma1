@@ -60,27 +60,23 @@ export class Cluster {
   }
 
   getLocalToken(): string | null {
-    if (!this.clusterSecret || this.clusterSecret === '') {
-      const localNote = isLocal(this.baseUrl)
-        ? `Please either provide a clusterSecret or run ${chalk.green.bold(
-            'prisma local start',
-          )} to generate a new one. `
-        : ''
-
-      this.out.warn(
-        `Property '${chalk.bold('clusterSecret')}' of cluster ${chalk.bold(
-          this.name,
-        )} in ~/.prisma/config.yml is empty. ${localNote}Read more here https://bit.ly/prisma-graphql-config-yml`,
-      )
+    if (
+      !this.clusterSecret ||
+      (this.clusterSecret === '' && !process.env.PRISMA_MANAGEMENT_API_SECRET)
+    ) {
       return null
     }
     if (!this.cachedToken) {
       const grants = [{ target: `*/*`, action: '*' }]
+      const secret =
+        process.env.PRISMA_MANAGEMENT_API_SECRET || this.clusterSecret
 
       try {
-        this.cachedToken = jwt.sign({ grants }, this.clusterSecret, {
+        this.cachedToken = jwt.sign({ grants }, secret, {
           expiresIn: '5y',
-          algorithm: 'RS256',
+          algorithm: process.env.PRISMA_MANAGEMENT_API_SECRET
+            ? 'HS256'
+            : 'RS256',
         })
       } catch (e) {
         throw new Error(
@@ -206,5 +202,17 @@ export class Cluster {
     }
 
     return null
+  }
+
+  toJSON() {
+    return {
+      name: this.name,
+      baseUrl: this.baseUrl,
+      local: this.local,
+      clusterSecret: this.clusterSecret,
+      shared: this.shared,
+      isPrivate: this.isPrivate,
+      workspaceSlug: this.workspaceSlug,
+    }
   }
 }

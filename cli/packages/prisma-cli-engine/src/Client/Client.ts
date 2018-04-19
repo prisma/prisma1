@@ -157,7 +157,6 @@ export class Client {
           },
         })
       }
-      console.error(e)
     }
   }
   get client(): GraphQLClient {
@@ -185,12 +184,19 @@ export class Client {
             e.response.errors[0].message.includes('decoded') &&
             this.env.activeCluster.local
           ) {
-            throw new Error(`Cluster secret of cluster \`${
-              this.env.activeCluster.name
-            }\` saved in ~/.prisma/config.yml
-does not match with the actual cluster secret of that cluster. This means the key pair got out of sync.
-To reset the key pair, please run ${chalk.bold.green('prisma local start')}
-`)
+            if (!process.env.PRISMA_MANAGEMENT_API_SECRET) {
+              throw new Error(
+                `Cluster ${
+                  this.env.activeCluster.name
+                } requires a cluster secret. Please provide it with the env var PRISMA_MANAGEMENT_API_SECRET`,
+              )
+            } else {
+              throw new Error(
+                `Cluster secret in env var PRISMA_MANAGEMENT_API_SECRET does not match for cluster ${
+                  this.env.activeCluster.name
+                }`,
+              )
+            }
           }
 
           if (
