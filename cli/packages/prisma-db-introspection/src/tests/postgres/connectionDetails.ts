@@ -1,5 +1,5 @@
 export const connectionDetails = {
   // database: 'prisma',
-  // user: 'prisma',
+  user: 'postgres',
   host: 'localhost',
 }
