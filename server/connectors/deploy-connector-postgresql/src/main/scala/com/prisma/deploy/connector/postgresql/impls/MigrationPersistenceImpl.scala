@@ -23,8 +23,8 @@ case class MigrationPersistenceImpl(
 
   def lock(): Future[Int] = {
     // todo Possible enhancement: Canary row in a separate table to prevent serious damage to data in case another instance spins up and circumvents this protection.
-    internalDatabase.run(sql"SELECT pg_try_advisory_xact_lock(1000);".as[Char].head.withPinnedSession).transformWith {
-      case Success(result) => if (result == 't') Future.successful(result) else lock()
+    internalDatabase.run(sql"SELECT pg_try_advisory_xact_lock(1000);".as[String].head.withPinnedSession).transformWith {
+      case Success(result) => if (result == "t") Future.successful(1) else lock()
       case Failure(err)    => Future.failed(err)
     }
   }
