@@ -157,7 +157,7 @@ case class DestructiveChanges(persistencePlugin: DeployConnector, project: Proje
         case Some(field) => field.isRequired
       }
 
-      if (modelARequired) nextSchema.models.find(_.name == modelName) match {
+      if (modelARequired) previousSchema.models.find(_.name == modelName) match {
         case Some(model) =>
           clientDataResolver.existsByModel(model.name).map {
             case true =>
