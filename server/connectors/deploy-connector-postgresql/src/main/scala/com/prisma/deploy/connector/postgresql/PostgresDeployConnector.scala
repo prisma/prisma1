@@ -75,9 +75,10 @@ trait TableTruncationHelpers {
   }
 
   private def getTables(projectId: String)(implicit ec: ExecutionContext): DBIOAction[Vector[String], NoStream, Read] = {
-    for {
-      metaTables <- MTable.getTables(cat = Some(projectId), schemaPattern = None, namePattern = None, types = None)
-    } yield metaTables.map(table => table.name.name)
+    sql"""SELECT table_name
+          FROM information_schema.tables
+          WHERE table_schema = 'public'
+          AND table_type = 'BASE TABLE';""".as[String]
   }
 
   private def dangerouslyTruncateTables(tableNames: Vector[String]): DBIOAction[Unit, NoStream, Effect] = {

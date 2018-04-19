@@ -25,19 +25,6 @@ case class DeployTestDependencies()(implicit val system: ActorSystem, val materi
   override def apiAuth = AuthImpl
 
   override def deployPersistencePlugin: DeployConnector = {
-//    val testConfig = DatabaseConfig(
-//      "test",
-//      "mysql",
-//      active = true,
-//      sys.env("SQL_CLIENT_HOST"),
-//      sys.env("SQL_CLIENT_PORT").toInt,
-//      sys.env("SQL_CLIENT_USER"),
-//      sys.env("SQL_CLIENT_PASSWORD"),
-//      connectionLimit = Some(1)
-//    )
-//
-//    MySqlDeployConnector(testConfig)(system.dispatcher)
-
     val testConfig = DatabaseConfig(
       "test",
       "postgres",
