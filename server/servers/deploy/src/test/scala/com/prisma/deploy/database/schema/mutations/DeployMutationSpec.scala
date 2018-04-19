@@ -570,7 +570,7 @@ class DeployMutationSpec extends FlatSpec with Matchers with DeploySpecBase {
     val nameAndStage = ProjectId.fromEncodedString(project.id)
     val schema =
       """
-        |type Mote {
+        |type Note {
         | name: String! @unique
         | # creator: User!
         | members: [User!]!
@@ -590,7 +590,7 @@ class DeployMutationSpec extends FlatSpec with Matchers with DeploySpecBase {
 
     val schema2 =
       """
-        |type Mote {
+        |type Note {
         | name: String! @unique
         | creator: User! @relation(name: "Creator")
         | members: [User!]! @relation(name: "MemberOf")
@@ -598,8 +598,8 @@ class DeployMutationSpec extends FlatSpec with Matchers with DeploySpecBase {
         |
         |type User {
         | name: String! @unique
-        | motes: [Mote!]! @relation(name: "Creator")
-        | memberOf: [Mote!]! @relation(name: "MemberOf")
+        | Notes: [Note!]! @relation(name: "Creator")
+        | memberOf: [Note!]! @relation(name: "MemberOf")
         |}
       """.stripMargin
 
@@ -618,7 +618,7 @@ class DeployMutationSpec extends FlatSpec with Matchers with DeploySpecBase {
       """.stripMargin,
       errorCode = 3018,
       errorContains =
-        "There is a relation ambiguity during the migration. Please first name the old relation on your schema. The ambiguity is on a relation between Mote and User."
+        "There is a relation ambiguity during the migration. Please first name the old relation on your schema. The ambiguity is on a relation between Note and User."
     )
   }
 
@@ -627,7 +627,7 @@ class DeployMutationSpec extends FlatSpec with Matchers with DeploySpecBase {
     val nameAndStage = ProjectId.fromEncodedString(project.id)
     val schema =
       """
-        |type Mote {
+        |type Note {
         | name: String! @unique
         | creator: User! @relation(name: "Creator")
         | members: [User!]! @relation(name: "MemberOf")
@@ -635,8 +635,8 @@ class DeployMutationSpec extends FlatSpec with Matchers with DeploySpecBase {
         |
         |type User {
         | name: String! @unique
-        | motes: [Mote!]! @relation(name: "Creator")
-        | memberOf: [Mote!]! @relation(name: "MemberOf")
+        | Notes: [Note!]! @relation(name: "Creator")
+        | memberOf: [Note!]! @relation(name: "MemberOf")
         |}
       """.stripMargin
 
@@ -649,7 +649,7 @@ class DeployMutationSpec extends FlatSpec with Matchers with DeploySpecBase {
 
     val schema2 =
       """
-        |type Mote {
+        |type Note {
         | name: String! @unique
         | # creator: User!
         | members: [User!]!
@@ -674,7 +674,7 @@ class DeployMutationSpec extends FlatSpec with Matchers with DeploySpecBase {
          |}
       """.stripMargin,
       errorCode = 3018,
-      errorContains = "There is a relation ambiguity during the migration. The ambiguity is on a relation between Mote and User."
+      errorContains = "There is a relation ambiguity during the migration. The ambiguity is on a relation between Note and User."
     )
   }
 
