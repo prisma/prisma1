@@ -53,10 +53,10 @@ services:
       - "5672:5672"
       - "15672:15672"
 
-  ping-db:
-    image: mysql:5.7
-    command: echo "Just used from test.sh"
-    links:
-    - test-db
-    environment:
-      MYSQL_PWD: graphcool
+#  ping-db:
+#    image: mysql:5.7
+#    command: echo "Just used from test.sh"
+#    links:
+#    - test-db
+#    environment:
+#      MYSQL_PWD: graphcool
