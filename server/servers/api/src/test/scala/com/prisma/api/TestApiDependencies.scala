@@ -37,9 +37,9 @@ case class TestApiDependenciesImpl()(implicit val system: ActorSystem, val mater
   override lazy val maxImportExportSize: Int    = 1000
   override lazy val sssEventsPubSub             = InMemoryAkkaPubSub[String]()
   override lazy val webhookPublisher            = InMemoryQueueTestKit[Webhook]()
-  override lazy val apiConnector                = PostgresApiConnector(config.databases.head)
+  override lazy val apiConnector                = PostgresApiConnector(config.databases.head.copy(pooled = false))
   override lazy val sideEffectMutactionExecutor = SideEffectMutactionExecutorImpl()
   override lazy val mutactionVerifier           = DatabaseMutactionVerifierImpl
 
-  lazy val deployConnector = PostgresDeployConnector(config.databases.head)
+  lazy val deployConnector = PostgresDeployConnector(config.databases.head.copy(pooled = false))
 }

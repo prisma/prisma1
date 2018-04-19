@@ -15,7 +15,7 @@ class InternalTestDatabase extends AwaitUtils {
     case Failure(err) => err.printStackTrace(); sys.error(s"Unable to load Prisma config: $err")
   }
 
-  val databaseDefs         = InternalDatabaseDefs(config.databases.head)
+  val databaseDefs         = InternalDatabaseDefs(config.databases.head.copy(pooled = false))
   val internalDatabaseRoot = databaseDefs.internalDatabaseRoot
   val internalDatabase     = databaseDefs.internalDatabase
 

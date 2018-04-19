@@ -157,7 +157,8 @@ case class DatabaseConfig(name: String,
                           port: Int,
                           user: String,
                           password: String,
-                          connectionLimit: Option[Int])
+                          connectionLimit: Option[Int],
+                          pooled: Boolean = true)
 
 abstract class ConfigError(reason: String)       extends Exception(reason)
 case class InvalidConfiguration(message: String) extends ConfigError(message)

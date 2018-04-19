@@ -33,7 +33,8 @@ case class DeployTestDependencies()(implicit val system: ActorSystem, val materi
       sys.env("SQL_CLIENT_PORT").toInt,
       sys.env("SQL_CLIENT_USER"),
       sys.env("SQL_CLIENT_PASSWORD"),
-      connectionLimit = Some(1)
+      connectionLimit = Some(1),
+      pooled = false
     )
 
     PostgresDeployConnector(testConfig)(system.dispatcher)

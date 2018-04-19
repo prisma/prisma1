@@ -17,10 +17,11 @@ case class InternalDatabaseDefs(dbConfig: DatabaseConfig) {
   }
 
   def typeSafeConfigFromDatabaseConfig(dbConfig: DatabaseConfig): Config = {
+    val pooled = if (dbConfig.pooled) "enabled" else "disabled"
+
     ConfigFactory
       .parseString(s"""
         |database {
-        |  connectionPool = disabled
         |  dataSourceClass = "slick.jdbc.DriverDataSource"
         |  properties {
         |    url = "jdbc:postgresql://${dbConfig.host}:${dbConfig.port}/"
@@ -29,6 +30,7 @@ case class InternalDatabaseDefs(dbConfig: DatabaseConfig) {
         |  }
         |  numThreads = ${dbConfig.connectionLimit.getOrElse(10)}
         |  connectionTimeout = 5000
+        |  connectionPool = $pooled
         |}
       """.stripMargin)
       .resolve

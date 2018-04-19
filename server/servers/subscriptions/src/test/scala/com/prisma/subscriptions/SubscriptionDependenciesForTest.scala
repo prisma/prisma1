@@ -28,7 +28,7 @@ class SubscriptionDependenciesForTest()(implicit val system: ActorSystem, val ma
     case Failure(err) => sys.error(s"Unable to load Prisma config: $err")
   }
 
-  lazy val deployConnector = PostgresDeployConnector(config.databases.head)
+  lazy val deployConnector = PostgresDeployConnector(config.databases.head.copy(pooled = false))
 
   lazy val invalidationTestKit   = InMemoryPubSubTestKit[String]()
   lazy val sssEventsTestKit      = InMemoryPubSubTestKit[String]()
@@ -65,7 +65,7 @@ class SubscriptionDependenciesForTest()(implicit val system: ActorSystem, val ma
   override lazy val sssEventsPubSub                 = ???
   override lazy val webhookPublisher                = ???
 
-  override lazy val apiConnector                = PostgresApiConnector(config.databases.head)
+  override lazy val apiConnector                = PostgresApiConnector(config.databases.head.copy(pooled = false))
   override lazy val sideEffectMutactionExecutor = SideEffectMutactionExecutorImpl()
   override lazy val mutactionVerifier           = DatabaseMutactionVerifierImpl
 }
