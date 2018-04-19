@@ -13,14 +13,10 @@ PROJECT_NAME=${BUILDKITE_JOB_ID:-TEST}
 DC_ARGS="--project-name $PROJECT_NAME --file $DIR/docker-compose.test.yml"
 
 echo "Starting dependency services..."
-docker-compose $DC_ARGS up -d client-db internal-db rabbit
+docker-compose $DC_ARGS up -d test-db rabbit
 
-until docker-compose $DC_ARGS run ping-db mysqladmin ping -h client-db -u root --protocol=TCP > /dev/null; do
+until docker-compose $DC_ARGS run ping-db mysqladmin ping -h test-db -u root --protocol=TCP > /dev/null; do
     echo "$(date) - waiting for mysql (client)"
-    sleep 1
-done
-until docker-compose $DC_ARGS run ping-db mysqladmin ping -h internal-db -u root --protocol=TCP > /dev/null; do
-    echo "$(date) - waiting for mysql (internal)"
     sleep 1
 done
 
