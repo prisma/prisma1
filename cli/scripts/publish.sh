@@ -2,9 +2,9 @@
 
 #
 # Build Order
+# prisma-db-introspection
 # prisma-yml
 # prisma-cli-engine
-# prisma-db-introspection
 # prisma-cli-core
 # prisma-cli
 
@@ -70,6 +70,27 @@ node cli/scripts/waitUntilTagPublished.js $nextDockerTag
 
 cd cli/packages/
 
+export introspectionVersionBefore=$(cat prisma-db-introspection/package.json | jq -r '.version')
+
+if [ $introspectionChanged ]; then
+  cd prisma-db-introspection
+  sleep 0.5
+  ../../scripts/doubleInstall.sh
+  yarn build
+  if [[ $CIRCLE_TAG ]]; then
+    npm version $(npm info prisma-db-introspection version)
+    npm version patch --no-git-tag-version
+    npm publish
+  else
+    npm version $(npm info prisma-db-introspection version --tag beta)
+    npm version prerelease --no-git-tag-version
+    npm publish --tag beta
+  fi
+  cd ..
+fi
+export introspectionVersion=$(cat prisma-db-introspection/package.json | jq -r '.version')
+
+
 export ymlVersionBefore=$(cat prisma-yml/package.json | jq -r '.version')
 
 if [ $ymlChanged ] || [ $CIRCLE_TAG ]; then
@@ -112,26 +133,6 @@ if [ $ymlVersionBefore != $ymlVersion ] || [ $engineChanged ]; then
 fi
 export engineVersion=$(cat prisma-cli-engine/package.json | jq -r '.version')
 
-
-export introspectionVersionBefore=$(cat prisma-db-introspection/package.json | jq -r '.version')
-
-if [ $introspectionChanged ]; then
-  cd prisma-db-introspection
-  sleep 0.5
-  ../../scripts/doubleInstall.sh
-  yarn build
-  if [[ $CIRCLE_TAG ]]; then
-    npm version $(npm info prisma-db-introspection version)
-    npm version patch --no-git-tag-version
-    npm publish
-  else
-    npm version $(npm info prisma-db-introspection version --tag beta)
-    npm version prerelease --no-git-tag-version
-    npm publish --tag beta
-  fi
-  cd ..
-fi
-export introspectionVersion=$(cat prisma-db-introspection/package.json | jq -r '.version')
 
 if [ $ymlVersionBefore != $ymlVersion ] || [ $coreChanged ] || [ $introspectionChanged ]; then
   cd prisma-cli-core
