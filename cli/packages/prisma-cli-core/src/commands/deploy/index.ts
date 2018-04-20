@@ -1,5 +1,5 @@
 import { Command, flags, Flags, DeployPayload, Config } from 'prisma-cli-engine'
-import { Cluster } from 'prisma-yml'
+import { Cluster, getEndpoint, getWSEndpoint } from 'prisma-yml'
 import chalk from 'chalk'
 import { ServiceDoesntExistError } from '../../errors/ServiceDoesntExistError'
 import { emptyDefinition } from './emptyDefinition'
@@ -606,12 +606,14 @@ Note: prisma local start will be deprecated soon in favor of the direct usage of
       'Your Prisma GraphQL database endpoint is live:',
     )}
 
-  ${chalk.bold('HTTP:')}  ${cluster.getApiEndpoint(
+  ${chalk.bold('HTTP:')}  ${getEndpoint(
+      cluster,
       serviceName,
       stageName,
       workspace,
     )}
-  ${chalk.bold('WS:')}    ${cluster.getWSEndpoint(
+  ${chalk.bold('WS:')}    ${getWSEndpoint(
+      cluster,
       serviceName,
       stageName,
       workspace,

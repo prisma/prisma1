@@ -464,7 +464,7 @@ export function getEndpoint(
   stage: string,
   workspace?: string | null,
 ) {
-  let url = cluster.baseUrl
+  const url = cluster.baseUrl
   if (service === 'default' && stage === 'default' && !workspace) {
     return url
   }
@@ -476,6 +476,15 @@ export function getEndpoint(
   }
 
   return `${url}/${service}/${stage}`
+}
+
+export function getWSEndpoint(
+  cluster: Cluster,
+  service: string,
+  stage: string,
+  workspace?: string | null,
+) {
+  return getEndpoint(cluster, service, stage, workspace).replace(/^http/, 'ws')
 }
 
 export function getEndpointFromRawProps(
