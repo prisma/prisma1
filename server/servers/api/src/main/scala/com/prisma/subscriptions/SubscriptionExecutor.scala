@@ -77,7 +77,7 @@ object SubscriptionExecutor {
       }
     }
 
-    val transformedVariables = VariablesTransformer.transformVariables(variables, mutationType, updatedFields.get.toSet)
+    val transformedVariables = VariablesTransformer.transformVariables(variables, mutationType, updatedFields)
 
     val context = SubscriptionUserContext(
       nodeId = nodeId,
