@@ -488,12 +488,12 @@ export class EndpointDialog {
     const port = await this.ask('Enter database port')
     const user = await this.ask('Enter database user')
     const password = await this.ask('Enter database password')
-    // const database = await this.ask(
-    //   'Enter database name (only needed when you already have data)',
-    // )
-    // const alreadyData = await this.ask(
-    //   'Do you already have data in the database? (yes/no)',
-    // )
+    const database = await this.ask(
+      'Enter database name (only needed when you already have data)',
+    )
+    const alreadyData = await this.ask(
+      'Do you already have data in the database? (yes/no)',
+    )
 
     return {
       type,
@@ -501,8 +501,8 @@ export class EndpointDialog {
       port,
       user,
       password,
-      database: undefined,
-      alreadyData: false,
+      database,
+      alreadyData,
     }
   }
 
