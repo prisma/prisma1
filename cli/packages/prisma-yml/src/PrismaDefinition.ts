@@ -228,7 +228,7 @@ If it is a private cluster, make sure that you're logged in with ${chalk.bold.gr
             )}`,
           )
         }
-      } else {
+      } else if (cluster) {
         return cluster
       }
     }
@@ -439,7 +439,8 @@ export function parseEndpoint(
   const splittedPath = url.pathname.split('/')
   const shared =
     url.origin.includes('eu1.prisma') || url.origin.includes('us1.prisma')
-  const isPrivate = !shared
+  const local = isLocal(url.origin)
+  const isPrivate = !shared && !local
   // assuming, that the pathname always starts with a leading /, we always can ignore the first element of the split array
   const service =
     splittedPath.length > 3 ? splittedPath[2] : splittedPath[1] || 'default'
@@ -450,7 +451,7 @@ export function parseEndpoint(
     clusterBaseUrl: url.origin,
     service,
     stage,
-    local: isLocal(url.origin),
+    local,
     isPrivate,
     shared,
     workspaceSlug,
