@@ -186,13 +186,13 @@ export class CLI {
           'Update available ' +
           chalk.dim(this.notifier.update.current) +
           chalk.reset(' → ') +
-          chalk.green(this.notifier.update.latest) +
-          `\nRun ${chalk.bold.green('npm i -g prisma')} to update`,
+          chalk.cyan(this.notifier.update.latest) +
+          `\nRun ${chalk.bold.cyan('npm i -g prisma')} to update`,
         boxenOpts: {
           padding: 1,
           margin: 1,
           align: 'center',
-          borderColor: 'green',
+          borderColor: 'grey',
           borderStyle: 'round',
         },
       })

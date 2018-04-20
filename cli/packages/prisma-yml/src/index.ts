@@ -3,6 +3,7 @@ export {
   PrismaDefinitionClass,
   parseEndpoint,
   getEndpoint,
+  getWSEndpoint,
 } from './PrismaDefinition'
 export { Environment } from './Environment'
 export { Args } from './types/common'

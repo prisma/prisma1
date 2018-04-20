@@ -96,8 +96,8 @@ export default class Help extends Command {
     offset: number = 1,
   ) {
     const color = this.out.color
-    this.out.log(`\nGraphQL Database (${chalk.underline(
-      'https://www.prismagraphql.com',
+    this.out.log(`\nGraphQL Database Gateway (${chalk.underline(
+      'https://www.prisma.io',
     )})
     
 ${chalk.bold('Usage:')} ${chalk.bold('prisma')} COMMAND`)
@@ -146,7 +146,7 @@ ${chalk.bold('Usage:')} ${chalk.bold('prisma')} COMMAND`)
     }
 
     const globalMaxLeft =
-      maxLength(flatten(jobs.map(j => j.list)).map(i => i[0])) + 2
+      maxLength(flatten(jobs.map(j => j.list)).map(i => i[0])) + 6
 
     jobs.forEach(job => {
       this.out.log('')
@@ -156,19 +156,18 @@ ${chalk.bold('Usage:')} ${chalk.bold('prisma')} COMMAND`)
       this.out.log(job.deprecated ? chalk.dim(secondLine) : secondLine)
     })
 
-    this.out.log(`\nUse ${chalk.green(
+    this.out.log(`\nUse ${chalk.cyan(
       'prisma help [command]',
     )} for more information about a command.
-Docs can be found here:
-https://www.prismagraphql.com/docs/reference/
+Docs can be found here: https://bit.ly/prisma-cli-commands
 
 ${chalk.dim('Examples:')}
 
 ${chalk.gray('-')} Initialize files for a new Prisma service
-  ${chalk.green('$ prisma init')}
+  ${chalk.cyan('$ prisma init')}
 
 ${chalk.gray('-')} Deploy service changes (or new service)
-  ${chalk.green('$ prisma deploy')}
+  ${chalk.cyan('$ prisma deploy')}
 `)
   }
 

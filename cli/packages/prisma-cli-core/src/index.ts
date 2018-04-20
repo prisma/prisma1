@@ -30,11 +30,13 @@ import ClusterLogs from './commands/cluster/logs'
 import ClusterAdd from './commands/cluster/add'
 import ClusterRemove from './commands/cluster/remove'
 import InitPrisma from './commands/init-prisma'
+import IntrospectCommand from './commands/introspect/introspect'
+import Seed from './commands/seed/seed'
 
 export const groups = [
   {
-    key: 'db',
-    name: 'Database service',
+    key: 'service',
+    name: 'Service',
   },
   {
     key: 'data',
@@ -44,15 +46,6 @@ export const groups = [
     key: 'cloud',
     name: 'Cloud',
   },
-  {
-    key: 'local',
-    name: 'Local development',
-    deprecated: true,
-  },
-  {
-    key: 'cluster',
-    name: 'Clusters',
-  },
 ]
 
 export const topics = [
@@ -60,27 +53,41 @@ export const topics = [
   {
     name: 'init',
     description: 'Create files for new services',
-    group: 'db',
+    group: 'service',
   },
   {
     name: 'deploy',
     description: 'Deploy local service definition',
-    group: 'db',
+    group: 'service',
+  },
+  {
+    name: 'introspect',
+    description: 'Introspect database schema(s) of service',
+    group: 'service',
   },
   {
     name: 'info',
     description: 'Print service info (endpoints, clusters, ...) ',
-    group: 'db',
+    group: 'service',
   },
-  { name: 'token', description: 'Create a new service token', group: 'db' },
-  { name: 'list', description: 'List all deployed services', group: 'db' },
-  { name: 'delete', description: 'Delete an existing service', group: 'db' },
+  {
+    name: 'token',
+    description: 'Create a new service token',
+    group: 'service',
+  },
+  { name: 'list', description: 'List all deployed services', group: 'service' },
+  {
+    name: 'delete',
+    description: 'Delete an existing service',
+    group: 'service',
+  },
   /* Data workflows */
   {
     name: 'playground',
     description: 'Opens the playground for the current service',
     group: 'data',
   },
+  { name: 'seed', description: 'Load seed data', group: 'data' },
   {
     name: 'import',
     description: 'Import command',
@@ -92,12 +99,6 @@ export const topics = [
     group: 'data',
   },
   { name: 'reset', description: 'Reset data of a service', group: 'data' },
-  /* Local development */
-  {
-    name: 'local',
-    description: 'Manage the local Prisma version',
-    group: 'local',
-  },
   /* Cloud */
   {
     name: 'login',
@@ -127,6 +128,7 @@ export const commands = [
   Playground,
   ConsoleCommand,
   List,
+  Seed,
   Delete,
   Up,
   Stop,
@@ -146,6 +148,7 @@ export const commands = [
   ClusterLogs,
   ClusterAdd,
   ClusterRemove,
+  IntrospectCommand,
 ]
 
 export {
@@ -156,6 +159,7 @@ export {
   Playground,
   // Console,
   List,
+  Seed,
   Delete,
   // RootTokens,
   // FunctionLogs,
@@ -177,4 +181,5 @@ export {
   ClusterAdd,
   ClusterRemove,
   InitPrisma,
+  IntrospectCommand,
 }

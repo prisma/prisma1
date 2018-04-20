@@ -1,5 +1,5 @@
 import { Command, flags, Flags, DeployPayload, Config } from 'prisma-cli-engine'
-import { Cluster } from 'prisma-yml'
+import { Cluster, getEndpoint, getWSEndpoint } from 'prisma-yml'
 import chalk from 'chalk'
 import { ServiceDoesntExistError } from '../../errors/ServiceDoesntExistError'
 import { emptyDefinition } from './emptyDefinition'
@@ -74,7 +74,6 @@ ${chalk.gray(
     }),
   }
   private deploying: boolean = false
-  private showedLines: number = 0
   private showedHooks: boolean = false
   private loggedIn: boolean = false
   async run() {
@@ -177,13 +176,6 @@ Note: prisma local start will be deprecated soon in favor of the direct usage of
       this.env.setActiveCluster(cluster)
     } else {
       throw new Error(`Cluster ${cluster} does not exist.`)
-    }
-
-    /**
-     * Go up after dialogs have been shown
-     */
-    if (this.showedLines > 0) {
-      this.out.up(this.showedLines)
     }
 
     /**
@@ -606,12 +598,14 @@ Note: prisma local start will be deprecated soon in favor of the direct usage of
       'Your Prisma GraphQL database endpoint is live:',
     )}
 
-  ${chalk.bold('HTTP:')}  ${cluster.getApiEndpoint(
+  ${chalk.bold('HTTP:')}  ${getEndpoint(
+      cluster,
       serviceName,
       stageName,
       workspace,
     )}
-  ${chalk.bold('WS:')}    ${cluster.getWSEndpoint(
+  ${chalk.bold('WS:')}    ${getWSEndpoint(
+      cluster,
       serviceName,
       stageName,
       workspace,
@@ -639,7 +633,6 @@ Note: prisma local start will be deprecated soon in favor of the direct usage of
     }
 
     const { cluster } = await this.out.prompt(question)
-    this.showedLines += 2
 
     if (cluster === 'login') {
       await this.client.login()
@@ -689,6 +682,7 @@ Note: prisma local start will be deprecated soon in favor of the direct usage of
     const allCombinations = [...combinations, ...localChoices]
 
     return [
+      new inquirer.Separator('                     '),
       ...this.convertChoices(allCombinations),
       new inquirer.Separator('                     '),
       new inquirer.Separator(
