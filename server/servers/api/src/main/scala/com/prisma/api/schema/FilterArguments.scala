@@ -43,7 +43,7 @@ object FilterArguments {
 
   val ANDFilter     = FilterArgument("AND", "Logical AND on all given filters.")
   val ORFilter      = FilterArgument("OR", "Logical OR on all given filters.")
-  val NOTFilter     = FilterArgument("NOT", "Logical NOT on all given filters.")
+  val NOTFilter     = FilterArgument("NOT", "Logical NOT on all given filters combined by AND.")
   val booleanFilter = FilterArgument("boolean", "")
   val nodeFilter    = FilterArgument("node", "")
 

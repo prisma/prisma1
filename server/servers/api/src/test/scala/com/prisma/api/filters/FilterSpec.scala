@@ -71,7 +71,14 @@ class FilterSpec extends FlatSpec with Matchers with ApiBaseSpec {
 
     val filter = """(where: {NOT:{name_starts_with: "P"}})"""
 
-    userUniques(filter) should be(Vector(1, 3, 4))
+    userUniques(filter) should be(Vector(2, 3, 4))
+  }
+
+  "NOT filter" should "work as list" in {
+
+    val filter = """(where: {NOT:[{name_contains: "e"},{unique:1}]})"""
+
+    userUniques(filter) should be(Vector(4))
   }
 
   "Nested filter" should "work" in {
