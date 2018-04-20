@@ -1,5 +1,6 @@
 package com.prisma.api.schema
 
+import com.prisma.subscriptions.schema.VariablesTransformer
 import org.scalatest.FlatSpec
 import play.api.libs.json._
 
@@ -27,27 +28,14 @@ class TransformVariablesSpec extends FlatSpec {
         |  }
         |}""".stripMargin).as[JsObject]
 
-    val mutationName  = "CREATED"
+    val mutationName  = com.prisma.shared.models.ModelMutationType.Created
     val updatedFields = Set("updated1", "updated2", "updated3")
 
-    def convert(input: JsObject): JsObject = {
-      JsObject(input.fields.map {
-        case ("updatedFields_contains", JsString(field))                                       => ("boolean", JsBoolean(updatedFields.contains(field)))
-        case ("updatedFields_contains_every", JsArray(values))                                 => ("boolean", JsBoolean(values.map(_.as[JsString].value).toSet.subsetOf(updatedFields)))
-        case ("updatedFields_contains_some", JsArray(values))                                  => ("boolean", JsBoolean(values.map(_.as[JsString].value).exists(updatedFields.contains)))
-        case ("mutation_in", JsString(mutation))                                               => ("boolean", JsBoolean(mutation == mutationName))
-        case ("mutation_in", JsArray(values))                                                  => ("boolean", JsBoolean(values.map(_.as[JsString].value).contains(mutationName)))
-        case (key: String, obj: JsObject)                                                      => (key, convert(obj))
-        case (key: String, JsArray(eles)) if eles.nonEmpty && eles.head.isInstanceOf[JsObject] => (key, JsArray(eles.map(v => convert(v.as[JsObject]))))
-        case (key: String, arr: JsArray)                                                       => (key, arr)
-        case (key: String, leafJsValue)                                                        => (key, leafJsValue)
-      })
-    }
+    val converted = VariablesTransformer.transformVariables(variables, mutationName, updatedFields)
 
     println(mutationName)
     println(variables)
-    val conv = convert(variables)
-    println(conv)
+    println(converted)
 
   }
 }

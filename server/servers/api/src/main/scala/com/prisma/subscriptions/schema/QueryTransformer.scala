@@ -8,11 +8,7 @@ import sangria.visitor.VisitorCommand
 
 object QueryTransformer {
   def replaceMutationInFilter(query: Document, mutation: ModelMutationType): AstNode = {
-    val mutationName = mutation match {
-      case ModelMutationType.Created => "CREATED"
-      case ModelMutationType.Updated => "UPDATED"
-      case ModelMutationType.Deleted => "DELETED"
-    }
+    val mutationName = mutation.toString
     MyAstVisitor.visitAst(
       query,
       onEnter = {

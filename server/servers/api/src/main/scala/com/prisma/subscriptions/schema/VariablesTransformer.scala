@@ -1,16 +1,11 @@
 package com.prisma.subscriptions.schema
 
-import com.prisma.shared.models.ModelMutationType
 import com.prisma.shared.models.ModelMutationType.ModelMutationType
 import play.api.libs.json._
 
 object VariablesTransformer {
   def transformVariables(variables: JsValue, mutation: ModelMutationType, updatedFields: Set[String]): JsValue = {
-    val mutationName = mutation match {
-      case ModelMutationType.Created => "CREATED"
-      case ModelMutationType.Updated => "UPDATED"
-      case ModelMutationType.Deleted => "DELETED"
-    }
+    val mutationName = mutation.toString
 
     def convert(input: JsObject): JsObject = {
       JsObject(input.fields.map {
