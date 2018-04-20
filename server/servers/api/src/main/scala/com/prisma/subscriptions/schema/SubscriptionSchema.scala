@@ -49,14 +49,9 @@ case class SubscriptionSchema(
       }
     ),
     resolve = (ctx) =>
-      isDelete match {
-        case false =>
-          SubscriptionDataResolver.resolve(dependencies.dataResolver(project), schemaBuilder.objectTypeBuilder, model, ctx)
-
-        case true =>
-//        Future.successful(None)
-          // in the delete case there MUST be the previousValues
-          Future.successful(Some(SimpleResolveOutput(previousValues.get, Args.empty)))
+      isDelete match { // in the delete case there MUST be the previousValues
+        case true  => Future.successful(Some(SimpleResolveOutput(previousValues.get, Args.empty)))
+        case false => SubscriptionDataResolver.resolve(dependencies.dataResolver(project), schemaBuilder.objectTypeBuilder, model, ctx)
     }
   )
 
