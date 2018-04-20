@@ -7,7 +7,7 @@ import * as yamlParser from 'yaml-ast-parser'
 export function replaceYamlValue(input, key, newValue) {
   const ast = yamlParser.safeLoad(input)
   const position = getPosition(ast, key)
-  const newEntry = `${key}: ${newValue}`
+  const newEntry = `${key}: ${newValue}\n`
   if (!position) {
     return input + '\n' + newEntry
   }
@@ -33,4 +33,24 @@ function getPosition(
     start: mapping.startPosition,
     end: mapping.endPosition + 1,
   }
+}
+
+function commentOut(input: string, keys: string[]) {
+  let output = input
+  for (const key of keys) {
+    const ast = yamlParser.safeLoad(output)
+    const position = getPosition(ast, key)
+
+    if (position) {
+      output =
+        output.slice(0, position.start) + '#' + output.slice(position.start)
+    }
+  }
+
+  return output
+}
+
+export function migrateToEndpoint(input, endpoint) {
+  let output = commentOut(input, ['service', 'stage', 'cluster'])
+  return replaceYamlValue(output, 'endpoint', endpoint)
 }

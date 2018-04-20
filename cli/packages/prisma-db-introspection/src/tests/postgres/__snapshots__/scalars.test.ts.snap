@@ -1,0 +1,59 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Introspector DateTime columns 1`] = `
+"type Booleans @postgres(table: \\"Booleans\\") {
+  a: DateTime
+  b: DateTime!
+}"
+`;
+
+exports[`Introspector Json columns 1`] = `
+"type Booleans @postgres(table: \\"Booleans\\") {
+  a: Json
+  b: Json!
+}"
+`;
+
+exports[`Introspector boolean columns 1`] = `
+"type Booleans @postgres(table: \\"Booleans\\") {
+  a: Boolean
+  b: Boolean!
+}"
+`;
+
+exports[`Introspector float columns 1`] = `
+"type Floats @postgres(table: \\"Floats\\") {
+  a: Float
+  b: Float
+  c: Float
+  d: Float
+  e: Float!
+  f: Float!
+  g: Float!
+  h: Float!
+  i: Float
+  j: Float!
+}"
+`;
+
+exports[`Introspector int columns 1`] = `
+"type Ints @postgres(table: \\"Ints\\") {
+  a: Int
+  b: Int
+  c: Int
+  d: Int!
+  e: Int!
+  f: Int!
+}"
+`;
+
+exports[`Introspector text columns 1`] = `
+"type Strings @postgres(table: \\"Strings\\") {
+  a: String
+  b: String
+  c: String
+  d: String!
+  e: String!
+  f: String!
+}"
+`;

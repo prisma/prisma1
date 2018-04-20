@@ -11,3 +11,6 @@ yarn test
 cd ../prisma-cli-core
 yarn build
 yarn test
+cd ../prisma-db-introspection
+yarn build
+yarn test
