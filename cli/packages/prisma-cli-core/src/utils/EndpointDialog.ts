@@ -84,7 +84,6 @@ export class EndpointDialog {
   client: Client
   env: Environment
   config: Config
-  showedLines = 0
   constructor(out: Output, client: Client, env: Environment, config: Config) {
     this.out = out
     this.client = client
@@ -108,8 +107,6 @@ export class EndpointDialog {
     )
 
     const { choice } = await this.out.prompt(question)
-    this.out.up(1)
-    this.showedLines += 1
 
     return this.handleChoice({
       choice: this.decodeName(choice),
@@ -251,8 +248,6 @@ export class EndpointDialog {
       stage = await this.askForStage('dev')
     }
 
-    this.out.up(this.showedLines)
-
     return {
       endpoint: getEndpoint(cluster, service, stage, workspace),
       cluster,
@@ -333,6 +328,7 @@ export class EndpointDialog {
       ]
       const choices = this.convertChoices(rawChoices)
       const finalChoices = [
+        new inquirer.Separator('                       '),
         new inquirer.Separator(
           chalk.bold(
             'You can set up Prisma  for local development (requires Docker)',
@@ -381,6 +377,7 @@ export class EndpointDialog {
             ...choices.slice(choices.length - 2),
           ]
       const finalChoices = [
+        new inquirer.Separator('                       '),
         new inquirer.Separator(chalk.bold('Use an existing Prisma server')),
         ...choices.slice(0, clusterChoices.length + 2),
         new inquirer.Separator('                       '),
@@ -444,9 +441,6 @@ export class EndpointDialog {
     }
 
     const { stage } = await this.out.prompt(question)
-    this.out.up(1)
-
-    // this.showedLines += 1
 
     return stage
   }
@@ -460,9 +454,6 @@ export class EndpointDialog {
     }
 
     const { service } = await this.out.prompt(question)
-    this.out.up(1)
-
-    // this.showedLines += 1
 
     return service
   }
@@ -476,9 +467,6 @@ export class EndpointDialog {
     }
 
     const { endpoint } = await this.out.prompt(question)
-    this.out.up(1)
-
-    // this.showedLines += 1
 
     return endpoint
   }
