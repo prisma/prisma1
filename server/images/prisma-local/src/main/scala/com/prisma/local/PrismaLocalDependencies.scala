@@ -8,11 +8,12 @@ import com.prisma.api.mutactions.{DatabaseMutactionVerifierImpl, SideEffectMutac
 import com.prisma.api.project.{CachedProjectFetcherImpl, ProjectFetcher}
 import com.prisma.api.schema.{CachedSchemaBuilder, SchemaBuilder}
 import com.prisma.auth.AuthImpl
-import com.prisma.config.PrismaConfig
+import com.prisma.config.{ConfigLoader, PrismaConfig}
+import com.prisma.connectors.utils.ConnectorUtils
 import com.prisma.deploy.DeployDependencies
 import com.prisma.deploy.migration.migrator.{AsyncMigrator, Migrator}
 import com.prisma.deploy.server.auth.{AsymmetricClusterAuth, DummyClusterAuth, SymmetricClusterAuth}
-import com.prisma.image.{Converters, FunctionValidatorImpl, ImageUtils, SingleServerProjectFetcher}
+import com.prisma.image.{Converters, FunctionValidatorImpl, SingleServerProjectFetcher}
 import com.prisma.messagebus.pubsub.inmemory.InMemoryAkkaPubSub
 import com.prisma.messagebus.queue.inmemory.InMemoryAkkaQueue
 import com.prisma.messagebus.{PubSubPublisher, PubSubSubscriber, QueueConsumer, QueuePublisher}
@@ -27,14 +28,13 @@ import com.prisma.workers.payloads.{Webhook => WorkerWebhook}
 import play.api.libs.json.Json
 
 case class PrismaLocalDependencies()(implicit val system: ActorSystem, val materializer: ActorMaterializer)
-    extends ImageUtils
-    with DeployDependencies
+    extends DeployDependencies
     with ApiDependencies
     with WorkerDependencies
     with SubscriptionDependencies {
   override implicit def self = this
 
-  val config: PrismaConfig = loadConfig()
+  val config: PrismaConfig = ConfigLoader.load()
 
   override lazy val apiSchemaBuilder = CachedSchemaBuilder(SchemaBuilder(), invalidationPubSub)
   override lazy val projectFetcher: ProjectFetcher = {
@@ -91,10 +91,10 @@ case class PrismaLocalDependencies()(implicit val system: ActorSystem, val mater
   override lazy val webhooksConsumer        = webhooksQueue.map[WorkerWebhook](Converters.apiWebhook2WorkerWebhook)
   override lazy val httpClient              = SimpleHttpClient()
   override lazy val apiAuth                 = AuthImpl
-  override lazy val deployPersistencePlugin = loadDeployConnector(config) // MySqlDeployConnector(apiConnector.databases.master)(system.dispatcher)
+  override lazy val deployPersistencePlugin = ConnectorUtils.loadDeployConnector(config)
   override lazy val functionValidator       = FunctionValidatorImpl()
 
-  override lazy val apiConnector                = loadApiConnector(config)
+  override lazy val apiConnector                = ConnectorUtils.loadApiConnector(config)
   override lazy val sideEffectMutactionExecutor = SideEffectMutactionExecutorImpl()
   override lazy val mutactionVerifier           = DatabaseMutactionVerifierImpl
 }

@@ -1,24 +1,16 @@
-package com.prisma.image
+package com.prisma.connectors.utils
 
 import com.prisma.api.connector.ApiConnector
 import com.prisma.api.connector.mysql.MySqlApiConnector
 import com.prisma.api.connector.postgresql.PostgresApiConnector
-import com.prisma.config.{ConfigLoader, PrismaConfig}
+import com.prisma.config.PrismaConfig
 import com.prisma.deploy.connector.DeployConnector
 import com.prisma.deploy.connector.mysql.MySqlDeployConnector
 import com.prisma.deploy.connector.postgresql.PostgresDeployConnector
 
 import scala.concurrent.ExecutionContext
-import scala.util.{Failure, Success}
 
-trait ImageUtils {
-  def loadConfig(): PrismaConfig = {
-    ConfigLoader.load() match {
-      case Success(c)   => c
-      case Failure(err) => sys.error(s"Unable to load Prisma config: $err")
-    }
-  }
-
+object ConnectorUtils {
   def loadApiConnector(config: PrismaConfig)(implicit ec: ExecutionContext): ApiConnector = {
     val databaseConfig = config.databases.head
     databaseConfig.connector match {

@@ -3,10 +3,9 @@ package com.prisma.deploy.specutils
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
 import com.prisma.auth.AuthImpl
-import com.prisma.config.DatabaseConfig
+import com.prisma.config.ConfigLoader
+import com.prisma.connectors.utils.ConnectorUtils
 import com.prisma.deploy.DeployDependencies
-import com.prisma.deploy.connector.DeployConnector
-import com.prisma.deploy.connector.postgresql.PostgresDeployConnector
 import com.prisma.deploy.migration.validation.SchemaError
 import com.prisma.deploy.schema.mutations.{FunctionInput, FunctionValidator}
 import com.prisma.deploy.server.auth.DummyClusterAuth
@@ -15,7 +14,11 @@ import com.prisma.messagebus.pubsub.inmemory.InMemoryAkkaPubSub
 import com.prisma.shared.models.Project
 
 case class DeployTestDependencies()(implicit val system: ActorSystem, val materializer: ActorMaterializer) extends DeployDependencies {
+  import system.dispatcher
+
   override implicit def self: DeployDependencies = this
+
+  val config = ConfigLoader.load()
 
   implicit val reporter: ErrorReporter    = BugsnagErrorReporter(sys.env.getOrElse("BUGSNAG_API_KEY", ""))
   override lazy val migrator              = TestMigrator(migrationPersistence, deployPersistencePlugin.deployMutactionExecutor)
@@ -24,21 +27,7 @@ case class DeployTestDependencies()(implicit val system: ActorSystem, val materi
 
   override def apiAuth = AuthImpl
 
-  def deployPersistencePlugin: DeployConnector = {
-    val testConfig = DatabaseConfig(
-      "test",
-      "postgres",
-      active = true,
-      sys.env("SQL_CLIENT_HOST"),
-      sys.env("SQL_CLIENT_PORT").toInt,
-      sys.env("SQL_CLIENT_USER"),
-      sys.env("SQL_CLIENT_PASSWORD"),
-      connectionLimit = Some(1),
-      pooled = false
-    )
-
-    PostgresDeployConnector(testConfig)(system.dispatcher)
-  }
+  def deployPersistencePlugin = ConnectorUtils.loadDeployConnector(config.copy(databases = config.databases.map(_.copy(pooled = false))))
 
   override def functionValidator: FunctionValidator = (project: Project, fn: FunctionInput) => {
     if (fn.name == "failing") Vector(SchemaError(`type` = "model", field = "field", description = "error")) else Vector.empty

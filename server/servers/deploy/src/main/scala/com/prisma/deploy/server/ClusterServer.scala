@@ -28,7 +28,7 @@ import scala.concurrent.Future
 import scala.language.postfixOps
 import scala.util.{Failure, Success}
 
-case class ClusterServer(prefix: String = "")(
+case class ClusterServer(prefix: String = "", server2serverSecret: Option[String])(
     implicit system: ActorSystem,
     materializer: ActorMaterializer,
     dependencies: DeployDependencies
@@ -42,7 +42,7 @@ case class ClusterServer(prefix: String = "")(
   val projectPersistence: ProjectPersistence = dependencies.projectPersistence
   val log: String => Unit                    = (msg: String) => logger.info(msg)
   val requestPrefix                          = sys.env.getOrElse("ENV", "local")
-  val server2serverSecret                    = sys.env.getOrElse("SCHEMA_MANAGER_SECRET", sys.error("SCHEMA_MANAGER_SECRET env var required but not found"))
+  val schemaManagerSecured                   = server2serverSecret.exists(_.nonEmpty)
 
   def errorExtractor(t: Throwable): Option[Int] = t match {
     case e: DeployApiError => Some(e.code)
@@ -128,18 +128,21 @@ case class ClusterServer(prefix: String = "")(
             } ~ pathPrefix("schema") {
               pathPrefix(Segment) { projectId =>
                 optionalHeaderValueByName("Authorization") {
-                  case Some(authorizationHeader) if authorizationHeader == s"Bearer $server2serverSecret" =>
+                  case None if !schemaManagerSecured =>
+                    parameters('forceRefresh ? false) { forceRefresh =>
+                      complete(performSchemaRequest(projectId, forceRefresh, logRequestEnd))
+                    }
+
+                  case Some(authorizationHeader) if !schemaManagerSecured || authorizationHeader == s"Bearer $server2serverSecret" =>
                     parameters('forceRefresh ? false) { forceRefresh =>
                       complete(performSchemaRequest(projectId, forceRefresh, logRequestEnd))
                     }
 
                   case Some(h) =>
-                    println(s"Wrong Authorization Header supplied: '$h'")
                     complete(Unauthorized -> "Wrong Authorization Header supplied")
 
                   case None =>
-                    println("No Authorization Header supplied")
-                    complete(Unauthorized -> "No Authorization Header supplied")
+                    complete(Unauthorized -> "Authorization header required but not supplied")
                 }
               }
             }

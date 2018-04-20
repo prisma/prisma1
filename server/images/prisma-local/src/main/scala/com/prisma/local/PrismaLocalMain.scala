@@ -18,8 +18,8 @@ object PrismaLocalMain extends App {
   Version.check()
 
   ServerExecutor(
-    port = dependencies.config.port.getOrElse(5466),
-    ClusterServer("cluster"),
+    port = dependencies.config.port.getOrElse(4466),
+    ClusterServer("cluster", dependencies.config.server2serverSecret),
     WebsocketServer(dependencies),
     ApiServer(dependencies.apiSchemaBuilder),
     SimpleSubscriptionsServer(),

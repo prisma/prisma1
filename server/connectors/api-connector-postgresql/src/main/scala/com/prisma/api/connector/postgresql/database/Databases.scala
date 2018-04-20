@@ -29,7 +29,7 @@ object Databases {
         |  properties {
         |    url = "jdbc:postgresql://${dbConfig.host}:${dbConfig.port}/"
         |    user = ${dbConfig.user}
-        |    password = ${dbConfig.password}
+        |    password = ${dbConfig.password.getOrElse("")}
         |  }
         |  numThreads = ${dbConfig.connectionLimit.getOrElse(10)}
         |  connectionTimeout = 5000

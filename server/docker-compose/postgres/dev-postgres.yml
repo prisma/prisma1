@@ -7,7 +7,7 @@ services:
     restart: always
     command: postgres -c 'max_connections=1000'
     environment:
-      POSTGRES_USER: $SQL_CLIENT_USER
-      POSTGRES_PASSWORD: $SQL_CLIENT_PASSWORD
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: prisma
     ports:
-      - "127.0.0.1:${SQL_CLIENT_PORT}:5432"
+      - "127.0.0.1:5432:5432"

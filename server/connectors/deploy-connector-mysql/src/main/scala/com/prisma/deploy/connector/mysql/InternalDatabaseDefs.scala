@@ -24,6 +24,8 @@ case class InternalDatabaseDefs(dbConfig: DatabaseConfig) {
   }
 
   def typeSafeConfigFromDatabaseConfig(dbConfig: DatabaseConfig, database: String = ""): Config = {
+    val pooled = if (dbConfig.pooled) "" else "connectionPool = disabled"
+
     ConfigFactory
       .parseString(s"""
         |database {
@@ -32,10 +34,11 @@ case class InternalDatabaseDefs(dbConfig: DatabaseConfig) {
         |  properties {
         |    url = "jdbc:mysql://${dbConfig.host}:${dbConfig.port}/$database?autoReconnect=true&useSSL=false&serverTimeZone=UTC&useUnicode=true&characterEncoding=UTF-8&socketTimeout=60000&usePipelineAuth=false"
         |    user = ${dbConfig.user}
-        |    password = ${dbConfig.password}
+        |    password = ${dbConfig.password.getOrElse("")}
         |  }
         |  numThreads = ${dbConfig.connectionLimit.getOrElse(10)}
         |  connectionTimeout = 5000
+        |  $pooled
         |}
       """.stripMargin)
       .resolve

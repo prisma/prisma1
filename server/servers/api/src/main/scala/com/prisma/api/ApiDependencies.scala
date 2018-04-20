@@ -32,7 +32,7 @@ trait ApiDependencies extends AwaitUtils {
   def mutactionVerifier: DatabaseMutactionVerifier
 
   implicit lazy val executionContext: ExecutionContext  = system.dispatcher
-  implicit lazy val reporter: ErrorReporter             = BugsnagErrorReporter(sys.env("BUGSNAG_API_KEY"))
+  implicit lazy val reporter: ErrorReporter             = BugsnagErrorReporter(sys.env.getOrElse("BUGSNAG_API_KEY", ""))
   lazy val graphQlRequestHandler: GraphQlRequestHandler = GraphQlRequestHandlerImpl(println)
   lazy val auth: Auth                                   = AuthImpl
   lazy val requestHandler: RequestHandler               = RequestHandler(projectFetcher, apiSchemaBuilder, graphQlRequestHandler, auth, println)
@@ -46,7 +46,6 @@ trait ApiDependencies extends AwaitUtils {
   def deferredResolverProvider(project: Project)         = new DeferredResolverProvider[ApiUserContext](dataResolver(project))
 
   def destroy = {
-    println("ApiDependencies [DESTROY]")
     apiConnector.shutdown().await()
     materializer.shutdown()
     system.terminate().await()

@@ -17,7 +17,7 @@ case class InternalDatabaseDefs(dbConfig: DatabaseConfig) {
   }
 
   def typeSafeConfigFromDatabaseConfig(dbConfig: DatabaseConfig): Config = {
-    val pooled = if (dbConfig.pooled) "enabled" else "disabled"
+    val pooled = if (dbConfig.pooled) "" else "connectionPool = disabled"
 
     ConfigFactory
       .parseString(s"""
@@ -26,11 +26,11 @@ case class InternalDatabaseDefs(dbConfig: DatabaseConfig) {
         |  properties {
         |    url = "jdbc:postgresql://${dbConfig.host}:${dbConfig.port}/"
         |    user = ${dbConfig.user}
-        |    password = ${dbConfig.password}
+        |    password = ${dbConfig.password.getOrElse("")}
         |  }
         |  numThreads = ${dbConfig.connectionLimit.getOrElse(10)}
         |  connectionTimeout = 5000
-        |  connectionPool = $pooled
+        |  $pooled
         |}
       """.stripMargin)
       .resolve

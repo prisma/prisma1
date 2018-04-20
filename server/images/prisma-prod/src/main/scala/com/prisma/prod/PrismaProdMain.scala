@@ -17,8 +17,8 @@ object PrismaProdMain extends App {
   dependencies.initialize()(system.dispatcher)
 
   val port                 = dependencies.config.port.getOrElse(4466)
-  val includeClusterServer = sys.env.get("CLUSTER_API_ENABLED").contains("1")
-  val servers = includeClusterServer.toOption(ClusterServer("cluster")) ++ List(
+  val includeClusterServer = dependencies.config.managmentApiEnabled
+  val servers = includeClusterServer.flatMap(_.toOption(ClusterServer("cluster", dependencies.config.server2serverSecret))) ++ List(
     WebsocketServer(dependencies),
     ApiServer(dependencies.apiSchemaBuilder),
     SimpleSubscriptionsServer(),

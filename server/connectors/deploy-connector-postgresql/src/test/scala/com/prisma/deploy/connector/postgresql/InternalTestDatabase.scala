@@ -6,14 +6,9 @@ import com.prisma.utils.await.AwaitUtils
 import slick.dbio.{DBIOAction, NoStream}
 import slick.jdbc.PostgresProfile.api._
 
-import scala.util.{Failure, Success}
-
 class InternalTestDatabase extends AwaitUtils {
 
-  val config = ConfigLoader.load() match {
-    case Success(c)   => c
-    case Failure(err) => err.printStackTrace(); sys.error(s"Unable to load Prisma config: $err")
-  }
+  val config = ConfigLoader.load()
 
   val databaseDefs         = InternalDatabaseDefs(config.databases.head.copy(pooled = false))
   val internalDatabaseRoot = databaseDefs.internalDatabaseRoot

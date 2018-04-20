@@ -8,13 +8,14 @@ import com.prisma.api.mutactions.{DatabaseMutactionVerifierImpl, SideEffectMutac
 import com.prisma.api.project.{CachedProjectFetcherImpl, ProjectFetcher}
 import com.prisma.api.schema.{CachedSchemaBuilder, SchemaBuilder}
 import com.prisma.auth.AuthImpl
-import com.prisma.config.PrismaConfig
+import com.prisma.config.{ConfigLoader, PrismaConfig}
+import com.prisma.connectors.utils.ConnectorUtils
 import com.prisma.deploy.DeployDependencies
 import com.prisma.deploy.connector.DeployConnector
 import com.prisma.deploy.migration.migrator.{AsyncMigrator, Migrator}
 import com.prisma.deploy.schema.mutations.FunctionValidator
 import com.prisma.deploy.server.auth.{AsymmetricClusterAuth, DummyClusterAuth, SymmetricClusterAuth}
-import com.prisma.image.{Converters, FunctionValidatorImpl, ImageUtils, SingleServerProjectFetcher}
+import com.prisma.image.{Converters, FunctionValidatorImpl, SingleServerProjectFetcher}
 import com.prisma.messagebus._
 import com.prisma.messagebus.pubsub.inmemory.InMemoryAkkaPubSub
 import com.prisma.messagebus.pubsub.rabbit.RabbitAkkaPubSub
@@ -31,15 +32,14 @@ import com.prisma.workers.payloads.{JsonConversions, Webhook => WorkerWebhook}
 import play.api.libs.json.Json
 
 case class PrismaProdDependencies()(implicit val system: ActorSystem, val materializer: ActorMaterializer)
-    extends ImageUtils
-    with DeployDependencies
+    extends DeployDependencies
     with ApiDependencies
     with SubscriptionDependencies
     with WorkerDependencies {
 
-  val config: PrismaConfig = loadConfig()
+  val config: PrismaConfig = ConfigLoader.load()
 
-  private val rabbitUri: String = sys.env("RABBITMQ_URI")
+  private val rabbitUri: String = config.rabbitUri.getOrElse("RabbitMQ URI required but not found in Prisma configuration.")
 
   override implicit def self: PrismaProdDependencies = this
 
@@ -103,10 +103,10 @@ case class PrismaProdDependencies()(implicit val system: ActorSystem, val materi
     RabbitQueue.consumer[WorkerWebhook](rabbitUri, "webhooks")(reporter, JsonConversions.webhookUnmarshaller).asInstanceOf[QueueConsumer[WorkerWebhook]]
   override lazy val httpClient                               = SimpleHttpClient()
   override lazy val apiAuth                                  = AuthImpl
-  override lazy val deployPersistencePlugin: DeployConnector = loadDeployConnector(config)
+  override lazy val deployPersistencePlugin: DeployConnector = ConnectorUtils.loadDeployConnector(config)
   override lazy val functionValidator: FunctionValidator     = FunctionValidatorImpl()
 
-  override lazy val apiConnector                = loadApiConnector(config)
+  override lazy val apiConnector                = ConnectorUtils.loadApiConnector(config)
   override lazy val sideEffectMutactionExecutor = SideEffectMutactionExecutorImpl()
   override lazy val mutactionVerifier           = DatabaseMutactionVerifierImpl
 }

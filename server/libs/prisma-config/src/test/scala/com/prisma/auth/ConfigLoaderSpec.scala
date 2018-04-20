@@ -19,7 +19,7 @@ class ConfigLoaderSpec extends WordSpec with Matchers {
                           |    password: prisma
                         """.stripMargin
 
-      val config = ConfigLoader.loadString(validConfig)
+      val config = ConfigLoader.tryLoadString(validConfig)
 
       config.isSuccess shouldBe true
       config.get.port shouldBe 4466
@@ -45,7 +45,7 @@ class ConfigLoaderSpec extends WordSpec with Matchers {
                           |    password: prisma
                         """.stripMargin
 
-      val config = ConfigLoader.loadString(validConfig)
+      val config = ConfigLoader.tryLoadString(validConfig)
 
       config.isSuccess shouldBe true
       config.get.port should contain(4466)
@@ -72,7 +72,7 @@ class ConfigLoaderSpec extends WordSpec with Matchers {
                           |    password: prisma
                         """.stripMargin
 
-      val config = ConfigLoader.loadString(validConfig)
+      val config = ConfigLoader.tryLoadString(validConfig)
 
       config.isSuccess shouldBe true
       config.get.port should contain(4466)
@@ -101,7 +101,7 @@ class ConfigLoaderSpec extends WordSpec with Matchers {
                             |    password: prisma
                           """.stripMargin
 
-      val config = ConfigLoader.loadString(invalidConfig)
+      val config = ConfigLoader.tryLoadString(invalidConfig)
 
       config.isSuccess shouldBe false
       config.failed.get shouldBe a[InvalidConfiguration]
@@ -122,7 +122,7 @@ class ConfigLoaderSpec extends WordSpec with Matchers {
                           |    password: prisma
                         """.stripMargin
 
-    val config = ConfigLoader.loadString(invalidConfig)
+    val config = ConfigLoader.tryLoadString(invalidConfig)
 
     config.isSuccess shouldBe false
     config.failed.get shouldBe a[InvalidConfiguration]
@@ -134,7 +134,7 @@ class ConfigLoaderSpec extends WordSpec with Matchers {
                           |managementApiSecret: somesecret
                         """.stripMargin
 
-    val config = ConfigLoader.loadString(invalidConfig)
+    val config = ConfigLoader.tryLoadString(invalidConfig)
 
     config.isSuccess shouldBe false
     config.failed.get shouldBe a[InvalidConfiguration]
