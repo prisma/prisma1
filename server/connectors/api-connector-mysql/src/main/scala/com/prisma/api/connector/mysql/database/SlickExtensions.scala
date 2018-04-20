@@ -82,6 +82,17 @@ object SlickExtensions {
 
   def combineByOr(actions: Iterable[SQLActionBuilder]) = generateParentheses(combineBy(actions, "or"))
 
+  def combineByNot(actions: Iterable[SQLActionBuilder]) = {
+
+    val combined = actions.toList match {
+      case Nil         => None
+      case head :: Nil => Some(sql"not " ++ head)
+      case _           => Some(sql"not " ++ actions.reduceLeft((a, b) => a ++ sql" and not " ++ b))
+    }
+
+    generateParentheses(combined)
+  }
+
   def combineByComma(actions: Iterable[SQLActionBuilder]) = combineBy(actions, ",")
 
   def generateParentheses(sql: Option[SQLActionBuilder]) = sql match {
