@@ -82,6 +82,8 @@ object SlickExtensions {
 
   def combineByOr(actions: Iterable[SQLActionBuilder]) = generateParentheses(combineBy(actions, "or"))
 
+  def combineByNot(actions: Iterable[SQLActionBuilder]) = generateParentheses(combinedBy(actions, "not"))
+
   def combineByComma(actions: Iterable[SQLActionBuilder]) = combineBy(actions, ",")
 
   def generateParentheses(sql: Option[SQLActionBuilder]) = sql match {

@@ -22,6 +22,9 @@ class FilterArguments(model: Model, isSubscriptionFilter: Boolean = false) {
     case "OR" =>
       FieldFilterTuple(None, FilterArguments.ORFilter)
 
+    case "NOT" =>
+      FieldFilterTuple(None, FilterArguments.NOTFilter)
+
     case "boolean" if isSubscriptionFilter =>
       FieldFilterTuple(None, FilterArguments.booleanFilter)
 
@@ -40,6 +43,7 @@ object FilterArguments {
 
   val ANDFilter     = FilterArgument("AND", "Logical AND on all given filters.")
   val ORFilter      = FilterArgument("OR", "Logical OR on all given filters.")
+  val NOTFilter     = FilterArgument("NOT", "Logical NOT on all given filters.")
   val booleanFilter = FilterArgument("boolean", "")
   val nodeFilter    = FilterArgument("node", "")
 
