@@ -7,6 +7,7 @@ import * as sillyname from 'sillyname'
 import * as path from 'path'
 import * as fs from 'fs'
 import { Introspector } from 'prisma-db-introspection'
+import { defaultDBPort } from '../commands/local/constants'
 
 export interface GetEndpointParams {
   folderName: string
@@ -484,16 +485,33 @@ export class EndpointDialog {
 
   private async getDatabase(): Promise<DatabaseCredentials> {
     const type = await this.askForDatabaseType()
-    const host = await this.ask('Enter database host')
-    const port = await this.ask('Enter database port')
-    const user = await this.ask('Enter database user')
-    const password = await this.ask('Enter database password')
-    const database = await this.ask(
-      'Enter database name (only needed when you already have data)',
-    )
-    const alreadyData = await this.ask(
-      'Do you already have data in the database? (yes/no)',
-    )
+    const host = await this.ask({
+      message: 'Enter database host',
+      key: 'host',
+      defaultValue: 'localhost',
+    })
+    const port = await this.ask({
+      message: 'Enter database port',
+      key: 'port',
+      defaultValue: String(defaultPorts[type]),
+    })
+    const user = await this.ask({
+      message: 'Enter database user',
+      key: 'user',
+    })
+    const password = await this.ask({
+      message: 'Enter database password',
+      key: 'password',
+    })
+    const database = await this.ask({
+      message: 'Enter database name (only needed when you already have data)',
+    })
+    const alreadyData = await this.ask({
+      message: 'Do you already have data in the database? (yes/no)',
+      defaultValue: 'no',
+      validate: value =>
+        ['yes', 'no'].includes(value) ? true : 'Please answer either yes or no',
+    })
 
     return {
       type,
@@ -506,12 +524,27 @@ export class EndpointDialog {
     }
   }
 
-  private async ask(message: string, defaultValue?: string) {
+  private async ask({
+    message,
+    defaultValue,
+    key,
+    validate,
+  }: {
+    message: string
+    key?: string
+    defaultValue?: string
+    validate?: (value: string) => boolean | string
+  }) {
     const question = {
       name: 'result',
       type: 'input',
       message,
       default: defaultValue,
+      validate: defaultValue
+        ? undefined
+        : validate ||
+          (value =>
+            value && value.length > 0 ? `Please provide a valid ${key}` : true),
     }
 
     const { result } = await this.out.prompt(question)
