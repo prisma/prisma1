@@ -3,7 +3,7 @@ package com.prisma.api.queries
 import com.prisma.api.ApiBaseSpec
 import com.prisma.shared.schema_dsl.SchemaDsl
 import org.scalatest.{FlatSpec, Matchers}
-import play.api.libs.json.{JsObject, Json}
+import play.api.libs.json._
 
 class ValidateSubscriptionQuerySpec extends FlatSpec with Matchers with ApiBaseSpec {
   "the query" should "return errors if the query is invalid GraphQL" in {

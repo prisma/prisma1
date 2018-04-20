@@ -8,7 +8,7 @@ import com.prisma.api.schema.UserFacingError
 import com.prisma.sangria.utils.ErrorHandler
 import com.prisma.shared.models.ModelMutationType.ModelMutationType
 import com.prisma.shared.models._
-import com.prisma.subscriptions.schema.{QueryTransformer, SubscriptionSchema}
+import com.prisma.subscriptions.schema.{QueryTransformer, SubscriptionSchema, VariablesTransformer}
 import play.api.libs.json._
 import sangria.ast.Document
 import sangria.execution.Executor
@@ -77,6 +77,8 @@ object SubscriptionExecutor {
       }
     }
 
+    val transformedVariables = VariablesTransformer.transformVariables(variables, mutationType, updatedFields.get.toSet)
+
     val context = SubscriptionUserContext(
       nodeId = nodeId,
       requestId = requestId,
@@ -106,7 +108,7 @@ object SubscriptionExecutor {
         schema = internalSchema,
         queryAst = transformedQuery,
         userContext = context,
-        variables = variables,
+        variables = transformedVariables,
         exceptionHandler = sangriaHandler,
         operationName = operationName,
         deferredResolver = new DeferredResolverProvider(dataResolver)
