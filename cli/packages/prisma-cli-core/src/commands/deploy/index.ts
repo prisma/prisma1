@@ -434,6 +434,7 @@ Note: prisma local start will be deprecated soon in favor of the direct usage of
       }
     }
     const hooks = this.definition.getHooks('post-deploy')
+    this.out.log(`\n${chalk.bold('post-deploy')}:`)
     for (const hook of hooks) {
       const splittedHook = hook.split(' ')
       this.out.action.start(`Running ${chalk.cyan(hook)}`)
