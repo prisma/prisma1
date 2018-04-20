@@ -86,13 +86,13 @@ case class ApiTestServer()(implicit dependencies: ApiDependencies) extends PlayJ
     )
   }
 
-  def queryPrivateSchema(query: String, project: Project): JsValue = {
+  def queryPrivateSchema(query: String, project: Project, variables: JsObject = JsObject.empty): JsValue = {
     val schemaBuilder = PrivateSchemaBuilder(project)(dependencies, dependencies.system)
     querySchema(
       query = query,
       project = project,
       schema = schemaBuilder.build(),
-      variables = JsObject.empty,
+      variables = variables,
       requestId = "private-api-request",
       graphcoolHeader = None
     )
