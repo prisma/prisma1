@@ -66,16 +66,15 @@ object SubscriptionExecutor {
   )(implicit dependencies: ApiDependencies, ec: ExecutionContext): Future[Option[JsValue]] = {
     import com.prisma.api.server.JsonMarshalling._
 
-    val schema = SubscriptionSchema(model, project, updatedFields, mutationType, previousValues).build()
+    val internalSchema = SubscriptionSchema(model, project, updatedFields, mutationType, previousValues).build()
 
-    val actualQuery = {
-      val mutationInEvaluated = if (mutationType == ModelMutationType.Updated) {
-        val tmp = QueryTransformer.replaceMutationInFilter(query, mutationType).asInstanceOf[Document]
-        QueryTransformer.replaceUpdatedFieldsInFilter(tmp, updatedFields.get.toSet).asInstanceOf[Document]
-      } else {
-        QueryTransformer.replaceMutationInFilter(query, mutationType).asInstanceOf[Document]
+    //todo mutation_in etc are not replace when in a variable
+    val transformedQuery = {
+      val replaceMutationIn = QueryTransformer.replaceMutationInFilter(query, mutationType).asInstanceOf[Document]
+      mutationType == ModelMutationType.Updated match {
+        case true  => QueryTransformer.replaceUpdatedFieldsInFilter(replaceMutationIn, updatedFields.get.toSet).asInstanceOf[Document]
+        case false => replaceMutationIn
       }
-      QueryTransformer.mergeBooleans(mutationInEvaluated).asInstanceOf[Document]
     }
 
     val context = SubscriptionUserContext(
@@ -83,13 +82,9 @@ object SubscriptionExecutor {
       requestId = requestId,
       project = project,
       log = x => println(x),
-      queryAst = Some(actualQuery)
+      queryAst = Some(transformedQuery)
     )
-    val dataResolver = if (alwaysQueryMasterDatabase) {
-      dependencies.masterDataResolver(project)
-    } else {
-      dependencies.dataResolver(project)
-    }
+    val dataResolver = if (alwaysQueryMasterDatabase) dependencies.masterDataResolver(project) else dependencies.dataResolver(project)
 
     def errorExtractor(t: Throwable): Option[Int] = t match {
       case e: UserFacingError => Some(e.code)
@@ -108,8 +103,8 @@ object SubscriptionExecutor {
 
     Executor
       .execute(
-        schema = schema,
-        queryAst = actualQuery,
+        schema = internalSchema,
+        queryAst = transformedQuery,
         userContext = context,
         variables = variables,
         exceptionHandler = sangriaHandler,
@@ -118,11 +113,7 @@ object SubscriptionExecutor {
       )
       .map { result =>
         val lookup = result.as[JsObject] \ "data" \ camelCase(model.name)
-        if (lookup.validate[JsValue].get != JsNull) {
-          Some(result)
-        } else {
-          None
-        }
+        if (lookup.validate[JsValue].get != JsNull) Some(result) else None
       }
   }
 

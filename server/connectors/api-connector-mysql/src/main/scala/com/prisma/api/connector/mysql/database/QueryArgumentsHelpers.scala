@@ -58,7 +58,7 @@ object QueryArgumentsHelpers {
         case FilterElement(key, value, None, filterName) if filterName == "NOT" =>
           val values = value
             .asInstanceOf[Seq[Any]]
-            .map(subFilter => genereateFilterConditions(projectId, tableName, subFilter.asInstanceOf[Seq[Any]]))
+            .map(subFilter => generateFilterConditions(projectId, tableName, subFilter.asInstanceOf[Seq[Any]]))
             .collect { case Some(x) => x }
 
           combineByNot(values)
