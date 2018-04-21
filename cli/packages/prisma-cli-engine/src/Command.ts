@@ -60,12 +60,6 @@ export class Command {
   }
 
   static async run(config?: RunOptions): Promise<Command> {
-    if (process.env.NOCK_WRITE_RESPONSE_CMD === 'true') {
-      debug('RECORDING')
-      require('nock').recorder.rec({
-        dont_print: true,
-      })
-    }
     const cmd = new this({ config })
 
     try {
@@ -76,12 +70,6 @@ export class Command {
       cmd.out.error(err)
     }
 
-    if (process.env.NOCK_WRITE_RESPONSE_CMD === 'true') {
-      const requests = require('nock').recorder.play()
-      const requestsPath = path.join(process.cwd(), 'requests.js')
-      debug('WRITING', requestsPath)
-      fs.writeFileSync(requestsPath, requests.join('\n'))
-    }
     return cmd
   }
 
@@ -108,9 +96,9 @@ export class Command {
   argv: string[]
 
   constructor(options: { config?: RunOptions } = { config: { mock: true } }) {
-    this.config =
-      (options.config && options.config.mockConfig) ||
-      options.config instanceof Config
+    this.config = options.config
+      ? options.config.mockConfig
+      : options!.config instanceof Config
         ? (options.config as any)
         : new Config(options.config)
     this.out = new Output(this.config)

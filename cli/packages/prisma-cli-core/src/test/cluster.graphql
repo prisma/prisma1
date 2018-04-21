@@ -1,0 +1,219 @@
+input AddProjectInput {
+  name: String!
+  stage: String!
+  secrets: [String!]
+  clientMutationId: String
+}
+
+type AddProjectPayload {
+  project: Project
+  clientMutationId: String
+}
+
+# Information about the deployed cluster
+type ClusterInfo {
+  version: String!
+  commit: String!
+}
+
+type CreateEnum implements MigrationStep {
+  name: String!
+  values: [String!]!
+  type: String!
+}
+
+type CreateField implements MigrationStep {
+  model: String!
+  name: String!
+  typeName: String!
+  isRequired: Boolean!
+  isList: Boolean!
+  unique: Boolean!
+  relation: String
+  default: String
+  enum: String
+  type: String!
+}
+
+type CreateModel implements MigrationStep {
+  name: String!
+  type: String!
+}
+
+type CreateRelation implements MigrationStep {
+  name: String!
+  leftModel: String!
+  rightModel: String!
+  type: String!
+}
+
+scalar DateTime
+
+type DeleteEnum implements MigrationStep {
+  name: String!
+  type: String!
+}
+
+type DeleteField implements MigrationStep {
+  model: String!
+  name: String!
+  type: String!
+}
+
+type DeleteModel implements MigrationStep {
+  name: String!
+  type: String!
+}
+
+input DeleteProjectInput {
+  name: String!
+  stage: String!
+  clientMutationId: String
+}
+
+type DeleteProjectPayload {
+  project: Project
+  clientMutationId: String
+}
+
+type DeleteRelation implements MigrationStep {
+  name: String!
+  type: String!
+}
+
+input DeployInput {
+  name: String!
+  stage: String!
+  types: String!
+  dryRun: Boolean
+  secrets: [String!]
+  subscriptions: [FunctionInput!]
+  force: Boolean
+  clientMutationId: String
+}
+
+type DeployPayload {
+  errors: [SchemaError!]!
+  migration: Migration
+  warnings: [SchemaWarning!]!
+  clientMutationId: String
+}
+
+input FunctionInput {
+  name: String!
+  query: String!
+  url: String!
+  headers: [HeaderInput!]!
+}
+
+input HeaderInput {
+  name: String!
+  value: String!
+}
+
+# This is a migration
+type Migration {
+  projectId: String!
+  revision: Int!
+  status: String!
+  applied: Int!
+  rolledBack: Int!
+  steps: [MigrationStep!]!
+  errors: [String!]!
+  startedAt: DateTime
+  finishedAt: DateTime
+}
+
+# This is a migration step.
+interface MigrationStep {
+  type: String!
+}
+
+type Mutation {
+  deploy(input: DeployInput!): DeployPayload
+  addProject(input: AddProjectInput!): AddProjectPayload
+  deleteProject(input: DeleteProjectInput!): DeleteProjectPayload
+}
+
+# This is a project
+type Project {
+  metricKey: String!
+  name: String!
+  stage: String!
+}
+
+type Query {
+  # Shows the status of the next migration in line to be applied to the project.
+  # If no such migration exists, it shows the last applied migration.
+  migrationStatus(name: String!, stage: String!): Migration!
+
+  # Shows all projects the caller has access to.
+  listProjects: [Project!]!
+
+  # Shows all migrations for the project. Debug query, will likely be removed in the future.
+  listMigrations(name: String!, stage: String!): [Migration!]!
+
+  # Gets a project by name and stage.
+  project(name: String!, stage: String!): Project!
+
+  # Information about the cluster
+  clusterInfo: ClusterInfo!
+
+  # generates a token for the given project
+  generateProjectToken(name: String!, stage: String!): String!
+}
+
+# An error that occurred while validating the schema.
+type SchemaError {
+  type: String!
+  field: String
+  description: String!
+}
+
+# A warning created while validating the schema against existing data.
+type SchemaWarning {
+  type: String!
+  field: String
+  description: String!
+}
+
+type UpdateEnum implements MigrationStep {
+  name: String!
+  newName: String
+  values: [String!]
+  type: String!
+}
+
+type UpdateField implements MigrationStep {
+  model: String!
+  name: String!
+  newName: String
+  typeName: String
+  isRequired: Boolean
+  isList: Boolean
+  unique: Boolean
+  relation: String
+  default: String
+  enum: String
+  type: String!
+}
+
+type UpdateModel implements MigrationStep {
+  name: String!
+  newName: String!
+  type: String!
+}
+
+type UpdateRelation implements MigrationStep {
+  name: String!
+  newName: String
+  modelAId: String
+  modelBId: String
+  type: String!
+}
+
+type UpdateSecrets implements MigrationStep {
+  message: String!
+  type: String!
+}
+

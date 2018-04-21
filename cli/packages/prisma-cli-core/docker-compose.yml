@@ -1,0 +1,28 @@
+version: '3'
+services:
+  prisma:
+    image: prismagraphql/prisma:experimental
+    restart: always
+    ports:
+    - "4466:4466"
+    environment:
+      CLUSTER_ADDRESS: ""
+      SCHEMA_MANAGER_SECRET: ""
+      SCHEMA_MANAGER_ENDPOINT: ""
+      BUGSNAG_API_KEY: ""
+      PRISMA_CONFIG: |
+        port: 4466
+        databases:
+          default:
+            connector: mysql
+            active: true
+            host: db
+            port: 3306 
+            user: root
+            password: prisma
+  db:
+    image: mysql:5.7
+    restart: always
+    environment:
+      MYSQL_USER: prisma
+      MYSQL_ROOT_PASSWORD: prisma

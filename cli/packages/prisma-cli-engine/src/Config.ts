@@ -18,6 +18,7 @@ export class Config {
   /**
    * Local settings
    */
+  mockInquirer?: any
   out: Output
   debug: boolean = Boolean(
     process.env.DEBUG && process.env.DEBUG!.includes('*'),
@@ -74,6 +75,9 @@ export class Config {
     this.setDefinitionPaths()
     this.setPaths()
     this.readPackageJson(options!)
+    if (options && options.mockInquirer) {
+      this.mockInquirer = options.mockInquirer
+    }
   }
   setOutput(out: Output) {
     this.out = out

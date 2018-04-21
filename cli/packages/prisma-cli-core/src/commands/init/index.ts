@@ -31,11 +31,11 @@ export default class Init extends Command {
   async run() {
     const dirName = this.args!.dirName
     if (dirName) {
-      const newDefinitionDir = path.join(process.cwd(), dirName + '/')
+      const newDefinitionDir = path.join(this.config.cwd, dirName + '/')
       this.config.definitionDir = newDefinitionDir
       fs.mkdirpSync(newDefinitionDir)
     } else {
-      this.config.definitionDir = process.cwd()
+      this.config.definitionDir = this.config.cwd
     }
 
     await this.runInit()
@@ -86,7 +86,7 @@ Either try using a new directory name, or remove the files listed above.
         results.dockerComposeYml,
       )
     }
-    let relativeDir = path.relative(process.cwd(), this.config.definitionDir)
+    let relativeDir = path.relative(this.config.cwd, this.config.definitionDir)
     relativeDir = relativeDir.length === 0 ? '.' : relativeDir
 
     const definitionPath = path.join(this.config.definitionDir, 'prisma.yml')

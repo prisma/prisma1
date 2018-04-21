@@ -402,8 +402,8 @@ export class EndpointDialog {
   }
 
   private async askForDatabaseType() {
-    const { result } = await this.out.prompt({
-      name: 'result',
+    const { dbType } = await this.out.prompt({
+      name: 'dbType',
       type: 'list',
       message: `What kind of database do you want to deploy to?`,
       choices: [
@@ -419,7 +419,7 @@ export class EndpointDialog {
       // pageSize: 9,
     })
 
-    return result
+    return dbType
   }
 
   private convertChoices(
@@ -493,9 +493,11 @@ export class EndpointDialog {
     })
     const database = await this.ask({
       message: 'Enter database name (only needed when you already have data)',
+      key: 'database',
     })
     const alreadyData = await this.ask({
       message: 'Do you already have data in the database? (yes/no)',
+      key: 'alreadyData',
       defaultValue: 'no',
       validate: value =>
         ['yes', 'no'].includes(value) ? true : 'Please answer either yes or no',
@@ -519,12 +521,12 @@ export class EndpointDialog {
     validate,
   }: {
     message: string
-    key?: string
+    key: string
     defaultValue?: string
     validate?: (value: string) => boolean | string
   }) {
     const question = {
-      name: 'result',
+      name: key,
       type: 'input',
       message,
       default: defaultValue,
@@ -535,9 +537,9 @@ export class EndpointDialog {
             value && value.length > 0 ? `Please provide a valid ${key}` : true),
     }
 
-    const { result } = await this.out.prompt(question)
+    const result = await this.out.prompt(question)
 
-    return result
+    return result[key]
   }
 
   private getSillyName() {

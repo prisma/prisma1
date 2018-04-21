@@ -530,7 +530,7 @@ Note: prisma local start will be deprecated soon in favor of the direct usage of
       debug({ graphqlBin })
       this.out.log(`Running ${chalk.cyan(`$ graphql prepare`)}...`)
       try {
-        const oldCwd = process.cwd()
+        const oldCwd = this.config.cwd
         const configDir = this.config.findConfigDir()
         if (configDir) {
           process.chdir(configDir)
