@@ -66,18 +66,9 @@ object SubscriptionExecutor {
   )(implicit dependencies: ApiDependencies, ec: ExecutionContext): Future[Option[JsValue]] = {
     import com.prisma.api.server.JsonMarshalling._
 
-    val internalSchema = SubscriptionSchema(model, project, updatedFields, mutationType, previousValues).build()
-
-    //todo mutation_in etc are not replace when in a variable
-    val transformedQuery = {
-      val replaceMutationIn = QueryTransformer.replaceMutationInFilter(query, mutationType).asInstanceOf[Document]
-      mutationType == ModelMutationType.Updated match {
-        case true  => QueryTransformer.replaceUpdatedFieldsInFilter(replaceMutationIn, updatedFields.get.toSet).asInstanceOf[Document]
-        case false => replaceMutationIn
-      }
-    }
-
-    val transformedVariables = VariablesTransformer.transformVariables(variables, mutationType, updatedFields)
+    val internalSchema       = SubscriptionSchema(model, project, updatedFields, mutationType, previousValues).build()
+    val transformedQuery     = QueryTransformer.replaceExternalFieldsWithBooleanFieldsForInternalSchema(query, mutationType, updatedFields)
+    val transformedVariables = VariablesTransformer.replaceExternalFieldsWithBooleanFieldsForInternalSchema(variables, mutationType, updatedFields)
 
     val context = SubscriptionUserContext(
       nodeId = nodeId,
@@ -86,6 +77,7 @@ object SubscriptionExecutor {
       log = x => println(x),
       queryAst = Some(transformedQuery)
     )
+
     val dataResolver = if (alwaysQueryMasterDatabase) dependencies.masterDataResolver(project) else dependencies.dataResolver(project)
 
     def errorExtractor(t: Throwable): Option[Int] = t match {

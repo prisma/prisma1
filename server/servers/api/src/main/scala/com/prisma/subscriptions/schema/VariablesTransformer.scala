@@ -4,7 +4,7 @@ import com.prisma.shared.models.ModelMutationType.ModelMutationType
 import play.api.libs.json._
 
 object VariablesTransformer {
-  def transformVariables(variables: JsValue, mutation: ModelMutationType, updatedFields: Option[List[String]]): JsValue = {
+  def replaceExternalFieldsWithBooleanFieldsForInternalSchema(variables: JsValue, mutation: ModelMutationType, updatedFields: Option[List[String]]): JsValue = {
     val mutationName  = mutation.toString
     val isUpdate      = mutationName == "UPDATED"
     lazy val fieldSet = updatedFields.get.toSet

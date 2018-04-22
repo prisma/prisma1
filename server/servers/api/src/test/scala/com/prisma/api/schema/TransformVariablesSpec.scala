@@ -23,7 +23,7 @@ class TransformVariablesSpec extends FlatSpec with Matchers {
     val mutationName  = com.prisma.shared.models.ModelMutationType.Created
     val updatedFields = None
 
-    val converted = VariablesTransformer.transformVariables(variables, mutationName, updatedFields)
+    val converted = VariablesTransformer.replaceExternalFieldsWithBooleanFieldsForInternalSchema(variables, mutationName, updatedFields)
 
     converted.toString should be(
       """{"_where":{"AND":[{"boolean":true},{"boolean":false},{"field":"value"},{"listField":[1,2,3,4]},{"booleans":true},{"float":1.2323}]}}""")
@@ -47,7 +47,7 @@ class TransformVariablesSpec extends FlatSpec with Matchers {
     val mutationName  = com.prisma.shared.models.ModelMutationType.Created
     val updatedFields = None
 
-    val converted = VariablesTransformer.transformVariables(variables, mutationName, updatedFields)
+    val converted = VariablesTransformer.replaceExternalFieldsWithBooleanFieldsForInternalSchema(variables, mutationName, updatedFields)
     converted.toString should be(
       """{"_where":{"AND":[{"boolean":true},{"boolean":false},{"boolean":false},{"field":"value"},{"listField":[1,2,3,4]},{"booleans":true},{"float":1.2323}]}}""")
   }
@@ -77,7 +77,7 @@ class TransformVariablesSpec extends FlatSpec with Matchers {
     val mutationName  = com.prisma.shared.models.ModelMutationType.Updated
     val updatedFields = Some(List("updated1", "updated2", "updated3"))
 
-    val converted = VariablesTransformer.transformVariables(variables, mutationName, updatedFields)
+    val converted = VariablesTransformer.replaceExternalFieldsWithBooleanFieldsForInternalSchema(variables, mutationName, updatedFields)
     converted.toString should be(
       """{"_where":{"AND":[{"boolean":false},{"boolean":true},{"field":"value"},{"listField":[1,2,3,4]},{"booleans":true},{"OR":[{"boolean":true},{"boolean":false},{"boolean":true},{"boolean":false},{"boolean":true},{"boolean":false}]},{"float":1.2323}]}}""")
 

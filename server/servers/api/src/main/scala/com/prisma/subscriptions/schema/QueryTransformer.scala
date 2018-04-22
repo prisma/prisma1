@@ -7,6 +7,16 @@ import sangria.ast._
 import sangria.visitor.VisitorCommand
 
 object QueryTransformer {
+
+  def replaceExternalFieldsWithBooleanFieldsForInternalSchema(query: Document, mutation: ModelMutationType, updatedFields: Option[List[String]]) = {
+    val replaceMutationIn = replaceMutationInFilter(query, mutation).asInstanceOf[Document]
+
+    mutation == ModelMutationType.Updated match {
+      case true  => replaceUpdatedFieldsInFilter(replaceMutationIn, updatedFields.get.toSet).asInstanceOf[Document]
+      case false => replaceMutationIn
+    }
+  }
+
   def replaceMutationInFilter(query: Document, mutation: ModelMutationType): AstNode = {
     val mutationName = mutation.toString
     MyAstVisitor.visitAst(
