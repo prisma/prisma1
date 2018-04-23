@@ -1,9 +1,9 @@
 ---
 alias: iquaecuj6b
-description: Update to 1.7
+description: Upgrading to 1.7
 ---
 
-# Update to 1.7
+# Upgrading to 1.7
 
 ## Overview
 
