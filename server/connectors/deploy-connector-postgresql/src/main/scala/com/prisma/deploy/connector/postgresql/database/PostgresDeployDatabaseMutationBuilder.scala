@@ -7,7 +7,7 @@ import com.prisma.shared.models.{Project, TypeIdentifier}
 import slick.dbio.DBIOAction
 import slick.jdbc.PostgresProfile.api._
 
-object DeployDatabaseMutationBuilderPostGres {
+object PostgresDeployDatabaseMutationBuilder {
 
   def createClientDatabaseForProject(projectId: String) = {
 
@@ -72,10 +72,10 @@ object DeployDatabaseMutationBuilderPostGres {
   }
 
   def renameScalarListTable(projectId: String, modelName: String, fieldName: String, newModelName: String, newFieldName: String) = {
-    sqlu"""RENAME TABLE "#$projectId"."#${modelName}_#${fieldName}" TO "#$projectId"."#${newModelName}_#${newFieldName}""""
+    sqlu"""ALTER TABLE "#$projectId"."#${modelName}_#${fieldName}" RENAME TO "#${newModelName}_#${newFieldName}""""
   }
 
-  def renameTable(projectId: String, name: String, newName: String) = sqlu"""RENAME TABLE "#$projectId"."#$name" TO "#$projectId"."#$newName";"""
+  def renameTable(projectId: String, name: String, newName: String) = sqlu"""ALTER TABLE "#$projectId"."#$name" RENAME TO "#$newName";"""
 
   def createColumn(projectId: String,
                    tableName: String,

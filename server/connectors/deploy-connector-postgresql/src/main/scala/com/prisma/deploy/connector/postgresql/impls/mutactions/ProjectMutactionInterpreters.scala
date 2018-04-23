@@ -1,22 +1,22 @@
 package com.prisma.deploy.connector.postgresql.impls.mutactions
 
 import com.prisma.deploy.connector._
-import com.prisma.deploy.connector.postgresql.database.DeployDatabaseMutationBuilderPostGres
+import com.prisma.deploy.connector.postgresql.database.PostgresDeployDatabaseMutationBuilder
 import slick.dbio.DBIOAction
 
 object CreateProjectInterpreter extends SqlMutactionInterpreter[CreateProject] {
   override def execute(mutaction: CreateProject) = {
-    DeployDatabaseMutationBuilderPostGres.createClientDatabaseForProject(projectId = mutaction.projectId)
+    PostgresDeployDatabaseMutationBuilder.createClientDatabaseForProject(projectId = mutaction.projectId)
   }
 
   override def rollback(mutaction: CreateProject) = {
-    DeployDatabaseMutationBuilderPostGres.deleteProjectDatabase(projectId = mutaction.projectId)
+    PostgresDeployDatabaseMutationBuilder.deleteProjectDatabase(projectId = mutaction.projectId)
   }
 }
 
 object TruncateProjectInterpreter extends SqlMutactionInterpreter[TruncateProject] {
   override def execute(mutaction: TruncateProject) = {
-    DeployDatabaseMutationBuilderPostGres.truncateProjectTables(project = mutaction.project)
+    PostgresDeployDatabaseMutationBuilder.truncateProjectTables(project = mutaction.project)
   }
 
   override def rollback(mutaction: TruncateProject) = {
@@ -26,10 +26,10 @@ object TruncateProjectInterpreter extends SqlMutactionInterpreter[TruncateProjec
 
 object DeleteProjectInterpreter extends SqlMutactionInterpreter[DeleteProject] {
   override def execute(mutaction: DeleteProject) = {
-    DeployDatabaseMutationBuilderPostGres.deleteProjectDatabase(projectId = mutaction.projectId)
+    PostgresDeployDatabaseMutationBuilder.deleteProjectDatabase(projectId = mutaction.projectId)
   }
 
   override def rollback(mutaction: DeleteProject) = {
-    DeployDatabaseMutationBuilderPostGres.createClientDatabaseForProject(projectId = mutaction.projectId)
+    PostgresDeployDatabaseMutationBuilder.createClientDatabaseForProject(projectId = mutaction.projectId)
   }
 }
