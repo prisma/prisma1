@@ -22,3 +22,5 @@ export const MockGraphQLClient = () => {
     },
   }
 }
+
+export { ExecutionResult } from 'graphql'
