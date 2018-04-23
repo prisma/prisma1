@@ -41,10 +41,11 @@ services:
   rabbit:
     image: rabbitmq:3.7.2-management
     restart: always
-    hostname: rabbit-host
     ports:
       - "5672:5672"
       - "15672:15672"
+    networks:
+      - tests
 
 networks:
   tests:
