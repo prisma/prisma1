@@ -9,5 +9,5 @@ dev-postgres:
 	cp ./docker-compose/postgres/prisma.yml .
 
 dev-down:
-	docker-compose -f docker-compose/dev-mysql.yml down -v --remove-orphans
-	docker-compose -f docker-compose/dev-postgres.yml down -v --remove-orphans
+	docker-compose -f docker-compose/mysql/dev-mysql.yml down -v --remove-orphans
+	docker-compose -f docker-compose/postgres/dev-postgres.yml down -v --remove-orphans

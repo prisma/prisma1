@@ -24,7 +24,7 @@ object DeployDatabaseMutationBuilderMySql {
 
     val tables = Vector("_RelayId") ++ project.models.map(_.name) ++ project.relations.map(_.relationTableName) ++ listTableNames
 
-    DBIO.seq(tables.map(name => sqlu"""TRUNCATE TABLE  #${project.id}.#$name CASCADE """): _*)
+    DBIO.seq((sqlu"set foreign_key_checks=0" +: tables.map(name => sqlu"""TRUNCATE TABLE  `#${project.id}`.`#$name`""") :+ sqlu"set foreign_key_checks=1"): _*)
   }
 
   def deleteProjectDatabase(projectId: String) = sqlu"DROP DATABASE IF EXISTS `#$projectId`"
