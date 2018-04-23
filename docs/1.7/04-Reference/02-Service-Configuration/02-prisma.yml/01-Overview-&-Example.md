@@ -5,7 +5,7 @@ description: Overview
 
 # Overview
 
-Every Prisma service consists of several components that developers can provide, such as the service name, the data model for the service, information about deployment and authentication or the configuration of event subscriptions functions.
+Every Prisma service consists of several components that developers can provide, such as the API endpoint, the data model for the service, information about deployment and authentication or the configuration of subscription webhooks.
 
 All of these components are set up in the configuration file for a service: `prisma.yml`.
 
@@ -15,10 +15,6 @@ Here is a simple example of a service definition file:
 
 ```yml
 # REQUIRED
-# `my-demo-app` is the name of this Prisma service.
-service: my-demo-app
-
-# REQUIRED
 # This service is based on the type definitions in the two files
 # `database/types.graphql` and `database/enums.graphql`
 datamodel:
@@ -26,25 +22,21 @@ datamodel:
   - database/enums.graphql
 
 # OPTIONAL
-# The service will be deployed to the `local` cluster.
-# Note that if you leave out this option, you will be
-# asked which cluster to deploy to, and your decision
-# will be persisted here.
-cluster: local
-
-# REQUIRED
-# This service will be deployed to the `dev` stage.
-stage: dev
-
-# OPTIONAL (default: false)
-# Whether authentication is required for this service
-# is based on the value of the `PRISMA_DISABLE_AUTH`
-# environment variable.
-disableAuth: ${env:PRISMA_DISABLE_AUTH}
+# The endpoint represents the HTTP endpoint for your Prisma API. It encodes
+# several pieces of information:
+# * Prisma server (`localhost:4466` in this example)
+# * Service name (`myservice` in this example)
+# * Stage (`dev` in this example)
+# NOTE: When service name and stage are set to `default`, they can be omitted.
+# Meaning http://myserver.com/default/default can be written as http://myserver.com.
+endpoint: http://localhost:4466/myservice/dev
 
 # OPTIONAL
-# If your Prisma service requires authentication, this is the secret for creating JWT tokens.
-secret: 
+# The secret is used to create JSON web tokens (JWTs). These tokens need to be
+# attached in the `Authorization` header of HTTP requests against the Prisma endpoint.
+# WARNING: If the secret is not provided, the Prisma API can be accessed
+# without authentication!
+secret: mysecret123
 
 # OPTIONAL
 # Path where the full GraphQL schema will be written to
@@ -97,7 +89,6 @@ This service definition expects the following file structure:
 
 If you wish to have autocompletion while configuring your `prisma.yml` configuration file, as well as static errors checking before deploying your service, a [JSON Schema](https://github.com/graphcool/prisma-json-schema) is available to provide this kind of experience.
 **For now though, it is only available for [VSCode](https://code.visualstudio.com/).**
-
 
 **Step 1.**
 

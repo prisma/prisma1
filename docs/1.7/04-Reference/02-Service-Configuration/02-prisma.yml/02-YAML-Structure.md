@@ -9,48 +9,19 @@ description: YAML Structure
 
 The service definition file `prisma.yml` has the following root properties:
 
-- `service` (required): Name of the Prisma service
-- `datamodel` (required): Type definitions for database models, relations, enums and other types
-- `stage` (required): The stage of the Prisma service to deploy to
-- `cluster`: The cluster name to deploy to. Can be omitted to prompt interactive cluster selection.
-- `disableAuth`: Disable authentication for the endpoint
-- `secret`: Secret for securing the API endpoint
-- `schema`: Path to the Prisma database schema
-- `subscriptions`: Configuration of subscription functions
-- `seed`: Instructions for data seeding
-- `custom`: Use to provide variables which can be referenced from other fields
+- `datamodel` (required): Type definitions for database models, relations, enums and other types.
+- `endpoint`: HTTP endpoint for the Prisma API. Can be omitted to prompt CLI deployment wizard.
+- `secret`: Secret for securing the API endpoint.
+- `schema`: Path to the GraphQL schema for the Prisma API.
+- `subscriptions`: Configuration of subscription webhooks.
+- `seed`: Points to a file containing mutations for data seeding.
+- `custom`: Used to provide variables which can be referenced elsewhere in `prisma.yml`.
 
 > The exact structure of `prisma.yml` is defined with [JSON schema](http://json-schema.org/). You can find the corresponding schema definition [here](https://github.com/graphcool/graphcool-json-schema/blob/master/src/schema.json).
 
-## `service` (required)
-
-The service defines the service name which will also be reflected in the endpoint for your service once it's deployed. The service name must follow these requirements:
-
-- must contain only alphanumeric characters, hyphens and underscores
-- must start with an uppercase or lowercase letter
-- must be at most 64 characters long
-
-#### Type
-
-The `service` property expects a **string**.
-
-#### Examples
-
-Define a service called `hello-word`.
-
-```yml
-service: hello-world
-```
-
-Define a service called `DEMO_APP123`.
-
-```yml
-service: My-DEMO_APP123
-```
-
 ## `datamodel` (required)
 
-The `datamodel` points to one or more `.graphql`-files containing type definitions written in the [SDL](https://blog.graph.cool/graphql-sdl-schema-definition-language-6755bcb9ce51). If multiple files are provided, the CLI will simply concatenate their contents at deployment time.
+The `datamodel` points to one or more `.graphql`-files containing type definitions written in [GraphQL SDL](https://blog.graph.cool/graphql-sdl-schema-definition-language-6755bcb9ce51). If multiple files are provided, the CLI will simply concatenate their contents at deployment time.
 
 #### Type
 
@@ -72,85 +43,61 @@ datamodel:
   - enums.graphql
 ```
 
-## `stage` (required)
+## `endpoint` (required)
 
-The `stage` property defines the deployment target name to which you can deploy your service.
+The HTTP endpoint for your Prisma API is composed of three or four components:
 
-#### Type
-
-The `stage` property expects a **string** that denotes the name of the stage.
-
-#### Examples
-
-Define a `dev` stage:
-
-```yml
-stage: dev
-```
-
-Read the stage from an environment variable:
-
-```yml
-stage: ${env:MY_STAGE}
-```
-
-## `cluster` (optional)
-
-The cluster defines the cluster to which the service will be deployed to. It refers to clusters in the global registry, `~/.prismarc`.
-
-- must contain only alphanumeric characters, hyphens and underscores
-- must start with an uppercase or lowercase letter
-- must be at most 64 characters long
-
-If the `cluster` property is omitted, an interactive selection is prompted.
+- **Prisma server**: The server that will host your Prisma API.
+- **Workspace** (only Prisma Cloud): The name of the Workspace you configured through Prisma Cloud.
+- **Service name**: A descriptive name for your Prisma API.
+- **Stage**: The development stage of your cluster (e.g. `dev`, `staging`, `prod`).
 
 #### Type
 
-The `cluster` property expects a **string**.
+The `endpoint` property expects a **string**.
 
 #### Examples
 
-Refer to the `local` cluster.
+The following example endpoint encodes this information:
+
+- **Prisma server**: `localhost:4466` means you're using Docker to deploy the API on your local machine (on port `4466`).
+- **Service name**: `default`
+- **Stage**: `default`
+
+> **Note**: When service name and stage are both set tgo `default`, they can be omitted and will be inferred by Prisma. This means this example endpoint is equivalent to writing: `http://localhost:4466/`
 
 ```yml
-cluster: local
+endpoint: http://localhost:4466/default/default
 ```
 
-## `disableAuth` (optional)
+The following example endpoint encodes this information:
 
-The `disableAuth` property indicates whether the Prisma service requires authentication. If set to `true`, anyone has full read/write-access to the database!
-
-Setting `disableAuth` is optional. If not set, the default is `false` (which means authentication is enabled by default).
-
-#### Type
-
-The `disableAuth` property expects a **boolean**.
-
-#### Examples
-
-Disable authentication in your Prisma service.
+- **Prisma server**: `eu1.prisma.sh` means you're using a Prisma Sandbox to deploy your Prisma API.
+- **Workspace**: `public-helixgoose-752` is a randomly generated string that identifies the Prisma Cloud workspace for your Sandbox.
+- **Service name**: `myservice`
+- **Stage**: `dev`
 
 ```yml
-disableAuth: true
-```
-
-Enable authentication in your Prisma service.
-
-```yml
-disableAuth: false
+endpoint: https://eu1.prisma.sh/public-helixgoose-752/myservice/dev
 ```
 
 ## `secret` (optional)
 
-A secret is used to generate (or _sign_) authentication tokens ([JWT](https://jwt.io)). If your Prisma service requires authentication, one of these authentication tokens needs to be attached to the HTTP request (in the `Authorization` header field). A secret must follow these requirements:
+A secret is used to generate (or _sign_) authentication tokens ([JWT](https://jwt.io)). One of these authentication tokens needs to be attached to the HTTP request (in the `Authorization` header field). A secret must follow these requirements:
 
 - must be [utf8](https://en.wikipedia.org/wiki/UTF-8) encoded
 - must not contain spaces
 - must be at most 256 characters long
 
-Note that it's possible to encode multiple secrets in this string, which allows smooth secret rotations.
+Note that it's possible to encode multiple secrets in this string, which allows for smooth secret rotations.
 
 Read more about Database [authentication here](!alias-utee3eiquo#authentication).
+
+<InfoBox type=warning>
+
+**WARNING**: If the Prisma API is deployed without a `secret`, it does not require authentication. This means everyone with access to the `endpoint` is able to send arbitrary queries and mutations and therefore read and write to the database!
+
+</InfoBox>
 
 #### Type
 
@@ -210,7 +157,7 @@ schema: src/schemas/database.graphql
 
 ## `subscriptions` (optional)
 
-The `subscriptions` property is used to define all the event subscription functions for your Prisma service. Event subscriptions need (at least) two pieces of information:
+The `subscriptions` property is used to define all the subscription webhooks for your Prisma service. A subscription needs (at least) two pieces of information:
 
 - a _subscription query_ that defines upon which event a function should be invoked and what the payload looks like
 - the URL of a _webhook_ which is invoked via HTTP once the event happens
