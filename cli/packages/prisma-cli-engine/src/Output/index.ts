@@ -106,7 +106,7 @@ export class Output {
     this.prompter = new Prompter(this)
     console.log({ mockInquirer: !!this.config.mockInquirer })
     this.prompt =
-      this.config.mockInquirer.prompt ||
+      (this.config && this.config.mockInquirer && this.config.mockInquirer.prompt) ||
       inquirer.createPromptModule({
         output: process.stdout,
       })

@@ -2,7 +2,7 @@ import { makeExecutableSchema, addMockFunctionsToSchema } from 'graphql-tools'
 import { graphql } from 'graphql'
 import * as fs from 'fs-extra'
 
-const typeDefs = fs.readFileSync('./cluster.graphql', 'utf-8')
+const typeDefs = fs.readFileSync(__dirname + '/cluster.graphql', 'utf-8')
 
 const schema = makeExecutableSchema({ typeDefs })
 

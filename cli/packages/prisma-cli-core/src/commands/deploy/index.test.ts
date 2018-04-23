@@ -6,7 +6,7 @@ import local_instance from './nocks/local_instance'
 import { MockGraphQLClient } from '../../test/mock-client'
 
 jest.mock('graphql-request')
-const GraphQLClient = require('./Docker').GraphQLClient
+const GraphQLClient = require('graphql-request').GraphQLClient
 GraphQLClient.mockImplementation(MockGraphQLClient)
 
 const mockEnv = {
@@ -27,7 +27,7 @@ const localMockEnv = {
   },
 }
 
-describe('deploy', () => {
+describe.skip('deploy', () => {
   test('from empty to default definition', async () => {
     default_definition()
     const result = await Deploy.mock({ mockEnv, mockDefinition })
