@@ -93,7 +93,9 @@ export class Output {
 
   constructor(config: Config) {
     this.config = config
-    this.mock = config.mock
+    if (config && config.mock) {
+      this.mock = config.mock
+    }
     this.stdout = new StreamOutput(process.stdout, this)
     this.stderr = new StreamOutput(process.stderr, this)
     this.action = shouldDisplaySpinner(this)
@@ -104,9 +106,10 @@ export class Output {
       CustomColors.supports = false
     }
     this.prompter = new Prompter(this)
-    console.log({ mockInquirer: !!this.config.mockInquirer })
     this.prompt =
-      (this.config && this.config.mockInquirer && this.config.mockInquirer.prompt) ||
+      (this.config &&
+        this.config.mockInquirer &&
+        this.config.mockInquirer.prompt) ||
       inquirer.createPromptModule({
         output: process.stdout,
       })
