@@ -336,11 +336,11 @@ export class EndpointDialog {
       ],
     ]
     if (fromScratch && !hasDockerComposeYml) {
-      const rawChoices = [
-        ['Use existing database', 'Connect to existing database'],
+      const fixChoices = [
+        // ['Use existing database', 'Connect to existing database'],
         ['Create new database', 'Set up a local database using Docker'],
-        ...sandboxChoices,
       ]
+      const rawChoices = [...fixChoices, ...sandboxChoices]
       const choices = this.convertChoices(rawChoices)
       const finalChoices = [
         new inquirer.Separator('                       '),
@@ -349,12 +349,12 @@ export class EndpointDialog {
             'You can set up Prisma  for local development (requires Docker)',
           ),
         ),
-        ...choices.slice(0, 2),
+        ...choices.slice(0, fixChoices.length),
         new inquirer.Separator('                       '),
         new inquirer.Separator(
           chalk.bold('Or use a free hosted Prisma sandbox (includes database)'),
         ),
-        ...choices.slice(2, 4),
+        ...choices.slice(fixChoices.length, 4),
       ]
       return {
         name: 'choice',
@@ -377,7 +377,7 @@ export class EndpointDialog {
         ['local', 'Local Prisma server (connected to MySQL)'],
         ...clusterChoices,
         ['Use other server', 'Connect to an existing prisma server'],
-        ['Use existing database', 'Connect to existing database'],
+        // ['Use existing database', 'Connect to existing database'],
         ['Create new database', 'Set up a local database using Docker'],
       ]
       const choices = this.convertChoices(rawChoices)
