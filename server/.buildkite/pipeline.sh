@@ -9,7 +9,7 @@ static=$(printf "    - label: \":mysql: MySql API connector\"
     - label: \":mysql: MySql deploy connector\"
       command: cd server && ./.buildkite/scripts/test.sh deploy-connector-mysql mysql
 
-    - label: \":mysql: Postgres API connector\"
+    - label: \":postgres: Postgres API connector\"
       command: cd server && ./.buildkite/scripts/test.sh api-connector-postgres postgres
 
     - label: \":postgres: Postgres deploy connector\"
@@ -52,22 +52,22 @@ for connector in "${connectors[@]}"
 do
    dynamic=$(printf "$dynamic
 %s
-" "    - label: \":scala: images $connector\"
+" "    - label: \":scala: images [$connector]\"
       command: cd server && ./.buildkite/scripts/test.sh images $connector
 
-    - label: \":scala: deploy\"
+    - label: \":scala: deploy [$connector]\"
       command: cd server && ./.buildkite/scripts/test.sh deploy $connector
 
-    - label: \":scala: api\"
+    - label: \":scala: api [$connector]\"
       command: cd server && ./.buildkite/scripts/test.sh api $connector
 
-    - label: \":scala: subscriptions\"
+    - label: \":scala: subscriptions [$connector]\"
       command: cd server && ./.buildkite/scripts/test.sh subscriptions $connector
 
-    - label: \":scala: workers $connector\"
+    - label: \":scala: workers [$connector]\"
       command: cd server && ./.buildkite/scripts/test.sh workers $connector
 
-    - label: \":scala: integration-tests\"
+    - label: \":scala: integration-tests [$connector]\"
       command: cd server && ./.buildkite/scripts/test.sh integrationTests $connector
 
 ")
