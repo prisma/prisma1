@@ -205,7 +205,7 @@ export class Client {
           ) {
             const localNotice = this.env.activeCluster.local
               ? `Please use ${chalk.bold.green(
-                  'prisma local start',
+                  'docker-compose up -d',
                 )} to start your local Prisma cluster.`
               : ''
             throw new Error(
