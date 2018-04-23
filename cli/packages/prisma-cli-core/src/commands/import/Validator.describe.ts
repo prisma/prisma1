@@ -9,5 +9,3 @@ const types = `
       }
     `
 const validator = new Validator(types)
-console.log(validator.ast)
-debugger

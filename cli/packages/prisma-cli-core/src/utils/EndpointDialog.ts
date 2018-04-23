@@ -534,7 +534,9 @@ export class EndpointDialog {
         ? undefined
         : validate ||
           (value =>
-            value && value.length > 0 ? `Please provide a valid ${key}` : true),
+            value && value.length === 0
+              ? true
+              : `Please provide a valid ${key}`),
     }
 
     const result = await this.out.prompt(question)
