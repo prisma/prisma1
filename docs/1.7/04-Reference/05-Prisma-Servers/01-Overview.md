@@ -5,11 +5,11 @@ description: Overview
 
 # Overview
 
-Prisma services are deployed to so-called _clusters_. Cluster are the _runtime environment_ for Prisma services.
+Prisma APIs are hosted on _Prisma servers_. These servers provide the _runtime environment_ for Prisma APIs.
 
-In essence, there are three kinds of _clusters_ you can deploy your Prisma service to:
+In essence, there are three kinds of _servers_ you can deploy your Prisma API to:
 
-- **Local / self-hosted** (using [Docker](https://www.docker.com/)): You can create your own Prisma clusters locally or host them using a cloud provider of your choice. They are managed with the Prisma CLI which governs the underlying Docker _images_ and _containers_ for you. Follow [this](!alias-texoo9aemu) tutorial to learn how to host your own Prisma cluster on Digital Ocean.
+- **Local / self-hosted** (using [Docker](https://www.docker.com/)): You can create your own Prisma service locally or host them using a cloud provider of your choice. They are managed with the [Docker CLI](https://docs.docker.com/engine/reference/commandline/cli/) which governs the underlying Docker _images_ and _containers_ for you. Follow [this](!alias-texoo9aemu) tutorial to learn how to host your own Prisma cluster on Digital Ocean.
 - **Development clusters** ([Prisma Cloud](https://www.prismagraphql.com/cloud)): Prisma Cloud offers free development clusters which you can use for learning, prototyping and development. Note that when deployed to a development cluster, your services will be rate limited and have an upper bound in storage capacity (see the info box below for further info).
 - **Private clusters** ([Prisma Cloud](https://www.prismagraphql.com/cloud)): A private cluster is connected to your own database which you're provisioning when initially setting up the cluster.
 
