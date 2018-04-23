@@ -4,8 +4,8 @@ import java.sql.{SQLException, SQLIntegrityConstraintViolationException}
 
 import com.prisma.api.connector._
 import com.prisma.api.connector.mysql.DatabaseMutactionInterpreter
-import com.prisma.api.connector.mysql.database.DatabaseMutationBuilder
-import com.prisma.api.connector.mysql.database.DatabaseMutationBuilder.{
+import com.prisma.api.connector.mysql.database.MySqlApiDatabaseMutationBuilder
+import com.prisma.api.connector.mysql.database.MySqlApiDatabaseMutationBuilder.{
   cascadingDeleteChildActions,
   oldParentFailureTriggerByField,
   oldParentFailureTriggerByFieldAndFilter
@@ -20,7 +20,7 @@ import slick.jdbc.MySQLProfile.api._
 
 case class AddDataItemToManyRelationByPathInterpreter(mutaction: AddDataItemToManyRelationByPath) extends DatabaseMutactionInterpreter {
 
-  override val action = DatabaseMutationBuilder.createRelationRowByPath(mutaction.project.id, mutaction.path)
+  override val action = MySqlApiDatabaseMutationBuilder.createRelationRowByPath(mutaction.project.id, mutaction.path)
 }
 
 case class CascadingDeleteRelationMutactionsInterpreter(mutaction: CascadingDeleteRelationMutactions) extends DatabaseMutactionInterpreter {
@@ -64,9 +64,9 @@ case class CreateDataItemInterpreter(mutaction: CreateDataItem) extends Database
   val path    = mutaction.path
 
   override val action = {
-    val createNonList  = DatabaseMutationBuilder.createDataItem(project.id, path, mutaction.nonListArgs)
-    val createRelayRow = DatabaseMutationBuilder.createRelayRow(project.id, path)
-    val listAction     = DatabaseMutationBuilder.getDbActionForScalarLists(project, path, mutaction.listArgs)
+    val createNonList  = MySqlApiDatabaseMutationBuilder.createDataItem(project.id, path, mutaction.nonListArgs)
+    val createRelayRow = MySqlApiDatabaseMutationBuilder.createRelayRow(project.id, path)
+    val listAction     = MySqlApiDatabaseMutationBuilder.getDbActionForScalarLists(project, path, mutaction.listArgs)
 
     DBIO.seq(createNonList, createRelayRow, listAction)
   }
@@ -82,22 +82,22 @@ case class CreateDataItemInterpreter(mutaction: CreateDataItem) extends Database
 
 case class DeleteDataItemInterpreter(mutaction: DeleteDataItem) extends DatabaseMutactionInterpreter {
   override val action = DBIO.seq(
-    DatabaseMutationBuilder.deleteRelayRow(mutaction.project.id, mutaction.path),
-    DatabaseMutationBuilder.deleteDataItem(mutaction.project.id, mutaction.path)
+    MySqlApiDatabaseMutationBuilder.deleteRelayRow(mutaction.project.id, mutaction.path),
+    MySqlApiDatabaseMutationBuilder.deleteDataItem(mutaction.project.id, mutaction.path)
   )
 }
 
 case class DeleteDataItemNestedInterpreter(mutaction: DeleteDataItemNested) extends DatabaseMutactionInterpreter {
   override val action = DBIO.seq(
-    DatabaseMutationBuilder.deleteRelayRow(mutaction.project.id, mutaction.path),
-    DatabaseMutationBuilder.deleteDataItem(mutaction.project.id, mutaction.path)
+    MySqlApiDatabaseMutationBuilder.deleteRelayRow(mutaction.project.id, mutaction.path),
+    MySqlApiDatabaseMutationBuilder.deleteDataItem(mutaction.project.id, mutaction.path)
   )
 }
 
 case class DeleteDataItemsInterpreter(mutaction: DeleteDataItems) extends DatabaseMutactionInterpreter {
   override val action = DBIOAction.seq(
-    DatabaseMutationBuilder.deleteRelayIds(mutaction.project, mutaction.model, mutaction.whereFilter),
-    DatabaseMutationBuilder.deleteDataItems(mutaction.project, mutaction.model, mutaction.whereFilter)
+    MySqlApiDatabaseMutationBuilder.deleteRelayIds(mutaction.project, mutaction.model, mutaction.whereFilter),
+    MySqlApiDatabaseMutationBuilder.deleteDataItems(mutaction.project, mutaction.model, mutaction.whereFilter)
   )
 }
 
@@ -158,9 +158,9 @@ case class DeleteRelationCheckInterpreter(mutaction: DeleteRelationCheck) extend
 }
 
 case class ResetDataInterpreter(mutaction: ResetDataMutaction) extends DatabaseMutactionInterpreter {
-  val disableConstraints = DatabaseMutationBuilder.disableForeignKeyConstraintChecks
-  val truncateTables     = DBIOAction.seq(mutaction.tableNames.map(DatabaseMutationBuilder.resetData(mutaction.project.id, _)): _*)
-  val enableConstraints  = DatabaseMutationBuilder.enableForeignKeyConstraintChecks
+  val disableConstraints = MySqlApiDatabaseMutationBuilder.disableForeignKeyConstraintChecks
+  val truncateTables     = DBIOAction.seq(mutaction.tableNames.map(MySqlApiDatabaseMutationBuilder.resetData(mutaction.project.id, _)): _*)
+  val enableConstraints  = MySqlApiDatabaseMutationBuilder.enableForeignKeyConstraintChecks
 
   override val action = DBIOAction.seq(disableConstraints, truncateTables, enableConstraints)
 }
@@ -171,8 +171,8 @@ case class UpdateDataItemInterpreter(mutaction: UpdateWrapper) extends DatabaseM
     case x: NestedUpdateDataItem => (x.project, x.path, x.nonListArgs, x.listArgs)
   }
 
-  val nonListAction = DatabaseMutationBuilder.updateDataItemByPath(project.id, path, nonListArgs)
-  val listAction    = DatabaseMutationBuilder.getDbActionForScalarLists(project, path, listArgs)
+  val nonListAction = MySqlApiDatabaseMutationBuilder.updateDataItemByPath(project.id, path, nonListArgs)
+  val listAction    = MySqlApiDatabaseMutationBuilder.getDbActionForScalarLists(project, path, listArgs)
 
   override val action = DBIO.seq(listAction, nonListAction)
 
@@ -191,8 +191,8 @@ case class UpdateDataItemInterpreter(mutaction: UpdateWrapper) extends DatabaseM
 }
 
 case class UpdateDataItemsInterpreter(mutaction: UpdateDataItems) extends DatabaseMutactionInterpreter {
-  val nonListActions = DatabaseMutationBuilder.updateDataItems(mutaction.project.id, mutaction.model, mutaction.updateArgs, mutaction.whereFilter)
-  val listActions    = DatabaseMutationBuilder.setManyScalarLists(mutaction.project.id, mutaction.model, mutaction.listArgs, mutaction.whereFilter)
+  val nonListActions = MySqlApiDatabaseMutationBuilder.updateDataItems(mutaction.project.id, mutaction.model, mutaction.updateArgs, mutaction.whereFilter)
+  val listActions    = MySqlApiDatabaseMutationBuilder.setManyScalarLists(mutaction.project.id, mutaction.model, mutaction.listArgs, mutaction.whereFilter)
 
   //update Lists before updating the nodes
   override val action = DBIOAction.seq(listActions, nonListActions)
@@ -205,9 +205,9 @@ case class UpsertDataItemInterpreter(mutaction: UpsertDataItem) extends Database
   val updateArgs = mutaction.nonListUpdateArgs
 
   override val action = {
-    val createAction = DatabaseMutationBuilder.getDbActionForScalarLists(project, mutaction.createPath, mutaction.listCreateArgs)
-    val updateAction = DatabaseMutationBuilder.getDbActionForScalarLists(project, mutaction.updatePath, mutaction.listUpdateArgs)
-    DatabaseMutationBuilder.upsert(project.id, mutaction.createPath, mutaction.updatePath, createArgs, updateArgs, createAction, updateAction)
+    val createAction = MySqlApiDatabaseMutationBuilder.getDbActionForScalarLists(project, mutaction.createPath, mutaction.listCreateArgs)
+    val updateAction = MySqlApiDatabaseMutationBuilder.getDbActionForScalarLists(project, mutaction.updatePath, mutaction.listUpdateArgs)
+    MySqlApiDatabaseMutationBuilder.upsert(project.id, mutaction.createPath, mutaction.updatePath, createArgs, updateArgs, createAction, updateAction)
   }
 
   override val errorMapper = {
@@ -225,12 +225,12 @@ case class UpsertDataItemInterpreter(mutaction: UpsertDataItem) extends Database
 case class UpsertDataItemIfInRelationWithInterpreter(mutaction: UpsertDataItemIfInRelationWith) extends DatabaseMutactionInterpreter {
   val project = mutaction.project
 
-  val scalarListsCreate = DatabaseMutationBuilder.getDbActionForScalarLists(project, mutaction.createPath, mutaction.createListArgs)
-  val scalarListsUpdate = DatabaseMutationBuilder.getDbActionForScalarLists(project, mutaction.updatePath, mutaction.updateListArgs)
+  val scalarListsCreate = MySqlApiDatabaseMutationBuilder.getDbActionForScalarLists(project, mutaction.createPath, mutaction.createListArgs)
+  val scalarListsUpdate = MySqlApiDatabaseMutationBuilder.getDbActionForScalarLists(project, mutaction.updatePath, mutaction.updateListArgs)
   val relationChecker   = NestedCreateRelationInterpreter(NestedCreateRelation(project, mutaction.createPath, false))
   val createCheck       = DBIOAction.seq(relationChecker.allActions: _*)
 
-  override val action = DatabaseMutationBuilder.upsertIfInRelationWith(
+  override val action = MySqlApiDatabaseMutationBuilder.upsertIfInRelationWith(
     project = project,
     createPath = mutaction.createPath,
     updatePath = mutaction.updatePath,
@@ -263,7 +263,7 @@ case class VerifyConnectionInterpreter(mutaction: VerifyConnection) extends Data
   val project = mutaction.project
   val path    = mutaction.path
 
-  override val action = DatabaseMutationBuilder.connectionFailureTrigger(project, path)
+  override val action = MySqlApiDatabaseMutationBuilder.connectionFailureTrigger(project, path)
 
   override val errorMapper = {
     case e: SQLException if e.getErrorCode == 1242 && causedByThisMutaction(e.getCause.toString) => throw APIErrors.NodesNotConnectedError(path)
@@ -283,7 +283,7 @@ case class VerifyWhereInterpreter(mutaction: VerifyWhere) extends DatabaseMutact
   val project = mutaction.project
   val where   = mutaction.where
 
-  override val action = DatabaseMutationBuilder.whereFailureTrigger(project, where)
+  override val action = MySqlApiDatabaseMutationBuilder.whereFailureTrigger(project, where)
 
   override val errorMapper = {
     case e: SQLException if e.getErrorCode == 1242 && causedByThisMutaction(e.getCause.toString) => throw APIErrors.NodeNotFoundForWhereError(where)
@@ -296,13 +296,13 @@ case class VerifyWhereInterpreter(mutaction: VerifyWhere) extends DatabaseMutact
 }
 
 case class CreateDataItemsImportInterpreter(mutaction: CreateDataItemsImport) extends DatabaseMutactionInterpreter {
-  override val action = DatabaseMutationBuilder.createDataItemsImport(mutaction)
+  override val action = MySqlApiDatabaseMutationBuilder.createDataItemsImport(mutaction)
 }
 
 case class CreateRelationRowsImportInterpreter(mutaction: CreateRelationRowsImport) extends DatabaseMutactionInterpreter {
-  override val action = DatabaseMutationBuilder.createRelationRowsImport(mutaction)
+  override val action = MySqlApiDatabaseMutationBuilder.createRelationRowsImport(mutaction)
 }
 
 case class PushScalarListsImportInterpreter(mutaction: PushScalarListsImport) extends DatabaseMutactionInterpreter {
-  override val action = DatabaseMutationBuilder.pushScalarListsImport(mutaction)
+  override val action = MySqlApiDatabaseMutationBuilder.pushScalarListsImport(mutaction)
 }
