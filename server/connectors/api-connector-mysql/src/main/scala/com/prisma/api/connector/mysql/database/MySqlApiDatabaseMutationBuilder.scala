@@ -7,7 +7,7 @@ import com.prisma.api.connector._
 import com.prisma.api.connector.mysql.database.JdbcExtensions._
 import com.prisma.api.connector.mysql.database.SlickExtensions._
 import com.prisma.api.schema.UserFacingError
-import com.prisma.gc_values.{GCValue, ListGCValue, NullGCValue}
+import com.prisma.gc_values.{GCValue, GCValueExtractor, ListGCValue, NullGCValue}
 import com.prisma.shared.models._
 import cool.graph.cuid.Cuid
 import slick.dbio.{DBIOAction, Effect, NoStream}
@@ -603,7 +603,8 @@ object MySqlApiDatabaseMutationBuilder {
             .filter(element => element._1 == Statement.EXECUTE_FAILED)
             .map { failed =>
               val failedValue: GCValue = argsWithIndex.find(_._2 == failed._2).get._1
-              s"Failure inserting into listTable $tableName for the id $nodeId for value $failedValue. Cause: ${removeConnectionInfoFromCause(e.getCause.toString)}"
+              s"Failure inserting into listTable $tableName for the id $nodeId for value ${GCValueExtractor.fromGCValue(failedValue)}. Cause: ${removeConnectionInfoFromCause(
+                e.getCause.toString)}"
             }
             .toVector
 
