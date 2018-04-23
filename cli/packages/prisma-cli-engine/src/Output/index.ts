@@ -167,6 +167,7 @@ export class Output {
       (this.mock && typeof err !== 'string' && exitCode !== false) ||
       process.env.NODE_ENV === 'test'
     ) {
+      console.error(err)
       throw err
     }
     try {

@@ -189,6 +189,7 @@ export class EndpointDialog {
         dockerComposeYml += this.printDatabaseService(type)
         break
       case 'Use existing database':
+        console.log('going for existing db')
         credentials = await this.getDatabase()
         this.out.action.start(`Connecting to database`)
         const introspector = new Introspector(credentials)
@@ -519,24 +520,27 @@ export class EndpointDialog {
     defaultValue,
     key,
     validate,
+    required,
   }: {
     message: string
     key: string
     defaultValue?: string
     validate?: (value: string) => boolean | string
+    required?: boolean
   }) {
     const question = {
       name: key,
       type: 'input',
       message,
       default: defaultValue,
-      validate: defaultValue
-        ? undefined
-        : validate ||
-          (value =>
-            value && value.length === 0
-              ? true
-              : `Please provide a valid ${key}`),
+      validate:
+        defaultValue || !required
+          ? undefined
+          : validate ||
+            (value =>
+              value && value.length > 0
+                ? true
+                : `Please provide a valid ${key}`),
     }
 
     const result = await this.out.prompt(question)

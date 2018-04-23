@@ -32,6 +32,7 @@ async function testChoices(choices) {
   const result = await Init.mock({ mockConfig: config })
   expect(getFolderContent(cwd)).toMatchSnapshot()
   expect(result.out.stdout.output).toMatchSnapshot()
+  expect(result.out.stderr.output).toMatchSnapshot()
 }
 
 describe('init', () => {
@@ -47,9 +48,9 @@ describe('init', () => {
       dbType: 'postgres',
       host: 'localhost',
       port: 5432,
-      user: 'postgres',
-      password: '',
-      database: undefined,
+      database: process.env.TEST_PG_DB,
+      user: process.env.TEST_PG_USER || 'postgres',
+      password: process.env.TEST_PG_PASSWORD,
       alreadyData: false,
     })
   })

@@ -42,7 +42,7 @@ if (!global.testing) {
     }
   })
   const handleErr = async err => {
-    if (!out) {
+    if (!out || process.env.NODE_ENV === 'test') {
       throw err
     }
     out.error(err)
