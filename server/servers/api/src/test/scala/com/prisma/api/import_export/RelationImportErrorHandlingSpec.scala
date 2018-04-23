@@ -51,10 +51,8 @@ class RelationImportErrorHandlingSpec extends FlatSpec with Matchers with ApiBas
     importer.executeImport(nodes).await(5)
     val res = importer.executeImport(relations).await(5)
 
-    res.toString should include(
-      """Failure inserting into relationtable _Relation0to0 with ids 1 and 7. Cause: insert or update on table "_Relation0to0" violates foreign key constraint "_Relation0to0_A_fkey" Detail: Key (A)=(1                        ) is not present in table "Model0".""")
-    res.toString should include(
-      """Failure inserting into relationtable _Relation0to1 with ids 7 and 0. Cause: insert or update on table "_Relation0to1" violates foreign key constraint "_Relation0to1_A_fkey" Detail: Key (A)=(7                        ) is not present in table "Model1". """)
+    res.toString should include("""Failure inserting into relationtable _Relation0to0 with ids 1 and 7.""")
+    res.toString should include("""Failure inserting into relationtable _Relation0to1 with ids 7 and 0.""")
 
     val res0 = server.query("query{model0s{id, a}}", project).toString
     res0 should be("""{"data":{"model0s":[{"id":"0","a":"test"}]}}""")

@@ -9,8 +9,6 @@ import slick.jdbc.PostgresProfile.api._
 
 object DeployDatabaseMutationBuilderPostGres {
 
-  def itemCountForTable(projectId: String, tableName: String) = sql"""SELECT COUNT(*) AS Count FROM "#$projectId"."#$tableName""""
-
   def createClientDatabaseForProject(projectId: String) = {
 
     val createFunction = SimpleDBIO[Unit] { x =>
@@ -25,7 +23,10 @@ object DeployDatabaseMutationBuilderPostGres {
 
     DBIO.seq(
       sqlu"""CREATE SCHEMA "#$projectId";""",
-      sqlu"""CREATE TABLE "#$projectId"."_RelayId" ("id" VARCHAR (25) NOT NULL, "stableModelIdentifier" VARCHAR (25) NOT NULL, PRIMARY KEY ("id"))""",
+      sqlu"""CREATE TABLE "#$projectId"."_RelayId" (
+            "id" VARCHAR (25) NOT NULL,
+            "stableModelIdentifier" VARCHAR (25) NOT NULL,
+             PRIMARY KEY ("id"))""",
       createFunction
     )
   }
@@ -41,23 +42,24 @@ object DeployDatabaseMutationBuilderPostGres {
 
   def deleteProjectDatabase(projectId: String) = sqlu"""DROP SCHEMA IF EXISTS "#$projectId" CASCADE"""
 
-  def dropTable(projectId: String, tableName: String) = sqlu"""DROP TABLE "#$projectId"."#$tableName""""
+  def dropTable(projectId: String, tableName: String)                              = sqlu"""DROP TABLE "#$projectId"."#$tableName""""
+  def dropScalarListTable(projectId: String, modelName: String, fieldName: String) = sqlu"""DROP TABLE "#$projectId"."#${modelName}_#${fieldName}""""
 
   def createTable(projectId: String, name: String) = {
+    // todo update timestamp https://stackoverflow.com/questions/1035980/update-timestamp-when-row-is-updated-in-postgresql
+
     sqlu"""CREATE TABLE "#$projectId"."#$name"
     ("id" VARCHAR (25) NOT NULL,
     "createdAt" TIMESTAMP (3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updatedAt" TIMESTAMP (3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP (3) NOT NULL DEFAULT CURRENT_TIMESTAMP, 
     PRIMARY KEY ("id")
     )"""
   }
 
-  def dropScalarListTable(projectId: String, modelName: String, fieldName: String) = sqlu"""DROP TABLE "#$projectId"."#${modelName}_#${fieldName}""""
-
   def createScalarListTable(projectId: String, modelName: String, fieldName: String, typeIdentifier: TypeIdentifier) = {
     val sqlType = sqlTypeForScalarTypeIdentifier(typeIdentifier)
     sqlu"""CREATE TABLE "#$projectId"."#${modelName}_#${fieldName}"
-    ("nodeId" VARCHAR (25) NOT NULL,
+    ("nodeId" VARCHAR (25) NOT NULL REFERENCES "#$projectId"."#$modelName" ("id"),
     "position" INT NOT NULL,
     "value" #$sqlType NOT NULL,
     PRIMARY KEY ("nodeId", "position")
