@@ -96,11 +96,11 @@ Either try using a new directory name, or remove the files listed above.
 
     const dir = this.args!.dirName
     const dirString = dir
-      ? `Open the new folder via ${chalk.cyan(`$ cd ${dir}`)}. `
+      ? `Open the new folder via ${chalk.cyan(`$ cd ${dir}`)}.\n`
       : ``
 
     const deployString = results.cluster!.local
-      ? `Run ${chalk.cyan('docker-compose up -d')}. Then you `
+      ? `Run ${chalk.cyan('docker-compose up -d')}.\nThen you `
       : `You now `
 
     this.out.log(`\
