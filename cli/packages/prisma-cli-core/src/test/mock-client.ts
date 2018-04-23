@@ -1,5 +1,5 @@
 import { makeExecutableSchema, addMockFunctionsToSchema } from 'graphql-tools'
-import { graphql } from 'graphql'
+import { graphql, ExecutionResult } from 'graphql'
 import * as fs from 'fs-extra'
 
 const typeDefs = fs.readFileSync(__dirname + '/cluster.graphql', 'utf-8')
@@ -18,9 +18,9 @@ addMockFunctionsToSchema({
 export const MockGraphQLClient = () => {
   return {
     request(query, variables) {
-      return graphql(schema, query, {}, {}, variables)
+      return graphql(schema, query, {}, {}, variables) as any
     },
   }
 }
 
-export { ExecutionResult } from 'graphql'
+export { ExecutionResult }
