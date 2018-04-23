@@ -276,6 +276,49 @@ export class EndpointDialog {
     }
   }
 
+  async getDatabase(): Promise<DatabaseCredentials> {
+    const type = await this.askForDatabaseType()
+    const host = await this.ask({
+      message: 'Enter database host',
+      key: 'host',
+      defaultValue: 'localhost',
+    })
+    const port = await this.ask({
+      message: 'Enter database port',
+      key: 'port',
+      defaultValue: String(defaultPorts[type]),
+    })
+    const user = await this.ask({
+      message: 'Enter database user',
+      key: 'user',
+    })
+    const password = await this.ask({
+      message: 'Enter database password',
+      key: 'password',
+    })
+    const database = await this.ask({
+      message: 'Enter database name (only needed when you already have data)',
+      key: 'database',
+    })
+    const alreadyData = await this.ask({
+      message: 'Do you already have data in the database? (yes/no)',
+      key: 'alreadyData',
+      defaultValue: 'no',
+      validate: value =>
+        ['yes', 'no'].includes(value) ? true : 'Please answer either yes or no',
+    })
+
+    return {
+      type,
+      host,
+      port,
+      user,
+      password,
+      database,
+      alreadyData,
+    }
+  }
+
   private getClusterAndWorkspaceFromChoice(
     choice: string,
   ): { workspace: string | null; cluster: string } {
@@ -484,49 +527,6 @@ export class EndpointDialog {
     const { endpoint } = await this.out.prompt(question)
 
     return endpoint
-  }
-
-  private async getDatabase(): Promise<DatabaseCredentials> {
-    const type = await this.askForDatabaseType()
-    const host = await this.ask({
-      message: 'Enter database host',
-      key: 'host',
-      defaultValue: 'localhost',
-    })
-    const port = await this.ask({
-      message: 'Enter database port',
-      key: 'port',
-      defaultValue: String(defaultPorts[type]),
-    })
-    const user = await this.ask({
-      message: 'Enter database user',
-      key: 'user',
-    })
-    const password = await this.ask({
-      message: 'Enter database password',
-      key: 'password',
-    })
-    const database = await this.ask({
-      message: 'Enter database name (only needed when you already have data)',
-      key: 'database',
-    })
-    const alreadyData = await this.ask({
-      message: 'Do you already have data in the database? (yes/no)',
-      key: 'alreadyData',
-      defaultValue: 'no',
-      validate: value =>
-        ['yes', 'no'].includes(value) ? true : 'Please answer either yes or no',
-    })
-
-    return {
-      type,
-      host,
-      port,
-      user,
-      password,
-      database,
-      alreadyData,
-    }
   }
 
   private async ask({
