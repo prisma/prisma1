@@ -43,14 +43,16 @@ datamodel:
   - enums.graphql
 ```
 
-## `endpoint` (required)
+## `endpoint`
 
-The HTTP endpoint for your Prisma API is composed of three or four components:
+The HTTP endpoint for your Prisma API is composed of the following components:
 
 - **Prisma server**: The server that will host your Prisma API.
 - **Workspace** (only Prisma Cloud): The name of the Workspace you configured through Prisma Cloud.
 - **Service name**: A descriptive name for your Prisma API.
 - **Stage**: The development stage of your cluster (e.g. `dev`, `staging`, `prod`).
+
+Note that the `endpoint` is required to deploy your Prisma API. However, if you don't specify it in `prisma.yml` before running `prisma deploy`, the CLI will use a wizard to prompt you with a few questions and add the `endpoint` to `prisma.yml` for you.
 
 #### Type
 
@@ -79,6 +81,16 @@ The following example endpoint encodes this information:
 
 ```yml
 endpoint: https://eu1.prisma.sh/public-helixgoose-752/myservice/dev
+```
+
+The following example endpoint encodes this information:
+
+- **Prisma server**: `http://my-pr-Publi-1GXX8QUZU3T89-413349553.us-east-1.elb.amazonaws.com` means you're using a custom server to deploy your Prisma API.
+- **Service name**: `cat-pictures`
+- **Stage**: `prod`
+
+```yml
+endpoint: http://my-pr-Publi-1GXX8QUZU3T89-413349553.us-east-1.elb.amazonaws.com/cat-pictures/prod
 ```
 
 ## `secret` (optional)
