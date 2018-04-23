@@ -5,17 +5,18 @@ import com.prisma.shared.models.{Project, TypeIdentifier}
 import slick.jdbc.MySQLProfile.api._
 
 object DeployDatabaseMutationBuilderMySql {
+
   def createClientDatabaseForProject(projectId: String) = {
     val idCharset = charsetTypeForScalarTypeIdentifier(isList = false, TypeIdentifier.GraphQLID)
     DBIO.seq(
       sqlu"""CREATE SCHEMA `#$projectId` DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci; """,
-      sqlu"""CREATE TABLE `#$projectId`.`_RelayId` (`id` CHAR(25) #$idCharset NOT NULL, `stableModelIdentifier` CHAR(25) #$idCharset NOT NULL, PRIMARY KEY (`id`), UNIQUE INDEX `id_UNIQUE` (`id` ASC)) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci"""
+      sqlu"""CREATE TABLE `#$projectId`.`_RelayId` (
+             `id` CHAR(25) #$idCharset NOT NULL,
+              `stableModelIdentifier` CHAR(25) #$idCharset NOT NULL,
+               PRIMARY KEY (`id`),
+               UNIQUE INDEX `id_UNIQUE` (`id` ASC))
+               DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci"""
     )
-  }
-
-  def dropClientDatabaseForProject(projectId: String) = {
-    println(s"Dropping $projectId")
-    DBIO.seq(sqlu"""DROP SCHEMA IF EXISTS `#$projectId`;""")
   }
 
   def truncateProjectTables(project: Project) = {
@@ -29,7 +30,8 @@ object DeployDatabaseMutationBuilderMySql {
 
   def deleteProjectDatabase(projectId: String) = sqlu"DROP DATABASE IF EXISTS `#$projectId`"
 
-  def dropTable(projectId: String, tableName: String) = sqlu"DROP TABLE `#$projectId`.`#$tableName`"
+  def dropTable(projectId: String, tableName: String)                              = sqlu"DROP TABLE `#$projectId`.`#$tableName`"
+  def dropScalarListTable(projectId: String, modelName: String, fieldName: String) = sqlu"DROP TABLE `#$projectId`.`#${modelName}_#${fieldName}`"
 
   def createTable(projectId: String, name: String) = {
     val idCharset = charsetTypeForScalarTypeIdentifier(isList = false, TypeIdentifier.GraphQLID)
@@ -42,8 +44,6 @@ object DeployDatabaseMutationBuilderMySql {
     UNIQUE INDEX `id_UNIQUE` (`id` ASC))
     DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci"""
   }
-
-  def dropScalarListTable(projectId: String, modelName: String, fieldName: String) = sqlu"DROP TABLE `#$projectId`.`#${modelName}_#${fieldName}`"
 
   def createScalarListTable(projectId: String, modelName: String, fieldName: String, typeIdentifier: TypeIdentifier) = {
     val idCharset     = charsetTypeForScalarTypeIdentifier(isList = false, TypeIdentifier.GraphQLID)
@@ -59,13 +59,13 @@ object DeployDatabaseMutationBuilderMySql {
     `position` INT(4) NOT NULL,
     `value` #$sqlType #$charsetString NOT NULL,
     PRIMARY KEY (`nodeId`, `position`),
-    INDEX `value` (`value`#$indexSize ASC))
+    INDEX `value` (`value`#$indexSize ASC),
+    FOREIGN KEY (`nodeId`) REFERENCES `#$projectId`.`#$modelName`(id) ON DELETE CASCADE)
     DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci"""
   }
 
   def updateScalarListType(projectId: String, modelName: String, fieldName: String, typeIdentifier: TypeIdentifier) = {
     val sqlType = sqlTypeForScalarTypeIdentifier(false, typeIdentifier)
-//    val charsetString = charsetTypeForScalarTypeIdentifier(false, typeIdentifier)
     val indexSize = sqlType match {
       case "text" | "mediumtext" => "(191)"
       case _                     => ""
@@ -79,23 +79,6 @@ object DeployDatabaseMutationBuilderMySql {
   }
 
   def renameTable(projectId: String, name: String, newName: String) = sqlu"""RENAME TABLE `#$projectId`.`#$name` TO `#$projectId`.`#$newName`;"""
-
-  def charsetTypeForScalarTypeIdentifier(isList: Boolean, typeIdentifier: TypeIdentifier): String = {
-    if (isList) {
-      return "CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci"
-    }
-
-    typeIdentifier match {
-      case TypeIdentifier.String    => "CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci"
-      case TypeIdentifier.Boolean   => ""
-      case TypeIdentifier.Int       => ""
-      case TypeIdentifier.Float     => ""
-      case TypeIdentifier.GraphQLID => "CHARACTER SET utf8 COLLATE utf8_general_ci"
-      case TypeIdentifier.Enum      => "CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci"
-      case TypeIdentifier.Json      => "CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci"
-      case TypeIdentifier.DateTime  => ""
-    }
-  }
 
   def createColumn(projectId: String,
                    tableName: String,
@@ -188,6 +171,22 @@ object DeployDatabaseMutationBuilderMySql {
       case TypeIdentifier.Json      => "mediumtext"
       case TypeIdentifier.DateTime  => "datetime(3)"
       case TypeIdentifier.Relation  => sys.error("Relation is not a scalar type. Are you trying to create a db column for a relation?")
+    }
+  }
+  def charsetTypeForScalarTypeIdentifier(isList: Boolean, typeIdentifier: TypeIdentifier): String = {
+    if (isList) {
+      return "CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci"
+    }
+
+    typeIdentifier match {
+      case TypeIdentifier.String    => "CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci"
+      case TypeIdentifier.Boolean   => ""
+      case TypeIdentifier.Int       => ""
+      case TypeIdentifier.Float     => ""
+      case TypeIdentifier.GraphQLID => "CHARACTER SET utf8 COLLATE utf8_general_ci"
+      case TypeIdentifier.Enum      => "CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci"
+      case TypeIdentifier.Json      => "CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci"
+      case TypeIdentifier.DateTime  => ""
     }
   }
 

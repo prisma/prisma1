@@ -185,7 +185,7 @@ class BulkExportSpec extends FlatSpec with Matchers with ApiBaseSpec with AwaitU
     secondChunk.cursor.row should be(-1)
   }
 
-  //List Value chunking is simplified for now. We will have up to 1000 list values for one id as the smallest inseparable chunk. if that is over 10mb we won't split it
+  //List Value chunking is simplified for now. We will have up to 1000 list values for one id as the smallest inseparable chunk. if that is over 1mb we won't split it
   "Exporting ListValues" should "work" ignore {
 
     val nodes =

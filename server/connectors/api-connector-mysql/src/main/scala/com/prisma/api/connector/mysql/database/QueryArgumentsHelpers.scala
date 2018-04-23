@@ -84,8 +84,8 @@ object QueryArgumentsHelpers {
 
         //--- non recursive
 
-        // the boolean filter comes from precomputed fields
-        case FilterElement(key, value, None, filterName) if filterName == "boolean" => // todo probably useless
+        // the boolean filter comes from precomputed fields that are replace in the QueryTransformer
+        case FilterElement(key, value, None, filterName) if filterName == "boolean" =>
           value match {
             case true  => Some(sql"TRUE")
             case false => Some(sql"FALSE")
