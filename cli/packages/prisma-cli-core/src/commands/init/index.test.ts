@@ -22,7 +22,13 @@ function makeMockConfig(mockInquirer?: any) {
 function getFolderContent(folder) {
   return fs
     .readdirSync(folder)
-    .map(f => ({ [f]: fs.readFileSync(path.join(folder, f), 'utf-8') }))
+    .map(f => {
+      let file = fs.readFileSync(path.join(folder, f), 'utf-8')
+      if (f === 'docker-compose.yml') {
+        file = normalizeDockerCompose(file)
+      }
+      return { [f]: file }
+    })
     .reduce((acc, curr) => ({ ...acc, ...curr }), {})
 }
 
@@ -56,3 +62,12 @@ describe('init', () => {
     })
   })
 })
+
+function normalizeDockerCompose(dc) {
+  return dc
+    .split('\n')
+    .filter(
+      l => !l.trim().startsWith('user') && !l.trim().startsWith('password'),
+    )
+    .join('\n')
+}

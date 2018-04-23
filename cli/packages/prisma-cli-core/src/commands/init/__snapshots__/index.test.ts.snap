@@ -27,8 +27,6 @@ services:
             active: true
             host: db
             port: 3306 
-            user: root
-            password: prisma
   db:
     image: mysql:5.7
     restart: always
@@ -77,8 +75,6 @@ services:
             active: true
             host: localhost
             port: 5432 
-            user: postgres
-            password: 
 ",
   "prisma.yml": "endpoint: http://localhost:4466
 datamodel: datamodel.graphql",
