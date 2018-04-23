@@ -95,7 +95,7 @@ export class Command {
   args?: OutputArgs
   argv: string[]
 
-  constructor(options: { config?: RunOptions } = { config: { mock: true } }) {
+  constructor(options: { config?: RunOptions } = { config: { mock: false } }) {
     if (options.config && options.config instanceof Config) {
       this.config = options.config
     } else if (options && options.config && options.config.mockConfig) {

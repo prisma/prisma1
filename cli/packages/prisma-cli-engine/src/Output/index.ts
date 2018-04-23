@@ -81,7 +81,7 @@ function extractMessage(response): string {
 const arrow = process.platform === 'win32' ? '!' : '▸'
 
 export class Output {
-  mock: boolean = true
+  mock: boolean = false
   config: Config
   action: ActionBase
   stdout: StreamOutput
@@ -163,10 +163,7 @@ export class Output {
   }
 
   async error(err: Error | string, exitCode: number | false = 1) {
-    if (
-      (this.mock && typeof err !== 'string' && exitCode !== false) ||
-      process.env.NODE_ENV === 'test'
-    ) {
+    if (process.env.NODE_ENV === 'test') {
       console.error(err)
       throw err
     }
@@ -275,7 +272,7 @@ To get more detailed output, run ${chalk.dim(instruction)}`,
     if (this.config.debug) {
       console.error(`Exiting with code: ${code}`)
     }
-    if (this.mock) {
+    if (this.mock && process.env.NODE_ENV === 'test') {
       throw new ExitError(code)
     } else {
       process.exit(code)

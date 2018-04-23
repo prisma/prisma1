@@ -70,7 +70,6 @@ Either try using a new directory name, or remove the files listed above.
       this.config,
     )
     const results = await endpointDialog.getEndpoint()
-    this.out.up(3)
 
     fs.copySync(
       path.join(__dirname, 'boilerplate', 'prisma.yml'),

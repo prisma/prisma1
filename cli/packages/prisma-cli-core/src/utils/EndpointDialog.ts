@@ -189,7 +189,6 @@ export class EndpointDialog {
         dockerComposeYml += this.printDatabaseService(type)
         break
       case 'Use existing database':
-        console.log('going for existing db')
         credentials = await this.getDatabase()
         this.out.action.start(`Connecting to database`)
         const introspector = new Introspector(credentials)
