@@ -60,6 +60,10 @@ This is also relevant for the `import` and `export` endpoints of your API. Inste
 
 ### Deprecating `local` commands
 
+The `prisma local` commands are being deprecated in favor of using Docker commands directly. `prisma local` provided a convenient abstraction for certain Docker workflows. In 1.7., everything related 
+
 ### Authenticating against Prisma servers running on Docker
+
+
 
 ### New 
