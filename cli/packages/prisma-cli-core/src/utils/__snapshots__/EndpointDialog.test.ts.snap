@@ -43,7 +43,7 @@ services:
             connector: mysql
             active: true
             host: db
-            port: 3306 
+            port: 3306
             user: root
             password: prisma
   db:
@@ -105,7 +105,7 @@ services:
             connector: mysql
             active: true
             host: db
-            port: 3306 
+            port: 3306
             user: root
             password: prisma
   db:

@@ -8,6 +8,7 @@ import * as path from 'path'
 import * as fs from 'fs'
 import { Introspector } from 'prisma-db-introspection'
 import { defaultDBPort } from '../commands/local/constants'
+import * as yaml from 'js-yaml'
 
 export interface GetEndpointParams {
   folderName: string
@@ -61,7 +62,7 @@ const defaultPorts = {
 }
 
 const databaseServiceDefinitions = {
-  postgres: `\
+  postgres: `
   db:
     image: postgres
     restart: always
@@ -69,7 +70,7 @@ const databaseServiceDefinitions = {
       POSTGRES_USER: prisma
       POSTGRES_PASSWORD: prisma
 `,
-  mysql: `\
+  mysql: `
   db:
     image: mysql:5.7
     restart: always
@@ -132,16 +133,30 @@ export class EndpointDialog {
   }
 
   printDatabaseConfig(credentials: DatabaseCredentials) {
-    return `\
-        databases:
-          default:
-            connector: ${credentials.type}
-            active: ${!credentials.alreadyData}
-            host: ${credentials.host}
-            port: ${credentials.port || defaultPorts[credentials.type]} 
-            user: ${credentials.user}
-            password: ${credentials.password}
-`
+    const defaultDB = JSON.parse(
+      JSON.stringify({
+        connector: credentials.type,
+        active: !credentials.alreadyData,
+        host: credentials.host,
+        port: credentials.port || defaultPorts[credentials.type],
+        user: credentials.user,
+        password: credentials.password,
+        database:
+          credentials.database && credentials.database.length > 0
+            ? credentials.database
+            : undefined,
+      }),
+    )
+    return yaml
+      .safeDump({
+        databases: {
+          default: defaultDB,
+        },
+      })
+      .split('\n')
+      .filter(l => l.trim().length > 0)
+      .map(l => `        ${l}`)
+      .join('\n')
   }
 
   printDatabaseService(type: DatabaseType) {
