@@ -18,7 +18,7 @@ services:
             user: root
             password: prisma
     volumes:
-      - ../../..:/root
+      - ../../../..:/root
       - ~/.ivy2:/root/.ivy2
       - ~/.coursier:/root/.coursier
     working_dir: /root/server
@@ -38,22 +38,14 @@ services:
     networks:
       - tests
 
-#  test-db:
-#    image: postgres:10.3
-#    restart: always
-#    environment:
-#      POSTGRES_USER: "root"
-#      POSTGRES_PASSWORD: "graphcool"
-#    ports:
-#      - "5432"
-
   rabbit:
     image: rabbitmq:3.7.2-management
     restart: always
-    hostname: rabbit-host
     ports:
       - "5672:5672"
       - "15672:15672"
+    networks:
+      - tests
 
 networks:
   tests:
