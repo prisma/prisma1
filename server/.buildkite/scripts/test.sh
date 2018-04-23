@@ -19,7 +19,7 @@ sleep 20
 
 # script is invoked with a service parameter
 echo "Starting tests for $SERVICE..."
-docker-compose $DC_ARGS run app sbt -mem 3072 "$SERVICE/testOnly"
+docker-compose $DC_ARGS run app sbt -mem 3072 "$SERVICE/test"
 
 EXIT_CODE=$?
 
