@@ -22,7 +22,7 @@ function makeMockConfig(mockInquirer?: any) {
 function getFolderContent(folder) {
   return fs
     .readdirSync(folder)
-    .map(f => ({ [f]: fs.readFileSync(f, 'utf-8') }))
+    .map(f => ({ [f]: fs.readFileSync(path.join(folder, f), 'utf-8') }))
     .reduce((acc, curr) => ({ ...acc, ...curr }), {})
 }
 
@@ -30,6 +30,7 @@ async function testChoices(choices) {
   const mockInquirer = mocki(choices)
   const { config, home, cwd } = makeMockConfig(mockInquirer)
   const result = await Init.mock({ mockConfig: config })
+
   expect(getFolderContent(cwd)).toMatchSnapshot()
   expect(result.out.stdout.output).toMatchSnapshot()
   expect(result.out.stderr.output).toMatchSnapshot()

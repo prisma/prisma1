@@ -56,11 +56,7 @@ exports[`init choose local 3`] = `""`;
 
 exports[`init test project 1`] = `
 Object {
-  "datamodel.graphql": "type User {
-  id: ID! @unique
-  name: String!
-}
-",
+  "datamodel.graphql": "",
   "docker-compose.yml": "version: '3'
 services:
   prisma:
@@ -77,18 +73,12 @@ services:
         port: 4466
         databases:
           default:
-            connector: mysql
+            connector: postgres
             active: true
-            host: db
-            port: 3306 
-            user: root
-            password: prisma
-  db:
-    image: mysql:5.7
-    restart: always
-    environment:
-      MYSQL_USER: prisma
-      MYSQL_ROOT_PASSWORD: prisma
+            host: localhost
+            port: 5432 
+            user: postgres
+            password: 
 ",
   "prisma.yml": "endpoint: http://localhost:4466
 datamodel: datamodel.graphql",
