@@ -35,14 +35,11 @@ ${chalk.gray(
     '-',
   )} Deploy local changes from prisma.yml to the default service environment.
   ${chalk.green('$ prisma deploy')}
-
-${chalk.gray('-')} Deploy local changes to a specific stage
-  ${chalk.green('$ prisma deploy --stage production')}
     
 ${chalk.gray(
     '-',
   )} Deploy local changes from default service file accepting potential data loss caused by schema changes
-  ${chalk.green('$ prisma deploy --force --stage production')}
+  ${chalk.green('$ prisma deploy --force')}
   `
   static flags: Flags = {
     force: flags.boolean({
