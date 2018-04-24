@@ -33,22 +33,19 @@ From `1.7` onwards, the CLI will support custom http proxies.
 https://github.com/graphcool/prisma/issues/618
 
 This is in particular important when being behind a corporate firewall.
-To activate the proxy, provide the env vars `HTTP_PROXY` and `HTTPS_PROXY`.
-The behavior is very similar to how the [`npm` cli handles it](https://docs.npmjs.com/misc/config#https-proxy).
-The following env vars can be provided:
 
-`HTTP_PROXY` or `http_proxy`
-Proxy url for http traffic, for example `http://localhost:8080`
+To activate the proxy, provide the env vars `HTTP_PROXY` and `HTTPS_PROXY`. The behavior is very similar to how the [`npm` cli handles it](https://docs.npmjs.com/misc/config#https-proxy).
 
-`HTTPS_PROXY` or `https_proxy`
-Proxy url for https traffic, for example `https://localhost:8080`
+The following environment variables can be provided:
 
-`NO_PROXY` or `no_proxy`
-To disable the proxying for certain urls, please provide a glob for `NO_PROXY`, for example `*`.
+- `HTTP_PROXY` or `http_proxy`: Proxy url for http traffic, for example `http://localhost:8080`
+- `HTTPS_PROXY` or `https_proxy`: Proxy url for https traffic, for example `https://localhost:8080`
+- `NO_PROXY` or `no_proxy`: To disable the proxying for certain urls, please provide a glob for `NO_PROXY`, for example `*`.
 
 To get a simple local proxy, you can use the [`proxy` module](https://www.npmjs.com/package/proxy):
+
 ```bash
-$ npm install -g proxy
-$ DEBUG="*" proxy -p 8080
-$ HTTP_PROXY=http://localhost:8080 HTTPS_PROXY=https://localhost:8080 prisma deploy
+npm install -g proxy
+DEBUG="*" proxy -p 8080
+HTTP_PROXY=http://localhost:8080 HTTPS_PROXY=https://localhost:8080 prisma deploy
 ```
