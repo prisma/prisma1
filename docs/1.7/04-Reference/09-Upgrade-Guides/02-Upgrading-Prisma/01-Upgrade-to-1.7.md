@@ -21,7 +21,7 @@ There are two main cases for how the CLI is helping you with the migration:
 - **Prisma Clusters** are renamed to **Prisma Servers**
 - **Development Clusters** are renamed to **Prisma Sandbox**
 
-## `prisma.yml`
+## Service configuration in `prisma.yml`
 
 ### New YAML structure
 
