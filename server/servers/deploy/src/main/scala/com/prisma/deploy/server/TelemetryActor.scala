@@ -48,7 +48,7 @@ case class TelemetryActor(connector: DeployConnector)(implicit val materializer:
       .flatMap { projects =>
         gqlClient.sendQuery(s"""
          |mutation {
-         |  ping("${info.id}", services: ${projects.length}, version: "$version")
+         |  ping(id: "${info.id}", services: ${projects.length}, version: "$version")
          |}
         """.stripMargin)
       }
