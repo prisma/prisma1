@@ -182,3 +182,4 @@ Here's a few pointers for where you can go next:
 - **Quickstart Tutorials (Backend & Frontend)**: The remaining quickstart tutorials explain how to use Prisma together with conrete languages and frameworks, like [React](!alias-tijghei9go), [Node.js](!alias-phe8vai1oo) or [TypeScript](!alias-rohd6ipoo4).
 - [**Examples**](https://github.com/graphcool/Prisma/tree/master/examples): We're maintaing a list of practical examples showcasing certain use cases and scenarios with Prisma, such as authentication & permissions, file handling, wrapping REST APIs or using GraphQL subscriptions.
 - [**Deployment Docs**](!alias-eu2ood0she): To learn more about different deployment options, you can check out the cluster documentation.
+- [How to GraphQL tutorial for Node.js](https://www.howtographql.com/graphql-js/0-introduction/): In-depth tutorial teaching you how to build a GraphQL server implementing features lielke authentication, pagiation, filters and realtime subscriptions.
