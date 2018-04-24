@@ -8,6 +8,7 @@ import * as path from 'path'
 import * as fs from 'fs'
 import { Introspector } from 'prisma-db-introspection'
 import { defaultDBPort } from '../commands/local/constants'
+import * as yaml from 'js-yaml'
 
 export interface GetEndpointParams {
   folderName: string
@@ -61,7 +62,7 @@ const defaultPorts = {
 }
 
 const databaseServiceDefinitions = {
-  postgres: `\
+  postgres: `
   db:
     image: postgres
     restart: always
@@ -69,12 +70,11 @@ const databaseServiceDefinitions = {
       POSTGRES_USER: prisma
       POSTGRES_PASSWORD: prisma
 `,
-  mysql: `\
+  mysql: `
   db:
     image: mysql:5.7
     restart: always
     environment:
-      MYSQL_USER: prisma
       MYSQL_ROOT_PASSWORD: prisma
 `,
 }
@@ -132,16 +132,30 @@ export class EndpointDialog {
   }
 
   printDatabaseConfig(credentials: DatabaseCredentials) {
-    return `\
-        databases:
-          default:
-            connector: ${credentials.type}
-            active: ${!credentials.alreadyData}
-            host: ${credentials.host}
-            port: ${credentials.port || defaultPorts[credentials.type]} 
-            user: ${credentials.user}
-            password: ${credentials.password}
-`
+    const defaultDB = JSON.parse(
+      JSON.stringify({
+        connector: credentials.type,
+        active: !credentials.alreadyData,
+        host: credentials.host,
+        port: credentials.port || defaultPorts[credentials.type],
+        user: credentials.user,
+        password: credentials.password,
+        database:
+          credentials.database && credentials.database.length > 0
+            ? credentials.database
+            : undefined,
+      }),
+    )
+    return yaml
+      .safeDump({
+        databases: {
+          default: defaultDB,
+        },
+      })
+      .split('\n')
+      .filter(l => l.trim().length > 0)
+      .map(l => `        ${l}`)
+      .join('\n')
   }
 
   printDatabaseService(type: DatabaseType) {
@@ -261,6 +275,49 @@ export class EndpointDialog {
     }
   }
 
+  async getDatabase(): Promise<DatabaseCredentials> {
+    const type = await this.askForDatabaseType()
+    const host = await this.ask({
+      message: 'Enter database host',
+      key: 'host',
+      defaultValue: 'localhost',
+    })
+    const port = await this.ask({
+      message: 'Enter database port',
+      key: 'port',
+      defaultValue: String(defaultPorts[type]),
+    })
+    const user = await this.ask({
+      message: 'Enter database user',
+      key: 'user',
+    })
+    const password = await this.ask({
+      message: 'Enter database password',
+      key: 'password',
+    })
+    const database = await this.ask({
+      message: 'Enter database name (only needed when you already have data)',
+      key: 'database',
+    })
+    const alreadyData = await this.ask({
+      message: 'Do you already have data in the database? (yes/no)',
+      key: 'alreadyData',
+      defaultValue: 'no',
+      validate: value =>
+        ['yes', 'no'].includes(value) ? true : 'Please answer either yes or no',
+    })
+
+    return {
+      type,
+      host,
+      port,
+      user,
+      password,
+      database,
+      alreadyData,
+    }
+  }
+
   private getClusterAndWorkspaceFromChoice(
     choice: string,
   ): { workspace: string | null; cluster: string } {
@@ -321,11 +378,11 @@ export class EndpointDialog {
       ],
     ]
     if (fromScratch && !hasDockerComposeYml) {
-      const rawChoices = [
-        ['Use existing database', 'Connect to existing database'],
+      const fixChoices = [
+        // ['Use existing database', 'Connect to existing database'],
         ['Create new database', 'Set up a local database using Docker'],
-        ...sandboxChoices,
       ]
+      const rawChoices = [...fixChoices, ...sandboxChoices]
       const choices = this.convertChoices(rawChoices)
       const finalChoices = [
         new inquirer.Separator('                       '),
@@ -334,12 +391,12 @@ export class EndpointDialog {
             'You can set up Prisma  for local development (requires Docker)',
           ),
         ),
-        ...choices.slice(0, 2),
+        ...choices.slice(0, fixChoices.length),
         new inquirer.Separator('                       '),
         new inquirer.Separator(
           chalk.bold('Or use a free hosted Prisma sandbox (includes database)'),
         ),
-        ...choices.slice(2, 4),
+        ...choices.slice(fixChoices.length, 4),
       ]
       return {
         name: 'choice',
@@ -362,7 +419,7 @@ export class EndpointDialog {
         ['local', 'Local Prisma server (connected to MySQL)'],
         ...clusterChoices,
         ['Use other server', 'Connect to an existing prisma server'],
-        ['Use existing database', 'Connect to existing database'],
+        // ['Use existing database', 'Connect to existing database'],
         ['Create new database', 'Set up a local database using Docker'],
       ]
       const choices = this.convertChoices(rawChoices)
@@ -402,8 +459,8 @@ export class EndpointDialog {
   }
 
   private async askForDatabaseType() {
-    const { result } = await this.out.prompt({
-      name: 'result',
+    const { dbType } = await this.out.prompt({
+      name: 'dbType',
       type: 'list',
       message: `What kind of database do you want to deploy to?`,
       choices: [
@@ -419,7 +476,7 @@ export class EndpointDialog {
       // pageSize: 9,
     })
 
-    return result
+    return dbType
   }
 
   private convertChoices(
@@ -471,73 +528,37 @@ export class EndpointDialog {
     return endpoint
   }
 
-  private async getDatabase(): Promise<DatabaseCredentials> {
-    const type = await this.askForDatabaseType()
-    const host = await this.ask({
-      message: 'Enter database host',
-      key: 'host',
-      defaultValue: 'localhost',
-    })
-    const port = await this.ask({
-      message: 'Enter database port',
-      key: 'port',
-      defaultValue: String(defaultPorts[type]),
-    })
-    const user = await this.ask({
-      message: 'Enter database user',
-      key: 'user',
-    })
-    const password = await this.ask({
-      message: 'Enter database password',
-      key: 'password',
-    })
-    const database = await this.ask({
-      message: 'Enter database name (only needed when you already have data)',
-    })
-    const alreadyData = await this.ask({
-      message: 'Do you already have data in the database? (yes/no)',
-      defaultValue: 'no',
-      validate: value =>
-        ['yes', 'no'].includes(value) ? true : 'Please answer either yes or no',
-    })
-
-    return {
-      type,
-      host,
-      port,
-      user,
-      password,
-      database,
-      alreadyData,
-    }
-  }
-
   private async ask({
     message,
     defaultValue,
     key,
     validate,
+    required,
   }: {
     message: string
-    key?: string
+    key: string
     defaultValue?: string
     validate?: (value: string) => boolean | string
+    required?: boolean
   }) {
     const question = {
-      name: 'result',
+      name: key,
       type: 'input',
       message,
       default: defaultValue,
-      validate: defaultValue
-        ? undefined
-        : validate ||
-          (value =>
-            value && value.length > 0 ? `Please provide a valid ${key}` : true),
+      validate:
+        defaultValue || !required
+          ? undefined
+          : validate ||
+            (value =>
+              value && value.length > 0
+                ? true
+                : `Please provide a valid ${key}`),
     }
 
-    const { result } = await this.out.prompt(question)
+    const result = await this.out.prompt(question)
 
-    return result
+    return result[key]
   }
 
   private getSillyName() {

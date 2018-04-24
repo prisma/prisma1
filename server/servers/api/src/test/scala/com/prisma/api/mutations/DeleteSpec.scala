@@ -1,7 +1,6 @@
 package com.prisma.api.mutations
 
 import com.prisma.api.ApiBaseSpec
-import com.prisma.api.connector.mysql.database.DatabaseQueryBuilder
 import com.prisma.shared.models.Project
 import com.prisma.shared.schema_dsl.SchemaDsl
 import org.scalatest.{FlatSpec, Matchers}
@@ -17,10 +16,7 @@ class DeleteSpec extends FlatSpec with Matchers with ApiBaseSpec {
     database.setup(project)
   }
 
-  override protected def beforeEach(): Unit = {
-    super.beforeEach()
-    database.truncate(project.id)
-  }
+  override def beforeEach(): Unit = database.truncateProjectTables(project)
 
   "The delete  mutation" should "delete the item matching the where clause" in {
     createTodo("title1")
@@ -72,7 +68,7 @@ class DeleteSpec extends FlatSpec with Matchers with ApiBaseSpec {
     )
     result.pathAsSeq("data.todoes").size should be(int)
 
-    database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "_RelayId").as[Int]) should be(Vector(int))
+    dataResolver(project).countByTable("_RelayId").await should be(int)
 
   }
 

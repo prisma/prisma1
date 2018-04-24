@@ -35,14 +35,11 @@ ${chalk.gray(
     '-',
   )} Deploy local changes from prisma.yml to the default service environment.
   ${chalk.green('$ prisma deploy')}
-
-${chalk.gray('-')} Deploy local changes to a specific stage
-  ${chalk.green('$ prisma deploy --stage production')}
     
 ${chalk.gray(
     '-',
   )} Deploy local changes from default service file accepting potential data loss caused by schema changes
-  ${chalk.green('$ prisma deploy --force --stage production')}
+  ${chalk.green('$ prisma deploy --force')}
   `
   static flags: Flags = {
     force: flags.boolean({
@@ -434,6 +431,9 @@ Note: prisma local start will be deprecated soon in favor of the direct usage of
       }
     }
     const hooks = this.definition.getHooks('post-deploy')
+    if (hooks.length > 0) {
+      this.out.log(`\n${chalk.bold('post-deploy')}:`)
+    }
     for (const hook of hooks) {
       const splittedHook = hook.split(' ')
       this.out.action.start(`Running ${chalk.cyan(hook)}`)
@@ -529,7 +529,7 @@ Note: prisma local start will be deprecated soon in favor of the direct usage of
       debug({ graphqlBin })
       this.out.log(`Running ${chalk.cyan(`$ graphql prepare`)}...`)
       try {
-        const oldCwd = process.cwd()
+        const oldCwd = this.config.cwd
         const configDir = this.config.findConfigDir()
         if (configDir) {
           process.chdir(configDir)

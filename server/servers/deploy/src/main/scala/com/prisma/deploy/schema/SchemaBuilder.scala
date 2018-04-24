@@ -9,7 +9,7 @@ import com.prisma.deploy.migration.migrator.Migrator
 import com.prisma.deploy.schema.fields.{AddProjectField, DeleteProjectField, DeployField, ManualMarshallerHelpers}
 import com.prisma.deploy.schema.mutations._
 import com.prisma.deploy.schema.types._
-import com.prisma.shared.models.{Project, ProjectId}
+import com.prisma.shared.models.{Project, ProjectIdEncoder}
 import com.prisma.utils.future.FutureUtils.FutureOpt
 import sangria.relay.Mutation
 import sangria.schema._
@@ -35,11 +35,12 @@ case class SchemaBuilderImpl(
 
   val projectPersistence: ProjectPersistence         = dependencies.projectPersistence
   val migrationPersistence: MigrationPersistence     = dependencies.migrationPersistence
-  val persistencePlugin: DeployConnector             = dependencies.deployPersistencePlugin
+  val persistencePlugin: DeployConnector             = dependencies.deployConnector
   val migrator: Migrator                             = dependencies.migrator
   val schemaInferrer: SchemaInferrer                 = SchemaInferrer()
   val migrationStepsInferrer: MigrationStepsInferrer = MigrationStepsInferrer()
   val schemaMapper: SchemaMapper                     = SchemaMapper
+  val projectIdEncoder: ProjectIdEncoder             = dependencies.projectIdEncoder
 
   def build(): Schema[SystemUserContext, Unit] = {
     val Query = ObjectType[SystemUserContext, Unit](
@@ -78,21 +79,23 @@ case class SchemaBuilderImpl(
       "Shows the status of the next migration in line to be applied to the project. If no such migration exists, it shows the last applied migration."
     ),
     resolve = (ctx) => {
-      val projectId    = ctx.args.raw.projectId
-      val nameAndStage = ProjectId.fromEncodedString(projectId)
+      val name  = ctx.args.raw.name
+      val stage = ctx.args.raw.stage
 
-      verifyAuthOrThrow(nameAndStage.name, nameAndStage.stage, ctx.ctx.authorizationHeader)
+      val projectId = projectIdEncoder.toEncodedString(name, stage)
+
+      verifyAuthOrThrow(name, stage, ctx.ctx.authorizationHeader)
 
       FutureOpt(migrationPersistence.getNextMigration(projectId)).fallbackTo(migrationPersistence.getLastMigration(projectId)).map {
         case Some(migration) => migration
-        case None            => throw InvalidProjectId(projectId)
+        case None            => throw InvalidProjectId(projectIdEncoder.fromEncodedString(projectId))
       }
     }
   )
 
   val listProjectsField: Field[SystemUserContext, Unit] = Field(
     "listProjects",
-    ListType(ProjectType.Type),
+    ListType(ProjectType.Type(projectIdEncoder)),
     description = Some("Shows all projects the caller has access to."),
     resolve = (ctx) => {
       // Only accessible via */* token, like the one the Cloud API uses
@@ -108,29 +111,31 @@ case class SchemaBuilderImpl(
     arguments = projectIdArguments,
     description = Some("Shows all migrations for the project. Debug query, will likely be removed in the future."),
     resolve = (ctx) => {
-      val projectId    = ctx.args.raw.projectId
-      val nameAndStage = ProjectId.fromEncodedString(projectId)
+      val name      = ctx.args.raw.name
+      val stage     = ctx.args.raw.stage
+      val projectId = projectIdEncoder.toEncodedString(name, stage)
 
-      verifyAuthOrThrow(nameAndStage.name, nameAndStage.stage, ctx.ctx.authorizationHeader)
-      migrationPersistence.loadAll(ctx.args.raw.projectId)
+      verifyAuthOrThrow(name, stage, ctx.ctx.authorizationHeader)
+      migrationPersistence.loadAll(projectId)
     }
   )
 
   val projectField: Field[SystemUserContext, Unit] = Field(
     "project",
-    ProjectType.Type,
+    ProjectType.Type(projectIdEncoder),
     arguments = projectIdArguments,
     description = Some("Gets a project by name and stage."),
     resolve = (ctx) => {
-      val projectId    = ctx.args.raw.projectId
-      val nameAndStage = ProjectId.fromEncodedString(projectId)
+      val name      = ctx.args.raw.name
+      val stage     = ctx.args.raw.stage
+      val projectId = projectIdEncoder.toEncodedString(name, stage)
 
-      verifyAuthOrThrow(nameAndStage.name, nameAndStage.stage, ctx.ctx.authorizationHeader)
+      verifyAuthOrThrow(name, stage, ctx.ctx.authorizationHeader)
 
       for {
         projectOpt <- projectPersistence.load(projectId)
       } yield {
-        projectOpt.getOrElse(throw InvalidProjectId(projectId))
+        projectOpt.getOrElse(throw InvalidProjectId(projectIdEncoder.fromEncodedString(projectId)))
       }
     }
   )
@@ -148,13 +153,14 @@ case class SchemaBuilderImpl(
     arguments = projectIdArguments,
     description = Some("generates a token for the given project"),
     resolve = (ctx) => {
-      val projectId    = ctx.args.raw.projectId
-      val nameAndStage = ProjectId.fromEncodedString(projectId)
-      verifyAuthOrThrow(nameAndStage.name, nameAndStage.stage, ctx.ctx.authorizationHeader)
+      val name      = ctx.args.raw.name
+      val stage     = ctx.args.raw.stage
+      val projectId = projectIdEncoder.toEncodedString(name, stage)
+      verifyAuthOrThrow(name, stage, ctx.ctx.authorizationHeader)
 
       for {
         projectOpt <- projectPersistence.load(projectId)
-        project    = projectOpt.getOrElse(throw InvalidProjectId(projectId))
+        project    = projectOpt.getOrElse(throw InvalidProjectId(projectIdEncoder.fromEncodedString(projectId)))
       } yield {
         dependencies.apiAuth.createToken(project.secrets)
       }
@@ -175,8 +181,8 @@ case class SchemaBuilderImpl(
       mutateAndGetPayload = (args, ctx) =>
         handleMutationResult {
           for {
-            project   <- getProjectOrThrow(args.projectId)
-            projectId = project.projectId
+            project   <- getProjectOrThrow(projectIdEncoder.toEncodedString(args.name, args.stage))
+            projectId = projectIdEncoder.fromEncodedString(project.id)
             _         = verifyAuthOrThrow(projectId.name, projectId.stage, ctx.ctx.authorizationHeader)
             result <- DeployMutation(
                        args = args,
@@ -201,7 +207,9 @@ case class SchemaBuilderImpl(
       typeName = "AddProject",
       inputFields = AddProjectField.inputFields,
       outputFields = sangria.schema.fields[SystemUserContext, AddProjectMutationPayload](
-        Field("project", OptionType(ProjectType.Type), resolve = (ctx: Context[SystemUserContext, AddProjectMutationPayload]) => ctx.value.project)
+        Field("project",
+              OptionType(ProjectType.Type(projectIdEncoder)),
+              resolve = (ctx: Context[SystemUserContext, AddProjectMutationPayload]) => ctx.value.project)
       ),
       mutateAndGetPayload = (args, ctx) =>
         handleMutationResult {
@@ -211,7 +219,7 @@ case class SchemaBuilderImpl(
             args = args,
             projectPersistence = projectPersistence,
             migrationPersistence = migrationPersistence,
-            persistencePlugin = dependencies.deployPersistencePlugin
+            persistencePlugin = dependencies.deployConnector
           ).execute
       }
     )
@@ -224,7 +232,9 @@ case class SchemaBuilderImpl(
       typeName = "DeleteProject",
       inputFields = DeleteProjectField.inputFields,
       outputFields = sangria.schema.fields[SystemUserContext, DeleteProjectMutationPayload](
-        Field("project", OptionType(ProjectType.Type), resolve = (ctx: Context[SystemUserContext, DeleteProjectMutationPayload]) => ctx.value.project)
+        Field("project",
+              OptionType(ProjectType.Type(projectIdEncoder)),
+              resolve = (ctx: Context[SystemUserContext, DeleteProjectMutationPayload]) => ctx.value.project)
       ),
       mutateAndGetPayload = (args, ctx) =>
         handleMutationResult {
@@ -233,7 +243,7 @@ case class SchemaBuilderImpl(
             args = args,
             projectPersistence = projectPersistence,
             invalidationPubSub = dependencies.invalidationPublisher,
-            persistencePlugin = dependencies.deployPersistencePlugin
+            persistencePlugin = dependencies.deployConnector
           ).execute
       }
     )
@@ -248,7 +258,7 @@ case class SchemaBuilderImpl(
 
   private def getProjectOrThrow(projectId: String): Future[Project] = {
     projectPersistence.load(projectId).map { projectOpt =>
-      projectOpt.getOrElse(throw InvalidProjectId(projectId))
+      projectOpt.getOrElse(throw InvalidProjectId(projectIdEncoder.fromEncodedString(projectId)))
     }
   }
 

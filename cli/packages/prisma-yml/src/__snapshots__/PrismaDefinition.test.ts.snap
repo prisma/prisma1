@@ -161,7 +161,7 @@ exports[`parseEndpoint work for minimal url 1`] = `
 Object {
   "clusterBaseUrl": "http://localhost:4466",
   "clusterName": "local",
-  "isPrivate": true,
+  "isPrivate": false,
   "local": true,
   "service": "default",
   "shared": false,
@@ -174,7 +174,7 @@ exports[`parseEndpoint work for url with service 1`] = `
 Object {
   "clusterBaseUrl": "http://localhost:4466",
   "clusterName": "local",
-  "isPrivate": true,
+  "isPrivate": false,
   "local": true,
   "service": "service-name",
   "shared": false,
@@ -187,7 +187,7 @@ exports[`parseEndpoint work for url with service and stage 1`] = `
 Object {
   "clusterBaseUrl": "http://localhost:4466",
   "clusterName": "local",
-  "isPrivate": true,
+  "isPrivate": false,
   "local": true,
   "service": "service-name",
   "shared": false,

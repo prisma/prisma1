@@ -8,7 +8,7 @@ class ClusterInfoSpec extends FlatSpec with Matchers with DeploySpecBase {
 
   "ClusterInfo query" should "return cluster version" in {
     val (project, _) = setupProject(basicTypesGql)
-    val nameAndStage = ProjectId.fromEncodedString(project.id)
+    val nameAndStage = testDependencies.projectIdEncoder.fromEncodedString(project.id)
     val result       = server.query(s"""
                                        |query {
                                        |  clusterInfo {

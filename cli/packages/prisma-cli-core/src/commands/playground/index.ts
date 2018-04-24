@@ -64,7 +64,9 @@ export default class Playground extends Command {
       if (fs.pathExistsSync(localPlaygroundPath) && !web) {
         const envPath = path.join(os.tmpdir(), `${randomString()}.json`)
         fs.writeFileSync(envPath, JSON.stringify(process.env))
-        const url = `graphql-playground://?cwd=${process.cwd()}&envPath=${envPath}&endpoint=${endpoint}`
+        const url = `graphql-playground://?cwd=${
+          this.config.cwd
+        }&envPath=${envPath}&endpoint=${endpoint}`
         opn(url, { wait: false })
         debug(url)
         debug(process.env)

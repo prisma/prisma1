@@ -31,11 +31,11 @@ export default class Init extends Command {
   async run() {
     const dirName = this.args!.dirName
     if (dirName) {
-      const newDefinitionDir = path.join(process.cwd(), dirName + '/')
+      const newDefinitionDir = path.join(this.config.cwd, dirName + '/')
       this.config.definitionDir = newDefinitionDir
       fs.mkdirpSync(newDefinitionDir)
     } else {
-      this.config.definitionDir = process.cwd()
+      this.config.definitionDir = this.config.cwd
     }
 
     await this.runInit()
@@ -70,7 +70,6 @@ Either try using a new directory name, or remove the files listed above.
       this.config,
     )
     const results = await endpointDialog.getEndpoint()
-    this.out.up(3)
 
     fs.copySync(
       path.join(__dirname, 'boilerplate', 'prisma.yml'),
@@ -86,7 +85,7 @@ Either try using a new directory name, or remove the files listed above.
         results.dockerComposeYml,
       )
     }
-    let relativeDir = path.relative(process.cwd(), this.config.definitionDir)
+    let relativeDir = path.relative(this.config.cwd, this.config.definitionDir)
     relativeDir = relativeDir.length === 0 ? '.' : relativeDir
 
     const definitionPath = path.join(this.config.definitionDir, 'prisma.yml')
@@ -97,11 +96,11 @@ Either try using a new directory name, or remove the files listed above.
 
     const dir = this.args!.dirName
     const dirString = dir
-      ? `Open the new folder via ${chalk.cyan(`$ cd ${dir}`)}. `
+      ? `Open the new folder via ${chalk.cyan(`$ cd ${dir}`)}.\n`
       : ``
 
     const deployString = results.cluster!.local
-      ? `Run ${chalk.cyan('docker-compose up -d')}. Then you `
+      ? `Run ${chalk.cyan('docker-compose up -d')}.\nThen you `
       : `You now `
 
     this.out.log(`\

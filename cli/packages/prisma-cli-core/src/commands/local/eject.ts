@@ -11,7 +11,7 @@ export default class Eject extends Command {
   // static group = 'local'
   static hidden = true
   async run() {
-    const newComposePath = path.join(process.cwd(), 'docker-compose.yml')
+    const newComposePath = path.join(this.config.cwd, 'docker-compose.yml')
     fs.copySync(
       path.join(__dirname, 'docker/docker-compose.yml'),
       newComposePath,
@@ -21,10 +21,10 @@ export default class Eject extends Command {
     const isWin = /^win/.test(process.platform)
     // const isWin = true
     if (isWin) {
-      newEnvrcPath = path.join(process.cwd(), 'env.bat')
+      newEnvrcPath = path.join(this.config.cwd, 'env.bat')
       fs.writeFileSync(newEnvrcPath, this.getWindowsBat())
     } else {
-      newEnvrcPath = path.join(process.cwd(), 'env')
+      newEnvrcPath = path.join(this.config.cwd, 'env')
       fs.copySync(path.join(__dirname, 'docker/env'), newEnvrcPath)
     }
     this.out.log('')

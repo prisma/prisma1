@@ -146,6 +146,9 @@ if [ $ymlVersionBefore != $ymlVersion ] || [ $coreChanged ] || [ $introspectionC
   sed -i.bak "s/CLUSTER_VERSION: [0-9]\{1,\}\.[0-9]\{1,\}/CLUSTER_VERSION: $nextDockerTag/g" src/commands/local/docker/docker-compose.yml
   sed -i.bak "s/image: prismagraphql\/prisma:[0-9]\{1,\}\.[0-9]\{1,\}/image: prismagraphql\/prisma:$nextDockerTag/g" src/commands/local/docker/docker-compose.yml
 
+  # new docker tag
+  sed -i.bak "s/image: prismagraphql\/prisma:[0-9]\{1,\}\.[0-9]\{1,\}/image: prismagraphql\/prisma:$nextDockerTag/g" src/util.ts
+
   yarn build
   if [[ $CIRCLE_TAG ]]; then
     npm version $(npm info prisma-cli-core version)

@@ -5,6 +5,7 @@ import com.prisma.shared.models.Model
 import com.prisma.shared.schema_dsl.SchemaDsl
 import org.scalatest._
 import play.api.libs.json._
+
 import scala.concurrent.duration._
 
 class SubscriptionsProtocolV05Spec extends FlatSpec with Matchers with SpecBase {
