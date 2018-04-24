@@ -29,9 +29,8 @@ class DateTimeImportExportSpec extends FlatSpec with Matchers with ApiBaseSpec w
     database.setup(project)
   }
 
-  override def beforeEach(): Unit = {
-    database.truncate(project.id)
-  }
+  override def beforeEach(): Unit = database.truncateProjectTables(project)
+
   val importer = new BulkImport(project)
 
   "DateTimeFormat" should "work" in {
@@ -41,8 +40,8 @@ class DateTimeImportExportSpec extends FlatSpec with Matchers with ApiBaseSpec w
 
     val utc                        = new DateTime(now).withZone(DateTimeZone.UTC)
     val utcString                  = dateTimeFormat.print(utc)
-    val utcStringOutput            = dateTimeFormat2.print(utc) + ".000Z"
-    val utcStringOutputOneSecLater = dateTimeFormat2.print(utc.plusSeconds(1)) + ".000Z"
+    val utcStringOutput            = dateTimeFormat2.print(utc) + "."
+    val utcStringOutputOneSecLater = dateTimeFormat2.print(utc.plusSeconds(1)) + "."
 
     val nodes = s"""{"valueType": "nodes", "values": [{"_typeName": "Model3", "id": "0", "a": "test", "updatedAt": "$utcString"}]}""".stripMargin.parseJson
 
@@ -50,10 +49,20 @@ class DateTimeImportExportSpec extends FlatSpec with Matchers with ApiBaseSpec w
 
     val res = server.query("query{model3s{createdAt, updatedAt}}", project).toString
 
+    println(utcStringOutput)
+
     val result = res match {
-      case exact if exact == s"""{"data":{"model3s":[{"createdAt":"$utcStringOutput","updatedAt":"$utcStringOutput"}]}}"""                => true
-      case delayed if delayed == s"""{"data":{"model3s":[{"createdAt":"$utcStringOutputOneSecLater","updatedAt":"$utcStringOutput"}]}}""" => true
-      case _                                                                                                                              => false
+      case exact
+          if exact.contains(s"""{"data":{"model3s":[{"createdAt":"$utcStringOutput""") && exact.contains(s"""Z","updatedAt":"${utcStringOutput}000Z"}]}}""") =>
+        true
+
+      case delayed
+          if delayed.contains(s"""{"data":{"model3s":[{"createdAt":"$utcStringOutputOneSecLater""") && delayed.contains(
+            s"""Z","updatedAt":"${utcStringOutput}000Z"}]}}""") =>
+        true
+
+      case _ =>
+        false
     }
 
     result should be(true)
@@ -70,7 +79,8 @@ class DateTimeImportExportSpec extends FlatSpec with Matchers with ApiBaseSpec w
     }
 
     database.setup(project)
-    database.truncate(project.id)
+    database.truncateProjectTables(project)
+
     val dataResolver: DataResolver = this.dataResolver(project)
 
     val nodes =

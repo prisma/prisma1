@@ -3,9 +3,9 @@ package com.prisma.rabbit
 import java.util.concurrent.{Executors, ThreadFactory}
 
 import com.prisma.errors.ErrorReporter
+import com.rabbitmq.client.{ConnectionFactory, Channel => RabbitChannel}
 
 import scala.util.Try
-import com.rabbitmq.client.{ConnectionFactory, Channel => RabbitChannel}
 
 object PlainRabbit {
   def connect(name: String, amqpUri: String, numberOfThreads: Int, qos: Option[Int])(implicit reporter: ErrorReporter): Try[RabbitChannel] = Try {

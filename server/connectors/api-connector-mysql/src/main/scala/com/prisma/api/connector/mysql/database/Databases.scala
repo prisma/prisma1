@@ -1,6 +1,7 @@
 package com.prisma.api.connector.mysql.database
 
-import com.typesafe.config.Config
+import com.prisma.config.DatabaseConfig
+import com.typesafe.config.{Config, ConfigFactory}
 import slick.jdbc.MySQLProfile.api._
 import slick.jdbc.MySQLProfile.backend.DatabaseDef
 
@@ -8,27 +9,33 @@ case class Databases(master: DatabaseDef, readOnly: DatabaseDef)
 
 object Databases {
   private lazy val dbDriver = new org.mariadb.jdbc.Driver
-  private val configRoot    = "clientDatabases"
 
-  def initialize(config: Config): Databases = {
-    import scala.collection.JavaConverters._
-    config.resolve()
+  def initialize(dbConfig: DatabaseConfig): Databases = {
+    val config   = typeSafeConfigFromDatabaseConfig(dbConfig)
+    val masterDb = Database.forConfig("database", config, driver = dbDriver)
+    val dbs = Databases(
+      master = masterDb,
+      readOnly = masterDb //if (config.hasPath(readOnlyPath)) readOnlyDb else masterDb
+    )
 
-    val databasesMap = for {
-      dbName <- asScalaSet(config.getObject(configRoot).keySet())
-    } yield {
-      val readOnlyPath    = s"$configRoot.$dbName.readonly"
-      val masterDb        = Database.forConfig(s"$configRoot.$dbName.master", config, driver = dbDriver)
-      lazy val readOnlyDb = Database.forConfig(readOnlyPath, config, driver = dbDriver)
+    dbs
+  }
 
-      val dbs = Databases(
-        master = masterDb,
-        readOnly = if (config.hasPath(readOnlyPath)) readOnlyDb else masterDb
-      )
-
-      dbName -> dbs
-    }
-
-    databasesMap.head._2
+  def typeSafeConfigFromDatabaseConfig(dbConfig: DatabaseConfig): Config = {
+    ConfigFactory
+      .parseString(s"""
+        |database {
+        |  connectionInitSql="set names utf8mb4"
+        |  dataSourceClass = "slick.jdbc.DriverDataSource"
+        |  properties {
+        |    url = "jdbc:mysql://${dbConfig.host}:${dbConfig.port}/?autoReconnect=true&useSSL=false&serverTimeZone=UTC&useUnicode=true&characterEncoding=UTF-8&socketTimeout=60000&usePipelineAuth=false"
+        |    user = ${dbConfig.user}
+        |    password = ${dbConfig.password.getOrElse("")}
+        |  }
+        |  numThreads = ${dbConfig.connectionLimit.getOrElse(10)}
+        |  connectionTimeout = 5000
+        |}
+      """.stripMargin)
+      .resolve
   }
 }

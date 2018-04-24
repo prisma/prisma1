@@ -3,41 +3,33 @@ package com.prisma.deploy.specutils
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
 import com.prisma.auth.AuthImpl
+import com.prisma.config.ConfigLoader
+import com.prisma.connectors.utils.ConnectorUtils
 import com.prisma.deploy.DeployDependencies
-import com.prisma.deploy.connector.DeployConnector
-import com.prisma.deploy.connector.mysql.MySqlDeployConnector
 import com.prisma.deploy.migration.validation.SchemaError
 import com.prisma.deploy.schema.mutations.{FunctionInput, FunctionValidator}
 import com.prisma.deploy.server.auth.DummyClusterAuth
 import com.prisma.errors.{BugsnagErrorReporter, ErrorReporter}
 import com.prisma.messagebus.pubsub.inmemory.InMemoryAkkaPubSub
-import com.prisma.shared.models.Project
+import com.prisma.shared.models.{Project, ProjectIdEncoder}
 
 case class DeployTestDependencies()(implicit val system: ActorSystem, val materializer: ActorMaterializer) extends DeployDependencies {
+  import system.dispatcher
+
   override implicit def self: DeployDependencies = this
 
+  val config = ConfigLoader.load()
+
   implicit val reporter: ErrorReporter    = BugsnagErrorReporter(sys.env.getOrElse("BUGSNAG_API_KEY", ""))
-  override lazy val migrator              = TestMigrator(migrationPersistence, deployPersistencePlugin.deployMutactionExecutor)
+  override lazy val migrator              = TestMigrator(migrationPersistence, deployConnector.deployMutactionExecutor)
   override lazy val clusterAuth           = DummyClusterAuth()
   override lazy val invalidationPublisher = InMemoryAkkaPubSub[String]()
 
   override def apiAuth = AuthImpl
 
-  override def deployPersistencePlugin: DeployConnector = {
-    import slick.jdbc.MySQLProfile.api._
-    val sqlInternalHost     = sys.env("SQL_CLIENT_HOST")
-    val sqlInternalPort     = sys.env("SQL_CLIENT_PORT")
-    val sqlInternalUser     = sys.env("SQL_CLIENT_USER")
-    val sqlInternalPassword = sys.env("SQL_CLIENT_PASSWORD")
-    val clientDb = Database.forURL(
-      url =
-        s"jdbc:mariadb://$sqlInternalHost:$sqlInternalPort?autoReconnect=true&useSSL=false&serverTimeZone=UTC&useUnicode=true&characterEncoding=UTF-8&usePipelineAuth=false",
-      user = sqlInternalUser,
-      password = sqlInternalPassword,
-      driver = "org.mariadb.jdbc.Driver"
-    )
-    MySqlDeployConnector(clientDatabase = clientDb)(system.dispatcher)
-  }
+  def deployConnector = ConnectorUtils.loadDeployConnector(config.copy(databases = config.databases.map(_.copy(pooled = false))))
+
+  override def projectIdEncoder: ProjectIdEncoder = deployConnector.projectIdEncoder
 
   override def functionValidator: FunctionValidator = (project: Project, fn: FunctionInput) => {
     if (fn.name == "failing") Vector(SchemaError(`type` = "model", field = "field", description = "error")) else Vector.empty

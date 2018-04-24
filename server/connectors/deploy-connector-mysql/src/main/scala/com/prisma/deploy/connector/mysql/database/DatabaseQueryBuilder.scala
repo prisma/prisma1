@@ -1,8 +1,8 @@
 package com.prisma.deploy.connector.mysql.database
 
 import com.prisma.shared.models.{Field, Model}
-import slick.jdbc.{PositionedParameters, SQLActionBuilder}
 import slick.jdbc.MySQLProfile.api._
+import slick.jdbc.{PositionedParameters, SQLActionBuilder}
 
 object DatabaseQueryBuilder {
 
