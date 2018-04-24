@@ -6,7 +6,7 @@ case class ProjectIdEncoder(stageSeparator: Char) {
   val workspaceSeparator: Char     = '~'
   private val defaultService       = "default"
   private val defaultStage         = "default"
-  val reservedServiceAndStageNames = Seq("cluster", "export", "import")
+  val reservedServiceAndStageNames = Seq("cluster", "management", "export", "import")
 
   def fromEncodedString(str: String): ProjectId = {
     val parts = str.split(stageSeparator)

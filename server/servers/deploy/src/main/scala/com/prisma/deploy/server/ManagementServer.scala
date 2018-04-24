@@ -52,7 +52,7 @@ case class ManagementServer(prefix: String = "", server2serverSecret: Option[Str
   }
 
   val innerRoutes = extractRequest { req =>
-    val requestId            = requestPrefix + ":cluster:" + createCuid()
+    val requestId            = requestPrefix + ":management:" + createCuid()
     val requestBeginningTime = System.currentTimeMillis()
 
     def logRequestEnd(projectId: Option[String] = None, clientId: Option[String] = None) = {
