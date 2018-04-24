@@ -11,6 +11,8 @@ object InternalDatabaseSchema {
 
   val createDatabaseAction = sql"""CREATE DATABASE "#$database";""".as[Option[String]]
 
+  // todo migration concept from older versions
+
   def createSchemaActions(recreate: Boolean): DBIOAction[Unit, NoStream, Effect] = {
     if (recreate) {
       DBIO.seq(dropAction, setupActions)

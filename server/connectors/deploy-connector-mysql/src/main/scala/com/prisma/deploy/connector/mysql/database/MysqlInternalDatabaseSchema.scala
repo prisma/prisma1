@@ -11,11 +11,11 @@ object MysqlInternalDatabaseSchema {
     }
   }
 
-  lazy val dropAction = DBIO.seq(sqlu"DROP SCHEMA IF EXISTS `graphcool`;")
+  lazy val dropAction = DBIO.seq(sqlu"DROP SCHEMA IF EXISTS `prisma`;")
 
   lazy val setupActions = DBIO.seq(
-    sqlu"CREATE SCHEMA IF NOT EXISTS `graphcool` DEFAULT CHARACTER SET latin1;",
-    sqlu"USE `graphcool`;",
+    sqlu"CREATE SCHEMA IF NOT EXISTS `prisma` DEFAULT CHARACTER SET latin1;",
+    sqlu"USE `prisma`;",
     // Project
     sqlu"""
       CREATE TABLE IF NOT EXISTS `Project` (
