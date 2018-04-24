@@ -18,6 +18,9 @@ static=$(printf "    - label: \":mysql: MySql API connector\"
     # Libs are not specific to a connector, simply run with mysql
     - label: \":scala: libs\"
       command: cd server && ./.buildkite/scripts/test.sh libs mysql
+
+    - label: \":scala: subscriptions\"
+      command: cd server && ./.buildkite/scripts/test.sh subscriptions mysql
 ")
 
 optional=""
@@ -60,9 +63,6 @@ do
 
     - label: \":scala: api [$connector]\"
       command: cd server && ./.buildkite/scripts/test.sh api $connector
-
-    - label: \":scala: subscriptions [$connector]\"
-      command: cd server && ./.buildkite/scripts/test.sh subscriptions $connector
 
     - label: \":scala: workers [$connector]\"
       command: cd server && ./.buildkite/scripts/test.sh workers $connector
