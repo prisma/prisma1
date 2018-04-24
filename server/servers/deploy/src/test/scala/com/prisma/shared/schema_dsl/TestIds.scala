@@ -4,7 +4,7 @@ trait TestIds {
 
   val testClientId           = "test-client-id"
   val testAuth0Id            = "auth0|580f939ba1bc2cc066caa46b"
-  val testProjectId          = s"testProjectId"
+  val testProjectId          = "default@default"
   val testEmail              = "test-email"
   val testPassword           = "test-password"
   val testResetPasswordToken = "test-reset-password-token"
