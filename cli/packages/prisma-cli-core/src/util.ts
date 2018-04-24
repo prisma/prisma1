@@ -53,7 +53,7 @@ export const defaultDockerCompose = `\
 version: '3'
 services:
   prisma:
-    image: prismagraphql/prisma:1.7-beta
+    image: prismagraphql/prisma:1.7
     restart: always
     ports:
     - "4466:4466"
