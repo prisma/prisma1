@@ -6,6 +6,7 @@ import { GraphQLClient } from 'graphql-request'
 import chalk from 'chalk'
 import { isLocal } from './Environment'
 import { IOutput } from './Output'
+import { getProxyAgent } from './utils/getProxyAgent'
 
 export class Cluster {
   name: string
@@ -95,7 +96,8 @@ export class Cluster {
       headers: {
         Authorization: `Bearer ${this.clusterSecret}`,
       },
-    })
+      agent: getProxyAgent(cloudApiEndpoint),
+    } as any)
   }
 
   async generateClusterToken(
@@ -193,7 +195,8 @@ export class Cluster {
             }
           }`,
         }),
-      })
+        agent: getProxyAgent(this.getDeployEndpoint()),
+      } as any)
 
       const { data } = await result.json()
       return data.clusterInfo.version

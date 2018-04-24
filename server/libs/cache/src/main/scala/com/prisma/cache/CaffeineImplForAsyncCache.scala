@@ -3,10 +3,10 @@ package com.prisma.cache
 import java.util.concurrent.{CompletableFuture, Executor}
 import java.util.function.BiFunction
 
-import com.github.benmanes.caffeine.cache.{AsyncCacheLoader, Caffeine, AsyncLoadingCache => AsyncCaffeineCache, Cache => CaffeineCache}
+import com.github.benmanes.caffeine.cache.{AsyncCacheLoader, Caffeine, AsyncLoadingCache => AsyncCaffeineCache}
+
 import scala.compat.java8.FunctionConverters._
 import scala.compat.java8.FutureConverters._
-
 import scala.concurrent.{ExecutionContext, Future}
 
 object CaffeineImplForAsyncCache {

@@ -1,9 +1,9 @@
 package com.prisma.rabbit
 
 import java.text.SimpleDateFormat
-import java.util.{Date, UUID}
 import java.util.concurrent.ThreadFactory
 import java.util.concurrent.atomic.AtomicLong
+import java.util.{Date, UUID}
 
 object Utils {
   def timestamp: String = {

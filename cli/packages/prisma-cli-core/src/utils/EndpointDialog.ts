@@ -198,7 +198,7 @@ export class EndpointDialog {
           user: type === 'mysql' ? 'root' : 'prisma',
           password: 'prisma',
           type,
-          host: 'db',
+          host: 'localhost',
           port: defaultPorts[type],
         })
         dockerComposeYml += this.printDatabaseService(type)

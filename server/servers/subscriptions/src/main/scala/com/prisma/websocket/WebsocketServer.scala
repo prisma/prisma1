@@ -41,7 +41,7 @@ case class WebsocketServer(dependencies: SubscriptionDependencies, prefix: Strin
   val innerRoutes =
     pathPrefix(Segments(min = 0, max = 3)) { segments =>
       get {
-        val projectId = ProjectId.fromSegments(segments).asString
+        val projectId = dependencies.projectIdEncoder.toEncodedString(dependencies.projectIdEncoder.fromSegments(segments))
 
         extractUpgradeToWebSocket { upgrade =>
           upgrade.requestedProtocols.headOption match {

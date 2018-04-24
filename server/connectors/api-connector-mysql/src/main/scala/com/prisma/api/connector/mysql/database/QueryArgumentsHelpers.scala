@@ -93,8 +93,8 @@ object QueryArgumentsHelpers {
 
         //--- non recursive
 
-        // the boolean filter comes from precomputed fields
-        case FilterElement(key, value, None, filterName) if filterName == "boolean" => // todo probably useless
+        // the boolean filter comes from precomputed fields that are replace in the QueryTransformer
+        case FilterElement(key, value, None, filterName) if filterName == "boolean" =>
           value match {
             case true  => Some(sql"TRUE")
             case false => Some(sql"FALSE")
@@ -119,16 +119,16 @@ object QueryArgumentsHelpers {
           Some(sql"`#$projectId`.`#$tableName`.`#${field.name}` NOT LIKE " ++ escapeUnsafeParam(s"%${GCValueExtractor.fromGCValue(value)}"))
 
         case FinalValueFilter(key, value, field, filterName) if filterName == "_lt" =>
-          Some(sql"`#$projectId`.`#$tableName`.`#${field.name}` < " ++ gcValueToSQLBuilder(value))
+          Some(sql"`#$projectId`.`#$tableName`.`#${field.name}` < $value")
 
         case FinalValueFilter(key, value, field, filterName) if filterName == "_gt" =>
-          Some(sql"`#$projectId`.`#$tableName`.`#${field.name}` > " ++ gcValueToSQLBuilder(value))
+          Some(sql"`#$projectId`.`#$tableName`.`#${field.name}` > $value")
 
         case FinalValueFilter(key, value, field, filterName) if filterName == "_lte" =>
-          Some(sql"`#$projectId`.`#$tableName`.`#${field.name}` <= " ++ gcValueToSQLBuilder(value))
+          Some(sql"`#$projectId`.`#$tableName`.`#${field.name}` <= $value")
 
         case FinalValueFilter(key, value, field, filterName) if filterName == "_gte" =>
-          Some(sql"`#$projectId`.`#$tableName`.`#${field.name}` >= " ++ gcValueToSQLBuilder(value))
+          Some(sql"`#$projectId`.`#$tableName`.`#${field.name}` >= $value")
 
         case FinalValueFilter(key, NullGCValue, field, filterName) if filterName == "_in" =>
           Some(sql"false")
@@ -152,13 +152,13 @@ object QueryArgumentsHelpers {
           Some(sql"`#$projectId`.`#$tableName`.`#${field.name}` IS NOT NULL")
 
         case FinalValueFilter(key, value, field, filterName) if filterName == "_not" =>
-          Some(sql"`#$projectId`.`#$tableName`.`#${field.name}` != " ++ gcValueToSQLBuilder(value))
+          Some(sql"`#$projectId`.`#$tableName`.`#${field.name}` != $value")
 
         case FinalValueFilter(key, NullGCValue, field, filterName) =>
           Some(sql"`#$projectId`.`#$tableName`.`#$key` IS NULL")
 
         case FinalValueFilter(key, value, field, filterName) =>
-          Some(sql"`#$projectId`.`#$tableName`.`#$key` = " ++ gcValueToSQLBuilder(value))
+          Some(sql"`#$projectId`.`#$tableName`.`#$key` = $value")
         case FinalRelationFilter(key, null, field, filterName) =>
           if (field.isList) throw APIErrors.FilterCannotBeNullOnToManyField(field.name)
 
@@ -177,6 +177,6 @@ object QueryArgumentsHelpers {
     if (sqlParts.isEmpty) None else combineByAnd(sqlParts)
   }
 
-  def generateInStatement(items: Vector[GCValue]) = sql" IN (" ++ combineByComma(items.map(gcValueToSQLBuilder)) ++ sql")"
+  def generateInStatement(items: Vector[GCValue]) = sql" IN (" ++ combineByComma(items.map(v => sql"$v")) ++ sql")"
 
 }

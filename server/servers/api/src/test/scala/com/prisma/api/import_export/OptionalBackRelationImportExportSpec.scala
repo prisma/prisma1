@@ -30,9 +30,7 @@ class OptionalBackRelationImportExportSpec extends FlatSpec with Matchers with A
     database.setup(project)
   }
 
-  override def beforeEach(): Unit = {
-    database.truncate(project.id)
-  }
+  override def beforeEach(): Unit = database.truncateProjectTables(project)
 
   val importer                   = new BulkImport(project)
   val exporter                   = new BulkExport(project)

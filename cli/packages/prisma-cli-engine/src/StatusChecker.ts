@@ -4,7 +4,7 @@ import * as path from 'path'
 import { spawn } from 'child_process'
 import * as fetch from 'isomorphic-fetch'
 import * as fs from 'fs-extra'
-import { Environment } from 'prisma-yml'
+import { Environment, getProxyAgent } from 'prisma-yml'
 import * as os from 'os'
 import { getIsGlobal } from './utils/isGlobal'
 import * as serializeError from 'serialize-error'
@@ -153,6 +153,7 @@ async function requestWithTimeout(input) {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify(input),
+        agent: getProxyAgent('https://stats.prismagraphql.com'),
       },
     )
     const json = await result.json()

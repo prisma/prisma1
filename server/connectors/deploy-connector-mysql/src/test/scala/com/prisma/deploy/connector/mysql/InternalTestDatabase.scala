@@ -1,5 +1,6 @@
 package com.prisma.deploy.connector.mysql
 
+import com.prisma.config.ConfigLoader
 import com.prisma.deploy.connector.mysql.database.InternalDatabaseSchema
 import com.prisma.utils.await.AwaitUtils
 import slick.dbio.Effect.Read
@@ -10,7 +11,8 @@ import slick.jdbc.meta.MTable
 class InternalTestDatabase extends AwaitUtils {
   import scala.concurrent.ExecutionContext.Implicits.global
 
-  val databaseDefs         = InternalDatabaseDefs()
+  val config               = ConfigLoader.load()
+  val databaseDefs         = InternalDatabaseDefs(config.databases.head.copy(pooled = false))
   val internalDatabaseRoot = databaseDefs.internalDatabaseRoot
   val internalDatabase     = databaseDefs.internalDatabase
 

@@ -5,7 +5,7 @@ import java.util.concurrent.atomic.AtomicInteger
 import akka.actor.{Actor, ActorSystem, Props}
 import akka.stream.ActorMaterializer
 import com.prisma.messagebus.pubsub.PubSubProtocol.Publish
-import com.prisma.messagebus.pubsub.{IntermediateCallbackActor, Message, PubSubRouterAlt, PubSubRouter}
+import com.prisma.messagebus.pubsub.{IntermediateCallbackActor, Message}
 import org.scalatest.WordSpecLike
 
 import scala.reflect.ClassTag

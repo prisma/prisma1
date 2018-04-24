@@ -115,7 +115,6 @@ case class Project(
   def relations = schema.relations
   def enums     = schema.enums
 
-  lazy val projectId: ProjectId       = ProjectId.fromEncodedString(id)
   val serverSideSubscriptionFunctions = functions.collect { case x: ServerSideSubscriptionFunction => x }
 
 }

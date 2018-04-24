@@ -2,7 +2,7 @@ package com.prisma.deploy.specutils
 
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
-import com.prisma.shared.models.{Migration, Project}
+import com.prisma.shared.models.{Migration, Project, ProjectId}
 import com.prisma.utils.await.AwaitUtils
 import com.prisma.utils.json.PlayJsonExtensions
 import cool.graph.cuid.Cuid
@@ -18,7 +18,7 @@ trait DeploySpecBase extends BeforeAndAfterEach with BeforeAndAfterAll with Awai
   implicit lazy val testDependencies: DeployTestDependencies = DeployTestDependencies()
 
   val server            = DeployTestServer()
-  val internalDB        = testDependencies.deployPersistencePlugin
+  val internalDB        = testDependencies.deployConnector
   val projectsToCleanUp = new ArrayBuffer[String]
 
   val basicTypesGql =
@@ -30,20 +30,20 @@ trait DeploySpecBase extends BeforeAndAfterEach with BeforeAndAfterAll with Awai
 
   override protected def beforeAll(): Unit = {
     super.beforeAll()
-    testDependencies.deployPersistencePlugin.initialize().await()
+    testDependencies.deployConnector.initialize().await()
   }
 
   override protected def afterAll(): Unit = {
     super.afterAll()
 //    projectsToCleanUp.foreach(internalDB.deleteProjectDatabase)
-    testDependencies.deployPersistencePlugin.shutdown().await()
+    testDependencies.deployConnector.shutdown().await()
   }
 
   override protected def beforeEach(): Unit = {
     super.beforeEach()
 //    projectsToCleanUp.foreach(internalDB.deleteProjectDatabase)
 //    projectsToCleanUp.clear()
-    testDependencies.deployPersistencePlugin.reset().await
+    testDependencies.deployConnector.reset().await
   }
 
   def setupProject(
@@ -53,8 +53,8 @@ trait DeploySpecBase extends BeforeAndAfterEach with BeforeAndAfterAll with Awai
       secrets: Vector[String] = Vector.empty
   ): (Project, Migration) = {
 
-//    val projectId = name + "@" + stage
-//    projectsToCleanUp += projectId
+    val projectId = testDependencies.projectIdEncoder.fromSegments(List(name, stage))
+    projectsToCleanUp :+ projectId
     server.addProject(name, stage)
     server.deploySchema(name, stage, schema.stripMargin, secrets)
   }

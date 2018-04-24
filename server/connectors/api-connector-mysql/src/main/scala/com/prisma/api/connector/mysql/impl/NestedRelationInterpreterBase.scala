@@ -3,12 +3,12 @@ package com.prisma.api.connector.mysql.impl
 import java.sql.SQLException
 
 import com.prisma.api.connector.mysql.DatabaseMutactionInterpreter
+import com.prisma.api.connector.mysql.database.MySqlApiDatabaseMutationBuilder._
+import com.prisma.api.connector.mysql.database.ErrorMessageParameterHelper.parameterString
 import com.prisma.api.connector.{ModelEdge, NodeEdge, Path}
-import com.prisma.api.connector.mysql.database.DatabaseMutationBuilder._
 import com.prisma.api.schema.APIErrors.RequiredRelationWouldBeViolated
 import com.prisma.shared.models.Project
 import slick.dbio.{DBIOAction, Effect, NoStream}
-import com.prisma.api.connector.mysql.database.ErrorMessageParameterHelper.parameterString
 
 trait NestedRelationInterpreterBase extends DatabaseMutactionInterpreter {
 

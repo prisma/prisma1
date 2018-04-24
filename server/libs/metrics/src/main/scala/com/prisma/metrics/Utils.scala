@@ -1,6 +1,6 @@
 package com.prisma.metrics
 
-import com.twitter.util.{Return, Throw, Future => TwitterFuture, Promise => TwitterPromise}
+import com.twitter.util.{Return, Throw, Future => TwitterFuture}
 
 import scala.concurrent.{ExecutionContext, Future => ScalaFuture, Promise => ScalaPromise}
 import scala.util.Try

@@ -36,12 +36,10 @@ class ListValueImportExportSpec extends FlatSpec with Matchers with ApiBaseSpec 
     database.setup(project)
   }
 
-  override def beforeEach(): Unit = {
-    database.truncate(project.id)
-  }
-  val importer                   = new BulkImport(project)
-  val exporter                   = new BulkExport(project)
-  val dataResolver: DataResolver = this.dataResolver(project)
+  override def beforeEach(): Unit = database.truncateProjectTables(project)
+  val importer                    = new BulkImport(project)
+  val exporter                    = new BulkExport(project)
+  val dataResolver: DataResolver  = this.dataResolver(project)
 
   "Importing ListValues for a wrong Id" should "fail" in {
 
@@ -58,7 +56,7 @@ class ListValueImportExportSpec extends FlatSpec with Matchers with ApiBaseSpec 
         |]}
         |""".stripMargin.parseJson
 
-    importer.executeImport(lists).await().toString should include("Cannot add or update a child row: a foreign key constraint fails ")
+    importer.executeImport(lists).await().toString should include("Failure inserting into listTable Model0_stringList for the id 3 for value ")
   }
 
   "Exporting nodes" should "work (with filesize limit set to 1000 for test) and preserve the order of items" in {

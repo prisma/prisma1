@@ -35,7 +35,7 @@ class AddProjectMutationSpec extends FlatSpec with Matchers with DeploySpecBase 
 
   "AddProjectMutation" should "fail if a project already exists" in {
     val (project, _) = setupProject(basicTypesGql)
-    val nameAndStage = ProjectId.fromEncodedString(project.id)
+    val nameAndStage = testDependencies.projectIdEncoder.fromEncodedString(project.id)
     server.queryThatMustFail(
       s"""
        |mutation {
@@ -55,7 +55,7 @@ class AddProjectMutationSpec extends FlatSpec with Matchers with DeploySpecBase 
   }
 
   "AddProjectMutation" should "fail if a service name is reserved" in {
-    ProjectId.reservedServiceAndStageNames.foreach { reserved =>
+    testDependencies.projectIdEncoder.reservedServiceAndStageNames.foreach { reserved =>
       server.queryThatMustFail(
         s"""
            |mutation {
@@ -76,7 +76,7 @@ class AddProjectMutationSpec extends FlatSpec with Matchers with DeploySpecBase 
   }
 
   "AddProjectMutation" should "fail if a stage name is reserved" in {
-    ProjectId.reservedServiceAndStageNames.foreach { reserved =>
+    testDependencies.projectIdEncoder.reservedServiceAndStageNames.foreach { reserved =>
       server.queryThatMustFail(
         s"""
            |mutation {

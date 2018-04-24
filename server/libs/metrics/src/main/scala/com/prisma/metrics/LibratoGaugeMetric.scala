@@ -4,6 +4,7 @@ import java.util.concurrent.atomic.AtomicLong
 
 import akka.actor.ActorSystem
 import com.librato.metrics.client._
+
 import scala.concurrent.duration._
 
 case class LibratoGaugeMetric(

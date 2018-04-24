@@ -15,7 +15,9 @@ trait DataResolver {
 
   def resolveByUnique(where: NodeSelector): Future[Option[PrismaNode]]
 
-  def countByModel(model: Model, whereFilter: Option[DataItemFilterCollection] = None): Future[Int] //todo
+  def countByTable(table: String, whereFilter: Option[DataItemFilterCollection] = None): Future[Int]
+
+  def countByModel(model: Model, whereFilter: Option[DataItemFilterCollection] = None): Future[Int] = countByTable(model.name, whereFilter)
 
   def batchResolveByUnique(model: Model, fieldName: String, values: Vector[GCValue]): Future[Vector[PrismaNode]]
 

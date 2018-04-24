@@ -12,11 +12,11 @@ import {
   CloudTokenRequestPayload,
 } from '../types/common'
 
-import { GraphQLClient, request } from 'graphql-request'
+import { GraphQLClient } from 'graphql-request'
 import { omit, flatMap, flatten } from 'lodash'
 import { Config } from '../Config'
 import { getFastestRegion } from './ping'
-import { Environment, Cluster, FunctionInput } from 'prisma-yml'
+import { Environment, Cluster, FunctionInput, getProxyAgent } from 'prisma-yml'
 import { Output } from '../index'
 import chalk from 'chalk'
 import { introspectionQuery } from './introspectionQuery'
@@ -135,11 +135,14 @@ export class Client {
         workspaceSlug,
         stageName,
       )
+      const agent = getProxyAgent(cluster.getDeployEndpoint())
+      console.log({ agent })
       this.clusterClient = new GraphQLClient(cluster.getDeployEndpoint(), {
         headers: {
           Authorization: `Bearer ${token}`,
         },
-      })
+        agent,
+      } as any)
     } catch (e) {
       if (e.message.includes('Not authorized')) {
         await this.login()
@@ -155,7 +158,8 @@ export class Client {
           headers: {
             Authorization: `Bearer ${token}`,
           },
-        })
+          agent: getProxyAgent(cluster.getDeployEndpoint()),
+        } as any)
       }
     }
   }
@@ -223,6 +227,7 @@ export class Client {
   get cloudClient(): GraphQLClient {
     const options = {
       headers: {},
+      agent: getProxyAgent(this.config.cloudApiEndpoint),
     }
     if (this.env.cloudSessionKey) {
       options.headers = {
@@ -261,7 +266,8 @@ export class Client {
       ),
       {
         headers,
-      },
+        agent: getProxyAgent(this.config.cloudApiEndpoint),
+      } as any,
     )
     return client.request(introspectionQuery)
   }
@@ -286,7 +292,8 @@ export class Client {
       ),
       {
         headers,
-      },
+        agent: getProxyAgent(this.config.cloudApiEndpoint),
+      } as any,
     )
     return client.request(query)
   }
@@ -312,7 +319,8 @@ export class Client {
         'Content-Type': 'application/json',
       },
       body: exportData,
-    })
+      agent: getProxyAgent(endpoint),
+    } as any)
 
     const text = await result.text()
     try {
@@ -342,7 +350,8 @@ export class Client {
         'Content-Type': 'application/json',
       },
       body: exportData,
-    })
+      agent: getProxyAgent(endpoint),
+    } as any)
 
     const text = await result.text()
     try {
@@ -358,22 +367,22 @@ export class Client {
     token?: string,
     workspaceSlug?: string,
   ): Promise<void> {
-    const result = await fetch(
+    const endpoint =
       this.env.activeCluster.getApiEndpoint(serviceName, stage, workspaceSlug) +
-        '/private',
-      {
-        method: 'post',
-        headers: {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          query: `mutation {
+      '/private'
+    const result = await fetch(endpoint, {
+      method: 'post',
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        query: `mutation {
           resetData
         }`,
-        }),
-      },
-    )
+      }),
+      agent: getProxyAgent(endpoint),
+    } as any)
 
     const text = await result.text()
     try {
@@ -854,11 +863,13 @@ export class Client {
   async waitForLocalDocker(endpoint: string): Promise<void> {
     // dont send any auth information when running the authenticateCustomer mutation
     let valid = false
+    const client = new GraphQLClient(endpoint, {
+      agent: getProxyAgent(endpoint),
+    } as any)
     while (!valid) {
       try {
         debug('requesting', endpoint)
-        await request(
-          endpoint,
+        await client.request(
           `
             {
               __schema {
@@ -909,10 +920,12 @@ export class Client {
     token: string,
   ): Promise<AuthenticateCustomerPayload> {
     // dont send any auth information when running the authenticateCustomer mutation
-    const result = await request<{
+    const client = new GraphQLClient(endpoint, {
+      agent: getProxyAgent(endpoint),
+    } as any)
+    const result = await client.request<{
       authenticateCustomer: AuthenticateCustomerPayload
     }>(
-      endpoint,
       `
       mutation ($token: String!) {
         authenticateCustomer(input: {

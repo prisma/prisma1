@@ -1,5 +1,6 @@
 package com.prisma.deploy.schema.mutations
 
+import com.prisma.deploy.DeployDependencies
 import com.prisma.deploy.connector.{DeployConnector, ProjectPersistence}
 import com.prisma.deploy.schema.InvalidProjectId
 import com.prisma.messagebus.PubSubPublisher
@@ -14,10 +15,12 @@ case class DeleteProjectMutation(
     invalidationPubSub: PubSubPublisher[String],
     persistencePlugin: DeployConnector
 )(
-    implicit ec: ExecutionContext
+    implicit ec: ExecutionContext,
+    dependencies: DeployDependencies
 ) extends Mutation[DeleteProjectMutationPayload] {
 
-  val projectId = ProjectId.toEncodedString(name = args.name, stage = args.stage)
+  val projectIdEncoder = dependencies.projectIdEncoder
+  val projectId        = projectIdEncoder.toEncodedString(name = args.name, stage = args.stage)
 
   override def execute: Future[MutationResult[DeleteProjectMutationPayload]] = {
     for {
@@ -33,7 +36,7 @@ case class DeleteProjectMutation(
 
   private def validate(project: Option[Project]): Project = {
     project match {
-      case None    => throw InvalidProjectId(projectId)
+      case None    => throw InvalidProjectId(projectIdEncoder.fromEncodedString(projectId))
       case Some(p) => p
     }
   }
