@@ -75,7 +75,6 @@ const databaseServiceDefinitions = {
     image: mysql:5.7
     restart: always
     environment:
-      MYSQL_USER: prisma
       MYSQL_ROOT_PASSWORD: prisma
 `,
 }
@@ -198,7 +197,7 @@ export class EndpointDialog {
           user: type === 'mysql' ? 'root' : 'prisma',
           password: 'prisma',
           type,
-          host: 'localhost',
+          host: 'db',
           port: defaultPorts[type],
         })
         dockerComposeYml += this.printDatabaseService(type)
