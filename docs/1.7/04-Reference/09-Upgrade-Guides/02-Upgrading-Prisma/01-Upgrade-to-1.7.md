@@ -107,6 +107,8 @@ hooks:
     - graphql codegen
 ```
 
+> **Note**: To use the `graphql codegen` command, you need to install the current _beta_ release of the GraphQL CLI:  `npm install -g graphql-cli@beta`.
+
 ## Prisma CLI
 
 ### Deprecating `local` commands
@@ -136,7 +138,7 @@ services:
             connector: mysql  # or `postgres`
             managementApiSecret: my-server-secret-123
             active: true
-            host: localhost
+            host: db
             port: 3306        # or `5432` for `postgres`
             user: root
             password: prisma
@@ -181,7 +183,7 @@ services:
             connector: mysql  # or `postgres`
             managementApiSecret: my-server-secret-123
             active: true
-            host: localhost
+            host: db
             port: 3306        # or `5432` for `postgres`
             user: root
             password: prisma

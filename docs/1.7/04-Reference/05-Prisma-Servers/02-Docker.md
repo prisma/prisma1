@@ -52,7 +52,7 @@ services:
             connector: mysql  # or `postgres`
             managementApiSecret: my-server-secret-123
             active: true
-            host: localhost
+            host: db
             port: 3306        # or `5432` for `postgres`
             user: root
             password: prisma
