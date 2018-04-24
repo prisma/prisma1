@@ -150,7 +150,12 @@ export class CLI {
         }
         this.setRavenUserContext()
         const checker = getStatusChecker()!
-        checker.checkStatus(id, this.cmd.args, this.cmd.flags, this.cmd.argv)
+        checker.checkStatus(
+          foundCommand.command ? id : id.split(':')[0],
+          this.cmd.args,
+          this.cmd.flags,
+          this.cmd.argv,
+        )
 
         if (process.env.NOCK_WRITE_RESPONSE_CLI === 'true') {
           const requests = require('nock').recorder.play()
