@@ -5,6 +5,12 @@ description: Learn how to deploy your Prisma database service to Digital Ocean m
 
 # Digital Ocean (manual)
 
+<InfoBox type=warning>
+
+This tutorial only applies to Prisma version lower than 1.7 and will be updated soon.
+
+</InfoBox>
+
 This section describes how to set up a fully functioning Prisma server on Digital Ocean in less than 20 minutes.
 
 In the following procedure you will connect to your droplet with ssh, and manually install all required dependencies. Most users should use the procedure described in [Digital Ocean (Docker Machine)](!alias-texoo9aemu) instead.

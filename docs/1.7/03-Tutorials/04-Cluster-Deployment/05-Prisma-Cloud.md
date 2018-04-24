@@ -5,6 +5,12 @@ description: Learn how to deploy your Prisma services with Prisma Cloud.
 
 # Setting up Clusters with Prisma Cloud and AWS RDS
 
+<InfoBox type=warning>
+
+This tutorial only applies to Prisma version lower than 1.7 and will be updated soon.
+
+</InfoBox>
+
 This guide gets you up and running with [Prisma Cloud](https://www.prismagraphql.com/cloud/) and [AWS Relational Database Service](https://aws.amazon.com/rds/) (RDS).
 
 > AWS RDS is eligible for the AWS Free Tier. This is great for development clusters or to just get things started. If you're looking for more advanced features we recommend using [AWS Aurora](https://aws.amazon.com/rds/aurora) instead.

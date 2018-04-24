@@ -5,6 +5,12 @@ description: Learn how to deploy your Prisma database service to a local cluster
 
 # Local Cluster (Docker)
 
+<InfoBox type=warning>
+
+This tutorial only applies to Prisma version lower than 1.7 and will be updated soon.
+
+</InfoBox>
+
 This guide describes advanced topics for the local Prisma cluster.
 
 If you want to develop without internet access or simply prefer having everything locally, you can use `prisma local` to set up a local Prisma cluster with Docker.

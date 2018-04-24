@@ -5,6 +5,12 @@ description: Learn how to deploy your Prisma database service to Kubernetes.
 
 # Kubernetes
 
+<InfoBox type=warning>
+
+This tutorial only applies to Prisma version lower than 1.7 and will be updated soon.
+
+</InfoBox>
+
 In this tutorial, you will learn how to deploy a Prisma server on Kubernetes.
 
 [Kubernetes](https://kubernetes.io/) is a container orchestrator, that helps with deploying and scaling of your containerized applications.

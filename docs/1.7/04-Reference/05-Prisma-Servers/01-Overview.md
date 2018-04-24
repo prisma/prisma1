@@ -7,13 +7,15 @@ description: Overview
 
 Prisma APIs are hosted on _Prisma servers_. These servers provide the _runtime environment_ for Prisma APIs.
 
+> **Note**: Prior to Prisma 1.7., Prisma servers have been called [_clusters_](!alias-iquaecuj6b#terminology).
+
 In essence, there are three kinds of _servers_ you can deploy your Prisma API to:
 
-- **Local / self-hosted** (using [Docker](https://www.docker.com/)): You can create your own Prisma service locally or host them using a cloud provider of your choice. They are managed with the [Docker CLI](https://docs.docker.com/engine/reference/commandline/cli/) which governs the underlying Docker _images_ and _containers_ for you. Follow [this](!alias-texoo9aemu) tutorial to learn how to host your own Prisma cluster on Digital Ocean.
-- **Development clusters** ([Prisma Cloud](https://www.prismagraphql.com/cloud)): Prisma Cloud offers free development clusters which you can use for learning, prototyping and development. Note that when deployed to a development cluster, your services will be rate limited and have an upper bound in storage capacity (see the info box below for further info).
-- **Private clusters** ([Prisma Cloud](https://www.prismagraphql.com/cloud)): A private cluster is connected to your own database which you're provisioning when initially setting up the cluster.
+- **Local / self-hosted** (using [Docker](https://www.docker.com/)): You can spin up your own Prisma server locally or host them using a cloud provider of your choice. They are managed with the [Docker CLI](https://docs.docker.com/engine/reference/commandline/cli/) which governs the underlying Docker _images_ and _containers_ for you. Follow [this](!alias-texoo9aemu) tutorial to learn how to host your own Prisma server on Digital Ocean.
+- **Prisma Sandbox** ([Prisma Cloud](https://www.prismagraphql.com/cloud)): Prisma Cloud offers free development severs which you can use for learning and prototyping, these servers are called **Prisma Sandbox**. Note that when deployed to a Prisma Sandbox, your APIs will be rate limited and have an upper bound in storage capacity (see the info box below for further info).
+- **Private servers** ([Prisma Cloud](https://www.prismagraphql.com/cloud)): A private server is connected to your own database which you're provisioning when initially setting up the server.
 
-For production use cases, **private and self-hosted clusters are the preferred option to deploy Prisma services**. This chapter is about self-hosted clusters, you can learn more about Prisma Cloud [here](!alias-fae2ooth2u).
+For production use cases, **private and self-hosted servers are the preferred option to deploy Prisma services**. This chapter is about self-hosted clusters, you can learn more about Prisma Cloud [here](!alias-fae2ooth2u).
 
 <InfoBox>
 
@@ -26,26 +28,6 @@ Development clusters are rate limited:
 The upper bound in storage capacity for a Prisma service that's running on a development cluster is 100 MB.
 
 </InfoBox>
-
-## Cluster registry
-
-When first used, the Prisma CLI creates a new directory (called `.prisma`) in your home directory. This directory contains the _cluster registry_: `~/.prisma/config.yml`.
-
-The cluster registry lists information about the clusters you can deploy your services to. It is used by the Prisma CLI to provision deployment options to you when you're running [`prisma deploy`](!alias-kee1iedaov).
-
-### Example
-
-Here is an example of what the cluster registry might look like:
-
-```yml
-clusters:
-  local:
-    host: 'http://localhost:4466'
-    clusterSecret: "-----BEGIN RSA PRIVATE KEY-----  [ long key omitted ] -----END RSA PRIVATE KEY-----\r\n"
-  digital-ocean:
-    host: 'http://45.55.177.154:4466'
-    clusterSecret: "-----BEGIN RSA PRIVATE KEY----- [ long key omitted ] -----END RSA PRIVATE KEY-----\r\n"
-```
 
 When you're running `prisma deploy` for a Prisma service, there are two scenarios with respect to the target cluster:
 
@@ -67,12 +49,6 @@ Consider the above example for a cluster registry. In that case, the following w
   ```yml(path="prisma.yml")
   cluster: digital-ocean
   ```
-
-### Adding and removing clusters
-
-If you want to add a custom cluster to the cluster registry, you can either use the `prisma cluster add` command or manually add a cluster entry to the file, providing the required information. Similarly, to delete a cluster you can either run `prisma cluster remove` or  simply remove it from the cluster registry by hand.
-
-You can list your clusters and associated information using `prisma cluster list`. If you're authenticated with the Prisma Cloud, the command will also output the clusters you've configured there.
 
 ## Authentication
 
