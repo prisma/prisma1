@@ -315,9 +315,10 @@ query {
 
 #### Combining multiple filters
 
-You can use the filter combinators `OR` and `AND` to create an arbitrary logical combination of filter conditions.
+You can use the filter combinators `OR`, `AND`, `NOT` to create an arbitrary logical combination of filter conditions.
+For `AND` all of the nested conditions have to be true. For `OR` one of the nested conditions have to be true. For `NOT` all of the nested conditions have to be false since they are combined by and internally.
 
-##### Using `OR` or `AND`
+##### Using `OR`, `AND` and `NOT`
 
 Let's start with an easy example:
 
@@ -339,11 +340,11 @@ query {
 }
 ```
 
-> **Note**: `OR` and `AND` accept a _list_ as input where each list item is an object and therefore needs to be wrapped with `{}`, for example: `AND: [{title_in: ["My biggest Adventure", "My latest Hobbies"]}, {published: true}]`
+> **Note**: `OR`, `AND` and `NOT`and  accept a _list_ as input where each list item is an object and therefore needs to be wrapped with `{}`, for example: `AND: [{title_in: ["My biggest Adventure", "My latest Hobbies"]}, {published: true}]`
 
-##### Arbitrary combination of filters with `AND` and `OR`
+##### Arbitrary combination of filters with `AND`, `OR` and `NOT`
 
-You can combine and even nest the filter combinators `AND` and `OR` to create arbitrary logical combinations of filter conditions.
+You can combine and even nest the filter combinators `AND`, `OR` and `NOT` to create arbitrary logical combinations of filter conditions.
 
 Query all `Post` nodes that are either `published` _and_ whose `title` is in a list of given strings, _or_ have the specific `id` we supply:
 
@@ -371,7 +372,7 @@ query($published: Boolean) {
 
 #### Explore available filter criteria
 
-Apart from the filter combinators `AND` and `OR`, the available filter arguments for a query for all nodes of a type depend on the fields of the type and their types.
+Apart from the filter combinators `AND`, `OR` and `NOT`, the available filter arguments for a query for all nodes of a type depend on the fields of the type and their types.
 
 Use the [GraphQL Playground](https://github.com/graphcool/graphql-playground) to explore available filter conditions.
 
