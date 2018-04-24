@@ -136,7 +136,6 @@ export class Client {
         stageName,
       )
       const agent = getProxyAgent(cluster.getDeployEndpoint())
-      console.log({ agent })
       this.clusterClient = new GraphQLClient(cluster.getDeployEndpoint(), {
         headers: {
           Authorization: `Bearer ${token}`,
