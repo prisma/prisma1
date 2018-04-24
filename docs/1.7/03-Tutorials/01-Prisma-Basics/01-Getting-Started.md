@@ -223,3 +223,10 @@ query {
   }
 }
 ```
+
+## Next steps
+
+At this point, you can either move on the [**next chapter**](!alias-va4ga2phie) and learn how you can update your data model and API or visit one of the following resources:
+
+- **Quickstart Tutorials (Backend & Frontend)**: The remaining quickstart tutorials explain how to use Prisma together with conrete languages and frameworks, like [React](!alias-tijghei9go), [Node.js](!alias-phe8vai1oo) or [TypeScript](!alias-rohd6ipoo4).
+- [How to GraphQL tutorial for Node.js](https://www.howtographql.com/graphql-js/0-introduction/): In-depth tutorial teaching you how to build a GraphQL server implementing features lielke authentication, pagiation, filters and realtime subscriptions.
