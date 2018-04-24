@@ -1,5 +1,6 @@
 package com.prisma.deploy.connector
 
+import org.joda.time.DateTime
 import com.prisma.shared.models.{Field, Model, Project, ProjectIdEncoder}
 
 import scala.concurrent.Future
@@ -20,9 +21,12 @@ trait DeployConnector {
   def deleteProjectDatabase(id: String): Future[Unit]
   def getAllDatabaseSizes(): Future[Vector[DatabaseSize]]
 
+  def getOrCreateTelemetryInfo(): Future[TelemetryInfo]
+  def updateTelemetryInfo(lastPinged: DateTime): Future[Unit]
 }
 
 case class DatabaseSize(name: String, total: Double)
+case class TelemetryInfo(id: String, lastPing: Option[DateTime])
 
 trait ClientDbQueries {
   def existsByModel(modelName: String): Future[Boolean]

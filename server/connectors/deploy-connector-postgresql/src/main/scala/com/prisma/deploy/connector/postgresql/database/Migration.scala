@@ -1,6 +1,6 @@
 package com.prisma.deploy.connector.postgresql.database
 
-import com.github.tototoshi.slick.MySQLJodaSupport
+import com.github.tototoshi.slick.PostgresJodaSupport
 import com.prisma.shared.models.MigrationStatus
 import com.prisma.shared.models.MigrationStatus.MigrationStatus
 import org.joda.time.DateTime
@@ -26,7 +26,7 @@ case class Migration(
 class MigrationTable(tag: Tag) extends Table[Migration](tag, "Migration") {
   implicit val statusMapper = MigrationTable.statusMapper
   implicit val jsonMapper   = MigrationTable.jsonMapper
-  implicit val jodaMapper   = MySQLJodaSupport.datetimeTypeMapper
+  implicit val jodaMapper   = PostgresJodaSupport.datetimeTypeMapper
 
   def projectId  = column[String]("projectId")
   def revision   = column[Int]("revision")
@@ -46,7 +46,7 @@ class MigrationTable(tag: Tag) extends Table[Migration](tag, "Migration") {
 
 object MigrationTable {
   implicit val jsonMapper = MappedColumns.jsonMapper
-  implicit val jodaMapper = MySQLJodaSupport.datetimeTypeMapper
+  implicit val jodaMapper = PostgresJodaSupport.datetimeTypeMapper
   implicit val statusMapper = MappedColumnType.base[MigrationStatus, String](
     _.toString,
     MigrationStatus.withName

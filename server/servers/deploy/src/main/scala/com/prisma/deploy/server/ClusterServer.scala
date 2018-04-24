@@ -1,6 +1,6 @@
 package com.prisma.deploy.server
 
-import akka.actor.ActorSystem
+import akka.actor.{ActorSystem, Props}
 import akka.http.scaladsl.model.StatusCode
 import akka.http.scaladsl.model.StatusCodes._
 import akka.http.scaladsl.model.headers.RawHeader
@@ -44,6 +44,7 @@ case class ClusterServer(prefix: String = "", server2serverSecret: Option[String
   val requestPrefix                          = sys.env.getOrElse("ENV", "local")
   val schemaManagerSecured                   = server2serverSecret.exists(_.nonEmpty)
   val projectIdEncoder                       = dependencies.projectIdEncoder
+  val telemetryActor                         = system.actorOf(Props(TelemetryActor(dependencies.deployConnector)))
 
   def errorExtractor(t: Throwable): Option[Int] = t match {
     case e: DeployApiError => Some(e.code)
