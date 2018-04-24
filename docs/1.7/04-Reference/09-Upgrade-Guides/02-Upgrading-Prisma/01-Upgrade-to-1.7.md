@@ -95,7 +95,7 @@ In Prisma 1.7, you can specify arbitrary terminal commands to be executed by the
 
 Here is an example that performs three tasks after a deployment:
 
-1. Print `Deployment finished"
+1. Print "Deployment finished"
 1. Download the GraphQL schema for the `db` project specified in `.graphqlconfig.yml`
 1. Invoke code generation as specified in `.graphqlconfig.yml`
 
