@@ -87,7 +87,7 @@ This is also relevant for the `/import` and `/export` endpoints of your API.
 For example:
 
 - `http://localhost:4466/default/default/import` can be written as `http://localhost:4466/import`
--  `https://eu1.prisma.sh/public-helixgoose-752/default/default/export` can be written as `https://eu1.prisma.sh/public-helixgoose-752/export`
+- `https://eu1.prisma.sh/public-helixgoose-752/default/default/export` can be written as `https://eu1.prisma.sh/public-helixgoose-752/export`
 
 ### Post deployment hooks
 
