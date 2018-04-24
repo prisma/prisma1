@@ -15,13 +15,14 @@ object TelemetryActor {
   object Report
 }
 
-case class TelemetryActor(version: String, connector: DeployConnector)(implicit val materializer: ActorMaterializer) extends Actor with AwaitUtils {
+case class TelemetryActor(connector: DeployConnector)(implicit val materializer: ActorMaterializer) extends Actor with AwaitUtils {
   import TelemetryActor._
 
   implicit val system = context.system
   implicit val ec     = context.system.dispatcher
 
   val info               = connector.getOrCreateTelemetryInfo().await
+  val version            = sys.env.getOrElse("CLUSTER_VERSION", "Unknown")
   val gqlClient          = GraphQlClientImpl("https://stats.prisma.io", Map.empty, Http())
   val regularInterval    = 1.hour
   val errorInterval      = 1.minute

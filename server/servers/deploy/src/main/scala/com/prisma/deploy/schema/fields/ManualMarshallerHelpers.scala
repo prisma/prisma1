@@ -12,11 +12,8 @@ object ManualMarshallerHelpers {
 
     def clientMutationId: Option[String] = optionalArgAsString("clientMutationId")
 
-    def projectId: String = {
-      val name  = requiredArgAsString("name")
-      val stage = requiredArgAsString("stage")
-      ProjectId.toEncodedString(name, stage)
-    }
+    def name: String  = requiredArgAsString("name")
+    def stage: String = requiredArgAsString("stage")
 
     def requiredArgAsString(name: String): String         = requiredArgAs[String](name)
     def optionalArgAsString(name: String): Option[String] = optionalArgAs[String](name)

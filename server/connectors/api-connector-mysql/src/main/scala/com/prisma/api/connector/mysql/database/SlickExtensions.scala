@@ -3,10 +3,6 @@ package com.prisma.api.connector.mysql.database
 import com.prisma.api.connector.Types.DataItemFilterCollection
 import com.prisma.api.connector.mysql.database.JdbcExtensions._
 import com.prisma.gc_values._
-import com.prisma.shared.models.Model
-import org.joda.time.DateTime
-import org.joda.time.format.DateTimeFormat
-import play.api.libs.json.{JsValue => PlayJsValue}
 import slick.jdbc.MySQLProfile.api._
 import slick.jdbc.{PositionedParameters, SQLActionBuilder, SetParameter}
 
@@ -36,45 +32,7 @@ object SlickExtensions {
     def ++(b: Option[SQLActionBuilder]): SQLActionBuilder = concat(b)
   }
 
-  def escapeUnsafeParam(param: Any): SQLActionBuilder = {
-    def unwrapSome(x: Any): Any = x match {
-      case Some(x) => x
-      case x       => x
-    }
-
-    unwrapSome(param) match {
-      case param: String      => sql"$param"
-      case param: PlayJsValue => sql"${param.toString}"
-      case param: Boolean     => sql"$param"
-      case param: Int         => sql"$param"
-      case param: Long        => sql"$param"
-      case param: Float       => sql"$param"
-      case param: Double      => sql"$param"
-      case param: BigInt      => sql"#${param.toString}"
-      case param: BigDecimal  => sql"#${param.toString}"
-      case param: DateTime    => sql"${param.toString(DateTimeFormat.forPattern("yyyy-MM-dd'T'HH:mm:ss.SSS").withZoneUTC())}"
-      case None               => sql"NULL"
-      case null               => sql"NULL"
-      case _                  => throw new IllegalArgumentException("Unsupported scalar value in SlickExtensions: " + param.toString)
-    }
-  }
-
-  def gcValueToSQLBuilder(gcValue: GCValue): SQLActionBuilder = {
-    val dateTimeFormat = DateTimeFormat.forPattern("yyyy-MM-dd'T'HH:mm:ss.SSS").withZoneUTC()
-    gcValue match {
-      case NullGCValue            => sql"NULL"
-      case StringGCValue(value)   => sql"$value"
-      case EnumGCValue(value)     => sql"$value"
-      case IdGCValue(value)       => sql"$value"
-      case DateTimeGCValue(value) => sql"${dateTimeFormat.print(value)}"
-      case IntGCValue(value)      => sql"$value"
-      case FloatGCValue(value)    => sql"$value"
-      case BooleanGCValue(value)  => sql"$value"
-      case JsonGCValue(value)     => sql"${value.toString}"
-      case ListGCValue(_)         => sys.error("ListGCValue not implemented here yet.")
-      case RootGCValue(_)         => sys.error("RootGCValues not implemented here yet.")
-    }
-  }
+  def escapeUnsafeParam(string: String): SQLActionBuilder = sql"$string"
 
   def escapeKey(key: String) = sql"`#$key`"
 
@@ -111,8 +69,8 @@ object SlickExtensions {
     if (action.isEmpty) None else Some(sql"#$prefix " ++ action.get)
   }
 
-  def whereFilterAppendix(projectId: String, model: Model, filter: Option[DataItemFilterCollection]) = {
-    val whereSql = filter.flatMap(where => QueryArgumentsHelpers.generateFilterConditions(projectId, model.name, where))
+  def whereFilterAppendix(projectId: String, table: String, filter: Option[DataItemFilterCollection]) = {
+    val whereSql = filter.flatMap(where => QueryArgumentsHelpers.generateFilterConditions(projectId, table, where))
     prefixIfNotNone("WHERE", whereSql)
   }
 }

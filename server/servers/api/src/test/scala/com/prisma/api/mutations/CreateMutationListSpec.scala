@@ -4,7 +4,6 @@ import com.prisma.api.ApiBaseSpec
 import com.prisma.api.util.TroubleCharacters
 import com.prisma.shared.schema_dsl.SchemaDsl
 import org.scalatest.{FlatSpec, Matchers}
-import play.api.libs.json._
 
 class CreateMutationListSpec extends FlatSpec with Matchers with ApiBaseSpec {
 
@@ -32,9 +31,7 @@ class CreateMutationListSpec extends FlatSpec with Matchers with ApiBaseSpec {
     database.setup(project)
   }
 
-  override def beforeEach(): Unit = {
-    database.truncate(project.id)
-  }
+  override def beforeEach(): Unit = database.truncateProjectTables(project)
 
   "A Create Mutation" should "create and return items with listvalues" in {
 

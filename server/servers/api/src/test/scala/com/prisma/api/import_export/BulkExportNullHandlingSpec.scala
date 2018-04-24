@@ -30,7 +30,7 @@ class BulkExportNullHandlingSpec extends FlatSpec with Matchers with ApiBaseSpec
     }
 
     database.setup(project)
-    database.truncate(project.id)
+    database.truncateProjectTables(project)
 
     server.query("""mutation{createModel0(data: { nonList: "Model0", bla: {create: {test: "Model1"}}}){id}}""", project)
 
@@ -62,7 +62,7 @@ class BulkExportNullHandlingSpec extends FlatSpec with Matchers with ApiBaseSpec
     }
 
     database.setup(project)
-    database.truncate(project.id)
+    database.truncateProjectTables(project)
 
     server.query("""mutation{createModel0(data: { test: "Model0"}){id}}""", project)
     server.query("""mutation{createModel0(data: { test: "Model0"}){id}}""", project)

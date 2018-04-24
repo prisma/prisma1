@@ -27,6 +27,7 @@ object TestData extends AwaitUtils {
       nonListArgs = args,
       listArgs = Vector.empty
     )
+
     testDatabase.runDatabaseMutactionOnClientDb(mutaction)
   }
 }

@@ -6,8 +6,8 @@ import java.util.Date
 
 import com.prisma.gc_values._
 import com.prisma.shared.models.TypeIdentifier
-import org.joda.time.{DateTime, DateTimeZone}
 import org.joda.time.format.DateTimeFormat
+import org.joda.time.{DateTime, DateTimeZone}
 import play.api.libs.json.Json
 
 object JdbcExtensions {

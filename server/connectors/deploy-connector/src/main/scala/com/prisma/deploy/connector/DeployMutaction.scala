@@ -1,9 +1,15 @@
 package com.prisma.deploy.connector
 
 import com.prisma.shared.models.TypeIdentifier.TypeIdentifier
-import com.prisma.shared.models.{Field, Model, Relation, Schema}
+import com.prisma.shared.models._
 
 sealed trait DeployMutaction
+
+//  new project deploy mutactions
+
+case class CreateProject(projectId: String)  extends DeployMutaction
+case class TruncateProject(project: Project) extends DeployMutaction
+case class DeleteProject(projectId: String)  extends DeployMutaction
 
 // those should be named fields
 case class CreateColumn(projectId: String, model: Model, field: Field)                     extends DeployMutaction

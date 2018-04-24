@@ -13,6 +13,7 @@ import { RC } from './index'
 import { ClusterNotSet } from './errors/ClusterNotSet'
 import * as _ from 'lodash'
 import { clusterEndpointMap } from './constants'
+import { getProxyAgent } from './utils/getProxyAgent'
 const debug = require('debug')('Environment')
 
 const isDev = (process.env.ENV || '').toLowerCase() === 'dev'
@@ -60,7 +61,8 @@ export class Environment {
           }
         `,
           }),
-        })
+          proxy: getProxyAgent('https://api.cloud.prisma.sh'),
+        } as any)
         const json = await res.json()
 
         if (json && json.data && json.data.renewToken) {
@@ -104,7 +106,8 @@ export class Environment {
           }
         `,
           }),
-        })
+          agent: getProxyAgent('https://api.cloud.prisma.sh'),
+        } as any)
         const json = await res.json()
         if (
           json &&

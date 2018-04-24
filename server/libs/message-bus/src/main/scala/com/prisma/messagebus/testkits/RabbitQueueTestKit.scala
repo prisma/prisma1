@@ -1,8 +1,8 @@
 package com.prisma.messagebus.testkits
 
 import akka.testkit.TestProbe
-import com.prisma.errors.ErrorReporter
 import com.prisma.akkautil.SingleThreadedActorSystem
+import com.prisma.errors.ErrorReporter
 import com.prisma.messagebus.Conversions.{ByteMarshaller, ByteUnmarshaller}
 import com.prisma.messagebus.Queue
 import com.prisma.messagebus.QueueConsumer.ConsumeFn

@@ -43,11 +43,12 @@ case class ApiServer(
   val requestPrefix       = sys.env.getOrElse("ENV", "local")
   val projectFetcher      = apiDependencies.projectFetcher
   val reservedSegments    = Set("private", "import", "export")
+  val projectIdEncoder    = apiDependencies.projectIdEncoder
 
   import scala.concurrent.duration._
 
   lazy val unthrottledProjectIds = sys.env.get("UNTHROTTLED_PROJECT_IDS") match {
-    case Some(envValue) => envValue.split('|').filter(_.nonEmpty).toVector.map(ProjectId.fromEncodedString)
+    case Some(envValue) => envValue.split('|').filter(_.nonEmpty).toVector.map(projectIdEncoder.fromEncodedString)
     case None           => Vector.empty
   }
 
@@ -124,9 +125,9 @@ case class ApiServer(
     }
 
     def handleRequestForPublicApi(projectId: ProjectId, rawRequest: RawRequest) = {
-      val result = apiDependencies.requestHandler.handleRawRequestForPublicApi(projectId.asString, rawRequest)
+      val result = apiDependencies.requestHandler.handleRawRequestForPublicApi(projectIdEncoder.toEncodedString(projectId), rawRequest)
       result.onComplete { _ =>
-        logRequestEnd(projectId.asString)
+        logRequestEnd(projectIdEncoder.toEncodedString(projectId))
       }
       result
     }
@@ -135,8 +136,8 @@ case class ApiServer(
     pathPrefix(Segments(min = 0, max = 4)) { segments =>
       post {
         val (projectSegments, reservedSegment) = splitReservedSegment(segments)
-        val projectId                          = ProjectId.fromSegments(projectSegments)
-        val projectIdAsString                  = projectId.asString
+        val projectId                          = projectIdEncoder.fromSegments(projectSegments)
+        val projectIdAsString                  = projectIdEncoder.toEncodedString(projectId)
 
         handleExceptions(toplevelExceptionHandler(requestId)) {
           extractRawRequest(requestId) { rawRequest =>

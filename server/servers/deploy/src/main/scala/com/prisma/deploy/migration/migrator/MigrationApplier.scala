@@ -114,5 +114,4 @@ case class MigrationApplierImpl(
   def executeClientMutaction(mutaction: DeployMutaction): Future[Unit] = mutactionExecutor.execute(mutaction)
 
   def executeClientMutactionRollback(mutaction: DeployMutaction): Future[Unit] = mutactionExecutor.rollback(mutaction)
-
 }

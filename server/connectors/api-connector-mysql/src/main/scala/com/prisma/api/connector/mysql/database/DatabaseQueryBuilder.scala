@@ -13,6 +13,7 @@ import slick.jdbc.MySQLProfile.api._
 import slick.jdbc.meta.{DatabaseMeta, MTable}
 import slick.jdbc.{SQLActionBuilder, _}
 import slick.sql.SqlStreamingAction
+
 import scala.concurrent.ExecutionContext.Implicits.global
 
 object DatabaseQueryBuilder {
@@ -142,8 +143,8 @@ object DatabaseQueryBuilder {
     }
   }
 
-  def countAllFromModel(project: Project, model: Model, whereFilter: Option[DataItemFilterCollection]): DBIOAction[Int, NoStream, Effect] = {
-    val query = sql"select count(*) from `#${project.id}`.`#${model.name}`" ++ whereFilterAppendix(project.id, model, whereFilter)
+  def countAllFromTable(project: Project, table: String, whereFilter: Option[DataItemFilterCollection]): DBIOAction[Int, NoStream, Effect] = {
+    val query = sql"select count(*) from `#${project.id}`.`#$table`" ++ whereFilterAppendix(project.id, table, whereFilter)
     query.as[Int].map(_.head)
   }
 
@@ -151,7 +152,7 @@ object DatabaseQueryBuilder {
                                    model: Model,
                                    fieldName: String,
                                    values: Vector[GCValue]): SqlStreamingAction[Vector[PrismaNode], PrismaNode, Effect] = {
-    val query = sql"select * from `#$projectId`.`#${model.name}` where `#$fieldName` in (" ++ combineByComma(values.map(gcValueToSQLBuilder)) ++ sql")"
+    val query = sql"select * from `#$projectId`.`#${model.name}` where `#$fieldName` in (" ++ combineByComma(values.map(v => sql"$v")) ++ sql")"
     query.as[PrismaNode](getResultForModel(model))
   }
 
@@ -179,7 +180,7 @@ object DatabaseQueryBuilder {
                            field: Field,
                            nodeIds: Vector[IdGCValue]): DBIOAction[Vector[ScalarListValues], NoStream, Effect] = {
     val query = sql"select nodeId, position, value from `#$projectId`.`#${modelName}_#${field.name}` where nodeId in (" ++ combineByComma(
-      nodeIds.map(gcValueToSQLBuilder)) ++ sql")"
+      nodeIds.map(v => sql"$v")) ++ sql")"
 
     query.as[ScalarListElement](getResultForScalarListField(field)).map { scalarListElements =>
       val grouped: Map[Id, Vector[ScalarListElement]] = scalarListElements.groupBy(_.nodeId)

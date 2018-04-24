@@ -7,11 +7,10 @@ import com.prisma.sangria.utils.ErrorHandler
 import com.prisma.shared.models.{Migration, MigrationId, Project, ProjectId}
 import com.prisma.utils.await.AwaitUtils
 import com.prisma.utils.json.PlayJsonExtensions
-import play.api.libs.json.{JsArray, JsString}
+import play.api.libs.json.{JsArray, JsString, _}
 import sangria.execution.{Executor, QueryAnalysisError}
 import sangria.parser.QueryParser
 import sangria.renderer.SchemaRenderer
-import play.api.libs.json._
 
 import scala.concurrent.Await
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -157,7 +156,7 @@ case class DeployTestServer()(implicit dependencies: DeployDependencies) extends
   }
 
   def deploySchema(name: String, stage: String, schema: String, secrets: Vector[String] = Vector.empty): (Project, Migration) = {
-    val projectId = name + "@" + stage
+    val projectId = dependencies.projectIdEncoder.toEncodedString(List(name, stage))
     val result    = deployHelper(projectId, schema, secrets)
     val revision  = result.pathAsLong("data.deploy.migration.revision")
     (dependencies.projectPersistence.load(projectId).await.get, dependencies.migrationPersistence.byId(MigrationId(projectId, revision.toInt)).await.get)
@@ -170,7 +169,7 @@ case class DeployTestServer()(implicit dependencies: DeployDependencies) extends
                            shouldWarn: Boolean = false,
                            force: Boolean = false): JsValue = {
 
-    val nameAndStage     = ProjectId.fromEncodedString(projectId)
+    val nameAndStage     = dependencies.projectIdEncoder.fromEncodedString(projectId)
     val name             = nameAndStage.name
     val stage            = nameAndStage.stage
     val formattedSchema  = JsString(schema.stripMargin).toString

@@ -1,7 +1,7 @@
 package com.prisma.stub
 
 import scala.collection.SortedMap
-import scala.util.parsing.json.{JSONType, JSON}
+import scala.util.parsing.json.{JSON, JSONType}
 
 object StubMatching {
   sealed trait MatchResult {

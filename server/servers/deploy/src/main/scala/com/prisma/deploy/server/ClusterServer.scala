@@ -19,17 +19,16 @@ import com.prisma.sangria.utils.ErrorHandler
 import com.prisma.shared.models.ProjectWithClientId
 import com.typesafe.scalalogging.LazyLogging
 import cool.graph.cuid.Cuid.createCuid
-import play.api.libs.json.Json
+import de.heikoseeberger.akkahttpplayjson.PlayJsonSupport
+import play.api.libs.json.{Json, _}
 import sangria.execution.{Executor, QueryAnalysisError}
 import sangria.parser.QueryParser
-import play.api.libs.json._
-import de.heikoseeberger.akkahttpplayjson.PlayJsonSupport
 
 import scala.concurrent.Future
 import scala.language.postfixOps
 import scala.util.{Failure, Success}
 
-case class ClusterServer(prefix: String = "")(
+case class ClusterServer(prefix: String = "", server2serverSecret: Option[String])(
     implicit system: ActorSystem,
     materializer: ActorMaterializer,
     dependencies: DeployDependencies
@@ -43,8 +42,9 @@ case class ClusterServer(prefix: String = "")(
   val projectPersistence: ProjectPersistence = dependencies.projectPersistence
   val log: String => Unit                    = (msg: String) => logger.info(msg)
   val requestPrefix                          = sys.env.getOrElse("ENV", "local")
-  val server2serverSecret                    = sys.env.getOrElse("SCHEMA_MANAGER_SECRET", sys.error("SCHEMA_MANAGER_SECRET env var required but not found"))
-//  val telemetryActor = system.actorOf(Props(TelemetryActor(dependencies.)))
+  val schemaManagerSecured                   = server2serverSecret.exists(_.nonEmpty)
+  val projectIdEncoder                       = dependencies.projectIdEncoder
+  val telemetryActor                         = system.actorOf(Props(TelemetryActor(dependencies.deployConnector)))
 
   def errorExtractor(t: Throwable): Option[Int] = t match {
     case e: DeployApiError => Some(e.code)
@@ -130,18 +130,21 @@ case class ClusterServer(prefix: String = "")(
             } ~ pathPrefix("schema") {
               pathPrefix(Segment) { projectId =>
                 optionalHeaderValueByName("Authorization") {
-                  case Some(authorizationHeader) if authorizationHeader == s"Bearer $server2serverSecret" =>
+                  case None if !schemaManagerSecured =>
+                    parameters('forceRefresh ? false) { forceRefresh =>
+                      complete(performSchemaRequest(projectId, forceRefresh, logRequestEnd))
+                    }
+
+                  case Some(authorizationHeader) if !schemaManagerSecured || authorizationHeader == s"Bearer $server2serverSecret" =>
                     parameters('forceRefresh ? false) { forceRefresh =>
                       complete(performSchemaRequest(projectId, forceRefresh, logRequestEnd))
                     }
 
                   case Some(h) =>
-                    println(s"Wrong Authorization Header supplied: '$h'")
                     complete(Unauthorized -> "Wrong Authorization Header supplied")
 
                   case None =>
-                    println("No Authorization Header supplied")
-                    complete(Unauthorized -> "No Authorization Header supplied")
+                    complete(Unauthorized -> "Authorization header required but not supplied")
                 }
               }
             }
@@ -166,7 +169,7 @@ case class ClusterServer(prefix: String = "")(
     projectPersistence
       .load(projectId)
       .flatMap {
-        case None    => Future.failed(InvalidProjectId(projectId))
+        case None    => Future.failed(InvalidProjectId(projectIdEncoder.fromEncodedString(projectId)))
         case Some(p) => Future.successful(Json.toJson(ProjectWithClientId(p, p.ownerId)).toString)
       }
   }

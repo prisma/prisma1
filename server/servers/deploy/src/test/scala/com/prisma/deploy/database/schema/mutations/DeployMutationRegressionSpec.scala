@@ -71,7 +71,7 @@ class DeployMutationRegressionSpec extends FlatSpec with Matchers with DeploySpe
     initialMigration.errors should be(empty)
     initialMigration.status shouldEqual MigrationStatus.Success
 
-    val nameAndStage = ProjectId.fromEncodedString(project.id)
+    val nameAndStage = testDependencies.projectIdEncoder.fromEncodedString(project.id)
     val nextSchema =
       """
         |type User {
@@ -133,7 +133,7 @@ class DeployMutationRegressionSpec extends FlatSpec with Matchers with DeploySpe
     initialMigration.errors should be(empty)
     initialMigration.status shouldEqual MigrationStatus.Success
 
-    val nameAndStage = ProjectId.fromEncodedString(project.id)
+    val nameAndStage = testDependencies.projectIdEncoder.fromEncodedString(project.id)
     val nextSchema =
       """
         |type Update {
@@ -205,7 +205,7 @@ class DeployMutationRegressionSpec extends FlatSpec with Matchers with DeploySpe
     initialMigration.errors should be(empty)
     initialMigration.status shouldEqual MigrationStatus.Success
 
-    val nameAndStage = ProjectId.fromEncodedString(project.id)
+    val nameAndStage = testDependencies.projectIdEncoder.fromEncodedString(project.id)
     val nextSchema =
       """
         |type Post {
@@ -272,7 +272,7 @@ class DeployMutationRegressionSpec extends FlatSpec with Matchers with DeploySpe
     initialMigration.errors should be(empty)
     initialMigration.status shouldEqual MigrationStatus.Success
 
-    val nameAndStage = ProjectId.fromEncodedString(project.id)
+    val nameAndStage = testDependencies.projectIdEncoder.fromEncodedString(project.id)
     val nextSchema =
       """
         |type Post {
@@ -319,7 +319,7 @@ class DeployMutationRegressionSpec extends FlatSpec with Matchers with DeploySpe
     initialMigration.errors should be(empty)
     initialMigration.status shouldEqual MigrationStatus.Success
 
-    val nameAndStage = ProjectId.fromEncodedString(project.id)
+    val nameAndStage = testDependencies.projectIdEncoder.fromEncodedString(project.id)
     val nextSchema =
       """
         |type User {

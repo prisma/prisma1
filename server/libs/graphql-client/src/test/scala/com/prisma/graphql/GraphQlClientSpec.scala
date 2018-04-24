@@ -7,7 +7,6 @@ import scala.concurrent.{Await, Awaitable}
 
 class GraphQlClientSpec extends FlatSpec with Matchers {
   import com.prisma.stub.Import._
-  import scala.concurrent.ExecutionContext.Implicits.global
 
   val defaultStub = stub("/graphql-endpoint")
 

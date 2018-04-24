@@ -9,9 +9,9 @@ import akka.util.Timeout
 import com.prisma.akkautil.SingleThreadedActorSystem
 import com.prisma.akkautil.http.SimpleHttpClient
 
+import scala.concurrent.duration._
 import scala.concurrent.{Await, Future}
 import scala.util.{Failure, Success}
-import scala.concurrent.duration._
 
 case class StatsdHealthChecker() {
   import StatsdHealthCheckerActor._

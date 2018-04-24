@@ -1,0 +1,155 @@
+package com.prisma.deploy.connector.postgresql.database
+
+import java.sql.PreparedStatement
+
+import com.prisma.shared.models.TypeIdentifier.TypeIdentifier
+import com.prisma.shared.models.{Project, TypeIdentifier}
+import slick.dbio.DBIOAction
+import slick.jdbc.PostgresProfile.api._
+
+object PostgresDeployDatabaseMutationBuilder {
+
+  def createClientDatabaseForProject(projectId: String) = {
+
+    val createFunction = SimpleDBIO[Unit] { x =>
+      val query                             = """CREATE OR REPLACE FUNCTION raise_exception(text) RETURNS void as $$
+                                                     BEGIN
+                                                        RAISE EXCEPTION '%', $1;
+                                                     END;
+                                                     $$ Language plpgsql;"""
+      val functionInsert: PreparedStatement = x.connection.prepareStatement(query)
+      functionInsert.execute()
+    }
+
+    DBIO.seq(
+      sqlu"""CREATE SCHEMA "#$projectId";""",
+      sqlu"""CREATE TABLE "#$projectId"."_RelayId" (
+            "id" VARCHAR (25) NOT NULL,
+            "stableModelIdentifier" VARCHAR (25) NOT NULL,
+             PRIMARY KEY ("id"))""",
+      createFunction
+    )
+  }
+
+  def truncateProjectTables(project: Project) = {
+    val listTableNames: List[String] =
+      project.models.flatMap(model => model.fields.collect { case field if field.isScalar && field.isList => s"${model.name}_${field.name}" })
+
+    val tables = Vector("_RelayId") ++ project.models.map(_.name) ++ project.relations.map(_.relationTableName) ++ listTableNames
+
+    DBIO.seq(tables.map(name => sqlu"""TRUNCATE TABLE  "#${project.id}"."#$name" CASCADE """): _*)
+  }
+
+  def deleteProjectDatabase(projectId: String) = sqlu"""DROP SCHEMA IF EXISTS "#$projectId" CASCADE"""
+
+  def dropTable(projectId: String, tableName: String)                              = sqlu"""DROP TABLE "#$projectId"."#$tableName""""
+  def dropScalarListTable(projectId: String, modelName: String, fieldName: String) = sqlu"""DROP TABLE "#$projectId"."#${modelName}_#${fieldName}""""
+
+  def createTable(projectId: String, name: String) = {
+    // todo update timestamp https://stackoverflow.com/questions/1035980/update-timestamp-when-row-is-updated-in-postgresql
+
+    sqlu"""CREATE TABLE "#$projectId"."#$name"
+    ("id" VARCHAR (25) NOT NULL,
+    "createdAt" TIMESTAMP (3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP (3) NOT NULL DEFAULT CURRENT_TIMESTAMP, 
+    PRIMARY KEY ("id")
+    )"""
+  }
+
+  def createScalarListTable(projectId: String, modelName: String, fieldName: String, typeIdentifier: TypeIdentifier) = {
+    val sqlType = sqlTypeForScalarTypeIdentifier(typeIdentifier)
+    sqlu"""CREATE TABLE "#$projectId"."#${modelName}_#${fieldName}"
+    ("nodeId" VARCHAR (25) NOT NULL REFERENCES "#$projectId"."#$modelName" ("id"),
+    "position" INT NOT NULL,
+    "value" #$sqlType NOT NULL,
+    PRIMARY KEY ("nodeId", "position")
+    )"""
+  }
+
+  def updateScalarListType(projectId: String, modelName: String, fieldName: String, typeIdentifier: TypeIdentifier) = {
+    val sqlType = sqlTypeForScalarTypeIdentifier(typeIdentifier)
+    sqlu"""ALTER TABLE "#$projectId"."#${modelName}_#${fieldName}" DROP INDEX "value", CHANGE COLUMN "value" "value" #$sqlType, ADD INDEX "value" ("value" ASC)"""
+  }
+
+  def renameScalarListTable(projectId: String, modelName: String, fieldName: String, newModelName: String, newFieldName: String) = {
+    sqlu"""ALTER TABLE "#$projectId"."#${modelName}_#${fieldName}" RENAME TO "#${newModelName}_#${newFieldName}""""
+  }
+
+  def renameTable(projectId: String, name: String, newName: String) = sqlu"""ALTER TABLE "#$projectId"."#$name" RENAME TO "#$newName";"""
+
+  def createColumn(projectId: String,
+                   tableName: String,
+                   columnName: String,
+                   isRequired: Boolean,
+                   isUnique: Boolean,
+                   isList: Boolean,
+                   typeIdentifier: TypeIdentifier.TypeIdentifier) = {
+
+    val sqlType    = sqlTypeForScalarTypeIdentifier(typeIdentifier)
+    val nullString = if (isRequired) "NOT NULL" else "NULL"
+    val uniqueAction = isUnique match {
+      case true =>
+        sqlu"""CREATE UNIQUE INDEX "#$projectId.#$tableName.#$columnName._UNIQUE" ON "#$projectId"."#$tableName"("#$columnName" ASC);"""
+      case false => DBIOAction.successful(())
+    }
+
+    val addColumn = sqlu"""ALTER TABLE "#$projectId"."#$tableName" ADD COLUMN "#$columnName" #$sqlType #$nullString"""
+
+    DBIOAction.seq(addColumn, uniqueAction)
+  }
+
+  def deleteColumn(projectId: String, tableName: String, columnName: String) = {
+    sqlu"""ALTER TABLE "#$projectId"."#$tableName" DROP COLUMN "#$columnName""""
+  }
+
+  def updateColumn(projectId: String,
+                   tableName: String,
+                   oldColumnName: String,
+                   newColumnName: String,
+                   newIsRequired: Boolean,
+                   newIsList: Boolean,
+                   newTypeIdentifier: TypeIdentifier) = {
+    val nulls   = if (newIsRequired) { "NOT NULL" } else { "NULL" }
+    val sqlType = sqlTypeForScalarTypeIdentifier(newTypeIdentifier)
+
+    sqlu"""ALTER TABLE "#$projectId"."#$tableName" CHANGE COLUMN "#$oldColumnName" "#$newColumnName" #$sqlType #$nulls"""
+  }
+
+  def addUniqueConstraint(projectId: String, tableName: String, columnName: String, typeIdentifier: TypeIdentifier, isList: Boolean) = {
+    sqlu"""CREATE UNIQUE INDEX "#$projectId.#$tableName.#$columnName._UNIQUE" ON "#$projectId"."#$tableName"("#$columnName" ASC);"""
+  }
+
+  def removeUniqueConstraint(projectId: String, tableName: String, columnName: String) = {
+    sqlu"""DROP INDEX "#$projectId.#$tableName.#$columnName._UNIQUE""""
+  }
+
+  def createRelationTable(projectId: String, relationTableName: String, aTableName: String, bTableName: String) = {
+
+    val tableCreate = sqlu"""CREATE TABLE "#$projectId"."#$relationTableName" ("id" CHAR(25)  NOT NULL,
+           PRIMARY KEY ("id"),
+    "A" VARCHAR (25)  NOT NULL,
+    "B" VARCHAR (25)  NOT NULL,
+    FOREIGN KEY ("A") REFERENCES "#$projectId"."#$aTableName"("id") ON DELETE CASCADE,
+    FOREIGN KEY ("B") REFERENCES "#$projectId"."#$bTableName"("id") ON DELETE CASCADE)
+    ;"""
+
+    val indexCreate = sqlu"""CREATE UNIQUE INDEX "#${relationTableName}_AB_unique" on  "#$projectId"."#$relationTableName" ("A" ASC, "B" ASC)"""
+
+    DBIOAction.seq(tableCreate, indexCreate)
+  }
+
+  private def sqlTypeForScalarTypeIdentifier(typeIdentifier: TypeIdentifier): String = {
+    typeIdentifier match {
+      case TypeIdentifier.String    => "text"
+      case TypeIdentifier.Boolean   => "boolean"
+      case TypeIdentifier.Int       => "int"
+      case TypeIdentifier.Float     => "Decimal(65,30)"
+      case TypeIdentifier.GraphQLID => "varchar (25)"
+      case TypeIdentifier.Enum      => "text"
+      case TypeIdentifier.Json      => "text"
+      case TypeIdentifier.DateTime  => "timestamp (3)"
+      case TypeIdentifier.Relation  => sys.error("Relation is not a scalar type. Are you trying to create a db column for a relation?")
+    }
+  }
+
+}

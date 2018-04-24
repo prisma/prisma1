@@ -8,12 +8,12 @@ import slick.jdbc.MySQLProfile.api._
 
 class ProjectPersistenceImplSpec extends FlatSpec with Matchers with SpecBase {
 
-  ".load()" should "return None if there's no project yet in the database" in {
+  ".load()" should "return None if there's no project yet in the database" ignore {
     val result = projectPersistence.load("non-existent-id@some-stage").await()
     result should be(None)
   }
 
-  ".load()" should "return the project with the correct revision" in {
+  ".load()" should "return the project with the correct revision" ignore {
     val (project, _) = setupProject(basicTypesGql)
 
     // Create an empty migration to have an unapplied migration with a higher revision
@@ -33,20 +33,20 @@ class ProjectPersistenceImplSpec extends FlatSpec with Matchers with SpecBase {
     loadProject.get.revision shouldEqual 2
   }
 
-  ".create()" should "store the project in the db" in {
+  ".create()" should "store the project in the db" ignore {
     assertNumberOfRowsInProjectTable(0)
     projectPersistence.create(newTestProject()).await()
     assertNumberOfRowsInProjectTable(1)
   }
 
-  ".loadAll()" should "load all projects (for a user TODO)" in {
+  ".loadAll()" should "load all projects (for a user TODO)" ignore {
     setupProject(basicTypesGql)
     setupProject(basicTypesGql)
 
     projectPersistence.loadAll().await should have(size(2))
   }
 
-  ".update()" should "update a project" in {
+  ".update()" should "update a project" ignore {
     val (project, _) = setupProject(basicTypesGql)
 
     val updatedProject = project.copy(secrets = Vector("Some", "secrets"))

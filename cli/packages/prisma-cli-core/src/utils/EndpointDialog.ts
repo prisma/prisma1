@@ -75,7 +75,6 @@ const databaseServiceDefinitions = {
     image: mysql:5.7
     restart: always
     environment:
-      MYSQL_USER: prisma
       MYSQL_ROOT_PASSWORD: prisma
 `,
 }

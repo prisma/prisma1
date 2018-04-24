@@ -1,7 +1,7 @@
 package com.prisma.deploy.connector
 
-import com.prisma.shared.models.{Field, Model, Project}
 import org.joda.time.DateTime
+import com.prisma.shared.models.{Field, Model, Project, ProjectIdEncoder}
 
 import scala.concurrent.Future
 
@@ -10,6 +10,7 @@ trait DeployConnector {
   def migrationPersistence: MigrationPersistence
   def deployMutactionExecutor: DeployMutactionExecutor
   def clientDBQueries(project: Project): ClientDbQueries
+  def projectIdEncoder: ProjectIdEncoder
 
   def initialize(): Future[Unit]
   def reset(): Future[Unit]
