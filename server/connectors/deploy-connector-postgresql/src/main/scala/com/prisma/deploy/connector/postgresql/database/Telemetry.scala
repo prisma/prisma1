@@ -1,6 +1,6 @@
-package com.prisma.deploy.connector.mysql.database
+package com.prisma.deploy.connector.postgresql.database
 
-import com.github.tototoshi.slick.MySQLJodaSupport
+import com.github.tototoshi.slick.PostgresJodaSupport
 import com.prisma.deploy.connector.TelemetryInfo
 import org.joda.time.DateTime
 import slick.dbio.DBIOAction
@@ -11,7 +11,7 @@ import slick.sql.FixedSqlAction
 import scala.concurrent.ExecutionContext
 
 class TelemetryTable(tag: Tag) extends Table[TelemetryInfo](tag, "TelemetryInfo") {
-  implicit val jodaMapper = MySQLJodaSupport.datetimeTypeMapper
+  implicit val jodaMapper = PostgresJodaSupport.datetimeTypeMapper
 
   def id         = column[String]("id")
   def lastPinged = column[Option[DateTime]]("lastPinged")
@@ -19,7 +19,7 @@ class TelemetryTable(tag: Tag) extends Table[TelemetryInfo](tag, "TelemetryInfo"
 }
 
 object TelemetryTable {
-  implicit val jodaMapper = MySQLJodaSupport.datetimeTypeMapper
+  implicit val jodaMapper = PostgresJodaSupport.datetimeTypeMapper
 
   def getOrCreateInfo()(implicit ec: ExecutionContext): DBIOAction[TelemetryInfo, NoStream, Read with Write] = {
     Tables.Telemetry.result.headOption.flatMap {

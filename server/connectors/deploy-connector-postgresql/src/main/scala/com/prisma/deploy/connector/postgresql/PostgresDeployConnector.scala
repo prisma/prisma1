@@ -2,9 +2,10 @@ package com.prisma.deploy.connector.postgresql
 
 import com.prisma.config.DatabaseConfig
 import com.prisma.deploy.connector._
-import com.prisma.deploy.connector.postgresql.database.{InternalDatabaseSchema, PostgresDeployDatabaseMutationBuilder}
+import com.prisma.deploy.connector.postgresql.database.{InternalDatabaseSchema, PostgresDeployDatabaseMutationBuilder, TelemetryTable}
 import com.prisma.deploy.connector.postgresql.impls.{ClientDbQueriesImpl, DeployMutactionExecutorImpl, MigrationPersistenceImpl, ProjectPersistenceImpl}
 import com.prisma.shared.models.{Project, ProjectIdEncoder}
+import org.joda.time.DateTime
 import slick.dbio.Effect.Read
 import slick.dbio.{DBIOAction, NoStream}
 import slick.jdbc.PostgresProfile.api._
@@ -17,10 +18,7 @@ case class PostgresDeployConnector(dbConfig: DatabaseConfig)(implicit ec: Execut
   lazy val internalDatabase     = internalDatabaseDefs.internalDatabase
   lazy val clientDatabase       = internalDatabaseRoot
 
-  override val projectPersistence: ProjectPersistence = ProjectPersistenceImpl(internalDatabase)
-
-  override def projectIdEncoder: ProjectIdEncoder = ProjectIdEncoder('$')
-
+  override val projectPersistence: ProjectPersistence           = ProjectPersistenceImpl(internalDatabase)
   override val migrationPersistence: MigrationPersistence       = MigrationPersistenceImpl(internalDatabase)
   override val deployMutactionExecutor: DeployMutactionExecutor = DeployMutactionExecutorImpl(clientDatabase)
 
@@ -49,7 +47,10 @@ case class PostgresDeployConnector(dbConfig: DatabaseConfig)(implicit ec: Execut
     clientDatabase.run(action)
   }
 
-  override def clientDBQueries(project: Project): ClientDbQueries = ClientDbQueriesImpl(project, clientDatabase)
+  override def clientDBQueries(project: Project): ClientDbQueries      = ClientDbQueriesImpl(project, clientDatabase)
+  override def getOrCreateTelemetryInfo(): Future[TelemetryInfo]       = internalDatabaseRoot.run(TelemetryTable.getOrCreateInfo())
+  override def updateTelemetryInfo(lastPinged: DateTime): Future[Unit] = internalDatabaseRoot.run(TelemetryTable.updateInfo(lastPinged)).map(_ => ())
+  override def projectIdEncoder: ProjectIdEncoder                      = ProjectIdEncoder('$')
 
   override def initialize(): Future[Unit] = {
     val action = InternalDatabaseSchema.createSchemaActions(recreate = false)

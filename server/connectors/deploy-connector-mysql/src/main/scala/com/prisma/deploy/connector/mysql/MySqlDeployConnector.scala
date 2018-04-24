@@ -46,7 +46,10 @@ case class MySqlDeployConnector(config: DatabaseConfig)(implicit ec: ExecutionCo
     clientDatabase.run(action)
   }
 
-  override def clientDBQueries(project: Project): ClientDbQueries = ClientDbQueriesImpl(project, clientDatabase)
+  override def clientDBQueries(project: Project): ClientDbQueries      = ClientDbQueriesImpl(project, clientDatabase)
+  override def getOrCreateTelemetryInfo(): Future[TelemetryInfo]       = internalDatabaseRoot.run(TelemetryTable.getOrCreateInfo())
+  override def updateTelemetryInfo(lastPinged: DateTime): Future[Unit] = internalDatabaseRoot.run(TelemetryTable.updateInfo(lastPinged)).map(_ => ())
+  override def projectIdEncoder: ProjectIdEncoder                      = ProjectIdEncoder('@')
 
   override def initialize(): Future[Unit] = {
     val action = InternalDatabaseSchema.createSchemaActions(recreate = false)
@@ -61,11 +64,6 @@ case class MySqlDeployConnector(config: DatabaseConfig)(implicit ec: ExecutionCo
       _ <- internalDatabase.shutdown
     } yield ()
   }
-
-  override def getOrCreateTelemetryInfo(): Future[TelemetryInfo]       = internalDatabaseRoot.run(TelemetryTable.getOrCreateInfo())
-  override def updateTelemetryInfo(lastPinged: DateTime): Future[Unit] = internalDatabaseRoot.run(TelemetryTable.updateInfo(lastPinged)).map(_ => ())
-
-  override def projectIdEncoder: ProjectIdEncoder = ProjectIdEncoder('@')
 }
 
 trait TableTruncationHelpers {

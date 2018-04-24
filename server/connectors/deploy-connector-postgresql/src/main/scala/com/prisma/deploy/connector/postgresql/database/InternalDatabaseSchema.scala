@@ -53,5 +53,12 @@ object InternalDatabaseSchema {
         "appliedAt" timestamp NOT NULL,
         PRIMARY KEY ("id")
       );""",
+    // Telemetry
+    sqlu"""
+      CREATE TABLE IF NOT EXISTS "TelemetryInfo" (
+        "id" varchar(255)  NOT NULL,
+        "lastPinged" timestamp NOT NULL,
+        PRIMARY KEY ("id")
+      );""",
   )
 }
