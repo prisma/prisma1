@@ -4,7 +4,7 @@ import com.prisma.config.DatabaseConfig
 import com.prisma.deploy.connector._
 import com.prisma.deploy.connector.mysql.database.{DeployDatabaseMutationBuilderMySql, InternalDatabaseSchema}
 import com.prisma.deploy.connector.mysql.impls.{ClientDbQueriesImpl, MigrationPersistenceImpl, MySqlDeployMutactionExectutor, ProjectPersistenceImpl}
-import com.prisma.shared.models.Project
+import com.prisma.shared.models.{Project, ProjectIdEncoder}
 import slick.dbio.Effect.Read
 import slick.dbio.{DBIOAction, NoStream}
 import slick.jdbc.MySQLProfile.api._
@@ -60,6 +60,8 @@ case class MySqlDeployConnector(config: DatabaseConfig)(implicit ec: ExecutionCo
       _ <- internalDatabase.shutdown
     } yield ()
   }
+
+  override def projectIdEncoder: ProjectIdEncoder = ProjectIdEncoder('@')
 }
 
 trait TableTruncationHelpers {

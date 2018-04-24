@@ -130,7 +130,7 @@ class BulkImportSpec extends FlatSpec with Matchers with ApiBaseSpec with AwaitU
     res.toString should be("""{"data":{"model0s":[{"id":"just-some-id0","b":12},{"id":"just-some-id2","b":13}]}}""")
   }
 
-  //todo postpres stops batch actions once an error occurs and rolls back
+  //todo postgres stops batch actions once an error occurs and rolls back
   // the order in which the items are created is not deterministic. therefore the error message can vary depending on which item is created last
   "Inserting a node with a duplicate id" should "return the invalid index but keep on creating" ignore {
     val nodes = """{"valueType":"nodes","values":[

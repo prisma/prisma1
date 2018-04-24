@@ -9,6 +9,7 @@ import com.prisma.config.ConfigLoader
 import com.prisma.connectors.utils.ConnectorUtils
 import com.prisma.messagebus.testkits.{InMemoryPubSubTestKit, InMemoryQueueTestKit}
 import com.prisma.messagebus.{PubSubPublisher, PubSubSubscriber, QueueConsumer, QueuePublisher}
+import com.prisma.shared.models.ProjectIdEncoder
 import com.prisma.subscriptions.protocol.SubscriptionProtocolV05.Responses.SubscriptionSessionResponseV05
 import com.prisma.subscriptions.protocol.SubscriptionProtocolV07.Responses.SubscriptionSessionResponse
 import com.prisma.subscriptions.protocol.{Converters, SubscriptionRequest}
@@ -60,7 +61,10 @@ class SubscriptionDependenciesForTest()(implicit val system: ActorSystem, val ma
   override lazy val sssEventsPubSub                 = ???
   override lazy val webhookPublisher                = ???
 
-  override lazy val apiConnector                = ConnectorUtils.loadApiConnector(config)
+  override lazy val apiConnector = ConnectorUtils.loadApiConnector(config)
+
+  override def projectIdEncoder: ProjectIdEncoder = apiConnector.projectIdEncoder
+
   override lazy val sideEffectMutactionExecutor = SideEffectMutactionExecutorImpl()
   override lazy val mutactionVerifier           = DatabaseMutactionVerifierImpl
 }

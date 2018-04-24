@@ -11,7 +11,7 @@ import com.prisma.deploy.schema.mutations.{FunctionInput, FunctionValidator}
 import com.prisma.deploy.server.auth.DummyClusterAuth
 import com.prisma.errors.{BugsnagErrorReporter, ErrorReporter}
 import com.prisma.messagebus.pubsub.inmemory.InMemoryAkkaPubSub
-import com.prisma.shared.models.Project
+import com.prisma.shared.models.{Project, ProjectIdEncoder}
 
 case class DeployTestDependencies()(implicit val system: ActorSystem, val materializer: ActorMaterializer) extends DeployDependencies {
   import system.dispatcher
@@ -21,13 +21,15 @@ case class DeployTestDependencies()(implicit val system: ActorSystem, val materi
   val config = ConfigLoader.load()
 
   implicit val reporter: ErrorReporter    = BugsnagErrorReporter(sys.env.getOrElse("BUGSNAG_API_KEY", ""))
-  override lazy val migrator              = TestMigrator(migrationPersistence, deployPersistencePlugin.deployMutactionExecutor)
+  override lazy val migrator              = TestMigrator(migrationPersistence, deployConnector.deployMutactionExecutor)
   override lazy val clusterAuth           = DummyClusterAuth()
   override lazy val invalidationPublisher = InMemoryAkkaPubSub[String]()
 
   override def apiAuth = AuthImpl
 
-  def deployPersistencePlugin = ConnectorUtils.loadDeployConnector(config.copy(databases = config.databases.map(_.copy(pooled = false))))
+  def deployConnector = ConnectorUtils.loadDeployConnector(config.copy(databases = config.databases.map(_.copy(pooled = false))))
+
+  override def projectIdEncoder: ProjectIdEncoder = deployConnector.projectIdEncoder
 
   override def functionValidator: FunctionValidator = (project: Project, fn: FunctionInput) => {
     if (fn.name == "failing") Vector(SchemaError(`type` = "model", field = "field", description = "error")) else Vector.empty

@@ -121,7 +121,7 @@ class DeployMutationSpec extends FlatSpec with Matchers with DeploySpecBase {
 
   "DeployMutation" should "fail if reserved fields are malformed" in {
     val (project, _) = setupProject(basicTypesGql)
-    val nameAndStage = ProjectId.fromEncodedString(project.id)
+    val nameAndStage = testDependencies.projectIdEncoder.fromEncodedString(project.id)
 
     def tryDeploy(field: String) = {
       val schema = basicTypesGql +
@@ -278,7 +278,7 @@ class DeployMutationSpec extends FlatSpec with Matchers with DeploySpecBase {
   }
 
   def deploySchema(project: Project, schema: String, functions: Vector[FunctionInput] = Vector.empty) = {
-    val nameAndStage = ProjectId.fromEncodedString(project.id)
+    val nameAndStage = testDependencies.projectIdEncoder.fromEncodedString(project.id)
     server.query(s"""
       |mutation {
       |  deploy(input:{
@@ -308,7 +308,7 @@ class DeployMutationSpec extends FlatSpec with Matchers with DeploySpecBase {
                  """.stripMargin
 
     val (project, _)  = setupProject(schema)
-    val nameAndStage  = ProjectId.fromEncodedString(project.id)
+    val nameAndStage  = testDependencies.projectIdEncoder.fromEncodedString(project.id)
     val loadedProject = projectPersistence.load(project.id).await.get
 
     loadedProject.schema.getModelByName("TestModel").get.getFieldByName("id").get.isVisible shouldEqual true
@@ -384,7 +384,7 @@ class DeployMutationSpec extends FlatSpec with Matchers with DeploySpecBase {
 
   "DeployMutation" should "error if defaultValue are provided for list fields" in {
     val (project, _) = setupProject(basicTypesGql)
-    val nameAndStage = ProjectId.fromEncodedString(project.id)
+    val nameAndStage = testDependencies.projectIdEncoder.fromEncodedString(project.id)
     val schema =
       """
         |type TestModel {
@@ -411,7 +411,7 @@ class DeployMutationSpec extends FlatSpec with Matchers with DeploySpecBase {
 
   "DeployMutation" should "throw a correct error for an invalid query" in {
     val (project, _) = setupProject(basicTypesGql)
-    val nameAndStage = ProjectId.fromEncodedString(project.id)
+    val nameAndStage = testDependencies.projectIdEncoder.fromEncodedString(project.id)
     val schema =
       """
         |{
@@ -483,7 +483,7 @@ class DeployMutationSpec extends FlatSpec with Matchers with DeploySpecBase {
 
   "DeployMutation" should "detect and report addition and removal of secrets if that is the only change" in {
     val (project, _) = setupProject(basicTypesGql)
-    val nameAndStage = ProjectId.fromEncodedString(project.id)
+    val nameAndStage = testDependencies.projectIdEncoder.fromEncodedString(project.id)
 
     server.query(
       s"""
@@ -534,7 +534,7 @@ class DeployMutationSpec extends FlatSpec with Matchers with DeploySpecBase {
 
   "DeployMutation" should "not change secrets if there are errors in the deploy (invalid functions)" in {
     val (project, _) = setupProject(basicTypesGql)
-    val nameAndStage = ProjectId.fromEncodedString(project.id)
+    val nameAndStage = testDependencies.projectIdEncoder.fromEncodedString(project.id)
     val schema =
       """
         |{
@@ -567,7 +567,7 @@ class DeployMutationSpec extends FlatSpec with Matchers with DeploySpecBase {
 
   "DeployMutation" should "throw a proper error if detecting an ambiguous relation update" in {
     val (project, _) = setupProject(basicTypesGql)
-    val nameAndStage = ProjectId.fromEncodedString(project.id)
+    val nameAndStage = testDependencies.projectIdEncoder.fromEncodedString(project.id)
     val schema =
       """
         |type Note {
@@ -624,7 +624,7 @@ class DeployMutationSpec extends FlatSpec with Matchers with DeploySpecBase {
 
   "DeployMutation" should "throw a proper error if detecting an ambiguous relation update 2" in {
     val (project, _) = setupProject(basicTypesGql)
-    val nameAndStage = ProjectId.fromEncodedString(project.id)
+    val nameAndStage = testDependencies.projectIdEncoder.fromEncodedString(project.id)
     val schema =
       """
         |type Note {

@@ -17,6 +17,7 @@ import com.prisma.image.{Converters, FunctionValidatorImpl, SingleServerProjectF
 import com.prisma.messagebus.pubsub.inmemory.InMemoryAkkaPubSub
 import com.prisma.messagebus.queue.inmemory.InMemoryAkkaQueue
 import com.prisma.messagebus.{PubSubPublisher, PubSubSubscriber, QueueConsumer, QueuePublisher}
+import com.prisma.shared.models.ProjectIdEncoder
 import com.prisma.subscriptions.protocol.SubscriptionProtocolV05.Responses.SubscriptionSessionResponseV05
 import com.prisma.subscriptions.protocol.SubscriptionProtocolV07.Responses.SubscriptionSessionResponse
 import com.prisma.subscriptions.protocol.SubscriptionRequest
@@ -42,7 +43,7 @@ case class PrismaLocalDependencies()(implicit val system: ActorSystem, val mater
     CachedProjectFetcherImpl(fetcher, invalidationPubSub)
   }
 
-  override lazy val migrator: Migrator = AsyncMigrator(migrationPersistence, projectPersistence, deployPersistencePlugin)
+  override lazy val migrator: Migrator = AsyncMigrator(migrationPersistence, projectPersistence, deployConnector)
   override lazy val clusterAuth = {
     (config.managementApiSecret, config.legacySecret) match {
       case (Some(jwtSecret), _) if jwtSecret.nonEmpty => SymmetricClusterAuth(jwtSecret)
@@ -87,12 +88,14 @@ case class PrismaLocalDependencies()(implicit val system: ActorSystem, val mater
 
   private lazy val webhooksQueue = InMemoryAkkaQueue[Webhook]()
 
-  override lazy val webhookPublisher        = webhooksQueue
-  override lazy val webhooksConsumer        = webhooksQueue.map[WorkerWebhook](Converters.apiWebhook2WorkerWebhook)
-  override lazy val httpClient              = SimpleHttpClient()
-  override lazy val apiAuth                 = AuthImpl
-  override lazy val deployPersistencePlugin = ConnectorUtils.loadDeployConnector(config)
-  override lazy val functionValidator       = FunctionValidatorImpl()
+  override lazy val webhookPublisher  = webhooksQueue
+  override lazy val webhooksConsumer  = webhooksQueue.map[WorkerWebhook](Converters.apiWebhook2WorkerWebhook)
+  override lazy val httpClient        = SimpleHttpClient()
+  override lazy val apiAuth           = AuthImpl
+  override lazy val deployConnector   = ConnectorUtils.loadDeployConnector(config)
+  override lazy val functionValidator = FunctionValidatorImpl()
+
+  override def projectIdEncoder: ProjectIdEncoder = deployConnector.projectIdEncoder
 
   override lazy val apiConnector                = ConnectorUtils.loadApiConnector(config)
   override lazy val sideEffectMutactionExecutor = SideEffectMutactionExecutorImpl()

@@ -1,5 +1,6 @@
 package com.prisma.deploy.schema.mutations
 
+import com.prisma.deploy.DeployDependencies
 import com.prisma.deploy.connector.{DeployConnector, MigrationPersistence, ProjectPersistence}
 import com.prisma.deploy.schema._
 import com.prisma.deploy.validation.NameConstraints
@@ -14,10 +15,12 @@ case class AddProjectMutation(
     migrationPersistence: MigrationPersistence,
     persistencePlugin: DeployConnector
 )(
-    implicit ec: ExecutionContext
+    implicit ec: ExecutionContext,
+    dependencies: DeployDependencies
 ) extends Mutation[AddProjectMutationPayload]
     with AwaitUtils {
-  val projectId = ProjectId.toEncodedString(name = args.name, stage = args.stage)
+  val projectIdEncoder = dependencies.projectIdEncoder
+  val projectId        = projectIdEncoder.toEncodedString(name = args.name, stage = args.stage)
 
   override def execute: Future[MutationResult[AddProjectMutationPayload]] = {
     validate()
@@ -51,8 +54,8 @@ case class AddProjectMutation(
   }
 
   private def validate(): Unit = {
-    if (ProjectId.reservedServiceAndStageNames.contains(args.name)) throw ReservedServiceName(args.name)
-    if (ProjectId.reservedServiceAndStageNames.contains(args.stage)) throw ReservedStageName(args.stage)
+    if (projectIdEncoder.reservedServiceAndStageNames.contains(args.name)) throw ReservedServiceName(args.name)
+    if (projectIdEncoder.reservedServiceAndStageNames.contains(args.stage)) throw ReservedStageName(args.stage)
     if (!NameConstraints.isValidServiceName(args.name)) throw InvalidServiceName(args.name)
     if (!NameConstraints.isValidServiceStage(args.stage)) throw InvalidServiceStage(args.stage)
 

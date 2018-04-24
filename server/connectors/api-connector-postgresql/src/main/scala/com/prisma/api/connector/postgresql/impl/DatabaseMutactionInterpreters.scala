@@ -16,7 +16,7 @@ import com.prisma.api.schema.APIErrors.RequiredRelationWouldBeViolated
 import com.prisma.shared.models.{Field, Relation}
 import org.postgresql.util.PSQLException
 import slick.dbio.DBIOAction
-import slick.jdbc.MySQLProfile.api._
+import slick.jdbc.PostgresProfile.api._
 
 case class AddDataItemToManyRelationByPathInterpreter(mutaction: AddDataItemToManyRelationByPath) extends DatabaseMutactionInterpreter {
 

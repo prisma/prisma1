@@ -2,9 +2,9 @@ package com.prisma.deploy.connector.postgresql
 
 import com.prisma.config.DatabaseConfig
 import com.prisma.deploy.connector._
-import com.prisma.deploy.connector.postgresql.database.{PostgresDeployDatabaseMutationBuilder, InternalDatabaseSchema}
+import com.prisma.deploy.connector.postgresql.database.{InternalDatabaseSchema, PostgresDeployDatabaseMutationBuilder}
 import com.prisma.deploy.connector.postgresql.impls.{ClientDbQueriesImpl, DeployMutactionExecutorImpl, MigrationPersistenceImpl, ProjectPersistenceImpl}
-import com.prisma.shared.models.Project
+import com.prisma.shared.models.{Project, ProjectIdEncoder}
 import slick.dbio.Effect.Read
 import slick.dbio.{DBIOAction, NoStream}
 import slick.jdbc.PostgresProfile.api._
@@ -17,7 +17,10 @@ case class PostgresDeployConnector(dbConfig: DatabaseConfig)(implicit ec: Execut
   lazy val internalDatabase     = internalDatabaseDefs.internalDatabase
   lazy val clientDatabase       = internalDatabaseRoot
 
-  override val projectPersistence: ProjectPersistence           = ProjectPersistenceImpl(internalDatabase)
+  override val projectPersistence: ProjectPersistence = ProjectPersistenceImpl(internalDatabase)
+
+  override def projectIdEncoder: ProjectIdEncoder = ProjectIdEncoder('$')
+
   override val migrationPersistence: MigrationPersistence       = MigrationPersistenceImpl(internalDatabase)
   override val deployMutactionExecutor: DeployMutactionExecutor = DeployMutactionExecutorImpl(clientDatabase)
 

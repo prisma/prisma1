@@ -33,6 +33,7 @@ case class DeployMutation(
     dependencies: DeployDependencies
 ) extends Mutation[DeployMutationPayload] {
 
+  val projectId = dependencies.projectIdEncoder.toEncodedString(args.name, args.stage)
   val graphQlSdl: Document = QueryParser.parse(args.types) match {
     case Success(res) => res
     case Failure(e)   => throw InvalidQuery(e.getMessage)
@@ -165,7 +166,8 @@ case class DeployMutation(
 
 case class DeployMutationInput(
     clientMutationId: Option[String],
-    projectId: String,
+    name: String,
+    stage: String,
     types: String,
     dryRun: Option[Boolean],
     force: Option[Boolean],

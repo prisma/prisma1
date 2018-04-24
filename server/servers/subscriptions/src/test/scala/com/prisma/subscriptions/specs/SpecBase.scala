@@ -24,6 +24,7 @@ trait SpecBase extends TestFrameworkInterface with BeforeAndAfterEach with Befor
   val invalidationTestKit                   = dependencies.invalidationTestKit
   val requestsTestKit                       = dependencies.requestsQueueTestKit
   val responsesTestKit                      = dependencies.responsePubSubTestKit
+  val projectIdEncoder                      = dependencies.projectIdEncoder
 
   val wsServer            = WebsocketServer(dependencies)
   val simpleSubServer     = SimpleSubscriptionsServer()
@@ -78,7 +79,7 @@ trait SpecBase extends TestFrameworkInterface with BeforeAndAfterEach with Befor
       com.prisma.stub.Import.Request("GET", s"/${dependencies.projectFetcherPath}/${project.id}").stub(200, Json.toJson(projectWithClientId).toString)
     )
     withStubServer(stubs, port = dependencies.projectFetcherPort) {
-      val projectId = ProjectId.fromEncodedString(project.id)
+      val projectId = projectIdEncoder.fromEncodedString(project.id)
       WS(s"/${projectId.name}/${projectId.stage}", wsClient.flow, Seq(wsServer.v7ProtocolName)) ~> wsServer.routes ~> check {
         checkFn(wsClient)
       }

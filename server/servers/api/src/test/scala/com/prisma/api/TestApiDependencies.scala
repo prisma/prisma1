@@ -11,6 +11,7 @@ import com.prisma.connectors.utils.ConnectorUtils
 import com.prisma.deploy.connector.DeployConnector
 import com.prisma.messagebus.pubsub.inmemory.InMemoryAkkaPubSub
 import com.prisma.messagebus.testkits.InMemoryQueueTestKit
+import com.prisma.shared.models.ProjectIdEncoder
 import com.prisma.subscriptions.Webhook
 
 trait TestApiDependencies extends ApiDependencies {
@@ -36,4 +37,6 @@ case class TestApiDependenciesImpl()(implicit val system: ActorSystem, val mater
   override lazy val mutactionVerifier           = DatabaseMutactionVerifierImpl
 
   lazy val deployConnector = ConnectorUtils.loadDeployConnector(config.copy(databases = config.databases.map(_.copy(pooled = false))))
+
+  override def projectIdEncoder: ProjectIdEncoder = deployConnector.projectIdEncoder
 }

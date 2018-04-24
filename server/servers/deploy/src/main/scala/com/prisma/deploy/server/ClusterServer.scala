@@ -43,6 +43,7 @@ case class ClusterServer(prefix: String = "", server2serverSecret: Option[String
   val log: String => Unit                    = (msg: String) => logger.info(msg)
   val requestPrefix                          = sys.env.getOrElse("ENV", "local")
   val schemaManagerSecured                   = server2serverSecret.exists(_.nonEmpty)
+  val projectIdEncoder                       = dependencies.projectIdEncoder
 
   def errorExtractor(t: Throwable): Option[Int] = t match {
     case e: DeployApiError => Some(e.code)
@@ -167,7 +168,7 @@ case class ClusterServer(prefix: String = "", server2serverSecret: Option[String
     projectPersistence
       .load(projectId)
       .flatMap {
-        case None    => Future.failed(InvalidProjectId(projectId))
+        case None    => Future.failed(InvalidProjectId(projectIdEncoder.fromEncodedString(projectId)))
         case Some(p) => Future.successful(Json.toJson(ProjectWithClientId(p, p.ownerId)).toString)
       }
   }

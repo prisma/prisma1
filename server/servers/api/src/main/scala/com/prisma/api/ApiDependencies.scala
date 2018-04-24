@@ -12,7 +12,7 @@ import com.prisma.auth.{Auth, AuthImpl}
 import com.prisma.client.server.{GraphQlRequestHandler, GraphQlRequestHandlerImpl}
 import com.prisma.errors.{BugsnagErrorReporter, ErrorReporter}
 import com.prisma.messagebus.{PubSub, PubSubPublisher, QueuePublisher}
-import com.prisma.shared.models.Project
+import com.prisma.shared.models.{Project, ProjectIdEncoder}
 import com.prisma.subscriptions.Webhook
 import com.prisma.utils.await.AwaitUtils
 
@@ -30,6 +30,7 @@ trait ApiDependencies extends AwaitUtils {
   def databaseMutactionExecutor: DatabaseMutactionExecutor = apiConnector.databaseMutactionExecutor
   def sideEffectMutactionExecutor: SideEffectMutactionExecutor
   def mutactionVerifier: DatabaseMutactionVerifier
+  def projectIdEncoder: ProjectIdEncoder
 
   implicit lazy val executionContext: ExecutionContext  = system.dispatcher
   implicit lazy val reporter: ErrorReporter             = BugsnagErrorReporter(sys.env.getOrElse("BUGSNAG_API_KEY", ""))

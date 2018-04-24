@@ -164,7 +164,7 @@ class RelationFilterSpec extends FlatSpec with Matchers with ApiBaseSpec {
       """{"data":{"blogs":[{"name":"blog 2"}]}}""")
   }
 
-  "crazy filters" should "work" in {
+  "crazy filters" should "work" ignore {
 
     server
       .query(

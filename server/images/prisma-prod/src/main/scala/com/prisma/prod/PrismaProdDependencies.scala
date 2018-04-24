@@ -21,6 +21,7 @@ import com.prisma.messagebus.pubsub.inmemory.InMemoryAkkaPubSub
 import com.prisma.messagebus.pubsub.rabbit.RabbitAkkaPubSub
 import com.prisma.messagebus.queue.inmemory.InMemoryAkkaQueue
 import com.prisma.messagebus.queue.rabbit.RabbitQueue
+import com.prisma.shared.models.ProjectIdEncoder
 import com.prisma.subscriptions.protocol.SubscriptionProtocolV05.Responses.SubscriptionSessionResponseV05
 import com.prisma.subscriptions.protocol.SubscriptionProtocolV07.Responses.SubscriptionSessionResponse
 import com.prisma.subscriptions.protocol.SubscriptionRequest
@@ -49,7 +50,7 @@ case class PrismaProdDependencies()(implicit val system: ActorSystem, val materi
     CachedProjectFetcherImpl(fetcher, invalidationPubSub)
   }
 
-  override lazy val migrator: Migrator = AsyncMigrator(migrationPersistence, projectPersistence, deployPersistencePlugin)
+  override lazy val migrator: Migrator = AsyncMigrator(migrationPersistence, projectPersistence, deployConnector)
   override lazy val clusterAuth = {
     (config.managementApiSecret, config.legacySecret) match {
       case (Some(jwtSecret), _) if jwtSecret.nonEmpty => SymmetricClusterAuth(jwtSecret)
@@ -101,10 +102,12 @@ case class PrismaProdDependencies()(implicit val system: ActorSystem, val materi
     RabbitQueue.publisher[Webhook](rabbitUri, "webhooks")(reporter, Webhook.marshaller).asInstanceOf[QueuePublisher[Webhook]]
   override lazy val webhooksConsumer =
     RabbitQueue.consumer[WorkerWebhook](rabbitUri, "webhooks")(reporter, JsonConversions.webhookUnmarshaller).asInstanceOf[QueueConsumer[WorkerWebhook]]
-  override lazy val httpClient                               = SimpleHttpClient()
-  override lazy val apiAuth                                  = AuthImpl
-  override lazy val deployPersistencePlugin: DeployConnector = ConnectorUtils.loadDeployConnector(config)
-  override lazy val functionValidator: FunctionValidator     = FunctionValidatorImpl()
+  override lazy val httpClient                           = SimpleHttpClient()
+  override lazy val apiAuth                              = AuthImpl
+  override lazy val deployConnector: DeployConnector     = ConnectorUtils.loadDeployConnector(config)
+  override lazy val functionValidator: FunctionValidator = FunctionValidatorImpl()
+
+  override def projectIdEncoder: ProjectIdEncoder = deployConnector.projectIdEncoder
 
   override lazy val apiConnector                = ConnectorUtils.loadApiConnector(config)
   override lazy val sideEffectMutactionExecutor = SideEffectMutactionExecutorImpl()

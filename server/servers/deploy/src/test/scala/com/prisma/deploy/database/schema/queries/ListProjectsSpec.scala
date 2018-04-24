@@ -1,6 +1,7 @@
 package com.prisma.deploy.database.schema.queries
 
 import com.prisma.deploy.specutils.DeploySpecBase
+import com.prisma.shared.models.ProjectId
 import org.scalatest.{FlatSpec, Matchers}
 
 class ListProjectsSpec extends FlatSpec with Matchers with DeploySpecBase {
@@ -30,7 +31,9 @@ class ListProjectsSpec extends FlatSpec with Matchers with DeploySpecBase {
        |}
       """.stripMargin)
 
-    result.pathAsSeq("data.listProjects").map(p => s"${p.pathAsString("name")}$$${p.pathAsString("stage")}") should contain allOf (
+    result
+      .pathAsSeq("data.listProjects")
+      .map(p => s"${p.pathAsString("name")}${testDependencies.projectIdEncoder.stageSeparator}${p.pathAsString("stage")}") should contain allOf (
       project.id,
       project2.id,
       project3.id

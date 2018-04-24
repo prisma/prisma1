@@ -24,10 +24,9 @@ case class InvalidQuery(reason: String) extends AbstractDeployApiError(reason, 3
 case class UpdatedRelationAmbigous(reason: String) extends AbstractDeployApiError(reason, 3018)
 
 // 40xx
-case class InvalidProjectId(projectId: String)
+case class InvalidProjectId(projectId: ProjectId)
     extends AbstractDeployApiError({
-      val nameAndStage = ProjectId.fromEncodedString(projectId)
-      s"No service with name '${nameAndStage.name}' and stage '${nameAndStage.stage}' found"
+      s"No service with name '${projectId.name}' and stage '${projectId.stage}' found"
     }, 4000)
 
 case class InvalidServiceName(name: String) extends AbstractDeployApiError(InvalidNames.forService(name, "service name"), 4001)
