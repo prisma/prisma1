@@ -4,12 +4,12 @@ import play.api.libs.json.Json
 
 import scala.util.Try
 
-object ClusterAuth {
+object ManagementAuth {
   implicit val tokenGrantReads = Json.reads[TokenGrant]
   implicit val tokenDataReads  = Json.reads[TokenData]
 }
 
-trait ClusterAuth {
+trait ManagementAuth {
   def verify(name: String, stage: String, authHeaderOpt: Option[String]): Try[Unit]
 }
 

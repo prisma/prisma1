@@ -2,7 +2,7 @@ package com.prisma.deploy.server.auth
 
 import scala.util.{Success, Try}
 
-case class DummyClusterAuth() extends ClusterAuth {
+case class DummyManagementAuth() extends ManagementAuth {
   override def verify(name: String, stage: String, authHeaderOpt: Option[String]): Try[Unit] = {
     println(
       "Warning: Cluster authentication is disabled. " +

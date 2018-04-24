@@ -263,6 +263,6 @@ case class SchemaBuilderImpl(
   }
 
   private def verifyAuthOrThrow(name: String, stage: String, authHeader: Option[String]) = {
-    dependencies.clusterAuth.verify(name, stage, authHeader).get
+    dependencies.managementAuth.verify(name, stage, authHeader).get
   }
 }
