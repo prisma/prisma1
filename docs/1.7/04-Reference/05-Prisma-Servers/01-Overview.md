@@ -40,13 +40,13 @@ When you're running `prisma deploy` for a Prisma API, there are two scenarios wi
 
 Prisma servers support _symmetric_ as well as _asymmetric_ authentication approaches.
 
-### Asymmetric authentication using public/private key pairs
+#### Asymmetric authentication using public/private key pairs
 
 Using the asymmetric authentication approach, Prisma servers are secured using public/private key pairs. 
 
 The Prisma servers knows the **public key** (via the `legacySecret` property in `docker-compose.yml`, see [here](!alias-aira9zama5) for more info). The **private key** is known locally by the Prisma CLI and used to generate authentication tokens. These tokens are used to authenticate requests against the Prisma server (e.g. an invocation of `prisma deploy`) which can then be validated by the Prisma server using its public key.
 
-### Symmetric approach using a single secret
+#### Symmetric approach using a single secret
 
 In Prisma 1.7., a new authentication approach for Prisma servers has been introduced. It uses a single secret to authenticate requests made by the Prisma CLI against a Prisma server.
 
