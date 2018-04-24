@@ -7,7 +7,7 @@ description: Overview
 
 Prisma APIs are hosted on _Prisma servers_. These servers provide the _runtime environment_ for Prisma APIs.
 
-> **Note**: Prior to Prisma 1.7., Prisma servers have been called [_clusters_](!alias-iquaecuj6b#terminology).
+> **Note**: Prior to Prisma 1.7, Prisma servers have been called [_clusters_](!alias-iquaecuj6b#terminology).
 
 In essence, there are three kinds of _servers_ you can deploy your Prisma API to:
 
@@ -48,7 +48,7 @@ The Prisma servers knows the **public key** (via the `legacySecret` property in 
 
 #### Symmetric approach using a single secret
 
-In Prisma 1.7., a new authentication approach for Prisma servers has been introduced. It uses a single secret to authenticate requests made by the Prisma CLI against a Prisma server.
+In Prisma 1.7, a new authentication approach for Prisma servers has been introduced. It uses a single secret to authenticate requests made by the Prisma CLI against a Prisma server.
 
 The secret can be chosen by the admin of the Prisma server. It is set via the `managementApiSecret` property in the `docker-compose.yml` which is used to deploy the Prisma server. If not specified, the CLI doesn't need to authenticate its requests. If specified, the CLI needs to have access to an environment variable called `PRISMA_MANAGEMENT_API_SECRET` which contains the secret, otherwise the CLI can not talk to the Prisma server (e.g. `prisma deploy` will fail).
 
