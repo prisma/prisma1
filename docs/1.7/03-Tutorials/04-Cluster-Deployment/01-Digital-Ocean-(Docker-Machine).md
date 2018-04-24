@@ -79,7 +79,7 @@ docker-machine ls
 
 ## 4. Install Prisma on your Droplet
 
-Now that you have your Droplet up and running, you can install Prisma on it. As [the Prisma infrastructure runs on Docker](!alias-aira9zama5), you could theoretically do this by using the Docker CLI directly. In that case, you could use the [Docker Compose file](!alias-aira9zama5#docker-compose-file) as foundation and run the required commands (e.g. [`docker-compose up`](https://docs.docker.com/compose/reference/up/)) yourself.
+Now that you have your Droplet up and running, you can install Prisma on it. As [the Prisma infrastructure runs on Docker](!alias-aira9zama5), you could theoretically do this by using the Docker CLI directly. In that case, you could use the [Docker Compose file](!alias-aira9zama5#docker-compose-file) as foundation and run the required commands (e.g. [`docker-compose up -d`](https://docs.docker.com/compose/reference/up/)) yourself.
 
 However, the Prisma CLI actually offers some commands that you can use for convenience to not fiddle with Docker yourself. In this tutorial, you'll take advantage of these commands - under the hood they will simply configure your Docker environment and invoke the required CLI commands.
 
@@ -121,7 +121,7 @@ To actually install Prisma on your Droplet, you need to perform the following st
 
 1. Create `docker-compose.yml` with proper configuration
 1. Create `.env` to configure the environment variables used by Docker
-1. Run `docker-compose up` to install Prisma on the Droplet
+1. Run `docker-compose up -d` to install Prisma on the Droplet
 
 Let's get started!
 

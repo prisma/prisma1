@@ -163,9 +163,9 @@ With Prisma 1.7, a _symmetric_ authentication approach is introduced. This means
 
 #### Providing the key to the Prisma server
 
-Prisma servers running on Docker receive their keys via the `XXX` property in `docker-compose.yml`. When deploying the Prisma server using `docker-compose up`, the key will be stored on the server. Every request made by the CLI (e.g. `prisma deploy`) now needs to be authenticated with that key.
+Prisma servers running on Docker receive their keys via the `managementApiSecret` key in `docker-compose.yml`. When deploying the Prisma server using `docker-compose up -d`, the key will be stored on the server. Every request made by the CLI (e.g. `prisma deploy`) now needs to be authenticated with that key.
 
-Here is an example where the `XXX` property is set to `mykey123`:
+Here is an example where the `managementApiSecret` key is set to `my-server-secret-123`:
 
 ```yml
 version: '3'
@@ -202,8 +202,8 @@ Whenever the CLI makes requests against the server (e.g. `prisma deploy`), it ne
 
 You need to explicitly set the key using the `PRISMA_MANAGEMENT_API_SECRET` environment variable. The easiest way to do so is by using a [`.env`](https://www.npmjs.com/package/dotenv)-file which is automatically "understood" by the Prisma CLI.
 
-Here is an example for a `.env`-file which defines the `mykey123` key as the `PRISMA_MANAGEMENT_API_SECRET` environment variable. This will allow the Prisma CLI to authenticate against the Prisma server it is talking to:
+Here is an example for a `.env`-file which defines the `my-server-secret-123` key as the `PRISMA_MANAGEMENT_API_SECRET` environment variable. This will allow the Prisma CLI to authenticate against the Prisma server it is talking to:
 
 ```
-PRISMA_MANAGEMENT_API_SECRET="mykey123"
+PRISMA_MANAGEMENT_API_SECRET="my-server-secret-123"
 ```

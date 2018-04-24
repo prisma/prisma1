@@ -9,7 +9,7 @@ The infrastructure for self-hosted (and local) Prisma servers is entirely based 
 
 Here's a quick rundown of the most important commands:
 
-- [`docker-compose up`](https://docs.docker.com/compose/reference/up/): Start a new Prisma server to which you can deploy your Prisma APIs
+- [`docker-compose up -d`](https://docs.docker.com/compose/reference/up/): Start a new Prisma server to which you can deploy your Prisma APIs
 - [`docker-compose stop`](https://docs.docker.com/compose/reference/stop/): Stops the Prisma server
 - [`docker-compose pull`](https://docs.docker.com/compose/reference/pull/): Downloads the [latest Prisma images](https://hub.docker.com/r/prismagraphql/prisma/tags/) from Docker Hub
 - [`docker logs`](https://docs.docker.com/compose/reference/logs/): Shows the logs of the Prisma server (helpful for debugging)
@@ -57,7 +57,6 @@ services:
             user: root
             password: prisma
   db:
-    container_name: prisma-db
     image: mysql:5.7
     restart: always
     environment:
@@ -122,5 +121,5 @@ If your local prisma cluster is in an unrecoverable state, the easiest option mi
 ```sh
 docker-compose kill
 docker-compose down
-docker-compose up
+docker-compose up -d
 ```
