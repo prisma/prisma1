@@ -91,7 +91,7 @@ For example:
 
 ### Post deployment hooks
 
-In Prisma 1.7, you can specify arbitrary terminal commands to be executed by the Prisma CLI after a deployment (i.e. after `prisma deploy` has terminated.
+In Prisma 1.7, you can specify arbitrary terminal commands to be executed by the Prisma CLI after a deployment (i.e. after `prisma deploy` has terminated).
 
 Here is an example that performs three tasks after a deployment:
 
@@ -104,10 +104,10 @@ hooks:
   post-deploy:
     - echo "Deployment finished"
     - graphql get-schema --project db
-    - graphql codegen
+    - graphql prepare
 ```
 
-> **Note**: To use the `graphql codegen` command, you need to install the current _beta_ release of the GraphQL CLI:  `npm install -g graphql-cli@beta`.
+
 
 ## Prisma CLI
 
@@ -206,4 +206,35 @@ Here is an example for a `.env`-file which defines the `my-server-secret-123` ke
 
 ```
 PRISMA_MANAGEMENT_API_SECRET="my-server-secret-123"
+```
+
+### Download the Prisma GraphQL schema and invoking codegen
+
+In Prisma 1.7, the Prisma CLI is not automatically taking care of downloading the GraphQL schema (commonly called `prisma.graphql`) for the deployed Prisma API after a deployment any more. If you need the file in your project, you need to download it via a [post deployment hook](#post-deployment-hook).
+
+Similarly, if you're using code generation that is configured via [GraphQL Config](https://github.com/graphcool/graphql-config), you also need to explicitly invoke `graphql prepare` for the code being generated.
+
+Here is the example of a `.graphqlconfig.yml` file that specifies that:
+
+- the Prisma GraphQL schema should be stored in a file called `generated/prisma.graphql`
+- the corresponding TypeScript type definitions should be written to a file called `generated/prisma.ts`
+
+```yml
+projects:
+  prisma:
+    schemaPath: generated/prisma.graphql
+    extensions:
+      prisma: prisma.yml
+      prepare-binding:
+        output: generated/prisma.ts
+        generator: prisma-ts
+```
+
+The corresponding post deployment hook in `prisma.yml` for downloading the schema and invoking the code generation needs to be configured as follows:
+
+```yml
+hooks:
+  post-deploy:
+    - graphql get-schema --project prisma
+    - graphql prepare
 ```
