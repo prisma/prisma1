@@ -50,31 +50,21 @@ This will create a new directory called `hello-world` as well as the two files w
 - [`prisma.yml`](!alias-foatho8aip): The root configuration file for your service. It contains information about your service, like the name (which is used to generate the service's HTTP endpoint), a secret to secure the access to the endpoint and about where it should be deployed.
 - `datamodel.graphql` (can also be called differently, e.g. `types.graphql`): This file contains the definition of your [data model](!alias-eiroozae8u), written in [GraphQL SDL](https://blog.graph.cool/graphql-sdl-schema-definition-language-6755bcb9ce51).
 
-> **Note**: The `hello-world` directory actually contains a third file as well: `.graphqlconfig.yml`. This file follows the industry standard for configuring and structuring GraphQL projects (based on [`graphql-config`](https://github.com/graphcool/graphql-config)). If present, it is used by GraphQL tooling (such as the GraphQL Playground, the [`graphql-cli`](https://github.com/graphql-cli/graphql-cli/), text editors, build tools and others) to improve your local developer workflows.
-
 Let's take a look at the contents of the generated files:
 
 **`prisma.yml`**
 
 ```yml
-service: hello-world
-stage: dev
-
+endpoint: https://eu1.prisma.sh/public-mountainninja-311/hello-world/dev
 datamodel: datamodel.graphql
-
-# to enable auth, provide
-# secret: my-secret
-disableAuth: true
 ```
+
+Note that the endpoint will look slightly different for you as `public-mountainninja-311` is a randomly generated ID that will be different for every Prisma API you deploy to a Sandbox.
 
 Here's an overview of the properties in the generated `prisma.yml`:
 
-- `service`: Defines the service name which will be part of the service's HTTP endpoint
-- `stage`: A service can be deployed to multiple stages (e.g. a _development_ and a _production_ environment)
-- `datamodel`: The path to the file which contains your data model
-- `disableAuth`: If set to true, everyone who knows the endpoint of your Prisma service has full read and write access. If set to `false`, you need to specify a `secret` in `prisma.yml` which is used to generate JWT authentication tokens. These tokens need to be attached to the `Authorization` header of the requests sent to the API of your service. The easiest way to obtain such a token is the `prisma token` command from the Prisma CLI.
-
-> **Note**: We'll keep `disableAuth` set to `true` for this tutorial. In production applications, you'll always want to require authentication for your service! You can read more about this topic [here](!alias-pua7soog4v).
+- `endpoint`: Defines HTTP endpoint of the Prisma API ([learn more](!alias-ufeshusai8#endpoint-optional)).
+- `datamodel`: The path to the file which contains your data model ([learn more](!alias-ufeshusai8#datamodel-required)).
 
 **`datamodel.graphql`**
 
@@ -89,41 +79,17 @@ The data model contains type definitions for the entities in your application do
 
 The `@unique` directive here expresses that no two users in the database can have the same `id`, Prisma will ensure this requirement is met at all times.
 
-## Deploying your Prisma service
-
-`prisma.yml` and `datamodel.graphql` are your abstract _service definition_. To actually create an instance of this service that can be invoked via HTTP, you need to _deploy_ it.
-
-<Instruction>
-
-Inside the `hello-world` directory in your terminal, run the following command:
-
-```sh
-prisma deploy
-```
-
-</Instruction>
-
-<!-- TODO: Enter screenshot of terminal -->
-
-Since `prisma.yml` doesn't yet contain the information about _where_ (meaning to which `cluster`) your service should be deployed, the CLI triggers a prompt for you to provide this information. At this point, you can choose to either deploy it locally with [Docker](https://www.docker.com) (which of course requires you to have Docker installed on your machine) or to a development Prisma cluster. You'll use a development cluster for the purpose of this tutorial.
-
-<Instruction>
-
-When prompted where (i.e. to which _cluster_) to deploy your Prisma service, choose one of the _public cluster_ options: `prisma-eu1` or `prisma-us1`.
-
-</Instruction>
-
-Your Prisma service is now deployed and ready to accept your queries and mutations 🎉
+Your Prisma API is now deployed and ready to receive your queries, mutations and subscriptions 🎉
 
 ## Exploring your service in a GraphQL Playground
 
-So your service is deployed - but how do you know how to interact with it? What does its API actually look like?
+So your API is deployed - but how do you know how to interact with it? What does its API actually look like?
 
 In general, the generated API allows to perform CRUD operations on the types in your data model. It also exposes GraphQL subscriptions which allow clients to _subscribe_ to certain _events_ and receive updates in realtime.
 
-It is important to understand that the data model is the foundation for your API. Every time you make changes to your data model, the GraphQL API gets updated accordingly.
+It is important to understand that the data model is the foundation for your API. Every time you make changes to your data model (and run `prisma deploy` afterwards), the GraphQL API gets updated accordingly.
 
-Because your datamodel contains the `User` type, the Prisma API now allows for its clients to create, read, update and delete instances, also called _nodes_, of that type. In particular, the following GraphQL operations are now generated based on the `User` type:
+Because your data model contains the `User` type, the Prisma API now allows for its clients to create, read, update and delete instances, also called _nodes_, of that type. In particular, the following GraphQL operations are now generated based on the `User` type:
 
 - `user`: Query to retrieve a single `User` node by its `id` (or another `@unique` field).
 - `users`: Query to retrieve a list of `User` nodes.
@@ -131,9 +97,9 @@ Because your datamodel contains the `User` type, the Prisma API now allows for i
 - `updateUser`: Mutation to update an existing `User` node.
 - `deleteUser`: Mutation to delete an existing `User` node.
 
-> **Note**: This list of generated operations is not complete. The Prisma API exposes a couple of more convenience operations that, for example, allow to batch update/delete many nodes. However, all operations either create, read, update or delete nodes of the types defined in the data model.
+> **Note**: This list of generated operations is not complete. The Prisma API exposes a couple of more operations that, for example, allow to batch update/delete many nodes. However, all operations either create, read, update or delete nodes of the types defined in the data model.
 
-To actually use these operations, you need a way to [send requests to your service's API](ohm2ouceuj). Since that API is exposed via HTTP, you could use tools like [`curl`](https://en.wikipedia.org/wiki/CURL) or [Postman](https://www.getpostman.com/) to interact with it. However, GraphQL actually comes with much nicer tooling for that purpose: [GraphQL Playground](https://github.com/graphcool/graphql-playground), an interactive GraphQL IDE.
+To actually use these operations, you need a way to [send requests to your service's API](!alias-ohm2ouceuj). Since that API is exposed via HTTP, you could use tools like [`curl`](https://en.wikipedia.org/wiki/CURL) or [Postman](https://www.getpostman.com/) to interact with it. However, GraphQL actually has with much nicer tooling for that purpose: [GraphQL Playground](https://github.com/graphcool/graphql-playground), an interactive GraphQL IDE.
 
 <Instruction>
 
@@ -155,7 +121,7 @@ One really cool property of GraphQL APIs is that they're effectively _self-docum
 
 <Instruction>
 
-To see the documentation for your service's API, click the green **SCHEMA**-button on the right edge of the Playground window.
+To see the documentation for your Prisma API, click the green **SCHEMA**-button on the right edge of the Playground window.
 
 </Instruction>
 
