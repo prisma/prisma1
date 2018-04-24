@@ -1,6 +1,6 @@
 package com.prisma.deploy.server
 
-import akka.actor.ActorSystem
+import akka.actor.{ActorSystem, Props}
 import akka.http.scaladsl.model.StatusCode
 import akka.http.scaladsl.model.StatusCodes._
 import akka.http.scaladsl.model.headers.RawHeader
@@ -44,6 +44,7 @@ case class ClusterServer(prefix: String = "")(
   val log: String => Unit                    = (msg: String) => logger.info(msg)
   val requestPrefix                          = sys.env.getOrElse("ENV", "local")
   val server2serverSecret                    = sys.env.getOrElse("SCHEMA_MANAGER_SECRET", sys.error("SCHEMA_MANAGER_SECRET env var required but not found"))
+//  val telemetryActor = system.actorOf(Props(TelemetryActor(dependencies.)))
 
   def errorExtractor(t: Throwable): Option[Int] = t match {
     case e: DeployApiError => Some(e.code)

@@ -1,9 +1,10 @@
 package com.prisma.deploy.connector.mysql
 
 import com.prisma.deploy.connector._
-import com.prisma.deploy.connector.mysql.database.{DatabaseMutationBuilder, InternalDatabaseSchema}
+import com.prisma.deploy.connector.mysql.database.{DatabaseMutationBuilder, InternalDatabaseSchema, TelemetryTable}
 import com.prisma.deploy.connector.mysql.impls.{ClientDbQueriesImpl, DeployMutactionExectutorImpl, MigrationPersistenceImpl, ProjectPersistenceImpl}
 import com.prisma.shared.models.Project
+import org.joda.time.DateTime
 import slick.dbio.Effect.Read
 import slick.dbio.{DBIOAction, NoStream}
 import slick.jdbc.MySQLProfile.api._
@@ -58,6 +59,9 @@ case class MySqlDeployConnector(clientDatabase: Database)(implicit ec: Execution
       _ <- internalDatabase.shutdown
     } yield ()
   }
+
+  override def getOrCreateTelemetryInfo(): Future[TelemetryInfo]       = internalDatabaseRoot.run(TelemetryTable.getOrCreateInfo())
+  override def updateTelemetryInfo(lastPinged: DateTime): Future[Unit] = internalDatabaseRoot.run(TelemetryTable.updateInfo(lastPinged))
 }
 
 trait TableTruncationHelpers {
