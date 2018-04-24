@@ -16,6 +16,11 @@ There are two main cases for how the CLI is helping you with the migration:
 - **Your API is deployed to a [Prisma Cloud](https://www.prisma.io/cloud) cluster**: The CLI _automatically_ adjusts `prisma.yml` and writes the new `endpoint` property into it (while removing `service`, `stage` and `cluster`).
 - **Your API is _NOT_ deployed to a [Prisma Cloud](https://www.prisma.io/cloud) cluster**: The CLI prints a warning and provides hints how to perform the updates (see below for more info).
 
+## Terminology
+
+- **Prisma Clusters** are renamed to **Prisma Servers**
+- **Development Clusters** are renamed to **Prisma Sandbox**
+
 ## `prisma.yml`
 
 ### New YAML structure
@@ -26,11 +31,11 @@ The service configuration inside `prisma.yml` is based on a new YAML structure (
 - A new property called `endpoint` has been added. The new `endpoint` effectively encodes the information of the three removed properties.
 - A new property called `post-deploy` has been added (see [Post deployment hooks](#post-deployment-hooks) for more info).
 - The `disableAuth` property has been removed. If you don't want your Prisma API to require authentication, simply omit the `secret` property.
-- The `schema` property has been removed. Note that the Prisma CLI will not by default generate the GraphQL schema (commonly called `prisma.graphql`) for your Prisma API any more! If you want to get access to the GraphQL schema of your Prisma API, you need to configure a [post deploment hook](#post-deployment-hooks) accordingly.
+- The `schema` property has been removed. Note that the Prisma CLI will not by default download the GraphQL schema (commonly called `prisma.graphql`) for your Prisma API any more! If you want to get access to the GraphQL schema of your Prisma API, you need to configure a [post deploment hook](#post-deployment-hooks) accordingly.
 
 #### Example: Local deployment
 
-As an example, consider this **outdated** version of `prisma.yml`:
+Consider this **outdated** version of `prisma.yml`:
 
 ```yml
 service: myservice
@@ -47,15 +52,42 @@ endpoint: http://localhost:4466/myservice/dev
 datamodel: datamodel.graphql
 ```
 
+### Example: Deploying to a Prisma Sandbox in the Cloud
+
+Consider this **outdated** version of `prisma.yml`:
+
+```yml
+service: myservice
+stage: dev
+cluster: public-crocusraccoon-3/prisma-eu1
+
+datamodel: datamodel.graphql
+```
+
+After migrated to **Prisma 1.7.**, the file will have the following structure:
+
+```yml
+endpoint: https://eu1.prisma.sh/public-crocusraccoon-3/myservice/dev
+datamodel: datamodel.graphql
+```
+
 ### Introducing `default` service name and `default` stage
 
 For convenience, two special values for the _service name_ and _stage_ parts of the Prisma `endpoint` have been introduced. Both values are called `default`. If not explicitly provided, the CLI will automatically infer them.
 
 Concretely, this means that whenever the _service name_ and _stage_ are called `default`, you can omit them in the `endpoint` property of `prisma.yml`.
 
-For example, `http://localhost:4466/default/default` can be written as `http://localhost:4466/` or `https://eu1.prisma.sh/public-helixgoose-752/default/default` can be written as `https://eu1.prisma.sh/public-helixgoose-752/`.
+For example:
 
-This is also relevant for the `import` and `export` endpoints of your API. Instead of `http://localhost:4466/default/default/import` you can now write `http://localhost:4466/import` or instead of `https://eu1.prisma.sh/public-helixgoose-752/default/default/export` you can write `https://eu1.prisma.sh/public-helixgoose-752/export`.
+- `http://localhost:4466/default/default` can be written as `http://localhost:4466/`
+- `https://eu1.prisma.sh/public-helixgoose-752/default/default` can be written as `https://eu1.prisma.sh/public-helixgoose-752/`
+
+This is also relevant for the `/import` and `/export` endpoints of your API.
+
+For example:
+
+- `http://localhost:4466/default/default/import` can be written as `http://localhost:4466/import`
+-  `https://eu1.prisma.sh/public-helixgoose-752/default/default/export` can be written as `https://eu1.prisma.sh/public-helixgoose-752/export`
 
 ### Post deployment hooks
 
@@ -81,12 +113,12 @@ hooks:
 
 The `prisma local` commands are being deprecated in favor of using Docker commands directly. `prisma local` provided a convenient abstraction for certain Docker workflows. In 1.7., everything related to these Docker worfklows can be done manually using the [Docker CLI](https://docs.docker.com/engine/reference/commandline/cli/).
 
-When running `prisma init` in the Prisma 1.7., the CLI generates a `docker-compose.yml` file that specifies the images for two Docker containers:
+When running `prisma init` in Prisma 1.7., the CLI generates a `docker-compose.yml` file that specifies the images for two Docker containers:
 
 - `prisma`: This is the image for the Prisma API that turns your database into a GraphQL API.
 - `db`: This is the image for the connected database, e.g. `mysql`.
 
-Here's what the raw version of `docker-compose.yml` looks like:
+Here's what the raw version of this generated `docker-compose.yml` file:
 
 ```yml
 version: '3'
@@ -120,7 +152,7 @@ services:
       MYSQL_ROOT_PASSWORD: prisma
 ```
 
-> **Note**: You can learn more about the different properties of the `docker-compose.yml` file in the [reference](!alias-aira9zama5).
+> **Note**: You can learn more about the different properties of the `docker-compose.yml` file in the [reference](!alias-aira9zama5) or directly in the [Docker documentation](https://docs.docker.com/compose/compose-file/).
 
 ### Authenticating against Prisma servers running on Docker
 
