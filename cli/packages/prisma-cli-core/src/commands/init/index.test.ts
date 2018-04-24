@@ -70,7 +70,8 @@ function normalizeDockerCompose(dc) {
       l =>
         !l.trim().startsWith('user:') &&
         !l.trim().startsWith('password:') &&
-        !l.trim().startsWith('database:'),
+        !l.trim().startsWith('database:') &&
+        !l.trim().startsWith('image:'),
     )
     .join('\n')
 }

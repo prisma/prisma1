@@ -1,6 +1,6 @@
 {
   "name": "prisma-yml",
-  "version": "1.0.14-6",
+  "version": "1.0.47",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "repository": {
