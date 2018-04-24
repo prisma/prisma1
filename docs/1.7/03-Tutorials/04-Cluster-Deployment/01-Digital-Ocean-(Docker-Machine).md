@@ -7,7 +7,7 @@ description: Learn how to deploy your Prisma database service to Digital Ocean u
 
 <InfoBox type=warning>
 
-This tutorial only applies to Prisma version lower than 1.7 and will be updated soon.
+**This tutorial only applies to Prisma versions lower than 1.7 and will be updated soon.**
 
 </InfoBox>
 
