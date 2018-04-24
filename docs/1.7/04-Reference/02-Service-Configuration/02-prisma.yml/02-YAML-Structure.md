@@ -43,7 +43,7 @@ datamodel:
   - enums.graphql
 ```
 
-## `endpoint`
+## `endpoint` (optional)
 
 The HTTP endpoint for your Prisma API is composed of the following components:
 
@@ -52,7 +52,7 @@ The HTTP endpoint for your Prisma API is composed of the following components:
 - **Service name**: A descriptive name for your Prisma API.
 - **Stage**: The development stage of your cluster (e.g. `dev`, `staging`, `prod`).
 
-Note that the `endpoint` is required to deploy your Prisma API. However, if you don't specify it in `prisma.yml` before running `prisma deploy`, the CLI will use a wizard to prompt you with a few questions and add the `endpoint` to `prisma.yml` for you.
+Note that the `endpoint` is actually required to deploy your Prisma API. However, if you don't specify it in `prisma.yml` before running `prisma deploy`, the CLI will use a wizard to prompt you with a few questions and add the `endpoint` to `prisma.yml` for you.
 
 #### Type
 
@@ -133,38 +133,6 @@ Use the value of the `MY_SECRET` environment variable as the secret(s).
 
 ```yml
 secret: ${env:MY_SECRET}
-```
-
-## `schema` (optional)
-
-Upon every deploy of your service, the CLI will generate the service's _database schema_ (typically called `database.graphql`). This file contains the definitions of all CRUD operations for the types defined in your data model.
-
-The `schema` property specifies the file path indicating where the CLI should store the generated file.
-
-Specifying `schema` is optional. If not set, the CLI will not generate and store the database schema!
-
-<InfoBox type=warning>
-
-When you're using [`graphql-config`](https://github.com/graphcool/graphql-config) in your project and have a `.graphqlconfig`-file with the `schemaPath` property set, this `schemaPath` property takes precedence over the `schema` property in `prisma.yml` and overrides it.
-
-</InfoBox>
-
-#### Type
-
-The `schema` property expects a **string**.
-
-#### Example
-
-Store the database schema in the root directory of the service and call it `database.graphql`.
-
-```yml
-schema: database.graphql
-```
-
-Store the database schema in the `src/schemas` directory of the service and call it `database.graphql`.
-
-```yml
-schema: src/schemas/database.graphql
 ```
 
 ## `subscriptions` (optional)
