@@ -29,12 +29,9 @@ In the following sections you'll learn more about configuring Prisma services us
 
 ## Using a HTTP proxy for the CLI
 
-From `1.7` onwards, the CLI will support custom http proxies.
-https://github.com/graphcool/prisma/issues/618
+The Prisma CLI supports [custom HTTP proxies](https://github.com/graphcool/prisma/issues/618). This is particularly relevant when being behind a corporate firewall.
 
-This is in particular important when being behind a corporate firewall.
-
-To activate the proxy, provide the env vars `HTTP_PROXY` and `HTTPS_PROXY`. The behavior is very similar to how the [`npm` cli handles it](https://docs.npmjs.com/misc/config#https-proxy).
+To activate the proxy, provide the env vars `HTTP_PROXY` and `HTTPS_PROXY`. The behavior is very similar to how the [`npm` CLI handles this](https://docs.npmjs.com/misc/config#https-proxy).
 
 The following environment variables can be provided:
 
