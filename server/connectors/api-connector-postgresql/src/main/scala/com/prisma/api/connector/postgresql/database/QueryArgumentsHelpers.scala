@@ -55,6 +55,14 @@ object QueryArgumentsHelpers {
             .collect { case Some(x) => x }
 
           combineByOr(values)
+
+        case FilterElement(key, value, None, filterName) if filterName == "NOT" =>
+          val values = value
+            .asInstanceOf[Seq[Any]]
+            .map(subFilter => generateFilterConditions(projectId, tableName, subFilter.asInstanceOf[Seq[Any]]))
+            .collect { case Some(x) => x }
+
+          combineByNot(values)
         case FilterElement(key, value, None, filterName) if filterName == "node" =>
           val values = value
             .asInstanceOf[Seq[Any]]
