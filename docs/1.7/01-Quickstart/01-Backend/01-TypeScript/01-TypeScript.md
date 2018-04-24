@@ -6,90 +6,50 @@ github: https://github.com/graphql-boilerplates/typescript-graphql-server/tree/m
 
 # TypeScript Prisma Quickstart
 
-In this quickstart tutorial, you'll learn how to build a GraphQL server with TypeScript. You will use [`graphql-yoga`](https://github.com/graphcool/graphql-yoga/) as your web server. The server is connected to a Prisma database service using [`prisma-binding`](https://github.com/graphcool/prisma-binding). To learn more about GraphQL server development and the required architecture, read the corresponding [Introduction](!alias-quohj3yahv) chapters.
+In this quickstart tutorial, you'll learn how to build a GraphQL server with TypeScript. You will use [`graphql-yoga`](https://github.com/graphcool/graphql-yoga/) as your web server. The server is connected to a Prisma database API using [`prisma-binding`](https://github.com/graphcool/prisma-binding).
+
+To learn more about the core concepts of GraphQL server development with Prisma and the architecture, read the corresponding [Introduction](!alias-quohj3yahv) chapters.
+
+![](https://imgur.com/g41vZah.png)
 
 > The code for this project can be found as a _GraphQL boilerplate_ project on [GitHub](https://github.com/graphql-boilerplates/typescript-graphql-server/tree/master/basic).
 
 ## Step 1: Install required command line tools
 
-Throughout the course of this tutorial, you'll use the Prisma CLI to create and manage your Prisma database service. So, the first step is to install the CLI.
+Throughout the course of this tutorial, you'll use the Prisma CLI to create and manage your Prisma database service. You'll also use the [GraphQL CLI](https://github.com/graphql-cli/graphql-cli) for certain workflows around your GraphQL server.
 
 <Instruction>
 
-Open your terminal and globally install the Prisma CLI:
+Open your terminal and globally install both CLIs via npm:
 
 ```sh
-npm install -g prisma
-```
-
-</Instruction>
-
-You also need to have [Docker](https://www.docker.com/) installed on your machine.
-
-<Instruction>
-
-If you don't have Docker installed on your machine yet, go and download it now from the official website:
-
-- [Mac OS](https://www.docker.com/docker-mac)
-- [Windows](https://www.docker.com/docker-windows)
-
-</Instruction>
-
-Once it's downloaded, you can install it right away. Note that this also gives you access to the `docker` CLI.
-
-The last step is to boot the local development [cluster](!alias-eu2ood0she) to which you're going to deploy the Prisma service.
-
-<Instruction>
-
-In your terminal, run the following command:
-
-```sh
-prisma local start
+npm install -g prisma graphql-cli
 ```
 
 </Instruction>
 
 ## Step 2: Bootstrap your GraphQL server
 
-Now you can use `prisma init` to bootstrap your GraphQL server. Note that this command will trigger an interactive prompt that allows to select a template your project should be based on.
+You'll now bootstrap the code for your GraphQL server using the `graphql create` command from the GraphQL CLI.
 
 <Instruction>
 
-Because you're passing `my-app` as an argument to `prisma init`, the Prisma CLI will create a new directory called `my-app` where it will place all the files for your project:
+Open your terminal and run the following command:
 
 ```sh
-prisma init my-app
+graphql create my-app --boilerplate typescript-basic
 ```
 
 </Instruction>
 
-<Instruction>
+You're passing two arguments to the command:
 
-When prompted how you want to set up your Prisma service, choose `GraphQL server/fullstack boilerplate (recommended)`.
+- `my-app`: This is the directory name where the CLI is going to put all files for your project.
+- `--boilerplate typescript-basic`: This specifies which [GraphQL boilerplate](https://github.com/graphql-boilerplates) you want to use as a starter kit for your GraphQL server.
 
-</Instruction>
+After `graphql create` has finished, your Prisma database API is deployed and will be accessible under the `endpoint` that's specified in `/my-app/database/prisma.yml`.
 
-<Instruction>
-
-The CLI now prompts you to select a [GraphQL boilerplate](https://github.com/graphql-boilerplates) as foundation for your project. Select the [`typescript-basic`](https://github.com/graphql-boilerplates/typescript-graphql-server/tree/master/basic) boilerplate here.
-
-</Instruction>
-
-<Instruction>
-
-Finally, when prompted which cluster you want to deploy to, choose the `local` cluster.
-
-</Instruction>
-
-After `prisma init` has finished, your Prisma database service is deployed and will be accessible under [`http://localhost:4466/my-app/dev`](http://localhost:4466/my-app/dev).
-
-As you might recognize, the HTTP endpoint for the database service is composed of the following components:
-
-- The **cluster's domain** (specified as the `host` property in `~/.prisma/config.yml`): `http://localhost:4466/my-app/dev`
-- The **name** of the Prisma `service` specified in `prisma.yml`: `my-app`
-- The **stage** to which the service is deployed, by default this is calleds: `dev`
-
-Note that the endpoint is referenced in `src/index.ts`. There, it is used to instantiate `Prisma` in order to create a binding between the application schema and the Prisma schema:
+Note that the `endpoint` is also referenced in `src/index.ts`. There, it is used to instantiate `Prisma` in order to create a _GraphQL binding_ from the application schema and the Prisma database schema (think of the binding as a "GraphQL ORM" layer):
 
 ```ts(path="src/index.ts"&nocopy)
 const server = new GraphQLServer({
@@ -98,9 +58,9 @@ const server = new GraphQLServer({
   context: req => ({
     ...req,
     db: new Prisma({
-      endpoint: 'http://localhost:4466/my-app/dev', // the endpoint of the Prisma DB service
-      secret: 'mysecret123',                        // specified in `database/prisma.yml`
+      endpoint: 'http://localhost:4466/my-app/dev', // the endpoint of the Prisma DB API (this will look slightly different for you)
       debug: true,                                  // log all GraphQL queries & mutations
+      // secret: 'mysecret123',                     // specified in `database/prisma.yml`
     }),
   }),
 })
@@ -136,7 +96,7 @@ type Post {
 }
 ```
 
-Based on this data model Prisma generates the **Prisma schema**, a [GraphQL schema](https://blog.graph.cool/graphql-server-basics-the-schema-ac5e2950214e) that defines a CRUD API for the types in your data model. This schema is stored in `src/generated/prisma.graphql` and will be updated by the CLI every time you [`deploy`](!alias-kee1iedaov) changes to your data model.
+Based on this data model Prisma generates the **Prisma database schema**, a [GraphQL schema](https://blog.graph.cool/graphql-server-basics-the-schema-ac5e2950214e) that defines a CRUD API for the types in your data model. This schema is stored in `src/generated/prisma.graphql` and will be updated by the CLI every time you [`deploy`](!alias-kee1iedaov) changes to your data model.
 
 You're now set to start the server! 🚀
 
