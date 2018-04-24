@@ -54,9 +54,9 @@ class SubscriptionDependenciesForTest()(implicit val system: ActorSystem, val ma
   val projectFetcherPort                = 12345
   override val keepAliveIntervalSeconds = 1000
   val projectFetcherPath                = "project-fetcher"
-  override val projectFetcher: ProjectFetcher = {
+  override val projectFetcher: ProjectFetcher =
     ProjectFetcherImpl(Vector.empty, schemaManagerEndpoint = s"http://localhost:$projectFetcherPort/$projectFetcherPath", schemaManagerSecret = "empty")
-  }
+
   override lazy val apiSchemaBuilder: SchemaBuilder = ???
   override lazy val sssEventsPubSub                 = ???
   override lazy val webhookPublisher                = ???
