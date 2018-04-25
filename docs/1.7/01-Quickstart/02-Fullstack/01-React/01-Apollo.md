@@ -110,6 +110,6 @@ yarn start # open http://localhost:3000 in your browser
 
 ## Next steps
 
-- In this quickstart tutorial, you learned how to get started building a GraphQL server using TypeScript with Prisma as a "GraphQL ORM" layer. If you want to learn about how the Prisma database layer actually works, you can check out [this](!alias-ouzia3ahqu) tutorial in our docs.
+- In this quickstart tutorial, you learned how to get started building a fullstack GraphQL app with React & Node.JS, using Prisma as a "GraphQL ORM" layer. If you want to learn about how the Prisma database layer actually works, you can check out [this](!alias-ouzia3ahqu) tutorial in our docs.
 - Learn how to _deploy_ the GraphQL server with [Zeit Now](https://blog.graph.cool/deploying-graphql-servers-with-zeit-now-85f4757b79a7) or [Apex Up](https://blog.graph.cool/deploying-graphql-servers-with-apex-up-522f2b75a2ac).
 - Learn how to build a fully-fledged GraphQL server with authentication, pagination, filters and realtime subscriptions in this in-depth [Node & GraphQL tutorial](https://www.howtographql.com/graphql-js/0-introduction/) on How to GraphQL.
