@@ -2,26 +2,10 @@ import sbt.Keys.name
 import sbt._
 import SbtUtils._
 import Dependencies._
-import com.typesafe.sbt.SbtGit
 
 name := "server"
-Revolver.settings
 
-// determine the version of our artifacts with sbt-git
-lazy val versionSettings = SbtGit.versionWithGit ++ Seq(
-  git.baseVersion := "0.8.0",
-  git.gitUncommittedChanges := { // the default implementation of sbt-git uses JGit which somehow always returns true here, so we roll our own impl
-    import sys.process._
-    val gitStatusResult = "git status --porcelain".!!
-    if (gitStatusResult.nonEmpty){
-      println("Git has uncommitted changes!")
-      println(gitStatusResult)
-    }
-    gitStatusResult.nonEmpty
-  }
-)
-
-lazy val commonSettings = versionSettings ++ Seq(
+lazy val commonSettings = Seq(
   organization := "com.prisma",
   organizationName := "graphcool",
   scalaVersion := "2.12.3",
