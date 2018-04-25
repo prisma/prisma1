@@ -188,26 +188,58 @@ You can find more detailled info about the `@relation` directive and its usage [
 
 ## Authentication
 
-### Service secret
+### API secret
 
-The GraphQL API of a Prisma service is typically protected by a [service secret](!alias-ufeshusai8#secret-optional) which you specify in [`prisma.yml`](!alias-foatho8aip).
+The GraphQL API of a Prisma service is typically protected by an _API secret_ which you specify as the [`secret`]((!alias-ufeshusai8#secret-optional)) property in in [`prisma.yml`](!alias-foatho8aip).
 
-### Service token
+Here is an example of a `prisma.yml` specifying a `secret`:
 
-The `secret` is used to sign a [JWT](https://jwt.io/) which can then be used in the `Authorization` field of the HTTP header:
+```yml
+endpoint: http://localhost:4466/myapi/dev
+datamodel: datamodel.graphql
+
+secret: mysecret123 # your API secret
+```
+
+### API token
+
+API tokens are used to authenticate against your Prisma API. The API secret is used to sign a [JWT](https://jwt.io/) which needs be used in the `Authorization` header of the HTTP requests made against your Prisma API:
 
 ```
-Authorization: Bearer __TOKEN__
+Authorization: Bearer __YOUR_API_TOKEN__
 ```
 
-This is a sample payload for a JWT:
+#### Obtaining an API token with the Prisma CLI
+
+The easiest way to obtain an API token is by using the [`prisma token`](!alias-shoo8cioto) command from the Prisma CLI:
+
+```sh
+prisma token
+```
+
+When running `prisma token` inside a directory where `prisma.yml` is available, the CLI will read the `secret` property from `prisma.yml` and generate a corresponding JWT.
+
+#### Authenticating in a GraphQL Playground
+
+After obtainining an API token for your Prisma API, you can use it to authenticate your API requests. For example, when using the API through a [GraphQL Playground](https://github.com/graphcool/graphql-playground).
+
+Once you openened the Playground for your Prisma API, open the **HTTP HEADERS** field in the bottom-left corner of the Playground. Then paste your API token as the value for the `Authorization` field into it:
 
 ```json
 {
-  "exp": 1300819380,
-  "service": "my-service@prod"
+  "Authorization": "Bearer __YOUR_API_TOKEN__"
 }
 ```
+
+With a real token, this might look like this:
+
+```json
+{
+  "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJkYXRhIjp7InNlcnZpY2UiOiJibG9nckBkZXYiLCJyb2xlcyI6WyJhZG1pbiJdfSwiaWF0IjoxNTE4NzE2NjA4LCJleHAiOjE1MTkzMjE0MDh9.zqBh_Oo4RmV4j3UQeVDYqJDxV-YHQiOR-XIlhjbWejw"
+}
+```
+
+![](https://imgur.com/3xNKkbV.png)
 
 #### Claims
 
@@ -218,13 +250,16 @@ The JWT must contain different [claims](https://jwt.io/introduction/#payload):
 
 > In the future there might be support for more fine grained access control by introducing a concept of roles such as `["write:Log", "read:*"]`
 
-#### Generating a service token
+Here is the sample Payload of a JTW.
 
-##### Prisma CLI
+```json
+{
+  "exp": 1300819380,
+  "service": "my-service@prod"
+}
+```
 
-Run `prisma token` to obtain a new signed JWT for your current Prisma service.
-
-##### JavaScript
+#### Generating a service token in JavaScript
 
 Consider the following `prisma.yml`:
 
