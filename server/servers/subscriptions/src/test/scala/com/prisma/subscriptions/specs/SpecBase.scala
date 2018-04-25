@@ -3,6 +3,7 @@ package com.prisma.subscriptions.specs
 import akka.actor.ActorSystem
 import akka.http.scaladsl.testkit.{ScalatestRouteTest, TestFrameworkInterface, WSProbe}
 import akka.stream.ActorMaterializer
+import com.prisma.ConnectorAwareTest
 import com.prisma.akkautil.http.ServerExecutor
 import com.prisma.api.ApiTestDatabase
 import com.prisma.shared.models.{Project, ProjectId, ProjectWithClientId}
@@ -14,7 +15,7 @@ import play.api.libs.json.{JsObject, JsValue, Json}
 import scala.concurrent.duration._
 import scala.concurrent.{Await, ExecutionContextExecutor}
 
-trait SpecBase extends TestFrameworkInterface with BeforeAndAfterEach with BeforeAndAfterAll with ScalatestRouteTest { this: Suite =>
+trait SpecBase extends ConnectorAwareTest with TestFrameworkInterface with BeforeAndAfterEach with BeforeAndAfterAll with ScalatestRouteTest { this: Suite =>
   implicit val ec: ExecutionContextExecutor = system.dispatcher
   implicit val dependencies                 = new SubscriptionDependenciesForTest()
   val testDatabase                          = ApiTestDatabase()
@@ -25,6 +26,8 @@ trait SpecBase extends TestFrameworkInterface with BeforeAndAfterEach with Befor
   val requestsTestKit                       = dependencies.requestsQueueTestKit
   val responsesTestKit                      = dependencies.responsePubSubTestKit
   val projectIdEncoder                      = dependencies.projectIdEncoder
+
+  override def prismaConfig = dependencies.config
 
   val wsServer            = WebsocketServer(dependencies)
   val simpleSubServer     = SimpleSubscriptionsServer()
