@@ -10,3 +10,4 @@ services:
       MYSQL_ROOT_PASSWORD: prisma
     ports:
       - "127.0.0.1:3306:3306"
+    tmpfs: /var/lib/mysql
