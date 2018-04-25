@@ -30,6 +30,7 @@ class WebhookDelivererWorkerSpec
       val worker: WebhookDelivererWorker = WebhookDelivererWorker(SimpleHttpClient(), webhookTestKit)
 
       worker.start.futureValue
+      Thread.sleep(1000) // wait a bit to make sure the worker has connected to the queue actually
 
       def teardown = {
         webhookTestKit.shutdown()
