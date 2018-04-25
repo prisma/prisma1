@@ -8,7 +8,7 @@ import play.api.libs.json._
 
 import scala.concurrent.duration._
 
-class SubscriptionsProtocolV07Spec extends FlatSpec with Matchers with SpecBase with ScalaFutures {
+class SubscriptionsProtocolV07Spec extends FlatSpec with Matchers with SubscriptionSpecBase with ScalaFutures {
   val schema: SchemaDsl.SchemaBuilder = SchemaDsl.schema()
   val todo: SchemaDsl.ModelBuilder = schema
     .model("Todo")

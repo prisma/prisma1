@@ -16,7 +16,7 @@ trait DeploySpecBase extends ConnectorAwareTest with BeforeAndAfterEach with Bef
 
   implicit lazy val system                                   = ActorSystem()
   implicit lazy val materializer                             = ActorMaterializer()
-  implicit lazy val testDependencies: DeployTestDependencies = DeployTestDependencies()
+  implicit lazy val testDependencies: TestDeployDependencies = TestDeployDependencies()
 
   override def prismaConfig = testDependencies.config
 

@@ -1,10 +1,10 @@
 package com.prisma.api.queries
 
-import com.prisma.api.ApiBaseSpec
+import com.prisma.api.ApiSpecBase
 import com.prisma.shared.schema_dsl.SchemaDsl
 import org.scalatest.{FlatSpec, Matchers}
 
-class AggregationQuerySpec extends FlatSpec with Matchers with ApiBaseSpec {
+class AggregationQuerySpec extends FlatSpec with Matchers with ApiSpecBase {
   "the count query" should "return 0" in {
 
     val project = SchemaDsl() { schema =>

@@ -9,7 +9,7 @@ import com.prisma.messagebus.pubsub.Only
 import com.prisma.shared.models.ModelMutationType
 import com.prisma.shared.models.ModelMutationType.ModelMutationType
 import com.prisma.shared.schema_dsl.SchemaDsl
-import com.prisma.subscriptions.SubscriptionDependenciesForTest
+import com.prisma.subscriptions.TestSubscriptionDependencies
 import com.prisma.subscriptions.protocol.StringOrInt
 import com.prisma.subscriptions.resolving.SubscriptionsManager.Requests.EndSubscription
 import com.prisma.subscriptions.resolving.SubscriptionsManager.Responses.SubscriptionEvent
@@ -32,7 +32,7 @@ class SubscriptionsManagerForModelSpec
   override def afterAll = shutdown()
 
   implicit val materializer = ActorMaterializer()
-  implicit val dependencies = new SubscriptionDependenciesForTest()
+  implicit val dependencies = new TestSubscriptionDependencies()
   //val testDatabase                 = new SimpleTestDatabase
 
   val testQuery = QueryParser.parse("""

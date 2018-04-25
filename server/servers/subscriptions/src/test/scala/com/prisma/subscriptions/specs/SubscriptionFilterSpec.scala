@@ -9,7 +9,7 @@ import com.prisma.utils.await.AwaitUtils
 import org.scalatest.{FlatSpec, Matchers}
 import play.api.libs.json.{JsString, Json}
 
-class SubscriptionFilterSpec extends FlatSpec with Matchers with SpecBase with AwaitUtils {
+class SubscriptionFilterSpec extends FlatSpec with Matchers with SubscriptionSpecBase with AwaitUtils {
   val schema: SchemaDsl.SchemaBuilder = SchemaDsl.schema()
   val statusEnum: Enum                = schema.enum("Status", Vector("Active", "Done"))
   val comment: SchemaDsl.ModelBuilder = schema.model("Comment").field("text", _.String)

@@ -5,7 +5,7 @@ import akka.stream.ActorMaterializer
 import com.prisma.api.connector.DataResolver
 import com.prisma.api.util.StringMatchers
 import com.prisma.api.{ApiTestServer, TestApiDependenciesImpl}
-import com.prisma.deploy.specutils.{DeployTestDependencies, DeployTestServer}
+import com.prisma.deploy.specutils.{TestDeployDependencies, DeployTestServer}
 import com.prisma.shared.models.{Migration, Project}
 import com.prisma.utils.await.AwaitUtils
 import com.prisma.utils.json.PlayJsonExtensions
@@ -37,7 +37,7 @@ trait IntegrationBaseSpec extends BeforeAndAfterEach with BeforeAndAfterAll with
 
   // DEPLOY
 
-  implicit lazy val deployTestDependencies: DeployTestDependencies = DeployTestDependencies()
+  implicit lazy val deployTestDependencies: TestDeployDependencies = TestDeployDependencies()
 
   val deployServer      = DeployTestServer()
   val projectsToCleanUp = new ArrayBuffer[String]

@@ -1,12 +1,12 @@
 package com.prisma.api.mutations
 
-import com.prisma.api.ApiBaseSpec
+import com.prisma.api.ApiSpecBase
 import com.prisma.gc_values.StringGCValue
 import com.prisma.shared.models.Project
 import com.prisma.shared.schema_dsl.SchemaDsl
 import org.scalatest.{FlatSpec, Matchers}
 
-class UpsertMutationSpec extends FlatSpec with Matchers with ApiBaseSpec {
+class UpsertMutationSpec extends FlatSpec with Matchers with ApiSpecBase {
   val project: Project = SchemaDsl() { schema =>
     schema.model("Todo").field_!("title", _.String).field_!("alias", _.String, isUnique = true).field("anotherIDField", _.GraphQLID, isUnique = true)
     schema.model("WithDefaultValue").field_!("reqString", _.String, defaultValue = Some(StringGCValue("defaultValue"))).field_!("title", _.String)

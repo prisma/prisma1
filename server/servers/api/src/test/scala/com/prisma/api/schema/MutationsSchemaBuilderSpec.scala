@@ -1,12 +1,12 @@
 package com.prisma.api.schema
 
-import com.prisma.api.ApiBaseSpec
+import com.prisma.api.ApiSpecBase
 import com.prisma.shared.schema_dsl.SchemaDsl
 import com.prisma.util.GraphQLSchemaMatchers
 import org.scalatest.{FlatSpec, Matchers}
 import sangria.renderer.SchemaRenderer
 
-class MutationsSchemaBuilderSpec extends FlatSpec with Matchers with ApiBaseSpec with GraphQLSchemaMatchers {
+class MutationsSchemaBuilderSpec extends FlatSpec with Matchers with ApiSpecBase with GraphQLSchemaMatchers {
   val schemaBuilder = testDependencies.apiSchemaBuilder
 
   "the create Mutation for a model" should "be generated correctly" in {

@@ -15,9 +15,10 @@ import play.api.libs.json.{JsObject, JsValue, Json}
 import scala.concurrent.duration._
 import scala.concurrent.{Await, ExecutionContextExecutor}
 
-trait SpecBase extends ConnectorAwareTest with TestFrameworkInterface with BeforeAndAfterEach with BeforeAndAfterAll with ScalatestRouteTest { this: Suite =>
+trait SubscriptionSpecBase extends ConnectorAwareTest with TestFrameworkInterface with BeforeAndAfterEach with BeforeAndAfterAll with ScalatestRouteTest {
+  this: Suite =>
   implicit val ec: ExecutionContextExecutor = system.dispatcher
-  implicit val dependencies                 = new SubscriptionDependenciesForTest()
+  implicit val dependencies                 = new TestSubscriptionDependencies()
   val testDatabase                          = ApiTestDatabase()
   implicit val actorSytem                   = ActorSystem("test")
   implicit val mat                          = ActorMaterializer()

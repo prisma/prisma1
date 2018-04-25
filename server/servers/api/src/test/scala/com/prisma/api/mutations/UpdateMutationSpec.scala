@@ -1,11 +1,11 @@
 package com.prisma.api.mutations
 
-import com.prisma.api.ApiBaseSpec
+import com.prisma.api.ApiSpecBase
 import com.prisma.api.util.TroubleCharacters
 import com.prisma.shared.schema_dsl.SchemaDsl
 import org.scalatest.{FlatSpec, Matchers}
 
-class UpdateMutationSpec extends FlatSpec with Matchers with ApiBaseSpec {
+class UpdateMutationSpec extends FlatSpec with Matchers with ApiSpecBase {
 
   "The Update Mutation" should "update an item" in {
     val project = SchemaDsl() { schema =>

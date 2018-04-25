@@ -1,11 +1,11 @@
 package com.prisma.api.mutations
 
-import com.prisma.api.ApiBaseSpec
+import com.prisma.api.ApiSpecBase
 import com.prisma.shared.models._
 import com.prisma.shared.schema_dsl.SchemaDsl
 import org.scalatest.{FlatSpec, Matchers}
 
-class CascadingDeleteSpec extends FlatSpec with Matchers with ApiBaseSpec {
+class CascadingDeleteSpec extends FlatSpec with Matchers with ApiSpecBase {
 
   //region  TOP LEVEL DELETE
 

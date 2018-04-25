@@ -1,7 +1,7 @@
 package com.prisma.api.server
 
 import akka.http.scaladsl.model.StatusCodes
-import com.prisma.api.ApiBaseSpec
+import com.prisma.api.ApiSpecBase
 import com.prisma.api.project.ProjectFetcher
 import com.prisma.api.schema.APIErrors.InvalidToken
 import com.prisma.api.schema.{ApiUserContext, SchemaBuilder}
@@ -17,7 +17,7 @@ import sangria.schema.{ObjectType, Schema, SchemaValidationRule}
 
 import scala.concurrent.Future
 
-class RequestHandlerSpec extends FlatSpec with Matchers with ApiBaseSpec with AwaitUtils {
+class RequestHandlerSpec extends FlatSpec with Matchers with ApiSpecBase with AwaitUtils {
   import system.dispatcher
   import testDependencies.reporter
 

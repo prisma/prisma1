@@ -1,12 +1,12 @@
 package com.prisma.api.mutations
 
-import com.prisma.api.ApiBaseSpec
+import com.prisma.api.ApiSpecBase
 import com.prisma.shared.models.Project
 import com.prisma.shared.schema_dsl.SchemaDsl
 import org.joda.time.{DateTime, DateTimeZone}
 import org.scalatest.{FlatSpec, Matchers}
 
-class TransactionalNestedExecutionSpec extends FlatSpec with Matchers with ApiBaseSpec {
+class TransactionalNestedExecutionSpec extends FlatSpec with Matchers with ApiSpecBase {
 
   //At the moment we are only inserting the inner where, the outer condition is checked separately
   //the up front check for the outer where is still needed to provide return values
