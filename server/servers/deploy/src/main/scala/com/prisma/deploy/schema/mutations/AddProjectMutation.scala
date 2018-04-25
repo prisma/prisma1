@@ -13,7 +13,7 @@ case class AddProjectMutation(
     args: AddProjectInput,
     projectPersistence: ProjectPersistence,
     migrationPersistence: MigrationPersistence,
-    persistencePlugin: DeployConnector
+    deployConnector: DeployConnector
 )(
     implicit ec: ExecutionContext,
     dependencies: DeployDependencies
@@ -48,7 +48,7 @@ case class AddProjectMutation(
       _ <- projectPersistence.create(newProject)
 //      stmt <- CreateClientDatabaseForProject(newProject.id).execute
 //      _    <- clientDb.run(stmt.sqlAction)
-      _ <- persistencePlugin.createProjectDatabase(newProject.id)
+      _ <- deployConnector.createProjectDatabase(newProject.id)
       _ <- migrationPersistence.create(migration)
     } yield MutationSuccess(AddProjectMutationPayload(args.clientMutationId, newProject))
   }

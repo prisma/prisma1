@@ -15,14 +15,14 @@ import scala.util.{Failure, Success}
 case class AsyncMigrator(
     migrationPersistence: MigrationPersistence,
     projectPersistence: ProjectPersistence,
-    persistencePlugin: DeployConnector
+    deployConnector: DeployConnector
 )(
     implicit val system: ActorSystem,
     materializer: ActorMaterializer
 ) extends Migrator {
   import system.dispatcher
 
-  val deploymentScheduler = system.actorOf(Props(DeploymentSchedulerActor(migrationPersistence, projectPersistence, persistencePlugin)))
+  val deploymentScheduler = system.actorOf(Props(DeploymentSchedulerActor(migrationPersistence, projectPersistence, deployConnector)))
   implicit val timeout    = new Timeout(5.minutes)
 
   (deploymentScheduler ? Initialize).onComplete {

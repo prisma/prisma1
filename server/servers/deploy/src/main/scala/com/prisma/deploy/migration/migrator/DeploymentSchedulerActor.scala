@@ -10,7 +10,7 @@ import scala.util.{Failure, Success}
 case class DeploymentSchedulerActor(
     migrationPersistence: MigrationPersistence,
     projectPersistence: ProjectPersistence,
-    persistencePlugin: DeployConnector
+    deployConnector: DeployConnector
 ) extends Actor
     with Stash {
   import DeploymentProtocol._
@@ -68,7 +68,7 @@ case class DeploymentSchedulerActor(
   }
 
   def workerForProject(projectId: String): ActorRef = {
-    val newWorker = context.actorOf(Props(ProjectDeploymentActor(projectId, migrationPersistence, persistencePlugin)))
+    val newWorker = context.actorOf(Props(ProjectDeploymentActor(projectId, migrationPersistence, deployConnector)))
 
     context.watch(newWorker)
     projectWorkers += (projectId -> newWorker)

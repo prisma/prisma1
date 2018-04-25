@@ -26,7 +26,7 @@ case class DeployMutation(
     schemaMapper: SchemaMapper,
     migrationPersistence: MigrationPersistence,
     projectPersistence: ProjectPersistence,
-    persistencePlugin: DeployConnector,
+    deployConnector: DeployConnector,
     migrator: Migrator
 )(
     implicit ec: ExecutionContext,
@@ -72,7 +72,7 @@ case class DeployMutation(
 
           case Good(functionsForInput) =>
             val steps                  = migrationStepsInferrer.infer(project.schema, inferredNextSchema, schemaMapping)
-            val existingDataValidation = DestructiveChanges(persistencePlugin, project, inferredNextSchema, steps)
+            val existingDataValidation = DestructiveChanges(deployConnector, project, inferredNextSchema, steps)
             val checkResults           = existingDataValidation.checkAgainstExistingData
 
             checkResults.flatMap { results =>

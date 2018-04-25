@@ -35,7 +35,7 @@ case class SchemaBuilderImpl(
 
   val projectPersistence: ProjectPersistence         = dependencies.projectPersistence
   val migrationPersistence: MigrationPersistence     = dependencies.migrationPersistence
-  val persistencePlugin: DeployConnector             = dependencies.deployConnector
+  val deployConnector: DeployConnector               = dependencies.deployConnector
   val migrator: Migrator                             = dependencies.migrator
   val schemaInferrer: SchemaInferrer                 = SchemaInferrer()
   val migrationStepsInferrer: MigrationStepsInferrer = MigrationStepsInferrer()
@@ -192,7 +192,7 @@ case class SchemaBuilderImpl(
                        schemaMapper = schemaMapper,
                        migrationPersistence = migrationPersistence,
                        projectPersistence = projectPersistence,
-                       persistencePlugin = persistencePlugin,
+                       deployConnector = deployConnector,
                        migrator = migrator
                      ).execute
           } yield result
@@ -219,7 +219,7 @@ case class SchemaBuilderImpl(
             args = args,
             projectPersistence = projectPersistence,
             migrationPersistence = migrationPersistence,
-            persistencePlugin = dependencies.deployConnector
+            deployConnector = dependencies.deployConnector
           ).execute
       }
     )
@@ -243,7 +243,7 @@ case class SchemaBuilderImpl(
             args = args,
             projectPersistence = projectPersistence,
             invalidationPubSub = dependencies.invalidationPublisher,
-            persistencePlugin = dependencies.deployConnector
+            deployConnector = dependencies.deployConnector
           ).execute
       }
     )
