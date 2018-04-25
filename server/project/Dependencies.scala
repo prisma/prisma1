@@ -40,8 +40,6 @@ object Dependencies {
   val playStreams = "com.typesafe.play" %% "play-streams" % v.play
 
   val akka              = "com.typesafe.akka" %% "akka-actor"           % v.akka
-  val akkaClusterTools  = "com.typesafe.akka" %% "akka-cluster-tools"   % v.akka
-  val akkaContrib       = "com.typesafe.akka" %% "akka-contrib"         % v.akka
   val akkaTestKit       = "com.typesafe.akka" %% "akka-testkit"         % v.akka
   val akkaHttp          = "com.typesafe.akka" %% "akka-http"            % v.akkaHttp
   val akkaHttpTestKit   = "com.typesafe.akka" %% "akka-http-testkit"    % v.akkaHttp

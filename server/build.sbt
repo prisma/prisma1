@@ -217,7 +217,6 @@ lazy val akkaUtils = libProject("akka-utils")
   .dependsOn(stubServer % "test")
   .settings(libraryDependencies ++= Seq(
     akka,
-    akkaContrib,
     akkaHttp,
     akkaTestKit,
     finagle,
