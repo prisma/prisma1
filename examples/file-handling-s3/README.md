@@ -17,7 +17,7 @@ curl https://codeload.github.com/graphcool/prisma/tar.gz/master | tar -xz --stri
 Next, navigate into the downloaded folder and install the NPM dependencies:
 
 ```sh
-cd auth
+cd file-handling-s3
 yarn install
 ```
 

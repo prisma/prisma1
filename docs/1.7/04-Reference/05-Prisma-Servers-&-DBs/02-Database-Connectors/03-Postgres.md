@@ -5,7 +5,7 @@ description: Learn how to use the Postgres connector to connect your Prisma serv
 
 # Postgres
 
-To connect your Prisma server to a Postgres database, you need to use the Postgres connector. The connector needs to be specified in the [**docker-compose.yml`](!alias-aira9zama5#docker-compo) file that's the foundation for your Prisma server:
+To connect your Prisma server to a Postgres database, you need to use the Postgres connector. The connector needs to be specified in the [`docker-compose.yml`](!alias-aira9zama5#docker-compo) file that's the foundation for your Prisma server:
 
 ```yml
 version: '3'
@@ -16,12 +16,12 @@ services:
     ports:
     - "4466:4466"
     environment:
-      PRISMA_CONFIG:
+      PRISMA_CONFIG: |
+        managementApiSecret: my-server-secret-123
         port: 4466
         databases:
           default:
             connector: postgres
-            managementApiSecret: my-server-secret-123
             active: true
             host: db
             port: 5432

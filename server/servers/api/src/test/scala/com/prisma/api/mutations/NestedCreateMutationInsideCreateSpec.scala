@@ -1,10 +1,10 @@
 package com.prisma.api.mutations
 
-import com.prisma.api.ApiBaseSpec
+import com.prisma.api.ApiSpecBase
 import com.prisma.shared.schema_dsl.SchemaDsl
 import org.scalatest.{FlatSpec, Matchers}
 
-class NestedCreateMutationInsideCreateSpec extends FlatSpec with Matchers with ApiBaseSpec {
+class NestedCreateMutationInsideCreateSpec extends FlatSpec with Matchers with ApiSpecBase {
 
   "a P1! to C1! relation" should "be possible" in {
     val project = SchemaDsl() { schema =>

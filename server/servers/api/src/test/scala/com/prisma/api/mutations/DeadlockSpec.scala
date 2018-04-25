@@ -2,14 +2,14 @@ package com.prisma.api.mutations
 
 import java.util.concurrent.Executors
 
-import com.prisma.api.ApiBaseSpec
+import com.prisma.api.ApiSpecBase
 import com.prisma.shared.schema_dsl.SchemaDsl
 import org.scalatest.{FlatSpec, Matchers}
 
 import scala.concurrent.duration.Duration
 import scala.concurrent.{Await, ExecutionContext, Future}
 
-class DeadlockSpec extends FlatSpec with Matchers with ApiBaseSpec {
+class DeadlockSpec extends FlatSpec with Matchers with ApiSpecBase {
 
   implicit val ec = ExecutionContext.fromExecutor(Executors.newFixedThreadPool(100))
 

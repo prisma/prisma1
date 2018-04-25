@@ -72,17 +72,17 @@ cd cli/packages/
 
 export introspectionVersionBefore=$(cat prisma-db-introspection/package.json | jq -r '.version')
 
-if [ $introspectionChanged ]; then
+if [ $introspectionChanged ] || [ $CIRCLE_TAG ]; then
   cd prisma-db-introspection
   sleep 0.5
   ../../scripts/doubleInstall.sh
   yarn build
   if [[ $CIRCLE_TAG ]]; then
-    npm version $(npm info prisma-db-introspection version)
+    npm version --allow-same-version $(npm info prisma-db-introspection version)
     npm version patch --no-git-tag-version
     npm publish
   else
-    npm version $(npm info prisma-db-introspection version --tag beta)
+    npm version --allow-same-version $(npm info prisma-db-introspection version --tag beta)
     npm version prerelease --no-git-tag-version
     npm publish --tag beta
   fi
@@ -100,11 +100,11 @@ if [ $ymlChanged ] || [ $CIRCLE_TAG ]; then
   yarn build
   if [[ $CIRCLE_TAG ]]; then
     # make sure it is the latest version
-    npm version $(npm info prisma-yml version)
+    npm version --allow-same-version $(npm info prisma-yml version)
     npm version patch --no-git-tag-version
     npm publish
   else
-    npm version $(npm info prisma-yml version --tag beta)
+    npm version --allow-same-version $(npm info prisma-yml version --tag beta)
     npm version prerelease --no-git-tag-version
     npm publish --tag beta
   fi
@@ -121,11 +121,11 @@ if [ $ymlVersionBefore != $ymlVersion ] || [ $engineChanged ]; then
   ../../scripts/doubleInstall.sh
   yarn build
   if [[ $CIRCLE_TAG ]]; then
-    npm version $(npm info prisma-cli-engine version)
+    npm version --allow-same-version $(npm info prisma-cli-engine version)
     npm version patch --no-git-tag-version
     npm publish
   else
-    npm version $(npm info prisma-cli-engine version --tag beta)
+    npm version --allow-same-version $(npm info prisma-cli-engine version --tag beta)
     npm version prerelease --no-git-tag-version
     npm publish --tag beta
   fi
@@ -151,11 +151,11 @@ if [ $ymlVersionBefore != $ymlVersion ] || [ $coreChanged ] || [ $introspectionC
 
   yarn build
   if [[ $CIRCLE_TAG ]]; then
-    npm version $(npm info prisma-cli-core version)
+    npm version --allow-same-version $(npm info prisma-cli-core version)
     npm version patch --no-git-tag-version
     npm publish
   else
-    npm version $(npm info prisma-cli-core version --tag beta)
+    npm version --allow-same-version $(npm info prisma-cli-core version --tag beta)
     npm version prerelease --no-git-tag-version
     npm publish --tag beta
   fi

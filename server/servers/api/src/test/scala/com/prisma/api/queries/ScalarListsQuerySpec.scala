@@ -1,11 +1,11 @@
 package com.prisma.api.queries
 
-import com.prisma.api.ApiBaseSpec
+import com.prisma.api.ApiSpecBase
 import com.prisma.shared.models.Project
 import com.prisma.shared.schema_dsl.SchemaDsl
 import org.scalatest.{FlatSpec, Matchers}
 
-class ScalarListsQuerySpec extends FlatSpec with Matchers with ApiBaseSpec {
+class ScalarListsQuerySpec extends FlatSpec with Matchers with ApiSpecBase {
 
   "empty scalar list" should "return empty list" in {
 

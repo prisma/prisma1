@@ -29,7 +29,7 @@ object DatabaseSizeReporter {
 }
 case class DatabaseSizeReporter(
     projectPersistence: ProjectPersistence,
-    persistencePlugin: DeployConnector
+    deployConnector: DeployConnector
 ) extends Actor
     with LogUnhandled {
   import context.dispatcher
@@ -67,5 +67,5 @@ case class DatabaseSizeReporter(
     })
   }
 
-  def getAllDatabaseSizes(): Future[Vector[DatabaseSize]] = persistencePlugin.getAllDatabaseSizes()
+  def getAllDatabaseSizes(): Future[Vector[DatabaseSize]] = deployConnector.getAllDatabaseSizes()
 }

@@ -37,12 +37,11 @@ export default class Playground extends Command {
     const { web } = this.flags
     const envFile = this.flags['env-file']
     await this.definition.load(this.flags, envFile)
-    const serviceName = this.definition.definition!.service!
-    const stage = this.definition.definition!.stage!
 
-    const clusterName = this.definition.getClusterName()
-    const cluster = this.env.clusterByName(clusterName!, true)
-    this.env.setActiveCluster(cluster!)
+    const serviceName = this.definition.service!
+    const stage = this.definition.stage!
+    const workspace = this.definition.getWorkspace()
+    const cluster = this.definition.getCluster()
 
     if (this.config.findConfigDir() === this.config.definitionDir) {
       const graphqlBin = await getGraphQLCliBin()

@@ -1,11 +1,11 @@
 package com.prisma.api.mutations
 
-import com.prisma.api.ApiBaseSpec
+import com.prisma.api.ApiSpecBase
 import com.prisma.shared.models.Project
 import com.prisma.shared.schema_dsl.SchemaDsl
 import org.scalatest.{FlatSpec, Matchers}
 
-class DeleteManyRelationFilterSpec extends FlatSpec with Matchers with ApiBaseSpec {
+class DeleteManyRelationFilterSpec extends FlatSpec with Matchers with ApiSpecBase {
 
   val project: Project = SchemaDsl() { schema =>
     val top        = schema.model("Top").field_!("top", _.String, isUnique = true)

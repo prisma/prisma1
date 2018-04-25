@@ -1,11 +1,11 @@
 package com.prisma.api.mutations
 
-import com.prisma.api.ApiBaseSpec
+import com.prisma.api.ApiSpecBase
 import com.prisma.shared.models.Project
 import com.prisma.shared.schema_dsl.SchemaDsl
 import org.scalatest.{FlatSpec, Matchers}
 
-class RelationGraphQLSpec extends FlatSpec with Matchers with ApiBaseSpec {
+class RelationGraphQLSpec extends FlatSpec with Matchers with ApiSpecBase {
 
   "One2One relations" should "only allow one item per side" in {
 

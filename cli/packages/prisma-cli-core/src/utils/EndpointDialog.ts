@@ -295,17 +295,17 @@ export class EndpointDialog {
       message: 'Enter database password',
       key: 'password',
     })
-    const database = await this.ask({
-      message: 'Enter database name (only needed when you already have data)',
-      key: 'database',
-    })
-    const alreadyData = await this.ask({
-      message: 'Do you already have data in the database? (yes/no)',
-      key: 'alreadyData',
-      defaultValue: 'no',
-      validate: value =>
-        ['yes', 'no'].includes(value) ? true : 'Please answer either yes or no',
-    })
+    // const database = await this.ask({
+    //   message: 'Enter database name (only needed when you already have data)',
+    //   key: 'database',
+    // })
+    // const alreadyData = await this.ask({
+    //   message: 'Do you already have data in the database? (yes/no)',
+    //   key: 'alreadyData',
+    //   defaultValue: 'no',
+    //   validate: value =>
+    //     ['yes', 'no'].includes(value) ? true : 'Please answer either yes or no',
+    // })
 
     return {
       type,
@@ -313,8 +313,8 @@ export class EndpointDialog {
       port,
       user,
       password,
-      database,
-      alreadyData,
+      // database,
+      alreadyData: false,
     }
   }
 
@@ -379,7 +379,7 @@ export class EndpointDialog {
     ]
     if (fromScratch && !hasDockerComposeYml) {
       const fixChoices = [
-        // ['Use existing database', 'Connect to existing database'],
+        ['Use existing database', 'Connect to existing database'],
         ['Create new database', 'Set up a local database using Docker'],
       ]
       const rawChoices = [...fixChoices, ...sandboxChoices]
@@ -419,7 +419,7 @@ export class EndpointDialog {
         ['local', 'Local Prisma server (connected to MySQL)'],
         ...clusterChoices,
         ['Use other server', 'Connect to an existing prisma server'],
-        // ['Use existing database', 'Connect to existing database'],
+        ['Use existing database', 'Connect to existing database'],
         ['Create new database', 'Set up a local database using Docker'],
       ]
       const choices = this.convertChoices(rawChoices)

@@ -1,11 +1,11 @@
 package com.prisma.api.mutations
 
-import com.prisma.api.ApiBaseSpec
+import com.prisma.api.ApiSpecBase
 import com.prisma.shared.models.Project
 import com.prisma.shared.schema_dsl.SchemaDsl
 import org.scalatest.{FlatSpec, Matchers}
 
-class RelationDesignSpec extends FlatSpec with Matchers with ApiBaseSpec {
+class RelationDesignSpec extends FlatSpec with Matchers with ApiSpecBase {
 
   "Deleting a parent node" should "remove it from the relation and delete the relay id" in {
 

@@ -1,13 +1,13 @@
 package com.prisma.subscriptions
 
-import com.prisma.api.ApiBaseSpec
+import com.prisma.api.ApiSpecBase
 import com.prisma.shared.models._
 import com.prisma.shared.schema_dsl.SchemaDsl
 import com.prisma.shared.schema_dsl.SchemaDsl.ModelBuilder
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.{FlatSpec, Matchers}
 
-class ServerSideSubscriptionSpec extends FlatSpec with Matchers with ApiBaseSpec with ScalaFutures {
+class ServerSideSubscriptionSpec extends FlatSpec with Matchers with ApiSpecBase with ScalaFutures {
 
   val webhookTestKit = testDependencies.webhookPublisher
 

@@ -13,7 +13,7 @@ case class DeleteProjectMutation(
     args: DeleteProjectInput,
     projectPersistence: ProjectPersistence,
     invalidationPubSub: PubSubPublisher[String],
-    persistencePlugin: DeployConnector
+    deployConnector: DeployConnector
 )(
     implicit ec: ExecutionContext,
     dependencies: DeployDependencies
@@ -29,7 +29,7 @@ case class DeleteProjectMutation(
       _          <- projectPersistence.delete(projectId)
 //      stmt       <- DeleteClientDatabaseForProject(projectId).execute
 //      _          <- clientDb.run(stmt.sqlAction)
-      _ <- persistencePlugin.deleteProjectDatabase(projectId)
+      _ <- deployConnector.deleteProjectDatabase(projectId)
       _ = invalidationPubSub.publish(Only(projectId), projectId)
     } yield MutationSuccess(DeleteProjectMutationPayload(args.clientMutationId, project))
   }

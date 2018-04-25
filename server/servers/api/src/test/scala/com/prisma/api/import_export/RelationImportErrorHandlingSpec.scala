@@ -1,13 +1,13 @@
 package com.prisma.api.import_export
 
-import com.prisma.api.ApiBaseSpec
+import com.prisma.api.ApiSpecBase
 import com.prisma.api.connector.DataResolver
 import com.prisma.shared.models.Project
 import com.prisma.shared.schema_dsl.SchemaDsl
 import com.prisma.utils.await.AwaitUtils
 import org.scalatest.{FlatSpec, Matchers}
 
-class RelationImportErrorHandlingSpec extends FlatSpec with Matchers with ApiBaseSpec with AwaitUtils {
+class RelationImportErrorHandlingSpec extends FlatSpec with Matchers with ApiSpecBase with AwaitUtils {
 
   val project: Project = SchemaDsl() { schema =>
     val model0: SchemaDsl.ModelBuilder = schema

@@ -13,7 +13,7 @@ import com.prisma.errors.{BugsnagErrorReporter, ErrorReporter}
 import com.prisma.messagebus.pubsub.inmemory.InMemoryAkkaPubSub
 import com.prisma.shared.models.{Project, ProjectIdEncoder}
 
-case class DeployTestDependencies()(implicit val system: ActorSystem, val materializer: ActorMaterializer) extends DeployDependencies {
+case class TestDeployDependencies()(implicit val system: ActorSystem, val materializer: ActorMaterializer) extends DeployDependencies {
   import system.dispatcher
 
   override implicit def self: DeployDependencies = this

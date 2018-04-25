@@ -5,7 +5,7 @@ description: Create a new service token
 
 # `prisma token`
 
-Generate a new [service token](!alias-utee3eiquo#service-token). The token is a [JWT](https://jwt.io) that is signed with the [service secret](!alias-utee3eiquo#service-secret).
+Generate a new [API token](!alias-utee3eiquo#api-token). The token is a [JWT](https://jwt.io) that is signed with the [API secret](!alias-utee3eiquo#api-secret).
 
 #### Usage
 

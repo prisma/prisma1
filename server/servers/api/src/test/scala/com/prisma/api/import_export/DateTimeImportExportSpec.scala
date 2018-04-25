@@ -2,7 +2,7 @@ package com.prisma.api.import_export
 
 import java.util.Date
 
-import com.prisma.api.ApiBaseSpec
+import com.prisma.api.ApiSpecBase
 import com.prisma.api.connector.DataResolver
 import com.prisma.api.import_export.ImportExport.MyJsonProtocol._
 import com.prisma.api.import_export.ImportExport.{Cursor, ExportRequest, ResultFormat}
@@ -14,7 +14,7 @@ import org.joda.time.{DateTime, DateTimeZone}
 import org.scalatest.{FlatSpec, Matchers}
 import play.api.libs.json.JsArray
 
-class DateTimeImportExportSpec extends FlatSpec with Matchers with ApiBaseSpec with AwaitUtils {
+class DateTimeImportExportSpec extends FlatSpec with Matchers with ApiSpecBase with AwaitUtils {
 
   val project: Project = SchemaDsl() { schema =>
     schema

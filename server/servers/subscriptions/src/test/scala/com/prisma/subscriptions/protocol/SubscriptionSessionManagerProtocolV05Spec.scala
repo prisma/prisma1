@@ -5,7 +5,7 @@ import akka.stream.ActorMaterializer
 import akka.testkit.{TestKit, TestProbe}
 import com.prisma.messagebus.pubsub.Message
 import com.prisma.messagebus.testkits._
-import com.prisma.subscriptions.SubscriptionDependenciesForTest
+import com.prisma.subscriptions.TestSubscriptionDependencies
 import com.prisma.subscriptions.protocol.SubscriptionProtocolV07.Responses.SubscriptionSessionResponse
 import com.prisma.subscriptions.protocol.SubscriptionSessionManager.Requests.EnrichedSubscriptionRequestV05
 import com.prisma.subscriptions.resolving.SubscriptionsManager.Requests.{CreateSubscription, EndSubscription}
@@ -30,7 +30,7 @@ class SubscriptionSessionManagerProtocolV05Spec
 
   val ignoreProbe: TestProbe = TestProbe()
   val ignoreRef: ActorRef    = ignoreProbe.testActor
-  implicit val dependencies  = new SubscriptionDependenciesForTest
+  implicit val dependencies  = new TestSubscriptionDependencies
 
   def ignoreKeepAliveProbe: TestProbe = {
     val ret = TestProbe()

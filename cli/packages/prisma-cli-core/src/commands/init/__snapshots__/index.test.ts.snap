@@ -10,7 +10,6 @@ Object {
   "docker-compose.yml": "version: '3'
 services:
   prisma:
-    image: prismagraphql/prisma:1.7-beta
     restart: always
     ports:
     - \\"4466:4466\\"
@@ -24,7 +23,6 @@ services:
             host: db
             port: 3306
   db:
-    image: mysql:5.7
     restart: always
     environment:
       MYSQL_ROOT_PASSWORD: prisma
@@ -54,7 +52,6 @@ Object {
   "docker-compose.yml": "version: '3'
 services:
   prisma:
-    image: prismagraphql/prisma:1.7-beta
     restart: always
     ports:
     - \\"4466:4466\\"

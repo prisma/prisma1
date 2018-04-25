@@ -16,7 +16,7 @@ import com.prisma.subscriptions.protocol.{Converters, SubscriptionRequest}
 import com.prisma.subscriptions.resolving.SubscriptionsManagerForProject.{SchemaInvalidated, SchemaInvalidatedMessage}
 import com.prisma.websocket.protocol.Request
 
-class SubscriptionDependenciesForTest()(implicit val system: ActorSystem, val materializer: ActorMaterializer)
+class TestSubscriptionDependencies()(implicit val system: ActorSystem, val materializer: ActorMaterializer)
     extends SubscriptionDependencies
     with TestApiDependencies {
   override implicit def self: ApiDependencies = this

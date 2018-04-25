@@ -8,8 +8,8 @@ import com.prisma.shared.models._
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-case class DestructiveChanges(persistencePlugin: DeployConnector, project: Project, nextSchema: Schema, steps: Vector[MigrationStep]) {
-  val clientDataResolver = persistencePlugin.clientDBQueries(project)
+case class DestructiveChanges(deployConnector: DeployConnector, project: Project, nextSchema: Schema, steps: Vector[MigrationStep]) {
+  val clientDataResolver = deployConnector.clientDBQueries(project)
   val previousSchema     = project.schema
 
   def checkAgainstExistingData: Future[Vector[SchemaCheckResult]] = {
