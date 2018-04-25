@@ -19,10 +19,12 @@ Throughout the course of this tutorial, you'll use the Prisma CLI to create and 
 Open your terminal and globally install the Prisma CLI:
 
 ```sh
-npm install -g prisma
+npm install -g prisma@1.6.3
 ```
 
 </Instruction>
+
+> **Note**: This tutorial currently still uses the `1.6.3` version of the CLI but will be updated shortly to use the [latest release](https://www.prisma.io/docs/1.7/reference/upgrade-guides/upgrading-prisma/upgrade-to-1.7-iquaecuj6b).
 
 You also need to have [Docker](https://www.docker.com/) installed on your machine.
 
