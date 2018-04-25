@@ -60,106 +60,99 @@ def normalProject(name: String): Project = Project(id = name, base = file(s"./$n
 // ####################
 //       IMAGES
 // ####################
-lazy val prismaLocal = imageProject("prisma-local", imageName = "prisma").dependsOn(prismaImageShared % "compile->compile;test->test")
-lazy val prismaProd = imageProject("prisma-prod", imageName = "prisma-prod").dependsOn(prismaImageShared % "compile->compile;test->test")
+lazy val prismaLocal = imageProject("prisma-local", imageName = "prisma").dependsOn(prismaImageShared)
+lazy val prismaProd = imageProject("prisma-prod", imageName = "prisma-prod").dependsOn(prismaImageShared)
 
 lazy val prismaImageShared = imageProject("prisma-image-shared")
-  .dependsOn(api % "compile")
-  .dependsOn(deploy % "compile")
-  .dependsOn(subscriptions % "compile")
-  .dependsOn(workers % "compile")
-  .dependsOn(graphQlClient % "compile")
-  .dependsOn(prismaConfig % "compile")
-  .dependsOn(connectors % "test->test;compile->compile")
+  .dependsOn(api)
+  .dependsOn(deploy)
+  .dependsOn(subscriptions)
+  .dependsOn(workers)
+  .dependsOn(graphQlClient)
+  .dependsOn(prismaConfig)
+  .dependsOn(allConnectorProjects)
 
 // ####################
 //       SERVERS
 // ####################
 
 lazy val deploy = serverProject("deploy")
-  .dependsOn(akkaUtils % "compile")
-  .dependsOn(metrics % "compile")
-  .dependsOn(jvmProfiler % "compile")
-  .dependsOn(messageBus % "compile")
-  .dependsOn(graphQlClient % "compile")
-  .dependsOn(stubServer % "test")
-  .dependsOn(sangriaUtils % "compile")
-  .dependsOn(auth % "compile")
-  .dependsOn(connectorUtils % "compile->compile;test->test")
   .dependsOn(serversShared % "compile->compile;test->test")
+  .dependsOn(deployConnector)
+  .dependsOn(akkaUtils)
+  .dependsOn(metrics)
+  .dependsOn(jvmProfiler)
+  .dependsOn(messageBus)
+  .dependsOn(graphQlClient)
+  .dependsOn(sangriaUtils)
+  .dependsOn(auth)
 
 lazy val api = serverProject("api")
-  .dependsOn(deploy % "test->test")
-  .dependsOn(messageBus % "compile")
-  .dependsOn(akkaUtils % "compile")
-  .dependsOn(metrics % "compile")
-  .dependsOn(jvmProfiler % "compile")
-  .dependsOn(cache % "compile")
-  .dependsOn(auth % "compile")
-  .dependsOn(sangriaUtils % "compile")
-  .dependsOn(connectorUtils %"compile->compile;test->test")
   .dependsOn(serversShared % "compile->compile;test->test")
+  .dependsOn(deploy % "test->test")
+  .dependsOn(apiConnector)
+  .dependsOn(messageBus)
+  .dependsOn(akkaUtils)
+  .dependsOn(metrics)
+  .dependsOn(jvmProfiler)
+  .dependsOn(cache)
+  .dependsOn(auth)
+  .dependsOn(sangriaUtils)
 
 lazy val subscriptions = serverProject("subscriptions")
-  .dependsOn(api % "compile;test->test")
-  .dependsOn(stubServer % "compile")
-  .dependsOn(connectorUtils % "test->test")
   .dependsOn(serversShared % "compile->compile;test->test")
+  .dependsOn(api % "compile->compile;test->test")
+  .dependsOn(stubServer % "test->test")
   .settings(
     libraryDependencies ++= Seq(playStreams)
   )
 
 lazy val workers = serverProject("workers")
-  .dependsOn(errorReporting % "compile")
-  .dependsOn(messageBus % "compile")
-  .dependsOn(scalaUtils % "compile")
-  .dependsOn(stubServer % "test")
+  .dependsOn(stubServer % "test->test")
+  .dependsOn(errorReporting)
+  .dependsOn(messageBus)
+  .dependsOn(scalaUtils)
 
-lazy val serversShared = serverProject("servers-shared")
-    .dependsOn(prismaConfig)
+lazy val serversShared = serverProject("servers-shared").dependsOn(connectorUtils % "test->test")
 
 // ####################
 //       CONNECTORS
 // ####################
 
-lazy val connectorUtils = connectorProject("utils").dependsOn(prismaConfig).dependsOn(allConnectorProjects)
+lazy val connectorUtils = connectorProject("utils").dependsOn(deployConnectorProjects).dependsOn(apiConnectorProjects)
 
 lazy val deployConnector = connectorProject("deploy-connector")
-  .dependsOn(sharedModels % "compile")
+  .dependsOn(sharedModels)
 
 lazy val deployConnectorMySql = connectorProject("deploy-connector-mysql")
-  .dependsOn(deployConnector % "compile")
-  .dependsOn(scalaUtils % "compile")
+  .dependsOn(deployConnector)
   .settings(
     libraryDependencies ++= slick ++ Seq(mariaDbClient)
   )
 
 lazy val deployConnectorPostgres = connectorProject("deploy-connector-postgresql")
-  .dependsOn(deployConnector % "compile")
-  .dependsOn(scalaUtils % "compile")
+  .dependsOn(deployConnector)
   .settings(
     libraryDependencies ++= slick ++ Seq(postgresClient)
   )
 
 lazy val apiConnector = connectorProject("api-connector")
-  .dependsOn(sharedModels % "compile")
-  .dependsOn(gcValues % "compile")
+  .dependsOn(sharedModels)
+  .dependsOn(gcValues)
   .settings(
     libraryDependencies ++= Seq(apacheCommons)
   )
 
 lazy val apiConnectorMySql = connectorProject("api-connector-mysql")
-  .dependsOn(apiConnector % "compile")
-  .dependsOn(scalaUtils % "compile")
-  .dependsOn(metrics % "compile")
+  .dependsOn(apiConnector)
+  .dependsOn(metrics)
   .settings(
     libraryDependencies ++= slick ++ Seq(mariaDbClient)
   )
 
 lazy val apiConnectorPostgres = connectorProject("api-connector-postgresql")
-  .dependsOn(apiConnector % "compile")
-  .dependsOn(scalaUtils % "compile")
-  .dependsOn(metrics % "compile")
+  .dependsOn(apiConnector)
+  .dependsOn(metrics)
   .settings(
     libraryDependencies ++= slick ++ Seq(postgresClient)
   )
@@ -169,8 +162,8 @@ lazy val apiConnectorPostgres = connectorProject("api-connector-postgresql")
 // ####################
 
 lazy val sharedModels = normalProject("shared-models")
-  .dependsOn(gcValues % "compile")
-  .dependsOn(jsonUtils % "compile")
+  .dependsOn(gcValues)
+  .dependsOn(jsonUtils)
   .settings(
   libraryDependencies ++= Seq(
     cuid
@@ -182,9 +175,8 @@ lazy val sharedModels = normalProject("shared-models")
 // ####################
 
 lazy val integrationTestsMySql = integrationTestProject("integration-tests-mysql")
-  .dependsOn(deploy % "compile;test->test")
-  .dependsOn(api % "compile;test->test")
-  .dependsOn(deployConnectorMySql)
+  .dependsOn(deploy % "compile->compile;test->test")
+  .dependsOn(api % "compile->compile;test->test")
 
 // ####################
 //       LIBS
@@ -196,9 +188,9 @@ lazy val gcValues = libProject("gc-values")
   ) ++ joda)
 
 lazy val akkaUtils = libProject("akka-utils")
-  .dependsOn(errorReporting % "compile")
-  .dependsOn(scalaUtils % "compile")
-  .dependsOn(stubServer % "test")
+  .dependsOn(stubServer % "test->test")
+  .dependsOn(errorReporting)
+  .dependsOn(scalaUtils)
   .settings(libraryDependencies ++= Seq(
     akkaStream,
     akkaHttp,
@@ -212,15 +204,14 @@ lazy val akkaUtils = libProject("akka-utils")
   .settings(scalacOptions := Seq("-deprecation", "-feature"))
 
 lazy val metrics = libProject("metrics")
-  .dependsOn(errorReporting % "compile")
-  .dependsOn(akkaUtils % "compile")
+  .dependsOn(errorReporting)
+  .dependsOn(akkaUtils)
   .settings(
     libraryDependencies ++= Seq(
       datadogStatsd,
       akkaHttp,
       finagle,
       akka,
-      scalaTest,
       librato
     )
   )
@@ -231,12 +222,12 @@ lazy val rabbitProcessor = libProject("rabbit-processor")
       amqp
     ) ++ jackson
   )
-  .dependsOn(errorReporting % "compile")
+  .dependsOn(errorReporting)
 
 lazy val messageBus = libProject("message-bus")
-  .dependsOn(errorReporting % "compile")
-  .dependsOn(akkaUtils % "compile")
-  .dependsOn(rabbitProcessor % "compile")
+  .dependsOn(errorReporting)
+  .dependsOn(akkaUtils)
+  .dependsOn(rabbitProcessor)
   .settings(libraryDependencies ++= Seq(
     akka,
     specs2,
@@ -247,18 +238,16 @@ lazy val messageBus = libProject("message-bus")
 
 lazy val jvmProfiler = libProject("jvm-profiler")
   .settings(commonSettings: _*)
-  .dependsOn(metrics % "compile")
-  .settings(libraryDependencies += scalaTest)
+  .dependsOn(metrics)
 
 lazy val graphQlClient = libProject("graphql-client")
   .settings(commonSettings: _*)
   .settings(libraryDependencies ++= Seq(
-    scalaTest,
     playJson,
     akkaStream
   ))
-  .dependsOn(stubServer % "test")
-  .dependsOn(akkaUtils % "compile")
+  .dependsOn(stubServer % "test->test")
+  .dependsOn(akkaUtils)
 
 
 lazy val stubServer = libProject("stub-server")
@@ -282,7 +271,7 @@ lazy val errorReporting = libProject("error-reporting")
     ))
 
 lazy val sangriaUtils = libProject("sangria-utils")
-    .dependsOn(errorReporting % "compile")
+    .dependsOn(errorReporting)
     .settings(libraryDependencies ++= Seq(
       akkaHttp,
       akkaStream
@@ -290,8 +279,7 @@ lazy val sangriaUtils = libProject("sangria-utils")
 
 lazy val jsonUtils = libProject("json-utils")
     .settings(libraryDependencies ++= Seq(
-      playJson,
-      scalaTest
+      playJson
     ) ++ joda)
 
 lazy val cache = libProject("cache")
@@ -313,7 +301,8 @@ val allServerProjects = List(
   api,
   deploy,
   subscriptions,
-  workers
+  workers,
+  serversShared
 )
 
 lazy val deployConnectorProjects = List(
@@ -328,7 +317,7 @@ lazy val apiConnectorProjects = List(
   apiConnectorPostgres,
 )
 
-lazy val allConnectorProjects = deployConnectorProjects ++ apiConnectorProjects
+lazy val allConnectorProjects = deployConnectorProjects ++ apiConnectorProjects ++ Seq(connectorUtils)
 
 val allLibProjects = List(
   akkaUtils,
@@ -351,8 +340,8 @@ val allIntegrationTestProjects = List(
 
 lazy val images = (project in file("images")).dependsOn(allDockerImageProjects)
 lazy val servers = (project in file("servers")).dependsOn(allServerProjects)
-lazy val connectors = (project in file("connectors")).dependsOn(allConnectorProjects).dependsOn(connectorUtils)
-lazy val integrationTests = (project in file("integration-tests")).dependsOn(allConnectorProjects)
+lazy val connectors = (project in file("connectors")).dependsOn(allConnectorProjects)
+lazy val integrationTests = (project in file("integration-tests")).dependsOn(allIntegrationTestProjects)
 lazy val libs = (project in file("libs")).dependsOn(allLibProjects)
 
 lazy val root = (project in file("."))
