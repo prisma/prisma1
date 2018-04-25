@@ -427,14 +427,14 @@ function transformHeaders(headers?: { [key: string]: string }): Header[] {
 export function parseEndpoint(
   endpoint: string,
 ): {
-    service: string
-    clusterBaseUrl: string
-    stage: string
-    isPrivate: boolean
-    local: boolean
-    shared: boolean
-    workspaceSlug: string | undefined
-    clusterName: string
+  service: string
+  clusterBaseUrl: string
+  stage: string
+  isPrivate: boolean
+  local: boolean
+  shared: boolean
+  workspaceSlug: string | undefined
+  clusterName: string
   } {
   const url = new URL(endpoint)
   const splittedPath = url.pathname.split('/')
