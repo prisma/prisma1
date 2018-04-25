@@ -46,11 +46,11 @@ services:
     - "4466:4466"
     environment:
       PRISMA_CONFIG: |
+        managementApiSecret: my-server-secret-123
         port: 4466
         databases:
           default:
             connector: mysql  # or `postgres`
-            managementApiSecret: my-server-secret-123
             active: true
             host: db
             port: 3306        # or `5432` for `postgres`

@@ -16,12 +16,12 @@ services:
     ports:
     - "4466:4466"
     environment:
-      PRISMA_CONFIG:
+      PRISMA_CONFIG: |
+        managementApiSecret: my-server-secret-123
         port: 4466
         databases:
           default:
             connector: mysql
-            managementApiSecret: my-server-secret-123
             active: true
             host: db
             port: 3306
