@@ -4,6 +4,7 @@ import * as fs from 'fs-extra'
 import { mapValues } from 'lodash'
 import * as yamlParser from 'yaml-ast-parser'
 import * as dotenv from 'dotenv'
+import * as dotenvExpand from 'dotenv-expand'
 import * as path from 'path'
 import * as jwt from 'jsonwebtoken'
 import { Args } from './types/common'
@@ -64,7 +65,7 @@ export class PrismaDefinitionClass {
         throw new Error(`--env-file path '${envPath}' does not exist`)
       }
     }
-    dotenv.config({ path: envPath })
+    dotenvExpand(dotenv.config({ path: envPath }))
     if (this.definitionPath) {
       await this.loadDefinition(args)
       const migrator = new DefinitionMigrator(this)
@@ -426,15 +427,15 @@ function transformHeaders(headers?: { [key: string]: string }): Header[] {
 export function parseEndpoint(
   endpoint: string,
 ): {
-  service: string
-  clusterBaseUrl: string
-  stage: string
-  isPrivate: boolean
-  local: boolean
-  shared: boolean
-  workspaceSlug: string | undefined
-  clusterName: string
-} {
+    service: string
+    clusterBaseUrl: string
+    stage: string
+    isPrivate: boolean
+    local: boolean
+    shared: boolean
+    workspaceSlug: string | undefined
+    clusterName: string
+  } {
   const url = new URL(endpoint)
   const splittedPath = url.pathname.split('/')
   const shared =
