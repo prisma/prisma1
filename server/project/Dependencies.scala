@@ -8,8 +8,8 @@ object Dependencies {
     */
   object v {
     val sangria     = "1.3.3"
-    val akka        = "2.5.8"
-    val akkaHttp    = "10.0.10"
+    val akka        = "2.5.11"
+    val akkaHttp    = "10.1.0"
     val joda        = "2.9.4"
     val jodaConvert = "1.7"
     val cuid        = "0.1.1"
@@ -40,11 +40,12 @@ object Dependencies {
   val playStreams = "com.typesafe.play" %% "play-streams" % v.play
 
   val akka              = "com.typesafe.akka" %% "akka-actor"           % v.akka
+  val akkaStream        = "com.typesafe.akka" %% "akka-stream"          % v.akka
   val akkaTestKit       = "com.typesafe.akka" %% "akka-testkit"         % v.akka
   val akkaHttp          = "com.typesafe.akka" %% "akka-http"            % v.akkaHttp
   val akkaHttpTestKit   = "com.typesafe.akka" %% "akka-http-testkit"    % v.akkaHttp
   val akkaHttpSprayJson = "com.typesafe.akka" %% "akka-http-spray-json" % v.akkaHttp
-  val akkaHttpCors      = "ch.megard"         %% "akka-http-cors"       % "0.2.2"
+  val akkaHttpCors      = "ch.megard"         %% "akka-http-cors"       % "0.3.0"
   val akkaHttpPlayJson = "de.heikoseeberger" %% "akka-http-play-json" % "1.20.0" excludeAll (
     ExclusionRule(organization = "com.typesafe.akka"),
     ExclusionRule(organization = "com.typesafe.play")

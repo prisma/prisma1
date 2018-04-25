@@ -200,7 +200,7 @@ lazy val akkaUtils = libProject("akka-utils")
   .dependsOn(scalaUtils % "compile")
   .dependsOn(stubServer % "test")
   .settings(libraryDependencies ++= Seq(
-    akka,
+    akkaStream,
     akkaHttp,
     akkaTestKit,
     finagle,
@@ -255,7 +255,7 @@ lazy val graphQlClient = libProject("graphql-client")
   .settings(libraryDependencies ++= Seq(
     scalaTest,
     playJson,
-    akkaHttp
+    akkaStream
   ))
   .dependsOn(stubServer % "test")
   .dependsOn(akkaUtils % "compile")
@@ -285,6 +285,7 @@ lazy val sangriaUtils = libProject("sangria-utils")
     .dependsOn(errorReporting % "compile")
     .settings(libraryDependencies ++= Seq(
       akkaHttp,
+      akkaStream
     ) ++ sangria)
 
 lazy val jsonUtils = libProject("json-utils")
