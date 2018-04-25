@@ -435,7 +435,7 @@ export function parseEndpoint(
   shared: boolean
   workspaceSlug: string | undefined
   clusterName: string
-  } {
+} {
   const url = new URL(endpoint)
   const splittedPath = url.pathname.split('/')
   const shared =
