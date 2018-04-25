@@ -5,7 +5,7 @@ description: Learn how to use the MySQL connector to connect your Prisma server 
 
 # MySQL
 
-To connect your Prisma server to a MySQL database, you need to use the MySQL connector. The connector needs to be specified in the [**docker-compose.yml`](!alias-aira9zama5#docker-compo) file that's the foundation for your Prisma server:
+To connect your Prisma server to a MySQL database, you need to use the MySQL connector. The connector needs to be specified in the [`docker-compose.yml`](!alias-aira9zama5#docker-compo) file that's the foundation for your Prisma server:
 
 ```yml
 version: '3'
