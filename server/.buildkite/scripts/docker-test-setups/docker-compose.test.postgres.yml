@@ -30,10 +30,12 @@ services:
     restart: always
     environment:
       POSTGRES_PASSWORD: "prisma"
+      PGDATA: "/pgtmpfs"
     ports:
       - "5432"
     networks:
       - tests
+    tmpfs: /pgtmpfs
 
   rabbit:
     image: rabbitmq:3.7.2-management
