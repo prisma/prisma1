@@ -45,7 +45,7 @@ services:
     ports:
     - "4466:4466"
     environment:
-      PRISMA_CONFIG:
+      PRISMA_CONFIG: |
         port: 4466
         databases:
           default:
