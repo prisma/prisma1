@@ -102,6 +102,7 @@ lazy val deploy = serverProject("deploy")
   .dependsOn(sangriaUtils % "compile")
   .dependsOn(auth % "compile")
   .dependsOn(connectorUtils % "compile->compile;test->test")
+  .dependsOn(serversShared % "compile->compile;test->test")
 
 lazy val api = serverProject("api")
   .dependsOn(deploy % "test->test")
@@ -113,11 +114,13 @@ lazy val api = serverProject("api")
   .dependsOn(auth % "compile")
   .dependsOn(sangriaUtils % "compile")
   .dependsOn(connectorUtils %"compile->compile;test->test")
+  .dependsOn(serversShared % "compile->compile;test->test")
 
 lazy val subscriptions = serverProject("subscriptions")
   .dependsOn(api % "compile;test->test")
   .dependsOn(stubServer % "compile")
   .dependsOn(connectorUtils % "test->test")
+  .dependsOn(serversShared % "compile->compile;test->test")
   .settings(
     libraryDependencies ++= Seq(playStreams)
   )
@@ -127,6 +130,9 @@ lazy val workers = serverProject("workers")
   .dependsOn(messageBus % "compile")
   .dependsOn(scalaUtils % "compile")
   .dependsOn(stubServer % "test")
+
+lazy val serversShared = serverProject("servers-shared")
+    .dependsOn(prismaConfig)
 
 // ####################
 //       CONNECTORS

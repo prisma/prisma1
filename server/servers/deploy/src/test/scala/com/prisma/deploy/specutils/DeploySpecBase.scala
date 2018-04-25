@@ -2,6 +2,7 @@ package com.prisma.deploy.specutils
 
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
+import com.prisma.ConnectorAwareTest
 import com.prisma.shared.models.{Migration, Project, ProjectId}
 import com.prisma.utils.await.AwaitUtils
 import com.prisma.utils.json.PlayJsonExtensions
@@ -11,11 +12,13 @@ import play.api.libs.json.JsString
 
 import scala.collection.mutable.ArrayBuffer
 
-trait DeploySpecBase extends BeforeAndAfterEach with BeforeAndAfterAll with AwaitUtils with PlayJsonExtensions { self: Suite =>
+trait DeploySpecBase extends ConnectorAwareTest with BeforeAndAfterEach with BeforeAndAfterAll with AwaitUtils with PlayJsonExtensions { self: Suite =>
 
   implicit lazy val system                                   = ActorSystem()
   implicit lazy val materializer                             = ActorMaterializer()
   implicit lazy val testDependencies: DeployTestDependencies = DeployTestDependencies()
+
+  override def prismaConfig = testDependencies.config
 
   val server            = DeployTestServer()
   val internalDB        = testDependencies.deployConnector

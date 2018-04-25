@@ -2,6 +2,7 @@ package com.prisma.api
 
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
+import com.prisma.ConnectorAwareTest
 import com.prisma.api.connector.DataResolver
 import com.prisma.api.util.StringMatchers
 import com.prisma.shared.models.Project
@@ -10,7 +11,7 @@ import com.prisma.utils.json.PlayJsonExtensions
 import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach, Suite}
 import play.api.libs.json.JsString
 
-trait ApiBaseSpec extends BeforeAndAfterEach with BeforeAndAfterAll with PlayJsonExtensions with StringMatchers with AwaitUtils {
+trait ApiBaseSpec extends ConnectorAwareTest with BeforeAndAfterEach with BeforeAndAfterAll with PlayJsonExtensions with StringMatchers with AwaitUtils {
   self: Suite =>
 
   implicit lazy val system           = ActorSystem()
@@ -18,6 +19,8 @@ trait ApiBaseSpec extends BeforeAndAfterEach with BeforeAndAfterAll with PlayJso
   implicit lazy val testDependencies = new TestApiDependenciesImpl
   val server                         = ApiTestServer()
   val database                       = ApiTestDatabase()
+
+  override def prismaConfig = testDependencies.config
 
   def dataResolver(project: Project): DataResolver = testDependencies.dataResolver(project)
 

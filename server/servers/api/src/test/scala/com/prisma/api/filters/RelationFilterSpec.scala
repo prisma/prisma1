@@ -1,10 +1,12 @@
 package com.prisma.api.filters
 
+import com.prisma.IgnorePostgres
 import com.prisma.api.ApiBaseSpec
 import com.prisma.shared.schema_dsl.SchemaDsl
-import org.scalatest.{FlatSpec, Matchers}
+import org.scalatest._
 
 class RelationFilterSpec extends FlatSpec with Matchers with ApiBaseSpec {
+
   val project = SchemaDsl.schema() { schema =>
     val blog = schema
       .model("Blog")
@@ -164,7 +166,7 @@ class RelationFilterSpec extends FlatSpec with Matchers with ApiBaseSpec {
       """{"data":{"blogs":[{"name":"blog 2"}]}}""")
   }
 
-  "crazy filters" should "work" ignore {
+  "crazy filters" should "work" taggedAs (IgnorePostgres) in {
 
     server
       .query(
