@@ -1,22 +1,23 @@
 package com.prisma.deploy.connector.postgresql
 
 import com.prisma.config.DatabaseConfig
+import com.prisma.deploy.connector.postgresql.database.InternalDatabaseSchema
 import com.typesafe.config.{Config, ConfigFactory}
 
 case class InternalDatabaseDefs(dbConfig: DatabaseConfig) {
   import slick.jdbc.PostgresProfile.api._
 
-  lazy val internalDatabaseRoot = database
-  lazy val internalDatabase     = database
+  lazy val internalDatabaseRoot = getDatabase("postgres")
+  lazy val internalDatabase     = getDatabase(InternalDatabaseSchema.database)
 
   private lazy val dbDriver = new org.postgresql.Driver
 
-  lazy val database = {
-    val config = typeSafeConfigFromDatabaseConfig(dbConfig)
+  def getDatabase(dbToUse: String) = {
+    val config = typeSafeConfigFromDatabaseConfig(dbToUse, dbConfig)
     Database.forConfig("database", config, driver = dbDriver)
   }
 
-  def typeSafeConfigFromDatabaseConfig(dbConfig: DatabaseConfig): Config = {
+  def typeSafeConfigFromDatabaseConfig(database: String, dbConfig: DatabaseConfig): Config = {
     val pooled = if (dbConfig.pooled) "" else "connectionPool = disabled"
 
     ConfigFactory
@@ -24,7 +25,7 @@ case class InternalDatabaseDefs(dbConfig: DatabaseConfig) {
         |database {
         |  dataSourceClass = "slick.jdbc.DriverDataSource"
         |  properties {
-        |    url = "jdbc:postgresql://${dbConfig.host}:${dbConfig.port}/"
+        |    url = "jdbc:postgresql://${dbConfig.host}:${dbConfig.port}/$database"
         |    user = "${dbConfig.user}"
         |    password = "${dbConfig.password.getOrElse("")}"
         |  }

@@ -16,11 +16,11 @@ case class PostgresDeployConnector(dbConfig: DatabaseConfig)(implicit ec: Execut
   lazy val internalDatabaseDefs = InternalDatabaseDefs(dbConfig)
   lazy val internalDatabaseRoot = internalDatabaseDefs.internalDatabaseRoot
   lazy val internalDatabase     = internalDatabaseDefs.internalDatabase
-  lazy val clientDatabase       = internalDatabaseRoot
+  lazy val clientDatabase       = internalDatabase
 
-  override val projectPersistence: ProjectPersistence           = ProjectPersistenceImpl(internalDatabase)
-  override val migrationPersistence: MigrationPersistence       = MigrationPersistenceImpl(internalDatabase)
-  override val deployMutactionExecutor: DeployMutactionExecutor = DeployMutactionExecutorImpl(clientDatabase)
+  override lazy val projectPersistence: ProjectPersistence           = ProjectPersistenceImpl(internalDatabase)
+  override lazy val migrationPersistence: MigrationPersistence       = MigrationPersistenceImpl(internalDatabase)
+  override lazy val deployMutactionExecutor: DeployMutactionExecutor = DeployMutactionExecutorImpl(clientDatabase)
 
   override def createProjectDatabase(id: String): Future[Unit] = {
     val action = PostgresDeployDatabaseMutationBuilder.createClientDatabaseForProject(projectId = id)
@@ -48,13 +48,16 @@ case class PostgresDeployConnector(dbConfig: DatabaseConfig)(implicit ec: Execut
   }
 
   override def clientDBQueries(project: Project): ClientDbQueries      = ClientDbQueriesImpl(project, clientDatabase)
-  override def getOrCreateTelemetryInfo(): Future[TelemetryInfo]       = internalDatabaseRoot.run(TelemetryTable.getOrCreateInfo())
-  override def updateTelemetryInfo(lastPinged: DateTime): Future[Unit] = internalDatabaseRoot.run(TelemetryTable.updateInfo(lastPinged)).map(_ => ())
+  override def getOrCreateTelemetryInfo(): Future[TelemetryInfo]       = internalDatabase.run(TelemetryTable.getOrCreateInfo())
+  override def updateTelemetryInfo(lastPinged: DateTime): Future[Unit] = internalDatabase.run(TelemetryTable.updateInfo(lastPinged)).map(_ => ())
   override def projectIdEncoder: ProjectIdEncoder                      = ProjectIdEncoder('$')
 
   override def initialize(): Future[Unit] = {
-    val action = InternalDatabaseSchema.createSchemaActions(recreate = false)
-    internalDatabaseRoot.run(action)
+    // We're ignoring failures for createDatabaseAction as there is no "create if not exists" in psql
+    internalDatabaseRoot.run(InternalDatabaseSchema.createDatabaseAction).transformWith { _ =>
+      val action = InternalDatabaseSchema.createSchemaActions(recreate = false)
+      internalDatabase.run(action)
+    }
   }
 
   override def reset(): Future[Unit] = truncateTablesInDatabase(internalDatabase)
