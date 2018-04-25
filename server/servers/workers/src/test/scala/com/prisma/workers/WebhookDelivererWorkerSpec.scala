@@ -63,7 +63,7 @@ class WebhookDelivererWorkerSpec
           webhookTestKit.publish(webhook)
 
           // Give the worker time to work off
-          Thread.sleep(1000)
+          Thread.sleep(2000)
 
           server.requestCount(stub) should equal(1)
           val lastRequest = server.lastRequest
@@ -94,7 +94,7 @@ class WebhookDelivererWorkerSpec
 
           webhookTestKit.publish(webhook)
 
-          Thread.sleep(1000)
+          Thread.sleep(2000)
           server.requestCount(stub) should equal(1)
         }
       }
