@@ -14,13 +14,22 @@ object SchemaDsl {
   def apply()  = schema()
   def schema() = SchemaBuilder()
 
-  def fromString(id: String = TestIds.testProjectId)(sdlString: String): Project = {
+  def fromString(id: String = TestIds.testProjectId, withReservedFields: Boolean = true)(sdlString: String): Project = {
     val emptyBaseSchema    = Schema()
     val emptySchemaMapping = SchemaMapping.empty
     val sqlDocument        = QueryParser.parse(sdlString.stripMargin).get
     val schema             = SchemaInferrer().infer(emptyBaseSchema, emptySchemaMapping, sqlDocument).get
 
-    TestProject().copy(id = id, schema = schema)
+    val actualSchema = if (withReservedFields) {
+      schema
+    } else {
+      val newModels = schema.models.map { model =>
+        model.filterFields(f => f.name != ReservedFields.createdAtFieldName && f.name != ReservedFields.updatedAtFieldName)
+      }
+      schema.copy(models = newModels)
+    }
+
+    TestProject().copy(id = id, schema = actualSchema)
   }
 
   case class SchemaBuilder(modelBuilders: Buffer[ModelBuilder] = Buffer.empty,

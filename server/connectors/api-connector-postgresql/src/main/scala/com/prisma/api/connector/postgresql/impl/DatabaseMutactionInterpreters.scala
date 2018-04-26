@@ -56,16 +56,20 @@ case class CascadingDeleteRelationMutactionsInterpreter(mutaction: CascadingDele
   }
 }
 
-case class CreateDataItemInterpreter(mutaction: CreateDataItem) extends DatabaseMutactionInterpreter {
+case class CreateDataItemInterpreter(mutaction: CreateDataItem, includeRelayRow: Boolean = true) extends DatabaseMutactionInterpreter {
   val project = mutaction.project
   val path    = mutaction.path
 
   override val action = {
-    val createNonList  = PostGresApiDatabaseMutationBuilder.createDataItem(project.id, path, mutaction.nonListArgs)
-    val createRelayRow = PostGresApiDatabaseMutationBuilder.createRelayRow(project.id, path)
-    val listAction     = PostGresApiDatabaseMutationBuilder.setScalarList(project.id, path, mutaction.listArgs)
+    val createNonList = PostGresApiDatabaseMutationBuilder.createDataItem(project.id, path, mutaction.nonListArgs)
+    val listAction    = PostGresApiDatabaseMutationBuilder.setScalarList(project.id, path, mutaction.listArgs)
 
-    DBIO.seq(createNonList, createRelayRow, listAction)
+    if (includeRelayRow) {
+      val createRelayRow = PostGresApiDatabaseMutationBuilder.createRelayRow(project.id, path)
+      DBIO.seq(createNonList, createRelayRow, listAction)
+    } else {
+      DBIO.seq(createNonList, listAction)
+    }
   }
 
   override val errorMapper = {
