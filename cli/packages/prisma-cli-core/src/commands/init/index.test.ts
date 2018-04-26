@@ -63,7 +63,7 @@ describe('init', () => {
   })
 })
 
-function normalizeDockerCompose(dc) {
+export function normalizeDockerCompose(dc) {
   return dc
     .split('\n')
     .filter(
