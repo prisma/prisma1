@@ -7,12 +7,12 @@ import slick.dbio.{DBIOAction, NoStream}
 import slick.jdbc.PostgresProfile.api._
 
 class InternalTestDatabase extends AwaitUtils {
-  val config               = ConfigLoader.load()
-  val databaseDefs         = InternalDatabaseDefs(config.databases.head.copy(pooled = false))
-  val internalDatabaseRoot = databaseDefs.internalDatabaseRoot
-  val internalDatabase     = databaseDefs.internalDatabase
+  val config           = ConfigLoader.load()
+  val databaseDefs     = InternalDatabaseDefs(config.databases.head.copy(pooled = false))
+  val setupDatabase    = databaseDefs.setupDatabase
+  val internalDatabase = databaseDefs.internalDatabase
 
-  def createInternalDatabaseSchema() = internalDatabaseRoot.run(InternalDatabaseSchema.createSchemaActions(recreate = true)).await(10)
+  def createInternalDatabaseSchema() = setupDatabase.run(InternalDatabaseSchema.createSchemaActions(recreate = true)).await(10)
 
   def truncateTables(): Unit = {
     val schemas = internalDatabase.run(getTables).await()
@@ -34,7 +34,7 @@ class InternalTestDatabase extends AwaitUtils {
   def run[R](a: DBIOAction[R, NoStream, Nothing]) = internalDatabase.run(a).await()
 
   def shutdown() = {
-    internalDatabaseRoot.close()
+    setupDatabase.close()
     internalDatabase.close()
   }
 }
