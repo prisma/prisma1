@@ -25,8 +25,8 @@ case class InternalDatabaseDefs(dbConfig: DatabaseConfig) {
         |  dataSourceClass = "slick.jdbc.DriverDataSource"
         |  properties {
         |    url = "jdbc:postgresql://${dbConfig.host}:${dbConfig.port}/"
-        |    user = ${dbConfig.user}
-        |    password = ${dbConfig.password.getOrElse("")}
+        |    user = "${dbConfig.user}"
+        |    password = "${dbConfig.password.getOrElse("")}"
         |  }
         |  numThreads = ${dbConfig.connectionLimit.getOrElse(10)}
         |  connectionTimeout = 5000
