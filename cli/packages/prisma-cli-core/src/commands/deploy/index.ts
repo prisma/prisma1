@@ -178,7 +178,7 @@ Note: prisma local start will be deprecated soon in favor of the direct usage of
     /**
      * Make sure we're logged in when a non-public cluster has been chosen
      */
-    if (cluster && !cluster.local) {
+    if (cluster && !cluster.local && cluster.isPrivate) {
       if (!workspace) {
         workspace = this.definition.getWorkspace() || '*'
       }
@@ -194,10 +194,13 @@ Note: prisma local start will be deprecated soon in favor of the direct usage of
 
     await this.client.initClusterClient(cluster, workspace, serviceName, stage)
 
+    debug('checking verions')
     await this.checkVersions(cluster!)
 
     let projectNew = false
+    debug('checking if project exists')
     if (!await this.projectExists(cluster, serviceName, stage, workspace)) {
+      debug('adding project')
       await this.addProject(cluster, serviceName, stage, workspace)
       projectNew = true
     }

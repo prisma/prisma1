@@ -440,7 +440,7 @@ export function parseEndpoint(
   const shared =
     url.origin.includes('eu1.prisma') || url.origin.includes('us1.prisma')
   const local = isLocal(url.origin)
-  const isPrivate = !shared && !local
+  const isPrivate = !shared && !local && url.origin.includes('prisma.io')
   // assuming, that the pathname always starts with a leading /, we always can ignore the first element of the split array
   const service =
     splittedPath.length > 3 ? splittedPath[2] : splittedPath[1] || 'default'
