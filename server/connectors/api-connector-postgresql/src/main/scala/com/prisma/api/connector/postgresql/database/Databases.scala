@@ -28,6 +28,8 @@ object Databases {
   }
 
   def typeSafeConfigFromDatabaseConfig(dbConfig: DatabaseConfig): Config = {
+    val pooled = if (dbConfig.pooled) "" else "connectionPool = disabled"
+
     ConfigFactory
       .parseString(s"""
         |database {
@@ -39,6 +41,7 @@ object Databases {
         |  }
         |  numThreads = ${dbConfig.connectionLimit.getOrElse(10)}
         |  connectionTimeout = 5000
+        |  $pooled
         |}
       """.stripMargin)
       .resolve

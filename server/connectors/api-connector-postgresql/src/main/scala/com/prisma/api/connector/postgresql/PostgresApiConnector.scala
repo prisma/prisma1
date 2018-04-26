@@ -26,6 +26,5 @@ case class PostgresApiConnector(config: DatabaseConfig)(implicit ec: ExecutionCo
   override def databaseMutactionExecutor: DatabaseMutactionExecutor = DatabaseMutactionExecutorImpl(databases.master)
   override def dataResolver(project: Project)                       = PostgresDataResolver(project, databases.readOnly)
   override def masterDataResolver(project: Project)                 = PostgresDataResolver(project, databases.master)
-
-  override def projectIdEncoder: ProjectIdEncoder = ProjectIdEncoder('$')
+  override def projectIdEncoder: ProjectIdEncoder                   = ProjectIdEncoder('$')
 }
