@@ -156,7 +156,8 @@ object DatabaseQueryBuilder {
     query.as[PrismaNode](getResultForModel(model))
   }
 
-  import com.prisma.slick.JdbcExtensions._
+  import com.prisma.slick.NewJdbcExtensions._
+  import com.prisma.api.connector.mysql.database.JdbcExtensions._
 
   def batchSelectFromModelByUniqueSimple(projectId: String, model: Model, fieldName: String, values: Vector[GCValue]): SimpleDBIO[Vector[PrismaNode]] =
     SimpleDBIO[Vector[PrismaNode]] { x =>
@@ -171,7 +172,7 @@ object DatabaseQueryBuilder {
     PrismaNode(id = rs.getId, data = RootGCValue(data: _*))
   }
 
-  def setGcValue: SetParam[GCValue] = new SetParam[GCValue] {
+  implicit val setGcValue: SetParam[GCValue] = new SetParam[GCValue] {
     override def apply(ps: PreparedStatement, index: Int, value: GCValue): Unit = ps.setGcValue(index, value)
   }
 
