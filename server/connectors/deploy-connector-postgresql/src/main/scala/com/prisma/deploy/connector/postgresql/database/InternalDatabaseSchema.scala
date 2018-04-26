@@ -9,7 +9,7 @@ object InternalDatabaseSchema {
   // PSQL schema for internal Prisma tables
   val internalSchema = "management"
 
-  val createDatabaseAction = sqlu"""CREATE DATABASE $internalSchema;"""
+  val createDatabaseAction = sql"""CREATE DATABASE "#$database";""".as[Option[String]]
 
   def createSchemaActions(recreate: Boolean): DBIOAction[Unit, NoStream, Effect] = {
     if (recreate) {
@@ -19,10 +19,11 @@ object InternalDatabaseSchema {
     }
   }
 
-  lazy val dropAction = DBIO.seq(sqlu"""DROP SCHEMA IF EXISTS "$internalSchema";""")
+  lazy val dropAction = DBIO.seq(sqlu"""DROP DATABASE "#$database";""")
 
   lazy val setupActions = DBIO.seq(
-    sqlu"""CREATE SCHEMA IF NOT EXISTS "$internalSchema";""",
+    sqlu"""CREATE SCHEMA IF NOT EXISTS "#$internalSchema";""",
+    sqlu"""SET SCHEMA '#$internalSchema';""",
     // Project
     sqlu"""
       CREATE TABLE IF NOT EXISTS "Project" (

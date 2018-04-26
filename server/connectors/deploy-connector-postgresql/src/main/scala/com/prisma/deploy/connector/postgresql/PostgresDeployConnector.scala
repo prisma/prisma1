@@ -14,22 +14,21 @@ import scala.concurrent.{ExecutionContext, Future}
 
 case class PostgresDeployConnector(dbConfig: DatabaseConfig)(implicit ec: ExecutionContext) extends DeployConnector with TableTruncationHelpers {
   lazy val internalDatabaseDefs = InternalDatabaseDefs(dbConfig)
-  lazy val internalDatabaseRoot = internalDatabaseDefs.internalDatabaseRoot
-  lazy val internalDatabase     = internalDatabaseDefs.internalDatabase
-  lazy val clientDatabase       = internalDatabase
+  lazy val internalDatabaseRoot = internalDatabaseDefs.internalDatabaseRoot // DB prisma, schema public
+  lazy val internalDatabase     = internalDatabaseDefs.internalDatabase // DB prisma, schema management
 
   override lazy val projectPersistence: ProjectPersistence           = ProjectPersistenceImpl(internalDatabase)
   override lazy val migrationPersistence: MigrationPersistence       = MigrationPersistenceImpl(internalDatabase)
-  override lazy val deployMutactionExecutor: DeployMutactionExecutor = DeployMutactionExecutorImpl(clientDatabase)
+  override lazy val deployMutactionExecutor: DeployMutactionExecutor = DeployMutactionExecutorImpl(internalDatabaseRoot)
 
   override def createProjectDatabase(id: String): Future[Unit] = {
     val action = PostgresDeployDatabaseMutationBuilder.createClientDatabaseForProject(projectId = id)
-    clientDatabase.run(action)
+    internalDatabaseRoot.run(action)
   }
 
   override def deleteProjectDatabase(id: String): Future[Unit] = {
     val action = PostgresDeployDatabaseMutationBuilder.deleteProjectDatabase(projectId = id).map(_ => ())
-    clientDatabase.run(action)
+    internalDatabaseRoot.run(action)
   }
 
   override def getAllDatabaseSizes(): Future[Vector[DatabaseSize]] = {
@@ -44,20 +43,23 @@ case class PostgresDeployConnector(dbConfig: DatabaseConfig)(implicit ec: Execut
       }
     }
 
-    clientDatabase.run(action)
+    internalDatabaseRoot.run(action)
   }
 
-  override def clientDBQueries(project: Project): ClientDbQueries      = ClientDbQueriesImpl(project, clientDatabase)
+  override def clientDBQueries(project: Project): ClientDbQueries      = ClientDbQueriesImpl(project, internalDatabaseRoot)
   override def getOrCreateTelemetryInfo(): Future[TelemetryInfo]       = internalDatabase.run(TelemetryTable.getOrCreateInfo())
   override def updateTelemetryInfo(lastPinged: DateTime): Future[Unit] = internalDatabase.run(TelemetryTable.updateInfo(lastPinged)).map(_ => ())
   override def projectIdEncoder: ProjectIdEncoder                      = ProjectIdEncoder('$')
 
   override def initialize(): Future[Unit] = {
     // We're ignoring failures for createDatabaseAction as there is no "create if not exists" in psql
-    internalDatabaseRoot.run(InternalDatabaseSchema.createDatabaseAction).transformWith { _ =>
-      val action = InternalDatabaseSchema.createSchemaActions(recreate = false)
-      internalDatabase.run(action)
-    }
+    internalDatabaseDefs.setupDatabase
+      .run(InternalDatabaseSchema.createDatabaseAction)
+      .transformWith { _ =>
+        val action = InternalDatabaseSchema.createSchemaActions(recreate = false)
+        internalDatabase.run(action)
+      }
+      .flatMap(_ => internalDatabaseDefs.setupDatabase.shutdown)
   }
 
   override def reset(): Future[Unit] = truncateTablesInDatabase(internalDatabase)

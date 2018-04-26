@@ -7,17 +7,21 @@ import com.typesafe.config.{Config, ConfigFactory}
 case class InternalDatabaseDefs(dbConfig: DatabaseConfig) {
   import slick.jdbc.PostgresProfile.api._
 
-  lazy val internalDatabaseRoot = getDatabase("postgres")
-  lazy val internalDatabase     = getDatabase(InternalDatabaseSchema.database)
+  // Only used during setup
+  lazy val setupDatabase = getDatabase("postgres")
+
+  // Used during runtime & setup
+  lazy val internalDatabaseRoot = getDatabase(InternalDatabaseSchema.database)
+  lazy val internalDatabase     = getDatabase(InternalDatabaseSchema.database, InternalDatabaseSchema.internalSchema)
 
   private lazy val dbDriver = new org.postgresql.Driver
 
-  def getDatabase(dbToUse: String) = {
-    val config = typeSafeConfigFromDatabaseConfig(dbToUse, dbConfig)
+  def getDatabase(dbToUse: String, schemaToUse: String = "public") = {
+    val config = typeSafeConfigFromDatabaseConfig(dbToUse, schemaToUse, dbConfig)
     Database.forConfig("database", config, driver = dbDriver)
   }
 
-  def typeSafeConfigFromDatabaseConfig(database: String, dbConfig: DatabaseConfig): Config = {
+  def typeSafeConfigFromDatabaseConfig(database: String, schema: String, dbConfig: DatabaseConfig): Config = {
     val pooled = if (dbConfig.pooled) "" else "connectionPool = disabled"
 
     ConfigFactory
@@ -25,7 +29,7 @@ case class InternalDatabaseDefs(dbConfig: DatabaseConfig) {
         |database {
         |  dataSourceClass = "slick.jdbc.DriverDataSource"
         |  properties {
-        |    url = "jdbc:postgresql://${dbConfig.host}:${dbConfig.port}/$database"
+        |    url = "jdbc:postgresql://${dbConfig.host}:${dbConfig.port}/$database?currentSchema=$schema)"
         |    user = "${dbConfig.user}"
         |    password = "${dbConfig.password.getOrElse("")}"
         |  }

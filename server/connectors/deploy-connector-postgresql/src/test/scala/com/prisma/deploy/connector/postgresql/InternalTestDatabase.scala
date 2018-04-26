@@ -7,9 +7,7 @@ import slick.dbio.{DBIOAction, NoStream}
 import slick.jdbc.PostgresProfile.api._
 
 class InternalTestDatabase extends AwaitUtils {
-
-  val config = ConfigLoader.load()
-
+  val config               = ConfigLoader.load()
   val databaseDefs         = InternalDatabaseDefs(config.databases.head.copy(pooled = false))
   val internalDatabaseRoot = databaseDefs.internalDatabaseRoot
   val internalDatabase     = databaseDefs.internalDatabase
