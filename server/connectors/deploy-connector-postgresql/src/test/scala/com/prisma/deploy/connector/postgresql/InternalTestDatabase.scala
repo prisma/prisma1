@@ -7,12 +7,21 @@ import slick.dbio.{DBIOAction, NoStream}
 import slick.jdbc.PostgresProfile.api._
 
 class InternalTestDatabase extends AwaitUtils {
+  import scala.concurrent.ExecutionContext.Implicits.global
+
   val config           = ConfigLoader.load()
   val databaseDefs     = InternalDatabaseDefs(config.databases.head.copy(pooled = false))
   val setupDatabase    = databaseDefs.setupDatabase
   val internalDatabase = databaseDefs.internalDatabase
 
-  def createInternalDatabaseSchema() = setupDatabase.run(InternalDatabaseSchema.createSchemaActions(recreate = true)).await(10)
+  def createInternalDatabaseSchema() =
+    setupDatabase
+      .run(InternalDatabaseSchema.createDatabaseAction)
+      .transformWith { _ =>
+        val action = InternalDatabaseSchema.createSchemaActions(recreate = true)
+        internalDatabase.run(action)
+      }
+      .await(10)
 
   def truncateTables(): Unit = {
     val schemas = internalDatabase.run(getTables).await()
