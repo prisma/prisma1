@@ -242,7 +242,7 @@ Awesome, you now have your Prisma cluster available on the Digital Ocean Droplet
 
 The cluster registry is stored in `~/.prisma/config.yml`. It lists all the clusters you can use to deploy your Prisma services (excluding the ones you configured through the Prisma Cloud).
 
-There is two ways how you can a new cluster to the registry:
+There are two ways to add a new cluster to the registry:
 
 1. Use the interactive Prisma CLI using the  `prisma cluster add` command
 1. Open `~/.prisma/config.yml` and add the cluster manually
