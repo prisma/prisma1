@@ -24,7 +24,7 @@ describe('endpoint dialog', () => {
       localClusterRunning: false,
     }
     const result = await dialog.handleChoice(input)
-    expect({ input, result }).toMatchSnapshot()
+    expect({ input, result: normalizeResult(result) }).toMatchSnapshot()
   })
   test('local running', async () => {
     const input = {
@@ -34,7 +34,7 @@ describe('endpoint dialog', () => {
       localClusterRunning: true,
     }
     const result = await dialog.handleChoice(input)
-    expect({ input, result }).toMatchSnapshot()
+    expect({ input, result: normalizeResult(result) }).toMatchSnapshot()
   })
 })
 
