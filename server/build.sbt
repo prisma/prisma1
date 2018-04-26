@@ -146,6 +146,7 @@ lazy val apiConnector = connectorProject("api-connector")
 lazy val apiConnectorMySql = connectorProject("api-connector-mysql")
   .dependsOn(apiConnector)
   .dependsOn(metrics)
+  .dependsOn(slickUtils)
   .settings(
     libraryDependencies ++= slick ++ Seq(mariaDbClient)
   )
@@ -153,6 +154,7 @@ lazy val apiConnectorMySql = connectorProject("api-connector-mysql")
 lazy val apiConnectorPostgres = connectorProject("api-connector-postgresql")
   .dependsOn(apiConnector)
   .dependsOn(metrics)
+  .dependsOn(slickUtils)
   .settings(
     libraryDependencies ++= slick ++ Seq(postgresClient)
   )
@@ -289,6 +291,8 @@ lazy val cache = libProject("cache")
     ))
 
 lazy val auth = libProject("auth").settings(libraryDependencies ++= Seq(jwt))
+
+lazy val slickUtils = libProject("slick-utils").settings(libraryDependencies ++= slick)
 
 lazy val prismaConfig = libProject("prisma-config").settings(libraryDependencies ++= Seq(snakeYML))
 
