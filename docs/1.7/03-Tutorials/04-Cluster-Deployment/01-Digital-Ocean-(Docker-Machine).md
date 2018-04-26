@@ -127,7 +127,7 @@ Let's get started!
 
 <Instruction>
 
-First, go ahead and create a new directory on your file system where you'll place all the files for your project, you can call it `digital-ocean-demo`.
+First, go ahead and create a new directory on your file system(on your local machine) where you'll place all the files for your project, you can call it `digital-ocean-demo`.
 
 </Instruction>
 
