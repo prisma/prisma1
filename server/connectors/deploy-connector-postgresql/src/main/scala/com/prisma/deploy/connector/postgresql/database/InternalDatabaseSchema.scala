@@ -19,7 +19,7 @@ object InternalDatabaseSchema {
     }
   }
 
-  lazy val dropAction = DBIO.seq(sqlu"""DROP DATABASE "#$database";""")
+  lazy val dropAction = DBIO.seq(sqlu"""DROP SCHEMA IF EXISTS "#$internalSchema" CASCADE;""")
 
   lazy val setupActions = DBIO.seq(
     sqlu"""CREATE SCHEMA IF NOT EXISTS "#$internalSchema";""",

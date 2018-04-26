@@ -10,8 +10,8 @@ import play.api.libs.json.JsString
 trait SpecBase extends BeforeAndAfterEach with BeforeAndAfterAll with AwaitUtils { self: Suite =>
   import scala.concurrent.ExecutionContext.Implicits.global
 
+  val encoder    = ProjectIdEncoder('$')
   val internalDb = new InternalTestDatabase
-
   val basicTypesGql =
     """
       |type TestModel {
@@ -46,7 +46,7 @@ trait SpecBase extends BeforeAndAfterEach with BeforeAndAfterAll with AwaitUtils
       name: String = Cuid.createCuid(),
       stage: String = Cuid.createCuid()
   ): (Project, Migration) = {
-    val projectId = name + "@" + stage
+    val projectId = encoder.toEncodedString(name, stage)
     val project   = newTestProject(projectId)
     projectPersistence.create(project).await()
 

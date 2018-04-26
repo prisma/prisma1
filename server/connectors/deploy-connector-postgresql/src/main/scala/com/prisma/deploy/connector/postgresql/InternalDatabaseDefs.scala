@@ -29,7 +29,7 @@ case class InternalDatabaseDefs(dbConfig: DatabaseConfig) {
         |database {
         |  dataSourceClass = "slick.jdbc.DriverDataSource"
         |  properties {
-        |    url = "jdbc:postgresql://${dbConfig.host}:${dbConfig.port}/$database?currentSchema=$schema)"
+        |    url = "jdbc:postgresql://${dbConfig.host}:${dbConfig.port}/$database?currentSchema=$schema"
         |    user = "${dbConfig.user}"
         |    password = "${dbConfig.password.getOrElse("")}"
         |  }

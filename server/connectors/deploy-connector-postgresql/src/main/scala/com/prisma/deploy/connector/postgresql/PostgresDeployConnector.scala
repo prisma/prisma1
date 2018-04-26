@@ -57,7 +57,7 @@ case class PostgresDeployConnector(dbConfig: DatabaseConfig)(implicit ec: Execut
       .run(InternalDatabaseSchema.createDatabaseAction)
       .transformWith { _ =>
         val action = InternalDatabaseSchema.createSchemaActions(recreate = false)
-        internalDatabase.run(action)
+        internalDatabaseRoot.run(action)
       }
       .flatMap(_ => internalDatabaseDefs.setupDatabase.shutdown)
   }
