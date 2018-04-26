@@ -238,3 +238,9 @@ hooks:
     - graphql get-schema --project prisma
     - graphql prepare
 ```
+
+## Common Errors
+
+### Invalid prisma.yml file prisma.yml should NOT have additional properties.
+
+You can read more about this error and how to fix it [in the Forum](https://www.graph.cool/forum/t/how-to-fix-invalid-prisma-yml-file-prisma-yml-should-not-have-additional-properties-additionalproperty-endpoint-errors/3303).
