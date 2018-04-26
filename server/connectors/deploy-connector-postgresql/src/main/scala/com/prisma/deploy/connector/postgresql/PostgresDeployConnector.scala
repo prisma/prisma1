@@ -77,15 +77,15 @@ trait TableTruncationHelpers {
 
   protected def truncateTablesInDatabase(database: Database)(implicit ec: ExecutionContext): Future[Unit] = {
     for {
-      schemas <- database.run(getTables("graphcool"))
+      schemas <- database.run(getTables())
       _       <- database.run(dangerouslyTruncateTables(schemas))
     } yield ()
   }
 
-  private def getTables(projectId: String)(implicit ec: ExecutionContext): DBIOAction[Vector[String], NoStream, Read] = {
+  private def getTables()(implicit ec: ExecutionContext): DBIOAction[Vector[String], NoStream, Read] = {
     sql"""SELECT table_name
           FROM information_schema.tables
-          WHERE table_schema = 'public'
+          WHERE table_schema = '#${InternalDatabaseSchema.internalSchema}'
           AND table_type = 'BASE TABLE';""".as[String]
   }
 
