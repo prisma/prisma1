@@ -17,6 +17,7 @@ import chalk from 'chalk'
 import { clusterEndpointMap, clusterEndpointMapReverse } from './constants'
 import { replaceYamlValue } from './utils/yamlComment'
 import { DefinitionMigrator } from './utils/DefinitionMigrator'
+import { parseEndpoint } from './utils/parseEndpoint'
 const debug = require('debug')('prisma definition')
 
 interface ErrorMessage {
@@ -405,45 +406,6 @@ function transformHeaders(headers?: { [key: string]: string }): Header[] {
   }))
 }
 
-export function parseEndpoint(
-  endpoint: string,
-): {
-  service: string
-  clusterBaseUrl: string
-  stage: string
-  isPrivate: boolean
-  local: boolean
-  shared: boolean
-  workspaceSlug: string | undefined
-  clusterName: string
-} {
-  const url = new URL(endpoint)
-  const splittedPath = url.pathname.split('/')
-  const shared =
-    url.origin.includes('eu1.prisma') || url.origin.includes('us1.prisma')
-  const local = isLocal(url.origin)
-  const isPrivate = !shared && !local && url.origin.includes('prisma.sh')
-  // assuming, that the pathname always starts with a leading /, we always can ignore the first element of the split array
-  const service =
-    splittedPath.length > 3 ? splittedPath[2] : splittedPath[1] || 'default'
-  const stage =
-    splittedPath.length > 3 ? splittedPath[3] : splittedPath[2] || 'default'
-  let workspaceSlug = splittedPath.length > 3 ? splittedPath[1] : undefined
-  if (isPrivate && !workspaceSlug) {
-    workspaceSlug = getWorkspaceFromPrivateOrigin(url.origin)
-  }
-  return {
-    clusterBaseUrl: url.origin,
-    service,
-    stage,
-    local,
-    isPrivate,
-    shared,
-    workspaceSlug,
-    clusterName: getClusterName(url.origin),
-  }
-}
-
 export function getEndpointFromRawProps(
   clusterWorkspace: string,
   service: string,
@@ -453,25 +415,3 @@ export function getEndpointFromRawProps(
   const cluster = splitted.length > 1 ? splitted[1] : splitted[0]
   const workspace = splitted.length > 1 ? splitted[0] : undefined
 }
-
-function getClusterName(origin): string {
-  if (clusterEndpointMapReverse[origin]) {
-    return clusterEndpointMapReverse[origin]
-  }
-
-  if (origin.endsWith('prisma.sh')) {
-    return origin.split('_')[0].replace(/https?:\/\//, '')
-  }
-
-  if (isLocal(origin)) {
-    return 'local'
-  }
-
-  return 'default'
-}
-
-const getWorkspaceFromPrivateOrigin = (origin: string) =>
-  origin.split('_')[1].split('.')[0]
-
-const isLocal = origin =>
-  origin.includes('localhost') || origin.includes('127.0.0.1')
