@@ -155,27 +155,6 @@ export class PrismaDefinitionClass {
   }
 
   validate() {
-    // const disableAuth = this.definition!.disableAuth
-    // if (this.secrets === null && !disableAuth) {
-    //   throw new Error(
-    //     'Please either provide a secret in your prisma.yml or disableAuth: true',
-    //   )
-    // }
-
-    // if (!this.service) {
-    //   throw new Error(`Please provide a service property in your prisma.yml`)
-    // }
-
-    // if (!this.stage) {
-    //   throw new Error(`Please provide a stage property in your prisma.yml`)
-    // }
-
-    // if (!this.cluster) {
-    //   throw new Error(
-    //     `Please either provide a cluster or endpoint property in your prisma.yml`,
-    //   )
-    // }
-
     // shared clusters need a workspace
     const clusterName = this.getClusterName()
     const cluster = this.env.clusterByName(clusterName!)!
@@ -440,7 +419,7 @@ export function parseEndpoint(
   const shared =
     url.origin.includes('eu1.prisma') || url.origin.includes('us1.prisma')
   const local = isLocal(url.origin)
-  const isPrivate = !shared && !local && url.origin.includes('prisma.io')
+  const isPrivate = !shared && !local && url.origin.includes('prisma.sh')
   // assuming, that the pathname always starts with a leading /, we always can ignore the first element of the split array
   const service =
     splittedPath.length > 3 ? splittedPath[2] : splittedPath[1] || 'default'
