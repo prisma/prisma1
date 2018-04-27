@@ -4,7 +4,7 @@ import com.prisma.shared.models.{Field, Model}
 import slick.jdbc.MySQLProfile.api._
 import slick.jdbc.{PositionedParameters, SQLActionBuilder}
 
-object DatabaseQueryBuilder {
+object MysqlDeployDatabaseQueryBuilder {
 
   def existsByModel(projectId: String, modelName: String): SQLActionBuilder = {
     sql"select exists (select `id` from `#$projectId`.`#$modelName`)"

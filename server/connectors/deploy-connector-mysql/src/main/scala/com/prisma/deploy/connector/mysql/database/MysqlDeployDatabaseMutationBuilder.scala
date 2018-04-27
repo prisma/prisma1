@@ -4,7 +4,7 @@ import com.prisma.shared.models.TypeIdentifier.TypeIdentifier
 import com.prisma.shared.models.{Project, TypeIdentifier}
 import slick.jdbc.MySQLProfile.api._
 
-object DeployDatabaseMutationBuilderMySql {
+object MysqlDeployDatabaseMutationBuilder {
 
   def createClientDatabaseForProject(projectId: String) = {
     val idCharset = charsetTypeForScalarTypeIdentifier(isList = false, TypeIdentifier.GraphQLID)

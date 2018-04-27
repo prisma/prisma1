@@ -2,8 +2,7 @@ package com.prisma.deploy.connector.mysql.database
 
 import slick.jdbc.MySQLProfile.api._
 
-object InternalDatabaseSchema {
-
+object MysqlInternalDatabaseSchema {
   def createSchemaActions(recreate: Boolean): DBIOAction[Unit, NoStream, Effect] = {
     if (recreate) {
       DBIO.seq(dropAction, setupActions)

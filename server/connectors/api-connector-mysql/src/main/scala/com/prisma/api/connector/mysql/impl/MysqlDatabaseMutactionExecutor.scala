@@ -1,13 +1,13 @@
-package com.prisma.api.connector.postgresql.impl
+package com.prisma.api.connector.mysql.impl
 
 import com.prisma.api.connector._
-import com.prisma.api.connector.postgresql.DatabaseMutactionInterpreter
+import com.prisma.api.connector.mysql.DatabaseMutactionInterpreter
 import slick.jdbc.MySQLProfile.api._
 import slick.jdbc.TransactionIsolation
 
 import scala.concurrent.{ExecutionContext, Future}
 
-case class DatabaseMutactionExecutorImpl(clientDb: Database)(implicit ec: ExecutionContext) extends DatabaseMutactionExecutor {
+case class MysqlDatabaseMutactionExecutor(clientDb: Database)(implicit ec: ExecutionContext) extends DatabaseMutactionExecutor {
 
   override def execute(mutactions: Vector[DatabaseMutaction], runTransactionally: Boolean): Future[Unit] = {
     val interpreters        = mutactions.map(interpreterFor)
