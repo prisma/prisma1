@@ -97,7 +97,7 @@ ${chalk.gray(
     /**
      * If no endpoint or service provided, ask for it
      */
-    let workspace
+    let workspace: string | undefined | null = this.definition.getWorkspace()
     let cluster
     let dockerComposeYml = defaultDockerCompose
     if (!serviceName || !stage || interactive) {
@@ -192,16 +192,16 @@ Note: prisma local start will be deprecated soon in favor of the direct usage of
       }
     }
 
-    await this.client.initClusterClient(cluster, workspace, serviceName, stage)
+    await this.client.initClusterClient(cluster, serviceName, stage, workspace!)
 
     debug('checking verions')
     await this.checkVersions(cluster!)
 
     let projectNew = false
     debug('checking if project exists')
-    if (!await this.projectExists(cluster, serviceName, stage, workspace)) {
+    if (!await this.projectExists(cluster, serviceName, stage, workspace!)) {
       debug('adding project')
-      await this.addProject(cluster, serviceName, stage, workspace)
+      await this.addProject(cluster, serviceName, stage, workspace!)
       projectNew = true
     }
 
@@ -213,7 +213,7 @@ Note: prisma local start will be deprecated soon in favor of the direct usage of
       force,
       dryRun,
       projectNew,
-      workspace,
+      workspace!,
     )
 
     if (watch) {
@@ -232,7 +232,7 @@ Note: prisma local start will be deprecated soon in favor of the direct usage of
                 force,
                 dryRun,
                 false,
-                workspace,
+                workspace!,
               )
               this.out.log('Watching for change...')
             }

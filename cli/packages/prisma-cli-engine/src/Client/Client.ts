@@ -125,12 +125,15 @@ export class Client {
   // always create a new client which points to the latest config for each request
   async initClusterClient(
     cluster: Cluster,
-    workspaceSlug: string,
     serviceName: string,
     stageName?: string,
+    workspaceSlug: string | undefined | null = '*',
   ) {
     debug('Initializing cluster client')
     try {
+      if (!workspaceSlug) {
+        workspaceSlug = '*'
+      }
       const token = await cluster.getToken(
         serviceName,
         workspaceSlug,
@@ -151,7 +154,7 @@ export class Client {
         }
         const token = await cluster.getToken(
           serviceName,
-          workspaceSlug,
+          workspaceSlug!,
           stageName,
         )
         this.clusterClient = new GraphQLClient(cluster.getDeployEndpoint(), {
