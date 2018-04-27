@@ -1,7 +1,7 @@
 import { Output, Client, Config } from 'prisma-cli-engine'
 import * as inquirer from 'inquirer'
 import chalk from 'chalk'
-import { Cluster, Environment, getEndpoint } from 'prisma-yml'
+import { Cluster, Environment } from 'prisma-yml'
 import { concatName, defaultDataModel, defaultDockerCompose } from '../util'
 import * as sillyname from 'sillyname'
 import * as path from 'path'
@@ -263,7 +263,7 @@ export class EndpointDialog {
     }
 
     return {
-      endpoint: getEndpoint(cluster, service, stage, workspace),
+      endpoint: cluster.getApiEndpoint(service, stage, workspace),
       cluster,
       workspace,
       service,
