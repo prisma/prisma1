@@ -62,7 +62,7 @@ object PostgresApiDatabaseQueryBuilder {
       overrideMaxNodeCount: Option[Int] = None
   ): DBIOAction[ResolverResult[PrismaNode], NoStream, Effect] = {
 
-    val tableName                                        = model.name
+    val tableName                                        = model.pgTableName
     val (conditionCommand, orderByCommand, limitCommand) = extractQueryArgs(projectId, tableName, args, None, overrideMaxNodeCount = overrideMaxNodeCount)
 
     val query = sql"""select * from "#$projectId"."#$tableName"""" ++
@@ -125,7 +125,7 @@ object PostgresApiDatabaseQueryBuilder {
   def batchSelectFromModelByUnique(projectId: String, model: Model, fieldName: String, values: Vector[GCValue]): SimpleDBIO[Vector[PrismaNode]] =
     SimpleDBIO[Vector[PrismaNode]] { x =>
       val placeHolders                   = values.map(_ => "?").mkString(",")
-      val query                          = s"""select * from "$projectId"."${model.name}" where "$fieldName" in ($placeHolders)"""
+      val query                          = s"""select * from "$projectId"."${model.pgTableName}" where "$fieldName" in ($placeHolders)"""
       val batchSelect: PreparedStatement = x.connection.prepareStatement(query)
       values.zipWithIndex.foreach { gcValueWithIndex =>
         batchSelect.setGcValue(gcValueWithIndex._2 + 1, gcValueWithIndex._1)

@@ -1,7 +1,6 @@
 package com.prisma.api.mutations
 
 import com.prisma.api.ApiSpecBase
-import com.prisma.api.util.TroubleCharacters
 import com.prisma.deploy.connector.postgresql.PostgresDeployConnector
 import com.prisma.shared.schema_dsl.SchemaDsl
 import org.scalatest.{FlatSpec, Matchers}
@@ -36,7 +35,7 @@ class PassiveConnectorSpec extends FlatSpec with Matchers with ApiSpecBase {
       | type List {
       |   id: String!
       |   name: String!
-      |   todoes: [Todo]
+      |   todos: [Todo]
       | }
       |
       | type Todo {
@@ -65,6 +64,7 @@ class PassiveConnectorSpec extends FlatSpec with Matchers with ApiSpecBase {
   }
 
   "A Create Mutation" should "created nested items" in {
+    // how do we implement this? We would have to reorder in this case?
     val res = server.query(
       s"""mutation {
          |  createTodo(data: {
@@ -77,5 +77,20 @@ class PassiveConnectorSpec extends FlatSpec with Matchers with ApiSpecBase {
       project = project
     )
     res.toString should be(s"""{"data":{"createTodo":{"title":"the todo"}}}""")
+  }
+
+  "A Create Mutation" should "created nested items 2" in {
+    val res = server.query(
+      s"""mutation {
+         |  createList(data: {
+         |    name: "the list"
+         |    todos: {
+         |      create: [{ title: "the list" }]
+         |    }
+         |  }){ name }
+         |}""".stripMargin,
+      project = project
+    )
+    res.toString should be(s"""{"data":{"createList":{"name":"the list"}}}""")
   }
 }

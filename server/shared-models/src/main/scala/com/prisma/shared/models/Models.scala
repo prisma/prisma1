@@ -132,7 +132,8 @@ case class Model(
     fields: List[Field],
     description: Option[String] = None,
 ) {
-  def id = name
+  def id          = name
+  def pgTableName = name.toLowerCase
 
   lazy val uniqueFields: List[Field]          = fields.filter(f => f.isUnique && f.isVisible)
   lazy val scalarFields: List[Field]          = fields.filter(_.isScalar)

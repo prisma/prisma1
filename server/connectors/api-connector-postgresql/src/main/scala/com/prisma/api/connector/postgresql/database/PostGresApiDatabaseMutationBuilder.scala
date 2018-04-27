@@ -19,14 +19,14 @@ object PostGresApiDatabaseMutationBuilder {
 
   // region CREATE
 
-  def createDataItem(projectId: String, path: Path, args: PrismaArgs) = {
+  def createDataItem(projectId: String, path: Path, args: PrismaArgs): SimpleDBIO[Unit] = {
 
     SimpleDBIO[Unit] { x =>
       val columns      = path.lastModel.scalarNonListFields.map(_.name)
       val escapedKeys  = columns.map(column => s""""$column"""").mkString(",")
       val placeHolders = columns.map(_ => "?").mkString(",")
 
-      val query                         = s"""INSERT INTO "$projectId"."${path.lastModel.name}" ($escapedKeys) VALUES ($placeHolders)"""
+      val query                         = s"""INSERT INTO "$projectId"."${path.lastModel.pgTableName}" ($escapedKeys) VALUES ($placeHolders)"""
       val itemInsert: PreparedStatement = x.connection.prepareStatement(query)
 
       columns.zipWithIndex.foreach {
@@ -56,6 +56,11 @@ object PostGresApiDatabaseMutationBuilder {
     (sql"""insert into "#$projectId"."#${path.lastRelation_!.relationTableName}" ("id", "#${path.parentSideOfLastEdge}", "#${path.childSideOfLastEdge}")""" ++
       sql"""Select '#$relationId',""" ++ pathQueryForLastChild(projectId, path.removeLastEdge) ++ sql"," ++
       sql""""id" FROM "#$projectId"."#${childWhere.model.name}" where "#${childWhere.field.name}" = ${childWhere.fieldValue}""").asUpdate
+
+//    (sql"""update "#$projectId".todo""" ++
+//      sql"""set list_id = subquery.id""" ++
+//      sql"""from (select "id" from "#$projectId"."#${childWhere.model.pgTableName}" where "#${childWhere.field.name}" = ${childWhere.fieldValue}) as subquery""" ++
+//      sql"""where "#$projectId".todo.id = """ ++ pathQueryForLastChild(projectId, path.removeLastEdge)).asUpdate
 
 //    https://stackoverflow.com/questions/1109061/insert-on-duplicate-update-in-postgresql
 //    ++
