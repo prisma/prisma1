@@ -129,8 +129,7 @@ case class ProjectWithClient(project: Project, client: Client)
 case class Model(
     name: String,
     stableIdentifier: String,
-    fields: List[Field],
-    description: Option[String] = None,
+    fields: List[Field]
 ) {
   def id          = name
   def pgTableName = name.toLowerCase

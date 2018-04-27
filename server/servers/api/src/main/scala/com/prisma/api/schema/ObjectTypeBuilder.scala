@@ -73,7 +73,7 @@ class ObjectTypeBuilder(
   protected def modelToObjectType(model: models.Model): ObjectType[ApiUserContext, PrismaNode] = {
     new ObjectType(
       name = model.name,
-      description = model.description,
+      description = None,
       fieldsFn = () => {
         model.fields
           .filter(_.isVisible)
