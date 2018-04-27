@@ -2,6 +2,7 @@ package com.prisma.shared.models
 
 import com.prisma.gc_values._
 import com.prisma.shared.models.FieldConstraintType.FieldConstraintType
+import com.prisma.shared.models.Manifestations.{FieldManifestation, ModelManifestation}
 import com.prisma.shared.models.MigrationStepsJsonFormatter._
 import com.prisma.utils.json.JsonUtils
 import com.prisma.utils.json.JsonUtils._
@@ -182,6 +183,13 @@ object ProjectJsonFormatter {
       (JsPath \ "modelBOnDelete").readNullable[OnDelete.Value].map(_.getOrElse(OnDelete.SetNull))
   )(Relation.apply _)
 
+  val modelManifestationWrites: Writes[ModelManifestation] = Writes(manifestation => Json.obj("dbName" -> manifestation.dbName))
+  val modelManifestationReads: Reads[ModelManifestation]   = (JsPath \ "dbName").read[String].map(ModelManifestation)
+  val fieldManifestationWrites: Writes[FieldManifestation] = Writes(manifestation => Json.obj("dbName" -> manifestation.dbName))
+  val fieldManifestationReads: Reads[FieldManifestation]   = (JsPath \ "dbName").read[String].map(FieldManifestation)
+
+  implicit lazy val modelManifestation        = Format(modelManifestationReads, modelManifestationWrites)
+  implicit lazy val fieldManifestation        = Format(fieldManifestationReads, fieldManifestationWrites)
   implicit lazy val relation                  = Format(relationReads, relationWrites)
   implicit lazy val enum                      = Json.format[Enum]
   implicit lazy val field                     = Json.format[Field]

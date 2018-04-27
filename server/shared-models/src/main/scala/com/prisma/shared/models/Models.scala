@@ -3,6 +3,7 @@ package com.prisma.shared.models
 import com.prisma.gc_values.GCValue
 import com.prisma.shared.errors.SharedErrors
 import com.prisma.shared.models.FieldConstraintType.FieldConstraintType
+import com.prisma.shared.models.Manifestations.{FieldManifestation, ModelManifestation}
 import org.joda.time.DateTime
 
 object IdType {
@@ -129,10 +130,11 @@ case class ProjectWithClient(project: Project, client: Client)
 case class Model(
     name: String,
     stableIdentifier: String,
-    fields: List[Field]
+    fields: List[Field],
+    manifestation: Option[ModelManifestation]
 ) {
-  def id          = name
-  def pgTableName = name.toLowerCase
+  val id: String     = name
+  val dbName: String = manifestation.map(_.dbName).getOrElse(id)
 
   lazy val uniqueFields: List[Field]          = fields.filter(f => f.isUnique && f.isVisible)
   lazy val scalarFields: List[Field]          = fields.filter(_.isScalar)
@@ -209,6 +211,7 @@ case class Field(
     defaultValue: Option[GCValue],
     relation: Option[Relation],
     relationSide: Option[RelationSide.Value],
+    manifestation: Option[FieldManifestation],
     constraints: List[FieldConstraint] = List.empty
 ) {
   def id                                            = name

@@ -1,5 +1,6 @@
 package com.prisma.deploy.migration.inference
 
+import com.prisma.shared.models.Manifestations.{FieldManifestation, ModelManifestation}
 import com.prisma.shared.models.{RelationSide, Schema}
 import com.prisma.shared.schema_dsl.SchemaDsl
 import org.scalactic.Or
@@ -323,6 +324,28 @@ class SchemaInfererSpec extends WordSpec with Matchers {
     relation.modelAId should equal("Technology")
     relation.modelBId should equal("Technology")
     relation.getModelAField(schema).get.name should be("childTechnologies")
+  }
+
+  "handle database manifestations for models" in {
+    val types =
+      """|type Todo @model(table:"todo_table"){
+         |  name: String!
+         |}""".stripMargin
+    val schema = infer(emptyProject.schema, types).get
+
+    val model = schema.getModelByName_!("Todo")
+    model.manifestation should equal(Some(ModelManifestation("todo_table")))
+  }
+
+  "handle database manifestations for fields" in {
+    val types =
+      """|type Todo {
+         |  name: String! @field(column: "my_name_column")
+         |}""".stripMargin
+    val schema = infer(emptyProject.schema, types).get
+
+    val field = schema.getModelByName_!("Todo").getFieldByName_!("name")
+    field.manifestation should equal(Some(FieldManifestation("my_name_column")))
   }
 
   def infer(schema: Schema, types: String, mapping: SchemaMapping = SchemaMapping.empty): Or[Schema, ProjectSyntaxError] = {

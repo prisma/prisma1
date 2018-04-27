@@ -5,7 +5,8 @@ import com.prisma.deploy.migration.DataSchemaAstExtensions._
 import com.prisma.deploy.schema.InvalidRelationName
 import com.prisma.deploy.validation.NameConstraints
 import com.prisma.gc_values.{GCValue, InvalidValueForScalarType}
-import com.prisma.shared.models.{OnDelete, ReservedFields, _}
+import com.prisma.shared.models.Manifestations.{FieldManifestation, ModelManifestation}
+import com.prisma.shared.models.{OnDelete, RelationSide, ReservedFields, _}
 import com.prisma.utils.or.OrExtensions
 import cool.graph.cuid.Cuid
 import org.scalactic.{Bad, Good, Or}
@@ -49,6 +50,7 @@ case class SchemaInferrerImpl(
         val fieldNames            = fields.map(_.name)
         val missingReservedFields = ReservedFields.reservedFieldNames.filterNot(fieldNames.contains)
         val hiddenReservedFields  = missingReservedFields.map(ReservedFields.reservedFieldFor(_).copy(isHidden = true))
+        val manifestation         = objectType.directiveArgumentAsString("model", "table").map(ModelManifestation)
 
         val stableIdentifier = baseSchema.getModelByName(schemaMapping.getPreviousModelName(objectType.name)) match {
           case Some(existingModel) => existingModel.stableIdentifier
@@ -58,7 +60,8 @@ case class SchemaInferrerImpl(
         Model(
           name = objectType.name,
           fields = fields.toList ++ hiddenReservedFields,
-          stableIdentifier = stableIdentifier
+          stableIdentifier = stableIdentifier,
+          manifestation = manifestation
         )
       }
     }
@@ -82,7 +85,7 @@ case class SchemaInferrerImpl(
 
       //For self relations we were inferring the relationSide A for both sides, this now assigns A to the lexicographically lower field name and B to the other
       //If in the previous schema whether both relationSides are A we reassign the relationsides otherwise we keep the one from the previous schema.
-      def inferRelationSide(relation: Option[Relation]) = {
+      def inferRelationSide(relation: Option[Relation]): Option[RelationSide.Value] = {
         def oldRelationSidesNotBothEqual(oldField: Field) = oldField.otherRelationField(baseSchema) match {
           case Some(relatedField) => oldField.relationSide.isDefined && oldField.relationSide != relatedField.relationSide
           case None               => true
@@ -118,7 +121,8 @@ case class SchemaInferrerImpl(
           enum = nextEnums.find(_.name == fieldDef.typeName),
           defaultValue = default,
           relation = relation,
-          relationSide = inferRelationSide(relation)
+          relationSide = inferRelationSide(relation),
+          manifestation = fieldDef.directiveArgumentAsString("field", "column").map(FieldManifestation)
         )
       }
 

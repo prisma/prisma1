@@ -309,7 +309,8 @@ object SchemaDsl {
       Model(
         name = name,
         stableIdentifier = Cuid.createCuid(),
-        fields = fields.toList
+        fields = fields.toList,
+        manifestation = None
       )
     }
   }
@@ -339,7 +340,8 @@ object SchemaDsl {
       isHidden = isHidden,
       relation = None,
       relationSide = None,
-      constraints = constraints
+      constraints = constraints,
+      manifestation = None
     )
   }
 
@@ -363,7 +365,8 @@ object SchemaDsl {
       isUnique = false,
       isReadonly = false,
       defaultValue = None,
-      enum = None
+      enum = None,
+      manifestation = None
     )
   }
 
@@ -379,7 +382,8 @@ object SchemaDsl {
     enum = None,
     defaultValue = None,
     relation = None,
-    relationSide = None
+    relationSide = None,
+    manifestation = None
   )
 
   private val updatedAtField = Field(
@@ -392,7 +396,8 @@ object SchemaDsl {
     enum = None,
     defaultValue = None,
     relation = None,
-    relationSide = None
+    relationSide = None,
+    manifestation = None
   )
 
   private val createdAtField = Field(
@@ -405,6 +410,7 @@ object SchemaDsl {
     enum = None,
     defaultValue = None,
     relation = None,
-    relationSide = None
+    relationSide = None,
+    manifestation = None
   )
 }
