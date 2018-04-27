@@ -16,7 +16,7 @@ import slick.sql.SqlStreamingAction
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
-object DatabaseQueryBuilder {
+object MysqlDatabaseQueryBuilder {
   import JdbcExtensions._
   import QueryArgumentsExtensions._
   import SlickExtensions._

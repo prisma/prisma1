@@ -15,7 +15,7 @@ import slick.jdbc.MySQLProfile.api._
 import slick.jdbc.SQLActionBuilder
 import slick.sql.{SqlAction, SqlStreamingAction}
 
-object PostGresApiDatabaseMutationBuilder {
+object PostgresApiDatabaseMutationBuilder {
 
   // region CREATE
 
@@ -143,7 +143,7 @@ object PostGresApiDatabaseMutationBuilder {
       sql"""select EXISTS (
             select "id" from "#${project.id}"."#${updatePath.lastModel.name}"
             where""" ++ nodeSelector(updatePath.lastEdge_!) ++
-        sql""" "id" IN""" ++ PostGresApiDatabaseMutationBuilder.pathQueryThatUsesWholePath(project.id, updatePath) ++ sql")"
+        sql""" "id" IN""" ++ PostgresApiDatabaseMutationBuilder.pathQueryThatUsesWholePath(project.id, updatePath) ++ sql")"
     }
 
     val condition = existsNodeIsInRelationshipWith.as[Boolean]
