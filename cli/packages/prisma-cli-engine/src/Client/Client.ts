@@ -129,6 +129,7 @@ export class Client {
     serviceName: string,
     stageName?: string,
   ) {
+    debug('Initializing cluster client', cluster.baseUrl)
     try {
       const token = await cluster.getToken(
         serviceName,
