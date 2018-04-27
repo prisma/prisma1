@@ -381,6 +381,7 @@ export class EndpointDialog {
       const fixChoices = [
         ['Use existing database', 'Connect to existing database'],
         ['Create new database', 'Set up a local database using Docker'],
+        ['Use other server', 'Connect to an existing prisma server'],
       ]
       const rawChoices = [...fixChoices, ...sandboxChoices]
       const choices = this.convertChoices(rawChoices)
@@ -396,7 +397,7 @@ export class EndpointDialog {
         new inquirer.Separator(
           chalk.bold('Or use a free hosted Prisma sandbox (includes database)'),
         ),
-        ...choices.slice(fixChoices.length, 4),
+        ...choices.slice(fixChoices.length, 5),
       ]
       return {
         name: 'choice',
