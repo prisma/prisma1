@@ -136,13 +136,13 @@ export class Cluster {
     stage: string,
     workspaceSlug?: string | null,
   ) {
-    if (service === 'default' && stage === 'default') {
+    if (!this.shared && service === 'default' && stage === 'default') {
       return this.baseUrl
     }
-    if (stage === 'default') {
+    if (!this.shared && stage === 'default') {
       return `${this.baseUrl}/${service}`
     }
-    if (this.isPrivate) {
+    if (this.isPrivate || this.local) {
       return `${this.baseUrl}/${service}/${stage}`
     }
     const workspaceString = workspaceSlug ? `${workspaceSlug}/` : ''
