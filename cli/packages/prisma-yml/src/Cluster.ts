@@ -131,45 +131,45 @@ export class Cluster {
     return clusterToken
   }
 
-  getApiEndpoint(serviceName: string, stage: string, workspaceSlug?: string) {
+  getApiEndpoint(
+    service: string,
+    stage: string,
+    workspaceSlug?: string | null,
+  ) {
+    if (service === 'default' && stage === 'default') {
+      return this.baseUrl
+    }
+    if (stage === 'default') {
+      return `${this.baseUrl}/${service}`
+    }
     if (this.isPrivate) {
-      return `${this.baseUrl}/${serviceName}/${stage}`
+      return `${this.baseUrl}/${service}/${stage}`
     }
     const workspaceString = workspaceSlug ? `${workspaceSlug}/` : ''
-    return `${this.baseUrl}/${workspaceString}${serviceName}/${stage}`
+    return `${this.baseUrl}/${workspaceString}${service}/${stage}`
   }
 
-  getWSEndpoint(serviceName: string, stage: string, workspaceSlug?: string) {
-    if (this.isPrivate) {
-      return `${this.baseUrl}/${serviceName}/${stage}`
-    }
-    const replacedUrl = this.baseUrl.replace('http', 'ws')
-    const workspaceString = workspaceSlug ? `${workspaceSlug}/` : ''
-    return `${replacedUrl}/${workspaceString}${serviceName}/${stage}`
+  getWSEndpoint(service: string, stage: string, workspaceSlug?: string | null) {
+    return this.getApiEndpoint(service, stage, workspaceSlug).replace(
+      /^http/,
+      'ws',
+    )
   }
 
   getImportEndpoint(
-    serviceName: string,
+    service: string,
     stage: string,
-    workspaceSlug?: string,
+    workspaceSlug?: string | null,
   ) {
-    if (this.isPrivate) {
-      return `${this.baseUrl}/${serviceName}/${stage}/import`
-    }
-    const workspaceString = workspaceSlug ? `${workspaceSlug}/` : ''
-    return `${this.baseUrl}/${workspaceString}${serviceName}/${stage}/import`
+    return this.getApiEndpoint(service, stage, workspaceSlug) + `/import`
   }
 
   getExportEndpoint(
-    serviceName: string,
+    service: string,
     stage: string,
-    workspaceSlug?: string,
+    workspaceSlug?: string | null,
   ) {
-    if (this.isPrivate) {
-      return `${this.baseUrl}/${serviceName}/${stage}/export`
-    }
-    const workspaceString = workspaceSlug ? `${workspaceSlug}/` : ''
-    return `${this.baseUrl}/${workspaceString}${serviceName}/${stage}/export`
+    return this.getApiEndpoint(service, stage, workspaceSlug) + `/export`
   }
 
   getDeployEndpoint() {

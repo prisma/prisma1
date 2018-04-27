@@ -129,7 +129,7 @@ export class Client {
     serviceName: string,
     stageName?: string,
   ) {
-    debug('Initializing cluster client', cluster.baseUrl)
+    debug('Initializing cluster client', cluster)
     try {
       const token = await cluster.getToken(
         serviceName,
@@ -160,6 +160,8 @@ export class Client {
           },
           agent: getProxyAgent(cluster.getDeployEndpoint()),
         } as any)
+      } else {
+        throw e
       }
     }
   }

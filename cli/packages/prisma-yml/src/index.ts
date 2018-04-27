@@ -1,10 +1,5 @@
 export { Cluster } from './Cluster'
-export {
-  PrismaDefinitionClass,
-  parseEndpoint,
-  getEndpoint,
-  getWSEndpoint,
-} from './PrismaDefinition'
+export { PrismaDefinitionClass, parseEndpoint } from './PrismaDefinition'
 export { Environment } from './Environment'
 export { Args } from './types/common'
 export { ClusterNotFound } from './errors/ClusterNotFound'

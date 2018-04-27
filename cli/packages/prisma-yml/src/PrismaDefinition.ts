@@ -17,6 +17,7 @@ import chalk from 'chalk'
 import { clusterEndpointMap, clusterEndpointMapReverse } from './constants'
 import { replaceYamlValue } from './utils/yamlComment'
 import { DefinitionMigrator } from './utils/DefinitionMigrator'
+const debug = require('debug')('prisma definition')
 
 interface ErrorMessage {
   message: string
@@ -161,7 +162,8 @@ export class PrismaDefinitionClass {
     if (
       clusterName &&
       cluster &&
-      (cluster.shared || cluster.isPrivate) &&
+      cluster.shared &&
+      !cluster.isPrivate &&
       !this.getWorkspace() &&
       clusterName !== 'shared-public-demo'
     ) {
@@ -222,6 +224,7 @@ If it is a private cluster, make sure that you're logged in with ${chalk.bold.gr
         clusterName,
       } = parseEndpoint(this.endpoint)
       if (clusterBaseUrl) {
+        debug('making cluster here')
         const cluster = new Cluster(
           this.out!,
           clusterName,
@@ -354,7 +357,7 @@ If it is a private cluster, make sure that you're logged in with ${chalk.bold.gr
     const workspace = this.getWorkspace()
 
     if (service && stage && cluster) {
-      return getEndpoint(cluster!, service!, stage!, workspace)
+      return cluster!.getApiEndpoint(service, stage, workspace)
     }
 
     return null
@@ -425,7 +428,10 @@ export function parseEndpoint(
     splittedPath.length > 3 ? splittedPath[2] : splittedPath[1] || 'default'
   const stage =
     splittedPath.length > 3 ? splittedPath[3] : splittedPath[2] || 'default'
-  const workspaceSlug = splittedPath.length > 3 ? splittedPath[1] : undefined
+  let workspaceSlug = splittedPath.length > 3 ? splittedPath[1] : undefined
+  if (isPrivate && !workspaceSlug) {
+    workspaceSlug = getWorkspaceFromPrivateOrigin(url.origin)
+  }
   return {
     clusterBaseUrl: url.origin,
     service,
@@ -436,35 +442,6 @@ export function parseEndpoint(
     workspaceSlug,
     clusterName: getClusterName(url.origin),
   }
-}
-
-export function getEndpoint(
-  cluster: Cluster,
-  service: string,
-  stage: string,
-  workspace?: string | null,
-) {
-  const url = cluster.baseUrl
-  if (service === 'default' && stage === 'default' && !workspace) {
-    return url
-  }
-  if (stage === 'default' && !workspace) {
-    return `${url}/${service}`
-  }
-  if (workspace) {
-    return `${url}/${workspace}/${service}/${stage}`
-  }
-
-  return `${url}/${service}/${stage}`
-}
-
-export function getWSEndpoint(
-  cluster: Cluster,
-  service: string,
-  stage: string,
-  workspace?: string | null,
-) {
-  return getEndpoint(cluster, service, stage, workspace).replace(/^http/, 'ws')
 }
 
 export function getEndpointFromRawProps(
@@ -492,6 +469,9 @@ function getClusterName(origin): string {
 
   return 'default'
 }
+
+const getWorkspaceFromPrivateOrigin = (origin: string) =>
+  origin.split('_')[1].split('.')[0]
 
 const isLocal = origin =>
   origin.includes('localhost') || origin.includes('127.0.0.1')
