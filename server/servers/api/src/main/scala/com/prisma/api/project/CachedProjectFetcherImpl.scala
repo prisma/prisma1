@@ -6,13 +6,13 @@ import com.prisma.messagebus.PubSubSubscriber
 import com.prisma.messagebus.pubsub.{Everything, Message}
 import com.prisma.shared.models.ProjectWithClientId
 
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
 
 case class CachedProjectFetcherImpl(
     projectFetcher: RefreshableProjectFetcher,
     projectSchemaInvalidationSubscriber: PubSubSubscriber[String]
-) extends RefreshableProjectFetcher {
-  import scala.concurrent.ExecutionContext.Implicits.global
+)(implicit ec: ExecutionContext)
+    extends RefreshableProjectFetcher {
 
   private val cache = Cache.lfuAsync[String, ProjectWithClientId](initialCapacity = 16, maxCapacity = 100)
 

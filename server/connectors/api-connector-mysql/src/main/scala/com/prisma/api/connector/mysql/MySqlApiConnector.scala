@@ -24,8 +24,8 @@ case class MySqlApiConnector(config: DatabaseConfig)(implicit ec: ExecutionConte
   }
 
   override def databaseMutactionExecutor: DatabaseMutactionExecutor = DatabaseMutactionExecutorImpl(databases.master)
-  override def dataResolver(project: Project)                       = MySqlDataResolver(project, databases.readOnly)
-  override def masterDataResolver(project: Project)                 = MySqlDataResolver(project, databases.master)
+  override def dataResolver(project: Project)                       = MySqlDataResolver(project, databases.readOnly)(ec)
+  override def masterDataResolver(project: Project)                 = MySqlDataResolver(project, databases.master)(ec)
 
   override def projectIdEncoder: ProjectIdEncoder = ProjectIdEncoder('@')
 }

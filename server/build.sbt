@@ -46,7 +46,20 @@ def commonDockerImageSettings(imageName: String) = commonServerSettings ++ Seq(
       env("CLUSTER_VERSION", sys.env.getOrElse("CLUSTER_VERSION", sys.error("Env var CLUSTER_VERSION required but not found.")))
       entryPointShell(s"$targetDir/start.sh")
     }
-  }
+
+  },
+  javaOptions in Universal ++= Seq(
+    // -J params will be added as jvm parameters
+    "-J-agentlib:jdwp=transport=dt_socket,server=y,address=8000,suspend=n",
+    "-J-Dcom.sun.management.jmxremote=true",
+    "-J-Dcom.sun.management.jmxremote.local.only=false",
+    "-J-Dcom.sun.management.jmxremote.authenticate=false",
+    "-J-Dcom.sun.management.jmxremote.ssl=false",
+    "-J-Dcom.sun.management.jmxremote.port=3333",
+    "-J-Dcom.sun.management.jmxremote.rmi.port=3333",
+    "-J-Djava.rmi.server.hostname=localhost",
+    "-J-Xmx2560m"
+  )
 )
 
 def imageProject(name: String, imageName: String): Project = imageProject(name).enablePlugins(sbtdocker.DockerPlugin, JavaAppPackaging).settings(commonDockerImageSettings(imageName): _*)

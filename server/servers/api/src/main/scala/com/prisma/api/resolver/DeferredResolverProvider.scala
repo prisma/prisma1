@@ -84,7 +84,7 @@ class DeferredResolverProvider[CtxType](dataResolver: DataResolver) extends Defe
     val manyModelFutureResults = manyModelDeferredsMap
       .map {
         case (key, value) =>
-          manyModelDeferredResolver.resolve(value)
+          manyModelDeferredResolver.resolve(value, ec)
       }
       .toVector
       .flatten
@@ -92,7 +92,7 @@ class DeferredResolverProvider[CtxType](dataResolver: DataResolver) extends Defe
     val manyModelExistsFutureResults = manyModelExistsDeferredsMap
       .map {
         case (key, value) =>
-          manyModelsExistsDeferredResolver.resolve(value)
+          manyModelsExistsDeferredResolver.resolve(value, ec)
       }
       .toVector
       .flatten
@@ -108,7 +108,7 @@ class DeferredResolverProvider[CtxType](dataResolver: DataResolver) extends Defe
     val toManyFutureResults = toManyDeferredsMap
       .map {
         case (key, value) =>
-          toManyDeferredResolver.resolve(value)
+          toManyDeferredResolver.resolve(value, ec)
       }
       .toVector
       .flatten
@@ -116,7 +116,7 @@ class DeferredResolverProvider[CtxType](dataResolver: DataResolver) extends Defe
     val countToManyFutureResults = countToManyDeferredsMap
       .map {
         case (key, value) =>
-          countToManyDeferredResolver.resolve(value)
+          countToManyDeferredResolver.resolve(value, ec)
       }
       .toVector
       .flatten
@@ -124,7 +124,7 @@ class DeferredResolverProvider[CtxType](dataResolver: DataResolver) extends Defe
     val toOneFutureResults = toOneDeferredMap
       .map {
         case (key, value) =>
-          toOneDeferredResolver.resolve(value)
+          toOneDeferredResolver.resolve(value, ec)
       }
       .toVector
       .flatten
@@ -132,14 +132,14 @@ class DeferredResolverProvider[CtxType](dataResolver: DataResolver) extends Defe
     val oneFutureResult = oneDeferredsMap
       .map {
         case (key, value) =>
-          oneDeferredResolver.resolve(value)
+          oneDeferredResolver.resolve(value, ec)
       }
       .toVector
       .flatten
 
     val scalarListFutureResult = scalarListDeferredsMap
       .map {
-        case (field, value) => scalarListDeferredResolver.resolve(value)
+        case (field, value) => scalarListDeferredResolver.resolve(value, ec)
       }
       .toVector
       .flatten

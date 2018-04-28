@@ -1,6 +1,7 @@
 package com.prisma.api.server
 
 import akka.actor.ActorSystem
+import akka.http.javadsl.model.StatusCode
 import akka.http.scaladsl.model.StatusCodes
 import akka.http.scaladsl.model.StatusCodes._
 import akka.http.scaladsl.model.headers.RawHeader
@@ -26,6 +27,7 @@ import play.api.libs.json._
 
 import scala.concurrent.Future
 import scala.language.postfixOps
+import scala.util.Try
 
 case class ApiServer(
     schemaBuilder: SchemaBuilder,
@@ -72,7 +74,7 @@ case class ApiServer(
     val requestId            = requestPrefix + ":api:" + createCuid()
     val requestBeginningTime = System.currentTimeMillis()
 
-    def logRequestEnd(projectId: String, throttledBy: Long = 0) = {
+    def logRequestEnd(projectId: String, throttledBy: Long = 0, result: Try[(StatusCode, JsValue)]) = {
       val end            = System.currentTimeMillis()
       val actualDuration = end - requestBeginningTime - throttledBy
       ApiMetrics.requestDuration.record(actualDuration, Seq(projectId))
@@ -87,7 +89,8 @@ case class ApiServer(
               payload = Some(
                 Map(
                   "request_duration" -> (end - requestBeginningTime),
-                  "throttled_by"     -> throttledBy
+                  "throttled_by"     -> throttledBy,
+                  "response"         -> result.toString
                 ))
             )
           )
@@ -126,8 +129,8 @@ case class ApiServer(
 
     def handleRequestForPublicApi(projectId: ProjectId, rawRequest: RawRequest) = {
       val result = apiDependencies.requestHandler.handleRawRequestForPublicApi(projectIdEncoder.toEncodedString(projectId), rawRequest)
-      result.onComplete { _ =>
-        logRequestEnd(projectIdEncoder.toEncodedString(projectId))
+      result.onComplete { res =>
+        logRequestEnd(projectIdEncoder.toEncodedString(projectId), result = res)
       }
       result
     }
@@ -147,20 +150,20 @@ case class ApiServer(
 
               case Some("private") =>
                 val result = apiDependencies.requestHandler.handleRawRequestForPrivateApi(projectId = projectIdAsString, rawRequest = rawRequest)
-                result.onComplete(_ => logRequestEnd(projectIdAsString))
+                result.onComplete(res => logRequestEnd(projectIdAsString, result = res))
                 complete(result)
 
               case Some("import") =>
                 withRequestTimeout(5.minutes) {
                   val result = apiDependencies.requestHandler.handleRawRequestForImport(projectId = projectIdAsString, rawRequest = rawRequest)
-                  result.onComplete(_ => logRequestEnd(projectIdAsString))
+                  result.onComplete(res => logRequestEnd(projectIdAsString, result = res))
                   complete(result)
                 }
 
               case Some("export") =>
                 withRequestTimeout(5.minutes) {
                   val result = apiDependencies.requestHandler.handleRawRequestForExport(projectId = projectIdAsString, rawRequest = rawRequest)
-                  result.onComplete(_ => logRequestEnd(projectIdAsString))
+                  result.onComplete(res => logRequestEnd(projectIdAsString, result = res))
                   complete(result)
                 }
 

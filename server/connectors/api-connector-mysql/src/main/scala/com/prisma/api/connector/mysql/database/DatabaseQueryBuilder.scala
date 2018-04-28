@@ -13,10 +13,9 @@ import slick.jdbc.MySQLProfile.api._
 import slick.jdbc.meta.{DatabaseMeta, MTable}
 import slick.jdbc.{SQLActionBuilder, _}
 import slick.sql.SqlStreamingAction
+import scala.concurrent.ExecutionContext
 
-import scala.concurrent.ExecutionContext.Implicits.global
-
-object DatabaseQueryBuilder {
+class DatabaseQueryBuilder()(implicit ec: ExecutionContext) {
   import JdbcExtensions._
   import QueryArgumentsExtensions._
   import SlickExtensions._
