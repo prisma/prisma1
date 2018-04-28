@@ -34,6 +34,9 @@ export class DefinitionMigrator {
       definition.cluster &&
       endpoint
     ) {
+      const log = this.prismaDefinition.out
+        ? this.prismaDefinition.out.log.bind(this.prismaDefinition.out)
+        : console.log.bind(console)
       const splittedCluster = definition.cluster.split('/')
       if (
         rawJson.service !== definition.service ||
@@ -41,7 +44,7 @@ export class DefinitionMigrator {
         rawJson.cluster !== definition.cluster ||
         splittedCluster.length === 1
       ) {
-        this.prismaDefinition.out!.log(`${chalk.yellow(
+        log(`${chalk.yellow(
           'warning',
         )} prisma.yml: "cluster", "service" and "stage" are deprecated and will be replaced with "endpoint".
 To get the endpoint, run ${chalk.cyan(
@@ -53,7 +56,7 @@ To get the endpoint, run ${chalk.cyan(
       const definitionString = fs.readFileSync(definitionPath, 'utf-8')
       const newDefinitionString = migrateToEndpoint(definitionString, endpoint)
       fs.writeFileSync(definitionPath, newDefinitionString)
-      this.prismaDefinition.out!.log(`${chalk.yellow(
+      log(`${chalk.yellow(
         'warning',
       )} prisma.yml: "cluster", "service", "stage" is being replaced by "endpoint".
 We did this migration for you in your prisma.yml so you don't have to take care of it.

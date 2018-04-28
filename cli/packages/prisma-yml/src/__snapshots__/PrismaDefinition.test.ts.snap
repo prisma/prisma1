@@ -157,45 +157,6 @@ Array [
 ]
 `;
 
-exports[`parseEndpoint work for minimal url 1`] = `
-Object {
-  "clusterBaseUrl": "http://localhost:4466",
-  "clusterName": "local",
-  "isPrivate": false,
-  "local": true,
-  "service": "default",
-  "shared": false,
-  "stage": "default",
-  "workspaceSlug": undefined,
-}
-`;
-
-exports[`parseEndpoint work for url with service 1`] = `
-Object {
-  "clusterBaseUrl": "http://localhost:4466",
-  "clusterName": "local",
-  "isPrivate": false,
-  "local": true,
-  "service": "service-name",
-  "shared": false,
-  "stage": "default",
-  "workspaceSlug": undefined,
-}
-`;
-
-exports[`parseEndpoint work for url with service and stage 1`] = `
-Object {
-  "clusterBaseUrl": "http://localhost:4466",
-  "clusterName": "local",
-  "isPrivate": false,
-  "local": true,
-  "service": "service-name",
-  "shared": false,
-  "stage": "stage",
-  "workspaceSlug": undefined,
-}
-`;
-
 exports[`prisma definition dont load yml with secret and env var in args 1`] = `undefined`;
 
 exports[`prisma definition load basic yml, provide cluster 1`] = `

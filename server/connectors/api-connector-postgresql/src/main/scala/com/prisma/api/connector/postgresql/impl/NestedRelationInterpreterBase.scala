@@ -1,7 +1,7 @@
 package com.prisma.api.connector.postgresql.impl
 
 import com.prisma.api.connector.postgresql.DatabaseMutactionInterpreter
-import com.prisma.api.connector.postgresql.database.PostGresApiDatabaseMutationBuilder._
+import com.prisma.api.connector.postgresql.database.PostgresApiDatabaseMutationBuilder._
 import com.prisma.api.connector.{ModelEdge, NodeEdge, Path}
 import com.prisma.api.schema.APIErrors.RequiredRelationWouldBeViolated
 import com.prisma.shared.models.Project

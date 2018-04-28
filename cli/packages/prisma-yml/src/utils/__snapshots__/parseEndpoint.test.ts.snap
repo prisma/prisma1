@@ -1,0 +1,66 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`parseEndpoint private url 1`] = `
+Object {
+  "clusterBaseUrl": "https://test1_workspace.prisma.sh",
+  "clusterName": "test1",
+  "isPrivate": true,
+  "local": false,
+  "service": "tessst",
+  "shared": false,
+  "stage": "dev",
+  "workspaceSlug": "workspace",
+}
+`;
+
+exports[`parseEndpoint shared url 1`] = `
+Object {
+  "clusterBaseUrl": "https://eu1.prisma.sh",
+  "clusterName": "prisma-eu1",
+  "isPrivate": false,
+  "local": false,
+  "service": "tessst",
+  "shared": true,
+  "stage": "dev",
+  "workspaceSlug": "workspace-name",
+}
+`;
+
+exports[`parseEndpoint work for minimal url 1`] = `
+Object {
+  "clusterBaseUrl": "http://localhost:4466",
+  "clusterName": "local",
+  "isPrivate": false,
+  "local": true,
+  "service": "default",
+  "shared": false,
+  "stage": "default",
+  "workspaceSlug": undefined,
+}
+`;
+
+exports[`parseEndpoint work for url with service 1`] = `
+Object {
+  "clusterBaseUrl": "http://localhost:4466",
+  "clusterName": "local",
+  "isPrivate": false,
+  "local": true,
+  "service": "service-name",
+  "shared": false,
+  "stage": "default",
+  "workspaceSlug": undefined,
+}
+`;
+
+exports[`parseEndpoint work for url with service and stage 1`] = `
+Object {
+  "clusterBaseUrl": "http://localhost:4466",
+  "clusterName": "local",
+  "isPrivate": false,
+  "local": true,
+  "service": "service-name",
+  "shared": false,
+  "stage": "stage",
+  "workspaceSlug": undefined,
+}
+`;
