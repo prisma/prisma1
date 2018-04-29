@@ -70,14 +70,15 @@ The `prisma-db` service is based on the [`prismagraphlq/prisma`](https://hub.doc
 
 - `ports`: The value `"4466:4466"` means that the Prisma server will be available on port `4466` of the host machine. For example: `http://localhost:4466`.
 - `environment`: This property specifies one environment variable called `PRISMA_CONFIG`. `PRISMA_CONFIG` contains several configuration options as well as the information needed for the Prisma server to connect to a database.
+  - `managementApiSecret`: The secret the CLI needs to send to authenticate its requests against the Prisma server (see [here](!alias-eu2ood0she#symmetric-approach-using-a-single-secret) for more info). Alternatively, you could use the property `legacySecret` for asymmetric authentication.
   - `port`: The port on which the Prisma server is running.
   - `databases`: Specify which databases the Prisma server should connect to (currently Prisma servers can only connect to one database).
-  - `default.connector`: Specify which Prisma database connector is to be used.
-  - `default.managementApiSecret`: The secret the CLI needs to send to authenticate its requests against the Prisma server (see [here](!alias-eu2ood0she#symmetric-approach-using-a-single-secret) for more info). Alternatively, you could use the property `default.legacySecret` for asymmetric authentication.
-  - `default.active`: Setting this to `true` means you're using an _active_ (as opposed to a _passive_) database connector
-  - `default.host`: The host machine of the database.
-  - `default.port`: The port on whcih the database is running.
-  - `default.user` and `default.password`: Credentials to authentivate against the database.
+    - `default.connector`: Specify which Prisma database connector is to be used.
+  
+    - `default.active`: Setting this to `true` means you're using an _active_ (as opposed to a _passive_) database connector
+    - `default.host`: The host machine of the database.
+    - `default.port`: The port on whcih the database is running.
+    - `default.user` and `default.password`: Credentials to authentivate against the database.
 
 #### `db`
 
