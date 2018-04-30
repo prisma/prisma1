@@ -11,7 +11,7 @@ If you provide a directory name as an argument to the command, the generated fil
 
 <InfoBox type=warning>
 
-Note that in [Prisma 1.7](!alias-iquaecuj6b), the `--boilerplate` flag has been removed from `prisma init`. This means you can not bootstrap an entire GraphQL server based on a [GraphQL boilerplate](https://github.com/graphql-boilerplates) project any more.
+Note that in [Prisma 1.7](https://github.com/graphcool/prisma/releases/tag/1.7.0), the `--boilerplate` flag has been removed from `prisma init`. This means you can not bootstrap an entire GraphQL server based on a [GraphQL boilerplate](https://github.com/graphql-boilerplates) project any more.
 
 To bootstrap a GraphQL server based on a GraphQL boilerplate project, use the `graphql create` command from the [GraphQL CLI](https://github.com/graphql-cli/graphql-cli):
 
