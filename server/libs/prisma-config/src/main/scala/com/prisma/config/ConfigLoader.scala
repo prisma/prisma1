@@ -74,7 +74,7 @@ object ConfigLoader {
       val dbUser         = sys.env.getOrElse("SQL_CLIENT_USER", sys.error("Env var SQL_CLIENT_USER required but not found"))
       val dbPass         = sys.env.getOrElse("SQL_CLIENT_PASSWORD", sys.error("Env var SQL_CLIENT_PASSWORD required but not found"))
       val dbConn         = sys.env.getOrElse("SQL_INTERNAL_CONNECTION_LIMIT", "1")
-      val managementDb   = sys.env.getOrElse("SQL_INTERNAL_DATABASE", "graphcool") // Legacy always ran on 'graphcool'
+      val database       = sys.env.getOrElse("SQL_INTERNAL_DATABASE", "graphcool") // Legacy always ran on 'graphcool'
       val mgmtApiEnabled = sys.env.getOrElse("CLUSTER_API_ENABLED", "1") match {
         case "1" => "true"
         case "0" => "false"
@@ -97,7 +97,7 @@ object ConfigLoader {
         |    user: $dbUser
         |    password: $dbPass
         |    connectionLimit: $dbConn
-        |    managementDb: $managementDb
+        |    database: $database
       """.stripMargin
     }.toOption
 
