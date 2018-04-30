@@ -13,7 +13,7 @@ import slick.jdbc.meta.MTable
 
 import scala.concurrent.{ExecutionContext, Future}
 
-case class MySqlDeployConnector(config: DatabaseConfig)(implicit ec: ExecutionContext) extends DeployConnector with TableTruncationHelpers {
+case class MySqlDeployConnector(config: DatabaseConfig)(implicit ec: ExecutionContext) extends DeployConnector {
   lazy val internalDatabaseDefs = MysqlInternalDatabaseDefs(config)
   lazy val internalDatabaseRoot = internalDatabaseDefs.internalDatabaseRoot
   lazy val internalDatabase     = internalDatabaseDefs.internalDatabase
@@ -52,7 +52,7 @@ case class MySqlDeployConnector(config: DatabaseConfig)(implicit ec: ExecutionCo
   override def projectIdEncoder: ProjectIdEncoder                      = ProjectIdEncoder('@')
 
   override def initialize(): Future[Unit] = {
-    val action = MysqlInternalDatabaseSchema.createSchemaActions(recreate = false)
+    val action = MysqlInternalDatabaseSchema.createSchemaActions(internalDatabaseDefs.dbName, recreate = false)
     internalDatabaseRoot.run(action)
   }
 
@@ -64,21 +64,17 @@ case class MySqlDeployConnector(config: DatabaseConfig)(implicit ec: ExecutionCo
       _ <- internalDatabase.shutdown
     } yield ()
   }
-}
-
-trait TableTruncationHelpers {
-  // copied from InternalTestDatabase
 
   protected def truncateTablesInDatabase(database: Database)(implicit ec: ExecutionContext): Future[Unit] = {
     for {
-      schemas <- database.run(getTables("graphcool"))
+      schemas <- database.run(getTables(internalDatabaseDefs.dbName))
       _       <- database.run(dangerouslyTruncateTables(schemas))
     } yield ()
   }
 
-  private def getTables(projectId: String)(implicit ec: ExecutionContext): DBIOAction[Vector[String], NoStream, Read] = {
+  private def getTables(database: String)(implicit ec: ExecutionContext): DBIOAction[Vector[String], NoStream, Read] = {
     for {
-      metaTables <- MTable.getTables(cat = Some(projectId), schemaPattern = None, namePattern = None, types = None)
+      metaTables <- MTable.getTables(cat = Some(database), schemaPattern = None, namePattern = None, types = None)
     } yield metaTables.map(table => table.name.name)
   }
 

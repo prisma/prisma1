@@ -3,15 +3,10 @@ package com.prisma.deploy.connector.postgresql.database
 import slick.jdbc.PostgresProfile.api._
 
 object InternalDatabaseSchema {
-  // PSQL Database that contains the client schemas and the internal schemas
-  val database = "prisma"
-
   // PSQL schema for internal Prisma tables
   val internalSchema = "management"
 
-  val createDatabaseAction = sql"""CREATE DATABASE "#$database";""".as[Option[String]]
-
-  // todo migration concept from older versions
+  def createDatabaseAction(db: String) = sql"""CREATE DATABASE "#$db";""".as[Option[String]]
 
   def createSchemaActions(recreate: Boolean): DBIOAction[Unit, NoStream, Effect] = {
     if (recreate) {

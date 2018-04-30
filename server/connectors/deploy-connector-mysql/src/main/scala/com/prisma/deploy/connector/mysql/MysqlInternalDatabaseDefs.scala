@@ -6,7 +6,7 @@ import com.typesafe.config.{Config, ConfigFactory}
 case class MysqlInternalDatabaseDefs(dbConfig: DatabaseConfig) {
   import slick.jdbc.MySQLProfile.api._
 
-  val internalDb = "graphcool"
+  val dbName = dbConfig.database.getOrElse("prisma")
 
   lazy val internalDatabaseRoot = database(root = true)
   lazy val internalDatabase     = database(root = false)
@@ -14,16 +14,11 @@ case class MysqlInternalDatabaseDefs(dbConfig: DatabaseConfig) {
   private lazy val dbDriver = new org.mariadb.jdbc.Driver
 
   def database(root: Boolean) = {
-    val config = if (root) {
-      typeSafeConfigFromDatabaseConfig(dbConfig)
-    } else {
-      typeSafeConfigFromDatabaseConfig(dbConfig, internalDb)
-    }
-
+    val config = typeSafeConfigFromDatabaseConfig(dbConfig, root)
     Database.forConfig("database", config, driver = dbDriver)
   }
 
-  def typeSafeConfigFromDatabaseConfig(dbConfig: DatabaseConfig, database: String = ""): Config = {
+  def typeSafeConfigFromDatabaseConfig(dbConfig: DatabaseConfig, root: Boolean): Config = {
     val pooled = if (dbConfig.pooled) "" else "connectionPool = disabled"
 
     ConfigFactory
@@ -32,7 +27,7 @@ case class MysqlInternalDatabaseDefs(dbConfig: DatabaseConfig) {
         |  connectionInitSql="set names utf8mb4"
         |  dataSourceClass = "slick.jdbc.DriverDataSource"
         |  properties {
-        |    url = "jdbc:mysql://${dbConfig.host}:${dbConfig.port}/$database?autoReconnect=true&useSSL=false&serverTimeZone=UTC&useUnicode=true&characterEncoding=UTF-8&socketTimeout=60000&usePipelineAuth=false"
+        |    url = "jdbc:mysql://${dbConfig.host}:${dbConfig.port}/$dbName?autoReconnect=true&useSSL=false&serverTimeZone=UTC&useUnicode=true&characterEncoding=UTF-8&socketTimeout=60000&usePipelineAuth=false"
         |    user = "${dbConfig.user}"
         |    password = "${dbConfig.password.getOrElse("")}"
         |  }

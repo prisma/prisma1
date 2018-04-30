@@ -12,8 +12,8 @@ import slick.jdbc.PostgresProfile.api._
 
 import scala.concurrent.{ExecutionContext, Future}
 
-case class PostgresDeployConnector(dbConfig: DatabaseConfig)(implicit ec: ExecutionContext) extends DeployConnector with TableTruncationHelpers {
-  lazy val internalDatabaseDefs = InternalDatabaseDefs(dbConfig)
+case class PostgresDeployConnector(dbConfig: DatabaseConfig)(implicit ec: ExecutionContext) extends DeployConnector {
+  lazy val internalDatabaseDefs = PostgresInternalDatabaseDefs(dbConfig)
   lazy val internalDatabaseRoot = internalDatabaseDefs.internalDatabaseRoot // DB prisma, schema public
   lazy val internalDatabase     = internalDatabaseDefs.internalDatabase // DB prisma, schema management
 
@@ -54,7 +54,7 @@ case class PostgresDeployConnector(dbConfig: DatabaseConfig)(implicit ec: Execut
   override def initialize(): Future[Unit] = {
     // We're ignoring failures for createDatabaseAction as there is no "create if not exists" in psql
     internalDatabaseDefs.setupDatabase
-      .run(InternalDatabaseSchema.createDatabaseAction)
+      .run(InternalDatabaseSchema.createDatabaseAction(internalDatabaseDefs.dbName))
       .transformWith { _ =>
         val action = InternalDatabaseSchema.createSchemaActions(recreate = false)
         internalDatabaseRoot.run(action)
@@ -62,7 +62,7 @@ case class PostgresDeployConnector(dbConfig: DatabaseConfig)(implicit ec: Execut
       .flatMap(_ => internalDatabaseDefs.setupDatabase.shutdown)
   }
 
-  override def reset(): Future[Unit] = truncateTablesInDatabase(internalDatabase)
+  override def reset(): Future[Unit] = truncateManagementTablesInDatabase(internalDatabase)
 
   override def shutdown() = {
     for {
@@ -70,12 +70,8 @@ case class PostgresDeployConnector(dbConfig: DatabaseConfig)(implicit ec: Execut
       _ <- internalDatabase.shutdown
     } yield ()
   }
-}
 
-trait TableTruncationHelpers {
-  // copied from InternalTestDatabase
-
-  protected def truncateTablesInDatabase(database: Database)(implicit ec: ExecutionContext): Future[Unit] = {
+  protected def truncateManagementTablesInDatabase(database: Database)(implicit ec: ExecutionContext): Future[Unit] = {
     for {
       schemas <- database.run(getTables())
       _       <- database.run(dangerouslyTruncateTables(schemas))
