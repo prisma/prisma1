@@ -238,3 +238,20 @@ hooks:
     - graphql get-schema --project prisma
     - graphql prepare
 ```
+
+### Bootstrap a GraphQL server
+
+Note that in Prisma 1.7, the `--boilerplate` option has been removed from the `prisma init` command. This means you can not bootstrap an entire GraphQL server based on a [GraphQL boilerplate](https://github.com/graphql-boilerplates) project any more.
+
+To bootstrap a GraphQL server based on a GraphQL boilerplate project, use the `graphql create` command from the [GraphQL CLI](https://github.com/graphql-cli/graphql-cli):
+
+```bash
+# Install the GraphQL CLI
+npm install -g graphql-cli
+
+# Choose a boilerplate from the interactive prompt ...
+graphql create myapp 
+
+# ...or directly select a boilerplate project via the `--boilerplate` option (e.g. `typescript-advanced`)
+graphql create myapp --boilerplate typescript-advanced
+```
