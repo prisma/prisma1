@@ -178,20 +178,17 @@ case class ApiServer(
   def extractRawRequest(requestId: String)(fn: RawRequest => Route): Route = {
     optionalHeaderValueByName("Authorization") { authorizationHeader =>
       TimeResponseDirectiveImpl(ApiMetrics).timeResponse {
-        optionalHeaderValueByName("x-graphcool-source") { graphcoolSourceHeader =>
-          entity(as[JsValue]) { requestJson =>
-            extractClientIP { clientIp =>
-              respondWithHeader(RawHeader("Request-Id", requestId)) {
-                fn(
-                  RawRequest(
-                    id = requestId,
-                    json = requestJson,
-                    ip = clientIp.toString,
-                    sourceHeader = graphcoolSourceHeader,
-                    authorizationHeader = authorizationHeader
-                  )
+        entity(as[JsValue]) { requestJson =>
+          extractClientIP { clientIp =>
+            respondWithHeader(RawHeader("Request-Id", requestId)) {
+              fn(
+                RawRequest(
+                  id = requestId,
+                  json = requestJson,
+                  ip = clientIp.toString,
+                  authorizationHeader = authorizationHeader
                 )
-              }
+              )
             }
           }
         }
