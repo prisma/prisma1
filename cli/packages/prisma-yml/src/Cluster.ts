@@ -61,10 +61,7 @@ export class Cluster {
   }
 
   getLocalToken(): string | null {
-    if (
-      !this.clusterSecret ||
-      (this.clusterSecret === '' && !process.env.PRISMA_MANAGEMENT_API_SECRET)
-    ) {
+    if (!this.clusterSecret && !process.env.PRISMA_MANAGEMENT_API_SECRET) {
       return null
     }
     if (!this.cachedToken) {
@@ -73,11 +70,12 @@ export class Cluster {
         process.env.PRISMA_MANAGEMENT_API_SECRET || this.clusterSecret
 
       try {
+        const algorithm = process.env.PRISMA_MANAGEMENT_API_SECRET
+          ? 'HS256'
+          : 'RS256'
         this.cachedToken = jwt.sign({ grants }, secret, {
           expiresIn: '5y',
-          algorithm: process.env.PRISMA_MANAGEMENT_API_SECRET
-            ? 'HS256'
-            : 'RS256',
+          algorithm,
         })
       } catch (e) {
         throw new Error(
