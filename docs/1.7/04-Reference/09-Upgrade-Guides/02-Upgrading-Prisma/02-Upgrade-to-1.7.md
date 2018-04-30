@@ -107,8 +107,6 @@ hooks:
     - graphql prepare
 ```
 
-
-
 ## Prisma CLI
 
 ### Deprecating `local` commands

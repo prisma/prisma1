@@ -236,3 +236,29 @@ subscriptions:
     query: ${self:custom.subscriptionQueries}/sendWelcomeEmail.graphql
     webhook: https://${self:custom.serverlessEndpoint}/sendWelcomeEmail
 ```
+
+## `hooks` (optional)
+
+The `hooks` property is used to define terminal commands which will be executed by the Prisma CLI before or after certain commands.
+
+The following hooks are currently available:
+
+- `post-deploy`: Will be invoked _after_ the `prisma deploy` command
+
+#### Type
+
+The `hooks` property expects an **object**. The properties match the names of the currently availale hooks.
+
+#### Examples
+
+1. Print "Deployment finished"
+1. Download the GraphQL schema for the `db` project specified in `.graphqlconfig.yml`
+1. Invoke code generation as specified in `.graphqlconfig.yml`
+
+```yml
+hooks:
+  post-deploy:
+    - echo "Deployment finished"
+    - graphql get-schema --project db
+    - graphql prepare
+```
