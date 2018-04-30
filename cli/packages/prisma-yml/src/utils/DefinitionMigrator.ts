@@ -54,12 +54,18 @@ To get the endpoint, run ${chalk.cyan(
       }
 
       const definitionString = fs.readFileSync(definitionPath, 'utf-8')
+      const backupPath = definitionPath + '.backup'
+      if (!fs.existsSync(backupPath)) {
+        fs.copyFileSync(definitionPath, backupPath)
+      }
       const newDefinitionString = migrateToEndpoint(definitionString, endpoint)
       fs.writeFileSync(definitionPath, newDefinitionString)
       log(`${chalk.yellow(
         'warning',
       )} prisma.yml: "cluster", "service", "stage" is being replaced by "endpoint".
 We did this migration for you in your prisma.yml so you don't have to take care of it.
+The old prisma.yml has been copied to prisma.yml.backup.
+
 Read more about the migration here: https://bit.ly/migrate-prisma-yml\n`)
       return true
     }
