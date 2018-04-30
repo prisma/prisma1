@@ -1,6 +1,7 @@
 package com.prisma.api.schema
 
 import com.prisma.api.ApiSpecBase
+import com.prisma.api.connector.NodeQueryCapability
 import com.prisma.shared.schema_dsl.SchemaDsl
 import com.prisma.util.GraphQLSchemaMatchers
 import org.scalatest.{Matchers, WordSpec}
@@ -70,6 +71,31 @@ class QueriesSchemaBuilderSpec extends WordSpec with Matchers with ApiSpecBase w
 
       schema should containType("TodoConnection", fields = Vector("pageInfo: PageInfo!", "edges: [TodoEdge]!", "aggregate: AggregateTodo!"))
       schema should containType("TodoEdge", fields = Vector("node: Todo!", "cursor: String!"))
+    }
+  }
+
+  "the node query for a model" must {
+    "be present if the connector has the capability" in {
+      val project = SchemaDsl() { schema =>
+        schema.model("Todo")
+      }
+
+      val schemaBuilder = SchemaBuilderImpl(project, capabilities = Vector(NodeQueryCapability))(testDependencies, system)
+      val schema        = SchemaRenderer.renderSchema(schemaBuilder.build())
+      schema should include("node(")
+      schema should include("id: ID!): Node")
+    }
+
+    "not be present if the connector doesn't have the capability" in {
+      val project = SchemaDsl() { schema =>
+        schema.model("Todo")
+      }
+
+      val schemaBuilder = SchemaBuilderImpl(project, capabilities = Vector.empty)(testDependencies, system)
+      val schema        = SchemaRenderer.renderSchema(schemaBuilder.build())
+
+      schema should not(include("node("))
+      schema should not(include("id: ID!): Node"))
     }
   }
 }

@@ -9,6 +9,7 @@ trait ApiConnector {
   def dataResolver(project: Project): DataResolver
   def masterDataResolver(project: Project): DataResolver
   def projectIdEncoder: ProjectIdEncoder
+  def capabilities: Vector[ApiConnectorCapability]
 
   def initialize(): Future[Unit]
   def shutdown(): Future[Unit]
@@ -17,3 +18,6 @@ trait ApiConnector {
 trait DatabaseMutactionExecutor {
   def execute(mutactions: Vector[DatabaseMutaction], runTransactionally: Boolean = true): Future[Unit]
 }
+
+sealed trait ApiConnectorCapability
+object NodeQueryCapability extends ApiConnectorCapability

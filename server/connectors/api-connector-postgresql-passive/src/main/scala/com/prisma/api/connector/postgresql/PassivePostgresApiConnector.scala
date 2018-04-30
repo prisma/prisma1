@@ -36,6 +36,8 @@ case class PassivePostgresApiConnector(config: DatabaseConfig)(implicit ec: Exec
   override def masterDataResolver(project: Project) = activeConnector.masterDataResolver(project)
 
   override def projectIdEncoder: ProjectIdEncoder = activeConnector.projectIdEncoder
+
+  override def capabilities = Vector.empty
 }
 
 case class PassiveDatabaseMutactionExecutorImpl(activeExecutor: DatabaseMutactionExecutorImpl)(implicit ec: ExecutionContext)

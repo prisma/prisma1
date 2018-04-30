@@ -1,13 +1,14 @@
 package com.prisma.api.schema
 
 import akka.actor.ActorSystem
-import com.prisma.api.connector.PrismaNode
+import com.prisma.api.connector.{ApiConnectorCapability, NodeQueryCapability, PrismaNode}
 import com.prisma.api.mutations._
 import com.prisma.api.resolver.DeferredTypes.{ManyModelDeferred, OneDeferred}
 import com.prisma.api.{ApiDependencies, ApiMetrics}
 import com.prisma.gc_values.IdGCValue
 import com.prisma.shared.models.{Model, Project}
 import com.prisma.util.coolArgs.CoolArgs
+import com.prisma.utils.boolean.BooleanUtils._
 import org.atteo.evo.inflector.English
 import sangria.relay._
 import sangria.schema._
@@ -22,11 +23,14 @@ trait SchemaBuilder {
 }
 
 object SchemaBuilder {
-  def apply()(implicit system: ActorSystem, apiDependencies: ApiDependencies): SchemaBuilder = (project: Project) => SchemaBuilderImpl(project).build()
+  def apply()(implicit system: ActorSystem, apiDependencies: ApiDependencies): SchemaBuilder = { (project: Project) =>
+    SchemaBuilderImpl(project, apiDependencies.capabilities).build()
+  }
 }
 
 case class SchemaBuilderImpl(
-    project: Project
+    project: Project,
+    capabilities: Vector[ApiConnectorCapability]
 )(implicit apiDependencies: ApiDependencies, system: ActorSystem) {
   import system.dispatcher
 
@@ -59,7 +63,7 @@ case class SchemaBuilderImpl(
     val fields = project.models.map(getAllItemsField) ++
       project.models.flatMap(getSingleItemField) ++
       project.models.map(getAllItemsConnectionField) ++
-      List(nodeField)
+      capabilities.contains(NodeQueryCapability).toOption(nodeField)
 
     ObjectType("Query", fields)
   }
