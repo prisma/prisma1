@@ -129,13 +129,13 @@ case class ApiServer(
 
     def handleRequestForPublicApi(projectId: ProjectId, rawRequest: RawRequest) = {
       val result = apiDependencies.requestHandler.handleRawRequestForPublicApi(projectIdEncoder.toEncodedString(projectId), rawRequest)
-      result.onComplete { res =>
-        logRequestEnd(projectIdEncoder.toEncodedString(projectId), result = res)
-      }
+//      result.onComplete { res =>
+//        logRequestEnd(projectIdEncoder.toEncodedString(projectId), result = res)
+//      }
       result
     }
 
-    logger.info(Json.toJson(LogData(LogKey.RequestNew, requestId)).toString())
+//    logger.info(Json.toJson(LogData(LogKey.RequestNew, requestId)).toString())
     pathPrefix(Segments(min = 0, max = 4)) { segments =>
       post {
         val (projectSegments, reservedSegment) = splitReservedSegment(segments)

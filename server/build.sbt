@@ -159,6 +159,7 @@ lazy val apiConnector = connectorProject("api-connector")
 lazy val apiConnectorMySql = connectorProject("api-connector-mysql")
   .dependsOn(apiConnector)
   .dependsOn(metrics)
+  .dependsOn(cache)
   .settings(
     libraryDependencies ++= slick ++ Seq(mariaDbClient)
   )
