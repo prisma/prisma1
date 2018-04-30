@@ -251,6 +251,8 @@ The `hooks` property expects an **object**. The properties match the names of th
 
 #### Examples
 
+Here is an example that performs three tasks after `prisma deploy` was executed:
+
 1. Print "Deployment finished"
 1. Download the GraphQL schema for the `db` project specified in `.graphqlconfig.yml`
 1. Invoke code generation as specified in `.graphqlconfig.yml`
@@ -261,4 +263,17 @@ hooks:
     - echo "Deployment finished"
     - graphql get-schema --project db
     - graphql prepare
+```
+
+Note that this setup assumes the availability of a `.graphqlconfig.yml` looking similar to this:
+
+```yml
+projects:
+  prisma:
+    schemaPath: generated/prisma.graphql
+    extensions:
+      prisma: prisma.yml
+      prepare-binding:
+        output: generated/prisma.ts
+        generator: prisma-ts
 ```
