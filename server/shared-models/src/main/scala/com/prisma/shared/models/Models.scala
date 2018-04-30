@@ -215,6 +215,7 @@ case class Field(
     constraints: List[FieldConstraint] = List.empty
 ) {
   def id                                            = name
+  val dbName                                        = manifestation.map(_.dbName).getOrElse(name)
   def isScalar: Boolean                             = typeIdentifier != TypeIdentifier.Relation
   def isRelation: Boolean                           = typeIdentifier == TypeIdentifier.Relation
   def isScalarList: Boolean                         = isScalar && isList

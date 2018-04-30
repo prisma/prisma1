@@ -22,14 +22,15 @@ object PostGresApiDatabaseMutationBuilder {
   def createDataItem(projectId: String, path: Path, args: PrismaArgs): SimpleDBIO[Unit] = {
 
     SimpleDBIO[Unit] { x =>
-      val columns      = path.lastModel.scalarNonListFields.map(_.name)
+      val fields       = path.lastModel.scalarNonListFields
+      val columns      = fields.map(_.dbName)
       val escapedKeys  = columns.map(column => s""""$column"""").mkString(",")
       val placeHolders = columns.map(_ => "?").mkString(",")
 
-      val query                         = s"""INSERT INTO "$projectId"."${path.lastModel.pgTableName}" ($escapedKeys) VALUES ($placeHolders)"""
+      val query                         = s"""INSERT INTO "$projectId"."${path.lastModel.dbName}" ($escapedKeys) VALUES ($placeHolders)"""
       val itemInsert: PreparedStatement = x.connection.prepareStatement(query)
 
-      columns.zipWithIndex.foreach {
+      fields.map(_.name).zipWithIndex.foreach {
         case (column, index) =>
           args.raw.asRoot.map.get(column) match {
             case Some(NullGCValue) if column == "createdAt" || column == "updatedAt" => itemInsert.setTimestamp(index + 1, currentTimeStampUTC)

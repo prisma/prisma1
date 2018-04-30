@@ -62,7 +62,7 @@ object PostgresApiDatabaseQueryBuilder {
       overrideMaxNodeCount: Option[Int] = None
   ): DBIOAction[ResolverResult[PrismaNode], NoStream, Effect] = {
 
-    val tableName                                        = model.pgTableName
+    val tableName                                        = model.dbName
     val (conditionCommand, orderByCommand, limitCommand) = extractQueryArgs(projectId, tableName, args, None, overrideMaxNodeCount = overrideMaxNodeCount)
 
     val query = sql"""select * from "#$projectId"."#$tableName"""" ++
@@ -125,7 +125,7 @@ object PostgresApiDatabaseQueryBuilder {
   def batchSelectFromModelByUnique(projectId: String, model: Model, fieldName: String, values: Vector[GCValue]): SimpleDBIO[Vector[PrismaNode]] =
     SimpleDBIO[Vector[PrismaNode]] { x =>
       val placeHolders                   = values.map(_ => "?").mkString(",")
-      val query                          = s"""select * from "$projectId"."${model.pgTableName}" where "$fieldName" in ($placeHolders)"""
+      val query                          = s"""select * from "$projectId"."${model.dbName}" where "$fieldName" in ($placeHolders)"""
       val batchSelect: PreparedStatement = x.connection.prepareStatement(query)
       values.zipWithIndex.foreach { gcValueWithIndex =>
         batchSelect.setGcValue(gcValueWithIndex._2 + 1, gcValueWithIndex._1)
@@ -134,7 +134,7 @@ object PostgresApiDatabaseQueryBuilder {
 
       var result: Vector[PrismaNode] = Vector.empty
       while (rs.next) {
-        val data = model.scalarNonListFields.map(field => field.name -> rs.getGcValue(field.name, field.typeIdentifier))
+        val data = model.scalarNonListFields.map(field => field.name -> rs.getGcValue(field.dbName, field.typeIdentifier))
         result = result :+ PrismaNode(id = rs.getId, data = RootGCValue(data: _*))
       }
 

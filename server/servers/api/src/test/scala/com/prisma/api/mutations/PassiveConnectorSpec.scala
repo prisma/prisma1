@@ -93,4 +93,24 @@ class PassiveConnectorSpec extends FlatSpec with Matchers with ApiSpecBase {
     )
     res.toString should be(s"""{"data":{"createList":{"name":"the list"}}}""")
   }
+
+  "the connector" should "support diverging names for models/tables and fields/columns" in {
+    val project = SchemaDsl.fromString(id = projectId, withReservedFields = false) {
+      """
+        | type List @model(table: "list"){
+        |   id: String!
+        |   theName: String! @field(column: "name")
+        | }
+      """.stripMargin
+    }
+    val res = server.query(
+      s"""mutation {
+         |  createList(data: {
+         |    theName: "the list"
+         |  }){ theName }
+         |}""".stripMargin,
+      project = project
+    )
+    res.toString should be(s"""{"data":{"createList":{"theName":"the list"}}}""")
+  }
 }

@@ -116,7 +116,7 @@ case class NestedCreateDataItemInterpreter(mutaction: NestedCreateDataItem) exte
     val idSubQuery = PostGresApiDatabaseMutationBuilder.pathQueryForLastParent(project.id, path)
 
     for {
-      ids <- (sql"""select "id" from #${project.id}.#${path.removeLastEdge.lastModel.pgTableName} where id in (""" ++ idSubQuery ++ sql")").as[String]
+      ids <- (sql"""select "id" from #${project.id}.#${path.removeLastEdge.lastModel.dbName} where id in (""" ++ idSubQuery ++ sql")").as[String]
       _   <- createDataItemAndLinkToParent(ids.head)
     } yield ()
   }
@@ -137,7 +137,7 @@ case class NestedCreateDataItemInterpreter(mutaction: NestedCreateDataItem) exte
       val escapedKeys  = columns.map(column => s""""$column"""").mkString(",")
       val placeHolders = columns.map(_ => "?").mkString(",")
 
-      val query                         = s"""INSERT INTO "$projectId"."${path.lastModel.pgTableName}" ($escapedKeys) VALUES ($placeHolders, $parentId)"""
+      val query                         = s"""INSERT INTO "$projectId"."${path.lastModel.dbName}" ($escapedKeys) VALUES ($placeHolders, $parentId)"""
       val itemInsert: PreparedStatement = x.connection.prepareStatement(query)
 
       columns.zipWithIndex.foreach {
