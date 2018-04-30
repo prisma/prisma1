@@ -9,6 +9,25 @@ Creates the local file structure for a new Prisma database API.
 
 If you provide a directory name as an argument to the command, the generated files will be placed inside a new directory with that name.
 
+<InfoBox>
+
+Note that in [Prisma 1.7](!alias-iquaecuj6b), the `--boilerplate` flag has been removed from `prisma init`. This means you can not bootstrap an entire GraphQL server based on a [GraphQL boilerplate](https://github.com/graphql-boilerplates) project any more.
+
+To bootstrap a GraphQL server based on a GraphQL boilerplate project, use the `graphql create` command from the [GraphQL CLI](https://github.com/graphql-cli/graphql-cli):
+
+```bash
+# Install the GraphQL CLI
+npm install -g graphql-cli
+
+# Choose a boilerplate from the interactive prompt ...
+graphql create myapp 
+
+# ... or directly select a boilerplate project via the `--boilerplate` option (e.g. `typescript-advanced`)
+graphql create myapp --boilerplate typescript-advanced
+```
+
+</InfoBox>
+
 #### Usage
 
 ```sh
