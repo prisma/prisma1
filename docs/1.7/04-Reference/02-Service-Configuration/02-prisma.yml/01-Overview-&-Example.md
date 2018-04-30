@@ -39,10 +39,12 @@ endpoint: http://localhost:4466/myservice/dev
 secret: mysecret123
 
 # OPTIONAL
-# Path where the full GraphQL schema will be written to
-# after deploying. Note that it is generated based on your
-# data model.
-schema: schemas/prisma.graphql
+# A "post-deployment" hook that first downloads the GraphQL schema from an endpoint configured
+# in `.graphqlconfig` and then invokes a code generation process.
+hooks:
+  post-deploy:
+    - graphql get-schema --project db
+    - graphql prepare
 
 # OPTIONAL
 # This service has one event subscription configured. The corresponding
