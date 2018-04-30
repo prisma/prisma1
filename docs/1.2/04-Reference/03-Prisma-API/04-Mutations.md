@@ -108,6 +108,8 @@ mutation {
 
 > **Note**: `create` and `update` are of the same type as the `data` object in the `createUser` and `updateUser` mutations.
 
+> **Note**: At this time, it is not possible to include nested mutations within upsert; nested mutations included within upsert will be ignored. For more information, see [#1579](https://github.com/graphcool/prisma/issues/1579) & [#2194](https://github.com/graphcool/prisma/issues/2194).
+
 ### Deleting nodes
 
 To delete nodes, all we have to do is to use the [select the node(s)](!alias-utee3eiquo#node-selection) to be deleted in a `delete` mutation.
