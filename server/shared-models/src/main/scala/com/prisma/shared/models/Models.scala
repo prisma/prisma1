@@ -3,7 +3,7 @@ package com.prisma.shared.models
 import com.prisma.gc_values.GCValue
 import com.prisma.shared.errors.SharedErrors
 import com.prisma.shared.models.FieldConstraintType.FieldConstraintType
-import com.prisma.shared.models.Manifestations.{FieldManifestation, ModelManifestation}
+import com.prisma.shared.models.Manifestations.{FieldManifestation, ModelManifestation, RelationManifestation}
 import org.joda.time.DateTime
 
 object IdType {
@@ -363,7 +363,8 @@ case class Relation(
     modelAId: Id,
     modelBId: Id,
     modelAOnDelete: OnDelete.Value,
-    modelBOnDelete: OnDelete.Value
+    modelBOnDelete: OnDelete.Value,
+    manifestation: Option[RelationManifestation]
 ) {
   val relationTableName = "_" + name
 

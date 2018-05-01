@@ -205,7 +205,8 @@ case class SchemaInferrerImpl(
             modelAId = modelA,
             modelBId = modelB,
             modelAOnDelete = modelAOnDelete,
-            modelBOnDelete = modelBOnDelete
+            modelBOnDelete = modelBOnDelete,
+            manifestation = None
           )
       }
     }

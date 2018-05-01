@@ -2,7 +2,7 @@ package com.prisma.shared.models
 
 import com.prisma.gc_values._
 import com.prisma.shared.models.FieldConstraintType.FieldConstraintType
-import com.prisma.shared.models.Manifestations.{FieldManifestation, ModelManifestation}
+import com.prisma.shared.models.Manifestations._
 import com.prisma.shared.models.MigrationStepsJsonFormatter._
 import com.prisma.utils.json.JsonUtils
 import com.prisma.utils.json.JsonUtils._
@@ -165,13 +165,43 @@ object ProjectJsonFormatter {
     private def addDiscriminator(json: JsObject, fn: Function) = json ++ Json.obj(discriminatorField -> fn.typeCode.toString)
   }
 
+  val inlineRelationManifestationFormat: OFormat[InlineRelationManifestation] = (
+    (JsPath \ "inTableOfModelId").format[String] and
+      (JsPath \ "referencingColumn").format[String]
+  )(InlineRelationManifestation.apply, unlift(InlineRelationManifestation.unapply))
+
+  val relationTableManifestationFormat: OFormat[RelationTableManifestation] = (
+    (JsPath \ "table").format[String] and
+      (JsPath \ "modelAColumn").format[String] and
+      (JsPath \ "modelBColumn").format[String]
+  )(RelationTableManifestation.apply, unlift(RelationTableManifestation.unapply))
+
+  implicit lazy val relationManifestation = new Format[RelationManifestation] {
+    val discriminatorField = "relationManifestationType"
+    val inlineRelationType = "inline"
+    val relationTableType  = "relation_table"
+
+    override def reads(json: JsValue) = (json \ discriminatorField).validate[String].flatMap {
+      case `inlineRelationType` => inlineRelationManifestationFormat.reads(json)
+      case `relationTableType`  => relationTableManifestationFormat.reads(json)
+    }
+
+    override def writes(mani: RelationManifestation) = {
+      mani match {
+        case x: InlineRelationManifestation => inlineRelationManifestationFormat.writes(x) ++ Json.obj(discriminatorField -> inlineRelationType)
+        case x: RelationTableManifestation  => relationTableManifestationFormat.writes(x) ++ Json.obj(discriminatorField  -> relationTableType)
+      }
+    }
+  }
+
   val relationWrites: Writes[Relation] = (
     (JsPath \ "name").write[String] and
       (JsPath \ "description").writeNullable[String] and
       (JsPath \ "modelAId").write[String] and
       (JsPath \ "modelBId").write[String] and
       (JsPath \ "modelAOnDelete").write[OnDelete.Value] and
-      (JsPath \ "modelBOnDelete").write[OnDelete.Value]
+      (JsPath \ "modelBOnDelete").write[OnDelete.Value] and
+      (JsPath \ "modelBOnDelete").writeNullable[RelationManifestation]
   )(unlift(Relation.unapply))
 
   val relationReads: Reads[Relation] = (
@@ -180,7 +210,8 @@ object ProjectJsonFormatter {
       (JsPath \ "modelAId").read[String] and
       (JsPath \ "modelBId").read[String] and
       (JsPath \ "modelAOnDelete").readNullable[OnDelete.Value].map(_.getOrElse(OnDelete.SetNull)) and
-      (JsPath \ "modelBOnDelete").readNullable[OnDelete.Value].map(_.getOrElse(OnDelete.SetNull))
+      (JsPath \ "modelBOnDelete").readNullable[OnDelete.Value].map(_.getOrElse(OnDelete.SetNull)) and
+      (JsPath \ "modelBOnDelete").readNullable[RelationManifestation]
   )(Relation.apply _)
 
   val modelManifestationWrites: Writes[ModelManifestation] = Writes(manifestation => Json.obj("dbName" -> manifestation.dbName))
