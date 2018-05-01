@@ -32,16 +32,16 @@ class PassiveConnectorSpec extends FlatSpec with Matchers with ApiSpecBase {
   }
   val project = SchemaDsl.fromString(id = projectId, withReservedFields = false) {
     """
-      | type List {
+      | type List @model(table: "list"){
       |   id: String!
       |   name: String!
       |   todos: [Todo]
       | }
       |
-      | type Todo {
+      | type Todo @model(table: "todo"){
       |   id: String!
       |   title: String!
-      |   list: List
+      |   list: List @field(column: "list_id")
       | }
     """.stripMargin
   }

@@ -135,14 +135,15 @@ case class NestedCreateDataItemInterpreter(mutaction: NestedCreateDataItem) exte
 
     SimpleDBIO[Unit] { x =>
 //      val subselect    = PostGresApiDatabaseMutationBuilder.pathQueryForLastParent(projectId, path)
-      val columns      = path.lastModel.scalarNonListFields.map(_.name) :+ relationField.get.name
+      val fields       = path.lastModel.scalarNonListFields
+      val columns      = fields.map(_.dbName) :+ relationField.get.dbName
       val escapedKeys  = columns.map(column => s""""$column"""").mkString(",")
       val placeHolders = columns.map(_ => "?").mkString(",")
 
-      val query                         = s"""INSERT INTO "$projectId"."${path.lastModel.dbName}" ($escapedKeys) VALUES ($placeHolders, $parentId)"""
+      val query                         = s"""INSERT INTO "$projectId"."${path.lastModel.dbName}" ($escapedKeys) VALUES ($placeHolders)"""
       val itemInsert: PreparedStatement = x.connection.prepareStatement(query)
 
-      columns.zipWithIndex.foreach {
+      fields.map(_.name).zipWithIndex.foreach {
         case (column, index) =>
           args.raw.asRoot.map.get(column) match {
             case Some(NullGCValue) if column == "createdAt" || column == "updatedAt" => itemInsert.setTimestamp(index + 1, currentTimeStampUTC)
@@ -151,6 +152,7 @@ case class NestedCreateDataItemInterpreter(mutaction: NestedCreateDataItem) exte
             case None                                                                => itemInsert.setNull(index + 1, java.sql.Types.NULL)
           }
       }
+      itemInsert.setString(fields.size + 1, parentId)
       itemInsert.execute()
     }
   }
