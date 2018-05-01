@@ -6,7 +6,7 @@ import com.prisma.api.connector._
 import com.prisma.api.connector.postgresql.database.{Databases, PostGresApiDatabaseMutationBuilder}
 import com.prisma.api.connector.postgresql.impl._
 import com.prisma.config.DatabaseConfig
-import com.prisma.gc_values.NullGCValue
+import com.prisma.gc_values.{IdGCValue, NullGCValue, RootGCValue}
 import com.prisma.shared.models.{Project, ProjectIdEncoder}
 import slick.jdbc.PostgresProfile.api._
 import slick.jdbc.TransactionIsolation
@@ -119,48 +119,20 @@ case class NestedCreateDataItemInterpreter(mutaction: NestedCreateDataItem) exte
 
     for {
       ids <- (sql"""select "id" from #${project.id}.#${path.removeLastEdge.lastModel.dbName} where id in (""" ++ idSubQuery ++ sql")").as[String]
-      _   <- createDataItemAndLinkToParent(ids.head)
+      _   <- createDataItemAndLinkToParent2(ids.head)
     } yield ()
   }
 
-  def createDataItemAndLinkToParent(parentId: String) = {
+  def createDataItemAndLinkToParent2(parentId: String) = {
     val projectId = project.id
-    val args      = mutaction.create.nonListArgs
     val relation  = mutaction.nestedCreateRelation.path.lastRelation_!
     val relationField = if (path.lastModel.id == relation.modelAId) {
       relation.getModelAField(project.schema)
     } else {
       relation.getModelBField(project.schema)
     }
-
-    SimpleDBIO[Unit] { x =>
-//      val subselect    = PostGresApiDatabaseMutationBuilder.pathQueryForLastParent(projectId, path)
-      val fields       = path.lastModel.scalarNonListFields
-      val columns      = fields.map(_.dbName) :+ relationField.get.dbName
-      val escapedKeys  = columns.map(column => s""""$column"""").mkString(",")
-      val placeHolders = columns.map(_ => "?").mkString(",")
-
-      val query                         = s"""INSERT INTO "$projectId"."${path.lastModel.dbName}" ($escapedKeys) VALUES ($placeHolders)"""
-      val itemInsert: PreparedStatement = x.connection.prepareStatement(query)
-
-      fields.map(_.name).zipWithIndex.foreach {
-        case (column, index) =>
-          args.raw.asRoot.map.get(column) match {
-            case Some(NullGCValue) if column == "createdAt" || column == "updatedAt" => itemInsert.setTimestamp(index + 1, currentTimeStampUTC)
-            case Some(gCValue)                                                       => itemInsert.setGcValue(index + 1, gCValue)
-            case None if column == "createdAt" || column == "updatedAt"              => itemInsert.setTimestamp(index + 1, currentTimeStampUTC)
-            case None                                                                => itemInsert.setNull(index + 1, java.sql.Types.NULL)
-          }
-      }
-      itemInsert.setString(fields.size + 1, parentId)
-      itemInsert.execute()
-    }
+    val argsMap      = mutaction.create.nonListArgs.raw.asRoot.map
+    val modifiedArgs = argsMap.updated(relationField.get.name, IdGCValue(parentId))
+    PostGresApiDatabaseMutationBuilder.createDataItem(projectId, path, PrismaArgs(RootGCValue(modifiedArgs)))
   }
-
-//  override val errorMapper = {
-//    case e: PSQLException if e.getSQLState == "23505" && GetFieldFromSQLUniqueException.getFieldOption(mutaction.nonListArgs.keys, e).isDefined =>
-//      APIErrors.UniqueConstraintViolation(path.lastModel.name, GetFieldFromSQLUniqueException.getFieldOption(mutaction.nonListArgs.keys, e).get)
-//    case e: SQLIntegrityConstraintViolationException if e.getErrorCode == 1452 =>
-//      APIErrors.NodeDoesNotExist("")
-//  }
 }

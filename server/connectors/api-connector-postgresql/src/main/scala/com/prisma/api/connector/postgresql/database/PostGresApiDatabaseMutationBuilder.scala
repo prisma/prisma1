@@ -22,7 +22,7 @@ object PostGresApiDatabaseMutationBuilder {
   def createDataItem(projectId: String, path: Path, args: PrismaArgs): SimpleDBIO[Unit] = {
 
     SimpleDBIO[Unit] { x =>
-      val fields       = path.lastModel.scalarNonListFields
+      val fields       = path.lastModel.nonListFields
       val columns      = fields.map(_.dbName)
       val escapedKeys  = columns.map(column => s""""$column"""").mkString(",")
       val placeHolders = columns.map(_ => "?").mkString(",")
