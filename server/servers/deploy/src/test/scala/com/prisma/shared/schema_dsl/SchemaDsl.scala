@@ -18,18 +18,8 @@ object SchemaDsl {
     val emptyBaseSchema    = Schema()
     val emptySchemaMapping = SchemaMapping.empty
     val sqlDocument        = QueryParser.parse(sdlString.stripMargin).get
-    val schema             = SchemaInferrer().infer(emptyBaseSchema, emptySchemaMapping, sqlDocument).get
-
-    val actualSchema = if (withReservedFields) {
-      schema
-    } else {
-      val newModels = schema.models.map { model =>
-        model.filterFields(f => f.name != ReservedFields.createdAtFieldName && f.name != ReservedFields.updatedAtFieldName)
-      }
-      schema.copy(models = newModels)
-    }
-
-    TestProject().copy(id = id, schema = actualSchema)
+    val schema             = SchemaInferrer(withReservedFields).infer(emptyBaseSchema, emptySchemaMapping, sqlDocument).get
+    TestProject().copy(id = id, schema = schema)
   }
 
   case class SchemaBuilder(modelBuilders: Buffer[ModelBuilder] = Buffer.empty,
