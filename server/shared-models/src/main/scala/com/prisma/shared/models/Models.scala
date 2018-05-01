@@ -3,7 +3,7 @@ package com.prisma.shared.models
 import com.prisma.gc_values.GCValue
 import com.prisma.shared.errors.SharedErrors
 import com.prisma.shared.models.FieldConstraintType.FieldConstraintType
-import com.prisma.shared.models.Manifestations.{FieldManifestation, ModelManifestation, RelationManifestation}
+import com.prisma.shared.models.Manifestations._
 import org.joda.time.DateTime
 
 object IdType {
@@ -366,7 +366,9 @@ case class Relation(
     modelBOnDelete: OnDelete.Value,
     manifestation: Option[RelationManifestation]
 ) {
-  val relationTableName = "_" + name
+  val relationTableName = manifestation.collect { case m: RelationTableManifestation => m.table }.getOrElse("_" + name)
+
+  def isInlineRelation: Boolean = manifestation.exists(_.isInstanceOf[InlineRelationManifestation])
 
   def connectsTheModels(model1: String, model2: String): Boolean = (modelAId == model1 && modelBId == model2) || (modelAId == model2 && modelBId == model1)
 

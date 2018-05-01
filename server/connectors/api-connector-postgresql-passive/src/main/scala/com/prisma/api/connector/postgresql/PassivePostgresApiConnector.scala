@@ -64,7 +64,7 @@ case class PassiveDatabaseMutactionExecutorImpl(activeExecutor: DatabaseMutactio
       .collect {
         case candidate: CreateDataItem =>
           val partner: Option[NestedCreateRelation] = mutactions.collectFirst {
-            case m: NestedCreateRelation if m.path == candidate.path => m
+            case m: NestedCreateRelation if m.path == candidate.path && m.path.lastRelation_!.isInlineRelation => m
           }
           partner.map { p =>
             candidate -> NestedCreateDataItem(candidate, p)
@@ -102,8 +102,9 @@ case class NestedCreateDataItem(create: CreateDataItem, nestedCreateRelation: Ne
 case class NestedCreateDataItemInterpreter(mutaction: NestedCreateDataItem) extends DatabaseMutactionInterpreter {
   import scala.concurrent.ExecutionContext.Implicits.global
 
-  val project = mutaction.create.project
-  val path    = mutaction.create.path
+  val project  = mutaction.create.project
+  val path     = mutaction.create.path
+  val relation = mutaction.nestedCreateRelation.path.lastRelation_!
 
   override val action = {
 //    val createNonList = PostGresApiDatabaseMutationBuilder.createDataItem(project.id, path, mutaction.create.nonListArgs)
@@ -125,7 +126,6 @@ case class NestedCreateDataItemInterpreter(mutaction: NestedCreateDataItem) exte
 
   def createDataItemAndLinkToParent2(parentId: String) = {
     val projectId = project.id
-    val relation  = mutaction.nestedCreateRelation.path.lastRelation_!
     val relationField = if (path.lastModel.id == relation.modelAId) {
       relation.getModelAField(project.schema)
     } else {

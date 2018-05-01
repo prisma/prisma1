@@ -144,7 +144,7 @@ class PassiveConnectorSpecForTableRelations extends FlatSpec with PassiveConnect
       | type List @model(table: "list"){
       |   id: String!
       |   name: String!
-      |   todos: [Todo] @relation(table: "list_to_todo", thisColumn: "list_id", otherColumn: "todo_id")
+      |   todos: [Todo] @relationTable(table: "list_to_todo", thisColumn: "list_id", otherColumn: "todo_id")
       | }
       |
       | type Todo @model(table: "todo"){
