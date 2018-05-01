@@ -58,8 +58,7 @@ case class ApiTestServer()(implicit dependencies: ApiDependencies) extends PlayJ
       query = query,
       project = project,
       variables = variables,
-      requestId = requestId,
-      prismaHeader = prismaHeader
+      requestId = requestId
     )
     result.assertFailingResponse(errorCode, errorCount, errorContains)
     result
@@ -72,8 +71,7 @@ case class ApiTestServer()(implicit dependencies: ApiDependencies) extends PlayJ
       query: String,
       project: Project,
       variables: JsValue = JsObject.empty,
-      requestId: String = "CombinedTestDatabase.requestId",
-      prismaHeader: Option[String] = None
+      requestId: String = "CombinedTestDatabase.requestId"
   ): JsValue = {
     val schemaBuilder = SchemaBuilder()(dependencies.system, dependencies)
     querySchema(
@@ -82,7 +80,6 @@ case class ApiTestServer()(implicit dependencies: ApiDependencies) extends PlayJ
       schema = schemaBuilder(project),
       variables = variables,
       requestId = requestId,
-      prismaHeader = prismaHeader
     )
   }
 
@@ -93,8 +90,7 @@ case class ApiTestServer()(implicit dependencies: ApiDependencies) extends PlayJ
       project = project,
       schema = schemaBuilder.build(),
       variables = variables,
-      requestId = "private-api-request",
-      prismaHeader = None
+      requestId = "private-api-request"
     )
   }
 
@@ -104,7 +100,6 @@ case class ApiTestServer()(implicit dependencies: ApiDependencies) extends PlayJ
       schema: Schema[ApiUserContext, Unit],
       variables: JsValue,
       requestId: String,
-      prismaHeader: Option[String]
   ): JsValue = {
     val queryAst = QueryParser.parse(query).get
 
@@ -117,7 +112,6 @@ case class ApiTestServer()(implicit dependencies: ApiDependencies) extends PlayJ
       id = requestId,
       ip = "test.ip",
       json = JsObject.empty,
-      sourceHeader = prismaHeader,
       project = project,
       schema = schema,
       queries = Vector(graphqlQuery),
