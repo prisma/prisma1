@@ -19,7 +19,7 @@ class InternalTestDatabase extends AwaitUtils {
     setupDatabase
       .run(InternalDatabaseSchema.createDatabaseAction(databaseDefs.dbName))
       .transformWith { _ =>
-        val action = InternalDatabaseSchema.createSchemaActions(recreate = false)
+        val action = InternalDatabaseSchema.createSchemaActions(databaseDefs.managementSchemaName, recreate = false)
         internalDatabaseRoot.run(action)
       }
       .await(10)
@@ -36,7 +36,7 @@ class InternalTestDatabase extends AwaitUtils {
   private def getTables = {
     sql"""SELECT table_name
           FROM information_schema.tables
-          WHERE table_schema = '#${InternalDatabaseSchema.internalSchema}'
+          WHERE table_schema = '#${databaseDefs.managementSchemaName}'
           AND table_type = 'BASE TABLE';""".as[String]
   }
 

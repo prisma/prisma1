@@ -3,22 +3,19 @@ package com.prisma.deploy.connector.postgresql.database
 import slick.jdbc.PostgresProfile.api._
 
 object InternalDatabaseSchema {
-  // PSQL schema for internal Prisma tables
-  val internalSchema = "management"
-
   def createDatabaseAction(db: String) = sql"""CREATE DATABASE "#$db";""".as[Option[String]]
 
-  def createSchemaActions(recreate: Boolean): DBIOAction[Unit, NoStream, Effect] = {
+  def createSchemaActions(internalSchema: String, recreate: Boolean): DBIOAction[Unit, NoStream, Effect] = {
     if (recreate) {
-      DBIO.seq(dropAction, setupActions)
+      DBIO.seq(dropAction(internalSchema), setupActions(internalSchema))
     } else {
-      setupActions
+      setupActions(internalSchema)
     }
   }
 
-  lazy val dropAction = DBIO.seq(sqlu"""DROP SCHEMA IF EXISTS "#$internalSchema" CASCADE;""")
+  def dropAction(internalSchema: String) = DBIO.seq(sqlu"""DROP SCHEMA IF EXISTS "#$internalSchema" CASCADE;""")
 
-  lazy val setupActions = DBIO.seq(
+  def setupActions(internalSchema: String) = DBIO.seq(
     sqlu"""CREATE SCHEMA IF NOT EXISTS "#$internalSchema";""",
     sqlu"""SET SCHEMA '#$internalSchema';""",
     // Project

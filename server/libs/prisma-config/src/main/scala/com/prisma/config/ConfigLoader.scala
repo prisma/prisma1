@@ -97,7 +97,7 @@ object ConfigLoader {
         |    user: $dbUser
         |    password: $dbPass
         |    connectionLimit: $dbConn
-        |    database: $database
+        |    managementSchema: $database
       """.stripMargin
     }.toOption
 
@@ -120,9 +120,10 @@ object ConfigLoader {
         val dbPass      = extractStringOpt("password", db)
         val connLimit   = extractIntOpt("connectionLimit", db)
         val database    = extractStringOpt("database", db)
+        val mgmtSchema  = extractStringOpt("managementSchema", db)
         val pooled      = extractBooleanOpt("pooled", db)
 
-        DatabaseConfig(dbName, dbConnector, dbActive, dbHost, dbPort, dbUser, dbPass, database, connLimit, pooled.getOrElse(true))
+        DatabaseConfig(dbName, dbConnector, dbActive, dbHost, dbPort, dbUser, dbPass, database, mgmtSchema, connLimit, pooled.getOrElse(true))
     }.toSeq
 
     if (databases.isEmpty) {
@@ -201,6 +202,7 @@ case class DatabaseConfig(name: String,
                           user: String,
                           password: Option[String],
                           database: Option[String],
+                          managementSchema: Option[String],
                           connectionLimit: Option[Int],
                           pooled: Boolean)
 

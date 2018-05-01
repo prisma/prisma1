@@ -12,8 +12,9 @@ case class PostgresInternalDatabaseDefs(dbConfig: DatabaseConfig) {
 
   // Used during runtime & setup
   lazy val dbName               = dbConfig.database.getOrElse("prisma")
+  lazy val managementSchemaName = dbConfig.managementSchema.getOrElse("management")
   lazy val internalDatabaseRoot = getDatabase(dbName)
-  lazy val internalDatabase     = getDatabase(dbName, InternalDatabaseSchema.internalSchema)
+  lazy val internalDatabase     = getDatabase(dbName, managementSchemaName)
 
   private lazy val dbDriver = new org.postgresql.Driver
 

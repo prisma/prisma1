@@ -52,7 +52,7 @@ case class MySqlDeployConnector(config: DatabaseConfig)(implicit ec: ExecutionCo
   override def projectIdEncoder: ProjectIdEncoder                      = ProjectIdEncoder('@')
 
   override def initialize(): Future[Unit] = {
-    val action = MysqlInternalDatabaseSchema.createSchemaActions(internalDatabaseDefs.dbName, recreate = false)
+    val action = MysqlInternalDatabaseSchema.createSchemaActions(internalDatabaseDefs.managementSchemaName, recreate = false)
     internalDatabaseRoot.run(action)
   }
 
@@ -67,7 +67,7 @@ case class MySqlDeployConnector(config: DatabaseConfig)(implicit ec: ExecutionCo
 
   protected def truncateTablesInDatabase(database: Database)(implicit ec: ExecutionContext): Future[Unit] = {
     for {
-      schemas <- database.run(getTables(internalDatabaseDefs.dbName))
+      schemas <- database.run(getTables(internalDatabaseDefs.managementSchemaName))
       _       <- database.run(dangerouslyTruncateTables(schemas))
     } yield ()
   }

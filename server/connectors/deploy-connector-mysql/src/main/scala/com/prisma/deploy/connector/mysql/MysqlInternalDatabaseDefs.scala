@@ -6,7 +6,7 @@ import com.typesafe.config.{Config, ConfigFactory}
 case class MysqlInternalDatabaseDefs(dbConfig: DatabaseConfig) {
   import slick.jdbc.MySQLProfile.api._
 
-  val dbName = dbConfig.database.getOrElse("prisma")
+  val managementSchemaName = dbConfig.managementSchema.getOrElse("prisma")
 
   lazy val internalDatabaseRoot = database(root = true)
   lazy val internalDatabase     = database(root = false)
@@ -27,7 +27,7 @@ case class MysqlInternalDatabaseDefs(dbConfig: DatabaseConfig) {
         |  connectionInitSql="set names utf8mb4"
         |  dataSourceClass = "slick.jdbc.DriverDataSource"
         |  properties {
-        |    url = "jdbc:mysql://${dbConfig.host}:${dbConfig.port}/$dbName?autoReconnect=true&useSSL=false&serverTimeZone=UTC&useUnicode=true&characterEncoding=UTF-8&socketTimeout=60000&usePipelineAuth=false"
+        |    url = "jdbc:mysql://${dbConfig.host}:${dbConfig.port}/$managementSchemaName?autoReconnect=true&useSSL=false&serverTimeZone=UTC&useUnicode=true&characterEncoding=UTF-8&socketTimeout=60000&usePipelineAuth=false"
         |    user = "${dbConfig.user}"
         |    password = "${dbConfig.password.getOrElse("")}"
         |  }

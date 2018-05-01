@@ -56,7 +56,7 @@ case class PostgresDeployConnector(dbConfig: DatabaseConfig)(implicit ec: Execut
     internalDatabaseDefs.setupDatabase
       .run(InternalDatabaseSchema.createDatabaseAction(internalDatabaseDefs.dbName))
       .transformWith { _ =>
-        val action = InternalDatabaseSchema.createSchemaActions(recreate = false)
+        val action = InternalDatabaseSchema.createSchemaActions(internalDatabaseDefs.managementSchemaName, recreate = false)
         internalDatabaseRoot.run(action)
       }
       .flatMap(_ => internalDatabaseDefs.setupDatabase.shutdown)
@@ -81,7 +81,7 @@ case class PostgresDeployConnector(dbConfig: DatabaseConfig)(implicit ec: Execut
   private def getTables()(implicit ec: ExecutionContext): DBIOAction[Vector[String], NoStream, Read] = {
     sql"""SELECT table_name
           FROM information_schema.tables
-          WHERE table_schema = '#${InternalDatabaseSchema.internalSchema}'
+          WHERE table_schema = '#${internalDatabaseDefs.managementSchemaName}'
           AND table_type = 'BASE TABLE';""".as[String]
   }
 
