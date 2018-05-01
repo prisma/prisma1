@@ -9,28 +9,22 @@ class PassiveConnectorSpec extends FlatSpec with Matchers with ApiSpecBase {
   //
   val projectId = "passive_test"
 
-  override protected def beforeAll(): Unit = {
-    super.beforeAll()
-    val connector = testDependencies.deployConnector.asInstanceOf[PostgresDeployConnector]
-    val session   = connector.internalDatabase.createSession()
-    val statement = session.createStatement()
-    statement.execute(s"""
-        |DROP SCHEMA IF EXISTS $projectId CASCADE;
-        |CREATE SCHEMA $projectId;
-        |CREATE TABLE $projectId.list (
-        |  id      varchar PRIMARY KEY  -- implicit primary key constraint
-        |, name    text NOT NULL
-        |);
-        |
-        |CREATE TABLE $projectId.todo (
-        |  id       varchar PRIMARY KEY
-        |, title     text NOT NULL
-        |, list_id varchar NOT NULL REFERENCES $projectId.list (id) ON UPDATE CASCADE
-        |);
-      """.stripMargin)
-    session.close()
-  }
-  val project = SchemaDsl.fromString(id = projectId, withReservedFields = false) {
+  val inlineRelationSchema = s"""
+    |DROP SCHEMA IF EXISTS $projectId CASCADE;
+    |CREATE SCHEMA $projectId;
+    |CREATE TABLE $projectId.list (
+    |  id      varchar PRIMARY KEY  -- implicit primary key constraint
+    |, name    text NOT NULL
+    |);
+    |
+    |CREATE TABLE $projectId.todo (
+    |  id       varchar PRIMARY KEY
+    |, title     text NOT NULL
+    |, list_id varchar NOT NULL REFERENCES $projectId.list (id) ON UPDATE CASCADE
+    |);
+      """.stripMargin
+
+  val inlineRelationProject = SchemaDsl.fromString(id = projectId, withReservedFields = false) {
     """
       | type List @model(table: "list"){
       |   id: String!
@@ -46,14 +40,23 @@ class PassiveConnectorSpec extends FlatSpec with Matchers with ApiSpecBase {
     """.stripMargin
   }
 
+  def executeOnInternalDatabase(sql: String) = {
+    val connector = testDependencies.deployConnector.asInstanceOf[PostgresDeployConnector]
+    val session   = connector.internalDatabase.createSession()
+    val statement = session.createStatement()
+    statement.execute(sql)
+    session.close()
+  }
+
   "A Create Mutation" should "create and return item" in {
+    executeOnInternalDatabase(inlineRelationSchema)
     val res = server.query(
       s"""mutation {
          |  createList(data: {
          |    name: "the list name"
          |  }){ name }
          |}""".stripMargin,
-      project = project
+      project = inlineRelationProject
     )
     res.toString should be(s"""{"data":{"createList":{"name":"the list name"}}}""")
 //
@@ -64,6 +67,7 @@ class PassiveConnectorSpec extends FlatSpec with Matchers with ApiSpecBase {
   }
 
   "A Create Mutation" should "created nested items" in {
+    executeOnInternalDatabase(inlineRelationSchema)
     // how do we implement this? We would have to reorder in this case?
     val res = server.query(
       s"""mutation {
@@ -74,12 +78,13 @@ class PassiveConnectorSpec extends FlatSpec with Matchers with ApiSpecBase {
          |    }
          |  }){ title }
          |}""".stripMargin,
-      project = project
+      project = inlineRelationProject
     )
     res.toString should be(s"""{"data":{"createTodo":{"title":"the todo"}}}""")
   }
 
   "A Create Mutation" should "created nested items 2" in {
+    executeOnInternalDatabase(inlineRelationSchema)
     val res = server.query(
       s"""mutation {
          |  createList(data: {
@@ -89,12 +94,13 @@ class PassiveConnectorSpec extends FlatSpec with Matchers with ApiSpecBase {
          |    }
          |  }){ name }
          |}""".stripMargin,
-      project = project
+      project = inlineRelationProject
     )
     res.toString should be(s"""{"data":{"createList":{"name":"the list"}}}""")
   }
 
   "the connector" should "support diverging names for models/tables and fields/columns" in {
+    executeOnInternalDatabase(inlineRelationSchema)
     val project = SchemaDsl.fromString(id = projectId, withReservedFields = false) {
       """
         | type List @model(table: "list"){
