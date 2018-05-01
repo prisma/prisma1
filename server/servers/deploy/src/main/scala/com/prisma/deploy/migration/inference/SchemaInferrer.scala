@@ -17,9 +17,9 @@ trait SchemaInferrer {
 }
 
 object SchemaInferrer {
-  def apply() = new SchemaInferrer {
+  def apply(addReservedFields: Boolean = true) = new SchemaInferrer {
     override def infer(baseSchema: Schema, schemaMapping: SchemaMapping, graphQlSdl: Document) =
-      SchemaInferrerImpl(baseSchema, schemaMapping, graphQlSdl).infer()
+      SchemaInferrerImpl(baseSchema, schemaMapping, graphQlSdl, addReservedFields).infer()
   }
 }
 
@@ -30,7 +30,8 @@ case class InvalidGCValue(err: InvalidValueForScalarType)                       
 case class SchemaInferrerImpl(
     baseSchema: Schema,
     schemaMapping: SchemaMapping,
-    sdl: Document
+    sdl: Document,
+    addReservedFields: Boolean
 ) {
   def infer(): Schema Or ProjectSyntaxError = {
     for {
@@ -47,10 +48,14 @@ case class SchemaInferrerImpl(
   lazy val nextModels: Vector[Model] Or ProjectSyntaxError = {
     val models = sdl.objectTypes.map { objectType =>
       fieldsForType(objectType).map { fields =>
-        val fieldNames            = fields.map(_.name)
-        val missingReservedFields = ReservedFields.reservedFieldNames.filterNot(fieldNames.contains)
-        val hiddenReservedFields  = missingReservedFields.map(ReservedFields.reservedFieldFor(_).copy(isHidden = true))
-        val manifestation         = objectType.directiveArgumentAsString("model", "table").map(ModelManifestation)
+        val fieldNames = fields.map(_.name)
+        val hiddenReservedFields = if (addReservedFields) {
+          val missingReservedFields = ReservedFields.reservedFieldNames.filterNot(fieldNames.contains)
+          missingReservedFields.map(ReservedFields.reservedFieldFor(_).copy(isHidden = true))
+        } else {
+          Vector.empty
+        }
+        val manifestation = objectType.directiveArgumentAsString("model", "table").map(ModelManifestation)
 
         val stableIdentifier = baseSchema.getModelByName(schemaMapping.getPreviousModelName(objectType.name)) match {
           case Some(existingModel) => existingModel.stableIdentifier

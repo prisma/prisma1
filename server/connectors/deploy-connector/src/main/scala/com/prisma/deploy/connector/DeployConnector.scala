@@ -6,6 +6,7 @@ import com.prisma.shared.models.{Field, Model, Project, ProjectIdEncoder}
 import scala.concurrent.Future
 
 trait DeployConnector {
+  def isActive: Boolean
   def projectPersistence: ProjectPersistence
   def migrationPersistence: MigrationPersistence
   def deployMutactionExecutor: DeployMutactionExecutor

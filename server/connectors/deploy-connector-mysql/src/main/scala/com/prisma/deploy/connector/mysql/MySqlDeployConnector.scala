@@ -14,6 +14,7 @@ import slick.jdbc.meta.MTable
 import scala.concurrent.{ExecutionContext, Future}
 
 case class MySqlDeployConnector(config: DatabaseConfig)(implicit ec: ExecutionContext) extends DeployConnector with TableTruncationHelpers {
+  override def isActive         = true
   lazy val internalDatabaseDefs = InternalDatabaseDefs(config)
   lazy val internalDatabaseRoot = internalDatabaseDefs.internalDatabaseRoot
   lazy val internalDatabase     = internalDatabaseDefs.internalDatabase

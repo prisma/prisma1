@@ -8,8 +8,6 @@ import org.scalatest.{Matchers, WordSpec}
 import sangria.parser.QueryParser
 
 class SchemaInfererSpec extends WordSpec with Matchers {
-
-  val inferrer     = SchemaInferrer()
   val emptyProject = SchemaDsl().buildProject()
 
   "if a given relation does not exist yet, the inferer" should {
@@ -348,8 +346,32 @@ class SchemaInfererSpec extends WordSpec with Matchers {
     field.manifestation should equal(Some(FieldManifestation("my_name_column")))
   }
 
-  def infer(schema: Schema, types: String, mapping: SchemaMapping = SchemaMapping.empty): Or[Schema, ProjectSyntaxError] = {
+  "add hidden reserved fields if addReservedFields is true" in {
+    val types =
+      """|type Todo {
+         |  name: String!
+         |}""".stripMargin
+    val schema = infer(emptyProject.schema, types, addReservedFields = true).get
+
+    val model = schema.getModelByName_!("Todo")
+    model.fields should have(size(4))
+    model.fields.map(_.name) should equal(List("name", "id", "updatedAt", "createdAt"))
+  }
+
+  "do not add hidden reserved fields if addReservedFields is false" in {
+    val types =
+      """|type Todo {
+         |  name: String!
+         |}""".stripMargin
+    val schema = infer(emptyProject.schema, types, addReservedFields = false).get
+
+    val model = schema.getModelByName_!("Todo")
+    model.fields should have(size(1))
+    model.fields.map(_.name) should equal(List("name"))
+  }
+
+  def infer(schema: Schema, types: String, mapping: SchemaMapping = SchemaMapping.empty, addReservedFields: Boolean = true): Or[Schema, ProjectSyntaxError] = {
     val document = QueryParser.parse(types).get
-    inferrer.infer(schema, mapping, document)
+    SchemaInferrer(addReservedFields).infer(schema, mapping, document)
   }
 }

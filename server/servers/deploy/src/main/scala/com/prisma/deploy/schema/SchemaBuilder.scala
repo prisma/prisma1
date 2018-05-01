@@ -37,7 +37,7 @@ case class SchemaBuilderImpl(
   val migrationPersistence: MigrationPersistence     = dependencies.migrationPersistence
   val deployConnector: DeployConnector               = dependencies.deployConnector
   val migrator: Migrator                             = dependencies.migrator
-  val schemaInferrer: SchemaInferrer                 = SchemaInferrer()
+  val schemaInferrer: SchemaInferrer                 = SchemaInferrer(addReservedFields = deployConnector.isActive)
   val migrationStepsInferrer: MigrationStepsInferrer = MigrationStepsInferrer()
   val schemaMapper: SchemaMapper                     = SchemaMapper
   val projectIdEncoder: ProjectIdEncoder             = dependencies.projectIdEncoder
