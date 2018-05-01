@@ -1,6 +1,6 @@
 package com.prisma.deploy.migration.inference
 
-import com.prisma.shared.models.Manifestations.{FieldManifestation, ModelManifestation}
+import com.prisma.shared.models.Manifestations.{FieldManifestation, ModelManifestation, RelationTableManifestation}
 import com.prisma.shared.models.{RelationSide, Schema}
 import com.prisma.shared.schema_dsl.SchemaDsl
 import org.scalactic.Or
@@ -344,6 +344,26 @@ class SchemaInfererSpec extends WordSpec with Matchers {
 
     val field = schema.getModelByName_!("Todo").getFieldByName_!("name")
     field.manifestation should equal(Some(FieldManifestation("my_name_column")))
+  }
+
+  "handle relation table manifestations" in {
+    val types =
+      """|type Todo {
+         |  name: String!
+         |}
+         |
+         |type List {
+         |  todos: [Todo] @relationTable(table: "list_to_todo", thisColumn: "list_id", otherColumn: "todo_id")
+         |}""".stripMargin
+    val schema = infer(emptyProject.schema, types).get
+
+    val relation = schema.getModelByName_!("List").getFieldByName_!("todos").relation.get
+    // assert model ids to make sure that the generated manifestation refers to the right modelAColumn/modelBColumn
+    relation.modelAId should equal("List")
+    relation.modelBId should equal("Todo")
+
+    val expectedManifestation = RelationTableManifestation(table = "list_to_todo", modelAColumn = "list_id", modelBColumn = "todo_id")
+    relation.manifestation should equal(Some(expectedManifestation))
   }
 
   "add hidden reserved fields if addReservedFields is true" in {

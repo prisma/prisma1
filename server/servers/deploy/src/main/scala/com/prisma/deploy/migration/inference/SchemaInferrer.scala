@@ -2,10 +2,11 @@ package com.prisma.deploy.migration.inference
 
 import com.prisma.deploy.gc_value.GCStringConverter
 import com.prisma.deploy.migration.DataSchemaAstExtensions._
+import com.prisma.deploy.migration.DirectiveTypes.RelationTableDirective
 import com.prisma.deploy.schema.InvalidRelationName
 import com.prisma.deploy.validation.NameConstraints
 import com.prisma.gc_values.{GCValue, InvalidValueForScalarType}
-import com.prisma.shared.models.Manifestations.{FieldManifestation, ModelManifestation}
+import com.prisma.shared.models.Manifestations.{FieldManifestation, ModelManifestation, RelationTableManifestation}
 import com.prisma.shared.models.{OnDelete, RelationSide, ReservedFields, _}
 import com.prisma.utils.or.OrExtensions
 import cool.graph.cuid.Cuid
@@ -188,6 +189,16 @@ case class SchemaInferrerImpl(
         UnambiguousRelation.unambiguousRelationThatConnectsModels(baseSchema, previousModelAName, previousModelBName)
       }
 
+      // todo: do we need to do validations to make the directive is valid?
+      val relationManifestation = relationField.relationTableDirective.map { tableDirective =>
+        val isThisModelA = model1 == modelA
+        RelationTableManifestation(
+          table = tableDirective.table,
+          modelAColumn = if (isThisModelA) tableDirective.thisColumn else tableDirective.otherColumn,
+          modelBColumn = if (isThisModelA) tableDirective.otherColumn else tableDirective.thisColumn
+        )
+      }
+
       oldEquivalentRelation match {
         case Some(relation) =>
           val nextModelAId = if (previousModelAName == relation.modelAId) modelA else modelB
@@ -197,7 +208,8 @@ case class SchemaInferrerImpl(
             modelAId = nextModelAId,
             modelBId = nextModelBId,
             modelAOnDelete = modelAOnDelete,
-            modelBOnDelete = modelBOnDelete
+            modelBOnDelete = modelBOnDelete,
+            manifestation = relationManifestation
           )
         case None =>
           Relation(
@@ -206,7 +218,7 @@ case class SchemaInferrerImpl(
             modelBId = modelB,
             modelAOnDelete = modelAOnDelete,
             modelBOnDelete = modelBOnDelete,
-            manifestation = None
+            manifestation = relationManifestation
           )
       }
     }

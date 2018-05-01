@@ -1,5 +1,7 @@
 package com.prisma.deploy.migration
 
+import com.prisma.deploy.migration.DirectiveTypes.RelationTableDirective
+import com.prisma.shared.models.Manifestations.RelationManifestation
 import com.prisma.shared.models.TypeIdentifier
 import sangria.ast._
 
@@ -109,6 +111,14 @@ object DataSchemaAstExtensions {
     def oldDefaultValue: Option[String]      = fieldDefinition.directiveArgumentAsString("defaultValue", "value")
     def relationName: Option[String]         = fieldDefinition.directiveArgumentAsString("relation", "name")
     def previousRelationName: Option[String] = fieldDefinition.directiveArgumentAsString("relation", "oldName").orElse(relationName)
+
+    def relationTableDirective: Option[RelationTableDirective] = {
+      for {
+        tableName   <- fieldDefinition.directiveArgumentAsString("relationTable", "table")
+        thisColumn  <- fieldDefinition.directiveArgumentAsString("relationTable", "thisColumn")
+        otherColumn <- fieldDefinition.directiveArgumentAsString("relationTable", "otherColumn")
+      } yield RelationTableDirective(table = tableName, thisColumn = thisColumn, otherColumn = otherColumn)
+    }
   }
 
   implicit class CoolEnumType(val enumType: EnumTypeDefinition) extends AnyVal {
@@ -176,4 +186,8 @@ object DataSchemaAstExtensions {
     }
   }
 
+}
+
+object DirectiveTypes {
+  case class RelationTableDirective(table: String, thisColumn: String, otherColumn: String)
 }
