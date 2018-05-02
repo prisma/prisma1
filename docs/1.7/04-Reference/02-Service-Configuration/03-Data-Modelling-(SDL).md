@@ -614,7 +614,37 @@ If the rename directive is not used, Prisma would remove the old type and field 
 
 #### Migrating the value of a scalar field
 
-The temporary directive `@migrationValue(value: String!)` is used to migrate the value of a scalar field. When changing an optional field to a required field, it is necessary to also use this directive.
+You can use the `updateManyXs` mutation to migrate the value of a scalar field for all nodes, or only a specific subset.
+
+```graphql
+mutation {
+  # update the email of all users with no email address to the empty string
+  updateManyUsers(
+    where: {
+      email: null
+    }
+    data: {
+      email: ""
+    }
+  )
+}
+```
+
+**Special Case - adding a required field to the data model**
+
+When adding a required field to a model that already contains nodes, you receive this error message:
+
+> You are making a field required, but there are already nodes that would violate that constraint.
+
+This is because all nodes would have `null` for this field, being a
+
+Here are the steps that are needed to add a required field:
+
+1. Add the field being _optional_
+1. Use `updateManyXs` to migrate the field of all nodes from `null` to a non-null value
+1. Now you can mark the field as _required_ and deploy as expected
+
+A more convenient workflow is discussed [in this feature request](https://github.com/graphcool/prisma/issues/2323) on Github.
 
 ## Naming conventions
 
