@@ -215,8 +215,17 @@ case class Field(
     manifestation: Option[FieldManifestation],
     constraints: List[FieldConstraint] = List.empty
 ) {
-  def id                                            = name
-  val dbName                                        = manifestation.map(_.dbName).getOrElse(name)
+  def id = name
+  val dbName = {
+    if (isRelation) {
+      relation match {
+        case Some(r) if r.isInlineRelation => r.manifestation.get.asInstanceOf[InlineRelationManifestation].referencingColumn
+        case None                          => sys.error("not a valid call on relations manifested via a table")
+      }
+    } else {
+      manifestation.map(_.dbName).getOrElse(name)
+    }
+  }
   def isScalar: Boolean                             = typeIdentifier != TypeIdentifier.Relation
   def isRelation: Boolean                           = typeIdentifier == TypeIdentifier.Relation
   def isScalarList: Boolean                         = isScalar && isList
@@ -378,6 +387,16 @@ case class Relation(
     getModelAField(schema) == getModelBField(schema).orElse(getModelAField(schema))
   }
 
+  def getFieldOnModel(modelId: String, schema: Schema): Option[Field] = {
+    if (modelId == modelAId) {
+      getModelAField(schema)
+    } else if (modelId == modelBId) {
+      getModelBField(schema)
+    } else {
+      sys.error(s"The model id ${modelId} is not part of this relation ${name}")
+    }
+  }
+
   def getModelA(schema: Schema): Option[Model] = schema.getModelById(modelAId)
   def getModelA_!(schema: Schema): Model       = getModelA(schema).get //OrElse(throw SystemErrors.InvalidRelation("A relation should have a valid Model A."))
 
@@ -385,9 +404,7 @@ case class Relation(
   def getModelB_!(schema: Schema): Model       = getModelB(schema).get //OrElse(throw SystemErrors.InvalidRelation("A relation should have a valid Model B."))
 
   def getModelAField(schema: Schema): Option[Field] = modelFieldFor(schema, modelAId, RelationSide.A)
-  def getModelBField(schema: Schema): Option[Field] = {
-    modelFieldFor(schema, modelBId, RelationSide.B)
-  }
+  def getModelBField(schema: Schema): Option[Field] = modelFieldFor(schema, modelBId, RelationSide.B)
 
   private def modelFieldFor(schema: Schema, modelId: String, relationSide: RelationSide.Value): Option[Field] = {
     for {

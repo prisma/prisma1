@@ -22,7 +22,8 @@ object PostGresApiDatabaseMutationBuilder {
   def createDataItem(projectId: String, path: Path, args: PrismaArgs): SimpleDBIO[Unit] = {
 
     SimpleDBIO[Unit] { x =>
-      val fields       = path.lastModel.scalarNonListFields
+      val argsAsRoot   = args.raw.asRoot
+      val fields       = path.lastModel.fields.filter(field => argsAsRoot.hasArgFor(field.name))
       val columns      = fields.map(_.dbName)
       val escapedKeys  = columns.map(column => s""""$column"""").mkString(",")
       val placeHolders = columns.map(_ => "?").mkString(",")
@@ -32,7 +33,7 @@ object PostGresApiDatabaseMutationBuilder {
 
       fields.map(_.name).zipWithIndex.foreach {
         case (column, index) =>
-          args.raw.asRoot.map.get(column) match {
+          argsAsRoot.map.get(column) match {
             case Some(NullGCValue) if column == "createdAt" || column == "updatedAt" => itemInsert.setTimestamp(index + 1, currentTimeStampUTC)
             case Some(gCValue)                                                       => itemInsert.setGcValue(index + 1, gCValue)
             case None if column == "createdAt" || column == "updatedAt"              => itemInsert.setTimestamp(index + 1, currentTimeStampUTC)

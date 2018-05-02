@@ -45,7 +45,7 @@ class PassiveConnectorSpecForInlineRelations extends PassiveConnectorSpec {
       | type Todo @model(table: "todo"){
       |   id: String!
       |   title: String!
-      |   list: List @field(column: "list_id")
+      |   list: List @inline(column: "list_id")
       | }
     """.stripMargin
   }
@@ -65,7 +65,7 @@ class PassiveConnectorSpecForInlineRelations extends PassiveConnectorSpec {
 
   "A Create Mutation" should "created nested items" in {
     executeOnInternalDatabase(inlineRelationSchema)
-    // how do we implement this? We would have to reorder in this case?
+    // TODO: how do we implement this? We would have to reorder in this case?
     val res = server.query(
       s"""mutation {
          |  createTodo(data: {
