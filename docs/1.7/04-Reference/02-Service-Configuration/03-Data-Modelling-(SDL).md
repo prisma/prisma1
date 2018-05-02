@@ -612,7 +612,7 @@ If the rename directive is not used, Prisma would remove the old type and field 
 
 </InfoBox>
 
-#### Migrating the value of a scalar field
+### Migrating the value of a scalar field
 
 You can use the `updateManyXs` mutation to migrate the value of a scalar field for all nodes, or only a specific subset.
 
@@ -630,7 +630,7 @@ mutation {
 }
 ```
 
-**Special Case - adding a required field to the data model**
+#### Adding a required field to the data model
 
 When adding a required field to a model that already contains nodes, you receive this error message:
 
