@@ -413,6 +413,40 @@ type User {
 
 Fields in the data model affect the available [query arguments](!alias-ahwee4zaey#query-arguments).
 
+### Migrating the value of a scalar field
+
+You can use the `updateManyXs` mutation to migrate the value of a scalar field for all nodes, or only a specific subset.
+
+```graphql
+mutation {
+  # update the email of all users with no email address to the empty string
+  updateManyUsers(
+    where: {
+      email: null
+    }
+    data: {
+      email: ""
+    }
+  )
+}
+```
+
+#### Adding a required field to the data model
+
+When adding a required field to a model that already contains nodes, you receive this error message:
+
+> You are making a field required, but there are already nodes that would violate that constraint.
+
+This is because all nodes would have `null` for this field, being a
+
+Here are the steps that are needed to add a required field:
+
+1. Add the field being _optional_
+1. Use `updateManyXs` to migrate the field of all nodes from `null` to a non-null value
+1. Now you can mark the field as _required_ and deploy as expected
+
+A more convenient workflow is discussed [in this feature request](https://github.com/graphcool/prisma/issues/2323) on Github.
+
 ## Relations
 
 A _relation_ defines the semantics of a connection between two [types](#object-types). Two types in a relation are connected via a [relation field](#scalar-and-relation-fields). When a relation might be ambiguous, the relation field needs to be annotated with the [`@relation`](#relation-fields) directive to disambiguate it.
@@ -611,40 +645,6 @@ type Story @rename(oldName: "Post") {
 If the rename directive is not used, Prisma would remove the old type and field before creating the new one, resulting in loss of data!
 
 </InfoBox>
-
-### Migrating the value of a scalar field
-
-You can use the `updateManyXs` mutation to migrate the value of a scalar field for all nodes, or only a specific subset.
-
-```graphql
-mutation {
-  # update the email of all users with no email address to the empty string
-  updateManyUsers(
-    where: {
-      email: null
-    }
-    data: {
-      email: ""
-    }
-  )
-}
-```
-
-#### Adding a required field to the data model
-
-When adding a required field to a model that already contains nodes, you receive this error message:
-
-> You are making a field required, but there are already nodes that would violate that constraint.
-
-This is because all nodes would have `null` for this field, being a
-
-Here are the steps that are needed to add a required field:
-
-1. Add the field being _optional_
-1. Use `updateManyXs` to migrate the field of all nodes from `null` to a non-null value
-1. Now you can mark the field as _required_ and deploy as expected
-
-A more convenient workflow is discussed [in this feature request](https://github.com/graphcool/prisma/issues/2323) on Github.
 
 ## Naming conventions
 
