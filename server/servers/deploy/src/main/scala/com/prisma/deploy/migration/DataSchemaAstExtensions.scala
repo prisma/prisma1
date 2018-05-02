@@ -1,6 +1,6 @@
 package com.prisma.deploy.migration
 
-import com.prisma.deploy.migration.DirectiveTypes.RelationTableDirective
+import com.prisma.deploy.migration.DirectiveTypes.{InlineRelationDirective, RelationTableDirective}
 import com.prisma.shared.models.Manifestations.RelationManifestation
 import com.prisma.shared.models.TypeIdentifier
 import sangria.ast._
@@ -119,6 +119,12 @@ object DataSchemaAstExtensions {
         otherColumn <- fieldDefinition.directiveArgumentAsString("relationTable", "otherColumn")
       } yield RelationTableDirective(table = tableName, thisColumn = thisColumn, otherColumn = otherColumn)
     }
+
+    def inlineRelationDirective: Option[InlineRelationDirective] = {
+      for {
+        column <- fieldDefinition.directiveArgumentAsString("inline", "column")
+      } yield InlineRelationDirective(column)
+    }
   }
 
   implicit class CoolEnumType(val enumType: EnumTypeDefinition) extends AnyVal {
@@ -190,4 +196,5 @@ object DataSchemaAstExtensions {
 
 object DirectiveTypes {
   case class RelationTableDirective(table: String, thisColumn: String, otherColumn: String)
+  case class InlineRelationDirective(column: String)
 }

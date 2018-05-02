@@ -6,7 +6,7 @@ import com.prisma.deploy.migration.DirectiveTypes.RelationTableDirective
 import com.prisma.deploy.schema.InvalidRelationName
 import com.prisma.deploy.validation.NameConstraints
 import com.prisma.gc_values.{GCValue, InvalidValueForScalarType}
-import com.prisma.shared.models.Manifestations.{FieldManifestation, ModelManifestation, RelationTableManifestation}
+import com.prisma.shared.models.Manifestations.{FieldManifestation, InlineRelationManifestation, ModelManifestation, RelationTableManifestation}
 import com.prisma.shared.models.{OnDelete, RelationSide, ReservedFields, _}
 import com.prisma.utils.or.OrExtensions
 import cool.graph.cuid.Cuid
@@ -190,7 +190,10 @@ case class SchemaInferrerImpl(
       }
 
       // todo: do we need to do validations to make the directive is valid?
-      val relationManifestation = relationField.relationTableDirective.map { tableDirective =>
+      val inlineRelationManifestation = relationField.inlineRelationDirective.map { inlineDirective =>
+        InlineRelationManifestation(inTableOfModelId = objectType.name, referencingColumn = inlineDirective.column)
+      }
+      val relationTableManifestation = relationField.relationTableDirective.map { tableDirective =>
         val isThisModelA = model1 == modelA
         RelationTableManifestation(
           table = tableDirective.table,
@@ -198,6 +201,7 @@ case class SchemaInferrerImpl(
           modelBColumn = if (isThisModelA) tableDirective.otherColumn else tableDirective.thisColumn
         )
       }
+      val relationManifestation = inlineRelationManifestation.orElse(relationTableManifestation)
 
       oldEquivalentRelation match {
         case Some(relation) =>

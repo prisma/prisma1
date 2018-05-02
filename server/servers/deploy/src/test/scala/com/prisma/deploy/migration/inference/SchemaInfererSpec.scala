@@ -1,6 +1,6 @@
 package com.prisma.deploy.migration.inference
 
-import com.prisma.shared.models.Manifestations.{FieldManifestation, ModelManifestation, RelationTableManifestation}
+import com.prisma.shared.models.Manifestations.{FieldManifestation, InlineRelationManifestation, ModelManifestation, RelationTableManifestation}
 import com.prisma.shared.models.{RelationSide, Schema}
 import com.prisma.shared.schema_dsl.SchemaDsl
 import org.scalactic.Or
@@ -363,6 +363,24 @@ class SchemaInfererSpec extends WordSpec with Matchers {
     relation.modelBId should equal("Todo")
 
     val expectedManifestation = RelationTableManifestation(table = "list_to_todo", modelAColumn = "list_id", modelBColumn = "todo_id")
+    relation.manifestation should equal(Some(expectedManifestation))
+  }
+
+  "handle inline relation manifestations" in {
+    val types =
+      """|type Todo {
+         |  name: String!
+         |  list: List @inline(column: "list_id")
+         |}
+         |
+         |type List {
+         |  todos: [Todo]
+         |}""".stripMargin
+    val schema = infer(emptyProject.schema, types).get
+
+    val relation = schema.getModelByName_!("List").getFieldByName_!("todos").relation.get
+
+    val expectedManifestation = InlineRelationManifestation(inTableOfModelId = "Todo", referencingColumn = "list_id")
     relation.manifestation should equal(Some(expectedManifestation))
   }
 
