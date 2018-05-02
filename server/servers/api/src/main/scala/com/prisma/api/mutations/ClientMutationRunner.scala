@@ -1,6 +1,6 @@
 package com.prisma.api.mutations
 
-import com.prisma.api.connector.DatabaseMutactionExecutor
+import com.prisma.api.connector.{DatabaseMutactionExecutor, DatabaseMutactionResult}
 import com.prisma.api.mutactions.{DatabaseMutactionVerifier, SideEffectMutactionExecutor}
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -17,8 +17,8 @@ object ClientMutationRunner {
       preparedMutactions <- clientMutation.prepareMutactions()
       errors             = databaseMutactionVerifier.verify(preparedMutactions.databaseMutactions)
       _                  = if (errors.nonEmpty) throw errors.head
-      _                  <- performMutactions(preparedMutactions, clientMutation.projectId, databaseMutactionExecutor, sideEffectMutactionExecutor)
-      prismaNode         <- clientMutation.getReturnValue
+      databaseResults    <- performMutactions(preparedMutactions, clientMutation.projectId, databaseMutactionExecutor, sideEffectMutactionExecutor)
+      prismaNode         <- clientMutation.getReturnValue(MutactionResults(databaseResults))
     } yield prismaNode
   }
 
@@ -27,10 +27,10 @@ object ClientMutationRunner {
       projectId: String,
       databaseMutactionExecutor: DatabaseMutactionExecutor,
       sideEffectMutactionExecutor: SideEffectMutactionExecutor
-  )(implicit ec: ExecutionContext): Future[Unit] = {
+  )(implicit ec: ExecutionContext): Future[Vector[DatabaseMutactionResult]] = {
     for {
-      _ <- databaseMutactionExecutor.execute(preparedMutactions.databaseMutactions)
-      _ <- sideEffectMutactionExecutor.execute(preparedMutactions.sideEffectMutactions)
-    } yield ()
+      databaseResults <- databaseMutactionExecutor.execute(preparedMutactions.databaseMutactions)
+      _               <- sideEffectMutactionExecutor.execute(preparedMutactions.sideEffectMutactions)
+    } yield databaseResults
   }
 }

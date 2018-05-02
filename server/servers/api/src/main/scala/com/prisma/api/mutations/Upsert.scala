@@ -47,7 +47,7 @@ case class Upsert(
     }
   }
 
-  override def getReturnValue: Future[ReturnValueResult] = {
+  override def getReturnValue(results: MutactionResults): Future[ReturnValueResult] = {
     val createItemFuture = dataResolver.resolveByUnique(createPath.lastCreateWhere_!)
     val upsertItemFuture = dataResolver.resolveByUnique(updatedWhere)
 
