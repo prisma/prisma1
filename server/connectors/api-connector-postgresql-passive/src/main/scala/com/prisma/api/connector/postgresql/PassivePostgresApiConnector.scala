@@ -132,7 +132,7 @@ case class NestedCreateDataItemInterpreter(mutaction: NestedCreateDataItem) exte
       relation.getModelBField(project.schema)
     }
     val argsMap      = mutaction.create.nonListArgs.raw.asRoot.map
-    val modifiedArgs = argsMap.updated(relationField.get.name, IdGCValue(parentId))
+    val modifiedArgs = argsMap.updated(relationField.get.dbName, IdGCValue(parentId))
     PostGresApiDatabaseMutationBuilder.createDataItem(projectId, path, PrismaArgs(RootGCValue(modifiedArgs)))
   }
 }
