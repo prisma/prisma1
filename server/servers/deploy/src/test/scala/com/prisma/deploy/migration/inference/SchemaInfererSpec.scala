@@ -368,14 +368,16 @@ class SchemaInfererSpec extends WordSpec with Matchers {
 
   "handle inline relation manifestations" in {
     val types =
-      """|type Todo {
+      """
+         |type List {
+         |  todos: [Todo]
+         |}
+         |
+         |type Todo {
          |  name: String!
          |  list: List @inline(column: "list_id")
          |}
-         |
-         |type List {
-         |  todos: [Todo]
-         |}""".stripMargin
+         |""".stripMargin
     val schema = infer(emptyProject.schema, types).get
 
     val relation = schema.getModelByName_!("List").getFieldByName_!("todos").relation.get

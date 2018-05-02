@@ -6,7 +6,7 @@ import com.prisma.deploy.migration.DirectiveTypes.RelationTableDirective
 import com.prisma.deploy.schema.InvalidRelationName
 import com.prisma.deploy.validation.NameConstraints
 import com.prisma.gc_values.{GCValue, InvalidValueForScalarType}
-import com.prisma.shared.models.Manifestations.{FieldManifestation, InlineRelationManifestation, ModelManifestation, RelationTableManifestation}
+import com.prisma.shared.models.Manifestations._
 import com.prisma.shared.models.{OnDelete, RelationSide, ReservedFields, _}
 import com.prisma.utils.or.OrExtensions
 import cool.graph.cuid.Cuid
@@ -145,7 +145,7 @@ case class SchemaInferrerImpl(
   lazy val nextRelations: Set[Relation] = {
     val tmp = for {
       objectType    <- sdl.objectTypes
-      relationField <- objectType.fields if typeIdentifierForTypename(relationField.typeName) == TypeIdentifier.Relation
+      relationField <- objectType.fields if isRelationField(relationField)
     } yield {
       val model1 = objectType.name
       val model2 = relationField.typeName
@@ -174,7 +174,8 @@ case class SchemaInferrerImpl(
         concat(modelA, modelB)
       }
 
-      val relationNameOnRelatedField: Option[String] = sdl.relatedFieldOf(objectType, relationField).flatMap(_.relationName)
+      val relatedField                               = sdl.relatedFieldOf(objectType, relationField)
+      val relationNameOnRelatedField: Option[String] = relatedField.flatMap(_.relationName)
       val relationName = (relationField.relationName, relationNameOnRelatedField) match {
         case (Some(name), _) if !NameConstraints.isValidRelationName(name)    => throw InvalidRelationName(name)
         case (None, Some(name)) if !NameConstraints.isValidRelationName(name) => throw InvalidRelationName(name)
@@ -188,20 +189,7 @@ case class SchemaInferrerImpl(
       val oldEquivalentRelation = relationField.relationName.flatMap(baseSchema.getRelationByName).orElse {
         UnambiguousRelation.unambiguousRelationThatConnectsModels(baseSchema, previousModelAName, previousModelBName)
       }
-
-      // todo: do we need to do validations to make the directive is valid?
-      val inlineRelationManifestation = relationField.inlineRelationDirective.map { inlineDirective =>
-        InlineRelationManifestation(inTableOfModelId = objectType.name, referencingColumn = inlineDirective.column)
-      }
-      val relationTableManifestation = relationField.relationTableDirective.map { tableDirective =>
-        val isThisModelA = model1 == modelA
-        RelationTableManifestation(
-          table = tableDirective.table,
-          modelAColumn = if (isThisModelA) tableDirective.thisColumn else tableDirective.otherColumn,
-          modelBColumn = if (isThisModelA) tableDirective.otherColumn else tableDirective.thisColumn
-        )
-      }
-      val relationManifestation = inlineRelationManifestation.orElse(relationTableManifestation)
+      val relationManifestation = relationManifestationOnFieldOrRelatedField(objectType, relationField)
 
       oldEquivalentRelation match {
         case Some(relation) =>
@@ -228,6 +216,38 @@ case class SchemaInferrerImpl(
     }
     tmp.groupBy(_.name).values.flatMap(_.headOption).toSet
   }
+
+  def relationManifestationOnFieldOrRelatedField(objectType: ObjectTypeDefinition, relationField: FieldDefinition): Option[RelationManifestation] = {
+    val manifestationOnThisField = relationManifestationOnField(objectType, relationField)
+    val manifestationOnRelatedField = sdl.relatedFieldOf(objectType, relationField).flatMap { relatedField =>
+      val relatedType = sdl.objectType_!(relationField.typeName)
+      relationManifestationOnField(relatedType, relatedField)
+    }
+    manifestationOnThisField.orElse(manifestationOnRelatedField)
+  }
+
+  def relationManifestationOnField(objectType: ObjectTypeDefinition, relationField: FieldDefinition): Option[RelationManifestation] = {
+    require(isRelationField(relationField), "this method must only be called with relationFields")
+    val inlineRelationManifestation = relationField.inlineRelationDirective.map { inlineDirective =>
+      InlineRelationManifestation(inTableOfModelId = objectType.name, referencingColumn = inlineDirective.column)
+    }
+    val relationTableManifestation = relationField.relationTableDirective.map { tableDirective =>
+      val isThisModelA = isModelA(objectType.name, relationField.typeName)
+      RelationTableManifestation(
+        table = tableDirective.table,
+        modelAColumn = if (isThisModelA) tableDirective.thisColumn else tableDirective.otherColumn,
+        modelBColumn = if (isThisModelA) tableDirective.otherColumn else tableDirective.thisColumn
+      )
+    }
+    inlineRelationManifestation.orElse(relationTableManifestation)
+  }
+
+  /**
+    * returns true if model1 is modelA
+    */
+  def isModelA(model1: String, model2: String): Boolean = model1 < model2
+
+  def isRelationField(fieldDef: FieldDefinition): Boolean = typeIdentifierForTypename(fieldDef.typeName) == TypeIdentifier.Relation
 
   private def getOnDeleteFromField(field: FieldDefinition): OnDelete.Value = {
     field.directiveArgumentAsString("relation", "onDelete") match {
