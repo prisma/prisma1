@@ -37,13 +37,13 @@ class PassiveConnectorSpecForInlineRelations extends PassiveConnectorSpec {
   val inlineRelationProject = SchemaDsl.fromString(id = projectId, withReservedFields = false) {
     """
       | type List @model(table: "list"){
-      |   id: String!
+      |   id: ID!
       |   name: String!
       |   todos: [Todo]
       | }
       |
       | type Todo @model(table: "todo"){
-      |   id: String!
+      |   id: ID!
       |   title: String!
       |   list: List @inline(column: "list_id")
       | }
@@ -101,7 +101,7 @@ class PassiveConnectorSpecForInlineRelations extends PassiveConnectorSpec {
     val project = SchemaDsl.fromString(id = projectId, withReservedFields = false) {
       """
         | type List @model(table: "list"){
-        |   id: String!
+        |   id: ID!
         |   theName: String! @field(column: "name")
         | }
       """.stripMargin
@@ -142,13 +142,13 @@ class PassiveConnectorSpecForTableRelations extends FlatSpec with PassiveConnect
   val relationTableProject = SchemaDsl.fromString(id = projectId, withReservedFields = false) {
     """
       | type List @model(table: "list"){
-      |   id: String!
+      |   id: ID!
       |   name: String!
       |   todos: [Todo] @relationTable(table: "list_to_todo", thisColumn: "list_id", otherColumn: "todo_id")
       | }
       |
       | type Todo @model(table: "todo"){
-      |   id: String!
+      |   id: ID!
       |   title: String!
       |   list: List
       | }

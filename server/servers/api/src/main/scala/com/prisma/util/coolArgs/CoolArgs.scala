@@ -4,6 +4,7 @@ import com.prisma.api.connector._
 import com.prisma.api.schema.APIErrors
 import com.prisma.gc_values.{GCValueExtractor, ListGCValue, NullGCValue, RootGCValue}
 import com.prisma.shared.models._
+import com.prisma.utils.boolean.BooleanUtils._
 
 import scala.collection.immutable.Seq
 
@@ -155,6 +156,7 @@ case class CoolArgs(raw: Map[String, Any]) {
 
   def generateNonListCreateArgs(where: NodeSelector): CoolArgs = {
     require(where.isId)
+    val idFieldIsIdType = where.model.idField.typeIdentifier == TypeIdentifier.GraphQLID // in this case we will provide the id
     CoolArgs(
       where.model.scalarNonListFields
         .filter(_.name != "id")
@@ -166,7 +168,7 @@ case class CoolArgs(raw: Map[String, Any]) {
             case None                                                           => None
           }
         }
-        .toMap + ("id" -> where.fieldValueAsString))
+        .toMap ++ idFieldIsIdType.toOption("id" -> where.fieldValueAsString))
   }
 
   def generateNonListUpdateGCValues(model: Model): PrismaArgs = {
