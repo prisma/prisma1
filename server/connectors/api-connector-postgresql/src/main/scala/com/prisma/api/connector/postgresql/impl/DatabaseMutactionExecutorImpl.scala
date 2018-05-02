@@ -9,19 +9,18 @@ import scala.concurrent.{ExecutionContext, Future}
 
 case class DatabaseMutactionExecutorImpl(clientDb: Database)(implicit ec: ExecutionContext) extends DatabaseMutactionExecutor {
 
-  override def execute(mutactions: Vector[DatabaseMutaction], runTransactionally: Boolean): Future[Unit] = {
+  override def execute(mutactions: Vector[DatabaseMutaction], runTransactionally: Boolean): Future[Vector[DatabaseMutactionResult]] = {
     val interpreters        = mutactions.map(interpreterFor)
     val combinedErrorMapper = interpreters.map(_.errorMapper).reduceLeft(_ orElse _)
 
     val singleAction = runTransactionally match {
-      case true  => DBIO.seq(interpreters.map(_.action): _*).transactionally
-      case false => DBIO.seq(interpreters.map(_.action): _*)
+      case true  => DBIO.sequence(interpreters.map(_.action)).transactionally
+      case false => DBIO.sequence(interpreters.map(_.action))
     }
 
     clientDb
       .run(singleAction.withTransactionIsolation(TransactionIsolation.ReadCommitted))
       .recover { case error => throw combinedErrorMapper.lift(error).getOrElse(error) }
-      .map(_ => ())
   }
 
   def interpreterFor(mutaction: DatabaseMutaction): DatabaseMutactionInterpreter = mutaction match {

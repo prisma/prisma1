@@ -20,7 +20,7 @@ class BulkImport(project: Project)(implicit apiDependencies: ApiDependencies) {
 
   def executeImport(bundle: ImportBundle): Future[JsValue] = {
 
-    val res: Future[Vector[Try[Unit]]] =
+    val res: Future[Vector[Try[_]]] =
       bundle.valueType match {
         case "nodes" =>
           val importNodes                             = bundle.values.value.map(convertToImportNode).toVector

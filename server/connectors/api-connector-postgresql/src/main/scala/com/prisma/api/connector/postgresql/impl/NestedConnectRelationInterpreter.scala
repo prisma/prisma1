@@ -1,10 +1,12 @@
 package com.prisma.api.connector.postgresql.impl
 
-import com.prisma.api.connector.NestedConnectRelation
-import slick.dbio.{Effect, NoStream}
+import com.prisma.api.connector.{DatabaseMutactionResult, NestedConnectRelation}
+import slick.dbio.{DBIOAction, Effect, NoStream}
 import slick.sql.{SqlAction, SqlStreamingAction}
 
 case class NestedConnectRelationInterpreter(mutaction: NestedConnectRelation) extends NestedRelationInterpreterBase {
+  import scala.concurrent.ExecutionContext.Implicits.global // FIXME: all methods should take implicit ECs
+
   override def path        = mutaction.path
   override def project     = mutaction.project
   override def topIsCreate = mutaction.topIsCreate
@@ -67,5 +69,5 @@ case class NestedConnectRelationInterpreter(mutaction: NestedConnectRelation) ex
       }
   }
 
-  override def addAction: List[SqlAction[Int, NoStream, Effect]] = createRelationRow
+  override def addAction: List[DBIOAction[DatabaseMutactionResult, NoStream, Effect]] = createRelationRow.map(_.map(mapToUnitResult))
 }

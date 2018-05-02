@@ -2,13 +2,14 @@ package com.prisma.api.connector.postgresql.impl
 
 import com.prisma.api.connector.postgresql.DatabaseMutactionInterpreter
 import com.prisma.api.connector.postgresql.database.PostGresApiDatabaseMutationBuilder._
-import com.prisma.api.connector.{ModelEdge, NodeEdge, Path}
+import com.prisma.api.connector.{DatabaseMutactionResult, ModelEdge, NodeEdge, Path}
 import com.prisma.api.schema.APIErrors.RequiredRelationWouldBeViolated
 import com.prisma.shared.models.Project
 import org.postgresql.util.PSQLException
 import slick.dbio.{DBIOAction, Effect, NoStream}
 
 trait NestedRelationInterpreterBase extends DatabaseMutactionInterpreter {
+  import scala.concurrent.ExecutionContext.Implicits.global // FIXME: all methods should take implicit ECs
 
   def path: Path
   def project: Project
@@ -63,7 +64,7 @@ trait NestedRelationInterpreterBase extends DatabaseMutactionInterpreter {
 
   def allActions = requiredCheck ++ removalActions ++ addAction
 
-  override val action = DBIOAction.seq(allActions: _*)
+  override val action = DBIOAction.seq(allActions: _*).map(mapToUnitResult)
 
   override val errorMapper = {
     case e: PSQLException if causedByThisMutaction(e.getMessage) => throw RequiredRelationWouldBeViolated(project, path.lastRelation_!)

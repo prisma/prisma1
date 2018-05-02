@@ -17,40 +17,45 @@ import slick.jdbc.SQLActionBuilder
 import slick.sql.{SqlAction, SqlStreamingAction}
 
 object PostGresApiDatabaseMutationBuilder {
+  import scala.concurrent.ExecutionContext.Implicits.global // FIXME: all methods should take implicit ECs
 
   // region CREATE
 
-  def createDataItem(projectId: String, path: Path, args: PrismaArgs): SimpleDBIO[Unit] = {
+  def createDataItem(projectId: String, path: Path, args: PrismaArgs): SimpleDBIO[CreateDataItemResult] = SimpleDBIO[CreateDataItemResult] { x =>
+    val argsAsRoot   = args.raw.asRoot
+    val fields       = path.lastModel.fields.filter(field => argsAsRoot.hasArgFor(field.name))
+    val columns      = fields.map(_.dbName)
+    val escapedKeys  = columns.map(column => s""""$column"""").mkString(",")
+    val placeHolders = columns.map(_ => "?").mkString(",")
 
-    SimpleDBIO[Unit] { x =>
-      val argsAsRoot   = args.raw.asRoot
-      val fields       = path.lastModel.fields.filter(field => argsAsRoot.hasArgFor(field.name))
-      val columns      = fields.map(_.dbName)
-      val escapedKeys  = columns.map(column => s""""$column"""").mkString(",")
-      val placeHolders = columns.map(_ => "?").mkString(",")
+    val query                         = s"""INSERT INTO "$projectId"."${path.lastModel.dbName}" ($escapedKeys) VALUES ($placeHolders)"""
+    val itemInsert: PreparedStatement = x.connection.prepareStatement(query, Statement.RETURN_GENERATED_KEYS)
 
-      val query                         = s"""INSERT INTO "$projectId"."${path.lastModel.dbName}" ($escapedKeys) VALUES ($placeHolders)"""
-      val itemInsert: PreparedStatement = x.connection.prepareStatement(query)
-
-      fields.map(_.name).zipWithIndex.foreach {
-        case (column, index) =>
-          argsAsRoot.map.get(column) match {
-            case Some(NullGCValue) if column == "createdAt" || column == "updatedAt" => itemInsert.setTimestamp(index + 1, currentTimeStampUTC)
-            case Some(gCValue)                                                       => itemInsert.setGcValue(index + 1, gCValue)
-            case None if column == "createdAt" || column == "updatedAt"              => itemInsert.setTimestamp(index + 1, currentTimeStampUTC)
-            case None                                                                => itemInsert.setNull(index + 1, java.sql.Types.NULL)
-          }
-      }
-      itemInsert.execute()
+    fields.map(_.name).zipWithIndex.foreach {
+      case (column, index) =>
+        argsAsRoot.map.get(column) match {
+          case Some(NullGCValue) if column == "createdAt" || column == "updatedAt" => itemInsert.setTimestamp(index + 1, currentTimeStampUTC)
+          case Some(gCValue)                                                       => itemInsert.setGcValue(index + 1, gCValue)
+          case None if column == "createdAt" || column == "updatedAt"              => itemInsert.setTimestamp(index + 1, currentTimeStampUTC)
+          case None                                                                => itemInsert.setNull(index + 1, java.sql.Types.NULL)
+        }
     }
+    itemInsert.execute()
+
+    val generatedKeys = itemInsert.getGeneratedKeys()
+    generatedKeys.next()
+    // fixme: the name of the id column might be different
+    val field = path.lastModel.getFieldByName_!("id")
+    CreateDataItemResult(generatedKeys.getGcValue(field.name, field.typeIdentifier))
   }
 
-  def createRelayRow(projectId: String, path: Path): SqlStreamingAction[Vector[Int], Int, Effect]#ResultAction[Int, NoStream, Effect] = {
-    val where = path.lastCreateWhere_!
-    (sql"""INSERT INTO "#$projectId"."_RelayId" ("id", "stableModelIdentifier") VALUES (${where.fieldValue}, ${where.model.stableIdentifier})""").asUpdate
+  def createRelayRow(projectId: String, path: Path): DBIOAction[UnitDatabaseMutactionResult.type, NoStream, Effect] = {
+    val where  = path.lastCreateWhere_!
+    val action = sql"""INSERT INTO "#$projectId"."_RelayId" ("id", "stableModelIdentifier") VALUES (${where.fieldValue}, ${where.model.stableIdentifier})"""
+    action.asUpdate.map(mapToUnitResult)
   }
 
-  def createRelationRowByPath(projectId: String, path: Path): SqlAction[Int, NoStream, Effect] = {
+  def createRelationRowByPath(projectId: String, path: Path): DBIOAction[DatabaseMutactionResult, NoStream, Effect] = {
     val relation = path.lastRelation_!
     require(!relation.isInlineRelation)
 
@@ -59,7 +64,7 @@ object PostGresApiDatabaseMutationBuilder {
       case edge: NodeEdge => edge.childWhere
     }
 
-    if (relation.hasManifestation) {
+    val action = if (relation.hasManifestation) {
       val nodeEdge        = path.lastEdge_!.asInstanceOf[NodeEdge]
       val parentModel     = nodeEdge.parent
       val childModel      = nodeEdge.child
@@ -76,6 +81,7 @@ object PostGresApiDatabaseMutationBuilder {
         sql"""Select '#$relationId',""" ++ pathQueryForLastChild(projectId, path.removeLastEdge) ++ sql"," ++
         sql""""id" FROM "#$projectId"."#${childWhere.model.name}" where "#${childWhere.field.name}" = ${childWhere.fieldValue}""").asUpdate
     }
+    action.map(mapToUnitResult)
 
 //    (sql"""update "#$projectId".todo""" ++
 //      sql"""set list_id = subquery.id""" ++
@@ -133,8 +139,8 @@ object PostGresApiDatabaseMutationBuilder {
              updatePath: Path,
              createArgs: PrismaArgs,
              updateArgs: PrismaArgs,
-             create: slick.dbio.DBIOAction[Unit, slick.dbio.NoStream, slick.dbio.Effect with slick.dbio.Effect.All],
-             update: slick.dbio.DBIOAction[Unit, slick.dbio.NoStream, slick.dbio.Effect with slick.dbio.Effect.All]) = {
+             create: slick.dbio.DBIOAction[_, slick.dbio.NoStream, slick.dbio.Effect.All],
+             update: slick.dbio.DBIOAction[_, slick.dbio.NoStream, slick.dbio.Effect.All]) = {
 
     val query = sql"""select exists ( SELECT "id" FROM "#$projectId"."#${updatePath.lastModel.name}" WHERE "id" = """ ++ pathQueryForLastChild(
       projectId,
@@ -154,8 +160,8 @@ object PostGresApiDatabaseMutationBuilder {
       updatePath: Path,
       createArgs: PrismaArgs,
       updateArgs: PrismaArgs,
-      scalarListCreate: slick.dbio.DBIOAction[Unit, slick.dbio.NoStream, slick.dbio.Effect with slick.dbio.Effect.All],
-      scalarListUpdate: slick.dbio.DBIOAction[Unit, slick.dbio.NoStream, slick.dbio.Effect with slick.dbio.Effect.All],
+      scalarListCreate: slick.dbio.DBIOAction[_, slick.dbio.NoStream, slick.dbio.Effect.All],
+      scalarListUpdate: slick.dbio.DBIOAction[_, slick.dbio.NoStream, slick.dbio.Effect.All],
       createCheck: DBIOAction[Any, NoStream, Effect],
   ) = {
 
@@ -232,9 +238,14 @@ object PostGresApiDatabaseMutationBuilder {
   //endregion
 
   //region SCALAR LISTS
-  def setScalarList(projectId: String, path: Path, listFieldMap: Vector[(String, ListGCValue)]) = {
+  def setScalarList(
+      projectId: String,
+      path: Path,
+      listFieldMap: Vector[(String, ListGCValue)]
+  ): DBIOAction[UnitDatabaseMutactionResult.type, NoStream, Effect.All] = {
     val idQuery = (sql"""SELECT "id" FROM "#${projectId}"."#${path.lastModel.name}" WHERE "id" = """ ++ pathQueryForLastChild(projectId, path)).as[String]
-    if (listFieldMap.isEmpty) DBIOAction.successful(()) else setManyScalarListHelper(projectId, path.lastModel, listFieldMap, idQuery)
+    val action  = if (listFieldMap.isEmpty) DBIOAction.successful(()) else setManyScalarListHelper(projectId, path.lastModel, listFieldMap, idQuery)
+    action.map(mapToUnitResult)
   }
 
   def setManyScalarLists(projectId: String, model: Model, listFieldMap: Vector[(String, ListGCValue)], whereFilter: Option[DataItemFilterCollection]) = {
@@ -418,8 +429,8 @@ object PostGresApiDatabaseMutationBuilder {
   }
 
   def ifThenElse(condition: SqlStreamingAction[Vector[Boolean], Boolean, Effect],
-                 thenMutactions: DBIOAction[Unit, NoStream, Effect.All],
-                 elseMutactions: DBIOAction[Unit, NoStream, Effect.All]) = {
+                 thenMutactions: DBIOAction[_, NoStream, Effect.All],
+                 elseMutactions: DBIOAction[_, NoStream, Effect.All]) = {
     import scala.concurrent.ExecutionContext.Implicits.global
     for {
       exists <- condition
@@ -638,4 +649,9 @@ object PostGresApiDatabaseMutationBuilder {
       action  <- pushQuery(nodeIds.head)
     } yield action
   }
+
+  /**
+    * HELPERS
+    */
+  def mapToUnitResult(x: Any): UnitDatabaseMutactionResult.type = UnitDatabaseMutactionResult
 }
