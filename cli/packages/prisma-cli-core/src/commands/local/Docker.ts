@@ -387,7 +387,6 @@ Please close the process by hand. ${instruction}`)
     if (this.cluster ? this.cluster.local : true) {
       await this.setKeyPair()
     }
-    debug(this.envVars)
   }
 
   async setKeyPair() {

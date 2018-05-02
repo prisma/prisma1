@@ -2,8 +2,8 @@ package com.prisma.deploy.connector.mysql
 
 import com.prisma.config.DatabaseConfig
 import com.prisma.deploy.connector._
-import com.prisma.deploy.connector.mysql.database.{DeployDatabaseMutationBuilderMySql, InternalDatabaseSchema, TelemetryTable}
-import com.prisma.deploy.connector.mysql.impls.{ClientDbQueriesImpl, MigrationPersistenceImpl, MySqlDeployMutactionExectutor, ProjectPersistenceImpl}
+import com.prisma.deploy.connector.mysql.database.{MysqlDeployDatabaseMutationBuilder, MysqlInternalDatabaseSchema, TelemetryTable}
+import com.prisma.deploy.connector.mysql.impls.{MysqlClientDbQueries, MysqlMigrationPersistence, MySqlDeployMutactionExectutor, MysqlProjectPersistence}
 import com.prisma.shared.models.{Project, ProjectIdEncoder}
 import org.joda.time.DateTime
 import slick.dbio.Effect.Read
@@ -14,22 +14,22 @@ import slick.jdbc.meta.MTable
 import scala.concurrent.{ExecutionContext, Future}
 
 case class MySqlDeployConnector(config: DatabaseConfig)(implicit ec: ExecutionContext) extends DeployConnector with TableTruncationHelpers {
-  lazy val internalDatabaseDefs = InternalDatabaseDefs(config)
+  lazy val internalDatabaseDefs = MysqlInternalDatabaseDefs(config)
   lazy val internalDatabaseRoot = internalDatabaseDefs.internalDatabaseRoot
   lazy val internalDatabase     = internalDatabaseDefs.internalDatabase
   lazy val clientDatabase       = internalDatabaseDefs.internalDatabaseRoot
 
-  override val projectPersistence: ProjectPersistence           = ProjectPersistenceImpl(internalDatabase)
-  override val migrationPersistence: MigrationPersistence       = MigrationPersistenceImpl(internalDatabase)
+  override val projectPersistence: ProjectPersistence           = MysqlProjectPersistence(internalDatabase)
+  override val migrationPersistence: MigrationPersistence       = MysqlMigrationPersistence(internalDatabase)
   override val deployMutactionExecutor: DeployMutactionExecutor = MySqlDeployMutactionExectutor(clientDatabase)
 
   override def createProjectDatabase(id: String): Future[Unit] = {
-    val action = DeployDatabaseMutationBuilderMySql.createClientDatabaseForProject(projectId = id)
+    val action = MysqlDeployDatabaseMutationBuilder.createClientDatabaseForProject(projectId = id)
     clientDatabase.run(action)
   }
 
   override def deleteProjectDatabase(id: String): Future[Unit] = {
-    val action = DeployDatabaseMutationBuilderMySql.deleteProjectDatabase(projectId = id).map(_ => ())
+    val action = MysqlDeployDatabaseMutationBuilder.deleteProjectDatabase(projectId = id).map(_ => ())
     clientDatabase.run(action)
   }
 
@@ -46,13 +46,13 @@ case class MySqlDeployConnector(config: DatabaseConfig)(implicit ec: ExecutionCo
     clientDatabase.run(action)
   }
 
-  override def clientDBQueries(project: Project): ClientDbQueries      = ClientDbQueriesImpl(project, clientDatabase)
+  override def clientDBQueries(project: Project): ClientDbQueries      = MysqlClientDbQueries(project, clientDatabase)
   override def getOrCreateTelemetryInfo(): Future[TelemetryInfo]       = internalDatabaseRoot.run(TelemetryTable.getOrCreateInfo())
   override def updateTelemetryInfo(lastPinged: DateTime): Future[Unit] = internalDatabaseRoot.run(TelemetryTable.updateInfo(lastPinged)).map(_ => ())
   override def projectIdEncoder: ProjectIdEncoder                      = ProjectIdEncoder('@')
 
   override def initialize(): Future[Unit] = {
-    val action = InternalDatabaseSchema.createSchemaActions(recreate = false)
+    val action = MysqlInternalDatabaseSchema.createSchemaActions(recreate = false)
     internalDatabaseRoot.run(action)
   }
 

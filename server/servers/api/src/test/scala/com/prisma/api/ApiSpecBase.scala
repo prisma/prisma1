@@ -24,6 +24,11 @@ trait ApiSpecBase extends ConnectorAwareTest with BeforeAndAfterEach with Before
 
   def dataResolver(project: Project): DataResolver = testDependencies.dataResolver(project)
 
+  override protected def beforeAll(): Unit = {
+    super.beforeAll()
+    testDependencies.deployConnector.initialize().await()
+  }
+
   override protected def afterAll(): Unit = {
     super.afterAll()
     testDependencies.destroy

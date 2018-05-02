@@ -2,7 +2,7 @@ package com.prisma.workers.payloads
 
 case class Webhook(
     projectId: String,
-    functionId: String,
+    functionName: String,
     requestId: String,
     url: String,
     payload: String,

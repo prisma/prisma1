@@ -1,7 +1,7 @@
 package com.prisma.deploy.connector.mysql
 
 import com.prisma.config.ConfigLoader
-import com.prisma.deploy.connector.mysql.database.InternalDatabaseSchema
+import com.prisma.deploy.connector.mysql.database.MysqlInternalDatabaseSchema
 import com.prisma.utils.await.AwaitUtils
 import slick.dbio.Effect.Read
 import slick.dbio.{DBIOAction, NoStream}
@@ -12,11 +12,11 @@ class InternalTestDatabase extends AwaitUtils {
   import scala.concurrent.ExecutionContext.Implicits.global
 
   val config               = ConfigLoader.load()
-  val databaseDefs         = InternalDatabaseDefs(config.databases.head.copy(pooled = false))
+  val databaseDefs         = MysqlInternalDatabaseDefs(config.databases.head.copy(pooled = false))
   val internalDatabaseRoot = databaseDefs.internalDatabaseRoot
   val internalDatabase     = databaseDefs.internalDatabase
 
-  def createInternalDatabaseSchema() = internalDatabaseRoot.run(InternalDatabaseSchema.createSchemaActions(recreate = true)).await(10)
+  def createInternalDatabaseSchema() = internalDatabaseRoot.run(MysqlInternalDatabaseSchema.createSchemaActions(recreate = true)).await(10)
 
   def truncateTables(): Unit = {
     val schemas = internalDatabase.run(getTables("graphcool")).await()

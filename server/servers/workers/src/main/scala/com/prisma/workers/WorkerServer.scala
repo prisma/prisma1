@@ -39,7 +39,6 @@ case class WorkerServer(
     println("Stopping workers...")
     val stopFutures = Future.sequence(workers.map(_.stop))
 
-    //stopFutures.onComplete(_ => dependencies.shutdown)
     stopFutures
   }
 }

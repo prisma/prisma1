@@ -15,7 +15,7 @@ import slick.jdbc.{SQLActionBuilder, _}
 import slick.sql.SqlStreamingAction
 import scala.concurrent.ExecutionContext
 
-class DatabaseQueryBuilder()(implicit ec: ExecutionContext) {
+class MySqlDatabaseQueryBuilder()(implicit ec: ExecutionContext) {
   import JdbcExtensions._
   import QueryArgumentsExtensions._
   import SlickExtensions._
@@ -65,7 +65,6 @@ class DatabaseQueryBuilder()(implicit ec: ExecutionContext) {
 
   implicit object GetRelationNode extends GetResult[RelationNode] {
     override def apply(ps: PositionedResult): RelationNode = RelationNode(ps.rs.getId, ps.rs.getAsID("A"), ps.rs.getAsID("B"))
-
   }
 
   implicit object GetRelationCount extends GetResult[(IdGCValue, Int)] {

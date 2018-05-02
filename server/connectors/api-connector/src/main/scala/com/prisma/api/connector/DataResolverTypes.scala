@@ -8,8 +8,7 @@ import com.prisma.shared.models.{Field, Model, Relation}
 import scala.collection.immutable.Seq
 
 object Types {
-  type DataItemFilterCollection = Seq[_ >: Seq[Any] <: Any] //todo
-  //  type UserData                 = Map[String, Option[Any]]
+  type DataItemFilterCollection = Seq[_ >: Seq[Any] <: Any]
 }
 
 case class ScalarListElement(nodeId: Id, position: Int, value: GCValue)
@@ -30,6 +29,7 @@ case class QueryArguments(
     filter: Option[DataItemFilterCollection],
     orderBy: Option[OrderBy]
 )
+
 object QueryArguments {
   def empty = QueryArguments(skip = None, after = None, first = None, before = None, last = None, filter = None, orderBy = None)
   def filterOnly(filter: Option[DataItemFilterCollection]) =

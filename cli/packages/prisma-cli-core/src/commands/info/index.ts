@@ -7,7 +7,7 @@ import {
   Project,
 } from 'prisma-cli-engine'
 import chalk from 'chalk'
-import { Cluster, getEndpoint, getWSEndpoint } from 'prisma-yml'
+import { Cluster } from 'prisma-yml'
 
 export interface Service {
   project: {
@@ -84,8 +84,8 @@ export default class InfoCommand extends Command {
         stage,
         cluster: cluster.name,
         workspace,
-        httpEndpoint: getEndpoint(cluster, name, stage, workspace),
-        wsEndpoint: getWSEndpoint(cluster, name, stage, workspace),
+        httpEndpoint: cluster.getApiEndpoint(name, stage, workspace),
+        wsEndpoint: cluster.getWSEndpoint(name, stage, workspace),
       }
 
       if (secret) {
@@ -96,7 +96,7 @@ export default class InfoCommand extends Command {
     return `
   ${chalk.bold(stage)} (cluster: ${chalk.bold(`\`${cluster.name}\``)})
 
-    HTTP:       ${getEndpoint(cluster, name, stage, workspace)}
-    Websocket:  ${getWSEndpoint(cluster, name, stage, workspace)}`
+    HTTP:       ${cluster.getApiEndpoint(name, stage, workspace)}
+    Websocket:  ${cluster.getWSEndpoint(name, stage, workspace)}`
   }
 }

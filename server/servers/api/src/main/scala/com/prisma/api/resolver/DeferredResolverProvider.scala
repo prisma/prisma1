@@ -83,56 +83,49 @@ class DeferredResolverProvider[CtxType](dataResolver: DataResolver) extends Defe
     // for every group of deferreds, resolve them
     val manyModelFutureResults = manyModelDeferredsMap
       .map {
-        case (key, value) =>
-          manyModelDeferredResolver.resolve(value, ec)
+        case (key, value) => manyModelDeferredResolver.resolve(value, ec)
       }
       .toVector
       .flatten
 
     val manyModelExistsFutureResults = manyModelExistsDeferredsMap
       .map {
-        case (key, value) =>
-          manyModelsExistsDeferredResolver.resolve(value, ec)
+        case (key, value) => manyModelsExistsDeferredResolver.resolve(value, ec)
       }
       .toVector
       .flatten
 
     val countManyModelFutureResults = countManyModelDeferredsMap
       .map {
-        case (key, value) =>
-          countManyModelDeferredResolver.resolve(value)
+        case (key, value) => countManyModelDeferredResolver.resolve(value)
       }
       .toVector
       .flatten
 
     val toManyFutureResults = toManyDeferredsMap
       .map {
-        case (key, value) =>
-          toManyDeferredResolver.resolve(value, ec)
+        case (key, value) => toManyDeferredResolver.resolve(value, ec)
       }
       .toVector
       .flatten
 
     val countToManyFutureResults = countToManyDeferredsMap
       .map {
-        case (key, value) =>
-          countToManyDeferredResolver.resolve(value, ec)
+        case (key, value) => countToManyDeferredResolver.resolve(value, ec)
       }
       .toVector
       .flatten
 
     val toOneFutureResults = toOneDeferredMap
       .map {
-        case (key, value) =>
-          toOneDeferredResolver.resolve(value, ec)
+        case (key, value) => toOneDeferredResolver.resolve(value, ec)
       }
       .toVector
       .flatten
 
     val oneFutureResult = oneDeferredsMap
       .map {
-        case (key, value) =>
-          oneDeferredResolver.resolve(value, ec)
+        case (key, value) => oneDeferredResolver.resolve(value, ec)
       }
       .toVector
       .flatten

@@ -1,5 +1,5 @@
 import { Command, flags, Flags, DeployPayload, Config } from 'prisma-cli-engine'
-import { Cluster, getEndpoint, getWSEndpoint } from 'prisma-yml'
+import { Cluster } from 'prisma-yml'
 import chalk from 'chalk'
 import { ServiceDoesntExistError } from '../../errors/ServiceDoesntExistError'
 import { emptyDefinition } from './emptyDefinition'
@@ -97,7 +97,7 @@ ${chalk.gray(
     /**
      * If no endpoint or service provided, ask for it
      */
-    let workspace
+    let workspace: string | undefined | null = this.definition.getWorkspace()
     let cluster
     let dockerComposeYml = defaultDockerCompose
     if (!serviceName || !stage || interactive) {
@@ -192,16 +192,16 @@ Note: prisma local start will be deprecated soon in favor of the direct usage of
       }
     }
 
-    await this.client.initClusterClient(cluster, workspace, serviceName, stage)
+    await this.client.initClusterClient(cluster, serviceName, stage, workspace!)
 
     debug('checking verions')
     await this.checkVersions(cluster!)
 
     let projectNew = false
     debug('checking if project exists')
-    if (!await this.projectExists(cluster, serviceName, stage, workspace)) {
+    if (!await this.projectExists(cluster, serviceName, stage, workspace!)) {
       debug('adding project')
-      await this.addProject(cluster, serviceName, stage, workspace)
+      await this.addProject(cluster, serviceName, stage, workspace!)
       projectNew = true
     }
 
@@ -213,7 +213,7 @@ Note: prisma local start will be deprecated soon in favor of the direct usage of
       force,
       dryRun,
       projectNew,
-      workspace,
+      workspace!,
     )
 
     if (watch) {
@@ -232,7 +232,7 @@ Note: prisma local start will be deprecated soon in favor of the direct usage of
                 force,
                 dryRun,
                 false,
-                workspace,
+                workspace!,
               )
               this.out.log('Watching for change...')
             }
@@ -601,14 +601,12 @@ Note: prisma local start will be deprecated soon in favor of the direct usage of
       'Your Prisma GraphQL database endpoint is live:',
     )}
 
-  ${chalk.bold('HTTP:')}  ${getEndpoint(
-      cluster,
+  ${chalk.bold('HTTP:')}  ${cluster.getApiEndpoint(
       serviceName,
       stageName,
       workspace,
     )}
-  ${chalk.bold('WS:')}    ${getWSEndpoint(
-      cluster,
+  ${chalk.bold('WS:')}    ${cluster.getWSEndpoint(
       serviceName,
       stageName,
       workspace,

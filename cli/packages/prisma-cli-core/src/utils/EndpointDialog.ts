@@ -1,7 +1,7 @@
 import { Output, Client, Config } from 'prisma-cli-engine'
 import * as inquirer from 'inquirer'
 import chalk from 'chalk'
-import { Cluster, Environment, getEndpoint } from 'prisma-yml'
+import { Cluster, Environment } from 'prisma-yml'
 import { concatName, defaultDataModel, defaultDockerCompose } from '../util'
 import * as sillyname from 'sillyname'
 import * as path from 'path'
@@ -263,7 +263,7 @@ export class EndpointDialog {
     }
 
     return {
-      endpoint: getEndpoint(cluster, service, stage, workspace),
+      endpoint: cluster.getApiEndpoint(service, stage, workspace),
       cluster,
       workspace,
       service,
@@ -381,6 +381,7 @@ export class EndpointDialog {
       const fixChoices = [
         ['Use existing database', 'Connect to existing database'],
         ['Create new database', 'Set up a local database using Docker'],
+        ['Use other server', 'Connect to an existing prisma server'],
       ]
       const rawChoices = [...fixChoices, ...sandboxChoices]
       const choices = this.convertChoices(rawChoices)
@@ -396,7 +397,7 @@ export class EndpointDialog {
         new inquirer.Separator(
           chalk.bold('Or use a free hosted Prisma sandbox (includes database)'),
         ),
-        ...choices.slice(fixChoices.length, 4),
+        ...choices.slice(fixChoices.length, 5),
       ]
       return {
         name: 'choice',

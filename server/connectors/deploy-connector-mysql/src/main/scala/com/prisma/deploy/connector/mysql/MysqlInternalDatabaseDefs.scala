@@ -3,7 +3,7 @@ package com.prisma.deploy.connector.mysql
 import com.prisma.config.DatabaseConfig
 import com.typesafe.config.{Config, ConfigFactory}
 
-case class InternalDatabaseDefs(dbConfig: DatabaseConfig) {
+case class MysqlInternalDatabaseDefs(dbConfig: DatabaseConfig) {
   import slick.jdbc.MySQLProfile.api._
 
   val internalDb = "graphcool"
@@ -33,8 +33,8 @@ case class InternalDatabaseDefs(dbConfig: DatabaseConfig) {
         |  dataSourceClass = "slick.jdbc.DriverDataSource"
         |  properties {
         |    url = "jdbc:mysql://${dbConfig.host}:${dbConfig.port}/$database?autoReconnect=true&useSSL=false&serverTimeZone=UTC&useUnicode=true&characterEncoding=UTF-8&socketTimeout=60000&usePipelineAuth=false"
-        |    user = ${dbConfig.user}
-        |    password = ${dbConfig.password.getOrElse("")}
+        |    user = "${dbConfig.user}"
+        |    password = "${dbConfig.password.getOrElse("")}"
         |  }
         |  numThreads = ${dbConfig.connectionLimit.getOrElse(10)}
         |  connectionTimeout = 5000

@@ -1,0 +1,21 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`cluster endpoint generation local cluster 1`] = `"http://localhost:4466"`;
+
+exports[`cluster endpoint generation local cluster 2`] = `"http://localhost:4466/dev"`;
+
+exports[`cluster endpoint generation local cluster 3`] = `"http://localhost:4466/default/dev"`;
+
+exports[`cluster endpoint generation local cluster 4`] = `"http://localhost:4466/default/dev"`;
+
+exports[`cluster endpoint generation private cluster 1`] = `"https://test01_workspace.prisma.sh"`;
+
+exports[`cluster endpoint generation private cluster 2`] = `"https://test01_workspace.prisma.sh/dev"`;
+
+exports[`cluster endpoint generation private cluster 3`] = `"https://test01_workspace.prisma.sh/default/dev"`;
+
+exports[`cluster endpoint generation sandbox cluster 1`] = `"https://eu1.prisma.sh/workspace/default/default"`;
+
+exports[`cluster endpoint generation sandbox cluster 2`] = `"https://eu1.prisma.sh/workspace/dev/default"`;
+
+exports[`cluster endpoint generation sandbox cluster 3`] = `"https://eu1.prisma.sh/workspace/default/dev"`;

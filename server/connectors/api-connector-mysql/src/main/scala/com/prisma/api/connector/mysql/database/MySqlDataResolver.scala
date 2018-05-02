@@ -15,8 +15,7 @@ import slick.sql.SqlAction
 import scala.concurrent.{ExecutionContext, Future}
 
 case class MySqlDataResolver(project: Project, readonlyClientDatabase: MySQLProfile.backend.DatabaseDef)(implicit ec: ExecutionContext) extends DataResolver {
-
-  val queryBuilder = new DatabaseQueryBuilder()(ec)
+  val queryBuilder = new MySqlDatabaseQueryBuilder()(ec)
 
   override def resolveByGlobalId(globalId: IdGCValue): Future[Option[PrismaNode]] = { //todo rewrite this to use normal query?
     if (globalId.value == "viewer-fixed") return Future.successful(Some(PrismaNode(globalId, RootGCValue.empty, Some("Viewer"))))
