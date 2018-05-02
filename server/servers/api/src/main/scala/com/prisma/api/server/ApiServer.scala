@@ -74,7 +74,7 @@ case class ApiServer(
     val requestId            = requestPrefix + ":api:" + createCuid()
     val requestBeginningTime = System.currentTimeMillis()
 
-    def logRequestEnd(projectId: String, throttledBy: Long = 0, result: Try[(StatusCode, JsValue)]) = {
+    def logRequestEnd(projectId: String, throttledBy: Long = 0) = {
       val end            = System.currentTimeMillis()
       val actualDuration = end - requestBeginningTime - throttledBy
       ApiMetrics.requestDuration.record(actualDuration, Seq(projectId))
@@ -89,8 +89,7 @@ case class ApiServer(
               payload = Some(
                 Map(
                   "request_duration" -> (end - requestBeginningTime),
-                  "throttled_by"     -> throttledBy,
-                  "response"         -> result.toString
+                  "throttled_by"     -> throttledBy
                 ))
             )
           )
@@ -145,20 +144,20 @@ case class ApiServer(
 
               case Some("private") =>
                 val result = apiDependencies.requestHandler.handleRawRequestForPrivateApi(projectId = projectIdAsString, rawRequest = rawRequest)
-                result.onComplete(res => logRequestEnd(projectIdAsString, result = res))
+                result.onComplete(_ => logRequestEnd(projectIdAsString))
                 complete(result)
 
               case Some("import") =>
                 withRequestTimeout(5.minutes) {
                   val result = apiDependencies.requestHandler.handleRawRequestForImport(projectId = projectIdAsString, rawRequest = rawRequest)
-                  result.onComplete(res => logRequestEnd(projectIdAsString, result = res))
+                  result.onComplete(_ => logRequestEnd(projectIdAsString))
                   complete(result)
                 }
 
               case Some("export") =>
                 withRequestTimeout(5.minutes) {
                   val result = apiDependencies.requestHandler.handleRawRequestForExport(projectId = projectIdAsString, rawRequest = rawRequest)
-                  result.onComplete(res => logRequestEnd(projectIdAsString, result = res))
+                  result.onComplete(_ => logRequestEnd(projectIdAsString))
                   complete(result)
                 }
 

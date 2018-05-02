@@ -44,21 +44,6 @@ class DatabaseQueryBuilder()(implicit ec: ExecutionContext) {
     }
   }
 
-//  import com.prisma.cache.Cache
-//  val cache = Cache.lfu[String, GetResult[PrismaNode]](10, 10)
-//
-//  def getResultForModel(model: Model): GetResult[PrismaNode] = cache.get(model.name) match {
-//    case None =>
-//      val x = GetResult { ps: PositionedResult =>
-//        getPrismaNode(model, ps)
-//      }
-//      cache.put(model.name, x)
-//      x
-//
-//    case Some(x) =>
-//      x
-//  }
-
   def getResultForModel(model: Model): GetResult[PrismaNode] = GetResult { ps: PositionedResult =>
     getPrismaNode(model, ps)
   }
