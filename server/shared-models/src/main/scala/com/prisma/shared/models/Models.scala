@@ -216,7 +216,7 @@ case class Field(
     constraints: List[FieldConstraint] = List.empty
 ) {
   def id = name
-  val dbName = {
+  def dbName = {
     if (isRelation) {
       relation match {
         case Some(r) if r.isInlineRelation => r.manifestation.get.asInstanceOf[InlineRelationManifestation].referencingColumn
@@ -377,6 +377,7 @@ case class Relation(
 ) {
   val relationTableName = manifestation.collect { case m: RelationTableManifestation => m.table }.getOrElse("_" + name)
 
+  def hasManifestation: Boolean = manifestation.isDefined
   def isInlineRelation: Boolean = manifestation.exists(_.isInstanceOf[InlineRelationManifestation])
 
   def connectsTheModels(model1: String, model2: String): Boolean = (modelAId == model1 && modelBId == model2) || (modelAId == model2 && modelBId == model1)

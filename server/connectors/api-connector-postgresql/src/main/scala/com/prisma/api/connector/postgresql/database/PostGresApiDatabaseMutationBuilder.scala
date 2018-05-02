@@ -8,6 +8,7 @@ import com.prisma.api.connector.postgresql.database.JdbcExtensions._
 import com.prisma.api.connector.postgresql.database.SlickExtensions._
 import com.prisma.api.schema.UserFacingError
 import com.prisma.gc_values.{GCValue, GCValueExtractor, ListGCValue, NullGCValue}
+import com.prisma.shared.models.Manifestations.RelationTableManifestation
 import com.prisma.shared.models._
 import cool.graph.cuid.Cuid
 import slick.dbio.{DBIOAction, Effect, NoStream}
@@ -50,14 +51,31 @@ object PostGresApiDatabaseMutationBuilder {
   }
 
   def createRelationRowByPath(projectId: String, path: Path): SqlAction[Int, NoStream, Effect] = {
+    val relation = path.lastRelation_!
+    require(!relation.isInlineRelation)
+
     val childWhere = path.lastEdge_! match {
       case _: ModelEdge   => sys.error("Needs to be a node edge.")
       case edge: NodeEdge => edge.childWhere
     }
-    val relationId = Cuid.createCuid()
-    (sql"""insert into "#$projectId"."#${path.lastRelation_!.relationTableName}" ("id", "#${path.parentSideOfLastEdge}", "#${path.childSideOfLastEdge}")""" ++
-      sql"""Select '#$relationId',""" ++ pathQueryForLastChild(projectId, path.removeLastEdge) ++ sql"," ++
-      sql""""id" FROM "#$projectId"."#${childWhere.model.name}" where "#${childWhere.field.name}" = ${childWhere.fieldValue}""").asUpdate
+
+    if (relation.hasManifestation) {
+      val nodeEdge        = path.lastEdge_!.asInstanceOf[NodeEdge]
+      val parentModel     = nodeEdge.parent
+      val childModel      = nodeEdge.child
+      val manifestation   = relation.manifestation.get.asInstanceOf[RelationTableManifestation]
+      val columnForParent = if (parentModel.id == relation.modelAId) manifestation.modelAColumn else manifestation.modelBColumn
+      val columnForChild  = if (childModel.id == relation.modelAId) manifestation.modelAColumn else manifestation.modelBColumn
+
+      (sql"""insert into "#$projectId"."#${path.lastRelation_!.relationTableName}" ("#$columnForParent", "#$columnForChild")""" ++
+        sql"""Select """ ++ pathQueryForLastChild(projectId, path.removeLastEdge) ++ sql"," ++
+        sql""""id" FROM "#$projectId"."#${childWhere.model.dbName}" where "#${childWhere.field.name}" = ${childWhere.fieldValue}""").asUpdate
+    } else {
+      val relationId = Cuid.createCuid()
+      (sql"""insert into "#$projectId"."#${path.lastRelation_!.relationTableName}" ("id", "#${path.parentSideOfLastEdge}", "#${path.childSideOfLastEdge}")""" ++
+        sql"""Select '#$relationId',""" ++ pathQueryForLastChild(projectId, path.removeLastEdge) ++ sql"," ++
+        sql""""id" FROM "#$projectId"."#${childWhere.model.name}" where "#${childWhere.field.name}" = ${childWhere.fieldValue}""").asUpdate
+    }
 
 //    (sql"""update "#$projectId".todo""" ++
 //      sql"""set list_id = subquery.id""" ++
