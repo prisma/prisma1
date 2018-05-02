@@ -100,6 +100,7 @@ Here is an example that performs three tasks after a deployment:
 1. Invoke code generation as specified in `.graphqlconfig.yml`
 
 ```yml
+# in database/prisma.yml
 hooks:
   post-deploy:
     - echo "Deployment finished"
