@@ -100,8 +100,8 @@ case class NestedCreateDataItem(create: CreateDataItem, nestedCreateRelation: Ne
   override def replaces = Vector(create, nestedCreateRelation)
 }
 
-case class NestedCreateDataItemInterpreterForInlineRelations(mutaction: NestedCreateDataItem) extends DatabaseMutactionInterpreter {
-  import scala.concurrent.ExecutionContext.Implicits.global
+case class NestedCreateDataItemInterpreterForInlineRelations(mutaction: NestedCreateDataItem)(implicit val ec: ExecutionContext)
+    extends DatabaseMutactionInterpreter {
 
   val project  = mutaction.create.project
   val path     = mutaction.create.path

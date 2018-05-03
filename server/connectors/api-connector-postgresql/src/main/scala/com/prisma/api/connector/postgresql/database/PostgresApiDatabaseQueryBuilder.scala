@@ -12,7 +12,7 @@ import slick.jdbc.PostgresProfile.api._
 import slick.jdbc.{SQLActionBuilder, _}
 import slick.sql.SqlStreamingAction
 
-import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.ExecutionContext
 
 object PostgresApiDatabaseQueryBuilder {
   import JdbcExtensions._
@@ -60,7 +60,7 @@ object PostgresApiDatabaseQueryBuilder {
       model: Model,
       args: Option[QueryArguments],
       overrideMaxNodeCount: Option[Int] = None
-  ): DBIOAction[ResolverResult[PrismaNode], NoStream, Effect] = {
+  )(implicit ec: ExecutionContext): DBIOAction[ResolverResult[PrismaNode], NoStream, Effect] = {
 
     val tableName                                        = model.dbName
     val (conditionCommand, orderByCommand, limitCommand) = extractQueryArgs(projectId, tableName, args, None, overrideMaxNodeCount = overrideMaxNodeCount)
@@ -78,7 +78,7 @@ object PostgresApiDatabaseQueryBuilder {
       relationId: String,
       args: Option[QueryArguments],
       overrideMaxNodeCount: Option[Int] = None
-  ): DBIOAction[ResolverResult[RelationNode], NoStream, Effect] = {
+  )(implicit ec: ExecutionContext): DBIOAction[ResolverResult[RelationNode], NoStream, Effect] = {
 
     val tableName                                        = relationId
     val (conditionCommand, orderByCommand, limitCommand) = extractQueryArgs(projectId, tableName, args, None, overrideMaxNodeCount = overrideMaxNodeCount)
@@ -91,11 +91,8 @@ object PostgresApiDatabaseQueryBuilder {
     query.as[RelationNode].map(args.get.resultTransform)
   }
 
-  def selectAllFromListTable(projectId: String,
-                             model: Model,
-                             field: Field,
-                             args: Option[QueryArguments],
-                             overrideMaxNodeCount: Option[Int] = None): DBIOAction[ResolverResult[ScalarListValues], NoStream, Effect] = {
+  def selectAllFromListTable(projectId: String, model: Model, field: Field, args: Option[QueryArguments], overrideMaxNodeCount: Option[Int] = None)(
+      implicit ec: ExecutionContext): DBIOAction[ResolverResult[ScalarListValues], NoStream, Effect] = {
 
     val tableName                                        = s"${model.name}_${field.name}"
     val (conditionCommand, orderByCommand, limitCommand) = extractQueryArgs(projectId, tableName, args, None, overrideMaxNodeCount = overrideMaxNodeCount, true)
@@ -117,7 +114,8 @@ object PostgresApiDatabaseQueryBuilder {
     }
   }
 
-  def countAllFromTable(project: Project, table: String, whereFilter: Option[DataItemFilterCollection]): DBIOAction[Int, NoStream, Effect] = {
+  def countAllFromTable(project: Project, table: String, whereFilter: Option[DataItemFilterCollection])(
+      implicit ec: ExecutionContext): DBIOAction[Int, NoStream, Effect] = {
     val query = sql"""select count(*) from "#${project.id}"."#$table"""" ++ whereFilterAppendix(project.id, table, whereFilter)
     query.as[Int].map(_.head)
   }
@@ -141,10 +139,8 @@ object PostgresApiDatabaseQueryBuilder {
       result
     }
 
-  def selectFromScalarList(projectId: String,
-                           modelName: String,
-                           field: Field,
-                           nodeIds: Vector[IdGCValue]): DBIOAction[Vector[ScalarListValues], NoStream, Effect] = {
+  def selectFromScalarList(projectId: String, modelName: String, field: Field, nodeIds: Vector[IdGCValue])(
+      implicit ec: ExecutionContext): DBIOAction[Vector[ScalarListValues], NoStream, Effect] = {
     val query = sql"""select "nodeId", "position", "value" from "#$projectId"."#${modelName}_#${field.name}" where "nodeId" in (""" ++ combineByComma(
       nodeIds.map(v => sql"$v")) ++ sql")"
 
@@ -158,10 +154,8 @@ object PostgresApiDatabaseQueryBuilder {
     }
   }
 
-  def batchSelectAllFromRelatedModel(project: Project,
-                                     fromField: Field,
-                                     fromModelIds: Vector[IdGCValue],
-                                     args: Option[QueryArguments]): DBIOAction[Vector[ResolverResult[PrismaNodeWithParent]], NoStream, Effect] = {
+  def batchSelectAllFromRelatedModel(project: Project, fromField: Field, fromModelIds: Vector[IdGCValue], args: Option[QueryArguments])(
+      implicit ec: ExecutionContext): DBIOAction[Vector[ResolverResult[PrismaNodeWithParent]], NoStream, Effect] = {
 
     val relatedModel         = fromField.relatedModel(project.schema).get
     val fieldTable           = fromField.relatedModel(project.schema).get.name

@@ -2,7 +2,9 @@ package com.prisma.api.connector.postgresql.impl
 
 import com.prisma.api.connector.NestedDisconnectRelation
 
-case class NestedDisconnectRelationInterpreter(mutaction: NestedDisconnectRelation) extends NestedRelationInterpreterBase {
+import scala.concurrent.ExecutionContext
+
+case class NestedDisconnectRelationInterpreter(mutaction: NestedDisconnectRelation)(implicit val ec: ExecutionContext) extends NestedRelationInterpreterBase {
   override def path        = mutaction.path
   override def project     = mutaction.project
   override def topIsCreate = mutaction.topIsCreate

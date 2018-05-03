@@ -4,8 +4,9 @@ import com.prisma.api.connector.{DatabaseMutactionResult, NestedConnectRelation}
 import slick.dbio.{DBIOAction, Effect, NoStream}
 import slick.sql.{SqlAction, SqlStreamingAction}
 
-case class NestedConnectRelationInterpreter(mutaction: NestedConnectRelation) extends NestedRelationInterpreterBase {
-  import scala.concurrent.ExecutionContext.Implicits.global // FIXME: all methods should take implicit ECs
+import scala.concurrent.ExecutionContext
+
+case class NestedConnectRelationInterpreter(mutaction: NestedConnectRelation)(implicit val ec: ExecutionContext) extends NestedRelationInterpreterBase {
 
   override def path        = mutaction.path
   override def project     = mutaction.project

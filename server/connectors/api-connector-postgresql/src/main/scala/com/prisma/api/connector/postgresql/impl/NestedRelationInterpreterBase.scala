@@ -9,8 +9,6 @@ import org.postgresql.util.PSQLException
 import slick.dbio.{DBIOAction, Effect, NoStream}
 
 trait NestedRelationInterpreterBase extends DatabaseMutactionInterpreter {
-  import scala.concurrent.ExecutionContext.Implicits.global // FIXME: all methods should take implicit ECs
-
   def path: Path
   def project: Project
   def topIsCreate: Boolean

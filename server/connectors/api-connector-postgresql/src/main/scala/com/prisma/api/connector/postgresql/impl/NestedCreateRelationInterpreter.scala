@@ -4,7 +4,9 @@ import com.prisma.api.connector.{DatabaseMutactionResult, NestedCreateRelation}
 import slick.dbio.{DBIOAction, Effect, NoStream}
 import slick.sql.{SqlAction, SqlStreamingAction}
 
-case class NestedCreateRelationInterpreter(mutaction: NestedCreateRelation) extends NestedRelationInterpreterBase {
+import scala.concurrent.ExecutionContext
+
+case class NestedCreateRelationInterpreter(mutaction: NestedCreateRelation)(implicit val ec: ExecutionContext) extends NestedRelationInterpreterBase {
   override def path        = mutaction.path
   override def project     = mutaction.project
   override def topIsCreate = mutaction.topIsCreate
