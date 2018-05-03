@@ -26,6 +26,7 @@ case class PassivePostgresApiConnector(config: DatabaseConfig)(implicit ec: Exec
 
   override def shutdown() = {
     for {
+      _ <- activeConnector.shutdown()
       _ <- databases.master.shutdown
       _ <- databases.readOnly.shutdown
     } yield ()
@@ -124,9 +125,9 @@ case class NestedCreateDataItemInterpreterForInlineRelations(mutaction: NestedCr
     val idSubQuery      = PostGresApiDatabaseMutationBuilder.pathQueryForLastParent(project.id, path)
     val lastParentModel = path.removeLastEdge.lastModel
     for {
-      ids <- (sql"""select "id" from #${project.id}.#${lastParentModel.dbName} where id in (""" ++ idSubQuery ++ sql")").as[String]
-      _   <- createDataItemAndLinkToParent2(ids.head)
-    } yield ()
+      ids    <- (sql"""select "id" from #${project.id}.#${lastParentModel.dbName} where id in (""" ++ idSubQuery ++ sql")").as[String]
+      result <- createDataItemAndLinkToParent2(ids.head)
+    } yield result
   }
 
   def createDataItemAndLinkToParent2(parentId: String) = {
