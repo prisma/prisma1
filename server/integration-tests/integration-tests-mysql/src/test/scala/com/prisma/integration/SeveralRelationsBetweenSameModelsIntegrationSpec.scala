@@ -207,4 +207,134 @@ class SeveralRelationsBetweenSameModelsIntegrationSpec extends FlatSpec with Mat
     unchangedRelationContent.toString should be("""{"data":{"as":[{"title":"A1","b1":{"title":"B1"}}]}}""")
   }
 
+  "Going from two named relations between the same models to one unnamed one" should "error due to ambiguity" in {
+
+    val schema =
+      """type A {
+        |  id: ID! @unique
+        |  b: B @relation(name: "AB1")
+        |  b2: B @relation(name: "AB2")
+        | }
+        |
+        |type B {
+        |  id: ID! @unique
+        |  title: String
+        |  a: A @relation(name: "AB1")
+        |  a2: A @relation(name: "AB2")
+        | }"""
+
+    val (project, _) = setupProject(schema)
+
+    project.schema.relations.size should be(2)
+    project.schema.relations.head.name should be("""AB1""")
+    project.schema.relations.last.name should be("""AB2""")
+
+    val schema1 =
+      """type A {
+        |  id: ID! @unique
+        |  b: B
+        |}
+        |
+        |type B {
+        |  id: ID! @unique
+        |  title: String
+        |}"""
+
+    deployServer.deploySchemaThatMustError(project, schema1)
+  }
+
+  "Going from two named relations between the same models to one named one without a backrelation" should "work" in {
+
+    val schema =
+      """type A {
+        |  id: ID! @unique
+        |  title: String
+        |  b: B @relation(name: "AB1")
+        |  b2: B @relation(name: "AB2")
+        | }
+        |
+        |type B {
+        |  id: ID! @unique
+        |  title: String
+        |  a: A @relation(name: "AB1")
+        |  a2: A @relation(name: "AB2")
+        | }"""
+
+    val (project, _) = setupProject(schema)
+
+    project.schema.relations.size should be(2)
+    project.schema.relations.head.name should be("""AB1""")
+    project.schema.relations.last.name should be("""AB2""")
+
+    apiServer.query("""mutation{createA(data:{title:"A1" b:{create:{title: "B1"}}}){id}}""", project)
+
+    val schema1 =
+      """type A {
+        |  id: ID! @unique
+        |  title: String
+        |  b: B @relation(name: "AB1")
+        |}
+        |
+        |type B {
+        |  id: ID! @unique
+        |  title: String
+        |}"""
+
+    val updatedProject = deployServer.deploySchema(project, schema1)
+
+    updatedProject.schema.relations.size should be(1)
+    updatedProject.schema.relations.head.name should be("""AB1""")
+
+    val unchangedRelationContent = apiServer.query("""{as{title, b{title}}}""", updatedProject)
+
+    unchangedRelationContent.toString should be("""{"data":{"as":[{"title":"A1","b":{"title":"B1"}}]}}""")
+  }
+
+  "Going from two named relations between the same models to one named one without a backrelation" should "work even when there is a rename" in {
+
+    val schema =
+      """type A {
+          |  id: ID! @unique
+          |  title: String
+          |  b: B @relation(name: "AB1")
+          |  b2: B @relation(name: "AB2")
+          | }
+          |
+          |type B {
+          |  id: ID! @unique
+          |  title: String
+          |  a: A @relation(name: "AB1")
+          |  a2: A @relation(name: "AB2")
+          | }"""
+
+    val (project, _) = setupProject(schema)
+
+    project.schema.relations.size should be(2)
+    project.schema.relations.head.name should be("""AB1""")
+    project.schema.relations.last.name should be("""AB2""")
+
+    apiServer.query("""mutation{createA(data:{title:"A1" b:{create:{title: "B1"}}}){id}}""", project)
+
+    val schema1 =
+      """type A {
+          |  id: ID! @unique
+          |  title: String
+          |  b: B @relation(name: "AB2" oldName: "AB1")
+          |}
+          |
+          |type B {
+          |  id: ID! @unique
+          |  title: String
+          |}"""
+
+    val updatedProject = deployServer.deploySchema(project, schema1)
+
+    updatedProject.schema.relations.size should be(1)
+    updatedProject.schema.relations.head.name should be("""AB2""")
+
+    val unchangedRelationContent = apiServer.query("""{as{title, b{title}}}""", updatedProject)
+
+    unchangedRelationContent.toString should be("""{"data":{"as":[{"title":"A1","b":{"title":"B1"}}]}}""")
+  }
+
 }

@@ -38,7 +38,7 @@ case class DeployTestServer()(implicit dependencies: DeployDependencies) extends
       requestId: String = "CombinedTestDatabase.requestId"
   ): JsValue = {
     val result = executeQueryWithAuthentication(
-      query = query.stripMargin,
+      query = query,
       variables = variables,
       requestId = requestId
     )
@@ -91,12 +91,13 @@ case class DeployTestServer()(implicit dependencies: DeployDependencies) extends
     val userContext    = SystemUserContext(None)
     val schema         = schemaBuilder(userContext)
     val renderedSchema = SchemaRenderer.renderSchema(schema)
-    val errorHandler   = ErrorHandler(requestId, HttpRequest(), query, variables.toString(), dependencies.reporter, errorCodeExtractor = errorExtractor)
+    val errorHandler =
+      ErrorHandler(requestId, HttpRequest(), query.stripMargin, variables.toString(), dependencies.reporter, errorCodeExtractor = errorExtractor)
 
     if (printSchema) println(renderedSchema)
     if (writeSchemaToFile) writeSchemaIntoFile(renderedSchema)
 
-    val queryAst = QueryParser.parse(query).get
+    val queryAst = QueryParser.parse(query.stripMargin).get
     val context  = userContext
     val result = Await.result(
       Executor
@@ -149,6 +150,11 @@ case class DeployTestServer()(implicit dependencies: DeployDependencies) extends
 
   def deploySchemaThatMustWarn(project: Project, schema: String, force: Boolean = false): JsValue = {
     deployHelper(project.id, schema, Vector.empty, shouldFail = false, shouldWarn = true, force = force)
+  }
+
+  def deploySchemaThatMustWarnAndReturnProject(project: Project, schema: String, force: Boolean = false): Project = {
+    deployHelper(project.id, schema, Vector.empty, shouldFail = false, shouldWarn = true, force = force)
+    dependencies.projectPersistence.load(project.id).await.get
   }
 
   def deploySchemaThatMustFailAndWarn(project: Project, schema: String, force: Boolean = false): JsValue = {

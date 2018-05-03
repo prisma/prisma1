@@ -174,8 +174,18 @@ case class MigrationStepsInferrerImpl(previousSchema: Schema, nextSchema: Schema
       nextModelAName   = renames.getNextModelName(previousRelation.modelAId)
       nextModelBName   = renames.getNextModelName(previousRelation.modelBId)
       nextRelation <- nextSchema
-                       .getRelationByName(previousRelation.name)
-                       .orElse(UnambiguousRelation.unambiguousRelationThatConnectsModels(nextSchema, nextModelAName, nextModelBName))
+                       .getRelationByName(renames.getNextRelationName(previousRelation.name))
+                       .orElse {
+                         val previousWasAmbiguous = previousSchema.getRelationsThatConnectModels(previousRelation.modelAId, previousRelation.modelBId).size > 1
+                         val nextIsAmbiguous      = nextSchema.getRelationsThatConnectModels(nextModelAName, nextModelBName).size > 1
+
+                         (previousWasAmbiguous, nextIsAmbiguous) match {
+                           case (true, true)   => None
+                           case (true, false)  => None
+                           case (false, true)  => None
+                           case (false, false) => nextSchema.getRelationsThatConnectModels(nextModelAName, nextModelBName).headOption
+                         }
+                       }
     } yield {
       UpdateRelation(
         name = previousRelation.name,
@@ -186,6 +196,7 @@ case class MigrationStepsInferrerImpl(previousSchema: Schema, nextSchema: Schema
         modelBOnDelete = diff(previousRelation.modelBOnDelete, nextRelation.modelBOnDelete)
       )
     }
+
     updates.filter(isAnyOptionSet)
   }
 
@@ -238,7 +249,10 @@ case class MigrationStepsInferrerImpl(previousSchema: Schema, nextSchema: Schema
 
       val refersToModelsExactlyRight = previousRelation.modelAId == previousModelAId && previousRelation.modelBId == previousModelBId
       val refersToModelsSwitched     = previousRelation.modelAId == previousModelBId && previousRelation.modelBId == previousModelAId
-      val relationNameMatches = previousRelation.name == previousGeneratedRelationName || previousRelation.name == nextRelation.name || previousRelation.name == previousRelationName(
+
+      val nameIsUnchanged = previousRelation.name == nextRelation.name && !renames.relations.exists(m => m.next == nextRelation.name && m.previous != m.next)
+
+      val relationNameMatches = previousRelation.name == previousGeneratedRelationName || nameIsUnchanged || previousRelation.name == previousRelationName(
         nextRelation.name)
 
       val previousRelationCountBetweenModels = previousSchema.relations.count(relation => relation.connectsTheModels(previousModelAId, previousModelBId))
@@ -258,9 +272,8 @@ case class MigrationStepsInferrerImpl(previousSchema: Schema, nextSchema: Schema
                               previousRelation: Relation,
                               nextModelName: String => String,
                               nextRelationName: String => String): Boolean = {
-    val previousGeneratedRelationName = generateRelationName(previousRelation.modelAId, previousRelation.modelBId)
-    val previousRelationCountBetweenModels =
-      previousSchema.relations.count(relation => relation.connectsTheModels(previousRelation.modelAId, previousRelation.modelBId))
+    val previousGeneratedRelationName      = generateRelationName(previousRelation.modelAId, previousRelation.modelBId)
+    val previousRelationCountBetweenModels = previousSchema.relations.count(_.connectsTheModels(previousRelation.modelAId, previousRelation.modelBId))
 
     val relationInNextSchema = nextSchema.relations.exists { nextRelation =>
       val nextModelAId              = nextModelName(previousRelation.modelAId)
@@ -269,8 +282,13 @@ case class MigrationStepsInferrerImpl(previousSchema: Schema, nextSchema: Schema
 
       val refersToModelsExactlyRight = nextRelation.modelAId == nextModelAId && nextRelation.modelBId == nextModelBId
       val refersToModelsSwitched     = nextRelation.modelAId == nextModelBId && nextRelation.modelBId == nextModelAId
-      val relationNameMatches = nextRelation.name == nextGeneratedRelationName || nextRelation.name == previousRelation.name || nextRelation.name == nextRelationName(
-        previousRelation.name)
+
+      val nameIsUnchanged = nextRelation.name == previousRelation.name && !renames.relations.exists(m => m.next == nextRelation.name && m.previous != m.next)
+
+      val nameIsChangedToNextName = nextRelation.name == nextRelationName(previousRelation.name) && renames.relations.exists(p =>
+        p.previous == previousRelation.name && p.next != previousRelation.name)
+
+      val relationNameMatches = nextRelation.name == nextGeneratedRelationName || nameIsUnchanged || nameIsChangedToNextName
 
       val nextRelationCountBetweenModels = nextSchema.relations.count(relation => relation.connectsTheModels(nextModelAId, nextModelBId))
 

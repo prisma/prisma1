@@ -76,15 +76,16 @@ case class DestructiveChanges(deployConnector: DeployConnector, project: Project
   }
 
   private def updateFieldValidation(x: UpdateField) = {
-    val model                               = previousSchema.getModelByName_!(x.model)
-    val oldField                            = model.fields.find(_.name == x.name).get
-    val cardinalityChanges                  = x.isList.isDefined
-    val typeChanges                         = x.typeName.isDefined
-    val goesFromRelationToScalarOrViceVersa = x.relation.isDefined
+    val model                    = previousSchema.getModelByName_!(x.model)
+    val oldField                 = model.fields.find(_.name == x.name).get
+    val cardinalityChanges       = x.isList.isDefined
+    val typeChanges              = x.typeName.isDefined
+    val goesFromScalarToRelation = oldField.isScalar && x.relation.isDefined
+    val goesFromRelationToScalar = oldField.isRelation && x.relation.isDefined && x.relation.get.isEmpty
 
     val becomesRequired = x.isRequired.contains(true)
 
-    def warnings: Future[Vector[SchemaWarning]] = cardinalityChanges || typeChanges || goesFromRelationToScalarOrViceVersa match {
+    def warnings: Future[Vector[SchemaWarning]] = cardinalityChanges || typeChanges || goesFromRelationToScalar || goesFromScalarToRelation match {
       case true =>
         clientDataResolver.existsByModel(model.name).map {
           case true  => Vector(SchemaWarnings.dataLossField(x.name, x.name))
