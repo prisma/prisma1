@@ -5,13 +5,13 @@ import akka.stream.ActorMaterializer
 import com.prisma.api.ApiDependencies
 import com.prisma.api.connector.{CreateDataItemResult, DataResolver, NodeSelector, Path}
 import com.prisma.api.mutactions.{DatabaseMutactions, ServerSideSubscriptions, SubscriptionEvents}
+import com.prisma.gc_values.IdGCValue
 import com.prisma.shared.models.IdType.Id
 import com.prisma.shared.models._
 import com.prisma.util.coolArgs.CoolArgs
 import cool.graph.cuid.Cuid
 import sangria.schema
 
-import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
 case class Create(
@@ -24,6 +24,8 @@ case class Create(
 
   implicit val system: ActorSystem             = apiDependencies.system
   implicit val materializer: ActorMaterializer = apiDependencies.materializer
+
+  import system.dispatcher
 
   val id: Id            = Cuid.createCuid()
   val requestId: String = "" //                        = dataResolver.requestContext.map(_.requestId).getOrElse("")
@@ -47,8 +49,9 @@ case class Create(
 
   override def getReturnValue(results: MutactionResults): Future[ReturnValueResult] = {
     val createdItem = results.databaseResults.collectFirst { case x: CreateDataItemResult => x }
+    val idGcValue   = IdGCValue(id)
     for {
-      returnValue <- returnValueByUnique(NodeSelector.forIdGCValue(model, createdItem.get.id))
+      returnValue <- returnValueByUnique(NodeSelector.forIdGCValue(model, createdItem.map(_.id).getOrElse(idGcValue)))
       prismaNode  = returnValue.asInstanceOf[ReturnValue].prismaNode
     } yield {
       ReturnValue(prismaNode)
