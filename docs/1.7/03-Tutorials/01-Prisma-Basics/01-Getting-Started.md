@@ -113,11 +113,11 @@ Because your data model contains the `User` type, the Prisma API now allows for 
 
 To actually use these operations, you need a way to [send requests to your service's API](!alias-ohm2ouceuj). Since that API is exposed via HTTP, you could use tools like [`curl`](https://en.wikipedia.org/wiki/CURL) or [Postman](https://www.getpostman.com/) to interact with it. However, GraphQL actually has with much nicer tooling for that purpose: [GraphQL Playground](https://github.com/graphcool/graphql-playground), an interactive GraphQL IDE.
 
-The GraphQL Playground is based on [`graphql-config`](https://github.com/graphcool/graphql-config), so before opening it you need to create a `.graphqlconfig`-file where you specify your Prisma project:
+The GraphQL Playground is based on [`graphql-config`](https://github.com/graphcool/graphql-config), so before opening it you need to create a `.graphqlconfig.yml`-file where you specify your Prisma project:
 
 <Instruction>
 
-Create a new file inside the `hello-world` directory and call it `.graphqlconfig`. Then add the following contents to it:
+Create a new file inside the `hello-world` directory and call it `.graphqlconfig.yml`. Then add the following contents to it:
 
 ```yml
 projects:
