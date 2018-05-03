@@ -60,17 +60,22 @@ case class CreateDataItemInterpreter(mutaction: CreateDataItem, includeRelayRow:
   val project = mutaction.project
   val path    = mutaction.path
 
-  override val action = {
+  import scala.concurrent.ExecutionContext.Implicits.global
+
+  override def newAction = {
+    val unitAction    = DBIO.successful(UnitDatabaseMutactionResult)
     val createNonList = PostGresApiDatabaseMutationBuilder.createDataItem(project.id, path, mutaction.nonListArgs)
-    val listAction    = PostGresApiDatabaseMutationBuilder.setScalarList(project.id, path, mutaction.listArgs)
+    val listAction    = PostGresApiDatabaseMutationBuilder.setScalarList(project.id, path, mutaction.listArgs).andThen(unitAction)
 
     if (includeRelayRow) {
-      val createRelayRow = PostGresApiDatabaseMutationBuilder.createRelayRow(project.id, path)
-      DBIO.seq(createNonList, createRelayRow, listAction)
+      val createRelayRow = PostGresApiDatabaseMutationBuilder.createRelayRow(project.id, path).andThen(unitAction)
+      DBIO.sequence(Vector(createNonList, createRelayRow, listAction)).map(_.head)
     } else {
-      DBIO.seq(createNonList, listAction)
+      DBIO.sequence(Vector(createNonList, listAction)).map(_.head)
     }
   }
+
+  override def action = ???
 
   override val errorMapper = {
     case e: PSQLException if e.getSQLState == "23505" && GetFieldFromSQLUniqueException.getFieldOption(mutaction.nonListArgs.keys, e).isDefined =>

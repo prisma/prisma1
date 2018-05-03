@@ -145,6 +145,7 @@ case class Model(
   lazy val relationNonListFields: List[Field] = relationFields.filter(!_.isList)
   lazy val relations: List[Relation]          = fields.flatMap(_.relation).distinct
   lazy val nonListFields                      = fields.filter(!_.isList)
+  lazy val idField                            = getFieldByName_!("id")
 
   lazy val cascadingRelationFields: List[Field] = relationFields.filter(field => field.relation.get.sideOfModelCascades(this))
 
@@ -161,7 +162,7 @@ case class Model(
     getFieldByName(name).getOrElse(sys.error(s"field $name is not part of the model ${this.name}")) // .getOrElse(throw FieldNotInModel(fieldName = name, modelName = this.name))
   def getFieldByName(name: String): Option[Field] = fields.find(_.name == name)
 
-  def hasVisibleIdField: Boolean = getFieldByName_!("id").isVisible
+  def hasVisibleIdField: Boolean = idField.isVisible
 }
 
 object RelationSide extends Enumeration {

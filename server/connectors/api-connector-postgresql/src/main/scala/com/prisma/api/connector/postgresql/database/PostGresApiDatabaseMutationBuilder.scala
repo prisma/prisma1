@@ -20,9 +20,9 @@ object PostGresApiDatabaseMutationBuilder {
 
   // region CREATE
 
-  def createDataItem(projectId: String, path: Path, args: PrismaArgs): SimpleDBIO[Unit] = {
+  def createDataItem(projectId: String, path: Path, args: PrismaArgs): DBIO[CreateDataItemResult] = {
 
-    SimpleDBIO[Unit] { x =>
+    SimpleDBIO[CreateDataItemResult] { x =>
       val argsAsRoot   = args.raw.asRoot
       val fields       = path.lastModel.fields.filter(field => argsAsRoot.hasArgFor(field.name))
       val columns      = fields.map(_.dbName)
@@ -30,7 +30,7 @@ object PostGresApiDatabaseMutationBuilder {
       val placeHolders = columns.map(_ => "?").mkString(",")
 
       val query                         = s"""INSERT INTO "$projectId"."${path.lastModel.dbName}" ($escapedKeys) VALUES ($placeHolders)"""
-      val itemInsert: PreparedStatement = x.connection.prepareStatement(query)
+      val itemInsert: PreparedStatement = x.connection.prepareStatement(query, Statement.RETURN_GENERATED_KEYS)
 
       fields.map(_.name).zipWithIndex.foreach {
         case (column, index) =>
@@ -42,6 +42,12 @@ object PostGresApiDatabaseMutationBuilder {
           }
       }
       itemInsert.execute()
+
+      val generatedKeys = itemInsert.getGeneratedKeys()
+      generatedKeys.next()
+      // fixme: the name of the id field might be different?
+      val field = path.lastModel.getFieldByName_!("id")
+      CreateDataItemResult(generatedKeys.getGcValue(field.dbName, field.typeIdentifier))
     }
   }
 

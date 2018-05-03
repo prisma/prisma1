@@ -14,14 +14,13 @@ case class DatabaseMutactionExecutorImpl(clientDb: Database)(implicit ec: Execut
     val combinedErrorMapper = interpreters.map(_.errorMapper).reduceLeft(_ orElse _)
 
     val singleAction = runTransactionally match {
-      case true  => DBIO.seq(interpreters.map(_.action): _*).transactionally
-      case false => DBIO.seq(interpreters.map(_.action): _*)
+      case true  => DBIO.sequence(interpreters.map(_.newAction)).transactionally
+      case false => DBIO.sequence(interpreters.map(_.newAction))
     }
 
     clientDb
       .run(singleAction.withTransactionIsolation(TransactionIsolation.ReadCommitted))
       .recover { case error => throw combinedErrorMapper.lift(error).getOrElse(error) }
-      .map(_ => Vector.empty)
   }
 
   def interpreterFor(mutaction: DatabaseMutaction): DatabaseMutactionInterpreter = mutaction match {
