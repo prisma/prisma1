@@ -26,6 +26,7 @@ case class PassivePostgresApiConnector(config: DatabaseConfig)(implicit ec: Exec
 
   override def shutdown() = {
     for {
+      _ <- activeConnector.shutdown
       _ <- databases.master.shutdown
       _ <- databases.readOnly.shutdown
     } yield ()
