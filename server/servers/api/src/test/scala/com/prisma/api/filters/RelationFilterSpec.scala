@@ -175,7 +175,7 @@ class RelationFilterSpec extends FlatSpec with Matchers with ApiSpecBase {
                 |    posts_some: {
                 |      popularity_gte: 5
                 |    }
-                |    name_contains: "Blog 1"
+                |    name_contains: "blog 1"
                 |  }
                 |  comments_none: {
                 |    likes_gte: 5
@@ -197,7 +197,7 @@ class RelationFilterSpec extends FlatSpec with Matchers with ApiSpecBase {
                 |    posts_some: {
                 |      popularity_gte: 5
                 |    }
-                |    name_contains: "Blog 1"
+                |    name_contains: "blog 1"
                 |  }
                 |  comments_none: {
                 |    likes_gte: 500
