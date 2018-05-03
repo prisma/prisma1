@@ -1,5 +1,6 @@
 package com.prisma.api.mutations
 
+import com.prisma.IgnoreActive
 import com.prisma.api.ApiSpecBase
 import com.prisma.deploy.connector.postgresql.PostgresDeployConnector
 import com.prisma.shared.schema_dsl.SchemaDsl
@@ -20,37 +21,37 @@ trait PassiveConnectorSpec extends FlatSpec with Matchers with ApiSpecBase {
 class PassiveConnectorSpecForInlineRelations extends PassiveConnectorSpec {
 
   val inlineRelationSchema = s"""
-    |DROP SCHEMA IF EXISTS $projectId CASCADE;
-    |CREATE SCHEMA $projectId;
-    |CREATE TABLE $projectId.list (
-    |  id      varchar PRIMARY KEY  -- implicit primary key constraint
-    |, name    text NOT NULL
-    |);
-    |
+                                |DROP SCHEMA IF EXISTS $projectId CASCADE;
+                                |CREATE SCHEMA $projectId;
+                                |CREATE TABLE $projectId.list (
+                                |  id      varchar PRIMARY KEY  -- implicit primary key constraint
+                                |, name    text NOT NULL
+                                |);
+                                |
     |CREATE TABLE $projectId.todo (
-    |  id       varchar PRIMARY KEY
-    |, title     text NOT NULL
-    |, list_id varchar NOT NULL REFERENCES $projectId.list (id) ON UPDATE CASCADE
-    |);
+                                |  id       varchar PRIMARY KEY
+                                |, title     text NOT NULL
+                                |, list_id varchar NOT NULL REFERENCES $projectId.list (id) ON UPDATE CASCADE
+                                |);
       """.stripMargin
 
   val inlineRelationProject = SchemaDsl.fromString(id = projectId, withReservedFields = false) {
     """
       | type List @model(table: "list"){
-      |   id: String!
+      |   id: ID!
       |   name: String!
       |   todos: [Todo]
       | }
       |
       | type Todo @model(table: "todo"){
-      |   id: String!
+      |   id: ID!
       |   title: String!
       |   list: List @inline(column: "list_id")
       | }
     """.stripMargin
   }
 
-  "A Create Mutation" should "create and return item" in {
+  "A Create Mutation" should "create and return item" taggedAs (IgnoreActive) in {
     executeOnInternalDatabase(inlineRelationSchema)
     val res = server.query(
       s"""mutation {
@@ -63,7 +64,7 @@ class PassiveConnectorSpecForInlineRelations extends PassiveConnectorSpec {
     res.toString should be(s"""{"data":{"createList":{"name":"the list name"}}}""")
   }
 
-  "A Create Mutation" should "created nested items" in {
+  "A Create Mutation" should "created nested items" taggedAs (IgnoreActive) in {
     executeOnInternalDatabase(inlineRelationSchema)
     // TODO: how do we implement this? We would have to reorder in this case?
     val res = server.query(
@@ -80,7 +81,7 @@ class PassiveConnectorSpecForInlineRelations extends PassiveConnectorSpec {
     res.toString should be(s"""{"data":{"createTodo":{"title":"the todo"}}}""")
   }
 
-  "A Create Mutation" should "created nested items 2" in {
+  "A Create Mutation" should "created nested items 2" taggedAs (IgnoreActive) in {
     executeOnInternalDatabase(inlineRelationSchema)
     val res = server.query(
       s"""mutation {
@@ -96,12 +97,12 @@ class PassiveConnectorSpecForInlineRelations extends PassiveConnectorSpec {
     res.toString should be(s"""{"data":{"createList":{"name":"the list"}}}""")
   }
 
-  "the connector" should "support diverging names for models/tables and fields/columns" in {
+  "the connector" should "support diverging names for models/tables and fields/columns" taggedAs (IgnoreActive) in {
     executeOnInternalDatabase(inlineRelationSchema)
     val project = SchemaDsl.fromString(id = projectId, withReservedFields = false) {
       """
         | type List @model(table: "list"){
-        |   id: String!
+        |   id: ID!
         |   theName: String! @field(column: "name")
         | }
       """.stripMargin
@@ -142,20 +143,20 @@ class PassiveConnectorSpecForTableRelations extends FlatSpec with PassiveConnect
   val relationTableProject = SchemaDsl.fromString(id = projectId, withReservedFields = false) {
     """
       | type List @model(table: "list"){
-      |   id: String!
+      |   id: ID!
       |   name: String!
       |   todos: [Todo] @relationTable(table: "list_to_todo", thisColumn: "list_id", otherColumn: "todo_id")
       | }
       |
       | type Todo @model(table: "todo"){
-      |   id: String!
+      |   id: ID!
       |   title: String!
       |   list: List
       | }
     """.stripMargin
   }
 
-  "A Create Mutation" should "create and return item" in {
+  "A Create Mutation" should "create and return item" taggedAs (IgnoreActive) in {
     executeOnInternalDatabase(relationTableSchema)
     val res = server.query(
       s"""mutation {
@@ -168,7 +169,7 @@ class PassiveConnectorSpecForTableRelations extends FlatSpec with PassiveConnect
     res.toString should be(s"""{"data":{"createList":{"name":"the list name"}}}""")
   }
 
-  "A Create Mutation" should "created nested items" in {
+  "A Create Mutation" should "created nested items" taggedAs (IgnoreActive) in {
     executeOnInternalDatabase(relationTableSchema)
     // how do we implement this? We would have to reorder in this case?
     val res = server.query(
@@ -183,5 +184,51 @@ class PassiveConnectorSpecForTableRelations extends FlatSpec with PassiveConnect
       project = relationTableProject
     )
     res.toString should be(s"""{"data":{"createTodo":{"title":"the todo"}}}""")
+  }
+}
+
+class PassiveConnectorSpecForAutoGeneratedIds extends FlatSpec with PassiveConnectorSpec with Matchers with ApiSpecBase {
+  val sqlSchema =
+    s"""
+       |DROP SCHEMA IF EXISTS $projectId CASCADE;
+       |CREATE SCHEMA $projectId;
+       |CREATE TABLE $projectId.list (
+       |  id      SERIAL PRIMARY KEY  -- implicit primary key constraint
+       |, name    text NOT NULL
+       |, foo     text
+       |);
+     """.stripMargin
+
+  val project = SchemaDsl.fromString(id = projectId, withReservedFields = false) {
+    """
+      | type List @model(table: "list"){
+      |   id: Int!
+      |   name: String!
+      |   foo: String
+      | }
+    """.stripMargin
+  }
+
+  "A Create Mutation" should "create and return item" taggedAs (IgnoreActive) in {
+    executeOnInternalDatabase(sqlSchema)
+    val res1 = server.query(
+      s"""mutation {
+         |  createList(data: {
+         |    name: "the list name"
+         |  }){ id, name }
+         |}""".stripMargin,
+      project = project
+    )
+    res1.toString should be(s"""{"data":{"createList":{"id":1,"name":"the list name"}}}""")
+
+    val res2 = server.query(
+      s"""mutation {
+         |  createList(data: {
+         |    name: "the list name"
+         |  }){ id, name }
+         |}""".stripMargin,
+      project = project
+    )
+    res2.toString should be(s"""{"data":{"createList":{"id":2,"name":"the list name"}}}""")
   }
 }
