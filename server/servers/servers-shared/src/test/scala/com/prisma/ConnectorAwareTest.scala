@@ -19,7 +19,7 @@ trait ConnectorAwareTest extends SuiteMixin { self: Suite =>
     val ignoreActiveOrPassive = if (connector.active) IgnoreActive else IgnorePassive
     val ignoreConnectorTypes = {
       val ignoreConnectorTags = Set(IgnorePostgres, IgnoreMySql)
-      ignoreConnectorTags.filterNot(_.name.endsWith(connector.connector))
+      ignoreConnectorTags.filter(_.name.endsWith(connector.connector))
     }
     val tagNamesToIgnore = (Set(ignoreActiveOrPassive) ++ ignoreConnectorTypes).map(_.name)
     superTags.mapValues { value =>
