@@ -44,7 +44,7 @@ case class PassivePostgresApiConnector(config: DatabaseConfig)(implicit ec: Exec
 case class PassiveDatabaseMutactionExecutorImpl(activeExecutor: DatabaseMutactionExecutorImpl)(implicit ec: ExecutionContext)
     extends DatabaseMutactionExecutor {
 
-  override def execute(mutactions: Vector[DatabaseMutaction], runTransactionally: Boolean): Future[Unit] = {
+  override def execute(mutactions: Vector[DatabaseMutaction], runTransactionally: Boolean): Future[Vector[DatabaseMutactionResult]] = {
     val transformed         = transform(mutactions)
     val interpreters        = transformed.map(interpreterFor)
     val combinedErrorMapper = interpreters.map(_.errorMapper).reduceLeft(_ orElse _)
@@ -57,7 +57,7 @@ case class PassiveDatabaseMutactionExecutorImpl(activeExecutor: DatabaseMutactio
     activeExecutor.clientDb
       .run(singleAction.withTransactionIsolation(TransactionIsolation.ReadCommitted))
       .recover { case error => throw combinedErrorMapper.lift(error).getOrElse(error) }
-      .map(_ => ())
+      .map(_ => Vector.empty)
   }
 
   def transform(mutactions: Vector[DatabaseMutaction]): Vector[PassiveDatabaseMutaction] = {

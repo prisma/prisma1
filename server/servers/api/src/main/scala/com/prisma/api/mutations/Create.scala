@@ -45,7 +45,7 @@ case class Create(
     }
   }
 
-  override def getReturnValue: Future[ReturnValueResult] = {
+  override def getReturnValue(results: MutactionResults): Future[ReturnValueResult] = {
     for {
       returnValue <- returnValueByUnique(NodeSelector.forId(model, id))
       prismaNode  = returnValue.asInstanceOf[ReturnValue].prismaNode

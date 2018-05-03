@@ -34,7 +34,7 @@ case class Upsert(
   val updatePath = Path.empty(outerWhere)
   val createPath = Path.empty(NodeSelector.forId(model, Cuid.createCuid()))
 
-  override def prepareMutactions(): Future[PreparedMutactions] = {
+  override def prepareMutactions: Future[PreparedMutactions] = {
     val sqlMutactions          = DatabaseMutactions(project).getMutactionsForUpsert(createPath, updatePath, coolArgs)
     val subscriptionMutactions = SubscriptionEvents.extractFromSqlMutactions(project, mutationId, sqlMutactions)
     val sssActions             = ServerSideSubscriptions.extractFromMutactions(project, sqlMutactions, requestId = "")
@@ -47,7 +47,7 @@ case class Upsert(
     }
   }
 
-  override def getReturnValue: Future[ReturnValueResult] = {
+  override def getReturnValue(results: MutactionResults): Future[ReturnValueResult] = {
     val createItemFuture = dataResolver.resolveByUnique(createPath.lastCreateWhere_!)
     val upsertItemFuture = dataResolver.resolveByUnique(updatedWhere)
 

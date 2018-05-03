@@ -32,6 +32,6 @@ case class DeleteMany(
     }
   }
 
-  override def getReturnValue: Future[BatchPayload] = count.map(value => BatchPayload(count = value))
+  override def getReturnValue(results: MutactionResults): Future[BatchPayload] = count.map(value => BatchPayload(count = value))
 
 }
