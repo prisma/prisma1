@@ -152,8 +152,8 @@ case class SchemaSyntaxValidator(schema: String, directiveRequirements: Seq[Dire
       case fieldAndType if !fieldAndType.fieldDef.hasRelationDirective =>
         Left(SchemaErrors.missingRelationDirective(fieldAndType))
 
-      case fieldAndType if !isSelfRelation(fieldAndType) && relationCount(fieldAndType) != 2 =>
-        Left(SchemaErrors.relationNameMustAppear2Times(fieldAndType))
+//      case fieldAndType if !isSelfRelation(fieldAndType) && relationCount(fieldAndType) != 2 =>
+//        Left(SchemaErrors.relationNameMustAppear2Times(fieldAndType))
 
       case fieldAndType if isSelfRelation(fieldAndType) && relationCount(fieldAndType) != 1 && relationCount(fieldAndType) != 2 =>
         Left(SchemaErrors.selfRelationMustAppearOneOrTwoTimes(fieldAndType))
@@ -297,7 +297,7 @@ case class SchemaSyntaxValidator(schema: String, directiveRequirements: Seq[Dire
     // TODO: this probably only works if a relation directive appears twice actually in case of ambiguous relations
 
     isSelfRelation(fieldAndType) match {
-      case true  => (fieldsOnTypeB).count(_.relationName == fieldAndType.fieldDef.relationName)
+      case true  => fieldsOnTypeB.count(_.relationName == fieldAndType.fieldDef.relationName)
       case false => (fieldsOnTypeA ++ fieldsOnTypeB).count(_.relationName == fieldAndType.fieldDef.relationName)
     }
   }

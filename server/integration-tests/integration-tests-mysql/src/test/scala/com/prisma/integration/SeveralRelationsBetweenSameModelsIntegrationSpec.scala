@@ -337,4 +337,33 @@ class SeveralRelationsBetweenSameModelsIntegrationSpec extends FlatSpec with Mat
     unchangedRelationContent.toString should be("""{"data":{"as":[{"title":"A1","b":{"title":"B1"}}]}}""")
   }
 
+  "Several missing backrelations on the same type" should "work when there are relation directives provided" in {
+
+    val schema =
+      """type TeamMatch {
+        |  key: String! @unique
+        |}
+        |
+        |type Match {
+        |  number: Int @unique
+        |}"""
+
+    val (project, _) = setupProject(schema)
+
+    val schema1 =
+      """type TeamMatch {
+        |  key: String! @unique
+        |}
+        |
+        |type Match {
+        |  number: Int @unique
+        |  teamLeft: TeamMatch @relation(name: "TeamMatchLeft")
+        |  teamRight: TeamMatch @relation(name: "TeamMatchRight")
+        |  winner: TeamMatch @relation(name: "TeamMatchWinner")
+        |}"""
+    val updatedProject = deployServer.deploySchema(project, schema1)
+
+    updatedProject.schema.relations.size should be(3)
+  }
+
 }
