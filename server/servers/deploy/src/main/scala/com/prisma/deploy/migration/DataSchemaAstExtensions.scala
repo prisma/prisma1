@@ -63,6 +63,8 @@ object DataSchemaAstExtensions {
     def field(name: String): Option[FieldDefinition] = objectType.fields.find(_.name == name)
 
     def description: Option[String] = objectType.directiveArgumentAsString("description", "text")
+
+    def tableName: Option[String] = objectType.directiveArgumentAsString("model", "table")
   }
 
   implicit class CoolField(val fieldDefinition: FieldDefinition) extends AnyVal {
@@ -77,6 +79,8 @@ object DataSchemaAstExtensions {
     def typeString: String = fieldDefinition.fieldType.renderPretty
 
     def typeName: String = fieldDefinition.fieldType.namedType.name
+
+    def columnName: Option[String] = fieldDefinition.directiveArgumentAsString("field", "column")
 
     def isUnique: Boolean = fieldDefinition.directive("unique").isDefined
 

@@ -56,7 +56,7 @@ case class SchemaInferrerImpl(
         } else {
           Vector.empty
         }
-        val manifestation = objectType.directiveArgumentAsString("model", "table").map(ModelManifestation)
+        val manifestation = objectType.tableName.map(ModelManifestation)
 
         val stableIdentifier = baseSchema.getModelByName(schemaMapping.getPreviousModelName(objectType.name)) match {
           case Some(existingModel) => existingModel.stableIdentifier
@@ -128,7 +128,7 @@ case class SchemaInferrerImpl(
           defaultValue = default,
           relation = relation,
           relationSide = inferRelationSide(relation),
-          manifestation = fieldDef.directiveArgumentAsString("field", "column").map(FieldManifestation)
+          manifestation = fieldDef.columnName.map(FieldManifestation)
         )
       }
 
