@@ -40,20 +40,46 @@ case class DestructiveChanges(deployConnector: DeployConnector, project: Project
   }
 
   private def createFieldValidation(x: CreateField) = {
+    def newRequiredScalarField(model: Model) = x.relation.isEmpty && x.isRequired match {
+      case true =>
+        clientDataResolver.existsByModel(model.name).map {
+          case true =>
+            Vector(
+              SchemaError(`type` = model.name,
+                          description = s"You are creating a required field but there are already nodes present that would violate that constraint."))
+          case false => Vector.empty
+        }
+
+      case false =>
+        validationSuccessful
+    }
+    def newToOneBackRelationField(model: Model) = x.relation.nonEmpty && !x.isList && previousSchema.relations.map(_.name).contains(x.relation.get) match {
+      case true =>
+        val previousRelation                   = previousSchema.relations.find(r => x.relation.contains(r.name)).get
+        val relationSideThatCantHaveDuplicates = if (previousRelation.modelAId == model.name) RelationSide.A else RelationSide.B
+
+        clientDataResolver.existsDuplicateByRelationAndSide(s"_${x.relation.get}", relationSideThatCantHaveDuplicates).map {
+          case true =>
+            Vector(
+              SchemaError(
+                `type` = model.name,
+                description =
+                  s"You are adding a singular backrelation field to a type but there are already pairs in the relation that would violate that constraint."
+              ))
+          case false => Vector.empty
+        }
+
+      case false =>
+        validationSuccessful
+    }
+
     previousSchema.getModelByName(x.model) match {
       case Some(existingModel) =>
-        x.relation.isEmpty && x.isRequired match {
-          case true =>
-            clientDataResolver.existsByModel(existingModel.name).map {
-              case true =>
-                Vector(
-                  SchemaError(`type` = existingModel.name,
-                              description = s"You are creating a required field but there are already nodes present that would violate that constraint."))
-              case false => Vector.empty
-            }
-
-          case false =>
-            validationSuccessful
+        for {
+          required     <- newRequiredScalarField(existingModel)
+          backRelation <- newToOneBackRelationField(existingModel)
+        } yield {
+          required ++ backRelation
         }
 
       case None =>

@@ -1,5 +1,6 @@
 package com.prisma.deploy.connector.postgresql.database
 
+import com.prisma.shared.models.RelationSide.RelationSide
 import com.prisma.shared.models.{Field, Model}
 import slick.jdbc.PostgresProfile.api._
 import slick.jdbc.{PositionedParameters, SQLActionBuilder}
@@ -12,6 +13,10 @@ object PostgresDeployDatabaseQueryBuilder {
 
   def existsByRelation(projectId: String, relationId: String): SQLActionBuilder = {
     sql"""select exists (select "id" from "#$projectId"."#$relationId")"""
+  }
+
+  def existsDuplicateByRelationAndSide(projectId: String, relationTableName: String, relationSide: RelationSide): SQLActionBuilder = {
+    sql"""select exists (select Count(*)from "#$projectId"."#$relationTableName" Group by "${relationSide.toString}" having Count(*) > 1)"""
   }
 
   def existsNullByModelAndScalarField(projectId: String, modelName: String, fieldName: String) = {
