@@ -341,6 +341,88 @@ class SeveralRelationsBetweenSameModelsIntegrationSpec extends FlatSpec with Mat
 
     val schema =
       """type TeamMatch {
+        |  name: String! @unique
+        |}
+        |
+        |type Match {
+        |  number: Int @unique
+        |}"""
+
+    val (project, _) = setupProject(schema)
+
+    val schema1 =
+      """type Team {
+        |  name: String! @unique
+        |}
+        |
+        |type Match {
+        |  number: Int @unique
+        |  teamLeft: Team @relation(name: "TeamMatchLeft")
+        |  teamRight: Team @relation(name: "TeamMatchRight")
+        |  winner: Team @relation(name: "TeamMatchWinner")
+        |}"""
+    val updatedProject = deployServer.deploySchema(project, schema1)
+
+    updatedProject.schema.relations.size should be(3)
+
+    apiServer.query(
+      """mutation{createMatch(data:{
+        |                           number:1
+        |                           teamLeft:{create:{name: "Bayern"}},
+        |                           teamRight:{create:{name: "Real"}},
+        |                           winner:{create:{name: "Real2"}}
+        |                           }                           
+        |){number}}""",
+      updatedProject
+    )
+
+    val matches = apiServer.query("""{matches{number, teamLeft{name},teamRight{name},winner{name}}}""", updatedProject)
+    matches.toString should be("""{"data":{"matches":[{"number":1,"teamLeft":{"name":"Bayern"},"teamRight":{"name":"Real"},"winner":{"name":"Real2"}}]}}""")
+
+    val teams = apiServer.query("""{teams{name}}""", updatedProject)
+    teams.toString should be("""{"data":{"teams":[{"name":"Bayern"},{"name":"Real"},{"name":"Real2"}]}}""")
+
+  }
+
+  "Several missing backrelations on the same type" should "work when there are relation directives provided and connecting to" in {
+
+    val schema =
+      """type Team {
+        |  name: String! @unique
+        |}
+        |
+        |type Match {
+        |  number: Int @unique
+        |  teamLeft: Team @relation(name: "TeamMatchLeft")
+        |  teamRight: Team @relation(name: "TeamMatchRight")
+        |  winner: Team @relation(name: "TeamMatchWinner")
+        |}"""
+
+    val (project, _) = setupProject(schema)
+
+    apiServer.query(
+      """mutation{createMatch(data:{
+        |                           number:1
+        |                           teamLeft:{create:{name: "Bayern"}},
+        |                           teamRight:{create:{name: "Real"}},
+        |                           winner:{connect:{name: "Real"}}
+        |                           }
+        |){number}}""",
+      project
+    )
+
+    val matches = apiServer.query("""{matches{number, teamLeft{name},teamRight{name},winner{name}}}""", project)
+    matches.toString should be("""{"data":{"matches":[{"number":1,"teamLeft":{"name":"Bayern"},"teamRight":{"name":"Real"},"winner":{"name":"Real"}}]}}""")
+
+    val teams = apiServer.query("""{teams{name}}""", project)
+    teams.toString should be("""{"data":{"teams":[{"name":"Bayern"},{"name":"Real"}]}}""")
+
+  }
+
+  "Several missing backrelations on the same type and one unnamed relation on the other side" should "work when there are relation directives provided" in {
+
+    val schema =
+      """type TeamMatch {
         |  key: String! @unique
         |}
         |
@@ -353,6 +435,7 @@ class SeveralRelationsBetweenSameModelsIntegrationSpec extends FlatSpec with Mat
     val schema1 =
       """type TeamMatch {
         |  key: String! @unique
+        |  match: Match
         |}
         |
         |type Match {
@@ -361,9 +444,11 @@ class SeveralRelationsBetweenSameModelsIntegrationSpec extends FlatSpec with Mat
         |  teamRight: TeamMatch @relation(name: "TeamMatchRight")
         |  winner: TeamMatch @relation(name: "TeamMatchWinner")
         |}"""
-    val updatedProject = deployServer.deploySchema(project, schema1)
 
-    updatedProject.schema.relations.size should be(3)
+    val res = deployServer.deploySchemaThatMustError(project, schema1)
+    res.toString should be(
+      """{"data":{"deploy":{"migration":null,"errors":[{"description":"You are trying to set the relation 'TeamMatchLeft' from `Match` to `TeamMatch` and are only providing a relation directive on `Match`. Since there is also a relation field without a relation directive on `TeamMatch` pointing towards `Match` that is ambiguous. Please provide the same relation directive on `TeamMatch` if this is supposed to be the same relation. If you meant to create two separate relations without backrelations please provide a relation directive with a different name on `nameB`."},{"description":"You are trying to set the relation 'TeamMatchRight' from `Match` to `TeamMatch` and are only providing a relation directive on `Match`. Since there is also a relation field without a relation directive on `TeamMatch` pointing towards `Match` that is ambiguous. Please provide the same relation directive on `TeamMatch` if this is supposed to be the same relation. If you meant to create two separate relations without backrelations please provide a relation directive with a different name on `nameB`."},{"description":"You are trying to set the relation 'TeamMatchWinner' from `Match` to `TeamMatch` and are only providing a relation directive on `Match`. Since there is also a relation field without a relation directive on `TeamMatch` pointing towards `Match` that is ambiguous. Please provide the same relation directive on `TeamMatch` if this is supposed to be the same relation. If you meant to create two separate relations without backrelations please provide a relation directive with a different name on `nameB`."}],"warnings":[]}}}""")
+
   }
 
 }
