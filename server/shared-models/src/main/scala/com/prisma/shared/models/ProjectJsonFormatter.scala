@@ -201,7 +201,7 @@ object ProjectJsonFormatter {
       (JsPath \ "modelBId").write[String] and
       (JsPath \ "modelAOnDelete").write[OnDelete.Value] and
       (JsPath \ "modelBOnDelete").write[OnDelete.Value] and
-      (JsPath \ "modelBOnDelete").writeNullable[RelationManifestation]
+      (JsPath \ "manifestation").writeNullable[RelationManifestation]
   )(unlift(Relation.unapply))
 
   val relationReads: Reads[Relation] = (
@@ -211,7 +211,7 @@ object ProjectJsonFormatter {
       (JsPath \ "modelBId").read[String] and
       (JsPath \ "modelAOnDelete").readNullable[OnDelete.Value].map(_.getOrElse(OnDelete.SetNull)) and
       (JsPath \ "modelBOnDelete").readNullable[OnDelete.Value].map(_.getOrElse(OnDelete.SetNull)) and
-      (JsPath \ "modelBOnDelete").readNullable[RelationManifestation]
+      (JsPath \ "manifestation").readNullable[RelationManifestation]
   )(Relation.apply _)
 
   val modelManifestationWrites: Writes[ModelManifestation] = Writes(manifestation => Json.obj("dbName" -> manifestation.dbName))
