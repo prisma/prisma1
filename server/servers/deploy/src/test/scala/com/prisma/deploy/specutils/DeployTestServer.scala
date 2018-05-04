@@ -132,9 +132,11 @@ case class DeployTestServer()(implicit dependencies: DeployDependencies) extends
       """.stripMargin)
   }
 
-  def deploySchema(project: Project, schema: String): Project = {
-    deployHelper(project.id, schema.stripMargin, Vector.empty)
-    dependencies.projectPersistence.load(project.id).await.get
+  def deploySchema(project: Project, schema: String): Project = deploySchema(project.id, schema)
+
+  def deploySchema(projectId: String, schema: String): Project = {
+    deployHelper(projectId, schema.stripMargin, Vector.empty)
+    dependencies.projectPersistence.load(projectId).await.get
   }
 
   def deploySchemaThatMustSucceed(project: Project, schema: String, revision: Int, force: Boolean = false): JsValue = {

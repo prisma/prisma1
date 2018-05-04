@@ -28,7 +28,7 @@ class PassiveConnectorSpecForInlineRelations extends PassiveConnectorSpec {
                                 |, name    text NOT NULL
                                 |);
                                 |
-    |CREATE TABLE $projectId.todo (
+                                |CREATE TABLE $projectId.todo (
                                 |  id       varchar PRIMARY KEY
                                 |, title     text NOT NULL
                                 |, list_id varchar NOT NULL REFERENCES $projectId.list (id) ON UPDATE CASCADE

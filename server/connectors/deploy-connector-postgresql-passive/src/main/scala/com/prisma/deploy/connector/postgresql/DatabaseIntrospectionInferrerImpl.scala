@@ -1,20 +1,19 @@
 package com.prisma.deploy.connector.postgresql
 
 import com.prisma.deploy.connector._
-import slick.jdbc.JdbcBackend.Database
-import slick.jdbc.JdbcProfile
 import slick.jdbc.meta.{MColumn, MForeignKey, MTable}
 
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
+import slick.jdbc.PostgresProfile.api._
+import slick.jdbc.PostgresProfile.backend.DatabaseDef
 
-case class DatabaseIntrospectionInferrerImpl(jdbcProfile: JdbcProfile, db: Database, schema: String) extends DatabaseIntrospectionInferrer {
-  import jdbcProfile.api._
+case class DatabaseIntrospectionInferrerImpl(db: DatabaseDef, schema: String)(implicit ec: ExecutionContext) extends DatabaseIntrospectionInferrer {
 
   def infer(): Future[InferredTables] = db.run(action)
 
   def action: DBIO[InferredTables] = {
     for {
-      tables         <- MTable.getTables(cat = Some(schema), schemaPattern = None, namePattern = None, types = None)
+      tables         <- MTable.getTables(cat = None, schemaPattern = Some(schema), namePattern = None, types = None)
       inferredTables <- DBIO.sequence(tables.map(mTableToInferredTable))
     } yield {
       InferredTables(
@@ -29,6 +28,10 @@ case class DatabaseIntrospectionInferrerImpl(jdbcProfile: JdbcProfile, db: Datab
       columns      <- mTable.getColumns
       importedKeys <- mTable.getImportedKeys
     } yield {
+//      println(s"inferred table ${mTable.name.name}")
+//      val columnNames = columns.map(_.name)
+//      println(s"found the columns: $columnNames")
+
       if (isRelationTable(columns, importedKeys)) {
         mTableToRelationTable(mTable, importedKeys)
       } else {

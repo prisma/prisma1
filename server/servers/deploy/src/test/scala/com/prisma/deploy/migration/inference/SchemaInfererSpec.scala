@@ -1,5 +1,6 @@
 package com.prisma.deploy.migration.inference
 
+import com.prisma.deploy.connector.InferredTables
 import com.prisma.shared.models.Manifestations.{FieldManifestation, InlineRelationManifestation, ModelManifestation, RelationTableManifestation}
 import com.prisma.shared.models.{RelationSide, Schema}
 import com.prisma.shared.schema_dsl.SchemaDsl
@@ -412,6 +413,6 @@ class SchemaInfererSpec extends WordSpec with Matchers {
 
   def infer(schema: Schema, types: String, mapping: SchemaMapping = SchemaMapping.empty, addReservedFields: Boolean = true): Or[Schema, ProjectSyntaxError] = {
     val document = QueryParser.parse(types).get
-    SchemaInferrer(addReservedFields).infer(schema, mapping, document)
+    SchemaInferrer(addReservedFields).infer(schema, mapping, document, InferredTables.empty)
   }
 }

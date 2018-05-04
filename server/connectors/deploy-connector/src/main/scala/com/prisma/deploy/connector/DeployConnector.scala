@@ -12,6 +12,7 @@ trait DeployConnector {
   def deployMutactionExecutor: DeployMutactionExecutor
   def clientDBQueries(project: Project): ClientDbQueries
   def projectIdEncoder: ProjectIdEncoder
+  def databaseIntrospectionInferrer(project: Project): DatabaseIntrospectionInferrer
 
   def initialize(): Future[Unit]
   def reset(): Future[Unit]

@@ -1,5 +1,6 @@
 package com.prisma.shared.schema_dsl
 
+import com.prisma.deploy.connector.InferredTables
 import com.prisma.deploy.migration.inference.{SchemaInferrer, SchemaMapping}
 import com.prisma.gc_values.GCValue
 import com.prisma.shared.models.IdType.Id
@@ -18,7 +19,7 @@ object SchemaDsl {
     val emptyBaseSchema    = Schema()
     val emptySchemaMapping = SchemaMapping.empty
     val sqlDocument        = QueryParser.parse(sdlString.stripMargin).get
-    val schema             = SchemaInferrer(withReservedFields).infer(emptyBaseSchema, emptySchemaMapping, sqlDocument).get
+    val schema             = SchemaInferrer(withReservedFields).infer(emptyBaseSchema, emptySchemaMapping, sqlDocument, InferredTables.empty).get
     TestProject().copy(id = id, schema = schema)
   }
 

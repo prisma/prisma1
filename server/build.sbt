@@ -319,6 +319,7 @@ lazy val deployConnectorProjects = List(
   deployConnector,
   deployConnectorMySql,
   deployConnectorPostgres,
+  deployConnectorPostgresPassive
 )
 
 lazy val apiConnectorProjects = List(

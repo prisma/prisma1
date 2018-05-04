@@ -9,7 +9,12 @@ trait DatabaseIntrospectionInferrer {
 case class InferredTables(
     relationTables: Vector[InferredRelationTable],
     modelTables: Vector[InferredModelTable]
-)
+) {
+  def modelTable_!(name: String) = modelTables.find(_.name == name).getOrElse(sys.error(s"could not find model table $name"))
+}
+object InferredTables {
+  val empty = InferredTables(Vector.empty, Vector.empty)
+}
 
 sealed trait InferredTable
 

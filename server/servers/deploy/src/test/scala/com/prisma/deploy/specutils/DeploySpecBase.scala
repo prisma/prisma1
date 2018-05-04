@@ -3,6 +3,7 @@ package com.prisma.deploy.specutils
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
 import com.prisma.ConnectorAwareTest
+import com.prisma.deploy.connector.postgresql.PostgresDeployConnector
 import com.prisma.shared.models.{Migration, Project, ProjectId}
 import com.prisma.utils.await.AwaitUtils
 import com.prisma.utils.json.PlayJsonExtensions
@@ -12,7 +13,7 @@ import play.api.libs.json.JsString
 
 import scala.collection.mutable.ArrayBuffer
 
-trait ActiveDeploySpecBase extends ConnectorAwareTest with BeforeAndAfterEach with BeforeAndAfterAll with AwaitUtils with PlayJsonExtensions { self: Suite =>
+trait DeploySpecBase extends ConnectorAwareTest with BeforeAndAfterEach with BeforeAndAfterAll with AwaitUtils with PlayJsonExtensions { self: Suite =>
 
   implicit lazy val system                                   = ActorSystem()
   implicit lazy val materializer                             = ActorMaterializer()
@@ -49,6 +50,11 @@ trait ActiveDeploySpecBase extends ConnectorAwareTest with BeforeAndAfterEach wi
     testDependencies.deployConnector.reset().await
   }
 
+  def formatSchema(schema: String): String = JsString(schema).toString()
+  def escapeString(str: String): String    = JsString(str).toString()
+}
+
+trait ActiveDeploySpecBase extends DeploySpecBase { self: Suite =>
   def setupProject(
       schema: String,
       name: String = Cuid.createCuid(),
@@ -61,7 +67,20 @@ trait ActiveDeploySpecBase extends ConnectorAwareTest with BeforeAndAfterEach wi
     server.addProject(name, stage)
     server.deploySchema(name, stage, schema.stripMargin, secrets)
   }
+}
 
-  def formatSchema(schema: String): String = JsString(schema).toString()
-  def escapeString(str: String): String    = JsString(str).toString()
+trait PassiveDeploySpecBase extends DeploySpecBase { self: Suite =>
+  def setupProjectDatabaseForProject(projectId: String, sql: String) = {
+    val connector = testDependencies.deployConnector.asInstanceOf[PostgresDeployConnector]
+    val session   = connector.internalDatabase.createSession()
+    val statement = session.createStatement()
+    statement.execute(s"drop schema if exists $projectId cascade;")
+
+    val ProjectId(name, stage) = testDependencies.projectIdEncoder.fromEncodedString(projectId)
+    server.addProject(name, stage)
+
+    statement.execute(s"SET search_path TO $projectId;")
+    statement.execute(sql)
+    session.close()
+  }
 }

@@ -10,6 +10,7 @@ import com.prisma.deploy.schema.InvalidQuery
 import com.prisma.deploy.validation.DestructiveChanges
 import com.prisma.messagebus.pubsub.Only
 import com.prisma.shared.models.{Function, Migration, MigrationStep, Project, Schema, ServerSideSubscriptionFunction, UpdateSecrets, WebhookDelivery}
+import com.prisma.utils.await.AwaitUtils
 import org.scalactic.{Bad, Good, Or}
 import sangria.ast.Document
 import sangria.parser.QueryParser
@@ -31,7 +32,8 @@ case class DeployMutation(
 )(
     implicit ec: ExecutionContext,
     dependencies: DeployDependencies
-) extends Mutation[DeployMutationPayload] {
+) extends Mutation[DeployMutationPayload]
+    with AwaitUtils {
 
   val projectId = dependencies.projectIdEncoder.toEncodedString(args.name, args.stage)
   val graphQlSdl: Document = QueryParser.parse(args.types) match {
@@ -41,6 +43,7 @@ case class DeployMutation(
 
   val validator                                = SchemaSyntaxValidator(args.types)
   val schemaErrors: immutable.Seq[SchemaError] = validator.validate()
+  val inferredTablesFuture                     = deployConnector.databaseIntrospectionInferrer(project).infer()
 
   override def execute: Future[MutationResult[DeployMutationPayload]] = {
     if (schemaErrors.nonEmpty) {
@@ -58,10 +61,9 @@ case class DeployMutation(
     }
   }
 
-  private def performDeployment: Future[MutationSuccess[DeployMutationPayload]] = {
+  private def performDeployment: Future[MutationSuccess[DeployMutationPayload]] = inferredTablesFuture.flatMap { inferredTables =>
     val schemaMapping = schemaMapper.createMapping(graphQlSdl)
-
-    schemaInferrer.infer(project.schema, schemaMapping, graphQlSdl) match {
+    schemaInferrer.infer(project.schema, schemaMapping, graphQlSdl, inferredTables) match {
       case Good(inferredNextSchema) =>
         val functionsOrErrors = getFunctionModelsOrErrors(args.functions)
 

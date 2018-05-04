@@ -1,6 +1,6 @@
 package com.prisma.deploy.migration.inference
 
-import com.prisma.deploy.connector.{DatabaseIntrospectionInferrer, InferredRelationTable}
+import com.prisma.deploy.connector.{DatabaseIntrospectionInferrer, EmptyDatabaseIntrospectionInferrer, InferredRelationTable, InferredTables}
 import com.prisma.deploy.gc_value.GCStringConverter
 import com.prisma.deploy.migration.DataSchemaAstExtensions._
 import com.prisma.deploy.migration.DirectiveTypes.RelationTableDirective
@@ -16,13 +16,13 @@ import org.scalactic.{Bad, Good, Or}
 import sangria.ast.{Field => _, _}
 
 trait SchemaInferrer {
-  def infer(baseSchema: Schema, schemaMapping: SchemaMapping, graphQlSdl: Document): Schema Or ProjectSyntaxError
+  def infer(baseSchema: Schema, schemaMapping: SchemaMapping, graphQlSdl: Document, inferredTables: InferredTables): Schema Or ProjectSyntaxError
 }
 
 object SchemaInferrer {
   def apply(addReservedFields: Boolean = true) = new SchemaInferrer {
-    override def infer(baseSchema: Schema, schemaMapping: SchemaMapping, graphQlSdl: Document) =
-      SchemaInferrerImpl(baseSchema, schemaMapping, graphQlSdl, addReservedFields).infer()
+    override def infer(baseSchema: Schema, schemaMapping: SchemaMapping, graphQlSdl: Document, inferredTables: InferredTables) =
+      SchemaInferrerImpl(baseSchema, schemaMapping, graphQlSdl, addReservedFields, inferredTables).infer()
   }
 }
 
@@ -35,9 +35,8 @@ case class SchemaInferrerImpl(
     schemaMapping: SchemaMapping,
     sdl: Document,
     addReservedFields: Boolean,
-    databaseIntrospectionInferrer: DatabaseIntrospectionInferrer
+    inferredTables: InferredTables
 ) extends AwaitUtils {
-  val inferredTables = databaseIntrospectionInferrer.infer().await(seconds = 10)
 
   def infer(): Schema Or ProjectSyntaxError = {
     for {
@@ -235,8 +234,8 @@ case class SchemaInferrerImpl(
     require(isRelationField(relationField), "this method must only be called with relationFields")
     val inlineRelationManifestation = relationField.inlineRelationDirective.column
       .orElse {
-        // FIXME: the table name for the model may diverge
-        inferredTables.modelTables.find(_.name == objectType.tableName).get.columnNameForReferencedTable(relationField.typeName)
+        val referencedType = sdl.objectType_!(relationField.typeName)
+        inferredTables.modelTable_!(objectType.tableName).columnNameForReferencedTable(referencedType.tableName)
       }
       .map { column =>
         InlineRelationManifestation(inTableOfModelId = objectType.name, referencingColumn = column)
