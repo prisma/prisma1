@@ -55,7 +55,7 @@ export default class Playground extends Command {
     } else {
       const localPlaygroundPath = `/Applications/GraphQL\ Playground.app/Contents/MacOS/GraphQL\ Playground`
 
-      const endpoint = cluster!.getApiEndpoint(
+      const endpoint = this.definition.definition!.endpoint || cluster!.getApiEndpoint(
         this.definition.definition!.service!,
         stage,
         this.definition.getWorkspace() || undefined,
