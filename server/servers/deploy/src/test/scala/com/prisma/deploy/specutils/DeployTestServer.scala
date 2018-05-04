@@ -148,6 +148,10 @@ case class DeployTestServer()(implicit dependencies: DeployDependencies) extends
     deployHelper(project.id, schema, Vector.empty, shouldFail = true, force = force)
   }
 
+  def deploySchemaThatMustErrorWithCode(project: Project, schema: String, force: Boolean = false, errorCode: Int): JsValue = {
+    deployHelper(project.id, schema, Vector.empty, shouldFail = true, force = force, errorCode = errorCode)
+  }
+
   def deploySchemaThatMustWarn(project: Project, schema: String, force: Boolean = false): JsValue = {
     deployHelper(project.id, schema, Vector.empty, shouldFail = false, shouldWarn = true, force = force)
   }
@@ -173,7 +177,9 @@ case class DeployTestServer()(implicit dependencies: DeployDependencies) extends
                            secrets: Vector[String],
                            shouldFail: Boolean = false,
                            shouldWarn: Boolean = false,
-                           force: Boolean = false): JsValue = {
+                           force: Boolean = false,
+                           queryFailsCompletely: Boolean = false,
+                           errorCode: Int = 0): JsValue = {
 
     val nameAndStage     = dependencies.projectIdEncoder.fromEncodedString(projectId)
     val name             = nameAndStage.name
@@ -198,8 +204,14 @@ case class DeployTestServer()(implicit dependencies: DeployDependencies) extends
                          |}
       """.stripMargin
 
-    val deployResult = query(queryString)
-    deployResult.assertErrorsAndWarnings(shouldFail, shouldWarn)
-    deployResult
+    errorCode != 0 match {
+      case true =>
+        executeQueryThatMustFail(queryString, errorCode)
+
+      case false =>
+        val deployResult = query(queryString)
+        deployResult.assertErrorsAndWarnings(shouldFail, shouldWarn)
+        deployResult
+    }
   }
 }

@@ -240,7 +240,7 @@ class SeveralRelationsBetweenSameModelsIntegrationSpec extends FlatSpec with Mat
         |  title: String
         |}"""
 
-    deployServer.deploySchemaThatMustError(project, schema1)
+    deployServer.deploySchemaThatMustErrorWithCode(project, schema1, errorCode = 3018)
   }
 
   "Going from two named relations between the same models to one named one without a backrelation" should "work" in {
