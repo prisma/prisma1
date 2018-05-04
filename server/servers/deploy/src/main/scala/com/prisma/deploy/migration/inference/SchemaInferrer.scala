@@ -1,5 +1,6 @@
 package com.prisma.deploy.migration.inference
 
+import com.prisma.deploy.connector.{DatabaseIntrospectionInferrer, InferredRelationTable}
 import com.prisma.deploy.gc_value.GCStringConverter
 import com.prisma.deploy.migration.DataSchemaAstExtensions._
 import com.prisma.deploy.migration.DirectiveTypes.RelationTableDirective
@@ -8,6 +9,7 @@ import com.prisma.deploy.validation.NameConstraints
 import com.prisma.gc_values.{GCValue, InvalidValueForScalarType}
 import com.prisma.shared.models.Manifestations._
 import com.prisma.shared.models.{OnDelete, RelationSide, ReservedFields, _}
+import com.prisma.utils.await.AwaitUtils
 import com.prisma.utils.or.OrExtensions
 import cool.graph.cuid.Cuid
 import org.scalactic.{Bad, Good, Or}
@@ -32,8 +34,11 @@ case class SchemaInferrerImpl(
     baseSchema: Schema,
     schemaMapping: SchemaMapping,
     sdl: Document,
-    addReservedFields: Boolean
-) {
+    addReservedFields: Boolean,
+    databaseIntrospectionInferrer: DatabaseIntrospectionInferrer
+) extends AwaitUtils {
+  val inferredTables = databaseIntrospectionInferrer.infer().await(seconds = 10)
+
   def infer(): Schema Or ProjectSyntaxError = {
     for {
       models <- nextModels
@@ -56,7 +61,7 @@ case class SchemaInferrerImpl(
         } else {
           Vector.empty
         }
-        val manifestation = objectType.tableName.map(ModelManifestation)
+        val manifestation = objectType.tableNameDirective.map(ModelManifestation)
 
         val stableIdentifier = baseSchema.getModelByName(schemaMapping.getPreviousModelName(objectType.name)) match {
           case Some(existingModel) => existingModel.stableIdentifier
@@ -228,15 +233,36 @@ case class SchemaInferrerImpl(
 
   def relationManifestationOnField(objectType: ObjectTypeDefinition, relationField: FieldDefinition): Option[RelationManifestation] = {
     require(isRelationField(relationField), "this method must only be called with relationFields")
-    val inlineRelationManifestation = relationField.inlineRelationDirective.map { inlineDirective =>
-      InlineRelationManifestation(inTableOfModelId = objectType.name, referencingColumn = inlineDirective.column)
-    }
+    val inlineRelationManifestation = relationField.inlineRelationDirective.column
+      .orElse {
+        // FIXME: the table name for the model may diverge
+        inferredTables.modelTables.find(_.name == objectType.tableName).get.columnNameForReferencedTable(relationField.typeName)
+      }
+      .map { column =>
+        InlineRelationManifestation(inTableOfModelId = objectType.name, referencingColumn = column)
+      }
+
     val relationTableManifestation = relationField.relationTableDirective.map { tableDirective =>
-      val isThisModelA = isModelA(objectType.name, relationField.typeName)
+      val isThisModelA  = isModelA(objectType.name, relationField.typeName)
+      val inferredTable = inferredTables.relationTables.find(_.name == tableDirective.table)
+
+      val modelAColumn = if (isThisModelA) {
+        tableDirective.thisColumn.orElse(inferredTable.flatMap(_.columnForTable(relationField.typeName)))
+      } else {
+        tableDirective.otherColumn.orElse(inferredTable.flatMap(_.columnForTable(objectType.name)))
+      }
+
+      val modelBColumn = if (isThisModelA) {
+        tableDirective.otherColumn.orElse(inferredTable.flatMap(_.columnForTable(objectType.name)))
+      } else {
+        tableDirective.thisColumn.orElse(inferredTable.flatMap(_.columnForTable(relationField.typeName)))
+      }
+
+      // FIXME: return an error if we can not find a foreign key columns for his relation instead of calling .get
       RelationTableManifestation(
         table = tableDirective.table,
-        modelAColumn = if (isThisModelA) tableDirective.thisColumn else tableDirective.otherColumn,
-        modelBColumn = if (isThisModelA) tableDirective.otherColumn else tableDirective.thisColumn
+        modelAColumn = modelAColumn.get,
+        modelBColumn = modelBColumn.get
       )
     }
     inlineRelationManifestation.orElse(relationTableManifestation)

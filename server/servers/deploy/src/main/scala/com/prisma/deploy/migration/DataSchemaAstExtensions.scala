@@ -64,7 +64,8 @@ object DataSchemaAstExtensions {
 
     def description: Option[String] = objectType.directiveArgumentAsString("description", "text")
 
-    def tableName: Option[String] = objectType.directiveArgumentAsString("model", "table")
+    def tableName: String                  = tableNameDirective.getOrElse(objectType.name)
+    def tableNameDirective: Option[String] = objectType.directiveArgumentAsString("model", "table")
   }
 
   implicit class CoolField(val fieldDefinition: FieldDefinition) extends AnyVal {
@@ -119,16 +120,12 @@ object DataSchemaAstExtensions {
     def relationTableDirective: Option[RelationTableDirective] = {
       for {
         tableName   <- fieldDefinition.directiveArgumentAsString("relationTable", "table")
-        thisColumn  <- fieldDefinition.directiveArgumentAsString("relationTable", "thisColumn")
-        otherColumn <- fieldDefinition.directiveArgumentAsString("relationTable", "otherColumn")
+        thisColumn  = fieldDefinition.directiveArgumentAsString("relationTable", "thisColumn")
+        otherColumn = fieldDefinition.directiveArgumentAsString("relationTable", "otherColumn")
       } yield RelationTableDirective(table = tableName, thisColumn = thisColumn, otherColumn = otherColumn)
     }
 
-    def inlineRelationDirective: Option[InlineRelationDirective] = {
-      for {
-        column <- fieldDefinition.directiveArgumentAsString("inline", "column")
-      } yield InlineRelationDirective(column)
-    }
+    def inlineRelationDirective: InlineRelationDirective = InlineRelationDirective(fieldDefinition.directiveArgumentAsString("inline", "column"))
   }
 
   implicit class CoolEnumType(val enumType: EnumTypeDefinition) extends AnyVal {
@@ -199,6 +196,6 @@ object DataSchemaAstExtensions {
 }
 
 object DirectiveTypes {
-  case class RelationTableDirective(table: String, thisColumn: String, otherColumn: String)
-  case class InlineRelationDirective(column: String)
+  case class RelationTableDirective(table: String, thisColumn: Option[String], otherColumn: Option[String])
+  case class InlineRelationDirective(column: Option[String])
 }

@@ -136,6 +136,9 @@ lazy val deployConnectorPostgres = connectorProject("deploy-connector-postgresql
     libraryDependencies ++= slick ++ Seq(postgresClient)
   )
 
+lazy val deployConnectorPostgresPassive = connectorProject("deploy-connector-postgresql-passive")
+  .dependsOn(deployConnectorPostgres)
+
 lazy val apiConnector = connectorProject("api-connector")
   .dependsOn(sharedModels)
   .dependsOn(gcValues)
