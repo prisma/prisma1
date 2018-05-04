@@ -1,10 +1,10 @@
 package com.prisma.deploy.database.schema.mutations
 
-import com.prisma.deploy.specutils.DeploySpecBase
+import com.prisma.deploy.specutils.ActiveDeploySpecBase
 import cool.graph.cuid.Cuid
 import org.scalatest.{FlatSpec, Matchers}
 
-class DeleteServiceMutationSpec extends FlatSpec with Matchers with DeploySpecBase {
+class DeleteServiceMutationSpec extends FlatSpec with Matchers with ActiveDeploySpecBase {
 
   val projectPersistence = testDependencies.projectPersistence
 
