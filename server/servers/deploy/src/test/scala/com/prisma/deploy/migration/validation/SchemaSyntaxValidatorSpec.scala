@@ -87,7 +87,7 @@ class SchemaSyntaxValidatorSpec extends WordSpecLike with Matchers {
       """.stripMargin
     val result = SchemaSyntaxValidator(schema).validate
     result should have(size(4))
-    result.forall(_.description.contains("A relation directive with a name must appear exactly 2 times.")) should be(true)
+    result.forall(_.description.contains("A relation directive cannot appear more than twice.")) should be(true)
   }
 
   // TODO: the backwards field should not be required here.

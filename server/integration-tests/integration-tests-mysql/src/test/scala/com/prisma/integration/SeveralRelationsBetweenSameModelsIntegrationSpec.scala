@@ -419,7 +419,36 @@ class SeveralRelationsBetweenSameModelsIntegrationSpec extends FlatSpec with Mat
 
   }
 
-  "Several missing backrelations on the same type and one unnamed relation on the other side" should "work when there are relation directives provided" in {
+  "One missing backrelation and one unnamed relation on the other side" should "error" in {
+
+    val schema =
+      """type TeamMatch {
+        |  key: String! @unique
+        |}
+        |
+        |type Match {
+        |  number: Int @unique
+        |}"""
+
+    val (project, _) = setupProject(schema)
+
+    val schema1 =
+      """type TeamMatch {
+        |  key: String! @unique
+        |  match: Match
+        |}
+        |
+        |type Match {
+        |  number: Int @unique
+        |  teamLeft: TeamMatch @relation(name: "TeamMatchLeft")
+        |}"""
+
+    val res = deployServer.deploySchemaThatMustError(project, schema1)
+    res.toString should be(
+      """{"data":{"deploy":{"migration":null,"errors":[{"description":"You are trying to set the relation 'TeamMatchLeft' from `Match` to `TeamMatch` and are only providing a relation directive on `Match`. Since there is also a relation field without a relation directive on `TeamMatch` pointing towards `Match` that is ambiguous. Please provide the same relation directive on `TeamMatch` if this is supposed to be the same relation. If you meant to create two separate relations without backrelations please provide a relation directive with a different name on `nameB`."}],"warnings":[]}}}""")
+  }
+
+  "Several missing backrelations on the same type and one unnamed relation on the other side" should "error" in {
 
     val schema =
       """type TeamMatch {
@@ -448,7 +477,6 @@ class SeveralRelationsBetweenSameModelsIntegrationSpec extends FlatSpec with Mat
     val res = deployServer.deploySchemaThatMustError(project, schema1)
     res.toString should be(
       """{"data":{"deploy":{"migration":null,"errors":[{"description":"You are trying to set the relation 'TeamMatchLeft' from `Match` to `TeamMatch` and are only providing a relation directive on `Match`. Since there is also a relation field without a relation directive on `TeamMatch` pointing towards `Match` that is ambiguous. Please provide the same relation directive on `TeamMatch` if this is supposed to be the same relation. If you meant to create two separate relations without backrelations please provide a relation directive with a different name on `nameB`."},{"description":"You are trying to set the relation 'TeamMatchRight' from `Match` to `TeamMatch` and are only providing a relation directive on `Match`. Since there is also a relation field without a relation directive on `TeamMatch` pointing towards `Match` that is ambiguous. Please provide the same relation directive on `TeamMatch` if this is supposed to be the same relation. If you meant to create two separate relations without backrelations please provide a relation directive with a different name on `nameB`."},{"description":"You are trying to set the relation 'TeamMatchWinner' from `Match` to `TeamMatch` and are only providing a relation directive on `Match`. Since there is also a relation field without a relation directive on `TeamMatch` pointing towards `Match` that is ambiguous. Please provide the same relation directive on `TeamMatch` if this is supposed to be the same relation. If you meant to create two separate relations without backrelations please provide a relation directive with a different name on `nameB`."}],"warnings":[]}}}""")
-
   }
 
 }

@@ -55,6 +55,11 @@ object SchemaErrors {
     )
   }
 
+  def relationDirectiveCannotAppearMoreThanTwice(fieldAndType: FieldAndType): SchemaError = {
+    val relationName = fieldAndType.fieldDef.previousRelationName.get
+    error(fieldAndType, s"A relation directive cannot appear more than twice. Relation name: '$relationName'")
+  }
+
   def selfRelationMustAppearOneOrTwoTimes(fieldAndType: FieldAndType): SchemaError = {
     val relationName = fieldAndType.fieldDef.previousRelationName.get
     error(fieldAndType, s"A relation directive for a self relation must appear either 1 or 2 times. Relation name: '$relationName'")

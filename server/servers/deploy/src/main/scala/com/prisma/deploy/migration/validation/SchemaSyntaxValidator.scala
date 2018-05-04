@@ -152,6 +152,9 @@ case class SchemaSyntaxValidator(schema: String, directiveRequirements: Seq[Dire
       case fieldAndType if !fieldAndType.fieldDef.hasRelationDirective =>
         Left(SchemaErrors.missingRelationDirective(fieldAndType))
 
+      case fieldAndType if !isSelfRelation(fieldAndType) && relationCount(fieldAndType) > 2 =>
+        Left(SchemaErrors.relationDirectiveCannotAppearMoreThanTwice(fieldAndType))
+
       case fieldAndType if isSelfRelation(fieldAndType) && relationCount(fieldAndType) != 1 && relationCount(fieldAndType) != 2 =>
         Left(SchemaErrors.selfRelationMustAppearOneOrTwoTimes(fieldAndType))
 
