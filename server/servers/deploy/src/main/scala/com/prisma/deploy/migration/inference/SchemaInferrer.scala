@@ -52,7 +52,7 @@ case class SchemaInferrerImpl(
         relations = nextRelations.toList,
         enums = nextEnums.toList
       )
-      errors = checkRelationsAgainstInferredTables(schema)
+      errors = if (!isActive) checkRelationsAgainstInferredTables(schema) else Vector.empty
       result <- if (errors.isEmpty) Good(schema) else Bad(errors.head)
     } yield result
   }
