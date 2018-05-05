@@ -15,6 +15,8 @@ export interface Relation {
 
 export interface Column {
   name: string
+  isUnique: boolean
+  defaultValue: any
   type: string
   typeIdentifier: TypeIdentifier
   comment: string | null
@@ -24,6 +26,7 @@ export interface Column {
 
 export interface Table {
   name: string
+  isJunctionTable: boolean
   columns: Column[]
 }
 
