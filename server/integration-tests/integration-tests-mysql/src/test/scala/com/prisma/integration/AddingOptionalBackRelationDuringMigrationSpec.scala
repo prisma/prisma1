@@ -235,4 +235,70 @@ class AddingOptionalBackRelationDuringMigrationSpec extends FlatSpec with Matche
     res.toString should be(
       """{"data":{"deploy":{"migration":{"applied":0,"revision":0},"errors":[{"description":"You are adding a singular backrelation field to a type but there are already pairs in the relation that would violate that constraint."}],"warnings":[]}}}""")
   }
+
+  "Adding several missing back-relations of list type" should "work even when there are already multiple relation pairs" in {
+
+    val schema =
+      """type Team {
+        |  name: String! @unique
+        |}
+        |
+        |type Match {
+        |  number: Int @unique
+        |  teamLeft: Team @relation(name: "TeamMatchLeft")
+        |  teamRight: Team @relation(name: "TeamMatchRight")
+        |  winner: Team @relation(name: "TeamMatchWinner")
+        |}"""
+
+    val (project, _) = setupProject(schema)
+
+    apiServer.query(
+      """mutation{createMatch(data:{
+        |                           number:1
+        |                           teamLeft:{create:{name: "Bayern"}},
+        |                           teamRight:{create:{name: "Real"}},
+        |                           winner:{connect:{name: "Real"}}
+        |                           }
+        |){number}}""",
+      project
+    )
+
+    apiServer.query(
+      """mutation{createMatch(data:{
+        |                           number:2
+        |                           teamLeft:{connect:{name: "Bayern"}},
+        |                           teamRight:{connect:{name: "Real"}},
+        |                           winner:{connect:{name: "Real"}}
+        |                           }
+        |){number}}""",
+      project
+    )
+
+    val matches = apiServer.query("""{matches{number, teamLeft{name},teamRight{name},winner{name}}}""", project)
+    matches.toString should be(
+      """{"data":{"matches":[{"number":1,"teamLeft":{"name":"Bayern"},"teamRight":{"name":"Real"},"winner":{"name":"Real"}},{"number":2,"teamLeft":{"name":"Bayern"},"teamRight":{"name":"Real"},"winner":{"name":"Real"}}]}}""")
+
+    val teams = apiServer.query("""{teams{name}}""", project)
+    teams.toString should be("""{"data":{"teams":[{"name":"Bayern"},{"name":"Real"}]}}""")
+
+    val schema1 =
+      """type Team {
+        |  name: String! @unique
+        |  wins: [Match!]! @relation(name: "TeamMatchWinner")
+        |  lefts: [Match!]! @relation(name: "TeamMatchLeft")
+        |}
+        |
+        |type Match {
+        |  number: Int @unique
+        |  teamLeft: Team @relation(name: "TeamMatchLeft")
+        |  teamRight: Team @relation(name: "TeamMatchRight")
+        |  winner: Team @relation(name: "TeamMatchWinner")
+        |}"""
+
+    val updatedProject = deployServer.deploySchema(project, schema1)
+
+    val updatedTeams = apiServer.query("""{teams{name, wins{number}, lefts{number}}}""", updatedProject)
+    updatedTeams.toString should be(
+      """{"data":{"teams":[{"name":"Bayern","wins":[],"lefts":[{"number":1},{"number":2}]},{"name":"Real","wins":[{"number":1},{"number":2}],"lefts":[]}]}}""")
+  }
 }

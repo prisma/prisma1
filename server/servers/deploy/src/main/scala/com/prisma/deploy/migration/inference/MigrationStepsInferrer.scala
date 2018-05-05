@@ -1,6 +1,6 @@
 package com.prisma.deploy.migration.inference
 
-import com.prisma.deploy.schema.UpdatedRelationAmbigous
+import com.prisma.deploy.schema.UpdatedRelationAmbiguous
 import com.prisma.shared.models._
 
 trait MigrationStepsInferrer {
@@ -258,8 +258,8 @@ case class MigrationStepsInferrerImpl(previousSchema: Schema, nextSchema: Schema
       val previousRelationCountBetweenModels = previousSchema.relations.count(relation => relation.connectsTheModels(previousModelAId, previousModelBId))
 
       if (nextRelation.name == nextGeneratedRelationName && nextRelationCountBetweenModels == 1 && previousRelationCountBetweenModels > 1)
-        throw UpdatedRelationAmbigous(
-          s"There is a relation ambiguity during the migration. The ambiguity is on a relation between ${previousRelation.modelAId} and ${previousRelation.modelBId}.")
+        throw UpdatedRelationAmbiguous(
+          s"There is a relation ambiguity during the migration. The ambiguity is on a relation between ${previousRelation.modelAId} and ${previousRelation.modelBId}. Please name relations or change the schema in steps.")
 
       val isNameRemovalOfPreviouslyNamedRelation = nextRelation.name == nextGeneratedRelationName && nextRelationCountBetweenModels == 1 && previousRelationCountBetweenModels == 1
       (relationNameMatches || isNameRemovalOfPreviouslyNamedRelation) && (refersToModelsExactlyRight || refersToModelsSwitched)
@@ -293,8 +293,8 @@ case class MigrationStepsInferrerImpl(previousSchema: Schema, nextSchema: Schema
       val nextRelationCountBetweenModels = nextSchema.relations.count(relation => relation.connectsTheModels(nextModelAId, nextModelBId))
 
       if (previousRelation.name == previousGeneratedRelationName && nextRelationCountBetweenModels > 1 && previousRelationCountBetweenModels == 1)
-        throw UpdatedRelationAmbigous(
-          s"There is a relation ambiguity during the migration. Please first name the old relation on your schema. The ambiguity is on a relation between ${previousRelation.modelAId} and ${previousRelation.modelBId}.")
+        throw UpdatedRelationAmbiguous(
+          s"There is a relation ambiguity during the migration. Please first name the old relation on your schema. The ambiguity is on a relation between ${previousRelation.modelAId} and ${previousRelation.modelBId}. Please name relations or change the schema in steps.")
 
       val isRenameOfPreviouslyUnnamedRelation = previousRelation.name == previousGeneratedRelationName && nextRelationCountBetweenModels == 1 && previousRelationCountBetweenModels == 1
 
