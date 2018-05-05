@@ -1910,9 +1910,9 @@ graphcool-inquirer@^1.0.3:
     strip-ansi "^4.0.0"
     through "^2.3.6"
 
-graphql-config-extension-prisma@^0.0.11:
-  version "0.0.11"
-  resolved "https://registry.yarnpkg.com/graphql-config-extension-prisma/-/graphql-config-extension-prisma-0.0.11.tgz#d194470cc7a18eae9dca3909c649714a1413f2c9"
+graphql-config-extension-prisma@^0.0.12:
+  version "0.0.12"
+  resolved "https://registry.yarnpkg.com/graphql-config-extension-prisma/-/graphql-config-extension-prisma-0.0.12.tgz#c591a2dd3d45eb4b039a39b5d4a6ea7ca7d8e05a"
   dependencies:
     graphql-config "^2.0.1"
     prisma-yml "1.0.50"

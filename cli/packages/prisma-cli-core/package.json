@@ -94,7 +94,7 @@
     "graphcool-inquirer": "^1.0.3",
     "graphql": "^0.13.1",
     "graphql-config": "^2.0.1",
-    "graphql-config-extension-prisma": "^0.0.11",
+    "graphql-config-extension-prisma": "^0.0.12",
     "graphql-playground-middleware-express": "^1.6.1",
     "inquirer": "^5.2.0",
     "isomorphic-fetch": "^2.2.1",
