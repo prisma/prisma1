@@ -3,7 +3,7 @@ package com.prisma.deploy.connector.postgresql
 import com.prisma.config.DatabaseConfig
 import com.prisma.deploy.connector._
 import com.prisma.deploy.connector.postgresql.database.{InternalDatabaseSchema, PostgresDeployDatabaseMutationBuilder, TelemetryTable}
-import com.prisma.deploy.connector.postgresql.impls.{PostgresClientDbQueries, DeployMutactionExecutorImpl, MigrationPersistenceImpl, ProjectPersistenceImpl}
+import com.prisma.deploy.connector.postgresql.impls.{PostgresClientDbQueries, PostgresDeployMutactionExecutor, MigrationPersistenceImpl, ProjectPersistenceImpl}
 import com.prisma.shared.models.{Project, ProjectIdEncoder}
 import org.joda.time.DateTime
 import slick.dbio.Effect.Read
@@ -19,7 +19,7 @@ case class PostgresDeployConnector(dbConfig: DatabaseConfig)(implicit ec: Execut
 
   override lazy val projectPersistence: ProjectPersistence           = ProjectPersistenceImpl(internalDatabase)
   override lazy val migrationPersistence: MigrationPersistence       = MigrationPersistenceImpl(internalDatabase)
-  override lazy val deployMutactionExecutor: DeployMutactionExecutor = DeployMutactionExecutorImpl(internalDatabaseRoot)
+  override lazy val deployMutactionExecutor: DeployMutactionExecutor = PostgresDeployMutactionExecutor(internalDatabaseRoot)
 
   override def createProjectDatabase(id: String): Future[Unit] = {
     val action = PostgresDeployDatabaseMutationBuilder.createClientDatabaseForProject(projectId = id)
