@@ -3,13 +3,13 @@
 exports[`Introspector relation with inline relation column 1`] = `
 "type Bill @pgTable(name: \\"bill\\") {
   bill: String!
-  id: Int! @default(value = [AUTO INCREMENT])
+  id: Int!
   product: Product @pgRelation(column: \\"product_id\\")
 }
 
 type Product @pgTable(name: \\"product\\") {
   description: String!
-  id: Int! @default(value = [AUTO INCREMENT])
+  id: Int!
   bills: [Bill]
 }
 "
@@ -18,12 +18,12 @@ type Product @pgTable(name: \\"product\\") {
 exports[`Introspector relation with relation table 1`] = `
 "type Bill @pgTable(name: \\"bill\\") {
   bill: String!
-  id: Int! @default(value = [AUTO INCREMENT])
+  id: Int!
   products: [Product] @pgRelationTable(table: \\"bill_product\\" name: \\"bill_product\\")
 }
 
 type Product @pgTable(name: \\"product\\") {
-  id: Int! @default(value = [AUTO INCREMENT])
+  id: Int!
   product: String!
   bills: [Bill] @pgRelationTable(table: \\"bill_product\\" name: \\"bill_product\\")
 }
@@ -33,7 +33,7 @@ type Product @pgTable(name: \\"product\\") {
 exports[`Introspector relation with relation table with extra column 1`] = `
 "type Bill @pgTable(name: \\"bill\\") {
   bill: String!
-  id: Int! @default(value = [AUTO INCREMENT])
+  id: Int!
   bill_products: [Bill_product]
 }
 
@@ -44,7 +44,7 @@ type Bill_product @pgTable(name: \\"bill_product\\") {
 }
 
 type Product @pgTable(name: \\"product\\") {
-  id: Int! @default(value = [AUTO INCREMENT])
+  id: Int!
   product: String!
   bill_products: [Bill_product]
 }

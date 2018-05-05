@@ -26,7 +26,7 @@ exports[`Introspector boolean columns 1`] = `
 
 exports[`Introspector float columns 1`] = `
 "type Floats @pgTable(name: \\"Floats\\") {
-  a: Float @default(value = 3.4)
+  a: Float @pgDefault(value = 3.4)
   b: Float
   c: Float
   d: Float
@@ -42,7 +42,7 @@ exports[`Introspector float columns 1`] = `
 
 exports[`Introspector int columns 1`] = `
 "type Ints @pgTable(name: \\"Ints\\") {
-  a: Int @default(value = 3)
+  a: Int @pgDefault(value = 3)
   b: Int
   c: Int
   d: Int!
@@ -54,9 +54,9 @@ exports[`Introspector int columns 1`] = `
 
 exports[`Introspector text columns 1`] = `
 "type Strings @pgTable(name: \\"Strings\\") {
-  a: String @unique
-  b: String @unique
-  c: String @default(value = \\"abc\\")
+  a: String @pgUnique
+  b: String @pgUnique
+  c: String @pgDefault(value = \\"abc\\")
   d: String!
   e: String!
   f: String!

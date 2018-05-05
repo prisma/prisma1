@@ -93,17 +93,21 @@ export class SdlPrinter {
 
   printFieldDirective(column: Column) {
     if (column.isUnique) {
-      return ` @unique`
+      return ` @pgUnique`
     }
     if (column.defaultValue != null) {
+      if (column.defaultValue == '[AUTO INCREMENT]') {
+        return ''
+      }
+
       if (
         column.typeIdentifier == 'String' ||
         column.typeIdentifier == 'DateTime' ||
         column.typeIdentifier == 'Json'
       ) {
-        return ` @default(value = "${column.defaultValue}")`
+        return ` @pgDefault(value = "${column.defaultValue}")`
       } else {
-        return ` @default(value = ${column.defaultValue})`
+        return ` @pgDefault(value = ${column.defaultValue})`
       }
     }
 
