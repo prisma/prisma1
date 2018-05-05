@@ -17,10 +17,10 @@ import { spawn } from '../../spawn'
 import * as sillyname from 'sillyname'
 import { getSchemaPathFromConfig } from './getSchemaPathFromConfig'
 import * as findUp from 'find-up'
-import getGraphQLCliBin from '../../utils/getGraphQLCliBin'
 import Up from '../local/up'
 import { EndpointDialog } from '../../utils/EndpointDialog'
 import { isDockerComposeInstalled } from '../../utils/dockerComposeInstalled'
+import { spawnSync } from 'npm-run'
 
 export default class Deploy extends Command {
   static topic = 'deploy'
@@ -440,9 +440,16 @@ Note: prisma local start will be deprecated soon in favor of the direct usage of
     for (const hook of hooks) {
       const splittedHook = hook.split(' ')
       this.out.action.start(`Running ${chalk.cyan(hook)}`)
-      const result = await spawn(splittedHook[0], splittedHook.slice(1))
+      const child = spawnSync(splittedHook[0], splittedHook.slice(1))
+      const stderr = child.stderr && child.stderr.toString()
+      if (stderr && stderr.length > 0) {
+        this.out.log(stderr)
+      }
+      const stdout = child.stdout && child.stdout.toString()
+      if (stdout) {
+        this.out.log(stdout)
+      }
       this.out.action.stop()
-      this.out.log(result)
     }
   }
 
@@ -518,31 +525,6 @@ Note: prisma local start will be deprecated soon in favor of the direct usage of
     }
 
     return false
-  }
-
-  private async graphqlPrepare() {
-    let dir
-    try {
-      dir = this.config.findConfigDir()
-    } catch (e) {
-      //
-    }
-    if (dir) {
-      const graphqlBin = await getGraphQLCliBin()
-      debug({ graphqlBin })
-      this.out.log(`Running ${chalk.cyan(`$ graphql prepare`)}...`)
-      try {
-        const oldCwd = this.config.cwd
-        const configDir = this.config.findConfigDir()
-        if (configDir) {
-          process.chdir(configDir)
-        }
-        await spawn(graphqlBin, ['prepare'])
-        process.chdir(oldCwd)
-      } catch (e) {
-        this.out.warn(e)
-      }
-    }
   }
 
   private printResult(payload: DeployPayload, force: boolean) {

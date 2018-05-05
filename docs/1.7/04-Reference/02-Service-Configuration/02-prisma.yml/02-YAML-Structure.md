@@ -66,7 +66,7 @@ The following example endpoint encodes this information:
 - **Service name**: `default`
 - **Stage**: `default`
 
-> **Note**: When service name and stage are both set tgo `default`, they can be omitted and will be inferred by Prisma. This means this example endpoint is equivalent to writing: `http://localhost:4466/`
+> **Note**: When service name and stage are both set to `default`, they can be omitted and will be inferred by Prisma. This means this example endpoint is equivalent to writing: `http://localhost:4466/`
 
 ```yml
 endpoint: http://localhost:4466/default/default
