@@ -21,7 +21,7 @@ object TokenExpired extends AbstractDeployApiError(s"Authentication token is exp
 
 case class InvalidQuery(reason: String) extends AbstractDeployApiError(reason, 3017)
 
-case class UpdatedRelationAmbigous(reason: String) extends AbstractDeployApiError(reason, 3018)
+case class UpdatedRelationAmbiguous(reason: String) extends AbstractDeployApiError(reason, 3018)
 
 // 40xx
 case class InvalidProjectId(projectId: ProjectId)
