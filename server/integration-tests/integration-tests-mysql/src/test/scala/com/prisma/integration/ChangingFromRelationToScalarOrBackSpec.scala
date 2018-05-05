@@ -104,7 +104,7 @@ class ChangingFromRelationToScalarOrBackSpec extends FlatSpec with Matchers with
 
     val (project, _) = setupProject(schema)
 
-    apiServer.query("""mutation{createA(data:{a:"A", b: {b: "B"}}){a}}""", project)
+    apiServer.query("""mutation{createA(data:{a:"A", b: {create:{b: "B"}}}){a}}""", project)
 
     val as = apiServer.query("""{as{a, b{b}}}""", project)
     as.toString should be("""{"data":{"as":[{"a":"A","b":{"b":"B"}}]}}""")
@@ -119,7 +119,7 @@ class ChangingFromRelationToScalarOrBackSpec extends FlatSpec with Matchers with
         |  b: String! @unique
         |}"""
 
-    deployServer.deploySchema(project, schema1)
+    deployServer.deploySchemaThatMustWarn(project, schema1, force = true)
   }
 
 }
