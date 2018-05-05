@@ -3,7 +3,7 @@ package com.prisma.deploy.schema.mutations
 import com.prisma.deploy.DeployDependencies
 import com.prisma.deploy.connector.{DeployConnector, MigrationPersistence, ProjectPersistence}
 import com.prisma.deploy.migration._
-import com.prisma.deploy.migration.inference.{InvalidGCValue, MigrationStepsInferrer, RelationDirectiveNeeded, SchemaInferrer}
+import com.prisma.deploy.migration.inference._
 import com.prisma.deploy.migration.migrator.Migrator
 import com.prisma.deploy.migration.validation.{SchemaError, SchemaSyntaxValidator, SchemaWarning}
 import com.prisma.deploy.schema.InvalidQuery
@@ -117,6 +117,7 @@ case class DeployMutation(
               errors = List(err match {
                 case RelationDirectiveNeeded(t1, _, t2, _) => SchemaError.global(s"Relation directive required for types $t1 and $t2.")
                 case InvalidGCValue(gcError)               => SchemaError.global(s"Invalid value '${gcError.value}' for type ${gcError.typeIdentifier}.")
+                case GenericProblem(msg)                   => SchemaError.global(msg)
               }),
               warnings = Seq.empty
             ))

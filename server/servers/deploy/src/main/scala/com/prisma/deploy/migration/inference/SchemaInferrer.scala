@@ -15,6 +15,9 @@ import cool.graph.cuid.Cuid
 import org.scalactic.{Bad, Good, Or}
 import sangria.ast.{Field => _, _}
 
+import scala.collection.immutable
+import scala.util.{Failure, Success, Try}
+
 trait SchemaInferrer {
   def infer(baseSchema: Schema, schemaMapping: SchemaMapping, graphQlSdl: Document, inferredTables: InferredTables): Schema Or ProjectSyntaxError
 }
@@ -26,11 +29,12 @@ object SchemaInferrer {
   }
 }
 
-sealed trait ProjectSyntaxError
+sealed trait ProjectSyntaxError                                                                                            extends Exception
 case class RelationDirectiveNeeded(type1: String, type1Fields: Vector[String], type2: String, type2Fields: Vector[String]) extends ProjectSyntaxError
 case class InvalidGCValue(err: InvalidValueForScalarType)                                                                  extends ProjectSyntaxError
+case class GenericProblem(msg: String)                                                                                     extends ProjectSyntaxError
 
-//case class ProjectSyntaxErrorException
+case class ProjectSyntaxErrorException(error: ProjectSyntaxError) extends Exception
 
 case class SchemaInferrerImpl(
     baseSchema: Schema,
@@ -42,19 +46,20 @@ case class SchemaInferrerImpl(
 
   def infer(): Schema Or ProjectSyntaxError = {
     for {
-      models <- nextModels
-    } yield {
-      Schema(
+      models <- nextModels(nextRelations)
+      schema = Schema(
         models = models.toList,
         relations = nextRelations.toList,
         enums = nextEnums.toList
       )
-    }
+      errors = checkRelationsAgainstInferredTables(schema)
+      result <- if (errors.isEmpty) Good(schema) else Bad(errors.head)
+    } yield result
   }
 
-  lazy val nextModels: Vector[Model] Or ProjectSyntaxError = {
+  def nextModels(relations: Set[Relation]): Vector[Model] Or ProjectSyntaxError = {
     val models = sdl.objectTypes.map { objectType =>
-      fieldsForType(objectType).map { fields =>
+      fieldsForType(objectType, relations).map { fields =>
         val fieldNames = fields.map(_.name)
         val hiddenReservedFields = if (isActive) {
           val missingReservedFields = ReservedFields.reservedFieldNames.filterNot(fieldNames.contains)
@@ -81,7 +86,7 @@ case class SchemaInferrerImpl(
     OrExtensions.sequence(models)
   }
 
-  def fieldsForType(objectType: ObjectTypeDefinition): Or[Vector[Field], InvalidGCValue] = {
+  def fieldsForType(objectType: ObjectTypeDefinition, relations: Set[Relation]): Or[Vector[Field], InvalidGCValue] = {
 
     val fields: Vector[Or[Field, InvalidGCValue]] = objectType.fields.flatMap { fieldDef =>
       val typeIdentifier = typeIdentifierForTypename(fieldDef.typeName)
@@ -90,8 +95,8 @@ case class SchemaInferrerImpl(
         None
       } else {
         fieldDef.relationName match {
-          case Some(name) => nextRelations.find(_.name == name)
-          case None       => nextRelations.find(relation => relation.connectsTheModels(objectType.name, fieldDef.typeName))
+          case Some(name) => relations.find(_.name == name)
+          case None       => relations.find(relation => relation.connectsTheModels(objectType.name, fieldDef.typeName))
         }
       }
 
@@ -223,6 +228,52 @@ case class SchemaInferrerImpl(
     tmp.groupBy(_.name).values.flatMap(_.headOption).toSet
   }
 
+  def checkRelationsAgainstInferredTables(schema: Schema): immutable.Seq[GenericProblem] = {
+    schema.relations.flatMap { relation =>
+      relation.manifestation match {
+        case None =>
+          val modelA = relation.getModelA_!(schema)
+          val modelB = relation.getModelB_!(schema)
+          Some(GenericProblem(s"Could not find the relation between the models ${modelA.name} and ${modelB.name} in the databtase"))
+
+        case Some(m: InlineRelationManifestation) =>
+          val model = schema.getModelById_!(m.inTableOfModelId)
+          val field = relation.getFieldOnModel(model.id, schema).get
+          inferredTables.modelTables.find(_.name == model.dbName) match {
+            case None =>
+              Some(GenericProblem(s"Could not find the model table ${model.dbName} in the databse"))
+
+            case Some(modelTable) =>
+              modelTable.foreignKeys.find(_.name == m.referencingColumn) match {
+                case None    => Some(GenericProblem(s"Could not find the foreign key column ${m.referencingColumn} in the model table ${model.dbName}"))
+                case Some(_) => None
+              }
+          }
+
+        case Some(m: RelationTableManifestation) =>
+          inferredTables.relationTables.find(_.name == m.table) match {
+            case None =>
+              Some(GenericProblem(s"Could not find the relation table ${m.table}"))
+
+            case Some(relationTable) =>
+              val modelA = relation.getModelA_!(schema)
+              val modelB = relation.getModelB_!(schema)
+              if (!relationTable.referencesTheTables(modelA.dbName, modelB.dbName)) {
+                Some(GenericProblem(s"The specified relation table ${m.table} does not reference the tables for model ${modelA.name} and ${modelB.name}"))
+              } else if (!relationTable.doesColumnReferenceTable(m.modelAColumn, modelA.dbName)) {
+                Some(GenericProblem(
+                  s"The specified relation table ${m.table} does not have a column ${m.modelAColumn} or does not the reference the right table ${modelA.dbName}"))
+              } else if (!relationTable.doesColumnReferenceTable(m.modelBColumn, modelB.dbName)) {
+                Some(GenericProblem(
+                  s"The specified relation table ${m.table} does not have a column ${m.modelBColumn} or does not the reference the right table ${modelB.dbName}"))
+              } else {
+                None
+              }
+          }
+      }
+    }
+  }
+
   def relationManifestationOnFieldOrRelatedField(objectType: ObjectTypeDefinition, relationField: FieldDefinition): Option[RelationManifestation] = {
     val manifestationOnThisField = relationManifestationOnField(objectType, relationField)
     val manifestationOnRelatedField = sdl.relatedFieldOf(objectType, relationField).flatMap { relatedField =>
@@ -244,29 +295,33 @@ case class SchemaInferrerImpl(
       }
 
     val relationTableManifestation = relationField.relationTableDirective
-      .map { tableDirective =>
+      .flatMap { tableDirective =>
         val isThisModelA  = isModelA(objectType.name, relationField.typeName)
         val inferredTable = inferredTables.relationTables.find(_.name == tableDirective.table)
         val relatedType   = sdl.objectType_!(relationField.typeName)
 
-        val modelAColumn = if (isThisModelA) {
+        val modelAColumnOpt = if (isThisModelA) {
           tableDirective.thisColumn.orElse(inferredTable.flatMap(_.columnForTable(relatedType.tableName)))
         } else {
           tableDirective.otherColumn.orElse(inferredTable.flatMap(_.columnForTable(objectType.tableName)))
         }
 
-        val modelBColumn = if (isThisModelA) {
+        val modelBColumnOpt = if (isThisModelA) {
           tableDirective.otherColumn.orElse(inferredTable.flatMap(_.columnForTable(objectType.tableName)))
         } else {
           tableDirective.thisColumn.orElse(inferredTable.flatMap(_.columnForTable(relatedType.tableName)))
         }
 
-        // FIXME: return an error if we can not find a foreign key columns for his relation instead of calling .get
-        RelationTableManifestation(
-          table = tableDirective.table,
-          modelAColumn = modelAColumn.get,
-          modelBColumn = modelBColumn.get
-        )
+        for {
+          modelAColumn <- modelAColumnOpt
+          modelBColumn <- modelBColumnOpt
+        } yield {
+          RelationTableManifestation(
+            table = tableDirective.table,
+            modelAColumn = modelAColumn,
+            modelBColumn = modelBColumn
+          )
+        }
       }
       .orElse {
         val relatedType         = sdl.objectType_!(relationField.typeName)
@@ -277,25 +332,29 @@ case class SchemaInferrerImpl(
           .find { relationTable =>
             relationTable.referencesTheTables(tableForThisType, tableForRelatedType)
           }
-          .map { inferredTable =>
+          .flatMap { inferredTable =>
             val isThisModelA = isModelA(objectType.name, relationField.typeName)
-            val modelAColumn = if (isThisModelA) {
+            val modelAColumnOpt = if (isThisModelA) {
               inferredTable.columnForTable(relatedType.tableName)
             } else {
               inferredTable.columnForTable(objectType.tableName)
             }
 
-            val modelBColumn = if (isThisModelA) {
+            val modelBColumnOpt = if (isThisModelA) {
               inferredTable.columnForTable(objectType.tableName)
             } else {
               inferredTable.columnForTable(relatedType.tableName)
             }
-            // FIXME: return an error if we can not find a foreign key columns for his relation instead of calling .get
-            RelationTableManifestation(
-              table = inferredTable.name,
-              modelAColumn = modelAColumn.get,
-              modelBColumn = modelBColumn.get
-            )
+            for {
+              modelAColumn <- modelAColumnOpt
+              modelBColumn <- modelBColumnOpt
+            } yield {
+              RelationTableManifestation(
+                table = inferredTable.name,
+                modelAColumn = modelAColumn,
+                modelBColumn = modelBColumn
+              )
+            }
           }
       }
     inlineRelationManifestation.orElse(relationTableManifestation)
@@ -333,6 +392,15 @@ case class SchemaInferrerImpl(
       TypeIdentifier.Enum
     } else {
       TypeIdentifier.withNameHacked(typeName)
+    }
+  }
+
+  def catchSyntaxExceptions[T](fn: => T): T Or ProjectSyntaxError = {
+    Try(fn) match {
+      case Success(x)                              => Good(x)
+      case Failure(e: ProjectSyntaxErrorException) => Bad(e.error)
+      case Failure(e: ProjectSyntaxError)          => Bad(e)
+      case Failure(e)                              => throw e
     }
   }
 }
