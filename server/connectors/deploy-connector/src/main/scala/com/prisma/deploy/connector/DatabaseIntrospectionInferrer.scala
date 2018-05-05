@@ -30,6 +30,10 @@ case class InferredRelationTable(name: String, foreignKey1: InferredForeignKeyCo
     else if (foreignKey2.referencesTable == table) Some(foreignKey2.name)
     else None
   }
+
+  def referencesTheTables(table1: String, table2: String) = {
+    (foreignKey1.referencesTable == table1 && foreignKey2.referencesTable == table2) || (foreignKey1.referencesTable == table2 && foreignKey2.referencesTable == table1)
+  }
 }
 case class InferredForeignKeyColumn(name: String, referencesTable: String, referencesColumn: String)
 

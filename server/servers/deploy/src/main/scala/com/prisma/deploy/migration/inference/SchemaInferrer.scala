@@ -241,29 +241,61 @@ case class SchemaInferrerImpl(
         InlineRelationManifestation(inTableOfModelId = objectType.name, referencingColumn = column)
       }
 
-    val relationTableManifestation = relationField.relationTableDirective.map { tableDirective =>
-      val isThisModelA  = isModelA(objectType.name, relationField.typeName)
-      val inferredTable = inferredTables.relationTables.find(_.name == tableDirective.table)
+    val relationTableManifestation = relationField.relationTableDirective
+      .map { tableDirective =>
+        val isThisModelA  = isModelA(objectType.name, relationField.typeName)
+        val inferredTable = inferredTables.relationTables.find(_.name == tableDirective.table)
+        val relatedType   = sdl.objectType_!(relationField.typeName)
 
-      val modelAColumn = if (isThisModelA) {
-        tableDirective.thisColumn.orElse(inferredTable.flatMap(_.columnForTable(relationField.typeName)))
-      } else {
-        tableDirective.otherColumn.orElse(inferredTable.flatMap(_.columnForTable(objectType.name)))
+        val modelAColumn = if (isThisModelA) {
+          tableDirective.thisColumn.orElse(inferredTable.flatMap(_.columnForTable(relatedType.tableName)))
+        } else {
+          tableDirective.otherColumn.orElse(inferredTable.flatMap(_.columnForTable(objectType.tableName)))
+        }
+
+        val modelBColumn = if (isThisModelA) {
+          tableDirective.otherColumn.orElse(inferredTable.flatMap(_.columnForTable(objectType.tableName)))
+        } else {
+          tableDirective.thisColumn.orElse(inferredTable.flatMap(_.columnForTable(relatedType.tableName)))
+        }
+
+        // FIXME: return an error if we can not find a foreign key columns for his relation instead of calling .get
+        RelationTableManifestation(
+          table = tableDirective.table,
+          modelAColumn = modelAColumn.get,
+          modelBColumn = modelBColumn.get
+        )
       }
+      .orElse {
+        val relatedType         = sdl.objectType_!(relationField.typeName)
+        val tableForThisType    = objectType.tableName
+        val tableForRelatedType = sdl.objectType_!(relationField.typeName).tableName
 
-      val modelBColumn = if (isThisModelA) {
-        tableDirective.otherColumn.orElse(inferredTable.flatMap(_.columnForTable(objectType.name)))
-      } else {
-        tableDirective.thisColumn.orElse(inferredTable.flatMap(_.columnForTable(relationField.typeName)))
+        inferredTables.relationTables
+          .find { relationTable =>
+            relationTable.referencesTheTables(tableForThisType, tableForRelatedType)
+          }
+          .map { inferredTable =>
+            val isThisModelA = isModelA(objectType.name, relationField.typeName)
+            val modelAColumn = if (isThisModelA) {
+              inferredTable.columnForTable(relatedType.tableName)
+            } else {
+              inferredTable.columnForTable(objectType.tableName)
+            }
+
+            val modelBColumn = if (isThisModelA) {
+              inferredTable.columnForTable(objectType.tableName)
+            } else {
+              inferredTable.columnForTable(relatedType.tableName)
+            }
+            // FIXME: return an error if we can not find a foreign key columns for his relation instead of calling .get
+            RelationTableManifestation(
+              table = inferredTable.name,
+              modelAColumn = modelAColumn.get,
+              modelBColumn = modelBColumn.get
+            )
+          }
       }
-
-      // FIXME: return an error if we can not find a foreign key columns for his relation instead of calling .get
-      RelationTableManifestation(
-        table = tableDirective.table,
-        modelAColumn = modelAColumn.get,
-        modelBColumn = modelBColumn.get
-      )
-    }
     inlineRelationManifestation.orElse(relationTableManifestation)
   }
 

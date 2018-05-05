@@ -73,7 +73,11 @@ case class DeployMutation(
               MutationSuccess(DeployMutationPayload(args.clientMutationId, Some(Migration.empty(project.id)), errors = schemaErrors ++ errors, Seq.empty)))
 
           case Good(functionsForInput) =>
-            val steps                  = migrationStepsInferrer.infer(project.schema, inferredNextSchema, schemaMapping)
+            val steps = if (deployConnector.isActive) {
+              migrationStepsInferrer.infer(project.schema, inferredNextSchema, schemaMapping)
+            } else {
+              Vector.empty
+            }
             val existingDataValidation = DestructiveChanges(deployConnector, project, inferredNextSchema, steps)
             val checkResults           = existingDataValidation.checkAgainstExistingData
 
@@ -153,8 +157,12 @@ case class DeployMutation(
   }
 
   private def handleMigration(nextSchema: Schema, steps: Vector[MigrationStep], functions: Vector[Function]): Future[Option[Migration]] = {
-    val migrationNeeded = steps.nonEmpty || functions.nonEmpty
-    val isNotDryRun     = !args.dryRun.getOrElse(false)
+    val migrationNeeded = if (deployConnector.isActive) {
+      steps.nonEmpty || functions.nonEmpty
+    } else {
+      project.schema != nextSchema
+    }
+    val isNotDryRun = !args.dryRun.getOrElse(false)
     if (migrationNeeded && isNotDryRun) {
       invalidateSchema()
       migrator.schedule(project.id, nextSchema, steps, functions).map(Some(_))

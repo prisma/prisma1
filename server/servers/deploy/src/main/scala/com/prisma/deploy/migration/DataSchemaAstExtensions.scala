@@ -119,9 +119,9 @@ object DataSchemaAstExtensions {
 
     def relationTableDirective: Option[RelationTableDirective] = {
       for {
-        tableName   <- fieldDefinition.directiveArgumentAsString("relationTable", "table")
-        thisColumn  = fieldDefinition.directiveArgumentAsString("relationTable", "thisColumn")
-        otherColumn = fieldDefinition.directiveArgumentAsString("relationTable", "otherColumn")
+        tableName   <- fieldDefinition.directiveArgumentAsString("pgRelationTable", "table")
+        thisColumn  = fieldDefinition.directiveArgumentAsString("pgRelationTable", "thisColumn")
+        otherColumn = fieldDefinition.directiveArgumentAsString("pgRelationTable", "otherColumn")
       } yield RelationTableDirective(table = tableName, thisColumn = thisColumn, otherColumn = otherColumn)
     }
 
