@@ -20,9 +20,9 @@ trait SchemaInferrer {
 }
 
 object SchemaInferrer {
-  def apply(addReservedFields: Boolean = true) = new SchemaInferrer {
+  def apply(isActive: Boolean = true) = new SchemaInferrer {
     override def infer(baseSchema: Schema, schemaMapping: SchemaMapping, graphQlSdl: Document, inferredTables: InferredTables) =
-      SchemaInferrerImpl(baseSchema, schemaMapping, graphQlSdl, addReservedFields, inferredTables).infer()
+      SchemaInferrerImpl(baseSchema, schemaMapping, graphQlSdl, isActive, inferredTables).infer()
   }
 }
 
@@ -30,11 +30,13 @@ sealed trait ProjectSyntaxError
 case class RelationDirectiveNeeded(type1: String, type1Fields: Vector[String], type2: String, type2Fields: Vector[String]) extends ProjectSyntaxError
 case class InvalidGCValue(err: InvalidValueForScalarType)                                                                  extends ProjectSyntaxError
 
+//case class ProjectSyntaxErrorException
+
 case class SchemaInferrerImpl(
     baseSchema: Schema,
     schemaMapping: SchemaMapping,
     sdl: Document,
-    addReservedFields: Boolean,
+    isActive: Boolean,
     inferredTables: InferredTables
 ) extends AwaitUtils {
 
@@ -54,7 +56,7 @@ case class SchemaInferrerImpl(
     val models = sdl.objectTypes.map { objectType =>
       fieldsForType(objectType).map { fields =>
         val fieldNames = fields.map(_.name)
-        val hiddenReservedFields = if (addReservedFields) {
+        val hiddenReservedFields = if (isActive) {
           val missingReservedFields = ReservedFields.reservedFieldNames.filterNot(fieldNames.contains)
           missingReservedFields.map(ReservedFields.reservedFieldFor(_).copy(isHidden = true))
         } else {

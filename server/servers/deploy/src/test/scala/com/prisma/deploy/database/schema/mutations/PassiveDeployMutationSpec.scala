@@ -208,4 +208,44 @@ class PassiveDeployMutationSpec extends FlatSpec with Matchers with PassiveDeplo
     relation.modelBId should be("Todo")
     relation.manifestation should be(Some(RelationTableManifestation(table = "todotolist", modelAColumn = "todo_id", modelBColumn = "list_id")))
   }
+
+  "a sdl schema with an inline relation that does not match the db schema" should "return a error" in {
+    val sqlSchema = s"""
+     |CREATE TABLE list (
+     |  id      varchar PRIMARY KEY  -- implicit primary key constraint
+     |, name    text NOT NULL
+     |);
+     |
+     |CREATE TABLE todo (
+     |  id       varchar PRIMARY KEY
+     |, title     text NOT NULL
+     |);
+     |
+     |CREATE TABLE TodoToTodo(
+     |  todo_id varchar NOT NULL REFERENCES todo (id) ON UPDATE CASCADE,
+     |  todo_id2 varchar NOT NULL REFERENCES todo (id) ON UPDATE CASCADE
+     |)
+      """.stripMargin
+
+    val schema =
+      """
+        | type List @model(table: "list"){
+        |   id: ID! @unique
+        |   name: String!
+        |   todos: [Todo!]!
+        | }
+        |
+        | type Todo @model(table: "todo"){
+        |   id: ID! @unique
+        |   title: String!
+        |   list: [List!]!
+        | }
+      """.stripMargin
+
+    setupProjectDatabaseForProject(projectId, sqlSchema)
+
+    val result = server.deploySchemaThatMustError(projectId, schema)
+
+    println(result)
+  }
 }
