@@ -18,8 +18,8 @@ static=$(printf "    - label: \":mysql: MySql API connector\"
     - label: \":postgres: Postgres deploy connector\"
       command: cd server && ./.buildkite/scripts/test.sh deploy-connector-postgresql postgres
 
-    - label: \":scala: integration-tests-postgres\"
-      command: cd server && ./.buildkite/scripts/test.sh integration-tests-mysql postgres
+    #- label: \":scala: integration-tests-postgres\"
+    #  command: cd server && ./.buildkite/scripts/test.sh integration-tests-mysql postgres
 
     # Libs are not specific to a connector, simply run with mysql
     - label: \":scala: libs\"
