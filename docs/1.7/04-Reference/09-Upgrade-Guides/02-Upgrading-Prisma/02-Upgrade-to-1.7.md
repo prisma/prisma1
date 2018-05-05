@@ -136,7 +136,6 @@ services:
         databases:
           default:
             connector: mysql  # or `postgres`
-            active: true
             host: db
             port: 3306        # or `5432` for `postgres`
             user: root
