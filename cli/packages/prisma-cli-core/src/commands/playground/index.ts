@@ -71,7 +71,7 @@ export default class Playground extends Command {
     const config = await this.getConfig()
 
     if (shouldStartServer) {
-      const endpoint = cluster!.getApiEndpoint(
+      const endpoint = this.definition.definition!.endpoint || cluster!.getApiEndpoint(
         this.definition.service!,
         stage,
         this.definition.getWorkspace() || undefined,
