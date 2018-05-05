@@ -205,6 +205,7 @@ export class CLI {
 
     if (
       !(
+        this.config.argv.includes('playground') ||
         this.config.argv.includes('logs') ||
         this.config.argv.includes('logs:function') ||
         (this.config.argv.includes('deploy') &&

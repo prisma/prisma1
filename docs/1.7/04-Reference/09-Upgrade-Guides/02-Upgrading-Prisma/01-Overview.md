@@ -7,7 +7,7 @@ description: General pointers for upgrading a Prisma server
 
 Before upgrading your Prisma server, make sure to follow the general instructions here, as well as the instructions for upgrading to a specific version.
 
-If you have any questions about upgrading your Prisma serer, feel free to reach out in [the Forum](https://graph.cool/forum), [Slack](https://slack.graph.cool) or [Github](https://github.com/graphcool/prisma).
+If you have any questions about upgrading your Prisma server, feel free to reach out in [the Forum](https://graph.cool/forum), [Slack](https://slack.graph.cool) or [Github](https://github.com/graphcool/prisma).
 
 ## Release Notes
 
