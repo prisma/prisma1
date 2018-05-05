@@ -6,7 +6,6 @@ const debug = require('debug')('playground')
 import * as path from 'path'
 import * as os from 'os'
 import * as crypto from 'crypto'
-import getGraphQLCliBin from '../../utils/getGraphQLCliBin'
 import chalk from 'chalk'
 import { spawn } from '../../spawn'
 import * as express from 'express'
@@ -88,35 +87,6 @@ export default class Playground extends Command {
       const url = `graphql-playground://?cwd=${process.cwd()}&envPath=${envPath}`
       opn(url, { wait: false })
     }
-
-    // if (this.config.findConfigDir() === this.config.definitionDir) {
-    //   const graphqlBin = await getGraphQLCliBin()
-    //   debug({ graphqlBin })
-    //   this.out.log(`Running ${chalk.cyan(`$ graphql playground`)}...`)
-    //   const args = ['playground']
-    //   if (web) {
-    //     args.push('--web')
-    //   }
-    //   await spawn(graphqlBin, args)
-    // } else {
-    //   const endpoint = cluster!.getApiEndpoint(
-    //     this.definition.service!,
-    //     stage,
-    //     this.definition.getWorkspace() || undefined,
-    //   )
-    //   if (fs.pathExistsSync(localPlaygroundPath) && !web) {
-    //     const envPath = path.join(os.tmpdir(), `${randomString()}.json`)
-    //     fs.writeFileSync(envPath, JSON.stringify(process.env))
-    //     const url = `graphql-playground://?cwd=${
-    //       this.config.cwd
-    //     }&envPath=${envPath}&endpoint=${endpoint}`
-    //     opn(url, { wait: false })
-    //     debug(url)
-    //     debug(process.env)
-    //   } else {
-    //     opn(endpoint)
-    //   }
-    // }
   }
 
   async getConfig(): Promise<GraphQLConfig> {

@@ -17,7 +17,6 @@ import { spawn } from '../../spawn'
 import * as sillyname from 'sillyname'
 import { getSchemaPathFromConfig } from './getSchemaPathFromConfig'
 import * as findUp from 'find-up'
-import getGraphQLCliBin from '../../utils/getGraphQLCliBin'
 import Up from '../local/up'
 import { EndpointDialog } from '../../utils/EndpointDialog'
 import { isDockerComposeInstalled } from '../../utils/dockerComposeInstalled'
@@ -526,31 +525,6 @@ Note: prisma local start will be deprecated soon in favor of the direct usage of
     }
 
     return false
-  }
-
-  private async graphqlPrepare() {
-    let dir
-    try {
-      dir = this.config.findConfigDir()
-    } catch (e) {
-      //
-    }
-    if (dir) {
-      const graphqlBin = await getGraphQLCliBin()
-      debug({ graphqlBin })
-      this.out.log(`Running ${chalk.cyan(`$ graphql prepare`)}...`)
-      try {
-        const oldCwd = this.config.cwd
-        const configDir = this.config.findConfigDir()
-        if (configDir) {
-          process.chdir(configDir)
-        }
-        await spawn(graphqlBin, ['prepare'])
-        process.chdir(oldCwd)
-      } catch (e) {
-        this.out.warn(e)
-      }
-    }
   }
 
   private printResult(payload: DeployPayload, force: boolean) {

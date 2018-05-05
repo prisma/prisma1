@@ -5,7 +5,6 @@ import chalk from 'chalk'
 import * as npmRun from 'npm-run'
 const debug = require('debug')('init')
 import * as spawn from 'cross-spawn'
-import getGraphQLCliBin from '../../utils/getGraphQLCliBin'
 import { EndpointDialog } from '../../utils/EndpointDialog'
 import { isDockerComposeInstalled } from '../../utils/dockerComposeInstalled'
 
