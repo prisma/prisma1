@@ -46,7 +46,6 @@ object SchemaSyntaxValidator {
     ),
     DirectiveRequirement("rename", requiredArguments = Seq(RequiredArg("oldName", mustBeAString = true)), optionalArguments = Seq.empty),
     DirectiveRequirement("default", requiredArguments = Seq(RequiredArg("value", mustBeAString = false)), optionalArguments = Seq.empty),
-    DirectiveRequirement("migrationValue", requiredArguments = Seq(RequiredArg("value", mustBeAString = false)), optionalArguments = Seq.empty),
     DirectiveRequirement("unique", requiredArguments = Seq.empty, optionalArguments = Seq.empty)
   )
 
@@ -271,7 +270,9 @@ case class SchemaSyntaxValidator(schema: String, directiveRequirements: Seq[Dire
   }
 
   def validateEnumTypes: Seq[SchemaError] = {
-    doc.enumTypes.flatMap { enumType =>
+    val duplicateNames = doc.enumNames.diff(doc.enumNames.distinct).distinct.flatMap(dupe => Some(SchemaErrors.enumNamesMustBeUnique(doc.enumType(dupe).get)))
+
+    val otherErrors = doc.enumTypes.flatMap { enumType =>
       val invalidEnumValues = enumType.valuesAsStrings.filter(!NameConstraints.isValidEnumValueName(_))
 
       if (enumType.values.exists(value => value.name.head.isLower)) {
@@ -282,6 +283,8 @@ case class SchemaSyntaxValidator(schema: String, directiveRequirements: Seq[Dire
         None
       }
     }
+
+    duplicateNames ++ otherErrors
   }
 
   def relationCount(fieldAndType: FieldAndType): Int = {

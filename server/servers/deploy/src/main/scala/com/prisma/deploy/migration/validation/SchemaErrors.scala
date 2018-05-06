@@ -145,6 +145,10 @@ object SchemaErrors {
     )
   }
 
+  def enumNamesMustBeUnique(enumType: EnumTypeDefinition) = {
+    error(enumType, s"The enum type `${enumType.name}` is defined twice in the schema. Enum names must be unique.")
+  }
+
   def enumValuesMustBeginUppercase(enumType: EnumTypeDefinition) = {
     error(enumType, s"The enum type `${enumType.name}` contains invalid enum values. The first character of each value must be an uppercase letter.")
   }
