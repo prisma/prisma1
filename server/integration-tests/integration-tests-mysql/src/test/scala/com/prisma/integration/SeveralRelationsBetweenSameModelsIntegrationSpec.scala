@@ -207,4 +207,244 @@ class SeveralRelationsBetweenSameModelsIntegrationSpec extends FlatSpec with Mat
     unchangedRelationContent.toString should be("""{"data":{"as":[{"title":"A1","b1":{"title":"B1"}}]}}""")
   }
 
+  "Going from two named relations between the same models to one unnamed one" should "error due to ambiguity" in {
+
+    val schema =
+      """type A {
+        |  id: ID! @unique
+        |  b: B @relation(name: "AB1")
+        |  b2: B @relation(name: "AB2")
+        | }
+        |
+        |type B {
+        |  id: ID! @unique
+        |  title: String
+        |  a: A @relation(name: "AB1")
+        |  a2: A @relation(name: "AB2")
+        | }"""
+
+    val (project, _) = setupProject(schema)
+
+    project.schema.relations.size should be(2)
+    project.schema.relations.head.name should be("""AB1""")
+    project.schema.relations.last.name should be("""AB2""")
+
+    val schema1 =
+      """type A {
+        |  id: ID! @unique
+        |  b: B
+        |}
+        |
+        |type B {
+        |  id: ID! @unique
+        |  title: String
+        |}"""
+
+    deployServer.deploySchemaThatMustErrorWithCode(project, schema1, errorCode = 3018)
+  }
+
+  "Going from two named relations between the same models to one named one without a backrelation" should "work" in {
+
+    val schema =
+      """type A {
+        |  id: ID! @unique
+        |  title: String
+        |  b: B @relation(name: "AB1")
+        |  b2: B @relation(name: "AB2")
+        | }
+        |
+        |type B {
+        |  id: ID! @unique
+        |  title: String
+        |  a: A @relation(name: "AB1")
+        |  a2: A @relation(name: "AB2")
+        | }"""
+
+    val (project, _) = setupProject(schema)
+
+    project.schema.relations.size should be(2)
+    project.schema.relations.head.name should be("""AB1""")
+    project.schema.relations.last.name should be("""AB2""")
+
+    apiServer.query("""mutation{createA(data:{title:"A1" b:{create:{title: "B1"}}}){id}}""", project)
+
+    val schema1 =
+      """type A {
+        |  id: ID! @unique
+        |  title: String
+        |  b: B @relation(name: "AB1")
+        |}
+        |
+        |type B {
+        |  id: ID! @unique
+        |  title: String
+        |}"""
+
+    val updatedProject = deployServer.deploySchema(project, schema1)
+
+    updatedProject.schema.relations.size should be(1)
+    updatedProject.schema.relations.head.name should be("""AB1""")
+
+    val unchangedRelationContent = apiServer.query("""{as{title, b{title}}}""", updatedProject)
+
+    unchangedRelationContent.toString should be("""{"data":{"as":[{"title":"A1","b":{"title":"B1"}}]}}""")
+  }
+
+  "Going from two named relations between the same models to one named one without a backrelation" should "work even when there is a rename" in {
+
+    val schema =
+      """type A {
+          |  id: ID! @unique
+          |  title: String
+          |  b: B @relation(name: "AB1")
+          |  b2: B @relation(name: "AB2")
+          | }
+          |
+          |type B {
+          |  id: ID! @unique
+          |  title: String
+          |  a: A @relation(name: "AB1")
+          |  a2: A @relation(name: "AB2")
+          | }"""
+
+    val (project, _) = setupProject(schema)
+
+    project.schema.relations.size should be(2)
+    project.schema.relations.head.name should be("""AB1""")
+    project.schema.relations.last.name should be("""AB2""")
+
+    apiServer.query("""mutation{createA(data:{title:"A1" b:{create:{title: "B1"}}}){id}}""", project)
+
+    val schema1 =
+      """type A {
+          |  id: ID! @unique
+          |  title: String
+          |  b: B @relation(name: "AB2" oldName: "AB1")
+          |}
+          |
+          |type B {
+          |  id: ID! @unique
+          |  title: String
+          |}"""
+
+    val updatedProject = deployServer.deploySchema(project, schema1)
+
+    updatedProject.schema.relations.size should be(1)
+    updatedProject.schema.relations.head.name should be("""AB2""")
+
+    val unchangedRelationContent = apiServer.query("""{as{title, b{title}}}""", updatedProject)
+
+    unchangedRelationContent.toString should be("""{"data":{"as":[{"title":"A1","b":{"title":"B1"}}]}}""")
+  }
+
+  "Several missing backrelations on the same type" should "work when there are relation directives provided" in {
+
+    val schema =
+      """type TeamMatch {
+        |  name: String! @unique
+        |}
+        |
+        |type Match {
+        |  number: Int @unique
+        |}"""
+
+    val (project, _) = setupProject(schema)
+
+    val schema1 =
+      """type Team {
+        |  name: String! @unique
+        |}
+        |
+        |type Match {
+        |  number: Int @unique
+        |  teamLeft: Team @relation(name: "TeamMatchLeft")
+        |  teamRight: Team @relation(name: "TeamMatchRight")
+        |  winner: Team @relation(name: "TeamMatchWinner")
+        |}"""
+    val updatedProject = deployServer.deploySchema(project, schema1)
+
+    updatedProject.schema.relations.size should be(3)
+
+    apiServer.query(
+      """mutation{createMatch(data:{
+        |                           number:1
+        |                           teamLeft:{create:{name: "Bayern"}},
+        |                           teamRight:{create:{name: "Real"}},
+        |                           winner:{create:{name: "Real2"}}
+        |                           }                           
+        |){number}}""",
+      updatedProject
+    )
+
+    val matches = apiServer.query("""{matches{number, teamLeft{name},teamRight{name},winner{name}}}""", updatedProject)
+    matches.toString should be("""{"data":{"matches":[{"number":1,"teamLeft":{"name":"Bayern"},"teamRight":{"name":"Real"},"winner":{"name":"Real2"}}]}}""")
+
+    val teams = apiServer.query("""{teams{name}}""", updatedProject)
+    teams.toString should be("""{"data":{"teams":[{"name":"Bayern"},{"name":"Real"},{"name":"Real2"}]}}""")
+
+  }
+
+  // should move to schemavalidationspec
+
+  "One missing backrelation and one unnamed relation on the other side" should "error" in {
+
+    val (project, _) = setupProject(basicTypesGql)
+    val schema1 =
+      """type TeamMatch {
+        |  key: String! @unique
+        |  match: Match
+        |}
+        |
+        |type Match {
+        |  number: Int @unique
+        |  teamLeft: TeamMatch @relation(name: "TeamMatchLeft")
+        |}"""
+
+    val res = deployServer.deploySchemaThatMustError(project, schema1)
+    res.toString should be(
+      """{"data":{"deploy":{"migration":null,"errors":[{"description":"You are trying to set the relation 'TeamMatchLeft' from `Match` to `TeamMatch` and are only providing a relation directive on `Match`. Since there is also a relation field without a relation directive on `TeamMatch` pointing towards `Match` that is ambiguous. Please provide the same relation directive on `TeamMatch` if this is supposed to be the same relation. If you meant to create two separate relations without backrelations please provide a relation directive with a different name on `nameB`."}],"warnings":[]}}}""")
+  }
+
+  "Several missing backrelations on the same type and one unnamed relation on the other side" should "error" in {
+    val (project, _) = setupProject(basicTypesGql)
+
+    val schema1 =
+      """type TeamMatch {
+        |  key: String! @unique
+        |  match: Match
+        |}
+        |
+        |type Match {
+        |  number: Int @unique
+        |  teamLeft: TeamMatch @relation(name: "TeamMatchLeft")
+        |  teamRight: TeamMatch @relation(name: "TeamMatchRight")
+        |  winner: TeamMatch @relation(name: "TeamMatchWinner")
+        |}"""
+
+    val res = deployServer.deploySchemaThatMustError(project, schema1)
+    res.toString should be(
+      """{"data":{"deploy":{"migration":null,"errors":[{"description":"You are trying to set the relation 'TeamMatchLeft' from `Match` to `TeamMatch` and are only providing a relation directive on `Match`. Since there is also a relation field without a relation directive on `TeamMatch` pointing towards `Match` that is ambiguous. Please provide the same relation directive on `TeamMatch` if this is supposed to be the same relation. If you meant to create two separate relations without backrelations please provide a relation directive with a different name on `nameB`."},{"description":"You are trying to set the relation 'TeamMatchRight' from `Match` to `TeamMatch` and are only providing a relation directive on `Match`. Since there is also a relation field without a relation directive on `TeamMatch` pointing towards `Match` that is ambiguous. Please provide the same relation directive on `TeamMatch` if this is supposed to be the same relation. If you meant to create two separate relations without backrelations please provide a relation directive with a different name on `nameB`."},{"description":"You are trying to set the relation 'TeamMatchWinner' from `Match` to `TeamMatch` and are only providing a relation directive on `Match`. Since there is also a relation field without a relation directive on `TeamMatch` pointing towards `Match` that is ambiguous. Please provide the same relation directive on `TeamMatch` if this is supposed to be the same relation. If you meant to create two separate relations without backrelations please provide a relation directive with a different name on `nameB`."}],"warnings":[]}}}""")
+  }
+
+  "Several missing backrelation to different models" should "work" in {
+
+    val (project, _) = setupProject(basicTypesGql)
+    val schema1 =
+      """type TeamMatch {
+        |  key: String! @unique
+        |}
+        |
+        |type TeamMatch2 {
+        |  key: String! @unique
+        |}
+        |
+        |type Match {
+        |  number: Int @unique
+        |  teamLeft: TeamMatch @relation(name: "TeamMatchLeft")
+        |  teamLeft2: TeamMatch2 @relation(name: "TeamMatchLeft2")
+        |}"""
+
+    deployServer.deploySchemaThatMustSucceed(project, schema1, 3)
+  }
+
 }

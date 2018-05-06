@@ -3,11 +3,13 @@ package com.prisma.api.resolver
 import com.prisma.api.connector._
 import com.prisma.api.resolver.DeferredTypes._
 
-import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.ExecutionContext
 
 class ManyModelDeferredResolver(resolver: DataResolver) {
-  def resolve(orderedDeferreds: Vector[OrderedDeferred[ManyModelDeferred]]): Vector[OrderedDeferredFutureResult[RelayConnectionOutputType]] = {
-    val deferreds = orderedDeferreds.map(_.deferred)
+  def resolve(orderedDeferreds: Vector[OrderedDeferred[ManyModelDeferred]],
+              executionContext: ExecutionContext): Vector[OrderedDeferredFutureResult[RelayConnectionOutputType]] = {
+    implicit val ec: ExecutionContext = executionContext
+    val deferreds                     = orderedDeferreds.map(_.deferred)
 
     DeferredUtils.checkSimilarityOfModelDeferredsAndThrow(deferreds)
 

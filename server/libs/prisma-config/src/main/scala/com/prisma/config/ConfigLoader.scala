@@ -102,7 +102,7 @@ object ConfigLoader {
   def convertToConfig(map: mutable.Map[String, Any]): PrismaConfig = {
     val port           = extractIntOpt("port", map)
     val secret         = extractStringOpt("managementApiSecret", map)
-    val legacySecret   = extractStringOpt("clusterPublicKey", map)
+    val legacySecret   = extractStringOpt("legacySecret", map)
     val s2sSecret      = extractStringOpt("server2serverSecret", map)
     val clusterAddress = extractStringOpt("clusterAddress", map)
     val rabbitUri      = extractStringOpt("rabbitUri", map)

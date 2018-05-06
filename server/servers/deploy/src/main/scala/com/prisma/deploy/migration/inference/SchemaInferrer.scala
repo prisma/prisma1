@@ -75,13 +75,21 @@ case class SchemaInferrerImpl(
         None
       } else {
         fieldDef.relationName match {
-          case Some(name) => nextRelations.find(_.name == name)
-          case None       => nextRelations.find(relation => relation.connectsTheModels(objectType.name, fieldDef.typeName))
+          case Some(name) =>
+            nextRelations.find(_.name == name)
+
+          case None =>
+            val relationsThatConnectBothModels = nextRelations.filter(relation => relation.connectsTheModels(objectType.name, fieldDef.typeName))
+            if (relationsThatConnectBothModels.size > 1) {
+              None
+            } else {
+              relationsThatConnectBothModels.headOption
+            }
         }
       }
 
       //For self relations we were inferring the relationSide A for both sides, this now assigns A to the lexicographically lower field name and B to the other
-      //If in the previous schema whether both relationSides are A we reassign the relationsides otherwise we keep the one from the previous schema.
+      //If in the previous schema both relationSides are A we reassign the relationsides otherwise we keep the one from the previous schema.
       def inferRelationSide(relation: Option[Relation]) = {
         def oldRelationSidesNotBothEqual(oldField: Field) = oldField.otherRelationField(baseSchema) match {
           case Some(relatedField) => oldField.relationSide.isDefined && oldField.relationSide != relatedField.relationSide

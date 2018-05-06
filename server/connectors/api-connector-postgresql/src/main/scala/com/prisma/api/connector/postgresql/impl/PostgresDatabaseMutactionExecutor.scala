@@ -7,7 +7,7 @@ import slick.jdbc.TransactionIsolation
 
 import scala.concurrent.{ExecutionContext, Future}
 
-case class DatabaseMutactionExecutorImpl(clientDb: Database)(implicit ec: ExecutionContext) extends DatabaseMutactionExecutor {
+case class PostgresDatabaseMutactionExecutor(clientDb: Database)(implicit ec: ExecutionContext) extends DatabaseMutactionExecutor {
 
   override def execute(mutactions: Vector[DatabaseMutaction], runTransactionally: Boolean): Future[Unit] = {
     val interpreters        = mutactions.map(interpreterFor)

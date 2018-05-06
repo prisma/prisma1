@@ -5,12 +5,13 @@ import com.prisma.api.resolver.DeferredTypes._
 import com.prisma.gc_values.IdGCValue
 import com.prisma.shared.models.Project
 
-import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
 
 class ToManyDeferredResolver(dataResolver: DataResolver) {
-  def resolve(orderedDeferreds: Vector[OrderedDeferred[ToManyDeferred]]): Vector[OrderedDeferredFutureResult[RelayConnectionOutputType]] = {
-    val deferreds = orderedDeferreds.map(_.deferred)
+  def resolve(orderedDeferreds: Vector[OrderedDeferred[ToManyDeferred]],
+              executionContext: ExecutionContext): Vector[OrderedDeferredFutureResult[RelayConnectionOutputType]] = {
+    implicit val ec: ExecutionContext = executionContext
+    val deferreds                     = orderedDeferreds.map(_.deferred)
 
     // Check if we really can satisfy all deferreds with one database query
     DeferredUtils.checkSimilarityOfRelatedDeferredsAndThrow(deferreds)

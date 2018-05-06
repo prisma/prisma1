@@ -139,8 +139,6 @@ export class Environment {
               )
             })
           })
-          debug(this.sharedClusters)
-          debug(this.clusterEndpointMap)
         }
       } catch (e) {
         debug(e)
@@ -198,7 +196,6 @@ export class Environment {
     }
     // parse & stringify to rm undefined for yaml parser
     debug('saving global rc')
-    debug(rc)
     const rcString = yaml.safeDump(JSON.parse(JSON.stringify(rc)))
     fs.writeFileSync(this.rcPath, rcString)
   }

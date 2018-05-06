@@ -61,10 +61,7 @@ export class Cluster {
   }
 
   getLocalToken(): string | null {
-    if (
-      !this.clusterSecret ||
-      (this.clusterSecret === '' && !process.env.PRISMA_MANAGEMENT_API_SECRET)
-    ) {
+    if (!this.clusterSecret && !process.env.PRISMA_MANAGEMENT_API_SECRET) {
       return null
     }
     if (!this.cachedToken) {
@@ -73,11 +70,12 @@ export class Cluster {
         process.env.PRISMA_MANAGEMENT_API_SECRET || this.clusterSecret
 
       try {
+        const algorithm = process.env.PRISMA_MANAGEMENT_API_SECRET
+          ? 'HS256'
+          : 'RS256'
         this.cachedToken = jwt.sign({ grants }, secret, {
           expiresIn: '5y',
-          algorithm: process.env.PRISMA_MANAGEMENT_API_SECRET
-            ? 'HS256'
-            : 'RS256',
+          algorithm,
         })
       } catch (e) {
         throw new Error(
@@ -131,45 +129,45 @@ export class Cluster {
     return clusterToken
   }
 
-  getApiEndpoint(serviceName: string, stage: string, workspaceSlug?: string) {
-    if (this.isPrivate) {
-      return `${this.baseUrl}/${serviceName}/${stage}`
+  getApiEndpoint(
+    service: string,
+    stage: string,
+    workspaceSlug?: string | null,
+  ) {
+    if (!this.shared && service === 'default' && stage === 'default') {
+      return this.baseUrl
+    }
+    if (!this.shared && stage === 'default') {
+      return `${this.baseUrl}/${service}`
+    }
+    if (this.isPrivate || this.local) {
+      return `${this.baseUrl}/${service}/${stage}`
     }
     const workspaceString = workspaceSlug ? `${workspaceSlug}/` : ''
-    return `${this.baseUrl}/${workspaceString}${serviceName}/${stage}`
+    return `${this.baseUrl}/${workspaceString}${service}/${stage}`
   }
 
-  getWSEndpoint(serviceName: string, stage: string, workspaceSlug?: string) {
-    if (this.isPrivate) {
-      return `${this.baseUrl}/${serviceName}/${stage}`
-    }
-    const replacedUrl = this.baseUrl.replace('http', 'ws')
-    const workspaceString = workspaceSlug ? `${workspaceSlug}/` : ''
-    return `${replacedUrl}/${workspaceString}${serviceName}/${stage}`
+  getWSEndpoint(service: string, stage: string, workspaceSlug?: string | null) {
+    return this.getApiEndpoint(service, stage, workspaceSlug).replace(
+      /^http/,
+      'ws',
+    )
   }
 
   getImportEndpoint(
-    serviceName: string,
+    service: string,
     stage: string,
-    workspaceSlug?: string,
+    workspaceSlug?: string | null,
   ) {
-    if (this.isPrivate) {
-      return `${this.baseUrl}/${serviceName}/${stage}/import`
-    }
-    const workspaceString = workspaceSlug ? `${workspaceSlug}/` : ''
-    return `${this.baseUrl}/${workspaceString}${serviceName}/${stage}/import`
+    return this.getApiEndpoint(service, stage, workspaceSlug) + `/import`
   }
 
   getExportEndpoint(
-    serviceName: string,
+    service: string,
     stage: string,
-    workspaceSlug?: string,
+    workspaceSlug?: string | null,
   ) {
-    if (this.isPrivate) {
-      return `${this.baseUrl}/${serviceName}/${stage}/export`
-    }
-    const workspaceString = workspaceSlug ? `${workspaceSlug}/` : ''
-    return `${this.baseUrl}/${workspaceString}${serviceName}/${stage}/export`
+    return this.getApiEndpoint(service, stage, workspaceSlug) + `/export`
   }
 
   getDeployEndpoint() {

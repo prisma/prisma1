@@ -93,8 +93,7 @@ case class Schema(
   def getEnumByName(name: String): Option[Enum] = enums.find(_.name.toLowerCase == name.toLowerCase)
 
   def getRelationByName(name: String): Option[Relation] = relations.find(_.name == name)
-  def getRelationByName_!(name: String): Relation =
-    getRelationByName(name).get //OrElse(throw SystemErrors.InvalidRelation("There is no relation with name: " + name))
+  def getRelationByName_!(name: String): Relation       = getRelationByName(name).get
 
   def getRelationsThatConnectModels(modelA: String, modelB: String): List[Relation] = relations.filter(_.connectsTheModels(modelA, modelB))
 
@@ -377,9 +376,7 @@ case class Relation(
   def getModelB_!(schema: Schema): Model       = getModelB(schema).get //OrElse(throw SystemErrors.InvalidRelation("A relation should have a valid Model B."))
 
   def getModelAField(schema: Schema): Option[Field] = modelFieldFor(schema, modelAId, RelationSide.A)
-  def getModelBField(schema: Schema): Option[Field] = {
-    modelFieldFor(schema, modelBId, RelationSide.B)
-  }
+  def getModelBField(schema: Schema): Option[Field] = modelFieldFor(schema, modelBId, RelationSide.B)
 
   private def modelFieldFor(schema: Schema, modelId: String, relationSide: RelationSide.Value): Option[Field] = {
     for {

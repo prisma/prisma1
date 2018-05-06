@@ -1,10 +1,11 @@
 package com.prisma.deploy.connector.mysql.database
 
+import com.prisma.shared.models.RelationSide.RelationSide
 import com.prisma.shared.models.{Field, Model}
 import slick.jdbc.MySQLProfile.api._
 import slick.jdbc.{PositionedParameters, SQLActionBuilder}
 
-object DatabaseQueryBuilder {
+object MysqlDeployDatabaseQueryBuilder {
 
   def existsByModel(projectId: String, modelName: String): SQLActionBuilder = {
     sql"select exists (select `id` from `#$projectId`.`#$modelName`)"
@@ -12,6 +13,10 @@ object DatabaseQueryBuilder {
 
   def existsByRelation(projectId: String, relationTableName: String): SQLActionBuilder = {
     sql"select exists (select `id` from `#$projectId`.`#$relationTableName`)"
+  }
+
+  def existsDuplicateByRelationAndSide(projectId: String, relationTableName: String, relationSide: RelationSide): SQLActionBuilder = {
+    sql"select exists (select Count(*)from `#$projectId`.`#$relationTableName` Group by `#${relationSide.toString}` having Count(*) > 1)"
   }
 
   def existsNullByModelAndScalarField(projectId: String, modelName: String, fieldName: String) = {
