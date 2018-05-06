@@ -16,7 +16,7 @@ object PostgresDeployDatabaseQueryBuilder {
   }
 
   def existsDuplicateByRelationAndSide(projectId: String, relationTableName: String, relationSide: RelationSide): SQLActionBuilder = {
-    sql"""select exists (select Count(*)from "#$projectId"."#$relationTableName" Group by "${relationSide.toString}" having Count(*) > 1)"""
+    sql"""select exists (select Count(*)from "#$projectId"."#$relationTableName" Group by "#${relationSide.toString}" having Count(*) > 1)"""
   }
 
   def existsNullByModelAndScalarField(projectId: String, modelName: String, fieldName: String) = {
@@ -56,7 +56,7 @@ object PostgresDeployDatabaseQueryBuilder {
     sql"""Select Exists (
                Select existanceCheck
                From(""" concat unionized concat sql""") as combined
-               Where existanceCheck = 1)"""
+               Where existanceCheck = TRUE )"""
   }
 
   def combineBy(actions: Iterable[SQLActionBuilder], combinator: String): Option[SQLActionBuilder] = actions.toList match {

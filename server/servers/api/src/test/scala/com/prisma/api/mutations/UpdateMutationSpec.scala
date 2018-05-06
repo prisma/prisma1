@@ -155,9 +155,15 @@ class UpdateMutationSpec extends FlatSpec with Matchers with ApiSpecBase {
     )
   }
 
-  "The Update Mutation" should "be able to set an optional value to null and leave missing values unchanged" in {
+  "Updating" should "change the updatedAt datetime" in {
     val project = SchemaDsl() { schema =>
-      schema.model("Todo").field("title", _.String).field("text", _.String).field("alias", _.String, isUnique = true)
+      schema
+        .model("Todo")
+        .field("title", _.String)
+        .field("text", _.String)
+        .field("alias", _.String, isUnique = true)
+        .field("createdAt", _.DateTime)
+        .field("updatedAt", _.DateTime)
     }
     database.setup(project)
 
@@ -172,10 +178,11 @@ class UpdateMutationSpec extends FlatSpec with Matchers with ApiSpecBase {
          |      alias: "$alias"
          |    }
          |  ){
-         |    id
+         |    createdAt
+         |    updatedAt
          |  }
          |}
-      """.stripMargin,
+      """,
       project
     )
 
@@ -190,16 +197,16 @@ class UpdateMutationSpec extends FlatSpec with Matchers with ApiSpecBase {
          |      alias: "$alias"
          |    }
          |  ){
-         |    title
-         |    text
+         |    createdAt
+         |    updatedAt
          |  }
-         |}""".stripMargin,
+         |}""",
       project
     )
 
-    res.toString should be("""{"data":{"updateTodo":{"title":null,"text":"some text"}}}""")
+    val createdAt = res.pathAsString("data.updateTodo.createdAt")
+    val updatedAt = res.pathAsString("data.updateTodo.updatedAt")
 
-    server.query("""query{todoes{title, text}}""", project).toString should be("""{"data":{"todoes":[{"title":null,"text":"some text"}]}}""")
+    createdAt should not be updatedAt
   }
-
 }

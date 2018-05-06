@@ -1,15 +1,17 @@
 package com.prisma.api.connector.postgresql.database
 
 import java.sql.{PreparedStatement, Statement}
+import java.util.Date
 
 import com.prisma.api.connector.Types.DataItemFilterCollection
 import com.prisma.api.connector._
 import com.prisma.api.connector.postgresql.database.JdbcExtensions._
 import com.prisma.api.connector.postgresql.database.SlickExtensions._
 import com.prisma.api.schema.UserFacingError
-import com.prisma.gc_values.{GCValue, GCValueExtractor, ListGCValue, NullGCValue}
+import com.prisma.gc_values._
 import com.prisma.shared.models._
 import cool.graph.cuid.Cuid
+import org.joda.time.{DateTime, DateTimeZone}
 import slick.dbio.{DBIOAction, Effect, NoStream}
 import slick.jdbc.MySQLProfile.api._
 import slick.jdbc.SQLActionBuilder
@@ -70,7 +72,9 @@ object PostgresApiDatabaseMutationBuilder {
     val updateValues = combineByComma(args.raw.asRoot.map.map { case (k, v) => escapeKey(k) ++ sql" = $v" })
 
     if (updateValues.isDefined) {
-      (sql"""UPDATE "#${projectId}"."#${model.name}"""" ++ sql"SET " ++ updateValues ++ whereFilterAppendix(projectId, model.name, whereFilter)).asUpdate
+      (sql"""UPDATE "#${projectId}"."#${model.name}"""" ++ sql"SET " ++ addUpdatedDateTime(updateValues) ++ whereFilterAppendix(projectId,
+                                                                                                                                model.name,
+                                                                                                                                whereFilter)).asUpdate
     } else {
       DBIOAction.successful(())
     }
@@ -83,11 +87,12 @@ object PostgresApiDatabaseMutationBuilder {
       case _: ModelEdge   => sql""
     }
 
-    val baseQuery = sql"""UPDATE "#${projectId}"."#${path.lastModel.name}" SET """ ++ updateValues ++ sql"""WHERE "id" ="""
+    val baseQuery = sql"""UPDATE "#${projectId}"."#${path.lastModel.name}" SET """ ++ addUpdatedDateTime(updateValues) ++ sql"""WHERE "id" ="""
 
     if (updateArgs.raw.asRoot.map.isEmpty) {
       DBIOAction.successful(())
     } else {
+
       val query = path.lastEdge match {
         case Some(edge) =>
           baseQuery ++ sql"""(SELECT "#${path.childSideOfLastEdge}" """ ++
@@ -102,6 +107,14 @@ object PostgresApiDatabaseMutationBuilder {
   //endregion
 
   //region UPSERT
+
+  private def addUpdatedDateTime(updateValues: Option[SQLActionBuilder]) = {
+    val today              = new Date()
+    val exactlyNow         = new DateTime(today).withZone(DateTimeZone.UTC)
+    val currentDateGCValue = DateTimeGCValue(exactlyNow)
+    val updatedAt          = sql""""updatedAt" = $currentDateGCValue """
+    combineByComma(updateValues ++ List(updatedAt))
+  }
 
   def upsert(projectId: String,
              createPath: Path,
@@ -291,8 +304,6 @@ object PostgresApiDatabaseMutationBuilder {
   def idFromWherePath(projectId: String, where: NodeSelector): SQLActionBuilder = {
     sql"""(SELECT "id" FROM (SELECT  * From "#$projectId"."#${where.model.name}") IDFROMWHEREPATH WHERE "#${where.field.name}" = ${where.fieldValue})"""
   }
-
-  //we could probably save even more joins if we start the paths always at the last node edge
 
   def pathQueryForLastParent(projectId: String, path: Path): SQLActionBuilder = pathQueryForLastChild(projectId, path.removeLastEdge)
 
