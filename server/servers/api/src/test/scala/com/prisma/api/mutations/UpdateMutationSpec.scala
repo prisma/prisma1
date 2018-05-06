@@ -186,6 +186,8 @@ class UpdateMutationSpec extends FlatSpec with Matchers with ApiSpecBase {
       project
     )
 
+    Thread.sleep(1000)
+
     val res = server.query(
       s"""
          |mutation {
