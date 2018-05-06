@@ -1,12 +1,10 @@
 package com.prisma.api.connector.postgresql
 
-import java.sql.PreparedStatement
-
 import com.prisma.api.connector._
 import com.prisma.api.connector.postgresql.database.{Databases, PostGresApiDatabaseMutationBuilder}
 import com.prisma.api.connector.postgresql.impl._
 import com.prisma.config.DatabaseConfig
-import com.prisma.gc_values.{IdGCValue, NullGCValue, RootGCValue}
+import com.prisma.gc_values.{IdGCValue, RootGCValue}
 import com.prisma.shared.models.Manifestations.InlineRelationManifestation
 import com.prisma.shared.models.{Project, ProjectIdEncoder}
 import slick.jdbc.PostgresProfile.api._
@@ -32,8 +30,10 @@ case class PassivePostgresApiConnector(config: DatabaseConfig)(implicit ec: Exec
     } yield ()
   }
 
-  override def databaseMutactionExecutor: DatabaseMutactionExecutor =
-    PassiveDatabaseMutactionExecutorImpl(activeConnector.databaseMutactionExecutor.asInstanceOf[DatabaseMutactionExecutorImpl])
+  override def databaseMutactionExecutor: DatabaseMutactionExecutor = {
+    val activeExecutor = activeConnector.databaseMutactionExecutor.asInstanceOf[DatabaseMutactionExecutorImpl]
+    PassiveDatabaseMutactionExecutorImpl(activeExecutor, config.database)
+  }
   override def dataResolver(project: Project)       = activeConnector.dataResolver(project)
   override def masterDataResolver(project: Project) = activeConnector.masterDataResolver(project)
 
@@ -42,17 +42,18 @@ case class PassivePostgresApiConnector(config: DatabaseConfig)(implicit ec: Exec
   override def capabilities = Vector.empty
 }
 
-case class PassiveDatabaseMutactionExecutorImpl(activeExecutor: DatabaseMutactionExecutorImpl)(implicit ec: ExecutionContext)
+case class PassiveDatabaseMutactionExecutorImpl(activeExecutor: DatabaseMutactionExecutorImpl, databaseName: Option[String])(implicit ec: ExecutionContext)
     extends DatabaseMutactionExecutor {
 
   override def execute(mutactions: Vector[DatabaseMutaction], runTransactionally: Boolean): Future[Vector[DatabaseMutactionResult]] = {
     val transformed         = transform(mutactions)
     val interpreters        = transformed.map(interpreterFor)
     val combinedErrorMapper = interpreters.map(_.errorMapper).reduceLeft(_ orElse _)
+    val mutationBuilder     = PostGresApiDatabaseMutationBuilder(databaseName = databaseName.getOrElse(mutactions.head.project.id))
 
     val singleAction = runTransactionally match {
-      case true  => DBIO.sequence(interpreters.map(_.newAction)).transactionally
-      case false => DBIO.sequence(interpreters.map(_.newAction))
+      case true  => DBIO.sequence(interpreters.map(_.newAction(mutationBuilder))).transactionally
+      case false => DBIO.sequence(interpreters.map(_.newAction(mutationBuilder)))
     }
 
     activeExecutor.clientDb
@@ -112,28 +113,27 @@ case class NestedCreateDataItemInterpreterForInlineRelations(mutaction: NestedCr
   val inlineManifestation = relation.manifestation.get.asInstanceOf[InlineRelationManifestation]
   require(inlineManifestation.inTableOfModelId == path.lastModel.id)
 
-  override val action = {
+  override def action(mutationBuilder: PostGresApiDatabaseMutationBuilder) = {
 //    val createNonList = PostGresApiDatabaseMutationBuilder.createDataItem(project.id, path, mutaction.create.nonListArgs)
 //    val listAction    = PostGresApiDatabaseMutationBuilder.setScalarList(project.id, path, mutaction.listArgs)
-    DBIO.seq(bla)
+    DBIO.seq(bla(mutationBuilder))
   }
 
-  import com.prisma.api.connector.postgresql.database.JdbcExtensions._
   import com.prisma.api.connector.postgresql.database.SlickExtensions._
 
-  def bla = {
-    val idSubQuery      = PostGresApiDatabaseMutationBuilder.pathQueryForLastParent(project.id, path)
+  def bla(mutationBuilder: PostGresApiDatabaseMutationBuilder) = {
+    val idSubQuery      = mutationBuilder.pathQueryForLastParent(path)
     val lastParentModel = path.removeLastEdge.lastModel
     for {
-      ids    <- (sql"""select "id" from #${project.id}.#${lastParentModel.dbName} where id in (""" ++ idSubQuery ++ sql")").as[String]
-      result <- createDataItemAndLinkToParent2(ids.head)
+      ids    <- (sql"""select "id" from #${mutationBuilder.databaseName}.#${lastParentModel.dbName} where id in (""" ++ idSubQuery ++ sql")").as[String]
+      result <- createDataItemAndLinkToParent2(mutationBuilder)(ids.head)
     } yield result
   }
 
-  def createDataItemAndLinkToParent2(parentId: String) = {
+  def createDataItemAndLinkToParent2(mutationBuilder: PostGresApiDatabaseMutationBuilder)(parentId: String) = {
     val inlineField  = relation.getFieldOnModel(model.id, project.schema).get
     val argsMap      = mutaction.create.nonListArgs.raw.asRoot.map
     val modifiedArgs = argsMap.updated(inlineField.name, IdGCValue(parentId))
-    PostGresApiDatabaseMutationBuilder.createDataItem(project.id, path, PrismaArgs(RootGCValue(modifiedArgs)))
+    mutationBuilder.createDataItem(path, PrismaArgs(RootGCValue(modifiedArgs)))
   }
 }
