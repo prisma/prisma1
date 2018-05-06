@@ -275,12 +275,16 @@ case class SchemaInferrerImpl(
   }
 
   def relationManifestationOnFieldOrRelatedField(objectType: ObjectTypeDefinition, relationField: FieldDefinition): Option[RelationManifestation] = {
-    val manifestationOnThisField = relationManifestationOnField(objectType, relationField)
-    val manifestationOnRelatedField = sdl.relatedFieldOf(objectType, relationField).flatMap { relatedField =>
-      val relatedType = sdl.objectType_!(relationField.typeName)
-      relationManifestationOnField(relatedType, relatedField)
+    if (isActive) {
+      None
+    } else {
+      val manifestationOnThisField = relationManifestationOnField(objectType, relationField)
+      val manifestationOnRelatedField = sdl.relatedFieldOf(objectType, relationField).flatMap { relatedField =>
+        val relatedType = sdl.objectType_!(relationField.typeName)
+        relationManifestationOnField(relatedType, relatedField)
+      }
+      manifestationOnThisField.orElse(manifestationOnRelatedField)
     }
-    manifestationOnThisField.orElse(manifestationOnRelatedField)
   }
 
   def relationManifestationOnField(objectType: ObjectTypeDefinition, relationField: FieldDefinition): Option[RelationManifestation] = {
