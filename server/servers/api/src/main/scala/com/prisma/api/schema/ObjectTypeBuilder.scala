@@ -12,14 +12,14 @@ import com.prisma.shared.models.{Field, Model, TypeIdentifier}
 import com.prisma.util.coolArgs.GCAnyConverter
 import sangria.schema.{Field => SangriaField, _}
 
-import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.ExecutionContext
 
 class ObjectTypeBuilder(
     project: models.Project,
     nodeInterface: Option[InterfaceType[ApiUserContext, PrismaNode]] = None,
     withRelations: Boolean = true,
     onlyId: Boolean = false
-) {
+)(implicit ec: ExecutionContext) {
   val batchPayloadType: ObjectType[ApiUserContext, BatchPayload] = ObjectType(
     name = "BatchPayload",
     description = "",

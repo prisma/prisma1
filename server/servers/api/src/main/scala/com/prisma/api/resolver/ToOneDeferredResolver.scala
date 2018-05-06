@@ -4,12 +4,13 @@ import com.prisma.api.connector.{DataResolver, PrismaNode, PrismaNodeWithParent}
 import com.prisma.api.resolver.DeferredTypes.{OneDeferredResultType, OrderedDeferred, OrderedDeferredFutureResult, ToOneDeferred}
 import com.prisma.shared.models.Project
 
-import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
 
 class ToOneDeferredResolver(dataResolver: DataResolver) {
-  def resolve(orderedDeferreds: Vector[OrderedDeferred[ToOneDeferred]]): Vector[OrderedDeferredFutureResult[OneDeferredResultType]] = {
-    val deferreds = orderedDeferreds.map(_.deferred)
+  def resolve(orderedDeferreds: Vector[OrderedDeferred[ToOneDeferred]],
+              executionContext: ExecutionContext): Vector[OrderedDeferredFutureResult[OneDeferredResultType]] = {
+    implicit val ec: ExecutionContext = executionContext
+    val deferreds                     = orderedDeferreds.map(_.deferred)
 
     // check if we really can satisfy all deferreds with one database query
     DeferredUtils.checkSimilarityOfRelatedDeferredsAndThrow(deferreds)
