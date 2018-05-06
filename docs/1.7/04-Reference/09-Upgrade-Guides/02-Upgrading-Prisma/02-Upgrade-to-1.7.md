@@ -253,3 +253,9 @@ graphql create myapp
 # ...or directly select a boilerplate project via the `--boilerplate` option (e.g. `typescript-advanced`)
 graphql create myapp --boilerplate typescript-advanced
 ```
+
+## Common Errors
+
+### Invalid prisma.yml file prisma.yml should NOT have additional properties.
+
+You can read more about this error and how to fix it [in the Forum](https://www.graph.cool/forum/t/how-to-fix-invalid-prisma-yml-file-prisma-yml-should-not-have-additional-properties-additionalproperty-endpoint-errors/3303).
