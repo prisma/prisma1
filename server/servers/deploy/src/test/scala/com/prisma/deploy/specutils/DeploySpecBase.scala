@@ -55,6 +55,9 @@ trait DeploySpecBase extends ConnectorAwareTest with BeforeAndAfterEach with Bef
 }
 
 trait ActiveDeploySpecBase extends DeploySpecBase { self: Suite =>
+
+  override def runSuiteOnlyForActiveConnectors = true
+
   def setupProject(
       schema: String,
       name: String = Cuid.createCuid(),
@@ -70,6 +73,9 @@ trait ActiveDeploySpecBase extends DeploySpecBase { self: Suite =>
 }
 
 trait PassiveDeploySpecBase extends DeploySpecBase { self: Suite =>
+
+  override def runSuiteOnlyForPassiveConnectors = true
+
   def setupProjectDatabaseForProject(projectId: String, sql: String) = {
     val connector = testDependencies.deployConnector.asInstanceOf[PostgresDeployConnector]
     val session   = connector.internalDatabase.createSession()
