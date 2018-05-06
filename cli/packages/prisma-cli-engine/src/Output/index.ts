@@ -12,7 +12,7 @@ import * as util from 'util'
 import { errtermwidth } from './actions/screen'
 import { TableOptions } from './table'
 import ExitError from '../errors/ExitError'
-import * as inquirer from 'graphcool-inquirer'
+import * as inquirer from 'inquirer'
 import { MigrationPrinter } from './migration'
 import * as treeify from 'treeify'
 import * as dirTree from 'directory-tree'
@@ -81,7 +81,7 @@ function extractMessage(response): string {
 const arrow = process.platform === 'win32' ? '!' : '▸'
 
 export class Output {
-  mock: boolean = true
+  mock: boolean = false
   config: Config
   action: ActionBase
   stdout: StreamOutput
@@ -93,7 +93,9 @@ export class Output {
 
   constructor(config: Config) {
     this.config = config
-    this.mock = config.mock
+    if (config && config.mock) {
+      this.mock = config.mock
+    }
     this.stdout = new StreamOutput(process.stdout, this)
     this.stderr = new StreamOutput(process.stderr, this)
     this.action = shouldDisplaySpinner(this)
@@ -104,7 +106,13 @@ export class Output {
       CustomColors.supports = false
     }
     this.prompter = new Prompter(this)
-    this.prompt = inquirer.createPromptModule({ output: process.stdout })
+    this.prompt =
+      (this.config &&
+        this.config.mockInquirer &&
+        this.config.mockInquirer.prompt) ||
+      inquirer.createPromptModule({
+        output: process.stdout,
+      })
     this.migration = new MigrationPrinter(this)
     this.charm = Charm()
     this.charm.pipe(process.stdout)
@@ -155,10 +163,8 @@ export class Output {
   }
 
   async error(err: Error | string, exitCode: number | false = 1) {
-    if (
-      (this.mock && typeof err !== 'string' && exitCode !== false) ||
-      process.env.NODE_ENV === 'test'
-    ) {
+    if (process.env.NODE_ENV === 'test') {
+      console.error(err)
       throw err
     }
     try {
@@ -266,7 +272,7 @@ To get more detailed output, run ${chalk.dim(instruction)}`,
     if (this.config.debug) {
       console.error(`Exiting with code: ${code}`)
     }
-    if (this.mock) {
+    if (this.mock && process.env.NODE_ENV === 'test') {
       throw new ExitError(code)
     } else {
       process.exit(code)
@@ -336,47 +342,6 @@ To get more detailed output, run ${chalk.dim(instruction)}`,
 
     return rows.join('\n')
   }
-
-  // printServices = (
-  //   stages: Stages,
-  //   projects: Project[],
-  //   onlyLocal: boolean = true,
-  // ) => {
-  //   const uniqTargetKeys = uniqBy(Object.keys(stages), key => stages[key])
-  //   if (onlyLocal) {
-  //     return this.printPadded(
-  //       uniqTargetKeys.map(key => {
-  //         const project = projects.find(p => p.id === id)
-  //         const serviceName = project ? project.name : key
-  //         return [serviceName + '  ', uniqTargetKeys[key] + '  ']
-  //       }),
-  //       0,
-  //       1,
-  //       ['Service Name', 'Cluster / Service ID'],
-  //     )
-  //   } else {
-  //     return this.printPadded(
-  //       uniqTargetKeys
-  //         .map(key => {
-  //           const stage = stages[key]
-  //           const serviceName = project ? project.name : key
-  //           return [serviceName, stage]
-  //         })
-  //         .concat(
-  //           projects.map(p => {
-  //             return [
-  //               p.name,
-  //               `shared-${p.region.toLowerCase().replace(/_/g, '-')}/${p.id}`,
-  //             ]
-  //           }),
-  //         )
-  //         .map(l => [l[0] + '  ', l[1] + '  ']),
-  //       0,
-  //       1,
-  //       ['Service Name', 'Cluster / Service ID'],
-  //     )
-  //   }
-  // }
   getGraphQLErrorMessage(err: any) {
     if (this.mock) {
       return (

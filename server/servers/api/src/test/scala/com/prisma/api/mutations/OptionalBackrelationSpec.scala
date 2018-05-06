@@ -1,10 +1,10 @@
 package com.prisma.api.mutations
 
-import com.prisma.api.ApiBaseSpec
+import com.prisma.api.ApiSpecBase
 import com.prisma.shared.schema_dsl.SchemaDsl
 import org.scalatest.{FlatSpec, Matchers}
 
-class OptionalBackrelationSpec extends FlatSpec with Matchers with ApiBaseSpec {
+class OptionalBackrelationSpec extends FlatSpec with Matchers with ApiSpecBase {
 
   "Nested Updates" should "work for models with missing backrelations " in {
     val project = SchemaDsl.fromString() {

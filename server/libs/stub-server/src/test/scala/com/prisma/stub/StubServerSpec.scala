@@ -1,12 +1,10 @@
 package com.prisma.stub
 
-import javax.servlet.http.HttpServletRequest
-
 import org.specs2.mutable.Specification
+import scalaj.http.{Http, HttpResponse}
 
 import scala.collection.SortedMap
 import scala.util.Random
-import scalaj.http.{Http, HttpResponse}
 
 class StubServerSpec extends Specification {
   import com.prisma.stub.Import._

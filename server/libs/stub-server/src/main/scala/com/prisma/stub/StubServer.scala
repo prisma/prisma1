@@ -1,8 +1,7 @@
 package com.prisma.stub
 
-import javax.servlet.http.{HttpServletRequest, HttpServletResponse}
-
 import com.prisma.stub.StubMatching.MatchResult
+import javax.servlet.http.{HttpServletRequest, HttpServletResponse}
 import org.eclipse.jetty.server.handler.AbstractHandler
 import org.eclipse.jetty.server.{Server, Request => JettyRequest}
 

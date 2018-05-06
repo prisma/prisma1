@@ -1,12 +1,12 @@
 package com.prisma.api.mutations
 
-import com.prisma.api.ApiBaseSpec
+import com.prisma.api.ApiSpecBase
 import com.prisma.gc_values.StringGCValue
 import com.prisma.shared.models.Project
 import com.prisma.shared.schema_dsl.SchemaDsl
 import org.scalatest.{FlatSpec, Matchers}
 
-class UpsertMutationSpec extends FlatSpec with Matchers with ApiBaseSpec {
+class UpsertMutationSpec extends FlatSpec with Matchers with ApiSpecBase {
   val project: Project = SchemaDsl() { schema =>
     schema.model("Todo").field_!("title", _.String).field_!("alias", _.String, isUnique = true).field("anotherIDField", _.GraphQLID, isUnique = true)
     schema.model("WithDefaultValue").field_!("reqString", _.String, defaultValue = Some(StringGCValue("defaultValue"))).field_!("title", _.String)
@@ -18,10 +18,7 @@ class UpsertMutationSpec extends FlatSpec with Matchers with ApiBaseSpec {
     database.setup(project)
   }
 
-  override protected def beforeEach(): Unit = {
-    super.beforeEach()
-    database.truncate(project)
-  }
+  override def beforeEach(): Unit = database.truncateProjectTables(project)
 
   "an item" should "be created if it does not exist yet" in {
     todoCount should be(0)
@@ -43,7 +40,7 @@ class UpsertMutationSpec extends FlatSpec with Matchers with ApiBaseSpec {
         |    title
         |  }
         |}
-      """.stripMargin,
+      """,
       project
     )
 
@@ -80,7 +77,7 @@ class UpsertMutationSpec extends FlatSpec with Matchers with ApiBaseSpec {
          |    reqBoolean
          |  }
          |}
-      """.stripMargin,
+      """,
       project
     )
     result.pathAsString("data.upsertMultipleFields.reqString") should be("new title")

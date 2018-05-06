@@ -12,8 +12,8 @@ import com.prisma.client.server.GraphQlRequestHandler
 import com.prisma.errors.{ErrorReporter, ProjectMetadata}
 import com.prisma.shared.models.{Project, ProjectWithClientId}
 import com.prisma.utils.`try`.TryExtensions._
+import play.api.libs.json._
 import sangria.schema.Schema
-import spray.json.JsValue
 
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.Failure
@@ -48,7 +48,7 @@ case class RequestHandler(
         result         <- handleGraphQlRequest(graphQlRequest)
       } yield result
     }.recoverWith {
-      case e: InvalidGraphQlRequest => Future.successful(OK -> APIErrors.errorJson(rawRequest.id, e.underlying.getMessage))
+      case e: InvalidGraphQlRequest => Future.successful(OK -> JsonErrorHelper.errorJson(rawRequest.id, e.underlying.getMessage))
     }
   }
 
@@ -67,12 +67,12 @@ case class RequestHandler(
     }
   }
 
-  def handleRawRequest(
+  def handleRawRequest[T](
       projectId: String,
       rawRequest: RawRequest,
   )(
-      fn: Project => Future[(StatusCode, JsValue)]
-  ): Future[(StatusCode, JsValue)] = {
+      fn: Project => Future[(StatusCode, T)]
+  ): Future[(StatusCode, T)] = {
     for {
       projectWithClientId <- fetchProject(projectId)
       _                   <- verifyAuth(projectWithClientId.project, rawRequest)

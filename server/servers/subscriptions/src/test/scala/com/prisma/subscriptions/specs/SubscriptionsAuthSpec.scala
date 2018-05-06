@@ -4,7 +4,7 @@ import com.prisma.shared.schema_dsl.SchemaDsl
 import org.scalatest.{FlatSpec, Matchers}
 import pdi.jwt.{Jwt, JwtAlgorithm}
 
-class SubscriptionsAuthSpec extends FlatSpec with Matchers with SpecBase {
+class SubscriptionsAuthSpec extends FlatSpec with Matchers with SubscriptionSpecBase {
 
   "the subscriptions" should "succeed without an auth token if the project has no secrets" in {
     val project = SchemaDsl() { schema =>

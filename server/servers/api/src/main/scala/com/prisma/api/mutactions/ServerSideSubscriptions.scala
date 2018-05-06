@@ -32,7 +32,7 @@ object ServerSideSubscriptions {
   )(implicit apiDependencies: ApiDependencies): Vector[ServerSideSubscription] = {
     for {
       mutaction <- mutactions
-      sssFn     <- serverSideSubscriptionFunctionsFor(project, mutaction.model, ModelMutationType.Deleted)
+      sssFn     <- serverSideSubscriptionFunctionsFor(project, mutaction.model, ModelMutationType.Created)
     } yield {
       ServerSideSubscription(
         project,
@@ -52,14 +52,14 @@ object ServerSideSubscriptions {
   )(implicit apiDependencies: ApiDependencies): Vector[ServerSideSubscription] = {
     for {
       mutaction <- mutactions
-      sssFn     <- serverSideSubscriptionFunctionsFor(project, mutaction.model, ModelMutationType.Deleted)
+      sssFn     <- serverSideSubscriptionFunctionsFor(project, mutaction.path.lastModel, ModelMutationType.Updated)
     } yield {
       ServerSideSubscription(
         project,
-        mutaction.model,
+        mutaction.path.lastModel,
         ModelMutationType.Updated,
         sssFn,
-        nodeId = mutaction.id,
+        nodeId = mutaction.previousValues.id.value,
         requestId = requestId,
         updatedFields = Some(mutaction.namesOfUpdatedFields.toList),
         previousValues = Some(mutaction.previousValues)
@@ -75,11 +75,11 @@ object ServerSideSubscriptions {
   )(implicit apiDependencies: ApiDependencies): Vector[ServerSideSubscription] = {
     for {
       mutaction <- mutactions
-      sssFn     <- serverSideSubscriptionFunctionsFor(project, mutaction.path.root.model, ModelMutationType.Deleted)
+      sssFn     <- serverSideSubscriptionFunctionsFor(project, mutaction.path.lastModel, ModelMutationType.Deleted)
     } yield {
       ServerSideSubscription(
         project,
-        mutaction.path.root.model,
+        mutaction.path.lastModel,
         ModelMutationType.Deleted,
         sssFn,
         nodeId = mutaction.id,

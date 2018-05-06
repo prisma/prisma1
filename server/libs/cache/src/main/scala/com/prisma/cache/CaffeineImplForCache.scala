@@ -1,6 +1,7 @@
 package com.prisma.cache
 
 import com.github.benmanes.caffeine.cache.{Caffeine, Cache => CaffeineCache}
+
 import scala.compat.java8.FunctionConverters._
 
 object CaffeineImplForCache {

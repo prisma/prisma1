@@ -1,9 +1,10 @@
 package com.prisma.utils.future
 
-import org.scalatest.{Matchers, WordSpec}
 import com.prisma.utils.future.FutureUtils._
 import org.scalatest.concurrent.ScalaFutures._
 import org.scalatest.time.{Millis, Seconds, Span}
+import org.scalatest.{Matchers, WordSpec}
+
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 

@@ -9,7 +9,7 @@ class SchemaSyntaxValidatorSpec extends WordSpecLike with Matchers {
   "succeed if the schema is fine" in {
     val schema =
       """
-        |type Todo @model{
+        |type Todo {
         |  title: String
         |}
       """.stripMargin
@@ -19,7 +19,7 @@ class SchemaSyntaxValidatorSpec extends WordSpecLike with Matchers {
   "fail if the schema is syntactically incorrect" in {
     val schema =
       """
-        |type Todo @model {
+        |type Todo  {
         |  title: String
         |  isDone
         |}
@@ -32,12 +32,12 @@ class SchemaSyntaxValidatorSpec extends WordSpecLike with Matchers {
   "succeed if an unambiguous relation field does not specify the relation directive" in {
     val schema =
       """
-        |type Todo @model{
+        |type Todo {
         |  title: String
         |  comments: [Comment!]!
         |}
         |
-        |type Comment @model{
+        |type Comment {
         |  text: String
         |}
       """.stripMargin
@@ -48,13 +48,13 @@ class SchemaSyntaxValidatorSpec extends WordSpecLike with Matchers {
   "fail if ambiguous relation fields do not specify the relation directive" in {
     val schema =
       """
-        |type Todo @model{
+        |type Todo {
         |  title: String
         |  comments: [Comment!]!
         |  comments2: [Comment!]!
         |}
         |
-        |type Comment @model{
+        |type Comment {
         |  text: String
         |}
       """.stripMargin
@@ -73,13 +73,13 @@ class SchemaSyntaxValidatorSpec extends WordSpecLike with Matchers {
   "fail if ambiguous relation fields specify the same relation name" in {
     val schema =
       """
-        |type Todo @model{
+        |type Todo {
         |  title: String
         |  comments: [Comment!]! @relation(name: "TodoToComments")
         |  comments2: [Comment!]! @relation(name: "TodoToComments")
         |}
         |
-        |type Comment @model{
+        |type Comment {
         |  todo: Todo! @relation(name: "TodoToComments")
         |  todo2: Todo! @relation(name: "TodoToComments")
         |  text: String
@@ -87,20 +87,20 @@ class SchemaSyntaxValidatorSpec extends WordSpecLike with Matchers {
       """.stripMargin
     val result = SchemaSyntaxValidator(schema).validate
     result should have(size(4))
-    result.forall(_.description.contains("A relation directive with a name must appear exactly 2 times.")) should be(true)
+    result.forall(_.description.contains("A relation directive cannot appear more than twice.")) should be(true)
   }
 
   // TODO: the backwards field should not be required here.
   "succeed if ambiguous relation fields specify the relation directive" in {
     val schema =
       """
-        |type Todo @model{
+        |type Todo {
         |  title: String
         |  comments: [Comment!]! @relation(name: "TodoToComments1")
         |  comments2: [Comment!]! @relation(name: "TodoToComments2")
         |}
         |
-        |type Comment @model{
+        |type Comment {
         |  todo: Todo! @relation(name: "TodoToComments1")
         |  todo2: Todo! @relation(name: "TodoToComments2")
         |  text: String
@@ -113,11 +113,11 @@ class SchemaSyntaxValidatorSpec extends WordSpecLike with Matchers {
   "fail if a relation directive appears on a scalar field" in {
     val schema =
       """
-        |type Todo @model {
+        |type Todo  {
         |  title: String @relation(name: "TodoToComments")
         |}
         |
-        |type Comment @model{
+        |type Comment {
         |  bla: String
         |}
         """.stripMargin
@@ -131,12 +131,12 @@ class SchemaSyntaxValidatorSpec extends WordSpecLike with Matchers {
   "succeed if a relation name specifies the relation directive only once" in {
     val schema =
       """
-        |type Todo @model{
+        |type Todo {
         |  title: String
         |  comments: [Comment!]! @relation(name: "TodoToComments")
         |}
         |
-        |type Comment @model{
+        |type Comment {
         |  bla: String
         |}
       """.stripMargin
@@ -147,20 +147,20 @@ class SchemaSyntaxValidatorSpec extends WordSpecLike with Matchers {
   "succeed if a relation directive specifies a valid onDelete attribute" in {
     val schema =
       """
-        |type Todo @model{
+        |type Todo {
         |  title: String
         |  comments1: [Comment1!]! @relation(name: "TodoToComments1", onDelete: CASCADE)
         |  comments2: [Comment2!]! @relation(name: "TodoToComments2", onDelete: SET_NULL)
         |  comments3: [Comment3!]! @relation(name: "TodoToComments3")
         |}
         |
-        |type Comment1 @model{
+        |type Comment1 {
         |  bla: String
         |}
-        |type Comment2 @model{
+        |type Comment2 {
         |  bla: String
         |}
-        |type Comment3 @model{
+        |type Comment3 {
         |  bla: String
         |}
       """.stripMargin
@@ -171,12 +171,12 @@ class SchemaSyntaxValidatorSpec extends WordSpecLike with Matchers {
   "fail if a relation directive specifies an invalid onDelete attribute" in {
     val schema =
       """
-        |type Todo @model{
+        |type Todo {
         |  title: String
         |  comments: [Comment!]! @relation(name: "TodoToComments", onDelete: INVALID)
         |}
         |
-        |type Comment @model{
+        |type Comment {
         |  bla: String
         |}
       """.stripMargin
@@ -189,12 +189,12 @@ class SchemaSyntaxValidatorSpec extends WordSpecLike with Matchers {
   "succeed if a relation gets renamed" in {
     val schema =
       """
-        |type Todo @model{
+        |type Todo {
         |  title: String
         |  comments: [Comment!]! @relation(name: "TodoToCommentsNew", oldName: "TodoToComments")
         |}
         |
-        |type Comment @model{
+        |type Comment {
         |  bla: String
         |  todo: Todo @relation(name: "TodoToComments")
         |}
@@ -208,7 +208,7 @@ class SchemaSyntaxValidatorSpec extends WordSpecLike with Matchers {
   "succeed if a one field self relation does appear only once" in {
     val schema =
       """
-        |type Todo @model{
+        |type Todo {
         |  title: String
         |  todo: Todo @relation(name: "OneFieldSelfRelation")
         |  todos: [Todo!]! @relation(name: "OneFieldManySelfRelation")
@@ -222,16 +222,16 @@ class SchemaSyntaxValidatorSpec extends WordSpecLike with Matchers {
   "fail if the relation directive does not appear on the right fields case 1" in {
     val schema =
       """
-        |type Todo @model{
+        |type Todo {
         |  title: String
         |  comments: [Comment!]! @relation(name: "TodoToComments")
         |}
         |
-        |type Comment @model{
+        |type Comment {
         |  bla: String
         |}
         |
-        |type Author @model{
+        |type Author {
         |  name: String
         |  todo: Todo @relation(name: "TodoToComments")
         |}
@@ -247,16 +247,16 @@ class SchemaSyntaxValidatorSpec extends WordSpecLike with Matchers {
   "fail if the relation directive does not appear on the right fields case 2" in {
     val schema =
       """
-        |type Todo @model{
+        |type Todo {
         |  title: String
         |  comments: [Comment!]! @relation(name: "TodoToComments")
         |}
         |
-        |type Comment @model{
+        |type Comment {
         |  bla: String
         |}
         |
-        |type Author @model{
+        |type Author {
         |  name: String
         |  whatever: Comment @relation(name: "TodoToComments")
         |}
@@ -277,12 +277,12 @@ class SchemaSyntaxValidatorSpec extends WordSpecLike with Matchers {
   "not accept that a many relation field is not marked as required" in {
     val schema =
       """
-        |type Todo @model{
+        |type Todo {
         |  title: String
         |  comments: [Comment!] @relation(name: "TodoToComments")
         |}
         |
-        |type Comment @model{
+        |type Comment {
         |  text: String
         |  todo: Todo @relation(name: "TodoToComments")
         |}
@@ -294,12 +294,12 @@ class SchemaSyntaxValidatorSpec extends WordSpecLike with Matchers {
   "succeed if a one relation field is marked as required" in {
     val schema =
       """
-        |type Todo @model{
+        |type Todo {
         |  title: String
         |  comments: [Comment!]! @relation(name: "TodoToComments")
         |}
         |
-        |type Comment @model{
+        |type Comment {
         |  text: String
         |  todo: Todo! @relation(name: "TodoToComments")
         |}
@@ -311,7 +311,7 @@ class SchemaSyntaxValidatorSpec extends WordSpecLike with Matchers {
   "fail if schema refers to a type that is not there" in {
     val schema =
       """
-        |type Todo @model{
+        |type Todo {
         |  title: String
         |  comments: [Comment!]!
         |}
@@ -333,7 +333,7 @@ class SchemaSyntaxValidatorSpec extends WordSpecLike with Matchers {
     )
     val schema =
       """
-        |type Todo @model{
+        |type Todo {
         |  title: String @zero @one(a: "") @two(a:1, b: "")
         |}
       """.stripMargin
@@ -349,7 +349,7 @@ class SchemaSyntaxValidatorSpec extends WordSpecLike with Matchers {
     )
     val schema =
       """
-        |type Todo @model{
+        |type Todo {
         |  title: String @one(a:1) @two(a:1)
         |}
       """.stripMargin
@@ -370,7 +370,7 @@ class SchemaSyntaxValidatorSpec extends WordSpecLike with Matchers {
   "fail if the values in an enum declaration don't begin uppercase" in {
     val schema =
       """
-        |type Todo @model{
+        |type Todo {
         |  title: String @one @two(a:"")
         |  status: TodoStatus
         |}
@@ -392,7 +392,7 @@ class SchemaSyntaxValidatorSpec extends WordSpecLike with Matchers {
     val longEnumValue = "A" * 192
     val schema =
       s"""
-         |type Todo @model{
+         |type Todo {
          |  title: String @one @two(a:"")
          |  status: TodoStatus
          |}
@@ -412,7 +412,7 @@ class SchemaSyntaxValidatorSpec extends WordSpecLike with Matchers {
   "fail if a directive appears more than once on a field" in {
     val schema =
       """
-        |type Todo @model{
+        |type Todo {
         |  title: String @default(value: "foo") @default(value: "bar")
         |}
       """.stripMargin
@@ -427,7 +427,7 @@ class SchemaSyntaxValidatorSpec extends WordSpecLike with Matchers {
   "fail if the old defaultValue directive appears on a field" in {
     val schema =
       """
-        |type Todo @model{
+        |type Todo {
         |  title: String @defaultValue(value: "foo")
         |}
       """.stripMargin
@@ -443,7 +443,7 @@ class SchemaSyntaxValidatorSpec extends WordSpecLike with Matchers {
   "fail if an id field does not specify @unique directive" in {
     val schema =
       """
-        |type Todo @model{
+        |type Todo {
         |  id: ID!
         |}
       """.stripMargin
@@ -458,12 +458,36 @@ class SchemaSyntaxValidatorSpec extends WordSpecLike with Matchers {
   "not fail if a model does not specify an id field at all" in {
     val schema =
       """
-        |type Todo @model{
+        |type Todo {
         |  title: String
         |}
       """.stripMargin
     val result = SchemaSyntaxValidator(schema).validate
     result should have(size(0))
+  }
+
+  "fail if there is a duplicate enum in datamodel" in {
+    val schema =
+      """
+        |type Todo {
+        |  id: ID! @unique
+        |}
+        |
+        |enum Privacy {
+        |  A
+        |  B
+        |}
+        |
+        |enum Privacy {
+        |  C
+        |}
+      """.stripMargin
+    val result = SchemaSyntaxValidator(schema).validate
+    result should have(size(1))
+    val error1 = result.head
+    error1.`type` should equal("Privacy")
+    error1.field should equal(None)
+    error1.description should include(s"The enum type `Privacy` is defined twice in the schema. Enum names must be unique.")
   }
 
   def missingDirectiveArgument(directive: String, argument: String) = {

@@ -39,7 +39,8 @@ object DeployField {
     def fromResult(node: marshaller.Node) = {
       DeployMutationInput(
         clientMutationId = node.clientMutationId,
-        projectId = node.projectId,
+        name = node.name,
+        stage = node.stage,
         types = node.requiredArgAsString("types"),
         dryRun = node.optionalArgAsBoolean("dryRun"),
         force = node.optionalArgAsBoolean("force"),

@@ -2,7 +2,7 @@
 //
 //import com.prisma.deploy.migration._
 //import com.prisma.shared.models._
-//import com.prisma.shared.project_dsl.SchemaDsl
+//import com.prisma.shared.schema_dsl.SchemaDsl
 //import org.scalactic.{Bad, Good, Or}
 //import org.scalatest.{FlatSpec, Matchers}
 //

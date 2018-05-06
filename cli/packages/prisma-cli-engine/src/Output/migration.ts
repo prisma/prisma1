@@ -32,7 +32,9 @@ export class MigrationPrinter {
     this.printRelations(steps)
   }
   printTypes(allSteps: MigrationStep[]) {
-    const steps = allSteps.filter(s => s.model || s.type === 'CreateModel')
+    const steps = allSteps.filter(
+      s => s.model || (s.type === 'CreateModel' || s.type === 'DeleteModel'),
+    )
     const groupedByModel = groupBy(steps, s => s.model || s.name)
     Object.keys(groupedByModel).forEach(model => {
       this.out.log(`\n  ${chalk.bold(model)} (Type)`)
@@ -209,6 +211,21 @@ export class MigrationPrinter {
           `\``,
         )
         this.out.log(`    ${chalk.red(figures.cross)} ${outputMessage}`)
+      })
+    })
+  }
+
+  printWarnings(warnings: SchemaError[]) {
+    const groupedByType = groupBy(warnings, e => e.type)
+    Object.keys(groupedByType).forEach(type => {
+      const typeErrors = groupedByType[type]
+      this.out.log('\n  ' + chalk.bold(type))
+      typeErrors.forEach(error => {
+        const outputMessage = makePartsEnclodesByCharacterBold(
+          error.description,
+          `\``,
+        )
+        this.out.log(`    ${chalk.yellow.bold('!')} ${outputMessage}`)
       })
     })
   }

@@ -6,8 +6,8 @@ import akka.actor.ActorSystem
 import com.prisma.akkautil.specs2.{AcceptanceSpecification, AkkaTestKitSpecs2Context}
 import com.prisma.akkautil.throttler.Throttler.{ThrottleBufferFullException, ThrottleCallTimeoutException}
 
-import scala.concurrent.{Await, Awaitable, Future}
 import scala.concurrent.duration.FiniteDuration
+import scala.concurrent.{Await, Awaitable, Future}
 
 class ThrottlerSpec extends AcceptanceSpecification {
   def is = s2"""

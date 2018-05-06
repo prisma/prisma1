@@ -16,8 +16,6 @@ object SubscriptionDataResolver {
               modelObjectTypes: ObjectTypeBuilder,
               model: Model,
               ctx: Context[SubscriptionUserContext, Unit]): Future[Option[SimpleResolveOutput]] = {
-    FilteredResolver
-      .resolve(modelObjectTypes, model, ctx.ctx.nodeId, ctx, dataResolver)
-      .map(_.map(dataItem => SimpleResolveOutput(dataItem, Args.empty)))
+    FilteredResolver.resolve(modelObjectTypes, model, ctx.ctx.nodeId, ctx, dataResolver).map(_.map(SimpleResolveOutput(_, Args.empty)))
   }
 }

@@ -1,11 +1,11 @@
 package com.prisma.subscriptions.specs
 
 import com.prisma.api.ApiTestDatabase
-import com.prisma.api.connector.{CoolArgs, CreateDataItem, NodeSelector, Path}
+import com.prisma.api.connector._
+import com.prisma.gc_values._
 import com.prisma.shared.models.{Model, Project}
 import com.prisma.utils.await.AwaitUtils
-import spray.json.JsValue
-
+import play.api.libs.json._
 object TestData extends AwaitUtils {
   def createTodo(
       id: String,
@@ -16,11 +16,18 @@ object TestData extends AwaitUtils {
       model: Model,
       testDatabase: ApiTestDatabase
   ) = {
+
+    val raw: List[(String, GCValue)] =
+      List(("text", StringGCValue(text)), ("id", IdGCValue(id)), ("done", BooleanGCValue(done.getOrElse(true))), ("json", JsonGCValue(json)))
+    val args = PrismaArgs(RootGCValue(raw: _*))
+
     val mutaction = CreateDataItem(
       project = project,
       path = Path.empty(NodeSelector.forId(model, id)),
-      args = CoolArgs(Map("text" -> text, "id" -> id, "done" -> done.getOrElse(true), "json" -> json))
+      nonListArgs = args,
+      listArgs = Vector.empty
     )
+
     testDatabase.runDatabaseMutactionOnClientDb(mutaction)
   }
 }

@@ -7,9 +7,10 @@ import com.prisma.deploy.connector.DeployConnector
 import com.prisma.deploy.migration.migrator.Migrator
 import com.prisma.deploy.schema.SchemaBuilder
 import com.prisma.deploy.schema.mutations.FunctionValidator
-import com.prisma.deploy.server.ClusterAuth
+import com.prisma.deploy.server.auth.ClusterAuth
 import com.prisma.errors.ErrorReporter
 import com.prisma.messagebus.PubSubPublisher
+import com.prisma.shared.models.ProjectIdEncoder
 import com.prisma.utils.await.AwaitUtils
 
 import scala.concurrent.ExecutionContext
@@ -25,15 +26,17 @@ trait DeployDependencies extends AwaitUtils {
   def clusterAuth: ClusterAuth
   def invalidationPublisher: PubSubPublisher[String]
   def apiAuth: Auth
-  def deployPersistencePlugin: DeployConnector
+  def deployConnector: DeployConnector
   def functionValidator: FunctionValidator
+  def projectIdEncoder: ProjectIdEncoder
 
-  lazy val projectPersistence   = deployPersistencePlugin.projectPersistence
-  lazy val migrationPersistence = deployPersistencePlugin.migrationPersistence
+  lazy val projectPersistence   = deployConnector.projectPersistence
+  lazy val migrationPersistence = deployConnector.migrationPersistence
   lazy val clusterSchemaBuilder = SchemaBuilder()
 
   def initialize()(implicit ec: ExecutionContext): Unit = {
-    await(deployPersistencePlugin.initialize(), seconds = 30)
-    system.actorOf(Props(DatabaseSizeReporter(projectPersistence, deployPersistencePlugin)))
+    await(deployConnector.initialize(), seconds = 30)
+    system.actorOf(Props(DatabaseSizeReporter(projectPersistence, deployConnector)))
+    migrator
   }
 }

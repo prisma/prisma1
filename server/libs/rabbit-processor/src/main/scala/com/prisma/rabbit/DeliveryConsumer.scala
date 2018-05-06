@@ -1,7 +1,7 @@
 package com.prisma.rabbit
 
 import com.prisma.errors.{ErrorReporter, GenericMetadata}
-import com.rabbitmq.client.{AMQP, DefaultConsumer, Envelope, Channel => RabbitChannel}
+import com.rabbitmq.client.{AMQP, DefaultConsumer, Envelope}
 
 import scala.util.{Failure, Try}
 

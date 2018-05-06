@@ -1,11 +1,13 @@
 package com.prisma.api.schema
 
 import akka.actor.ActorSystem
-import com.prisma.api.connector.{CoolArgs, DataItem}
+import com.prisma.api.connector.PrismaNode
 import com.prisma.api.mutations._
 import com.prisma.api.resolver.DeferredTypes.{ManyModelDeferred, OneDeferred}
 import com.prisma.api.{ApiDependencies, ApiMetrics}
+import com.prisma.gc_values.IdGCValue
 import com.prisma.shared.models.{Model, Project}
+import com.prisma.util.coolArgs.CoolArgs
 import org.atteo.evo.inflector.English
 import sangria.relay._
 import sangria.schema._
@@ -20,9 +22,7 @@ trait SchemaBuilder {
 }
 
 object SchemaBuilder {
-  def apply()(implicit system: ActorSystem, apiDependencies: ApiDependencies): SchemaBuilder = new SchemaBuilder {
-    override def apply(project: Project) = SchemaBuilderImpl(project).build()
-  }
+  def apply()(implicit system: ActorSystem, apiDependencies: ApiDependencies): SchemaBuilder = (project: Project) => SchemaBuilderImpl(project).build()
 }
 
 case class SchemaBuilderImpl(
@@ -116,7 +116,7 @@ case class SchemaBuilderImpl(
           resolve = (ctx) => {
             val coolArgs = CoolArgs(ctx.args.raw)
             val where    = coolArgs.extractNodeSelectorFromWhereField(model)
-            OneDeferred(model, where.field.name, where.unwrappedFieldValue)
+            OneDeferred(model, where)
           }
         )
       }
@@ -158,8 +158,8 @@ case class SchemaBuilderImpl(
         fieldType = objectTypeBuilder.batchPayloadType,
         arguments = args,
         resolve = (ctx) => {
-          val where    = objectTypeBuilder.extractRequiredFilterFromContext(model, ctx)
-          val mutation = UpdateMany(project, model, ctx.args, where, dataResolver = masterDataResolver)
+          val arguments = objectTypeBuilder.extractQueryArgumentsFromContext(model, ctx).flatMap(_.filter)
+          val mutation  = UpdateMany(project, model, ctx.args, arguments, dataResolver = masterDataResolver)
           ClientMutationRunner.run(mutation, databaseMutactionExecutor, sideEffectMutactionExecutor, mutactionVerifier)
         }
       )
@@ -208,8 +208,8 @@ case class SchemaBuilderImpl(
       fieldType = objectTypeBuilder.batchPayloadType,
       arguments = argumentsBuilder.getSangriaArgumentsForDeleteMany(model),
       resolve = (ctx) => {
-        val where    = objectTypeBuilder.extractRequiredFilterFromContext(model, ctx)
-        val mutation = DeleteMany(project, model, where, dataResolver = masterDataResolver)
+        val arguments = objectTypeBuilder.extractQueryArgumentsFromContext(model, ctx).flatMap(_.filter)
+        val mutation  = DeleteMany(project, model, arguments, dataResolver = masterDataResolver)
         ClientMutationRunner.run(mutation, databaseMutactionExecutor, sideEffectMutactionExecutor, mutactionVerifier)
       }
     )
@@ -228,14 +228,14 @@ case class SchemaBuilderImpl(
 
   implicit val nodeEvidence = SangriaEvidences.DataItemNodeEvidence
 
-  lazy val NodeDefinition(nodeInterface: InterfaceType[ApiUserContext, DataItem], nodeField, nodeRes) = Node.definitionById(
+  lazy val NodeDefinition(nodeInterface: InterfaceType[ApiUserContext, PrismaNode], nodeField, nodeRes) = Node.definitionById(
     resolve = (id: String, ctx: Context[ApiUserContext, Unit]) => {
-      dataResolver.resolveByGlobalId(id)
+      dataResolver.resolveByGlobalId(IdGCValue(id))
     },
     possibleTypes = {
       objectTypes.values.flatMap { o =>
         if (o.allInterfaces.exists(_.name == "Node")) {
-          Some(PossibleNodeObject[ApiUserContext, Node, DataItem](o))
+          Some(PossibleNodeObject[ApiUserContext, Node, PrismaNode](o))
         } else {
           None
         }
@@ -247,15 +247,15 @@ case class SchemaBuilderImpl(
 
   private def mapReturnValueResult(result: Future[ReturnValueResult], args: Args): Future[SimpleResolveOutput] = {
     result.map {
-      case ReturnValue(dataItem) => outputTypesBuilder.mapResolve(dataItem, args)
-      case NoReturnValue(where)  => throw APIErrors.NodeNotFoundForWhereError(where)
+      case ReturnValue(prismaNode) => outputTypesBuilder.mapResolve(prismaNode, args)
+      case NoReturnValue(where)    => throw APIErrors.NodeNotFoundForWhereError(where)
     }
   }
 }
 
 object SangriaEvidences {
-  implicit object DataItemNodeEvidence extends IdentifiableNode[ApiUserContext, DataItem] {
-    override def id(ctx: Context[ApiUserContext, DataItem]) = ctx.value.id
+  implicit object DataItemNodeEvidence extends IdentifiableNode[ApiUserContext, PrismaNode] {
+    override def id(ctx: Context[ApiUserContext, PrismaNode]) = ctx.value.id.value
   }
 }
 

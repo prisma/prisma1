@@ -1,14 +1,15 @@
 package com.prisma.deploy.validation
 
 import com.prisma.deploy.connector.DeployConnector
-import com.prisma.deploy.migration.validation.{SchemaError, SchemaWarning}
+import com.prisma.deploy.migration.validation.{SchemaError, SchemaWarning, SchemaWarnings}
 import com.prisma.shared.errors.SchemaCheckResult
 import com.prisma.shared.models._
+
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-case class DestructiveChanges(persistencePlugin: DeployConnector, project: Project, nextSchema: Schema, steps: Vector[MigrationStep]) {
-  val clientDataResolver = persistencePlugin.clientDBQueries(project)
+case class DestructiveChanges(deployConnector: DeployConnector, project: Project, nextSchema: Schema, steps: Vector[MigrationStep]) {
+  val clientDataResolver = deployConnector.clientDBQueries(project)
   val previousSchema     = project.schema
 
   def checkAgainstExistingData: Future[Vector[SchemaCheckResult]] = {
@@ -18,13 +19,13 @@ case class DestructiveChanges(persistencePlugin: DeployConnector, project: Proje
       case x: UpdateModel    => validationSuccessful
       case x: CreateField    => createFieldValidation(x)
       case x: DeleteField    => deleteFieldValidation(x)
-      case x: UpdateField    => updateFieldValidation
+      case x: UpdateField    => updateFieldValidation(x)
       case x: CreateEnum     => validationSuccessful
-      case x: DeleteEnum     => deleteEnumValidation
-      case x: UpdateEnum     => updateEnumValidation
+      case x: DeleteEnum     => deleteEnumValidation(x)
+      case x: UpdateEnum     => updateEnumValidation(x)
+      case x: CreateRelation => createRelationValidation(x)
       case x: DeleteRelation => deleteRelationValidation(x)
-      case x: CreateRelation => createRelationValidation
-      case x: UpdateRelation => updateRelationValidation
+      case x: UpdateRelation => updateRelationValidation(x)
       case x: UpdateSecrets  => validationSuccessful
     }
 
@@ -33,23 +34,52 @@ case class DestructiveChanges(persistencePlugin: DeployConnector, project: Proje
 
   private def deleteModelValidation(x: DeleteModel) = {
     clientDataResolver.existsByModel(x.name).map {
-      case true  => Vector(SchemaWarning.dataLossModel(x.name))
+      case true  => Vector(SchemaWarnings.dataLossModel(x.name))
       case false => Vector.empty
     }
   }
 
   private def createFieldValidation(x: CreateField) = {
-    project.schema.getModelByName(x.model) match {
-      case Some(existingModel) =>
-        x.isRequired && x.defaultValue.isEmpty match {
+    def newRequiredScalarField(model: Model) = x.relation.isEmpty && x.isRequired match {
+      case true =>
+        clientDataResolver.existsByModel(model.name).map {
           case true =>
-            clientDataResolver.existsByModel(existingModel.name).map {
-              case true  => Vector(SchemaError.global("There was an error"))
-              case false => Vector.empty
-            }
+            Vector(
+              SchemaError(`type` = model.name,
+                          description = s"You are creating a required field but there are already nodes present that would violate that constraint."))
+          case false => Vector.empty
+        }
 
-          case false =>
-            validationSuccessful
+      case false =>
+        validationSuccessful
+    }
+    def newToOneBackRelationField(model: Model) = x.relation.nonEmpty && !x.isList && previousSchema.relations.map(_.name).contains(x.relation.get) match {
+      case true =>
+        val previousRelation                   = previousSchema.relations.find(r => x.relation.contains(r.name)).get
+        val relationSideThatCantHaveDuplicates = if (previousRelation.modelAId == model.name) RelationSide.A else RelationSide.B
+
+        clientDataResolver.existsDuplicateByRelationAndSide(s"_${x.relation.get}", relationSideThatCantHaveDuplicates).map {
+          case true =>
+            Vector(
+              SchemaError(
+                `type` = model.name,
+                description =
+                  s"You are adding a singular backrelation field to a type but there are already pairs in the relation that would violate that constraint."
+              ))
+          case false => Vector.empty
+        }
+
+      case false =>
+        validationSuccessful
+    }
+
+    previousSchema.getModelByName(x.model) match {
+      case Some(existingModel) =>
+        for {
+          required     <- newRequiredScalarField(existingModel)
+          backRelation <- newToOneBackRelationField(existingModel)
+        } yield {
+          required ++ backRelation
         }
 
       case None =>
@@ -58,70 +88,136 @@ case class DestructiveChanges(persistencePlugin: DeployConnector, project: Proje
   }
 
   private def deleteFieldValidation(x: DeleteField) = {
-    val model = project.schema.getModelByName_!(x.model)
+    val model    = previousSchema.getModelByName_!(x.model)
+    val isScalar = model.fields.find(_.name == x.name).get.isScalar
 
-    clientDataResolver.existsByModel(model.name).map {
-      case true  => Vector(SchemaWarning.dataLossField(x.name, x.name))
-      case false => Vector.empty
+    if (isScalar) {
+      clientDataResolver.existsByModel(model.name).map {
+        case true  => Vector(SchemaWarnings.dataLossField(x.name, x.name))
+        case false => Vector.empty
+      }
+    } else {
+      validationSuccessful
     }
   }
 
-  private def updateFieldValidation = {
-    //todo
-    //data loss
-    // to relation -> warning
-    // to from list -> warning
-    // typechange -> warning
+  private def updateFieldValidation(x: UpdateField) = {
+    val model                    = previousSchema.getModelByName_!(x.model)
+    val oldField                 = model.fields.find(_.name == x.name).get
+    val cardinalityChanges       = x.isList.isDefined
+    val typeChanges              = x.typeName.isDefined
+    val goesFromScalarToRelation = oldField.isScalar && x.relation.isDefined
+    val goesFromRelationToScalar = oldField.isRelation && x.relation.isDefined && x.relation.get.isEmpty
 
-    //changing to required and no defValue
-    // existing data -> error
-    // relations -> maybe error
+    val becomesRequired = x.isRequired.contains(true)
 
-    //existing unchanged required is also dangerous
-    // to/from  relation change -> error
+    def warnings: Future[Vector[SchemaWarning]] = cardinalityChanges || typeChanges || goesFromRelationToScalar || goesFromScalarToRelation match {
+      case true =>
+        clientDataResolver.existsByModel(model.name).map {
+          case true  => Vector(SchemaWarnings.dataLossField(x.name, x.name))
+          case false => Vector.empty
+        }
+      case false =>
+        validationSuccessful
+    }
 
-    //cardinality change -> warning
+    def errors: Future[Vector[SchemaError]] = becomesRequired match {
+      case true =>
+        clientDataResolver.existsNullByModelAndField(model, oldField).map {
+          case true =>
+            Vector(
+              SchemaError(`type` = model.name,
+                          field = oldField.name,
+                          "You are making a field required, but there are already nodes that would violate that constraint."))
+          case false => Vector.empty
+        }
 
+      case false =>
+        validationSuccessful
+    }
+
+    for {
+      warnings: Vector[SchemaWarning] <- warnings
+      errors: Vector[SchemaError]     <- errors
+    } yield {
+      warnings ++ errors
+    }
+  }
+
+  private def deleteEnumValidation(x: DeleteEnum) = {
+    //already covered by deleteField
     validationSuccessful
   }
 
-  private def deleteEnumValidation = {
-    //todo
+  private def updateEnumValidation(x: UpdateEnum) = {
+    val oldEnum = previousSchema.enums.find(_.name == x.name)
+    val deletedValues: Vector[String] = x.values match {
+      case None            => Vector.empty
+      case Some(newValues) => oldEnum.get.values.filter(value => !newValues.contains(value))
+    }
 
-    //error if in use
+    if (deletedValues.nonEmpty) {
+      val modelsWithFieldsThatUseEnum = previousSchema.models.filter(m => m.fields.exists(f => f.enum.isDefined && f.enum.get.name == x.name)).toVector
+      val res = deletedValues.map { deletedValue =>
+        clientDataResolver.enumValueIsInUse(modelsWithFieldsThatUseEnum, x.name, deletedValue).map {
+          case true  => Vector(SchemaError.global(s"You are deleting the value '$deletedValue' of the enum '${x.name}', but that value is in use."))
+          case false => Vector.empty
+        }
+      }
+      Future.sequence(res).map(_.flatten)
 
-    validationSuccessful
+    } else {
+      validationSuccessful
+    }
   }
 
-  private def updateEnumValidation = {
-    //todo
+  private def createRelationValidation(x: CreateRelation) = {
 
-    //error if deleted case in use
+    val nextRelation = nextSchema.relations.find(_.name == x.name).get
 
-    validationSuccessful
-  }
+    def checkRelationSide(modelName: String) = {
+      val nextModelA      = nextSchema.models.find(_.name == modelName).get
+      val nextModelAField = nextModelA.fields.find(field => field.relation.contains(nextRelation))
 
-  private def createRelationValidation = {
-    //todo
+      val modelARequired = nextModelAField match {
+        case None        => false
+        case Some(field) => field.isRequired
+      }
 
-    //probably caught by the relationfields checks
+      if (modelARequired) previousSchema.models.find(_.name == modelName) match {
+        case Some(model) =>
+          clientDataResolver.existsByModel(model.name).map {
+            case true =>
+              Vector(SchemaError(`type` = model.name, s"You are creating a required relation, but there are already nodes that would violate that constraint."))
+            case false => Vector.empty
+          }
 
-    validationSuccessful
+        case None => validationSuccessful
+      } else {
+        validationSuccessful
+      }
+    }
+
+    val checks = Vector(checkRelationSide(x.modelAName), checkRelationSide(x.modelBName))
+
+    Future.sequence(checks).map(_.flatten)
   }
 
   private def deleteRelationValidation(x: DeleteRelation) = {
-    clientDataResolver.existsByRelation(x.name).map {
-      case true  => Vector(SchemaWarning.dataLossModel(x.name)) //todo
+    val previousRelation = previousSchema.relations.find(_.name == x.name).get
+
+    clientDataResolver.existsByRelation(previousRelation.relationTableName).map {
+      case true  => Vector(SchemaWarnings.dataLossRelation(x.name))
       case false => Vector.empty
     }
   }
 
-  private def updateRelationValidation = {
-    // todo cardinality change? how is that handled?
+  private def updateRelationValidation(x: UpdateRelation) = {
+    // becomes required is handled by the change on the updateField
+    // todo cardinality change
+
     validationSuccessful
   }
 
-  private def validationSuccessful = {
-    Future.successful(Vector.empty)
-  }
+  private def validationSuccessful = Future.successful(Vector.empty)
 }

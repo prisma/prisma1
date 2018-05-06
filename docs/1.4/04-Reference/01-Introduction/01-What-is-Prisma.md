@@ -17,8 +17,6 @@ If you've used Graphcool before and don't have any experience in building your o
 - [Graphcool Framework and Prisma](https://www.graph.cool/forum/t/graphcool-framework-and-prisma/2237)
 - [What are the edge cases that make Prisma necessary?](https://www.graph.cool/forum/t/what-are-the-edge-cases-that-make-prisma-necessary/2857/8)
 
-## Migrating to Prisma
-
 </InfoBox>
 
 Prisma is a _database abstraction layer_ that turns your databases into GraphQL APIs with CRUD operations and realtime capabilities. It is the glue between your database and GraphQL server.

@@ -12,11 +12,11 @@ import {
   CloudTokenRequestPayload,
 } from '../types/common'
 
-import { GraphQLClient, request } from 'graphql-request'
+import { GraphQLClient } from 'graphql-request'
 import { omit, flatMap, flatten } from 'lodash'
 import { Config } from '../Config'
 import { getFastestRegion } from './ping'
-import { Environment, Cluster, FunctionInput } from 'prisma-yml'
+import { Environment, Cluster, FunctionInput, getProxyAgent } from 'prisma-yml'
 import { Output } from '../index'
 import chalk from 'chalk'
 import { introspectionQuery } from './introspectionQuery'
@@ -125,17 +125,48 @@ export class Client {
   // always create a new client which points to the latest config for each request
   async initClusterClient(
     cluster: Cluster,
-    workspaceSlug: string,
     serviceName: string,
     stageName?: string,
+    workspaceSlug: string | undefined | null = '*',
   ) {
-    const token = await cluster.getToken(serviceName, workspaceSlug, stageName)
-    debug(`Token`, token)
-    this.clusterClient = new GraphQLClient(cluster.getDeployEndpoint(), {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    })
+    debug('Initializing cluster client')
+    try {
+      if (!workspaceSlug) {
+        workspaceSlug = '*'
+      }
+      const token = await cluster.getToken(
+        serviceName,
+        workspaceSlug,
+        stageName,
+      )
+      const agent = getProxyAgent(cluster.getDeployEndpoint())
+      this.clusterClient = new GraphQLClient(cluster.getDeployEndpoint(), {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        agent,
+      } as any)
+    } catch (e) {
+      if (e.message.includes('Not authorized')) {
+        await this.login()
+        if (cluster.shared) {
+          cluster.clusterSecret = this.env.cloudSessionKey
+        }
+        const token = await cluster.getToken(
+          serviceName,
+          workspaceSlug!,
+          stageName,
+        )
+        this.clusterClient = new GraphQLClient(cluster.getDeployEndpoint(), {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+          agent: getProxyAgent(cluster.getDeployEndpoint()),
+        } as any)
+      } else {
+        throw e
+      }
+    }
   }
   get client(): GraphQLClient {
     if (!this.env.activeCluster) {
@@ -162,12 +193,19 @@ export class Client {
             e.response.errors[0].message.includes('decoded') &&
             this.env.activeCluster.local
           ) {
-            throw new Error(`Cluster secret of cluster \`${
-              this.env.activeCluster.name
-            }\` saved in ~/.prisma/config.yml
-does not match with the actual cluster secret of that cluster. This means the key pair got out of sync.
-To reset the key pair, please run ${chalk.bold.green('prisma local start')}
-`)
+            if (!process.env.PRISMA_MANAGEMENT_API_SECRET) {
+              throw new Error(
+                `Cluster ${
+                  this.env.activeCluster.name
+                } requires a cluster secret. Please provide it with the env var PRISMA_MANAGEMENT_API_SECRET`,
+              )
+            } else {
+              throw new Error(
+                `Cluster secret in env var PRISMA_MANAGEMENT_API_SECRET does not match for cluster ${
+                  this.env.activeCluster.name
+                }`,
+              )
+            }
           }
 
           if (
@@ -176,7 +214,7 @@ To reset the key pair, please run ${chalk.bold.green('prisma local start')}
           ) {
             const localNotice = this.env.activeCluster.local
               ? `Please use ${chalk.bold.green(
-                  'prisma local start',
+                  'docker-compose up -d',
                 )} to start your local Prisma cluster.`
               : ''
             throw new Error(
@@ -194,6 +232,7 @@ To reset the key pair, please run ${chalk.bold.green('prisma local start')}
   get cloudClient(): GraphQLClient {
     const options = {
       headers: {},
+      agent: getProxyAgent(this.config.cloudApiEndpoint),
     }
     if (this.env.cloudSessionKey) {
       options.headers = {
@@ -219,7 +258,7 @@ To reset the key pair, please run ${chalk.bold.green('prisma local start')}
     token?: string,
     workspaceSlug?: string,
   ): Promise<any> {
-    debug('introspecting', serviceName, stageName, token)
+    debug('introspecting', serviceName, stageName)
     const headers: any = {}
     if (token) {
       headers.Authorization = `Bearer ${token}`
@@ -232,7 +271,8 @@ To reset the key pair, please run ${chalk.bold.green('prisma local start')}
       ),
       {
         headers,
-      },
+        agent: getProxyAgent(this.config.cloudApiEndpoint),
+      } as any,
     )
     return client.request(introspectionQuery)
   }
@@ -244,7 +284,7 @@ To reset the key pair, please run ${chalk.bold.green('prisma local start')}
     token?: string,
     workspaceSlug?: string,
   ): Promise<any> {
-    debug('executing query', serviceName, stageName, query, token)
+    debug('executing query', serviceName, stageName, query)
     const headers: any = {}
     if (token) {
       headers.Authorization = `Bearer ${token}`
@@ -257,7 +297,8 @@ To reset the key pair, please run ${chalk.bold.green('prisma local start')}
       ),
       {
         headers,
-      },
+        agent: getProxyAgent(this.config.cloudApiEndpoint),
+      } as any,
     )
     return client.request(query)
   }
@@ -283,7 +324,8 @@ To reset the key pair, please run ${chalk.bold.green('prisma local start')}
         'Content-Type': 'application/json',
       },
       body: exportData,
-    })
+      agent: getProxyAgent(endpoint),
+    } as any)
 
     const text = await result.text()
     try {
@@ -313,7 +355,8 @@ To reset the key pair, please run ${chalk.bold.green('prisma local start')}
         'Content-Type': 'application/json',
       },
       body: exportData,
-    })
+      agent: getProxyAgent(endpoint),
+    } as any)
 
     const text = await result.text()
     try {
@@ -329,22 +372,22 @@ To reset the key pair, please run ${chalk.bold.green('prisma local start')}
     token?: string,
     workspaceSlug?: string,
   ): Promise<void> {
-    const result = await fetch(
+    const endpoint =
       this.env.activeCluster.getApiEndpoint(serviceName, stage, workspaceSlug) +
-        '/private',
-      {
-        method: 'post',
-        headers: {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          query: `mutation {
+      '/private'
+    const result = await fetch(endpoint, {
+      method: 'post',
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        query: `mutation {
           resetData
         }`,
-        }),
-      },
-    )
+      }),
+      agent: getProxyAgent(endpoint),
+    } as any)
 
     const text = await result.text()
     try {
@@ -398,38 +441,39 @@ To reset the key pair, please run ${chalk.bold.green('prisma local start')}
   }
 
   async login(key?: string): Promise<void> {
-    let token = key
+    let token: null | string = null
     this.out.action.start(`Authenticating`)
-    if (!token) {
-      const secret = await this.requestCloudToken()
+    const authenticated = await this.isAuthenticated()
+    if (authenticated) {
+      this.out.action.stop()
+      this.out.log('Already signed in')
+      return
+    }
+    const secret = await this.requestCloudToken()
 
-      const url = `${this.config.consoleEndpoint}/cli-auth?secret=${secret}`
+    const url = `${this.config.consoleEndpoint}/cli-auth?secret=${secret}`
 
-      this.out.log(`Opening ${url} in the browser\n`)
+    this.out.log(`Opening ${url} in the browser\n`)
 
+    try {
       opn(url)
-
-      while (!token) {
-        const cloud = await this.cloudTokenRequest(secret)
-        if (cloud.token) {
-          token = cloud.token
-        }
-        await new Promise(r => setTimeout(r, 500))
-      }
-      this.env.globalRC.cloudSessionKey = token
-    } else {
-      this.env.globalRC.cloudSessionKey = token
-      const authenticated = await this.isAuthenticated()
-      if (!authenticated) {
-        throw new Error('The provided key is invalid')
-      }
+    } catch (e) {
+      this.out.log(`Could not open url. Please open ${url} manually`)
     }
 
-    this.env.saveGlobalRC()
-    debug(`Saved token ${token}`)
-    await this.env.getClusters()
+    while (!token) {
+      const cloud = await this.cloudTokenRequest(secret)
+      if (cloud.token) {
+        token = cloud.token
+      }
+      await new Promise(r => setTimeout(r, 500))
+    }
+    this.env.globalRC.cloudSessionKey = token
 
     this.out.action.stop()
+
+    this.env.saveGlobalRC()
+    await this.env.getClusters()
   }
 
   async getAccount(): Promise<User | null> {
@@ -644,9 +688,9 @@ To reset the key pair, please run ${chalk.bold.green('prisma local start')}
     dryRun: boolean,
     subscriptions: FunctionInput[],
     secrets: string[] | null,
+    force?: boolean,
   ): Promise<any> {
-    // TODO add dryRun to query as soon as the backend is ready
-    const mutation = `\
+    const oldMutation = `\
       mutation($name: String!, $stage: String! $types: String! $dryRun: Boolean $secrets: [String!], $subscriptions: [FunctionInput!]) {
         deploy(input: {
           name: $name
@@ -669,18 +713,69 @@ To reset the key pair, please run ${chalk.bold.green('prisma local start')}
       ${MIGRATION_FRAGMENT}
     `
 
-    const { deploy } = await this.client.request<{
-      deploy: DeployPayload
-    }>(mutation, {
-      name,
-      stage,
-      types,
-      dryRun,
-      secrets,
-      subscriptions,
-    })
+    const newMutation = `\
+      mutation($name: String!, $stage: String! $types: String! $dryRun: Boolean $secrets: [String!], $subscriptions: [FunctionInput!], $force: Boolean) {
+        deploy(input: {
+          name: $name
+          stage: $stage
+          types: $types
+          dryRun: $dryRun
+          secrets: $secrets
+          subscriptions: $subscriptions
+          force: $force
+        }) {
+          errors {
+            type
+            field
+            description
+          }
+          warnings {
+            type
+            field
+            description
+          }
+          migration {
+            ...MigrationFragment
+          }
+        }
+      }
+      ${MIGRATION_FRAGMENT}
+    `
 
-    return deploy
+    try {
+      const { deploy } = await this.client.request<{
+        deploy: DeployPayload
+      }>(newMutation, {
+        name,
+        stage,
+        types,
+        dryRun,
+        secrets,
+        subscriptions,
+        force,
+      })
+
+      return deploy
+    } catch (e) {
+      if (
+        e.message.includes(`Field 'force' is not defined in the input type`)
+      ) {
+        const { deploy } = await this.client.request<{
+          deploy: DeployPayload
+        }>(oldMutation, {
+          name,
+          stage,
+          types,
+          dryRun,
+          secrets,
+          subscriptions,
+        })
+
+        return deploy
+      } else {
+        throw e
+      }
+    }
   }
 
   async listProjects(): Promise<Project[]> {
@@ -773,11 +868,13 @@ To reset the key pair, please run ${chalk.bold.green('prisma local start')}
   async waitForLocalDocker(endpoint: string): Promise<void> {
     // dont send any auth information when running the authenticateCustomer mutation
     let valid = false
+    const client = new GraphQLClient(endpoint, {
+      agent: getProxyAgent(endpoint),
+    } as any)
     while (!valid) {
       try {
         debug('requesting', endpoint)
-        await request(
-          endpoint,
+        await client.request(
           `
             {
               __schema {
@@ -828,10 +925,12 @@ To reset the key pair, please run ${chalk.bold.green('prisma local start')}
     token: string,
   ): Promise<AuthenticateCustomerPayload> {
     // dont send any auth information when running the authenticateCustomer mutation
-    const result = await request<{
+    const client = new GraphQLClient(endpoint, {
+      agent: getProxyAgent(endpoint),
+    } as any)
+    const result = await client.request<{
       authenticateCustomer: AuthenticateCustomerPayload
     }>(
-      endpoint,
       `
       mutation ($token: String!) {
         authenticateCustomer(input: {

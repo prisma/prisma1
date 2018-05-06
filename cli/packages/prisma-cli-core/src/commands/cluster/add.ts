@@ -8,12 +8,21 @@ export default class ClusterAdd extends Command {
   static command = 'add'
   static description = 'Add an existing cluster'
   static group = 'cluster'
+  static deprecated = true
   async run() {
     const endpoint = await this.endpointSelector()
     const clusterSecret = await this.clusterSecretSelector()
     const name = await this.nameSelector()
 
-    const cluster = new Cluster(this.out, name, endpoint, clusterSecret)
+    const cluster = new Cluster(
+      this.out,
+      name,
+      endpoint,
+      clusterSecret
+        .trim()
+        .replace(/\\r/g, '\r')
+        .replace(/\\n/g, '\n'),
+    )
     debug('Saving cluster', cluster)
     this.env.addCluster(cluster)
     this.env.saveGlobalRC()

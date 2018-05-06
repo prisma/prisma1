@@ -7,29 +7,26 @@ import play.api.libs.json.Json
 import sangria.execution.{Executor, HandledException}
 import sangria.marshalling.ResultMarshaller
 
-trait ErrorWithCode {
-  val code: Int
-}
-
 case class ErrorHandler(
     requestId: String,
     request: HttpRequest,
     query: String,
     variables: String,
     reporter: ErrorReporter,
-    projectId: Option[String] = None
+    projectId: Option[String] = None,
+    errorCodeExtractor: Throwable => Option[Int]
 ) {
   private val internalErrorMessage = s"Whoops. Looks like an internal server error. Search your cluster logs for request ID: $requestId"
 
   lazy val handler: PartialFunction[(ResultMarshaller, Throwable), HandledException] = {
-    case (marshaller: ResultMarshaller, error: ErrorWithCode) =>
+    case (marshaller: ResultMarshaller, error: Throwable) if errorCodeExtractor(error).isDefined =>
       logError(LogKey.HandledError, error, requestId, query, variables, projectId)
-      val additionalFields = Map("code" -> marshaller.scalarNode(error.code, "Int", Set.empty))
+      val additionalFields = Map("code" -> marshaller.scalarNode(errorCodeExtractor(error).get, "Int", Set.empty))
       HandledException(error.getMessage, additionalFields ++ commonFields(marshaller))
 
     case (marshaller, error: Throwable) =>
-      logError(LogKey.UnhandledError, error, requestId, query, variables, projectId)
       error.printStackTrace()
+      logError(LogKey.UnhandledError, error, requestId, query, variables, projectId)
       val requestMetadata = RequestMetadata(requestId, request.method.value, request.uri.toString(), request.headers.map(h => h.name() -> h.value()))
       val graphQlMetadata = GraphQlMetadata(query, variables)
       val projectMetadata = projectId.map(pid => ProjectMetadata(pid))
@@ -53,8 +50,8 @@ case class ErrorHandler(
   ): Unit = {
     import com.prisma.logging.LogDataWrites.logDataWrites
     val errorCode = error match {
-      case error: ErrorWithCode => error.code
-      case _                    => 0
+      case error: Throwable if errorCodeExtractor(error).isDefined => errorCodeExtractor(error).get
+      case _                                                       => 0
     }
     val payload = Map(
       "message"     -> error.getMessage,

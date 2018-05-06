@@ -4,12 +4,11 @@ import com.prisma.messagebus.pubsub.Only
 import com.prisma.shared.schema_dsl.SchemaDsl
 import org.scalatest._
 import org.scalatest.concurrent.ScalaFutures
-import play.api.libs.json.{JsNull, Json}
-import spray.json.{JsArray, JsNumber, JsObject, JsString}
+import play.api.libs.json._
 
 import scala.concurrent.duration._
 
-class SubscriptionsProtocolV07Spec extends FlatSpec with Matchers with SpecBase with ScalaFutures {
+class SubscriptionsProtocolV07Spec extends FlatSpec with Matchers with SubscriptionSpecBase with ScalaFutures {
   val schema: SchemaDsl.SchemaBuilder = SchemaDsl.schema()
   val todo: SchemaDsl.ModelBuilder = schema
     .model("Todo")
@@ -24,7 +23,7 @@ class SubscriptionsProtocolV07Spec extends FlatSpec with Matchers with SpecBase 
   override def beforeEach() = {
     super.beforeEach()
     testDatabase.setup(project)
-    val json = JsArray(JsNumber(1), JsNumber(2), JsObject("a" -> JsString("b")))
+    val json = Json.arr(1, 2, Json.obj("a" -> "b"))
     TestData.createTodo("test-node-id", "some todo", json, None, project, model, testDatabase)
     TestData.createTodo("important-test-node-id", "important!", json, None, project, model, testDatabase)
   }
@@ -164,7 +163,7 @@ class SubscriptionsProtocolV07Spec extends FlatSpec with Matchers with SpecBase 
     }
   }
 
-  "Using the URPDATED mutation filter" should "work" in {
+  "Using the UPDATED mutation filter" should "work" in {
     testInitializedWebsocket(project) { wsClient =>
       wsClient.sendMessage(
         startMessage(
@@ -176,7 +175,7 @@ class SubscriptionsProtocolV07Spec extends FlatSpec with Matchers with SpecBase 
 
       sssEventsTestKit.publish(
         Only(s"subscription:event:${project.id}:updateTodo"),
-        s"""{"nodeId":"test-node-id","modelId":"${model.id}","mutationType":"UpdateNode","changedFields":["text"], "previousValues": "{\\"id\\": \\"text-node-id\\", \\"text\\": \\"asd\\", \\"json\\": [], \\"float\\": 1.23, \\"int\\": 1}"}"""
+        s"""{"nodeId":"test-node-id","modelId":"${model.id}","mutationType":"UpdateNode","changedFields":["text"], "previousValues": {"id": "text-node-id", "text": "asd", "json": [], "float": 1.23, "int": 1}}"""
       )
 
       wsClient.expectMessage(
@@ -233,13 +232,13 @@ class SubscriptionsProtocolV07Spec extends FlatSpec with Matchers with SpecBase 
 
       sssEventsTestKit.publish(
         Only(s"subscription:event:${project.id}:updateTodo"),
-        s"""{"nodeId":"test-node-id","modelId":"${model.id}","mutationType":"UpdateNode","changedFields":["text"], "previousValues": "{\\"id\\": \\"text-node-id\\", \\"text\\": \\"asd\\", \\"json\\": null, \\"int\\": 8, \\"createdAt\\": \\"2017\\"}"}"""
+        s"""{"nodeId":"test-node-id","modelId":"${model.id}","mutationType":"UpdateNode","changedFields":["text"], "previousValues": {"id": "text-node-id", "text": "asd", "json": null, "int": 8, "createdAt": "2017"}}"""
       )
 
       wsClient.expectMessage(
         dataMessage(
           id = "3",
-          payload = """{"todo":{"mutation":"UPDATED","previousValues":{"id":"test-node-id","json":null,"int":8},"node":{"id":"test-node-id"}}}"""
+          payload = """{"todo":{"mutation":"UPDATED","previousValues":{"id":"text-node-id","json":null,"int":8},"node":{"id":"test-node-id"}}}"""
         )
       )
     }
@@ -289,7 +288,7 @@ class SubscriptionsProtocolV07Spec extends FlatSpec with Matchers with SpecBase 
 
       sssEventsTestKit.publish(
         Only(s"subscription:event:${project.id}:updateTodo"),
-        s"""{"nodeId":"important-test-node-id","modelId":"${model.id}","mutationType":"UpdateNode","changedFields":["text"], "previousValues": "{\\"id\\": \\"text-node-id\\", \\"text\\": \\"asd\\", \\"json\\": null, \\"createdAt\\": \\"2017\\"}"}"""
+        s"""{"nodeId":"important-test-node-id","modelId":"${model.id}","mutationType":"UpdateNode","changedFields":["text"], "previousValues": {"id": "text-node-id", "text": "asd", "json": null, "createdAt": "2017"}}"""
       )
 
       wsClient.expectMessage(

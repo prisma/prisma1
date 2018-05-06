@@ -91,7 +91,7 @@ class DeployMutationSpec extends FlatSpec with Matchers with DeploySpecBase {
         |  id: ID! @unique
         |  stringListField: [String!]
         |}
-      """.stripMargin
+      """
 
     val schema2 =
       """
@@ -99,7 +99,7 @@ class DeployMutationSpec extends FlatSpec with Matchers with DeploySpecBase {
         |  id: ID! @unique
         |  stringListField: [Int!]
         |}
-      """.stripMargin
+      """
 
     val schema3 =
       """
@@ -107,7 +107,7 @@ class DeployMutationSpec extends FlatSpec with Matchers with DeploySpecBase {
         |  id: ID! @unique
         |  intListField: [Int!]
         |}
-      """.stripMargin
+      """
 
     server.deploySchema(project, schema1)
     server.deploySchema(project, schema2)
@@ -121,7 +121,7 @@ class DeployMutationSpec extends FlatSpec with Matchers with DeploySpecBase {
 
   "DeployMutation" should "fail if reserved fields are malformed" in {
     val (project, _) = setupProject(basicTypesGql)
-    val nameAndStage = ProjectId.fromEncodedString(project.id)
+    val nameAndStage = testDependencies.projectIdEncoder.fromEncodedString(project.id)
 
     def tryDeploy(field: String) = {
       val schema = basicTypesGql +
@@ -144,7 +144,7 @@ class DeployMutationSpec extends FlatSpec with Matchers with DeploySpecBase {
          |    }
          |  }
          |}
-        """.stripMargin
+        """
       )
 
       // Query must fail
@@ -167,7 +167,7 @@ class DeployMutationSpec extends FlatSpec with Matchers with DeploySpecBase {
                    |type TestModel {
                    |  test: String
                    |}
-                 """.stripMargin
+                 """
 
     val (project, _)  = setupProject(schema)
     val loadedProject = projectPersistence.load(project.id).await.get
@@ -183,7 +183,7 @@ class DeployMutationSpec extends FlatSpec with Matchers with DeploySpecBase {
                    |  id: ID! @unique
                    |  test: String
                    |}
-                 """.stripMargin
+                 """
 
     val (project, _)  = setupProject(schema)
     val loadedProject = projectPersistence.load(project.id).await.get
@@ -198,7 +198,7 @@ class DeployMutationSpec extends FlatSpec with Matchers with DeploySpecBase {
                           |  createdAt: DateTime!
                           |  updatedAt: DateTime!
                           |}
-                        """.stripMargin
+                        """
 
     server.deploySchema(project, updatedSchema)
 
@@ -278,7 +278,7 @@ class DeployMutationSpec extends FlatSpec with Matchers with DeploySpecBase {
   }
 
   def deploySchema(project: Project, schema: String, functions: Vector[FunctionInput] = Vector.empty) = {
-    val nameAndStage = ProjectId.fromEncodedString(project.id)
+    val nameAndStage = testDependencies.projectIdEncoder.fromEncodedString(project.id)
     server.query(s"""
       |mutation {
       |  deploy(input:{
@@ -308,7 +308,7 @@ class DeployMutationSpec extends FlatSpec with Matchers with DeploySpecBase {
                  """.stripMargin
 
     val (project, _)  = setupProject(schema)
-    val nameAndStage  = ProjectId.fromEncodedString(project.id)
+    val nameAndStage  = testDependencies.projectIdEncoder.fromEncodedString(project.id)
     val loadedProject = projectPersistence.load(project.id).await.get
 
     loadedProject.schema.getModelByName("TestModel").get.getFieldByName("id").get.isVisible shouldEqual true
@@ -325,7 +325,6 @@ class DeployMutationSpec extends FlatSpec with Matchers with DeploySpecBase {
                           |type TestModel2 {
                           |  id: ID! @unique
                           |  test: String
-                          |  t1: TestModel
                           |}
                         """.stripMargin
 
@@ -384,7 +383,7 @@ class DeployMutationSpec extends FlatSpec with Matchers with DeploySpecBase {
 
   "DeployMutation" should "error if defaultValue are provided for list fields" in {
     val (project, _) = setupProject(basicTypesGql)
-    val nameAndStage = ProjectId.fromEncodedString(project.id)
+    val nameAndStage = testDependencies.projectIdEncoder.fromEncodedString(project.id)
     val schema =
       """
         |type TestModel {
@@ -411,7 +410,7 @@ class DeployMutationSpec extends FlatSpec with Matchers with DeploySpecBase {
 
   "DeployMutation" should "throw a correct error for an invalid query" in {
     val (project, _) = setupProject(basicTypesGql)
-    val nameAndStage = ProjectId.fromEncodedString(project.id)
+    val nameAndStage = testDependencies.projectIdEncoder.fromEncodedString(project.id)
     val schema =
       """
         |{
@@ -483,7 +482,7 @@ class DeployMutationSpec extends FlatSpec with Matchers with DeploySpecBase {
 
   "DeployMutation" should "detect and report addition and removal of secrets if that is the only change" in {
     val (project, _) = setupProject(basicTypesGql)
-    val nameAndStage = ProjectId.fromEncodedString(project.id)
+    val nameAndStage = testDependencies.projectIdEncoder.fromEncodedString(project.id)
 
     server.query(
       s"""
@@ -534,7 +533,7 @@ class DeployMutationSpec extends FlatSpec with Matchers with DeploySpecBase {
 
   "DeployMutation" should "not change secrets if there are errors in the deploy (invalid functions)" in {
     val (project, _) = setupProject(basicTypesGql)
-    val nameAndStage = ProjectId.fromEncodedString(project.id)
+    val nameAndStage = testDependencies.projectIdEncoder.fromEncodedString(project.id)
     val schema =
       """
         |{
@@ -567,10 +566,10 @@ class DeployMutationSpec extends FlatSpec with Matchers with DeploySpecBase {
 
   "DeployMutation" should "throw a proper error if detecting an ambiguous relation update" in {
     val (project, _) = setupProject(basicTypesGql)
-    val nameAndStage = ProjectId.fromEncodedString(project.id)
+    val nameAndStage = testDependencies.projectIdEncoder.fromEncodedString(project.id)
     val schema =
       """
-        |type Mote {
+        |type Note {
         | name: String! @unique
         | # creator: User!
         | members: [User!]!
@@ -590,7 +589,7 @@ class DeployMutationSpec extends FlatSpec with Matchers with DeploySpecBase {
 
     val schema2 =
       """
-        |type Mote {
+        |type Note {
         | name: String! @unique
         | creator: User! @relation(name: "Creator")
         | members: [User!]! @relation(name: "MemberOf")
@@ -598,8 +597,8 @@ class DeployMutationSpec extends FlatSpec with Matchers with DeploySpecBase {
         |
         |type User {
         | name: String! @unique
-        | motes: [Mote!]! @relation(name: "Creator")
-        | memberOf: [Mote!]! @relation(name: "MemberOf")
+        | Notes: [Note!]! @relation(name: "Creator")
+        | memberOf: [Note!]! @relation(name: "MemberOf")
         |}
       """.stripMargin
 
@@ -618,7 +617,63 @@ class DeployMutationSpec extends FlatSpec with Matchers with DeploySpecBase {
       """.stripMargin,
       errorCode = 3018,
       errorContains =
-        "There is a relation ambiguity during the migration. Please first name the old relation on your schema. The ambiguity is on a relation between Mote and User."
+        "There is a relation ambiguity during the migration. Please first name the old relation on your schema. The ambiguity is on a relation between Note and User."
+    )
+  }
+
+  "DeployMutation" should "throw a proper error if detecting an ambiguous relation update 2" in {
+    val (project, _) = setupProject(basicTypesGql)
+    val nameAndStage = testDependencies.projectIdEncoder.fromEncodedString(project.id)
+    val schema =
+      """
+        |type Note {
+        | name: String! @unique
+        | creator: User! @relation(name: "Creator")
+        | members: [User!]! @relation(name: "MemberOf")
+        |}
+        |
+        |type User {
+        | name: String! @unique
+        | Notes: [Note!]! @relation(name: "Creator")
+        | memberOf: [Note!]! @relation(name: "MemberOf")
+        |}
+      """.stripMargin
+
+    server.deploySchema(project, schema)
+
+    val migrations = migrationPersistence.loadAll(project.id).await
+    migrations should have(size(3))
+    migrations.exists(x => x.status != MigrationStatus.Success) shouldEqual false
+    migrations.head.revision shouldEqual 3 // order is DESC
+
+    val schema2 =
+      """
+        |type Note {
+        | name: String! @unique
+        | # creator: User!
+        | members: [User!]!
+        |}
+        |
+        |type User {
+        | name: String! @unique
+        |}
+      """.stripMargin
+
+    server.queryThatMustFail(
+      s"""
+         |mutation {
+         |  deploy(input:{name: "${nameAndStage.name}", stage: "${nameAndStage.stage}", types: ${formatSchema(schema2)}}){
+         |    migration {
+         |      applied
+         |    }
+         |    errors {
+         |      description
+         |    }
+         |  }
+         |}
+      """.stripMargin,
+      errorCode = 3018,
+      errorContains = "There is a relation ambiguity during the migration. The ambiguity is on a relation between Note and User."
     )
   }
 

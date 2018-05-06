@@ -4,11 +4,11 @@ import com.prisma.messagebus.pubsub.Only
 import com.prisma.shared.models.Model
 import com.prisma.shared.schema_dsl.SchemaDsl
 import org.scalatest._
-import spray.json.{JsArray, JsNumber, JsObject, JsString}
+import play.api.libs.json._
 
 import scala.concurrent.duration._
 
-class SubscriptionsProtocolV05Spec extends FlatSpec with Matchers with SpecBase {
+class SubscriptionsProtocolV05Spec extends FlatSpec with Matchers with SubscriptionSpecBase {
   val schema = SchemaDsl.schema()
   val todo = schema
     .model("Todo")
@@ -22,7 +22,7 @@ class SubscriptionsProtocolV05Spec extends FlatSpec with Matchers with SpecBase 
   override def beforeEach() = {
     super.beforeEach()
     testDatabase.setup(project)
-    val json = JsArray(JsNumber(1), JsNumber(2), JsObject("a" -> JsString("b")))
+    val json = Json.arr(1, 2, Json.obj("a" -> "b"))
     TestData.createTodo("test-node-id", "some todo", json, None, project, model, testDatabase)
     TestData.createTodo("important-test-node-id", "important!", json, None, project, model, testDatabase)
   }
@@ -87,7 +87,7 @@ class SubscriptionsProtocolV05Spec extends FlatSpec with Matchers with SpecBase 
 
       sssEventsTestKit.publish(
         Only(s"subscription:event:${project.id}:updateTodo"),
-        s"""{"nodeId":"test-node-id","modelId":"${model.id}","mutationType":"UpdateNode","changedFields":["text"], "previousValues": "{\\"id\\": \\"text-node-id\\", \\"text\\": \\"asd\\", \\"json\\": []}"}"""
+        s"""{"nodeId":"test-node-id","modelId":"${model.id}","mutationType":"UpdateNode","changedFields":["text"], "previousValues": {"id": "text-node-id", "text": "asd", "json": []}}"""
       )
 
       wsClient.expectMessage("""{"id":"5","payload":{"data":{"todo":{"node":{"id":"test-node-id","text":"some todo"}}}},"type":"subscription_data"}""")
@@ -158,7 +158,7 @@ class SubscriptionsProtocolV05Spec extends FlatSpec with Matchers with SpecBase 
 
       sssEventsTestKit.publish(
         Only(s"subscription:event:${project.id}:updateTodo"),
-        s"""{"nodeId":"test-node-id","modelId":"${model.id}","mutationType":"UpdateNode","changedFields":["text"], "previousValues": "{\\"id\\": \\"text-node-id\\", \\"text\\": \\"asd\\", \\"json\\": []}"}"""
+        s"""{"nodeId":"test-node-id","modelId":"${model.id}","mutationType":"UpdateNode","changedFields":["text"], "previousValues": {"id": "text-node-id", "text": "asd", "json": []}}"""
       )
 
 //      sleep(500)
@@ -223,11 +223,11 @@ class SubscriptionsProtocolV05Spec extends FlatSpec with Matchers with SpecBase 
 
       sssEventsTestKit.publish(
         Only(s"subscription:event:${project.id}:updateTodo"),
-        s"""{"nodeId":"test-node-id","modelId":"${model.id}","mutationType":"UpdateNode","changedFields":["text"], "previousValues": "{\\"id\\": \\"text-node-id\\", \\"text\\": \\"asd\\", \\"json\\": null, \\"int\\": 8, \\"createdAt\\": \\"2017\\"}"}"""
+        s"""{"nodeId":"test-node-id","modelId":"${model.id}","mutationType":"UpdateNode","changedFields":["text"], "previousValues": {"id": "text-node-id", "text": "asd", "json": null, "int": 8, "createdAt": "2017"}}"""
       )
 
       wsClient.expectMessage(
-        """{"id":"3","payload":{"data":{"todo":{"mutation":"UPDATED","previousValues":{"id":"test-node-id","json":null,"int":8},"node":{"id":"test-node-id"}}}},"type":"subscription_data"}""")
+        """{"id":"3","payload":{"data":{"todo":{"mutation":"UPDATED","previousValues":{"id":"text-node-id","json":null,"int":8},"node":{"id":"test-node-id"}}}},"type":"subscription_data"}""")
     }
   }
 
@@ -283,7 +283,7 @@ class SubscriptionsProtocolV05Spec extends FlatSpec with Matchers with SpecBase 
 
       sssEventsTestKit.publish(
         Only(s"subscription:event:${project.id}:updateTodo"),
-        s"""{"nodeId":"important-test-node-id","modelId":"${model.id}","mutationType":"UpdateNode","changedFields":["text"], "previousValues": "{\\"id\\": \\"text-node-id\\", \\"text\\": \\"asd\\", \\"json\\": null, \\"createdAt\\": \\"2017\\"}"}"""
+        s"""{"nodeId":"important-test-node-id","modelId":"${model.id}","mutationType":"UpdateNode","changedFields":["text"], "previousValues": {"id": "text-node-id", "text": "asd", "json": null, "createdAt": "2017"}}"""
       )
 
       wsClient.expectMessage(

@@ -16,7 +16,7 @@ services:
       - db-persistence:/var/lib/mysql
 
   prisma-database:
-    image: prismagraphql/prisma:1.0
+    image: prismagraphql/prisma:1.7
     restart: on-failure
     ports:
       - "0.0.0.0:${PORT}:${PORT}"

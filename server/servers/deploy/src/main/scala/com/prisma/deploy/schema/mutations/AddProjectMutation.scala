@@ -1,7 +1,8 @@
 package com.prisma.deploy.schema.mutations
 
+import com.prisma.deploy.DeployDependencies
 import com.prisma.deploy.connector.{DeployConnector, MigrationPersistence, ProjectPersistence}
-import com.prisma.deploy.schema.{InvalidServiceName, InvalidServiceStage, ProjectAlreadyExists}
+import com.prisma.deploy.schema._
 import com.prisma.deploy.validation.NameConstraints
 import com.prisma.shared.models._
 import com.prisma.utils.await.AwaitUtils
@@ -12,12 +13,14 @@ case class AddProjectMutation(
     args: AddProjectInput,
     projectPersistence: ProjectPersistence,
     migrationPersistence: MigrationPersistence,
-    persistencePlugin: DeployConnector
+    deployConnector: DeployConnector
 )(
-    implicit ec: ExecutionContext
+    implicit ec: ExecutionContext,
+    dependencies: DeployDependencies
 ) extends Mutation[AddProjectMutationPayload]
     with AwaitUtils {
-  val projectId = ProjectId.toEncodedString(name = args.name, stage = args.stage)
+  val projectIdEncoder = dependencies.projectIdEncoder
+  val projectId        = projectIdEncoder.toEncodedString(name = args.name, stage = args.stage)
 
   override def execute: Future[MutationResult[AddProjectMutationPayload]] = {
     validate()
@@ -45,22 +48,19 @@ case class AddProjectMutation(
       _ <- projectPersistence.create(newProject)
 //      stmt <- CreateClientDatabaseForProject(newProject.id).execute
 //      _    <- clientDb.run(stmt.sqlAction)
-      _ <- persistencePlugin.createProjectDatabase(newProject.id)
+      _ <- deployConnector.createProjectDatabase(newProject.id)
       _ <- migrationPersistence.create(migration)
     } yield MutationSuccess(AddProjectMutationPayload(args.clientMutationId, newProject))
   }
 
   private def validate(): Unit = {
-    if (!NameConstraints.isValidServiceName(args.name)) {
-      throw InvalidServiceName(args.name)
-    }
-    if (!NameConstraints.isValidServiceStage(args.stage)) {
-      throw InvalidServiceStage(args.stage)
-    }
+    if (projectIdEncoder.reservedServiceAndStageNames.contains(args.name)) throw ReservedServiceName(args.name)
+    if (projectIdEncoder.reservedServiceAndStageNames.contains(args.stage)) throw ReservedStageName(args.stage)
+    if (!NameConstraints.isValidServiceName(args.name)) throw InvalidServiceName(args.name)
+    if (!NameConstraints.isValidServiceStage(args.stage)) throw InvalidServiceStage(args.stage)
+
     val projectForGivenId = projectPersistence.load(projectId).await()
-    if (projectForGivenId.isDefined) {
-      throw ProjectAlreadyExists(name = args.name, stage = args.stage)
-    }
+    if (projectForGivenId.isDefined) throw ProjectAlreadyExists(name = args.name, stage = args.stage)
   }
 }
 

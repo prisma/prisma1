@@ -1,11 +1,11 @@
 package com.prisma.api.mutations
 
-import com.prisma.api.ApiBaseSpec
+import com.prisma.api.ApiSpecBase
 import com.prisma.shared.models.Project
 import com.prisma.shared.schema_dsl.SchemaDsl
 import org.scalatest.{FlatSpec, Matchers}
 
-class DeleteMutationSpec extends FlatSpec with Matchers with ApiBaseSpec {
+class DeleteMutationSpec extends FlatSpec with Matchers with ApiSpecBase {
 
   val project: Project = SchemaDsl() { schema =>
     schema
@@ -19,7 +19,7 @@ class DeleteMutationSpec extends FlatSpec with Matchers with ApiBaseSpec {
     database.setup(project)
   }
 
-  override def beforeEach(): Unit = database.truncate(project)
+  override def beforeEach(): Unit = database.truncateProjectTables(project)
 
   "A Delete Mutation" should "delete and return item" in {
     val id =

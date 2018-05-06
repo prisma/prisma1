@@ -1,11 +1,11 @@
 package com.prisma.api.mutations
 
-import com.prisma.api.ApiBaseSpec
+import com.prisma.api.ApiSpecBase
 import com.prisma.gc_values.StringGCValue
 import com.prisma.shared.schema_dsl.SchemaDsl
 import org.scalatest.{FlatSpec, Matchers}
 
-class DefaultValueSpec extends FlatSpec with Matchers with ApiBaseSpec {
+class DefaultValueSpec extends FlatSpec with Matchers with ApiSpecBase {
 
   "A Create Mutation on a non-list field" should "utilize the defaultValue" in {
     val project = SchemaDsl() { schema =>

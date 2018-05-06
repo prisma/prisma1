@@ -12,16 +12,15 @@ import 'isomorphic-fetch'
 import { RC } from './index'
 import { ClusterNotSet } from './errors/ClusterNotSet'
 import * as _ from 'lodash'
+import { clusterEndpointMap } from './constants'
+import { getProxyAgent } from './utils/getProxyAgent'
 const debug = require('debug')('Environment')
 
 const isDev = (process.env.ENV || '').toLowerCase() === 'dev'
 
 export class Environment {
   sharedClusters: string[] = ['prisma-eu1', 'prisma-us1']
-  clusterEndpointMap: { [key: string]: string } = {
-    'prisma-eu1': 'https://eu1.prisma.sh',
-    'prisma-us1': 'https://us1.prisma.sh',
-  }
+  clusterEndpointMap = clusterEndpointMap
   args: Args
   activeCluster: Cluster
   globalRC: RC = {}
@@ -46,8 +45,39 @@ export class Environment {
     return process.env.PRISMA_CLOUD_SESSION_KEY || this.globalRC.cloudSessionKey
   }
 
+  async renewToken() {
+    if (this.cloudSessionKey) {
+      try {
+        const res = await fetch('https://api.cloud.prisma.sh', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${this.cloudSessionKey}`,
+          } as any,
+          body: JSON.stringify({
+            query: `
+          mutation {
+            renewToken
+          }
+        `,
+          }),
+          proxy: getProxyAgent('https://api.cloud.prisma.sh'),
+        } as any)
+        const json = await res.json()
+
+        if (json && json.data && json.data.renewToken) {
+          this.globalRC.cloudSessionKey = json.data.renewToken
+          this.saveGlobalRC()
+        }
+      } catch (e) {
+        console.error(e)
+      }
+    }
+  }
+
   async getClusters() {
     if (this.cloudSessionKey) {
+      this.renewToken()
       try {
         const res = await fetch('https://api.cloud.prisma.sh', {
           method: 'POST',
@@ -76,7 +106,8 @@ export class Environment {
           }
         `,
           }),
-        })
+          agent: getProxyAgent('https://api.cloud.prisma.sh'),
+        } as any)
         const json = await res.json()
         if (
           json &&
@@ -108,8 +139,6 @@ export class Environment {
               )
             })
           })
-          debug(this.sharedClusters)
-          debug(this.clusterEndpointMap)
         }
       } catch (e) {
         debug(e)
@@ -160,12 +189,13 @@ export class Environment {
 
   saveGlobalRC() {
     const rc = {
-      cloudSessionKey: this.globalRC.cloudSessionKey,
+      cloudSessionKey: this.globalRC.cloudSessionKey
+        ? this.globalRC.cloudSessionKey.trim()
+        : undefined,
       clusters: this.getLocalClusterConfig(),
     }
     // parse & stringify to rm undefined for yaml parser
     debug('saving global rc')
-    debug(rc)
     const rcString = yaml.safeDump(JSON.parse(JSON.stringify(rc)))
     fs.writeFileSync(this.rcPath, rcString)
   }

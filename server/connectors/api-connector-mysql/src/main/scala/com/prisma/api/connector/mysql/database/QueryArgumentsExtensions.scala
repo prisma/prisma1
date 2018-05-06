@@ -1,14 +1,12 @@
 package com.prisma.api.connector.mysql.database
-
-import com.prisma.api.connector.mysql.database.DatabaseQueryBuilder.{ResultListTransform, ResultTransform}
-import com.prisma.api.connector.{DataItem, QueryArguments, ResolverResult, ScalarListValue}
+import com.prisma.api.connector._
+import com.prisma.api.connector.mysql.database.SlickExtensions._
 import com.prisma.api.schema.APIErrors
 import com.prisma.api.schema.APIErrors.{InvalidFirstArgument, InvalidLastArgument, InvalidSkipArgument}
+import slick.jdbc.MySQLProfile.api._
 import slick.jdbc.SQLActionBuilder
 
 object QueryArgumentsExtensions {
-  import SlickExtensions._
-  import slick.jdbc.MySQLProfile.api._
   val MAX_NODE_COUNT = 1000
 
   implicit class QueryArgumentsExtensions(val queryArguments: QueryArguments) extends AnyVal {
@@ -41,15 +39,13 @@ object QueryArgumentsExtensions {
       val nodeIdField   = s"`$projectId`.`$modelId`.`nodeId`"
       val positionField = s"`$projectId`.`$modelId`.`position`"
 
-      // First order by the orderByField, then by id to break ties
+      //always order by nodeId, then positionfield ascending
       Some(sql"#$nodeIdField #$order, #$positionField #$idOrder")
     }
 
     def extractOrderByCommand(projectId: String, modelId: String, defaultOrderShortcut: Option[String] = None): Option[SQLActionBuilder] = {
 
-      if (first.isDefined && last.isDefined) {
-        throw APIErrors.InvalidConnectionArguments()
-      }
+      if (first.isDefined && last.isDefined) throw APIErrors.InvalidConnectionArguments()
 
       // The limit instruction only works from up to down. Therefore, we have to invert order when we use before.
       val defaultOrder = orderBy.map(_.sortOrder.toString).getOrElse("asc")
@@ -60,7 +56,7 @@ object QueryArgumentsExtensions {
 
       val idField = s"`$projectId`.`$modelId`.`id`"
 
-      val res = orderBy match {
+      orderBy match {
         case Some(orderByArg) if orderByArg.field.name != "id" =>
           val orderByField = s"`$projectId`.`$modelId`.`${orderByArg.field.name}`"
 
@@ -72,7 +68,6 @@ object QueryArgumentsExtensions {
           Some(sql"#${defaultOrderShortcut.getOrElse(idField)} #$order")
 
       }
-      res
     }
 
     def extractLimitCommand(projectId: String, modelId: String, maxNodeCount: Int = MAX_NODE_COUNT): Option[SQLActionBuilder] = {
@@ -88,10 +83,9 @@ object QueryArgumentsExtensions {
           }
           // Increase by 1 to know if we have a next page / previous page for relay queries
           val limitedCount: String = count match {
-            case None => maxNodeCount.toString
-            case Some(x) if x > maxNodeCount =>
-              throw APIErrors.TooManyNodesRequested(x)
-            case Some(x) => (x + 1).toString
+            case None                        => maxNodeCount.toString
+            case Some(x) if x > maxNodeCount => throw APIErrors.TooManyNodesRequested(x)
+            case Some(x)                     => (x + 1).toString
           }
           Some(sql"${skip.getOrElse(0)}, #$limitedCount")
       }
@@ -99,50 +93,29 @@ object QueryArgumentsExtensions {
 
     // If order is inverted we have to reverse the returned data items. We do this in-mem to keep the sql query simple.
     // Also, remove excess items from limit + 1 queries and set page info (hasNext, hasPrevious).
-    def extractResultTransform(projectId: String, modelId: String): ResultTransform = (list: List[DataItem]) => { generateResultTransform(list) }
-
-    def extractListResultTransform(projectId: String, modelId: String): ResultListTransform =
-      (listValues: List[ScalarListValue]) => {
-        val list = listValues.map(listValue => DataItem(id = listValue.nodeId, userData = Map("value" -> Some(listValue.value))))
-        generateResultTransform(list)
-      }
-
-    private def generateResultTransform(list: List[DataItem]) = {
+    def resultTransform[T](vector: Vector[T]) = {
       val items = isReverseOrder match {
-        case true  => list.reverse
-        case false => list
+        case true  => vector.reverse
+        case false => vector
       }
 
       (first, last) match {
-        case (Some(f), _) =>
-          if (items.size > f) {
-            ResolverResult(items.dropRight(1), hasNextPage = true)
-          } else {
-            ResolverResult(items)
-          }
-
-        case (_, Some(l)) =>
-          if (items.size > l) {
-            ResolverResult(items.tail, hasPreviousPage = true)
-          } else {
-            ResolverResult(items)
-          }
-
-        case _ =>
-          ResolverResult(items)
+        case (Some(f), _) if items.size > f => ResolverResult(items.dropRight(1), hasPreviousPage = false, hasNextPage = true)
+        case (_, Some(l)) if items.size > l => ResolverResult(items.tail, hasPreviousPage = true, hasNextPage = false)
+        case _                              => ResolverResult(items, hasPreviousPage = false, hasNextPage = false)
       }
     }
 
-    def extractWhereConditionCommand(projectId: String, modelId: String): Option[SQLActionBuilder] = {
+    def extractWhereConditionCommand(projectId: String, tableName: String): Option[SQLActionBuilder] = {
 
       if (first.isDefined && last.isDefined) throw APIErrors.InvalidConnectionArguments()
 
       val standardCondition = filter match {
-        case Some(filterArg) => generateFilterConditions(projectId, modelId, filterArg)
+        case Some(filterArg) => QueryArgumentsHelpers.generateFilterConditions(projectId, tableName, filterArg)
         case None            => None
       }
 
-      val cursorCondition = buildCursorCondition(projectId, modelId, standardCondition)
+      val cursorCondition = buildCursorCondition(projectId, tableName, standardCondition)
 
       cursorCondition match {
         case None                     => standardCondition
@@ -200,10 +173,6 @@ object QueryArgumentsExtensions {
       val whereCommand = combineByAnd(List(injectedFilter, afterCursorFilter, beforeCursorFilter).flatten)
 
       whereCommand.map(c => sql"" concat c)
-    }
-
-    def generateFilterConditions(projectId: String, tableName: String, filter: Seq[Any]): Option[SQLActionBuilder] = {
-      QueryArgumentsHelpers.generateFilterConditions(projectId, tableName, filter)
     }
   }
 }

@@ -2,8 +2,8 @@ package com.prisma.messagebus.testkits
 
 import akka.actor.ActorRef
 import akka.testkit.TestProbe
-import com.prisma.errors.ErrorReporter
 import com.prisma.akkautil.SingleThreadedActorSystem
+import com.prisma.errors.ErrorReporter
 import com.prisma.messagebus.Conversions.{ByteMarshaller, ByteUnmarshaller, Converter}
 import com.prisma.messagebus.PubSub
 import com.prisma.messagebus.pubsub.{Message, Only, Subscription, Topic}

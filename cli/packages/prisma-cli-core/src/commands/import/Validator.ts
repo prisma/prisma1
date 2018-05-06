@@ -64,9 +64,11 @@ export class Validator {
       return typeof value === 'object'
     },
   }
+  modelTypes: { [key: string]: boolean }
   constructor(typesString: string) {
     this.typesString = typesString
     this.ast = parse(typesString)
+    this.modelTypes = this.collectModelTypes(this.ast)
     this.types = this.astToTypes(this.ast)
     this.enums = this.astToEnums(this.ast)
     this.validators = {
@@ -171,6 +173,21 @@ export class Validator {
     return true
   }
 
+  private collectModelTypes(ast: DocumentNode): { [key: string]: boolean } {
+    return ast.definitions.reduce(
+      (acc, curr: ObjectTypeDefinitionNode) => {
+        if (curr.kind !== 'ObjectTypeDefinition') {
+          return acc
+        }
+        return {
+          ...acc,
+          [curr.name.value]: true,
+        }
+      },
+      {} as any,
+    )
+  }
+
   private astToTypes(ast: DocumentNode): Types {
     return ast.definitions.reduce(
       (acc, curr: ObjectTypeDefinitionNode) => {
@@ -246,10 +263,13 @@ export class Validator {
           return false
         }
 
-        let listBoolean = true
-        if (!field) {
-          debugger
+        const typeName = this.getDeepType(field).name.value
+        // if there is no validator, it's a relation or enum
+        if (this.modelTypes[typeName]) {
+          return false
         }
+
+        let listBoolean = true
         const isList = this.isList(field)
         if ((listsOnly && !isList) || (!listsOnly && isList)) {
           listBoolean = false

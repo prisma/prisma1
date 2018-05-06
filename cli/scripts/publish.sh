@@ -1,5 +1,13 @@
 #!/bin/bash
 
+#
+# Build Order
+# prisma-db-introspection
+# prisma-yml
+# prisma-cli-engine
+# prisma-cli-core
+# prisma-cli
+
 set -e
 set -x
 
@@ -18,9 +26,14 @@ fi
 
 export changedFiles=$(git diff-tree --no-commit-id --name-only -r $lastCommits)
 
+introspectionChanged=false
 ymlChanged=false
 coreChanged=false
 engineChanged=false
+
+if [[ "$changedFiles" = *"cli/packages/prisma-db-introspection"* ]]; then
+  introspectionChanged=true
+fi
 
 if [[ "$changedFiles" = *"cli/packages/prisma-yml"* ]]; then
   ymlChanged=true
@@ -34,9 +47,9 @@ if [[ "$changedFiles" = *"cli/packages/prisma-cli-engine"* ]]; then
   engineChanged=true
 fi
 
-echo "yml changed: $ymlChanged. core changed: $coreChanged. engine changed: $engineChanged"
+echo "introspection changed: $introspectionChanged yml changed: $ymlChanged. core changed: $coreChanged. engine changed: $engineChanged"
 
-if [ $ymlChanged == false ] && [ $coreChanged == false ] && [ $engineChanged == false ] && [ -z "$CIRCLE_TAG" ]; then
+if [ $introspectionChanged == false ] && [ $ymlChanged == false ] && [ $coreChanged == false ] && [ $engineChanged == false ] && [ -z "$CIRCLE_TAG" ]; then
   echo "There are no changes in the CLI."
   exit 0;
 fi
@@ -57,6 +70,27 @@ node cli/scripts/waitUntilTagPublished.js $nextDockerTag
 
 cd cli/packages/
 
+export introspectionVersionBefore=$(cat prisma-db-introspection/package.json | jq -r '.version')
+
+if [ $introspectionChanged ] || [ $CIRCLE_TAG ]; then
+  cd prisma-db-introspection
+  sleep 0.5
+  ../../scripts/doubleInstall.sh
+  yarn build
+  if [[ $CIRCLE_TAG ]]; then
+    npm version --allow-same-version $(npm info prisma-db-introspection version)
+    npm version patch --no-git-tag-version
+    npm publish
+  else
+    npm version --allow-same-version $(npm info prisma-db-introspection version --tag beta)
+    npm version prerelease --no-git-tag-version
+    npm publish --tag beta
+  fi
+  cd ..
+fi
+export introspectionVersion=$(cat prisma-db-introspection/package.json | jq -r '.version')
+
+
 export ymlVersionBefore=$(cat prisma-yml/package.json | jq -r '.version')
 
 if [ $ymlChanged ] || [ $CIRCLE_TAG ]; then
@@ -66,11 +100,11 @@ if [ $ymlChanged ] || [ $CIRCLE_TAG ]; then
   yarn build
   if [[ $CIRCLE_TAG ]]; then
     # make sure it is the latest version
-    npm version $(npm info prisma-yml version)
+    npm version --allow-same-version $(npm info prisma-yml version)
     npm version patch --no-git-tag-version
     npm publish
   else
-    npm version $(npm info prisma-yml version --tag beta)
+    npm version --allow-same-version $(npm info prisma-yml version --tag beta)
     npm version prerelease --no-git-tag-version
     npm publish --tag beta
   fi
@@ -87,11 +121,11 @@ if [ $ymlVersionBefore != $ymlVersion ] || [ $engineChanged ]; then
   ../../scripts/doubleInstall.sh
   yarn build
   if [[ $CIRCLE_TAG ]]; then
-    npm version $(npm info prisma-cli-engine version)
+    npm version --allow-same-version $(npm info prisma-cli-engine version)
     npm version patch --no-git-tag-version
     npm publish
   else
-    npm version $(npm info prisma-cli-engine version --tag beta)
+    npm version --allow-same-version $(npm info prisma-cli-engine version --tag beta)
     npm version prerelease --no-git-tag-version
     npm publish --tag beta
   fi
@@ -99,24 +133,29 @@ if [ $ymlVersionBefore != $ymlVersion ] || [ $engineChanged ]; then
 fi
 export engineVersion=$(cat prisma-cli-engine/package.json | jq -r '.version')
 
-if [ $ymlVersionBefore != $ymlVersion ] || [ $coreChanged ]; then
+
+if [ $ymlVersionBefore != $ymlVersion ] || [ $coreChanged ] || [ $introspectionChanged ]; then
   cd prisma-cli-core
   sleep 3.0
   yarn add prisma-yml@$ymlVersion
   sleep 0.2
+  yarn add prisma-db-introspection@$introspectionVersion
   yarn install
 
   # replace docker tag
   sed -i.bak "s/CLUSTER_VERSION: [0-9]\{1,\}\.[0-9]\{1,\}/CLUSTER_VERSION: $nextDockerTag/g" src/commands/local/docker/docker-compose.yml
   sed -i.bak "s/image: prismagraphql\/prisma:[0-9]\{1,\}\.[0-9]\{1,\}/image: prismagraphql\/prisma:$nextDockerTag/g" src/commands/local/docker/docker-compose.yml
 
+  # new docker tag
+  sed -i.bak "s/image: prismagraphql\/prisma:[0-9]\{1,\}\.[0-9]\{1,\}/image: prismagraphql\/prisma:$nextDockerTag/g" src/util.ts
+
   yarn build
   if [[ $CIRCLE_TAG ]]; then
-    npm version $(npm info prisma-cli-core version)
+    npm version --allow-same-version $(npm info prisma-cli-core version)
     npm version patch --no-git-tag-version
     npm publish
   else
-    npm version $(npm info prisma-cli-core version --tag beta)
+    npm version --allow-same-version $(npm info prisma-cli-core version --tag beta)
     npm version prerelease --no-git-tag-version
     npm publish --tag beta
   fi

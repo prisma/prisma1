@@ -13,6 +13,11 @@ import { IOutput } from './Output'
 import { Cluster } from './Cluster'
 import { FunctionInput, Header } from './types/rc'
 import chalk from 'chalk'
+import { clusterEndpointMap, clusterEndpointMapReverse } from './constants'
+import { replaceYamlValue } from './utils/yamlComment'
+import { DefinitionMigrator } from './utils/DefinitionMigrator'
+import { parseEndpoint } from './utils/parseEndpoint'
+const debug = require('debug')('prisma definition')
 
 interface ErrorMessage {
   message: string
@@ -21,6 +26,8 @@ interface ErrorMessage {
 export interface EnvVars {
   [key: string]: string | undefined
 }
+
+export type HookType = 'post-deploy'
 
 export class PrismaDefinitionClass {
   definition?: PrismaDefinition
@@ -60,18 +67,14 @@ export class PrismaDefinitionClass {
     }
     dotenv.config({ path: envPath })
     if (this.definitionPath) {
-      const { definition, rawJson } = await readDefinition(
-        this.definitionPath,
-        args,
-        this.out,
-        this.envVars,
-      )
-      this.definition = definition
-      this.rawJson = rawJson
-      this.definitionString = fs.readFileSync(this.definitionPath, 'utf-8')
-      this.typesString = this.getTypesString(this.definition)
-      const secrets = this.definition.secret
-      this.secrets = secrets ? secrets.replace(/\s/g, '').split(',') : null
+      await this.loadDefinition(args)
+      const migrator = new DefinitionMigrator(this)
+      const migrated = migrator.migrate(this.definitionPath)
+      // if there was a migration, reload the definition
+      if (migrated) {
+        await this.loadDefinition(args)
+      }
+
       this.validate()
     } else {
       throw new Error(
@@ -80,21 +83,87 @@ export class PrismaDefinitionClass {
     }
   }
 
-  validate() {
-    const disableAuth = this.definition!.disableAuth
-    if (this.secrets === null && !disableAuth) {
-      throw new Error(
-        'Please either provide a secret in your prisma.yml or disableAuth: true',
-      )
-    }
+  private async loadDefinition(args) {
+    const { definition, rawJson } = await readDefinition(
+      this.definitionPath!,
+      args,
+      this.out,
+      this.envVars,
+    )
+    this.definition = definition
+    this.rawJson = rawJson
+    this.definitionString = fs.readFileSync(this.definitionPath!, 'utf-8')
+    this.typesString = this.getTypesString(this.definition)
+    const secrets = this.definition.secret
+    this.secrets = secrets ? secrets.replace(/\s/g, '').split(',') : null
+  }
 
+  get endpoint(): string | undefined {
+    return (
+      (this.definition && this.definition.endpoint) ||
+      process.env.PRISMA_MANAGEMENT_API_ENDPOINT
+    )
+  }
+
+  get clusterBaseUrl(): string | undefined {
+    if (!this.definition || this.definition.cluster || !this.endpoint) {
+      return undefined
+    }
+    const { clusterBaseUrl } = parseEndpoint(this.endpoint)
+    return clusterBaseUrl
+  }
+
+  get service(): string | undefined {
+    if (!this.definition) {
+      return undefined
+    }
+    if (this.definition.service) {
+      return this.definition.service
+    }
+    if (!this.endpoint) {
+      return undefined
+    }
+    const { service } = parseEndpoint(this.endpoint)
+    return service
+  }
+
+  get stage(): string | undefined {
+    if (!this.definition) {
+      return undefined
+    }
+    if (this.definition.stage) {
+      return this.definition.stage
+    }
+    if (!this.endpoint) {
+      return undefined
+    }
+    const { stage } = parseEndpoint(this.endpoint)
+    return stage
+  }
+
+  get cluster(): string | undefined {
+    if (!this.definition) {
+      return undefined
+    }
+    if (this.definition.cluster) {
+      return this.definition.cluster
+    }
+    if (!this.endpoint) {
+      return undefined
+    }
+    const { clusterName } = parseEndpoint(this.endpoint)
+    return clusterName
+  }
+
+  validate() {
     // shared clusters need a workspace
     const clusterName = this.getClusterName()
     const cluster = this.env.clusterByName(clusterName!)!
     if (
       clusterName &&
       cluster &&
-      (cluster.shared || cluster.isPrivate) &&
+      cluster.shared &&
+      !cluster.isPrivate &&
       !this.getWorkspace() &&
       clusterName !== 'shared-public-demo'
     ) {
@@ -127,7 +196,7 @@ and execute ${chalk.bold.green(
     return undefined
   }
 
-  getCluster(throws: boolean = true): Cluster | undefined {
+  getCluster(throws: boolean = false): Cluster | undefined {
     const clusterName = this.getClusterName()
     if (clusterName) {
       const cluster = this.env.clusterByName(clusterName)
@@ -140,7 +209,34 @@ If it is a private cluster, make sure that you're logged in with ${chalk.bold.gr
             )}`,
           )
         }
-      } else {
+      } else if (cluster) {
+        return cluster
+      }
+    }
+
+    if (this.definition && this.endpoint) {
+      const {
+        clusterBaseUrl,
+        isPrivate,
+        local,
+        shared,
+        workspaceSlug,
+        clusterName,
+      } = parseEndpoint(this.endpoint)
+      if (clusterBaseUrl) {
+        debug('making cluster here')
+        const cluster = new Cluster(
+          this.out!,
+          clusterName,
+          clusterBaseUrl,
+          shared ? this.env.cloudSessionKey : undefined,
+          local,
+          shared,
+          isPrivate,
+          workspaceSlug,
+        )
+        this.env.removeCluster(clusterName)
+        this.env.addCluster(cluster)
         return cluster
       }
     }
@@ -174,7 +270,7 @@ If it is a private cluster, make sure that you're logged in with ${chalk.bold.gr
     if (this.definition && this.definition.cluster) {
       return this.definition!.cluster!.split('/').slice(-1)[0]
     }
-    return null
+    return this.cluster || null
   }
 
   getWorkspace(): string | null {
@@ -182,6 +278,13 @@ If it is a private cluster, make sure that you're logged in with ${chalk.bold.gr
       const splitted = this.definition!.cluster!.split('/')
       if (splitted.length > 1) {
         return splitted[0]
+      }
+    }
+
+    if (this.definition && this.endpoint) {
+      const { workspaceSlug } = parseEndpoint(this.endpoint)
+      if (workspaceSlug) {
+        return workspaceSlug
       }
     }
 
@@ -237,6 +340,46 @@ If it is a private cluster, make sure that you're logged in with ${chalk.bold.gr
       await this.load(args)
     }
   }
+
+  replaceEndpoint(newEndpoint) {
+    this.definitionString = replaceYamlValue(
+      this.definitionString,
+      'endpoint',
+      newEndpoint,
+    )
+    fs.writeFileSync(this.definitionPath!, this.definitionString)
+  }
+
+  getEndpoint(serviceInput?: string, stageInput?: string) {
+    const cluster = this.getCluster()
+    const service = serviceInput || this.service
+    const stage = stageInput || this.stage
+    const workspace = this.getWorkspace()
+
+    if (service && stage && cluster) {
+      return cluster!.getApiEndpoint(service, stage, workspace)
+    }
+
+    return null
+  }
+
+  getHooks(hookType: HookType): string[] {
+    if (
+      this.definition &&
+      this.definition.hooks &&
+      this.definition.hooks[hookType]
+    ) {
+      const hooks = this.definition.hooks[hookType]
+      if (typeof hooks !== 'string' && !Array.isArray(hooks)) {
+        throw new Error(
+          `Hook ${hookType} provided in prisma.yml must be string or an array of strings.`,
+        )
+      }
+      return typeof hooks === 'string' ? [hooks] : hooks
+    }
+
+    return []
+  }
 }
 
 export function concatName(
@@ -260,4 +403,14 @@ function transformHeaders(headers?: { [key: string]: string }): Header[] {
     name: key,
     value: headers[key],
   }))
+}
+
+export function getEndpointFromRawProps(
+  clusterWorkspace: string,
+  service: string,
+  stage: string,
+) {
+  const splitted = clusterWorkspace.split('/')
+  const cluster = splitted.length > 1 ? splitted[1] : splitted[0]
+  const workspace = splitted.length > 1 ? splitted[0] : undefined
 }

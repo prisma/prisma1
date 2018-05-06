@@ -26,11 +26,10 @@ object DeployMetrics extends MetricsManager(BugsnagErrorReporter(sys.env.getOrEl
 object DatabaseSizeReporter {
   object Report
 
-//  case class DatabaseSize(name: String, total: Double)
 }
 case class DatabaseSizeReporter(
     projectPersistence: ProjectPersistence,
-    persistencePlugin: DeployConnector
+    deployConnector: DeployConnector
 ) extends Actor
     with LogUnhandled {
   import context.dispatcher
@@ -68,18 +67,5 @@ case class DatabaseSizeReporter(
     })
   }
 
-  def getAllDatabaseSizes(): Future[Vector[DatabaseSize]] = persistencePlugin.getAllDatabaseSizes()
-
-//  def getAllDatabaseSizes(): Future[Vector[DatabaseSize]] = database.run(action)
-//
-//  val action = {
-//    val query = sql"""
-//         SELECT table_schema, sum( data_length + index_length) / 1024 / 1024 FROM information_schema.TABLES GROUP BY table_schema
-//       """
-//    query.as[(String, Double)].map { tuples =>
-//      tuples.map { tuple =>
-//        DatabaseSize(tuple._1, tuple._2)
-//      }
-//    }
-//  }
+  def getAllDatabaseSizes(): Future[Vector[DatabaseSize]] = deployConnector.getAllDatabaseSizes()
 }

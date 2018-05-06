@@ -2,23 +2,21 @@
 
 exports[`Environment empty global prisma rc 1`] = `
 Array [
-  Cluster {
+  Object {
     "baseUrl": "https://eu1.prisma.sh",
     "clusterSecret": undefined,
     "isPrivate": false,
     "local": false,
     "name": "prisma-eu1",
-    "out": Output {},
     "shared": true,
     "workspaceSlug": undefined,
   },
-  Cluster {
+  Object {
     "baseUrl": "https://us1.prisma.sh",
     "clusterSecret": undefined,
     "isPrivate": false,
     "local": false,
     "name": "prisma-us1",
-    "out": Output {},
     "shared": true,
     "workspaceSlug": undefined,
   },
@@ -27,23 +25,21 @@ Array [
 
 exports[`Environment interpolates env vars 1`] = `
 Array [
-  Cluster {
+  Object {
     "baseUrl": "https://eu1.prisma.sh",
     "clusterSecret": undefined,
     "isPrivate": false,
     "local": false,
     "name": "prisma-eu1",
-    "out": Output {},
     "shared": true,
     "workspaceSlug": undefined,
   },
-  Cluster {
+  Object {
     "baseUrl": "https://us1.prisma.sh",
     "clusterSecret": undefined,
     "isPrivate": false,
     "local": false,
     "name": "prisma-us1",
-    "out": Output {},
     "shared": true,
     "workspaceSlug": undefined,
   },
@@ -52,23 +48,21 @@ Array [
 
 exports[`Environment loads multiple cluster definitions correctly + gives cluster by name 1`] = `
 Array [
-  Cluster {
+  Object {
     "baseUrl": "https://eu1.prisma.sh",
     "clusterSecret": undefined,
     "isPrivate": false,
     "local": false,
     "name": "prisma-eu1",
-    "out": Output {},
     "shared": true,
     "workspaceSlug": undefined,
   },
-  Cluster {
+  Object {
     "baseUrl": "https://us1.prisma.sh",
     "clusterSecret": undefined,
     "isPrivate": false,
     "local": false,
     "name": "prisma-us1",
-    "out": Output {},
     "shared": true,
     "workspaceSlug": undefined,
   },
@@ -79,23 +73,21 @@ exports[`Environment loads multiple cluster definitions correctly + gives cluste
 
 exports[`Environment non-existent global prisma rc 1`] = `
 Array [
-  Cluster {
+  Object {
     "baseUrl": "https://eu1.prisma.sh",
     "clusterSecret": undefined,
     "isPrivate": false,
     "local": false,
     "name": "prisma-eu1",
-    "out": Output {},
     "shared": true,
     "workspaceSlug": undefined,
   },
-  Cluster {
+  Object {
     "baseUrl": "https://us1.prisma.sh",
     "clusterSecret": undefined,
     "isPrivate": false,
     "local": false,
     "name": "prisma-us1",
-    "out": Output {},
     "shared": true,
     "workspaceSlug": undefined,
   },
@@ -112,33 +104,30 @@ exports[`Environment persists .prisma correctly 1`] = `
 
 exports[`Environment persists .prisma correctly 2`] = `
 Array [
-  Cluster {
+  Object {
     "baseUrl": "https://eu1.prisma.sh",
     "clusterSecret": undefined,
     "isPrivate": false,
     "local": false,
     "name": "prisma-eu1",
-    "out": Output {},
     "shared": true,
     "workspaceSlug": undefined,
   },
-  Cluster {
+  Object {
     "baseUrl": "https://us1.prisma.sh",
     "clusterSecret": undefined,
     "isPrivate": false,
     "local": false,
     "name": "prisma-us1",
-    "out": Output {},
     "shared": true,
     "workspaceSlug": undefined,
   },
-  Cluster {
+  Object {
     "baseUrl": "http://localhost:60000",
     "clusterSecret": "",
     "isPrivate": false,
     "local": true,
     "name": "cluster",
-    "out": Output {},
     "shared": false,
     "workspaceSlug": undefined,
   },
@@ -147,23 +136,21 @@ Array [
 
 exports[`Environment sets the platform token correctly 1`] = `
 Array [
-  Cluster {
+  Object {
     "baseUrl": "https://eu1.prisma.sh",
     "clusterSecret": undefined,
     "isPrivate": false,
     "local": false,
     "name": "prisma-eu1",
-    "out": Output {},
     "shared": true,
     "workspaceSlug": undefined,
   },
-  Cluster {
+  Object {
     "baseUrl": "https://us1.prisma.sh",
     "clusterSecret": undefined,
     "isPrivate": false,
     "local": false,
     "name": "prisma-us1",
-    "out": Output {},
     "shared": true,
     "workspaceSlug": undefined,
   },

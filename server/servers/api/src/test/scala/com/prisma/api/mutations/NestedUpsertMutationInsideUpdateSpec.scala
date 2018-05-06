@@ -1,11 +1,10 @@
 package com.prisma.api.mutations
 
-import com.prisma.api.ApiBaseSpec
-import com.prisma.api.connector.mysql.database.DatabaseQueryBuilder
+import com.prisma.api.ApiSpecBase
 import com.prisma.shared.schema_dsl.SchemaDsl
 import org.scalatest.{FlatSpec, Matchers}
 
-class NestedUpsertMutationInsideUpdateSpec extends FlatSpec with Matchers with ApiBaseSpec {
+class NestedUpsertMutationInsideUpdateSpec extends FlatSpec with Matchers with ApiSpecBase {
 
   "a PM to C1!  relation with a child already in a relation" should "work with create" in {
     val project = SchemaDsl() { schema =>
@@ -31,7 +30,7 @@ class NestedUpsertMutationInsideUpdateSpec extends FlatSpec with Matchers with A
       project
     )
 
-    database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "_ParentToChild").as[Int]) should be(Vector(1))
+    dataResolver(project).countByTable("_ParentToChild").await should be(1)
 
     val res = server.query(
       s"""
@@ -56,10 +55,10 @@ class NestedUpsertMutationInsideUpdateSpec extends FlatSpec with Matchers with A
 
     res.toString should be("""{"data":{"updateParent":{"childrenOpt":[{"c":"c1"},{"c":"c2"}]}}}""")
 
-    database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "Parent").as[Int]) should be(Vector(1))
-    database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "Child").as[Int]) should be(Vector(2))
-    database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "_RelayId").as[Int]) should be(Vector(3))
-    database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "_ParentToChild").as[Int]) should be(Vector(2))
+    dataResolver(project).countByTable("Parent").await should be(1)
+    dataResolver(project).countByTable("Child").await should be(2)
+    dataResolver(project).countByTable("_RelayId").await should be(3)
+    dataResolver(project).countByTable("_ParentToChild").await should be(2)
   }
 
   "a PM to C1!  relation with a child already in a relation" should "work with update" in {
@@ -86,7 +85,7 @@ class NestedUpsertMutationInsideUpdateSpec extends FlatSpec with Matchers with A
       project
     )
 
-    database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "_ParentToChild").as[Int]) should be(Vector(1))
+    dataResolver(project).countByTable("_ParentToChild").await should be(1)
 
     val res = server.query(
       s"""
@@ -111,10 +110,10 @@ class NestedUpsertMutationInsideUpdateSpec extends FlatSpec with Matchers with A
 
     res.toString should be("""{"data":{"updateParent":{"childrenOpt":[{"c":"updated C"}]}}}""")
 
-    database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "Parent").as[Int]) should be(Vector(1))
-    database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "Child").as[Int]) should be(Vector(1))
-    database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "_RelayId").as[Int]) should be(Vector(2))
-    database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "_ParentToChild").as[Int]) should be(Vector(1))
+    dataResolver(project).countByTable("Parent").await should be(1)
+    dataResolver(project).countByTable("Child").await should be(1)
+    dataResolver(project).countByTable("_RelayId").await should be(2)
+    dataResolver(project).countByTable("_ParentToChild").await should be(1)
   }
 
   "a PM to C1  relation with the parent already in a relation" should "work through a nested mutation by unique for create" in {
@@ -142,7 +141,7 @@ class NestedUpsertMutationInsideUpdateSpec extends FlatSpec with Matchers with A
         project
       )
 
-    database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "_ParentToChild").as[Int]) should be(Vector(2))
+    dataResolver(project).countByTable("_ParentToChild").await should be(2)
 
     val res = server.query(
       s"""
@@ -167,10 +166,10 @@ class NestedUpsertMutationInsideUpdateSpec extends FlatSpec with Matchers with A
 
     res.toString should be("""{"data":{"updateParent":{"childrenOpt":[{"c":"c1"},{"c":"c2"},{"c":"new C"}]}}}""")
 
-    database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "Parent").as[Int]) should be(Vector(1))
-    database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "Child").as[Int]) should be(Vector(3))
-    database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "_RelayId").as[Int]) should be(Vector(4))
-    database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "_ParentToChild").as[Int]) should be(Vector(3))
+    dataResolver(project).countByTable("Parent").await should be(1)
+    dataResolver(project).countByTable("Child").await should be(3)
+    dataResolver(project).countByTable("_RelayId").await should be(4)
+    dataResolver(project).countByTable("_ParentToChild").await should be(3)
   }
 
   "a PM to C1  relation with the parent already in a relation" should "work through a nested mutation by unique for update" in {
@@ -198,7 +197,7 @@ class NestedUpsertMutationInsideUpdateSpec extends FlatSpec with Matchers with A
         project
       )
 
-    database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "_ParentToChild").as[Int]) should be(Vector(2))
+    dataResolver(project).countByTable("_ParentToChild").await should be(2)
 
     val res = server.query(
       s"""
@@ -223,10 +222,10 @@ class NestedUpsertMutationInsideUpdateSpec extends FlatSpec with Matchers with A
 
     res.toString should be("""{"data":{"updateParent":{"childrenOpt":[{"c":"updated C"},{"c":"c2"}]}}}""")
 
-    database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "Parent").as[Int]) should be(Vector(1))
-    database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "Child").as[Int]) should be(Vector(2))
-    database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "_RelayId").as[Int]) should be(Vector(3))
-    database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "_ParentToChild").as[Int]) should be(Vector(2))
+    dataResolver(project).countByTable("Parent").await should be(1)
+    dataResolver(project).countByTable("Child").await should be(2)
+    dataResolver(project).countByTable("_RelayId").await should be(3)
+    dataResolver(project).countByTable("_ParentToChild").await should be(2)
   }
 
   "a PM to CM  relation with the children already in a relation" should "work through a nested mutation by unique for update" in {
@@ -252,7 +251,7 @@ class NestedUpsertMutationInsideUpdateSpec extends FlatSpec with Matchers with A
       project
     )
 
-    database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "_ChildToParent").as[Int]) should be(Vector(2))
+    dataResolver(project).countByTable("_ChildToParent").await should be(2)
 
     val res = server.query(
       s"""
@@ -280,10 +279,10 @@ class NestedUpsertMutationInsideUpdateSpec extends FlatSpec with Matchers with A
     server.query(s"""query{children{c, parentsOpt{p}}}""", project).toString should be(
       """{"data":{"children":[{"c":"c1","parentsOpt":[{"p":"p1"}]},{"c":"updated C","parentsOpt":[{"p":"p1"}]}]}}""")
 
-    database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "Parent").as[Int]) should be(Vector(1))
-    database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "Child").as[Int]) should be(Vector(2))
-    database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "_RelayId").as[Int]) should be(Vector(3))
-    database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "_ChildToParent").as[Int]) should be(Vector(2))
+    dataResolver(project).countByTable("Parent").await should be(1)
+    dataResolver(project).countByTable("Child").await should be(2)
+    dataResolver(project).countByTable("_RelayId").await should be(3)
+    dataResolver(project).countByTable("_ChildToParent").await should be(2)
   }
 
   "a PM to CM  relation with the children already in a relation" should "work through a nested mutation by unique for create" in {
@@ -309,7 +308,7 @@ class NestedUpsertMutationInsideUpdateSpec extends FlatSpec with Matchers with A
       project
     )
 
-    database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "_ChildToParent").as[Int]) should be(Vector(2))
+    dataResolver(project).countByTable("_ChildToParent").await should be(2)
 
     val res = server.query(
       s"""
@@ -337,10 +336,10 @@ class NestedUpsertMutationInsideUpdateSpec extends FlatSpec with Matchers with A
     server.query(s"""query{children{c, parentsOpt{p}}}""", project).toString should be(
       """{"data":{"children":[{"c":"c1","parentsOpt":[{"p":"p1"}]},{"c":"c2","parentsOpt":[{"p":"p1"}]},{"c":"updated C","parentsOpt":[{"p":"p1"}]}]}}""")
 
-    database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "Parent").as[Int]) should be(Vector(1))
-    database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "Child").as[Int]) should be(Vector(3))
-    database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "_RelayId").as[Int]) should be(Vector(4))
-    database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "_ChildToParent").as[Int]) should be(Vector(3))
+    dataResolver(project).countByTable("Parent").await should be(1)
+    dataResolver(project).countByTable("Child").await should be(3)
+    dataResolver(project).countByTable("_RelayId").await should be(4)
+    dataResolver(project).countByTable("_ChildToParent").await should be(3)
   }
 
   "a one to many relation" should "be upsertable by id through a nested mutation" in {

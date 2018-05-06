@@ -1,6 +1,6 @@
 package com.prisma.api.import_export
 
-import com.prisma.api.ApiBaseSpec
+import com.prisma.api.ApiSpecBase
 import com.prisma.api.connector.DataResolver
 import com.prisma.api.import_export.ImportExport.MyJsonProtocol._
 import com.prisma.api.import_export.ImportExport.{Cursor, ExportRequest, ResultFormat}
@@ -8,9 +8,9 @@ import com.prisma.shared.models.Project
 import com.prisma.shared.schema_dsl.SchemaDsl
 import com.prisma.utils.await.AwaitUtils
 import org.scalatest.{FlatSpec, Matchers}
-import spray.json._
+import play.api.libs.json._
 
-class ListValueImportExportSpec extends FlatSpec with Matchers with ApiBaseSpec with AwaitUtils {
+class ListValueImportExportSpec extends FlatSpec with Matchers with ApiSpecBase with AwaitUtils {
 
   val project: Project = SchemaDsl() { schema =>
     val enum = schema.enum("Enum", Vector("AB", "CD", "\uD83D\uDE0B", "\uD83D\uDCA9"))
@@ -36,12 +36,10 @@ class ListValueImportExportSpec extends FlatSpec with Matchers with ApiBaseSpec 
     database.setup(project)
   }
 
-  override def beforeEach(): Unit = {
-    database.truncate(project)
-  }
-  val importer                   = new BulkImport(project)
-  val exporter                   = new BulkExport(project)
-  val dataResolver: DataResolver = this.dataResolver(project)
+  override def beforeEach(): Unit = database.truncateProjectTables(project)
+  val importer                    = new BulkImport(project)
+  val exporter                    = new BulkExport(project)
+  val dataResolver: DataResolver  = this.dataResolver(project)
 
   "Importing ListValues for a wrong Id" should "fail" in {
 
@@ -58,7 +56,7 @@ class ListValueImportExportSpec extends FlatSpec with Matchers with ApiBaseSpec 
         |]}
         |""".stripMargin.parseJson
 
-    importer.executeImport(lists).await().toString should include("Cannot add or update a child row: a foreign key constraint fails ")
+    importer.executeImport(lists).await().toString should include("Failure inserting into listTable Model0_stringList for the id 3 for value ")
   }
 
   "Exporting nodes" should "work (with filesize limit set to 1000 for test) and preserve the order of items" in {
@@ -89,9 +87,9 @@ class ListValueImportExportSpec extends FlatSpec with Matchers with ApiBaseSpec 
 
     importer.executeImport(lists).await().toString should be("[]")
 
-    val cursor     = Cursor(0, 0, 0, 0)
+    val cursor     = Cursor(0, 0)
     val request    = ExportRequest("lists", cursor)
-    val firstChunk = exporter.executeExport(dataResolver, request.toJson).await().convertTo[ResultFormat]
+    val firstChunk = exporter.executeExport(dataResolver, request).await().as[ResultFormat]
 
     JsArray(firstChunk.out.jsonElements).toString should be(
       "[" ++
@@ -102,7 +100,7 @@ class ListValueImportExportSpec extends FlatSpec with Matchers with ApiBaseSpec 
     firstChunk.cursor.row should be(0)
 
     val request2    = request.copy(cursor = firstChunk.cursor)
-    val secondChunk = exporter.executeExport(dataResolver, request2.toJson).await().convertTo[ResultFormat]
+    val secondChunk = exporter.executeExport(dataResolver, request2).await().as[ResultFormat]
 
     JsArray(secondChunk.out.jsonElements).toString should be("[" ++
       """{"_typeName":"Model0","id":"1","floatList":[1.423423,3.1234324234,4.23432424,4.234234324234,1.423423,3.1234324234,4.23432424,4.234234324234]},""" ++
@@ -134,9 +132,9 @@ class ListValueImportExportSpec extends FlatSpec with Matchers with ApiBaseSpec 
 
     importer.executeImport(lists).await().toString should be("[]")
 
-    val cursor     = Cursor(0, 0, 0, 0)
+    val cursor     = Cursor(0, 0)
     val request    = ExportRequest("lists", cursor)
-    val firstChunk = exporter.executeExport(dataResolver, request.toJson).await().convertTo[ResultFormat]
+    val firstChunk = exporter.executeExport(dataResolver, request).await().as[ResultFormat]
 
     JsArray(firstChunk.out.jsonElements).toString should be(
       "[" ++
@@ -167,9 +165,10 @@ class ListValueImportExportSpec extends FlatSpec with Matchers with ApiBaseSpec 
 
     importer.executeImport(lists).await().toString should be("[]")
 
-    val cursor     = Cursor(0, 0, 0, 0)
-    val request    = ExportRequest("lists", cursor)
-    val firstChunk = exporter.executeExport(dataResolver, request.toJson).await().convertTo[ResultFormat]
+    val cursor       = Cursor(0, 0)
+    val request      = ExportRequest("lists", cursor)
+    val exportResult = exporter.executeExport(dataResolver, request).await()
+    val firstChunk   = exportResult.as[ResultFormat]
 
     JsArray(firstChunk.out.jsonElements).toString should be(
       "[" ++

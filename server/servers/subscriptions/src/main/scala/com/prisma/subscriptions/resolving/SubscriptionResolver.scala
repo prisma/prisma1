@@ -2,14 +2,15 @@ package com.prisma.subscriptions.resolving
 
 import java.util.concurrent.TimeUnit
 
-import com.prisma.api.connector.DataItem
-import com.prisma.api.mutactions.GraphcoolDataTypes
+import com.prisma.api.connector.{PrismaArgs, PrismaNode}
+import com.prisma.gc_values.IdGCValue
 import com.prisma.shared.models.ModelMutationType.ModelMutationType
 import com.prisma.shared.models.{Model, ModelMutationType, Project}
-import com.prisma.subscriptions.{SubscriptionDependencies, SubscriptionExecutor}
 import com.prisma.subscriptions.metrics.SubscriptionMetrics.handleDatabaseEventTimer
 import com.prisma.subscriptions.resolving.SubscriptionsManagerForModel.Requests.StartSubscription
 import com.prisma.subscriptions.util.PlayJson
+import com.prisma.subscriptions.{SubscriptionDependencies, SubscriptionExecutor}
+import com.prisma.util.coolArgs.GCCreateReallyCoolArgsConverter
 import play.api.libs.json._
 
 import scala.concurrent.duration.Duration
@@ -26,6 +27,7 @@ case class SubscriptionResolver(
     ec: ExecutionContext
 ) {
   import DatabaseEvents._
+  val converter = GCCreateReallyCoolArgsConverter(model)
 
   def handleDatabaseMessage(event: String): Future[Option[JsValue]] = {
     import DatabaseEventReaders._
@@ -38,13 +40,8 @@ case class SubscriptionResolver(
     }
 
     dbEvent match {
-      case JsError(_) =>
-        Future.successful(None)
-
-      case JsSuccess(event, _) =>
-        handleDatabaseEventTimer.timeFuture(project.id) {
-          delayed(handleDatabaseMessage(event))
-        }
+      case JsError(_)          => Future.successful(None)
+      case JsSuccess(event, _) => handleDatabaseEventTimer.timeFuture(project.id) { delayed(handleDatabaseMessage(event)) }
     }
   }
 
@@ -65,48 +62,33 @@ case class SubscriptionResolver(
   }
 
   def handleDatabaseUpdateEvent(event: DatabaseUpdateEvent): Future[Option[JsValue]] = {
-    val values         = GraphcoolDataTypes.fromJson(event.previousValues, model.fields)
-    val previousValues = DataItem(event.nodeId, values)
+    val reallyCoolArgs: PrismaArgs = converter.toReallyCoolArgsFromJson(event.previousValues)
+    val previousValues             = PrismaNode(IdGCValue(event.nodeId), reallyCoolArgs.raw.asRoot)
 
     executeQuery(event.nodeId, Some(previousValues), updatedFields = Some(event.changedFields.toList))
   }
 
   def handleDatabaseDeleteEvent(event: DatabaseDeleteEvent): Future[Option[JsValue]] = {
-    val values         = GraphcoolDataTypes.fromJson(event.node, model.fields)
-    val previousValues = DataItem(event.nodeId, values)
+    val reallyCoolArgs: PrismaArgs = converter.toReallyCoolArgsFromJson(event.node)
+    val previousValues             = PrismaNode(IdGCValue(event.nodeId), reallyCoolArgs.raw.asRoot)
 
     executeQuery(event.nodeId, Some(previousValues), updatedFields = None)
   }
 
-  def executeQuery(nodeId: String, previousValues: Option[DataItem], updatedFields: Option[List[String]]): Future[Option[JsValue]] = {
-    val variables: spray.json.JsValue = subscription.variables match {
-      case None =>
-        spray.json.JsObject.empty
-
-      case Some(vars) =>
-        val str = vars.toString
-        VariablesParser.parseVariables(str)
-    }
-
-    SubscriptionExecutor
-      .execute(
-        project = project,
-        model = model,
-        mutationType = mutationType,
-        previousValues = previousValues,
-        updatedFields = updatedFields,
-        query = subscription.query,
-        variables = variables,
-        nodeId = nodeId,
-        requestId = s"subscription:${subscription.sessionId}:${subscription.id.asString}",
-        operationName = subscription.operationName,
-        skipPermissionCheck = false,
-        alwaysQueryMasterDatabase = false
-      )
-      .map { x =>
-        x.map { sprayJsonResult =>
-          Json.parse(sprayJsonResult.toString)
-        }
-      }
+  def executeQuery(nodeId: String, previousValues: Option[PrismaNode], updatedFields: Option[List[String]]): Future[Option[JsValue]] = {
+    SubscriptionExecutor.execute(
+      project = project,
+      model = model,
+      mutationType = mutationType,
+      previousValues = previousValues,
+      updatedFields = updatedFields,
+      query = subscription.query,
+      variables = subscription.variables.getOrElse(JsObject.empty),
+      nodeId = nodeId,
+      requestId = s"subscription:${subscription.sessionId}:${subscription.id.asString}",
+      operationName = subscription.operationName,
+      skipPermissionCheck = false,
+      alwaysQueryMasterDatabase = false
+    )
   }
 }

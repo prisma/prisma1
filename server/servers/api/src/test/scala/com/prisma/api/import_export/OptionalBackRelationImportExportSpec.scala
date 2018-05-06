@@ -1,6 +1,6 @@
 package com.prisma.api.import_export
 
-import com.prisma.api.ApiBaseSpec
+import com.prisma.api.ApiSpecBase
 import com.prisma.api.connector.DataResolver
 import com.prisma.api.import_export.ImportExport.MyJsonProtocol._
 import com.prisma.api.import_export.ImportExport.{Cursor, ExportRequest, ResultFormat}
@@ -8,9 +8,9 @@ import com.prisma.shared.models.Project
 import com.prisma.shared.schema_dsl.SchemaDsl
 import com.prisma.utils.await.AwaitUtils
 import org.scalatest.{FlatSpec, Matchers}
-import spray.json._
+import play.api.libs.json.JsArray
 
-class OptionalBackRelationImportExportSpec extends FlatSpec with Matchers with ApiBaseSpec with AwaitUtils {
+class OptionalBackRelationImportExportSpec extends FlatSpec with Matchers with ApiSpecBase with AwaitUtils {
 
   val project: Project = SchemaDsl() { schema =>
     val model0: SchemaDsl.ModelBuilder = schema
@@ -30,9 +30,7 @@ class OptionalBackRelationImportExportSpec extends FlatSpec with Matchers with A
     database.setup(project)
   }
 
-  override def beforeEach(): Unit = {
-    database.truncate(project)
-  }
+  override def beforeEach(): Unit = database.truncateProjectTables(project)
 
   val importer                   = new BulkImport(project)
   val exporter                   = new BulkExport(project)
@@ -68,7 +66,7 @@ class OptionalBackRelationImportExportSpec extends FlatSpec with Matchers with A
 
     val rel0 = server.query("query{model0s{id, model0self{id}}}", project).toString
     rel0 should be(
-      """{"data":{"model0s":[{"id":"0","model0self":null},{"id":"3","model0self":{"id":"4"}},{"id":"4","model0self":null},{"id":"5","model0self":{"id":"6"}},{"id":"6","model0self":null}]}}""")
+      """{"data":{"model0s":[{"id":"0","model0self":null},{"id":"3","model0self":{"id":"4"}},{"id":"4","model0self":{"id":"3"}},{"id":"5","model0self":{"id":"6"}},{"id":"6","model0self":{"id":"5"}}]}}""")
 
     val rel1 = server.query("query{model1s{id, model0{id}}}", project).toString
     rel1 should be("""{"data":{"model1s":[{"id":"1","model0":{"id":"0"}}]}}""")
@@ -104,7 +102,7 @@ class OptionalBackRelationImportExportSpec extends FlatSpec with Matchers with A
 
     val rel0 = server.query("query{model0s{id, model0self{id}}}", project).toString
     rel0 should be(
-      """{"data":{"model0s":[{"id":"0","model0self":null},{"id":"3","model0self":{"id":"4"}},{"id":"4","model0self":null},{"id":"5","model0self":{"id":"6"}},{"id":"6","model0self":null}]}}""")
+      """{"data":{"model0s":[{"id":"0","model0self":null},{"id":"3","model0self":{"id":"4"}},{"id":"4","model0self":{"id":"3"}},{"id":"5","model0self":{"id":"6"}},{"id":"6","model0self":{"id":"5"}}]}}""")
 
     val rel1 = server.query("query{model1s{id, model0{id}}}", project).toString
     rel1 should be("""{"data":{"model1s":[{"id":"1","model0":{"id":"0"}}]}}""")
@@ -150,9 +148,9 @@ class OptionalBackRelationImportExportSpec extends FlatSpec with Matchers with A
     importer.executeImport(nodes).await(5)
     importer.executeImport(relations).await(5)
 
-    val cursor     = Cursor(0, 0, 0, 0)
+    val cursor     = Cursor(0, 0)
     val request    = ExportRequest("relations", cursor)
-    val firstChunk = exporter.executeExport(dataResolver, request.toJson).await(5).convertTo[ResultFormat]
+    val firstChunk = exporter.executeExport(dataResolver, request).await(5).as[ResultFormat]
 
     JsArray(firstChunk.out.jsonElements).toString should be(
       """[""" concat

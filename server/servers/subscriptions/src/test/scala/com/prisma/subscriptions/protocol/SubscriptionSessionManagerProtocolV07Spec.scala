@@ -8,7 +8,7 @@ import com.prisma.messagebus.testkits.{DummyPubSubPublisher, InMemoryPubSubTestK
 import com.prisma.shared.models.ProjectWithClientId
 import com.prisma.shared.schema_dsl.TestProject
 import com.prisma.stub.Import.withStubServer
-import com.prisma.subscriptions.SubscriptionDependenciesForTest
+import com.prisma.subscriptions.TestSubscriptionDependencies
 import com.prisma.subscriptions.protocol.SubscriptionProtocolV05.Responses.SubscriptionSessionResponseV05
 import com.prisma.subscriptions.protocol.SubscriptionSessionManager.Requests.EnrichedSubscriptionRequest
 import com.prisma.subscriptions.resolving.SubscriptionsManager.Requests.{CreateSubscription, EndSubscription}
@@ -34,7 +34,7 @@ class SubscriptionSessionManagerProtocolV07Spec
   val ignoreProbe: TestProbe = TestProbe()
   val ignoreRef: ActorRef    = ignoreProbe.testActor
 
-  implicit val dependencies = new SubscriptionDependenciesForTest
+  implicit val dependencies = new TestSubscriptionDependencies
 
   def ignoreKeepAliveProbe: TestProbe = {
     val ret = TestProbe()

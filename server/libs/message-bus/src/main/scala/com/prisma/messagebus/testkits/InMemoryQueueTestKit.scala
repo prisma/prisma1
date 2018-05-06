@@ -30,7 +30,6 @@ case class InMemoryQueueTestKit[T](backoff: BackoffStrategy = ConstantBackoff(1.
     system: ActorSystem,
     materializer: ActorMaterializer
 ) extends Queue[T] {
-  import system.dispatcher
 
   /**
     * Why that much mutable state?

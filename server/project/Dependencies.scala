@@ -8,8 +8,8 @@ object Dependencies {
     */
   object v {
     val sangria     = "1.3.3"
-    val akka        = "2.5.8"
-    val akkaHttp    = "10.0.10"
+    val akka        = "2.5.11"
+    val akkaHttp    = "10.1.0"
     val joda        = "2.9.4"
     val jodaConvert = "1.7"
     val cuid        = "0.1.1"
@@ -17,7 +17,6 @@ object Dependencies {
     val scalactic   = "3.0.4"
     val scalaTest   = "3.0.4"
     val slick       = "3.2.0"
-    val spray       = "1.3.3"
     val jackson     = "2.8.4"
   }
 
@@ -25,30 +24,29 @@ object Dependencies {
   val jodaConvert = "org.joda" % "joda-convert" % v.jodaConvert
   val joda        = Seq(jodaTime, jodaConvert)
 
-  val cuid      = "cool.graph"    % "cuid-java"   % v.cuid
-  val scalactic = "org.scalactic" %% "scalactic"  % v.scalactic
-  val scalaTest = "org.scalatest" %% "scalatest"  % v.scalaTest % Test
-  val sprayJson = "io.spray"      %% "spray-json" % v.spray
+  val cuid      = "cool.graph"    % "cuid-java"  % v.cuid
+  val scalactic = "org.scalactic" %% "scalactic" % v.scalactic
+  val scalaTest = "org.scalatest" %% "scalatest" % v.scalaTest % Test
 
   val slickCore   = "com.typesafe.slick" %% "slick" % v.slick
   val slickHikari = "com.typesafe.slick" %% "slick-hikaricp" % v.slick
   val slickJoda   = "com.github.tototoshi" %% "slick-joda-mapper" % "2.3.0"
   val slick       = Seq(slickCore, slickHikari, slickJoda)
 
-  val mariaDbClient = "org.mariadb.jdbc" % "mariadb-java-client" % "2.1.2"
+  val mariaDbClient  = "org.mariadb.jdbc" % "mariadb-java-client" % "2.1.2"
+  val postgresClient = "org.postgresql"   % "postgresql"          % "42.2.2"
 
   val playJson    = "com.typesafe.play" %% "play-json"    % v.play
   val playStreams = "com.typesafe.play" %% "play-streams" % v.play
 
   val akka              = "com.typesafe.akka" %% "akka-actor"           % v.akka
-  val akkaClusterTools  = "com.typesafe.akka" %% "akka-cluster-tools"   % v.akka
-  val akkaContrib       = "com.typesafe.akka" %% "akka-contrib"         % v.akka
+  val akkaStream        = "com.typesafe.akka" %% "akka-stream"          % v.akka
   val akkaTestKit       = "com.typesafe.akka" %% "akka-testkit"         % v.akka
   val akkaHttp          = "com.typesafe.akka" %% "akka-http"            % v.akkaHttp
   val akkaHttpTestKit   = "com.typesafe.akka" %% "akka-http-testkit"    % v.akkaHttp
   val akkaHttpSprayJson = "com.typesafe.akka" %% "akka-http-spray-json" % v.akkaHttp
-  val akkaHttpCors      = "ch.megard"         %% "akka-http-cors"       % "0.2.2"
-  val akkaHttpPlayJson = "de.heikoseeberger" %% "akka-http-play-json" % "1.18.0" excludeAll (
+  val akkaHttpCors      = "ch.megard"         %% "akka-http-cors"       % "0.3.0"
+  val akkaHttpPlayJson = "de.heikoseeberger" %% "akka-http-play-json" % "1.20.0" excludeAll (
     ExclusionRule(organization = "com.typesafe.akka"),
     ExclusionRule(organization = "com.typesafe.play")
   )
@@ -81,8 +79,7 @@ object Dependencies {
   val scalajHttp        = "org.scalaj"                 %% "scalaj-http"              % "2.3.0"
   val evoInflector      = "org.atteo"                  % "evo-inflector"             % "1.2"
   val logBack           = "ch.qos.logback"             % "logback-classic"           % "1.1.7"
-  val snakeYML          = "org.yaml"                   % "snakeyaml"                 % "1.17"
-  val moultingYML       = "net.jcazevedo"              %% "moultingyaml"             % "0.4.0"
+  val snakeYML          = "org.yaml"                   % "snakeyaml"                 % "1.19"
   val logstash          = "net.logstash.logback"       % "logstash-logback-encoder"  % "4.7"
   val librato           = "com.librato.metrics"        % "librato-java"              % "2.1.0"
   val jettyServer       = "org.eclipse.jetty"          % "jetty-server"              % "9.3.0.v20150612"
@@ -104,7 +101,6 @@ object Dependencies {
     akkaHttpPlayJson,
     akkaHttpCors,
     akkaHttpTestKit,
-    sprayJson,
     playJson,
     scalajHttp,
     scalaLogging,
@@ -113,7 +109,6 @@ object Dependencies {
     evoInflector,
     cuid,
     finagle,
-    snakeYML,
     jwt
   )
 }

@@ -1,6 +1,6 @@
 package com.prisma.deploy.migration.migrator
 
-import com.prisma.shared.models.{Migration, MigrationStep, Schema, Function}
+import com.prisma.shared.models.{Function, Migration, MigrationStep, Schema}
 
 import scala.concurrent.Future
 

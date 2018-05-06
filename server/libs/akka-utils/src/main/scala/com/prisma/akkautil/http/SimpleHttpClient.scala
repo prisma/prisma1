@@ -5,16 +5,16 @@ import akka.http.scaladsl.Http
 import akka.http.scaladsl.model.HttpHeader.ParsingResult.{Error, Ok}
 import akka.http.scaladsl.model._
 import akka.http.scaladsl.server.RejectionError
-import akka.http.scaladsl.unmarshalling.Unmarshal
 import akka.http.scaladsl.settings.{ClientConnectionSettings, ConnectionPoolSettings}
+import akka.http.scaladsl.unmarshalling.Unmarshal
 import akka.stream.ActorMaterializer
 import com.prisma.utils.future.FutureUtils._
 import play.api.libs.json._
 
 import scala.collection.immutable.Seq
 import scala.concurrent.Future
-import scala.util.{Failure, Success, Try}
 import scala.concurrent.duration._
+import scala.util.{Failure, Success, Try}
 
 /**
   * Simplified abstraction over akka HTTP, allowing to easily execute common HTTP requests, which makes it suitable to

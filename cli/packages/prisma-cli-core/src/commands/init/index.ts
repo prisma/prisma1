@@ -5,7 +5,8 @@ import chalk from 'chalk'
 import * as npmRun from 'npm-run'
 const debug = require('debug')('init')
 import * as spawn from 'cross-spawn'
-import getGraphQLCliBin from '../../utils/getGraphQLCliBin'
+import { EndpointDialog } from '../../utils/EndpointDialog'
+import { isDockerComposeInstalled } from '../../utils/dockerComposeInstalled'
 
 export default class Init extends Command {
   static topic = 'init'
@@ -29,59 +30,25 @@ export default class Init extends Command {
   async run() {
     const dirName = this.args!.dirName
     if (dirName) {
-      const newDefinitionDir = path.join(process.cwd(), dirName + '/')
+      const newDefinitionDir = path.join(this.config.cwd, dirName + '/')
       this.config.definitionDir = newDefinitionDir
       fs.mkdirpSync(newDefinitionDir)
     } else {
-      this.config.definitionDir = process.cwd()
+      this.config.definitionDir = this.config.cwd
     }
 
-    const { boilerplate } = this.flags
-    if (boilerplate) {
-      await this.graphqlCreate(boilerplate)
-    } else {
-      const choice = await this.prompt()
-
-      if (choice === 'create') {
-        await this.graphqlCreate()
-      } else {
-        this.initMinimal()
-      }
-    }
+    await this.runInit()
   }
 
-  async prompt(): Promise<'create' | 'minimal'> {
-    const question = {
-      name: 'prompt',
-      type: 'list',
-      message: `How to set up a new Prisma service?`,
-      choices: [
-        {
-          name: 'Minimal setup: database-only',
-          value: 'minimal',
-        },
-        {
-          name: 'GraphQL server/fullstack boilerplate (recommended)',
-          value: 'create',
-        },
-      ],
-      pageSize: 2,
-    }
-
-    const { prompt } = await this.out.prompt(question)
-
-    this.out.up(1)
-
-    return prompt
-  }
-
-  initMinimal() {
+  async runInit() {
     const files = fs.readdirSync(this.config.definitionDir)
     // the .prismarc must be allowed for the docker version to be functioning
     // CONTINUE: special env handling for dockaa. can't just override the host/dinges
     if (
       files.length > 0 &&
-      (files.includes('prisma.yml') || files.includes('datamodel.graphql'))
+      (files.includes('prisma.yml') ||
+        files.includes('datamodel.graphql') ||
+        files.includes('docker-compose.yml'))
     ) {
       this.out.log(`
 The directory ${chalk.cyan(
@@ -95,78 +62,71 @@ Either try using a new directory name, or remove the files listed above.
       this.out.exit(1)
     }
 
-    fs.copySync(path.join(__dirname, 'boilerplate'), this.config.definitionDir)
-    let relativeDir = path.relative(process.cwd(), this.config.definitionDir)
+    const endpointDialog = new EndpointDialog(
+      this.out,
+      this.client,
+      this.env,
+      this.config,
+    )
+    const results = await endpointDialog.getEndpoint()
+
+    fs.copySync(
+      path.join(__dirname, 'boilerplate', 'prisma.yml'),
+      path.join(this.config.definitionDir, 'prisma.yml'),
+    )
+    fs.writeFileSync(
+      path.join(this.config.definitionDir, 'datamodel.graphql'),
+      results.datamodel,
+    )
+    if (results.cluster!.local) {
+      fs.writeFileSync(
+        path.join(this.config.definitionDir, 'docker-compose.yml'),
+        results.dockerComposeYml,
+      )
+    }
+    let relativeDir = path.relative(this.config.cwd, this.config.definitionDir)
     relativeDir = relativeDir.length === 0 ? '.' : relativeDir
 
     const definitionPath = path.join(this.config.definitionDir, 'prisma.yml')
     const prismaYml = fs.readFileSync(definitionPath, 'utf-8')
 
-    const newPrismaYml = prismaYml.replace(
-      'SERVICE_NAME',
-      path.basename(this.config.definitionDir),
-    )
+    const newPrismaYml = prismaYml.replace('ENDPOINT', results.endpoint)
     fs.writeFileSync(definitionPath, newPrismaYml)
 
     const dir = this.args!.dirName
     const dirString = dir
-      ? `Open the new folder via ${chalk.cyan(`$ cd ${dir}`)}. `
+      ? `Open the new folder via ${chalk.cyan(`$ cd ${dir}`)}.\n`
       : ``
 
+    const deployString = results.cluster!.local
+      ? `Run ${chalk.cyan('docker-compose up -d')}.\nThen you `
+      : `You now `
+
     this.out.log(`\
-Created 3 new files:               
+Created ${
+      results.cluster!.local ? 3 : 2
+    } new files:                                                                          
 
   ${chalk.cyan('prisma.yml')}           Prisma service definition
   ${chalk.cyan(
     'datamodel.graphql',
   )}    GraphQL SDL-based datamodel (foundation for database)
-  ${chalk.cyan(
-    '.graphqlconfig.yml',
-  )}   Configuration file for GraphQL tooling (Playground, IDE, …)
-
-${dirString}You can now run ${chalk.cyan(
-      '$ prisma deploy',
-    )} to deploy your database service.
-
-For next steps follow this tutorial: https://bit.ly/prisma-graphql-first-steps`)
+  ${
+    results.cluster!.local
+      ? `${chalk.cyan('docker-compose.yml')}   Docker configuration file`
+      : ''
   }
-  async graphqlCreate(boilerplate?: string) {
-    this.out.log(
-      `Running ${chalk.cyan(
-        '$ graphql create',
-      )} ...                             `,
-    )
 
-    const args: any[] = ['create']
-
-    if (this.args && this.args.dirName) {
-      args.push(this.args!.dirName!)
-    }
-
-    if (boilerplate) {
-      args.push('--boilerplate')
-      args.push(boilerplate)
-    }
-
-    debug('running graphql cli')
-    const binPath = await getGraphQLCliBin()
-
-    debug({ binPath, args })
-
-    const result = spawn.sync(binPath, args, {
-      stdio: 'inherit',
-    })
-
-    if (result.error) {
-      if (result.error.message.includes('ENOENT')) {
-        throw new Error(
-          `Could not start graphql cli. Please try to install it globally with ${chalk.bold(
-            'npm install -g graphql-cli',
-          )}`,
-        )
-      }
-
-      throw result.error
+${dirString}${deployString}can run ${chalk.cyan(
+      '$ prisma deploy',
+    )} to deploy your database service.`)
+    const dockerComposeInstalled = await isDockerComposeInstalled()
+    if (!dockerComposeInstalled) {
+      this.out.log(
+        `\nTo install docker-compose, please follow this link: ${chalk.cyan(
+          'https://docs.docker.com/compose/install/',
+        )}`,
+      )
     }
   }
 }

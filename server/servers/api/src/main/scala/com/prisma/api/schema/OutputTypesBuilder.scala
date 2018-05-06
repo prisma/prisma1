@@ -1,14 +1,14 @@
 package com.prisma.api.schema
 
-import com.prisma.api.connector.{DataItem, DataResolver}
+import com.prisma.api.connector.{DataResolver, PrismaNode}
 import com.prisma.shared.models.ModelMutationType.ModelMutationType
 import com.prisma.shared.models.{Model, Project}
 import sangria.schema
 import sangria.schema._
 
-case class OutputTypesBuilder(project: Project, objectTypes: Map[String, ObjectType[ApiUserContext, DataItem]], masterDataResolver: DataResolver) {
+case class OutputTypesBuilder(project: Project, objectTypes: Map[String, ObjectType[ApiUserContext, PrismaNode]], masterDataResolver: DataResolver) {
 
-  def mapOutputType[C](model: Model, objectType: ObjectType[C, DataItem], onlyId: Boolean): ObjectType[C, SimpleResolveOutput] = {
+  def mapOutputType[C](model: Model, objectType: ObjectType[C, PrismaNode], onlyId: Boolean): ObjectType[C, SimpleResolveOutput] = {
     ObjectType[C, SimpleResolveOutput](
       name = objectType.name,
       fieldsFn = () => {
@@ -18,8 +18,8 @@ case class OutputTypesBuilder(project: Project, objectTypes: Map[String, ObjectT
           .map { field =>
             field.copy(
               resolve = { outerCtx: Context[C, SimpleResolveOutput] =>
-                val castedCtx = outerCtx.asInstanceOf[Context[C, DataItem]]
-                field.resolve(castedCtx.copy(value = outerCtx.value.item))
+                val castedCtx = outerCtx.asInstanceOf[Context[C, PrismaNode]]
+                field.resolve(castedCtx.copy(value = outerCtx.value.node))
               }
             )
           }
@@ -27,7 +27,7 @@ case class OutputTypesBuilder(project: Project, objectTypes: Map[String, ObjectT
     )
   }
 
-  def mapPreviousValuesOutputType[C](model: Model, objectType: ObjectType[C, DataItem]): ObjectType[C, DataItem] = {
+  def mapPreviousValuesOutputType[C](model: Model, objectType: ObjectType[C, PrismaNode]): ObjectType[C, PrismaNode] = {
     def isIncluded(outputType: OutputType[_]): Boolean = {
       outputType match {
         case _: ScalarType[_] | _: EnumType[_] => true
@@ -37,36 +37,33 @@ case class OutputTypesBuilder(project: Project, objectTypes: Map[String, ObjectT
       }
     }
     val fields = objectType.ownFields.toList.collect {
-      case field if isIncluded(field.fieldType) =>
-        field.copy(
-          resolve = (outerCtx: Context[C, DataItem]) => field.resolve(outerCtx)
-        )
+      case field if isIncluded(field.fieldType) => field.copy(resolve = (outerCtx: Context[C, PrismaNode]) => field.resolve(outerCtx))
     }
 
-    ObjectType[C, DataItem](
+    ObjectType[C, PrismaNode](
       name = s"${objectType.name}PreviousValues",
       fieldsFn = () => fields
     )
   }
 
-  def mapCreateOutputType[C](model: Model, objectType: ObjectType[C, DataItem]): ObjectType[C, SimpleResolveOutput] = {
+  def mapCreateOutputType[C](model: Model, objectType: ObjectType[C, PrismaNode]): ObjectType[C, SimpleResolveOutput] = {
     mapOutputType(model, objectType, onlyId = false)
   }
 
-  def mapUpdateOutputType[C](model: Model, objectType: ObjectType[C, DataItem]): ObjectType[C, SimpleResolveOutput] = {
+  def mapUpdateOutputType[C](model: Model, objectType: ObjectType[C, PrismaNode]): ObjectType[C, SimpleResolveOutput] = {
     mapOutputType(model, objectType, onlyId = false)
   }
 
-  def mapUpsertOutputType[C](model: Model, objectType: ObjectType[C, DataItem]): ObjectType[C, SimpleResolveOutput] = {
+  def mapUpsertOutputType[C](model: Model, objectType: ObjectType[C, PrismaNode]): ObjectType[C, SimpleResolveOutput] = {
     mapOutputType(model, objectType, onlyId = false)
   }
 
   def mapSubscriptionOutputType[C](
       model: Model,
-      objectType: ObjectType[C, DataItem],
+      objectType: ObjectType[C, PrismaNode],
       updatedFields: Option[List[String]] = None,
       mutation: ModelMutationType = com.prisma.shared.models.ModelMutationType.Created,
-      previousValues: Option[DataItem] = None,
+      previousValues: Option[PrismaNode] = None,
       dataItem: Option[SimpleResolveOutput] = None
   ): ObjectType[C, SimpleResolveOutput] = {
     ObjectType[C, SimpleResolveOutput](
@@ -109,12 +106,12 @@ case class OutputTypesBuilder(project: Project, objectTypes: Map[String, ObjectT
     )
   }
 
-  def mapDeleteOutputType[C](model: Model, objectType: ObjectType[C, DataItem], onlyId: Boolean): ObjectType[C, SimpleResolveOutput] =
+  def mapDeleteOutputType[C](model: Model, objectType: ObjectType[C, PrismaNode], onlyId: Boolean): ObjectType[C, SimpleResolveOutput] =
     mapOutputType(model, objectType, onlyId)
 
   type R = SimpleResolveOutput
 
-  def mapResolve(item: DataItem, args: Args): SimpleResolveOutput = SimpleResolveOutput(item, args)
+  def mapResolve(node: PrismaNode, args: Args): SimpleResolveOutput = SimpleResolveOutput(node, args)
 }
 
-case class SimpleResolveOutput(item: DataItem, args: Args)
+case class SimpleResolveOutput(node: PrismaNode, args: Args)

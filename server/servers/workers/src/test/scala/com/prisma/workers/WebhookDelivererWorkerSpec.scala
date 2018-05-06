@@ -7,7 +7,7 @@ import com.prisma.messagebus.testkits.spechelpers.InMemoryMessageBusTestKits
 import com.prisma.stub.Import.withStubServer
 import com.prisma.stub.StubDsl.Default.Request
 import com.prisma.workers.payloads.Webhook
-import org.scalatest.concurrent.ScalaFutures
+import org.scalatest.concurrent.{Eventually, IntegrationPatience, ScalaFutures}
 import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach, Matchers, WordSpecLike}
 
 import scala.util.{Failure, Success, Try}
@@ -18,7 +18,9 @@ class WebhookDelivererWorkerSpec
     with Matchers
     with BeforeAndAfterEach
     with BeforeAndAfterAll
-    with ScalaFutures {
+    with ScalaFutures
+    with Eventually
+    with IntegrationPatience {
   import scala.concurrent.ExecutionContext.Implicits.global
 
   override def afterAll = shutdownTestKit
@@ -28,6 +30,7 @@ class WebhookDelivererWorkerSpec
       val worker: WebhookDelivererWorker = WebhookDelivererWorker(SimpleHttpClient(), webhookTestKit)
 
       worker.start.futureValue
+      Thread.sleep(1000) // wait a bit to make sure the worker has connected to the queue actually
 
       def teardown = {
         webhookTestKit.shutdown()
@@ -62,15 +65,14 @@ class WebhookDelivererWorkerSpec
 
           webhookTestKit.publish(webhook)
 
-          // Give the worker time to work off
-          Thread.sleep(1000)
-
-          server.requestCount(stub) should equal(1)
-          val lastRequest = server.lastRequest
-          lastRequest.httpMethod should equal("POST")
-          lastRequest.body should equal(webhook.payload)
-          lastRequest.headers should contain("X-Cheese-Header" -> "Gouda")
-          lastRequest.path should equal("/function-endpoint")
+          eventually {
+            server.requestCount(stub) should equal(1)
+            val lastRequest = server.lastRequest
+            lastRequest.httpMethod should equal("POST")
+            lastRequest.body should equal(webhook.payload)
+            lastRequest.headers should contain("X-Cheese-Header" -> "Gouda")
+            lastRequest.path should equal("/function-endpoint")
+          }
         }
       }
     }
@@ -94,8 +96,9 @@ class WebhookDelivererWorkerSpec
 
           webhookTestKit.publish(webhook)
 
-          Thread.sleep(1000)
-          server.requestCount(stub) should equal(1)
+          eventually {
+            server.requestCount(stub) should equal(1)
+          }
         }
       }
     }

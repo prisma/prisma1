@@ -1,8 +1,8 @@
 package com.prisma.metrics.utils
 
 import com.prisma.errors.BugsnagErrorReporter
-import com.timgroup.statsd.StatsDClient
 import com.prisma.metrics.{DummyStatsDClient, MetricsManager}
+import com.timgroup.statsd.StatsDClient
 
 class TestMetricsManager extends MetricsManager(BugsnagErrorReporter("")) {
   def serviceName: String = "TestService"

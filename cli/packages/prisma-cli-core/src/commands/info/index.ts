@@ -26,14 +26,15 @@ export default class InfoCommand extends Command {
       char: 'j',
       description: 'Json Output',
     }),
-    current: flags.boolean({
-      char: 'c',
-      description: 'Only show info for current service',
-    }),
     secret: flags.boolean({
       char: 's',
       description: 'Print secret in json output',
     }),
+    current: flags.boolean({
+      char: 'c',
+      description: 'Deprecated.',
+    }),
+
     ['env-file']: flags.string({
       description: 'Path to .env file to inject env vars',
       char: 'e',
@@ -43,22 +44,15 @@ export default class InfoCommand extends Command {
     const { json, secret } = this.flags
     const envFile = this.flags['env-file']
     await this.definition.load(this.flags, envFile)
-    const serviceName = this.definition.definition!.service
-    const stage = this.definition.definition!.stage
+    const serviceName = this.definition.service!
+    const stage = this.definition.stage!
     const workspace = this.definition.getWorkspace()
 
-    // if (current) {
-    const clusterName = this.definition.getClusterName()
-    if (!clusterName) {
+    const cluster = this.definition.getCluster()
+    if (!cluster) {
       throw new Error(
         `No cluster set. Please set the "cluster" property in your prisma.yml`,
       )
-    }
-    const cluster = this.definition.getCluster()
-    if (!cluster) {
-      throw new Error(`Cluster ${clusterName} could not be found in global ~/.prisma/config.yml.
-Please make sure it contains the cluster. You can create a local cluster using 'gc local start'.
-Read more here: https://bit.ly/prisma-graphql-config-yml`)
     }
     if (!json) {
       this.out.log(`Service Name: ${chalk.bold(serviceName)}`)

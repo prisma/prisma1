@@ -1,11 +1,11 @@
 package com.prisma.api.queries
 
-import com.prisma.api.ApiBaseSpec
+import com.prisma.api.ApiSpecBase
 import com.prisma.shared.models.Project
 import com.prisma.shared.schema_dsl.SchemaDsl
 import org.scalatest.{FlatSpec, Matchers}
 
-class ScalarListsQuerySpec extends FlatSpec with Matchers with ApiBaseSpec {
+class ScalarListsQuerySpec extends FlatSpec with Matchers with ApiSpecBase {
 
   "empty scalar list" should "return empty list" in {
 
@@ -182,11 +182,11 @@ class ScalarListsQuerySpec extends FlatSpec with Matchers with ApiBaseSpec {
     verifySuccessfulSetAndRetrieval(fieldName, inputValue, outputValue, project)
   }
 
-  "full scalar list" should "return full list for json" ignore {
+  "full scalar list" should "return full list for json" in {
 
     val fieldName   = "jsons"
     val inputValue  = """"{\"a\":2}""""
-    val outputValue = """{"a":"b"}"""
+    val outputValue = """{"a":2}"""
 
     val project = SchemaDsl() { schema =>
       schema.model("Model").field(fieldName, _.Json, isList = true)

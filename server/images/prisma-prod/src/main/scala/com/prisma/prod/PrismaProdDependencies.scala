@@ -4,23 +4,24 @@ import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
 import com.prisma.akkautil.http.SimpleHttpClient
 import com.prisma.api.ApiDependencies
-import com.prisma.api.connector.mysql.ApiConnectorImpl
 import com.prisma.api.mutactions.{DatabaseMutactionVerifierImpl, SideEffectMutactionExecutorImpl}
 import com.prisma.api.project.{CachedProjectFetcherImpl, ProjectFetcher}
 import com.prisma.api.schema.{CachedSchemaBuilder, SchemaBuilder}
 import com.prisma.auth.AuthImpl
+import com.prisma.config.{ConfigLoader, PrismaConfig}
+import com.prisma.connectors.utils.ConnectorUtils
 import com.prisma.deploy.DeployDependencies
 import com.prisma.deploy.connector.DeployConnector
-import com.prisma.deploy.connector.mysql.MySqlDeployConnector
 import com.prisma.deploy.migration.migrator.{AsyncMigrator, Migrator}
 import com.prisma.deploy.schema.mutations.FunctionValidator
-import com.prisma.deploy.server.{ClusterAuthImpl, DummyClusterAuth}
+import com.prisma.deploy.server.auth.{AsymmetricClusterAuth, DummyClusterAuth, SymmetricClusterAuth}
 import com.prisma.image.{Converters, FunctionValidatorImpl, SingleServerProjectFetcher}
 import com.prisma.messagebus._
 import com.prisma.messagebus.pubsub.inmemory.InMemoryAkkaPubSub
 import com.prisma.messagebus.pubsub.rabbit.RabbitAkkaPubSub
 import com.prisma.messagebus.queue.inmemory.InMemoryAkkaQueue
 import com.prisma.messagebus.queue.rabbit.RabbitQueue
+import com.prisma.shared.models.ProjectIdEncoder
 import com.prisma.subscriptions.protocol.SubscriptionProtocolV05.Responses.SubscriptionSessionResponseV05
 import com.prisma.subscriptions.protocol.SubscriptionProtocolV07.Responses.SubscriptionSessionResponse
 import com.prisma.subscriptions.protocol.SubscriptionRequest
@@ -37,7 +38,9 @@ case class PrismaProdDependencies()(implicit val system: ActorSystem, val materi
     with SubscriptionDependencies
     with WorkerDependencies {
 
-  private val rabbitUri: String = sys.env("RABBITMQ_URI")
+  val config: PrismaConfig = ConfigLoader.load()
+
+  private val rabbitUri: String = config.rabbitUri.getOrElse("RabbitMQ URI required but not found in Prisma configuration.")
 
   override implicit def self: PrismaProdDependencies = this
 
@@ -47,11 +50,12 @@ case class PrismaProdDependencies()(implicit val system: ActorSystem, val materi
     CachedProjectFetcherImpl(fetcher, invalidationPubSub)
   }
 
-  override lazy val migrator: Migrator = AsyncMigrator(migrationPersistence, projectPersistence, deployPersistencePlugin)
+  override lazy val migrator: Migrator = AsyncMigrator(migrationPersistence, projectPersistence, deployConnector)
   override lazy val clusterAuth = {
-    sys.env.get("CLUSTER_PUBLIC_KEY") match {
-      case Some(publicKey) if publicKey.nonEmpty => ClusterAuthImpl(publicKey)
-      case _                                     => DummyClusterAuth()
+    (config.managementApiSecret, config.legacySecret) match {
+      case (Some(jwtSecret), _) if jwtSecret.nonEmpty => SymmetricClusterAuth(jwtSecret)
+      case (_, Some(publicKey)) if publicKey.nonEmpty => AsymmetricClusterAuth(publicKey)
+      case _                                          => DummyClusterAuth()
     }
   }
 
@@ -94,16 +98,19 @@ case class PrismaProdDependencies()(implicit val system: ActorSystem, val materi
 
   override lazy val keepAliveIntervalSeconds = 10
 
-  override lazy val webhookPublisher =
-    RabbitQueue.publisher[Webhook](rabbitUri, "webhooks")(reporter, Webhook.marshaller).asInstanceOf[QueuePublisher[Webhook]]
-  override lazy val webhooksConsumer =
-    RabbitQueue.consumer[WorkerWebhook](rabbitUri, "webhooks")(reporter, JsonConversions.webhookUnmarshaller).asInstanceOf[QueueConsumer[WorkerWebhook]]
-  override lazy val httpClient                               = SimpleHttpClient()
-  override lazy val apiAuth                                  = AuthImpl
-  override lazy val deployPersistencePlugin: DeployConnector = MySqlDeployConnector(apiConnector.databases.master)(system.dispatcher)
-  override lazy val functionValidator: FunctionValidator     = FunctionValidatorImpl()
+  override lazy val webhookPublisher: QueuePublisher[Webhook] =
+    RabbitQueue.publisher[Webhook](rabbitUri, "webhooks")(reporter, Webhook.marshaller)
+  override lazy val webhooksConsumer: QueueConsumer[WorkerWebhook] =
+    RabbitQueue.consumer[WorkerWebhook](rabbitUri, "webhooks")(reporter, JsonConversions.webhookUnmarshaller)
 
-  override lazy val apiConnector                = ApiConnectorImpl()
+  override lazy val httpClient                           = SimpleHttpClient()
+  override lazy val apiAuth                              = AuthImpl
+  override lazy val deployConnector: DeployConnector     = ConnectorUtils.loadDeployConnector(config)
+  override lazy val functionValidator: FunctionValidator = FunctionValidatorImpl()
+
+  override def projectIdEncoder: ProjectIdEncoder = deployConnector.projectIdEncoder
+
+  override lazy val apiConnector                = ConnectorUtils.loadApiConnector(config)
   override lazy val sideEffectMutactionExecutor = SideEffectMutactionExecutorImpl()
   override lazy val mutactionVerifier           = DatabaseMutactionVerifierImpl
 }

@@ -10,7 +10,7 @@ class GenerateProjectTokenSpec extends FlatSpec with Matchers with DeploySpecBas
 
   "the GenerateProjectToken query" should "return a proper token for the requested project" in {
     val (project: Project, _)  = setupProject(schema = basicTypesGql, secrets = Vector("super-duper-secret"))
-    val ProjectId(name, stage) = ProjectId.fromEncodedString(project.id)
+    val ProjectId(name, stage) = testDependencies.projectIdEncoder.fromEncodedString(project.id)
     val result                 = server.query(s"""
                                        |query {
                                        |  generateProjectToken(name: "$name", stage: "$stage")
@@ -23,7 +23,7 @@ class GenerateProjectTokenSpec extends FlatSpec with Matchers with DeploySpecBas
 
   "the GenerateProjectToken query" should "return an empty string if the requested project does not have any secrets" in {
     val (project, _)           = setupProject(basicTypesGql)
-    val ProjectId(name, stage) = ProjectId.fromEncodedString(project.id)
+    val ProjectId(name, stage) = testDependencies.projectIdEncoder.fromEncodedString(project.id)
     val result                 = server.query(s"""
                                                  |query {
                                                  |  generateProjectToken(name: "$name", stage: "$stage")

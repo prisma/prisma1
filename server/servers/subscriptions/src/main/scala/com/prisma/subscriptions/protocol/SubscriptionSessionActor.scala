@@ -49,8 +49,8 @@ case class SubscriptionSessionActor(
   import SubscriptionProtocolV07.Requests._
   import SubscriptionProtocolV07.Responses._
   import akka.pattern.pipe
-  import context.dispatcher
   import com.prisma.subscriptions.resolving.SubscriptionsManager.Requests.CreateSubscription
+  import context.dispatcher
 
   val reporter = dependencies.reporter
 

@@ -46,6 +46,7 @@ export interface CachedPlugin {
 export interface Group {
   key: string
   name: string
+  deprecated?: boolean
 }
 
 export interface CacheData {
@@ -105,7 +106,10 @@ export default class Cache {
       }
       this.initialize()
     }
-    if (this._cache.version !== this.config.version || process.env.GRAPHCOOL_CLI_CLEAR_CACHE) {
+    if (
+      this._cache.version !== this.config.version ||
+      process.env.GRAPHCOOL_CLI_CLEAR_CACHE
+    ) {
       if (process.env.GRAPHCOOL_CLI_CLEAR_CACHE) {
         debug('clearing cache because GRAPHCOOL_CLI_CLEAR_CACHE is set')
       }

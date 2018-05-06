@@ -3,10 +3,11 @@ package com.prisma.api.mutations
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
 import com.prisma.api.ApiDependencies
-import com.prisma.api.connector.{CoolArgs, DataResolver, NodeSelector}
+import com.prisma.api.connector.{DataResolver, NodeSelector, Path}
 import com.prisma.api.mutactions.{DatabaseMutactions, ServerSideSubscriptions, SubscriptionEvents}
 import com.prisma.shared.models.IdType.Id
 import com.prisma.shared.models._
+import com.prisma.util.coolArgs.CoolArgs
 import cool.graph.cuid.Cuid
 import sangria.schema
 
@@ -27,17 +28,12 @@ case class Create(
   val id: Id            = Cuid.createCuid()
   val requestId: String = "" //                        = dataResolver.requestContext.map(_.requestId).getOrElse("")
 
-  val coolArgs: CoolArgs = {
-    val argsPointer: Map[String, Any] = args.raw.get("data") match {
-      case Some(value) => value.asInstanceOf[Map[String, Any]]
-      case None        => args.raw
-    }
+  val coolArgs: CoolArgs = CoolArgs.fromSchemaArgs(args.raw)
 
-    CoolArgs(argsPointer)
-  }
+  val path = Path.empty(NodeSelector.forId(model, id))
 
   def prepareMutactions(): Future[PreparedMutactions] = {
-    val createMutactionsResult = DatabaseMutactions(project).getMutactionsForCreate(model, coolArgs, id).toVector
+    val createMutactionsResult = DatabaseMutactions(project).getMutactionsForCreate(path, coolArgs)
     val subscriptionMutactions = SubscriptionEvents.extractFromSqlMutactions(project, mutationId, createMutactionsResult)
     val sssActions             = ServerSideSubscriptions.extractFromMutactions(project, createMutactionsResult, requestId)
 
@@ -52,9 +48,9 @@ case class Create(
   override def getReturnValue: Future[ReturnValueResult] = {
     for {
       returnValue <- returnValueByUnique(NodeSelector.forId(model, id))
-      dataItem    = returnValue.asInstanceOf[ReturnValue].dataItem
+      prismaNode  = returnValue.asInstanceOf[ReturnValue].prismaNode
     } yield {
-      ReturnValue(dataItem)
+      ReturnValue(prismaNode)
     }
   }
 }

@@ -4,8 +4,6 @@ import com.prisma.messagebus.Conversions.ByteMarshaller
 import com.prisma.messagebus.QueuePublisher
 import com.prisma.rabbit.Exchange
 
-import scala.concurrent.Future
-
 /**
   * Publishing messages follows a specific pattern: "[prefix].[tries].[next processing timestamp, optional]"
   * The [prefix] decides where the message will be routed. There are 2 queues:

@@ -8,17 +8,19 @@ import * as inquirer from 'inquirer'
 import * as path from 'path'
 import * as fs from 'fs-extra'
 import { fetchAndPrintSchema } from './printSchema'
-import Up from '../local/up'
 import { Seeder } from '../seed/Seeder'
 import * as childProcess from 'child_process'
 import * as semver from 'semver'
 const debug = require('debug')('deploy')
-import { prettyTime, concatName } from '../../util'
+import { prettyTime, concatName, defaultDockerCompose } from '../../util'
 import { spawn } from '../../spawn'
 import * as sillyname from 'sillyname'
 import { getSchemaPathFromConfig } from './getSchemaPathFromConfig'
 import * as findUp from 'find-up'
-import getGraphQLCliBin from '../../utils/getGraphQLCliBin'
+import Up from '../local/up'
+import { EndpointDialog } from '../../utils/EndpointDialog'
+import { isDockerComposeInstalled } from '../../utils/dockerComposeInstalled'
+import { spawnSync } from 'npm-run'
 
 export default class Deploy extends Command {
   static topic = 'deploy'
@@ -33,14 +35,11 @@ ${chalk.gray(
     '-',
   )} Deploy local changes from prisma.yml to the default service environment.
   ${chalk.green('$ prisma deploy')}
-
-${chalk.gray('-')} Deploy local changes to a specific stage
-  ${chalk.green('$ prisma deploy --stage production')}
     
 ${chalk.gray(
     '-',
   )} Deploy local changes from default service file accepting potential data loss caused by schema changes
-  ${chalk.green('$ prisma deploy --force --stage production')}
+  ${chalk.green('$ prisma deploy --force')}
   `
   static flags: Flags = {
     force: flags.boolean({
@@ -51,8 +50,8 @@ ${chalk.gray(
       char: 'w',
       description: 'Watch for changes',
     }),
-    interactive: flags.boolean({
-      char: 'i',
+    new: flags.boolean({
+      char: 'n',
       description: 'Force interactive mode to select the cluster',
     }),
     'dry-run': flags.boolean({
@@ -72,11 +71,14 @@ ${chalk.gray(
     }),
   }
   private deploying: boolean = false
-  private showedLines: number = 0
   private showedHooks: boolean = false
+  private loggedIn: boolean = false
   async run() {
-    debug('run')
-    const { force, watch, interactive } = this.flags
+    /**
+     * Get Args
+     */
+    const { force, watch } = this.flags
+    const interactive = this.flags.new // new is a reserved keyword, so we use interactive instead
     const envFile = this.flags['env-file']
     const dryRun = this.flags['dry-run']
 
@@ -84,84 +86,102 @@ ${chalk.gray(
       await this.out.error(`--env-file path '${envFile}' does not exist`)
     }
 
+    /**
+     * Get prisma.yml content
+     */
     await this.definition.load(this.flags, envFile)
-    if (!this.definition.definition) {
-      throw new Error(
-        `Couldn’t find \`prisma.yml\` file. Are you in the right directory?`,
-      )
-    }
-    const serviceName = this.definition.definition!.service
-    const stage = this.definition.definition!.stage
 
-    let cluster = this.definition.getCluster(false)
-    const clusterName = this.definition.getClusterName()
-    if (!cluster && clusterName && clusterName !== 'local') {
+    let serviceName = this.definition.service!
+    let stage = this.definition.stage!
+
+    /**
+     * If no endpoint or service provided, ask for it
+     */
+    let workspace: string | undefined | null = this.definition.getWorkspace()
+    let cluster
+    let dockerComposeYml = defaultDockerCompose
+    if (!serviceName || !stage || interactive) {
+      const endpointDialog = new EndpointDialog(
+        this.out,
+        this.client,
+        this.env,
+        this.config,
+      )
+      const results = await endpointDialog.getEndpoint()
+      cluster = results.cluster
+      workspace = results.workspace
+      serviceName = results.service
+      stage = results.stage
+      dockerComposeYml = results.dockerComposeYml
+      this.definition.replaceEndpoint(results.endpoint)
+      this.out.log(
+        `\nWritten endpoint \`${chalk.bold(
+          results.endpoint,
+        )}\` to prisma.yml\n`,
+      )
+    } else {
+      cluster = this.definition.getCluster(false)
+    }
+
+    /**
+     * If no cluster is running locally, don't start anymore but create docker-compose.yml and ask for starting
+     */
+    if (
+      cluster &&
+      cluster.local &&
+      !await cluster.isOnline() &&
+      !fs.readdirSync(this.config.definitionDir).includes('docker-compose.yml')
+    ) {
+      fs.writeFileSync(
+        path.join(this.config.definitionDir, 'docker-compose.yml'),
+        dockerComposeYml,
+      )
+      this.out.log(
+        `Created docker-compose.yml with a local prisma server.
+Please run ${chalk.cyan('$ docker-compose up -d')} to start your local prisma.
+Note: prisma local start will be deprecated soon in favor of the direct usage of docker-compose.`,
+      )
+      const dockerComposeInstalled = await isDockerComposeInstalled()
+      if (!dockerComposeInstalled) {
+        this.out.log(
+          `To install docker-compose, please follow this link: ${chalk.cyan(
+            'https://docs.docker.com/compose/install/',
+          )}`,
+        )
+      }
+      process.exit(1)
+    }
+
+    /**
+     * If the cluster has been provided with the old "cluster: " key, check if the cluster could be found
+     */
+    if (this.definition.definition!.cluster && !cluster) {
       this.out.log(
         `You're not logged in and cluster ${chalk.bold(
-          clusterName!,
-        )} could not be found locally. Trying to authanticate.\n`,
+          this.definition.definition!.cluster!,
+        )} could not be found locally. Trying to authenticate.\n`,
       )
+      // signs in and fetches clusters
       await this.client.login()
       cluster = this.definition.getCluster()
     }
-    const isOnline = cluster ? await cluster.isOnline() : false
-    if (
-      this.definition.definition.cluster === 'local' &&
-      (!cluster || !isOnline)
-    ) {
-      cluster = await this.localUp()
-    } else if (
-      !isOnline &&
-      cluster &&
-      cluster.local &&
-      (cluster.baseUrl.includes('127.0.0.1') ||
-        cluster.baseUrl.includes('localhost'))
-    ) {
-      cluster = await this.localUp()
-    } else if (cluster && !isOnline) {
-      throw new Error(
-        `Could not connect to cluster ${chalk.bold(cluster.name)} with host ${
-          cluster.baseUrl
-        }. Did you provide the right port?`,
-      )
-    }
-    let gotCluster = false
 
-    if (!cluster) {
-      if (this.definition.definition!.hasOwnProperty('cluster')) {
-        const value = this.definition.rawJson.cluster
-        const envNotice = value.toLowerCase().includes('env')
-          ? `Make sure that the env var ${value} is set correctly or remove the cluster property from the prisma.yml and execute deploy again to get a new cluster.`
-          : ''
-        throw new Error(
-          `Property cluster in prisma.yml is provided, but provided value ${value} could not be resolved. ${envNotice}`,
-        )
-      }
-      const clusterWorkspace = await this.getCluster(serviceName, stage)
-      cluster = clusterWorkspace.cluster
-      gotCluster = true
-    }
-
+    /**
+     * Abort when no cluster is set
+     */
     if (cluster) {
       this.env.setActiveCluster(cluster)
     } else {
-      throw new Error(
-        `No cluster set. Please set the "cluster" property in your prisma.yml`,
-      )
+      throw new Error(`Cluster ${cluster} does not exist.`)
     }
 
-    if (this.showedLines > 0) {
-      this.out.up(this.showedLines)
-    }
-
-    if (gotCluster) {
-      this.out.log(
-        `Added ${chalk.bold(`cluster: ${cluster!.name}`)} to prisma.yml`,
-      )
-    }
-
-    if (cluster && !cluster.local) {
-      const workspace = this.definition.getWorkspace()
+    /**
+     * Make sure we're logged in when a non-public cluster has been chosen
+     */
+    if (cluster && !cluster.local && cluster.isPrivate) {
+      if (!workspace) {
+        workspace = this.definition.getWorkspace() || '*'
+      }
       if (
         workspace &&
         !workspace.startsWith('public-') &&
@@ -172,42 +192,28 @@ ${chalk.gray(
       }
     }
 
-    await this.client.initClusterClient(
-      cluster,
-      this.definition.getWorkspace() || '*',
-      serviceName,
-      stage,
-    )
+    await this.client.initClusterClient(cluster, serviceName, stage, workspace!)
 
+    debug('checking verions')
     await this.checkVersions(cluster!)
 
     let projectNew = false
-    if (
-      !await this.projectExists(
-        cluster,
-        serviceName,
-        stage,
-        this.definition.getWorkspace(),
-      )
-    ) {
-      await this.addProject(
-        cluster,
-        serviceName,
-        stage,
-        this.definition.getWorkspace(),
-      )
+    debug('checking if project exists')
+    if (!await this.projectExists(cluster, serviceName, stage, workspace!)) {
+      debug('adding project')
+      await this.addProject(cluster, serviceName, stage, workspace!)
       projectNew = true
     }
 
     await this.deploy(
       stage,
       serviceName,
-      cluster!,
-      this.definition.definition!.cluster!,
+      cluster,
+      cluster.name,
       force,
       dryRun,
       projectNew,
-      this.definition.getWorkspace(),
+      workspace!,
     )
 
     if (watch) {
@@ -220,13 +226,13 @@ ${chalk.gray(
               await this.definition.load(this.flags)
               await this.deploy(
                 stage,
-                this.definition.definition!.service,
-                cluster!,
-                this.definition.definition!.cluster!,
+                serviceName,
+                cluster,
+                cluster.name,
                 force,
                 dryRun,
                 false,
-                this.definition.getWorkspace(),
+                workspace!,
               )
               this.out.log('Watching for change...')
             }
@@ -348,9 +354,9 @@ ${chalk.gray(
     const verb = dryRun ? 'Performing dry run for' : 'Deploying'
 
     this.out.action.start(
-      `${verb} service ${b(serviceName)} to stage ${b(
-        stageName,
-      )} on cluster ${b(completeClusterName)}`,
+      `${verb} service ${b(serviceName)} to stage ${b(stageName)} to server ${b(
+        completeClusterName,
+      )}`,
     )
 
     const migrationResult: DeployPayload = await this.client.deploy(
@@ -360,9 +366,10 @@ ${chalk.gray(
       dryRun,
       this.definition.getSubscriptions(),
       this.definition.secrets,
+      force,
     )
     this.out.action.stop(prettyTime(Date.now() - before))
-    this.printResult(migrationResult)
+    this.printResult(migrationResult, force)
 
     if (
       migrationResult.migration &&
@@ -426,14 +433,23 @@ ${chalk.gray(
         )
       }
     }
-
-    const schemaChanged = await this.generateSchema(
-      cluster,
-      serviceName,
-      stageName,
-    )
-    if (schemaChanged) {
-      await this.graphqlPrepare()
+    const hooks = this.definition.getHooks('post-deploy')
+    if (hooks.length > 0) {
+      this.out.log(`\n${chalk.bold('post-deploy')}:`)
+    }
+    for (const hook of hooks) {
+      const splittedHook = hook.split(' ')
+      this.out.action.start(`Running ${chalk.cyan(hook)}`)
+      const child = spawnSync(splittedHook[0], splittedHook.slice(1))
+      const stderr = child.stderr && child.stderr.toString()
+      if (stderr && stderr.length > 0) {
+        this.out.log(stderr)
+      }
+      const stdout = child.stdout && child.stdout.toString()
+      if (stdout) {
+        this.out.log(stdout)
+      }
+      this.out.action.stop()
     }
   }
 
@@ -511,37 +527,37 @@ ${chalk.gray(
     return false
   }
 
-  private async graphqlPrepare() {
-    let dir
-    try {
-      dir = this.config.findConfigDir()
-    } catch (e) {
-      //
-    }
-    if (dir) {
-      const graphqlBin = await getGraphQLCliBin()
-      debug({ graphqlBin })
-      this.out.log(`Running ${chalk.cyan(`$ graphql prepare`)}...`)
-      try {
-        const oldCwd = process.cwd()
-        const configDir = this.config.findConfigDir()
-        if (configDir) {
-          process.chdir(configDir)
-        }
-        await spawn(graphqlBin, ['prepare'])
-        process.chdir(oldCwd)
-      } catch (e) {
-        this.out.warn(e)
-      }
-    }
-  }
-
-  private printResult(payload: DeployPayload) {
+  private printResult(payload: DeployPayload, force: boolean) {
     if (payload.errors && payload.errors.length > 0) {
-      this.out.log(`${chalk.bold.red('Errors:')}`)
+      this.out.log(`${chalk.bold.red('\nErrors:')}`)
       this.out.migration.printErrors(payload.errors)
-      this.out.log('')
+      this.out.log(
+        '\nDeployment canceled. Please fix the above errors to continue deploying.',
+      )
+      this.out.log(
+        'Read more about deployment errors here: https://bit.ly/prisma-force-flag',
+      )
+
       this.out.exit(1)
+    }
+
+    if (payload.warnings && payload.warnings.length > 0) {
+      this.out.log(`${chalk.bold.yellow('\nWarnings:')}`)
+      this.out.migration.printWarnings(payload.warnings)
+
+      if (force) {
+        this.out.log('\nIgnoring warnings because you provided --force.')
+      } else {
+        this.out.log(
+          `\nIf you want to ignore the warnings, please deploy with the --force flag: ${chalk.cyan(
+            '$ prisma deploy --force',
+          )}`,
+        )
+        this.out.log(
+          'Read more about deployment warnings here: https://bit.ly/prisma-force-flag',
+        )
+        this.out.exit(1)
+      }
     }
 
     if (!payload.migration || payload.migration.steps.length === 0) {
@@ -563,7 +579,9 @@ ${chalk.gray(
     stageName: string,
     workspace?: string,
   ) {
-    this.out.log(`\n${chalk.bold('Your GraphQL database endpoint is live:')}
+    this.out.log(`\n${chalk.bold(
+      'Your Prisma GraphQL database endpoint is live:',
+    )}
 
   ${chalk.bold('HTTP:')}  ${cluster.getApiEndpoint(
       serviceName,
@@ -578,54 +596,11 @@ ${chalk.gray(
 `)
   }
 
-  private async getCluster(
-    serviceName: string,
-    stage: string,
-  ): Promise<{ cluster?: Cluster; workspace?: string }> {
-    const loggedIn = await this.client.isAuthenticated()
-    let workspaceClusterCombination = await this.clusterSelection(
-      serviceName,
-      stage,
-      loggedIn,
-    )
-    const splitted = workspaceClusterCombination.split('/')
-    let workspace = splitted.length > 1 ? splitted[0] : null
-    const clusterName = splitted.slice(-1)[0]
-    const exists = this.env.clusterByName(clusterName)
-
-    // in this case it's a public cluster and we need to generate a workspace name
-    if (!loggedIn && exists && exists.shared) {
-      workspace = this.getPublicName()
-      debug(`silly name`, workspace)
-      workspaceClusterCombination = `${workspace}/${clusterName}`
-    }
-
-    if (!exists) {
-      if (clusterName === 'local') {
-        await this.localUp()
-      } else {
-        await this.out.error(`Could not find selected cluster ${clusterName}`)
-      }
-    } else {
-      // make sure that local clusters are booted
-      if (!exists.isPrivate && !exists.shared && !await exists.isOnline()) {
-        await this.localUp()
-      }
-    }
-
-    await this.definition.addCluster(workspaceClusterCombination, this.flags)
-
-    return {
-      cluster: this.env.clusterByName(clusterName) || undefined,
-      workspace: workspace || undefined,
-    }
+  private getCloudClusters(): Cluster[] {
+    return this.env.clusters.filter(c => c.shared || c.isPrivate)
   }
 
-  private async clusterSelection(
-    serviceName: string,
-    stage: string,
-    loggedIn: boolean,
-  ): Promise<string> {
+  private async clusterSelection(loggedIn: boolean): Promise<string> {
     debug({ loggedIn })
 
     const choices = loggedIn
@@ -635,37 +610,38 @@ ${chalk.gray(
     const question = {
       name: 'cluster',
       type: 'list',
-      message: `Please choose the cluster you want to deploy "${serviceName}@${stage}" to`,
+      message: `Please choose the cluster you want to deploy to`,
       choices,
       pageSize: 9,
     }
 
     const { cluster } = await this.out.prompt(question)
-    this.showedLines += 2
 
     if (cluster === 'login') {
       await this.client.login()
-      return this.clusterSelection(serviceName, stage, true)
+      this.loggedIn = true
+      return this.clusterSelection(true)
     }
 
     return cluster
   }
 
   private getLocalClusterChoices(): string[][] {
-    const clusters = this.env.clusters.filter(c => !c.shared && !c.isPrivate)
+    // const clusters = this.env.clusters.filter(c => !c.shared && !c.isPrivate)
 
-    const clusterNames: string[][] = clusters.map(c => {
-      const note =
-        c.baseUrl.includes('localhost') || c.baseUrl.includes('127.0.0.1')
-          ? 'Local cluster (requires Docker)'
-          : 'Self-hosted'
-      return [c.name, note]
-    })
+    // const clusterNames: string[][] = clusters.map(c => {
+    //   const note =
+    //     c.baseUrl.includes('localhost') || c.baseUrl.includes('127.0.0.1')
+    //       ? 'Local cluster (requires Docker)'
+    //       : 'Self-hosted'
+    //   return [c.name, note]
+    // })
 
-    if (clusterNames.length === 0) {
-      clusterNames.push(['local', 'Local cluster (requires Docker)'])
-    }
-    return clusterNames
+    // if (clusterNames.length === 0) {
+    //   clusterNames.push(['local', 'Local cluster (requires Docker)'])
+    // }
+    // return clusterNames
+    return [['local', 'Local cluster (requires Docker)']]
   }
 
   private async getLoggedInChoices(): Promise<any[]> {
@@ -689,6 +665,7 @@ ${chalk.gray(
     const allCombinations = [...combinations, ...localChoices]
 
     return [
+      new inquirer.Separator('                     '),
       ...this.convertChoices(allCombinations),
       new inquirer.Separator('                     '),
       new inquirer.Separator(
@@ -742,21 +719,6 @@ ${chalk.gray(
       ),
       new inquirer.Separator('                     '),
     ]
-  }
-
-  private async stageNameSelector(defaultName: string): Promise<string> {
-    const question = {
-      name: 'stage',
-      type: 'input',
-      message: 'Please choose the stage name',
-      default: defaultName,
-    }
-
-    const { stage } = await this.out.prompt(question)
-
-    this.showedLines += 1
-
-    return stage
   }
 }
 

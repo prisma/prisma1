@@ -3,9 +3,9 @@ package com.prisma.messagebus.queue.rabbit
 import com.prisma.errors.ErrorReporter
 import com.prisma.messagebus.Conversions.{ByteMarshaller, ByteUnmarshaller}
 import com.prisma.messagebus.QueueConsumer.ConsumeFn
-import com.prisma.messagebus.{ConsumerRef, Queue}
 import com.prisma.messagebus.queue.{BackoffStrategy, LinearBackoff}
 import com.prisma.messagebus.utils.RabbitUtils
+import com.prisma.messagebus.{ConsumerRef, Queue}
 import com.prisma.rabbit.Consumer
 import com.prisma.rabbit.Import.{Exchange, Queue => RMQueue}
 

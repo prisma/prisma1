@@ -1,10 +1,10 @@
 package com.prisma.api.queries
 
-import com.prisma.api.ApiBaseSpec
+import com.prisma.api.ApiSpecBase
 import com.prisma.shared.schema_dsl.SchemaDsl
 import org.scalatest.{FlatSpec, Matchers}
 
-class MultiItemQuerySpec extends FlatSpec with Matchers with ApiBaseSpec {
+class MultiItemQuerySpec extends FlatSpec with Matchers with ApiSpecBase {
 
   "the multi item query" should "return empty list" in {
 

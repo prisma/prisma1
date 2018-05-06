@@ -12,6 +12,7 @@ export interface RunOptions {
   mockConfig?: Config
   cwd?: string
   home?: string
+  mockInquirer?: any
 }
 
 export type Region = 'EU_WEST_1' | 'AP_NORTHEAST_1' | 'US_WEST_2'

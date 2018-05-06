@@ -141,9 +141,21 @@ export class CLI {
         }
 
         this.cmd = await foundCommand.run(this.config)
+        if (foundCommand.deprecated) {
+          this.cmd.out.log(
+            chalk.yellow(
+              `\nThis command is deprecated and will be removed in 1.9`,
+            ),
+          )
+        }
         this.setRavenUserContext()
         const checker = getStatusChecker()!
-        checker.checkStatus(id, this.cmd.args, this.cmd.flags, this.cmd.argv)
+        checker.checkStatus(
+          foundCommand.command ? id : id.split(':')[0],
+          this.cmd.args,
+          this.cmd.flags,
+          this.cmd.argv,
+        )
 
         if (process.env.NOCK_WRITE_RESPONSE_CLI === 'true') {
           const requests = require('nock').recorder.play()
@@ -179,13 +191,13 @@ export class CLI {
           'Update available ' +
           chalk.dim(this.notifier.update.current) +
           chalk.reset(' → ') +
-          chalk.green(this.notifier.update.latest) +
-          `\nRun ${chalk.bold.green('npm i -g prisma')} to update`,
+          chalk.cyan(this.notifier.update.latest) +
+          `\nRun ${chalk.bold.cyan('npm i -g prisma')} to update`,
         boxenOpts: {
           padding: 1,
           margin: 1,
           align: 'center',
-          borderColor: 'green',
+          borderColor: 'grey',
           borderStyle: 'round',
         },
       })
@@ -193,6 +205,7 @@ export class CLI {
 
     if (
       !(
+        this.config.argv.includes('playground') ||
         this.config.argv.includes('logs') ||
         this.config.argv.includes('logs:function') ||
         (this.config.argv.includes('deploy') &&

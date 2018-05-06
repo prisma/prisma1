@@ -1,0 +1,52 @@
+version: "3"
+services:
+  app:
+    image: graphcool/scala-sbt-docker
+    environment:
+      CLUSTER_VERSION: "latest"
+      COMMIT_SHA: "123abcd"
+      PACKAGECLOUD_PW: "${PACKAGECLOUD_PW}"
+      PRISMA_CONFIG: |
+        port: 4466
+        rabbitUri: amqp://rabbit
+        databases:
+          default:
+            connector: mysql
+            active: true
+            host: test-db
+            port: 3306
+            user: root
+            password: prisma
+    volumes:
+      - ../../../..:/root
+      - ~/.ivy2:/root/.ivy2
+      - ~/.coursier:/root/.coursier
+    working_dir: /root/server
+    networks:
+      - tests
+
+  test-db:
+    image: mysql:5.7
+    command: mysqld --max-connections=1000 --sql-mode="ANSI,ALLOW_INVALID_DATES,ANSI_QUOTES,ERROR_FOR_DIVISION_BY_ZERO,HIGH_NOT_PRECEDENCE,IGNORE_SPACE,NO_AUTO_CREATE_USER,NO_AUTO_VALUE_ON_ZERO,NO_BACKSLASH_ESCAPES,NO_ENGINE_SUBSTITUTION,NO_KEY_OPTIONS,NO_UNSIGNED_SUBTRACTION,NO_ZERO_DATE,NO_ZERO_IN_DATE,ONLY_FULL_GROUP_BY,PIPES_AS_CONCAT,REAL_AS_FLOAT,STRICT_ALL_TABLES,STRICT_TRANS_TABLES,TRADITIONAL"
+    restart: always
+    environment:
+      MYSQL_USER: root
+      MYSQL_ROOT_PASSWORD: prisma
+      MYSQL_DATABASE: graphcool
+    ports:
+      - "3306"
+    networks:
+      - tests
+    tmpfs: /var/lib/mysql
+
+  rabbit:
+    image: rabbitmq:3.7.2-management
+    restart: always
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    networks:
+      - tests
+
+networks:
+  tests:

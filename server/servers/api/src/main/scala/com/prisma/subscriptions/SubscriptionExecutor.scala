@@ -2,29 +2,29 @@ package com.prisma.subscriptions
 
 import akka.http.scaladsl.model.HttpRequest
 import com.prisma.api.ApiDependencies
-import com.prisma.api.connector.DataItem
+import com.prisma.api.connector.PrismaNode
 import com.prisma.api.resolver.DeferredResolverProvider
+import com.prisma.api.schema.UserFacingError
 import com.prisma.sangria.utils.ErrorHandler
 import com.prisma.shared.models.ModelMutationType.ModelMutationType
 import com.prisma.shared.models._
-import com.prisma.subscriptions.schema.{QueryTransformer, SubscriptionSchema}
-import com.prisma.util.json.SprayJsonExtensions
+import com.prisma.subscriptions.schema.{QueryTransformer, SubscriptionSchema, VariablesTransformer}
+import play.api.libs.json._
 import sangria.ast.Document
 import sangria.execution.Executor
 import sangria.parser.QueryParser
-import spray.json._
 
 import scala.concurrent.{ExecutionContext, Future}
 
-object SubscriptionExecutor extends SprayJsonExtensions {
+object SubscriptionExecutor {
   def execute(
       project: Project,
       model: Model,
       mutationType: ModelMutationType,
-      previousValues: Option[DataItem],
+      previousValues: Option[PrismaNode],
       updatedFields: Option[List[String]],
       query: String,
-      variables: spray.json.JsValue,
+      variables: JsValue,
       nodeId: String,
       requestId: String,
       operationName: Option[String],
@@ -54,10 +54,10 @@ object SubscriptionExecutor extends SprayJsonExtensions {
       project: Project,
       model: Model,
       mutationType: ModelMutationType,
-      previousValues: Option[DataItem],
+      previousValues: Option[PrismaNode],
       updatedFields: Option[List[String]],
       query: Document,
-      variables: spray.json.JsValue,
+      variables: JsValue,
       nodeId: String,
       requestId: String,
       operationName: Option[String],
@@ -66,56 +66,48 @@ object SubscriptionExecutor extends SprayJsonExtensions {
   )(implicit dependencies: ApiDependencies, ec: ExecutionContext): Future[Option[JsValue]] = {
     import com.prisma.api.server.JsonMarshalling._
 
-    val schema = SubscriptionSchema(model, project, updatedFields, mutationType, previousValues).build()
-
-    val actualQuery = {
-      val mutationInEvaluated = if (mutationType == ModelMutationType.Updated) {
-        val tmp = QueryTransformer.replaceMutationInFilter(query, mutationType).asInstanceOf[Document]
-        QueryTransformer.replaceUpdatedFieldsInFilter(tmp, updatedFields.get.toSet).asInstanceOf[Document]
-      } else {
-        QueryTransformer.replaceMutationInFilter(query, mutationType).asInstanceOf[Document]
-      }
-      QueryTransformer.mergeBooleans(mutationInEvaluated).asInstanceOf[Document]
-    }
+    val internalSchema       = SubscriptionSchema(model, project, updatedFields, mutationType, previousValues).build()
+    val transformedQuery     = QueryTransformer.replaceExternalFieldsWithBooleanFieldsForInternalSchema(query, mutationType, updatedFields)
+    val transformedVariables = VariablesTransformer.replaceExternalFieldsWithBooleanFieldsForInternalSchema(variables, mutationType, updatedFields)
 
     val context = SubscriptionUserContext(
       nodeId = nodeId,
       requestId = requestId,
       project = project,
       log = x => println(x),
-      queryAst = Some(actualQuery)
+      queryAst = Some(transformedQuery)
     )
-    val dataResolver = if (alwaysQueryMasterDatabase) {
-      dependencies.masterDataResolver(project)
-    } else {
-      dependencies.dataResolver(project)
+
+    val dataResolver = if (alwaysQueryMasterDatabase) dependencies.masterDataResolver(project) else dependencies.dataResolver(project)
+
+    def errorExtractor(t: Throwable): Option[Int] = t match {
+      case e: UserFacingError => Some(e.code)
+      case _                  => None
     }
 
     val sangriaHandler = ErrorHandler(
       requestId,
       HttpRequest(),
       query.renderPretty,
-      variables.compactPrint,
+      variables.toString,
       dependencies.reporter,
-      Some(project.id)
+      Some(project.id),
+      errorCodeExtractor = errorExtractor
     ).sangriaExceptionHandler
 
     Executor
       .execute(
-        schema = schema,
-        queryAst = actualQuery,
+        schema = internalSchema,
+        queryAst = transformedQuery,
         userContext = context,
-        variables = variables,
+        variables = transformedVariables,
         exceptionHandler = sangriaHandler,
         operationName = operationName,
         deferredResolver = new DeferredResolverProvider(dataResolver)
       )
       .map { result =>
-        if (result.pathAs[JsValue](s"data.${camelCase(model.name)}") != JsNull) {
-          Some(result)
-        } else {
-          None
-        }
+        val lookup = result.as[JsObject] \ "data" \ camelCase(model.name)
+        if (lookup.validate[JsValue].get != JsNull) Some(result) else None
       }
   }
 

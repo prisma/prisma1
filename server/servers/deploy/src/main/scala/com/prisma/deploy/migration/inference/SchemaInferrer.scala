@@ -75,13 +75,21 @@ case class SchemaInferrerImpl(
         None
       } else {
         fieldDef.relationName match {
-          case Some(name) => nextRelations.find(_.name == name)
-          case None       => nextRelations.find(relation => relation.connectsTheModels(objectType.name, fieldDef.typeName))
+          case Some(name) =>
+            nextRelations.find(_.name == name)
+
+          case None =>
+            val relationsThatConnectBothModels = nextRelations.filter(relation => relation.connectsTheModels(objectType.name, fieldDef.typeName))
+            if (relationsThatConnectBothModels.size > 1) {
+              None
+            } else {
+              relationsThatConnectBothModels.headOption
+            }
         }
       }
 
       //For self relations we were inferring the relationSide A for both sides, this now assigns A to the lexicographically lower field name and B to the other
-      //If in the previous schema whether both relationSides are A we reassign the relationsides otherwise we keep the one from the previous schema.
+      //If in the previous schema both relationSides are A we reassign the relationsides otherwise we keep the one from the previous schema.
       def inferRelationSide(relation: Option[Relation]) = {
         def oldRelationSidesNotBothEqual(oldField: Field) = oldField.otherRelationField(baseSchema) match {
           case Some(relatedField) => oldField.relationSide.isDefined && oldField.relationSide != relatedField.relationSide
@@ -95,7 +103,7 @@ case class SchemaInferrerImpl(
             val oldField     = baseSchema.getFieldByName(oldModelName, oldFieldName)
 
             oldField match {
-              case Some(field) if oldRelationSidesNotBothEqual(field) =>
+              case Some(field) if field.isRelation && oldRelationSidesNotBothEqual(field) =>
                 field.relationSide.get
 
               case _ =>
@@ -175,7 +183,6 @@ case class SchemaInferrerImpl(
       val previousModelAName = schemaMapping.getPreviousModelName(modelA)
       val previousModelBName = schemaMapping.getPreviousModelName(modelB)
 
-      // TODO: this needs to be adapted once we allow rename of relations
       val oldEquivalentRelation = relationField.relationName.flatMap(baseSchema.getRelationByName).orElse {
         UnambiguousRelation.unambiguousRelationThatConnectsModels(baseSchema, previousModelAName, previousModelBName)
       }

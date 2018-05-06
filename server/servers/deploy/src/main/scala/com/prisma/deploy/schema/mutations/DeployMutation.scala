@@ -26,13 +26,14 @@ case class DeployMutation(
     schemaMapper: SchemaMapper,
     migrationPersistence: MigrationPersistence,
     projectPersistence: ProjectPersistence,
-    persistencePlugin: DeployConnector,
+    deployConnector: DeployConnector,
     migrator: Migrator
 )(
     implicit ec: ExecutionContext,
     dependencies: DeployDependencies
 ) extends Mutation[DeployMutationPayload] {
 
+  val projectId = dependencies.projectIdEncoder.toEncodedString(args.name, args.stage)
   val graphQlSdl: Document = QueryParser.parse(args.types) match {
     case Success(res) => res
     case Failure(e)   => throw InvalidQuery(e.getMessage)
@@ -70,10 +71,9 @@ case class DeployMutation(
               MutationSuccess(DeployMutationPayload(args.clientMutationId, Some(Migration.empty(project.id)), errors = schemaErrors ++ errors, Seq.empty)))
 
           case Good(functionsForInput) =>
-            val steps = migrationStepsInferrer.infer(project.schema, inferredNextSchema, schemaMapping)
-//            val existingDataValidation = DestructiveChanges(persistencePlugin, project, inferredNextSchema, steps)
-//            val checkResults           = existingDataValidation.checkAgainstExistingData
-            val checkResults = Future.successful(Vector.empty)
+            val steps                  = migrationStepsInferrer.infer(project.schema, inferredNextSchema, schemaMapping)
+            val existingDataValidation = DestructiveChanges(deployConnector, project, inferredNextSchema, steps)
+            val checkResults           = existingDataValidation.checkAgainstExistingData
 
             checkResults.flatMap { results =>
               val destructiveWarnings: Vector[SchemaWarning] = results.collect { case warning: SchemaWarning => warning }
@@ -166,7 +166,8 @@ case class DeployMutation(
 
 case class DeployMutationInput(
     clientMutationId: Option[String],
-    projectId: String,
+    name: String,
+    stage: String,
     types: String,
     dryRun: Option[Boolean],
     force: Option[Boolean],

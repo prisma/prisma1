@@ -50,14 +50,6 @@ case class Path(root: NodeSelector, edges: List[Edge]) {
 
   def append(edge: Edge): Path = copy(root, edges :+ edge)
 
-  def extend(project: Project, field: Field, nestedMutation: NestedMutation): Path = {
-    nestedMutation match {
-      case x: NestedWhere =>
-        this.append(NodeEdge(lastModel, field, field.relatedModel(project.schema).get, field.relatedField(project.schema), x.where, field.relation.get))
-      case _ => this.append(ModelEdge(lastModel, field, field.relatedModel(project.schema).get, field.relatedField(project.schema), field.relation.get))
-    }
-  }
-
   def lastModel = edges match {
     case Nil => root.model
     case x   => x.last.child
@@ -68,30 +60,29 @@ case class Path(root: NodeSelector, edges: List[Edge]) {
     case x   => Some(x.last.relation)
   }
 
+  def lastCreateWhere_! : NodeSelector = if (edges.isEmpty) root else lastEdge_!.asInstanceOf[NodeEdge].childWhere
+
   def pretty: String =
     s"Where: ${root.model.name}, ${root.field.name}, ${root.fieldValueAsString} |  " + edges
       .map(edge => s"${edge.parent.name}<->${edge.child.name}")
       .mkString(" ")
 
-  def updatedRoot(args: CoolArgs): Path = {
-    val whereFieldValue = args.raw.get(root.field.name)
-    val updatedWhere    = whereFieldValue.map(root.updateValue).getOrElse(root)
-    this.copy(root = updatedWhere)
-  }
-
   def lastEdgeToNodeEdge(where: NodeSelector): Path = this.copy(edges = removeLastEdge.edges :+ lastEdge_!.toNodeEdge(where))
 
-  def lastEdgeToNodeEdgeIfNecessary(nested: NestedMutation): Path = nested match {
-    case x: NestedWhere => this.copy(edges = removeLastEdge.edges :+ lastEdge_!.toNodeEdge(x.where))
-    case _              => this
+  def relationFieldsNotOnPathOnLastModel = lastModel.relationFields.filter { f =>
+    lastEdge match {
+      case Some(edge) => !edge.childField.contains(f)
+      case None       => true
+    }
   }
 }
 
 object Path {
   def empty(where: NodeSelector) = Path(where, List.empty)
 
-  def collectCascadingPaths(project: Project, path: Path): List[Path] = path.otherCascadingRelationFields match {
-    case Nil   => List(path)
-    case edges => edges.flatMap(field => collectCascadingPaths(project, path.appendCascadingEdge(project, field)))
+  def collectCascadingPaths(project: Project, path: Path): Vector[Path] = path.otherCascadingRelationFields match {
+    case Nil   => Vector(path)
+    case edges => edges.flatMap(field => collectCascadingPaths(project, path.appendCascadingEdge(project, field))).toVector
   }
+
 }

@@ -3,8 +3,8 @@ package com.prisma.rabbit
 import java.nio.charset.StandardCharsets
 
 import com.prisma.errors.ErrorReporter
-import com.rabbitmq.client.{Channel => RabbitChannel, Consumer => RabbitConsumer, _}
 import com.prisma.rabbit.Bindings.Binding
+import com.rabbitmq.client.{Channel => RabbitChannel, Consumer => RabbitConsumer, _}
 
 import scala.util.Try
 
@@ -39,9 +39,7 @@ case class Channel(rabbitChannel: RabbitChannel) {
 
   def exchangeDeclare(name: String, durable: Boolean, autoDelete: Boolean = false, confirm: Boolean = false): Try[Exchange] = Try {
     import collection.JavaConverters.mapAsJavaMap
-    val internal = false
-    rabbitChannel
-      .exchangeDeclare(name, BuiltinExchangeType.TOPIC, durable, autoDelete, mapAsJavaMap(Map.empty[String, Object]))
+    rabbitChannel.exchangeDeclare(name, BuiltinExchangeType.TOPIC, durable, autoDelete, mapAsJavaMap(Map.empty[String, Object]))
     if (confirm) {
       rabbitChannel.confirmSelect()
     }
@@ -50,9 +48,7 @@ case class Channel(rabbitChannel: RabbitChannel) {
 
   def close(alsoCloseConnection: Boolean = true): Try[Unit] = Try {
     rabbitChannel.close
-    if (alsoCloseConnection) {
-      rabbitChannel.getConnection.close
-    }
+    if (alsoCloseConnection) rabbitChannel.getConnection.close
   }
 }
 

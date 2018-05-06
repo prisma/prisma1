@@ -2,7 +2,6 @@ package com.prisma.workers
 
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
-import com.prisma.errors.ErrorReporter
 import com.prisma.akkautil.http.{Routes, Server}
 import com.prisma.workers.dependencies.WorkerDependencies
 
@@ -40,7 +39,6 @@ case class WorkerServer(
     println("Stopping workers...")
     val stopFutures = Future.sequence(workers.map(_.stop))
 
-    //stopFutures.onComplete(_ => dependencies.shutdown)
     stopFutures
   }
 }

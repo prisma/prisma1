@@ -4,8 +4,8 @@ import akka.actor.{ActorRef, ActorSystem}
 import akka.testkit.TestProbe
 import com.prisma.akkautil.SingleThreadedActorSystem
 import com.prisma.messagebus.Conversions.Converter
-import com.prisma.messagebus.{PubSubPublisher, PubSubSubscriber}
 import com.prisma.messagebus.pubsub.{Message, Only, Subscription, Topic}
+import com.prisma.messagebus.{PubSubPublisher, PubSubSubscriber}
 
 object DummyPubSubSubscriber {
   // Initializes a minimal actor system to use

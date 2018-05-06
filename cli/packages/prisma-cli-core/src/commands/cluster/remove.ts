@@ -8,6 +8,7 @@ export default class ClusterRemove extends Command {
   static command = 'remove'
   static description = 'Remove Cluster'
   static group = 'cluster'
+  static deprecated = true
   async run() {
     await this.definition.load(this.flags)
 

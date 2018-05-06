@@ -47,7 +47,6 @@ case class AllocationMetrics(metricsManager: MetricsManager, mxBean: Option[Thre
     case Success(x) => x
     case Failure(_) => false
   }
-  println(s"MemoryAllocationMetrics are enabled: $isThreadAllocatedMemoryEnabled")
 
   var lastAllocatedBytes = Map.empty[Long, Long] // thread id to allocated kilobytes
 

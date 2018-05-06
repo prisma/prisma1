@@ -12,15 +12,14 @@ import com.prisma.workers.WorkerServer
 object PrismaLocalMain extends App {
   implicit val system       = ActorSystem("single-server")
   implicit val materializer = ActorMaterializer()
-  val port                  = sys.env.getOrElse("PORT", "9000").toInt
   implicit val dependencies = PrismaLocalDependencies()
-  dependencies.initialize()(system.dispatcher)
 
+  dependencies.initialize()(system.dispatcher)
   Version.check()
 
   ServerExecutor(
-    port = port,
-    ClusterServer("cluster"),
+    port = dependencies.config.port.getOrElse(4466),
+    ClusterServer("cluster", dependencies.config.server2serverSecret),
     WebsocketServer(dependencies),
     ApiServer(dependencies.apiSchemaBuilder),
     SimpleSubscriptionsServer(),

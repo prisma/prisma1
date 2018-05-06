@@ -1,7 +1,8 @@
 package com.prisma.akkautil.http
 
-import akka.http.scaladsl.server.Route
 import akka.http.scaladsl.server.Directives.pathPrefix
+import akka.http.scaladsl.server.Route
+
 import scala.concurrent.Future
 
 trait Server {

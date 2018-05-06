@@ -7,15 +7,18 @@ import sangria.ast._
 import sangria.visitor.VisitorCommand
 
 object QueryTransformer {
-  def replaceMutationInFilter(query: Document, mutation: ModelMutationType): AstNode = {
-    val mutationName = mutation match {
-      case ModelMutationType.Created =>
-        "CREATED"
-      case ModelMutationType.Updated =>
-        "UPDATED"
-      case ModelMutationType.Deleted =>
-        "DELETED"
+
+  def replaceExternalFieldsWithBooleanFieldsForInternalSchema(query: Document, mutation: ModelMutationType, updatedFields: Option[List[String]]) = {
+    val replaceMutationIn = replaceMutationInFilter(query, mutation).asInstanceOf[Document]
+
+    mutation == ModelMutationType.Updated match {
+      case true  => replaceUpdatedFieldsInFilter(replaceMutationIn, updatedFields.get.toSet).asInstanceOf[Document]
+      case false => replaceMutationIn
     }
+  }
+
+  def replaceMutationInFilter(query: Document, mutation: ModelMutationType): AstNode = {
+    val mutationName = mutation.toString
     MyAstVisitor.visitAst(
       query,
       onEnter = {
@@ -24,19 +27,9 @@ object QueryTransformer {
           Some(ObjectField("boolean", BooleanValue(exists)))
 
         case ObjectField("mutation_in", ListValue(values, _, _), _, _) =>
-          values match {
-            case (x: EnumValue) +: xs =>
-              var exists = false
-              val list   = values.asInstanceOf[Vector[EnumValue]]
-              list.foreach(mutation => {
-                if (mutation.value == mutationName) {
-                  exists = true
-                }
-              })
-              Some(ObjectField("boolean", BooleanValue(exists)))
-
-            case _ =>
-              None
+          values.isEmpty match {
+            case true  => None
+            case false => Some(ObjectField("boolean", BooleanValue(values.asInstanceOf[Vector[EnumValue]].exists(_.value == mutationName))))
           }
 
         case _ =>
@@ -89,47 +82,6 @@ object QueryTransformer {
     )
   }
 
-  def mergeBooleans(query: Document) = {
-    MyAstVisitor.visitAst(
-      query,
-      onEnter = {
-        case x @ ObjectValue(fields, _, _) =>
-          var boolean      = true
-          var booleanFound = false
-
-          fields.foreach({
-            case ObjectField("boolean", BooleanValue(value, _, _), _, _) =>
-              boolean = boolean && value
-            case _ =>
-          })
-
-          val filteredFields = fields.flatMap(field => {
-            field match {
-              case ObjectField("boolean", BooleanValue(value, _, _), _, _) =>
-                booleanFound match {
-                  case true =>
-                    None
-
-                  case false =>
-                    booleanFound = true
-                    Some(field.copy(value = BooleanValue(boolean)))
-                }
-              case _ =>
-                Some(field)
-            }
-          })
-
-          Some(x.copy(fields = filteredFields))
-
-        case _ =>
-          None
-      },
-      onLeave = (node) => {
-        None
-      }
-    )
-  }
-
   def getModelNameFromSubscription(query: Document): Option[String] = {
     var modelName: Option[String] = None
 
@@ -168,12 +120,9 @@ object QueryTransformer {
                 val list = values.asInstanceOf[Vector[EnumValue]]
                 list.foreach(mutation => {
                   mutation.value match {
-                    case "CREATED" =>
-                      mutations += ModelMutationType.Created
-                    case "DELETED" =>
-                      mutations += ModelMutationType.Deleted
-                    case "UPDATED" =>
-                      mutations += ModelMutationType.Updated
+                    case "CREATED" => mutations += ModelMutationType.Created
+                    case "DELETED" => mutations += ModelMutationType.Deleted
+                    case "UPDATED" => mutations += ModelMutationType.Updated
                   }
                 })
 

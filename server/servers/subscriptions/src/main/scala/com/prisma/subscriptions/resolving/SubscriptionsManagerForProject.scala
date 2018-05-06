@@ -2,7 +2,6 @@ package com.prisma.subscriptions.resolving
 
 import akka.actor.{Actor, ActorRef, Props, Stash, Terminated}
 import com.prisma.akkautil.{LogUnhandled, LogUnhandledExceptions}
-import com.prisma.subscriptions.schema.{QueryTransformer, SubscriptionQueryValidator}
 import com.prisma.messagebus.pubsub.Message
 import com.prisma.shared.models._
 import com.prisma.subscriptions.SubscriptionDependencies
@@ -12,6 +11,7 @@ import com.prisma.subscriptions.protocol.StringOrInt
 import com.prisma.subscriptions.resolving.SubscriptionsManager.Responses.{CreateSubscriptionFailed, CreateSubscriptionResponse, CreateSubscriptionSucceeded}
 import com.prisma.subscriptions.resolving.SubscriptionsManagerForModel.Requests.StartSubscription
 import com.prisma.subscriptions.resolving.SubscriptionsManagerForProject.{SchemaInvalidated, SchemaInvalidatedMessage}
+import com.prisma.subscriptions.schema.{QueryTransformer, SubscriptionQueryValidator}
 import org.scalactic.{Bad, Good}
 
 import scala.collection.mutable
@@ -116,12 +116,7 @@ case class SubscriptionsManagerForProject(
   }
 
   def removeManagerForModel(ref: ActorRef) = {
-    resolversByModel.retain {
-      case (_, resolver) => resolver != ref
-    }
-
-    resolversBySubscriptionId.retain {
-      case (_, resolver) => resolver != ref
-    }
+    resolversByModel.retain { case (_, resolver)          => resolver != ref }
+    resolversBySubscriptionId.retain { case (_, resolver) => resolver != ref }
   }
 }

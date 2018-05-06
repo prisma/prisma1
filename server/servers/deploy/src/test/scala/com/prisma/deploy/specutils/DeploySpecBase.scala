@@ -2,22 +2,26 @@ package com.prisma.deploy.specutils
 
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
-import cool.graph.cuid.Cuid
-import com.prisma.shared.models.{Migration, MigrationId, Project}
+import com.prisma.ConnectorAwareTest
+import com.prisma.shared.models.{Migration, Project, ProjectId}
 import com.prisma.utils.await.AwaitUtils
+import com.prisma.utils.json.PlayJsonExtensions
+import cool.graph.cuid.Cuid
 import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach, Suite}
-import play.api.libs.json.{JsArray, JsString}
+import play.api.libs.json.JsString
 
 import scala.collection.mutable.ArrayBuffer
 
-trait DeploySpecBase extends BeforeAndAfterEach with BeforeAndAfterAll with AwaitUtils with SprayJsonExtensions { self: Suite =>
+trait DeploySpecBase extends ConnectorAwareTest with BeforeAndAfterEach with BeforeAndAfterAll with AwaitUtils with PlayJsonExtensions { self: Suite =>
 
   implicit lazy val system                                   = ActorSystem()
   implicit lazy val materializer                             = ActorMaterializer()
-  implicit lazy val testDependencies: DeployTestDependencies = DeployTestDependencies()
+  implicit lazy val testDependencies: TestDeployDependencies = TestDeployDependencies()
 
-  val server = DeployTestServer()
-//  val clientDb          = testDependencies.clientTestDb
+  override def prismaConfig = testDependencies.config
+
+  val server            = DeployTestServer()
+  val internalDB        = testDependencies.deployConnector
   val projectsToCleanUp = new ArrayBuffer[String]
 
   val basicTypesGql =
@@ -25,24 +29,24 @@ trait DeploySpecBase extends BeforeAndAfterEach with BeforeAndAfterAll with Awai
       |type TestModel {
       |  id: ID! @unique
       |}
-    """.stripMargin.trim()
+    """.stripMargin
 
   override protected def beforeAll(): Unit = {
     super.beforeAll()
-    testDependencies.deployPersistencePlugin.initialize().await()
+    testDependencies.deployConnector.initialize().await()
   }
 
   override protected def afterAll(): Unit = {
     super.afterAll()
-    testDependencies.deployPersistencePlugin.shutdown().await()
-//    clientDb.shutdown()
+//    projectsToCleanUp.foreach(internalDB.deleteProjectDatabase)
+    testDependencies.deployConnector.shutdown().await()
   }
 
   override protected def beforeEach(): Unit = {
     super.beforeEach()
-    testDependencies.deployPersistencePlugin.reset().await
-//    projectsToCleanUp.foreach(clientDb.delete)
-    projectsToCleanUp.clear()
+//    projectsToCleanUp.foreach(internalDB.deleteProjectDatabase)
+//    projectsToCleanUp.clear()
+    testDependencies.deployConnector.reset().await
   }
 
   def setupProject(
@@ -52,10 +56,10 @@ trait DeploySpecBase extends BeforeAndAfterEach with BeforeAndAfterAll with Awai
       secrets: Vector[String] = Vector.empty
   ): (Project, Migration) = {
 
-    val projectId = name + "@" + stage
+    val projectId = testDependencies.projectIdEncoder.fromSegments(List(name, stage))
     projectsToCleanUp :+ projectId
     server.addProject(name, stage)
-    server.deploySchema(name, stage, schema, secrets)
+    server.deploySchema(name, stage, schema.stripMargin, secrets)
   }
 
   def formatSchema(schema: String): String = JsString(schema).toString()

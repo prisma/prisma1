@@ -4,9 +4,9 @@ import java.util.concurrent.TimeUnit
 
 import akka.actor.{ActorSystem, Props}
 import com.librato.metrics.client.{Duration, LibratoClient}
+import com.prisma.akkautil.SingleThreadedActorSystem
 import com.prisma.errors.ErrorReporter
 import com.timgroup.statsd.{NonBlockingStatsDClient, StatsDClient}
-import com.prisma.akkautil.SingleThreadedActorSystem
 
 import scala.concurrent.Await
 import scala.concurrent.duration._

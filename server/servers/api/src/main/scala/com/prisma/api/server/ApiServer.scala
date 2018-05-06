@@ -1,7 +1,8 @@
 package com.prisma.api.server
 
 import akka.actor.ActorSystem
-import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport._
+import akka.http.javadsl.model.StatusCode
+import akka.http.scaladsl.model.StatusCodes
 import akka.http.scaladsl.model.StatusCodes._
 import akka.http.scaladsl.model.headers.RawHeader
 import akka.http.scaladsl.server.Directives._
@@ -12,7 +13,7 @@ import com.prisma.akkautil.throttler.Throttler
 import com.prisma.akkautil.throttler.Throttler.ThrottleBufferFullException
 import com.prisma.api.schema.APIErrors.ProjectNotFound
 import com.prisma.api.schema.CommonErrors.ThrottlerBufferFullException
-import com.prisma.api.schema.{APIErrors, SchemaBuilder, UserFacingError}
+import com.prisma.api.schema.{SchemaBuilder, UserFacingError}
 import com.prisma.api.{ApiDependencies, ApiMetrics}
 import com.prisma.logging.LogDataWrites.logDataWrites
 import com.prisma.logging.{LogData, LogKey}
@@ -21,11 +22,12 @@ import com.prisma.shared.models.{ProjectId, ProjectWithClientId}
 import com.prisma.util.env.EnvUtils
 import com.typesafe.scalalogging.LazyLogging
 import cool.graph.cuid.Cuid.createCuid
-import play.api.libs.json.Json
-import spray.json._
+import de.heikoseeberger.akkahttpplayjson.PlayJsonSupport
+import play.api.libs.json._
 
 import scala.concurrent.Future
 import scala.language.postfixOps
+import scala.util.Try
 
 case class ApiServer(
     schemaBuilder: SchemaBuilder,
@@ -35,17 +37,20 @@ case class ApiServer(
     system: ActorSystem,
     materializer: ActorMaterializer
 ) extends Server
+    with PlayJsonSupport
     with LazyLogging {
   import system.dispatcher
 
   val log: String => Unit = (msg: String) => logger.info(msg)
-  val requestPrefix       = "api"
+  val requestPrefix       = sys.env.getOrElse("ENV", "local")
   val projectFetcher      = apiDependencies.projectFetcher
+  val reservedSegments    = Set("private", "import", "export")
+  val projectIdEncoder    = apiDependencies.projectIdEncoder
 
   import scala.concurrent.duration._
 
   lazy val unthrottledProjectIds = sys.env.get("UNTHROTTLED_PROJECT_IDS") match {
-    case Some(envValue) => envValue.split('|').filter(_.nonEmpty).toVector.map(ProjectId.fromEncodedString)
+    case Some(envValue) => envValue.split('|').filter(_.nonEmpty).toVector.map(projectIdEncoder.fromEncodedString)
     case None           => Vector.empty
   }
 
@@ -56,8 +61,8 @@ case class ApiServer(
     } yield {
       val per = EnvUtils.asInt("THROTTLING_RATE_PER_SECONDS").getOrElse(1)
       Throttler[ProjectId](
-        groupBy = pid => pid.name + "_" + pid.stage,
-        amount = throttlingRate.toInt,
+        groupBy = pid => pid.name + "~" + pid.stage,
+        amount = throttlingRate,
         per = per.seconds,
         timeout = 25.seconds,
         maxCallsInFlight = maxCallsInFlights.toInt
@@ -122,57 +127,42 @@ case class ApiServer(
     }
 
     def handleRequestForPublicApi(projectId: ProjectId, rawRequest: RawRequest) = {
-      val result = apiDependencies.requestHandler.handleRawRequestForPublicApi(projectId.asString, rawRequest)
-      result.onComplete { _ =>
-        logRequestEnd(projectId.asString)
-      }
-      result
+      apiDependencies.requestHandler.handleRawRequestForPublicApi(projectIdEncoder.toEncodedString(projectId), rawRequest)
     }
 
-    logger.info(Json.toJson(LogData(LogKey.RequestNew, requestId)).toString())
-    pathPrefix(Segments(min = 2, max = 4)) { segments =>
+    pathPrefix(Segments(min = 0, max = 4)) { segments =>
       post {
-        def removeLastElementIfInSet(elements: List[String], set: Set[String]) = {
-          if (set.contains(elements.last)) {
-            elements.dropRight(1)
-          } else {
-            elements
-          }
-        }
-        val actualSegments    = removeLastElementIfInSet(segments, Set("private", "import", "export"))
-        val projectId         = ProjectId.fromSegments(actualSegments)
-        val projectIdAsString = projectId.asString
-
-        val apiSegment = if (segments.size == 3 || segments.size == 4) {
-          segments.last
-        } else {
-          ""
-        }
+        val (projectSegments, reservedSegment) = splitReservedSegment(segments)
+        val projectId                          = projectIdEncoder.fromSegments(projectSegments)
+        val projectIdAsString                  = projectIdEncoder.toEncodedString(projectId)
 
         handleExceptions(toplevelExceptionHandler(requestId)) {
           extractRawRequest(requestId) { rawRequest =>
-            apiSegment match {
-              case "private" =>
+            reservedSegment match {
+              case None =>
+                throttleApiCallIfNeeded(projectId, rawRequest)
+
+              case Some("private") =>
                 val result = apiDependencies.requestHandler.handleRawRequestForPrivateApi(projectId = projectIdAsString, rawRequest = rawRequest)
                 result.onComplete(_ => logRequestEnd(projectIdAsString))
                 complete(result)
 
-              case "import" =>
+              case Some("import") =>
                 withRequestTimeout(5.minutes) {
                   val result = apiDependencies.requestHandler.handleRawRequestForImport(projectId = projectIdAsString, rawRequest = rawRequest)
                   result.onComplete(_ => logRequestEnd(projectIdAsString))
                   complete(result)
                 }
 
-              case "export" =>
+              case Some("export") =>
                 withRequestTimeout(5.minutes) {
                   val result = apiDependencies.requestHandler.handleRawRequestForExport(projectId = projectIdAsString, rawRequest = rawRequest)
                   result.onComplete(_ => logRequestEnd(projectIdAsString))
                   complete(result)
                 }
 
-              case _ =>
-                throttleApiCallIfNeeded(projectId, rawRequest)
+              case Some(x) =>
+                complete(StatusCodes.BadRequest, s"Invalid path segment $x")
             }
           }
         }
@@ -206,6 +196,14 @@ case class ApiServer(
     }
   }
 
+  def splitReservedSegment(elements: List[String]): (List[String], Option[String]) = {
+    if (elements.nonEmpty && reservedSegments.contains(elements.last)) {
+      (elements.dropRight(1), elements.lastOption)
+    } else {
+      (elements, None)
+    }
+  }
+
   def fetchProject(projectId: String): Future[ProjectWithClientId] = {
     val result = projectFetcher.fetch(projectIdOrAlias = projectId)
 
@@ -217,12 +215,12 @@ case class ApiServer(
 
   def toplevelExceptionHandler(requestId: String) = ExceptionHandler {
     case e: UserFacingError =>
-      complete(OK -> APIErrors.errorJson(requestId, e.getMessage, e.code))
+      complete(OK -> JsonErrorHelper.errorJson(requestId, e.getMessage, e.code))
 
     case e: Throwable =>
       println(e.getMessage)
       e.printStackTrace()
       apiDependencies.reporter.report(e)
-      complete(InternalServerError -> APIErrors.errorJson(requestId, e.getMessage))
+      complete(InternalServerError -> JsonErrorHelper.errorJson(requestId, e.getMessage))
   }
 }

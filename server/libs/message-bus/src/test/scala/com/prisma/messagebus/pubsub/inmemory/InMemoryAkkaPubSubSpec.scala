@@ -2,9 +2,10 @@ package com.prisma.messagebus.pubsub.inmemory
 
 import akka.testkit.{TestKit, TestProbe}
 import com.prisma.akkautil.SingleThreadedActorSystem
-import com.prisma.messagebus.{PubSub, PubSubPublisher}
 import com.prisma.messagebus.pubsub.{Everything, Message, Only}
+import com.prisma.messagebus.{PubSub, PubSubPublisher}
 import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach, Matchers, WordSpecLike}
+
 import scala.concurrent.duration._
 
 class InMemoryAkkaPubSubSpec

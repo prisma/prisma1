@@ -1,7 +1,7 @@
 package com.prisma.messagebus.queue
 
 import com.prisma.messagebus.Conversions.Converter
-import com.prisma.messagebus.{ConsumerRef, Queue, QueueConsumer, QueuePublisher}
+import com.prisma.messagebus.{ConsumerRef, QueueConsumer, QueuePublisher}
 
 import scala.concurrent.Future
 

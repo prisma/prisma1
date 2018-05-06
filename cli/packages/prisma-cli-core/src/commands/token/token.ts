@@ -19,10 +19,9 @@ export default class Token extends Command {
     const { copy } = this.flags
     const envFile = this.flags['env-file']
     await this.definition.load(this.flags, envFile)
-    const serviceName = this.definition.definition!.service
-    const stage = this.definition.definition!.stage
-    const clusterName = this.definition.getClusterName()
-    const cluster = this.env.clusterByName(clusterName!, true)
+    const serviceName = this.definition.service!
+    const stage = this.definition.stage!
+    const cluster = this.definition.getCluster()
     this.env.setActiveCluster(cluster!)
 
     const token = this.definition.getToken(serviceName, stage)

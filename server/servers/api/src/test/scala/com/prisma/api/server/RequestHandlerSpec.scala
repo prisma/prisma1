@@ -1,10 +1,10 @@
 package com.prisma.api.server
 
 import akka.http.scaladsl.model.StatusCodes
+import com.prisma.api.ApiSpecBase
 import com.prisma.api.project.ProjectFetcher
 import com.prisma.api.schema.APIErrors.InvalidToken
 import com.prisma.api.schema.{ApiUserContext, SchemaBuilder}
-import com.prisma.api.{ApiBaseSpec, GraphQLResponseAssertions}
 import com.prisma.auth.AuthImpl
 import com.prisma.client.server.GraphQlRequestHandler
 import com.prisma.shared.models.{Project, ProjectWithClientId}
@@ -12,12 +12,12 @@ import com.prisma.shared.schema_dsl.TestProject
 import com.prisma.utils.await.AwaitUtils
 import org.scalatest.{FlatSpec, Matchers}
 import pdi.jwt.{Jwt, JwtAlgorithm}
+import play.api.libs.json._
 import sangria.schema.{ObjectType, Schema, SchemaValidationRule}
-import spray.json.{JsObject, JsString}
 
 import scala.concurrent.Future
 
-class RequestHandlerSpec extends FlatSpec with Matchers with ApiBaseSpec with AwaitUtils with GraphQLResponseAssertions {
+class RequestHandlerSpec extends FlatSpec with Matchers with ApiSpecBase with AwaitUtils {
   import system.dispatcher
   import testDependencies.reporter
 
@@ -35,7 +35,7 @@ class RequestHandlerSpec extends FlatSpec with Matchers with ApiBaseSpec with Aw
   val projectWithSecret = TestProject().copy(secrets = Vector("secret"))
 
   def request(authHeader: String) =
-    RawRequest(id = "req-id", json = JsObject("query" -> JsString("{users}")), ip = "0.0.0.0", sourceHeader = null, authorizationHeader = Some(authHeader))
+    RawRequest(id = "req-id", json = Json.obj("query" -> "{users}"), ip = "0.0.0.0", sourceHeader = null, authorizationHeader = Some(authHeader))
 
   def handler(project: Project) = {
     RequestHandler(
@@ -50,7 +50,7 @@ class RequestHandlerSpec extends FlatSpec with Matchers with ApiBaseSpec with Aw
 
 object SucceedingGraphQlRequestHandler extends GraphQlRequestHandler {
   override def handle(graphQlRequest: GraphQlRequest) = Future.successful {
-    StatusCodes.ImATeapot -> JsObject()
+    StatusCodes.ImATeapot -> JsObject.empty
   }
 
   override def healthCheck = Future.unit

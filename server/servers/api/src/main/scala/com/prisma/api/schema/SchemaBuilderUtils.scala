@@ -78,7 +78,8 @@ case class FilterObjectTypeBuilder(model: Model, project: Project) {
       fieldsFn = () => {
         List(
           InputField("AND", OptionInputType(ListInputType(filterObjectType)), description = FilterArguments.ANDFilter.description),
-          InputField("OR", OptionInputType(ListInputType(filterObjectType)), description = FilterArguments.ORFilter.description)
+          InputField("OR", OptionInputType(ListInputType(filterObjectType)), description = FilterArguments.ORFilter.description),
+          InputField("NOT", OptionInputType(ListInputType(filterObjectType)), description = FilterArguments.NOTFilter.description)
         ) ++ model.scalarFields.filterNot(_.isHidden).flatMap(SchemaBuilderUtils.mapToInputField) ++ model.relationFields.flatMap(mapToRelationFilterInputField)
       }
     )
@@ -91,6 +92,7 @@ case class FilterObjectTypeBuilder(model: Model, project: Project) {
         List(
           InputField("AND", OptionInputType(ListInputType(subscriptionFilterObjectType)), description = FilterArguments.ANDFilter.description),
           InputField("OR", OptionInputType(ListInputType(subscriptionFilterObjectType)), description = FilterArguments.ORFilter.description),
+          InputField("NOT", OptionInputType(ListInputType(subscriptionFilterObjectType)), description = FilterArguments.NOTFilter.description),
           InputField(
             "mutation_in",
             OptionInputType(ListInputType(ModelMutationType.Type)),
@@ -126,6 +128,7 @@ case class FilterObjectTypeBuilder(model: Model, project: Project) {
         List(
           InputField("AND", OptionInputType(ListInputType(internalSubscriptionFilterObjectType)), description = FilterArguments.ANDFilter.description),
           InputField("OR", OptionInputType(ListInputType(internalSubscriptionFilterObjectType)), description = FilterArguments.ORFilter.description),
+          InputField("NOT", OptionInputType(ListInputType(internalSubscriptionFilterObjectType)), description = FilterArguments.NOTFilter.description),
           InputField("boolean",
                      OptionInputType(BooleanType),
                      description = "Placeholder boolean type that will be replaced with the according boolean in the schema"),

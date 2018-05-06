@@ -3,17 +3,17 @@ package com.prisma.api
 import com.prisma.api.schema.{ApiUserContext, PrivateSchemaBuilder, SchemaBuilder}
 import com.prisma.api.server.{GraphQlQuery, GraphQlRequest}
 import com.prisma.shared.models.Project
-import com.prisma.util.json.SprayJsonExtensions
+import com.prisma.utils.json.PlayJsonExtensions
+import play.api.libs.json._
 import sangria.parser.QueryParser
 import sangria.renderer.SchemaRenderer
 import sangria.schema.Schema
-import spray.json._
 
 import scala.concurrent.Await
 import scala.concurrent.duration.Duration
 import scala.reflect.io.File
 
-case class ApiTestServer()(implicit dependencies: ApiDependencies) extends SprayJsonExtensions with GraphQLResponseAssertions {
+case class ApiTestServer()(implicit dependencies: ApiDependencies) extends PlayJsonExtensions {
 
   def writeSchemaIntoFile(schema: String): Unit = File("schema").writeAll(schema)
 
@@ -32,7 +32,7 @@ case class ApiTestServer()(implicit dependencies: ApiDependencies) extends Spray
       requestId: String = "CombinedTestDatabase.requestId"
   ): JsValue = {
     val result = executeQuerySimpleWithAuthentication(
-      query = query,
+      query = query.stripMargin,
       project = project,
       variables = variables,
       requestId = requestId
@@ -51,7 +51,7 @@ case class ApiTestServer()(implicit dependencies: ApiDependencies) extends Spray
                         errorCount: Int = 1,
                         errorContains: String = "",
                         userId: Option[String] = None,
-                        variables: JsValue = JsObject(),
+                        variables: JsValue = JsObject.empty,
                         requestId: String = "CombinedTestDatabase.requestId",
                         graphcoolHeader: Option[String] = None): JsValue = {
     val result = executeQuerySimpleWithAuthentication(
@@ -71,7 +71,7 @@ case class ApiTestServer()(implicit dependencies: ApiDependencies) extends Spray
   def executeQuerySimpleWithAuthentication(
       query: String,
       project: Project,
-      variables: JsValue = JsObject(),
+      variables: JsValue = JsObject.empty,
       requestId: String = "CombinedTestDatabase.requestId",
       graphcoolHeader: Option[String] = None
   ): JsValue = {
@@ -86,13 +86,13 @@ case class ApiTestServer()(implicit dependencies: ApiDependencies) extends Spray
     )
   }
 
-  def queryPrivateSchema(query: String, project: Project): JsValue = {
+  def queryPrivateSchema(query: String, project: Project, variables: JsObject = JsObject.empty): JsValue = {
     val schemaBuilder = PrivateSchemaBuilder(project)(dependencies, dependencies.system)
     querySchema(
       query = query,
       project = project,
       schema = schemaBuilder.build(),
-      variables = JsObject.empty,
+      variables = variables,
       requestId = "private-api-request",
       graphcoolHeader = None
     )

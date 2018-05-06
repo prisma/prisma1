@@ -1,11 +1,11 @@
 package com.prisma.api.mutations
 
-import com.prisma.api.ApiBaseSpec
+import com.prisma.api.ApiSpecBase
 import com.prisma.shared.models.Project
 import com.prisma.shared.schema_dsl.SchemaDsl
 import org.scalatest.{FlatSpec, Matchers}
 
-class UpdateManySpec extends FlatSpec with Matchers with ApiBaseSpec {
+class UpdateManySpec extends FlatSpec with Matchers with ApiSpecBase {
 
   val project: Project = SchemaDsl() { schema =>
     schema.model("Todo").field_!("title", _.String)
@@ -15,11 +15,7 @@ class UpdateManySpec extends FlatSpec with Matchers with ApiBaseSpec {
     super.beforeAll()
     database.setup(project)
   }
-
-  override protected def beforeEach(): Unit = {
-    super.beforeEach()
-    database.truncate(project)
-  }
+  override def beforeEach(): Unit = database.truncateProjectTables(project)
 
   "The update items Mutation" should "update the items matching the where clause" in {
     createTodo("title1")

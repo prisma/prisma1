@@ -1,4 +1,4 @@
-# Susbcriptions
+# Subscriptions
 
 This example demonstrates how to implement **event-based realtime updates with GraphQL subscriptions** when building a GraphQL server based on Prisma & [`graphql-yoga`](https://github.com/graphcool/graphql-yoga).
 

@@ -1,8 +1,8 @@
 package com.prisma.messagebus.pubsub.rabbit
 
 import akka.testkit.{TestKit, TestProbe}
-import com.prisma.errors.BugsnagErrorReporter
 import com.prisma.akkautil.SingleThreadedActorSystem
+import com.prisma.errors.BugsnagErrorReporter
 import com.prisma.messagebus.Conversions
 import com.prisma.messagebus.pubsub.{Everything, Message, Only}
 import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach, Matchers, WordSpecLike}

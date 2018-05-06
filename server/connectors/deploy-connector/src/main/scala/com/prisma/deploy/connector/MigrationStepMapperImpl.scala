@@ -51,15 +51,17 @@ case class MigrationStepMapperImpl(projectId: String) extends MigrationStepMappe
       lazy val deleteScalarListTable = DeleteScalarListTable(projectId, model.name, previous.name, previous.typeIdentifier)
 
       () match {
-        case _ if previous.isRelation && next.isRelation           => Vector.empty
-        case _ if previous.isRelation && next.isScalarNonList      => Vector(createColumn)
-        case _ if previous.isRelation && next.isScalarList         => Vector(createScalarListTable)
-        case _ if previous.isScalarList && next.isScalarList       => Vector(updateScalarListTable)
-        case _ if previous.isScalarList && next.isScalarNonList    => Vector(createColumn, deleteScalarListTable)
-        case _ if previous.isScalarList && next.isRelation         => Vector(deleteScalarListTable)
-        case _ if previous.isScalarNonList && next.isScalarNonList => Vector(updateColumn)
-        case _ if previous.isScalarNonList && next.isScalarList    => Vector(createScalarListTable, deleteColumn)
-        case _ if previous.isScalarNonList && next.isRelation      => Vector(deleteColumn)
+        case _ if previous.isRelation && next.isRelation                                                             => Vector.empty
+        case _ if previous.isRelation && next.isScalarNonList                                                        => Vector(createColumn)
+        case _ if previous.isRelation && next.isScalarList                                                           => Vector(createScalarListTable)
+        case _ if previous.isScalarList && next.isScalarNonList                                                      => Vector(createColumn, deleteScalarListTable)
+        case _ if previous.isScalarList && next.isRelation                                                           => Vector(deleteScalarListTable)
+        case _ if previous.isScalarNonList && next.isScalarList                                                      => Vector(createScalarListTable, deleteColumn)
+        case _ if previous.isScalarNonList && next.isRelation                                                        => Vector(deleteColumn)
+        case _ if previous.isScalarNonList && next.isScalarNonList && previous.typeIdentifier == next.typeIdentifier => Vector(updateColumn)
+        case _ if previous.isScalarList && next.isScalarList && previous.typeIdentifier == next.typeIdentifier       => Vector(updateScalarListTable)
+        case _ if previous.isScalarNonList && next.isScalarNonList                                                   => Vector(deleteColumn, createColumn)
+        case _ if previous.isScalarList && next.isScalarList                                                         => Vector(deleteScalarListTable, createScalarListTable)
       }
 
     case x: CreateRelation =>
@@ -74,7 +76,10 @@ case class MigrationStepMapperImpl(projectId: String) extends MigrationStepMappe
       x.newName.map { newName =>
         val previousRelation = previousSchema.getRelationByName_!(x.name)
         val nextRelation     = nextSchema.getRelationByName_!(newName)
-        RenameTable(projectId = projectId, previousName = previousRelation.id, nextName = nextRelation.id, scalarListFieldsNames = Vector.empty)
+        RenameTable(projectId = projectId,
+                    previousName = previousRelation.relationTableName,
+                    nextName = nextRelation.relationTableName,
+                    scalarListFieldsNames = Vector.empty)
       }.toVector
 
     case x: EnumMigrationStep =>

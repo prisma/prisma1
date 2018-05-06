@@ -1,12 +1,11 @@
 package com.prisma.api.mutations
 
-import com.prisma.api.ApiBaseSpec
-import com.prisma.api.connector.mysql.database.DatabaseQueryBuilder
+import com.prisma.api.ApiSpecBase
 import com.prisma.shared.models.Project
 import com.prisma.shared.schema_dsl.SchemaDsl
 import org.scalatest.{FlatSpec, Matchers}
 
-class DeleteManySpec extends FlatSpec with Matchers with ApiBaseSpec {
+class DeleteManySpec extends FlatSpec with Matchers with ApiSpecBase {
 
   val project: Project = SchemaDsl() { schema =>
     schema.model("Todo").field_!("title", _.String)
@@ -17,10 +16,7 @@ class DeleteManySpec extends FlatSpec with Matchers with ApiBaseSpec {
     database.setup(project)
   }
 
-  override protected def beforeEach(): Unit = {
-    super.beforeEach()
-    database.truncate(project)
-  }
+  override def beforeEach(): Unit = database.truncateProjectTables(project)
 
   "The delete many Mutation" should "delete the items matching the where clause" in {
     createTodo("title1")
@@ -193,7 +189,7 @@ class DeleteManySpec extends FlatSpec with Matchers with ApiBaseSpec {
     )
     result.pathAsSeq("data.todoes").size should be(int)
 
-    database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "_RelayId").as[Int]) should be(Vector(int))
+    dataResolver(project).countByTable("_RelayId").await should be(int)
 
   }
 

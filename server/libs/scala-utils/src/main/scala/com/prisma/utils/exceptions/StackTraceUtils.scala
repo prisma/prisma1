@@ -1,7 +1,6 @@
 package com.prisma.utils.exceptions
 
-import java.io.StringWriter
-import java.io.PrintWriter
+import java.io.{PrintWriter, StringWriter}
 
 object StackTraceUtils {
   def print(err: Throwable): String = {

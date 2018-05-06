@@ -3,7 +3,7 @@ package com.prisma.websocket.websockets
 import akka.actor.{ActorSystem, Props}
 import akka.testkit.TestProbe
 import com.prisma.messagebus.testkits.spechelpers.InMemoryMessageBusTestKits
-import com.prisma.subscriptions.SubscriptionDependenciesForTest
+import com.prisma.subscriptions.TestSubscriptionDependencies
 import com.prisma.websocket.WebsocketSession
 import com.prisma.websocket.protocol.Request
 import org.scalatest.concurrent.ScalaFutures
@@ -26,7 +26,7 @@ class WebsocketSessionSpec
         val outgoing                  = TestProbe().ref
         val manager                   = TestProbe().ref
         val probe                     = TestProbe()
-        implicit val testDependencies = new SubscriptionDependenciesForTest()
+        implicit val testDependencies = new TestSubscriptionDependencies()
 
         probe.watch(outgoing)
 

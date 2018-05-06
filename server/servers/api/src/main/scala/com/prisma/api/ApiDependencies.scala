@@ -12,7 +12,7 @@ import com.prisma.auth.{Auth, AuthImpl}
 import com.prisma.client.server.{GraphQlRequestHandler, GraphQlRequestHandlerImpl}
 import com.prisma.errors.{BugsnagErrorReporter, ErrorReporter}
 import com.prisma.messagebus.{PubSub, PubSubPublisher, QueuePublisher}
-import com.prisma.shared.models.Project
+import com.prisma.shared.models.{Project, ProjectIdEncoder}
 import com.prisma.subscriptions.Webhook
 import com.prisma.utils.await.AwaitUtils
 
@@ -30,13 +30,14 @@ trait ApiDependencies extends AwaitUtils {
   def databaseMutactionExecutor: DatabaseMutactionExecutor = apiConnector.databaseMutactionExecutor
   def sideEffectMutactionExecutor: SideEffectMutactionExecutor
   def mutactionVerifier: DatabaseMutactionVerifier
+  def projectIdEncoder: ProjectIdEncoder
 
   implicit lazy val executionContext: ExecutionContext  = system.dispatcher
-  implicit lazy val reporter: ErrorReporter             = BugsnagErrorReporter(sys.env("BUGSNAG_API_KEY"))
+  implicit lazy val reporter: ErrorReporter             = BugsnagErrorReporter(sys.env.getOrElse("BUGSNAG_API_KEY", ""))
   lazy val graphQlRequestHandler: GraphQlRequestHandler = GraphQlRequestHandlerImpl(println)
   lazy val auth: Auth                                   = AuthImpl
   lazy val requestHandler: RequestHandler               = RequestHandler(projectFetcher, apiSchemaBuilder, graphQlRequestHandler, auth, println)
-  lazy val maxImportExportSize: Int                     = 10000000
+  lazy val maxImportExportSize: Int                     = 1000000
 
   val sssEventsPubSub: PubSub[String]
   lazy val sssEventsPublisher: PubSubPublisher[String] = sssEventsPubSub
@@ -46,7 +47,6 @@ trait ApiDependencies extends AwaitUtils {
   def deferredResolverProvider(project: Project)         = new DeferredResolverProvider[ApiUserContext](dataResolver(project))
 
   def destroy = {
-    println("ApiDependencies [DESTROY]")
     apiConnector.shutdown().await()
     materializer.shutdown()
     system.terminate().await()

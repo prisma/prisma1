@@ -31,13 +31,13 @@ object DeploymentProtocol {
 case class ProjectDeploymentActor(
     projectId: String,
     migrationPersistence: MigrationPersistence,
-    persistencePlugin: DeployConnector
+    deployConnector: DeployConnector
 ) extends Actor
     with Stash {
   import DeploymentProtocol._
 
   implicit val ec          = context.system.dispatcher
-  val applier              = MigrationApplierImpl(migrationPersistence, MigrationStepMapperImpl(projectId), persistencePlugin.deployMutactionExecutor)
+  val applier              = MigrationApplierImpl(migrationPersistence, MigrationStepMapperImpl(projectId), deployConnector.deployMutactionExecutor)
   var activeSchema: Schema = _
 
   // Possible enhancement: Periodically scan the DB for migrations if signal was lost -> Wait and see if this is an issue at all

@@ -1,12 +1,12 @@
 package com.prisma.api.schema
 
-import com.prisma.api.ApiBaseSpec
+import com.prisma.api.ApiSpecBase
 import com.prisma.shared.schema_dsl.SchemaDsl
 import com.prisma.util.GraphQLSchemaMatchers
 import org.scalatest.{FlatSpec, Matchers}
 import sangria.renderer.SchemaRenderer
 
-class MutationsSchemaBuilderSpec extends FlatSpec with Matchers with ApiBaseSpec with GraphQLSchemaMatchers {
+class MutationsSchemaBuilderSpec extends FlatSpec with Matchers with ApiSpecBase with GraphQLSchemaMatchers {
   val schemaBuilder = testDependencies.apiSchemaBuilder
 
   "the create Mutation for a model" should "be generated correctly" in {
@@ -142,17 +142,6 @@ class MutationsSchemaBuilderSpec extends FlatSpec with Matchers with ApiBaseSpec
                                      "update: TodoUpdateDataInput!",
                                      "create: TodoCreateInput!"
                                    ))
-  }
-
-  "the update many Mutation for a model" should "be generated correctly" in {
-    val project = SchemaDsl() { schema =>
-      schema.model("Todo").field_!("title", _.String).field("alias", _.String, isUnique = true)
-    }
-
-    val schema = SchemaRenderer.renderSchema(schemaBuilder(project))
-
-    schema should containMutation("updateManyTodoes(data: TodoUpdateInput!, where: TodoWhereInput!): BatchPayload!")
-    schema should containInputType("TodoWhereInput")
   }
 
   "the many update Mutation for a model" should "not be generated for an empty model" in {
@@ -325,7 +314,7 @@ class MutationsSchemaBuilderSpec extends FlatSpec with Matchers with ApiBaseSpec
                                      "unique: Int"
                                    ))
   }
-  "the delete many Mutation for a model" should "be generated correctly" in {
+  "the deleteMany Mutation for a model" should "be generated correctly" in {
     val project = SchemaDsl() { schema =>
       schema
         .model("Todo")
@@ -334,7 +323,20 @@ class MutationsSchemaBuilderSpec extends FlatSpec with Matchers with ApiBaseSpec
 
     val schema = SchemaRenderer.renderSchema(schemaBuilder(project))
 
-    schema should containMutation("deleteManyTodoes(where: TodoWhereInput!): BatchPayload!")
+    schema should containMutation("deleteManyTodoes(where: TodoWhereInput): BatchPayload!")
+    schema should containInputType("TodoWhereInput")
+  }
+
+  "the updateMany Mutation for a model" should "be generated correctly" in {
+    val project = SchemaDsl() { schema =>
+      schema
+        .model("Todo")
+        .field_!("title", _.String)
+    }
+
+    val schema = SchemaRenderer.renderSchema(schemaBuilder(project))
+
+    schema should containMutation("updateManyTodoes(data: TodoUpdateInput!, where: TodoWhereInput): BatchPayload!")
     schema should containInputType("TodoWhereInput")
   }
 }

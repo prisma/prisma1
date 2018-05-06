@@ -3,15 +3,15 @@ package com.prisma.api.mutactions
 import com.prisma.api.connector._
 import com.prisma.api.mutactions.validation.InputValueValidation
 import com.prisma.api.schema.APIErrors.ClientApiError
-import com.prisma.api.schema.GeneralError
+import com.prisma.api.schema.UserFacingError
 import com.prisma.shared.models.Model
 
 trait DatabaseMutactionVerifier {
-  def verify(mutactions: Vector[DatabaseMutaction]): Vector[GeneralError]
+  def verify(mutactions: Vector[DatabaseMutaction]): Vector[UserFacingError]
 }
 
 object DatabaseMutactionVerifierImpl extends DatabaseMutactionVerifier {
-  override def verify(mutactions: Vector[DatabaseMutaction]): Vector[GeneralError] = {
+  override def verify(mutactions: Vector[DatabaseMutaction]): Vector[UserFacingError] = {
     mutactions.flatMap {
       case m: CreateDataItem                 => verify(m)
       case m: UpdateDataItem                 => verify(m)
@@ -21,21 +21,21 @@ object DatabaseMutactionVerifierImpl extends DatabaseMutactionVerifier {
     }
   }
 
-  def verify(mutaction: CreateDataItem): Option[ClientApiError] = InputValueValidation.validateDataItemInputs(mutaction.model, mutaction.args)
-  def verify(mutaction: UpdateDataItem): Option[ClientApiError] = InputValueValidation.validateDataItemInputs(mutaction.model, mutaction.args)
+  def verify(mutaction: CreateDataItem): Option[ClientApiError] = InputValueValidation.validateDataItemInputs(mutaction.model, mutaction.nonListArgs)
+  def verify(mutaction: UpdateDataItem): Option[ClientApiError] = InputValueValidation.validateDataItemInputs(mutaction.path.lastModel, mutaction.nonListArgs)
 
   def verify(mutaction: UpsertDataItem): Iterable[ClientApiError] = {
-    val model      = mutaction.path.lastModel
-    val createArgs = mutaction.allArgs.createArgumentsAsCoolArgs.generateNonListCreateArgs(model, mutaction.createWhere.fieldValueAsString)
-    val updateArgs = mutaction.allArgs.updateArgumentsAsCoolArgs.generateNonListUpdateArgs(model)
+    val model      = mutaction.createPath.lastModel
+    val createArgs = mutaction.nonListCreateArgs
+    val updateArgs = mutaction.nonListUpdateArgs
     verifyUpsert(model, createArgs, updateArgs)
   }
 
   def verify(mutaction: UpsertDataItemIfInRelationWith): Iterable[ClientApiError] = {
-    verifyUpsert(mutaction.path.lastModel, mutaction.createArgs, mutaction.updateArgs)
+    verifyUpsert(mutaction.createPath.lastModel, mutaction.createNonListArgs, mutaction.updateNonListArgs)
   }
 
-  def verifyUpsert(model: Model, createArgs: CoolArgs, updateArgs: CoolArgs): Iterable[ClientApiError] = {
+  def verifyUpsert(model: Model, createArgs: PrismaArgs, updateArgs: PrismaArgs): Iterable[ClientApiError] = {
     val createCheck = InputValueValidation.validateDataItemInputs(model, createArgs)
     val updateCheck = InputValueValidation.validateDataItemInputs(model, updateArgs)
     createCheck ++ updateCheck

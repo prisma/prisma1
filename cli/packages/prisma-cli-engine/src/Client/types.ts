@@ -19,6 +19,7 @@ export interface Migration {
 
 export interface DeployPayload {
   errors: SchemaError[]
+  warnings: SchemaError[]
   migration: Migration
 }
 

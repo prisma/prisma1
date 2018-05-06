@@ -10,7 +10,7 @@ In this tutorial, you'll learn how to get started with Prisma to generate a Grap
 Here are the steps you're going to perform:
 
 - Install the Prisma CLI
-- Bootstraping a Prisma service with `prisma init`
+- Bootstrapping a Prisma service with `prisma init`
 - Explore the API in a GraphQL Playground and send queries & mutations
 
 > To ensure you're not accidentally skipping an instruction in the tutorial, all required actions on your end are highlighted with a little counter on the left.
@@ -33,7 +33,7 @@ npm install -g prisma
 
 </Instruction>
 
-## Bootstraping a Prisma service
+## Bootstrapping a Prisma service
 
 <Instruction>
 

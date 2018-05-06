@@ -1,6 +1,5 @@
 package com.prisma.subscriptions.protocol
 
-import com.prisma.subscriptions.protocol.SubscriptionProtocolV05.Responses.{InitConnectionFail, SubscriptionErrorPayload, SubscriptionFail}
 import play.api.libs.json._
 
 case class StringOrInt(string: Option[String], int: Option[Int]) {

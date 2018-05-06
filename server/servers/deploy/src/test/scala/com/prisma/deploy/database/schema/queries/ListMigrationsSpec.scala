@@ -8,7 +8,7 @@ class ListMigrationsSpec extends FlatSpec with Matchers with DeploySpecBase {
 
   "ListMigrations" should "return all migrations for a project" in {
     val (project, _) = setupProject(basicTypesGql)
-    val nameAndStage = ProjectId.fromEncodedString(project.id)
+    val nameAndStage = testDependencies.projectIdEncoder.fromEncodedString(project.id)
     val result       = server.query(s"""
        |query {
        |  listMigrations(name: "${nameAndStage.name}", stage: "${nameAndStage.stage}") {

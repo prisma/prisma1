@@ -96,8 +96,8 @@ export default class Help extends Command {
     offset: number = 1,
   ) {
     const color = this.out.color
-    this.out.log(`\nGraphQL Database (${chalk.underline(
-      'https://www.prismagraphql.com',
+    this.out.log(`\nGraphQL Database Gateway (${chalk.underline(
+      'https://www.prisma.io',
     )})
     
 ${chalk.bold('Usage:')} ${chalk.bold('prisma')} COMMAND`)
@@ -124,43 +124,50 @@ ${chalk.bold('Usage:')} ${chalk.bold('prisma')} COMMAND`)
         groupTopics.map(async (t: any) => {
           const cmds = await this.plugins.commandsForTopic(t.id)
           // console.log(cmds)
-          // if (t.id === 'local') {
+          // if (t.id === 'cluster') {
           //   debugger
           // }
           return cmds.filter(cmd => !cmd.hidden).map(cmd => {
             const cmdName = cmd.command ? ` ${cmd.command}` : ''
-            return [t.id + cmdName, chalk.dim(cmd.description || t.description)]
+            const deprecation = cmd.deprecated ? ' (deprecated)' : ''
+            return [
+              t.id + cmdName,
+              chalk.dim((cmd.description || t.description) + deprecation),
+            ]
           })
         }),
       )) as any
+      const name = group.deprecated ? `${group.name} (deprecated)` : group.name
       jobs.push({
-        group: group.name,
+        deprecated: group.deprecated,
+        group: name,
         list: flatten(list),
       })
     }
 
     const globalMaxLeft =
-      maxLength(flatten(jobs.map(j => j.list)).map(i => i[0])) + 2
+      maxLength(flatten(jobs.map(j => j.list)).map(i => i[0])) + 6
 
     jobs.forEach(job => {
       this.out.log('')
-      this.out.log(chalk.bold(job.group + ':'))
-      this.out.log(renderList(job.list, globalMaxLeft))
+      const firstLine = chalk.bold(job.group + ':')
+      const secondLine = renderList(job.list, globalMaxLeft)
+      this.out.log(job.deprecated ? chalk.dim(firstLine) : firstLine)
+      this.out.log(job.deprecated ? chalk.dim(secondLine) : secondLine)
     })
 
-    this.out.log(`\nUse ${chalk.green(
+    this.out.log(`\nUse ${chalk.cyan(
       'prisma help [command]',
     )} for more information about a command.
-Docs can be found here:
-https://www.prismagraphql.com/docs/reference/prisma-cli/commands-aiteerae6l
+Docs can be found here: https://bit.ly/prisma-cli-commands
 
 ${chalk.dim('Examples:')}
 
 ${chalk.gray('-')} Initialize files for a new Prisma service
-  ${chalk.green('$ prisma init')}
+  ${chalk.cyan('$ prisma init')}
 
 ${chalk.gray('-')} Deploy service changes (or new service)
-  ${chalk.green('$ prisma deploy')}
+  ${chalk.cyan('$ prisma deploy')}
 `)
   }
 

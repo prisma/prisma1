@@ -32,3 +32,5 @@ project/plugins/project/
 
 # buildkite artifacts
 buildkite-script-*
+
+/prisma.yml

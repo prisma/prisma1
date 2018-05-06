@@ -1,13 +1,13 @@
-import * as nock from 'nock'
 import Deploy from './'
 import { changedDefaultDefinition } from '../../examples'
 import { mockDefinition, Config } from 'prisma-cli-engine'
 import default_definition from './nocks/default_definition'
 import local_instance from './nocks/local_instance'
+import { MockGraphQLClient } from '../../test/mock-client'
 
-afterAll(() => {
-  nock.cleanAll()
-})
+jest.mock('graphql-request')
+const GraphQLClient = require('graphql-request').GraphQLClient
+GraphQLClient.mockImplementation(MockGraphQLClient)
 
 const mockEnv = {
   stages: {
@@ -27,16 +27,10 @@ const localMockEnv = {
   },
 }
 
-describe('deploy', () => {
-  test.skip('from empty to default definition', async () => {
+describe.skip('deploy', () => {
+  test('from empty to default definition', async () => {
     default_definition()
-    const result = await Deploy.mock(
-      { mockEnv, mockDefinition },
-      '-n',
-      'servicename',
-      '-c',
-      'shared-public-demo',
-    )
+    const result = await Deploy.mock({ mockEnv, mockDefinition })
     expect(result.out.stdout.output).toMatchSnapshot()
   })
 

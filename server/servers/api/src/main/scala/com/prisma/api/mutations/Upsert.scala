@@ -1,9 +1,10 @@
 package com.prisma.api.mutations
 
 import com.prisma.api.ApiDependencies
-import com.prisma.api.connector.{CoolArgs, DataResolver, NodeSelector, Path}
+import com.prisma.api.connector.{DataResolver, NodeSelector, Path}
 import com.prisma.api.mutactions.{DatabaseMutactions, ServerSideSubscriptions, SubscriptionEvents}
 import com.prisma.shared.models.{Model, Project}
+import com.prisma.util.coolArgs.CoolArgs
 import cool.graph.cuid.Cuid
 import sangria.schema
 
@@ -20,20 +21,21 @@ case class Upsert(
 
   import apiDependencies.system.dispatcher
 
-  val outerWhere: NodeSelector = CoolArgs(args.raw).extractNodeSelectorFromWhereField(model)
+  val coolArgs = CoolArgs(args.raw)
 
-  val idOfNewItem: String       = Cuid.createCuid()
-  val createWhere: NodeSelector = NodeSelector.forId(model, idOfNewItem)
-  val updateArgs: CoolArgs      = CoolArgs(args.raw).updateArgumentsAsCoolArgs.generateNonListUpdateArgs(model)
+  val outerWhere: NodeSelector = coolArgs.extractNodeSelectorFromWhereField(model)
+
+  val updateArgs: CoolArgs = coolArgs.updateArgumentsAsCoolArgs
   val updatedWhere: NodeSelector = updateArgs.raw.get(outerWhere.field.name) match {
     case Some(_) => updateArgs.extractNodeSelector(model)
     case None    => outerWhere
   }
 
-  val path = Path.empty(outerWhere)
+  val updatePath = Path.empty(outerWhere)
+  val createPath = Path.empty(NodeSelector.forId(model, Cuid.createCuid()))
 
   override def prepareMutactions(): Future[PreparedMutactions] = {
-    val sqlMutactions          = DatabaseMutactions(project).getMutactionsForUpsert(path, createWhere, updatedWhere, CoolArgs(args.raw)).toVector
+    val sqlMutactions          = DatabaseMutactions(project).getMutactionsForUpsert(createPath, updatePath, coolArgs)
     val subscriptionMutactions = SubscriptionEvents.extractFromSqlMutactions(project, mutationId, sqlMutactions)
     val sssActions             = ServerSideSubscriptions.extractFromMutactions(project, sqlMutactions, requestId = "")
 
@@ -46,12 +48,17 @@ case class Upsert(
   }
 
   override def getReturnValue: Future[ReturnValueResult] = {
+    val createItemFuture = dataResolver.resolveByUnique(createPath.lastCreateWhere_!)
+    val upsertItemFuture = dataResolver.resolveByUnique(updatedWhere)
 
-    val uniques = Vector(createWhere, updatedWhere)
-    dataResolver.resolveByUniques(model, uniques).map { items =>
-      items.headOption match {
-        case Some(item) => ReturnValue(item)
-        case None       => sys.error("Could not find an item after an Upsert. This should not be possible.") // Todo: what should we do here?
+    for {
+      createItem <- createItemFuture
+      updateItem <- upsertItemFuture
+    } yield {
+      (createItem, updateItem) match {
+        case (Some(create), _) => ReturnValue(create)
+        case (_, Some(update)) => ReturnValue(update)
+        case (None, None)      => sys.error("Could not find an item after an Upsert. This should not be possible.")
       }
     }
   }

@@ -3,11 +3,11 @@ package com.prisma.client.server
 import akka.http.scaladsl.model.StatusCodes.OK
 import akka.http.scaladsl.model._
 import com.prisma.api.ApiDependencies
-import com.prisma.api.schema.ApiUserContext
+import com.prisma.api.schema.{ApiUserContext, UserFacingError}
 import com.prisma.api.server.{GraphQlQuery, GraphQlRequest}
 import com.prisma.sangria.utils.ErrorHandler
+import play.api.libs.json.{JsArray, JsValue}
 import sangria.execution.{Executor, QueryAnalysisError}
-import spray.json.{JsArray, JsValue}
 
 import scala.collection.immutable.Seq
 import scala.concurrent.Future
@@ -36,6 +36,11 @@ case class GraphQlRequestHandlerImpl(
     jsonResult.map(OK -> _)
   }
 
+  def errorExtractor(t: Throwable): Option[Int] = t match {
+    case e: UserFacingError => Some(e.code)
+    case _                  => None
+  }
+
   def handleQuery(
       request: GraphQlRequest,
       query: GraphQlQuery
@@ -47,10 +52,11 @@ case class GraphQlRequestHandlerImpl(
       query.queryString,
       query.variables.toString(),
       apiDependencies.reporter,
-      projectId = Some(request.project.id)
+      projectId = Some(request.project.id),
+      errorCodeExtractor = errorExtractor
     )
 
-    val result = Executor.execute(
+    val result: Future[JsValue] = Executor.execute(
       schema = request.schema,
       queryAst = query.query,
       userContext = context,

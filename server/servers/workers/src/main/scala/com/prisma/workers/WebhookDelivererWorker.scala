@@ -18,8 +18,7 @@ case class WebhookDelivererWorker(
 
   // Current decision: Do not retry delivery, treat all return codes as work item "success" (== ack).
   val consumeFn = (wh: Webhook) => {
-    val startTime = System.currentTimeMillis()
-
+//    val startTime = System.currentTimeMillis()
 //    def handleError(msg: String) = {
 //      val timing    = System.currentTimeMillis() - startTime
 //      val timestamp = Utils.msqlDateTime3Timestamp()

@@ -1,6 +1,6 @@
 {
   "name": "prisma-yml",
-  "version": "1.0.14-6",
+  "version": "1.0.48",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "repository": {
@@ -17,6 +17,7 @@
     "jest": "^21.2.1",
     "prettier": "^1.10.2",
     "ts-jest": "^21.2.4",
+    "ts-node": "^5.0.1",
     "tslint": "^5.6.0",
     "typescript": "^2.6.2"
   },
@@ -28,12 +29,14 @@
     "dotenv": "^4.0.0",
     "fs-extra": "^5.0.0",
     "graphql-request": "^1.5.0",
+    "http-proxy-agent": "^2.1.0",
+    "https-proxy-agent": "^2.2.1",
     "isomorphic-fetch": "^2.2.1",
     "js-yaml": "^3.10.0",
     "json-stable-stringify": "^1.0.1",
     "jsonwebtoken": "^8.1.0",
     "lodash": "^4.17.4",
-    "prisma-json-schema": "^0.0.1",
+    "prisma-json-schema": "0.0.4",
     "replaceall": "^0.1.6",
     "scuid": "^1.0.2",
     "yaml-ast-parser": "^0.0.40"

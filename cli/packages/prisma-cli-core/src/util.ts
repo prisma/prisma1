@@ -41,3 +41,38 @@ export function concatName(
 
   return name
 }
+
+export const defaultDataModel = `\
+type User {
+  id: ID! @unique
+  name: String!
+}
+`
+
+export const defaultDockerCompose = `\
+version: '3'
+services:
+  prisma:
+    image: prismagraphql/prisma:1.7
+    restart: always
+    ports:
+    - "4466:4466"
+    environment:
+      PRISMA_CONFIG: |
+        port: 4466
+        # uncomment the next line and provide the env var PRISMA_MANAGEMENT_API_SECRET=my-secret to activate cluster security
+        # managementApiSecret: my-secret
+`
+
+// legacySecret: old public key
+// managementApiSecret: somesecret
+
+//
+//     databases:
+//       default:
+//         connector: mysql
+//         active: true
+//         host: your-mysql-host
+//         port: 3306
+//         user: someuser
+//         password: existingpw

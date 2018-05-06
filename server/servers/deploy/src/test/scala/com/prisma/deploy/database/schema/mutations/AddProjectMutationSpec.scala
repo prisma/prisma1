@@ -1,8 +1,8 @@
 package com.prisma.deploy.database.schema.mutations
 
-import cool.graph.cuid.Cuid
 import com.prisma.deploy.specutils.DeploySpecBase
 import com.prisma.shared.models.ProjectId
+import cool.graph.cuid.Cuid
 import org.scalatest.{FlatSpec, Matchers}
 
 class AddProjectMutationSpec extends FlatSpec with Matchers with DeploySpecBase {
@@ -35,7 +35,7 @@ class AddProjectMutationSpec extends FlatSpec with Matchers with DeploySpecBase 
 
   "AddProjectMutation" should "fail if a project already exists" in {
     val (project, _) = setupProject(basicTypesGql)
-    val nameAndStage = ProjectId.fromEncodedString(project.id)
+    val nameAndStage = testDependencies.projectIdEncoder.fromEncodedString(project.id)
     server.queryThatMustFail(
       s"""
        |mutation {
@@ -52,5 +52,47 @@ class AddProjectMutationSpec extends FlatSpec with Matchers with DeploySpecBase 
       """.stripMargin,
       4005
     )
+  }
+
+  "AddProjectMutation" should "fail if a service name is reserved" in {
+    testDependencies.projectIdEncoder.reservedServiceAndStageNames.foreach { reserved =>
+      server.queryThatMustFail(
+        s"""
+           |mutation {
+           |  addProject(input: {
+           |    name: "$reserved",
+           |    stage: "default"
+           |  }) {
+           |    project {
+           |      name
+           |      stage
+           |    }
+           |  }
+           |}
+      """.stripMargin,
+        4006
+      )
+    }
+  }
+
+  "AddProjectMutation" should "fail if a stage name is reserved" in {
+    testDependencies.projectIdEncoder.reservedServiceAndStageNames.foreach { reserved =>
+      server.queryThatMustFail(
+        s"""
+           |mutation {
+           |  addProject(input: {
+           |    name: "default",
+           |    stage: "$reserved"
+           |  }) {
+           |    project {
+           |      name
+           |      stage
+           |    }
+           |  }
+           |}
+      """.stripMargin,
+        4007
+      )
+    }
   }
 }

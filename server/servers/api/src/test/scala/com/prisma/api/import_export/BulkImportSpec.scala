@@ -1,13 +1,12 @@
 package com.prisma.api.import_export
 
-import com.prisma.api.ApiBaseSpec
+import com.prisma.api.ApiSpecBase
 import com.prisma.shared.models.Project
 import com.prisma.shared.schema_dsl.SchemaDsl
 import com.prisma.utils.await.AwaitUtils
 import org.scalatest.{FlatSpec, Matchers}
-import spray.json._
 
-class BulkImportSpec extends FlatSpec with Matchers with ApiBaseSpec with AwaitUtils {
+class BulkImportSpec extends FlatSpec with Matchers with ApiSpecBase with AwaitUtils {
 
   val project: Project = SchemaDsl() { schema =>
     val model1: SchemaDsl.ModelBuilder = schema
@@ -40,9 +39,8 @@ class BulkImportSpec extends FlatSpec with Matchers with ApiBaseSpec with AwaitU
     database.setup(project)
   }
 
-  override def beforeEach(): Unit = {
-    database.truncate(project)
-  }
+  override def beforeEach(): Unit = database.truncateProjectTables(project)
+
   val importer = new BulkImport(project)
 
   "Combining the data from the three files" should "work" in {
@@ -125,15 +123,16 @@ class BulkImportSpec extends FlatSpec with Matchers with ApiBaseSpec with AwaitU
 
     val res2 = importer.executeImport(nodes).await(5)
 
-    res2.toString should be("""[{"index":1,"message":"Unknown field 'c' in field list"}]""")
+    res2.toString should be("""["The model Model0 with id just-some-id3 has an unknown field 'c' in field list."]""")
 
     val res = server.query("query{model0s{id, b}}", project)
 
     res.toString should be("""{"data":{"model0s":[{"id":"just-some-id0","b":12},{"id":"just-some-id2","b":13}]}}""")
   }
 
+  //todo postgres stops batch actions once an error occurs and rolls back
   // the order in which the items are created is not deterministic. therefore the error message can vary depending on which item is created last
-  "Inserting a node with a duplicate id" should "return the invalid index but keep on creating" in {
+  "Inserting a node with a duplicate id" should "return the invalid index but keep on creating" ignore {
     val nodes = """{"valueType":"nodes","values":[
                   |{"_typeName": "Model0", "id": "just-some-id4", "b": 12},
                   |{"_typeName": "Model0", "id": "just-some-id5", "b": 13},
@@ -142,11 +141,8 @@ class BulkImportSpec extends FlatSpec with Matchers with ApiBaseSpec with AwaitU
 
     val res2 = importer.executeImport(nodes).await(5)
 
-    println(res2.toString())
-
-    res2.toString should (be("""[{"index":2,"message":" Duplicate entry 'just-some-id5' for key 'PRIMARY'"}]""")
-      or be("""[{"index":1,"message":" Duplicate entry 'just-some-id5' for key 'PRIMARY'"}]"""))
-
+    res2.toString should be(
+      """["Failure inserting Model0 with Id: just-some-id5. Cause: java.sql.SQLIntegrityConstraintViolationException: Duplicate entry 'just-some-id5' for key 'PRIMARY'","Failure inserting RelayRow with Id: just-some-id5. Cause: java.sql.SQLIntegrityConstraintViolationException: Duplicate entry 'just-some-id5' for key 'PRIMARY'"]""")
     val res = server.query("query{model0s{id, b}}", project)
     res.toString should (be("""{"data":{"model0s":[{"id":"just-some-id4","b":12},{"id":"just-some-id5","b":13}]}}""") or
       be("""{"data":{"model0s":[{"id":"just-some-id4","b":12},{"id":"just-some-id5","b":15}]}}"""))

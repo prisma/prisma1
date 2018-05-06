@@ -1,8 +1,8 @@
 package com.prisma.shared.errors
 
-abstract class UserFacingError(message: String, errorCode: Int) extends Exception {
-  val code: Int = errorCode
-}
+//abstract class UserFacingError(message: String, errorCode: Int) extends Exception {
+//  val code: Int = errorCode
+//}
 
 trait SchemaCheckResult
 
@@ -10,7 +10,7 @@ trait WithSchemaError {
   def schemaError: Option[SchemaError] = None
 }
 
-abstract class SystemApiError(message: String, errorCode: Int)                     extends UserFacingError(message, errorCode) with WithSchemaError
+abstract class SystemApiError(message: String, errorCode: Int)                     extends Exception with WithSchemaError
 case class SchemaError(`type`: String, description: String, field: Option[String]) extends SchemaCheckResult
 
 object SchemaError {

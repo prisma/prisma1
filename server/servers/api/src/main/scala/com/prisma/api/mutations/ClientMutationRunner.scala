@@ -18,8 +18,8 @@ object ClientMutationRunner {
       errors             = databaseMutactionVerifier.verify(preparedMutactions.databaseMutactions)
       _                  = if (errors.nonEmpty) throw errors.head
       _                  <- performMutactions(preparedMutactions, clientMutation.projectId, databaseMutactionExecutor, sideEffectMutactionExecutor)
-      dataItem           <- clientMutation.getReturnValue
-    } yield dataItem
+      prismaNode         <- clientMutation.getReturnValue
+    } yield prismaNode
   }
 
   private def performMutactions(

@@ -91,8 +91,16 @@ case class MigrationApplierImpl(
 
   def applyStep(previousSchema: Schema, migration: Migration, step: MigrationStep): Future[Unit] = {
     migrationStepMapper.mutactionFor(previousSchema, migration.schema, step) match {
-      case x if x.isEmpty => Future.unit
-      case list           => Future.sequence(list.map(executeClientMutaction)).map(_ => ())
+      case x if x.isEmpty =>
+        Future.unit
+
+      case list =>
+        list.foldLeft(Future.unit) { (prev, mutaction) =>
+          for {
+            _ <- prev
+            _ <- executeClientMutaction(mutaction)
+          } yield ()
+        }
     }
   }
 
@@ -103,19 +111,7 @@ case class MigrationApplierImpl(
     }
   }
 
-  def executeClientMutaction(mutaction: DeployMutaction): Future[Unit] = {
-//    for {
-//      statements <- mutaction.execute
-//      _          <- clientDatabase.run(statements.sqlAction)
-//    } yield ()
-    mutactionExecutor.execute(mutaction)
-  }
+  def executeClientMutaction(mutaction: DeployMutaction): Future[Unit] = mutactionExecutor.execute(mutaction)
 
-  def executeClientMutactionRollback(mutaction: DeployMutaction): Future[Unit] = {
-//    for {
-//      statements <- mutaction.rollback.get
-//      _          <- clientDatabase.run(statements.sqlAction)
-//    } yield ()
-    mutactionExecutor.rollback(mutaction)
-  }
+  def executeClientMutactionRollback(mutaction: DeployMutaction): Future[Unit] = mutactionExecutor.rollback(mutaction)
 }
