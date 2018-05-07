@@ -135,7 +135,7 @@ export class EndpointDialog {
     const defaultDB = JSON.parse(
       JSON.stringify({
         connector: credentials.type,
-        active: !credentials.alreadyData,
+        migrations: !credentials.alreadyData,
         host: credentials.host,
         port: credentials.port || defaultPorts[credentials.type],
         user: credentials.user,
@@ -295,17 +295,20 @@ export class EndpointDialog {
       message: 'Enter database password',
       key: 'password',
     })
-    // const database = await this.ask({
-    //   message: 'Enter database name (only needed when you already have data)',
-    //   key: 'database',
-    // })
-    // const alreadyData = await this.ask({
-    //   message: 'Do you already have data in the database? (yes/no)',
-    //   key: 'alreadyData',
-    //   defaultValue: 'no',
-    //   validate: value =>
-    //     ['yes', 'no'].includes(value) ? true : 'Please answer either yes or no',
-    // })
+    const database =
+      type === 'postgres'
+        ? await this.ask({
+            message: 'Enter database name',
+            key: 'database',
+          })
+        : null
+    const alreadyData = await this.ask({
+      message: 'Do you already have data in the database? (yes/no)',
+      key: 'alreadyData',
+      defaultValue: 'no',
+      validate: value =>
+        ['yes', 'no'].includes(value) ? true : 'Please answer either yes or no',
+    })
 
     return {
       type,
@@ -313,8 +316,8 @@ export class EndpointDialog {
       port,
       user,
       password,
-      // database,
-      alreadyData: false,
+      database,
+      alreadyData,
     }
   }
 
