@@ -73,6 +73,31 @@ class DeployingUniqueConstraintSpec extends FlatSpec with Matchers with Integrat
     deployServer.deploySchemaThatMustSucceed(project, schema1, 3)
   }
 
+  "Adding a new required String field with a unique constraint" should "work" in {
+
+    val schema =
+      """type Team {
+        |  name: String! @unique
+        |  dummy: String
+        |}"""
+
+    val (project, _) = setupProject(schema)
+
+    apiServer.query("""mutation{createTeam(data:{name:"Bayern", dummy: "String"}){name}}""", project)
+    apiServer.query("""mutation{createTeam(data:{name:"Real", dummy: "String2"}){name}}""", project)
+
+    val schema1 =
+      """type Team {
+        |  name: String! @unique
+        |  dummy: String
+        |  newField: String! @unique
+        |}"""
+
+    val res = deployServer.deploySchemaThatMustError(project, schema1)
+    res.toString should be(
+      """{"data":{"deploy":{"migration":{"applied":0,"revision":0},"errors":[{"description":"You are creating a required field but there are already nodes present that would violate that constraint."}],"warnings":[]}}}""")
+  }
+
   "Adding a new Int field with a unique constraint" should "work" in {
 
     val schema =
