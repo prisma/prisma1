@@ -12,7 +12,7 @@ services:
         databases:
           default:
             connector: postgres
-            active: false
+            migrations: false
             host: test-db
             port: 5432
             user: postgres

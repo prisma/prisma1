@@ -12,7 +12,7 @@ class ConfigLoaderSpec extends WordSpec with Matchers {
                           |databases:
                           |  default:
                           |    connector: mysql
-                          |    active: true
+                          |    migrations: true
                           |    host: localhost
                           |    port: 3306
                           |    user: root
@@ -42,7 +42,7 @@ class ConfigLoaderSpec extends WordSpec with Matchers {
                           |databases:
                           |  default:
                           |    connector: mysql
-                          |    active: true
+                          |    migrations: true
                           |    host: localhost
                           |    port: 3306
                           |    user: root
@@ -71,7 +71,7 @@ class ConfigLoaderSpec extends WordSpec with Matchers {
                           |databases:
                           |  default:
                           |    connector: mysql
-                          |    active: true
+                          |    migrations: true
                           |    host: localhost
                           |    port: 3306
                           |    user: root
@@ -104,7 +104,7 @@ class ConfigLoaderSpec extends WordSpec with Matchers {
                             |databases:
                             |  default:
                             |    connector: mysql
-                            |    active: true
+                            |    migrations: true
                             |    host: localhost
                             |    port: 3306
                             |    user: root
@@ -125,7 +125,7 @@ class ConfigLoaderSpec extends WordSpec with Matchers {
                           |databases:
                           |  default:
                           |    connector: mysql
-                          |    active: notaboolean
+                          |    migrations: notaboolean
                           |    host: localhost
                           |    port: 3306
                           |    user: root

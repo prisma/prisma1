@@ -12,7 +12,7 @@ services:
         databases:
           default:
             connector: mysql
-            active: true
+            migrations: true
             host: test-db
             port: 3306
             user: root
