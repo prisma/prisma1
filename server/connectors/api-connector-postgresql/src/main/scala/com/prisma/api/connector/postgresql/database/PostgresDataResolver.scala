@@ -14,10 +14,14 @@ import slick.sql.SqlAction
 
 import scala.concurrent.{ExecutionContext, Future}
 
-case class PostgresDataResolver(project: Project, readonlyClientDatabase: PostgresProfile.backend.DatabaseDef)(implicit ec: ExecutionContext)
+case class PostgresDataResolver(
+    project: Project,
+    readonlyClientDatabase: PostgresProfile.backend.DatabaseDef,
+    schemaName: Option[String]
+)(implicit ec: ExecutionContext)
     extends DataResolver {
 
-  val queryBuilder = PostgresApiDatabaseQueryBuilder(schemaName = project.id)
+  val queryBuilder = PostgresApiDatabaseQueryBuilder(schemaName = schemaName.getOrElse(project.id))
 
   override def resolveByGlobalId(globalId: IdGCValue): Future[Option[PrismaNode]] = { //todo rewrite this to use normal query?
     if (globalId.value == "viewer-fixed") return Future.successful(Some(PrismaNode(globalId, RootGCValue.empty, Some("Viewer"))))

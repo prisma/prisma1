@@ -1,7 +1,7 @@
 package com.prisma.api.connector.postgresql
 
 import com.prisma.api.connector._
-import com.prisma.api.connector.postgresql.database.{Databases, PostGresApiDatabaseMutationBuilder}
+import com.prisma.api.connector.postgresql.database.{Databases, PostGresApiDatabaseMutationBuilder, PostgresDataResolver}
 import com.prisma.api.connector.postgresql.impl._
 import com.prisma.config.DatabaseConfig
 import com.prisma.gc_values.{IdGCValue, RootGCValue}
@@ -13,9 +13,9 @@ import slick.jdbc.TransactionIsolation
 import scala.concurrent.{ExecutionContext, Future}
 
 case class PassivePostgresApiConnector(config: DatabaseConfig)(implicit ec: ExecutionContext) extends ApiConnector {
-  lazy val databases = Databases.initialize(config)
-
-  val activeConnector = PostgresApiConnector(config)
+  lazy val databases          = Databases.initialize(config)
+  val activeConnector         = PostgresApiConnector(config)
+  val activeMutactionExecutor = activeConnector.databaseMutactionExecutor
 
   override def initialize() = {
     databases
@@ -30,12 +30,9 @@ case class PassivePostgresApiConnector(config: DatabaseConfig)(implicit ec: Exec
     } yield ()
   }
 
-  override def databaseMutactionExecutor: DatabaseMutactionExecutor = {
-    val activeExecutor = activeConnector.databaseMutactionExecutor.asInstanceOf[DatabaseMutactionExecutorImpl]
-    PassiveDatabaseMutactionExecutorImpl(activeExecutor, config.database)
-  }
-  override def dataResolver(project: Project)       = activeConnector.dataResolver(project)
-  override def masterDataResolver(project: Project) = activeConnector.masterDataResolver(project)
+  override def databaseMutactionExecutor: DatabaseMutactionExecutor = PassiveDatabaseMutactionExecutorImpl(activeMutactionExecutor, config.database)
+  override def dataResolver(project: Project)                       = PostgresDataResolver(project, databases.readOnly, schemaName = config.schema)
+  override def masterDataResolver(project: Project)                 = PostgresDataResolver(project, databases.readOnly, schemaName = config.schema)
 
   override def projectIdEncoder: ProjectIdEncoder = activeConnector.projectIdEncoder
 
