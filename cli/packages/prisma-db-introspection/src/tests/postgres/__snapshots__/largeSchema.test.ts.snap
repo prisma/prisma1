@@ -7,7 +7,7 @@ Object {
   actor_id: Int!
   first_name: String!
   last_name: String!
-  last_update: DateTime! @pgDefault(value = \\"now()\\")
+  last_update: DateTime! @pgDefault(value: \\"now()\\")
   film_actors: [Film_actor]
 }
 
@@ -24,7 +24,7 @@ type Address @pgTable(name: \\"address\\") {
   address_id: Int!
   city: City @pgRelation(column: \\"city_id\\")!
   district: String!
-  last_update: DateTime! @pgDefault(value = \\"now()\\")
+  last_update: DateTime! @pgDefault(value: \\"now()\\")
   phone: String!
   postal_code: String
   customers: [Customer]
@@ -34,7 +34,7 @@ type Address @pgTable(name: \\"address\\") {
 
 type Category @pgTable(name: \\"category\\") {
   category_id: Int!
-  last_update: DateTime! @pgDefault(value = \\"now()\\")
+  last_update: DateTime! @pgDefault(value: \\"now()\\")
   name: String!
   film_categorys: [Film_category]
 }
@@ -43,27 +43,27 @@ type City @pgTable(name: \\"city\\") {
   city: String!
   city_id: Int!
   country: Country @pgRelation(column: \\"country_id\\")!
-  last_update: DateTime! @pgDefault(value = \\"now()\\")
+  last_update: DateTime! @pgDefault(value: \\"now()\\")
   addresss: [Address]
 }
 
 type Country @pgTable(name: \\"country\\") {
   country: String!
   country_id: Int!
-  last_update: DateTime! @pgDefault(value = \\"now()\\")
+  last_update: DateTime! @pgDefault(value: \\"now()\\")
   citys: [City]
 }
 
 type Customer @pgTable(name: \\"customer\\") {
   active: Int
-  activebool: Boolean! @pgDefault(value = true)
+  activebool: Boolean! @pgDefault(value: true)
   address: Address @pgRelation(column: \\"address_id\\")!
-  create_date: null! @pgDefault(value = ('now)
+  create_date: null! @pgDefault(value: ('now)
   customer_id: Int!
   email: String
   first_name: String!
   last_name: String!
-  last_update: DateTime @pgDefault(value = \\"now()\\")
+  last_update: DateTime @pgDefault(value: \\"now()\\")
   store_id: Int!
   payments: [Payment]
   rentals: [Rental]
@@ -86,13 +86,13 @@ type Film @pgTable(name: \\"film\\") {
   film_id: Int!
   fulltext: null!
   language: Language @pgRelation(column: \\"language_id\\")!
-  last_update: DateTime! @pgDefault(value = \\"now()\\")
+  last_update: DateTime! @pgDefault(value: \\"now()\\")
   length: Int
-  rating: null @pgDefault(value = G)
+  rating: null @pgDefault(value: G)
   release_year: Int
-  rental_duration: Int! @pgDefault(value = 3)
-  rental_rate: Float! @pgDefault(value = 4.99)
-  replacement_cost: Float! @pgDefault(value = 19.99)
+  rental_duration: Int! @pgDefault(value: 3)
+  rental_rate: Float! @pgDefault(value: 4.99)
+  replacement_cost: Float! @pgDefault(value: 19.99)
   special_features: null
   title: String!
   film_actors: [Film_actor]
@@ -103,13 +103,13 @@ type Film @pgTable(name: \\"film\\") {
 type Film_actor @pgTable(name: \\"film_actor\\") {
   actor: Actor @pgRelation(column: \\"actor_id\\")!
   film: Film @pgRelation(column: \\"film_id\\")!
-  last_update: DateTime! @pgDefault(value = \\"now()\\")
+  last_update: DateTime! @pgDefault(value: \\"now()\\")
 }
 
 type Film_category @pgTable(name: \\"film_category\\") {
   category: Category @pgRelation(column: \\"category_id\\")!
   film: Film @pgRelation(column: \\"film_id\\")!
-  last_update: DateTime! @pgDefault(value = \\"now()\\")
+  last_update: DateTime! @pgDefault(value: \\"now()\\")
 }
 
 type Film_list @pgTable(name: \\"film_list\\") {
@@ -126,14 +126,14 @@ type Film_list @pgTable(name: \\"film_list\\") {
 type Inventory @pgTable(name: \\"inventory\\") {
   film: Film @pgRelation(column: \\"film_id\\")!
   inventory_id: Int!
-  last_update: DateTime! @pgDefault(value = \\"now()\\")
+  last_update: DateTime! @pgDefault(value: \\"now()\\")
   store_id: Int!
   rentals: [Rental]
 }
 
 type Language @pgTable(name: \\"language\\") {
   language_id: Int!
-  last_update: DateTime! @pgDefault(value = \\"now()\\")
+  last_update: DateTime! @pgDefault(value: \\"now()\\")
   name: String!
   films: [Film]
 }
@@ -161,7 +161,7 @@ type Payment @pgTable(name: \\"payment\\") {
 type Rental @pgTable(name: \\"rental\\") {
   customer: Customer @pgRelation(column: \\"customer_id\\")!
   inventory: Inventory @pgRelation(column: \\"inventory_id\\")!
-  last_update: DateTime! @pgDefault(value = \\"now()\\")
+  last_update: DateTime! @pgDefault(value: \\"now()\\")
   rental_date: DateTime!
   rental_id: Int!
   return_date: DateTime
@@ -181,12 +181,12 @@ type Sales_by_store @pgTable(name: \\"sales_by_store\\") {
 }
 
 type Staff @pgTable(name: \\"staff\\") {
-  active: Boolean! @pgDefault(value = true)
+  active: Boolean! @pgDefault(value: true)
   address: Address @pgRelation(column: \\"address_id\\")!
   email: String
   first_name: String!
   last_name: String!
-  last_update: DateTime! @pgDefault(value = \\"now()\\")
+  last_update: DateTime! @pgDefault(value: \\"now()\\")
   password: String
   picture: null
   staff_id: Int!
@@ -210,7 +210,7 @@ type Staff_list @pgTable(name: \\"staff_list\\") {
 
 type Store @pgTable(name: \\"store\\") {
   address: Address @pgRelation(column: \\"address_id\\")!
-  last_update: DateTime! @pgDefault(value = \\"now()\\")
+  last_update: DateTime! @pgDefault(value: \\"now()\\")
   manager_staff: Staff @pgRelation(column: \\"manager_staff_id\\")!
   store_id: Int!
 }

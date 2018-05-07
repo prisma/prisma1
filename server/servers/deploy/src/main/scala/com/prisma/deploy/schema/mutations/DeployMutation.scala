@@ -41,7 +41,7 @@ case class DeployMutation(
     case Failure(e)   => throw InvalidQuery(e.getMessage)
   }
 
-  val validator                                = SchemaSyntaxValidator(args.types)
+  val validator                                = SchemaSyntaxValidator(args.types, isActive = deployConnector.isActive)
   val schemaErrors: immutable.Seq[SchemaError] = validator.validate()
   val inferredTablesFuture                     = deployConnector.databaseIntrospectionInferrer(project.id).infer()
 

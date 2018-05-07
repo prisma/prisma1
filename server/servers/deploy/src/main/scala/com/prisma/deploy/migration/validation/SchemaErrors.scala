@@ -1,7 +1,7 @@
 package com.prisma.deploy.migration.validation
 
 import com.prisma.shared.errors.SchemaCheckResult
-import sangria.ast.{EnumTypeDefinition, TypeDefinition}
+import sangria.ast.{EnumTypeDefinition, ObjectTypeDefinition, TypeDefinition}
 
 import scala.collection.immutable
 
@@ -81,8 +81,23 @@ object SchemaErrors {
     )
   }
 
-  // Brain kaputt, todo find a better solution
   def malformedReservedField(fieldAndType: FieldAndType, requirement: FieldRequirement): SchemaError = {
+    error(
+      fieldAndType,
+      s"The field `${fieldAndType.fieldDef.name}` is reserved and has to have the format: ${requirementMessage(requirement)}."
+    )
+  }
+
+  def missingReservedField(objectType: ObjectTypeDefinition, fieldName: String, requirement: FieldRequirement): SchemaError = {
+    SchemaError(
+      objectType.name,
+      fieldName,
+      s"The required field `$fieldName` is missing and has to have the format: ${requirementMessage(requirement)}."
+    )
+  }
+
+  // Brain kaputt, todo find a better solution
+  def requirementMessage(requirement: FieldRequirement): String = {
     val requiredTypeMessages = requirement.validTypes.map { typeName =>
       requirement match {
         case x @ FieldRequirement(name, _, true, false, false)  => s"$name: $typeName!"
@@ -95,11 +110,7 @@ object SchemaErrors {
         case x @ FieldRequirement(name, _, false, false, false) => s"$name: $typeName"
       }
     }
-
-    error(
-      fieldAndType,
-      s"The field `${fieldAndType.fieldDef.name}` is reserved and has to have the format: ${requiredTypeMessages.mkString(" or ")}."
-    )
+    requiredTypeMessages.mkString(" or ")
   }
 
   def atNodeIsDeprecated(fieldAndType: FieldAndType) = {

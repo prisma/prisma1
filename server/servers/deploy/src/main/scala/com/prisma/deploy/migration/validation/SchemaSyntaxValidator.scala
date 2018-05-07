@@ -55,26 +55,32 @@ object SchemaSyntaxValidator {
     DirectiveRequirement("unique", requiredArguments = Seq.empty, optionalArguments = Seq.empty)
   )
 
+  val idFieldRequirementForPassiveConnectors = FieldRequirement("id", Vector("ID", "Int"), required = true, unique = true, list = false)
+  val idFieldRequirementForActiveConnectors  = FieldRequirement("id", "ID", required = true, unique = true, list = false)
+
   val reservedFieldsRequirementsForAllConnectors = Seq(
     FieldRequirement("updatedAt", "DateTime", required = true, unique = false, list = false),
     FieldRequirement("createdAt", "DateTime", required = true, unique = false, list = false)
   )
 
-  val reservedFieldsRequirementsForActiveConnectors = reservedFieldsRequirementsForAllConnectors ++ Seq(
-    FieldRequirement("id", "ID", required = true, unique = true, list = false)
-  )
+  val reservedFieldsRequirementsForActiveConnectors  = reservedFieldsRequirementsForAllConnectors ++ Seq(idFieldRequirementForActiveConnectors)
+  val reservedFieldsRequirementsForPassiveConnectors = reservedFieldsRequirementsForAllConnectors ++ Seq(idFieldRequirementForPassiveConnectors)
 
-  val reservedFieldsRequirementsForPassiveConnectors = reservedFieldsRequirementsForAllConnectors ++ Seq(
-    FieldRequirement("id", Vector("ID", "Int"), required = true, unique = true, list = false)
-  )
+  val requiredReservedFields = Vector(idFieldRequirementForPassiveConnectors)
 
-  def apply(schema: String, isActive: Boolean = true): SchemaSyntaxValidator = {
-    val fieldRequirements = if (isActive) reservedFieldsRequirementsForActiveConnectors else reservedFieldsRequirementsForPassiveConnectors
-    SchemaSyntaxValidator(schema, directiveRequirements, fieldRequirements)
+  def apply(schema: String, isActive: Boolean): SchemaSyntaxValidator = {
+    val fieldRequirements         = if (isActive) reservedFieldsRequirementsForActiveConnectors else reservedFieldsRequirementsForPassiveConnectors
+    val requiredFieldRequirements = if (isActive) Vector.empty else requiredReservedFields
+    SchemaSyntaxValidator(schema, directiveRequirements, fieldRequirements, requiredFieldRequirements)
   }
 }
 
-case class SchemaSyntaxValidator(schema: String, directiveRequirements: Seq[DirectiveRequirement], reservedFieldsRequirements: Seq[FieldRequirement]) {
+case class SchemaSyntaxValidator(
+    schema: String,
+    directiveRequirements: Seq[DirectiveRequirement],
+    reservedFieldsRequirements: Seq[FieldRequirement],
+    requiredReservedFields: Seq[FieldRequirement]
+) {
   import com.prisma.deploy.migration.DataSchemaAstExtensions._
 
   val result   = SdlSchemaParser.parse(schema)
@@ -94,6 +100,7 @@ case class SchemaSyntaxValidator(schema: String, directiveRequirements: Seq[Dire
     } yield FieldAndType(objectType, field)
 
     val reservedFieldsValidations = validateReservedFields(allFieldAndTypes)
+    val requiredFieldValidations  = validateRequiredReservedFields(doc.objectTypes)
     val duplicateTypeValidations  = validateDuplicateTypes(doc.objectTypes, allFieldAndTypes)
     val duplicateFieldValidations = validateDuplicateFields(allFieldAndTypes)
     val missingTypeValidations    = validateMissingTypes(allFieldAndTypes)
@@ -102,6 +109,7 @@ case class SchemaSyntaxValidator(schema: String, directiveRequirements: Seq[Dire
     val fieldDirectiveValidations = allFieldAndTypes.flatMap(validateFieldDirectives)
 
     reservedFieldsValidations ++
+      requiredFieldValidations ++
       duplicateTypeValidations ++
       duplicateFieldValidations ++
       missingTypeValidations ++
@@ -117,6 +125,15 @@ case class SchemaSyntaxValidator(schema: String, directiveRequirements: Seq[Dire
       failedChecks = reservedFieldsRequirements.filterNot { _.isValid(field.fieldDef) }
       if failedChecks.nonEmpty
     } yield SchemaErrors.malformedReservedField(field, failedChecks.head)
+  }
+
+  def validateRequiredReservedFields(objectTypes: Seq[ObjectTypeDefinition]): Seq[SchemaError] = {
+    for {
+      objectType   <- objectTypes
+      fieldNames   = objectType.fields.map(_.name)
+      failedChecks = requiredReservedFields.filterNot(req => fieldNames.contains(req.name))
+      if failedChecks.nonEmpty
+    } yield SchemaErrors.missingReservedField(objectType, failedChecks.head.name, failedChecks.head)
   }
 
   def validateDuplicateTypes(objectTypes: Seq[ObjectTypeDefinition], fieldAndTypes: Seq[FieldAndType]): Seq[SchemaError] = {
