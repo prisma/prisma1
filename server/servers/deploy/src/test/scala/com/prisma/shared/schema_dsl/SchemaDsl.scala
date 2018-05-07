@@ -1,31 +1,51 @@
 package com.prisma.shared.schema_dsl
 
-import com.prisma.deploy.connector.InferredTables
+import com.prisma.deploy.connector.{DatabaseIntrospectionInferrer, DeployConnector, InferredTables}
 import com.prisma.deploy.migration.inference.{SchemaInferrer, SchemaMapping}
 import com.prisma.gc_values.GCValue
 import com.prisma.shared.models.IdType.Id
 import com.prisma.shared.models._
+import com.prisma.utils.await.AwaitUtils
 import cool.graph.cuid.Cuid
 import sangria.parser.QueryParser
 
-object SchemaDsl {
+object SchemaDsl extends AwaitUtils {
 
   import scala.collection.mutable.Buffer
 
   def apply()  = schema()
   def schema() = SchemaBuilder()
 
-  def fromString(id: String = TestIds.testProjectId, withReservedFields: Boolean = true)(sdlString: String): Project = {
+  def fromString(id: String = TestIds.testProjectId)(sdlString: String): Project = {
+    fromString(id, InferredTables.empty, withReservedFields = true)(sdlString)
+  }
+
+  def fromPassiveConnectorSdl(
+      id: String = TestIds.testProjectId,
+      deployConnector: DeployConnector,
+      withReservedFields: Boolean = true
+  )(sdlString: String): Project = {
+    val inferredTables = deployConnector.databaseIntrospectionInferrer(id).infer().await()
+    fromString(id, inferredTables, withReservedFields)(sdlString)
+  }
+
+  private def fromString(
+      id: String,
+      inferredTables: InferredTables,
+      withReservedFields: Boolean
+  )(sdlString: String): Project = {
     val emptyBaseSchema    = Schema()
     val emptySchemaMapping = SchemaMapping.empty
     val sqlDocument        = QueryParser.parse(sdlString.stripMargin).get
-    val schema             = SchemaInferrer(withReservedFields).infer(emptyBaseSchema, emptySchemaMapping, sqlDocument, InferredTables.empty).get
+    val schema             = SchemaInferrer(withReservedFields).infer(emptyBaseSchema, emptySchemaMapping, sqlDocument, inferredTables).get
     TestProject().copy(id = id, schema = schema)
   }
 
-  case class SchemaBuilder(modelBuilders: Buffer[ModelBuilder] = Buffer.empty,
-                           enums: Buffer[Enum] = Buffer.empty,
-                           functions: Buffer[com.prisma.shared.models.Function] = Buffer.empty) {
+  case class SchemaBuilder(
+      modelBuilders: Buffer[ModelBuilder] = Buffer.empty,
+      enums: Buffer[Enum] = Buffer.empty,
+      functions: Buffer[com.prisma.shared.models.Function] = Buffer.empty
+  ) {
 
     def apply(fn: SchemaBuilder => Unit): Project = {
       fn(this)

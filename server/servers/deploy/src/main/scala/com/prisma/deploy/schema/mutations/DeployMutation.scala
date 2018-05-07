@@ -43,7 +43,7 @@ case class DeployMutation(
 
   val validator                                = SchemaSyntaxValidator(args.types)
   val schemaErrors: immutable.Seq[SchemaError] = validator.validate()
-  val inferredTablesFuture                     = deployConnector.databaseIntrospectionInferrer(project).infer()
+  val inferredTablesFuture                     = deployConnector.databaseIntrospectionInferrer(project.id).infer()
 
   override def execute: Future[MutationResult[DeployMutationPayload]] = {
     if (schemaErrors.nonEmpty) {

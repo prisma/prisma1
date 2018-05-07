@@ -66,7 +66,7 @@ case class MySqlDeployConnector(config: DatabaseConfig)(implicit ec: ExecutionCo
     } yield ()
   }
 
-  override def databaseIntrospectionInferrer(project: Project) = EmptyDatabaseIntrospectionInferrer
+  override def databaseIntrospectionInferrer(projectId: String) = EmptyDatabaseIntrospectionInferrer
 }
 
 trait TableTruncationHelpers {

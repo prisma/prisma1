@@ -2,7 +2,6 @@ package com.prisma.deploy.connector.postgresql
 
 import com.prisma.config.DatabaseConfig
 import com.prisma.deploy.connector.DeployConnector
-import com.prisma.shared.models.Project
 
 import scala.concurrent.ExecutionContext
 
@@ -13,8 +12,8 @@ class PassivePostgresDeployConnector(dbConfig: DatabaseConfig)(implicit ec: Exec
 
   override def isActive = false
 
-  override def databaseIntrospectionInferrer(project: Project) = {
-    val schema = dbConfig.schema.getOrElse(project.id)
+  override def databaseIntrospectionInferrer(projectId: String) = {
+    val schema = dbConfig.schema.getOrElse(projectId)
     DatabaseIntrospectionInferrerImpl(clientDatabase, schema)
   }
 }

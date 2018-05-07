@@ -68,7 +68,7 @@ case class PostgresDeployConnector(dbConfig: DatabaseConfig)(implicit ec: Execut
     } yield ()
   }
 
-  override def databaseIntrospectionInferrer(project: Project): DatabaseIntrospectionInferrer = EmptyDatabaseIntrospectionInferrer
+  override def databaseIntrospectionInferrer(projectId: String): DatabaseIntrospectionInferrer = EmptyDatabaseIntrospectionInferrer
 }
 
 trait TableTruncationHelpers {

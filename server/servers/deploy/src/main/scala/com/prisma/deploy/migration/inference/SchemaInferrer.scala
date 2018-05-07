@@ -32,7 +32,9 @@ object SchemaInferrer {
 sealed trait ProjectSyntaxError                                                                                            extends Exception
 case class RelationDirectiveNeeded(type1: String, type1Fields: Vector[String], type2: String, type2Fields: Vector[String]) extends ProjectSyntaxError
 case class InvalidGCValue(err: InvalidValueForScalarType)                                                                  extends ProjectSyntaxError
-case class GenericProblem(msg: String)                                                                                     extends ProjectSyntaxError
+case class GenericProblem(msg: String) extends ProjectSyntaxError {
+  override def toString = msg
+}
 
 case class ProjectSyntaxErrorException(error: ProjectSyntaxError) extends Exception
 
@@ -305,15 +307,15 @@ case class SchemaInferrerImpl(
         val relatedType   = sdl.objectType_!(relationField.typeName)
 
         val modelAColumnOpt = if (isThisModelA) {
-          tableDirective.thisColumn.orElse(inferredTable.flatMap(_.columnForTable(relatedType.tableName)))
+          tableDirective.thisColumn.orElse(inferredTable.flatMap(_.columnForTable(objectType.tableName)))
         } else {
-          tableDirective.otherColumn.orElse(inferredTable.flatMap(_.columnForTable(objectType.tableName)))
+          tableDirective.otherColumn.orElse(inferredTable.flatMap(_.columnForTable(relatedType.tableName)))
         }
 
         val modelBColumnOpt = if (isThisModelA) {
-          tableDirective.otherColumn.orElse(inferredTable.flatMap(_.columnForTable(objectType.tableName)))
+          tableDirective.otherColumn.orElse(inferredTable.flatMap(_.columnForTable(relatedType.tableName)))
         } else {
-          tableDirective.thisColumn.orElse(inferredTable.flatMap(_.columnForTable(relatedType.tableName)))
+          tableDirective.thisColumn.orElse(inferredTable.flatMap(_.columnForTable(objectType.tableName)))
         }
 
         for {
@@ -339,15 +341,15 @@ case class SchemaInferrerImpl(
           .flatMap { inferredTable =>
             val isThisModelA = isModelA(objectType.name, relationField.typeName)
             val modelAColumnOpt = if (isThisModelA) {
-              inferredTable.columnForTable(relatedType.tableName)
-            } else {
               inferredTable.columnForTable(objectType.tableName)
+            } else {
+              inferredTable.columnForTable(relatedType.tableName)
             }
 
             val modelBColumnOpt = if (isThisModelA) {
-              inferredTable.columnForTable(objectType.tableName)
-            } else {
               inferredTable.columnForTable(relatedType.tableName)
+            } else {
+              inferredTable.columnForTable(objectType.tableName)
             }
             for {
               modelAColumn <- modelAColumnOpt
