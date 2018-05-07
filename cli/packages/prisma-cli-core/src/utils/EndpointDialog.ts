@@ -1,4 +1,4 @@
-import { Output, Client, Config } from 'prisma-cli-engine'
+import { Output, Client, Config, getPing } from 'prisma-cli-engine'
 import * as inquirer from 'inquirer'
 import chalk from 'chalk'
 import { Cluster, Environment } from 'prisma-yml'
@@ -233,10 +233,14 @@ export class EndpointDialog {
         this.out.action.stop()
         cluster = new Cluster(this.out, 'custom', 'http://localhost:4466')
         break
-      case 'sandbox-eu1':
-        cluster = this.env.clusters.find(c => c.name === 'prisma-eu1')
-      case 'sandbox-us1':
-        cluster = this.env.clusters.find(c => c.name === 'prisma-us1')
+      case 'Demo Server':
+        const demoCluster = await this.getDemoCluster()
+        if (!demoCluster) {
+          return this.getEndpoint()
+        } else {
+          cluster = demoCluster
+        }
+        break
       default:
         const result = this.getClusterAndWorkspaceFromChoice(choice)
         if (!result.workspace) {
@@ -396,19 +400,18 @@ export class EndpointDialog {
   ) {
     const sandboxChoices = [
       [
-        'sandbox-eu1',
-        'Free development server on Prisma Cloud (incl. database)',
+        'Demo Server',
+        'Hosted demo environment incl. database (requires login)',
       ],
       [
-        'sandbox-us1',
-        'Free development server on Prisma Cloud (incl. database)',
+        'User other server',
+        'Manually provide endpoint of a running Prisma Server',
       ],
     ]
     if (fromScratch && !hasDockerComposeYml) {
       const fixChoices = [
         ['Use existing database', 'Connect to existing database'],
         ['Create new database', 'Set up a local database using Docker'],
-        ['Use other server', 'Connect to an existing prisma server'],
       ]
       const rawChoices = [...fixChoices, ...sandboxChoices]
       const choices = this.convertChoices(rawChoices)
@@ -422,7 +425,7 @@ export class EndpointDialog {
         ...choices.slice(0, fixChoices.length),
         new inquirer.Separator('                       '),
         new inquirer.Separator(
-          chalk.bold('Or use a free hosted Prisma sandbox (includes database)'),
+          chalk.bold('Or deploy to an existing Prisma server:'),
         ),
         ...choices.slice(fixChoices.length, 5),
       ]
@@ -437,12 +440,7 @@ export class EndpointDialog {
     } else {
       const clusterChoices =
         clusters.length > 0
-          ? clusters.map(c => [
-              `${c.workspaceSlug ? `${c.workspaceSlug}/` : ''}${this.encodeName(
-                c.name,
-              )}`,
-              this.getClusterDescription(c),
-            ])
+          ? clusters.map(this.getClusterChoice)
           : sandboxChoices
       const rawChoices = [
         ['local', 'Local Prisma server (connected to MySQL)'],
@@ -477,6 +475,53 @@ export class EndpointDialog {
         pageSize: finalChoices.length,
       }
     }
+  }
+
+  private getClusterName(c: Cluster): string {
+    return `${c.workspaceSlug ? `${c.workspaceSlug}/` : ''}${this.encodeName(
+      c.name,
+    )}`
+  }
+
+  private getClusterChoice = (c: Cluster): string[] => {
+    return [this.getClusterName(c), this.getClusterDescription(c)]
+  }
+
+  private async getDemoCluster(): Promise<Cluster | null> {
+    if (!this.env.cloudSessionKey) {
+      await this.client.login()
+    }
+    return this.askForDemoCluster()
+  }
+
+  private async askForDemoCluster(): Promise<Cluster> {
+    const clusters = this.getCloudClusters().slice(0, 2)
+    const eu1Cluster = clusters.find(c => c.name === 'prisma-eu1')!
+    const us1Cluster = clusters.find(c => c.name === 'prisma-us1')!
+    const eu1Ping = await getPing('EU_WEST_1')
+    const us1Ping = await getPing('US_WEST_2')
+    const eu1Name = this.getClusterName(eu1Cluster)
+    const us1Name = this.getClusterName(us1Cluster)
+    const eu1Choice = [
+      eu1Name,
+      `Hosted on AWS in eu-west-1 using MySQL [${eu1Ping.toFixed()}ms latency]`,
+    ]
+    const us1Choice = [
+      us1Name,
+      `Hosted on AWS in us-west-2 using MySQL [${eu1Ping.toFixed()}ms latency]`,
+    ]
+    const rawChoices =
+      eu1Ping < us1Ping ? [eu1Choice, us1Choice] : [us1Choice, eu1Choice]
+    const choices = this.convertChoices(rawChoices)
+
+    const { cluster } = await this.out.prompt({
+      name: 'cluster',
+      type: 'list',
+      message: `Choose the region of your demo server`,
+      choices,
+    })
+
+    return eu1Name === cluster ? eu1Cluster : us1Cluster
   }
 
   private getClusterDescription(c: Cluster) {

@@ -18,7 +18,13 @@ Object {
       "shared": false,
       "workspaceSlug": undefined,
     },
-    "database": undefined,
+    "database": Object {
+      "host": "db",
+      "password": "prisma",
+      "port": 3306,
+      "type": "mysql",
+      "user": "root",
+    },
     "datamodel": "type User {
   id: ID! @unique
   name: String!
@@ -48,6 +54,7 @@ services:
 ",
     "endpoint": "http://localhost:4466",
     "localClusterRunning": false,
+    "newDatabase": true,
     "service": "default",
     "stage": "default",
     "workspace": undefined,
@@ -73,7 +80,13 @@ Object {
       "shared": false,
       "workspaceSlug": undefined,
     },
-    "database": undefined,
+    "database": Object {
+      "host": "db",
+      "password": "prisma",
+      "port": 3306,
+      "type": "mysql",
+      "user": "root",
+    },
     "datamodel": "type User {
   id: ID! @unique
   name: String!
@@ -103,6 +116,7 @@ services:
 ",
     "endpoint": "http://localhost:4466",
     "localClusterRunning": true,
+    "newDatabase": true,
     "service": "default",
     "stage": "default",
     "workspace": undefined,
@@ -151,52 +165,23 @@ exports[`init choose local 2`] = `
   datamodel.graphql    GraphQL SDL-based datamodel (foundation for database)
   docker-compose.yml   Docker configuration file
 
-Run docker-compose up -d.
+To start your Prisma Server run docker-compose up -d.
 Then you can run $ prisma deploy to deploy your database service.
+
+Prisma connects to your MySQL database with user prisma and password prisma.
+To change this, please have a look in docker-compose.yml
+
+For next steps follow this tutorial: https://bit.ly/prisma-graphql-first-steps
 "
 `;
 
 exports[`init choose local 3`] = `""`;
 
-exports[`init test project 1`] = `
-Object {
-  "datamodel.graphql": "",
-  "docker-compose.yml": "version: '3'
-services:
-  prisma:
-    restart: always
-    ports:
-    - \\"4466:4466\\"
-    environment:
-      PRISMA_CONFIG: |
-        port: 4466
-        # uncomment the next line and provide the env var PRISMA_MANAGEMENT_API_SECRET=my-secret to activate cluster security
-        # managementApiSecret: my-secret
-        databases:
-          default:
-            connector: postgres
-            migrations: true
-            host: localhost
-            port: 5432",
-  "prisma.yml": "endpoint: http://localhost:4466
-datamodel: datamodel.graphql",
-}
-`;
+exports[`init test project 1`] = `Object {}`;
 
-exports[`init test project 2`] = `
-"Created 3 new files:                                                                          
-
-  prisma.yml           Prisma service definition
-  datamodel.graphql    GraphQL SDL-based datamodel (foundation for database)
-  docker-compose.yml   Docker configuration file
-
-Run docker-compose up -d.
-Then you can run $ prisma deploy to deploy your database service.
-"
-`;
+exports[`init test project 2`] = `""`;
 
 exports[`init test project 3`] = `
 "
-Connecting to database... ✔
-"
+Connecting to database..."
 `;

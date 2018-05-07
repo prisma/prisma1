@@ -1,3 +1,5 @@
+export { getPing } from './Client/ping'
+
 export { Config } from './Config'
 export { Command } from './Command'
 export { CLI, run } from './CLI'
