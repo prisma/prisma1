@@ -12,7 +12,7 @@ object PostgresDeployDatabaseMutationBuilder {
   def createClientDatabaseForProject(projectId: String) = {
 
     val createFunction = SimpleDBIO[Unit] { x =>
-      val query                             = """CREATE OR REPLACE FUNCTION raise_exception(text) RETURNS void as $$
+      val query                             = s"""CREATE OR REPLACE FUNCTION "$projectId".raise_exception(text)""" + """RETURNS void as $$
                                                      BEGIN
                                                         RAISE EXCEPTION '%', $1;
                                                      END;
@@ -46,7 +46,6 @@ object PostgresDeployDatabaseMutationBuilder {
   def dropScalarListTable(projectId: String, modelName: String, fieldName: String) = sqlu"""DROP TABLE "#$projectId"."#${modelName}_#${fieldName}""""
 
   def createTable(projectId: String, name: String) = {
-    // todo update timestamp https://stackoverflow.com/questions/1035980/update-timestamp-when-row-is-updated-in-postgresql
 
     sqlu"""CREATE TABLE "#$projectId"."#$name"
     ("id" VARCHAR (25) NOT NULL,
@@ -88,8 +87,7 @@ object PostgresDeployDatabaseMutationBuilder {
     val sqlType    = sqlTypeForScalarTypeIdentifier(typeIdentifier)
     val nullString = if (isRequired) "NOT NULL" else "NULL"
     val uniqueAction = isUnique match {
-      case true =>
-        sqlu"""CREATE UNIQUE INDEX "#$projectId.#$tableName.#$columnName._UNIQUE" ON "#$projectId"."#$tableName"("#$columnName" ASC);"""
+      case true  => sqlu"""CREATE UNIQUE INDEX "#$projectId.#$tableName.#$columnName._UNIQUE" ON "#$projectId"."#$tableName"("#$columnName" ASC);"""
       case false => DBIOAction.successful(())
     }
 
