@@ -19,6 +19,15 @@ object MysqlDeployDatabaseQueryBuilder {
     sql"select exists (select Count(*)from `#$projectId`.`#$relationTableName` Group by `#${relationSide.toString}` having Count(*) > 1)"
   }
 
+  def existsDuplicateValueByModelAndField(projectId: String, modelName: String, fieldName: String) = {
+    sql"""SELECT EXISTS(
+             Select Count(*)
+             FROM `#$projectId`.`#$modelName`
+             GROUP BY `#$fieldName`
+             HAVING COUNT(*) > 1
+          )"""
+  }
+
   def existsNullByModelAndScalarField(projectId: String, modelName: String, fieldName: String) = {
     sql"""SELECT EXISTS(Select `id` FROM `#$projectId`.`#$modelName`
           WHERE `#$projectId`.`#$modelName`.#$fieldName IS NULL)"""

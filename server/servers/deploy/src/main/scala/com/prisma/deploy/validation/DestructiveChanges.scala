@@ -110,6 +110,7 @@ case class DestructiveChanges(deployConnector: DeployConnector, project: Project
     val goesFromRelationToScalar = oldField.isRelation && x.relation.isDefined && x.relation.get.isEmpty
 
     val becomesRequired = x.isRequired.contains(true)
+    val becomesUnique   = x.isUnique.contains(true)
 
     def warnings: Future[Vector[SchemaWarning]] = cardinalityChanges || typeChanges || goesFromRelationToScalar || goesFromScalarToRelation match {
       case true =>
@@ -121,7 +122,7 @@ case class DestructiveChanges(deployConnector: DeployConnector, project: Project
         validationSuccessful
     }
 
-    def errors: Future[Vector[SchemaError]] = becomesRequired match {
+    def requiredErrors: Future[Vector[SchemaError]] = becomesRequired match {
       case true =>
         clientDataResolver.existsNullByModelAndField(model, oldField).map {
           case true =>
@@ -136,11 +137,27 @@ case class DestructiveChanges(deployConnector: DeployConnector, project: Project
         validationSuccessful
     }
 
+    def uniqueErrors: Future[Vector[SchemaError]] = becomesUnique match {
+      case true =>
+        clientDataResolver.existsDuplicateValueByModelAndField(model, oldField).map {
+          case true =>
+            Vector(
+              SchemaError(`type` = model.name,
+                          field = oldField.name,
+                          "You are making a field unique, but there are already nodes that would violate that constraint."))
+          case false => Vector.empty
+        }
+
+      case false =>
+        validationSuccessful
+    }
+
     for {
-      warnings: Vector[SchemaWarning] <- warnings
-      errors: Vector[SchemaError]     <- errors
+      warnings: Vector[SchemaWarning]    <- warnings
+      requiredError: Vector[SchemaError] <- requiredErrors
+      uniqueError: Vector[SchemaError]   <- uniqueErrors
     } yield {
-      warnings ++ errors
+      warnings ++ requiredError ++ uniqueError
     }
   }
 
