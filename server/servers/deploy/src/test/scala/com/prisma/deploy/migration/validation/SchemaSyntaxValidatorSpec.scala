@@ -338,7 +338,7 @@ class SchemaSyntaxValidatorSpec extends WordSpecLike with Matchers {
         |}
       """.stripMargin
 
-    val result = SchemaSyntaxValidator(schema, directiveRequirements, reservedFieldsRequirements = Vector.empty).validate
+    val result = SchemaSyntaxValidator(schema, directiveRequirements, reservedFieldsRequirements = Vector.empty, requiredReservedFields = Vector.empty).validate
     result should have(size(0))
   }
 
@@ -354,7 +354,7 @@ class SchemaSyntaxValidatorSpec extends WordSpecLike with Matchers {
         |}
       """.stripMargin
 
-    val result = SchemaSyntaxValidator(schema, directiveRequirements, reservedFieldsRequirements = Vector.empty).validate
+    val result = SchemaSyntaxValidator(schema, directiveRequirements, reservedFieldsRequirements = Vector.empty, requiredReservedFields = Vector.empty).validate
     result should have(size(2))
     val error1 = result.head
     error1.`type` should equal("Todo")
@@ -480,7 +480,7 @@ class SchemaSyntaxValidatorSpec extends WordSpecLike with Matchers {
     result should have(size(0))
   }
 
-  "not fail if a model does not specify an id field at all" in {
+  "not fail if a model does not specify an id field at all for an active connector" in {
     val schema =
       """
         |type Todo {
@@ -489,6 +489,20 @@ class SchemaSyntaxValidatorSpec extends WordSpecLike with Matchers {
       """.stripMargin
     val result = SchemaSyntaxValidator(schema).validate
     result should have(size(0))
+  }
+
+  "fail if a model does not specify an id field at all for a passive connector" in {
+    val schema =
+      """
+        |type Todo {
+        |  title: String
+        |}
+      """.stripMargin
+    val result = SchemaSyntaxValidator(schema, isActive = false).validate
+    val error1 = result.head
+    error1.`type` should equal("Todo")
+    error1.field should equal(Some("id"))
+    error1.description should include(s"The required field `id` is missing and has to have the format: id: ID! @unique or id: Int! @unique.")
   }
 
   "fail if there is a duplicate enum in datamodel" in {
