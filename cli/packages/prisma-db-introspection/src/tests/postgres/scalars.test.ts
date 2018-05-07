@@ -2,7 +2,7 @@ import { Introspector } from '../../Introspector'
 import { Client } from 'pg'
 import { connectionDetails } from './connectionDetails'
 
-function introspect(): Promise<string> {
+function introspect(): Promise<{ numTables: number; sdl: string; }> {
   return new Introspector(connectionDetails).introspect('DatabaseIntrospector')
 }
 
