@@ -13,6 +13,9 @@ object Databases {
   // PostgreSQL db used for all Prisma schemas (must be in sync with the deploy connector)
   val defaultDatabase = "prisma"
 
+  // Schema to use in the database
+  val schema = "public" // default
+
   def initialize(dbConfig: DatabaseConfig): Databases = {
     val config   = typeSafeConfigFromDatabaseConfig(dbConfig)
     val masterDb = Database.forConfig("database", config, driver = dbDriver)
@@ -34,7 +37,7 @@ object Databases {
         |database {
         |  dataSourceClass = "slick.jdbc.DriverDataSource"
         |  properties {
-        |    url = "jdbc:postgresql://${dbConfig.host}:${dbConfig.port}/$database"
+        |    url = "jdbc:postgresql://${dbConfig.host}:${dbConfig.port}/$database?currentSchema=$schema"
         |    user = ${dbConfig.user}
         |    password = ${dbConfig.password.getOrElse("")}
         |  }
