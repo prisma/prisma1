@@ -171,7 +171,7 @@ export class Cluster {
   }
 
   getDeployEndpoint() {
-    return `${this.baseUrl}/cluster`
+    return `${this.baseUrl}/management`
   }
 
   async isOnline(): Promise<boolean> {

@@ -185,26 +185,38 @@ export class Client {
           debug(result)
           return result
         } catch (e) {
-          if (
-            e.response &&
-            e.response.errors &&
-            e.response.errors[0] &&
-            e.response.errors[0].code === 3015 &&
-            e.response.errors[0].message.includes('decoded') &&
-            this.env.activeCluster.local
-          ) {
-            if (!process.env.PRISMA_MANAGEMENT_API_SECRET) {
-              throw new Error(
-                `Cluster ${
-                  this.env.activeCluster.name
-                } requires a cluster secret. Please provide it with the env var PRISMA_MANAGEMENT_API_SECRET`,
-              )
-            } else {
-              throw new Error(
-                `Cluster secret in env var PRISMA_MANAGEMENT_API_SECRET does not match for cluster ${
-                  this.env.activeCluster.name
-                }`,
-              )
+          if (e.response && e.response.errors && e.response.errors[0]) {
+            if (
+              e.response.errors[0].code === 3015 &&
+              e.response.errors[0].message.includes('decoded') &&
+              this.env.activeCluster.local
+            ) {
+              if (!process.env.PRISMA_MANAGEMENT_API_SECRET) {
+                throw new Error(
+                  `Cluster ${
+                    this.env.activeCluster.name
+                  } requires a cluster secret. Please provide it with the env var PRISMA_MANAGEMENT_API_SECRET`,
+                )
+              } else {
+                throw new Error(
+                  `Cluster secret in env var PRISMA_MANAGEMENT_API_SECRET does not match for cluster ${
+                    this.env.activeCluster.name
+                  }`,
+                )
+              }
+            }
+
+            if (
+              e.response.errors[0].code === 3016 &&
+              e.response.errors[0].message.includes('management@default')
+            ) {
+              // TODO: make url mutable in graphql client
+              ;(this.clusterClient as any).url = (this
+                .clusterClient as any).url.replace(/management$/, 'cluster')
+
+              const result = await this.clusterClient.request(query, variables)
+              debug(result)
+              return result
             }
           }
 
