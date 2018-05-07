@@ -30,7 +30,7 @@ case class PassivePostgresApiConnector(config: DatabaseConfig)(implicit ec: Exec
     } yield ()
   }
 
-  override def databaseMutactionExecutor: DatabaseMutactionExecutor = PassiveDatabaseMutactionExecutorImpl(activeMutactionExecutor, config.database)
+  override def databaseMutactionExecutor: DatabaseMutactionExecutor = PassiveDatabaseMutactionExecutorImpl(activeMutactionExecutor, config.schema)
   override def dataResolver(project: Project)                       = PostgresDataResolver(project, databases.readOnly, schemaName = config.schema)
   override def masterDataResolver(project: Project)                 = PostgresDataResolver(project, databases.readOnly, schemaName = config.schema)
 
