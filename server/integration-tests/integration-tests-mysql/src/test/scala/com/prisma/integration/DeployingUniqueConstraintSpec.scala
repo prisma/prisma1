@@ -73,7 +73,7 @@ class DeployingUniqueConstraintSpec extends FlatSpec with Matchers with Integrat
     deployServer.deploySchemaThatMustSucceed(project, schema1, 3)
   }
 
-  "Adding a new required String field with a unique constraint" should "work" in {
+  "Adding a new required String field with a unique constraint" should "error" in {
 
     val schema =
       """type Team {
