@@ -1,7 +1,7 @@
 package com.prisma.api
 
 import com.prisma.shared.schema_dsl.SchemaDsl
-import org.scalatest.{FlatSpec, Matchers}
+import org.scalatest.{Assertion, FlatSpec, Matchers}
 
 class Queries extends FlatSpec with Matchers with ApiSpecBase {
 
@@ -29,7 +29,7 @@ class Queries extends FlatSpec with Matchers with ApiSpecBase {
     server.query("""{cars{wheelCount}}""", project).pathAsLong("data.cars.[0].wheelCount") should be(8)
     server.query("""{carsConnection{edges{node{wheelCount}}}}""", project).pathAsLong("data.carsConnection.edges.[0].node.wheelCount") should be(8)
     server.query(s"""{car(where: {id:"${newId}"}){wheelCount}}""", project).pathAsLong("data.car.wheelCount") should be(8)
-    server.query(s"""{node(id:"${newId}"){... on Car { wheelCount }}}""", project).pathAsLong("data.node.wheelCount") should be(8)
+    ifConnectorIsActive { server.query(s"""{node(id:"${newId}"){... on Car { wheelCount }}}""", project).pathAsLong("data.node.wheelCount") should be(8) }
   }
 
   "schema" should "include old nested mutations" in {
