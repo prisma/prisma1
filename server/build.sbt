@@ -343,7 +343,8 @@ val allLibProjects = List(
   jsonUtils,
   cache,
   errorReporting,
-  sangriaUtils
+  sangriaUtils,
+  prismaConfig
 )
 
 val allIntegrationTestProjects = List(
