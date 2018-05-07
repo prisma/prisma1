@@ -36,6 +36,7 @@ export interface GetEndpointResult {
   database?: DatabaseCredentials
   dockerComposeYml: string
   datamodel: string
+  newDatabase: boolean
 }
 
 export interface HandleChoiceInput {
@@ -177,6 +178,7 @@ export class EndpointDialog {
     let credentials
     let dockerComposeYml = defaultDockerCompose
     let datamodel = defaultDataModel
+    let newDatabase = false
 
     switch (choice) {
       case 'Use other server':
@@ -193,14 +195,16 @@ export class EndpointDialog {
           choice === 'Create new database'
             ? await this.askForDatabaseType()
             : 'mysql'
-        dockerComposeYml += this.printDatabaseConfig({
+        credentials = {
           user: type === 'mysql' ? 'root' : 'prisma',
           password: 'prisma',
           type,
           host: 'db',
           port: defaultPorts[type],
-        })
+        }
+        dockerComposeYml += this.printDatabaseConfig(credentials)
         dockerComposeYml += this.printDatabaseService(type)
+        newDatabase = true
         break
       case 'Use existing database':
         credentials = await this.getDatabase()
@@ -280,6 +284,7 @@ export class EndpointDialog {
       database: credentials,
       dockerComposeYml,
       datamodel,
+      newDatabase,
     }
   }
 

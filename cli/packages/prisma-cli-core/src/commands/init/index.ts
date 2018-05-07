@@ -98,6 +98,14 @@ Either try using a new directory name, or remove the files listed above.
       ? `Open the new folder via ${chalk.cyan(`$ cd ${dir}`)}.\n`
       : ``
 
+    const isLocal = results.cluster!.local
+    const dbType = results.database ? results.database.type : ''
+    const beautifulDbTypesMap = {
+      mysql: 'MySQL',
+      postgres: 'PostgreSQL',
+    }
+    const beautifulDbType = beautifulDbTypesMap[dbType] || ''
+
     const deployString = results.cluster!.local
       ? `To start your Prisma Server run ${chalk.cyan(
           'docker-compose up -d',
@@ -114,7 +122,7 @@ Created ${
     'datamodel.graphql',
   )}    GraphQL SDL-based datamodel (foundation for database)
   ${
-    results.cluster!.local
+    isLocal
       ? `${chalk.cyan('docker-compose.yml')}   Docker configuration file`
       : ''
   }
@@ -122,7 +130,14 @@ Created ${
 ${dirString}${deployString}can run ${chalk.cyan(
       '$ prisma deploy',
     )} to deploy your database service.
-
+${
+      results.newDatabase && isLocal
+        ? `\nPrisma connects to your ${beautifulDbType} database with user ${chalk.bold(
+            'prisma',
+          )} and password ${chalk.bold('prisma')}.
+To change this, please have a look in ${chalk.cyan('docker-compose.yml')}\n`
+        : ''
+    }
 For next steps follow this tutorial: https://bit.ly/prisma-graphql-first-steps`)
     const dockerComposeInstalled = await isDockerComposeInstalled()
     if (!dockerComposeInstalled) {
