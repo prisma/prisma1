@@ -20,6 +20,7 @@ case class MysqlInternalDatabaseDefs(dbConfig: DatabaseConfig) {
 
   def typeSafeConfigFromDatabaseConfig(dbConfig: DatabaseConfig, root: Boolean): Config = {
     val pooled = if (dbConfig.pooled) "" else "connectionPool = disabled"
+    val schema = if (root) "" else managementSchemaName
 
     ConfigFactory
       .parseString(s"""
@@ -27,7 +28,7 @@ case class MysqlInternalDatabaseDefs(dbConfig: DatabaseConfig) {
         |  connectionInitSql="set names utf8mb4"
         |  dataSourceClass = "slick.jdbc.DriverDataSource"
         |  properties {
-        |    url = "jdbc:mysql://${dbConfig.host}:${dbConfig.port}/$managementSchemaName?autoReconnect=true&useSSL=false&serverTimeZone=UTC&useUnicode=true&characterEncoding=UTF-8&socketTimeout=60000&usePipelineAuth=false"
+        |    url = "jdbc:mysql://${dbConfig.host}:${dbConfig.port}/$schema?autoReconnect=true&useSSL=false&serverTimeZone=UTC&useUnicode=true&characterEncoding=UTF-8&socketTimeout=60000&usePipelineAuth=false"
         |    user = "${dbConfig.user}"
         |    password = "${dbConfig.password.getOrElse("")}"
         |  }
