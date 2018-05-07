@@ -2,7 +2,7 @@ package com.prisma.deploy.migration.validation
 
 import com.prisma.deploy.validation._
 import com.prisma.shared.models.TypeIdentifier
-import sangria.ast._
+import sangria.ast.{Argument => SangriaArgument, _}
 
 import scala.collection.immutable.Seq
 import scala.util.{Failure, Success}
