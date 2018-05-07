@@ -3,19 +3,19 @@ package com.prisma.deploy.connector.mysql.database
 import slick.jdbc.MySQLProfile.api._
 
 object MysqlInternalDatabaseSchema {
-  def createSchemaActions(recreate: Boolean): DBIOAction[Unit, NoStream, Effect] = {
+  def createSchemaActions(databaseName: String, recreate: Boolean): DBIOAction[Unit, NoStream, Effect] = {
     if (recreate) {
-      DBIO.seq(dropAction, setupActions)
+      DBIO.seq(dropAction(databaseName), setupActions(databaseName))
     } else {
-      setupActions
+      setupActions(databaseName)
     }
   }
 
-  lazy val dropAction = DBIO.seq(sqlu"DROP SCHEMA IF EXISTS `graphcool`;")
+  def dropAction(db: String) = DBIO.seq(sqlu"DROP SCHEMA IF EXISTS `#$db`;")
 
-  lazy val setupActions = DBIO.seq(
-    sqlu"CREATE SCHEMA IF NOT EXISTS `graphcool` DEFAULT CHARACTER SET latin1;",
-    sqlu"USE `graphcool`;",
+  def setupActions(db: String) = DBIO.seq(
+    sqlu"CREATE SCHEMA IF NOT EXISTS `#$db` DEFAULT CHARACTER SET latin1;",
+    sqlu"USE `#$db`;",
     // Project
     sqlu"""
       CREATE TABLE IF NOT EXISTS `Project` (

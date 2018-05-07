@@ -16,10 +16,11 @@ class InternalTestDatabase extends AwaitUtils {
   val internalDatabaseRoot = databaseDefs.internalDatabaseRoot
   val internalDatabase     = databaseDefs.internalDatabase
 
-  def createInternalDatabaseSchema() = internalDatabaseRoot.run(MysqlInternalDatabaseSchema.createSchemaActions(recreate = true)).await(10)
+  def createInternalDatabaseSchema() =
+    internalDatabaseRoot.run(MysqlInternalDatabaseSchema.createSchemaActions(databaseDefs.managementSchemaName, recreate = true)).await(10)
 
   def truncateTables(): Unit = {
-    val schemas = internalDatabase.run(getTables("graphcool")).await()
+    val schemas = internalDatabase.run(getTables(databaseDefs.managementSchemaName)).await()
     internalDatabase.run(dangerouslyTruncateTables(schemas)).await()
   }
 

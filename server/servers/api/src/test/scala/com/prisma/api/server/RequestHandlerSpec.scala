@@ -35,7 +35,7 @@ class RequestHandlerSpec extends FlatSpec with Matchers with ApiSpecBase with Aw
   val projectWithSecret = TestProject().copy(secrets = Vector("secret"))
 
   def request(authHeader: String) =
-    RawRequest(id = "req-id", json = Json.obj("query" -> "{users}"), ip = "0.0.0.0", sourceHeader = null, authorizationHeader = Some(authHeader))
+    RawRequest(id = "req-id", json = Json.obj("query" -> "{users}"), ip = "0.0.0.0", authorizationHeader = Some(authHeader))
 
   def handler(project: Project) = {
     RequestHandler(

@@ -15,14 +15,12 @@ trait RawRequestAttributes {
   val id: String
   val json: JsValue
   val ip: String
-  val sourceHeader: Option[String]
 }
 
 case class RawRequest(
     id: String,
     json: JsValue,
     ip: String,
-    sourceHeader: Option[String],
     authorizationHeader: Option[String]
 ) extends RawRequestAttributes {
 
@@ -47,7 +45,6 @@ case class RawRequest(
           id = id,
           ip = ip,
           json = json,
-          sourceHeader = sourceHeader,
           project = project,
           schema = schema,
           queries = queries,
@@ -70,7 +67,6 @@ case class GraphQlRequest(
     id: String,
     json: JsValue,
     ip: String,
-    sourceHeader: Option[String],
     project: Project,
     schema: Schema[ApiUserContext, Unit],
     queries: Vector[GraphQlQuery],
