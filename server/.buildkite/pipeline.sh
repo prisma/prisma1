@@ -1,6 +1,7 @@
 #! /bin/bash
 
-declare -a connectors=(mysql postgres postgres-passive)
+#declare -a connectors=(mysql postgres postgres-passive)
+declare -a connectors=(mysql postgres)
 
 # Projects with a locked connector
 static=$(printf "    - label: \":mysql: MySql API connector\"
