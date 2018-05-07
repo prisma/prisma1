@@ -39,7 +39,7 @@ case class PassivePostgresApiConnector(config: DatabaseConfig)(implicit ec: Exec
   override def capabilities = Vector.empty
 }
 
-case class PassiveDatabaseMutactionExecutorImpl(activeExecutor: DatabaseMutactionExecutorImpl, schemaName: Option[String])(implicit ec: ExecutionContext)
+case class PassiveDatabaseMutactionExecutorImpl(activeExecutor: PostgresDatabaseMutactionExecutor, schemaName: Option[String])(implicit ec: ExecutionContext)
     extends DatabaseMutactionExecutor {
 
   override def execute(mutactions: Vector[DatabaseMutaction], runTransactionally: Boolean): Future[Vector[DatabaseMutactionResult]] = {
