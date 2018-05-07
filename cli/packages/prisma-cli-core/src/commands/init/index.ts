@@ -99,7 +99,9 @@ Either try using a new directory name, or remove the files listed above.
       : ``
 
     const deployString = results.cluster!.local
-      ? `Run ${chalk.cyan('docker-compose up -d')}.\nThen you `
+      ? `To start your Prisma Server run ${chalk.cyan(
+          'docker-compose up -d',
+        )}.\nThen you `
       : `You now `
 
     this.out.log(`\
@@ -119,7 +121,9 @@ Created ${
 
 ${dirString}${deployString}can run ${chalk.cyan(
       '$ prisma deploy',
-    )} to deploy your database service.`)
+    )} to deploy your database service.
+
+For next steps follow this tutorial: https://bit.ly/prisma-graphql-first-steps`)
     const dockerComposeInstalled = await isDockerComposeInstalled()
     if (!dockerComposeInstalled) {
       this.out.log(

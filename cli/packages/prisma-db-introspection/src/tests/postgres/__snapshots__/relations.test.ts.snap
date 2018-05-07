@@ -1,7 +1,9 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`Introspector relation with inline relation column 1`] = `
-"type Bill @pgTable(name: \\"bill\\") {
+Object {
+  "numTables": 2,
+  "sdl": "type Bill @pgTable(name: \\"bill\\") {
   bill: String!
   id: Int!
   product: Product @pgRelation(column: \\"product_id\\")
@@ -12,11 +14,14 @@ type Product @pgTable(name: \\"product\\") {
   id: Int!
   bills: [Bill]
 }
-"
+",
+}
 `;
 
 exports[`Introspector relation with relation table 1`] = `
-"type Bill @pgTable(name: \\"bill\\") {
+Object {
+  "numTables": 3,
+  "sdl": "type Bill @pgTable(name: \\"bill\\") {
   bill: String!
   id: Int!
   products: [Product] @pgRelationTable(table: \\"bill_product\\" name: \\"bill_product\\")
@@ -27,11 +32,14 @@ type Product @pgTable(name: \\"product\\") {
   product: String!
   bills: [Bill] @pgRelationTable(table: \\"bill_product\\" name: \\"bill_product\\")
 }
-"
+",
+}
 `;
 
 exports[`Introspector relation with relation table with extra column 1`] = `
-"type Bill @pgTable(name: \\"bill\\") {
+Object {
+  "numTables": 3,
+  "sdl": "type Bill @pgTable(name: \\"bill\\") {
   bill: String!
   id: Int!
   bill_products: [Bill_product]
@@ -48,5 +56,6 @@ type Product @pgTable(name: \\"product\\") {
   product: String!
   bill_products: [Bill_product]
 }
-"
+",
+}
 `;

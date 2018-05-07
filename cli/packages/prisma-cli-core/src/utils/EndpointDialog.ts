@@ -216,7 +216,13 @@ export class EndpointDialog {
         }
         // TODO: ask for postres schema if more than one
         if (schemas && schemas.length > 0) {
-          datamodel = await introspector.introspect(schemas[0])
+          const { numTables, sdl } = await introspector.introspect(schemas[0])
+          if (numTables === 0) {
+            throw new Error(
+              `The provided database doesn't contain any tables. Please either provide another database or choose "No" for "What kind of database do you want to deploy to?"`,
+            )
+          }
+          datamodel = sdl
 
           dockerComposeYml += this.printDatabaseConfig(credentials)
         }
@@ -290,6 +296,13 @@ export class EndpointDialog {
 
   async getDatabase(): Promise<DatabaseCredentials> {
     const type = await this.askForDatabaseType()
+    const alreadyData = await this.ask({
+      message: 'Do you already have data in the database? (yes/no)',
+      key: 'alreadyData',
+      defaultValue: 'no',
+      validate: value =>
+        ['yes', 'no'].includes(value) ? true : 'Please answer either yes or no',
+    })
     const host = await this.ask({
       message: 'Enter database host',
       key: 'host',
@@ -315,13 +328,6 @@ export class EndpointDialog {
             key: 'database',
           })
         : null
-    const alreadyData = await this.ask({
-      message: 'Do you already have data in the database? (yes/no)',
-      key: 'alreadyData',
-      defaultValue: 'no',
-      validate: value =>
-        ['yes', 'no'].includes(value) ? true : 'Please answer either yes or no',
-    })
 
     return {
       type,
@@ -418,7 +424,8 @@ export class EndpointDialog {
       return {
         name: 'choice',
         type: 'list',
-        message: `Connect to your database, set up a new one or use hosted sandbox?`,
+        // message: `Connect to your database, set up a new one or use hosted sandbox?`,
+        message: `Set up a new Prisma server or deploy to an existing server?`,
         choices: finalChoices,
         pageSize: finalChoices.length,
       }
@@ -483,11 +490,12 @@ export class EndpointDialog {
       choices: [
         {
           value: 'mysql',
-          name: 'MySQL',
+          name:
+            'MySQL             MySQL compliant databases like MySQL or MariaDB',
         },
         {
           value: 'postgres',
-          name: 'PostgreSQL',
+          name: 'PostgreSQL        PostgreSQL database',
         },
       ],
       // pageSize: 9,

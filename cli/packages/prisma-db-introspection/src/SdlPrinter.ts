@@ -7,11 +7,11 @@ export interface RelationField {
 }
 
 export class SdlPrinter {
-  async print(tables: Table[]): Promise<string> {
+  print(tables: Table[]): string {
     const candidates = tables.filter(x => !x.isJunctionTable)
 
     const sdl = _.map(candidates, table =>
-      this.printType(table, tables.filter(x => x != table))
+      this.printType(table, tables.filter(x => x != table)),
     )
 
     return sdl.join('\r\n')
@@ -26,14 +26,14 @@ export class SdlPrinter {
       .map(t =>
         t.columns
           .filter(filterFunction)
-          .map(c => ({ remoteColumn: c, remoteTable: t }))
+          .map(c => ({ remoteColumn: c, remoteTable: t })),
       )
       .reduce((acc, next) => acc.concat(next), [])
 
     return `type ${this.capitalizeFirstLetter(table.name)} @pgTable(name: "${
       table.name
     }") {${_.map(nativeFields, column => this.printField(column)).join(
-      ''
+      '',
     )}${relationFields
       .map(field => this.printBackRelationField(field))
       .join('')}
@@ -44,27 +44,27 @@ export class SdlPrinter {
   printBackRelationField(field: RelationField) {
     if (field.remoteTable.isJunctionTable) {
       const otherRemoteTableField = field.remoteTable.columns.filter(
-        x => x.name !== field.remoteColumn.name
+        x => x.name !== field.remoteColumn.name,
       )[0]
       const relatedTable = (otherRemoteTableField.relation as Relation).table
 
       return `\n  ${this.lowerCaseFirstLetter(
-        relatedTable
+        relatedTable,
       )}s: [${this.capitalizeFirstLetter(
-        relatedTable
+        relatedTable,
       )}] @pgRelationTable(table: "${field.remoteTable.name}" name: "${
         field.remoteTable.name
       }")`
     } else {
       return `\n  ${field.remoteTable.name}s: [${this.capitalizeFirstLetter(
-        field.remoteTable.name
+        field.remoteTable.name,
       )}]`
     }
   }
 
   printField(column: Column) {
     return `\n  ${this.printFieldName(column)}: ${this.printFieldType(
-      column
+      column,
     )}${this.printFieldOptional(column)}${this.printFieldDirective(column)}`
   }
 
