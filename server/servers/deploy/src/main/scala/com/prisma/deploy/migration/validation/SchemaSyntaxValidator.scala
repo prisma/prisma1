@@ -68,7 +68,7 @@ object SchemaSyntaxValidator {
 
   val requiredReservedFields = Vector(idFieldRequirementForPassiveConnectors)
 
-  def apply(schema: String, isActive: Boolean = true): SchemaSyntaxValidator = {
+  def apply(schema: String, isActive: Boolean): SchemaSyntaxValidator = {
     val fieldRequirements         = if (isActive) reservedFieldsRequirementsForActiveConnectors else reservedFieldsRequirementsForPassiveConnectors
     val requiredFieldRequirements = if (isActive) Vector.empty else requiredReservedFields
     SchemaSyntaxValidator(schema, directiveRequirements, fieldRequirements, requiredFieldRequirements)

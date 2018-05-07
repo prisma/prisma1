@@ -1,7 +1,9 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`Introspector large example database 1`] = `
-"type Actor @pgTable(name: \\"actor\\") {
+Object {
+  "numTables": 22,
+  "sdl": "type Actor @pgTable(name: \\"actor\\") {
   actor_id: Int!
   first_name: String!
   last_name: String!
@@ -212,5 +214,6 @@ type Store @pgTable(name: \\"store\\") {
   manager_staff: Staff @pgRelation(column: \\"manager_staff_id\\")!
   store_id: Int!
 }
-"
+",
+}
 `;

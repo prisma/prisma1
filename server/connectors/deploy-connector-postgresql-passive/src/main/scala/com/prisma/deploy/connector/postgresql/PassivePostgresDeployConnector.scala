@@ -11,6 +11,6 @@ class PassivePostgresDeployConnector(dbConfig: DatabaseConfig)(implicit ec: Exec
 
   override def databaseIntrospectionInferrer(projectId: String) = {
     val schema = dbConfig.schema.getOrElse(projectId)
-    DatabaseIntrospectionInferrerImpl(internalDatabase, schema)
+    DatabaseIntrospectionInferrerImpl(internalDatabaseRoot, schema)
   }
 }
