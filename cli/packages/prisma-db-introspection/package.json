@@ -1,14 +1,13 @@
 {
   "name": "prisma-db-introspection",
-  "version": "0.0.6",
+  "version": "0.0.7",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "repository": {
-    "url": "https://github.com/graphcool/graphcool/tree/prisma-cli/cli/packages/prisma-db-introspection"
+    "url":
+      "https://github.com/graphcool/graphcool/tree/prisma-cli/cli/packages/prisma-db-introspection"
   },
-  "files": [
-    "dist"
-  ],
+  "files": ["dist"],
   "license": "Apache-2.0",
   "devDependencies": {
     "@types/fs-extra": "^5.0.0",
@@ -48,20 +47,12 @@
     "prepublishOnly": "yarn lint && yarn test && yarn build"
   },
   "jest": {
-    "moduleFileExtensions": [
-      "ts",
-      "tsx",
-      "js",
-      "jsx",
-      "json"
-    ],
+    "moduleFileExtensions": ["ts", "tsx", "js", "jsx", "json"],
     "rootDir": "./src",
     "transform": {
       "^.+\\.(ts|tsx)$": "../../../node_modules/ts-jest/preprocessor.js"
     },
-    "testMatch": [
-      "**/*.test.(ts|js)"
-    ],
+    "testMatch": ["**/*.test.(ts|js)"],
     "globals": {
       "ts-jest": {
         "tsConfigFile": "./tsconfig.json"
