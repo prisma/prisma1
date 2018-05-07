@@ -460,7 +460,7 @@ case class PostgresApiDatabaseMutationBuilder(
 
     (sql"select case when #$notValue exists ( " ++ query ++ sql" )" ++
       sql"then '' " ++
-      sql"else (raise_exception($triggerString))end;").as[String]
+      sql"""else ("#$schemaName".raise_exception($triggerString))end;""").as[String]
   }
 
   //endregion
