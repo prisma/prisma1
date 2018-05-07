@@ -158,7 +158,7 @@ case class PostgresApiDatabaseMutationBuilder(
       update: slick.dbio.DBIOAction[Unit, slick.dbio.NoStream, slick.dbio.Effect with slick.dbio.Effect.All]
   ) = {
 
-    val query     = sql"""select exists ( SELECT "id" FROM "#$schemaName"."#${updatePath.lastModel.name}" WHERE "id" = """ ++ pathQueryForLastChild(updatePath)
+    val query     = sql"""select exists ( SELECT "id" FROM "#$schemaName"."#${updatePath.lastModel.name}" WHERE "id" = """ ++ pathQueryForLastChild(updatePath) ++ sql")"
     val condition = query.as[Boolean]
     // insert creates item first, then the list values
     val qInsert = DBIOAction.seq(createDataItem(createPath, createArgs), createRelayRow(createPath), create)
