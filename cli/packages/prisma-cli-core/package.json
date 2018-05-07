@@ -97,7 +97,7 @@
     "opn": "^5.1.0",
     "pause": "^0.1.0",
     "portfinder": "^1.0.13",
-    "prisma-db-introspection": "0.0.4",
+    "prisma-db-introspection": "0.0.5",
     "prisma-json-schema": "0.0.4",
     "prisma-yml": "1.0.48",
     "scuid": "^1.0.2",

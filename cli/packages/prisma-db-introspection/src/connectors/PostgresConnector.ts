@@ -97,7 +97,8 @@ WHERE constraint_type = 'FOREIGN KEY' AND tc.table_schema = $1::text;`,
     const withColumns = _.map(tables, (originalColumns, key) => {
       const columns = _.map(originalColumns, column => {
         const { typeIdentifier, comment, error } = this.toTypeIdentifier(
-          column.data_type
+          column.data_type,
+          column.column_name
         )
         const relation = this.extractRelation(
           column.table_name,
@@ -159,12 +160,20 @@ WHERE constraint_type = 'FOREIGN KEY' AND tc.table_schema = $1::text;`,
   }
 
   toTypeIdentifier(
-    type: string
+    type: string,
+    field: string
   ): {
     typeIdentifier: TypeIdentifier | null
     comment: string | null
     error: string | null
   } {
+    if (
+      field == 'id' &&
+      (type === 'character' || type === 'character varying' || type === 'text')
+    ) {
+      return { typeIdentifier: 'ID', comment: null, error: null }
+    }
+
     if (type === 'character') {
       return { typeIdentifier: 'String', comment: null, error: null }
     }
