@@ -296,7 +296,7 @@ Note: prisma local start will be deprecated soon in favor of the direct usage of
 
   private async localUp(): Promise<Cluster> {
     await Up.run(this.config)
-    await this.env.load(this.flags)
+    await this.env.load()
     const cluster = this.env.clusterByName('local')!
     this.env.setActiveCluster(cluster)
     return cluster

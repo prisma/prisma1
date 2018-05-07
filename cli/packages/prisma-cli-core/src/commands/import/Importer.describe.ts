@@ -13,7 +13,7 @@ async function load() {
   const out = new Output(config)
 
   const env = new Environment(config.globalConfigPath, out)
-  await env.load({})
+  await env.load()
   const client = new Client(config, env, out)
   const importer = new Importer(
     __dirname + '/fixtures/basic/.import',
