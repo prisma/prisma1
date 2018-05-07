@@ -61,7 +61,7 @@ case class SchemaBuilderImpl(
     listProjectsField,
     listMigrationsField,
     projectField,
-    clusterInfoField,
+    serverInfoField,
     generateProjectTokenField
   )
 
@@ -140,10 +140,10 @@ case class SchemaBuilderImpl(
     }
   )
 
-  val clusterInfoField: Field[SystemUserContext, Unit] = Field(
-    "clusterInfo",
-    ClusterInfoType.Type,
-    description = Some("Information about the cluster"),
+  val serverInfoField: Field[SystemUserContext, Unit] = Field(
+    "serverInfo",
+    ServerInfoType.Type,
+    description = Some("Information about the server"),
     resolve = (ctx) => ()
   )
 
@@ -263,6 +263,6 @@ case class SchemaBuilderImpl(
   }
 
   private def verifyAuthOrThrow(name: String, stage: String, authHeader: Option[String]) = {
-    dependencies.clusterAuth.verify(name, stage, authHeader).get
+    dependencies.managementAuth.verify(name, stage, authHeader).get
   }
 }

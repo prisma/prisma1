@@ -12,7 +12,7 @@ import com.prisma.config.{ConfigLoader, PrismaConfig}
 import com.prisma.connectors.utils.ConnectorUtils
 import com.prisma.deploy.DeployDependencies
 import com.prisma.deploy.migration.migrator.{AsyncMigrator, Migrator}
-import com.prisma.deploy.server.auth.{AsymmetricClusterAuth, DummyClusterAuth, SymmetricClusterAuth}
+import com.prisma.deploy.server.auth.{AsymmetricManagementAuth, DummyManagementAuth, SymmetricManagementAuth}
 import com.prisma.image.{Converters, FunctionValidatorImpl, SingleServerProjectFetcher}
 import com.prisma.messagebus.pubsub.inmemory.InMemoryAkkaPubSub
 import com.prisma.messagebus.queue.inmemory.InMemoryAkkaQueue
@@ -44,11 +44,11 @@ case class PrismaLocalDependencies()(implicit val system: ActorSystem, val mater
   }
 
   override lazy val migrator: Migrator = AsyncMigrator(migrationPersistence, projectPersistence, deployConnector)
-  override lazy val clusterAuth = {
+  override lazy val managementAuth = {
     (config.managementApiSecret, config.legacySecret) match {
-      case (Some(jwtSecret), _) if jwtSecret.nonEmpty => SymmetricClusterAuth(jwtSecret)
-      case (_, Some(publicKey)) if publicKey.nonEmpty => AsymmetricClusterAuth(publicKey)
-      case _                                          => DummyClusterAuth()
+      case (Some(jwtSecret), _) if jwtSecret.nonEmpty => SymmetricManagementAuth(jwtSecret)
+      case (_, Some(publicKey)) if publicKey.nonEmpty => AsymmetricManagementAuth(publicKey)
+      case _                                          => DummyManagementAuth()
     }
   }
 

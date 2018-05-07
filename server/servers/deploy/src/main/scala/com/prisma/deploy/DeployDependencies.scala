@@ -7,7 +7,7 @@ import com.prisma.deploy.connector.DeployConnector
 import com.prisma.deploy.migration.migrator.Migrator
 import com.prisma.deploy.schema.SchemaBuilder
 import com.prisma.deploy.schema.mutations.FunctionValidator
-import com.prisma.deploy.server.auth.ClusterAuth
+import com.prisma.deploy.server.auth.ManagementAuth
 import com.prisma.errors.ErrorReporter
 import com.prisma.messagebus.PubSubPublisher
 import com.prisma.shared.models.ProjectIdEncoder
@@ -23,16 +23,16 @@ trait DeployDependencies extends AwaitUtils {
   implicit def self: DeployDependencies
 
   def migrator: Migrator
-  def clusterAuth: ClusterAuth
+  def managementAuth: ManagementAuth
   def invalidationPublisher: PubSubPublisher[String]
   def apiAuth: Auth
   def deployConnector: DeployConnector
   def functionValidator: FunctionValidator
   def projectIdEncoder: ProjectIdEncoder
 
-  lazy val projectPersistence   = deployConnector.projectPersistence
-  lazy val migrationPersistence = deployConnector.migrationPersistence
-  lazy val clusterSchemaBuilder = SchemaBuilder()
+  lazy val projectPersistence      = deployConnector.projectPersistence
+  lazy val migrationPersistence    = deployConnector.migrationPersistence
+  lazy val managementSchemaBuilder = SchemaBuilder()
 
   def initialize()(implicit ec: ExecutionContext): Unit = {
     await(deployConnector.initialize(), seconds = 30)

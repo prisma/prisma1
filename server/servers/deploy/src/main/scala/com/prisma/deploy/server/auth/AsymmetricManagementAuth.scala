@@ -7,9 +7,9 @@ import play.api.libs.json._
 
 import scala.util.{Failure, Success, Try}
 
-case class AsymmetricClusterAuth(publicKey: String) extends ClusterAuth {
-  import ClusterAuth._
+case class AsymmetricManagementAuth(publicKey: String) extends ManagementAuth {
   import pdi.jwt.{Jwt, JwtAlgorithm, JwtOptions}
+  import ManagementAuth._
 
   override def verify(name: String, stage: String, authHeaderOpt: Option[String]): Try[Unit] = Try {
     authHeaderOpt match {
