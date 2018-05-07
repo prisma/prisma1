@@ -119,8 +119,21 @@ object ConfigLoader {
         val connLimit   = extractIntOpt("connectionLimit", db)
         val pooled      = extractBooleanOpt("pooled", db)
         val database    = extractStringOpt("database", db)
+        val schema      = extractStringOpt("schema", db)
 
-        DatabaseConfig(dbName, dbConnector, dbActive, dbHost, dbPort, dbUser, dbPass, connLimit, pooled.getOrElse(true), database)
+        DatabaseConfig(
+          name = dbName,
+          connector = dbConnector,
+          active = dbActive,
+          host = dbHost,
+          port = dbPort,
+          user = dbUser,
+          password = dbPass,
+          connectionLimit = connLimit,
+          pooled = pooled.getOrElse(true),
+          database = database,
+          schema = schema
+        )
     }.toSeq
 
     if (databases.isEmpty) {
@@ -203,7 +216,8 @@ case class DatabaseConfig(
     password: Option[String],
     connectionLimit: Option[Int],
     pooled: Boolean,
-    database: Option[String]
+    database: Option[String],
+    schema: Option[String]
 )
 
 abstract class ConfigError(reason: String)       extends Exception(reason)
