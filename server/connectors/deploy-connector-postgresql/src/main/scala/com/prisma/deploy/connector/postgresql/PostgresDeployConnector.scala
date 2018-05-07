@@ -67,6 +67,8 @@ case class PostgresDeployConnector(dbConfig: DatabaseConfig)(implicit ec: Execut
       _ <- internalDatabase.shutdown
     } yield ()
   }
+
+  override def databaseIntrospectionInferrer(projectId: String): DatabaseIntrospectionInferrer = EmptyDatabaseIntrospectionInferrer
 }
 
 trait TableTruncationHelpers {

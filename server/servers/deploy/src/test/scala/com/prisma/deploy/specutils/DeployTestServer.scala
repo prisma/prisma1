@@ -132,9 +132,11 @@ case class DeployTestServer()(implicit dependencies: DeployDependencies) extends
       """.stripMargin)
   }
 
-  def deploySchema(project: Project, schema: String): Project = {
-    deployHelper(project.id, schema.stripMargin, Vector.empty)
-    dependencies.projectPersistence.load(project.id).await.get
+  def deploySchema(project: Project, schema: String): Project = deploySchema(project.id, schema)
+
+  def deploySchema(projectId: String, schema: String): Project = {
+    deployHelper(projectId, schema.stripMargin, Vector.empty)
+    dependencies.projectPersistence.load(projectId).await.get
   }
 
   def deploySchemaThatMustSucceed(project: Project, schema: String, revision: Int, force: Boolean = false): JsValue = {
@@ -143,8 +145,12 @@ case class DeployTestServer()(implicit dependencies: DeployDependencies) extends
     res
   }
 
-  def deploySchemaThatMustError(project: Project, schema: String, force: Boolean = false): JsValue = {
-    deployHelper(project.id, schema, Vector.empty, shouldFail = true, force = force)
+  def deploySchemaThatMustError(project: Project, schema: String, force: Boolean = false): JsValue = deploySchemaThatMustError(project.id, schema, force)
+
+  def deploySchemaThatMustError(projectId: String, schema: String): JsValue = deploySchemaThatMustError(projectId, schema, force = false)
+
+  def deploySchemaThatMustError(projectId: String, schema: String, force: Boolean): JsValue = {
+    deployHelper(projectId, schema, Vector.empty, shouldFail = true, force = force)
   }
 
   def deploySchemaThatMustWarn(project: Project, schema: String, force: Boolean = false): JsValue = {

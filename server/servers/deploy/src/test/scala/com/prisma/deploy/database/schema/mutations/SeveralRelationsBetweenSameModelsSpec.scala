@@ -1,9 +1,9 @@
 package com.prisma.deploy.database.schema.mutations
 
-import com.prisma.deploy.specutils.DeploySpecBase
+import com.prisma.deploy.specutils.ActiveDeploySpecBase
 import org.scalatest.{FlatSpec, Matchers}
 
-class SeveralRelationsBetweenSameModelsSpec extends FlatSpec with Matchers with DeploySpecBase {
+class SeveralRelationsBetweenSameModelsSpec extends FlatSpec with Matchers with ActiveDeploySpecBase {
 
   "DeployMutation" should "be able to name a relation that previously had no name" in {
 

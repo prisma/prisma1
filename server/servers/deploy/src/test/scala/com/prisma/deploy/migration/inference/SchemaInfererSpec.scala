@@ -1,5 +1,7 @@
 package com.prisma.deploy.migration.inference
 
+import com.prisma.{ConnectorAwareTest, IgnoreActive}
+import com.prisma.deploy.connector.InferredTables
 import com.prisma.shared.models.Manifestations.{FieldManifestation, InlineRelationManifestation, ModelManifestation, RelationTableManifestation}
 import com.prisma.shared.models.{RelationSide, Schema}
 import com.prisma.shared.schema_dsl.SchemaDsl
@@ -346,7 +348,7 @@ class SchemaInfererSpec extends WordSpec with Matchers {
     field.manifestation should equal(Some(FieldManifestation("my_name_column")))
   }
 
-  "handle relation table manifestations" in {
+  "handle relation table manifestations" ignore {
     val types =
       """|type Todo {
          |  name: String!
@@ -355,7 +357,7 @@ class SchemaInfererSpec extends WordSpec with Matchers {
          |type List {
          |  todos: [Todo] @relationTable(table: "list_to_todo", thisColumn: "list_id", otherColumn: "todo_id")
          |}""".stripMargin
-    val schema = infer(emptyProject.schema, types).get
+    val schema = infer(emptyProject.schema, types, isActive = false).get
 
     val relation = schema.getModelByName_!("List").getFieldByName_!("todos").relation.get
     // assert model ids to make sure that the generated manifestation refers to the right modelAColumn/modelBColumn
@@ -366,7 +368,7 @@ class SchemaInfererSpec extends WordSpec with Matchers {
     relation.manifestation should equal(Some(expectedManifestation))
   }
 
-  "handle inline relation manifestations" in {
+  "handle inline relation manifestations" ignore {
     val types =
       """
          |type List {
@@ -378,7 +380,7 @@ class SchemaInfererSpec extends WordSpec with Matchers {
          |  list: List @inline(column: "list_id")
          |}
          |""".stripMargin
-    val schema = infer(emptyProject.schema, types).get
+    val schema = infer(emptyProject.schema, types, isActive = false).get
 
     val relation = schema.getModelByName_!("List").getFieldByName_!("todos").relation.get
 
@@ -386,32 +388,32 @@ class SchemaInfererSpec extends WordSpec with Matchers {
     relation.manifestation should equal(Some(expectedManifestation))
   }
 
-  "add hidden reserved fields if addReservedFields is true" in {
+  "add hidden reserved fields if isActive is true" in {
     val types =
       """|type Todo {
          |  name: String!
          |}""".stripMargin
-    val schema = infer(emptyProject.schema, types, addReservedFields = true).get
+    val schema = infer(emptyProject.schema, types, isActive = true).get
 
     val model = schema.getModelByName_!("Todo")
     model.fields should have(size(4))
     model.fields.map(_.name) should equal(List("name", "id", "updatedAt", "createdAt"))
   }
 
-  "do not add hidden reserved fields if addReservedFields is false" in {
+  "do not add hidden reserved fields if isActive is false" in {
     val types =
       """|type Todo {
          |  name: String!
          |}""".stripMargin
-    val schema = infer(emptyProject.schema, types, addReservedFields = false).get
+    val schema = infer(emptyProject.schema, types, isActive = false).get
 
     val model = schema.getModelByName_!("Todo")
     model.fields should have(size(1))
     model.fields.map(_.name) should equal(List("name"))
   }
 
-  def infer(schema: Schema, types: String, mapping: SchemaMapping = SchemaMapping.empty, addReservedFields: Boolean = true): Or[Schema, ProjectSyntaxError] = {
+  def infer(schema: Schema, types: String, mapping: SchemaMapping = SchemaMapping.empty, isActive: Boolean = true): Or[Schema, ProjectSyntaxError] = {
     val document = QueryParser.parse(types).get
-    SchemaInferrer(addReservedFields).infer(schema, mapping, document)
+    SchemaInferrer(isActive).infer(schema, mapping, document, InferredTables.empty)
   }
 }

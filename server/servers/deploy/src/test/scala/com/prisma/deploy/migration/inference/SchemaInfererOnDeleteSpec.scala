@@ -1,5 +1,6 @@
 package com.prisma.deploy.migration.inference
 
+import com.prisma.deploy.connector.InferredTables
 import com.prisma.shared.models.{OnDelete, Schema}
 import com.prisma.shared.schema_dsl.SchemaDsl
 import org.scalactic.Or
@@ -168,6 +169,6 @@ class SchemaInfererOnDeleteSpec extends WordSpec with Matchers {
 
   def infer(schema: Schema, types: String, mapping: SchemaMapping = SchemaMapping.empty): Or[Schema, ProjectSyntaxError] = {
     val document = QueryParser.parse(types).get
-    inferer.infer(schema, mapping, document)
+    inferer.infer(schema, mapping, document, InferredTables.empty)
   }
 }

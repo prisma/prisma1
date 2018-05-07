@@ -3,13 +3,14 @@ package com.prisma.deploy.schema.mutations
 import com.prisma.deploy.DeployDependencies
 import com.prisma.deploy.connector.{DeployConnector, MigrationPersistence, ProjectPersistence}
 import com.prisma.deploy.migration._
-import com.prisma.deploy.migration.inference.{InvalidGCValue, MigrationStepsInferrer, RelationDirectiveNeeded, SchemaInferrer}
+import com.prisma.deploy.migration.inference._
 import com.prisma.deploy.migration.migrator.Migrator
 import com.prisma.deploy.migration.validation.{SchemaError, SchemaSyntaxValidator, SchemaWarning}
 import com.prisma.deploy.schema.InvalidQuery
 import com.prisma.deploy.validation.DestructiveChanges
 import com.prisma.messagebus.pubsub.Only
 import com.prisma.shared.models.{Function, Migration, MigrationStep, Project, Schema, ServerSideSubscriptionFunction, UpdateSecrets, WebhookDelivery}
+import com.prisma.utils.await.AwaitUtils
 import org.scalactic.{Bad, Good, Or}
 import sangria.ast.Document
 import sangria.parser.QueryParser
@@ -31,7 +32,8 @@ case class DeployMutation(
 )(
     implicit ec: ExecutionContext,
     dependencies: DeployDependencies
-) extends Mutation[DeployMutationPayload] {
+) extends Mutation[DeployMutationPayload]
+    with AwaitUtils {
 
   val projectId = dependencies.projectIdEncoder.toEncodedString(args.name, args.stage)
   val graphQlSdl: Document = QueryParser.parse(args.types) match {
@@ -41,6 +43,7 @@ case class DeployMutation(
 
   val validator                                = SchemaSyntaxValidator(args.types)
   val schemaErrors: immutable.Seq[SchemaError] = validator.validate()
+  val inferredTablesFuture                     = deployConnector.databaseIntrospectionInferrer(project.id).infer()
 
   override def execute: Future[MutationResult[DeployMutationPayload]] = {
     if (schemaErrors.nonEmpty) {
@@ -58,10 +61,9 @@ case class DeployMutation(
     }
   }
 
-  private def performDeployment: Future[MutationSuccess[DeployMutationPayload]] = {
+  private def performDeployment: Future[MutationSuccess[DeployMutationPayload]] = inferredTablesFuture.flatMap { inferredTables =>
     val schemaMapping = schemaMapper.createMapping(graphQlSdl)
-
-    schemaInferrer.infer(project.schema, schemaMapping, graphQlSdl) match {
+    schemaInferrer.infer(project.schema, schemaMapping, graphQlSdl, inferredTables) match {
       case Good(inferredNextSchema) =>
         val functionsOrErrors = getFunctionModelsOrErrors(args.functions)
 
@@ -71,7 +73,11 @@ case class DeployMutation(
               MutationSuccess(DeployMutationPayload(args.clientMutationId, Some(Migration.empty(project.id)), errors = schemaErrors ++ errors, Seq.empty)))
 
           case Good(functionsForInput) =>
-            val steps                  = migrationStepsInferrer.infer(project.schema, inferredNextSchema, schemaMapping)
+            val steps = if (deployConnector.isActive) {
+              migrationStepsInferrer.infer(project.schema, inferredNextSchema, schemaMapping)
+            } else {
+              Vector.empty
+            }
             val existingDataValidation = DestructiveChanges(deployConnector, project, inferredNextSchema, steps)
             val checkResults           = existingDataValidation.checkAgainstExistingData
 
@@ -111,6 +117,7 @@ case class DeployMutation(
               errors = List(err match {
                 case RelationDirectiveNeeded(t1, _, t2, _) => SchemaError.global(s"Relation directive required for types $t1 and $t2.")
                 case InvalidGCValue(gcError)               => SchemaError.global(s"Invalid value '${gcError.value}' for type ${gcError.typeIdentifier}.")
+                case GenericProblem(msg)                   => SchemaError.global(msg)
               }),
               warnings = Seq.empty
             ))
@@ -151,8 +158,12 @@ case class DeployMutation(
   }
 
   private def handleMigration(nextSchema: Schema, steps: Vector[MigrationStep], functions: Vector[Function]): Future[Option[Migration]] = {
-    val migrationNeeded = steps.nonEmpty || functions.nonEmpty
-    val isNotDryRun     = !args.dryRun.getOrElse(false)
+    val migrationNeeded = if (deployConnector.isActive) {
+      steps.nonEmpty || functions.nonEmpty
+    } else {
+      project.schema != nextSchema
+    }
+    val isNotDryRun = !args.dryRun.getOrElse(false)
     if (migrationNeeded && isNotDryRun) {
       invalidateSchema()
       migrator.schedule(project.id, nextSchema, steps, functions).map(Some(_))

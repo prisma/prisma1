@@ -2,6 +2,7 @@ package com.prisma.api.connector.postgresql.impl
 
 import com.prisma.api.connector._
 import com.prisma.api.connector.postgresql.DatabaseMutactionInterpreter
+import com.prisma.api.connector.postgresql.database.PostGresApiDatabaseMutationBuilder
 import slick.jdbc.MySQLProfile.api._
 import slick.jdbc.TransactionIsolation
 
@@ -12,10 +13,11 @@ case class DatabaseMutactionExecutorImpl(clientDb: Database)(implicit ec: Execut
   override def execute(mutactions: Vector[DatabaseMutaction], runTransactionally: Boolean): Future[Vector[DatabaseMutactionResult]] = {
     val interpreters        = mutactions.map(interpreterFor)
     val combinedErrorMapper = interpreters.map(_.errorMapper).reduceLeft(_ orElse _)
+    val mutationBuilder     = PostGresApiDatabaseMutationBuilder(schemaName = mutactions.head.project.id)
 
     val singleAction = runTransactionally match {
-      case true  => DBIO.sequence(interpreters.map(_.newAction)).transactionally
-      case false => DBIO.sequence(interpreters.map(_.newAction))
+      case true  => DBIO.sequence(interpreters.map(_.newAction(mutationBuilder))).transactionally
+      case false => DBIO.sequence(interpreters.map(_.newAction(mutationBuilder)))
     }
 
     clientDb

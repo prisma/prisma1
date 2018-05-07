@@ -6,7 +6,7 @@ import com.prisma.api.connector.postgresql.{PassivePostgresApiConnector, Postgre
 import com.prisma.config.PrismaConfig
 import com.prisma.deploy.connector.DeployConnector
 import com.prisma.deploy.connector.mysql.MySqlDeployConnector
-import com.prisma.deploy.connector.postgresql.PostgresDeployConnector
+import com.prisma.deploy.connector.postgresql.{PassivePostgresDeployConnector, PostgresDeployConnector}
 
 import scala.concurrent.ExecutionContext
 
@@ -28,7 +28,7 @@ object ConnectorUtils {
       case ("mysql", true)     => MySqlDeployConnector(databaseConfig)
       case ("mysql", false)    => sys.error("There is not passive mysql deploy connector yet!")
       case ("postgres", true)  => PostgresDeployConnector(databaseConfig)
-      case ("postgres", false) => PostgresDeployConnector(databaseConfig)
+      case ("postgres", false) => new PassivePostgresDeployConnector(databaseConfig)
       case (conn, _)           => sys.error(s"Unknown connector $conn")
     }
   }

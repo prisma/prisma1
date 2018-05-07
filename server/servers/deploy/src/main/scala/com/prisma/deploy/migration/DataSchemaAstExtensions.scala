@@ -63,6 +63,10 @@ object DataSchemaAstExtensions {
     def field(name: String): Option[FieldDefinition] = objectType.fields.find(_.name == name)
 
     def description: Option[String] = objectType.directiveArgumentAsString("description", "text")
+
+    def tableName: String = tableNameDirective.getOrElse(objectType.name)
+    def tableNameDirective: Option[String] =
+      objectType.directiveArgumentAsString("model", "table").orElse(objectType.directiveArgumentAsString("pgTable", "name"))
   }
 
   implicit class CoolField(val fieldDefinition: FieldDefinition) extends AnyVal {
@@ -78,7 +82,10 @@ object DataSchemaAstExtensions {
 
     def typeName: String = fieldDefinition.fieldType.namedType.name
 
-    def isUnique: Boolean = fieldDefinition.directive("unique").isDefined
+    def columnName: Option[String] =
+      fieldDefinition.directiveArgumentAsString("field", "column").orElse(fieldDefinition.directiveArgumentAsString("pgColumn", "name"))
+
+    def isUnique: Boolean = fieldDefinition.directive("unique").isDefined || fieldDefinition.directive("pqUnique").isDefined
 
     def isRequired: Boolean = fieldDefinition.fieldType.isRequired
 
@@ -107,24 +114,27 @@ object DataSchemaAstExtensions {
     def hasDefaultValueDirective: Boolean    = defaultValue.isDefined
     def hasOldDefaultValueDirective: Boolean = oldDefaultValue.isDefined
     def description: Option[String]          = fieldDefinition.directiveArgumentAsString("description", "text")
-    def defaultValue: Option[String]         = fieldDefinition.directiveArgumentAsString("default", "value")
+    def defaultValue: Option[String] =
+      fieldDefinition.directiveArgumentAsString("default", "value").orElse(fieldDefinition.directiveArgumentAsString("pgDefault", "value"))
     def oldDefaultValue: Option[String]      = fieldDefinition.directiveArgumentAsString("defaultValue", "value")
     def relationName: Option[String]         = fieldDefinition.directiveArgumentAsString("relation", "name")
     def previousRelationName: Option[String] = fieldDefinition.directiveArgumentAsString("relation", "oldName").orElse(relationName)
 
     def relationTableDirective: Option[RelationTableDirective] = {
       for {
-        tableName   <- fieldDefinition.directiveArgumentAsString("relationTable", "table")
-        thisColumn  <- fieldDefinition.directiveArgumentAsString("relationTable", "thisColumn")
-        otherColumn <- fieldDefinition.directiveArgumentAsString("relationTable", "otherColumn")
+        tableName <- fieldDefinition.directiveArgumentAsString("pgRelationTable", "table")
+        thisColumn = fieldDefinition
+          .directiveArgumentAsString("pgRelationTable", "thisColumn")
+          .orElse(fieldDefinition.directiveArgumentAsString("pgRelationTable", "relationColumn"))
+        otherColumn = fieldDefinition
+          .directiveArgumentAsString("pgRelationTable", "otherColumn")
+          .orElse(fieldDefinition.directiveArgumentAsString("pgRelationTable", "targetColumn"))
       } yield RelationTableDirective(table = tableName, thisColumn = thisColumn, otherColumn = otherColumn)
     }
 
-    def inlineRelationDirective: Option[InlineRelationDirective] = {
-      for {
-        column <- fieldDefinition.directiveArgumentAsString("inline", "column")
-      } yield InlineRelationDirective(column)
-    }
+    def inlineRelationDirective: InlineRelationDirective =
+      InlineRelationDirective(
+        fieldDefinition.directiveArgumentAsString("inline", "column").orElse(fieldDefinition.directiveArgumentAsString("pgRelation", "column")))
   }
 
   implicit class CoolEnumType(val enumType: EnumTypeDefinition) extends AnyVal {
@@ -195,6 +205,6 @@ object DataSchemaAstExtensions {
 }
 
 object DirectiveTypes {
-  case class RelationTableDirective(table: String, thisColumn: String, otherColumn: String)
-  case class InlineRelationDirective(column: String)
+  case class RelationTableDirective(table: String, thisColumn: Option[String], otherColumn: Option[String])
+  case class InlineRelationDirective(column: Option[String])
 }

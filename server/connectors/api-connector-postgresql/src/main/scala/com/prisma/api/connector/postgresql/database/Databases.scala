@@ -27,7 +27,7 @@ object Databases {
         |database {
         |  dataSourceClass = "slick.jdbc.DriverDataSource"
         |  properties {
-        |    url = "jdbc:postgresql://${dbConfig.host}:${dbConfig.port}/"
+        |    url = "jdbc:postgresql://${dbConfig.host}:${dbConfig.port}/${dbConfig.database.getOrElse("")}"
         |    user = ${dbConfig.user}
         |    password = ${dbConfig.password.getOrElse("")}
         |  }
