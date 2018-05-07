@@ -455,6 +455,31 @@ class SchemaSyntaxValidatorSpec extends WordSpecLike with Matchers {
     error1.description should include(s"The field `id` is reserved and has to have the format: id: ID! @unique.")
   }
 
+  "fail if an id field does not match the valid types for a passive connector" in {
+    val schema =
+      """
+        |type Todo {
+        |  id: Float
+        |}
+      """.stripMargin
+    val result = SchemaSyntaxValidator(schema, isActive = false).validate
+    val error1 = result.head
+    error1.`type` should equal("Todo")
+    error1.field should equal(Some("id"))
+    error1.description should include(s"The field `id` is reserved and has to have the format: id: ID! @unique or id: Int! @unique.")
+  }
+
+  "not fail if an id field is of type Int for a passive connector" in {
+    val schema =
+      """
+        |type Todo {
+        |  id: Int! @unique
+        |}
+      """.stripMargin
+    val result = SchemaSyntaxValidator(schema, isActive = false).validate
+    result should have(size(0))
+  }
+
   "not fail if a model does not specify an id field at all" in {
     val schema =
       """

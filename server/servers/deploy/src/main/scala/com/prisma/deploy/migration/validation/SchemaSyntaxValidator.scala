@@ -13,12 +13,17 @@ case class Argument(name: String, isValid: sangria.ast.Value => Boolean)
 
 case class FieldAndType(objectType: ObjectTypeDefinition, fieldDef: FieldDefinition)
 
-case class FieldRequirement(name: String, typeName: String, required: Boolean, unique: Boolean, list: Boolean) {
+object FieldRequirement {
+  def apply(name: String, validType: String, required: Boolean, unique: Boolean, list: Boolean): FieldRequirement = {
+    FieldRequirement(name = name, validTypes = Vector(validType), required = required, unique = unique, list = list)
+  }
+}
+case class FieldRequirement(name: String, validTypes: Vector[String], required: Boolean, unique: Boolean, list: Boolean) {
   import com.prisma.deploy.migration.DataSchemaAstExtensions._
 
   def isValid(field: FieldDefinition): Boolean = {
     field.name == name match {
-      case true  => field.fieldType.namedType.name == typeName && field.isRequired == required && field.isUnique == unique && field.isList == list
+      case true  => validTypes.contains(field.typeName) && field.isRequired == required && field.isUnique == unique && field.isList == list
       case false => true
     }
   }
@@ -50,14 +55,22 @@ object SchemaSyntaxValidator {
     DirectiveRequirement("unique", requiredArguments = Seq.empty, optionalArguments = Seq.empty)
   )
 
-  val reservedFieldsRequirements = Seq(
-    FieldRequirement("id", "ID", required = true, unique = true, list = false),
+  val reservedFieldsRequirementsForAllConnectors = Seq(
     FieldRequirement("updatedAt", "DateTime", required = true, unique = false, list = false),
     FieldRequirement("createdAt", "DateTime", required = true, unique = false, list = false)
   )
 
-  def apply(schema: String): SchemaSyntaxValidator = {
-    SchemaSyntaxValidator(schema, directiveRequirements, reservedFieldsRequirements)
+  val reservedFieldsRequirementsForActiveConnectors = reservedFieldsRequirementsForAllConnectors ++ Seq(
+    FieldRequirement("id", "ID", required = true, unique = true, list = false)
+  )
+
+  val reservedFieldsRequirementsForPassiveConnectors = reservedFieldsRequirementsForAllConnectors ++ Seq(
+    FieldRequirement("id", Vector("ID", "Int"), required = true, unique = true, list = false)
+  )
+
+  def apply(schema: String, isActive: Boolean = true): SchemaSyntaxValidator = {
+    val fieldRequirements = if (isActive) reservedFieldsRequirementsForActiveConnectors else reservedFieldsRequirementsForPassiveConnectors
+    SchemaSyntaxValidator(schema, directiveRequirements, fieldRequirements)
   }
 }
 

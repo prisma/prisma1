@@ -3,6 +3,8 @@ package com.prisma.deploy.migration.validation
 import com.prisma.shared.errors.SchemaCheckResult
 import sangria.ast.{EnumTypeDefinition, TypeDefinition}
 
+import scala.collection.immutable
+
 case class SchemaError(`type`: String, description: String, field: Option[String]) extends SchemaCheckResult
 
 object SchemaError {
@@ -80,21 +82,23 @@ object SchemaErrors {
   }
 
   // Brain kaputt, todo find a better solution
-  def malformedReservedField(fieldAndType: FieldAndType, requirement: FieldRequirement) = {
-    val requiredTypeMessage = requirement match {
-      case x @ FieldRequirement(name, typeName, true, false, false)  => s"$name: $typeName!"
-      case x @ FieldRequirement(name, typeName, true, true, false)   => s"$name: $typeName! @unique"
-      case x @ FieldRequirement(name, typeName, true, true, true)    => s"$name: [$typeName!]! @unique" // is that even possible? Prob. not.
-      case x @ FieldRequirement(name, typeName, true, false, true)   => s"$name: [$typeName!]!"
-      case x @ FieldRequirement(name, typeName, false, true, false)  => s"$name: $typeName @unique"
-      case x @ FieldRequirement(name, typeName, false, true, true)   => s"$name: [$typeName!] @unique"
-      case x @ FieldRequirement(name, typeName, false, false, true)  => s"$name: [$typeName!]"
-      case x @ FieldRequirement(name, typeName, false, false, false) => s"$name: $typeName"
+  def malformedReservedField(fieldAndType: FieldAndType, requirement: FieldRequirement): SchemaError = {
+    val requiredTypeMessages = requirement.validTypes.map { typeName =>
+      requirement match {
+        case x @ FieldRequirement(name, _, true, false, false)  => s"$name: $typeName!"
+        case x @ FieldRequirement(name, _, true, true, false)   => s"$name: $typeName! @unique"
+        case x @ FieldRequirement(name, _, true, true, true)    => s"$name: [$typeName!]! @unique" // is that even possible? Prob. not.
+        case x @ FieldRequirement(name, _, true, false, true)   => s"$name: [$typeName!]!"
+        case x @ FieldRequirement(name, _, false, true, false)  => s"$name: $typeName @unique"
+        case x @ FieldRequirement(name, _, false, true, true)   => s"$name: [$typeName!] @unique"
+        case x @ FieldRequirement(name, _, false, false, true)  => s"$name: [$typeName!]"
+        case x @ FieldRequirement(name, _, false, false, false) => s"$name: $typeName"
+      }
     }
 
     error(
       fieldAndType,
-      s"The field `${fieldAndType.fieldDef.name}` is reserved and has to have the format: $requiredTypeMessage."
+      s"The field `${fieldAndType.fieldDef.name}` is reserved and has to have the format: ${requiredTypeMessages.mkString(" or ")}."
     )
   }
 
