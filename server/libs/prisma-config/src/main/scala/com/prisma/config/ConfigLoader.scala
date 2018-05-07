@@ -113,7 +113,7 @@ object ConfigLoader {
       case (dbName, dbMap) =>
         val db          = extractScalaMap(dbMap, path = dbName)
         val dbConnector = extractString("connector", db)
-        val dbActive    = extractBooleanOpt("migrations", db).getOrElse(extractBoolean("active", db))
+        val dbActive    = extractBooleanOpt("migrations", db).orElse(extractBooleanOpt("active", db)).getOrElse(true)
         val dbHost      = extractString("host", db)
         val dbPort      = extractInt("port", db)
         val dbUser      = extractString("user", db)

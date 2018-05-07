@@ -42,7 +42,6 @@ class ConfigLoaderSpec extends WordSpec with Matchers {
                           |databases:
                           |  default:
                           |    connector: mysql
-                          |    migrations: true
                           |    host: localhost
                           |    port: 3306
                           |    user: root
@@ -125,9 +124,8 @@ class ConfigLoaderSpec extends WordSpec with Matchers {
                           |databases:
                           |  default:
                           |    connector: mysql
-                          |    migrations: notaboolean
                           |    host: localhost
-                          |    port: 3306
+                          |    port: notanumber
                           |    user: root
                           |    password: prisma
                         """.stripMargin
