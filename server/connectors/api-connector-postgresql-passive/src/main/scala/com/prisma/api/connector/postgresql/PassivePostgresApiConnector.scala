@@ -1,7 +1,7 @@
 package com.prisma.api.connector.postgresql
 
 import com.prisma.api.connector._
-import com.prisma.api.connector.postgresql.database.{Databases, PostGresApiDatabaseMutationBuilder, PostgresDataResolver}
+import com.prisma.api.connector.postgresql.database.{Databases, PostgresApiDatabaseMutationBuilder, PostgresDataResolver}
 import com.prisma.api.connector.postgresql.impl._
 import com.prisma.config.DatabaseConfig
 import com.prisma.gc_values.{IdGCValue, RootGCValue}
@@ -46,7 +46,7 @@ case class PassiveDatabaseMutactionExecutorImpl(activeExecutor: DatabaseMutactio
     val transformed         = transform(mutactions)
     val interpreters        = transformed.map(interpreterFor)
     val combinedErrorMapper = interpreters.map(_.errorMapper).reduceLeft(_ orElse _)
-    val mutationBuilder     = PostGresApiDatabaseMutationBuilder(schemaName = schemaName.getOrElse(mutactions.head.project.id))
+    val mutationBuilder     = PostgresApiDatabaseMutationBuilder(schemaName = schemaName.getOrElse(mutactions.head.project.id))
 
     val singleAction = runTransactionally match {
       case true  => DBIO.sequence(interpreters.map(_.newAction(mutationBuilder))).transactionally
@@ -110,7 +110,7 @@ case class NestedCreateDataItemInterpreterForInlineRelations(mutaction: NestedCr
   val inlineManifestation = relation.manifestation.get.asInstanceOf[InlineRelationManifestation]
   require(inlineManifestation.inTableOfModelId == path.lastModel.id)
 
-  override def action(mutationBuilder: PostGresApiDatabaseMutationBuilder) = {
+  override def action(mutationBuilder: PostgresApiDatabaseMutationBuilder) = {
 //    val createNonList = PostGresApiDatabaseMutationBuilder.createDataItem(project.id, path, mutaction.create.nonListArgs)
 //    val listAction    = PostGresApiDatabaseMutationBuilder.setScalarList(project.id, path, mutaction.listArgs)
     DBIO.seq(bla(mutationBuilder))
@@ -118,7 +118,7 @@ case class NestedCreateDataItemInterpreterForInlineRelations(mutaction: NestedCr
 
   import com.prisma.api.connector.postgresql.database.SlickExtensions._
 
-  def bla(mutationBuilder: PostGresApiDatabaseMutationBuilder) = {
+  def bla(mutationBuilder: PostgresApiDatabaseMutationBuilder) = {
     val idSubQuery      = mutationBuilder.pathQueryForLastParent(path)
     val lastParentModel = path.removeLastEdge.lastModel
     for {
@@ -127,7 +127,7 @@ case class NestedCreateDataItemInterpreterForInlineRelations(mutaction: NestedCr
     } yield result
   }
 
-  def createDataItemAndLinkToParent2(mutationBuilder: PostGresApiDatabaseMutationBuilder)(parentId: String) = {
+  def createDataItemAndLinkToParent2(mutationBuilder: PostgresApiDatabaseMutationBuilder)(parentId: String) = {
     val inlineField  = relation.getFieldOnModel(model.id, project.schema).get
     val argsMap      = mutaction.create.nonListArgs.raw.asRoot.map
     val modifiedArgs = argsMap.updated(inlineField.name, IdGCValue(parentId))

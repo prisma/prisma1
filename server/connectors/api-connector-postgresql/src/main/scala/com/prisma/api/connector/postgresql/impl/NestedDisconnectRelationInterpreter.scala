@@ -1,14 +1,14 @@
 package com.prisma.api.connector.postgresql.impl
 
 import com.prisma.api.connector.NestedDisconnectRelation
-import com.prisma.api.connector.postgresql.database.PostGresApiDatabaseMutationBuilder
+import com.prisma.api.connector.postgresql.database.PostgresApiDatabaseMutationBuilder
 
 case class NestedDisconnectRelationInterpreter(mutaction: NestedDisconnectRelation) extends NestedRelationInterpreterBase {
   override def path        = mutaction.path
   override def project     = mutaction.project
   override def topIsCreate = mutaction.topIsCreate
 
-  override def requiredCheck(implicit mutationBuilder: PostGresApiDatabaseMutationBuilder) =
+  override def requiredCheck(implicit mutationBuilder: PostgresApiDatabaseMutationBuilder) =
     (p.isList, p.isRequired, c.isList, c.isRequired) match {
       case (false, true, false, true)   => requiredRelationViolation
       case (false, true, false, false)  => requiredRelationViolation
@@ -22,7 +22,7 @@ case class NestedDisconnectRelationInterpreter(mutaction: NestedDisconnectRelati
       case _                            => sysError
     }
 
-  override def removalActions(implicit mutationBuilder: PostGresApiDatabaseMutationBuilder) = List(removalByParentAndChild)
+  override def removalActions(implicit mutationBuilder: PostgresApiDatabaseMutationBuilder) = List(removalByParentAndChild)
 
-  override def addAction(implicit mutationBuilder: PostGresApiDatabaseMutationBuilder) = noActionRequired
+  override def addAction(implicit mutationBuilder: PostgresApiDatabaseMutationBuilder) = noActionRequired
 }

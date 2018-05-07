@@ -1,7 +1,7 @@
 package com.prisma.api.connector.postgresql.impl
 
 import com.prisma.api.connector.NestedConnectRelation
-import com.prisma.api.connector.postgresql.database.PostGresApiDatabaseMutationBuilder
+import com.prisma.api.connector.postgresql.database.PostgresApiDatabaseMutationBuilder
 import slick.dbio.{Effect, NoStream}
 import slick.sql.{SqlAction, SqlStreamingAction}
 
@@ -10,7 +10,7 @@ case class NestedConnectRelationInterpreter(mutaction: NestedConnectRelation) ex
   override def project     = mutaction.project
   override def topIsCreate = mutaction.topIsCreate
 
-  override def requiredCheck(implicit mutationBuilder: PostGresApiDatabaseMutationBuilder): List[SqlStreamingAction[Vector[String], String, Effect]] =
+  override def requiredCheck(implicit mutationBuilder: PostgresApiDatabaseMutationBuilder): List[SqlStreamingAction[Vector[String], String, Effect]] =
     topIsCreate match {
       case false =>
         (p.isList, p.isRequired, c.isList, c.isRequired) match {
@@ -41,7 +41,7 @@ case class NestedConnectRelationInterpreter(mutaction: NestedConnectRelation) ex
     }
 
   override def removalActions(
-      implicit mutationBuilder: PostGresApiDatabaseMutationBuilder): List[SqlStreamingAction[Vector[Int], Int, Effect]#ResultAction[Int, NoStream, Effect]] =
+      implicit mutationBuilder: PostgresApiDatabaseMutationBuilder): List[SqlStreamingAction[Vector[Int], Int, Effect]#ResultAction[Int, NoStream, Effect]] =
     topIsCreate match {
       case false =>
         (p.isList, p.isRequired, c.isList, c.isRequired) match {
@@ -71,5 +71,5 @@ case class NestedConnectRelationInterpreter(mutaction: NestedConnectRelation) ex
         }
     }
 
-  override def addAction(implicit mutationBuilder: PostGresApiDatabaseMutationBuilder): List[SqlAction[Int, NoStream, Effect]] = createRelationRow
+  override def addAction(implicit mutationBuilder: PostgresApiDatabaseMutationBuilder): List[SqlAction[Int, NoStream, Effect]] = createRelationRow
 }

@@ -4,7 +4,7 @@ import java.sql.SQLIntegrityConstraintViolationException
 
 import com.prisma.api.connector._
 import com.prisma.api.connector.postgresql.DatabaseMutactionInterpreter
-import com.prisma.api.connector.postgresql.database.PostGresApiDatabaseMutationBuilder
+import com.prisma.api.connector.postgresql.database.PostgresApiDatabaseMutationBuilder
 import com.prisma.api.connector.postgresql.impl.GetFieldFromSQLUniqueException.getFieldOption
 import com.prisma.api.schema.APIErrors
 import com.prisma.api.schema.APIErrors.RequiredRelationWouldBeViolated
@@ -15,7 +15,7 @@ import slick.jdbc.PostgresProfile.api._
 
 case class AddDataItemToManyRelationByPathInterpreter(mutaction: AddDataItemToManyRelationByPath) extends DatabaseMutactionInterpreter {
 
-  def action(mutationBuilder: PostGresApiDatabaseMutationBuilder) = mutationBuilder.createRelationRowByPath(mutaction.path)
+  def action(mutationBuilder: PostgresApiDatabaseMutationBuilder) = mutationBuilder.createRelationRowByPath(mutaction.path)
 }
 
 case class CascadingDeleteRelationMutactionsInterpreter(mutaction: CascadingDeleteRelationMutactions) extends DatabaseMutactionInterpreter {
@@ -29,7 +29,7 @@ case class CascadingDeleteRelationMutactionsInterpreter(mutaction: CascadingDele
     case None       => fieldsWhereThisModelIsRequired
   }
 
-  def action(mutationBuilder: PostGresApiDatabaseMutationBuilder) = {
+  def action(mutationBuilder: PostgresApiDatabaseMutationBuilder) = {
     val requiredCheck = otherFieldsWhereThisModelIsRequired.map(field => mutationBuilder.oldParentFailureTriggerByField(path, field, causeString(field)))
     val deleteAction  = List(mutationBuilder.cascadingDeleteChildActions(path))
     val allActions    = requiredCheck ++ deleteAction
@@ -57,7 +57,7 @@ case class CreateDataItemInterpreter(mutaction: CreateDataItem, includeRelayRow:
 
   import scala.concurrent.ExecutionContext.Implicits.global
 
-  override def newAction(mutationBuilder: PostGresApiDatabaseMutationBuilder) = {
+  override def newAction(mutationBuilder: PostgresApiDatabaseMutationBuilder) = {
     val unitAction    = DBIO.successful(UnitDatabaseMutactionResult)
     val createNonList = mutationBuilder.createDataItem(path, mutaction.nonListArgs)
     val listAction    = mutationBuilder.setScalarList(path, mutaction.listArgs).andThen(unitAction)
@@ -70,7 +70,7 @@ case class CreateDataItemInterpreter(mutaction: CreateDataItem, includeRelayRow:
     }
   }
 
-  override def action(mutationBuilder: PostGresApiDatabaseMutationBuilder) = ???
+  override def action(mutationBuilder: PostgresApiDatabaseMutationBuilder) = ???
 
   override val errorMapper = {
     case e: PSQLException if e.getSQLState == "23505" && GetFieldFromSQLUniqueException.getFieldOption(mutaction.nonListArgs.keys, e).isDefined =>
@@ -81,21 +81,21 @@ case class CreateDataItemInterpreter(mutaction: CreateDataItem, includeRelayRow:
 }
 
 case class DeleteDataItemInterpreter(mutaction: DeleteDataItem) extends DatabaseMutactionInterpreter {
-  def action(mutationBuilder: PostGresApiDatabaseMutationBuilder) = DBIO.seq(
+  def action(mutationBuilder: PostgresApiDatabaseMutationBuilder) = DBIO.seq(
     mutationBuilder.deleteRelayRow(mutaction.path),
     mutationBuilder.deleteDataItem(mutaction.path)
   )
 }
 
 case class DeleteDataItemNestedInterpreter(mutaction: DeleteDataItemNested) extends DatabaseMutactionInterpreter {
-  def action(mutationBuilder: PostGresApiDatabaseMutationBuilder) = DBIO.seq(
+  def action(mutationBuilder: PostgresApiDatabaseMutationBuilder) = DBIO.seq(
     mutationBuilder.deleteRelayRow(mutaction.path),
     mutationBuilder.deleteDataItem(mutaction.path)
   )
 }
 
 case class DeleteDataItemsInterpreter(mutaction: DeleteDataItems) extends DatabaseMutactionInterpreter {
-  def action(mutationBuilder: PostGresApiDatabaseMutationBuilder) = DBIOAction.seq(
+  def action(mutationBuilder: PostgresApiDatabaseMutationBuilder) = DBIOAction.seq(
     mutationBuilder.deleteRelayIds(mutaction.model, mutaction.whereFilter),
     mutationBuilder.deleteDataItems(mutaction.model, mutaction.whereFilter)
   )
@@ -108,7 +108,7 @@ case class DeleteManyRelationChecksInterpreter(mutaction: DeleteManyRelationChec
 
   val fieldsWhereThisModelIsRequired = project.schema.fieldsWhereThisModelIsRequired(model)
 
-  def action(mutationBuilder: PostGresApiDatabaseMutationBuilder) = {
+  def action(mutationBuilder: PostgresApiDatabaseMutationBuilder) = {
     val requiredChecks =
       fieldsWhereThisModelIsRequired.map(field => mutationBuilder.oldParentFailureTriggerByFieldAndFilter(model, filter, field, causeString(field)))
     DBIOAction.seq(requiredChecks: _*)
@@ -134,7 +134,7 @@ case class DeleteRelationCheckInterpreter(mutaction: DeleteRelationCheck) extend
 
   val fieldsWhereThisModelIsRequired = project.schema.fieldsWhereThisModelIsRequired(path.lastModel)
 
-  def action(mutationBuilder: PostGresApiDatabaseMutationBuilder) = {
+  def action(mutationBuilder: PostgresApiDatabaseMutationBuilder) = {
     val requiredCheck = fieldsWhereThisModelIsRequired.map(field => mutationBuilder.oldParentFailureTriggerByField(path, field, causeString(field)))
     DBIOAction.seq(requiredCheck: _*)
   }
@@ -155,7 +155,7 @@ case class DeleteRelationCheckInterpreter(mutaction: DeleteRelationCheck) extend
 }
 
 case class ResetDataInterpreter(mutaction: ResetDataMutaction) extends DatabaseMutactionInterpreter {
-  def action(mutationBuilder: PostGresApiDatabaseMutationBuilder) = {
+  def action(mutationBuilder: PostgresApiDatabaseMutationBuilder) = {
     val truncateTables = DBIOAction.sequence(mutaction.tableNames.map(mutationBuilder.truncateTable))
     DBIOAction.seq(truncateTables)
   }
@@ -167,7 +167,7 @@ case class UpdateDataItemInterpreter(mutaction: UpdateWrapper) extends DatabaseM
     case x: NestedUpdateDataItem => (x.project, x.path, x.nonListArgs, x.listArgs)
   }
 
-  def action(mutationBuilder: PostGresApiDatabaseMutationBuilder) = {
+  def action(mutationBuilder: PostgresApiDatabaseMutationBuilder) = {
     val nonListAction = mutationBuilder.updateDataItemByPath(path, nonListArgs)
     val listAction    = mutationBuilder.setScalarList(path, listArgs)
     DBIO.seq(listAction, nonListAction)
@@ -188,7 +188,7 @@ case class UpdateDataItemInterpreter(mutaction: UpdateWrapper) extends DatabaseM
 
 case class UpdateDataItemsInterpreter(mutaction: UpdateDataItems) extends DatabaseMutactionInterpreter {
   //update Lists before updating the nodes
-  def action(mutationBuilder: PostGresApiDatabaseMutationBuilder) = {
+  def action(mutationBuilder: PostgresApiDatabaseMutationBuilder) = {
     val nonListActions = mutationBuilder.updateDataItems(mutaction.model, mutaction.updateArgs, mutaction.whereFilter)
     val listActions    = mutationBuilder.setManyScalarLists(mutaction.model, mutaction.listArgs, mutaction.whereFilter)
     DBIOAction.seq(listActions, nonListActions)
@@ -201,7 +201,7 @@ case class UpsertDataItemInterpreter(mutaction: UpsertDataItem) extends Database
   val createArgs = mutaction.nonListCreateArgs
   val updateArgs = mutaction.nonListUpdateArgs
 
-  def action(mutationBuilder: PostGresApiDatabaseMutationBuilder) = {
+  def action(mutationBuilder: PostgresApiDatabaseMutationBuilder) = {
     val createAction = mutationBuilder.setScalarList(mutaction.createPath, mutaction.listCreateArgs)
     val updateAction = mutationBuilder.setScalarList(mutaction.updatePath, mutaction.listUpdateArgs)
     mutationBuilder.upsert(mutaction.createPath, mutaction.updatePath, createArgs, updateArgs, createAction, updateAction)
@@ -224,7 +224,7 @@ case class UpsertDataItemIfInRelationWithInterpreter(mutaction: UpsertDataItemIf
 
   val relationChecker = NestedCreateRelationInterpreter(NestedCreateRelation(project, mutaction.createPath, false))
 
-  def action(mutationBuilder: PostGresApiDatabaseMutationBuilder) = {
+  def action(mutationBuilder: PostgresApiDatabaseMutationBuilder) = {
     val createCheck       = DBIOAction.seq(relationChecker.allActions(mutationBuilder): _*)
     val scalarListsCreate = mutationBuilder.setScalarList(mutaction.createPath, mutaction.createListArgs)
     val scalarListsUpdate = mutationBuilder.setScalarList(mutaction.updatePath, mutaction.updateListArgs)
@@ -265,7 +265,7 @@ case class VerifyConnectionInterpreter(mutaction: VerifyConnection) extends Data
       s"CONNECTIONFAILURETRIGGERPATH@${path.lastRelation_!.relationTableName}@${path.parentSideOfLastEdge}@${path.childSideOfLastEdge}@${edge.childWhere.fieldValueAsString}}"
   }
 
-  def action(mutationBuilder: PostGresApiDatabaseMutationBuilder) = mutationBuilder.connectionFailureTrigger(path, causeString)
+  def action(mutationBuilder: PostgresApiDatabaseMutationBuilder) = mutationBuilder.connectionFailureTrigger(path, causeString)
 
   override val errorMapper = {
     case e: PSQLException if e.getMessage.contains(causeString) => throw APIErrors.NodesNotConnectedError(path)
@@ -277,7 +277,7 @@ case class VerifyWhereInterpreter(mutaction: VerifyWhere) extends DatabaseMutact
   val where       = mutaction.where
   val causeString = s"WHEREFAILURETRIGGER@${where.model.name}@${where.field.name}@${where.fieldValueAsString}"
 
-  def action(mutationBuilder: PostGresApiDatabaseMutationBuilder) = mutationBuilder.whereFailureTrigger(where, causeString)
+  def action(mutationBuilder: PostgresApiDatabaseMutationBuilder) = mutationBuilder.whereFailureTrigger(where, causeString)
 
   override val errorMapper = {
     case e: PSQLException if e.getMessage.contains(causeString) => throw APIErrors.NodeNotFoundForWhereError(where)
@@ -285,13 +285,13 @@ case class VerifyWhereInterpreter(mutaction: VerifyWhere) extends DatabaseMutact
 }
 
 case class CreateDataItemsImportInterpreter(mutaction: CreateDataItemsImport) extends DatabaseMutactionInterpreter {
-  def action(mutationBuilder: PostGresApiDatabaseMutationBuilder) = mutationBuilder.createDataItemsImport(mutaction)
+  def action(mutationBuilder: PostgresApiDatabaseMutationBuilder) = mutationBuilder.createDataItemsImport(mutaction)
 }
 
 case class CreateRelationRowsImportInterpreter(mutaction: CreateRelationRowsImport) extends DatabaseMutactionInterpreter {
-  def action(mutationBuilder: PostGresApiDatabaseMutationBuilder) = mutationBuilder.createRelationRowsImport(mutaction)
+  def action(mutationBuilder: PostgresApiDatabaseMutationBuilder) = mutationBuilder.createRelationRowsImport(mutaction)
 }
 
 case class PushScalarListsImportInterpreter(mutaction: PushScalarListsImport) extends DatabaseMutactionInterpreter {
-  def action(mutationBuilder: PostGresApiDatabaseMutationBuilder) = mutationBuilder.pushScalarListsImport(mutaction)
+  def action(mutationBuilder: PostgresApiDatabaseMutationBuilder) = mutationBuilder.pushScalarListsImport(mutaction)
 }

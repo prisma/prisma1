@@ -19,7 +19,7 @@ import slick.jdbc.MySQLProfile.api._
 import slick.jdbc.SQLActionBuilder
 import slick.sql.{SqlAction, SqlStreamingAction}
 
-case class PostGresApiDatabaseMutationBuilder(
+case class PostgresApiDatabaseMutationBuilder(
     schemaName: String
 ) {
 

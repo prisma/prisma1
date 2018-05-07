@@ -1,7 +1,7 @@
 package com.prisma.api.connector.postgresql.impl
 
 import com.prisma.api.connector.postgresql.DatabaseMutactionInterpreter
-import com.prisma.api.connector.postgresql.database.PostGresApiDatabaseMutationBuilder
+import com.prisma.api.connector.postgresql.database.PostgresApiDatabaseMutationBuilder
 import com.prisma.api.connector.{ModelEdge, NodeEdge, Path}
 import com.prisma.api.schema.APIErrors.RequiredRelationWouldBeViolated
 import com.prisma.shared.models.Project
@@ -40,33 +40,33 @@ trait NestedRelationInterpreterBase extends DatabaseMutactionInterpreter {
       }
   }
 
-  def checkForOldParent(implicit mutationBuilder: PostGresApiDatabaseMutationBuilder) = mutationBuilder.oldParentFailureTrigger(path, parentCauseString)
+  def checkForOldParent(implicit mutationBuilder: PostgresApiDatabaseMutationBuilder) = mutationBuilder.oldParentFailureTrigger(path, parentCauseString)
   def checkForOldParentByChildWhere(
-      implicit mutationBuilder: PostGresApiDatabaseMutationBuilder): slick.sql.SqlStreamingAction[Vector[String], String, slick.dbio.Effect] =
+      implicit mutationBuilder: PostgresApiDatabaseMutationBuilder): slick.sql.SqlStreamingAction[Vector[String], String, slick.dbio.Effect] =
     path.lastEdge_! match {
       case _: ModelEdge => sys.error("Should be a node edge")
       case edge: NodeEdge =>
         mutationBuilder.oldParentFailureTriggerForRequiredRelations(edge.relation, edge.childWhere, edge.childRelationSide, parentCauseString)
     }
 
-  def checkForOldChild(implicit mutationBuilder: PostGresApiDatabaseMutationBuilder) = mutationBuilder.oldChildFailureTrigger(path, childCauseString)
+  def checkForOldChild(implicit mutationBuilder: PostgresApiDatabaseMutationBuilder) = mutationBuilder.oldChildFailureTrigger(path, childCauseString)
   def noCheckRequired                                                                = List.empty
 
-  def removalByParent(implicit mutationBuilder: PostGresApiDatabaseMutationBuilder)         = mutationBuilder.deleteRelationRowByParent(path)
-  def removalByChildWhere(implicit mutationBuilder: PostGresApiDatabaseMutationBuilder)     = mutationBuilder.deleteRelationRowByChildWithWhere(path)
-  def removalByParentAndChild(implicit mutationBuilder: PostGresApiDatabaseMutationBuilder) = mutationBuilder.deleteRelationRowByParentAndChild(path)
-  def createRelationRow(implicit mutationBuilder: PostGresApiDatabaseMutationBuilder)       = List(mutationBuilder.createRelationRowByPath(path))
+  def removalByParent(implicit mutationBuilder: PostgresApiDatabaseMutationBuilder)         = mutationBuilder.deleteRelationRowByParent(path)
+  def removalByChildWhere(implicit mutationBuilder: PostgresApiDatabaseMutationBuilder)     = mutationBuilder.deleteRelationRowByChildWithWhere(path)
+  def removalByParentAndChild(implicit mutationBuilder: PostgresApiDatabaseMutationBuilder) = mutationBuilder.deleteRelationRowByParentAndChild(path)
+  def createRelationRow(implicit mutationBuilder: PostgresApiDatabaseMutationBuilder)       = List(mutationBuilder.createRelationRowByPath(path))
   def noActionRequired                                                                      = List.empty
 
-  def requiredCheck(implicit mutationBuilder: PostGresApiDatabaseMutationBuilder): List[DBIOAction[_, NoStream, Effect]]
+  def requiredCheck(implicit mutationBuilder: PostgresApiDatabaseMutationBuilder): List[DBIOAction[_, NoStream, Effect]]
 
-  def removalActions(implicit mutationBuilder: PostGresApiDatabaseMutationBuilder): List[DBIOAction[_, NoStream, Effect]]
+  def removalActions(implicit mutationBuilder: PostgresApiDatabaseMutationBuilder): List[DBIOAction[_, NoStream, Effect]]
 
-  def addAction(implicit mutationBuilder: PostGresApiDatabaseMutationBuilder): List[DBIOAction[_, NoStream, Effect]]
+  def addAction(implicit mutationBuilder: PostgresApiDatabaseMutationBuilder): List[DBIOAction[_, NoStream, Effect]]
 
-  def allActions(implicit mutationBuilder: PostGresApiDatabaseMutationBuilder) = requiredCheck ++ removalActions ++ addAction
+  def allActions(implicit mutationBuilder: PostgresApiDatabaseMutationBuilder) = requiredCheck ++ removalActions ++ addAction
 
-  override def action(mutationBuilder: PostGresApiDatabaseMutationBuilder) = {
+  override def action(mutationBuilder: PostgresApiDatabaseMutationBuilder) = {
     DBIOAction.seq(allActions(mutationBuilder): _*)
   }
 
