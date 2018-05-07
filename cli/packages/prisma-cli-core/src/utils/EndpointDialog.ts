@@ -205,7 +205,9 @@ export class EndpointDialog {
       case 'Use existing database':
         credentials = await this.getDatabase()
         this.out.action.start(`Connecting to database`)
-        const introspector = new Introspector(credentials)
+        const introspector = new Introspector(
+          this.replaceLocalDockerHost(credentials),
+        )
         let schemas
         try {
           schemas = await introspector.listSchemas()
@@ -272,6 +274,17 @@ export class EndpointDialog {
       database: credentials,
       dockerComposeYml,
       datamodel,
+    }
+  }
+
+  replaceLocalDockerHost(credentials: DatabaseCredentials) {
+    const replaceMap = {
+      'host.docker.internal': 'localhost',
+      'docker.for.mac.localhost': 'localhost',
+    }
+    return {
+      ...credentials,
+      host: replaceMap[credentials.host] || credentials.host,
     }
   }
 
