@@ -32,7 +32,7 @@ services:
     environment:
       MYSQL_USER: root
       MYSQL_ROOT_PASSWORD: prisma
-      MYSQL_DATABASE: graphcool
+      MYSQL_DATABASE: prisma
     ports:
       - "3306"
     networks:

@@ -10,16 +10,16 @@ class InternalTestDatabase extends AwaitUtils {
   import scala.concurrent.ExecutionContext.Implicits.global
 
   val config               = ConfigLoader.load()
-  val databaseDefs         = InternalDatabaseDefs(config.databases.head.copy(pooled = false))
+  val databaseDefs         = PostgresInternalDatabaseDefs(config.databases.head.copy(pooled = false))
   val setupDatabase        = databaseDefs.setupDatabase
   val internalDatabase     = databaseDefs.internalDatabase
   val internalDatabaseRoot = databaseDefs.internalDatabaseRoot
 
   def createInternalDatabaseSchema() =
     setupDatabase
-      .run(InternalDatabaseSchema.createDatabaseAction)
+      .run(InternalDatabaseSchema.createDatabaseAction(databaseDefs.dbName))
       .transformWith { _ =>
-        val action = InternalDatabaseSchema.createSchemaActions(recreate = false)
+        val action = InternalDatabaseSchema.createSchemaActions(databaseDefs.managementSchemaName, recreate = false)
         internalDatabaseRoot.run(action)
       }
       .await(10)
@@ -36,7 +36,7 @@ class InternalTestDatabase extends AwaitUtils {
   private def getTables = {
     sql"""SELECT table_name
           FROM information_schema.tables
-          WHERE table_schema = '#${InternalDatabaseSchema.internalSchema}'
+          WHERE table_schema = '#${databaseDefs.managementSchemaName}'
           AND table_type = 'BASE TABLE';""".as[String]
   }
 

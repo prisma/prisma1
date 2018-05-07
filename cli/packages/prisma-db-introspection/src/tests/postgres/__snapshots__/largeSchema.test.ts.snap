@@ -1,66 +1,73 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`Introspector large example database 1`] = `
-"type Actor @postgres(table: \\"actor\\") {
+"type Actor @pgTable(name: \\"actor\\") {
   actor_id: Int!
   first_name: String!
   last_name: String!
-  last_update: DateTime!
-  film_actors: [Film_actor] @postgres(foreignColumn: \\"actor_id\\")
+  last_update: DateTime! @pgDefault(value = \\"now()\\")
+  film_actors: [Film_actor]
 }
-type Actor_info @postgres(table: \\"actor_info\\") {
+
+type Actor_info @pgTable(name: \\"actor_info\\") {
   actor_id: Int
   film_info: String
   first_name: String
   last_name: String
 }
-type Address @postgres(table: \\"address\\") {
+
+type Address @pgTable(name: \\"address\\") {
   address: String!
   address2: String
   address_id: Int!
-  city_id: City @postgres(ownColumn: \\"city_id\\")!
+  city: City @pgRelation(column: \\"city_id\\")!
   district: String!
-  last_update: DateTime!
+  last_update: DateTime! @pgDefault(value = \\"now()\\")
   phone: String!
   postal_code: String
-  customers: [Customer] @postgres(foreignColumn: \\"address_id\\")
-  staffs: [Staff] @postgres(foreignColumn: \\"address_id\\")
-  stores: [Store] @postgres(foreignColumn: \\"address_id\\")
+  customers: [Customer]
+  staffs: [Staff]
+  stores: [Store]
 }
-type Category @postgres(table: \\"category\\") {
+
+type Category @pgTable(name: \\"category\\") {
   category_id: Int!
-  last_update: DateTime!
+  last_update: DateTime! @pgDefault(value = \\"now()\\")
   name: String!
-  film_categorys: [Film_category] @postgres(foreignColumn: \\"category_id\\")
+  film_categorys: [Film_category]
 }
-type City @postgres(table: \\"city\\") {
+
+type City @pgTable(name: \\"city\\") {
   city: String!
   city_id: Int!
-  country_id: Country @postgres(ownColumn: \\"country_id\\")!
-  last_update: DateTime!
-  addresss: [Address] @postgres(foreignColumn: \\"city_id\\")
+  country: Country @pgRelation(column: \\"country_id\\")!
+  last_update: DateTime! @pgDefault(value = \\"now()\\")
+  addresss: [Address]
 }
-type Country @postgres(table: \\"country\\") {
+
+type Country @pgTable(name: \\"country\\") {
   country: String!
   country_id: Int!
-  last_update: DateTime!
-  citys: [City] @postgres(foreignColumn: \\"country_id\\")
+  last_update: DateTime! @pgDefault(value = \\"now()\\")
+  citys: [City]
 }
-type Customer @postgres(table: \\"customer\\") {
+
+type Customer @pgTable(name: \\"customer\\") {
   active: Int
-  activebool: Boolean!
-  address_id: Address @postgres(ownColumn: \\"address_id\\")!
-  create_date: null!
+  activebool: Boolean! @pgDefault(value = true)
+  address: Address @pgRelation(column: \\"address_id\\")!
+  create_date: null! @pgDefault(value = ('now)
   customer_id: Int!
   email: String
   first_name: String!
   last_name: String!
-  last_update: DateTime
+  last_update: DateTime @pgDefault(value = \\"now()\\")
   store_id: Int!
-  payments: [Payment] @postgres(foreignColumn: \\"customer_id\\")
-  rentals: [Rental] @postgres(foreignColumn: \\"customer_id\\")
+  payments: [Payment]
+  rentals: [Rental]
 }
-type Customer_list @postgres(table: \\"customer_list\\") {
+
+type Customer_list @pgTable(name: \\"customer_list\\") {
   address: String
   city: String
   country: String
@@ -71,35 +78,39 @@ type Customer_list @postgres(table: \\"customer_list\\") {
   sid: Int
   zip code: String
 }
-type Film @postgres(table: \\"film\\") {
+
+type Film @pgTable(name: \\"film\\") {
   description: String
   film_id: Int!
   fulltext: null!
-  language_id: Language @postgres(ownColumn: \\"language_id\\")!
-  last_update: DateTime!
+  language: Language @pgRelation(column: \\"language_id\\")!
+  last_update: DateTime! @pgDefault(value = \\"now()\\")
   length: Int
-  rating: null
+  rating: null @pgDefault(value = G)
   release_year: Int
-  rental_duration: Int!
-  rental_rate: Float!
-  replacement_cost: Float!
+  rental_duration: Int! @pgDefault(value = 3)
+  rental_rate: Float! @pgDefault(value = 4.99)
+  replacement_cost: Float! @pgDefault(value = 19.99)
   special_features: null
   title: String!
-  film_actors: [Film_actor] @postgres(foreignColumn: \\"film_id\\")
-  film_categorys: [Film_category] @postgres(foreignColumn: \\"film_id\\")
-  inventorys: [Inventory] @postgres(foreignColumn: \\"film_id\\")
+  film_actors: [Film_actor]
+  film_categorys: [Film_category]
+  inventorys: [Inventory]
 }
-type Film_actor @postgres(table: \\"film_actor\\") {
-  actor_id: Actor @postgres(ownColumn: \\"actor_id\\")!
-  film_id: Film @postgres(ownColumn: \\"film_id\\")!
-  last_update: DateTime!
+
+type Film_actor @pgTable(name: \\"film_actor\\") {
+  actor: Actor @pgRelation(column: \\"actor_id\\")!
+  film: Film @pgRelation(column: \\"film_id\\")!
+  last_update: DateTime! @pgDefault(value = \\"now()\\")
 }
-type Film_category @postgres(table: \\"film_category\\") {
-  category_id: Category @postgres(ownColumn: \\"category_id\\")!
-  film_id: Film @postgres(ownColumn: \\"film_id\\")!
-  last_update: DateTime!
+
+type Film_category @pgTable(name: \\"film_category\\") {
+  category: Category @pgRelation(column: \\"category_id\\")!
+  film: Film @pgRelation(column: \\"film_id\\")!
+  last_update: DateTime! @pgDefault(value = \\"now()\\")
 }
-type Film_list @postgres(table: \\"film_list\\") {
+
+type Film_list @pgTable(name: \\"film_list\\") {
   actors: String
   category: String
   description: String
@@ -109,20 +120,23 @@ type Film_list @postgres(table: \\"film_list\\") {
   rating: null
   title: String
 }
-type Inventory @postgres(table: \\"inventory\\") {
-  film_id: Film @postgres(ownColumn: \\"film_id\\")!
+
+type Inventory @pgTable(name: \\"inventory\\") {
+  film: Film @pgRelation(column: \\"film_id\\")!
   inventory_id: Int!
-  last_update: DateTime!
+  last_update: DateTime! @pgDefault(value = \\"now()\\")
   store_id: Int!
-  rentals: [Rental] @postgres(foreignColumn: \\"inventory_id\\")
+  rentals: [Rental]
 }
-type Language @postgres(table: \\"language\\") {
+
+type Language @pgTable(name: \\"language\\") {
   language_id: Int!
-  last_update: DateTime!
+  last_update: DateTime! @pgDefault(value = \\"now()\\")
   name: String!
-  films: [Film] @postgres(foreignColumn: \\"language_id\\")
+  films: [Film]
 }
-type Nicer_but_slower_film_list @postgres(table: \\"nicer_but_slower_film_list\\") {
+
+type Nicer_but_slower_film_list @pgTable(name: \\"nicer_but_slower_film_list\\") {
   actors: String
   category: String
   description: String
@@ -132,50 +146,56 @@ type Nicer_but_slower_film_list @postgres(table: \\"nicer_but_slower_film_list\\
   rating: null
   title: String
 }
-type Payment @postgres(table: \\"payment\\") {
+
+type Payment @pgTable(name: \\"payment\\") {
   amount: Float!
-  customer_id: Customer @postgres(ownColumn: \\"customer_id\\")!
+  customer: Customer @pgRelation(column: \\"customer_id\\")!
   payment_date: DateTime!
   payment_id: Int!
-  rental_id: Rental @postgres(ownColumn: \\"rental_id\\")!
-  staff_id: Staff @postgres(ownColumn: \\"staff_id\\")!
+  rental: Rental @pgRelation(column: \\"rental_id\\")!
+  staff: Staff @pgRelation(column: \\"staff_id\\")!
 }
-type Rental @postgres(table: \\"rental\\") {
-  customer_id: Customer @postgres(ownColumn: \\"customer_id\\")!
-  inventory_id: Inventory @postgres(ownColumn: \\"inventory_id\\")!
-  last_update: DateTime!
+
+type Rental @pgTable(name: \\"rental\\") {
+  customer: Customer @pgRelation(column: \\"customer_id\\")!
+  inventory: Inventory @pgRelation(column: \\"inventory_id\\")!
+  last_update: DateTime! @pgDefault(value = \\"now()\\")
   rental_date: DateTime!
   rental_id: Int!
   return_date: DateTime
-  staff_id: Staff @postgres(ownColumn: \\"staff_id\\")!
-  payments: [Payment] @postgres(foreignColumn: \\"rental_id\\")
+  staff: Staff @pgRelation(column: \\"staff_id\\")!
+  payments: [Payment]
 }
-type Sales_by_film_category @postgres(table: \\"sales_by_film_category\\") {
+
+type Sales_by_film_category @pgTable(name: \\"sales_by_film_category\\") {
   category: String
   total_sales: Float
 }
-type Sales_by_store @postgres(table: \\"sales_by_store\\") {
+
+type Sales_by_store @pgTable(name: \\"sales_by_store\\") {
   manager: String
   store: String
   total_sales: Float
 }
-type Staff @postgres(table: \\"staff\\") {
-  active: Boolean!
-  address_id: Address @postgres(ownColumn: \\"address_id\\")!
+
+type Staff @pgTable(name: \\"staff\\") {
+  active: Boolean! @pgDefault(value = true)
+  address: Address @pgRelation(column: \\"address_id\\")!
   email: String
   first_name: String!
   last_name: String!
-  last_update: DateTime!
+  last_update: DateTime! @pgDefault(value = \\"now()\\")
   password: String
   picture: null
   staff_id: Int!
   store_id: Int!
   username: String!
-  payments: [Payment] @postgres(foreignColumn: \\"staff_id\\")
-  rentals: [Rental] @postgres(foreignColumn: \\"staff_id\\")
-  stores: [Store] @postgres(foreignColumn: \\"manager_staff_id\\")
+  payments: [Payment]
+  rentals: [Rental]
+  stores: [Store]
 }
-type Staff_list @postgres(table: \\"staff_list\\") {
+
+type Staff_list @pgTable(name: \\"staff_list\\") {
   address: String
   city: String
   country: String
@@ -185,10 +205,12 @@ type Staff_list @postgres(table: \\"staff_list\\") {
   sid: Int
   zip code: String
 }
-type Store @postgres(table: \\"store\\") {
-  address_id: Address @postgres(ownColumn: \\"address_id\\")!
-  last_update: DateTime!
-  manager_staff_id: Staff @postgres(ownColumn: \\"manager_staff_id\\")!
+
+type Store @pgTable(name: \\"store\\") {
+  address: Address @pgRelation(column: \\"address_id\\")!
+  last_update: DateTime! @pgDefault(value = \\"now()\\")
+  manager_staff: Staff @pgRelation(column: \\"manager_staff_id\\")!
   store_id: Int!
-}"
+}
+"
 `;

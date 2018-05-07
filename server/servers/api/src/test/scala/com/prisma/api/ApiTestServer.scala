@@ -48,8 +48,7 @@ case class ApiTestServer()(implicit dependencies: ApiDependencies) extends PlayJ
       project = project,
       schema = schemaBuilder(project),
       variables = variables,
-      requestId = requestId,
-      graphcoolHeader = None
+      requestId = requestId
     )
 
     result.map { r =>
@@ -61,15 +60,16 @@ case class ApiTestServer()(implicit dependencies: ApiDependencies) extends PlayJ
   /**
     * Execute a Query that must fail.
     */
-  def queryThatMustFail(query: String,
-                        project: Project,
-                        errorCode: Int,
-                        errorCount: Int = 1,
-                        errorContains: String = "",
-                        userId: Option[String] = None,
-                        variables: JsValue = JsObject.empty,
-                        requestId: String = "CombinedTestDatabase.requestId",
-                        graphcoolHeader: Option[String] = None): JsValue = {
+  def queryThatMustFail(
+      query: String,
+      project: Project,
+      errorCode: Int,
+      errorCount: Int = 1,
+      errorContains: String = "",
+      userId: Option[String] = None,
+      variables: JsValue = JsObject.empty,
+      requestId: String = "CombinedTestDatabase.requestId"
+  ): JsValue = {
     val schemaBuilder = SchemaBuilder()(dependencies.system, dependencies)
     val result = awaitInfinitely {
       querySchemaAsync(
@@ -77,8 +77,7 @@ case class ApiTestServer()(implicit dependencies: ApiDependencies) extends PlayJ
         project = project,
         schema = schemaBuilder(project),
         variables = variables,
-        requestId = requestId,
-        graphcoolHeader = graphcoolHeader
+        requestId = requestId
       )
     }
     result.assertFailingResponse(errorCode, errorCount, errorContains)
@@ -93,8 +92,7 @@ case class ApiTestServer()(implicit dependencies: ApiDependencies) extends PlayJ
         project = project,
         schema = schemaBuilder.build(),
         variables = variables,
-        requestId = "private-api-request",
-        graphcoolHeader = None
+        requestId = "private-api-request"
       )
     }
   }
@@ -104,8 +102,7 @@ case class ApiTestServer()(implicit dependencies: ApiDependencies) extends PlayJ
       project: Project,
       schema: Schema[ApiUserContext, Unit],
       variables: JsValue,
-      requestId: String,
-      graphcoolHeader: Option[String]
+      requestId: String
   ): Future[JsValue] = {
     val queryAst = QueryParser.parse(query).get
 
@@ -118,7 +115,6 @@ case class ApiTestServer()(implicit dependencies: ApiDependencies) extends PlayJ
       id = requestId,
       ip = "test.ip",
       json = JsObject.empty,
-      sourceHeader = graphcoolHeader,
       project = project,
       schema = schema,
       queries = Vector(graphqlQuery),

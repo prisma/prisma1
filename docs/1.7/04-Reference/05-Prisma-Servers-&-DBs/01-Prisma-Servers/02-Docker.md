@@ -57,6 +57,7 @@ services:
             user: root
             password: prisma
   db:
+    container_name: prisma-db
     image: mysql:5.7
     restart: always
     environment:

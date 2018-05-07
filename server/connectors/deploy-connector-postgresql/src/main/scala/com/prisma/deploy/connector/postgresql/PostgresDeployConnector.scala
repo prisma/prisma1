@@ -12,10 +12,9 @@ import slick.jdbc.PostgresProfile.api._
 
 import scala.concurrent.{ExecutionContext, Future}
 
-case class PostgresDeployConnector(dbConfig: DatabaseConfig)(implicit ec: ExecutionContext) extends DeployConnector with TableTruncationHelpers {
-  override def isActive = true
-
-  lazy val internalDatabaseDefs = InternalDatabaseDefs(dbConfig)
+case class PostgresDeployConnector(dbConfig: DatabaseConfig)(implicit ec: ExecutionContext) extends DeployConnector {
+  override def isActive         = true
+  lazy val internalDatabaseDefs = PostgresInternalDatabaseDefs(dbConfig)
   lazy val internalDatabaseRoot = internalDatabaseDefs.internalDatabaseRoot // DB prisma, schema public
   lazy val internalDatabase     = internalDatabaseDefs.internalDatabase // DB prisma, schema management
 
@@ -56,15 +55,15 @@ case class PostgresDeployConnector(dbConfig: DatabaseConfig)(implicit ec: Execut
   override def initialize(): Future[Unit] = {
     // We're ignoring failures for createDatabaseAction as there is no "create if not exists" in psql
     internalDatabaseDefs.setupDatabase
-      .run(InternalDatabaseSchema.createDatabaseAction)
+      .run(InternalDatabaseSchema.createDatabaseAction(internalDatabaseDefs.dbName))
       .transformWith { _ =>
-        val action = InternalDatabaseSchema.createSchemaActions(recreate = false)
+        val action = InternalDatabaseSchema.createSchemaActions(internalDatabaseDefs.managementSchemaName, recreate = false)
         internalDatabaseRoot.run(action)
       }
       .flatMap(_ => internalDatabaseDefs.setupDatabase.shutdown)
   }
 
-  override def reset(): Future[Unit] = truncateTablesInDatabase(internalDatabase)
+  override def reset(): Future[Unit] = truncateManagementTablesInDatabase(internalDatabase)
 
   override def shutdown() = {
     for {
@@ -74,12 +73,8 @@ case class PostgresDeployConnector(dbConfig: DatabaseConfig)(implicit ec: Execut
   }
 
   override def databaseIntrospectionInferrer(projectId: String): DatabaseIntrospectionInferrer = EmptyDatabaseIntrospectionInferrer
-}
 
-trait TableTruncationHelpers {
-  // copied from InternalTestDatabase
-
-  protected def truncateTablesInDatabase(database: Database)(implicit ec: ExecutionContext): Future[Unit] = {
+  protected def truncateManagementTablesInDatabase(database: Database)(implicit ec: ExecutionContext): Future[Unit] = {
     for {
       schemas <- database.run(getTables())
       _       <- database.run(dangerouslyTruncateTables(schemas))
@@ -89,7 +84,7 @@ trait TableTruncationHelpers {
   private def getTables()(implicit ec: ExecutionContext): DBIOAction[Vector[String], NoStream, Read] = {
     sql"""SELECT table_name
           FROM information_schema.tables
-          WHERE table_schema = '#${InternalDatabaseSchema.internalSchema}'
+          WHERE table_schema = '#${internalDatabaseDefs.managementSchemaName}'
           AND table_type = 'BASE TABLE';""".as[String]
   }
 

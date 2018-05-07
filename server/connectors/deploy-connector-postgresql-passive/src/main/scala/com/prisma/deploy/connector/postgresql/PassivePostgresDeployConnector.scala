@@ -5,10 +5,7 @@ import com.prisma.deploy.connector.DeployConnector
 
 import scala.concurrent.ExecutionContext
 
-class PassivePostgresDeployConnector(dbConfig: DatabaseConfig)(implicit ec: ExecutionContext)
-    extends PostgresDeployConnector(dbConfig)
-    with DeployConnector
-    with TableTruncationHelpers {
+class PassivePostgresDeployConnector(dbConfig: DatabaseConfig)(implicit ec: ExecutionContext) extends PostgresDeployConnector(dbConfig) with DeployConnector {
 
   override def isActive = false
 

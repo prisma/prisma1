@@ -1,31 +1,52 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`Introspector relation with inline relation column 1`] = `
-"type Bill @postgres(table: \\"bill\\") {
+"type Bill @pgTable(name: \\"bill\\") {
   bill: String!
   id: Int!
-  product_id: Product @postgres(ownColumn: \\"product_id\\")
+  product: Product @pgRelation(column: \\"product_id\\")
 }
-type Product @postgres(table: \\"product\\") {
+
+type Product @pgTable(name: \\"product\\") {
   description: String!
   id: Int!
-  bills: [Bill] @postgres(foreignColumn: \\"product_id\\")
-}"
+  bills: [Bill]
+}
+"
 `;
 
 exports[`Introspector relation with relation table 1`] = `
-"type Bill @postgres(table: \\"bill\\") {
+"type Bill @pgTable(name: \\"bill\\") {
   bill: String!
   id: Int!
-  bill_products: [Bill_product] @postgres(foreignColumn: \\"bill_id\\")
+  products: [Product] @pgRelationTable(table: \\"bill_product\\" name: \\"bill_product\\")
 }
-type Bill_product @postgres(table: \\"bill_product\\") {
-  bill_id: Bill @postgres(ownColumn: \\"bill_id\\")
-  product_id: Product @postgres(ownColumn: \\"product_id\\")
-}
-type Product @postgres(table: \\"product\\") {
+
+type Product @pgTable(name: \\"product\\") {
   id: Int!
   product: String!
-  bill_products: [Bill_product] @postgres(foreignColumn: \\"product_id\\")
-}"
+  bills: [Bill] @pgRelationTable(table: \\"bill_product\\" name: \\"bill_product\\")
+}
+"
+`;
+
+exports[`Introspector relation with relation table with extra column 1`] = `
+"type Bill @pgTable(name: \\"bill\\") {
+  bill: String!
+  id: Int!
+  bill_products: [Bill_product]
+}
+
+type Bill_product @pgTable(name: \\"bill_product\\") {
+  bill: Bill @pgRelation(column: \\"bill_id\\")
+  product: Product @pgRelation(column: \\"product_id\\")
+  some_other_column: String!
+}
+
+type Product @pgTable(name: \\"product\\") {
+  id: Int!
+  product: String!
+  bill_products: [Bill_product]
+}
+"
 `;

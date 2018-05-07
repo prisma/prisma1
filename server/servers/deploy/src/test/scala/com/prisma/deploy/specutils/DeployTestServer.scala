@@ -62,12 +62,12 @@ case class DeployTestServer()(implicit dependencies: DeployDependencies) extends
                                userId: Option[String] = None,
                                variables: JsValue = JsObject.empty,
                                requestId: String = "CombinedTestDatabase.requestId",
-                               graphcoolHeader: Option[String] = None): JsValue = {
+                               prismaHeader: Option[String] = None): JsValue = {
     val result = executeQueryWithAuthentication(
       query = query,
       variables = variables,
       requestId = requestId,
-      graphcoolHeader = graphcoolHeader
+      prismaHeader = prismaHeader
     )
 
     result.assertFailingResponse(errorCode, errorCount, errorContains)
@@ -85,7 +85,7 @@ case class DeployTestServer()(implicit dependencies: DeployDependencies) extends
   def executeQueryWithAuthentication(query: String,
                                      variables: JsValue = JsObject.empty,
                                      requestId: String = "CombinedTestDatabase.requestId",
-                                     graphcoolHeader: Option[String] = None): JsValue = {
+                                     prismaHeader: Option[String] = None): JsValue = {
 
     val schemaBuilder  = SchemaBuilder()(dependencies.system, dependencies)
     val userContext    = SystemUserContext(None)

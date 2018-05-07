@@ -14,7 +14,7 @@ object Databases {
   val defaultDatabase = "prisma"
 
   // Schema to use in the database
-  val schema = "public" // default
+  val schema = "public" // default schema
 
   def initialize(dbConfig: DatabaseConfig): Databases = {
     val config   = typeSafeConfigFromDatabaseConfig(dbConfig)

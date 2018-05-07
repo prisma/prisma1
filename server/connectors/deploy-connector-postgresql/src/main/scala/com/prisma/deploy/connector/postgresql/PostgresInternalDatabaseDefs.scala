@@ -4,15 +4,17 @@ import com.prisma.config.DatabaseConfig
 import com.prisma.deploy.connector.postgresql.database.InternalDatabaseSchema
 import com.typesafe.config.{Config, ConfigFactory}
 
-case class InternalDatabaseDefs(dbConfig: DatabaseConfig) {
+case class PostgresInternalDatabaseDefs(dbConfig: DatabaseConfig) {
   import slick.jdbc.PostgresProfile.api._
 
-  // Only used during setup
+  // Only used during setup - this is the default PSQL db, which is only used for administrative commands
   lazy val setupDatabase = getDatabase("postgres")
 
   // Used during runtime & setup
-  lazy val internalDatabaseRoot = getDatabase(InternalDatabaseSchema.database)
-  lazy val internalDatabase     = getDatabase(InternalDatabaseSchema.database, InternalDatabaseSchema.internalSchema)
+  lazy val dbName               = dbConfig.database.getOrElse("prisma")
+  lazy val managementSchemaName = dbConfig.managementSchema.getOrElse("management")
+  lazy val internalDatabaseRoot = getDatabase(dbName)
+  lazy val internalDatabase     = getDatabase(dbName, managementSchemaName)
 
   private lazy val dbDriver = new org.postgresql.Driver
 

@@ -28,7 +28,7 @@ import scala.concurrent.Future
 import scala.language.postfixOps
 import scala.util.{Failure, Success}
 
-case class ClusterServer(prefix: String = "", server2serverSecret: Option[String])(
+case class ManagementServer(prefix: String = "", server2serverSecret: Option[String])(
     implicit system: ActorSystem,
     materializer: ActorMaterializer,
     dependencies: DeployDependencies
@@ -38,7 +38,7 @@ case class ClusterServer(prefix: String = "", server2serverSecret: Option[String
   import com.prisma.deploy.server.JsonMarshalling._
   import system.dispatcher
 
-  val schemaBuilder: SchemaBuilder           = dependencies.clusterSchemaBuilder
+  val schemaBuilder: SchemaBuilder           = dependencies.managementSchemaBuilder
   val projectPersistence: ProjectPersistence = dependencies.projectPersistence
   val log: String => Unit                    = (msg: String) => logger.info(msg)
   val requestPrefix                          = sys.env.getOrElse("ENV", "local")
@@ -52,7 +52,7 @@ case class ClusterServer(prefix: String = "", server2serverSecret: Option[String
   }
 
   val innerRoutes = extractRequest { req =>
-    val requestId            = requestPrefix + ":cluster:" + createCuid()
+    val requestId            = requestPrefix + ":management:" + createCuid()
     val requestBeginningTime = System.currentTimeMillis()
 
     def logRequestEnd(projectId: Option[String] = None, clientId: Option[String] = None) = {

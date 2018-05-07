@@ -74,6 +74,7 @@ object ConfigLoader {
       val dbUser         = sys.env.getOrElse("SQL_CLIENT_USER", sys.error("Env var SQL_CLIENT_USER required but not found"))
       val dbPass         = sys.env.getOrElse("SQL_CLIENT_PASSWORD", sys.error("Env var SQL_CLIENT_PASSWORD required but not found"))
       val dbConn         = sys.env.getOrElse("SQL_INTERNAL_CONNECTION_LIMIT", "1")
+      val database       = sys.env.getOrElse("SQL_INTERNAL_DATABASE", "graphcool") // Legacy always ran on 'graphcool'
       val mgmtApiEnabled = sys.env.getOrElse("CLUSTER_API_ENABLED", "1") match {
         case "1" => "true"
         case "0" => "false"
@@ -96,6 +97,7 @@ object ConfigLoader {
         |    user: $dbUser
         |    password: $dbPass
         |    connectionLimit: $dbConn
+        |    managementSchema: $database
       """.stripMargin
     }.toOption
 
@@ -117,6 +119,7 @@ object ConfigLoader {
         val dbUser      = extractString("user", db)
         val dbPass      = extractStringOpt("password", db)
         val connLimit   = extractIntOpt("connectionLimit", db)
+        val mgmtSchema  = extractStringOpt("managementSchema", db)
         val pooled      = extractBooleanOpt("pooled", db)
         val database    = extractStringOpt("database", db)
         val schema      = extractStringOpt("schema", db)
@@ -132,7 +135,8 @@ object ConfigLoader {
           connectionLimit = connLimit,
           pooled = pooled.getOrElse(true),
           database = database,
-          schema = schema
+          schema = schema,
+          managementSchema = mgmtSchema
         )
     }.toSeq
 
@@ -214,6 +218,7 @@ case class DatabaseConfig(
     port: Int,
     user: String,
     password: Option[String],
+    managementSchema: Option[String],
     connectionLimit: Option[Int],
     pooled: Boolean,
     database: Option[String],
