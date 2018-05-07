@@ -6,7 +6,7 @@ exports[`Introspector large example database 1`] = `
   first_name: String!
   last_name: String!
   last_update: DateTime! @pgDefault(value: \\"now()\\")
-  film_actors: [Film_actor]
+  film_actors: [Film_actor!]!
 }
 
 type Actor_info @pgTable(name: \\"actor_info\\") {
@@ -25,16 +25,16 @@ type Address @pgTable(name: \\"address\\") {
   last_update: DateTime! @pgDefault(value: \\"now()\\")
   phone: String!
   postal_code: String
-  customers: [Customer]
-  staffs: [Staff]
-  stores: [Store]
+  customers: [Customer!]!
+  staffs: [Staff!]!
+  stores: [Store!]!
 }
 
 type Category @pgTable(name: \\"category\\") {
   category_id: Int!
   last_update: DateTime! @pgDefault(value: \\"now()\\")
   name: String!
-  film_categorys: [Film_category]
+  film_categorys: [Film_category!]!
 }
 
 type City @pgTable(name: \\"city\\") {
@@ -42,14 +42,14 @@ type City @pgTable(name: \\"city\\") {
   city_id: Int!
   country: Country @pgRelation(column: \\"country_id\\")!
   last_update: DateTime! @pgDefault(value: \\"now()\\")
-  addresss: [Address]
+  addresss: [Address!]!
 }
 
 type Country @pgTable(name: \\"country\\") {
   country: String!
   country_id: Int!
   last_update: DateTime! @pgDefault(value: \\"now()\\")
-  citys: [City]
+  citys: [City!]!
 }
 
 type Customer @pgTable(name: \\"customer\\") {
@@ -63,8 +63,8 @@ type Customer @pgTable(name: \\"customer\\") {
   last_name: String!
   last_update: DateTime @pgDefault(value: \\"now()\\")
   store_id: Int!
-  payments: [Payment]
-  rentals: [Rental]
+  payments: [Payment!]!
+  rentals: [Rental!]!
 }
 
 type Customer_list @pgTable(name: \\"customer_list\\") {
@@ -93,9 +93,9 @@ type Film @pgTable(name: \\"film\\") {
   replacement_cost: Float! @pgDefault(value: 19.99)
   special_features: null
   title: String!
-  film_actors: [Film_actor]
-  film_categorys: [Film_category]
-  inventorys: [Inventory]
+  film_actors: [Film_actor!]!
+  film_categorys: [Film_category!]!
+  inventorys: [Inventory!]!
 }
 
 type Film_actor @pgTable(name: \\"film_actor\\") {
@@ -126,14 +126,14 @@ type Inventory @pgTable(name: \\"inventory\\") {
   inventory_id: Int!
   last_update: DateTime! @pgDefault(value: \\"now()\\")
   store_id: Int!
-  rentals: [Rental]
+  rentals: [Rental!]!
 }
 
 type Language @pgTable(name: \\"language\\") {
   language_id: Int!
   last_update: DateTime! @pgDefault(value: \\"now()\\")
   name: String!
-  films: [Film]
+  films: [Film!]!
 }
 
 type Nicer_but_slower_film_list @pgTable(name: \\"nicer_but_slower_film_list\\") {
@@ -164,7 +164,7 @@ type Rental @pgTable(name: \\"rental\\") {
   rental_id: Int!
   return_date: DateTime
   staff: Staff @pgRelation(column: \\"staff_id\\")!
-  payments: [Payment]
+  payments: [Payment!]!
 }
 
 type Sales_by_film_category @pgTable(name: \\"sales_by_film_category\\") {
@@ -190,9 +190,9 @@ type Staff @pgTable(name: \\"staff\\") {
   staff_id: Int!
   store_id: Int!
   username: String!
-  payments: [Payment]
-  rentals: [Rental]
-  stores: [Store]
+  payments: [Payment!]!
+  rentals: [Rental!]!
+  stores: [Store!]!
 }
 
 type Staff_list @pgTable(name: \\"staff_list\\") {

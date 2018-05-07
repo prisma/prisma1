@@ -52,13 +52,13 @@ export class SdlPrinter {
         relatedTable
       )}s: [${this.capitalizeFirstLetter(
         relatedTable
-      )}] @pgRelationTable(table: "${field.remoteTable.name}" name: "${
+      )}!]! @pgRelationTable(table: "${field.remoteTable.name}" name: "${
         field.remoteTable.name
       }")`
     } else {
       return `\n  ${field.remoteTable.name}s: [${this.capitalizeFirstLetter(
         field.remoteTable.name
-      )}]`
+      )}!]!`
     }
   }
 
