@@ -21,7 +21,7 @@ services:
         databases:
           default:
             connector: mysql
-            active: true
+            migrations: true
             host: db
             port: 3306
   db:
@@ -65,7 +65,7 @@ services:
         databases:
           default:
             connector: postgres
-            active: true
+            migrations: true
             host: localhost
             port: 5432",
   "prisma.yml": "endpoint: http://localhost:4466
