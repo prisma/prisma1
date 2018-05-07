@@ -105,9 +105,9 @@ export class SdlPrinter {
         column.typeIdentifier == 'DateTime' ||
         column.typeIdentifier == 'Json'
       ) {
-        return ` @pgDefault(value = "${column.defaultValue}")`
+        return ` @pgDefault(value: "${column.defaultValue}")`
       } else {
-        return ` @pgDefault(value = ${column.defaultValue})`
+        return ` @pgDefault(value: ${column.defaultValue})`
       }
     }
 
