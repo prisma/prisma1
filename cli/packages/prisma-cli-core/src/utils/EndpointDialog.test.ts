@@ -2,6 +2,7 @@ import { EndpointDialog } from './EndpointDialog'
 import { Output, Config, Client } from 'prisma-cli-engine'
 import { Environment } from 'prisma-yml'
 import { getTmpDir } from '../test/getTmpDir'
+import { normalizeDockerCompose } from '../commands/init/index.test'
 
 function makeDialog() {
   const config = new Config()
@@ -23,7 +24,7 @@ describe('endpoint dialog', () => {
       localClusterRunning: false,
     }
     const result = await dialog.handleChoice(input)
-    expect({ input, result }).toMatchSnapshot()
+    expect({ input, result: normalizeResult(result) }).toMatchSnapshot()
   })
   test('local running', async () => {
     const input = {
@@ -33,6 +34,13 @@ describe('endpoint dialog', () => {
       localClusterRunning: true,
     }
     const result = await dialog.handleChoice(input)
-    expect({ input, result }).toMatchSnapshot()
+    expect({ input, result: normalizeResult(result) }).toMatchSnapshot()
   })
 })
+
+export function normalizeResult({ dockerComposeYml, ...result }) {
+  return {
+    ...result,
+    dockerComposeYml: normalizeDockerCompose(dockerComposeYml),
+  }
+}

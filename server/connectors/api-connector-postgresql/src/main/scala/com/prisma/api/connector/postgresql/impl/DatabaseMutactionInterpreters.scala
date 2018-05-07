@@ -187,7 +187,6 @@ case class UpdateDataItemInterpreter(mutaction: UpdateWrapper) extends DatabaseM
 }
 
 case class UpdateDataItemsInterpreter(mutaction: UpdateDataItems) extends DatabaseMutactionInterpreter {
-
   //update Lists before updating the nodes
   def action(mutationBuilder: PostGresApiDatabaseMutationBuilder) = {
     val nonListActions = mutationBuilder.updateDataItems(mutaction.model, mutaction.updateArgs, mutaction.whereFilter)

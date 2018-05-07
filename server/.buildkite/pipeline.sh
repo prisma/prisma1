@@ -10,6 +10,9 @@ static=$(printf "    - label: \":mysql: MySql API connector\"
     - label: \":mysql: MySql deploy connector\"
       command: cd server && ./.buildkite/scripts/test.sh deploy-connector-mysql mysql
 
+    - label: \":scala: integration-tests-mysql\"
+      command: cd server && ./.buildkite/scripts/test.sh integration-tests-mysql mysql
+
     - label: \":postgres: Postgres API connector\"
       command: cd server && ./.buildkite/scripts/test.sh api-connector-postgresql postgres
 
@@ -22,12 +25,16 @@ static=$(printf "    - label: \":mysql: MySql API connector\"
     - label: \":postgres: passive Postgres deploy connector\"
       command: cd server && ./.buildkite/scripts/test.sh deploy-connector-postgresql-passive postgres
 
+    - label: \":scala: integration-tests-postgres\"
+      command: cd server && ./.buildkite/scripts/test.sh integration-tests-mysql postgres
+
     # Libs are not specific to a connector, simply run with mysql
     - label: \":scala: libs\"
       command: cd server && ./.buildkite/scripts/test.sh libs mysql
 
     - label: \":scala: subscriptions\"
       command: cd server && ./.buildkite/scripts/test.sh subscriptions mysql
+      
 ")
 
 optional=""
@@ -73,9 +80,6 @@ do
 
     - label: \":scala: workers [$connector]\"
       command: cd server && ./.buildkite/scripts/test.sh workers $connector
-
-    - label: \":scala: integration-tests [$connector]\"
-      command: cd server && ./.buildkite/scripts/test.sh integrationTests $connector
 
 ")
 

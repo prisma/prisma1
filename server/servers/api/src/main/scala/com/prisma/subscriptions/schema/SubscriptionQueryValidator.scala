@@ -33,8 +33,7 @@ case class SubscriptionQueryValidator(project: Project)(implicit dependencies: A
   def modelName(queryDoc: Document): String Or Seq[SubscriptionQueryError] =
     QueryTransformer.getModelNameFromSubscription(queryDoc) match {
       case Some(modelName) => Good(modelName)
-      case None =>
-        Bad(Seq(SubscriptionQueryError("The provided query doesn't include any known model name. Please check for the latest subscriptions API.")))
+      case None            => Bad(Seq(SubscriptionQueryError("The provided query doesn't include any known model name. Please check for the latest subscriptions API.")))
     }
 
   def modelFor(model: String): Model Or Seq[SubscriptionQueryError] = project.schema.getModelByName(model) match {

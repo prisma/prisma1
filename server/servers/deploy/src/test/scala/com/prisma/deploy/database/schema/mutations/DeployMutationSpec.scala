@@ -325,7 +325,6 @@ class DeployMutationSpec extends FlatSpec with Matchers with ActiveDeploySpecBas
                           |type TestModel2 {
                           |  id: ID! @unique
                           |  test: String
-                          |  t1: TestModel
                           |}
                         """.stripMargin
 

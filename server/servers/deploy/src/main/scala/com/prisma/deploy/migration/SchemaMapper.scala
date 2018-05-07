@@ -38,11 +38,12 @@ object SchemaMapper extends SchemaMapper {
       for {
         objectType <- graphQlSdl.objectTypes
         fieldDef   <- objectType.fields
-        if fieldDef.directiveArgumentAsString("relation", "oldName").isDefined
+        if fieldDef.directiveArgumentAsString("relation", "name").isDefined
       } yield {
+        val next = fieldDef.directiveArgumentAsString("relation", "name").get
         Mapping(
-          previous = fieldDef.directiveArgumentAsString("relation", "oldName").get,
-          next = fieldDef.directiveArgumentAsString("relation", "name").get
+          previous = fieldDef.directiveArgumentAsString("relation", "oldName").getOrElse(next),
+          next = next
         )
       }
 
@@ -50,7 +51,7 @@ object SchemaMapper extends SchemaMapper {
       models = modelMapping,
       enums = enumMapping,
       fields = fieldMapping,
-      relations = relationMapping
+      relations = relationMapping.distinct
     )
   }
 }

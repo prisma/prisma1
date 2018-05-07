@@ -1,22 +1,22 @@
 package com.prisma.deploy.connector.mysql.impls.mutactions
 
 import com.prisma.deploy.connector._
-import com.prisma.deploy.connector.mysql.database.DeployDatabaseMutationBuilderMySql
+import com.prisma.deploy.connector.mysql.database.MysqlDeployDatabaseMutationBuilder
 import slick.dbio.DBIOAction
 
 object CreateProjectInterpreter extends SqlMutactionInterpreter[CreateProject] {
   override def execute(mutaction: CreateProject) = {
-    DeployDatabaseMutationBuilderMySql.createClientDatabaseForProject(projectId = mutaction.projectId)
+    MysqlDeployDatabaseMutationBuilder.createClientDatabaseForProject(projectId = mutaction.projectId)
   }
 
   override def rollback(mutaction: CreateProject) = {
-    DeployDatabaseMutationBuilderMySql.deleteProjectDatabase(projectId = mutaction.projectId)
+    MysqlDeployDatabaseMutationBuilder.deleteProjectDatabase(projectId = mutaction.projectId)
   }
 }
 
 object TruncateProjectInterpreter extends SqlMutactionInterpreter[TruncateProject] {
   override def execute(mutaction: TruncateProject) = {
-    DeployDatabaseMutationBuilderMySql.truncateProjectTables(project = mutaction.project)
+    MysqlDeployDatabaseMutationBuilder.truncateProjectTables(project = mutaction.project)
   }
 
   override def rollback(mutaction: TruncateProject) = {
@@ -26,10 +26,10 @@ object TruncateProjectInterpreter extends SqlMutactionInterpreter[TruncateProjec
 
 object DeleteProjectInterpreter extends SqlMutactionInterpreter[DeleteProject] {
   override def execute(mutaction: DeleteProject) = {
-    DeployDatabaseMutationBuilderMySql.deleteProjectDatabase(projectId = mutaction.projectId)
+    MysqlDeployDatabaseMutationBuilder.deleteProjectDatabase(projectId = mutaction.projectId)
   }
 
   override def rollback(mutaction: DeleteProject) = {
-    DeployDatabaseMutationBuilderMySql.createClientDatabaseForProject(projectId = mutaction.projectId)
+    MysqlDeployDatabaseMutationBuilder.createClientDatabaseForProject(projectId = mutaction.projectId)
   }
 }

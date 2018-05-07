@@ -133,7 +133,7 @@ trait PlayJsonExtensions extends JsonUtils {
 
       (shouldFail, shouldWarn) match {
         case (true, false) =>
-          require(requirement = errors.nonEmpty, message = s"The query had to result in a failure but it returned no errors.")
+          require(requirement = errors.nonEmpty || hasErrors, message = s"The query had to result in a failure but it returned no errors.")
           require(requirement = warnings.isEmpty, message = s"The query had to result in a success but it returned warnings.")
 
         case (false, false) =>
@@ -145,7 +145,7 @@ trait PlayJsonExtensions extends JsonUtils {
           require(requirement = warnings.nonEmpty, message = s"The query had to result in a warning but it returned no warnings.")
 
         case (true, true) =>
-          require(requirement = errors.nonEmpty, message = s"The query had to result in a failure but it returned no errors.")
+          require(requirement = errors.nonEmpty || hasErrors, message = s"The query had to result in a failure but it returned no errors.")
           require(requirement = warnings.nonEmpty, message = s"The query had to result in a warning but it returned no warnings.")
       }
     }

@@ -94,8 +94,7 @@ case class Schema(
   def getEnumByName(name: String): Option[Enum] = enums.find(_.name.toLowerCase == name.toLowerCase)
 
   def getRelationByName(name: String): Option[Relation] = relations.find(_.name == name)
-  def getRelationByName_!(name: String): Relation =
-    getRelationByName(name).get //OrElse(throw SystemErrors.InvalidRelation("There is no relation with name: " + name))
+  def getRelationByName_!(name: String): Relation       = getRelationByName(name).get
 
   def getRelationsThatConnectModels(modelA: String, modelB: String): List[Relation] = relations.filter(_.connectsTheModels(modelA, modelB))
 

@@ -6,7 +6,7 @@ import com.prisma.shared.models.{Migration, MigrationId, MigrationStatus}
 import org.scalatest.{FlatSpec, Matchers}
 import slick.jdbc.MySQLProfile.api._
 
-class ProjectPersistenceImplSpec extends FlatSpec with Matchers with SpecBase {
+class MysqlProjectPersistenceSpec extends FlatSpec with Matchers with SpecBase {
 
   ".load()" should "return None if there's no project yet in the database" ignore {
     val result = projectPersistence.load("non-existent-id@some-stage").await()

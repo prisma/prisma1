@@ -98,10 +98,11 @@ case class PrismaProdDependencies()(implicit val system: ActorSystem, val materi
 
   override lazy val keepAliveIntervalSeconds = 10
 
-  override lazy val webhookPublisher =
-    RabbitQueue.publisher[Webhook](rabbitUri, "webhooks")(reporter, Webhook.marshaller).asInstanceOf[QueuePublisher[Webhook]]
-  override lazy val webhooksConsumer =
-    RabbitQueue.consumer[WorkerWebhook](rabbitUri, "webhooks")(reporter, JsonConversions.webhookUnmarshaller).asInstanceOf[QueueConsumer[WorkerWebhook]]
+  override lazy val webhookPublisher: QueuePublisher[Webhook] =
+    RabbitQueue.publisher[Webhook](rabbitUri, "webhooks")(reporter, Webhook.marshaller)
+  override lazy val webhooksConsumer: QueueConsumer[WorkerWebhook] =
+    RabbitQueue.consumer[WorkerWebhook](rabbitUri, "webhooks")(reporter, JsonConversions.webhookUnmarshaller)
+
   override lazy val httpClient                           = SimpleHttpClient()
   override lazy val apiAuth                              = AuthImpl
   override lazy val deployConnector: DeployConnector     = ConnectorUtils.loadDeployConnector(config)

@@ -45,6 +45,18 @@ prisma init hello-world
 
 </Instruction>
 
+<Instruction>
+
+After running the command, the CLI will ask you if you want to use an existing [Prisma server](!alias-eu2ood0she) or set up a new one. To get started quickly in this tutorial, you'll use a Prisma Sandbox. So choose either the `sandbox-eu1` or `sandbox-us1` and hit **Enter**.
+
+</Instruction>
+
+<Instruction>
+
+The CLI will then prompt you to configure the _name_ and _stage_ for your Prisma API. You can just choose the suggested values by hitting **Enter** two times.
+
+</Instruction>
+
 This will create a new directory called `hello-world` as well as the two files which provide a minimal setup for your service:
 
 - [`prisma.yml`](!alias-foatho8aip): The root configuration file for your service. It contains information about your service, like the name (which is used to generate the service's HTTP endpoint), a secret to secure the access to the endpoint and about where it should be deployed.
@@ -101,9 +113,24 @@ Because your data model contains the `User` type, the Prisma API now allows for 
 
 To actually use these operations, you need a way to [send requests to your service's API](!alias-ohm2ouceuj). Since that API is exposed via HTTP, you could use tools like [`curl`](https://en.wikipedia.org/wiki/CURL) or [Postman](https://www.getpostman.com/) to interact with it. However, GraphQL actually has with much nicer tooling for that purpose: [GraphQL Playground](https://github.com/graphcool/graphql-playground), an interactive GraphQL IDE.
 
+The GraphQL Playground is based on [`graphql-config`](https://github.com/graphcool/graphql-config), so before opening it you need to create a `.graphqlconfig.yml`-file where you specify your Prisma project:
+
 <Instruction>
 
-To open a GraphQL Playground, you can use the Prisma CLI again. Simply run the following command inside the `hello-world` directory:
+Create a new file inside the `hello-world` directory and call it `.graphqlconfig.yml`. Then add the following contents to it:
+
+```yml
+projects:
+  prisma:
+    extensions:
+      prisma: prisma.yml
+```
+
+</Instruction>
+
+<Instruction>
+
+To open a GraphQL Playground, you can now use the Prisma CLI again. Simply run the following command inside the `hello-world` directory:
 
 ```sh
 prisma playground

@@ -40,7 +40,7 @@ case class PrismaLocalDependencies()(implicit val system: ActorSystem, val mater
   override lazy val apiSchemaBuilder = CachedSchemaBuilder(SchemaBuilder(), invalidationPubSub)
   override lazy val projectFetcher: ProjectFetcher = {
     val fetcher = SingleServerProjectFetcher(projectPersistence)
-    CachedProjectFetcherImpl(fetcher, invalidationPubSub)
+    CachedProjectFetcherImpl(fetcher, invalidationPubSub)(system.dispatcher)
   }
 
   override lazy val migrator: Migrator = AsyncMigrator(migrationPersistence, projectPersistence, deployConnector)
@@ -96,8 +96,7 @@ case class PrismaLocalDependencies()(implicit val system: ActorSystem, val mater
   override lazy val functionValidator = FunctionValidatorImpl()
 
   override def projectIdEncoder: ProjectIdEncoder = deployConnector.projectIdEncoder
-
-  override lazy val apiConnector                = ConnectorUtils.loadApiConnector(config)
-  override lazy val sideEffectMutactionExecutor = SideEffectMutactionExecutorImpl()
-  override lazy val mutactionVerifier           = DatabaseMutactionVerifierImpl
+  override lazy val apiConnector                  = ConnectorUtils.loadApiConnector(config)
+  override lazy val sideEffectMutactionExecutor   = SideEffectMutactionExecutorImpl()
+  override lazy val mutactionVerifier             = DatabaseMutactionVerifierImpl
 }

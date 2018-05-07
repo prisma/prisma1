@@ -4,11 +4,11 @@ import com.prisma.api.connector.DataResolver
 import com.prisma.api.resolver.DeferredTypes.{CountToManyDeferred, OrderedDeferred, OrderedDeferredFutureResult}
 import com.prisma.gc_values.IdGCValue
 
-import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
 
 class CountToManyDeferredResolver(dataResolver: DataResolver) {
-  def resolve(orderedDeferreds: Vector[OrderedDeferred[CountToManyDeferred]]): Vector[OrderedDeferredFutureResult[Int]] = {
+  def resolve(orderedDeferreds: Vector[OrderedDeferred[CountToManyDeferred]], executionContext: ExecutionContext): Vector[OrderedDeferredFutureResult[Int]] = {
+    implicit val ec: ExecutionContext          = executionContext
     val deferreds: Vector[CountToManyDeferred] = orderedDeferreds.map(_.deferred)
 
     // check if we really can satisfy all deferreds with one database query

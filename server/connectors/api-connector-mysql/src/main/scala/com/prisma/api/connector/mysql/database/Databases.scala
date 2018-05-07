@@ -25,10 +25,10 @@ object Databases {
     ConfigFactory
       .parseString(s"""
         |database {
-        |  connectionInitSql="set names utf8mb4"
+        |  connectionInitSql="set names utf8mb4;"
         |  dataSourceClass = "slick.jdbc.DriverDataSource"
         |  properties {
-        |    url = "jdbc:mysql://${dbConfig.host}:${dbConfig.port}/?autoReconnect=true&useSSL=false&serverTimeZone=UTC&useUnicode=true&characterEncoding=UTF-8&socketTimeout=60000&usePipelineAuth=false"
+        |    url = "jdbc:mysql://${dbConfig.host}:${dbConfig.port}/?autoReconnect=true&useSSL=false&serverTimeZone=UTC&useUnicode=true&characterEncoding=UTF-8&socketTimeout=60000&usePipelineAuth=false&cachePrepStmts=true"
         |    user = ${dbConfig.user}
         |    password = ${dbConfig.password.getOrElse("")}
         |  }

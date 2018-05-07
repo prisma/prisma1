@@ -2,6 +2,7 @@ package com.prisma.deploy.connector.postgresql.impls
 
 import com.prisma.deploy.connector.ClientDbQueries
 import com.prisma.deploy.connector.postgresql.database.PostgresDeployDatabaseQueryBuilder
+import com.prisma.shared.models.RelationSide.RelationSide
 import com.prisma.shared.models.{Field, Model, Project}
 import slick.dbio.Effect.Read
 import slick.jdbc.PostgresProfile.api._
@@ -10,10 +11,15 @@ import slick.sql.SqlStreamingAction
 
 import scala.concurrent.{ExecutionContext, Future}
 
-case class ClientDbQueriesImpl(project: Project, clientDatabase: Database)(implicit ec: ExecutionContext) extends ClientDbQueries {
+case class PostgresClientDbQueries(project: Project, clientDatabase: Database)(implicit ec: ExecutionContext) extends ClientDbQueries {
 
   def existsByModel(modelName: String): Future[Boolean] = {
     val query = PostgresDeployDatabaseQueryBuilder.existsByModel(project.id, modelName)
+    clientDatabase.run(readOnlyBoolean(query)).map(_.head).recover { case _: java.sql.SQLSyntaxErrorException => false }
+  }
+
+  def existsDuplicateByRelationAndSide(relationId: String, relationSide: RelationSide): Future[Boolean] = {
+    val query = PostgresDeployDatabaseQueryBuilder.existsDuplicateByRelationAndSide(project.id, relationId, relationSide)
     clientDatabase.run(readOnlyBoolean(query)).map(_.head).recover { case _: java.sql.SQLSyntaxErrorException => false }
   }
 

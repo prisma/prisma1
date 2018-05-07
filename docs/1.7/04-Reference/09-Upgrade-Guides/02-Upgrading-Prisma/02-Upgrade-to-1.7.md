@@ -100,14 +100,13 @@ Here is an example that performs three tasks after a deployment:
 1. Invoke code generation as specified in `.graphqlconfig.yml`
 
 ```yml
+# in database/prisma.yml
 hooks:
   post-deploy:
     - echo "Deployment finished"
     - graphql get-schema --project db
     - graphql prepare
 ```
-
-
 
 ## Prisma CLI
 
@@ -137,7 +136,6 @@ services:
         databases:
           default:
             connector: mysql  # or `postgres`
-            active: true
             host: db
             port: 3306        # or `5432` for `postgres`
             user: root
@@ -238,3 +236,26 @@ hooks:
     - graphql get-schema --project prisma
     - graphql prepare
 ```
+
+### Bootstrap a GraphQL server
+
+Note that in Prisma 1.7, the `--boilerplate` option has been removed from the `prisma init` command. This means you can not bootstrap an entire GraphQL server based on a [GraphQL boilerplate](https://github.com/graphql-boilerplates) project any more.
+
+To bootstrap a GraphQL server based on a GraphQL boilerplate project, use the `graphql create` command from the [GraphQL CLI](https://github.com/graphql-cli/graphql-cli):
+
+```bash
+# Install the GraphQL CLI
+npm install -g graphql-cli
+
+# Choose a boilerplate from the interactive prompt ...
+graphql create myapp 
+
+# ...or directly select a boilerplate project via the `--boilerplate` option (e.g. `typescript-advanced`)
+graphql create myapp --boilerplate typescript-advanced
+```
+
+## Common Errors
+
+### Invalid prisma.yml file prisma.yml should NOT have additional properties.
+
+You can read more about this error and how to fix it [in the Forum](https://www.graph.cool/forum/t/how-to-fix-invalid-prisma-yml-file-prisma-yml-should-not-have-additional-properties-additionalproperty-endpoint-errors/3303).

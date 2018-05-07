@@ -1,5 +1,5 @@
 import { Command, flags, Flags, DeployPayload, Config } from 'prisma-cli-engine'
-import { Cluster, getEndpoint, getWSEndpoint } from 'prisma-yml'
+import { Cluster } from 'prisma-yml'
 import chalk from 'chalk'
 import { ServiceDoesntExistError } from '../../errors/ServiceDoesntExistError'
 import { emptyDefinition } from './emptyDefinition'
@@ -17,10 +17,10 @@ import { spawn } from '../../spawn'
 import * as sillyname from 'sillyname'
 import { getSchemaPathFromConfig } from './getSchemaPathFromConfig'
 import * as findUp from 'find-up'
-import getGraphQLCliBin from '../../utils/getGraphQLCliBin'
 import Up from '../local/up'
 import { EndpointDialog } from '../../utils/EndpointDialog'
 import { isDockerComposeInstalled } from '../../utils/dockerComposeInstalled'
+import { spawnSync } from 'npm-run'
 
 export default class Deploy extends Command {
   static topic = 'deploy'
@@ -97,7 +97,7 @@ ${chalk.gray(
     /**
      * If no endpoint or service provided, ask for it
      */
-    let workspace
+    let workspace: string | undefined | null = this.definition.getWorkspace()
     let cluster
     let dockerComposeYml = defaultDockerCompose
     if (!serviceName || !stage || interactive) {
@@ -178,7 +178,7 @@ Note: prisma local start will be deprecated soon in favor of the direct usage of
     /**
      * Make sure we're logged in when a non-public cluster has been chosen
      */
-    if (cluster && !cluster.local) {
+    if (cluster && !cluster.local && cluster.isPrivate) {
       if (!workspace) {
         workspace = this.definition.getWorkspace() || '*'
       }
@@ -192,13 +192,16 @@ Note: prisma local start will be deprecated soon in favor of the direct usage of
       }
     }
 
-    await this.client.initClusterClient(cluster, workspace, serviceName, stage)
+    await this.client.initClusterClient(cluster, serviceName, stage, workspace!)
 
+    debug('checking verions')
     await this.checkVersions(cluster!)
 
     let projectNew = false
-    if (!await this.projectExists(cluster, serviceName, stage, workspace)) {
-      await this.addProject(cluster, serviceName, stage, workspace)
+    debug('checking if project exists')
+    if (!await this.projectExists(cluster, serviceName, stage, workspace!)) {
+      debug('adding project')
+      await this.addProject(cluster, serviceName, stage, workspace!)
       projectNew = true
     }
 
@@ -210,7 +213,7 @@ Note: prisma local start will be deprecated soon in favor of the direct usage of
       force,
       dryRun,
       projectNew,
-      workspace,
+      workspace!,
     )
 
     if (watch) {
@@ -229,7 +232,7 @@ Note: prisma local start will be deprecated soon in favor of the direct usage of
                 force,
                 dryRun,
                 false,
-                workspace,
+                workspace!,
               )
               this.out.log('Watching for change...')
             }
@@ -437,9 +440,16 @@ Note: prisma local start will be deprecated soon in favor of the direct usage of
     for (const hook of hooks) {
       const splittedHook = hook.split(' ')
       this.out.action.start(`Running ${chalk.cyan(hook)}`)
-      const result = await spawn(splittedHook[0], splittedHook.slice(1))
+      const child = spawnSync(splittedHook[0], splittedHook.slice(1))
+      const stderr = child.stderr && child.stderr.toString()
+      if (stderr && stderr.length > 0) {
+        this.out.log(stderr)
+      }
+      const stdout = child.stdout && child.stdout.toString()
+      if (stdout) {
+        this.out.log(stdout)
+      }
       this.out.action.stop()
-      this.out.log(result)
     }
   }
 
@@ -517,31 +527,6 @@ Note: prisma local start will be deprecated soon in favor of the direct usage of
     return false
   }
 
-  private async graphqlPrepare() {
-    let dir
-    try {
-      dir = this.config.findConfigDir()
-    } catch (e) {
-      //
-    }
-    if (dir) {
-      const graphqlBin = await getGraphQLCliBin()
-      debug({ graphqlBin })
-      this.out.log(`Running ${chalk.cyan(`$ graphql prepare`)}...`)
-      try {
-        const oldCwd = this.config.cwd
-        const configDir = this.config.findConfigDir()
-        if (configDir) {
-          process.chdir(configDir)
-        }
-        await spawn(graphqlBin, ['prepare'])
-        process.chdir(oldCwd)
-      } catch (e) {
-        this.out.warn(e)
-      }
-    }
-  }
-
   private printResult(payload: DeployPayload, force: boolean) {
     if (payload.errors && payload.errors.length > 0) {
       this.out.log(`${chalk.bold.red('\nErrors:')}`)
@@ -598,14 +583,12 @@ Note: prisma local start will be deprecated soon in favor of the direct usage of
       'Your Prisma GraphQL database endpoint is live:',
     )}
 
-  ${chalk.bold('HTTP:')}  ${getEndpoint(
-      cluster,
+  ${chalk.bold('HTTP:')}  ${cluster.getApiEndpoint(
       serviceName,
       stageName,
       workspace,
     )}
-  ${chalk.bold('WS:')}    ${getWSEndpoint(
-      cluster,
+  ${chalk.bold('WS:')}    ${cluster.getWSEndpoint(
       serviceName,
       stageName,
       workspace,

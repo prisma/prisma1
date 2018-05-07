@@ -48,7 +48,7 @@ case class SchemaInferrerImpl(
 
   def infer(): Schema Or ProjectSyntaxError = {
     for {
-      models <- nextModels(nextRelations)
+      models <- nextModels
       schema = Schema(
         models = models.toList,
         relations = nextRelations.toList,
@@ -59,9 +59,9 @@ case class SchemaInferrerImpl(
     } yield result
   }
 
-  def nextModels(relations: Set[Relation]): Vector[Model] Or ProjectSyntaxError = {
+  lazy val nextModels: Vector[Model] Or ProjectSyntaxError = {
     val models = sdl.objectTypes.map { objectType =>
-      fieldsForType(objectType, relations).map { fields =>
+      fieldsForType(objectType).map { fields =>
         val fieldNames = fields.map(_.name)
         val hiddenReservedFields = if (isActive) {
           val missingReservedFields = ReservedFields.reservedFieldNames.filterNot(fieldNames.contains)
@@ -88,7 +88,7 @@ case class SchemaInferrerImpl(
     OrExtensions.sequence(models)
   }
 
-  def fieldsForType(objectType: ObjectTypeDefinition, relations: Set[Relation]): Or[Vector[Field], InvalidGCValue] = {
+  def fieldsForType(objectType: ObjectTypeDefinition): Or[Vector[Field], InvalidGCValue] = {
 
     val fields: Vector[Or[Field, InvalidGCValue]] = objectType.fields.flatMap { fieldDef =>
       val typeIdentifier = typeIdentifierForTypename(fieldDef.typeName)
@@ -97,14 +97,22 @@ case class SchemaInferrerImpl(
         None
       } else {
         fieldDef.relationName match {
-          case Some(name) => relations.find(_.name == name)
-          case None       => relations.find(relation => relation.connectsTheModels(objectType.name, fieldDef.typeName))
+          case Some(name) =>
+            nextRelations.find(_.name == name)
+
+          case None =>
+            val relationsThatConnectBothModels = nextRelations.filter(relation => relation.connectsTheModels(objectType.name, fieldDef.typeName))
+            if (relationsThatConnectBothModels.size > 1) {
+              None
+            } else {
+              relationsThatConnectBothModels.headOption
+            }
         }
       }
 
       //For self relations we were inferring the relationSide A for both sides, this now assigns A to the lexicographically lower field name and B to the other
-      //If in the previous schema whether both relationSides are A we reassign the relationsides otherwise we keep the one from the previous schema.
-      def inferRelationSide(relation: Option[Relation]): Option[RelationSide.Value] = {
+      //If in the previous schema both relationSides are A we reassign the relationsides otherwise we keep the one from the previous schema.
+      def inferRelationSide(relation: Option[Relation]) = {
         def oldRelationSidesNotBothEqual(oldField: Field) = oldField.otherRelationField(baseSchema) match {
           case Some(relatedField) => oldField.relationSide.isDefined && oldField.relationSide != relatedField.relationSide
           case None               => true

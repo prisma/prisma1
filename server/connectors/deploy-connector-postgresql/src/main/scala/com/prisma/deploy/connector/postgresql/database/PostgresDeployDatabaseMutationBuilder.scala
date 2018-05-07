@@ -109,10 +109,17 @@ object PostgresDeployDatabaseMutationBuilder {
                    newIsRequired: Boolean,
                    newIsList: Boolean,
                    newTypeIdentifier: TypeIdentifier) = {
-    val nulls   = if (newIsRequired) { "NOT NULL" } else { "NULL" }
+    val nulls   = if (newIsRequired) { "SET NOT NULL" } else { "DROP NOT NULL" }
     val sqlType = sqlTypeForScalarTypeIdentifier(newTypeIdentifier)
+    val renameIfNecessary =
+      if (oldColumnName != newColumnName) sqlu"""ALTER TABLE "#$projectId"."#$tableName" RENAME COLUMN "#$oldColumnName" TO "#$newColumnName""""
+      else DBIOAction.successful(())
 
-    sqlu"""ALTER TABLE "#$projectId"."#$tableName" CHANGE COLUMN "#$oldColumnName" "#$newColumnName" #$sqlType #$nulls"""
+    DBIOAction.seq(
+      sqlu"""ALTER TABLE "#$projectId"."#$tableName" ALTER COLUMN "#$oldColumnName" TYPE #$sqlType""",
+      sqlu"""ALTER TABLE "#$projectId"."#$tableName" ALTER COLUMN "#$oldColumnName" #$nulls""",
+      renameIfNecessary
+    )
   }
 
   def addUniqueConstraint(projectId: String, tableName: String, columnName: String, typeIdentifier: TypeIdentifier, isList: Boolean) = {

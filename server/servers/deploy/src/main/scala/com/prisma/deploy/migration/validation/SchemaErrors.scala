@@ -42,9 +42,22 @@ object SchemaErrors {
     error(fieldAndType, s"""The field `${fieldAndType.fieldDef.name}` is a scalar field and cannot specify the `@relation` directive.""")
   }
 
-  def relationNameMustAppear2Times(fieldAndType: FieldAndType): SchemaError = {
+  def ambiguousRelationSinceThereIsOnlyOneRelationDirective(fieldAndType: FieldAndType): SchemaError = {
     val relationName = fieldAndType.fieldDef.previousRelationName.get
-    error(fieldAndType, s"A relation directive with a name must appear exactly 2 times. Relation name: '$relationName'")
+    val nameA        = fieldAndType.objectType.name
+    val nameB        = fieldAndType.fieldDef.fieldType.namedType.name
+    error(
+      fieldAndType,
+      s"You are trying to set the relation '$relationName' from `$nameA` to `$nameB` and are only providing a relation directive on `$nameA`. " +
+        s"Since there is also a relation field without a relation directive on `$nameB` pointing towards `$nameA` that is ambiguous. " +
+        s"Please provide the same relation directive on `$nameB` if this is supposed to be the same relation. " +
+        s"If you meant to create two separate relations without backrelations please provide a relation directive with a different name on `nameB`."
+    )
+  }
+
+  def relationDirectiveCannotAppearMoreThanTwice(fieldAndType: FieldAndType): SchemaError = {
+    val relationName = fieldAndType.fieldDef.previousRelationName.get
+    error(fieldAndType, s"A relation directive cannot appear more than twice. Relation name: '$relationName'")
   }
 
   def selfRelationMustAppearOneOrTwoTimes(fieldAndType: FieldAndType): SchemaError = {
@@ -143,6 +156,10 @@ object SchemaErrors {
       fieldAndType,
       s"""The scalar field `${fieldAndType.fieldDef.name}` has the wrong format: `${fieldAndType.fieldDef.typeString}` Possible Formats: `$scalarType`, `$scalarType!`, `[$scalarType!]` or `[$scalarType!]!`"""
     )
+  }
+
+  def enumNamesMustBeUnique(enumType: EnumTypeDefinition) = {
+    error(enumType, s"The enum type `${enumType.name}` is defined twice in the schema. Enum names must be unique.")
   }
 
   def enumValuesMustBeginUppercase(enumType: EnumTypeDefinition) = {
