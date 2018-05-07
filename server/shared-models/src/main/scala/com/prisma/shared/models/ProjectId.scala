@@ -10,6 +10,7 @@ case class ProjectIdEncoder(stageSeparator: Char) {
 
   def fromEncodedString(str: String): ProjectId = {
     val parts = str.split(stageSeparator)
+    require(parts.size == 2, s"an encoded project id string must consist of 2 parts. Separator is $stageSeparator. The string was: $str")
     val name  = parts(0)
     val stage = parts(1)
 

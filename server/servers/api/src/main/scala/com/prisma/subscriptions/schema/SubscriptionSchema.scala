@@ -22,7 +22,7 @@ case class SubscriptionSchema(
 
   import dependencies.system
 
-  val schemaBuilder    = SchemaBuilderImpl(project)
+  val schemaBuilder    = SchemaBuilderImpl(project, dependencies.capabilities)
   val modelObjectTypes = schemaBuilder.objectTypes
   val outputMapper     = OutputTypesBuilder(project, modelObjectTypes, dependencies.dataResolver(project))
 

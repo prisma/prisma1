@@ -10,6 +10,9 @@ case class Databases(master: DatabaseDef, readOnly: DatabaseDef)
 object Databases {
   private lazy val dbDriver = new org.postgresql.Driver
 
+  // PostgreSQL db used for all Prisma schemas (must be in sync with the deploy connector)
+  val defaultDatabase = "prisma"
+
   // Schema to use in the database
   val schema = "public" // default schema
 
@@ -27,14 +30,16 @@ object Databases {
   def typeSafeConfigFromDatabaseConfig(dbConfig: DatabaseConfig): Config = {
     val pooled = if (dbConfig.pooled) "" else "connectionPool = disabled"
 
+    val database = dbConfig.database.getOrElse(defaultDatabase)
+
     ConfigFactory
       .parseString(s"""
         |database {
         |  dataSourceClass = "slick.jdbc.DriverDataSource"
         |  properties {
-        |    url = "jdbc:postgresql://${dbConfig.host}:${dbConfig.port}/${dbConfig.database.getOrElse("prisma")}?currentSchema=$schema"
-        |    user = "${dbConfig.user}"
-        |    password = "${dbConfig.password.getOrElse("")}"
+        |    url = "jdbc:postgresql://${dbConfig.host}:${dbConfig.port}/$database?currentSchema=$schema"
+        |    user = ${dbConfig.user}
+        |    password = ${dbConfig.password.getOrElse("")}
         |  }
         |  numThreads = ${dbConfig.connectionLimit.getOrElse(10)}
         |  connectionTimeout = 5000

@@ -1,5 +1,8 @@
 package com.prisma.deploy.migration.inference
 
+import com.prisma.{ConnectorAwareTest, IgnoreActive}
+import com.prisma.deploy.connector.InferredTables
+import com.prisma.shared.models.Manifestations.{FieldManifestation, InlineRelationManifestation, ModelManifestation, RelationTableManifestation}
 import com.prisma.shared.models.{RelationSide, Schema}
 import com.prisma.shared.schema_dsl.SchemaDsl
 import org.scalactic.Or
@@ -7,8 +10,6 @@ import org.scalatest.{Matchers, WordSpec}
 import sangria.parser.QueryParser
 
 class SchemaInfererSpec extends WordSpec with Matchers {
-
-  val inferrer     = SchemaInferrer()
   val emptyProject = SchemaDsl().buildProject()
 
   "if a given relation does not exist yet, the inferer" should {
@@ -325,8 +326,94 @@ class SchemaInfererSpec extends WordSpec with Matchers {
     relation.getModelAField(schema).get.name should be("childTechnologies")
   }
 
-  def infer(schema: Schema, types: String, mapping: SchemaMapping = SchemaMapping.empty): Or[Schema, ProjectSyntaxError] = {
+  "handle database manifestations for models" in {
+    val types =
+      """|type Todo @model(table:"todo_table"){
+         |  name: String!
+         |}""".stripMargin
+    val schema = infer(emptyProject.schema, types).get
+
+    val model = schema.getModelByName_!("Todo")
+    model.manifestation should equal(Some(ModelManifestation("todo_table")))
+  }
+
+  "handle database manifestations for fields" in {
+    val types =
+      """|type Todo {
+         |  name: String! @field(column: "my_name_column")
+         |}""".stripMargin
+    val schema = infer(emptyProject.schema, types).get
+
+    val field = schema.getModelByName_!("Todo").getFieldByName_!("name")
+    field.manifestation should equal(Some(FieldManifestation("my_name_column")))
+  }
+
+  "handle relation table manifestations" ignore {
+    val types =
+      """|type Todo {
+         |  name: String!
+         |}
+         |
+         |type List {
+         |  todos: [Todo] @relationTable(table: "list_to_todo", thisColumn: "list_id", otherColumn: "todo_id")
+         |}""".stripMargin
+    val schema = infer(emptyProject.schema, types, isActive = false).get
+
+    val relation = schema.getModelByName_!("List").getFieldByName_!("todos").relation.get
+    // assert model ids to make sure that the generated manifestation refers to the right modelAColumn/modelBColumn
+    relation.modelAId should equal("List")
+    relation.modelBId should equal("Todo")
+
+    val expectedManifestation = RelationTableManifestation(table = "list_to_todo", modelAColumn = "list_id", modelBColumn = "todo_id")
+    relation.manifestation should equal(Some(expectedManifestation))
+  }
+
+  "handle inline relation manifestations" ignore {
+    val types =
+      """
+         |type List {
+         |  todos: [Todo]
+         |}
+         |
+         |type Todo {
+         |  name: String!
+         |  list: List @inline(column: "list_id")
+         |}
+         |""".stripMargin
+    val schema = infer(emptyProject.schema, types, isActive = false).get
+
+    val relation = schema.getModelByName_!("List").getFieldByName_!("todos").relation.get
+
+    val expectedManifestation = InlineRelationManifestation(inTableOfModelId = "Todo", referencingColumn = "list_id")
+    relation.manifestation should equal(Some(expectedManifestation))
+  }
+
+  "add hidden reserved fields if isActive is true" in {
+    val types =
+      """|type Todo {
+         |  name: String!
+         |}""".stripMargin
+    val schema = infer(emptyProject.schema, types, isActive = true).get
+
+    val model = schema.getModelByName_!("Todo")
+    model.fields should have(size(4))
+    model.fields.map(_.name) should equal(List("name", "id", "updatedAt", "createdAt"))
+  }
+
+  "do not add hidden reserved fields if isActive is false" in {
+    val types =
+      """|type Todo {
+         |  name: String!
+         |}""".stripMargin
+    val schema = infer(emptyProject.schema, types, isActive = false).get
+
+    val model = schema.getModelByName_!("Todo")
+    model.fields should have(size(1))
+    model.fields.map(_.name) should equal(List("name"))
+  }
+
+  def infer(schema: Schema, types: String, mapping: SchemaMapping = SchemaMapping.empty, isActive: Boolean = true): Or[Schema, ProjectSyntaxError] = {
     val document = QueryParser.parse(types).get
-    inferrer.infer(schema, mapping, document)
+    SchemaInferrer(isActive).infer(schema, mapping, document, InferredTables.empty)
   }
 }

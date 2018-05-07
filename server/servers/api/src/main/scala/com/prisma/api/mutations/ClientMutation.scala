@@ -11,7 +11,7 @@ trait ClientMutation[T] {
   val mutationId: Id = Cuid.createCuid()
   def dataResolver: DataResolver
   def prepareMutactions(): Future[PreparedMutactions]
-  def getReturnValue: Future[T]
+  def getReturnValue(results: MutactionResults): Future[T]
 
   def projectId: String = dataResolver.project.id
 }
@@ -31,6 +31,8 @@ case class PreparedMutactions(
 ) {
   lazy val allMutactions = databaseMutactions ++ sideEffectMutactions
 }
+
+case class MutactionResults(databaseResults: Vector[DatabaseMutactionResult])
 
 sealed trait ReturnValueResult
 case class BatchPayload(count: Long)

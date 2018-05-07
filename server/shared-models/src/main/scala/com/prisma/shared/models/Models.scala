@@ -3,6 +3,7 @@ package com.prisma.shared.models
 import com.prisma.gc_values.GCValue
 import com.prisma.shared.errors.SharedErrors
 import com.prisma.shared.models.FieldConstraintType.FieldConstraintType
+import com.prisma.shared.models.Manifestations._
 import org.joda.time.DateTime
 
 object IdType {
@@ -129,9 +130,10 @@ case class Model(
     name: String,
     stableIdentifier: String,
     fields: List[Field],
-    description: Option[String] = None,
+    manifestation: Option[ModelManifestation]
 ) {
-  def id = name
+  val id: String     = name
+  val dbName: String = manifestation.map(_.dbName).getOrElse(id)
 
   lazy val uniqueFields: List[Field]          = fields.filter(f => f.isUnique && f.isVisible)
   lazy val scalarFields: List[Field]          = fields.filter(_.isScalar)
@@ -141,6 +143,8 @@ case class Model(
   lazy val relationListFields: List[Field]    = relationFields.filter(_.isList)
   lazy val relationNonListFields: List[Field] = relationFields.filter(!_.isList)
   lazy val relations: List[Relation]          = fields.flatMap(_.relation).distinct
+  lazy val nonListFields                      = fields.filter(!_.isList)
+  lazy val idField                            = getFieldByName_!("id")
 
   lazy val cascadingRelationFields: List[Field] = relationFields.filter(field => field.relation.get.sideOfModelCascades(this))
 
@@ -157,7 +161,7 @@ case class Model(
     getFieldByName(name).getOrElse(sys.error(s"field $name is not part of the model ${this.name}")) // .getOrElse(throw FieldNotInModel(fieldName = name, modelName = this.name))
   def getFieldByName(name: String): Option[Field] = fields.find(_.name == name)
 
-  def hasVisibleIdField: Boolean = getFieldByName_!("id").isVisible
+  def hasVisibleIdField: Boolean = idField.isVisible
 }
 
 object RelationSide extends Enumeration {
@@ -208,9 +212,20 @@ case class Field(
     defaultValue: Option[GCValue],
     relation: Option[Relation],
     relationSide: Option[RelationSide.Value],
+    manifestation: Option[FieldManifestation],
     constraints: List[FieldConstraint] = List.empty
 ) {
-  def id                                            = name
+  def id = name
+  def dbName = {
+    if (isRelation) {
+      relation match {
+        case Some(r) if r.isInlineRelation => r.manifestation.get.asInstanceOf[InlineRelationManifestation].referencingColumn
+        case None                          => sys.error("not a valid call on relations manifested via a table")
+      }
+    } else {
+      manifestation.map(_.dbName).getOrElse(name)
+    }
+  }
   def isScalar: Boolean                             = typeIdentifier != TypeIdentifier.Relation
   def isRelation: Boolean                           = typeIdentifier == TypeIdentifier.Relation
   def isScalarList: Boolean                         = isScalar && isList
@@ -357,9 +372,13 @@ case class Relation(
     modelAId: Id,
     modelBId: Id,
     modelAOnDelete: OnDelete.Value,
-    modelBOnDelete: OnDelete.Value
+    modelBOnDelete: OnDelete.Value,
+    manifestation: Option[RelationManifestation]
 ) {
-  val relationTableName = "_" + name
+  val relationTableName = manifestation.collect { case m: RelationTableManifestation => m.table }.getOrElse("_" + name)
+
+  def hasManifestation: Boolean = manifestation.isDefined
+  def isInlineRelation: Boolean = manifestation.exists(_.isInstanceOf[InlineRelationManifestation])
 
   def connectsTheModels(model1: String, model2: String): Boolean = (modelAId == model1 && modelBId == model2) || (modelAId == model2 && modelBId == model1)
 
@@ -367,6 +386,16 @@ case class Relation(
   def isSameFieldSameModelRelation(schema: Schema): Boolean = {
     // note: defaults to modelAField to handle same model, same field relations
     getModelAField(schema) == getModelBField(schema).orElse(getModelAField(schema))
+  }
+
+  def getFieldOnModel(modelId: String, schema: Schema): Option[Field] = {
+    if (modelId == modelAId) {
+      getModelAField(schema)
+    } else if (modelId == modelBId) {
+      getModelBField(schema)
+    } else {
+      sys.error(s"The model id ${modelId} is not part of this relation ${name}")
+    }
   }
 
   def getModelA(schema: Schema): Option[Model] = schema.getModelById(modelAId)

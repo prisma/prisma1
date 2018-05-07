@@ -1,13 +1,15 @@
 package com.prisma.shared.schema_dsl
 
+import com.prisma.deploy.connector.{DatabaseIntrospectionInferrer, DeployConnector, InferredTables}
 import com.prisma.deploy.migration.inference.{SchemaInferrer, SchemaMapping}
 import com.prisma.gc_values.GCValue
 import com.prisma.shared.models.IdType.Id
 import com.prisma.shared.models._
+import com.prisma.utils.await.AwaitUtils
 import cool.graph.cuid.Cuid
 import sangria.parser.QueryParser
 
-object SchemaDsl {
+object SchemaDsl extends AwaitUtils {
 
   import scala.collection.mutable.Buffer
 
@@ -15,17 +17,35 @@ object SchemaDsl {
   def schema() = SchemaBuilder()
 
   def fromString(id: String = TestIds.testProjectId)(sdlString: String): Project = {
+    fromString(id, InferredTables.empty, withReservedFields = true)(sdlString)
+  }
+
+  def fromPassiveConnectorSdl(
+      id: String = TestIds.testProjectId,
+      deployConnector: DeployConnector,
+      withReservedFields: Boolean = true
+  )(sdlString: String): Project = {
+    val inferredTables = deployConnector.databaseIntrospectionInferrer(id).infer().await()
+    fromString(id, inferredTables, withReservedFields)(sdlString)
+  }
+
+  private def fromString(
+      id: String,
+      inferredTables: InferredTables,
+      withReservedFields: Boolean
+  )(sdlString: String): Project = {
     val emptyBaseSchema    = Schema()
     val emptySchemaMapping = SchemaMapping.empty
     val sqlDocument        = QueryParser.parse(sdlString.stripMargin).get
-    val schema             = SchemaInferrer().infer(emptyBaseSchema, emptySchemaMapping, sqlDocument).get
-
+    val schema             = SchemaInferrer(withReservedFields).infer(emptyBaseSchema, emptySchemaMapping, sqlDocument, inferredTables).get
     TestProject().copy(id = id, schema = schema)
   }
 
-  case class SchemaBuilder(modelBuilders: Buffer[ModelBuilder] = Buffer.empty,
-                           enums: Buffer[Enum] = Buffer.empty,
-                           functions: Buffer[com.prisma.shared.models.Function] = Buffer.empty) {
+  case class SchemaBuilder(
+      modelBuilders: Buffer[ModelBuilder] = Buffer.empty,
+      enums: Buffer[Enum] = Buffer.empty,
+      functions: Buffer[com.prisma.shared.models.Function] = Buffer.empty
+  ) {
 
     def apply(fn: SchemaBuilder => Unit): Project = {
       fn(this)
@@ -145,7 +165,8 @@ object SchemaDsl {
         modelAId = this.id,
         modelBId = modelB.id,
         modelAOnDelete = modelAOnDelete,
-        modelBOnDelete = modelBOnDelete
+        modelBOnDelete = modelBOnDelete,
+        manifestation = None
       )
       val newField = relationField(fieldAName, this, modelB, relation, isList = false, isBackward = false)
       fields += newField
@@ -173,7 +194,8 @@ object SchemaDsl {
         modelAId = this.id,
         modelBId = modelB.id,
         modelAOnDelete = modelAOnDelete,
-        modelBOnDelete = modelBOnDelete
+        modelBOnDelete = modelBOnDelete,
+        manifestation = None
       )
 
       val newField = relationField(fieldAName, this, modelB, relation, isList = false, isBackward = false, isRequired = true)
@@ -201,7 +223,8 @@ object SchemaDsl {
         modelAId = this.id,
         modelBId = modelB.id,
         modelAOnDelete = modelAOnDelete,
-        modelBOnDelete = modelBOnDelete
+        modelBOnDelete = modelBOnDelete,
+        manifestation = None
       )
 
       val newField = relationField(fieldAName, this, modelB, relation, isList = true, isBackward = false, isRequired = false)
@@ -229,7 +252,8 @@ object SchemaDsl {
         modelAId = this.id,
         modelBId = modelB.id,
         modelAOnDelete = modelAOnDelete,
-        modelBOnDelete = modelBOnDelete
+        modelBOnDelete = modelBOnDelete,
+        manifestation = None
       )
       val newField = relationField(fieldAName, this, modelB, relation, isList = true, isBackward = false)
       fields += newField
@@ -256,7 +280,8 @@ object SchemaDsl {
         modelAId = this.id,
         modelBId = modelB.id,
         modelAOnDelete = modelAOnDelete,
-        modelBOnDelete = modelBOnDelete
+        modelBOnDelete = modelBOnDelete,
+        manifestation = None
       )
       val newField = relationField(fieldAName, this, modelB, relation, isList = false, isBackward = false)
       fields += newField
@@ -283,7 +308,8 @@ object SchemaDsl {
         modelAId = this.id,
         modelBId = modelB.id,
         modelAOnDelete = modelAOnDelete,
-        modelBOnDelete = modelBOnDelete
+        modelBOnDelete = modelBOnDelete,
+        manifestation = None
       )
       val newField = relationField(fieldAName, from = this, to = modelB, relation, isList = true, isBackward = false)
       fields += newField
@@ -300,7 +326,8 @@ object SchemaDsl {
       Model(
         name = name,
         stableIdentifier = Cuid.createCuid(),
-        fields = fields.toList
+        fields = fields.toList,
+        manifestation = None
       )
     }
   }
@@ -330,7 +357,8 @@ object SchemaDsl {
       isHidden = isHidden,
       relation = None,
       relationSide = None,
-      constraints = constraints
+      constraints = constraints,
+      manifestation = None
     )
   }
 
@@ -354,7 +382,8 @@ object SchemaDsl {
       isUnique = false,
       isReadonly = false,
       defaultValue = None,
-      enum = None
+      enum = None,
+      manifestation = None
     )
   }
 
@@ -370,7 +399,8 @@ object SchemaDsl {
     enum = None,
     defaultValue = None,
     relation = None,
-    relationSide = None
+    relationSide = None,
+    manifestation = None
   )
 
   private val updatedAtField = Field(
@@ -383,7 +413,8 @@ object SchemaDsl {
     enum = None,
     defaultValue = None,
     relation = None,
-    relationSide = None
+    relationSide = None,
+    manifestation = None
   )
 
   private val createdAtField = Field(
@@ -396,6 +427,7 @@ object SchemaDsl {
     enum = None,
     defaultValue = None,
     relation = None,
-    relationSide = None
+    relationSide = None,
+    manifestation = None
   )
 }

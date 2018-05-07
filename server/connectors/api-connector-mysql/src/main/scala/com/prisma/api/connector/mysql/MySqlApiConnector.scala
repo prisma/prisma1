@@ -2,7 +2,7 @@ package com.prisma.api.connector.mysql
 
 import com.prisma.api.connector.mysql.database.{Databases, MySqlDataResolver}
 import com.prisma.api.connector.mysql.impl.MySqlDatabaseMutactionExecutor
-import com.prisma.api.connector.{ApiConnector, DatabaseMutactionExecutor}
+import com.prisma.api.connector.{ApiConnector, DatabaseMutactionExecutor, NodeQueryCapability}
 import com.prisma.config.DatabaseConfig
 import com.prisma.shared.models.{Project, ProjectIdEncoder}
 
@@ -28,4 +28,6 @@ case class MySqlApiConnector(config: DatabaseConfig)(implicit ec: ExecutionConte
   override def masterDataResolver(project: Project)                 = MySqlDataResolver(project, databases.master)(ec)
 
   override def projectIdEncoder: ProjectIdEncoder = ProjectIdEncoder('@')
+
+  override def capabilities = Vector(NodeQueryCapability)
 }

@@ -1,14 +1,14 @@
 package com.prisma.deploy.migration.migrator
 
 import com.prisma.deploy.connector.{CreateModelTable, DeployMutaction, DeployMutactionExecutor, MigrationStepMapper}
-import com.prisma.deploy.specutils.DeploySpecBase
+import com.prisma.deploy.specutils.ActiveDeploySpecBase
 import com.prisma.shared.models._
 import com.prisma.utils.await.AwaitUtils
 import org.scalatest.{FlatSpec, Matchers}
 
 import scala.concurrent.Future
 
-class MigrationApplierSpec extends FlatSpec with Matchers with DeploySpecBase with AwaitUtils {
+class MigrationApplierSpec extends FlatSpec with Matchers with ActiveDeploySpecBase with AwaitUtils {
   import system.dispatcher
   val persistence = testDependencies.migrationPersistence
 

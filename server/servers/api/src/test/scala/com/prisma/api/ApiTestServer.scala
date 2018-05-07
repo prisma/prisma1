@@ -9,11 +9,12 @@ import sangria.parser.QueryParser
 import sangria.renderer.SchemaRenderer
 import sangria.schema.Schema
 
-import scala.concurrent.Await
+import scala.concurrent.{Await, Awaitable, Future}
 import scala.concurrent.duration.Duration
 import scala.reflect.io.File
 
 case class ApiTestServer()(implicit dependencies: ApiDependencies) extends PlayJsonExtensions {
+  import dependencies.system.dispatcher
 
   def writeSchemaIntoFile(schema: String): Unit = File("schema").writeAll(schema)
 
@@ -30,77 +31,79 @@ case class ApiTestServer()(implicit dependencies: ApiDependencies) extends PlayJ
       dataContains: String = "",
       variables: JsValue = JsObject.empty,
       requestId: String = "CombinedTestDatabase.requestId"
-  ): JsValue = {
-    val result = executeQuerySimpleWithAuthentication(
+  ): JsValue = awaitInfinitely {
+    queryAsync(query, project, dataContains, variables, requestId)
+  }
+
+  def queryAsync(
+      query: String,
+      project: Project,
+      dataContains: String = "",
+      variables: JsValue = JsObject.empty,
+      requestId: String = "CombinedTestDatabase.requestId"
+  ): Future[JsValue] = {
+    val schemaBuilder = SchemaBuilder()(dependencies.system, dependencies)
+    val result = querySchemaAsync(
       query = query.stripMargin,
       project = project,
+      schema = schemaBuilder(project),
       variables = variables,
       requestId = requestId
     )
 
-    result.assertSuccessfulResponse(dataContains)
-    result
+    result.map { r =>
+      r.assertSuccessfulResponse(dataContains)
+      r
+    }
   }
 
   /**
     * Execute a Query that must fail.
     */
-  def queryThatMustFail(query: String,
-                        project: Project,
-                        errorCode: Int,
-                        errorCount: Int = 1,
-                        errorContains: String = "",
-                        userId: Option[String] = None,
-                        variables: JsValue = JsObject.empty,
-                        requestId: String = "CombinedTestDatabase.requestId",
-                        prismaHeader: Option[String] = None): JsValue = {
-    val result = executeQuerySimpleWithAuthentication(
-      query = query,
-      project = project,
-      variables = variables,
-      requestId = requestId
-    )
-    result.assertFailingResponse(errorCode, errorCount, errorContains)
-    result
-  }
-
-  /**
-    * Execute a Query without Checks.
-    */
-  def executeQuerySimpleWithAuthentication(
+  def queryThatMustFail(
       query: String,
       project: Project,
+      errorCode: Int,
+      errorCount: Int = 1,
+      errorContains: String = "",
+      userId: Option[String] = None,
       variables: JsValue = JsObject.empty,
       requestId: String = "CombinedTestDatabase.requestId"
   ): JsValue = {
     val schemaBuilder = SchemaBuilder()(dependencies.system, dependencies)
-    querySchema(
-      query = query,
-      project = project,
-      schema = schemaBuilder(project),
-      variables = variables,
-      requestId = requestId,
-    )
+    val result = awaitInfinitely {
+      querySchemaAsync(
+        query = query,
+        project = project,
+        schema = schemaBuilder(project),
+        variables = variables,
+        requestId = requestId
+      )
+    }
+    result.assertFailingResponse(errorCode, errorCount, errorContains)
+    result
   }
 
   def queryPrivateSchema(query: String, project: Project, variables: JsObject = JsObject.empty): JsValue = {
     val schemaBuilder = PrivateSchemaBuilder(project)(dependencies, dependencies.system)
-    querySchema(
-      query = query,
-      project = project,
-      schema = schemaBuilder.build(),
-      variables = variables,
-      requestId = "private-api-request"
-    )
+    awaitInfinitely {
+      querySchemaAsync(
+        query = query,
+        project = project,
+        schema = schemaBuilder.build(),
+        variables = variables,
+        requestId = "private-api-request"
+      )
+    }
   }
 
-  private def querySchema(
+  private def querySchemaAsync(
       query: String,
       project: Project,
       schema: Schema[ApiUserContext, Unit],
       variables: JsValue,
-      requestId: String,
-  ): JsValue = {
+      requestId: String
+  ): Future[JsValue] = {
     val queryAst = QueryParser.parse(query).get
 
     lazy val renderedSchema = SchemaRenderer.renderSchema(schema)
@@ -118,9 +121,11 @@ case class ApiTestServer()(implicit dependencies: ApiDependencies) extends PlayJ
       isBatch = false
     )
 
-    val result = Await.result(dependencies.graphQlRequestHandler.handle(graphQlRequest), Duration.Inf)._2
+    val result = dependencies.graphQlRequestHandler.handle(graphQlRequest).map(_._2)
 
-    println("Request Result: " + result)
+    result.foreach(x => println("Request Result: " + x))
     result
   }
+
+  private def awaitInfinitely[T](awaitable: Awaitable[T]): T = Await.result(awaitable, Duration.Inf)
 }

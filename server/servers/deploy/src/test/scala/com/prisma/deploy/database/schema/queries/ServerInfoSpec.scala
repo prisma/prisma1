@@ -1,10 +1,9 @@
 package com.prisma.deploy.database.schema.queries
 
-import com.prisma.deploy.specutils.DeploySpecBase
-import com.prisma.shared.models.ProjectId
+import com.prisma.deploy.specutils.ActiveDeploySpecBase
 import org.scalatest.{FlatSpec, Matchers}
 
-class ServerInfoSpec extends FlatSpec with Matchers with DeploySpecBase {
+class ServerInfoSpec extends FlatSpec with Matchers with ActiveDeploySpecBase {
 
   "ServerInfo query" should "return server version" in {
     val (project, _) = setupProject(basicTypesGql)

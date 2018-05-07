@@ -1,7 +1,7 @@
 package com.prisma.api.connector.postgresql.impl
 
 import com.prisma.api.connector.postgresql.DatabaseMutactionInterpreter
-import com.prisma.api.connector.postgresql.database.PostgresApiDatabaseMutationBuilder._
+import com.prisma.api.connector.postgresql.database.PostgresApiDatabaseMutationBuilder
 import com.prisma.api.connector.{ModelEdge, NodeEdge, Path}
 import com.prisma.api.schema.APIErrors.RequiredRelationWouldBeViolated
 import com.prisma.shared.models.Project
@@ -40,30 +40,35 @@ trait NestedRelationInterpreterBase extends DatabaseMutactionInterpreter {
       }
   }
 
-  def checkForOldParent = oldParentFailureTrigger(project, path, parentCauseString)
-  def checkForOldParentByChildWhere: slick.sql.SqlStreamingAction[Vector[String], String, slick.dbio.Effect] = path.lastEdge_! match {
-    case _: ModelEdge   => sys.error("Should be a node edge")
-    case edge: NodeEdge => oldParentFailureTriggerForRequiredRelations(project, edge.relation, edge.childWhere, edge.childRelationSide, parentCauseString)
+  def checkForOldParent(implicit mutationBuilder: PostgresApiDatabaseMutationBuilder) = mutationBuilder.oldParentFailureTrigger(path, parentCauseString)
+  def checkForOldParentByChildWhere(
+      implicit mutationBuilder: PostgresApiDatabaseMutationBuilder): slick.sql.SqlStreamingAction[Vector[String], String, slick.dbio.Effect] =
+    path.lastEdge_! match {
+      case _: ModelEdge => sys.error("Should be a node edge")
+      case edge: NodeEdge =>
+        mutationBuilder.oldParentFailureTriggerForRequiredRelations(edge.relation, edge.childWhere, edge.childRelationSide, parentCauseString)
+    }
+
+  def checkForOldChild(implicit mutationBuilder: PostgresApiDatabaseMutationBuilder) = mutationBuilder.oldChildFailureTrigger(path, childCauseString)
+  def noCheckRequired                                                                = List.empty
+
+  def removalByParent(implicit mutationBuilder: PostgresApiDatabaseMutationBuilder)         = mutationBuilder.deleteRelationRowByParent(path)
+  def removalByChildWhere(implicit mutationBuilder: PostgresApiDatabaseMutationBuilder)     = mutationBuilder.deleteRelationRowByChildWithWhere(path)
+  def removalByParentAndChild(implicit mutationBuilder: PostgresApiDatabaseMutationBuilder) = mutationBuilder.deleteRelationRowByParentAndChild(path)
+  def createRelationRow(implicit mutationBuilder: PostgresApiDatabaseMutationBuilder)       = List(mutationBuilder.createRelationRowByPath(path))
+  def noActionRequired                                                                      = List.empty
+
+  def requiredCheck(implicit mutationBuilder: PostgresApiDatabaseMutationBuilder): List[DBIOAction[_, NoStream, Effect]]
+
+  def removalActions(implicit mutationBuilder: PostgresApiDatabaseMutationBuilder): List[DBIOAction[_, NoStream, Effect]]
+
+  def addAction(implicit mutationBuilder: PostgresApiDatabaseMutationBuilder): List[DBIOAction[_, NoStream, Effect]]
+
+  def allActions(implicit mutationBuilder: PostgresApiDatabaseMutationBuilder) = requiredCheck ++ removalActions ++ addAction
+
+  override def action(mutationBuilder: PostgresApiDatabaseMutationBuilder) = {
+    DBIOAction.seq(allActions(mutationBuilder): _*)
   }
-
-  def checkForOldChild = oldChildFailureTrigger(project, path, childCauseString)
-  def noCheckRequired  = List.empty
-
-  def removalByParent         = deleteRelationRowByParent(project.id, path)
-  def removalByChildWhere     = deleteRelationRowByChildWithWhere(project.id, path)
-  def removalByParentAndChild = deleteRelationRowByParentAndChild(project.id, path)
-  def createRelationRow       = List(createRelationRowByPath(project.id, path))
-  def noActionRequired        = List.empty
-
-  def requiredCheck: List[DBIOAction[_, NoStream, Effect]]
-
-  def removalActions: List[DBIOAction[_, NoStream, Effect]]
-
-  def addAction: List[DBIOAction[_, NoStream, Effect]]
-
-  def allActions = requiredCheck ++ removalActions ++ addAction
-
-  override val action = DBIOAction.seq(allActions: _*)
 
   override val errorMapper = {
     case e: PSQLException if causedByThisMutaction(e.getMessage) => throw RequiredRelationWouldBeViolated(project, path.lastRelation_!)

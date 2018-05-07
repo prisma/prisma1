@@ -1,17 +1,15 @@
 package com.prisma.api.mutations
 
-import java.util.concurrent.Executors
-
 import com.prisma.api.ApiSpecBase
 import com.prisma.shared.schema_dsl.SchemaDsl
+import com.prisma.utils.await.AwaitUtils
 import org.scalatest.{FlatSpec, Matchers}
 
-import scala.concurrent.duration.Duration
-import scala.concurrent.{Await, ExecutionContext, Future}
+import scala.concurrent.Future
 
-class DeadlockSpec extends FlatSpec with Matchers with ApiSpecBase {
+class DeadlockSpec extends FlatSpec with Matchers with ApiSpecBase with AwaitUtils {
 
-  implicit val ec = ExecutionContext.fromExecutor(Executors.newFixedThreadPool(100))
+  import testDependencies.system.dispatcher
 
   "creating many items" should "not cause deadlocks" in {
     val project = SchemaDsl() { schema =>
@@ -19,8 +17,6 @@ class DeadlockSpec extends FlatSpec with Matchers with ApiSpecBase {
       schema.model("Todo").oneToManyRelation("comments", "todo", comment).field("a", _.String)
     }
     database.setup(project)
-
-    implicit val ec = ExecutionContext.fromExecutor(Executors.newFixedThreadPool(100))
 
     def exec(i: Int) =
       Future(
@@ -39,7 +35,7 @@ class DeadlockSpec extends FlatSpec with Matchers with ApiSpecBase {
         )
       )
 
-    Await.result(Future.traverse(0 to 50)((i) => exec(i)), Duration.Inf)
+    Future.traverse(0 to 50)((i) => exec(i)).await(seconds = 30)
   }
 
   "updating single item many times" should "not cause deadlocks" in {
@@ -70,9 +66,8 @@ class DeadlockSpec extends FlatSpec with Matchers with ApiSpecBase {
     val comment2Id = createResult.pathAsString("data.createTodo.comments.[1].id")
 
     def exec(i: Int) =
-      Future(
-        server.query(
-          s"""mutation {
+      server.queryAsync(
+        s"""mutation {
              |  updateTodo(
              |    where: { id: "${todoId}" }
              |    data:{
@@ -83,11 +78,14 @@ class DeadlockSpec extends FlatSpec with Matchers with ApiSpecBase {
              |  }
              |}
       """.stripMargin,
-          project
-        )
+        project
       )
 
-    Await.result(Future.traverse(0 to 50)((i) => exec(i)), Duration.Inf)
+    Future
+      .traverse(0 to 50) { (i) =>
+        exec(i)
+      }
+      .await(seconds = 30)
   }
 
   "updating single item and relations many times" should "not cause deadlocks" in {
@@ -118,9 +116,8 @@ class DeadlockSpec extends FlatSpec with Matchers with ApiSpecBase {
     val comment2Id = createResult.pathAsString("data.createTodo.comments.[1].id")
 
     def exec(i: Int) =
-      Future(
-        server.query(
-          s"""mutation {
+      server.queryAsync(
+        s"""mutation {
              |  updateTodo(
              |    where: { id: "${todoId}" }
              |    data:{
@@ -134,11 +131,14 @@ class DeadlockSpec extends FlatSpec with Matchers with ApiSpecBase {
              |  }
              |}
       """.stripMargin,
-          project
-        )
+        project
       )
 
-    Await.result(Future.traverse(0 to 50)((i) => exec(i)), Duration.Inf)
+    Future
+      .traverse(0 to 50) { (i) =>
+        exec(i)
+      }
+      .await(seconds = 30)
   }
 
   "creating many items with relations" should "not cause deadlocks" in {
@@ -149,9 +149,8 @@ class DeadlockSpec extends FlatSpec with Matchers with ApiSpecBase {
     database.setup(project)
 
     def exec(i: Int) =
-      Future(
-        server.query(
-          s"""mutation {
+      server.queryAsync(
+        s"""mutation {
                |  createTodo(
                |    data:{
                |      a: "a",
@@ -166,11 +165,10 @@ class DeadlockSpec extends FlatSpec with Matchers with ApiSpecBase {
                |  }
                |}
       """.stripMargin,
-          project
-        )
+        project
       )
 
-    Await.result(Future.traverse(0 to 50)((i) => exec(i)), Duration.Inf)
+    Future.traverse(0 to 50)((i) => exec(i)).await(seconds = 30)
   }
 
   "deleting many items" should "not cause deadlocks" in {
@@ -181,9 +179,8 @@ class DeadlockSpec extends FlatSpec with Matchers with ApiSpecBase {
     database.setup(project)
 
     def create() =
-      Future(
-        server.query(
-          """mutation {
+      server.queryAsync(
+        """mutation {
         |  createTodo(
         |    data: {
         |      a: "b",
@@ -196,15 +193,14 @@ class DeadlockSpec extends FlatSpec with Matchers with ApiSpecBase {
         |    comments { id }
         |  }
         |}""".stripMargin,
-          project
-        ))
+        project
+      )
 
-    val todoIds = Await.result(Future.traverse(0 to 50)((i) => create()), Duration.Inf).map(_.pathAsString("data.createTodo.id"))
+    val todoIds = Future.traverse(0 to 50)((i) => create()).await(seconds = 30).map(_.pathAsString("data.createTodo.id"))
 
     def exec(id: String) =
-      Future(
-        server.query(
-          s"""mutation {
+      server.queryAsync(
+        s"""mutation {
              |  deleteTodo(
              |    where: { id: "${id}" }
              |  ){
@@ -212,11 +208,9 @@ class DeadlockSpec extends FlatSpec with Matchers with ApiSpecBase {
              |  }
              |}
       """.stripMargin,
-          project
-        )
+        project
       )
 
-    Await.result(Future.traverse(todoIds)((i) => exec(i)), Duration.Inf)
+    Future.traverse(todoIds)((i) => exec(i)).await(seconds = 30)
   }
-
 }

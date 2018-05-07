@@ -45,7 +45,7 @@ case class Update(
     }
   }
 
-  override def getReturnValue: Future[ReturnValueResult] = {
+  override def getReturnValue(results: MutactionResults): Future[ReturnValueResult] = {
     prismaNodes flatMap {
       case Some(prismaNode) => returnValueByUnique(NodeSelector.forIdGCValue(model, prismaNode.id))
       case None             => Future.successful(NoReturnValue(where))

@@ -7,7 +7,9 @@ import com.prisma.shared.models.ModelMutationType.ModelMutationType
 import com.prisma.shared.models._
 
 sealed trait ApiMutaction
-sealed trait DatabaseMutaction   extends ApiMutaction
+sealed trait DatabaseMutaction extends ApiMutaction {
+  def project: Project
+}
 sealed trait SideEffectMutaction extends ApiMutaction
 
 case class AddDataItemToManyRelationByPath(project: Project, path: Path)   extends DatabaseMutaction

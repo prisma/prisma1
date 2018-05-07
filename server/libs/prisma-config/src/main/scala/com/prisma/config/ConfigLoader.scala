@@ -119,11 +119,25 @@ object ConfigLoader {
         val dbUser      = extractString("user", db)
         val dbPass      = extractStringOpt("password", db)
         val connLimit   = extractIntOpt("connectionLimit", db)
-        val database    = extractStringOpt("database", db)
         val mgmtSchema  = extractStringOpt("managementSchema", db)
         val pooled      = extractBooleanOpt("pooled", db)
+        val database    = extractStringOpt("database", db)
+        val schema      = extractStringOpt("schema", db)
 
-        DatabaseConfig(dbName, dbConnector, dbActive, dbHost, dbPort, dbUser, dbPass, database, mgmtSchema, connLimit, pooled.getOrElse(true))
+        DatabaseConfig(
+          name = dbName,
+          connector = dbConnector,
+          active = dbActive,
+          host = dbHost,
+          port = dbPort,
+          user = dbUser,
+          password = dbPass,
+          connectionLimit = connLimit,
+          pooled = pooled.getOrElse(true),
+          database = database,
+          schema = schema,
+          managementSchema = mgmtSchema
+        )
     }.toSeq
 
     if (databases.isEmpty) {
@@ -185,26 +199,31 @@ object ConfigLoader {
   }
 }
 
-case class PrismaConfig(port: Option[Int],
-                        managementApiSecret: Option[String],
-                        legacySecret: Option[String],
-                        server2serverSecret: Option[String],
-                        clusterAddress: Option[String],
-                        rabbitUri: Option[String],
-                        managmentApiEnabled: Option[Boolean],
-                        databases: Seq[DatabaseConfig])
+case class PrismaConfig(
+    port: Option[Int],
+    managementApiSecret: Option[String],
+    legacySecret: Option[String],
+    server2serverSecret: Option[String],
+    clusterAddress: Option[String],
+    rabbitUri: Option[String],
+    managmentApiEnabled: Option[Boolean],
+    databases: Seq[DatabaseConfig]
+)
 
-case class DatabaseConfig(name: String,
-                          connector: String,
-                          active: Boolean,
-                          host: String,
-                          port: Int,
-                          user: String,
-                          password: Option[String],
-                          database: Option[String],
-                          managementSchema: Option[String],
-                          connectionLimit: Option[Int],
-                          pooled: Boolean)
+case class DatabaseConfig(
+    name: String,
+    connector: String,
+    active: Boolean,
+    host: String,
+    port: Int,
+    user: String,
+    password: Option[String],
+    managementSchema: Option[String],
+    connectionLimit: Option[Int],
+    pooled: Boolean,
+    database: Option[String],
+    schema: Option[String]
+)
 
 abstract class ConfigError(reason: String)       extends Exception(reason)
 case class InvalidConfiguration(message: String) extends ConfigError(message)
