@@ -42,14 +42,14 @@ case class PassivePostgresApiConnector(config: DatabaseConfig)(implicit ec: Exec
   override def capabilities = Vector.empty
 }
 
-case class PassiveDatabaseMutactionExecutorImpl(activeExecutor: DatabaseMutactionExecutorImpl, databaseName: Option[String])(implicit ec: ExecutionContext)
+case class PassiveDatabaseMutactionExecutorImpl(activeExecutor: DatabaseMutactionExecutorImpl, schemaName: Option[String])(implicit ec: ExecutionContext)
     extends DatabaseMutactionExecutor {
 
   override def execute(mutactions: Vector[DatabaseMutaction], runTransactionally: Boolean): Future[Vector[DatabaseMutactionResult]] = {
     val transformed         = transform(mutactions)
     val interpreters        = transformed.map(interpreterFor)
     val combinedErrorMapper = interpreters.map(_.errorMapper).reduceLeft(_ orElse _)
-    val mutationBuilder     = PostGresApiDatabaseMutationBuilder(databaseName = databaseName.getOrElse(mutactions.head.project.id))
+    val mutationBuilder     = PostGresApiDatabaseMutationBuilder(schemaName = schemaName.getOrElse(mutactions.head.project.id))
 
     val singleAction = runTransactionally match {
       case true  => DBIO.sequence(interpreters.map(_.newAction(mutationBuilder))).transactionally
@@ -125,7 +125,7 @@ case class NestedCreateDataItemInterpreterForInlineRelations(mutaction: NestedCr
     val idSubQuery      = mutationBuilder.pathQueryForLastParent(path)
     val lastParentModel = path.removeLastEdge.lastModel
     for {
-      ids    <- (sql"""select "id" from #${mutationBuilder.databaseName}.#${lastParentModel.dbName} where id in (""" ++ idSubQuery ++ sql")").as[String]
+      ids    <- (sql"""select "id" from #${mutationBuilder.schemaName}.#${lastParentModel.dbName} where id in (""" ++ idSubQuery ++ sql")").as[String]
       result <- createDataItemAndLinkToParent2(mutationBuilder)(ids.head)
     } yield result
   }

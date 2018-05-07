@@ -15,7 +15,7 @@ import slick.sql.SqlStreamingAction
 import scala.concurrent.ExecutionContext.Implicits.global
 
 case class PostgresApiDatabaseQueryBuilder(
-    databaseName: String
+    schemaName: String
 ) {
   import JdbcExtensions._
   import QueryArgumentsExtensions._
@@ -64,9 +64,9 @@ case class PostgresApiDatabaseQueryBuilder(
   ): DBIOAction[ResolverResult[PrismaNode], NoStream, Effect] = {
 
     val tableName                                        = model.dbName
-    val (conditionCommand, orderByCommand, limitCommand) = extractQueryArgs(databaseName, tableName, args, None, overrideMaxNodeCount = overrideMaxNodeCount)
+    val (conditionCommand, orderByCommand, limitCommand) = extractQueryArgs(schemaName, tableName, args, None, overrideMaxNodeCount = overrideMaxNodeCount)
 
-    val query = sql"""select * from "#$databaseName"."#$tableName"""" ++
+    val query = sql"""select * from "#$schemaName"."#$tableName"""" ++
       prefixIfNotNone("where", conditionCommand) ++
       prefixIfNotNone("order by", orderByCommand) ++
       prefixIfNotNone("limit", limitCommand)
@@ -81,9 +81,9 @@ case class PostgresApiDatabaseQueryBuilder(
   ): DBIOAction[ResolverResult[RelationNode], NoStream, Effect] = {
 
     val tableName                                        = relationId
-    val (conditionCommand, orderByCommand, limitCommand) = extractQueryArgs(databaseName, tableName, args, None, overrideMaxNodeCount = overrideMaxNodeCount)
+    val (conditionCommand, orderByCommand, limitCommand) = extractQueryArgs(schemaName, tableName, args, None, overrideMaxNodeCount = overrideMaxNodeCount)
 
-    val query = sql"""select * from "#$databaseName"."#$tableName"""" ++
+    val query = sql"""select * from "#$schemaName"."#$tableName"""" ++
       prefixIfNotNone("where", conditionCommand) ++
       prefixIfNotNone("order by", orderByCommand) ++
       prefixIfNotNone("limit", limitCommand)
@@ -100,10 +100,10 @@ case class PostgresApiDatabaseQueryBuilder(
 
     val tableName = s"${model.name}_${field.name}"
     val (conditionCommand, orderByCommand, limitCommand) =
-      extractQueryArgs(databaseName, tableName, args, None, overrideMaxNodeCount = overrideMaxNodeCount, true)
+      extractQueryArgs(schemaName, tableName, args, None, overrideMaxNodeCount = overrideMaxNodeCount, true)
 
     val query =
-      sql"""select * from "#$databaseName"."#$tableName"""" ++
+      sql"""select * from "#$schemaName"."#$tableName"""" ++
         prefixIfNotNone("where", conditionCommand) ++
         prefixIfNotNone("order by", orderByCommand) ++
         prefixIfNotNone("limit", limitCommand)
@@ -120,14 +120,14 @@ case class PostgresApiDatabaseQueryBuilder(
   }
 
   def countAllFromTable(table: String, whereFilter: Option[DataItemFilterCollection]): DBIOAction[Int, NoStream, Effect] = {
-    val query = sql"""select count(*) from "#$databaseName"."#$table"""" ++ whereFilterAppendix(databaseName, table, whereFilter)
+    val query = sql"""select count(*) from "#$schemaName"."#$table"""" ++ whereFilterAppendix(schemaName, table, whereFilter)
     query.as[Int].map(_.head)
   }
 
   def batchSelectFromModelByUnique(model: Model, fieldName: String, values: Vector[GCValue]): SimpleDBIO[Vector[PrismaNode]] =
     SimpleDBIO[Vector[PrismaNode]] { x =>
       val placeHolders                   = values.map(_ => "?").mkString(",")
-      val query                          = s"""select * from "$databaseName"."${model.dbName}" where "$fieldName" in ($placeHolders)"""
+      val query                          = s"""select * from "$schemaName"."${model.dbName}" where "$fieldName" in ($placeHolders)"""
       val batchSelect: PreparedStatement = x.connection.prepareStatement(query)
       values.zipWithIndex.foreach { gcValueWithIndex =>
         batchSelect.setGcValue(gcValueWithIndex._2 + 1, gcValueWithIndex._1)
@@ -144,7 +144,7 @@ case class PostgresApiDatabaseQueryBuilder(
     }
 
   def selectFromScalarList(modelName: String, field: Field, nodeIds: Vector[IdGCValue]): DBIOAction[Vector[ScalarListValues], NoStream, Effect] = {
-    val query = sql"""select "nodeId", "position", "value" from "#$databaseName"."#${modelName}_#${field.name}" where "nodeId" in (""" ++ combineByComma(
+    val query = sql"""select "nodeId", "position", "value" from "#$schemaName"."#${modelName}_#${field.name}" where "nodeId" in (""" ++ combineByComma(
       nodeIds.map(v => sql"$v")) ++ sql")"
 
     query.as[ScalarListElement](getResultForScalarListField(field)).map { scalarListElements =>
@@ -171,14 +171,14 @@ case class PostgresApiDatabaseQueryBuilder(
     val oppositeRelationSide = fromField.oppositeRelationSide.get.toString
 
     val (conditionCommand, orderByCommand, limitCommand) =
-      extractQueryArgs(databaseName, fieldTable, args, defaultOrderShortcut = Some(s""" "$databaseName"."$unsafeRelationId"."$oppositeRelationSide" """), None)
+      extractQueryArgs(schemaName, fieldTable, args, defaultOrderShortcut = Some(s""" "$schemaName"."$unsafeRelationId"."$oppositeRelationSide" """), None)
 
     def createQuery(id: String, modelRelationSide: String, fieldRelationSide: String) = {
-      sql"""(select "#$databaseName"."#$fieldTable".*, "#$databaseName"."#$unsafeRelationId"."A" as __Relation__A,  "#$databaseName"."#$unsafeRelationId"."B" as __Relation__B
-            from "#$databaseName"."#$fieldTable"
-           inner join "#$databaseName"."#$unsafeRelationId"
-           on "#$databaseName"."#$fieldTable"."id" = "#$databaseName"."#$unsafeRelationId"."#$fieldRelationSide"
-           where "#$databaseName"."#$unsafeRelationId"."#$modelRelationSide" = '#$id' """ ++
+      sql"""(select "#$schemaName"."#$fieldTable".*, "#$schemaName"."#$unsafeRelationId"."A" as __Relation__A,  "#$schemaName"."#$unsafeRelationId"."B" as __Relation__B
+            from "#$schemaName"."#$fieldTable"
+           inner join "#$schemaName"."#$unsafeRelationId"
+           on "#$schemaName"."#$fieldTable"."id" = "#$schemaName"."#$unsafeRelationId"."#$fieldRelationSide"
+           where "#$schemaName"."#$unsafeRelationId"."#$modelRelationSide" = '#$id' """ ++
         prefixIfNotNone("and", conditionCommand) ++
         prefixIfNotNone("order by", orderByCommand) ++
         prefixIfNotNone("limit", limitCommand) ++ sql")"
@@ -225,13 +225,13 @@ case class PostgresApiDatabaseQueryBuilder(
     val fieldRelationSide = relationField.oppositeRelationSide.get.toString
 
     val (conditionCommand, orderByCommand, limitCommand) =
-      extractQueryArgs(databaseName, fieldTable, args, defaultOrderShortcut = Some(s"""$databaseName.$unsafeRelationId.$fieldRelationSide"""), None)
+      extractQueryArgs(schemaName, fieldTable, args, defaultOrderShortcut = Some(s"""$schemaName.$unsafeRelationId.$fieldRelationSide"""), None)
 
     def createQuery(id: String) = {
-      sql"""(select "#$id", count(*) from "#$databaseName"."#$fieldTable"
-           inner join "#$databaseName"."#$unsafeRelationId"
-           on "#$databaseName"."#$fieldTable"."id" = "#$databaseName"."#$unsafeRelationId"."#$fieldRelationSide"
-           where "#$databaseName"."#$unsafeRelationId"."#$modelRelationSide" = '#$id' """ ++
+      sql"""(select "#$id", count(*) from "#$schemaName"."#$fieldTable"
+           inner join "#$schemaName"."#$unsafeRelationId"
+           on "#$schemaName"."#$fieldTable"."id" = "#$schemaName"."#$unsafeRelationId"."#$fieldRelationSide"
+           where "#$schemaName"."#$unsafeRelationId"."#$modelRelationSide" = '#$id' """ ++
         prefixIfNotNone("and", conditionCommand) ++
         prefixIfNotNone("order by", orderByCommand) ++
         prefixIfNotNone("limit", limitCommand) ++ sql")"

@@ -17,7 +17,7 @@ import scala.concurrent.{ExecutionContext, Future}
 case class PostgresDataResolver(project: Project, readonlyClientDatabase: PostgresProfile.backend.DatabaseDef)(implicit ec: ExecutionContext)
     extends DataResolver {
 
-  val queryBuilder = PostgresApiDatabaseQueryBuilder(databaseName = project.id)
+  val queryBuilder = PostgresApiDatabaseQueryBuilder(schemaName = project.id)
 
   override def resolveByGlobalId(globalId: IdGCValue): Future[Option[PrismaNode]] = { //todo rewrite this to use normal query?
     if (globalId.value == "viewer-fixed") return Future.successful(Some(PrismaNode(globalId, RootGCValue.empty, Some("Viewer"))))

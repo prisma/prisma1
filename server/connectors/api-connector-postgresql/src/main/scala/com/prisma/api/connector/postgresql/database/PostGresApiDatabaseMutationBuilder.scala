@@ -17,7 +17,7 @@ import slick.jdbc.SQLActionBuilder
 import slick.sql.{SqlAction, SqlStreamingAction}
 
 case class PostGresApiDatabaseMutationBuilder(
-    databaseName: String
+    schemaName: String
 ) {
 
   // region CREATE
@@ -31,7 +31,7 @@ case class PostGresApiDatabaseMutationBuilder(
       val escapedKeys  = columns.map(column => s""""$column"""").mkString(",")
       val placeHolders = columns.map(_ => "?").mkString(",")
 
-      val query                         = s"""INSERT INTO "$databaseName"."${path.lastModel.dbName}" ($escapedKeys) VALUES ($placeHolders)"""
+      val query                         = s"""INSERT INTO "$schemaName"."${path.lastModel.dbName}" ($escapedKeys) VALUES ($placeHolders)"""
       val itemInsert: PreparedStatement = x.connection.prepareStatement(query, Statement.RETURN_GENERATED_KEYS)
 
       fields.map(_.name).zipWithIndex.foreach {
@@ -55,7 +55,7 @@ case class PostGresApiDatabaseMutationBuilder(
 
   def createRelayRow(path: Path): SqlStreamingAction[Vector[Int], Int, Effect]#ResultAction[Int, NoStream, Effect] = {
     val where = path.lastCreateWhere_!
-    (sql"""INSERT INTO "#$databaseName"."_RelayId" ("id", "stableModelIdentifier") VALUES (${where.fieldValue}, ${where.model.stableIdentifier})""").asUpdate
+    (sql"""INSERT INTO "#$schemaName"."_RelayId" ("id", "stableModelIdentifier") VALUES (${where.fieldValue}, ${where.model.stableIdentifier})""").asUpdate
   }
 
   def createRelationRowByPath(path: Path): SqlAction[Int, NoStream, Effect] = {
@@ -75,14 +75,14 @@ case class PostGresApiDatabaseMutationBuilder(
       val columnForParent = if (parentModel.id == relation.modelAId) manifestation.modelAColumn else manifestation.modelBColumn
       val columnForChild  = if (childModel.id == relation.modelAId) manifestation.modelAColumn else manifestation.modelBColumn
 
-      (sql"""insert into "#$databaseName"."#${path.lastRelation_!.relationTableName}" ("#$columnForParent", "#$columnForChild")""" ++
+      (sql"""insert into "#$schemaName"."#${path.lastRelation_!.relationTableName}" ("#$columnForParent", "#$columnForChild")""" ++
         sql"""Select """ ++ pathQueryForLastChild(path.removeLastEdge) ++ sql"," ++
-        sql""""id" FROM "#$databaseName"."#${childWhere.model.dbName}" where "#${childWhere.field.name}" = ${childWhere.fieldValue}""").asUpdate
+        sql""""id" FROM "#$schemaName"."#${childWhere.model.dbName}" where "#${childWhere.field.name}" = ${childWhere.fieldValue}""").asUpdate
     } else {
       val relationId = Cuid.createCuid()
-      (sql"""insert into "#$databaseName"."#${path.lastRelation_!.relationTableName}" ("id", "#${path.parentSideOfLastEdge}", "#${path.childSideOfLastEdge}")""" ++
+      (sql"""insert into "#$schemaName"."#${path.lastRelation_!.relationTableName}" ("id", "#${path.parentSideOfLastEdge}", "#${path.childSideOfLastEdge}")""" ++
         sql"""Select '#$relationId',""" ++ pathQueryForLastChild(path.removeLastEdge) ++ sql"," ++
-        sql""""id" FROM "#$databaseName"."#${childWhere.model.name}" where "#${childWhere.field.name}" = ${childWhere.fieldValue}""").asUpdate
+        sql""""id" FROM "#$schemaName"."#${childWhere.model.name}" where "#${childWhere.field.name}" = ${childWhere.fieldValue}""").asUpdate
     }
 
 //    (sql"""update "#$databaseName".todo""" ++
@@ -103,7 +103,7 @@ case class PostGresApiDatabaseMutationBuilder(
     val updateValues = combineByComma(args.raw.asRoot.map.map { case (k, v) => escapeKey(k) ++ sql" = $v" })
 
     if (updateValues.isDefined) {
-      (sql"""UPDATE "#$databaseName"."#${model.name}"""" ++ sql"SET " ++ updateValues ++ whereFilterAppendix(databaseName, model.name, whereFilter)).asUpdate
+      (sql"""UPDATE "#$schemaName"."#${model.name}"""" ++ sql"SET " ++ updateValues ++ whereFilterAppendix(schemaName, model.name, whereFilter)).asUpdate
     } else {
       DBIOAction.successful(())
     }
@@ -116,7 +116,7 @@ case class PostGresApiDatabaseMutationBuilder(
       case _: ModelEdge   => sql""
     }
 
-    val baseQuery = sql"""UPDATE "#$databaseName"."#${path.lastModel.name}" SET """ ++ updateValues ++ sql"""WHERE "id" ="""
+    val baseQuery = sql"""UPDATE "#$schemaName"."#${path.lastModel.name}" SET """ ++ updateValues ++ sql"""WHERE "id" ="""
 
     if (updateArgs.raw.asRoot.map.isEmpty) {
       DBIOAction.successful(())
@@ -124,7 +124,7 @@ case class PostGresApiDatabaseMutationBuilder(
       val query = path.lastEdge match {
         case Some(edge) =>
           baseQuery ++ sql"""(SELECT "#${path.childSideOfLastEdge}" """ ++
-            sql"""FROM "#$databaseName"."#${path.lastRelation_!.relationTableName}"""" ++
+            sql"""FROM "#$schemaName"."#${path.lastRelation_!.relationTableName}"""" ++
             sql"WHERE" ++ fromEdge(edge) ++ sql""""#${path.parentSideOfLastEdge}" = """ ++ pathQueryForLastParent(path) ++ sql")"
         case None => baseQuery ++ idFromWhere(path.root)
       }
@@ -145,7 +145,7 @@ case class PostGresApiDatabaseMutationBuilder(
       update: slick.dbio.DBIOAction[Unit, slick.dbio.NoStream, slick.dbio.Effect with slick.dbio.Effect.All]
   ) = {
 
-    val query     = sql"""select exists ( SELECT "id" FROM "#$databaseName"."#${updatePath.lastModel.name}" WHERE "id" = """ ++ pathQueryForLastChild(updatePath) ++ sql")"
+    val query     = sql"""select exists ( SELECT "id" FROM "#$schemaName"."#${updatePath.lastModel.name}" WHERE "id" = """ ++ pathQueryForLastChild(updatePath) ++ sql")"
     val condition = query.as[Boolean]
     // insert creates item first, then the list values
     val qInsert = DBIOAction.seq(createDataItem(createPath, createArgs), createRelayRow(createPath), create)
@@ -172,7 +172,7 @@ case class PostGresApiDatabaseMutationBuilder(
       }
 
       sql"""select EXISTS (
-            select "id" from "#$databaseName"."#${updatePath.lastModel.name}"
+            select "id" from "#$schemaName"."#${updatePath.lastModel.name}"
             where""" ++ nodeSelector(updatePath.lastEdge_!) ++
         sql""" "id" IN""" ++ pathQueryThatUsesWholePath(updatePath) ++ sql")"
     }
@@ -191,24 +191,24 @@ case class PostGresApiDatabaseMutationBuilder(
   //region DELETE
 
   def deleteDataItems(model: Model, whereFilter: Option[DataItemFilterCollection]) = {
-    (sql"""DELETE FROM "#$databaseName"."#${model.name}"""" ++ whereFilterAppendix(databaseName, model.name, whereFilter)).asUpdate
+    (sql"""DELETE FROM "#$schemaName"."#${model.name}"""" ++ whereFilterAppendix(schemaName, model.name, whereFilter)).asUpdate
   }
 
   def deleteRelayIds(model: Model, whereFilter: Option[DataItemFilterCollection]) = {
-    (sql"""DELETE FROM "#$databaseName"."_RelayId" WHERE "id" IN ( SELECT "id" FROM "#$databaseName"."#${model.name}"""" ++ whereFilterAppendix(
-      databaseName,
+    (sql"""DELETE FROM "#$schemaName"."_RelayId" WHERE "id" IN ( SELECT "id" FROM "#$schemaName"."#${model.name}"""" ++ whereFilterAppendix(
+      schemaName,
       model.name,
       whereFilter) ++ sql")").asUpdate
   }
 
   def deleteDataItem(path: Path) =
-    (sql"""DELETE FROM "#$databaseName"."#${path.lastModel.name}" WHERE "id" = """ ++ pathQueryForLastChild(path)).asUpdate
+    (sql"""DELETE FROM "#$schemaName"."#${path.lastModel.name}" WHERE "id" = """ ++ pathQueryForLastChild(path)).asUpdate
 
   def deleteRelayRow(path: Path) =
-    (sql"""DELETE FROM "#$databaseName"."_RelayId" WHERE "id" = """ ++ pathQueryForLastChild(path)).asUpdate
+    (sql"""DELETE FROM "#$schemaName"."_RelayId" WHERE "id" = """ ++ pathQueryForLastChild(path)).asUpdate
 
   def deleteRelationRowByParent(path: Path) = {
-    (sql"""DELETE FROM "#$databaseName"."#${path.lastRelation_!.relationTableName}" WHERE "#${path.parentSideOfLastEdge}" = """ ++ pathQueryForLastParent(path)).asUpdate
+    (sql"""DELETE FROM "#$schemaName"."#${path.lastRelation_!.relationTableName}" WHERE "#${path.parentSideOfLastEdge}" = """ ++ pathQueryForLastParent(path)).asUpdate
   }
 
   def deleteRelationRowByChildWithWhere(path: Path) = {
@@ -217,19 +217,19 @@ case class PostGresApiDatabaseMutationBuilder(
       case edge: NodeEdge => edge.childWhere
 
     }
-    (sql"""DELETE FROM "#$databaseName"."#${path.lastRelation_!.relationTableName}" WHERE "#${path.childSideOfLastEdge}"""" ++ idFromWhereEquals(where)).asUpdate
+    (sql"""DELETE FROM "#$schemaName"."#${path.lastRelation_!.relationTableName}" WHERE "#${path.childSideOfLastEdge}"""" ++ idFromWhereEquals(where)).asUpdate
   }
 
   def deleteRelationRowByParentAndChild(path: Path) = {
-    (sql"""DELETE FROM "#$databaseName"."#${path.lastRelation_!.relationTableName}" """ ++
+    (sql"""DELETE FROM "#$schemaName"."#${path.lastRelation_!.relationTableName}" """ ++
       sql"""WHERE "#${path.childSideOfLastEdge}" = """ ++ pathQueryForLastChild(path) ++
       sql""" AND "#${path.parentSideOfLastEdge}" = """ ++ pathQueryForLastParent(path)).asUpdate
   }
 
   def cascadingDeleteChildActions(path: Path) = {
-    val deleteRelayIds = (sql"""DELETE FROM "#$databaseName"."_RelayId" WHERE "id" IN (""" ++ pathQueryForLastChild(path) ++ sql")").asUpdate
+    val deleteRelayIds = (sql"""DELETE FROM "#$schemaName"."_RelayId" WHERE "id" IN (""" ++ pathQueryForLastChild(path) ++ sql")").asUpdate
     val deleteDataItems =
-      (sql"""DELETE FROM "#$databaseName"."#${path.lastModel.name}" WHERE "id" IN (""" ++ pathQueryForLastChild(path) ++ sql")").asUpdate
+      (sql"""DELETE FROM "#$schemaName"."#${path.lastModel.name}" WHERE "id" IN (""" ++ pathQueryForLastChild(path) ++ sql")").asUpdate
     DBIO.seq(deleteRelayIds, deleteDataItems)
   }
 
@@ -237,12 +237,12 @@ case class PostGresApiDatabaseMutationBuilder(
 
   //region SCALAR LISTS
   def setScalarList(path: Path, listFieldMap: Vector[(String, ListGCValue)]) = {
-    val idQuery = (sql"""SELECT "id" FROM "#$databaseName"."#${path.lastModel.name}" WHERE "id" = """ ++ pathQueryForLastChild(path)).as[String]
+    val idQuery = (sql"""SELECT "id" FROM "#$schemaName"."#${path.lastModel.name}" WHERE "id" = """ ++ pathQueryForLastChild(path)).as[String]
     if (listFieldMap.isEmpty) DBIOAction.successful(()) else setManyScalarListHelper(path.lastModel, listFieldMap, idQuery)
   }
 
   def setManyScalarLists(model: Model, listFieldMap: Vector[(String, ListGCValue)], whereFilter: Option[DataItemFilterCollection]) = {
-    val idQuery = (sql"""SELECT "id" FROM "#$databaseName"."#${model.name}"""" ++ whereFilterAppendix(databaseName, model.name, whereFilter)).as[String]
+    val idQuery = (sql"""SELECT "id" FROM "#$schemaName"."#${model.name}"""" ++ whereFilterAppendix(schemaName, model.name, whereFilter)).as[String]
     if (listFieldMap.isEmpty) DBIOAction.successful(()) else setManyScalarListHelper(model, listFieldMap, idQuery)
   }
 
@@ -270,11 +270,11 @@ case class PostGresApiDatabaseMutationBuilder(
 
           listFieldMap.foreach {
             case (fieldName, listGCValue) =>
-              val wipe                             = s"""DELETE  FROM "$databaseName"."${model.name}_$fieldName" $whereString"""
+              val wipe                             = s"""DELETE  FROM "$schemaName"."${model.name}_$fieldName" $whereString"""
               val wipeOldValues: PreparedStatement = x.connection.prepareStatement(wipe)
               wipeOldValues.executeUpdate()
 
-              val insert                             = s"""INSERT INTO "$databaseName"."${model.name}_$fieldName" ("nodeId", "position", "value") VALUES (?,?,?)"""
+              val insert                             = s"""INSERT INTO "$schemaName"."${model.name}_$fieldName" ("nodeId", "position", "value") VALUES (?,?,?)"""
               val insertNewValues: PreparedStatement = x.connection.prepareStatement(insert)
               val newValueTuples                     = valueTuplesForListField(listGCValue)
               newValueTuples.foreach { tuple =>
@@ -298,7 +298,7 @@ case class PostGresApiDatabaseMutationBuilder(
   //endregion
 
   //region RESET DATA
-  def truncateTable(tableName: String) = sqlu"""TRUNCATE TABLE "#$databaseName"."#$tableName" CASCADE"""
+  def truncateTable(tableName: String) = sqlu"""TRUNCATE TABLE "#$schemaName"."#$tableName" CASCADE"""
 
   //endregion
 
@@ -308,14 +308,14 @@ case class PostGresApiDatabaseMutationBuilder(
     if (where.isId) {
       sql"""${where.fieldValue}"""
     } else {
-      sql"""(SELECT "id" FROM (SELECT * FROM "#$databaseName"."#${where.model.name}") IDFROMWHERE WHERE "#${where.field.name}" = ${where.fieldValue})"""
+      sql"""(SELECT "id" FROM (SELECT * FROM "#$schemaName"."#${where.model.name}") IDFROMWHERE WHERE "#${where.field.name}" = ${where.fieldValue})"""
     }
   }
 
   def idFromWhereEquals(where: NodeSelector): SQLActionBuilder = sql" = " ++ idFromWhere(where)
 
   def idFromWherePath(where: NodeSelector): SQLActionBuilder = {
-    sql"""(SELECT "id" FROM (SELECT  * From "#$databaseName"."#${where.model.name}") IDFROMWHEREPATH WHERE "#${where.field.name}" = ${where.fieldValue})"""
+    sql"""(SELECT "id" FROM (SELECT  * From "#$schemaName"."#${where.model.name}") IDFROMWHEREPATH WHERE "#${where.field.name}" = ${where.fieldValue})"""
   }
 
   //we could probably save even more joins if we start the paths always at the last node edge
@@ -344,14 +344,14 @@ case class PostGresApiDatabaseMutationBuilder(
         }
 
         sql"""(SELECT "#${last.childRelationSide}"""" ++
-          sql""" FROM (SELECT * FROM "#$databaseName"."#${last.relation.relationTableName}") PATHQUERY""" ++
+          sql""" FROM (SELECT * FROM "#$schemaName"."#${last.relation.relationTableName}") PATHQUERY""" ++
           sql" WHERE " ++ childWhere ++ sql""""#${last.parentRelationSide}" IN (""" ++ pathQueryForLastParent(path) ++ sql"))"
     }
   }
 
   def whereFailureTrigger(where: NodeSelector, causeString: String) = {
     val table = where.model.name
-    val query = sql"""(SELECT "id" FROM "#$databaseName"."#${where.model.name}" WHEREFAILURETRIGGER WHERE "#${where.field.name}" = ${where.fieldValue})"""
+    val query = sql"""(SELECT "id" FROM "#$schemaName"."#${where.model.name}" WHEREFAILURETRIGGER WHERE "#${where.field.name}" = ${where.fieldValue})"""
 
     triggerFailureWhenNotExists(query, table, causeString)
   }
@@ -365,7 +365,7 @@ case class PostGresApiDatabaseMutationBuilder(
     }
 
     val query =
-      sql"""SELECT "id" FROM "#$databaseName"."#$table" CONNECTIONFAILURETRIGGERPATH""" ++
+      sql"""SELECT "id" FROM "#$schemaName"."#$table" CONNECTIONFAILURETRIGGERPATH""" ++
         sql"WHERE" ++ lastChildWhere ++ sql""""#${path.parentSideOfLastEdge}" = """ ++ pathQueryForLastParent(path)
 
     triggerFailureWhenNotExists(query, table, causeString)
@@ -376,36 +376,36 @@ case class PostGresApiDatabaseMutationBuilder(
                                                   childSide: RelationSide.Value,
                                                   triggerString: String): slick.sql.SqlStreamingAction[Vector[String], String, slick.dbio.Effect] = {
     val table = relation.relationTableName
-    val query = sql"""SELECT "id" FROM "#$databaseName"."#$table" OLDPARENTFAILURETRIGGER WHERE "#$childSide" """ ++ idFromWhereEquals(where)
+    val query = sql"""SELECT "id" FROM "#$schemaName"."#$table" OLDPARENTFAILURETRIGGER WHERE "#$childSide" """ ++ idFromWhereEquals(where)
 
     triggerFailureWhenExists(query, table, triggerString)
   }
 
   def oldParentFailureTrigger(path: Path, triggerString: String) = {
     val table = path.lastRelation_!.relationTableName
-    val query = sql"""SELECT "id" FROM "#$databaseName"."#$table" OLDPARENTPATHFAILURETRIGGER WHERE "#${path.childSideOfLastEdge}" IN (""" ++ pathQueryForLastChild(
+    val query = sql"""SELECT "id" FROM "#$schemaName"."#$table" OLDPARENTPATHFAILURETRIGGER WHERE "#${path.childSideOfLastEdge}" IN (""" ++ pathQueryForLastChild(
       path) ++ sql")"
     triggerFailureWhenExists(query, table, triggerString)
   }
 
   def oldParentFailureTriggerByField(path: Path, field: Field, triggerString: String) = {
     val table = field.relation.get.relationTableName
-    val query = sql"""SELECT "id" FROM "#$databaseName"."#$table" OLDPARENTPATHFAILURETRIGGERBYFIELD WHERE "#${field.oppositeRelationSide.get}" IN (""" ++ pathQueryForLastChild(
+    val query = sql"""SELECT "id" FROM "#$schemaName"."#$table" OLDPARENTPATHFAILURETRIGGERBYFIELD WHERE "#${field.oppositeRelationSide.get}" IN (""" ++ pathQueryForLastChild(
       path) ++ sql")"
     triggerFailureWhenExists(query, table, triggerString)
   }
 
   def oldParentFailureTriggerByFieldAndFilter(model: Model, whereFilter: Option[DataItemFilterCollection], field: Field, causeString: String) = {
     val table = field.relation.get.relationTableName
-    val query = sql"""SELECT "id" FROM "#$databaseName"."#$table" OLDPARENTPATHFAILURETRIGGERBYFIELDANDFILTER""" ++
-      sql"""WHERE "#${field.oppositeRelationSide.get}" IN (SELECT "id" FROM "#$databaseName"."#${model.name}" """ ++
-      whereFilterAppendix(databaseName, model.name, whereFilter) ++ sql")"
+    val query = sql"""SELECT "id" FROM "#$schemaName"."#$table" OLDPARENTPATHFAILURETRIGGERBYFIELDANDFILTER""" ++
+      sql"""WHERE "#${field.oppositeRelationSide.get}" IN (SELECT "id" FROM "#$schemaName"."#${model.name}" """ ++
+      whereFilterAppendix(schemaName, model.name, whereFilter) ++ sql")"
     triggerFailureWhenExists(query, table, causeString)
   }
 
   def oldChildFailureTrigger(path: Path, triggerString: String) = {
     val table = path.lastRelation_!.relationTableName
-    val query = sql"""SELECT "id" FROM "#$databaseName"."#$table" OLDCHILDPATHFAILURETRIGGER WHERE "#${path.parentSideOfLastEdge}" IN (""" ++ pathQueryForLastParent(
+    val query = sql"""SELECT "id" FROM "#$schemaName"."#$table" OLDCHILDPATHFAILURETRIGGER WHERE "#${path.parentSideOfLastEdge}" IN (""" ++ pathQueryForLastParent(
       path) ++ sql")"
     triggerFailureWhenExists(query, table, triggerString)
   }
@@ -584,7 +584,7 @@ case class PostGresApiDatabaseMutationBuilder(
             CASE WHEN max("position") IS NULL THEN 1000
             ELSE max("position") +1000
             END
-            FROM "#$databaseName"."#$tableName"
+            FROM "#$schemaName"."#$tableName"
             WHERE "nodeId" = $nodeId
             ) as "ALIAS"
       """.as[Int]
@@ -592,7 +592,7 @@ case class PostGresApiDatabaseMutationBuilder(
     def pushQuery(baseLine: Int) = SimpleDBIO[Vector[String]] { x =>
       val argsWithIndex = mutaction.args.values.zipWithIndex
       val rowResult: Vector[String] = try {
-        val query                         = s"""insert into "$databaseName"."$tableName" ("nodeId", "position", "value") values (?, $baseLine + ? , ?)"""
+        val query                         = s"""insert into "$schemaName"."$tableName" ("nodeId", "position", "value") values (?, $baseLine + ? , ?)"""
         val insertRows: PreparedStatement = x.connection.prepareStatement(query)
 
         argsWithIndex.foreach { argWithIndex =>

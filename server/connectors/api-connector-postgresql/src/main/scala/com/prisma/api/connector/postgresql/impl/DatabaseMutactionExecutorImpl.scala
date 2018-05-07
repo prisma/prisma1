@@ -13,7 +13,7 @@ case class DatabaseMutactionExecutorImpl(clientDb: Database)(implicit ec: Execut
   override def execute(mutactions: Vector[DatabaseMutaction], runTransactionally: Boolean): Future[Vector[DatabaseMutactionResult]] = {
     val interpreters        = mutactions.map(interpreterFor)
     val combinedErrorMapper = interpreters.map(_.errorMapper).reduceLeft(_ orElse _)
-    val mutationBuilder     = PostGresApiDatabaseMutationBuilder(databaseName = mutactions.head.project.id)
+    val mutationBuilder     = PostGresApiDatabaseMutationBuilder(schemaName = mutactions.head.project.id)
 
     val singleAction = runTransactionally match {
       case true  => DBIO.sequence(interpreters.map(_.newAction(mutationBuilder))).transactionally
