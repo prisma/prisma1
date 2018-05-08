@@ -342,6 +342,8 @@ export class EndpointDialog {
       stage = await this.askForStage('dev')
     }
 
+    workspace = workspace || cluster.workspaceSlug
+
     return {
       endpoint: cluster.getApiEndpoint(service, stage, workspace),
       cluster,
