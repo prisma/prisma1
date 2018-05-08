@@ -22,12 +22,16 @@ services:
           default:
             connector: mysql
             migrations: true
-            host: db
+            host: mysql
             port: 3306
-  db:
+  mysql:
     restart: always
     environment:
       MYSQL_ROOT_PASSWORD: prisma
+    volumes:
+      - db-persistence:/var/lib/mysql
+volumes:
+  mysql:
 ",
   "prisma.yml": "endpoint: http://localhost:4466
 datamodel: datamodel.graphql",

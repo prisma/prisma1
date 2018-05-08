@@ -66,19 +66,27 @@ const defaultPorts = {
 
 const databaseServiceDefinitions = {
   postgres: `
-  db:
+  postgres:
     image: postgres
     restart: always
     environment:
       POSTGRES_USER: prisma
       POSTGRES_PASSWORD: prisma
+    volumes:
+      - postgres:/var/lib/postgresql/data
+volumes:
+  postgres:
 `,
   mysql: `
-  db:
+  mysql:
     image: mysql:5.7
     restart: always
     environment:
       MYSQL_ROOT_PASSWORD: prisma
+    volumes:
+      - db-persistence:/var/lib/mysql
+volumes:
+  mysql:
 `,
 }
 
@@ -224,7 +232,7 @@ export class EndpointDialog {
           user: type === 'mysql' ? 'root' : 'prisma',
           password: 'prisma',
           type,
-          host: 'db',
+          host: type === 'mysql' ? 'mysql' : 'postgres',
           port: defaultPorts[type],
         }
         dockerComposeYml += this.printDatabaseConfig(credentials)
