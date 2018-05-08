@@ -67,7 +67,7 @@ class PassiveConnectorSpecForInlineRelations extends PassiveConnectorSpec {
     res.toString should be(s"""{"data":{"createList":{"name":"the list name"}}}""")
   }
 
-  "A Create Mutation" should "created nested items" taggedAs (IgnoreActive) in {
+  "A Create Mutation" should "created nested items" taggedAs (IgnoreActive) ignore {
     executeOnInternalDatabase(inlineRelationSchema)
     // TODO: how do we implement this? We would have to reorder in this case?
     val res = server.query(
