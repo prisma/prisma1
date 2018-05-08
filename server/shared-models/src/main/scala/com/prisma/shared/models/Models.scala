@@ -392,7 +392,7 @@ case class Relation(
     val x = for {
       modelAField <- getModelAField(schema)
       modelBField <- getModelBField(schema)
-    } yield !modelAField.isList && modelBField.isList
+    } yield modelAField.isList && modelBField.isList
     x.getOrElse(false) // todo: is this ok?
   }
 
