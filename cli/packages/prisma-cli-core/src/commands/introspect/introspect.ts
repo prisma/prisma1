@@ -10,7 +10,7 @@ export default class IntrospectCommand extends Command {
   static topic = 'introspect'
   static description = 'Introspect database schema(s) of service'
   static flags: Flags = {}
-  static hidden = true
+  static hidden = false
   async run() {
     await this.definition.load(this.flags)
 
