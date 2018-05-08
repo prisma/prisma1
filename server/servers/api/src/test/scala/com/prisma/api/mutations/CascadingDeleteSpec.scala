@@ -25,7 +25,8 @@ class CascadingDeleteSpec extends FlatSpec with Matchers with ApiSpecBase {
     server.query("""mutation{deleteP(where: {p:"p"}){id}}""", project)
     server.query("""query{ps{p, c {c}}}""", project).toString should be("""{"data":{"ps":[{"p":"p2","c":{"c":"c2"}}]}}""")
     server.query("""query{cs{c, p {p}}}""", project).toString should be("""{"data":{"cs":[{"c":"c2","p":{"p":"p2"}}]}}""")
-    dataResolver(project).countByTable("_RelayId").await should be(2)
+
+    ifConnectorIsActive { dataResolver(project).countByTable("_RelayId").await should be(2) }
   }
 
   "PM-CM relation deleting the parent" should "delete all children if the parent is marked cascading" in {
@@ -45,7 +46,8 @@ class CascadingDeleteSpec extends FlatSpec with Matchers with ApiSpecBase {
     server.query("""mutation{deleteP(where: {p:"p"}){id}}""", project)
     server.query("""query{ps{p, c {c}}}""", project).toString should be("""{"data":{"ps":[{"p":"p2","c":[{"c":"cx"},{"c":"cx2"}]},{"p":"pz","c":[]}]}}""")
     server.query("""query{cs{c, p {p}}}""", project).toString should be("""{"data":{"cs":[{"c":"cx","p":[{"p":"p2"}]},{"c":"cx2","p":[{"p":"p2"}]}]}}""")
-    dataResolver(project).countByTable("_RelayId").await should be(4)
+
+    ifConnectorIsActive { dataResolver(project).countByTable("_RelayId").await should be(4) }
   }
 
   "PM-CM relation deleting the parent" should "error if both sides are marked cascading since it would be a circle" in {
@@ -64,7 +66,8 @@ class CascadingDeleteSpec extends FlatSpec with Matchers with ApiSpecBase {
     server.queryThatMustFail("""mutation{deleteP(where: {p:"p"}){id}}""", project, errorCode = 3043)
     server.query("""query{ps{p, c {c}}}""", project).toString should be(
       """{"data":{"ps":[{"p":"p","c":[{"c":"c"},{"c":"c2"}]},{"p":"pz","c":[{"c":"c2"}]}]}}""")
-    dataResolver(project).countByTable("_RelayId").await should be(4)
+
+    ifConnectorIsActive { dataResolver(project).countByTable("_RelayId").await should be(4) }
   }
 
   "P1!-C1! relation deleting the parent" should "error if both sides are marked marked cascading" in {
@@ -81,7 +84,8 @@ class CascadingDeleteSpec extends FlatSpec with Matchers with ApiSpecBase {
 
     server.queryThatMustFail("""mutation{deleteP(where: {p:"p"}){id}}""", project, errorCode = 3043)
     server.query("""query{ps{p, c {c}}}""", project).toString should be("""{"data":{"ps":[{"p":"p","c":{"c":"c"}}]}}""")
-    dataResolver(project).countByTable("_RelayId").await should be(2)
+
+    ifConnectorIsActive { dataResolver(project).countByTable("_RelayId").await should be(2) }
   }
 
   "P1!-C1! relation deleting the parent" should "error if only child is marked marked cascading" in {
@@ -101,7 +105,7 @@ class CascadingDeleteSpec extends FlatSpec with Matchers with ApiSpecBase {
     server.query("""query{ps{p, c {c}}}""", project).toString should be("""{"data":{"ps":[{"p":"p","c":{"c":"c"}},{"p":"p2","c":{"c":"c2"}}]}}""")
     server.query("""query{cs{c, p {p}}}""", project).toString should be("""{"data":{"cs":[{"c":"c","p":{"p":"p"}},{"c":"c2","p":{"p":"p2"}}]}}""")
 
-    dataResolver(project).countByTable("_RelayId").await should be(4)
+    ifConnectorIsActive { dataResolver(project).countByTable("_RelayId").await should be(4) }
   }
 
   "P1!-C1!-C1!-GC! relation deleting the parent and child and grandchild if marked cascading" should "work" in {
@@ -125,7 +129,7 @@ class CascadingDeleteSpec extends FlatSpec with Matchers with ApiSpecBase {
     server.query("""query{cs{c, gc{gc}, p {p}}}""", project).toString should be("""{"data":{"cs":[{"c":"c2","gc":{"gc":"gc2"},"p":{"p":"p2"}}]}}""")
     server.query("""query{gCs{gc, c {c, p{p}}}}""", project).toString should be("""{"data":{"gCs":[{"gc":"gc2","c":{"c":"c2","p":{"p":"p2"}}}]}}""")
 
-    dataResolver(project).countByTable("_RelayId").await should be(3)
+    ifConnectorIsActive { dataResolver(project).countByTable("_RelayId").await should be(3) }
   }
 
   "P1!-C1!-C1-GC relation deleting the parent and child marked cascading" should "work but preserve the grandchild" in {
@@ -150,7 +154,7 @@ class CascadingDeleteSpec extends FlatSpec with Matchers with ApiSpecBase {
     server.query("""query{gCs{gc, c {c, p{p}}}}""", project).toString should be(
       """{"data":{"gCs":[{"gc":"gc","c":null},{"gc":"gc2","c":{"c":"c2","p":{"p":"p2"}}}]}}""")
 
-    dataResolver(project).countByTable("_RelayId").await should be(4)
+    ifConnectorIsActive { dataResolver(project).countByTable("_RelayId").await should be(4) }
   }
 
   "P1!-C1! relation deleting the parent marked cascading" should "error if the child is required in another non-cascading relation" in {
@@ -172,7 +176,7 @@ class CascadingDeleteSpec extends FlatSpec with Matchers with ApiSpecBase {
     server.query("""query{ps{p, c {c}}}""", project).toString should be("""{"data":{"ps":[{"p":"p","c":{"c":"c"}},{"p":"p2","c":{"c":"c2"}}]}}""")
     server.query("""query{cs{c, p {p}}}""", project).toString should be("""{"data":{"cs":[{"c":"c","p":{"p":"p"}},{"c":"c2","p":{"p":"p2"}}]}}""")
 
-    dataResolver(project).countByTable("_RelayId").await should be(6)
+    ifConnectorIsActive { dataResolver(project).countByTable("_RelayId").await should be(6) }
   }
 
   "If the parent is not cascading nothing on the path" should "be deleted except for the parent" in {
@@ -194,7 +198,7 @@ class CascadingDeleteSpec extends FlatSpec with Matchers with ApiSpecBase {
     server.query("""query{cs{c, p {p}}}""", project).toString should be("""{"data":{"cs":[{"c":"c","p":null}]}}""")
     server.query("""query{gCs{gc, c {c}}}""", project).toString should be("""{"data":{"gCs":[{"gc":"gc","c":{"c":"c"}}]}}""")
 
-    dataResolver(project).countByTable("_RelayId").await should be(2)
+    ifConnectorIsActive { dataResolver(project).countByTable("_RelayId").await should be(2) }
   }
 
   "P1!-C1! PM-SC1! relation deleting the parent marked cascading" should "work" in {
@@ -223,7 +227,7 @@ class CascadingDeleteSpec extends FlatSpec with Matchers with ApiSpecBase {
     server.query("""query{cs{c, p {p}}}""", project).toString should be("""{"data":{"cs":[{"c":"c2","p":{"p":"p2"}}]}}""")
     server.query("""query{sCs{sc,  p{p}}}""", project).toString should be("""{"data":{"sCs":[{"sc":"sc3","p":{"p":"p2"}},{"sc":"sc4","p":{"p":"p2"}}]}}""")
 
-    dataResolver(project).countByTable("_RelayId").await should be(4)
+    ifConnectorIsActive { dataResolver(project).countByTable("_RelayId").await should be(4) }
   }
 
   "P!->C PM->SC relation without backrelations" should "work when deleting the parent marked cascading" in {
@@ -253,7 +257,7 @@ class CascadingDeleteSpec extends FlatSpec with Matchers with ApiSpecBase {
     server.query("""query{cs{c}}""", project).toString should be("""{"data":{"cs":[{"c":"c2"}]}}""")
     server.query("""query{sCs{sc}}""", project).toString should be("""{"data":{"sCs":[]}}""")
 
-    dataResolver(project).countByTable("_RelayId").await should be(1)
+    ifConnectorIsActive { dataResolver(project).countByTable("_RelayId").await should be(1) }
   }
 
   "A path that is interrupted since there are nodes missing" should "only cascade up until the gap" in {
@@ -284,7 +288,7 @@ class CascadingDeleteSpec extends FlatSpec with Matchers with ApiSpecBase {
     server.query("""query{ds{d, gc {gc},e {e}}}""", project).toString should be("""{"data":{"ds":[{"d":"d","gc":[],"e":[{"e":"e"}]}]}}""")
     server.query("""query{es{e, d {d}}}""", project).toString should be("""{"data":{"es":[{"e":"e","d":[{"d":"d"}]}]}}""")
 
-    dataResolver(project).countByTable("_RelayId").await should be(5)
+    ifConnectorIsActive { dataResolver(project).countByTable("_RelayId").await should be(5) }
   }
 
   "A deep uninterrupted path" should "cascade all the way down" in {
@@ -315,7 +319,7 @@ class CascadingDeleteSpec extends FlatSpec with Matchers with ApiSpecBase {
     server.query("""query{ds{d, gc {gc},e {e}}}""", project).toString should be("""{"data":{"ds":[]}}""")
     server.query("""query{es{e, d {d}}}""", project).toString should be("""{"data":{"es":[]}}""")
 
-    dataResolver(project).countByTable("_RelayId").await should be(3)
+    ifConnectorIsActive { dataResolver(project).countByTable("_RelayId").await should be(3) }
   }
 
   "A deep uninterrupted path" should "error on a required relation violation at the end" in {
@@ -355,7 +359,7 @@ class CascadingDeleteSpec extends FlatSpec with Matchers with ApiSpecBase {
     server.query("""query{ds{d, gc {gc},e {e}}}""", project).toString should be("""{"data":{"ds":[{"d":"d","gc":[{"gc":"gc"}],"e":[{"e":"e"}]}]}}""")
     server.query("""query{fs{f, e {e}}}""", project).toString should be("""{"data":{"fs":[{"f":"f","e":{"e":"e"}}]}}""")
 
-    dataResolver(project).countByTable("_RelayId").await should be(9)
+    ifConnectorIsActive { dataResolver(project).countByTable("_RelayId").await should be(9) }
   }
 
   "A required relation violation anywhere on the path" should "error and roll back all of the changes" in {
@@ -434,7 +438,7 @@ class CascadingDeleteSpec extends FlatSpec with Matchers with ApiSpecBase {
       errorContains = "The change you are trying to make would violate the required relation '_AToD' between A and D"
     )
 
-    dataResolver(project).countByTable("_RelayId").await should be(7)
+    ifConnectorIsActive { dataResolver(project).countByTable("_RelayId").await should be(7) }
   }
 
   "Several relations between the same model" should "be handled correctly" in {
@@ -505,7 +509,7 @@ class CascadingDeleteSpec extends FlatSpec with Matchers with ApiSpecBase {
                              errorContains = "No Node for the model")
     server.query("""query{ps{p, c {c}}}""", project).toString should be("""{"data":{"ps":[{"p":"p2","c":{"c":"c2"}}]}}""")
     server.query("""query{cs{c, p {p}}}""", project).toString should be("""{"data":{"cs":[{"c":"c2","p":{"p":"p2"}}]}}""")
-    dataResolver(project).countByTable("_RelayId").await should be(2)
+    ifConnectorIsActive { dataResolver(project).countByTable("_RelayId").await should be(2) }
   }
 
   "P1-C1-C1!-GC! relation updating the parent to delete the child and grandchild if marked cascading" should "work" in {
@@ -530,7 +534,7 @@ class CascadingDeleteSpec extends FlatSpec with Matchers with ApiSpecBase {
     server.query("""query{cs{c, gc{gc}, p {p}}}""", project).toString should be("""{"data":{"cs":[{"c":"c2","gc":{"gc":"gc2"},"p":{"p":"p2"}}]}}""")
     server.query("""query{gCs{gc, c {c, p{p}}}}""", project).toString should be("""{"data":{"gCs":[{"gc":"gc2","c":{"c":"c2","p":{"p":"p2"}}}]}}""")
 
-    dataResolver(project).countByTable("_RelayId").await should be(4)
+    ifConnectorIsActive { dataResolver(project).countByTable("_RelayId").await should be(4) }
   }
 
   "P1!-C1!-C1!-GC! relation updating the parent to delete the child and grandchild if marked cascading" should "error if the child is required on parent" in {
@@ -562,7 +566,7 @@ class CascadingDeleteSpec extends FlatSpec with Matchers with ApiSpecBase {
     server.query("""query{gCs{gc, c {c, p{p}}}}""", project).toString should be(
       """{"data":{"gCs":[{"gc":"gc","c":{"c":"c","p":{"p":"p"}}},{"gc":"gc2","c":{"c":"c2","p":{"p":"p2"}}}]}}""")
 
-    dataResolver(project).countByTable("_RelayId").await should be(6)
+    ifConnectorIsActive { dataResolver(project).countByTable("_RelayId").await should be(6) }
   }
   //endregion
 }

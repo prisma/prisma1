@@ -1,11 +1,10 @@
 package com.prisma.deploy.database.schema.mutations
 
-import com.prisma.deploy.specutils.ActiveDeploySpecBase
-import com.prisma.shared.models.ProjectId
+import com.prisma.deploy.specutils.DeploySpecBase
 import cool.graph.cuid.Cuid
 import org.scalatest.{FlatSpec, Matchers}
 
-class AddProjectMutationSpec extends FlatSpec with Matchers with ActiveDeploySpecBase {
+class AddProjectMutationSpec extends FlatSpec with Matchers with DeploySpecBase {
 
   val projectPersistence = testDependencies.projectPersistence
 
@@ -34,14 +33,29 @@ class AddProjectMutationSpec extends FlatSpec with Matchers with ActiveDeploySpe
   }
 
   "AddProjectMutation" should "fail if a project already exists" in {
-    val (project, _) = setupProject(basicTypesGql)
-    val nameAndStage = testDependencies.projectIdEncoder.fromEncodedString(project.id)
+    val name  = s"${Cuid.createCuid()}~test"
+    val stage = Cuid.createCuid()
+
+    server.query(s"""
+       |mutation {
+       | addProject(input: {
+       |   name: "$name",
+       |   stage: "$stage"
+       | }) {
+       |   project {
+       |     name
+       |     stage
+       |   }
+       | }
+       |}
+      """.stripMargin)
+
     server.queryThatMustFail(
       s"""
        |mutation {
        | addProject(input: {
-       |   name: "${nameAndStage.name}",
-       |   stage: "${nameAndStage.stage}"
+       |   name: "${name}",
+       |   stage: "${stage}"
        | }) {
        |   project {
        |     name
