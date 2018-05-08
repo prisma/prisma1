@@ -187,7 +187,7 @@ Next steps:
   1. Start your Prisma server: docker-compose up -d
   2. Deploy your Prisma service: prisma deploy
   3. Read more about Prisma server:
-https://www.prisma.io/docs/reference/prisma-servers-and-dbs/prisma-servers/overview-eu2ood0she
+     https://www.prisma.io/docs/reference/prisma-servers-and-dbs/prisma-servers/overview-eu2ood0she
 "
 `;
 
@@ -224,6 +224,7 @@ datamodel: datamodel.graphql",
 
 exports[`init test project 2`] = `
 "
+
 Created 3 new files:                                                                          
 
   prisma.yml           Prisma service definition
@@ -235,12 +236,11 @@ Next steps:
   1. Start your Prisma server: docker-compose up -d
   2. Deploy your Prisma service: prisma deploy
   3. Read more about Prisma server:
-https://www.prisma.io/docs/reference/prisma-servers-and-dbs/prisma-servers/overview-eu2ood0she
+     https://www.prisma.io/docs/reference/prisma-servers-and-dbs/prisma-servers/overview-eu2ood0she
 "
 `;
 
 exports[`init test project 3`] = `
 "
-Connecting to database... ✔
 "
 `;
