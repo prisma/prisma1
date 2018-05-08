@@ -78,7 +78,7 @@ Either try using a new directory name, or remove the files listed above.
       path.join(this.config.definitionDir, 'datamodel.graphql'),
       results.datamodel,
     )
-    if (results.cluster!.local) {
+    if (results.cluster!.local && results.writeDockerComposeYml) {
       fs.writeFileSync(
         path.join(this.config.definitionDir, 'docker-compose.yml'),
         results.dockerComposeYml,
@@ -98,7 +98,7 @@ Either try using a new directory name, or remove the files listed above.
       ? `Open the new folder via ${chalk.cyan(`$ cd ${dir}`)}.\n`
       : ``
 
-    const isLocal = results.cluster!.local
+    const isLocal = results.cluster!.local && results.writeDockerComposeYml
     const dbType = results.database ? results.database.type : ''
     const beautifulDbTypesMap = {
       mysql: 'MySQL',
@@ -112,7 +112,7 @@ Either try using a new directory name, or remove the files listed above.
       steps.push(`Open folder: ${chalk.cyan('cd example')}`)
     }
 
-    if (results.cluster!.local) {
+    if (results.cluster!.local && results.writeDockerComposeYml) {
       steps.push(
         `Start your Prisma server: ${chalk.cyan('docker-compose up -d')}`,
       )

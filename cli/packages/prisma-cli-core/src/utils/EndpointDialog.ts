@@ -37,6 +37,8 @@ export interface GetEndpointResult {
   dockerComposeYml: string
   datamodel: string
   newDatabase: boolean
+  managementSecret?: string
+  writeDockerComposeYml: boolean
 }
 
 export interface HandleChoiceInput {
@@ -179,11 +181,34 @@ export class EndpointDialog {
     let dockerComposeYml = defaultDockerCompose
     let datamodel = defaultDataModel
     let newDatabase = false
+    let managementSecret: string | undefined
+    let writeDockerComposeYml = true
 
     switch (choice) {
       case 'Use other server':
-        clusterEndpoint = await this.customEndpointSelector(folderName)
+        clusterEndpoint = await this.customEndpointSelector()
         cluster = new Cluster(this.out, 'custom', clusterEndpoint)
+        const needsAuth = await cluster.needsAuth()
+        if (needsAuth) {
+          managementSecret = await this.ask({
+            message: 'Enter the management API secret',
+            key: 'managementSecret',
+            inputType: 'password',
+          })
+        }
+
+        service = await this.ask({
+          message: 'Choose a name for your service',
+          key: 'serviceName',
+        })
+
+        stage = await this.ask({
+          message: 'Choose a name for your stage',
+          key: 'stageName',
+        })
+
+        writeDockerComposeYml = false
+
         break
       case 'local':
       case 'Create new database':
@@ -300,6 +325,8 @@ export class EndpointDialog {
       dockerComposeYml,
       datamodel,
       newDatabase,
+      managementSecret,
+      writeDockerComposeYml,
     }
   }
 
@@ -418,7 +445,7 @@ export class EndpointDialog {
         'Hosted demo environment incl. database (requires login)',
       ],
       [
-        'User other server',
+        'Use other server',
         'Manually provide endpoint of a running Prisma server',
       ],
     ]
@@ -604,12 +631,11 @@ export class EndpointDialog {
     return service
   }
 
-  private async customEndpointSelector(defaultName: string): Promise<string> {
+  private async customEndpointSelector(): Promise<string> {
     const question = {
       name: 'endpoint',
       type: 'input',
-      message: `What's your clusters endpoint?`,
-      default: defaultName,
+      message: `Enter the endpoint of your Prisma server`,
     }
 
     const { endpoint } = await this.out.prompt(question)
@@ -672,16 +698,18 @@ export class EndpointDialog {
     key,
     validate,
     required,
+    inputType = 'input',
   }: {
     message: string
     key: string
     defaultValue?: string
     validate?: (value: string) => boolean | string
     required?: boolean
+    inputType?: string
   }) {
     const question = {
       name: key,
-      type: 'input',
+      type: inputType,
       message,
       default: defaultValue,
       validate:

@@ -205,6 +205,29 @@ export class Cluster {
     return null
   }
 
+  async needsAuth(): Promise<boolean> {
+    try {
+      const result = await fetch(this.getDeployEndpoint(), {
+        method: 'post',
+        headers: {
+          'Content-Type': 'application/json',
+        } as any,
+        body: JSON.stringify({
+          query: `{
+            listProjects {
+              name
+            }
+          }`,
+        }),
+        agent: getProxyAgent(this.getDeployEndpoint()),
+      } as any)
+
+      return true
+    } catch (e) {
+      return false
+    }
+  }
+
   toJSON() {
     return {
       name: this.name,
