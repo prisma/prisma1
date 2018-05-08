@@ -73,7 +73,16 @@ object SchemaDsl extends AwaitUtils {
         relation.copy(manifestation = Some(manifestation))
       }
     }
-    project.copy(schema = schema.copy(relations = newRelations))
+    val newModels = project.models.map { model =>
+      val newFields = model.fields.map { field =>
+        val newRelation = field.relation.flatMap { relation =>
+          newRelations.find(_.name == relation.name)
+        }
+        field.copy(relation = newRelation)
+      }
+      model.copy(fields = newFields)
+    }
+    project.copy(schema = schema.copy(relations = newRelations, models = newModels))
   }
 
   case class SchemaBuilder(
