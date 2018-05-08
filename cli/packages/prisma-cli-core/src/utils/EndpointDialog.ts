@@ -269,9 +269,14 @@ export class EndpointDialog {
         ) {
           const { numTables, sdl } = await introspector.introspect(schemas[0])
           if (numTables === 0) {
-            throw new Error(
-              `The provided database doesn't contain any tables. Please either provide another database or choose "No" for "Does your database contain existing data?"`,
+            this.out.log(
+              chalk.red(
+                `\n${chalk.bold(
+                  'Error: ',
+                )}The provided database doesn't contain any tables. Please either provide another database or choose "No" for "Does your database contain existing data?"`,
+              ),
             )
+            this.out.exit(1)
           }
           this.out.log(
             `Created datamodel definition based on ${numTables} database tables.`,
