@@ -267,6 +267,35 @@ class NestedCreateMutationInsideCreateSpec extends FlatSpec with Matchers with A
     ifConnectorIsActive { dataResolver(project).countByTable("_ChildToParent").await should be(1) }
   }
 
+  "a P1 to CM relation" should "work in both directions" ignore { // FIXME: we have to fuse mutactions correctly to do this?
+    val project = SchemaDsl.fromBuilder { schema =>
+      val parent = schema.model("Parent").field_!("p", _.String, isUnique = true)
+      val child  = schema.model("Child").field_!("c", _.String, isUnique = true).oneToManyRelation("parentsOpt", "childOpt", parent)
+    }
+    database.setup(project)
+
+    val res = server
+      .query(
+        """mutation {
+          |  createChild(data: {
+          |    c: "c1"
+          |    parentsOpt: {
+          |      create: [{p: "p1"}]
+          |    }
+          |  }){
+          |   parentsOpt{
+          |     p
+          |   }
+          |  }
+          |}""".stripMargin,
+        project
+      )
+
+    res.toString should be("""{"data":{"createChild":{"parentsOpt":[{"p":"p1"}]}}}""")
+
+    ifConnectorIsActive { dataResolver(project).countByTable("_ChildToParent").await should be(1) }
+  }
+
   "a PM to CM  relation " should "work" in {
     val project = SchemaDsl.fromBuilder { schema =>
       val parent = schema.model("Parent").field_!("p", _.String, isUnique = true)
