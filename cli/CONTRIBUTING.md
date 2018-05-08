@@ -16,3 +16,10 @@ $ cd ../prisma-cli
 $ yarn install && yarn build
 $ node dist/index.js
 ```
+
+To recreate jest snapshots:
+
+```
+cd packages/prisma-cli-core
+yarn test -- -u
+```
