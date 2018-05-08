@@ -4,6 +4,7 @@ import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
 import com.prisma.api.connector.DatabaseMutaction
 import com.prisma.deploy.connector._
+import com.prisma.shared.models.Manifestations.InlineRelationManifestation
 import com.prisma.shared.models._
 import com.prisma.utils.await.AwaitUtils
 
@@ -24,7 +25,24 @@ case class ApiTestDatabase()(implicit dependencies: TestApiDependencies) extends
   def deleteProjectDatabase(project: Project): Unit   = runMutaction(DeleteProject(project.id))
   private def createProjectDatabase(project: Project) = runMutaction(CreateProject(project.id))
 
-  private def createRelationTable(project: Project, relation: Relation) = runMutaction(CreateRelationTable(project.id, project.schema, relation = relation))
+  private def createRelationTable(project: Project, relation: Relation) = {
+    val schema = project.schema
+    val mutaction = relation.manifestation match {
+      case Some(m: InlineRelationManifestation) =>
+        val modelA = relation.getModelA_!(schema)
+        val modelB = relation.getModelB_!(schema)
+
+        val (model, references) = if (m.inTableOfModelId == modelA.id) {
+          (modelA, modelB)
+        } else {
+          (modelB, modelA)
+        }
+        CreateInlineRelation(project.id, model, references, m.referencingColumn)
+      case _ =>
+        CreateRelationTable(project.id, project.schema, relation = relation)
+    }
+    runMutaction(mutaction)
+  }
 
   def runMutaction(mutaction: DeployMutaction)                     = dependencies.deployConnector.deployMutactionExecutor.execute(mutaction).await
   def runDatabaseMutactionOnClientDb(mutaction: DatabaseMutaction) = dependencies.databaseMutactionExecutor.execute(Vector(mutaction)).await

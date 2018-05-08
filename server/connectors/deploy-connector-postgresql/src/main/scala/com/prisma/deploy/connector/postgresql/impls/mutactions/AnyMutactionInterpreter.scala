@@ -19,6 +19,7 @@ object AnyMutactionInterpreterImpl extends SqlMutactionInterpreter[DeployMutacti
       case x: DeleteModelTable      => DeleteModelInterpreter.execute(x)
       case x: CreateRelationTable   => CreateRelationInterpreter.execute(x)
       case x: DeleteRelationTable   => DeleteRelationInterpreter.execute(x)
+      case x: CreateInlineRelation  => CreateInlineRelationInterpreter.execute(x)
     }
   }
 
@@ -38,6 +39,7 @@ object AnyMutactionInterpreterImpl extends SqlMutactionInterpreter[DeployMutacti
       case x: DeleteModelTable      => DeleteModelInterpreter.rollback(x)
       case x: CreateRelationTable   => CreateRelationInterpreter.rollback(x)
       case x: DeleteRelationTable   => DeleteRelationInterpreter.rollback(x)
+      case x: CreateInlineRelation  => CreateInlineRelationInterpreter.rollback(x)
     }
   }
 }

@@ -3,7 +3,7 @@ package com.prisma.deploy.connector.postgresql.database
 import java.sql.PreparedStatement
 
 import com.prisma.shared.models.TypeIdentifier.TypeIdentifier
-import com.prisma.shared.models.{Project, TypeIdentifier}
+import com.prisma.shared.models.{Model, Project, TypeIdentifier}
 import slick.dbio.DBIOAction
 import slick.jdbc.PostgresProfile.api._
 
@@ -141,6 +141,15 @@ object PostgresDeployDatabaseMutationBuilder {
     val indexCreate = sqlu"""CREATE UNIQUE INDEX "#${relationTableName}_AB_unique" on  "#$projectId"."#$relationTableName" ("A" ASC, "B" ASC)"""
 
     DBIOAction.seq(tableCreate, indexCreate)
+  }
+
+  def createRelationColumn(projectId: String, model: Model, references: Model, column: String) = {
+    val sqlType    = sqlTypeForScalarTypeIdentifier(TypeIdentifier.GraphQLID)
+    val isRequired = false
+    val nullString = if (isRequired) "NOT NULL" else "NULL"
+    val addColumn  = sqlu"""ALTER TABLE "#$projectId"."#${model.dbName}" ADD COLUMN "#$column" #$sqlType #$nullString
+                            REFERENCES "#$projectId"."#${references.dbName}"(id);"""
+    addColumn
   }
 
   private def sqlTypeForScalarTypeIdentifier(typeIdentifier: TypeIdentifier): String = {

@@ -8,6 +8,7 @@ import scala.concurrent.Future
 
 trait DeployConnector {
   def isActive: Boolean
+  def isPassive: Boolean = !isActive
   def projectPersistence: ProjectPersistence
   def migrationPersistence: MigrationPersistence
   def deployMutactionExecutor: DeployMutactionExecutor

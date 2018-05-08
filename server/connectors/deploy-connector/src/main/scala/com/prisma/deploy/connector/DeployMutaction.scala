@@ -26,3 +26,5 @@ case class RenameTable(projectId: String, previousName: String, nextName: String
 
 case class CreateRelationTable(projectId: String, schema: Schema, relation: Relation) extends DeployMutaction
 case class DeleteRelationTable(projectId: String, schema: Schema, relation: Relation) extends DeployMutaction
+
+case class CreateInlineRelation(projectId: String, model: Model, references: Model, column: String) extends DeployMutaction
