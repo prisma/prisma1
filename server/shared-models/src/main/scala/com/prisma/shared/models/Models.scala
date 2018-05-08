@@ -388,6 +388,14 @@ case class Relation(
     getModelAField(schema) == getModelBField(schema).orElse(getModelAField(schema))
   }
 
+  def isManyToMany(schema: Schema): Boolean = {
+    val x = for {
+      modelAField <- getModelAField(schema)
+      modelBField <- getModelBField(schema)
+    } yield !modelAField.isList && modelBField.isList
+    x.getOrElse(false) // todo: is this ok?
+  }
+
   def getFieldOnModel(modelId: String, schema: Schema): Option[Field] = {
     if (modelId == modelAId) {
       getModelAField(schema)

@@ -4,9 +4,11 @@ import com.prisma.deploy.connector.{DatabaseIntrospectionInferrer, DeployConnect
 import com.prisma.deploy.migration.inference.{SchemaInferrer, SchemaMapping}
 import com.prisma.gc_values.GCValue
 import com.prisma.shared.models.IdType.Id
+import com.prisma.shared.models.Manifestations.InlineRelationManifestation
 import com.prisma.shared.models._
 import com.prisma.utils.await.AwaitUtils
 import cool.graph.cuid.Cuid
+import org.scalatest.Suite
 import sangria.parser.QueryParser
 
 object SchemaDsl extends AwaitUtils {
@@ -15,6 +17,17 @@ object SchemaDsl extends AwaitUtils {
 
   def apply()  = schema()
   def schema() = SchemaBuilder()
+
+  def fromBuilder(fn: SchemaBuilder => Unit)(implicit deployConnector: DeployConnector, suite: Suite) = {
+    val schemaBuilder = SchemaBuilder()
+    fn(schemaBuilder)
+    val project = schemaBuilder.buildProject(id = suite.getClass.getSimpleName)
+    if (deployConnector.isPassive) {
+      addManifestations(project)
+    } else {
+      project
+    }
+  }
 
   def fromString(id: String = TestIds.testProjectId)(sdlString: String): Project = {
     fromString(id, InferredTables.empty, isActive = true)(sdlString)
@@ -38,6 +51,25 @@ object SchemaDsl extends AwaitUtils {
     val sqlDocument        = QueryParser.parse(sdlString.stripMargin).get
     val schema             = SchemaInferrer(isActive).infer(emptyBaseSchema, emptySchemaMapping, sqlDocument, inferredTables).get
     TestProject().copy(id = id, schema = schema)
+  }
+
+  private def addManifestations(project: Project): Project = {
+    val schema = project.schema
+    val newRelations = project.relations.map { relation =>
+      if (relation.isManyToMany(schema)) {
+        relation
+      } else {
+        val relationFields                   = Vector(relation.getModelAField(schema), relation.getModelBField(schema)).flatten
+        val fieldToRepresentAsInlineRelation = relationFields.find(_.isList).getOrElse(relationFields.head)
+        val relatedModel                     = fieldToRepresentAsInlineRelation.relatedModel_!(schema)
+        val modelToPutRelationInto           = fieldToRepresentAsInlineRelation.model(schema).get
+
+        val manifestation =
+          InlineRelationManifestation(inTableOfModelId = modelToPutRelationInto.id, referencingColumn = s"${relatedModel.name.toLowerCase}_id")
+        relation.copy(manifestation = Some(manifestation))
+      }
+    }
+    project.copy(schema = schema.copy(relations = newRelations))
   }
 
   case class SchemaBuilder(
