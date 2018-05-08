@@ -62,6 +62,7 @@ case class SchemaBuilderImpl(
     listMigrationsField,
     projectField,
     serverInfoField,
+    clusterInfoField,
     generateProjectTokenField
   )
 
@@ -142,6 +143,14 @@ case class SchemaBuilderImpl(
 
   val serverInfoField: Field[SystemUserContext, Unit] = Field(
     "serverInfo",
+    ServerInfoType.Type,
+    description = Some("Information about the server"),
+    resolve = (ctx) => ()
+  )
+
+  // Deprecated, will be removed soon
+  val clusterInfoField: Field[SystemUserContext, Unit] = Field(
+    "clusterInfo",
     ServerInfoType.Type,
     description = Some("Information about the server"),
     resolve = (ctx) => ()
