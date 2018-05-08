@@ -549,7 +549,7 @@ export class EndpointDialog {
     ]
     const us1Choice = [
       us1Name,
-      `Hosted on AWS in us-west-2 using MySQL [${eu1Ping.toFixed()}ms latency]`,
+      `Hosted on AWS in us-west-2 using MySQL [${us1Ping.toFixed()}ms latency]`,
     ]
     const rawChoices =
       eu1Ping < us1Ping ? [eu1Choice, us1Choice] : [us1Choice, eu1Choice]
