@@ -369,8 +369,10 @@ export class EndpointDialog {
     }
   }
 
-  async getDatabase(): Promise<DatabaseCredentials> {
-    const type = await this.askForDatabaseType()
+  async getDatabase(
+    introspection: boolean = false,
+  ): Promise<DatabaseCredentials> {
+    const type = await this.askForDatabaseType(introspection)
     // const alreadyData = await this.ask({
     //   message: 'Does your database contain existing data?',
     //   key: 'alreadyData',
@@ -378,7 +380,7 @@ export class EndpointDialog {
     //   validate: value =>
     //     ['yes', 'no'].includes(value) ? true : 'Please answer either yes or no',
     // })
-    const alreadyData = await this.askForExistingData()
+    const alreadyData = introspection || (await this.askForExistingData())
     if (type === 'mysql' && alreadyData) {
       throw new Error(
         `Existing MySQL databases with data are not yet supported.`,
@@ -619,24 +621,31 @@ export class EndpointDialog {
     return `Production Prisma cluster`
   }
 
-  private async askForDatabaseType() {
+  private async askForDatabaseType(introspect: boolean = false) {
+    const choices: any[] = []
+
+    if (!introspect) {
+      choices.push({
+        value: 'mysql',
+        name:
+          'MySQL             MySQL compliant databases like MySQL or MariaDB',
+        short: 'MySQL',
+      })
+    }
+
+    choices.push({
+      value: 'postgres',
+      name: 'PostgreSQL        PostgreSQL database',
+      short: 'PostgreSQL',
+    })
+
     const { dbType } = await this.out.prompt({
       name: 'dbType',
       type: 'list',
-      message: `What kind of database do you want to deploy to?`,
-      choices: [
-        {
-          value: 'mysql',
-          name:
-            'MySQL             MySQL compliant databases like MySQL or MariaDB',
-          short: 'MySQL',
-        },
-        {
-          value: 'postgres',
-          name: 'PostgreSQL        PostgreSQL database',
-          short: 'PostgreSQL',
-        },
-      ],
+      message: `What kind of database do you want to ${
+        introspect ? 'introspect' : 'deploy to'
+      }?`,
+      choices,
       // pageSize: 9,
     })
 
