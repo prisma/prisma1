@@ -67,4 +67,17 @@ describe('Introspector', () => {
     , product_id int REFERENCES product (id) ON UPDATE CASCADE
     );`)
   })
+
+  test('relation with inline relation column NOT NULL', async () => {
+    await testSchema(`CREATE TABLE product (
+      id           serial PRIMARY KEY  -- implicit primary key constraint
+    , description  text NOT NULL
+    );
+    
+    CREATE TABLE bill (
+      id         serial PRIMARY KEY
+    , bill       text NOT NULL
+    , product_id int NOT NULL REFERENCES product (id) ON UPDATE CASCADE
+    );`)
+  })
 })

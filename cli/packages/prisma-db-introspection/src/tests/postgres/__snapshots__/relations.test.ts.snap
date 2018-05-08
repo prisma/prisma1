@@ -18,6 +18,24 @@ type Product @pgTable(name: \\"product\\") {
 }
 `;
 
+exports[`Introspector relation with inline relation column NOT NULL 1`] = `
+Object {
+  "numTables": 2,
+  "sdl": "type Bill @pgTable(name: \\"bill\\") {
+  bill: String!
+  id: Int!
+  product: Product! @pgRelation(column: \\"product_id\\")
+}
+
+type Product @pgTable(name: \\"product\\") {
+  description: String!
+  id: Int!
+  bills: [Bill!]!
+}
+",
+}
+`;
+
 exports[`Introspector relation with relation table 1`] = `
 Object {
   "numTables": 3,

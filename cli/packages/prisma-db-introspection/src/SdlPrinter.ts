@@ -65,7 +65,9 @@ export class SdlPrinter {
   printField(column: Column) {
     return `\n  ${this.printFieldName(column)}: ${this.printFieldType(
       column
-    )}${this.printFieldOptional(column)}${this.printFieldDirective(column)}`
+    )}${this.printFieldOptional(column)}${this.printRelationDirective(
+      column
+    )}${this.printFieldDirective(column)}`
   }
 
   printFieldName(column: Column) {
@@ -78,12 +80,17 @@ export class SdlPrinter {
 
   printFieldType(column: Column) {
     if (column.relation) {
-      return (
-        this.capitalizeFirstLetter(column.relation.table) +
-        ` @pgRelation(column: "${column.name}")`
-      )
+      return this.capitalizeFirstLetter(column.relation.table)
     } else {
       return column.typeIdentifier
+    }
+  }
+
+  printRelationDirective(column: Column) {
+    if (column.relation) {
+      return ` @pgRelation(column: "${column.name}")`
+    } else {
+      return ''
     }
   }
 

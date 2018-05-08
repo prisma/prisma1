@@ -2,7 +2,7 @@ import { Introspector } from '../../Introspector'
 import { Client } from 'pg'
 import { connectionDetails } from './connectionDetails'
 
-function introspect(): Promise<{ numTables: number; sdl: string; }> {
+function introspect(): Promise<{ numTables: number; sdl: string }> {
   return new Introspector(connectionDetails).introspect('DatabaseIntrospector')
 }
 
@@ -23,8 +23,10 @@ describe('Introspector', () => {
   test('text columns', async () => {
     await testSchema(`CREATE TABLE "Strings" (
       "a" char(1) DEFAULT NULL UNIQUE,
+      "aa" char(1) NOT NULL UNIQUE,
       "b" varchar(255) DEFAULT NULL,
       "c" text DEFAULT 'abc',
+      "cc" text DEFAULT 'abc' NOT NULL,
       "d" char(1) NOT NULL,
       "e" varchar(255) NOT NULL,
       "f" text NOT NULL,

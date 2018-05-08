@@ -22,7 +22,7 @@ type Address @pgTable(name: \\"address\\") {
   address: String!
   address2: String
   address_id: Int!
-  city: City @pgRelation(column: \\"city_id\\")!
+  city: City! @pgRelation(column: \\"city_id\\")
   district: String!
   last_update: DateTime! @default(value: \\"now()\\")
   phone: String!
@@ -42,7 +42,7 @@ type Category @pgTable(name: \\"category\\") {
 type City @pgTable(name: \\"city\\") {
   city: String!
   city_id: Int!
-  country: Country @pgRelation(column: \\"country_id\\")!
+  country: Country! @pgRelation(column: \\"country_id\\")
   last_update: DateTime! @default(value: \\"now()\\")
   addresss: [Address!]!
 }
@@ -57,7 +57,7 @@ type Country @pgTable(name: \\"country\\") {
 type Customer @pgTable(name: \\"customer\\") {
   active: Int
   activebool: Boolean! @default(value: true)
-  address: Address @pgRelation(column: \\"address_id\\")!
+  address: Address! @pgRelation(column: \\"address_id\\")
   create_date: null! @default(value: ('now)
   customer_id: Int!
   email: String
@@ -85,7 +85,7 @@ type Film @pgTable(name: \\"film\\") {
   description: String
   film_id: Int!
   fulltext: null!
-  language: Language @pgRelation(column: \\"language_id\\")!
+  language: Language! @pgRelation(column: \\"language_id\\")
   last_update: DateTime! @default(value: \\"now()\\")
   length: Int
   rating: null @default(value: G)
@@ -101,14 +101,14 @@ type Film @pgTable(name: \\"film\\") {
 }
 
 type Film_actor @pgTable(name: \\"film_actor\\") {
-  actor: Actor @pgRelation(column: \\"actor_id\\")!
-  film: Film @pgRelation(column: \\"film_id\\")!
+  actor: Actor! @pgRelation(column: \\"actor_id\\")
+  film: Film! @pgRelation(column: \\"film_id\\")
   last_update: DateTime! @default(value: \\"now()\\")
 }
 
 type Film_category @pgTable(name: \\"film_category\\") {
-  category: Category @pgRelation(column: \\"category_id\\")!
-  film: Film @pgRelation(column: \\"film_id\\")!
+  category: Category! @pgRelation(column: \\"category_id\\")
+  film: Film! @pgRelation(column: \\"film_id\\")
   last_update: DateTime! @default(value: \\"now()\\")
 }
 
@@ -124,7 +124,7 @@ type Film_list @pgTable(name: \\"film_list\\") {
 }
 
 type Inventory @pgTable(name: \\"inventory\\") {
-  film: Film @pgRelation(column: \\"film_id\\")!
+  film: Film! @pgRelation(column: \\"film_id\\")
   inventory_id: Int!
   last_update: DateTime! @default(value: \\"now()\\")
   store_id: Int!
@@ -151,21 +151,21 @@ type Nicer_but_slower_film_list @pgTable(name: \\"nicer_but_slower_film_list\\")
 
 type Payment @pgTable(name: \\"payment\\") {
   amount: Float!
-  customer: Customer @pgRelation(column: \\"customer_id\\")!
+  customer: Customer! @pgRelation(column: \\"customer_id\\")
   payment_date: DateTime!
   payment_id: Int!
-  rental: Rental @pgRelation(column: \\"rental_id\\")!
-  staff: Staff @pgRelation(column: \\"staff_id\\")!
+  rental: Rental! @pgRelation(column: \\"rental_id\\")
+  staff: Staff! @pgRelation(column: \\"staff_id\\")
 }
 
 type Rental @pgTable(name: \\"rental\\") {
-  customer: Customer @pgRelation(column: \\"customer_id\\")!
-  inventory: Inventory @pgRelation(column: \\"inventory_id\\")!
+  customer: Customer! @pgRelation(column: \\"customer_id\\")
+  inventory: Inventory! @pgRelation(column: \\"inventory_id\\")
   last_update: DateTime! @default(value: \\"now()\\")
   rental_date: DateTime!
   rental_id: Int!
   return_date: DateTime
-  staff: Staff @pgRelation(column: \\"staff_id\\")!
+  staff: Staff! @pgRelation(column: \\"staff_id\\")
   payments: [Payment!]!
 }
 
@@ -182,7 +182,7 @@ type Sales_by_store @pgTable(name: \\"sales_by_store\\") {
 
 type Staff @pgTable(name: \\"staff\\") {
   active: Boolean! @default(value: true)
-  address: Address @pgRelation(column: \\"address_id\\")!
+  address: Address! @pgRelation(column: \\"address_id\\")
   email: String
   first_name: String!
   last_name: String!
@@ -209,9 +209,9 @@ type Staff_list @pgTable(name: \\"staff_list\\") {
 }
 
 type Store @pgTable(name: \\"store\\") {
-  address: Address @pgRelation(column: \\"address_id\\")!
+  address: Address! @pgRelation(column: \\"address_id\\")
   last_update: DateTime! @default(value: \\"now()\\")
-  manager_staff: Staff @pgRelation(column: \\"manager_staff_id\\")!
+  manager_staff: Staff! @pgRelation(column: \\"manager_staff_id\\")
   store_id: Int!
 }
 ",
