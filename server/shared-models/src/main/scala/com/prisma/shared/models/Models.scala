@@ -397,6 +397,19 @@ case class Relation(
     case None                                 => "B"
   }
 
+  def columnForModel(model: Model): String = {
+    require(model.id == modelAId || model.id == modelBId)
+    inlineManifestation match {
+      case Some(m: InlineRelationManifestation) => if (model.id == m.inTableOfModelId) "id" else m.referencingColumn
+      case None                                 => relationSide(model).toString
+    }
+  }
+
+  def relationSide(model: Model): RelationSide.Value = {
+    require(model.id == modelAId || model.id == modelBId)
+    if (model.id == modelAId) RelationSide.A else RelationSide.B
+  }
+
   def hasManifestation: Boolean = manifestation.isDefined
   def isInlineRelation: Boolean = manifestation.exists(_.isInstanceOf[InlineRelationManifestation])
 

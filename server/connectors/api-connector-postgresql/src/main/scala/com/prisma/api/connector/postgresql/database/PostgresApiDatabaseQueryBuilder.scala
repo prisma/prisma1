@@ -164,33 +164,22 @@ case class PostgresApiDatabaseQueryBuilder(
       fromModelIds: Vector[IdGCValue],
       args: Option[QueryArguments]
   ): DBIOAction[Vector[ResolverResult[PrismaNodeWithParent]], NoStream, Effect] = {
-    val fromModel            = fromField.model(schema).get
-    val relation             = fromField.relation.get
-    val relatedModel         = fromField.relatedModel(schema).get
-    val fieldTable           = fromField.relatedModel(schema).get.name
-    val relationTableName    = fromField.relation.get.relationTableNameNew(schema)
-    val modelRelationSide    = fromField.relationSide.get.toString
-    val oppositeRelationSide = fromField.oppositeRelationSide.get.toString
+    val fromModel    = fromField.model(schema).get
+    val relation     = fromField.relation.get
+    val relatedModel = fromField.relatedModel(schema).get
+    val modelTable   = fromField.relatedModel(schema).get.name
 
-    val (aColumn, bColumn) = relation.inlineManifestation match {
-      case Some(m: InlineRelationManifestation) => ("id", m.referencingColumn)
-      case None                                 => ("A", "B")
-    }
-    val columnForFromModel = relation.inlineManifestation match {
-      case Some(m: InlineRelationManifestation) => if (fromModel.id == m.inTableOfModelId) "id" else m.referencingColumn
-      case None                                 => fromField.relationSide.get.toString
-    }
-    val columnForRelatedModel = relation.inlineManifestation match {
-      case Some(m: InlineRelationManifestation) => if (relatedModel.id == m.inTableOfModelId) "id" else m.referencingColumn
-      case None                                 => fromField.oppositeRelationSide.get.toString
-    }
+    val relationTableName     = fromField.relation.get.relationTableNameNew(schema)
+    val (aColumn, bColumn)    = (relation.modelAColumn, relation.modelBColumn)
+    val columnForFromModel    = relation.columnForModel(fromModel)
+    val columnForRelatedModel = relation.columnForModel(relatedModel)
 
     val (conditionCommand, orderByCommand, limitCommand) =
-      extractQueryArgs(schemaName, fieldTable, args, defaultOrderShortcut = Some(s""" RelationTable."$columnForRelatedModel" """), None)
+      extractQueryArgs(schemaName, modelTable, args, defaultOrderShortcut = Some(s""" RelationTable."$columnForRelatedModel" """), None)
 
     def createQuery(id: String, modelRelationSide: String, fieldRelationSide: String) = {
       sql"""(select ModelTable.*, RelationTable."#$aColumn" as __Relation__A,  RelationTable."#$bColumn" as __Relation__B
-            from "#$schemaName"."#$fieldTable" as ModelTable
+            from "#$schemaName"."#$modelTable" as ModelTable
            inner join "#$schemaName"."#$relationTableName" as RelationTable
            on ModelTable."id" = RelationTable."#$fieldRelationSide"
            where RelationTable."#$modelRelationSide" = '#$id' """ ++
@@ -210,22 +199,24 @@ case class PostgresApiDatabaseQueryBuilder(
       case true =>
         fromModelIds.distinct.view.zipWithIndex.foldLeft(sql"")(
           (a, b) =>
-            a ++ unionIfNotFirst(b._2) ++ createQuery(b._1.value, columnForFromModel, columnForRelatedModel) ++ sql"union all " ++ createQuery(
-              b._1.value,
-              columnForRelatedModel,
-              columnForFromModel))
+            a ++ unionIfNotFirst(b._2) ++
+              createQuery(b._1.value, columnForFromModel, columnForRelatedModel) ++
+              sql"union all " ++
+              createQuery(b._1.value, columnForRelatedModel, columnForFromModel))
     }
 
+    val modelRelationSide    = fromField.relationSide.get.toString
+    val oppositeRelationSide = fromField.oppositeRelationSide.get.toString
     query
       .as[PrismaNodeWithParent](getResultForModelAndRelationSide(relatedModel, modelRelationSide, oppositeRelationSide))
       .map { items =>
         val itemGroupsByModelId = items.groupBy(_.parentId)
-        fromModelIds
-          .map(id =>
-            itemGroupsByModelId.find(_._1 == id) match {
-              case Some((_, itemsForId)) => args.get.resultTransform(itemsForId).copy(parentModelId = Some(id))
-              case None                  => ResolverResult(Vector.empty[PrismaNodeWithParent], hasPreviousPage = false, hasNextPage = false, parentModelId = Some(id))
-          })
+        fromModelIds.map { id =>
+          itemGroupsByModelId.find(_._1 == id) match {
+            case Some((_, itemsForId)) => args.get.resultTransform(itemsForId).copy(parentModelId = Some(id))
+            case None                  => ResolverResult(Vector.empty[PrismaNodeWithParent], hasPreviousPage = false, hasNextPage = false, parentModelId = Some(id))
+          }
+        }
       }
   }
 
