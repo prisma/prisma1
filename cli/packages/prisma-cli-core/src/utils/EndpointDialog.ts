@@ -629,10 +629,12 @@ export class EndpointDialog {
           value: 'mysql',
           name:
             'MySQL             MySQL compliant databases like MySQL or MariaDB',
+          short: 'MySQL',
         },
         {
           value: 'postgres',
           name: 'PostgreSQL        PostgreSQL database',
+          short: 'PostgreSQL',
         },
       ],
       // pageSize: 9,
@@ -648,6 +650,7 @@ export class EndpointDialog {
     return padded.map((name, index) => ({
       name,
       value: choices[index][0],
+      short: choices[index][0],
     }))
   }
 
@@ -696,24 +699,18 @@ export class EndpointDialog {
       message: `Does your database contain existing data?`,
       choices: [
         {
-          value: 'yes',
-          name: 'Yes',
-        },
-        {
           value: 'no',
           name: 'No',
         },
+        {
+          value: 'yes',
+          name: 'Yes (experimental - Prisma migrations not yet supported)',
+          short: 'Yes',
+        },
         new inquirer.Separator(
-          chalk.red.bold(
-            `\n\nWarning: Introspecting databases with existing data is an early alpha preview not ready for production yet. If you find any problems, please let us know: https://github.com/graphcool/prisma/issues\n`,
-          ),
-        ),
-        new inquirer.Separator(
-          chalk.dim(
-            `Note: If you already have data in your database you won't be able to change the database schema with Prisma. If you want to use Prisma's migration system, please choose ${chalk.bold(
-              'No',
-            )}`,
-          ),
+          `\n\n${chalk.yellow(
+            'Warning: Introspecting databases with existing data is an early alpha preview not ready for production yet. If you find any problems, please let us know: https://github.com/graphcool/prisma/issues\n',
+          )}`,
         ),
       ],
       pageSize: 10,
