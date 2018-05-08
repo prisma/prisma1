@@ -175,7 +175,7 @@ export class EndpointDialog {
     let workspace: string | undefined
     let service = 'default'
     let stage = 'default'
-    let credentials
+    let credentials: DatabaseCredentials | undefined
     let dockerComposeYml = defaultDockerCompose
     let datamodel = defaultDataModel
     let newDatabase = false
@@ -208,7 +208,11 @@ export class EndpointDialog {
         break
       case 'Use existing database':
         credentials = await this.getDatabase()
-        this.out.action.start(`Connecting to database`)
+        this.out.action.start(
+          credentials!.alreadyData
+            ? `Introspecting database`
+            : `Connecting to database`,
+        )
         const introspector = new Introspector(
           this.replaceLocalDockerHost(credentials),
         )
@@ -219,17 +223,24 @@ export class EndpointDialog {
           throw new Error(`Could not connect to database. ${e.message}`)
         }
         // TODO: ask for postres schema if more than one
-        if (schemas && schemas.length > 0) {
+        if (
+          credentials &&
+          credentials.alreadyData &&
+          schemas &&
+          schemas.length > 0
+        ) {
           const { numTables, sdl } = await introspector.introspect(schemas[0])
           if (numTables === 0) {
             throw new Error(
-              `The provided database doesn't contain any tables. Please either provide another database or choose "No" for "What kind of database do you want to deploy to?"`,
+              `The provided database doesn't contain any tables. Please either provide another database or choose "No" for "Does your database contain existing data?"`,
             )
           }
+          this.out.log(
+            `Created datamodel definition based on ${numTables} database tables.`,
+          )
           datamodel = sdl
-
-          dockerComposeYml += this.printDatabaseConfig(credentials)
         }
+        dockerComposeYml += this.printDatabaseConfig(credentials)
         this.out.action.stop()
         cluster = new Cluster(this.out, 'custom', 'http://localhost:4466')
         break
@@ -305,13 +316,14 @@ export class EndpointDialog {
 
   async getDatabase(): Promise<DatabaseCredentials> {
     const type = await this.askForDatabaseType()
-    const alreadyData = await this.ask({
-      message: 'Do you already have data in the database? (yes/no)',
-      key: 'alreadyData',
-      defaultValue: 'no',
-      validate: value =>
-        ['yes', 'no'].includes(value) ? true : 'Please answer either yes or no',
-    })
+    // const alreadyData = await this.ask({
+    //   message: 'Does your database contain existing data?',
+    //   key: 'alreadyData',
+    //   defaultValue: 'no',
+    //   validate: value =>
+    //     ['yes', 'no'].includes(value) ? true : 'Please answer either yes or no',
+    // })
+    const alreadyData = await this.askForExistingData()
     const host = await this.ask({
       message: 'Enter database host',
       key: 'host',
@@ -333,7 +345,9 @@ export class EndpointDialog {
     const database =
       type === 'postgres'
         ? await this.ask({
-            message: 'Enter database name',
+            message:
+              'Enter database name' +
+              (alreadyData ? ' (location of existing data)' : ''),
             key: 'database',
           })
         : null
@@ -405,7 +419,7 @@ export class EndpointDialog {
       ],
       [
         'User other server',
-        'Manually provide endpoint of a running Prisma Server',
+        'Manually provide endpoint of a running Prisma server',
       ],
     ]
     if (fromScratch && !hasDockerComposeYml) {
@@ -419,7 +433,7 @@ export class EndpointDialog {
         new inquirer.Separator('                       '),
         new inquirer.Separator(
           chalk.bold(
-            'You can set up Prisma  for local development (requires Docker)',
+            'You can set up Prisma  for local development (based on docker-compose)',
           ),
         ),
         ...choices.slice(0, fixChoices.length),
@@ -601,6 +615,55 @@ export class EndpointDialog {
     const { endpoint } = await this.out.prompt(question)
 
     return endpoint
+  }
+
+  private async askForExistingData(): Promise<boolean> {
+    const question = {
+      name: 'existingData',
+      type: 'list',
+      message: `Does your database contain existing data?`,
+      choices: [
+        {
+          value: 'yes',
+          name: 'Yes',
+        },
+        {
+          value: 'no',
+          name: 'No',
+        },
+        new inquirer.Separator(
+          chalk.red.bold(
+            `\n\nWarning: Introspecting databases with existing data is an early alpha preview not ready for production yet. If you find any problems, please let us know: https://github.com/graphcool/prisma/issues\n`,
+          ),
+        ),
+        new inquirer.Separator(
+          chalk.dim(
+            `Note: If you already have data in your database you won't be able to change the database schema with Prisma. If you want to use Prisma's migration system, please choose ${chalk.bold(
+              'No',
+            )}`,
+          ),
+        ),
+      ],
+      pageSize: 10,
+    }
+
+    const { existingData } = await this.out.prompt(question)
+
+    return existingData === 'yes'
+
+    // this.out.log(
+    //   chalk.bold.red(
+    //     `\n\nWarning: Introspecting databases with existing data is an early alpha preview not ready for production yet. If you find any problems, please let us know\n`,
+    //   ),
+    // )
+    // this.out.log(
+    //   chalk.dim(
+    //     `Note: If you already have data in your database you won't be able to change the database schema with Prisma. If you want to use Prisma's migratino system, plrease choose ${chalk.bold(
+    //       'No',
+    //     )}`,
+    //   ),
+    // )
+    // this.out.up(7)
   }
 
   private async ask({

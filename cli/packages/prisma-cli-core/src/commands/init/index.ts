@@ -106,16 +106,40 @@ Either try using a new directory name, or remove the files listed above.
     }
     const beautifulDbType = beautifulDbTypesMap[dbType] || ''
 
-    const deployString = results.cluster!.local
-      ? `To start your Prisma Server run ${chalk.cyan(
-          'docker-compose up -d',
-        )}.\nThen you `
-      : `You now `
+    const steps: string[] = []
 
-    this.out.log(`\
-Created ${
-      results.cluster!.local ? 3 : 2
-    } new files:                                                                          
+    if (dir) {
+      steps.push(`Open folder: ${chalk.cyan('cd example')}`)
+    }
+
+    steps.push(
+      `Start your Prisma server: ${chalk.cyan('docker-compose up -d')}`,
+      `Deploy your Prisma service: ${chalk.cyan('prisma deploy')}`,
+    )
+
+    if (results.database && results.database.alreadyData) {
+      steps.push(
+        `Read more about introspection:\nhttps://www.prisma.io/docs/reference/service-configuration/introspection-aeb6diethe`,
+      )
+    } else if (
+      (results.database && !results.database.alreadyData) ||
+      results.newDatabase
+    ) {
+      steps.push(
+        `Read more about Prisma server:\nhttps://www.prisma.io/docs/reference/prisma-servers-and-dbs/prisma-servers/overview-eu2ood0she`,
+      )
+    } else {
+      steps.push(
+        `Read more about deploying services:\nhttps://www.prisma.io/docs/reference/cli-command-reference/database-service/prisma-deploy-kee1iedaov`,
+      )
+    }
+
+    this.out.log(`
+${chalk.bold(
+      `Created ${
+        results.cluster!.local ? 3 : 2
+      } new files:                                                                          `,
+    )}
 
   ${chalk.cyan('prisma.yml')}           Prisma service definition
   ${chalk.cyan(
@@ -127,18 +151,10 @@ Created ${
       : ''
   }
 
-${dirString}${deployString}can run ${chalk.cyan(
-      '$ prisma deploy',
-    )} to deploy your database service.
-${
-      results.newDatabase && isLocal
-        ? `\nPrisma connects to your ${beautifulDbType} database with user ${chalk.bold(
-            'prisma',
-          )} and password ${chalk.bold('prisma')}.
-To change this, please have a look in ${chalk.cyan('docker-compose.yml')}\n`
-        : ''
-    }
-For next steps follow this tutorial: https://bit.ly/prisma-graphql-first-steps`)
+${chalk.bold('Next steps:')}
+
+${steps.map((step, index) => `  ${index + 1}. ${step}`).join('\n')}`)
+
     const dockerComposeInstalled = await isDockerComposeInstalled()
     if (!dockerComposeInstalled) {
       this.out.log(
