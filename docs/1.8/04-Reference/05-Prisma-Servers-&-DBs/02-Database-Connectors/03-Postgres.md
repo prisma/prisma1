@@ -22,17 +22,23 @@ services:
         databases:
           default:
             connector: postgres
-            active: true
-            host: db
+            host: postgres
             port: 5432
             user: root
             password: prisma
-  db:
+            migrations: true
+            managementSchema: management
+            database: prisma
+  postgres:
     image: postgres
     restart: always
     environment:
-      MYSQL_USER: root
-      MYSQL_ROOT_PASSWORD: prisma
+      POSTGRES_USER: root
+      POSTGRES_PASSWORD: prisma
+    volumes:
+      - postgres:/var/lib/postgresql/data
+volumes:
+  postgres:
 ```
 
 ## Get started
