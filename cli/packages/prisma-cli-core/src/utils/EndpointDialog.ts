@@ -669,7 +669,7 @@ export class EndpointDialog {
     const question = {
       name: 'stage',
       type: 'input',
-      message: 'To which stage do you want to deploy?',
+      message: 'Choose a name for your stage',
       default: defaultName,
     }
 
@@ -682,7 +682,7 @@ export class EndpointDialog {
     const question = {
       name: 'service',
       type: 'input',
-      message: 'How do you want to call your service?',
+      message: 'Choose a name for your service',
       default: defaultName,
     }
 
