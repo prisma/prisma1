@@ -79,6 +79,8 @@ Object {
   d: String!
   e: String!
   f: String!
+  g: String
+  h: String!
 }
 ",
 }

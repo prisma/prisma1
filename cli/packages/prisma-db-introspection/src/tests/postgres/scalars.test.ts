@@ -30,6 +30,8 @@ describe('Introspector', () => {
       "d" char(1) NOT NULL,
       "e" varchar(255) NOT NULL,
       "f" text NOT NULL,
+      "g" uuid DEFAULT NULL,
+      "h" uuid NOT NULL,
       constraint foo unique(b)
       );`)
   })

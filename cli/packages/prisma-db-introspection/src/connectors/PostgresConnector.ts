@@ -169,11 +169,17 @@ WHERE constraint_type = 'FOREIGN KEY' AND tc.table_schema = $1::text;`,
   } {
     if (
       field == 'id' &&
-      (type === 'character' || type === 'character varying' || type === 'text')
+      (type === 'character' ||
+        type === 'character varying' ||
+        type === 'text' ||
+        type == 'uuid')
     ) {
       return { typeIdentifier: 'ID', comment: null, error: null }
     }
 
+    if (type === 'uuid') {
+      return { typeIdentifier: 'String', comment: null, error: null }
+    }
     if (type === 'character') {
       return { typeIdentifier: 'String', comment: null, error: null }
     }
