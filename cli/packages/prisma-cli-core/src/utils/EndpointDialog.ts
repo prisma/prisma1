@@ -500,7 +500,7 @@ export class EndpointDialog {
         new inquirer.Separator('                       '),
         new inquirer.Separator(
           chalk.bold(
-            'You can set up Prisma  for local development (based on docker-compose)',
+            'You can set up Prisma for local development (based on docker-compose)',
           ),
         ),
         ...choices.slice(0, fixChoices.length),
@@ -718,7 +718,7 @@ export class EndpointDialog {
         },
         new inquirer.Separator(
           `\n\n${chalk.yellow(
-            'Warning: Introspecting databases with existing data is an early alpha preview not ready for production yet. If you find any problems, please let us know: https://github.com/graphcool/prisma/issues\n',
+            'Warning: Introspecting databases with existing data is currently an experimental feature. If you find any issues, please report them here: https://github.com/graphcool/prisma/issues\n',
           )}`,
         ),
       ],

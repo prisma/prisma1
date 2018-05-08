@@ -122,18 +122,18 @@ Either try using a new directory name, or remove the files listed above.
 
     if (results.database && results.database.alreadyData) {
       steps.push(
-        `Read more about introspection:\n     https://www.prisma.io/docs/reference/service-configuration/introspection-aeb6diethe`,
+        `Read more about introspection:\n     http://bit.ly/prisma-introspection`,
       )
     } else if (
       (results.database && !results.database.alreadyData) ||
       results.newDatabase
     ) {
       steps.push(
-        `Read more about Prisma server:\n     https://www.prisma.io/docs/reference/prisma-servers-and-dbs/prisma-servers/overview-eu2ood0she`,
+        `Read more about Prisma server:\n     http://bit.ly/prisma-server-overview`,
       )
     } else {
       steps.push(
-        `Read more about deploying services:\n     https://www.prisma.io/docs/reference/cli-command-reference/database-service/prisma-deploy-kee1iedaov`,
+        `Read more about deploying services:\n     http://bit.ly/prisma-deploy-services`,
       )
     }
 
