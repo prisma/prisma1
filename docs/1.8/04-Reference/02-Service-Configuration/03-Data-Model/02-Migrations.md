@@ -1,5 +1,5 @@
 ---
-alias: o8viesh2r
+alias: ao8viesh2r
 description: Migrations
 ---
 
