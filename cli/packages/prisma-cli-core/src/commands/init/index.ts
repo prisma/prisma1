@@ -153,7 +153,6 @@ ${chalk.bold(
       ? `${chalk.cyan('docker-compose.yml')}   Docker configuration file`
       : ''
   }
-
 ${chalk.bold('Next steps:')}
 
 ${steps.map((step, index) => `  ${index + 1}. ${step}`).join('\n')}`)
