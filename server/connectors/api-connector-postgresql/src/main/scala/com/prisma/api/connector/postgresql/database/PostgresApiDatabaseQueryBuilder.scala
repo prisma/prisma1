@@ -6,6 +6,7 @@ import com.prisma.api.connector.Types.DataItemFilterCollection
 import com.prisma.api.connector._
 import com.prisma.gc_values._
 import com.prisma.shared.models.IdType.Id
+import com.prisma.shared.models.Manifestations.InlineRelationManifestation
 import com.prisma.shared.models.{Function => _, _}
 import slick.dbio.DBIOAction
 import slick.jdbc.PostgresProfile.api._
@@ -163,20 +164,34 @@ case class PostgresApiDatabaseQueryBuilder(
       fromModelIds: Vector[IdGCValue],
       args: Option[QueryArguments]
   ): DBIOAction[Vector[ResolverResult[PrismaNodeWithParent]], NoStream, Effect] = {
-
+    val fromModel            = fromField.model(schema).get
+    val relation             = fromField.relation.get
     val relatedModel         = fromField.relatedModel(schema).get
     val fieldTable           = fromField.relatedModel(schema).get.name
-    val unsafeRelationId     = fromField.relation.get.relationTableName
+    val relationTableName    = fromField.relation.get.relationTableNameNew(schema)
     val modelRelationSide    = fromField.relationSide.get.toString
     val oppositeRelationSide = fromField.oppositeRelationSide.get.toString
 
+    val (aColumn, bColumn) = relation.inlineManifestation match {
+      case Some(m: InlineRelationManifestation) => ("id", m.referencingColumn)
+      case None                                 => ("A", "B")
+    }
+    val columnForFromModel = relation.inlineManifestation match {
+      case Some(m: InlineRelationManifestation) => if (fromModel.id == m.inTableOfModelId) "id" else m.referencingColumn
+      case None                                 => fromField.relationSide.get.toString
+    }
+    val columnForRelatedModel = relation.inlineManifestation match {
+      case Some(m: InlineRelationManifestation) => if (relatedModel.id == m.inTableOfModelId) "id" else m.referencingColumn
+      case None                                 => fromField.oppositeRelationSide.get.toString
+    }
+
     val (conditionCommand, orderByCommand, limitCommand) =
-      extractQueryArgs(schemaName, fieldTable, args, defaultOrderShortcut = Some(s""" RelationTable."$oppositeRelationSide" """), None)
+      extractQueryArgs(schemaName, fieldTable, args, defaultOrderShortcut = Some(s""" RelationTable."$columnForRelatedModel" """), None)
 
     def createQuery(id: String, modelRelationSide: String, fieldRelationSide: String) = {
-      sql"""(select ModelTable.*, RelationTable."A" as __Relation__A,  RelationTable."B" as __Relation__B
+      sql"""(select ModelTable.*, RelationTable."#$aColumn" as __Relation__A,  RelationTable."#$bColumn" as __Relation__B
             from "#$schemaName"."#$fieldTable" as ModelTable
-           inner join "#$schemaName"."#$unsafeRelationId" as RelationTable
+           inner join "#$schemaName"."#$relationTableName" as RelationTable
            on ModelTable."id" = RelationTable."#$fieldRelationSide"
            where RelationTable."#$modelRelationSide" = '#$id' """ ++
         prefixIfNotNone("and", conditionCommand) ++
@@ -190,13 +205,15 @@ case class PostgresApiDatabaseQueryBuilder(
     val query = resolveFromBothSidesAndMerge match {
       case false =>
         fromModelIds.distinct.view.zipWithIndex.foldLeft(sql"")((a, b) =>
-          a ++ unionIfNotFirst(b._2) ++ createQuery(b._1.value, modelRelationSide, oppositeRelationSide))
+          a ++ unionIfNotFirst(b._2) ++ createQuery(b._1.value, columnForFromModel, columnForRelatedModel))
 
       case true =>
-        fromModelIds.distinct.view.zipWithIndex.foldLeft(sql"")((a, b) =>
-          a ++ unionIfNotFirst(b._2) ++ createQuery(b._1.value, modelRelationSide, oppositeRelationSide) ++ sql"union all " ++ createQuery(b._1.value,
-                                                                                                                                           oppositeRelationSide,
-                                                                                                                                           modelRelationSide))
+        fromModelIds.distinct.view.zipWithIndex.foldLeft(sql"")(
+          (a, b) =>
+            a ++ unionIfNotFirst(b._2) ++ createQuery(b._1.value, columnForFromModel, columnForRelatedModel) ++ sql"union all " ++ createQuery(
+              b._1.value,
+              columnForRelatedModel,
+              columnForFromModel))
     }
 
     query

@@ -377,8 +377,30 @@ case class Relation(
 ) {
   val relationTableName = manifestation.collect { case m: RelationTableManifestation => m.table }.getOrElse("_" + name)
 
+  def relationTableNameNew(schema: Schema): String =
+    manifestation
+      .collect {
+        case m: RelationTableManifestation  => m.table
+        case m: InlineRelationManifestation => schema.getModelById_!(m.inTableOfModelId).dbName
+      }
+      .getOrElse("_" + name)
+
+  def modelAColumn: String = manifestation match {
+    case Some(m: RelationTableManifestation)  => m.modelAColumn
+    case Some(m: InlineRelationManifestation) => if (m.inTableOfModelId == modelAId) "id" else m.referencingColumn
+    case None                                 => "A"
+  }
+
+  def modelBColumn: String = manifestation match {
+    case Some(m: RelationTableManifestation)  => m.modelBColumn
+    case Some(m: InlineRelationManifestation) => if (m.inTableOfModelId == modelBId) "id" else m.referencingColumn
+    case None                                 => "B"
+  }
+
   def hasManifestation: Boolean = manifestation.isDefined
   def isInlineRelation: Boolean = manifestation.exists(_.isInstanceOf[InlineRelationManifestation])
+
+  def inlineManifestation: Option[InlineRelationManifestation] = manifestation.collect { case x: InlineRelationManifestation => x }
 
   def connectsTheModels(model1: String, model2: String): Boolean = (modelAId == model1 && modelBId == model2) || (modelAId == model2 && modelBId == model1)
 
