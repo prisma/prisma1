@@ -22,17 +22,24 @@ services:
         databases:
           default:
             connector: mysql
-            active: true
-            host: db
+            host: mysql
             port: 3306
             user: root
             password: prisma
-  db:
+            migrations: true
+            managementSchema: management
+            
+  mysql:
     image: mysql
     restart: always
     environment:
       MYSQL_USER: root
       MYSQL_ROOT_PASSWORD: prisma
+    volumes:
+      - mysql:/var/lib/mysql
+      
+volumes:
+  mysql:
 ```
 
 ## Get started
