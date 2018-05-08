@@ -109,7 +109,7 @@ Either try using a new directory name, or remove the files listed above.
     const steps: string[] = []
 
     if (dir) {
-      steps.push(`Open folder: ${chalk.cyan('cd example')}`)
+      steps.push(`Open folder: ${chalk.cyan(`cd ${dir}`)}`)
     }
 
     if (results.cluster!.local && results.writeDockerComposeYml) {
