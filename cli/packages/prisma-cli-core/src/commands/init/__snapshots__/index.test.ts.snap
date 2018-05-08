@@ -51,7 +51,7 @@ Next steps:
   1. Start your Prisma server: docker-compose up -d
   2. Deploy your Prisma service: prisma deploy
   3. Read more about Prisma server:
-     https://www.prisma.io/docs/reference/prisma-servers-and-dbs/prisma-servers/overview-eu2ood0she
+     http://bit.ly/prisma-server-overview
 "
 `;
 
@@ -100,7 +100,7 @@ Next steps:
   1. Start your Prisma server: docker-compose up -d
   2. Deploy your Prisma service: prisma deploy
   3. Read more about Prisma server:
-     https://www.prisma.io/docs/reference/prisma-servers-and-dbs/prisma-servers/overview-eu2ood0she
+     http://bit.ly/prisma-server-overview
 "
 `;
 
