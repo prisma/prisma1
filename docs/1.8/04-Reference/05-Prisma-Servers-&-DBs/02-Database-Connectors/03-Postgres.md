@@ -56,6 +56,12 @@ You can setup a new Prisma server that connects to a Postgres database using the
 
 ### Troubleshooting
 
+#### Connecting to a local database not running in Docker
+
+As Prisma is running in Docker it cannot connect directly to databases running on your local machine by connecting to `localhost`. To work around this Docker v 18.03 introduced a hostname that is routed to your local machine: `host.docker.internal`. Read more about this in this [Stack Overflow question](https://stackoverflow.com/questions/31324981/how-to-access-host-port-from-docker-container).
+
+#### General
+
 If you have used previous versions of the Prisma CLI with Docker, you need to clear your Docker setup before running `docker-compose up -d`, otherwise you might run into the following error message:
 
 ```
