@@ -56,13 +56,13 @@ export interface HandleChoiceInput {
 }
 
 const encodeMap = {
-  'prisma-eu1': 'sandbox-eu1',
-  'prisma-us1': 'sandbox-us1',
+  'prisma-eu1': 'demo-eu1',
+  'prisma-us1': 'demo-us1',
 }
 
 const decodeMap = {
-  'sandbox-eu1': 'prisma-eu1',
-  'sandbox-us1': 'prisma-us1',
+  'demo-eu1': 'prisma-eu1',
+  'demo-us1': 'prisma-us1',
 }
 
 const defaultPorts = {
