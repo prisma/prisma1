@@ -33,9 +33,7 @@ class NestedCreateMutationInsideCreateSpec extends FlatSpec with Matchers with A
 
     res.toString should be("""{"data":{"createParent":{"p":"p1","childReq":{"c":"c1"}}}}""")
 
-    ifConnectorIsActive {
-      dataResolver(project).countByTable("_ChildToParent").await should be(1)
-    }
+    ifConnectorIsActive { dataResolver(project).countByTable("_ChildToParent").await should be(1) }
   }
 
   "a P1! to C1 relation " should "work" in {
@@ -63,8 +61,7 @@ class NestedCreateMutationInsideCreateSpec extends FlatSpec with Matchers with A
       )
       .pathAsString("data.createParent.childReq.id")
 
-    dataResolver(project).countByTable("_ParentToChild").await should be(1)
-
+    ifConnectorIsActive { dataResolver(project).countByTable("_ParentToChild").await should be(1) }
   }
 
   "a P1! to C1  relation " should "work" in {
@@ -93,8 +90,7 @@ class NestedCreateMutationInsideCreateSpec extends FlatSpec with Matchers with A
 
     res.toString should be("""{"data":{"createParent":{"childReq":{"c":"c1"}}}}""")
 
-    dataResolver(project).countByTable("_ParentToChild").await should be(1)
-
+    ifConnectorIsActive { dataResolver(project).countByTable("_ParentToChild").await should be(1) }
   }
 
   "a P1 to C1  relation" should "work" in {
@@ -123,7 +119,7 @@ class NestedCreateMutationInsideCreateSpec extends FlatSpec with Matchers with A
 
     res.toString should be("""{"data":{"createParent":{"childOpt":{"c":"c1"}}}}""")
 
-    dataResolver(project).countByTable("_ParentToChild").await should be(1)
+    ifConnectorIsActive { dataResolver(project).countByTable("_ParentToChild").await should be(1) }
   }
 
   "a PM to C1! " should "work" in {
@@ -152,7 +148,7 @@ class NestedCreateMutationInsideCreateSpec extends FlatSpec with Matchers with A
 
     res.toString should be("""{"data":{"createParent":{"childrenOpt":[{"c":"c1"},{"c":"c2"}]}}}""")
 
-    dataResolver(project).countByTable("_ParentToChild").await should be(2)
+    ifConnectorIsActive { dataResolver(project).countByTable("_ParentToChild").await should be(2) }
   }
 
   "a P1 to C1!  relation " should "work" in {
@@ -181,7 +177,7 @@ class NestedCreateMutationInsideCreateSpec extends FlatSpec with Matchers with A
 
     res.toString should be("""{"data":{"createParent":{"childOpt":{"c":"c1"}}}}""")
 
-    dataResolver(project).countByTable("_ChildToParent").await should be(1)
+    ifConnectorIsActive { dataResolver(project).countByTable("_ChildToParent").await should be(1) }
   }
 
   "a PM to C1  relation" should "work" in {
@@ -210,7 +206,7 @@ class NestedCreateMutationInsideCreateSpec extends FlatSpec with Matchers with A
 
     res.toString should be("""{"data":{"createParent":{"childrenOpt":[{"c":"c1"},{"c":"c2"}]}}}""")
 
-    dataResolver(project).countByTable("_ParentToChild").await should be(2)
+    ifConnectorIsActive { dataResolver(project).countByTable("_ParentToChild").await should be(2) }
   }
 
   "a P1! to CM  relation " should "work" in {
@@ -239,7 +235,7 @@ class NestedCreateMutationInsideCreateSpec extends FlatSpec with Matchers with A
 
     res.toString should be("""{"data":{"createParent":{"childReq":{"c":"c1"}}}}""")
 
-    dataResolver(project).countByTable("_ChildToParent").await should be(1)
+    ifConnectorIsActive { dataResolver(project).countByTable("_ChildToParent").await should be(1) }
   }
 
   "a P1 to CM relation" should "work" in {
@@ -268,7 +264,7 @@ class NestedCreateMutationInsideCreateSpec extends FlatSpec with Matchers with A
 
     res.toString should be("""{"data":{"createParent":{"childOpt":{"c":"c1"}}}}""")
 
-    dataResolver(project).countByTable("_ChildToParent").await should be(1)
+    ifConnectorIsActive { dataResolver(project).countByTable("_ChildToParent").await should be(1) }
   }
 
   "a PM to CM  relation " should "work" in {
