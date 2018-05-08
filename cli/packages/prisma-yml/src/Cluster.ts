@@ -19,6 +19,7 @@ export class Cluster {
   isPrivate: boolean
   workspaceSlug?: string
   private cachedToken?: string
+  hasOldDeployEndpoint: boolean
   constructor(
     out: IOutput,
     name: string,
@@ -42,6 +43,7 @@ export class Cluster {
     this.shared = shared
     this.isPrivate = isPrivate
     this.workspaceSlug = workspaceSlug
+    this.hasOldDeployEndpoint = false
   }
 
   async getToken(
@@ -171,7 +173,9 @@ export class Cluster {
   }
 
   getDeployEndpoint() {
-    return `${this.baseUrl}/management`
+    return `${this.baseUrl}/${
+      this.hasOldDeployEndpoint ? 'cluster' : 'management'
+    }`
   }
 
   async isOnline(): Promise<boolean> {
@@ -180,23 +184,41 @@ export class Cluster {
   }
 
   async getVersion(): Promise<string | null> {
+    // first try new api
     try {
-      const result = await fetch(this.getDeployEndpoint(), {
-        method: 'post',
-        headers: {
-          'Content-Type': 'application/json',
-        } as any,
-        body: JSON.stringify({
-          query: `{
-            clusterInfo {
-              version
-            }
-          }`,
-        }),
-        agent: getProxyAgent(this.getDeployEndpoint()),
-      } as any)
+      const result = await this.request(`{
+        serverInfo {
+          version
+        }
+      }`)
 
-      const { data } = await result.json()
+      const res = await result.json()
+      const { data, errors } = res
+      if (
+        errors &&
+        errors[0].code === 3016 &&
+        errors[0].message.includes('management@default')
+      ) {
+        this.hasOldDeployEndpoint = true
+        return this.getVersion()
+      }
+      if (data && data.serverInfo) {
+        return data.serverInfo.version
+      }
+    } catch (e) {
+      debug(e)
+    }
+
+    // if that doesn't work, try the old one
+    try {
+      const result = await this.request(`{
+        clusterInfo {
+          version
+        }
+      }`)
+
+      const res = await result.json()
+      const { data, errors } = res
       return data.clusterInfo.version
     } catch (e) {
       debug(e)
@@ -205,23 +227,26 @@ export class Cluster {
     return null
   }
 
+  request(query: string) {
+    return fetch(this.getDeployEndpoint(), {
+      method: 'post',
+      headers: {
+        'Content-Type': 'application/json',
+      } as any,
+      body: JSON.stringify({
+        query,
+      }),
+      agent: getProxyAgent(this.getDeployEndpoint()),
+    } as any)
+  }
+
   async needsAuth(): Promise<boolean> {
     try {
-      const result = await fetch(this.getDeployEndpoint(), {
-        method: 'post',
-        headers: {
-          'Content-Type': 'application/json',
-        } as any,
-        body: JSON.stringify({
-          query: `{
-            listProjects {
-              name
-            }
-          }`,
-        }),
-        agent: getProxyAgent(this.getDeployEndpoint()),
-      } as any)
-
+      const result = await this.request(`{
+        listProjects {
+          name
+        }
+      }`)
       return true
     } catch (e) {
       return false
