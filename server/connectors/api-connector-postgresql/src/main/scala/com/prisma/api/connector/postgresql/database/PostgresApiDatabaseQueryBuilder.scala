@@ -171,14 +171,14 @@ case class PostgresApiDatabaseQueryBuilder(
     val oppositeRelationSide = fromField.oppositeRelationSide.get.toString
 
     val (conditionCommand, orderByCommand, limitCommand) =
-      extractQueryArgs(schemaName, fieldTable, args, defaultOrderShortcut = Some(s""" "$schemaName"."$unsafeRelationId"."$oppositeRelationSide" """), None)
+      extractQueryArgs(schemaName, fieldTable, args, defaultOrderShortcut = Some(s""" RelationTable."$oppositeRelationSide" """), None)
 
     def createQuery(id: String, modelRelationSide: String, fieldRelationSide: String) = {
-      sql"""(select "#$schemaName"."#$fieldTable".*, "#$schemaName"."#$unsafeRelationId"."A" as __Relation__A,  "#$schemaName"."#$unsafeRelationId"."B" as __Relation__B
-            from "#$schemaName"."#$fieldTable"
-           inner join "#$schemaName"."#$unsafeRelationId"
-           on "#$schemaName"."#$fieldTable"."id" = "#$schemaName"."#$unsafeRelationId"."#$fieldRelationSide"
-           where "#$schemaName"."#$unsafeRelationId"."#$modelRelationSide" = '#$id' """ ++
+      sql"""(select ModelTable.*, RelationTable."A" as __Relation__A,  RelationTable."B" as __Relation__B
+            from "#$schemaName"."#$fieldTable" as ModelTable
+           inner join "#$schemaName"."#$unsafeRelationId" as RelationTable
+           on ModelTable."id" = RelationTable."#$fieldRelationSide"
+           where RelationTable."#$modelRelationSide" = '#$id' """ ++
         prefixIfNotNone("and", conditionCommand) ++
         prefixIfNotNone("order by", orderByCommand) ++
         prefixIfNotNone("limit", limitCommand) ++ sql")"
