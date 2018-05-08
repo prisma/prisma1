@@ -28,7 +28,6 @@ services:
             password: prisma
             migrations: true
             managementSchema: management
-            
   mysql:
     image: mysql
     restart: always
@@ -37,7 +36,6 @@ services:
       MYSQL_ROOT_PASSWORD: prisma
     volumes:
       - mysql:/var/lib/mysql
-      
 volumes:
   mysql:
 ```
