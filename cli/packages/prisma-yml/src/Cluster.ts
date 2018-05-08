@@ -81,9 +81,10 @@ export class Cluster {
         })
       } catch (e) {
         throw new Error(
-          `Could not generate token for local cluster ${chalk.bold(
-            this.name,
-          )}. ${e.message}`,
+          `Could not generate token for cluster ${chalk.bold(
+            this.getDeployEndpoint(),
+          )}. Did you provide the env var PRISMA_MANAGEMENT_API_SECRET?
+Original error: ${e.message}`,
         )
       }
     }
