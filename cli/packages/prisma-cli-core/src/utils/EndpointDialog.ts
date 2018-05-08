@@ -90,7 +90,7 @@ volumes:
     environment:
       MYSQL_ROOT_PASSWORD: prisma
     volumes:
-      - db-persistence:/var/lib/mysql
+      - mysql:/var/lib/mysql
 volumes:
   mysql:
 `,
