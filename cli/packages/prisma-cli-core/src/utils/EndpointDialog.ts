@@ -2,7 +2,12 @@ import { Output, Client, Config, getPing } from 'prisma-cli-engine'
 import * as inquirer from 'inquirer'
 import chalk from 'chalk'
 import { Cluster, Environment } from 'prisma-yml'
-import { concatName, defaultDataModel, defaultDockerCompose } from '../util'
+import {
+  concatName,
+  defaultDataModel,
+  defaultDockerCompose,
+  prettyTime,
+} from '../util'
 import * as sillyname from 'sillyname'
 import * as path from 'path'
 import * as fs from 'fs'
@@ -246,6 +251,8 @@ export class EndpointDialog {
         break
       case 'Use existing database':
         credentials = await this.getDatabase()
+        this.out.log('')
+        const before = Date.now()
         this.out.action.start(
           credentials!.alreadyData
             ? `Introspecting database`
@@ -278,13 +285,16 @@ export class EndpointDialog {
             )
             this.out.exit(1)
           }
+
+          this.out.action.stop(prettyTime(Date.now() - before))
           this.out.log(
             `Created datamodel definition based on ${numTables} database tables.`,
           )
           datamodel = sdl
+        } else {
+          this.out.action.stop(prettyTime(Date.now() - before))
         }
         dockerComposeYml += this.printDatabaseConfig(credentials)
-        this.out.action.stop()
         cluster = new Cluster(this.out, 'custom', 'http://localhost:4466')
         break
       case 'Demo server':
