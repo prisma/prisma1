@@ -36,6 +36,11 @@ case class MysqlClientDbQueries(project: Project, clientDatabase: Database)(impl
     clientDatabase.run(readOnlyBoolean(query)).map(_.head).recover { case _: java.sql.SQLSyntaxErrorException => false }
   }
 
+  def existsDuplicateValueByModelAndField(model: Model, field: Field): Future[Boolean] = {
+    val query = MysqlDeployDatabaseQueryBuilder.existsDuplicateValueByModelAndField(project.id, model.name, field.name)
+    clientDatabase.run(readOnlyBoolean(query)).map(_.head).recover { case _: java.sql.SQLSyntaxErrorException => false }
+  }
+
   override def enumValueIsInUse(models: Vector[Model], enumName: String, value: String): Future[Boolean] = {
     val query = MysqlDeployDatabaseQueryBuilder.enumValueIsInUse(project.id, models, enumName, value)
     clientDatabase.run(readOnlyBoolean(query)).map(_.head).recover { case _: java.sql.SQLSyntaxErrorException => false }
