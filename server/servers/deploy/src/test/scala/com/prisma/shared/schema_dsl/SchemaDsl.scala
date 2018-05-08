@@ -59,13 +59,17 @@ object SchemaDsl extends AwaitUtils {
       if (relation.isManyToMany(schema)) {
         relation
       } else {
-        val relationFields                   = Vector(relation.getModelAField(schema), relation.getModelBField(schema)).flatten
-        val fieldToRepresentAsInlineRelation = relationFields.find(_.isList).getOrElse(relationFields.head)
-        val relatedModel                     = fieldToRepresentAsInlineRelation.relatedModel_!(schema)
-        val modelToPutRelationInto           = fieldToRepresentAsInlineRelation.model(schema).get
-
-        val manifestation =
-          InlineRelationManifestation(inTableOfModelId = modelToPutRelationInto.id, referencingColumn = s"${relatedModel.name.toLowerCase}_id")
+        val relationFields = Vector(relation.getModelAField(schema), relation.getModelBField(schema)).flatten
+        val fieldToRepresentAsInlineRelation = relationFields.find(_.isList) match {
+          case Some(field) => field
+          case None        => relationFields.head // happens for one to one relations
+        }
+        val relatedModel           = fieldToRepresentAsInlineRelation.relatedModel_!(schema)
+        val modelToPutRelationInto = fieldToRepresentAsInlineRelation.model(schema).get
+        val manifestation = InlineRelationManifestation(
+          inTableOfModelId = modelToPutRelationInto.id,
+          referencingColumn = s"${relatedModel.name.toLowerCase}_id"
+        )
         relation.copy(manifestation = Some(manifestation))
       }
     }
