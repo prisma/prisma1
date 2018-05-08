@@ -146,15 +146,15 @@ export class EndpointDialog {
     const defaultDB = JSON.parse(
       JSON.stringify({
         connector: credentials.type,
-        migrations: !credentials.alreadyData,
         host: credentials.host,
         port: credentials.port || defaultPorts[credentials.type],
-        user: credentials.user,
-        password: credentials.password,
         database:
           credentials.database && credentials.database.length > 0
             ? credentials.database
             : undefined,
+        user: credentials.user,
+        password: credentials.password,
+        migrations: !credentials.alreadyData,
       }),
     )
     return yaml
