@@ -43,7 +43,7 @@ async function loadDefinition(
   globalRC: string = defaultGlobalRC,
 ) {
   const { env, definition } = makeDefinition(yml, datamodel, args, globalRC)
-  await env.load(args)
+  await env.load()
   await definition.load(args, envPath)
   return { env, definition }
 }
@@ -134,7 +134,7 @@ type User @model {
       `MY_DOT_ENV_SECRET=this-is-very-secret,and-comma,seperated`,
     )
 
-    await env.load({})
+    await env.load()
     await definition.load({}, envPath)
 
     expect(definition.definition).toMatchSnapshot()
@@ -174,7 +174,7 @@ type User @model {
       envVars,
     )
 
-    await env.load({})
+    await env.load()
     await definition.load({})
 
     expect(definition.definition).toMatchSnapshot()
@@ -217,7 +217,7 @@ type User @model {
 
     let error
     try {
-      await env.load({})
+      await env.load()
       await definition.load({})
     } catch (e) {
       error = e
@@ -255,7 +255,7 @@ type User @model {
       `MY_DOT_ENV_SECRET=this-is-very-secret,and-comma,seperated`,
     )
 
-    await env.load({})
+    await env.load()
     await definition.load({}, envPath)
 
     expect(definition.definition).toMatchSnapshot()

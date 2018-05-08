@@ -136,6 +136,9 @@ lazy val deployConnectorPostgres = connectorProject("deploy-connector-postgresql
     libraryDependencies ++= slick ++ Seq(postgresClient)
   )
 
+lazy val deployConnectorPostgresPassive = connectorProject("deploy-connector-postgresql-passive")
+  .dependsOn(deployConnectorPostgres)
+
 lazy val apiConnector = connectorProject("api-connector")
   .dependsOn(sharedModels)
   .dependsOn(gcValues)
@@ -146,6 +149,7 @@ lazy val apiConnector = connectorProject("api-connector")
 lazy val apiConnectorMySql = connectorProject("api-connector-mysql")
   .dependsOn(apiConnector)
   .dependsOn(metrics)
+  .dependsOn(slickUtils)
   .settings(
     libraryDependencies ++= slick ++ Seq(mariaDbClient)
   )
@@ -153,9 +157,13 @@ lazy val apiConnectorMySql = connectorProject("api-connector-mysql")
 lazy val apiConnectorPostgres = connectorProject("api-connector-postgresql")
   .dependsOn(apiConnector)
   .dependsOn(metrics)
+  .dependsOn(slickUtils)
   .settings(
     libraryDependencies ++= slick ++ Seq(postgresClient)
   )
+
+lazy val apiConnectorPostgresPassive = connectorProject("api-connector-postgresql-passive")
+  .dependsOn(apiConnectorPostgres)
 
 // ####################
 //       SHARED
@@ -290,6 +298,8 @@ lazy val cache = libProject("cache")
 
 lazy val auth = libProject("auth").settings(libraryDependencies ++= Seq(jwt))
 
+lazy val slickUtils = libProject("slick-utils").settings(libraryDependencies ++= slick)
+
 lazy val prismaConfig = libProject("prisma-config").settings(libraryDependencies ++= Seq(snakeYML))
 
 val allDockerImageProjects = List(
@@ -309,12 +319,14 @@ lazy val deployConnectorProjects = List(
   deployConnector,
   deployConnectorMySql,
   deployConnectorPostgres,
+  deployConnectorPostgresPassive
 )
 
 lazy val apiConnectorProjects = List(
   apiConnector,
   apiConnectorMySql,
   apiConnectorPostgres,
+  apiConnectorPostgresPassive,
 )
 
 lazy val allConnectorProjects = deployConnectorProjects ++ apiConnectorProjects ++ Seq(connectorUtils)
@@ -331,7 +343,8 @@ val allLibProjects = List(
   jsonUtils,
   cache,
   errorReporting,
-  sangriaUtils
+  sangriaUtils,
+  prismaConfig
 )
 
 val allIntegrationTestProjects = List(

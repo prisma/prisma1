@@ -1,12 +1,12 @@
 package com.prisma.deploy.migration.inference
 
-import com.prisma.deploy.specutils.DeploySpecBase
+import com.prisma.deploy.specutils.ActiveDeploySpecBase
 import com.prisma.shared.models._
 import com.prisma.shared.schema_dsl.SchemaDsl
 import com.prisma.shared.schema_dsl.SchemaDsl.SchemaBuilder
 import org.scalatest.{FlatSpec, Matchers}
 
-class MigrationStepsInferrerSpec extends FlatSpec with Matchers with DeploySpecBase {
+class MigrationStepsInferrerSpec extends FlatSpec with Matchers with ActiveDeploySpecBase {
 
   /**
     * Basic tests

@@ -36,9 +36,11 @@ export class Environment {
     fs.mkdirpSync(path.dirname(this.rcPath))
   }
 
-  async load(args: Args) {
+  async load(loadClusters: boolean = true) {
     await this.loadGlobalRC()
-    await this.getClusters()
+    if (loadClusters) {
+      await this.getClusters()
+    }
   }
 
   get cloudSessionKey(): string | undefined {

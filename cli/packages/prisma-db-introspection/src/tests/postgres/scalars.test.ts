@@ -2,7 +2,7 @@ import { Introspector } from '../../Introspector'
 import { Client } from 'pg'
 import { connectionDetails } from './connectionDetails'
 
-function introspect(): Promise<string> {
+function introspect(): Promise<{ numTables: number; sdl: string }> {
   return new Introspector(connectionDetails).introspect('DatabaseIntrospector')
 }
 
@@ -22,18 +22,23 @@ async function testSchema(sql: string) {
 describe('Introspector', () => {
   test('text columns', async () => {
     await testSchema(`CREATE TABLE "Strings" (
-      "a" char(1) DEFAULT NULL,
+      "a" char(1) DEFAULT NULL UNIQUE,
+      "aa" char(1) NOT NULL UNIQUE,
       "b" varchar(255) DEFAULT NULL,
-      "c" text DEFAULT NULL,
+      "c" text DEFAULT 'abc',
+      "cc" text DEFAULT 'abc' NOT NULL,
       "d" char(1) NOT NULL,
       "e" varchar(255) NOT NULL,
-      "f" text NOT NULL
+      "f" text NOT NULL,
+      "g" uuid DEFAULT NULL,
+      "h" uuid NOT NULL,
+      constraint foo unique(b)
       );`)
   })
 
   test('int columns', async () => {
     await testSchema(`CREATE TABLE "Ints" (
-      "a" smallint DEFAULT NULL,
+      "a" smallint DEFAULT 3,
       "b" integer DEFAULT NULL,
       "c" bigint DEFAULT NULL,
       "d" smallint NOT NULL,
@@ -44,7 +49,7 @@ describe('Introspector', () => {
 
   test('float columns', async () => {
     await testSchema(`CREATE TABLE "Floats" (
-      "a" real DEFAULT NULL,
+      "a" real DEFAULT 3.4,
       "b" double precision DEFAULT NULL,
       "c" float4 DEFAULT NULL,
       "d" float8 DEFAULT NULL,

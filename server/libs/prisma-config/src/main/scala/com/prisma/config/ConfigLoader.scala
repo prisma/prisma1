@@ -74,6 +74,7 @@ object ConfigLoader {
       val dbUser         = sys.env.getOrElse("SQL_CLIENT_USER", sys.error("Env var SQL_CLIENT_USER required but not found"))
       val dbPass         = sys.env.getOrElse("SQL_CLIENT_PASSWORD", sys.error("Env var SQL_CLIENT_PASSWORD required but not found"))
       val dbConn         = sys.env.getOrElse("SQL_INTERNAL_CONNECTION_LIMIT", "1")
+      val database       = sys.env.getOrElse("SQL_INTERNAL_DATABASE", "graphcool") // Legacy always ran on 'graphcool'
       val mgmtApiEnabled = sys.env.getOrElse("CLUSTER_API_ENABLED", "1") match {
         case "1" => "true"
         case "0" => "false"
@@ -90,12 +91,13 @@ object ConfigLoader {
         |databases:
         |  default:
         |    connector: mysql
-        |    active: true
+        |    migrations: true
         |    host: $dbHost
         |    port: $dbPort
         |    user: $dbUser
         |    password: $dbPass
         |    connectionLimit: $dbConn
+        |    managementSchema: $database
       """.stripMargin
     }.toOption
 
@@ -111,15 +113,31 @@ object ConfigLoader {
       case (dbName, dbMap) =>
         val db          = extractScalaMap(dbMap, path = dbName)
         val dbConnector = extractString("connector", db)
-        val dbActive    = extractBoolean("active", db)
+        val dbActive    = extractBooleanOpt("migrations", db).orElse(extractBooleanOpt("active", db)).getOrElse(true)
         val dbHost      = extractString("host", db)
         val dbPort      = extractInt("port", db)
         val dbUser      = extractString("user", db)
         val dbPass      = extractStringOpt("password", db)
         val connLimit   = extractIntOpt("connectionLimit", db)
+        val mgmtSchema  = extractStringOpt("managementSchema", db)
         val pooled      = extractBooleanOpt("pooled", db)
+        val database    = extractStringOpt("database", db)
+        val schema      = extractStringOpt("schema", db)
 
-        DatabaseConfig(dbName, dbConnector, dbActive, dbHost, dbPort, dbUser, dbPass, connLimit, pooled.getOrElse(true))
+        DatabaseConfig(
+          name = dbName,
+          connector = dbConnector,
+          active = dbActive,
+          host = dbHost,
+          port = dbPort,
+          user = dbUser,
+          password = dbPass,
+          connectionLimit = connLimit,
+          pooled = pooled.getOrElse(true),
+          database = database,
+          schema = schema,
+          managementSchema = mgmtSchema
+        )
     }.toSeq
 
     if (databases.isEmpty) {
@@ -181,24 +199,31 @@ object ConfigLoader {
   }
 }
 
-case class PrismaConfig(port: Option[Int],
-                        managementApiSecret: Option[String],
-                        legacySecret: Option[String],
-                        server2serverSecret: Option[String],
-                        clusterAddress: Option[String],
-                        rabbitUri: Option[String],
-                        managmentApiEnabled: Option[Boolean],
-                        databases: Seq[DatabaseConfig])
+case class PrismaConfig(
+    port: Option[Int],
+    managementApiSecret: Option[String],
+    legacySecret: Option[String],
+    server2serverSecret: Option[String],
+    clusterAddress: Option[String],
+    rabbitUri: Option[String],
+    managmentApiEnabled: Option[Boolean],
+    databases: Seq[DatabaseConfig]
+)
 
-case class DatabaseConfig(name: String,
-                          connector: String,
-                          active: Boolean,
-                          host: String,
-                          port: Int,
-                          user: String,
-                          password: Option[String],
-                          connectionLimit: Option[Int],
-                          pooled: Boolean)
+case class DatabaseConfig(
+    name: String,
+    connector: String,
+    active: Boolean,
+    host: String,
+    port: Int,
+    user: String,
+    password: Option[String],
+    managementSchema: Option[String],
+    connectionLimit: Option[Int],
+    pooled: Boolean,
+    database: Option[String],
+    schema: Option[String]
+)
 
 abstract class ConfigError(reason: String)       extends Exception(reason)
 case class InvalidConfiguration(message: String) extends ConfigError(message)

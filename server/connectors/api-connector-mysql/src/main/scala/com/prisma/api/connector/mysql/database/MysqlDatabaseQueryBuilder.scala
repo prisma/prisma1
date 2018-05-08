@@ -13,10 +13,9 @@ import slick.jdbc.MySQLProfile.api._
 import slick.jdbc.meta.{DatabaseMeta, MTable}
 import slick.jdbc.{SQLActionBuilder, _}
 import slick.sql.SqlStreamingAction
+import scala.concurrent.ExecutionContext
 
-import scala.concurrent.ExecutionContext.Implicits.global
-
-object MysqlDatabaseQueryBuilder {
+class MySqlDatabaseQueryBuilder()(implicit ec: ExecutionContext) {
   import JdbcExtensions._
   import QueryArgumentsExtensions._
   import SlickExtensions._
@@ -66,7 +65,6 @@ object MysqlDatabaseQueryBuilder {
 
   implicit object GetRelationNode extends GetResult[RelationNode] {
     override def apply(ps: PositionedResult): RelationNode = RelationNode(ps.rs.getId, ps.rs.getAsID("A"), ps.rs.getAsID("B"))
-
   }
 
   implicit object GetRelationCount extends GetResult[(IdGCValue, Int)] {
@@ -156,24 +154,25 @@ object MysqlDatabaseQueryBuilder {
     query.as[PrismaNode](getResultForModel(model))
   }
 
+  import com.prisma.slick.NewJdbcExtensions._
+  import com.prisma.api.connector.mysql.database.JdbcExtensions._
+
   def batchSelectFromModelByUniqueSimple(projectId: String, model: Model, fieldName: String, values: Vector[GCValue]): SimpleDBIO[Vector[PrismaNode]] =
     SimpleDBIO[Vector[PrismaNode]] { x =>
-      val placeHolders                   = values.map(_ => "?").mkString(",")
-      val query                          = s"select * from `$projectId`.`${model.name}` where `$fieldName` in ($placeHolders)"
-      val batchSelect: PreparedStatement = x.connection.prepareStatement(query)
-      values.zipWithIndex.foreach { gcValueWithIndex =>
-        batchSelect.setGcValue(gcValueWithIndex._2 + 1, gcValueWithIndex._1)
-      }
-      val rs: ResultSet = batchSelect.executeQuery()
-
-      var result: Vector[PrismaNode] = Vector.empty
-      while (rs.next) {
-        val data = model.scalarNonListFields.map(field => field.name -> rs.getGcValue(field.name, field.typeIdentifier))
-        result = result :+ PrismaNode(id = rs.getId, data = RootGCValue(data: _*))
-      }
-
-      result
+      val query                 = s"select * from `$projectId`.`${model.name}` where `$fieldName` in ${placeHolders(values)}"
+      val ps: PreparedStatement = x.connection.prepareStatement(query).setValues(values)
+      val rs: ResultSet         = ps.executeQuery()
+      rs.as[PrismaNode](readsPrismaNode(model))
     }
+
+  def readsPrismaNode(model: Model): ReadsResultSet[PrismaNode] = ReadsResultSet { rs =>
+    val data = model.scalarNonListFields.map(field => field.name -> rs.getGcValue(field.name, field.typeIdentifier))
+    PrismaNode(id = rs.getId, data = RootGCValue(data: _*))
+  }
+
+  implicit val setGcValue: SetParam[GCValue] = new SetParam[GCValue] {
+    override def apply(ps: PreparedStatement, index: Int, value: GCValue): Unit = ps.setGcValue(index, value)
+  }
 
   def selectFromScalarList(projectId: String,
                            modelName: String,

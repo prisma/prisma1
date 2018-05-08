@@ -7,7 +7,7 @@ async function load() {
   const config = new Config()
   const out = new Output(config)
   const env = new Environment(config.globalConfigPath, out)
-  await env.load({})
+  await env.load()
   const client = new Client(config, env, out)
   const exporter = new Exporter(__dirname + '/download', client, out, config)
 

@@ -2,7 +2,7 @@ package com.prisma.deploy.migration.validation
 
 import com.prisma.deploy.validation._
 import com.prisma.shared.models.TypeIdentifier
-import sangria.ast.{Directive, EnumValue, FieldDefinition, ObjectTypeDefinition}
+import sangria.ast.{Argument => SangriaArgument, _}
 
 import scala.collection.immutable.Seq
 import scala.util.{Failure, Success}
@@ -13,14 +13,18 @@ case class Argument(name: String, isValid: sangria.ast.Value => Boolean)
 
 case class FieldAndType(objectType: ObjectTypeDefinition, fieldDef: FieldDefinition)
 
-case class FieldRequirement(name: String, typeName: String, required: Boolean, unique: Boolean, list: Boolean) {
+object FieldRequirement {
+  def apply(name: String, validType: String, required: Boolean, unique: Boolean, list: Boolean): FieldRequirement = {
+    FieldRequirement(name = name, validTypes = Vector(validType), required = required, unique = unique, list = list)
+  }
+}
+case class FieldRequirement(name: String, validTypes: Vector[String], required: Boolean, unique: Boolean, list: Boolean) {
   import com.prisma.deploy.migration.DataSchemaAstExtensions._
 
   def isValid(field: FieldDefinition): Boolean = {
-    if (field.name == name) {
-      field.fieldType.namedType.name == typeName && field.isRequired == required && field.isUnique == unique && field.isList == list
-    } else {
-      true
+    field.name == name match {
+      case true  => validTypes.contains(field.typeName) && field.isRequired == required && field.isUnique == unique && field.isList == list
+      case false => true
     }
   }
 }
@@ -38,30 +42,45 @@ object SchemaSyntaxValidator {
     enum && valid
   }
 
+  def validOldName(x: sangria.ast.Value): Boolean = x.isInstanceOf[StringValue]
+
   val directiveRequirements = Seq(
     DirectiveRequirement(
       "relation",
       requiredArguments = Seq(RequiredArg("name", mustBeAString = true)),
-      optionalArguments = Seq(Argument("onDelete", validOnDeleteEnum))
+      optionalArguments = Seq(Argument("onDelete", validOnDeleteEnum), Argument("oldName", validOldName))
     ),
     DirectiveRequirement("rename", requiredArguments = Seq(RequiredArg("oldName", mustBeAString = true)), optionalArguments = Seq.empty),
     DirectiveRequirement("default", requiredArguments = Seq(RequiredArg("value", mustBeAString = false)), optionalArguments = Seq.empty),
-    DirectiveRequirement("migrationValue", requiredArguments = Seq(RequiredArg("value", mustBeAString = false)), optionalArguments = Seq.empty),
     DirectiveRequirement("unique", requiredArguments = Seq.empty, optionalArguments = Seq.empty)
   )
 
-  val reservedFieldsRequirements = Seq(
-    FieldRequirement("id", "ID", required = true, unique = true, list = false),
+  val idFieldRequirementForPassiveConnectors = FieldRequirement("id", Vector("ID", "Int"), required = true, unique = true, list = false)
+  val idFieldRequirementForActiveConnectors  = FieldRequirement("id", "ID", required = true, unique = true, list = false)
+
+  val reservedFieldsRequirementsForAllConnectors = Seq(
     FieldRequirement("updatedAt", "DateTime", required = true, unique = false, list = false),
     FieldRequirement("createdAt", "DateTime", required = true, unique = false, list = false)
   )
 
-  def apply(schema: String): SchemaSyntaxValidator = {
-    SchemaSyntaxValidator(schema, directiveRequirements, reservedFieldsRequirements)
+  val reservedFieldsRequirementsForActiveConnectors  = reservedFieldsRequirementsForAllConnectors ++ Seq(idFieldRequirementForActiveConnectors)
+  val reservedFieldsRequirementsForPassiveConnectors = reservedFieldsRequirementsForAllConnectors ++ Seq(idFieldRequirementForPassiveConnectors)
+
+  val requiredReservedFields = Vector(idFieldRequirementForPassiveConnectors)
+
+  def apply(schema: String, isActive: Boolean): SchemaSyntaxValidator = {
+    val fieldRequirements         = if (isActive) reservedFieldsRequirementsForActiveConnectors else reservedFieldsRequirementsForPassiveConnectors
+    val requiredFieldRequirements = if (isActive) Vector.empty else requiredReservedFields
+    SchemaSyntaxValidator(schema, directiveRequirements, fieldRequirements, requiredFieldRequirements)
   }
 }
 
-case class SchemaSyntaxValidator(schema: String, directiveRequirements: Seq[DirectiveRequirement], reservedFieldsRequirements: Seq[FieldRequirement]) {
+case class SchemaSyntaxValidator(
+    schema: String,
+    directiveRequirements: Seq[DirectiveRequirement],
+    reservedFieldsRequirements: Seq[FieldRequirement],
+    requiredReservedFields: Seq[FieldRequirement]
+) {
   import com.prisma.deploy.migration.DataSchemaAstExtensions._
 
   val result   = SdlSchemaParser.parse(schema)
@@ -81,6 +100,7 @@ case class SchemaSyntaxValidator(schema: String, directiveRequirements: Seq[Dire
     } yield FieldAndType(objectType, field)
 
     val reservedFieldsValidations = validateReservedFields(allFieldAndTypes)
+    val requiredFieldValidations  = validateRequiredReservedFields(doc.objectTypes)
     val duplicateTypeValidations  = validateDuplicateTypes(doc.objectTypes, allFieldAndTypes)
     val duplicateFieldValidations = validateDuplicateFields(allFieldAndTypes)
     val missingTypeValidations    = validateMissingTypes(allFieldAndTypes)
@@ -89,6 +109,7 @@ case class SchemaSyntaxValidator(schema: String, directiveRequirements: Seq[Dire
     val fieldDirectiveValidations = allFieldAndTypes.flatMap(validateFieldDirectives)
 
     reservedFieldsValidations ++
+      requiredFieldValidations ++
       duplicateTypeValidations ++
       duplicateFieldValidations ++
       missingTypeValidations ++
@@ -104,6 +125,15 @@ case class SchemaSyntaxValidator(schema: String, directiveRequirements: Seq[Dire
       failedChecks = reservedFieldsRequirements.filterNot { _.isValid(field.fieldDef) }
       if failedChecks.nonEmpty
     } yield SchemaErrors.malformedReservedField(field, failedChecks.head)
+  }
+
+  def validateRequiredReservedFields(objectTypes: Seq[ObjectTypeDefinition]): Seq[SchemaError] = {
+    for {
+      objectType   <- objectTypes
+      fieldNames   = objectType.fields.map(_.name)
+      failedChecks = requiredReservedFields.filterNot(req => fieldNames.contains(req.name))
+      if failedChecks.nonEmpty
+    } yield SchemaErrors.missingReservedField(objectType, failedChecks.head.name, failedChecks.head)
   }
 
   def validateDuplicateTypes(objectTypes: Seq[ObjectTypeDefinition], fieldAndTypes: Seq[FieldAndType]): Seq[SchemaError] = {
@@ -143,18 +173,17 @@ case class SchemaSyntaxValidator(schema: String, directiveRequirements: Seq[Dire
       val relationFields                                = objectType.fields.filter(isRelationField)
       val grouped: Map[String, Vector[FieldDefinition]] = relationFields.groupBy(_.typeName)
       val ambiguousFields                               = grouped.values.filter(_.size > 1).flatten.toVector
-      ambiguousFields.map { field =>
-        FieldAndType(objectType, field)
-      }
+      ambiguousFields.map(field => FieldAndType(objectType, field))
     }
+
     val ambiguousRelationFields = doc.objectTypes.flatMap(ambiguousRelationFieldsForType)
 
     val (schemaErrors, _) = partition(ambiguousRelationFields) {
       case fieldAndType if !fieldAndType.fieldDef.hasRelationDirective =>
         Left(SchemaErrors.missingRelationDirective(fieldAndType))
 
-      case fieldAndType if !isSelfRelation(fieldAndType) && relationCount(fieldAndType) != 2 =>
-        Left(SchemaErrors.relationNameMustAppear2Times(fieldAndType))
+      case fieldAndType if !isSelfRelation(fieldAndType) && relationCount(fieldAndType) > 2 =>
+        Left(SchemaErrors.relationDirectiveCannotAppearMoreThanTwice(fieldAndType))
 
       case fieldAndType if isSelfRelation(fieldAndType) && relationCount(fieldAndType) != 1 && relationCount(fieldAndType) != 2 =>
         Left(SchemaErrors.selfRelationMustAppearOneOrTwoTimes(fieldAndType))
@@ -169,6 +198,22 @@ case class SchemaSyntaxValidator(schema: String, directiveRequirements: Seq[Dire
       if field.hasRelationDirective
       if isRelationField(field)
     } yield FieldAndType(objectType, field)
+
+    /**
+      * Check that if a relation is not a self-relation and a relation-directive occurs only once that there is no
+      * opposing field without a relationdirective on the other side.
+      */
+    val allowOnlyOneDirectiveOnlyWhenUnambigous = relationFieldsWithRelationDirective.flatMap {
+      case thisType if !isSelfRelation(thisType) && relationCount(thisType) == 1 =>
+        val oppositeObjectType               = doc.objectType_!(thisType.fieldDef.typeName)
+        val fieldsOnOppositeObjectType       = oppositeObjectType.fields.filter(_.typeName == thisType.objectType.name)
+        val relationFieldsWithoutDirective   = fieldsOnOppositeObjectType.filter(f => !f.hasRelationDirective && isRelationField(f))
+        val relationFieldsPointingToThisType = relationFieldsWithoutDirective.filter(f => f.typeName == thisType.objectType.name)
+        if (relationFieldsPointingToThisType.nonEmpty) Some(SchemaErrors.ambiguousRelationSinceThereIsOnlyOneRelationDirective(thisType)) else None
+
+      case _ =>
+        None
+    }
 
     /**
       * The validation below must be only applied to fields that specify the relation directive.
@@ -195,7 +240,7 @@ case class SchemaSyntaxValidator(schema: String, directiveRequirements: Seq[Dire
           Iterable.empty
       }
 
-    wrongTypeDefinitions ++ schemaErrors ++ relationFieldsWithNonMatchingTypes
+    wrongTypeDefinitions ++ schemaErrors ++ relationFieldsWithNonMatchingTypes ++ allowOnlyOneDirectiveOnlyWhenUnambigous
   }
 
   def validateScalarFields(fieldAndTypes: Seq[FieldAndType]): Seq[SchemaError] = {
@@ -271,7 +316,9 @@ case class SchemaSyntaxValidator(schema: String, directiveRequirements: Seq[Dire
   }
 
   def validateEnumTypes: Seq[SchemaError] = {
-    doc.enumTypes.flatMap { enumType =>
+    val duplicateNames = doc.enumNames.diff(doc.enumNames.distinct).distinct.flatMap(dupe => Some(SchemaErrors.enumNamesMustBeUnique(doc.enumType(dupe).get)))
+
+    val otherErrors = doc.enumTypes.flatMap { enumType =>
       val invalidEnumValues = enumType.valuesAsStrings.filter(!NameConstraints.isValidEnumValueName(_))
 
       if (enumType.values.exists(value => value.name.head.isLower)) {
@@ -282,6 +329,8 @@ case class SchemaSyntaxValidator(schema: String, directiveRequirements: Seq[Dire
         None
       }
     }
+
+    duplicateNames ++ otherErrors
   }
 
   def relationCount(fieldAndType: FieldAndType): Int = {
@@ -291,10 +340,8 @@ case class SchemaSyntaxValidator(schema: String, directiveRequirements: Seq[Dire
     val fieldsOnTypeA      = fieldsWithType(fieldAndType.objectType, fieldAndType.fieldDef.typeName)
     val fieldsOnTypeB      = fieldsWithType(oppositeObjectType, fieldAndType.objectType.name)
 
-    // TODO: this probably only works if a relation directive appears twice actually in case of ambiguous relations
-
     isSelfRelation(fieldAndType) match {
-      case true  => (fieldsOnTypeB).count(_.relationName == fieldAndType.fieldDef.relationName)
+      case true  => fieldsOnTypeB.count(_.relationName == fieldAndType.fieldDef.relationName)
       case false => (fieldsOnTypeA ++ fieldsOnTypeB).count(_.relationName == fieldAndType.fieldDef.relationName)
     }
   }

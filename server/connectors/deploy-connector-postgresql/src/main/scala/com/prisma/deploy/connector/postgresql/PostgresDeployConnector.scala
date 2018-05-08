@@ -3,7 +3,7 @@ package com.prisma.deploy.connector.postgresql
 import com.prisma.config.DatabaseConfig
 import com.prisma.deploy.connector._
 import com.prisma.deploy.connector.postgresql.database.{InternalDatabaseSchema, PostgresDeployDatabaseMutationBuilder, TelemetryTable}
-import com.prisma.deploy.connector.postgresql.impls.{ClientDbQueriesImpl, DeployMutactionExecutorImpl, MigrationPersistenceImpl, ProjectPersistenceImpl}
+import com.prisma.deploy.connector.postgresql.impls.{PostgresClientDbQueries, PostgresDeployMutactionExecutor, MigrationPersistenceImpl, ProjectPersistenceImpl}
 import com.prisma.shared.models.{Project, ProjectIdEncoder}
 import org.joda.time.DateTime
 import slick.dbio.Effect.Read
@@ -12,14 +12,15 @@ import slick.jdbc.PostgresProfile.api._
 
 import scala.concurrent.{ExecutionContext, Future}
 
-case class PostgresDeployConnector(dbConfig: DatabaseConfig)(implicit ec: ExecutionContext) extends DeployConnector with TableTruncationHelpers {
-  lazy val internalDatabaseDefs = InternalDatabaseDefs(dbConfig)
+case class PostgresDeployConnector(dbConfig: DatabaseConfig)(implicit ec: ExecutionContext) extends DeployConnector {
+  override def isActive         = true
+  lazy val internalDatabaseDefs = PostgresInternalDatabaseDefs(dbConfig)
   lazy val internalDatabaseRoot = internalDatabaseDefs.internalDatabaseRoot // DB prisma, schema public
   lazy val internalDatabase     = internalDatabaseDefs.internalDatabase // DB prisma, schema management
 
   override lazy val projectPersistence: ProjectPersistence           = ProjectPersistenceImpl(internalDatabase)
   override lazy val migrationPersistence: MigrationPersistence       = MigrationPersistenceImpl(internalDatabase)
-  override lazy val deployMutactionExecutor: DeployMutactionExecutor = DeployMutactionExecutorImpl(internalDatabaseRoot)
+  override lazy val deployMutactionExecutor: DeployMutactionExecutor = PostgresDeployMutactionExecutor(internalDatabaseRoot)
 
   override def createProjectDatabase(id: String): Future[Unit] = {
     val action = PostgresDeployDatabaseMutationBuilder.createClientDatabaseForProject(projectId = id)
@@ -46,7 +47,7 @@ case class PostgresDeployConnector(dbConfig: DatabaseConfig)(implicit ec: Execut
     internalDatabaseRoot.run(action)
   }
 
-  override def clientDBQueries(project: Project): ClientDbQueries      = ClientDbQueriesImpl(project, internalDatabaseRoot)
+  override def clientDBQueries(project: Project): ClientDbQueries      = PostgresClientDbQueries(project, internalDatabaseRoot)
   override def getOrCreateTelemetryInfo(): Future[TelemetryInfo]       = internalDatabase.run(TelemetryTable.getOrCreateInfo())
   override def updateTelemetryInfo(lastPinged: DateTime): Future[Unit] = internalDatabase.run(TelemetryTable.updateInfo(lastPinged)).map(_ => ())
   override def projectIdEncoder: ProjectIdEncoder                      = ProjectIdEncoder('$')
@@ -54,15 +55,15 @@ case class PostgresDeployConnector(dbConfig: DatabaseConfig)(implicit ec: Execut
   override def initialize(): Future[Unit] = {
     // We're ignoring failures for createDatabaseAction as there is no "create if not exists" in psql
     internalDatabaseDefs.setupDatabase
-      .run(InternalDatabaseSchema.createDatabaseAction)
+      .run(InternalDatabaseSchema.createDatabaseAction(internalDatabaseDefs.dbName))
       .transformWith { _ =>
-        val action = InternalDatabaseSchema.createSchemaActions(recreate = false)
+        val action = InternalDatabaseSchema.createSchemaActions(internalDatabaseDefs.managementSchemaName, recreate = false)
         internalDatabaseRoot.run(action)
       }
       .flatMap(_ => internalDatabaseDefs.setupDatabase.shutdown)
   }
 
-  override def reset(): Future[Unit] = truncateTablesInDatabase(internalDatabase)
+  override def reset(): Future[Unit] = truncateManagementTablesInDatabase(internalDatabase)
 
   override def shutdown() = {
     for {
@@ -70,12 +71,10 @@ case class PostgresDeployConnector(dbConfig: DatabaseConfig)(implicit ec: Execut
       _ <- internalDatabase.shutdown
     } yield ()
   }
-}
 
-trait TableTruncationHelpers {
-  // copied from InternalTestDatabase
+  override def databaseIntrospectionInferrer(projectId: String): DatabaseIntrospectionInferrer = EmptyDatabaseIntrospectionInferrer
 
-  protected def truncateTablesInDatabase(database: Database)(implicit ec: ExecutionContext): Future[Unit] = {
+  protected def truncateManagementTablesInDatabase(database: Database)(implicit ec: ExecutionContext): Future[Unit] = {
     for {
       schemas <- database.run(getTables())
       _       <- database.run(dangerouslyTruncateTables(schemas))
@@ -85,7 +84,7 @@ trait TableTruncationHelpers {
   private def getTables()(implicit ec: ExecutionContext): DBIOAction[Vector[String], NoStream, Read] = {
     sql"""SELECT table_name
           FROM information_schema.tables
-          WHERE table_schema = '#${InternalDatabaseSchema.internalSchema}'
+          WHERE table_schema = '#${internalDatabaseDefs.managementSchemaName}'
           AND table_type = 'BASE TABLE';""".as[String]
   }
 

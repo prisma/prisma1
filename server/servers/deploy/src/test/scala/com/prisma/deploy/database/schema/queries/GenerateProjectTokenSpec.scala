@@ -1,11 +1,11 @@
 package com.prisma.deploy.database.schema.queries
 
 import com.prisma.auth.{AuthImpl, AuthSuccess}
-import com.prisma.deploy.specutils.DeploySpecBase
+import com.prisma.deploy.specutils.ActiveDeploySpecBase
 import com.prisma.shared.models.{Project, ProjectId}
 import org.scalatest.{FlatSpec, Matchers}
 
-class GenerateProjectTokenSpec extends FlatSpec with Matchers with DeploySpecBase {
+class GenerateProjectTokenSpec extends FlatSpec with Matchers with ActiveDeploySpecBase {
   val auth = AuthImpl
 
   "the GenerateProjectToken query" should "return a proper token for the requested project" in {

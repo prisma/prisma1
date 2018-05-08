@@ -1,6 +1,7 @@
 package com.prisma.api.server
 
 import akka.actor.ActorSystem
+import akka.http.javadsl.model.StatusCode
 import akka.http.scaladsl.model.StatusCodes
 import akka.http.scaladsl.model.StatusCodes._
 import akka.http.scaladsl.model.headers.RawHeader
@@ -26,6 +27,7 @@ import play.api.libs.json._
 
 import scala.concurrent.Future
 import scala.language.postfixOps
+import scala.util.Try
 
 case class ApiServer(
     schemaBuilder: SchemaBuilder,
@@ -125,14 +127,9 @@ case class ApiServer(
     }
 
     def handleRequestForPublicApi(projectId: ProjectId, rawRequest: RawRequest) = {
-      val result = apiDependencies.requestHandler.handleRawRequestForPublicApi(projectIdEncoder.toEncodedString(projectId), rawRequest)
-      result.onComplete { _ =>
-        logRequestEnd(projectIdEncoder.toEncodedString(projectId))
-      }
-      result
+      apiDependencies.requestHandler.handleRawRequestForPublicApi(projectIdEncoder.toEncodedString(projectId), rawRequest)
     }
 
-    logger.info(Json.toJson(LogData(LogKey.RequestNew, requestId)).toString())
     pathPrefix(Segments(min = 0, max = 4)) { segments =>
       post {
         val (projectSegments, reservedSegment) = splitReservedSegment(segments)
@@ -178,20 +175,17 @@ case class ApiServer(
   def extractRawRequest(requestId: String)(fn: RawRequest => Route): Route = {
     optionalHeaderValueByName("Authorization") { authorizationHeader =>
       TimeResponseDirectiveImpl(ApiMetrics).timeResponse {
-        optionalHeaderValueByName("x-graphcool-source") { graphcoolSourceHeader =>
-          entity(as[JsValue]) { requestJson =>
-            extractClientIP { clientIp =>
-              respondWithHeader(RawHeader("Request-Id", requestId)) {
-                fn(
-                  RawRequest(
-                    id = requestId,
-                    json = requestJson,
-                    ip = clientIp.toString,
-                    sourceHeader = graphcoolSourceHeader,
-                    authorizationHeader = authorizationHeader
-                  )
+        entity(as[JsValue]) { requestJson =>
+          extractClientIP { clientIp =>
+            respondWithHeader(RawHeader("Request-Id", requestId)) {
+              fn(
+                RawRequest(
+                  id = requestId,
+                  json = requestJson,
+                  ip = clientIp.toString,
+                  authorizationHeader = authorizationHeader
                 )
-              }
+              )
             }
           }
         }

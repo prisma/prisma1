@@ -44,6 +44,8 @@ case class RootGCValue(map: SortedMap[String, GCValue]) extends GCValue {
   }
 
   def isEmpty = map.isEmpty
+
+  def hasArgFor(name: String): Boolean = map.get(name).isDefined
 }
 
 case class ListGCValue(values: Vector[GCValue]) extends GCValue {

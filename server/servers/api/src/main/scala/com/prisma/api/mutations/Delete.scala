@@ -49,5 +49,5 @@ case class Delete(
       }
   }
 
-  override def getReturnValue: Future[ReturnValueResult] = Future.successful(ReturnValue(deletedItemOpt.get))
+  override def getReturnValue(results: MutactionResults): Future[ReturnValueResult] = Future.successful(ReturnValue(deletedItemOpt.get))
 }

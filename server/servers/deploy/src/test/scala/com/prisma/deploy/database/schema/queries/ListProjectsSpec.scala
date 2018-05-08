@@ -1,10 +1,10 @@
 package com.prisma.deploy.database.schema.queries
 
-import com.prisma.deploy.specutils.DeploySpecBase
+import com.prisma.deploy.specutils.ActiveDeploySpecBase
 import com.prisma.shared.models.ProjectId
 import org.scalatest.{FlatSpec, Matchers}
 
-class ListProjectsSpec extends FlatSpec with Matchers with DeploySpecBase {
+class ListProjectsSpec extends FlatSpec with Matchers with ActiveDeploySpecBase {
   "ListProjects" should "return an empty list with no projects" in {
     val result = server.query(s"""
        |query {

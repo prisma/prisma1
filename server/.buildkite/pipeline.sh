@@ -1,5 +1,6 @@
 #! /bin/bash
 
+#declare -a connectors=(mysql postgres postgres-passive)
 declare -a connectors=(mysql postgres)
 
 # Projects with a locked connector
@@ -9,11 +10,23 @@ static=$(printf "    - label: \":mysql: MySql API connector\"
     - label: \":mysql: MySql deploy connector\"
       command: cd server && ./.buildkite/scripts/test.sh deploy-connector-mysql mysql
 
+    - label: \":scala: integration-tests-mysql\"
+      command: cd server && ./.buildkite/scripts/test.sh integration-tests-mysql mysql
+
     - label: \":postgres: Postgres API connector\"
       command: cd server && ./.buildkite/scripts/test.sh api-connector-postgresql postgres
 
     - label: \":postgres: Postgres deploy connector\"
       command: cd server && ./.buildkite/scripts/test.sh deploy-connector-postgresql postgres
+
+    - label: \":postgres: passive Postgres API connector\"
+      command: cd server && ./.buildkite/scripts/test.sh api-connector-postgresql-passive postgres
+
+    - label: \":postgres: passive Postgres deploy connector\"
+      command: cd server && ./.buildkite/scripts/test.sh deploy-connector-postgresql-passive postgres
+
+    - label: \":scala: integration-tests-postgres\"
+      command: cd server && ./.buildkite/scripts/test.sh integration-tests-mysql postgres
 
     # Libs are not specific to a connector, simply run with mysql
     - label: \":scala: libs\"
@@ -21,6 +34,7 @@ static=$(printf "    - label: \":mysql: MySql API connector\"
 
     - label: \":scala: subscriptions\"
       command: cd server && ./.buildkite/scripts/test.sh subscriptions mysql
+      
 ")
 
 optional=""
@@ -66,9 +80,6 @@ do
 
     - label: \":scala: workers [$connector]\"
       command: cd server && ./.buildkite/scripts/test.sh workers $connector
-
-    - label: \":scala: integration-tests [$connector]\"
-      command: cd server && ./.buildkite/scripts/test.sh integrationTests $connector
 
 ")
 

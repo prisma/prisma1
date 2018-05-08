@@ -145,7 +145,8 @@ export class Command {
     this.flags = flags!
     this.argv = argv!
     this.args = args
-    await this.env.load(flags!)
+    const loadClusters = !['help'].includes((this.constructor as any).topic)
+    await this.env.load(loadClusters)
     initStatusChecker(this.config, this.env)
   }
 

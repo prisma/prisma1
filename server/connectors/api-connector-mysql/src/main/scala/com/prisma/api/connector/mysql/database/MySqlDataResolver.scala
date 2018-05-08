@@ -12,10 +12,10 @@ import slick.jdbc.MySQLProfile.api._
 import slick.lifted.TableQuery
 import slick.sql.SqlAction
 
-import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
 
-case class MySqlDataResolver(project: Project, readonlyClientDatabase: MySQLProfile.backend.DatabaseDef) extends DataResolver {
+case class MySqlDataResolver(project: Project, readonlyClientDatabase: MySQLProfile.backend.DatabaseDef)(implicit ec: ExecutionContext) extends DataResolver {
+  val queryBuilder = new MySqlDatabaseQueryBuilder()(ec)
 
   override def resolveByGlobalId(globalId: IdGCValue): Future[Option[PrismaNode]] = { //todo rewrite this to use normal query?
     if (globalId.value == "viewer-fixed") return Future.successful(Some(PrismaNode(globalId, RootGCValue.empty, Some("Viewer"))))
@@ -40,7 +40,7 @@ case class MySqlDataResolver(project: Project, readonlyClientDatabase: MySQLProf
   }
 
   override def resolveByModel(model: Model, args: Option[QueryArguments] = None): Future[ResolverResult[PrismaNode]] = {
-    val query = MysqlDatabaseQueryBuilder.selectAllFromTable(project.id, model, args)
+    val query = queryBuilder.selectAllFromTable(project.id, model, args)
     performWithTiming("loadModelRowsForExport", readonlyClientDatabase.run(query))
   }
 
@@ -48,39 +48,39 @@ case class MySqlDataResolver(project: Project, readonlyClientDatabase: MySQLProf
     batchResolveByUnique(where.model, where.field.name, Vector(where.fieldValue)).map(_.headOption)
 
   override def countByTable(table: String, whereFilter: Option[DataItemFilterCollection] = None): Future[Int] = {
-    val query = MysqlDatabaseQueryBuilder.countAllFromTable(project, table, whereFilter)
+    val query = queryBuilder.countAllFromTable(project, table, whereFilter)
     performWithTiming("countByModel", readonlyClientDatabase.run(query))
   }
 
   override def batchResolveByUnique(model: Model, fieldName: String, values: Vector[GCValue]): Future[Vector[PrismaNode]] = {
-    val query = MysqlDatabaseQueryBuilder.batchSelectFromModelByUnique(project.id, model, fieldName, values)
+    val query = queryBuilder.batchSelectFromModelByUnique(project.id, model, fieldName, values)
     performWithTiming("batchResolveByUnique", readonlyClientDatabase.run(query))
   }
 
   override def batchResolveScalarList(model: Model, listField: Field, nodeIds: Vector[IdGCValue]): Future[Vector[ScalarListValues]] = {
-    val query = MysqlDatabaseQueryBuilder.selectFromScalarList(project.id, model.name, listField, nodeIds)
+    val query = queryBuilder.selectFromScalarList(project.id, model.name, listField, nodeIds)
     performWithTiming("batchResolveScalarList", readonlyClientDatabase.run(query))
   }
 
   override def resolveByRelationManyModels(fromField: Field,
                                            fromNodeIds: Vector[IdGCValue],
                                            args: Option[QueryArguments]): Future[Vector[ResolverResult[PrismaNodeWithParent]]] = {
-    val query = MysqlDatabaseQueryBuilder.batchSelectAllFromRelatedModel(project, fromField, fromNodeIds, args)
+    val query = queryBuilder.batchSelectAllFromRelatedModel(project, fromField, fromNodeIds, args)
     performWithTiming("resolveByRelation", readonlyClientDatabase.run(query))
   }
 
   override def countByRelationManyModels(fromField: Field, fromNodeIds: Vector[IdGCValue], args: Option[QueryArguments]): Future[Vector[(IdGCValue, Int)]] = {
-    val query = MysqlDatabaseQueryBuilder.countAllFromRelatedModels(project, fromField, fromNodeIds, args)
+    val query = queryBuilder.countAllFromRelatedModels(project, fromField, fromNodeIds, args)
     performWithTiming("countByRelation", readonlyClientDatabase.run(query))
   }
 
   override def loadListRowsForExport(model: Model, field: Field, args: Option[QueryArguments] = None): Future[ResolverResult[ScalarListValues]] = {
-    val query = MysqlDatabaseQueryBuilder.selectAllFromListTable(project.id, model, field, args, None)
+    val query = queryBuilder.selectAllFromListTable(project.id, model, field, args, None)
     performWithTiming("loadListRowsForExport", readonlyClientDatabase.run(query))
   }
 
   override def loadRelationRowsForExport(relationId: String, args: Option[QueryArguments] = None): Future[ResolverResult[RelationNode]] = {
-    val query = MysqlDatabaseQueryBuilder.selectAllFromRelationTable(project.id, relationId, args)
+    val query = queryBuilder.selectAllFromRelationTable(project.id, relationId, args)
     performWithTiming("loadRelationRowsForExport", readonlyClientDatabase.run(query))
   }
 

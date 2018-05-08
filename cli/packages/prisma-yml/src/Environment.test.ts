@@ -15,12 +15,12 @@ const out = new Output()
 describe('Environment', () => {
   test('non-existent global prisma rc', async () => {
     const env = makeEnv()
-    await env.load({})
+    await env.load()
     expect(env.clusters).toMatchSnapshot()
   })
   test('persists .prisma correctly', async () => {
     const env = makeEnv()
-    await env.load({})
+    await env.load()
     const cluster = new Cluster(out, 'cluster', `http://localhost:60000`, '')
     env.addCluster(cluster)
     env.saveGlobalRC()
@@ -29,18 +29,18 @@ describe('Environment', () => {
   })
   test('empty global prisma rc', async () => {
     const env = makeEnv('')
-    await env.load({})
+    await env.load()
     expect(env.clusters).toMatchSnapshot()
   })
   test('sets the platform token correctly', async () => {
     const env = makeEnv(`platformToken: asdf`)
-    await env.load({})
+    await env.load()
     expect(env.clusters).toMatchSnapshot()
   })
   test('interpolates env vars', async () => {
     process.env.SPECIAL_TEST_ENV_VAR = 'this-is-so-special'
     const env = makeEnv(`platformToken: \${env:SPECIAL_TEST_ENV_VAR}`)
-    await env.load({})
+    await env.load()
     expect(env.clusters).toMatchSnapshot()
   })
   test('loads multiple cluster definitions correctly + gives cluster by name', async () => {
@@ -52,7 +52,7 @@ describe('Environment', () => {
       clusterSecret: 'here-is-a-token'
   `
     const env = makeEnv(rc)
-    await env.load({})
+    await env.load()
     expect(env.clusters).toMatchSnapshot()
 
     const cluster = env.clusterByName('remote')

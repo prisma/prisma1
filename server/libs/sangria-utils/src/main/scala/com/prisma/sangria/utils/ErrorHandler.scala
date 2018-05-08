@@ -16,7 +16,7 @@ case class ErrorHandler(
     projectId: Option[String] = None,
     errorCodeExtractor: Throwable => Option[Int]
 ) {
-  private val internalErrorMessage = s"Whoops. Looks like an internal server error. Search your cluster logs for request ID: $requestId"
+  private val internalErrorMessage = s"Whoops. Looks like an internal server error. Search your server logs for request ID: $requestId"
 
   lazy val handler: PartialFunction[(ResultMarshaller, Throwable), HandledException] = {
     case (marshaller: ResultMarshaller, error: Throwable) if errorCodeExtractor(error).isDefined =>

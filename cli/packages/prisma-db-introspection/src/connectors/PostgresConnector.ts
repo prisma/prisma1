@@ -34,7 +34,7 @@ FROM
     JOIN information_schema.constraint_column_usage AS ccu
       ON ccu.constraint_name = tc.constraint_name
 WHERE constraint_type = 'FOREIGN KEY' AND tc.table_schema = $1::text;`,
-      [schemaName.toLowerCase()],
+      [schemaName.toLowerCase()]
     )
 
     return res.rows
@@ -42,8 +42,14 @@ WHERE constraint_type = 'FOREIGN KEY' AND tc.table_schema = $1::text;`,
 
   async queryTables(schemaName: string) {
     const res = await this.client.query(
-      `select table_name, column_name, is_nullable, data_type, udt_name from information_schema.columns where table_schema = $1::text`,
-      [schemaName.toLowerCase()],
+      `select table_name, column_name, is_nullable, data_type, udt_name, column_default, (SELECT EXISTS(
+        SELECT *
+        FROM 
+            information_schema.table_constraints AS tc 
+            JOIN information_schema.key_column_usage AS kcu
+              ON tc.constraint_name = kcu.constraint_name
+        WHERE constraint_type = 'UNIQUE' AND tc.table_schema = 'databaseintrospector' AND tc.table_name = c.table_name AND kcu.column_name = c.column_name)) as is_unique from information_schema.columns c where table_schema = $1::text`,
+      [schemaName.toLowerCase()]
     )
 
     const tables = _.groupBy(res.rows, 'table_name')
@@ -53,7 +59,7 @@ WHERE constraint_type = 'FOREIGN KEY' AND tc.table_schema = $1::text;`,
 
   async querySchemas() {
     const res = await this.client.query(
-      `select schema_name from information_schema.schemata WHERE schema_name NOT LIKE 'pg_%' AND schema_name NOT LIKE 'information_schema';`,
+      `select schema_name from information_schema.schemata WHERE schema_name NOT LIKE 'pg_%' AND schema_name NOT LIKE 'information_schema';`
     )
 
     return res.rows.map(x => x.schema_name)
@@ -62,7 +68,7 @@ WHERE constraint_type = 'FOREIGN KEY' AND tc.table_schema = $1::text;`,
   extractRelation(table, column, relations) {
     const candidate = relations.find(
       relation =>
-        relation.table_name === table && relation.column_name === column,
+        relation.table_name === table && relation.column_name === column
     )
 
     if (candidate) {
@@ -92,14 +98,17 @@ WHERE constraint_type = 'FOREIGN KEY' AND tc.table_schema = $1::text;`,
       const columns = _.map(originalColumns, column => {
         const { typeIdentifier, comment, error } = this.toTypeIdentifier(
           column.data_type,
+          column.column_name
         )
         const relation = this.extractRelation(
           column.table_name,
           column.column_name,
-          relations,
+          relations
         )
 
         return {
+          isUnique: column.is_unique,
+          defaultValue: this.parseDefaultValue(column.column_default),
           name: column.column_name,
           type: column.data_type,
           typeIdentifier,
@@ -110,10 +119,14 @@ WHERE constraint_type = 'FOREIGN KEY' AND tc.table_schema = $1::text;`,
       }).filter(x => x != null) as Column[]
 
       const sortedColumns = _.sortBy(columns, x => x.name)
+      const isJunctionTable =
+        sortedColumns.length === 2 &&
+        sortedColumns.every(x => x.relation != null)
 
       return {
         name: key,
         columns: sortedColumns,
+        isJunctionTable: isJunctionTable,
       }
     })
 
@@ -122,13 +135,51 @@ WHERE constraint_type = 'FOREIGN KEY' AND tc.table_schema = $1::text;`,
     return sortedTables
   }
 
+  parseDefaultValue(string) {
+    if (string == null) {
+      return null
+    }
+
+    if (string.includes(`nextval('`)) {
+      return '[AUTO INCREMENT]'
+    }
+
+    if (string.includes('::')) {
+      const candidate = string.split('::')[0]
+      const withoutSuffix = candidate.endsWith(`'`)
+        ? candidate.substring(0, candidate.length - 1)
+        : candidate
+      const withoutPrefix = withoutSuffix.startsWith(`'`)
+        ? withoutSuffix.substring(1, withoutSuffix.length)
+        : withoutSuffix
+
+      return withoutPrefix
+    }
+
+    return string
+  }
+
   toTypeIdentifier(
     type: string,
+    field: string
   ): {
     typeIdentifier: TypeIdentifier | null
     comment: string | null
     error: string | null
   } {
+    if (
+      field == 'id' &&
+      (type === 'character' ||
+        type === 'character varying' ||
+        type === 'text' ||
+        type == 'uuid')
+    ) {
+      return { typeIdentifier: 'ID', comment: null, error: null }
+    }
+
+    if (type === 'uuid') {
+      return { typeIdentifier: 'String', comment: null, error: null }
+    }
     if (type === 'character') {
       return { typeIdentifier: 'String', comment: null, error: null }
     }

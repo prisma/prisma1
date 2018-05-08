@@ -1,15 +1,17 @@
-import { Table, Column } from './types/common'
+import { Table, Column, Relation } from './types/common'
 import * as _ from 'lodash'
 
 export interface RelationField {
   remoteColumn: Column
-  remoteTable: string
+  remoteTable: Table
 }
 
 export class SdlPrinter {
-  async print(tables: Table[]): Promise<string> {
-    const sdl = _.map(tables, table =>
-      this.printType(table, tables.filter(x => x != table)),
+  print(tables: Table[]): string {
+    const candidates = tables.filter(x => !x.isJunctionTable)
+
+    const sdl = _.map(candidates, table =>
+      this.printType(table, tables.filter(x => x != table))
     )
 
     return sdl.join('\r\n')
@@ -24,42 +26,71 @@ export class SdlPrinter {
       .map(t =>
         t.columns
           .filter(filterFunction)
-          .map(c => ({ remoteColumn: c, remoteTable: t.name })),
+          .map(c => ({ remoteColumn: c, remoteTable: t }))
       )
       .reduce((acc, next) => acc.concat(next), [])
 
-    return `type ${this.capitalizeFirstLetter(table.name)} @postgres(table: "${
+    return `type ${this.capitalizeFirstLetter(table.name)} @pgTable(name: "${
       table.name
     }") {${_.map(nativeFields, column => this.printField(column)).join(
-      '',
-    )}${relationFields.map(field => this.printRelationField(field)).join('')}
-}`
+      ''
+    )}${relationFields
+      .map(field => this.printBackRelationField(field))
+      .join('')}
+}
+`
   }
 
-  printRelationField(field: RelationField) {
-    return `\n  ${field.remoteTable}s: [${this.capitalizeFirstLetter(
-      field.remoteTable,
-    )}] @postgres(foreignColumn: "${field.remoteColumn.name}")`
+  printBackRelationField(field: RelationField) {
+    if (field.remoteTable.isJunctionTable) {
+      const otherRemoteTableField = field.remoteTable.columns.filter(
+        x => x.name !== field.remoteColumn.name
+      )[0]
+      const relatedTable = (otherRemoteTableField.relation as Relation).table
+
+      return `\n  ${this.lowerCaseFirstLetter(
+        relatedTable
+      )}s: [${this.capitalizeFirstLetter(
+        relatedTable
+      )}!]! @pgRelationTable(table: "${field.remoteTable.name}" name: "${
+        field.remoteTable.name
+      }")`
+    } else {
+      return `\n  ${field.remoteTable.name}s: [${this.capitalizeFirstLetter(
+        field.remoteTable.name
+      )}!]!`
+    }
   }
 
   printField(column: Column) {
     return `\n  ${this.printFieldName(column)}: ${this.printFieldType(
-      column,
-    )}${this.printFieldOptional(column)}${this.printFieldDirective(column)}`
+      column
+    )}${this.printFieldOptional(column)}${this.printRelationDirective(
+      column
+    )}${this.printFieldDirective(column)}`
   }
 
   printFieldName(column: Column) {
-    return column.name
+    if (column.relation) {
+      return this.removeIdSuffix(column.name)
+    } else {
+      return column.name
+    }
   }
 
   printFieldType(column: Column) {
     if (column.relation) {
-      return (
-        this.capitalizeFirstLetter(column.relation.table) +
-        ` @postgres(ownColumn: "${column.name}")`
-      )
+      return this.capitalizeFirstLetter(column.relation.table)
     } else {
       return column.typeIdentifier
+    }
+  }
+
+  printRelationDirective(column: Column) {
+    if (column.relation) {
+      return ` @pgRelation(column: "${column.name}")`
+    } else {
+      return ''
     }
   }
 
@@ -68,12 +99,45 @@ export class SdlPrinter {
   }
 
   printFieldDirective(column: Column) {
-    if (column.relation) {
-      return ``
-    } else return ''
+    if (column.isUnique) {
+      return ` @unique`
+    }
+    if (column.defaultValue != null) {
+      if (column.defaultValue == '[AUTO INCREMENT]') {
+        return ''
+      }
+
+      if (
+        column.typeIdentifier == 'String' ||
+        column.typeIdentifier == 'DateTime' ||
+        column.typeIdentifier == 'Json'
+      ) {
+        return ` @default(value: "${column.defaultValue}")`
+      } else {
+        return ` @default(value: ${column.defaultValue})`
+      }
+    }
+
+    return ''
   }
 
   capitalizeFirstLetter(string) {
     return string.charAt(0).toUpperCase() + string.slice(1)
+  }
+
+  lowerCaseFirstLetter(string) {
+    return string.charAt(0).toLowerCase() + string.slice(1)
+  }
+
+  removeIdSuffix(string) {
+    function removeSuffix(suffix, string) {
+      if (string.endsWith(suffix)) {
+        return string.substring(0, string.length - suffix.length)
+      } else {
+        return string
+      }
+    }
+
+    return removeSuffix('_ID', removeSuffix('_id', removeSuffix('Id', string)))
   }
 }

@@ -7,14 +7,14 @@ import com.prisma.twitterFutures.TwitterFutureImplicits._
 import com.twitter.conversions.time._
 import play.api.libs.json.Json
 
-import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
 
 case class ProjectFetcherImpl(
     blockedProjectIds: Vector[String],
     schemaManagerEndpoint: String,
     schemaManagerSecret: String
-) extends RefreshableProjectFetcher {
+)(implicit ec: ExecutionContext)
+    extends RefreshableProjectFetcher {
 
   private lazy val schemaService = {
     val client = if (schemaManagerEndpoint.startsWith("https")) {

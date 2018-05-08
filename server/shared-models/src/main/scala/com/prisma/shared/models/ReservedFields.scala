@@ -25,7 +25,8 @@ object ReservedFields {
       enum = None,
       defaultValue = None,
       relation = None,
-      relationSide = None
+      relationSide = None,
+      manifestation = None
     )
   }
 
@@ -40,7 +41,8 @@ object ReservedFields {
       enum = None,
       defaultValue = None,
       relation = None,
-      relationSide = None
+      relationSide = None,
+      manifestation = None
     )
   }
 
@@ -55,7 +57,8 @@ object ReservedFields {
       enum = None,
       defaultValue = None,
       relation = None,
-      relationSide = None
+      relationSide = None,
+      manifestation = None
     )
   }
 
