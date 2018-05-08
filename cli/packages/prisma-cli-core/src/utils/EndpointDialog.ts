@@ -287,7 +287,7 @@ export class EndpointDialog {
         this.out.action.stop()
         cluster = new Cluster(this.out, 'custom', 'http://localhost:4466')
         break
-      case 'Demo Server':
+      case 'Demo server':
         const demoCluster = await this.getDemoCluster()
         if (!demoCluster) {
           return this.getEndpoint()
@@ -469,7 +469,7 @@ export class EndpointDialog {
   ) {
     const sandboxChoices = [
       [
-        'Demo Server',
+        'Demo server',
         'Hosted demo environment incl. database (requires login)',
       ],
       [
@@ -509,14 +509,20 @@ export class EndpointDialog {
     } else {
       const clusterChoices =
         clusters.length > 0
-          ? clusters.map(this.getClusterChoice)
+          ? clusters.filter(c => !c.shared).map(this.getClusterChoice)
           : sandboxChoices
       const rawChoices = [
-        ['local', 'Local Prisma server (connected to MySQL)'],
-        ...clusterChoices,
-        ['Use other server', 'Connect to an existing prisma server'],
         ['Use existing database', 'Connect to existing database'],
         ['Create new database', 'Set up a local database using Docker'],
+        ...clusterChoices,
+        [
+          'Demo server',
+          'Ready-to-use hosted demo environment (incl. database)',
+        ],
+        [
+          'Use other server',
+          'Manually provide endpoint of a running Prisma server',
+        ],
       ]
       const choices = this.convertChoices(rawChoices)
       const dockerChoices = hasDockerComposeYml
@@ -524,22 +530,24 @@ export class EndpointDialog {
         : [
             new inquirer.Separator(
               chalk.bold(
-                'Set up a new Prisma server for local development (requires Docker):',
+                'Set up a new Prisma server for local development (based on docker-compose):',
               ),
             ),
-            ...choices.slice(choices.length - 2),
+            ...choices.slice(0, 2),
           ]
       const finalChoices = [
         new inquirer.Separator('                       '),
-        new inquirer.Separator(chalk.bold('Use an existing Prisma server')),
-        ...choices.slice(0, clusterChoices.length + 2),
-        new inquirer.Separator('                       '),
         ...dockerChoices,
+        new inquirer.Separator('                       '),
+        new inquirer.Separator(
+          chalk.bold('Or deploy to an existing Prisma server:'),
+        ),
+        ...choices.slice(2),
       ]
       return {
         name: 'choice',
         type: 'list',
-        message: `Connect to your database, set up a new one or use existing Prisma server?`,
+        message: `Set up a new Prisma server or deploy to an existing server?`,
         choices: finalChoices,
         pageSize: finalChoices.length,
       }
