@@ -24,6 +24,7 @@ export interface DatabaseCredentials {
   password: string
   database?: string
   alreadyData?: boolean
+  schema?: string
 }
 
 export interface GetEndpointResult {
@@ -151,6 +152,10 @@ export class EndpointDialog {
         database:
           credentials.database && credentials.database.length > 0
             ? credentials.database
+            : undefined,
+        schema:
+          credentials.schema && credentials.schema.length > 0
+            ? credentials.schema
             : undefined,
         user: credentials.user,
         password: credentials.password,
@@ -359,6 +364,11 @@ export class EndpointDialog {
     //     ['yes', 'no'].includes(value) ? true : 'Please answer either yes or no',
     // })
     const alreadyData = await this.askForExistingData()
+    if (type === 'mysql' && alreadyData) {
+      throw new Error(
+        `Existing MySQL databases with data are not yet supported.`,
+      )
+    }
     const host = await this.ask({
       message: 'Enter database host',
       key: 'host',
@@ -380,12 +390,16 @@ export class EndpointDialog {
     const database =
       type === 'postgres'
         ? await this.ask({
-            message:
-              'Enter database name' +
-              (alreadyData ? ' (location of existing data)' : ''),
+            message: alreadyData
+              ? `Enter name of existing database`
+              : `Enter database name`,
             key: 'database',
           })
         : null
+    const schema = await this.ask({
+      message: `Enter name of existing schema`,
+      key: 'schema',
+    })
 
     return {
       type,
@@ -395,6 +409,7 @@ export class EndpointDialog {
       password,
       database,
       alreadyData,
+      schema,
     }
   }
 
