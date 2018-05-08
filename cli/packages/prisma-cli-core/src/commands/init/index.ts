@@ -112,10 +112,13 @@ Either try using a new directory name, or remove the files listed above.
       steps.push(`Open folder: ${chalk.cyan('cd example')}`)
     }
 
-    steps.push(
-      `Start your Prisma server: ${chalk.cyan('docker-compose up -d')}`,
-      `Deploy your Prisma service: ${chalk.cyan('prisma deploy')}`,
-    )
+    if (results.cluster!.local) {
+      steps.push(
+        `Start your Prisma server: ${chalk.cyan('docker-compose up -d')}`,
+      )
+    }
+
+    steps.push(`Deploy your Prisma service: ${chalk.cyan('prisma deploy')}`)
 
     if (results.database && results.database.alreadyData) {
       steps.push(
