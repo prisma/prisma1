@@ -62,16 +62,26 @@ case class PassiveDatabaseMutactionExecutorImpl(activeExecutor: PostgresDatabase
     val replacements: Map[DatabaseMutaction, PassiveDatabaseMutaction] = mutactions
       .collect {
         case candidate: CreateDataItem =>
-          val partner: Option[NestedCreateRelation] = mutactions.collectFirst {
-            case m: NestedCreateRelation if m.path == candidate.path && m.path.lastRelation_!.isInlineRelation => m
-          }
+          val partner: Option[NestedCreateRelation] = mutactions
+            .collect {
+              case m: NestedCreateRelation => m
+            }
+            .find { m: NestedCreateRelation =>
+              m.path.lastRelation_!.inlineManifestation match {
+                case Some(manifestation: InlineRelationManifestation) =>
+                  val mutactionsHaveTheSamePath = m.path == candidate.path
+                  val wouldInsertIntoRightTable = manifestation.inTableOfModelId == m.path.lastModel.id
+                  mutactionsHaveTheSamePath && wouldInsertIntoRightTable
+
+                case None =>
+                  false
+              }
+            }
           partner.map { p =>
             candidate -> NestedCreateDataItem(candidate, p)
           }
       }
-      .collect {
-        case Some(x) => x
-      }
+      .flatten
       .toMap
     val removals: Vector[DatabaseMutaction] = replacements.values.toVector.flatMap(_.replaces)
     mutactions.collect {

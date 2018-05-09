@@ -145,7 +145,7 @@ object PostgresDeployDatabaseMutationBuilder {
 
   def createRelationColumn(projectId: String, model: Model, references: Model, column: String) = {
     val sqlType    = sqlTypeForScalarTypeIdentifier(TypeIdentifier.GraphQLID)
-    val isRequired = false
+    val isRequired = false // FIXME: pass in the field and use field.isRequired
     val nullString = if (isRequired) "NOT NULL" else "NULL"
     val addColumn  = sqlu"""ALTER TABLE "#$projectId"."#${model.dbName}" ADD COLUMN "#$column" #$sqlType #$nullString
                             REFERENCES "#$projectId"."#${references.dbName}"(id);"""
