@@ -100,8 +100,14 @@ case class PostgresApiDatabaseQueryBuilder(
   ): DBIOAction[ResolverResult[ScalarListValues], NoStream, Effect] = {
 
     val tableName = s"${model.name}_${field.name}"
-    val (conditionCommand, orderByCommand, limitCommand) =
-      extractQueryArgs(schemaName, tableName, args, None, overrideMaxNodeCount = overrideMaxNodeCount, true)
+    val (conditionCommand, orderByCommand, limitCommand) = extractQueryArgs(
+      schemaName,
+      tableName,
+      args,
+      None,
+      overrideMaxNodeCount = overrideMaxNodeCount,
+      true
+    )
 
     val query =
       sql"""select * from "#$schemaName"."#$tableName"""" ++
@@ -164,6 +170,7 @@ case class PostgresApiDatabaseQueryBuilder(
       fromModelIds: Vector[IdGCValue],
       args: Option[QueryArguments]
   ): DBIOAction[Vector[ResolverResult[PrismaNodeWithParent]], NoStream, Effect] = {
+//    batchSelectAllFromRelatedModelOld(schema, fromField, fromModelIds, args)
     batchSelectAllFromRelatedModelNew(schema, fromField, fromModelIds, args)
   }
 
@@ -180,11 +187,17 @@ case class PostgresApiDatabaseQueryBuilder(
 
     val relationTableName     = fromField.relation.get.relationTableNameNew(schema)
     val (aColumn, bColumn)    = (relation.modelAColumn, relation.modelBColumn)
-    val columnForFromModel    = relation.columnForModel(fromModel)
-    val columnForRelatedModel = relation.columnForModel(relatedModel)
+    val columnForFromModel    = relation.columnForModel(fromModel, fromField.relationSide.get)
+    val columnForRelatedModel = relation.columnForModel(relatedModel, fromField.oppositeRelationSide.get)
 
-    val (conditionCommand, orderByCommand, limitCommand) =
-      extractQueryArgs(schemaName, "ModelTable", args, defaultOrderShortcut = Some(s""" RelationTable."$columnForRelatedModel" """), None)
+    val (conditionCommand, orderByCommand, limitCommand) = extractQueryArgs(
+      projectId = schemaName,
+      modelName = "ModelTable",
+      args = args,
+      defaultOrderShortcut = Some(s""" RelationTable."$columnForRelatedModel" """),
+      overrideMaxNodeCount = None,
+      quoteTableName = false
+    )
 
     def createQuery(id: String, modelRelationSide: String, fieldRelationSide: String) = {
       sql"""(select ModelTable.*, RelationTable."#$aColumn" as __Relation__A,  RelationTable."#$bColumn" as __Relation__B
