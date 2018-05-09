@@ -9,7 +9,7 @@ import org.scalatest.{FlatSpec, Matchers}
 
 class ResetDataSpec extends FlatSpec with Matchers with ApiSpecBase with AwaitUtils {
 
-  val project: Project = SchemaDsl() { schema =>
+  val project: Project = SchemaDsl.fromBuilder { schema =>
     val model1: SchemaDsl.ModelBuilder = schema
       .model("Model1")
       .field("a", _.String)

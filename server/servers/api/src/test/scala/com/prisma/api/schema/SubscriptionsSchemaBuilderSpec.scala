@@ -11,7 +11,7 @@ class SubscriptionsSchemaBuilderSpec extends WordSpec with Matchers with ApiSpec
 
   "the single item query for a model" must {
     "be generated correctly" in {
-      val project = SchemaDsl() { schema =>
+      val project = SchemaDsl.fromBuilder { schema =>
         schema.model("Todo")
       }
 
@@ -24,7 +24,7 @@ class SubscriptionsSchemaBuilderSpec extends WordSpec with Matchers with ApiSpec
     }
 
     "have correct payload" in {
-      val project = SchemaDsl() { schema =>
+      val project = SchemaDsl.fromBuilder { schema =>
         val testSchema = schema.model("Todo")
       }
 

@@ -6,7 +6,7 @@ import org.scalatest.{FlatSpec, Matchers}
 
 class SelfRelationFilterSpec extends FlatSpec with Matchers with ApiSpecBase {
 
-  val project = SchemaDsl() { schema =>
+  val project = SchemaDsl.fromBuilder { schema =>
     val human: SchemaDsl.ModelBuilder = schema
       .model("Human")
       .field("name", _.String)

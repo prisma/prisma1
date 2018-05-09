@@ -10,7 +10,7 @@ class RelationsSchemaBuilderSpec extends FlatSpec with Matchers with ApiSpecBase
   val schemaBuilder = testDependencies.apiSchemaBuilder
 
   "the update Mutation for a many to many relation with an optional backrelation" should "be generated correctly" in {
-    val project = SchemaDsl() { schema =>
+    val project = SchemaDsl.fromBuilder { schema =>
       val list = schema.model("List").field_!("listUnique", _.String, isUnique = true).field("optList", _.String)
       val todo = schema.model("Todo").field_!("todoUnique", _.String, isUnique = true).field("optString", _.String)
       list.manyToManyRelation("todoes", "does not matter", todo, includeFieldB = false)
@@ -59,7 +59,7 @@ class RelationsSchemaBuilderSpec extends FlatSpec with Matchers with ApiSpecBase
   }
 
   "the update Mutation for a one to one relation with an optional backrelation" should "be generated correctly" in {
-    val project = SchemaDsl() { schema =>
+    val project = SchemaDsl.fromBuilder { schema =>
       val list = schema.model("List").field_!("listUnique", _.String, isUnique = true).field("optList", _.String)
       val todo = schema.model("Todo").field_!("todoUnique", _.String, isUnique = true).field("optString", _.String)
       list.oneToOneRelation("todo", "does not matter", todo, includeFieldB = false)

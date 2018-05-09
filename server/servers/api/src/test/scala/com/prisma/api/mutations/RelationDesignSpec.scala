@@ -9,7 +9,7 @@ class RelationDesignSpec extends FlatSpec with Matchers with ApiSpecBase {
 
   "Deleting a parent node" should "remove it from the relation and delete the relay id" in {
 
-    val project = SchemaDsl() { schema =>
+    val project = SchemaDsl.fromBuilder { schema =>
       val list = schema.model("List").field("uList", _.String, isUnique = true)
       val todo = schema.model("Todo").field("uTodo", _.String, isUnique = true).oneToOneRelation("list", "todo", list)
     }
@@ -34,7 +34,7 @@ class RelationDesignSpec extends FlatSpec with Matchers with ApiSpecBase {
 
   "Deleting a child node" should "remove it from the relation and delete the relay id" in {
 
-    val project = SchemaDsl() { schema =>
+    val project = SchemaDsl.fromBuilder { schema =>
       val list = schema.model("List").field("uList", _.String, isUnique = true)
       val todo = schema.model("Todo").field("uTodo", _.String, isUnique = true).oneToOneRelation("list", "todo", list)
     }

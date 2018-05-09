@@ -11,7 +11,7 @@ class UpsertDesignSpec extends FlatSpec with Matchers with ApiSpecBase {
 
   "An upsert on the top level" should "only execute the nested mutations of the correct create branch" ignore {
 
-    val project = SchemaDsl() { schema =>
+    val project = SchemaDsl.fromBuilder { schema =>
       val list = schema.model("List").field("listInts", _.Int, isList = true).field("uList", _.String, isUnique = true)
       val todo = schema.model("Todo").field("todoInts", _.Int, isList = true).field("uTodo", _.String, isUnique = true)
       todo.oneToOneRelation("list", "todo", list)
@@ -40,7 +40,7 @@ class UpsertDesignSpec extends FlatSpec with Matchers with ApiSpecBase {
 
   "An upsert on the top level" should "only execute the nested mutations of the correct update branch" ignore {
 
-    val project = SchemaDsl() { schema =>
+    val project = SchemaDsl.fromBuilder { schema =>
       val list = schema.model("List").field("listInts", _.Int, isList = true).field("uList", _.String, isUnique = true)
       val todo = schema.model("Todo").field("todoInts", _.Int, isList = true).field("uTodo", _.String, isUnique = true)
       todo.oneToOneRelation("list", "todo", list)
@@ -71,7 +71,7 @@ class UpsertDesignSpec extends FlatSpec with Matchers with ApiSpecBase {
 
   "An upsert on the top level" should "only execute the scalar lists of the correct create branch" in {
 
-    val project = SchemaDsl() { schema =>
+    val project = SchemaDsl.fromBuilder { schema =>
       val list = schema.model("List").field("listInts", _.Int, isList = true).field("uList", _.String, isUnique = true)
       val todo = schema.model("Todo").field("todoInts", _.Int, isList = true).field("uTodo", _.String, isUnique = true)
       todo.oneToOneRelation("list", "todo", list)
@@ -97,7 +97,7 @@ class UpsertDesignSpec extends FlatSpec with Matchers with ApiSpecBase {
 
   "An upsert on the top level" should "be able to reset lists to empty" in {
 
-    val project = SchemaDsl() { schema =>
+    val project = SchemaDsl.fromBuilder { schema =>
       val list = schema.model("List").field("listInts", _.Int, isList = true).field("uList", _.String, isUnique = true)
       val todo = schema.model("Todo").field("todoInts", _.Int, isList = true).field("uTodo", _.String, isUnique = true)
       todo.oneToOneRelation("list", "todo", list)
@@ -138,7 +138,7 @@ class UpsertDesignSpec extends FlatSpec with Matchers with ApiSpecBase {
 
   "An upsert on the top level" should "only execute the scalar lists of the correct update branch" in {
 
-    val project = SchemaDsl() { schema =>
+    val project = SchemaDsl.fromBuilder { schema =>
       val list = schema.model("List").field("listInts", _.Int, isList = true).field("uList", _.String, isUnique = true)
       val todo = schema.model("Todo").field("todoInts", _.Int, isList = true).field("uTodo", _.String, isUnique = true)
       todo.oneToOneRelation("list", "todo", list)
@@ -170,7 +170,7 @@ class UpsertDesignSpec extends FlatSpec with Matchers with ApiSpecBase {
 
   "A nested upsert" should "only execute the nested scalarlists of the correct update branch" in {
 
-    val project = SchemaDsl() { schema =>
+    val project = SchemaDsl.fromBuilder { schema =>
       val list = schema.model("List").field("listInts", _.Int, isList = true).field("uList", _.String, isUnique = true)
       val todo = schema.model("Todo").field("todoInts", _.Int, isList = true).field("uTodo", _.String, isUnique = true)
       todo.manyToManyRelation("lists", "todoes", list)
@@ -201,7 +201,7 @@ class UpsertDesignSpec extends FlatSpec with Matchers with ApiSpecBase {
 
   "A nested upsert" should "only execute the nested scalarlists of the correct create branch" in {
 
-    val project = SchemaDsl() { schema =>
+    val project = SchemaDsl.fromBuilder { schema =>
       val list = schema.model("List").field("listInts", _.Int, isList = true).field("uList", _.String, isUnique = true)
       val todo = schema.model("Todo").field("todoInts", _.Int, isList = true).field("uTodo", _.String, isUnique = true)
       todo.manyToManyRelation("lists", "todoes", list)
@@ -232,7 +232,7 @@ class UpsertDesignSpec extends FlatSpec with Matchers with ApiSpecBase {
 
   "A nested upsert" should "only execute the nested scalarlists of the correct create branch for to many relations" in {
 
-    val project = SchemaDsl() { schema =>
+    val project = SchemaDsl.fromBuilder { schema =>
       val todo = schema.model("Todo").field("todoInts", _.Int, isList = true).field("uTodo", _.String, isUnique = true)
       val list = schema.model("List").field("listInts", _.Int, isList = true).field("uList", _.String, isUnique = true)
       list.oneToManyRelation("todoes", "list", todo)
@@ -263,7 +263,7 @@ class UpsertDesignSpec extends FlatSpec with Matchers with ApiSpecBase {
 
   "A nested upsert" should "be able to reset lists to empty" in {
 
-    val project = SchemaDsl() { schema =>
+    val project = SchemaDsl.fromBuilder { schema =>
       val todo = schema.model("Todo").field("todoInts", _.Int, isList = true).field("uTodo", _.String, isUnique = true)
       val list =
         schema.model("List").field("listInts", _.Int, isList = true).field("uList", _.String, isUnique = true).oneToManyRelation("todoes", "list", todo)
@@ -294,7 +294,7 @@ class UpsertDesignSpec extends FlatSpec with Matchers with ApiSpecBase {
 
   "A nested upsert" should "only execute the nested mutations of the correct update branch" ignore {
 
-    val project = SchemaDsl() { schema =>
+    val project = SchemaDsl.fromBuilder { schema =>
       val list = schema.model("List").field("uList", _.String, isUnique = true)
       val todo = schema.model("Todo").field("uTodo", _.String, isUnique = true).oneToOneRelation("list", "todo", list)
       val tag  = schema.model("Tag").field("uTag", _.String, isUnique = true).oneToOneRelation("todo", "tag", todo)
@@ -327,7 +327,7 @@ class UpsertDesignSpec extends FlatSpec with Matchers with ApiSpecBase {
 
   "A nested upsert" should "only execute the nested mutations of the correct create branch" ignore {
 
-    val project = SchemaDsl() { schema =>
+    val project = SchemaDsl.fromBuilder { schema =>
       val list = schema.model("List").field("uList", _.String, isUnique = true)
       val todo = schema.model("Todo").field("uTodo", _.String, isUnique = true).oneToOneRelation("list", "todo", list)
       val tag  = schema.model("Tag").field("uTag", _.String, isUnique = true).oneToOneRelation("todo", "tag", todo)

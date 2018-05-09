@@ -12,7 +12,7 @@ class QueriesSchemaBuilderSpec extends WordSpec with Matchers with ApiSpecBase w
 
   "the single item query for a model" must {
     "be generated correctly" in {
-      val project = SchemaDsl() { schema =>
+      val project = SchemaDsl.fromBuilder { schema =>
         schema.model("Todo")
       }
 
@@ -21,7 +21,7 @@ class QueriesSchemaBuilderSpec extends WordSpec with Matchers with ApiSpecBase w
     }
 
     "not be present if there is no unique field" in {
-      val project = SchemaDsl() { schema =>
+      val project = SchemaDsl.fromBuilder { schema =>
         val testSchema = schema.model("Todo")
         testSchema.fields.clear()
         testSchema.field("id", _.GraphQLID, isUnique = true, isHidden = true)
@@ -32,7 +32,7 @@ class QueriesSchemaBuilderSpec extends WordSpec with Matchers with ApiSpecBase w
     }
 
     "be present if there is a unique field other than ID" in {
-      val project = SchemaDsl() { schema =>
+      val project = SchemaDsl.fromBuilder { schema =>
         val testSchema = schema.model("Todo")
         testSchema.fields.clear()
         testSchema.field("id", _.GraphQLID, isUnique = true, isHidden = true)
@@ -46,7 +46,7 @@ class QueriesSchemaBuilderSpec extends WordSpec with Matchers with ApiSpecBase w
 
   "the multi item query for a model" must {
     "be generated correctly" in {
-      val project = SchemaDsl() { schema =>
+      val project = SchemaDsl.fromBuilder { schema =>
         schema.model("Todo")
       }
 
@@ -59,7 +59,7 @@ class QueriesSchemaBuilderSpec extends WordSpec with Matchers with ApiSpecBase w
 
   "the many item connection query for a model" must {
     "be generated correctly" in {
-      val project = SchemaDsl() { schema =>
+      val project = SchemaDsl.fromBuilder { schema =>
         schema.model("Todo")
       }
 
@@ -76,7 +76,7 @@ class QueriesSchemaBuilderSpec extends WordSpec with Matchers with ApiSpecBase w
 
   "the node query for a model" must {
     "be present if the connector has the capability" in {
-      val project = SchemaDsl() { schema =>
+      val project = SchemaDsl.fromBuilder { schema =>
         schema.model("Todo")
       }
 
@@ -87,7 +87,7 @@ class QueriesSchemaBuilderSpec extends WordSpec with Matchers with ApiSpecBase w
     }
 
     "not be present if the connector doesn't have the capability" in {
-      val project = SchemaDsl() { schema =>
+      val project = SchemaDsl.fromBuilder { schema =>
         schema.model("Todo")
       }
 

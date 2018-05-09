@@ -13,7 +13,7 @@ import play.api.libs.json.JsArray
 class ImportJsonFormatSpec extends FlatSpec with Matchers with ApiSpecBase with AwaitUtils {
 
   "Import json nodes" should "work" in {
-    val project: Project = SchemaDsl() { schema =>
+    val project: Project = SchemaDsl.fromBuilder { schema =>
       val model1 = schema
         .model("Model0")
         .field("a", _.String)

@@ -7,7 +7,7 @@ import org.scalatest.{FlatSpec, Matchers}
 
 class UpdateManyRelationFilterSpec extends FlatSpec with Matchers with ApiSpecBase {
 
-  val project: Project = SchemaDsl() { schema =>
+  val project: Project = SchemaDsl.fromBuilder { schema =>
     val top        = schema.model("Top").field_!("top", _.String)
     val bottom     = schema.model("Bottom").field_!("bottom", _.String)
     val veryBottom = schema.model("VeryBottom").field_!("veryBottom", _.String)
