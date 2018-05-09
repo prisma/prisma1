@@ -64,11 +64,11 @@ object SchemaDsl extends AwaitUtils {
           case Some(field) => field
           case None        => relationFields.head // happens for one to one relations
         }
-        val relatedModel           = fieldToRepresentAsInlineRelation.relatedModel_!(schema)
-        val modelToPutRelationInto = fieldToRepresentAsInlineRelation.model(schema).get
+        val modelToLinkTo          = fieldToRepresentAsInlineRelation.model(schema).get
+        val modelToPutRelationInto = fieldToRepresentAsInlineRelation.relatedModel_!(schema)
         val manifestation = InlineRelationManifestation(
           inTableOfModelId = modelToPutRelationInto.id,
-          referencingColumn = s"${relatedModel.name.toLowerCase}_id"
+          referencingColumn = s"${modelToLinkTo.name.toLowerCase}_id"
         )
         relation.copy(manifestation = Some(manifestation))
       }
