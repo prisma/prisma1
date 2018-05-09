@@ -1,6 +1,5 @@
 package com.prisma.deploy.migration.inference
 
-import com.prisma.{ConnectorAwareTest, IgnoreActive}
 import com.prisma.deploy.connector.InferredTables
 import com.prisma.shared.models.Manifestations.{FieldManifestation, InlineRelationManifestation, ModelManifestation, RelationTableManifestation}
 import com.prisma.shared.models.{RelationSide, Schema}
