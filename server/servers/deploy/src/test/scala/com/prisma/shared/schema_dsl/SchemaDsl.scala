@@ -29,8 +29,12 @@ object SchemaDsl extends AwaitUtils {
     }
   }
 
-  def fromString(id: String = TestIds.testProjectId)(sdlString: String): Project = {
-    fromString(id, InferredTables.empty, isActive = true)(sdlString)
+  def fromString(id: String = TestIds.testProjectId)(sdlString: String)(implicit deployConnector: DeployConnector, suite: Suite): Project = {
+    fromString(
+      id = suite.getClass.getSimpleName,
+      InferredTables.empty,
+      isActive = true
+    )(sdlString)
   }
 
   def fromPassiveConnectorSdl(
