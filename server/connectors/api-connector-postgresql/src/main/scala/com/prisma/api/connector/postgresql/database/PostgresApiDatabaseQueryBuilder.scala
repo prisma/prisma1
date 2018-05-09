@@ -6,6 +6,7 @@ import com.prisma.api.connector.Types.DataItemFilterCollection
 import com.prisma.api.connector._
 import com.prisma.gc_values._
 import com.prisma.shared.models.IdType.Id
+import com.prisma.shared.models.Manifestations.InlineRelationManifestation
 import com.prisma.shared.models.{Function => _, _}
 import slick.dbio.DBIOAction
 import slick.jdbc.PostgresProfile.api._
@@ -99,8 +100,14 @@ case class PostgresApiDatabaseQueryBuilder(
   ): DBIOAction[ResolverResult[ScalarListValues], NoStream, Effect] = {
 
     val tableName = s"${model.name}_${field.name}"
-    val (conditionCommand, orderByCommand, limitCommand) =
-      extractQueryArgs(schemaName, tableName, args, None, overrideMaxNodeCount = overrideMaxNodeCount, true)
+    val (conditionCommand, orderByCommand, limitCommand) = extractQueryArgs(
+      schemaName,
+      tableName,
+      args,
+      None,
+      overrideMaxNodeCount = overrideMaxNodeCount,
+      true
+    )
 
     val query =
       sql"""select * from "#$schemaName"."#$tableName"""" ++
@@ -158,6 +165,84 @@ case class PostgresApiDatabaseQueryBuilder(
   }
 
   def batchSelectAllFromRelatedModel(
+      schema: Schema,
+      fromField: Field,
+      fromModelIds: Vector[IdGCValue],
+      args: Option[QueryArguments]
+  ): DBIOAction[Vector[ResolverResult[PrismaNodeWithParent]], NoStream, Effect] = {
+//    batchSelectAllFromRelatedModelOld(schema, fromField, fromModelIds, args)
+    batchSelectAllFromRelatedModelNew(schema, fromField, fromModelIds, args)
+  }
+
+  def batchSelectAllFromRelatedModelNew(
+      schema: Schema,
+      fromField: Field,
+      fromModelIds: Vector[IdGCValue],
+      args: Option[QueryArguments]
+  ): DBIOAction[Vector[ResolverResult[PrismaNodeWithParent]], NoStream, Effect] = {
+    val fromModel    = fromField.model(schema).get
+    val relation     = fromField.relation.get
+    val relatedModel = fromField.relatedModel(schema).get
+    val modelTable   = fromField.relatedModel(schema).get.name
+
+    val relationTableName     = fromField.relation.get.relationTableNameNew(schema)
+    val (aColumn, bColumn)    = (relation.modelAColumn, relation.modelBColumn)
+    val columnForFromModel    = relation.columnForModel(fromModel, fromField.relationSide.get)
+    val columnForRelatedModel = relation.columnForModel(relatedModel, fromField.oppositeRelationSide.get)
+
+    val (conditionCommand, orderByCommand, limitCommand) = extractQueryArgs(
+      projectId = schemaName,
+      modelName = "ModelTable",
+      args = args,
+      defaultOrderShortcut = Some(s""" RelationTable."$columnForRelatedModel" """),
+      overrideMaxNodeCount = None,
+      quoteTableName = false
+    )
+
+    def createQuery(id: String, modelRelationSide: String, fieldRelationSide: String) = {
+      sql"""(select ModelTable.*, RelationTable."#$aColumn" as __Relation__A,  RelationTable."#$bColumn" as __Relation__B
+            from "#$schemaName"."#$modelTable" as ModelTable
+           inner join "#$schemaName"."#$relationTableName" as RelationTable
+           on ModelTable."id" = RelationTable."#$fieldRelationSide"
+           where RelationTable."#$modelRelationSide" = '#$id' """ ++
+        prefixIfNotNone("and", conditionCommand) ++
+        prefixIfNotNone("order by", orderByCommand) ++
+        prefixIfNotNone("limit", limitCommand) ++ sql")"
+    }
+
+    // see https://github.com/graphcool/internal-docs/blob/master/relations.md#findings
+    val resolveFromBothSidesAndMerge = fromField.relation.get.isSameFieldSameModelRelation(schema)
+
+    val query = resolveFromBothSidesAndMerge match {
+      case false =>
+        fromModelIds.distinct.view.zipWithIndex.foldLeft(sql"")((a, b) =>
+          a ++ unionIfNotFirst(b._2) ++ createQuery(b._1.value, columnForFromModel, columnForRelatedModel))
+
+      case true =>
+        fromModelIds.distinct.view.zipWithIndex.foldLeft(sql"")(
+          (a, b) =>
+            a ++ unionIfNotFirst(b._2) ++
+              createQuery(b._1.value, columnForFromModel, columnForRelatedModel) ++
+              sql"union all " ++
+              createQuery(b._1.value, columnForRelatedModel, columnForFromModel))
+    }
+
+    val modelRelationSide    = fromField.relationSide.get.toString
+    val oppositeRelationSide = fromField.oppositeRelationSide.get.toString
+    query
+      .as[PrismaNodeWithParent](getResultForModelAndRelationSide(relatedModel, modelRelationSide, oppositeRelationSide))
+      .map { items =>
+        val itemGroupsByModelId = items.groupBy(_.parentId)
+        fromModelIds.map { id =>
+          itemGroupsByModelId.find(_._1 == id) match {
+            case Some((_, itemsForId)) => args.get.resultTransform(itemsForId).copy(parentModelId = Some(id))
+            case None                  => ResolverResult(Vector.empty[PrismaNodeWithParent], hasPreviousPage = false, hasNextPage = false, parentModelId = Some(id))
+          }
+        }
+      }
+  }
+
+  def batchSelectAllFromRelatedModelOld(
       schema: Schema,
       fromField: Field,
       fromModelIds: Vector[IdGCValue],

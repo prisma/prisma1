@@ -17,6 +17,8 @@ trait ApiSpecBase extends ConnectorAwareTest with BeforeAndAfterEach with Before
   implicit lazy val system           = ActorSystem()
   implicit lazy val materializer     = ActorMaterializer()
   implicit lazy val testDependencies = new TestApiDependenciesImpl
+  implicit lazy val implicitSuite    = self
+  implicit lazy val deployConnector  = testDependencies.deployConnector
   val server                         = ApiTestServer()
   val database                       = ApiTestDatabase()
 

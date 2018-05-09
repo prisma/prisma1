@@ -61,16 +61,24 @@ case class PostgresApiDatabaseMutationBuilder(
     (sql"""INSERT INTO "#$schemaName"."_RelayId" ("id", "stableModelIdentifier") VALUES (${where.fieldValue}, ${where.model.stableIdentifier})""").asUpdate
   }
 
-  def createRelationRowByPath(path: Path): SqlAction[Int, NoStream, Effect] = {
+  def createRelationRowByPath(schema: Schema, path: Path): SqlAction[Int, NoStream, Effect] = {
     val relation = path.lastRelation_!
-    require(!relation.isInlineRelation)
-
     val childWhere = path.lastEdge_! match {
       case _: ModelEdge   => sys.error("Needs to be a node edge.")
       case edge: NodeEdge => edge.childWhere
     }
 
-    if (relation.hasManifestation) {
+    if (relation.isInlineRelation) {
+      val inlineManifestation = relation.inlineManifestation.get
+      val referencingColumn   = inlineManifestation.referencingColumn
+      val tableName           = relation.relationTableNameNew(schema)
+
+      (sql"""update "#$schemaName"."#${tableName}" """ ++
+        sql"""set "#${referencingColumn}" = subquery.id""" ++
+        sql"""from (select "id" from "#$schemaName"."#${childWhere.model.dbName}" where "#${childWhere.field.name}" = ${childWhere.fieldValue}) as subquery""" ++
+        sql"""where "#$schemaName"."#${tableName}".id = """ ++ pathQueryForLastChild(path.removeLastEdge)).asUpdate
+
+    } else if (relation.hasManifestation) {
       val nodeEdge        = path.lastEdge_!.asInstanceOf[NodeEdge]
       val parentModel     = nodeEdge.parent
       val childModel      = nodeEdge.child
@@ -84,15 +92,9 @@ case class PostgresApiDatabaseMutationBuilder(
     } else {
       val relationId = Cuid.createCuid()
       (sql"""insert into "#$schemaName"."#${path.lastRelation_!.relationTableName}" ("id", "#${path.parentSideOfLastEdge}", "#${path.childSideOfLastEdge}")""" ++
-        sql"""Select '#$relationId',""" ++ pathQueryForLastChild(path.removeLastEdge) ++ sql"," ++
-        sql""""id" FROM "#$schemaName"."#${childWhere.model.name}" where "#${childWhere.field.name}" = ${childWhere.fieldValue}""").asUpdate
+        sql"""Select '#$relationId',""" ++ pathQueryForLastChild(path.removeLastEdge) ++ sql""","id" """ ++
+        sql"""FROM "#$schemaName"."#${childWhere.model.name}" where "#${childWhere.field.name}" = ${childWhere.fieldValue}""").asUpdate
     }
-
-//    (sql"""update "#$databaseName".todo""" ++
-//      sql"""set list_id = subquery.id""" ++
-//      sql"""from (select "id" from "#$databaseName"."#${childWhere.model.pgTableName}" where "#${childWhere.field.name}" = ${childWhere.fieldValue}) as subquery""" ++
-//      sql"""where "#$databaseName".todo.id = """ ++ pathQueryForLastChild( path.removeLastEdge)).asUpdate
-
 //    https://stackoverflow.com/questions/1109061/insert-on-duplicate-update-in-postgresql
 //    ++
 //      sql"on conflict (id )  key update #$databaseName.#${path.lastRelation_!.relationTableName}.id = #$databaseName.#${path.lastRelation_!.relationTableName}.id").asUpdate

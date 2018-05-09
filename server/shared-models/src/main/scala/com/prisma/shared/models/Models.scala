@@ -377,8 +377,39 @@ case class Relation(
 ) {
   val relationTableName = manifestation.collect { case m: RelationTableManifestation => m.table }.getOrElse("_" + name)
 
+  def relationTableNameNew(schema: Schema): String =
+    manifestation
+      .collect {
+        case m: RelationTableManifestation  => m.table
+        case m: InlineRelationManifestation => schema.getModelById_!(m.inTableOfModelId).dbName
+      }
+      .getOrElse("_" + name)
+
+  def modelAColumn: String = manifestation match {
+    case Some(m: RelationTableManifestation)  => m.modelAColumn
+    case Some(m: InlineRelationManifestation) => if (m.inTableOfModelId == modelAId) "id" else m.referencingColumn
+    case None                                 => "A"
+  }
+
+  def modelBColumn: String = manifestation match {
+    case Some(m: RelationTableManifestation)  => m.modelBColumn
+    case Some(m: InlineRelationManifestation) => if (m.inTableOfModelId == modelBId) "id" else m.referencingColumn
+    case None                                 => "B"
+  }
+
+  def columnForModel(model: Model, relationSide: RelationSide.Value): String = {
+    require(model.id == modelAId || model.id == modelBId)
+    inlineManifestation match {
+      // FIXME: this needs to respect the relation side as well
+      case Some(m: InlineRelationManifestation) => if (model.id == m.inTableOfModelId) "id" else m.referencingColumn
+      case None                                 => relationSide.toString
+    }
+  }
+
   def hasManifestation: Boolean = manifestation.isDefined
   def isInlineRelation: Boolean = manifestation.exists(_.isInstanceOf[InlineRelationManifestation])
+
+  def inlineManifestation: Option[InlineRelationManifestation] = manifestation.collect { case x: InlineRelationManifestation => x }
 
   def connectsTheModels(model1: String, model2: String): Boolean = (modelAId == model1 && modelBId == model2) || (modelAId == model2 && modelBId == model1)
 
@@ -386,6 +417,14 @@ case class Relation(
   def isSameFieldSameModelRelation(schema: Schema): Boolean = {
     // note: defaults to modelAField to handle same model, same field relations
     getModelAField(schema) == getModelBField(schema).orElse(getModelAField(schema))
+  }
+
+  def isManyToMany(schema: Schema): Boolean = {
+    val x = for {
+      modelAField <- getModelAField(schema)
+      modelBField <- getModelBField(schema)
+    } yield modelAField.isList && modelBField.isList
+    x.getOrElse(false) // todo: is this ok?
   }
 
   def getFieldOnModel(modelId: String, schema: Schema): Option[Field] = {
