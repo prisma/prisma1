@@ -44,7 +44,7 @@ case class ManagementServer(prefix: String = "", server2serverSecret: Option[Str
   val requestPrefix                          = sys.env.getOrElse("ENV", "local")
   val schemaManagerSecured                   = server2serverSecret.exists(_.nonEmpty)
   val projectIdEncoder                       = dependencies.projectIdEncoder
-  val telemetryActor                         = system.actorOf(Props(TelemetryActor(dependencies.deployConnector)))
+  val telemetryActor                         = dependencies.telemetryActor
 
   def errorExtractor(t: Throwable): Option[Int] = t match {
     case e: DeployApiError => Some(e.code)

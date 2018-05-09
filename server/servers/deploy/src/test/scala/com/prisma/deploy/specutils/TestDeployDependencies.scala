@@ -2,6 +2,7 @@ package com.prisma.deploy.specutils
 
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
+import akka.testkit.TestProbe
 import com.prisma.auth.AuthImpl
 import com.prisma.config.ConfigLoader
 import com.prisma.connectors.utils.ConnectorUtils
@@ -34,4 +35,6 @@ case class TestDeployDependencies()(implicit val system: ActorSystem, val materi
   override def functionValidator: FunctionValidator = (project: Project, fn: FunctionInput) => {
     if (fn.name == "failing") Vector(SchemaError(`type` = "model", field = "field", description = "error")) else Vector.empty
   }
+
+  lazy val telemetryActor = TestProbe().ref
 }

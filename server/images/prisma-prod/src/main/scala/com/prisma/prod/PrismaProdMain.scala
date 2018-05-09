@@ -19,7 +19,13 @@ object PrismaProdMain extends App {
 
   val port              = dependencies.config.port.getOrElse(4466)
   val includeMgmtServer = dependencies.config.managmentApiEnabled
-  val servers = includeMgmtServer.flatMap(_.toOption(ManagementServer("management", dependencies.config.server2serverSecret))) ++ List(
+  val mgmtServer = includeMgmtServer.flatMap(_.toOption(
+    List(
+      ManagementServer("management", dependencies.config.server2serverSecret),
+      ManagementServer("cluster", dependencies.config.server2serverSecret) // Deprecated, will be removed soon
+  ))).toList.flatten
+
+  val servers = mgmtServer ++ List(
     WebsocketServer(dependencies),
     ApiServer(dependencies.apiSchemaBuilder),
     SimpleSubscriptionsServer(),
@@ -28,6 +34,6 @@ object PrismaProdMain extends App {
 
   ServerExecutor(
     port = port,
-    servers = servers.toSeq: _*
+    servers = servers: _*
   ).startBlocking()
 }
