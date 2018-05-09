@@ -73,21 +73,21 @@ object QueryArgumentsHelpers {
 
         //transitive filters
 
-        case TransitiveRelationFilter(field, fromModel, toModel, relation, filterName, nestedFilter) if filterName == "_some" =>
+        case TransitiveRelationFilter(schema, field, fromModel, toModel, relation, filterName, nestedFilter) if filterName == "_some" =>
           val (alias, modTableName) = getAliasAndTableName(fromModel.name, toModel.name)
           Some(sql"exists (" ++ joinRelations(relation, toModel, alias, field, modTableName) ++ sql"and" ++ filterOnRelation(alias, nestedFilter) ++ sql")")
 
-        case TransitiveRelationFilter(field, fromModel, toModel, relation, filterName, nestedFilter) if filterName == "_every" =>
+        case TransitiveRelationFilter(schema, field, fromModel, toModel, relation, filterName, nestedFilter) if filterName == "_every" =>
           val (alias, modTableName) = getAliasAndTableName(fromModel.name, toModel.name)
           Some(
             sql"not exists (" ++ joinRelations(relation, toModel, alias, field, modTableName) ++ sql"and not" ++ filterOnRelation(alias, nestedFilter) ++ sql")")
 
-        case TransitiveRelationFilter(field, fromModel, toModel, relation, filterName, nestedFilter) if filterName == "_none" =>
+        case TransitiveRelationFilter(schema, field, fromModel, toModel, relation, filterName, nestedFilter) if filterName == "_none" =>
           val (alias, modTableName) = getAliasAndTableName(fromModel.name, toModel.name)
           Some(
             sql"not exists (" ++ joinRelations(relation, toModel, alias, field, modTableName) ++ sql"and " ++ filterOnRelation(alias, nestedFilter) ++ sql")")
 
-        case TransitiveRelationFilter(field, fromModel, toModel, relation, filterName, nestedFilter) if filterName == "" =>
+        case TransitiveRelationFilter(schema, field, fromModel, toModel, relation, filterName, nestedFilter) if filterName == "" =>
           val (alias, modTableName) = getAliasAndTableName(fromModel.name, toModel.name)
           Some(sql"exists (" ++ joinRelations(relation, toModel, alias, field, modTableName) ++ sql"and" ++ filterOnRelation(alias, nestedFilter) ++ sql")")
 
@@ -159,7 +159,7 @@ object QueryArgumentsHelpers {
 
         case FinalValueFilter(key, value, field, filterName) =>
           Some(sql"`#$projectId`.`#$tableName`.`#$key` = $value")
-        case FinalRelationFilter(key, null, field, filterName) =>
+        case FinalRelationFilter(schema, key, null, field, filterName) =>
           if (field.isList) throw APIErrors.FilterCannotBeNullOnToManyField(field.name)
 
           Some(sql""" not exists (select  *

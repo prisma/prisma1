@@ -406,6 +406,21 @@ case class Relation(
     }
   }
 
+  def columnForRelationSide(relationSide: RelationSide.Value): String = {
+    manifestation match {
+      case Some(m: InlineRelationManifestation) =>
+        if (relationSide == RelationSide.A) {
+          if (modelAId == m.inTableOfModelId) "id" else m.referencingColumn
+        } else {
+          if (modelBId == m.inTableOfModelId) "id" else m.referencingColumn
+        }
+      case Some(m: RelationTableManifestation) =>
+        if (relationSide == RelationSide.A) m.modelAColumn else m.modelBColumn
+      case None =>
+        relationSide.toString
+    }
+  }
+
   def hasManifestation: Boolean = manifestation.isDefined
   def isInlineRelation: Boolean = manifestation.exists(_.isInstanceOf[InlineRelationManifestation])
 

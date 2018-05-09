@@ -5,7 +5,7 @@ import com.prisma.api.connector._
 import com.prisma.api.connector.postgresql.database.SlickExtensions._
 import com.prisma.api.schema.APIErrors
 import com.prisma.gc_values.{GCValue, GCValueExtractor, ListGCValue, NullGCValue}
-import com.prisma.shared.models.{Field, Model, Relation}
+import com.prisma.shared.models.{Field, Model, Relation, Schema}
 import slick.jdbc.PostgresProfile.api._
 import slick.jdbc.SQLActionBuilder
 
@@ -24,12 +24,15 @@ object QueryArgumentsHelpers {
       Some(generateFilterConditions(projectId, relationTableName, nestedFilter).getOrElse(sql"True"))
     }
 
-    def joinRelations(relation: Relation, toModel: Model, alias: String, field: Field, modTableName: String) = {
+    def joinRelations(schema: Schema, relation: Relation, toModel: Model, alias: String, field: Field, modTableName: String) = {
+      val relationTableName = relation.relationTableNameNew(schema)
+      val column            = relation.columnForRelationSide(field.relationSide.get)
+      val oppositeColumn    = relation.columnForRelationSide(field.oppositeRelationSide.get)
       sql"""select *
-            from "#$projectId"."#${toModel.name}" as "#$alias"
-            inner join "#$projectId"."#${relation.relationTableName}"
-            on "#$alias"."id" = "#$projectId"."#${relation.relationTableName}"."#${field.oppositeRelationSide.get}"
-            where "#$projectId"."#${relation.relationTableName}"."#${field.relationSide.get}" = "#$modTableName"."id""""
+            from "#$projectId"."#${toModel.dbName}" as "#$alias"
+            inner join "#$projectId"."#${relationTableName}"
+            on "#$alias"."id" = "#$projectId"."#${relationTableName}"."#${oppositeColumn}"
+            where "#$projectId"."#${relationTableName}"."#${column}" = "#$modTableName"."id""""
     }
 
     val tableNameSql = if (quoteTableName) sql""""#$tableName"""" else sql"""#$tableName"""
@@ -75,23 +78,26 @@ object QueryArgumentsHelpers {
 
         //transitive filters
 
-        case TransitiveRelationFilter(field, fromModel, toModel, relation, filterName, nestedFilter) if filterName == "_some" =>
-          val (alias, modTableName) = getAliasAndTableName(fromModel.name, toModel.name)
-          Some(sql"exists (" ++ joinRelations(relation, toModel, alias, field, modTableName) ++ sql"and" ++ filterOnRelation(alias, nestedFilter) ++ sql")")
-
-        case TransitiveRelationFilter(field, fromModel, toModel, relation, filterName, nestedFilter) if filterName == "_every" =>
+        case TransitiveRelationFilter(schema, field, fromModel, toModel, relation, filterName, nestedFilter) if filterName == "_some" =>
           val (alias, modTableName) = getAliasAndTableName(fromModel.name, toModel.name)
           Some(
-            sql"not exists (" ++ joinRelations(relation, toModel, alias, field, modTableName) ++ sql"and not" ++ filterOnRelation(alias, nestedFilter) ++ sql")")
+            sql"exists (" ++ joinRelations(schema, relation, toModel, alias, field, modTableName) ++ sql"and" ++ filterOnRelation(alias, nestedFilter) ++ sql")")
 
-        case TransitiveRelationFilter(field, fromModel, toModel, relation, filterName, nestedFilter) if filterName == "_none" =>
+        case TransitiveRelationFilter(schema, field, fromModel, toModel, relation, filterName, nestedFilter) if filterName == "_every" =>
+          val (alias, modTableName) = getAliasAndTableName(fromModel.name, toModel.name)
+          Some(sql"not exists (" ++ joinRelations(schema, relation, toModel, alias, field, modTableName) ++ sql"and not" ++ filterOnRelation(
+            alias,
+            nestedFilter) ++ sql")")
+
+        case TransitiveRelationFilter(schema, field, fromModel, toModel, relation, filterName, nestedFilter) if filterName == "_none" =>
           val (alias, modTableName) = getAliasAndTableName(fromModel.name, toModel.name)
           Some(
-            sql"not exists (" ++ joinRelations(relation, toModel, alias, field, modTableName) ++ sql"and " ++ filterOnRelation(alias, nestedFilter) ++ sql")")
+            sql"not exists (" ++ joinRelations(schema, relation, toModel, alias, field, modTableName) ++ sql"and " ++ filterOnRelation(alias, nestedFilter) ++ sql")")
 
-        case TransitiveRelationFilter(field, fromModel, toModel, relation, filterName, nestedFilter) if filterName == "" =>
+        case TransitiveRelationFilter(schema, field, fromModel, toModel, relation, filterName, nestedFilter) if filterName == "" =>
           val (alias, modTableName) = getAliasAndTableName(fromModel.name, toModel.name)
-          Some(sql"exists (" ++ joinRelations(relation, toModel, alias, field, modTableName) ++ sql"and" ++ filterOnRelation(alias, nestedFilter) ++ sql")")
+          Some(
+            sql"exists (" ++ joinRelations(schema, relation, toModel, alias, field, modTableName) ++ sql"and" ++ filterOnRelation(alias, nestedFilter) ++ sql")")
 
         //--- non recursive
 
@@ -161,12 +167,16 @@ object QueryArgumentsHelpers {
 
         case FinalValueFilter(key, value, field, filterName) =>
           Some(tableNameSql ++ sql"""."#$key" = $value""")
-        case FinalRelationFilter(key, null, field, filterName) =>
+        case FinalRelationFilter(schema, key, null, field, filterName) =>
           if (field.isList) throw APIErrors.FilterCannotBeNullOnToManyField(field.name)
 
+          val relation          = field.relation.get
+          val relationTableName = relation.relationTableNameNew(schema)
+          val column            = relation.columnForRelationSide(field.relationSide.get)
+
           Some(sql""" not exists (select  *
-                                  from    "#$projectId"."#${field.relation.get.relationTableName}"
-                                  where   "#$projectId"."#${field.relation.get.relationTableName}"."#${field.relationSide.get}" = """ ++ tableNameSql ++ sql""".id
+                                  from    "#$projectId"."#${relationTableName}"
+                                  where   "#$projectId"."#${relationTableName}"."#${column}" = """ ++ tableNameSql ++ sql""".id
                                   )""")
 
         // this is used for the node: {} field in the Subscription Filter
