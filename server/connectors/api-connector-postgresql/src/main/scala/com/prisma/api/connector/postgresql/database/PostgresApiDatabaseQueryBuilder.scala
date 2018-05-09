@@ -164,6 +164,15 @@ case class PostgresApiDatabaseQueryBuilder(
       fromModelIds: Vector[IdGCValue],
       args: Option[QueryArguments]
   ): DBIOAction[Vector[ResolverResult[PrismaNodeWithParent]], NoStream, Effect] = {
+    batchSelectAllFromRelatedModelNew(schema, fromField, fromModelIds, args)
+  }
+
+  def batchSelectAllFromRelatedModelNew(
+      schema: Schema,
+      fromField: Field,
+      fromModelIds: Vector[IdGCValue],
+      args: Option[QueryArguments]
+  ): DBIOAction[Vector[ResolverResult[PrismaNodeWithParent]], NoStream, Effect] = {
     val fromModel    = fromField.model(schema).get
     val relation     = fromField.relation.get
     val relatedModel = fromField.relatedModel(schema).get
@@ -175,7 +184,7 @@ case class PostgresApiDatabaseQueryBuilder(
     val columnForRelatedModel = relation.columnForModel(relatedModel)
 
     val (conditionCommand, orderByCommand, limitCommand) =
-      extractQueryArgs(schemaName, modelTable, args, defaultOrderShortcut = Some(s""" RelationTable."$columnForRelatedModel" """), None)
+      extractQueryArgs(schemaName, "ModelTable", args, defaultOrderShortcut = Some(s""" RelationTable."$columnForRelatedModel" """), None)
 
     def createQuery(id: String, modelRelationSide: String, fieldRelationSide: String) = {
       sql"""(select ModelTable.*, RelationTable."#$aColumn" as __Relation__A,  RelationTable."#$bColumn" as __Relation__B
@@ -217,6 +226,61 @@ case class PostgresApiDatabaseQueryBuilder(
             case None                  => ResolverResult(Vector.empty[PrismaNodeWithParent], hasPreviousPage = false, hasNextPage = false, parentModelId = Some(id))
           }
         }
+      }
+  }
+
+  def batchSelectAllFromRelatedModelOld(
+      schema: Schema,
+      fromField: Field,
+      fromModelIds: Vector[IdGCValue],
+      args: Option[QueryArguments]
+  ): DBIOAction[Vector[ResolverResult[PrismaNodeWithParent]], NoStream, Effect] = {
+
+    val relatedModel         = fromField.relatedModel(schema).get
+    val fieldTable           = fromField.relatedModel(schema).get.name
+    val unsafeRelationId     = fromField.relation.get.relationTableName
+    val modelRelationSide    = fromField.relationSide.get.toString
+    val oppositeRelationSide = fromField.oppositeRelationSide.get.toString
+
+    val (conditionCommand, orderByCommand, limitCommand) =
+      extractQueryArgs(schemaName, fieldTable, args, defaultOrderShortcut = Some(s""" "$schemaName"."$unsafeRelationId"."$oppositeRelationSide" """), None)
+
+    def createQuery(id: String, modelRelationSide: String, fieldRelationSide: String) = {
+      sql"""(select "#$schemaName"."#$fieldTable".*, "#$schemaName"."#$unsafeRelationId"."A" as __Relation__A,  "#$schemaName"."#$unsafeRelationId"."B" as __Relation__B
+            from "#$schemaName"."#$fieldTable"
+           inner join "#$schemaName"."#$unsafeRelationId"
+           on "#$schemaName"."#$fieldTable"."id" = "#$schemaName"."#$unsafeRelationId"."#$fieldRelationSide"
+           where "#$schemaName"."#$unsafeRelationId"."#$modelRelationSide" = '#$id' """ ++
+        prefixIfNotNone("and", conditionCommand) ++
+        prefixIfNotNone("order by", orderByCommand) ++
+        prefixIfNotNone("limit", limitCommand) ++ sql")"
+    }
+
+    // see https://github.com/graphcool/internal-docs/blob/master/relations.md#findings
+    val resolveFromBothSidesAndMerge = fromField.relation.get.isSameFieldSameModelRelation(schema)
+
+    val query = resolveFromBothSidesAndMerge match {
+      case false =>
+        fromModelIds.distinct.view.zipWithIndex.foldLeft(sql"")((a, b) =>
+          a ++ unionIfNotFirst(b._2) ++ createQuery(b._1.value, modelRelationSide, oppositeRelationSide))
+
+      case true =>
+        fromModelIds.distinct.view.zipWithIndex.foldLeft(sql"")((a, b) =>
+          a ++ unionIfNotFirst(b._2) ++ createQuery(b._1.value, modelRelationSide, oppositeRelationSide) ++ sql"union all " ++ createQuery(b._1.value,
+                                                                                                                                           oppositeRelationSide,
+                                                                                                                                           modelRelationSide))
+    }
+
+    query
+      .as[PrismaNodeWithParent](getResultForModelAndRelationSide(relatedModel, modelRelationSide, oppositeRelationSide))
+      .map { items =>
+        val itemGroupsByModelId = items.groupBy(_.parentId)
+        fromModelIds
+          .map(id =>
+            itemGroupsByModelId.find(_._1 == id) match {
+              case Some((_, itemsForId)) => args.get.resultTransform(itemsForId).copy(parentModelId = Some(id))
+              case None                  => ResolverResult(Vector.empty[PrismaNodeWithParent], hasPreviousPage = false, hasNextPage = false, parentModelId = Some(id))
+          })
       }
   }
 
