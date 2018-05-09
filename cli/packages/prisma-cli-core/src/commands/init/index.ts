@@ -84,6 +84,12 @@ Either try using a new directory name, or remove the files listed above.
         results.dockerComposeYml,
       )
     }
+    if (results.managementSecret) {
+      fs.writeFileSync(
+        path.join(this.config.definitionDir, '.env'),
+        `PRISMA_MANAGEMENT_API_SECRET=${results.managementSecret}`,
+      )
+    }
     let relativeDir = path.relative(this.config.cwd, this.config.definitionDir)
     relativeDir = relativeDir.length === 0 ? '.' : relativeDir
 
@@ -147,6 +153,14 @@ Either try using a new directory name, or remove the files listed above.
     if (isLocal) {
       createdFiles.push(
         `  ${chalk.cyan('docker-compose.yml')}   Docker configuration file`,
+      )
+    }
+
+    if (results.managementSecret) {
+      createdFiles.push(
+        `  ${chalk.cyan(
+          '.env',
+        )}                 Env file including PRISMA_API_MANAGEMENT_SECRET`,
       )
     }
 
