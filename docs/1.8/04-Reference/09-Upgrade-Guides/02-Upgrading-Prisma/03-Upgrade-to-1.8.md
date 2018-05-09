@@ -14,7 +14,7 @@ The [1.8 release](https://github.com/graphcool/prisma/releases/tag/1.8.0) introd
 The Management API of a Prisma Server is responsible for service deployment and also provides information about the Prisma Server.
 
 Previously, the Management API was available at `/cluster`, for example `localhost:4466/cluster`.
-With 1.8, `/cluster` is not available anymore. The endpoint has been updated to `/managenent`, for example `localhost:4466/management`.
+With 1.8, `/cluster` is not available anymore. The endpoint has been updated to `/management`, for example `localhost:4466/management`.
 
 The Management API exposes a GraphQL API, that previously contained a top-level field `clusterInfo`. It has been renamed to `serverInfo` in 1.8. `clusterInfo` is deprecated and will be removed in version 1.10.
 
