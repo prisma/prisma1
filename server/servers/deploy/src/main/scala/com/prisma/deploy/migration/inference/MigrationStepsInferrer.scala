@@ -51,7 +51,8 @@ case class MigrationStepsInferrerImpl(previousSchema: Schema, nextSchema: Schema
       relationsToCreate ++
       enumsToUpdate ++
       fieldsToUpdate ++
-      modelsToUpdate ++
+      modelsToUpdateFirstStep ++
+      modelsToUpdateSecondStep ++
       relationsToUpdate
   }
 
@@ -71,6 +72,9 @@ case class MigrationStepsInferrerImpl(previousSchema: Schema, nextSchema: Schema
       if nextModel.name != previousModelName
     } yield UpdateModel(name = previousModelName, newName = nextModel.name)
   }
+
+  lazy val modelsToUpdateFirstStep: Vector[UpdateModel]  = modelsToUpdate.map(update => update.copy(newName = "__" + update.newName))
+  lazy val modelsToUpdateSecondStep: Vector[UpdateModel] = modelsToUpdate.map(update => update.copy(name = "__" + update.newName))
 
   /*
    * Check all previous models if they are present on on the new one, ignore renames (== updated models).
@@ -119,6 +123,7 @@ case class MigrationStepsInferrerImpl(previousSchema: Schema, nextSchema: Schema
     } yield {
       UpdateField(
         model = previousModelName,
+        newModel = nextModel.name,
         name = previousFieldName,
         newName = diff(previousField.name, fieldOfNextModel.name),
         typeName = diff(previousField.typeIdentifier.toString, fieldOfNextModel.typeIdentifier.toString),

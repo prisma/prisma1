@@ -8,30 +8,32 @@ object CreateScalarListInterpreter extends SqlMutactionInterpreter[CreateScalarL
   override def execute(mutaction: CreateScalarListTable) = {
     PostgresDeployDatabaseMutationBuilder.createScalarListTable(
       projectId = mutaction.projectId,
-      modelName = mutaction.model,
-      fieldName = mutaction.field,
-      typeIdentifier = mutaction.typeIdentifier
+      modelName = mutaction.model.name,
+      fieldName = mutaction.field.name,
+      typeIdentifier = mutaction.field.typeIdentifier
     )
   }
 
   override def rollback(mutaction: CreateScalarListTable) = {
     DBIO.seq(
-      PostgresDeployDatabaseMutationBuilder.dropScalarListTable(projectId = mutaction.projectId, modelName = mutaction.model, fieldName = mutaction.field))
+      PostgresDeployDatabaseMutationBuilder
+        .dropScalarListTable(projectId = mutaction.projectId, modelName = mutaction.model.name, fieldName = mutaction.field.name))
   }
 }
 
 object DeleteScalarListInterpreter extends SqlMutactionInterpreter[DeleteScalarListTable] {
   override def execute(mutaction: DeleteScalarListTable) = {
     DBIO.seq(
-      PostgresDeployDatabaseMutationBuilder.dropScalarListTable(projectId = mutaction.projectId, modelName = mutaction.model, fieldName = mutaction.field))
+      PostgresDeployDatabaseMutationBuilder
+        .dropScalarListTable(projectId = mutaction.projectId, modelName = mutaction.model.name, fieldName = mutaction.field.name))
   }
 
   override def rollback(mutaction: DeleteScalarListTable) = {
     PostgresDeployDatabaseMutationBuilder.createScalarListTable(
       projectId = mutaction.projectId,
-      modelName = mutaction.model,
-      fieldName = mutaction.field,
-      typeIdentifier = mutaction.typeIdentifier
+      modelName = mutaction.model.name,
+      fieldName = mutaction.field.name,
+      typeIdentifier = mutaction.field.typeIdentifier
     )
   }
 }
