@@ -193,8 +193,8 @@ export class Client {
             ) {
               if (!process.env.PRISMA_MANAGEMENT_API_SECRET) {
                 throw new Error(
-                  `Cluster ${
-                    this.env.activeCluster.name
+                  `Server at ${
+                    this.env.activeCluster.baseUrl
                   } requires a cluster secret. Please provide it with the env var PRISMA_MANAGEMENT_API_SECRET`,
                 )
               } else {

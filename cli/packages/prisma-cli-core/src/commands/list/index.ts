@@ -66,7 +66,7 @@ export default class List extends Command {
       const mapped = projects.map(p => ({
         'Service Name': p.name,
         Stage: p.stage,
-        Cluster: p.cluster,
+        Server: p.cluster,
       }))
       this.out.table(mapped)
     }

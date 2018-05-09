@@ -84,6 +84,12 @@ Either try using a new directory name, or remove the files listed above.
         results.dockerComposeYml,
       )
     }
+    if (results.managementSecret) {
+      fs.writeFileSync(
+        path.join(this.config.definitionDir, '.env'),
+        `PRISMA_MANAGEMENT_API_SECRET=${results.managementSecret}`,
+      )
+    }
     let relativeDir = path.relative(this.config.cwd, this.config.definitionDir)
     relativeDir = relativeDir.length === 0 ? '.' : relativeDir
 
@@ -109,7 +115,7 @@ Either try using a new directory name, or remove the files listed above.
     const steps: string[] = []
 
     if (dir) {
-      steps.push(`Open folder: ${chalk.cyan('cd example')}`)
+      steps.push(`Open folder: ${chalk.cyan(`cd ${dir}`)}`)
     }
 
     if (results.cluster!.local && results.writeDockerComposeYml) {
@@ -122,37 +128,50 @@ Either try using a new directory name, or remove the files listed above.
 
     if (results.database && results.database.alreadyData) {
       steps.push(
-        `Read more about introspection:\nhttps://www.prisma.io/docs/reference/service-configuration/introspection-aeb6diethe`,
+        `Read more about introspection:\n     http://bit.ly/prisma-introspection`,
       )
     } else if (
       (results.database && !results.database.alreadyData) ||
       results.newDatabase
     ) {
       steps.push(
-        `Read more about Prisma server:\nhttps://www.prisma.io/docs/reference/prisma-servers-and-dbs/prisma-servers/overview-eu2ood0she`,
+        `Read more about Prisma server:\n     http://bit.ly/prisma-server-overview`,
       )
     } else {
       steps.push(
-        `Read more about deploying services:\nhttps://www.prisma.io/docs/reference/cli-command-reference/database-service/prisma-deploy-kee1iedaov`,
+        `Read more about deploying services:\n     http://bit.ly/prisma-deploy-services`,
+      )
+    }
+
+    const createdFiles = [
+      `  ${chalk.cyan('prisma.yml')}           Prisma service definition`,
+      `  ${chalk.cyan(
+        'datamodel.graphql',
+      )}    GraphQL SDL-based datamodel (foundation for database)`,
+    ]
+
+    if (isLocal) {
+      createdFiles.push(
+        `  ${chalk.cyan('docker-compose.yml')}   Docker configuration file`,
+      )
+    }
+
+    if (results.managementSecret) {
+      createdFiles.push(
+        `  ${chalk.cyan(
+          '.env',
+        )}                 Env file including PRISMA_API_MANAGEMENT_SECRET`,
       )
     }
 
     this.out.log(`
 ${chalk.bold(
       `Created ${
-        results.cluster!.local ? 3 : 2
+        createdFiles.length
       } new files:                                                                          `,
     )}
 
-  ${chalk.cyan('prisma.yml')}           Prisma service definition
-  ${chalk.cyan(
-    'datamodel.graphql',
-  )}    GraphQL SDL-based datamodel (foundation for database)
-  ${
-    isLocal
-      ? `${chalk.cyan('docker-compose.yml')}   Docker configuration file`
-      : ''
-  }
+${createdFiles.join('\n')}
 
 ${chalk.bold('Next steps:')}
 

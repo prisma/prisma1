@@ -5,7 +5,7 @@ description: GraphQL API
 
 # Data Modelling & GraphQL API
 
-Prisma introduces a few canges to the way how your data model is written as well as to the generated GraphQL API.
+Prisma introduces a few changes to the way how your data model is written as well as to the generated GraphQL API.
 
 ## Data modelling
 

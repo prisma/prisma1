@@ -160,6 +160,8 @@ export class PrismaDefinitionClass {
     const clusterName = this.getClusterName()
     const cluster = this.env.clusterByName(clusterName!)!
     if (
+      this.definition &&
+      this.definition.cluster &&
       clusterName &&
       cluster &&
       cluster.shared &&
@@ -175,6 +177,22 @@ Make sure that your \`cluster\` property looks like this: ${chalk.bold(
 and execute ${chalk.bold.green(
           'prisma deploy',
         )} again, to get that value auto-filled.`,
+      )
+    }
+    if (
+      this.definition &&
+      this.definition.endpoint &&
+      clusterName &&
+      cluster &&
+      cluster.shared &&
+      !cluster.isPrivate &&
+      !this.getWorkspace() &&
+      clusterName !== 'shared-public-demo'
+    ) {
+      throw new Error(
+        `The provided endpoint ${
+          this.definition.endpoint
+        } points to a demo cluster, but is missing the workspace slug. A valid demo endpoint looks like this: https://eu1.prisma.sh/myworkspace/service-name/stage-name`,
       )
     }
     this.env.sharedClusters

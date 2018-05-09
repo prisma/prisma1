@@ -2,7 +2,12 @@ import { Output, Client, Config, getPing } from 'prisma-cli-engine'
 import * as inquirer from 'inquirer'
 import chalk from 'chalk'
 import { Cluster, Environment } from 'prisma-yml'
-import { concatName, defaultDataModel, defaultDockerCompose } from '../util'
+import {
+  concatName,
+  defaultDataModel,
+  defaultDockerCompose,
+  prettyTime,
+} from '../util'
 import * as sillyname from 'sillyname'
 import * as path from 'path'
 import * as fs from 'fs'
@@ -24,6 +29,7 @@ export interface DatabaseCredentials {
   password: string
   database?: string
   alreadyData?: boolean
+  schema?: string
 }
 
 export interface GetEndpointResult {
@@ -50,13 +56,13 @@ export interface HandleChoiceInput {
 }
 
 const encodeMap = {
-  'prisma-eu1': 'sandbox-eu1',
-  'prisma-us1': 'sandbox-us1',
+  'prisma-eu1': 'demo-eu1',
+  'prisma-us1': 'demo-us1',
 }
 
 const decodeMap = {
-  'sandbox-eu1': 'prisma-eu1',
-  'sandbox-us1': 'prisma-us1',
+  'demo-eu1': 'prisma-eu1',
+  'demo-us1': 'prisma-us1',
 }
 
 const defaultPorts = {
@@ -66,19 +72,27 @@ const defaultPorts = {
 
 const databaseServiceDefinitions = {
   postgres: `
-  db:
+  postgres:
     image: postgres
     restart: always
     environment:
       POSTGRES_USER: prisma
       POSTGRES_PASSWORD: prisma
+    volumes:
+      - postgres:/var/lib/postgresql/data
+volumes:
+  postgres:
 `,
   mysql: `
-  db:
+  mysql:
     image: mysql:5.7
     restart: always
     environment:
       MYSQL_ROOT_PASSWORD: prisma
+    volumes:
+      - mysql:/var/lib/mysql
+volumes:
+  mysql:
 `,
 }
 
@@ -138,15 +152,19 @@ export class EndpointDialog {
     const defaultDB = JSON.parse(
       JSON.stringify({
         connector: credentials.type,
-        migrations: !credentials.alreadyData,
         host: credentials.host,
         port: credentials.port || defaultPorts[credentials.type],
-        user: credentials.user,
-        password: credentials.password,
         database:
           credentials.database && credentials.database.length > 0
             ? credentials.database
             : undefined,
+        schema:
+          credentials.schema && credentials.schema.length > 0
+            ? credentials.schema
+            : undefined,
+        user: credentials.user,
+        password: credentials.password,
+        migrations: !credentials.alreadyData,
       }),
     )
     return yaml
@@ -224,7 +242,7 @@ export class EndpointDialog {
           user: type === 'mysql' ? 'root' : 'prisma',
           password: 'prisma',
           type,
-          host: 'db',
+          host: type === 'mysql' ? 'mysql' : 'postgres',
           port: defaultPorts[type],
         }
         dockerComposeYml += this.printDatabaseConfig(credentials)
@@ -233,6 +251,8 @@ export class EndpointDialog {
         break
       case 'Use existing database':
         credentials = await this.getDatabase()
+        this.out.log('')
+        const before = Date.now()
         this.out.action.start(
           credentials!.alreadyData
             ? `Introspecting database`
@@ -256,20 +276,28 @@ export class EndpointDialog {
         ) {
           const { numTables, sdl } = await introspector.introspect(schemas[0])
           if (numTables === 0) {
-            throw new Error(
-              `The provided database doesn't contain any tables. Please either provide another database or choose "No" for "Does your database contain existing data?"`,
+            this.out.log(
+              chalk.red(
+                `\n${chalk.bold(
+                  'Error: ',
+                )}The provided database doesn't contain any tables. Please either provide another database or choose "No" for "Does your database contain existing data?"`,
+              ),
             )
+            this.out.exit(1)
           }
+
+          this.out.action.stop(prettyTime(Date.now() - before))
           this.out.log(
             `Created datamodel definition based on ${numTables} database tables.`,
           )
           datamodel = sdl
+        } else {
+          this.out.action.stop(prettyTime(Date.now() - before))
         }
         dockerComposeYml += this.printDatabaseConfig(credentials)
-        this.out.action.stop()
         cluster = new Cluster(this.out, 'custom', 'http://localhost:4466')
         break
-      case 'Demo Server':
+      case 'Demo server':
         const demoCluster = await this.getDemoCluster()
         if (!demoCluster) {
           return this.getEndpoint()
@@ -314,6 +342,8 @@ export class EndpointDialog {
       stage = await this.askForStage('dev')
     }
 
+    workspace = workspace || cluster.workspaceSlug
+
     return {
       endpoint: cluster.getApiEndpoint(service, stage, workspace),
       cluster,
@@ -341,8 +371,10 @@ export class EndpointDialog {
     }
   }
 
-  async getDatabase(): Promise<DatabaseCredentials> {
-    const type = await this.askForDatabaseType()
+  async getDatabase(
+    introspection: boolean = false,
+  ): Promise<DatabaseCredentials> {
+    const type = await this.askForDatabaseType(introspection)
     // const alreadyData = await this.ask({
     //   message: 'Does your database contain existing data?',
     //   key: 'alreadyData',
@@ -350,7 +382,12 @@ export class EndpointDialog {
     //   validate: value =>
     //     ['yes', 'no'].includes(value) ? true : 'Please answer either yes or no',
     // })
-    const alreadyData = await this.askForExistingData()
+    const alreadyData = introspection || (await this.askForExistingData())
+    if (type === 'mysql' && alreadyData) {
+      throw new Error(
+        `Existing MySQL databases with data are not yet supported.`,
+      )
+    }
     const host = await this.ask({
       message: 'Enter database host',
       key: 'host',
@@ -372,12 +409,16 @@ export class EndpointDialog {
     const database =
       type === 'postgres'
         ? await this.ask({
-            message:
-              'Enter database name' +
-              (alreadyData ? ' (location of existing data)' : ''),
+            message: alreadyData
+              ? `Enter name of existing database`
+              : `Enter database name`,
             key: 'database',
           })
         : null
+    const schema = await this.ask({
+      message: `Enter name of existing schema`,
+      key: 'schema',
+    })
 
     return {
       type,
@@ -387,6 +428,7 @@ export class EndpointDialog {
       password,
       database,
       alreadyData,
+      schema,
     }
   }
 
@@ -441,7 +483,7 @@ export class EndpointDialog {
   ) {
     const sandboxChoices = [
       [
-        'Demo Server',
+        'Demo server',
         'Hosted demo environment incl. database (requires login)',
       ],
       [
@@ -460,7 +502,7 @@ export class EndpointDialog {
         new inquirer.Separator('                       '),
         new inquirer.Separator(
           chalk.bold(
-            'You can set up Prisma  for local development (based on docker-compose)',
+            'You can set up Prisma for local development (based on docker-compose)',
           ),
         ),
         ...choices.slice(0, fixChoices.length),
@@ -481,14 +523,20 @@ export class EndpointDialog {
     } else {
       const clusterChoices =
         clusters.length > 0
-          ? clusters.map(this.getClusterChoice)
+          ? clusters.filter(c => !c.shared).map(this.getClusterChoice)
           : sandboxChoices
       const rawChoices = [
-        ['local', 'Local Prisma server (connected to MySQL)'],
-        ...clusterChoices,
-        ['Use other server', 'Connect to an existing prisma server'],
         ['Use existing database', 'Connect to existing database'],
         ['Create new database', 'Set up a local database using Docker'],
+        ...clusterChoices,
+        [
+          'Demo server',
+          'Hosted demo environment incl. database (requires login',
+        ],
+        [
+          'Use other server',
+          'Manually provide endpoint of a running Prisma server',
+        ],
       ]
       const choices = this.convertChoices(rawChoices)
       const dockerChoices = hasDockerComposeYml
@@ -496,22 +544,24 @@ export class EndpointDialog {
         : [
             new inquirer.Separator(
               chalk.bold(
-                'Set up a new Prisma server for local development (requires Docker):',
+                'Set up a new Prisma server for local development (based on docker-compose):',
               ),
             ),
-            ...choices.slice(choices.length - 2),
+            ...choices.slice(0, 2),
           ]
       const finalChoices = [
         new inquirer.Separator('                       '),
-        new inquirer.Separator(chalk.bold('Use an existing Prisma server')),
-        ...choices.slice(0, clusterChoices.length + 2),
-        new inquirer.Separator('                       '),
         ...dockerChoices,
+        new inquirer.Separator('                       '),
+        new inquirer.Separator(
+          chalk.bold('Or deploy to an existing Prisma server:'),
+        ),
+        ...choices.slice(2),
       ]
       return {
         name: 'choice',
         type: 'list',
-        message: `Connect to your database, set up a new one or use existing Prisma server?`,
+        message: `Set up a new Prisma server or deploy to an existing server?`,
         choices: finalChoices,
         pageSize: finalChoices.length,
       }
@@ -549,7 +599,7 @@ export class EndpointDialog {
     ]
     const us1Choice = [
       us1Name,
-      `Hosted on AWS in us-west-2 using MySQL [${eu1Ping.toFixed()}ms latency]`,
+      `Hosted on AWS in us-west-2 using MySQL [${us1Ping.toFixed()}ms latency]`,
     ]
     const rawChoices =
       eu1Ping < us1Ping ? [eu1Choice, us1Choice] : [us1Choice, eu1Choice]
@@ -573,22 +623,31 @@ export class EndpointDialog {
     return `Production Prisma cluster`
   }
 
-  private async askForDatabaseType() {
+  private async askForDatabaseType(introspect: boolean = false) {
+    const choices: any[] = []
+
+    if (!introspect) {
+      choices.push({
+        value: 'mysql',
+        name:
+          'MySQL             MySQL compliant databases like MySQL or MariaDB',
+        short: 'MySQL',
+      })
+    }
+
+    choices.push({
+      value: 'postgres',
+      name: 'PostgreSQL        PostgreSQL database',
+      short: 'PostgreSQL',
+    })
+
     const { dbType } = await this.out.prompt({
       name: 'dbType',
       type: 'list',
-      message: `What kind of database do you want to deploy to?`,
-      choices: [
-        {
-          value: 'mysql',
-          name:
-            'MySQL             MySQL compliant databases like MySQL or MariaDB',
-        },
-        {
-          value: 'postgres',
-          name: 'PostgreSQL        PostgreSQL database',
-        },
-      ],
+      message: `What kind of database do you want to ${
+        introspect ? 'introspect' : 'deploy to'
+      }?`,
+      choices,
       // pageSize: 9,
     })
 
@@ -602,6 +661,7 @@ export class EndpointDialog {
     return padded.map((name, index) => ({
       name,
       value: choices[index][0],
+      short: choices[index][0],
     }))
   }
 
@@ -609,7 +669,7 @@ export class EndpointDialog {
     const question = {
       name: 'stage',
       type: 'input',
-      message: 'To which stage do you want to deploy?',
+      message: 'Choose a name for your stage',
       default: defaultName,
     }
 
@@ -622,7 +682,7 @@ export class EndpointDialog {
     const question = {
       name: 'service',
       type: 'input',
-      message: 'How do you want to call your service?',
+      message: 'Choose a name for your service',
       default: defaultName,
     }
 
@@ -650,24 +710,18 @@ export class EndpointDialog {
       message: `Does your database contain existing data?`,
       choices: [
         {
-          value: 'yes',
-          name: 'Yes',
-        },
-        {
           value: 'no',
           name: 'No',
         },
+        {
+          value: 'yes',
+          name: 'Yes (experimental - Prisma migrations not yet supported)',
+          short: 'Yes',
+        },
         new inquirer.Separator(
-          chalk.red.bold(
-            `\n\nWarning: Introspecting databases with existing data is an early alpha preview not ready for production yet. If you find any problems, please let us know: https://github.com/graphcool/prisma/issues\n`,
-          ),
-        ),
-        new inquirer.Separator(
-          chalk.dim(
-            `Note: If you already have data in your database you won't be able to change the database schema with Prisma. If you want to use Prisma's migration system, please choose ${chalk.bold(
-              'No',
-            )}`,
-          ),
+          `\n\n${chalk.yellow(
+            'Warning: Introspecting databases with existing data is currently an experimental feature. If you find any issues, please report them here: https://github.com/graphcool/prisma/issues\n',
+          )}`,
         ),
       ],
       pageSize: 10,
