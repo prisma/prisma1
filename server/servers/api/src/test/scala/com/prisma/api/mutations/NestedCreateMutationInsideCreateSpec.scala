@@ -1,5 +1,6 @@
 package com.prisma.api.mutations
 
+import com.prisma.IgnorePassive
 import com.prisma.api.ApiSpecBase
 import com.prisma.shared.schema_dsl.SchemaDsl
 import org.scalatest.{FlatSpec, Matchers}
@@ -571,7 +572,7 @@ class NestedCreateMutationInsideCreateSpec extends FlatSpec with Matchers with A
     )
   }
 
-  "a required one2one relation" should "be creatable through a nested connected mutation" in {
+  "a required one2one relation" should "be creatable through a nested connected mutation" taggedAs (IgnorePassive) in {
     val project = SchemaDsl.fromBuilder { schema =>
       val todo = schema.model("Todo").field_!("reqOnTodo", _.String).field("optOnTodo", _.String)
       schema
