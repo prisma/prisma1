@@ -19,6 +19,8 @@ trait SubscriptionSpecBase extends ConnectorAwareTest with TestFrameworkInterfac
   this: Suite =>
   implicit val ec: ExecutionContextExecutor = system.dispatcher
   implicit val dependencies                 = new TestSubscriptionDependencies()
+  implicit lazy val implicitSuite           = this
+  implicit lazy val deployConnector         = dependencies.deployConnector
   val testDatabase                          = ApiTestDatabase()
   implicit val actorSytem                   = ActorSystem("test")
   implicit val mat                          = ActorMaterializer()

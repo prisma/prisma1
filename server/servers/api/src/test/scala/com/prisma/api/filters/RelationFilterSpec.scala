@@ -7,7 +7,7 @@ import org.scalatest._
 
 class RelationFilterSpec extends FlatSpec with Matchers with ApiSpecBase {
 
-  val project = SchemaDsl.schema() { schema =>
+  val project = SchemaDsl.fromBuilder { schema =>
     val blog = schema
       .model("Blog")
       .field_!("name", _.String)
