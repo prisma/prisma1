@@ -137,22 +137,28 @@ Either try using a new directory name, or remove the files listed above.
       )
     }
 
+    const createdFiles = [
+      `  ${chalk.cyan('prisma.yml')}           Prisma service definition`,
+      `  ${chalk.cyan(
+        'datamodel.graphql',
+      )}    GraphQL SDL-based datamodel (foundation for database)`,
+    ]
+
+    if (isLocal) {
+      createdFiles.push(
+        `  ${chalk.cyan('docker-compose.yml')}   Docker configuration file`,
+      )
+    }
+
     this.out.log(`
 ${chalk.bold(
       `Created ${
-        results.cluster!.local ? 3 : 2
+        createdFiles.length
       } new files:                                                                          `,
     )}
 
-  ${chalk.cyan('prisma.yml')}           Prisma service definition
-  ${chalk.cyan(
-    'datamodel.graphql',
-  )}    GraphQL SDL-based datamodel (foundation for database)
-  ${
-    isLocal
-      ? `${chalk.cyan('docker-compose.yml')}   Docker configuration file`
-      : ''
-  }
+${createdFiles.join('\n')}
+
 ${chalk.bold('Next steps:')}
 
 ${steps.map((step, index) => `  ${index + 1}. ${step}`).join('\n')}`)
