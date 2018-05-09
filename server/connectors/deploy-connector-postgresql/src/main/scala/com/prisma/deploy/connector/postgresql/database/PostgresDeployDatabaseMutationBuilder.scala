@@ -3,7 +3,7 @@ package com.prisma.deploy.connector.postgresql.database
 import java.sql.PreparedStatement
 
 import com.prisma.shared.models.TypeIdentifier.TypeIdentifier
-import com.prisma.shared.models.{Model, Project, TypeIdentifier}
+import com.prisma.shared.models.{Field, Model, Project, TypeIdentifier}
 import slick.dbio.DBIOAction
 import slick.jdbc.PostgresProfile.api._
 
@@ -143,9 +143,9 @@ object PostgresDeployDatabaseMutationBuilder {
     DBIOAction.seq(tableCreate, indexCreate)
   }
 
-  def createRelationColumn(projectId: String, model: Model, references: Model, column: String) = {
+  def createRelationColumn(projectId: String, model: Model, field: Field, references: Model, column: String) = {
     val sqlType    = sqlTypeForScalarTypeIdentifier(TypeIdentifier.GraphQLID)
-    val isRequired = false // FIXME: pass in the field and use field.isRequired
+    val isRequired = false //field.isRequired
     val nullString = if (isRequired) "NOT NULL" else "NULL"
     val addColumn  = sqlu"""ALTER TABLE "#$projectId"."#${model.dbName}" ADD COLUMN "#$column" #$sqlType #$nullString
                             REFERENCES "#$projectId"."#${references.dbName}"(id);"""

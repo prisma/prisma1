@@ -34,7 +34,7 @@ object DeleteRelationInterpreter extends SqlMutactionInterpreter[DeleteRelationT
 
 object CreateInlineRelationInterpreter extends SqlMutactionInterpreter[CreateInlineRelation] {
   override def execute(mutaction: CreateInlineRelation) = {
-    PostgresDeployDatabaseMutationBuilder.createRelationColumn(mutaction.projectId, mutaction.model, mutaction.references, mutaction.column)
+    PostgresDeployDatabaseMutationBuilder.createRelationColumn(mutaction.projectId, mutaction.model, mutaction.field, mutaction.references, mutaction.column)
   }
 
   override def rollback(mutaction: CreateInlineRelation) = ???
