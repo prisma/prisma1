@@ -78,7 +78,7 @@ Either try using a new directory name, or remove the files listed above.
       path.join(this.config.definitionDir, 'datamodel.graphql'),
       results.datamodel,
     )
-    if (results.cluster!.local) {
+    if (results.cluster!.local && results.writeDockerComposeYml) {
       fs.writeFileSync(
         path.join(this.config.definitionDir, 'docker-compose.yml'),
         results.dockerComposeYml,
@@ -98,7 +98,7 @@ Either try using a new directory name, or remove the files listed above.
       ? `Open the new folder via ${chalk.cyan(`$ cd ${dir}`)}.\n`
       : ``
 
-    const isLocal = results.cluster!.local
+    const isLocal = results.cluster!.local && results.writeDockerComposeYml
     const dbType = results.database ? results.database.type : ''
     const beautifulDbTypesMap = {
       mysql: 'MySQL',
@@ -106,16 +106,43 @@ Either try using a new directory name, or remove the files listed above.
     }
     const beautifulDbType = beautifulDbTypesMap[dbType] || ''
 
-    const deployString = results.cluster!.local
-      ? `To start your Prisma Server run ${chalk.cyan(
-          'docker-compose up -d',
-        )}.\nThen you `
-      : `You now `
+    const steps: string[] = []
 
-    this.out.log(`\
-Created ${
-      results.cluster!.local ? 3 : 2
-    } new files:                                                                          
+    if (dir) {
+      steps.push(`Open folder: ${chalk.cyan(`cd ${dir}`)}`)
+    }
+
+    if (results.cluster!.local && results.writeDockerComposeYml) {
+      steps.push(
+        `Start your Prisma server: ${chalk.cyan('docker-compose up -d')}`,
+      )
+    }
+
+    steps.push(`Deploy your Prisma service: ${chalk.cyan('prisma deploy')}`)
+
+    if (results.database && results.database.alreadyData) {
+      steps.push(
+        `Read more about introspection:\n     http://bit.ly/prisma-introspection`,
+      )
+    } else if (
+      (results.database && !results.database.alreadyData) ||
+      results.newDatabase
+    ) {
+      steps.push(
+        `Read more about Prisma server:\n     http://bit.ly/prisma-server-overview`,
+      )
+    } else {
+      steps.push(
+        `Read more about deploying services:\n     http://bit.ly/prisma-deploy-services`,
+      )
+    }
+
+    this.out.log(`
+${chalk.bold(
+      `Created ${
+        results.cluster!.local ? 3 : 2
+      } new files:                                                                          `,
+    )}
 
   ${chalk.cyan('prisma.yml')}           Prisma service definition
   ${chalk.cyan(
@@ -126,19 +153,10 @@ Created ${
       ? `${chalk.cyan('docker-compose.yml')}   Docker configuration file`
       : ''
   }
+${chalk.bold('Next steps:')}
 
-${dirString}${deployString}can run ${chalk.cyan(
-      '$ prisma deploy',
-    )} to deploy your database service.
-${
-      results.newDatabase && isLocal
-        ? `\nPrisma connects to your ${beautifulDbType} database with user ${chalk.bold(
-            'prisma',
-          )} and password ${chalk.bold('prisma')}.
-To change this, please have a look in ${chalk.cyan('docker-compose.yml')}\n`
-        : ''
-    }
-For next steps follow this tutorial: https://bit.ly/prisma-graphql-first-steps`)
+${steps.map((step, index) => `  ${index + 1}. ${step}`).join('\n')}`)
+
     const dockerComposeInstalled = await isDockerComposeInstalled()
     if (!dockerComposeInstalled) {
       this.out.log(

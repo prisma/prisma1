@@ -29,7 +29,7 @@ class RelationDesignSpec extends FlatSpec with Matchers with ApiSpecBase {
     server.query(s"""mutation{deleteList(where: {uList:"A"}){id}}""", project)
 
     countItems(project, "lists") should be(0)
-    dataResolver(project).countByTable("_RelayId").await should be(1)
+    ifConnectorIsActive { dataResolver(project).countByTable("_RelayId").await should be(1) }
   }
 
   "Deleting a child node" should "remove it from the relation and delete the relay id" in {
@@ -54,7 +54,7 @@ class RelationDesignSpec extends FlatSpec with Matchers with ApiSpecBase {
     server.query(s"""mutation{deleteTodo(where: {uTodo:"B"}){id}}""", project)
 
     countItems(project, "todoes") should be(0)
-    dataResolver(project).countByTable("_RelayId").await should be(1)
+    ifConnectorIsActive { dataResolver(project).countByTable("_RelayId").await should be(1) }
   }
 
   def countItems(project: Project, name: String): Int = {

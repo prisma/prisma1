@@ -189,8 +189,7 @@ class DeleteManySpec extends FlatSpec with Matchers with ApiSpecBase {
     )
     result.pathAsSeq("data.todoes").size should be(int)
 
-    dataResolver(project).countByTable("_RelayId").await should be(int)
-
+    ifConnectorIsActive { dataResolver(project).countByTable("_RelayId").await should be(int) }
   }
 
   def createTodo(title: String): Unit = {

@@ -161,7 +161,7 @@ class PassiveDeployMutationSpec extends FlatSpec with Matchers with PassiveDeplo
     val relation = result.schema.relations.head
     relation.modelAId should be("List")
     relation.modelBId should be("Todo")
-    relation.manifestation should be(Some(RelationTableManifestation(table = "todotolist", modelAColumn = "todo_id", modelBColumn = "list_id")))
+    relation.manifestation should be(Some(RelationTableManifestation(table = "todotolist", modelAColumn = "list_id", modelBColumn = "todo_id")))
   }
 
   "a schema with an inferred relation table relation" should "work" in {
@@ -206,7 +206,7 @@ class PassiveDeployMutationSpec extends FlatSpec with Matchers with PassiveDeplo
     val relation = result.schema.relations.head
     relation.modelAId should be("List")
     relation.modelBId should be("Todo")
-    relation.manifestation should be(Some(RelationTableManifestation(table = "todotolist", modelAColumn = "todo_id", modelBColumn = "list_id")))
+    relation.manifestation should be(Some(RelationTableManifestation(table = "todotolist", modelAColumn = "list_id", modelBColumn = "todo_id")))
   }
 
   "a sdl schema with an inline relation that does not match the db schema" should "return a error" in {

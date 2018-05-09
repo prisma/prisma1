@@ -38,8 +38,15 @@ async function testChoices(choices) {
   const result = await Init.mock({ mockConfig: config })
 
   expect(getFolderContent(cwd)).toMatchSnapshot()
-  expect(result.out.stdout.output).toMatchSnapshot()
-  expect(result.out.stderr.output).toMatchSnapshot()
+  expect(makeOutputDeterministic(result.out.stdout.output)).toMatchSnapshot()
+  expect(makeOutputDeterministic(result.out.stderr.output)).toMatchSnapshot()
+}
+
+function makeOutputDeterministic(output: string) {
+  return output
+    .split('\n')
+    .filter(l => !l.includes('Connecting to database'))
+    .join('\n')
 }
 
 describe('init', () => {

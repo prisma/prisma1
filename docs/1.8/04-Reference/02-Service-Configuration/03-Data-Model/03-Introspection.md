@@ -11,6 +11,10 @@ When connecting Prisma to an existing database it can be tedious to write the da
 
 The generated SDL serves as a basis for your Prisma service, but you can easily make modifications afterwards as you see fit. Some common modifications include hiding a table from the GraphQL API or making a column to a different name.
 
+## Limitations
+
+Currently database introspection only works with Postgres. Additionally there is a set of documented [known limitations](https://github.com/graphcool/prisma/issues/2377).
+
 ## Introspecting a database
 
 There are two ways you can use the CLI to introspect a database: Using the interactive `prisma init` command and using the dedicated `prisma introspect` command.

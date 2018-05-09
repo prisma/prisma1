@@ -10,13 +10,13 @@ object IgnorePassive  extends Tag("ignore.passive")
 
 trait ConnectorAwareTest extends SuiteMixin { self: Suite =>
   def prismaConfig: PrismaConfig
+  lazy val connector = prismaConfig.databases.head
 
   def runSuiteOnlyForActiveConnectors: Boolean  = false
   def runSuiteOnlyForPassiveConnectors: Boolean = false
 
   abstract override def tags: Map[String, Set[String]] = {
     val superTags = super.tags
-    val connector = prismaConfig.databases.head
 
     if (runSuiteOnlyForActiveConnectors && !connector.active) {
       ignoreAllTests
@@ -24,6 +24,18 @@ trait ConnectorAwareTest extends SuiteMixin { self: Suite =>
       ignoreAllTests
     } else {
       ignoredTestsBasedOnInvidualTagging(connector, superTags)
+    }
+  }
+
+  def ifConnectorIsActive[T](assertion: => T): Unit = {
+    if (connector.active) {
+      assertion
+    }
+  }
+
+  def ifConnectorIsPassive[T](assertion: => T): Unit = {
+    if (!connector.active) {
+      assertion
     }
   }
 

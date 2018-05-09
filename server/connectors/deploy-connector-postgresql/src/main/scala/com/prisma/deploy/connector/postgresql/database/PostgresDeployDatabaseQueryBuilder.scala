@@ -24,6 +24,15 @@ object PostgresDeployDatabaseQueryBuilder {
           WHERE "#$projectId"."#$modelName".#$fieldName IS NULL)"""
   }
 
+  def existsDuplicateValueByModelAndField(projectId: String, modelName: String, fieldName: String) = {
+    sql"""SELECT EXISTS(
+             Select Count(*)
+             FROM "#$projectId"."#$modelName"
+             GROUP BY "#$fieldName"
+             HAVING COUNT(*) > 1
+          )"""
+  }
+
   def existsNullByModelAndRelationField(projectId: String, modelName: String, field: Field) = {
     val relationId   = field.relation.get.relationTableName
     val relationSide = field.relationSide.get.toString

@@ -17,27 +17,26 @@ object SchemaDsl extends AwaitUtils {
   def schema() = SchemaBuilder()
 
   def fromString(id: String = TestIds.testProjectId)(sdlString: String): Project = {
-    fromString(id, InferredTables.empty, withReservedFields = true)(sdlString)
+    fromString(id, InferredTables.empty, isActive = true)(sdlString)
   }
 
   def fromPassiveConnectorSdl(
       id: String = TestIds.testProjectId,
-      deployConnector: DeployConnector,
-      withReservedFields: Boolean = true
+      deployConnector: DeployConnector
   )(sdlString: String): Project = {
     val inferredTables = deployConnector.databaseIntrospectionInferrer(id).infer().await()
-    fromString(id, inferredTables, withReservedFields)(sdlString)
+    fromString(id, inferredTables, isActive = false)(sdlString)
   }
 
   private def fromString(
       id: String,
       inferredTables: InferredTables,
-      withReservedFields: Boolean
+      isActive: Boolean
   )(sdlString: String): Project = {
     val emptyBaseSchema    = Schema()
     val emptySchemaMapping = SchemaMapping.empty
     val sqlDocument        = QueryParser.parse(sdlString.stripMargin).get
-    val schema             = SchemaInferrer(withReservedFields).infer(emptyBaseSchema, emptySchemaMapping, sqlDocument, inferredTables).get
+    val schema             = SchemaInferrer(isActive).infer(emptyBaseSchema, emptySchemaMapping, sqlDocument, inferredTables).get
     TestProject().copy(id = id, schema = schema)
   }
 
