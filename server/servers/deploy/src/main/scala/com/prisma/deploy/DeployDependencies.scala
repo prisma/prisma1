@@ -1,6 +1,6 @@
 package com.prisma.deploy
 
-import akka.actor.{ActorSystem, Props}
+import akka.actor.{ActorRef, ActorSystem, Props}
 import akka.stream.ActorMaterializer
 import com.prisma.auth.Auth
 import com.prisma.deploy.connector.DeployConnector
@@ -29,6 +29,7 @@ trait DeployDependencies extends AwaitUtils {
   def deployConnector: DeployConnector
   def functionValidator: FunctionValidator
   def projectIdEncoder: ProjectIdEncoder
+  def telemetryActor: ActorRef
 
   lazy val projectPersistence      = deployConnector.projectPersistence
   lazy val migrationPersistence    = deployConnector.migrationPersistence
