@@ -39,8 +39,7 @@ case class PrismaProdDependencies()(implicit val system: ActorSystem, val materi
     with SubscriptionDependencies
     with WorkerDependencies {
 
-  val config: PrismaConfig = ConfigLoader.load()
-
+  val config: PrismaConfig      = ConfigLoader.load()
   private val rabbitUri: String = config.rabbitUri.getOrElse("RabbitMQ URI required but not found in Prisma configuration.")
 
   override implicit def self: PrismaProdDependencies = this

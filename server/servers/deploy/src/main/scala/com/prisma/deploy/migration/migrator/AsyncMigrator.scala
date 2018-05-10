@@ -22,19 +22,21 @@ case class AsyncMigrator(
 ) extends Migrator {
   import system.dispatcher
 
-  val deploymentScheduler = system.actorOf(Props(DeploymentSchedulerActor(migrationPersistence, projectPersistence, deployConnector)))
-  implicit val timeout    = new Timeout(5.minutes)
-
-  (deploymentScheduler ? Initialize).onComplete {
-    case Success(_) =>
-      println("Deployment worker initialization complete.")
-
-    case Failure(err) =>
-      println(s"Fatal error during deployment worker initialization: $err")
-      sys.exit(-1)
-  }
+  lazy val deploymentScheduler = system.actorOf(Props(DeploymentSchedulerActor(migrationPersistence, projectPersistence, deployConnector)))
+  implicit val timeout         = new Timeout(5.minutes)
 
   override def schedule(projectId: String, nextSchema: Schema, steps: Vector[MigrationStep], functions: Vector[Function]): Future[Migration] = {
     (deploymentScheduler ? Schedule(projectId, nextSchema, steps, functions)).mapTo[Migration]
+  }
+
+  override def initialize: Unit = {
+    (deploymentScheduler ? Initialize).onComplete {
+      case Success(_) =>
+        println("Deployment worker initialization complete.")
+
+      case Failure(err) =>
+        println(s"Fatal error during deployment worker initialization: $err")
+        sys.exit(-1)
+    }
   }
 }

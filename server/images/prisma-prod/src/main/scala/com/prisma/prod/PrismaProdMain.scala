@@ -2,7 +2,7 @@ package com.prisma.prod
 
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
-import com.prisma.akkautil.http.ServerExecutor
+import com.prisma.akkautil.http.{Server, ServerExecutor}
 import com.prisma.api.server.ApiServer
 import com.prisma.deploy.server.ManagementServer
 import com.prisma.subscriptions.SimpleSubscriptionsServer
@@ -19,11 +19,23 @@ object PrismaProdMain extends App {
 
   val port              = dependencies.config.port.getOrElse(4466)
   val includeMgmtServer = dependencies.config.managmentApiEnabled
-  val mgmtServer = includeMgmtServer.flatMap(_.toOption(
-    List(
-      ManagementServer("management", dependencies.config.server2serverSecret),
-      ManagementServer("cluster", dependencies.config.server2serverSecret) // Deprecated, will be removed soon
-  ))).toList.flatten
+
+  def managementServers: List[Server] = {
+    dependencies.migrator.initialize
+    includeMgmtServer
+      .flatMap(
+        _.toOption(List(
+          ManagementServer("management", dependencies.config.server2serverSecret),
+          ManagementServer("cluster", dependencies.config.server2serverSecret) // Deprecated, will be removed soon
+        )))
+      .toList
+      .flatten
+  }
+
+  val mgmtServer = includeMgmtServer
+    .flatMap(_.toOption(managementServers))
+    .toList
+    .flatten
 
   val servers = mgmtServer ++ List(
     WebsocketServer(dependencies),
