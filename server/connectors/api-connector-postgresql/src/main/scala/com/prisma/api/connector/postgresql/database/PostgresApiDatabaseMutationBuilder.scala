@@ -419,10 +419,13 @@ case class PostgresApiDatabaseMutationBuilder(
   }
 
   def oldParentFailureTriggerByField(path: Path, field: Field, triggerString: String) = {
-    val relation = field.relation.get
-    val table    = relation.relationTableNameNew(schema)
-    val column   = relation.columnForRelationSide(field.oppositeRelationSide.get)
-    val query    = sql"""SELECT "id" FROM "#$schemaName"."#$table" OLDPARENTPATHFAILURETRIGGERBYFIELD WHERE "#$column" IN (""" ++ pathQueryForLastChild(path) ++ sql")"
+    val relation       = field.relation.get
+    val table          = relation.relationTableNameNew(schema)
+    val oppositeColumn = relation.columnForRelationSide(field.oppositeRelationSide.get)
+    val column         = relation.columnForRelationSide(field.relationSide.get)
+    val query = sql"""SELECT "id" FROM "#$schemaName"."#$table" OLDPARENTPATHFAILURETRIGGERBYFIELD""" ++
+      sql"""WHERE "#$oppositeColumn" IN (""" ++ pathQueryForLastChild(path) ++ sql") " ++
+      sql"""AND "#$column" IS NOT NULL"""
     triggerFailureWhenExists(query, table, triggerString)
   }
 
