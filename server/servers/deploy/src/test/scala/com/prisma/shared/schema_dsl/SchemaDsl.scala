@@ -76,7 +76,7 @@ object SchemaDsl extends AwaitUtils {
         val modelToPutRelationInto = fieldToRepresentAsInlineRelation.relatedModel_!(schema)
         val manifestation = InlineRelationManifestation(
           inTableOfModelId = modelToPutRelationInto.id,
-          referencingColumn = s"${modelToLinkTo.name.toLowerCase}_id"
+          referencingColumn = s"${relation.name}_${modelToLinkTo.name.toLowerCase}_id"
         )
         relation.copy(manifestation = Some(manifestation))
       }
