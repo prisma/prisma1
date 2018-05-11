@@ -32,6 +32,16 @@ case class Path(root: NodeSelector, edges: List[Edge]) {
   def parentSideOfLastEdge         = lastEdge_!.parentRelationSide
   def childSideOfLastEdge          = lastEdge_!.childRelationSide
 
+  def columnForParentSideOfLastEdge = {
+    val relation = lastEdge_!.relation
+    relation.columnForRelationSide(lastEdge_!.parentRelationSide)
+  }
+
+  def columnForChildSideOfLastEdge = {
+    val relation = lastEdge_!.relation
+    relation.columnForRelationSide(lastEdge_!.childRelationSide)
+  }
+
   def removeLastEdge: Path = edges match {
     case Nil => sys.error("Don't call this on an empty path")
     case _   => copy(root, edges.dropRight(1))

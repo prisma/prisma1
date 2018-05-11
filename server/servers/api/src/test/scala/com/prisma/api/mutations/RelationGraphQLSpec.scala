@@ -23,8 +23,9 @@ class RelationGraphQLSpec extends FlatSpec with Matchers with ApiSpecBase {
 
     //set initial owner
     val res = server.query(
-      """mutation {updateCat(where: {catName: "garfield"},
-        |data: {owner: {connect: {ownerName: "jon"}}}) {
+      """mutation { updateCat(
+        |  where: {catName: "garfield"},
+        |  data: {owner: {connect: {ownerName: "jon"}}}) {
         |    catName
         |    owner {
         |      ownerName

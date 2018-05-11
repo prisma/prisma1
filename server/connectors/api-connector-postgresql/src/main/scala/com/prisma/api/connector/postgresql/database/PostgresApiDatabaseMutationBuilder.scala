@@ -175,9 +175,9 @@ case class PostgresApiDatabaseMutationBuilder(
       updatePath: Path,
       createArgs: PrismaArgs,
       updateArgs: PrismaArgs,
-      scalarListCreate: slick.dbio.DBIOAction[Unit, slick.dbio.NoStream, slick.dbio.Effect with slick.dbio.Effect.All],
-      scalarListUpdate: slick.dbio.DBIOAction[Unit, slick.dbio.NoStream, slick.dbio.Effect with slick.dbio.Effect.All],
-      createCheck: DBIOAction[Any, NoStream, Effect],
+      scalarListCreate: DBIO[_],
+      scalarListUpdate: DBIO[_],
+      createCheck: DBIO[_],
   ) = {
 
     def existsNodeIsInRelationshipWith = {
@@ -222,23 +222,39 @@ case class PostgresApiDatabaseMutationBuilder(
   def deleteRelayRow(path: Path) =
     (sql"""DELETE FROM "#$schemaName"."_RelayId" WHERE "id" = """ ++ pathQueryForLastChild(path)).asUpdate
 
-  def deleteRelationRowByParent(path: Path) = {
-    (sql"""DELETE FROM "#$schemaName"."#${path.lastRelation_!.relationTableName}" WHERE "#${path.parentSideOfLastEdge}" = """ ++ pathQueryForLastParent(path)).asUpdate
+  def deleteRelationRowByParent(schema: Schema, path: Path): DBIO[Unit] = {
+    val relation = path.lastRelation_!
+    if (relation.isInlineRelation) {
+      dbioUnit
+    } else {
+      val relationTable = path.lastRelation_!.relationTableNameNew(schema)
+      val action =
+        (sql"""DELETE FROM "#$schemaName"."#${relationTable}" WHERE "#${path.columnForParentSideOfLastEdge}" = """ ++ pathQueryForLastParent(path)).asUpdate
+
+      action.andThen(dbioUnit)
+    }
   }
 
-  def deleteRelationRowByChildWithWhere(path: Path) = {
-    val where = path.lastEdge_! match {
-      case _: ModelEdge   => sys.error("Should be a node Edge")
-      case edge: NodeEdge => edge.childWhere
+  def deleteRelationRowByChildWithWhere(schema: Schema, path: Path): DBIO[Unit] = {
+    val relation = path.lastRelation_!
+    if (relation.isInlineRelation) {
+      dbioUnit
+    } else {
+      val relationTable = path.lastRelation_!.relationTableNameNew(schema)
+      val where = path.lastEdge_! match {
+        case _: ModelEdge   => sys.error("Should be a node Edge")
+        case edge: NodeEdge => edge.childWhere
 
+      }
+      (sql"""DELETE FROM "#$schemaName"."#${relationTable}" WHERE "#${path.columnForChildSideOfLastEdge}"""" ++ idFromWhereEquals(where)).asUpdate
+        .andThen(dbioUnit)
     }
-    (sql"""DELETE FROM "#$schemaName"."#${path.lastRelation_!.relationTableName}" WHERE "#${path.childSideOfLastEdge}"""" ++ idFromWhereEquals(where)).asUpdate
   }
 
   def deleteRelationRowByParentAndChild(path: Path) = {
     (sql"""DELETE FROM "#$schemaName"."#${path.lastRelation_!.relationTableName}" """ ++
       sql"""WHERE "#${path.childSideOfLastEdge}" = """ ++ pathQueryForLastChild(path) ++
-      sql""" AND "#${path.parentSideOfLastEdge}" = """ ++ pathQueryForLastParent(path)).asUpdate
+      sql""" AND "#${path.parentSideOfLastEdge}" = """ ++ pathQueryForLastParent(path)).asUpdate.andThen(dbioUnit)
   }
 
   def cascadingDeleteChildActions(path: Path) = {
@@ -644,4 +660,6 @@ case class PostgresApiDatabaseMutationBuilder(
       action  <- pushQuery(nodeIds.head)
     } yield action
   }
+
+  private val dbioUnit = DBIO.successful(())
 }
