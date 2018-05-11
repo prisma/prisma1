@@ -19,13 +19,7 @@ export default class Init extends Command {
     },
   ]
 
-  static flags: Flags = {
-    boilerplate: flags.string({
-      char: 'b',
-      description:
-        'Full URL or repo shorthand (e.g. `owner/repo`) to boilerplate GitHub repository',
-    }),
-  }
+  static flags: Flags = {}
 
   async run() {
     const dirName = this.args!.dirName
@@ -52,8 +46,8 @@ export default class Init extends Command {
     ) {
       this.out.log(`
 The directory ${chalk.cyan(
-        this.config.definitionDir,
-      )} contains files that could conflict:
+          this.config.definitionDir,
+        )} contains files that could conflict:
 
 ${files.map(f => `  ${f}`).join('\n')}
 
@@ -166,10 +160,10 @@ Either try using a new directory name, or remove the files listed above.
 
     this.out.log(`
 ${chalk.bold(
-      `Created ${
+        `Created ${
         createdFiles.length
-      } new files:                                                                          `,
-    )}
+        } new files:                                                                          `,
+      )}
 
 ${createdFiles.join('\n')}
 
