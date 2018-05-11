@@ -16,6 +16,7 @@ import slick.sql.SqlStreamingAction
 import scala.concurrent.ExecutionContext.Implicits.global
 
 case class PostgresApiDatabaseQueryBuilder(
+    schema: Schema,
     schemaName: String
 ) {
   import JdbcExtensions._
@@ -76,12 +77,12 @@ case class PostgresApiDatabaseQueryBuilder(
   }
 
   def selectAllFromRelationTable(
-      relationId: String,
+      relation: Relation,
       args: Option[QueryArguments],
       overrideMaxNodeCount: Option[Int] = None
   ): DBIOAction[ResolverResult[RelationNode], NoStream, Effect] = {
 
-    val tableName                                        = relationId
+    val tableName                                        = relation.relationTableNameNew(schema)
     val (conditionCommand, orderByCommand, limitCommand) = extractQueryArgs(schemaName, tableName, args, None, overrideMaxNodeCount = overrideMaxNodeCount)
 
     val query = sql"""select * from "#$schemaName"."#$tableName"""" ++
