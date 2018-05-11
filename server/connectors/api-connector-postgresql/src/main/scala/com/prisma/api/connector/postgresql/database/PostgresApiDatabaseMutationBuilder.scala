@@ -92,7 +92,7 @@ case class PostgresApiDatabaseMutationBuilder(
         sql""""id" FROM "#$schemaName"."#${childWhere.model.dbName}" where "#${childWhere.field.name}" = ${childWhere.fieldValue}""").asUpdate
     } else {
       val relationId = Cuid.createCuid()
-      (sql"""insert into "#$schemaName"."#${path.lastRelation_!.relationTableNameNew(schema)}" ("id", "#${path.parentSideOfLastEdge}", "#${path.childSideOfLastEdge}")""" ++
+      (sql"""insert into "#$schemaName"."#${path.lastRelation_!.relationTableNameNew(schema)}" ("id", "#${path.columnForParentSideOfLastEdge}", "#${path.columnForChildSideOfLastEdge}")""" ++
         sql"""Select '#$relationId',""" ++ pathQueryForLastChild(path.removeLastEdge) ++ sql""","id" """ ++
         sql"""FROM "#$schemaName"."#${childWhere.model.name}" where "#${childWhere.field.name}" = ${childWhere.fieldValue}""").asUpdate
     }
@@ -120,7 +120,7 @@ case class PostgresApiDatabaseMutationBuilder(
   def updateDataItemByPath(path: Path, updateArgs: PrismaArgs) = {
     val updateValues = combineByComma(updateArgs.raw.asRoot.map.map { case (k, v) => escapeKey(k) ++ sql" = $v" })
     def fromEdge(edge: Edge) = edge match {
-      case edge: NodeEdge => sql""" "#${path.childSideOfLastEdge}"""" ++ idFromWhereEquals(edge.childWhere) ++ sql" AND "
+      case edge: NodeEdge => sql""" "#${path.columnForChildSideOfLastEdge}"""" ++ idFromWhereEquals(edge.childWhere) ++ sql" AND "
       case _: ModelEdge   => sql""
     }
 
@@ -132,7 +132,7 @@ case class PostgresApiDatabaseMutationBuilder(
 
       val query = path.lastEdge match {
         case Some(edge) =>
-          baseQuery ++ sql"""(SELECT "#${path.childSideOfLastEdge}" """ ++
+          baseQuery ++ sql"""(SELECT "#${path.columnForChildSideOfLastEdge}" """ ++
             sql"""FROM "#$schemaName"."#${path.lastRelation_!.relationTableNameNew(schema)}"""" ++
             sql"WHERE" ++ fromEdge(edge) ++ sql""""#${path.parentSideOfLastEdge}" = """ ++ pathQueryForLastParent(path) ++ sql")"
         case None => baseQuery ++ idFromWhere(path.root)
@@ -254,8 +254,8 @@ case class PostgresApiDatabaseMutationBuilder(
 
   def deleteRelationRowByParentAndChild(path: Path) = {
     (sql"""DELETE FROM "#$schemaName"."#${path.lastRelation_!.relationTableNameNew(schema)}" """ ++
-      sql"""WHERE "#${path.childSideOfLastEdge}" = """ ++ pathQueryForLastChild(path) ++
-      sql""" AND "#${path.parentSideOfLastEdge}" = """ ++ pathQueryForLastParent(path)).asUpdate.andThen(dbioUnit)
+      sql"""WHERE "#${path.columnForChildSideOfLastEdge}" = """ ++ pathQueryForLastChild(path) ++
+      sql""" AND "#${path.columnForParentSideOfLastEdge}" = """ ++ pathQueryForLastParent(path)).asUpdate.andThen(dbioUnit)
   }
 
   def cascadingDeleteChildActions(path: Path) = {
@@ -413,15 +413,16 @@ case class PostgresApiDatabaseMutationBuilder(
 
   def oldParentFailureTrigger(path: Path, triggerString: String) = {
     val table = path.lastRelation_!.relationTableNameNew(schema)
-    val query = sql"""SELECT "id" FROM "#$schemaName"."#$table" OLDPARENTPATHFAILURETRIGGER WHERE "#${path.childSideOfLastEdge}" IN (""" ++ pathQueryForLastChild(
-      path) ++ sql")"
+    val query = sql"""SELECT "id" FROM "#$schemaName"."#$table" OLDPARENTPATHFAILURETRIGGER WHERE "#${path.columnForChildSideOfLastEdge}" IN (""" ++
+      pathQueryForLastChild(path) ++ sql")"
     triggerFailureWhenExists(query, table, triggerString)
   }
 
   def oldParentFailureTriggerByField(path: Path, field: Field, triggerString: String) = {
-    val table = field.relation.get.relationTableNameNew(schema)
-    val query = sql"""SELECT "id" FROM "#$schemaName"."#$table" OLDPARENTPATHFAILURETRIGGERBYFIELD WHERE "#${field.oppositeRelationSide.get}" IN (""" ++ pathQueryForLastChild(
-      path) ++ sql")"
+    val relation = field.relation.get
+    val table    = relation.relationTableNameNew(schema)
+    val column   = relation.columnForRelationSide(field.oppositeRelationSide.get)
+    val query    = sql"""SELECT "id" FROM "#$schemaName"."#$table" OLDPARENTPATHFAILURETRIGGERBYFIELD WHERE "#$column" IN (""" ++ pathQueryForLastChild(path) ++ sql")"
     triggerFailureWhenExists(query, table, triggerString)
   }
 
