@@ -4,7 +4,7 @@ import com.prisma.api.connector.postgresql.DatabaseMutactionInterpreter
 import com.prisma.api.connector.postgresql.database.PostgresApiDatabaseMutationBuilder
 import com.prisma.api.connector.{ModelEdge, NodeEdge, Path}
 import com.prisma.api.schema.APIErrors.RequiredRelationWouldBeViolated
-import com.prisma.shared.models.Project
+import com.prisma.shared.models.{Project, Schema}
 import org.postgresql.util.PSQLException
 import slick.dbio.{DBIO, DBIOAction, Effect, NoStream}
 
@@ -13,6 +13,7 @@ trait NestedRelationInterpreterBase extends DatabaseMutactionInterpreter {
   def path: Path
   def project: Project
   def topIsCreate: Boolean
+  def schema: Schema = project.schema
 
   val lastEdge         = path.lastEdge_!
   val p                = lastEdge.parentField
@@ -25,18 +26,21 @@ trait NestedRelationInterpreterBase extends DatabaseMutactionInterpreter {
 
   val parentCauseString = path.lastEdge_! match {
     case edge: NodeEdge =>
-      s"-OLDPARENTFAILURETRIGGER@${path.lastRelation_!.relationTableName}@${path.lastEdge_!.childRelationSide}@${edge.childWhere.fieldValueAsString}-"
-    case _: ModelEdge => s"-OLDPARENTFAILURETRIGGER@${path.lastRelation_!.relationTableName}@${path.lastEdge_!.childRelationSide}-"
+      s"-OLDPARENTFAILURETRIGGER@${path.lastRelation_!.relationTableNameNew(schema)}@${path.lastEdge_!.columnForChildRelationSide}@${edge.childWhere.fieldValueAsString}-"
+    case _: ModelEdge =>
+      s"-OLDPARENTFAILURETRIGGER@${path.lastRelation_!.relationTableNameNew(schema)}@${path.lastEdge_!.columnForChildRelationSide}-"
   }
 
   val childCauseString = path.edges.length match {
     case 0 => sys.error("There should always be at least one edge on the path if this is called.")
-    case 1 => s"-OLDCHILDPATHFAILURETRIGGER@${path.lastRelation_!.relationTableName}@${path.lastEdge_!.parentRelationSide}@${path.root.fieldValueAsString}-"
+    case 1 =>
+      s"-OLDCHILDPATHFAILURETRIGGER@${path.lastRelation_!.relationTableNameNew(schema)}@${path.lastEdge_!.columnForParentRelationSide}@${path.root.fieldValueAsString}-"
     case _ =>
       path.removeLastEdge.lastEdge_! match {
         case edge: NodeEdge =>
-          s"-OLDCHILDPATHFAILURETRIGGER@${path.lastRelation_!.relationTableName}@${path.lastEdge_!.parentRelationSide}@${edge.childWhere.fieldValueAsString}-"
-        case _: ModelEdge => s"-OLDCHILDPATHFAILURETRIGGER@${path.lastRelation_!.relationTableName}@${path.lastEdge_!.parentRelationSide}-"
+          s"-OLDCHILDPATHFAILURETRIGGER@${path.lastRelation_!.relationTableNameNew(schema)}@${path.lastEdge_!.columnForParentRelationSide}@${edge.childWhere.fieldValueAsString}-"
+        case _: ModelEdge =>
+          s"-OLDCHILDPATHFAILURETRIGGER@${path.lastRelation_!.relationTableNameNew(schema)}@${path.lastEdge_!.columnForParentRelationSide}-"
       }
   }
 

@@ -21,6 +21,7 @@ case class AddDataItemToManyRelationByPathInterpreter(mutaction: AddDataItemToMa
 case class CascadingDeleteRelationMutactionsInterpreter(mutaction: CascadingDeleteRelationMutactions) extends DatabaseMutactionInterpreter {
   val path    = mutaction.path
   val project = mutaction.project
+  val schema  = project.schema
 
   val fieldsWhereThisModelIsRequired = project.schema.fieldsWhereThisModelIsRequired(path.lastModel)
 
@@ -46,8 +47,8 @@ case class CascadingDeleteRelationMutactionsInterpreter(mutaction: CascadingDele
 
   private def causeString(field: Field) = path.lastEdge match {
     case Some(edge: NodeEdge) =>
-      s"-OLDPARENTPATHFAILURETRIGGERBYFIELD@${field.relation.get.relationTableName}@${field.oppositeRelationSide.get}@${edge.childWhere.fieldValueAsString}-"
-    case _ => s"-OLDPARENTPATHFAILURETRIGGERBYFIELD@${field.relation.get.relationTableName}@${field.oppositeRelationSide.get}-"
+      s"-OLDPARENTPATHFAILURETRIGGERBYFIELD@${field.relation.get.relationTableNameNew(schema)}@${field.oppositeRelationSide.get}@${edge.childWhere.fieldValueAsString}-"
+    case _ => s"-OLDPARENTPATHFAILURETRIGGERBYFIELD@${field.relation.get.relationTableNameNew(schema)}@${field.oppositeRelationSide.get}-"
   }
 }
 
@@ -105,6 +106,7 @@ case class DeleteManyRelationChecksInterpreter(mutaction: DeleteManyRelationChec
   val project = mutaction.project
   val model   = mutaction.model
   val filter  = mutaction.whereFilter
+  val schema  = project.schema
 
   val fieldsWhereThisModelIsRequired = project.schema.fieldsWhereThisModelIsRequired(model)
 
@@ -124,13 +126,14 @@ case class DeleteManyRelationChecksInterpreter(mutaction: DeleteManyRelationChec
   }
 
   private def causeString(field: Field) =
-    s"-OLDPARENTPATHFAILURETRIGGERBYFIELDANDFILTER@${field.relation.get.relationTableName}@${field.oppositeRelationSide.get}-"
+    s"-OLDPARENTPATHFAILURETRIGGERBYFIELDANDFILTER@${field.relation.get.relationTableNameNew(schema)}@${field.oppositeRelationSide.get}-"
 
 }
 
 case class DeleteRelationCheckInterpreter(mutaction: DeleteRelationCheck) extends DatabaseMutactionInterpreter {
   val project = mutaction.project
   val path    = mutaction.path
+  val schema  = project.schema
 
   val fieldsWhereThisModelIsRequired = project.schema.fieldsWhereThisModelIsRequired(path.lastModel)
 
@@ -149,8 +152,8 @@ case class DeleteRelationCheckInterpreter(mutaction: DeleteRelationCheck) extend
 
   private def causeString(field: Field) = path.lastEdge match {
     case Some(edge: NodeEdge) =>
-      s"-OLDPARENTPATHFAILURETRIGGERBYFIELD@${field.relation.get.relationTableName}@${field.oppositeRelationSide.get}@${edge.childWhere.fieldValueAsString}-"
-    case _ => s"-OLDPARENTPATHFAILURETRIGGERBYFIELD@${field.relation.get.relationTableName}@${field.oppositeRelationSide.get}-"
+      s"-OLDPARENTPATHFAILURETRIGGERBYFIELD@${field.relation.get.relationTableNameNew(schema)}@${field.oppositeRelationSide.get}@${edge.childWhere.fieldValueAsString}-"
+    case _ => s"-OLDPARENTPATHFAILURETRIGGERBYFIELD@${field.relation.get.relationTableNameNew(schema)}@${field.oppositeRelationSide.get}-"
   }
 }
 
@@ -259,10 +262,13 @@ case class UpsertDataItemIfInRelationWithInterpreter(mutaction: UpsertDataItemIf
 case class VerifyConnectionInterpreter(mutaction: VerifyConnection) extends DatabaseMutactionInterpreter {
   val project = mutaction.project
   val path    = mutaction.path
+  val schema  = project.schema
+
   val causeString = path.lastEdge_! match {
-    case _: ModelEdge => s"CONNECTIONFAILURETRIGGERPATH@${path.lastRelation_!.relationTableName}@${path.parentSideOfLastEdge}"
+    case _: ModelEdge =>
+      s"CONNECTIONFAILURETRIGGERPATH@${path.lastRelation_!.relationTableNameNew(schema)}@${path.parentSideOfLastEdge}"
     case edge: NodeEdge =>
-      s"CONNECTIONFAILURETRIGGERPATH@${path.lastRelation_!.relationTableName}@${path.parentSideOfLastEdge}@${path.childSideOfLastEdge}@${edge.childWhere.fieldValueAsString}}"
+      s"CONNECTIONFAILURETRIGGERPATH@${path.lastRelation_!.relationTableNameNew(schema)}@${path.columnForParentSideOfLastEdge}@${path.columnForChildSideOfLastEdge}@${edge.childWhere.fieldValueAsString}}"
   }
 
   def action(mutationBuilder: PostgresApiDatabaseMutationBuilder) = mutationBuilder.connectionFailureTrigger(path, causeString)
