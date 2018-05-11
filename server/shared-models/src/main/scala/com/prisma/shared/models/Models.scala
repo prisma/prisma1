@@ -393,32 +393,12 @@ case class Relation(
 
   def modelBColumn: String = manifestation match {
     case Some(m: RelationTableManifestation)  => m.modelBColumn
-    case Some(m: InlineRelationManifestation) => if (m.inTableOfModelId == modelBId) "id" else m.referencingColumn
+    case Some(m: InlineRelationManifestation) => if (m.inTableOfModelId == modelBId && !isSameModelRelation) "id" else m.referencingColumn
     case None                                 => "B"
   }
 
-  def columnForModel(model: Model, relationSide: RelationSide.Value): String = {
-    require(model.id == modelAId || model.id == modelBId)
-    inlineManifestation match {
-      // FIXME: this needs to respect the relation side as well
-      case Some(m: InlineRelationManifestation) => if (model.id == m.inTableOfModelId) "id" else m.referencingColumn
-      case None                                 => relationSide.toString
-    }
-  }
-
   def columnForRelationSide(relationSide: RelationSide.Value): String = {
-    manifestation match {
-      case Some(m: InlineRelationManifestation) =>
-        if (relationSide == RelationSide.A) {
-          if (modelAId == m.inTableOfModelId) "id" else m.referencingColumn
-        } else {
-          if (modelBId == m.inTableOfModelId) "id" else m.referencingColumn
-        }
-      case Some(m: RelationTableManifestation) =>
-        if (relationSide == RelationSide.A) m.modelAColumn else m.modelBColumn
-      case None =>
-        relationSide.toString
-    }
+    if (relationSide == RelationSide.A) modelAColumn else modelBColumn
   }
 
   def hasManifestation: Boolean = manifestation.isDefined

@@ -187,8 +187,8 @@ case class PostgresApiDatabaseQueryBuilder(
 
     val relationTableName     = fromField.relation.get.relationTableNameNew(schema)
     val (aColumn, bColumn)    = (relation.modelAColumn, relation.modelBColumn)
-    val columnForFromModel    = relation.columnForModel(fromModel, fromField.relationSide.get)
-    val columnForRelatedModel = relation.columnForModel(relatedModel, fromField.oppositeRelationSide.get)
+    val columnForFromModel    = relation.columnForRelationSide(fromField.relationSide.get)
+    val columnForRelatedModel = relation.columnForRelationSide(fromField.oppositeRelationSide.get)
 
     val (conditionCommand, orderByCommand, limitCommand) = extractQueryArgs(
       projectId = schemaName,

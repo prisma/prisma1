@@ -20,7 +20,8 @@ import slick.jdbc.SQLActionBuilder
 import slick.sql.{SqlAction, SqlStreamingAction}
 
 case class PostgresApiDatabaseMutationBuilder(
-    schemaName: String
+    schemaName: String,
+    schema: Schema,
 ) {
 
   // region CREATE
@@ -368,13 +369,13 @@ case class PostgresApiDatabaseMutationBuilder(
 
       case _ ::> last =>
         val childWhere = last match {
-          case edge: NodeEdge => sql""" "#${edge.childRelationSide}"""" ++ idFromWhereEquals(edge.childWhere) ++ sql" AND "
+          case edge: NodeEdge => sql""" "#${edge.columnForChildRelationSide}"""" ++ idFromWhereEquals(edge.childWhere) ++ sql" AND "
           case _: ModelEdge   => sql""
         }
 
-        sql"""(SELECT "#${last.childRelationSide}"""" ++
-          sql""" FROM (SELECT * FROM "#$schemaName"."#${last.relation.relationTableName}") PATHQUERY""" ++
-          sql" WHERE " ++ childWhere ++ sql""""#${last.parentRelationSide}" IN (""" ++ pathQueryForLastParent(path) ++ sql"))"
+        sql"""(SELECT "#${last.columnForChildRelationSide}"""" ++
+          sql""" FROM (SELECT * FROM "#$schemaName"."#${last.relation.relationTableNameNew(schema)}") PATHQUERY""" ++
+          sql" WHERE " ++ childWhere ++ sql""""#${last.columnForParentRelationSide}" IN (""" ++ pathQueryForLastParent(path) ++ sql"))"
     }
   }
 
@@ -386,16 +387,16 @@ case class PostgresApiDatabaseMutationBuilder(
   }
 
   def connectionFailureTrigger(path: Path, causeString: String) = {
-    val table = path.lastRelation.get.relationTableName
+    val table = path.lastRelation.get.relationTableNameNew(schema)
 
     val lastChildWhere = path.lastEdge_! match {
-      case edge: NodeEdge => sql""" "#${path.childSideOfLastEdge}"""" ++ idFromWhereEquals(edge.childWhere) ++ sql" AND "
+      case edge: NodeEdge => sql""" "#${path.columnForChildSideOfLastEdge}"""" ++ idFromWhereEquals(edge.childWhere) ++ sql" AND "
       case _: ModelEdge   => sql""
     }
 
     val query =
       sql"""SELECT "id" FROM "#$schemaName"."#$table" CONNECTIONFAILURETRIGGERPATH""" ++
-        sql"WHERE" ++ lastChildWhere ++ sql""""#${path.parentSideOfLastEdge}" = """ ++ pathQueryForLastParent(path)
+        sql"WHERE" ++ lastChildWhere ++ sql""""#${path.columnForParentSideOfLastEdge}" = """ ++ pathQueryForLastParent(path)
 
     triggerFailureWhenNotExists(query, table, causeString)
   }

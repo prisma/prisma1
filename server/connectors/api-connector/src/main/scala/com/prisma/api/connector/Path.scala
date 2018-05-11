@@ -7,9 +7,11 @@ import com.prisma.shared.models.{Field, Model, Project, Relation}
 trait Edge {
   def parent: Model
   def parentField: Field
+  def columnForParentRelationSide      = relation.columnForRelationSide(parentRelationSide)
   def parentRelationSide: RelationSide = parentField.relationSide.get
   def child: Model
   def childField: Option[Field]
+  def columnForChildRelationSide      = relation.columnForRelationSide(childRelationSide)
   def childRelationSide: RelationSide = parentField.oppositeRelationSide.get
   def relation: Relation
   def toNodeEdge(where: NodeSelector): NodeEdge = {
@@ -32,15 +34,8 @@ case class Path(root: NodeSelector, edges: List[Edge]) {
   def parentSideOfLastEdge         = lastEdge_!.parentRelationSide
   def childSideOfLastEdge          = lastEdge_!.childRelationSide
 
-  def columnForParentSideOfLastEdge = {
-    val relation = lastEdge_!.relation
-    relation.columnForRelationSide(lastEdge_!.parentRelationSide)
-  }
-
-  def columnForChildSideOfLastEdge = {
-    val relation = lastEdge_!.relation
-    relation.columnForRelationSide(lastEdge_!.childRelationSide)
-  }
+  def columnForParentSideOfLastEdge = lastEdge_!.columnForParentRelationSide
+  def columnForChildSideOfLastEdge  = lastEdge_!.columnForChildRelationSide
 
   def removeLastEdge: Path = edges match {
     case Nil => sys.error("Don't call this on an empty path")

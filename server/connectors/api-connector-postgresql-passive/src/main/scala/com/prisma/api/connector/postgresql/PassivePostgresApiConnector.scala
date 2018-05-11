@@ -46,7 +46,10 @@ case class PassiveDatabaseMutactionExecutorImpl(activeExecutor: PostgresDatabase
     val transformed         = transform(mutactions)
     val interpreters        = transformed.map(interpreterFor)
     val combinedErrorMapper = interpreters.map(_.errorMapper).reduceLeft(_ orElse _)
-    val mutationBuilder     = PostgresApiDatabaseMutationBuilder(schemaName = schemaName.getOrElse(mutactions.head.project.id))
+    val mutationBuilder = PostgresApiDatabaseMutationBuilder(
+      schemaName = schemaName.getOrElse(mutactions.head.project.id),
+      schema = mutactions.head.project.schema
+    )
 
     val singleAction = runTransactionally match {
       case true  => DBIO.sequence(interpreters.map(_.newAction(mutationBuilder))).transactionally
