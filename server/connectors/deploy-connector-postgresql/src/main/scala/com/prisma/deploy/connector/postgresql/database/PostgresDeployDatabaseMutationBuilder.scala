@@ -148,7 +148,7 @@ object PostgresDeployDatabaseMutationBuilder {
     val isRequired = false //field.isRequired
     val nullString = if (isRequired) "NOT NULL" else "NULL"
     val addColumn  = sqlu"""ALTER TABLE "#$projectId"."#${model.dbName}" ADD COLUMN "#$column" #$sqlType #$nullString
-                            REFERENCES "#$projectId"."#${references.dbName}"(id);"""
+                            REFERENCES "#$projectId"."#${references.dbName}"(id) ON DELETE SET NULL;"""
     addColumn
   }
 

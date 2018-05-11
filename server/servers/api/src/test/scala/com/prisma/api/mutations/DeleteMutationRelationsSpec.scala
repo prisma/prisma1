@@ -8,6 +8,7 @@ import org.scalatest.{FlatSpec, Matchers}
 class DeleteMutationRelationsSpec extends FlatSpec with Matchers with ApiSpecBase {
 
   "a P0 to C1! relation " should "error when deleting the parent" taggedAs (IgnorePassive) in {
+    // ignored because of order of nested mutations
     val project = SchemaDsl.fromBuilder { schema =>
       val parent = schema.model("Parent").field_!("p", _.String, isUnique = true)
       val child  = schema.model("Child").field_!("c", _.String, isUnique = true)
