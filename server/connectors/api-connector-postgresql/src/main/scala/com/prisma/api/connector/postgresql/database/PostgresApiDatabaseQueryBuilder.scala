@@ -252,7 +252,7 @@ case class PostgresApiDatabaseQueryBuilder(
 
     val relatedModel         = fromField.relatedModel(schema).get
     val fieldTable           = fromField.relatedModel(schema).get.name
-    val unsafeRelationId     = fromField.relation.get.relationTableName
+    val unsafeRelationId     = fromField.relation.get.relationTableNameNew(schema)
     val modelRelationSide    = fromField.relationSide.get.toString
     val oppositeRelationSide = fromField.oppositeRelationSide.get.toString
 
@@ -306,7 +306,7 @@ case class PostgresApiDatabaseQueryBuilder(
   ): SqlStreamingAction[Vector[(IdGCValue, Int)], (IdGCValue, Int), Effect] = {
 
     val fieldTable        = relationField.relatedModel(schema).get.name
-    val unsafeRelationId  = relationField.relation.get.relationTableName
+    val unsafeRelationId  = relationField.relation.get.relationTableNameNew(schema)
     val modelRelationSide = relationField.relationSide.get.toString
     val fieldRelationSide = relationField.oppositeRelationSide.get.toString
 
