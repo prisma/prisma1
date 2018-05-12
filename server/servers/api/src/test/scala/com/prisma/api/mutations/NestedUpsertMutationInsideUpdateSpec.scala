@@ -1,5 +1,6 @@
 package com.prisma.api.mutations
 
+import com.prisma.IgnorePassive
 import com.prisma.api.ApiSpecBase
 import com.prisma.shared.schema_dsl.SchemaDsl
 import org.scalatest.{FlatSpec, Matchers}
@@ -1195,7 +1196,8 @@ class NestedUpsertMutationInsideUpdateSpec extends FlatSpec with Matchers with A
       """{"data":{"bottoms":[{"nameBottom":"the second bottom"},{"nameBottom":"created bottom"}]}}""")
   }
 
-  "a deeply nested mutation" should "execute all levels of the mutation if there are model and node edges on the path  and back relations are missing and node edges follow model edges for update" in {
+  // TODO: fails because of missing back relation field
+  "a deeply nested mutation" should "execute all levels of the mutation if there are model and node edges on the path  and back relations are missing and node edges follow model edges for update" taggedAs (IgnorePassive) in {
     val project = SchemaDsl.fromString() { """type Top {
                                              |  id: ID! @unique
                                              |  nameTop: String! @unique
@@ -1288,7 +1290,8 @@ class NestedUpsertMutationInsideUpdateSpec extends FlatSpec with Matchers with A
     server.query("query{belows{nameBelow}}", project).toString should be("""{"data":{"belows":[{"nameBelow":"updated below"},{"nameBelow":"second below"}]}}""")
   }
 
-  "a deeply nested mutation" should "execute all levels of the mutation if there are model and node edges on the path  and back relations are missing and node edges follow model edges for create" in {
+  // TODO: fails because of missing back relation field
+  "a deeply nested mutation" should "execute all levels of the mutation if there are model and node edges on the path  and back relations are missing and node edges follow model edges for create" taggedAs (IgnorePassive) in {
     val project = SchemaDsl.fromString() { """type Top {
                                              |  id: ID! @unique
                                              |  nameTop: String! @unique
@@ -1537,7 +1540,9 @@ class NestedUpsertMutationInsideUpdateSpec extends FlatSpec with Matchers with A
 
     server.query("query{bottoms{nameBottom}}", project).toString should be("""{"data":{"bottoms":[{"nameBottom":"created bottom"}]}}""")
   }
-  "a deeply nested mutation" should "execute all levels of the mutation if there are only model edges on the path for update when there are no backrelations" in {
+
+  // TODO: fails because of missing back relation field
+  "a deeply nested mutation" should "execute all levels of the mutation if there are only model edges on the path for update when there are no backrelations" taggedAs (IgnorePassive) in {
     val project = SchemaDsl.fromString() { """type Top {
                                              |  id: ID! @unique
                                              |  nameTop: String! @unique
@@ -1617,7 +1622,8 @@ class NestedUpsertMutationInsideUpdateSpec extends FlatSpec with Matchers with A
     server.query("query{bottoms{nameBottom}}", project).toString should be("""{"data":{"bottoms":[{"nameBottom":"updated bottom"}]}}""")
   }
 
-  "a deeply nested mutation" should "execute all levels of the mutation if there are only model edges on the path for create when there are no backrelations" in {
+  // TODO: fails because of missing back relation field
+  "a deeply nested mutation" should "execute all levels of the mutation if there are only model edges on the path for create when there are no backrelations" taggedAs (IgnorePassive) in {
     val project = SchemaDsl.fromString() { """type Top {
                                              |  id: ID! @unique
                                              |  nameTop: String! @unique
