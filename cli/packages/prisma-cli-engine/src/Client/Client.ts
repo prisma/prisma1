@@ -208,7 +208,7 @@ export class Client {
 
             if (
               e.response.errors[0].code === 3016 &&
-              e.response.errors[0].message.includes('management@default')
+              e.response.errors[0].message.includes('management$default')
             ) {
               // TODO: make url mutable in graphql client
               ;(this.clusterClient as any).url = (this

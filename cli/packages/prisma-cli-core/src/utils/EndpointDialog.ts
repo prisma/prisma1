@@ -531,7 +531,7 @@ export class EndpointDialog {
         ...clusterChoices,
         [
           'Demo server',
-          'Hosted demo environment incl. database (requires login',
+          'Hosted demo environment incl. database (requires login)',
         ],
         [
           'Use other server',

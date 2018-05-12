@@ -1,6 +1,7 @@
 import { invert } from 'lodash'
 
-export const cloudApiEndpoint = 'https://api.cloud.prisma.sh'
+export const cloudApiEndpoint =
+  process.env.CLOUD_API_ENDPOINT || 'https://api.cloud.prisma.sh'
 
 export const clusterEndpointMap: { [key: string]: string } = {
   'prisma-eu1': 'https://eu1.prisma.sh',

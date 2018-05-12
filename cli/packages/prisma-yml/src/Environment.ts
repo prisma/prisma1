@@ -101,6 +101,9 @@ export class Environment {
                     connectInfo {
                       endpoint
                     }
+                    customConnectionInfo {
+                      endpoint
+                    }
                   }
                 }
               }
@@ -126,7 +129,9 @@ export class Environment {
             m.workspace.clusters.forEach(cluster => {
               const endpoint = cluster.connectInfo
                 ? cluster.connectInfo.endpoint
-                : this.clusterEndpointMap[cluster.name]
+                : cluster.customConnectionInfo
+                  ? cluster.customConnectionInfo.endpoint
+                  : this.clusterEndpointMap[cluster.name]
               this.addCluster(
                 new Cluster(
                   this.out,
