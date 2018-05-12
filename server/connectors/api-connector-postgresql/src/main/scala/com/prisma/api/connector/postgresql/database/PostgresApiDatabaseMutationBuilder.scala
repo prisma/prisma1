@@ -274,9 +274,18 @@ case class PostgresApiDatabaseMutationBuilder(
   }
 
   def deleteRelationRowByParentAndChild(path: Path) = {
-    (sql"""DELETE FROM "#$schemaName"."#${path.lastRelation_!.relationTableNameNew(schema)}" """ ++
-      sql"""WHERE "#${path.columnForChildSideOfLastEdge}" = """ ++ pathQueryForLastChild(path) ++
-      sql""" AND "#${path.columnForParentSideOfLastEdge}" = """ ++ pathQueryForLastParent(path)).asUpdate.andThen(dbioUnit)
+    val relation = path.lastRelation_!
+    relation.inlineManifestation match {
+      case Some(manifestation) =>
+        (sql"""UPDATE "#$schemaName"."#${path.lastRelation_!.relationTableNameNew(schema)}"  """ ++
+          sql"""SET "#${manifestation.referencingColumn}" = NULL """ ++
+          sql"""WHERE "#${path.columnForChildSideOfLastEdge}" = """ ++ pathQueryForLastChild(path) ++
+          sql""" AND "#${path.columnForParentSideOfLastEdge}" = """ ++ pathQueryForLastParent(path)).asUpdate.andThen(dbioUnit)
+      case _ =>
+        (sql"""DELETE FROM "#$schemaName"."#${path.lastRelation_!.relationTableNameNew(schema)}" """ ++
+          sql"""WHERE "#${path.columnForChildSideOfLastEdge}" = """ ++ pathQueryForLastChild(path) ++
+          sql""" AND "#${path.columnForParentSideOfLastEdge}" = """ ++ pathQueryForLastParent(path)).asUpdate.andThen(dbioUnit)
+    }
   }
 
   def cascadingDeleteChildActions(path: Path) = {
