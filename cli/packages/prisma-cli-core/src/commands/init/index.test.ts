@@ -65,6 +65,7 @@ describe('init', () => {
       database: process.env.TEST_PG_DB,
       user: process.env.TEST_PG_USER || 'postgres',
       password: process.env.TEST_PG_PASSWORD,
+      schema: undefined,
       alreadyData: false,
     })
   })

@@ -22,6 +22,7 @@ describe('endpoint dialog', () => {
       loggedIn: false,
       folderName: 'some-folder',
       localClusterRunning: false,
+      existingData: false,
     }
     const result = await dialog.handleChoice(input)
     expect({ input, result: normalizeResult(result) }).toMatchSnapshot()
@@ -32,6 +33,7 @@ describe('endpoint dialog', () => {
       loggedIn: false,
       folderName: 'some-folder',
       localClusterRunning: true,
+      existingData: false,
     }
     const result = await dialog.handleChoice(input)
     expect({ input, result: normalizeResult(result) }).toMatchSnapshot()
