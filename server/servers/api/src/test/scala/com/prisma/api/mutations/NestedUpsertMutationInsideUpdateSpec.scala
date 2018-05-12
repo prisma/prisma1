@@ -30,7 +30,7 @@ class NestedUpsertMutationInsideUpdateSpec extends FlatSpec with Matchers with A
       project
     )
 
-    dataResolver(project).countByTable("_ParentToChild").await should be(1)
+    ifConnectorIsActive { dataResolver(project).countByTable("_ParentToChild").await should be(1) }
 
     val res = server.query(
       s"""
@@ -57,7 +57,7 @@ class NestedUpsertMutationInsideUpdateSpec extends FlatSpec with Matchers with A
 
     dataResolver(project).countByTable("Parent").await should be(1)
     dataResolver(project).countByTable("Child").await should be(2)
-    dataResolver(project).countByTable("_ParentToChild").await should be(2)
+    ifConnectorIsActive { dataResolver(project).countByTable("_ParentToChild").await should be(2) }
     ifConnectorIsActive { dataResolver(project).countByTable("_RelayId").await should be(3) }
   }
 
@@ -85,7 +85,7 @@ class NestedUpsertMutationInsideUpdateSpec extends FlatSpec with Matchers with A
       project
     )
 
-    dataResolver(project).countByTable("_ParentToChild").await should be(1)
+    ifConnectorIsActive { dataResolver(project).countByTable("_ParentToChild").await should be(1) }
 
     val res = server.query(
       s"""
@@ -112,7 +112,7 @@ class NestedUpsertMutationInsideUpdateSpec extends FlatSpec with Matchers with A
 
     dataResolver(project).countByTable("Parent").await should be(1)
     dataResolver(project).countByTable("Child").await should be(1)
-    dataResolver(project).countByTable("_ParentToChild").await should be(1)
+    ifConnectorIsActive { dataResolver(project).countByTable("_ParentToChild").await should be(1) }
     ifConnectorIsActive { dataResolver(project).countByTable("_RelayId").await should be(2) }
   }
 
@@ -141,7 +141,7 @@ class NestedUpsertMutationInsideUpdateSpec extends FlatSpec with Matchers with A
         project
       )
 
-    dataResolver(project).countByTable("_ParentToChild").await should be(2)
+    ifConnectorIsActive { dataResolver(project).countByTable("_ParentToChild").await should be(2) }
 
     val res = server.query(
       s"""
@@ -168,7 +168,7 @@ class NestedUpsertMutationInsideUpdateSpec extends FlatSpec with Matchers with A
 
     dataResolver(project).countByTable("Parent").await should be(1)
     dataResolver(project).countByTable("Child").await should be(3)
-    dataResolver(project).countByTable("_ParentToChild").await should be(3)
+    ifConnectorIsActive { dataResolver(project).countByTable("_ParentToChild").await should be(3) }
     ifConnectorIsActive { dataResolver(project).countByTable("_RelayId").await should be(4) }
   }
 
@@ -197,7 +197,7 @@ class NestedUpsertMutationInsideUpdateSpec extends FlatSpec with Matchers with A
         project
       )
 
-    dataResolver(project).countByTable("_ParentToChild").await should be(2)
+    ifConnectorIsActive { dataResolver(project).countByTable("_ParentToChild").await should be(2) }
 
     val res = server.query(
       s"""
@@ -224,7 +224,7 @@ class NestedUpsertMutationInsideUpdateSpec extends FlatSpec with Matchers with A
 
     dataResolver(project).countByTable("Parent").await should be(1)
     dataResolver(project).countByTable("Child").await should be(2)
-    dataResolver(project).countByTable("_ParentToChild").await should be(2)
+    ifConnectorIsActive { dataResolver(project).countByTable("_ParentToChild").await should be(2) }
     ifConnectorIsActive { dataResolver(project).countByTable("_RelayId").await should be(3) }
   }
 
@@ -251,7 +251,7 @@ class NestedUpsertMutationInsideUpdateSpec extends FlatSpec with Matchers with A
       project
     )
 
-    dataResolver(project).countByTable("_ChildToParent").await should be(2)
+    ifConnectorIsActive { dataResolver(project).countByTable("_ChildToParent").await should be(2) }
 
     val res = server.query(
       s"""
@@ -281,7 +281,7 @@ class NestedUpsertMutationInsideUpdateSpec extends FlatSpec with Matchers with A
 
     dataResolver(project).countByTable("Parent").await should be(1)
     dataResolver(project).countByTable("Child").await should be(2)
-    dataResolver(project).countByTable("_ChildToParent").await should be(2)
+    ifConnectorIsActive { dataResolver(project).countByTable("_ChildToParent").await should be(2) }
     ifConnectorIsActive { dataResolver(project).countByTable("_RelayId").await should be(3) }
   }
 
@@ -308,7 +308,7 @@ class NestedUpsertMutationInsideUpdateSpec extends FlatSpec with Matchers with A
       project
     )
 
-    dataResolver(project).countByTable("_ChildToParent").await should be(2)
+    ifConnectorIsActive { dataResolver(project).countByTable("_ChildToParent").await should be(2) }
 
     val res = server.query(
       s"""
@@ -338,7 +338,7 @@ class NestedUpsertMutationInsideUpdateSpec extends FlatSpec with Matchers with A
 
     dataResolver(project).countByTable("Parent").await should be(1)
     dataResolver(project).countByTable("Child").await should be(3)
-    dataResolver(project).countByTable("_ChildToParent").await should be(3)
+    ifConnectorIsActive { dataResolver(project).countByTable("_ChildToParent").await should be(3) }
     ifConnectorIsActive { dataResolver(project).countByTable("_RelayId").await should be(4) }
   }
 

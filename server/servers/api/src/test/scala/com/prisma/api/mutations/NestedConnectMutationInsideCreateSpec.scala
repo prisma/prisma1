@@ -31,9 +31,7 @@ class NestedConnectMutationInsideCreateSpec extends FlatSpec with Matchers with 
       )
       .pathAsString("data.createParent.childReq.id")
 
-    ifConnectorIsActive {
-      dataResolver(project).countByTable("_ChildToParent").await should be(1)
-    }
+    ifConnectorIsActive { dataResolver(project).countByTable("_ChildToParent").await should be(1) }
 
     server.queryThatMustFail(
       s"""
@@ -53,9 +51,7 @@ class NestedConnectMutationInsideCreateSpec extends FlatSpec with Matchers with 
       errorContains = "The change you are trying to make would violate the required relation '_ChildToParent' between Child and Parent"
     )
 
-    ifConnectorIsActive {
-      dataResolver(project).countByTable("_ChildToParent").await should be(1)
-    }
+    ifConnectorIsActive { dataResolver(project).countByTable("_ChildToParent").await should be(1) }
   }
 
   "a P1! to C1 relation with the child already in a relation" should "should fail on existing old parent" in {
@@ -83,9 +79,7 @@ class NestedConnectMutationInsideCreateSpec extends FlatSpec with Matchers with 
       )
       .pathAsString("data.createParent.childReq.id")
 
-    ifConnectorIsActive {
-      dataResolver(project).countByTable("_ParentToChild").await should be(1)
-    }
+    ifConnectorIsActive { dataResolver(project).countByTable("_ParentToChild").await should be(1) }
 
     server.queryThatMustFail(
       s"""
@@ -105,9 +99,7 @@ class NestedConnectMutationInsideCreateSpec extends FlatSpec with Matchers with 
       errorContains = "The change you are trying to make would violate the required relation '_ParentToChild' between Parent and Child"
     )
 
-    ifConnectorIsActive {
-      dataResolver(project).countByTable("_ParentToChild").await should be(1)
-    }
+    ifConnectorIsActive { dataResolver(project).countByTable("_ParentToChild").await should be(1) }
   }
 
   "a P1! to C1  relation with the child not in a relation" should "be connectable through a nested mutation by id" in {
@@ -129,9 +121,7 @@ class NestedConnectMutationInsideCreateSpec extends FlatSpec with Matchers with 
       )
       .pathAsString("data.createChild.id")
 
-    ifConnectorIsActive {
-      dataResolver(project).countByTable("_ParentToChild").await should be(0)
-    }
+    ifConnectorIsActive { dataResolver(project).countByTable("_ParentToChild").await should be(0) }
 
     val res = server.query(
       s"""
@@ -150,9 +140,7 @@ class NestedConnectMutationInsideCreateSpec extends FlatSpec with Matchers with 
     )
 
     res.toString should be("""{"data":{"createParent":{"childReq":{"c":"c1"}}}}""")
-    ifConnectorIsActive {
-      dataResolver(project).countByTable("_ParentToChild").await should be(1)
-    }
+    ifConnectorIsActive { dataResolver(project).countByTable("_ParentToChild").await should be(1) }
   }
 
   "a P1 to C1  relation with the child already in a relation" should "be connectable through a nested mutation by id if the child is already in a relation" in {
@@ -180,9 +168,7 @@ class NestedConnectMutationInsideCreateSpec extends FlatSpec with Matchers with 
       )
       .pathAsString("data.createParent.childOpt.id")
 
-    ifConnectorIsActive {
-      dataResolver(project).countByTable("_ParentToChild").await should be(1)
-    }
+    ifConnectorIsActive { dataResolver(project).countByTable("_ParentToChild").await should be(1) }
 
     val res = server.query(
       s"""
@@ -202,9 +188,7 @@ class NestedConnectMutationInsideCreateSpec extends FlatSpec with Matchers with 
 
     res.toString should be("""{"data":{"createParent":{"childOpt":{"c":"c1"}}}}""")
 
-    ifConnectorIsActive {
-      dataResolver(project).countByTable("_ParentToChild").await should be(1)
-    }
+    ifConnectorIsActive { dataResolver(project).countByTable("_ParentToChild").await should be(1) }
   }
 
   "a P1 to C1  relation with the child without a relation" should "be connectable through a nested mutation by id" in {
@@ -226,9 +210,7 @@ class NestedConnectMutationInsideCreateSpec extends FlatSpec with Matchers with 
       )
       .pathAsString("data.createChild.id")
 
-    ifConnectorIsActive {
-      dataResolver(project).countByTable("_ParentToChild").await should be(0)
-    }
+    ifConnectorIsActive { dataResolver(project).countByTable("_ParentToChild").await should be(0) }
 
     val res = server.query(
       s"""
@@ -248,9 +230,7 @@ class NestedConnectMutationInsideCreateSpec extends FlatSpec with Matchers with 
 
     res.toString should be("""{"data":{"createParent":{"childOpt":{"c":"c1"}}}}""")
 
-    ifConnectorIsActive {
-      dataResolver(project).countByTable("_ParentToChild").await should be(1)
-    }
+    ifConnectorIsActive { dataResolver(project).countByTable("_ParentToChild").await should be(1) }
   }
 
   "a PM to C1!  relation with the child already in a relation" should "be connectable through a nested mutation by unique" in {
@@ -276,9 +256,7 @@ class NestedConnectMutationInsideCreateSpec extends FlatSpec with Matchers with 
       project
     )
 
-    ifConnectorIsActive {
-      dataResolver(project).countByTable("_ParentToChild").await should be(1)
-    }
+    ifConnectorIsActive { dataResolver(project).countByTable("_ParentToChild").await should be(1) }
 
     val res = server.query(
       s"""
@@ -298,9 +276,7 @@ class NestedConnectMutationInsideCreateSpec extends FlatSpec with Matchers with 
 
     res.toString should be("""{"data":{"createParent":{"childrenOpt":[{"c":"c1"}]}}}""")
 
-    ifConnectorIsActive {
-      dataResolver(project).countByTable("_ParentToChild").await should be(1)
-    }
+    ifConnectorIsActive { dataResolver(project).countByTable("_ParentToChild").await should be(1) }
   }
 
   "a P1 to C1!  relation with the child already in a relation" should "be connectable through a nested mutation by unique" in {
@@ -326,9 +302,7 @@ class NestedConnectMutationInsideCreateSpec extends FlatSpec with Matchers with 
           |}""".stripMargin,
       project
     )
-    ifConnectorIsActive {
-      dataResolver(project).countByTable("_ChildToParent").await should be(1)
-    }
+    ifConnectorIsActive { dataResolver(project).countByTable("_ChildToParent").await should be(1) }
 
     val res = server.query(
       s"""
@@ -348,9 +322,7 @@ class NestedConnectMutationInsideCreateSpec extends FlatSpec with Matchers with 
 
     res.toString should be("""{"data":{"createParent":{"childOpt":{"c":"c1"}}}}""")
 
-    ifConnectorIsActive {
-      dataResolver(project).countByTable("_ChildToParent").await should be(1)
-    }
+    ifConnectorIsActive { dataResolver(project).countByTable("_ChildToParent").await should be(1) }
   }
 
   "a PM to C1  relation with the child already in a relation" should "be connectable through a nested mutation by unique" in {
@@ -377,9 +349,7 @@ class NestedConnectMutationInsideCreateSpec extends FlatSpec with Matchers with 
         project
       )
 
-    ifConnectorIsActive {
-      dataResolver(project).countByTable("_ParentToChild").await should be(2)
-    }
+    ifConnectorIsActive { dataResolver(project).countByTable("_ParentToChild").await should be(2) }
 
     // we are even resilient against multiple identical connects here -> twice connecting to c2
 
@@ -401,9 +371,7 @@ class NestedConnectMutationInsideCreateSpec extends FlatSpec with Matchers with 
 
     res.toString should be("""{"data":{"createParent":{"childrenOpt":[{"c":"c1"},{"c":"c2"}]}}}""")
 
-    ifConnectorIsActive {
-      dataResolver(project).countByTable("_ParentToChild").await should be(2)
-    }
+    ifConnectorIsActive { dataResolver(project).countByTable("_ParentToChild").await should be(2) }
   }
 
   "a PM to C1  relation with the child without a relation" should "be connectable through a nested mutation by unique" in {
@@ -425,9 +393,7 @@ class NestedConnectMutationInsideCreateSpec extends FlatSpec with Matchers with 
       )
       .pathAsString("data.createChild.id")
 
-    ifConnectorIsActive {
-      dataResolver(project).countByTable("_ParentToChild").await should be(0)
-    }
+    ifConnectorIsActive { dataResolver(project).countByTable("_ParentToChild").await should be(0) }
 
     val res = server.query(
       s"""
@@ -447,9 +413,7 @@ class NestedConnectMutationInsideCreateSpec extends FlatSpec with Matchers with 
 
     res.toString should be("""{"data":{"createParent":{"childrenOpt":[{"c":"c1"}]}}}""")
 
-    ifConnectorIsActive {
-      dataResolver(project).countByTable("_ParentToChild").await should be(1)
-    }
+    ifConnectorIsActive { dataResolver(project).countByTable("_ParentToChild").await should be(1) }
   }
 
   "a PM to C1  relation with a child without a relation" should "error if also trying to connect to a non-existing node" in {
@@ -471,9 +435,7 @@ class NestedConnectMutationInsideCreateSpec extends FlatSpec with Matchers with 
       )
       .pathAsString("data.createChild.id")
 
-    ifConnectorIsActive {
-      dataResolver(project).countByTable("_ParentToChild").await should be(0)
-    }
+    ifConnectorIsActive { dataResolver(project).countByTable("_ParentToChild").await should be(0) }
 
     server.queryThatMustFail(
       s"""
@@ -493,9 +455,7 @@ class NestedConnectMutationInsideCreateSpec extends FlatSpec with Matchers with 
       errorContains = "No Node for the model Child with value DOES NOT EXIST for c found."
     )
 
-    ifConnectorIsActive {
-      dataResolver(project).countByTable("_ParentToChild").await should be(0)
-    }
+    ifConnectorIsActive { dataResolver(project).countByTable("_ParentToChild").await should be(0) }
   }
 
   "a P1! to CM  relation with the child already in a relation" should "be connectable through a nested mutation by unique" in {
@@ -521,9 +481,7 @@ class NestedConnectMutationInsideCreateSpec extends FlatSpec with Matchers with 
       project
     )
 
-    ifConnectorIsActive {
-      dataResolver(project).countByTable("_ChildToParent").await should be(1)
-    }
+    ifConnectorIsActive { dataResolver(project).countByTable("_ChildToParent").await should be(1) }
 
     val res = server.query(
       s"""
@@ -545,9 +503,7 @@ class NestedConnectMutationInsideCreateSpec extends FlatSpec with Matchers with 
 
     server.query(s"""query{children{parentsOpt{p}}}""", project).toString should be("""{"data":{"children":[{"parentsOpt":[{"p":"p1"},{"p":"p2"}]}]}}""")
 
-    ifConnectorIsActive {
-      dataResolver(project).countByTable("_ChildToParent").await should be(2)
-    }
+    ifConnectorIsActive { dataResolver(project).countByTable("_ChildToParent").await should be(2) }
   }
 
   "a P1! to CM  relation with the child not already in a relation" should "be connectable through a nested mutation by unique" in {
@@ -566,9 +522,7 @@ class NestedConnectMutationInsideCreateSpec extends FlatSpec with Matchers with 
       project
     )
 
-    ifConnectorIsActive {
-      dataResolver(project).countByTable("_ChildToParent").await should be(0)
-    }
+    ifConnectorIsActive { dataResolver(project).countByTable("_ChildToParent").await should be(0) }
 
     val res = server.query(
       s"""
@@ -590,9 +544,7 @@ class NestedConnectMutationInsideCreateSpec extends FlatSpec with Matchers with 
 
     server.query(s"""query{children{parentsOpt{p}}}""", project).toString should be("""{"data":{"children":[{"parentsOpt":[{"p":"p2"}]}]}}""")
 
-    ifConnectorIsActive {
-      dataResolver(project).countByTable("_ChildToParent").await should be(1)
-    }
+    ifConnectorIsActive { dataResolver(project).countByTable("_ChildToParent").await should be(1) }
   }
 
   "a P1 to CM  relation with the child already in a relation" should "be connectable through a nested mutation by unique" in {
@@ -618,9 +570,7 @@ class NestedConnectMutationInsideCreateSpec extends FlatSpec with Matchers with 
       project
     )
 
-    ifConnectorIsActive {
-      dataResolver(project).countByTable("_ChildToParent").await should be(1)
-    }
+    ifConnectorIsActive { dataResolver(project).countByTable("_ChildToParent").await should be(1) }
 
     val res = server.query(
       s"""
@@ -642,9 +592,7 @@ class NestedConnectMutationInsideCreateSpec extends FlatSpec with Matchers with 
 
     server.query(s"""query{children{parentsOpt{p}}}""", project).toString should be("""{"data":{"children":[{"parentsOpt":[{"p":"p1"},{"p":"p2"}]}]}}""")
 
-    ifConnectorIsActive {
-      dataResolver(project).countByTable("_ChildToParent").await should be(2)
-    }
+    ifConnectorIsActive { dataResolver(project).countByTable("_ChildToParent").await should be(2) }
   }
 
   "a P1 to CM  relation with the child not already in a relation" should "be connectable through a nested mutation by unique" in {
@@ -663,9 +611,7 @@ class NestedConnectMutationInsideCreateSpec extends FlatSpec with Matchers with 
       project
     )
 
-    ifConnectorIsActive {
-      dataResolver(project).countByTable("_ChildToParent").await should be(0)
-    }
+    ifConnectorIsActive { dataResolver(project).countByTable("_ChildToParent").await should be(0) }
 
     val res = server.query(
       s"""
@@ -687,9 +633,7 @@ class NestedConnectMutationInsideCreateSpec extends FlatSpec with Matchers with 
 
     server.query(s"""query{children{parentsOpt{p}}}""", project).toString should be("""{"data":{"children":[{"parentsOpt":[{"p":"p2"}]}]}}""")
 
-    ifConnectorIsActive {
-      dataResolver(project).countByTable("_ChildToParent").await should be(1)
-    }
+    ifConnectorIsActive { dataResolver(project).countByTable("_ChildToParent").await should be(1) }
   }
 
   "a PM to CM  relation with the children already in a relation" should "be connectable through a nested mutation by unique" in {
@@ -715,9 +659,7 @@ class NestedConnectMutationInsideCreateSpec extends FlatSpec with Matchers with 
       project
     )
 
-    ifConnectorIsActive {
-      dataResolver(project).countByTable("_ChildToParent").await should be(2)
-    }
+    ifConnectorIsActive { dataResolver(project).countByTable("_ChildToParent").await should be(2) }
 
     val res = server.query(
       s"""
@@ -740,9 +682,7 @@ class NestedConnectMutationInsideCreateSpec extends FlatSpec with Matchers with 
     server.query(s"""query{children{parentsOpt{p}}}""", project).toString should be(
       """{"data":{"children":[{"parentsOpt":[{"p":"p1"},{"p":"p2"}]},{"parentsOpt":[{"p":"p1"},{"p":"p2"}]}]}}""")
 
-    ifConnectorIsActive {
-      dataResolver(project).countByTable("_ChildToParent").await should be(4)
-    }
+    ifConnectorIsActive { dataResolver(project).countByTable("_ChildToParent").await should be(4) }
   }
 
   "a PM to CM  relation with the child not already in a relation" should "be connectable through a nested mutation by unique" in {
@@ -761,9 +701,7 @@ class NestedConnectMutationInsideCreateSpec extends FlatSpec with Matchers with 
       project
     )
 
-    ifConnectorIsActive {
-      dataResolver(project).countByTable("_ChildToParent").await should be(0)
-    }
+    ifConnectorIsActive { dataResolver(project).countByTable("_ChildToParent").await should be(0) }
 
     val res = server.query(
       s"""
@@ -785,9 +723,7 @@ class NestedConnectMutationInsideCreateSpec extends FlatSpec with Matchers with 
 
     server.query(s"""query{children{parentsOpt{p}}}""", project).toString should be("""{"data":{"children":[{"parentsOpt":[{"p":"p2"}]}]}}""")
 
-    ifConnectorIsActive {
-      dataResolver(project).countByTable("_ChildToParent").await should be(1)
-    }
+    ifConnectorIsActive { dataResolver(project).countByTable("_ChildToParent").await should be(1) }
   }
 
   "a PM to CM  relation without a backrelation" should "be connectable through a nested mutation by unique" in {
@@ -806,9 +742,7 @@ class NestedConnectMutationInsideCreateSpec extends FlatSpec with Matchers with 
       project
     )
 
-    ifConnectorIsActive {
-      dataResolver(project).countByTable("_UserToRole").await should be(0)
-    }
+    ifConnectorIsActive { dataResolver(project).countByTable("_UserToRole").await should be(0) }
 
     val res = server.query(
       s"""
@@ -828,9 +762,7 @@ class NestedConnectMutationInsideCreateSpec extends FlatSpec with Matchers with 
 
     res.toString should be("""{"data":{"createUser":{"roles":[{"r":"r1"}]}}}""")
 
-    ifConnectorIsActive {
-      dataResolver(project).countByTable("_UserToRole").await should be(1)
-    }
+    ifConnectorIsActive { dataResolver(project).countByTable("_UserToRole").await should be(1) }
   }
 
   "a many relation" should "be connectable through a nested mutation by id" in {

@@ -29,7 +29,7 @@ class DeleteManyMutationRelationsSpec extends FlatSpec with Matchers with ApiSpe
         project
       )
 
-    dataResolver(project).countByTable("_ChildToParent").await should be(1)
+    ifConnectorIsActive { dataResolver(project).countByTable("_ChildToParent").await should be(1) }
 
     server.queryThatMustFail(
       s"""
@@ -48,7 +48,7 @@ class DeleteManyMutationRelationsSpec extends FlatSpec with Matchers with ApiSpe
 
     dataResolver(project).countByTable("Parent").await should be(1)
     dataResolver(project).countByTable("Child").await should be(1)
-    dataResolver(project).countByTable("_ChildToParent").await should be(1)
+    ifConnectorIsActive { dataResolver(project).countByTable("_ChildToParent").await should be(1) }
   }
 
   "a P0 to C1! relation " should "error when deleting the parent with empty filter" in {
@@ -74,7 +74,7 @@ class DeleteManyMutationRelationsSpec extends FlatSpec with Matchers with ApiSpe
         project
       )
 
-    dataResolver(project).countByTable("_ChildToParent").await should be(1)
+    ifConnectorIsActive { dataResolver(project).countByTable("_ChildToParent").await should be(1) }
 
     server.queryThatMustFail(
       s"""
@@ -93,7 +93,7 @@ class DeleteManyMutationRelationsSpec extends FlatSpec with Matchers with ApiSpe
 
     dataResolver(project).countByTable("Parent").await should be(1)
     dataResolver(project).countByTable("Child").await should be(1)
-    dataResolver(project).countByTable("_ChildToParent").await should be(1)
+    ifConnectorIsActive { dataResolver(project).countByTable("_ChildToParent").await should be(1) }
   }
 
   "a P1! to C1! relation " should "error when deleting the parent" in {
@@ -123,7 +123,7 @@ class DeleteManyMutationRelationsSpec extends FlatSpec with Matchers with ApiSpe
     val childId  = res.pathAsString("data.createParent.childReq.id")
     val parentId = res.pathAsString("data.createParent.id")
 
-    dataResolver(project).countByTable("_ChildToParent").await should be(1)
+    ifConnectorIsActive { dataResolver(project).countByTable("_ChildToParent").await should be(1) }
 
     server.queryThatMustFail(
       s"""
@@ -142,7 +142,7 @@ class DeleteManyMutationRelationsSpec extends FlatSpec with Matchers with ApiSpe
 
     dataResolver(project).countByTable("Parent").await should be(1)
     dataResolver(project).countByTable("Child").await should be(1)
-    dataResolver(project).countByTable("_ChildToParent").await should be(1)
+    ifConnectorIsActive { dataResolver(project).countByTable("_ChildToParent").await should be(1) }
   }
 
   "a P1! to C1 relation" should "succeed when trying to delete the parent" in {
@@ -172,7 +172,7 @@ class DeleteManyMutationRelationsSpec extends FlatSpec with Matchers with ApiSpe
 
     val parentId = res.pathAsString("data.createParent.id")
 
-    dataResolver(project).countByTable("_ParentToChild").await should be(1)
+    ifConnectorIsActive { dataResolver(project).countByTable("_ParentToChild").await should be(1) }
 
     server.query(
       s"""
@@ -189,7 +189,7 @@ class DeleteManyMutationRelationsSpec extends FlatSpec with Matchers with ApiSpe
 
     dataResolver(project).countByTable("Parent").await should be(0)
     dataResolver(project).countByTable("Child").await should be(1)
-    dataResolver(project).countByTable("_ParentToChild").await should be(0)
+    ifConnectorIsActive { dataResolver(project).countByTable("_ParentToChild").await should be(0) }
   }
 
   "a P1 to C1  relation " should "succeed when trying to delete the parent" in {
@@ -219,7 +219,7 @@ class DeleteManyMutationRelationsSpec extends FlatSpec with Matchers with ApiSpe
 
     val parentId = res.pathAsString("data.createParent.id")
 
-    dataResolver(project).countByTable("_ParentToChild").await should be(1)
+    ifConnectorIsActive { dataResolver(project).countByTable("_ParentToChild").await should be(1) }
 
     server.query(
       s"""
@@ -236,7 +236,7 @@ class DeleteManyMutationRelationsSpec extends FlatSpec with Matchers with ApiSpe
 
     dataResolver(project).countByTable("Parent").await should be(0)
     dataResolver(project).countByTable("Child").await should be(1)
-    dataResolver(project).countByTable("_ParentToChild").await should be(0)
+    ifConnectorIsActive { dataResolver(project).countByTable("_ParentToChild").await should be(0) }
   }
 
   "a P1 to C1  relation " should "succeed when trying to delete the parent if there are no children" in {
@@ -258,7 +258,7 @@ class DeleteManyMutationRelationsSpec extends FlatSpec with Matchers with ApiSpe
         project
       )
 
-    dataResolver(project).countByTable("_ParentToChild").await should be(0)
+    ifConnectorIsActive { dataResolver(project).countByTable("_ParentToChild").await should be(0) }
 
     server.query(
       s"""
@@ -275,7 +275,7 @@ class DeleteManyMutationRelationsSpec extends FlatSpec with Matchers with ApiSpe
 
     dataResolver(project).countByTable("Parent").await should be(0)
     dataResolver(project).countByTable("Child").await should be(0)
-    dataResolver(project).countByTable("_ParentToChild").await should be(0)
+    ifConnectorIsActive { dataResolver(project).countByTable("_ParentToChild").await should be(0) }
   }
 
   "a PM to C1!  relation " should "error when deleting the parent" in {
@@ -301,7 +301,7 @@ class DeleteManyMutationRelationsSpec extends FlatSpec with Matchers with ApiSpe
       project
     )
 
-    dataResolver(project).countByTable("_ParentToChild").await should be(1)
+    ifConnectorIsActive { dataResolver(project).countByTable("_ParentToChild").await should be(1) }
 
     server.queryThatMustFail(
       s"""
@@ -318,7 +318,7 @@ class DeleteManyMutationRelationsSpec extends FlatSpec with Matchers with ApiSpe
       errorContains = "The change you are trying to make would violate the required relation '_ParentToChild' between Parent and Child"
     )
 
-    dataResolver(project).countByTable("_ParentToChild").await should be(1)
+    ifConnectorIsActive { dataResolver(project).countByTable("_ParentToChild").await should be(1) }
   }
 
   "a PM to C1!  relation " should "succeed if no child exists that requires the parent" in {
@@ -343,7 +343,7 @@ class DeleteManyMutationRelationsSpec extends FlatSpec with Matchers with ApiSpe
 
     dataResolver(project).countByTable("Parent").await should be(1)
     dataResolver(project).countByTable("Child").await should be(0)
-    dataResolver(project).countByTable("_ParentToChild").await should be(0)
+    ifConnectorIsActive { dataResolver(project).countByTable("_ParentToChild").await should be(0) }
 
     server.query(
       s"""
@@ -358,7 +358,7 @@ class DeleteManyMutationRelationsSpec extends FlatSpec with Matchers with ApiSpe
       project
     )
 
-    dataResolver(project).countByTable("_ParentToChild").await should be(0)
+    ifConnectorIsActive { dataResolver(project).countByTable("_ParentToChild").await should be(0) }
     dataResolver(project).countByTable("Parent").await should be(0)
     dataResolver(project).countByTable("Child").await should be(0)
 
@@ -387,7 +387,7 @@ class DeleteManyMutationRelationsSpec extends FlatSpec with Matchers with ApiSpe
       project
     )
 
-    dataResolver(project).countByTable("_ChildToParent").await should be(1)
+    ifConnectorIsActive { dataResolver(project).countByTable("_ChildToParent").await should be(1) }
 
     server.queryThatMustFail(
       s"""
@@ -405,7 +405,7 @@ class DeleteManyMutationRelationsSpec extends FlatSpec with Matchers with ApiSpe
     )
     dataResolver(project).countByTable("Parent").await should be(1)
     dataResolver(project).countByTable("Child").await should be(1)
-    dataResolver(project).countByTable("_ChildToParent").await should be(1)
+    ifConnectorIsActive { dataResolver(project).countByTable("_ChildToParent").await should be(1) }
   }
 
   "a P1 to C1!  relation " should "succeed when trying to delete the parent if there is no child" in {
@@ -429,7 +429,7 @@ class DeleteManyMutationRelationsSpec extends FlatSpec with Matchers with ApiSpe
 
     dataResolver(project).countByTable("Parent").await should be(1)
     dataResolver(project).countByTable("Child").await should be(0)
-    dataResolver(project).countByTable("_ChildToParent").await should be(0)
+    ifConnectorIsActive { dataResolver(project).countByTable("_ChildToParent").await should be(0) }
 
     server.query(
       s"""
@@ -445,7 +445,7 @@ class DeleteManyMutationRelationsSpec extends FlatSpec with Matchers with ApiSpe
     )
     dataResolver(project).countByTable("Parent").await should be(0)
     dataResolver(project).countByTable("Child").await should be(0)
-    dataResolver(project).countByTable("_ChildToParent").await should be(0)
+    ifConnectorIsActive { dataResolver(project).countByTable("_ChildToParent").await should be(0) }
   }
 
   "a PM to C1 " should "succeed in deleting the parent" in {
@@ -472,7 +472,7 @@ class DeleteManyMutationRelationsSpec extends FlatSpec with Matchers with ApiSpe
         project
       )
 
-    dataResolver(project).countByTable("_ParentToChild").await should be(2)
+    ifConnectorIsActive { dataResolver(project).countByTable("_ParentToChild").await should be(2) }
 
     server.query(
       s"""
@@ -487,7 +487,7 @@ class DeleteManyMutationRelationsSpec extends FlatSpec with Matchers with ApiSpe
       project
     )
 
-    dataResolver(project).countByTable("_ParentToChild").await should be(0)
+    ifConnectorIsActive { dataResolver(project).countByTable("_ParentToChild").await should be(0) }
     dataResolver(project).countByTable("Parent").await should be(0)
     dataResolver(project).countByTable("Child").await should be(2)
   }
@@ -511,7 +511,7 @@ class DeleteManyMutationRelationsSpec extends FlatSpec with Matchers with ApiSpe
         project
       )
 
-    dataResolver(project).countByTable("_ParentToChild").await should be(0)
+    ifConnectorIsActive { dataResolver(project).countByTable("_ParentToChild").await should be(0) }
 
     server.query(
       s"""
@@ -526,7 +526,7 @@ class DeleteManyMutationRelationsSpec extends FlatSpec with Matchers with ApiSpe
       project
     )
 
-    dataResolver(project).countByTable("_ParentToChild").await should be(0)
+    ifConnectorIsActive { dataResolver(project).countByTable("_ParentToChild").await should be(0) }
     dataResolver(project).countByTable("Parent").await should be(0)
     dataResolver(project).countByTable("Child").await should be(0)
   }
@@ -554,7 +554,7 @@ class DeleteManyMutationRelationsSpec extends FlatSpec with Matchers with ApiSpe
       project
     )
 
-    dataResolver(project).countByTable("_ChildToParent").await should be(1)
+    ifConnectorIsActive { dataResolver(project).countByTable("_ChildToParent").await should be(1) }
 
     server.query(
       s"""
@@ -569,7 +569,7 @@ class DeleteManyMutationRelationsSpec extends FlatSpec with Matchers with ApiSpe
       project
     )
 
-    dataResolver(project).countByTable("_ChildToParent").await should be(0)
+    ifConnectorIsActive { dataResolver(project).countByTable("_ChildToParent").await should be(0) }
     dataResolver(project).countByTable("Parent").await should be(0)
     dataResolver(project).countByTable("Child").await should be(1)
   }
@@ -597,7 +597,7 @@ class DeleteManyMutationRelationsSpec extends FlatSpec with Matchers with ApiSpe
       project
     )
 
-    dataResolver(project).countByTable("_ChildToParent").await should be(1)
+    ifConnectorIsActive { dataResolver(project).countByTable("_ChildToParent").await should be(1) }
 
     server.query(
       s"""
@@ -612,7 +612,7 @@ class DeleteManyMutationRelationsSpec extends FlatSpec with Matchers with ApiSpe
       project
     )
 
-    dataResolver(project).countByTable("_ChildToParent").await should be(0)
+    ifConnectorIsActive { dataResolver(project).countByTable("_ChildToParent").await should be(0) }
     dataResolver(project).countByTable("Parent").await should be(0)
     dataResolver(project).countByTable("Child").await should be(1)
   }
@@ -636,7 +636,7 @@ class DeleteManyMutationRelationsSpec extends FlatSpec with Matchers with ApiSpe
       project
     )
 
-    dataResolver(project).countByTable("_ChildToParent").await should be(0)
+    ifConnectorIsActive { dataResolver(project).countByTable("_ChildToParent").await should be(0) }
 
     server.query(
       s"""
@@ -651,7 +651,7 @@ class DeleteManyMutationRelationsSpec extends FlatSpec with Matchers with ApiSpe
       project
     )
 
-    dataResolver(project).countByTable("_ChildToParent").await should be(0)
+    ifConnectorIsActive { dataResolver(project).countByTable("_ChildToParent").await should be(0) }
     dataResolver(project).countByTable("Parent").await should be(0)
     dataResolver(project).countByTable("Child").await should be(0)
   }
@@ -679,7 +679,7 @@ class DeleteManyMutationRelationsSpec extends FlatSpec with Matchers with ApiSpe
       project
     )
 
-    dataResolver(project).countByTable("_ChildToParent").await should be(2)
+    ifConnectorIsActive { dataResolver(project).countByTable("_ChildToParent").await should be(2) }
 
     server.query(
       s"""
@@ -694,7 +694,7 @@ class DeleteManyMutationRelationsSpec extends FlatSpec with Matchers with ApiSpe
       project
     )
 
-    dataResolver(project).countByTable("_ChildToParent").await should be(0)
+    ifConnectorIsActive { dataResolver(project).countByTable("_ChildToParent").await should be(0) }
     dataResolver(project).countByTable("Parent").await should be(0)
     dataResolver(project).countByTable("Child").await should be(2)
 
@@ -719,7 +719,7 @@ class DeleteManyMutationRelationsSpec extends FlatSpec with Matchers with ApiSpe
       project
     )
 
-    dataResolver(project).countByTable("_ChildToParent").await should be(0)
+    ifConnectorIsActive { dataResolver(project).countByTable("_ChildToParent").await should be(0) }
 
     server.query(
       s"""
@@ -734,7 +734,7 @@ class DeleteManyMutationRelationsSpec extends FlatSpec with Matchers with ApiSpe
       project
     )
 
-    dataResolver(project).countByTable("_ChildToParent").await should be(0)
+    ifConnectorIsActive { dataResolver(project).countByTable("_ChildToParent").await should be(0) }
     dataResolver(project).countByTable("Parent").await should be(0)
     dataResolver(project).countByTable("Child").await should be(0)
 
@@ -766,8 +766,8 @@ class DeleteManyMutationRelationsSpec extends FlatSpec with Matchers with ApiSpe
       project
     )
 
-    dataResolver(project).countByTable("_StepChildToParent").await should be(1)
-    dataResolver(project).countByTable("_ChildToParent").await should be(2)
+    ifConnectorIsActive { dataResolver(project).countByTable("_StepChildToParent").await should be(1) }
+    ifConnectorIsActive { dataResolver(project).countByTable("_ChildToParent").await should be(2) }
 
     server.query(
       s"""
@@ -782,8 +782,8 @@ class DeleteManyMutationRelationsSpec extends FlatSpec with Matchers with ApiSpe
       project
     )
 
-    dataResolver(project).countByTable("_ChildToParent").await should be(0)
-    dataResolver(project).countByTable("_StepChildToParent").await should be(0)
+    ifConnectorIsActive { dataResolver(project).countByTable("_ChildToParent").await should be(0) }
+    ifConnectorIsActive { dataResolver(project).countByTable("_StepChildToParent").await should be(0) }
     dataResolver(project).countByTable("Parent").await should be(0)
     dataResolver(project).countByTable("Child").await should be(2)
     dataResolver(project).countByTable("StepChild").await should be(1)

@@ -310,7 +310,7 @@ class NestedCreateMutationInsideCreateSpec extends FlatSpec with Matchers with A
 
     res.toString should be("""{"data":{"createParent":{"childrenOpt":[{"c":"c1"},{"c":"c2"}]}}}""")
 
-    dataResolver(project).countByTable("_ChildToParent").await should be(2)
+    ifConnectorIsActive { dataResolver(project).countByTable("_ChildToParent").await should be(2) }
   }
 
   "a one to many relation" should "be creatable through a nested mutation" in {
