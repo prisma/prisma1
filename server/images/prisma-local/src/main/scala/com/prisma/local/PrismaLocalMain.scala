@@ -15,6 +15,8 @@ object PrismaLocalMain extends App {
   implicit val dependencies = PrismaLocalDependencies()
 
   dependencies.initialize()(system.dispatcher)
+  dependencies.migrator.initialize
+
   Version.check()
 
   ServerExecutor(
