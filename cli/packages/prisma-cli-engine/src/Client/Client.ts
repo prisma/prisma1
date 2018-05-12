@@ -455,10 +455,13 @@ export class Client {
   async login(key?: string): Promise<void> {
     let token: null | string = null
     this.out.action.start(`Authenticating`)
+    if (key) {
+      this.env.globalRC.cloudSessionKey = key
+    }
     const authenticated = await this.isAuthenticated()
     if (authenticated) {
       this.out.action.stop()
-      this.out.log('Already signed in')
+      this.out.log(key ? 'Successfully signed in' : 'Already signed in')
       return
     }
     const secret = await this.requestCloudToken()
