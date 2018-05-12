@@ -34,7 +34,9 @@ class NestedDisconnectMutationInsideUpdateSpec extends FlatSpec with Matchers wi
     val childId  = res.pathAsString("data.createParent.childOpt.id")
     val parentId = res.pathAsString("data.createParent.id")
 
-    dataResolver(project).countByTable("_ParentToChild").await should be(1)
+    ifConnectorIsActive {
+      dataResolver(project).countByTable("_ParentToChild").await should be(1)
+    }
 
     val res2 = server.query(
       s"""
@@ -56,7 +58,9 @@ class NestedDisconnectMutationInsideUpdateSpec extends FlatSpec with Matchers wi
 
     res2.toString should be("""{"data":{"updateParent":{"childOpt":null}}}""")
 
-    dataResolver(project).countByTable("_ParentToChild").await should be(0)
+    ifConnectorIsActive {
+      dataResolver(project).countByTable("_ParentToChild").await should be(0)
+    }
   }
 
   "a P1 to C1  relation with the child and the parent without a relation" should "not be disconnectable through a nested mutation by id" in {
@@ -90,7 +94,9 @@ class NestedDisconnectMutationInsideUpdateSpec extends FlatSpec with Matchers wi
       )
       .pathAsString("data.createParent.id")
 
-    dataResolver(project).countByTable("_ParentToChild").await should be(0)
+    ifConnectorIsActive {
+      dataResolver(project).countByTable("_ParentToChild").await should be(0)
+    }
 
     val res = server.queryThatMustFail(
       s"""
@@ -111,7 +117,9 @@ class NestedDisconnectMutationInsideUpdateSpec extends FlatSpec with Matchers wi
       errorCode = 3041
     )
 
-    dataResolver(project).countByTable("_ParentToChild").await should be(0)
+    ifConnectorIsActive {
+      dataResolver(project).countByTable("_ParentToChild").await should be(0)
+    }
   }
 
   "a PM to C1!  relation with the child already in a relation" should "not be disconnectable through a nested mutation by unique" in {
@@ -137,7 +145,9 @@ class NestedDisconnectMutationInsideUpdateSpec extends FlatSpec with Matchers wi
       project
     )
 
-    dataResolver(project).countByTable("_ParentToChild").await should be(1)
+    ifConnectorIsActive {
+      dataResolver(project).countByTable("_ParentToChild").await should be(1)
+    }
 
     server.queryThatMustFail(
       s"""
@@ -157,7 +167,9 @@ class NestedDisconnectMutationInsideUpdateSpec extends FlatSpec with Matchers wi
       errorCode = 3042
     )
 
-    dataResolver(project).countByTable("_ParentToChild").await should be(1)
+    ifConnectorIsActive {
+      dataResolver(project).countByTable("_ParentToChild").await should be(1)
+    }
   }
 
   "a P1 to C1!  relation with the child and the parent already in a relation" should "should error in a nested mutation by unique" in {
@@ -183,7 +195,9 @@ class NestedDisconnectMutationInsideUpdateSpec extends FlatSpec with Matchers wi
       project
     )
 
-    dataResolver(project).countByTable("_ChildToParent").await should be(1)
+    ifConnectorIsActive {
+      dataResolver(project).countByTable("_ChildToParent").await should be(1)
+    }
 
     server.queryThatMustFail(
       s"""
@@ -204,7 +218,9 @@ class NestedDisconnectMutationInsideUpdateSpec extends FlatSpec with Matchers wi
       errorContains = "The change you are trying to make would violate the required relation '_ChildToParent' between Child and Parent"
     )
 
-    dataResolver(project).countByTable("_ChildToParent").await should be(1)
+    ifConnectorIsActive {
+      dataResolver(project).countByTable("_ChildToParent").await should be(1)
+    }
   }
 
   "a PM to C1  relation with the child already in a relation" should "be disconnectable through a nested mutation by unique" in {
@@ -231,7 +247,9 @@ class NestedDisconnectMutationInsideUpdateSpec extends FlatSpec with Matchers wi
         project
       )
 
-    dataResolver(project).countByTable("_ParentToChild").await should be(2)
+    ifConnectorIsActive {
+      dataResolver(project).countByTable("_ParentToChild").await should be(2)
+    }
 
     val res = server.query(
       s"""
@@ -252,7 +270,9 @@ class NestedDisconnectMutationInsideUpdateSpec extends FlatSpec with Matchers wi
 
     res.toString should be("""{"data":{"updateParent":{"childrenOpt":[{"c":"c1"}]}}}""")
 
-    dataResolver(project).countByTable("_ParentToChild").await should be(1)
+    ifConnectorIsActive {
+      dataResolver(project).countByTable("_ParentToChild").await should be(1)
+    }
   }
 
   "a P1 to CM  relation with the child already in a relation" should "be disconnectable through a nested mutation by unique" in {
@@ -278,7 +298,9 @@ class NestedDisconnectMutationInsideUpdateSpec extends FlatSpec with Matchers wi
       project
     )
 
-    dataResolver(project).countByTable("_ChildToParent").await should be(1)
+    ifConnectorIsActive {
+      dataResolver(project).countByTable("_ChildToParent").await should be(1)
+    }
 
     val res = server.query(
       s"""
@@ -301,7 +323,9 @@ class NestedDisconnectMutationInsideUpdateSpec extends FlatSpec with Matchers wi
 
     server.query(s"""query{children{c, parentsOpt{p}}}""", project).toString should be("""{"data":{"children":[{"c":"c1","parentsOpt":[]}]}}""")
 
-    dataResolver(project).countByTable("_ChildToParent").await should be(0)
+    ifConnectorIsActive {
+      dataResolver(project).countByTable("_ChildToParent").await should be(0)
+    }
   }
 
   "a PM to CM  relation with the children already in a relation" should "be disconnectable through a nested mutation by unique" in {
@@ -327,7 +351,9 @@ class NestedDisconnectMutationInsideUpdateSpec extends FlatSpec with Matchers wi
       project
     )
 
-    dataResolver(project).countByTable("_ChildToParent").await should be(2)
+    ifConnectorIsActive {
+      dataResolver(project).countByTable("_ChildToParent").await should be(2)
+    }
 
     val res = server.query(
       s"""
@@ -351,7 +377,9 @@ class NestedDisconnectMutationInsideUpdateSpec extends FlatSpec with Matchers wi
     server.query(s"""query{children{c, parentsOpt{p}}}""", project).toString should be(
       """{"data":{"children":[{"c":"c1","parentsOpt":[]},{"c":"c2","parentsOpt":[{"p":"p1"}]}]}}""")
 
-    dataResolver(project).countByTable("_ChildToParent").await should be(1)
+    ifConnectorIsActive {
+      dataResolver(project).countByTable("_ChildToParent").await should be(1)
+    }
   }
 
   "a one to many relation" should "be disconnectable by id through a nested mutation" in {
