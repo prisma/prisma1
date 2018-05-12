@@ -73,11 +73,32 @@ case class PostgresApiDatabaseMutationBuilder(
       val inlineManifestation = relation.inlineManifestation.get
       val referencingColumn   = inlineManifestation.referencingColumn
       val tableName           = relation.relationTableNameNew(schema)
+      val otherModel = if (inlineManifestation.inTableOfModelId == relation.modelAId) {
+        schema.getModelById_!(relation.modelBId)
+      } else {
+        schema.getModelById_!(relation.modelAId)
+      }
+      val childWhereCondition = sql"""where "#$schemaName"."#${childWhere.model.dbName}"."#${childWhere.field.name}" = ${childWhere.fieldValue}"""
+      // fixme: this should not use path.root. This can only work for paths that have 1 edge.
+      val otherWhereCondition = sql"""where "#$schemaName"."#${path.root.model.dbName}"."id" in (""" ++ pathQueryForLastChild(path.removeLastEdge) ++ sql")"
+      val selectIdOfChild     = sql"""select "id" from "#$schemaName"."#${childWhere.model.dbName}" """ ++ childWhereCondition
+      val selectIdOfOther     = sql"""select "id" from "#$schemaName"."#${otherModel.dbName}" """ ++ otherWhereCondition
+
+      val rowToUpdateCondition = if (inlineManifestation.inTableOfModelId == childWhere.model.id) {
+        childWhereCondition
+      } else {
+        otherWhereCondition
+      }
+      val nodeToLinkToCondition = if (inlineManifestation.inTableOfModelId == childWhere.model.id) {
+        selectIdOfOther
+      } else {
+        selectIdOfChild
+      }
 
       (sql"""update "#$schemaName"."#${tableName}" """ ++
         sql"""set "#${referencingColumn}" = subquery.id""" ++
-        sql"""from (select "id" from "#$schemaName"."#${childWhere.model.dbName}" where "#${childWhere.field.name}" = ${childWhere.fieldValue}) as subquery""" ++
-        sql"""where "#$schemaName"."#${tableName}".id = """ ++ pathQueryForLastChild(path.removeLastEdge)).asUpdate
+        sql"""from (""" ++ nodeToLinkToCondition ++ sql""") as subquery""" ++
+        rowToUpdateCondition).asUpdate
 
     } else if (relation.hasManifestation) {
       val nodeEdge        = path.lastEdge_!.asInstanceOf[NodeEdge]
