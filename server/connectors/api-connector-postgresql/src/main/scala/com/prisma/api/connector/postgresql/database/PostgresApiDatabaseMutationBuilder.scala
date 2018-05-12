@@ -154,7 +154,7 @@ case class PostgresApiDatabaseMutationBuilder(
         case Some(edge) =>
           baseQuery ++ sql"""(SELECT "#${path.columnForChildSideOfLastEdge}" """ ++
             sql"""FROM "#$schemaName"."#${path.lastRelation_!.relationTableNameNew(schema)}"""" ++
-            sql"WHERE" ++ fromEdge(edge) ++ sql""""#${path.parentSideOfLastEdge}" = """ ++ pathQueryForLastParent(path) ++ sql")"
+            sql"WHERE" ++ fromEdge(edge) ++ sql""""#${path.columnForParentSideOfLastEdge}" = """ ++ pathQueryForLastParent(path) ++ sql")"
         case None => baseQuery ++ idFromWhere(path.root)
       }
       query.asUpdate

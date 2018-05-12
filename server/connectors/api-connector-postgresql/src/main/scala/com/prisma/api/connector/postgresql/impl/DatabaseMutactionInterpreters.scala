@@ -266,7 +266,7 @@ case class VerifyConnectionInterpreter(mutaction: VerifyConnection) extends Data
 
   val causeString = path.lastEdge_! match {
     case _: ModelEdge =>
-      s"CONNECTIONFAILURETRIGGERPATH@${path.lastRelation_!.relationTableNameNew(schema)}@${path.parentSideOfLastEdge}"
+      s"CONNECTIONFAILURETRIGGERPATH@${path.lastRelation_!.relationTableNameNew(schema)}@${path.columnForParentSideOfLastEdge}"
     case edge: NodeEdge =>
       s"CONNECTIONFAILURETRIGGERPATH@${path.lastRelation_!.relationTableNameNew(schema)}@${path.columnForParentSideOfLastEdge}@${path.columnForChildSideOfLastEdge}@${edge.childWhere.fieldValueAsString}}"
   }
