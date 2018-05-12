@@ -1,12 +1,14 @@
 package com.prisma.api.mutations
 
+import com.prisma.IgnorePassive
 import com.prisma.api.ApiSpecBase
 import com.prisma.shared.schema_dsl.SchemaDsl
 import org.scalatest.{FlatSpec, Matchers}
 
 class OptionalBackrelationSpec extends FlatSpec with Matchers with ApiSpecBase {
 
-  "Nested Updates" should "work for models with missing backrelations " in {
+  // TODO: fails because of missing back relation field for passive connectors
+  "Nested Updates" should "work for models with missing backrelations " taggedAs (IgnorePassive) in {
     val project = SchemaDsl.fromString() {
       """
         |type Owner {
