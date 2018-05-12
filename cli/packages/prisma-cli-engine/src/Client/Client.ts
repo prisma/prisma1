@@ -462,6 +462,9 @@ export class Client {
     if (authenticated) {
       this.out.action.stop()
       this.out.log(key ? 'Successfully signed in' : 'Already signed in')
+      if (key) {
+        this.env.saveGlobalRC()
+      }
       return
     }
     const secret = await this.requestCloudToken()
