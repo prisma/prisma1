@@ -9,6 +9,8 @@ import org.scalatest.{FlatSpec, Matchers}
 
 class ResetDataSpec extends FlatSpec with Matchers with ApiSpecBase with AwaitUtils {
 
+  override def runSuiteOnlyForActiveConnectors = true
+
   val project: Project = SchemaDsl.fromBuilder { schema =>
     val model1: SchemaDsl.ModelBuilder = schema
       .model("Model1")
