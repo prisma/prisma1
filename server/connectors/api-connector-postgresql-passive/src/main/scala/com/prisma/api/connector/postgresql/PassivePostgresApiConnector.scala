@@ -123,10 +123,9 @@ case class NestedCreateDataItemInterpreterForInlineRelations(mutaction: NestedCr
   val inlineManifestation = relation.manifestation.get.asInstanceOf[InlineRelationManifestation]
   require(inlineManifestation.inTableOfModelId == path.lastModel.id)
 
-  override def action(mutationBuilder: PostgresApiDatabaseMutationBuilder) = {
-//    val createNonList = PostGresApiDatabaseMutationBuilder.createDataItem(project.id, path, mutaction.create.nonListArgs)
-//    val listAction    = PostGresApiDatabaseMutationBuilder.setScalarList(project.id, path, mutaction.listArgs)
-    DBIO.seq(bla(mutationBuilder))
+  override def action(mutationBuilder: PostgresApiDatabaseMutationBuilder): DBIO[Unit] = {
+    val listAction = mutationBuilder.setScalarList(path, mutaction.create.listArgs)
+    DBIO.seq(bla(mutationBuilder), listAction)
   }
 
   import com.prisma.api.connector.postgresql.database.SlickExtensions._
