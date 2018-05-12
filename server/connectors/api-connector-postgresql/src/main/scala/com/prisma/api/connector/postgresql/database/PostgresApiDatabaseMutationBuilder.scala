@@ -79,8 +79,7 @@ case class PostgresApiDatabaseMutationBuilder(
         schema.getModelById_!(relation.modelAId)
       }
       val childWhereCondition = sql"""where "#$schemaName"."#${childWhere.model.dbName}"."#${childWhere.field.name}" = ${childWhere.fieldValue}"""
-      // fixme: this should not use path.root. This can only work for paths that have 1 edge.
-      val otherWhereCondition = sql"""where "#$schemaName"."#${path.root.model.dbName}"."id" in (""" ++ pathQueryForLastChild(path.removeLastEdge) ++ sql")"
+      val otherWhereCondition = sql"""where "#$schemaName"."#${path.removeLastEdge.lastModel.dbName}"."id" in (""" ++ pathQueryForLastChild(path.removeLastEdge) ++ sql")"
       val selectIdOfChild     = sql"""select "id" from "#$schemaName"."#${childWhere.model.dbName}" """ ++ childWhereCondition
       val selectIdOfOther     = sql"""select "id" from "#$schemaName"."#${otherModel.dbName}" """ ++ otherWhereCondition
 
