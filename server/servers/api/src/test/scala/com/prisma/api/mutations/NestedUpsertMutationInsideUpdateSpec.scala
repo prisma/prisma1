@@ -464,7 +464,7 @@ class NestedUpsertMutationInsideUpdateSpec extends FlatSpec with Matchers with A
     mustBeEqual(result.pathAsString("data.updateTodo.comments.[1].text").toString, """new comment3""")
   }
 
-  "a one to many relation" should "generate helpfull error messages" in {
+  "a one to many relation" should "generate helpful error messages" in {
     val project = SchemaDsl.fromBuilder { schema =>
       val comment = schema.model("Comment").field("text", _.String).field("uniqueComment", _.String, isUnique = true)
       schema.model("Todo").field("uniqueTodo", _.String, isUnique = true).oneToManyRelation("comments", "todo", comment)

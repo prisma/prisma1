@@ -20,7 +20,7 @@ object SchemaDsl extends AwaitUtils {
   def fromBuilder(fn: SchemaBuilder => Unit)(implicit deployConnector: DeployConnector, suite: Suite) = {
     val schemaBuilder = SchemaBuilder()
     fn(schemaBuilder)
-    val project = schemaBuilder.buildProject(id = suite.getClass.getSimpleName)
+    val project = schemaBuilder.buildProject(id = projectId(suite))
     if (deployConnector.isPassive) {
       addManifestations(project)
     } else {
@@ -30,7 +30,7 @@ object SchemaDsl extends AwaitUtils {
 
   def fromString(id: String = TestIds.testProjectId)(sdlString: String)(implicit deployConnector: DeployConnector, suite: Suite): Project = {
     val project = fromString(
-      id = suite.getClass.getSimpleName,
+      id = projectId(suite),
       InferredTables.empty,
       isActive = true
     )(sdlString)
@@ -39,6 +39,13 @@ object SchemaDsl extends AwaitUtils {
     } else {
       project
     }
+  }
+
+  private def projectId(suite: Suite): String = {
+    // GetFieldFromSQLUniqueException blows up if we generate longer names, since we then exceed the postgres limits for constraint names
+    // todo: actually fix GetFieldFromSQLUniqueException instead
+    val nameThatMightBeTooLong = suite.getClass.getSimpleName
+    nameThatMightBeTooLong.substring(0, Math.min(32, nameThatMightBeTooLong.length))
   }
 
   def fromPassiveConnectorSdl(
