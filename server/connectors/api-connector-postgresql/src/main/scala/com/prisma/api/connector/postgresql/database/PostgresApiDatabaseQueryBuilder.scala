@@ -6,7 +6,7 @@ import com.prisma.api.connector.Types.DataItemFilterCollection
 import com.prisma.api.connector._
 import com.prisma.gc_values._
 import com.prisma.shared.models.IdType.Id
-import com.prisma.shared.models.Manifestations.InlineRelationManifestation
+import com.prisma.shared.models.Manifestations.{InlineRelationManifestation, RelationTableManifestation}
 import com.prisma.shared.models.{Function => _, _}
 import slick.dbio.DBIOAction
 import slick.jdbc.PostgresProfile.api._
@@ -42,9 +42,10 @@ case class PostgresApiDatabaseQueryBuilder(
     PrismaNodeWithParent(parentId, node)
   }
 
-  implicit object GetRelationNode extends GetResult[RelationNode] {
-    override def apply(ps: PositionedResult): RelationNode = RelationNode(ps.rs.getId, ps.rs.getAsID("A"), ps.rs.getAsID("B"))
-
+  private def getResultForRelation(relation: Relation): GetResult[RelationNode] = GetResult { ps: PositionedResult =>
+    val modelAColumn = relation.columnForRelationSide(RelationSide.A)
+    val modelBColumn = relation.columnForRelationSide(RelationSide.B)
+    RelationNode(id = ps.rs.getId, a = ps.rs.getAsID(modelAColumn), b = ps.rs.getAsID(modelBColumn))
   }
 
   implicit object GetRelationCount extends GetResult[(IdGCValue, Int)] {
@@ -90,7 +91,7 @@ case class PostgresApiDatabaseQueryBuilder(
       prefixIfNotNone("order by", orderByCommand) ++
       prefixIfNotNone("limit", limitCommand)
 
-    query.as[RelationNode].map(args.get.resultTransform)
+    query.as[RelationNode](getResultForRelation(relation)).map(args.get.resultTransform)
   }
 
   def selectAllFromListTable(
