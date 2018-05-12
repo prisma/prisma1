@@ -168,6 +168,8 @@ object RelationSide extends Enumeration {
   type RelationSide = Value
   val A = Value("A")
   val B = Value("B")
+
+  def opposite(side: RelationSide.Value) = if (side == A) B else A
 }
 
 object TypeIdentifier extends Enumeration {

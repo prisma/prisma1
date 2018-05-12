@@ -405,8 +405,11 @@ case class PostgresApiDatabaseMutationBuilder(
                                                   where: NodeSelector,
                                                   childSide: RelationSide.Value,
                                                   triggerString: String): slick.sql.SqlStreamingAction[Vector[String], String, slick.dbio.Effect] = {
-    val table = relation.relationTableNameNew(schema)
-    val query = sql"""SELECT "id" FROM "#$schemaName"."#$table" OLDPARENTFAILURETRIGGER WHERE "#$childSide" """ ++ idFromWhereEquals(where)
+    val table       = relation.relationTableNameNew(schema)
+    val column      = relation.columnForRelationSide(childSide)
+    val otherColumn = relation.columnForRelationSide(RelationSide.opposite(childSide))
+    val query = sql"""SELECT "id" FROM "#$schemaName"."#$table" OLDPARENTFAILURETRIGGER WHERE "#$column" """ ++
+      idFromWhereEquals(where) ++ sql""" AND "#$otherColumn" IS NOT NULL """
 
     triggerFailureWhenExists(query, table, triggerString)
   }
@@ -430,7 +433,8 @@ case class PostgresApiDatabaseMutationBuilder(
   }
 
   def oldParentFailureTriggerByFieldAndFilter(model: Model, whereFilter: Option[DataItemFilterCollection], field: Field, causeString: String) = {
-    val table = field.relation.get.relationTableNameNew(schema)
+    val relation = field.relation.get
+    val table    = relation.relationTableNameNew(schema)
     val query = sql"""SELECT "id" FROM "#$schemaName"."#$table" OLDPARENTPATHFAILURETRIGGERBYFIELDANDFILTER""" ++
       sql"""WHERE "#${field.oppositeRelationSide.get}" IN (SELECT "id" FROM "#$schemaName"."#${model.name}" """ ++
       whereFilterAppendix(schemaName, model.name, whereFilter) ++ sql")"
