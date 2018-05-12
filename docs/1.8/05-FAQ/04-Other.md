@@ -9,15 +9,15 @@ description: Frequently asked questions about Prisma as a company, the platform 
 
 You can contact us through a variety of channels.
 
-If you have a **technical problem**, the best way to find help is either in our [Forum](https://www.graph.cool/forum/) or on [Stack Overflow](https://stackoverflow.com/questions/tagged/graphcool).
+If you have a **technical problem**, the best way to find help is either in our [Forum](https://www.prisma.io/forum/) or on [Stack Overflow](https://stackoverflow.com/questions/tagged/prisma).
 
 To **get involved in our open source work** and **obtain insights into our roadmap**, you should check out our [GitHub organization](github.com/graphcool/).
 
-If you just want to hang out and chat with GraphQL enthusiasts, our [Slack](https://slack.graph.cool) channel is the place to be.
+If you just want to hang out and chat with GraphQL enthusiasts, our [Slack](https://slack.prisma.io) channel is the place to be.
 
-Finally, for any direct requests, you can always reach out to us via email: [Sales](mailto:sales@graph.cool) & [Support](mailto:support@graph.cool).
+Finally, for any direct requests, you can always reach out to us via email: [Sales](mailto:sales@prisma.io) & [Support](mailto:support@prisma.io).
 
-### How is this different from Graphcool Framework?
+### How is Prisma different from Graphcool Framework?
 
 The Graphcool Framework is a strongly opinionated open-source solution based on GraphQL and Serverless functions, that provides an entire web server setup with a powerful GraphQL API.
 
