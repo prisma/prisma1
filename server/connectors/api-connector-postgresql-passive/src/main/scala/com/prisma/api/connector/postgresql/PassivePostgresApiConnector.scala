@@ -124,6 +124,7 @@ case class NestedCreateDataItemInterpreterForInlineRelations(mutaction: NestedCr
   require(inlineManifestation.inTableOfModelId == path.lastModel.id)
 
   override def action(mutationBuilder: PostgresApiDatabaseMutationBuilder): DBIO[Unit] = {
+//    val relationAction = NestedCreateRelationInterpreter(mutaction.nestedCreateRelation).action(mutationBuilder)
     val listAction = mutationBuilder.setScalarList(path, mutaction.create.listArgs)
     DBIO.seq(bla(mutationBuilder), listAction)
   }

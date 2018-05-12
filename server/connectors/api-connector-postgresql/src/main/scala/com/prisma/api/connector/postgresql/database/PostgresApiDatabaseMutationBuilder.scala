@@ -244,32 +244,41 @@ case class PostgresApiDatabaseMutationBuilder(
     (sql"""DELETE FROM "#$schemaName"."_RelayId" WHERE "id" = """ ++ pathQueryForLastChild(path)).asUpdate
 
   def deleteRelationRowByParent(schema: Schema, path: Path): DBIO[Unit] = {
-    val relation = path.lastRelation_!
-    if (relation.isInlineRelation) {
-      dbioUnit
-    } else {
-      val relationTable = path.lastRelation_!.relationTableNameNew(schema)
-      val action =
-        (sql"""DELETE FROM "#$schemaName"."#${relationTable}" WHERE "#${path.columnForParentSideOfLastEdge}" = """ ++ pathQueryForLastParent(path)).asUpdate
-
-      action.andThen(dbioUnit)
+    val relation      = path.lastRelation_!
+    val relationTable = path.lastRelation_!.relationTableNameNew(schema)
+    val where = path.lastEdge_! match {
+      case _: ModelEdge   => sys.error("Should be a node Edge")
+      case edge: NodeEdge => edge.childWhere
     }
+    val action = relation.inlineManifestation match {
+      case Some(manifestation) =>
+        (sql"""UPDATE "#$schemaName"."#${relationTable}" """ ++
+          sql"""SET "#${manifestation.referencingColumn}" = NULL""" ++
+          sql"""WHERE "#${path.columnForParentSideOfLastEdge}" IN """ ++ pathQueryThatUsesWholePath(path.removeLastEdge) ++
+          sql""" AND "#${path.columnForChildSideOfLastEdge}" IN """ ++ pathQueryThatUsesWholePath(path)).asUpdate
+      case None =>
+        (sql"""DELETE FROM "#$schemaName"."#${relationTable}" WHERE "#${path.columnForParentSideOfLastEdge}" = """ ++ pathQueryForLastParent(path)).asUpdate
+    }
+    action.andThen(dbioUnit)
   }
 
   def deleteRelationRowByChildWithWhere(schema: Schema, path: Path): DBIO[Unit] = {
-    val relation = path.lastRelation_!
-    if (relation.isInlineRelation) {
-      dbioUnit
-    } else {
-      val relationTable = path.lastRelation_!.relationTableNameNew(schema)
-      val where = path.lastEdge_! match {
-        case _: ModelEdge   => sys.error("Should be a node Edge")
-        case edge: NodeEdge => edge.childWhere
-
-      }
-      (sql"""DELETE FROM "#$schemaName"."#${relationTable}" WHERE "#${path.columnForChildSideOfLastEdge}"""" ++ idFromWhereEquals(where)).asUpdate
-        .andThen(dbioUnit)
+    val relation      = path.lastRelation_!
+    val relationTable = path.lastRelation_!.relationTableNameNew(schema)
+    val where = path.lastEdge_! match {
+      case _: ModelEdge   => sys.error("Should be a node Edge")
+      case edge: NodeEdge => edge.childWhere
     }
+    val action = relation.inlineManifestation match {
+      case Some(manifestation) =>
+        (sql"""UPDATE "#$schemaName"."#${relationTable}" """ ++
+          sql"""SET "#${manifestation.referencingColumn}" = NULL""" ++
+          sql"""WHERE "#${path.columnForChildSideOfLastEdge}" IN """ ++ pathQueryThatUsesWholePath(path) ++
+          sql""" AND "#${path.columnForParentSideOfLastEdge}" IN """ ++ pathQueryThatUsesWholePath(path.removeLastEdge)).asUpdate
+      case None =>
+        (sql"""DELETE FROM "#$schemaName"."#${relationTable}" WHERE "#${path.columnForChildSideOfLastEdge}"""" ++ idFromWhereEquals(where)).asUpdate
+    }
+    action.andThen(dbioUnit)
   }
 
   def deleteRelationRowByParentAndChild(path: Path) = {
