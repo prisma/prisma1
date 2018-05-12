@@ -472,8 +472,9 @@ case class PostgresApiDatabaseMutationBuilder(
 
   def oldChildFailureTrigger(path: Path, triggerString: String) = {
     val table = path.lastRelation_!.relationTableNameNew(schema)
-    val query = sql"""SELECT "id" FROM "#$schemaName"."#$table" OLDCHILDPATHFAILURETRIGGER WHERE "#${path.columnForParentSideOfLastEdge}" IN (""" ++ pathQueryForLastParent(
-      path) ++ sql")"
+    val query = sql"""SELECT "id" FROM "#$schemaName"."#$table" OLDCHILDPATHFAILURETRIGGER""" ++
+      sql"""WHERE "#${path.columnForParentSideOfLastEdge}" IN (""" ++ pathQueryForLastParent(path) ++ sql") " ++
+      sql"""AND "#${path.columnForChildSideOfLastEdge}" IS NOT NULL """
     triggerFailureWhenExists(query, table, triggerString)
   }
 

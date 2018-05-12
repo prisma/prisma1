@@ -564,7 +564,7 @@ class NestedConnectMutationInsideUpdateSpec extends FlatSpec with Matchers with 
     ifConnectorIsActive { dataResolver(project).countByTable("_ChildToParent").await should be(2) }
   }
 
-  "a P1 to C1!  relation with the child already in a relation" should "should error in a nested mutation by unique" in {
+  "a P1 to C1! relation with the child already in a relation" should "should not error when switching to a different parent" in {
     val project = SchemaDsl.fromBuilder { schema =>
       val parent = schema.model("Parent").field_!("p", _.String, isUnique = true)
       schema.model("Child").field_!("c", _.String, isUnique = true).oneToOneRelation_!("parentReq", "childOpt", parent, isRequiredOnFieldB = false)
