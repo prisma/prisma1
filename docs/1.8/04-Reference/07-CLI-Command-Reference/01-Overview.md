@@ -22,7 +22,7 @@ npm install -g prisma
 To initialize a new service, use the `init` command. Then follow the interactive prompt to bootstrap the service based on a template of your choice:
 
 ```sh
-prisma init
+prisma init hello-world
 ```
 
 In the following sections you'll learn more about configuring Prisma services using the CLI.
