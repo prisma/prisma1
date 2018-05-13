@@ -61,7 +61,7 @@ object MigrationStepsJsonFormatter extends DefaultReads {
     override def writes(x: UpdateField): JsObject = {
       Json.obj(
         modelField      -> x.model,
-        newModelField   -> x.model,
+        newModelField   -> x.newModel,
         nameField       -> x.name,
         newNameField    -> x.newName,
         typeNameField   -> x.typeName,
