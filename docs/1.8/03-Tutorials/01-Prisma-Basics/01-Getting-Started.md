@@ -45,15 +45,33 @@ prisma init hello-world
 
 </Instruction>
 
+After running the command, the CLI will ask you if you want to use an existing [Prisma server](!alias-eu2ood0she) or set up a new one.
+
 <Instruction>
 
-After running the command, the CLI will ask you if you want to use an existing [Prisma server](!alias-eu2ood0she) or set up a new one. To get started quickly in this tutorial, you'll use a Prisma Sandbox. So choose either the `sandbox-eu1` or `sandbox-us1` and hit **Enter**.
+To get started quickly in this tutorial, you'll use the Prisma **Demo server** running on Prisma Cloud.
+
+</Instruction>
+
+If you haven't registered with Prisma Cloud before, the CLI will now open a browser window asking you to sign up.
+
+<Instruction>
+
+Follow the instructions in the browser to register with Prisma Cloud.
+
+</Instruction>
+
+After you've sucessfully logged in, you need to select the _region_ for your Demo server.
+
+<Instruction>
+
+Select either `demo-eu1` or `demo-us1` (the CLI will display the latencies for each server so you know which one will perform better for your specific location).
 
 </Instruction>
 
 <Instruction>
 
-The CLI will then prompt you to configure the _name_ and _stage_ for your Prisma API. You can just choose the suggested values by hitting **Enter** two times.
+Next, the CLI will prompt you to configure the _name_ and _stage_ for your Prisma API. You can just choose the suggested values by hitting **Enter** two times.
 
 </Instruction>
 
@@ -67,11 +85,11 @@ Let's take a look at the contents of the generated files:
 **`prisma.yml`**
 
 ```yml
-endpoint: https://eu1.prisma.sh/public-mountainninja-311/hello-world/dev
+endpoint: https://eu1.prisma.sh/alice/hello-world/dev
 datamodel: datamodel.graphql
 ```
 
-Note that the endpoint will look slightly different for you as `public-mountainninja-311` is a randomly generated ID that will be different for every Prisma API you deploy to a Sandbox.
+Note that the endpoint will look slightly different for you as `alice` is the ID of your Prisma Cloud _workspace_ which hosts the service.
 
 Here's an overview of the properties in the generated `prisma.yml`:
 
@@ -90,6 +108,19 @@ type User {
 The data model contains type definitions for the entities in your application domain. In this case, you're starting out with a very simple `User` type with an `id` and a `name`.
 
 The `@unique` directive here expresses that no two users in the database can have the same `id`, Prisma will ensure this requirement is met at all times.
+
+The `prisma init` command only bootstrapped the _files_ for your Prisma service, but it didn't actually _deploy_ it - so you can't use your CRUD GraphQL API for the `User` type yet.
+
+<Instruction>
+
+To achieve that, navigate into the `hello-world` directory and run the `prisma deploy` command:
+
+```bash
+cd hello-world
+prisma deploy
+```
+
+</Instruction>
 
 Your Prisma API is now deployed and ready to receive your queries, mutations and subscriptions 🎉
 
