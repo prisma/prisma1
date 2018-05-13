@@ -428,7 +428,7 @@ case class PostgresApiDatabaseMutationBuilder(
 
     val lastChildWhere = path.lastEdge_! match {
       case edge: NodeEdge => sql""" "#${path.columnForChildSideOfLastEdge}"""" ++ idFromWhereEquals(edge.childWhere) ++ sql" AND "
-      case _: ModelEdge   => sql""
+      case _: ModelEdge   => sql""" "#${path.columnForChildSideOfLastEdge}" IS NOT NULL AND """
     }
 
     val query =
