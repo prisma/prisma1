@@ -471,11 +471,17 @@ case class PostgresApiDatabaseMutationBuilder(
   }
 
   def oldParentFailureTriggerByFieldAndFilter(model: Model, whereFilter: Option[DataItemFilterCollection], field: Field, causeString: String) = {
-    val relation = field.relation.get
-    val table    = relation.relationTableNameNew(schema)
-    val query = sql"""SELECT "id" FROM "#$schemaName"."#$table" OLDPARENTPATHFAILURETRIGGERBYFIELDANDFILTER""" ++
-      sql"""WHERE "#${field.oppositeRelationSide.get}" IN (SELECT "id" FROM "#$schemaName"."#${model.name}" """ ++
-      whereFilterAppendix(schemaName, model.name, whereFilter) ++ sql")"
+    val relation       = field.relation.get
+    val table          = relation.relationTableNameNew(schema)
+    val column         = relation.columnForRelationSide(field.oppositeRelationSide.get)
+    val oppositeColumn = relation.columnForRelationSide(field.relationSide.get)
+    val whereSql       = whereFilter.flatMap(where => QueryArgumentsHelpers.generateFilterConditions(schemaName, model.dbName, where))
+
+    val query =
+      sql"""SELECT "id" FROM "#$schemaName"."#$table" OLDPARENTPATHFAILURETRIGGERBYFIELDANDFILTER""" ++
+        sql"""WHERE "#$column" IN (""" ++
+        sql"""SELECT "id" FROM "#$schemaName"."#${model.dbName}" """ ++
+        sql"""WHERE """ ++ whereSql ++ sql"""AND "#$schemaName"."#${model.dbName}"."#$oppositeColumn" IS NOT NULL)"""
     triggerFailureWhenExists(query, table, causeString)
   }
 
