@@ -15,7 +15,7 @@ import com.prisma.shared.models._
 import cool.graph.cuid.Cuid
 import org.joda.time.{DateTime, DateTimeZone}
 import slick.dbio.{DBIOAction, Effect, NoStream}
-import slick.jdbc.MySQLProfile.api._
+import slick.jdbc.PostgresProfile.api._
 import slick.jdbc.SQLActionBuilder
 import slick.sql.{SqlAction, SqlStreamingAction}
 
