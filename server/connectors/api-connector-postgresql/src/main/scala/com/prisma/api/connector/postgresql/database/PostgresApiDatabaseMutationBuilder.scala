@@ -254,8 +254,7 @@ case class PostgresApiDatabaseMutationBuilder(
       case Some(manifestation) =>
         (sql"""UPDATE "#$schemaName"."#${relationTable}" """ ++
           sql"""SET "#${manifestation.referencingColumn}" = NULL""" ++
-          sql"""WHERE "#${path.columnForParentSideOfLastEdge}" IN """ ++ pathQueryThatUsesWholePath(path.removeLastEdge) ++
-          sql""" AND "#${path.columnForChildSideOfLastEdge}" IN """ ++ pathQueryThatUsesWholePath(path)).asUpdate
+          sql"""WHERE "#${path.columnForParentSideOfLastEdge}" IN """ ++ pathQueryThatUsesWholePath(path.removeLastEdge)).asUpdate
       case None =>
         (sql"""DELETE FROM "#$schemaName"."#${relationTable}" WHERE "#${path.columnForParentSideOfLastEdge}" = """ ++ pathQueryForLastParent(path)).asUpdate
     }
