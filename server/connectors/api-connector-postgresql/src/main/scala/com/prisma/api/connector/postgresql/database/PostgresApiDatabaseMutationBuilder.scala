@@ -492,13 +492,13 @@ case class PostgresApiDatabaseMutationBuilder(
     val table          = relation.relationTableNameNew(schema)
     val column         = relation.columnForRelationSide(field.oppositeRelationSide.get)
     val oppositeColumn = relation.columnForRelationSide(field.relationSide.get)
-    val whereSql       = whereFilter.flatMap(where => QueryArgumentsHelpers.generateFilterConditions(schemaName, model.dbName, where))
 
     val query =
       sql"""SELECT "id" FROM "#$schemaName"."#$table" OLDPARENTPATHFAILURETRIGGERBYFIELDANDFILTER""" ++
-        sql"""WHERE "#$column" IN (""" ++
+        sql"""WHERE "#$oppositeColumn" IS NOT NULL """ ++
+        sql"""AND "#$column" IN (""" ++
         sql"""SELECT "id" FROM "#$schemaName"."#${model.dbName}" """ ++
-        sql"""WHERE """ ++ whereSql ++ sql"""AND "#$schemaName"."#${model.dbName}"."#$oppositeColumn" IS NOT NULL)"""
+        whereFilterAppendix(schemaName, model.dbName, whereFilter) ++ sql""")"""
     triggerFailureWhenExists(query, table, causeString)
   }
 
