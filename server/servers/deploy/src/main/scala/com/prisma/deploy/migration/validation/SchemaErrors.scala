@@ -153,6 +153,10 @@ object SchemaErrors {
     error(fieldAndType, s"List fields cannot have defaultValues.")
   }
 
+  def invalidEnumValueInDefaultValue(fieldAndType: FieldAndType) = {
+    error(fieldAndType, s"The defaultValue contains an invalid enumValue.")
+  }
+
   def invalidSyntaxForDefaultValue(fieldAndType: FieldAndType) = {
     error(fieldAndType, s"""You are using a '@defaultValue' directive. Prisma uses '@default(value: "Value as String")' to declare default values.""")
   }
