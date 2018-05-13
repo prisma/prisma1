@@ -125,7 +125,7 @@ object PostgresDeployDatabaseMutationBuilder {
   }
 
   def removeUniqueConstraint(projectId: String, tableName: String, columnName: String) = {
-    sqlu"""DROP INDEX "#$projectId.#$tableName.#$columnName._UNIQUE""""
+    sqlu"""DROP INDEX "#$projectId"."#$projectId.#$tableName.#$columnName._UNIQUE""""
   }
 
   def createRelationTable(projectId: String, relationTableName: String, aTableName: String, bTableName: String) = {
