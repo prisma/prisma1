@@ -29,7 +29,7 @@ object MigrationStepsJsonFormatter extends DefaultReads {
     override def reads(json: JsValue): JsResult[UpdateField] = {
       for {
         model        <- (json \ modelField).validate[String]
-        newModel     <- (json \ newNameField).validateOpt[String]
+        newModel     <- (json \ newModelField).validateOpt[String]
         name         <- (json \ nameField).validate[String]
         newName      <- (json \ newNameField).validateOpt[String]
         typeName     <- (json \ typeNameField).validateOpt[String]

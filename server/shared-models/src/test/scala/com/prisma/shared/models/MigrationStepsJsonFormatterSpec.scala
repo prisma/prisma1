@@ -106,4 +106,59 @@ class MigrationStepsJsonFormatterSpec extends FlatSpec with Matchers {
     create.modelAOnDelete should equal(Some(OnDelete.Cascade))
     create.modelBOnDelete should equal(Some(OnDelete.SetNull))
   }
+
+  "UpdateField" should "be readable in the format of 1.8" in {
+    val json = Json.parse("""
+                            |{
+                            |    "model": "Todo",
+                            |    "name": "Field",
+                            |    "newName": "NewField",
+                            |    "typeName": "Todo",
+                            |    "isRequired": true,
+                            |    "isList": true
+                            |  }
+                          """.stripMargin)
+
+    val updateField = json.as[UpdateField]
+    updateField.name should equal("Field")
+    updateField.newName should equal(Some("NewField"))
+    updateField.model should equal("Todo")
+    updateField.newModel should equal("Todo")
+    updateField.typeName should equal(Some("Todo"))
+    updateField.isRequired should equal(Some(true))
+    updateField.isList should equal(Some(true))
+    updateField.isUnique should equal(None)
+    updateField.isHidden should equal(None)
+    updateField.relation should equal(None)
+    updateField.defaultValue should equal(None)
+    updateField.enum should equal(None)
+  }
+
+  "UpdateField" should "be readable in the format of 1.9" in {
+    val json = Json.parse("""
+                            |{
+                            |    "model": "Todo",
+                            |    "newModel": "NewTodo",
+                            |    "name": "Field",
+                            |    "newName": "NewField",
+                            |    "typeName": "Todo",
+                            |    "isRequired": true,
+                            |    "isList": true
+                            |  }
+                          """.stripMargin)
+
+    val updateField = json.as[UpdateField]
+    updateField.name should equal("Field")
+    updateField.newName should equal(Some("NewField"))
+    updateField.model should equal("Todo")
+    updateField.newModel should equal("NewTodo")
+    updateField.typeName should equal(Some("Todo"))
+    updateField.isRequired should equal(Some(true))
+    updateField.isList should equal(Some(true))
+    updateField.isUnique should equal(None)
+    updateField.isHidden should equal(None)
+    updateField.relation should equal(None)
+    updateField.defaultValue should equal(None)
+    updateField.enum should equal(None)
+  }
 }
