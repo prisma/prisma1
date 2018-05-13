@@ -308,11 +308,24 @@ case class SchemaSyntaxValidator(
       }
     }
 
+    def ensureNoInvalidEnumValuesInDefaultValues(fieldAndTypes: FieldAndType): Option[SchemaError] = {
+      def containsInvalidEnumValue: Boolean = {
+        val enumValues = doc.enumType(fieldAndType.fieldDef.typeName).get.values.map(_.name)
+        !enumValues.contains(fieldAndType.fieldDef.directiveArgumentAsString("default", "value").get)
+      }
+
+      fieldAndType.fieldDef.hasDefaultValueDirective && isEnumField(fieldAndType.fieldDef) match {
+        case true if containsInvalidEnumValue => Some(SchemaErrors.invalidEnumValueInDefaultValue(fieldAndType))
+        case _                                => None
+      }
+    }
+
     fieldAndType.fieldDef.directives.flatMap(validateDirectiveRequirements) ++
       ensureDirectivesAreUnique(fieldAndType) ++
       ensureNoOldDefaultValueDirectives(fieldAndType) ++
       ensureRelationDirectivesArePlacedCorrectly(fieldAndType) ++
-      ensureNoDefaultValuesOnListFields(fieldAndType)
+      ensureNoDefaultValuesOnListFields(fieldAndType) ++
+      ensureNoInvalidEnumValuesInDefaultValues(fieldAndType)
   }
 
   def validateEnumTypes: Seq[SchemaError] = {
