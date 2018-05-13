@@ -74,7 +74,8 @@ case class PassiveDatabaseMutactionExecutorImpl(activeExecutor: PostgresDatabase
                 case Some(manifestation: InlineRelationManifestation) =>
                   val mutactionsHaveTheSamePath = m.path == candidate.path
                   val wouldInsertIntoRightTable = manifestation.inTableOfModelId == m.path.lastModel.id
-                  mutactionsHaveTheSamePath && wouldInsertIntoRightTable
+                  val isSelfRelation            = m.path.lastRelation_!.isSameModelRelation
+                  mutactionsHaveTheSamePath && wouldInsertIntoRightTable && !isSelfRelation
 
                 case None =>
                   false

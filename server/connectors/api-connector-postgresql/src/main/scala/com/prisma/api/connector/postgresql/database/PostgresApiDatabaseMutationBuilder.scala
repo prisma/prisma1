@@ -83,15 +83,33 @@ case class PostgresApiDatabaseMutationBuilder(
       val selectIdOfChild     = sql"""select "id" from "#$schemaName"."#${childWhere.model.dbName}" """ ++ childWhereCondition
       val selectIdOfOther     = sql"""select "id" from "#$schemaName"."#${otherModel.dbName}" """ ++ otherWhereCondition
 
-      val rowToUpdateCondition = if (inlineManifestation.inTableOfModelId == childWhere.model.id) {
-        childWhereCondition
+      val rowToUpdateCondition = if (relation.isSameModelRelation) {
+        if (path.lastEdge_!.childField.get.relationSide.get == RelationSide.A) {
+          childWhereCondition
+        } else {
+          otherWhereCondition
+        }
       } else {
-        otherWhereCondition
+        if (inlineManifestation.inTableOfModelId == childWhere.model.id) {
+          childWhereCondition
+        } else {
+          otherWhereCondition
+        }
       }
-      val nodeToLinkToCondition = if (inlineManifestation.inTableOfModelId == childWhere.model.id) {
-        selectIdOfOther
+
+      val nodeToLinkToCondition = if (relation.isSameModelRelation) {
+        if (path.lastEdge_!.childField.get.relationSide.get == RelationSide.A) {
+          selectIdOfOther
+        } else {
+          selectIdOfChild
+        }
       } else {
-        selectIdOfChild
+        if (inlineManifestation.inTableOfModelId == childWhere.model.id) {
+          selectIdOfOther
+        } else {
+          selectIdOfChild
+        }
+
       }
 
       (sql"""update "#$schemaName"."#${tableName}" """ ++
