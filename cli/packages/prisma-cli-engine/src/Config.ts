@@ -62,7 +62,7 @@ export class Config {
     'https://api.cloud.prisma.sh'
   consoleEndpoint = isDevConsole
     ? 'http://localhost:3000'
-    : 'https://app.prisma.sh'
+    : 'https://app.prisma.io'
 
   /* tslint:disable-next-line */
   __cache = {}
