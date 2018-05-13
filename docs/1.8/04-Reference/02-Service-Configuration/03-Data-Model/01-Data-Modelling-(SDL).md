@@ -341,7 +341,7 @@ More database constraints will be added going forward according to this [feature
 
 ### Default value
 
-You can set a default value for scalar fields. The value will be taken for new nodes when no value was supplied during creation.
+You can set a default value for non-list scalar fields. The value will be taken for new nodes when no value was supplied during creation.
 
 To specify a default value for a field, you can use the `@default` directive:
 
