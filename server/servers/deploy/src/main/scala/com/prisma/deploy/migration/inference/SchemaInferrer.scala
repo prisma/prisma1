@@ -54,8 +54,9 @@ case class SchemaInferrerImpl(
         relations = nextRelations.toList,
         enums = nextEnums.toList
       )
-      errors = if (!isActive) checkRelationsAgainstInferredTables(schema) else Vector.empty
-      result <- if (errors.isEmpty) Good(schema) else Bad(errors.head)
+      finalSchema = addMissingBackRelations(schema)
+      errors      = if (!isActive) checkRelationsAgainstInferredTables(finalSchema) else Vector.empty
+      result      <- if (errors.isEmpty) Good(finalSchema) else Bad(errors.head)
     } yield result
   }
 
@@ -372,6 +373,50 @@ case class SchemaInferrerImpl(
           }
       }
     inlineRelationManifestation.orElse(relationTableManifestation)
+  }
+
+  def addMissingBackRelations(schema: Schema): Schema = {
+    schema.relations.foldLeft(schema) { (schema, relation) =>
+      addMissingBackRelationFieldIfMissing(schema, relation)
+    }
+  }
+
+  def addMissingBackRelationFieldIfMissing(schema: Schema, relation: Relation): Schema = {
+    val isAFieldMissing = relation.getModelAField(schema).isEmpty
+    val isBFieldMissing = relation.getModelBField(schema).isEmpty
+    if (isAFieldMissing) {
+      addMissingFieldFor(schema, relation, RelationSide.A)
+    } else if (isBFieldMissing) {
+      addMissingFieldFor(schema, relation, RelationSide.B)
+    } else {
+      schema
+    }
+  }
+
+  def addMissingFieldFor(schema: Schema, relation: Relation, relationSide: RelationSide.Value): Schema = {
+    val model     = if (relationSide == RelationSide.A) relation.getModelA_!(schema) else relation.getModelB_!(schema)
+    val newModel  = model.copy(fields = model.fields :+ missingBackRelationField(relation, relationSide))
+    val newModels = schema.models.filter(_.name != model.name) :+ newModel
+    schema.copy(models = newModels)
+  }
+
+  def missingBackRelationField(relation: Relation, relationSide: RelationSide.Value): Field = {
+    val name = "_back_" + relation.name
+    Field(
+      name = name,
+      typeIdentifier = TypeIdentifier.Relation,
+      description = None,
+      isRequired = false,
+      isList = true,
+      isUnique = false,
+      isHidden = true,
+      isReadonly = false,
+      enum = None,
+      defaultValue = None,
+      relation = Some(relation),
+      relationSide = Some(relationSide),
+      manifestation = None
+    )
   }
 
   /**

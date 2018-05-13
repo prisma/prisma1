@@ -142,6 +142,7 @@ case class Model(
   lazy val relationFields: List[Field]        = fields.filter(_.isRelation)
   lazy val relationListFields: List[Field]    = relationFields.filter(_.isList)
   lazy val relationNonListFields: List[Field] = relationFields.filter(!_.isList)
+  lazy val visibleRelationFields: List[Field] = relationFields.filter(_.isVisible)
   lazy val relations: List[Relation]          = fields.flatMap(_.relation).distinct
   lazy val nonListFields                      = fields.filter(!_.isList)
   lazy val idField                            = getFieldByName_!("id")
