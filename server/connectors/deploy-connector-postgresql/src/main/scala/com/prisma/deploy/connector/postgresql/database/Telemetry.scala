@@ -5,7 +5,7 @@ import com.prisma.deploy.connector.TelemetryInfo
 import org.joda.time.DateTime
 import slick.dbio.DBIOAction
 import slick.dbio.Effect.{Read, Write}
-import slick.jdbc.MySQLProfile.api._
+import slick.jdbc.PostgresProfile.api._
 import slick.sql.FixedSqlAction
 
 import scala.concurrent.ExecutionContext
