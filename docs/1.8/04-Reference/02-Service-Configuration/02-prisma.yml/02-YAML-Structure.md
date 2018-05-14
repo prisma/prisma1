@@ -107,7 +107,7 @@ Read more about Database [authentication here](!alias-utee3eiquo#authentication)
 
 <InfoBox type=warning>
 
-**WARNING**: If the Prisma API is deployed without a `secret`, it does not require authentication. This means everyone with access to the `endpoint` is able to send arbitrary queries and mutations and therefore read and write to the database!
+**WARNING**: If the Prisma API is deployed without a `secret`, it does not require authentication. This means everyone with access to the `endpoint` is able to send arbitrary queries and mutations and can therefore read and write to the database!
 
 </InfoBox>
 
