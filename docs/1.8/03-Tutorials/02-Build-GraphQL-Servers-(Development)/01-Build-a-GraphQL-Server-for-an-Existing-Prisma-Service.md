@@ -27,7 +27,7 @@ To ensure you're not accidentally skipping an instruction in the tutorial, all r
 
 One commonly asked question is why not to use Prisma's GraphQL API as your entire backend - it has a GraphQL API, so why bother writing another GraphQL server on top of it?
 
-Prisma turns yoyur database into a GraphQL API, exposing powerful CRUD operations to read and modify the data. This means letting your clients talk to Prisma directly is equivalent to directly exposing your entire database to your clients.
+Prisma turns your database into a GraphQL API, exposing powerful CRUD operations to read and modify the data. This means letting your clients talk to Prisma directly is equivalent to directly exposing your entire database to your clients.
 
 There are several reasons why this is not a suitable setup for production use cases:
 
@@ -151,7 +151,7 @@ type Query {
 }
 
 type Mutation {
-  createDraft(authorID: ID!, title: String!, content: String!): Post
+  createDraft(authorId: ID!, title: String!, content: String!): Post
   publish(id: ID!): Post
   deletePost(id: ID!): Post
   signup(name: String!): User!
@@ -164,7 +164,7 @@ This GraphQL schema defines six operations (two queries and four mutations):
 
 - `posts(searchString: String)`: Retrieve the list of all `Post`s and potentially filter them by providing a `searchString`
 - `user(id: ID!)`: Retrieve a single `User` by its `id`
-- `createDraft(authorID: ID!, title: String!, content: String!)`: Create a new _draft_ (i.e. a `Post` where `published` is set to `false`) written by a specific `User` identified by `authorId`
+- `createDraft(authorId: ID!, title: String!, content: String!)`: Create a new _draft_ (i.e. a `Post` where `published` is set to `false`) written by a specific `User` identified by `authorId`
 - `publish(id: ID!)`: Publish a _draft_ (i.e. set its `published` field to `true`)
 - `deletePost(id: ID!)`: Delete a `Post`
 - `signup(name: String!)`: Create a new `User` by providing a `name`
@@ -213,7 +213,7 @@ projects:
   prisma:
     schemaPath: src/generated/prisma.graphql
     extensions:
-      prisma: prisma.yml
+      prisma: prisma/prisma.yml
 ```
 
 </Instruction>
@@ -285,7 +285,7 @@ const resolvers = {
 }
 
 const server = new GraphQLServer({
-  typeDefs: './schema.graphql',
+  typeDefs: 'src/schema.graphql',
   resolvers,
   context: req => ({
     ...req,
@@ -363,7 +363,7 @@ const resolvers = {
             id: args.id,
           },
           data: {
-            puslished: true,
+            published: true,
           },
         },
         info,
@@ -463,20 +463,6 @@ mutation {
 }
 ```
 
-**Delete a post**:
-
-Note that you need to replace the `__POST_ID__` placeholder with the `id` of an actual `Post` from your database.
-
-```graphql
-mutation {
-  deletePost(
-    id: "__POST_ID__",
-  ) {
-    id
-  }
-}
-```
-
 **Filter posts for "GraphQL Europe"**
 
 ```graphql
@@ -490,6 +476,20 @@ query {
       id
       name
     }
+  }
+}
+```
+
+**Delete a post**:
+
+Note that you need to replace the `__POST_ID__` placeholder with the `id` of an actual `Post` from your database.
+
+```graphql
+mutation {
+  deletePost(
+    id: "__POST_ID__",
+  ) {
+    id
   }
 }
 ```
