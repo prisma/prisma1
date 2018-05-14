@@ -122,8 +122,6 @@ mutation {
 }
 ```
 
-
-
 </p>
 </details>
 
