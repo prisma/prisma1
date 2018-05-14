@@ -45,7 +45,7 @@ prisma init hello-world
 
 Then select the **Demo server** and follow the instructions of the interactive CLI prompt.
 
-<details><summary><b>Alternative: I want to use Prisma with my own database.</b></summary>
+<details><summary><b>Alternative: Setup Prisma with your own database.</b></summary>
 <p>
 
 Instead of using a Demo server, you can also setup a Prisma server that is connected to your own database. Note that this **requires [Docker](https://www.docker.com)**.
