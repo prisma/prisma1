@@ -107,14 +107,16 @@ prisma playground
 <details><summary><b>I don't know what queries and mutations I can send.</b></summary>
 <p>
 
-**Create a new users**:
+**Create a new user**:
 
 ```graphql
 mutation {
-  createUser(data: {
-    name: "Alice"
-    handle: "alice"
-  }) {
+  createUser(
+    data: {
+      name: "Alice"
+      handle: "alice"
+    }
+  ) {
     id
   }
 }
@@ -143,7 +145,7 @@ query {
 ```graphql
 mutation {
   createTweet(
-    data:{
+    data: {
       text: "Prisma makes building GraphQL servers fun & easy"
       location: {
         create: {
@@ -156,7 +158,8 @@ mutation {
           id: "__USER_ID__"
         }
       }
-  }) {
+    }
+  ) {
     id
     owner {
       name
