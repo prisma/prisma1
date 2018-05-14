@@ -21,11 +21,15 @@ object MysqlDeployDatabaseQueryBuilder {
 
   def existsDuplicateValueByModelAndField(projectId: String, modelName: String, fieldName: String) = {
     sql"""SELECT EXISTS(
-             Select Count(*)
-             FROM `#$projectId`.`#$modelName`
-             GROUP BY `#$fieldName`
-             HAVING COUNT(*) > 1 AND NOT NULL
-          )"""
+         |             Select Count(temp)
+         |             FROM (
+         |                  SELECT `#$fieldName`
+         |                  FROM `#$projectId`.`#$modelName`
+         |                  WHERE `#$fieldName` is not null
+         |                  ) as temp
+         |             GROUP BY temp
+         |             HAVING COUNT(temp) > 1
+         |          )"""
   }
 
   def existsNullByModelAndScalarField(projectId: String, modelName: String, fieldName: String) = {
