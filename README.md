@@ -50,7 +50,7 @@ Then select the **Demo server** and follow the instructions of the interactive C
 
 Instead of using a Demo server, you can also setup a Prisma server that is connected to your own database. Note that this **requires [Docker](https://www.docker.com)**.
 
-To do so, follow the interactive CLI prompts to choose your own database setup:
+To do so, run `prisma init` as shown above and follow the interactive CLI prompts to choose your own database setup:
 
 - Create a new database
 - Connect an existing database
@@ -70,7 +70,7 @@ type Tweet {
   createdAt: DateTime!
   text: String!
   owner: User!
-  location: Location!
+  location: Location
 }
 
 type User {
@@ -78,7 +78,7 @@ type User {
   createdAt: DateTime!
   updatedAt: DateTime!
   handle: String! @unique
-  name: String
+  name: String!
   tweets: [Tweet!]!
 }
 
@@ -90,19 +90,48 @@ type Location {
 
 #### 4. Deploy your Prisma service
 
-To deploy your service simply run the following command and select one of the hosted development clusters or setup a local Docker-based development environment:
+To deploy your service, run the following command:
 
-```console
+```bash
 prisma deploy
 ```
 
-#### 5. Connect to your GraphQL endpoint
+#### 5. Explore the API in a Playground
 
-Use the endpoint from the previous step in your frontend (or backend) applications to connect to your GraphQL API.
+Run the following command to open a GraphQL Playground:
 
-#### 7. Read more in the dedicated quickstarts for your favorite technology
+```bash
+prisma playground
+```
 
-[![](https://imgur.com/T5nakij.png)](https://www.prisma.io/docs/quickstart/)
+> 💡 **Pro tip**: [Download](https://github.com/graphcool/graphql-playground/releases) the standalone GraphQL Playground app.
+
+You can now send queries and mutations to the API.
+
+<details><summary><b>I don't know what queries and mutations I can send.</b></summary>
+<p>
+
+**Create a new User**:
+
+```graphql
+mutation {
+  createUser(
+    name: "Alice"
+    handle: "alice"
+  ) {
+    id
+  }
+}
+```
+
+
+
+</p>
+</details>
+
+#### 7. Next steps
+
+- **Build a GraphQL server (recommended)**
 
 ## Examples
 
