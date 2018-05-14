@@ -102,7 +102,7 @@ Use the endpoint from the previous step in your frontend (or backend) applicatio
 
 ## Architecture
 
-Prisma is a secure API layer that sits in front of your database. Acting as a proxy, Prisma exposes a powerful GraphQL API and manages Rate-Limiting, Authentication, Logging and a host of other features. Because Prisma is a standalone process, it can be scaled independently from your application layer and provide scalable subscriptions infrastructure.
+Prisma is a secure API layer that sits in front of your database. Acting as a "GraphQL database proxy", Prisma exposes a powerful GraphQL API and manages rate-limiting, authentication, logging and a host of other features. Because Prisma is a standalone process, it can be scaled independently from your application layer and provide scalable subscriptions infrastructure.
 
 ![](https://imgur.com/SdssPgT.png)
 
@@ -110,9 +110,15 @@ Prisma is a secure API layer that sits in front of your database. Acting as a pr
 
 Prisma provides a mapping from your API to your database. In that sense, it solves similar problems as conventional ORMs. The big difference between Prisma and other ORMs is the way _how_ the mapping is implemented.
 
-**Prisma takes a radically different approach which avoids the shortcomings and limitations commonly experienced with ORMs. The core idea is that Prisma turns your database into a GraphQL API which is then consumed by your API server** (via [GraphQL binding](https://oss.prisma.io/graphql-binding)). While this makes Prisma particularly well-suited for building GraphQL servers, it can definetely be used in other contexts as well.
+Prisma takes a radically different approach which avoids the shortcomings and limitations commonly experienced with ORMs. The core idea is that Prisma turns your database into a GraphQL API which is then consumed by your API server (via [GraphQL binding](https://oss.prisma.io/graphql-binding)). While this makes Prisma particularly well-suited for building GraphQL servers, it can definetely be used in other contexts as well.
 
+Here is how Prisma compares to conventional ORMs:
 
+- **Expressiveness**: Full flexibility thanks to Prisma's GraphQL API, including powerful (relational) filters and nested mutations
+- **Performance**: Prisma uses various optimization techniques (caching, dataloader, ...) to ensure top performance in complex scenarios
+- **Architecture**: Embedding Prisma in your stack makes for a layered and clean architecture allowing you to focus on your API layer
+- **Type safety**: Thanks to GraphQL's strong type system you're getting a strongly typed API layer for free
+- **Realtime**: Prisma's GraphQL API has out-of-the-box support for realtime updates for all events happening in the database (using GraphQL subscriptions)
 
 ## Database Connectors
 
