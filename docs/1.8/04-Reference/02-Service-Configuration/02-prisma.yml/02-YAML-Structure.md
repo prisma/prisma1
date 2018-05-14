@@ -16,6 +16,7 @@ The service definition file `prisma.yml` has the following root properties:
 - `subscriptions`: Configuration of subscription webhooks.
 - `seed`: Points to a file containing mutations for data seeding.
 - `custom`: Used to provide variables which can be referenced elsewhere in `prisma.yml`.
+- `hooks`: Define CLI commands to be executed before/after specific actions of the Prisma CLI
 
 > The exact structure of `prisma.yml` is defined with [JSON schema](http://json-schema.org/). You can find the corresponding schema definition [here](https://github.com/graphcool/graphcool-json-schema/blob/master/src/schema.json).
 
