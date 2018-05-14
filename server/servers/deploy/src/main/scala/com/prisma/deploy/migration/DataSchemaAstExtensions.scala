@@ -64,9 +64,8 @@ object DataSchemaAstExtensions {
 
     def description: Option[String] = objectType.directiveArgumentAsString("description", "text")
 
-    def tableName: String = tableNameDirective.getOrElse(objectType.name)
-    def tableNameDirective: Option[String] =
-      objectType.directiveArgumentAsString("model", "table").orElse(objectType.directiveArgumentAsString("pgTable", "name"))
+    def tableName: String                  = tableNameDirective.getOrElse(objectType.name)
+    def tableNameDirective: Option[String] = objectType.directiveArgumentAsString("pgTable", "name")
   }
 
   implicit class CoolField(val fieldDefinition: FieldDefinition) extends AnyVal {
@@ -82,8 +81,7 @@ object DataSchemaAstExtensions {
 
     def typeName: String = fieldDefinition.fieldType.namedType.name
 
-    def columnName: Option[String] =
-      fieldDefinition.directiveArgumentAsString("field", "column").orElse(fieldDefinition.directiveArgumentAsString("pgColumn", "name"))
+    def columnName: Option[String] = fieldDefinition.directiveArgumentAsString("pgColumn", "name")
 
     def isUnique: Boolean = fieldDefinition.directive("unique").isDefined || fieldDefinition.directive("pqUnique").isDefined
 

@@ -19,7 +19,7 @@ class PassiveDeployMutationSpec extends FlatSpec with Matchers with PassiveDeplo
 
     val schema =
       """
-       | type List @model(table: "list"){
+       | type List @pgTable(name: "list"){
        |   id: ID! @unique
        |   name: String!
        |   foo: String
@@ -47,7 +47,7 @@ class PassiveDeployMutationSpec extends FlatSpec with Matchers with PassiveDeplo
        """.stripMargin
     val schema =
       """
-        | type List @model(table: "list"){
+        | type List @pgTable(name: "list"){
         |   id: ID! @unique
         |   name: String!
         |   scalarList: [String!]!
@@ -77,13 +77,13 @@ class PassiveDeployMutationSpec extends FlatSpec with Matchers with PassiveDeplo
 
     val schema =
       """
-        | type List @model(table: "list"){
+        | type List @pgTable(name: "list"){
         |   id: ID! @unique
         |   name: String!
         |   todos: [Todo!]!
         | }
         |
-        | type Todo @model(table: "todo"){
+        | type Todo @pgTable(name: "todo"){
         |   id: ID! @unique
         |   title: String!
         |   list: List! @pgRelation(name: "list_id")
@@ -118,13 +118,13 @@ class PassiveDeployMutationSpec extends FlatSpec with Matchers with PassiveDeplo
 
     val schema =
       """
-        | type List @model(table: "list"){
+        | type List @pgTable(name: "list"){
         |   id: ID! @unique
         |   name: String!
         |   todos: [Todo!]!
         | }
         |
-        | type Todo @model(table: "todo"){
+        | type Todo @pgTable(name: "todo"){
         |   id: ID! @unique
         |   title: String!
         |   list: List!
@@ -163,13 +163,13 @@ class PassiveDeployMutationSpec extends FlatSpec with Matchers with PassiveDeplo
 
     val schema =
       """
-        | type List @model(table: "list"){
+        | type List @pgTable(name: "list"){
         |   id: ID! @unique
         |   name: String!
         |   todos: [Todo!]! @pgRelationTable(table: "todotolist")
         | }
         |
-        | type Todo @model(table: "todo"){
+        | type Todo @pgTable(name: "todo"){
         |   id: ID! @unique
         |   title: String!
         |   list: [List!]!
@@ -208,13 +208,13 @@ class PassiveDeployMutationSpec extends FlatSpec with Matchers with PassiveDeplo
 
     val schema =
       """
-        | type List @model(table: "list"){
+        | type List @pgTable(name: "list"){
         |   id: ID! @unique
         |   name: String!
         |   todos: [Todo!]!
         | }
         |
-        | type Todo @model(table: "todo"){
+        | type Todo @pgTable(name: "todo"){
         |   id: ID! @unique
         |   title: String!
         |   list: [List!]!
@@ -253,13 +253,13 @@ class PassiveDeployMutationSpec extends FlatSpec with Matchers with PassiveDeplo
 
     val schema =
       """
-        | type List @model(table: "list"){
+        | type List @pgTable(name: "list"){
         |   id: ID! @unique
         |   name: String!
         |   todos: [Todo!]!
         | }
         |
-        | type Todo @model(table: "todo"){
+        | type Todo @pgTable(name: "todo"){
         |   id: ID! @unique
         |   title: String!
         |   list: [List!]!

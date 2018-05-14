@@ -327,7 +327,7 @@ class SchemaInfererSpec extends WordSpec with Matchers {
 
   "handle database manifestations for models" in {
     val types =
-      """|type Todo @model(table:"todo_table"){
+      """|type Todo @pgTable(name:"todo_table"){
          |  name: String!
          |}""".stripMargin
     val schema = infer(emptyProject.schema, types).get
@@ -339,7 +339,7 @@ class SchemaInfererSpec extends WordSpec with Matchers {
   "handle database manifestations for fields" in {
     val types =
       """|type Todo {
-         |  name: String! @field(column: "my_name_column")
+         |  name: String! @pgColumn(name: "my_name_column")
          |}""".stripMargin
     val schema = infer(emptyProject.schema, types).get
 
