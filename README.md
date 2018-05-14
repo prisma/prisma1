@@ -180,7 +180,7 @@ Prisma servers run as standalone processes which allows for them to be scaled in
 
 <!-- Prisma is a secure API layer that sits in front of your database. Acting as a _GraphQL database proxy_, Prisma exposes a powerful GraphQL API and manages rate limiting, authentication, logging and a host of other features. Because Prisma is a standalone process, it can be scaled independently from your application layer and provide scalable subscriptions infrastructure. -->
 
-![](https://imgur.com/SdssPgT.png)
+<p align="center"><img src="https://imgur.com/lMV1tMg.png" height="280" /></p>
 
 ## Is Prisma an ORM?
 
@@ -269,3 +269,5 @@ Releases are separated into two _channels_ - the **stable** and **unstable** cha
 * The stable channel is released every two weeks, incrementing the minor version number. Irregular releases in between minor releases can occur and increment the patch version.
 
 * The unstable channel is released with every commit to master and therefore gives access to features and bug fixes before the stable release. You can find more information about running the Prisma on the unstable channel [here](https://github.com/graphcool/prisma/blob/master/CONTRIBUTING.md#the-unstable-channel).
+
+<p align="center"><a href="https://oss.prisma.io"><img src="https://imgur.com/IMU2ERq.png" alt="Prisma" height="170px"></a></p>
