@@ -6,7 +6,7 @@
 
 **Prisma is a performant open-source GraphQL [ORM-like layer](#is-prisma-an-orm)** doing the heavy lifting in your GraphQL server. It turns your database into a GraphQL API that is consumed by your resolvers via [GraphQL bindings](https://oss.prisma.io/graphql-binding).
 
-The Prisma GraphQL API provides powerful abstractions and modular building blocks to develop flexible, scalable GraphQL backends:
+Prisma's auto-generated GraphQL API provides powerful abstractions and modular building blocks to develop flexible, scalable GraphQL backends:
 
 - **Type-safe API** that can be used from frontend and backend, including filters, aggregations and transactions.
 - **Data modeling** with declarative SDL. Prisma migrates your underlying database automatically.
@@ -246,10 +246,12 @@ Join the discussion or contribute to influence which we'll work on next!
 
 The most important component in Prisma is the GraphQL API:
 
-* Query, mutate & stream data via GraphQL CRUD API
-* Define and evolve your data model using GraphQL SDL
+* Query, mutate & stream data via a auto-generated GraphQL CRUD API
+* Define your data model and perform migrations using GraphQL SDL
 
-Try the online demo: [open GraphQL Playground](https://www.prisma.io/features)
+> Try the online demo: [Open GraphQL Playground](https://www.prisma.io/features/graphql-api/)
+
+Prisma's auto-generated GraphQL APIs are fully compatible with the [OpenCRUD](https://www.opencrud.org/) standard.
 
 ## Community
 
