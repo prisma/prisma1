@@ -176,7 +176,7 @@ Prisma takes the role of a [data access layer](https://en.wikipedia.org/wiki/Dat
 
 Acting as a "GraphQL database proxy", Prisma provides a GraphQL-based abstraction for your databases enabling you to read and write data with GraphQL queries and mutations. Using [Prisma bindings](https://github.com/graphcool/prisma-binding), you can access Prisma's GraphQL API from your programming language.
 
-Prisma servers run as standalone processes which allows for them to be scaled independetly from your API server.
+Prisma servers run as standalone processes which allows for them to be scaled independently from your API server.
 
 <!-- Prisma is a secure API layer that sits in front of your database. Acting as a _GraphQL database proxy_, Prisma exposes a powerful GraphQL API and manages rate limiting, authentication, logging and a host of other features. Because Prisma is a standalone process, it can be scaled independently from your application layer and provide scalable subscriptions infrastructure. -->
 
@@ -257,7 +257,7 @@ Prisma has a community of thousands of amazing developers and contributors. Welc
 - [Meetup](https://www.meetup.com/graphql-berlin)
 - [GraphQL Europe](https://www.graphql-europe.org/) (June 15, Berlin)
 - [GraphQL Day](https://www.graphqlday.org/)
-- [Email](hello@prisma.io)
+- [Email](mailto:hello@prisma.io)
 
 ## Contributing
 
