@@ -45,8 +45,6 @@ prisma init hello-world
 
 Then select the **Demo server** and follow the instructions of the interactive CLI prompt.
 
-<br>
-
 <details><summary>I want to use Prisma with my own database.</summary>
 <p>
 
