@@ -43,4 +43,4 @@ To deploy your service to a public cluster (rather than locally with Docker), yo
 
 ### 3. Explore the Postgres
 
-Running the command `docker ps` will show you an image running for Postgres running at port 5432 and an image running the Prisma which connects to this external Postgres running at port 5432.
+Running the command `docker ps` will show you an image running for Postgres running at port 5432 and an image running Prisma which connects to this external Postgres running at port 5432.
