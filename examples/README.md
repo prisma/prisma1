@@ -8,5 +8,6 @@ Collection of Prisma example projects 💡
 * [yaml-structure](yaml-structure)
 * [hooks](hooks)
 * [server-side-subscriptions](server-side-subscriptions)
+* [application-server](application-server)
 
 You can also check the [**AirBnB clone example**](https://github.com/graphcool/graphql-server-example) we built as a fully-featured demo app for Prisma.
