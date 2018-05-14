@@ -169,11 +169,17 @@ object SchemaErrors {
     ) //todo
   }
 
-  def scalarFieldTypeWrong(fieldAndType: FieldAndType): SchemaError = {
-    val scalarType = fieldAndType.fieldDef.fieldType.namedType.name
+  def invalidScalarNonListType(fieldAndType: FieldAndType)       = invalidScalarType(fieldAndType, listTypesAllowed = false)
+  def invalidScalarListOrNonListType(fieldAndType: FieldAndType) = invalidScalarType(fieldAndType, listTypesAllowed = true)
+
+  private def invalidScalarType(fieldAndType: FieldAndType, listTypesAllowed: Boolean): SchemaError = {
+    val scalarType      = fieldAndType.fieldDef.fieldType.namedType.name
+    val nonListFormats  = s"`$scalarType`, `$scalarType!`"
+    val listFormats     = s", `[$scalarType!]` or `[$scalarType!]!"
+    val possibleFormats = if (listTypesAllowed) nonListFormats + listFormats else nonListFormats
     error(
       fieldAndType,
-      s"""The scalar field `${fieldAndType.fieldDef.name}` has the wrong format: `${fieldAndType.fieldDef.typeString}` Possible Formats: `$scalarType`, `$scalarType!`, `[$scalarType!]` or `[$scalarType!]!`"""
+      s"""The scalar field `${fieldAndType.fieldDef.name}` has the wrong format: `${fieldAndType.fieldDef.typeString}` Possible Formats: $possibleFormats"""
     )
   }
 

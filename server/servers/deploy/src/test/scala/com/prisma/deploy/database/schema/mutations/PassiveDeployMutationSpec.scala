@@ -37,6 +37,30 @@ class PassiveDeployMutationSpec extends FlatSpec with Matchers with PassiveDeplo
     model.fields should have(size(3))
   }
 
+  "a schema with scalar list" should "not work" in {
+    val sqlSchema =
+      s"""
+         |CREATE TABLE list (
+         |  id      SERIAL PRIMARY KEY
+         |, name    text NOT NULL
+         |);
+       """.stripMargin
+    val schema =
+      """
+        | type List @model(table: "list"){
+        |   id: ID! @unique
+        |   name: String!
+        |   scalarList: [String!]!
+        | }
+      """.stripMargin
+
+    setupProjectDatabaseForProject(projectId, sqlSchema)
+
+    val result = server.deploySchemaThatMustError(projectId, schema)
+    result.pathAsString("data.deploy.errors.[0].description") should be(
+      "The scalar field `scalarList` has the wrong format: `[String!]!` Possible Formats: `String`, `String!`")
+  }
+
   "a schema with an explicit inline relation" should "work" in {
     val sqlSchema = s"""
      |CREATE TABLE List (

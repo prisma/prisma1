@@ -71,7 +71,13 @@ object SchemaSyntaxValidator {
   def apply(schema: String, isActive: Boolean): SchemaSyntaxValidator = {
     val fieldRequirements         = if (isActive) reservedFieldsRequirementsForActiveConnectors else reservedFieldsRequirementsForPassiveConnectors
     val requiredFieldRequirements = if (isActive) Vector.empty else requiredReservedFields
-    SchemaSyntaxValidator(schema, directiveRequirements, fieldRequirements, requiredFieldRequirements)
+    SchemaSyntaxValidator(
+      schema = schema,
+      directiveRequirements = directiveRequirements,
+      reservedFieldsRequirements = fieldRequirements,
+      requiredReservedFields = requiredFieldRequirements,
+      allowScalarLists = isActive
+    )
   }
 }
 
@@ -79,7 +85,8 @@ case class SchemaSyntaxValidator(
     schema: String,
     directiveRequirements: Seq[DirectiveRequirement],
     reservedFieldsRequirements: Seq[FieldRequirement],
-    requiredReservedFields: Seq[FieldRequirement]
+    requiredReservedFields: Seq[FieldRequirement],
+    allowScalarLists: Boolean
 ) {
   import com.prisma.deploy.migration.DataSchemaAstExtensions._
 
@@ -245,7 +252,15 @@ case class SchemaSyntaxValidator(
 
   def validateScalarFields(fieldAndTypes: Seq[FieldAndType]): Seq[SchemaError] = {
     val scalarFields = fieldAndTypes.filter(isScalarField)
-    scalarFields.collect { case fieldAndType if !fieldAndType.fieldDef.isValidScalarType => SchemaErrors.scalarFieldTypeWrong(fieldAndType) }
+    if (allowScalarLists) {
+      scalarFields.collect {
+        case fieldAndType if !fieldAndType.fieldDef.isValidScalarListOrNonListType => SchemaErrors.invalidScalarListOrNonListType(fieldAndType)
+      }
+    } else {
+      scalarFields.collect {
+        case fieldAndType if !fieldAndType.fieldDef.isValidScalarNonListType => SchemaErrors.invalidScalarNonListType(fieldAndType)
+      }
+    }
   }
 
   def validateFieldDirectives(fieldAndType: FieldAndType): Seq[SchemaError] = {

@@ -102,12 +102,18 @@ object DataSchemaAstExtensions {
       case _                                                            => false
     }
 
-    def isValidScalarType: Boolean = fieldDefinition.fieldType match {
-      case NamedType(_, _)                                              => true
-      case NotNullType(NamedType(_, _), _)                              => true
+    def isValidScalarListOrNonListType: Boolean = isValidScalarListType || isValidScalarNonListType
+
+    def isValidScalarListType: Boolean = fieldDefinition.fieldType match {
       case ListType(NotNullType(NamedType(_, _), _), _)                 => true
       case NotNullType(ListType(NotNullType(NamedType(_, _), _), _), _) => true
       case _                                                            => false
+    }
+
+    def isValidScalarNonListType: Boolean = fieldDefinition.fieldType match {
+      case NamedType(_, _)                 => true
+      case NotNullType(NamedType(_, _), _) => true
+      case _                               => false
     }
 
     def hasRelationDirective: Boolean        = relationName.isDefined
