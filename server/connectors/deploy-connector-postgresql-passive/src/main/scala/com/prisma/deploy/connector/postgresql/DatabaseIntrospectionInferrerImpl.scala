@@ -49,7 +49,7 @@ case class DatabaseIntrospectionInferrerImpl(db: DatabaseDef, schema: String)(im
     InferredModelTable(name = mTable.name.name, foreignKeys = importedKeys.map(slickForeignKeyToOurForeignKeyColumn))
   }
 
-  def isRelationTable(columns: Vector[MColumn], importedKeys: Vector[MForeignKey]): Boolean = importedKeys.size == 2 && columns.size == 2
+  def isRelationTable(columns: Vector[MColumn], importedKeys: Vector[MForeignKey]): Boolean = importedKeys.size == 2
 
   def slickForeignKeyToOurForeignKeyColumn(fk: MForeignKey): InferredForeignKeyColumn = {
     InferredForeignKeyColumn(
