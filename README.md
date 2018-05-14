@@ -4,7 +4,7 @@
 
 [![CircleCI](https://circleci.com/gh/graphcool/prisma.svg?style=shield)](https://circleci.com/gh/graphcool/prisma) [![Slack Status](https://slack.prisma.io/badge.svg)](https://slack.prisma.io) [![npm version](https://badge.fury.io/js/prisma.svg)](https://badge.fury.io/js/prisma)
 
-**Prisma is a performant open-source GraphQL [ORM-like layer](#is-prisma-an-orm)** doing the heavy lifting in your GraphQL server. It turns your database into a GraphQL API that is consumed by your resolvers via [GraphQL bindings](https://oss.prisma.io/graphql-binding).
+**Prisma is a performant open-source GraphQL [ORM-like layer](#is-prisma-an-orm)** doing the heavy lifting in your GraphQL server. It turns your database into a GraphQL API which is consumed by your resolvers via [GraphQL bindings](https://oss.prisma.io/graphql-binding).
 
 Prisma's auto-generated GraphQL API provides powerful abstractions and modular building blocks to develop flexible, scalable GraphQL backends:
 
@@ -172,7 +172,13 @@ TBD
 
 ## Architecture
 
-Prisma is a secure API layer that sits in front of your database. Acting as a _GraphQL database proxy_, Prisma exposes a powerful GraphQL API and manages rate limiting, authentication, logging and a host of other features. Because Prisma is a standalone process, it can be scaled independently from your application layer and provide scalable subscriptions infrastructure.
+Prisma takes the role of a [data access layer](https://en.wikipedia.org/wiki/Data_access_layer) in your backend architecture by connecting your API server to your databases. It enables a layered architecture which leads to better _separation of concerns_ and improves _maintainability_ of the entire backend.
+
+Using [Prisma bindings](https://github.com/graphcool/prisma-binding), you can further access Prisma's GraphQL API from your programming language.
+
+Prisma servers run as standalone processes which allows for them to be scaled independetly from your API server.
+
+<!-- Prisma is a secure API layer that sits in front of your database. Acting as a _GraphQL database proxy_, Prisma exposes a powerful GraphQL API and manages rate limiting, authentication, logging and a host of other features. Because Prisma is a standalone process, it can be scaled independently from your application layer and provide scalable subscriptions infrastructure. -->
 
 ![](https://imgur.com/SdssPgT.png)
 
