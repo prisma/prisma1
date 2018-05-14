@@ -1,0 +1,10 @@
+projects:
+  db:
+    schemaPath: generated-schema.graphql
+    extensions:
+      endpoints:
+        default: 'http://localhost:4466/hooks'
+      prisma: prisma.yml
+      prepare-binding:
+        output: generated-prisma.ts
+        generator: prisma-ts
