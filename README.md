@@ -4,23 +4,7 @@
 
 [![CircleCI](https://circleci.com/gh/graphcool/prisma.svg?style=shield)](https://circleci.com/gh/graphcool/prisma) [![Slack Status](https://slack.graph.cool/badge.svg)](https://slack.graph.cool) [![npm version](https://badge.fury.io/js/prisma.svg)](https://badge.fury.io/js/prisma)
 
-**Prisma is a performant open-source GraphQL ORM-like layer** doing the heavy lifting in your GraphQL server.
-
-<br>
-
-<details><summary>What do you mean by _ORM-like layer layer_?</summary>
-<p>
-
-Prisma provides a mapping from your API to your database, it therefore solves similar problems as conventional ORMs. To implementd the mapping, Prisma takes a radically different approach which prevents the shortcomings and limitations of conventional ORMs:
-
-- Prisma turns your database into a GrapQL API
-- Access Prisma's GraphQL API from your programming language using [GraphQL binding](https://oss.prisma.io/graphql-binding)
-- Enables a layered architecture for your GraphQL server
-
-</p>
-</details>
-
-<br>
+**Prisma is a performant open-source GraphQL [ORM-like layer](#)** doing the heavy lifting in your GraphQL server.
 
 The Prisma GraphQL API provides powerful abstractions and building blocks to develop flexible, scalable GraphQL backends:
 
@@ -116,12 +100,28 @@ Use the endpoint from the previous step in your frontend (or backend) applicatio
 - [resolver-forwarding](examples/resolver-forwarding)
 - [subscriptions](examples/subscriptions)
 
-
 ## Architecture
 
 Prisma is a secure API layer that sits in front of your database. Acting as a proxy, Prisma exposes a powerful GraphQL API and manages Rate-Limiting, Authentication, Logging and a host of other features. Because Prisma is a standalone process, it can be scaled independently from your application layer and provide scalable subscriptions infrastructure.
 
 ![](https://imgur.com/SdssPgT.png)
+
+## Is Prisma an ORM?
+
+Prisma provides a mapping from your API to your database. In that sense, it solves similar problems as conventional ORMs. The big difference between Prisma and other ORMs is the way _how_ the mapping is implemented.
+
+**Prisma takes a radically different approach which avoids the shortcomings and limitations commonly experienced with ORMs. The core idea is that Prisma turns your database into a GraphQL API which is then consumed by your API server** (via [GraphQL binding](https://oss.prisma.io/graphql-binding)). While this makes Prisma particularly well-suited for building GraphQL servers, it can definetely be used in other contexts as well.
+
+### Conventional ORMs are limited in their expressiveness
+
+- Conventional ORMs are limited in their expressiveness: Prisma solves this by turning your 
+- solves unperformant queries via separate layers, dataloader, caching etc
+- tedious to keep in sync with your db schema
+- Lacking type safety
+
+- Prisma turns your database into a GrapQL API
+- Access Prisma's GraphQL API from your programming language using [GraphQL binding](https://oss.prisma.io/graphql-binding)
+- Enables a layered architecture for your GraphQL server
 
 ## Database Connectors
 
