@@ -121,27 +121,27 @@ case class NestedCreateDataItemInterpreterForInlineRelations(mutaction: NestedCr
   val model    = mutaction.create.path.lastModel
 
   require(relation.isInlineRelation)
-  val inlineManifestation = relation.manifestation.get.asInstanceOf[InlineRelationManifestation]
+  val inlineManifestation = relation.inlineManifestation.get
   require(inlineManifestation.inTableOfModelId == path.lastModel.id)
 
   override def action(mutationBuilder: PostgresApiDatabaseMutationBuilder): DBIO[Unit] = {
-    val relationAction = NestedCreateRelationInterpreter(mutaction.nestedCreateRelation).removalActions(mutationBuilder)
+    val relationAction = DBIO.sequence(NestedCreateRelationInterpreter(mutaction.nestedCreateRelation).removalActions(mutationBuilder))
     val listAction     = mutationBuilder.setScalarList(path, mutaction.create.listArgs)
-    DBIO.seq(DBIO.sequence(relationAction), bla(mutationBuilder), listAction)
+    DBIO.seq(relationAction, queryParentAndCreateDataItem(mutationBuilder), listAction)
   }
 
   import com.prisma.api.connector.postgresql.database.SlickExtensions._
 
-  def bla(mutationBuilder: PostgresApiDatabaseMutationBuilder) = {
+  def queryParentAndCreateDataItem(mutationBuilder: PostgresApiDatabaseMutationBuilder) = {
     val idSubQuery      = mutationBuilder.pathQueryForLastParent(path)
     val lastParentModel = path.removeLastEdge.lastModel
     for {
       ids    <- (sql"""select "id" from "#${mutationBuilder.schemaName}"."#${lastParentModel.dbName}" where id in (""" ++ idSubQuery ++ sql")").as[String]
-      result <- createDataItemAndLinkToParent2(mutationBuilder)(ids.head)
+      result <- createDataItemWithLinkToParent(mutationBuilder)(ids.head)
     } yield result
   }
 
-  def createDataItemAndLinkToParent2(mutationBuilder: PostgresApiDatabaseMutationBuilder)(parentId: String) = {
+  def createDataItemWithLinkToParent(mutationBuilder: PostgresApiDatabaseMutationBuilder)(parentId: String) = {
     val inlineField  = relation.getFieldOnModel(model.id, project.schema).get
     val argsMap      = mutaction.create.nonListArgs.raw.asRoot.map
     val modifiedArgs = argsMap.updated(inlineField.name, IdGCValue(parentId))
