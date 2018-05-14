@@ -1,18 +1,18 @@
 <a href="https://www.prisma.io"><img src="https://imgur.com/HUu10rH.png" width="248" /></a>
 
-[Website](https://www.prisma.io) • [Docs](https://www.prisma.io/docs/) • [Blog](https://blog.prisma.io/) • [Forum](https://www.prisma.io/forum) • [Slack](https://slack.prisma.io/) • [Twitter](https://twitter.com/graphcool)
+[Website](https://www.prisma.io) • [Docs](https://www.prisma.io/docs/) • [Blog](https://blog.prisma.io/) • [Forum](https://www.prisma.io/forum) • [Slack](https://slack.prisma.io/) • [Twitter](https://twitter.com/prismagraphql)
 
-[![CircleCI](https://circleci.com/gh/graphcool/prisma.svg?style=shield)](https://circleci.com/gh/graphcool/prisma) [![Slack Status](https://slack.graph.cool/badge.svg)](https://slack.graph.cool) [![npm version](https://badge.fury.io/js/prisma.svg)](https://badge.fury.io/js/prisma)
+[![CircleCI](https://circleci.com/gh/graphcool/prisma.svg?style=shield)](https://circleci.com/gh/graphcool/prisma) [![Slack Status](https://slack.prisma.io/badge.svg)](https://slack.prisma.io) [![npm version](https://badge.fury.io/js/prisma.svg)](https://badge.fury.io/js/prisma)
 
-**Prisma is a performant open-source GraphQL [ORM-like layer](#is-prisma-an-orm)** doing the heavy lifting in your GraphQL server. It turns your database into a GraphQL API to be consumed from your resolvers via [GraphQL bindings](https://new.prisma.io/).
+**Prisma is a performant open-source GraphQL [ORM-like layer](#is-prisma-an-orm)** doing the heavy lifting in your GraphQL server. It turns your database into a GraphQL API that is consumed by your resolvers via [GraphQL bindings](https://oss.prisma.io/graphql-binding).
 
-The Prisma GraphQL API provides powerful abstractions and building blocks to develop flexible, scalable GraphQL backends:
+The Prisma GraphQL API provides powerful abstractions and modular building blocks to develop flexible, scalable GraphQL backends:
 
-1. **Type-safe API** that can be used from frontend and backend, including filters, aggregations and transactions.
-2. **Data modeling** with declarative SDL. Prisma migrates your underlying database automatically.
-3. **Realtime API** using GraphQL Subscriptions.
-4. **Advanced API composition** using GraphQL Bindings and schema stitching.
-5. **Works with all frontend frameworks** like React, Vue.js, Angular ([Quickstart Examples](https://www.prisma.io/docs/quickstart/)).
+- **Type-safe API** that can be used from frontend and backend, including filters, aggregations and transactions.
+- **Data modeling** with declarative SDL. Prisma migrates your underlying database automatically.
+- **Realtime API** using GraphQL Subscriptions.
+- **Advanced API composition** using GraphQL Bindings and schema stitching.
+- **Works with all frontend frameworks** like React, Vue.js, Angular
 
 ## Contents
 
@@ -168,11 +168,10 @@ mutation {
 }
 ```
 
-
 </p>
 </details>
 
-#### 7. Next steps
+#### 6. Next steps
 
 You can now connect to Prisma's GraphQL API, select what you would like to do next:
 
@@ -180,20 +179,13 @@ You can now connect to Prisma's GraphQL API, select what you would like to do ne
 - Access Prisma's GraphQL API directly from the frontend (_coming soon_)
 - Access Prisma's GraphQL API directly from a Node script (_coming soon_)
 
-
 ## Examples
 
-- [demo-application](https://github.com/graphcool/graphql-server-example)
-- [auth](examples/auth)
-- [file-handling-s3](examples/file-handling-s3)
-- [github-auth](examples/github-auth)
-- [permissions](examples/permissions)
-- [resolver-forwarding](examples/resolver-forwarding)
-- [subscriptions](examples/subscriptions)
+TBD
 
 ## Architecture
 
-Prisma is a secure API layer that sits in front of your database. Acting as a "GraphQL database proxy", Prisma exposes a powerful GraphQL API and manages rate-limiting, authentication, logging and a host of other features. Because Prisma is a standalone process, it can be scaled independently from your application layer and provide scalable subscriptions infrastructure.
+Prisma is a secure API layer that sits in front of your database. Acting as a _GraphQL database proxy_, Prisma exposes a powerful GraphQL API and manages rate limiting, authentication, logging and a host of other features. Because Prisma is a standalone process, it can be scaled independently from your application layer and provide scalable subscriptions infrastructure.
 
 ![](https://imgur.com/SdssPgT.png)
 
@@ -217,14 +209,14 @@ Here is how Prisma compares to conventional ORMs:
 
 You can connect the following databases to Prisma already:
 
-* MySQL
-* Postgres
+- MySQL
+- Postgres
 
 More database connectors will follow.
 
 ### Upcoming Connectors
 
-If you are interested to participate in the preview for one of the following connectors, please reach out in our [Slack](https://slack.graph.cool).
+If you are interested to participate in the preview for one of the following connectors, please reach out in our [Slack](https://slack.prisma.io).
 
 * [MongoDB Connector](https://github.com/graphcool/prisma/issues/1643)
 * [Elastic Search Connector](https://github.com/graphcool/prisma/issues/1665)
@@ -263,12 +255,12 @@ Try the online demo: [open GraphQL Playground](https://www.prisma.io/features)
 
 Prisma has a community of thousands of amazing developers and contributors. Welcome, please join us! 👋
 
-* [Forum](https://www.graph.cool/forum)
-* [Slack](https://slack.graph.cool/)
-* [Twitter](https://twitter.com/graphcool)
+* [Forum](https://www.prisma.io/forum)
+* [Slack](https://slack.prisma.io/)
+* [Twitter](https://twitter.com/prismagraphql)
 * [Facebook](https://www.facebook.com/GraphcoolHQ)
 * [Meetup](https://www.meetup.com/graphql-berlin)
-* [Email](hello@graph.cool)
+* [Email](hello@prisma.io)
 
 ## Contributing
 
