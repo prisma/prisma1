@@ -29,17 +29,17 @@ The Prisma GraphQL API provides powerful abstractions and building blocks to dev
 
 [Watch this 4 min tutorial](https://www.youtube.com/watch?v=20zGexpEitc) or follow the steps below to get started with Prisma:
 
-1. **Install the CLI via NPM:**
+#### 1. Install the CLI via NPM
 
-```console
+```bash
 npm install -g prisma
 ```
 
-2. **Create a new Prisma service:**
+#### 2. Create a new Prisma service
 
-The following command creates all files you need for a new [service](https://www.prisma.io/docs/reference/service-configuration/overview-ieshoo5ohm).
+Run following command to create the files you need for a new Prisma [service](https://www.prisma.io/docs/reference/service-configuration/overview-ieshoo5ohm).
 
-```console
+```bash
 prisma init hello-world
 ```
 
@@ -49,7 +49,7 @@ Follow the interactive prompts to choose your own Prisma setup:
 - Setup Prisma with a new database (requires Docker)
 - Connect your database (requires Docker)
 
-3. **Define your data model:**
+### 4. Define your data model
 
 Edit `datamodel.graphql` to define your data model using the [GraphQL SDL notation](https://www.prisma.io/docs/reference/service-configuration/data-modelling-(sdl)-eiroozae8u).
 
@@ -77,7 +77,7 @@ type Location {
 }
 ```
 
-5. **Deploy your service:**
+#### 5. Deploy your service
 
 To deploy your service simply run the following command and select one of the hosted development clusters or setup a local Docker-based development environment:
 
@@ -85,11 +85,11 @@ To deploy your service simply run the following command and select one of the ho
 prisma deploy
 ```
 
-6. **Connect to your GraphQL endpoint:**
+#### 6. Connect to your GraphQL endpoint
 
 Use the endpoint from the previous step in your frontend (or backend) applications to connect to your GraphQL API.
 
-7. **Read more in the dedicated quickstarts for your favorite technology**
+#### 7. Read more in the dedicated quickstarts for your favorite technology
 
 [![](https://imgur.com/T5nakij.png)](https://www.prisma.io/docs/quickstart/)
 
