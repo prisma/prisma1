@@ -13,8 +13,11 @@ case class DatabaseIntrospectionInferrerImpl(db: DatabaseDef, schema: String)(im
 
   def action: DBIO[InferredTables] = {
     for {
-      tables         <- MTable.getTables(cat = None, schemaPattern = Some(schema), namePattern = None, types = None)
-      inferredTables <- DBIO.sequence(tables.map(mTableToInferredTable))
+      // the line below does not work perfectly on postgres. E.g. it will return tables for schemas "passive_test" and "passive$test" when param is "passive_test"
+      // we therefore have one additional filter step
+      potentialTables <- MTable.getTables(cat = None, schemaPattern = Some(schema), namePattern = None, types = None)
+      tables          = potentialTables.filter(table => table.name.schema.contains(schema))
+      inferredTables  <- DBIO.sequence(tables.map(mTableToInferredTable))
     } yield {
       InferredTables(
         relationTables = inferredTables.collect { case x: InferredRelationTable => x },
@@ -28,10 +31,6 @@ case class DatabaseIntrospectionInferrerImpl(db: DatabaseDef, schema: String)(im
       columns      <- mTable.getColumns
       importedKeys <- mTable.getImportedKeys
     } yield {
-//      println(s"inferred table ${mTable.name.name}")
-//      val columnNames = columns.map(_.name)
-//      println(s"found the columns: $columnNames")
-
       if (isRelationTable(columns, importedKeys)) {
         mTableToRelationTable(mTable, importedKeys)
       } else {

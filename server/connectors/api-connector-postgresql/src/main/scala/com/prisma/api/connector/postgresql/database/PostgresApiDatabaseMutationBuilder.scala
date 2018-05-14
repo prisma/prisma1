@@ -561,7 +561,7 @@ case class PostgresApiDatabaseMutationBuilder(
         val escapedKeys  = columns.map(column => s""""$column"""").mkString(",")
         val placeHolders = columns.map(_ => "?").mkString(",")
 
-        val query                         = s"""INSERT INTO "${mutaction.project.id}"."${model.name}" ($escapedKeys) VALUES ($placeHolders)"""
+        val query                         = s"""INSERT INTO "$schemaName"."${model.name}" ($escapedKeys) VALUES ($placeHolders)"""
         val itemInsert: PreparedStatement = jdbcActionContext.connection.prepareStatement(query)
         val currentTimeStamp              = currentTimeStampUTC
 
@@ -595,7 +595,7 @@ case class PostgresApiDatabaseMutationBuilder(
       }
 
       val relayResult: Vector[String] = try {
-        val relayQuery                     = s"""INSERT INTO "${mutaction.project.id}"."_RelayId" ("id", "stableModelIdentifier") VALUES (?,?)"""
+        val relayQuery                     = s"""INSERT INTO "$schemaName"."_RelayId" ("id", "stableModelIdentifier") VALUES (?,?)"""
         val relayInsert: PreparedStatement = jdbcActionContext.connection.prepareStatement(relayQuery)
 
         mutaction.args.foreach { arg =>
@@ -635,7 +635,7 @@ case class PostgresApiDatabaseMutationBuilder(
 
     SimpleDBIO[Vector[String]] { x =>
       val res = try {
-        val query                             = s"""INSERT INTO "${mutaction.project.id}"."${mutaction.relation.relationTableNameNew(schema)}" ("id", "A","B") VALUES (?,?,?)"""
+        val query                             = s"""INSERT INTO "$schemaName"."${mutaction.relation.relationTableNameNew(schema)}" ("id", "A","B") VALUES (?,?,?)"""
         val relationInsert: PreparedStatement = x.connection.prepareStatement(query)
         mutaction.args.foreach { arg =>
           relationInsert.setString(1, Cuid.createCuid())
