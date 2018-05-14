@@ -2,6 +2,8 @@ import { Command, flags, Flags } from 'prisma-cli-engine'
 import * as fs from 'fs-extra'
 import { Importer } from '../import/Importer'
 import { Seeder } from './Seeder'
+import { prettyTime } from '../../util'
+import chalk from 'chalk'
 
 export default class Seed extends Command {
   static topic = 'seed'
@@ -20,6 +22,13 @@ export default class Seed extends Command {
     const cluster = this.definition.getCluster()
     this.env.setActiveCluster(cluster!)
 
+    const seed = this.definition.definition!.seed
+    if (!seed) {
+      throw new Error(
+        `In order to seed, you need to provide a "seed" property in your prisma.yml`,
+      )
+    }
+
     const seeder = new Seeder(
       this.definition,
       this.client,
@@ -27,6 +36,18 @@ export default class Seed extends Command {
       this.config,
     )
 
-    await seeder.seed(serviceName, this.definition.stage!, reset, this.definition.getWorkspace()!)
+    const seedSource =
+      this.definition.definition!.seed!.import ||
+      this.definition.definition!.seed!.run
+
+    this.out.action.start(`Seeding based on ${chalk.bold(seedSource!)}`)
+    const before = Date.now()
+    await seeder.seed(
+      serviceName,
+      this.definition.stage!,
+      reset,
+      this.definition.getWorkspace()!,
+    )
+    this.out.action.stop(prettyTime(Date.now() - before))
   }
 }
