@@ -80,13 +80,14 @@ trait SubscriptionSpecBase extends ConnectorAwareTest with TestFrameworkInterfac
     import com.prisma.shared.models.ProjectJsonFormatter._
     import com.prisma.stub.Import._
 
-    val projectWithClientId = ProjectWithClientId(project, "clientId")
+    val projectWithClientId   = ProjectWithClientId(project, "clientId")
+    val dummyStage            = "test"
+    val projectIdInFetcherUrl = projectIdEncoder.toEncodedString(project.id, dummyStage)
     val stubs = List(
-      com.prisma.stub.Import.Request("GET", s"/${dependencies.projectFetcherPath}/${project.id}").stub(200, Json.toJson(projectWithClientId).toString)
+      com.prisma.stub.Import.Request("GET", s"/${dependencies.projectFetcherPath}/$projectIdInFetcherUrl").stub(200, Json.toJson(projectWithClientId).toString)
     )
     withStubServer(stubs, port = dependencies.projectFetcherPort) {
-      val projectId = projectIdEncoder.fromEncodedString(project.id)
-      WS(s"/${projectId.name}/${projectId.stage}", wsClient.flow, Seq(wsServer.v7ProtocolName)) ~> wsServer.routes ~> check {
+      WS(s"/${project.id}/$dummyStage", wsClient.flow, Seq(wsServer.v7ProtocolName)) ~> wsServer.routes ~> check {
         checkFn(wsClient)
       }
     }
