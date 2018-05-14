@@ -1,6 +1,6 @@
 # Application Server
 
-This example demonstrates usage of Prisma with [`graphql-yoga`](https://github.com/graphcool/graphql-yoga) and [`prisma-binding`](https://github.com/graphcool/prisma-binding) to build an application server and expose a domain specific API.
+This example demonstrates the usage of Prisma with [`graphql-yoga`](https://github.com/graphcool/graphql-yoga) and [`prisma-binding`](https://github.com/graphcool/prisma-binding) to build an application server and expose a domain specific API.
 
 ## Get started
 
@@ -43,7 +43,7 @@ To deploy your service to a public cluster (rather than locally with Docker), yo
 
 ### 3. Explore the API
 
-This example seeds some code into the database for us to explore some queries and features of the data model. Please take a look at `seed.graphql` for reference. Feel free to add/remove more data via mutations.
+This example seeds some data into the database for us to explore some queries and features of the data model. Please take a look at `seed.graphql` for reference. Feel free to add/remove more data via mutations.
 
 ### To start the server, run the following command
 
