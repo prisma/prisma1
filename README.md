@@ -125,7 +125,12 @@ mutation {
 
 #### 7. Next steps
 
-- **Build a GraphQL server (recommended)**
+You can now connect to Prisma's GraphQL API, select what you would like to do next:
+
+- [**Build a GraphQL server (recommended)**](https://www.prisma.io/docs/tutorials/-ohdaiyoo6c)
+- Access Prisma's GraphQL API directly from the frontend (_coming soon_)
+- Access Prisma's GraphQL API directly from a Node script (_coming soon_)
+
 
 ## Examples
 
