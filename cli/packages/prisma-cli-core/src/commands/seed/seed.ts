@@ -27,6 +27,6 @@ export default class Seed extends Command {
       this.config,
     )
 
-    await seeder.seed(serviceName, this.definition.stage!, reset)
+    await seeder.seed(serviceName, this.definition.stage!, reset, this.definition.getWorkspace()!)
   }
 }
