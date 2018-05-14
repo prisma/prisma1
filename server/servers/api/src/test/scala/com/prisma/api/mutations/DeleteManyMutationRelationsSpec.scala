@@ -7,7 +7,7 @@ import org.scalatest.{FlatSpec, Matchers}
 
 class DeleteManyMutationRelationsSpec extends FlatSpec with Matchers with ApiSpecBase {
 
-  // TODO: fails because of missing back relation field
+  // todo: fails because of missing back relation, which we want to guarantee to always be there in the future
   "a P0 to C1! relation " should "error when deleting the parent" taggedAs (IgnorePassive) in {
     val project = SchemaDsl.fromBuilder { schema =>
       val parent = schema.model("Parent").field_!("p", _.String, isUnique = true)
@@ -53,7 +53,7 @@ class DeleteManyMutationRelationsSpec extends FlatSpec with Matchers with ApiSpe
     ifConnectorIsActive { dataResolver(project).countByTable("_ChildToParent").await should be(1) }
   }
 
-  // TODO: fails because of missing back relation field
+  // todo: fails because of missing back relation, which we want to guarantee to always be there in the future
   "a P0 to C1! relation " should "error when deleting the parent with empty filter" taggedAs (IgnorePassive) in {
     val project = SchemaDsl.fromBuilder { schema =>
       val parent = schema.model("Parent").field_!("p", _.String, isUnique = true)
