@@ -98,7 +98,7 @@ prisma deploy
 
 #### 5. Explore the API in a Playground
 
-Run the following command to open a GraphQL Playground:
+Run the following command to open a [GraphQL Playground](https://github.com/graphcool/graphql-playground/releases):
 
 ```bash
 prisma playground
