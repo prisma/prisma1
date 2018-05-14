@@ -32,7 +32,8 @@ object SchemaDsl extends AwaitUtils {
     val project = fromString(
       id = projectId(suite),
       InferredTables.empty,
-      isActive = true
+      isActive = deployConnector.isActive,
+      shouldCheckAgainstInferredTables = false
     )(sdlString)
     if (deployConnector.isPassive) {
       addManifestations(project)
@@ -53,18 +54,19 @@ object SchemaDsl extends AwaitUtils {
       deployConnector: DeployConnector
   )(sdlString: String): Project = {
     val inferredTables = deployConnector.databaseIntrospectionInferrer(id).infer().await()
-    fromString(id, inferredTables, isActive = false)(sdlString)
+    fromString(id, inferredTables, isActive = false, shouldCheckAgainstInferredTables = true)(sdlString)
   }
 
   private def fromString(
       id: String,
       inferredTables: InferredTables,
-      isActive: Boolean
+      isActive: Boolean,
+      shouldCheckAgainstInferredTables: Boolean
   )(sdlString: String): Project = {
     val emptyBaseSchema    = Schema()
     val emptySchemaMapping = SchemaMapping.empty
     val sqlDocument        = QueryParser.parse(sdlString.stripMargin).get
-    val schema             = SchemaInferrer(isActive).infer(emptyBaseSchema, emptySchemaMapping, sqlDocument, inferredTables).get
+    val schema             = SchemaInferrer(isActive, shouldCheckAgainstInferredTables).infer(emptyBaseSchema, emptySchemaMapping, sqlDocument, inferredTables).get
     TestProject().copy(id = id, schema = schema)
   }
 

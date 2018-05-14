@@ -1,5 +1,6 @@
 package com.prisma.api.mutations
 
+import com.prisma.IgnorePassive
 import com.prisma.api.ApiSpecBase
 import com.prisma.shared.schema_dsl.SchemaDsl
 import org.scalatest.{FlatSpec, Matchers}
@@ -1320,7 +1321,8 @@ class NestedConnectMutationInsideUpdateSpec extends FlatSpec with Matchers with 
     mustBeEqual(result.pathAsJsValue("data.updateTodo.comments").toString, """[{"text":"comment1"},{"text":"comment2"}]""")
   }
 
-  "a PM to CM  self relation with the child not already in a relation" should "be connectable through a nested mutation by unique" in {
+  // fails for passive as no id field is added to the model
+  "a PM to CM  self relation with the child not already in a relation" should "be connectable through a nested mutation by unique" taggedAs (IgnorePassive) in {
     val project = SchemaDsl.fromString() { """type Technology {
                                              |  name: String! @unique
                                              |  childTechnologies: [Technology!]! @relation(name: "ChildTechnologies")

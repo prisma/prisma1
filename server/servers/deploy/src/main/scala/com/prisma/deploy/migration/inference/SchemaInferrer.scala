@@ -23,9 +23,16 @@ trait SchemaInferrer {
 }
 
 object SchemaInferrer {
-  def apply(isActive: Boolean = true) = new SchemaInferrer {
+  def apply(isActive: Boolean = true, shouldCheckAgainstInferredTables: Boolean = true) = new SchemaInferrer {
     override def infer(baseSchema: Schema, schemaMapping: SchemaMapping, graphQlSdl: Document, inferredTables: InferredTables) =
-      SchemaInferrerImpl(baseSchema, schemaMapping, graphQlSdl, isActive, inferredTables).infer()
+      SchemaInferrerImpl(
+        baseSchema = baseSchema,
+        schemaMapping = schemaMapping,
+        sdl = graphQlSdl,
+        isActive = isActive,
+        shouldCheckAgainstInferredTables = shouldCheckAgainstInferredTables,
+        inferredTables = inferredTables
+      ).infer()
   }
 }
 
@@ -43,8 +50,11 @@ case class SchemaInferrerImpl(
     schemaMapping: SchemaMapping,
     sdl: Document,
     isActive: Boolean,
+    shouldCheckAgainstInferredTables: Boolean,
     inferredTables: InferredTables
 ) extends AwaitUtils {
+
+  val isPassive = !isActive
 
   def infer(): Schema Or ProjectSyntaxError = {
     for {
@@ -55,7 +65,7 @@ case class SchemaInferrerImpl(
         enums = nextEnums.toList
       )
       finalSchema = addMissingBackRelations(schema)
-      errors      = if (!isActive) checkRelationsAgainstInferredTables(finalSchema) else Vector.empty
+      errors      = if (isPassive && shouldCheckAgainstInferredTables) checkRelationsAgainstInferredTables(finalSchema) else Vector.empty
       result      <- if (errors.isEmpty) Good(finalSchema) else Bad(errors.head)
     } yield result
   }
@@ -285,15 +295,15 @@ case class SchemaInferrerImpl(
   }
 
   def relationManifestationOnFieldOrRelatedField(objectType: ObjectTypeDefinition, relationField: FieldDefinition): Option[RelationManifestation] = {
-    if (isActive) {
-      None
-    } else {
+    if (isPassive && shouldCheckAgainstInferredTables) {
       val manifestationOnThisField = relationManifestationOnField(objectType, relationField)
       val manifestationOnRelatedField = sdl.relatedFieldOf(objectType, relationField).flatMap { relatedField =>
         val relatedType = sdl.objectType_!(relationField.typeName)
         relationManifestationOnField(relatedType, relatedField)
       }
       manifestationOnThisField.orElse(manifestationOnRelatedField)
+    } else {
+      None
     }
   }
 
@@ -375,8 +385,12 @@ case class SchemaInferrerImpl(
   }
 
   def addMissingBackRelations(schema: Schema): Schema = {
-    schema.relations.foldLeft(schema) { (schema, relation) =>
-      addMissingBackRelationFieldIfMissing(schema, relation)
+    if (isPassive) {
+      schema.relations.foldLeft(schema) { (schema, relation) =>
+        addMissingBackRelationFieldIfMissing(schema, relation)
+      }
+    } else {
+      schema
     }
   }
 
