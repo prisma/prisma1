@@ -375,12 +375,8 @@ case class SchemaInferrerImpl(
   }
 
   def addMissingBackRelations(schema: Schema): Schema = {
-    if (!isActive) {
-      schema.relations.foldLeft(schema) { (schema, relation) =>
-        addMissingBackRelationFieldIfMissing(schema, relation)
-      }
-    } else {
-      schema
+    schema.relations.foldLeft(schema) { (schema, relation) =>
+      addMissingBackRelationFieldIfMissing(schema, relation)
     }
   }
 
