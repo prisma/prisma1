@@ -249,9 +249,10 @@ The most important component in Prisma is the GraphQL API:
 * Query, mutate & stream data via a auto-generated GraphQL CRUD API
 * Define your data model and perform migrations using GraphQL SDL
 
-> Try the online demo: [Open GraphQL Playground](https://www.prisma.io/features/graphql-api/)
-
 Prisma's auto-generated GraphQL APIs are fully compatible with the [OpenCRUD](https://www.opencrud.org/) standard.
+
+> [Try the online demo!](https://www.prisma.io/features/graphql-api/)
+
 
 ## Community
 
