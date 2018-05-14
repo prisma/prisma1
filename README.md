@@ -1,4 +1,4 @@
-<a href="https://www.prisma.io"><img src="https://imgur.com/HUu10rH.png" width="248" /></a>
+<p align="center"><a href="https://www.prisma.io"><img src="https://i.imgur.com/wD4rVt4.png" alt="Prisma" height="160px"></a></p>
 
 [Website](https://www.prisma.io) • [Docs](https://www.prisma.io/docs/) • [Blog](https://blog.prisma.io/) • [Forum](https://www.prisma.io/forum) • [Slack](https://slack.prisma.io/) • [Twitter](https://twitter.com/prismagraphql) • [OSS](https://oss.prisma.io/) • [Learn](https://www.howtographql.com)
 
