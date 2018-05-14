@@ -121,10 +121,7 @@ case class Project(
 object ProjectWithClientId {
   def apply(project: Project): ProjectWithClientId = ProjectWithClientId(project, project.ownerId)
 }
-case class ProjectWithClientId(project: Project, clientId: Id) {
-  val id: Id = project.id
-}
-case class ProjectWithClient(project: Project, client: Client)
+case class ProjectWithClientId(project: Project, clientId: Id)
 
 case class Model(
     name: String,
