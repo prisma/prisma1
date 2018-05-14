@@ -94,6 +94,8 @@ class MySqlDatabaseQueryBuilder()(implicit ec: ExecutionContext) {
       prefixIfNotNone("order by", orderByCommand) ++
       prefixIfNotNone("limit", limitCommand)
 
+    println(query.queryParts)
+
     query.as[PrismaNode](getResultForModel(model)).map(args.get.resultTransform)
   }
 
