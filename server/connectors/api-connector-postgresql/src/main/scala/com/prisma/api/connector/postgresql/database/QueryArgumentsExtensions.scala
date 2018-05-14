@@ -9,12 +9,15 @@ import slick.jdbc.SQLActionBuilder
 object QueryArgumentsExtensions {
   val MAX_NODE_COUNT = 1000
 
-  def extractQueryArgs(projectId: String,
-                       modelName: String,
-                       args: Option[QueryArguments],
-                       defaultOrderShortcut: Option[String],
-                       overrideMaxNodeCount: Option[Int],
-                       forList: Boolean = false): (Option[SQLActionBuilder], Option[SQLActionBuilder], Option[SQLActionBuilder]) = {
+  def extractQueryArgs(
+      projectId: String,
+      modelName: String,
+      args: Option[QueryArguments],
+      defaultOrderShortcut: Option[String],
+      overrideMaxNodeCount: Option[Int],
+      forList: Boolean = false,
+      quoteTableName: Boolean = true,
+  ): (Option[SQLActionBuilder], Option[SQLActionBuilder], Option[SQLActionBuilder]) = {
     args match {
       case None => (None, None, None)
       case Some(givenArgs: QueryArguments) =>
@@ -23,7 +26,7 @@ object QueryArgumentsExtensions {
           else givenArgs.extractOrderByCommand(projectId, modelName, defaultOrderShortcut)
 
         (
-          givenArgs.extractWhereConditionCommand(projectId, modelName),
+          givenArgs.extractWhereConditionCommand(projectId, modelName, quoteTableName),
           orderByCommand,
           overrideMaxNodeCount match {
             case None                => givenArgs.extractLimitCommand(projectId, modelName)
@@ -127,12 +130,12 @@ object QueryArgumentsExtensions {
       }
     }
 
-    def extractWhereConditionCommand(projectId: String, tableName: String): Option[SQLActionBuilder] = {
+    def extractWhereConditionCommand(projectId: String, tableName: String, quoteTableName: Boolean): Option[SQLActionBuilder] = {
 
       if (first.isDefined && last.isDefined) throw APIErrors.InvalidConnectionArguments()
 
       val standardCondition = filter match {
-        case Some(filterArg) => QueryArgumentsHelpers.generateFilterConditions(projectId, tableName, filterArg)
+        case Some(filterArg) => QueryArgumentsHelpers.generateFilterConditions(projectId, tableName, filterArg, quoteTableName = quoteTableName)
         case None            => None
       }
 

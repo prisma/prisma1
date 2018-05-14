@@ -7,7 +7,7 @@ import org.scalatest.{FlatSpec, Matchers}
 
 class DeleteSpec extends FlatSpec with Matchers with ApiSpecBase {
 
-  val project: Project = SchemaDsl() { schema =>
+  val project: Project = SchemaDsl.fromBuilder { schema =>
     schema.model("Todo").field_!("title", _.String, isUnique = true)
   }
 

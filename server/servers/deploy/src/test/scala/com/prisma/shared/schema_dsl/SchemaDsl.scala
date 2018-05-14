@@ -4,20 +4,49 @@ import com.prisma.deploy.connector.{DatabaseIntrospectionInferrer, DeployConnect
 import com.prisma.deploy.migration.inference.{SchemaInferrer, SchemaMapping}
 import com.prisma.gc_values.GCValue
 import com.prisma.shared.models.IdType.Id
+import com.prisma.shared.models.Manifestations.InlineRelationManifestation
 import com.prisma.shared.models._
 import com.prisma.utils.await.AwaitUtils
 import cool.graph.cuid.Cuid
+import org.scalatest.Suite
 import sangria.parser.QueryParser
 
 object SchemaDsl extends AwaitUtils {
 
   import scala.collection.mutable.Buffer
 
-  def apply()  = schema()
-  def schema() = SchemaBuilder()
+  def apply() = SchemaBuilder()
 
-  def fromString(id: String = TestIds.testProjectId)(sdlString: String): Project = {
-    fromString(id, InferredTables.empty, isActive = true)(sdlString)
+  def fromBuilder(fn: SchemaBuilder => Unit)(implicit deployConnector: DeployConnector, suite: Suite) = {
+    val schemaBuilder = SchemaBuilder()
+    fn(schemaBuilder)
+    val project = schemaBuilder.buildProject(id = projectId(suite))
+    if (deployConnector.isPassive) {
+      addManifestations(project)
+    } else {
+      project
+    }
+  }
+
+  def fromString(id: String = TestIds.testProjectId)(sdlString: String)(implicit deployConnector: DeployConnector, suite: Suite): Project = {
+    val project = fromString(
+      id = projectId(suite),
+      InferredTables.empty,
+      isActive = deployConnector.isActive,
+      shouldCheckAgainstInferredTables = false
+    )(sdlString)
+    if (deployConnector.isPassive) {
+      addManifestations(project)
+    } else {
+      project
+    }
+  }
+
+  private def projectId(suite: Suite): String = {
+    // GetFieldFromSQLUniqueException blows up if we generate longer names, since we then exceed the postgres limits for constraint names
+    // todo: actually fix GetFieldFromSQLUniqueException instead
+    val nameThatMightBeTooLong = suite.getClass.getSimpleName
+    nameThatMightBeTooLong.substring(0, Math.min(32, nameThatMightBeTooLong.length))
   }
 
   def fromPassiveConnectorSdl(
@@ -25,19 +54,52 @@ object SchemaDsl extends AwaitUtils {
       deployConnector: DeployConnector
   )(sdlString: String): Project = {
     val inferredTables = deployConnector.databaseIntrospectionInferrer(id).infer().await()
-    fromString(id, inferredTables, isActive = false)(sdlString)
+    fromString(id, inferredTables, isActive = false, shouldCheckAgainstInferredTables = true)(sdlString)
   }
 
   private def fromString(
       id: String,
       inferredTables: InferredTables,
-      isActive: Boolean
+      isActive: Boolean,
+      shouldCheckAgainstInferredTables: Boolean
   )(sdlString: String): Project = {
     val emptyBaseSchema    = Schema()
     val emptySchemaMapping = SchemaMapping.empty
     val sqlDocument        = QueryParser.parse(sdlString.stripMargin).get
-    val schema             = SchemaInferrer(isActive).infer(emptyBaseSchema, emptySchemaMapping, sqlDocument, inferredTables).get
+    val schema             = SchemaInferrer(isActive, shouldCheckAgainstInferredTables).infer(emptyBaseSchema, emptySchemaMapping, sqlDocument, inferredTables).get
     TestProject().copy(id = id, schema = schema)
+  }
+
+  private def addManifestations(project: Project): Project = {
+    val schema = project.schema
+    val newRelations = project.relations.map { relation =>
+      if (relation.isManyToMany(schema)) {
+        relation
+      } else {
+        val relationFields = Vector(relation.getModelAField(schema), relation.getModelBField(schema)).flatten
+        val fieldToRepresentAsInlineRelation = relationFields.find(_.isList) match {
+          case Some(field) => field
+          case None        => relationFields.head // happens for one to one relations
+        }
+        val modelToLinkTo          = fieldToRepresentAsInlineRelation.model(schema).get
+        val modelToPutRelationInto = fieldToRepresentAsInlineRelation.relatedModel_!(schema)
+        val manifestation = InlineRelationManifestation(
+          inTableOfModelId = modelToPutRelationInto.id,
+          referencingColumn = s"${relation.name}_${modelToLinkTo.name.toLowerCase}_id"
+        )
+        relation.copy(manifestation = Some(manifestation))
+      }
+    }
+    val newModels = project.models.map { model =>
+      val newFields = model.fields.map { field =>
+        val newRelation = field.relation.flatMap { relation =>
+          newRelations.find(_.name == relation.name)
+        }
+        field.copy(relation = newRelation)
+      }
+      model.copy(fields = newFields)
+    }
+    project.copy(schema = schema.copy(relations = newRelations, models = newModels))
   }
 
   case class SchemaBuilder(

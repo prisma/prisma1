@@ -15,11 +15,14 @@ object PrismaLocalMain extends App {
   implicit val dependencies = PrismaLocalDependencies()
 
   dependencies.initialize()(system.dispatcher)
+  dependencies.migrator.initialize
+
   Version.check()
 
   ServerExecutor(
     port = dependencies.config.port.getOrElse(4466),
     ManagementServer("management", dependencies.config.server2serverSecret),
+    ManagementServer("cluster", dependencies.config.server2serverSecret), // Deprecated, will be removed soon
     WebsocketServer(dependencies),
     ApiServer(dependencies.apiSchemaBuilder),
     SimpleSubscriptionsServer(),

@@ -1,5 +1,6 @@
 package com.prisma.api.mutations
 
+import com.prisma.IgnorePassive
 import com.prisma.api.ApiSpecBase
 import com.prisma.shared.schema_dsl.SchemaDsl
 import org.scalatest.{FlatSpec, Matchers}
@@ -7,7 +8,7 @@ import org.scalatest.{FlatSpec, Matchers}
 class NestedUpdateMutationInsideUpdateSpec extends FlatSpec with Matchers with ApiSpecBase {
 
   "a one to many relation" should "be updateable by id through a nested mutation" in {
-    val project = SchemaDsl() { schema =>
+    val project = SchemaDsl.fromBuilder { schema =>
       val comment = schema.model("Comment").field("text", _.String)
       schema.model("Todo").oneToManyRelation("comments", "todo", comment)
     }
@@ -62,7 +63,7 @@ class NestedUpdateMutationInsideUpdateSpec extends FlatSpec with Matchers with A
   }
 
   "a one to many relation" should "be updateable by any unique argument through a nested mutation" in {
-    val project = SchemaDsl() { schema =>
+    val project = SchemaDsl.fromBuilder { schema =>
       val comment = schema.model("Comment").field("text", _.String).field_!("alias", _.String, isUnique = true)
       schema.model("Todo").oneToManyRelation("comments", "todo", comment)
     }
@@ -114,7 +115,7 @@ class NestedUpdateMutationInsideUpdateSpec extends FlatSpec with Matchers with A
   }
 
   "a many to many relation with an optional backrelation" should "be updateable by any unique argument through a nested mutation" in {
-    val project = SchemaDsl() { schema =>
+    val project = SchemaDsl.fromBuilder { schema =>
       val list = schema.model("List").field_!("listUnique", _.String, isUnique = true)
       val todo = schema.model("Todo").field_!("todoUnique", _.String, isUnique = true)
       list.manyToManyRelation("todoes", "does not matter", todo, includeFieldB = false)
@@ -163,7 +164,7 @@ class NestedUpdateMutationInsideUpdateSpec extends FlatSpec with Matchers with A
   }
 
   "a many to one relation" should "be updateable by id through a nested mutation" in {
-    val project = SchemaDsl() { schema =>
+    val project = SchemaDsl.fromBuilder { schema =>
       val comment = schema.model("Comment").field("text", _.String)
       val todo    = schema.model("Todo").field("title", _.String)
       todo.oneToManyRelation("comments", "todo", comment)
@@ -213,7 +214,7 @@ class NestedUpdateMutationInsideUpdateSpec extends FlatSpec with Matchers with A
   }
 
   "a one to one relation" should "be updateable by id through a nested mutation" in {
-    val project = SchemaDsl() { schema =>
+    val project = SchemaDsl.fromBuilder { schema =>
       val note = schema.model("Note").field("text", _.String)
       schema.model("Todo").field_!("title", _.String).oneToOneRelation("note", "todo", note)
     }
@@ -262,7 +263,7 @@ class NestedUpdateMutationInsideUpdateSpec extends FlatSpec with Matchers with A
   }
 
   "a many to many relation" should "fail gracefully on wrong where and assign error correctly and not execute partially" in {
-    val project = SchemaDsl() { schema =>
+    val project = SchemaDsl.fromBuilder { schema =>
       val note = schema.model("Note").field("text", _.String)
       val todo = schema.model("Todo").field_!("title", _.String)
       todo.manyToManyRelation("notes", "todoes", note)
@@ -319,7 +320,7 @@ class NestedUpdateMutationInsideUpdateSpec extends FlatSpec with Matchers with A
   }
 
   "a many to many relation" should "handle null in unique fields" in {
-    val project = SchemaDsl() { schema =>
+    val project = SchemaDsl.fromBuilder { schema =>
       val note = schema.model("Note").field("text", _.String, isUnique = true)
       schema.model("Todo").field_!("title", _.String, isUnique = true).field("unique", _.String, isUnique = true).manyToManyRelation("notes", "todos", note)
     }
@@ -704,7 +705,7 @@ class NestedUpdateMutationInsideUpdateSpec extends FlatSpec with Matchers with A
       """{"data":{"updateTop":{"nameTop":"updated top","middle":{"nameMiddle":"updated middle","bottom":{"nameBottom":"updated bottom","below":[{"nameBelow":"updated below"},{"nameBelow":"second below"}]}}}}}""")
   }
 
-  "a deeply nested mutation" should "fail if there are model and node edges on the path  and back relations are missing and node edges follow model edges but the path is interrupted" in {
+  "a deeply nested mutation" should "fail if there are model and node edges on the path and back relations are missing and node edges follow model edges but the path is interrupted" in {
     val project = SchemaDsl.fromString() { """type Top {
                                              |  id: ID! @unique
                                              |  nameTop: String! @unique

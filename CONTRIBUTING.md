@@ -49,7 +49,7 @@ Let us know if you encounter any problems on the unstable channel or help improv
 
 To request a new feature, you can use [this template](https://github.com/graphcool/prisma/issues/new?template=feature_request.md).
 
-To contibrute features or API changes, it's best to start a discussion in an issue first, ideally with a propopal. This allows everyone to participate and ensures that no potential implementation work is in vain.
+To contribute features or API changes, it's best to start a discussion in an issue first, ideally with a proposal. This allows everyone to participate and ensures that no potential implementation work is in vain.
 
 ## Submitting Changes
 

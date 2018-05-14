@@ -3,7 +3,7 @@ package com.prisma.api.connector.postgresql.impl
 import com.prisma.api.connector._
 import com.prisma.api.connector.postgresql.DatabaseMutactionInterpreter
 import com.prisma.api.connector.postgresql.database.PostgresApiDatabaseMutationBuilder
-import slick.jdbc.MySQLProfile.api._
+import slick.jdbc.PostgresProfile.api._
 import slick.jdbc.TransactionIsolation
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -13,7 +13,7 @@ case class PostgresDatabaseMutactionExecutor(clientDb: Database)(implicit ec: Ex
   override def execute(mutactions: Vector[DatabaseMutaction], runTransactionally: Boolean): Future[Vector[DatabaseMutactionResult]] = {
     val interpreters        = mutactions.map(interpreterFor)
     val combinedErrorMapper = interpreters.map(_.errorMapper).reduceLeft(_ orElse _)
-    val mutationBuilder     = PostgresApiDatabaseMutationBuilder(schemaName = mutactions.head.project.id)
+    val mutationBuilder     = PostgresApiDatabaseMutationBuilder(schemaName = mutactions.head.project.id, schema = mutactions.head.project.schema)
 
     val singleAction = runTransactionally match {
       case true  => DBIO.sequence(interpreters.map(_.newAction(mutationBuilder))).transactionally

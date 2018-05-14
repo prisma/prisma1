@@ -9,7 +9,7 @@ class ScalarListsQuerySpec extends FlatSpec with Matchers with ApiSpecBase {
 
   "empty scalar list" should "return empty list" in {
 
-    val project = SchemaDsl() { schema =>
+    val project = SchemaDsl.fromBuilder { schema =>
       schema.model("Model").field("ints", _.Int, isList = true).field("strings", _.String, isList = true)
     }
 
@@ -42,7 +42,7 @@ class ScalarListsQuerySpec extends FlatSpec with Matchers with ApiSpecBase {
 
   "full scalar list" should "return full list" in {
 
-    val project = SchemaDsl() { schema =>
+    val project = SchemaDsl.fromBuilder { schema =>
       schema.model("Model").field("ints", _.Int, isList = true).field("strings", _.String, isList = true)
     }
 
@@ -76,7 +76,7 @@ class ScalarListsQuerySpec extends FlatSpec with Matchers with ApiSpecBase {
 
   "full scalar list" should "preserve order of elements" in {
 
-    val project = SchemaDsl() { schema =>
+    val project = SchemaDsl.fromBuilder { schema =>
       schema.model("Model").field("ints", _.Int, isList = true).field("strings", _.String, isList = true)
     }
     database.setup(project)
@@ -123,7 +123,7 @@ class ScalarListsQuerySpec extends FlatSpec with Matchers with ApiSpecBase {
     val inputValue  = """"STRING""""
     val outputValue = """"STRING""""
 
-    val project = SchemaDsl() { schema =>
+    val project = SchemaDsl.fromBuilder { schema =>
       schema.model("Model").field(fieldName, _.String, isList = true)
     }
 
@@ -136,7 +136,7 @@ class ScalarListsQuerySpec extends FlatSpec with Matchers with ApiSpecBase {
     val inputValue  = 1
     val outputValue = 1
 
-    val project = SchemaDsl() { schema =>
+    val project = SchemaDsl.fromBuilder { schema =>
       schema.model("Model").field(fieldName, _.Int, isList = true)
     }
 
@@ -149,7 +149,7 @@ class ScalarListsQuerySpec extends FlatSpec with Matchers with ApiSpecBase {
     val inputValue  = 1.345
     val outputValue = 1.345
 
-    val project = SchemaDsl() { schema =>
+    val project = SchemaDsl.fromBuilder { schema =>
       schema.model("Model").field(fieldName, _.Float, isList = true)
     }
 
@@ -162,7 +162,7 @@ class ScalarListsQuerySpec extends FlatSpec with Matchers with ApiSpecBase {
     val inputValue  = true
     val outputValue = true
 
-    val project = SchemaDsl() { schema =>
+    val project = SchemaDsl.fromBuilder { schema =>
       schema.model("Model").field(fieldName, _.Boolean, isList = true)
     }
 
@@ -175,7 +175,7 @@ class ScalarListsQuerySpec extends FlatSpec with Matchers with ApiSpecBase {
     val inputValue  = """"someID123""""
     val outputValue = """"someID123""""
 
-    val project = SchemaDsl() { schema =>
+    val project = SchemaDsl.fromBuilder { schema =>
       schema.model("Model").field(fieldName, _.GraphQLID, isList = true)
     }
 
@@ -188,7 +188,7 @@ class ScalarListsQuerySpec extends FlatSpec with Matchers with ApiSpecBase {
     val inputValue  = """"{\"a\":2}""""
     val outputValue = """{"a":2}"""
 
-    val project = SchemaDsl() { schema =>
+    val project = SchemaDsl.fromBuilder { schema =>
       schema.model("Model").field(fieldName, _.Json, isList = true)
     }
 
@@ -201,7 +201,7 @@ class ScalarListsQuerySpec extends FlatSpec with Matchers with ApiSpecBase {
     val inputValue  = """"2018""""
     val outputValue = """"2018-01-01T00:00:00.000Z""""
 
-    val project = SchemaDsl() { schema =>
+    val project = SchemaDsl.fromBuilder { schema =>
       schema.model("Model").field(fieldName, _.DateTime, isList = true)
     }
 
@@ -214,7 +214,7 @@ class ScalarListsQuerySpec extends FlatSpec with Matchers with ApiSpecBase {
     val inputValue  = "HA"
     val outputValue = """"HA""""
 
-    val project = SchemaDsl() { schema =>
+    val project = SchemaDsl.fromBuilder { schema =>
       val enum = schema.enum("HA", Vector("HA", "HI"))
       schema.model("Model").field(fieldName, _.Enum, isList = true, enum = Some(enum))
     }
@@ -224,7 +224,7 @@ class ScalarListsQuerySpec extends FlatSpec with Matchers with ApiSpecBase {
 
   "Nested scalar lists" should "work in creates " in {
 
-    val project = SchemaDsl() { schema =>
+    val project = SchemaDsl.fromBuilder { schema =>
       val list = schema.model("List").field("listInts", _.Int, isList = true)
       val todo = schema.model("Todo").field("todoInts", _.Int, isList = true).manyToManyRelation("list", "todo", list)
     }
@@ -243,7 +243,7 @@ class ScalarListsQuerySpec extends FlatSpec with Matchers with ApiSpecBase {
 
   "Deeply nested scalar lists" should "work in creates " in {
 
-    val project = SchemaDsl() { schema =>
+    val project = SchemaDsl.fromBuilder { schema =>
       val list = schema.model("List").field("listInts", _.Int, isList = true)
       val todo = schema.model("Todo").field("todoInts", _.Int, isList = true).oneToOneRelation("list", "todo", list)
       val tag  = schema.model("Tag").field("tagInts", _.Int, isList = true).oneToOneRelation("todo", "tag", todo)
@@ -263,7 +263,7 @@ class ScalarListsQuerySpec extends FlatSpec with Matchers with ApiSpecBase {
 
   "Deeply nested scalar lists" should "work in updates " in {
 
-    val project = SchemaDsl() { schema =>
+    val project = SchemaDsl.fromBuilder { schema =>
       val list = schema.model("List").field("listInts", _.Int, isList = true).field("uList", _.String, isUnique = true)
       val todo = schema.model("Todo").field("todoInts", _.Int, isList = true).field("uTodo", _.String, isUnique = true).oneToOneRelation("list", "todo", list)
       val tag  = schema.model("Tag").field("tagInts", _.Int, isList = true).field("uTag", _.String, isUnique = true).oneToOneRelation("todo", "tag", todo)
@@ -291,7 +291,7 @@ class ScalarListsQuerySpec extends FlatSpec with Matchers with ApiSpecBase {
 
   "Nested scalar lists" should "work in upserts and only execute one branch of the upsert" in {
 
-    val project = SchemaDsl() { schema =>
+    val project = SchemaDsl.fromBuilder { schema =>
       val list = schema.model("List").field("listInts", _.Int, isList = true).field("uList", _.String, isUnique = true)
       val todo = schema.model("Todo").field("todoInts", _.Int, isList = true).field("uTodo", _.String, isUnique = true).oneToOneRelation("list", "todo", list)
     }
@@ -323,7 +323,7 @@ class ScalarListsQuerySpec extends FlatSpec with Matchers with ApiSpecBase {
 
   "Overwriting a full scalar list with an empty list" should "return an empty list" in {
 
-    val project = SchemaDsl() { schema =>
+    val project = SchemaDsl.fromBuilder { schema =>
       schema.model("Model").field("ints", _.Int, isList = true).field("strings", _.String, isList = true)
     }
 
@@ -383,7 +383,7 @@ class ScalarListsQuerySpec extends FlatSpec with Matchers with ApiSpecBase {
 
   "Overwriting a full scalar list with a list of different length" should "delete all members of the old list" in {
 
-    val project = SchemaDsl() { schema =>
+    val project = SchemaDsl.fromBuilder { schema =>
       schema.model("Model").field("ints", _.Int, isList = true).field("strings", _.String, isList = true)
     }
 

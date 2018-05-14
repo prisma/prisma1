@@ -7,7 +7,7 @@ import org.scalatest.{FlatSpec, Matchers}
 class SingleItemQuerySpec extends FlatSpec with Matchers with ApiSpecBase {
 
   "the single item query" should "return null if the id does not exist" in {
-    val project = SchemaDsl() { schema =>
+    val project = SchemaDsl.fromBuilder { schema =>
       schema.model("Todo").field_!("title", _.String)
     }
     database.setup(project)
@@ -26,7 +26,7 @@ class SingleItemQuerySpec extends FlatSpec with Matchers with ApiSpecBase {
   }
 
   "the single item query" should "work by id" in {
-    val project = SchemaDsl() { schema =>
+    val project = SchemaDsl.fromBuilder { schema =>
       schema.model("Todo").field_!("title", _.String)
     }
     database.setup(project)
@@ -53,7 +53,7 @@ class SingleItemQuerySpec extends FlatSpec with Matchers with ApiSpecBase {
   }
 
   "the single item query" should "work by any unique field" in {
-    val project = SchemaDsl() { schema =>
+    val project = SchemaDsl.fromBuilder { schema =>
       schema.model("Todo").field_!("title", _.String).field_!("alias", _.String, isUnique = true)
     }
     database.setup(project)

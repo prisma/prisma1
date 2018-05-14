@@ -19,6 +19,7 @@ object MySqlAnyMutactionInterpreter extends SqlMutactionInterpreter[DeployMutact
       case x: DeleteModelTable      => DeleteModelInterpreter.execute(x)
       case x: CreateRelationTable   => CreateRelationInterpreter.execute(x)
       case x: DeleteRelationTable   => DeleteRelationInterpreter.execute(x)
+      case x: CreateInlineRelation  => sys.error("Not supported on mysql")
     }
   }
 
@@ -38,6 +39,7 @@ object MySqlAnyMutactionInterpreter extends SqlMutactionInterpreter[DeployMutact
       case x: DeleteModelTable      => DeleteModelInterpreter.rollback(x)
       case x: CreateRelationTable   => CreateRelationInterpreter.rollback(x)
       case x: DeleteRelationTable   => DeleteRelationInterpreter.rollback(x)
+      case x: CreateInlineRelation  => sys.error("Not supported on mysql")
     }
   }
 }

@@ -111,13 +111,17 @@ Prisma is a secure API layer that sits in front of your database. Acting as a pr
 
 [Database connectors](https://github.com/graphcool/prisma/issues/1751) provide the link between Prisma and the underlying database.
 
-Prisma can be used for MySQL Databases out of the box. More database connectors will follow.
+You can connect the following databases to Prisma already:
+
+* MySQL
+* Postgres
+
+More database connectors will follow.
 
 ### Upcoming Connectors
 
 If you are interested to participate in the preview for one of the following connectors, please reach out in our [Slack](https://slack.graph.cool).
 
-* [PostgreSQL Connector](https://github.com/graphcool/prisma/issues/1641)
 * [MongoDB Connector](https://github.com/graphcool/prisma/issues/1643)
 * [Elastic Search Connector](https://github.com/graphcool/prisma/issues/1665)
 

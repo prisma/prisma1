@@ -26,10 +26,14 @@ object PostgresDeployDatabaseQueryBuilder {
 
   def existsDuplicateValueByModelAndField(projectId: String, modelName: String, fieldName: String) = {
     sql"""SELECT EXISTS(
-             Select Count(*)
-             FROM "#$projectId"."#$modelName"
-             GROUP BY "#$fieldName"
-             HAVING COUNT(*) > 1
+             Select Count(temp)
+             FROM (
+                  SELECT "#$fieldName"
+                  FROM "#$projectId"."#$modelName"
+                  WHERE "#$fieldName" is not null
+                  ) as temp
+             GROUP BY temp
+             HAVING COUNT(temp) > 1
           )"""
   }
 

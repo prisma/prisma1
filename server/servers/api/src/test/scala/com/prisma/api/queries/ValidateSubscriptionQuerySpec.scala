@@ -7,7 +7,7 @@ import play.api.libs.json._
 
 class ValidateSubscriptionQuerySpec extends FlatSpec with Matchers with ApiSpecBase {
   "the query" should "return errors if the query is invalid GraphQL" in {
-    val project = SchemaDsl() { schema =>
+    val project = SchemaDsl.fromBuilder { schema =>
       schema.model("Todo").field_!("title", _.String)
     }
     database.setup(project)
@@ -26,7 +26,7 @@ class ValidateSubscriptionQuerySpec extends FlatSpec with Matchers with ApiSpecB
   }
 
   "the query" should "return errors if the query contains unknown models" in {
-    val project = SchemaDsl() { schema =>
+    val project = SchemaDsl.fromBuilder { schema =>
       schema.model("Todo").field_!("title", _.String)
     }
     database.setup(project)
@@ -55,7 +55,7 @@ class ValidateSubscriptionQuerySpec extends FlatSpec with Matchers with ApiSpecB
   }
 
   "the query" should "return no errors if the query is valid" in {
-    val project = SchemaDsl() { schema =>
+    val project = SchemaDsl.fromBuilder { schema =>
       schema.model("Todo").field_!("title", _.String)
     }
     database.setup(project)
@@ -84,7 +84,7 @@ class ValidateSubscriptionQuerySpec extends FlatSpec with Matchers with ApiSpecB
   }
 
   "the query" should "work with variables and return no errors if the query is valid" in {
-    val project = SchemaDsl() { schema =>
+    val project = SchemaDsl.fromBuilder { schema =>
       schema.model("Todo").field_!("title", _.String)
     }
     database.setup(project)

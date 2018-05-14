@@ -8,7 +8,7 @@ class MultiItemQuerySpec extends FlatSpec with Matchers with ApiSpecBase {
 
   "the multi item query" should "return empty list" in {
 
-    val project = SchemaDsl() { schema =>
+    val project = SchemaDsl.fromBuilder { schema =>
       schema.model("Todo").field_!("title", _.String)
     }
     database.setup(project)
@@ -26,7 +26,7 @@ class MultiItemQuerySpec extends FlatSpec with Matchers with ApiSpecBase {
   }
 
   "the multi item query" should "return single node" in {
-    val project = SchemaDsl() { schema =>
+    val project = SchemaDsl.fromBuilder { schema =>
       schema.model("Todo").field_!("title", _.String)
     }
     database.setup(project)
@@ -56,7 +56,7 @@ class MultiItemQuerySpec extends FlatSpec with Matchers with ApiSpecBase {
   }
 
   "the multi item query" should "filter by any field" in {
-    val project = SchemaDsl() { schema =>
+    val project = SchemaDsl.fromBuilder { schema =>
       schema.model("Todo").field_!("title", _.String)
     }
     database.setup(project)

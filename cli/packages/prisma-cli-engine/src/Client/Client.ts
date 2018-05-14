@@ -208,7 +208,7 @@ export class Client {
 
             if (
               e.response.errors[0].code === 3016 &&
-              e.response.errors[0].message.includes('management@default')
+              e.response.errors[0].message.includes('management$default')
             ) {
               // TODO: make url mutable in graphql client
               ;(this.clusterClient as any).url = (this
@@ -455,10 +455,16 @@ export class Client {
   async login(key?: string): Promise<void> {
     let token: null | string = null
     this.out.action.start(`Authenticating`)
+    if (key) {
+      this.env.globalRC.cloudSessionKey = key
+    }
     const authenticated = await this.isAuthenticated()
     if (authenticated) {
       this.out.action.stop()
-      this.out.log('Already signed in')
+      this.out.log(key ? 'Successfully signed in' : 'Already signed in')
+      if (key) {
+        this.env.saveGlobalRC()
+      }
       return
     }
     const secret = await this.requestCloudToken()

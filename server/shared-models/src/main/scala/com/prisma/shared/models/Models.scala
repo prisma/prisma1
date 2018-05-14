@@ -121,10 +121,7 @@ case class Project(
 object ProjectWithClientId {
   def apply(project: Project): ProjectWithClientId = ProjectWithClientId(project, project.ownerId)
 }
-case class ProjectWithClientId(project: Project, clientId: Id) {
-  val id: Id = project.id
-}
-case class ProjectWithClient(project: Project, client: Client)
+case class ProjectWithClientId(project: Project, clientId: Id)
 
 case class Model(
     name: String,
@@ -142,9 +139,10 @@ case class Model(
   lazy val relationFields: List[Field]        = fields.filter(_.isRelation)
   lazy val relationListFields: List[Field]    = relationFields.filter(_.isList)
   lazy val relationNonListFields: List[Field] = relationFields.filter(!_.isList)
+  lazy val visibleRelationFields: List[Field] = relationFields.filter(_.isVisible)
   lazy val relations: List[Relation]          = fields.flatMap(_.relation).distinct
   lazy val nonListFields                      = fields.filter(!_.isList)
-  lazy val idField                            = getFieldByName_!("id")
+  lazy val idField                            = getFieldByName("id")
 
   lazy val cascadingRelationFields: List[Field] = relationFields.filter(field => field.relation.get.sideOfModelCascades(this))
 
@@ -161,13 +159,15 @@ case class Model(
     getFieldByName(name).getOrElse(sys.error(s"field $name is not part of the model ${this.name}")) // .getOrElse(throw FieldNotInModel(fieldName = name, modelName = this.name))
   def getFieldByName(name: String): Option[Field] = fields.find(_.name == name)
 
-  def hasVisibleIdField: Boolean = idField.isVisible
+  def hasVisibleIdField: Boolean = idField.exists(_.isVisible)
 }
 
 object RelationSide extends Enumeration {
   type RelationSide = Value
   val A = Value("A")
   val B = Value("B")
+
+  def opposite(side: RelationSide.Value) = if (side == A) B else A
 }
 
 object TypeIdentifier extends Enumeration {
@@ -316,30 +316,32 @@ sealed trait FieldConstraint {
   val id: String; val fieldId: String; val constraintType: FieldConstraintType
 }
 
-case class StringConstraint(id: String,
-                            fieldId: String,
-                            equalsString: Option[String] = None,
-                            oneOfString: List[String] = List.empty,
-                            minLength: Option[Int] = None,
-                            maxLength: Option[Int] = None,
-                            startsWith: Option[String] = None,
-                            endsWith: Option[String] = None,
-                            includes: Option[String] = None,
-                            regex: Option[String] = None)
-    extends FieldConstraint {
+case class StringConstraint(
+    id: String,
+    fieldId: String,
+    equalsString: Option[String] = None,
+    oneOfString: List[String] = List.empty,
+    minLength: Option[Int] = None,
+    maxLength: Option[Int] = None,
+    startsWith: Option[String] = None,
+    endsWith: Option[String] = None,
+    includes: Option[String] = None,
+    regex: Option[String] = None
+) extends FieldConstraint {
   val constraintType: FieldConstraintType = FieldConstraintType.STRING
 }
 
-case class NumberConstraint(id: String,
-                            fieldId: String,
-                            equalsNumber: Option[Double] = None,
-                            oneOfNumber: List[Double] = List.empty,
-                            min: Option[Double] = None,
-                            max: Option[Double] = None,
-                            exclusiveMin: Option[Double] = None,
-                            exclusiveMax: Option[Double] = None,
-                            multipleOf: Option[Double] = None)
-    extends FieldConstraint {
+case class NumberConstraint(
+    id: String,
+    fieldId: String,
+    equalsNumber: Option[Double] = None,
+    oneOfNumber: List[Double] = List.empty,
+    min: Option[Double] = None,
+    max: Option[Double] = None,
+    exclusiveMin: Option[Double] = None,
+    exclusiveMax: Option[Double] = None,
+    multipleOf: Option[Double] = None
+) extends FieldConstraint {
   val constraintType: FieldConstraintType = FieldConstraintType.NUMBER
 }
 
@@ -364,7 +366,6 @@ object FieldConstraintType extends Enumeration {
 // but left out for now because of cyclic dependencies
 case class Relation(
     name: String,
-    description: Option[String] = None,
     // BEWARE: if the relation looks like this: val relation = Relation(id = "relationId", modelAId = "userId", modelBId = "todoId")
     // then the relationSide for the fields have to be "opposite", because the field's side is the side of _the other_ model
     // val userField = Field(..., relation = Some(relation), relationSide = Some(RelationSide.B)
@@ -377,8 +378,34 @@ case class Relation(
 ) {
   val relationTableName = manifestation.collect { case m: RelationTableManifestation => m.table }.getOrElse("_" + name)
 
+  def relationTableNameNew(schema: Schema): String =
+    manifestation
+      .collect {
+        case m: RelationTableManifestation  => m.table
+        case m: InlineRelationManifestation => schema.getModelById_!(m.inTableOfModelId).dbName
+      }
+      .getOrElse("_" + name)
+
+  def modelAColumn: String = manifestation match {
+    case Some(m: RelationTableManifestation)  => m.modelAColumn
+    case Some(m: InlineRelationManifestation) => if (m.inTableOfModelId == modelAId) "id" else m.referencingColumn
+    case None                                 => "A"
+  }
+
+  def modelBColumn: String = manifestation match {
+    case Some(m: RelationTableManifestation)  => m.modelBColumn
+    case Some(m: InlineRelationManifestation) => if (m.inTableOfModelId == modelBId && !isSameModelRelation) "id" else m.referencingColumn
+    case None                                 => "B"
+  }
+
+  def columnForRelationSide(relationSide: RelationSide.Value): String = {
+    if (relationSide == RelationSide.A) modelAColumn else modelBColumn
+  }
+
   def hasManifestation: Boolean = manifestation.isDefined
   def isInlineRelation: Boolean = manifestation.exists(_.isInstanceOf[InlineRelationManifestation])
+
+  def inlineManifestation: Option[InlineRelationManifestation] = manifestation.collect { case x: InlineRelationManifestation => x }
 
   def connectsTheModels(model1: String, model2: String): Boolean = (modelAId == model1 && modelBId == model2) || (modelAId == model2 && modelBId == model1)
 
@@ -386,6 +413,12 @@ case class Relation(
   def isSameFieldSameModelRelation(schema: Schema): Boolean = {
     // note: defaults to modelAField to handle same model, same field relations
     getModelAField(schema) == getModelBField(schema).orElse(getModelAField(schema))
+  }
+
+  def isManyToMany(schema: Schema): Boolean = {
+    val modelAFieldIsList = getModelAField(schema).map(_.isList).getOrElse(true)
+    val modelBFieldIsList = getModelBField(schema).map(_.isList).getOrElse(true)
+    modelAFieldIsList && modelBFieldIsList
   }
 
   def getFieldOnModel(modelId: String, schema: Schema): Option[Field] = {

@@ -19,13 +19,7 @@ export default class Init extends Command {
     },
   ]
 
-  static flags: Flags = {
-    boilerplate: flags.string({
-      char: 'b',
-      description:
-        'Full URL or repo shorthand (e.g. `owner/repo`) to boilerplate GitHub repository',
-    }),
-  }
+  static flags: Flags = {}
 
   async run() {
     const dirName = this.args!.dirName
@@ -52,8 +46,8 @@ export default class Init extends Command {
     ) {
       this.out.log(`
 The directory ${chalk.cyan(
-        this.config.definitionDir,
-      )} contains files that could conflict:
+          this.config.definitionDir,
+        )} contains files that could conflict:
 
 ${files.map(f => `  ${f}`).join('\n')}
 
@@ -82,6 +76,12 @@ Either try using a new directory name, or remove the files listed above.
       fs.writeFileSync(
         path.join(this.config.definitionDir, 'docker-compose.yml'),
         results.dockerComposeYml,
+      )
+    }
+    if (results.managementSecret) {
+      fs.writeFileSync(
+        path.join(this.config.definitionDir, '.env'),
+        `PRISMA_MANAGEMENT_API_SECRET=${results.managementSecret}`,
       )
     }
     let relativeDir = path.relative(this.config.cwd, this.config.definitionDir)
@@ -137,22 +137,36 @@ Either try using a new directory name, or remove the files listed above.
       )
     }
 
+    const createdFiles = [
+      `  ${chalk.cyan('prisma.yml')}           Prisma service definition`,
+      `  ${chalk.cyan(
+        'datamodel.graphql',
+      )}    GraphQL SDL-based datamodel (foundation for database)`,
+    ]
+
+    if (isLocal) {
+      createdFiles.push(
+        `  ${chalk.cyan('docker-compose.yml')}   Docker configuration file`,
+      )
+    }
+
+    if (results.managementSecret) {
+      createdFiles.push(
+        `  ${chalk.cyan(
+          '.env',
+        )}                 Env file including PRISMA_API_MANAGEMENT_SECRET`,
+      )
+    }
+
     this.out.log(`
 ${chalk.bold(
-      `Created ${
-        results.cluster!.local ? 3 : 2
-      } new files:                                                                          `,
-    )}
+        `Created ${
+        createdFiles.length
+        } new files:                                                                          `,
+      )}
 
-  ${chalk.cyan('prisma.yml')}           Prisma service definition
-  ${chalk.cyan(
-    'datamodel.graphql',
-  )}    GraphQL SDL-based datamodel (foundation for database)
-  ${
-    isLocal
-      ? `${chalk.cyan('docker-compose.yml')}   Docker configuration file`
-      : ''
-  }
+${createdFiles.join('\n')}
+
 ${chalk.bold('Next steps:')}
 
 ${steps.map((step, index) => `  ${index + 1}. ${step}`).join('\n')}`)

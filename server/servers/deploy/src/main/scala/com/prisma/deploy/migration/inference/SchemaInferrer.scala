@@ -23,9 +23,16 @@ trait SchemaInferrer {
 }
 
 object SchemaInferrer {
-  def apply(isActive: Boolean = true) = new SchemaInferrer {
+  def apply(isActive: Boolean = true, shouldCheckAgainstInferredTables: Boolean = true) = new SchemaInferrer {
     override def infer(baseSchema: Schema, schemaMapping: SchemaMapping, graphQlSdl: Document, inferredTables: InferredTables) =
-      SchemaInferrerImpl(baseSchema, schemaMapping, graphQlSdl, isActive, inferredTables).infer()
+      SchemaInferrerImpl(
+        baseSchema = baseSchema,
+        schemaMapping = schemaMapping,
+        sdl = graphQlSdl,
+        isActive = isActive,
+        shouldCheckAgainstInferredTables = shouldCheckAgainstInferredTables,
+        inferredTables = inferredTables
+      ).infer()
   }
 }
 
@@ -43,8 +50,11 @@ case class SchemaInferrerImpl(
     schemaMapping: SchemaMapping,
     sdl: Document,
     isActive: Boolean,
+    shouldCheckAgainstInferredTables: Boolean,
     inferredTables: InferredTables
 ) extends AwaitUtils {
+
+  val isPassive = !isActive
 
   def infer(): Schema Or ProjectSyntaxError = {
     for {
@@ -54,8 +64,9 @@ case class SchemaInferrerImpl(
         relations = nextRelations.toList,
         enums = nextEnums.toList
       )
-      errors = if (!isActive) checkRelationsAgainstInferredTables(schema) else Vector.empty
-      result <- if (errors.isEmpty) Good(schema) else Bad(errors.head)
+      finalSchema = addMissingBackRelations(schema)
+      errors      = if (isPassive && shouldCheckAgainstInferredTables) checkRelationsAgainstInferredTables(finalSchema) else Vector.empty
+      result      <- if (errors.isEmpty) Good(finalSchema) else Bad(errors.head)
     } yield result
   }
 
@@ -207,32 +218,31 @@ case class SchemaInferrerImpl(
       val previousModelAName = schemaMapping.getPreviousModelName(modelA)
       val previousModelBName = schemaMapping.getPreviousModelName(modelB)
 
-      val oldEquivalentRelation = relationField.relationName.flatMap(baseSchema.getRelationByName).orElse {
+      val oldEquivalentRelationByName =
+        relationField.relationName.flatMap(baseSchema.getRelationByName).filter(rel => rel.connectsTheModels(previousModelAName, previousModelBName))
+
+      val oldEquivalentRelation = oldEquivalentRelationByName.orElse {
         UnambiguousRelation.unambiguousRelationThatConnectsModels(baseSchema, previousModelAName, previousModelBName)
       }
       val relationManifestation = relationManifestationOnFieldOrRelatedField(objectType, relationField)
+
+      val nextRelation = Relation(
+        name = relationName,
+        modelAId = modelA,
+        modelBId = modelB,
+        modelAOnDelete = modelAOnDelete,
+        modelBOnDelete = modelBOnDelete,
+        manifestation = relationManifestation
+      )
 
       oldEquivalentRelation match {
         case Some(relation) =>
           val nextModelAId = if (previousModelAName == relation.modelAId) modelA else modelB
           val nextModelBId = if (previousModelBName == relation.modelBId) modelB else modelA
-          relation.copy(
-            name = relationName,
-            modelAId = nextModelAId,
-            modelBId = nextModelBId,
-            modelAOnDelete = modelAOnDelete,
-            modelBOnDelete = modelBOnDelete,
-            manifestation = relationManifestation
-          )
-        case None =>
-          Relation(
-            name = relationName,
-            modelAId = modelA,
-            modelBId = modelB,
-            modelAOnDelete = modelAOnDelete,
-            modelBOnDelete = modelBOnDelete,
-            manifestation = relationManifestation
-          )
+          nextRelation.copy(modelAId = nextModelAId, modelBId = nextModelBId)
+
+        case None => nextRelation
+
       }
     }
     tmp.groupBy(_.name).values.flatMap(_.headOption).toSet
@@ -248,7 +258,6 @@ case class SchemaInferrerImpl(
 
         case Some(m: InlineRelationManifestation) =>
           val model = schema.getModelById_!(m.inTableOfModelId)
-          val field = relation.getFieldOnModel(model.id, schema).get
           inferredTables.modelTables.find(_.name == model.dbName) match {
             case None =>
               Some(GenericProblem(s"Could not find the model table ${model.dbName} in the databse"))
@@ -285,15 +294,15 @@ case class SchemaInferrerImpl(
   }
 
   def relationManifestationOnFieldOrRelatedField(objectType: ObjectTypeDefinition, relationField: FieldDefinition): Option[RelationManifestation] = {
-    if (isActive) {
-      None
-    } else {
+    if (isPassive && shouldCheckAgainstInferredTables) {
       val manifestationOnThisField = relationManifestationOnField(objectType, relationField)
       val manifestationOnRelatedField = sdl.relatedFieldOf(objectType, relationField).flatMap { relatedField =>
         val relatedType = sdl.objectType_!(relationField.typeName)
         relationManifestationOnField(relatedType, relatedField)
       }
       manifestationOnThisField.orElse(manifestationOnRelatedField)
+    } else {
+      None
     }
   }
 
@@ -372,6 +381,56 @@ case class SchemaInferrerImpl(
           }
       }
     inlineRelationManifestation.orElse(relationTableManifestation)
+  }
+
+  def addMissingBackRelations(schema: Schema): Schema = {
+    if (isPassive) {
+      schema.relations.foldLeft(schema) { (schema, relation) =>
+        addMissingBackRelationFieldIfMissing(schema, relation)
+      }
+    } else {
+      schema
+    }
+  }
+
+  def addMissingBackRelationFieldIfMissing(schema: Schema, relation: Relation): Schema = {
+    val isAFieldMissing = relation.getModelAField(schema).isEmpty
+    val isBFieldMissing = relation.getModelBField(schema).isEmpty
+    if (relation.isSameFieldSameModelRelation(schema)) { // fixme: we want to remove that in 1.9
+      schema
+    } else if (isAFieldMissing) {
+      addMissingFieldFor(schema, relation, RelationSide.A)
+    } else if (isBFieldMissing) {
+      addMissingFieldFor(schema, relation, RelationSide.B)
+    } else {
+      schema
+    }
+  }
+
+  def addMissingFieldFor(schema: Schema, relation: Relation, relationSide: RelationSide.Value): Schema = {
+    val model     = if (relationSide == RelationSide.A) relation.getModelA_!(schema) else relation.getModelB_!(schema)
+    val newModel  = model.copy(fields = model.fields :+ missingBackRelationField(relation, relationSide))
+    val newModels = schema.models.filter(_.name != model.name) :+ newModel
+    schema.copy(models = newModels)
+  }
+
+  def missingBackRelationField(relation: Relation, relationSide: RelationSide.Value): Field = {
+    val name = "_back_" + relation.name
+    Field(
+      name = name,
+      typeIdentifier = TypeIdentifier.Relation,
+      description = None,
+      isRequired = false,
+      isList = true,
+      isUnique = false,
+      isHidden = true,
+      isReadonly = false,
+      enum = None,
+      defaultValue = None,
+      relation = Some(relation),
+      relationSide = Some(relationSide),
+      manifestation = None
+    )
   }
 
   /**

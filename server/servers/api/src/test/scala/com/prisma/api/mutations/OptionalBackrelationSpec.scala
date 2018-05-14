@@ -1,5 +1,6 @@
 package com.prisma.api.mutations
 
+import com.prisma.IgnorePassive
 import com.prisma.api.ApiSpecBase
 import com.prisma.shared.schema_dsl.SchemaDsl
 import org.scalatest.{FlatSpec, Matchers}

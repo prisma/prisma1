@@ -34,13 +34,13 @@ The **Prisma** Docker image is required, along with exactly one **Database** ima
 
 ### Docker Compose file
 
-Here is what `docker-compose.yml` for **Prisma 1.7** looks like:
+Here is what `docker-compose.yml` for **Prisma 1.8** looks like:
 
 ```yml
 version: '3'
 services:
   prisma:
-    image: prismagraphql/prisma:1.7
+    image: prismagraphql/prisma:1.8
     restart: always
     ports:
     - "4466:4466"
@@ -56,12 +56,11 @@ services:
             port: 3306        # or `5432` for `postgres`
             user: root
             password: prisma
-  db:
+  mysql:  # or `postgres`
     container_name: prisma-db
     image: mysql:5.7
     restart: always
     environment:
-      MYSQL_USER: root
       MYSQL_ROOT_PASSWORD: prisma
 ```
 

@@ -1,6 +1,6 @@
 package com.prisma.prod
 
-import akka.actor.ActorSystem
+import akka.actor.{ActorSystem, Props}
 import akka.stream.ActorMaterializer
 import com.prisma.akkautil.http.SimpleHttpClient
 import com.prisma.api.ApiDependencies
@@ -14,6 +14,7 @@ import com.prisma.deploy.DeployDependencies
 import com.prisma.deploy.connector.DeployConnector
 import com.prisma.deploy.migration.migrator.{AsyncMigrator, Migrator}
 import com.prisma.deploy.schema.mutations.FunctionValidator
+import com.prisma.deploy.server.TelemetryActor
 import com.prisma.deploy.server.auth.{AsymmetricManagementAuth, DummyManagementAuth, SymmetricManagementAuth}
 import com.prisma.image.{Converters, FunctionValidatorImpl, SingleServerProjectFetcher}
 import com.prisma.messagebus._
@@ -38,8 +39,7 @@ case class PrismaProdDependencies()(implicit val system: ActorSystem, val materi
     with SubscriptionDependencies
     with WorkerDependencies {
 
-  val config: PrismaConfig = ConfigLoader.load()
-
+  val config: PrismaConfig      = ConfigLoader.load()
   private val rabbitUri: String = config.rabbitUri.getOrElse("RabbitMQ URI required but not found in Prisma configuration.")
 
   override implicit def self: PrismaProdDependencies = this
@@ -113,4 +113,6 @@ case class PrismaProdDependencies()(implicit val system: ActorSystem, val materi
   override lazy val apiConnector                = ConnectorUtils.loadApiConnector(config)
   override lazy val sideEffectMutactionExecutor = SideEffectMutactionExecutorImpl()
   override lazy val mutactionVerifier           = DatabaseMutactionVerifierImpl
+
+  lazy val telemetryActor = system.actorOf(Props(TelemetryActor(deployConnector)))
 }

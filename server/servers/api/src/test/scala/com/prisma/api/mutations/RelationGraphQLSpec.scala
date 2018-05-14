@@ -9,7 +9,7 @@ class RelationGraphQLSpec extends FlatSpec with Matchers with ApiSpecBase {
 
   "One2One relations" should "only allow one item per side" in {
 
-    val project = SchemaDsl() { schema =>
+    val project = SchemaDsl.fromBuilder { schema =>
       val cat = schema.model("Cat").field("catName", _.String, isUnique = true)
       schema.model("Owner").field("ownerName", _.String, isUnique = true).oneToOneRelation("cat", "owner", cat)
     }
@@ -23,8 +23,9 @@ class RelationGraphQLSpec extends FlatSpec with Matchers with ApiSpecBase {
 
     //set initial owner
     val res = server.query(
-      """mutation {updateCat(where: {catName: "garfield"},
-        |data: {owner: {connect: {ownerName: "jon"}}}) {
+      """mutation { updateCat(
+        |  where: {catName: "garfield"},
+        |  data: {owner: {connect: {ownerName: "jon"}}}) {
         |    catName
         |    owner {
         |      ownerName
@@ -67,7 +68,7 @@ class RelationGraphQLSpec extends FlatSpec with Matchers with ApiSpecBase {
 
   "Required One2One relations" should "throw an error if an update would leave one item without a partner" in {
 
-    val project = SchemaDsl() { schema =>
+    val project = SchemaDsl.fromBuilder { schema =>
       val cat = schema.model("Cat").field("catName", _.String, isUnique = true)
       schema.model("Owner").field("ownerName", _.String, isUnique = true).oneToOneRelation_!("cat", "owner", cat)
     }

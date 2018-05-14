@@ -7,7 +7,7 @@ import org.scalatest.{FlatSpec, Matchers}
 
 class DeleteMutationSpec extends FlatSpec with Matchers with ApiSpecBase {
 
-  val project: Project = SchemaDsl() { schema =>
+  val project: Project = SchemaDsl.fromBuilder { schema =>
     schema
       .model("ScalarModel")
       .field("string", _.String)

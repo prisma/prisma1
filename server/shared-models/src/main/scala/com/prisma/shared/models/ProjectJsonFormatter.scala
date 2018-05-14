@@ -196,7 +196,6 @@ object ProjectJsonFormatter {
 
   val relationWrites: Writes[Relation] = (
     (JsPath \ "name").write[String] and
-      (JsPath \ "description").writeNullable[String] and
       (JsPath \ "modelAId").write[String] and
       (JsPath \ "modelBId").write[String] and
       (JsPath \ "modelAOnDelete").write[OnDelete.Value] and
@@ -206,7 +205,6 @@ object ProjectJsonFormatter {
 
   val relationReads: Reads[Relation] = (
     (JsPath \ "name").read[String] and
-      (JsPath \ "description").readNullable[String] and
       (JsPath \ "modelAId").read[String] and
       (JsPath \ "modelBId").read[String] and
       (JsPath \ "modelAOnDelete").readNullable[OnDelete.Value].map(_.getOrElse(OnDelete.SetNull)) and

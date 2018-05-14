@@ -40,4 +40,6 @@ case class TestMigrator(
     result.await(10)
     result
   }
+
+  override def initialize: Unit = {}
 }

@@ -13,7 +13,7 @@ case class MigrationStepMapperImpl(projectId: String) extends MigrationStepMappe
       Vector(DeleteModelTable(projectId, x.name, scalarListFieldNames))
 
     case x: UpdateModel =>
-      val model                = nextSchema.getModelByName_!(x.newName)
+      val model                = nextSchema.getModelByName(x.newName).getOrElse(nextSchema.getModelByName_!(x.newName.substring(2)))
       val scalarListFieldNames = model.scalarListFields.map(_.name).toVector
       Vector(RenameTable(projectId = projectId, previousName = x.name, nextName = x.newName, scalarListFieldsNames = scalarListFieldNames))
 
@@ -24,7 +24,7 @@ case class MigrationStepMapperImpl(projectId: String) extends MigrationStepMappe
       () match {
         case _ if ReservedFields.reservedFieldNames.contains(field.name) => Vector.empty
         case _ if field.isRelation                                       => Vector.empty
-        case _ if field.isScalarList                                     => Vector(CreateScalarListTable(projectId, model.name, field.name, field.typeIdentifier))
+        case _ if field.isScalarList                                     => Vector(CreateScalarListTable(projectId, model, field))
         case _ if field.isScalarNonList                                  => Vector(CreateColumn(projectId, model, field))
       }
 
@@ -34,21 +34,22 @@ case class MigrationStepMapperImpl(projectId: String) extends MigrationStepMappe
 
       () match {
         case _ if field.isRelation      => Vector.empty
-        case _ if field.isScalarList    => Vector(DeleteScalarListTable(projectId, model.name, field.name, field.typeIdentifier))
+        case _ if field.isScalarList    => Vector(DeleteScalarListTable(projectId, model, field))
         case _ if field.isScalarNonList => Vector(DeleteColumn(projectId, model, field))
       }
 
     case x: UpdateField =>
-      val model    = nextSchema.getModelByName_!(x.model)
-      val next     = nextSchema.getFieldByName_!(x.model, x.finalName)
+      val oldModel = previousSchema.getModelByName_!(x.model)
+      val newModel = nextSchema.getModelByName_!(x.newModel)
+      val next     = nextSchema.getFieldByName_!(x.newModel, x.finalName)
       val previous = previousSchema.getFieldByName_!(x.model, x.name)
 
-      lazy val createColumn          = CreateColumn(projectId, model, next)
-      lazy val updateColumn          = UpdateColumn(projectId, model, previous, next)
-      lazy val deleteColumn          = DeleteColumn(projectId, model, previous)
-      lazy val createScalarListTable = CreateScalarListTable(projectId, model.name, next.name, next.typeIdentifier)
-      lazy val updateScalarListTable = UpdateScalarListTable(projectId, model, model, previous, next)
-      lazy val deleteScalarListTable = DeleteScalarListTable(projectId, model.name, previous.name, previous.typeIdentifier)
+      lazy val createColumn          = CreateColumn(projectId, oldModel, next)
+      lazy val updateColumn          = UpdateColumn(projectId, oldModel, previous, next)
+      lazy val deleteColumn          = DeleteColumn(projectId, oldModel, previous)
+      lazy val createScalarListTable = CreateScalarListTable(projectId, oldModel, next)
+      lazy val deleteScalarListTable = DeleteScalarListTable(projectId, oldModel, previous)
+      lazy val updateScalarListTable = UpdateScalarListTable(projectId, oldModel, newModel, previous, next)
 
       () match {
         case _ if previous.isRelation && next.isRelation                                                             => Vector.empty

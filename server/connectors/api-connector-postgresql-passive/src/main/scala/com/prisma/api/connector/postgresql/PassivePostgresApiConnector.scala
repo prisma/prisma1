@@ -46,7 +46,10 @@ case class PassiveDatabaseMutactionExecutorImpl(activeExecutor: PostgresDatabase
     val transformed         = transform(mutactions)
     val interpreters        = transformed.map(interpreterFor)
     val combinedErrorMapper = interpreters.map(_.errorMapper).reduceLeft(_ orElse _)
-    val mutationBuilder     = PostgresApiDatabaseMutationBuilder(schemaName = schemaName.getOrElse(mutactions.head.project.id))
+    val mutationBuilder = PostgresApiDatabaseMutationBuilder(
+      schemaName = schemaName.getOrElse(mutactions.head.project.id),
+      schema = mutactions.head.project.schema
+    )
 
     val singleAction = runTransactionally match {
       case true  => DBIO.sequence(interpreters.map(_.newAction(mutationBuilder))).transactionally
@@ -62,16 +65,27 @@ case class PassiveDatabaseMutactionExecutorImpl(activeExecutor: PostgresDatabase
     val replacements: Map[DatabaseMutaction, PassiveDatabaseMutaction] = mutactions
       .collect {
         case candidate: CreateDataItem =>
-          val partner: Option[NestedCreateRelation] = mutactions.collectFirst {
-            case m: NestedCreateRelation if m.path == candidate.path && m.path.lastRelation_!.isInlineRelation => m
-          }
+          val partner: Option[NestedCreateRelation] = mutactions
+            .collect {
+              case m: NestedCreateRelation => m
+            }
+            .find { m: NestedCreateRelation =>
+              m.path.lastRelation_!.inlineManifestation match {
+                case Some(manifestation: InlineRelationManifestation) =>
+                  val mutactionsHaveTheSamePath = m.path == candidate.path
+                  val wouldInsertIntoRightTable = manifestation.inTableOfModelId == m.path.lastModel.id
+                  val isSelfRelation            = m.path.lastRelation_!.isSameModelRelation
+                  mutactionsHaveTheSamePath && wouldInsertIntoRightTable && !isSelfRelation
+
+                case None =>
+                  false
+              }
+            }
           partner.map { p =>
             candidate -> NestedCreateDataItem(candidate, p)
           }
       }
-      .collect {
-        case Some(x) => x
-      }
+      .flatten
       .toMap
     val removals: Vector[DatabaseMutaction] = replacements.values.toVector.flatMap(_.replaces)
     mutactions.collect {
@@ -107,27 +121,27 @@ case class NestedCreateDataItemInterpreterForInlineRelations(mutaction: NestedCr
   val model    = mutaction.create.path.lastModel
 
   require(relation.isInlineRelation)
-  val inlineManifestation = relation.manifestation.get.asInstanceOf[InlineRelationManifestation]
+  val inlineManifestation = relation.inlineManifestation.get
   require(inlineManifestation.inTableOfModelId == path.lastModel.id)
 
-  override def action(mutationBuilder: PostgresApiDatabaseMutationBuilder) = {
-//    val createNonList = PostGresApiDatabaseMutationBuilder.createDataItem(project.id, path, mutaction.create.nonListArgs)
-//    val listAction    = PostGresApiDatabaseMutationBuilder.setScalarList(project.id, path, mutaction.listArgs)
-    DBIO.seq(bla(mutationBuilder))
+  override def action(mutationBuilder: PostgresApiDatabaseMutationBuilder): DBIO[Unit] = {
+    val relationAction = DBIO.sequence(NestedCreateRelationInterpreter(mutaction.nestedCreateRelation).removalActions(mutationBuilder))
+    val listAction     = mutationBuilder.setScalarList(path, mutaction.create.listArgs)
+    DBIO.seq(relationAction, queryParentAndCreateDataItem(mutationBuilder), listAction)
   }
 
   import com.prisma.api.connector.postgresql.database.SlickExtensions._
 
-  def bla(mutationBuilder: PostgresApiDatabaseMutationBuilder) = {
+  def queryParentAndCreateDataItem(mutationBuilder: PostgresApiDatabaseMutationBuilder) = {
     val idSubQuery      = mutationBuilder.pathQueryForLastParent(path)
     val lastParentModel = path.removeLastEdge.lastModel
     for {
-      ids    <- (sql"""select "id" from #${mutationBuilder.schemaName}.#${lastParentModel.dbName} where id in (""" ++ idSubQuery ++ sql")").as[String]
-      result <- createDataItemAndLinkToParent2(mutationBuilder)(ids.head)
+      ids    <- (sql"""select "id" from "#${mutationBuilder.schemaName}"."#${lastParentModel.dbName}" where id in (""" ++ idSubQuery ++ sql")").as[String]
+      result <- createDataItemWithLinkToParent(mutationBuilder)(ids.head)
     } yield result
   }
 
-  def createDataItemAndLinkToParent2(mutationBuilder: PostgresApiDatabaseMutationBuilder)(parentId: String) = {
+  def createDataItemWithLinkToParent(mutationBuilder: PostgresApiDatabaseMutationBuilder)(parentId: String) = {
     val inlineField  = relation.getFieldOnModel(model.id, project.schema).get
     val argsMap      = mutaction.create.nonListArgs.raw.asRoot.map
     val modifiedArgs = argsMap.updated(inlineField.name, IdGCValue(parentId))

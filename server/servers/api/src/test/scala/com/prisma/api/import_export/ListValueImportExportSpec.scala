@@ -12,7 +12,7 @@ import play.api.libs.json._
 
 class ListValueImportExportSpec extends FlatSpec with Matchers with ApiSpecBase with AwaitUtils {
 
-  val project: Project = SchemaDsl() { schema =>
+  val project: Project = SchemaDsl.fromBuilder { schema =>
     val enum = schema.enum("Enum", Vector("AB", "CD", "\uD83D\uDE0B", "\uD83D\uDCA9"))
 
     schema

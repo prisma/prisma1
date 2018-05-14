@@ -2,7 +2,9 @@
   "name": "prisma-cli-core",
   "version": "1.0.37",
   "main": "dist/index.js",
-  "files": ["dist"],
+  "files": [
+    "dist"
+  ],
   "typings": "dist/index.d.ts",
   "author": "Tim Suchanek <tim@graph.cool>",
   "license": "Apache-2.0",
@@ -35,8 +37,7 @@
     "watch": "../../node_modules/.bin/watch -p 'src/**/*.*' -c 'yarn build'",
     "lint": "tslint src/**/*.ts",
     "precommit": "lint-staged",
-    "prettier":
-      "prettier --single-quote --no-semi --trailing-comma all --write '*.ts' 'src/**/*.ts'",
+    "prettier": "prettier --single-quote --no-semi --trailing-comma all --write '*.ts' 'src/**/*.ts'",
     "prepublishOnly": "yarn lint && yarn test && yarn build",
     "test": "NODE_ENV=test jest"
   },
@@ -52,13 +53,23 @@
     "gitDir": "../../../"
   },
   "jest": {
-    "moduleFileExtensions": ["ts", "tsx", "js", "jsx", "json"],
+    "moduleFileExtensions": [
+      "ts",
+      "tsx",
+      "js",
+      "jsx",
+      "json"
+    ],
     "rootDir": "./src",
     "transform": {
       "^.+\\.(ts|tsx)$": "../../../node_modules/ts-jest/preprocessor.js"
     },
-    "testMatch": ["**/*.test.(ts|js)"],
-    "setupFiles": ["../test/init.js"],
+    "testMatch": [
+      "**/*.test.(ts|js)"
+    ],
+    "setupFiles": [
+      "../test/init.js"
+    ],
     "globals": {
       "ts-jest": {
         "tsConfigFile": "./tsconfig.json"
@@ -84,7 +95,7 @@
     "graphql": "^0.13.1",
     "graphql-config": "^2.0.1",
     "graphql-config-extension-prisma": "^0.0.12",
-    "graphql-playground-middleware-express": "^1.6.1",
+    "graphql-playground-middleware-express": "^1.6.2",
     "inquirer": "^5.2.0",
     "isomorphic-fetch": "^2.2.1",
     "js-yaml": "^3.9.1",

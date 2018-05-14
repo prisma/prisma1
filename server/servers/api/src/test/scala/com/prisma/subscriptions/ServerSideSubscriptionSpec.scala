@@ -22,7 +22,7 @@ class ServerSideSubscriptionSpec extends FlatSpec with Matchers with ApiSpecBase
     webhookTestKit.reset
   }
 
-  val project = SchemaDsl.schema() { schema =>
+  val project = SchemaDsl.fromBuilder { schema =>
     val status: Enum = schema.enum("TodoStatus", Vector("Active", "Done"))
     val comment: ModelBuilder = schema
       .model("Comment")

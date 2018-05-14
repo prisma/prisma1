@@ -84,8 +84,8 @@ class MigrationStepsInferrerSpec extends FlatSpec with Matchers with DeploySpecB
     val proposer = MigrationStepsInferrerImpl(previousProject.schema, nextProject.schema, renames)
     val steps    = proposer.evaluate()
 
-    steps.length shouldBe 1
-    steps.last shouldBe UpdateModel("Test", "Test2")
+    steps.length shouldBe 2
+    steps.last shouldBe UpdateModel("__Test2", "Test2")
   }
 
   "Creating fields" should "create CreateField migration steps" in {
@@ -156,12 +156,12 @@ class MigrationStepsInferrerSpec extends FlatSpec with Matchers with DeploySpecB
 
     steps.length shouldBe 6
     steps should contain allOf (
-      UpdateField("Test", "a", Some("a2"), None, None, None, None, None, None, None, None),
-      UpdateField("Test", "b", None, Some("Int"), None, None, None, None, None, None, None),
-      UpdateField("Test", "c", None, None, Some(true), None, None, None, None, None, None),
-      UpdateField("Test", "d", None, None, None, Some(true), None, None, None, None, None),
-      UpdateField("Test", "e", None, None, None, None, Some(true), None, None, None, None),
-      UpdateField("Test", "id", None, None, None, None, None, Some(true), None, None, None)
+      UpdateField("Test", "Test", "a", Some("a2"), None, None, None, None, None, None, None, None),
+      UpdateField("Test", "Test", "b", None, Some("Int"), None, None, None, None, None, None, None),
+      UpdateField("Test", "Test", "c", None, None, Some(true), None, None, None, None, None, None),
+      UpdateField("Test", "Test", "d", None, None, None, Some(true), None, None, None, None, None),
+      UpdateField("Test", "Test", "e", None, None, None, None, Some(true), None, None, None, None),
+      UpdateField("Test", "Test", "id", None, None, None, None, None, Some(true), None, None, None)
     )
   }
 
@@ -271,13 +271,17 @@ class MigrationStepsInferrerSpec extends FlatSpec with Matchers with DeploySpecB
     val inferrer = MigrationStepsInferrerImpl(previousProject.schema, nextProject.schema, mappings)
     val steps    = inferrer.evaluate()
 
-    steps should have(size(5))
+    steps should have(size(7))
     steps should contain(
       UpdateRelation("CommentToTodo", newName = Some("CommentNewToTodoNew"), modelAId = Some("TodoNew"), modelBId = Some("CommentNew"), None, None))
-    steps should contain(UpdateModel("Comment", newName = "CommentNew"))
-    steps should contain(UpdateModel("Todo", newName = "TodoNew"))
-    steps should contain(UpdateField("Comment", "todo", Some("todoNew"), None, None, None, None, None, Some(Some("_CommentNewToTodoNew")), None, None))
-    steps should contain(UpdateField("Todo", "comments", Some("commentsNew"), None, None, None, None, None, Some(Some("_CommentNewToTodoNew")), None, None))
+    steps should contain(UpdateModel("Comment", newName = "__CommentNew"))
+    steps should contain(UpdateModel("Todo", newName = "__TodoNew"))
+    steps should contain(UpdateModel("__CommentNew", newName = "CommentNew"))
+    steps should contain(UpdateModel("__TodoNew", newName = "TodoNew"))
+    steps should contain(
+      UpdateField("Comment", "CommentNew", "todo", Some("todoNew"), None, None, None, None, None, Some(Some("_CommentNewToTodoNew")), None, None))
+    steps should contain(
+      UpdateField("Todo", "TodoNew", "comments", Some("commentsNew"), None, None, None, None, None, Some(Some("_CommentNewToTodoNew")), None, None))
   }
 
   // TODO: this spec probably cannot be fulfilled. And it probably does need to because the NextProjectInferer guarantees that those swaps cannot occur. Though this must be verified by extensive testing.
@@ -334,9 +338,7 @@ class MigrationStepsInferrerSpec extends FlatSpec with Matchers with DeploySpecB
   }
 
   "Updating an Enum Name" should "create one UpdateEnum and one UpdateField for each field using that Enum" in {
-    val renames = SchemaMapping(
-      enums = Vector(Mapping(previous = "TodoStatus", next = "TodoStatusNew"))
-    )
+    val renames = SchemaMapping(enums = Vector(Mapping(previous = "TodoStatus", next = "TodoStatusNew")))
 
     val previousProject = SchemaBuilder() { schema =>
       val enum = schema.enum("TodoStatus", Vector("Active", "Done"))
@@ -363,6 +365,7 @@ class MigrationStepsInferrerSpec extends FlatSpec with Matchers with DeploySpecB
       ),
       UpdateField(
         model = "Todo",
+        newModel = "Todo",
         name = "status",
         newName = None,
         typeName = None,

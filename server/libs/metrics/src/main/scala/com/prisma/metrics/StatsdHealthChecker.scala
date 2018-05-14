@@ -67,7 +67,7 @@ case class StatsdHealthCheckerActor(httpClient: SimpleHttpClient) extends Actor 
   private def checkAndWriteHealthStatus() = {
     httpClient.get(s"http://$ipToCheck:$port/status", timeout = 2.seconds).onComplete {
       case Success(resp) => statsdIsUp.set(true)
-      case Failure(e)    => statsdIsUp.set(false)
+      case Failure(e)    => println(s"Statd host health check failed with: $e"); statsdIsUp.set(false)
     }
   }
 }

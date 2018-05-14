@@ -35,13 +35,6 @@ To open the MySQL client in your terminal, run the following command. Note that 
 docker exec -it prisma-db mysql -u root --host 127.0.0.1 --port 3306 --password=graphcool
 ```
 
-<InfoBox>
-
-The password will be changed to `prisma` in [an upcoming release](https://github.com/graphcool/prisma/pull/1653).
-
-</Infobox>
-
-
 #### 3. Send SQL queries to the database
 
 Once the MySQL client is open, you can ask for the currently available databases:

@@ -236,6 +236,43 @@ class AddingOptionalBackRelationDuringMigrationSpec extends FlatSpec with Matche
       """{"data":{"deploy":{"migration":{"applied":0,"revision":0},"errors":[{"description":"You are adding a singular backrelation field to a type but there are already pairs in the relation that would violate that constraint."}],"warnings":[]}}}""")
   }
 
+  "Adding a missing back-relation of non-list type" should "work when there are already multiple nodes but they are not in a relation" in {
+
+    val schema =
+      """type Team {
+        |  name: String! @unique
+        |}
+        |
+        |type Match {
+        |  number: Int @unique
+        |  teamLeft: Team @relation(name: "TeamMatchLeft")
+        |  teamRight: Team @relation(name: "TeamMatchRight")
+        |  winner: Team @relation(name: "TeamMatchWinner")
+        |}"""
+
+    val (project, _) = setupProject(schema)
+
+    apiServer.query("""mutation{createMatch(data:{number:1}){number}}""", project)
+    apiServer.query("""mutation{createMatch(data:{number:2}){number}}""", project)
+    apiServer.query("""mutation{createTeam(data:{name:"Bayern"}){name}}""", project)
+    apiServer.query("""mutation{createTeam(data:{name:"Real"}){name}}""", project)
+
+    val schema1 =
+      """type Team {
+        |  name: String! @unique
+        |  wins: Match @relation(name: "TeamMatchWinner")
+        |}
+        |
+        |type Match {
+        |  number: Int @unique
+        |  teamLeft: Team @relation(name: "TeamMatchLeft")
+        |  teamRight: Team @relation(name: "TeamMatchRight")
+        |  winner: Team @relation(name: "TeamMatchWinner")
+        |}"""
+
+    deployServer.deploySchemaThatMustSucceed(project, schema1, 3)
+  }
+
   "Adding several missing back-relations of list type" should "work even when there are already multiple relation pairs" in {
 
     val schema =

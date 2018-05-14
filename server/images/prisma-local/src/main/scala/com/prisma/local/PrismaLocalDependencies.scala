@@ -1,6 +1,6 @@
 package com.prisma.local
 
-import akka.actor.ActorSystem
+import akka.actor.{ActorSystem, Props}
 import akka.stream.ActorMaterializer
 import com.prisma.akkautil.http.SimpleHttpClient
 import com.prisma.api.ApiDependencies
@@ -12,6 +12,7 @@ import com.prisma.config.{ConfigLoader, PrismaConfig}
 import com.prisma.connectors.utils.ConnectorUtils
 import com.prisma.deploy.DeployDependencies
 import com.prisma.deploy.migration.migrator.{AsyncMigrator, Migrator}
+import com.prisma.deploy.server.TelemetryActor
 import com.prisma.deploy.server.auth.{AsymmetricManagementAuth, DummyManagementAuth, SymmetricManagementAuth}
 import com.prisma.image.{Converters, FunctionValidatorImpl, SingleServerProjectFetcher}
 import com.prisma.messagebus.pubsub.inmemory.InMemoryAkkaPubSub
@@ -99,4 +100,6 @@ case class PrismaLocalDependencies()(implicit val system: ActorSystem, val mater
   override lazy val apiConnector                  = ConnectorUtils.loadApiConnector(config)
   override lazy val sideEffectMutactionExecutor   = SideEffectMutactionExecutorImpl()
   override lazy val mutactionVerifier             = DatabaseMutactionVerifierImpl
+
+  lazy val telemetryActor = system.actorOf(Props(TelemetryActor(deployConnector)))
 }

@@ -1,7 +1,5 @@
 package com.prisma.api.connector.postgresql.impl
 
-import java.sql.SQLIntegrityConstraintViolationException
-
 import com.prisma.api.connector._
 import com.prisma.api.connector.postgresql.DatabaseMutactionInterpreter
 import com.prisma.api.connector.postgresql.database.PostgresApiDatabaseMutationBuilder
@@ -21,6 +19,7 @@ case class AddDataItemToManyRelationByPathInterpreter(mutaction: AddDataItemToMa
 case class CascadingDeleteRelationMutactionsInterpreter(mutaction: CascadingDeleteRelationMutactions) extends DatabaseMutactionInterpreter {
   val path    = mutaction.path
   val project = mutaction.project
+  val schema  = project.schema
 
   val fieldsWhereThisModelIsRequired = project.schema.fieldsWhereThisModelIsRequired(path.lastModel)
 
@@ -46,8 +45,8 @@ case class CascadingDeleteRelationMutactionsInterpreter(mutaction: CascadingDele
 
   private def causeString(field: Field) = path.lastEdge match {
     case Some(edge: NodeEdge) =>
-      s"-OLDPARENTPATHFAILURETRIGGERBYFIELD@${field.relation.get.relationTableName}@${field.oppositeRelationSide.get}@${edge.childWhere.fieldValueAsString}-"
-    case _ => s"-OLDPARENTPATHFAILURETRIGGERBYFIELD@${field.relation.get.relationTableName}@${field.oppositeRelationSide.get}-"
+      s"-OLDPARENTPATHFAILURETRIGGERBYFIELD@${field.relation.get.relationTableNameNew(schema)}@${field.oppositeRelationSide.get}@${edge.childWhere.fieldValueAsString}-"
+    case _ => s"-OLDPARENTPATHFAILURETRIGGERBYFIELD@${field.relation.get.relationTableNameNew(schema)}@${field.oppositeRelationSide.get}-"
   }
 }
 
@@ -75,7 +74,7 @@ case class CreateDataItemInterpreter(mutaction: CreateDataItem, includeRelayRow:
   override val errorMapper = {
     case e: PSQLException if e.getSQLState == "23505" && GetFieldFromSQLUniqueException.getFieldOption(mutaction.nonListArgs.keys, e).isDefined =>
       APIErrors.UniqueConstraintViolation(path.lastModel.name, GetFieldFromSQLUniqueException.getFieldOption(mutaction.nonListArgs.keys, e).get)
-    case e: SQLIntegrityConstraintViolationException if e.getErrorCode == 1452 =>
+    case e: PSQLException if e.getSQLState == "23503" =>
       APIErrors.NodeDoesNotExist("")
   }
 }
@@ -105,6 +104,7 @@ case class DeleteManyRelationChecksInterpreter(mutaction: DeleteManyRelationChec
   val project = mutaction.project
   val model   = mutaction.model
   val filter  = mutaction.whereFilter
+  val schema  = project.schema
 
   val fieldsWhereThisModelIsRequired = project.schema.fieldsWhereThisModelIsRequired(model)
 
@@ -124,13 +124,14 @@ case class DeleteManyRelationChecksInterpreter(mutaction: DeleteManyRelationChec
   }
 
   private def causeString(field: Field) =
-    s"-OLDPARENTPATHFAILURETRIGGERBYFIELDANDFILTER@${field.relation.get.relationTableName}@${field.oppositeRelationSide.get}-"
+    s"-OLDPARENTPATHFAILURETRIGGERBYFIELDANDFILTER@${field.relation.get.relationTableNameNew(schema)}@${field.oppositeRelationSide.get}-"
 
 }
 
 case class DeleteRelationCheckInterpreter(mutaction: DeleteRelationCheck) extends DatabaseMutactionInterpreter {
   val project = mutaction.project
   val path    = mutaction.path
+  val schema  = project.schema
 
   val fieldsWhereThisModelIsRequired = project.schema.fieldsWhereThisModelIsRequired(path.lastModel)
 
@@ -149,8 +150,8 @@ case class DeleteRelationCheckInterpreter(mutaction: DeleteRelationCheck) extend
 
   private def causeString(field: Field) = path.lastEdge match {
     case Some(edge: NodeEdge) =>
-      s"-OLDPARENTPATHFAILURETRIGGERBYFIELD@${field.relation.get.relationTableName}@${field.oppositeRelationSide.get}@${edge.childWhere.fieldValueAsString}-"
-    case _ => s"-OLDPARENTPATHFAILURETRIGGERBYFIELD@${field.relation.get.relationTableName}@${field.oppositeRelationSide.get}-"
+      s"-OLDPARENTPATHFAILURETRIGGERBYFIELD@${field.relation.get.relationTableNameNew(schema)}@${field.oppositeRelationSide.get}@${edge.childWhere.fieldValueAsString}-"
+    case _ => s"-OLDPARENTPATHFAILURETRIGGERBYFIELD@${field.relation.get.relationTableNameNew(schema)}@${field.oppositeRelationSide.get}-"
   }
 }
 
@@ -178,10 +179,10 @@ case class UpdateDataItemInterpreter(mutaction: UpdateWrapper) extends DatabaseM
     case e: PSQLException if e.getSQLState == "23505" && GetFieldFromSQLUniqueException.getFieldOption(nonListArgs.keys, e).isDefined =>
       APIErrors.UniqueConstraintViolation(path.lastModel.name, GetFieldFromSQLUniqueException.getFieldOption(nonListArgs.keys, e).get)
 
-    case e: SQLIntegrityConstraintViolationException if e.getErrorCode == 1452 =>
+    case e: PSQLException if e.getSQLState == "23503" =>
       APIErrors.NodeNotFoundForWhereError(path.root)
 
-    case e: SQLIntegrityConstraintViolationException if e.getErrorCode == 1048 =>
+    case e: PSQLException if e.getSQLState == "23502" =>
       APIErrors.FieldCannotBeNull()
   }
 }
@@ -211,11 +212,11 @@ case class UpsertDataItemInterpreter(mutaction: UpsertDataItem) extends Database
     case e: PSQLException if e.getSQLState == "23505" && getFieldOption(createArgs.keys ++ updateArgs.keys, e).isDefined =>
       APIErrors.UniqueConstraintViolation(model.name, getFieldOption(createArgs.keys ++ updateArgs.keys, e).get)
 
-    case e: SQLIntegrityConstraintViolationException if e.getErrorCode == 1452 =>
+    case e: PSQLException if e.getSQLState == "23503" =>
       APIErrors.NodeDoesNotExist("") //todo
 
-    case e: SQLIntegrityConstraintViolationException if e.getErrorCode == 1048 =>
-      APIErrors.FieldCannotBeNull(e.getCause.getMessage)
+    case e: PSQLException if e.getSQLState == "23502" =>
+      APIErrors.FieldCannotBeNull(e.getMessage)
   }
 }
 
@@ -245,10 +246,10 @@ case class UpsertDataItemIfInRelationWithInterpreter(mutaction: UpsertDataItemIf
       APIErrors.UniqueConstraintViolation(mutaction.createPath.lastModel.name,
                                           getFieldOption(mutaction.createNonListArgs.keys ++ mutaction.updateNonListArgs.keys, e).get)
 
-    case e: SQLIntegrityConstraintViolationException if e.getErrorCode == 1452 =>
+    case e: PSQLException if e.getSQLState == "23503" =>
       APIErrors.NodeDoesNotExist("") //todo
 
-    case e: SQLIntegrityConstraintViolationException if e.getErrorCode == 1048 =>
+    case e: PSQLException if e.getSQLState == "23502" =>
       APIErrors.FieldCannotBeNull()
 
     case e: PSQLException if relationChecker.causedByThisMutaction(e.getMessage) =>
@@ -259,17 +260,18 @@ case class UpsertDataItemIfInRelationWithInterpreter(mutaction: UpsertDataItemIf
 case class VerifyConnectionInterpreter(mutaction: VerifyConnection) extends DatabaseMutactionInterpreter {
   val project = mutaction.project
   val path    = mutaction.path
+  val schema  = project.schema
+
   val causeString = path.lastEdge_! match {
-    case _: ModelEdge => s"CONNECTIONFAILURETRIGGERPATH@${path.lastRelation_!.relationTableName}@${path.parentSideOfLastEdge}"
+    case _: ModelEdge =>
+      s"CONNECTIONFAILURETRIGGERPATH@${path.lastRelation_!.relationTableNameNew(schema)}@${path.columnForParentSideOfLastEdge}"
     case edge: NodeEdge =>
-      s"CONNECTIONFAILURETRIGGERPATH@${path.lastRelation_!.relationTableName}@${path.parentSideOfLastEdge}@${path.childSideOfLastEdge}@${edge.childWhere.fieldValueAsString}}"
+      s"CONNECTIONFAILURETRIGGERPATH@${path.lastRelation_!.relationTableNameNew(schema)}@${path.columnForParentSideOfLastEdge}@${path.columnForChildSideOfLastEdge}@${edge.childWhere.fieldValueAsString}}"
   }
 
   def action(mutationBuilder: PostgresApiDatabaseMutationBuilder) = mutationBuilder.connectionFailureTrigger(path, causeString)
 
-  override val errorMapper = {
-    case e: PSQLException if e.getMessage.contains(causeString) => throw APIErrors.NodesNotConnectedError(path)
-  }
+  override val errorMapper = { case e: PSQLException if e.getMessage.contains(causeString) => throw APIErrors.NodesNotConnectedError(path) }
 }
 
 case class VerifyWhereInterpreter(mutaction: VerifyWhere) extends DatabaseMutactionInterpreter {
@@ -279,9 +281,7 @@ case class VerifyWhereInterpreter(mutaction: VerifyWhere) extends DatabaseMutact
 
   def action(mutationBuilder: PostgresApiDatabaseMutationBuilder) = mutationBuilder.whereFailureTrigger(where, causeString)
 
-  override val errorMapper = {
-    case e: PSQLException if e.getMessage.contains(causeString) => throw APIErrors.NodeNotFoundForWhereError(where)
-  }
+  override val errorMapper = { case e: PSQLException if e.getMessage.contains(causeString) => throw APIErrors.NodeNotFoundForWhereError(where) }
 }
 
 case class CreateDataItemsImportInterpreter(mutaction: CreateDataItemsImport) extends DatabaseMutactionInterpreter {

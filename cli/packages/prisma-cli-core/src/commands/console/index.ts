@@ -7,7 +7,7 @@ export default class ConsoleCommand extends Command {
   static topic = 'console'
   static description = 'Open Prisma Console in browser'
   async run() {
-    const url = `https://app.prisma.sh`
+    const url = `https://app.prisma.io`
 
     this.out.log(`Opening prisma console ${url} in the browser`)
     opn(url)

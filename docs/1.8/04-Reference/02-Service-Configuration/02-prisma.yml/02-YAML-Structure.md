@@ -16,6 +16,7 @@ The service definition file `prisma.yml` has the following root properties:
 - `subscriptions`: Configuration of subscription webhooks.
 - `seed`: Points to a file containing mutations for data seeding.
 - `custom`: Used to provide variables which can be referenced elsewhere in `prisma.yml`.
+- `hooks`: Define CLI commands to be executed before/after specific actions of the Prisma CLI
 
 > The exact structure of `prisma.yml` is defined with [JSON schema](http://json-schema.org/). You can find the corresponding schema definition [here](https://github.com/graphcool/graphcool-json-schema/blob/master/src/schema.json).
 
@@ -107,7 +108,7 @@ Read more about Database [authentication here](!alias-utee3eiquo#authentication)
 
 <InfoBox type=warning>
 
-**WARNING**: If the Prisma API is deployed without a `secret`, it does not require authentication. This means everyone with access to the `endpoint` is able to send arbitrary queries and mutations and therefore read and write to the database!
+**WARNING**: If the Prisma API is deployed without a `secret`, it does not require authentication. This means everyone with access to the `endpoint` is able to send arbitrary queries and mutations and can therefore read and write to the database!
 
 </InfoBox>
 

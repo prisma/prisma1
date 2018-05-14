@@ -7,7 +7,7 @@ import org.scalatest.{FlatSpec, Matchers}
 class NestedConnectMutationInsideUpsertSpec extends FlatSpec with Matchers with ApiSpecBase {
 
   "a one to many relation" should "be connectable by id within an upsert in the create case" ignore {
-    val project = SchemaDsl() { schema =>
+    val project = SchemaDsl.fromBuilder { schema =>
       val customer = schema.model("Customer").field_!("name", _.String)
       schema.model("Tenant").field_!("name", _.String).oneToManyRelation("customers", "tenant", customer)
     }
@@ -28,7 +28,7 @@ class NestedConnectMutationInsideUpsertSpec extends FlatSpec with Matchers with 
   }
 
   "a one to many relation" should "be connectable by id within an upsert in the update case" ignore {
-    val project = SchemaDsl() { schema =>
+    val project = SchemaDsl.fromBuilder { schema =>
       val customer = schema.model("Customer").field_!("name", _.String)
       schema.model("Tenant").field_!("name", _.String).oneToManyRelation("customers", "tenant", customer)
     }
@@ -50,7 +50,7 @@ class NestedConnectMutationInsideUpsertSpec extends FlatSpec with Matchers with 
   }
 
   "a one to many relation" should "be connectable by unique field within an upsert in the update case" ignore {
-    val project = SchemaDsl() { schema =>
+    val project = SchemaDsl.fromBuilder { schema =>
       val customer = schema.model("Customer").field_!("name", _.String, isUnique = true)
       schema.model("Tenant").field_!("name", _.String, isUnique = true).oneToManyRelation("customers", "tenant", customer)
     }
