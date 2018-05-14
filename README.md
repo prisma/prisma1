@@ -1,6 +1,6 @@
 <a href="https://www.prisma.io"><img src="https://imgur.com/HUu10rH.png" width="248" /></a>
 
-[Website](https://www.prisma.io) • [Docs](https://www.prisma.io/docs/) • [Blog](https://blog.prisma.io/) • [Forum](https://www.prisma.io/forum) • [Slack](https://slack.prisma.io/) • [Twitter](https://twitter.com/prismagraphql)
+[Website](https://www.prisma.io) • [Docs](https://www.prisma.io/docs/) • [Blog](https://blog.prisma.io/) • [Forum](https://www.prisma.io/forum) • [Slack](https://slack.prisma.io/) • [Twitter](https://twitter.com/prismagraphql) • [Learn GraphQL](https://www.howtographql.com)
 
 [![CircleCI](https://circleci.com/gh/graphcool/prisma.svg?style=shield)](https://circleci.com/gh/graphcool/prisma) [![Slack Status](https://slack.prisma.io/badge.svg)](https://slack.prisma.io) [![npm version](https://badge.fury.io/js/prisma.svg)](https://badge.fury.io/js/prisma)
 
