@@ -41,9 +41,7 @@ To deploy your service to a public cluster (rather than locally with Docker), yo
 
 </details>
 
-### 3. Description of `prisma.yml` properties
-
-#### hooks
+### 3. `hooks` property of `prisma.yml`
 
 The `hooks` property is used to define terminal commands which will be executed by the Prisma CLI before or after certain commands.
 
