@@ -79,5 +79,5 @@ projects:
         output:
           typings: generated-prisma.ts
         generator: typegen
-        language: ts
+        language: typescript
 ```
