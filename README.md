@@ -249,7 +249,8 @@ Prisma has a community of thousands of amazing developers and contributors. Welc
 - [Twitter](https://twitter.com/prismagraphql)
 - [Facebook](https://www.facebook.com/GraphcoolHQ)
 - [Meetup](https://www.meetup.com/graphql-berlin)
-- [GraphQL Europe](https://www.graphql-europe.org/) | [GraphQL Day](https://www.graphqlday.org/) 
+- [GraphQL Europe](https://www.graphql-europe.org/)
+- [GraphQL Day](https://www.graphqlday.org/)
 - [Email](hello@prisma.io)
 
 ## Contributing
