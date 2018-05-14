@@ -98,13 +98,11 @@ prisma deploy
 
 #### 5. Explore the API in a Playground
 
-Run the following command to open a [GraphQL Playground](https://github.com/graphcool/graphql-playground/releases):
+Run the following command to open a [GraphQL Playground](https://github.com/graphcool/graphql-playground/releases) and start sending queries and mutation:
 
 ```bash
 prisma playground
 ```
-
-You can now send queries and mutations to the API.
 
 <details><summary><b>I don't know what queries and mutations I can send.</b></summary>
 <p>
