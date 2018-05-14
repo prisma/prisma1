@@ -65,7 +65,7 @@ Or you can open a Playground by navigating to [http://localhost:4000](http://loc
 
 ```graphql
 query {
-  posts(where: { author: { name_in: ["Graphcool"] } }) {
+  posts(where: { author: { name_in: ["Prisma"] } }) {
     id
     title
     status
@@ -87,7 +87,7 @@ mutation {
       title: "Second Post"
       content: "Second Post Content"
       status: DRAFT
-      author: { connect: { handle: "graphcool" } }
+      author: { connect: { handle: "prisma" } }
     }
   ) {
     id

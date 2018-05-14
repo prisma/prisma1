@@ -4,7 +4,7 @@ mutation CreatePostWithUser {
       title: "First Post"
       content: "First Post Content"
       status: DRAFT
-      author: { create: { name: "Graphcool", handle: "graphcool" } }
+      author: { create: { name: "Prisma", handle: "prisma" } }
     }
   ) {
     id
