@@ -1,5 +1,5 @@
 mutation CreateUsers {
-  user1: createUser(data: { name: "Graphcool", type: ADMIN }) {
+  user1: createUser(data: { name: "Prisma", type: ADMIN }) {
     id
     name
   }
