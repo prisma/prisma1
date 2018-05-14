@@ -190,11 +190,11 @@ Prisma provides a mapping from your API to your database. In that sense, it solv
 
 Here is how Prisma compares to conventional ORMs:
 
-- **Expressiveness**: Full flexibility thanks to Prisma's GraphQL API, including relational filters and nested mutations
-- **Performance**: Prisma uses various optimization techniques to ensure top performance in complex scenarios
-- **Architecture**: Using Prisma enables a layered and clean architecture, allowing you to focus on your API layer
-- **Type safety**: Thanks to GraphQL's strong type system you're getting a strongly typed API layer for free
-- **Realtime**: Out-of-the-box support for realtime updates for all events happening in the database
+- **Expressiveness**: Full flexibility thanks to Prisma's GraphQL API, including relational filters and nested mutations.
+- **Performance**: Prisma uses various optimization techniques to ensure top performance in complex scenarios.
+- **Architecture**: Using Prisma enables a layered and clean architecture, allowing you to focus on your API layer.
+- **Type safety**: Thanks to GraphQL's strong type system you're getting a strongly typed API layer for free.
+- **Realtime**: Out-of-the-box support for realtime updates for all events happening in the database.
 
 ## Database Connectors
 
