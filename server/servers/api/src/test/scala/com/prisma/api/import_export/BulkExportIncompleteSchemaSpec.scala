@@ -11,7 +11,7 @@ import org.scalatest.{FlatSpec, Matchers}
 
 class BulkExportIncompleteSchemaSpec extends FlatSpec with Matchers with ApiSpecBase with AwaitUtils {
 
-  val project: Project = SchemaDsl()(_ => ())
+  val project: Project = SchemaDsl.fromBuilder(_ => ())
 
   override protected def beforeAll(): Unit = {
     super.beforeAll()

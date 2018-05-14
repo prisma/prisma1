@@ -8,7 +8,7 @@ class MultiItemConnectionQuerySpec extends FlatSpec with Matchers with ApiSpecBa
 
   "the connection query" should "return empty edges" in {
 
-    val project = SchemaDsl() { schema =>
+    val project = SchemaDsl.fromBuilder { schema =>
       schema.model("Todo").field_!("title", _.String)
     }
     database.setup(project)
@@ -30,7 +30,7 @@ class MultiItemConnectionQuerySpec extends FlatSpec with Matchers with ApiSpecBa
   }
 
   "the connection query" should "return single node" in {
-    val project = SchemaDsl() { schema =>
+    val project = SchemaDsl.fromBuilder { schema =>
       schema.model("Todo").field_!("title", _.String)
     }
     database.setup(project)
@@ -64,7 +64,7 @@ class MultiItemConnectionQuerySpec extends FlatSpec with Matchers with ApiSpecBa
   }
 
   "the connection query" should "filter by any field" in {
-    val project = SchemaDsl() { schema =>
+    val project = SchemaDsl.fromBuilder { schema =>
       schema.model("Todo").field_!("title", _.String)
     }
     database.setup(project)

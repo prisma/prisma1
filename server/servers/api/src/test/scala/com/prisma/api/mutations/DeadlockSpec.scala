@@ -12,7 +12,7 @@ class DeadlockSpec extends FlatSpec with Matchers with ApiSpecBase with AwaitUti
   import testDependencies.system.dispatcher
 
   "creating many items" should "not cause deadlocks" in {
-    val project = SchemaDsl() { schema =>
+    val project = SchemaDsl.fromBuilder { schema =>
       val comment = schema.model("Comment").field("text", _.String)
       schema.model("Todo").oneToManyRelation("comments", "todo", comment).field("a", _.String)
     }
@@ -39,7 +39,7 @@ class DeadlockSpec extends FlatSpec with Matchers with ApiSpecBase with AwaitUti
   }
 
   "updating single item many times" should "not cause deadlocks" in {
-    val project = SchemaDsl() { schema =>
+    val project = SchemaDsl.fromBuilder { schema =>
       val comment = schema.model("Comment").field("text", _.String)
       schema.model("Todo").oneToManyRelation("comments", "todo", comment).field("a", _.String)
     }
@@ -89,7 +89,7 @@ class DeadlockSpec extends FlatSpec with Matchers with ApiSpecBase with AwaitUti
   }
 
   "updating single item and relations many times" should "not cause deadlocks" in {
-    val project = SchemaDsl() { schema =>
+    val project = SchemaDsl.fromBuilder { schema =>
       val comment = schema.model("Comment").field("text", _.String)
       schema.model("Todo").oneToManyRelation("comments", "todo", comment).field("a", _.String)
     }
@@ -142,7 +142,7 @@ class DeadlockSpec extends FlatSpec with Matchers with ApiSpecBase with AwaitUti
   }
 
   "creating many items with relations" should "not cause deadlocks" in {
-    val project = SchemaDsl() { schema =>
+    val project = SchemaDsl.fromBuilder { schema =>
       val comment = schema.model("Comment").field("text", _.String)
       schema.model("Todo").oneToManyRelation("comments", "todo", comment).field("a", _.String)
     }
@@ -172,7 +172,7 @@ class DeadlockSpec extends FlatSpec with Matchers with ApiSpecBase with AwaitUti
   }
 
   "deleting many items" should "not cause deadlocks" in {
-    val project = SchemaDsl() { schema =>
+    val project = SchemaDsl.fromBuilder { schema =>
       val comment = schema.model("Comment").field("text", _.String)
       schema.model("Todo").oneToManyRelation("comments", "todo", comment).field("a", _.String)
     }

@@ -16,7 +16,7 @@ class CascadingDeletePathSpec extends FlatSpec with Matchers with ApiSpecBase {
     //              GC            GC2               SGC
     //                  GGC                   SGGC          SGGC2
 
-    val project = SchemaDsl() { schema =>
+    val project = SchemaDsl.fromBuilder { schema =>
       val parent               = schema.model("P").field_!("p", _.String, isUnique = true)
       val child                = schema.model("C").field_!("c", _.String, isUnique = true).manyToManyRelation("p", "c", parent)
       val stepchild            = schema.model("SC").field_!("sc", _.String, isUnique = true).manyToManyRelation("p", "sc", parent)
@@ -42,7 +42,7 @@ class CascadingDeletePathSpec extends FlatSpec with Matchers with ApiSpecBase {
     //              GC            GC2               SGC
     //                  GGC                   SGGC          SGGC2
 
-    val project = SchemaDsl() { schema =>
+    val project = SchemaDsl.fromBuilder { schema =>
       val parent               = schema.model("P").field_!("p", _.String, isUnique = true)
       val child                = schema.model("C").field_!("c", _.String, isUnique = true)
       val stepchild            = schema.model("SC").field_!("sc", _.String, isUnique = true)
@@ -81,7 +81,7 @@ class CascadingDeletePathSpec extends FlatSpec with Matchers with ApiSpecBase {
     //                              /   \
     //                            C   -  SC
 
-    val project = SchemaDsl() { schema =>
+    val project = SchemaDsl.fromBuilder { schema =>
       val parent    = schema.model("P").field_!("p", _.String, isUnique = true)
       val child     = schema.model("C").field_!("c", _.String, isUnique = true)
       val stepchild = schema.model("SC").field_!("sc", _.String, isUnique = true)
@@ -109,7 +109,7 @@ class CascadingDeletePathSpec extends FlatSpec with Matchers with ApiSpecBase {
     //                              /   \
     //                            C   -  SC
 
-    val project = SchemaDsl() { schema =>
+    val project = SchemaDsl.fromBuilder { schema =>
       val parent    = schema.model("P").field_!("p", _.String, isUnique = true)
       val child     = schema.model("C").field_!("c", _.String, isUnique = true)
       val stepchild = schema.model("SC").field_!("sc", _.String, isUnique = true)
@@ -131,7 +131,7 @@ class CascadingDeletePathSpec extends FlatSpec with Matchers with ApiSpecBase {
     //                              /   \
     //                            C   -  SC
 
-    val project = SchemaDsl() { schema =>
+    val project = SchemaDsl.fromBuilder { schema =>
       val ancestor  = schema.model("A").field_!("a", _.String, isUnique = true)
       val ancestor2 = schema.model("A2").field_!("a2", _.String, isUnique = true)
       val parent    = schema.model("P").field_!("p", _.String, isUnique = true)
@@ -156,7 +156,7 @@ class CascadingDeletePathSpec extends FlatSpec with Matchers with ApiSpecBase {
     //                               \ /
     //                                P
 
-    val project = SchemaDsl() { schema =>
+    val project = SchemaDsl.fromBuilder { schema =>
       val parent = schema.model("P").field_!("p", _.String, isUnique = true)
       parent.manyToManyRelation("follow", "Opposite Side", parent, modelAOnDelete = OnDelete.Cascade)
     }
@@ -172,7 +172,7 @@ class CascadingDeletePathSpec extends FlatSpec with Matchers with ApiSpecBase {
     //                               \ /
     //                                P
 
-    val project = SchemaDsl() { schema =>
+    val project = SchemaDsl.fromBuilder { schema =>
       val parent = schema.model("P").field_!("p", _.String, isUnique = true)
       parent.manyToManyRelation("follow", "Opposite Side", parent, modelAOnDelete = OnDelete.Cascade, modelBOnDelete = OnDelete.Cascade)
     }

@@ -6,10 +6,9 @@ import org.scalatest.{Assertion, FlatSpec, Matchers}
 class Queries extends FlatSpec with Matchers with ApiSpecBase {
 
   "schema" should "include simple API features" in {
-    val schema = SchemaDsl()
-    schema.model("Car").field("wheelCount", _.Int).field_!("name", _.String).field_!("createdAt", _.DateTime).field_!("updatedAt", _.DateTime)
-    val project = schema.buildProject()
-
+    val project = SchemaDsl.fromBuilder { schema =>
+      schema.model("Car").field("wheelCount", _.Int).field_!("name", _.String).field_!("createdAt", _.DateTime).field_!("updatedAt", _.DateTime)
+    }
     database.setup(project)
 
     // MUTATIONS
@@ -33,11 +32,11 @@ class Queries extends FlatSpec with Matchers with ApiSpecBase {
   }
 
   "schema" should "include old nested mutations" in {
-    val schema = SchemaDsl()
-    val car    = schema.model("Car").field("wheelCount", _.Int).field_!("name", _.String).field_!("createdAt", _.DateTime).field_!("updatedAt", _.DateTime)
-    schema.model("Wheel").manyToOneRelation("car", "wheels", car).field_!("size", _.Int).field_!("createdAt", _.DateTime).field_!("updatedAt", _.DateTime)
-    val project = schema.buildProject()
+    val project = SchemaDsl.fromBuilder { schema =>
+      val car = schema.model("Car").field("wheelCount", _.Int).field_!("name", _.String).field_!("createdAt", _.DateTime).field_!("updatedAt", _.DateTime)
+      schema.model("Wheel").manyToOneRelation("car", "wheels", car).field_!("size", _.Int).field_!("createdAt", _.DateTime).field_!("updatedAt", _.DateTime)
 
+    }
     database.setup(project)
 
     // MUTATIONS

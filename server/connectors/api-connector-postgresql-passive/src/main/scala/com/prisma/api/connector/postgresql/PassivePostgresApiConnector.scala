@@ -46,7 +46,10 @@ case class PassiveDatabaseMutactionExecutorImpl(activeExecutor: PostgresDatabase
     val transformed         = transform(mutactions)
     val interpreters        = transformed.map(interpreterFor)
     val combinedErrorMapper = interpreters.map(_.errorMapper).reduceLeft(_ orElse _)
-    val mutationBuilder     = PostgresApiDatabaseMutationBuilder(schemaName = schemaName.getOrElse(mutactions.head.project.id))
+    val mutationBuilder = PostgresApiDatabaseMutationBuilder(
+      schemaName = schemaName.getOrElse(mutactions.head.project.id),
+      schema = mutactions.head.project.schema
+    )
 
     val singleAction = runTransactionally match {
       case true  => DBIO.sequence(interpreters.map(_.newAction(mutationBuilder))).transactionally
@@ -71,7 +74,8 @@ case class PassiveDatabaseMutactionExecutorImpl(activeExecutor: PostgresDatabase
                 case Some(manifestation: InlineRelationManifestation) =>
                   val mutactionsHaveTheSamePath = m.path == candidate.path
                   val wouldInsertIntoRightTable = manifestation.inTableOfModelId == m.path.lastModel.id
-                  mutactionsHaveTheSamePath && wouldInsertIntoRightTable
+                  val isSelfRelation            = m.path.lastRelation_!.isSameModelRelation
+                  mutactionsHaveTheSamePath && wouldInsertIntoRightTable && !isSelfRelation
 
                 case None =>
                   false
@@ -120,10 +124,10 @@ case class NestedCreateDataItemInterpreterForInlineRelations(mutaction: NestedCr
   val inlineManifestation = relation.manifestation.get.asInstanceOf[InlineRelationManifestation]
   require(inlineManifestation.inTableOfModelId == path.lastModel.id)
 
-  override def action(mutationBuilder: PostgresApiDatabaseMutationBuilder) = {
-//    val createNonList = PostGresApiDatabaseMutationBuilder.createDataItem(project.id, path, mutaction.create.nonListArgs)
-//    val listAction    = PostGresApiDatabaseMutationBuilder.setScalarList(project.id, path, mutaction.listArgs)
-    DBIO.seq(bla(mutationBuilder))
+  override def action(mutationBuilder: PostgresApiDatabaseMutationBuilder): DBIO[Unit] = {
+    val relationAction = NestedCreateRelationInterpreter(mutaction.nestedCreateRelation).removalActions(mutationBuilder)
+    val listAction     = mutationBuilder.setScalarList(path, mutaction.create.listArgs)
+    DBIO.seq(DBIO.sequence(relationAction), bla(mutationBuilder), listAction)
   }
 
   import com.prisma.api.connector.postgresql.database.SlickExtensions._

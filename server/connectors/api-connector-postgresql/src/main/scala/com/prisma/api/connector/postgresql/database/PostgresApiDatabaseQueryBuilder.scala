@@ -6,7 +6,7 @@ import com.prisma.api.connector.Types.DataItemFilterCollection
 import com.prisma.api.connector._
 import com.prisma.gc_values._
 import com.prisma.shared.models.IdType.Id
-import com.prisma.shared.models.Manifestations.InlineRelationManifestation
+import com.prisma.shared.models.Manifestations.{InlineRelationManifestation, RelationTableManifestation}
 import com.prisma.shared.models.{Function => _, _}
 import slick.dbio.DBIOAction
 import slick.jdbc.PostgresProfile.api._
@@ -16,6 +16,7 @@ import slick.sql.SqlStreamingAction
 import scala.concurrent.ExecutionContext.Implicits.global
 
 case class PostgresApiDatabaseQueryBuilder(
+    schema: Schema,
     schemaName: String
 ) {
   import JdbcExtensions._
@@ -41,9 +42,10 @@ case class PostgresApiDatabaseQueryBuilder(
     PrismaNodeWithParent(parentId, node)
   }
 
-  implicit object GetRelationNode extends GetResult[RelationNode] {
-    override def apply(ps: PositionedResult): RelationNode = RelationNode(ps.rs.getId, ps.rs.getAsID("A"), ps.rs.getAsID("B"))
-
+  private def getResultForRelation(relation: Relation): GetResult[RelationNode] = GetResult { ps: PositionedResult =>
+    val modelAColumn = relation.columnForRelationSide(RelationSide.A)
+    val modelBColumn = relation.columnForRelationSide(RelationSide.B)
+    RelationNode(id = ps.rs.getId, a = ps.rs.getAsID(modelAColumn), b = ps.rs.getAsID(modelBColumn))
   }
 
   implicit object GetRelationCount extends GetResult[(IdGCValue, Int)] {
@@ -76,12 +78,12 @@ case class PostgresApiDatabaseQueryBuilder(
   }
 
   def selectAllFromRelationTable(
-      relationId: String,
+      relation: Relation,
       args: Option[QueryArguments],
       overrideMaxNodeCount: Option[Int] = None
   ): DBIOAction[ResolverResult[RelationNode], NoStream, Effect] = {
 
-    val tableName                                        = relationId
+    val tableName                                        = relation.relationTableNameNew(schema)
     val (conditionCommand, orderByCommand, limitCommand) = extractQueryArgs(schemaName, tableName, args, None, overrideMaxNodeCount = overrideMaxNodeCount)
 
     val query = sql"""select * from "#$schemaName"."#$tableName"""" ++
@@ -89,7 +91,7 @@ case class PostgresApiDatabaseQueryBuilder(
       prefixIfNotNone("order by", orderByCommand) ++
       prefixIfNotNone("limit", limitCommand)
 
-    query.as[RelationNode].map(args.get.resultTransform)
+    query.as[RelationNode](getResultForRelation(relation)).map(args.get.resultTransform)
   }
 
   def selectAllFromListTable(
@@ -187,8 +189,8 @@ case class PostgresApiDatabaseQueryBuilder(
 
     val relationTableName     = fromField.relation.get.relationTableNameNew(schema)
     val (aColumn, bColumn)    = (relation.modelAColumn, relation.modelBColumn)
-    val columnForFromModel    = relation.columnForModel(fromModel, fromField.relationSide.get)
-    val columnForRelatedModel = relation.columnForModel(relatedModel, fromField.oppositeRelationSide.get)
+    val columnForFromModel    = relation.columnForRelationSide(fromField.relationSide.get)
+    val columnForRelatedModel = relation.columnForRelationSide(fromField.oppositeRelationSide.get)
 
     val (conditionCommand, orderByCommand, limitCommand) = extractQueryArgs(
       projectId = schemaName,
@@ -251,7 +253,7 @@ case class PostgresApiDatabaseQueryBuilder(
 
     val relatedModel         = fromField.relatedModel(schema).get
     val fieldTable           = fromField.relatedModel(schema).get.name
-    val unsafeRelationId     = fromField.relation.get.relationTableName
+    val unsafeRelationId     = fromField.relation.get.relationTableNameNew(schema)
     val modelRelationSide    = fromField.relationSide.get.toString
     val oppositeRelationSide = fromField.oppositeRelationSide.get.toString
 
@@ -305,7 +307,7 @@ case class PostgresApiDatabaseQueryBuilder(
   ): SqlStreamingAction[Vector[(IdGCValue, Int)], (IdGCValue, Int), Effect] = {
 
     val fieldTable        = relationField.relatedModel(schema).get.name
-    val unsafeRelationId  = relationField.relation.get.relationTableName
+    val unsafeRelationId  = relationField.relation.get.relationTableNameNew(schema)
     val modelRelationSide = relationField.relationSide.get.toString
     val fieldRelationSide = relationField.oppositeRelationSide.get.toString
 

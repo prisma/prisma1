@@ -15,13 +15,12 @@ object SchemaDsl extends AwaitUtils {
 
   import scala.collection.mutable.Buffer
 
-  def apply()  = schema()
-  def schema() = SchemaBuilder()
+  def apply() = SchemaBuilder()
 
   def fromBuilder(fn: SchemaBuilder => Unit)(implicit deployConnector: DeployConnector, suite: Suite) = {
     val schemaBuilder = SchemaBuilder()
     fn(schemaBuilder)
-    val project = schemaBuilder.buildProject(id = suite.getClass.getSimpleName)
+    val project = schemaBuilder.buildProject(id = projectId(suite))
     if (deployConnector.isPassive) {
       addManifestations(project)
     } else {
@@ -30,11 +29,23 @@ object SchemaDsl extends AwaitUtils {
   }
 
   def fromString(id: String = TestIds.testProjectId)(sdlString: String)(implicit deployConnector: DeployConnector, suite: Suite): Project = {
-    fromString(
-      id = suite.getClass.getSimpleName,
+    val project = fromString(
+      id = projectId(suite),
       InferredTables.empty,
       isActive = true
     )(sdlString)
+    if (deployConnector.isPassive) {
+      addManifestations(project)
+    } else {
+      project
+    }
+  }
+
+  private def projectId(suite: Suite): String = {
+    // GetFieldFromSQLUniqueException blows up if we generate longer names, since we then exceed the postgres limits for constraint names
+    // todo: actually fix GetFieldFromSQLUniqueException instead
+    val nameThatMightBeTooLong = suite.getClass.getSimpleName
+    nameThatMightBeTooLong.substring(0, Math.min(32, nameThatMightBeTooLong.length))
   }
 
   def fromPassiveConnectorSdl(
@@ -72,7 +83,7 @@ object SchemaDsl extends AwaitUtils {
         val modelToPutRelationInto = fieldToRepresentAsInlineRelation.relatedModel_!(schema)
         val manifestation = InlineRelationManifestation(
           inTableOfModelId = modelToPutRelationInto.id,
-          referencingColumn = s"${modelToLinkTo.name.toLowerCase}_id"
+          referencingColumn = s"${relation.name}_${modelToLinkTo.name.toLowerCase}_id"
         )
         relation.copy(manifestation = Some(manifestation))
       }

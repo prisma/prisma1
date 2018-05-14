@@ -16,7 +16,7 @@ import play.api.libs.json.JsArray
 
 class DateTimeImportExportSpec extends FlatSpec with Matchers with ApiSpecBase with AwaitUtils {
 
-  val project: Project = SchemaDsl() { schema =>
+  val project: Project = SchemaDsl.fromBuilder { schema =>
     schema
       .model("Model3")
       .field("createdAt", _.DateTime)
@@ -69,7 +69,7 @@ class DateTimeImportExportSpec extends FlatSpec with Matchers with ApiSpecBase w
   }
 
   "Exporting nodes" should "produce the correct ISO 8601 DateTime Format" in {
-    val project: Project = SchemaDsl() { schema =>
+    val project: Project = SchemaDsl.fromBuilder { schema =>
       val model1 = schema
         .model("Model0")
         .field("a", _.String)

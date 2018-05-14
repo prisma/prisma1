@@ -142,6 +142,7 @@ case class Model(
   lazy val relationFields: List[Field]        = fields.filter(_.isRelation)
   lazy val relationListFields: List[Field]    = relationFields.filter(_.isList)
   lazy val relationNonListFields: List[Field] = relationFields.filter(!_.isList)
+  lazy val visibleRelationFields: List[Field] = relationFields.filter(_.isVisible)
   lazy val relations: List[Relation]          = fields.flatMap(_.relation).distinct
   lazy val nonListFields                      = fields.filter(!_.isList)
   lazy val idField                            = getFieldByName_!("id")
@@ -168,6 +169,8 @@ object RelationSide extends Enumeration {
   type RelationSide = Value
   val A = Value("A")
   val B = Value("B")
+
+  def opposite(side: RelationSide.Value) = if (side == A) B else A
 }
 
 object TypeIdentifier extends Enumeration {
@@ -392,17 +395,12 @@ case class Relation(
 
   def modelBColumn: String = manifestation match {
     case Some(m: RelationTableManifestation)  => m.modelBColumn
-    case Some(m: InlineRelationManifestation) => if (m.inTableOfModelId == modelBId) "id" else m.referencingColumn
+    case Some(m: InlineRelationManifestation) => if (m.inTableOfModelId == modelBId && !isSameModelRelation) "id" else m.referencingColumn
     case None                                 => "B"
   }
 
-  def columnForModel(model: Model, relationSide: RelationSide.Value): String = {
-    require(model.id == modelAId || model.id == modelBId)
-    inlineManifestation match {
-      // FIXME: this needs to respect the relation side as well
-      case Some(m: InlineRelationManifestation) => if (model.id == m.inTableOfModelId) "id" else m.referencingColumn
-      case None                                 => relationSide.toString
-    }
+  def columnForRelationSide(relationSide: RelationSide.Value): String = {
+    if (relationSide == RelationSide.A) modelAColumn else modelBColumn
   }
 
   def hasManifestation: Boolean = manifestation.isDefined
@@ -419,11 +417,9 @@ case class Relation(
   }
 
   def isManyToMany(schema: Schema): Boolean = {
-    val x = for {
-      modelAField <- getModelAField(schema)
-      modelBField <- getModelBField(schema)
-    } yield modelAField.isList && modelBField.isList
-    x.getOrElse(false) // todo: is this ok?
+    val modelAFieldIsList = getModelAField(schema).map(_.isList).getOrElse(true)
+    val modelBFieldIsList = getModelBField(schema).map(_.isList).getOrElse(true)
+    modelAFieldIsList && modelBFieldIsList
   }
 
   def getFieldOnModel(modelId: String, schema: Schema): Option[Field] = {

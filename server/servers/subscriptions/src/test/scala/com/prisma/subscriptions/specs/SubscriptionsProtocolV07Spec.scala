@@ -9,16 +9,16 @@ import play.api.libs.json._
 import scala.concurrent.duration._
 
 class SubscriptionsProtocolV07Spec extends FlatSpec with Matchers with SubscriptionSpecBase with ScalaFutures {
-  val schema: SchemaDsl.SchemaBuilder = SchemaDsl.schema()
-  val todo: SchemaDsl.ModelBuilder = schema
-    .model("Todo")
-    .field("text", _.String)
-    .field("json", _.Json)
-    .field("int", _.Int)
-    .field("float", _.Float)
+  val project = SchemaDsl.fromBuilder { schema =>
+    val todo: SchemaDsl.ModelBuilder = schema
+      .model("Todo")
+      .field("text", _.String)
+      .field("json", _.Json)
+      .field("int", _.Int)
+      .field("float", _.Float)
 
-  val project = schema.buildProject()
-  val model   = project.schema.getModelByName_!("Todo")
+  }
+  val model = project.schema.getModelByName_!("Todo")
 
   override def beforeEach() = {
     super.beforeEach()

@@ -7,7 +7,7 @@ import org.scalatest.{FlatSpec, Matchers}
 class AggregationQuerySpec extends FlatSpec with Matchers with ApiSpecBase {
   "the count query" should "return 0" in {
 
-    val project = SchemaDsl() { schema =>
+    val project = SchemaDsl.fromBuilder { schema =>
       schema.model("Todo").field_!("title", _.String)
     }
     database.setup(project)
@@ -27,7 +27,7 @@ class AggregationQuerySpec extends FlatSpec with Matchers with ApiSpecBase {
   }
 
   "the count query" should "return 1" in {
-    val project = SchemaDsl() { schema =>
+    val project = SchemaDsl.fromBuilder { schema =>
       schema.model("Todo").field_!("title", _.String)
     }
     database.setup(project)
@@ -57,7 +57,7 @@ class AggregationQuerySpec extends FlatSpec with Matchers with ApiSpecBase {
   }
 
   "the count query" should "filter by any field" in {
-    val project = SchemaDsl() { schema =>
+    val project = SchemaDsl.fromBuilder { schema =>
       schema.model("Todo").field_!("title", _.String)
     }
     database.setup(project)

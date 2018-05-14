@@ -11,7 +11,7 @@ class CascadingDeleteSpec extends FlatSpec with Matchers with ApiSpecBase {
 
   "P1!-C1! relation deleting the parent" should "work if parent is marked marked cascading" in {
     //         P-C
-    val project = SchemaDsl() { schema =>
+    val project = SchemaDsl.fromBuilder { schema =>
       val parent = schema.model("P").field_!("p", _.String, isUnique = true)
       val child  = schema.model("C").field_!("c", _.String, isUnique = true)
 
@@ -31,7 +31,7 @@ class CascadingDeleteSpec extends FlatSpec with Matchers with ApiSpecBase {
 
   "PM-CM relation deleting the parent" should "delete all children if the parent is marked cascading" in {
     //         P-C
-    val project = SchemaDsl() { schema =>
+    val project = SchemaDsl.fromBuilder { schema =>
       val parent = schema.model("P").field_!("p", _.String, isUnique = true)
       val child  = schema.model("C").field_!("c", _.String, isUnique = true)
 
@@ -52,7 +52,7 @@ class CascadingDeleteSpec extends FlatSpec with Matchers with ApiSpecBase {
 
   "PM-CM relation deleting the parent" should "error if both sides are marked cascading since it would be a circle" in {
     //         P-C
-    val project = SchemaDsl() { schema =>
+    val project = SchemaDsl.fromBuilder { schema =>
       val parent = schema.model("P").field_!("p", _.String, isUnique = true)
       val child  = schema.model("C").field_!("c", _.String, isUnique = true)
 
@@ -72,7 +72,7 @@ class CascadingDeleteSpec extends FlatSpec with Matchers with ApiSpecBase {
 
   "P1!-C1! relation deleting the parent" should "error if both sides are marked marked cascading" in {
     //         P-C
-    val project = SchemaDsl() { schema =>
+    val project = SchemaDsl.fromBuilder { schema =>
       val parent = schema.model("P").field_!("p", _.String, isUnique = true)
       val child  = schema.model("C").field_!("c", _.String, isUnique = true)
 
@@ -90,7 +90,7 @@ class CascadingDeleteSpec extends FlatSpec with Matchers with ApiSpecBase {
 
   "P1!-C1! relation deleting the parent" should "error if only child is marked marked cascading" in {
     //         P-C
-    val project = SchemaDsl() { schema =>
+    val project = SchemaDsl.fromBuilder { schema =>
       val parent = schema.model("P").field_!("p", _.String, isUnique = true)
       val child  = schema.model("C").field_!("c", _.String, isUnique = true)
 
@@ -110,7 +110,7 @@ class CascadingDeleteSpec extends FlatSpec with Matchers with ApiSpecBase {
 
   "P1!-C1!-C1!-GC! relation deleting the parent and child and grandchild if marked cascading" should "work" in {
     //         P-C-GC
-    val project = SchemaDsl() { schema =>
+    val project = SchemaDsl.fromBuilder { schema =>
       val parent     = schema.model("P").field_!("p", _.String, isUnique = true)
       val child      = schema.model("C").field_!("c", _.String, isUnique = true)
       val grandChild = schema.model("GC").field_!("gc", _.String, isUnique = true)
@@ -134,7 +134,7 @@ class CascadingDeleteSpec extends FlatSpec with Matchers with ApiSpecBase {
 
   "P1!-C1!-C1-GC relation deleting the parent and child marked cascading" should "work but preserve the grandchild" in {
     //         P-C-GC
-    val project = SchemaDsl() { schema =>
+    val project = SchemaDsl.fromBuilder { schema =>
       val parent     = schema.model("P").field_!("p", _.String, isUnique = true)
       val child      = schema.model("C").field_!("c", _.String, isUnique = true)
       val grandChild = schema.model("GC").field_!("gc", _.String, isUnique = true)
@@ -159,7 +159,7 @@ class CascadingDeleteSpec extends FlatSpec with Matchers with ApiSpecBase {
 
   "P1!-C1! relation deleting the parent marked cascading" should "error if the child is required in another non-cascading relation" in {
     //         P-C-GC
-    val project = SchemaDsl() { schema =>
+    val project = SchemaDsl.fromBuilder { schema =>
       val parent     = schema.model("P").field_!("p", _.String, isUnique = true)
       val child      = schema.model("C").field_!("c", _.String, isUnique = true)
       val grandChild = schema.model("GC").field_!("gc", _.String, isUnique = true)
@@ -181,7 +181,7 @@ class CascadingDeleteSpec extends FlatSpec with Matchers with ApiSpecBase {
 
   "If the parent is not cascading nothing on the path" should "be deleted except for the parent" in {
     //         P-C-GC
-    val project = SchemaDsl() { schema =>
+    val project = SchemaDsl.fromBuilder { schema =>
       val parent     = schema.model("P").field_!("p", _.String, isUnique = true)
       val child      = schema.model("C").field_!("c", _.String, isUnique = true)
       val grandChild = schema.model("GC").field_!("gc", _.String, isUnique = true)
@@ -206,7 +206,7 @@ class CascadingDeleteSpec extends FlatSpec with Matchers with ApiSpecBase {
     //       /   \
     //      C     SC
 
-    val project = SchemaDsl() { schema =>
+    val project = SchemaDsl.fromBuilder { schema =>
       val parent    = schema.model("P").field_!("p", _.String, isUnique = true)
       val child     = schema.model("C").field_!("c", _.String, isUnique = true)
       val stepChild = schema.model("SC").field_!("sc", _.String, isUnique = true)
@@ -235,7 +235,7 @@ class CascadingDeleteSpec extends FlatSpec with Matchers with ApiSpecBase {
     //       /   \      not a real circle since from the children there are no backrelations to the parent
     //      C  -  SC
 
-    val project = SchemaDsl() { schema =>
+    val project = SchemaDsl.fromBuilder { schema =>
       val parent    = schema.model("P").field_!("p", _.String, isUnique = true)
       val child     = schema.model("C").field_!("c", _.String, isUnique = true)
       val stepChild = schema.model("SC").field_!("sc", _.String, isUnique = true)
@@ -262,7 +262,7 @@ class CascadingDeleteSpec extends FlatSpec with Matchers with ApiSpecBase {
 
   "A path that is interrupted since there are nodes missing" should "only cascade up until the gap" in {
     //         P-C-GC-|-D-E
-    val project = SchemaDsl() { schema =>
+    val project = SchemaDsl.fromBuilder { schema =>
       val parent     = schema.model("P").field_!("p", _.String, isUnique = true)
       val child      = schema.model("C").field_!("c", _.String, isUnique = true)
       val grandChild = schema.model("GC").field_!("gc", _.String, isUnique = true)
@@ -293,7 +293,7 @@ class CascadingDeleteSpec extends FlatSpec with Matchers with ApiSpecBase {
 
   "A deep uninterrupted path" should "cascade all the way down" in {
     //         P-C-GC-D-E
-    val project = SchemaDsl() { schema =>
+    val project = SchemaDsl.fromBuilder { schema =>
       val parent     = schema.model("P").field_!("p", _.String, isUnique = true)
       val child      = schema.model("C").field_!("c", _.String, isUnique = true)
       val grandChild = schema.model("GC").field_!("gc", _.String, isUnique = true)
@@ -324,7 +324,7 @@ class CascadingDeleteSpec extends FlatSpec with Matchers with ApiSpecBase {
 
   "A deep uninterrupted path" should "error on a required relation violation at the end" in {
     //         P-C-GC-D-E-F!
-    val project = SchemaDsl() { schema =>
+    val project = SchemaDsl.fromBuilder { schema =>
       val parent     = schema.model("P").field_!("p", _.String, isUnique = true)
       val child      = schema.model("C").field_!("c", _.String, isUnique = true)
       val grandChild = schema.model("GC").field_!("gc", _.String, isUnique = true)
@@ -372,7 +372,7 @@ class CascadingDeleteSpec extends FlatSpec with Matchers with ApiSpecBase {
       *          /
       *         D
       */
-    val project = SchemaDsl() { schema =>
+    val project = SchemaDsl.fromBuilder { schema =>
       val a = schema.model("A").field_!("a", _.DateTime, isUnique = true)
       val b = schema.model("B").field_!("b", _.DateTime, isUnique = true)
       val c = schema.model("C").field_!("c", _.DateTime, isUnique = true)
@@ -408,7 +408,7 @@ class CascadingDeleteSpec extends FlatSpec with Matchers with ApiSpecBase {
       *          |
       *          E
       */
-    val project = SchemaDsl() { schema =>
+    val project = SchemaDsl.fromBuilder { schema =>
       val a = schema.model("A").field_!("a", _.String, isUnique = true)
       val b = schema.model("B").field_!("b", _.String, isUnique = true)
       val c = schema.model("C").field_!("c", _.String, isUnique = true)
@@ -451,7 +451,7 @@ class CascadingDeleteSpec extends FlatSpec with Matchers with ApiSpecBase {
       *        \ /
       *         D
       */
-    val project = SchemaDsl() { schema =>
+    val project = SchemaDsl.fromBuilder { schema =>
       val a = schema.model("A").field_!("a", _.Float, isUnique = true)
       val b = schema.model("B").field_!("b", _.Float, isUnique = true)
       val c = schema.model("C").field_!("c", _.Float, isUnique = true)
@@ -492,7 +492,7 @@ class CascadingDeleteSpec extends FlatSpec with Matchers with ApiSpecBase {
        technically covered by cascade directives.*/
 
     //         P-C
-    val project = SchemaDsl() { schema =>
+    val project = SchemaDsl.fromBuilder { schema =>
       val parent = schema.model("P").field_!("p", _.String, isUnique = true)
       val child  = schema.model("C").field_!("c", _.String, isUnique = true)
 
@@ -514,7 +514,7 @@ class CascadingDeleteSpec extends FlatSpec with Matchers with ApiSpecBase {
 
   "P1-C1-C1!-GC! relation updating the parent to delete the child and grandchild if marked cascading" should "work" in {
     //         P-C-GC
-    val project = SchemaDsl() { schema =>
+    val project = SchemaDsl.fromBuilder { schema =>
       val parent     = schema.model("P").field_!("p", _.String, isUnique = true)
       val child      = schema.model("C").field_!("c", _.String, isUnique = true)
       val grandChild = schema.model("GC").field_!("gc", _.String, isUnique = true)
@@ -539,7 +539,7 @@ class CascadingDeleteSpec extends FlatSpec with Matchers with ApiSpecBase {
 
   "P1!-C1!-C1!-GC! relation updating the parent to delete the child and grandchild if marked cascading" should "error if the child is required on parent" in {
     //         P-C-GC
-    val project = SchemaDsl() { schema =>
+    val project = SchemaDsl.fromBuilder { schema =>
       val parent     = schema.model("P").field_!("p", _.String, isUnique = true)
       val child      = schema.model("C").field_!("c", _.String, isUnique = true)
       val grandChild = schema.model("GC").field_!("gc", _.String, isUnique = true)

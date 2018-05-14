@@ -7,7 +7,7 @@ import org.scalatest.{FlatSpec, Matchers}
 
 class CreateMutationListSpec extends FlatSpec with Matchers with ApiSpecBase {
 
-  val project = SchemaDsl() { schema =>
+  val project = SchemaDsl.fromBuilder { schema =>
     val enum = schema.enum(
       name = "MyEnum",
       values = Vector(

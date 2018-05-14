@@ -21,7 +21,7 @@ case class PostgresDataResolver(
 )(implicit ec: ExecutionContext)
     extends DataResolver {
 
-  val queryBuilder = PostgresApiDatabaseQueryBuilder(schemaName = schemaName.getOrElse(project.id))
+  val queryBuilder = PostgresApiDatabaseQueryBuilder(project.schema, schemaName = schemaName.getOrElse(project.id))
 
   override def resolveByGlobalId(globalId: IdGCValue): Future[Option[PrismaNode]] = { //todo rewrite this to use normal query?
     if (globalId.value == "viewer-fixed") return Future.successful(Some(PrismaNode(globalId, RootGCValue.empty, Some("Viewer"))))
@@ -86,7 +86,8 @@ case class PostgresDataResolver(
   }
 
   override def loadRelationRowsForExport(relationId: String, args: Option[QueryArguments] = None): Future[ResolverResult[RelationNode]] = {
-    val query = queryBuilder.selectAllFromRelationTable(relationId, args)
+    val relation = project.schema.relations.find(_.relationTableName == relationId).get
+    val query    = queryBuilder.selectAllFromRelationTable(relation, args)
     performWithTiming("loadRelationRowsForExport", readonlyClientDatabase.run(query))
   }
 

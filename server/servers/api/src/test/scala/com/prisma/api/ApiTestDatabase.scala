@@ -37,7 +37,7 @@ case class ApiTestDatabase()(implicit dependencies: TestApiDependencies) extends
         } else {
           (modelB, modelA)
         }
-        val field = relation.getFieldOnModel(m.inTableOfModelId, project.schema).get
+        val field = relation.getFieldOnModel(m.inTableOfModelId, project.schema)
         CreateInlineRelation(project.id, model, field, references, m.referencingColumn)
       case _ =>
         CreateRelationTable(project.id, project.schema, relation = relation)

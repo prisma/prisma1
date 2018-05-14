@@ -54,8 +54,8 @@ abstract class UncachedInputTypesBuilder(project: Project) extends InputTypesBui
 
   protected def computeInputObjectTypeForCreate(model: Model, parentField: Option[Field]): Option[InputObjectType[Any]] = {
     val inputObjectTypeName = parentField.flatMap(_.otherRelationField(project.schema)) match {
-      case None        => s"${model.name}CreateInput"
-      case Some(field) => s"${model.name}CreateWithout${field.name.capitalize}Input"
+      case Some(field) if !field.isHidden => s"${model.name}CreateWithout${field.name.capitalize}Input"
+      case _                              => s"${model.name}CreateInput"
     }
 
     val fields = computeScalarInputFieldsForCreate(model) ++ computeRelationalInputFieldsForCreate(model, parentField)
@@ -99,8 +99,8 @@ abstract class UncachedInputTypesBuilder(project: Project) extends InputTypesBui
           whereArg <- computeInputObjectTypeForWhereUnique(subModel)
         } yield {
           val typeName = parentField.otherRelationField(project.schema) match {
-            case Some(field) => s"${subModel.name}UpdateWithWhereUniqueWithout${field.name.capitalize}Input"
-            case None        => s"${subModel.name}UpdateWithWhereUniqueNestedInput"
+            case Some(field) if !field.isHidden => s"${subModel.name}UpdateWithWhereUniqueWithout${field.name.capitalize}Input"
+            case _                              => s"${subModel.name}UpdateWithWhereUniqueNestedInput"
           }
 
           InputObjectType[Any](
@@ -125,8 +125,8 @@ abstract class UncachedInputTypesBuilder(project: Project) extends InputTypesBui
 
     if (fields.nonEmpty) {
       val typeName = parentField.otherRelationField(project.schema) match {
-        case Some(field) => s"${subModel.name}UpdateWithout${field.name.capitalize}DataInput"
-        case None        => s"${subModel.name}UpdateDataInput"
+        case Some(field) if !field.isHidden => s"${subModel.name}UpdateWithout${field.name.capitalize}DataInput"
+        case _                              => s"${subModel.name}UpdateDataInput"
       }
 
       Some(
@@ -159,8 +159,8 @@ abstract class UncachedInputTypesBuilder(project: Project) extends InputTypesBui
       createArg <- computeInputObjectTypeForCreate(subModel, Some(parentField))
     } yield {
       val typeName = parentField.otherRelationField(project.schema) match {
-        case Some(field) => s"${subModel.name}UpsertWithout${field.name.capitalize}Input"
-        case None        => s"${subModel.name}UpsertNestedInput"
+        case Some(field) if !field.isHidden => s"${subModel.name}UpsertWithout${field.name.capitalize}Input"
+        case _                              => s"${subModel.name}UpsertNestedInput"
       }
 
       InputObjectType[Any](
@@ -183,8 +183,8 @@ abstract class UncachedInputTypesBuilder(project: Project) extends InputTypesBui
       createArg <- computeInputObjectTypeForCreate(subModel, Some(parentField))
     } yield {
       val typeName = parentField.otherRelationField(project.schema) match {
-        case Some(field) => s"${subModel.name}UpsertWithWhereUniqueWithout${field.name.capitalize}Input"
-        case None        => s"${subModel.name}UpsertWithWhereUniqueNestedInput"
+        case Some(field) if !field.isHidden => s"${subModel.name}UpsertWithWhereUniqueWithout${field.name.capitalize}Input"
+        case _                              => s"${subModel.name}UpsertWithWhereUniqueNestedInput"
       }
 
       InputObjectType[Any](
@@ -248,15 +248,15 @@ abstract class UncachedInputTypesBuilder(project: Project) extends InputTypesBui
   }
 
   private def computeRelationalInputFieldsForUpdate(model: Model, parentField: Option[Field]): List[InputField[Any]] = {
-    model.relationFields.flatMap { field =>
+    model.visibleRelationFields.flatMap { field =>
       val subModel     = field.relatedModel_!(project.schema)
       val relatedField = field.otherRelationField(project.schema)
 
       val inputObjectTypeName = {
         val arityPart = if (field.isList) "Many" else "One"
         val withoutPart = relatedField match {
-          case Some(field) => s"Without${field.name.capitalize}"
-          case None        => ""
+          case Some(field) if !field.isHidden => s"Without${field.name.capitalize}"
+          case _                              => ""
         }
         s"${subModel.name}Update${arityPart}${withoutPart}Input"
       }
@@ -285,15 +285,15 @@ abstract class UncachedInputTypesBuilder(project: Project) extends InputTypesBui
   }
 
   private def computeRelationalInputFieldsForCreate(model: Model, parentField: Option[Field]): List[InputField[Any]] = {
-    model.relationFields.flatMap { field =>
+    model.visibleRelationFields.flatMap { field =>
       val subModel     = field.relatedModel_!(project.schema)
       val relatedField = field.otherRelationField(project.schema)
 
       val inputObjectTypeName = {
         val arityPart = if (field.isList) "Many" else "One"
         val withoutPart = relatedField match {
-          case Some(field) => s"Without${field.name.capitalize}"
-          case None        => ""
+          case Some(field) if !field.isHidden => s"Without${field.name.capitalize}"
+          case _                              => ""
         }
         s"${subModel.name}Create${arityPart}${withoutPart}Input"
       }

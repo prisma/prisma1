@@ -1,5 +1,6 @@
 package com.prisma.api.mutations
 
+import com.prisma.IgnorePassive
 import com.prisma.api.ApiSpecBase
 import com.prisma.shared.schema_dsl.SchemaDsl
 import org.scalatest.{FlatSpec, Matchers}
@@ -7,7 +8,7 @@ import org.scalatest.{FlatSpec, Matchers}
 class NestedUpsertMutationInsideUpdateSpec extends FlatSpec with Matchers with ApiSpecBase {
 
   "a PM to C1!  relation with a child already in a relation" should "work with create" in {
-    val project = SchemaDsl() { schema =>
+    val project = SchemaDsl.fromBuilder { schema =>
       val child  = schema.model("Child").field_!("c", _.String, isUnique = true)
       val parent = schema.model("Parent").field_!("p", _.String, isUnique = true)
       parent.oneToManyRelation_!("childrenOpt", "parentReq", child)
@@ -30,7 +31,7 @@ class NestedUpsertMutationInsideUpdateSpec extends FlatSpec with Matchers with A
       project
     )
 
-    dataResolver(project).countByTable("_ParentToChild").await should be(1)
+    ifConnectorIsActive { dataResolver(project).countByTable("_ParentToChild").await should be(1) }
 
     val res = server.query(
       s"""
@@ -57,12 +58,12 @@ class NestedUpsertMutationInsideUpdateSpec extends FlatSpec with Matchers with A
 
     dataResolver(project).countByTable("Parent").await should be(1)
     dataResolver(project).countByTable("Child").await should be(2)
-    dataResolver(project).countByTable("_ParentToChild").await should be(2)
+    ifConnectorIsActive { dataResolver(project).countByTable("_ParentToChild").await should be(2) }
     ifConnectorIsActive { dataResolver(project).countByTable("_RelayId").await should be(3) }
   }
 
   "a PM to C1!  relation with a child already in a relation" should "work with update" in {
-    val project = SchemaDsl() { schema =>
+    val project = SchemaDsl.fromBuilder { schema =>
       val child  = schema.model("Child").field_!("c", _.String, isUnique = true)
       val parent = schema.model("Parent").field_!("p", _.String, isUnique = true)
       parent.oneToManyRelation_!("childrenOpt", "parentReq", child)
@@ -85,7 +86,7 @@ class NestedUpsertMutationInsideUpdateSpec extends FlatSpec with Matchers with A
       project
     )
 
-    dataResolver(project).countByTable("_ParentToChild").await should be(1)
+    ifConnectorIsActive { dataResolver(project).countByTable("_ParentToChild").await should be(1) }
 
     val res = server.query(
       s"""
@@ -112,12 +113,12 @@ class NestedUpsertMutationInsideUpdateSpec extends FlatSpec with Matchers with A
 
     dataResolver(project).countByTable("Parent").await should be(1)
     dataResolver(project).countByTable("Child").await should be(1)
-    dataResolver(project).countByTable("_ParentToChild").await should be(1)
+    ifConnectorIsActive { dataResolver(project).countByTable("_ParentToChild").await should be(1) }
     ifConnectorIsActive { dataResolver(project).countByTable("_RelayId").await should be(2) }
   }
 
   "a PM to C1  relation with the parent already in a relation" should "work through a nested mutation by unique for create" in {
-    val project = SchemaDsl() { schema =>
+    val project = SchemaDsl.fromBuilder { schema =>
       val child  = schema.model("Child").field_!("c", _.String, isUnique = true)
       val parent = schema.model("Parent").field_!("p", _.String, isUnique = true)
       parent.oneToManyRelation("childrenOpt", "parentOpt", child)
@@ -141,7 +142,7 @@ class NestedUpsertMutationInsideUpdateSpec extends FlatSpec with Matchers with A
         project
       )
 
-    dataResolver(project).countByTable("_ParentToChild").await should be(2)
+    ifConnectorIsActive { dataResolver(project).countByTable("_ParentToChild").await should be(2) }
 
     val res = server.query(
       s"""
@@ -168,12 +169,12 @@ class NestedUpsertMutationInsideUpdateSpec extends FlatSpec with Matchers with A
 
     dataResolver(project).countByTable("Parent").await should be(1)
     dataResolver(project).countByTable("Child").await should be(3)
-    dataResolver(project).countByTable("_ParentToChild").await should be(3)
+    ifConnectorIsActive { dataResolver(project).countByTable("_ParentToChild").await should be(3) }
     ifConnectorIsActive { dataResolver(project).countByTable("_RelayId").await should be(4) }
   }
 
   "a PM to C1  relation with the parent already in a relation" should "work through a nested mutation by unique for update" in {
-    val project = SchemaDsl() { schema =>
+    val project = SchemaDsl.fromBuilder { schema =>
       val child  = schema.model("Child").field_!("c", _.String, isUnique = true)
       val parent = schema.model("Parent").field_!("p", _.String, isUnique = true)
       parent.oneToManyRelation("childrenOpt", "parentOpt", child)
@@ -197,7 +198,7 @@ class NestedUpsertMutationInsideUpdateSpec extends FlatSpec with Matchers with A
         project
       )
 
-    dataResolver(project).countByTable("_ParentToChild").await should be(2)
+    ifConnectorIsActive { dataResolver(project).countByTable("_ParentToChild").await should be(2) }
 
     val res = server.query(
       s"""
@@ -224,12 +225,12 @@ class NestedUpsertMutationInsideUpdateSpec extends FlatSpec with Matchers with A
 
     dataResolver(project).countByTable("Parent").await should be(1)
     dataResolver(project).countByTable("Child").await should be(2)
-    dataResolver(project).countByTable("_ParentToChild").await should be(2)
+    ifConnectorIsActive { dataResolver(project).countByTable("_ParentToChild").await should be(2) }
     ifConnectorIsActive { dataResolver(project).countByTable("_RelayId").await should be(3) }
   }
 
   "a PM to CM  relation with the children already in a relation" should "work through a nested mutation by unique for update" in {
-    val project = SchemaDsl() { schema =>
+    val project = SchemaDsl.fromBuilder { schema =>
       val parent = schema.model("Parent").field_!("p", _.String, isUnique = true)
       val child  = schema.model("Child").field_!("c", _.String, isUnique = true).manyToManyRelation("parentsOpt", "childrenOpt", parent)
     }
@@ -251,7 +252,7 @@ class NestedUpsertMutationInsideUpdateSpec extends FlatSpec with Matchers with A
       project
     )
 
-    dataResolver(project).countByTable("_ChildToParent").await should be(2)
+    ifConnectorIsActive { dataResolver(project).countByTable("_ChildToParent").await should be(2) }
 
     val res = server.query(
       s"""
@@ -281,12 +282,12 @@ class NestedUpsertMutationInsideUpdateSpec extends FlatSpec with Matchers with A
 
     dataResolver(project).countByTable("Parent").await should be(1)
     dataResolver(project).countByTable("Child").await should be(2)
-    dataResolver(project).countByTable("_ChildToParent").await should be(2)
+    ifConnectorIsActive { dataResolver(project).countByTable("_ChildToParent").await should be(2) }
     ifConnectorIsActive { dataResolver(project).countByTable("_RelayId").await should be(3) }
   }
 
   "a PM to CM  relation with the children already in a relation" should "work through a nested mutation by unique for create" in {
-    val project = SchemaDsl() { schema =>
+    val project = SchemaDsl.fromBuilder { schema =>
       val parent = schema.model("Parent").field_!("p", _.String, isUnique = true)
       val child  = schema.model("Child").field_!("c", _.String, isUnique = true).manyToManyRelation("parentsOpt", "childrenOpt", parent)
     }
@@ -308,7 +309,7 @@ class NestedUpsertMutationInsideUpdateSpec extends FlatSpec with Matchers with A
       project
     )
 
-    dataResolver(project).countByTable("_ChildToParent").await should be(2)
+    ifConnectorIsActive { dataResolver(project).countByTable("_ChildToParent").await should be(2) }
 
     val res = server.query(
       s"""
@@ -338,12 +339,12 @@ class NestedUpsertMutationInsideUpdateSpec extends FlatSpec with Matchers with A
 
     dataResolver(project).countByTable("Parent").await should be(1)
     dataResolver(project).countByTable("Child").await should be(3)
-    dataResolver(project).countByTable("_ChildToParent").await should be(3)
+    ifConnectorIsActive { dataResolver(project).countByTable("_ChildToParent").await should be(3) }
     ifConnectorIsActive { dataResolver(project).countByTable("_RelayId").await should be(4) }
   }
 
   "a one to many relation" should "be upsertable by id through a nested mutation" in {
-    val project = SchemaDsl() { schema =>
+    val project = SchemaDsl.fromBuilder { schema =>
       val comment = schema.model("Comment").field("text", _.String)
       schema.model("Todo").oneToManyRelation("comments", "todo", comment)
     }
@@ -398,7 +399,7 @@ class NestedUpsertMutationInsideUpdateSpec extends FlatSpec with Matchers with A
   }
 
   "a one to many relation" should "only update nodes that are connected" in {
-    val project = SchemaDsl() { schema =>
+    val project = SchemaDsl.fromBuilder { schema =>
       val comment = schema.model("Comment").field("text", _.String)
       schema.model("Todo").oneToManyRelation("comments", "todo", comment)
     }
@@ -464,8 +465,8 @@ class NestedUpsertMutationInsideUpdateSpec extends FlatSpec with Matchers with A
     mustBeEqual(result.pathAsString("data.updateTodo.comments.[1].text").toString, """new comment3""")
   }
 
-  "a one to many relation" should "generate helpfull error messages" in {
-    val project = SchemaDsl() { schema =>
+  "a one to many relation" should "generate helpful error messages" in {
+    val project = SchemaDsl.fromBuilder { schema =>
       val comment = schema.model("Comment").field("text", _.String).field("uniqueComment", _.String, isUnique = true)
       schema.model("Todo").field("uniqueTodo", _.String, isUnique = true).oneToManyRelation("comments", "todo", comment)
     }
@@ -517,7 +518,7 @@ class NestedUpsertMutationInsideUpdateSpec extends FlatSpec with Matchers with A
   }
 
   "a deeply nested mutation" should "execute all levels of the mutation" ignore {
-    val project = SchemaDsl() { schema =>
+    val project = SchemaDsl.fromBuilder { schema =>
       val list = schema.model("List").field_!("name", _.String)
       val todo = schema.model("Todo").field_!("title", _.String)
       val tag  = schema.model("Tag").field_!("name", _.String)
@@ -612,7 +613,7 @@ class NestedUpsertMutationInsideUpdateSpec extends FlatSpec with Matchers with A
   }
 
   "a deeply nested mutation with upsert" should "work on miss on id" in {
-    val project = SchemaDsl() { schema =>
+    val project = SchemaDsl.fromBuilder { schema =>
       val list = schema.model("List").field_!("name", _.String)
       val todo = schema.model("Todo").field_!("title", _.String)
       val tag  = schema.model("Tag").field_!("name", _.String)
@@ -1195,7 +1196,8 @@ class NestedUpsertMutationInsideUpdateSpec extends FlatSpec with Matchers with A
       """{"data":{"bottoms":[{"nameBottom":"the second bottom"},{"nameBottom":"created bottom"}]}}""")
   }
 
-  "a deeply nested mutation" should "execute all levels of the mutation if there are model and node edges on the path  and back relations are missing and node edges follow model edges for update" in {
+  // TODO: fails because of missing back relation field
+  "a deeply nested mutation" should "execute all levels of the mutation if there are model and node edges on the path  and back relations are missing and node edges follow model edges for update" taggedAs (IgnorePassive) in {
     val project = SchemaDsl.fromString() { """type Top {
                                              |  id: ID! @unique
                                              |  nameTop: String! @unique
@@ -1288,7 +1290,8 @@ class NestedUpsertMutationInsideUpdateSpec extends FlatSpec with Matchers with A
     server.query("query{belows{nameBelow}}", project).toString should be("""{"data":{"belows":[{"nameBelow":"updated below"},{"nameBelow":"second below"}]}}""")
   }
 
-  "a deeply nested mutation" should "execute all levels of the mutation if there are model and node edges on the path  and back relations are missing and node edges follow model edges for create" in {
+  // TODO: fails because of missing back relation field
+  "a deeply nested mutation" should "execute all levels of the mutation if there are model and node edges on the path  and back relations are missing and node edges follow model edges for create" taggedAs (IgnorePassive) in {
     val project = SchemaDsl.fromString() { """type Top {
                                              |  id: ID! @unique
                                              |  nameTop: String! @unique
@@ -1537,7 +1540,9 @@ class NestedUpsertMutationInsideUpdateSpec extends FlatSpec with Matchers with A
 
     server.query("query{bottoms{nameBottom}}", project).toString should be("""{"data":{"bottoms":[{"nameBottom":"created bottom"}]}}""")
   }
-  "a deeply nested mutation" should "execute all levels of the mutation if there are only model edges on the path for update when there are no backrelations" in {
+
+  // TODO: fails because of missing back relation field
+  "a deeply nested mutation" should "execute all levels of the mutation if there are only model edges on the path for update when there are no backrelations" taggedAs (IgnorePassive) in {
     val project = SchemaDsl.fromString() { """type Top {
                                              |  id: ID! @unique
                                              |  nameTop: String! @unique
@@ -1617,7 +1622,8 @@ class NestedUpsertMutationInsideUpdateSpec extends FlatSpec with Matchers with A
     server.query("query{bottoms{nameBottom}}", project).toString should be("""{"data":{"bottoms":[{"nameBottom":"updated bottom"}]}}""")
   }
 
-  "a deeply nested mutation" should "execute all levels of the mutation if there are only model edges on the path for create when there are no backrelations" in {
+  // TODO: fails because of missing back relation field
+  "a deeply nested mutation" should "execute all levels of the mutation if there are only model edges on the path for create when there are no backrelations" taggedAs (IgnorePassive) in {
     val project = SchemaDsl.fromString() { """type Top {
                                              |  id: ID! @unique
                                              |  nameTop: String! @unique

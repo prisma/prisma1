@@ -12,7 +12,7 @@ import play.api.libs.json.JsArray
 
 class SingleValueImportExportSpec extends FlatSpec with Matchers with ApiSpecBase with AwaitUtils {
 
-  val project: Project = SchemaDsl() { schema =>
+  val project: Project = SchemaDsl.fromBuilder { schema =>
     val enum = schema.enum("Enum", Vector("HA", "HO"))
 
     schema

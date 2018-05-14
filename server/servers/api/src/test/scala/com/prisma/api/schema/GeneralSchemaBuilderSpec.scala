@@ -11,7 +11,7 @@ class GeneralSchemaBuilderSpec extends WordSpec with Matchers with ApiSpecBase w
   val schemaBuilder = testDependencies.apiSchemaBuilder
 
   def projectWithHiddenID: Project = {
-    SchemaDsl() { schema =>
+    SchemaDsl.fromBuilder { schema =>
       val testSchema = schema.model("Todo")
       testSchema.fields.clear()
       testSchema.field("id", _.GraphQLID, isUnique = true, isHidden = true).field("someOtherField", _.Int)
@@ -42,7 +42,7 @@ class GeneralSchemaBuilderSpec extends WordSpec with Matchers with ApiSpecBase w
     }
 
     "not include a *CreateInput if there is only an ID field" in {
-      val project = SchemaDsl() { schema =>
+      val project = SchemaDsl.fromBuilder { schema =>
         schema.model("Todo")
       }
 

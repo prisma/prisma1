@@ -15,7 +15,7 @@ class BulkExportNullHandlingSpec extends FlatSpec with Matchers with ApiSpecBase
   val emptyResult = ResultFormat(JsonBundle(Vector.empty, 0), Cursor(-1, -1), isFull = false)
 
   "Exporting nodes" should "be able to handle null in lists or nodes" in {
-    val project: Project = SchemaDsl() { schema =>
+    val project: Project = SchemaDsl.fromBuilder { schema =>
       val model1 = schema
         .model("Model1")
         .field("test", _.String)
@@ -50,7 +50,7 @@ class BulkExportNullHandlingSpec extends FlatSpec with Matchers with ApiSpecBase
   }
 
   "Exporting nodes" should "be able to handle null in lists or nodes 2" in {
-    val project: Project = SchemaDsl() { schema =>
+    val project: Project = SchemaDsl.fromBuilder { schema =>
       val model1 = schema
         .model("Model1")
         .field("test", _.String)

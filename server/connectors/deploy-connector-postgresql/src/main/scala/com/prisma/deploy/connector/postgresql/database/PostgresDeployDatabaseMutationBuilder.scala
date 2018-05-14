@@ -35,7 +35,7 @@ object PostgresDeployDatabaseMutationBuilder {
     val listTableNames: List[String] =
       project.models.flatMap(model => model.fields.collect { case field if field.isScalar && field.isList => s"${model.name}_${field.name}" })
 
-    val tables = Vector("_RelayId") ++ project.models.map(_.name) ++ project.relations.map(_.relationTableName) ++ listTableNames
+    val tables = Vector("_RelayId") ++ project.models.map(_.name) ++ project.relations.map(_.relationTableNameNew(project.schema)) ++ listTableNames
 
     DBIO.seq(tables.map(name => sqlu"""TRUNCATE TABLE  "#${project.id}"."#$name" CASCADE """): _*)
   }
@@ -143,12 +143,12 @@ object PostgresDeployDatabaseMutationBuilder {
     DBIOAction.seq(tableCreate, indexCreate)
   }
 
-  def createRelationColumn(projectId: String, model: Model, field: Field, references: Model, column: String) = {
+  def createRelationColumn(projectId: String, model: Model, field: Option[Field], references: Model, column: String) = {
     val sqlType    = sqlTypeForScalarTypeIdentifier(TypeIdentifier.GraphQLID)
     val isRequired = false //field.isRequired
     val nullString = if (isRequired) "NOT NULL" else "NULL"
     val addColumn  = sqlu"""ALTER TABLE "#$projectId"."#${model.dbName}" ADD COLUMN "#$column" #$sqlType #$nullString
-                            REFERENCES "#$projectId"."#${references.dbName}"(id);"""
+                            REFERENCES "#$projectId"."#${references.dbName}"(id) ON DELETE SET NULL;"""
     addColumn
   }
 

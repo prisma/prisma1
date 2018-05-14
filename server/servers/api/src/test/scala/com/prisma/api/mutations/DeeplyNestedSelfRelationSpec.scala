@@ -23,9 +23,11 @@ class DeeplyNestedSelfRelationSpec extends FlatSpec with Matchers with ApiSpecBa
                    |    data: {
                    |      name: "A"
                    |      children: {
-                   |        create: [{ name: "B", children: {
-                   |                                    create: [{ name: "C" }]
-                   |                               }
+                   |        create: [
+                   |          { name: "B",
+                   |            children: {
+                   |              create: [{ name: "C" }]
+                   |            }
                    |        }]
                    |      }
                    |    }

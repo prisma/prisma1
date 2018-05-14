@@ -31,9 +31,10 @@ class SubscriptionsManagerForModelSpec
 
   override def afterAll = shutdown()
 
-  implicit val materializer = ActorMaterializer()
-  implicit val dependencies = new TestSubscriptionDependencies()
-  //val testDatabase                 = new SimpleTestDatabase
+  implicit val materializer         = ActorMaterializer()
+  implicit val dependencies         = new TestSubscriptionDependencies()
+  implicit lazy val implicitSuite   = this
+  implicit lazy val deployConnector = dependencies.deployConnector
 
   val testQuery = QueryParser.parse("""
                                       |subscription {
@@ -45,10 +46,10 @@ class SubscriptionsManagerForModelSpec
                                       |}
                                     """.stripMargin).get
 
-  val schema = SchemaDsl.schema()
-  val todo   = schema.model("Todo").field("text", _.String)
+  val project = SchemaDsl.fromBuilder { schema =>
+    val todo = schema.model("Todo").field("text", _.String)
 
-  val project   = schema.buildProject()
+  }
   val todoModel = project.models.find(_.name == "Todo").get
 
   "subscribing two times with the same subscription id but different session ids" ignore {

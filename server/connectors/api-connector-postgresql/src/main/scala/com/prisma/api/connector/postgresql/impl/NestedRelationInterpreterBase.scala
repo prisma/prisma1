@@ -4,15 +4,16 @@ import com.prisma.api.connector.postgresql.DatabaseMutactionInterpreter
 import com.prisma.api.connector.postgresql.database.PostgresApiDatabaseMutationBuilder
 import com.prisma.api.connector.{ModelEdge, NodeEdge, Path}
 import com.prisma.api.schema.APIErrors.RequiredRelationWouldBeViolated
-import com.prisma.shared.models.Project
+import com.prisma.shared.models.{Project, Schema}
 import org.postgresql.util.PSQLException
-import slick.dbio.{DBIOAction, Effect, NoStream}
+import slick.dbio.{DBIO, DBIOAction, Effect, NoStream}
 
 trait NestedRelationInterpreterBase extends DatabaseMutactionInterpreter {
 
   def path: Path
   def project: Project
   def topIsCreate: Boolean
+  def schema: Schema = project.schema
 
   val lastEdge         = path.lastEdge_!
   val p                = lastEdge.parentField
@@ -25,50 +26,50 @@ trait NestedRelationInterpreterBase extends DatabaseMutactionInterpreter {
 
   val parentCauseString = path.lastEdge_! match {
     case edge: NodeEdge =>
-      s"-OLDPARENTFAILURETRIGGER@${path.lastRelation_!.relationTableName}@${path.lastEdge_!.childRelationSide}@${edge.childWhere.fieldValueAsString}-"
-    case _: ModelEdge => s"-OLDPARENTFAILURETRIGGER@${path.lastRelation_!.relationTableName}@${path.lastEdge_!.childRelationSide}-"
+      s"-OLDPARENTFAILURETRIGGER@${path.lastRelation_!.relationTableNameNew(schema)}@${path.lastEdge_!.columnForChildRelationSide}@${edge.childWhere.fieldValueAsString}-"
+    case _: ModelEdge =>
+      s"-OLDPARENTFAILURETRIGGER@${path.lastRelation_!.relationTableNameNew(schema)}@${path.lastEdge_!.columnForChildRelationSide}-"
   }
 
   val childCauseString = path.edges.length match {
     case 0 => sys.error("There should always be at least one edge on the path if this is called.")
-    case 1 => s"-OLDCHILDPATHFAILURETRIGGER@${path.lastRelation_!.relationTableName}@${path.lastEdge_!.parentRelationSide}@${path.root.fieldValueAsString}-"
+    case 1 =>
+      s"-OLDCHILDPATHFAILURETRIGGER@${path.lastRelation_!.relationTableNameNew(schema)}@${path.lastEdge_!.columnForParentRelationSide}@${path.root.fieldValueAsString}-"
     case _ =>
       path.removeLastEdge.lastEdge_! match {
         case edge: NodeEdge =>
-          s"-OLDCHILDPATHFAILURETRIGGER@${path.lastRelation_!.relationTableName}@${path.lastEdge_!.parentRelationSide}@${edge.childWhere.fieldValueAsString}-"
-        case _: ModelEdge => s"-OLDCHILDPATHFAILURETRIGGER@${path.lastRelation_!.relationTableName}@${path.lastEdge_!.parentRelationSide}-"
+          s"-OLDCHILDPATHFAILURETRIGGER@${path.lastRelation_!.relationTableNameNew(schema)}@${path.lastEdge_!.columnForParentRelationSide}@${edge.childWhere.fieldValueAsString}-"
+        case _: ModelEdge =>
+          s"-OLDCHILDPATHFAILURETRIGGER@${path.lastRelation_!.relationTableNameNew(schema)}@${path.lastEdge_!.columnForParentRelationSide}-"
       }
   }
 
-  def checkForOldParent(implicit mutationBuilder: PostgresApiDatabaseMutationBuilder) = mutationBuilder.oldParentFailureTrigger(path, parentCauseString)
-  def checkForOldParentByChildWhere(
-      implicit mutationBuilder: PostgresApiDatabaseMutationBuilder): slick.sql.SqlStreamingAction[Vector[String], String, slick.dbio.Effect] =
+  def checkForOldParent(implicit mb: PostgresApiDatabaseMutationBuilder) = mb.oldParentFailureTrigger(path, parentCauseString)
+  def checkForOldParentByChildWhere(implicit mb: PostgresApiDatabaseMutationBuilder): slick.sql.SqlStreamingAction[Vector[String], String, slick.dbio.Effect] =
     path.lastEdge_! match {
       case _: ModelEdge => sys.error("Should be a node edge")
       case edge: NodeEdge =>
-        mutationBuilder.oldParentFailureTriggerForRequiredRelations(edge.relation, edge.childWhere, edge.childRelationSide, parentCauseString)
+        mb.oldParentFailureTriggerForRequiredRelations(edge.relation, edge.childWhere, edge.childRelationSide, parentCauseString)
     }
 
-  def checkForOldChild(implicit mutationBuilder: PostgresApiDatabaseMutationBuilder) = mutationBuilder.oldChildFailureTrigger(path, childCauseString)
-  def noCheckRequired                                                                = List.empty
+  def checkForOldChild(implicit mb: PostgresApiDatabaseMutationBuilder) = mb.oldChildFailureTrigger(path, childCauseString)
+  def noCheckRequired                                                   = List.empty
 
-  def removalByParent(implicit mutationBuilder: PostgresApiDatabaseMutationBuilder)         = mutationBuilder.deleteRelationRowByParent(path)
-  def removalByChildWhere(implicit mutationBuilder: PostgresApiDatabaseMutationBuilder)     = mutationBuilder.deleteRelationRowByChildWithWhere(path)
-  def removalByParentAndChild(implicit mutationBuilder: PostgresApiDatabaseMutationBuilder) = mutationBuilder.deleteRelationRowByParentAndChild(path)
-  def createRelationRow(implicit mutationBuilder: PostgresApiDatabaseMutationBuilder)       = List(mutationBuilder.createRelationRowByPath(project.schema, path))
-  def noActionRequired                                                                      = List.empty
+  def removalByParent(implicit mb: PostgresApiDatabaseMutationBuilder)         = mb.deleteRelationRowByParent(project.schema, path)
+  def removalByChildWhere(implicit mb: PostgresApiDatabaseMutationBuilder)     = mb.deleteRelationRowByChildWithWhere(project.schema, path)
+  def removalByParentAndChild(implicit mb: PostgresApiDatabaseMutationBuilder) = mb.deleteRelationRowByParentAndChild(path)
+  def createRelationRow(implicit mb: PostgresApiDatabaseMutationBuilder)       = List(mb.createRelationRowByPath(project.schema, path))
+  def noActionRequired                                                         = List.empty
 
-  def requiredCheck(implicit mutationBuilder: PostgresApiDatabaseMutationBuilder): List[DBIOAction[_, NoStream, Effect]]
+  def requiredCheck(implicit mb: PostgresApiDatabaseMutationBuilder): List[DBIO[_]]
 
-  def removalActions(implicit mutationBuilder: PostgresApiDatabaseMutationBuilder): List[DBIOAction[_, NoStream, Effect]]
+  def removalActions(implicit mb: PostgresApiDatabaseMutationBuilder): List[DBIO[_]]
 
-  def addAction(implicit mutationBuilder: PostgresApiDatabaseMutationBuilder): List[DBIOAction[_, NoStream, Effect]]
+  def addAction(implicit mb: PostgresApiDatabaseMutationBuilder): List[DBIO[_]]
 
-  def allActions(implicit mutationBuilder: PostgresApiDatabaseMutationBuilder) = requiredCheck ++ removalActions ++ addAction
+  def allActions(implicit mb: PostgresApiDatabaseMutationBuilder) = requiredCheck ++ removalActions ++ addAction
 
-  override def action(mutationBuilder: PostgresApiDatabaseMutationBuilder) = {
-    DBIOAction.seq(allActions(mutationBuilder): _*)
-  }
+  override def action(mb: PostgresApiDatabaseMutationBuilder) = DBIOAction.seq(allActions(mb): _*)
 
   override val errorMapper = {
     case e: PSQLException if causedByThisMutaction(e.getMessage) => throw RequiredRelationWouldBeViolated(project, path.lastRelation_!)

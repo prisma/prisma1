@@ -12,7 +12,9 @@ import play.api.libs.json.JsArray
 
 class OptionalBackRelationImportExportSpec extends FlatSpec with Matchers with ApiSpecBase with AwaitUtils {
 
-  val project: Project = SchemaDsl() { schema =>
+  override def runSuiteOnlyForActiveConnectors = true
+
+  val project: Project = SchemaDsl.fromBuilder { schema =>
     val model0: SchemaDsl.ModelBuilder = schema
       .model("Model0")
       .field("a", _.String)
@@ -20,7 +22,13 @@ class OptionalBackRelationImportExportSpec extends FlatSpec with Matchers with A
     schema
       .model("Model1")
       .field("a", _.String)
-      .oneToOneRelation("model0", "doesn't matter", model0, Some("Relation0to1"), includeFieldB = false)
+      .oneToOneRelation(
+        fieldAName = "model0",
+        fieldBName = "doesn't matter",
+        modelB = model0,
+        relationName = Some("Relation0to1"),
+        includeFieldB = false
+      )
 
     model0.oneToOneRelation("model0self", "doesn't matter", model0, Some("Relation0to0"), includeFieldB = false)
   }

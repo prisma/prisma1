@@ -8,7 +8,7 @@ import org.scalatest.{FlatSpec, Matchers}
 class DefaultValueSpec extends FlatSpec with Matchers with ApiSpecBase {
 
   "A Create Mutation on a non-list field" should "utilize the defaultValue" in {
-    val project = SchemaDsl() { schema =>
+    val project = SchemaDsl.fromBuilder { schema =>
       schema.model("ScalarModel").field_!("reqString", _.String, defaultValue = Some(StringGCValue("default")))
     }
     database.setup(project)

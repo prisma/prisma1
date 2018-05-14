@@ -10,7 +10,7 @@ class MutationsSchemaBuilderSpec extends FlatSpec with Matchers with ApiSpecBase
   val schemaBuilder = testDependencies.apiSchemaBuilder
 
   "the create Mutation for a model" should "be generated correctly" in {
-    val project = SchemaDsl() { schema =>
+    val project = SchemaDsl.fromBuilder { schema =>
       schema.model("Todo").field_!("title", _.String).field("tag", _.String)
     }
 
@@ -21,7 +21,7 @@ class MutationsSchemaBuilderSpec extends FlatSpec with Matchers with ApiSpecBase
   }
 
   "the create Mutation for a model with relations" should "be generated correctly" in {
-    val project = SchemaDsl() { schema =>
+    val project = SchemaDsl.fromBuilder { schema =>
       val comment = schema.model("Comment").field_!("text", _.String)
       schema
         .model("Todo")
@@ -74,7 +74,7 @@ class MutationsSchemaBuilderSpec extends FlatSpec with Matchers with ApiSpecBase
   }
 
   "the update Mutation for a model" should "be generated correctly" in {
-    val project = SchemaDsl() { schema =>
+    val project = SchemaDsl.fromBuilder { schema =>
       schema.model("Todo").field_!("title", _.String).field("alias", _.String, isUnique = true)
     }
 
@@ -96,7 +96,7 @@ class MutationsSchemaBuilderSpec extends FlatSpec with Matchers with ApiSpecBase
   }
 
   "the update Mutation for a model with a optional backrelation" should "be generated correctly" in {
-    val project = SchemaDsl() { schema =>
+    val project = SchemaDsl.fromBuilder { schema =>
       val list = schema.model("List").field_!("listUnique", _.String, isUnique = true).field("optList", _.String)
       val todo = schema.model("Todo").field_!("todoUnique", _.String, isUnique = true).field("optString", _.String)
       list.manyToManyRelation("todoes", "does not matter", todo, includeFieldB = false)
@@ -145,7 +145,7 @@ class MutationsSchemaBuilderSpec extends FlatSpec with Matchers with ApiSpecBase
   }
 
   "the many update Mutation for a model" should "not be generated for an empty model" in {
-    val project = SchemaDsl() { schema =>
+    val project = SchemaDsl.fromBuilder { schema =>
       val model = schema.model("Todo")
       model.fields.clear()
       model.field_!("id", _.GraphQLID, isHidden = true)
@@ -162,7 +162,7 @@ class MutationsSchemaBuilderSpec extends FlatSpec with Matchers with ApiSpecBase
   }
 
   "the update Mutation for a model with relations" should "be generated correctly" in {
-    val project = SchemaDsl() { schema =>
+    val project = SchemaDsl.fromBuilder { schema =>
       val comment = schema.model("Comment").field_!("text", _.String)
       schema
         .model("Todo")
@@ -252,7 +252,7 @@ class MutationsSchemaBuilderSpec extends FlatSpec with Matchers with ApiSpecBase
   }
 
   "the update and upsert Mutation for a model with omitted back relation" should "be generated correctly" in {
-    val project = SchemaDsl() { schema =>
+    val project = SchemaDsl.fromBuilder { schema =>
       val comment = schema.model("Comment").field_!("text", _.String)
       val todo    = schema.model("Todo").field_!("title", _.String).field("tag", _.String)
       todo.oneToManyRelation("comments", "todo", comment, includeFieldB = false)
@@ -274,7 +274,7 @@ class MutationsSchemaBuilderSpec extends FlatSpec with Matchers with ApiSpecBase
   }
 
   "the upsert Mutation for a model" should "be generated correctly" in {
-    val project = SchemaDsl() { schema =>
+    val project = SchemaDsl.fromBuilder { schema =>
       schema.model("Todo").field_!("title", _.String)
     }
     val schema = SchemaRenderer.renderSchema(schemaBuilder(project))
@@ -283,7 +283,7 @@ class MutationsSchemaBuilderSpec extends FlatSpec with Matchers with ApiSpecBase
   }
 
   "the delete Mutation for a model" should "be generated correctly" in {
-    val project = SchemaDsl() { schema =>
+    val project = SchemaDsl.fromBuilder { schema =>
       schema.model("Todo").field_!("title", _.String).field("tag", _.String)
     }
 
@@ -297,7 +297,7 @@ class MutationsSchemaBuilderSpec extends FlatSpec with Matchers with ApiSpecBase
   }
 
   "the delete Mutation for a model" should "be generated correctly and contain all non-list unique fields" in {
-    val project = SchemaDsl() { schema =>
+    val project = SchemaDsl.fromBuilder { schema =>
       schema
         .model("Todo")
         .field_!("title", _.String)
@@ -315,7 +315,7 @@ class MutationsSchemaBuilderSpec extends FlatSpec with Matchers with ApiSpecBase
                                    ))
   }
   "the deleteMany Mutation for a model" should "be generated correctly" in {
-    val project = SchemaDsl() { schema =>
+    val project = SchemaDsl.fromBuilder { schema =>
       schema
         .model("Todo")
         .field_!("title", _.String)
@@ -328,7 +328,7 @@ class MutationsSchemaBuilderSpec extends FlatSpec with Matchers with ApiSpecBase
   }
 
   "the updateMany Mutation for a model" should "be generated correctly" in {
-    val project = SchemaDsl() { schema =>
+    val project = SchemaDsl.fromBuilder { schema =>
       schema
         .model("Todo")
         .field_!("title", _.String)

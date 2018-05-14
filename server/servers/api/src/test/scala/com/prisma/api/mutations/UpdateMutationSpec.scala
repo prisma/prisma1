@@ -9,7 +9,7 @@ import org.scalatest.{FlatSpec, Matchers}
 class UpdateMutationSpec extends FlatSpec with Matchers with ApiSpecBase {
 
   "The Update Mutation" should "update an item" in {
-    val project = SchemaDsl() { schema =>
+    val project = SchemaDsl.fromBuilder { schema =>
       val enum = schema.enum(
         name = "MyEnum",
         values = Vector(
@@ -74,7 +74,7 @@ class UpdateMutationSpec extends FlatSpec with Matchers with ApiSpecBase {
   }
 
   "The Update Mutation" should "update an item by a unique field" in {
-    val project = SchemaDsl() { schema =>
+    val project = SchemaDsl.fromBuilder { schema =>
       schema.model("Todo").field_!("title", _.String).field("alias", _.String, isUnique = true)
     }
     database.setup(project)
@@ -115,7 +115,7 @@ class UpdateMutationSpec extends FlatSpec with Matchers with ApiSpecBase {
   }
 
   "The Update Mutation" should "gracefully fail when trying to update an item by a unique field with a non-existing value" in {
-    val project = SchemaDsl() { schema =>
+    val project = SchemaDsl.fromBuilder { schema =>
       schema.model("Todo").field_!("title", _.String).field("alias", _.String, isUnique = true)
     }
     database.setup(project)
@@ -157,7 +157,7 @@ class UpdateMutationSpec extends FlatSpec with Matchers with ApiSpecBase {
   }
 
   "Updating" should "change the updatedAt datetime" taggedAs (IgnoreMySql) in {
-    val project = SchemaDsl() { schema =>
+    val project = SchemaDsl.fromBuilder { schema =>
       schema
         .model("Todo")
         .field("title", _.String)

@@ -190,6 +190,7 @@ class ObjectTypeBuilder(
               } else {
                 // this must be a relation filter
                 TransitiveRelationFilter(
+                  project.schema,
                   field.get,
                   model,
                   field.get.relatedModel(project.schema).get,
@@ -213,10 +214,10 @@ class ObjectTypeBuilder(
               FinalValueFilter(key, converter.toGCValue(filterValue).get, field.get, filter.name)
 
             case Some(filterValue) if field.isDefined && field.get.isRelation =>
-              FinalRelationFilter(key, filterValue, field.get, filter.name)
+              FinalRelationFilter(project.schema, key, filterValue, field.get, filter.name)
 
             case valueNew if field.isDefined && field.get.isRelation =>
-              FinalRelationFilter(key, valueNew, field.get, filter.name)
+              FinalRelationFilter(project.schema, key, valueNew, field.get, filter.name)
 
             case valueNew if field.isDefined && field.get.isScalar =>
               val converter = GCAnyConverter(field.get.typeIdentifier, isList = false)
