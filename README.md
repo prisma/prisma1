@@ -104,8 +104,6 @@ Run the following command to open a GraphQL Playground:
 prisma playground
 ```
 
-> 💡 **Pro tip**: [Download](https://github.com/graphcool/graphql-playground/releases) the standalone GraphQL Playground app.
-
 You can now send queries and mutations to the API.
 
 <details><summary><b>I don't know what queries and mutations I can send.</b></summary>
