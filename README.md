@@ -70,7 +70,6 @@ type Tweet {
   createdAt: DateTime!
   text: String!
   owner: User!
-  location: Location
 }
 
 type User {
@@ -80,11 +79,6 @@ type User {
   handle: String! @unique
   name: String!
   tweets: [Tweet!]!
-}
-
-type Location {
-  latitude: Float!
-  longitude: Float!
 }
 ```
 
@@ -147,12 +141,6 @@ mutation {
   createTweet(
     data: {
       text: "Prisma makes building GraphQL servers fun & easy"
-      location: {
-        create: {
-          latitude: 52.5200
-          longitude: 13.4050
-        }
-      }
       owner: {
         connect: {
           id: "__USER_ID__"
@@ -252,7 +240,6 @@ The most important component in Prisma is the GraphQL API:
 Prisma's auto-generated GraphQL APIs are fully compatible with the [OpenCRUD](https://www.opencrud.org/) standard.
 
 > [Try the online demo!](https://www.prisma.io/features/graphql-api/)
-
 
 ## Community
 
