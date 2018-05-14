@@ -114,8 +114,8 @@ Prisma takes a radically different approach which avoids the shortcomings and li
 
 Here is how Prisma compares to conventional ORMs:
 
-- **Expressiveness**: Full flexibility thanks to Prisma's GraphQL API, including powerful (relational) filters and nested mutations
-- **Performance**: Prisma uses various optimization techniques (caching, dataloader, ...) to ensure top performance in complex scenarios
+- **Expressiveness**: Full flexibility thanks to Prisma's GraphQL API, including relational filters and nested mutations
+- **Performance**: Prisma uses various optimization techniques to ensure top performance in complex scenarios
 - **Architecture**: Embedding Prisma in your stack makes for a layered and clean architecture allowing you to focus on your API layer
 - **Type safety**: Thanks to GraphQL's strong type system you're getting a strongly typed API layer for free
 - **Realtime**: Prisma's GraphQL API has out-of-the-box support for realtime updates for all events happening in the database (using GraphQL subscriptions)
