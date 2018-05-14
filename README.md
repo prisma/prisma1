@@ -74,8 +74,6 @@ type Tweet {
 
 type User {
   id: ID! @unique
-  createdAt: DateTime!
-  updatedAt: DateTime!
   handle: String! @unique
   name: String!
   tweets: [Tweet!]!
@@ -116,16 +114,16 @@ mutation {
 }
 ```
 
-**Query all users**:
+**Query all users and their tweets**:
 
 ```graphql
 query {
   users {
     id
-    createdAt
     name
     tweets {
       id
+      createdAt
       text
     }
   }
@@ -149,6 +147,7 @@ mutation {
     }
   ) {
     id
+    createdAt
     owner {
       name
     }
