@@ -62,7 +62,7 @@ Once the command has finished, you need to run `docker-compose up -d` to start t
 
 #### 3. Define your data model
 
-Edit `datamodel.graphql` to define your data model using the [GraphQL SDL notation](https://www.prisma.io/docs/reference/service-configuration/data-modelling-(sdl)-eiroozae8u).
+Edit `datamodel.graphql` to define your data model using GraphQL SDL:
 
 ```graphql
 type Tweet {
@@ -98,7 +98,7 @@ prisma deploy
 
 #### 5. Explore the API in a Playground
 
-Run the following command to open a [GraphQL Playground](https://github.com/graphcool/graphql-playground/releases) and start sending queries and mutation:
+Run the following command to open a [GraphQL Playground](https://github.com/graphcool/graphql-playground/releases) and start sending queries and mutations:
 
 ```bash
 prisma playground
@@ -107,18 +107,64 @@ prisma playground
 <details><summary><b>I don't know what queries and mutations I can send.</b></summary>
 <p>
 
-**Create a new User**:
+**Create a new users**:
 
 ```graphql
 mutation {
-  createUser(
+  createUser(data: {
     name: "Alice"
     handle: "alice"
-  ) {
+  }) {
     id
   }
 }
 ```
+
+**Query all users**:
+
+```graphql
+query {
+  users {
+    id
+    createdAt
+    name
+    tweets {
+      id
+      text
+    }
+  }
+}
+```
+
+**Create a new tweet for a user**:
+
+> Replace the `__USER_ID__` placeholder with the `id` of an actual `User`
+
+```graphql
+mutation {
+  createTweet(
+    data:{
+      text: "Prisma makes building GraphQL servers fun & easy"
+      location: {
+        create: {
+          latitude: 52.5200
+          longitude: 13.4050
+        }
+      }
+      owner: {
+        connect: {
+          id: "__USER_ID__"
+        }
+      }
+  }) {
+    id
+    owner {
+      name
+    }
+  }
+}
+```
+
 
 </p>
 </details>
