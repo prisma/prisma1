@@ -49,7 +49,7 @@ case class PostgresApiDatabaseMutationBuilder(
       }
       itemInsert.execute()
 
-      val generatedKeys = itemInsert.getGeneratedKeys()
+      val generatedKeys = itemInsert.getGeneratedKeys
       generatedKeys.next()
       // fixme: the name of the id field might be different?
       val field = path.lastModel.getFieldByName_!("id")
@@ -59,10 +59,10 @@ case class PostgresApiDatabaseMutationBuilder(
 
   def createRelayRow(path: Path): SqlStreamingAction[Vector[Int], Int, Effect]#ResultAction[Int, NoStream, Effect] = {
     val where = path.lastCreateWhere_!
-    (sql"""INSERT INTO "#$schemaName"."_RelayId" ("id", "stableModelIdentifier") VALUES (${where.fieldValue}, ${where.model.stableIdentifier})""").asUpdate
+    sql"""INSERT INTO "#$schemaName"."_RelayId" ("id", "stableModelIdentifier") VALUES (${where.fieldValue}, ${where.model.stableIdentifier})""".asUpdate
   }
 
-  def createRelationRowByPath(schema: Schema, path: Path): SqlAction[Int, NoStream, Effect] = {
+  def createRelationRowByPath(path: Path): SqlAction[Int, NoStream, Effect] = {
     val relation = path.lastRelation_!
     val childWhere = path.lastEdge_! match {
       case _: ModelEdge   => sys.error("Needs to be a node edge.")
@@ -112,8 +112,8 @@ case class PostgresApiDatabaseMutationBuilder(
 
       }
 
-      (sql"""update "#$schemaName"."#${tableName}" """ ++
-        sql"""set "#${referencingColumn}" = subquery.id""" ++
+      (sql"""update "#$schemaName"."#$tableName" """ ++
+        sql"""set "#$referencingColumn" = subquery.id""" ++
         sql"""from (""" ++ nodeToLinkToCondition ++ sql""") as subquery""" ++
         rowToUpdateCondition).asUpdate
 
@@ -261,25 +261,21 @@ case class PostgresApiDatabaseMutationBuilder(
   def deleteRelayRow(path: Path) =
     (sql"""DELETE FROM "#$schemaName"."_RelayId" WHERE "id" = """ ++ pathQueryForLastChild(path)).asUpdate
 
-  def deleteRelationRowByParent(schema: Schema, path: Path): DBIO[Unit] = {
+  def deleteRelationRowByParent(path: Path): DBIO[Unit] = {
     val relation      = path.lastRelation_!
     val relationTable = path.lastRelation_!.relationTableNameNew(schema)
-    val where = path.lastEdge_! match {
-      case _: ModelEdge   => sys.error("Should be a node Edge")
-      case edge: NodeEdge => edge.childWhere
-    }
     val action = relation.inlineManifestation match {
       case Some(manifestation) =>
-        (sql"""UPDATE "#$schemaName"."#${relationTable}" """ ++
+        (sql"""UPDATE "#$schemaName"."#$relationTable" """ ++
           sql"""SET "#${manifestation.referencingColumn}" = NULL""" ++
           sql"""WHERE "#${path.columnForParentSideOfLastEdge}" IN """ ++ pathQueryThatUsesWholePath(path.removeLastEdge)).asUpdate
       case None =>
-        (sql"""DELETE FROM "#$schemaName"."#${relationTable}" WHERE "#${path.columnForParentSideOfLastEdge}" = """ ++ pathQueryForLastParent(path)).asUpdate
+        (sql"""DELETE FROM "#$schemaName"."#$relationTable" WHERE "#${path.columnForParentSideOfLastEdge}" = """ ++ pathQueryForLastParent(path)).asUpdate
     }
     action.andThen(dbioUnit)
   }
 
-  def deleteRelationRowByChildWithWhere(schema: Schema, path: Path): DBIO[Unit] = {
+  def deleteRelationRowByChildWithWhere(path: Path): DBIO[Unit] = {
     val relation      = path.lastRelation_!
     val relationTable = path.lastRelation_!.relationTableNameNew(schema)
     val where = path.lastEdge_! match {
@@ -288,12 +284,12 @@ case class PostgresApiDatabaseMutationBuilder(
     }
     val action = relation.inlineManifestation match {
       case Some(manifestation) =>
-        (sql"""UPDATE "#$schemaName"."#${relationTable}" """ ++
+        (sql"""UPDATE "#$schemaName"."#$relationTable" """ ++
           sql"""SET "#${manifestation.referencingColumn}" = NULL""" ++
           sql"""WHERE "#${path.columnForChildSideOfLastEdge}" IN """ ++ pathQueryThatUsesWholePath(path) ++
           sql""" AND "#${path.columnForParentSideOfLastEdge}" IN """ ++ pathQueryThatUsesWholePath(path.removeLastEdge)).asUpdate
       case None =>
-        (sql"""DELETE FROM "#$schemaName"."#${relationTable}" WHERE "#${path.columnForChildSideOfLastEdge}"""" ++ idFromWhereEquals(where)).asUpdate
+        (sql"""DELETE FROM "#$schemaName"."#$relationTable" WHERE "#${path.columnForChildSideOfLastEdge}"""" ++ idFromWhereEquals(where)).asUpdate
     }
     action.andThen(dbioUnit)
   }
@@ -556,7 +552,7 @@ case class PostgresApiDatabaseMutationBuilder(
 
   def createDataItemsImport(mutaction: CreateDataItemsImport): SimpleDBIO[Vector[String]] = {
 
-    SimpleDBIO[Vector[String]] { x =>
+    SimpleDBIO[Vector[String]] { jdbcActionContext =>
       val model         = mutaction.model
       val argsWithIndex = mutaction.args.zipWithIndex
 
@@ -566,7 +562,7 @@ case class PostgresApiDatabaseMutationBuilder(
         val placeHolders = columns.map(_ => "?").mkString(",")
 
         val query                         = s"""INSERT INTO "${mutaction.project.id}"."${model.name}" ($escapedKeys) VALUES ($placeHolders)"""
-        val itemInsert: PreparedStatement = x.connection.prepareStatement(query)
+        val itemInsert: PreparedStatement = jdbcActionContext.connection.prepareStatement(query)
         val currentTimeStamp              = currentTimeStampUTC
 
         mutaction.args.foreach { arg =>
@@ -600,7 +596,7 @@ case class PostgresApiDatabaseMutationBuilder(
 
       val relayResult: Vector[String] = try {
         val relayQuery                     = s"""INSERT INTO "${mutaction.project.id}"."_RelayId" ("id", "stableModelIdentifier") VALUES (?,?)"""
-        val relayInsert: PreparedStatement = x.connection.prepareStatement(relayQuery)
+        val relayInsert: PreparedStatement = jdbcActionContext.connection.prepareStatement(relayQuery)
 
         mutaction.args.foreach { arg =>
           relayInsert.setString(1, arg.raw.asRoot.idField.value)
@@ -673,8 +669,6 @@ case class PostgresApiDatabaseMutationBuilder(
   }
 
   def pushScalarListsImport(mutaction: PushScalarListsImport) = {
-
-    val projectId = mutaction.project.id
     val tableName = mutaction.tableName
     val nodeId    = mutaction.id
 
