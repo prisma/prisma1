@@ -126,19 +126,13 @@ object DataSchemaAstExtensions {
 
     def relationTableDirective: Option[RelationTableDirective] = {
       for {
-        tableName <- fieldDefinition.directiveArgumentAsString("pgRelationTable", "table")
-        thisColumn = fieldDefinition
-          .directiveArgumentAsString("pgRelationTable", "thisColumn")
-          .orElse(fieldDefinition.directiveArgumentAsString("pgRelationTable", "relationColumn"))
-        otherColumn = fieldDefinition
-          .directiveArgumentAsString("pgRelationTable", "otherColumn")
-          .orElse(fieldDefinition.directiveArgumentAsString("pgRelationTable", "targetColumn"))
+        tableName   <- fieldDefinition.directiveArgumentAsString("pgRelationTable", "table")
+        thisColumn  = fieldDefinition.fieldDefinition.directiveArgumentAsString("pgRelationTable", "relationColumn")
+        otherColumn = fieldDefinition.directiveArgumentAsString("pgRelationTable", "targetColumn")
       } yield RelationTableDirective(table = tableName, thisColumn = thisColumn, otherColumn = otherColumn)
     }
 
-    def inlineRelationDirective: InlineRelationDirective =
-      InlineRelationDirective(
-        fieldDefinition.directiveArgumentAsString("inline", "column").orElse(fieldDefinition.directiveArgumentAsString("pgRelation", "column")))
+    def inlineRelationDirective: InlineRelationDirective = InlineRelationDirective(fieldDefinition.directiveArgumentAsString("pgRelation", "column"))
   }
 
   implicit class CoolEnumType(val enumType: EnumTypeDefinition) extends AnyVal {

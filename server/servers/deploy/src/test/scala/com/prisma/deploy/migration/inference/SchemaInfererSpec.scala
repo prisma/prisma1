@@ -354,7 +354,7 @@ class SchemaInfererSpec extends WordSpec with Matchers {
          |}
          |
          |type List {
-         |  todos: [Todo] @relationTable(table: "list_to_todo", thisColumn: "list_id", otherColumn: "todo_id")
+         |  todos: [Todo] @relationTable(table: "list_to_todo", relationColumn: "list_id", targetColumn: "todo_id")
          |}""".stripMargin
     val schema = infer(emptyProject.schema, types, isActive = false).get
 
@@ -376,7 +376,7 @@ class SchemaInfererSpec extends WordSpec with Matchers {
          |
          |type Todo {
          |  name: String!
-         |  list: List @inline(column: "list_id")
+         |  list: List @pgRelation(column: "list_id")
          |}
          |""".stripMargin
     val schema = infer(emptyProject.schema, types, isActive = false).get
@@ -411,7 +411,12 @@ class SchemaInfererSpec extends WordSpec with Matchers {
     model.fields.map(_.name) should equal(List("name"))
   }
 
-  def infer(schema: Schema, types: String, mapping: SchemaMapping = SchemaMapping.empty, isActive: Boolean = true): Or[Schema, ProjectSyntaxError] = {
+  def infer(
+      schema: Schema,
+      types: String,
+      mapping: SchemaMapping = SchemaMapping.empty,
+      isActive: Boolean = true
+  ): Or[Schema, ProjectSyntaxError] = {
     val document = QueryParser.parse(types).get
     SchemaInferrer(isActive).infer(schema, mapping, document, InferredTables.empty)
   }
