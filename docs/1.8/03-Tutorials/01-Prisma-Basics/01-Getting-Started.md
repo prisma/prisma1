@@ -77,7 +77,7 @@ Next, the CLI will prompt you to configure the _name_ and _stage_ for your Prism
 
 This will create a new directory called `hello-world` as well as the two files which provide a minimal setup for your service:
 
-- [`prisma.yml`](!alias-foatho8aip): The root configuration file for your service. It contains information about your service, like the name (which is used to generate the service's HTTP endpoint), a secret to secure the access to the endpoint and about where it should be deployed.
+- [`prisma.yml`](!alias-foatho8aip): The root configuration file for your service. It contains information about your service, like the name (which is used to generate the service's HTTP endpoint), a secret to secure the access to the endpoint and where it should be deployed.
 - `datamodel.graphql` (can also be called differently, e.g. `types.graphql`): This file contains the definition of your [data model](!alias-eiroozae8u), written in [GraphQL SDL](https://blog.graph.cool/graphql-sdl-schema-definition-language-6755bcb9ce51).
 
 Let's take a look at the contents of the generated files:
