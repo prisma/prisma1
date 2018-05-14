@@ -207,32 +207,31 @@ case class SchemaInferrerImpl(
       val previousModelAName = schemaMapping.getPreviousModelName(modelA)
       val previousModelBName = schemaMapping.getPreviousModelName(modelB)
 
-      val oldEquivalentRelation = relationField.relationName.flatMap(baseSchema.getRelationByName).orElse {
+      val oldEquivalentRelationByName =
+        relationField.relationName.flatMap(baseSchema.getRelationByName).filter(rel => rel.connectsTheModels(previousModelAName, previousModelBName))
+
+      val oldEquivalentRelation = oldEquivalentRelationByName.orElse {
         UnambiguousRelation.unambiguousRelationThatConnectsModels(baseSchema, previousModelAName, previousModelBName)
       }
       val relationManifestation = relationManifestationOnFieldOrRelatedField(objectType, relationField)
+
+      val nextRelation = Relation(
+        name = relationName,
+        modelAId = modelA,
+        modelBId = modelB,
+        modelAOnDelete = modelAOnDelete,
+        modelBOnDelete = modelBOnDelete,
+        manifestation = relationManifestation
+      )
 
       oldEquivalentRelation match {
         case Some(relation) =>
           val nextModelAId = if (previousModelAName == relation.modelAId) modelA else modelB
           val nextModelBId = if (previousModelBName == relation.modelBId) modelB else modelA
-          relation.copy(
-            name = relationName,
-            modelAId = nextModelAId,
-            modelBId = nextModelBId,
-            modelAOnDelete = modelAOnDelete,
-            modelBOnDelete = modelBOnDelete,
-            manifestation = relationManifestation
-          )
-        case None =>
-          Relation(
-            name = relationName,
-            modelAId = modelA,
-            modelBId = modelB,
-            modelAOnDelete = modelAOnDelete,
-            modelBOnDelete = modelBOnDelete,
-            manifestation = relationManifestation
-          )
+          nextRelation.copy(modelAId = nextModelAId, modelBId = nextModelBId)
+
+        case None => nextRelation
+
       }
     }
     tmp.groupBy(_.name).values.flatMap(_.headOption).toSet

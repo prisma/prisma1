@@ -57,7 +57,7 @@ case class ApiTestDatabase()(implicit dependencies: TestApiDependencies) extends
       .map(runMutaction)
 
     model.scalarListFields
-      .map(field => CreateScalarListTable(project.id, model.name, field.name, field.typeIdentifier))
+      .map(field => CreateScalarListTable(project.id, model, field))
       .map(runMutaction)
   }
 }

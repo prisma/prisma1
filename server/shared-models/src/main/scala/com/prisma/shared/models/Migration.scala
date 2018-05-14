@@ -83,6 +83,7 @@ case class DeleteField(model: String, name: String) extends FieldMigrationStep
 
 case class UpdateField(
     model: String,
+    newModel: String,
     name: String,
     newName: Option[String],
     typeName: Option[String],

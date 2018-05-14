@@ -55,6 +55,7 @@ class InfererIntegrationSpec extends FlatSpec with Matchers {
     steps should contain allOf (
       UpdateField(
         model = "Todo",
+        newModel = "Todo",
         name = "comments",
         newName = None,
         typeName = None,
@@ -68,6 +69,7 @@ class InfererIntegrationSpec extends FlatSpec with Matchers {
       ),
       UpdateField(
         model = "Comment",
+        newModel = "Comment",
         name = "todo",
         newName = None,
         typeName = None,
@@ -120,6 +122,7 @@ class InfererIntegrationSpec extends FlatSpec with Matchers {
     steps should contain allOf (
       UpdateField(
         model = "Todo",
+        newModel = "Todo",
         name = "comments",
         newName = None,
         typeName = None,
@@ -133,6 +136,7 @@ class InfererIntegrationSpec extends FlatSpec with Matchers {
       ),
       UpdateField(
         model = "Comment",
+        newModel = "Comment",
         name = "todo",
         newName = None,
         typeName = None,

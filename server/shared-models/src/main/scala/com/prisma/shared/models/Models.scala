@@ -364,7 +364,6 @@ object FieldConstraintType extends Enumeration {
 // but left out for now because of cyclic dependencies
 case class Relation(
     name: String,
-    description: Option[String] = None,
     // BEWARE: if the relation looks like this: val relation = Relation(id = "relationId", modelAId = "userId", modelBId = "todoId")
     // then the relationSide for the fields have to be "opposite", because the field's side is the side of _the other_ model
     // val userField = Field(..., relation = Some(relation), relationSide = Some(RelationSide.B)

@@ -7,7 +7,6 @@ trait SchemaMapper {
   def createMapping(graphQlSdl: Document): SchemaMapping
 }
 
-// todo mapping might be insufficient for edge cases: Model renamed, field on model renamed as well
 object SchemaMapper extends SchemaMapper {
   import DataSchemaAstExtensions._
 

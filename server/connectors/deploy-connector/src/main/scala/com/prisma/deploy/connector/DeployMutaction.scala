@@ -1,6 +1,5 @@
 package com.prisma.deploy.connector
 
-import com.prisma.shared.models.TypeIdentifier.TypeIdentifier
 import com.prisma.shared.models._
 
 sealed trait DeployMutaction
@@ -16,8 +15,8 @@ case class CreateColumn(projectId: String, model: Model, field: Field)          
 case class DeleteColumn(projectId: String, model: Model, field: Field)                     extends DeployMutaction
 case class UpdateColumn(projectId: String, model: Model, oldField: Field, newField: Field) extends DeployMutaction
 
-case class CreateScalarListTable(projectId: String, model: String, field: String, typeIdentifier: TypeIdentifier)       extends DeployMutaction
-case class DeleteScalarListTable(projectId: String, model: String, field: String, typeIdentifier: TypeIdentifier)       extends DeployMutaction
+case class CreateScalarListTable(projectId: String, model: Model, field: Field)                                         extends DeployMutaction
+case class DeleteScalarListTable(projectId: String, model: Model, field: Field)                                         extends DeployMutaction
 case class UpdateScalarListTable(projectId: String, oldModel: Model, newModel: Model, oldField: Field, newField: Field) extends DeployMutaction
 
 case class CreateModelTable(projectId: String, model: String)                                                            extends DeployMutaction

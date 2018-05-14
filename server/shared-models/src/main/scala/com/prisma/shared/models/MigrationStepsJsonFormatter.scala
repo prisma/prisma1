@@ -14,6 +14,7 @@ object MigrationStepsJsonFormatter extends DefaultReads {
   implicit val deleteFieldFormat = Json.format[DeleteField]
   implicit val updateFieldFormat = new OFormat[UpdateField] {
     val modelField        = "model"
+    val newModelField     = "newModel"
     val nameField         = "name"
     val newNameField      = "newName"
     val typeNameField     = "typeName"
@@ -28,6 +29,7 @@ object MigrationStepsJsonFormatter extends DefaultReads {
     override def reads(json: JsValue): JsResult[UpdateField] = {
       for {
         model        <- (json \ modelField).validate[String]
+        newModel     <- (json \ newModelField).validateOpt[String]
         name         <- (json \ nameField).validate[String]
         newName      <- (json \ newNameField).validateOpt[String]
         typeName     <- (json \ typeNameField).validateOpt[String]
@@ -41,6 +43,7 @@ object MigrationStepsJsonFormatter extends DefaultReads {
       } yield {
         UpdateField(
           model = model,
+          newModel = newModel.getOrElse(model),
           name = name,
           newName = newName,
           typeName = typeName,
@@ -58,6 +61,7 @@ object MigrationStepsJsonFormatter extends DefaultReads {
     override def writes(x: UpdateField): JsObject = {
       Json.obj(
         modelField      -> x.model,
+        newModelField   -> x.newModel,
         nameField       -> x.name,
         newNameField    -> x.newName,
         typeNameField   -> x.typeName,
