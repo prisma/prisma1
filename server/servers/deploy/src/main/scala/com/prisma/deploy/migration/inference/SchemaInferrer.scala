@@ -258,7 +258,6 @@ case class SchemaInferrerImpl(
 
         case Some(m: InlineRelationManifestation) =>
           val model = schema.getModelById_!(m.inTableOfModelId)
-          val field = relation.getFieldOnModel(model.id, schema).get
           inferredTables.modelTables.find(_.name == model.dbName) match {
             case None =>
               Some(GenericProblem(s"Could not find the model table ${model.dbName} in the databse"))
