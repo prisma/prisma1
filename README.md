@@ -16,13 +16,10 @@ The Prisma GraphQL API provides powerful abstractions and building blocks to dev
 
 ## Contents
 
-<!--
-<img align="right" width="400" src="https://imgur.com/EsopgE3.gif" />
--->
-
 * [Quickstart](#quickstart)
 * [Examples](#examples)
 * [Architecture](#architecture)
+* [Is Prisma an ORM?](#is-prisma-an-orm)
 * [Database Connectors](#database-connectors)
 * [GraphQL API](#graphql-api)
 * [Community](#community)
@@ -38,13 +35,19 @@ The Prisma GraphQL API provides powerful abstractions and building blocks to dev
 npm install -g prisma
 ```
 
-2. **Create a new service:**
+2. **Create a new Prisma service:**
 
 The following command creates all files you need for a new [service](https://www.prisma.io/docs/reference/service-configuration/overview-ieshoo5ohm).
 
 ```console
-prisma init
+prisma init hello-world
 ```
+
+Follow the interactive prompts to choose your own Prisma setup:
+
+- Deploy to a Prisma demo server (**recommended**)
+- Setup Prisma with a new database (requires Docker)
+- Connect your database (requires Docker)
 
 3. **Define your data model:**
 
