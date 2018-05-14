@@ -7,8 +7,7 @@ import org.scalatest.{FlatSpec, Matchers}
 
 class OptionalBackrelationSpec extends FlatSpec with Matchers with ApiSpecBase {
 
-  // TODO: fails because of missing back relation field for passive connectors
-  "Nested Updates" should "work for models with missing backrelations " taggedAs (IgnorePassive) in {
+  "Nested Updates" should "work for models with missing backrelations " in {
     val project = SchemaDsl.fromString() {
       """
         |type Owner {

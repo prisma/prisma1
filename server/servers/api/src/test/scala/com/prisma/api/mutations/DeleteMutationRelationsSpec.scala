@@ -1,13 +1,12 @@
 package com.prisma.api.mutations
 
-import com.prisma.IgnorePassive
 import com.prisma.api.ApiSpecBase
 import com.prisma.shared.schema_dsl.SchemaDsl
 import org.scalatest.{FlatSpec, Matchers}
 
 class DeleteMutationRelationsSpec extends FlatSpec with Matchers with ApiSpecBase {
 
-  "a P0 to C1! relation " should "error when deleting the parent" taggedAs (IgnorePassive) in {
+  "a P0 to C1! relation " should "error when deleting the parent" in {
     // ignored because of order of nested mutations
     val project = SchemaDsl.fromBuilder { schema =>
       val parent = schema.model("Parent").field_!("p", _.String, isUnique = true)

@@ -615,8 +615,7 @@ class NestedUpdateMutationInsideUpdateSpec extends FlatSpec with Matchers with A
       """{"data":{"updateTop":{"nameTop":"updated top","middles":[{"nameMiddle":"updated middle","bottom":{"nameBottom":"updated bottom"}},{"nameMiddle":"the second middle","bottom":{"nameBottom":"the second bottom"}}]}}}""")
   }
 
-  // TODO: fails because of missing back relation field
-  "a deeply nested mutation" should "execute all levels of the mutation if there are model and node edges on the path  and back relations are missing and node edges follow model edges" taggedAs (IgnorePassive) in {
+  "a deeply nested mutation" should "execute all levels of the mutation if there are model and node edges on the path  and back relations are missing and node edges follow model edges" in {
     val project = SchemaDsl.fromString() { """type Top {
                                              |  id: ID! @unique
                                              |  nameTop: String! @unique
@@ -706,8 +705,7 @@ class NestedUpdateMutationInsideUpdateSpec extends FlatSpec with Matchers with A
       """{"data":{"updateTop":{"nameTop":"updated top","middle":{"nameMiddle":"updated middle","bottom":{"nameBottom":"updated bottom","below":[{"nameBelow":"updated below"},{"nameBelow":"second below"}]}}}}}""")
   }
 
-  // TODO: fails because of missing back relation field
-  "a deeply nested mutation" should "fail if there are model and node edges on the path and back relations are missing and node edges follow model edges but the path is interrupted" taggedAs (IgnorePassive) in {
+  "a deeply nested mutation" should "fail if there are model and node edges on the path and back relations are missing and node edges follow model edges but the path is interrupted" in {
     val project = SchemaDsl.fromString() { """type Top {
                                              |  id: ID! @unique
                                              |  nameTop: String! @unique
@@ -898,8 +896,7 @@ class NestedUpdateMutationInsideUpdateSpec extends FlatSpec with Matchers with A
       """{"data":{"updateTop":{"nameTop":"updated top","middle":{"nameMiddle":"updated middle","bottom":{"nameBottom":"updated bottom"}}}}}""")
   }
 
-  // TODO: fails because of missing back relation field
-  "a deeply nested mutation" should "execute all levels of the mutation if there are only model edges on the path and there are no backrelations" taggedAs (IgnorePassive) in {
+  "a deeply nested mutation" should "execute all levels of the mutation if there are only model edges on the path and there are no backrelations" in {
     val project = SchemaDsl.fromString() { """type Top {
                                              |  id: ID! @unique
                                              |  nameTop: String! @unique
@@ -974,8 +971,7 @@ class NestedUpdateMutationInsideUpdateSpec extends FlatSpec with Matchers with A
       """{"data":{"updateTop":{"nameTop":"updated top","middle":{"nameMiddle":"updated middle","bottom":{"nameBottom":"updated bottom"}}}}}""")
   }
 
-  // TODO: fails because of missing back relation field
-  "a deeply nested mutation" should "fail if there are only model edges on the path but there is no connected item to update at the end" taggedAs (IgnorePassive) in {
+  "a deeply nested mutation" should "fail if there are only model edges on the path but there is no connected item to update at the end" in {
     val project = SchemaDsl.fromString() { """type Top {
                                              |  id: ID! @unique
                                              |  nameTop: String! @unique
