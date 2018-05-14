@@ -7,7 +7,9 @@ import org.scalatest.{FlatSpec, Matchers}
 
 class UpdateManyListSpec extends FlatSpec with Matchers with ApiSpecBase {
 
-  val project: Project = SchemaDsl.fromString() { """type MyObject {
+  val project: Project = SchemaDsl.fromString() { """
+                                                  |type MyObject {
+                                                  |  id: String! @unique
                                                   |  name: String! @unique
                                                   |  strings: [String!]!
                                                   |  ints: [Int!]!
