@@ -27,7 +27,7 @@ Prisma's auto-generated GraphQL API provides powerful abstractions and modular b
 
 ## Quickstart
 
-[Watch this 4 min tutorial](https://www.youtube.com/watch?v=20zGexpEitc) or follow the steps below to get started with Prisma:
+[Watch this 4 min tutorial](https://www.youtube.com/watch?v=20zGexpEitc) or follow the steps below to get started with Prisma.
 
 #### 1. Install the CLI via NPM
 
@@ -244,12 +244,13 @@ Prisma's auto-generated GraphQL APIs are fully compatible with the [OpenCRUD](ht
 
 Prisma has a community of thousands of amazing developers and contributors. Welcome, please join us! 👋
 
-* [Forum](https://www.prisma.io/forum)
-* [Slack](https://slack.prisma.io/)
-* [Twitter](https://twitter.com/prismagraphql)
-* [Facebook](https://www.facebook.com/GraphcoolHQ)
-* [Meetup](https://www.meetup.com/graphql-berlin)
-* [Email](hello@prisma.io)
+- [Forum](https://www.prisma.io/forum)
+- [Slack](https://slack.prisma.io/)
+- [Twitter](https://twitter.com/prismagraphql)
+- [Facebook](https://www.facebook.com/GraphcoolHQ)
+- [Meetup](https://www.meetup.com/graphql-berlin)
+- [GraphQL Europe](https://www.graphql-europe.org/) | [GraphQL Day](https://www.graphqlday.org/) 
+- [Email](hello@prisma.io)
 
 ## Contributing
 
