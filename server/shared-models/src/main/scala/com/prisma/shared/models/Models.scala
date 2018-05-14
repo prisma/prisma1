@@ -316,30 +316,32 @@ sealed trait FieldConstraint {
   val id: String; val fieldId: String; val constraintType: FieldConstraintType
 }
 
-case class StringConstraint(id: String,
-                            fieldId: String,
-                            equalsString: Option[String] = None,
-                            oneOfString: List[String] = List.empty,
-                            minLength: Option[Int] = None,
-                            maxLength: Option[Int] = None,
-                            startsWith: Option[String] = None,
-                            endsWith: Option[String] = None,
-                            includes: Option[String] = None,
-                            regex: Option[String] = None)
-    extends FieldConstraint {
+case class StringConstraint(
+    id: String,
+    fieldId: String,
+    equalsString: Option[String] = None,
+    oneOfString: List[String] = List.empty,
+    minLength: Option[Int] = None,
+    maxLength: Option[Int] = None,
+    startsWith: Option[String] = None,
+    endsWith: Option[String] = None,
+    includes: Option[String] = None,
+    regex: Option[String] = None
+) extends FieldConstraint {
   val constraintType: FieldConstraintType = FieldConstraintType.STRING
 }
 
-case class NumberConstraint(id: String,
-                            fieldId: String,
-                            equalsNumber: Option[Double] = None,
-                            oneOfNumber: List[Double] = List.empty,
-                            min: Option[Double] = None,
-                            max: Option[Double] = None,
-                            exclusiveMin: Option[Double] = None,
-                            exclusiveMax: Option[Double] = None,
-                            multipleOf: Option[Double] = None)
-    extends FieldConstraint {
+case class NumberConstraint(
+    id: String,
+    fieldId: String,
+    equalsNumber: Option[Double] = None,
+    oneOfNumber: List[Double] = List.empty,
+    min: Option[Double] = None,
+    max: Option[Double] = None,
+    exclusiveMin: Option[Double] = None,
+    exclusiveMax: Option[Double] = None,
+    multipleOf: Option[Double] = None
+) extends FieldConstraint {
   val constraintType: FieldConstraintType = FieldConstraintType.NUMBER
 }
 
