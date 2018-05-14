@@ -6,6 +6,8 @@
 
 **Prisma is a performant open-source GraphQL ORM-like layer** doing the heavy lifting in your GraphQL server.
 
+<br>
+
 <details><summary>What do you mean by _ORM-like layer layer_?</summary>
 <p>
 
@@ -17,6 +19,8 @@ Prisma provides a mapping from your API to your database, it therefore solves si
 
 </p>
 </details>
+
+<br>
 
 The Prisma GraphQL API provides powerful abstractions and building blocks to develop flexible, scalable GraphQL backends:
 
