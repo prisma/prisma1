@@ -174,7 +174,7 @@ TBD
 
 Prisma takes the role of a [data access layer](https://en.wikipedia.org/wiki/Data_access_layer) in your backend architecture by connecting your API server to your databases. It enables a layered architecture which leads to better _separation of concerns_ and improves _maintainability_ of the entire backend.
 
-Using [Prisma bindings](https://github.com/graphcool/prisma-binding), you can further access Prisma's GraphQL API from your programming language.
+Acting as a "GraphQL database proxy", Prisma provides a GraphQL-based abstraction for your databases enabling you to read and write data with GraphQL queries and mutations. Using [Prisma bindings](https://github.com/graphcool/prisma-binding), you can access Prisma's GraphQL API from your programming language.
 
 Prisma servers run as standalone processes which allows for them to be scaled independetly from your API server.
 
