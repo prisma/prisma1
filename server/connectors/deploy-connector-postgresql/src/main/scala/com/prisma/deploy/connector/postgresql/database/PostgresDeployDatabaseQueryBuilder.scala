@@ -29,7 +29,7 @@ object PostgresDeployDatabaseQueryBuilder {
              Select Count(*)
              FROM "#$projectId"."#$modelName"
              GROUP BY "#$fieldName"
-             HAVING COUNT(*) > 1
+             HAVING COUNT(*) > 1 AND NOT NULL
           )"""
   }
 

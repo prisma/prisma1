@@ -50,6 +50,28 @@ class DeployingUniqueConstraintSpec extends FlatSpec with Matchers with Integrat
     deployServer.deploySchemaThatMustSucceed(project, schema1, 3)
   }
 
+  "Adding a unique constraint without violating data" should "work even with multiple nulls" in {
+
+    val schema =
+      """type Team {
+        |  name: String! @unique
+        |  dummy: String
+        |}"""
+
+    val (project, _) = setupProject(schema)
+
+    apiServer.query("""mutation{createTeam(data:{name:"Bayern"}){name}}""", project)
+    apiServer.query("""mutation{createTeam(data:{name:"Real"}){name}}""", project)
+
+    val schema1 =
+      """type Team {
+        |  name: String! @unique
+        |  dummy: String @unique
+        |}"""
+
+    deployServer.deploySchemaThatMustSucceed(project, schema1, 3)
+  }
+
   "Adding a new String field with a unique constraint" should "work" in {
 
     val schema =
