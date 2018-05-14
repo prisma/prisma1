@@ -64,9 +64,8 @@ object DataSchemaAstExtensions {
 
     def description: Option[String] = objectType.directiveArgumentAsString("description", "text")
 
-    def tableName: String = tableNameDirective.getOrElse(objectType.name)
-    def tableNameDirective: Option[String] =
-      objectType.directiveArgumentAsString("model", "table").orElse(objectType.directiveArgumentAsString("pgTable", "name"))
+    def tableName: String                  = tableNameDirective.getOrElse(objectType.name)
+    def tableNameDirective: Option[String] = objectType.directiveArgumentAsString("pgTable", "name")
   }
 
   implicit class CoolField(val fieldDefinition: FieldDefinition) extends AnyVal {
@@ -82,8 +81,7 @@ object DataSchemaAstExtensions {
 
     def typeName: String = fieldDefinition.fieldType.namedType.name
 
-    def columnName: Option[String] =
-      fieldDefinition.directiveArgumentAsString("field", "column").orElse(fieldDefinition.directiveArgumentAsString("pgColumn", "name"))
+    def columnName: Option[String] = fieldDefinition.directiveArgumentAsString("pgColumn", "name")
 
     def isUnique: Boolean = fieldDefinition.directive("unique").isDefined || fieldDefinition.directive("pqUnique").isDefined
 
@@ -128,19 +126,13 @@ object DataSchemaAstExtensions {
 
     def relationTableDirective: Option[RelationTableDirective] = {
       for {
-        tableName <- fieldDefinition.directiveArgumentAsString("pgRelationTable", "table")
-        thisColumn = fieldDefinition
-          .directiveArgumentAsString("pgRelationTable", "thisColumn")
-          .orElse(fieldDefinition.directiveArgumentAsString("pgRelationTable", "relationColumn"))
-        otherColumn = fieldDefinition
-          .directiveArgumentAsString("pgRelationTable", "otherColumn")
-          .orElse(fieldDefinition.directiveArgumentAsString("pgRelationTable", "targetColumn"))
+        tableName   <- fieldDefinition.directiveArgumentAsString("pgRelationTable", "table")
+        thisColumn  = fieldDefinition.fieldDefinition.directiveArgumentAsString("pgRelationTable", "relationColumn")
+        otherColumn = fieldDefinition.directiveArgumentAsString("pgRelationTable", "targetColumn")
       } yield RelationTableDirective(table = tableName, thisColumn = thisColumn, otherColumn = otherColumn)
     }
 
-    def inlineRelationDirective: InlineRelationDirective =
-      InlineRelationDirective(
-        fieldDefinition.directiveArgumentAsString("inline", "column").orElse(fieldDefinition.directiveArgumentAsString("pgRelation", "column")))
+    def inlineRelationDirective: InlineRelationDirective = InlineRelationDirective(fieldDefinition.directiveArgumentAsString("pgRelation", "column"))
   }
 
   implicit class CoolEnumType(val enumType: EnumTypeDefinition) extends AnyVal {
