@@ -12,7 +12,7 @@ Prisma's auto-generated GraphQL API provides powerful abstractions and modular b
 - **Data modeling & migrations** with declarative GraphQL SDL.
 - **Realtime API** using GraphQL Subscriptions.
 - **Advanced API composition** using GraphQL Bindings and schema stitching.
-- **Works with all frontend frameworks** like React, Vue.js, Angular
+- **Works with all frontend frameworks** like React, Vue.js, Angular.
 
 ## Contents
 
