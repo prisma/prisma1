@@ -4,7 +4,7 @@ description: Get started in 5 min with [React](https://facebook.github.io/react/
 github: https://github.com/graphql-boilerplates/react-fullstack-graphql/tree/master/basic
 ---
 
-# React & Apollo Quickstart
+# Bootstrap a fullstack GraphQL server based on Prisma
 
 In this quickstart tutorial, you'll learn how to build a fullstack app with React, GraphQL and Node.js. You will use [`graphql-yoga`](https://github.com/graphcool/graphql-yoga/) as your web server. The server is connected to a Prisma database API using [`prisma-binding`](https://github.com/graphcool/prisma-binding).
 

@@ -4,7 +4,7 @@ description: Get started with in 5 min Prisma and TypeScript by building a Graph
 github: https://github.com/graphql-boilerplates/typescript-graphql-server/tree/master/basic
 ---
 
-# TypeScript Prisma Quickstart
+# Bootstrap a TypeScript GraphQL server based on Prisma
 
 In this quickstart tutorial, you'll learn how to build a GraphQL server with TypeScript. You will use [`graphql-yoga`](https://github.com/graphcool/graphql-yoga/) as your web server. The server is connected to a Prisma database API using [`prisma-binding`](https://github.com/graphcool/prisma-binding).
 

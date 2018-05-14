@@ -1,31 +1,31 @@
 ---
 alias: ouzia3ahqu
-description: Learn how to generate a GraphQL API for your database with Prisma.
+description: Learn how to deploy a Prisma service to a Demo server.
 ---
 
-# Getting started with Prisma
+# Setup Prisma
 
-In this tutorial, you'll learn how to get started with Prisma to generate a GraphQL API for your database.
+In this tutorial, you'll learn how to get started with Prisma and deploy a Prisma service to a _Demo server_.
 
-Here are the steps you're going to perform:
+Demo servers provide a hosted environment (running in Prisma Cloud) which you can use for learning, prototyping and development. They are free to use but should not be used for production use cases as they are rate limited and have an upper bound in storage capacity.
 
-- Install the Prisma CLI
-- Bootstrapping a Prisma service with `prisma init`
-- Explore the API in a GraphQL Playground and send queries & mutations
+<InfoBox>
 
-> To ensure you're not accidentally skipping an instruction in the tutorial, all required actions on your end are highlighted with a little counter on the left.
->
-> **Pro tip**: If you're only keen on getting started but don't care so much about the explanations of what's going on, you can simply jump from instruction to instruction.
+To ensure you're not accidentally skipping an instruction in the tutorial, all required actions are highlighted with a little _counter_ on the left.
 
-## Installing the Prisma CLI
+**Pro tip**: If you're only keen on getting started but don't care so much about the explanations of what's going on, you can simply jump from instruction to instruction.
 
-Prisma services are managed with the [Prisma CLI](!alias-ieshoo5ohm). You can install it using `npm` (or `yarn`).
+</InfoBox>
+
+## Step 1: Install the Prisma CLI
+
+Prisma services are managed with the [Prisma CLI](!alias-je3ahghip5). You can install it using `npm` (or `yarn`).
 
 <Instruction>
 
 Open your terminal and run the following command to install the Prisma CLI:
 
-```
+```sh
 npm install -g prisma
 # or
 # yarn global add prisma
@@ -33,7 +33,7 @@ npm install -g prisma
 
 </Instruction>
 
-## Bootstrapping a Prisma service
+## Step 2: Bootstrap a Prisma service
 
 <Instruction>
 
@@ -65,13 +65,15 @@ After you've sucessfully logged in, you need to select the _region_ for your Dem
 
 <Instruction>
 
-Select either `demo-eu1` or `demo-us1` (the CLI will display the latencies for each server so you know which one will perform better for your specific location).
+Select either **demo-eu1** or **demo-us1** (the CLI will display the latencies for each server so you know which one will perform better for your specific location).
 
 </Instruction>
 
+Next, the CLI will prompt you to configure the _name_ and _stage_ for your Prisma API.
+
 <Instruction>
 
-Next, the CLI will prompt you to configure the _name_ and _stage_ for your Prisma API. You can just choose the suggested values by hitting **Enter** two times.
+Just confirm the suggested values by hitting **Enter** two times.
 
 </Instruction>
 
@@ -85,11 +87,11 @@ Let's take a look at the contents of the generated files:
 **`prisma.yml`**
 
 ```yml
-endpoint: https://eu1.prisma.sh/alice/hello-world/dev
+endpoint: https://eu1.prisma.sh/alice-doe-fd2dcf/hello-world/dev
 datamodel: datamodel.graphql
 ```
 
-Note that the endpoint will look slightly different for you as `alice` is the ID of your Prisma Cloud _workspace_ which hosts the service.
+Note that the endpoint will look slightly different for you as `alice-doe-fd2dcf` is the ID of your Prisma Cloud _workspace_ which hosts the service.
 
 Here's an overview of the properties in the generated `prisma.yml`:
 
@@ -107,7 +109,9 @@ type User {
 
 The data model contains type definitions for the entities in your application domain. In this case, you're starting out with a very simple `User` type with an `id` and a `name`.
 
-The `@unique` directive here expresses that no two users in the database can have the same `id`, Prisma will ensure this requirement is met at all times.
+The `@unique` directive here expresses that no two `User` records in the database can have the same `id`, Prisma will ensure this requirement is met at all times.
+
+## Step 3: Deploy your Prisma service to a Demo server
 
 The `prisma init` command only bootstrapped the _files_ for your Prisma service, but it didn't actually _deploy_ it - so you can't use your CRUD GraphQL API for the `User` type yet.
 
@@ -124,15 +128,15 @@ prisma deploy
 
 Your Prisma API is now deployed and ready to receive your queries, mutations and subscriptions 🎉
 
-## Exploring your service in a GraphQL Playground
+## Step 4: Explore Prisma's GraphQL API in a GraphQL Playground
 
-So your API is deployed - but how do you know how to interact with it? What does its API actually look like?
+So your Prisma service is deployed - but how do you know how to interact with it? What does its API actually look like?
 
 In general, the generated API allows to perform CRUD operations on the types in your data model. It also exposes GraphQL subscriptions which allow clients to _subscribe_ to certain _events_ and receive updates in realtime.
 
-It is important to understand that the data model is the foundation for your API. Every time you make changes to your data model (and run `prisma deploy` afterwards), the GraphQL API gets updated accordingly.
+It is important to understand that the data model is the foundation for your API. Every time you make changes to your data model (and run `prisma deploy` afterwards), the schema of Prisma's GraphQL API gets updated accordingly.
 
-Because your data model contains the `User` type, the Prisma API now allows for its clients to create, read, update and delete instances, also called _nodes_, of that type. In particular, the following GraphQL operations are now generated based on the `User` type:
+Because your data model contains the `User` type, the Prisma API now allows for its clients to create, read, update and delete records, also called _nodes_, of that type. In particular, the following GraphQL operations are now generated based on the `User` type:
 
 - `user`: Query to retrieve a single `User` node by its `id` (or another `@unique` field).
 - `users`: Query to retrieve a list of `User` nodes.
@@ -142,26 +146,11 @@ Because your data model contains the `User` type, the Prisma API now allows for 
 
 > **Note**: This list of generated operations is not complete. The Prisma API exposes a couple of more operations that, for example, allow to batch update/delete many nodes. However, all operations either create, read, update or delete nodes of the types defined in the data model.
 
-To actually use these operations, you need a way to [send requests to your service's API](!alias-ohm2ouceuj). Since that API is exposed via HTTP, you could use tools like [`curl`](https://en.wikipedia.org/wiki/CURL) or [Postman](https://www.getpostman.com/) to interact with it. However, GraphQL actually has with much nicer tooling for that purpose: [GraphQL Playground](https://github.com/graphcool/graphql-playground), an interactive GraphQL IDE.
-
-The GraphQL Playground is based on [`graphql-config`](https://github.com/graphcool/graphql-config), so before opening it you need to create a `.graphqlconfig.yml`-file where you specify your Prisma project:
+To actually use these operations, you need a way to [send requests to your service's API](!alias-ohm2ouceuj). Since that API is exposed via HTTP, you could use tools like [`curl`](https://en.wikipedia.org/wiki/CURL) or [Postman](https://www.getpostman.com/) to interact with it. However, GraphQL actually has much nicer tooling for that purpose: [GraphQL Playground](https://github.com/graphcool/graphql-playground), an interactive GraphQL IDE.
 
 <Instruction>
 
-Create a new file inside the `hello-world` directory and call it `.graphqlconfig.yml`. Then add the following contents to it:
-
-```yml
-projects:
-  prisma:
-    extensions:
-      prisma: prisma.yml
-```
-
-</Instruction>
-
-<Instruction>
-
-To open a GraphQL Playground, you can now use the Prisma CLI again. Simply run the following command inside the `hello-world` directory:
+To open a GraphQL Playground you can use the Prisma CLI again. Run the following command inside the `hello-world` directory:
 
 ```sh
 prisma playground
@@ -187,7 +176,7 @@ This brings up the Playground's documentation pane. The left-most column is a li
 
 ![](https://imgur.com/l82HjFR.png)
 
-## Sending queries and mutations
+## Step 5: Send queries and mutations
 
 All right! With everything you learned so far, you're ready to fire off some queries and mutations against your API. Let's start with the `users` query to retrieve all the `User` nodes currently stored in the database.
 
@@ -282,9 +271,6 @@ query {
 }
 ```
 
-## Next steps
+## Where to go from here?
 
-At this point, you can either move on the [**next chapter**](!alias-va4ga2phie) and learn how you can update your data model and API or visit one of the following resources:
-
-- **Quickstart Tutorials (Backend & Frontend)**: The remaining quickstart tutorials explain how to use Prisma together with conrete languages and frameworks, like [React](!alias-tijghei9go), [Node.js](!alias-phe8vai1oo) or [TypeScript](!alias-rohd6ipoo4).
-- [How to GraphQL tutorial for Node.js](https://www.howtographql.com/graphql-js/0-introduction/): In-depth tutorial teaching you how to build a GraphQL server implementing features lielke authentication, pagiation, filters and realtime subscriptions.
+You can now go and **[build a GraphQL server](!alias-ohdaiyoo6c)** based on this API.
