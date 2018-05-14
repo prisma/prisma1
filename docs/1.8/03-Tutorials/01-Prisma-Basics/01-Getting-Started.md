@@ -10,7 +10,7 @@ In this tutorial, you'll learn how to get started with Prisma to generate a Grap
 Here are the steps you're going to perform:
 
 - Install the Prisma CLI
-- Bootstrapping a Prisma service with `prisma init`
+- Bootstrap a Prisma service with `prisma init`
 - Explore the API in a GraphQL Playground and send queries & mutations
 
 > To ensure you're not accidentally skipping an instruction in the tutorial, all required actions on your end are highlighted with a little counter on the left.
@@ -128,7 +128,7 @@ Your Prisma API is now deployed and ready to receive your queries, mutations and
 
 So your API is deployed - but how do you know how to interact with it? What does its API actually look like?
 
-In general, the generated API allows to perform CRUD operations on the types in your data model. It also exposes GraphQL subscriptions which allow clients to _subscribe_ to certain _events_ and receive updates in realtime.
+In general, the generated API allows you to perform CRUD operations on the types in your data model. It also exposes GraphQL subscriptions which allow clients to _subscribe_ to certain _events_ and receive updates in realtime.
 
 It is important to understand that the data model is the foundation for your API. Every time you make changes to your data model (and run `prisma deploy` afterwards), the GraphQL API gets updated accordingly.
 
@@ -140,9 +140,9 @@ Because your data model contains the `User` type, the Prisma API now allows for 
 - `updateUser`: Mutation to update an existing `User` node.
 - `deleteUser`: Mutation to delete an existing `User` node.
 
-> **Note**: This list of generated operations is not complete. The Prisma API exposes a couple of more operations that, for example, allow to batch update/delete many nodes. However, all operations either create, read, update or delete nodes of the types defined in the data model.
+> **Note**: This list of generated operations is not complete. The Prisma API exposes a couple of more operations that, for example, allow you to batch update/delete many nodes. However, all operations either create, read, update or delete nodes of the types defined in the data model.
 
-To actually use these operations, you need a way to [send requests to your service's API](!alias-ohm2ouceuj). Since that API is exposed via HTTP, you could use tools like [`curl`](https://en.wikipedia.org/wiki/CURL) or [Postman](https://www.getpostman.com/) to interact with it. However, GraphQL actually has with much nicer tooling for that purpose: [GraphQL Playground](https://github.com/graphcool/graphql-playground), an interactive GraphQL IDE.
+To actually use these operations, you need a way to [send requests to your service's API](!alias-ohm2ouceuj). Since that API is exposed via HTTP, you could use tools like [`curl`](https://en.wikipedia.org/wiki/CURL) or [Postman](https://www.getpostman.com/) to interact with it. However, GraphQL actually has much nicer tooling for that purpose: [GraphQL Playground](https://github.com/graphcool/graphql-playground), an interactive GraphQL IDE.
 
 The GraphQL Playground is based on [`graphql-config`](https://github.com/graphcool/graphql-config), so before opening it you need to create a `.graphqlconfig.yml`-file where you specify your Prisma project:
 
@@ -284,7 +284,7 @@ query {
 
 ## Next steps
 
-At this point, you can either move on the [**next chapter**](!alias-va4ga2phie) and learn how you can update your data model and API or visit one of the following resources:
+At this point, you can either move on to the [**next chapter**](!alias-va4ga2phie) and learn how you can update your data model and API or visit one of the following resources:
 
-- **Quickstart Tutorials (Backend & Frontend)**: The remaining quickstart tutorials explain how to use Prisma together with conrete languages and frameworks, like [React](!alias-tijghei9go), [Node.js](!alias-phe8vai1oo) or [TypeScript](!alias-rohd6ipoo4).
-- [How to GraphQL tutorial for Node.js](https://www.howtographql.com/graphql-js/0-introduction/): In-depth tutorial teaching you how to build a GraphQL server implementing features lielke authentication, pagiation, filters and realtime subscriptions.
+- **Quickstart Tutorials (Backend & Frontend)**: The remaining quickstart tutorials explain how to use Prisma together with concrete languages and frameworks, like [React](!alias-tijghei9go), [Node.js](!alias-phe8vai1oo) or [TypeScript](!alias-rohd6ipoo4).
+- [How to GraphQL tutorial for Node.js](https://www.howtographql.com/graphql-js/0-introduction/): In-depth tutorial teaching you how to build a GraphQL server implementing features like authentication, pagination, filters and realtime subscriptions.
