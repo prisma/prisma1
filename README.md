@@ -43,13 +43,26 @@ Run the following command to create the files you need for a new Prisma [service
 prisma init hello-world
 ```
 
-Then follow the interactive CLI prompts to choose your own Prisma setup:
+Then select the **Demo server** and follow the instructions of the interactive CLI prompt.
 
-- **Deploy to a Prisma demo server (recommended)**
-- Setup Prisma with a new database (requires Docker)
-- Connect your database (requires Docker)
+<br>
 
-### 4. Define your data model
+<details><summary>I want to use Prisma with my own database.</summary>
+<p>
+
+Instead of using a Demo server, you can also setup a Prisma server that is connected to your own database. Note that this **requires [Docker](https://www.docker.com)**.
+
+To do so, follow the interactive CLI prompts to choose your own database setup:
+
+- Create a new database
+- Connect an existing database
+
+Once the command has finished, you need to run `docker-compose up -d` to start the Prisma server.
+
+</p>
+</details>
+
+#### 3. Define your data model
 
 Edit `datamodel.graphql` to define your data model using the [GraphQL SDL notation](https://www.prisma.io/docs/reference/service-configuration/data-modelling-(sdl)-eiroozae8u).
 
@@ -77,7 +90,7 @@ type Location {
 }
 ```
 
-#### 5. Deploy your service
+#### 4. Deploy your Prisma service
 
 To deploy your service simply run the following command and select one of the hosted development clusters or setup a local Docker-based development environment:
 
@@ -85,7 +98,7 @@ To deploy your service simply run the following command and select one of the ho
 prisma deploy
 ```
 
-#### 6. Connect to your GraphQL endpoint
+#### 5. Connect to your GraphQL endpoint
 
 Use the endpoint from the previous step in your frontend (or backend) applications to connect to your GraphQL API.
 
