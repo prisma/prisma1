@@ -37,15 +37,15 @@ npm install -g prisma
 
 #### 2. Create a new Prisma service
 
-Run following command to create the files you need for a new Prisma [service](https://www.prisma.io/docs/reference/service-configuration/overview-ieshoo5ohm).
+Run the following command to create the files you need for a new Prisma [service](https://www.prisma.io/docs/reference/service-configuration/overview-ieshoo5ohm).
 
 ```bash
 prisma init hello-world
 ```
 
-Follow the interactive prompts to choose your own Prisma setup:
+Then follow the interactive CLI prompts to choose your own Prisma setup:
 
-- Deploy to a Prisma demo server (**recommended**)
+- **Deploy to a Prisma demo server (recommended)**
 - Setup Prisma with a new database (requires Docker)
 - Connect your database (requires Docker)
 
