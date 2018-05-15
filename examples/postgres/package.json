@@ -1,5 +1,5 @@
 {
   "devDependencies": {
-    "prisma": "^1.8.0"
+    "prisma": "1.8.3"
   }
 }

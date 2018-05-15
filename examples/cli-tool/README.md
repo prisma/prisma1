@@ -1,6 +1,6 @@
 # CLI Tool
 
-This example demonstrates how to implement a data store with Prisma for a CLI tool (In this case a simple todo list).
+This example demonstrates how to implement a data store with Prisma for a CLI tool (In this case a simple todo list). Note that typically you would deploy Prisma behind an [application server](../application-server).
 
 ## Get started
 
@@ -61,4 +61,29 @@ node index.js list
 
 ```sh
 node index.js delete First todo item
+```
+
+### 3. Explore the generated Prisma API
+
+The easiest way to explore this deployed service and play with the API generated from the data model is by using a [GraphQL Playground](https://github.com/graphcool/graphql-playground).
+
+### Open a Playground
+
+You can either start the [desktop app](https://github.com/graphcool/graphql-playground) via
+
+```sh
+yarn playground
+```
+
+Or you can open a Playground by navigating to [http://localhost:4466/cli-tool](http://localhost:4466/cli-tool) in your browser.
+
+### Run the following query
+
+```graphql
+query Todoes {
+  todoes(orderBy: id_DESC) {
+    id
+    title
+  }
+}
 ```

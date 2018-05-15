@@ -1,9 +1,9 @@
 {
   "dependencies": {
-    "graphql": "^0.13.2",
-    "prisma-binding": "^2.0.0"
+    "graphql": "0.13.2",
+    "prisma-binding": "2.0.0"
   },
   "devDependencies": {
-    "prisma": "^1.8.0"
+    "prisma": "1.8.3"
   }
 }
