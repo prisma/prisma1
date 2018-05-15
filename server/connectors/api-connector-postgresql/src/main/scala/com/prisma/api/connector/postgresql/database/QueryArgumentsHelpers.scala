@@ -118,67 +118,68 @@ object QueryArgumentsHelpers {
             case false => Some(sql"FALSE")
           }
 
-        case FinalValueFilter(key, value, field, filterName) if filterName == "_contains" =>
-          Some(tableNameSql ++ sql"""."#${field.name}" LIKE """ ++ escapeUnsafeParam(s"%${GCValueExtractor.fromGCValue(value)}%"))
+        case FinalValueFilter(_, value, field, filterName) if filterName == "_contains" =>
+          Some(tableNameSql ++ sql"""."#${field.dbName}" LIKE """ ++ escapeUnsafeParam(s"%${GCValueExtractor.fromGCValue(value)}%"))
 
-        case FinalValueFilter(key, value, field, filterName) if filterName == "_not_contains" =>
-          Some(tableNameSql ++ sql"""."#${field.name}" NOT LIKE """ ++ escapeUnsafeParam(s"%${GCValueExtractor.fromGCValue(value)}%"))
+        case FinalValueFilter(_, value, field, filterName) if filterName == "_not_contains" =>
+          Some(tableNameSql ++ sql"""."#${field.dbName}" NOT LIKE """ ++ escapeUnsafeParam(s"%${GCValueExtractor.fromGCValue(value)}%"))
 
-        case FinalValueFilter(key, value, field, filterName) if filterName == "_starts_with" =>
-          Some(tableNameSql ++ sql"""."#${field.name}" LIKE """ ++ escapeUnsafeParam(s"${GCValueExtractor.fromGCValue(value)}%"))
+        case FinalValueFilter(_, value, field, filterName) if filterName == "_starts_with" =>
+          Some(tableNameSql ++ sql"""."#${field.dbName}" LIKE """ ++ escapeUnsafeParam(s"${GCValueExtractor.fromGCValue(value)}%"))
 
-        case FinalValueFilter(key, value, field, filterName) if filterName == "_not_starts_with" =>
-          Some(tableNameSql ++ sql"""."#${field.name}" NOT LIKE """ ++ escapeUnsafeParam(s"${GCValueExtractor.fromGCValue(value)}%"))
+        case FinalValueFilter(_, value, field, filterName) if filterName == "_not_starts_with" =>
+          Some(tableNameSql ++ sql"""."#${field.dbName}" NOT LIKE """ ++ escapeUnsafeParam(s"${GCValueExtractor.fromGCValue(value)}%"))
 
-        case FinalValueFilter(key, value, field, filterName) if filterName == "_ends_with" =>
-          Some(tableNameSql ++ sql"""."#${field.name}" LIKE """ ++ escapeUnsafeParam(s"%${GCValueExtractor.fromGCValue(value)}"))
+        case FinalValueFilter(_, value, field, filterName) if filterName == "_ends_with" =>
+          Some(tableNameSql ++ sql"""."#${field.dbName}" LIKE """ ++ escapeUnsafeParam(s"%${GCValueExtractor.fromGCValue(value)}"))
 
-        case FinalValueFilter(key, value, field, filterName) if filterName == "_not_ends_with" =>
-          Some(tableNameSql ++ sql"""."#${field.name}" NOT LIKE """ ++ escapeUnsafeParam(s"%${GCValueExtractor.fromGCValue(value)}"))
+        case FinalValueFilter(_, value, field, filterName) if filterName == "_not_ends_with" =>
+          Some(tableNameSql ++ sql"""."#${field.dbName}" NOT LIKE """ ++ escapeUnsafeParam(s"%${GCValueExtractor.fromGCValue(value)}"))
 
-        case FinalValueFilter(key, value, field, filterName) if filterName == "_lt" =>
-          Some(tableNameSql ++ sql"""."#${field.name}" < $value""")
+        case FinalValueFilter(_, value, field, filterName) if filterName == "_lt" =>
+          Some(tableNameSql ++ sql"""."#${field.dbName}" < $value""")
 
-        case FinalValueFilter(key, value, field, filterName) if filterName == "_gt" =>
-          Some(tableNameSql ++ sql"""."#${field.name}" > $value""")
+        case FinalValueFilter(_, value, field, filterName) if filterName == "_gt" =>
+          Some(tableNameSql ++ sql"""."#${field.dbName}" > $value""")
 
-        case FinalValueFilter(key, value, field, filterName) if filterName == "_lte" =>
-          Some(tableNameSql ++ sql"""."#${field.name}" <= $value""")
+        case FinalValueFilter(_, value, field, filterName) if filterName == "_lte" =>
+          Some(tableNameSql ++ sql"""."#${field.dbName}" <= $value""")
 
-        case FinalValueFilter(key, value, field, filterName) if filterName == "_gte" =>
-          Some(tableNameSql ++ sql"""."#${field.name}" >= $value""")
+        case FinalValueFilter(_, value, field, filterName) if filterName == "_gte" =>
+          Some(tableNameSql ++ sql"""."#${field.dbName}" >= $value""")
 
-        case FinalValueFilter(key, NullGCValue, field, filterName) if filterName == "_in" =>
+        case FinalValueFilter(_, NullGCValue, field, filterName) if filterName == "_in" =>
           Some(sql"false")
 
-        case FinalValueFilter(key, ListGCValue(values), field, filterName) if filterName == "_in" =>
+        case FinalValueFilter(_, ListGCValue(values), field, filterName) if filterName == "_in" =>
           values.nonEmpty match {
-            case true  => Some(tableNameSql ++ sql"""."#${field.name}" """ ++ generateInStatement(values))
+            case true  => Some(tableNameSql ++ sql"""."#${field.dbName}" """ ++ generateInStatement(values))
             case false => Some(sql"false")
           }
 
-        case FinalValueFilter(key, NullGCValue, field, filterName) if filterName == "_not_in" =>
+        case FinalValueFilter(_, NullGCValue, field, filterName) if filterName == "_not_in" =>
           Some(sql"false")
 
-        case FinalValueFilter(key, ListGCValue(values), field, filterName) if filterName == "_not_in" =>
+        case FinalValueFilter(_, ListGCValue(values), field, filterName) if filterName == "_not_in" =>
           values.nonEmpty match {
-            case true  => Some(tableNameSql ++ sql"""."#${field.name}" NOT """ ++ generateInStatement(values))
+            case true  => Some(tableNameSql ++ sql"""."#${field.dbName}" NOT """ ++ generateInStatement(values))
             case false => Some(sql"true")
           }
 
-        case FinalValueFilter(key, NullGCValue, field, filterName) if filterName == "_not" =>
-          Some(tableNameSql ++ sql"""."#${field.name}" IS NOT NULL""")
+        case FinalValueFilter(_, NullGCValue, field, filterName) if filterName == "_not" =>
+          Some(tableNameSql ++ sql"""."#${field.dbName}" IS NOT NULL""")
 
-        case FinalValueFilter(key, value, field, filterName) if filterName == "_not" =>
-          Some(tableNameSql ++ sql"""."#${field.name}" != $value""")
+        case FinalValueFilter(_, value, field, filterName) if filterName == "_not" =>
+          Some(tableNameSql ++ sql"""."#${field.dbName}" != $value""")
 
-        case FinalValueFilter(key, NullGCValue, field, filterName) =>
-          Some(tableNameSql ++ sql"""."#$key" IS NULL""")
+        case FinalValueFilter(_, NullGCValue, field, filterName) =>
+          Some(tableNameSql ++ sql"""."#${field.dbName}" IS NULL""")
 
-        case FinalValueFilter(key, value, field, filterName) =>
-          Some(tableNameSql ++ sql"""."#$key" = $value""")
+        case FinalValueFilter(_, value, field, filterName) =>
+          Some(tableNameSql ++ sql"""."#${field.dbName}" = $value""")
+
         case FinalRelationFilter(schema, key, null, field, filterName) =>
-          if (field.isList) throw APIErrors.FilterCannotBeNullOnToManyField(field.name)
+          if (field.isList) throw APIErrors.FilterCannotBeNullOnToManyField(field.dbName)
 
           val relation          = field.relation.get
           val relationTableName = relation.relationTableNameNew(schema)
