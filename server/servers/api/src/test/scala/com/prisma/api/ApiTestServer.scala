@@ -104,7 +104,7 @@ case class ApiTestServer()(implicit dependencies: ApiDependencies) extends PlayJ
       variables: JsValue,
       requestId: String
   ): Future[JsValue] = {
-    val queryAst = QueryParser.parse(query).get
+    val queryAst = QueryParser.parse(query.stripMargin).get
 
     lazy val renderedSchema = SchemaRenderer.renderSchema(schema)
     if (printSchema) println(renderedSchema)

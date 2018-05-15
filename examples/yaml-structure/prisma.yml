@@ -1,0 +1,20 @@
+datamodel: 
+  - datamodel.graphql
+  - enums.graphql
+
+endpoint: http://${self:custom.serverIP}:${self:custom.serverPort}/yaml-structure/default
+
+secret: symmetric-secret-key
+
+seed:
+  import: seed.graphql
+
+custom: 
+  serverIP: localhost
+  serverPort: 4466
+
+hooks:
+  post-deploy:
+    - echo "Deployment finished"
+    - graphql get-schema --project db
+    - graphql prepare

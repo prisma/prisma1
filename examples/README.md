@@ -2,11 +2,13 @@
 
 Collection of Prisma example projects 💡
 
-- [auth](auth)
-- [file-handling-s3](file-handling-s3)
-- [github-auth](github-auth)
-- [permissions](permissions)
-- [resolver-forwarding](resolver-forwarding)
-- [subscriptions](subscriptions)
+* [cli-tool](cli-tool)
+* [data-modelling](data-modelling)
+* [postgres](postgres)
+* [yaml-structure](yaml-structure)
+* [hooks](hooks)
+* [server-side-subscriptions](server-side-subscriptions)
+* [application-server](application-server)
+* [resolver-forwarding](resolver-forwarding)
 
 You can also check the [**AirBnB clone example**](https://github.com/graphcool/graphql-server-example) we built as a fully-featured demo app for Prisma.

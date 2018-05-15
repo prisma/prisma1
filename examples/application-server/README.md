@@ -1,6 +1,6 @@
-# Resolver Forwarding
+# Application Server
 
-This example demonstrates how to use **resolver forwarding (which creates a 1-to-1 mapping from application schema to Prisma database schema)** when building a GraphQL server based on Prisma & graphql-yoga.
+This example demonstrates usage of Prisma with [`graphql-yoga`](https://github.com/graphcool/graphql-yoga) and [`prisma-binding`](https://github.com/graphcool/prisma-binding) to build an application server and expose a domain specific API.
 
 ## Get started
 
@@ -11,13 +11,13 @@ This example demonstrates how to use **resolver forwarding (which creates a 1-to
 Clone the Prisma monorepo and navigate to this directory or download _only_ this example with the following command:
 
 ```sh
-curl https://codeload.github.com/graphcool/prisma/tar.gz/resolver-forwarding | tar -xz --strip=2 prisma-master/examples/resolver-forwarding
+curl https://codeload.github.com/graphcool/prisma/tar.gz/application-server | tar -xz --strip=2 prisma-master/examples/application-server
 ```
 
 Next, navigate into the downloaded folder and install the NPM dependencies:
 
 ```sh
-cd resolver-forwarding
+cd application-server
 yarn install
 ```
 
