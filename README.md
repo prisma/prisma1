@@ -4,9 +4,9 @@
 
 [![CircleCI](https://circleci.com/gh/graphcool/prisma.svg?style=shield)](https://circleci.com/gh/graphcool/prisma) [![Slack Status](https://slack.prisma.io/badge.svg)](https://slack.prisma.io) [![npm version](https://badge.fury.io/js/prisma.svg)](https://badge.fury.io/js/prisma)
 
-**Prisma is a performant open-source GraphQL [ORM-like layer](#is-prisma-an-orm)** doing the heavy lifting in your GraphQL server. It turns your database into a GraphQL API which is consumed by your resolvers via [GraphQL bindings](https://oss.prisma.io/graphql-binding).
+**Prisma is a performant open-source GraphQL [ORM-like layer](#is-prisma-an-orm)** doing the heavy lifting in your GraphQL server. It turns your database into a GraphQL API which can be consumed by your resolvers via [GraphQL bindings](https://oss.prisma.io/graphql-binding).
 
-Prisma's auto-generated GraphQL API provides powerful abstractions and modular building blocks to develop flexible, scalable GraphQL backends:
+Prisma's auto-generated GraphQL API provides powerful abstractions and modular building blocks to develop flexible and scalable GraphQL backends:
 
 - **Type-safe API** including filters, aggregations, pagination and transactions.
 - **Data modeling & migrations** with declarative GraphQL SDL.
@@ -27,7 +27,7 @@ Prisma's auto-generated GraphQL API provides powerful abstractions and modular b
 
 ## Quickstart
 
-[Watch this 4 min tutorial](https://www.youtube.com/watch?v=20zGexpEitc) or follow the steps below to get started with Prisma.
+[Watch this 3-min tutorial](https://www.youtube.com/watch?v=CORQo5rooX8) or follow the steps below to get started with Prisma.
 
 #### 1. Install the CLI via NPM
 
@@ -43,7 +43,7 @@ Run the following command to create the files you need for a new Prisma [service
 prisma init hello-world
 ```
 
-Then select the **Demo server** and follow the instructions of the interactive CLI prompt.
+Then select the **Demo server** (hosted in Prisma Cloud) and follow the instructions of the interactive CLI prompt.
 
 <details><summary><b>Alternative: Setup Prisma with your own database.</b></summary>
 <p>
@@ -90,7 +90,7 @@ prisma deploy
 
 #### 5. Explore the API in a Playground
 
-Run the following command to open a [GraphQL Playground](https://github.com/graphcool/graphql-playground/releases) and start sending queries and mutations:
+Run the following command to open a [GraphQL Playground](https://github.com/prismagraphql/graphql-playground/releases) and start sending queries and mutations:
 
 ```bash
 prisma playground
@@ -174,7 +174,7 @@ TBD
 
 Prisma takes the role of a [data access layer](https://en.wikipedia.org/wiki/Data_access_layer) in your backend architecture by connecting your API server to your databases. It enables a layered architecture which leads to better _separation of concerns_ and improves _maintainability_ of the entire backend.
 
-Acting as a "GraphQL database proxy", Prisma provides a GraphQL-based abstraction for your databases enabling you to read and write data with GraphQL queries and mutations. Using [Prisma bindings](https://github.com/graphcool/prisma-binding), you can access Prisma's GraphQL API from your programming language.
+Acting as a _GraphQL database proxy_, Prisma provides a GraphQL-based abstraction for your databases enabling you to read and write data with GraphQL queries and mutations. Using [Prisma bindings](https://github.com/prismagraphql/prisma-binding), you can access Prisma's GraphQL API from your programming language.
 
 Prisma servers run as standalone processes which allows for them to be scaled independently from your API server.
 
@@ -198,7 +198,7 @@ Here is how Prisma compares to conventional ORMs:
 
 ## Database Connectors
 
-[Database connectors](https://github.com/graphcool/prisma/issues/1751) provide the link between Prisma and the underlying database.
+[Database connectors](https://github.com/prismagraphql/prisma/issues/1751) provide the link between Prisma and the underlying database.
 
 You can connect the following databases to Prisma already:
 
@@ -211,27 +211,27 @@ More database connectors will follow.
 
 If you are interested to participate in the preview for one of the following connectors, please reach out in our [Slack](https://slack.prisma.io).
 
-* [MongoDB Connector](https://github.com/graphcool/prisma/issues/1643)
-* [Elastic Search Connector](https://github.com/graphcool/prisma/issues/1665)
+* [MongoDB Connector](https://github.com/prismagraphql/prisma/issues/1643)
+* [Elastic Search Connector](https://github.com/prismagraphql/prisma/issues/1665)
 
 ### Further Connectors
 
 We are still collecting use cases and feedback for the API design and feature set of the following connectors:
 
-* [MS SQL Connector](https://github.com/graphcool/prisma/issues/1642)
-* [Oracle Connector](https://github.com/graphcool/prisma/issues/1644)
-* [ArangoDB Connector](https://github.com/graphcool/prisma/issues/1645)
-* [Neo4j Connector](https://github.com/graphcool/prisma/issues/1646)
-* [Druid Connector](https://github.com/graphcool/prisma/issues/1647)
-* [Dgraph Connector](https://github.com/graphcool/prisma/issues/1648)
-* [DynamoDB Connector](https://github.com/graphcool/prisma/issues/1655)
-* [Cloud Firestore Connector](https://github.com/graphcool/prisma/issues/1660)
-* [CockroachDB Connector](https://github.com/graphcool/prisma/issues/1705)
-* [Cassandra Connector](https://github.com/graphcool/prisma/issues/1750)
-* [Redis Connector](https://github.com/graphcool/prisma/issues/1722)
-* [AWS Neptune Connector](https://github.com/graphcool/prisma/issues/1752)
-* [CosmosDB Connector](https://github.com/graphcool/prisma/issues/1663)
-* [Influx Connector](https://github.com/graphcool/prisma/issues/1857)
+* [MS SQL Connector](https://github.com/prismagraphql/prisma/issues/1642)
+* [Oracle Connector](https://github.com/prismagraphql/prisma/issues/1644)
+* [ArangoDB Connector](https://github.com/prismagraphql/prisma/issues/1645)
+* [Neo4j Connector](https://github.com/prismagraphql/prisma/issues/1646)
+* [Druid Connector](https://github.com/prismagraphql/prisma/issues/1647)
+* [Dgraph Connector](https://github.com/prismagraphql/prisma/issues/1648)
+* [DynamoDB Connector](https://github.com/prismagraphql/prisma/issues/1655)
+* [Cloud Firestore Connector](https://github.com/prismagraphql/prisma/issues/1660)
+* [CockroachDB Connector](https://github.com/prismagraphql/prisma/issues/1705)
+* [Cassandra Connector](https://github.com/prismagraphql/prisma/issues/1750)
+* [Redis Connector](https://github.com/prismagraphql/prisma/issues/1722)
+* [AWS Neptune Connector](https://github.com/prismagraphql/prisma/issues/1752)
+* [CosmosDB Connector](https://github.com/prismagraphql/prisma/issues/1663)
+* [Influx Connector](https://github.com/prismagraphql/prisma/issues/1857)
 
 Join the discussion or contribute to influence which we'll work on next!
 
@@ -262,12 +262,12 @@ Prisma has a community of thousands of amazing developers and contributors. Welc
 ## Contributing
 
 Contributions are **welcome and extremely helpful** 🙌
-Please refer [to the contribution guide](https://github.com/graphcool/prisma/blob/master/CONTRIBUTING.md) for more information.
+Please refer [to the contribution guide](https://github.com/prismagraphql/prisma/blob/master/CONTRIBUTING.md) for more information.
 
 Releases are separated into two _channels_ - the **stable** and **unstable** channel.
 
 * The stable channel is released every two weeks, incrementing the minor version number. Irregular releases in between minor releases can occur and increment the patch version.
 
-* The unstable channel is released with every commit to master and therefore gives access to features and bug fixes before the stable release. You can find more information about running the Prisma on the unstable channel [here](https://github.com/graphcool/prisma/blob/master/CONTRIBUTING.md#the-unstable-channel).
+* The unstable channel is released with every commit to master and therefore gives access to features and bug fixes before the stable release. You can find more information about running the Prisma on the unstable channel [here](https://github.com/prismagraphql/prisma/blob/master/CONTRIBUTING.md#the-unstable-channel).
 
 <p align="center"><a href="https://oss.prisma.io"><img src="https://imgur.com/IMU2ERq.png" alt="Prisma" height="170px"></a></p>
