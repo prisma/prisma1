@@ -2,7 +2,7 @@ datamodel:
   - datamodel.graphql
   - enums.graphql
 
-endpoint: http://${self:custom.serverIP}:${self:custom.serverPort}/yaml-structure/default
+endpoint: http://${self:custom.serverIP}:${self:custom.serverPort}/yml-structure/default
 
 secret: symmetric-secret-key
 

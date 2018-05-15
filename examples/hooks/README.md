@@ -1,4 +1,4 @@
-# YAML Structure
+# Hooks
 
 This example demonstrates `hooks` property available to us in `prisma.yml`.
 
@@ -11,19 +11,19 @@ This example demonstrates `hooks` property available to us in `prisma.yml`.
 Clone the Prisma monorepo and navigate to this directory or download _only_ this example with the following command:
 
 ```sh
-curl https://codeload.github.com/graphcool/prisma/tar.gz/master | tar -xz --strip=2 prisma-master/examples/yaml-structure
+curl https://codeload.github.com/graphcool/prisma/tar.gz/master | tar -xz --strip=2 prisma-master/examples/yml-structure
 ```
 
 Next, navigate into the downloaded folder and install the NPM dependencies:
 
 ```sh
-cd yaml-structure
+cd yml-structure
 yarn install
 ```
 
 ### 2. Deploy the Prisma database service
 
-You can now [deploy](https://www.prismagraphql.com/docs/reference/cli-command-reference/database-service/prisma-deploy-kee1iedaov) the Prisma service (note that this requires you to have [Docker](https://www.docker.com) installed on your machine - if that's not the case, follow the collapsed instructions below the code block):
+You can now [deploy](https://www.prisma.io/docs/reference/cli-command-reference/database-service/prisma-deploy-kee1iedaov) the Prisma service (note that this requires you to have [Docker](https://www.docker.com) installed on your machine - if that's not the case, follow the collapsed instructions below the code block):
 
 ```sh
 yarn prisma deploy
@@ -36,7 +36,7 @@ To deploy your service to a public cluster (rather than locally with Docker), yo
 
 1.  Remove the `cluster` property from `prisma.yml`
 1.  Run `yarn prisma deploy`
-1.  When prompted by the CLI, select a public cluster (e.g. `prisma-eu1` or `prisma-us1`)
+1.  When prompted by the CLI, select a demo cluster (e.g. `prisma-eu1` or `prisma-us1`)
 1.  Replace the [`endpoint`](./src/index.js#L23) in `index.js` with the HTTP endpoint that was printed after the previous command
 
 </details>
@@ -61,7 +61,7 @@ hooks:
 
 * Running `graphql prepare` to generate TS bindings
 
-Note that these commands work closely in conjunction with `.graphqlconfig.yaml` file that looks like this and directs the output of generate schema and typescript bindings.
+Note that these commands work closely in conjunction with `.graphqlconfig.yml` file that looks like this and directs the output of generate schema and typescript bindings.
 
 ```yml
 projects:
