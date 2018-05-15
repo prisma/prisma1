@@ -51,7 +51,7 @@ case class PostgresDataResolver(
   }
 
   override def resolveByUnique(where: NodeSelector): Future[Option[PrismaNode]] =
-    batchResolveByUnique(where.model, where.field.name, Vector(where.fieldValue)).map(_.headOption)
+    batchResolveByUnique(where.model, where.field.dbName, Vector(where.fieldValue)).map(_.headOption)
 
   override def countByTable(table: String, whereFilter: Option[DataItemFilterCollection] = None): Future[Int] = {
     val query = queryBuilder.countAllFromTable(table, whereFilter)

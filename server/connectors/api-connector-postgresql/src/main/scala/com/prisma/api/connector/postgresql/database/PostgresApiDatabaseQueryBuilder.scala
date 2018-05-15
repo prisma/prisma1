@@ -30,7 +30,7 @@ case class PostgresApiDatabaseQueryBuilder(
   private def getPrismaNode(model: Model, ps: PositionedResult) = {
     val data = model.scalarNonListFields.map(field => field.name -> ps.rs.getGcValue(field.name, field.typeIdentifier))
 
-    PrismaNode(id = ps.rs.getId, data = RootGCValue(data: _*))
+    PrismaNode(id = ps.rs.getId(model), data = RootGCValue(data: _*))
   }
 
   def getResultForModelAndRelationSide(model: Model, side: String, oppositeSide: String): GetResult[PrismaNodeWithParent] = GetResult { ps: PositionedResult =>
@@ -45,11 +45,11 @@ case class PostgresApiDatabaseQueryBuilder(
   private def getResultForRelation(relation: Relation): GetResult[RelationNode] = GetResult { ps: PositionedResult =>
     val modelAColumn = relation.columnForRelationSide(schema, RelationSide.A)
     val modelBColumn = relation.columnForRelationSide(schema, RelationSide.B)
-    RelationNode(id = ps.rs.getId, a = ps.rs.getAsID(modelAColumn), b = ps.rs.getAsID(modelBColumn))
+    RelationNode(id = ps.rs.getAsID("id"), a = ps.rs.getAsID(modelAColumn), b = ps.rs.getAsID(modelBColumn))
   }
 
   implicit object GetRelationCount extends GetResult[(IdGCValue, Int)] {
-    override def apply(ps: PositionedResult): (IdGCValue, Int) = (ps.rs.getId, ps.rs.getInt("Count"))
+    override def apply(ps: PositionedResult): (IdGCValue, Int) = (ps.rs.getAsID("id"), ps.rs.getInt("Count"))
   }
 
   def getResultForScalarListField(field: Field): GetResult[ScalarListElement] = GetResult { ps: PositionedResult =>
@@ -146,7 +146,7 @@ case class PostgresApiDatabaseQueryBuilder(
       var result: Vector[PrismaNode] = Vector.empty
       while (rs.next) {
         val data = model.scalarNonListFields.map(field => field.name -> rs.getGcValue(field.dbName, field.typeIdentifier))
-        result = result :+ PrismaNode(id = rs.getId, data = RootGCValue(data: _*))
+        result = result :+ PrismaNode(id = rs.getId(model), data = RootGCValue(data: _*))
       }
 
       result

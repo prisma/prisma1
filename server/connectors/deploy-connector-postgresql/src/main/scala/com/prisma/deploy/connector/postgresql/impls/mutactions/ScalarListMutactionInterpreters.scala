@@ -8,7 +8,7 @@ object CreateScalarListInterpreter extends SqlMutactionInterpreter[CreateScalarL
   override def execute(mutaction: CreateScalarListTable) = {
     PostgresDeployDatabaseMutationBuilder.createScalarListTable(
       projectId = mutaction.projectId,
-      modelName = mutaction.model.dbName,
+      model = mutaction.model,
       fieldName = mutaction.field.name,
       typeIdentifier = mutaction.field.typeIdentifier
     )
@@ -31,7 +31,7 @@ object DeleteScalarListInterpreter extends SqlMutactionInterpreter[DeleteScalarL
   override def rollback(mutaction: DeleteScalarListTable) = {
     PostgresDeployDatabaseMutationBuilder.createScalarListTable(
       projectId = mutaction.projectId,
-      modelName = mutaction.model.dbName,
+      model = mutaction.model,
       fieldName = mutaction.field.name,
       typeIdentifier = mutaction.field.typeIdentifier
     )

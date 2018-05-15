@@ -45,20 +45,20 @@ object PostgresDeployDatabaseMutationBuilder {
   def dropTable(projectId: String, tableName: String)                              = sqlu"""DROP TABLE "#$projectId"."#$tableName""""
   def dropScalarListTable(projectId: String, modelName: String, fieldName: String) = sqlu"""DROP TABLE "#$projectId"."#${modelName}_#${fieldName}""""
 
-  def createTable(projectId: String, name: String) = {
+  def createTable(projectId: String, name: String, nameOfIdField: String) = {
 
     sqlu"""CREATE TABLE "#$projectId"."#$name"
-    ("id" VARCHAR (25) NOT NULL,
+    ("#$nameOfIdField" VARCHAR (25) NOT NULL,
     "createdAt" TIMESTAMP (3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP (3) NOT NULL DEFAULT CURRENT_TIMESTAMP, 
-    PRIMARY KEY ("id")
+    PRIMARY KEY ("#$nameOfIdField")
     )"""
   }
 
-  def createScalarListTable(projectId: String, modelName: String, fieldName: String, typeIdentifier: TypeIdentifier) = {
+  def createScalarListTable(projectId: String, model: Model, fieldName: String, typeIdentifier: TypeIdentifier) = {
     val sqlType = sqlTypeForScalarTypeIdentifier(typeIdentifier)
-    sqlu"""CREATE TABLE "#$projectId"."#${modelName}_#${fieldName}"
-    ("nodeId" VARCHAR (25) NOT NULL REFERENCES "#$projectId"."#$modelName" ("id"),
+    sqlu"""CREATE TABLE "#$projectId"."#${model.dbName}_#$fieldName"
+    ("nodeId" VARCHAR (25) NOT NULL REFERENCES "#$projectId"."#${model.dbName}" ("#${model.dbNameOfIdField}"),
     "position" INT NOT NULL,
     "value" #$sqlType NOT NULL,
     PRIMARY KEY ("nodeId", "position")
