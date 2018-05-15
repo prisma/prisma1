@@ -1,9 +1,8 @@
 package com.prisma.deploy.migration.inference
 
-import com.prisma.deploy.connector.{DatabaseIntrospectionInferrer, EmptyDatabaseIntrospectionInferrer, InferredRelationTable, InferredTables}
+import com.prisma.deploy.connector.InferredTables
 import com.prisma.deploy.gc_value.GCStringConverter
 import com.prisma.deploy.migration.DataSchemaAstExtensions._
-import com.prisma.deploy.migration.DirectiveTypes.RelationTableDirective
 import com.prisma.deploy.schema.InvalidRelationName
 import com.prisma.deploy.validation.NameConstraints
 import com.prisma.gc_values.{GCValue, InvalidValueForScalarType}

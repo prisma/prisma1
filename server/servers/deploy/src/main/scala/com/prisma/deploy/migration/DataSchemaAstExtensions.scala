@@ -2,7 +2,7 @@ package com.prisma.deploy.migration
 
 import com.prisma.deploy.migration.DirectiveTypes.{InlineRelationDirective, RelationTableDirective}
 import com.prisma.shared.models.Manifestations.RelationManifestation
-import com.prisma.shared.models.TypeIdentifier
+import com.prisma.shared.models.{OnDelete, TypeIdentifier}
 import sangria.ast._
 
 import scala.collection.Seq
@@ -144,6 +144,14 @@ object DataSchemaAstExtensions {
   }
 
   implicit class CoolWithDirectives(val withDirectives: WithDirectives) extends AnyVal {
+
+    def relationName = directiveArgumentAsString("relation", "name")
+    def onDelete = directiveArgumentAsString("relation", "onDelete") match {
+      case Some("SET_NULL") => OnDelete.SetNull
+      case Some("CASCADE")  => OnDelete.Cascade
+      case None             => OnDelete.SetNull
+    }
+
     def directiveArgumentAsString(directiveName: String, argumentName: String): Option[String] = {
       for {
         directive <- directive(directiveName)
@@ -203,6 +211,9 @@ object DataSchemaAstExtensions {
 }
 
 object DirectiveTypes {
-  case class RelationTableDirective(table: String, thisColumn: Option[String], otherColumn: Option[String])
-  case class InlineRelationDirective(column: Option[String])
+
+  trait RelationDBDirective
+
+  case class RelationTableDirective(table: String, thisColumn: Option[String], otherColumn: Option[String]) extends RelationDBDirective
+  case class InlineRelationDirective(column: Option[String])                                                extends RelationDBDirective
 }
