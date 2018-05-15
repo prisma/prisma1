@@ -31,14 +31,14 @@ case class PostgresClientDbQueries(project: Project, clientDatabase: Database)(i
 
   def existsNullByModelAndField(model: Model, field: Field): Future[Boolean] = {
     val query = field.isScalar match {
-      case true  => PostgresDeployDatabaseQueryBuilder.existsNullByModelAndScalarField(project.id, model, field.name)
+      case true  => PostgresDeployDatabaseQueryBuilder.existsNullByModelAndScalarField(project.id, model, field.dbName)
       case false => PostgresDeployDatabaseQueryBuilder.existsNullByModelAndRelationField(project.id, model, field)
     }
     clientDatabase.run(readOnlyBoolean(query)).map(_.head).recover { case _: java.sql.SQLSyntaxErrorException => false }
   }
 
   def existsDuplicateValueByModelAndField(model: Model, field: Field): Future[Boolean] = {
-    val query = PostgresDeployDatabaseQueryBuilder.existsDuplicateValueByModelAndField(project.id, model, field.name)
+    val query = PostgresDeployDatabaseQueryBuilder.existsDuplicateValueByModelAndField(project.id, model, field.dbName)
     clientDatabase.run(readOnlyBoolean(query)).map(_.head).recover { case _: java.sql.SQLSyntaxErrorException => false }
   }
 

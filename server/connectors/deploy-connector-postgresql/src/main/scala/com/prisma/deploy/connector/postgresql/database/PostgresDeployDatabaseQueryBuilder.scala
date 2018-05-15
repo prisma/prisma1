@@ -54,7 +54,7 @@ object PostgresDeployDatabaseQueryBuilder {
       field <- model.fields
       if field.enum.isDefined && field.enum.get.name == enumName
     } yield {
-      if (field.isList) ("nodeId", s"${model.name}_${field.name}", "value", value) else (model.dbNameOfIdField, model.name, field.name, value)
+      if (field.isList) ("nodeId", s"${model.dbName}_${field.dbName}", "value", value) else (model.dbNameOfIdField, model.dbName, field.dbName, value)
     }
 
     val checks: Vector[SQLActionBuilder] = nameTuples.map { tuple =>

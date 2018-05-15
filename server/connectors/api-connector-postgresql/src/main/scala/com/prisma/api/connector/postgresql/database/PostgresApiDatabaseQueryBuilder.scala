@@ -115,7 +115,7 @@ case class PostgresApiDatabaseQueryBuilder(
       overrideMaxNodeCount: Option[Int] = None
   ): DBIOAction[ResolverResult[ScalarListValues], NoStream, Effect] = {
 
-    val tableName = s"${model.name}_${field.name}"
+    val tableName = s"${model.dbName}_${field.dbName}"
     val (conditionCommand, orderByCommand, limitCommand) = extractQueryArgs(
       schemaName,
       tableName,
@@ -168,7 +168,7 @@ case class PostgresApiDatabaseQueryBuilder(
     }
 
   def selectFromScalarList(modelName: String, field: Field, nodeIds: Vector[IdGCValue]): DBIOAction[Vector[ScalarListValues], NoStream, Effect] = {
-    val query = sql"""select "nodeId", "position", "value" from "#$schemaName"."#${modelName}_#${field.name}" where "nodeId" in (""" ++ combineByComma(
+    val query = sql"""select "nodeId", "position", "value" from "#$schemaName"."#${modelName}_#${field.dbName}" where "nodeId" in (""" ++ combineByComma(
       nodeIds.map(v => sql"$v")) ++ sql")"
 
     query.as[ScalarListElement](getResultForScalarListField(field)).map { scalarListElements =>
@@ -199,7 +199,7 @@ case class PostgresApiDatabaseQueryBuilder(
   ): DBIOAction[Vector[ResolverResult[PrismaNodeWithParent]], NoStream, Effect] = {
     val relation     = fromField.relation.get
     val relatedModel = fromField.relatedModel(schema).get
-    val modelTable   = relatedModel.name
+    val modelTable   = relatedModel.dbName
 
     val relationTableName     = fromField.relation.get.relationTableNameNew(schema)
     val (aColumn, bColumn)    = (relation.modelAColumn(schema), relation.modelBColumn(schema))
@@ -267,7 +267,7 @@ case class PostgresApiDatabaseQueryBuilder(
   ): DBIOAction[Vector[ResolverResult[PrismaNodeWithParent]], NoStream, Effect] = {
 
     val relatedModel         = fromField.relatedModel(schema).get
-    val fieldTable           = relatedModel.name
+    val fieldTable           = relatedModel.dbName
     val unsafeRelationId     = fromField.relation.get.relationTableNameNew(schema)
     val modelRelationSide    = fromField.relationSide.get.toString
     val oppositeRelationSide = fromField.oppositeRelationSide.get.toString
@@ -328,7 +328,7 @@ case class PostgresApiDatabaseQueryBuilder(
   ): SqlStreamingAction[Vector[(IdGCValue, Int)], (IdGCValue, Int), Effect] = {
 
     val relatedModel      = relationField.relatedModel(schema).get
-    val fieldTable        = relatedModel.name
+    val fieldTable        = relatedModel.dbName
     val unsafeRelationId  = relationField.relation.get.relationTableNameNew(schema)
     val modelRelationSide = relationField.relationSide.get.toString
     val fieldRelationSide = relationField.oppositeRelationSide.get.toString

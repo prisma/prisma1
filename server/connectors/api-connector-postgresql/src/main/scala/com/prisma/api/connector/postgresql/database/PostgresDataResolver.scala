@@ -64,7 +64,7 @@ case class PostgresDataResolver(
   }
 
   override def batchResolveScalarList(model: Model, listField: Field, nodeIds: Vector[IdGCValue]): Future[Vector[ScalarListValues]] = {
-    val query = queryBuilder.selectFromScalarList(model.name, listField, nodeIds)
+    val query = queryBuilder.selectFromScalarList(model.dbName, listField, nodeIds)
     performWithTiming("batchResolveScalarList", readonlyClientDatabase.run(query))
   }
 

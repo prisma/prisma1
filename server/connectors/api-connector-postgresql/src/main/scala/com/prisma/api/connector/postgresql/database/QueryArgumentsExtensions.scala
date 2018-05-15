@@ -87,8 +87,8 @@ object QueryArgumentsExtensions {
       val idField = s""""$projectId"."$tableName"."$idFieldName""""
 
       orderBy match {
-        case Some(orderByArg) if orderByArg.field.name != idFieldName =>
-          val orderByField = s""""$projectId"."$tableName"."${orderByArg.field.name}""""
+        case Some(orderByArg) if orderByArg.field.dbName != idFieldName =>
+          val orderByField = s""""$projectId"."$tableName"."${orderByArg.field.dbName}""""
 
           // First order by the orderByField, then by id to break ties
           Some(sql"#$orderByField #$order, #$idField #$idOrder")
@@ -171,7 +171,7 @@ object QueryArgumentsExtensions {
       // First, we fetch the ordering for the query. If none is passed, we order by id, ascending.
       // We need that since before/after are dependent on the order.
       val (orderByField, sortDirection) = orderBy match {
-        case Some(orderByArg) => (s""""$projectId"."$modelId"."${orderByArg.field.name}"""", orderByArg.sortOrder.toString)
+        case Some(orderByArg) => (s""""$projectId"."$modelId"."${orderByArg.field.dbName}"""", orderByArg.sortOrder.toString)
         case None             => (idField, "asc")
       }
 
