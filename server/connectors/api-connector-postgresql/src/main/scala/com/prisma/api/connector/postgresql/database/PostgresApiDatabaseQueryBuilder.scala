@@ -43,8 +43,8 @@ case class PostgresApiDatabaseQueryBuilder(
   }
 
   private def getResultForRelation(relation: Relation): GetResult[RelationNode] = GetResult { ps: PositionedResult =>
-    val modelAColumn = relation.columnForRelationSide(RelationSide.A)
-    val modelBColumn = relation.columnForRelationSide(RelationSide.B)
+    val modelAColumn = relation.columnForRelationSide(schema, RelationSide.A)
+    val modelBColumn = relation.columnForRelationSide(schema, RelationSide.B)
     RelationNode(id = ps.rs.getId, a = ps.rs.getAsID(modelAColumn), b = ps.rs.getAsID(modelBColumn))
   }
 
@@ -182,15 +182,14 @@ case class PostgresApiDatabaseQueryBuilder(
       fromModelIds: Vector[IdGCValue],
       args: Option[QueryArguments]
   ): DBIOAction[Vector[ResolverResult[PrismaNodeWithParent]], NoStream, Effect] = {
-    val fromModel    = fromField.model(schema).get
     val relation     = fromField.relation.get
     val relatedModel = fromField.relatedModel(schema).get
     val modelTable   = fromField.relatedModel(schema).get.name
 
     val relationTableName     = fromField.relation.get.relationTableNameNew(schema)
-    val (aColumn, bColumn)    = (relation.modelAColumn, relation.modelBColumn)
-    val columnForFromModel    = relation.columnForRelationSide(fromField.relationSide.get)
-    val columnForRelatedModel = relation.columnForRelationSide(fromField.oppositeRelationSide.get)
+    val (aColumn, bColumn)    = (relation.modelAColumn(schema), relation.modelBColumn(schema))
+    val columnForFromModel    = relation.columnForRelationSide(schema, fromField.relationSide.get)
+    val columnForRelatedModel = relation.columnForRelationSide(schema, fromField.oppositeRelationSide.get)
 
     val (conditionCommand, orderByCommand, limitCommand) = extractQueryArgs(
       projectId = schemaName,

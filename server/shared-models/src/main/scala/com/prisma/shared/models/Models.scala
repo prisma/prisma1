@@ -386,20 +386,26 @@ case class Relation(
       }
       .getOrElse("_" + name)
 
-  def modelAColumn: String = manifestation match {
-    case Some(m: RelationTableManifestation)  => m.modelAColumn
-    case Some(m: InlineRelationManifestation) => if (m.inTableOfModelId == modelAId) "id" else m.referencingColumn
-    case None                                 => "A"
+  def modelAColumn(schema: Schema): String = manifestation match {
+    case Some(m: RelationTableManifestation) =>
+      m.modelAColumn
+    case Some(m: InlineRelationManifestation) =>
+      if (m.inTableOfModelId == modelAId) getModelA_!(schema).idField.get.dbName else m.referencingColumn
+    case None =>
+      "A"
   }
 
-  def modelBColumn: String = manifestation match {
-    case Some(m: RelationTableManifestation)  => m.modelBColumn
-    case Some(m: InlineRelationManifestation) => if (m.inTableOfModelId == modelBId && !isSameModelRelation) "id" else m.referencingColumn
-    case None                                 => "B"
+  def modelBColumn(schema: Schema): String = manifestation match {
+    case Some(m: RelationTableManifestation) =>
+      m.modelBColumn
+    case Some(m: InlineRelationManifestation) =>
+      if (m.inTableOfModelId == modelBId && !isSameModelRelation) getModelB_!(schema).idField.get.dbName else m.referencingColumn
+    case None =>
+      "B"
   }
 
-  def columnForRelationSide(relationSide: RelationSide.Value): String = {
-    if (relationSide == RelationSide.A) modelAColumn else modelBColumn
+  def columnForRelationSide(schema: Schema, relationSide: RelationSide.Value): String = {
+    if (relationSide == RelationSide.A) modelAColumn(schema) else modelBColumn(schema)
   }
 
   def hasManifestation: Boolean = manifestation.isDefined
