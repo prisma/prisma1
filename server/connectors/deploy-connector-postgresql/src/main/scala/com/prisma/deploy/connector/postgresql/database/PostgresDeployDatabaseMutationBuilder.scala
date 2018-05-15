@@ -128,14 +128,15 @@ object PostgresDeployDatabaseMutationBuilder {
     sqlu"""DROP INDEX "#$projectId"."#$projectId.#$tableName.#$columnName._UNIQUE""""
   }
 
-  def createRelationTable(projectId: String, relationTableName: String, aTableName: String, bTableName: String) = {
+  def createRelationTable(projectId: String, relationTableName: String, modelA: Model, modelB: Model) = {
 
-    val tableCreate = sqlu"""CREATE TABLE "#$projectId"."#$relationTableName" ("id" CHAR(25)  NOT NULL,
-           PRIMARY KEY ("id"),
+    val tableCreate = sqlu"""CREATE TABLE "#$projectId"."#$relationTableName" (
+    "id" CHAR(25)  NOT NULL,
+    PRIMARY KEY ("id"),
     "A" VARCHAR (25)  NOT NULL,
     "B" VARCHAR (25)  NOT NULL,
-    FOREIGN KEY ("A") REFERENCES "#$projectId"."#$aTableName"("id") ON DELETE CASCADE,
-    FOREIGN KEY ("B") REFERENCES "#$projectId"."#$bTableName"("id") ON DELETE CASCADE)
+    FOREIGN KEY ("A") REFERENCES "#$projectId"."#${modelA.dbName}"("#${modelA.dbNameOfIdField}") ON DELETE CASCADE,
+    FOREIGN KEY ("B") REFERENCES "#$projectId"."#${modelB.dbName}"("#${modelA.dbNameOfIdField}") ON DELETE CASCADE)
     ;"""
 
     val indexCreate = sqlu"""CREATE UNIQUE INDEX "#${relationTableName}_AB_unique" on  "#$projectId"."#$relationTableName" ("A" ASC, "B" ASC)"""
@@ -148,7 +149,7 @@ object PostgresDeployDatabaseMutationBuilder {
     val isRequired = false //field.exists(_.isRequired)
     val nullString = if (isRequired) "NOT NULL" else "NULL"
     val addColumn  = sqlu"""ALTER TABLE "#$projectId"."#${model.dbName}" ADD COLUMN "#$column" #$sqlType #$nullString
-                            REFERENCES "#$projectId"."#${references.dbName}"(id) ON DELETE SET NULL;"""
+                            REFERENCES "#$projectId"."#${references.dbName}"(#${references.dbNameOfIdField}) ON DELETE SET NULL;"""
     addColumn
   }
 
