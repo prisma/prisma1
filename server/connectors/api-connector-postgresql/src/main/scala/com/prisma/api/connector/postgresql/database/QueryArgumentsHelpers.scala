@@ -26,8 +26,8 @@ object QueryArgumentsHelpers {
 
     def joinRelations(schema: Schema, relation: Relation, toModel: Model, alias: String, field: Field, modTableName: String) = {
       val relationTableName = relation.relationTableNameNew(schema)
-      val column            = relation.columnForRelationSide(field.relationSide.get)
-      val oppositeColumn    = relation.columnForRelationSide(field.oppositeRelationSide.get)
+      val column            = relation.columnForRelationSide(schema, field.relationSide.get)
+      val oppositeColumn    = relation.columnForRelationSide(schema, field.oppositeRelationSide.get)
       sql"""select *
             from "#$projectId"."#${toModel.dbName}" as "#$alias"
             inner join "#$projectId"."#${relationTableName}"
@@ -172,7 +172,7 @@ object QueryArgumentsHelpers {
 
           val relation          = field.relation.get
           val relationTableName = relation.relationTableNameNew(schema)
-          val column            = relation.columnForRelationSide(field.relationSide.get)
+          val column            = relation.columnForRelationSide(schema, field.relationSide.get)
 
           Some(sql""" not exists (select  *
                                   from    "#$projectId"."#${relationTableName}"

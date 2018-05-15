@@ -184,7 +184,7 @@ case class PostgresApiDatabaseQueryBuilder(
   ): DBIOAction[Vector[ResolverResult[PrismaNodeWithParent]], NoStream, Effect] = {
     val relation     = fromField.relation.get
     val relatedModel = fromField.relatedModel(schema).get
-    val modelTable   = fromField.relatedModel(schema).get.name
+    val modelTable   = relatedModel.name
 
     val relationTableName     = fromField.relation.get.relationTableNameNew(schema)
     val (aColumn, bColumn)    = (relation.modelAColumn(schema), relation.modelBColumn(schema))
@@ -204,7 +204,7 @@ case class PostgresApiDatabaseQueryBuilder(
       sql"""(select ModelTable.*, RelationTable."#$aColumn" as __Relation__A,  RelationTable."#$bColumn" as __Relation__B
             from "#$schemaName"."#$modelTable" as ModelTable
            inner join "#$schemaName"."#$relationTableName" as RelationTable
-           on ModelTable."id" = RelationTable."#$fieldRelationSide"
+           on ModelTable."#${relatedModel.dbNameOfIdField}" = RelationTable."#$fieldRelationSide"
            where RelationTable."#$modelRelationSide" = '#$id' """ ++
         prefixIfNotNone("and", conditionCommand) ++
         prefixIfNotNone("order by", orderByCommand) ++
@@ -251,7 +251,7 @@ case class PostgresApiDatabaseQueryBuilder(
   ): DBIOAction[Vector[ResolverResult[PrismaNodeWithParent]], NoStream, Effect] = {
 
     val relatedModel         = fromField.relatedModel(schema).get
-    val fieldTable           = fromField.relatedModel(schema).get.name
+    val fieldTable           = relatedModel.name
     val unsafeRelationId     = fromField.relation.get.relationTableNameNew(schema)
     val modelRelationSide    = fromField.relationSide.get.toString
     val oppositeRelationSide = fromField.oppositeRelationSide.get.toString
@@ -263,7 +263,7 @@ case class PostgresApiDatabaseQueryBuilder(
       sql"""(select "#$schemaName"."#$fieldTable".*, "#$schemaName"."#$unsafeRelationId"."A" as __Relation__A,  "#$schemaName"."#$unsafeRelationId"."B" as __Relation__B
             from "#$schemaName"."#$fieldTable"
            inner join "#$schemaName"."#$unsafeRelationId"
-           on "#$schemaName"."#$fieldTable"."id" = "#$schemaName"."#$unsafeRelationId"."#$fieldRelationSide"
+           on "#$schemaName"."#$fieldTable"."#${relatedModel.dbNameOfIdField}" = "#$schemaName"."#$unsafeRelationId"."#$fieldRelationSide"
            where "#$schemaName"."#$unsafeRelationId"."#$modelRelationSide" = '#$id' """ ++
         prefixIfNotNone("and", conditionCommand) ++
         prefixIfNotNone("order by", orderByCommand) ++
@@ -305,7 +305,8 @@ case class PostgresApiDatabaseQueryBuilder(
       args: Option[QueryArguments]
   ): SqlStreamingAction[Vector[(IdGCValue, Int)], (IdGCValue, Int), Effect] = {
 
-    val fieldTable        = relationField.relatedModel(schema).get.name
+    val relatedModel      = relationField.relatedModel(schema).get
+    val fieldTable        = relatedModel.name
     val unsafeRelationId  = relationField.relation.get.relationTableNameNew(schema)
     val modelRelationSide = relationField.relationSide.get.toString
     val fieldRelationSide = relationField.oppositeRelationSide.get.toString
@@ -316,7 +317,7 @@ case class PostgresApiDatabaseQueryBuilder(
     def createQuery(id: String) = {
       sql"""(select "#$id", count(*) from "#$schemaName"."#$fieldTable"
            inner join "#$schemaName"."#$unsafeRelationId"
-           on "#$schemaName"."#$fieldTable"."id" = "#$schemaName"."#$unsafeRelationId"."#$fieldRelationSide"
+           on "#$schemaName"."#$fieldTable"."#${relatedModel.dbNameOfIdField}" = "#$schemaName"."#$unsafeRelationId"."#$fieldRelationSide"
            where "#$schemaName"."#$unsafeRelationId"."#$modelRelationSide" = '#$id' """ ++
         prefixIfNotNone("and", conditionCommand) ++
         prefixIfNotNone("order by", orderByCommand) ++

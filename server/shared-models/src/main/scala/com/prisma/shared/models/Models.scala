@@ -143,6 +143,7 @@ case class Model(
   lazy val relations: List[Relation]          = fields.flatMap(_.relation).distinct
   lazy val nonListFields                      = fields.filter(!_.isList)
   lazy val idField                            = getFieldByName("id")
+  lazy val dbNameOfIdField                    = idField.get.dbName
 
   lazy val cascadingRelationFields: List[Field] = relationFields.filter(field => field.relation.get.sideOfModelCascades(this))
 
