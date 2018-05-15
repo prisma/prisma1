@@ -6,8 +6,6 @@ projects:
         default: 'http://localhost:4466/hooks'
       prisma: prisma.yml
       codegen:
-        input: 
-          schema: generated-schema.graphql
         output: 
           typings: generated-prisma.ts
         generator: typegen
