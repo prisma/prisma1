@@ -14,8 +14,11 @@ object QueryArgumentsHelpers {
   def generateFilterConditions(projectId: String, tableName: String, filter: Seq[Any], quoteTableName: Boolean = true): Option[SQLActionBuilder] = {
 
     def getAliasAndTableName(fromModel: String, toModel: String): (String, String) = {
-      var modTableName = ""
-      if (!tableName.contains("_")) modTableName = projectId + """"."""" + fromModel else modTableName = tableName
+      val modTableName = if (!tableName.contains("_")) {
+        projectId + """"."""" + fromModel
+      } else {
+        tableName
+      }
       val alias = toModel + "_" + tableName
       (alias, modTableName)
     }
@@ -24,15 +27,15 @@ object QueryArgumentsHelpers {
       Some(generateFilterConditions(projectId, relationTableName, nestedFilter).getOrElse(sql"True"))
     }
 
-    def joinRelations(schema: Schema, relation: Relation, toModel: Model, alias: String, field: Field, modTableName: String) = {
+    def joinRelations(schema: Schema, relation: Relation, toModel: Model, alias: String, field: Field, fromModel: Model, modTableName: String) = {
       val relationTableName = relation.relationTableNameNew(schema)
       val column            = relation.columnForRelationSide(schema, field.relationSide.get)
       val oppositeColumn    = relation.columnForRelationSide(schema, field.oppositeRelationSide.get)
       sql"""select *
             from "#$projectId"."#${toModel.dbName}" as "#$alias"
             inner join "#$projectId"."#${relationTableName}"
-            on "#$alias"."id" = "#$projectId"."#${relationTableName}"."#${oppositeColumn}"
-            where "#$projectId"."#${relationTableName}"."#${column}" = "#$modTableName"."id""""
+            on "#$alias"."#${toModel.dbNameOfIdField}" = "#$projectId"."#${relationTableName}"."#${oppositeColumn}"
+            where "#$projectId"."#${relationTableName}"."#${column}" = "#$modTableName"."#${fromModel.dbNameOfIdField}""""
     }
 
     val tableNameSql = if (quoteTableName) sql""""#$tableName"""" else sql"""#$tableName"""
@@ -81,23 +84,30 @@ object QueryArgumentsHelpers {
         case TransitiveRelationFilter(schema, field, fromModel, toModel, relation, filterName, nestedFilter) if filterName == "_some" =>
           val (alias, modTableName) = getAliasAndTableName(fromModel.name, toModel.name)
           Some(
-            sql"exists (" ++ joinRelations(schema, relation, toModel, alias, field, modTableName) ++ sql"and" ++ filterOnRelation(alias, nestedFilter) ++ sql")")
+            sql"exists (" ++ joinRelations(schema, relation, toModel, alias, field, fromModel, modTableName) ++ sql"and" ++ filterOnRelation(
+              alias,
+              nestedFilter) ++ sql")")
 
         case TransitiveRelationFilter(schema, field, fromModel, toModel, relation, filterName, nestedFilter) if filterName == "_every" =>
           val (alias, modTableName) = getAliasAndTableName(fromModel.name, toModel.name)
-          Some(sql"not exists (" ++ joinRelations(schema, relation, toModel, alias, field, modTableName) ++ sql"and not" ++ filterOnRelation(
-            alias,
-            nestedFilter) ++ sql")")
+          Some(
+            sql"not exists (" ++ joinRelations(schema, relation, toModel, alias, field, fromModel, modTableName) ++ sql"and not" ++ filterOnRelation(
+              alias,
+              nestedFilter) ++ sql")")
 
         case TransitiveRelationFilter(schema, field, fromModel, toModel, relation, filterName, nestedFilter) if filterName == "_none" =>
           val (alias, modTableName) = getAliasAndTableName(fromModel.name, toModel.name)
           Some(
-            sql"not exists (" ++ joinRelations(schema, relation, toModel, alias, field, modTableName) ++ sql"and " ++ filterOnRelation(alias, nestedFilter) ++ sql")")
+            sql"not exists (" ++ joinRelations(schema, relation, toModel, alias, field, fromModel, modTableName) ++ sql"and " ++ filterOnRelation(
+              alias,
+              nestedFilter) ++ sql")")
 
         case TransitiveRelationFilter(schema, field, fromModel, toModel, relation, filterName, nestedFilter) if filterName == "" =>
           val (alias, modTableName) = getAliasAndTableName(fromModel.name, toModel.name)
           Some(
-            sql"exists (" ++ joinRelations(schema, relation, toModel, alias, field, modTableName) ++ sql"and" ++ filterOnRelation(alias, nestedFilter) ++ sql")")
+            sql"exists (" ++ joinRelations(schema, relation, toModel, alias, field, fromModel, modTableName) ++ sql"and" ++ filterOnRelation(
+              alias,
+              nestedFilter) ++ sql")")
 
         //--- non recursive
 

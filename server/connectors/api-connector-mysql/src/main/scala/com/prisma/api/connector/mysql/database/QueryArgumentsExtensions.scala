@@ -58,7 +58,7 @@ object QueryArgumentsExtensions {
 
       orderBy match {
         case Some(orderByArg) if orderByArg.field.name != "id" =>
-          val orderByField = s"`$projectId`.`$modelId`.`${orderByArg.field.name}`"
+          val orderByField = s"`$projectId`.`$modelId`.`${orderByArg.field.dbName}`"
 
           // First order by the orderByField, then by id to break ties
           Some(sql"#$orderByField #$order, #$idField #$idOrder")

@@ -136,7 +136,8 @@ case class NestedCreateDataItemInterpreterForInlineRelations(mutaction: NestedCr
     val idSubQuery      = mutationBuilder.pathQueryForLastParent(path)
     val lastParentModel = path.removeLastEdge.lastModel
     for {
-      ids    <- (sql"""select "id" from "#${mutationBuilder.schemaName}"."#${lastParentModel.dbName}" where id in (""" ++ idSubQuery ++ sql")").as[String]
+      ids <- (sql"""select "#${lastParentModel.dbNameOfIdField}" from "#${mutationBuilder.schemaName}"."#${lastParentModel.dbName}" where "#${lastParentModel.dbNameOfIdField}" in (""" ++ idSubQuery ++ sql")")
+              .as[String]
       result <- createDataItemWithLinkToParent(mutationBuilder)(ids.head)
     } yield result
   }
