@@ -168,6 +168,8 @@ You can now connect to Prisma's GraphQL API, select what you would like to do ne
 
 ## Examples
 
+Collection of Prisma example projects 💡
+
 * [cli-tool](./examples/cli-tool)
 * [data-modelling](./examples/data-modelling)
 * [postgres](./examples/postgres)
