@@ -168,7 +168,16 @@ You can now connect to Prisma's GraphQL API, select what you would like to do ne
 
 ## Examples
 
-See a list of Prisma examples to get started [here](./examples).
+* [cli-tool](./examples/cli-tool)
+* [data-modelling](./examples/data-modelling)
+* [postgres](./examples/postgres)
+* [yaml-structure](./examples/yaml-structure)
+* [hooks](./examples/hooks)
+* [server-side-subscriptions](./examples/server-side-subscriptions)
+* [application-server](./examples/application-server)
+* [resolver-forwarding](./examples/resolver-forwarding)
+
+You can also check the [**AirBnB clone example**](https://github.com/graphcool/graphql-server-example) we built as a fully-featured demo app for Prisma.
 
 ## Architecture
 
