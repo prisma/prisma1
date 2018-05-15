@@ -85,7 +85,8 @@ class ObjectTypeBuilder(
           .map(mapClientField(model))
       },
       interfaces = {
-        if (model.hasVisibleIdField) {
+        val idFieldHasRightType = model.idField.exists(f => f.typeIdentifier == TypeIdentifier.String || f.typeIdentifier == TypeIdentifier.GraphQLID)
+        if (model.hasVisibleIdField && idFieldHasRightType) {
           nodeInterface.toList
         } else {
           List.empty
