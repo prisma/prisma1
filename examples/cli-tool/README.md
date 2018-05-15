@@ -65,7 +65,7 @@ node index.js delete First todo item
 
 ### 3. Explore the generated Prisma API
 
-The easiest way to explore this deployed service and play with the API generated from the data model is by using a [GraphQL Playground](https://github.com/graphcool/graphql-playground).
+The easiest way to explore this deployed service and play with the API generated from the data model is by using the [GraphQL Playground](https://github.com/graphcool/graphql-playground).
 
 ### Open a Playground
 
