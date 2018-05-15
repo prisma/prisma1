@@ -11,7 +11,8 @@ object QueryArgumentsExtensions {
 
   def extractQueryArgs(
       projectId: String,
-      modelName: String,
+      tableName: String,
+      idFieldName: String,
       args: Option[QueryArguments],
       defaultOrderShortcut: Option[String],
       overrideMaxNodeCount: Option[Int],
@@ -22,15 +23,15 @@ object QueryArgumentsExtensions {
       case None => (None, None, None)
       case Some(givenArgs: QueryArguments) =>
         val orderByCommand =
-          if (forList) givenArgs.extractOrderByCommandForLists(projectId, modelName, defaultOrderShortcut)
-          else givenArgs.extractOrderByCommand(projectId, modelName, defaultOrderShortcut)
+          if (forList) givenArgs.extractOrderByCommandForLists(projectId, tableName, defaultOrderShortcut)
+          else givenArgs.extractOrderByCommand(projectId, tableName, idFieldName, defaultOrderShortcut)
 
         (
-          givenArgs.extractWhereConditionCommand(projectId, modelName, quoteTableName),
+          givenArgs.extractWhereConditionCommand(projectId, tableName, quoteTableName),
           orderByCommand,
           overrideMaxNodeCount match {
-            case None                => givenArgs.extractLimitCommand(projectId, modelName)
-            case Some(maxCount: Int) => givenArgs.extractLimitCommand(projectId, modelName, maxCount)
+            case None                => givenArgs.extractLimitCommand(projectId, tableName)
+            case Some(maxCount: Int) => givenArgs.extractLimitCommand(projectId, tableName, maxCount)
           }
         )
     }
@@ -67,7 +68,12 @@ object QueryArgumentsExtensions {
       Some(sql""""#$projectId"."#$modelId"."nodeId" #$order, "#$projectId"."#$modelId"."position" #$idOrder""")
     }
 
-    def extractOrderByCommand(projectId: String, modelId: String, defaultOrderShortcut: Option[String] = None): Option[SQLActionBuilder] = {
+    def extractOrderByCommand(
+        projectId: String,
+        tableName: String,
+        idFieldName: String,
+        defaultOrderShortcut: Option[String] = None
+    ): Option[SQLActionBuilder] = {
 
       if (first.isDefined && last.isDefined) throw APIErrors.InvalidConnectionArguments()
 
@@ -78,11 +84,11 @@ object QueryArgumentsExtensions {
         case false => (defaultOrder, "asc")
       }
 
-      val idField = s""""$projectId"."$modelId"."id""""
+      val idField = s""""$projectId"."$tableName"."$idFieldName""""
 
       orderBy match {
-        case Some(orderByArg) if orderByArg.field.name != "id" =>
-          val orderByField = s""""$projectId"."$modelId"."${orderByArg.field.name}""""
+        case Some(orderByArg) if orderByArg.field.name != idFieldName =>
+          val orderByField = s""""$projectId"."$tableName"."${orderByArg.field.name}""""
 
           // First order by the orderByField, then by id to break ties
           Some(sql"#$orderByField #$order, #$idField #$idOrder")
