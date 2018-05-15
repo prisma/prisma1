@@ -2,7 +2,7 @@
 
 [Website](https://www.prisma.io) • [Docs](https://www.prisma.io/docs/) • [Blog](https://blog.prisma.io/) • [Forum](https://www.prisma.io/forum) • [Slack](https://slack.prisma.io/) • [Twitter](https://twitter.com/prismagraphql) • [OSS](https://oss.prisma.io/) • [Learn](https://www.howtographql.com)
 
-[![CircleCI](https://circleci.com/gh/graphcool/prisma.svg?style=shield)](https://circleci.com/gh/graphcool/prisma) [![Slack Status](https://slack.prisma.io/badge.svg)](https://slack.prisma.io) [![npm version](https://badge.fury.io/js/prisma.svg)](https://badge.fury.io/js/prisma)
+[![CircleCI](https://circleci.com/gh/prismagraphql/prisma.svg?style=shield)](https://circleci.com/gh/prismagraphql/prisma) [![Slack Status](https://slack.prisma.io/badge.svg)](https://slack.prisma.io) [![npm version](https://badge.fury.io/js/prisma.svg)](https://badge.fury.io/js/prisma)
 
 **Prisma is a performant open-source GraphQL [ORM-like layer](#is-prisma-an-orm)** doing the heavy lifting in your GraphQL server. It turns your database into a GraphQL API which can be consumed by your resolvers via [GraphQL bindings](https://oss.prisma.io/graphql-binding).
 
