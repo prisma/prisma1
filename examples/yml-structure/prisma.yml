@@ -4,7 +4,7 @@ datamodel:
 
 endpoint: http://${self:custom.serverIP}:${self:custom.serverPort}/yml-structure/default
 
-secret: symmetric-secret-key
+secret: my-secret-key
 
 seed:
   import: seed.graphql

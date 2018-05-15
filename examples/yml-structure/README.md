@@ -140,6 +140,8 @@ hooks:
     - graphql prepare
 ```
 
+Please refer to this detailed [example on `hooks`](../hooks).
+
 * Printing "Deployment finished"
 
 * Getting the latest schema
@@ -160,3 +162,7 @@ projects:
         output: generated-prisma.ts
         generator: prisma-ts
 ```
+
+#### Subscriptions
+
+Please refer to this detailed [example on `subscriptions`](../server-side-subscriptions).

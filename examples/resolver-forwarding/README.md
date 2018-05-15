@@ -43,13 +43,13 @@ To deploy your service to a public cluster (rather than locally with Docker), yo
 
 ### 3. Explore the API
 
-This example seeds some code into the database for us to explore some queries and features of the data model. Please take a look at `seed.graphql` for reference. Feel free to add/remove more data via mutations.
+This example seeds some data into the database for us to explore some queries and features of the data model. Please take a look at `seed.graphql` for reference. Feel free to add/remove more data via mutations.
 
 ### To start the server, run the following command
 
 `yarn start`
 
-The easiest way to explore this deployed service and play with the API generated from the data model is by using a [GraphQL Playground](https://github.com/graphcool/graphql-playground).
+The easiest way to explore this deployed service and play with the API generated from the data model is by using the [GraphQL Playground](https://github.com/graphcool/graphql-playground).
 
 ### Open a Playground
 

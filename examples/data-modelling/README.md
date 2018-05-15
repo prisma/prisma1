@@ -43,9 +43,9 @@ To deploy your service to a public cluster (rather than locally with Docker), yo
 
 ### 3. Explore the generated datamodel
 
-This example seeds some code into the database for us to explore some queries and features of the data model. Please take a look at `seed.graphql` for reference. Feel free to add/remove more data via mutations.
+This example seeds some data into the database for us to explore some queries and features of the data model. Please take a look at `seed.graphql` for reference. Feel free to add/remove more data via mutations.
 
-The easiest way to explore this deployed service and play with the API generated from the data model is by using a [GraphQL Playground](https://github.com/graphcool/graphql-playground).
+The easiest way to explore this deployed service and play with the API generated from the data model is by using the [GraphQL Playground](https://github.com/graphcool/graphql-playground).
 
 ### Open a Playground
 
@@ -59,7 +59,9 @@ Or you can open a Playground by navigating to [http://localhost:4466/data-modell
 
 This example illustrates a few important concepts when working with your data model:
 
-#### The three types Tweet, User and Location are mapped to tables in the database. We can query any of these types (say Tweet) in the following ways
+### There are three types Tweet, User and Location
+
+These types are mapped to tables in the database. We can query any of these types (say Tweet) in the following ways
 
 ##### Get one tweet by its id (or any other field with @unique directive)
 
@@ -109,7 +111,7 @@ query Tweets {
 }
 ```
 
-#### There is a bidirectional relation between User and Tweet
+### There is a bidirectional relation between User and Tweet
 
 ##### Get user for a tweet
 
@@ -141,7 +143,7 @@ query UserTweets {
 }
 ```
 
-#### GraphQL Directives
+### GraphQL Directives
 
 ##### Unique
 
@@ -167,6 +169,8 @@ The deletion behaviour in this example is as follows:
 * When a `User` node gets deleted, all its related `Tweet` nodes will be deleted as well.
 
 * When a `Tweet` node gets deleted, it will simply be removed from the tweets list on the related `User` node.
+
+Note that `deleteMany` does not activate a cascade delete yet. This feature is being tracked [here](https://github.com/prismagraphql/prisma/issues/1936).
 
 ##### Default
 
