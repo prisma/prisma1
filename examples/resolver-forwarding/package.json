@@ -1,9 +1,9 @@
 {
   "devDependencies": {
-    "prisma": "^1.8.3"
+    "prisma": "1.8.3"
   },
   "dependencies": {
-    "graphql-yoga": "^1.13.1",
-    "prisma-binding": "^2.0.0"
+    "graphql-yoga": "1.13.1",
+    "prisma-binding": "2.0.0"
   }
 }

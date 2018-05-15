@@ -10,5 +10,6 @@ Collection of Prisma example projects 💡
 * [server-side-subscriptions](server-side-subscriptions)
 * [application-server](application-server)
 * [resolver-forwarding](resolver-forwarding)
+* [subscriptions](subscriptions)
 
 You can also check the [**AirBnB clone example**](https://github.com/graphcool/graphql-server-example) we built as a fully-featured demo app for Prisma.
