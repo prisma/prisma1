@@ -1,6 +1,6 @@
 # Server Side Subscription
 
-This example demonstrates `subscriptions` property available to us in `prisma.yml`.
+This example demonstrates `subscriptions` property available to us in `prisma.yml` that can be used to implement even-driven business logic.
 
 ## Get started
 
