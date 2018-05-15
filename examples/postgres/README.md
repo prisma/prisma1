@@ -43,4 +43,37 @@ To deploy your service to a demo server (rather than locally with Docker), you n
 
 ### 3. Explore the Postgres
 
-Running the command `docker ps` will show you an image running for Postgres running at port 5432 and an image running Prisma which connects to this external Postgres running at port 5432.
+Running the command `docker ps` will show you an image running for Postgres running at port 5432 and an image running the Prisma which connects to this external Postgres running at port 5432.
+
+Let us take a look at the Postgres specific parts of the `docker-compose.yml` file in this example.
+
+This part of the configuration declares the service for postgres database which runs on its default port 5432.
+
+```yml
+postgres:
+    image: postgres
+    restart: always
+    environment:
+      POSTGRES_USER: prisma
+      POSTGRES_PASSWORD: prisma
+    volumes:
+      - postgres:/var/lib/postgresql/data
+```
+
+This part of configurations declares the environment for Prisma server to connect to the external Postgres database running at the port 5432.
+
+```yml
+environment:
+      PRISMA_CONFIG: |
+        port: 4466
+        # uncomment the next line and provide the env var PRISMA_MANAGEMENT_API_SECRET=my-secret to activate cluster security
+        # managementApiSecret: my-secret
+        databases:
+          default:
+            connector: postgres
+            host: postgres
+            port: 5432
+            user: prisma
+            password: prisma
+            migrations: true
+```
