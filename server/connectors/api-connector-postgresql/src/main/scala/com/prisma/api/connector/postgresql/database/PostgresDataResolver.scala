@@ -54,7 +54,11 @@ case class PostgresDataResolver(
     batchResolveByUnique(where.model, where.field, Vector(where.fieldValue)).map(_.headOption)
 
   override def countByTable(table: String, whereFilter: Option[DataItemFilterCollection] = None): Future[Int] = {
-    val query = queryBuilder.countAllFromTable(table, whereFilter)
+    val actualTable = project.schema.getModelByName(table) match {
+      case Some(model) => model.dbName
+      case None        => table
+    }
+    val query = queryBuilder.countAllFromTable(actualTable, whereFilter)
     performWithTiming("countByModel", readonlyClientDatabase.run(query))
   }
 

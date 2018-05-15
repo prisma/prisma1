@@ -144,7 +144,7 @@ case class PostgresApiDatabaseMutationBuilder(
   //region UPDATE
 
   def updateDataItems(model: Model, args: PrismaArgs, whereFilter: Option[DataItemFilterCollection]) = {
-    val updateValues = combineByComma(args.raw.asRoot.map.map { case (k, v) => escapeKey(k) ++ sql" = $v" })
+    val updateValues = combineByComma(args.raw.asRoot.map.map { case (k, v) => escapeKey(model.getFieldByName_!(k).dbName) ++ sql" = $v" })
 
     if (updateValues.isDefined) {
       (sql"""UPDATE "#$schemaName"."#${model.dbName}"""" ++ sql"SET " ++ addUpdatedDateTime(updateValues) ++ whereFilterAppendix(schemaName,
@@ -361,11 +361,12 @@ case class PostgresApiDatabaseMutationBuilder(
 
           listFieldMap.foreach {
             case (fieldName, listGCValue) =>
-              val wipe                             = s"""DELETE  FROM "$schemaName"."${model.dbName}_$fieldName" $whereString"""
+              val dbNameOfField                    = model.getFieldByName_!(fieldName).dbName
+              val wipe                             = s"""DELETE  FROM "$schemaName"."${model.dbName}_$dbNameOfField" $whereString"""
               val wipeOldValues: PreparedStatement = x.connection.prepareStatement(wipe)
               wipeOldValues.executeUpdate()
 
-              val insert                             = s"""INSERT INTO "$schemaName"."${model.dbName}_$fieldName" ("nodeId", "position", "value") VALUES (?,?,?)"""
+              val insert                             = s"""INSERT INTO "$schemaName"."${model.dbName}_$dbNameOfField" ("nodeId", "position", "value") VALUES (?,?,?)"""
               val insertNewValues: PreparedStatement = x.connection.prepareStatement(insert)
               val newValueTuples                     = valueTuplesForListField(listGCValue)
               newValueTuples.foreach { tuple =>
