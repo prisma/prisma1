@@ -14,7 +14,8 @@ import scala.concurrent.{ExecutionContext, Future}
 case class PostgresClientDbQueries(project: Project, clientDatabase: Database)(implicit ec: ExecutionContext) extends ClientDbQueries {
 
   def existsByModel(modelName: String): Future[Boolean] = {
-    val query = PostgresDeployDatabaseQueryBuilder.existsByModel(project.id, modelName)
+    val model = project.schema.getModelByName_!(modelName)
+    val query = PostgresDeployDatabaseQueryBuilder.existsByModel(project.id, model)
     clientDatabase.run(readOnlyBoolean(query)).map(_.head).recover { case _: java.sql.SQLSyntaxErrorException => false }
   }
 
@@ -30,14 +31,14 @@ case class PostgresClientDbQueries(project: Project, clientDatabase: Database)(i
 
   def existsNullByModelAndField(model: Model, field: Field): Future[Boolean] = {
     val query = field.isScalar match {
-      case true  => PostgresDeployDatabaseQueryBuilder.existsNullByModelAndScalarField(project.id, model.name, field.name)
-      case false => PostgresDeployDatabaseQueryBuilder.existsNullByModelAndRelationField(project.id, model.name, field)
+      case true  => PostgresDeployDatabaseQueryBuilder.existsNullByModelAndScalarField(project.id, model, field.name)
+      case false => PostgresDeployDatabaseQueryBuilder.existsNullByModelAndRelationField(project.id, model, field)
     }
     clientDatabase.run(readOnlyBoolean(query)).map(_.head).recover { case _: java.sql.SQLSyntaxErrorException => false }
   }
 
   def existsDuplicateValueByModelAndField(model: Model, field: Field): Future[Boolean] = {
-    val query = PostgresDeployDatabaseQueryBuilder.existsDuplicateValueByModelAndField(project.id, model.name, field.name)
+    val query = PostgresDeployDatabaseQueryBuilder.existsDuplicateValueByModelAndField(project.id, model, field.name)
     clientDatabase.run(readOnlyBoolean(query)).map(_.head).recover { case _: java.sql.SQLSyntaxErrorException => false }
   }
 
