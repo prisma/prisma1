@@ -23,7 +23,7 @@ yarn install
 
 ### 2. Deploy the Prisma database service
 
-You can now [deploy](https://www.prismagraphql.com/docs/reference/cli-command-reference/database-service/prisma-deploy-kee1iedaov) the Prisma service (note that this requires you to have [Docker](https://www.docker.com) installed on your machine - if that's not the case, follow the collapsed instructions below the code block):
+You can now [deploy](https://www.prisma.io/docs/reference/cli-command-reference/database-service/prisma-deploy-kee1iedaov) the Prisma service (note that this requires you to have [Docker](https://www.docker.com) installed on your machine - if that's not the case, follow the collapsed instructions below the code block):
 
 ```sh
 yarn prisma deploy
@@ -36,7 +36,7 @@ To deploy your service to a public cluster (rather than locally with Docker), yo
 
 1.  Remove the `cluster` property from `prisma.yml`
 1.  Run `yarn prisma deploy`
-1.  When prompted by the CLI, select a public cluster (e.g. `prisma-eu1` or `prisma-us1`)
+1.  When prompted by the CLI, select a demo cluster (e.g. `prisma-eu1` or `prisma-us1`)
 1.  Replace the [`endpoint`](./src/index.js#L23) in `index.js` with the HTTP endpoint that was printed after the previous command
 
 </details>

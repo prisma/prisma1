@@ -5,7 +5,7 @@ Collection of Prisma example projects 💡
 * [cli-tool](cli-tool)
 * [data-modelling](data-modelling)
 * [postgres](postgres)
-* [yaml-structure](yaml-structure)
+* [yml-structure](yml-structure)
 * [hooks](hooks)
 * [server-side-subscriptions](server-side-subscriptions)
 * [application-server](application-server)

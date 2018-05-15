@@ -9,5 +9,5 @@ type Mutation {
 }
 
 type Subscription {
-  posts: PostSubscriptionPayload
+  publications: PostSubscriptionPayload
 }
