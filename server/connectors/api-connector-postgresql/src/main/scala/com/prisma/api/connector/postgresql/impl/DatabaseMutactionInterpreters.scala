@@ -72,11 +72,12 @@ case class CreateDataItemInterpreter(mutaction: CreateDataItem, includeRelayRow:
   override def action(mutationBuilder: PostgresApiDatabaseMutationBuilder) = ???
 
   override val errorMapper = {
-    case e: PSQLException if e.getSQLState == "23505" && GetFieldFromSQLUniqueException.getFieldOption(mutaction.nonListArgs.keys, e).isDefined =>
-      APIErrors.UniqueConstraintViolation(path.lastModel.name, GetFieldFromSQLUniqueException.getFieldOption(mutaction.nonListArgs.keys, e).get)
+    case e: PSQLException if e.getSQLState == "23505" && GetFieldFromSQLUniqueException.getFieldOption(mutaction.model, e).isDefined =>
+      APIErrors.UniqueConstraintViolation(path.lastModel.name, GetFieldFromSQLUniqueException.getFieldOption(mutaction.model, e).get)
     case e: PSQLException if e.getSQLState == "23503" =>
       APIErrors.NodeDoesNotExist("")
   }
+
 }
 
 case class DeleteDataItemInterpreter(mutaction: DeleteDataItem) extends DatabaseMutactionInterpreter {
@@ -167,6 +168,7 @@ case class UpdateDataItemInterpreter(mutaction: UpdateWrapper) extends DatabaseM
     case x: UpdateDataItem       => (x.project, x.path, x.nonListArgs, x.listArgs)
     case x: NestedUpdateDataItem => (x.project, x.path, x.nonListArgs, x.listArgs)
   }
+  val model = path.lastModel
 
   def action(mutationBuilder: PostgresApiDatabaseMutationBuilder) = {
     val nonListAction = mutationBuilder.updateDataItemByPath(path, nonListArgs)
@@ -176,8 +178,8 @@ case class UpdateDataItemInterpreter(mutaction: UpdateWrapper) extends DatabaseM
 
   override val errorMapper = {
     // https://dev.mysql.com/doc/refman/5.5/en/error-messages-server.html#error_er_dup_entry
-    case e: PSQLException if e.getSQLState == "23505" && GetFieldFromSQLUniqueException.getFieldOption(nonListArgs.keys, e).isDefined =>
-      APIErrors.UniqueConstraintViolation(path.lastModel.name, GetFieldFromSQLUniqueException.getFieldOption(nonListArgs.keys, e).get)
+    case e: PSQLException if e.getSQLState == "23505" && GetFieldFromSQLUniqueException.getFieldOption(model, e).isDefined =>
+      APIErrors.UniqueConstraintViolation(path.lastModel.name, GetFieldFromSQLUniqueException.getFieldOption(model, e).get)
 
     case e: PSQLException if e.getSQLState == "23503" =>
       APIErrors.NodeNotFoundForWhereError(path.root)
@@ -209,8 +211,8 @@ case class UpsertDataItemInterpreter(mutaction: UpsertDataItem) extends Database
   }
 
   override val errorMapper = {
-    case e: PSQLException if e.getSQLState == "23505" && getFieldOption(createArgs.keys ++ updateArgs.keys, e).isDefined =>
-      APIErrors.UniqueConstraintViolation(model.name, getFieldOption(createArgs.keys ++ updateArgs.keys, e).get)
+    case e: PSQLException if e.getSQLState == "23505" && getFieldOption(model, e).isDefined =>
+      APIErrors.UniqueConstraintViolation(model.name, getFieldOption(model, e).get)
 
     case e: PSQLException if e.getSQLState == "23503" =>
       APIErrors.NodeDoesNotExist("") //todo
@@ -221,8 +223,8 @@ case class UpsertDataItemInterpreter(mutaction: UpsertDataItem) extends Database
 }
 
 case class UpsertDataItemIfInRelationWithInterpreter(mutaction: UpsertDataItemIfInRelationWith) extends DatabaseMutactionInterpreter {
-  val project = mutaction.project
-
+  val project         = mutaction.project
+  val model           = mutaction.createPath.lastModel
   val relationChecker = NestedCreateRelationInterpreter(NestedCreateRelation(project, mutaction.createPath, false))
 
   def action(mutationBuilder: PostgresApiDatabaseMutationBuilder) = {
@@ -242,9 +244,8 @@ case class UpsertDataItemIfInRelationWithInterpreter(mutaction: UpsertDataItemIf
 
   override val errorMapper = {
     // https://dev.mysql.com/doc/refman/5.5/en/error-messages-server.html#error_er_dup_entry
-    case e: PSQLException if e.getSQLState == "23505" && getFieldOption(mutaction.createNonListArgs.keys ++ mutaction.updateNonListArgs.keys, e).isDefined =>
-      APIErrors.UniqueConstraintViolation(mutaction.createPath.lastModel.name,
-                                          getFieldOption(mutaction.createNonListArgs.keys ++ mutaction.updateNonListArgs.keys, e).get)
+    case e: PSQLException if e.getSQLState == "23505" && getFieldOption(model, e).isDefined =>
+      APIErrors.UniqueConstraintViolation(mutaction.createPath.lastModel.name, getFieldOption(model, e).get)
 
     case e: PSQLException if e.getSQLState == "23503" =>
       APIErrors.NodeDoesNotExist("") //todo
