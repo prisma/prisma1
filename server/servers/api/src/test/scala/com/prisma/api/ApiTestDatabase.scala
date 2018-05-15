@@ -49,7 +49,7 @@ case class ApiTestDatabase()(implicit dependencies: TestApiDependencies) extends
   def runDatabaseMutactionOnClientDb(mutaction: DatabaseMutaction) = dependencies.databaseMutactionExecutor.execute(Vector(mutaction)).await
 
   private def createModelTable(project: Project, model: Model) = {
-    runMutaction(CreateModelTable(project.id, model.name))
+    runMutaction(CreateModelTable(project.id, model.dbName))
 
     model.scalarNonListFields
       .filter(f => !ReservedFields.reservedFieldNames.contains(f.name))

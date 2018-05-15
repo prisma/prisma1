@@ -4,7 +4,7 @@ import com.prisma.deploy.connector.{DatabaseIntrospectionInferrer, DeployConnect
 import com.prisma.deploy.migration.inference.{SchemaInferrer, SchemaMapping}
 import com.prisma.gc_values.GCValue
 import com.prisma.shared.models.IdType.Id
-import com.prisma.shared.models.Manifestations.InlineRelationManifestation
+import com.prisma.shared.models.Manifestations.{InlineRelationManifestation, ModelManifestation}
 import com.prisma.shared.models._
 import com.prisma.utils.await.AwaitUtils
 import cool.graph.cuid.Cuid
@@ -97,7 +97,8 @@ object SchemaDsl extends AwaitUtils {
         }
         field.copy(relation = newRelation)
       }
-      model.copy(fields = newFields)
+
+      model.copy(fields = newFields, manifestation = Some(ModelManifestation(model.name + "_Table")))
     }
     project.copy(schema = schema.copy(relations = newRelations, models = newModels))
   }

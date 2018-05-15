@@ -11,8 +11,8 @@ object CreateRelationInterpreter extends SqlMutactionInterpreter[CreateRelationT
     PostgresDeployDatabaseMutationBuilder.createRelationTable(
       projectId = mutaction.projectId,
       relationTableName = mutaction.relation.relationTableName,
-      aTableName = aModel.name,
-      bTableName = bModel.name
+      aTableName = aModel.dbName,
+      bTableName = bModel.dbName
     )
   }
 
