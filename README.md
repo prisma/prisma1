@@ -168,7 +168,7 @@ You can now connect to Prisma's GraphQL API, select what you would like to do ne
 
 ## Examples
 
-TBD
+See a list of Prisma examples to get started [here](./examples).
 
 ## Architecture
 
