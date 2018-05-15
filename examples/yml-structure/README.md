@@ -32,11 +32,11 @@ yarn prisma deploy
 <details>
  <summary><strong>I don't have <a href="https://www.docker.com">Docker</a> installed on my machine</strong></summary>
 
-To deploy your service to a public cluster (rather than locally with Docker), you need to perform the following steps:
+To deploy your service to a demo cluster (rather than locally with Docker), you need to perform the following steps:
 
 1.  Remove the `cluster` property from `prisma.yml`
 1.  Run `yarn prisma deploy`
-1.  When prompted by the CLI, select a demo cluster (e.g. `prisma-eu1` or `prisma-us1`)
+1.  When prompted by the CLI, select a demo cluster (e.g. `demo-eu1` or `demo-us1`)
 1.  Replace the [`endpoint`](./src/index.js#L23) in `index.js` with the HTTP endpoint that was printed after the previous command
 
 </details>
@@ -97,11 +97,15 @@ To get a hold of the JWT token, type `prisma token` in the console and send subs
 }
 ```
 
-More features of the `seceret` property in `prisma.yml` are:
+More features of the `secret` property in `prisma.yml` are:
 
 * It can have multiple secrets as comma separated values
 
 `secret: first-secret, second-secret, third-secret`
+
+This can be used to refresh authentication token without causing a service downtime. In this example, we are using multiple secrets
+
+`secret: my-secret-key, another-secret-key`
 
 * It can have a value supplied from environment variables
 

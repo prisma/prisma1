@@ -1,6 +1,6 @@
 # Postgres
 
-This example demonstrates how to implement a Postgres connector with Prisma.
+This example demonstrates how to use Prisma with Postgres.
 
 ## Get started
 
@@ -32,11 +32,11 @@ yarn prisma deploy
 <details>
  <summary><strong>I don't have <a href="https://www.docker.com">Docker</a> installed on my machine</strong></summary>
 
-To deploy your service to a public cluster (rather than locally with Docker), you need to perform the following steps:
+To deploy your service to a demo cluster (rather than locally with Docker), you need to perform the following steps:
 
 1.  Remove the `cluster` property from `prisma.yml`
 1.  Run `yarn prisma deploy`
-1.  When prompted by the CLI, select a demo cluster (e.g. `prisma-eu1` or `prisma-us1`)
+1.  When prompted by the CLI, select a demo cluster (e.g. `demo-eu1` or `demo-us1`)
 1.  Replace the [`endpoint`](./src/index.js#L23) in `index.js` with the HTTP endpoint that was printed after the previous command
 
 </details>
