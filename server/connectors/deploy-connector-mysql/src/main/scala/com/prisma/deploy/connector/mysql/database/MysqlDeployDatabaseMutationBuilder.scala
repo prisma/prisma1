@@ -38,8 +38,6 @@ object MysqlDeployDatabaseMutationBuilder {
 
     sqlu"""CREATE TABLE `#$projectId`.`#$name`
     (`id` CHAR(25) #$idCharset NOT NULL,
-    `createdAt` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    `updatedAt` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     PRIMARY KEY (`id`),
     UNIQUE INDEX `id_UNIQUE` (`id` ASC))
     DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci"""
