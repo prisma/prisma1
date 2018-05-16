@@ -184,10 +184,11 @@ object QueryArgumentsHelpers {
           val relation          = field.relation.get
           val relationTableName = relation.relationTableNameNew(schema)
           val column            = relation.columnForRelationSide(schema, field.relationSide.get)
+          val oppositeColumn    = relation.columnForRelationSide(schema, field.oppositeRelationSide.get)
 
           Some(sql""" not exists (select  *
                                   from    "#$projectId"."#${relationTableName}"
-                                  where   "#$projectId"."#${relationTableName}"."#${column}" = """ ++ tableNameSql ++ sql""".id
+                                  where   "#$projectId"."#${relationTableName}"."#${column}" = """ ++ tableNameSql ++ sql"""."#${oppositeColumn}"
                                   )""")
 
         // this is used for the node: {} field in the Subscription Filter
