@@ -5,7 +5,7 @@ import com.prisma.shared.models._
 case class MigrationStepMapperImpl(projectId: String) extends MigrationStepMapper {
   def mutactionFor(previousSchema: Schema, nextSchema: Schema, step: MigrationStep): Vector[DeployMutaction] = step match {
     case x: CreateModel =>
-      val model = previousSchema.getModelByName_!(x.name)
+      val model = nextSchema.getModelByName_!(x.name)
       Vector(CreateModelTable(projectId, model.name, model.dbNameOfIdField))
 
     case x: DeleteModel =>
