@@ -56,7 +56,7 @@ class ListValueImportExportSpec extends FlatSpec with Matchers with ApiSpecBase 
         |]}
         |""".stripMargin.parseJson
 
-    importer.executeImport(lists).await().toString should include("Failure inserting into listTable Model0_stringList for the id 3 for value ")
+    importer.executeImport(lists).await().toString should include("Failure inserting into listTable Model0_Table_stringList_column for the id 3 for value ")
   }
 
   "Exporting nodes" should "work (with filesize limit set to 1000 for test) and preserve the order of items" in {

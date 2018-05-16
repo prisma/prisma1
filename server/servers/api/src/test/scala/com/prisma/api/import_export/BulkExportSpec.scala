@@ -164,11 +164,11 @@ class BulkExportSpec extends FlatSpec with Matchers with ApiSpecBase with AwaitU
     JsArray(firstChunk.out.jsonElements).toString should be(
       """[""" concat
         """[{"_typeName":"Model0","id":"0","fieldName":"relation0bottom"},{"_typeName":"Model0","id":"0","fieldName":"relation0top"}],""" concat
-        """[{"_typeName":"Model0","id":"3","fieldName":"relation0bottom"},{"_typeName":"Model0","id":"3","fieldName":"relation0top"}],""" concat
-        """[{"_typeName":"Model0","id":"4","fieldName":"relation0bottom"},{"_typeName":"Model0","id":"4","fieldName":"relation0top"}],""" concat
-        """[{"_typeName":"Model0","id":"4","fieldName":"relation0bottom"},{"_typeName":"Model0","id":"3","fieldName":"relation0top"}],""" concat
         """[{"_typeName":"Model0","id":"4","fieldName":"relation0bottom"},{"_typeName":"Model0","id":"0","fieldName":"relation0top"}],""" concat
         """[{"_typeName":"Model0","id":"3","fieldName":"relation0bottom"},{"_typeName":"Model0","id":"0","fieldName":"relation0top"}],""" concat
+        """[{"_typeName":"Model0","id":"3","fieldName":"relation0bottom"},{"_typeName":"Model0","id":"3","fieldName":"relation0top"}],""" concat
+        """[{"_typeName":"Model0","id":"4","fieldName":"relation0bottom"},{"_typeName":"Model0","id":"3","fieldName":"relation0top"}],""" concat
+        """[{"_typeName":"Model0","id":"4","fieldName":"relation0bottom"},{"_typeName":"Model0","id":"4","fieldName":"relation0top"}],""" concat
         """[{"_typeName":"Model1","id":"1","fieldName":"model0"},{"_typeName":"Model0","id":"0","fieldName":"model1"}],""" concat
         """[{"_typeName":"Model1","id":"1","fieldName":"model0"},{"_typeName":"Model0","id":"3","fieldName":"model1"}]""" concat "]")
     firstChunk.cursor.table should be(1)
