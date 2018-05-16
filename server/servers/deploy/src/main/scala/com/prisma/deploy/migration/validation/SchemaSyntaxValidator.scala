@@ -365,15 +365,17 @@ case class SchemaSyntaxValidator(
     def ensureDefaultValuesHaveCorrectType(fieldAndTypes: FieldAndType): Option[SchemaError] = {
       def hasInvalidType: Boolean = {
         getDefaultValueFromField(fieldAndType.fieldDef) match {
-          case Some(Good(gcValue)) => false
-          case None                => false
-          case Some(Bad(err))      => true
+          case Some(Good(_)) => false
+          case None          => false
+          case Some(Bad(_))  => true
         }
       }
 
+      def isNotList = !fieldAndTypes.fieldDef.isList
+
       fieldAndType.fieldDef.hasDefaultValueDirective match {
-        case true if hasInvalidType => Some(SchemaErrors.invalidEnumValueInDefaultValue(fieldAndType))
-        case _                      => None
+        case true if isNotList && hasInvalidType => Some(SchemaErrors.invalidTypeForDefaultValue(fieldAndType))
+        case _                                   => None
       }
     }
 

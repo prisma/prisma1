@@ -30,6 +30,7 @@ object SchemaInferrer {
   }
 }
 
+//todo get rid of these???
 sealed trait ProjectSyntaxError                                                                                            extends Exception
 case class RelationDirectiveNeeded(type1: String, type1Fields: Vector[String], type2: String, type2Fields: Vector[String]) extends ProjectSyntaxError
 case class InvalidGCValue(err: InvalidValueForScalarType)                                                                  extends ProjectSyntaxError
@@ -37,7 +38,7 @@ case class GenericProblem(msg: String) extends ProjectSyntaxError {
   override def toString = msg
 }
 
-case class ProjectSyntaxErrorException2(error: ProjectSyntaxError) extends Exception
+case class ProjectSyntaxErrorException(error: ProjectSyntaxError) extends Exception
 
 case class SchemaInferrerImpl(
     baseSchema: Schema,
@@ -150,7 +151,7 @@ case class SchemaInferrerImpl(
               isRequired = enumField.isRequired,
               isList = enumField.isList,
               isUnique = enumField.isUnique,
-              enum = None,
+              enum = nextEnums.find(_.name == enumField.enumName),
               defaultValue = enumField.defaultValue,
               relation = None,
               relationSide = None,
