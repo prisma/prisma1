@@ -1,7 +1,6 @@
 package com.prisma.deploy.migration.validation
 
 import com.prisma.deploy.gc_value.GCStringConverter
-import com.prisma.deploy.migration.inference.InvalidGCValue
 import com.prisma.deploy.validation._
 import com.prisma.shared.models.TypeIdentifier
 import org.scalactic.{Bad, Good}

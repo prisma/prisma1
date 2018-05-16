@@ -1,6 +1,6 @@
 package com.prisma.shared.schema_dsl
 
-import com.prisma.deploy.connector.{DatabaseIntrospectionInferrer, DeployConnector, InferredTables}
+import com.prisma.deploy.connector.{DeployConnector, InferredTables}
 import com.prisma.deploy.migration.inference.{SchemaInferrer, SchemaMapping}
 import com.prisma.deploy.migration.validation.SchemaSyntaxValidator
 import com.prisma.gc_values.GCValue
@@ -35,7 +35,7 @@ object SchemaDsl extends AwaitUtils {
       InferredTables.empty,
       isActive = deployConnector.isActive,
       shouldCheckAgainstInferredTables = false
-    )(sdlString)
+    )(sdlString.stripMargin)
     if (deployConnector.isPassive) {
       addManifestations(project)
     } else {
