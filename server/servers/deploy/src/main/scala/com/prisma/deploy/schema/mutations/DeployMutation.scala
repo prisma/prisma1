@@ -43,7 +43,6 @@ case class DeployMutation(
 
   val validator                                = SchemaSyntaxValidator(args.types, isActive = deployConnector.isActive)
   val schemaErrors: immutable.Seq[SchemaError] = validator.validate
-  val prismaSdl: PrismaSdl                     = validator.generateSDL
   val inferredTablesFuture                     = deployConnector.databaseIntrospectionInferrer(project.id).infer()
 
   override def execute: Future[MutationResult[DeployMutationPayload]] = {
@@ -63,8 +62,9 @@ case class DeployMutation(
   }
 
   private def performDeployment: Future[MutationSuccess[DeployMutationPayload]] = inferredTablesFuture.flatMap { inferredTables =>
-    val schemaMapping      = schemaMapper.createMapping(graphQlSdl)
-    val inferredNextSchema = schemaInferrer.infer(project.schema, schemaMapping, prismaSdl, inferredTables)
+    val schemaMapping        = schemaMapper.createMapping(graphQlSdl)
+    val prismaSdl: PrismaSdl = validator.generateSDL
+    val inferredNextSchema   = schemaInferrer.infer(project.schema, schemaMapping, prismaSdl, inferredTables)
     // todo check relation against inferred tables InferredTablesValidator
     val functionsOrErrors = getFunctionModelsOrErrors(args.functions)
 

@@ -1,7 +1,10 @@
 package com.prisma.deploy.migration.validation
 
+import com.prisma.deploy.gc_value.GCStringConverter
+import com.prisma.deploy.migration.inference.InvalidGCValue
 import com.prisma.deploy.validation._
 import com.prisma.shared.models.TypeIdentifier
+import org.scalactic.{Bad, Good}
 import sangria.ast._
 
 import scala.collection.immutable.Seq
@@ -110,11 +113,12 @@ case class SchemaSyntaxValidator(
     val prismaTypes: Vector[PrismaSdl => PrismaType] = doc.objectTypes.map { definition =>
       val prismaFields = definition.fields.map {
         case x if isRelationField(x) => RelationalPrismaField(x.name, None, x.isList, x.isRequired, x.typeName, x.relationName, x.onDelete)(_)
-        case x if isEnumField(x)     => EnumPrismaField(x.name, None, x.isList, x.isRequired, x.isUnique, x.typeName, None)(_)
-        // todo add DefaultValue
-        case x if isScalarField(x) => ScalarPrismaField(x.name, None, x.isList, x.isRequired, x.isUnique, typeIdentifierForTypename(x.fieldType), None)(_)
-        //todo add defValue
+        case x if isEnumField(x)     => EnumPrismaField(x.name, None, x.isList, x.isRequired, x.isUnique, x.typeName, getDefaultValueFromField_!(x))(_)
+        case x if isScalarField(x) =>
+          ScalarPrismaField(x.name, None, x.isList, x.isRequired, x.isUnique, typeIdentifierForTypename(x.fieldType), getDefaultValueFromField_!(x))(_)
       }
+
+      //todo column names here?
 
       PrismaType(definition.name, None, fieldFn = prismaFields)(_)
     }
@@ -358,13 +362,37 @@ case class SchemaSyntaxValidator(
       }
     }
 
+    def ensureDefaultValuesHaveCorrectType(fieldAndTypes: FieldAndType): Option[SchemaError] = {
+      def hasInvalidType: Boolean = {
+        getDefaultValueFromField(fieldAndType.fieldDef) match {
+          case Some(Good(gcValue)) => false
+          case None                => false
+          case Some(Bad(err))      => true
+        }
+      }
+
+      fieldAndType.fieldDef.hasDefaultValueDirective match {
+        case true if hasInvalidType => Some(SchemaErrors.invalidEnumValueInDefaultValue(fieldAndType))
+        case _                      => None
+      }
+    }
+
     fieldAndType.fieldDef.directives.flatMap(validateDirectiveRequirements) ++
       ensureDirectivesAreUnique(fieldAndType) ++
       ensureNoOldDefaultValueDirectives(fieldAndType) ++
       ensureRelationDirectivesArePlacedCorrectly(fieldAndType) ++
       ensureNoDefaultValuesOnListFields(fieldAndType) ++
-      ensureNoInvalidEnumValuesInDefaultValues(fieldAndType)
+      ensureNoInvalidEnumValuesInDefaultValues(fieldAndType) ++
+      ensureDefaultValuesHaveCorrectType(fieldAndType)
   }
+
+  private def getDefaultValueFromField(fieldDef: FieldDefinition) = {
+    val defaultValue   = fieldDef.directiveArgumentAsString("default", "value")
+    val typeIdentifier = typeIdentifierForTypename(fieldDef.fieldType)
+    defaultValue.map(value => GCStringConverter(typeIdentifier, fieldDef.isList).toGCValue(value))
+  }
+
+  def getDefaultValueFromField_!(fieldDef: FieldDefinition) = getDefaultValueFromField(fieldDef).map(_.get)
 
   def validateEnumTypes: Seq[SchemaError] = {
     val duplicateNames = doc.enumNames.diff(doc.enumNames.distinct).distinct.flatMap(dupe => Some(SchemaErrors.enumNamesMustBeUnique(doc.enumType(dupe).get)))
