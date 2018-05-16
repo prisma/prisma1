@@ -94,7 +94,7 @@ case class PostgresApiDatabaseQueryBuilder(
     val (conditionCommand, orderByCommand, limitCommand) = extractQueryArgs(
       projectId = schemaName,
       tableName = tableName,
-      idFieldName = "id",
+      idFieldName = relation.columnForRelationSide(schema, RelationSide.A),
       args = args,
       defaultOrderShortcut = None,
       overrideMaxNodeCount = overrideMaxNodeCount
