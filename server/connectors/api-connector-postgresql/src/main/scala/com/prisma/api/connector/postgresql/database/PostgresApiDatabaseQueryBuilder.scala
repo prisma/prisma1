@@ -45,7 +45,7 @@ case class PostgresApiDatabaseQueryBuilder(
   private def getResultForRelation(relation: Relation): GetResult[RelationNode] = GetResult { ps: PositionedResult =>
     val modelAColumn = relation.columnForRelationSide(schema, RelationSide.A)
     val modelBColumn = relation.columnForRelationSide(schema, RelationSide.B)
-    RelationNode(id = ps.rs.getAsID("id"), a = ps.rs.getAsID(modelAColumn), b = ps.rs.getAsID(modelBColumn))
+    RelationNode(a = ps.rs.getAsID(modelAColumn), b = ps.rs.getAsID(modelBColumn))
   }
 
   implicit object GetRelationCount extends GetResult[(IdGCValue, Int)] {
