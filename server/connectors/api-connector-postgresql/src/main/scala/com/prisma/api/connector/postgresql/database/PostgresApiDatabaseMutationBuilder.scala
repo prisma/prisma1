@@ -147,9 +147,8 @@ case class PostgresApiDatabaseMutationBuilder(
     val updateValues = combineByComma(args.raw.asRoot.map.map { case (k, v) => escapeKey(model.getFieldByName_!(k).dbName) ++ sql" = $v" })
 
     if (updateValues.isDefined) {
-      (sql"""UPDATE "#$schemaName"."#${model.dbName}"""" ++ sql"SET " ++ addUpdatedDateTime(updateValues) ++ whereFilterAppendix(schemaName,
-                                                                                                                                 model.dbName,
-                                                                                                                                 whereFilter)).asUpdate
+      (sql"""UPDATE "#$schemaName"."#${model.dbName}"""" ++ sql"SET " ++ addUpdatedDateTime(model, updateValues) ++
+        whereFilterAppendix(schemaName, model.dbName, whereFilter)).asUpdate
     } else {
       DBIOAction.successful(())
     }
@@ -163,7 +162,7 @@ case class PostgresApiDatabaseMutationBuilder(
       case _: ModelEdge   => sql""
     }
 
-    val baseQuery = sql"""UPDATE "#$schemaName"."#${model.dbName}" SET """ ++ addUpdatedDateTime(updateValues) ++ sql"""WHERE "#${path.lastModel.dbNameOfIdField}" ="""
+    val baseQuery = sql"""UPDATE "#$schemaName"."#${model.dbName}" SET """ ++ addUpdatedDateTime(model, updateValues) ++ sql"""WHERE "#${path.lastModel.dbNameOfIdField}" ="""
 
     if (updateArgs.raw.asRoot.map.isEmpty) {
       DBIOAction.successful(())
@@ -183,12 +182,17 @@ case class PostgresApiDatabaseMutationBuilder(
   //endregion
 
   //region UPSERT
-  private def addUpdatedDateTime(updateValues: Option[SQLActionBuilder]) = {
-    val today              = new Date()
-    val exactlyNow         = new DateTime(today).withZone(DateTimeZone.UTC)
-    val currentDateGCValue = DateTimeGCValue(exactlyNow)
-    val updatedAt          = sql""""updatedAt" = $currentDateGCValue """
-    combineByComma(updateValues ++ List(updatedAt))
+  private def addUpdatedDateTime(model: Model, updateValues: Option[SQLActionBuilder]): Option[SQLActionBuilder] = {
+    model.updateAtField match {
+      case Some(updatedAtField) =>
+        val today              = new Date()
+        val exactlyNow         = new DateTime(today).withZone(DateTimeZone.UTC)
+        val currentDateGCValue = DateTimeGCValue(exactlyNow)
+        val updatedAt          = sql""""#${updatedAtField.dbName}" = $currentDateGCValue """
+        combineByComma(updateValues ++ List(updatedAt))
+      case None =>
+        updateValues
+    }
   }
 
   def upsert(

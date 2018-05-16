@@ -144,6 +144,7 @@ case class Model(
   lazy val nonListFields                      = fields.filter(!_.isList)
   lazy val idField                            = getFieldByName("id")
   lazy val dbNameOfIdField                    = idField.get.dbName
+  val updateAtField                           = getFieldByName("updatedAt")
 
   lazy val cascadingRelationFields: List[Field] = relationFields.filter(field => field.relation.get.sideOfModelCascades(this))
 
