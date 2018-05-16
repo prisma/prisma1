@@ -580,15 +580,15 @@ case class PostgresApiDatabaseMutationBuilder(
         val currentTimeStamp              = currentTimeStampUTC
 
         mutaction.args.foreach { arg =>
-          columns.zipWithIndex.foreach { columnAndIndex =>
-            val index  = columnAndIndex._2 + 1
-            val column = columnAndIndex._1
-
-            arg.raw.asRoot.map.get(column) match {
-              case Some(x)                                                => itemInsert.setGcValue(index, x)
-              case None if column == "createdAt" || column == "updatedAt" => itemInsert.setTimestamp(index, currentTimeStamp)
-              case None                                                   => itemInsert.setNull(index, java.sql.Types.NULL)
-            }
+          val argsAsRoot = arg.raw.asRoot
+          model.scalarNonListFields.zipWithIndex.foreach {
+            case (field, index) =>
+              argsAsRoot.map.get(field.name) match {
+                case Some(NullGCValue) if field == "createdAt" || field == "updatedAt" => itemInsert.setTimestamp(index + 1, currentTimeStamp)
+                case Some(gCValue)                                                     => itemInsert.setGcValue(index + 1, gCValue)
+                case None if field == "createdAt" || field == "updatedAt"              => itemInsert.setTimestamp(index + 1, currentTimeStamp)
+                case None                                                              => itemInsert.setNull(index + 1, java.sql.Types.NULL)
+              }
           }
           itemInsert.addBatch()
         }
