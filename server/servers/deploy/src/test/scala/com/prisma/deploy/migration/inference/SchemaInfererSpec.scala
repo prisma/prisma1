@@ -5,9 +5,7 @@ import com.prisma.deploy.migration.validation.SchemaSyntaxValidator
 import com.prisma.shared.models.Manifestations.{FieldManifestation, InlineRelationManifestation, ModelManifestation, RelationTableManifestation}
 import com.prisma.shared.models.{RelationSide, Schema}
 import com.prisma.shared.schema_dsl.SchemaDsl
-import org.scalactic.Or
 import org.scalatest.{Matchers, WordSpec}
-import sangria.parser.QueryParser
 
 class SchemaInfererSpec extends WordSpec with Matchers {
   val emptyProject = SchemaDsl().buildProject()
