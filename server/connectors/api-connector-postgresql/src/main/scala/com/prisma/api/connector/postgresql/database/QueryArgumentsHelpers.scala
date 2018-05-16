@@ -179,16 +179,20 @@ object QueryArgumentsHelpers {
           Some(tableNameSql ++ sql"""."#${field.dbName}" = $value""")
 
         case FinalRelationFilter(schema, key, null, field, filterName) =>
-          if (field.isList) throw APIErrors.FilterCannotBeNullOnToManyField(field.dbName)
+          if (field.isList) throw APIErrors.FilterCannotBeNullOnToManyField(field.name)
 
           val relation          = field.relation.get
           val relationTableName = relation.relationTableNameNew(schema)
           val column            = relation.columnForRelationSide(schema, field.relationSide.get)
-          val oppositeColumn    = relation.columnForRelationSide(schema, field.oppositeRelationSide.get)
+          // fixme: an ugly hack that is hard to explain. ask marcus.
+          val otherIdColumn = schema.models.find(_.dbName == tableName) match {
+            case Some(model) => model.idField.get.dbName
+            case None        => "id"
+          }
 
           Some(sql""" not exists (select  *
                                   from    "#$projectId"."#${relationTableName}"
-                                  where   "#$projectId"."#${relationTableName}"."#${column}" = """ ++ tableNameSql ++ sql"""."#${oppositeColumn}"
+                                  where   "#$projectId"."#${relationTableName}"."#${column}" = """ ++ tableNameSql ++ sql"""."#$otherIdColumn"
                                   )""")
 
         // this is used for the node: {} field in the Subscription Filter
