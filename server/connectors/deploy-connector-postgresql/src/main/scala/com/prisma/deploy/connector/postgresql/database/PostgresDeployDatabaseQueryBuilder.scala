@@ -8,7 +8,7 @@ import slick.jdbc.{PositionedParameters, SQLActionBuilder}
 object PostgresDeployDatabaseQueryBuilder {
 
   def existsByModel(projectId: String, model: Model): SQLActionBuilder = {
-    sql"""select exists (select "${model.dbNameOfIdField}" from "#$projectId"."#${model.dbName}")"""
+    sql"""select exists (select "#${model.dbNameOfIdField}" from "#$projectId"."#${model.dbName}")"""
   }
 
   def existsByRelation(projectId: String, relationId: String): SQLActionBuilder = {
