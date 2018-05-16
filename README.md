@@ -1,6 +1,6 @@
 <p align="center"><a href="https://www.prisma.io"><img src="https://i.imgur.com/wD4rVt4.png" alt="Prisma" height="160px"></a></p>
 
-[Website](https://www.prisma.io) • [Docs](https://www.prisma.io/docs/) • [Blog](https://blog.prisma.io/) • [Forum](https://www.prisma.io/forum) • [Slack](https://slack.prisma.io/) • [Twitter](https://twitter.com/prismagraphql) • [OSS](https://oss.prisma.io/) • [Learn](https://www.howtographql.com)
+[Website](https://www.prisma.io) • [Docs](https://www.prisma.io/docs/) • [Blog](https://www.prisma.io/blog) • [Forum](https://www.prisma.io/forum) • [Slack](https://slack.prisma.io/) • [Twitter](https://twitter.com/prisma) • [OSS](https://oss.prisma.io/) • [Learn](https://www.howtographql.com)
 
 [![CircleCI](https://circleci.com/gh/prismagraphql/prisma.svg?style=shield)](https://circleci.com/gh/prismagraphql/prisma) [![Slack Status](https://slack.prisma.io/badge.svg)](https://slack.prisma.io) [![npm version](https://badge.fury.io/js/prisma.svg)](https://badge.fury.io/js/prisma)
 
@@ -179,7 +179,7 @@ Collection of Prisma example projects 💡
 * [application-server](./examples/application-server)
 * [resolver-forwarding](./examples/resolver-forwarding)
 
-You can also check the [**AirBnB clone example**](https://github.com/graphcool/graphql-server-example) we built as a fully-featured demo app for Prisma.
+You can also check the [**AirBnB clone example**](https://github.com/prismagraphql/graphql-server-example) we built as a fully-featured demo app for Prisma.
 
 ## Architecture
 
@@ -263,8 +263,8 @@ Prisma has a community of thousands of amazing developers and contributors. Welc
 
 - [Forum](https://www.prisma.io/forum)
 - [Slack](https://slack.prisma.io/)
-- [Twitter](https://twitter.com/prismagraphql)
-- [Facebook](https://www.facebook.com/GraphcoolHQ)
+- [Twitter](https://twitter.com/prisma)
+- [Facebook](https://www.facebook.com/prisma.io)
 - [Meetup](https://www.meetup.com/graphql-berlin)
 - [GraphQL Europe](https://www.graphql-europe.org/) (June 15, Berlin)
 - [GraphQL Day](https://www.graphqlday.org/)
