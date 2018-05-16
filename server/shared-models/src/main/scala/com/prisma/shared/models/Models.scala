@@ -219,13 +219,10 @@ case class Field(
 ) {
   def id = name
   def dbName = {
-    if (isRelation) {
-      relation match {
-        case Some(r) if r.isInlineRelation => r.manifestation.get.asInstanceOf[InlineRelationManifestation].referencingColumn
-        case None                          => sys.error("not a valid call on relations manifested via a table")
-      }
-    } else {
-      manifestation.map(_.dbName).getOrElse(name)
+    relation match {
+      case Some(r) if r.isInlineRelation => r.manifestation.get.asInstanceOf[InlineRelationManifestation].referencingColumn
+      case None                          => manifestation.map(_.dbName).getOrElse(name)
+      case _                             => sys.error("not a valid call on relations manifested via a table")
     }
   }
   def isScalar: Boolean                             = typeIdentifier != TypeIdentifier.Relation

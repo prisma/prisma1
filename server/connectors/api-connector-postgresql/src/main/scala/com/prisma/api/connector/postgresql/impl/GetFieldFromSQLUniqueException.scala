@@ -5,7 +5,7 @@ import org.postgresql.util.PSQLException
 object GetFieldFromSQLUniqueException {
 
   def getFieldOption(model: Model, e: PSQLException): Option[String] = {
-    model.fields.filter { field =>
+    model.scalarFields.filter { field =>
       val constraintNameThatMightBeTooLong = model.dbName + "." + field.dbName + "._UNIQUE"
       val constraintName                   = constraintNameThatMightBeTooLong.substring(0, Math.min(30, constraintNameThatMightBeTooLong.length))
       e.getMessage.contains(constraintName)
