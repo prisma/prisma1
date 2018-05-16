@@ -584,10 +584,10 @@ case class PostgresApiDatabaseMutationBuilder(
           model.scalarNonListFields.zipWithIndex.foreach {
             case (field, index) =>
               argsAsRoot.map.get(field.name) match {
-                case Some(NullGCValue) if field == "createdAt" || field == "updatedAt" => itemInsert.setTimestamp(index + 1, currentTimeStamp)
-                case Some(gCValue)                                                     => itemInsert.setGcValue(index + 1, gCValue)
-                case None if field == "createdAt" || field == "updatedAt"              => itemInsert.setTimestamp(index + 1, currentTimeStamp)
-                case None                                                              => itemInsert.setNull(index + 1, java.sql.Types.NULL)
+                case Some(NullGCValue) if field.name == "createdAt" || field.name == "updatedAt" => itemInsert.setTimestamp(index + 1, currentTimeStamp)
+                case Some(gCValue)                                                               => itemInsert.setGcValue(index + 1, gCValue)
+                case None if field.name == "createdAt" || field.name == "updatedAt"              => itemInsert.setTimestamp(index + 1, currentTimeStamp)
+                case None                                                                        => itemInsert.setNull(index + 1, java.sql.Types.NULL)
               }
           }
           itemInsert.addBatch()
