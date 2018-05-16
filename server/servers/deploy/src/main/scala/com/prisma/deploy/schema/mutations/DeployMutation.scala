@@ -5,7 +5,7 @@ import com.prisma.deploy.connector.{DeployConnector, MigrationPersistence, Proje
 import com.prisma.deploy.migration._
 import com.prisma.deploy.migration.inference._
 import com.prisma.deploy.migration.migrator.Migrator
-import com.prisma.deploy.migration.validation.{SchemaError, SchemaSyntaxValidator, SchemaWarning}
+import com.prisma.deploy.migration.validation._
 import com.prisma.deploy.schema.InvalidQuery
 import com.prisma.deploy.validation.DestructiveChanges
 import com.prisma.messagebus.pubsub.Only
@@ -22,7 +22,7 @@ import scala.util.{Failure, Success}
 case class DeployMutation(
     args: DeployMutationInput,
     project: Project,
-    schemaInferrer: SchemaInferrer,
+    schemaInferrer: SchemaInferrer2,
     migrationStepsInferrer: MigrationStepsInferrer,
     schemaMapper: SchemaMapper,
     migrationPersistence: MigrationPersistence,
@@ -41,8 +41,9 @@ case class DeployMutation(
     case Failure(e)   => throw InvalidQuery(e.getMessage)
   }
 
-  val validator                                = SchemaSyntaxValidator(args.types, isActive = deployConnector.isActive)
-  val schemaErrors: immutable.Seq[SchemaError] = validator.validate()
+  val validator                                = SchemaSyntaxValidator2(args.types, isActive = deployConnector.isActive)
+  val schemaErrors: immutable.Seq[SchemaError] = validator.validate
+  val prismaSdl: PrismaSdl                     = validator.generateSDL
   val inferredTablesFuture                     = deployConnector.databaseIntrospectionInferrer(project.id).infer()
 
   override def execute: Future[MutationResult[DeployMutationPayload]] = {
@@ -62,65 +63,48 @@ case class DeployMutation(
   }
 
   private def performDeployment: Future[MutationSuccess[DeployMutationPayload]] = inferredTablesFuture.flatMap { inferredTables =>
-    val schemaMapping = schemaMapper.createMapping(graphQlSdl)
-    schemaInferrer.infer(project.schema, schemaMapping, graphQlSdl, inferredTables) match {
-      case Good(inferredNextSchema) =>
-        val functionsOrErrors = getFunctionModelsOrErrors(args.functions)
+    val schemaMapping      = schemaMapper.createMapping(graphQlSdl)
+    val inferredNextSchema = schemaInferrer.infer(project.schema, schemaMapping, prismaSdl, inferredTables)
+    val functionsOrErrors  = getFunctionModelsOrErrors(args.functions)
 
-        functionsOrErrors match {
-          case Bad(errors) =>
-            Future.successful(
-              MutationSuccess(DeployMutationPayload(args.clientMutationId, Some(Migration.empty(project.id)), errors = schemaErrors ++ errors, Seq.empty)))
+    functionsOrErrors match {
+      case Bad(errors) =>
+        Future.successful(
+          MutationSuccess(DeployMutationPayload(args.clientMutationId, Some(Migration.empty(project.id)), errors = schemaErrors ++ errors, Seq.empty)))
 
-          case Good(functionsForInput) =>
-            val steps = if (deployConnector.isActive) {
-              migrationStepsInferrer.infer(project.schema, inferredNextSchema, schemaMapping)
-            } else {
-              Vector.empty
-            }
-            val existingDataValidation = DestructiveChanges(deployConnector, project, inferredNextSchema, steps)
-            val checkResults           = existingDataValidation.checkAgainstExistingData
-
-            checkResults.flatMap { results =>
-              val destructiveWarnings: Vector[SchemaWarning] = results.collect { case warning: SchemaWarning => warning }
-              val inconsistencyErrors: Vector[SchemaError]   = results.collect { case error: SchemaError     => error }
-
-              (inconsistencyErrors, destructiveWarnings, args.force.getOrElse(false)) match {
-
-                case (errors, warnings, _) if errors.nonEmpty =>
-                  Future.successful(
-                    MutationSuccess(DeployMutationPayload(args.clientMutationId, Some(Migration.empty(project.id)), errors = schemaErrors ++ errors, warnings)))
-
-                case (_, warnings, _) if warnings.isEmpty =>
-                  val secretsUpdatedFuture = updateSecretsIfNecessary()
-                  val migration            = secretsUpdatedFuture.flatMap(secret => handleMigration(inferredNextSchema, steps ++ secret, functionsForInput))
-                  migration.map(mig => MutationSuccess(DeployMutationPayload(args.clientMutationId, mig, errors = schemaErrors, warnings)))
-
-                case (_, warnings, true) =>
-                  val secretsUpdatedFuture = updateSecretsIfNecessary()
-                  val migration            = secretsUpdatedFuture.flatMap(secret => handleMigration(inferredNextSchema, steps ++ secret, functionsForInput))
-                  migration.map(mig => MutationSuccess(DeployMutationPayload(args.clientMutationId, mig, errors = schemaErrors, warnings)))
-
-                case (_, warnings, false) =>
-                  Future.successful(
-                    MutationSuccess(DeployMutationPayload(args.clientMutationId, Some(Migration.empty(project.id)), errors = schemaErrors, warnings)))
-              }
-            }
+      case Good(functionsForInput) =>
+        val steps = if (deployConnector.isActive) {
+          migrationStepsInferrer.infer(project.schema, inferredNextSchema, schemaMapping)
+        } else {
+          Vector.empty
         }
+        val existingDataValidation = DestructiveChanges(deployConnector, project, inferredNextSchema, steps)
+        val checkResults           = existingDataValidation.checkAgainstExistingData
 
-      case Bad(err) =>
-        Future.successful {
-          MutationSuccess(
-            DeployMutationPayload(
-              clientMutationId = args.clientMutationId,
-              migration = None,
-              errors = List(err match {
-                case RelationDirectiveNeeded(t1, _, t2, _) => SchemaError.global(s"Relation directive required for types $t1 and $t2.")
-                case InvalidGCValue(gcError)               => SchemaError.global(s"Invalid value '${gcError.value}' for type ${gcError.typeIdentifier}.")
-                case GenericProblem(msg)                   => SchemaError.global(msg)
-              }),
-              warnings = Seq.empty
-            ))
+        checkResults.flatMap { results =>
+          val destructiveWarnings: Vector[SchemaWarning] = results.collect { case warning: SchemaWarning => warning }
+          val inconsistencyErrors: Vector[SchemaError]   = results.collect { case error: SchemaError     => error }
+
+          (inconsistencyErrors, destructiveWarnings, args.force.getOrElse(false)) match {
+
+            case (errors, warnings, _) if errors.nonEmpty =>
+              Future.successful(
+                MutationSuccess(DeployMutationPayload(args.clientMutationId, Some(Migration.empty(project.id)), errors = schemaErrors ++ errors, warnings)))
+
+            case (_, warnings, _) if warnings.isEmpty =>
+              val secretsUpdatedFuture = updateSecretsIfNecessary()
+              val migration            = secretsUpdatedFuture.flatMap(secret => handleMigration(inferredNextSchema, steps ++ secret, functionsForInput))
+              migration.map(mig => MutationSuccess(DeployMutationPayload(args.clientMutationId, mig, errors = schemaErrors, warnings)))
+
+            case (_, warnings, true) =>
+              val secretsUpdatedFuture = updateSecretsIfNecessary()
+              val migration            = secretsUpdatedFuture.flatMap(secret => handleMigration(inferredNextSchema, steps ++ secret, functionsForInput))
+              migration.map(mig => MutationSuccess(DeployMutationPayload(args.clientMutationId, mig, errors = schemaErrors, warnings)))
+
+            case (_, warnings, false) =>
+              Future.successful(
+                MutationSuccess(DeployMutationPayload(args.clientMutationId, Some(Migration.empty(project.id)), errors = schemaErrors, warnings)))
+          }
         }
     }
   }

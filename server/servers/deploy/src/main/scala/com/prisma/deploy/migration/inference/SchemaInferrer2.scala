@@ -30,14 +30,14 @@ object SchemaInferrer2 {
   }
 }
 
-sealed trait ProjectSyntaxError2                                                                                           extends Exception
-case class RelationDirectiveNeeded(type1: String, type1Fields: Vector[String], type2: String, type2Fields: Vector[String]) extends ProjectSyntaxError2
-case class InvalidGCValue(err: InvalidValueForScalarType)                                                                  extends ProjectSyntaxError2
-case class GenericProblem(msg: String) extends ProjectSyntaxError2 {
+sealed trait ProjectSyntaxError2                                                                                            extends Exception
+case class RelationDirectiveNeeded2(type1: String, type1Fields: Vector[String], type2: String, type2Fields: Vector[String]) extends ProjectSyntaxError2
+case class InvalidGCValue2(err: InvalidValueForScalarType)                                                                  extends ProjectSyntaxError2
+case class GenericProblem2(msg: String) extends ProjectSyntaxError2 {
   override def toString = msg
 }
 
-case class ProjectSyntaxErrorException(error: ProjectSyntaxError) extends Exception
+case class ProjectSyntaxErrorException2(error: ProjectSyntaxError) extends Exception
 
 case class SchemaInferrerImpl2(
     baseSchema: Schema,
@@ -51,17 +51,8 @@ case class SchemaInferrerImpl2(
   val isPassive = !isActive
 
   def infer(): Schema = {
-    for {
-      _ <- nextModels
-      schema = Schema(
-        models = nextModels.toList,
-        relations = nextRelations.toList,
-        enums = nextEnums.toList
-      )
-      finalSchema = addMissingBackRelations(schema)
-//      errors      = if (isPassive && shouldCheckAgainstInferredTables) checkRelationsAgainstInferredTables(finalSchema) else Vector.empty
-      result <- finalSchema
-    } yield result
+    val schema = Schema(models = nextModels.toList, relations = nextRelations.toList, enums = nextEnums.toList)
+    addMissingBackRelations(schema)
   }
 
   lazy val nextModels: Vector[Model] = {
@@ -260,6 +251,8 @@ case class SchemaInferrerImpl2(
     }
     tmp.groupBy(_.name).values.flatMap(_.headOption).toSet
   }
+
+  //todo this needs to go into the schemasyntaxvalidator
 
 //  def checkRelationsAgainstInferredTables(schema: Schema): immutable.Seq[GenericProblem] = {
 //    schema.relations.flatMap { relation =>

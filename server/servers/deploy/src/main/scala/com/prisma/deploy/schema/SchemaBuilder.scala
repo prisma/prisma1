@@ -4,7 +4,7 @@ import akka.actor.ActorSystem
 import com.prisma.deploy.DeployDependencies
 import com.prisma.deploy.connector.{DeployConnector, MigrationPersistence, ProjectPersistence}
 import com.prisma.deploy.migration.SchemaMapper
-import com.prisma.deploy.migration.inference.{MigrationStepsInferrer, SchemaInferrer}
+import com.prisma.deploy.migration.inference.{MigrationStepsInferrer, SchemaInferrer, SchemaInferrer2}
 import com.prisma.deploy.migration.migrator.Migrator
 import com.prisma.deploy.schema.fields.{AddProjectField, DeleteProjectField, DeployField, ManualMarshallerHelpers}
 import com.prisma.deploy.schema.mutations._
@@ -37,7 +37,7 @@ case class SchemaBuilderImpl(
   val migrationPersistence: MigrationPersistence     = dependencies.migrationPersistence
   val deployConnector: DeployConnector               = dependencies.deployConnector
   val migrator: Migrator                             = dependencies.migrator
-  val schemaInferrer: SchemaInferrer                 = SchemaInferrer(isActive = deployConnector.isActive)
+  val schemaInferrer: SchemaInferrer2                = SchemaInferrer2(isActive = deployConnector.isActive)
   val migrationStepsInferrer: MigrationStepsInferrer = MigrationStepsInferrer()
   val schemaMapper: SchemaMapper                     = SchemaMapper
   val projectIdEncoder: ProjectIdEncoder             = dependencies.projectIdEncoder

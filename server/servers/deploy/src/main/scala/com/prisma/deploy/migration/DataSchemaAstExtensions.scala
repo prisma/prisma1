@@ -149,6 +149,7 @@ object DataSchemaAstExtensions {
     def onDelete = directiveArgumentAsString("relation", "onDelete") match {
       case Some("SET_NULL") => OnDelete.SetNull
       case Some("CASCADE")  => OnDelete.Cascade
+      case Some(_)          => sys.error("The SchemaSyntaxvalidator should catch this") // todo
       case None             => OnDelete.SetNull
     }
 
@@ -212,7 +213,7 @@ object DataSchemaAstExtensions {
 
 object DirectiveTypes {
 
-  trait RelationDBDirective
+  sealed trait RelationDBDirective
 
   case class RelationTableDirective(table: String, thisColumn: Option[String], otherColumn: Option[String]) extends RelationDBDirective
   case class InlineRelationDirective(column: Option[String])                                                extends RelationDBDirective

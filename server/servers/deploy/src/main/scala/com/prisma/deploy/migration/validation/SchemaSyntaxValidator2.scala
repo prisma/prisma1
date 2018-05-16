@@ -8,29 +8,29 @@ import sangria.ast.{Argument => SangriaArgument, _}
 import scala.collection.immutable.Seq
 import scala.util.{Failure, Success}
 
-case class DirectiveRequirement(directiveName: String, requiredArguments: Seq[RequiredArg], optionalArguments: Seq[Argument])
-case class RequiredArg(name: String, mustBeAString: Boolean)
-case class Argument(name: String, isValid: sangria.ast.Value => Boolean)
+//case class DirectiveRequirement(directiveName: String, requiredArguments: Seq[RequiredArg], optionalArguments: Seq[Argument])
+//case class RequiredArg(name: String, mustBeAString: Boolean)
+//case class Argument(name: String, isValid: sangria.ast.Value => Boolean)
+//
+//case class FieldAndType(objectType: ObjectTypeDefinition, fieldDef: FieldDefinition)
+//
+//object FieldRequirement {
+//  def apply(name: String, validType: String, required: Boolean, unique: Boolean, list: Boolean): FieldRequirement = {
+//    FieldRequirement(name = name, validTypes = Vector(validType), required = required, unique = unique, list = list)
+//  }
+//}
+//case class FieldRequirement(name: String, validTypes: Vector[String], required: Boolean, unique: Boolean, list: Boolean) {
+//  import com.prisma.deploy.migration.DataSchemaAstExtensions._
+//
+//  def isValid(field: FieldDefinition): Boolean = {
+//    field.name == name match {
+//      case true  => validTypes.contains(field.typeName) && field.isRequired == required && field.isUnique == unique && field.isList == list
+//      case false => true
+//    }
+//  }
+//}
 
-case class FieldAndType(objectType: ObjectTypeDefinition, fieldDef: FieldDefinition)
-
-object FieldRequirement {
-  def apply(name: String, validType: String, required: Boolean, unique: Boolean, list: Boolean): FieldRequirement = {
-    FieldRequirement(name = name, validTypes = Vector(validType), required = required, unique = unique, list = list)
-  }
-}
-case class FieldRequirement(name: String, validTypes: Vector[String], required: Boolean, unique: Boolean, list: Boolean) {
-  import com.prisma.deploy.migration.DataSchemaAstExtensions._
-
-  def isValid(field: FieldDefinition): Boolean = {
-    field.name == name match {
-      case true  => validTypes.contains(field.typeName) && field.isRequired == required && field.isUnique == unique && field.isList == list
-      case false => true
-    }
-  }
-}
-
-object SchemaSyntaxValidator {
+object SchemaSyntaxValidator2 {
 
   def validOnDeleteEnum(x: sangria.ast.Value): Boolean = {
     val enum = x.isInstanceOf[EnumValue]
@@ -69,10 +69,10 @@ object SchemaSyntaxValidator {
 
   val requiredReservedFields = Vector(idFieldRequirementForPassiveConnectors)
 
-  def apply(schema: String, isActive: Boolean): SchemaSyntaxValidator = {
+  def apply(schema: String, isActive: Boolean): SchemaSyntaxValidator2 = {
     val fieldRequirements         = if (isActive) reservedFieldsRequirementsForActiveConnectors else reservedFieldsRequirementsForPassiveConnectors
     val requiredFieldRequirements = if (isActive) Vector.empty else requiredReservedFields
-    SchemaSyntaxValidator(
+    SchemaSyntaxValidator2(
       schema = schema,
       directiveRequirements = directiveRequirements,
       reservedFieldsRequirements = fieldRequirements,
@@ -82,7 +82,7 @@ object SchemaSyntaxValidator {
   }
 }
 
-case class SchemaSyntaxValidator(
+case class SchemaSyntaxValidator2(
     schema: String,
     directiveRequirements: Seq[DirectiveRequirement],
     reservedFieldsRequirements: Seq[FieldRequirement],
@@ -94,16 +94,10 @@ case class SchemaSyntaxValidator(
   val result   = SdlSchemaParser.parse(schema)
   lazy val doc = result.get
 
-  def validate(): PrismaSdl Or Seq[SchemaError] = {
+  def validate: Seq[SchemaError] = {
     result match {
-      case Success(x) =>
-        val validationErrors = validateInternal
-        validationErrors match {
-          case Seq.empty => Good(generateSDL)
-          case errors    => Bad(errors)
-        }
-
-      case Failure(e) => Bad(List(SchemaError.global(s"There's a syntax error in the Schema Definition. ${e.getMessage}")))
+      case Success(_) => validateInternal
+      case Failure(e) => List(SchemaError.global(s"There's a syntax error in the Schema Definition. ${e.getMessage}"))
     }
   }
 
@@ -111,18 +105,19 @@ case class SchemaSyntaxValidator(
 
     val enumTypes: Vector[PrismaSdl => PrismaEnum] = doc.enumNames.map { name =>
       val definition: EnumTypeDefinition = doc.enumType(name).get
-      PrismaEnum(name, values = definition.values.map(_.name))
+      PrismaEnum(name, values = definition.values.map(_.name)) _
     }
 
     val prismaTypes: Vector[PrismaSdl => PrismaType] = doc.objectTypes.map { definition =>
       val prismaFields = definition.fields.map {
-        case x if isRelationField(x) => RelationalPrismaField(x.name, None, x.isList, x.isRequired, x.typeName, x.relationName, x.onDelete)
-        case x if isEnumField(x)     => EnumPrismaField(x.name, None, x.isList, x.isRequired, x.isUnique, x.typeName, None) // add DefaultValue
-        case x if isScalarField(x) =>
-          ScalarPrismaField(x.name, None, x.isList, x.isRequired, x.isUnique, TypeIdentifier.Float, None) //add TypeIdentifier and defValue
+        case x if isRelationField(x) => RelationalPrismaField(x.name, None, x.isList, x.isRequired, x.typeName, x.relationName, x.onDelete) _
+        case x if isEnumField(x)     => EnumPrismaField(x.name, None, x.isList, x.isRequired, x.isUnique, x.typeName, None) _
+        // todo add DefaultValue
+        case x if isScalarField(x) => ScalarPrismaField(x.name, None, x.isList, x.isRequired, x.isUnique, typeIdentifierForTypename(x.fieldType), None) _
+        //todo add defValue
       }
 
-      PrismaType(definition.name, None, fieldFn = prismaFields)
+      PrismaType(definition.name, None, fieldFn = prismaFields) _
     }
 
     PrismaSdl(typesFn = prismaTypes, enumsFn = enumTypes)
@@ -417,5 +412,17 @@ case class SchemaSyntaxValidator(
     val lefts  = mapped.collect { case Left(x) => x }
     val rights = mapped.collect { case Right(x) => x }
     (lefts, rights)
+  }
+
+  def typeIdentifierForTypename(fieldType: Type): TypeIdentifier.Value = {
+    val typeName = fieldType.namedType.name
+
+    if (doc.objectType(typeName).isDefined) {
+      TypeIdentifier.Relation
+    } else if (doc.enumType(typeName).isDefined) {
+      TypeIdentifier.Enum
+    } else {
+      TypeIdentifier.withNameHacked(typeName)
+    }
   }
 }
