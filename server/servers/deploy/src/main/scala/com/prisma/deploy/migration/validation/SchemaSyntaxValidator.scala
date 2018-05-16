@@ -2,7 +2,7 @@ package com.prisma.deploy.migration.validation
 
 import com.prisma.deploy.validation._
 import com.prisma.shared.models.TypeIdentifier
-import sangria.ast.{Argument => SangriaArgument, _}
+import sangria.ast._
 
 import scala.collection.immutable.Seq
 import scala.util.{Failure, Success}
@@ -93,14 +93,37 @@ case class SchemaSyntaxValidator(
   val result   = SdlSchemaParser.parse(schema)
   lazy val doc = result.get
 
-  def validate(): Seq[SchemaError] = {
+  def validate: Seq[SchemaError] = {
     result match {
-      case Success(x) => validateInternal()
+      case Success(_) => validateInternal
       case Failure(e) => List(SchemaError.global(s"There's a syntax error in the Schema Definition. ${e.getMessage}"))
     }
   }
 
-  def validateInternal(): Seq[SchemaError] = {
+  def generateSDL: PrismaSdl = {
+
+    val enumTypes: Vector[PrismaSdl => PrismaEnum] = doc.enumNames.map { name =>
+      val definition: EnumTypeDefinition = doc.enumType(name).get
+      PrismaEnum(name, values = definition.values.map(_.name))(_)
+    }
+
+    val prismaTypes: Vector[PrismaSdl => PrismaType] = doc.objectTypes.map { definition =>
+      val prismaFields = definition.fields.map {
+        case x if isRelationField(x) => RelationalPrismaField(x.name, None, x.isList, x.isRequired, x.typeName, x.relationName, x.onDelete)(_)
+        case x if isEnumField(x)     => EnumPrismaField(x.name, None, x.isList, x.isRequired, x.isUnique, x.typeName, None)(_)
+        // todo add DefaultValue
+        case x if isScalarField(x) => ScalarPrismaField(x.name, None, x.isList, x.isRequired, x.isUnique, typeIdentifierForTypename(x.fieldType), None)(_)
+        //todo add defValue
+      }
+
+      PrismaType(definition.name, None, fieldFn = prismaFields)(_)
+    }
+
+    PrismaSdl(typesFn = prismaTypes, enumsFn = enumTypes)
+  }
+
+  def validateInternal: Seq[SchemaError] = {
+
     val allFieldAndTypes: Seq[FieldAndType] = for {
       objectType <- doc.objectTypes
       field      <- objectType.fields
@@ -388,5 +411,17 @@ case class SchemaSyntaxValidator(
     val lefts  = mapped.collect { case Left(x) => x }
     val rights = mapped.collect { case Right(x) => x }
     (lefts, rights)
+  }
+
+  def typeIdentifierForTypename(fieldType: Type): TypeIdentifier.Value = {
+    val typeName = fieldType.namedType.name
+
+    if (doc.objectType(typeName).isDefined) {
+      TypeIdentifier.Relation
+    } else if (doc.enumType(typeName).isDefined) {
+      TypeIdentifier.Enum
+    } else {
+      TypeIdentifier.withNameHacked(typeName)
+    }
   }
 }

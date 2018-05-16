@@ -20,17 +20,7 @@ case class PrismaType(name: String, tableName: Option[String], fieldFn: Vector[P
     case y: ScalarPrismaField => y
   }
 
-  def tableName_! = tableName.getOrElse(name)
-}
-
-object Foo {
-
-  val fld: PrismaType => PrismaField =
-    EnumPrismaField("MyEnumField", columnName = None, isList = false, isRequired = false, isUnique = false, enumName = "Enum", defaultValue = None)
-  val tpe: PrismaSdl => PrismaType = PrismaType("MyType", Some("table"), Vector(fld))
-  val enm: PrismaSdl => PrismaEnum = PrismaEnum("MyEnum", Vector("A"))
-  val sdl                          = PrismaSdl(Vector(tpe), Vector(enm))
-
+  def finalTableName = tableName.getOrElse(name)
 }
 
 sealed trait PrismaField {
@@ -41,22 +31,26 @@ sealed trait PrismaField {
   def tpe: PrismaType
 }
 
-case class ScalarPrismaField(name: String,
-                             columnName: Option[String],
-                             isList: Boolean,
-                             isRequired: Boolean,
-                             isUnique: Boolean,
-                             typeIdentifier: TypeIdentifier,
-                             defaultValue: Option[GCValue])(val tpe: PrismaType)
+case class ScalarPrismaField(
+    name: String,
+    columnName: Option[String],
+    isList: Boolean,
+    isRequired: Boolean,
+    isUnique: Boolean,
+    typeIdentifier: TypeIdentifier,
+    defaultValue: Option[GCValue]
+)(val tpe: PrismaType)
     extends PrismaField
 
-case class EnumPrismaField(name: String,
-                           columnName: Option[String],
-                           isList: Boolean,
-                           isRequired: Boolean,
-                           isUnique: Boolean,
-                           enumName: String,
-                           defaultValue: Option[GCValue])(val tpe: PrismaType)
+case class EnumPrismaField(
+    name: String,
+    columnName: Option[String],
+    isList: Boolean,
+    isRequired: Boolean,
+    isUnique: Boolean,
+    enumName: String,
+    defaultValue: Option[GCValue]
+)(val tpe: PrismaType)
     extends PrismaField {
   override def typeIdentifier: TypeIdentifier = TypeIdentifier.Enum
 }
@@ -83,7 +77,7 @@ case class RelationalPrismaField(name: String,
     }
   }
 
-  def referencedType: PrismaType = tpe.sdl.types.find(_.name == referencesType).get
+  def relatedType: PrismaType = tpe.sdl.types.find(_.name == referencesType).get
 }
 
 case class PrismaEnum(name: String, values: Vector[String])(sdl: PrismaSdl)
