@@ -65,8 +65,9 @@ case class DeployMutation(
     val schemaMapping        = schemaMapper.createMapping(graphQlSdl)
     val prismaSdl: PrismaSdl = validator.generateSDL
     val inferredNextSchema   = schemaInferrer.infer(project.schema, schemaMapping, prismaSdl, inferredTables)
+    val inferredTableErrors =
+      if (deployConnector.isPassive) InferredTablesValidator.checkRelationsAgainstInferredTables(inferredNextSchema, inferredTables) else Vector.empty
 
-    val inferredTableErrors: Seq[SchemaError] = InferredTablesValidator.checkRelationsAgainstInferredTables(inferredNextSchema, inferredTables)
     inferredTableErrors.isEmpty match {
       case true =>
         val functionsOrErrors = getFunctionModelsOrErrors(args.functions)

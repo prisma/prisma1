@@ -111,15 +111,14 @@ case class SchemaSyntaxValidator(
 
     val prismaTypes: Vector[PrismaSdl => PrismaType] = doc.objectTypes.map { definition =>
       val prismaFields = definition.fields.map {
-        case x if isRelationField(x) => RelationalPrismaField(x.name, None, x.isList, x.isRequired, x.typeName, x.relationName, x.onDelete)(_)
-        case x if isEnumField(x)     => EnumPrismaField(x.name, None, x.isList, x.isRequired, x.isUnique, x.typeName, getDefaultValueFromField_!(x))(_)
+        case x if isRelationField(x) =>
+          RelationalPrismaField(x.name, x.relationDBDirective, x.isList, x.isRequired, x.typeName, x.relationName, x.onDelete)(_)
+        case x if isEnumField(x) => EnumPrismaField(x.name, x.columnName, x.isList, x.isRequired, x.isUnique, x.typeName, getDefaultValueFromField_!(x))(_)
         case x if isScalarField(x) =>
-          ScalarPrismaField(x.name, None, x.isList, x.isRequired, x.isUnique, typeIdentifierForTypename(x.fieldType), getDefaultValueFromField_!(x))(_)
+          ScalarPrismaField(x.name, x.columnName, x.isList, x.isRequired, x.isUnique, typeIdentifierForTypename(x.fieldType), getDefaultValueFromField_!(x))(_)
       }
 
-      //todo column names here?
-
-      PrismaType(definition.name, None, fieldFn = prismaFields)(_)
+      PrismaType(definition.name, definition.tableNameDirective, fieldFn = prismaFields)(_)
     }
 
     PrismaSdl(typesFn = prismaTypes, enumsFn = enumTypes)
@@ -190,10 +189,7 @@ case class SchemaSyntaxValidator(
   def validateMissingTypes(fieldAndTypes: Seq[FieldAndType]): Seq[SchemaError] = {
     fieldAndTypes
       .filter(!isScalarField(_))
-      .collect {
-        case fieldAndType if !doc.isObjectOrEnumType(fieldAndType.fieldDef.typeName) =>
-          SchemaErrors.missingType(fieldAndType)
-      }
+      .collect { case fieldAndType if !doc.isObjectOrEnumType(fieldAndType.fieldDef.typeName) => SchemaErrors.missingType(fieldAndType) }
   }
 
   def validateRelationFields(fieldAndTypes: Seq[FieldAndType]): Seq[SchemaError] = {

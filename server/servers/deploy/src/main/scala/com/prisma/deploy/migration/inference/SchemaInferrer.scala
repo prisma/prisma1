@@ -52,6 +52,7 @@ case class SchemaInferrerImpl(
   val isPassive = !isActive
 
   def infer(): Schema = {
+
     val schema = Schema(models = nextModels.toList, relations = nextRelations.toList, enums = nextEnums.toList)
     addMissingBackRelations(schema)
   }
@@ -254,7 +255,7 @@ case class SchemaInferrerImpl(
   }
 
   def relationManifestationOnFieldOrRelatedField(prismaType: PrismaType, relationField: RelationalPrismaField): Option[RelationManifestation] = {
-    if (isPassive && shouldCheckAgainstInferredTables) {
+    if (isPassive && shouldCheckAgainstInferredTables) { // todo try to get rid of this
       val manifestationOnThisField = relationManifestationOnField(prismaType, relationField)
       val manifestationOnRelatedField = relationField.relatedField.flatMap { relatedField =>
         val relatedType = sdl.types.find(_.name == relationField.referencesType).get
@@ -274,7 +275,7 @@ case class SchemaInferrerImpl(
 
     relationField.inlineDirectiveColumn match {
       case Some(inlineDirective: InlineRelationDirective) =>
-        Some(InlineRelationManifestation(inTableOfModelId = prismaType.name, referencingColumn = inlineDirective.column.get))
+        Some(InlineRelationManifestation(inTableOfModelId = prismaType.name, referencingColumn = inlineDirective.column))
 
       case Some(tableDirective: RelationTableDirective) =>
         val inferredTable        = inferredTables.relationTables.find(_.name == tableDirective.table)

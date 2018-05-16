@@ -124,6 +124,8 @@ object DataSchemaAstExtensions {
     def relationName: Option[String]         = fieldDefinition.directiveArgumentAsString("relation", "name")
     def previousRelationName: Option[String] = fieldDefinition.directiveArgumentAsString("relation", "oldName").orElse(relationName)
 
+    def relationDBDirective = relationTableDirective.orElse(inlineRelationDirective)
+
     def relationTableDirective: Option[RelationTableDirective] = {
       for {
         tableName   <- fieldDefinition.directiveArgumentAsString("pgRelationTable", "table")
@@ -132,7 +134,8 @@ object DataSchemaAstExtensions {
       } yield RelationTableDirective(table = tableName, thisColumn = thisColumn, otherColumn = otherColumn)
     }
 
-    def inlineRelationDirective: InlineRelationDirective = InlineRelationDirective(fieldDefinition.directiveArgumentAsString("pgRelation", "column"))
+    def inlineRelationDirective: Option[InlineRelationDirective] =
+      fieldDefinition.directiveArgumentAsString("pgRelation", "column").map(value => InlineRelationDirective(value))
   }
 
   implicit class CoolEnumType(val enumType: EnumTypeDefinition) extends AnyVal {
@@ -216,5 +219,5 @@ object DirectiveTypes {
   sealed trait RelationDBDirective
 
   case class RelationTableDirective(table: String, thisColumn: Option[String], otherColumn: Option[String]) extends RelationDBDirective
-  case class InlineRelationDirective(column: Option[String])                                                extends RelationDBDirective
+  case class InlineRelationDirective(column: String)                                                        extends RelationDBDirective
 }
