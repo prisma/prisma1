@@ -8,7 +8,7 @@ import slick.jdbc.{PositionedParameters, SQLActionBuilder}
 object PostgresDeployDatabaseQueryBuilder {
 
   def existsByModel(projectId: String, model: Model): SQLActionBuilder = {
-    sql"""select exists (select "#${model.dbNameOfIdField}" from "#$projectId"."#${model.dbName}")"""
+    sql"""select exists (select "#${model.dbNameOfIdField_!}" from "#$projectId"."#${model.dbName}")"""
   }
 
   def existsByRelation(projectId: String, relationId: String): SQLActionBuilder = {
@@ -20,7 +20,7 @@ object PostgresDeployDatabaseQueryBuilder {
   }
 
   def existsNullByModelAndScalarField(projectId: String, model: Model, fieldName: String) = {
-    sql"""SELECT EXISTS(Select "#${model.dbNameOfIdField}" FROM "#$projectId"."#${model.dbName}"
+    sql"""SELECT EXISTS(Select "#${model.dbNameOfIdField_!}" FROM "#$projectId"."#${model.dbName}"
           WHERE "#$projectId"."#${model.dbName}".#$fieldName IS NULL)"""
   }
 
@@ -41,8 +41,8 @@ object PostgresDeployDatabaseQueryBuilder {
     val relationId   = field.relation.get.relationTableName
     val relationSide = field.relationSide.get.toString
     sql"""select EXISTS (
-            select "#${model.dbNameOfIdField}" from "#$projectId"."#${model.dbName}"
-            where "#${model.dbNameOfIdField}" Not IN
+            select "#${model.dbNameOfIdField_!}" from "#$projectId"."#${model.dbName}"
+            where "#${model.dbNameOfIdField_!}" Not IN
             (Select "#$projectId"."#$relationId"."#$relationSide" from "#$projectId"."#$relationId")
           )"""
   }
@@ -54,7 +54,7 @@ object PostgresDeployDatabaseQueryBuilder {
       field <- model.fields
       if field.enum.isDefined && field.enum.get.name == enumName
     } yield {
-      if (field.isList) ("nodeId", s"${model.dbName}_${field.dbName}", "value", value) else (model.dbNameOfIdField, model.dbName, field.dbName, value)
+      if (field.isList) ("nodeId", s"${model.dbName}_${field.dbName}", "value", value) else (model.dbNameOfIdField_!, model.dbName, field.dbName, value)
     }
 
     val checks: Vector[SQLActionBuilder] = nameTuples.map { tuple =>

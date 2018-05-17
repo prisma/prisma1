@@ -70,7 +70,7 @@ case class PostgresApiDatabaseQueryBuilder(
     val (conditionCommand, orderByCommand, limitCommand) = extractQueryArgs(
       projectId = schemaName,
       tableName = tableName,
-      idFieldName = model.dbNameOfIdField,
+      idFieldName = model.dbNameOfIdField_!,
       args = args,
       defaultOrderShortcut = None,
       overrideMaxNodeCount = overrideMaxNodeCount
@@ -119,7 +119,7 @@ case class PostgresApiDatabaseQueryBuilder(
     val (conditionCommand, orderByCommand, limitCommand) = extractQueryArgs(
       projectId = schemaName,
       tableName = tableName,
-      idFieldName = model.dbNameOfIdField,
+      idFieldName = model.dbNameOfIdField_!,
       args = args,
       defaultOrderShortcut = None,
       overrideMaxNodeCount = overrideMaxNodeCount,
@@ -209,7 +209,7 @@ case class PostgresApiDatabaseQueryBuilder(
     val (conditionCommand, orderByCommand, limitCommand) = extractQueryArgs(
       projectId = schemaName,
       tableName = "ModelTable",
-      idFieldName = relatedModel.dbNameOfIdField,
+      idFieldName = relatedModel.dbNameOfIdField_!,
       args = args,
       defaultOrderShortcut = Some(s""" RelationTable."$columnForRelatedModel" """),
       overrideMaxNodeCount = None,
@@ -220,7 +220,7 @@ case class PostgresApiDatabaseQueryBuilder(
       sql"""(select ModelTable.*, RelationTable."#$aColumn" as __Relation__A,  RelationTable."#$bColumn" as __Relation__B
             from "#$schemaName"."#$modelTable" as ModelTable
            inner join "#$schemaName"."#$relationTableName" as RelationTable
-           on ModelTable."#${relatedModel.dbNameOfIdField}" = RelationTable."#$fieldRelationSide"
+           on ModelTable."#${relatedModel.dbNameOfIdField_!}" = RelationTable."#$fieldRelationSide"
            where RelationTable."#$modelRelationSide" = '#$id' """ ++
         prefixIfNotNone("and", conditionCommand) ++
         prefixIfNotNone("order by", orderByCommand) ++
@@ -276,7 +276,7 @@ case class PostgresApiDatabaseQueryBuilder(
     val (conditionCommand, orderByCommand, limitCommand) = extractQueryArgs(
       projectId = schemaName,
       tableName = fieldTable,
-      idFieldName = relatedModel.dbNameOfIdField,
+      idFieldName = relatedModel.dbNameOfIdField_!,
       args = args,
       defaultOrderShortcut = Some(s""" "$schemaName"."$unsafeRelationId"."$columnForOppositeRelationSide" """),
       overrideMaxNodeCount = None
@@ -286,7 +286,7 @@ case class PostgresApiDatabaseQueryBuilder(
       sql"""(select "#$schemaName"."#$fieldTable".*, "#$schemaName"."#$unsafeRelationId"."A" as __Relation__A,  "#$schemaName"."#$unsafeRelationId"."B" as __Relation__B
             from "#$schemaName"."#$fieldTable"
            inner join "#$schemaName"."#$unsafeRelationId"
-           on "#$schemaName"."#$fieldTable"."#${relatedModel.dbNameOfIdField}" = "#$schemaName"."#$unsafeRelationId"."#$fieldRelationSide"
+           on "#$schemaName"."#$fieldTable"."#${relatedModel.dbNameOfIdField_!}" = "#$schemaName"."#$unsafeRelationId"."#$fieldRelationSide"
            where "#$schemaName"."#$unsafeRelationId"."#$modelRelationSide" = '#$id' """ ++
         prefixIfNotNone("and", conditionCommand) ++
         prefixIfNotNone("order by", orderByCommand) ++
@@ -340,7 +340,7 @@ case class PostgresApiDatabaseQueryBuilder(
     val (conditionCommand, orderByCommand, limitCommand) = extractQueryArgs(
       projectId = schemaName,
       tableName = fieldTable,
-      idFieldName = relatedModel.dbNameOfIdField,
+      idFieldName = relatedModel.dbNameOfIdField_!,
       args = args,
       defaultOrderShortcut = Some(s"""$schemaName.$unsafeRelationId.$columnForFieldRelationSide"""),
       overrideMaxNodeCount = None
@@ -349,7 +349,7 @@ case class PostgresApiDatabaseQueryBuilder(
     def createQuery(id: String) = {
       sql"""(select "#$id", count(*) from "#$schemaName"."#$fieldTable"
            inner join "#$schemaName"."#$unsafeRelationId"
-           on "#$schemaName"."#$fieldTable"."#${relatedModel.dbNameOfIdField}" = "#$schemaName"."#$unsafeRelationId"."#$columnForFieldRelationSide"
+           on "#$schemaName"."#$fieldTable"."#${relatedModel.dbNameOfIdField_!}" = "#$schemaName"."#$unsafeRelationId"."#$columnForFieldRelationSide"
            where "#$schemaName"."#$unsafeRelationId"."#$modelRelationSide" = '#$id' """ ++
         prefixIfNotNone("and", conditionCommand) ++
         prefixIfNotNone("order by", orderByCommand) ++

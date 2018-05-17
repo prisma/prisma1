@@ -34,8 +34,8 @@ object QueryArgumentsHelpers {
       sql"""select *
             from "#$projectId"."#${toModel.dbName}" as "#$alias"
             inner join "#$projectId"."#${relationTableName}"
-            on "#$alias"."#${toModel.dbNameOfIdField}" = "#$projectId"."#${relationTableName}"."#${oppositeColumn}"
-            where "#$projectId"."#${relationTableName}"."#${column}" = "#$modTableName"."#${fromModel.dbNameOfIdField}""""
+            on "#$alias"."#${toModel.dbNameOfIdField_!}" = "#$projectId"."#${relationTableName}"."#${oppositeColumn}"
+            where "#$projectId"."#${relationTableName}"."#${column}" = "#$modTableName"."#${fromModel.dbNameOfIdField_!}""""
     }
 
     val tableNameSql = if (quoteTableName) sql""""#$tableName"""" else sql"""#$tableName"""
@@ -186,7 +186,7 @@ object QueryArgumentsHelpers {
           val column            = relation.columnForRelationSide(schema, field.relationSide.get)
           // fixme: an ugly hack that is hard to explain. ask marcus.
           val otherIdColumn = schema.models.find(_.dbName == tableName) match {
-            case Some(model) => model.idField.get.dbName
+            case Some(model) => model.idField_!.dbName
             case None        => "id"
           }
 

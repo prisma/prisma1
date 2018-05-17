@@ -6,12 +6,12 @@ case class MigrationStepMapperImpl(projectId: String) extends MigrationStepMappe
   def mutactionFor(previousSchema: Schema, nextSchema: Schema, step: MigrationStep): Vector[DeployMutaction] = step match {
     case x: CreateModel =>
       val model = nextSchema.getModelByName_!(x.name)
-      Vector(CreateModelTable(projectId, model.name, model.dbNameOfIdField))
+      Vector(CreateModelTable(projectId, model.name, model.dbNameOfIdField_!))
 
     case x: DeleteModel =>
       val model                = previousSchema.getModelByName_!(x.name)
       val scalarListFieldNames = model.scalarListFields.map(_.name).toVector
-      Vector(DeleteModelTable(projectId, x.name, model.dbNameOfIdField, scalarListFieldNames))
+      Vector(DeleteModelTable(projectId, x.name, model.dbNameOfIdField_!, scalarListFieldNames))
 
     case x: UpdateModel =>
       val model                = nextSchema.getModelByName(x.newName).getOrElse(nextSchema.getModelByName_!(x.newName.substring(2)))

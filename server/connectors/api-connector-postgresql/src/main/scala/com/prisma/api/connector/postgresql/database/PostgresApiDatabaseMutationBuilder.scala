@@ -51,7 +51,7 @@ case class PostgresApiDatabaseMutationBuilder(
 
       val generatedKeys = itemInsert.getGeneratedKeys
       generatedKeys.next()
-      val field = path.lastModel.idField.get
+      val field = path.lastModel.idField_!
       CreateDataItemResult(generatedKeys.getGcValue(field.dbName, field.typeIdentifier))
     }
   }
@@ -78,10 +78,10 @@ case class PostgresApiDatabaseMutationBuilder(
         schema.getModelById_!(relation.modelAId)
       }
       val childWhereCondition = sql"""where "#$schemaName"."#${childWhere.model.dbName}"."#${childWhere.field.dbName}" = ${childWhere.fieldValue}"""
-      val otherWhereCondition = sql"""where "#$schemaName"."#${path.removeLastEdge.lastModel.dbName}"."#${path.removeLastEdge.lastModel.dbNameOfIdField}" in (""" ++ pathQueryForLastChild(
+      val otherWhereCondition = sql"""where "#$schemaName"."#${path.removeLastEdge.lastModel.dbName}"."#${path.removeLastEdge.lastModel.dbNameOfIdField_!}" in (""" ++ pathQueryForLastChild(
         path.removeLastEdge) ++ sql")"
-      val selectIdOfChild = sql"""select "#${childWhere.model.dbNameOfIdField}" as id from "#$schemaName"."#${childWhere.model.dbName}" """ ++ childWhereCondition
-      val selectIdOfOther = sql"""select "#${otherModel.dbNameOfIdField}" as id from "#$schemaName"."#${otherModel.dbName}" """ ++ otherWhereCondition
+      val selectIdOfChild = sql"""select "#${childWhere.model.dbNameOfIdField_!}" as id from "#$schemaName"."#${childWhere.model.dbName}" """ ++ childWhereCondition
+      val selectIdOfOther = sql"""select "#${otherModel.dbNameOfIdField_!}" as id from "#$schemaName"."#${otherModel.dbName}" """ ++ otherWhereCondition
 
       val rowToUpdateCondition = if (relation.isSameModelRelation) {
         if (path.lastEdge_!.childField.get.relationSide.get == RelationSide.A) {
@@ -126,12 +126,12 @@ case class PostgresApiDatabaseMutationBuilder(
 
       (sql"""insert into "#$schemaName"."#${path.lastRelation_!.relationTableNameNew(schema)}" ("#$columnForParent", "#$columnForChild")""" ++
         sql"""Select """ ++ pathQueryForLastChild(path.removeLastEdge) ++ sql"," ++
-        sql""" "#${childWhere.model.dbNameOfIdField}" FROM "#$schemaName"."#${childWhere.model.dbName}" where "#${childWhere.field.dbName}" = ${childWhere.fieldValue}""").asUpdate
+        sql""" "#${childWhere.model.dbNameOfIdField_!}" FROM "#$schemaName"."#${childWhere.model.dbName}" where "#${childWhere.field.dbName}" = ${childWhere.fieldValue}""").asUpdate
     } else {
       val relationId = Cuid.createCuid()
       (sql"""insert into "#$schemaName"."#${path.lastRelation_!.relationTableNameNew(schema)}" """ ++
         sql"""("id", "#${path.columnForParentSideOfLastEdge(schema)}", "#${path.columnForChildSideOfLastEdge(schema)}")""" ++
-        sql"""Select '#$relationId',""" ++ pathQueryForLastChild(path.removeLastEdge) ++ sql""","#${childWhere.model.dbNameOfIdField}" """ ++
+        sql"""Select '#$relationId',""" ++ pathQueryForLastChild(path.removeLastEdge) ++ sql""","#${childWhere.model.dbNameOfIdField_!}" """ ++
         sql"""FROM "#$schemaName"."#${childWhere.model.dbName}" where "#${childWhere.field.dbName}" = ${childWhere.fieldValue}""").asUpdate
     }
 //    https://stackoverflow.com/questions/1109061/insert-on-duplicate-update-in-postgresql
@@ -162,7 +162,7 @@ case class PostgresApiDatabaseMutationBuilder(
       case _: ModelEdge   => sql""
     }
 
-    val baseQuery = sql"""UPDATE "#$schemaName"."#${model.dbName}" SET """ ++ addUpdatedDateTime(model, updateValues) ++ sql"""WHERE "#${path.lastModel.dbNameOfIdField}" ="""
+    val baseQuery = sql"""UPDATE "#$schemaName"."#${model.dbName}" SET """ ++ addUpdatedDateTime(model, updateValues) ++ sql"""WHERE "#${path.lastModel.dbNameOfIdField_!}" ="""
 
     if (updateArgs.raw.asRoot.map.isEmpty) {
       DBIOAction.successful(())
@@ -204,7 +204,7 @@ case class PostgresApiDatabaseMutationBuilder(
       update: slick.dbio.DBIOAction[Unit, slick.dbio.NoStream, slick.dbio.Effect with slick.dbio.Effect.All]
   ) = {
     val model = updatePath.lastModel
-    val query = sql"""select exists ( SELECT "#${model.dbNameOfIdField}" FROM "#$schemaName"."#${model.dbName}" WHERE "#${model.dbNameOfIdField}" = """ ++
+    val query = sql"""select exists ( SELECT "#${model.dbNameOfIdField_!}" FROM "#$schemaName"."#${model.dbName}" WHERE "#${model.dbNameOfIdField_!}" = """ ++
       pathQueryForLastChild(updatePath) ++ sql")"
     val condition = query.as[Boolean]
     // insert creates item first, then the list values
@@ -227,14 +227,14 @@ case class PostgresApiDatabaseMutationBuilder(
 
     def existsNodeIsInRelationshipWith = {
       def nodeSelector(last: Edge) = last match {
-        case edge: NodeEdge => sql" #${edge.child.dbNameOfIdField}" ++ idFromWhereEquals(edge.childWhere) ++ sql" AND "
+        case edge: NodeEdge => sql" #${edge.child.dbNameOfIdField_!}" ++ idFromWhereEquals(edge.childWhere) ++ sql" AND "
         case _: ModelEdge   => sql""
       }
       val model = updatePath.lastModel
       sql"""select EXISTS (
-            select "#${model.dbNameOfIdField}" from "#$schemaName"."#${updatePath.lastModel.dbName}"
+            select "#${model.dbNameOfIdField_!}" from "#$schemaName"."#${updatePath.lastModel.dbName}"
             where""" ++ nodeSelector(updatePath.lastEdge_!) ++
-        sql""" "#${model.dbNameOfIdField}" IN""" ++ pathQueryThatUsesWholePath(updatePath) ++ sql")"
+        sql""" "#${model.dbNameOfIdField_!}" IN""" ++ pathQueryThatUsesWholePath(updatePath) ++ sql")"
     }
 
     val condition = existsNodeIsInRelationshipWith.as[Boolean]
@@ -255,14 +255,14 @@ case class PostgresApiDatabaseMutationBuilder(
   }
 
   def deleteRelayIds(model: Model, whereFilter: Option[DataItemFilterCollection]) = {
-    (sql"""DELETE FROM "#$schemaName"."_RelayId" WHERE "id" IN ( SELECT "#${model.dbNameOfIdField}" FROM "#$schemaName"."#${model.dbName}"""" ++ whereFilterAppendix(
+    (sql"""DELETE FROM "#$schemaName"."_RelayId" WHERE "id" IN ( SELECT "#${model.dbNameOfIdField_!}" FROM "#$schemaName"."#${model.dbName}"""" ++ whereFilterAppendix(
       schemaName,
       model.dbName,
       whereFilter) ++ sql")").asUpdate
   }
 
   def deleteDataItem(path: Path) =
-    (sql"""DELETE FROM "#$schemaName"."#${path.lastModel.dbName}" WHERE "#${path.lastModel.dbNameOfIdField}" = """ ++ pathQueryForLastChild(path)).asUpdate
+    (sql"""DELETE FROM "#$schemaName"."#${path.lastModel.dbName}" WHERE "#${path.lastModel.dbNameOfIdField_!}" = """ ++ pathQueryForLastChild(path)).asUpdate
 
   def deleteRelayRow(path: Path) =
     (sql"""DELETE FROM "#$schemaName"."_RelayId" WHERE "id" = """ ++ pathQueryForLastChild(path)).asUpdate
@@ -318,7 +318,7 @@ case class PostgresApiDatabaseMutationBuilder(
   def cascadingDeleteChildActions(path: Path) = {
     val deleteRelayIds = (sql"""DELETE FROM "#$schemaName"."_RelayId" WHERE "id" IN (""" ++ pathQueryForLastChild(path) ++ sql")").asUpdate
     val model          = path.lastModel
-    val deleteDataItems = (sql"""DELETE FROM "#$schemaName"."#${model.dbName}" WHERE "#${model.dbNameOfIdField}" IN ("""
+    val deleteDataItems = (sql"""DELETE FROM "#$schemaName"."#${model.dbName}" WHERE "#${model.dbNameOfIdField_!}" IN ("""
       ++ pathQueryForLastChild(path) ++ sql")").asUpdate
 
     DBIO.seq(deleteRelayIds, deleteDataItems)
@@ -329,14 +329,14 @@ case class PostgresApiDatabaseMutationBuilder(
   //region SCALAR LISTS
   def setScalarList(path: Path, listFieldMap: Vector[(String, ListGCValue)]) = {
     val model = path.lastModel
-    val idQuery = (sql"""SELECT "#${model.dbNameOfIdField}" FROM "#$schemaName"."#${model.dbName}" WHERE "#${model.dbNameOfIdField}" = """ ++
+    val idQuery = (sql"""SELECT "#${model.dbNameOfIdField_!}" FROM "#$schemaName"."#${model.dbName}" WHERE "#${model.dbNameOfIdField_!}" = """ ++
       pathQueryForLastChild(path)).as[String]
     if (listFieldMap.isEmpty) DBIOAction.successful(()) else setManyScalarListHelper(path.lastModel, listFieldMap, idQuery)
   }
 
   def setManyScalarLists(model: Model, listFieldMap: Vector[(String, ListGCValue)], whereFilter: Option[DataItemFilterCollection]) = {
     val idQuery =
-      (sql"""SELECT "#${model.dbNameOfIdField}" FROM "#$schemaName"."#${model.dbName}"""" ++ whereFilterAppendix(schemaName, model.dbName, whereFilter))
+      (sql"""SELECT "#${model.dbNameOfIdField_!}" FROM "#$schemaName"."#${model.dbName}"""" ++ whereFilterAppendix(schemaName, model.dbName, whereFilter))
         .as[String]
     if (listFieldMap.isEmpty) DBIOAction.successful(()) else setManyScalarListHelper(model, listFieldMap, idQuery)
   }
@@ -404,14 +404,14 @@ case class PostgresApiDatabaseMutationBuilder(
     if (where.isId) {
       sql"""${where.fieldValue}"""
     } else {
-      sql"""(SELECT "#${where.model.dbNameOfIdField}" FROM (SELECT * FROM "#$schemaName"."#${where.model.dbName}") IDFROMWHERE WHERE "#${where.field.dbName}" = ${where.fieldValue})"""
+      sql"""(SELECT "#${where.model.dbNameOfIdField_!}" FROM (SELECT * FROM "#$schemaName"."#${where.model.dbName}") IDFROMWHERE WHERE "#${where.field.dbName}" = ${where.fieldValue})"""
     }
   }
 
   def idFromWhereEquals(where: NodeSelector): SQLActionBuilder = sql" = " ++ idFromWhere(where)
 
   def idFromWherePath(where: NodeSelector): SQLActionBuilder = {
-    sql"""(SELECT "#${where.model.dbNameOfIdField}" FROM (SELECT  * From "#$schemaName"."#${where.model.dbName}") IDFROMWHEREPATH WHERE "#${where.field.dbName}" = ${where.fieldValue})"""
+    sql"""(SELECT "#${where.model.dbNameOfIdField_!}" FROM (SELECT  * From "#$schemaName"."#${where.model.dbName}") IDFROMWHEREPATH WHERE "#${where.field.dbName}" = ${where.fieldValue})"""
   }
 
   def pathQueryForLastParent(path: Path): SQLActionBuilder = pathQueryForLastChild(path.removeLastEdge)
@@ -446,7 +446,7 @@ case class PostgresApiDatabaseMutationBuilder(
   def whereFailureTrigger(where: NodeSelector, causeString: String) = {
     val table = where.model.dbName
     val query =
-      sql"""(SELECT "#${where.model.dbNameOfIdField}" FROM "#$schemaName"."#${table}" WHEREFAILURETRIGGER WHERE "#${where.field.dbName}" = ${where.fieldValue})"""
+      sql"""(SELECT "#${where.model.dbNameOfIdField_!}" FROM "#$schemaName"."#${table}" WHEREFAILURETRIGGER WHERE "#${where.field.dbName}" = ${where.fieldValue})"""
 
     triggerFailureWhenNotExists(query, table, causeString)
   }
@@ -507,7 +507,7 @@ case class PostgresApiDatabaseMutationBuilder(
       sql"""SELECT * FROM "#$schemaName"."#$table" OLDPARENTPATHFAILURETRIGGERBYFIELDANDFILTER""" ++
         sql"""WHERE "#$oppositeColumn" IS NOT NULL """ ++
         sql"""AND "#$column" IN (""" ++
-        sql"""SELECT "#${model.dbNameOfIdField}" FROM "#$schemaName"."#${model.dbName}" """ ++
+        sql"""SELECT "#${model.dbNameOfIdField_!}" FROM "#$schemaName"."#${model.dbName}" """ ++
         whereFilterAppendix(schemaName, model.dbName, whereFilter) ++ sql""")"""
     triggerFailureWhenExists(query, table, causeString)
   }

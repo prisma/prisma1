@@ -143,7 +143,8 @@ case class Model(
   lazy val relations: List[Relation]          = fields.flatMap(_.relation).distinct
   lazy val nonListFields                      = fields.filter(!_.isList)
   lazy val idField                            = getFieldByName("id")
-  lazy val dbNameOfIdField                    = idField.get.dbName
+  lazy val idField_!                          = getFieldByName_!("id")
+  lazy val dbNameOfIdField_!                  = idField_!.dbName
   val updateAtField                           = getFieldByName("updatedAt")
 
   lazy val cascadingRelationFields: List[Field] = relationFields.filter(field => field.relation.get.sideOfModelCascades(this))
@@ -389,7 +390,7 @@ case class Relation(
     case Some(m: RelationTableManifestation) =>
       m.modelAColumn
     case Some(m: InlineRelationManifestation) =>
-      if (m.inTableOfModelId == modelAId) getModelA_!(schema).idField.get.dbName else m.referencingColumn
+      if (m.inTableOfModelId == modelAId) getModelA_!(schema).idField_!.dbName else m.referencingColumn
     case None =>
       "A"
   }
@@ -398,7 +399,7 @@ case class Relation(
     case Some(m: RelationTableManifestation) =>
       m.modelBColumn
     case Some(m: InlineRelationManifestation) =>
-      if (m.inTableOfModelId == modelBId && !isSameModelRelation) getModelB_!(schema).idField.get.dbName else m.referencingColumn
+      if (m.inTableOfModelId == modelBId && !isSameModelRelation) getModelB_!(schema).idField_!.dbName else m.referencingColumn
     case None =>
       "B"
   }

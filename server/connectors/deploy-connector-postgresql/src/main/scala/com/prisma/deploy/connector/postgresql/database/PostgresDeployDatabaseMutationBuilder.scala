@@ -56,7 +56,7 @@ object PostgresDeployDatabaseMutationBuilder {
   def createScalarListTable(projectId: String, model: Model, fieldName: String, typeIdentifier: TypeIdentifier) = {
     val sqlType = sqlTypeForScalarTypeIdentifier(typeIdentifier)
     sqlu"""CREATE TABLE "#$projectId"."#${model.dbName}_#$fieldName"
-    ("nodeId" VARCHAR (25) NOT NULL REFERENCES "#$projectId"."#${model.dbName}" ("#${model.dbNameOfIdField}"),
+    ("nodeId" VARCHAR (25) NOT NULL REFERENCES "#$projectId"."#${model.dbName}" ("#${model.dbNameOfIdField_!}"),
     "position" INT NOT NULL,
     "value" #$sqlType NOT NULL,
     PRIMARY KEY ("nodeId", "position")
@@ -133,8 +133,8 @@ object PostgresDeployDatabaseMutationBuilder {
     PRIMARY KEY ("id"),
     "A" VARCHAR (25)  NOT NULL,
     "B" VARCHAR (25)  NOT NULL,
-    FOREIGN KEY ("A") REFERENCES "#$projectId"."#${modelA.dbName}"("#${modelA.dbNameOfIdField}") ON DELETE CASCADE,
-    FOREIGN KEY ("B") REFERENCES "#$projectId"."#${modelB.dbName}"("#${modelA.dbNameOfIdField}") ON DELETE CASCADE)
+    FOREIGN KEY ("A") REFERENCES "#$projectId"."#${modelA.dbName}"("#${modelA.dbNameOfIdField_!}") ON DELETE CASCADE,
+    FOREIGN KEY ("B") REFERENCES "#$projectId"."#${modelB.dbName}"("#${modelA.dbNameOfIdField_!}") ON DELETE CASCADE)
     ;"""
 
     val indexCreate = sqlu"""CREATE UNIQUE INDEX "#${relationTableName}_AB_unique" on  "#$projectId"."#$relationTableName" ("A" ASC, "B" ASC)"""
@@ -147,7 +147,7 @@ object PostgresDeployDatabaseMutationBuilder {
     val isRequired = false //field.exists(_.isRequired)
     val nullString = if (isRequired) "NOT NULL" else "NULL"
     val addColumn  = sqlu"""ALTER TABLE "#$projectId"."#${model.dbName}" ADD COLUMN "#$column" #$sqlType #$nullString
-                            REFERENCES "#$projectId"."#${references.dbName}"(#${references.dbNameOfIdField}) ON DELETE SET NULL;"""
+                            REFERENCES "#$projectId"."#${references.dbName}"(#${references.dbNameOfIdField_!}) ON DELETE SET NULL;"""
     addColumn
   }
 
