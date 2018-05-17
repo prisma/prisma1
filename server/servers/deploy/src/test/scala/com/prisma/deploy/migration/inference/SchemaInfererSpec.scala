@@ -416,12 +416,12 @@ class SchemaInfererSpec extends WordSpec with Matchers {
       SchemaSyntaxValidator.directiveRequirements,
       SchemaSyntaxValidator.reservedFieldsRequirementsForAllConnectors,
       SchemaSyntaxValidator.requiredReservedFields,
-      true
+      allowScalarLists = false
     )
 
     val prismaSdl = validator.generateSDL
 
-    SchemaInferrer().infer(schema, SchemaMapping.empty, prismaSdl, InferredTables.empty)
+    SchemaInferrer(isActive).infer(schema, mapping, prismaSdl, InferredTables.empty)
 
   }
 }

@@ -5,7 +5,6 @@ import com.prisma.deploy.migration.DirectiveTypes.{InlineRelationDirective, Rela
 import com.prisma.deploy.migration.validation._
 import com.prisma.deploy.schema.InvalidRelationName
 import com.prisma.deploy.validation.NameConstraints
-import com.prisma.gc_values.InvalidValueForScalarType
 import com.prisma.shared.models.Manifestations._
 import com.prisma.shared.models.{OnDelete, RelationSide, ReservedFields, _}
 import com.prisma.utils.await.AwaitUtils
@@ -29,16 +28,6 @@ object SchemaInferrer {
       ).infer()
   }
 }
-
-//todo get rid of these???
-sealed trait ProjectSyntaxError                                                                                            extends Exception
-case class RelationDirectiveNeeded(type1: String, type1Fields: Vector[String], type2: String, type2Fields: Vector[String]) extends ProjectSyntaxError
-case class InvalidGCValue(err: InvalidValueForScalarType)                                                                  extends ProjectSyntaxError
-case class GenericProblem(msg: String) extends ProjectSyntaxError {
-  override def toString = msg
-}
-
-case class ProjectSyntaxErrorException(error: ProjectSyntaxError) extends Exception
 
 case class SchemaInferrerImpl(
     baseSchema: Schema,
