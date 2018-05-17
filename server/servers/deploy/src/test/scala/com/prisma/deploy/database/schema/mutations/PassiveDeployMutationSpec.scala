@@ -271,6 +271,6 @@ class PassiveDeployMutationSpec extends FlatSpec with Matchers with PassiveDeplo
     val result = server.deploySchemaThatMustError(projectId, schema)
 
     result.toString should be(
-      """{"data":{"deploy":{"migration":null,"errors":[{"description":"Could not find the relation between the models List and Todo in the databtase"}],"warnings":[]}}}""")
+      """{"data":{"deploy":{"migration":null,"errors":[{"description":"Could not find the relation between the models List and Todo in the database"}],"warnings":[]}}}""")
   }
 }

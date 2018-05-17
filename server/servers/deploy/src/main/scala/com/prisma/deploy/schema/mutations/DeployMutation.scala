@@ -5,7 +5,7 @@ import com.prisma.deploy.connector.{DeployConnector, MigrationPersistence, Proje
 import com.prisma.deploy.migration._
 import com.prisma.deploy.migration.inference._
 import com.prisma.deploy.migration.migrator.Migrator
-import com.prisma.deploy.migration.validation.{SchemaError, SchemaSyntaxValidator, SchemaWarning}
+import com.prisma.deploy.migration.validation._
 import com.prisma.deploy.schema.InvalidQuery
 import com.prisma.deploy.validation.DestructiveChanges
 import com.prisma.messagebus.pubsub.Only
@@ -36,13 +36,30 @@ case class DeployMutation(
     with AwaitUtils {
 
   val projectId = dependencies.projectIdEncoder.toEncodedString(args.name, args.stage)
+
+  //parse Schema
+  //validate Schema
+  //infer Tables
+  //map Schema
+  //create prismaSDL
+  //inferSchema
+  //inferred Table Validations
+  //get Function Models -> validateFunctionInputs
+  //infer MigrationSteps
+  //check For Destructive Changes
+  //check for Force
+  //update Secrets
+  //invalidateSchema
+  //schedule Migration
+  //if something fails during the migration steps we have no way of returning that error i think
+
   val graphQlSdl: Document = QueryParser.parse(args.types) match {
     case Success(res) => res
     case Failure(e)   => throw InvalidQuery(e.getMessage)
   }
 
   val validator                                = SchemaSyntaxValidator(args.types, isActive = deployConnector.isActive)
-  val schemaErrors: immutable.Seq[SchemaError] = validator.validate()
+  val schemaErrors: immutable.Seq[SchemaError] = validator.validate
   val inferredTablesFuture                     = deployConnector.databaseIntrospectionInferrer(project.id).infer()
 
   override def execute: Future[MutationResult[DeployMutationPayload]] = {
@@ -62,11 +79,15 @@ case class DeployMutation(
   }
 
   private def performDeployment: Future[MutationSuccess[DeployMutationPayload]] = inferredTablesFuture.flatMap { inferredTables =>
-    val schemaMapping = schemaMapper.createMapping(graphQlSdl)
-    schemaInferrer.infer(project.schema, schemaMapping, graphQlSdl, inferredTables) match {
-      case Good(inferredNextSchema) =>
-        val functionsOrErrors = getFunctionModelsOrErrors(args.functions)
+    val schemaMapping        = schemaMapper.createMapping(graphQlSdl)
+    val prismaSdl: PrismaSdl = validator.generateSDL
+    val inferredNextSchema   = schemaInferrer.infer(project.schema, schemaMapping, prismaSdl, inferredTables)
+    val inferredTableErrors =
+      if (deployConnector.isPassive) InferredTablesValidator.checkRelationsAgainstInferredTables(inferredNextSchema, inferredTables) else Vector.empty
 
+    inferredTableErrors.isEmpty match {
+      case true =>
+        val functionsOrErrors = getFunctionModelsOrErrors(args.functions)
         functionsOrErrors match {
           case Bad(errors) =>
             Future.successful(
@@ -108,21 +129,11 @@ case class DeployMutation(
             }
         }
 
-      case Bad(err) =>
-        Future.successful {
-          MutationSuccess(
-            DeployMutationPayload(
-              clientMutationId = args.clientMutationId,
-              migration = None,
-              errors = List(err match {
-                case RelationDirectiveNeeded(t1, _, t2, _) => SchemaError.global(s"Relation directive required for types $t1 and $t2.")
-                case InvalidGCValue(gcError)               => SchemaError.global(s"Invalid value '${gcError.value}' for type ${gcError.typeIdentifier}.")
-                case GenericProblem(msg)                   => SchemaError.global(msg)
-              }),
-              warnings = Seq.empty
-            ))
-        }
+      case false =>
+        Future.successful(MutationSuccess(DeployMutationPayload(args.clientMutationId, None, errors = inferredTableErrors, Seq.empty)))
+
     }
+
   }
 
   private def updateSecretsIfNecessary(): Future[Option[MigrationStep]] = {
