@@ -5,14 +5,14 @@ import com.prisma.deploy.connector.{CreateInlineRelation, CreateRelationTable, D
 
 object CreateRelationInterpreter extends SqlMutactionInterpreter[CreateRelationTable] {
   override def execute(mutaction: CreateRelationTable) = {
-    val aModel = mutaction.schema.getModelById_!(mutaction.relation.modelAId)
-    val bModel = mutaction.schema.getModelById_!(mutaction.relation.modelBId)
+    val modelA = mutaction.schema.getModelById_!(mutaction.relation.modelAId)
+    val modelB = mutaction.schema.getModelById_!(mutaction.relation.modelBId)
 
     PostgresDeployDatabaseMutationBuilder.createRelationTable(
       projectId = mutaction.projectId,
       relationTableName = mutaction.relation.relationTableName,
-      aTableName = aModel.name,
-      bTableName = bModel.name
+      modelA = modelA,
+      modelB = modelB
     )
   }
 
