@@ -21,7 +21,7 @@ object SchemaInferrer {
       SchemaInferrerImpl(
         baseSchema = baseSchema,
         schemaMapping = schemaMapping,
-        sdl = graphQlSdl,
+        prismaSdl = graphQlSdl,
         isActive = isActive,
         shouldCheckAgainstInferredTables = shouldCheckAgainstInferredTables,
         inferredTables = inferredTables
@@ -32,7 +32,7 @@ object SchemaInferrer {
 case class SchemaInferrerImpl(
     baseSchema: Schema,
     schemaMapping: SchemaMapping,
-    sdl: PrismaSdl,
+    prismaSdl: PrismaSdl,
     isActive: Boolean,
     shouldCheckAgainstInferredTables: Boolean,
     inferredTables: InferredTables
@@ -41,13 +41,12 @@ case class SchemaInferrerImpl(
   val isPassive = !isActive
 
   def infer(): Schema = {
-
     val schema = Schema(models = nextModels.toList, relations = nextRelations.toList, enums = nextEnums.toList)
     addMissingBackRelations(schema)
   }
 
   lazy val nextModels: Vector[Model] = {
-    sdl.types.map { prismaType =>
+    prismaSdl.types.map { prismaType =>
       val fieldNames = prismaType.fields.map(_.name)
       val hiddenReservedFields = if (isActive) {
         val missingReservedFields = ReservedFields.reservedFieldNames.filterNot(fieldNames.contains)
@@ -171,7 +170,7 @@ case class SchemaInferrerImpl(
 
   lazy val nextRelations: Set[Relation] = {
     val tmp = for {
-      prismaType    <- sdl.types
+      prismaType    <- prismaSdl.types
       relationField <- prismaType.relationalPrismaFields
     } yield {
       val model1       = prismaType.name
@@ -237,7 +236,6 @@ case class SchemaInferrerImpl(
           nextRelation.copy(modelAId = nextModelAId, modelBId = nextModelBId)
 
         case None => nextRelation
-
       }
     }
     tmp.groupBy(_.name).values.flatMap(_.headOption).toSet
@@ -247,7 +245,7 @@ case class SchemaInferrerImpl(
     if (isPassive && shouldCheckAgainstInferredTables) { // todo try to get rid of this
       val manifestationOnThisField = relationManifestationOnField(prismaType, relationField)
       val manifestationOnRelatedField = relationField.relatedField.flatMap { relatedField =>
-        val relatedType = sdl.types.find(_.name == relationField.referencesType).get
+        val relatedType = prismaSdl.types.find(_.name == relationField.referencesType).get
         relationManifestationOnField(relatedType, relatedField)
       }
       manifestationOnThisField.orElse(manifestationOnRelatedField)
@@ -302,6 +300,13 @@ case class SchemaInferrerImpl(
               )
             }
           }
+          .orElse {
+            val referencedType = prismaSdl.types.find(_.name == relationField.referencesType).get
+            val columnOption = inferredTables
+              .modelTable_!(prismaType.tableName.getOrElse(prismaType.name))
+              .columnNameForReferencedTable(referencedType.tableName.getOrElse(referencedType.name))
+            columnOption.map(column => InlineRelationManifestation(prismaType.name, column))
+          }
     }
   }
 
@@ -355,7 +360,7 @@ case class SchemaInferrerImpl(
     )
   }
 
-  lazy val nextEnums: Vector[Enum] = sdl.enums.map(enumType => Enum(name = enumType.name, values = enumType.values))
+  lazy val nextEnums: Vector[Enum] = prismaSdl.enums.map(enumType => Enum(name = enumType.name, values = enumType.values))
 
   def isModelA(model1: String, model2: String): Boolean = model1 < model2
 }

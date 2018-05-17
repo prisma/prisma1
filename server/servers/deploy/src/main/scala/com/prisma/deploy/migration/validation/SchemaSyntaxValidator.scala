@@ -106,7 +106,8 @@ case class SchemaSyntaxValidator(
 
     val enumTypes: Vector[PrismaSdl => PrismaEnum] = doc.enumNames.map { name =>
       val definition: EnumTypeDefinition = doc.enumType(name).get
-      PrismaEnum(name, values = definition.values.map(_.name))(_)
+      val enumValues                     = definition.values.map(_.name)
+      PrismaEnum(name, values = enumValues)(_)
     }
 
     val prismaTypes: Vector[PrismaSdl => PrismaType] = doc.objectTypes.map { definition =>
@@ -383,7 +384,7 @@ case class SchemaSyntaxValidator(
       ensureDefaultValuesHaveCorrectType(fieldAndType)
   }
 
-  private def getDefaultValueFromField(fieldDef: FieldDefinition) = {
+  def getDefaultValueFromField(fieldDef: FieldDefinition) = {
     val defaultValue   = fieldDef.directiveArgumentAsString("default", "value")
     val typeIdentifier = typeIdentifierForTypename(fieldDef.fieldType)
     defaultValue.map(value => GCStringConverter(typeIdentifier, fieldDef.isList).toGCValue(value))

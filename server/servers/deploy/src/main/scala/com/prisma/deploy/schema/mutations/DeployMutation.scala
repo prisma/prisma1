@@ -36,6 +36,23 @@ case class DeployMutation(
     with AwaitUtils {
 
   val projectId = dependencies.projectIdEncoder.toEncodedString(args.name, args.stage)
+
+  //parse Schema
+  //validate Schema
+  //infer Tables
+  //map Schema
+  //create prismaSDL
+  //inferSchema
+  //inferred Table Validations
+  //get Function Models -> validateFunctionInputs
+  //infer MigrationSteps
+  //check For Destructive Changes
+  //check for Force
+  //update Secrets
+  //invalidateSchema
+  //schedule Migration
+  //if something fails during the migration steps we have no way of returning that error i think
+
   val graphQlSdl: Document = QueryParser.parse(args.types) match {
     case Success(res) => res
     case Failure(e)   => throw InvalidQuery(e.getMessage)
@@ -113,8 +130,7 @@ case class DeployMutation(
         }
 
       case false =>
-        Future.successful(
-          MutationSuccess(DeployMutationPayload(args.clientMutationId, Some(Migration.empty(project.id)), errors = inferredTableErrors, Seq.empty)))
+        Future.successful(MutationSuccess(DeployMutationPayload(args.clientMutationId, None, errors = inferredTableErrors, Seq.empty)))
 
     }
 

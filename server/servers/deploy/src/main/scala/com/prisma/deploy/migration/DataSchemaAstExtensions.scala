@@ -1,7 +1,6 @@
 package com.prisma.deploy.migration
 
 import com.prisma.deploy.migration.DirectiveTypes.{InlineRelationDirective, RelationTableDirective}
-import com.prisma.shared.models.Manifestations.RelationManifestation
 import com.prisma.shared.models.{OnDelete, TypeIdentifier}
 import sangria.ast._
 
@@ -152,7 +151,7 @@ object DataSchemaAstExtensions {
     def onDelete = directiveArgumentAsString("relation", "onDelete") match {
       case Some("SET_NULL") => OnDelete.SetNull
       case Some("CASCADE")  => OnDelete.Cascade
-      case Some(_)          => sys.error("The SchemaSyntaxvalidator should catch this") // todo
+      case Some(_)          => sys.error("The SchemaSyntaxvalidator should catch this")
       case None             => OnDelete.SetNull
     }
 
@@ -217,7 +216,6 @@ object DataSchemaAstExtensions {
 object DirectiveTypes {
 
   sealed trait RelationDBDirective
-
   case class RelationTableDirective(table: String, thisColumn: Option[String], otherColumn: Option[String]) extends RelationDBDirective
   case class InlineRelationDirective(column: String)                                                        extends RelationDBDirective
 }
