@@ -5,12 +5,13 @@ import com.prisma.shared.models._
 case class MigrationStepMapperImpl(projectId: String) extends MigrationStepMapper {
   def mutactionFor(previousSchema: Schema, nextSchema: Schema, step: MigrationStep): Vector[DeployMutaction] = step match {
     case x: CreateModel =>
-      Vector(CreateModelTable(projectId, x.name))
+      val model = nextSchema.getModelByName_!(x.name)
+      Vector(CreateModelTable(projectId, model.name, model.dbNameOfIdField_!))
 
     case x: DeleteModel =>
       val model                = previousSchema.getModelByName_!(x.name)
       val scalarListFieldNames = model.scalarListFields.map(_.name).toVector
-      Vector(DeleteModelTable(projectId, x.name, scalarListFieldNames))
+      Vector(DeleteModelTable(projectId, x.name, model.dbNameOfIdField_!, scalarListFieldNames))
 
     case x: UpdateModel =>
       val model                = nextSchema.getModelByName(x.newName).getOrElse(nextSchema.getModelByName_!(x.newName.substring(2)))
@@ -22,10 +23,10 @@ case class MigrationStepMapperImpl(projectId: String) extends MigrationStepMappe
       val field = model.getFieldByName_!(x.name)
 
       () match {
-        case _ if ReservedFields.reservedFieldNames.contains(field.name) => Vector.empty
-        case _ if field.isRelation                                       => Vector.empty
-        case _ if field.isScalarList                                     => Vector(CreateScalarListTable(projectId, model, field))
-        case _ if field.isScalarNonList                                  => Vector(CreateColumn(projectId, model, field))
+        case _ if ReservedFields.idFieldName == field.name => Vector.empty
+        case _ if field.isRelation                         => Vector.empty
+        case _ if field.isScalarList                       => Vector(CreateScalarListTable(projectId, model, field))
+        case _ if field.isScalarNonList                    => Vector(CreateColumn(projectId, model, field))
       }
 
     case x: DeleteField =>

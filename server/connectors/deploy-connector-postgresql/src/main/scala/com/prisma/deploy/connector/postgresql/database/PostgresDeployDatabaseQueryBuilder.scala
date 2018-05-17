@@ -7,8 +7,8 @@ import slick.jdbc.{PositionedParameters, SQLActionBuilder}
 
 object PostgresDeployDatabaseQueryBuilder {
 
-  def existsByModel(projectId: String, modelName: String): SQLActionBuilder = {
-    sql"""select exists (select "id" from "#$projectId"."#$modelName")"""
+  def existsByModel(projectId: String, model: Model): SQLActionBuilder = {
+    sql"""select exists (select "#${model.dbNameOfIdField_!}" from "#$projectId"."#${model.dbName}")"""
   }
 
   def existsByRelation(projectId: String, relationId: String): SQLActionBuilder = {
@@ -19,17 +19,17 @@ object PostgresDeployDatabaseQueryBuilder {
     sql"""select exists (select Count(*)from "#$projectId"."#$relationTableName" Group by "#${relationSide.toString}" having Count(*) > 1)"""
   }
 
-  def existsNullByModelAndScalarField(projectId: String, modelName: String, fieldName: String) = {
-    sql"""SELECT EXISTS(Select "id" FROM "#$projectId"."#$modelName"
-          WHERE "#$projectId"."#$modelName".#$fieldName IS NULL)"""
+  def existsNullByModelAndScalarField(projectId: String, model: Model, fieldName: String) = {
+    sql"""SELECT EXISTS(Select "#${model.dbNameOfIdField_!}" FROM "#$projectId"."#${model.dbName}"
+          WHERE "#$projectId"."#${model.dbName}".#$fieldName IS NULL)"""
   }
 
-  def existsDuplicateValueByModelAndField(projectId: String, modelName: String, fieldName: String) = {
+  def existsDuplicateValueByModelAndField(projectId: String, model: Model, fieldName: String) = {
     sql"""SELECT EXISTS(
              Select Count(temp)
              FROM (
                   SELECT "#$fieldName"
-                  FROM "#$projectId"."#$modelName"
+                  FROM "#$projectId"."#${model.dbName}"
                   WHERE "#$fieldName" is not null
                   ) as temp
              GROUP BY temp
@@ -37,12 +37,12 @@ object PostgresDeployDatabaseQueryBuilder {
           )"""
   }
 
-  def existsNullByModelAndRelationField(projectId: String, modelName: String, field: Field) = {
+  def existsNullByModelAndRelationField(projectId: String, model: Model, field: Field) = {
     val relationId   = field.relation.get.relationTableName
     val relationSide = field.relationSide.get.toString
     sql"""select EXISTS (
-            select "id" from "#$projectId"."#$modelName"
-            where "id" Not IN
+            select "#${model.dbNameOfIdField_!}" from "#$projectId"."#${model.dbName}"
+            where "#${model.dbNameOfIdField_!}" Not IN
             (Select "#$projectId"."#$relationId"."#$relationSide" from "#$projectId"."#$relationId")
           )"""
   }
@@ -54,7 +54,7 @@ object PostgresDeployDatabaseQueryBuilder {
       field <- model.fields
       if field.enum.isDefined && field.enum.get.name == enumName
     } yield {
-      if (field.isList) ("nodeId", s"${model.name}_${field.name}", "value", value) else ("id", model.name, field.name, value)
+      if (field.isList) ("nodeId", s"${model.dbName}_${field.dbName}", "value", value) else (model.dbNameOfIdField_!, model.dbName, field.dbName, value)
     }
 
     val checks: Vector[SQLActionBuilder] = nameTuples.map { tuple =>
