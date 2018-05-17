@@ -23,10 +23,10 @@ case class MigrationStepMapperImpl(projectId: String) extends MigrationStepMappe
       val field = model.getFieldByName_!(x.name)
 
       () match {
-        case _ if ReservedFields.reservedFieldNames.contains(field.name) => Vector.empty
-        case _ if field.isRelation                                       => Vector.empty
-        case _ if field.isScalarList                                     => Vector(CreateScalarListTable(projectId, model, field))
-        case _ if field.isScalarNonList                                  => Vector(CreateColumn(projectId, model, field))
+        case _ if ReservedFields.idFieldName == field.name => Vector.empty
+        case _ if field.isRelation                         => Vector.empty
+        case _ if field.isScalarList                       => Vector(CreateScalarListTable(projectId, model, field))
+        case _ if field.isScalarNonList                    => Vector(CreateColumn(projectId, model, field))
       }
 
     case x: DeleteField =>
