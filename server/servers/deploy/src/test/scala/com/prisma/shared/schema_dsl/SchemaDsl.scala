@@ -1,10 +1,11 @@
 package com.prisma.shared.schema_dsl
 
-import com.prisma.deploy.connector.{DatabaseIntrospectionInferrer, DeployConnector, InferredTables}
+import com.prisma.deploy.connector.{DeployConnector, InferredTables}
 import com.prisma.deploy.migration.inference.{SchemaInferrer, SchemaMapping}
+import com.prisma.deploy.migration.validation.SchemaSyntaxValidator
 import com.prisma.gc_values.GCValue
 import com.prisma.shared.models.IdType.Id
-import com.prisma.shared.models.Manifestations.InlineRelationManifestation
+import com.prisma.shared.models.Manifestations.{FieldManifestation, InlineRelationManifestation, ModelManifestation}
 import com.prisma.shared.models._
 import com.prisma.utils.await.AwaitUtils
 import cool.graph.cuid.Cuid
@@ -34,7 +35,7 @@ object SchemaDsl extends AwaitUtils {
       InferredTables.empty,
       isActive = deployConnector.isActive,
       shouldCheckAgainstInferredTables = false
-    )(sdlString)
+    )(sdlString.stripMargin)
     if (deployConnector.isPassive) {
       addManifestations(project)
     } else {
@@ -66,7 +67,17 @@ object SchemaDsl extends AwaitUtils {
     val emptyBaseSchema    = Schema()
     val emptySchemaMapping = SchemaMapping.empty
     val sqlDocument        = QueryParser.parse(sdlString.stripMargin).get
-    val schema             = SchemaInferrer(isActive, shouldCheckAgainstInferredTables).infer(emptyBaseSchema, emptySchemaMapping, sqlDocument, inferredTables).get
+    val validator = SchemaSyntaxValidator(
+      sdlString,
+      SchemaSyntaxValidator.directiveRequirements,
+      SchemaSyntaxValidator.reservedFieldsRequirementsForAllConnectors,
+      SchemaSyntaxValidator.requiredReservedFields,
+      true
+    )
+
+    val prismaSdl = validator.generateSDL
+
+    val schema = SchemaInferrer(isActive, shouldCheckAgainstInferredTables).infer(emptyBaseSchema, emptySchemaMapping, prismaSdl, inferredTables)
     TestProject().copy(id = id, schema = schema)
   }
 
@@ -95,9 +106,10 @@ object SchemaDsl extends AwaitUtils {
         val newRelation = field.relation.flatMap { relation =>
           newRelations.find(_.name == relation.name)
         }
-        field.copy(relation = newRelation)
+        field.copy(relation = newRelation, manifestation = Some(FieldManifestation(field.name + "_column")))
       }
-      model.copy(fields = newFields)
+
+      model.copy(fields = newFields, manifestation = Some(ModelManifestation(model.name + "_Table")))
     }
     project.copy(schema = schema.copy(relations = newRelations, models = newModels))
   }

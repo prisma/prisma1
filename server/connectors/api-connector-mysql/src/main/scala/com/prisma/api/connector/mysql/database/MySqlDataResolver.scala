@@ -45,15 +45,15 @@ case class MySqlDataResolver(project: Project, readonlyClientDatabase: MySQLProf
   }
 
   override def resolveByUnique(where: NodeSelector): Future[Option[PrismaNode]] =
-    batchResolveByUnique(where.model, where.field.name, Vector(where.fieldValue)).map(_.headOption)
+    batchResolveByUnique(where.model, where.field, Vector(where.fieldValue)).map(_.headOption)
 
   override def countByTable(table: String, whereFilter: Option[DataItemFilterCollection] = None): Future[Int] = {
     val query = queryBuilder.countAllFromTable(project, table, whereFilter)
     performWithTiming("countByModel", readonlyClientDatabase.run(query))
   }
 
-  override def batchResolveByUnique(model: Model, fieldName: String, values: Vector[GCValue]): Future[Vector[PrismaNode]] = {
-    val query = queryBuilder.batchSelectFromModelByUnique(project.id, model, fieldName, values)
+  override def batchResolveByUnique(model: Model, field: Field, values: Vector[GCValue]): Future[Vector[PrismaNode]] = {
+    val query = queryBuilder.batchSelectFromModelByUnique(project.id, model, field.dbName, values)
     performWithTiming("batchResolveByUnique", readonlyClientDatabase.run(query))
   }
 

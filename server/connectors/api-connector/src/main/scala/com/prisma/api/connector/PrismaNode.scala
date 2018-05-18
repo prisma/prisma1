@@ -12,5 +12,5 @@ object PrismaNode {
 
 case class PrismaNodeWithParent(parentId: IdGCValue, prismaNode: PrismaNode)
 
-case class RelationNode(id: IdGCValue, a: IdGCValue, b: IdGCValue)
+case class RelationNode(a: IdGCValue, b: IdGCValue)
 case class ScalarListValues(nodeId: IdGCValue, value: ListGCValue)

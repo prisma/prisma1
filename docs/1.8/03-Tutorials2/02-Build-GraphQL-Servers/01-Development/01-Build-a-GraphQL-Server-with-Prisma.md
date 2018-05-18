@@ -1,9 +1,9 @@
 ---
 alias: ohdaiyoo6c
-description: Learn how to build a GraphQL server for an existing Prisma server.
+description: Learn how to build a GraphQL server for an existing Prisma service.
 ---
 
-# Build a GraphQL server for an existing Prisma service
+# Build a GraphQL server with Prisma
 
 This tutorial teaches you how to take an existing Prisma service and build a GraphQL server on top of it. The resolvers of the GraphQL servers will be connected to Prisma's GraphQL API via _Prisma bindings_.
 
@@ -169,7 +169,7 @@ This GraphQL schema defines six operations (two queries and four mutations):
 - `deletePost(id: ID!)`: Delete a `Post`
 - `signup(name: String!)`: Create a new `User` by providing a `name`
 
-There's one odd thing about the GraphQL schema right now though: The `Post` and `User` types are _imported_ from the `src/generated/prisma.graphql` which doesn't even exist yet - don't worry you'll download it next. Another thing to notice is that the import syntax uses GraphQL _comments_. These comments must not be deleted! They are used by [`graphql-import`](https://oss.prisma.io/graphql-import), a tool that lets you import SDL types _across files_ which is not possible with standard SDL ([yet]((https://github.com/graphql/graphql-wg/blob/master/notes/2018-02-01.md#present-graphql-import))!).
+There's one odd thing about the GraphQL schema right now though: The `Post` and `User` types are _imported_ from the `src/generated/prisma.graphql` which doesn't even exist yet - don't worry you'll download it next. Another thing to notice is that the import syntax uses GraphQL _comments_. These comments must not be deleted! They are used by [`graphql-import`](https://oss.prisma.io/content/GraphQL-Import/Overview.html), a tool that lets you import SDL types _across files_ which is not possible with standard SDL ([yet]((https://github.com/graphql/graphql-wg/blob/master/notes/2018-02-01.md#present-graphql-import))!).
 
 ## Step 4: Download the Prisma database schema
 
@@ -177,7 +177,7 @@ The next step is to download the GraphQL schema of Prisma's GraphQL API (also re
 
 Technically speaking, this is not absolutely necessary since you could also just _redefine_ identical `Post` and `User` types in `schema.graphql`. However, this would you that you have now _two_ separate locations where these type definitions live. Whenever you now wanted to update the types, you'd have to do that twice. It is therefore considered _best pratice_ to import the types from Prisma's GraphQL schema.
 
-Downloading the Prisma database schema is done using the [GraphQL CLI](https://oss.prisma.io/graphql-cli) and [GraphQL Config](https://oss.prisma.io/graphql-config).
+Downloading the Prisma database schema is done using the [GraphQL CLI](https://oss.prisma.io/content/GraphQL-CLI/01-Overview.html) and [GraphQL Config](https://oss.prisma.io/content/GraphQL-Config/Overview.html).
 
 <Instruction>
 

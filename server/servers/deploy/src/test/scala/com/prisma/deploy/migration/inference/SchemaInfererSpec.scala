@@ -1,12 +1,11 @@
 package com.prisma.deploy.migration.inference
 
 import com.prisma.deploy.connector.InferredTables
+import com.prisma.deploy.migration.validation.SchemaSyntaxValidator
 import com.prisma.shared.models.Manifestations.{FieldManifestation, InlineRelationManifestation, ModelManifestation, RelationTableManifestation}
 import com.prisma.shared.models.{RelationSide, Schema}
 import com.prisma.shared.schema_dsl.SchemaDsl
-import org.scalactic.Or
 import org.scalatest.{Matchers, WordSpec}
-import sangria.parser.QueryParser
 
 class SchemaInfererSpec extends WordSpec with Matchers {
   val emptyProject = SchemaDsl().buildProject()
@@ -23,7 +22,7 @@ class SchemaInfererSpec extends WordSpec with Matchers {
           |  todo: Todo! @relation(name:"MyNameForTodoToComments")
           |}
         """.stripMargin.trim()
-      val schema = infer(emptyProject.schema, types).get
+      val schema = infer(emptyProject.schema, types)
 
       val relation = schema.getRelationByName_!("MyNameForTodoToComments")
       relation.modelAId should equal("Comment")
@@ -41,7 +40,7 @@ class SchemaInfererSpec extends WordSpec with Matchers {
           |  created_by: User! @relation(name: "CallRequester")
           |  members: [User!]! @relation(name: "CallMembers")
           |}""".stripMargin.trim()
-      val schema = infer(emptyProject.schema, types).get
+      val schema = infer(emptyProject.schema, types)
 
       val relation = schema.getRelationByName_!("CallRequester")
       relation.modelAId should equal("Call")
@@ -63,7 +62,7 @@ class SchemaInfererSpec extends WordSpec with Matchers {
           |  todo: Todo!
           |}
         """.stripMargin.trim()
-      val schema = infer(emptyProject.schema, types).get
+      val schema = infer(emptyProject.schema, types)
 
       schema.relations should have(size(1))
       val relation = schema.getRelationByName_!("MyRelationName")
@@ -82,7 +81,7 @@ class SchemaInfererSpec extends WordSpec with Matchers {
           |  todo: Todo!
           |}
         """.stripMargin.trim()
-      val schema = infer(emptyProject.schema, types).get
+      val schema = infer(emptyProject.schema, types)
       schema.relations.foreach(println(_))
 
       val relation = schema.getRelationByName_!("CommentToTodo")
@@ -124,7 +123,7 @@ class SchemaInfererSpec extends WordSpec with Matchers {
         )
       )
 
-      val newSchema = infer(project.schema, types, renames).get
+      val newSchema = infer(project.schema, types, renames)
       newSchema.relations.foreach(println(_))
 
       val relation = newSchema.getRelationByName_!("CommentNewToTodoNew")
@@ -163,7 +162,7 @@ class SchemaInfererSpec extends WordSpec with Matchers {
         )
       )
 
-      val newSchema = infer(project.schema, types, renames).get
+      val newSchema = infer(project.schema, types, renames)
       newSchema.relations.foreach(println(_))
 
       val relation = newSchema.getRelationByName_!("CommentNewToTodoNew")
@@ -198,7 +197,7 @@ class SchemaInfererSpec extends WordSpec with Matchers {
         )
       )
 
-      val newSchema = infer(project.schema, types, renames).get
+      val newSchema = infer(project.schema, types, renames)
 
       val previousModel = project.schema.getModelByName_!("Todo")
       val nextModel     = newSchema.getModelByName_!("TodoNew")
@@ -215,7 +214,7 @@ class SchemaInfererSpec extends WordSpec with Matchers {
            |  childTechnologies: [Technology!]! @relation(name: "ChildTechnologies")
            |  parentTechnologies: [Technology!]! @relation(name: "ChildTechnologies")
            |}""".stripMargin.trim()
-      val schema = infer(emptyProject.schema, types).get
+      val schema = infer(emptyProject.schema, types)
 
       schema.relations should have(size(1))
       val relation = schema.getRelationByName_!("ChildTechnologies")
@@ -233,7 +232,7 @@ class SchemaInfererSpec extends WordSpec with Matchers {
            |  childTechnologies: [Technology!]! @relation(name: "ChildTechnologies")
            |  parentTechnologies: [Technology!]! @relation(name: "ChildTechnologies")
            |}""".stripMargin.trim()
-      val schema = infer(emptyProject.schema, types).get
+      val schema = infer(emptyProject.schema, types)
 
       schema.relations should have(size(1))
       val relation = schema.getRelationByName_!("ChildTechnologies")
@@ -255,7 +254,7 @@ class SchemaInfererSpec extends WordSpec with Matchers {
           Vector(FieldMapping(previousModel = "Technology", previousField = "childTechnologies", nextModel = "NewTechnology", nextField = "xTechnologies"))
       )
 
-      val newSchema = infer(schema, newTypes, renames).get
+      val newSchema = infer(schema, newTypes, renames)
       newSchema.relations.foreach(println(_))
 
       val newRelation = newSchema.getRelationByName_!("ChildTechnologies")
@@ -279,7 +278,7 @@ class SchemaInfererSpec extends WordSpec with Matchers {
          |  childTechnologies: [Technology!]! @relation(name: "ChildTechnologies")
          |  parentTechnologies: [Technology!]! @relation(name: "ChildTechnologies")
          |}""".stripMargin.trim()
-    val schema = infer(emptyProject.schema, types).get
+    val schema = infer(emptyProject.schema, types)
 
     schema.relations should have(size(1))
     val relation = schema.getRelationByName_!("ChildTechnologies")
@@ -294,7 +293,7 @@ class SchemaInfererSpec extends WordSpec with Matchers {
     val updatedModel  = techModel.copy(fields = techModel.fields.filter(_ != parentField) :+ parentField.copy(relationSide = Some(RelationSide.A)))
     val invalidSchema = schema.copy(models = List(updatedModel))
 
-    val newSchema = infer(invalidSchema, types).get
+    val newSchema = infer(invalidSchema, types)
     newSchema.relations.foreach(println(_))
 
     val newRelation = newSchema.getRelationByName_!("ChildTechnologies")
@@ -316,7 +315,7 @@ class SchemaInfererSpec extends WordSpec with Matchers {
          |  name: String! @unique
          |  childTechnologies: [Technology!]!
          |}""".stripMargin.trim()
-    val schema = infer(emptyProject.schema, types).get
+    val schema = infer(emptyProject.schema, types)
 
     schema.relations should have(size(1))
     val relation = schema.relations.head
@@ -330,7 +329,7 @@ class SchemaInfererSpec extends WordSpec with Matchers {
       """|type Todo @pgTable(name:"todo_table"){
          |  name: String!
          |}""".stripMargin
-    val schema = infer(emptyProject.schema, types).get
+    val schema = infer(emptyProject.schema, types)
 
     val model = schema.getModelByName_!("Todo")
     model.manifestation should equal(Some(ModelManifestation("todo_table")))
@@ -341,7 +340,7 @@ class SchemaInfererSpec extends WordSpec with Matchers {
       """|type Todo {
          |  name: String! @pgColumn(name: "my_name_column")
          |}""".stripMargin
-    val schema = infer(emptyProject.schema, types).get
+    val schema = infer(emptyProject.schema, types)
 
     val field = schema.getModelByName_!("Todo").getFieldByName_!("name")
     field.manifestation should equal(Some(FieldManifestation("my_name_column")))
@@ -356,7 +355,7 @@ class SchemaInfererSpec extends WordSpec with Matchers {
          |type List {
          |  todos: [Todo] @relationTable(table: "list_to_todo", relationColumn: "list_id", targetColumn: "todo_id")
          |}""".stripMargin
-    val schema = infer(emptyProject.schema, types, isActive = false).get
+    val schema = infer(emptyProject.schema, types, isActive = false)
 
     val relation = schema.getModelByName_!("List").getFieldByName_!("todos").relation.get
     // assert model ids to make sure that the generated manifestation refers to the right modelAColumn/modelBColumn
@@ -379,7 +378,7 @@ class SchemaInfererSpec extends WordSpec with Matchers {
          |  list: List @pgRelation(column: "list_id")
          |}
          |""".stripMargin
-    val schema = infer(emptyProject.schema, types, isActive = false).get
+    val schema = infer(emptyProject.schema, types, isActive = false)
 
     val relation = schema.getModelByName_!("List").getFieldByName_!("todos").relation.get
 
@@ -392,7 +391,7 @@ class SchemaInfererSpec extends WordSpec with Matchers {
       """|type Todo {
          |  name: String!
          |}""".stripMargin
-    val schema = infer(emptyProject.schema, types, isActive = true).get
+    val schema = infer(emptyProject.schema, types, isActive = true)
 
     val model = schema.getModelByName_!("Todo")
     model.fields should have(size(4))
@@ -404,20 +403,25 @@ class SchemaInfererSpec extends WordSpec with Matchers {
       """|type Todo {
          |  name: String!
          |}""".stripMargin
-    val schema = infer(emptyProject.schema, types, isActive = false).get
+    val schema = infer(emptyProject.schema, types, isActive = false)
 
     val model = schema.getModelByName_!("Todo")
     model.fields should have(size(1))
     model.fields.map(_.name) should equal(List("name"))
   }
 
-  def infer(
-      schema: Schema,
-      types: String,
-      mapping: SchemaMapping = SchemaMapping.empty,
-      isActive: Boolean = true
-  ): Or[Schema, ProjectSyntaxError] = {
-    val document = QueryParser.parse(types).get
-    SchemaInferrer(isActive).infer(schema, mapping, document, InferredTables.empty)
+  def infer(schema: Schema, types: String, mapping: SchemaMapping = SchemaMapping.empty, isActive: Boolean = true): Schema = {
+    val validator = SchemaSyntaxValidator(
+      types,
+      SchemaSyntaxValidator.directiveRequirements,
+      SchemaSyntaxValidator.reservedFieldsRequirementsForAllConnectors,
+      SchemaSyntaxValidator.requiredReservedFields,
+      allowScalarLists = false
+    )
+
+    val prismaSdl = validator.generateSDL
+
+    SchemaInferrer(isActive).infer(schema, mapping, prismaSdl, InferredTables.empty)
+
   }
 }

@@ -831,7 +831,7 @@ class NestedConnectMutationInsideCreateSpec extends FlatSpec with Matchers with 
   "a many relation" should "throw a proper error if connected by wrong id the other way around" in {
     val project = SchemaDsl.fromBuilder { schema =>
       val comment = schema.model("Comment").field_!("text", _.String)
-      schema.model("Todo").oneToManyRelation("comments", "todo", comment)
+      schema.model("Todo").field("text", _.String).oneToManyRelation("comments", "todo", comment)
     }
     database.setup(project)
 

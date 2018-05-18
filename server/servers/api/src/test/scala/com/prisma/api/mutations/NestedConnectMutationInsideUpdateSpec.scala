@@ -1321,7 +1321,7 @@ class NestedConnectMutationInsideUpdateSpec extends FlatSpec with Matchers with 
     mustBeEqual(result.pathAsJsValue("data.updateTodo.comments").toString, """[{"text":"comment1"},{"text":"comment2"}]""")
   }
 
-  // fails for passive as no id field is added to the model
+  // TODO: fails for passive as no id field is added to the model
   "a PM to CM  self relation with the child not already in a relation" should "be connectable through a nested mutation by unique" taggedAs (IgnorePassive) in {
     val project = SchemaDsl.fromString() { """type Technology {
                                              |  name: String! @unique
