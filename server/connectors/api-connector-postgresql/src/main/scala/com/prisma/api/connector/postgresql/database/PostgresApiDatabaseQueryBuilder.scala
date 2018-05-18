@@ -198,7 +198,7 @@ case class PostgresApiDatabaseQueryBuilder(
       args: Option[QueryArguments]
   ): DBIOAction[Vector[ResolverResult[PrismaNodeWithParent]], NoStream, Effect] = {
     val relation     = fromField.relation.get
-    val relatedModel = fromField.relatedModel(schema).get
+    val relatedModel = fromField.relatedModel.get
     val modelTable   = relatedModel.dbName
 
     val relationTableName     = fromField.relation.get.relationTableNameNew(schema)
@@ -266,7 +266,7 @@ case class PostgresApiDatabaseQueryBuilder(
       args: Option[QueryArguments]
   ): DBIOAction[Vector[ResolverResult[PrismaNodeWithParent]], NoStream, Effect] = {
 
-    val relatedModel                  = fromField.relatedModel(schema).get
+    val relatedModel                  = fromField.relatedModel.get
     val fieldTable                    = relatedModel.dbName
     val relation                      = fromField.relation.get
     val unsafeRelationId              = relation.relationTableNameNew(schema)
@@ -330,7 +330,7 @@ case class PostgresApiDatabaseQueryBuilder(
       args: Option[QueryArguments]
   ): SqlStreamingAction[Vector[(IdGCValue, Int)], (IdGCValue, Int), Effect] = {
 
-    val relatedModel               = relationField.relatedModel(schema).get
+    val relatedModel               = relationField.relatedModel.get
     val fieldTable                 = relatedModel.dbName
     val relation                   = relationField.relation.get
     val unsafeRelationId           = relation.relationTableNameNew(schema)

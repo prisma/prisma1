@@ -69,22 +69,24 @@ class Field(
 ) {
   import template._
 
+  val schema = model.schema
+
   lazy val relation: Option[Relation] = relationName.flatMap(model.schema.getRelationByName)
 
-  def id = name
-  def dbName = {
+  val id = name
+  val dbName = {
     relation match {
       case Some(r) if r.isInlineRelation => r.manifestation.get.asInstanceOf[InlineRelationManifestation].referencingColumn
       case None                          => manifestation.map(_.dbName).getOrElse(name)
       case _                             => sys.error("not a valid call on relations manifested via a table")
     }
   }
-  def isScalar: Boolean                             = typeIdentifier != TypeIdentifier.Relation
-  def isRelation: Boolean                           = typeIdentifier == TypeIdentifier.Relation
-  def isScalarList: Boolean                         = isScalar && isList
-  def isScalarNonList: Boolean                      = isScalar && !isList
-  def isRelationList: Boolean                       = isRelation && isList
-  def isRelationNonList: Boolean                    = isRelation && !isList
+  val isScalar: Boolean                             = typeIdentifier != TypeIdentifier.Relation
+  val isRelation: Boolean                           = typeIdentifier == TypeIdentifier.Relation
+  val isScalarList: Boolean                         = isScalar && isList
+  val isScalarNonList: Boolean                      = isScalar && !isList
+  val isRelationList: Boolean                       = isRelation && isList
+  val isRelationNonList: Boolean                    = isRelation && !isList
   def isRelationWithId(relationId: String): Boolean = relation.exists(_.relationTableName == relationId)
 
   def isRelationWithIdAndSide(relationId: String, relationSide: RelationSide.Value): Boolean = {
@@ -92,10 +94,10 @@ class Field(
   }
 
   private val excludedFromMutations = Vector("updatedAt", "createdAt", "id")
-  def isWritable: Boolean           = !isReadonly && !excludedFromMutations.contains(name)
-  def isVisible: Boolean            = !isHidden
+  val isWritable: Boolean           = !isReadonly && !excludedFromMutations.contains(name)
+  val isVisible: Boolean            = !isHidden
 
-  def oppositeRelationSide: Option[RelationSide.Value] = {
+  val oppositeRelationSide: Option[RelationSide.Value] = {
     relationSide match {
       case Some(RelationSide.A) => Some(RelationSide.B)
       case Some(RelationSide.B) => Some(RelationSide.A)
@@ -103,14 +105,7 @@ class Field(
     }
   }
 
-  def relatedModel_!(schema: Schema): Model = {
-    relatedModel(schema) match {
-      case None        => sys.error(s"Could not find relatedModel for field [$name] on model [${model(schema)}]")
-      case Some(model) => model
-    }
-  }
-
-  def relatedModel(schema: Schema): Option[Model] = {
+  val relatedModel: Option[Model] = {
     relation.flatMap(relation => {
       relationSide match {
         case Some(RelationSide.A) => relation.getModelB(schema)
@@ -120,20 +115,17 @@ class Field(
     })
   }
 
-  def model(schema: Schema): Option[Model] = {
-    relation.flatMap(relation => {
-      relationSide match {
-        case Some(RelationSide.A) => relation.getModelA(schema)
-        case Some(RelationSide.B) => relation.getModelB(schema)
-        case x                    => ??? //throw SystemErrors.InvalidStateException(message = s" relationSide was $x")
-      }
-    })
+  val relatedModel_! : Model = {
+    relatedModel match {
+      case None        => sys.error(s"Could not find relatedModel for field [$name] on model [${model(schema)}]")
+      case Some(model) => model
+    }
   }
 
   //todo this is dangerous in combination with self relations since it will return the field itself as related field
   //this should be removed where possible
-  def relatedField(schema: Schema): Option[Field] = {
-    val fields = relatedModel(schema).get.fields
+  val relatedField: Option[Field] = {
+    val fields = relatedModel_!.fields
 
     val returnField = fields.find { field =>
       field.relation.exists { relation =>
@@ -152,8 +144,8 @@ class Field(
   }
 
   //this really does return None if there is no opposite field
-  def otherRelationField(schema: Schema): Option[Field] = {
-    val fields = relatedModel(schema).get.fields
+  val otherRelationField: Option[Field] = {
+    val fields = relatedModel_!.fields
 
     fields.find { field =>
       field.relation.exists { relation =>

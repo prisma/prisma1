@@ -132,7 +132,7 @@ class ObjectTypeBuilder(
 
   def resolveConnection(field: Field): OutputType[Any] = {
     field.isList match {
-      case true  => ListType(modelObjectTypes(field.relatedModel(project.schema).get.name))
+      case true  => ListType(modelObjectTypes(field.relatedModel.get.name))
       case false => modelObjectTypes(field.relatedModel_!(project.schema).name)
     }
   }
@@ -141,8 +141,8 @@ class ObjectTypeBuilder(
     (field.isHidden, field.isScalar, field.isList) match {
       case (true, _, _)      => List()
       case (_, true, _)      => List()
-      case (_, false, true)  => mapToListConnectionArguments(field.relatedModel(project.schema).get)
-      case (_, false, false) => mapToSingleConnectionArguments(field.relatedModel(project.schema).get)
+      case (_, false, true)  => mapToListConnectionArguments(field.relatedModel.get)
+      case (_, false, false) => mapToSingleConnectionArguments(field.relatedModel.get)
     }
   }
 
@@ -193,10 +193,10 @@ class ObjectTypeBuilder(
                   project.schema,
                   field.get,
                   model,
-                  field.get.relatedModel(project.schema).get,
+                  field.get.relatedModel.get,
                   field.get.relation.get,
                   filter.name,
-                  generateFilterElement(typedValue, field.get.relatedModel(project.schema).get, isSubscriptionFilter)
+                  generateFilterElement(typedValue, field.get.relatedModel.get, isSubscriptionFilter)
                 )
               }
 
@@ -256,7 +256,7 @@ class ObjectTypeBuilder(
       ctx: Context[C, PrismaNode]): sangria.schema.Action[ApiUserContext, _] = {
 
     val item: PrismaNode = unwrapDataItemFromContext(ctx)
-    lazy val arguments   = extractQueryArgumentsFromContext(field.relatedModel(project.schema).get, ctx.asInstanceOf[Context[ApiUserContext, Unit]])
+    lazy val arguments   = extractQueryArgumentsFromContext(field.relatedModel.get, ctx.asInstanceOf[Context[ApiUserContext, Unit]])
 
     (field.isScalar, field.isList) match {
       case (true, true)   => ScalarListDeferred(model, field, item.id)

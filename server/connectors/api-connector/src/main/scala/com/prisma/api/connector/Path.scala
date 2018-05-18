@@ -43,13 +43,13 @@ case class Path(root: NodeSelector, edges: List[Edge]) {
   }
 
   def appendCascadingEdge(project: Project, field: Field): Path = {
-    val edge = ModelEdge(lastModel, field, field.relatedModel(project.schema).get, field.relatedField(project.schema), field.relation.get)
+    val edge = ModelEdge(lastModel, field, field.relatedModel_!, field.relatedField, field.relation.get)
     if (edge.relation.bothSidesCascade || models.contains(edge.child)) throw APIErrors.CascadingDeletePathLoops()
     copy(root, edges :+ edge)
   }
 
   def appendEdge(project: Project, field: Field): Path = {
-    val edge = ModelEdge(lastModel, field, field.relatedModel(project.schema).get, field.relatedField(project.schema), field.relation.get)
+    val edge = ModelEdge(lastModel, field, field.relatedModel_!, field.relatedField, field.relation.get)
     copy(root, edges :+ edge)
   }
 

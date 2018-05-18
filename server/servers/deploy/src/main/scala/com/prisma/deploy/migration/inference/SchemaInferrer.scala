@@ -91,7 +91,7 @@ case class SchemaInferrerImpl(
       //For self relations we were inferring the relationSide A for both sides, this now assigns A to the lexicographically lower field name and B to the other
       //If in the previous schema both relationSides are A we reassign the relationsides otherwise we keep the one from the previous schema.
       def inferRelationSide(relation: Option[RelationTemplate]) = {
-        def oldRelationSidesNotBothEqual(oldField: Field) = oldField.otherRelationField(baseSchema) match {
+        def oldRelationSidesNotBothEqual(oldField: Field) = oldField.otherRelationField match {
           case Some(relatedField) => oldField.relationSide.isDefined && oldField.relationSide != relatedField.relationSide
           case None               => true
         }

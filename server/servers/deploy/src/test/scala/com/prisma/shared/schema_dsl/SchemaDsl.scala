@@ -92,7 +92,7 @@ object SchemaDsl extends AwaitUtils {
           case Some(field) => field
           case None        => relationFields.head // happens for one to one relations
         }
-        val modelToLinkTo          = fieldToRepresentAsInlineRelation.model(schema).get
+        val modelToLinkTo          = fieldToRepresentAsInlineRelation.model
         val modelToPutRelationInto = fieldToRepresentAsInlineRelation.relatedModel_!(schema)
         val manifestation = InlineRelationManifestation(
           inTableOfModelId = modelToPutRelationInto.id,

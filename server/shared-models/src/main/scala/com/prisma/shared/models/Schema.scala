@@ -17,7 +17,7 @@ case class Schema(
 
   def allFields: Seq[Field] = models.flatMap(_.fields)
 
-  def fieldsWhereThisModelIsRequired(model: Model) = allFields.filter(f => f.isRequired && !f.isList && f.relatedModel(this).contains(model))
+  def fieldsWhereThisModelIsRequired(model: Model) = allFields.filter(f => f.isRequired && !f.isList && f.relatedModel.contains(model))
 
   def getModelById(id: Id): Option[Model] = models.find(_.id == id)
   def getModelById_!(id: Id): Model       = getModelById(id).getOrElse(throw SharedErrors.InvalidModel(id))
