@@ -90,7 +90,7 @@ case class PostgresApiDatabaseQueryBuilder(
       overrideMaxNodeCount: Option[Int] = None
   ): DBIOAction[ResolverResult[RelationNode], NoStream, Effect] = {
 
-    val tableName = relation.relationTableNameNew(schema)
+    val tableName = relation.relationTableName
     val (conditionCommand, orderByCommand, limitCommand) = extractQueryArgs(
       projectId = schemaName,
       tableName = tableName,
@@ -201,7 +201,7 @@ case class PostgresApiDatabaseQueryBuilder(
     val relatedModel = fromField.relatedModel.get
     val modelTable   = relatedModel.dbName
 
-    val relationTableName     = fromField.relation.get.relationTableNameNew(schema)
+    val relationTableName     = fromField.relation.get.relationTableName
     val (aColumn, bColumn)    = (relation.modelAColumn(schema), relation.modelBColumn(schema))
     val columnForFromModel    = relation.columnForRelationSide(schema, fromField.relationSide.get)
     val columnForRelatedModel = relation.columnForRelationSide(schema, fromField.oppositeRelationSide.get)
@@ -269,7 +269,7 @@ case class PostgresApiDatabaseQueryBuilder(
     val relatedModel                  = fromField.relatedModel.get
     val fieldTable                    = relatedModel.dbName
     val relation                      = fromField.relation.get
-    val unsafeRelationId              = relation.relationTableNameNew(schema)
+    val unsafeRelationId              = relation.relationTableName
     val modelRelationSide             = fromField.relationSide.get.toString
     val columnForOppositeRelationSide = relation.columnForRelationSide(schema, fromField.oppositeRelationSide.get)
 
@@ -333,7 +333,7 @@ case class PostgresApiDatabaseQueryBuilder(
     val relatedModel               = relationField.relatedModel.get
     val fieldTable                 = relatedModel.dbName
     val relation                   = relationField.relation.get
-    val unsafeRelationId           = relation.relationTableNameNew(schema)
+    val unsafeRelationId           = relation.relationTableName
     val modelRelationSide          = relationField.relationSide.get.toString
     val columnForFieldRelationSide = relation.columnForRelationSide(schema, relationField.oppositeRelationSide.get)
 

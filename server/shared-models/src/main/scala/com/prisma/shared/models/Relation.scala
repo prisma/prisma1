@@ -33,15 +33,12 @@ class Relation(
 ) {
   import template._
 
-  val relationTableName = manifestation.collect { case m: RelationTableManifestation => m.table }.getOrElse("_" + name)
-
-  def relationTableNameNew(schema: Schema): String =
-    manifestation
-      .collect {
-        case m: RelationTableManifestation  => m.table
-        case m: InlineRelationManifestation => schema.getModelById_!(m.inTableOfModelId).dbName
-      }
-      .getOrElse("_" + name)
+  lazy val relationTableName = manifestation // TODO: put this into a more readable pattern match
+    .collect {
+      case m: RelationTableManifestation  => m.table
+      case m: InlineRelationManifestation => schema.getModelById_!(m.inTableOfModelId).dbName
+    }
+    .getOrElse("_" + name)
 
   def modelAColumn(schema: Schema): String = manifestation match {
     case Some(m: RelationTableManifestation) =>
