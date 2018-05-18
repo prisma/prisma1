@@ -194,14 +194,14 @@ object ProjectJsonFormatter {
     }
   }
 
-  implicit val relationWrites: Writes[Relation] = (
+  implicit val relationWrites: Writes[RelationTemplate] = (
     (JsPath \ "name").write[String] and
       (JsPath \ "modelAId").write[String] and
       (JsPath \ "modelBId").write[String] and
       (JsPath \ "modelAOnDelete").write[OnDelete.Value] and
       (JsPath \ "modelBOnDelete").write[OnDelete.Value] and
       (JsPath \ "manifestation").writeNullable[RelationManifestation]
-  )(r => (r.name, r.modelAId, r.modelBId, r.modelAOnDelete, r.modelBOnDelete, r.manifestation))
+  )(unlift(RelationTemplate.unapply))
 
   implicit val relationReads: Reads[RelationTemplate] = (
     (JsPath \ "name").read[String] and
@@ -272,9 +272,9 @@ object ProjectJsonFormatter {
 
   val schemaWrites: Writes[Schema] = (
     (JsPath \ "models").write[List[Model]] and
-      (JsPath \ "relations").write[List[Relation]] and
+      (JsPath \ "relations").write[List[RelationTemplate]] and
       (JsPath \ "enums").write[List[Enum]]
-  )(s => (s.models, s.relations, s.enums))
+  )(s => (s.models, s.relationFns, s.enums))
 
   implicit lazy val schemaFormat              = Format(schemaReads, schemaWrites)
   implicit lazy val projectFormat             = Json.format[Project]
