@@ -164,7 +164,13 @@ class Model(
     fields.find(_.isRelationWithIdAndSide(relationId, relationSide))
   }
 
-  def filterFields(fn: Field => Boolean): Model = copy(fields = this.fields.filter(fn))(schema) // fixme: this does not seem right
+  def filterFields(fn: Field => Boolean): Model = {
+    copy(fields = this.fields.filter(fn))(schema)
+    val newFields         = this.fields.filter(fn)
+    val newModel          = copy(fields = newFields)
+    val newModelsInSchema = schema.models.filter(_.name != name).map(_.copy()) :+ newModel
+    schema.copy(modelFns = newModelsInSchema).getModelByName_!(name)
+  }
 
   def getFieldById_!(id: Id): Field       = getFieldById(id).get
   def getFieldById(id: Id): Option[Field] = fields.find(_.id == id)
