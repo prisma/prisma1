@@ -13,7 +13,7 @@ case class Schema(
     enums: List[Enum] = List.empty
 ) {
   val models    = modelTemplates.map(_.build(this))
-  val relations = relationTemplates.map(_.apply(this))
+  val relations = relationTemplates.map(_.build(this))
 
   def allFields: Seq[Field] = models.flatMap(_.fields)
 

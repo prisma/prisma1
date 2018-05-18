@@ -15,8 +15,8 @@ case class RelationTemplate(
     modelAOnDelete: OnDelete.Value,
     modelBOnDelete: OnDelete.Value,
     manifestation: Option[RelationManifestation]
-) extends (Schema => Relation) {
-  def apply(schema: Schema) = new Relation(this, schema)
+) {
+  def build(schema: Schema) = new Relation(this, schema)
 
   def connectsTheModels(model1: String, model2: String): Boolean = (modelAId == model1 && modelBId == model2) || (modelAId == model2 && modelBId == model1)
 

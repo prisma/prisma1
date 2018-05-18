@@ -57,7 +57,7 @@ case class FieldTemplate(
     manifestation: Option[FieldManifestation],
     constraints: List[FieldConstraint] = List.empty
 ) {
-  def apply(model: Model): Field = new Field(this, model)
+  def build(model: Model): Field = new Field(this, model)
 }
 
 object Field {

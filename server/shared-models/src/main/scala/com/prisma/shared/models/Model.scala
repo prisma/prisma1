@@ -30,7 +30,7 @@ class Model(
   val id: String     = name
   val dbName: String = manifestation.map(_.dbName).getOrElse(id)
 
-  lazy val fields: List[Field]                = fieldTemplates.map(_.apply(this))
+  lazy val fields: List[Field]                = fieldTemplates.map(_.build(this))
   lazy val uniqueFields: List[Field]          = fields.filter(f => f.isUnique && f.isVisible)
   lazy val scalarFields: List[Field]          = fields.filter(_.isScalar)
   lazy val scalarListFields: List[Field]      = scalarFields.filter(_.isList)
