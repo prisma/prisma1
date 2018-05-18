@@ -10,6 +10,8 @@ In this tutorial, you'll learn how to get started with Prisma and deploy a Prism
 Demo servers provide a hosted environment (running in Prisma Cloud) which you can use for learning, prototyping and development. They are free to use but should not be used for production use cases as they are rate limited and have an upper bound in storage capacity.
 ckstart:docs/1.8/03-Tutorials/01-Setup-Prisma/01-Demo-Server.md
 
+<InfoBox>
+
 To ensure you're not accidentally skipping an instruction in the tutorial, all required actions are highlighted with a little _counter_ on the left.
 
 **Pro tip**: 💡 If you're only keen on getting started but don't care so much about the explanations of what's going on, you can simply jump from instruction to instruction.
