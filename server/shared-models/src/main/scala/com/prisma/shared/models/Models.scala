@@ -268,7 +268,7 @@ class Field(
     val manifestation: Option[FieldManifestation],
     val constraints: List[FieldConstraint]
 )(model: Model) {
-  val relation: Option[Relation] = relationName.flatMap(model.schema.getRelationByName)
+  lazy val relation: Option[Relation] = relationName.flatMap(model.schema.getRelationByName)
 
   def id = name
   def dbName = {
