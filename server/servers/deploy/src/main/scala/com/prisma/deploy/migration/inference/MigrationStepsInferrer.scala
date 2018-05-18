@@ -236,7 +236,7 @@ case class MigrationStepsInferrerImpl(previousSchema: Schema, nextSchema: Schema
     updates.filter(isAnyOptionSet)
   }
 
-  lazy val emptyModel = new Model(name = "", stableIdentifier = "", fields = List.empty, manifestation = None)(previousSchema) // fixme: this does not seem right
+  lazy val emptyModel = new Model(name = "", stableIdentifier = "", fieldFns = List.empty, manifestation = None)(previousSchema) // fixme: this does not seem right
 
   def relationNotInPreviousSchema(previousSchema: Schema,
                                   nextSchema: Schema,

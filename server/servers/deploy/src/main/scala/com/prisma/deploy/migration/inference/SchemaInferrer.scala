@@ -50,7 +50,7 @@ case class SchemaInferrerImpl(
       val fieldNames = prismaType.fields.map(_.name)
       val hiddenReservedFields = if (isActive) {
         val missingReservedFields = ReservedFields.reservedFieldNames.filterNot(fieldNames.contains)
-        missingReservedFields.map(ReservedFields.reservedFieldFor(_).copy(isHidden = true))
+        missingReservedFields.map(ReservedFields.reservedFieldFor(_))
       } else {
         Vector.empty
       }
@@ -63,16 +63,16 @@ case class SchemaInferrerImpl(
 
       Model(
         name = prismaType.name,
-        fields = fieldsForType(prismaType).toList ++ hiddenReservedFields,
+        fieldFns = fieldsForType(prismaType).toList ++ hiddenReservedFields,
         stableIdentifier = stableIdentifier,
         manifestation = manifestation
       )(_)
     }
   }
 
-  def fieldsForType(prismaType: PrismaType): Vector[Field] = {
+  def fieldsForType(prismaType: PrismaType): Vector[Model => Field] = {
 
-    val fields: Vector[Field] = prismaType.fields.flatMap { prismaField =>
+    val fields: Vector[Model => Field] = prismaType.fields.flatMap { prismaField =>
       def relationFromRelationField(x: RelationalPrismaField) = {
         x.relationName match {
           case Some(name) =>
@@ -127,7 +127,7 @@ case class SchemaInferrerImpl(
               isUnique = scalarField.isUnique,
               enum = None,
               defaultValue = scalarField.defaultValue,
-              relation = None,
+              relationName = None,
               relationSide = None,
               manifestation = scalarField.columnName.map(FieldManifestation)
             ))
@@ -142,7 +142,7 @@ case class SchemaInferrerImpl(
               isUnique = enumField.isUnique,
               enum = nextEnums.find(_.name == enumField.enumName),
               defaultValue = enumField.defaultValue,
-              relation = None,
+              relationName = None,
               relationSide = None,
               manifestation = enumField.columnName.map(FieldManifestation)
             ))
@@ -158,7 +158,7 @@ case class SchemaInferrerImpl(
               isUnique = false,
               enum = None,
               defaultValue = None,
-              relation = relation,
+              relationName = relation.map(_.name),
               relationSide = inferRelationSide(relation),
               manifestation = None
             ))
@@ -336,12 +336,12 @@ case class SchemaInferrerImpl(
 
   def addMissingFieldFor(schema: Schema, relation: Relation, relationSide: RelationSide.Value): Schema = {
     val model     = if (relationSide == RelationSide.A) relation.getModelA_!(schema) else relation.getModelB_!(schema)
-    val newModel  = model.copy(fields = model.fields :+ missingBackRelationField(relation, relationSide))
+    val newModel  = model.copy(fieldFns = model.fieldFns :+ missingBackRelationField(relation, relationSide))
     val newModels = schema.models.filter(_.name != model.name).map(_.copy()) :+ newModel
     schema.copy(modelFns = newModels)
   }
 
-  def missingBackRelationField(relation: Relation, relationSide: RelationSide.Value): Field = {
+  def missingBackRelationField(relation: Relation, relationSide: RelationSide.Value): Model => Field = {
     val name = "_back_" + relation.name
     Field(
       name = name,
@@ -353,7 +353,7 @@ case class SchemaInferrerImpl(
       isReadonly = false,
       enum = None,
       defaultValue = None,
-      relation = Some(relation),
+      relationName = Some(relation.name),
       relationSide = Some(relationSide),
       manifestation = None
     )

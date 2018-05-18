@@ -82,6 +82,10 @@ object ProjectWithClientId {
 }
 case class ProjectWithClientId(project: Project, clientId: Id)
 
+object Schema {
+  val empty = Schema()
+}
+
 case class Schema(
     modelFns: List[Schema => Model] = List.empty,
     relations: List[Relation] = List.empty,
@@ -128,21 +132,22 @@ object Model {
   def apply(
       name: String,
       stableIdentifier: String,
-      fields: List[Field],
+      fieldFns: List[Model => Field],
       manifestation: Option[ModelManifestation]
   ): Schema => Model = {
-    new Model(name, stableIdentifier, fields, manifestation)(_)
+    new Model(name, stableIdentifier, fieldFns, manifestation)(_)
   }
 }
 class Model(
     val name: String,
     val stableIdentifier: String,
-    val fields: List[Field],
+    val fieldFns: List[Model => Field],
     val manifestation: Option[ModelManifestation]
-)(schema: Schema) {
+)(val schema: Schema) {
   val id: String     = name
   val dbName: String = manifestation.map(_.dbName).getOrElse(id)
 
+  lazy val fields: List[Field]                = fieldFns.map(_.apply(this))
   lazy val uniqueFields: List[Field]          = fields.filter(f => f.isUnique && f.isVisible)
   lazy val scalarFields: List[Field]          = fields.filter(_.isScalar)
   lazy val scalarListFields: List[Field]      = scalarFields.filter(_.isList)
@@ -165,9 +170,8 @@ class Model(
   }
 
   def filterFields(fn: Field => Boolean): Model = {
-    copy(fields = this.fields.filter(fn))(schema)
-    val newFields         = this.fields.filter(fn)
-    val newModel          = copy(fields = newFields)
+    val newFields         = this.fields.filter(fn).map(_.copy())
+    val newModel          = copy(fieldFns = newFields)
     val newModelsInSchema = schema.models.filter(_.name != name).map(_.copy()) :+ newModel
     schema.copy(modelFns = newModelsInSchema).getModelByName_!(name)
   }
@@ -184,10 +188,10 @@ class Model(
   def copy(
       name: String = this.name,
       stableIdentifier: String = this.stableIdentifier,
-      fields: List[Field] = this.fields,
+      fieldFns: List[Model => Field] = this.fieldFns,
       manifestation: Option[ModelManifestation] = this.manifestation
   ): Schema => Model = {
-    Model(name, stableIdentifier, fields, manifestation)
+    Model(name, stableIdentifier, fieldFns, manifestation)
   }
 }
 
@@ -228,21 +232,56 @@ case class Enum(
     values: Vector[String] = Vector.empty
 )
 
-case class Field(
-    name: String,
-    typeIdentifier: TypeIdentifier.Value,
-    isRequired: Boolean,
-    isList: Boolean,
-    isUnique: Boolean,
-    isHidden: Boolean = false,
-    isReadonly: Boolean = false,
-    enum: Option[Enum],
-    defaultValue: Option[GCValue],
-    relation: Option[Relation],
-    relationSide: Option[RelationSide.Value],
-    manifestation: Option[FieldManifestation],
-    constraints: List[FieldConstraint] = List.empty
-) {
+object Field {
+  def apply(
+      name: String,
+      typeIdentifier: TypeIdentifier.Value,
+      isRequired: Boolean,
+      isList: Boolean,
+      isUnique: Boolean,
+      isHidden: Boolean = false,
+      isReadonly: Boolean = false,
+      enum: Option[Enum],
+      defaultValue: Option[GCValue],
+      relationName: Option[String],
+      relationSide: Option[RelationSide.Value],
+      manifestation: Option[FieldManifestation],
+      constraints: List[FieldConstraint] = List.empty
+  ): Model => Field = {
+    new Field(
+      name = name,
+      typeIdentifier = typeIdentifier,
+      isRequired = isRequired,
+      isList = isList,
+      isUnique = isUnique,
+      isHidden = isHidden,
+      isReadonly = isReadonly,
+      enum = enum,
+      defaultValue = defaultValue,
+      relationName = relationName,
+      relationSide = relationSide,
+      manifestation = manifestation,
+      constraints = constraints
+    )(_)
+  }
+}
+class Field(
+    val name: String,
+    val typeIdentifier: TypeIdentifier.Value,
+    val isRequired: Boolean,
+    val isList: Boolean,
+    val isUnique: Boolean,
+    val isHidden: Boolean,
+    val isReadonly: Boolean,
+    val enum: Option[Enum],
+    val defaultValue: Option[GCValue],
+    val relationName: Option[String],
+    val relationSide: Option[RelationSide.Value],
+    val manifestation: Option[FieldManifestation],
+    val constraints: List[FieldConstraint]
+)(model: Model) {
+  val relation: Option[Relation] = relationName.flatMap(model.schema.getRelationByName)
+
   def id = name
   def dbName = {
     relation match {
@@ -334,6 +373,38 @@ case class Field(
         isTheSameRelation && !isTheSameField
       }
     }
+  }
+
+  def copy(
+      name: String = this.name,
+      typeIdentifier: TypeIdentifier.Value = this.typeIdentifier,
+      isRequired: Boolean = this.isRequired,
+      isList: Boolean = this.isList,
+      isUnique: Boolean = this.isUnique,
+      isHidden: Boolean = this.isHidden,
+      isReadonly: Boolean = this.isReadonly,
+      enum: Option[Enum] = this.enum,
+      defaultValue: Option[GCValue] = this.defaultValue,
+      relationName: Option[String] = this.relationName,
+      relationSide: Option[RelationSide.Value] = this.relationSide,
+      manifestation: Option[FieldManifestation] = this.manifestation,
+      constraints: List[FieldConstraint] = this.constraints
+  ): Model => Field = {
+    Field(
+      name = name,
+      typeIdentifier = typeIdentifier,
+      isRequired = isRequired,
+      isList = isList,
+      isUnique = isUnique,
+      isHidden = isHidden,
+      isReadonly = isReadonly,
+      enum = enum,
+      defaultValue = defaultValue,
+      relationName = relationName,
+      relationSide = relationSide,
+      manifestation = manifestation,
+      constraints = constraints
+    )
   }
 }
 

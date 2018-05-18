@@ -106,10 +106,10 @@ object SchemaDsl extends AwaitUtils {
         val newRelation = field.relation.flatMap { relation =>
           newRelations.find(_.name == relation.name)
         }
-        field.copy(relation = newRelation, manifestation = Some(FieldManifestation(field.name + "_column")))
+        field.copy(relationName = newRelation.map(_.name), manifestation = Some(FieldManifestation(field.name + "_column")))
       }
 
-      model.copy(fields = newFields, manifestation = Some(ModelManifestation(model.name + "_Table")))
+      model.copy(fieldFns = newFields, manifestation = Some(ModelManifestation(model.name + "_Table")))
     }
     project.copy(schema = schema.copy(relations = newRelations, modelFns = newModels))
   }
@@ -162,7 +162,7 @@ object SchemaDsl extends AwaitUtils {
 
   case class ModelBuilder(
       name: String,
-      fields: Buffer[Field] = Buffer(idField),
+      fields: Buffer[Model => Field] = Buffer(idField),
       var withPermissions: Boolean = true,
       relations: Buffer[Relation] = Buffer.empty
   ) {
@@ -403,7 +403,7 @@ object SchemaDsl extends AwaitUtils {
       Model(
         name = name,
         stableIdentifier = Cuid.createCuid(),
-        fields = fields.toList,
+        fieldFns = fields.toList,
         manifestation = None
       )(_)
     }
@@ -418,7 +418,7 @@ object SchemaDsl extends AwaitUtils {
                  enum: Option[Enum],
                  isList: Boolean,
                  defaultValue: Option[GCValue] = None,
-                 constraints: List[FieldConstraint] = List.empty): Field = {
+                 constraints: List[FieldConstraint] = List.empty): Model => Field = {
 
     Field(
       name = name,
@@ -431,11 +431,11 @@ object SchemaDsl extends AwaitUtils {
       isUnique = isUnique,
       isReadonly = false,
       isHidden = isHidden,
-      relation = None,
+      relationName = None,
       relationSide = None,
       constraints = constraints,
       manifestation = None
-    )
+    )(_)
   }
 
   def relationField(name: String,
@@ -444,14 +444,14 @@ object SchemaDsl extends AwaitUtils {
                     relation: Relation,
                     isList: Boolean,
                     isBackward: Boolean,
-                    isRequired: Boolean = false): Field = {
+                    isRequired: Boolean = false): Model => Field = {
     Field(
       name = name,
       isList = isList,
       relationSide = Some {
         if (!isBackward) RelationSide.A else RelationSide.B
       },
-      relation = Some(relation),
+      relationName = Some(relation.name),
       // hardcoded values
       typeIdentifier = TypeIdentifier.Relation,
       isRequired = isRequired,
@@ -460,7 +460,7 @@ object SchemaDsl extends AwaitUtils {
       defaultValue = None,
       enum = None,
       manifestation = None
-    )
+    )(_)
   }
 
   def newId(): Id = Cuid.createCuid()
@@ -474,7 +474,7 @@ object SchemaDsl extends AwaitUtils {
     isReadonly = true,
     enum = None,
     defaultValue = None,
-    relation = None,
+    relationName = None,
     relationSide = None,
     manifestation = None
   )
@@ -488,7 +488,7 @@ object SchemaDsl extends AwaitUtils {
     isReadonly = true,
     enum = None,
     defaultValue = None,
-    relation = None,
+    relationName = None,
     relationSide = None,
     manifestation = None
   )
@@ -502,7 +502,7 @@ object SchemaDsl extends AwaitUtils {
     isReadonly = true,
     enum = None,
     defaultValue = None,
-    relation = None,
+    relationName = None,
     relationSide = None,
     manifestation = None
   )

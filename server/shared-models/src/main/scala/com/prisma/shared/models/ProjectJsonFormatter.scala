@@ -217,12 +217,43 @@ object ProjectJsonFormatter {
   implicit val fieldManifestationWrites: Writes[FieldManifestation] = Writes(manifestation => Json.obj("dbName" -> manifestation.dbName))
   implicit val fieldManifestationReads: Reads[FieldManifestation]   = (JsPath \ "dbName").read[String].map(FieldManifestation)
   implicit lazy val enum                                            = Json.format[Enum]
-  implicit lazy val field                                           = Json.format[Field]
+
+  implicit val fieldReads: Reads[Model => Field] = (
+    (JsPath \ "name").read[String] and
+      (JsPath \ "typeIdentifier").read[TypeIdentifier.Value] and
+      (JsPath \ "isRequired").read[Boolean] and
+      (JsPath \ "isList").read[Boolean] and
+      (JsPath \ "isUnique").read[Boolean] and
+      (JsPath \ "isHidden").read[Boolean] and
+      (JsPath \ "isReadonly").read[Boolean] and
+      (JsPath \ "enum").readNullable[Enum] and
+      (JsPath \ "defaultValue").readNullable[GCValue] and
+      (JsPath \ "relationName").readNullable[String] and // fixme: this must also work with the old structure
+      (JsPath \ "relationSide").readNullable[RelationSide.Value] and
+      (JsPath \ "manifestation").readNullable[FieldManifestation] and
+      (JsPath \ "constraints").read[List[FieldConstraint]]
+  )(Field.apply _)
+
+  implicit val fieldWrites: Writes[Field] = (
+    (JsPath \ "name").write[String] and
+      (JsPath \ "typeIdentifier").write[TypeIdentifier.Value] and
+      (JsPath \ "isRequired").write[Boolean] and
+      (JsPath \ "isList").write[Boolean] and
+      (JsPath \ "isUnique").write[Boolean] and
+      (JsPath \ "isHidden").write[Boolean] and
+      (JsPath \ "isReadonly").write[Boolean] and
+      (JsPath \ "enum").writeNullable[Enum] and
+      (JsPath \ "defaultValue").writeNullable[GCValue] and
+      (JsPath \ "relationName").writeNullable[String] and
+      (JsPath \ "relationSide").writeNullable[RelationSide.Value] and
+      (JsPath \ "manifestation").writeNullable[FieldManifestation] and
+      (JsPath \ "constraints").write[List[FieldConstraint]]
+  ).apply(f => (f.name, f.typeIdentifier, f.isRequired, f.isList, f.isUnique, f.isHidden, f.isReadonly, f.enum, f.defaultValue, f.relationName, f.relationSide, f.manifestation, f.constraints))
 
   implicit val modelReads: Reads[Schema => Model] = (
     (JsPath \ "name").read[String] and
       (JsPath \ "stableIdentifier").read[String] and
-      (JsPath \ "fields").read[List[Field]] and
+      (JsPath \ "fields").read[List[Model => Field]] and
       (JsPath \ "manifestation").readNullable[ModelManifestation]
   )(Model.apply _)
 
