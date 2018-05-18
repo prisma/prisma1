@@ -274,7 +274,7 @@ object ProjectJsonFormatter {
     (JsPath \ "models").write[List[ModelTemplate]] and
       (JsPath \ "relations").write[List[RelationTemplate]] and
       (JsPath \ "enums").write[List[Enum]]
-  )(s => (s.modelFns, s.relationFns, s.enums))
+  )(s => (s.modelTemplates, s.relationTemplates, s.enums))
 
   implicit lazy val schemaFormat              = Format(schemaReads, schemaWrites)
   implicit lazy val projectFormat             = Json.format[Project]

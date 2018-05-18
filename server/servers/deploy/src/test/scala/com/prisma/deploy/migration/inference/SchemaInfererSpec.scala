@@ -291,8 +291,8 @@ class SchemaInfererSpec extends WordSpec with Matchers {
     val parentField = techModel.getFieldByName_!("parentTechnologies")
 
     val updatedModel =
-      techModel.copy(fieldFns = techModel.fields.filter(_ != parentField).map(_.copy()) :+ parentField.copy(relationSide = Some(RelationSide.A)))
-    val invalidSchema = schema.copy(modelFns = List(updatedModel))
+      techModel.copy(fieldTemplates = techModel.fields.filter(_ != parentField).map(_.copy()) :+ parentField.copy(relationSide = Some(RelationSide.A)))
+    val invalidSchema = schema.copy(modelTemplates = List(updatedModel))
 
     val newSchema = infer(invalidSchema, types)
     newSchema.relations.foreach(println(_))

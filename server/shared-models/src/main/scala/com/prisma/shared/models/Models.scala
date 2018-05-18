@@ -39,12 +39,12 @@ object Schema {
 }
 
 case class Schema(
-    modelFns: List[ModelTemplate] = List.empty,
-    relationFns: List[RelationTemplate] = List.empty,
+    modelTemplates: List[ModelTemplate] = List.empty,
+    relationTemplates: List[RelationTemplate] = List.empty,
     enums: List[Enum] = List.empty
 ) {
-  val models    = modelFns.map(_.apply(this))
-  val relations = relationFns.map(_.apply(this))
+  val models    = modelTemplates.map(_.apply(this))
+  val relations = relationTemplates.map(_.apply(this))
 
   def allFields: Seq[Field] = models.flatMap(_.fields)
 
@@ -84,7 +84,7 @@ case class Schema(
 case class ModelTemplate(
     name: String,
     stableIdentifier: String,
-    fieldFns: List[FieldTemplate],
+    fieldTemplates: List[FieldTemplate],
     manifestation: Option[ModelManifestation]
 ) {
   def apply(schema: Schema): Model = new Model(this, schema)
@@ -94,7 +94,7 @@ object Model {
   implicit def asModelTemplate(model: Model): ModelTemplate = model.template
 
   val empty: Model = new Model(
-    template = ModelTemplate(name = "", stableIdentifier = "", fieldFns = List.empty, manifestation = None),
+    template = ModelTemplate(name = "", stableIdentifier = "", fieldTemplates = List.empty, manifestation = None),
     schema = Schema.empty
   )
 }
@@ -107,7 +107,7 @@ class Model(
   val id: String     = name
   val dbName: String = manifestation.map(_.dbName).getOrElse(id)
 
-  lazy val fields: List[Field]                = fieldFns.map(_.apply(this))
+  lazy val fields: List[Field]                = fieldTemplates.map(_.apply(this))
   lazy val uniqueFields: List[Field]          = fields.filter(f => f.isUnique && f.isVisible)
   lazy val scalarFields: List[Field]          = fields.filter(_.isScalar)
   lazy val scalarListFields: List[Field]      = scalarFields.filter(_.isList)
@@ -131,9 +131,9 @@ class Model(
 
   def filterFields(fn: Field => Boolean): Model = {
     val newFields         = this.fields.filter(fn).map(_.template)
-    val newModel          = copy(fieldFns = newFields)
+    val newModel          = copy(fieldTemplates = newFields)
     val newModelsInSchema = schema.models.filter(_.name != name).map(_.template) :+ newModel
-    schema.copy(modelFns = newModelsInSchema).getModelByName_!(name)
+    schema.copy(modelTemplates = newModelsInSchema).getModelByName_!(name)
   }
 
   def getFieldById_!(id: Id): Field       = getFieldById(id).get

@@ -109,9 +109,9 @@ object SchemaDsl extends AwaitUtils {
         field.copy(relationName = newRelation.map(_.name), manifestation = Some(FieldManifestation(field.name + "_column")))
       }
 
-      model.copy(fieldFns = newFields, manifestation = Some(ModelManifestation(model.name + "_Table")))
+      model.copy(fieldTemplates = newFields, manifestation = Some(ModelManifestation(model.name + "_Table")))
     }
-    project.copy(schema = schema.copy(relationFns = newRelations, modelFns = newModels))
+    project.copy(schema = schema.copy(relationTemplates = newRelations, modelTemplates = newModels))
   }
 
   case class SchemaBuilder(
@@ -151,8 +151,8 @@ object SchemaDsl extends AwaitUtils {
       TestProject().copy(
         id = id,
         schema = Schema(
-          modelFns = models.toList,
-          relationFns = relations.toList,
+          modelTemplates = models.toList,
+          relationTemplates = relations.toList,
           enums = enums.toList
         ),
         functions = functions.toList
@@ -403,7 +403,7 @@ object SchemaDsl extends AwaitUtils {
       ModelTemplate(
         name = name,
         stableIdentifier = Cuid.createCuid(),
-        fieldFns = fields.toList,
+        fieldTemplates = fields.toList,
         manifestation = None
       )
     }

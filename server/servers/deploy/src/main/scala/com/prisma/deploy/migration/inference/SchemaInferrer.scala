@@ -41,7 +41,7 @@ case class SchemaInferrerImpl(
   val isPassive = !isActive
 
   def infer(): Schema = {
-    val schema = Schema(modelFns = nextModels.toList, relationFns = nextRelations.toList, enums = nextEnums.toList)
+    val schema = Schema(modelTemplates = nextModels.toList, relationTemplates = nextRelations.toList, enums = nextEnums.toList)
     addMissingBackRelations(schema)
   }
 
@@ -63,7 +63,7 @@ case class SchemaInferrerImpl(
 
       ModelTemplate(
         name = prismaType.name,
-        fieldFns = fieldsForType(prismaType).toList ++ hiddenReservedFields,
+        fieldTemplates = fieldsForType(prismaType).toList ++ hiddenReservedFields,
         stableIdentifier = stableIdentifier,
         manifestation = manifestation
       )
@@ -336,9 +336,9 @@ case class SchemaInferrerImpl(
 
   def addMissingFieldFor(schema: Schema, relation: Relation, relationSide: RelationSide.Value): Schema = {
     val model     = if (relationSide == RelationSide.A) relation.getModelA_!(schema) else relation.getModelB_!(schema)
-    val newModel  = model.copy(fieldFns = model.fieldFns :+ missingBackRelationField(relation, relationSide))
+    val newModel  = model.copy(fieldTemplates = model.fieldTemplates :+ missingBackRelationField(relation, relationSide))
     val newModels = schema.models.filter(_.name != model.name).map(_.copy()) :+ newModel
-    schema.copy(modelFns = newModels)
+    schema.copy(modelTemplates = newModels)
   }
 
   def missingBackRelationField(relation: Relation, relationSide: RelationSide.Value): FieldTemplate = {
