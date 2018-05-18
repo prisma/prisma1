@@ -32,12 +32,7 @@ yarn prisma deploy
 <details>
  <summary><strong>I don't have <a href="https://www.docker.com">Docker</a> installed on my machine</strong></summary>
 
-To deploy your service to a demo server (rather than locally with Docker), you need to perform the following steps:
-
-1.  Remove the `cluster` property from `prisma.yml`
-1.  Run `yarn prisma deploy`
-1.  When prompted by the CLI, select a demo server (e.g. `demo-eu1` or `demo-us1`)
-1.  Replace the [`endpoint`](./src/index.js#L23) in `index.js` with the HTTP endpoint that was printed after the previous command
+To deploy your service to a demo server (rather than locally with Docker), please follow [this link](https://www.prisma.io/docs/quickstart/).
 
 </details>
 
@@ -67,10 +62,10 @@ These types are mapped to tables in the database. We can query any of these type
 
 ```graphql
 query Tweet {
-  tweet(where: { id: "<tweet-id>" }) {
-    id
-    text
-  }
+ tweet(where: { id: "<tweet-id>" }) {
+  id
+  text
+ }
 }
 ```
 
@@ -78,10 +73,10 @@ query Tweet {
 
 ```graphql
 query Tweets {
-  tweets(first: 10, skip: 20) {
-    id
-    text
-  }
+ tweets(first: 10, skip: 20) {
+  id
+  text
+ }
 }
 ```
 
@@ -89,10 +84,10 @@ query Tweets {
 
 ```graphql
 query Tweets {
-  tweets(orderBy: createdAt_DESC) {
-    id
-    text
-  }
+ tweets(orderBy: createdAt_DESC) {
+  id
+  text
+ }
 }
 ```
 
@@ -100,14 +95,14 @@ query Tweets {
 
 ```graphql
 query Tweets {
-  tweets(
-    where: {
-      AND: [{ text_contains: "GraphQL" }, { owner: { name_not: "Graphcool" } }]
-    }
-  ) {
-    id
-    text
+ tweets(
+  where: {
+   AND: [{ text_contains: "GraphQL" }, { owner: { name_not: "Graphcool" } }]
   }
+ ) {
+  id
+  text
+ }
 }
 ```
 
@@ -117,14 +112,14 @@ query Tweets {
 
 ```graphql
 query Tweets {
-  tweets {
-    id
-    text
-    owner {
-      id
-      name
-    }
+ tweets {
+  id
+  text
+  owner {
+   id
+   name
   }
+ }
 }
 ```
 
@@ -132,14 +127,14 @@ query Tweets {
 
 ```graphql
 query UserTweets {
-  user(where: { handle: "graphcool" }) {
-    id
-    name
-    tweets(orderBy: createdAt_DESC) {
-      id
-      text
-    }
+ user(where: { handle: "graphcool" }) {
+  id
+  name
+  tweets(orderBy: createdAt_DESC) {
+   id
+   text
   }
+ }
 }
 ```
 
@@ -151,10 +146,10 @@ query UserTweets {
 
 ```graphql
 query UserTweets {
-  user(where: { handle: "graphcool" }) {
-    id
-    name
-  }
+ user(where: { handle: "graphcool" }) {
+  id
+  name
+ }
 }
 ```
 
