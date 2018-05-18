@@ -4,7 +4,7 @@
 
 [![CircleCI](https://circleci.com/gh/prismagraphql/prisma.svg?style=shield)](https://circleci.com/gh/prismagraphql/prisma) [![Slack Status](https://slack.prisma.io/badge.svg)](https://slack.prisma.io) [![npm version](https://badge.fury.io/js/prisma.svg)](https://badge.fury.io/js/prisma)
 
-**Prisma is a performant open-source GraphQL [ORM-like layer](#is-prisma-an-orm)** doing the heavy lifting in your GraphQL server. It turns your database into a GraphQL API which can be consumed by your resolvers via [GraphQL bindings](https://oss.prisma.io/graphql-binding).
+**Prisma is a performant open-source GraphQL [ORM-like layer](#is-prisma-an-orm)** doing the heavy lifting in your GraphQL server. It turns your database into a GraphQL API which can be consumed by your resolvers via [GraphQL bindings](https://oss.prisma.io/content/graphql-binding/01-overview).
 
 Prisma's auto-generated GraphQL API provides powerful abstractions and modular building blocks to develop flexible and scalable GraphQL backends:
 
@@ -197,7 +197,7 @@ Prisma servers run as standalone processes which allows for them to be scaled in
 
 Prisma provides a mapping from your API to your database. In that sense, it solves similar problems as conventional ORMs. The big difference between Prisma and other ORMs is the way _how_ the mapping is implemented.
 
-**Prisma takes a radically different approach which avoids the shortcomings and limitations commonly experienced with ORMs.** The core idea is that Prisma turns your database into a GraphQL API which is then consumed by your API server (via [GraphQL binding](https://oss.prisma.io/graphql-binding)). While this makes Prisma particularly well-suited for building GraphQL servers, it can definetely be used in other contexts as well.
+**Prisma takes a radically different approach which avoids the shortcomings and limitations commonly experienced with ORMs.** The core idea is that Prisma turns your database into a GraphQL API which is then consumed by your API server (via [GraphQL binding](https://oss.prisma.io/content/graphql-binding/01-overview)). While this makes Prisma particularly well-suited for building GraphQL servers, it can definetely be used in other contexts as well.
 
 Here is how Prisma compares to conventional ORMs:
 
