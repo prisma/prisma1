@@ -7,11 +7,11 @@ import com.prisma.shared.models._
 trait Edge {
   def parent: Model
   def parentField: Field
-  def columnForParentRelationSide(schema: Schema) = relation.columnForRelationSide(schema, parentRelationSide)
+  def columnForParentRelationSide(schema: Schema) = relation.columnForRelationSide(parentRelationSide)
   def parentRelationSide: RelationSide            = parentField.relationSide.get
   def child: Model
   def childField: Option[Field]
-  def columnForChildRelationSide(schema: Schema) = relation.columnForRelationSide(schema, childRelationSide)
+  def columnForChildRelationSide(schema: Schema) = relation.columnForRelationSide(childRelationSide)
   def childRelationSide: RelationSide            = parentField.oppositeRelationSide.get
   def relation: Relation
   def toNodeEdge(where: NodeSelector): NodeEdge = {

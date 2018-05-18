@@ -217,7 +217,7 @@ class MySqlDatabaseQueryBuilder()(implicit ec: ExecutionContext) {
     }
 
     // see https://github.com/graphcool/internal-docs/blob/master/relations.md#findings
-    val resolveFromBothSidesAndMerge = fromField.relation.get.isSameFieldSameModelRelation(project.schema)
+    val resolveFromBothSidesAndMerge = fromField.relation.get.isSameFieldSameModelRelation
 
     val query = resolveFromBothSidesAndMerge match {
       case false =>

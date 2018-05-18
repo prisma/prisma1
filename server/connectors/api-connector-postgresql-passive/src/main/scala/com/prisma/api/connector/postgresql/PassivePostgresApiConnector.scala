@@ -143,7 +143,7 @@ case class NestedCreateDataItemInterpreterForInlineRelations(mutaction: NestedCr
   }
 
   def createDataItemWithLinkToParent(mutationBuilder: PostgresApiDatabaseMutationBuilder)(parentId: String) = {
-    val inlineField  = relation.getFieldOnModel(model.id, project.schema).get
+    val inlineField  = relation.getFieldOnModel(model.id).get
     val argsMap      = mutaction.create.nonListArgs.raw.asRoot.map
     val modifiedArgs = argsMap.updated(inlineField.name, IdGCValue(parentId))
     mutationBuilder.createDataItem(path, PrismaArgs(RootGCValue(modifiedArgs)))

@@ -43,8 +43,8 @@ case class PostgresApiDatabaseQueryBuilder(
   }
 
   private def getResultForRelation(relation: Relation): GetResult[RelationNode] = GetResult { ps: PositionedResult =>
-    val modelAColumn = relation.columnForRelationSide(schema, RelationSide.A)
-    val modelBColumn = relation.columnForRelationSide(schema, RelationSide.B)
+    val modelAColumn = relation.columnForRelationSide(RelationSide.A)
+    val modelBColumn = relation.columnForRelationSide(RelationSide.B)
     RelationNode(a = ps.rs.getAsID(modelAColumn), b = ps.rs.getAsID(modelBColumn))
   }
 
@@ -94,7 +94,7 @@ case class PostgresApiDatabaseQueryBuilder(
     val (conditionCommand, orderByCommand, limitCommand) = extractQueryArgs(
       projectId = schemaName,
       tableName = tableName,
-      idFieldName = relation.columnForRelationSide(schema, RelationSide.A),
+      idFieldName = relation.columnForRelationSide(RelationSide.A),
       args = args,
       defaultOrderShortcut = None,
       overrideMaxNodeCount = overrideMaxNodeCount
@@ -202,9 +202,9 @@ case class PostgresApiDatabaseQueryBuilder(
     val modelTable   = relatedModel.dbName
 
     val relationTableName     = fromField.relation.get.relationTableName
-    val (aColumn, bColumn)    = (relation.modelAColumn(schema), relation.modelBColumn(schema))
-    val columnForFromModel    = relation.columnForRelationSide(schema, fromField.relationSide.get)
-    val columnForRelatedModel = relation.columnForRelationSide(schema, fromField.oppositeRelationSide.get)
+    val (aColumn, bColumn)    = (relation.modelAColumn, relation.modelBColumn)
+    val columnForFromModel    = relation.columnForRelationSide(fromField.relationSide.get)
+    val columnForRelatedModel = relation.columnForRelationSide(fromField.oppositeRelationSide.get)
 
     val (conditionCommand, orderByCommand, limitCommand) = extractQueryArgs(
       projectId = schemaName,
@@ -228,7 +228,7 @@ case class PostgresApiDatabaseQueryBuilder(
     }
 
     // see https://github.com/graphcool/internal-docs/blob/master/relations.md#findings
-    val resolveFromBothSidesAndMerge = fromField.relation.get.isSameFieldSameModelRelation(schema)
+    val resolveFromBothSidesAndMerge = fromField.relation.get.isSameFieldSameModelRelation
 
     val query = resolveFromBothSidesAndMerge match {
       case false =>
@@ -271,7 +271,7 @@ case class PostgresApiDatabaseQueryBuilder(
     val relation                      = fromField.relation.get
     val unsafeRelationId              = relation.relationTableName
     val modelRelationSide             = fromField.relationSide.get.toString
-    val columnForOppositeRelationSide = relation.columnForRelationSide(schema, fromField.oppositeRelationSide.get)
+    val columnForOppositeRelationSide = relation.columnForRelationSide(fromField.oppositeRelationSide.get)
 
     val (conditionCommand, orderByCommand, limitCommand) = extractQueryArgs(
       projectId = schemaName,
@@ -294,7 +294,7 @@ case class PostgresApiDatabaseQueryBuilder(
     }
 
     // see https://github.com/graphcool/internal-docs/blob/master/relations.md#findings
-    val resolveFromBothSidesAndMerge = fromField.relation.get.isSameFieldSameModelRelation(schema)
+    val resolveFromBothSidesAndMerge = fromField.relation.get.isSameFieldSameModelRelation
 
     val query = resolveFromBothSidesAndMerge match {
       case false =>
@@ -335,7 +335,7 @@ case class PostgresApiDatabaseQueryBuilder(
     val relation                   = relationField.relation.get
     val unsafeRelationId           = relation.relationTableName
     val modelRelationSide          = relationField.relationSide.get.toString
-    val columnForFieldRelationSide = relation.columnForRelationSide(schema, relationField.oppositeRelationSide.get)
+    val columnForFieldRelationSide = relation.columnForRelationSide(relationField.oppositeRelationSide.get)
 
     val (conditionCommand, orderByCommand, limitCommand) = extractQueryArgs(
       projectId = schemaName,

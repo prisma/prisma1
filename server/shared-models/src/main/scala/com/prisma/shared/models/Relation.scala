@@ -40,7 +40,7 @@ class Relation(
     }
     .getOrElse("_" + name)
 
-  def modelAColumn(schema: Schema): String = manifestation match {
+  def modelAColumn: String = manifestation match {
     case Some(m: RelationTableManifestation) =>
       m.modelAColumn
     case Some(m: InlineRelationManifestation) =>
@@ -49,7 +49,7 @@ class Relation(
       "A"
   }
 
-  def modelBColumn(schema: Schema): String = manifestation match {
+  def modelBColumn: String = manifestation match {
     case Some(m: RelationTableManifestation) =>
       m.modelBColumn
     case Some(m: InlineRelationManifestation) =>
@@ -58,27 +58,25 @@ class Relation(
       "B"
   }
 
-  def columnForRelationSide(schema: Schema, relationSide: RelationSide.Value): String = {
-    if (relationSide == RelationSide.A) modelAColumn(schema) else modelBColumn(schema)
-  }
+  def columnForRelationSide(relationSide: RelationSide.Value): String = if (relationSide == RelationSide.A) modelAColumn else modelBColumn
 
   def hasManifestation: Boolean = manifestation.isDefined
   def isInlineRelation: Boolean = manifestation.exists(_.isInstanceOf[InlineRelationManifestation])
 
   def inlineManifestation: Option[InlineRelationManifestation] = manifestation.collect { case x: InlineRelationManifestation => x }
 
-  def isSameFieldSameModelRelation(schema: Schema): Boolean = {
+  def isSameFieldSameModelRelation: Boolean = {
     // note: defaults to modelAField to handle same model, same field relations
     getModelAField(schema) == getModelBField(schema).orElse(getModelAField(schema))
   }
 
-  def isManyToMany(schema: Schema): Boolean = {
+  def isManyToMany: Boolean = {
     val modelAFieldIsList = getModelAField(schema).map(_.isList).getOrElse(true)
     val modelBFieldIsList = getModelBField(schema).map(_.isList).getOrElse(true)
     modelAFieldIsList && modelBFieldIsList
   }
 
-  def getFieldOnModel(modelId: String, schema: Schema): Option[Field] = {
+  def getFieldOnModel(modelId: String): Option[Field] = {
     if (modelId == modelAId) {
       getModelAField(schema)
     } else if (modelId == modelBId) {

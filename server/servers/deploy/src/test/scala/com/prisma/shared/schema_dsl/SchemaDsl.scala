@@ -84,7 +84,7 @@ object SchemaDsl extends AwaitUtils {
   private def addManifestations(project: Project): Project = {
     val schema = project.schema
     val newRelations = project.relations.map { relation =>
-      if (relation.isManyToMany(schema)) {
+      if (relation.isManyToMany) {
         relation.template
       } else {
         val relationFields = Vector(relation.getModelAField(schema), relation.getModelBField(schema)).flatten

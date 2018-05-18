@@ -323,7 +323,7 @@ case class SchemaInferrerImpl(
   def addMissingBackRelationFieldIfMissing(schema: Schema, relation: Relation): Schema = {
     val isAFieldMissing = relation.getModelAField(schema).isEmpty
     val isBFieldMissing = relation.getModelBField(schema).isEmpty
-    if (relation.isSameFieldSameModelRelation(schema)) { // fixme: we want to remove that in 1.9
+    if (relation.isSameFieldSameModelRelation) { // fixme: we want to remove that in 1.9
       schema
     } else if (isAFieldMissing) {
       addMissingFieldFor(schema, relation, RelationSide.A)

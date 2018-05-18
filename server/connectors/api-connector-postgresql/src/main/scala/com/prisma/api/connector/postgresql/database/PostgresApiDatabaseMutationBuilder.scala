@@ -471,8 +471,8 @@ case class PostgresApiDatabaseMutationBuilder(
                                                   childSide: RelationSide.Value,
                                                   triggerString: String): slick.sql.SqlStreamingAction[Vector[String], String, slick.dbio.Effect] = {
     val table       = relation.relationTableName
-    val column      = relation.columnForRelationSide(schema, childSide)
-    val otherColumn = relation.columnForRelationSide(schema, RelationSide.opposite(childSide))
+    val column      = relation.columnForRelationSide(childSide)
+    val otherColumn = relation.columnForRelationSide(RelationSide.opposite(childSide))
     val query = sql"""SELECT * FROM "#$schemaName"."#$table" OLDPARENTFAILURETRIGGER WHERE "#$column" """ ++
       idFromWhereEquals(where) ++ sql""" AND "#$otherColumn" IS NOT NULL """
 
@@ -489,8 +489,8 @@ case class PostgresApiDatabaseMutationBuilder(
   def oldParentFailureTriggerByField(path: Path, field: Field, triggerString: String) = {
     val relation       = field.relation.get
     val table          = relation.relationTableName
-    val oppositeColumn = relation.columnForRelationSide(schema, field.oppositeRelationSide.get)
-    val column         = relation.columnForRelationSide(schema, field.relationSide.get)
+    val oppositeColumn = relation.columnForRelationSide(field.oppositeRelationSide.get)
+    val column         = relation.columnForRelationSide(field.relationSide.get)
     val query = sql"""SELECT * FROM "#$schemaName"."#$table" OLDPARENTPATHFAILURETRIGGERBYFIELD""" ++
       sql"""WHERE "#$oppositeColumn" IN (""" ++ pathQueryForLastChild(path) ++ sql") " ++
       sql"""AND "#$column" IS NOT NULL"""
@@ -500,8 +500,8 @@ case class PostgresApiDatabaseMutationBuilder(
   def oldParentFailureTriggerByFieldAndFilter(model: Model, whereFilter: Option[DataItemFilterCollection], field: Field, causeString: String) = {
     val relation       = field.relation.get
     val table          = relation.relationTableName
-    val column         = relation.columnForRelationSide(schema, field.oppositeRelationSide.get)
-    val oppositeColumn = relation.columnForRelationSide(schema, field.relationSide.get)
+    val column         = relation.columnForRelationSide(field.oppositeRelationSide.get)
+    val oppositeColumn = relation.columnForRelationSide(field.relationSide.get)
 
     val query =
       sql"""SELECT * FROM "#$schemaName"."#$table" OLDPARENTPATHFAILURETRIGGERBYFIELDANDFILTER""" ++
