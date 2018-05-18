@@ -73,20 +73,20 @@ class Field(
 
   lazy val relation: Option[Relation] = relationName.flatMap(model.schema.getRelationByName)
 
-  val id = name
-  val dbName = {
+  lazy val id = name
+  lazy val dbName = {
     relation match {
       case Some(r) if r.isInlineRelation => r.manifestation.get.asInstanceOf[InlineRelationManifestation].referencingColumn
       case None                          => manifestation.map(_.dbName).getOrElse(name)
       case _                             => sys.error("not a valid call on relations manifested via a table")
     }
   }
-  val isScalar: Boolean                             = typeIdentifier != TypeIdentifier.Relation
-  val isRelation: Boolean                           = typeIdentifier == TypeIdentifier.Relation
-  val isScalarList: Boolean                         = isScalar && isList
-  val isScalarNonList: Boolean                      = isScalar && !isList
-  val isRelationList: Boolean                       = isRelation && isList
-  val isRelationNonList: Boolean                    = isRelation && !isList
+  lazy val isScalar: Boolean                        = typeIdentifier != TypeIdentifier.Relation
+  lazy val isRelation: Boolean                      = typeIdentifier == TypeIdentifier.Relation
+  lazy val isScalarList: Boolean                    = isScalar && isList
+  lazy val isScalarNonList: Boolean                 = isScalar && !isList
+  lazy val isRelationList: Boolean                  = isRelation && isList
+  lazy val isRelationNonList: Boolean               = isRelation && !isList
   def isRelationWithId(relationId: String): Boolean = relation.exists(_.relationTableName == relationId)
 
   def isRelationWithIdAndSide(relationId: String, relationSide: RelationSide.Value): Boolean = {
@@ -94,10 +94,10 @@ class Field(
   }
 
   private val excludedFromMutations = Vector("updatedAt", "createdAt", "id")
-  val isWritable: Boolean           = !isReadonly && !excludedFromMutations.contains(name)
-  val isVisible: Boolean            = !isHidden
+  lazy val isWritable: Boolean      = !isReadonly && !excludedFromMutations.contains(name)
+  lazy val isVisible: Boolean       = !isHidden
 
-  val oppositeRelationSide: Option[RelationSide.Value] = {
+  lazy val oppositeRelationSide: Option[RelationSide.Value] = {
     relationSide match {
       case Some(RelationSide.A) => Some(RelationSide.B)
       case Some(RelationSide.B) => Some(RelationSide.A)
@@ -105,7 +105,7 @@ class Field(
     }
   }
 
-  val relatedModel: Option[Model] = {
+  lazy val relatedModel: Option[Model] = {
     relation.flatMap(relation => {
       relationSide match {
         case Some(RelationSide.A) => relation.getModelB(schema)
@@ -115,7 +115,7 @@ class Field(
     })
   }
 
-  val relatedModel_! : Model = {
+  lazy val relatedModel_! : Model = {
     relatedModel match {
       case None        => sys.error(s"Could not find relatedModel for field [$name] on model [${model(schema)}]")
       case Some(model) => model
@@ -124,7 +124,7 @@ class Field(
 
   //todo this is dangerous in combination with self relations since it will return the field itself as related field
   //this should be removed where possible
-  val relatedField: Option[Field] = {
+  lazy val relatedField: Option[Field] = {
     val fields = relatedModel_!.fields
 
     val returnField = fields.find { field =>
@@ -144,7 +144,7 @@ class Field(
   }
 
   //this really does return None if there is no opposite field
-  val otherRelationField: Option[Field] = {
+  lazy val otherRelationField: Option[Field] = {
     val fields = relatedModel_!.fields
 
     fields.find { field =>
