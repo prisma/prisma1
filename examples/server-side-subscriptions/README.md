@@ -1,6 +1,6 @@
 # Server Side Subscription
 
-This example demonstrates `subscriptions` property available to us in `prisma.yml` that can be used to implement even-driven business logic.
+This example demonstrates `subscriptions` property available to us in `prisma.yml` that can be used to implement event-driven business logic.
 
 ## Get started
 
@@ -34,10 +34,10 @@ yarn prisma deploy
 
 To deploy your service to a demo server (rather than locally with Docker), you need to perform the following steps:
 
-1.  Remove the `cluster` property from `prisma.yml`
-1.  Run `yarn prisma deploy`
-1.  When prompted by the CLI, select a demo server (e.g. `demo-eu1` or `demo-us1`)
-1.  Replace the [`endpoint`](./src/index.js#L23) in `index.js` with the HTTP endpoint that was printed after the previous command
+1. Remove the `cluster` property from `prisma.yml`
+1. Run `yarn prisma deploy`
+1. When prompted by the CLI, select a demo server (e.g. `demo-eu1` or `demo-us1`)
+1. Replace the [`endpoint`](./src/index.js#L23) in `index.js` with the HTTP endpoint that was printed after the previous command
 
 </details>
 
@@ -62,13 +62,13 @@ Let us assume that we want to send a welcome email to new user. We will define t
 
 ```graphql
 subscription {
-  user(where: { mutation_in: [CREATED] }) {
-    mutation
-    node {
-      id
-      name
-    }
+ user(where: { mutation_in: [CREATED] }) {
+  mutation
+  node {
+   id
+   name
   }
+ }
 }
 ```
 
@@ -92,10 +92,10 @@ Or you can open a Playground by navigating to [http://localhost:4466/server-side
 
 ```graphql
 mutation M {
-  createUser(data: { name: "Graphcool" }) {
-    id
-    name
-  }
+ createUser(data: { name: "Graphcool" }) {
+  id
+  name
+ }
 }
 ```
 
