@@ -12,19 +12,6 @@ object IdType {
 
 import com.prisma.shared.models.IdType._
 
-case class Client(
-    id: Id,
-    auth0Id: Option[String] = None,
-    isAuth0IdentityProviderEmail: Boolean = false,
-    name: String,
-    email: String,
-    hashedPassword: String,
-    resetPasswordSecret: Option[String] = None,
-    projects: List[Project] = List.empty,
-    createdAt: DateTime,
-    updatedAt: DateTime
-)
-
 sealed trait Function {
   def name: String
   def isActive: Boolean
