@@ -34,10 +34,10 @@ yarn prisma deploy
 
 To deploy your service to a demo server (rather than locally with Docker), you need to perform the following steps:
 
-1.  Remove the `cluster` property from `prisma.yml`
-1.  Run `yarn prisma deploy`
-1.  When prompted by the CLI, select a demo server (e.g. `demo-eu1` or `demo-us1`)
-1.  Replace the [`endpoint`](./src/index.js#L23) in `index.js` with the HTTP endpoint that was printed after the previous command
+1. Remove the `cluster` property from `prisma.yml`
+1. Run `yarn prisma deploy`
+1. When prompted by the CLI, select a demo server (e.g. `demo-eu1` or `demo-us1`)
+1. Replace the [`endpoint`](./src/index.js#L23) in `index.js` with the HTTP endpoint that was printed after the previous command
 
 </details>
 
@@ -67,9 +67,9 @@ You can send the following mutation in the Playground to create a new `User` nod
 
 ```graphql
 mutation {
-  signup(email: "alice@graph.cool", password: "graphql") {
-    token
-  }
+ signup(email: "alice@prisma.io", password: "graphql") {
+  token
+ }
 }
 ```
 
@@ -79,9 +79,9 @@ This mutation will log in an _existing_ user by requesting a new authentication 
 
 ```graphql
 mutation {
-  login(email: "alice@graph.cool", password: "graphql") {
-    token
-  }
+ login(email: "alice@prisma.io", password: "graphql") {
+  token
+ }
 }
 ```
 
@@ -95,10 +95,10 @@ Once you've set the header, you can send the following query to check whether th
 
 ```graphql
 {
-  me {
-    id
-    email
-  }
+ me {
+  id
+  email
+ }
 }
 ```
 

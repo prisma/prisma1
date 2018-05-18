@@ -9,3 +9,9 @@ projects:
     extensions:
       endpoints:
         default: 'http://localhost:4466/authentication'
+      prisma: prisma.yml
+      codegen:
+        output: 
+          typings: generated-prisma.ts
+        generator: typegen
+        language: typescript

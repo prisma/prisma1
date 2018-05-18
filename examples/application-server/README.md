@@ -11,7 +11,7 @@ This example demonstrates usage of Prisma with [`graphql-yoga`](https://github.c
 Clone the Prisma monorepo and navigate to this directory or download _only_ this example with the following command:
 
 ```sh
-curl https://codeload.github.com/graphcool/prisma/tar.gz/application-server | tar -xz --strip=2 prisma-master/examples/application-server
+curl https://codeload.github.com/graphcool/prisma/tar.gz/master | tar -xz --strip=2 prisma-master/examples/application-server
 ```
 
 Next, navigate into the downloaded folder and install the NPM dependencies:
@@ -34,10 +34,10 @@ yarn prisma deploy
 
 To deploy your service to a demo server (rather than locally with Docker), you need to perform the following steps:
 
-1.  Remove the `cluster` property from `prisma.yml`
-1.  Run `yarn prisma deploy`
-1.  When prompted by the CLI, select a demo server (e.g. `demo-eu1` or `demo-us1`)
-1.  Replace the [`endpoint`](./src/index.js#L23) in `index.js` with the HTTP endpoint that was printed after the previous command
+1. Remove the `cluster` property from `prisma.yml`
+1. Run `yarn prisma deploy`
+1. When prompted by the CLI, select a demo server (e.g. `demo-eu1` or `demo-us1`)
+1. Replace the [`endpoint`](./src/index.js#L23) in `index.js` with the HTTP endpoint that was printed after the previous command
 
 </details>
 
@@ -65,16 +65,16 @@ Or you can open a Playground by navigating to [http://localhost:4000](http://loc
 
 ```graphql
 query {
-  posts(where: { author: { name_in: ["Prisma"] } }) {
-    id
-    title
-    status
-    author {
-      id
-      name
-      handle
-    }
+ posts(where: { author: { name_in: ["Prisma"] } }) {
+  id
+  title
+  status
+  author {
+   id
+   name
+   handle
   }
+ }
 }
 ```
 
@@ -82,16 +82,16 @@ query {
 
 ```graphql
 mutation {
-  createPost(
-    data: {
-      title: "Second Post"
-      content: "Second Post Content"
-      status: DRAFT
-      author: { connect: { handle: "prisma" } }
-    }
-  ) {
-    id
+ createPost(
+  data: {
+   title: "Second Post"
+   content: "Second Post Content"
+   status: DRAFT
+   author: { connect: { handle: "prisma" } }
   }
+ ) {
+  id
+ }
 }
 ```
 
