@@ -274,7 +274,74 @@ node src/index.js
 
 </Instruction>
 
-## Step 5: Send raw queries and mutations
+## Step 5: Checking for existence
+
+Besides query and mutation, Prisma binding provides a handy property called `exists`. Just like query or mutation, it contains several auto generated functions. It generates a function for every type in your schema. These functions receive filter arguments and return `true` or `false`.
+
+Because the schema you created in Step 1 has two models, User and Post, Prisma generated `exists.User` and `exists.Post`.
+
+<Instruction>
+
+Put the following code in `src/index.js`. It instantiates a Prisma binding instance and uses it to send queries and mutations to your Prisma service.
+
+<InfoBox type=warning>
+
+⚠️ **Important**: Remember to replace the value of `__YOUR_PRISMA_ENDPOINT__` with your Prisma endpoint, which is stored in `prisma/prisma.yml`.
+
+</InfoBox>
+
+```js
+const { Prisma } = require("prisma-binding");
+
+const prisma = new Prisma({
+  typeDefs: "src/generated/prisma.graphql",
+  endpoint: "__YOUR_PRISMA_ENDPOINT__"
+});
+
+prisma.mutation
+  .createUser({ data: { name: "Alice" } }, "{ id name }")
+  .then(response => {
+    return prisma.mutation.createPost({
+      data: {
+        title: "Prisma rocks!",
+        content: "Prisma rocks!",
+        author: {
+          connect: {
+            id: response.id
+          }
+        }
+      }
+    });
+  })
+  .then(() => prisma.exists.User({ name: "Alice" }))
+  .then(response => console.log(response))
+  // true
+  .then(() => prisma.exists.Post({ title: "Prisma rocks" }))
+  .then(response => console.log(response))
+  // true
+  .then(() => prisma.mutation.deleteManyPosts())
+  .then(() => prisma.mutation.deleteManyUsers())
+  .then(() => prisma.exists.Post({ title: "Prisma rocks" }))
+  .then(response => console.log(response))
+  // false
+  .then(() => prisma.exists.User({ name: "Alice" }))
+  .then(console.log);
+  // false
+```
+
+</Instruction>
+
+<Instruction>
+
+Run the script to see the query results printed in your terminal.
+
+```bash
+node src/index.js
+```
+
+</Instruction>
+
+## Step 6: Send raw queries and mutations
 
 Prisma binding also lets you send queries and mutations to your Prisma service. They work exactly the same as the functions generated based on your schema, but they are a little more verbose.
 
