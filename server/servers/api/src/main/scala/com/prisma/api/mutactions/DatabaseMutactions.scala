@@ -69,7 +69,7 @@ case class DatabaseMutactions(project: Project) {
 
     val x = for {
       field           <- path.relationFieldsNotOnPathOnLastModel
-      subModel        = field.relatedModel_!(project.schema)
+      subModel        = field.relatedModel_!
       nestedMutations = args.subNestedMutation(field, subModel)
     } yield {
 

@@ -10,7 +10,7 @@ case class ModelTemplate(
     fieldTemplates: List[FieldTemplate],
     manifestation: Option[ModelManifestation]
 ) {
-  def apply(schema: Schema): Model = new Model(this, schema)
+  def build(schema: Schema): Model = new Model(this, schema)
 }
 
 object Model {

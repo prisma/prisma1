@@ -71,7 +71,7 @@ class Field(
 
   val schema = model.schema
 
-  lazy val relation: Option[Relation] = relationName.flatMap(model.schema.getRelationByName)
+  lazy val relation: Option[Relation] = relationName.flatMap(schema.getRelationByName)
 
   lazy val id = name
   lazy val dbName = {
@@ -117,7 +117,7 @@ class Field(
 
   lazy val relatedModel_! : Model = {
     relatedModel match {
-      case None        => sys.error(s"Could not find relatedModel for field [$name] on model [${model(schema)}]")
+      case None        => sys.error(s"Could not find relatedModel for field [$name] on model [$model]")
       case Some(model) => model
     }
   }

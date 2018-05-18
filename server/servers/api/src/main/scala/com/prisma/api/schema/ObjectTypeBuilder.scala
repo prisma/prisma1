@@ -133,7 +133,7 @@ class ObjectTypeBuilder(
   def resolveConnection(field: Field): OutputType[Any] = {
     field.isList match {
       case true  => ListType(modelObjectTypes(field.relatedModel.get.name))
-      case false => modelObjectTypes(field.relatedModel_!(project.schema).name)
+      case false => modelObjectTypes(field.relatedModel_!.name)
     }
   }
 
