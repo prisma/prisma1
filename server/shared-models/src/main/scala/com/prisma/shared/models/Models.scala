@@ -465,18 +465,17 @@ case class RelationTemplate(
   def isSameModelRelation: Boolean = modelAId == modelBId
 }
 
+object Relation {
+  import scala.language.implicitConversions
+
+  implicit def asRelationTemplate(relation: Relation): RelationTemplate = relation.template
+}
+
 class Relation(
     val template: RelationTemplate,
     val schema: Schema
 ) {
-  val name                                                       = template.name
-  val modelAId                                                   = template.modelAId
-  val modelBId                                                   = template.modelBId
-  val modelAOnDelete                                             = template.modelAOnDelete
-  val modelBOnDelete                                             = template.modelBOnDelete
-  val manifestation                                              = template.manifestation
-  val isSameModelRelation: Boolean                               = template.isSameModelRelation
-  def connectsTheModels(model1: String, model2: String): Boolean = template.connectsTheModels(model1, model2)
+  import template._
 
   val relationTableName = manifestation.collect { case m: RelationTableManifestation => m.table }.getOrElse("_" + name)
 
