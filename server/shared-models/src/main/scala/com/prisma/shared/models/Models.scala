@@ -3,6 +3,7 @@ package com.prisma.shared.models
 import com.prisma.gc_values.GCValue
 import com.prisma.shared.errors.SharedErrors
 import com.prisma.shared.models.Manifestations._
+import scala.language.implicitConversions
 
 object IdType {
   type Id = String
@@ -84,7 +85,7 @@ object Model {
   def apply(
       name: String,
       stableIdentifier: String,
-      fieldFns: List[Model => Field],
+      fieldFns: List[FieldTemplate],
       manifestation: Option[ModelManifestation]
   ): Schema => Model = {
     new Model(name, stableIdentifier, fieldFns, manifestation)(_)
@@ -93,7 +94,7 @@ object Model {
 class Model(
     val name: String,
     val stableIdentifier: String,
-    val fieldFns: List[Model => Field],
+    val fieldFns: List[FieldTemplate],
     val manifestation: Option[ModelManifestation]
 )(val schema: Schema) {
   val id: String     = name
@@ -122,7 +123,7 @@ class Model(
   }
 
   def filterFields(fn: Field => Boolean): Model = {
-    val newFields         = this.fields.filter(fn).map(_.copy())
+    val newFields         = this.fields.filter(fn).map(_.template)
     val newModel          = copy(fieldFns = newFields)
     val newModelsInSchema = schema.models.filter(_.name != name).map(_.copy()) :+ newModel
     schema.copy(modelFns = newModelsInSchema).getModelByName_!(name)
@@ -140,7 +141,7 @@ class Model(
   def copy(
       name: String = this.name,
       stableIdentifier: String = this.stableIdentifier,
-      fieldFns: List[Model => Field] = this.fieldFns,
+      fieldFns: List[FieldTemplate] = this.fieldFns,
       manifestation: Option[ModelManifestation] = this.manifestation
   ): Schema => Model = {
     Model(name, stableIdentifier, fieldFns, manifestation)
@@ -184,54 +185,33 @@ case class Enum(
     values: Vector[String] = Vector.empty
 )
 
+case class FieldTemplate(
+    name: String,
+    typeIdentifier: TypeIdentifier.Value,
+    isRequired: Boolean,
+    isList: Boolean,
+    isUnique: Boolean,
+    isHidden: Boolean = false,
+    isReadonly: Boolean = false,
+    enum: Option[Enum],
+    defaultValue: Option[GCValue],
+    relationName: Option[String],
+    relationSide: Option[RelationSide.Value],
+    manifestation: Option[FieldManifestation],
+    constraints: List[FieldConstraint] = List.empty
+) {
+  def apply(model: Model): Field = new Field(this, model)
+}
+
 object Field {
-  def apply(
-      name: String,
-      typeIdentifier: TypeIdentifier.Value,
-      isRequired: Boolean,
-      isList: Boolean,
-      isUnique: Boolean,
-      isHidden: Boolean = false,
-      isReadonly: Boolean = false,
-      enum: Option[Enum],
-      defaultValue: Option[GCValue],
-      relationName: Option[String],
-      relationSide: Option[RelationSide.Value],
-      manifestation: Option[FieldManifestation],
-      constraints: List[FieldConstraint] = List.empty
-  ): Model => Field = {
-    new Field(
-      name = name,
-      typeIdentifier = typeIdentifier,
-      isRequired = isRequired,
-      isList = isList,
-      isUnique = isUnique,
-      isHidden = isHidden,
-      isReadonly = isReadonly,
-      enum = enum,
-      defaultValue = defaultValue,
-      relationName = relationName,
-      relationSide = relationSide,
-      manifestation = manifestation,
-      constraints = constraints
-    )(_)
-  }
+  implicit def asFieldTemplate(field: Field): FieldTemplate = field.template
 }
 class Field(
-    val name: String,
-    val typeIdentifier: TypeIdentifier.Value,
-    val isRequired: Boolean,
-    val isList: Boolean,
-    val isUnique: Boolean,
-    val isHidden: Boolean,
-    val isReadonly: Boolean,
-    val enum: Option[Enum],
-    val defaultValue: Option[GCValue],
-    val relationName: Option[String],
-    val relationSide: Option[RelationSide.Value],
-    val manifestation: Option[FieldManifestation],
-    val constraints: List[FieldConstraint]
-)(model: Model) {
+    val template: FieldTemplate,
+    val model: Model
+) {
+  import template._
+
   lazy val relation: Option[Relation] = relationName.flatMap(model.schema.getRelationByName)
 
   def id = name
@@ -326,38 +306,6 @@ class Field(
       }
     }
   }
-
-  def copy(
-      name: String = this.name,
-      typeIdentifier: TypeIdentifier.Value = this.typeIdentifier,
-      isRequired: Boolean = this.isRequired,
-      isList: Boolean = this.isList,
-      isUnique: Boolean = this.isUnique,
-      isHidden: Boolean = this.isHidden,
-      isReadonly: Boolean = this.isReadonly,
-      enum: Option[Enum] = this.enum,
-      defaultValue: Option[GCValue] = this.defaultValue,
-      relationName: Option[String] = this.relationName,
-      relationSide: Option[RelationSide.Value] = this.relationSide,
-      manifestation: Option[FieldManifestation] = this.manifestation,
-      constraints: List[FieldConstraint] = this.constraints
-  ): Model => Field = {
-    Field(
-      name = name,
-      typeIdentifier = typeIdentifier,
-      isRequired = isRequired,
-      isList = isList,
-      isUnique = isUnique,
-      isHidden = isHidden,
-      isReadonly = isReadonly,
-      enum = enum,
-      defaultValue = defaultValue,
-      relationName = relationName,
-      relationSide = relationSide,
-      manifestation = manifestation,
-      constraints = constraints
-    )
-  }
 }
 
 case class RelationTemplate(
@@ -380,8 +328,6 @@ case class RelationTemplate(
 }
 
 object Relation {
-  import scala.language.implicitConversions
-
   implicit def asRelationTemplate(relation: Relation): RelationTemplate = relation.template
 }
 

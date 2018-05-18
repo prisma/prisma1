@@ -70,9 +70,9 @@ case class SchemaInferrerImpl(
     }
   }
 
-  def fieldsForType(prismaType: PrismaType): Vector[Model => Field] = {
+  def fieldsForType(prismaType: PrismaType): Vector[FieldTemplate] = {
 
-    val fields: Vector[Model => Field] = prismaType.fields.flatMap { prismaField =>
+    val fields: Vector[FieldTemplate] = prismaType.fields.flatMap { prismaField =>
       def relationFromRelationField(x: RelationalPrismaField) = {
         x.relationName match {
           case Some(name) =>
@@ -119,7 +119,7 @@ case class SchemaInferrerImpl(
       prismaField match {
         case scalarField: ScalarPrismaField =>
           Some(
-            Field(
+            FieldTemplate(
               name = scalarField.name,
               typeIdentifier = scalarField.typeIdentifier,
               isRequired = scalarField.isRequired,
@@ -134,7 +134,7 @@ case class SchemaInferrerImpl(
 
         case enumField: EnumPrismaField =>
           Some(
-            Field(
+            FieldTemplate(
               name = enumField.name,
               typeIdentifier = enumField.typeIdentifier,
               isRequired = enumField.isRequired,
@@ -150,7 +150,7 @@ case class SchemaInferrerImpl(
           val relation = relationFromRelationField(relationField)
 
           Some(
-            Field(
+            FieldTemplate(
               name = relationField.name,
               typeIdentifier = relationField.typeIdentifier,
               isRequired = relationField.isRequired,
@@ -341,9 +341,9 @@ case class SchemaInferrerImpl(
     schema.copy(modelFns = newModels)
   }
 
-  def missingBackRelationField(relation: Relation, relationSide: RelationSide.Value): Model => Field = {
+  def missingBackRelationField(relation: Relation, relationSide: RelationSide.Value): FieldTemplate = {
     val name = "_back_" + relation.name
-    Field(
+    FieldTemplate(
       name = name,
       typeIdentifier = TypeIdentifier.Relation,
       isRequired = false,

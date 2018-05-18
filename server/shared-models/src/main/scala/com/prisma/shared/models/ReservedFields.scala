@@ -6,7 +6,7 @@ object ReservedFields {
   val createdAtFieldName = "createdAt"
   val reservedFieldNames = Vector(idFieldName, updatedAtFieldName, createdAtFieldName)
 
-  def reservedFieldFor(name: String): Model => Field = {
+  def reservedFieldFor(name: String): FieldTemplate = {
     name match {
       case x if x == idFieldName        => idField()
       case x if x == createdAtFieldName => createdAtField()
@@ -15,8 +15,8 @@ object ReservedFields {
     }
   }
 
-  private def createdAtField(): Model => Field = {
-    Field(
+  private def createdAtField(): FieldTemplate = {
+    FieldTemplate(
       name = createdAtFieldName,
       typeIdentifier = TypeIdentifier.DateTime,
       isRequired = true,
@@ -29,11 +29,11 @@ object ReservedFields {
       relationName = None,
       relationSide = None,
       manifestation = None
-    )(_)
+    )
   }
 
-  private def updatedAtField(): Model => Field = {
-    Field(
+  private def updatedAtField(): FieldTemplate = {
+    FieldTemplate(
       name = updatedAtFieldName,
       typeIdentifier = TypeIdentifier.DateTime,
       isRequired = true,
@@ -46,11 +46,11 @@ object ReservedFields {
       relationName = None,
       relationSide = None,
       manifestation = None
-    )(_)
+    )
   }
 
-  private def idField(): Model => Field = {
-    Field(
+  private def idField(): FieldTemplate = {
+    FieldTemplate(
       name = idFieldName,
       typeIdentifier = TypeIdentifier.GraphQLID,
       isRequired = true,
@@ -63,6 +63,6 @@ object ReservedFields {
       relationName = None,
       relationSide = None,
       manifestation = None
-    )(_)
+    )
   }
 }

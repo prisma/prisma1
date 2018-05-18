@@ -218,7 +218,7 @@ object ProjectJsonFormatter {
   implicit val fieldManifestationReads: Reads[FieldManifestation]   = (JsPath \ "dbName").read[String].map(FieldManifestation)
   implicit lazy val enum                                            = Json.format[Enum]
 
-  implicit val fieldReads: Reads[Model => Field] = (
+  implicit val fieldReads: Reads[FieldTemplate] = (
     (JsPath \ "name").read[String] and
       (JsPath \ "typeIdentifier").read[TypeIdentifier.Value] and
       (JsPath \ "isRequired").read[Boolean] and
@@ -232,9 +232,9 @@ object ProjectJsonFormatter {
       (JsPath \ "relationSide").readNullable[RelationSide.Value] and
       (JsPath \ "manifestation").readNullable[FieldManifestation] and
       (JsPath \ "constraints").read[List[FieldConstraint]]
-  )(Field.apply _)
+  )(FieldTemplate.apply _)
 
-  implicit val fieldWrites: Writes[Field] = (
+  implicit val fieldWrites: Writes[FieldTemplate] = (
     (JsPath \ "name").write[String] and
       (JsPath \ "typeIdentifier").write[TypeIdentifier.Value] and
       (JsPath \ "isRequired").write[Boolean] and
@@ -248,21 +248,21 @@ object ProjectJsonFormatter {
       (JsPath \ "relationSide").writeNullable[RelationSide.Value] and
       (JsPath \ "manifestation").writeNullable[FieldManifestation] and
       (JsPath \ "constraints").write[List[FieldConstraint]]
-  )(f => (f.name, f.typeIdentifier, f.isRequired, f.isList, f.isUnique, f.isHidden, f.isReadonly, f.enum, f.defaultValue, f.relationName, f.relationSide, f.manifestation, f.constraints))
+  )(unlift(FieldTemplate.unapply))
 
   implicit val modelReads: Reads[Schema => Model] = (
     (JsPath \ "name").read[String] and
       (JsPath \ "stableIdentifier").read[String] and
-      (JsPath \ "fields").read[List[Model => Field]] and
+      (JsPath \ "fields").read[List[FieldTemplate]] and
       (JsPath \ "manifestation").readNullable[ModelManifestation]
   )(Model.apply _)
 
   implicit val modelWrites: Writes[Model] = (
     (JsPath \ "name").write[String] and
       (JsPath \ "stableIdentifier").write[String] and
-      (JsPath \ "fields").write[List[Field]] and
+      (JsPath \ "fields").write[List[FieldTemplate]] and
       (JsPath \ "manifestation").writeNullable[ModelManifestation]
-  )(m => (m.name, m.stableIdentifier, m.fields, m.manifestation))
+  )(m => (m.name, m.stableIdentifier, m.fieldFns, m.manifestation))
 
   val schemaReads: Reads[Schema] = (
     (JsPath \ "models").read[List[Schema => Model]] and

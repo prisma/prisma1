@@ -162,7 +162,7 @@ object SchemaDsl extends AwaitUtils {
 
   case class ModelBuilder(
       name: String,
-      fields: Buffer[Model => Field] = Buffer(idField),
+      fields: Buffer[FieldTemplate] = Buffer(idField),
       var withPermissions: Boolean = true,
       relations: Buffer[RelationTemplate] = Buffer.empty
   ) {
@@ -418,9 +418,9 @@ object SchemaDsl extends AwaitUtils {
                  enum: Option[Enum],
                  isList: Boolean,
                  defaultValue: Option[GCValue] = None,
-                 constraints: List[FieldConstraint] = List.empty): Model => Field = {
+                 constraints: List[FieldConstraint] = List.empty): FieldTemplate = {
 
-    Field(
+    FieldTemplate(
       name = name,
       typeIdentifier = theType,
       isRequired = isRequired,
@@ -435,7 +435,7 @@ object SchemaDsl extends AwaitUtils {
       relationSide = None,
       constraints = constraints,
       manifestation = None
-    )(_)
+    )
   }
 
   def relationField(name: String,
@@ -444,8 +444,8 @@ object SchemaDsl extends AwaitUtils {
                     relation: RelationTemplate,
                     isList: Boolean,
                     isBackward: Boolean,
-                    isRequired: Boolean = false): Model => Field = {
-    Field(
+                    isRequired: Boolean = false): FieldTemplate = {
+    FieldTemplate(
       name = name,
       isList = isList,
       relationSide = Some {
@@ -460,12 +460,12 @@ object SchemaDsl extends AwaitUtils {
       defaultValue = None,
       enum = None,
       manifestation = None
-    )(_)
+    )
   }
 
   def newId(): Id = Cuid.createCuid()
 
-  private val idField = Field(
+  private val idField = FieldTemplate(
     name = "id",
     typeIdentifier = TypeIdentifier.GraphQLID,
     isRequired = true,
@@ -479,7 +479,7 @@ object SchemaDsl extends AwaitUtils {
     manifestation = None
   )
 
-  private val updatedAtField = Field(
+  private val updatedAtField = FieldTemplate(
     name = "updatedAt",
     typeIdentifier = TypeIdentifier.DateTime,
     isRequired = true,
@@ -493,7 +493,7 @@ object SchemaDsl extends AwaitUtils {
     manifestation = None
   )
 
-  private val createdAtField = Field(
+  private val createdAtField = FieldTemplate(
     name = "createdAt",
     typeIdentifier = TypeIdentifier.DateTime,
     isRequired = true,
