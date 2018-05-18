@@ -238,9 +238,7 @@ class ObjectTypeBuilder(
           case value if isScalarNonListFilter("_gt")                     => scalarFilter(GreaterThan(getGCValue(value)))
           case value if isScalarNonListFilter("_gte")                    => scalarFilter(GreaterThanOrEquals(getGCValue(value)))
           case _ if isOneRelationFilter("")                              => OneRelationIsNullFilter(project.schema, field.get)
-
-//            these are the Logical Filters it seems ????????????
-          case _ => FilterElement(key, value, field, filter.name)
+          case x                                                         => sys.error("Missing case " + x)
         }
     }
     AndFilter(filters.toVector)
