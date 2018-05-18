@@ -67,7 +67,7 @@ object QueryArgumentsExtensions {
       Some(sql""""#$projectId"."#$modelId"."nodeId" #$order, "#$projectId"."#$modelId"."position" #$idOrder""")
     }
 
-    def extractOrderByCommand(projectId: String, modelId: String, defaultOrderShortcut: Option[String] = None): Option[SQLActionBuilder] = {
+    def extractOrderByCommand(projectId: String, topLevelAlias: String, defaultOrderShortcut: Option[String] = None): Option[SQLActionBuilder] = {
 
       if (first.isDefined && last.isDefined) throw APIErrors.InvalidConnectionArguments()
 
@@ -78,11 +78,11 @@ object QueryArgumentsExtensions {
         case false => (defaultOrder, "asc")
       }
 
-      val idField = s""" "$projectId"."$modelId"."id" """
+      val idField = s""" "$topLevelAlias"."id" """
 
       orderBy match {
         case Some(orderByArg) if orderByArg.field.name != "id" =>
-          val orderByField = s""" "$projectId"."$modelId"."${orderByArg.field.name}" """
+          val orderByField = s""" "$topLevelAlias"."${orderByArg.field.name}" """
 
           // First order by the orderByField, then by id to break ties
           Some(sql""" #$orderByField #$order, #$idField #$idOrder """)

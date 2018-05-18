@@ -65,13 +65,16 @@ case class PostgresApiDatabaseQueryBuilder(
       overrideMaxNodeCount: Option[Int] = None
   ): DBIOAction[ResolverResult[PrismaNode], NoStream, Effect] = {
 
-    val tableName                                        = model.dbName
-    val (conditionCommand, orderByCommand, limitCommand) = extractQueryArgs(schemaName, tableName, args, None, overrideMaxNodeCount = overrideMaxNodeCount)
+    val tableName = model.dbName
+    val (conditionCommand, orderByCommand, limitCommand) =
+      extractQueryArgs(schemaName, "Top_Level_Alias", args, None, overrideMaxNodeCount = overrideMaxNodeCount)
 
-    val query = sql"""select * from "#$schemaName"."#$tableName"""" ++
-      prefixIfNotNone("where", conditionCommand) ++
-      prefixIfNotNone("order by", orderByCommand) ++
-      prefixIfNotNone("limit", limitCommand)
+    val query =
+      sql"""select * from 
+           "#$schemaName"."#$tableName" as "Top_Level_Alias" """ ++
+        prefixIfNotNone("where", conditionCommand) ++
+        prefixIfNotNone("order by", orderByCommand) ++
+        prefixIfNotNone("limit", limitCommand)
 
     query.as[PrismaNode](getResultForModel(model)).map(args.get.resultTransform)
 

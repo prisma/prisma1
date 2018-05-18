@@ -8,7 +8,7 @@ import play.api.libs.json.Json
 
 class SettingUpChinookSpec extends FlatSpec with Matchers with IntegrationBaseSpec {
 
-  "Adding a missing back-relation of non-list type" should "work when there are no violating occurences of Team" in {
+  "Importing Chinook" should "work " ignore {
 
     val schema =
       """type Artist {
