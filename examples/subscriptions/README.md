@@ -32,12 +32,7 @@ yarn prisma deploy
 <details>
  <summary><strong>I don't have <a href="https://www.docker.com">Docker</a> installed on my machine</strong></summary>
 
-To deploy your service to a demo server (rather than locally with Docker), you need to perform the following steps:
-
-1.  Remove the `cluster` property from `prisma.yml`
-1.  Run `yarn prisma deploy`
-1.  When prompted by the CLI, select a demo server (e.g. `demo-eu1` or `demo-us1`)
-1.  Replace the [`endpoint`](./src/index.js#L23) in `index.js` with the HTTP endpoint that was printed after the previous command
+To deploy your service to a demo server (rather than locally with Docker), please follow [this link](https://www.prisma.io/docs/quickstart/).
 
 </details>
 
@@ -65,14 +60,14 @@ Or you can open a Playground by navigating to [http://localhost:4000](http://loc
 
 ```graphql
 subscription Publications {
-  publications {
-    node {
-      id
-      title
-      content
-      status
-    }
+ publications {
+  node {
+   id
+   title
+   content
+   status
   }
+ }
 }
 ```
 
@@ -80,16 +75,16 @@ subscription Publications {
 
 ```graphql
 mutation M {
-  createPost(
-    data: {
-      title: "Second Post"
-      content: "Second Post Content"
-      status: DRAFT
-      author: { connect: { handle: "prisma" } }
-    }
-  ) {
-    id
+ createPost(
+  data: {
+   title: "Second Post"
+   content: "Second Post Content"
+   status: DRAFT
+   author: { connect: { handle: "prisma" } }
   }
+ ) {
+  id
+ }
 }
 ```
 
