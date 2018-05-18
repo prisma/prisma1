@@ -34,7 +34,8 @@ object QueryArgumentsHelpers {
             where "#$projectId"."#${relationTableName}"."#${column}" = "#$modTableName"."id""""
     }
 
-    val tableNameSql = if (quoteTableName) sql""""#$tableName"""" else sql"""#$tableName"""
+//    val tableNameSql = if (quoteTableName) sql""""#$tableName"""" else sql"""#$tableName"""
+    val tableNameSql = sql""""#$tableName""""
 
     //key, value, field, filterName, relationFilter
     val sqlParts = filter match {

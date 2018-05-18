@@ -212,13 +212,13 @@ case class PostgresApiDatabaseQueryBuilder(
       projectId = schemaName,
       modelName = "ModelTable",
       args = args,
-      defaultOrderShortcut = Some(s""" RelationTable."$columnForRelatedModel" """),
+      defaultOrderShortcut = Some(s""" "RelationTable"."$columnForRelatedModel" """),
       overrideMaxNodeCount = None,
       quoteTableName = false
     )
 
     def createQuery(id: String, modelRelationSide: String, fieldRelationSide: String) = {
-      sql"""(select "ModelTable".*, RelationTable."#$aColumn" as "__Relation__A",  "RelationTable"."#$bColumn" as "__Relation__B"
+      sql"""(select "ModelTable".*, "RelationTable"."#$aColumn" as "__Relation__A",  "RelationTable"."#$bColumn" as "__Relation__B"
             from "#$schemaName"."#$modelTable" as "ModelTable"
            inner join "#$schemaName"."#$relationTableName" as "RelationTable"
            on "ModelTable"."id" = "RelationTable"."#$fieldRelationSide"
@@ -328,7 +328,7 @@ case class PostgresApiDatabaseQueryBuilder(
     val fieldRelationSide = relationField.oppositeRelationSide.get.toString
 
     val (conditionCommand, orderByCommand, limitCommand) =
-      extractQueryArgs(schemaName, fieldTable, args, defaultOrderShortcut = Some(s"""$schemaName.$unsafeRelationId.$fieldRelationSide"""), None)
+      extractQueryArgs(schemaName, fieldTable, args, defaultOrderShortcut = Some(s""" "$schemaName"."$unsafeRelationId"."$fieldRelationSide" """), None)
 
     def createQuery(id: String) = {
       sql"""(select "#$id", count(*) from "#$schemaName"."#$fieldTable"
