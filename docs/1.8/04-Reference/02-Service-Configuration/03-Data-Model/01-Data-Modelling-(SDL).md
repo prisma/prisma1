@@ -435,7 +435,7 @@ mutation {
 
 When adding a required field to a model that already contains nodes, you receive this error message:
 
-> You are making a field required, but there are already nodes that would violate that constraint.
+> You are creating a required field but there are already nodes present that would violate that constraint.
 
 This is because all nodes would have `null` for this field, being a
 

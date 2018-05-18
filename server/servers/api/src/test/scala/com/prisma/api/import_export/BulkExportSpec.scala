@@ -1,5 +1,6 @@
 package com.prisma.api.import_export
 
+import com.prisma.{IgnoreMySql, IgnorePassive, IgnorePostgres}
 import com.prisma.api.ApiSpecBase
 import com.prisma.api.connector.DataResolver
 import com.prisma.api.import_export.ImportExport.MyJsonProtocol._
@@ -129,15 +130,15 @@ class BulkExportSpec extends FlatSpec with Matchers with ApiSpecBase with AwaitU
     thirdChunk.cursor.row should be(-1)
   }
 
-  "Exporting relationData" should "work (filesizelimit set to 1000)" in {
+  "Exporting relationData with Postgres" should "work (filesizelimit set to 1000)" in {
     val nodes =
       """{ "valueType": "nodes", "values": [
-                  |{"_typeName": "Model0", "id": "0", "a": "test", "b":  0, "createdAt": "2017-11-29 14:35:13"},
-                  |{"_typeName": "Model1", "id": "1", "a": "test", "b":  1},
-                  |{"_typeName": "Model2", "id": "2", "a": "test", "b":  2, "createdAt": "2017-11-29 14:35:13"},
-                  |{"_typeName": "Model0", "id": "3", "a": "test3", "b":  3, "createdAt": "2017-11-29 14:35:13"},
-                  |{"_typeName": "Model0", "id": "4", "a": "test4", "b":  4, "createdAt": "2017-11-29 14:35:13"}
-                  |]}""".stripMargin.parseJson
+        |{"_typeName": "Model0", "id": "0", "a": "test", "b":  0, "createdAt": "2017-11-29 14:35:13"},
+        |{"_typeName": "Model1", "id": "1", "a": "test", "b":  1},
+        |{"_typeName": "Model2", "id": "2", "a": "test", "b":  2, "createdAt": "2017-11-29 14:35:13"},
+        |{"_typeName": "Model0", "id": "3", "a": "test3", "b":  3, "createdAt": "2017-11-29 14:35:13"},
+        |{"_typeName": "Model0", "id": "4", "a": "test4", "b":  4, "createdAt": "2017-11-29 14:35:13"}
+        |]}""".stripMargin.parseJson
 
     val relations =
       """{ "valueType": "relations", "values": [
@@ -161,25 +162,27 @@ class BulkExportSpec extends FlatSpec with Matchers with ApiSpecBase with AwaitU
     val request    = ExportRequest("relations", cursor)
     val firstChunk = exporter.executeExport(dataResolver, request).await(5).as[ResultFormat]
 
-    JsArray(firstChunk.out.jsonElements).toString should be(
-      """[""" concat
-        """[{"_typeName":"Model0","id":"0","fieldName":"relation0bottom"},{"_typeName":"Model0","id":"0","fieldName":"relation0top"}],""" concat
-        """[{"_typeName":"Model0","id":"3","fieldName":"relation0bottom"},{"_typeName":"Model0","id":"3","fieldName":"relation0top"}],""" concat
-        """[{"_typeName":"Model0","id":"4","fieldName":"relation0bottom"},{"_typeName":"Model0","id":"4","fieldName":"relation0top"}],""" concat
-        """[{"_typeName":"Model0","id":"4","fieldName":"relation0bottom"},{"_typeName":"Model0","id":"3","fieldName":"relation0top"}],""" concat
-        """[{"_typeName":"Model0","id":"4","fieldName":"relation0bottom"},{"_typeName":"Model0","id":"0","fieldName":"relation0top"}],""" concat
-        """[{"_typeName":"Model0","id":"3","fieldName":"relation0bottom"},{"_typeName":"Model0","id":"0","fieldName":"relation0top"}],""" concat
-        """[{"_typeName":"Model1","id":"1","fieldName":"model0"},{"_typeName":"Model0","id":"0","fieldName":"model1"}],""" concat
-        """[{"_typeName":"Model1","id":"1","fieldName":"model0"},{"_typeName":"Model0","id":"3","fieldName":"model1"}]""" concat "]")
+    firstChunk.out.jsonElements should have(size(8))
+    firstChunk.out.jsonElements should contain theSameElementsAs Vector(
+      """[{"_typeName":"Model0","id":"0","fieldName":"relation0bottom"},{"_typeName":"Model0","id":"0","fieldName":"relation0top"}]""".parseJson,
+      """[{"_typeName":"Model0","id":"3","fieldName":"relation0bottom"},{"_typeName":"Model0","id":"3","fieldName":"relation0top"}]""".parseJson,
+      """[{"_typeName":"Model0","id":"4","fieldName":"relation0bottom"},{"_typeName":"Model0","id":"4","fieldName":"relation0top"}]""".parseJson,
+      """[{"_typeName":"Model0","id":"4","fieldName":"relation0bottom"},{"_typeName":"Model0","id":"3","fieldName":"relation0top"}]""".parseJson,
+      """[{"_typeName":"Model0","id":"4","fieldName":"relation0bottom"},{"_typeName":"Model0","id":"0","fieldName":"relation0top"}]""".parseJson,
+      """[{"_typeName":"Model0","id":"3","fieldName":"relation0bottom"},{"_typeName":"Model0","id":"0","fieldName":"relation0top"}]""".parseJson,
+      """[{"_typeName":"Model1","id":"1","fieldName":"model0"},{"_typeName":"Model0","id":"0","fieldName":"model1"}]""".parseJson,
+      """[{"_typeName":"Model1","id":"1","fieldName":"model0"},{"_typeName":"Model0","id":"3","fieldName":"model1"}]""".parseJson
+    )
     firstChunk.cursor.table should be(1)
     firstChunk.cursor.row should be(2)
 
     val request2    = request.copy(cursor = firstChunk.cursor)
     val secondChunk = exporter.executeExport(dataResolver, request2).await(5).as[ResultFormat]
-    JsArray(secondChunk.out.jsonElements).toString should be(
-      """[""" concat
-        """[{"_typeName":"Model1","id":"1","fieldName":"model0"},{"_typeName":"Model0","id":"4","fieldName":"model1"}],""" concat
-        """[{"_typeName":"Model1","id":"1","fieldName":"model2"},{"_typeName":"Model2","id":"2","fieldName":"model1"}]""" concat "]")
+    secondChunk.out.jsonElements should have(size(2))
+    secondChunk.out.jsonElements should contain theSameElementsAs Vector(
+      """[{"_typeName":"Model1","id":"1","fieldName":"model0"},{"_typeName":"Model0","id":"4","fieldName":"model1"}]""".parseJson,
+      """[{"_typeName":"Model1","id":"1","fieldName":"model2"},{"_typeName":"Model2","id":"2","fieldName":"model1"}]""".parseJson
+    )
 
     secondChunk.cursor.table should be(-1)
     secondChunk.cursor.row should be(-1)

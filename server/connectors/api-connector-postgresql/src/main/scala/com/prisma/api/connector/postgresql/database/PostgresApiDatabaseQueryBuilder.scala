@@ -28,9 +28,9 @@ case class PostgresApiDatabaseQueryBuilder(
   }
 
   private def getPrismaNode(model: Model, ps: PositionedResult) = {
-    val data = model.scalarNonListFields.map(field => field.name -> ps.rs.getGcValue(field.name, field.typeIdentifier))
+    val data = model.scalarNonListFields.map(field => field.name -> ps.rs.getGcValue(field.dbName, field.typeIdentifier))
 
-    PrismaNode(id = ps.rs.getId, data = RootGCValue(data: _*))
+    PrismaNode(id = ps.rs.getId(model), data = RootGCValue(data: _*))
   }
 
   def getResultForModelAndRelationSide(model: Model, side: String, oppositeSide: String): GetResult[PrismaNodeWithParent] = GetResult { ps: PositionedResult =>
@@ -43,13 +43,13 @@ case class PostgresApiDatabaseQueryBuilder(
   }
 
   private def getResultForRelation(relation: Relation): GetResult[RelationNode] = GetResult { ps: PositionedResult =>
-    val modelAColumn = relation.columnForRelationSide(RelationSide.A)
-    val modelBColumn = relation.columnForRelationSide(RelationSide.B)
-    RelationNode(id = ps.rs.getId, a = ps.rs.getAsID(modelAColumn), b = ps.rs.getAsID(modelBColumn))
+    val modelAColumn = relation.columnForRelationSide(schema, RelationSide.A)
+    val modelBColumn = relation.columnForRelationSide(schema, RelationSide.B)
+    RelationNode(a = ps.rs.getAsID(modelAColumn), b = ps.rs.getAsID(modelBColumn))
   }
 
   implicit object GetRelationCount extends GetResult[(IdGCValue, Int)] {
-    override def apply(ps: PositionedResult): (IdGCValue, Int) = (ps.rs.getId, ps.rs.getInt("Count"))
+    override def apply(ps: PositionedResult): (IdGCValue, Int) = (ps.rs.getAsID("id"), ps.rs.getInt("Count"))
   }
 
   def getResultForScalarListField(field: Field): GetResult[ScalarListElement] = GetResult { ps: PositionedResult =>
@@ -66,8 +66,15 @@ case class PostgresApiDatabaseQueryBuilder(
       overrideMaxNodeCount: Option[Int] = None
   ): DBIOAction[ResolverResult[PrismaNode], NoStream, Effect] = {
 
-    val tableName                                        = model.dbName
-    val (conditionCommand, orderByCommand, limitCommand) = extractQueryArgs(schemaName, tableName, args, None, overrideMaxNodeCount = overrideMaxNodeCount)
+    val tableName = model.dbName
+    val (conditionCommand, orderByCommand, limitCommand) = extractQueryArgs(
+      projectId = schemaName,
+      tableName = tableName,
+      idFieldName = model.dbNameOfIdField_!,
+      args = args,
+      defaultOrderShortcut = None,
+      overrideMaxNodeCount = overrideMaxNodeCount
+    )
 
     val query = sql"""select * from "#$schemaName"."#$tableName"""" ++
       prefixIfNotNone("where", conditionCommand) ++
@@ -83,8 +90,15 @@ case class PostgresApiDatabaseQueryBuilder(
       overrideMaxNodeCount: Option[Int] = None
   ): DBIOAction[ResolverResult[RelationNode], NoStream, Effect] = {
 
-    val tableName                                        = relation.relationTableNameNew(schema)
-    val (conditionCommand, orderByCommand, limitCommand) = extractQueryArgs(schemaName, tableName, args, None, overrideMaxNodeCount = overrideMaxNodeCount)
+    val tableName = relation.relationTableNameNew(schema)
+    val (conditionCommand, orderByCommand, limitCommand) = extractQueryArgs(
+      projectId = schemaName,
+      tableName = tableName,
+      idFieldName = relation.columnForRelationSide(schema, RelationSide.A),
+      args = args,
+      defaultOrderShortcut = None,
+      overrideMaxNodeCount = overrideMaxNodeCount
+    )
 
     val query = sql"""select * from "#$schemaName"."#$tableName"""" ++
       prefixIfNotNone("where", conditionCommand) ++
@@ -101,14 +115,15 @@ case class PostgresApiDatabaseQueryBuilder(
       overrideMaxNodeCount: Option[Int] = None
   ): DBIOAction[ResolverResult[ScalarListValues], NoStream, Effect] = {
 
-    val tableName = s"${model.name}_${field.name}"
+    val tableName = s"${model.dbName}_${field.dbName}"
     val (conditionCommand, orderByCommand, limitCommand) = extractQueryArgs(
-      schemaName,
-      tableName,
-      args,
-      None,
+      projectId = schemaName,
+      tableName = tableName,
+      idFieldName = model.dbNameOfIdField_!,
+      args = args,
+      defaultOrderShortcut = None,
       overrideMaxNodeCount = overrideMaxNodeCount,
-      true
+      forList = true
     )
 
     val query =
@@ -146,14 +161,14 @@ case class PostgresApiDatabaseQueryBuilder(
       var result: Vector[PrismaNode] = Vector.empty
       while (rs.next) {
         val data = model.scalarNonListFields.map(field => field.name -> rs.getGcValue(field.dbName, field.typeIdentifier))
-        result = result :+ PrismaNode(id = rs.getId, data = RootGCValue(data: _*))
+        result = result :+ PrismaNode(id = rs.getId(model), data = RootGCValue(data: _*))
       }
 
       result
     }
 
   def selectFromScalarList(modelName: String, field: Field, nodeIds: Vector[IdGCValue]): DBIOAction[Vector[ScalarListValues], NoStream, Effect] = {
-    val query = sql"""select "nodeId", "position", "value" from "#$schemaName"."#${modelName}_#${field.name}" where "nodeId" in (""" ++ combineByComma(
+    val query = sql"""select "nodeId", "position", "value" from "#$schemaName"."#${modelName}_#${field.dbName}" where "nodeId" in (""" ++ combineByComma(
       nodeIds.map(v => sql"$v")) ++ sql")"
 
     query.as[ScalarListElement](getResultForScalarListField(field)).map { scalarListElements =>
@@ -182,19 +197,19 @@ case class PostgresApiDatabaseQueryBuilder(
       fromModelIds: Vector[IdGCValue],
       args: Option[QueryArguments]
   ): DBIOAction[Vector[ResolverResult[PrismaNodeWithParent]], NoStream, Effect] = {
-    val fromModel    = fromField.model(schema).get
     val relation     = fromField.relation.get
     val relatedModel = fromField.relatedModel(schema).get
-    val modelTable   = fromField.relatedModel(schema).get.name
+    val modelTable   = relatedModel.dbName
 
     val relationTableName     = fromField.relation.get.relationTableNameNew(schema)
-    val (aColumn, bColumn)    = (relation.modelAColumn, relation.modelBColumn)
-    val columnForFromModel    = relation.columnForRelationSide(fromField.relationSide.get)
-    val columnForRelatedModel = relation.columnForRelationSide(fromField.oppositeRelationSide.get)
+    val (aColumn, bColumn)    = (relation.modelAColumn(schema), relation.modelBColumn(schema))
+    val columnForFromModel    = relation.columnForRelationSide(schema, fromField.relationSide.get)
+    val columnForRelatedModel = relation.columnForRelationSide(schema, fromField.oppositeRelationSide.get)
 
     val (conditionCommand, orderByCommand, limitCommand) = extractQueryArgs(
       projectId = schemaName,
-      modelName = "ModelTable",
+      tableName = "ModelTable",
+      idFieldName = relatedModel.dbNameOfIdField_!,
       args = args,
       defaultOrderShortcut = Some(s""" RelationTable."$columnForRelatedModel" """),
       overrideMaxNodeCount = None,
@@ -205,7 +220,7 @@ case class PostgresApiDatabaseQueryBuilder(
       sql"""(select ModelTable.*, RelationTable."#$aColumn" as __Relation__A,  RelationTable."#$bColumn" as __Relation__B
             from "#$schemaName"."#$modelTable" as ModelTable
            inner join "#$schemaName"."#$relationTableName" as RelationTable
-           on ModelTable."id" = RelationTable."#$fieldRelationSide"
+           on ModelTable."#${relatedModel.dbNameOfIdField_!}" = RelationTable."#$fieldRelationSide"
            where RelationTable."#$modelRelationSide" = '#$id' """ ++
         prefixIfNotNone("and", conditionCommand) ++
         prefixIfNotNone("order by", orderByCommand) ++
@@ -251,20 +266,27 @@ case class PostgresApiDatabaseQueryBuilder(
       args: Option[QueryArguments]
   ): DBIOAction[Vector[ResolverResult[PrismaNodeWithParent]], NoStream, Effect] = {
 
-    val relatedModel         = fromField.relatedModel(schema).get
-    val fieldTable           = fromField.relatedModel(schema).get.name
-    val unsafeRelationId     = fromField.relation.get.relationTableNameNew(schema)
-    val modelRelationSide    = fromField.relationSide.get.toString
-    val oppositeRelationSide = fromField.oppositeRelationSide.get.toString
+    val relatedModel                  = fromField.relatedModel(schema).get
+    val fieldTable                    = relatedModel.dbName
+    val relation                      = fromField.relation.get
+    val unsafeRelationId              = relation.relationTableNameNew(schema)
+    val modelRelationSide             = fromField.relationSide.get.toString
+    val columnForOppositeRelationSide = relation.columnForRelationSide(schema, fromField.oppositeRelationSide.get)
 
-    val (conditionCommand, orderByCommand, limitCommand) =
-      extractQueryArgs(schemaName, fieldTable, args, defaultOrderShortcut = Some(s""" "$schemaName"."$unsafeRelationId"."$oppositeRelationSide" """), None)
+    val (conditionCommand, orderByCommand, limitCommand) = extractQueryArgs(
+      projectId = schemaName,
+      tableName = fieldTable,
+      idFieldName = relatedModel.dbNameOfIdField_!,
+      args = args,
+      defaultOrderShortcut = Some(s""" "$schemaName"."$unsafeRelationId"."$columnForOppositeRelationSide" """),
+      overrideMaxNodeCount = None
+    )
 
     def createQuery(id: String, modelRelationSide: String, fieldRelationSide: String) = {
       sql"""(select "#$schemaName"."#$fieldTable".*, "#$schemaName"."#$unsafeRelationId"."A" as __Relation__A,  "#$schemaName"."#$unsafeRelationId"."B" as __Relation__B
             from "#$schemaName"."#$fieldTable"
            inner join "#$schemaName"."#$unsafeRelationId"
-           on "#$schemaName"."#$fieldTable"."id" = "#$schemaName"."#$unsafeRelationId"."#$fieldRelationSide"
+           on "#$schemaName"."#$fieldTable"."#${relatedModel.dbNameOfIdField_!}" = "#$schemaName"."#$unsafeRelationId"."#$fieldRelationSide"
            where "#$schemaName"."#$unsafeRelationId"."#$modelRelationSide" = '#$id' """ ++
         prefixIfNotNone("and", conditionCommand) ++
         prefixIfNotNone("order by", orderByCommand) ++
@@ -277,17 +299,19 @@ case class PostgresApiDatabaseQueryBuilder(
     val query = resolveFromBothSidesAndMerge match {
       case false =>
         fromModelIds.distinct.view.zipWithIndex.foldLeft(sql"")((a, b) =>
-          a ++ unionIfNotFirst(b._2) ++ createQuery(b._1.value, modelRelationSide, oppositeRelationSide))
+          a ++ unionIfNotFirst(b._2) ++ createQuery(b._1.value, modelRelationSide, columnForOppositeRelationSide))
 
       case true =>
-        fromModelIds.distinct.view.zipWithIndex.foldLeft(sql"")((a, b) =>
-          a ++ unionIfNotFirst(b._2) ++ createQuery(b._1.value, modelRelationSide, oppositeRelationSide) ++ sql"union all " ++ createQuery(b._1.value,
-                                                                                                                                           oppositeRelationSide,
-                                                                                                                                           modelRelationSide))
+        fromModelIds.distinct.view.zipWithIndex.foldLeft(sql"")(
+          (a, b) =>
+            a ++ unionIfNotFirst(b._2) ++ createQuery(b._1.value, modelRelationSide, columnForOppositeRelationSide) ++ sql"union all " ++ createQuery(
+              b._1.value,
+              columnForOppositeRelationSide,
+              modelRelationSide))
     }
 
     query
-      .as[PrismaNodeWithParent](getResultForModelAndRelationSide(relatedModel, modelRelationSide, oppositeRelationSide))
+      .as[PrismaNodeWithParent](getResultForModelAndRelationSide(relatedModel, modelRelationSide, columnForOppositeRelationSide))
       .map { items =>
         val itemGroupsByModelId = items.groupBy(_.parentId)
         fromModelIds
@@ -306,18 +330,26 @@ case class PostgresApiDatabaseQueryBuilder(
       args: Option[QueryArguments]
   ): SqlStreamingAction[Vector[(IdGCValue, Int)], (IdGCValue, Int), Effect] = {
 
-    val fieldTable        = relationField.relatedModel(schema).get.name
-    val unsafeRelationId  = relationField.relation.get.relationTableNameNew(schema)
-    val modelRelationSide = relationField.relationSide.get.toString
-    val fieldRelationSide = relationField.oppositeRelationSide.get.toString
+    val relatedModel               = relationField.relatedModel(schema).get
+    val fieldTable                 = relatedModel.dbName
+    val relation                   = relationField.relation.get
+    val unsafeRelationId           = relation.relationTableNameNew(schema)
+    val modelRelationSide          = relationField.relationSide.get.toString
+    val columnForFieldRelationSide = relation.columnForRelationSide(schema, relationField.oppositeRelationSide.get)
 
-    val (conditionCommand, orderByCommand, limitCommand) =
-      extractQueryArgs(schemaName, fieldTable, args, defaultOrderShortcut = Some(s"""$schemaName.$unsafeRelationId.$fieldRelationSide"""), None)
+    val (conditionCommand, orderByCommand, limitCommand) = extractQueryArgs(
+      projectId = schemaName,
+      tableName = fieldTable,
+      idFieldName = relatedModel.dbNameOfIdField_!,
+      args = args,
+      defaultOrderShortcut = Some(s"""$schemaName.$unsafeRelationId.$columnForFieldRelationSide"""),
+      overrideMaxNodeCount = None
+    )
 
     def createQuery(id: String) = {
       sql"""(select "#$id", count(*) from "#$schemaName"."#$fieldTable"
            inner join "#$schemaName"."#$unsafeRelationId"
-           on "#$schemaName"."#$fieldTable"."id" = "#$schemaName"."#$unsafeRelationId"."#$fieldRelationSide"
+           on "#$schemaName"."#$fieldTable"."#${relatedModel.dbNameOfIdField_!}" = "#$schemaName"."#$unsafeRelationId"."#$columnForFieldRelationSide"
            where "#$schemaName"."#$unsafeRelationId"."#$modelRelationSide" = '#$id' """ ++
         prefixIfNotNone("and", conditionCommand) ++
         prefixIfNotNone("order by", orderByCommand) ++

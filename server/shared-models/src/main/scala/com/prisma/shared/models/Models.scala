@@ -143,6 +143,9 @@ case class Model(
   lazy val relations: List[Relation]          = fields.flatMap(_.relation).distinct
   lazy val nonListFields                      = fields.filter(!_.isList)
   lazy val idField                            = getFieldByName("id")
+  lazy val idField_!                          = getFieldByName_!("id")
+  lazy val dbNameOfIdField_!                  = idField_!.dbName
+  val updateAtField                           = getFieldByName("updatedAt")
 
   lazy val cascadingRelationFields: List[Field] = relationFields.filter(field => field.relation.get.sideOfModelCascades(this))
 
@@ -217,13 +220,10 @@ case class Field(
 ) {
   def id = name
   def dbName = {
-    if (isRelation) {
-      relation match {
-        case Some(r) if r.isInlineRelation => r.manifestation.get.asInstanceOf[InlineRelationManifestation].referencingColumn
-        case None                          => sys.error("not a valid call on relations manifested via a table")
-      }
-    } else {
-      manifestation.map(_.dbName).getOrElse(name)
+    relation match {
+      case Some(r) if r.isInlineRelation => r.manifestation.get.asInstanceOf[InlineRelationManifestation].referencingColumn
+      case None                          => manifestation.map(_.dbName).getOrElse(name)
+      case _                             => sys.error("not a valid call on relations manifested via a table")
     }
   }
   def isScalar: Boolean                             = typeIdentifier != TypeIdentifier.Relation
@@ -386,20 +386,26 @@ case class Relation(
       }
       .getOrElse("_" + name)
 
-  def modelAColumn: String = manifestation match {
-    case Some(m: RelationTableManifestation)  => m.modelAColumn
-    case Some(m: InlineRelationManifestation) => if (m.inTableOfModelId == modelAId) "id" else m.referencingColumn
-    case None                                 => "A"
+  def modelAColumn(schema: Schema): String = manifestation match {
+    case Some(m: RelationTableManifestation) =>
+      m.modelAColumn
+    case Some(m: InlineRelationManifestation) =>
+      if (m.inTableOfModelId == modelAId) getModelA_!(schema).idField_!.dbName else m.referencingColumn
+    case None =>
+      "A"
   }
 
-  def modelBColumn: String = manifestation match {
-    case Some(m: RelationTableManifestation)  => m.modelBColumn
-    case Some(m: InlineRelationManifestation) => if (m.inTableOfModelId == modelBId && !isSameModelRelation) "id" else m.referencingColumn
-    case None                                 => "B"
+  def modelBColumn(schema: Schema): String = manifestation match {
+    case Some(m: RelationTableManifestation) =>
+      m.modelBColumn
+    case Some(m: InlineRelationManifestation) =>
+      if (m.inTableOfModelId == modelBId && !isSameModelRelation) getModelB_!(schema).idField_!.dbName else m.referencingColumn
+    case None =>
+      "B"
   }
 
-  def columnForRelationSide(relationSide: RelationSide.Value): String = {
-    if (relationSide == RelationSide.A) modelAColumn else modelBColumn
+  def columnForRelationSide(schema: Schema, relationSide: RelationSide.Value): String = {
+    if (relationSide == RelationSide.A) modelAColumn(schema) else modelBColumn(schema)
   }
 
   def hasManifestation: Boolean = manifestation.isDefined
