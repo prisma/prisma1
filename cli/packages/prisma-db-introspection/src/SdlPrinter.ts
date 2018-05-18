@@ -9,7 +9,6 @@ export interface RelationField {
 export class SdlPrinter {
   print(tables: Table[]): string {
     const candidates = tables.filter(x => !x.isJunctionTable)
-
     const sdl = _.map(candidates, table =>
       this.printType(table, tables.filter(x => x != table))
     )
@@ -19,8 +18,7 @@ export class SdlPrinter {
 
   printType(table: Table, otherTables: Table[]) {
     const nativeFields = table.columns
-    const filterFunction = c =>
-      (c.relation || false) && c.relation.table == table.name
+    const filterFunction = c => (c.relation || false) && c.relation.table == table.name
     const relationFields = otherTables
       .filter(t => t.columns.some(filterFunction))
       .map(t =>
@@ -30,13 +28,8 @@ export class SdlPrinter {
       )
       .reduce((acc, next) => acc.concat(next), [])
 
-    return `type ${this.capitalizeFirstLetter(table.name)} @pgTable(name: "${
-      table.name
-    }") {${_.map(nativeFields, column => this.printField(column)).join(
-      ''
-    )}${relationFields
-      .map(field => this.printBackRelationField(field))
-      .join('')}
+    return `type ${this.capitalizeFirstLetter(table.name)} @pgTable(name: "${table.name}") {
+  ${(_.map(nativeFields, nativeField => this.printField(nativeField)).concat(relationFields.map(field => this.printBackRelationField(field)))).join('\n  ')}
 }
 `
   }
@@ -48,31 +41,33 @@ export class SdlPrinter {
       )[0]
       const relatedTable = (otherRemoteTableField.relation as Relation).table
 
-      return `\n  ${this.lowerCaseFirstLetter(
+      return `${this.lowerCaseFirstLetter(
         relatedTable
       )}s: [${this.capitalizeFirstLetter(
         relatedTable
       )}!]! @pgRelationTable(table: "${field.remoteTable.name}" name: "${
         field.remoteTable.name
-      }")`
+        }")`
     } else {
-      return `\n  ${field.remoteTable.name}s: [${this.capitalizeFirstLetter(
+      return `${field.remoteTable.name}s: [${this.capitalizeFirstLetter(
         field.remoteTable.name
       )}!]!`
     }
   }
 
   printField(column: Column) {
-    return `\n  ${this.printFieldName(column)}: ${this.printFieldType(
+    return `${this.printFieldName(column)}: ${this.printFieldType(
       column
     )}${this.printFieldOptional(column)}${this.printRelationDirective(
       column
-    )}${this.printFieldDirective(column)}`
+    )}${this.printFieldDirectives(column)}`
   }
 
   printFieldName(column: Column) {
     if (column.relation) {
       return this.removeIdSuffix(column.name)
+    } else if (column.isPrimaryKey) {
+      return "id"
     } else {
       return column.name
     }
@@ -98,13 +93,19 @@ export class SdlPrinter {
     return column.nullable ? '' : '!'
   }
 
-  printFieldDirective(column: Column) {
+  printFieldDirectives(column: Column) {
+    let directives = ''
     if (column.isUnique) {
-      return ` @unique`
+      directives += ` @unique`
     }
+
+    if (column.isPrimaryKey && column.name != "id") {
+      directives += ` @pgColumn(name: "${column.name}")`
+    }
+
     if (column.defaultValue != null) {
       if (column.defaultValue == '[AUTO INCREMENT]') {
-        return ''
+        return directives
       }
 
       if (
@@ -112,13 +113,13 @@ export class SdlPrinter {
         column.typeIdentifier == 'DateTime' ||
         column.typeIdentifier == 'Json'
       ) {
-        return ` @default(value: "${column.defaultValue}")`
+        directives += ` @default(value: "${column.defaultValue}")`
       } else {
-        return ` @default(value: ${column.defaultValue})`
+        directives += ` @default(value: ${column.defaultValue})`
       }
     }
 
-    return ''
+    return directives
   }
 
   capitalizeFirstLetter(string) {

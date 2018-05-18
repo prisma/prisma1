@@ -15,6 +15,7 @@ export interface Relation {
 
 export interface Column {
   name: string
+  isPrimaryKey: boolean
   isUnique: boolean
   defaultValue: any
   type: string
