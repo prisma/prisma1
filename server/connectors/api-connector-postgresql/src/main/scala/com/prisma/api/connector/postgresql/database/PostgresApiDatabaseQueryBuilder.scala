@@ -6,7 +6,6 @@ import com.prisma.api.connector.Types.DataItemFilterCollection
 import com.prisma.api.connector._
 import com.prisma.gc_values._
 import com.prisma.shared.models.IdType.Id
-import com.prisma.shared.models.Manifestations.{InlineRelationManifestation, RelationTableManifestation}
 import com.prisma.shared.models.{Function => _, _}
 import slick.dbio.DBIOAction
 import slick.jdbc.PostgresProfile.api._
@@ -74,7 +73,9 @@ case class PostgresApiDatabaseQueryBuilder(
       prefixIfNotNone("order by", orderByCommand) ++
       prefixIfNotNone("limit", limitCommand)
 
-//    val filter = args.flatMap(_.filter).getOrElse(TopLevelFilter(Vector.empty))
+    query.as[PrismaNode](getResultForModel(model)).map(args.get.resultTransform)
+
+    //    val filter = args.flatMap(_.filter).getOrElse(TopLevelFilter(Vector.empty))
 //    filter match {
 //      case TopLevelFilter(values) =>
 //        val queryBuilder = QueryDsl.select(model)
@@ -84,7 +85,7 @@ case class PostgresApiDatabaseQueryBuilder(
 //          qb.where(casted.field, casted.value)
 //        }
 //        val query = result.build(schemaName)
-    query.as[PrismaNode](getResultForModel(model)).map(args.get.resultTransform)
+//    query.as[PrismaNode](getResultForModel(model)).map(args.get.resultTransform)
 //
 //      case x =>
 //        sys.error(s"not handled: $x")

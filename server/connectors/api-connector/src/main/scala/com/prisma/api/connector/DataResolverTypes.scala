@@ -46,6 +46,13 @@ case class OrderBy(
 
 sealed trait Filter
 
+object LogicalKeyWords {
+  val logicCombinators = List("AND", "OR", "NOT")
+
+  def isLogicFilter(key: String) = logicCombinators.contains(key)
+
+}
+
 case class AndFilter(filters: Vector[Filter])  extends Filter
 case class OrFilter(filters: Vector[Filter])   extends Filter
 case class NotFilter(filters: Vector[Filter])  extends Filter
@@ -54,43 +61,43 @@ case class NodeFilter(filters: Vector[Filter]) extends Filter
 case class ScalarFilter(key: String, field: Field, condition: ScalarCondition) extends Filter
 
 sealed trait ScalarCondition
-case class Equals(value: GCValue)            extends ScalarCondition
-case class NotEquals(value: GCValue)         extends ScalarCondition
-case class Contains(value: GCValue)          extends ScalarCondition
-case class NotContains(value: GCValue)       extends ScalarCondition
-case class StartsWith(value: GCValue)        extends ScalarCondition
-case class NotStartsWith(value: GCValue)     extends ScalarCondition
-case class EndsWith(value: GCValue)          extends ScalarCondition
-case class NotEndsWith(value: GCValue)       extends ScalarCondition
-case class LessThan(value: GCValue)          extends ScalarCondition
-case class LessThanOrEquals(value: GCValue)  extends ScalarCondition
-case class GreaterThan(value: GCValue)       extends ScalarCondition
-case class GreaterThanEquals(value: GCValue) extends ScalarCondition
-case class In(values: Vector[GCValue])       extends ScalarCondition
-case class NotIn(values: Vector[GCValue])    extends ScalarCondition
+case class Equals(value: GCValue)              extends ScalarCondition
+case class NotEquals(value: GCValue)           extends ScalarCondition
+case class Contains(value: GCValue)            extends ScalarCondition
+case class NotContains(value: GCValue)         extends ScalarCondition
+case class StartsWith(value: GCValue)          extends ScalarCondition
+case class NotStartsWith(value: GCValue)       extends ScalarCondition
+case class EndsWith(value: GCValue)            extends ScalarCondition
+case class NotEndsWith(value: GCValue)         extends ScalarCondition
+case class LessThan(value: GCValue)            extends ScalarCondition
+case class LessThanOrEquals(value: GCValue)    extends ScalarCondition
+case class GreaterThan(value: GCValue)         extends ScalarCondition
+case class GreaterThanOrEquals(value: GCValue) extends ScalarCondition
+case class In(values: Vector[GCValue])         extends ScalarCondition
+case class NotIn(values: Vector[GCValue])      extends ScalarCondition
 
-case class ScalarListFilter(field: Field, condition: ScalarListCondition) extends Filter
+case class ScalarListFilter(key: String, field: Field, condition: ScalarListCondition) extends Filter
 
 sealed trait ScalarListCondition
-case class ListContains(value: GCValue)      extends ScalarListCondition
-case class ListContainsEvery(value: GCValue) extends ScalarListCondition
-case class ListContainsSome(value: GCValue)  extends ScalarListCondition
+case class ListContains(value: GCValue)              extends ScalarListCondition
+case class ListContainsEvery(value: Vector[GCValue]) extends ScalarListCondition
+case class ListContainsSome(value: Vector[GCValue])  extends ScalarListCondition
 
-case class OneRelationFilter(schema: Schema, field: Field, fromModel: Model, toModel: Model, relation: Relation, nestedFilter: Filter) extends Filter // todo relation is null???
-case class ManyRelationFilter(schema: Schema,
-                              field: Field,
-                              fromModel: Model,
-                              toModel: Model,
-                              relation: Relation,
-                              nestedFilter: Filter,
-                              operator: RelationOperator)
+case class OneRelationIsNullFilter(schema: Schema, field: Field) extends Filter
+
+case class RelationFilter(schema: Schema,
+                          field: Field,
+                          fromModel: Model,
+                          toModel: Model,
+                          relation: Relation,
+                          nestedFilter: Filter,
+                          condition: RelationCondition)
     extends Filter
 
-sealed trait RelationOperator
-object EveryRelatedNode extends RelationOperator
-object AtLeastOneNode   extends RelationOperator
-object NoRelatedNode    extends RelationOperator
-object RelationIsNull   extends RelationOperator
+sealed trait RelationCondition
+object EveryRelatedNode      extends RelationCondition
+object AtLeastOneRelatedNode extends RelationCondition
+object NoRelatedNode         extends RelationCondition
 
 case class Filters(
     key: String,

@@ -1,6 +1,5 @@
 package com.prisma.subscriptions.resolving
 
-import com.prisma.api.connector.Types.DataItemFilterCollection
 import com.prisma.api.connector._
 import com.prisma.api.schema.ObjectTypeBuilder
 import com.prisma.gc_values.IdGCValue
@@ -19,10 +18,10 @@ object FilteredResolver {
       dataResolver: DataResolver
   ): Future[Option[PrismaNode]] = {
 
-    val filterInput: TopLevelFilter = modelObjectTypes
+    val filterInput: AndFilter = modelObjectTypes
       .extractQueryArgumentsFromContextForSubscription(model = model, ctx = ctx)
-      .flatMap(_.filter.map(_.asInstanceOf[TopLevelFilter]))
-      .getOrElse(TopLevelFilter(Vector.empty))
+      .flatMap(_.filter.map(_.asInstanceOf[AndFilter]))
+      .getOrElse(AndFilter(Vector.empty))
 
     def removeTopLevelIdFilter(element: Any) =
       element match {
@@ -30,9 +29,9 @@ object FilteredResolver {
         case _                => true
       }
 
-    val filterValues = filterInput.value.filter(removeTopLevelIdFilter(_)) ++ Vector(
+    val filterValues = filterInput.filters.filter(removeTopLevelIdFilter(_)) ++ Vector(
       FinalValueFilter(key = "id", value = IdGCValue(id), field = model.getFieldByName_!("id"), ""))
-    val filter = TopLevelFilter(filterValues)
+    val filter = AndFilter(filterValues)
 
     dataResolver.resolveByModel(model, Some(QueryArguments.filterOnly(filter = Some(filter)))).map(_.nodes.headOption)
   }

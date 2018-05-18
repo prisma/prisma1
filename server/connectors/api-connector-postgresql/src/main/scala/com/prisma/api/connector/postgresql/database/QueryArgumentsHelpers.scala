@@ -40,8 +40,8 @@ object QueryArgumentsHelpers {
     //key, value, field, filterName, relationFilter
     val sqlParts = filter match {
       // this is used for the node: {} field in the Subscription Filter
-      case values: TopLevelFilter =>
-        val actionBuilders = values.value.map(generateFilterConditions(projectId, tableName, _))
+      case filters: AndFilter =>
+        val actionBuilders = filters.filters.map(generateFilterConditions(projectId, tableName, _))
         combineByAnd(actionBuilders.flatten)
 
       case FilterElement(key, None, Some(field), filterName) =>
@@ -49,36 +49,36 @@ object QueryArgumentsHelpers {
 
       //combinationFilters
 
-      case FilterElement(key, value, None, filterName) if filterName == "AND" =>
-        val values = value
-          .asInstanceOf[Seq[Any]]
-          .map(subFilter => generateFilterConditions(projectId, tableName, subFilter.asInstanceOf[Seq[Any]]))
-          .collect { case Some(x) => x }
-
-        combineByAnd(values)
-
-      case FilterElement(key, value, None, filterName) if filterName == "OR" =>
-        val values = value
-          .asInstanceOf[Seq[Any]]
-          .map(subFilter => generateFilterConditions(projectId, tableName, subFilter.asInstanceOf[Seq[Any]]))
-          .collect { case Some(x) => x }
-
-        combineByOr(values)
-
-      case FilterElement(key, value, None, filterName) if filterName == "NOT" =>
-        val values = value
-          .asInstanceOf[Seq[Any]]
-          .map(subFilter => generateFilterConditions(projectId, tableName, subFilter.asInstanceOf[Seq[Any]]))
-          .collect { case Some(x) => x }
-
-        combineByNot(values)
-      case FilterElement(key, value, None, filterName) if filterName == "node" =>
-        val values = value
-          .asInstanceOf[Seq[Any]]
-          .map(subFilter => generateFilterConditions(projectId, tableName, subFilter.asInstanceOf[Seq[Any]]))
-          .collect { case Some(x) => x }
-
-        combineByOr(values)
+//      case FilterElement(key, value, None, filterName) if filterName == "AND" =>
+//        val values = value
+//          .asInstanceOf[Seq[Any]]
+//          .map(subFilter => generateFilterConditions(projectId, tableName, subFilter.asInstanceOf[Seq[Any]]))
+//          .collect { case Some(x) => x }
+//
+//        combineByAnd(values)
+//
+//      case FilterElement(key, value, None, filterName) if filterName == "OR" =>
+//        val values = value
+//          .asInstanceOf[Seq[Any]]
+//          .map(subFilter => generateFilterConditions(projectId, tableName, subFilter.asInstanceOf[Seq[Any]]))
+//          .collect { case Some(x) => x }
+//
+//        combineByOr(values)
+//
+//      case FilterElement(key, value, None, filterName) if filterName == "NOT" =>
+//        val values = value
+//          .asInstanceOf[Seq[Any]]
+//          .map(subFilter => generateFilterConditions(projectId, tableName, subFilter.asInstanceOf[Seq[Any]]))
+//          .collect { case Some(x) => x }
+//
+//        combineByNot(values)
+//      case FilterElement(key, value, None, filterName) if filterName == "node" =>
+//        val values = value
+//          .asInstanceOf[Seq[Any]]
+//          .map(subFilter => generateFilterConditions(projectId, tableName, subFilter.asInstanceOf[Seq[Any]]))
+//          .collect { case Some(x) => x }
+//
+//        combineByOr(values)
 
       //transitive filters
 
