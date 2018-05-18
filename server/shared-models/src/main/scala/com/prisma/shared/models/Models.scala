@@ -60,11 +60,35 @@ case class WebhookDelivery(
   override def typeCode = FunctionDeliveryType.WebhookDelivery
 }
 
+case class Project(
+    id: Id,
+    ownerId: Id,
+    revision: Int = 1,
+    schema: Schema,
+    webhookUrl: Option[String] = None,
+    secrets: Vector[String] = Vector.empty,
+    allowQueries: Boolean = true,
+    allowMutations: Boolean = true,
+    functions: List[Function] = List.empty
+) {
+  def models    = schema.models
+  def relations = schema.relations
+  def enums     = schema.enums
+
+  val serverSideSubscriptionFunctions = functions.collect { case x: ServerSideSubscriptionFunction => x }
+}
+object ProjectWithClientId {
+  def apply(project: Project): ProjectWithClientId = ProjectWithClientId(project, project.ownerId)
+}
+case class ProjectWithClientId(project: Project, clientId: Id)
+
 case class Schema(
-    models: List[Model] = List.empty,
+    modelFns: List[Schema => Model] = List.empty,
     relations: List[Relation] = List.empty,
     enums: List[Enum] = List.empty
 ) {
+  val models = modelFns.map(_.apply(this))
+
   def allFields: Seq[Field] = models.flatMap(_.fields)
 
   def fieldsWhereThisModelIsRequired(model: Model) = allFields.filter(f => f.isRequired && !f.isList && f.relatedModel(this).contains(model))
@@ -100,35 +124,22 @@ case class Schema(
 
 }
 
-case class Project(
-    id: Id,
-    ownerId: Id,
-    revision: Int = 1,
-    schema: Schema,
-    webhookUrl: Option[String] = None,
-    secrets: Vector[String] = Vector.empty,
-    allowQueries: Boolean = true,
-    allowMutations: Boolean = true,
-    functions: List[Function] = List.empty
-) {
-  def models    = schema.models
-  def relations = schema.relations
-  def enums     = schema.enums
-
-  val serverSideSubscriptionFunctions = functions.collect { case x: ServerSideSubscriptionFunction => x }
-
+object Model {
+  def apply(
+      name: String,
+      stableIdentifier: String,
+      fields: List[Field],
+      manifestation: Option[ModelManifestation]
+  ): Schema => Model = {
+    new Model(name, stableIdentifier, fields, manifestation)(_)
+  }
 }
-object ProjectWithClientId {
-  def apply(project: Project): ProjectWithClientId = ProjectWithClientId(project, project.ownerId)
-}
-case class ProjectWithClientId(project: Project, clientId: Id)
-
-case class Model(
-    name: String,
-    stableIdentifier: String,
-    fields: List[Field],
-    manifestation: Option[ModelManifestation]
-) {
+class Model(
+    val name: String,
+    val stableIdentifier: String,
+    val fields: List[Field],
+    val manifestation: Option[ModelManifestation]
+)(schema: Schema) {
   val id: String     = name
   val dbName: String = manifestation.map(_.dbName).getOrElse(id)
 
@@ -153,7 +164,7 @@ case class Model(
     fields.find(_.isRelationWithIdAndSide(relationId, relationSide))
   }
 
-  def filterFields(fn: Field => Boolean): Model = copy(fields = this.fields.filter(fn))
+  def filterFields(fn: Field => Boolean): Model = copy(fields = this.fields.filter(fn))(schema) // fixme: this does not seem right
 
   def getFieldById_!(id: Id): Field       = getFieldById(id).get
   def getFieldById(id: Id): Option[Field] = fields.find(_.id == id)
@@ -163,6 +174,15 @@ case class Model(
   def getFieldByName(name: String): Option[Field] = fields.find(_.name == name)
 
   def hasVisibleIdField: Boolean = idField.exists(_.isVisible)
+
+  def copy(
+      name: String = this.name,
+      stableIdentifier: String = this.stableIdentifier,
+      fields: List[Field] = this.fields,
+      manifestation: Option[ModelManifestation] = this.manifestation
+  ): Schema => Model = {
+    Model(name, stableIdentifier, fields, manifestation)
+  }
 }
 
 object RelationSide extends Enumeration {

@@ -194,7 +194,7 @@ object ProjectJsonFormatter {
     }
   }
 
-  val relationWrites: Writes[Relation] = (
+  implicit val relationWrites: Writes[Relation] = (
     (JsPath \ "name").write[String] and
       (JsPath \ "modelAId").write[String] and
       (JsPath \ "modelBId").write[String] and
@@ -203,7 +203,7 @@ object ProjectJsonFormatter {
       (JsPath \ "manifestation").writeNullable[RelationManifestation]
   )(unlift(Relation.unapply))
 
-  val relationReads: Reads[Relation] = (
+  implicit val relationReads: Reads[Relation] = (
     (JsPath \ "name").read[String] and
       (JsPath \ "modelAId").read[String] and
       (JsPath \ "modelBId").read[String] and
@@ -212,18 +212,40 @@ object ProjectJsonFormatter {
       (JsPath \ "manifestation").readNullable[RelationManifestation]
   )(Relation.apply _)
 
-  val modelManifestationWrites: Writes[ModelManifestation] = Writes(manifestation => Json.obj("dbName" -> manifestation.dbName))
-  val modelManifestationReads: Reads[ModelManifestation]   = (JsPath \ "dbName").read[String].map(ModelManifestation)
-  val fieldManifestationWrites: Writes[FieldManifestation] = Writes(manifestation => Json.obj("dbName" -> manifestation.dbName))
-  val fieldManifestationReads: Reads[FieldManifestation]   = (JsPath \ "dbName").read[String].map(FieldManifestation)
+  implicit val modelManifestationWrites: Writes[ModelManifestation] = Writes(manifestation => Json.obj("dbName" -> manifestation.dbName))
+  implicit val modelManifestationReads: Reads[ModelManifestation]   = (JsPath \ "dbName").read[String].map(ModelManifestation)
+  implicit val fieldManifestationWrites: Writes[FieldManifestation] = Writes(manifestation => Json.obj("dbName" -> manifestation.dbName))
+  implicit val fieldManifestationReads: Reads[FieldManifestation]   = (JsPath \ "dbName").read[String].map(FieldManifestation)
+  implicit lazy val enum                                            = Json.format[Enum]
+  implicit lazy val field                                           = Json.format[Field]
 
-  implicit lazy val modelManifestation        = Format(modelManifestationReads, modelManifestationWrites)
-  implicit lazy val fieldManifestation        = Format(fieldManifestationReads, fieldManifestationWrites)
-  implicit lazy val relation                  = Format(relationReads, relationWrites)
-  implicit lazy val enum                      = Json.format[Enum]
-  implicit lazy val field                     = Json.format[Field]
-  implicit lazy val model                     = Json.format[Model]
-  implicit lazy val schemaFormat              = Json.format[Schema]
+  implicit val modelReads: Reads[Schema => Model] = (
+    (JsPath \ "name").read[String] and
+      (JsPath \ "stableIdentifier").read[String] and
+      (JsPath \ "fields").read[List[Field]] and
+      (JsPath \ "manifestation").readNullable[ModelManifestation]
+  )(Model.apply _)
+
+  implicit val modelWrites: Writes[Model] = (
+    (JsPath \ "name").write[String] and
+      (JsPath \ "stableIdentifier").write[String] and
+      (JsPath \ "fields").write[List[Field]] and
+      (JsPath \ "manifestation").writeNullable[ModelManifestation]
+  ).apply(m => (m.name, m.stableIdentifier, m.fields, m.manifestation))
+
+  val schemaReads: Reads[Schema] = (
+    (JsPath \ "models").read[List[Schema => Model]] and
+      (JsPath \ "relations").read[List[Relation]] and
+      (JsPath \ "enums").read[List[Enum]]
+  )(Schema.apply _)
+
+  val schemaWrites: Writes[Schema] = (
+    (JsPath \ "models").write[List[Model]] and
+      (JsPath \ "relations").write[List[Relation]] and
+      (JsPath \ "enums").write[List[Enum]]
+  )(s => (s.models, s.relations, s.enums))
+
+  implicit lazy val schemaFormat              = Format(schemaReads, schemaWrites)
   implicit lazy val projectFormat             = Json.format[Project]
   implicit lazy val projectWithClientIdFormat = Json.format[ProjectWithClientId]
   implicit lazy val migrationStatusFormat     = JsonUtils.enumFormat(MigrationStatus)

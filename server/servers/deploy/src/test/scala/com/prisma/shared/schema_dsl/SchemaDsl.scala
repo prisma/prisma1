@@ -111,7 +111,7 @@ object SchemaDsl extends AwaitUtils {
 
       model.copy(fields = newFields, manifestation = Some(ModelManifestation(model.name + "_Table")))
     }
-    project.copy(schema = schema.copy(relations = newRelations, models = newModels))
+    project.copy(schema = schema.copy(relations = newRelations, modelFns = newModels))
   }
 
   case class SchemaBuilder(
@@ -139,12 +139,9 @@ object SchemaDsl extends AwaitUtils {
       newEnum
     }
 
-    private def build(): (Set[Model], Set[Relation]) = {
-      val models = modelBuilders.map(_.build())
-      val relations = for {
-        model <- models
-        field <- model.fields if field.isRelation
-      } yield field.relation.get
+    private def build(): (Set[Schema => Model], Set[Relation]) = {
+      val models    = modelBuilders.map(_.build())
+      val relations = modelBuilders.flatMap(_.relations)
 
       (models.toSet, relations.toSet)
     }
@@ -154,7 +151,7 @@ object SchemaDsl extends AwaitUtils {
       TestProject().copy(
         id = id,
         schema = Schema(
-          models = models.toList,
+          modelFns = models.toList,
           relations = relations.toList,
           enums = enums.toList
         ),
@@ -166,7 +163,8 @@ object SchemaDsl extends AwaitUtils {
   case class ModelBuilder(
       name: String,
       fields: Buffer[Field] = Buffer(idField),
-      var withPermissions: Boolean = true
+      var withPermissions: Boolean = true,
+      relations: Buffer[Relation] = Buffer.empty
   ) {
     val id = name
 
@@ -248,6 +246,7 @@ object SchemaDsl extends AwaitUtils {
         val newBField = relationField(fieldBName, modelB, this, relation, isList = false, isBackward = true)
         modelB.fields += newBField
       }
+      this.relations += relation
 
       this
     }
@@ -278,6 +277,7 @@ object SchemaDsl extends AwaitUtils {
         val newBField = relationField(fieldBName, modelB, this, relation, isList = false, isBackward = true, isRequired = isRequiredOnFieldB)
         modelB.fields += newBField
       }
+      this.relations += relation
 
       this
     }
@@ -307,6 +307,7 @@ object SchemaDsl extends AwaitUtils {
         val newBField = relationField(fieldBName, modelB, this, relation, isList = false, isBackward = true, isRequired = true)
         modelB.fields += newBField
       }
+      this.relations += relation
 
       this
     }
@@ -335,6 +336,7 @@ object SchemaDsl extends AwaitUtils {
         val newBField = relationField(fieldBName, modelB, this, relation, isList = false, isBackward = true)
         modelB.fields += newBField
       }
+      this.relations += relation
 
       this
     }
@@ -363,6 +365,7 @@ object SchemaDsl extends AwaitUtils {
         val newBField = relationField(fieldBName, modelB, this, relation, isList = true, isBackward = true)
         modelB.fields += newBField
       }
+      this.relations += relation
 
       this
     }
@@ -391,17 +394,18 @@ object SchemaDsl extends AwaitUtils {
         val newBField = relationField(fieldBName, from = modelB, to = this, relation, isList = true, isBackward = true)
         modelB.fields += newBField
       }
+      this.relations += relation
 
       this
     }
 
-    def build(): Model = {
+    def build(): Schema => Model = {
       Model(
         name = name,
         stableIdentifier = Cuid.createCuid(),
         fields = fields.toList,
         manifestation = None
-      )
+      )(_)
     }
   }
 
