@@ -19,10 +19,10 @@ object FilteredResolver {
       dataResolver: DataResolver
   ): Future[Option[PrismaNode]] = {
 
-    val filterInput: DataItemFilterCollection = modelObjectTypes
+    val filterInput: TopLevelFilter = modelObjectTypes
       .extractQueryArgumentsFromContextForSubscription(model = model, ctx = ctx)
-      .flatMap(_.filter)
-      .getOrElse(List.empty)
+      .flatMap(_.filter.map(_.asInstanceOf[TopLevelFilter]))
+      .getOrElse(TopLevelFilter(Vector.empty))
 
     def removeTopLevelIdFilter(element: Any) =
       element match {
@@ -30,8 +30,9 @@ object FilteredResolver {
         case _                => true
       }
 
-    val filter = filterInput.filter(removeTopLevelIdFilter(_)) ++ List(
+    val filterValues = filterInput.value.filter(removeTopLevelIdFilter(_)) ++ Vector(
       FinalValueFilter(key = "id", value = IdGCValue(id), field = model.getFieldByName_!("id"), ""))
+    val filter = TopLevelFilter(filterValues)
 
     dataResolver.resolveByModel(model, Some(QueryArguments.filterOnly(filter = Some(filter)))).map(_.nodes.headOption)
   }

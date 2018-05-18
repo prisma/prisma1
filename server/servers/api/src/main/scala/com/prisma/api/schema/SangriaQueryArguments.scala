@@ -1,7 +1,7 @@
 package com.prisma.api.schema
 
 import com.prisma.api.connector.Types.DataItemFilterCollection
-import com.prisma.api.connector.{OrderBy, QueryArguments, SortOrder}
+import com.prisma.api.connector.{Filter, OrderBy, QueryArguments, SortOrder}
 import com.prisma.shared.models
 import com.prisma.shared.models.Model
 import sangria.schema.{EnumType, EnumValue, _}
@@ -43,7 +43,7 @@ object SangriaQueryArguments {
                                  first: Option[Int],
                                  before: Option[String],
                                  last: Option[Int],
-                                 filterOpt: Option[DataItemFilterCollection],
+                                 filterOpt: Option[Filter],
                                  orderByOpt: Option[OrderBy]) = {
     QueryArguments(skipOpt, after, first, before, last, filterOpt, orderByOpt)
   }

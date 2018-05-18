@@ -175,60 +175,58 @@ class ObjectTypeBuilder(
     List(whereArgument(model, project))
   }
 
-  def generateFilterElement(input: Map[String, Any], model: Model, isSubscriptionFilter: Boolean = false): DataItemFilterCollection = {
+  def generateFilterElement(input: Map[String, Any], model: Model, isSubscriptionFilter: Boolean = false): Filter = {
     val filterArguments = new FilterArguments(model, isSubscriptionFilter)
 
-    input
-      .map {
-        case (key, value) =>
-          val FieldFilterTuple(field, filter) = filterArguments.lookup(key)
-          value match {
-            case value: Map[_, _] =>
-              val typedValue = value.asInstanceOf[Map[String, Any]]
-              if (List("AND", "OR", "NOT").contains(key) || (isSubscriptionFilter && key == "node")) {
-                generateFilterElement(typedValue, model, isSubscriptionFilter)
-              } else {
-                // this must be a relation filter
-                TransitiveRelationFilter(
-                  project.schema,
-                  field.get,
-                  model,
-                  field.get.relatedModel(project.schema).get,
-                  field.get.relation.get,
-                  filter.name,
-                  generateFilterElement(typedValue, field.get.relatedModel(project.schema).get, isSubscriptionFilter)
-                )
-              }
+    val filters = input.map {
+      case (key, value) =>
+        val FieldFilterTuple(field, filter) = filterArguments.lookup(key)
+        value match {
+          case value: Map[_, _] =>
+            val typedValue = value.asInstanceOf[Map[String, Any]]
+            if (List("AND", "OR", "NOT").contains(key) || (isSubscriptionFilter && key == "node")) {
+              generateFilterElement(typedValue, model, isSubscriptionFilter)
+            } else {
+              // this must be a relation filter
+              TransitiveRelationFilter(
+                project.schema,
+                field.get,
+                model,
+                field.get.relatedModel(project.schema).get,
+                field.get.relation.get,
+                filter.name,
+                generateFilterElement(typedValue, field.get.relatedModel(project.schema).get, isSubscriptionFilter)
+              )
+            }
 
-            case value: Seq[Any] if value.nonEmpty && value.head.isInstanceOf[Map[_, _]] =>
-              FilterElement(key, value.asInstanceOf[Seq[Map[String, Any]]].map(x => generateFilterElement(x, model, isSubscriptionFilter)), None, filter.name)
+          case value: Seq[Any] if value.nonEmpty && value.head.isInstanceOf[Map[_, _]] =>
+            Filters(key, value.asInstanceOf[Seq[Map[String, Any]]].map(x => generateFilterElement(x, model, isSubscriptionFilter)).toVector, filter.name)
 
-            //-------- non recursive
+          //-------- non recursive
 
-            case value: Seq[Any] if field.isDefined && field.get.isScalar =>
-              val converter = GCAnyConverter(field.get.typeIdentifier, isList = false)
-              FinalValueFilter(key, ListGCValue(value.map(x => converter.toGCValue(x).get).toVector), field.get, filter.name)
+          case value: Seq[Any] if field.isDefined && field.get.isScalar && filter.name == "_contains" =>
+            ScalarListCon
+            val converter = GCAnyConverter(field.get.typeIdentifier, isList = false)
+            FinalValueFilter(key, ListGCValue(value.map(x => converter.toGCValue(x).get).toVector), field.get, filter.name)
 
-            case Some(filterValue) if field.isDefined && field.get.isScalar =>
-              val converter = GCAnyConverter(field.get.typeIdentifier, isList = false)
-              FinalValueFilter(key, converter.toGCValue(filterValue).get, field.get, filter.name)
+          case Some(filterValue) if field.isDefined && field.get.isScalar =>
+            val converter = GCAnyConverter(field.get.typeIdentifier, isList = false)
+            FinalValueFilter(key, converter.toGCValue(filterValue).get, field.get, filter.name)
 
-            case Some(filterValue) if field.isDefined && field.get.isRelation =>
-              FinalRelationFilter(project.schema, key, filterValue, field.get, filter.name)
+          case valueNew if field.isDefined && field.get.isScalar =>
+            val converter = GCAnyConverter(field.get.typeIdentifier, isList = false)
+            FinalValueFilter(key, converter.toGCValue(valueNew).get, field.get, filter.name)
 
-            case valueNew if field.isDefined && field.get.isRelation =>
-              FinalRelationFilter(project.schema, key, valueNew, field.get, filter.name)
+          case _ if field.isDefined && field.get.isRelation =>
+            FinalRelationFilter(project.schema, key, field.get, filter.name)
 
-            case valueNew if field.isDefined && field.get.isScalar =>
-              val converter = GCAnyConverter(field.get.typeIdentifier, isList = false)
-              FinalValueFilter(key, converter.toGCValue(valueNew).get, field.get, filter.name)
-
-            case _ =>
-              FilterElement(key, value, field, filter.name)
-          }
-      }
-      .toList
-      .asInstanceOf[DataItemFilterCollection]
+//            these are the Logical Filters it seems
+          case _ =>
+            // todo: fail in this branch to find out which test cases fail
+            FilterElement(key, value, field, filter.name)
+        }
+    }
+    AndFilter(filters.toVector)
   }
 
   def extractQueryArgumentsFromContext(model: Model, ctx: Context[ApiUserContext, Unit]): Option[QueryArguments] = {

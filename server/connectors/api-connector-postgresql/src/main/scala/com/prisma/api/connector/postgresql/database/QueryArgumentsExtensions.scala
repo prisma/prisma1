@@ -135,8 +135,8 @@ object QueryArgumentsExtensions {
       if (first.isDefined && last.isDefined) throw APIErrors.InvalidConnectionArguments()
 
       val standardCondition = filter match {
-        case Some(filterArg) => QueryArgumentsHelpers.generateFilterConditions(projectId, tableName, filterArg, quoteTableName = quoteTableName)
-        case None            => None
+        case Some(filterArg: Filter) => QueryArgumentsHelpers.generateFilterConditions(projectId, tableName, filterArg, quoteTableName = quoteTableName)
+        case None                    => None
       }
 
       val cursorCondition = buildCursorCondition(projectId, tableName, standardCondition)

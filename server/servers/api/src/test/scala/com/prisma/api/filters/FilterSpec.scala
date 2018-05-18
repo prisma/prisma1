@@ -46,6 +46,13 @@ class FilterSpec extends FlatSpec with Matchers with ApiSpecBase {
     lotUniques(filter) should be(Vector(1, 2))
   }
 
+  "Simple filter" should "work" in {
+
+    val filter = """(where: {name: "John"})"""
+
+    userUniques(filter) should be(Vector(4))
+  }
+
   "Relation Null filter" should "work" in {
 
     val filter = "(where: {ride: null})"

@@ -7,7 +7,7 @@ import org.scalatest._
 
 class RelationFilterSpec extends FlatSpec with Matchers with ApiSpecBase {
 
-  override def runSuiteOnlyForActiveConnectors = true
+//  override def runSuiteOnlyForActiveConnectors = true
 
   val project = SchemaDsl.fromBuilder { schema =>
     val blog = schema
@@ -168,7 +168,7 @@ class RelationFilterSpec extends FlatSpec with Matchers with ApiSpecBase {
       """{"data":{"blogs":[{"name":"blog 2"}]}}""")
   }
 
-  "crazy filters" should "work" taggedAs (IgnorePostgres) in {
+  "crazy filters" should "work" in {
 
     server
       .query(
@@ -192,6 +192,12 @@ class RelationFilterSpec extends FlatSpec with Matchers with ApiSpecBase {
       )
       .toString should be("""{"data":{"posts":[]}}""")
 
+    /**
+      * select * from Post
+      * inner join Blog on Blog.post_id = Post.id
+      * inner join Post as Post_Sub on Blog.post_id = Post_Sub.id
+      * where Post_Sub.popularity > 5
+      */
     server
       .query(
         query = """{posts(where: {

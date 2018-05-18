@@ -118,13 +118,15 @@ class SettingUpChinookSpec extends FlatSpec with Matchers with IntegrationBaseSp
 //    order by Artist.name asc;
 //
 //
-//    explain Select distinct Artist.name
+//    explain
+//    Select distinct Artist.name
 //    From Artist
 //      join _AlbumToArtist on _AlbumToArtist.B = Artist.`id`
 //    join Album 			on _AlbumToArtist.A = Album.`id`
 //    join _AlbumToTrack  on _AlbumToTrack.A = Album.`id`
 //    join Track 			on _AlbumToTrack.B = Track.`id`
 //    Where Track.`Milliseconds` > 500000
+//    And Artist.Name = 'Kurt'
 //    order by Artist.name asc;
 
   }

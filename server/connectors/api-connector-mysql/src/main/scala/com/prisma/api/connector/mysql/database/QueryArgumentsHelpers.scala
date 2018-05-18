@@ -11,7 +11,7 @@ import slick.jdbc.SQLActionBuilder
 
 object QueryArgumentsHelpers {
 
-  def generateFilterConditions(projectId: String, tableName: String, filter: Seq[Any]): Option[SQLActionBuilder] = {
+  def generateFilterConditions(projectId: String, tableName: String, filter: Filter): Option[SQLActionBuilder] = {
 
     def getAliasAndTableName(fromModel: String, toModel: String): (String, String) = {
       var modTableName = ""
@@ -159,7 +159,7 @@ object QueryArgumentsHelpers {
 
         case FinalValueFilter(key, value, field, filterName) =>
           Some(sql"`#$projectId`.`#$tableName`.`#$key` = $value")
-        case FinalRelationFilter(schema, key, null, field, filterName) =>
+        case FinalRelationFilter(schema, key, field, filterName) =>
           if (field.isList) throw APIErrors.FilterCannotBeNullOnToManyField(field.name)
 
           Some(sql""" not exists (select  *

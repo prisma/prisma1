@@ -74,7 +74,22 @@ case class PostgresApiDatabaseQueryBuilder(
       prefixIfNotNone("order by", orderByCommand) ++
       prefixIfNotNone("limit", limitCommand)
 
+//    val filter = args.flatMap(_.filter).getOrElse(TopLevelFilter(Vector.empty))
+//    filter match {
+//      case TopLevelFilter(values) =>
+//        val queryBuilder = QueryDsl.select(model)
+//
+//        val result = values.foldLeft(queryBuilder) { (qb, value) =>
+//          val casted = value.asInstanceOf[FinalValueFilter]
+//          qb.where(casted.field, casted.value)
+//        }
+//        val query = result.build(schemaName)
     query.as[PrismaNode](getResultForModel(model)).map(args.get.resultTransform)
+//
+//      case x =>
+//        sys.error(s"not handled: $x")
+//    }
+
   }
 
   def selectAllFromRelationTable(
