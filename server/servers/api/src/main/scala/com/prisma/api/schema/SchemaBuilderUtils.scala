@@ -35,9 +35,9 @@ object SchemaBuilderUtils {
     require(field.typeIdentifier == TypeIdentifier.Enum, "This function must be called with Enum fields only!")
     val enum = field.enum.getOrElse(sys.error("A field with TypeIdentifier Enum must always have an enum."))
     EnumType(
-      enum.name,
-      field.description,
-      enum.values.map(enumValue => EnumValue(enumValue, value = enumValue, description = None)).toList
+      name = enum.name,
+      description = None,
+      values = enum.values.map(enumValue => EnumValue(enumValue, value = enumValue, description = None)).toList
     )
   }
 

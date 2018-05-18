@@ -346,7 +346,6 @@ case class SchemaInferrerImpl(
     Field(
       name = name,
       typeIdentifier = TypeIdentifier.Relation,
-      description = None,
       isRequired = false,
       isList = true,
       isUnique = false,

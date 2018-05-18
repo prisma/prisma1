@@ -105,7 +105,6 @@ class ObjectTypeBuilder(
   def mapClientField(model: models.Model)(field: models.Field): SangriaField[ApiUserContext, PrismaNode] = SangriaField(
     field.name,
     fieldType = mapToOutputType(Some(model), field),
-    description = field.description,
     arguments = mapToListConnectionArguments(model, field),
     resolve = (ctx: Context[ApiUserContext, PrismaNode]) => mapToOutputResolve(model, field)(ctx),
     tags = List()
@@ -167,7 +166,7 @@ class ObjectTypeBuilder(
 
     model.scalarNonListFields
       .filter(_.isUnique)
-      .map(field => Argument(field.name, SchemaBuilderUtils.mapToOptionalInputType(field), description = field.description.getOrElse("")))
+      .map(field => Argument(field.name, SchemaBuilderUtils.mapToOptionalInputType(field)))
   }
 
   def mapToSingleConnectionArguments(model: Model): List[Argument[Option[Any]]] = {

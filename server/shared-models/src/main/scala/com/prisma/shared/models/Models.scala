@@ -231,7 +231,6 @@ case class Enum(
 case class Field(
     name: String,
     typeIdentifier: TypeIdentifier.Value,
-    description: Option[String] = None,
     isRequired: Boolean,
     isList: Boolean,
     isUnique: Boolean,

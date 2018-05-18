@@ -427,7 +427,6 @@ object SchemaDsl extends AwaitUtils {
       enum = enum,
       defaultValue = defaultValue,
       // hardcoded values
-      description = None,
       isList = isList,
       isUnique = isUnique,
       isReadonly = false,
