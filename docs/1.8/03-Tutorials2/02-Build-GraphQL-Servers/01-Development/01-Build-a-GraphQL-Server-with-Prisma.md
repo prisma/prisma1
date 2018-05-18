@@ -1,9 +1,9 @@
 ---
 alias: ohdaiyoo6c
-description: Learn how to build a GraphQL server for an existing Prisma server.
+description: Learn how to build a GraphQL server for an existing Prisma service.
 ---
 
-# Build a GraphQL server for an existing Prisma service
+# Build a GraphQL server with Prisma
 
 This tutorial teaches you how to take an existing Prisma service and build a GraphQL server on top of it. The resolvers of the GraphQL servers will be connected to Prisma's GraphQL API via _Prisma bindings_.
 
@@ -35,7 +35,7 @@ There are several reasons why this is not a suitable setup for production use ca
 - You want to provide authentication functionality for your users so that they can register with a password or some 3rd-party authentication provider
 - You want your API to integrate with microservices or other legacy systems
 - You want to include 3-rd party services (such as Stripe, GitHub, Yelp, ...) or other public APIs into your server
-- You don't want to expose your entire database schema the everyone (which would be the case due to GrapHQL's [introspection](http://graphql.org/learn/introspection/) feature)
+- You don't want to expose your entire database schema to everyone (which would be the case due to GrapHQL's [introspection](http://graphql.org/learn/introspection/) feature)
 
 ## Step 1: Update the data model
 

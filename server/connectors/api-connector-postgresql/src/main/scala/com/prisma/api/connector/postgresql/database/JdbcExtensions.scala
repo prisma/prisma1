@@ -5,7 +5,7 @@ import java.time.{LocalDateTime, ZoneOffset}
 import java.util.{Calendar, Date, TimeZone}
 
 import com.prisma.gc_values._
-import com.prisma.shared.models.TypeIdentifier
+import com.prisma.shared.models.{Model, TypeIdentifier}
 import org.joda.time.{DateTime, DateTimeZone}
 import play.api.libs.json.Json
 
@@ -44,7 +44,7 @@ object JdbcExtensions {
 
   implicit class ResultSetExtensions(val resultSet: ResultSet) extends AnyVal {
 
-    def getId                     = IdGCValue(resultSet.getString("id"))
+    def getId(model: Model)       = getAsID(model.idField_!.dbName)
     def getAsID(column: String)   = IdGCValue(resultSet.getString(column))
     def getParentId(side: String) = IdGCValue(resultSet.getString("__Relation__" + side))
 

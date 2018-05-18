@@ -1,6 +1,7 @@
 package com.prisma.deploy.migration.inference
 
 import com.prisma.deploy.connector.InferredTables
+import com.prisma.deploy.migration.validation.SchemaSyntaxValidator
 import com.prisma.shared.models._
 import org.scalatest.{FlatSpec, Matchers}
 import sangria.parser.QueryParser
@@ -294,8 +295,17 @@ class InfererIntegrationSpec extends FlatSpec with Matchers {
   }
 
   def inferSchema(previous: Schema, schema: String): Schema = {
-    val schemaAst  = QueryParser.parse(schema).get
-    val nextSchema = SchemaInferrer().infer(previous, SchemaMapping.empty, schemaAst, InferredTables.empty).getOrElse(sys.error("Infering the project failed."))
+    val validator = SchemaSyntaxValidator(
+      schema,
+      SchemaSyntaxValidator.directiveRequirements,
+      SchemaSyntaxValidator.reservedFieldsRequirementsForAllConnectors,
+      SchemaSyntaxValidator.requiredReservedFields,
+      true
+    )
+
+    val prismaSdl = validator.generateSDL
+
+    val nextSchema = SchemaInferrer().infer(previous, SchemaMapping.empty, prismaSdl, InferredTables.empty)
 
     println(s"Relations of infered schema:\n  " + nextSchema.relations)
     nextSchema

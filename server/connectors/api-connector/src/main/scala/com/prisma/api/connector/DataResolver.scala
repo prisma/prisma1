@@ -19,7 +19,7 @@ trait DataResolver {
 
   def countByModel(model: Model, whereFilter: Option[DataItemFilterCollection] = None): Future[Int] = countByTable(model.name, whereFilter)
 
-  def batchResolveByUnique(model: Model, fieldName: String, values: Vector[GCValue]): Future[Vector[PrismaNode]]
+  def batchResolveByUnique(model: Model, field: Field, values: Vector[GCValue]): Future[Vector[PrismaNode]]
 
   def batchResolveScalarList(model: Model, listField: Field, nodeIds: Vector[IdGCValue]): Future[Vector[ScalarListValues]]
 

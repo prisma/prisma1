@@ -1,8 +1,10 @@
 package com.prisma.deploy.migration.validation
 
+import com.prisma.deploy.gc_value.GCStringConverter
 import com.prisma.deploy.validation._
 import com.prisma.shared.models.TypeIdentifier
-import sangria.ast.{Argument => SangriaArgument, _}
+import org.scalactic.{Bad, Good}
+import sangria.ast._
 
 import scala.collection.immutable.Seq
 import scala.util.{Failure, Success}
@@ -93,14 +95,38 @@ case class SchemaSyntaxValidator(
   val result   = SdlSchemaParser.parse(schema)
   lazy val doc = result.get
 
-  def validate(): Seq[SchemaError] = {
+  def validate: Seq[SchemaError] = {
     result match {
-      case Success(x) => validateInternal()
+      case Success(_) => validateInternal
       case Failure(e) => List(SchemaError.global(s"There's a syntax error in the Schema Definition. ${e.getMessage}"))
     }
   }
 
-  def validateInternal(): Seq[SchemaError] = {
+  def generateSDL: PrismaSdl = {
+
+    val enumTypes: Vector[PrismaSdl => PrismaEnum] = doc.enumNames.map { name =>
+      val definition: EnumTypeDefinition = doc.enumType(name).get
+      val enumValues                     = definition.values.map(_.name)
+      PrismaEnum(name, values = enumValues)(_)
+    }
+
+    val prismaTypes: Vector[PrismaSdl => PrismaType] = doc.objectTypes.map { definition =>
+      val prismaFields = definition.fields.map {
+        case x if isRelationField(x) =>
+          RelationalPrismaField(x.name, x.relationDBDirective, x.isList, x.isRequired, x.typeName, x.relationName, x.onDelete)(_)
+        case x if isEnumField(x) => EnumPrismaField(x.name, x.columnName, x.isList, x.isRequired, x.isUnique, x.typeName, getDefaultValueFromField_!(x))(_)
+        case x if isScalarField(x) =>
+          ScalarPrismaField(x.name, x.columnName, x.isList, x.isRequired, x.isUnique, typeIdentifierForTypename(x.fieldType), getDefaultValueFromField_!(x))(_)
+      }
+
+      PrismaType(definition.name, definition.tableNameDirective, fieldFn = prismaFields)(_)
+    }
+
+    PrismaSdl(typesFn = prismaTypes, enumsFn = enumTypes)
+  }
+
+  def validateInternal: Seq[SchemaError] = {
+
     val allFieldAndTypes: Seq[FieldAndType] = for {
       objectType <- doc.objectTypes
       field      <- objectType.fields
@@ -164,10 +190,7 @@ case class SchemaSyntaxValidator(
   def validateMissingTypes(fieldAndTypes: Seq[FieldAndType]): Seq[SchemaError] = {
     fieldAndTypes
       .filter(!isScalarField(_))
-      .collect {
-        case fieldAndType if !doc.isObjectOrEnumType(fieldAndType.fieldDef.typeName) =>
-          SchemaErrors.missingType(fieldAndType)
-      }
+      .collect { case fieldAndType if !doc.isObjectOrEnumType(fieldAndType.fieldDef.typeName) => SchemaErrors.missingType(fieldAndType) }
   }
 
   def validateRelationFields(fieldAndTypes: Seq[FieldAndType]): Seq[SchemaError] = {
@@ -335,13 +358,39 @@ case class SchemaSyntaxValidator(
       }
     }
 
+    def ensureDefaultValuesHaveCorrectType(fieldAndTypes: FieldAndType): Option[SchemaError] = {
+      def hasInvalidType: Boolean = {
+        getDefaultValueFromField(fieldAndType.fieldDef) match {
+          case Some(Good(_)) => false
+          case None          => false
+          case Some(Bad(_))  => true
+        }
+      }
+
+      def isNotList = !fieldAndTypes.fieldDef.isList
+
+      fieldAndType.fieldDef.hasDefaultValueDirective match {
+        case true if isNotList && hasInvalidType => Some(SchemaErrors.invalidTypeForDefaultValue(fieldAndType))
+        case _                                   => None
+      }
+    }
+
     fieldAndType.fieldDef.directives.flatMap(validateDirectiveRequirements) ++
       ensureDirectivesAreUnique(fieldAndType) ++
       ensureNoOldDefaultValueDirectives(fieldAndType) ++
       ensureRelationDirectivesArePlacedCorrectly(fieldAndType) ++
       ensureNoDefaultValuesOnListFields(fieldAndType) ++
-      ensureNoInvalidEnumValuesInDefaultValues(fieldAndType)
+      ensureNoInvalidEnumValuesInDefaultValues(fieldAndType) ++
+      ensureDefaultValuesHaveCorrectType(fieldAndType)
   }
+
+  def getDefaultValueFromField(fieldDef: FieldDefinition) = {
+    val defaultValue   = fieldDef.directiveArgumentAsString("default", "value")
+    val typeIdentifier = typeIdentifierForTypename(fieldDef.fieldType)
+    defaultValue.map(value => GCStringConverter(typeIdentifier, fieldDef.isList).toGCValue(value))
+  }
+
+  def getDefaultValueFromField_!(fieldDef: FieldDefinition) = getDefaultValueFromField(fieldDef).map(_.get)
 
   def validateEnumTypes: Seq[SchemaError] = {
     val duplicateNames = doc.enumNames.diff(doc.enumNames.distinct).distinct.flatMap(dupe => Some(SchemaErrors.enumNamesMustBeUnique(doc.enumType(dupe).get)))
@@ -388,5 +437,17 @@ case class SchemaSyntaxValidator(
     val lefts  = mapped.collect { case Left(x) => x }
     val rights = mapped.collect { case Right(x) => x }
     (lefts, rights)
+  }
+
+  def typeIdentifierForTypename(fieldType: Type): TypeIdentifier.Value = {
+    val typeName = fieldType.namedType.name
+
+    if (doc.objectType(typeName).isDefined) {
+      TypeIdentifier.Relation
+    } else if (doc.enumType(typeName).isDefined) {
+      TypeIdentifier.Enum
+    } else {
+      TypeIdentifier.withNameHacked(typeName)
+    }
   }
 }
