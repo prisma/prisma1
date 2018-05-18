@@ -12,6 +12,7 @@ class FilterSpec extends FlatSpec with Matchers with ApiSpecBase {
                                                    |  id: ID! @unique
                                                    |  unique: Int! @unique
                                                    |  name: String
+                                                   |  optional: String
                                                    |  ride: Vehicle
                                                    |}
                                                    |
@@ -51,6 +52,22 @@ class FilterSpec extends FlatSpec with Matchers with ApiSpecBase {
     val filter = """(where: {name: "John"})"""
 
     userUniques(filter) should be(Vector(4))
+  }
+
+  //todo Null and lists is weird
+
+  "Using _in with null" should "return all nodes with null for that field" in {
+
+    val filter = """(where: {optional_in: null})"""
+
+    userUniques(filter) should be(Vector(1, 2, 3, 4))
+  }
+
+  "Using _in with [null]" should "return all nodes with null for that field" ignore {
+
+    val filter = """(where: {optional_in: ["test", null]})"""
+
+    userUniques(filter) should be(Vector(1, 2, 3, 4))
   }
 
   "Relation Null filter" should "work" in {

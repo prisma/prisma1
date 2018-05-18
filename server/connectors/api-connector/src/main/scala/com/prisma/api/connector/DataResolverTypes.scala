@@ -58,7 +58,7 @@ case class OrFilter(filters: Vector[Filter])   extends Filter
 case class NotFilter(filters: Vector[Filter])  extends Filter
 case class NodeFilter(filters: Vector[Filter]) extends Filter
 
-case class ScalarFilter(key: String, field: Field, condition: ScalarCondition) extends Filter
+case class ScalarFilter(field: Field, condition: ScalarCondition) extends Filter
 
 sealed trait ScalarCondition
 case class Equals(value: GCValue)              extends ScalarCondition
@@ -98,12 +98,7 @@ sealed trait RelationCondition
 object EveryRelatedNode      extends RelationCondition
 object AtLeastOneRelatedNode extends RelationCondition
 object NoRelatedNode         extends RelationCondition
-
-case class Filters(
-    key: String,
-    value: Vector[Filter],
-    filterName: String = ""
-) extends Filter
+object NoRelationCondition   extends RelationCondition
 
 case class FilterElement(
     key: String,
@@ -118,6 +113,8 @@ case class FinalValueFilter(
     field: Field,
     filterName: String = ""
 ) extends Filter
+
+//only mysql usages left
 
 case class FinalRelationFilter( // relation is null
                                schema: Schema,

@@ -73,7 +73,6 @@ class RelationFilterSpec extends FlatSpec with Matchers with ApiSpecBase {
   }
 
   "simple scalar filter" should "work" in {
-
     server.query(query = """{blogs{posts(where:{popularity_gte: 5}){title}}}""", project = project).toString should be(
       """{"data":{"blogs":[{"posts":[{"title":"post 1"}]},{"posts":[{"title":"post 3"}]}]}}""")
   }

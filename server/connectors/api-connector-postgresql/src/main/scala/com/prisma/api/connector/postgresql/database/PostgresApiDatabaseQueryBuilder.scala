@@ -218,11 +218,11 @@ case class PostgresApiDatabaseQueryBuilder(
     )
 
     def createQuery(id: String, modelRelationSide: String, fieldRelationSide: String) = {
-      sql"""(select ModelTable.*, RelationTable."#$aColumn" as __Relation__A,  RelationTable."#$bColumn" as __Relation__B
-            from "#$schemaName"."#$modelTable" as ModelTable
-           inner join "#$schemaName"."#$relationTableName" as RelationTable
-           on ModelTable."id" = RelationTable."#$fieldRelationSide"
-           where RelationTable."#$modelRelationSide" = '#$id' """ ++
+      sql"""(select "ModelTable".*, RelationTable."#$aColumn" as "__Relation__A",  "RelationTable"."#$bColumn" as "__Relation__B"
+            from "#$schemaName"."#$modelTable" as "ModelTable"
+           inner join "#$schemaName"."#$relationTableName" as "RelationTable"
+           on "ModelTable"."id" = "RelationTable"."#$fieldRelationSide"
+           where "RelationTable"."#$modelRelationSide" = '#$id' """ ++
         prefixIfNotNone("and", conditionCommand) ++
         prefixIfNotNone("order by", orderByCommand) ++
         prefixIfNotNone("limit", limitCommand) ++ sql")"
