@@ -2,50 +2,13 @@ package com.prisma.shared.models
 
 import com.prisma.gc_values.GCValue
 import com.prisma.shared.errors.SharedErrors
-import com.prisma.shared.models.FieldConstraintType.FieldConstraintType
 import com.prisma.shared.models.Manifestations._
-import org.joda.time.DateTime
 
 object IdType {
   type Id = String
 }
 
 import com.prisma.shared.models.IdType._
-
-sealed trait Function {
-  def name: String
-  def isActive: Boolean
-  def delivery: FunctionDelivery
-  def typeCode: FunctionType.Value
-}
-
-object FunctionType extends Enumeration {
-  val ServerSideSubscription = Value("server-side-subscription")
-}
-
-case class ServerSideSubscriptionFunction(
-    name: String,
-    isActive: Boolean,
-    delivery: FunctionDelivery,
-    query: String
-) extends Function {
-  override def typeCode = FunctionType.ServerSideSubscription
-}
-
-sealed trait FunctionDelivery {
-  def typeCode: FunctionDeliveryType.Value
-}
-
-object FunctionDeliveryType extends Enumeration {
-  val WebhookDelivery = Value("webhook-delivery")
-}
-
-case class WebhookDelivery(
-    url: String,
-    headers: Vector[(String, String)]
-) extends FunctionDelivery {
-  override def typeCode = FunctionDeliveryType.WebhookDelivery
-}
 
 case class Project(
     id: Id,
@@ -64,6 +27,7 @@ case class Project(
 
   val serverSideSubscriptionFunctions = functions.collect { case x: ServerSideSubscriptionFunction => x }
 }
+
 object ProjectWithClientId {
   def apply(project: Project): ProjectWithClientId = ProjectWithClientId(project, project.ownerId)
 }
@@ -394,56 +358,6 @@ class Field(
       constraints = constraints
     )
   }
-}
-
-sealed trait FieldConstraint {
-  val id: String; val fieldId: String; val constraintType: FieldConstraintType
-}
-
-case class StringConstraint(
-    id: String,
-    fieldId: String,
-    equalsString: Option[String] = None,
-    oneOfString: List[String] = List.empty,
-    minLength: Option[Int] = None,
-    maxLength: Option[Int] = None,
-    startsWith: Option[String] = None,
-    endsWith: Option[String] = None,
-    includes: Option[String] = None,
-    regex: Option[String] = None
-) extends FieldConstraint {
-  val constraintType: FieldConstraintType = FieldConstraintType.STRING
-}
-
-case class NumberConstraint(
-    id: String,
-    fieldId: String,
-    equalsNumber: Option[Double] = None,
-    oneOfNumber: List[Double] = List.empty,
-    min: Option[Double] = None,
-    max: Option[Double] = None,
-    exclusiveMin: Option[Double] = None,
-    exclusiveMax: Option[Double] = None,
-    multipleOf: Option[Double] = None
-) extends FieldConstraint {
-  val constraintType: FieldConstraintType = FieldConstraintType.NUMBER
-}
-
-case class BooleanConstraint(id: String, fieldId: String, equalsBoolean: Option[Boolean] = None) extends FieldConstraint {
-  val constraintType: FieldConstraintType = FieldConstraintType.BOOLEAN
-}
-
-case class ListConstraint(id: String, fieldId: String, uniqueItems: Option[Boolean] = None, minItems: Option[Int] = None, maxItems: Option[Int] = None)
-    extends FieldConstraint {
-  val constraintType: FieldConstraintType = FieldConstraintType.LIST
-}
-
-object FieldConstraintType extends Enumeration {
-  type FieldConstraintType = Value
-  val STRING  = Value("STRING")
-  val NUMBER  = Value("NUMBER")
-  val BOOLEAN = Value("BOOLEAN")
-  val LIST    = Value("LIST")
 }
 
 case class RelationTemplate(
