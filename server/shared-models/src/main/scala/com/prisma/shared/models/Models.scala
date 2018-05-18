@@ -39,7 +39,7 @@ object Schema {
 }
 
 case class Schema(
-    modelFns: List[Schema => Model] = List.empty,
+    modelFns: List[ModelTemplate] = List.empty,
     relationFns: List[RelationTemplate] = List.empty,
     enums: List[Enum] = List.empty
 ) {
@@ -81,22 +81,29 @@ case class Schema(
 
 }
 
+case class ModelTemplate(
+    name: String,
+    stableIdentifier: String,
+    fieldFns: List[FieldTemplate],
+    manifestation: Option[ModelManifestation]
+) {
+  def apply(schema: Schema): Model = new Model(this, schema)
+}
+
 object Model {
-  def apply(
-      name: String,
-      stableIdentifier: String,
-      fieldFns: List[FieldTemplate],
-      manifestation: Option[ModelManifestation]
-  ): Schema => Model = {
-    new Model(name, stableIdentifier, fieldFns, manifestation)(_)
-  }
+  implicit def asModelTemplate(model: Model): ModelTemplate = model.template
+
+  val empty: Model = new Model(
+    template = ModelTemplate(name = "", stableIdentifier = "", fieldFns = List.empty, manifestation = None),
+    schema = Schema.empty
+  )
 }
 class Model(
-    val name: String,
-    val stableIdentifier: String,
-    val fieldFns: List[FieldTemplate],
-    val manifestation: Option[ModelManifestation]
-)(val schema: Schema) {
+    val template: ModelTemplate,
+    val schema: Schema
+) {
+  import template._
+
   val id: String     = name
   val dbName: String = manifestation.map(_.dbName).getOrElse(id)
 
@@ -125,7 +132,7 @@ class Model(
   def filterFields(fn: Field => Boolean): Model = {
     val newFields         = this.fields.filter(fn).map(_.template)
     val newModel          = copy(fieldFns = newFields)
-    val newModelsInSchema = schema.models.filter(_.name != name).map(_.copy()) :+ newModel
+    val newModelsInSchema = schema.models.filter(_.name != name).map(_.template) :+ newModel
     schema.copy(modelFns = newModelsInSchema).getModelByName_!(name)
   }
 
@@ -137,15 +144,6 @@ class Model(
   def getFieldByName(name: String): Option[Field] = fields.find(_.name == name)
 
   def hasVisibleIdField: Boolean = idField.exists(_.isVisible)
-
-  def copy(
-      name: String = this.name,
-      stableIdentifier: String = this.stableIdentifier,
-      fieldFns: List[FieldTemplate] = this.fieldFns,
-      manifestation: Option[ModelManifestation] = this.manifestation
-  ): Schema => Model = {
-    Model(name, stableIdentifier, fieldFns, manifestation)
-  }
 }
 
 object RelationSide extends Enumeration {

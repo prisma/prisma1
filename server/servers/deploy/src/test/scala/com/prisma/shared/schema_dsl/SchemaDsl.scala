@@ -139,7 +139,7 @@ object SchemaDsl extends AwaitUtils {
       newEnum
     }
 
-    private def build(): (Set[Schema => Model], Set[RelationTemplate]) = {
+    private def build(): (Set[ModelTemplate], Set[RelationTemplate]) = {
       val models    = modelBuilders.map(_.build())
       val relations = modelBuilders.flatMap(_.relations)
 
@@ -399,13 +399,13 @@ object SchemaDsl extends AwaitUtils {
       this
     }
 
-    def build(): Schema => Model = {
-      Model(
+    def build(): ModelTemplate = {
+      ModelTemplate(
         name = name,
         stableIdentifier = Cuid.createCuid(),
         fieldFns = fields.toList,
         manifestation = None
-      )(_)
+      )
     }
   }
 

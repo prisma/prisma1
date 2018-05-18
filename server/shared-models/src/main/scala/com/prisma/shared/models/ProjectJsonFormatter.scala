@@ -250,31 +250,31 @@ object ProjectJsonFormatter {
       (JsPath \ "constraints").write[List[FieldConstraint]]
   )(unlift(FieldTemplate.unapply))
 
-  implicit val modelReads: Reads[Schema => Model] = (
+  implicit val modelReads: Reads[ModelTemplate] = (
     (JsPath \ "name").read[String] and
       (JsPath \ "stableIdentifier").read[String] and
       (JsPath \ "fields").read[List[FieldTemplate]] and
       (JsPath \ "manifestation").readNullable[ModelManifestation]
-  )(Model.apply _)
+  )(ModelTemplate.apply _)
 
-  implicit val modelWrites: Writes[Model] = (
+  implicit val modelWrites: Writes[ModelTemplate] = (
     (JsPath \ "name").write[String] and
       (JsPath \ "stableIdentifier").write[String] and
       (JsPath \ "fields").write[List[FieldTemplate]] and
       (JsPath \ "manifestation").writeNullable[ModelManifestation]
-  )(m => (m.name, m.stableIdentifier, m.fieldFns, m.manifestation))
+  )(unlift(ModelTemplate.unapply))
 
   val schemaReads: Reads[Schema] = (
-    (JsPath \ "models").read[List[Schema => Model]] and
+    (JsPath \ "models").read[List[ModelTemplate]] and
       (JsPath \ "relations").read[List[RelationTemplate]] and
       (JsPath \ "enums").read[List[Enum]]
   )(Schema.apply _)
 
   val schemaWrites: Writes[Schema] = (
-    (JsPath \ "models").write[List[Model]] and
+    (JsPath \ "models").write[List[ModelTemplate]] and
       (JsPath \ "relations").write[List[RelationTemplate]] and
       (JsPath \ "enums").write[List[Enum]]
-  )(s => (s.models, s.relationFns, s.enums))
+  )(s => (s.modelFns, s.relationFns, s.enums))
 
   implicit lazy val schemaFormat              = Format(schemaReads, schemaWrites)
   implicit lazy val projectFormat             = Json.format[Project]

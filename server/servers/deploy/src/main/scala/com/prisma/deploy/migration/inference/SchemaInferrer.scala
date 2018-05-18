@@ -45,12 +45,12 @@ case class SchemaInferrerImpl(
     addMissingBackRelations(schema)
   }
 
-  lazy val nextModels: Vector[Schema => Model] = {
+  lazy val nextModels: Vector[ModelTemplate] = {
     prismaSdl.types.map { prismaType =>
       val fieldNames = prismaType.fields.map(_.name)
       val hiddenReservedFields = if (isActive) {
         val missingReservedFields = ReservedFields.reservedFieldNames.filterNot(fieldNames.contains)
-        missingReservedFields.map(ReservedFields.reservedFieldFor(_))
+        missingReservedFields.map(ReservedFields.reservedFieldFor)
       } else {
         Vector.empty
       }
@@ -61,12 +61,12 @@ case class SchemaInferrerImpl(
         case None                => Cuid.createCuid()
       }
 
-      Model(
+      ModelTemplate(
         name = prismaType.name,
         fieldFns = fieldsForType(prismaType).toList ++ hiddenReservedFields,
         stableIdentifier = stableIdentifier,
         manifestation = manifestation
-      )(_)
+      )
     }
   }
 
