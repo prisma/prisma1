@@ -201,16 +201,16 @@ object ProjectJsonFormatter {
       (JsPath \ "modelAOnDelete").write[OnDelete.Value] and
       (JsPath \ "modelBOnDelete").write[OnDelete.Value] and
       (JsPath \ "manifestation").writeNullable[RelationManifestation]
-  )(unlift(Relation.unapply))
+  )(r => (r.name, r.modelAId, r.modelBId, r.modelAOnDelete, r.modelBOnDelete, r.manifestation))
 
-  implicit val relationReads: Reads[Relation] = (
+  implicit val relationReads: Reads[RelationTemplate] = (
     (JsPath \ "name").read[String] and
       (JsPath \ "modelAId").read[String] and
       (JsPath \ "modelBId").read[String] and
       (JsPath \ "modelAOnDelete").readNullable[OnDelete.Value].map(_.getOrElse(OnDelete.SetNull)) and
       (JsPath \ "modelBOnDelete").readNullable[OnDelete.Value].map(_.getOrElse(OnDelete.SetNull)) and
       (JsPath \ "manifestation").readNullable[RelationManifestation]
-  )(Relation.apply _)
+  )(RelationTemplate.apply _)
 
   implicit val modelManifestationWrites: Writes[ModelManifestation] = Writes(manifestation => Json.obj("dbName" -> manifestation.dbName))
   implicit val modelManifestationReads: Reads[ModelManifestation]   = (JsPath \ "dbName").read[String].map(ModelManifestation)
@@ -248,7 +248,7 @@ object ProjectJsonFormatter {
       (JsPath \ "relationSide").writeNullable[RelationSide.Value] and
       (JsPath \ "manifestation").writeNullable[FieldManifestation] and
       (JsPath \ "constraints").write[List[FieldConstraint]]
-  ).apply(f => (f.name, f.typeIdentifier, f.isRequired, f.isList, f.isUnique, f.isHidden, f.isReadonly, f.enum, f.defaultValue, f.relationName, f.relationSide, f.manifestation, f.constraints))
+  )(f => (f.name, f.typeIdentifier, f.isRequired, f.isList, f.isUnique, f.isHidden, f.isReadonly, f.enum, f.defaultValue, f.relationName, f.relationSide, f.manifestation, f.constraints))
 
   implicit val modelReads: Reads[Schema => Model] = (
     (JsPath \ "name").read[String] and
@@ -262,11 +262,11 @@ object ProjectJsonFormatter {
       (JsPath \ "stableIdentifier").write[String] and
       (JsPath \ "fields").write[List[Field]] and
       (JsPath \ "manifestation").writeNullable[ModelManifestation]
-  ).apply(m => (m.name, m.stableIdentifier, m.fields, m.manifestation))
+  )(m => (m.name, m.stableIdentifier, m.fields, m.manifestation))
 
   val schemaReads: Reads[Schema] = (
     (JsPath \ "models").read[List[Schema => Model]] and
-      (JsPath \ "relations").read[List[Relation]] and
+      (JsPath \ "relations").read[List[RelationTemplate]] and
       (JsPath \ "enums").read[List[Enum]]
   )(Schema.apply _)
 

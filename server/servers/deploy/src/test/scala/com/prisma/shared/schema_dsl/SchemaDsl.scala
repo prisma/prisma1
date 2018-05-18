@@ -85,7 +85,7 @@ object SchemaDsl extends AwaitUtils {
     val schema = project.schema
     val newRelations = project.relations.map { relation =>
       if (relation.isManyToMany(schema)) {
-        relation
+        relation.template
       } else {
         val relationFields = Vector(relation.getModelAField(schema), relation.getModelBField(schema)).flatten
         val fieldToRepresentAsInlineRelation = relationFields.find(_.isList) match {
@@ -98,7 +98,7 @@ object SchemaDsl extends AwaitUtils {
           inTableOfModelId = modelToPutRelationInto.id,
           referencingColumn = s"${relation.name}_${modelToLinkTo.name.toLowerCase}_id"
         )
-        relation.copy(manifestation = Some(manifestation))
+        relation.template.copy(manifestation = Some(manifestation))
       }
     }
     val newModels = project.models.map { model =>
@@ -111,7 +111,7 @@ object SchemaDsl extends AwaitUtils {
 
       model.copy(fieldFns = newFields, manifestation = Some(ModelManifestation(model.name + "_Table")))
     }
-    project.copy(schema = schema.copy(relations = newRelations, modelFns = newModels))
+    project.copy(schema = schema.copy(relationFns = newRelations, modelFns = newModels))
   }
 
   case class SchemaBuilder(
@@ -139,7 +139,7 @@ object SchemaDsl extends AwaitUtils {
       newEnum
     }
 
-    private def build(): (Set[Schema => Model], Set[Relation]) = {
+    private def build(): (Set[Schema => Model], Set[RelationTemplate]) = {
       val models    = modelBuilders.map(_.build())
       val relations = modelBuilders.flatMap(_.relations)
 
@@ -152,7 +152,7 @@ object SchemaDsl extends AwaitUtils {
         id = id,
         schema = Schema(
           modelFns = models.toList,
-          relations = relations.toList,
+          relationFns = relations.toList,
           enums = enums.toList
         ),
         functions = functions.toList
@@ -164,7 +164,7 @@ object SchemaDsl extends AwaitUtils {
       name: String,
       fields: Buffer[Model => Field] = Buffer(idField),
       var withPermissions: Boolean = true,
-      relations: Buffer[Relation] = Buffer.empty
+      relations: Buffer[RelationTemplate] = Buffer.empty
   ) {
     val id = name
 
@@ -231,7 +231,7 @@ object SchemaDsl extends AwaitUtils {
         modelAOnDelete: OnDelete.Value = OnDelete.SetNull,
         modelBOnDelete: OnDelete.Value = OnDelete.SetNull
     ): ModelBuilder = {
-      val relation = Relation(
+      val relation = RelationTemplate(
         name = relationName.getOrElse(s"${this.name}To${modelB.name}"),
         modelAId = this.id,
         modelBId = modelB.id,
@@ -261,7 +261,7 @@ object SchemaDsl extends AwaitUtils {
         modelAOnDelete: OnDelete.Value = OnDelete.SetNull,
         modelBOnDelete: OnDelete.Value = OnDelete.SetNull
     ): ModelBuilder = {
-      val relation = Relation(
+      val relation = RelationTemplate(
         name = relationName.getOrElse(s"${this.name}To${modelB.name}"),
         modelAId = this.id,
         modelBId = modelB.id,
@@ -291,7 +291,7 @@ object SchemaDsl extends AwaitUtils {
         modelAOnDelete: OnDelete.Value = OnDelete.SetNull,
         modelBOnDelete: OnDelete.Value = OnDelete.SetNull
     ): ModelBuilder = {
-      val relation = Relation(
+      val relation = RelationTemplate(
         name = relationName.getOrElse(s"${this.name}To${modelB.name}"),
         modelAId = this.id,
         modelBId = modelB.id,
@@ -321,7 +321,7 @@ object SchemaDsl extends AwaitUtils {
         modelAOnDelete: OnDelete.Value = OnDelete.SetNull,
         modelBOnDelete: OnDelete.Value = OnDelete.SetNull
     ): ModelBuilder = {
-      val relation = Relation(
+      val relation = RelationTemplate(
         name = relationName.getOrElse(s"${this.name}To${modelB.name}"),
         modelAId = this.id,
         modelBId = modelB.id,
@@ -350,7 +350,7 @@ object SchemaDsl extends AwaitUtils {
         modelAOnDelete: OnDelete.Value = OnDelete.SetNull,
         modelBOnDelete: OnDelete.Value = OnDelete.SetNull
     ): ModelBuilder = {
-      val relation = Relation(
+      val relation = RelationTemplate(
         name = relationName.getOrElse(s"${this.name}To${modelB.name}"),
         modelAId = this.id,
         modelBId = modelB.id,
@@ -379,7 +379,7 @@ object SchemaDsl extends AwaitUtils {
         modelAOnDelete: OnDelete.Value = OnDelete.SetNull,
         modelBOnDelete: OnDelete.Value = OnDelete.SetNull
     ): ModelBuilder = {
-      val relation = Relation(
+      val relation = RelationTemplate(
         name = relationName.getOrElse(s"${this.name}To${modelB.name}"),
         modelAId = this.id,
         modelBId = modelB.id,
@@ -441,7 +441,7 @@ object SchemaDsl extends AwaitUtils {
   def relationField(name: String,
                     from: ModelBuilder,
                     to: ModelBuilder,
-                    relation: Relation,
+                    relation: RelationTemplate,
                     isList: Boolean,
                     isBackward: Boolean,
                     isRequired: Boolean = false): Model => Field = {

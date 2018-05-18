@@ -41,7 +41,7 @@ case class SchemaInferrerImpl(
   val isPassive = !isActive
 
   def infer(): Schema = {
-    val schema = Schema(modelFns = nextModels.toList, relations = nextRelations.toList, enums = nextEnums.toList)
+    val schema = Schema(modelFns = nextModels.toList, relationFns = nextRelations.toList, enums = nextEnums.toList)
     addMissingBackRelations(schema)
   }
 
@@ -90,7 +90,7 @@ case class SchemaInferrerImpl(
 
       //For self relations we were inferring the relationSide A for both sides, this now assigns A to the lexicographically lower field name and B to the other
       //If in the previous schema both relationSides are A we reassign the relationsides otherwise we keep the one from the previous schema.
-      def inferRelationSide(relation: Option[Relation]) = {
+      def inferRelationSide(relation: Option[RelationTemplate]) = {
         def oldRelationSidesNotBothEqual(oldField: Field) = oldField.otherRelationField(baseSchema) match {
           case Some(relatedField) => oldField.relationSide.isDefined && oldField.relationSide != relatedField.relationSide
           case None               => true
@@ -168,7 +168,7 @@ case class SchemaInferrerImpl(
     fields
   }
 
-  lazy val nextRelations: Set[Relation] = {
+  lazy val nextRelations: Set[RelationTemplate] = {
     val tmp = for {
       prismaType    <- prismaSdl.types
       relationField <- prismaType.relationalPrismaFields
@@ -220,7 +220,7 @@ case class SchemaInferrerImpl(
       }
       val relationManifestation = relationManifestationOnFieldOrRelatedField(prismaType, relationField)
 
-      val nextRelation = Relation(
+      val nextRelation = RelationTemplate(
         name = relationName,
         modelAId = modelA,
         modelBId = modelB,

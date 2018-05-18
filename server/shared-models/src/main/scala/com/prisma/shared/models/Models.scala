@@ -75,10 +75,11 @@ object Schema {
 
 case class Schema(
     modelFns: List[Schema => Model] = List.empty,
-    relations: List[Relation] = List.empty,
+    relationFns: List[RelationTemplate] = List.empty,
     enums: List[Enum] = List.empty
 ) {
-  val models = modelFns.map(_.apply(this))
+  val models    = modelFns.map(_.apply(this))
+  val relations = relationFns.map(_.apply(this))
 
   def allFields: Seq[Field] = models.flatMap(_.fields)
 
@@ -445,9 +446,7 @@ object FieldConstraintType extends Enumeration {
   val LIST    = Value("LIST")
 }
 
-// NOTE modelA/modelB should actually be included here
-// but left out for now because of cyclic dependencies
-case class Relation(
+case class RelationTemplate(
     name: String,
     // BEWARE: if the relation looks like this: val relation = Relation(id = "relationId", modelAId = "userId", modelBId = "todoId")
     // then the relationSide for the fields have to be "opposite", because the field's side is the side of _the other_ model
@@ -458,7 +457,27 @@ case class Relation(
     modelAOnDelete: OnDelete.Value,
     modelBOnDelete: OnDelete.Value,
     manifestation: Option[RelationManifestation]
+) extends (Schema => Relation) {
+  def apply(schema: Schema) = new Relation(this, schema)
+
+  def connectsTheModels(model1: String, model2: String): Boolean = (modelAId == model1 && modelBId == model2) || (modelAId == model2 && modelBId == model1)
+
+  def isSameModelRelation: Boolean = modelAId == modelBId
+}
+
+class Relation(
+    val template: RelationTemplate,
+    val schema: Schema
 ) {
+  val name                                                       = template.name
+  val modelAId                                                   = template.modelAId
+  val modelBId                                                   = template.modelBId
+  val modelAOnDelete                                             = template.modelAOnDelete
+  val modelBOnDelete                                             = template.modelBOnDelete
+  val manifestation                                              = template.manifestation
+  val isSameModelRelation: Boolean                               = template.isSameModelRelation
+  def connectsTheModels(model1: String, model2: String): Boolean = template.connectsTheModels(model1, model2)
+
   val relationTableName = manifestation.collect { case m: RelationTableManifestation => m.table }.getOrElse("_" + name)
 
   def relationTableNameNew(schema: Schema): String =
@@ -496,9 +515,6 @@ case class Relation(
 
   def inlineManifestation: Option[InlineRelationManifestation] = manifestation.collect { case x: InlineRelationManifestation => x }
 
-  def connectsTheModels(model1: String, model2: String): Boolean = (modelAId == model1 && modelBId == model2) || (modelAId == model2 && modelBId == model1)
-
-  def isSameModelRelation: Boolean = modelAId == modelBId
   def isSameFieldSameModelRelation(schema: Schema): Boolean = {
     // note: defaults to modelAField to handle same model, same field relations
     getModelAField(schema) == getModelBField(schema).orElse(getModelAField(schema))
