@@ -1,9 +1,9 @@
 ---
 alias: ohdaiyoo6c
-description: Learn how to build a GraphQL server for an existing Prisma server.
+description: Learn how to build a GraphQL server for an existing Prisma service.
 ---
 
-# Build a GraphQL server for an existing Prisma service
+# Build a GraphQL server with Prisma
 
 This tutorial teaches you how to take an existing Prisma service and build a GraphQL server on top of it. The resolvers of the GraphQL servers will be connected to Prisma's GraphQL API via _Prisma bindings_.
 
