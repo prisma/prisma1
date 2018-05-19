@@ -1,13 +1,12 @@
 package com.prisma.api.filters
 
-import com.prisma.IgnorePostgres
 import com.prisma.api.ApiSpecBase
 import com.prisma.shared.schema_dsl.SchemaDsl
 import org.scalatest._
 
 class RelationFilterSpec extends FlatSpec with Matchers with ApiSpecBase {
 
-//  override def runSuiteOnlyForActiveConnectors = true
+  override def runSuiteOnlyForActiveConnectors = true
 
   val project = SchemaDsl.fromBuilder { schema =>
     val blog = schema

@@ -29,9 +29,8 @@ object FilteredResolver {
         case _                => true
       }
 
-    val filterValues = filterInput.filters.filter(removeTopLevelIdFilter(_)) ++ Vector(
-      FinalValueFilter(key = "id", value = IdGCValue(id), field = model.getFieldByName_!("id"), ""))
-    val filter = AndFilter(filterValues)
+    val filterValues = filterInput.filters.filter(removeTopLevelIdFilter) ++ Vector(ScalarFilter(model.getFieldByName_!("id"), Equals(IdGCValue(id))))
+    val filter       = AndFilter(filterValues)
 
     dataResolver.resolveByModel(model, Some(QueryArguments.filterOnly(filter = Some(filter)))).map(_.nodes.headOption)
   }
