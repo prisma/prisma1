@@ -1,8 +1,7 @@
 package com.prisma.deploy.migration
 
 import com.prisma.deploy.migration.DirectiveTypes.{InlineRelationDirective, RelationTableDirective}
-import com.prisma.shared.models.Manifestations.RelationManifestation
-import com.prisma.shared.models.TypeIdentifier
+import com.prisma.shared.models.{OnDelete, TypeIdentifier}
 import sangria.ast._
 
 import scala.collection.Seq
@@ -64,9 +63,8 @@ object DataSchemaAstExtensions {
 
     def description: Option[String] = objectType.directiveArgumentAsString("description", "text")
 
-    def tableName: String = tableNameDirective.getOrElse(objectType.name)
-    def tableNameDirective: Option[String] =
-      objectType.directiveArgumentAsString("model", "table").orElse(objectType.directiveArgumentAsString("pgTable", "name"))
+    def tableName: String                  = tableNameDirective.getOrElse(objectType.name)
+    def tableNameDirective: Option[String] = objectType.directiveArgumentAsString("pgTable", "name")
   }
 
   implicit class CoolField(val fieldDefinition: FieldDefinition) extends AnyVal {
@@ -82,8 +80,7 @@ object DataSchemaAstExtensions {
 
     def typeName: String = fieldDefinition.fieldType.namedType.name
 
-    def columnName: Option[String] =
-      fieldDefinition.directiveArgumentAsString("field", "column").orElse(fieldDefinition.directiveArgumentAsString("pgColumn", "name"))
+    def columnName: Option[String] = fieldDefinition.directiveArgumentAsString("pgColumn", "name")
 
     def isUnique: Boolean = fieldDefinition.directive("unique").isDefined || fieldDefinition.directive("pqUnique").isDefined
 
@@ -126,21 +123,18 @@ object DataSchemaAstExtensions {
     def relationName: Option[String]         = fieldDefinition.directiveArgumentAsString("relation", "name")
     def previousRelationName: Option[String] = fieldDefinition.directiveArgumentAsString("relation", "oldName").orElse(relationName)
 
+    def relationDBDirective = relationTableDirective.orElse(inlineRelationDirective)
+
     def relationTableDirective: Option[RelationTableDirective] = {
       for {
-        tableName <- fieldDefinition.directiveArgumentAsString("pgRelationTable", "table")
-        thisColumn = fieldDefinition
-          .directiveArgumentAsString("pgRelationTable", "thisColumn")
-          .orElse(fieldDefinition.directiveArgumentAsString("pgRelationTable", "relationColumn"))
-        otherColumn = fieldDefinition
-          .directiveArgumentAsString("pgRelationTable", "otherColumn")
-          .orElse(fieldDefinition.directiveArgumentAsString("pgRelationTable", "targetColumn"))
+        tableName   <- fieldDefinition.directiveArgumentAsString("pgRelationTable", "table")
+        thisColumn  = fieldDefinition.fieldDefinition.directiveArgumentAsString("pgRelationTable", "relationColumn")
+        otherColumn = fieldDefinition.directiveArgumentAsString("pgRelationTable", "targetColumn")
       } yield RelationTableDirective(table = tableName, thisColumn = thisColumn, otherColumn = otherColumn)
     }
 
-    def inlineRelationDirective: InlineRelationDirective =
-      InlineRelationDirective(
-        fieldDefinition.directiveArgumentAsString("inline", "column").orElse(fieldDefinition.directiveArgumentAsString("pgRelation", "column")))
+    def inlineRelationDirective: Option[InlineRelationDirective] =
+      fieldDefinition.directiveArgumentAsString("pgRelation", "column").map(value => InlineRelationDirective(value))
   }
 
   implicit class CoolEnumType(val enumType: EnumTypeDefinition) extends AnyVal {
@@ -152,6 +146,15 @@ object DataSchemaAstExtensions {
   }
 
   implicit class CoolWithDirectives(val withDirectives: WithDirectives) extends AnyVal {
+
+    def relationName = directiveArgumentAsString("relation", "name")
+    def onDelete = directiveArgumentAsString("relation", "onDelete") match {
+      case Some("SET_NULL") => OnDelete.SetNull
+      case Some("CASCADE")  => OnDelete.Cascade
+      case Some(_)          => sys.error("The SchemaSyntaxvalidator should catch this")
+      case None             => OnDelete.SetNull
+    }
+
     def directiveArgumentAsString(directiveName: String, argumentName: String): Option[String] = {
       for {
         directive <- directive(directiveName)
@@ -211,6 +214,8 @@ object DataSchemaAstExtensions {
 }
 
 object DirectiveTypes {
-  case class RelationTableDirective(table: String, thisColumn: Option[String], otherColumn: Option[String])
-  case class InlineRelationDirective(column: Option[String])
+
+  sealed trait RelationDBDirective
+  case class RelationTableDirective(table: String, thisColumn: Option[String], otherColumn: Option[String]) extends RelationDBDirective
+  case class InlineRelationDirective(column: String)                                                        extends RelationDBDirective
 }

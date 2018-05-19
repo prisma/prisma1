@@ -2,7 +2,6 @@ package com.prisma.api.connector.postgresql.database
 
 import com.prisma.api.connector._
 import com.prisma.api.connector.postgresql.database.SlickExtensions._
-import com.prisma.api.schema.APIErrors
 import com.prisma.gc_values.{GCValue, GCValueExtractor, NullGCValue}
 import com.prisma.shared.models.{Field, Model, Relation, Schema}
 import slick.jdbc.PostgresProfile.api._
@@ -13,8 +12,11 @@ object QueryArgumentsHelpers {
   def generateFilterConditions(projectId: String, tableName: String, filter: Filter, quoteTableName: Boolean = true): Option[SQLActionBuilder] = {
 
     def getAliasAndTableName(fromModel: String, toModel: String): (String, String) = {
-      var modTableName = ""
-      if (!tableName.contains("_")) modTableName = projectId + """"."""" + fromModel else modTableName = tableName
+      val modTableName = if (!tableName.contains("_")) {
+        projectId + """"."""" + fromModel
+      } else {
+        tableName
+      }
       val alias = toModel + "_" + tableName
       (alias, modTableName)
     }
@@ -28,8 +30,8 @@ object QueryArgumentsHelpers {
                                 relationCondition: RelationCondition) = {
       val (alias, modTableName) = getAliasAndTableName(fromModel.name, toModel.name)
       val relationTableName     = relation.relationTableNameNew(schema)
-      val column                = relation.columnForRelationSide(field.relationSide.get)
-      val oppositeColumn        = relation.columnForRelationSide(field.oppositeRelationSide.get)
+      val column                = relation.columnForRelationSide(schema, field.relationSide.get)
+      val oppositeColumn        = relation.columnForRelationSide(schema, field.oppositeRelationSide.get)
 
       val join = sql"""select *
             from "#$projectId"."#${toModel.dbName}" as "#$alias"
@@ -48,6 +50,7 @@ object QueryArgumentsHelpers {
     }
 
     val sqlParts = filter match {
+      //-------------------------------RECURSION------------------------------------
       case NodeSubscriptionFilter() => None
       case AndFilter(filters)       => combineByAnd(filters.map(generateFilterConditions(projectId, tableName, _)).collect { case Some(x) => x })
       case OrFilter(filters)        => combineByOr(filters.map(generateFilterConditions(projectId, tableName, _)).collect { case Some(x) => x })
@@ -55,8 +58,7 @@ object QueryArgumentsHelpers {
       case NodeFilter(filters)      => combineByOr(filters.map(generateFilterConditions(projectId, tableName, _)).collect { case Some(x) => x })
       case RelationFilter(schema, field, fromModel, toModel, relation, nestedFilter, condition: RelationCondition) =>
         relationFilterStatement(schema, field, fromModel, toModel, relation, nestedFilter, condition)
-      //--- non recursive
-      // the boolean filter comes from precomputed fields // this is the computed stuff that we get when replacing mutation_in
+      //--------------------------------ANCHORS------------------------------------
       case PreComputedSubscriptionFilter(value) => Some(if (value) sql"TRUE" else sql"FALSE")
 
       case ScalarFilter(field, Contains(value)) =>
@@ -96,11 +98,16 @@ object QueryArgumentsHelpers {
       case OneRelationIsNullFilter(schema, field) =>
         val relation          = field.relation.get
         val relationTableName = relation.relationTableNameNew(schema)
-        val column            = relation.columnForRelationSide(field.relationSide.get)
+        val column            = relation.columnForRelationSide(schema, field.relationSide.get)
+        // fixme: an ugly hack that is hard to explain. ask marcus.
+        val otherIdColumn = schema.models.find(_.dbName == tableName) match {
+          case Some(model) => model.idField_!.dbName
+          case None        => "id"
+        }
 
         Some(sql""" not exists (select  *
                                   from    "#$projectId"."#${relationTableName}"
-                                  where   "#$projectId"."#${relationTableName}"."#${column}" = "#$tableName"."id")""")
+                                  where   "#$projectId"."#${relationTableName}"."#${column}" = "#$tableName"."#$otherIdColumn")""")
     }
 
     if (sqlParts.isEmpty) None else combineByAnd(sqlParts)

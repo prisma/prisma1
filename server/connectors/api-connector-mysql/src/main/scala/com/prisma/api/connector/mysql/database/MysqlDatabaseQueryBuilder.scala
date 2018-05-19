@@ -64,7 +64,7 @@ class MySqlDatabaseQueryBuilder()(implicit ec: ExecutionContext) {
   }
 
   implicit object GetRelationNode extends GetResult[RelationNode] {
-    override def apply(ps: PositionedResult): RelationNode = RelationNode(ps.rs.getId, ps.rs.getAsID("A"), ps.rs.getAsID("B"))
+    override def apply(ps: PositionedResult): RelationNode = RelationNode(ps.rs.getAsID("A"), ps.rs.getAsID("B"))
   }
 
   implicit object GetRelationCount extends GetResult[(IdGCValue, Int)] {

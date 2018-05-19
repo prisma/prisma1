@@ -8,8 +8,8 @@ object CreateColumnInterpreter extends SqlMutactionInterpreter[CreateColumn] {
   override def execute(mutaction: CreateColumn) = {
     PostgresDeployDatabaseMutationBuilder.createColumn(
       projectId = mutaction.projectId,
-      tableName = mutaction.model.name,
-      columnName = mutaction.field.name,
+      tableName = mutaction.model.dbName,
+      columnName = mutaction.field.dbName,
       isRequired = mutaction.field.isRequired,
       isUnique = mutaction.field.isUnique,
       isList = mutaction.field.isList,
@@ -20,8 +20,8 @@ object CreateColumnInterpreter extends SqlMutactionInterpreter[CreateColumn] {
   override def rollback(mutaction: CreateColumn) = {
     PostgresDeployDatabaseMutationBuilder.deleteColumn(
       projectId = mutaction.projectId,
-      tableName = mutaction.model.name,
-      columnName = mutaction.field.name
+      tableName = mutaction.model.dbName,
+      columnName = mutaction.field.dbName
     )
   }
 }
@@ -30,16 +30,16 @@ object DeleteColumnInterpreter extends SqlMutactionInterpreter[DeleteColumn] {
   override def execute(mutaction: DeleteColumn) = {
     PostgresDeployDatabaseMutationBuilder.deleteColumn(
       projectId = mutaction.projectId,
-      tableName = mutaction.model.name,
-      columnName = mutaction.field.name
+      tableName = mutaction.model.dbName,
+      columnName = mutaction.field.dbName
     )
   }
 
   override def rollback(mutaction: DeleteColumn) = {
     PostgresDeployDatabaseMutationBuilder.createColumn(
       projectId = mutaction.projectId,
-      tableName = mutaction.model.name,
-      columnName = mutaction.field.name,
+      tableName = mutaction.model.dbName,
+      columnName = mutaction.field.dbName,
       isRequired = mutaction.field.isRequired,
       isUnique = mutaction.field.isUnique,
       isList = mutaction.field.isList,
@@ -70,7 +70,7 @@ object UpdateColumnInterpreter extends SqlMutactionInterpreter[UpdateColumn] {
     val newField = mutaction.newField
     if (oldField.isScalar) {
       oldField.isRequired != newField.isRequired ||
-      oldField.name != newField.name ||
+      oldField.dbName != newField.dbName ||
       oldField.typeIdentifier != newField.typeIdentifier ||
       oldField.isList != newField.isList ||
       oldField.isUnique != newField.isUnique
@@ -83,13 +83,13 @@ object UpdateColumnInterpreter extends SqlMutactionInterpreter[UpdateColumn] {
     val before       = mutaction.oldField
     val after        = mutaction.newField
     val hasIndex     = before.isUnique
-    val indexIsDirty = before.isRequired != after.isRequired || before.name != after.name || before.typeIdentifier != after.typeIdentifier
+    val indexIsDirty = before.isRequired != after.isRequired || before.dbName != after.dbName || before.typeIdentifier != after.typeIdentifier
 
     val updateColumn = PostgresDeployDatabaseMutationBuilder.updateColumn(
       projectId = mutaction.projectId,
-      tableName = mutaction.model.name,
-      oldColumnName = before.name,
-      newColumnName = after.name,
+      tableName = mutaction.model.dbName,
+      oldColumnName = before.dbName,
+      newColumnName = after.dbName,
       newIsRequired = after.isRequired,
       newIsList = after.isList,
       newTypeIdentifier = after.typeIdentifier
@@ -97,14 +97,14 @@ object UpdateColumnInterpreter extends SqlMutactionInterpreter[UpdateColumn] {
 
     val removeUniqueConstraint = PostgresDeployDatabaseMutationBuilder.removeUniqueConstraint(
       projectId = mutaction.projectId,
-      tableName = mutaction.model.name,
-      columnName = before.name
+      tableName = mutaction.model.dbName,
+      columnName = before.dbName
     )
 
     val addUniqueConstraint = PostgresDeployDatabaseMutationBuilder.addUniqueConstraint(
       projectId = mutaction.projectId,
-      tableName = mutaction.model.name,
-      columnName = after.name,
+      tableName = mutaction.model.dbName,
+      columnName = after.dbName,
       typeIdentifier = after.typeIdentifier,
       isList = after.isList
     )

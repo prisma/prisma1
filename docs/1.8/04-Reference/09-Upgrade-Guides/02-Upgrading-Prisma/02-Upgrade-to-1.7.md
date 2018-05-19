@@ -104,7 +104,7 @@ Here is an example that performs three tasks after a deployment:
 hooks:
   post-deploy:
     - echo "Deployment finished"
-    - graphql get-schema --project db
+    - graphql get-schema
     - graphql prepare
 ```
 

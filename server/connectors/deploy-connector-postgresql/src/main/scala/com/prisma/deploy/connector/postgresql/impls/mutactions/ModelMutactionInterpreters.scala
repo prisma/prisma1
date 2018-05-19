@@ -7,7 +7,12 @@ import slick.dbio.{DBIOAction, Effect, NoStream}
 import slick.jdbc.PostgresProfile.api._
 
 object CreateModelInterpreter extends SqlMutactionInterpreter[CreateModelTable] {
-  override def execute(mutaction: CreateModelTable)  = createTable(projectId = mutaction.projectId, name = mutaction.model)
+  override def execute(mutaction: CreateModelTable) = createTable(
+    projectId = mutaction.projectId,
+    name = mutaction.model,
+    nameOfIdField = mutaction.nameOfIdField
+  )
+
   override def rollback(mutaction: CreateModelTable) = dropTable(projectId = mutaction.projectId, tableName = mutaction.model)
 }
 
@@ -21,7 +26,11 @@ object DeleteModelInterpreter extends SqlMutactionInterpreter[DeleteModelTable] 
     DBIO.seq(dropScalarListFields :+ droppingTable: _*)
   }
 
-  override def rollback(mutaction: DeleteModelTable) = createTable(projectId = mutaction.projectId, name = mutaction.model)
+  override def rollback(mutaction: DeleteModelTable) = createTable(
+    projectId = mutaction.projectId,
+    name = mutaction.model,
+    nameOfIdField = mutaction.nameOfIdField
+  )
 }
 
 object RenameModelInterpreter extends SqlMutactionInterpreter[RenameTable] {

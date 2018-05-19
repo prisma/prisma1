@@ -29,8 +29,11 @@ case class TelemetryActor(connector: DeployConnector)(implicit val materializer:
   val initialGracePeriod = 10.seconds
 
   def initialDelay: FiniteDuration = info.lastPing match {
-    case Some(lastPing) => Math.abs(regularInterval.toMillis + initialGracePeriod.toMillis - (new DateTime().getMillis - lastPing.getMillis)).millis
-    case None           => initialGracePeriod
+    case Some(lastPing) =>
+      Math.max(regularInterval.toMillis - (new DateTime().getMillis - lastPing.getMillis), 0).millis + initialGracePeriod
+
+    case None =>
+      initialGracePeriod
   }
 
   context.system.scheduler.scheduleOnce(initialDelay, self, Report)

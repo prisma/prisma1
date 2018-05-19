@@ -1,6 +1,6 @@
-# Resolver forwarding
+# Resolver Forwarding
 
-This example demonstrates how to use **resolver forwarding (which creates a 1-to-1 mapping from application schema to Prisma database schema)** when building a GraphQL server based on Prisma & [`graphql-yoga`](https://github.com/graphcool/graphql-yoga).
+This example demonstrates how to use **resolver forwarding (which creates a 1-to-1 mapping from application schema to Prisma database schema)** when building a GraphQL server based on Prisma & graphql-yoga.
 
 ## Get started
 
@@ -11,7 +11,7 @@ This example demonstrates how to use **resolver forwarding (which creates a 1-to
 Clone the Prisma monorepo and navigate to this directory or download _only_ this example with the following command:
 
 ```sh
-curl https://codeload.github.com/graphcool/prisma/tar.gz/master | tar -xz --strip=2 prisma-master/examples/resolver-forwarding
+curl https://codeload.github.com/graphcool/prisma/tar.gz/resolver-forwarding | tar -xz --strip=2 prisma-master/examples/resolver-forwarding
 ```
 
 Next, navigate into the downloaded folder and install the NPM dependencies:
@@ -34,26 +34,22 @@ yarn prisma deploy
 
 To deploy your service to a public cluster (rather than locally with Docker), you need to perform the following steps:
 
-1. Remove the `cluster` property from `prisma.yml`.
-1. Run `yarn prisma deploy`.
-1. When prompted by the CLI, select a public cluster (e.g. `prisma-eu1` or `prisma-us1`).
-1. Replace the [`endpoint`](./src/index.js#L23) in `index.js` with the HTTP endpoint that was printed after the previous command.
+1.  Remove the `cluster` property from `prisma.yml`
+1.  Run `yarn prisma deploy`
+1.  When prompted by the CLI, select a public cluster (e.g. `prisma-eu1` or `prisma-us1`)
+1.  Replace the [`endpoint`](./src/index.js#L23) in `index.js` with the HTTP endpoint that was printed after the previous command
 
 </details>
 
-### 3. Start the GraphQL server
+### 3. Explore the API
 
-The Prisma database service that's backing your GraphQL server is now available. This means you can now start the server:
+This example seeds some code into the database for us to explore some queries and features of the data model. Please take a look at `seed.graphql` for reference. Feel free to add/remove more data via mutations.
 
-```sh
-yarn start
-```
+### To start the server, run the following command
 
-The server is now running on [http://localhost:4000](http://localhost:4000).
+`yarn start`
 
-## Testing the API
-
-The easiest way to test the deployed service is by using a [GraphQL Playground](https://github.com/graphcool/graphql-playground).
+The easiest way to explore this deployed service and play with the API generated from the data model is by using a [GraphQL Playground](https://github.com/graphcool/graphql-playground).
 
 ### Open a Playground
 
@@ -65,60 +61,42 @@ yarn playground
 
 Or you can open a Playground by navigating to [http://localhost:4000](http://localhost:4000) in your browser.
 
-> **Note**: You can also invoke the `yarn dev` script (instead of `yarn start`) which starts the server _and_ opens a Playground in parallel. This will also give you access to the Prisma API directly.
+### Run the following query
 
-### Examples
+```graphql
+query {
+  posts(where: { author: { name_in: ["Prisma"] } }) {
+    id
+    title
+    status
+    author {
+      id
+      name
+      handle
+    }
+  }
+}
+```
 
-### Deleting posts
-
-The following mutation can be executed against the application schema, but _not_ against Prisma schema (note that the placeholder `__POST_ID__` needs to be replaced with the `id` of an actual `Post` node):
+### Run the following mutation
 
 ```graphql
 mutation {
-  deletePost(id: "__POST_ID__") {
+  createPost(
+    data: {
+      title: "Second Post"
+      content: "Second Post Content"
+      status: DRAFT
+      author: { connect: { handle: "prisma" } }
+    }
+  ) {
     id
   }
 }
 ```
 
-If you wanted to delete a `Post` against the Prisma schema directly:
+Notice that how we are able to associate a `User` with this newly created post. The user was created using `seed.graphql` when the first deploy happened.
 
-```graphql
-mutation {
-  deletePost(by: {
-    id: "__POST_ID__"
-  }) {
-    id
-  }
-}
-```
+We are able to associate the user using their `handle` field as it is decorated with `@unique` directive.
 
-### Creating posts
-
-Since the `createPost` mutation is mapped 1-to-1 from the application schema to the Prisma schema and implemented using `forwardTo`, the following mutation works against both APIs:
-
-```graphql
-mutation {
-  createPost(data: {
-    title: "GraphQL is awesome"
-  }) {
-    id
-  }
-}
-```
-
-## Troubleshooting
-
-<details>
- <summary><strong>I'm getting the error message <code>[Network error]: FetchError: request to http://localhost:4466/resolver-forwarding-example/dev failed, reason: connect ECONNREFUSED</code> when trying to send a query or mutation</strong></summary>
-
-This is because the endpoint for the Prisma service is hardcoded in [`index.js`](index.js#L23). The service is assumed to be running on the default port for a local cluster: `http://localhost:4466`. Apparently, your local cluster is using a different port.
-
-You now have two options:
-
-1. Figure out the port of your local cluster and adjust it in `index.js`. You can look it up in `~/.prisma/config.yml`.
-1. Deploy the service to a public cluster. Expand the `I don't have Docker installed on my machine`-section in step 2 for instructions.
-
-Either way, you need to adjust the `endpoint` that's passed to the `Prisma` constructor in `index.js` so it reflects the actual cluster domain and service endpoint.
-
-</details>
+Feel free to play around with the API.
