@@ -94,8 +94,6 @@ object QueryArgumentsHelpers {
       case ScalarFilter(field, Equals(NullGCValue))    => Some(sql""""#$tableName"."#${field.name}" IS NULL""")
       case ScalarFilter(field, Equals(value))          => Some(sql""""#$tableName"."#${field.name}" = $value""")
       case OneRelationIsNullFilter(schema, field) =>
-        if (field.isList) throw APIErrors.FilterCannotBeNullOnToManyField(field.name) //todo move this error up front
-
         val relation          = field.relation.get
         val relationTableName = relation.relationTableNameNew(schema)
         val column            = relation.columnForRelationSide(field.relationSide.get)

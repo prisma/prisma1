@@ -180,19 +180,18 @@ class ObjectTypeBuilder(
 
     val filters = input.map {
       case (key, value) =>
-        val FieldFilterTuple(field, filter)                    = filterArguments.lookup(key)
-        def isScalarNonListFilter(filterName: String): Boolean = field.isDefined && field.get.isScalar && !field.get.isList && filter.name == filterName
-        def isScalarListFilter(filterName: String): Boolean    = field.isDefined && field.get.isScalar && field.get.isList && filter.name == filterName
-        def isRelationFilter(filterName: String): Boolean      = field.isDefined && field.get.isRelation && filter.name == filterName
-        def isOneRelationFilter(filterName: String): Boolean   = isRelationFilter(filterName) && !field.get.isList
-        def isManyRelationFilter(filterName: String): Boolean  = isRelationFilter(filterName) && field.get.isList
-        def isCollectionOfFilters(value: Seq[Any], filterName: String): Boolean =
-          value.nonEmpty && value.head.isInstanceOf[Map[_, _]] && filter.name == filterName
+        val FieldFilterTuple(field, filter)                                    = filterArguments.lookup(key)
+        def isScalarNonListFilter(filterName: String): Boolean                 = field.isDefined && field.get.isScalar && !field.get.isList && filter.name == filterName
+        def isScalarListFilter(filterName: String): Boolean                    = field.isDefined && field.get.isScalar && field.get.isList && filter.name == filterName
+        def isRelationFilter(filterName: String): Boolean                      = field.isDefined && field.get.isRelation && filter.name == filterName
+        def isOneRelationFilter(filterName: String): Boolean                   = isRelationFilter(filterName) && !field.get.isList
+        def isManyRelationFilter(filterName: String): Boolean                  = isRelationFilter(filterName) && field.get.isList
+        def isFilterList(value: Seq[Any], filterName: String): Boolean         = value.nonEmpty && value.head.isInstanceOf[Map[_, _]] && filter.name == filterName
         def getGCValue(value: Any): GCValue                                    = GCAnyConverter(field.get.typeIdentifier, isList = false).toGCValue(unwrapSome(value)).get
         def scalarFilter(condition: ScalarCondition): ScalarFilter             = ScalarFilter(field.get, condition)
         def scalarListFilter(condition: ScalarListCondition): ScalarListFilter = ScalarListFilter(key, field.get, condition)
-        def generateSubFilters(value: Seq[Any]) =
-          value.asInstanceOf[Seq[Map[String, Any]]].map(x => generateFilterElement(x, model, isSubscriptionFilter)).toVector
+        def generateSubFilter(value: Map[_, _], model: Model): Filter          = generateFilterElement(value.asInstanceOf[Map[String, Any]], model, isSubscriptionFilter)
+        def generateSubFilters(values: Seq[Any]): Vector[Filter]               = values.map(x => generateSubFilter(x.asInstanceOf[Map[String, Any]], model)).toVector
 
         def relationFilter(value: Map[_, _], condition: RelationCondition): RelationFilter =
           RelationFilter(
@@ -201,46 +200,46 @@ class ObjectTypeBuilder(
             model,
             field.get.relatedModel(project.schema).get,
             field.get.relation.get,
-            generateFilterElement(value.asInstanceOf[Map[String, Any]], field.get.relatedModel(project.schema).get, isSubscriptionFilter),
+            generateSubFilter(value, field.get.relatedModel(project.schema).get),
             condition
           )
 
         value match {
           //-------------------------RECURSION-----------------------------
-          case value: Map[_, _] if isLogicFilter(key) || (isSubscriptionFilter && key == "node") =>
-            generateFilterElement(value.asInstanceOf[Map[String, Any]], model, isSubscriptionFilter)
-          case value: Map[_, _] if isManyRelationFilter("_every")      => relationFilter(value, EveryRelatedNode)
-          case value: Map[_, _] if isManyRelationFilter("_some")       => relationFilter(value, AtLeastOneRelatedNode)
-          case value: Map[_, _] if isManyRelationFilter("_none")       => relationFilter(value, NoRelatedNode)
-          case value: Map[_, _] if isRelationFilter("")                => relationFilter(value, NoRelationCondition)
-          case value: Seq[Any] if isCollectionOfFilters(value, "AND")  => AndFilter(generateSubFilters(value))
-          case value: Seq[Any] if isCollectionOfFilters(value, "OR")   => OrFilter(generateSubFilters(value))
-          case value: Seq[Any] if isCollectionOfFilters(value, "NOT")  => NotFilter(generateSubFilters(value))
-          case value: Seq[Any] if isCollectionOfFilters(value, "node") => NodeFilter(generateSubFilters(value))
+          case value: Map[_, _] if isLogicFilter(key) || (isSubscriptionFilter && key == "node") => generateSubFilter(value, model)
+          case value: Map[_, _] if isManyRelationFilter(filterName = "_every")                   => relationFilter(value, EveryRelatedNode)
+          case value: Map[_, _] if isManyRelationFilter(filterName = "_some")                    => relationFilter(value, AtLeastOneRelatedNode)
+          case value: Map[_, _] if isManyRelationFilter(filterName = "_none")                    => relationFilter(value, NoRelatedNode)
+          case value: Map[_, _] if isRelationFilter(filterName = "")                             => relationFilter(value, NoRelationCondition)
+          case value: Seq[Any] if isFilterList(value, filterName = "AND")                        => AndFilter(generateSubFilters(value))
+          case value: Seq[Any] if isFilterList(value, filterName = "OR")                         => OrFilter(generateSubFilters(value))
+          case value: Seq[Any] if isFilterList(value, filterName = "NOT")                        => NotFilter(generateSubFilters(value))
+          case value: Seq[Any] if isFilterList(value, filterName = "node")                       => NodeFilter(generateSubFilters(value))
           //--------------------------ANCHORS------------------------------
-          case values: Seq[Any] if isScalarListFilter("_contains_every")   => scalarListFilter(ListContainsEvery(values.map(getGCValue).toVector))
-          case values: Seq[Any] if isScalarListFilter("_contains_some")    => scalarListFilter(ListContainsSome(values.map(getGCValue).toVector))
-          case value if isScalarListFilter("_contains")                    => scalarListFilter(ListContains(getGCValue(value)))
-          case values: Seq[Any] if isScalarNonListFilter("_in")            => scalarFilter(In(values.map(getGCValue).toVector))
-          case null if isScalarNonListFilter("_in")                        => scalarFilter(In(Vector(NullGCValue)))
-          case values: Seq[Any] if isScalarNonListFilter("_not_in")        => scalarFilter(NotIn(values.map(getGCValue).toVector))
-          case null if isScalarNonListFilter("_not_in")                    => scalarFilter(NotIn(Vector(NullGCValue)))
-          case value if isScalarNonListFilter("")                          => scalarFilter(Equals(getGCValue(value)))
-          case value if isScalarNonListFilter("_not")                      => scalarFilter(NotEquals(getGCValue(value)))
-          case value if isScalarNonListFilter("_contains")                 => scalarFilter(Contains(getGCValue(value)))
-          case value if isScalarNonListFilter("_not_contains")             => scalarFilter(NotContains(getGCValue(value)))
-          case value if isScalarNonListFilter("_starts_with")              => scalarFilter(StartsWith(getGCValue(value)))
-          case value if isScalarNonListFilter("_not_starts_with")          => scalarFilter(NotStartsWith(getGCValue(value)))
-          case value if isScalarNonListFilter("_ends_with")                => scalarFilter(EndsWith(getGCValue(value)))
-          case value if isScalarNonListFilter("_not_ends_with")            => scalarFilter(NotEndsWith(getGCValue(value)))
-          case value if isScalarNonListFilter("_lt")                       => scalarFilter(LessThan(getGCValue(value)))
-          case value if isScalarNonListFilter("_lte")                      => scalarFilter(LessThanOrEquals(getGCValue(value)))
-          case value if isScalarNonListFilter("_gt")                       => scalarFilter(GreaterThan(getGCValue(value)))
-          case value if isScalarNonListFilter("_gte")                      => scalarFilter(GreaterThanOrEquals(getGCValue(value)))
-          case _ if isOneRelationFilter("")                                => OneRelationIsNullFilter(project.schema, field.get)
-          case value: Boolean if field.isEmpty && filter.name == "boolean" => PreComputedSubscriptionFilter(value)
-          case None if field.isDefined                                     => NodeSubscriptionFilter()
-          case x                                                           => sys.error("Missing case " + x)
+          case values: Seq[Any] if isScalarListFilter(filterName = "_contains_every") => scalarListFilter(ListContainsEvery(values.map(getGCValue).toVector))
+          case values: Seq[Any] if isScalarListFilter(filterName = "_contains_some")  => scalarListFilter(ListContainsSome(values.map(getGCValue).toVector))
+          case value if isScalarListFilter(filterName = "_contains")                  => scalarListFilter(ListContains(getGCValue(value)))
+          case values: Seq[Any] if isScalarNonListFilter(filterName = "_in")          => scalarFilter(In(values.map(getGCValue).toVector))
+          case null if isScalarNonListFilter(filterName = "_in")                      => scalarFilter(In(Vector(NullGCValue)))
+          case values: Seq[Any] if isScalarNonListFilter(filterName = "_not_in")      => scalarFilter(NotIn(values.map(getGCValue).toVector))
+          case null if isScalarNonListFilter(filterName = "_not_in")                  => scalarFilter(NotIn(Vector(NullGCValue)))
+          case value if isScalarNonListFilter(filterName = "")                        => scalarFilter(Equals(getGCValue(value)))
+          case value if isScalarNonListFilter(filterName = "_not")                    => scalarFilter(NotEquals(getGCValue(value)))
+          case value if isScalarNonListFilter(filterName = "_contains")               => scalarFilter(Contains(getGCValue(value)))
+          case value if isScalarNonListFilter(filterName = "_not_contains")           => scalarFilter(NotContains(getGCValue(value)))
+          case value if isScalarNonListFilter(filterName = "_starts_with")            => scalarFilter(StartsWith(getGCValue(value)))
+          case value if isScalarNonListFilter(filterName = "_not_starts_with")        => scalarFilter(NotStartsWith(getGCValue(value)))
+          case value if isScalarNonListFilter(filterName = "_ends_with")              => scalarFilter(EndsWith(getGCValue(value)))
+          case value if isScalarNonListFilter(filterName = "_not_ends_with")          => scalarFilter(NotEndsWith(getGCValue(value)))
+          case value if isScalarNonListFilter(filterName = "_lt")                     => scalarFilter(LessThan(getGCValue(value)))
+          case value if isScalarNonListFilter(filterName = "_lte")                    => scalarFilter(LessThanOrEquals(getGCValue(value)))
+          case value if isScalarNonListFilter(filterName = "_gt")                     => scalarFilter(GreaterThan(getGCValue(value)))
+          case value if isScalarNonListFilter(filterName = "_gte")                    => scalarFilter(GreaterThanOrEquals(getGCValue(value)))
+          case _ if isOneRelationFilter(filterName = "")                              => OneRelationIsNullFilter(project.schema, field.get)
+          case value: Boolean if field.isEmpty && filter.name == "boolean"            => PreComputedSubscriptionFilter(value)
+          case None if field.isDefined                                                => NodeSubscriptionFilter()
+          case null if field.isDefined && field.get.isList && field.get.isRelation    => throw APIErrors.FilterCannotBeNullOnToManyField(field.get.name)
+          case x                                                                      => sys.error("Missing case " + x)
         }
     }
     AndFilter(filters.toVector)
