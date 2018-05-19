@@ -48,17 +48,16 @@ object QueryArgumentsHelpers {
     }
 
     val sqlParts = filter match {
-      // todo this is used for the node: {} field in the Subscription Filter
-      case FilterElement(key, None, Some(field), filterName) => None
-      case AndFilter(filters)                                => combineByAnd(filters.map(generateFilterConditions(projectId, tableName, _)).collect { case Some(x) => x })
-      case OrFilter(filters)                                 => combineByOr(filters.map(generateFilterConditions(projectId, tableName, _)).collect { case Some(x) => x })
-      case NotFilter(filters)                                => combineByNot(filters.map(generateFilterConditions(projectId, tableName, _)).collect { case Some(x) => x })
-      case NodeFilter(filters)                               => combineByOr(filters.map(generateFilterConditions(projectId, tableName, _)).collect { case Some(x) => x })
+      case NodeSubscriptionFilter() => None
+      case AndFilter(filters)       => combineByAnd(filters.map(generateFilterConditions(projectId, tableName, _)).collect { case Some(x) => x })
+      case OrFilter(filters)        => combineByOr(filters.map(generateFilterConditions(projectId, tableName, _)).collect { case Some(x) => x })
+      case NotFilter(filters)       => combineByNot(filters.map(generateFilterConditions(projectId, tableName, _)).collect { case Some(x) => x })
+      case NodeFilter(filters)      => combineByOr(filters.map(generateFilterConditions(projectId, tableName, _)).collect { case Some(x) => x })
       case RelationFilter(schema, field, fromModel, toModel, relation, nestedFilter, condition: RelationCondition) =>
         relationFilterStatement(schema, field, fromModel, toModel, relation, nestedFilter, condition)
       //--- non recursive
       // the boolean filter comes from precomputed fields // this is the computed stuff that we get when replacing mutation_in
-      case FilterElement(key, value, None, filterName) if filterName == "boolean" => Some(if (value == true) sql"TRUE" else sql"FALSE")
+      case PreComputedSubscriptionFilter(value) => Some(if (value) sql"TRUE" else sql"FALSE")
 
       case ScalarFilter(field, Contains(value)) =>
         Some(sql""""#$tableName"."#${field.name}" LIKE """ ++ escapeUnsafeParam(s"%${GCValueExtractor.fromGCValue(value)}%"))

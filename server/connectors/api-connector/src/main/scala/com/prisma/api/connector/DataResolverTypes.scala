@@ -4,10 +4,6 @@ import com.prisma.gc_values.{GCValue, IdGCValue}
 import com.prisma.shared.models.IdType.Id
 import com.prisma.shared.models.{Field, Model, Relation, Schema}
 
-object Types {
-  type DataItemFilterCollection = Filter
-}
-
 case class ScalarListElement(nodeId: Id, position: Int, value: GCValue)
 
 case class ResolverResult[T](
@@ -28,9 +24,8 @@ case class QueryArguments(
 )
 
 object QueryArguments {
-  def empty = QueryArguments(skip = None, after = None, first = None, before = None, last = None, filter = None, orderBy = None)
-  def filterOnly(filter: Option[Filter]) =
-    QueryArguments(skip = None, after = None, first = None, before = None, last = None, filter = filter, orderBy = None)
+  def empty                              = QueryArguments(skip = None, after = None, first = None, before = None, last = None, filter = None, orderBy = None)
+  def filterOnly(filter: Option[Filter]) = QueryArguments.empty.copy(filter = filter)
 }
 
 object SortOrder extends Enumeration {
@@ -100,12 +95,14 @@ object AtLeastOneRelatedNode extends RelationCondition
 object NoRelatedNode         extends RelationCondition
 object NoRelationCondition   extends RelationCondition
 
-case class FilterElement(
-    key: String,
-    value: Any,
-    field: Option[Field] = None,
-    filterName: String = ""
-) extends Filter
+case class NodeSubscriptionFilter()                        extends Filter
+case class PreComputedSubscriptionFilter(boolean: Boolean) extends Filter
+
+//only mysql usages left
+
+object Types {
+  type DataItemFilterCollection = Filter
+}
 
 case class FinalValueFilter(
     key: String,
@@ -114,7 +111,12 @@ case class FinalValueFilter(
     filterName: String = ""
 ) extends Filter
 
-//only mysql usages left
+case class FilterElement(
+    key: String,
+    value: Any,
+    field: Option[Field] = None,
+    filterName: String = ""
+) extends Filter
 
 case class FinalRelationFilter( // relation is null
                                schema: Schema,
