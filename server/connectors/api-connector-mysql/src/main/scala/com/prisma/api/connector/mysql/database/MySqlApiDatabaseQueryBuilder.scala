@@ -15,7 +15,7 @@ import slick.sql.SqlStreamingAction
 
 import scala.concurrent.ExecutionContext
 
-case class MySqlApiDatabaseQueryBuilder(schema: Schema, schemaName: String)(implicit ec: ExecutionContext) {
+case class MySqlApiDatabaseQueryBuilder(project: Project)(implicit ec: ExecutionContext) {
   import JdbcExtensions._
   import MySqlQueryArgumentsExtensions._
   import MySqlSlickExtensions._
@@ -55,64 +55,25 @@ case class MySqlApiDatabaseQueryBuilder(schema: Schema, schemaName: String)(impl
     ScalarListElement(nodeId, position, value)
   }
 
-  def selectAllFromTable(
-      projectId: String,
-      model: Model,
-      args: Option[QueryArguments],
-      overrideMaxNodeCount: Option[Int] = None
-  ): DBIOAction[ResolverResult[PrismaNode], NoStream, Effect] = {
+  private def whereOrderByLimitCommands(args: Option[QueryArguments], overrideMaxNodeCount: Option[Int], tableName: String) = {
+    val (where, orderBy, limit) = extractQueryArgs(project.id, alias = ALIAS, tableName, args, None, overrideMaxNodeCount)
+    sql"" ++ prefixIfNotNone("where", where) ++ prefixIfNotNone("order by", orderBy) ++ prefixIfNotNone("limit", limit)
+  }
 
-    val tableName = model.name
-    val (conditionCommand, orderByCommand, limitCommand) =
-      extractQueryArgs(projectId, alias = TOP_LEVEL_ALIAS, tableName, args, None, overrideMaxNodeCount = overrideMaxNodeCount)
-
-    val query =
-      sql"""select * 
-            from `#$projectId`.`#$tableName` as `#${TOP_LEVEL_ALIAS}` """ ++
-        prefixIfNotNone("where", conditionCommand) ++
-        prefixIfNotNone("order by", orderByCommand) ++
-        prefixIfNotNone("limit", limitCommand)
-
+  def selectAllFromTable(model: Model, args: Option[QueryArguments], overrideMaxNodeCount: Option[Int] = None) = {
+    val query = sql"""select * from `#${project.id}`.`#${model.name}` as `#${ALIAS}` """ ++ whereOrderByLimitCommands(args, overrideMaxNodeCount, model.name)
     query.as[PrismaNode](getResultForModel(model)).map(args.get.resultTransform)
   }
 
-  def selectAllFromRelationTable(
-      projectId: String,
-      relationId: String,
-      args: Option[QueryArguments],
-      overrideMaxNodeCount: Option[Int] = None
-  ): DBIOAction[ResolverResult[RelationNode], NoStream, Effect] = {
-
-    val tableName = relationId
-    val (conditionCommand, orderByCommand, limitCommand) =
-      extractQueryArgs(projectId, TOP_LEVEL_ALIAS, tableName, args, None, overrideMaxNodeCount = overrideMaxNodeCount)
-
-    val query =
-      sql"""select * 
-            from `#$projectId`.`#$tableName` as `#${TOP_LEVEL_ALIAS}` """ ++
-        prefixIfNotNone("where", conditionCommand) ++
-        prefixIfNotNone("order by", orderByCommand) ++
-        prefixIfNotNone("limit", limitCommand)
-
+  def selectAllFromRelationTable(relationId: String, args: Option[QueryArguments], overrideMaxNodeCount: Option[Int] = None) = {
+    val query = sql"""select * from `#${project.id}`.`#$relationId` as `#${ALIAS}` """ ++ whereOrderByLimitCommands(args, overrideMaxNodeCount, relationId)
     query.as[RelationNode].map(args.get.resultTransform)
   }
 
-  def selectAllFromListTable(projectId: String,
-                             model: Model,
-                             field: Field,
-                             args: Option[QueryArguments],
-                             overrideMaxNodeCount: Option[Int] = None): DBIOAction[ResolverResult[ScalarListValues], NoStream, Effect] = {
+  def selectAllFromListTable(model: Model, field: Field, args: Option[QueryArguments], overrideMaxNodeCount: Option[Int] = None) = {
 
     val tableName = s"${model.name}_${field.name}"
-    val (conditionCommand, orderByCommand, limitCommand) =
-      extractQueryArgs(projectId, TOP_LEVEL_ALIAS, tableName, args, None, overrideMaxNodeCount = overrideMaxNodeCount, true)
-
-    val query =
-      sql"""select * 
-            from `#$projectId`.`#$tableName`  as `#${TOP_LEVEL_ALIAS}` """ ++
-        prefixIfNotNone("where", conditionCommand) ++
-        prefixIfNotNone("order by", orderByCommand) ++
-        prefixIfNotNone("limit", limitCommand)
+    val query     = sql"""select * from `#${project.id}`.`#$tableName`  as `#${ALIAS}` """ ++ whereOrderByLimitCommands(args, overrideMaxNodeCount, tableName)
 
     query.as[ScalarListElement](getResultForScalarListField(field)).map { scalarListElements =>
       val res = args.get.resultTransform(scalarListElements)

@@ -7,8 +7,8 @@ import slick.jdbc.MySQLProfile.api._
 import slick.jdbc.SQLActionBuilder
 
 object MySqlQueryArgumentsExtensions {
-  val MAX_NODE_COUNT  = 1000
-  val TOP_LEVEL_ALIAS = "Top_Level_Alias"
+  val MAX_NODE_COUNT = 1000
+  val ALIAS          = "Top_Level_Alias"
 
   def extractQueryArgs(
       projectId: String,
