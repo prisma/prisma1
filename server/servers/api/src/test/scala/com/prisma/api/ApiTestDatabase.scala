@@ -30,7 +30,7 @@ case class ApiTestDatabase()(implicit dependencies: TestApiDependencies) extends
     val mutaction = relation.manifestation match {
       case Some(m: InlineRelationManifestation) =>
         val modelA = relation.getModelA_!
-        val modelB = relation.getModelB_!(schema)
+        val modelB = relation.getModelB_!
 
         val (model, references) = if (m.inTableOfModelId == modelA.id) {
           (modelA, modelB)

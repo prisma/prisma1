@@ -104,7 +104,7 @@ object APIErrors {
 
   case class RequiredRelationWouldBeViolated(project: Project, relation: Relation)
       extends ClientApiError(
-        s"The change you are trying to make would violate the required relation '${relation.relationTableName}' between ${relation.getModelA_!.name} and ${relation.getModelB_!(project.schema).name}",
+        s"The change you are trying to make would violate the required relation '${relation.relationTableName}' between ${relation.getModelA_!.name} and ${relation.getModelB_!.name}",
         3042
       )
 

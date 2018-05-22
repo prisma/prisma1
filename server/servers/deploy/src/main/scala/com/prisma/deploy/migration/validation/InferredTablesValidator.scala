@@ -11,7 +11,7 @@ object InferredTablesValidator {
       relation.manifestation match {
         case None =>
           val modelA = relation.getModelA_!
-          val modelB = relation.getModelB_!(schema)
+          val modelB = relation.getModelB_!
           Some(SchemaError.global(s"Could not find the relation between the models ${modelA.name} and ${modelB.name} in the database"))
 
         case Some(m: InlineRelationManifestation) =>
@@ -34,7 +34,7 @@ object InferredTablesValidator {
 
             case Some(relationTable) =>
               val modelA = relation.getModelA_!
-              val modelB = relation.getModelB_!(schema)
+              val modelB = relation.getModelB_!
               if (!relationTable.referencesTheTables(modelA.dbName, modelB.dbName)) {
                 Some(SchemaError.global(s"The specified relation table ${m.table} does not reference the tables for model ${modelA.name} and ${modelB.name}"))
               } else if (!relationTable.doesColumnReferenceTable(m.modelAColumn, modelA.dbName)) {
