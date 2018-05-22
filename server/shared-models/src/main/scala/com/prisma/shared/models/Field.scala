@@ -109,7 +109,7 @@ class Field(
     relation.flatMap(relation => {
       relationSide match {
         case Some(RelationSide.A) => relation.getModelB(schema)
-        case Some(RelationSide.B) => relation.getModelA(schema)
+        case Some(RelationSide.B) => relation.getModelA
         case x                    => ??? //throw SystemErrors.InvalidStateException(message = s" relationSide was $x")
       }
     })

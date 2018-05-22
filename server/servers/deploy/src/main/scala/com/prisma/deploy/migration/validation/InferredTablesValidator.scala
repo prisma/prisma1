@@ -10,7 +10,7 @@ object InferredTablesValidator {
     schema.relations.flatMap { relation =>
       relation.manifestation match {
         case None =>
-          val modelA = relation.getModelA_!(schema)
+          val modelA = relation.getModelA_!
           val modelB = relation.getModelB_!(schema)
           Some(SchemaError.global(s"Could not find the relation between the models ${modelA.name} and ${modelB.name} in the database"))
 
@@ -33,7 +33,7 @@ object InferredTablesValidator {
               Some(SchemaError.global(s"Could not find the relation table ${m.table}"))
 
             case Some(relationTable) =>
-              val modelA = relation.getModelA_!(schema)
+              val modelA = relation.getModelA_!
               val modelB = relation.getModelB_!(schema)
               if (!relationTable.referencesTheTables(modelA.dbName, modelB.dbName)) {
                 Some(SchemaError.global(s"The specified relation table ${m.table} does not reference the tables for model ${modelA.name} and ${modelB.name}"))

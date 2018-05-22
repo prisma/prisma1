@@ -335,7 +335,7 @@ case class SchemaInferrerImpl(
   }
 
   def addMissingFieldFor(schema: Schema, relation: Relation, relationSide: RelationSide.Value): Schema = {
-    val model     = if (relationSide == RelationSide.A) relation.getModelA_!(schema) else relation.getModelB_!(schema)
+    val model     = if (relationSide == RelationSide.A) relation.getModelA_! else relation.getModelB_!(schema)
     val newModel  = model.copy(fieldTemplates = model.fieldTemplates :+ missingBackRelationField(relation, relationSide))
     val newModels = schema.models.filter(_.name != model.name).map(_.copy()) :+ newModel
     schema.copy(modelTemplates = newModels)

@@ -44,7 +44,7 @@ class Relation(
     case Some(m: RelationTableManifestation) =>
       m.modelAColumn
     case Some(m: InlineRelationManifestation) =>
-      if (m.inTableOfModelId == modelAId) getModelA_!(schema).idField_!.dbName else m.referencingColumn
+      if (m.inTableOfModelId == modelAId) getModelA_!.idField_!.dbName else m.referencingColumn
     case None =>
       "A"
   }
@@ -86,8 +86,8 @@ class Relation(
     }
   }
 
-  def getModelA(schema: Schema): Option[Model] = schema.getModelById(modelAId)
-  def getModelA_!(schema: Schema): Model       = getModelA(schema).get //OrElse(throw SystemErrors.InvalidRelation("A relation should have a valid Model A."))
+  def getModelA: Option[Model] = schema.getModelById(modelAId)
+  def getModelA_! : Model      = getModelA.get //OrElse(throw SystemErrors.InvalidRelation("A relation should have a valid Model A."))
 
   def getModelB(schema: Schema): Option[Model] = schema.getModelById(modelBId)
   def getModelB_!(schema: Schema): Model       = getModelB(schema).get //OrElse(throw SystemErrors.InvalidRelation("A relation should have a valid Model B."))
