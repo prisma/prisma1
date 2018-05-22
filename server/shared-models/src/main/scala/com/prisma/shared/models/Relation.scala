@@ -40,7 +40,7 @@ class Relation(
     }
     .getOrElse("_" + name)
 
-  def modelAColumn: String = manifestation match {
+  lazy val modelAColumn: String = manifestation match {
     case Some(m: RelationTableManifestation) =>
       m.modelAColumn
     case Some(m: InlineRelationManifestation) =>
@@ -49,7 +49,7 @@ class Relation(
       "A"
   }
 
-  def modelBColumn: String = manifestation match {
+  lazy val modelBColumn: String = manifestation match {
     case Some(m: RelationTableManifestation) =>
       m.modelBColumn
     case Some(m: InlineRelationManifestation) =>
@@ -58,23 +58,35 @@ class Relation(
       "B"
   }
 
-  def columnForRelationSide(relationSide: RelationSide.Value): String = if (relationSide == RelationSide.A) modelAColumn else modelBColumn
+  lazy val hasManifestation: Boolean                                = manifestation.isDefined
+  lazy val isInlineRelation: Boolean                                = manifestation.exists(_.isInstanceOf[InlineRelationManifestation])
+  lazy val inlineManifestation: Option[InlineRelationManifestation] = manifestation.collect { case x: InlineRelationManifestation => x }
 
-  def hasManifestation: Boolean = manifestation.isDefined
-  def isInlineRelation: Boolean = manifestation.exists(_.isInstanceOf[InlineRelationManifestation])
+  // note: defaults to modelAField to handle same model, same field relations
+  lazy val isSameFieldSameModelRelation: Boolean = getModelAField == getModelBField.orElse(getModelAField)
 
-  def inlineManifestation: Option[InlineRelationManifestation] = manifestation.collect { case x: InlineRelationManifestation => x }
-
-  def isSameFieldSameModelRelation: Boolean = {
-    // note: defaults to modelAField to handle same model, same field relations
-    getModelAField == getModelBField.orElse(getModelAField)
-  }
-
-  def isManyToMany: Boolean = {
+  lazy val isManyToMany: Boolean = {
     val modelAFieldIsList = getModelAField.map(_.isList).getOrElse(true)
     val modelBFieldIsList = getModelBField.map(_.isList).getOrElse(true)
     modelAFieldIsList && modelBFieldIsList
   }
+
+  lazy val bothSidesCascade: Boolean     = modelAOnDelete == OnDelete.Cascade && modelBOnDelete == OnDelete.Cascade
+  lazy val getModelA: Option[Model]      = schema.getModelById(modelAId)
+  lazy val getModelA_! : Model           = getModelA.get //OrElse(throw SystemErrors.InvalidRelation("A relation should have a valid Model A."))
+  lazy val getModelB: Option[Model]      = schema.getModelById(modelBId)
+  lazy val getModelB_! : Model           = getModelB.get //OrElse(throw SystemErrors.InvalidRelation("A relation should have a valid Model B."))
+  lazy val getModelAField: Option[Field] = modelFieldFor(modelAId, RelationSide.A)
+  lazy val getModelBField: Option[Field] = modelFieldFor(modelBId, RelationSide.B)
+
+  private def modelFieldFor(modelId: String, relationSide: RelationSide.Value): Option[Field] = {
+    for {
+      model <- schema.getModelById(modelId)
+      field <- model.relationFieldForIdAndSide(relationId = relationTableName, relationSide = relationSide)
+    } yield field
+  }
+
+  def columnForRelationSide(relationSide: RelationSide.Value): String = if (relationSide == RelationSide.A) modelAColumn else modelBColumn
 
   def getFieldOnModel(modelId: String): Option[Field] = {
     if (modelId == modelAId) {
@@ -86,22 +98,6 @@ class Relation(
     }
   }
 
-  def getModelA: Option[Model] = schema.getModelById(modelAId)
-  def getModelA_! : Model      = getModelA.get //OrElse(throw SystemErrors.InvalidRelation("A relation should have a valid Model A."))
-
-  def getModelB: Option[Model] = schema.getModelById(modelBId)
-  def getModelB_! : Model      = getModelB.get //OrElse(throw SystemErrors.InvalidRelation("A relation should have a valid Model B."))
-
-  def getModelAField: Option[Field] = modelFieldFor(modelAId, RelationSide.A)
-  def getModelBField: Option[Field] = modelFieldFor(modelBId, RelationSide.B)
-
-  private def modelFieldFor(modelId: String, relationSide: RelationSide.Value): Option[Field] = {
-    for {
-      model <- schema.getModelById(modelId)
-      field <- model.relationFieldForIdAndSide(relationId = relationTableName, relationSide = relationSide)
-    } yield field
-  }
-
   def sideOfModelCascades(model: Model): Boolean = {
     if (model.id == modelAId) {
       modelAOnDelete == OnDelete.Cascade
@@ -111,6 +107,4 @@ class Relation(
       sys.error(s"The model ${model.name} is not part of the relation $name")
     }
   }
-
-  def bothSidesCascade: Boolean = modelAOnDelete == OnDelete.Cascade && modelBOnDelete == OnDelete.Cascade
 }
