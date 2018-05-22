@@ -46,12 +46,11 @@ class Relation(
   // note: defaults to modelAField to handle same model, same field relations
   lazy val isSameFieldSameModelRelation: Boolean = modelAField == modelBField.orElse(modelAField)
 
-  lazy val relationTableName = manifestation // TODO: put this into a more readable pattern match
-    .collect {
-      case m: RelationTableManifestation  => m.table
-      case m: InlineRelationManifestation => schema.getModelById_!(m.inTableOfModelId).dbName
-    }
-    .getOrElse("_" + name)
+  lazy val relationTableName = manifestation match {
+    case Some(m: RelationTableManifestation)  => m.table
+    case Some(m: InlineRelationManifestation) => schema.getModelById_!(m.inTableOfModelId).dbName
+    case None                                 => "_" + name
+  }
 
   lazy val modelAColumn: String = manifestation match {
     case Some(m: RelationTableManifestation) =>
