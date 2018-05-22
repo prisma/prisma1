@@ -220,7 +220,7 @@ class SchemaInfererSpec extends WordSpec with Matchers {
       val relation = schema.getRelationByName_!("ChildTechnologies")
       relation.modelAId should equal("Technology")
       relation.modelBId should equal("Technology")
-      relation.getModelAField(schema).get.name should be("childTechnologies")
+      relation.getModelAField.get.name should be("childTechnologies")
       relation.getModelBField(schema).get.name should be("parentTechnologies")
 
     }
@@ -238,7 +238,7 @@ class SchemaInfererSpec extends WordSpec with Matchers {
       val relation = schema.getRelationByName_!("ChildTechnologies")
       relation.modelAId should equal("Technology")
       relation.modelBId should equal("Technology")
-      relation.getModelAField(schema).get.name should be("childTechnologies")
+      relation.getModelAField.get.name should be("childTechnologies")
       relation.getModelBField(schema).get.name should be("parentTechnologies")
 
       val newTypes =
@@ -284,7 +284,7 @@ class SchemaInfererSpec extends WordSpec with Matchers {
     val relation = schema.getRelationByName_!("ChildTechnologies")
     relation.modelAId should equal("Technology")
     relation.modelBId should equal("Technology")
-    relation.getModelAField(schema).get.name should be("childTechnologies")
+    relation.getModelAField.get.name should be("childTechnologies")
     relation.getModelBField(schema).get.name should be("parentTechnologies")
 
     val techModel   = schema.models.head
@@ -322,7 +322,7 @@ class SchemaInfererSpec extends WordSpec with Matchers {
     val relation = schema.relations.head
     relation.modelAId should equal("Technology")
     relation.modelBId should equal("Technology")
-    relation.getModelAField(schema).get.name should be("childTechnologies")
+    relation.getModelAField.get.name should be("childTechnologies")
   }
 
   "handle database manifestations for models" in {

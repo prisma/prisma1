@@ -75,7 +75,7 @@ package object ImportExport {
       r.getModelB_!.name,
       r.getModelBField(project.schema).map(_.name),
       r.getModelA_!.name,
-      r.getModelAField(project.schema).map(_.name)
+      r.getModelAField.map(_.name)
     )
   }
 
