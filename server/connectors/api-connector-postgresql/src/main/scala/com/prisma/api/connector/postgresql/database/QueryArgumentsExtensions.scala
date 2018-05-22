@@ -23,16 +23,13 @@ object QueryArgumentsExtensions {
       case None => (None, None, None)
       case Some(givenArgs: QueryArguments) =>
         val orderByCommand =
-          if (forList) givenArgs.extractOrderByCommandForLists(projectId, alias, defaultOrderShortcut)
-          else givenArgs.extractOrderByCommand(projectId, alias, idFieldName, defaultOrderShortcut)
+          if (forList) givenArgs.extractOrderByCommandForLists(alias, defaultOrderShortcut)
+          else givenArgs.extractOrderByCommand(alias, idFieldName, defaultOrderShortcut)
 
         (
           givenArgs.extractWhereConditionCommand(projectId, alias, tableName),
           orderByCommand,
-          overrideMaxNodeCount match {
-            case None                => givenArgs.extractLimitCommand(projectId, alias)
-            case Some(maxCount: Int) => givenArgs.extractLimitCommand(projectId, alias, maxCount)
-          }
+          givenArgs.extractLimitCommand(overrideMaxNodeCount.getOrElse(MAX_NODE_COUNT))
         )
     }
   }
@@ -53,7 +50,7 @@ object QueryArgumentsExtensions {
     // "where" keyword. This is because we might need to combine these commands with other commands. If nothing is to be
     // returned, DO NOT return an empty string, but None instead.
 
-    def extractOrderByCommandForLists(projectId: String, modelId: String, defaultOrderShortcut: Option[String] = None): Option[SQLActionBuilder] = {
+    def extractOrderByCommandForLists(topLevelAlias: String, defaultOrderShortcut: Option[String] = None): Option[SQLActionBuilder] = {
 
       if (first.isDefined && last.isDefined) throw APIErrors.InvalidConnectionArguments()
 
@@ -65,15 +62,10 @@ object QueryArgumentsExtensions {
       }
 
       //always order by nodeId, then positionfield ascending
-      Some(sql""""#$projectId"."#$modelId"."nodeId" #$order, "#$projectId"."#$modelId"."position" #$idOrder""")
+      Some(sql""""#$topLevelAlias"."nodeId" #$order, "#$topLevelAlias"."position" #$idOrder""")
     }
 
-    def extractOrderByCommand(
-        projectId: String,
-        topLevelAlias: String,
-        idFieldName: String,
-        defaultOrderShortcut: Option[String] = None
-    ): Option[SQLActionBuilder] = {
+    def extractOrderByCommand(topLevelAlias: String, idFieldName: String, defaultOrderShortcut: Option[String] = None): Option[SQLActionBuilder] = {
 
       if (first.isDefined && last.isDefined) throw APIErrors.InvalidConnectionArguments()
 
@@ -99,7 +91,7 @@ object QueryArgumentsExtensions {
       }
     }
 
-    def extractLimitCommand(projectId: String, modelId: String, maxNodeCount: Int = MAX_NODE_COUNT): Option[SQLActionBuilder] = {
+    def extractLimitCommand(maxNodeCount: Int): Option[SQLActionBuilder] = {
 
       (first, last, skip) match {
         case (Some(first), _, _) if first < 0 => throw InvalidFirstArgument()

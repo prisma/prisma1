@@ -190,32 +190,5 @@ class RelationFilterSpec extends FlatSpec with Matchers with ApiSpecBase {
       )
       .toString should be("""{"data":{"posts":[]}}""")
 
-    /**
-      * select * from Post
-      * inner join Blog on Blog.post_id = Post.id
-      * inner join Post as Post_Sub on Blog.post_id = Post_Sub.id
-      * where Post_Sub.popularity > 5
-      */
-    server
-      .query(
-        query = """{posts(where: {
-                |  blog: {
-                |    posts_some: {
-                |      popularity_gte: 5
-                |    }
-                |    name_contains: "Blog 1"
-                |  }
-                |  comments_none: {
-                |    likes_gte: 500
-                |  }
-                |  comments_some: {
-                |    likes_lte: 2
-                |  }
-                |}) {
-                |  title
-                |}}""".stripMargin,
-        project = project
-      )
-      .toString should be("""{"data":{"posts":[{"title":"post 1"}]}}""")
   }
 }
