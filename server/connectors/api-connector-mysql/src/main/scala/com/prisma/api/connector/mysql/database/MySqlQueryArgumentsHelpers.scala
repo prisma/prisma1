@@ -12,7 +12,7 @@ object MySqlQueryArgumentsHelpers {
   def generateFilterConditions(projectId: String, alias: String, modelName: String, filter: Filter): Option[SQLActionBuilder] = {
 
     def getAliasAndTableName(fromModel: String, toModel: String): (String, String) = {
-      val modTableName = if (!alias.contains("_")) projectId + """"."""" + fromModel else alias
+      val modTableName = if (!alias.contains("_")) projectId + """`.`""" + fromModel else alias
       val newAlias     = toModel + "_" + alias
       (newAlias, modTableName)
     }
