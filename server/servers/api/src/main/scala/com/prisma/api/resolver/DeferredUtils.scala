@@ -86,7 +86,7 @@ object DeferredUtils {
     val headDeferred = deferreds.head
 
     val countSimilarDeferreds = deferreds.count { d =>
-      d.field.id == headDeferred.field.id
+      d.field.name == headDeferred.field.name
     }
 
     if (countSimilarDeferreds != deferreds.length) {

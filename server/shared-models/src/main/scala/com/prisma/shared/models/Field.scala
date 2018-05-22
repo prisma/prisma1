@@ -73,7 +73,6 @@ class Field(
 
   lazy val relation: Option[Relation] = relationName.flatMap(schema.getRelationByName)
 
-  lazy val id = name
   lazy val dbName = {
     relation match {
       case Some(r) if r.isInlineRelation => r.manifestation.get.asInstanceOf[InlineRelationManifestation].referencingColumn
@@ -129,7 +128,7 @@ class Field(
 
     val returnField = fields.find { field =>
       field.relation.exists { relation =>
-        val isTheSameField    = field.id == this.id
+        val isTheSameField    = field.name == this.name
         val isTheSameRelation = relation.relationTableName == this.relation.get.relationTableName
         isTheSameRelation && !isTheSameField
       }
@@ -149,7 +148,7 @@ class Field(
 
     fields.find { field =>
       field.relation.exists { relation =>
-        val isTheSameField    = field.id == this.id
+        val isTheSameField    = field.name == this.name
         val isTheSameRelation = relation.relationTableName == this.relation.get.relationTableName
         isTheSameRelation && !isTheSameField
       }
