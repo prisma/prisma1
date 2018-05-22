@@ -67,7 +67,7 @@ class NestedConnectMutationInsideUpdateSpec extends FlatSpec with Matchers with 
       """.stripMargin,
       project,
       errorCode = 3042,
-      errorContains = "The change you are trying to make would violate the required relation '_ChildToParent' between Child and Parent"
+      errorContains = "The change you are trying to make would violate the required relation 'ChildToParent' between Child and Parent"
     )
 
     ifConnectorIsActive { dataResolver(project).countByTable("_ChildToParent").await should be(2) }
@@ -133,7 +133,7 @@ class NestedConnectMutationInsideUpdateSpec extends FlatSpec with Matchers with 
       """.stripMargin,
       project,
       errorCode = 3042,
-      errorContains = "The change you are trying to make would violate the required relation '_ParentToChild' between Parent and Child"
+      errorContains = "The change you are trying to make would violate the required relation 'ParentToChild' between Parent and Child"
     )
 
     ifConnectorIsActive { dataResolver(project).countByTable("_ParentToChild").await should be(2) }
@@ -559,7 +559,7 @@ class NestedConnectMutationInsideUpdateSpec extends FlatSpec with Matchers with 
       """.stripMargin,
       project,
       errorCode = 3042,
-      errorContains = "The change you are trying to make would violate the required relation '_ChildToParent' between Child and Parent"
+      errorContains = "The change you are trying to make would violate the required relation 'ChildToParent' between Child and Parent"
     )
 
     ifConnectorIsActive { dataResolver(project).countByTable("_ChildToParent").await should be(2) }
