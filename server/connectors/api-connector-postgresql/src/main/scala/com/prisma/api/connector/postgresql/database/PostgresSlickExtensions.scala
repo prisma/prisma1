@@ -32,7 +32,7 @@ object PostgresSlickExtensions {
     def ++(b: Option[SQLActionBuilder]): SQLActionBuilder = concat(b)
   }
 
-  def escapeUnsafeParam(string: String): SQLActionBuilder = sql"$string"
+  def escapeUnsafe(string: String): SQLActionBuilder = sql"$string"
 
   def escapeKey(key: String) = sql""""#$key""""
 
