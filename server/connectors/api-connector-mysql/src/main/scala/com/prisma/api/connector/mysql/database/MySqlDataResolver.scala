@@ -39,7 +39,7 @@ case class MySqlDataResolver(project: Project, readonlyClientDatabase: MySQLProf
   }
 
   override def resolveByModel(model: Model, args: Option[QueryArguments] = None): Future[ResolverResult[PrismaNode]] = {
-    val query = queryBuilder.selectAllFromTable(project.id, model, args)
+    val query = queryBuilder.selectAllFromTable(model, args)
     performWithTiming("loadModelRowsForExport", readonlyClientDatabase.run(query))
   }
 
@@ -47,39 +47,39 @@ case class MySqlDataResolver(project: Project, readonlyClientDatabase: MySQLProf
     batchResolveByUnique(where.model, where.field, Vector(where.fieldValue)).map(_.headOption)
 
   override def countByTable(table: String, whereFilter: Option[Filter] = None): Future[Int] = {
-    val query = queryBuilder.countAllFromTable(project, table, whereFilter)
+    val query = queryBuilder.countAllFromTable(table, whereFilter)
     performWithTiming("countByModel", readonlyClientDatabase.run(query))
   }
 
   override def batchResolveByUnique(model: Model, field: Field, values: Vector[GCValue]): Future[Vector[PrismaNode]] = {
-    val query = queryBuilder.batchSelectFromModelByUnique(project.id, model, field.dbName, values)
+    val query = queryBuilder.batchSelectFromModelByUnique(model, field.dbName, values)
     performWithTiming("batchResolveByUnique", readonlyClientDatabase.run(query))
   }
 
   override def batchResolveScalarList(model: Model, listField: Field, nodeIds: Vector[IdGCValue]): Future[Vector[ScalarListValues]] = {
-    val query = queryBuilder.selectFromScalarList(project.id, model.name, listField, nodeIds)
+    val query = queryBuilder.selectFromScalarList(model.name, listField, nodeIds)
     performWithTiming("batchResolveScalarList", readonlyClientDatabase.run(query))
   }
 
   override def resolveByRelationManyModels(fromField: Field,
                                            fromNodeIds: Vector[IdGCValue],
                                            args: Option[QueryArguments]): Future[Vector[ResolverResult[PrismaNodeWithParent]]] = {
-    val query = queryBuilder.batchSelectAllFromRelatedModel(project, fromField, fromNodeIds, args)
+    val query = queryBuilder.batchSelectAllFromRelatedModel(fromField, fromNodeIds, args)
     performWithTiming("resolveByRelation", readonlyClientDatabase.run(query))
   }
 
   override def countByRelationManyModels(fromField: Field, fromNodeIds: Vector[IdGCValue], args: Option[QueryArguments]): Future[Vector[(IdGCValue, Int)]] = {
-    val query = queryBuilder.countAllFromRelatedModels(project, fromField, fromNodeIds, args)
+    val query = queryBuilder.countAllFromRelatedModels(fromField, fromNodeIds, args)
     performWithTiming("countByRelation", readonlyClientDatabase.run(query))
   }
 
   override def loadListRowsForExport(model: Model, field: Field, args: Option[QueryArguments] = None): Future[ResolverResult[ScalarListValues]] = {
-    val query = queryBuilder.selectAllFromListTable(project.id, model, field, args, None)
+    val query = queryBuilder.selectAllFromListTable(model, field, args, None)
     performWithTiming("loadListRowsForExport", readonlyClientDatabase.run(query))
   }
 
   override def loadRelationRowsForExport(relationId: String, args: Option[QueryArguments] = None): Future[ResolverResult[RelationNode]] = {
-    val query = queryBuilder.selectAllFromRelationTable(project.id, relationId, args)
+    val query = queryBuilder.selectAllFromRelationTable(relationId, args)
     performWithTiming("loadRelationRowsForExport", readonlyClientDatabase.run(query))
   }
 

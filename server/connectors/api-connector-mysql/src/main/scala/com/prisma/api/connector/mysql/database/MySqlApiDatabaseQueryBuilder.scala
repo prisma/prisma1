@@ -86,25 +86,22 @@ case class MySqlApiDatabaseQueryBuilder(project: Project)(implicit ec: Execution
     }
   }
 
-  def countAllFromTable(project: Project, table: String, whereFilter: Option[Filter]): DBIOAction[Int, NoStream, Effect] = {
+  def countAllFromTable(table: String, whereFilter: Option[Filter]): DBIOAction[Int, NoStream, Effect] = {
     val query = sql"select count(*) from `#${project.id}`.`#$table`" ++ whereFilterAppendix(project.id, table, whereFilter)
     query.as[Int].map(_.head)
   }
 
-  def batchSelectFromModelByUnique(projectId: String,
-                                   model: Model,
-                                   fieldName: String,
-                                   values: Vector[GCValue]): SqlStreamingAction[Vector[PrismaNode], PrismaNode, Effect] = {
-    val query = sql"select * from `#$projectId`.`#${model.name}` where `#$fieldName` in (" ++ combineByComma(values.map(v => sql"$v")) ++ sql")"
+  def batchSelectFromModelByUnique(model: Model, fieldName: String, values: Vector[GCValue]) = {
+    val query = sql"select * from `#${project.id}`.`#${model.name}` where `#$fieldName` in (" ++ combineByComma(values.map(v => sql"$v")) ++ sql")"
     query.as[PrismaNode](getResultForModel(model))
   }
 
   import com.prisma.slick.NewJdbcExtensions._
   import com.prisma.api.connector.mysql.database.JdbcExtensions._
 
-  def batchSelectFromModelByUniqueSimple(projectId: String, model: Model, fieldName: String, values: Vector[GCValue]): SimpleDBIO[Vector[PrismaNode]] =
+  def batchSelectFromModelByUniqueSimple(model: Model, fieldName: String, values: Vector[GCValue]): SimpleDBIO[Vector[PrismaNode]] =
     SimpleDBIO[Vector[PrismaNode]] { x =>
-      val query                 = s"select * from `$projectId`.`${model.name}` where `$fieldName` in ${placeHolders(values)}"
+      val query                 = s"select * from `${project.id}`.`${model.name}` where `$fieldName` in ${placeHolders(values)}"
       val ps: PreparedStatement = x.connection.prepareStatement(query).setValues(values)
       val rs: ResultSet         = ps.executeQuery()
       rs.as[PrismaNode](readsPrismaNode(model))
@@ -119,11 +116,8 @@ case class MySqlApiDatabaseQueryBuilder(project: Project)(implicit ec: Execution
     override def apply(ps: PreparedStatement, index: Int, value: GCValue): Unit = ps.setGcValue(index, value)
   }
 
-  def selectFromScalarList(projectId: String,
-                           modelName: String,
-                           field: Field,
-                           nodeIds: Vector[IdGCValue]): DBIOAction[Vector[ScalarListValues], NoStream, Effect] = {
-    val query = sql"select nodeId, position, value from `#$projectId`.`#${modelName}_#${field.name}` where nodeId in (" ++ combineByComma(
+  def selectFromScalarList(modelName: String, field: Field, nodeIds: Vector[IdGCValue]): DBIOAction[Vector[ScalarListValues], NoStream, Effect] = {
+    val query = sql"select nodeId, position, value from `#${project.id}`.`#${modelName}_#${field.name}` where nodeId in (" ++ combineByComma(
       nodeIds.map(v => sql"$v")) ++ sql")"
 
     query.as[ScalarListElement](getResultForScalarListField(field)).map { scalarListElements =>
@@ -136,10 +130,7 @@ case class MySqlApiDatabaseQueryBuilder(project: Project)(implicit ec: Execution
     }
   }
 
-  def batchSelectAllFromRelatedModel(project: Project,
-                                     fromField: Field,
-                                     fromModelIds: Vector[IdGCValue],
-                                     args: Option[QueryArguments]): DBIOAction[Vector[ResolverResult[PrismaNodeWithParent]], NoStream, Effect] = {
+  def batchSelectAllFromRelatedModel(fromField: Field, fromModelIds: Vector[IdGCValue], args: Option[QueryArguments]) = {
 
     val relatedModel         = fromField.relatedModel(project.schema).get
     val fieldTable           = fromField.relatedModel(project.schema).get.name
@@ -194,10 +185,7 @@ case class MySqlApiDatabaseQueryBuilder(project: Project)(implicit ec: Execution
       }
   }
 
-  def countAllFromRelatedModels(project: Project,
-                                relationField: Field,
-                                parentNodeIds: Vector[IdGCValue],
-                                args: Option[QueryArguments]): SqlStreamingAction[Vector[(IdGCValue, Int)], (IdGCValue, Int), Effect] = {
+  def countAllFromRelatedModels(relationField: Field, parentNodeIds: Vector[IdGCValue], args: Option[QueryArguments]) = {
 
     val fieldTable        = relationField.relatedModel(project.schema).get.name
     val unsafeRelationId  = relationField.relation.get.relationTableName
@@ -231,9 +219,9 @@ case class MySqlApiDatabaseQueryBuilder(project: Project)(implicit ec: Execution
 
 // used in tests only
 
-  def getTables(projectId: String): DBIOAction[Vector[String], NoStream, Read] = {
+  def getTables: DBIOAction[Vector[String], NoStream, Read] = {
     for {
-      metaTables <- MTable.getTables(cat = Some(projectId), schemaPattern = None, namePattern = None, types = None)
+      metaTables <- MTable.getTables(cat = Some(project.id), schemaPattern = None, namePattern = None, types = None)
     } yield metaTables.map(table => table.name.name)
   }
 
@@ -243,11 +231,11 @@ case class MySqlApiDatabaseQueryBuilder(project: Project)(implicit ec: Execution
     } yield catalogs
   }
 
-  def itemCountForTable(projectId: String, modelName: String) = { // todo use count all from model
-    sql"SELECT COUNT(*) AS Count FROM `#$projectId`.`#$modelName`"
+  def itemCountForTable(modelName: String) = { // todo use count all from model
+    sql"SELECT COUNT(*) AS Count FROM `#${project.id}`.`#$modelName`"
   }
 
-  def existsByModel(projectId: String, modelName: String): SQLActionBuilder = { //todo also replace in tests with count
-    sql"select exists (select `id` from `#$projectId`.`#$modelName`)"
+  def existsByModel(modelName: String): SQLActionBuilder = { //todo also replace in tests with count
+    sql"select exists (select `id` from `#${project.id}`.`#$modelName`)"
   }
 }

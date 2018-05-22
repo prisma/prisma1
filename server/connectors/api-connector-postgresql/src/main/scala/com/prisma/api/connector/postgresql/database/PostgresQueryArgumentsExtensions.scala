@@ -8,6 +8,7 @@ import slick.jdbc.SQLActionBuilder
 
 object PostgresQueryArgumentsExtensions {
   val MAX_NODE_COUNT = 1000
+  val ALIAS          = "Top_Level_Alias"
 
   def extractQueryArgs(
       projectId: String,

@@ -14,7 +14,7 @@ import slick.sql.SqlStreamingAction
 import scala.concurrent.ExecutionContext
 
 case class PostgresApiDatabaseQueryBuilder(
-    schema: Schema,
+    project: Project,
     schemaName: String
 )(implicit ec: ExecutionContext) {
   import JdbcExtensions._
@@ -41,13 +41,18 @@ case class PostgresApiDatabaseQueryBuilder(
   }
 
   private def getResultForRelation(relation: Relation): GetResult[RelationNode] = GetResult { ps: PositionedResult =>
-    val modelAColumn = relation.columnForRelationSide(schema, RelationSide.A)
-    val modelBColumn = relation.columnForRelationSide(schema, RelationSide.B)
+    val modelAColumn = relation.columnForRelationSide(project.schema, RelationSide.A)
+    val modelBColumn = relation.columnForRelationSide(project.schema, RelationSide.B)
     RelationNode(a = ps.rs.getAsID(modelAColumn), b = ps.rs.getAsID(modelBColumn))
   }
 
   implicit object GetRelationCount extends GetResult[(IdGCValue, Int)] {
     override def apply(ps: PositionedResult): (IdGCValue, Int) = (ps.rs.getAsID("id"), ps.rs.getInt("Count"))
+  }
+
+  private def whereOrderByLimitCommands(args: Option[QueryArguments], overrideMaxNodeCount: Option[Int], model: Model) = {
+    val (where, orderBy, limit) = extractQueryArgs(schemaName, alias = ALIAS, model.dbName, model.dbNameOfIdField_!, args, None, overrideMaxNodeCount)
+    sql"" ++ prefixIfNotNone("where", where) ++ prefixIfNotNone("order by", orderBy) ++ prefixIfNotNone("limit", limit)
   }
 
   def getResultForScalarListField(field: Field): GetResult[ScalarListElement] = GetResult { ps: PositionedResult =>
@@ -64,22 +69,7 @@ case class PostgresApiDatabaseQueryBuilder(
       overrideMaxNodeCount: Option[Int] = None
   ): DBIOAction[ResolverResult[PrismaNode], NoStream, Effect] = {
 
-    val tableName = model.dbName
-    val (conditionCommand, orderByCommand, limitCommand) =
-      extractQueryArgs(schemaName,
-                       alias = "Top_Level_Alias",
-                       tableName = tableName,
-                       idFieldName = model.dbNameOfIdField_!,
-                       args,
-                       None,
-                       overrideMaxNodeCount = overrideMaxNodeCount)
-
-    val query =
-      sql"""select *
-            from "#$schemaName"."#$tableName" as "Top_Level_Alias" """ ++
-        prefixIfNotNone("where", conditionCommand) ++
-        prefixIfNotNone("order by", orderByCommand) ++
-        prefixIfNotNone("limit", limitCommand)
+    val query = sql"""select * from "#$schemaName"."#${model.dbName}" as "Top_Level_Alias" """ ++ whereOrderByLimitCommands(args, overrideMaxNodeCount, model)
 
     query.as[PrismaNode](getResultForModel(model)).map(args.get.resultTransform)
 
@@ -107,12 +97,12 @@ case class PostgresApiDatabaseQueryBuilder(
       overrideMaxNodeCount: Option[Int] = None
   ): DBIOAction[ResolverResult[RelationNode], NoStream, Effect] = {
 
-    val tableName = relation.relationTableNameNew(schema)
+    val tableName = relation.relationTableNameNew(project.schema)
     val (conditionCommand, orderByCommand, limitCommand) = extractQueryArgs(
       projectId = schemaName,
       alias = "Top_Level_Alias",
       tableName = tableName,
-      idFieldName = relation.columnForRelationSide(schema, RelationSide.A),
+      idFieldName = relation.columnForRelationSide(project.schema, RelationSide.A),
       args = args,
       defaultOrderShortcut = None,
       overrideMaxNodeCount = overrideMaxNodeCount
