@@ -44,7 +44,7 @@ class Model(
   lazy val idField                              = getFieldByName("id")
   lazy val idField_!                            = getFieldByName_!("id")
   lazy val dbNameOfIdField_!                    = idField_!.dbName
-  val updateAtField                             = getFieldByName("updatedAt")
+  val updatedAtField                            = getFieldByName("updatedAt")
   lazy val cascadingRelationFields: List[Field] = relationFields.filter(field => field.relation.get.sideOfModelCascades(this))
 
   def relationFieldForIdAndSide(relationId: String, relationSide: RelationSide.Value): Option[Field] = {

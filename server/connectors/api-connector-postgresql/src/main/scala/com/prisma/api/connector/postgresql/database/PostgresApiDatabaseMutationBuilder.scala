@@ -183,7 +183,7 @@ case class PostgresApiDatabaseMutationBuilder(
 
   //region UPSERT
   private def addUpdatedDateTime(model: Model, updateValues: Option[SQLActionBuilder]): Option[SQLActionBuilder] = {
-    model.updateAtField match {
+    model.updatedAtField match {
       case Some(updatedAtField) =>
         val today              = new Date()
         val exactlyNow         = new DateTime(today).withZone(DateTimeZone.UTC)
