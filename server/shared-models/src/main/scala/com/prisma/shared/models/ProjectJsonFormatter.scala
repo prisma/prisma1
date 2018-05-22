@@ -228,7 +228,7 @@ object ProjectJsonFormatter {
       (JsPath \ "isReadonly").read[Boolean] and
       (JsPath \ "enum").readNullable[Enum] and
       (JsPath \ "defaultValue").readNullable[GCValue] and
-      (JsPath \ "relationName").readNullable[String] and // fixme: this must also work with the old structure
+      readEitherPathNullable[String](JsPath \ "relationName", JsPath \ "relation" \ "name") and
       (JsPath \ "relationSide").readNullable[RelationSide.Value] and
       (JsPath \ "manifestation").readNullable[FieldManifestation] and
       (JsPath \ "constraints").read[List[FieldConstraint]]
@@ -290,4 +290,12 @@ object ProjectJsonFormatter {
     def fail = sys.error("This JSON Formatter always fails.")
   }
 
+  def readEitherPathNullable[T](path1: JsPath, path2: JsPath)(implicit reads: Reads[T]): Reads[Option[T]] = {
+    val readsPath1 = path1.readNullable[T]
+    val readsPath2 = path2.readNullable[T]
+    readsPath1.flatMap {
+      case Some(_) => readsPath1
+      case None    => readsPath2
+    }
+  }
 }

@@ -40,7 +40,7 @@ class ProjectJsonFormatterSpec extends FlatSpec with Matchers with JsonUtils {
     result.isHidden should be(false)
     result.isReadonly should be(false)
     result.relationName should be(Some("RelationName"))
-    result.relationSide should be(RelationSide.B)
+    result.relationSide should be(Some(RelationSide.B))
   }
 
   "Fields" should "be readable in the current format with references to relation names only" in {
