@@ -5,13 +5,13 @@ Object {
   "numTables": 2,
   "sdl": "type Bill @pgTable(name: \\"bill\\") {
   bill: String!
-  id: Int!
+  id: Int! @unique
   product: Product @pgRelation(column: \\"product_id\\")
 }
 
 type Product @pgTable(name: \\"product\\") {
   description: String!
-  id: Int!
+  id: Int! @unique
   bills: [Bill!]!
 }
 ",
@@ -23,13 +23,13 @@ Object {
   "numTables": 2,
   "sdl": "type Bill @pgTable(name: \\"bill\\") {
   bill: String!
-  id: Int!
+  id: Int! @unique
   product: Product! @pgRelation(column: \\"product_id\\")
 }
 
 type Product @pgTable(name: \\"product\\") {
   description: String!
-  id: Int!
+  id: Int! @unique
   bills: [Bill!]!
 }
 ",
@@ -41,12 +41,12 @@ Object {
   "numTables": 3,
   "sdl": "type Bill @pgTable(name: \\"bill\\") {
   bill: String!
-  id: Int!
+  id: Int! @unique
   products: [Product!]! @pgRelationTable(table: \\"bill_product\\" name: \\"bill_product\\")
 }
 
 type Product @pgTable(name: \\"product\\") {
-  id: Int!
+  id: Int! @unique
   product: String!
   bills: [Bill!]! @pgRelationTable(table: \\"bill_product\\" name: \\"bill_product\\")
 }
@@ -59,7 +59,7 @@ Object {
   "numTables": 3,
   "sdl": "type Bill @pgTable(name: \\"bill\\") {
   bill: String!
-  id: Int!
+  id: Int! @unique
   bill_products: [Bill_product!]!
 }
 
@@ -70,7 +70,7 @@ type Bill_product @pgTable(name: \\"bill_product\\") {
 }
 
 type Product @pgTable(name: \\"product\\") {
-  id: Int!
+  id: Int! @unique
   product: String!
   bill_products: [Bill_product!]!
 }

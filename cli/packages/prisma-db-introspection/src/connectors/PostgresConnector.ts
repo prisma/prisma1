@@ -54,17 +54,17 @@ WHERE constraint_type = 'FOREIGN KEY' AND tc.table_schema = $1::text;`,
               ON tc.constraint_name = kcu.constraint_name
         WHERE constraint_type = 'UNIQUE' 
         AND tc.table_schema = $1::text
-        AND tc.table_name = c.table_name 
+        AND tc.table_name = c.table_name
         AND kcu.column_name = c.column_name)) as is_unique,
         (SELECT EXISTS(
           SELECT *
           FROM 
-              information_schema.table_constraints AS tc 
+              information_schema.table_constraints AS tc
               JOIN information_schema.key_column_usage AS kcu
                 ON tc.constraint_name = kcu.constraint_name
-          WHERE constraint_type = 'PRIMARY KEY' 
-          AND tc.table_name = c.table_name 
-          AND kcu.table_name = c.table_name 
+          WHERE constraint_type = 'PRIMARY KEY'
+          AND tc.table_name = c.table_name
+          AND kcu.table_name = c.table_name
           AND kcu.column_name = c.column_name)) as is_pk
       FROM  information_schema.columns c
       WHERE table_schema = $1::text
@@ -116,6 +116,7 @@ WHERE constraint_type = 'FOREIGN KEY' AND tc.table_schema = $1::text;`,
           column.column_name,
           column.is_pk
         )
+
         const relation = this.extractRelation(
           column.table_name,
           column.column_name,
@@ -134,13 +135,18 @@ WHERE constraint_type = 'FOREIGN KEY' AND tc.table_schema = $1::text;`,
           nullable: column.is_nullable === 'YES',
         } as Column
 
-        console.log({ col, column })
+        // console.log({ col, column })
 
         return col
       }).filter(x => x != null) as Column[]
 
       // todo: relation table if 2 foreign keys. Also: No id field? + no other column that has NOT NULL and no default
-      const sortedColumns = _.sortBy(columns, x => x.name)
+      const sortedColumns = _.sortBy(columns.filter(c => !c.isPrimaryKey), x => x.name)
+      const primaryKeyCol = columns.find(c => c.isPrimaryKey)
+      if (primaryKeyCol) {
+        sortedColumns.unshift(primaryKeyCol)
+      }
+
       const isJunctionTable =
         sortedColumns.length === 2 &&
         sortedColumns.every(x => x.relation != null)
@@ -176,6 +182,10 @@ WHERE constraint_type = 'FOREIGN KEY' AND tc.table_schema = $1::text;`,
       const withoutPrefix = withoutSuffix.startsWith(`'`)
         ? withoutSuffix.substring(1, withoutSuffix.length)
         : withoutSuffix
+
+      if (withoutPrefix === "NULL") {
+        return null
+      }
 
       return withoutPrefix
     }
