@@ -220,8 +220,8 @@ class SchemaInfererSpec extends WordSpec with Matchers {
       val relation = schema.getRelationByName_!("ChildTechnologies")
       relation.modelAId should equal("Technology")
       relation.modelBId should equal("Technology")
-      relation.getModelAField.get.name should be("childTechnologies")
-      relation.getModelBField.get.name should be("parentTechnologies")
+      relation.modelAField.get.name should be("childTechnologies")
+      relation.modelBField.get.name should be("parentTechnologies")
 
     }
 
@@ -238,8 +238,8 @@ class SchemaInfererSpec extends WordSpec with Matchers {
       val relation = schema.getRelationByName_!("ChildTechnologies")
       relation.modelAId should equal("Technology")
       relation.modelBId should equal("Technology")
-      relation.getModelAField.get.name should be("childTechnologies")
-      relation.getModelBField.get.name should be("parentTechnologies")
+      relation.modelAField.get.name should be("childTechnologies")
+      relation.modelBField.get.name should be("parentTechnologies")
 
       val newTypes =
         """|type NewTechnology {
@@ -284,8 +284,8 @@ class SchemaInfererSpec extends WordSpec with Matchers {
     val relation = schema.getRelationByName_!("ChildTechnologies")
     relation.modelAId should equal("Technology")
     relation.modelBId should equal("Technology")
-    relation.getModelAField.get.name should be("childTechnologies")
-    relation.getModelBField.get.name should be("parentTechnologies")
+    relation.modelAField.get.name should be("childTechnologies")
+    relation.modelBField.get.name should be("parentTechnologies")
 
     val techModel   = schema.models.head
     val parentField = techModel.getFieldByName_!("parentTechnologies")
@@ -322,7 +322,7 @@ class SchemaInfererSpec extends WordSpec with Matchers {
     val relation = schema.relations.head
     relation.modelAId should equal("Technology")
     relation.modelBId should equal("Technology")
-    relation.getModelAField.get.name should be("childTechnologies")
+    relation.modelAField.get.name should be("childTechnologies")
   }
 
   "handle database manifestations for models" in {

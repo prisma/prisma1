@@ -29,8 +29,8 @@ case class ApiTestDatabase()(implicit dependencies: TestApiDependencies) extends
     val schema = project.schema
     val mutaction = relation.manifestation match {
       case Some(m: InlineRelationManifestation) =>
-        val modelA = relation.getModelA_!
-        val modelB = relation.getModelB_!
+        val modelA = relation.modelA_!
+        val modelB = relation.modelB_!
 
         val (model, references) = if (m.inTableOfModelId == modelA.id) {
           (modelA, modelB)

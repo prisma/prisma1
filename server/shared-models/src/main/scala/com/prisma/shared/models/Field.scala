@@ -108,8 +108,8 @@ class Field(
   lazy val relatedModel: Option[Model] = {
     relation.flatMap(relation => {
       relationSide match {
-        case Some(RelationSide.A) => relation.getModelB
-        case Some(RelationSide.B) => relation.getModelA
+        case Some(RelationSide.A) => relation.modelB
+        case Some(RelationSide.B) => relation.modelA
         case x                    => ??? //throw SystemErrors.InvalidStateException(message = s" relationSide was $x")
       }
     })
