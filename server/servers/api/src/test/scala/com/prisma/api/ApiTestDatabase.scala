@@ -32,7 +32,7 @@ case class ApiTestDatabase()(implicit dependencies: TestApiDependencies) extends
         val modelA = relation.modelA_!
         val modelB = relation.modelB_!
 
-        val (model, references) = if (m.inTableOfModelId == modelA.id) {
+        val (model, references) = if (m.inTableOfModelId == modelA.name) {
           (modelA, modelB)
         } else {
           (modelB, modelA)

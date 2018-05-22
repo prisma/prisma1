@@ -90,7 +90,7 @@ case class PostgresApiDatabaseMutationBuilder(
           otherWhereCondition
         }
       } else {
-        if (inlineManifestation.inTableOfModelId == childWhere.model.id) {
+        if (inlineManifestation.inTableOfModelId == childWhere.model.name) {
           childWhereCondition
         } else {
           otherWhereCondition
@@ -104,7 +104,7 @@ case class PostgresApiDatabaseMutationBuilder(
           selectIdOfChild
         }
       } else {
-        if (inlineManifestation.inTableOfModelId == childWhere.model.id) {
+        if (inlineManifestation.inTableOfModelId == childWhere.model.name) {
           selectIdOfOther
         } else {
           selectIdOfChild
@@ -121,8 +121,8 @@ case class PostgresApiDatabaseMutationBuilder(
       val parentModel     = nodeEdge.parent
       val childModel      = nodeEdge.child
       val manifestation   = relation.manifestation.get.asInstanceOf[RelationTableManifestation]
-      val columnForParent = if (parentModel.id == relation.modelAId) manifestation.modelAColumn else manifestation.modelBColumn
-      val columnForChild  = if (childModel.id == relation.modelAId) manifestation.modelAColumn else manifestation.modelBColumn
+      val columnForParent = if (parentModel.name == relation.modelAId) manifestation.modelAColumn else manifestation.modelBColumn
+      val columnForChild  = if (childModel.name == relation.modelAId) manifestation.modelAColumn else manifestation.modelBColumn
 
       (sql"""insert into "#$schemaName"."#${path.lastRelation_!.relationTableName}" ("#$columnForParent", "#$columnForChild")""" ++
         sql"""Select """ ++ pathQueryForLastChild(path.removeLastEdge) ++ sql"," ++

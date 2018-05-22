@@ -19,7 +19,7 @@ case class Schema(
 
   def fieldsWhereThisModelIsRequired(model: Model) = allFields.filter(f => f.isRequired && !f.isList && f.relatedModel.contains(model))
 
-  def getModelById(id: Id): Option[Model] = models.find(_.id == id)
+  def getModelById(id: Id): Option[Model] = models.find(_.name == id)
   def getModelById_!(id: Id): Model       = getModelById(id).getOrElse(throw SharedErrors.InvalidModel(id))
 
   def getModelByStableIdentifier_!(stableId: String): Model = {

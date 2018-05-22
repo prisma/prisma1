@@ -33,7 +33,7 @@ case class CachedInputTypesBuilder(project: Project) extends UncachedInputTypesB
     val sb = new JStringBuilder()
 
     sb.append(name)
-    sb.append(model.id)
+    sb.append(model.name)
     sb.append(field.orNull)
     sb.toString
   }
