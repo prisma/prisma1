@@ -54,8 +54,9 @@ case class PostgresApiDatabaseQueryBuilder(
                                         overrideMaxNodeCount: Option[Int],
                                         tableName: String,
                                         idFieldName: String,
-                                        defaultOrderShortCut: Option[String] = None) = {
-    val (where, orderBy, limit) = extractQueryArgs(schemaName, alias = ALIAS, tableName, idFieldName, args, defaultOrderShortCut, overrideMaxNodeCount)
+                                        defaultOrderShortCut: Option[String] = None,
+                                        forList: Boolean = false) = {
+    val (where, orderBy, limit) = extractQueryArgs(schemaName, alias = ALIAS, tableName, idFieldName, args, defaultOrderShortCut, overrideMaxNodeCount, forList)
     sql"" ++ prefixIfNotNone("where", where) ++ prefixIfNotNone("order by", orderBy) ++ prefixIfNotNone("limit", limit)
   }
 
@@ -126,7 +127,9 @@ case class PostgresApiDatabaseQueryBuilder(
     val query = sql"""select *from "#$schemaName"."#$tableName" "$ALIAS" """ ++ whereOrderByLimitCommands(args,
                                                                                                           overrideMaxNodeCount,
                                                                                                           tableName,
-                                                                                                          model.dbNameOfIdField_!)
+                                                                                                          model.dbNameOfIdField_!,
+                                                                                                          None,
+                                                                                                          true)
 
     query.as[ScalarListElement](getResultForScalarListField(field)).map { scalarListElements =>
       val res = args.get.resultTransform(scalarListElements)

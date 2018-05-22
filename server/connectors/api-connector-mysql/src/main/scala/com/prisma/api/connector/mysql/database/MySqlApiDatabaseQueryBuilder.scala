@@ -55,8 +55,8 @@ case class MySqlApiDatabaseQueryBuilder(project: Project)(implicit ec: Execution
     ScalarListElement(nodeId, position, value)
   }
 
-  private def whereOrderByLimitCommands(args: Option[QueryArguments], overrideMaxNodeCount: Option[Int], tableName: String) = {
-    val (where, orderBy, limit) = extractQueryArgs(project.id, alias = ALIAS, tableName, args, None, overrideMaxNodeCount)
+  private def whereOrderByLimitCommands(args: Option[QueryArguments], overrideMaxNodeCount: Option[Int], tableName: String, forList: Boolean = false) = {
+    val (where, orderBy, limit) = extractQueryArgs(project.id, alias = ALIAS, tableName, args, None, overrideMaxNodeCount, forList)
     sql"" ++ prefixIfNotNone("where", where) ++ prefixIfNotNone("order by", orderBy) ++ prefixIfNotNone("limit", limit)
   }
 
@@ -73,7 +73,7 @@ case class MySqlApiDatabaseQueryBuilder(project: Project)(implicit ec: Execution
   def selectAllFromListTable(model: Model, field: Field, args: Option[QueryArguments], overrideMaxNodeCount: Option[Int] = None) = {
 
     val tableName = s"${model.name}_${field.name}"
-    val query     = sql"""select * from `#${project.id}`.`#$tableName`  as `#${ALIAS}` """ ++ whereOrderByLimitCommands(args, overrideMaxNodeCount, tableName)
+    val query     = sql"""select * from `#${project.id}`.`#$tableName`  as `#${ALIAS}` """ ++ whereOrderByLimitCommands(args, overrideMaxNodeCount, tableName, true)
 
     query.as[ScalarListElement](getResultForScalarListField(field)).map { scalarListElements =>
       val res = args.get.resultTransform(scalarListElements)
