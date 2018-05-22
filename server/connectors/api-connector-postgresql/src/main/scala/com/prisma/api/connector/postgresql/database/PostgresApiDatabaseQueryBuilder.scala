@@ -67,7 +67,13 @@ case class PostgresApiDatabaseQueryBuilder(
 
     val tableName = model.dbName
     val (conditionCommand, orderByCommand, limitCommand) =
-      extractQueryArgs(schemaName, "Top_Level_Alias", idFieldName = model.dbNameOfIdField_!, args, None, overrideMaxNodeCount = overrideMaxNodeCount)
+      extractQueryArgs(schemaName,
+                       alias = "Top_Level_Alias",
+                       tableName = tableName,
+                       idFieldName = model.dbNameOfIdField_!,
+                       args,
+                       None,
+                       overrideMaxNodeCount = overrideMaxNodeCount)
 
     val query =
       sql"""select *
@@ -105,6 +111,7 @@ case class PostgresApiDatabaseQueryBuilder(
     val tableName = relation.relationTableNameNew(schema)
     val (conditionCommand, orderByCommand, limitCommand) = extractQueryArgs(
       projectId = schemaName,
+      alias = "Top_Level_Alias",
       tableName = tableName,
       idFieldName = relation.columnForRelationSide(schema, RelationSide.A),
       args = args,
@@ -112,10 +119,12 @@ case class PostgresApiDatabaseQueryBuilder(
       overrideMaxNodeCount = overrideMaxNodeCount
     )
 
-    val query = sql"""select * from "#$schemaName"."#$tableName"""" ++
-      prefixIfNotNone("where", conditionCommand) ++
-      prefixIfNotNone("order by", orderByCommand) ++
-      prefixIfNotNone("limit", limitCommand)
+    val query =
+      sql"""select * 
+            from "#$schemaName"."#$tableName" as "Top_Level_Alias" """ ++
+        prefixIfNotNone("where", conditionCommand) ++
+        prefixIfNotNone("order by", orderByCommand) ++
+        prefixIfNotNone("limit", limitCommand)
 
     query.as[RelationNode](getResultForRelation(relation)).map(args.get.resultTransform)
   }
@@ -130,6 +139,7 @@ case class PostgresApiDatabaseQueryBuilder(
     val tableName = s"${model.dbName}_${field.dbName}"
     val (conditionCommand, orderByCommand, limitCommand) = extractQueryArgs(
       projectId = schemaName,
+      alias = "Top_Level_Alias",
       tableName = tableName,
       idFieldName = model.dbNameOfIdField_!,
       args = args,
@@ -139,7 +149,8 @@ case class PostgresApiDatabaseQueryBuilder(
     )
 
     val query =
-      sql"""select * from "#$schemaName"."#$tableName"""" ++
+      sql"""select * 
+            from "#$schemaName"."#$tableName" "Top_Level_Alias" """ ++
         prefixIfNotNone("where", conditionCommand) ++
         prefixIfNotNone("order by", orderByCommand) ++
         prefixIfNotNone("limit", limitCommand)
@@ -220,12 +231,12 @@ case class PostgresApiDatabaseQueryBuilder(
 
     val (conditionCommand, orderByCommand, limitCommand) = extractQueryArgs(
       projectId = schemaName,
+      alias = "ModelTable",
       tableName = "ModelTable",
       idFieldName = relatedModel.dbNameOfIdField_!,
       args = args,
       defaultOrderShortcut = Some(s""" "RelationTable"."$columnForRelatedModel" """),
-      overrideMaxNodeCount = None,
-      quoteTableName = false
+      overrideMaxNodeCount = None
     )
 
     def createQuery(id: String, modelRelationSide: String, fieldRelationSide: String) = {
@@ -287,6 +298,7 @@ case class PostgresApiDatabaseQueryBuilder(
 
     val (conditionCommand, orderByCommand, limitCommand) = extractQueryArgs(
       projectId = schemaName,
+      alias = fieldTable,
       tableName = fieldTable,
       idFieldName = relatedModel.dbNameOfIdField_!,
       args = args,
@@ -352,6 +364,7 @@ case class PostgresApiDatabaseQueryBuilder(
     val (conditionCommand, orderByCommand, limitCommand) =
       extractQueryArgs(
         schemaName,
+        fieldTable,
         fieldTable,
         idFieldName = relatedModel.dbNameOfIdField_!,
         args,

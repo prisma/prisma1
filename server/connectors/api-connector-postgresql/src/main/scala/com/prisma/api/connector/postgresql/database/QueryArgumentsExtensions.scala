@@ -11,27 +11,27 @@ object QueryArgumentsExtensions {
 
   def extractQueryArgs(
       projectId: String,
+      alias: String,
       tableName: String,
       idFieldName: String,
       args: Option[QueryArguments],
       defaultOrderShortcut: Option[String],
       overrideMaxNodeCount: Option[Int],
-      forList: Boolean = false,
-      quoteTableName: Boolean = true,
+      forList: Boolean = false
   ): (Option[SQLActionBuilder], Option[SQLActionBuilder], Option[SQLActionBuilder]) = {
     args match {
       case None => (None, None, None)
       case Some(givenArgs: QueryArguments) =>
         val orderByCommand =
-          if (forList) givenArgs.extractOrderByCommandForLists(projectId, tableName, defaultOrderShortcut)
-          else givenArgs.extractOrderByCommand(projectId, tableName, idFieldName, defaultOrderShortcut)
+          if (forList) givenArgs.extractOrderByCommandForLists(projectId, alias, defaultOrderShortcut)
+          else givenArgs.extractOrderByCommand(projectId, alias, idFieldName, defaultOrderShortcut)
 
         (
-          givenArgs.extractWhereConditionCommand(projectId, tableName, quoteTableName),
+          givenArgs.extractWhereConditionCommand(projectId, alias, tableName),
           orderByCommand,
           overrideMaxNodeCount match {
-            case None                => givenArgs.extractLimitCommand(projectId, tableName)
-            case Some(maxCount: Int) => givenArgs.extractLimitCommand(projectId, tableName, maxCount)
+            case None                => givenArgs.extractLimitCommand(projectId, alias)
+            case Some(maxCount: Int) => givenArgs.extractLimitCommand(projectId, alias, maxCount)
           }
         )
     }
@@ -135,16 +135,16 @@ object QueryArgumentsExtensions {
       }
     }
 
-    def extractWhereConditionCommand(projectId: String, tableName: String, quoteTableName: Boolean): Option[SQLActionBuilder] = {
+    def extractWhereConditionCommand(projectId: String, alias: String, tableName: String): Option[SQLActionBuilder] = {
 
       if (first.isDefined && last.isDefined) throw APIErrors.InvalidConnectionArguments()
 
       val standardCondition = filter match {
-        case Some(filterArg: Filter) => QueryArgumentsHelpers.generateFilterConditions(projectId, tableName, filterArg, quoteTableName = quoteTableName)
+        case Some(filterArg: Filter) => QueryArgumentsHelpers.generateFilterConditions(projectId, alias, tableName, filterArg)
         case None                    => None
       }
 
-      val cursorCondition = buildCursorCondition(projectId, tableName, standardCondition)
+      val cursorCondition = buildCursorCondition(projectId, alias, standardCondition)
 
       cursorCondition match {
         case None                     => standardCondition

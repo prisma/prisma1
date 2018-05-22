@@ -70,7 +70,7 @@ object SlickExtensions {
   }
 
   def whereFilterAppendix(projectId: String, table: String, filter: Option[DataItemFilterCollection]) = {
-    val whereSql = filter.flatMap(where => QueryArgumentsHelpers.generateFilterConditions(projectId, table, where))
+    val whereSql = filter.flatMap(where => QueryArgumentsHelpers.generateFilterConditions(projectId, table, table, where))
     prefixIfNotNone("WHERE", whereSql)
   }
 }
