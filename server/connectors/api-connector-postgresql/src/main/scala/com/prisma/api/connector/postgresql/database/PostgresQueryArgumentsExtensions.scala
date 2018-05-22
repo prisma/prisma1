@@ -81,7 +81,7 @@ object PostgresQueryArgumentsExtensions {
 
       orderBy match {
         case Some(orderByArg) if orderByArg.field.name != idFieldName =>
-          val orderByField = s""" "$topLevelAlias"."${orderByArg.field.name}" """
+          val orderByField = s""" "$topLevelAlias"."${orderByArg.field.dbName}" """
 
           // First order by the orderByField, then by id to break ties
           Some(sql""" #$orderByField #$order, #$idField #$idOrder """)
