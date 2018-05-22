@@ -30,22 +30,21 @@ class Model(
   val id: String     = name
   val dbName: String = manifestation.map(_.dbName).getOrElse(id)
 
-  lazy val fields: List[Field]                = fieldTemplates.map(_.build(this))
-  lazy val uniqueFields: List[Field]          = fields.filter(f => f.isUnique && f.isVisible)
-  lazy val scalarFields: List[Field]          = fields.filter(_.isScalar)
-  lazy val scalarListFields: List[Field]      = scalarFields.filter(_.isList)
-  lazy val scalarNonListFields: List[Field]   = scalarFields.filter(!_.isList)
-  lazy val relationFields: List[Field]        = fields.filter(_.isRelation)
-  lazy val relationListFields: List[Field]    = relationFields.filter(_.isList)
-  lazy val relationNonListFields: List[Field] = relationFields.filter(!_.isList)
-  lazy val visibleRelationFields: List[Field] = relationFields.filter(_.isVisible)
-  lazy val relations: List[Relation]          = fields.flatMap(_.relation).distinct
-  lazy val nonListFields                      = fields.filter(!_.isList)
-  lazy val idField                            = getFieldByName("id")
-  lazy val idField_!                          = getFieldByName_!("id")
-  lazy val dbNameOfIdField_!                  = idField_!.dbName
-  val updateAtField                           = getFieldByName("updatedAt")
-
+  lazy val fields: List[Field]                  = fieldTemplates.map(_.build(this))
+  lazy val uniqueFields: List[Field]            = fields.filter(f => f.isUnique && f.isVisible)
+  lazy val scalarFields: List[Field]            = fields.filter(_.isScalar)
+  lazy val scalarListFields: List[Field]        = scalarFields.filter(_.isList)
+  lazy val scalarNonListFields: List[Field]     = scalarFields.filter(!_.isList)
+  lazy val relationFields: List[Field]          = fields.filter(_.isRelation)
+  lazy val relationListFields: List[Field]      = relationFields.filter(_.isList)
+  lazy val relationNonListFields: List[Field]   = relationFields.filter(!_.isList)
+  lazy val visibleRelationFields: List[Field]   = relationFields.filter(_.isVisible)
+  lazy val relations: List[Relation]            = fields.flatMap(_.relation).distinct
+  lazy val nonListFields                        = fields.filter(!_.isList)
+  lazy val idField                              = getFieldByName("id")
+  lazy val idField_!                            = getFieldByName_!("id")
+  lazy val dbNameOfIdField_!                    = idField_!.dbName
+  val updateAtField                             = getFieldByName("updatedAt")
   lazy val cascadingRelationFields: List[Field] = relationFields.filter(field => field.relation.get.sideOfModelCascades(this))
 
   def relationFieldForIdAndSide(relationId: String, relationSide: RelationSide.Value): Option[Field] = {
@@ -59,11 +58,7 @@ class Model(
     schema.copy(modelTemplates = newModelsInSchema).getModelByName_!(name)
   }
 
-  def getFieldById_!(id: Id): Field       = getFieldById(id).get
-  def getFieldById(id: Id): Option[Field] = fields.find(_.id == id)
-
-  def getFieldByName_!(name: String): Field =
-    getFieldByName(name).getOrElse(sys.error(s"field $name is not part of the model ${this.name}")) // .getOrElse(throw FieldNotInModel(fieldName = name, modelName = this.name))
+  def getFieldByName_!(name: String): Field       = getFieldByName(name).getOrElse(sys.error(s"field $name is not part of the model ${this.name}"))
   def getFieldByName(name: String): Option[Field] = fields.find(_.name == name)
 
   def hasVisibleIdField: Boolean = idField.exists(_.isVisible)
