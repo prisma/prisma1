@@ -27,8 +27,8 @@ object PostgresQueryArgumentsHelpers {
       val join = sql"""select *
             from "#$projectId"."#${field.relatedModel_!.dbName}" as "#$alias"
             inner join "#$projectId"."#${relationTableName}"
-            on "#$alias"."id" = "#$projectId"."#${relationTableName}"."#${oppositeColumn}"
-            where "#$projectId"."#${relationTableName}"."#${column}" = "#$modTableName"."id""""
+            on "#$alias"."#${field.relatedModel_!.dbNameOfIdField_!}" = "#$projectId"."#${relationTableName}"."#${oppositeColumn}"
+            where "#$projectId"."#${relationTableName}"."#${column}" = "#$modTableName"."#${field.model.dbNameOfIdField_!}""""
 
       val nestedFilterStatement = Some(generateFilterConditions(projectId, alias, modelName, nestedFilter).getOrElse(sql"True"))
 
