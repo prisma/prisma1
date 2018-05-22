@@ -53,7 +53,7 @@ object SchemaErrors {
       s"You are trying to set the relation '$relationName' from `$nameA` to `$nameB` and are only providing a relation directive on `$nameA`. " +
         s"Since there is also a relation field without a relation directive on `$nameB` pointing towards `$nameA` that is ambiguous. " +
         s"Please provide the same relation directive on `$nameB` if this is supposed to be the same relation. " +
-        s"If you meant to create two separate relations without backrelations please provide a relation directive with a different name on `nameB`."
+        s"If you meant to create two separate relations without backrelations please provide a relation directive with a different name on `$nameB`."
     )
   }
 
