@@ -132,8 +132,8 @@ case class MySqlApiDatabaseQueryBuilder(project: Project)(implicit ec: Execution
 
   def batchSelectAllFromRelatedModel(fromField: Field, fromModelIds: Vector[IdGCValue], args: Option[QueryArguments]) = {
 
-    val relatedModel         = fromField.relatedModel(project.schema).get
-    val fieldTable           = fromField.relatedModel(project.schema).get.name
+    val relatedModel         = fromField.relatedModel.get
+    val fieldTable           = fromField.relatedModel.get.name
     val unsafeRelationId     = fromField.relation.get.relationTableName
     val modelRelationSide    = fromField.relationSide.get.toString
     val oppositeRelationSide = fromField.oppositeRelationSide.get.toString
@@ -158,7 +158,7 @@ case class MySqlApiDatabaseQueryBuilder(project: Project)(implicit ec: Execution
     }
 
     // see https://github.com/graphcool/internal-docs/blob/master/relations.md#findings
-    val resolveFromBothSidesAndMerge = fromField.relation.get.isSameFieldSameModelRelation(project.schema)
+    val resolveFromBothSidesAndMerge = fromField.relation.get.isSameFieldSameModelRelation
 
     val query = resolveFromBothSidesAndMerge match {
       case false =>
@@ -187,7 +187,7 @@ case class MySqlApiDatabaseQueryBuilder(project: Project)(implicit ec: Execution
 
   def countAllFromRelatedModels(relationField: Field, parentNodeIds: Vector[IdGCValue], args: Option[QueryArguments]) = {
 
-    val fieldTable        = relationField.relatedModel(project.schema).get.name
+    val fieldTable        = relationField.relatedModel.get.name
     val unsafeRelationId  = relationField.relation.get.relationTableName
     val modelRelationSide = relationField.relationSide.get.toString
     val fieldRelationSide = relationField.oppositeRelationSide.get.toString

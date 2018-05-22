@@ -35,7 +35,7 @@ object PostgresDeployDatabaseMutationBuilder {
     val listTableNames: List[String] =
       project.models.flatMap(model => model.fields.collect { case field if field.isScalar && field.isList => s"${model.dbName}_${field.dbName}" })
 
-    val tables = Vector("_RelayId") ++ project.models.map(_.dbName) ++ project.relations.map(_.relationTableNameNew(project.schema)) ++ listTableNames
+    val tables = Vector("_RelayId") ++ project.models.map(_.dbName) ++ project.relations.map(_.relationTableName) ++ listTableNames
 
     DBIO.seq(tables.map(name => sqlu"""TRUNCATE TABLE  "#${project.id}"."#$name" CASCADE """): _*)
   }

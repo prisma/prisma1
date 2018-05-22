@@ -115,7 +115,7 @@ class SubscriptionsManagerForModelSpec
 
       pubSub.publish(
         Only(s"subscription:event:${project.id}:createTodo"),
-        s"""{"nodeId":"test-node-id","modelId":"${todoModel.id}","mutationType":"CreateNode"}"""
+        s"""{"nodeId":"test-node-id","modelId":"${todoModel.name}","mutationType":"CreateNode"}"""
       )
 
       // both receive the subscription data
@@ -130,7 +130,7 @@ class SubscriptionsManagerForModelSpec
 
       pubSub.publish(
         Only(s"subscription:event:${project.id}:createTodo"),
-        s"""{"nodeId":"test-node-id","modelId":"${todoModel.id}","mutationType":"CreateNode"}"""
+        s"""{"nodeId":"test-node-id","modelId":"${todoModel.name}","mutationType":"CreateNode"}"""
       )
 
       subscriber1.expectNoMessage(5.seconds)

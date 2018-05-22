@@ -105,7 +105,6 @@ class ObjectTypeBuilder(
   def mapClientField(model: models.Model)(field: models.Field): SangriaField[ApiUserContext, PrismaNode] = SangriaField(
     field.name,
     fieldType = mapToOutputType(Some(model), field),
-    description = field.description,
     arguments = mapToListConnectionArguments(model, field),
     resolve = (ctx: Context[ApiUserContext, PrismaNode]) => mapToOutputResolve(model, field)(ctx),
     tags = List()
@@ -133,8 +132,8 @@ class ObjectTypeBuilder(
 
   def resolveConnection(field: Field): OutputType[Any] = {
     field.isList match {
-      case true  => ListType(modelObjectTypes(field.relatedModel(project.schema).get.name))
-      case false => modelObjectTypes(field.relatedModel_!(project.schema).name)
+      case true  => ListType(modelObjectTypes(field.relatedModel.get.name))
+      case false => modelObjectTypes(field.relatedModel_!.name)
     }
   }
 
@@ -142,8 +141,8 @@ class ObjectTypeBuilder(
     (field.isHidden, field.isScalar, field.isList) match {
       case (true, _, _)      => List()
       case (_, true, _)      => List()
-      case (_, false, true)  => mapToListConnectionArguments(field.relatedModel(project.schema).get)
-      case (_, false, false) => mapToSingleConnectionArguments(field.relatedModel(project.schema).get)
+      case (_, false, true)  => mapToListConnectionArguments(field.relatedModel.get)
+      case (_, false, false) => mapToSingleConnectionArguments(field.relatedModel.get)
     }
   }
 
@@ -167,7 +166,7 @@ class ObjectTypeBuilder(
 
     model.scalarNonListFields
       .filter(_.isUnique)
-      .map(field => Argument(field.name, SchemaBuilderUtils.mapToOptionalInputType(field), description = field.description.getOrElse("")))
+      .map(field => Argument(field.name, SchemaBuilderUtils.mapToOptionalInputType(field)))
   }
 
   def mapToSingleConnectionArguments(model: Model): List[Argument[Option[Any]]] = {
@@ -193,17 +192,8 @@ class ObjectTypeBuilder(
         def scalarListFilter(condition: ScalarListCondition): ScalarListFilter = ScalarListFilter(key, field.get, condition)
         def generateSubFilter(value: Map[_, _], model: Model): Filter          = generateFilterElement(value.asInstanceOf[Map[String, Any]], model, isSubscriptionFilter)
         def generateSubFilters(values: Seq[Any]): Vector[Filter]               = values.map(x => generateSubFilter(x.asInstanceOf[Map[String, Any]], model)).toVector
-
         def relationFilter(value: Map[_, _], condition: RelationCondition): RelationFilter =
-          RelationFilter(
-            project.schema,
-            field.get,
-            model,
-            field.get.relatedModel(project.schema).get,
-            field.get.relation.get,
-            generateSubFilter(value, field.get.relatedModel(project.schema).get),
-            condition
-          )
+          RelationFilter(field.get, generateSubFilter(value, field.get.relatedModel_!), condition)
 
         value match {
           //-------------------------RECURSION-----------------------------
@@ -276,7 +266,7 @@ class ObjectTypeBuilder(
       ctx: Context[C, PrismaNode]): sangria.schema.Action[ApiUserContext, _] = {
 
     val item: PrismaNode = unwrapDataItemFromContext(ctx)
-    lazy val arguments   = extractQueryArgumentsFromContext(field.relatedModel(project.schema).get, ctx.asInstanceOf[Context[ApiUserContext, Unit]])
+    lazy val arguments   = extractQueryArgumentsFromContext(field.relatedModel.get, ctx.asInstanceOf[Context[ApiUserContext, Unit]])
 
     (field.isScalar, field.isList) match {
       case (true, true)   => ScalarListDeferred(model, field, item.id)

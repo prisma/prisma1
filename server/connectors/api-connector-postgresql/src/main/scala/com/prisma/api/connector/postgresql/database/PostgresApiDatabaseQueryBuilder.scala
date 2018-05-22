@@ -41,8 +41,8 @@ case class PostgresApiDatabaseQueryBuilder(
   }
 
   private def getResultForRelation(relation: Relation): GetResult[RelationNode] = GetResult { ps: PositionedResult =>
-    val modelAColumn = relation.columnForRelationSide(project.schema, RelationSide.A)
-    val modelBColumn = relation.columnForRelationSide(project.schema, RelationSide.B)
+    val modelAColumn = relation.columnForRelationSide(RelationSide.A)
+    val modelBColumn = relation.columnForRelationSide(RelationSide.B)
     RelationNode(a = ps.rs.getAsID(modelAColumn), b = ps.rs.getAsID(modelBColumn))
   }
 
@@ -105,13 +105,12 @@ case class PostgresApiDatabaseQueryBuilder(
       overrideMaxNodeCount: Option[Int] = None
   ): DBIOAction[ResolverResult[RelationNode], NoStream, Effect] = {
 
-    val tableName = relation.relationTableNameNew(project.schema)
+    val tableName = relation.relationTableName
 
-    val query = sql"""select * from "#$schemaName"."#$tableName" as "$ALIAS" """ ++ whereOrderByLimitCommands(
-      args,
-      overrideMaxNodeCount,
-      tableName,
-      relation.columnForRelationSide(project.schema, RelationSide.A))
+    val query = sql"""select * from "#$schemaName"."#$tableName" as "$ALIAS" """ ++ whereOrderByLimitCommands(args,
+                                                                                                              overrideMaxNodeCount,
+                                                                                                              tableName,
+                                                                                                              relation.columnForRelationSide(RelationSide.A))
 
     query.as[RelationNode](getResultForRelation(relation)).map(args.get.resultTransform)
   }
@@ -184,13 +183,13 @@ case class PostgresApiDatabaseQueryBuilder(
       args: Option[QueryArguments]
   ): DBIOAction[Vector[ResolverResult[PrismaNodeWithParent]], NoStream, Effect] = {
     val relation     = fromField.relation.get
-    val relatedModel = fromField.relatedModel(schema).get
+    val relatedModel = fromField.relatedModel_!
     val modelTable   = relatedModel.dbName
 
-    val relationTableName     = fromField.relation.get.relationTableNameNew(schema)
-    val (aColumn, bColumn)    = (relation.modelAColumn(schema), relation.modelBColumn(schema))
-    val columnForFromModel    = relation.columnForRelationSide(schema, fromField.relationSide.get)
-    val columnForRelatedModel = relation.columnForRelationSide(schema, fromField.oppositeRelationSide.get)
+    val relationTableName     = fromField.relation.get.relationTableName
+    val (aColumn, bColumn)    = (relation.modelAColumn, relation.modelBColumn)
+    val columnForFromModel    = relation.columnForRelationSide(fromField.relationSide.get)
+    val columnForRelatedModel = relation.columnForRelationSide(fromField.oppositeRelationSide.get)
 
     def createQuery(id: String, modelRelationSide: String, fieldRelationSide: String) = {
       sql"""(select "ModelTable".*, "RelationTable"."#$aColumn" as "__Relation__A",  "RelationTable"."#$bColumn" as "__Relation__B"
@@ -205,7 +204,7 @@ case class PostgresApiDatabaseQueryBuilder(
     }
 
     // see https://github.com/graphcool/internal-docs/blob/master/relations.md#findings
-    val resolveFromBothSidesAndMerge = fromField.relation.get.isSameFieldSameModelRelation(schema)
+    val resolveFromBothSidesAndMerge = fromField.relation.get.isSameFieldSameModelRelation
 
     val query = resolveFromBothSidesAndMerge match {
       case false =>
@@ -243,11 +242,11 @@ case class PostgresApiDatabaseQueryBuilder(
       args: Option[QueryArguments]
   ): SqlStreamingAction[Vector[(IdGCValue, Int)], (IdGCValue, Int), Effect] = {
 
-    val relatedModel               = relationField.relatedModel(schema).get
+    val relatedModel               = relationField.relatedModel_!
     val relation                   = relationField.relation.get
-    val unsafeRelationId           = relation.relationTableNameNew(schema)
+    val unsafeRelationId           = relation.relationTableName
     val modelRelationSide          = relationField.relationSide.get.toString
-    val columnForFieldRelationSide = relation.columnForRelationSide(schema, relationField.oppositeRelationSide.get)
+    val columnForFieldRelationSide = relation.columnForRelationSide(relationField.oppositeRelationSide.get)
 
     def createQuery(id: String) = {
       sql"""(select "#$id", count(*)

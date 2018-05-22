@@ -7,11 +7,11 @@ import com.prisma.shared.models._
 trait Edge {
   def parent: Model
   def parentField: Field
-  def columnForParentRelationSide(schema: Schema) = relation.columnForRelationSide(schema, parentRelationSide)
+  def columnForParentRelationSide(schema: Schema) = relation.columnForRelationSide(parentRelationSide)
   def parentRelationSide: RelationSide            = parentField.relationSide.get
   def child: Model
   def childField: Option[Field]
-  def columnForChildRelationSide(schema: Schema) = relation.columnForRelationSide(schema, childRelationSide)
+  def columnForChildRelationSide(schema: Schema) = relation.columnForRelationSide(childRelationSide)
   def childRelationSide: RelationSide            = parentField.oppositeRelationSide.get
   def relation: Relation
   def toNodeEdge(where: NodeSelector): NodeEdge = {
@@ -43,13 +43,13 @@ case class Path(root: NodeSelector, edges: List[Edge]) {
   }
 
   def appendCascadingEdge(project: Project, field: Field): Path = {
-    val edge = ModelEdge(lastModel, field, field.relatedModel(project.schema).get, field.relatedField(project.schema), field.relation.get)
+    val edge = ModelEdge(lastModel, field, field.relatedModel_!, field.relatedField, field.relation.get)
     if (edge.relation.bothSidesCascade || models.contains(edge.child)) throw APIErrors.CascadingDeletePathLoops()
     copy(root, edges :+ edge)
   }
 
   def appendEdge(project: Project, field: Field): Path = {
-    val edge = ModelEdge(lastModel, field, field.relatedModel(project.schema).get, field.relatedField(project.schema), field.relation.get)
+    val edge = ModelEdge(lastModel, field, field.relatedModel_!, field.relatedField, field.relation.get)
     copy(root, edges :+ edge)
   }
 

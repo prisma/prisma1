@@ -72,10 +72,10 @@ package object ImportExport {
   def toRelationData(r: Relation, project: Project): RelationData = {
     RelationData(
       r.relationTableName,
-      r.getModelB_!(project.schema).name,
-      r.getModelBField(project.schema).map(_.name),
-      r.getModelA_!(project.schema).name,
-      r.getModelAField(project.schema).map(_.name)
+      r.modelB_!.name,
+      r.modelBField.map(_.name),
+      r.modelA_!.name,
+      r.modelAField.map(_.name)
     )
   }
 

@@ -21,26 +21,26 @@ trait NestedRelationInterpreterBase extends DatabaseMutactionInterpreter {
   val otherFieldOption = lastEdge.childField
   val c = otherFieldOption match {
     case Some(x) => x
-    case None    => p.copy(isRequired = false, isList = true) //optional back-relation defaults to List-NonRequired
+    case None    => p.copy(isRequired = false, isList = true).build(otherModel) // fixme: 1. obsolete magical back relation 2. passingOtherModel is not right
   }
 
   val parentCauseString = path.lastEdge_! match {
     case edge: NodeEdge =>
-      s"-OLDPARENTFAILURETRIGGER@${path.lastRelation_!.relationTableNameNew(schema)}@${path.lastEdge_!.columnForChildRelationSide(schema)}@${edge.childWhere.fieldValueAsString}-"
+      s"-OLDPARENTFAILURETRIGGER@${path.lastRelation_!.relationTableName}@${path.lastEdge_!.columnForChildRelationSide(schema)}@${edge.childWhere.fieldValueAsString}-"
     case _: ModelEdge =>
-      s"-OLDPARENTFAILURETRIGGER@${path.lastRelation_!.relationTableNameNew(schema)}@${path.lastEdge_!.columnForChildRelationSide(schema)}-"
+      s"-OLDPARENTFAILURETRIGGER@${path.lastRelation_!.relationTableName}@${path.lastEdge_!.columnForChildRelationSide(schema)}-"
   }
 
   val childCauseString = path.edges.length match {
     case 0 => sys.error("There should always be at least one edge on the path if this is called.")
     case 1 =>
-      s"-OLDCHILDPATHFAILURETRIGGER@${path.lastRelation_!.relationTableNameNew(schema)}@${path.lastEdge_!.columnForParentRelationSide(schema)}@${path.root.fieldValueAsString}-"
+      s"-OLDCHILDPATHFAILURETRIGGER@${path.lastRelation_!.relationTableName}@${path.lastEdge_!.columnForParentRelationSide(schema)}@${path.root.fieldValueAsString}-"
     case _ =>
       path.removeLastEdge.lastEdge_! match {
         case edge: NodeEdge =>
-          s"-OLDCHILDPATHFAILURETRIGGER@${path.lastRelation_!.relationTableNameNew(schema)}@${path.lastEdge_!.columnForParentRelationSide(schema)}@${edge.childWhere.fieldValueAsString}-"
+          s"-OLDCHILDPATHFAILURETRIGGER@${path.lastRelation_!.relationTableName}@${path.lastEdge_!.columnForParentRelationSide(schema)}@${edge.childWhere.fieldValueAsString}-"
         case _: ModelEdge =>
-          s"-OLDCHILDPATHFAILURETRIGGER@${path.lastRelation_!.relationTableNameNew(schema)}@${path.lastEdge_!.columnForParentRelationSide(schema)}-"
+          s"-OLDCHILDPATHFAILURETRIGGER@${path.lastRelation_!.relationTableName}@${path.lastEdge_!.columnForParentRelationSide(schema)}-"
       }
   }
 

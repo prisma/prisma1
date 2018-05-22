@@ -78,16 +78,9 @@ case class ListContains(value: GCValue)              extends ScalarListCondition
 case class ListContainsEvery(value: Vector[GCValue]) extends ScalarListCondition
 case class ListContainsSome(value: Vector[GCValue])  extends ScalarListCondition
 
-case class OneRelationIsNullFilter(schema: Schema, field: Field) extends Filter
+case class OneRelationIsNullFilter(field: Field) extends Filter
 
-case class RelationFilter(schema: Schema,
-                          field: Field,
-                          fromModel: Model,
-                          toModel: Model,
-                          relation: Relation,
-                          nestedFilter: Filter,
-                          condition: RelationCondition)
-    extends Filter
+case class RelationFilter(field: Field, nestedFilter: Filter, condition: RelationCondition) extends Filter
 
 sealed trait RelationCondition
 object EveryRelatedNode      extends RelationCondition

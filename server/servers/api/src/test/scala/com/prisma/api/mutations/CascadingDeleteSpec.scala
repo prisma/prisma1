@@ -348,7 +348,7 @@ class CascadingDeleteSpec extends FlatSpec with Matchers with ApiSpecBase {
       """mutation{deleteP(where: {p:"p"}){id}}""",
       project,
       errorCode = 3042,
-      errorContains = """The change you are trying to make would violate the required relation '_FToE' between F and E"""
+      errorContains = """The change you are trying to make would violate the required relation 'FToE' between F and E"""
     )
 
     server.query("""query{ps{p, c {c}}}""", project).toString should be("""{"data":{"ps":[{"p":"p","c":{"c":"c"}},{"p":"p2","c":{"c":"c2"}}]}}""")
@@ -396,7 +396,7 @@ class CascadingDeleteSpec extends FlatSpec with Matchers with ApiSpecBase {
       """mutation{deleteA(where: {a:"2020"}){a}}""",
       project,
       errorCode = 3042,
-      errorContains = "The change you are trying to make would violate the required relation '_CToE' between C and E"
+      errorContains = "The change you are trying to make would violate the required relation 'CToE' between C and E"
     )
   }
 
@@ -435,7 +435,7 @@ class CascadingDeleteSpec extends FlatSpec with Matchers with ApiSpecBase {
       """mutation{deleteA(where: {a:"a"}){a}}""",
       project,
       errorCode = 3042,
-      errorContains = "The change you are trying to make would violate the required relation '_AToD' between A and D"
+      errorContains = "The change you are trying to make would violate the required relation 'AToD' between A and D"
     )
 
     ifConnectorIsActive { dataResolver(project).countByTable("_RelayId").await should be(7) }
@@ -556,7 +556,7 @@ class CascadingDeleteSpec extends FlatSpec with Matchers with ApiSpecBase {
       """mutation{updateP(where: {p:"p"}, data: { c: {delete: true}}){id}}""",
       project,
       errorCode = 3042,
-      errorContains = "The change you are trying to make would violate the required relation '_CToP' between C and P"
+      errorContains = "The change you are trying to make would violate the required relation 'CToP' between C and P"
     )
 
     server.query("""query{ps{p, c {c, gc{gc}}}}""", project).toString should be(

@@ -3,7 +3,7 @@ package com.prisma.api.connector.mysql.database
 import com.prisma.api.connector._
 import com.prisma.api.connector.mysql.database.MySqlSlickExtensions._
 import com.prisma.gc_values.{GCValue, GCValueExtractor, NullGCValue}
-import com.prisma.shared.models.{Field, Model, Relation, Schema}
+import com.prisma.shared.models.Field
 import slick.jdbc.MySQLProfile.api._
 import slick.jdbc.SQLActionBuilder
 
@@ -17,20 +17,14 @@ object MySqlQueryArgumentsHelpers {
       (newAlias, modTableName)
     }
 
-    def relationFilterStatement(schema: Schema,
-                                field: Field,
-                                fromModel: Model,
-                                toModel: Model,
-                                relation: Relation,
-                                nestedFilter: Filter,
-                                relationCondition: RelationCondition) = {
-      val (alias, modTableName) = getAliasAndTableName(fromModel.name, toModel.name)
-      val relationTableName     = relation.relationTableNameNew(schema)
-      val column                = relation.columnForRelationSide(schema, field.relationSide.get)
-      val oppositeColumn        = relation.columnForRelationSide(schema, field.oppositeRelationSide.get)
+    def relationFilterStatement(field: Field, nestedFilter: Filter, relationCondition: RelationCondition) = {
+      val (alias, modTableName) = getAliasAndTableName(field.model.name, field.relatedModel_!.name)
+      val relationTableName     = field.relation_!.relationTableName
+      val column                = field.relation_!.columnForRelationSide(field.relationSide.get)
+      val oppositeColumn        = field.relation_!.columnForRelationSide(field.oppositeRelationSide.get)
 
       val join = sql"""select *
-            from `#$projectId`.`#${toModel.dbName}` as `#$alias`
+            from `#$projectId`.`#${field.relatedModel_!.dbName}` as `#$alias`
             inner join `#$projectId`.`#${relationTableName}`
             on `#$alias`.`id` = `#$projectId`.`#${relationTableName}`.`#${oppositeColumn}`
             where `#$projectId`.`#${relationTableName}`.`#${column}` = `#$modTableName`.`id`"""
@@ -47,13 +41,12 @@ object MySqlQueryArgumentsHelpers {
 
     val sqlParts = filter match {
       //-------------------------------RECURSION------------------------------------
-      case NodeSubscriptionFilter() => None
-      case AndFilter(filters)       => combineByAnd(filters.map(generateFilterConditions(projectId, alias, modelName, _)).collect { case Some(x) => x })
-      case OrFilter(filters)        => combineByOr(filters.map(generateFilterConditions(projectId, alias, modelName, _)).collect { case Some(x) => x })
-      case NotFilter(filters)       => combineByNot(filters.map(generateFilterConditions(projectId, alias, modelName, _)).collect { case Some(x) => x })
-      case NodeFilter(filters)      => combineByOr(filters.map(generateFilterConditions(projectId, alias, modelName, _)).collect { case Some(x) => x })
-      case RelationFilter(schema, field, fromModel, toModel, relation, nestedFilter, condition: RelationCondition) =>
-        relationFilterStatement(schema, field, fromModel, toModel, relation, nestedFilter, condition)
+      case NodeSubscriptionFilter()                                          => None
+      case AndFilter(filters)                                                => combineByAnd(filters.map(generateFilterConditions(projectId, alias, modelName, _)).collect { case Some(x) => x })
+      case OrFilter(filters)                                                 => combineByOr(filters.map(generateFilterConditions(projectId, alias, modelName, _)).collect { case Some(x) => x })
+      case NotFilter(filters)                                                => combineByNot(filters.map(generateFilterConditions(projectId, alias, modelName, _)).collect { case Some(x) => x })
+      case NodeFilter(filters)                                               => combineByOr(filters.map(generateFilterConditions(projectId, alias, modelName, _)).collect { case Some(x) => x })
+      case RelationFilter(field, nestedFilter, condition: RelationCondition) => relationFilterStatement(field, nestedFilter, condition)
       //--------------------------------ANCHORS------------------------------------
       case PreComputedSubscriptionFilter(value) => Some(if (value) sql"TRUE" else sql"FALSE")
 
@@ -81,25 +74,17 @@ object MySqlQueryArgumentsHelpers {
       case ScalarFilter(field, GreaterThanOrEquals(value)) => Some(sql"""`#$alias`.`#${field.dbName}` >= $value""")
       case ScalarFilter(field, In(Vector(NullGCValue)))    => Some(if (field.isRequired) sql"false" else sql"""`#$alias`.`#${field.dbName}` IS NULL""")
       case ScalarFilter(field, NotIn(Vector(NullGCValue))) => Some(if (field.isRequired) sql"true" else sql"""`#$alias`.`#${field.dbName}` IS NOT NULL""")
-
-      case ScalarFilter(field, In(values)) =>
-        Some(if (values.nonEmpty) sql"""`#$alias`.`#${field.dbName}` """ ++ generateInStatement(values) else sql"false")
-      case ScalarFilter(field, NotIn(values)) =>
-        Some(if (values.nonEmpty) sql"""`#$alias`.`#${field.dbName}` NOT """ ++ generateInStatement(values) else sql"true")
-
-      case ScalarFilter(field, NotEquals(NullGCValue)) => Some(sql"""`#$alias`.`#${field.dbName}` IS NOT NULL""")
-      case ScalarFilter(field, NotEquals(value))       => Some(sql"""`#$alias`.`#${field.dbName}` != $value""")
-      case ScalarFilter(field, Equals(NullGCValue))    => Some(sql"""`#$alias`.`#${field.dbName}` IS NULL""")
-      case ScalarFilter(field, Equals(value))          => Some(sql"""`#$alias`.`#${field.dbName}` = $value""")
-      case OneRelationIsNullFilter(schema, field) =>
+      case ScalarFilter(field, In(values))                 => Some(if (values.nonEmpty) sql"""`#$alias`.`#${field.dbName}` """ ++ in(values) else sql"false")
+      case ScalarFilter(field, NotIn(values))              => Some(if (values.nonEmpty) sql"""`#$alias`.`#${field.dbName}` NOT """ ++ in(values) else sql"true")
+      case ScalarFilter(field, NotEquals(NullGCValue))     => Some(sql"""`#$alias`.`#${field.dbName}` IS NOT NULL""")
+      case ScalarFilter(field, NotEquals(value))           => Some(sql"""`#$alias`.`#${field.dbName}` != $value""")
+      case ScalarFilter(field, Equals(NullGCValue))        => Some(sql"""`#$alias`.`#${field.dbName}` IS NULL""")
+      case ScalarFilter(field, Equals(value))              => Some(sql"""`#$alias`.`#${field.dbName}` = $value""")
+      case OneRelationIsNullFilter(field) =>
         val relation          = field.relation.get
-        val relationTableName = relation.relationTableNameNew(schema)
-        val column            = relation.columnForRelationSide(schema, field.relationSide.get)
-        // fixme: an ugly hack that is hard to explain. ask marcus. remove this once we have the model on the field
-        val otherIdColumn = schema.models.find(_.dbName == modelName) match {
-          case Some(model) => model.idField_!.dbName
-          case None        => "id"
-        }
+        val relationTableName = relation.relationTableName
+        val column            = relation.columnForRelationSide(field.relationSide.get)
+        val otherIdColumn     = field.relatedModel_!.dbNameOfIdField_!
 
         Some(sql""" not exists (select  *
                                   from    `#$projectId`.`#${relationTableName}`
@@ -109,5 +94,5 @@ object MySqlQueryArgumentsHelpers {
     if (sqlParts.isEmpty) None else combineByAnd(sqlParts)
   }
 
-  def generateInStatement(items: Vector[GCValue]) = sql" IN (" ++ combineByComma(items.map(v => sql"$v")) ++ sql")"
+  def in(items: Vector[GCValue]) = sql" IN (" ++ combineByComma(items.map(v => sql"$v")) ++ sql")"
 }
