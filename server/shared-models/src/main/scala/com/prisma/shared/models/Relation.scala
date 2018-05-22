@@ -53,21 +53,15 @@ class Relation(
   }
 
   lazy val modelAColumn: String = manifestation match {
-    case Some(m: RelationTableManifestation) =>
-      m.modelAColumn
-    case Some(m: InlineRelationManifestation) =>
-      if (m.inTableOfModelId == modelAId) modelA_!.idField_!.dbName else m.referencingColumn
-    case None =>
-      "A"
+    case Some(m: RelationTableManifestation)  => m.modelAColumn
+    case Some(m: InlineRelationManifestation) => if (m.inTableOfModelId == modelAId) modelA_!.idField_!.dbName else m.referencingColumn
+    case None                                 => "A"
   }
 
   lazy val modelBColumn: String = manifestation match {
-    case Some(m: RelationTableManifestation) =>
-      m.modelBColumn
-    case Some(m: InlineRelationManifestation) =>
-      if (m.inTableOfModelId == modelBId && !isSameModelRelation) modelB_!.idField_!.dbName else m.referencingColumn
-    case None =>
-      "B"
+    case Some(m: RelationTableManifestation)  => m.modelBColumn
+    case Some(m: InlineRelationManifestation) => if (m.inTableOfModelId == modelBId && !isSameModelRelation) modelB_!.idField_!.dbName else m.referencingColumn
+    case None                                 => "B"
   }
 
   lazy val isManyToMany: Boolean = {
