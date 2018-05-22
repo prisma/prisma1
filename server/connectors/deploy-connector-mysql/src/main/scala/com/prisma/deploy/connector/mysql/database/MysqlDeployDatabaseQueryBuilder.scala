@@ -38,7 +38,7 @@ object MySqlDeployDatabaseQueryBuilder {
   }
 
   def existsNullByModelAndRelationField(projectId: String, modelName: String, field: Field) = {
-    val relationTableName = field.relation.get.relationTableName
+    val relationTableName = field.relation_!.relationTableName
     val relationSide      = field.relationSide.get.toString
 
     sql"""select EXISTS (

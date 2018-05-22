@@ -11,7 +11,6 @@ import slick.dbio.Effect.Read
 import slick.jdbc.MySQLProfile.api._
 import slick.jdbc.meta.{DatabaseMeta, MTable}
 import slick.jdbc.{SQLActionBuilder, _}
-import slick.sql.SqlStreamingAction
 
 import scala.concurrent.ExecutionContext
 
@@ -132,9 +131,9 @@ case class MySqlApiDatabaseQueryBuilder(project: Project)(implicit ec: Execution
 
   def batchSelectAllFromRelatedModel(fromField: Field, fromModelIds: Vector[IdGCValue], args: Option[QueryArguments]) = {
 
-    val relatedModel         = fromField.relatedModel.get
-    val fieldTable           = fromField.relatedModel.get.name
-    val unsafeRelationId     = fromField.relation.get.relationTableName
+    val relatedModel         = fromField.relatedModel_!
+    val fieldTable           = fromField.relatedModel_!.name
+    val unsafeRelationId     = fromField.relation_!.relationTableName
     val modelRelationSide    = fromField.relationSide.get.toString
     val oppositeRelationSide = fromField.oppositeRelationSide.get.toString
 
@@ -187,7 +186,7 @@ case class MySqlApiDatabaseQueryBuilder(project: Project)(implicit ec: Execution
 
   def countAllFromRelatedModels(relationField: Field, parentNodeIds: Vector[IdGCValue], args: Option[QueryArguments]) = {
 
-    val fieldTable        = relationField.relatedModel.get.name
+    val fieldTable        = relationField.relatedModel_!.name
     val unsafeRelationId  = relationField.relation.get.relationTableName
     val modelRelationSide = relationField.relationSide.get.toString
     val fieldRelationSide = relationField.oppositeRelationSide.get.toString

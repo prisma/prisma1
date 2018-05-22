@@ -431,13 +431,13 @@ case class PostgresApiDatabaseMutationBuilder(
 
       case _ ::> last =>
         val childWhere = last match {
-          case edge: NodeEdge => sql""" "#${edge.columnForChildRelationSide(schema)}"""" ++ idFromWhereEquals(edge.childWhere) ++ sql" AND "
+          case edge: NodeEdge => sql""" "#${edge.columnForChildRelationSide}"""" ++ idFromWhereEquals(edge.childWhere) ++ sql" AND "
           case _: ModelEdge   => sql""
         }
 
-        sql"""(SELECT "#${last.columnForChildRelationSide(schema)}"""" ++
+        sql"""(SELECT "#${last.columnForChildRelationSide}"""" ++
           sql""" FROM (SELECT * FROM "#$schemaName"."#${last.relation.relationTableName}") PATHQUERY""" ++
-          sql" WHERE " ++ childWhere ++ sql""""#${last.columnForParentRelationSide(schema)}" IN (""" ++ pathQueryForLastParent(path) ++ sql"))"
+          sql" WHERE " ++ childWhere ++ sql""""#${last.columnForParentRelationSide}" IN (""" ++ pathQueryForLastParent(path) ++ sql"))"
     }
   }
 

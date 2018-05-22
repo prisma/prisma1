@@ -132,7 +132,7 @@ class ObjectTypeBuilder(
 
   def resolveConnection(field: Field): OutputType[Any] = {
     field.isList match {
-      case true  => ListType(modelObjectTypes(field.relatedModel.get.name))
+      case true  => ListType(modelObjectTypes(field.relatedModel_!.name))
       case false => modelObjectTypes(field.relatedModel_!.name)
     }
   }
@@ -141,8 +141,8 @@ class ObjectTypeBuilder(
     (field.isHidden, field.isScalar, field.isList) match {
       case (true, _, _)      => List()
       case (_, true, _)      => List()
-      case (_, false, true)  => mapToListConnectionArguments(field.relatedModel.get)
-      case (_, false, false) => mapToSingleConnectionArguments(field.relatedModel.get)
+      case (_, false, true)  => mapToListConnectionArguments(field.relatedModel_!)
+      case (_, false, false) => mapToSingleConnectionArguments(field.relatedModel_!)
     }
   }
 
@@ -266,7 +266,7 @@ class ObjectTypeBuilder(
       ctx: Context[C, PrismaNode]): sangria.schema.Action[ApiUserContext, _] = {
 
     val item: PrismaNode = unwrapDataItemFromContext(ctx)
-    lazy val arguments   = extractQueryArgumentsFromContext(field.relatedModel.get, ctx.asInstanceOf[Context[ApiUserContext, Unit]])
+    lazy val arguments   = extractQueryArgumentsFromContext(field.relatedModel_!, ctx.asInstanceOf[Context[ApiUserContext, Unit]])
 
     (field.isScalar, field.isList) match {
       case (true, true)   => ScalarListDeferred(model, field, item.id)
