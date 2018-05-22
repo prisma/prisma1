@@ -5,7 +5,7 @@ import com.prisma.gc_values.GCValue
 import com.prisma.shared.models.{Field, Model}
 import slick.jdbc.SQLActionBuilder
 import slick.jdbc.PostgresProfile.api._
-import SlickExtensions._
+import PostgresSlickExtensions._
 
 object QueryDsl {
   def select(model: Model): QueryBuilder = QueryBuilder(model, Vector.empty)

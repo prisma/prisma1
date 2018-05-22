@@ -2,7 +2,6 @@ package com.prisma.api.connector.postgresql.database
 
 import java.sql.{PreparedStatement, ResultSet}
 
-import com.prisma.api.connector.Types.DataItemFilterCollection
 import com.prisma.api.connector._
 import com.prisma.gc_values._
 import com.prisma.shared.models.IdType.Id
@@ -19,8 +18,8 @@ case class PostgresApiDatabaseQueryBuilder(
     schemaName: String
 ) {
   import JdbcExtensions._
-  import QueryArgumentsExtensions._
-  import SlickExtensions._
+  import PostgresQueryArgumentsExtensions._
+  import PostgresSlickExtensions._
 
   def getResultForModel(model: Model): GetResult[PrismaNode] = GetResult { ps: PositionedResult =>
     getPrismaNode(model, ps)
@@ -166,7 +165,7 @@ case class PostgresApiDatabaseQueryBuilder(
     }
   }
 
-  def countAllFromTable(table: String, whereFilter: Option[DataItemFilterCollection]): DBIOAction[Int, NoStream, Effect] = {
+  def countAllFromTable(table: String, whereFilter: Option[Filter]): DBIOAction[Int, NoStream, Effect] = {
     val query = sql"""select count(*) from "#$schemaName"."#$table"""" ++ whereFilterAppendix(schemaName, table, whereFilter)
     query.as[Int].map(_.head)
   }

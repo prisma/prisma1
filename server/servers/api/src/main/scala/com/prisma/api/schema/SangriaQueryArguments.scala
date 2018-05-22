@@ -1,6 +1,5 @@
 package com.prisma.api.schema
 
-import com.prisma.api.connector.Types.DataItemFilterCollection
 import com.prisma.api.connector.{Filter, OrderBy, QueryArguments, SortOrder}
 import com.prisma.shared.models
 import com.prisma.shared.models.Model

@@ -1,15 +1,40 @@
-package com.prisma.api.connector.mysql.database
+package com.prisma.api.connector.postgresql.database
 import com.prisma.api.connector._
-import com.prisma.api.connector.mysql.database.SlickExtensions._
+import com.prisma.api.connector.postgresql.database.PostgresSlickExtensions._
 import com.prisma.api.schema.APIErrors
 import com.prisma.api.schema.APIErrors.{InvalidFirstArgument, InvalidLastArgument, InvalidSkipArgument}
-import slick.jdbc.MySQLProfile.api._
+import slick.jdbc.PostgresProfile.api._
 import slick.jdbc.SQLActionBuilder
 
-object QueryArgumentsExtensions {
+object PostgresQueryArgumentsExtensions {
   val MAX_NODE_COUNT = 1000
 
-  implicit class QueryArgumentsExtensions(val queryArguments: QueryArguments) extends AnyVal {
+  def extractQueryArgs(
+      projectId: String,
+      alias: String,
+      tableName: String,
+      idFieldName: String,
+      args: Option[QueryArguments],
+      defaultOrderShortcut: Option[String],
+      overrideMaxNodeCount: Option[Int],
+      forList: Boolean = false
+  ): (Option[SQLActionBuilder], Option[SQLActionBuilder], Option[SQLActionBuilder]) = {
+    args match {
+      case None => (None, None, None)
+      case Some(givenArgs: QueryArguments) =>
+        val orderByCommand =
+          if (forList) givenArgs.extractOrderByCommandForLists(alias, defaultOrderShortcut)
+          else givenArgs.extractOrderByCommand(alias, idFieldName, defaultOrderShortcut)
+
+        (
+          givenArgs.extractWhereConditionCommand(projectId, alias, tableName),
+          orderByCommand,
+          givenArgs.extractLimitCommand(overrideMaxNodeCount.getOrElse(MAX_NODE_COUNT))
+        )
+    }
+  }
+
+  implicit class PostgresQueryArgumentsExtensions(val queryArguments: QueryArguments) extends AnyVal {
     def skip    = queryArguments.skip
     def after   = queryArguments.after
     def first   = queryArguments.first
@@ -25,7 +50,7 @@ object QueryArgumentsExtensions {
     // "where" keyword. This is because we might need to combine these commands with other commands. If nothing is to be
     // returned, DO NOT return an empty string, but None instead.
 
-    def extractOrderByCommandForLists(projectId: String, modelId: String, defaultOrderShortcut: Option[String] = None): Option[SQLActionBuilder] = {
+    def extractOrderByCommandForLists(topLevelAlias: String, defaultOrderShortcut: Option[String] = None): Option[SQLActionBuilder] = {
 
       if (first.isDefined && last.isDefined) throw APIErrors.InvalidConnectionArguments()
 
@@ -36,14 +61,11 @@ object QueryArgumentsExtensions {
         case false => (defaultOrder, "asc")
       }
 
-      val nodeIdField   = s"`$projectId`.`$modelId`.`nodeId`"
-      val positionField = s"`$projectId`.`$modelId`.`position`"
-
       //always order by nodeId, then positionfield ascending
-      Some(sql"#$nodeIdField #$order, #$positionField #$idOrder")
+      Some(sql""""#$topLevelAlias"."nodeId" #$order, "#$topLevelAlias"."position" #$idOrder""")
     }
 
-    def extractOrderByCommand(projectId: String, modelId: String, defaultOrderShortcut: Option[String] = None): Option[SQLActionBuilder] = {
+    def extractOrderByCommand(topLevelAlias: String, idFieldName: String, defaultOrderShortcut: Option[String] = None): Option[SQLActionBuilder] = {
 
       if (first.isDefined && last.isDefined) throw APIErrors.InvalidConnectionArguments()
 
@@ -54,23 +76,22 @@ object QueryArgumentsExtensions {
         case false => (defaultOrder, "asc")
       }
 
-      val idField = s"`$projectId`.`$modelId`.`id`"
+      val idField = s""" "$topLevelAlias"."$idFieldName" """
 
       orderBy match {
-        case Some(orderByArg) if orderByArg.field.name != "id" =>
-          val orderByField = s"`$projectId`.`$modelId`.`${orderByArg.field.dbName}`"
+        case Some(orderByArg) if orderByArg.field.name != idFieldName =>
+          val orderByField = s""" "$topLevelAlias"."${orderByArg.field.name}" """
 
           // First order by the orderByField, then by id to break ties
-          Some(sql"#$orderByField #$order, #$idField #$idOrder")
+          Some(sql""" #$orderByField #$order, #$idField #$idOrder """)
 
         case _ =>
-          // be default, order by id. For performance reason use the id in the relation table
-          Some(sql"#${defaultOrderShortcut.getOrElse(idField)} #$order")
-
+          // by default, order by id. For performance reasons use the id in the relation table
+          Some(sql""" #${defaultOrderShortcut.getOrElse(idField)} #$order """)
       }
     }
 
-    def extractLimitCommand(projectId: String, modelId: String, maxNodeCount: Int = MAX_NODE_COUNT): Option[SQLActionBuilder] = {
+    def extractLimitCommand(maxNodeCount: Int): Option[SQLActionBuilder] = {
 
       (first, last, skip) match {
         case (Some(first), _, _) if first < 0 => throw InvalidFirstArgument()
@@ -87,7 +108,7 @@ object QueryArgumentsExtensions {
             case Some(x) if x > maxNodeCount => throw APIErrors.TooManyNodesRequested(x)
             case Some(x)                     => (x + 1).toString
           }
-          Some(sql"${skip.getOrElse(0)}, #$limitedCount")
+          Some(sql"#$limitedCount OFFSET ${skip.getOrElse(0)}")
       }
     }
 
@@ -106,16 +127,16 @@ object QueryArgumentsExtensions {
       }
     }
 
-    def extractWhereConditionCommand(projectId: String, tableName: String): Option[SQLActionBuilder] = {
+    def extractWhereConditionCommand(projectId: String, alias: String, tableName: String): Option[SQLActionBuilder] = {
 
       if (first.isDefined && last.isDefined) throw APIErrors.InvalidConnectionArguments()
 
       val standardCondition = filter match {
-        case Some(filterArg) => QueryArgumentsHelpers.generateFilterConditions(projectId, tableName, filterArg)
-        case None            => None
+        case Some(filterArg: Filter) => PostgresQueryArgumentsHelpers.generateFilterConditions(projectId, alias, tableName, filterArg)
+        case None                    => None
       }
 
-      val cursorCondition = buildCursorCondition(projectId, tableName, standardCondition)
+      val cursorCondition = buildCursorCondition(projectId, alias, standardCondition)
 
       cursorCondition match {
         case None                     => standardCondition
@@ -136,12 +157,12 @@ object QueryArgumentsExtensions {
       // If both params are empty, don't generate any query.
       if (before.isEmpty && after.isEmpty) return None
 
-      val idField = s"`$projectId`.`$modelId`.`id`"
+      val idField = s""""$projectId"."$modelId"."id""""
 
       // First, we fetch the ordering for the query. If none is passed, we order by id, ascending.
       // We need that since before/after are dependent on the order.
       val (orderByField, sortDirection) = orderBy match {
-        case Some(orderByArg) => (s"`$projectId`.`$modelId`.`${orderByArg.field.dbName}`", orderByArg.sortOrder.toString)
+        case Some(orderByArg) => (s""""$projectId"."$modelId"."${orderByArg.field.dbName}"""", orderByArg.sortOrder.toString)
         case None             => (idField, "asc")
       }
 
@@ -156,7 +177,7 @@ object QueryArgumentsExtensions {
           case _                  => throw new IllegalArgumentException
         }
 
-        Some(sql"(#$orderByField, #$idField) #$compOperator ((select #$orderByField from `#$projectId`.`#$modelId` where #$idField = '#$cursor'), '#$cursor')")
+        Some(sql"(#$orderByField, #$idField) #$compOperator ((select #$orderByField from #$projectId.#$modelId where #$idField = '#$cursor'), '#$cursor')")
       }
 
       val afterCursorFilter = after match {

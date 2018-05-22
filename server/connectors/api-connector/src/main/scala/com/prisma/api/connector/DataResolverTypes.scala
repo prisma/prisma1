@@ -98,12 +98,6 @@ object NoRelationCondition   extends RelationCondition
 case class NodeSubscriptionFilter()                        extends Filter
 case class PreComputedSubscriptionFilter(boolean: Boolean) extends Filter
 
-//only mysql usages left
-
-object Types {
-  type DataItemFilterCollection = Filter
-}
-
 case class FinalValueFilter(
     key: String,
     value: GCValue,

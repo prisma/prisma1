@@ -1,6 +1,5 @@
 package com.prisma.api.connector
 
-import com.prisma.api.connector.Types.DataItemFilterCollection
 import com.prisma.gc_values.{GCValue, IdGCValue}
 import com.prisma.shared.models.{Field, Model, Project}
 
@@ -15,9 +14,9 @@ trait DataResolver {
 
   def resolveByUnique(where: NodeSelector): Future[Option[PrismaNode]]
 
-  def countByTable(table: String, whereFilter: Option[DataItemFilterCollection] = None): Future[Int]
+  def countByTable(table: String, whereFilter: Option[Filter] = None): Future[Int]
 
-  def countByModel(model: Model, whereFilter: Option[DataItemFilterCollection] = None): Future[Int] = countByTable(model.name, whereFilter)
+  def countByModel(model: Model, whereFilter: Option[Filter] = None): Future[Int] = countByTable(model.name, whereFilter)
 
   def batchResolveByUnique(model: Model, field: Field, values: Vector[GCValue]): Future[Vector[PrismaNode]]
 

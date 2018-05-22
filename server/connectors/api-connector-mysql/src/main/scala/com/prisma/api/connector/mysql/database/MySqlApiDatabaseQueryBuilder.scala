@@ -2,7 +2,6 @@ package com.prisma.api.connector.mysql.database
 
 import java.sql.{PreparedStatement, ResultSet}
 
-import com.prisma.api.connector.Types.DataItemFilterCollection
 import com.prisma.api.connector._
 import com.prisma.gc_values._
 import com.prisma.shared.models.IdType.Id
@@ -13,36 +12,13 @@ import slick.jdbc.MySQLProfile.api._
 import slick.jdbc.meta.{DatabaseMeta, MTable}
 import slick.jdbc.{SQLActionBuilder, _}
 import slick.sql.SqlStreamingAction
+
 import scala.concurrent.ExecutionContext
 
-class MySqlDatabaseQueryBuilder()(implicit ec: ExecutionContext) {
+case class MySqlApiDatabaseQueryBuilder(schema: Schema, schemaName: String)(implicit ec: ExecutionContext) {
   import JdbcExtensions._
-  import QueryArgumentsExtensions._
-  import SlickExtensions._
-
-  def extractQueryArgs(projectId: String,
-                       modelName: String,
-                       args: Option[QueryArguments],
-                       defaultOrderShortcut: Option[String],
-                       overrideMaxNodeCount: Option[Int],
-                       forList: Boolean = false): (Option[SQLActionBuilder], Option[SQLActionBuilder], Option[SQLActionBuilder]) = {
-    args match {
-      case None => (None, None, None)
-      case Some(givenArgs: QueryArguments) =>
-        val orderByCommand =
-          if (forList) givenArgs.extractOrderByCommandForLists(projectId, modelName, defaultOrderShortcut)
-          else givenArgs.extractOrderByCommand(projectId, modelName, defaultOrderShortcut)
-
-        (
-          givenArgs.extractWhereConditionCommand(projectId, modelName),
-          orderByCommand,
-          overrideMaxNodeCount match {
-            case None                => givenArgs.extractLimitCommand(projectId, modelName)
-            case Some(maxCount: Int) => givenArgs.extractLimitCommand(projectId, modelName, maxCount)
-          }
-        )
-    }
-  }
+  import MySqlQueryArgumentsExtensions._
+  import MySqlSlickExtensions._
 
   def getResultForModel(model: Model): GetResult[PrismaNode] = GetResult { ps: PositionedResult =>
     getPrismaNode(model, ps)
@@ -86,15 +62,16 @@ class MySqlDatabaseQueryBuilder()(implicit ec: ExecutionContext) {
       overrideMaxNodeCount: Option[Int] = None
   ): DBIOAction[ResolverResult[PrismaNode], NoStream, Effect] = {
 
-    val tableName                                        = model.name
-    val (conditionCommand, orderByCommand, limitCommand) = extractQueryArgs(projectId, tableName, args, None, overrideMaxNodeCount = overrideMaxNodeCount)
+    val tableName = model.name
+    val (conditionCommand, orderByCommand, limitCommand) =
+      extractQueryArgs(projectId, alias = TOP_LEVEL_ALIAS, tableName, args, None, overrideMaxNodeCount = overrideMaxNodeCount)
 
-    val query = sql"select * from `#$projectId`.`#$tableName`" ++
-      prefixIfNotNone("where", conditionCommand) ++
-      prefixIfNotNone("order by", orderByCommand) ++
-      prefixIfNotNone("limit", limitCommand)
-
-    println(query.queryParts)
+    val query =
+      sql"""select * 
+            from `#$projectId`.`#$tableName` as `${TOP_LEVEL_ALIAS}` """ ++
+        prefixIfNotNone("where", conditionCommand) ++
+        prefixIfNotNone("order by", orderByCommand) ++
+        prefixIfNotNone("limit", limitCommand)
 
     query.as[PrismaNode](getResultForModel(model)).map(args.get.resultTransform)
   }
@@ -106,13 +83,16 @@ class MySqlDatabaseQueryBuilder()(implicit ec: ExecutionContext) {
       overrideMaxNodeCount: Option[Int] = None
   ): DBIOAction[ResolverResult[RelationNode], NoStream, Effect] = {
 
-    val tableName                                        = relationId
-    val (conditionCommand, orderByCommand, limitCommand) = extractQueryArgs(projectId, tableName, args, None, overrideMaxNodeCount = overrideMaxNodeCount)
+    val tableName = relationId
+    val (conditionCommand, orderByCommand, limitCommand) =
+      extractQueryArgs(projectId, TOP_LEVEL_ALIAS, tableName, args, None, overrideMaxNodeCount = overrideMaxNodeCount)
 
-    val query = sql"select * from `#$projectId`.`#$tableName`" ++
-      prefixIfNotNone("where", conditionCommand) ++
-      prefixIfNotNone("order by", orderByCommand) ++
-      prefixIfNotNone("limit", limitCommand)
+    val query =
+      sql"""select * 
+            from `#$projectId`.`#$tableName` as `${TOP_LEVEL_ALIAS}` """ ++
+        prefixIfNotNone("where", conditionCommand) ++
+        prefixIfNotNone("order by", orderByCommand) ++
+        prefixIfNotNone("limit", limitCommand)
 
     query.as[RelationNode].map(args.get.resultTransform)
   }
@@ -123,11 +103,13 @@ class MySqlDatabaseQueryBuilder()(implicit ec: ExecutionContext) {
                              args: Option[QueryArguments],
                              overrideMaxNodeCount: Option[Int] = None): DBIOAction[ResolverResult[ScalarListValues], NoStream, Effect] = {
 
-    val tableName                                        = s"${model.name}_${field.name}"
-    val (conditionCommand, orderByCommand, limitCommand) = extractQueryArgs(projectId, tableName, args, None, overrideMaxNodeCount = overrideMaxNodeCount, true)
+    val tableName = s"${model.name}_${field.name}"
+    val (conditionCommand, orderByCommand, limitCommand) =
+      extractQueryArgs(projectId, TOP_LEVEL_ALIAS, tableName, args, None, overrideMaxNodeCount = overrideMaxNodeCount, true)
 
     val query =
-      sql"select * from `#$projectId`.`#$tableName`" ++
+      sql"""select * 
+            from `#$projectId`.`#$tableName`  as `${TOP_LEVEL_ALIAS}` """ ++
         prefixIfNotNone("where", conditionCommand) ++
         prefixIfNotNone("order by", orderByCommand) ++
         prefixIfNotNone("limit", limitCommand)
@@ -143,7 +125,7 @@ class MySqlDatabaseQueryBuilder()(implicit ec: ExecutionContext) {
     }
   }
 
-  def countAllFromTable(project: Project, table: String, whereFilter: Option[DataItemFilterCollection]): DBIOAction[Int, NoStream, Effect] = {
+  def countAllFromTable(project: Project, table: String, whereFilter: Option[Filter]): DBIOAction[Int, NoStream, Effect] = {
     val query = sql"select count(*) from `#${project.id}`.`#$table`" ++ whereFilterAppendix(project.id, table, whereFilter)
     query.as[Int].map(_.head)
   }
@@ -205,7 +187,12 @@ class MySqlDatabaseQueryBuilder()(implicit ec: ExecutionContext) {
     val oppositeRelationSide = fromField.oppositeRelationSide.get.toString
 
     val (conditionCommand, orderByCommand, limitCommand) =
-      extractQueryArgs(project.id, fieldTable, args, defaultOrderShortcut = Some(s"""`${project.id}`.`$unsafeRelationId`.$oppositeRelationSide"""), None)
+      extractQueryArgs(project.id,
+                       fieldTable,
+                       fieldTable,
+                       args,
+                       defaultOrderShortcut = Some(s"""`${project.id}`.`$unsafeRelationId`.$oppositeRelationSide"""),
+                       None)
 
     def createQuery(id: String, modelRelationSide: String, fieldRelationSide: String) = {
       sql"""(select `#${project.id}`.`#$fieldTable`.*, `#${project.id}`.`#$unsafeRelationId`.A as __Relation__A,  `#${project.id}`.`#$unsafeRelationId`.B as __Relation__B
@@ -257,7 +244,12 @@ class MySqlDatabaseQueryBuilder()(implicit ec: ExecutionContext) {
     val fieldRelationSide = relationField.oppositeRelationSide.get.toString
 
     val (conditionCommand, orderByCommand, limitCommand) =
-      extractQueryArgs(project.id, fieldTable, args, defaultOrderShortcut = Some(s"""`${project.id}`.`$unsafeRelationId`.$fieldRelationSide"""), None)
+      extractQueryArgs(project.id,
+                       fieldTable,
+                       fieldTable,
+                       args,
+                       defaultOrderShortcut = Some(s"""`${project.id}`.`$unsafeRelationId`.$fieldRelationSide"""),
+                       None)
 
     def createQuery(id: String) = {
       sql"""(select '#$id', count(*) from `#${project.id}`.`#$fieldTable`

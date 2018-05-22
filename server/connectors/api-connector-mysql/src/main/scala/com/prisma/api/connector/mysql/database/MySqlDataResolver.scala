@@ -1,6 +1,5 @@
 package com.prisma.api.connector.mysql.database
 
-import com.prisma.api.connector.Types.DataItemFilterCollection
 import com.prisma.api.connector._
 import com.prisma.api.connector.mysql.Metrics
 import com.prisma.gc_values._
@@ -15,7 +14,7 @@ import slick.sql.SqlAction
 import scala.concurrent.{ExecutionContext, Future}
 
 case class MySqlDataResolver(project: Project, readonlyClientDatabase: MySQLProfile.backend.DatabaseDef)(implicit ec: ExecutionContext) extends DataResolver {
-  val queryBuilder = new MySqlDatabaseQueryBuilder()(ec)
+  val queryBuilder = new MySqlApiDatabaseQueryBuilder(project.schema, schemaName = project.id)(ec)
 
   override def resolveByGlobalId(globalId: IdGCValue): Future[Option[PrismaNode]] = { //todo rewrite this to use normal query?
     if (globalId.value == "viewer-fixed") return Future.successful(Some(PrismaNode(globalId, RootGCValue.empty, Some("Viewer"))))
@@ -47,7 +46,7 @@ case class MySqlDataResolver(project: Project, readonlyClientDatabase: MySQLProf
   override def resolveByUnique(where: NodeSelector): Future[Option[PrismaNode]] =
     batchResolveByUnique(where.model, where.field, Vector(where.fieldValue)).map(_.headOption)
 
-  override def countByTable(table: String, whereFilter: Option[DataItemFilterCollection] = None): Future[Int] = {
+  override def countByTable(table: String, whereFilter: Option[Filter] = None): Future[Int] = {
     val query = queryBuilder.countAllFromTable(project, table, whereFilter)
     performWithTiming("countByModel", readonlyClientDatabase.run(query))
   }

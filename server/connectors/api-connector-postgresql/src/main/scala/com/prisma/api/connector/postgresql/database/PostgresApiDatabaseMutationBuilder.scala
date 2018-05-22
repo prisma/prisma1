@@ -3,14 +3,12 @@ package com.prisma.api.connector.postgresql.database
 import java.sql.{PreparedStatement, Statement}
 import java.util.Date
 
-import com.prisma.api.connector.Types.DataItemFilterCollection
 import com.prisma.api.connector._
 import com.prisma.api.connector.postgresql.database.JdbcExtensions._
-import com.prisma.api.connector.postgresql.database.SlickExtensions._
+import com.prisma.api.connector.postgresql.database.PostgresSlickExtensions._
 import com.prisma.api.schema.UserFacingError
-import com.prisma.gc_values.{GCValue, GCValueExtractor, ListGCValue, NullGCValue}
+import com.prisma.gc_values.{GCValue, GCValueExtractor, ListGCValue, NullGCValue, _}
 import com.prisma.shared.models.Manifestations.RelationTableManifestation
-import com.prisma.gc_values._
 import com.prisma.shared.models._
 import cool.graph.cuid.Cuid
 import org.joda.time.{DateTime, DateTimeZone}
@@ -143,7 +141,7 @@ case class PostgresApiDatabaseMutationBuilder(
 
   //region UPDATE
 
-  def updateDataItems(model: Model, args: PrismaArgs, whereFilter: Option[DataItemFilterCollection]) = {
+  def updateDataItems(model: Model, args: PrismaArgs, whereFilter: Option[Filter]) = {
     val updateValues = combineByComma(args.raw.asRoot.map.map { case (k, v) => escapeKey(model.getFieldByName_!(k).dbName) ++ sql" = $v" })
 
     if (updateValues.isDefined) {
@@ -250,11 +248,11 @@ case class PostgresApiDatabaseMutationBuilder(
 
   //region DELETE
 
-  def deleteDataItems(model: Model, whereFilter: Option[DataItemFilterCollection]) = {
+  def deleteDataItems(model: Model, whereFilter: Option[Filter]) = {
     (sql"""DELETE FROM "#$schemaName"."#${model.dbName}"""" ++ whereFilterAppendix(schemaName, model.dbName, whereFilter)).asUpdate
   }
 
-  def deleteRelayIds(model: Model, whereFilter: Option[DataItemFilterCollection]) = {
+  def deleteRelayIds(model: Model, whereFilter: Option[Filter]) = {
     (sql"""DELETE FROM "#$schemaName"."_RelayId" WHERE "id" IN ( SELECT "#${model.dbNameOfIdField_!}" FROM "#$schemaName"."#${model.dbName}"""" ++ whereFilterAppendix(
       schemaName,
       model.dbName,
@@ -334,7 +332,7 @@ case class PostgresApiDatabaseMutationBuilder(
     if (listFieldMap.isEmpty) DBIOAction.successful(()) else setManyScalarListHelper(path.lastModel, listFieldMap, idQuery)
   }
 
-  def setManyScalarLists(model: Model, listFieldMap: Vector[(String, ListGCValue)], whereFilter: Option[DataItemFilterCollection]) = {
+  def setManyScalarLists(model: Model, listFieldMap: Vector[(String, ListGCValue)], whereFilter: Option[Filter]) = {
     val idQuery =
       (sql"""SELECT "#${model.dbNameOfIdField_!}" FROM "#$schemaName"."#${model.dbName}"""" ++ whereFilterAppendix(schemaName, model.dbName, whereFilter))
         .as[String]
@@ -497,7 +495,7 @@ case class PostgresApiDatabaseMutationBuilder(
     triggerFailureWhenExists(query, table, triggerString)
   }
 
-  def oldParentFailureTriggerByFieldAndFilter(model: Model, whereFilter: Option[DataItemFilterCollection], field: Field, causeString: String) = {
+  def oldParentFailureTriggerByFieldAndFilter(model: Model, whereFilter: Option[Filter], field: Field, causeString: String) = {
     val relation       = field.relation.get
     val table          = relation.relationTableNameNew(schema)
     val column         = relation.columnForRelationSide(schema, field.oppositeRelationSide.get)

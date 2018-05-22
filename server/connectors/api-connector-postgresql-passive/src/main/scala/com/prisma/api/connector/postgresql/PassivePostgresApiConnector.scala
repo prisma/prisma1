@@ -130,7 +130,7 @@ case class NestedCreateDataItemInterpreterForInlineRelations(mutaction: NestedCr
     DBIO.seq(relationAction, queryParentAndCreateDataItem(mutationBuilder), listAction)
   }
 
-  import com.prisma.api.connector.postgresql.database.SlickExtensions._
+  import com.prisma.api.connector.postgresql.database.PostgresSlickExtensions._
 
   def queryParentAndCreateDataItem(mutationBuilder: PostgresApiDatabaseMutationBuilder) = {
     val idSubQuery      = mutationBuilder.pathQueryForLastParent(path)

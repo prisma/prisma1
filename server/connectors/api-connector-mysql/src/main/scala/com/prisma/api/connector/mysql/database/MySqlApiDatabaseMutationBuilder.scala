@@ -2,10 +2,9 @@ package com.prisma.api.connector.mysql.database
 
 import java.sql.{PreparedStatement, Statement}
 
-import com.prisma.api.connector.Types.DataItemFilterCollection
 import com.prisma.api.connector._
 import com.prisma.api.connector.mysql.database.JdbcExtensions._
-import com.prisma.api.connector.mysql.database.SlickExtensions._
+import com.prisma.api.connector.mysql.database.MySqlSlickExtensions._
 import com.prisma.api.schema.UserFacingError
 import com.prisma.gc_values.{GCValue, GCValueExtractor, ListGCValue, NullGCValue}
 import com.prisma.shared.models._
@@ -62,7 +61,7 @@ object MySqlApiDatabaseMutationBuilder {
 
   //region UPDATE
 
-  def updateDataItems(projectId: String, model: Model, args: PrismaArgs, whereFilter: Option[DataItemFilterCollection]) = {
+  def updateDataItems(projectId: String, model: Model, args: PrismaArgs, whereFilter: Option[Filter]) = {
     val updateValues = combineByComma(args.raw.asRoot.map.map { case (k, v) => escapeKey(k) ++ sql" = $v" })
 
     if (updateValues.isDefined) {
@@ -154,11 +153,11 @@ object MySqlApiDatabaseMutationBuilder {
 
   //region DELETE
 
-  def deleteDataItems(project: Project, model: Model, whereFilter: Option[DataItemFilterCollection]) = {
+  def deleteDataItems(project: Project, model: Model, whereFilter: Option[Filter]) = {
     (sql"DELETE FROM `#${project.id}`.`#${model.name}`" ++ whereFilterAppendix(project.id, model.name, whereFilter)).asUpdate
   }
 
-  def deleteRelayIds(project: Project, model: Model, whereFilter: Option[DataItemFilterCollection]) = {
+  def deleteRelayIds(project: Project, model: Model, whereFilter: Option[Filter]) = {
     (sql"DELETE FROM `#${project.id}`.`_RelayId`" ++
       (sql"WHERE `id` IN (" ++
         sql"SELECT `id`" ++
@@ -235,7 +234,7 @@ object MySqlApiDatabaseMutationBuilder {
     (sql"DELETE FROM `#$projectId`.`#${path.lastModel.name}_#${fieldName}` WHERE `nodeId` = " ++ pathQueryForLastChild(projectId, path)).asUpdate
   }
 
-  def setManyScalarLists(projectId: String, model: Model, listFieldMap: Vector[(String, ListGCValue)], whereFilter: Option[DataItemFilterCollection]) = {
+  def setManyScalarLists(projectId: String, model: Model, listFieldMap: Vector[(String, ListGCValue)], whereFilter: Option[Filter]) = {
     import scala.concurrent.ExecutionContext.Implicits.global
 
     val idQuery: SqlStreamingAction[Vector[String], String, Effect] =
@@ -385,7 +384,7 @@ object MySqlApiDatabaseMutationBuilder {
     triggerFailureWhenExists(project, query, table)
   }
 
-  def oldParentFailureTriggerByFieldAndFilter(project: Project, model: Model, whereFilter: Option[DataItemFilterCollection], field: Field) = {
+  def oldParentFailureTriggerByFieldAndFilter(project: Project, model: Model, whereFilter: Option[Filter], field: Field) = {
     val table = field.relation.get.relationTableName
     val query = sql"SELECT `id` FROM `#${project.id}`.`#$table` OLDPARENTPATHFAILURETRIGGERBYFIELDANDFILTER" ++
       sql"WHERE `#${field.oppositeRelationSide.get}` IN (SELECT `id` FROM `#${project.id}`.`#${model.name}` " ++

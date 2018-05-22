@@ -1,13 +1,13 @@
-package com.prisma.api.connector.postgresql.database
+package com.prisma.api.connector.mysql.database
 
 import com.prisma.api.connector._
-import com.prisma.api.connector.postgresql.database.SlickExtensions._
+import com.prisma.api.connector.mysql.database.MySqlSlickExtensions._
 import com.prisma.gc_values.{GCValue, GCValueExtractor, NullGCValue}
 import com.prisma.shared.models.{Field, Model, Relation, Schema}
-import slick.jdbc.PostgresProfile.api._
+import slick.jdbc.MySQLProfile.api._
 import slick.jdbc.SQLActionBuilder
 
-object QueryArgumentsHelpers {
+object MySqlQueryArgumentsHelpers {
 
   def generateFilterConditions(projectId: String, alias: String, modelName: String, filter: Filter): Option[SQLActionBuilder] = {
 
@@ -95,7 +95,7 @@ object QueryArgumentsHelpers {
         val relation          = field.relation.get
         val relationTableName = relation.relationTableNameNew(schema)
         val column            = relation.columnForRelationSide(schema, field.relationSide.get)
-        // fixme: an ugly hack that is hard to explain. ask marcus.
+        // fixme: an ugly hack that is hard to explain. ask marcus. remove this once we have the model on the field
         val otherIdColumn = schema.models.find(_.dbName == modelName) match {
           case Some(model) => model.idField_!.dbName
           case None        => "id"
