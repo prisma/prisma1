@@ -93,7 +93,7 @@ yarn start
 
 The server is now running on [http://localhost:4000](http://localhost:4000).
 
-## Step 5: Launch the React application
+## Step 4: Launch the React application
 
 The last thing to do is actually launching the application 🚀
 
