@@ -67,12 +67,12 @@ class Relation(
 
   def isSameFieldSameModelRelation: Boolean = {
     // note: defaults to modelAField to handle same model, same field relations
-    getModelAField == getModelBField(schema).orElse(getModelAField)
+    getModelAField == getModelBField.orElse(getModelAField)
   }
 
   def isManyToMany: Boolean = {
     val modelAFieldIsList = getModelAField.map(_.isList).getOrElse(true)
-    val modelBFieldIsList = getModelBField(schema).map(_.isList).getOrElse(true)
+    val modelBFieldIsList = getModelBField.map(_.isList).getOrElse(true)
     modelAFieldIsList && modelBFieldIsList
   }
 
@@ -80,7 +80,7 @@ class Relation(
     if (modelId == modelAId) {
       getModelAField
     } else if (modelId == modelBId) {
-      getModelBField(schema)
+      getModelBField
     } else {
       sys.error(s"The model id ${modelId} is not part of this relation ${name}")
     }
@@ -92,8 +92,8 @@ class Relation(
   def getModelB: Option[Model] = schema.getModelById(modelBId)
   def getModelB_! : Model      = getModelB.get //OrElse(throw SystemErrors.InvalidRelation("A relation should have a valid Model B."))
 
-  def getModelAField: Option[Field]                 = modelFieldFor(modelAId, RelationSide.A)
-  def getModelBField(schema: Schema): Option[Field] = modelFieldFor(modelBId, RelationSide.B)
+  def getModelAField: Option[Field] = modelFieldFor(modelAId, RelationSide.A)
+  def getModelBField: Option[Field] = modelFieldFor(modelBId, RelationSide.B)
 
   private def modelFieldFor(modelId: String, relationSide: RelationSide.Value): Option[Field] = {
     for {

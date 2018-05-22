@@ -73,7 +73,7 @@ package object ImportExport {
     RelationData(
       r.relationTableName,
       r.getModelB_!.name,
-      r.getModelBField(project.schema).map(_.name),
+      r.getModelBField.map(_.name),
       r.getModelA_!.name,
       r.getModelAField.map(_.name)
     )

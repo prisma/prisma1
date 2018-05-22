@@ -87,7 +87,7 @@ object SchemaDsl extends AwaitUtils {
       if (relation.isManyToMany) {
         relation.template
       } else {
-        val relationFields = Vector(relation.getModelAField, relation.getModelBField(schema)).flatten
+        val relationFields = Vector(relation.getModelAField, relation.getModelBField).flatten
         val fieldToRepresentAsInlineRelation = relationFields.find(_.isList) match {
           case Some(field) => field
           case None        => relationFields.head // happens for one to one relations
