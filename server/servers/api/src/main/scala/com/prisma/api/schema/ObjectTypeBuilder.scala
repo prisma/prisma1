@@ -226,7 +226,7 @@ class ObjectTypeBuilder(
           case value if isScalarNonListFilter(filterName = "_lte")                    => scalarFilter(LessThanOrEquals(getGCValue(value)))
           case value if isScalarNonListFilter(filterName = "_gt")                     => scalarFilter(GreaterThan(getGCValue(value)))
           case value if isScalarNonListFilter(filterName = "_gte")                    => scalarFilter(GreaterThanOrEquals(getGCValue(value)))
-          case _ if isOneRelationFilter(filterName = "")                              => OneRelationIsNullFilter(project.schema, field.get)
+          case _ if isOneRelationFilter(filterName = "")                              => OneRelationIsNullFilter(field.get)
           case value: Boolean if field.isEmpty && filter.name == "boolean"            => PreComputedSubscriptionFilter(value)
           case None if field.isDefined                                                => NodeSubscriptionFilter()
           case null if field.isDefined && field.get.isList && field.get.isRelation    => throw APIErrors.FilterCannotBeNullOnToManyField(field.get.name)
