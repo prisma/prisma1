@@ -70,8 +70,8 @@ case class PostgresApiDatabaseQueryBuilder(
       extractQueryArgs(schemaName, "Top_Level_Alias", idFieldName = model.dbNameOfIdField_!, args, None, overrideMaxNodeCount = overrideMaxNodeCount)
 
     val query =
-      sql"""select * from 
-           "#$schemaName"."#$tableName" as "Top_Level_Alias" """ ++
+      sql"""select *
+            from "#$schemaName"."#$tableName" as "Top_Level_Alias" """ ++
         prefixIfNotNone("where", conditionCommand) ++
         prefixIfNotNone("order by", orderByCommand) ++
         prefixIfNotNone("limit", limitCommand)

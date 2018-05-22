@@ -62,39 +62,39 @@ object QueryArgumentsHelpers {
       case PreComputedSubscriptionFilter(value) => Some(if (value) sql"TRUE" else sql"FALSE")
 
       case ScalarFilter(field, Contains(value)) =>
-        Some(sql""""#$tableName"."#${field.name}" LIKE """ ++ escapeUnsafeParam(s"%${GCValueExtractor.fromGCValue(value)}%"))
+        Some(sql""""#$tableName"."#${field.dbName}" LIKE """ ++ escapeUnsafeParam(s"%${GCValueExtractor.fromGCValue(value)}%"))
 
       case ScalarFilter(field, NotContains(value)) =>
-        Some(sql""""#$tableName"."#${field.name}" NOT LIKE """ ++ escapeUnsafeParam(s"%${GCValueExtractor.fromGCValue(value)}%"))
+        Some(sql""""#$tableName"."#${field.dbName}" NOT LIKE """ ++ escapeUnsafeParam(s"%${GCValueExtractor.fromGCValue(value)}%"))
 
       case ScalarFilter(field, StartsWith(value)) =>
-        Some(sql""""#$tableName"."#${field.name}" LIKE """ ++ escapeUnsafeParam(s"${GCValueExtractor.fromGCValue(value)}%"))
+        Some(sql""""#$tableName"."#${field.dbName}" LIKE """ ++ escapeUnsafeParam(s"${GCValueExtractor.fromGCValue(value)}%"))
 
       case ScalarFilter(field, NotStartsWith(value)) =>
-        Some(sql""""#$tableName"."#${field.name}" NOT LIKE """ ++ escapeUnsafeParam(s"${GCValueExtractor.fromGCValue(value)}%"))
+        Some(sql""""#$tableName"."#${field.dbName}" NOT LIKE """ ++ escapeUnsafeParam(s"${GCValueExtractor.fromGCValue(value)}%"))
 
       case ScalarFilter(field, EndsWith(value)) =>
-        Some(sql""""#$tableName"."#${field.name}" LIKE """ ++ escapeUnsafeParam(s"%${GCValueExtractor.fromGCValue(value)}"))
+        Some(sql""""#$tableName"."#${field.dbName}" LIKE """ ++ escapeUnsafeParam(s"%${GCValueExtractor.fromGCValue(value)}"))
 
       case ScalarFilter(field, NotEndsWith(value)) =>
-        Some(sql""""#$tableName"."#${field.name}" NOT LIKE """ ++ escapeUnsafeParam(s"%${GCValueExtractor.fromGCValue(value)}"))
+        Some(sql""""#$tableName"."#${field.dbName}" NOT LIKE """ ++ escapeUnsafeParam(s"%${GCValueExtractor.fromGCValue(value)}"))
 
-      case ScalarFilter(field, LessThan(value))            => Some(sql""""#$tableName"."#${field.name}" < $value""")
-      case ScalarFilter(field, GreaterThan(value))         => Some(sql""""#$tableName"."#${field.name}" > $value""")
-      case ScalarFilter(field, LessThanOrEquals(value))    => Some(sql""""#$tableName"."#${field.name}" <= $value""")
-      case ScalarFilter(field, GreaterThanOrEquals(value)) => Some(sql""""#$tableName"."#${field.name}" >= $value""")
-      case ScalarFilter(field, In(Vector(NullGCValue)))    => Some(if (field.isRequired) sql"false" else sql""""#$tableName"."#${field.name}" IS NULL""")
-      case ScalarFilter(field, NotIn(Vector(NullGCValue))) => Some(if (field.isRequired) sql"true" else sql""""#$tableName"."#${field.name}" IS NOT NULL""")
+      case ScalarFilter(field, LessThan(value))            => Some(sql""""#$tableName"."#${field.dbName}" < $value""")
+      case ScalarFilter(field, GreaterThan(value))         => Some(sql""""#$tableName"."#${field.dbName}" > $value""")
+      case ScalarFilter(field, LessThanOrEquals(value))    => Some(sql""""#$tableName"."#${field.dbName}" <= $value""")
+      case ScalarFilter(field, GreaterThanOrEquals(value)) => Some(sql""""#$tableName"."#${field.dbName}" >= $value""")
+      case ScalarFilter(field, In(Vector(NullGCValue)))    => Some(if (field.isRequired) sql"false" else sql""""#$tableName"."#${field.dbName}" IS NULL""")
+      case ScalarFilter(field, NotIn(Vector(NullGCValue))) => Some(if (field.isRequired) sql"true" else sql""""#$tableName"."#${field.dbName}" IS NOT NULL""")
 
       case ScalarFilter(field, In(values)) =>
-        Some(if (values.nonEmpty) sql""""#$tableName"."#${field.name}" """ ++ generateInStatement(values) else sql"false")
+        Some(if (values.nonEmpty) sql""""#$tableName"."#${field.dbName}" """ ++ generateInStatement(values) else sql"false")
       case ScalarFilter(field, NotIn(values)) =>
-        Some(if (values.nonEmpty) sql""""#$tableName"."#${field.name}" NOT """ ++ generateInStatement(values) else sql"true")
+        Some(if (values.nonEmpty) sql""""#$tableName"."#${field.dbName}" NOT """ ++ generateInStatement(values) else sql"true")
 
-      case ScalarFilter(field, NotEquals(NullGCValue)) => Some(sql""""#$tableName"."#${field.name}" IS NOT NULL""")
-      case ScalarFilter(field, NotEquals(value))       => Some(sql""""#$tableName"."#${field.name}" != $value""")
-      case ScalarFilter(field, Equals(NullGCValue))    => Some(sql""""#$tableName"."#${field.name}" IS NULL""")
-      case ScalarFilter(field, Equals(value))          => Some(sql""""#$tableName"."#${field.name}" = $value""")
+      case ScalarFilter(field, NotEquals(NullGCValue)) => Some(sql""""#$tableName"."#${field.dbName}" IS NOT NULL""")
+      case ScalarFilter(field, NotEquals(value))       => Some(sql""""#$tableName"."#${field.dbName}" != $value""")
+      case ScalarFilter(field, Equals(NullGCValue))    => Some(sql""""#$tableName"."#${field.dbName}" IS NULL""")
+      case ScalarFilter(field, Equals(value))          => Some(sql""""#$tableName"."#${field.dbName}" = $value""")
       case OneRelationIsNullFilter(schema, field) =>
         val relation          = field.relation.get
         val relationTableName = relation.relationTableNameNew(schema)
