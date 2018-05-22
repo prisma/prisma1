@@ -46,7 +46,7 @@ class DeleteMutationRelationsSpec extends FlatSpec with Matchers with ApiSpecBas
       """.stripMargin,
       project,
       errorCode = 3042,
-      errorContains = "The change you are trying to make would violate the required relation '_ChildToParent' between Child and Parent"
+      errorContains = "The change you are trying to make would violate the required relation 'ChildToParent' between Child and Parent"
     )
 
     dataResolver(project).countByTable("Parent").await should be(1)
