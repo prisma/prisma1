@@ -8,7 +8,7 @@ import play.api.libs.json.Json
 class ProjectJsonFormatterSpec extends FlatSpec with Matchers with JsonUtils {
   import ProjectJsonFormatter._
 
-  "Fields" should "be readable in the obsolete format with inline relation objects" in {
+  "Relation Fields" should "be readable in the obsolete format with inline relation objects" in {
     val json =
       """
         |{
@@ -43,7 +43,7 @@ class ProjectJsonFormatterSpec extends FlatSpec with Matchers with JsonUtils {
     result.relationSide should be(Some(RelationSide.B))
   }
 
-  "Fields" should "be readable in the current format with references to relation names only" in {
+  "Relation Fields" should "be readable in the current format with references to relation names only" in {
     val json =
       """
         |{
@@ -70,6 +70,33 @@ class ProjectJsonFormatterSpec extends FlatSpec with Matchers with JsonUtils {
     result.isReadonly should be(false)
     result.relationName should be(Some("RelationName"))
     result.relationSide should be(Some(RelationSide.B))
+  }
+
+  "Scalar Fields" should "be readable" in {
+    val json =
+      """
+        |{
+        |    "name": "field_name",
+        |    "typeIdentifier": "String",
+        |    "isRequired": false,
+        |    "isList": true,
+        |    "isUnique": false,
+        |    "isHidden": false,
+        |    "isReadonly": false,
+        |    "constraints": []
+        |}
+      """.stripMargin.parseJson
+
+    val result = json.as[FieldTemplate]
+    result.name should equal("field_name")
+    result.typeIdentifier should equal(TypeIdentifier.String)
+    result.isRequired should be(false)
+    result.isList should be(true)
+    result.isUnique should be(false)
+    result.isHidden should be(false)
+    result.isReadonly should be(false)
+    result.relationName should be(None)
+    result.relationSide should be(None)
   }
 
   "Fields" should "always write the current format" in {
