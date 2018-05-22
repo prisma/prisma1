@@ -30,10 +30,10 @@ object MySqlQueryArgumentsHelpers {
       val oppositeColumn        = relation.columnForRelationSide(schema, field.oppositeRelationSide.get)
 
       val join = sql"""select *
-            from "#$projectId"."#${toModel.dbName}" as "#$alias"
-            inner join "#$projectId"."#${relationTableName}"
-            on "#$alias"."id" = "#$projectId"."#${relationTableName}"."#${oppositeColumn}"
-            where "#$projectId"."#${relationTableName}"."#${column}" = "#$modTableName"."id""""
+            from `#$projectId`.`#${toModel.dbName}` as `#$alias`
+            inner join `#$projectId`.`#${relationTableName}`
+            on `#$alias`.`id` = `#$projectId`.`#${relationTableName}`.`#${oppositeColumn}`
+            where `#$projectId`.`#${relationTableName}`.`#${column}` = `#$modTableName`.`id`"""
 
       val nestedFilterStatement = Some(generateFilterConditions(projectId, alias, modelName, nestedFilter).getOrElse(sql"True"))
 
@@ -58,39 +58,39 @@ object MySqlQueryArgumentsHelpers {
       case PreComputedSubscriptionFilter(value) => Some(if (value) sql"TRUE" else sql"FALSE")
 
       case ScalarFilter(field, Contains(value)) =>
-        Some(sql""""#$alias"."#${field.dbName}" LIKE """ ++ escapeUnsafeParam(s"%${GCValueExtractor.fromGCValue(value)}%"))
+        Some(sql"""`#$alias`.`#${field.dbName}` LIKE """ ++ escapeUnsafeParam(s"%${GCValueExtractor.fromGCValue(value)}%"))
 
       case ScalarFilter(field, NotContains(value)) =>
-        Some(sql""""#$alias"."#${field.dbName}" NOT LIKE """ ++ escapeUnsafeParam(s"%${GCValueExtractor.fromGCValue(value)}%"))
+        Some(sql"""`#$alias`.`#${field.dbName}` NOT LIKE """ ++ escapeUnsafeParam(s"%${GCValueExtractor.fromGCValue(value)}%"))
 
       case ScalarFilter(field, StartsWith(value)) =>
-        Some(sql""""#$alias"."#${field.dbName}" LIKE """ ++ escapeUnsafeParam(s"${GCValueExtractor.fromGCValue(value)}%"))
+        Some(sql"""`#$alias`.`#${field.dbName}` LIKE """ ++ escapeUnsafeParam(s"${GCValueExtractor.fromGCValue(value)}%"))
 
       case ScalarFilter(field, NotStartsWith(value)) =>
-        Some(sql""""#$alias"."#${field.dbName}" NOT LIKE """ ++ escapeUnsafeParam(s"${GCValueExtractor.fromGCValue(value)}%"))
+        Some(sql"""`#$alias`.`#${field.dbName}` NOT LIKE """ ++ escapeUnsafeParam(s"${GCValueExtractor.fromGCValue(value)}%"))
 
       case ScalarFilter(field, EndsWith(value)) =>
-        Some(sql""""#$alias"."#${field.dbName}" LIKE """ ++ escapeUnsafeParam(s"%${GCValueExtractor.fromGCValue(value)}"))
+        Some(sql"""`#$alias`.`#${field.dbName}` LIKE """ ++ escapeUnsafeParam(s"%${GCValueExtractor.fromGCValue(value)}"))
 
       case ScalarFilter(field, NotEndsWith(value)) =>
-        Some(sql""""#$alias"."#${field.dbName}" NOT LIKE """ ++ escapeUnsafeParam(s"%${GCValueExtractor.fromGCValue(value)}"))
+        Some(sql"""`#$alias`.`#${field.dbName}` NOT LIKE """ ++ escapeUnsafeParam(s"%${GCValueExtractor.fromGCValue(value)}"))
 
-      case ScalarFilter(field, LessThan(value))            => Some(sql""""#$alias"."#${field.dbName}" < $value""")
-      case ScalarFilter(field, GreaterThan(value))         => Some(sql""""#$alias"."#${field.dbName}" > $value""")
-      case ScalarFilter(field, LessThanOrEquals(value))    => Some(sql""""#$alias"."#${field.dbName}" <= $value""")
-      case ScalarFilter(field, GreaterThanOrEquals(value)) => Some(sql""""#$alias"."#${field.dbName}" >= $value""")
-      case ScalarFilter(field, In(Vector(NullGCValue)))    => Some(if (field.isRequired) sql"false" else sql""""#$alias"."#${field.dbName}" IS NULL""")
-      case ScalarFilter(field, NotIn(Vector(NullGCValue))) => Some(if (field.isRequired) sql"true" else sql""""#$alias"."#${field.dbName}" IS NOT NULL""")
+      case ScalarFilter(field, LessThan(value))            => Some(sql"""`#$alias`.`#${field.dbName}` < $value""")
+      case ScalarFilter(field, GreaterThan(value))         => Some(sql"""`#$alias`.`#${field.dbName}` > $value""")
+      case ScalarFilter(field, LessThanOrEquals(value))    => Some(sql"""`#$alias`.`#${field.dbName}` <= $value""")
+      case ScalarFilter(field, GreaterThanOrEquals(value)) => Some(sql"""`#$alias`.`#${field.dbName}` >= $value""")
+      case ScalarFilter(field, In(Vector(NullGCValue)))    => Some(if (field.isRequired) sql"false" else sql"""`#$alias`.`#${field.dbName}` IS NULL""")
+      case ScalarFilter(field, NotIn(Vector(NullGCValue))) => Some(if (field.isRequired) sql"true" else sql"""`#$alias`.`#${field.dbName}` IS NOT NULL""")
 
       case ScalarFilter(field, In(values)) =>
-        Some(if (values.nonEmpty) sql""""#$alias"."#${field.dbName}" """ ++ generateInStatement(values) else sql"false")
+        Some(if (values.nonEmpty) sql"""`#$alias`.`#${field.dbName}` """ ++ generateInStatement(values) else sql"false")
       case ScalarFilter(field, NotIn(values)) =>
-        Some(if (values.nonEmpty) sql""""#$alias"."#${field.dbName}" NOT """ ++ generateInStatement(values) else sql"true")
+        Some(if (values.nonEmpty) sql"""`#$alias`.`#${field.dbName}` NOT """ ++ generateInStatement(values) else sql"true")
 
-      case ScalarFilter(field, NotEquals(NullGCValue)) => Some(sql""""#$alias"."#${field.dbName}" IS NOT NULL""")
-      case ScalarFilter(field, NotEquals(value))       => Some(sql""""#$alias"."#${field.dbName}" != $value""")
-      case ScalarFilter(field, Equals(NullGCValue))    => Some(sql""""#$alias"."#${field.dbName}" IS NULL""")
-      case ScalarFilter(field, Equals(value))          => Some(sql""""#$alias"."#${field.dbName}" = $value""")
+      case ScalarFilter(field, NotEquals(NullGCValue)) => Some(sql"""`#$alias`.`#${field.dbName}` IS NOT NULL""")
+      case ScalarFilter(field, NotEquals(value))       => Some(sql"""`#$alias`.`#${field.dbName}` != $value""")
+      case ScalarFilter(field, Equals(NullGCValue))    => Some(sql"""`#$alias`.`#${field.dbName}` IS NULL""")
+      case ScalarFilter(field, Equals(value))          => Some(sql"""`#$alias`.`#${field.dbName}` = $value""")
       case OneRelationIsNullFilter(schema, field) =>
         val relation          = field.relation.get
         val relationTableName = relation.relationTableNameNew(schema)
@@ -102,8 +102,8 @@ object MySqlQueryArgumentsHelpers {
         }
 
         Some(sql""" not exists (select  *
-                                  from    "#$projectId"."#${relationTableName}"
-                                  where   "#$projectId"."#${relationTableName}"."#${column}" = "#$alias"."#$otherIdColumn")""")
+                                  from    `#$projectId`.`#${relationTableName}`
+                                  where   `#$projectId`.`#${relationTableName}`.`#${column}` = `#$alias`.`#$otherIdColumn`)""")
     }
 
     if (sqlParts.isEmpty) None else combineByAnd(sqlParts)

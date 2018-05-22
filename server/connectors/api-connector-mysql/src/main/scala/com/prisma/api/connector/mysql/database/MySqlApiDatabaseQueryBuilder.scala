@@ -68,7 +68,7 @@ case class MySqlApiDatabaseQueryBuilder(schema: Schema, schemaName: String)(impl
 
     val query =
       sql"""select * 
-            from `#$projectId`.`#$tableName` as `${TOP_LEVEL_ALIAS}` """ ++
+            from `#$projectId`.`#$tableName` as `#${TOP_LEVEL_ALIAS}` """ ++
         prefixIfNotNone("where", conditionCommand) ++
         prefixIfNotNone("order by", orderByCommand) ++
         prefixIfNotNone("limit", limitCommand)
@@ -89,7 +89,7 @@ case class MySqlApiDatabaseQueryBuilder(schema: Schema, schemaName: String)(impl
 
     val query =
       sql"""select * 
-            from `#$projectId`.`#$tableName` as `${TOP_LEVEL_ALIAS}` """ ++
+            from `#$projectId`.`#$tableName` as `#${TOP_LEVEL_ALIAS}` """ ++
         prefixIfNotNone("where", conditionCommand) ++
         prefixIfNotNone("order by", orderByCommand) ++
         prefixIfNotNone("limit", limitCommand)
@@ -109,7 +109,7 @@ case class MySqlApiDatabaseQueryBuilder(schema: Schema, schemaName: String)(impl
 
     val query =
       sql"""select * 
-            from `#$projectId`.`#$tableName`  as `${TOP_LEVEL_ALIAS}` """ ++
+            from `#$projectId`.`#$tableName`  as `#${TOP_LEVEL_ALIAS}` """ ++
         prefixIfNotNone("where", conditionCommand) ++
         prefixIfNotNone("order by", orderByCommand) ++
         prefixIfNotNone("limit", limitCommand)

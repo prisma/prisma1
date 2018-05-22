@@ -76,11 +76,11 @@ object MySqlQueryArgumentsExtensions {
         case false => (defaultOrder, "asc")
       }
 
-      val idField = s"$alias`.`id`"
+      val idField = s"`$alias`.`id`"
 
       orderBy match {
         case Some(orderByArg) if orderByArg.field.name != "id" =>
-          val orderByField = s"`$alias`${orderByArg.field.dbName}`"
+          val orderByField = s"`$alias`.`${orderByArg.field.dbName}`"
 
           // First order by the orderByField, then by id to break ties
           Some(sql"#$orderByField #$order, #$idField #$idOrder")

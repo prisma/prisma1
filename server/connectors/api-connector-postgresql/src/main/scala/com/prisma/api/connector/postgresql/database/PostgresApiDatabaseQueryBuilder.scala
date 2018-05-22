@@ -11,12 +11,12 @@ import slick.jdbc.PostgresProfile.api._
 import slick.jdbc.{SQLActionBuilder, _}
 import slick.sql.SqlStreamingAction
 
-import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.ExecutionContext
 
 case class PostgresApiDatabaseQueryBuilder(
     schema: Schema,
     schemaName: String
-) {
+)(implicit ec: ExecutionContext) {
   import JdbcExtensions._
   import PostgresQueryArgumentsExtensions._
   import PostgresSlickExtensions._
@@ -166,7 +166,9 @@ case class PostgresApiDatabaseQueryBuilder(
   }
 
   def countAllFromTable(table: String, whereFilter: Option[Filter]): DBIOAction[Int, NoStream, Effect] = {
-    val query = sql"""select count(*) from "#$schemaName"."#$table"""" ++ whereFilterAppendix(schemaName, table, whereFilter)
+    val query =
+      sql"""select count(*)
+            from "#$schemaName"."#$table" """ ++ whereFilterAppendix(schemaName, table, whereFilter)
     query.as[Int].map(_.head)
   }
 
