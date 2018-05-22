@@ -60,6 +60,16 @@ case class PostgresApiDatabaseQueryBuilder(
     sql"" ++ prefixIfNotNone("where", where) ++ prefixIfNotNone("order by", orderBy) ++ prefixIfNotNone("limit", limit)
   }
 
+  private def andWhereOrderByLimitCommands(args: Option[QueryArguments],
+                                           overrideMaxNodeCount: Option[Int],
+                                           tableName: String,
+                                           idFieldName: String,
+                                           defaultOrderShortCut: Option[String] = None,
+                                           forList: Boolean = false) = {
+    val (where, orderBy, limit) = extractQueryArgs(schemaName, alias = ALIAS, tableName, idFieldName, args, defaultOrderShortCut, overrideMaxNodeCount, forList)
+    sql"" ++ prefixIfNotNone("and", where) ++ prefixIfNotNone("order by", orderBy) ++ prefixIfNotNone("limit", limit)
+  }
+
   def getResultForScalarListField(field: Field): GetResult[ScalarListElement] = GetResult { ps: PositionedResult =>
     val resultSet = ps.rs
     val nodeId    = resultSet.getString("nodeId")
@@ -74,10 +84,10 @@ case class PostgresApiDatabaseQueryBuilder(
       overrideMaxNodeCount: Option[Int] = None
   ): DBIOAction[ResolverResult[PrismaNode], NoStream, Effect] = {
 
-    val query = sql"""select * from "#$schemaName"."#${model.dbName}" as "Top_Level_Alias" """ ++ whereOrderByLimitCommands(args,
-                                                                                                                            overrideMaxNodeCount,
-                                                                                                                            model.dbName,
-                                                                                                                            model.dbNameOfIdField_!)
+    val query = sql"""select * from "#$schemaName"."#${model.dbName}" as "#$ALIAS" """ ++ whereOrderByLimitCommands(args,
+                                                                                                                    overrideMaxNodeCount,
+                                                                                                                    model.dbName,
+                                                                                                                    model.dbNameOfIdField_!)
 
     query.as[PrismaNode](getResultForModel(model)).map(args.get.resultTransform)
 
@@ -107,10 +117,10 @@ case class PostgresApiDatabaseQueryBuilder(
 
     val tableName = relation.relationTableName
 
-    val query = sql"""select * from "#$schemaName"."#$tableName" as "$ALIAS" """ ++ whereOrderByLimitCommands(args,
-                                                                                                              overrideMaxNodeCount,
-                                                                                                              tableName,
-                                                                                                              relation.columnForRelationSide(RelationSide.A))
+    val query = sql"""select * from "#$schemaName"."#$tableName" as "#$ALIAS" """ ++ whereOrderByLimitCommands(args,
+                                                                                                               overrideMaxNodeCount,
+                                                                                                               tableName,
+                                                                                                               relation.columnForRelationSide(RelationSide.A))
 
     query.as[RelationNode](getResultForRelation(relation)).map(args.get.resultTransform)
   }
@@ -123,12 +133,12 @@ case class PostgresApiDatabaseQueryBuilder(
   ): DBIOAction[ResolverResult[ScalarListValues], NoStream, Effect] = {
 
     val tableName = s"${model.dbName}_${field.dbName}"
-    val query = sql"""select *from "#$schemaName"."#$tableName" "$ALIAS" """ ++ whereOrderByLimitCommands(args,
-                                                                                                          overrideMaxNodeCount,
-                                                                                                          tableName,
-                                                                                                          model.dbNameOfIdField_!,
-                                                                                                          None,
-                                                                                                          true)
+    val query = sql"""select *from "#$schemaName"."#$tableName" "#$ALIAS" """ ++ whereOrderByLimitCommands(args,
+                                                                                                           overrideMaxNodeCount,
+                                                                                                           tableName,
+                                                                                                           model.dbNameOfIdField_!,
+                                                                                                           None,
+                                                                                                           true)
 
     query.as[ScalarListElement](getResultForScalarListField(field)).map { scalarListElements =>
       val res = args.get.resultTransform(scalarListElements)
@@ -192,15 +202,16 @@ case class PostgresApiDatabaseQueryBuilder(
     val columnForRelatedModel = relation.columnForRelationSide(fromField.oppositeRelationSide.get)
 
     def createQuery(id: String, modelRelationSide: String, fieldRelationSide: String) = {
-      sql"""(select "ModelTable".*, "RelationTable"."#$aColumn" as "__Relation__A",  "RelationTable"."#$bColumn" as "__Relation__B"
-            from "#$schemaName"."#$modelTable" as "$ALIAS"
+      sql"""(select "#$ALIAS".*, "RelationTable"."#$aColumn" as "__Relation__A",  "RelationTable"."#$bColumn" as "__Relation__B"
+            from "#$schemaName"."#$modelTable" as "#$ALIAS"
             inner join "#$schemaName"."#$relationTableName" as "RelationTable"
-            on "$ALIAS"."#${relatedModel.dbNameOfIdField_!}" = "RelationTable"."#$fieldRelationSide"
-            where "RelationTable"."#$modelRelationSide" = '#$id' """ ++ whereOrderByLimitCommands(args,
-                                                                                                  None,
-                                                                                                  relatedModel.dbName,
-                                                                                                  relatedModel.dbNameOfIdField_!,
-                                                                                                  Some(s""" "RelationTable"."$columnForRelatedModel" """))
+            on "#$ALIAS"."#${relatedModel.dbNameOfIdField_!}" = "RelationTable"."#$fieldRelationSide"
+            where "RelationTable"."#$modelRelationSide" = '#$id' """ ++ andWhereOrderByLimitCommands(
+        args,
+        None,
+        relatedModel.dbName,
+        relatedModel.dbNameOfIdField_!,
+        Some(s""" "RelationTable"."$columnForRelatedModel" """)) ++ sql")"
     }
 
     // see https://github.com/graphcool/internal-docs/blob/master/relations.md#findings
@@ -250,15 +261,15 @@ case class PostgresApiDatabaseQueryBuilder(
 
     def createQuery(id: String) = {
       sql"""(select "#$id", count(*)
-            from "#$schemaName"."#${relatedModel.dbName}" AS "$ALIAS"
+            from "#$schemaName"."#${relatedModel.dbName}" AS "#$ALIAS"
             inner join "#$schemaName"."#$unsafeRelationId"
-            on "$ALIAS"."#${relatedModel.dbNameOfIdField_!}" = "#$schemaName"."#$unsafeRelationId"."#$columnForFieldRelationSide"
-            where "#$schemaName"."#$unsafeRelationId"."#$modelRelationSide" = '#$id' """ ++ whereOrderByLimitCommands(
+            on "#$ALIAS"."#${relatedModel.dbNameOfIdField_!}" = "#$schemaName"."#$unsafeRelationId"."#$columnForFieldRelationSide"
+            where "#$schemaName"."#$unsafeRelationId"."#$modelRelationSide" = '#$id' """ ++ andWhereOrderByLimitCommands(
         args,
         None,
         relatedModel.dbName,
         relatedModel.dbNameOfIdField_!,
-        Some(s"""$schemaName.$unsafeRelationId.$columnForFieldRelationSide"""))
+        Some(s"""$schemaName.$unsafeRelationId.$columnForFieldRelationSide""")) ++ sql")"
     }
 
     val query = parentNodeIds.distinct.view.zipWithIndex.foldLeft(sql"")((a, b) => a ++ unionIfNotFirst(b._2) ++ createQuery(b._1.value))

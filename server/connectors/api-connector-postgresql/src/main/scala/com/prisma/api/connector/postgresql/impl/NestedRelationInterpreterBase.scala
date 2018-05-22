@@ -15,11 +15,14 @@ trait NestedRelationInterpreterBase extends DatabaseMutactionInterpreter {
   def topIsCreate: Boolean
   def schema: Schema = project.schema
 
-  val lastEdge   = path.lastEdge_!
-  val p          = lastEdge.parentField
-  val otherModel = lastEdge.child
-  val c          = lastEdge.childField.get
-
+  val lastEdge         = path.lastEdge_!
+  val p                = lastEdge.parentField
+  val otherModel       = lastEdge.child
+  val otherFieldOption = lastEdge.childField
+  val c = otherFieldOption match {
+    case Some(x) => x
+    case None    => p.copy(isRequired = false, isList = true).build(otherModel) // fixme: 1. obsolete magical back relation 2. passingOtherModel is not right
+  }
   val parentCauseString = path.lastEdge_! match {
     case edge: NodeEdge =>
       s"-OLDPARENTFAILURETRIGGER@${path.lastRelation_!.relationTableName}@${path.lastEdge_!.columnForChildRelationSide}@${edge.childWhere.fieldValueAsString}-"
