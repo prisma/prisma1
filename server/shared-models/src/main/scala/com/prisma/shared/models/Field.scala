@@ -116,7 +116,7 @@ class Field(
 
   lazy val relatedModel_! : Model = {
     relatedModel match {
-      case None        => sys.error(s"Could not find relatedModel for field [$name] on model [$model]")
+      case None        => sys.error(s"Could not find relatedModel for field [$name] on model [${model.name}]")
       case Some(model) => model
     }
   }
