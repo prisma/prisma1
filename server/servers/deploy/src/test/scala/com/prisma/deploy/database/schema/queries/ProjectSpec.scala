@@ -1,7 +1,6 @@
 package com.prisma.deploy.database.schema.queries
 
 import com.prisma.deploy.specutils.ActiveDeploySpecBase
-import com.prisma.shared.models.ProjectId
 import org.scalatest.{FlatSpec, Matchers}
 
 class ProjectSpec extends FlatSpec with Matchers with ActiveDeploySpecBase {

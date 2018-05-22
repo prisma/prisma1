@@ -228,7 +228,7 @@ object ProjectJsonFormatter {
       (JsPath \ "isReadonly").read[Boolean] and
       (JsPath \ "enum").readNullable[Enum] and
       (JsPath \ "defaultValue").readNullable[GCValue] and
-      readEitherPathNullable[String](JsPath \ "relationName", JsPath \ "relation" \ "name") and
+      readEitherPathNullable[String](JsPath \ "relation" \ "name", JsPath \ "relationName") and
       (JsPath \ "relationSide").readNullable[RelationSide.Value] and
       (JsPath \ "manifestation").readNullable[FieldManifestation] and
       (JsPath \ "constraints").read[List[FieldConstraint]]
@@ -291,11 +291,14 @@ object ProjectJsonFormatter {
   }
 
   def readEitherPathNullable[T](path1: JsPath, path2: JsPath)(implicit reads: Reads[T]): Reads[Option[T]] = {
-    val readsPath1 = path1.readNullable[T]
-    val readsPath2 = path2.readNullable[T]
-    readsPath1.flatMap {
-      case Some(_) => readsPath1
-      case None    => readsPath2
+    Reads { json =>
+      val path1Lookup = path1.asSingleJson(json)
+      val path2Lookup = path2.asSingleJson(json)
+      (path1Lookup, path2Lookup) match {
+        case (JsDefined(foundJson), _) => foundJson.validateOpt[T]
+        case (_, JsDefined(foundJson)) => foundJson.validateOpt[T]
+        case _                         => JsSuccess(None)
+      }
     }
   }
 }
