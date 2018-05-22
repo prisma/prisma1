@@ -80,22 +80,18 @@ class Relation(
   def columnForRelationSide(relationSide: RelationSide.Value): String = if (relationSide == RelationSide.A) modelAColumn else modelBColumn
 
   def getFieldOnModel(modelId: String): Option[Field] = {
-    if (modelId == modelAId) {
-      modelAField
-    } else if (modelId == modelBId) {
-      modelBField
-    } else {
-      sys.error(s"The model id ${modelId} is not part of this relation ${name}")
+    modelId match {
+      case `modelAId` => modelAField
+      case `modelBId` => modelBField
+      case _          => sys.error(s"The model id ${modelId} is not part of this relation ${name}")
     }
   }
 
   def sideOfModelCascades(model: Model): Boolean = {
-    if (model.id == modelAId) {
-      modelAOnDelete == OnDelete.Cascade
-    } else if (model.id == modelBId) {
-      modelBOnDelete == OnDelete.Cascade
-    } else {
-      sys.error(s"The model ${model.name} is not part of the relation $name")
+    model.id match {
+      case `modelAId` => modelAOnDelete == OnDelete.Cascade
+      case `modelBId` => modelBOnDelete == OnDelete.Cascade
+      case _          => sys.error(s"The model ${model.name} is not part of the relation $name")
     }
   }
 }
