@@ -28,9 +28,9 @@ object QueryArgumentsHelpers {
     }
 
     def joinRelations(schema: Schema, relation: Relation, toModel: Model, alias: String, field: Field, fromModel: Model, modTableName: String) = {
-      val relationTableName = relation.relationTableNameNew(schema)
-      val column            = relation.columnForRelationSide(schema, field.relationSide.get)
-      val oppositeColumn    = relation.columnForRelationSide(schema, field.oppositeRelationSide.get)
+      val relationTableName = relation.relationTableName
+      val column            = relation.columnForRelationSide(field.relationSide.get)
+      val oppositeColumn    = relation.columnForRelationSide(field.oppositeRelationSide.get)
       sql"""select *
             from "#$projectId"."#${toModel.dbName}" as "#$alias"
             inner join "#$projectId"."#${relationTableName}"
@@ -182,8 +182,8 @@ object QueryArgumentsHelpers {
           if (field.isList) throw APIErrors.FilterCannotBeNullOnToManyField(field.name)
 
           val relation          = field.relation.get
-          val relationTableName = relation.relationTableNameNew(schema)
-          val column            = relation.columnForRelationSide(schema, field.relationSide.get)
+          val relationTableName = relation.relationTableName
+          val column            = relation.columnForRelationSide(field.relationSide.get)
           // fixme: an ugly hack that is hard to explain. ask marcus.
           val otherIdColumn = schema.models.find(_.dbName == tableName) match {
             case Some(model) => model.idField_!.dbName

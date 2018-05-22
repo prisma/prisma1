@@ -194,36 +194,89 @@ object ProjectJsonFormatter {
     }
   }
 
-  val relationWrites: Writes[Relation] = (
+  implicit val relationWrites: Writes[RelationTemplate] = (
     (JsPath \ "name").write[String] and
       (JsPath \ "modelAId").write[String] and
       (JsPath \ "modelBId").write[String] and
       (JsPath \ "modelAOnDelete").write[OnDelete.Value] and
       (JsPath \ "modelBOnDelete").write[OnDelete.Value] and
       (JsPath \ "manifestation").writeNullable[RelationManifestation]
-  )(unlift(Relation.unapply))
+  )(unlift(RelationTemplate.unapply))
 
-  val relationReads: Reads[Relation] = (
+  implicit val relationReads: Reads[RelationTemplate] = (
     (JsPath \ "name").read[String] and
       (JsPath \ "modelAId").read[String] and
       (JsPath \ "modelBId").read[String] and
       (JsPath \ "modelAOnDelete").readNullable[OnDelete.Value].map(_.getOrElse(OnDelete.SetNull)) and
       (JsPath \ "modelBOnDelete").readNullable[OnDelete.Value].map(_.getOrElse(OnDelete.SetNull)) and
       (JsPath \ "manifestation").readNullable[RelationManifestation]
-  )(Relation.apply _)
+  )(RelationTemplate.apply _)
 
-  val modelManifestationWrites: Writes[ModelManifestation] = Writes(manifestation => Json.obj("dbName" -> manifestation.dbName))
-  val modelManifestationReads: Reads[ModelManifestation]   = (JsPath \ "dbName").read[String].map(ModelManifestation)
-  val fieldManifestationWrites: Writes[FieldManifestation] = Writes(manifestation => Json.obj("dbName" -> manifestation.dbName))
-  val fieldManifestationReads: Reads[FieldManifestation]   = (JsPath \ "dbName").read[String].map(FieldManifestation)
+  implicit val modelManifestationWrites: Writes[ModelManifestation] = Writes(manifestation => Json.obj("dbName" -> manifestation.dbName))
+  implicit val modelManifestationReads: Reads[ModelManifestation]   = (JsPath \ "dbName").read[String].map(ModelManifestation)
+  implicit val fieldManifestationWrites: Writes[FieldManifestation] = Writes(manifestation => Json.obj("dbName" -> manifestation.dbName))
+  implicit val fieldManifestationReads: Reads[FieldManifestation]   = (JsPath \ "dbName").read[String].map(FieldManifestation)
+  implicit lazy val enum                                            = Json.format[Enum]
 
-  implicit lazy val modelManifestation        = Format(modelManifestationReads, modelManifestationWrites)
-  implicit lazy val fieldManifestation        = Format(fieldManifestationReads, fieldManifestationWrites)
-  implicit lazy val relation                  = Format(relationReads, relationWrites)
-  implicit lazy val enum                      = Json.format[Enum]
-  implicit lazy val field                     = Json.format[Field]
-  implicit lazy val model                     = Json.format[Model]
-  implicit lazy val schemaFormat              = Json.format[Schema]
+  implicit val fieldReads: Reads[FieldTemplate] = (
+    (JsPath \ "name").read[String] and
+      (JsPath \ "typeIdentifier").read[TypeIdentifier.Value] and
+      (JsPath \ "isRequired").read[Boolean] and
+      (JsPath \ "isList").read[Boolean] and
+      (JsPath \ "isUnique").read[Boolean] and
+      (JsPath \ "isHidden").read[Boolean] and
+      (JsPath \ "isReadonly").read[Boolean] and
+      (JsPath \ "enum").readNullable[Enum] and
+      (JsPath \ "defaultValue").readNullable[GCValue] and
+      readEitherPathNullable[String](JsPath \ "relation" \ "name", JsPath \ "relationName") and
+      (JsPath \ "relationSide").readNullable[RelationSide.Value] and
+      (JsPath \ "manifestation").readNullable[FieldManifestation] and
+      (JsPath \ "constraints").read[List[FieldConstraint]]
+  )(FieldTemplate.apply _)
+
+  implicit val fieldWrites: Writes[FieldTemplate] = (
+    (JsPath \ "name").write[String] and
+      (JsPath \ "typeIdentifier").write[TypeIdentifier.Value] and
+      (JsPath \ "isRequired").write[Boolean] and
+      (JsPath \ "isList").write[Boolean] and
+      (JsPath \ "isUnique").write[Boolean] and
+      (JsPath \ "isHidden").write[Boolean] and
+      (JsPath \ "isReadonly").write[Boolean] and
+      (JsPath \ "enum").writeNullable[Enum] and
+      (JsPath \ "defaultValue").writeNullable[GCValue] and
+      (JsPath \ "relationName").writeNullable[String] and
+      (JsPath \ "relationSide").writeNullable[RelationSide.Value] and
+      (JsPath \ "manifestation").writeNullable[FieldManifestation] and
+      (JsPath \ "constraints").write[List[FieldConstraint]]
+  )(unlift(FieldTemplate.unapply))
+
+  implicit val modelReads: Reads[ModelTemplate] = (
+    (JsPath \ "name").read[String] and
+      (JsPath \ "stableIdentifier").read[String] and
+      (JsPath \ "fields").read[List[FieldTemplate]] and
+      (JsPath \ "manifestation").readNullable[ModelManifestation]
+  )(ModelTemplate.apply _)
+
+  implicit val modelWrites: Writes[ModelTemplate] = (
+    (JsPath \ "name").write[String] and
+      (JsPath \ "stableIdentifier").write[String] and
+      (JsPath \ "fields").write[List[FieldTemplate]] and
+      (JsPath \ "manifestation").writeNullable[ModelManifestation]
+  )(unlift(ModelTemplate.unapply))
+
+  val schemaReads: Reads[Schema] = (
+    (JsPath \ "models").read[List[ModelTemplate]] and
+      (JsPath \ "relations").read[List[RelationTemplate]] and
+      (JsPath \ "enums").read[List[Enum]]
+  )(Schema.apply _)
+
+  val schemaWrites: Writes[Schema] = (
+    (JsPath \ "models").write[List[ModelTemplate]] and
+      (JsPath \ "relations").write[List[RelationTemplate]] and
+      (JsPath \ "enums").write[List[Enum]]
+  )(s => (s.modelTemplates, s.relationTemplates, s.enums))
+
+  implicit lazy val schemaFormat              = Format(schemaReads, schemaWrites)
   implicit lazy val projectFormat             = Json.format[Project]
   implicit lazy val projectWithClientIdFormat = Json.format[ProjectWithClientId]
   implicit lazy val migrationStatusFormat     = JsonUtils.enumFormat(MigrationStatus)
@@ -237,4 +290,15 @@ object ProjectJsonFormatter {
     def fail = sys.error("This JSON Formatter always fails.")
   }
 
+  def readEitherPathNullable[T](path1: JsPath, path2: JsPath)(implicit reads: Reads[T]): Reads[Option[T]] = {
+    Reads { json =>
+      val path1Lookup = path1.asSingleJson(json)
+      val path2Lookup = path2.asSingleJson(json)
+      (path1Lookup, path2Lookup) match {
+        case (JsDefined(foundJson), _) => foundJson.validateOpt[T]
+        case (_, JsDefined(foundJson)) => foundJson.validateOpt[T]
+        case _                         => JsSuccess(None)
+      }
+    }
+  }
 }

@@ -73,7 +73,7 @@ case class PassiveDatabaseMutactionExecutorImpl(activeExecutor: PostgresDatabase
               m.path.lastRelation_!.inlineManifestation match {
                 case Some(manifestation: InlineRelationManifestation) =>
                   val mutactionsHaveTheSamePath = m.path == candidate.path
-                  val wouldInsertIntoRightTable = manifestation.inTableOfModelId == m.path.lastModel.id
+                  val wouldInsertIntoRightTable = manifestation.inTableOfModelId == m.path.lastModel.name
                   val isSelfRelation            = m.path.lastRelation_!.isSameModelRelation
                   mutactionsHaveTheSamePath && wouldInsertIntoRightTable && !isSelfRelation
 
@@ -122,7 +122,7 @@ case class NestedCreateDataItemInterpreterForInlineRelations(mutaction: NestedCr
 
   require(relation.isInlineRelation)
   val inlineManifestation = relation.inlineManifestation.get
-  require(inlineManifestation.inTableOfModelId == path.lastModel.id)
+  require(inlineManifestation.inTableOfModelId == path.lastModel.name)
 
   override def action(mutationBuilder: PostgresApiDatabaseMutationBuilder): DBIO[Unit] = {
     val relationAction = DBIO.sequence(NestedCreateRelationInterpreter(mutaction.nestedCreateRelation).removalActions(mutationBuilder))
@@ -143,7 +143,7 @@ case class NestedCreateDataItemInterpreterForInlineRelations(mutaction: NestedCr
   }
 
   def createDataItemWithLinkToParent(mutationBuilder: PostgresApiDatabaseMutationBuilder)(parentId: String) = {
-    val inlineField  = relation.getFieldOnModel(model.id, project.schema).get
+    val inlineField  = relation.getFieldOnModel(model.name).get
     val argsMap      = mutaction.create.nonListArgs.raw.asRoot.map
     val modifiedArgs = argsMap.updated(inlineField.name, IdGCValue(parentId))
     mutationBuilder.createDataItem(path, PrismaArgs(RootGCValue(modifiedArgs)))

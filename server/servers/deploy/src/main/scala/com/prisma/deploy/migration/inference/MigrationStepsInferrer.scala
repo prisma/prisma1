@@ -93,7 +93,7 @@ case class MigrationStepsInferrerImpl(previousSchema: Schema, nextSchema: Schema
     for {
       nextModel         <- nextSchema.models.toVector
       previousModelName = renames.getPreviousModelName(nextModel.name)
-      previousModel     = previousSchema.getModelByName(previousModelName).getOrElse(emptyModel)
+      previousModel     = previousSchema.getModelByName(previousModelName).getOrElse(Model.empty)
       fieldOfNextModel  <- nextModel.fields.toVector
       previousFieldName = renames.getPreviousFieldName(nextModel.name, fieldOfNextModel.name)
       if previousModel.getFieldByName(previousFieldName).isEmpty
@@ -116,7 +116,7 @@ case class MigrationStepsInferrerImpl(previousSchema: Schema, nextSchema: Schema
     val updates = for {
       nextModel         <- nextSchema.models.toVector
       previousModelName = renames.getPreviousModelName(nextModel.name)
-      previousModel     = previousSchema.getModelByName(previousModelName).getOrElse(emptyModel)
+      previousModel     = previousSchema.getModelByName(previousModelName).getOrElse(Model.empty)
       fieldOfNextModel  <- nextModel.fields.toVector
       previousFieldName = renames.getPreviousFieldName(nextModel.name, fieldOfNextModel.name)
       previousField     <- previousModel.getFieldByName(previousFieldName)
@@ -235,8 +235,6 @@ case class MigrationStepsInferrerImpl(previousSchema: Schema, nextSchema: Schema
     }
     updates.filter(isAnyOptionSet)
   }
-
-  lazy val emptyModel = Model(name = "", stableIdentifier = "", fields = List.empty, manifestation = None)
 
   def relationNotInPreviousSchema(previousSchema: Schema,
                                   nextSchema: Schema,

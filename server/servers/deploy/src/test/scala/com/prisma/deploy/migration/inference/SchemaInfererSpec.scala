@@ -220,8 +220,8 @@ class SchemaInfererSpec extends WordSpec with Matchers {
       val relation = schema.getRelationByName_!("ChildTechnologies")
       relation.modelAId should equal("Technology")
       relation.modelBId should equal("Technology")
-      relation.getModelAField(schema).get.name should be("childTechnologies")
-      relation.getModelBField(schema).get.name should be("parentTechnologies")
+      relation.modelAField.get.name should be("childTechnologies")
+      relation.modelBField.get.name should be("parentTechnologies")
 
     }
 
@@ -238,8 +238,8 @@ class SchemaInfererSpec extends WordSpec with Matchers {
       val relation = schema.getRelationByName_!("ChildTechnologies")
       relation.modelAId should equal("Technology")
       relation.modelBId should equal("Technology")
-      relation.getModelAField(schema).get.name should be("childTechnologies")
-      relation.getModelBField(schema).get.name should be("parentTechnologies")
+      relation.modelAField.get.name should be("childTechnologies")
+      relation.modelBField.get.name should be("parentTechnologies")
 
       val newTypes =
         """|type NewTechnology {
@@ -284,14 +284,15 @@ class SchemaInfererSpec extends WordSpec with Matchers {
     val relation = schema.getRelationByName_!("ChildTechnologies")
     relation.modelAId should equal("Technology")
     relation.modelBId should equal("Technology")
-    relation.getModelAField(schema).get.name should be("childTechnologies")
-    relation.getModelBField(schema).get.name should be("parentTechnologies")
+    relation.modelAField.get.name should be("childTechnologies")
+    relation.modelBField.get.name should be("parentTechnologies")
 
     val techModel   = schema.models.head
     val parentField = techModel.getFieldByName_!("parentTechnologies")
 
-    val updatedModel  = techModel.copy(fields = techModel.fields.filter(_ != parentField) :+ parentField.copy(relationSide = Some(RelationSide.A)))
-    val invalidSchema = schema.copy(models = List(updatedModel))
+    val updatedModel =
+      techModel.copy(fieldTemplates = techModel.fields.filter(_ != parentField).map(_.copy()) :+ parentField.copy(relationSide = Some(RelationSide.A)))
+    val invalidSchema = schema.copy(modelTemplates = List(updatedModel))
 
     val newSchema = infer(invalidSchema, types)
     newSchema.relations.foreach(println(_))
@@ -321,7 +322,7 @@ class SchemaInfererSpec extends WordSpec with Matchers {
     val relation = schema.relations.head
     relation.modelAId should equal("Technology")
     relation.modelBId should equal("Technology")
-    relation.getModelAField(schema).get.name should be("childTechnologies")
+    relation.modelAField.get.name should be("childTechnologies")
   }
 
   "handle database manifestations for models" in {

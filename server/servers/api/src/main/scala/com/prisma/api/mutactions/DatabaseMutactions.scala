@@ -69,7 +69,7 @@ case class DatabaseMutactions(project: Project) {
 
     val x = for {
       field           <- path.relationFieldsNotOnPathOnLastModel
-      subModel        = field.relatedModel_!(project.schema)
+      subModel        = field.relatedModel_!
       nestedMutations = args.subNestedMutation(field, subModel)
     } yield {
 
@@ -205,8 +205,8 @@ case class DatabaseMutactions(project: Project) {
   def extend(path: Path, field: Field, nestedMutation: NestedMutation): Path = {
     nestedMutation match {
       case x: NestedWhere =>
-        path.append(NodeEdge(path.lastModel, field, field.relatedModel(project.schema).get, field.relatedField(project.schema), x.where, field.relation.get))
-      case _ => path.append(ModelEdge(path.lastModel, field, field.relatedModel(project.schema).get, field.relatedField(project.schema), field.relation.get))
+        path.append(NodeEdge(path.lastModel, field, field.relatedModel.get, field.relatedField, x.where, field.relation.get))
+      case _ => path.append(ModelEdge(path.lastModel, field, field.relatedModel.get, field.relatedField, field.relation.get))
     }
   }
 

@@ -45,8 +45,8 @@ case class CascadingDeleteRelationMutactionsInterpreter(mutaction: CascadingDele
 
   private def causeString(field: Field) = path.lastEdge match {
     case Some(edge: NodeEdge) =>
-      s"-OLDPARENTPATHFAILURETRIGGERBYFIELD@${field.relation.get.relationTableNameNew(schema)}@${field.oppositeRelationSide.get}@${edge.childWhere.fieldValueAsString}-"
-    case _ => s"-OLDPARENTPATHFAILURETRIGGERBYFIELD@${field.relation.get.relationTableNameNew(schema)}@${field.oppositeRelationSide.get}-"
+      s"-OLDPARENTPATHFAILURETRIGGERBYFIELD@${field.relation.get.relationTableName}@${field.oppositeRelationSide.get}@${edge.childWhere.fieldValueAsString}-"
+    case _ => s"-OLDPARENTPATHFAILURETRIGGERBYFIELD@${field.relation.get.relationTableName}@${field.oppositeRelationSide.get}-"
   }
 }
 
@@ -125,7 +125,7 @@ case class DeleteManyRelationChecksInterpreter(mutaction: DeleteManyRelationChec
   }
 
   private def causeString(field: Field) =
-    s"-OLDPARENTPATHFAILURETRIGGERBYFIELDANDFILTER@${field.relation.get.relationTableNameNew(schema)}@${field.oppositeRelationSide.get}-"
+    s"-OLDPARENTPATHFAILURETRIGGERBYFIELDANDFILTER@${field.relation.get.relationTableName}@${field.oppositeRelationSide.get}-"
 
 }
 
@@ -151,8 +151,8 @@ case class DeleteRelationCheckInterpreter(mutaction: DeleteRelationCheck) extend
 
   private def causeString(field: Field) = path.lastEdge match {
     case Some(edge: NodeEdge) =>
-      s"-OLDPARENTPATHFAILURETRIGGERBYFIELD@${field.relation.get.relationTableNameNew(schema)}@${field.oppositeRelationSide.get}@${edge.childWhere.fieldValueAsString}-"
-    case _ => s"-OLDPARENTPATHFAILURETRIGGERBYFIELD@${field.relation.get.relationTableNameNew(schema)}@${field.oppositeRelationSide.get}-"
+      s"-OLDPARENTPATHFAILURETRIGGERBYFIELD@${field.relation.get.relationTableName}@${field.oppositeRelationSide.get}@${edge.childWhere.fieldValueAsString}-"
+    case _ => s"-OLDPARENTPATHFAILURETRIGGERBYFIELD@${field.relation.get.relationTableName}@${field.oppositeRelationSide.get}-"
   }
 }
 
@@ -265,9 +265,9 @@ case class VerifyConnectionInterpreter(mutaction: VerifyConnection) extends Data
 
   val causeString = path.lastEdge_! match {
     case _: ModelEdge =>
-      s"CONNECTIONFAILURETRIGGERPATH@${path.lastRelation_!.relationTableNameNew(schema)}@${path.columnForParentSideOfLastEdge(schema)}"
+      s"CONNECTIONFAILURETRIGGERPATH@${path.lastRelation_!.relationTableName}@${path.columnForParentSideOfLastEdge(schema)}"
     case edge: NodeEdge =>
-      s"CONNECTIONFAILURETRIGGERPATH@${path.lastRelation_!.relationTableNameNew(schema)}@${path.columnForParentSideOfLastEdge(schema)}@${path
+      s"CONNECTIONFAILURETRIGGERPATH@${path.lastRelation_!.relationTableName}@${path.columnForParentSideOfLastEdge(schema)}@${path
         .columnForChildSideOfLastEdge(schema)}@${edge.childWhere.fieldValueAsString}}"
   }
 

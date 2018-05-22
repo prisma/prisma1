@@ -196,8 +196,8 @@ class MySqlDatabaseQueryBuilder()(implicit ec: ExecutionContext) {
                                      fromModelIds: Vector[IdGCValue],
                                      args: Option[QueryArguments]): DBIOAction[Vector[ResolverResult[PrismaNodeWithParent]], NoStream, Effect] = {
 
-    val relatedModel         = fromField.relatedModel(project.schema).get
-    val fieldTable           = fromField.relatedModel(project.schema).get.name
+    val relatedModel         = fromField.relatedModel.get
+    val fieldTable           = fromField.relatedModel.get.name
     val unsafeRelationId     = fromField.relation.get.relationTableName
     val modelRelationSide    = fromField.relationSide.get.toString
     val oppositeRelationSide = fromField.oppositeRelationSide.get.toString
@@ -217,7 +217,7 @@ class MySqlDatabaseQueryBuilder()(implicit ec: ExecutionContext) {
     }
 
     // see https://github.com/graphcool/internal-docs/blob/master/relations.md#findings
-    val resolveFromBothSidesAndMerge = fromField.relation.get.isSameFieldSameModelRelation(project.schema)
+    val resolveFromBothSidesAndMerge = fromField.relation.get.isSameFieldSameModelRelation
 
     val query = resolveFromBothSidesAndMerge match {
       case false =>
@@ -249,7 +249,7 @@ class MySqlDatabaseQueryBuilder()(implicit ec: ExecutionContext) {
                                 parentNodeIds: Vector[IdGCValue],
                                 args: Option[QueryArguments]): SqlStreamingAction[Vector[(IdGCValue, Int)], (IdGCValue, Int), Effect] = {
 
-    val fieldTable        = relationField.relatedModel(project.schema).get.name
+    val fieldTable        = relationField.relatedModel.get.name
     val unsafeRelationId  = relationField.relation.get.relationTableName
     val modelRelationSide = relationField.relationSide.get.toString
     val fieldRelationSide = relationField.oppositeRelationSide.get.toString
