@@ -2,6 +2,7 @@ import {
   Table,
   Column,
   TypeIdentifier,
+  PrimaryKey,
   PostgresConnectionDetails,
 } from '../types/common'
 import * as _ from 'lodash'
@@ -48,24 +49,13 @@ WHERE constraint_type = 'FOREIGN KEY' AND tc.table_schema = $1::text;`,
       `
       SELECT *, (SELECT EXISTS(
         SELECT *
-        FROM 
-            information_schema.table_constraints AS tc 
-            JOIN information_schema.key_column_usage AS kcu
-              ON tc.constraint_name = kcu.constraint_name
+        FROM information_schema.table_constraints AS tc 
+        JOIN information_schema.key_column_usage AS kcu
+          ON tc.constraint_name = kcu.constraint_name
         WHERE constraint_type = 'UNIQUE' 
         AND tc.table_schema = $1::text
         AND tc.table_name = c.table_name
-        AND kcu.column_name = c.column_name)) as is_unique,
-        (SELECT EXISTS(
-          SELECT *
-          FROM 
-              information_schema.table_constraints AS tc
-              JOIN information_schema.key_column_usage AS kcu
-                ON tc.constraint_name = kcu.constraint_name
-          WHERE constraint_type = 'PRIMARY KEY'
-          AND tc.table_name = c.table_name
-          AND kcu.table_name = c.table_name
-          AND kcu.column_name = c.column_name)) as is_pk
+        AND kcu.column_name = c.column_name)) as is_unique
       FROM  information_schema.columns c
       WHERE table_schema = $1::text
       `,
@@ -73,6 +63,32 @@ WHERE constraint_type = 'FOREIGN KEY' AND tc.table_schema = $1::text;`,
     )
 
     return _.groupBy(res.rows, 'table_name')
+  }
+
+  async queryPrimaryKeys(schemaName: string): Promise<PrimaryKey[]> {
+    return this.client.query(
+      `
+      SELECT tc.table_name, kc.column_name
+      FROM information_schema.table_constraints tc
+      JOIN information_schema.key_column_usage kc 
+        ON kc.table_name = tc.table_name 
+        AND kc.table_schema = tc.table_schema
+        AND kc.constraint_name = tc.constraint_name
+      WHERE tc.constraint_type = 'PRIMARY KEY'
+      AND tc.table_schema = $1::text
+      AND kc.ordinal_position IS NOT NULL
+      ORDER BY tc.table_name, kc.position_in_unique_constraint;
+      `,
+      [schemaName.toLowerCase()]
+    ).then(keys => {
+      const grouped = _.groupBy(keys.rows, 'table_name')
+      return _.map(grouped, (pks, key) => {
+        return {
+          tableName: key,
+          fields: pks.map(x => x.column_name)
+        } as PrimaryKey
+      })
+    })
   }
 
   async querySchemas() {
@@ -103,18 +119,29 @@ WHERE constraint_type = 'FOREIGN KEY' AND tc.table_schema = $1::text;`,
     return await this.querySchemas()
   }
 
-  async listTables(schemaName): Promise<Table[]> {
+  async listTables(schemaName: string): Promise<Table[]> {
     await this.connectionPromise
 
-    const relations = await this.queryRelations(schemaName)
-    const tables = await this.queryTables(schemaName)
+    const [relations, tables, primaryKeys] = await Promise.all([
+      this.queryRelations(schemaName),
+      this.queryTables(schemaName),
+      this.queryPrimaryKeys(schemaName)
+    ])
 
     const withColumns = _.map(tables, (originalColumns, key) => {
+      const tablePrimaryKey = primaryKeys.find(pk => pk.tableName === key) || null
       const columns = _.map(originalColumns, column => {
+
+        // Ignore compound keys for now
+        const isPk = Boolean(tablePrimaryKey
+          && tablePrimaryKey.fields.length == 1
+          && Boolean(tablePrimaryKey.fields.includes(column.column_name))
+        )
+
         const { typeIdentifier, comment, error } = this.toTypeIdentifier(
           column.data_type,
           column.column_name,
-          column.is_pk
+          isPk
         )
 
         const relation = this.extractRelation(
@@ -124,8 +151,8 @@ WHERE constraint_type = 'FOREIGN KEY' AND tc.table_schema = $1::text;`,
         )
 
         const col = {
-          isUnique: column.is_unique || column.is_pk,
-          isPrimaryKey: column.is_pk,
+          isUnique: column.is_unique || isPk,
+          isPrimaryKey: isPk,
           defaultValue: this.parseDefaultValue(column.column_default),
           name: column.column_name,
           type: column.data_type,
@@ -134,8 +161,6 @@ WHERE constraint_type = 'FOREIGN KEY' AND tc.table_schema = $1::text;`,
           relation: relation,
           nullable: column.is_nullable === 'YES',
         } as Column
-
-        // console.log({ col, column })
 
         return col
       }).filter(x => x != null) as Column[]

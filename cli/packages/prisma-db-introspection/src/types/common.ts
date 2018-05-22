@@ -31,4 +31,9 @@ export interface Table {
   columns: Column[]
 }
 
+export interface PrimaryKey {
+  tableName: string
+  fields: string[]
+}
+
 export type PostgresConnectionDetails = string | ClientConfig

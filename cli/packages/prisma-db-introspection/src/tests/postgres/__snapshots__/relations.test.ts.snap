@@ -4,14 +4,14 @@ exports[`Introspector relation with inline relation column 1`] = `
 Object {
   "numTables": 2,
   "sdl": "type Bill @pgTable(name: \\"bill\\") {
-  bill: String!
   id: Int! @unique
+  bill: String!
   product: Product @pgRelation(column: \\"product_id\\")
 }
 
 type Product @pgTable(name: \\"product\\") {
-  description: String!
   id: Int! @unique
+  description: String!
   bills: [Bill!]!
 }
 ",
@@ -22,14 +22,14 @@ exports[`Introspector relation with inline relation column NOT NULL 1`] = `
 Object {
   "numTables": 2,
   "sdl": "type Bill @pgTable(name: \\"bill\\") {
-  bill: String!
   id: Int! @unique
+  bill: String!
   product: Product! @pgRelation(column: \\"product_id\\")
 }
 
 type Product @pgTable(name: \\"product\\") {
-  description: String!
   id: Int! @unique
+  description: String!
   bills: [Bill!]!
 }
 ",
@@ -40,8 +40,8 @@ exports[`Introspector relation with relation table 1`] = `
 Object {
   "numTables": 3,
   "sdl": "type Bill @pgTable(name: \\"bill\\") {
-  bill: String!
   id: Int! @unique
+  bill: String!
   products: [Product!]! @pgRelationTable(table: \\"bill_product\\" name: \\"bill_product\\")
 }
 
@@ -58,8 +58,8 @@ exports[`Introspector relation with relation table with extra column 1`] = `
 Object {
   "numTables": 3,
   "sdl": "type Bill @pgTable(name: \\"bill\\") {
-  bill: String!
   id: Int! @unique
+  bill: String!
   bill_products: [Bill_product!]!
 }
 
