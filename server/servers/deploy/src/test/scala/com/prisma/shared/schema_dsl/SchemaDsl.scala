@@ -77,7 +77,7 @@ object SchemaDsl extends AwaitUtils {
     val prismaSdl = validator.generateSDL
 
     val schema                 = SchemaInferrer(isActive, shouldCheckAgainstInferredTables).infer(emptyBaseSchema, emptySchemaMapping, prismaSdl, inferredTables)
-    val withBackRelationsAdded = MissingBackRelations.addMissingBackRelations(schema)
+    val withBackRelationsAdded = MissingBackRelations.add(schema)
     TestProject().copy(id = id, schema = withBackRelationsAdded)
   }
 

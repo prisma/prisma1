@@ -5,7 +5,7 @@ import com.prisma.shared.models._
 // this object should be called by all implementations of ProjectPersistence to ensure that back relation fields are always available
 object MissingBackRelations {
 
-  def addMissingBackRelations(schema: Schema): Schema = {
+  def add(schema: Schema): Schema = {
     schema.relations.foldLeft(schema) { (schema, relation) =>
       addMissingBackRelationFieldIfMissing(schema, relation)
     }

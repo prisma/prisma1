@@ -26,7 +26,7 @@ object DbToModelMapper {
 
   private def convertSchema(schema: JsValue): Schema = {
     val schemaWithMissingBackRelations = schema.as[Schema]
-    MissingBackRelations.addMissingBackRelations(schemaWithMissingBackRelations)
+    MissingBackRelations.add(schemaWithMissingBackRelations)
   }
 
   def convert(migration: Migration): models.Migration = {
