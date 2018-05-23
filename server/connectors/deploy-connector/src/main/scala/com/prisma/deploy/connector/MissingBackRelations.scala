@@ -33,7 +33,7 @@ object MissingBackRelations {
   }
 
   private def missingBackRelationField(relation: Relation, relationSide: RelationSide.Value): FieldTemplate = {
-    val name = "_back_" + relation.name
+    val name = Field.magicalBackRelationPrefix + relation.name
     FieldTemplate(
       name = name,
       typeIdentifier = TypeIdentifier.Relation,
