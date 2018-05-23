@@ -106,7 +106,7 @@ object SchemaDsl extends AwaitUtils {
         val newRelation = field.relation.flatMap { relation =>
           newRelations.find(_.name == relation.name)
         }
-        field.copy(relationName = newRelation.map(_.name), manifestation = Some(FieldManifestation(field.name + "_column")))
+        field.template.copy(relationName = newRelation.map(_.name), manifestation = Some(FieldManifestation(field.name + "_column")))
       }
 
       model.copy(fieldTemplates = newFields, manifestation = Some(ModelManifestation(model.name + "_Table")))

@@ -60,7 +60,7 @@ case class FieldTemplate(
 }
 
 object Field {
-  implicit def asFieldTemplate(field: Field): FieldTemplate = field.template
+//  implicit def asFieldTemplate(field: Field): FieldTemplate = field.template
 
   val magicalBackRelationPrefix     = "_MagicalBackRelation_"
   private val excludedFromMutations = Vector("updatedAt", "createdAt", "id")
@@ -190,6 +190,23 @@ class FieldImpl(
   override def relationSide   = template.relationSide
   override def manifestation  = template.manifestation
 }
+
+//case class RelationField(
+//    name: String,
+//    isRequired: Boolean,
+//    isList: Boolean,
+//    relationName: String,
+//    relationSide: RelationSide.Value
+//) extends Field {
+//  override def typeIdentifier = TypeIdentifier.Relation
+//
+//  override def isUnique      = false
+//  override def isHidden      = false
+//  override def isReadonly    = false
+//  override def enum          = None
+//  override def defaultValue  = None
+//  override def manifestation = None
+//}
 
 object Sketch {
 //  sealed trait Field {
