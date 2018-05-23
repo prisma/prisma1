@@ -56,11 +56,18 @@ export class SdlPrinter {
   }
 
   printField(column: Column) {
-    return `${this.printFieldName(column)}: ${this.printFieldType(
+    const field = `${this.printFieldName(column)}: ${this.printFieldType(
       column
     )}${this.printFieldOptional(column)}${this.printRelationDirective(
       column
-    )}${this.printFieldDirectives(column)}`
+    )}${this.printFieldDirectives(column)}${
+      column.comment === null ? "" : ` # ${column.comment}`}`
+
+    if (column.typeIdentifier === null) {
+      return `# ${field}`
+    }
+
+    return field
   }
 
   printFieldName(column: Column) {

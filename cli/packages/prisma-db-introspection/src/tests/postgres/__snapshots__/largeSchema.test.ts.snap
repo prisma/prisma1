@@ -59,7 +59,7 @@ type Customer @pgTable(name: \\"customer\\") {
   active: Int
   activebool: Boolean! @default(value: true)
   address: Address! @pgRelation(column: \\"address_id\\")
-  create_date: null! @default(value: ('now)
+  create_date: DateTime!
   email: String
   first_name: String!
   last_name: String!
@@ -84,16 +84,16 @@ type Customer_list @pgTable(name: \\"customer_list\\") {
 type Film @pgTable(name: \\"film\\") {
   id: Int! @unique @pgColumn(name: \\"film_id\\")
   description: String
-  fulltext: null!
+  # fulltext: null! # Type 'tsvector' is not yet supported.
   language: Language! @pgRelation(column: \\"language_id\\")
   last_update: DateTime!
   length: Int
-  rating: null @default(value: G)
+  # rating: null @default(value: G) # Type 'USER-DEFINED' is not yet supported.
   release_year: Int
   rental_duration: Int! @default(value: 3)
   rental_rate: Float! @default(value: 4.99)
   replacement_cost: Float! @default(value: 19.99)
-  special_features: null
+  # special_features: null # Type 'ARRAY' is not yet supported.
   title: String!
   film_actors: [Film_actor!]!
   film_categorys: [Film_category!]!
@@ -119,7 +119,7 @@ type Film_list @pgTable(name: \\"film_list\\") {
   fid: Int
   length: Int
   price: Float
-  rating: null
+  # rating: null # Type 'USER-DEFINED' is not yet supported.
   title: String
 }
 
@@ -145,7 +145,7 @@ type Nicer_but_slower_film_list @pgTable(name: \\"nicer_but_slower_film_list\\")
   fid: Int
   length: Int
   price: Float
-  rating: null
+  # rating: null # Type 'USER-DEFINED' is not yet supported.
   title: String
 }
 
@@ -189,7 +189,7 @@ type Staff @pgTable(name: \\"staff\\") {
   last_name: String!
   last_update: DateTime!
   password: String
-  picture: null
+  # picture: null # Type 'bytea' is not yet supported.
   store_id: Int!
   username: String!
   payments: [Payment!]!

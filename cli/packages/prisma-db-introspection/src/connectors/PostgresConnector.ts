@@ -195,7 +195,7 @@ WHERE constraint_type = 'FOREIGN KEY' AND tc.table_schema = $1::text;`,
       return '[AUTO INCREMENT]'
     }
 
-    if (string.includes('now()')) {
+    if (string.includes('now()') || string.includes("'now'::text")) {
       return null
     }
 
@@ -282,10 +282,13 @@ WHERE constraint_type = 'FOREIGN KEY' AND tc.table_schema = $1::text;`,
     if (type === 'json') {
       return { typeIdentifier: 'Json', comment: null, error: null }
     }
+    if (type === 'date') {
+      return { typeIdentifier: 'DateTime', comment: null, error: null }
+    }
 
     return {
       typeIdentifier: null,
-      comment: null,
+      comment: `Type '${type}' is not yet supported.`,
       error: `Not able to handle type '${type}'`,
     }
   }

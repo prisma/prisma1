@@ -84,4 +84,12 @@ describe('Introspector', () => {
       "b" json NOT NULL
       );`)
   })
+
+  test('Unmapped columns', async () => {
+    await testSchema(`CREATE TABLE "Unmapped" (
+      "a" jsonb,
+      "c" tsvector,
+      "d" date[]
+      );`)
+  })
 })

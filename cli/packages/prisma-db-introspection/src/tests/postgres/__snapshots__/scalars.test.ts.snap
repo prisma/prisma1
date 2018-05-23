@@ -23,6 +23,18 @@ Object {
 }
 `;
 
+exports[`Introspector Unmapped columns 1`] = `
+Object {
+  "numTables": 1,
+  "sdl": "type Unmapped @pgTable(name: \\"Unmapped\\") {
+  # a: null # Type 'jsonb' is not yet supported.
+  # c: null # Type 'tsvector' is not yet supported.
+  # d: null # Type 'ARRAY' is not yet supported.
+}
+",
+}
+`;
+
 exports[`Introspector boolean columns 1`] = `
 Object {
   "numTables": 1,
@@ -72,7 +84,7 @@ exports[`Introspector text columns 1`] = `
 Object {
   "numTables": 1,
   "sdl": "type Strings @pgTable(name: \\"Strings\\") {
-  id: ID! @unique @pgColumn(name: "pk")
+  id: ID! @unique @pgColumn(name: \\"pk\\")
   a: String @unique
   aa: String! @unique
   b: String @unique
