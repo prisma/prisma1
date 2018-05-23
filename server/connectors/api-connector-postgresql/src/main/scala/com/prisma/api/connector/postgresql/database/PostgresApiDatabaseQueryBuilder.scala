@@ -201,34 +201,36 @@ case class PostgresApiDatabaseQueryBuilder(
     val columnForFromModel    = relation.columnForRelationSide(fromField.relationSide.get)
     val columnForRelatedModel = relation.columnForRelationSide(fromField.oppositeRelationSide.get)
 
-    def createQuery(id: String, modelRelationSide: String, fieldRelationSide: String) = {
-      sql"""(select "#$ALIAS".*, "RelationTable"."#$aColumn" as "__Relation__A",  "RelationTable"."#$bColumn" as "__Relation__B"
+    val fromToRelated = sql"""(select "#$ALIAS".*, "RelationTable"."#$aColumn" as "__Relation__A",  "RelationTable"."#$bColumn" as "__Relation__B"
             from "#$schemaName"."#$modelTable" as "#$ALIAS"
             inner join "#$schemaName"."#$relationTableName" as "RelationTable"
-            on "#$ALIAS"."#${relatedModel.dbNameOfIdField_!}" = "RelationTable"."#$fieldRelationSide"
-            where "RelationTable"."#$modelRelationSide" = '#$id' """ ++ andWhereOrderByLimitCommands(
-        args,
-        None,
-        relatedModel.dbName,
-        relatedModel.dbNameOfIdField_!,
-        Some(s""" "RelationTable"."$columnForRelatedModel" """)) ++ sql")"
+            on "#$ALIAS"."#${relatedModel.dbNameOfIdField_!}" = "RelationTable"."#$columnForRelatedModel"
+            where "RelationTable"."#$columnForFromModel" in """
+
+    val relatedToFrom = sql"""(select "#$ALIAS".*, "RelationTable"."#$aColumn" as "__Relation__A",  "RelationTable"."#$bColumn" as "__Relation__B"
+            from "#$schemaName"."#$modelTable" as "#$ALIAS"
+            inner join "#$schemaName"."#$relationTableName" as "RelationTable"
+            on "#$ALIAS"."#${relatedModel.dbNameOfIdField_!}" = "RelationTable"."#$columnForFromModel"
+            where "RelationTable"."#$columnForRelatedModel" in """
+
+    val second = andWhereOrderByLimitCommands(args,
+                                              None,
+                                              relatedModel.dbName,
+                                              relatedModel.dbNameOfIdField_!,
+                                              Some(s""" "RelationTable"."$columnForRelatedModel" """)) ++ sql")"
+
+    def createQuery(ids: Vector[IdGCValue], startingAtFrom: Boolean) = {
+      val beginning = if (startingAtFrom) fromToRelated else relatedToFrom
+      val formatted = ids.map(id => s"'${id.value}'").mkString("(", ",", ")")
+      beginning ++ sql""" #$formatted """ ++ second
     }
 
     // see https://github.com/graphcool/internal-docs/blob/master/relations.md#findings
     val resolveFromBothSidesAndMerge = fromField.relation.get.isSameFieldSameModelRelation
 
     val query = resolveFromBothSidesAndMerge match {
-      case false =>
-        fromModelIds.distinct.view.zipWithIndex.foldLeft(sql"")((a, b) =>
-          a ++ unionIfNotFirst(b._2) ++ createQuery(b._1.value, columnForFromModel, columnForRelatedModel))
-
-      case true =>
-        fromModelIds.distinct.view.zipWithIndex.foldLeft(sql"")(
-          (a, b) =>
-            a ++ unionIfNotFirst(b._2) ++
-              createQuery(b._1.value, columnForFromModel, columnForRelatedModel) ++
-              sql"union all " ++
-              createQuery(b._1.value, columnForRelatedModel, columnForFromModel))
+      case false => createQuery(fromModelIds.distinct, true)
+      case true  => createQuery(fromModelIds.distinct, true) ++ sql"union all " ++ createQuery(fromModelIds.distinct, false)
     }
 
     val modelRelationSide    = fromField.relationSide.get.toString
