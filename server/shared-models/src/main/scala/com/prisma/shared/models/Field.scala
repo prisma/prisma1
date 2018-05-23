@@ -69,7 +69,7 @@ class Field(
 ) {
   import template._
 
-  val isMagicalBackRelation = name.startsWith("_back_")
+  val isMagicalBackRelation = name.startsWith("_back_") // has to be in sync with MissingBackRelations.scala
 
   val schema = model.schema
 
