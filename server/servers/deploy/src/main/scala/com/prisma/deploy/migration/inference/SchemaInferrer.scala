@@ -40,10 +40,7 @@ case class SchemaInferrerImpl(
 
   val isPassive = !isActive
 
-  def infer(): Schema = {
-    val schema = Schema(modelTemplates = nextModels.toList, relationTemplates = nextRelations.toList, enums = nextEnums.toList)
-    addMissingBackRelations(schema)
-  }
+  def infer(): Schema = Schema(modelTemplates = nextModels.toList, relationTemplates = nextRelations.toList, enums = nextEnums.toList)
 
   lazy val nextModels: Vector[ModelTemplate] = {
     prismaSdl.types.map { prismaType =>
@@ -307,14 +304,6 @@ case class SchemaInferrerImpl(
               .columnNameForReferencedTable(referencedType.tableName.getOrElse(referencedType.name))
             columnOption.map(column => InlineRelationManifestation(prismaType.name, column))
           }
-    }
-  }
-
-  def addMissingBackRelations(schema: Schema): Schema = {
-    if (isPassive) {
-      MissingBackRelations.addMissingBackRelations(schema)
-    } else {
-      schema
     }
   }
 
