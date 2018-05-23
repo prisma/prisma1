@@ -103,8 +103,6 @@ services:
             user: __YOUR_POSTGRES_USER__
             password: __YOUR_POSTGRES_PASSWORD__
             migrations: true
-volumes:
-  postgres:
 ```
 
 </Instruction>
