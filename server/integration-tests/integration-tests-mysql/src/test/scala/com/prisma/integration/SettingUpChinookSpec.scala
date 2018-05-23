@@ -8,7 +8,7 @@ import play.api.libs.json.Json
 
 class SettingUpChinookSpec extends FlatSpec with Matchers with IntegrationBaseSpec {
 
-  "Importing Chinook" should "work " in {
+  "Importing Chinook" should "work " ignore {
 
     val schema =
       """type Artist {
@@ -91,56 +91,5 @@ class SettingUpChinookSpec extends FlatSpec with Matchers with IntegrationBaseSp
     for (a <- 1 to 50) {
       runquery
     }
-
-//    select *
-//      from Artist
-//      where (
-//        exists (
-//          select *
-//            from  Album as  Album_Artist
-//            inner join  _AlbumToArtist
-//            on  Album_Artist.id =  _AlbumToArtist.A
-//            where _AlbumToArtist.B = Artist.id
-//            and (
-//            exists (
-//              select *
-//                from  Track as  Track_Album_Artist
-//                inner join  _AlbumToTrack
-//                on  Track_Album_Artist.id = _AlbumToTrack.B
-//                where  _AlbumToTrack.A =  Album_Artist.id
-//                and ( Track_Album_Artist. Milliseconds > 500000)))))
-//    order by Artist.id asc;
-
-//    explain select name
-//    from Artist
-//      where (
-//        exists (
-//          select *
-//            from  Album as  Album_Artist
-//            inner join  _AlbumToArtist
-//            on  Album_Artist.id =  _AlbumToArtist.A
-//            where _AlbumToArtist.B = Artist.id
-//            and (
-//            exists (
-//              select *
-//                from  Track as  Track_Album_Artist
-//                inner join  _AlbumToTrack
-//                on  Track_Album_Artist.id = _AlbumToTrack.B
-//                where  _AlbumToTrack.A =  Album_Artist.id
-//                and ( Track_Album_Artist. Milliseconds > 500000)))))
-//    order by Artist.name asc;
-//
-//
-//    explain
-//    Select distinct Artist.name
-//    From Artist
-//      join _AlbumToArtist on _AlbumToArtist.B = Artist.`id`
-//    join Album 			on _AlbumToArtist.A = Album.`id`
-//    join _AlbumToTrack  on _AlbumToTrack.A = Album.`id`
-//    join Track 			on _AlbumToTrack.B = Track.`id`
-//    Where Track.`Milliseconds` > 500000
-//    And Artist.Name = 'Kurt'
-//    order by Artist.name asc;
-
   }
 }
