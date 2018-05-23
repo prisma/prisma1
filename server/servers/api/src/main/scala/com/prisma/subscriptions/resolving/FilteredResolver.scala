@@ -23,10 +23,10 @@ object FilteredResolver {
       .flatMap(_.filter.map(_.asInstanceOf[AndFilter]))
       .getOrElse(AndFilter(Vector.empty))
 
-    def removeTopLevelIdFilter(element: Any) =
+    def removeTopLevelIdFilter(element: Filter) =
       element match {
-        case e: FilterElement => e.key != "id"
-        case _                => true
+        case e: ScalarFilter => e.field.name != "id"
+        case _               => true
       }
 
     val filterValues = filterInput.filters.filter(removeTopLevelIdFilter) ++ Vector(ScalarFilter(model.getFieldByName_!("id"), Equals(IdGCValue(id))))

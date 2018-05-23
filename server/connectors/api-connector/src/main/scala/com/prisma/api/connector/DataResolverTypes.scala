@@ -39,14 +39,14 @@ case class OrderBy(
     sortOrder: SortOrder.Value
 )
 
-sealed trait Filter
-
 object LogicalKeyWords {
   val logicCombinators = List("AND", "OR", "NOT")
 
   def isLogicFilter(key: String) = logicCombinators.contains(key)
 
 }
+
+sealed trait Filter
 
 case class AndFilter(filters: Vector[Filter])  extends Filter
 case class OrFilter(filters: Vector[Filter])   extends Filter
@@ -90,34 +90,3 @@ object NoRelationCondition   extends RelationCondition
 
 case class NodeSubscriptionFilter()                        extends Filter
 case class PreComputedSubscriptionFilter(boolean: Boolean) extends Filter
-
-case class FinalValueFilter(
-    key: String,
-    value: GCValue,
-    field: Field,
-    filterName: String = ""
-) extends Filter
-
-case class FilterElement(
-    key: String,
-    value: Any,
-    field: Option[Field] = None,
-    filterName: String = ""
-) extends Filter
-
-case class FinalRelationFilter( // relation is null
-                               schema: Schema,
-                               key: String,
-                               field: Field,
-                               filterName: String = "")
-    extends Filter
-
-case class TransitiveRelationFilter(
-    schema: Schema,
-    field: Field,
-    fromModel: Model,
-    toModel: Model,
-    relation: Relation,
-    filterName: String = "",
-    nestedFilter: Filter
-) extends Filter
