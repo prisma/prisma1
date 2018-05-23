@@ -38,29 +38,29 @@ static=$(printf "    - label: \":mysql: MySql API connector\"
 
 optional=""
 
-if [ -z "$BUILDKITE_TAG" ]; then
-    # Regular commit
-    git diff --exit-code --name-only ${BUILDKITE_COMMIT} ${BUILDKITE_COMMIT}~1 | grep "server/"
-    if [ $? -ne 0 ]; then
-      buildkite-agent pipeline upload ./server/.buildkite/empty-pipeline.yml
-      exit 0
-    else
-      optional=$(printf "
-    - wait
-
-    - label: \":docker: Build unstable channel\"
-      command: ./server/.buildkite/scripts/docker-build.sh unstable
-      branches: master
-    ")
-    fi
-else
-    # Build was triggered by a tagged commit
-    optional=$(printf "    - wait
-
-    - label: \":docker: Build stable channel\"
-      command: ./server/.buildkite/scripts/docker-build.sh stable
-    ")
-fi
+#if [ -z "$BUILDKITE_TAG" ]; then
+#    # Regular commit
+#    git diff --exit-code --name-only ${BUILDKITE_COMMIT} ${BUILDKITE_COMMIT}~1 | grep "server/"
+#    if [ $? -ne 0 ]; then
+#      buildkite-agent pipeline upload ./server/.buildkite/empty-pipeline.yml
+#      exit 0
+#    else
+#      optional=$(printf "
+#    - wait
+#
+#    - label: \":docker: Build unstable channel\"
+#      command: ./server/.buildkite/scripts/docker-build.sh unstable
+#      branches: master
+#    ")
+#    fi
+#else
+#    # Build was triggered by a tagged commit
+#    optional=$(printf "    - wait
+#
+#    - label: \":docker: Build stable channel\"
+#      command: ./server/.buildkite/scripts/docker-build.sh stable
+#    ")
+#fi
 
 dynamic=""
 
