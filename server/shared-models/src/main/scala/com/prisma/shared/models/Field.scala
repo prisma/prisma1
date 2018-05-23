@@ -69,6 +69,8 @@ class Field(
 ) {
   import template._
 
+  val isMagicalBackRelation = name.startsWith("_back_")
+
   val schema = model.schema
 
   lazy val relation: Option[Relation] = relationName.flatMap(schema.getRelationByName)

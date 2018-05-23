@@ -143,7 +143,7 @@ case class MigrationStepsInferrerImpl(previousSchema: Schema, nextSchema: Schema
   lazy val fieldsToDelete: Vector[DeleteField] = {
     for {
       previousModel <- previousSchema.models.toVector
-      previousField <- previousModel.fields
+      previousField <- previousModel.fields.filterNot(_.isMagicalBackRelation)
       nextModelName = renames.getNextModelName(previousModel.name)
       nextFieldName = renames.getNextFieldName(previousModel.name, previousField.name)
       nextModel     <- nextSchema.getModelByName(nextModelName)
