@@ -1,6 +1,6 @@
 package com.prisma.shared.schema_dsl
 
-import com.prisma.deploy.connector.{DeployConnector, InferredTables}
+import com.prisma.deploy.connector.{DeployConnector, InferredTables, MissingBackRelations}
 import com.prisma.deploy.migration.inference.{SchemaInferrer, SchemaMapping}
 import com.prisma.deploy.migration.validation.SchemaSyntaxValidator
 import com.prisma.gc_values.GCValue
@@ -66,19 +66,19 @@ object SchemaDsl extends AwaitUtils {
   )(sdlString: String): Project = {
     val emptyBaseSchema    = Schema()
     val emptySchemaMapping = SchemaMapping.empty
-    val sqlDocument        = QueryParser.parse(sdlString.stripMargin).get
     val validator = SchemaSyntaxValidator(
       sdlString,
       SchemaSyntaxValidator.directiveRequirements,
       SchemaSyntaxValidator.reservedFieldsRequirementsForAllConnectors,
       SchemaSyntaxValidator.requiredReservedFields,
-      true
+      allowScalarLists = true
     )
 
     val prismaSdl = validator.generateSDL
 
-    val schema = SchemaInferrer(isActive, shouldCheckAgainstInferredTables).infer(emptyBaseSchema, emptySchemaMapping, prismaSdl, inferredTables)
-    TestProject().copy(id = id, schema = schema)
+    val schema                 = SchemaInferrer(isActive, shouldCheckAgainstInferredTables).infer(emptyBaseSchema, emptySchemaMapping, prismaSdl, inferredTables)
+    val withBackRelationsAdded = MissingBackRelations.addMissingBackRelations(schema)
+    TestProject().copy(id = id, schema = withBackRelationsAdded)
   }
 
   private def addManifestations(project: Project): Project = {
