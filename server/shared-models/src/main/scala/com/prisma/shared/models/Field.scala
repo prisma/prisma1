@@ -56,23 +56,41 @@ case class FieldTemplate(
     relationSide: Option[RelationSide.Value],
     manifestation: Option[FieldManifestation]
 ) {
-  def build(model: Model): Field = new Field(this, model)
+  def build(model: Model): Field = new FieldImpl(this, model)
 }
 
 object Field {
   implicit def asFieldTemplate(field: Field): FieldTemplate = field.template
 
-  val magicalBackRelationPrefix = "_MagicalBackRelation_"
+  val magicalBackRelationPrefix     = "_MagicalBackRelation_"
+  private val excludedFromMutations = Vector("updatedAt", "createdAt", "id")
 }
-class Field(
-    val template: FieldTemplate,
-    val model: Model
-) {
-  import template._
 
-  val isMagicalBackRelation = name.startsWith(Field.magicalBackRelationPrefix)
+sealed trait Field {
+  def name: String
+  def typeIdentifier: TypeIdentifier.Value
+  def isRequired: Boolean
+  def isList: Boolean
+  def isUnique: Boolean
+  def isHidden: Boolean
+  def isReadonly: Boolean
+  def enum: Option[Enum]
+  def defaultValue: Option[GCValue]
+  def relationName: Option[String]
+  def relationSide: Option[RelationSide.Value]
+  def manifestation: Option[FieldManifestation]
+  def model: Model
+  def schema: Schema
+  def template: FieldTemplate
 
-  val schema = model.schema
+  lazy val isScalar: Boolean          = typeIdentifier != TypeIdentifier.Relation
+  lazy val isRelation: Boolean        = typeIdentifier == TypeIdentifier.Relation
+  lazy val isScalarList: Boolean      = isScalar && isList
+  lazy val isScalarNonList: Boolean   = isScalar && !isList
+  lazy val isRelationList: Boolean    = isRelation && isList
+  lazy val isRelationNonList: Boolean = isRelation && !isList
+  lazy val isWritable: Boolean        = !isReadonly && !Field.excludedFromMutations.contains(name)
+  lazy val isVisible: Boolean         = !isHidden
 
   lazy val relation: Option[Relation] = relationName.flatMap(schema.getRelationByName)
 
@@ -83,29 +101,12 @@ class Field(
       case _                             => sys.error("not a valid call on relations manifested via a table")
     }
   }
-  lazy val isScalar: Boolean                        = typeIdentifier != TypeIdentifier.Relation
-  lazy val isRelation: Boolean                      = typeIdentifier == TypeIdentifier.Relation
-  lazy val isScalarList: Boolean                    = isScalar && isList
-  lazy val isScalarNonList: Boolean                 = isScalar && !isList
-  lazy val isRelationList: Boolean                  = isRelation && isList
-  lazy val isRelationNonList: Boolean               = isRelation && !isList
-  def isRelationWithId(relationId: String): Boolean = relation.exists(_.relationTableName == relationId)
 
   def isRelationWithIdAndSide(relationId: String, relationSide: RelationSide.Value): Boolean = {
     isRelationWithId(relationId) && this.relationSide.contains(relationSide)
   }
 
-  private val excludedFromMutations = Vector("updatedAt", "createdAt", "id")
-  lazy val isWritable: Boolean      = !isReadonly && !excludedFromMutations.contains(name)
-  lazy val isVisible: Boolean       = !isHidden
-
-  lazy val oppositeRelationSide: Option[RelationSide.Value] = {
-    relationSide match {
-      case Some(RelationSide.A) => Some(RelationSide.B)
-      case Some(RelationSide.B) => Some(RelationSide.A)
-      case x                    => ??? //throw SystemErrors.InvalidStateException(message = s" relationSide was $x")
-    }
-  }
+  private def isRelationWithId(relationId: String): Boolean = relation.exists(_.relationTableName == relationId)
 
   lazy val relatedModel: Option[Model] = {
     relation.flatMap(relation => {
@@ -115,6 +116,16 @@ class Field(
         case x                    => ??? //throw SystemErrors.InvalidStateException(message = s" relationSide was $x")
       }
     })
+  }
+
+  val isMagicalBackRelation = name.startsWith(Field.magicalBackRelationPrefix)
+
+  lazy val oppositeRelationSide: Option[RelationSide.Value] = {
+    relationSide match {
+      case Some(RelationSide.A) => Some(RelationSide.B)
+      case Some(RelationSide.B) => Some(RelationSide.A)
+      case x                    => ??? //throw SystemErrors.InvalidStateException(message = s" relationSide was $x")
+    }
   }
 
   lazy val relatedModel_! : Model = {
@@ -157,6 +168,27 @@ class Field(
       }
     }
   }
+}
+
+class FieldImpl(
+    val template: FieldTemplate,
+    val model: Model
+) extends Field {
+  import template._
+  val schema = model.schema
+
+  override def name           = template.name
+  override def typeIdentifier = template.typeIdentifier
+  override def isRequired     = template.isRequired
+  override def isList         = template.isList
+  override def isUnique       = template.isUnique
+  override def isHidden       = template.isHidden
+  override def isReadonly     = template.isReadonly
+  override def enum           = template.enum
+  override def defaultValue   = template.defaultValue
+  override def relationName   = template.relationName
+  override def relationSide   = template.relationSide
+  override def manifestation  = template.manifestation
 }
 
 object Sketch {
