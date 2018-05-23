@@ -433,7 +433,6 @@ object SchemaDsl extends AwaitUtils {
       isHidden = isHidden,
       relationName = None,
       relationSide = None,
-      constraints = constraints,
       manifestation = None
     )
   }

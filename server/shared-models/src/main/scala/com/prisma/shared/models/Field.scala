@@ -54,8 +54,7 @@ case class FieldTemplate(
     defaultValue: Option[GCValue],
     relationName: Option[String],
     relationSide: Option[RelationSide.Value],
-    manifestation: Option[FieldManifestation],
-    constraints: List[FieldConstraint] = List.empty
+    manifestation: Option[FieldManifestation]
 ) {
   def build(model: Model): Field = new Field(this, model)
 }
@@ -158,4 +157,54 @@ class Field(
       }
     }
   }
+}
+
+object Sketch {
+//  sealed trait Field {
+//    def name: String
+//    def typeIdentifier: TypeIdentifier.Value
+//    def isRequired: Boolean
+//    def isList: Boolean
+//    def isUnique: Boolean
+//    def isHidden: Boolean
+//    def isReadonly: Boolean
+//    def enum: Option[Enum]
+//    def defaultValue: Option[GCValue]
+//    def relationName: Option[String]
+//    def relationSide: Option[RelationSide.Value]
+//    def manifestation: Option[FieldManifestation]
+//  }
+//
+//  case class ScalarField(
+//      name: String,
+//      typeIdentifier: TypeIdentifier.Value,
+//      isRequired: Boolean,
+//      isList: Boolean,
+//      isUnique: Boolean,
+//      isHidden: Boolean,
+//      isReadonly: Boolean,
+//      enum: Option[Enum],
+//      defaultValue: Option[GCValue],
+//      manifestation: Option[FieldManifestation]
+//  ) extends Field {
+//    override def relationName = None
+//    override def relationSide = None
+//  }
+//
+//  case class RelationField(
+//      name: String,
+//      isRequired: Boolean,
+//      isList: Boolean,
+//      relationName: String,
+//      relationSide: RelationSide.Value
+//  ) extends Field {
+//    override def typeIdentifier = TypeIdentifier.Relation
+//
+//    override def isUnique      = false
+//    override def isHidden      = false
+//    override def isReadonly    = false
+//    override def enum          = None
+//    override def defaultValue  = None
+//    override def manifestation = None
+//  }
 }

@@ -33,13 +33,6 @@ case class Schema(
   def getFieldByName(model: String, name: String): Option[Field] = getModelByName(model).flatMap(_.getFieldByName(name))
   def getFieldByName_!(model: String, name: String): Field       = getModelByName_!(model).getFieldByName_!(name)
 
-  def getFieldConstraintById(id: Id): Option[FieldConstraint] = {
-    val fields      = models.flatMap(_.fields)
-    val constraints = fields.flatMap(_.constraints)
-    constraints.find(_.id == id)
-  }
-  def getFieldConstraintById_!(id: Id): FieldConstraint = getFieldConstraintById(id).get //OrElse(throw SystemErrors.InvalidFieldConstraintId(id))
-
   // note: mysql columns are case insensitive, so we have to be as well
   def getEnumByName(name: String): Option[Enum] = enums.find(_.name.toLowerCase == name.toLowerCase)
 
