@@ -13,7 +13,6 @@
     "target": "es5",
     "rootDir": "src",
     "skipLibCheck": true
-    // "noImplicitAny": true
   },
   "exclude": [
     "node_modules",
