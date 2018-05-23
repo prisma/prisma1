@@ -46,9 +46,9 @@ class ToOneDeferredResolver(dataResolver: DataResolver) {
     nodes
       .find(node => {
         resolveFromBothSidesAndMerge match {
-          case false => matchesRelation(node, deferred.relationField.relationSide.get.toString)
+          case false => matchesRelation(node, deferred.relationField.relationSideOpt.get.toString)
           case true =>
-            node.prismaNode.id != deferred.parentNodeId && (matchesRelation(node, deferred.relationField.relationSide.get.toString) ||
+            node.prismaNode.id != deferred.parentNodeId && (matchesRelation(node, deferred.relationField.relationSideOpt.get.toString) ||
               matchesRelation(node, deferred.relationField.oppositeRelationSide.get.toString))
         }
       })

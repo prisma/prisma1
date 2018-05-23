@@ -203,7 +203,7 @@ case class PostgresApiDatabaseQueryBuilder(
 
     val relationTableName     = fromField.relation.get.relationTableName
     val (aColumn, bColumn)    = (relation.modelAColumn, relation.modelBColumn)
-    val columnForFromModel    = relation.columnForRelationSide(fromField.relationSide.get)
+    val columnForFromModel    = relation.columnForRelationSide(fromField.relationSideOpt.get)
     val columnForRelatedModel = relation.columnForRelationSide(fromField.oppositeRelationSide.get)
 
     val (conditionCommand, orderByCommand, limitCommand) = extractQueryArgs(
@@ -244,7 +244,7 @@ case class PostgresApiDatabaseQueryBuilder(
               createQuery(b._1.value, columnForRelatedModel, columnForFromModel))
     }
 
-    val modelRelationSide    = fromField.relationSide.get.toString
+    val modelRelationSide    = fromField.relationSideOpt.get.toString
     val oppositeRelationSide = fromField.oppositeRelationSide.get.toString
     query
       .as[PrismaNodeWithParent](getResultForModelAndRelationSide(relatedModel, modelRelationSide, oppositeRelationSide))
@@ -270,7 +270,7 @@ case class PostgresApiDatabaseQueryBuilder(
     val fieldTable                    = relatedModel.dbName
     val relation                      = fromField.relation.get
     val unsafeRelationId              = relation.relationTableName
-    val modelRelationSide             = fromField.relationSide.get.toString
+    val modelRelationSide             = fromField.relationSideOpt.get.toString
     val columnForOppositeRelationSide = relation.columnForRelationSide(fromField.oppositeRelationSide.get)
 
     val (conditionCommand, orderByCommand, limitCommand) = extractQueryArgs(
@@ -334,7 +334,7 @@ case class PostgresApiDatabaseQueryBuilder(
     val fieldTable                 = relatedModel.dbName
     val relation                   = relationField.relation.get
     val unsafeRelationId           = relation.relationTableName
-    val modelRelationSide          = relationField.relationSide.get.toString
+    val modelRelationSide          = relationField.relationSideOpt.get.toString
     val columnForFieldRelationSide = relation.columnForRelationSide(relationField.oppositeRelationSide.get)
 
     val (conditionCommand, orderByCommand, limitCommand) = extractQueryArgs(

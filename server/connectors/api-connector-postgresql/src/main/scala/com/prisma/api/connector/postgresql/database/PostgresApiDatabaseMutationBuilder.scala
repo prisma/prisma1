@@ -84,7 +84,7 @@ case class PostgresApiDatabaseMutationBuilder(
       val selectIdOfOther = sql"""select "#${otherModel.dbNameOfIdField_!}" as id from "#$schemaName"."#${otherModel.dbName}" """ ++ otherWhereCondition
 
       val rowToUpdateCondition = if (relation.isSameModelRelation) {
-        if (path.lastEdge_!.childField.get.relationSide.get == RelationSide.A) {
+        if (path.lastEdge_!.childField.get.relationSideOpt.get == RelationSide.A) {
           childWhereCondition
         } else {
           otherWhereCondition
@@ -98,7 +98,7 @@ case class PostgresApiDatabaseMutationBuilder(
       }
 
       val nodeToLinkToCondition = if (relation.isSameModelRelation) {
-        if (path.lastEdge_!.childField.get.relationSide.get == RelationSide.A) {
+        if (path.lastEdge_!.childField.get.relationSideOpt.get == RelationSide.A) {
           selectIdOfOther
         } else {
           selectIdOfChild
@@ -490,7 +490,7 @@ case class PostgresApiDatabaseMutationBuilder(
     val relation       = field.relation.get
     val table          = relation.relationTableName
     val oppositeColumn = relation.columnForRelationSide(field.oppositeRelationSide.get)
-    val column         = relation.columnForRelationSide(field.relationSide.get)
+    val column         = relation.columnForRelationSide(field.relationSideOpt.get)
     val query = sql"""SELECT * FROM "#$schemaName"."#$table" OLDPARENTPATHFAILURETRIGGERBYFIELD""" ++
       sql"""WHERE "#$oppositeColumn" IN (""" ++ pathQueryForLastChild(path) ++ sql") " ++
       sql"""AND "#$column" IS NOT NULL"""
@@ -501,7 +501,7 @@ case class PostgresApiDatabaseMutationBuilder(
     val relation       = field.relation.get
     val table          = relation.relationTableName
     val column         = relation.columnForRelationSide(field.oppositeRelationSide.get)
-    val oppositeColumn = relation.columnForRelationSide(field.relationSide.get)
+    val oppositeColumn = relation.columnForRelationSide(field.relationSideOpt.get)
 
     val query =
       sql"""SELECT * FROM "#$schemaName"."#$table" OLDPARENTPATHFAILURETRIGGERBYFIELDANDFILTER""" ++

@@ -56,7 +56,33 @@ case class FieldTemplate(
     relationSide: Option[RelationSide.Value],
     manifestation: Option[FieldManifestation]
 ) {
-  def build(model: Model): Field = new FieldImpl(this, model)
+  def build(model: Model): Field = {
+    if (typeIdentifier == TypeIdentifier.Relation) {
+      RelationField(
+        name = name,
+        isRequired = isRequired,
+        isList = isList,
+        isHidden = isHidden,
+        relationName = relationName.get,
+        relationSide = relationSide.get,
+        model = model
+      )
+    } else {
+      ScalarField(
+        name = name,
+        typeIdentifier = typeIdentifier,
+        isRequired = isRequired,
+        isList = isList,
+        isUnique = isUnique,
+        isHidden = isHidden,
+        isReadonly = isReadonly,
+        enum = enum,
+        defaultValue = defaultValue,
+        manifestation = manifestation,
+        model = model
+      )
+    }
+  }
 }
 
 object Field {
@@ -76,8 +102,8 @@ sealed trait Field {
   def isReadonly: Boolean
   def enum: Option[Enum]
   def defaultValue: Option[GCValue]
-  def relationName: Option[String]
-  def relationSide: Option[RelationSide.Value]
+  def relationNameOpt: Option[String]
+  def relationSideOpt: Option[RelationSide.Value]
   def manifestation: Option[FieldManifestation]
   def model: Model
   def schema: Schema
@@ -92,7 +118,7 @@ sealed trait Field {
   lazy val isWritable: Boolean        = !isReadonly && !Field.excludedFromMutations.contains(name)
   lazy val isVisible: Boolean         = !isHidden
 
-  lazy val relation: Option[Relation] = relationName.flatMap(schema.getRelationByName)
+  lazy val relation: Option[Relation] = relationNameOpt.flatMap(schema.getRelationByName)
 
   lazy val dbName = {
     relation match {
@@ -103,14 +129,14 @@ sealed trait Field {
   }
 
   def isRelationWithIdAndSide(relationId: String, relationSide: RelationSide.Value): Boolean = {
-    isRelationWithId(relationId) && this.relationSide.contains(relationSide)
+    isRelationWithId(relationId) && this.relationSideOpt.contains(relationSide)
   }
 
   private def isRelationWithId(relationId: String): Boolean = relation.exists(_.relationTableName == relationId)
 
   lazy val relatedModel: Option[Model] = {
     relation.flatMap(relation => {
-      relationSide match {
+      relationSideOpt match {
         case Some(RelationSide.A) => relation.modelB
         case Some(RelationSide.B) => relation.modelA
         case x                    => ??? //throw SystemErrors.InvalidStateException(message = s" relationSide was $x")
@@ -121,7 +147,7 @@ sealed trait Field {
   val isMagicalBackRelation = name.startsWith(Field.magicalBackRelationPrefix)
 
   lazy val oppositeRelationSide: Option[RelationSide.Value] = {
-    relationSide match {
+    relationSideOpt match {
       case Some(RelationSide.A) => Some(RelationSide.B)
       case Some(RelationSide.B) => Some(RelationSide.A)
       case x                    => ??? //throw SystemErrors.InvalidStateException(message = s" relationSide was $x")
@@ -170,90 +196,45 @@ sealed trait Field {
   }
 }
 
-class FieldImpl(
-    val template: FieldTemplate,
-    val model: Model
+case class RelationField(
+    name: String,
+    isRequired: Boolean,
+    isList: Boolean,
+    isHidden: Boolean,
+    relationName: String,
+    relationSide: RelationSide.Value,
+    model: Model
 ) extends Field {
-  import template._
-  val schema = model.schema
+  override def typeIdentifier = TypeIdentifier.Relation
 
-  override def name           = template.name
-  override def typeIdentifier = template.typeIdentifier
-  override def isRequired     = template.isRequired
-  override def isList         = template.isList
-  override def isUnique       = template.isUnique
-  override def isHidden       = template.isHidden
-  override def isReadonly     = template.isReadonly
-  override def enum           = template.enum
-  override def defaultValue   = template.defaultValue
-  override def relationName   = template.relationName
-  override def relationSide   = template.relationSide
-  override def manifestation  = template.manifestation
+  override def isUnique        = false
+  override def isReadonly      = false
+  override def enum            = None
+  override def defaultValue    = None
+  override def manifestation   = None
+  override def relationNameOpt = Some(relationName)
+  override def relationSideOpt = Some(relationSide)
+  override def schema          = model.schema
+
+  override def template = ???
 }
 
-//case class RelationField(
-//    name: String,
-//    isRequired: Boolean,
-//    isList: Boolean,
-//    relationName: String,
-//    relationSide: RelationSide.Value
-//) extends Field {
-//  override def typeIdentifier = TypeIdentifier.Relation
-//
-//  override def isUnique      = false
-//  override def isHidden      = false
-//  override def isReadonly    = false
-//  override def enum          = None
-//  override def defaultValue  = None
-//  override def manifestation = None
-//}
+case class ScalarField(
+    name: String,
+    typeIdentifier: TypeIdentifier.Value,
+    isRequired: Boolean,
+    isList: Boolean,
+    isUnique: Boolean,
+    isHidden: Boolean,
+    isReadonly: Boolean,
+    enum: Option[Enum],
+    defaultValue: Option[GCValue],
+    manifestation: Option[FieldManifestation],
+    model: Model
+) extends Field {
+  override def relationNameOpt = None
+  override def relationSideOpt = None
 
-object Sketch {
-//  sealed trait Field {
-//    def name: String
-//    def typeIdentifier: TypeIdentifier.Value
-//    def isRequired: Boolean
-//    def isList: Boolean
-//    def isUnique: Boolean
-//    def isHidden: Boolean
-//    def isReadonly: Boolean
-//    def enum: Option[Enum]
-//    def defaultValue: Option[GCValue]
-//    def relationName: Option[String]
-//    def relationSide: Option[RelationSide.Value]
-//    def manifestation: Option[FieldManifestation]
-//  }
-//
-//  case class ScalarField(
-//      name: String,
-//      typeIdentifier: TypeIdentifier.Value,
-//      isRequired: Boolean,
-//      isList: Boolean,
-//      isUnique: Boolean,
-//      isHidden: Boolean,
-//      isReadonly: Boolean,
-//      enum: Option[Enum],
-//      defaultValue: Option[GCValue],
-//      manifestation: Option[FieldManifestation]
-//  ) extends Field {
-//    override def relationName = None
-//    override def relationSide = None
-//  }
-//
-//  case class RelationField(
-//      name: String,
-//      isRequired: Boolean,
-//      isList: Boolean,
-//      relationName: String,
-//      relationSide: RelationSide.Value
-//  ) extends Field {
-//    override def typeIdentifier = TypeIdentifier.Relation
-//
-//    override def isUnique      = false
-//    override def isHidden      = false
-//    override def isReadonly    = false
-//    override def enum          = None
-//    override def defaultValue  = None
-//    override def manifestation = None
-//  }
+  override def schema   = model.schema
+  override def template = ???
 }

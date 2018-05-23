@@ -263,11 +263,11 @@ class SchemaInfererSpec extends WordSpec with Matchers {
 
       val field1 = newSchema.getModelByName_!("NewTechnology").getFieldByName_!("xTechnologies")
       field1.relation should be(Some(newRelation))
-      field1.relationSide.get.toString should be("A")
+      field1.relationSideOpt.get.toString should be("A")
 
       val field2 = newSchema.getModelByName_!("NewTechnology").getFieldByName_!("parentTechnologies")
       field2.relation should be(Some(newRelation))
-      field2.relationSide.get.toString should be("B")
+      field2.relationSideOpt.get.toString should be("B")
     }
   }
 
@@ -304,11 +304,11 @@ class SchemaInfererSpec extends WordSpec with Matchers {
 
     val field1 = newSchema.getModelByName_!("Technology").getFieldByName_!("childTechnologies")
     field1.relation should be(Some(newRelation))
-    field1.relationSide.get.toString should be("A")
+    field1.relationSideOpt.get.toString should be("A")
 
     val field2 = newSchema.getModelByName_!("Technology").getFieldByName_!("parentTechnologies")
     field2.relation should be(Some(newRelation))
-    field2.relationSide.get.toString should be("B")
+    field2.relationSideOpt.get.toString should be("B")
   }
 
   "handle optional backrelations" in {

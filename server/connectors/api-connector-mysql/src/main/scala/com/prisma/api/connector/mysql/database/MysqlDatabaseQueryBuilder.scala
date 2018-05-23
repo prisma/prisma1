@@ -199,7 +199,7 @@ class MySqlDatabaseQueryBuilder()(implicit ec: ExecutionContext) {
     val relatedModel         = fromField.relatedModel.get
     val fieldTable           = fromField.relatedModel.get.name
     val unsafeRelationId     = fromField.relation.get.relationTableName
-    val modelRelationSide    = fromField.relationSide.get.toString
+    val modelRelationSide    = fromField.relationSideOpt.get.toString
     val oppositeRelationSide = fromField.oppositeRelationSide.get.toString
 
     val (conditionCommand, orderByCommand, limitCommand) =
@@ -251,7 +251,7 @@ class MySqlDatabaseQueryBuilder()(implicit ec: ExecutionContext) {
 
     val fieldTable        = relationField.relatedModel.get.name
     val unsafeRelationId  = relationField.relation.get.relationTableName
-    val modelRelationSide = relationField.relationSide.get.toString
+    val modelRelationSide = relationField.relationSideOpt.get.toString
     val fieldRelationSide = relationField.oppositeRelationSide.get.toString
 
     val (conditionCommand, orderByCommand, limitCommand) =

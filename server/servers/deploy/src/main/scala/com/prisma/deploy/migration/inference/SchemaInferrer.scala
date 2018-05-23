@@ -89,7 +89,7 @@ case class SchemaInferrerImpl(
       //If in the previous schema both relationSides are A we reassign the relationsides otherwise we keep the one from the previous schema.
       def inferRelationSide(relation: Option[RelationTemplate]) = {
         def oldRelationSidesNotBothEqual(oldField: Field) = oldField.otherRelationField match {
-          case Some(relatedField) => oldField.relationSide.isDefined && oldField.relationSide != relatedField.relationSide
+          case Some(relatedField) => oldField.relationSideOpt.isDefined && oldField.relationSideOpt != relatedField.relationSideOpt
           case None               => true
         }
 
@@ -101,7 +101,7 @@ case class SchemaInferrerImpl(
 
             oldField match {
               case Some(field) if field.isRelation && oldRelationSidesNotBothEqual(field) =>
-                field.relationSide.get
+                field.relationSideOpt.get
 
               case _ =>
                 val relationFieldNames = prismaType.relationalPrismaFields.filter(f => f.relationName.contains(relation.name)).map(_.name)

@@ -29,7 +29,7 @@ object QueryArgumentsHelpers {
 
     def joinRelations(schema: Schema, relation: Relation, toModel: Model, alias: String, field: Field, fromModel: Model, modTableName: String) = {
       val relationTableName = relation.relationTableName
-      val column            = relation.columnForRelationSide(field.relationSide.get)
+      val column            = relation.columnForRelationSide(field.relationSideOpt.get)
       val oppositeColumn    = relation.columnForRelationSide(field.oppositeRelationSide.get)
       sql"""select *
             from "#$projectId"."#${toModel.dbName}" as "#$alias"
@@ -183,7 +183,7 @@ object QueryArgumentsHelpers {
 
           val relation          = field.relation.get
           val relationTableName = relation.relationTableName
-          val column            = relation.columnForRelationSide(field.relationSide.get)
+          val column            = relation.columnForRelationSide(field.relationSideOpt.get)
           // fixme: an ugly hack that is hard to explain. ask marcus.
           val otherIdColumn = schema.models.find(_.dbName == tableName) match {
             case Some(model) => model.idField_!.dbName

@@ -8,7 +8,7 @@ trait Edge {
   def parent: Model
   def parentField: Field
   def columnForParentRelationSide(schema: Schema) = relation.columnForRelationSide(parentRelationSide)
-  def parentRelationSide: RelationSide            = parentField.relationSide.get
+  def parentRelationSide: RelationSide            = parentField.relationSideOpt.get
   def child: Model
   def childField: Option[Field]
   def columnForChildRelationSide(schema: Schema) = relation.columnForRelationSide(childRelationSide)

@@ -34,7 +34,7 @@ object DeferredUtils {
   def groupRelatedDeferred[T <: RelationDeferred[Any]](
       relatedDeferral: Vector[OrderedDeferred[T]]): Map[(String, RelationSide, Option[QueryArguments]), Vector[OrderedDeferred[T]]] = {
     relatedDeferral.groupBy(ordered =>
-      (ordered.deferred.relationField.relation.get.relationTableName, ordered.deferred.relationField.relationSide.get, ordered.deferred.args))
+      (ordered.deferred.relationField.relation.get.relationTableName, ordered.deferred.relationField.relationSideOpt.get, ordered.deferred.args))
   }
 
   def checkSimilarityOfModelDeferredsAndThrow(deferreds: Vector[ModelDeferred[Any]]) = {
@@ -60,7 +60,7 @@ object DeferredUtils {
       val myRelatedField = d.relationField
       myRelatedField.relation == relatedField.relation &&
       myRelatedField.typeIdentifier == relatedField.typeIdentifier &&
-      myRelatedField.relationSide == relatedField.relationSide &&
+      myRelatedField.relationSideOpt == relatedField.relationSideOpt &&
       d.args == args
     }
 
