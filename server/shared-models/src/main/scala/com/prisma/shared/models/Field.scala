@@ -65,6 +65,7 @@ case class FieldTemplate(
         isHidden = isHidden,
         relationName = relationName.get,
         relationSide = relationSide.get,
+        template = this,
         model = model
       )
     } else {
@@ -79,6 +80,7 @@ case class FieldTemplate(
         enum = enum,
         defaultValue = defaultValue,
         manifestation = manifestation,
+        template = this,
         model = model
       )
     }
@@ -86,8 +88,6 @@ case class FieldTemplate(
 }
 
 object Field {
-//  implicit def asFieldTemplate(field: Field): FieldTemplate = field.template
-
   val magicalBackRelationPrefix     = "_MagicalBackRelation_"
   private val excludedFromMutations = Vector("updatedAt", "createdAt", "id")
 }
@@ -203,6 +203,7 @@ case class RelationField(
     isHidden: Boolean,
     relationName: String,
     relationSide: RelationSide.Value,
+    template: FieldTemplate,
     model: Model
 ) extends Field {
   override def typeIdentifier = TypeIdentifier.Relation
@@ -216,7 +217,6 @@ case class RelationField(
   override def relationSideOpt = Some(relationSide)
   override def schema          = model.schema
 
-  override def template = ???
 }
 
 case class ScalarField(
@@ -230,11 +230,11 @@ case class ScalarField(
     enum: Option[Enum],
     defaultValue: Option[GCValue],
     manifestation: Option[FieldManifestation],
+    template: FieldTemplate,
     model: Model
 ) extends Field {
   override def relationNameOpt = None
   override def relationSideOpt = None
 
-  override def schema   = model.schema
-  override def template = ???
+  override def schema = model.schema
 }
