@@ -3,6 +3,8 @@ alias: joofei3ahd
 description: Learn how to deploy Prisma servers to AWS Fargate.
 ---
 
+# AWS Fargate
+
 [Prisma _servers_](https://www.prisma.io/docs/reference/prisma-servers-and-dbs/prisma-servers/overview-eu2ood0she) provide the runtime environment for your Prisma _services_. In this tutorial, you’re going to learn how to deploy a Prisma server to [AWS Fargate](https://aws.amazon.com/fargate/). The server will be backed by a MySQL database which you’re going deploy to AWS RDS first.
 
 > AWS Fargate is a new tool for Amazon ECS and EKS that allows you to run [containers](http://aws.amazon.com/what-are-containers) without having to manage servers.
