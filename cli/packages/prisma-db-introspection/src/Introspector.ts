@@ -7,6 +7,7 @@ export class Introspector {
   connectionString: string | ClientConfig
   connector: PostgresConnector
   printer = new SdlPrinter()
+
   constructor(connectionString: PostgresConnectionDetails) {
     this.connectionString = connectionString
     this.connector = new PostgresConnector(connectionString)
@@ -16,11 +17,8 @@ export class Introspector {
     return this.connector.listSchemas()
   }
 
-  async introspect(
-    schemaName: string,
-  ): Promise<{ numTables: number; sdl: string }> {
+  async introspect(schemaName: string): Promise<{ numTables: number; sdl: string }> {
     const tables = await this.connector.listTables(schemaName)
-
     const sdl = this.printer.print(tables)
 
     return { numTables: tables.length, sdl }
