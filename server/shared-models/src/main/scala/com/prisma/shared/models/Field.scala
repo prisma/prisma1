@@ -102,9 +102,8 @@ sealed trait Field {
   def isReadonly: Boolean
   def enum: Option[Enum]
   def defaultValue: Option[GCValue]
-  def relationNameOpt: Option[String]
-  def relationSideOpt: Option[RelationSide.Value]
   def manifestation: Option[FieldManifestation]
+  def relationSideOpt: Option[RelationSide.Value]
   def relationOpt: Option[Relation]
   def model: Model
   def schema: Schema
@@ -141,7 +140,6 @@ case class RelationField(
   override def enum            = None
   override def defaultValue    = None
   override def manifestation   = None
-  override def relationNameOpt = Some(relationName)
   override def relationSideOpt = Some(relationSide)
   override def schema          = model.schema
 
@@ -217,7 +215,6 @@ case class ScalarField(
 ) extends Field {
   override def isRelation      = false
   override def isScalar        = true
-  override def relationNameOpt = None
   override def relationSideOpt = None
   override def relationOpt     = None
   override val dbName          = manifestation.map(_.dbName).getOrElse(name)
