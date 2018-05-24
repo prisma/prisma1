@@ -153,19 +153,6 @@ sealed trait Field {
       case x                    => ??? //throw SystemErrors.InvalidStateException(message = s" relationSide was $x")
     }
   }
-
-  //this really does return None if there is no opposite field
-  lazy val otherRelationField: Option[Field] = {
-    val fields = relatedModel_!.fields
-
-    fields.find { field =>
-      field.relationOpt.exists { relation =>
-        val isTheSameField    = field.name == this.name
-        val isTheSameRelation = relation.relationTableName == this.relationOpt.get.relationTableName
-        isTheSameRelation && !isTheSameField
-      }
-    }
-  }
 }
 
 case class RelationField(
@@ -214,6 +201,19 @@ case class RelationField(
     }
 
     returnField.orElse(fallback)
+  }
+
+  //this really does return None if there is no opposite field
+  lazy val otherRelationField: Option[Field] = {
+    val fields = relatedModel_!.fields
+
+    fields.find { field =>
+      field.relationOpt.exists { relation =>
+        val isTheSameField    = field.name == this.name
+        val isTheSameRelation = relation.relationTableName == this.relationOpt.get.relationTableName
+        isTheSameRelation && !isTheSameField
+      }
+    }
   }
 }
 

@@ -88,7 +88,7 @@ case class SchemaInferrerImpl(
       //For self relations we were inferring the relationSide A for both sides, this now assigns A to the lexicographically lower field name and B to the other
       //If in the previous schema both relationSides are A we reassign the relationsides otherwise we keep the one from the previous schema.
       def inferRelationSide(relation: Option[RelationTemplate]) = {
-        def oldRelationSidesNotBothEqual(oldField: Field) = oldField.otherRelationField match {
+        def oldRelationSidesNotBothEqual(oldField: RelationField) = oldField.otherRelationField match {
           case Some(relatedField) => oldField.relationSideOpt.isDefined && oldField.relationSideOpt != relatedField.relationSideOpt
           case None               => true
         }
@@ -100,8 +100,8 @@ case class SchemaInferrerImpl(
             val oldField     = baseSchema.getFieldByName(oldModelName, oldFieldName)
 
             oldField match {
-              case Some(field) if field.isRelation && oldRelationSidesNotBothEqual(field) =>
-                field.relationSideOpt.get
+              case Some(field: RelationField) if oldRelationSidesNotBothEqual(field) =>
+                field.relationSide
 
               case _ =>
                 val relationFieldNames = prismaType.relationalPrismaFields.filter(f => f.relationName.contains(relation.name)).map(_.name)
