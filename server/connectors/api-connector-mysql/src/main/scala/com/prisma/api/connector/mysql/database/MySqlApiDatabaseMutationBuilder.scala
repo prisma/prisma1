@@ -295,12 +295,11 @@ object MySqlApiDatabaseMutationBuilder {
 
   // region HELPERS
 
-  def idFromWhere(projectId: String, where: NodeSelector): SQLActionBuilder = {
-    if (where.isId) {
-      sql"${where.fieldValue}"
-    } else {
-      sql"(SELECT `id` FROM (SELECT * FROM `#$projectId`.`#${where.model.name}`) IDFROMWHERE WHERE `#${where.field.name}` = ${where.fieldValue})"
-    }
+  def idFromWhere(projectId: String, where: NodeSelector): SQLActionBuilder = (where.isId, where.fieldValue) match {
+    case (true, NullGCValue)  => sys.error("id should not be NULL")
+    case (true, idValue)      => sql"$idValue"
+    case (false, NullGCValue) => sql"(SELECT `id` FROM (SELECT * FROM `#$projectId`.`#${where.model.name}`) IDFROMWHERE WHERE `#${where.field.name}` is NULL)"
+    case (false, value)       => sql"(SELECT `id` FROM (SELECT * FROM `#$projectId`.`#${where.model.name}`) IDFROMWHERE WHERE `#${where.field.name}` = $value)"
   }
 
   def idFromWhereEquals(projectId: String, where: NodeSelector): SQLActionBuilder = sql" = " ++ idFromWhere(projectId, where)
