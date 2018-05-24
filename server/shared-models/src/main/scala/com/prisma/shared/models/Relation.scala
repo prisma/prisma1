@@ -79,7 +79,7 @@ class Relation(
 
   def columnForRelationSide(relationSide: RelationSide.Value): String = if (relationSide == RelationSide.A) modelAColumn else modelBColumn
 
-  def getFieldOnModel(modelId: String): Option[Field] = {
+  def getFieldOnModel(modelId: String): Option[RelationField] = {
     modelId match {
       case `modelAId` => modelAField
       case `modelBId` => modelBField

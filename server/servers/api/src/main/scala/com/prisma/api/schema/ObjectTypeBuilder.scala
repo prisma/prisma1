@@ -187,6 +187,8 @@ class ObjectTypeBuilder(
       .map {
         case (key, value) =>
           val FieldFilterTuple(field, filter) = filterArguments.lookup(key)
+          lazy val asRelationField            = field.get.asInstanceOf[RelationField]
+          lazy val asScalarField              = field.get.asInstanceOf[ScalarField]
           value match {
             case value: Map[_, _] =>
               val typedValue = value.asInstanceOf[Map[String, Any]]
@@ -194,15 +196,14 @@ class ObjectTypeBuilder(
                 generateFilterElement(typedValue, model, isSubscriptionFilter)
               } else {
                 // this must be a relation filter
-                val relationField = field.get.asInstanceOf[RelationField]
                 TransitiveRelationFilter(
                   project.schema,
-                  relationField,
+                  asRelationField,
                   model,
-                  relationField.relatedModel_!,
-                  relationField.relation,
+                  asRelationField.relatedModel_!,
+                  asRelationField.relation,
                   filter.name,
-                  generateFilterElement(typedValue, relationField.relatedModel_!, isSubscriptionFilter)
+                  generateFilterElement(typedValue, asRelationField.relatedModel_!, isSubscriptionFilter)
                 )
               }
 
@@ -213,11 +214,11 @@ class ObjectTypeBuilder(
 
             case value: Seq[Any] if field.isDefined && field.get.isScalar =>
               val converter = GCAnyConverter(field.get.typeIdentifier, isList = false)
-              FinalValueFilter(key, ListGCValue(value.map(x => converter.toGCValue(x).get).toVector), field.get, filter.name)
+              FinalValueFilter(key, ListGCValue(value.map(x => converter.toGCValue(x).get).toVector), asScalarField, filter.name)
 
             case Some(filterValue) if field.isDefined && field.get.isScalar =>
               val converter = GCAnyConverter(field.get.typeIdentifier, isList = false)
-              FinalValueFilter(key, converter.toGCValue(filterValue).get, field.get, filter.name)
+              FinalValueFilter(key, converter.toGCValue(filterValue).get, asScalarField, filter.name)
 
             case Some(filterValue) if field.isDefined && field.get.isRelation =>
               FinalRelationFilter(project.schema, key, filterValue, field.get.asInstanceOf[RelationField], filter.name)
@@ -227,7 +228,7 @@ class ObjectTypeBuilder(
 
             case valueNew if field.isDefined && field.get.isScalar =>
               val converter = GCAnyConverter(field.get.typeIdentifier, isList = false)
-              FinalValueFilter(key, converter.toGCValue(valueNew).get, field.get, filter.name)
+              FinalValueFilter(key, converter.toGCValue(valueNew).get, asScalarField, filter.name)
 
             case _ =>
               FilterElement(key, value, field, filter.name)
@@ -265,7 +266,7 @@ class ObjectTypeBuilder(
 
     field match {
       case f: ScalarField if f.isList =>
-        ScalarListDeferred(model, field, item.id)
+        ScalarListDeferred(model, f, item.id)
 
       case f: ScalarField if !f.isList =>
         GCValueExtractor.fromGCValue(item.data.map(field.name))

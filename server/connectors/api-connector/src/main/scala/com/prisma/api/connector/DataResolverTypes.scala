@@ -43,7 +43,7 @@ object SortOrder extends Enumeration {
 }
 
 case class OrderBy(
-    field: Field,
+    field: ScalarField,
     sortOrder: SortOrder.Value
 )
 
@@ -57,7 +57,7 @@ case class FilterElement(
 case class FinalValueFilter(
     key: String,
     value: GCValue,
-    field: Field,
+    field: ScalarField,
     filterName: String = ""
 )
 

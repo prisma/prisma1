@@ -2,7 +2,7 @@ package com.prisma.api.resolver
 
 import com.prisma.api.connector.{NodeSelector, PrismaNode, QueryArguments}
 import com.prisma.gc_values.IdGCValue
-import com.prisma.shared.models.{Field, Model, RelationField}
+import com.prisma.shared.models.{Field, Model, RelationField, ScalarField}
 import sangria.execution.deferred.Deferred
 
 import scala.concurrent.Future
@@ -58,5 +58,5 @@ object DeferredTypes {
   type RelayConnectionOutputType    = IdBasedConnection[PrismaNode]
   type ScalarListDeferredResultType = Vector[Any]
 
-  case class ScalarListDeferred(model: Model, field: Field, nodeId: IdGCValue) extends Deferred[ScalarListDeferredResultType]
+  case class ScalarListDeferred(model: Model, field: ScalarField, nodeId: IdGCValue) extends Deferred[ScalarListDeferredResultType]
 }

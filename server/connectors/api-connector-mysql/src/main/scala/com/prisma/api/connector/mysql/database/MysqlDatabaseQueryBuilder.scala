@@ -117,7 +117,7 @@ class MySqlDatabaseQueryBuilder()(implicit ec: ExecutionContext) {
 
   def selectAllFromListTable(projectId: String,
                              model: Model,
-                             field: Field,
+                             field: ScalarField,
                              args: Option[QueryArguments],
                              overrideMaxNodeCount: Option[Int] = None): DBIOAction[ResolverResult[ScalarListValues], NoStream, Effect] = {
 
@@ -176,7 +176,7 @@ class MySqlDatabaseQueryBuilder()(implicit ec: ExecutionContext) {
 
   def selectFromScalarList(projectId: String,
                            modelName: String,
-                           field: Field,
+                           field: ScalarField,
                            nodeIds: Vector[IdGCValue]): DBIOAction[Vector[ScalarListValues], NoStream, Effect] = {
     val query = sql"select nodeId, position, value from `#$projectId`.`#${modelName}_#${field.name}` where nodeId in (" ++ combineByComma(
       nodeIds.map(v => sql"$v")) ++ sql")"

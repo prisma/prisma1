@@ -110,7 +110,7 @@ case class PostgresApiDatabaseQueryBuilder(
 
   def selectAllFromListTable(
       model: Model,
-      field: Field,
+      field: ScalarField,
       args: Option[QueryArguments],
       overrideMaxNodeCount: Option[Int] = None
   ): DBIOAction[ResolverResult[ScalarListValues], NoStream, Effect] = {
@@ -167,7 +167,7 @@ case class PostgresApiDatabaseQueryBuilder(
       result
     }
 
-  def selectFromScalarList(modelName: String, field: Field, nodeIds: Vector[IdGCValue]): DBIOAction[Vector[ScalarListValues], NoStream, Effect] = {
+  def selectFromScalarList(modelName: String, field: ScalarField, nodeIds: Vector[IdGCValue]): DBIOAction[Vector[ScalarListValues], NoStream, Effect] = {
     val query = sql"""select "nodeId", "position", "value" from "#$schemaName"."#${modelName}_#${field.dbName}" where "nodeId" in (""" ++ combineByComma(
       nodeIds.map(v => sql"$v")) ++ sql")"
 

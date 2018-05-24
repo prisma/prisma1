@@ -55,6 +55,7 @@ class Model(
   }
 
   def getRelationFieldByName_!(name: String): RelationField = getFieldByName_!(name).asInstanceOf[RelationField]
+  def getScalarFieldByName_!(name: String): ScalarField     = getFieldByName_!(name).asInstanceOf[ScalarField]
 
   def getFieldByName_!(name: String): Field       = getFieldByName(name).getOrElse(sys.error(s"field $name is not part of the model ${this.name}"))
   def getFieldByName(name: String): Option[Field] = fields.find(_.name == name)
