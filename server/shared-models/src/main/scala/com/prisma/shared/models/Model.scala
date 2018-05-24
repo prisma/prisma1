@@ -54,6 +54,8 @@ class Model(
     schema.copy(modelTemplates = newModelsInSchema).getModelByName_!(name)
   }
 
+  def getRelationFieldByName_!(name: String): RelationField = getFieldByName_!(name).asInstanceOf[RelationField]
+
   def getFieldByName_!(name: String): Field       = getFieldByName(name).getOrElse(sys.error(s"field $name is not part of the model ${this.name}"))
   def getFieldByName(name: String): Option[Field] = fields.find(_.name == name)
 

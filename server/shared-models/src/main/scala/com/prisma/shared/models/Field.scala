@@ -154,27 +154,6 @@ sealed trait Field {
     }
   }
 
-  //todo this is dangerous in combination with self relations since it will return the field itself as related field
-  //this should be removed where possible
-  lazy val relatedField: Option[Field] = {
-    val fields = relatedModel_!.fields
-
-    val returnField = fields.find { field =>
-      field.relationOpt.exists { relation =>
-        val isTheSameField    = field.name == this.name
-        val isTheSameRelation = relation.relationTableName == this.relationOpt.get.relationTableName
-        isTheSameRelation && !isTheSameField
-      }
-    }
-    val fallback = fields.find { relatedField =>
-      relatedField.relationOpt.exists { relation =>
-        relation.relationTableName == this.relationOpt.get.relationTableName
-      }
-    }
-
-    returnField.orElse(fallback)
-  }
-
   //this really does return None if there is no opposite field
   lazy val otherRelationField: Option[Field] = {
     val fields = relatedModel_!.fields
@@ -215,6 +194,27 @@ case class RelationField(
 
   lazy val relation: Relation            = schema.getRelationByName_!(relationName)
   lazy val relationOpt: Option[Relation] = Some(relation)
+
+  //todo this is dangerous in combination with self relations since it will return the field itself as related field
+  //this should be removed where possible
+  lazy val relatedField: Option[Field] = {
+    val fields = relatedModel_!.fields
+
+    val returnField = fields.find { field =>
+      field.relationOpt.exists { relation =>
+        val isTheSameField    = field.name == this.name
+        val isTheSameRelation = relation.relationTableName == this.relationOpt.get.relationTableName
+        isTheSameRelation && !isTheSameField
+      }
+    }
+    val fallback = fields.find { relatedField =>
+      relatedField.relationOpt.exists { relation =>
+        relation.relationTableName == this.relationOpt.get.relationTableName
+      }
+    }
+
+    returnField.orElse(fallback)
+  }
 }
 
 case class ScalarField(
