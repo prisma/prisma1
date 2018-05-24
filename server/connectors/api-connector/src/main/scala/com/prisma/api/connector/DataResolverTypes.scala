@@ -65,7 +65,7 @@ case class FinalRelationFilter(
     schema: Schema,
     key: String,
     value: Any,
-    field: Field,
+    field: RelationField,
     filterName: String = ""
 )
 

@@ -28,7 +28,7 @@ object QueryArgumentsHelpers {
       sql"""select * from `#$projectId`.`#${toModel.name}` as `#$alias`
                      inner join `#$projectId`.`#${relation.relationTableName}`
                      on `#$alias`.`id` = `#$projectId`.`#${relation.relationTableName}`.`#${field.oppositeRelationSide.get}`
-                     where `#$projectId`.`#${relation.relationTableName}`.`#${field.relationSideOpt.get}` = `#$modTableName`.`id`"""
+                     where `#$projectId`.`#${relation.relationTableName}`.`#${field.relationSide}` = `#$modTableName`.`id`"""
     }
 
     //key, value, field, filterName, relationFilter
@@ -164,7 +164,7 @@ object QueryArgumentsHelpers {
 
           Some(sql""" not exists (select  *
                                   from    `#$projectId`.`#${field.relationOpt.get.relationTableName}`
-                                  where   `#$projectId`.`#${field.relationOpt.get.relationTableName}`.`#${field.relationSideOpt.get}` = `#$projectId`.`#$tableName`.`id`
+                                  where   `#$projectId`.`#${field.relationOpt.get.relationTableName}`.`#${field.relationSide}` = `#$projectId`.`#$tableName`.`id`
                                   )""")
 
         // this is used for the node: {} field in the Subscription Filter

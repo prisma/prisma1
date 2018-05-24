@@ -261,13 +261,13 @@ class SchemaInfererSpec extends WordSpec with Matchers {
       newRelation.modelAId should be("NewTechnology")
       newRelation.modelBId should be("NewTechnology")
 
-      val field1 = newSchema.getModelByName_!("NewTechnology").getFieldByName_!("xTechnologies")
+      val field1 = newSchema.getModelByName_!("NewTechnology").getRelationFieldByName_!("xTechnologies")
       field1.relationOpt should be(Some(newRelation))
-      field1.relationSideOpt.get.toString should be("A")
+      field1.relationSide.toString should be("A")
 
-      val field2 = newSchema.getModelByName_!("NewTechnology").getFieldByName_!("parentTechnologies")
+      val field2 = newSchema.getModelByName_!("NewTechnology").getRelationFieldByName_!("parentTechnologies")
       field2.relationOpt should be(Some(newRelation))
-      field2.relationSideOpt.get.toString should be("B")
+      field2.relationSide.toString should be("B")
     }
   }
 
@@ -302,13 +302,13 @@ class SchemaInfererSpec extends WordSpec with Matchers {
     newRelation.modelAId should be("Technology")
     newRelation.modelBId should be("Technology")
 
-    val field1 = newSchema.getModelByName_!("Technology").getFieldByName_!("childTechnologies")
+    val field1 = newSchema.getModelByName_!("Technology").getRelationFieldByName_!("childTechnologies")
     field1.relationOpt should be(Some(newRelation))
-    field1.relationSideOpt.get.toString should be("A")
+    field1.relationSide.toString should be("A")
 
-    val field2 = newSchema.getModelByName_!("Technology").getFieldByName_!("parentTechnologies")
+    val field2 = newSchema.getModelByName_!("Technology").getRelationFieldByName_!("parentTechnologies")
     field2.relationOpt should be(Some(newRelation))
-    field2.relationSideOpt.get.toString should be("B")
+    field2.relationSide.toString should be("B")
   }
 
   "handle optional backrelations" in {

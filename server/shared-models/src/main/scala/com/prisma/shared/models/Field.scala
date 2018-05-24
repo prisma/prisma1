@@ -103,7 +103,6 @@ sealed trait Field {
   def enum: Option[Enum]
   def defaultValue: Option[GCValue]
   def manifestation: Option[FieldManifestation]
-  def relationSideOpt: Option[RelationSide.Value]
   def relationOpt: Option[Relation]
   def model: Model
   def schema: Schema
@@ -168,7 +167,7 @@ case class RelationField(
 
   //todo this is dangerous in combination with self relations since it will return the field itself as related field
   //this should be removed where possible
-  lazy val relatedField: Option[Field] = {
+  lazy val relatedField: Option[RelationField] = {
     val fallback = relatedModel_!.relationFields.find { relatedField =>
       val relation = relatedField.relation
       relation.relationTableName == this.relation.relationTableName
@@ -178,7 +177,7 @@ case class RelationField(
   }
 
   //this really does return None if there is no opposite field
-  lazy val otherRelationField: Option[Field] = {
+  lazy val otherRelationField: Option[RelationField] = {
     relatedModel_!.relationFields.find { field =>
       val relation          = field.relation
       val isTheSameField    = field.name == this.name
@@ -188,10 +187,10 @@ case class RelationField(
   }
 
   lazy val oppositeRelationSide: Option[RelationSide.Value] = {
-    relationSideOpt match {
-      case Some(RelationSide.A) => Some(RelationSide.B)
-      case Some(RelationSide.B) => Some(RelationSide.A)
-      case x                    => ??? //throw SystemErrors.InvalidStateException(message = s" relationSide was $x")
+    relationSide match {
+      case RelationSide.A => Some(RelationSide.B)
+      case RelationSide.B => Some(RelationSide.A)
+      case x              => sys.error(s"received invalid relation side $x")
     }
   }
 

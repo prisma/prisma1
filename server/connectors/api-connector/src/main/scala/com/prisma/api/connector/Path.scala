@@ -8,18 +8,16 @@ trait Edge {
   def parent: Model
   def parentField: RelationField
   def columnForParentRelationSide(schema: Schema) = relation.columnForRelationSide(parentRelationSide)
-  def parentRelationSide: RelationSide            = parentField.relationSideOpt.get
+  def parentRelationSide: RelationSide            = parentField.relationSide
   def child: Model
-  def childField: Option[Field]
+  def childField: Option[RelationField]
   def columnForChildRelationSide(schema: Schema) = relation.columnForRelationSide(childRelationSide)
   def childRelationSide: RelationSide            = parentField.oppositeRelationSide.get
   def relation: Relation
-  def toNodeEdge(where: NodeSelector): NodeEdge = {
-    NodeEdge(parent, parentField, child, childField, where, relation)
-  }
+  def toNodeEdge(where: NodeSelector): NodeEdge = NodeEdge(parent, parentField, child, childField, where, relation)
 }
-case class ModelEdge(parent: Model, parentField: RelationField, child: Model, childField: Option[Field], relation: Relation) extends Edge
-case class NodeEdge(parent: Model, parentField: RelationField, child: Model, childField: Option[Field], childWhere: NodeSelector, relation: Relation)
+case class ModelEdge(parent: Model, parentField: RelationField, child: Model, childField: Option[RelationField], relation: Relation) extends Edge
+case class NodeEdge(parent: Model, parentField: RelationField, child: Model, childField: Option[RelationField], childWhere: NodeSelector, relation: Relation)
     extends Edge
 
 //  case class NodePath(root: NodeSelector, edges: List[Edge], last: NodeEdge)

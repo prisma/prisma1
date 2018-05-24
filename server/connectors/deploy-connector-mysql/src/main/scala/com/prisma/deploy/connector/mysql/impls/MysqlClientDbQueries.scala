@@ -3,7 +3,7 @@ package com.prisma.deploy.connector.mysql.impls
 import com.prisma.deploy.connector.ClientDbQueries
 import com.prisma.deploy.connector.mysql.database.MysqlDeployDatabaseQueryBuilder
 import com.prisma.shared.models.RelationSide.RelationSide
-import com.prisma.shared.models.{Field, Model, Project}
+import com.prisma.shared.models._
 import slick.dbio.Effect.Read
 import slick.jdbc.MySQLProfile.api._
 import slick.jdbc.SQLActionBuilder
@@ -29,9 +29,9 @@ case class MysqlClientDbQueries(project: Project, clientDatabase: Database)(impl
   }
 
   def existsNullByModelAndField(model: Model, field: Field): Future[Boolean] = {
-    val query = field.isScalar match {
-      case true  => MysqlDeployDatabaseQueryBuilder.existsNullByModelAndScalarField(project.id, model.name, field.name)
-      case false => MysqlDeployDatabaseQueryBuilder.existsNullByModelAndRelationField(project.id, model.name, field)
+    val query = field match {
+      case f: ScalarField   => MysqlDeployDatabaseQueryBuilder.existsNullByModelAndScalarField(project.id, model.name, f.name)
+      case f: RelationField => MysqlDeployDatabaseQueryBuilder.existsNullByModelAndRelationField(project.id, model.name, f)
     }
     clientDatabase.run(readOnlyBoolean(query)).map(_.head).recover { case _: java.sql.SQLSyntaxErrorException => false }
   }

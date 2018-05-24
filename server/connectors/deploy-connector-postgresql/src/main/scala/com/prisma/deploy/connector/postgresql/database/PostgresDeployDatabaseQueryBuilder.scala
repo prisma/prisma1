@@ -1,7 +1,7 @@
 package com.prisma.deploy.connector.postgresql.database
 
 import com.prisma.shared.models.RelationSide.RelationSide
-import com.prisma.shared.models.{Field, Model}
+import com.prisma.shared.models.{Field, Model, RelationField}
 import slick.jdbc.PostgresProfile.api._
 import slick.jdbc.{PositionedParameters, SQLActionBuilder}
 
@@ -37,9 +37,9 @@ object PostgresDeployDatabaseQueryBuilder {
           )"""
   }
 
-  def existsNullByModelAndRelationField(projectId: String, model: Model, field: Field) = {
+  def existsNullByModelAndRelationField(projectId: String, model: Model, field: RelationField) = {
     val relationId   = field.relationOpt.get.relationTableName
-    val relationSide = field.relationSideOpt.get.toString
+    val relationSide = field.relationSide.toString
     sql"""select EXISTS (
             select "#${model.dbNameOfIdField_!}" from "#$projectId"."#${model.dbName}"
             where "#${model.dbNameOfIdField_!}" Not IN

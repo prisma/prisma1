@@ -89,7 +89,7 @@ case class SchemaInferrerImpl(
       //If in the previous schema both relationSides are A we reassign the relationsides otherwise we keep the one from the previous schema.
       def inferRelationSide(relation: Option[RelationTemplate]) = {
         def oldRelationSidesNotBothEqual(oldField: RelationField) = oldField.otherRelationField match {
-          case Some(relatedField) => oldField.relationSideOpt.isDefined && oldField.relationSideOpt != relatedField.relationSideOpt
+          case Some(relatedField) => oldField.relationSide != relatedField.relationSide
           case None               => true
         }
 

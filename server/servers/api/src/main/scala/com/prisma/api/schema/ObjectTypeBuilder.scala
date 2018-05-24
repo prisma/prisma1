@@ -220,10 +220,10 @@ class ObjectTypeBuilder(
               FinalValueFilter(key, converter.toGCValue(filterValue).get, field.get, filter.name)
 
             case Some(filterValue) if field.isDefined && field.get.isRelation =>
-              FinalRelationFilter(project.schema, key, filterValue, field.get, filter.name)
+              FinalRelationFilter(project.schema, key, filterValue, field.get.asInstanceOf[RelationField], filter.name)
 
             case valueNew if field.isDefined && field.get.isRelation =>
-              FinalRelationFilter(project.schema, key, valueNew, field.get, filter.name)
+              FinalRelationFilter(project.schema, key, valueNew, field.get.asInstanceOf[RelationField], filter.name)
 
             case valueNew if field.isDefined && field.get.isScalar =>
               val converter = GCAnyConverter(field.get.typeIdentifier, isList = false)

@@ -3,7 +3,7 @@ package com.prisma.deploy.connector.postgresql.impls
 import com.prisma.deploy.connector.ClientDbQueries
 import com.prisma.deploy.connector.postgresql.database.PostgresDeployDatabaseQueryBuilder
 import com.prisma.shared.models.RelationSide.RelationSide
-import com.prisma.shared.models.{Field, Model, Project}
+import com.prisma.shared.models._
 import slick.dbio.Effect.Read
 import slick.jdbc.PostgresProfile.api._
 import slick.jdbc.SQLActionBuilder
@@ -30,9 +30,9 @@ case class PostgresClientDbQueries(project: Project, clientDatabase: Database)(i
   }
 
   def existsNullByModelAndField(model: Model, field: Field): Future[Boolean] = {
-    val query = field.isScalar match {
-      case true  => PostgresDeployDatabaseQueryBuilder.existsNullByModelAndScalarField(project.id, model, field.dbName)
-      case false => PostgresDeployDatabaseQueryBuilder.existsNullByModelAndRelationField(project.id, model, field)
+    val query = field match {
+      case f: ScalarField   => PostgresDeployDatabaseQueryBuilder.existsNullByModelAndScalarField(project.id, model, f.dbName)
+      case f: RelationField => PostgresDeployDatabaseQueryBuilder.existsNullByModelAndRelationField(project.id, model, f)
     }
     clientDatabase.run(readOnlyBoolean(query)).map(_.head).recover { case _: java.sql.SQLSyntaxErrorException => false }
   }

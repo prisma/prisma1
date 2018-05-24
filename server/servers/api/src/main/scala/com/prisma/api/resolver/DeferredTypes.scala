@@ -39,7 +39,7 @@ object DeferredTypes {
   }
 
   trait RelationDeferred[+T] extends RelatedArgs with Deferred[T] {
-    def relationField: Field
+    def relationField: RelationField
     def parentNodeId: IdGCValue
     def args: Option[QueryArguments]
   }
