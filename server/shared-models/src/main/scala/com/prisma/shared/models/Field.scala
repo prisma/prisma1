@@ -131,16 +131,15 @@ case class RelationField(
     template: FieldTemplate,
     model: Model
 ) extends Field {
-  override def typeIdentifier  = TypeIdentifier.Relation
-  override def isRelation      = true
-  override def isScalar        = false
-  override def isUnique        = false
-  override def isReadonly      = false
-  override def enum            = None
-  override def defaultValue    = None
-  override def manifestation   = None
-  override def relationSideOpt = Some(relationSide)
-  override def schema          = model.schema
+  override def typeIdentifier = TypeIdentifier.Relation
+  override def isRelation     = true
+  override def isScalar       = false
+  override def isUnique       = false
+  override def isReadonly     = false
+  override def enum           = None
+  override def defaultValue   = None
+  override def manifestation  = None
+  override def schema         = model.schema
 
   lazy val dbName = relation.manifestation match {
     case Some(m: InlineRelationManifestation) => m.referencingColumn
@@ -212,11 +211,10 @@ case class ScalarField(
     template: FieldTemplate,
     model: Model
 ) extends Field {
-  override def isRelation      = false
-  override def isScalar        = true
-  override def relationSideOpt = None
-  override def relationOpt     = None
-  override val dbName          = manifestation.map(_.dbName).getOrElse(name)
+  override def isRelation  = false
+  override def isScalar    = true
+  override def relationOpt = None
+  override val dbName      = manifestation.map(_.dbName).getOrElse(name)
 
   override def schema = model.schema
 }
