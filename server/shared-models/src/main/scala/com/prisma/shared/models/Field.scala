@@ -127,16 +127,6 @@ sealed trait Field {
     }
   }
 
-  lazy val relatedModel: Option[Model] = {
-    relationOpt.flatMap(relation => {
-      relationSideOpt match {
-        case Some(RelationSide.A) => relation.modelB
-        case Some(RelationSide.B) => relation.modelA
-        case x                    => ??? //throw SystemErrors.InvalidStateException(message = s" relationSide was $x")
-      }
-    })
-  }
-
   val isMagicalBackRelation = name.startsWith(Field.magicalBackRelationPrefix)
 
   lazy val oppositeRelationSide: Option[RelationSide.Value] = {
@@ -179,6 +169,14 @@ case class RelationField(
     relatedModel match {
       case None        => sys.error(s"Could not find relatedModel for field [$name] on model [${model.name}]")
       case Some(model) => model
+    }
+  }
+
+  private lazy val relatedModel: Option[Model] = {
+    relationSide match {
+      case RelationSide.A => relation.modelB
+      case RelationSide.B => relation.modelA
+      case x              => sys.error(s"received invalid relation side $x")
     }
   }
 

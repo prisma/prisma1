@@ -15,9 +15,10 @@ case class Schema(
   val models    = modelTemplates.map(_.build(this))
   val relations = relationTemplates.map(_.build(this))
 
-  def allFields: Seq[Field] = models.flatMap(_.fields)
+  def allFields: Seq[Field]                 = models.flatMap(_.fields)
+  def allRelationFields: Seq[RelationField] = models.flatMap(_.relationFields)
 
-  def fieldsWhereThisModelIsRequired(model: Model) = allFields.filter(f => f.isRequired && !f.isList && f.relatedModel.contains(model))
+  def fieldsWhereThisModelIsRequired(model: Model) = allRelationFields.filter(f => f.isRequired && !f.isList && f.relatedModel_! == model)
 
   def getModelById(id: Id): Option[Model] = models.find(_.name == id)
   def getModelById_!(id: Id): Model       = getModelById(id).getOrElse(throw SharedErrors.InvalidModel(id))
