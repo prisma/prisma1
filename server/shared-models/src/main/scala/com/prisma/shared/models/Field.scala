@@ -111,6 +111,7 @@ sealed trait Field {
   def template: FieldTemplate
   def isRelation: Boolean
   def isScalar: Boolean
+  def dbName: String
 
   lazy val isScalarList: Boolean      = isScalar && isList
   lazy val isScalarNonList: Boolean   = isScalar && !isList
@@ -118,14 +119,6 @@ sealed trait Field {
   lazy val isRelationNonList: Boolean = isRelation && !isList
   lazy val isWritable: Boolean        = !isReadonly && !Field.excludedFromMutations.contains(name)
   lazy val isVisible: Boolean         = !isHidden
-
-  lazy val dbName = {
-    relationOpt match {
-      case Some(r) if r.isInlineRelation => r.manifestation.get.asInstanceOf[InlineRelationManifestation].referencingColumn
-      case None                          => manifestation.map(_.dbName).getOrElse(name)
-      case _                             => sys.error("not a valid call on relations manifested via a table")
-    }
-  }
 
   val isMagicalBackRelation = name.startsWith(Field.magicalBackRelationPrefix)
 }
@@ -152,8 +145,10 @@ case class RelationField(
   override def relationSideOpt = Some(relationSide)
   override def schema          = model.schema
 
-  def isRelationWithIdAndSide(relationId: String, relationSide: RelationSide.Value): Boolean = isRelationWithId(relationId) && this.relationSide == relationSide
-  private def isRelationWithId(relationId: String): Boolean                                  = relation.relationTableName == relationId
+  lazy val dbName = relation.manifestation match {
+    case Some(m: InlineRelationManifestation) => m.referencingColumn
+    case _                                    => sys.error("not a valid call on relations manifested via a table")
+  }
 
   lazy val relation: Relation            = schema.getRelationByName_!(relationName)
   lazy val relationOpt: Option[Relation] = Some(relation)
@@ -201,6 +196,9 @@ case class RelationField(
       case x                    => ??? //throw SystemErrors.InvalidStateException(message = s" relationSide was $x")
     }
   }
+
+  def isRelationWithIdAndSide(relationId: String, relationSide: RelationSide.Value): Boolean = isRelationWithId(relationId) && this.relationSide == relationSide
+  private def isRelationWithId(relationId: String): Boolean                                  = relation.relationTableName == relationId
 }
 
 case class ScalarField(
@@ -222,6 +220,7 @@ case class ScalarField(
   override def relationNameOpt = None
   override def relationSideOpt = None
   override def relationOpt     = None
+  override val dbName          = manifestation.map(_.dbName).getOrElse(name)
 
   override def schema = model.schema
 }
