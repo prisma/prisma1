@@ -1,8 +1,8 @@
 package com.prisma.api.schema
 
 import com.prisma.cache.Cache
-import com.prisma.shared.models.{Field, Model, Project, RelationField}
-import sangria.schema._
+import com.prisma.shared.models._
+import sangria.schema.{Field => _, _}
 
 trait InputTypesBuilder {
   def inputObjectTypeForCreate(model: Model, parentField: Option[RelationField] = None): Option[InputObjectType[Any]]
@@ -230,7 +230,7 @@ abstract class UncachedInputTypesBuilder(project: Project) extends InputTypesBui
     computeScalarInputFields(filteredModel, SchemaBuilderUtils.mapToOptionalInputType, "Update")
   }
 
-  private def computeScalarInputFields(model: Model, mapToInputType: Field => InputType[Any], inputObjectName: String) = {
+  private def computeScalarInputFields(model: Model, mapToInputType: ScalarField => InputType[Any], inputObjectName: String) = {
     val nonListFields = model.scalarNonListFields.map(field => InputField(field.name, mapToInputType(field)))
 
     val listFields = model.scalarListFields.map { field =>
@@ -368,7 +368,7 @@ abstract class UncachedInputTypesBuilder(project: Project) extends InputTypesBui
 }
 
 object FieldToInputTypeMapper {
-  def mapForCreateCase(field: Field): InputType[Any] = field.isRequired && field.defaultValue.isEmpty match {
+  def mapForCreateCase(field: ScalarField): InputType[Any] = field.isRequired && field.defaultValue.isEmpty match {
     case true  => SchemaBuilderUtils.mapToRequiredInputType(field)
     case false => SchemaBuilderUtils.mapToOptionalInputType(field)
   }

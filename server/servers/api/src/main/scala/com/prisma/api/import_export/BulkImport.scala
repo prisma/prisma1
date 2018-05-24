@@ -70,7 +70,7 @@ class BulkImport(project: Project)(implicit apiDependencies: ApiDependencies) {
     val fieldName    = jsObject.value.filterKeys(k => k != "_typeName" && k != "id").keys.head
     val jsonForField = jsObject.value(fieldName)
     val model        = project.schema.getModelByName_!(typeName)
-    val field        = model.getFieldByName_!(fieldName)
+    val field        = model.getScalarFieldByName_!(fieldName)
     val tableName    = s"${model.dbName}_${field.dbName}"
     val gcValue      = GCValueJsonFormatter.readListGCValue(field)(jsonForField).get
     ImportList(ImportIdentifier(typeName, id), tableName, gcValue)

@@ -1,7 +1,7 @@
 package com.prisma.api.import_export
 
 import com.prisma.gc_values._
-import com.prisma.shared.models.{Enum, Field, Model, TypeIdentifier}
+import com.prisma.shared.models.{Enum, Field, Model, ScalarField, TypeIdentifier}
 import org.joda.time.DateTimeZone
 import org.joda.time.format.{DateTimeFormat, ISODateTimeFormat}
 import play.api.libs.json._
@@ -53,7 +53,7 @@ object GCValueJsonFormatter {
       jsObject <- json.validate[JsObject]
       formattedValues = jsObject.fields.toVector.map { tuple =>
         val (key, value) = tuple
-        model.getFieldByName(key) match {
+        model.getScalarFieldByName(key) match {
           case Some(field) =>
             readLeafGCValueForField(field)(value) match {
               case JsSuccess(gcValue, _) => JsSuccess(key -> gcValue)
@@ -148,7 +148,7 @@ object GCValueJsonFormatter {
     override def reads(json: JsValue) = JsSuccess(JsonGCValue(json))
   }
 
-  def readListGCValue(field: Field)(json: JsValue): JsResult[ListGCValue] = {
+  def readListGCValue(field: ScalarField)(json: JsValue): JsResult[ListGCValue] = {
     require(field.isList)
     for {
       jsArray        <- json.validate[JsArray]
@@ -157,7 +157,7 @@ object GCValueJsonFormatter {
     } yield ListGCValue(gcValues)
   }
 
-  def readLeafGCValueForField(field: Field)(json: JsValue): JsResult[LeafGCValue] = {
+  def readLeafGCValueForField(field: ScalarField)(json: JsValue): JsResult[LeafGCValue] = {
     field.typeIdentifier match {
       case TypeIdentifier.String    => json.validate[StringGCValue]
       case TypeIdentifier.GraphQLID => json.validate[IdGCValue]
