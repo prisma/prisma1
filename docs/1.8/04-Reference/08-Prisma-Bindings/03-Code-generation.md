@@ -59,7 +59,7 @@ Invoking simply `graphql codegen` in a directory where the above `.graphqlconfig
 ```sh
 prisma-binding \
   --language typescript \
-  --outputBinding mybinding.ts
+  --outputBinding src/generated/prisma.ts
 ```
 
 ## Upgrading from `prisma-binding` v1.X
