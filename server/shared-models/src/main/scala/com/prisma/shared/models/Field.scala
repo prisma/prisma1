@@ -110,8 +110,8 @@ sealed trait Field {
   def schema: Schema
   def template: FieldTemplate
   def isRelation: Boolean
+  def isScalar: Boolean
 
-  lazy val isScalar: Boolean          = typeIdentifier != TypeIdentifier.Relation
   lazy val isScalarList: Boolean      = isScalar && isList
   lazy val isScalarNonList: Boolean   = isScalar && !isList
   lazy val isRelationList: Boolean    = isRelation && isList
@@ -142,6 +142,7 @@ case class RelationField(
 ) extends Field {
   override def typeIdentifier  = TypeIdentifier.Relation
   override def isRelation      = true
+  override def isScalar        = false
   override def isUnique        = false
   override def isReadonly      = false
   override def enum            = None
@@ -217,6 +218,7 @@ case class ScalarField(
     model: Model
 ) extends Field {
   override def isRelation      = false
+  override def isScalar        = true
   override def relationNameOpt = None
   override def relationSideOpt = None
   override def relationOpt     = None
