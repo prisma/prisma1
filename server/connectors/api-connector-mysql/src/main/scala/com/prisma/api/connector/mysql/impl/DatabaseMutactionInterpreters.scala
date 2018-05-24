@@ -14,7 +14,7 @@ import com.prisma.api.connector.mysql.database.ErrorMessageParameterHelper.param
 import com.prisma.api.connector.mysql.impl.GetFieldFromSQLUniqueException.getFieldOption
 import com.prisma.api.schema.APIErrors
 import com.prisma.api.schema.APIErrors.RequiredRelationWouldBeViolated
-import com.prisma.shared.models.{Field, Relation}
+import com.prisma.shared.models.{Field, Relation, RelationField}
 import slick.dbio.DBIOAction
 import slick.jdbc.MySQLProfile.api._
 
@@ -49,7 +49,7 @@ case class CascadingDeleteRelationMutactionsInterpreter(mutaction: CascadingDele
   private def otherFailingRequiredRelationOnChild(cause: String): Option[Relation] =
     otherFieldsWhereThisModelIsRequired.collectFirst { case f if causedByThisMutactionChildOnly(f, cause) => f.relationOpt.get }
 
-  private def causedByThisMutactionChildOnly(field: Field, cause: String) = {
+  private def causedByThisMutactionChildOnly(field: RelationField, cause: String) = {
     val parentCheckString = s"`${field.relationOpt.get.relationTableName}` OLDPARENTPATHFAILURETRIGGERBYFIELD WHERE `${field.oppositeRelationSide.get}`"
 
     path.lastEdge match {
@@ -122,7 +122,7 @@ case class DeleteManyRelationChecksInterpreter(mutaction: DeleteManyRelationChec
     case f if causedByThisMutactionChildOnly(f, cause) => f.relationOpt.get
   }
 
-  private def causedByThisMutactionChildOnly(field: Field, cause: String) = {
+  private def causedByThisMutactionChildOnly(field: RelationField, cause: String) = {
     val parentCheckString =
       s"`${field.relationOpt.get.relationTableName}` OLDPARENTPATHFAILURETRIGGERBYFIELDANDFILTER WHERE `${field.oppositeRelationSide.get}`"
     cause.contains(parentCheckString) //todo add filter
@@ -148,7 +148,7 @@ case class DeleteRelationCheckInterpreter(mutaction: DeleteRelationCheck) extend
   private def otherFailingRequiredRelationOnChild(cause: String): Option[Relation] =
     fieldsWhereThisModelIsRequired.collectFirst { case f if causedByThisMutactionChildOnly(f, cause) => f.relationOpt.get }
 
-  private def causedByThisMutactionChildOnly(field: Field, cause: String) = {
+  private def causedByThisMutactionChildOnly(field: RelationField, cause: String) = {
     val parentCheckString = s"`${field.relationOpt.get.relationTableName}` OLDPARENTPATHFAILURETRIGGERBYFIELD WHERE `${field.oppositeRelationSide.get}`"
 
     path.lastEdge match {

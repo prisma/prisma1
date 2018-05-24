@@ -6,7 +6,7 @@ import com.prisma.api.connector.postgresql.database.PostgresApiDatabaseMutationB
 import com.prisma.api.connector.postgresql.impl.GetFieldFromSQLUniqueException.getFieldOption
 import com.prisma.api.schema.APIErrors
 import com.prisma.api.schema.APIErrors.RequiredRelationWouldBeViolated
-import com.prisma.shared.models.{Field, Relation}
+import com.prisma.shared.models.{Field, Relation, RelationField}
 import org.postgresql.util.PSQLException
 import slick.dbio.DBIOAction
 import slick.jdbc.PostgresProfile.api._
@@ -43,7 +43,7 @@ case class CascadingDeleteRelationMutactionsInterpreter(mutaction: CascadingDele
   private def otherFailingRequiredRelationOnChild(cause: String): Option[Relation] =
     otherFieldsWhereThisModelIsRequired.collectFirst { case f if cause.contains(causeString(f)) => f.relationOpt.get }
 
-  private def causeString(field: Field) = path.lastEdge match {
+  private def causeString(field: RelationField) = path.lastEdge match {
     case Some(edge: NodeEdge) =>
       s"-OLDPARENTPATHFAILURETRIGGERBYFIELD@${field.relationOpt.get.relationTableName}@${field.oppositeRelationSide.get}@${edge.childWhere.fieldValueAsString}-"
     case _ => s"-OLDPARENTPATHFAILURETRIGGERBYFIELD@${field.relationOpt.get.relationTableName}@${field.oppositeRelationSide.get}-"
@@ -124,7 +124,7 @@ case class DeleteManyRelationChecksInterpreter(mutaction: DeleteManyRelationChec
     case f if cause.contains(causeString(f)) => f.relationOpt.get
   }
 
-  private def causeString(field: Field) =
+  private def causeString(field: RelationField) =
     s"-OLDPARENTPATHFAILURETRIGGERBYFIELDANDFILTER@${field.relationOpt.get.relationTableName}@${field.oppositeRelationSide.get}-"
 
 }
@@ -149,7 +149,7 @@ case class DeleteRelationCheckInterpreter(mutaction: DeleteRelationCheck) extend
   private def otherFailingRequiredRelationOnChild(cause: String): Option[Relation] =
     fieldsWhereThisModelIsRequired.collectFirst { case f if cause.contains(causeString(f)) => f.relationOpt.get }
 
-  private def causeString(field: Field) = path.lastEdge match {
+  private def causeString(field: RelationField) = path.lastEdge match {
     case Some(edge: NodeEdge) =>
       s"-OLDPARENTPATHFAILURETRIGGERBYFIELD@${field.relationOpt.get.relationTableName}@${field.oppositeRelationSide.get}@${edge.childWhere.fieldValueAsString}-"
     case _ => s"-OLDPARENTPATHFAILURETRIGGERBYFIELD@${field.relationOpt.get.relationTableName}@${field.oppositeRelationSide.get}-"

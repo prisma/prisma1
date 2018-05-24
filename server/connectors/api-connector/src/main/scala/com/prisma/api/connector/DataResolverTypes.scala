@@ -3,7 +3,7 @@ package com.prisma.api.connector
 import com.prisma.api.connector.Types.DataItemFilterCollection
 import com.prisma.gc_values.{GCValue, IdGCValue}
 import com.prisma.shared.models.IdType.Id
-import com.prisma.shared.models.{Field, Model, Relation, Schema}
+import com.prisma.shared.models._
 
 import scala.collection.immutable.Seq
 
@@ -71,7 +71,7 @@ case class FinalRelationFilter(
 
 case class TransitiveRelationFilter(
     schema: Schema,
-    field: Field,
+    field: RelationField,
     fromModel: Model,
     toModel: Model,
     relation: Relation,

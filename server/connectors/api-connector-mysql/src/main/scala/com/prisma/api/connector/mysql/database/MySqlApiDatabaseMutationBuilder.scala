@@ -377,7 +377,7 @@ object MySqlApiDatabaseMutationBuilder {
     triggerFailureWhenExists(project, query, table)
   }
 
-  def oldParentFailureTriggerByField(project: Project, path: Path, field: Field) = {
+  def oldParentFailureTriggerByField(project: Project, path: Path, field: RelationField) = {
     val table = field.relationOpt.get.relationTableName
     val query = sql"SELECT `id` FROM `#${project.id}`.`#$table` OLDPARENTPATHFAILURETRIGGERBYFIELD WHERE `#${field.oppositeRelationSide.get}` IN (" ++ pathQueryForLastChild(
       project.id,
@@ -385,7 +385,7 @@ object MySqlApiDatabaseMutationBuilder {
     triggerFailureWhenExists(project, query, table)
   }
 
-  def oldParentFailureTriggerByFieldAndFilter(project: Project, model: Model, whereFilter: Option[DataItemFilterCollection], field: Field) = {
+  def oldParentFailureTriggerByFieldAndFilter(project: Project, model: Model, whereFilter: Option[DataItemFilterCollection], field: RelationField) = {
     val table = field.relationOpt.get.relationTableName
     val query = sql"SELECT `id` FROM `#${project.id}`.`#$table` OLDPARENTPATHFAILURETRIGGERBYFIELDANDFILTER" ++
       sql"WHERE `#${field.oppositeRelationSide.get}` IN (SELECT `id` FROM `#${project.id}`.`#${model.name}` " ++

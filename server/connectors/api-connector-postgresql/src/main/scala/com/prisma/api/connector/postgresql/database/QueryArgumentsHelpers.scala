@@ -5,7 +5,7 @@ import com.prisma.api.connector._
 import com.prisma.api.connector.postgresql.database.SlickExtensions._
 import com.prisma.api.schema.APIErrors
 import com.prisma.gc_values.{GCValue, GCValueExtractor, ListGCValue, NullGCValue}
-import com.prisma.shared.models.{Field, Model, Relation, Schema}
+import com.prisma.shared.models._
 import slick.jdbc.PostgresProfile.api._
 import slick.jdbc.SQLActionBuilder
 
@@ -27,7 +27,7 @@ object QueryArgumentsHelpers {
       Some(generateFilterConditions(projectId, relationTableName, nestedFilter).getOrElse(sql"True"))
     }
 
-    def joinRelations(schema: Schema, relation: Relation, toModel: Model, alias: String, field: Field, fromModel: Model, modTableName: String) = {
+    def joinRelations(schema: Schema, relation: Relation, toModel: Model, alias: String, field: RelationField, fromModel: Model, modTableName: String) = {
       val relationTableName = relation.relationTableName
       val column            = relation.columnForRelationSide(field.relationSideOpt.get)
       val oppositeColumn    = relation.columnForRelationSide(field.oppositeRelationSide.get)

@@ -6,7 +6,7 @@ import com.prisma.shared.models._
 
 trait Edge {
   def parent: Model
-  def parentField: Field
+  def parentField: RelationField
   def columnForParentRelationSide(schema: Schema) = relation.columnForRelationSide(parentRelationSide)
   def parentRelationSide: RelationSide            = parentField.relationSideOpt.get
   def child: Model
@@ -18,8 +18,9 @@ trait Edge {
     NodeEdge(parent, parentField, child, childField, where, relation)
   }
 }
-case class ModelEdge(parent: Model, parentField: Field, child: Model, childField: Option[Field], relation: Relation)                          extends Edge
-case class NodeEdge(parent: Model, parentField: Field, child: Model, childField: Option[Field], childWhere: NodeSelector, relation: Relation) extends Edge
+case class ModelEdge(parent: Model, parentField: RelationField, child: Model, childField: Option[Field], relation: Relation) extends Edge
+case class NodeEdge(parent: Model, parentField: RelationField, child: Model, childField: Option[Field], childWhere: NodeSelector, relation: Relation)
+    extends Edge
 
 //  case class NodePath(root: NodeSelector, edges: List[Edge], last: NodeEdge)
 

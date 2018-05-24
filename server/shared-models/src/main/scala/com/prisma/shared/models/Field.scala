@@ -128,14 +128,6 @@ sealed trait Field {
   }
 
   val isMagicalBackRelation = name.startsWith(Field.magicalBackRelationPrefix)
-
-  lazy val oppositeRelationSide: Option[RelationSide.Value] = {
-    relationSideOpt match {
-      case Some(RelationSide.A) => Some(RelationSide.B)
-      case Some(RelationSide.B) => Some(RelationSide.A)
-      case x                    => ??? //throw SystemErrors.InvalidStateException(message = s" relationSide was $x")
-    }
-  }
 }
 
 case class RelationField(
@@ -198,6 +190,14 @@ case class RelationField(
       val isTheSameField    = field.name == this.name
       val isTheSameRelation = relation.relationTableName == this.relation.relationTableName
       isTheSameRelation && !isTheSameField
+    }
+  }
+
+  lazy val oppositeRelationSide: Option[RelationSide.Value] = {
+    relationSideOpt match {
+      case Some(RelationSide.A) => Some(RelationSide.B)
+      case Some(RelationSide.B) => Some(RelationSide.A)
+      case x                    => ??? //throw SystemErrors.InvalidStateException(message = s" relationSide was $x")
     }
   }
 }

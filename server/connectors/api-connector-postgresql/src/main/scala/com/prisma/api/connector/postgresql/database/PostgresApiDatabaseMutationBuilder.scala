@@ -486,7 +486,7 @@ case class PostgresApiDatabaseMutationBuilder(
     triggerFailureWhenExists(query, table, triggerString)
   }
 
-  def oldParentFailureTriggerByField(path: Path, field: Field, triggerString: String) = {
+  def oldParentFailureTriggerByField(path: Path, field: RelationField, triggerString: String) = {
     val relation       = field.relationOpt.get
     val table          = relation.relationTableName
     val oppositeColumn = relation.columnForRelationSide(field.oppositeRelationSide.get)
@@ -497,7 +497,7 @@ case class PostgresApiDatabaseMutationBuilder(
     triggerFailureWhenExists(query, table, triggerString)
   }
 
-  def oldParentFailureTriggerByFieldAndFilter(model: Model, whereFilter: Option[DataItemFilterCollection], field: Field, causeString: String) = {
+  def oldParentFailureTriggerByFieldAndFilter(model: Model, whereFilter: Option[DataItemFilterCollection], field: RelationField, causeString: String) = {
     val relation       = field.relationOpt.get
     val table          = relation.relationTableName
     val column         = relation.columnForRelationSide(field.oppositeRelationSide.get)

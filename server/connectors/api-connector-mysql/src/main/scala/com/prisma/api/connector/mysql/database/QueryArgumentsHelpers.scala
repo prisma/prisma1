@@ -5,7 +5,7 @@ import com.prisma.api.connector._
 import com.prisma.api.connector.mysql.database.SlickExtensions._
 import com.prisma.api.schema.APIErrors
 import com.prisma.gc_values.{GCValue, GCValueExtractor, ListGCValue, NullGCValue}
-import com.prisma.shared.models.{Field, Model, Relation}
+import com.prisma.shared.models.{Field, Model, Relation, RelationField}
 import slick.jdbc.MySQLProfile.api._
 import slick.jdbc.SQLActionBuilder
 
@@ -24,7 +24,7 @@ object QueryArgumentsHelpers {
       Some(generateFilterConditions(projectId, relationTableName, nestedFilter).getOrElse(sql"True"))
     }
 
-    def joinRelations(relation: Relation, toModel: Model, alias: String, field: Field, modTableName: String) = {
+    def joinRelations(relation: Relation, toModel: Model, alias: String, field: RelationField, modTableName: String) = {
       sql"""select * from `#$projectId`.`#${toModel.name}` as `#$alias`
                      inner join `#$projectId`.`#${relation.relationTableName}`
                      on `#$alias`.`id` = `#$projectId`.`#${relation.relationTableName}`.`#${field.oppositeRelationSide.get}`
