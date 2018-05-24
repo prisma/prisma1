@@ -137,13 +137,6 @@ sealed trait Field {
     })
   }
 
-  lazy val relatedModel_! : Model = {
-    relatedModel match {
-      case None        => sys.error(s"Could not find relatedModel for field [$name] on model [${model.name}]")
-      case Some(model) => model
-    }
-  }
-
   val isMagicalBackRelation = name.startsWith(Field.magicalBackRelationPrefix)
 
   lazy val oppositeRelationSide: Option[RelationSide.Value] = {
@@ -181,6 +174,13 @@ case class RelationField(
 
   lazy val relation: Relation            = schema.getRelationByName_!(relationName)
   lazy val relationOpt: Option[Relation] = Some(relation)
+
+  lazy val relatedModel_! : Model = {
+    relatedModel match {
+      case None        => sys.error(s"Could not find relatedModel for field [$name] on model [${model.name}]")
+      case Some(model) => model
+    }
+  }
 
   //todo this is dangerous in combination with self relations since it will return the field itself as related field
   //this should be removed where possible

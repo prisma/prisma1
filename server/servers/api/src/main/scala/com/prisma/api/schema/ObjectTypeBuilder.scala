@@ -8,7 +8,7 @@ import com.prisma.api.resolver.{IdBasedConnection, IdBasedConnectionDefinition}
 import com.prisma.api.schema.CustomScalarTypes.{DateTimeType, JsonType}
 import com.prisma.gc_values._
 import com.prisma.shared.models
-import com.prisma.shared.models.{Field, Model, TypeIdentifier}
+import com.prisma.shared.models.{Field => _, _}
 import com.prisma.util.coolArgs.GCAnyConverter
 import sangria.schema.{Field => SangriaField, _}
 
@@ -111,26 +111,31 @@ class ObjectTypeBuilder(
   )
 
   def mapToOutputType(model: Option[models.Model], field: models.Field): OutputType[Any] = {
-    var outputType: OutputType[Any] = field.typeIdentifier match {
-      case TypeIdentifier.String    => StringType
-      case TypeIdentifier.Int       => IntType
-      case TypeIdentifier.Float     => FloatType
-      case TypeIdentifier.Boolean   => BooleanType
-      case TypeIdentifier.GraphQLID => IDType
-      case TypeIdentifier.DateTime  => DateTimeType
-      case TypeIdentifier.Json      => JsonType
-      case TypeIdentifier.Enum      => SchemaBuilderUtils.mapEnumFieldToInputType(field)
-      case TypeIdentifier.Relation  => resolveConnection(field)
+    val outputType: OutputType[Any] = field match {
+      case f: RelationField => resolveConnection(f)
+      case f: ScalarField =>
+        f.typeIdentifier match {
+          case TypeIdentifier.String    => StringType
+          case TypeIdentifier.Int       => IntType
+          case TypeIdentifier.Float     => FloatType
+          case TypeIdentifier.Boolean   => BooleanType
+          case TypeIdentifier.GraphQLID => IDType
+          case TypeIdentifier.DateTime  => DateTimeType
+          case TypeIdentifier.Json      => JsonType
+          case TypeIdentifier.Enum      => SchemaBuilderUtils.mapEnumFieldToInputType(field)
+        }
     }
 
-    if (field.isScalar && field.isList) outputType = ListType(outputType)
-
-    if (!field.isRequired) outputType = OptionType(outputType)
-
-    outputType
+    if (field.isScalar && field.isList) {
+      ListType(outputType)
+    } else if (!field.isRequired) {
+      OptionType(outputType)
+    } else {
+      outputType
+    }
   }
 
-  def resolveConnection(field: Field): OutputType[Any] = {
+  def resolveConnection(field: RelationField): OutputType[Any] = {
     field.isList match {
       case true  => ListType(modelObjectTypes(field.relatedModel.get.name))
       case false => modelObjectTypes(field.relatedModel_!.name)

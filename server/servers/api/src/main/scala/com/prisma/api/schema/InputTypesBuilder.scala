@@ -335,26 +335,26 @@ abstract class UncachedInputTypesBuilder(project: Project) extends InputTypesBui
     generateInputType(inputObjectType, field.isList).map(x => InputField[Any]("upsert", x))
   }
 
-  def nestedConnectInputField(field: Field): Option[InputField[Any]] = whereInputField(field, name = "connect")
+  def nestedConnectInputField(field: RelationField): Option[InputField[Any]] = whereInputField(field, name = "connect")
 
-  def nestedDisconnectInputField(field: Field): Option[InputField[Any]] = field.isList match {
+  def nestedDisconnectInputField(field: RelationField): Option[InputField[Any]] = field.isList match {
     case true  => whereInputField(field, name = "disconnect")
     case false => Some(InputField[Any]("disconnect", OptionInputType(BooleanType)))
   }
 
-  def nestedDeleteInputField(field: Field): Option[InputField[Any]] = field.isList match {
+  def nestedDeleteInputField(field: RelationField): Option[InputField[Any]] = field.isList match {
     case true  => whereInputField(field, name = "delete")
     case false => Some(InputField[Any]("delete", OptionInputType(BooleanType)))
   }
 
-  def trueInputFlag(field: Field, name: String): Option[InputField[Any]] = {
+  def trueInputFlag(field: RelationField, name: String): Option[InputField[Any]] = {
     val subModel        = field.relatedModel_!
     val inputObjectType = inputObjectTypeForWhereUnique(subModel)
 
     generateInputType(inputObjectType, field.isList).map(x => InputField[Any](name, x))
   }
 
-  def whereInputField(field: Field, name: String): Option[InputField[Any]] = {
+  def whereInputField(field: RelationField, name: String): Option[InputField[Any]] = {
     val subModel        = field.relatedModel_!
     val inputObjectType = inputObjectTypeForWhereUnique(subModel)
 

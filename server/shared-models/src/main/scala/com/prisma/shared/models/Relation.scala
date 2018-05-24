@@ -38,8 +38,8 @@ class Relation(
   lazy val modelA_! : Model                                         = modelA.get //OrElse(throw SystemErrors.InvalidRelation("A relation should have a valid Model A."))
   lazy val modelB: Option[Model]                                    = schema.getModelById(modelBId)
   lazy val modelB_! : Model                                         = modelB.get //OrElse(throw SystemErrors.InvalidRelation("A relation should have a valid Model B."))
-  lazy val modelAField: Option[Field]                               = modelFieldFor(modelAId, RelationSide.A)
-  lazy val modelBField: Option[Field]                               = modelFieldFor(modelBId, RelationSide.B)
+  lazy val modelAField: Option[RelationField]                       = modelFieldFor(modelAId, RelationSide.A)
+  lazy val modelBField: Option[RelationField]                       = modelFieldFor(modelBId, RelationSide.B)
   lazy val hasManifestation: Boolean                                = manifestation.isDefined
   lazy val isInlineRelation: Boolean                                = manifestation.exists(_.isInstanceOf[InlineRelationManifestation])
   lazy val inlineManifestation: Option[InlineRelationManifestation] = manifestation.collect { case x: InlineRelationManifestation => x }
@@ -70,7 +70,7 @@ class Relation(
     modelAFieldIsList && modelBFieldIsList
   }
 
-  private def modelFieldFor(modelId: String, relationSide: RelationSide.Value): Option[Field] = {
+  private def modelFieldFor(modelId: String, relationSide: RelationSide.Value): Option[RelationField] = {
     for {
       model <- schema.getModelById(modelId)
       field <- model.relationFieldForIdAndSide(relationId = relationTableName, relationSide = relationSide)
