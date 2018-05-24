@@ -44,7 +44,7 @@ class Model(
   lazy val cascadingRelationFields: List[RelationField] = relationFields.filter(field => field.relationOpt.get.sideOfModelCascades(this))
 
   def relationFieldForIdAndSide(relationId: String, relationSide: RelationSide.Value): Option[Field] = {
-    fields.find(_.isRelationWithIdAndSide(relationId, relationSide))
+    relationFields.find(_.isRelationWithIdAndSide(relationId, relationSide))
   }
 
   def filterScalarFields(fn: ScalarField => Boolean): Model = {

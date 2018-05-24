@@ -127,12 +127,6 @@ sealed trait Field {
     }
   }
 
-  def isRelationWithIdAndSide(relationId: String, relationSide: RelationSide.Value): Boolean = {
-    isRelationWithId(relationId) && this.relationSideOpt.contains(relationSide)
-  }
-
-  private def isRelationWithId(relationId: String): Boolean = relationOpt.exists(_.relationTableName == relationId)
-
   lazy val relatedModel: Option[Model] = {
     relationOpt.flatMap(relation => {
       relationSideOpt match {
@@ -215,6 +209,9 @@ case class RelationField(
   override def relationNameOpt = Some(relationName)
   override def relationSideOpt = Some(relationSide)
   override def schema          = model.schema
+
+  def isRelationWithIdAndSide(relationId: String, relationSide: RelationSide.Value): Boolean = isRelationWithId(relationId) && this.relationSide == relationSide
+  private def isRelationWithId(relationId: String): Boolean                                  = relation.relationTableName == relationId
 
   lazy val relation: Relation            = schema.getRelationByName_!(relationName)
   lazy val relationOpt: Option[Relation] = Some(relation)
