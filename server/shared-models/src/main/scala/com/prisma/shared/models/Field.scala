@@ -185,34 +185,21 @@ case class RelationField(
   //todo this is dangerous in combination with self relations since it will return the field itself as related field
   //this should be removed where possible
   lazy val relatedField: Option[Field] = {
-    val fields = relatedModel_!.fields
-
-    val returnField = fields.find { field =>
-      field.relationOpt.exists { relation =>
-        val isTheSameField    = field.name == this.name
-        val isTheSameRelation = relation.relationTableName == this.relationOpt.get.relationTableName
-        isTheSameRelation && !isTheSameField
-      }
-    }
-    val fallback = fields.find { relatedField =>
-      relatedField.relationOpt.exists { relation =>
-        relation.relationTableName == this.relationOpt.get.relationTableName
-      }
+    val fallback = relatedModel_!.relationFields.find { relatedField =>
+      val relation = relatedField.relation
+      relation.relationTableName == this.relation.relationTableName
     }
 
-    returnField.orElse(fallback)
+    otherRelationField.orElse(fallback)
   }
 
   //this really does return None if there is no opposite field
   lazy val otherRelationField: Option[Field] = {
-    val fields = relatedModel_!.fields
-
-    fields.find { field =>
-      field.relationOpt.exists { relation =>
-        val isTheSameField    = field.name == this.name
-        val isTheSameRelation = relation.relationTableName == this.relationOpt.get.relationTableName
-        isTheSameRelation && !isTheSameField
-      }
+    relatedModel_!.relationFields.find { field =>
+      val relation          = field.relation
+      val isTheSameField    = field.name == this.name
+      val isTheSameRelation = relation.relationTableName == this.relation.relationTableName
+      isTheSameRelation && !isTheSameField
     }
   }
 }
