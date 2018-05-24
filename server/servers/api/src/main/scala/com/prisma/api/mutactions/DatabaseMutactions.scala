@@ -212,8 +212,8 @@ case class DatabaseMutactions(project: Project) {
   def extend(path: Path, field: RelationField, nestedMutation: NestedMutation): Path = {
     nestedMutation match {
       case x: NestedWhere =>
-        path.append(NodeEdge(path.lastModel, field, field.relatedModel.get, field.relatedField, x.where, field.relation))
-      case _ => path.append(ModelEdge(path.lastModel, field, field.relatedModel.get, field.relatedField, field.relation))
+        path.append(NodeEdge(path.lastModel, field, field.relatedModel_!, field.relatedField, x.where, field.relation))
+      case _ => path.append(ModelEdge(path.lastModel, field, field.relatedModel_!, field.relatedField, field.relation))
     }
   }
 

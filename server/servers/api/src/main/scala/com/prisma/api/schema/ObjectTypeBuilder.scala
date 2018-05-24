@@ -137,17 +137,17 @@ class ObjectTypeBuilder(
 
   def resolveConnection(field: RelationField): OutputType[Any] = {
     field.isList match {
-      case true  => ListType(modelObjectTypes(field.relatedModel.get.name))
+      case true  => ListType(modelObjectTypes(field.relatedModel_!.name))
       case false => modelObjectTypes(field.relatedModel_!.name)
     }
   }
 
   def mapToListConnectionArguments(model: models.Model, field: models.Field): List[Argument[Option[Any]]] = {
-    (field.isHidden, field.isScalar, field.isList) match {
-      case (true, _, _)      => List()
-      case (_, true, _)      => List()
-      case (_, false, true)  => mapToListConnectionArguments(field.relatedModel.get)
-      case (_, false, false) => mapToSingleConnectionArguments(field.relatedModel.get)
+    field match {
+      case f if f.isHidden               => List.empty
+      case _: ScalarField                => List.empty
+      case f: RelationField if f.isList  => mapToListConnectionArguments(f.relatedModel_!)
+      case f: RelationField if !f.isList => mapToSingleConnectionArguments(f.relatedModel_!)
     }
   }
 
@@ -194,14 +194,15 @@ class ObjectTypeBuilder(
                 generateFilterElement(typedValue, model, isSubscriptionFilter)
               } else {
                 // this must be a relation filter
+                val relationField = field.get.asInstanceOf[RelationField]
                 TransitiveRelationFilter(
                   project.schema,
-                  field.get,
+                  relationField,
                   model,
-                  field.get.relatedModel.get,
-                  field.get.relationOpt.get,
+                  relationField.relatedModel_!,
+                  relationField.relation,
                   filter.name,
-                  generateFilterElement(typedValue, field.get.relatedModel.get, isSubscriptionFilter)
+                  generateFilterElement(typedValue, relationField.relatedModel_!, isSubscriptionFilter)
                 )
               }
 
@@ -261,13 +262,21 @@ class ObjectTypeBuilder(
       ctx: Context[C, PrismaNode]): sangria.schema.Action[ApiUserContext, _] = {
 
     val item: PrismaNode = unwrapDataItemFromContext(ctx)
-    lazy val arguments   = extractQueryArgumentsFromContext(field.relatedModel.get, ctx.asInstanceOf[Context[ApiUserContext, Unit]])
 
-    (field.isScalar, field.isList) match {
-      case (true, true)   => ScalarListDeferred(model, field, item.id)
-      case (true, false)  => GCValueExtractor.fromGCValue(item.data.map(field.name))
-      case (false, true)  => DeferredValue(ToManyDeferred(field, item.id, arguments)).map(_.toNodes)
-      case (false, false) => ToOneDeferred(field, item.id, arguments)
+    field match {
+      case f: ScalarField if f.isList =>
+        ScalarListDeferred(model, field, item.id)
+
+      case f: ScalarField if !f.isList =>
+        GCValueExtractor.fromGCValue(item.data.map(field.name))
+
+      case f: RelationField if f.isList =>
+        val arguments = extractQueryArgumentsFromContext(f.relatedModel_!, ctx.asInstanceOf[Context[ApiUserContext, Unit]])
+        DeferredValue(ToManyDeferred(f, item.id, arguments)).map(_.toNodes)
+
+      case f: RelationField if !f.isList =>
+        val arguments = extractQueryArgumentsFromContext(f.relatedModel_!, ctx.asInstanceOf[Context[ApiUserContext, Unit]])
+        ToOneDeferred(f, item.id, arguments)
     }
   }
 

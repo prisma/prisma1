@@ -192,12 +192,12 @@ class MySqlDatabaseQueryBuilder()(implicit ec: ExecutionContext) {
   }
 
   def batchSelectAllFromRelatedModel(project: Project,
-                                     fromField: Field,
+                                     fromField: RelationField,
                                      fromModelIds: Vector[IdGCValue],
                                      args: Option[QueryArguments]): DBIOAction[Vector[ResolverResult[PrismaNodeWithParent]], NoStream, Effect] = {
 
-    val relatedModel         = fromField.relatedModel.get
-    val fieldTable           = fromField.relatedModel.get.name
+    val relatedModel         = fromField.relatedModel_!
+    val fieldTable           = fromField.relatedModel_!.name
     val unsafeRelationId     = fromField.relationOpt.get.relationTableName
     val modelRelationSide    = fromField.relationSideOpt.get.toString
     val oppositeRelationSide = fromField.oppositeRelationSide.get.toString
@@ -245,11 +245,11 @@ class MySqlDatabaseQueryBuilder()(implicit ec: ExecutionContext) {
   }
 
   def countAllFromRelatedModels(project: Project,
-                                relationField: Field,
+                                relationField: RelationField,
                                 parentNodeIds: Vector[IdGCValue],
                                 args: Option[QueryArguments]): SqlStreamingAction[Vector[(IdGCValue, Int)], (IdGCValue, Int), Effect] = {
 
-    val fieldTable        = relationField.relatedModel.get.name
+    val fieldTable        = relationField.relatedModel_!.name
     val unsafeRelationId  = relationField.relationOpt.get.relationTableName
     val modelRelationSide = relationField.relationSideOpt.get.toString
     val fieldRelationSide = relationField.oppositeRelationSide.get.toString

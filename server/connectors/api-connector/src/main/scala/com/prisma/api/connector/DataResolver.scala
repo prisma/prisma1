@@ -2,7 +2,7 @@ package com.prisma.api.connector
 
 import com.prisma.api.connector.Types.DataItemFilterCollection
 import com.prisma.gc_values.{GCValue, IdGCValue}
-import com.prisma.shared.models.{Field, Model, Project}
+import com.prisma.shared.models.{Field, Model, Project, RelationField}
 
 import scala.concurrent.Future
 
@@ -23,11 +23,11 @@ trait DataResolver {
 
   def batchResolveScalarList(model: Model, listField: Field, nodeIds: Vector[IdGCValue]): Future[Vector[ScalarListValues]]
 
-  def resolveByRelationManyModels(fromField: Field,
+  def resolveByRelationManyModels(fromField: RelationField,
                                   fromNodeIds: Vector[IdGCValue],
                                   args: Option[QueryArguments]): Future[Vector[ResolverResult[PrismaNodeWithParent]]]
 
-  def countByRelationManyModels(fromField: Field, fromNodeIds: Vector[IdGCValue], args: Option[QueryArguments]): Future[Vector[(IdGCValue, Int)]]
+  def countByRelationManyModels(fromField: RelationField, fromNodeIds: Vector[IdGCValue], args: Option[QueryArguments]): Future[Vector[(IdGCValue, Int)]]
 
   def loadListRowsForExport(model: Model, listField: Field, args: Option[QueryArguments] = None): Future[ResolverResult[ScalarListValues]]
 

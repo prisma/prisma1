@@ -62,14 +62,16 @@ case class MySqlDataResolver(project: Project, readonlyClientDatabase: MySQLProf
     performWithTiming("batchResolveScalarList", readonlyClientDatabase.run(query))
   }
 
-  override def resolveByRelationManyModels(fromField: Field,
+  override def resolveByRelationManyModels(fromField: RelationField,
                                            fromNodeIds: Vector[IdGCValue],
                                            args: Option[QueryArguments]): Future[Vector[ResolverResult[PrismaNodeWithParent]]] = {
     val query = queryBuilder.batchSelectAllFromRelatedModel(project, fromField, fromNodeIds, args)
     performWithTiming("resolveByRelation", readonlyClientDatabase.run(query))
   }
 
-  override def countByRelationManyModels(fromField: Field, fromNodeIds: Vector[IdGCValue], args: Option[QueryArguments]): Future[Vector[(IdGCValue, Int)]] = {
+  override def countByRelationManyModels(fromField: RelationField,
+                                         fromNodeIds: Vector[IdGCValue],
+                                         args: Option[QueryArguments]): Future[Vector[(IdGCValue, Int)]] = {
     val query = queryBuilder.countAllFromRelatedModels(project, fromField, fromNodeIds, args)
     performWithTiming("countByRelation", readonlyClientDatabase.run(query))
   }

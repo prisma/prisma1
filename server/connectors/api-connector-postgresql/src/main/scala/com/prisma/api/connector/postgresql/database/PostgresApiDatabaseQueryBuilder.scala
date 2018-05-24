@@ -183,7 +183,7 @@ case class PostgresApiDatabaseQueryBuilder(
 
   def batchSelectAllFromRelatedModel(
       schema: Schema,
-      fromField: Field,
+      fromField: RelationField,
       fromModelIds: Vector[IdGCValue],
       args: Option[QueryArguments]
   ): DBIOAction[Vector[ResolverResult[PrismaNodeWithParent]], NoStream, Effect] = {
@@ -193,12 +193,12 @@ case class PostgresApiDatabaseQueryBuilder(
 
   def batchSelectAllFromRelatedModelNew(
       schema: Schema,
-      fromField: Field,
+      fromField: RelationField,
       fromModelIds: Vector[IdGCValue],
       args: Option[QueryArguments]
   ): DBIOAction[Vector[ResolverResult[PrismaNodeWithParent]], NoStream, Effect] = {
     val relation     = fromField.relationOpt.get
-    val relatedModel = fromField.relatedModel.get
+    val relatedModel = fromField.relatedModel_!
     val modelTable   = relatedModel.dbName
 
     val relationTableName     = fromField.relationOpt.get.relationTableName
@@ -261,12 +261,12 @@ case class PostgresApiDatabaseQueryBuilder(
 
   def batchSelectAllFromRelatedModelOld(
       schema: Schema,
-      fromField: Field,
+      fromField: RelationField,
       fromModelIds: Vector[IdGCValue],
       args: Option[QueryArguments]
   ): DBIOAction[Vector[ResolverResult[PrismaNodeWithParent]], NoStream, Effect] = {
 
-    val relatedModel                  = fromField.relatedModel.get
+    val relatedModel                  = fromField.relatedModel_!
     val fieldTable                    = relatedModel.dbName
     val relation                      = fromField.relationOpt.get
     val unsafeRelationId              = relation.relationTableName
@@ -325,12 +325,12 @@ case class PostgresApiDatabaseQueryBuilder(
 
   def countAllFromRelatedModels(
       schema: Schema,
-      relationField: Field,
+      relationField: RelationField,
       parentNodeIds: Vector[IdGCValue],
       args: Option[QueryArguments]
   ): SqlStreamingAction[Vector[(IdGCValue, Int)], (IdGCValue, Int), Effect] = {
 
-    val relatedModel               = relationField.relatedModel.get
+    val relatedModel               = relationField.relatedModel_!
     val fieldTable                 = relatedModel.dbName
     val relation                   = relationField.relationOpt.get
     val unsafeRelationId           = relation.relationTableName
