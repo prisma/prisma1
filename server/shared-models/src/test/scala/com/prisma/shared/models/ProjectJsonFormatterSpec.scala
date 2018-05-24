@@ -112,8 +112,7 @@ class ProjectJsonFormatterSpec extends FlatSpec with Matchers with JsonUtils {
       defaultValue = Some(StringGCValue("string_gc_value")),
       relationName = Some("RelationName"),
       relationSide = Some(RelationSide.A),
-      manifestation = None,
-      constraints = List.empty
+      manifestation = None
     )
     val json = Json.toJson(field).prettyPrint
     json should equal(
