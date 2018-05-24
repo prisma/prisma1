@@ -105,6 +105,7 @@ sealed trait Field {
   def relationNameOpt: Option[String]
   def relationSideOpt: Option[RelationSide.Value]
   def manifestation: Option[FieldManifestation]
+  def relationOpt: Option[Relation]
   def model: Model
   def schema: Schema
   def template: FieldTemplate
@@ -118,10 +119,8 @@ sealed trait Field {
   lazy val isWritable: Boolean        = !isReadonly && !Field.excludedFromMutations.contains(name)
   lazy val isVisible: Boolean         = !isHidden
 
-  lazy val relation: Option[Relation] = relationNameOpt.flatMap(schema.getRelationByName)
-
   lazy val dbName = {
-    relation match {
+    relationOpt match {
       case Some(r) if r.isInlineRelation => r.manifestation.get.asInstanceOf[InlineRelationManifestation].referencingColumn
       case None                          => manifestation.map(_.dbName).getOrElse(name)
       case _                             => sys.error("not a valid call on relations manifested via a table")
@@ -132,10 +131,10 @@ sealed trait Field {
     isRelationWithId(relationId) && this.relationSideOpt.contains(relationSide)
   }
 
-  private def isRelationWithId(relationId: String): Boolean = relation.exists(_.relationTableName == relationId)
+  private def isRelationWithId(relationId: String): Boolean = relationOpt.exists(_.relationTableName == relationId)
 
   lazy val relatedModel: Option[Model] = {
-    relation.flatMap(relation => {
+    relationOpt.flatMap(relation => {
       relationSideOpt match {
         case Some(RelationSide.A) => relation.modelB
         case Some(RelationSide.B) => relation.modelA
@@ -167,15 +166,15 @@ sealed trait Field {
     val fields = relatedModel_!.fields
 
     val returnField = fields.find { field =>
-      field.relation.exists { relation =>
+      field.relationOpt.exists { relation =>
         val isTheSameField    = field.name == this.name
-        val isTheSameRelation = relation.relationTableName == this.relation.get.relationTableName
+        val isTheSameRelation = relation.relationTableName == this.relationOpt.get.relationTableName
         isTheSameRelation && !isTheSameField
       }
     }
     val fallback = fields.find { relatedField =>
-      relatedField.relation.exists { relation =>
-        relation.relationTableName == this.relation.get.relationTableName
+      relatedField.relationOpt.exists { relation =>
+        relation.relationTableName == this.relationOpt.get.relationTableName
       }
     }
 
@@ -187,9 +186,9 @@ sealed trait Field {
     val fields = relatedModel_!.fields
 
     fields.find { field =>
-      field.relation.exists { relation =>
+      field.relationOpt.exists { relation =>
         val isTheSameField    = field.name == this.name
-        val isTheSameRelation = relation.relationTableName == this.relation.get.relationTableName
+        val isTheSameRelation = relation.relationTableName == this.relationOpt.get.relationTableName
         isTheSameRelation && !isTheSameField
       }
     }
@@ -217,6 +216,8 @@ case class RelationField(
   override def relationSideOpt = Some(relationSide)
   override def schema          = model.schema
 
+  lazy val relation: Relation            = schema.getRelationByName_!(relationName)
+  lazy val relationOpt: Option[Relation] = Some(relation)
 }
 
 case class ScalarField(
@@ -235,6 +236,7 @@ case class ScalarField(
 ) extends Field {
   override def relationNameOpt = None
   override def relationSideOpt = None
+  override def relationOpt     = None
 
   override def schema = model.schema
 }

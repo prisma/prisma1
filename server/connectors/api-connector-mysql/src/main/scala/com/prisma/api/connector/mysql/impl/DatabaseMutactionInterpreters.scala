@@ -47,10 +47,10 @@ case class CascadingDeleteRelationMutactionsInterpreter(mutaction: CascadingDele
   }
 
   private def otherFailingRequiredRelationOnChild(cause: String): Option[Relation] =
-    otherFieldsWhereThisModelIsRequired.collectFirst { case f if causedByThisMutactionChildOnly(f, cause) => f.relation.get }
+    otherFieldsWhereThisModelIsRequired.collectFirst { case f if causedByThisMutactionChildOnly(f, cause) => f.relationOpt.get }
 
   private def causedByThisMutactionChildOnly(field: Field, cause: String) = {
-    val parentCheckString = s"`${field.relation.get.relationTableName}` OLDPARENTPATHFAILURETRIGGERBYFIELD WHERE `${field.oppositeRelationSide.get}`"
+    val parentCheckString = s"`${field.relationOpt.get.relationTableName}` OLDPARENTPATHFAILURETRIGGERBYFIELD WHERE `${field.oppositeRelationSide.get}`"
 
     path.lastEdge match {
       case Some(edge: NodeEdge) => cause.contains(parentCheckString) && cause.contains(parameterString(edge.childWhere))
@@ -119,11 +119,12 @@ case class DeleteManyRelationChecksInterpreter(mutaction: DeleteManyRelationChec
   }
 
   private def otherFailingRequiredRelationOnChild(cause: String): Option[Relation] = fieldsWhereThisModelIsRequired.collectFirst {
-    case f if causedByThisMutactionChildOnly(f, cause) => f.relation.get
+    case f if causedByThisMutactionChildOnly(f, cause) => f.relationOpt.get
   }
 
   private def causedByThisMutactionChildOnly(field: Field, cause: String) = {
-    val parentCheckString = s"`${field.relation.get.relationTableName}` OLDPARENTPATHFAILURETRIGGERBYFIELDANDFILTER WHERE `${field.oppositeRelationSide.get}`"
+    val parentCheckString =
+      s"`${field.relationOpt.get.relationTableName}` OLDPARENTPATHFAILURETRIGGERBYFIELDANDFILTER WHERE `${field.oppositeRelationSide.get}`"
     cause.contains(parentCheckString) //todo add filter
   }
 }
@@ -145,10 +146,10 @@ case class DeleteRelationCheckInterpreter(mutaction: DeleteRelationCheck) extend
   }
 
   private def otherFailingRequiredRelationOnChild(cause: String): Option[Relation] =
-    fieldsWhereThisModelIsRequired.collectFirst { case f if causedByThisMutactionChildOnly(f, cause) => f.relation.get }
+    fieldsWhereThisModelIsRequired.collectFirst { case f if causedByThisMutactionChildOnly(f, cause) => f.relationOpt.get }
 
   private def causedByThisMutactionChildOnly(field: Field, cause: String) = {
-    val parentCheckString = s"`${field.relation.get.relationTableName}` OLDPARENTPATHFAILURETRIGGERBYFIELD WHERE `${field.oppositeRelationSide.get}`"
+    val parentCheckString = s"`${field.relationOpt.get.relationTableName}` OLDPARENTPATHFAILURETRIGGERBYFIELD WHERE `${field.oppositeRelationSide.get}`"
 
     path.lastEdge match {
       case Some(edge: NodeEdge) => cause.contains(parentCheckString) && cause.contains(parameterString(edge.childWhere))

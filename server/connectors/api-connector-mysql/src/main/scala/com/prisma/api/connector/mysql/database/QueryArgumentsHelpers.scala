@@ -163,8 +163,8 @@ object QueryArgumentsHelpers {
           if (field.isList) throw APIErrors.FilterCannotBeNullOnToManyField(field.name)
 
           Some(sql""" not exists (select  *
-                                  from    `#$projectId`.`#${field.relation.get.relationTableName}`
-                                  where   `#$projectId`.`#${field.relation.get.relationTableName}`.`#${field.relationSideOpt.get}` = `#$projectId`.`#$tableName`.`id`
+                                  from    `#$projectId`.`#${field.relationOpt.get.relationTableName}`
+                                  where   `#$projectId`.`#${field.relationOpt.get.relationTableName}`.`#${field.relationSideOpt.get}` = `#$projectId`.`#$tableName`.`id`
                                   )""")
 
         // this is used for the node: {} field in the Subscription Filter

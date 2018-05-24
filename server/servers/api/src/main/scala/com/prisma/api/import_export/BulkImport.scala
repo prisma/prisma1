@@ -105,7 +105,7 @@ class BulkImport(project: Project)(implicit apiDependencies: ApiDependencies) {
       val fromModel                                                 = project.schema.getModelByName_!(left.identifier.typeName)
       val fromField                                                 = fromModel.getFieldByName_!(left.fieldName.get)
       val relationSide: com.prisma.shared.models.RelationSide.Value = fromField.relationSideOpt.get
-      val relation: Relation                                        = fromField.relation.get
+      val relation: Relation                                        = fromField.relationOpt.get
       val aValue: String                                            = if (relationSide == RelationSide.A) left.identifier.id else right.identifier.id
       val bValue: String                                            = if (relationSide == RelationSide.A) right.identifier.id else left.identifier.id
       CreateRelationRow(project, relation, aValue, bValue)

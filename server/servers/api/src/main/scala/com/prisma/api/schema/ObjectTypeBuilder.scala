@@ -194,7 +194,7 @@ class ObjectTypeBuilder(
                   field.get,
                   model,
                   field.get.relatedModel.get,
-                  field.get.relation.get,
+                  field.get.relationOpt.get,
                   filter.name,
                   generateFilterElement(typedValue, field.get.relatedModel.get, isSubscriptionFilter)
                 )

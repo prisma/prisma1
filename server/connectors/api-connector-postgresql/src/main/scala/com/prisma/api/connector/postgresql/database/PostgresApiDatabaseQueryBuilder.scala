@@ -197,11 +197,11 @@ case class PostgresApiDatabaseQueryBuilder(
       fromModelIds: Vector[IdGCValue],
       args: Option[QueryArguments]
   ): DBIOAction[Vector[ResolverResult[PrismaNodeWithParent]], NoStream, Effect] = {
-    val relation     = fromField.relation.get
+    val relation     = fromField.relationOpt.get
     val relatedModel = fromField.relatedModel.get
     val modelTable   = relatedModel.dbName
 
-    val relationTableName     = fromField.relation.get.relationTableName
+    val relationTableName     = fromField.relationOpt.get.relationTableName
     val (aColumn, bColumn)    = (relation.modelAColumn, relation.modelBColumn)
     val columnForFromModel    = relation.columnForRelationSide(fromField.relationSideOpt.get)
     val columnForRelatedModel = relation.columnForRelationSide(fromField.oppositeRelationSide.get)
@@ -228,7 +228,7 @@ case class PostgresApiDatabaseQueryBuilder(
     }
 
     // see https://github.com/graphcool/internal-docs/blob/master/relations.md#findings
-    val resolveFromBothSidesAndMerge = fromField.relation.get.isSameFieldSameModelRelation
+    val resolveFromBothSidesAndMerge = fromField.relationOpt.get.isSameFieldSameModelRelation
 
     val query = resolveFromBothSidesAndMerge match {
       case false =>
@@ -268,7 +268,7 @@ case class PostgresApiDatabaseQueryBuilder(
 
     val relatedModel                  = fromField.relatedModel.get
     val fieldTable                    = relatedModel.dbName
-    val relation                      = fromField.relation.get
+    val relation                      = fromField.relationOpt.get
     val unsafeRelationId              = relation.relationTableName
     val modelRelationSide             = fromField.relationSideOpt.get.toString
     val columnForOppositeRelationSide = relation.columnForRelationSide(fromField.oppositeRelationSide.get)
@@ -294,7 +294,7 @@ case class PostgresApiDatabaseQueryBuilder(
     }
 
     // see https://github.com/graphcool/internal-docs/blob/master/relations.md#findings
-    val resolveFromBothSidesAndMerge = fromField.relation.get.isSameFieldSameModelRelation
+    val resolveFromBothSidesAndMerge = fromField.relationOpt.get.isSameFieldSameModelRelation
 
     val query = resolveFromBothSidesAndMerge match {
       case false =>
@@ -332,7 +332,7 @@ case class PostgresApiDatabaseQueryBuilder(
 
     val relatedModel               = relationField.relatedModel.get
     val fieldTable                 = relatedModel.dbName
-    val relation                   = relationField.relation.get
+    val relation                   = relationField.relationOpt.get
     val unsafeRelationId           = relation.relationTableName
     val modelRelationSide          = relationField.relationSideOpt.get.toString
     val columnForFieldRelationSide = relation.columnForRelationSide(relationField.oppositeRelationSide.get)

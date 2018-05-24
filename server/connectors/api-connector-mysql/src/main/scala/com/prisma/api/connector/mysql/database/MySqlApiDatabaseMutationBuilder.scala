@@ -378,7 +378,7 @@ object MySqlApiDatabaseMutationBuilder {
   }
 
   def oldParentFailureTriggerByField(project: Project, path: Path, field: Field) = {
-    val table = field.relation.get.relationTableName
+    val table = field.relationOpt.get.relationTableName
     val query = sql"SELECT `id` FROM `#${project.id}`.`#$table` OLDPARENTPATHFAILURETRIGGERBYFIELD WHERE `#${field.oppositeRelationSide.get}` IN (" ++ pathQueryForLastChild(
       project.id,
       path) ++ sql")"
@@ -386,7 +386,7 @@ object MySqlApiDatabaseMutationBuilder {
   }
 
   def oldParentFailureTriggerByFieldAndFilter(project: Project, model: Model, whereFilter: Option[DataItemFilterCollection], field: Field) = {
-    val table = field.relation.get.relationTableName
+    val table = field.relationOpt.get.relationTableName
     val query = sql"SELECT `id` FROM `#${project.id}`.`#$table` OLDPARENTPATHFAILURETRIGGERBYFIELDANDFILTER" ++
       sql"WHERE `#${field.oppositeRelationSide.get}` IN (SELECT `id` FROM `#${project.id}`.`#${model.name}` " ++
       whereFilterAppendix(project.id, model.name, whereFilter) ++ sql")"

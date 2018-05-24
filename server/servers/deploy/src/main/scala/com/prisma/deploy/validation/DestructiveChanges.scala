@@ -194,7 +194,7 @@ case class DestructiveChanges(deployConnector: DeployConnector, project: Project
 
     def checkRelationSide(modelName: String) = {
       val nextModelA      = nextSchema.models.find(_.name == modelName).get
-      val nextModelAField = nextModelA.fields.find(field => field.relation.contains(nextRelation))
+      val nextModelAField = nextModelA.fields.find(field => field.relationOpt.contains(nextRelation))
 
       val modelARequired = nextModelAField match {
         case None        => false

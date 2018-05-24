@@ -198,7 +198,7 @@ class MySqlDatabaseQueryBuilder()(implicit ec: ExecutionContext) {
 
     val relatedModel         = fromField.relatedModel.get
     val fieldTable           = fromField.relatedModel.get.name
-    val unsafeRelationId     = fromField.relation.get.relationTableName
+    val unsafeRelationId     = fromField.relationOpt.get.relationTableName
     val modelRelationSide    = fromField.relationSideOpt.get.toString
     val oppositeRelationSide = fromField.oppositeRelationSide.get.toString
 
@@ -217,7 +217,7 @@ class MySqlDatabaseQueryBuilder()(implicit ec: ExecutionContext) {
     }
 
     // see https://github.com/graphcool/internal-docs/blob/master/relations.md#findings
-    val resolveFromBothSidesAndMerge = fromField.relation.get.isSameFieldSameModelRelation
+    val resolveFromBothSidesAndMerge = fromField.relationOpt.get.isSameFieldSameModelRelation
 
     val query = resolveFromBothSidesAndMerge match {
       case false =>
@@ -250,7 +250,7 @@ class MySqlDatabaseQueryBuilder()(implicit ec: ExecutionContext) {
                                 args: Option[QueryArguments]): SqlStreamingAction[Vector[(IdGCValue, Int)], (IdGCValue, Int), Effect] = {
 
     val fieldTable        = relationField.relatedModel.get.name
-    val unsafeRelationId  = relationField.relation.get.relationTableName
+    val unsafeRelationId  = relationField.relationOpt.get.relationTableName
     val modelRelationSide = relationField.relationSideOpt.get.toString
     val fieldRelationSide = relationField.oppositeRelationSide.get.toString
 

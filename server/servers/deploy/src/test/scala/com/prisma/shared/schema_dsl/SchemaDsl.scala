@@ -103,7 +103,7 @@ object SchemaDsl extends AwaitUtils {
     }
     val newModels = project.models.map { model =>
       val newFields = model.fields.map { field =>
-        val newRelation = field.relation.flatMap { relation =>
+        val newRelation = field.relationOpt.flatMap { relation =>
           newRelations.find(_.name == relation.name)
         }
         field.template.copy(relationName = newRelation.map(_.name), manifestation = Some(FieldManifestation(field.name + "_column")))

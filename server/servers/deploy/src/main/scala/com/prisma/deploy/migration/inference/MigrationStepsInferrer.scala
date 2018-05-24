@@ -106,7 +106,7 @@ case class MigrationStepsInferrerImpl(previousSchema: Schema, nextSchema: Schema
         isList = fieldOfNextModel.isList,
         isUnique = fieldOfNextModel.isUnique,
         defaultValue = fieldOfNextModel.defaultValue.map(_.toString),
-        relation = fieldOfNextModel.relation.map(_.name),
+        relation = fieldOfNextModel.relationOpt.map(_.name),
         enum = fieldOfNextModel.enum.map(_.name)
       )
     }
@@ -131,7 +131,7 @@ case class MigrationStepsInferrerImpl(previousSchema: Schema, nextSchema: Schema
         isList = diff(previousField.isList, fieldOfNextModel.isList),
         isUnique = diff(previousField.isUnique, fieldOfNextModel.isUnique),
         isHidden = diff(previousField.isHidden, fieldOfNextModel.isHidden),
-        relation = diff(previousField.relation.map(_.relationTableName), fieldOfNextModel.relation.map(_.relationTableName)),
+        relation = diff(previousField.relationOpt.map(_.relationTableName), fieldOfNextModel.relationOpt.map(_.relationTableName)),
         defaultValue = diff(previousField.defaultValue, fieldOfNextModel.defaultValue).map(_.map(_.toString)),
         enum = diff(previousField.enum.map(_.name), fieldOfNextModel.enum.map(_.name))
       )
