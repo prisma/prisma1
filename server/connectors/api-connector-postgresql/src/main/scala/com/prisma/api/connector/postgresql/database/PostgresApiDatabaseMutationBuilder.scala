@@ -401,10 +401,12 @@ case class PostgresApiDatabaseMutationBuilder(
   // region HELPERS
 
   def idFromWhere(where: NodeSelector): SQLActionBuilder = (where.isId, where.fieldValue) match {
-    case (true, NullGCValue)  => sys.error("id should not be NULL")
-    case (true, idValue)      => sql"$idValue"
-    case (false, NullGCValue) => sql"""(SELECT "id" FROM "#$schemaName"."#${where.model.dbName}" IDFROMWHERE WHERE "#${where.field.dbName}" is NULL)"""
-    case (false, value)       => sql"""(SELECT "id" FROM "#$schemaName"."#${where.model.dbName}" IDFROMWHERE WHERE "#${where.field.dbName}" = $value)"""
+    case (true, NullGCValue) => sys.error("id should not be NULL")
+    case (true, idValue)     => sql"$idValue"
+    case (false, NullGCValue) =>
+      sql"""(SELECT "#${where.model.dbNameOfIdField_!}" FROM "#$schemaName"."#${where.model.dbName}" IDFROMWHERE WHERE "#${where.field.dbName}" is NULL)"""
+    case (false, value) =>
+      sql"""(SELECT "#${where.model.dbNameOfIdField_!}" FROM "#$schemaName"."#${where.model.dbName}" IDFROMWHERE WHERE "#${where.field.dbName}" = $value)"""
   }
 
   def idFromWhereEquals(where: NodeSelector): SQLActionBuilder = sql" = " ++ idFromWhere(where)
@@ -437,7 +439,7 @@ case class PostgresApiDatabaseMutationBuilder(
         }
 
         sql"""(SELECT "#${last.columnForChildRelationSide(schema)}"""" ++
-          sql""" FROM (SELECT * FROM "#$schemaName"."#${last.relation.relationTableNameNew(schema)}") PATHQUERY""" ++
+          sql""" FROM "#$schemaName"."#${last.relation.relationTableNameNew(schema)}" PATHQUERY""" ++
           sql" WHERE " ++ childWhere ++ sql""""#${last.columnForParentRelationSide(schema)}" IN (""" ++ pathQueryForLastParent(path) ++ sql"))"
     }
   }
@@ -671,9 +673,7 @@ case class PostgresApiDatabaseMutationBuilder(
                 e.getCause.toString)}"
             }
             .toVector
-        case e: Exception =>
-          println(e.getMessage)
-          Vector(e.getMessage)
+        case e: Exception => Vector(e.getMessage)
       }
 
       if (res.nonEmpty) throw new Exception(res.mkString("-@-"))
@@ -722,9 +722,7 @@ case class PostgresApiDatabaseMutationBuilder(
             }
             .toVector
 
-        case e: Exception =>
-          println(e.getMessage)
-          Vector(e.getMessage)
+        case e: Exception => Vector(e.getMessage)
       }
 
       if (rowResult.nonEmpty) throw new Exception(rowResult.mkString("-@-"))
