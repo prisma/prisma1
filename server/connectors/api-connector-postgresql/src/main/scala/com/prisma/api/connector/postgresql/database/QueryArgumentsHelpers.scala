@@ -181,7 +181,7 @@ object QueryArgumentsHelpers {
         case FinalRelationFilter(schema, key, null, field, filterName) =>
           if (field.isList) throw APIErrors.FilterCannotBeNullOnToManyField(field.name)
 
-          val relation          = field.relationOpt.get
+          val relation          = field.relation
           val relationTableName = relation.relationTableName
           val column            = relation.columnForRelationSide(field.relationSide)
           // fixme: an ugly hack that is hard to explain. ask marcus.

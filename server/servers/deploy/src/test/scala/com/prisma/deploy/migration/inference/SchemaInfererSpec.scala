@@ -88,13 +88,13 @@ class SchemaInfererSpec extends WordSpec with Matchers {
       relation.modelAId should equal("Comment")
       relation.modelBId should equal("Todo")
 
-      val field1 = schema.getModelByName_!("Todo").getFieldByName_!("comments")
+      val field1 = schema.getModelByName_!("Todo").getRelationFieldByName_!("comments")
       field1.isList should be(true)
-      field1.relationOpt should be(Some(relation))
+      field1.relation should be(relation)
 
-      val field2 = schema.getModelByName_!("Comment").getFieldByName_!("todo")
+      val field2 = schema.getModelByName_!("Comment").getRelationFieldByName_!("todo")
       field2.isList should be(false)
-      field2.relationOpt should be(Some(relation))
+      field2.relation should be(relation)
     }
   }
 
@@ -130,13 +130,13 @@ class SchemaInfererSpec extends WordSpec with Matchers {
       relation.modelAId should be("TodoNew")
       relation.modelBId should be("CommentNew")
 
-      val field1 = newSchema.getModelByName_!("TodoNew").getFieldByName_!("comments")
+      val field1 = newSchema.getModelByName_!("TodoNew").getRelationFieldByName_!("comments")
       field1.isList should be(true)
-      field1.relationOpt should be(Some(relation))
+      field1.relation should be(relation)
 
-      val field2 = newSchema.getModelByName_!("CommentNew").getFieldByName_!("todo")
+      val field2 = newSchema.getModelByName_!("CommentNew").getRelationFieldByName_!("todo")
       field2.isList should be(false)
-      field2.relationOpt should be(Some(relation))
+      field2.relation should be(relation)
     }
 
     "infer the existing relation although the type and field names changed" in {
@@ -169,13 +169,13 @@ class SchemaInfererSpec extends WordSpec with Matchers {
       relation.modelAId should be("TodoNew")
       relation.modelBId should be("CommentNew")
 
-      val field1 = newSchema.getModelByName_!("TodoNew").getFieldByName_!("commentsNew")
+      val field1 = newSchema.getModelByName_!("TodoNew").getRelationFieldByName_!("commentsNew")
       field1.isList should be(true)
-      field1.relationOpt should be(Some(relation))
+      field1.relation should be(relation)
 
-      val field2 = newSchema.getModelByName_!("CommentNew").getFieldByName_!("todoNew")
+      val field2 = newSchema.getModelByName_!("CommentNew").getRelationFieldByName_!("todoNew")
       field2.isList should be(false)
-      field2.relationOpt should be(Some(relation))
+      field2.relation should be(relation)
     }
   }
 
@@ -262,11 +262,11 @@ class SchemaInfererSpec extends WordSpec with Matchers {
       newRelation.modelBId should be("NewTechnology")
 
       val field1 = newSchema.getModelByName_!("NewTechnology").getRelationFieldByName_!("xTechnologies")
-      field1.relationOpt should be(Some(newRelation))
+      field1.relation should be(newRelation)
       field1.relationSide.toString should be("A")
 
       val field2 = newSchema.getModelByName_!("NewTechnology").getRelationFieldByName_!("parentTechnologies")
-      field2.relationOpt should be(Some(newRelation))
+      field2.relation should be(newRelation)
       field2.relationSide.toString should be("B")
     }
   }
@@ -303,11 +303,11 @@ class SchemaInfererSpec extends WordSpec with Matchers {
     newRelation.modelBId should be("Technology")
 
     val field1 = newSchema.getModelByName_!("Technology").getRelationFieldByName_!("childTechnologies")
-    field1.relationOpt should be(Some(newRelation))
+    field1.relation should be(newRelation)
     field1.relationSide.toString should be("A")
 
     val field2 = newSchema.getModelByName_!("Technology").getRelationFieldByName_!("parentTechnologies")
-    field2.relationOpt should be(Some(newRelation))
+    field2.relation should be(newRelation)
     field2.relationSide.toString should be("B")
   }
 
@@ -359,7 +359,7 @@ class SchemaInfererSpec extends WordSpec with Matchers {
          |}""".stripMargin
     val schema = infer(emptyProject.schema, types, isActive = false)
 
-    val relation = schema.getModelByName_!("List").getFieldByName_!("todos").relationOpt.get
+    val relation = schema.getModelByName_!("List").getRelationFieldByName_!("todos").relation
     // assert model ids to make sure that the generated manifestation refers to the right modelAColumn/modelBColumn
     relation.modelAId should equal("List")
     relation.modelBId should equal("Todo")
@@ -382,7 +382,7 @@ class SchemaInfererSpec extends WordSpec with Matchers {
          |""".stripMargin
     val schema = infer(emptyProject.schema, types, isActive = false)
 
-    val relation = schema.getModelByName_!("List").getFieldByName_!("todos").relationOpt.get
+    val relation = schema.getModelByName_!("List").getRelationFieldByName_!("todos").relation
 
     val expectedManifestation = InlineRelationManifestation(inTableOfModelId = "Todo", referencingColumn = "list_id")
     relation.manifestation should equal(Some(expectedManifestation))

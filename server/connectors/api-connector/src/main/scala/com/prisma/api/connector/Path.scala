@@ -26,7 +26,7 @@ case class Path(root: NodeSelector, edges: List[Edge]) {
 
   def relations                    = edges.map(_.relation)
   def models                       = root.model +: edges.map(_.child)
-  def otherCascadingRelationFields = lastModel.cascadingRelationFields.filter(relationField => !relations.contains(relationField.relationOpt.get))
+  def otherCascadingRelationFields = lastModel.cascadingRelationFields.filter(relationField => !relations.contains(relationField.relation))
   def lastEdge                     = edges.lastOption
   def lastEdge_!                   = edges.last
   def lastRelation_!               = lastRelation.get
@@ -42,13 +42,13 @@ case class Path(root: NodeSelector, edges: List[Edge]) {
   }
 
   def appendCascadingEdge(project: Project, field: RelationField): Path = {
-    val edge = ModelEdge(lastModel, field, field.relatedModel_!, field.relatedField, field.relationOpt.get)
+    val edge = ModelEdge(lastModel, field, field.relatedModel_!, field.relatedField, field.relation)
     if (edge.relation.bothSidesCascade || models.contains(edge.child)) throw APIErrors.CascadingDeletePathLoops()
     copy(root, edges :+ edge)
   }
 
   def appendEdge(project: Project, field: RelationField): Path = {
-    val edge = ModelEdge(lastModel, field, field.relatedModel_!, field.relatedField, field.relationOpt.get)
+    val edge = ModelEdge(lastModel, field, field.relatedModel_!, field.relatedField, field.relation)
     copy(root, edges :+ edge)
   }
 

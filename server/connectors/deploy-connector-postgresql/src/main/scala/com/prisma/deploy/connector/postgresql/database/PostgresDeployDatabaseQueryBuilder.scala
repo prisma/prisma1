@@ -38,7 +38,7 @@ object PostgresDeployDatabaseQueryBuilder {
   }
 
   def existsNullByModelAndRelationField(projectId: String, model: Model, field: RelationField) = {
-    val relationId   = field.relationOpt.get.relationTableName
+    val relationId   = field.relation.relationTableName
     val relationSide = field.relationSide.toString
     sql"""select EXISTS (
             select "#${model.dbNameOfIdField_!}" from "#$projectId"."#${model.dbName}"
