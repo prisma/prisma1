@@ -233,8 +233,8 @@ object SchemaDsl extends AwaitUtils {
     ): ModelBuilder = {
       val relation = RelationTemplate(
         name = relationName.getOrElse(s"${this.name}To${modelB.name}"),
-        modelAId = this.id,
-        modelBId = modelB.id,
+        modelA = this.id,
+        modelB = modelB.id,
         modelAOnDelete = modelAOnDelete,
         modelBOnDelete = modelBOnDelete,
         manifestation = None
@@ -263,8 +263,8 @@ object SchemaDsl extends AwaitUtils {
     ): ModelBuilder = {
       val relation = RelationTemplate(
         name = relationName.getOrElse(s"${this.name}To${modelB.name}"),
-        modelAId = this.id,
-        modelBId = modelB.id,
+        modelA = this.id,
+        modelB = modelB.id,
         modelAOnDelete = modelAOnDelete,
         modelBOnDelete = modelBOnDelete,
         manifestation = None
@@ -293,8 +293,8 @@ object SchemaDsl extends AwaitUtils {
     ): ModelBuilder = {
       val relation = RelationTemplate(
         name = relationName.getOrElse(s"${this.name}To${modelB.name}"),
-        modelAId = this.id,
-        modelBId = modelB.id,
+        modelA = this.id,
+        modelB = modelB.id,
         modelAOnDelete = modelAOnDelete,
         modelBOnDelete = modelBOnDelete,
         manifestation = None
@@ -323,8 +323,8 @@ object SchemaDsl extends AwaitUtils {
     ): ModelBuilder = {
       val relation = RelationTemplate(
         name = relationName.getOrElse(s"${this.name}To${modelB.name}"),
-        modelAId = this.id,
-        modelBId = modelB.id,
+        modelA = this.id,
+        modelB = modelB.id,
         modelAOnDelete = modelAOnDelete,
         modelBOnDelete = modelBOnDelete,
         manifestation = None
@@ -352,8 +352,8 @@ object SchemaDsl extends AwaitUtils {
     ): ModelBuilder = {
       val relation = RelationTemplate(
         name = relationName.getOrElse(s"${this.name}To${modelB.name}"),
-        modelAId = this.id,
-        modelBId = modelB.id,
+        modelA = this.id,
+        modelB = modelB.id,
         modelAOnDelete = modelAOnDelete,
         modelBOnDelete = modelBOnDelete,
         manifestation = None
@@ -381,8 +381,8 @@ object SchemaDsl extends AwaitUtils {
     ): ModelBuilder = {
       val relation = RelationTemplate(
         name = relationName.getOrElse(s"${this.name}To${modelB.name}"),
-        modelAId = this.id,
-        modelBId = modelB.id,
+        modelA = this.id,
+        modelB = modelB.id,
         modelAOnDelete = modelAOnDelete,
         modelBOnDelete = modelBOnDelete,
         manifestation = None

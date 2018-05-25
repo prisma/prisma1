@@ -56,7 +56,7 @@ case class DestructiveChanges(deployConnector: DeployConnector, project: Project
     def newToOneBackRelationField(model: Model) = x.relation.nonEmpty && !x.isList && previousSchema.relations.map(_.name).contains(x.relation.get) match {
       case true =>
         val previousRelation                   = previousSchema.relations.find(r => x.relation.contains(r.name)).get
-        val relationSideThatCantHaveDuplicates = if (previousRelation.modelAId == model.name) RelationSide.A else RelationSide.B
+        val relationSideThatCantHaveDuplicates = if (previousRelation.modelA == model.name) RelationSide.A else RelationSide.B
 
         clientDataResolver.existsDuplicateByRelationAndSide(s"_${x.relation.get}", relationSideThatCantHaveDuplicates).map {
           case true =>

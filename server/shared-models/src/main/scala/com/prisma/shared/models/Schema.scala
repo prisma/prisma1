@@ -1,7 +1,6 @@
 package com.prisma.shared.models
 
 import com.prisma.shared.errors.SharedErrors
-import com.prisma.shared.models.IdType.Id
 
 object Schema {
   val empty = Schema()

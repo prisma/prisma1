@@ -1,26 +1,26 @@
 package com.prisma.shared.models
 
-import com.prisma.shared.models.IdType.Id
 import com.prisma.shared.models.Manifestations.{InlineRelationManifestation, RelationManifestation, RelationTableManifestation}
+
 import scala.language.implicitConversions
 
 case class RelationTemplate(
     name: String,
-    // BEWARE: if the relation looks like this: val relation = Relation(id = "relationId", modelAId = "userId", modelBId = "todoId")
+    // BEWARE: if the relation looks like this: val relation = Relation(id = "relationId", modelA = "userId", modelB = "todoId")
     // then the relationSide for the fields have to be "opposite", because the field's side is the side of _the other_ model
-    // val userField = Field(..., relation = Some(relation), relationSide = Some(RelationSide.B)
-    // val todoField = Field(..., relation = Some(relation), relationSide = Some(RelationSide.A)
-    modelAId: Id,
-    modelBId: Id,
+    // val userField = RelationField(..., relation = relation, relationSide = RelationSide.B)
+    // val todoField = RelationField(..., relation = relation, relationSide = RelationSide.A)
+    modelA: String,
+    modelB: String,
     modelAOnDelete: OnDelete.Value,
     modelBOnDelete: OnDelete.Value,
     manifestation: Option[RelationManifestation]
 ) {
   def build(schema: Schema) = new Relation(this, schema)
 
-  def connectsTheModels(model1: String, model2: String): Boolean = (modelAId == model1 && modelBId == model2) || (modelAId == model2 && modelBId == model1)
+  def connectsTheModels(model1: String, model2: String): Boolean = (modelA == model1 && modelB == model2) || (modelA == model2 && modelB == model1)
 
-  def isSameModelRelation: Boolean = modelAId == modelBId
+  def isSameModelRelation: Boolean = modelA == modelB
 }
 
 object Relation {
@@ -34,10 +34,10 @@ class Relation(
   import template._
 
   lazy val bothSidesCascade: Boolean                                = modelAOnDelete == OnDelete.Cascade && modelBOnDelete == OnDelete.Cascade
-  lazy val modelA_! : Model                                         = schema.getModelByName_!(modelAId)
-  lazy val modelB_! : Model                                         = schema.getModelByName_!(modelBId)
-  lazy val modelAField: Option[RelationField]                       = modelFieldFor(modelAId, RelationSide.A)
-  lazy val modelBField: Option[RelationField]                       = modelFieldFor(modelBId, RelationSide.B)
+  lazy val modelA_! : Model                                         = schema.getModelByName_!(modelA)
+  lazy val modelB_! : Model                                         = schema.getModelByName_!(modelB)
+  lazy val modelAField: Option[RelationField]                       = modelFieldFor(modelA, RelationSide.A)
+  lazy val modelBField: Option[RelationField]                       = modelFieldFor(modelB, RelationSide.B)
   lazy val hasManifestation: Boolean                                = manifestation.isDefined
   lazy val isInlineRelation: Boolean                                = manifestation.exists(_.isInstanceOf[InlineRelationManifestation])
   lazy val inlineManifestation: Option[InlineRelationManifestation] = manifestation.collect { case x: InlineRelationManifestation => x }
@@ -52,13 +52,13 @@ class Relation(
 
   lazy val modelAColumn: String = manifestation match {
     case Some(m: RelationTableManifestation)  => m.modelAColumn
-    case Some(m: InlineRelationManifestation) => if (m.inTableOfModelId == modelAId) modelA_!.idField_!.dbName else m.referencingColumn
+    case Some(m: InlineRelationManifestation) => if (m.inTableOfModelId == modelA) modelA_!.idField_!.dbName else m.referencingColumn
     case None                                 => "A"
   }
 
   lazy val modelBColumn: String = manifestation match {
     case Some(m: RelationTableManifestation)  => m.modelBColumn
-    case Some(m: InlineRelationManifestation) => if (m.inTableOfModelId == modelBId && !isSameModelRelation) modelB_!.idField_!.dbName else m.referencingColumn
+    case Some(m: InlineRelationManifestation) => if (m.inTableOfModelId == modelB && !isSameModelRelation) modelB_!.idField_!.dbName else m.referencingColumn
     case None                                 => "B"
   }
 
@@ -79,17 +79,17 @@ class Relation(
 
   def getFieldOnModel(modelId: String): Option[RelationField] = {
     modelId match {
-      case `modelAId` => modelAField
-      case `modelBId` => modelBField
-      case _          => sys.error(s"The model id ${modelId} is not part of this relation ${name}")
+      case `modelA` => modelAField
+      case `modelB` => modelBField
+      case _        => sys.error(s"The model id ${modelId} is not part of this relation ${name}")
     }
   }
 
   def sideOfModelCascades(model: Model): Boolean = {
     model.name match {
-      case `modelAId` => modelAOnDelete == OnDelete.Cascade
-      case `modelBId` => modelBOnDelete == OnDelete.Cascade
-      case _          => sys.error(s"The model ${model.name} is not part of the relation $name")
+      case `modelA` => modelAOnDelete == OnDelete.Cascade
+      case `modelB` => modelBOnDelete == OnDelete.Cascade
+      case _        => sys.error(s"The model ${model.name} is not part of the relation $name")
     }
   }
 }

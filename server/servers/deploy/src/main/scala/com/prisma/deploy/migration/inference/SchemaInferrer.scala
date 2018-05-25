@@ -108,7 +108,7 @@ case class SchemaInferrerImpl(
                 if (relationFieldNames.exists(name => name < prismaField.name)) RelationSide.B else RelationSide.A
             }
           } else {
-            if (relation.modelAId == prismaType.name) RelationSide.A else RelationSide.B
+            if (relation.modelA == prismaType.name) RelationSide.A else RelationSide.B
           }
         }
       }
@@ -219,8 +219,8 @@ case class SchemaInferrerImpl(
 
       val nextRelation = RelationTemplate(
         name = relationName,
-        modelAId = modelA,
-        modelBId = modelB,
+        modelA = modelA,
+        modelB = modelB,
         modelAOnDelete = modelAOnDelete,
         modelBOnDelete = modelBOnDelete,
         manifestation = relationManifestation
@@ -228,9 +228,9 @@ case class SchemaInferrerImpl(
 
       oldEquivalentRelation match {
         case Some(relation) =>
-          val nextModelAId = if (previousModelAName == relation.modelAId) modelA else modelB
-          val nextModelBId = if (previousModelBName == relation.modelBId) modelB else modelA
-          nextRelation.copy(modelAId = nextModelAId, modelBId = nextModelBId)
+          val nextModelAId = if (previousModelAName == relation.modelA) modelA else modelB
+          val nextModelBId = if (previousModelBName == relation.modelB) modelB else modelA
+          nextRelation.copy(modelA = nextModelAId, modelB = nextModelBId)
 
         case None => nextRelation
       }
