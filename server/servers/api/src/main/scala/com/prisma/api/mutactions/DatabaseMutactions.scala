@@ -1,7 +1,6 @@
 package com.prisma.api.mutactions
 
 import com.prisma.api.ApiMetrics
-import com.prisma.api.connector.Types.DataItemFilterCollection
 import com.prisma.api.connector._
 import com.prisma.api.schema.APIErrors.RelationIsRequired
 import com.prisma.shared.models.{Field, Model, Project, RelationField}
@@ -23,7 +22,7 @@ case class DatabaseMutactions(project: Project) {
   }
 
   //todo this does not support cascading delete behavior at the moment
-  def getMutactionsForDeleteMany(model: Model, whereFilter: Option[DataItemFilterCollection]): Vector[DatabaseMutaction] = report {
+  def getMutactionsForDeleteMany(model: Model, whereFilter: Option[Filter]): Vector[DatabaseMutaction] = report {
     val requiredRelationChecks = DeleteManyRelationChecks(project, model, whereFilter)
     val deleteItems            = DeleteDataItems(project, model, whereFilter)
     Vector(requiredRelationChecks, deleteItems)
@@ -42,7 +41,7 @@ case class DatabaseMutactions(project: Project) {
   }
 
   //todo this does not support scalar lists at the moment
-  def getMutactionsForUpdateMany(model: Model, whereFilter: Option[DataItemFilterCollection], args: CoolArgs): Vector[DatabaseMutaction] = report {
+  def getMutactionsForUpdateMany(model: Model, whereFilter: Option[Filter], args: CoolArgs): Vector[DatabaseMutaction] = report {
     val (nonListArgs, listArgs) = args.getUpdateArgs(model)
     Vector(UpdateDataItems(project, model, whereFilter, nonListArgs, listArgs))
   }
@@ -205,15 +204,14 @@ case class DatabaseMutactions(project: Project) {
       }
     }
 
-    val paths: Vector[Path] = Path.collectCascadingPaths(project, startPoint)
+    val paths: Vector[Path] = Path.collectCascadingPaths(startPoint)
     getMutactionsForEdges(paths)
   }
 
   def extend(path: Path, field: RelationField, nestedMutation: NestedMutation): Path = {
     nestedMutation match {
-      case x: NestedWhere =>
-        path.append(NodeEdge(path.lastModel, field, field.relatedModel_!, field.relatedField, x.where, field.relation))
-      case _ => path.append(ModelEdge(path.lastModel, field, field.relatedModel_!, field.relatedField, field.relation))
+      case x: NestedWhere => path.append(NodeEdge(field, x.where))
+      case _              => path.append(ModelEdge(field))
     }
   }
 

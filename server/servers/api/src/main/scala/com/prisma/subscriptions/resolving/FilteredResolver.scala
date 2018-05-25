@@ -1,6 +1,5 @@
 package com.prisma.subscriptions.resolving
 
-import com.prisma.api.connector.Types.DataItemFilterCollection
 import com.prisma.api.connector._
 import com.prisma.api.schema.ObjectTypeBuilder
 import com.prisma.gc_values.IdGCValue
@@ -19,20 +18,19 @@ object FilteredResolver {
       dataResolver: DataResolver
   ): Future[Option[PrismaNode]] = {
 
-    val filterInput: DataItemFilterCollection = modelObjectTypes
+    val filterInput: AndFilter = modelObjectTypes
       .extractQueryArgumentsFromContextForSubscription(model = model, ctx = ctx)
-      .flatMap(_.filter)
-      .getOrElse(List.empty)
+      .flatMap(_.filter.map(_.asInstanceOf[AndFilter]))
+      .getOrElse(AndFilter(Vector.empty))
 
-    def removeTopLevelIdFilter(element: Any) =
+    def removeTopLevelIdFilter(element: Filter) =
       element match {
-        case e: FilterElement => e.key != "id"
-        case _                => true
+        case e: ScalarFilter => e.field.name != "id"
+        case _               => true
       }
 
-    val filter = filterInput.filter(removeTopLevelIdFilter(_)) ++ List(
-      FinalValueFilter(key = "id", value = IdGCValue(id), field = model.getScalarFieldByName_!("id"), ""))
-
+    val filterValues = filterInput.filters.filter(removeTopLevelIdFilter) ++ Vector(ScalarFilter(model.getScalarFieldByName_!("id"), Equals(IdGCValue(id))))
+    val filter       = AndFilter(filterValues)
     dataResolver.resolveByModel(model, Some(QueryArguments.filterOnly(filter = Some(filter)))).map(_.nodes.headOption)
   }
 }

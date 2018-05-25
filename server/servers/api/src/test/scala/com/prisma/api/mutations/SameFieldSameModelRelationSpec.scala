@@ -1,5 +1,6 @@
 package com.prisma.api.mutations
 
+import com.prisma.IgnorePassive
 import com.prisma.api.ApiSpecBase
 import com.prisma.shared.models.Project
 import com.prisma.shared.schema_dsl.SchemaDsl
@@ -44,7 +45,7 @@ class SameFieldSameModelRelationSpec extends FlatSpec with Matchers with ApiSpec
       """{"data":{"post":{"identifier":2,"related":[{"identifier":1}]}}}""")
   }
 
-  "A One to One Self Relation" should "be accessible from both sides" in {
+  "A One to One Self Relation" should "be accessible from both sides" taggedAs (IgnorePassive) in {
     val project: Project = SchemaDsl.fromString() { """type Post {
                                                       |  id: ID! @unique
                                                       |  identifier: Int @unique

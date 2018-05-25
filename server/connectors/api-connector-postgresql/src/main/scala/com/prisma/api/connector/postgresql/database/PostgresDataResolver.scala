@@ -1,6 +1,5 @@
 package com.prisma.api.connector.postgresql.database
 
-import com.prisma.api.connector.Types.DataItemFilterCollection
 import com.prisma.api.connector._
 import com.prisma.api.connector.postgresql.Metrics
 import com.prisma.gc_values._
@@ -21,7 +20,7 @@ case class PostgresDataResolver(
 )(implicit ec: ExecutionContext)
     extends DataResolver {
 
-  val queryBuilder = PostgresApiDatabaseQueryBuilder(project.schema, schemaName = schemaName.getOrElse(project.id))
+  val queryBuilder = PostgresApiDatabaseQueryBuilder(project, schemaName = schemaName.getOrElse(project.id))(ec)
 
   override def resolveByGlobalId(globalId: IdGCValue): Future[Option[PrismaNode]] = { //todo rewrite this to use normal query?
     if (globalId.value == "viewer-fixed") return Future.successful(Some(PrismaNode(globalId, RootGCValue.empty, Some("Viewer"))))
@@ -53,7 +52,7 @@ case class PostgresDataResolver(
   override def resolveByUnique(where: NodeSelector): Future[Option[PrismaNode]] =
     batchResolveByUnique(where.model, where.field, Vector(where.fieldValue)).map(_.headOption)
 
-  override def countByTable(table: String, whereFilter: Option[DataItemFilterCollection] = None): Future[Int] = {
+  override def countByTable(table: String, whereFilter: Option[Filter] = None): Future[Int] = {
     val actualTable = project.schema.getModelByName(table) match {
       case Some(model) => model.dbName
       case None        => table
