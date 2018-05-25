@@ -197,22 +197,9 @@ case class PostgresApiDatabaseQueryBuilder(
         Some(s""" "RelationTable"."$columnForRelatedModel" """)) ++ sql")"
     }
 
-    // see https://github.com/graphcool/internal-docs/blob/master/relations.md#findings
-    val resolveFromBothSidesAndMerge = fromField.relation.isSameFieldSameModelRelation
-
-    val query = resolveFromBothSidesAndMerge match {
-      case false =>
-        fromModelIds.distinct.view.zipWithIndex.foldLeft(sql"")((a, b) =>
-          a ++ unionIfNotFirst(b._2) ++ createQuery(b._1.value, columnForFromModel, columnForRelatedModel))
-
-      case true =>
-        fromModelIds.distinct.view.zipWithIndex.foldLeft(sql"")(
-          (a, b) =>
-            a ++ unionIfNotFirst(b._2) ++
-              createQuery(b._1.value, columnForFromModel, columnForRelatedModel) ++
-              sql"union all " ++
-              createQuery(b._1.value, columnForRelatedModel, columnForFromModel))
-    }
+    val query =
+      fromModelIds.distinct.view.zipWithIndex.foldLeft(sql"")((a, b) =>
+        a ++ unionIfNotFirst(b._2) ++ createQuery(b._1.value, columnForFromModel, columnForRelatedModel))
 
     val modelRelationSide    = fromField.relationSide.toString
     val oppositeRelationSide = fromField.oppositeRelationSide.toString

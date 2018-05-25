@@ -5,18 +5,14 @@ import com.prisma.shared.models._
 // this object should be called by all implementations of ProjectPersistence to ensure that back relation fields are always available
 object MissingBackRelations {
 
-  def add(schema: Schema): Schema = {
-    schema.relations.foldLeft(schema) { (schema, relation) =>
-      addMissingBackRelationFieldIfMissing(schema, relation)
-    }
+  def add(schema: Schema): Schema = schema.relations.foldLeft(schema) { (schema, relation) =>
+    addMissingBackRelationFieldIfMissing(schema, relation)
   }
 
   private def addMissingBackRelationFieldIfMissing(schema: Schema, relation: Relation): Schema = {
-    val isAFieldMissing = relation.modelAField.isEmpty
-    val isBFieldMissing = relation.modelBField.isEmpty
-    if (relation.isSameFieldSameModelRelation) { // fixme: we want to remove that in 1.10
-      schema
-    } else if (isAFieldMissing) {
+    val isAFieldMissing = !relation.modelA.relationFields.exists(_.relation == relation)
+    val isBFieldMissing = !relation.modelB.relationFields.exists(_.relation == relation)
+    if (isAFieldMissing) {
       addMissingFieldFor(schema, relation, RelationSide.A)
     } else if (isBFieldMissing) {
       addMissingFieldFor(schema, relation, RelationSide.B)

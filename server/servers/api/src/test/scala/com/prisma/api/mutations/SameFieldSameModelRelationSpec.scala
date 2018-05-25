@@ -45,7 +45,8 @@ class SameFieldSameModelRelationSpec extends FlatSpec with Matchers with ApiSpec
       """{"data":{"post":{"identifier":2,"related":[{"identifier":1}]}}}""")
   }
 
-  "A One to One Self Relation" should "be accessible from both sides" taggedAs (IgnorePassive) in {
+  // taggedAs (IgnorePassive)
+  "A One to One Self Relation" should "be accessible from both sides" in {
     val project: Project = SchemaDsl.fromString() { """type Post {
                                                       |  id: ID! @unique
                                                       |  identifier: Int @unique

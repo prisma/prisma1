@@ -30,5 +30,4 @@ case class Schema(
   def getRelationByName_!(name: String): Relation                                   = getRelationByName(name).get
   def getRelationByName(name: String): Option[Relation]                             = relations.find(_.name == name)
   def getRelationsThatConnectModels(modelA: String, modelB: String): List[Relation] = relations.filter(_.connectsTheModels(modelA, modelB))
-
 }
