@@ -148,16 +148,9 @@ case class RelationField(
   lazy val relationOpt: Option[Relation] = Some(relation)
 
   lazy val relatedModel_! : Model = {
-    relatedModel match {
-      case None        => sys.error(s"Could not find relatedModel for field [$name] on model [${model.name}]")
-      case Some(model) => model
-    }
-  }
-
-  private lazy val relatedModel: Option[Model] = {
     relationSide match {
-      case RelationSide.A => relation.modelB
-      case RelationSide.B => relation.modelA
+      case RelationSide.A => relation.modelB_!
+      case RelationSide.B => relation.modelA_!
       case x              => sys.error(s"received invalid relation side $x")
     }
   }

@@ -34,10 +34,8 @@ class Relation(
   import template._
 
   lazy val bothSidesCascade: Boolean                                = modelAOnDelete == OnDelete.Cascade && modelBOnDelete == OnDelete.Cascade
-  lazy val modelA: Option[Model]                                    = schema.getModelById(modelAId)
-  lazy val modelA_! : Model                                         = modelA.get //OrElse(throw SystemErrors.InvalidRelation("A relation should have a valid Model A."))
-  lazy val modelB: Option[Model]                                    = schema.getModelById(modelBId)
-  lazy val modelB_! : Model                                         = modelB.get //OrElse(throw SystemErrors.InvalidRelation("A relation should have a valid Model B."))
+  lazy val modelA_! : Model                                         = schema.getModelByName_!(modelAId)
+  lazy val modelB_! : Model                                         = schema.getModelByName_!(modelBId)
   lazy val modelAField: Option[RelationField]                       = modelFieldFor(modelAId, RelationSide.A)
   lazy val modelBField: Option[RelationField]                       = modelFieldFor(modelBId, RelationSide.B)
   lazy val hasManifestation: Boolean                                = manifestation.isDefined
