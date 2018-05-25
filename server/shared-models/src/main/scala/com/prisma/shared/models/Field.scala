@@ -183,10 +183,10 @@ case class RelationField(
     }
   }
 
-  lazy val oppositeRelationSide: Option[RelationSide.Value] = {
+  lazy val oppositeRelationSide: RelationSide.Value = {
     relationSide match {
-      case RelationSide.A => Some(RelationSide.B)
-      case RelationSide.B => Some(RelationSide.A)
+      case RelationSide.A => RelationSide.B
+      case RelationSide.B => RelationSide.A
       case x              => sys.error(s"received invalid relation side $x")
     }
   }

@@ -30,7 +30,7 @@ object QueryArgumentsHelpers {
     def joinRelations(schema: Schema, relation: Relation, toModel: Model, alias: String, field: RelationField, fromModel: Model, modTableName: String) = {
       val relationTableName = relation.relationTableName
       val column            = relation.columnForRelationSide(field.relationSide)
-      val oppositeColumn    = relation.columnForRelationSide(field.oppositeRelationSide.get)
+      val oppositeColumn    = relation.columnForRelationSide(field.oppositeRelationSide)
       sql"""select *
             from "#$projectId"."#${toModel.dbName}" as "#$alias"
             inner join "#$projectId"."#${relationTableName}"

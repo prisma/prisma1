@@ -49,7 +49,7 @@ class ToOneDeferredResolver(dataResolver: DataResolver) {
           case false => matchesRelation(node, deferred.relationField.relationSide.toString)
           case true =>
             node.prismaNode.id != deferred.parentNodeId && (matchesRelation(node, deferred.relationField.relationSide.toString) ||
-              matchesRelation(node, deferred.relationField.oppositeRelationSide.get.toString))
+              matchesRelation(node, deferred.relationField.oppositeRelationSide.toString))
         }
       })
       .map(_.prismaNode)

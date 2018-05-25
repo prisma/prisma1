@@ -45,8 +45,8 @@ case class CascadingDeleteRelationMutactionsInterpreter(mutaction: CascadingDele
 
   private def causeString(field: RelationField) = path.lastEdge match {
     case Some(edge: NodeEdge) =>
-      s"-OLDPARENTPATHFAILURETRIGGERBYFIELD@${field.relation.relationTableName}@${field.oppositeRelationSide.get}@${edge.childWhere.fieldValueAsString}-"
-    case _ => s"-OLDPARENTPATHFAILURETRIGGERBYFIELD@${field.relation.relationTableName}@${field.oppositeRelationSide.get}-"
+      s"-OLDPARENTPATHFAILURETRIGGERBYFIELD@${field.relation.relationTableName}@${field.oppositeRelationSide}@${edge.childWhere.fieldValueAsString}-"
+    case _ => s"-OLDPARENTPATHFAILURETRIGGERBYFIELD@${field.relation.relationTableName}@${field.oppositeRelationSide}-"
   }
 }
 
@@ -125,7 +125,7 @@ case class DeleteManyRelationChecksInterpreter(mutaction: DeleteManyRelationChec
   }
 
   private def causeString(field: RelationField) =
-    s"-OLDPARENTPATHFAILURETRIGGERBYFIELDANDFILTER@${field.relation.relationTableName}@${field.oppositeRelationSide.get}-"
+    s"-OLDPARENTPATHFAILURETRIGGERBYFIELDANDFILTER@${field.relation.relationTableName}@${field.oppositeRelationSide}-"
 
 }
 
@@ -151,8 +151,8 @@ case class DeleteRelationCheckInterpreter(mutaction: DeleteRelationCheck) extend
 
   private def causeString(field: RelationField) = path.lastEdge match {
     case Some(edge: NodeEdge) =>
-      s"-OLDPARENTPATHFAILURETRIGGERBYFIELD@${field.relation.relationTableName}@${field.oppositeRelationSide.get}@${edge.childWhere.fieldValueAsString}-"
-    case _ => s"-OLDPARENTPATHFAILURETRIGGERBYFIELD@${field.relation.relationTableName}@${field.oppositeRelationSide.get}-"
+      s"-OLDPARENTPATHFAILURETRIGGERBYFIELD@${field.relation.relationTableName}@${field.oppositeRelationSide}@${edge.childWhere.fieldValueAsString}-"
+    case _ => s"-OLDPARENTPATHFAILURETRIGGERBYFIELD@${field.relation.relationTableName}@${field.oppositeRelationSide}-"
   }
 }
 

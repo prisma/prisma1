@@ -27,7 +27,7 @@ object QueryArgumentsHelpers {
     def joinRelations(relation: Relation, toModel: Model, alias: String, field: RelationField, modTableName: String) = {
       sql"""select * from `#$projectId`.`#${toModel.name}` as `#$alias`
                      inner join `#$projectId`.`#${relation.relationTableName}`
-                     on `#$alias`.`id` = `#$projectId`.`#${relation.relationTableName}`.`#${field.oppositeRelationSide.get}`
+                     on `#$alias`.`id` = `#$projectId`.`#${relation.relationTableName}`.`#${field.oppositeRelationSide}`
                      where `#$projectId`.`#${relation.relationTableName}`.`#${field.relationSide}` = `#$modTableName`.`id`"""
     }
 

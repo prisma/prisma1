@@ -50,7 +50,7 @@ case class CascadingDeleteRelationMutactionsInterpreter(mutaction: CascadingDele
     otherFieldsWhereThisModelIsRequired.collectFirst { case f if causedByThisMutactionChildOnly(f, cause) => f.relation }
 
   private def causedByThisMutactionChildOnly(field: RelationField, cause: String) = {
-    val parentCheckString = s"`${field.relation.relationTableName}` OLDPARENTPATHFAILURETRIGGERBYFIELD WHERE `${field.oppositeRelationSide.get}`"
+    val parentCheckString = s"`${field.relation.relationTableName}` OLDPARENTPATHFAILURETRIGGERBYFIELD WHERE `${field.oppositeRelationSide}`"
 
     path.lastEdge match {
       case Some(edge: NodeEdge) => cause.contains(parentCheckString) && cause.contains(parameterString(edge.childWhere))
@@ -124,7 +124,7 @@ case class DeleteManyRelationChecksInterpreter(mutaction: DeleteManyRelationChec
 
   private def causedByThisMutactionChildOnly(field: RelationField, cause: String) = {
     val parentCheckString =
-      s"`${field.relation.relationTableName}` OLDPARENTPATHFAILURETRIGGERBYFIELDANDFILTER WHERE `${field.oppositeRelationSide.get}`"
+      s"`${field.relation.relationTableName}` OLDPARENTPATHFAILURETRIGGERBYFIELDANDFILTER WHERE `${field.oppositeRelationSide}`"
     cause.contains(parentCheckString) //todo add filter
   }
 }
@@ -149,7 +149,7 @@ case class DeleteRelationCheckInterpreter(mutaction: DeleteRelationCheck) extend
     fieldsWhereThisModelIsRequired.collectFirst { case f if causedByThisMutactionChildOnly(f, cause) => f.relation }
 
   private def causedByThisMutactionChildOnly(field: RelationField, cause: String) = {
-    val parentCheckString = s"`${field.relation.relationTableName}` OLDPARENTPATHFAILURETRIGGERBYFIELD WHERE `${field.oppositeRelationSide.get}`"
+    val parentCheckString = s"`${field.relation.relationTableName}` OLDPARENTPATHFAILURETRIGGERBYFIELD WHERE `${field.oppositeRelationSide}`"
 
     path.lastEdge match {
       case Some(edge: NodeEdge) => cause.contains(parentCheckString) && cause.contains(parameterString(edge.childWhere))

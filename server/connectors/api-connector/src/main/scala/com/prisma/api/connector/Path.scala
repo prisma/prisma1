@@ -12,7 +12,7 @@ trait Edge {
   def child: Model
   def childField: Option[RelationField]
   def columnForChildRelationSide(schema: Schema) = relation.columnForRelationSide(childRelationSide)
-  def childRelationSide: RelationSide            = parentField.oppositeRelationSide.get
+  def childRelationSide: RelationSide            = parentField.oppositeRelationSide
   def relation: Relation
   def toNodeEdge(where: NodeSelector): NodeEdge = NodeEdge(parent, parentField, child, childField, where, relation)
 }

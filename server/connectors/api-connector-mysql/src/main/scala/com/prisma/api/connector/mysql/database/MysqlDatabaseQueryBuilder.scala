@@ -200,7 +200,7 @@ class MySqlDatabaseQueryBuilder()(implicit ec: ExecutionContext) {
     val fieldTable           = fromField.relatedModel_!.name
     val unsafeRelationId     = fromField.relation.relationTableName
     val modelRelationSide    = fromField.relationSide.toString
-    val oppositeRelationSide = fromField.oppositeRelationSide.get.toString
+    val oppositeRelationSide = fromField.oppositeRelationSide.toString
 
     val (conditionCommand, orderByCommand, limitCommand) =
       extractQueryArgs(project.id, fieldTable, args, defaultOrderShortcut = Some(s"""`${project.id}`.`$unsafeRelationId`.$oppositeRelationSide"""), None)
@@ -252,7 +252,7 @@ class MySqlDatabaseQueryBuilder()(implicit ec: ExecutionContext) {
     val fieldTable        = relationField.relatedModel_!.name
     val unsafeRelationId  = relationField.relation.relationTableName
     val modelRelationSide = relationField.relationSide.toString
-    val fieldRelationSide = relationField.oppositeRelationSide.get.toString
+    val fieldRelationSide = relationField.oppositeRelationSide.toString
 
     val (conditionCommand, orderByCommand, limitCommand) =
       extractQueryArgs(project.id, fieldTable, args, defaultOrderShortcut = Some(s"""`${project.id}`.`$unsafeRelationId`.$fieldRelationSide"""), None)
