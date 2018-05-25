@@ -53,9 +53,9 @@ abstract class UncachedInputTypesBuilder(project: Project) extends InputTypesBui
   }
 
   protected def computeInputObjectTypeForCreate(model: Model, parentField: Option[RelationField]): Option[InputObjectType[Any]] = {
-    val inputObjectTypeName = parentField.forall(_.relatedField.isHidden) match {
-      case false => s"${model.name}CreateWithout${parentField.get.relatedField.name.capitalize}Input"
-      case true  => s"${model.name}CreateInput"
+    val inputObjectTypeName = parentField.map(_.relatedField) match {
+      case Some(field) if !field.isHidden => s"${model.name}CreateWithout${field.name.capitalize}Input"
+      case _                              => s"${model.name}CreateInput"
     }
 
     val fields = computeScalarInputFieldsForCreate(model) ++ computeRelationalInputFieldsForCreate(model, parentField)
@@ -291,7 +291,7 @@ abstract class UncachedInputTypesBuilder(project: Project) extends InputTypesBui
 
       val inputObjectTypeName = {
         val arityPart   = if (field.isList) "Many" else "One"
-        val withoutPart = if (!relatedField.isHidden) s"Without${field.name.capitalize}" else ""
+        val withoutPart = if (!relatedField.isHidden) s"Without${relatedField.name.capitalize}" else ""
 
         s"${subModel.name}Create${arityPart}${withoutPart}Input"
       }
