@@ -79,6 +79,7 @@ class SettingUniqueToNullSpec extends FlatSpec with Matchers with ApiSpecBase {
       project
     )
 
+    //todo this will update all nodes that have b as null to NewC
     val res = server.query(
       """mutation b {
         |  updateA(
@@ -90,7 +91,7 @@ class SettingUniqueToNullSpec extends FlatSpec with Matchers with ApiSpecBase {
         |    b
         |    c{c}
         |  }
-        |}""".stripMargin,
+        |}""",
       project
     )
 
