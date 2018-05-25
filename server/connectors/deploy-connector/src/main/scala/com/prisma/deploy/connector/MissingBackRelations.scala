@@ -10,8 +10,8 @@ object MissingBackRelations {
   }
 
   private def addMissingBackRelationFieldIfMissing(schema: Schema, relation: Relation): Schema = {
-    val isAFieldMissing = !relation.modelA.relationFields.exists(_.relation == relation)
-    val isBFieldMissing = !relation.modelB.relationFields.exists(_.relation == relation)
+    val isAFieldMissing = !relation.modelA.relationFields.exists(field => field.relation == relation && field.relationSide == RelationSide.A)
+    val isBFieldMissing = !relation.modelB.relationFields.exists(field => field.relation == relation && field.relationSide == RelationSide.B)
     if (isAFieldMissing) {
       addMissingFieldFor(schema, relation, RelationSide.A)
     } else if (isBFieldMissing) {
@@ -22,9 +22,10 @@ object MissingBackRelations {
   }
 
   private def addMissingFieldFor(schema: Schema, relation: Relation, relationSide: RelationSide.Value): Schema = {
-    val model     = if (relationSide == RelationSide.A) relation.modelA else relation.modelB
-    val newModel  = model.copy(fieldTemplates = model.fieldTemplates :+ missingBackRelationField(relation, relationSide))
-    val newModels = schema.modelTemplates.filter(_.name != model.name) :+ newModel
+    val relationFromUpdatedSchema = schema.relations.find(_.name == relation.name).get
+    val model                     = if (relationSide == RelationSide.A) relationFromUpdatedSchema.modelA else relationFromUpdatedSchema.modelB
+    val newModel                  = model.copy(fieldTemplates = model.fieldTemplates :+ missingBackRelationField(relationFromUpdatedSchema, relationSide))
+    val newModels                 = schema.modelTemplates.filter(_.name != model.name) :+ newModel
     schema.copy(modelTemplates = newModels)
   }
 

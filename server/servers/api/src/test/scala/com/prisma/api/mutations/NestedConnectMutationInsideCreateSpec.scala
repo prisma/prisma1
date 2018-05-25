@@ -729,7 +729,7 @@ class NestedConnectMutationInsideCreateSpec extends FlatSpec with Matchers with 
   "a PM to CM  relation without a backrelation" should "be connectable through a nested mutation by unique" in {
     val project = SchemaDsl.fromBuilder { schema =>
       val role = schema.model("Role").field_!("r", _.String, isUnique = true)
-      val user = schema.model("User").field_!("u", _.String, isUnique = true).manyToManyRelation("roles", "notexposed", role, includeFieldB = false)
+      val user = schema.model("User").field_!("u", _.String, isUnique = true).manyToManyRelation("roles", "notexposed", role, includeFieldBInSchema = false)
     }
     database.setup(project)
 
