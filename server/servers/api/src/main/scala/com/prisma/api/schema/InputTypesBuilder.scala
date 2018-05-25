@@ -53,7 +53,7 @@ abstract class UncachedInputTypesBuilder(project: Project) extends InputTypesBui
   }
 
   protected def computeInputObjectTypeForCreate(model: Model, parentField: Option[RelationField]): Option[InputObjectType[Any]] = {
-    val inputObjectTypeName = parentField.get.relatedField.isHidden match {
+    val inputObjectTypeName = parentField.forall(_.relatedField.isHidden) match {
       case false => s"${model.name}CreateWithout${parentField.get.relatedField.name.capitalize}Input"
       case true  => s"${model.name}CreateInput"
     }
@@ -261,7 +261,7 @@ abstract class UncachedInputTypesBuilder(project: Project) extends InputTypesBui
         s"${subModel.name}Update${arityPart}${withoutPart}Input"
       }
 
-      val fieldIsOppositeRelationField = parentField.get.relatedField == field
+      val fieldIsOppositeRelationField = parentField.map(_.relatedField).contains(field)
 
       if (fieldIsOppositeRelationField) {
         None
@@ -296,7 +296,7 @@ abstract class UncachedInputTypesBuilder(project: Project) extends InputTypesBui
         s"${subModel.name}Create${arityPart}${withoutPart}Input"
       }
 
-      val fieldIsOppositeRelationField = parentField.get.relatedField == field
+      val fieldIsOppositeRelationField = parentField.map(_.relatedField).contains(field)
 
       if (fieldIsOppositeRelationField) {
         None

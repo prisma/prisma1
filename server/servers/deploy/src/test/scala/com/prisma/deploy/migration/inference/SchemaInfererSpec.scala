@@ -220,8 +220,8 @@ class SchemaInfererSpec extends WordSpec with Matchers {
       val relation = schema.getRelationByName_!("ChildTechnologies")
       relation.modelAName should equal("Technology")
       relation.modelBName should equal("Technology")
-      relation.modelAField.get.name should be("childTechnologies")
-      relation.modelBField.get.name should be("parentTechnologies")
+      relation.modelAField.name should be("childTechnologies")
+      relation.modelBField.name should be("parentTechnologies")
 
     }
 
@@ -238,8 +238,8 @@ class SchemaInfererSpec extends WordSpec with Matchers {
       val relation = schema.getRelationByName_!("ChildTechnologies")
       relation.modelAName should equal("Technology")
       relation.modelBName should equal("Technology")
-      relation.modelAField.get.name should be("childTechnologies")
-      relation.modelBField.get.name should be("parentTechnologies")
+      relation.modelAField.name should be("childTechnologies")
+      relation.modelBField.name should be("parentTechnologies")
 
       val newTypes =
         """|type NewTechnology {
@@ -284,8 +284,8 @@ class SchemaInfererSpec extends WordSpec with Matchers {
     val relation = schema.getRelationByName_!("ChildTechnologies")
     relation.modelAName should equal("Technology")
     relation.modelBName should equal("Technology")
-    relation.modelAField.get.name should be("childTechnologies")
-    relation.modelBField.get.name should be("parentTechnologies")
+    relation.modelAField.name should be("childTechnologies")
+    relation.modelBField.name should be("parentTechnologies")
 
     val techModel   = schema.models.head
     val parentField = techModel.getFieldByName_!("parentTechnologies")
@@ -323,7 +323,7 @@ class SchemaInfererSpec extends WordSpec with Matchers {
     val relation = schema.relations.head
     relation.modelAName should equal("Technology")
     relation.modelBName should equal("Technology")
-    relation.modelAField.get.name should be("childTechnologies")
+    relation.modelAField.name should be("childTechnologies")
   }
 
   "handle database manifestations for models" in {
