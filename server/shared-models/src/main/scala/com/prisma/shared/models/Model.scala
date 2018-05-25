@@ -36,12 +36,13 @@ class Model(
   lazy val relationListFields: List[RelationField]      = relationFields.filter(_.isList)
   lazy val relationNonListFields: List[RelationField]   = relationFields.filter(!_.isList)
   lazy val visibleRelationFields: List[RelationField]   = relationFields.filter(_.isVisible)
+  lazy val cascadingRelationFields: List[RelationField] = relationFields.filter(field => field.relation.sideOfModelCascades(this))
   lazy val nonListFields                                = fields.filter(!_.isList)
   lazy val idField                                      = getFieldByName("id")
   lazy val idField_!                                    = getFieldByName_!("id")
   lazy val dbNameOfIdField_!                            = idField_!.dbName
-  val updatedAtField                                    = getFieldByName("updatedAt")
-  lazy val cascadingRelationFields: List[RelationField] = relationFields.filter(field => field.relation.sideOfModelCascades(this))
+  lazy val updatedAtField                               = getFieldByName("updatedAt")
+  lazy val hasVisibleIdField: Boolean                   = idField.exists(_.isVisible)
 
   def filterScalarFields(fn: ScalarField => Boolean): Model = {
     val newFields         = this.scalarFields.filter(fn).map(_.template)
@@ -53,9 +54,7 @@ class Model(
   def getRelationFieldByName_!(name: String): RelationField   = getFieldByName_!(name).asInstanceOf[RelationField]
   def getScalarFieldByName_!(name: String): ScalarField       = getFieldByName_!(name).asInstanceOf[ScalarField]
   def getScalarFieldByName(name: String): Option[ScalarField] = getFieldByName(name).map(_.asInstanceOf[ScalarField])
+  def getFieldByName_!(name: String): Field                   = getFieldByName(name).getOrElse(sys.error(s"field $name is not part of the model ${this.name}"))
+  def getFieldByName(name: String): Option[Field]             = fields.find(_.name == name)
 
-  def getFieldByName_!(name: String): Field       = getFieldByName(name).getOrElse(sys.error(s"field $name is not part of the model ${this.name}"))
-  def getFieldByName(name: String): Option[Field] = fields.find(_.name == name)
-
-  def hasVisibleIdField: Boolean = idField.exists(_.isVisible)
 }
