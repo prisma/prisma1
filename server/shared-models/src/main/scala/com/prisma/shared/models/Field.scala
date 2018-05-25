@@ -184,8 +184,7 @@ case class RelationField(
     }
   }
 
-  def isRelationWithIdAndSide(relationId: String, relationSide: RelationSide.Value): Boolean = isRelationWithId(relationId) && this.relationSide == relationSide
-  private def isRelationWithId(relationId: String): Boolean                                  = relation.relationTableName == relationId
+  def isRelationWithNameAndSide(relationName: String, side: RelationSide.Value): Boolean = relation.name == relationName && this.relationSide == side
 }
 
 case class ScalarField(

@@ -69,10 +69,11 @@ class Relation(
   }
 
   private def modelFieldFor(model: String, relationSide: RelationSide.Value): Option[RelationField] = {
-    for {
-      model <- schema.getModelByName(model)
-      field <- model.relationFieldForIdAndSide(relationId = relationTableName, relationSide = relationSide)
-    } yield field
+    val model = relationSide match {
+      case RelationSide.A => modelA_!
+      case RelationSide.B => modelB_!
+    }
+    model.relationFields.find(_.isRelationWithNameAndSide(name, relationSide))
   }
 
   def columnForRelationSide(relationSide: RelationSide.Value): String = if (relationSide == RelationSide.A) modelAColumn else modelBColumn

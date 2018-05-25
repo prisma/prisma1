@@ -43,10 +43,6 @@ class Model(
   val updatedAtField                                    = getFieldByName("updatedAt")
   lazy val cascadingRelationFields: List[RelationField] = relationFields.filter(field => field.relation.sideOfModelCascades(this))
 
-  def relationFieldForIdAndSide(relationId: String, relationSide: RelationSide.Value): Option[RelationField] = {
-    relationFields.find(_.isRelationWithIdAndSide(relationId, relationSide))
-  }
-
   def filterScalarFields(fn: ScalarField => Boolean): Model = {
     val newFields         = this.scalarFields.filter(fn).map(_.template)
     val newModel          = copy(fieldTemplates = newFields)
