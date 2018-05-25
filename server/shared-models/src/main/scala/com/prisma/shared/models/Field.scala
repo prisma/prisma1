@@ -62,12 +62,16 @@ case class FieldTemplate(
 
 object Field {
   implicit def asFieldTemplate(field: Field): FieldTemplate = field.template
+
+  val magicalBackRelationPrefix = "_MagicalBackRelation_"
 }
 class Field(
     val template: FieldTemplate,
     val model: Model
 ) {
   import template._
+
+  val isMagicalBackRelation = name.startsWith(Field.magicalBackRelationPrefix)
 
   val schema = model.schema
 

@@ -1,6 +1,6 @@
 package com.prisma.deploy.migration.inference
 
-import com.prisma.deploy.connector.InferredTables
+import com.prisma.deploy.connector.{InferredTables, MissingBackRelations}
 import com.prisma.deploy.migration.DirectiveTypes.{InlineRelationDirective, RelationTableDirective}
 import com.prisma.deploy.migration.validation._
 import com.prisma.deploy.schema.InvalidRelationName
@@ -40,10 +40,7 @@ case class SchemaInferrerImpl(
 
   val isPassive = !isActive
 
-  def infer(): Schema = {
-    val schema = Schema(modelTemplates = nextModels.toList, relationTemplates = nextRelations.toList, enums = nextEnums.toList)
-    addMissingBackRelations(schema)
-  }
+  def infer(): Schema = Schema(modelTemplates = nextModels.toList, relationTemplates = nextRelations.toList, enums = nextEnums.toList)
 
   lazy val nextModels: Vector[ModelTemplate] = {
     prismaSdl.types.map { prismaType =>
@@ -308,55 +305,6 @@ case class SchemaInferrerImpl(
             columnOption.map(column => InlineRelationManifestation(prismaType.name, column))
           }
     }
-  }
-
-  def addMissingBackRelations(schema: Schema): Schema = {
-    if (isPassive) {
-      schema.relations.foldLeft(schema) { (schema, relation) =>
-        addMissingBackRelationFieldIfMissing(schema, relation)
-      }
-    } else {
-      schema
-    }
-  }
-
-  def addMissingBackRelationFieldIfMissing(schema: Schema, relation: Relation): Schema = {
-    val isAFieldMissing = relation.modelAField.isEmpty
-    val isBFieldMissing = relation.modelBField.isEmpty
-    if (relation.isSameFieldSameModelRelation) { // fixme: we want to remove that in 1.9
-      schema
-    } else if (isAFieldMissing) {
-      addMissingFieldFor(schema, relation, RelationSide.A)
-    } else if (isBFieldMissing) {
-      addMissingFieldFor(schema, relation, RelationSide.B)
-    } else {
-      schema
-    }
-  }
-
-  def addMissingFieldFor(schema: Schema, relation: Relation, relationSide: RelationSide.Value): Schema = {
-    val model     = if (relationSide == RelationSide.A) relation.modelA_! else relation.modelB_!
-    val newModel  = model.copy(fieldTemplates = model.fieldTemplates :+ missingBackRelationField(relation, relationSide))
-    val newModels = schema.models.filter(_.name != model.name).map(_.copy()) :+ newModel
-    schema.copy(modelTemplates = newModels)
-  }
-
-  def missingBackRelationField(relation: Relation, relationSide: RelationSide.Value): FieldTemplate = {
-    val name = "_back_" + relation.name
-    FieldTemplate(
-      name = name,
-      typeIdentifier = TypeIdentifier.Relation,
-      isRequired = false,
-      isList = true,
-      isUnique = false,
-      isHidden = true,
-      isReadonly = false,
-      enum = None,
-      defaultValue = None,
-      relationName = Some(relation.name),
-      relationSide = Some(relationSide),
-      manifestation = None
-    )
   }
 
   lazy val nextEnums: Vector[Enum] = prismaSdl.enums.map(enumType => Enum(name = enumType.name, values = enumType.values))
