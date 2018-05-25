@@ -3,7 +3,7 @@ package com.prisma.api.connector
 import com.prisma.api.connector.Types.DataItemFilterCollection
 import com.prisma.gc_values.{GCValue, IdGCValue}
 import com.prisma.shared.models.IdType.Id
-import com.prisma.shared.models.{Field, Model, Relation, Schema}
+import com.prisma.shared.models._
 
 import scala.collection.immutable.Seq
 
@@ -43,7 +43,7 @@ object SortOrder extends Enumeration {
 }
 
 case class OrderBy(
-    field: Field,
+    field: ScalarField,
     sortOrder: SortOrder.Value
 )
 
@@ -57,7 +57,7 @@ case class FilterElement(
 case class FinalValueFilter(
     key: String,
     value: GCValue,
-    field: Field,
+    field: ScalarField,
     filterName: String = ""
 )
 
@@ -65,13 +65,13 @@ case class FinalRelationFilter(
     schema: Schema,
     key: String,
     value: Any,
-    field: Field,
+    field: RelationField,
     filterName: String = ""
 )
 
 case class TransitiveRelationFilter(
     schema: Schema,
-    field: Field,
+    field: RelationField,
     fromModel: Model,
     toModel: Model,
     relation: Relation,

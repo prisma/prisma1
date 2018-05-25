@@ -71,7 +71,7 @@ class MySqlDatabaseQueryBuilder()(implicit ec: ExecutionContext) {
     override def apply(ps: PositionedResult): (IdGCValue, Int) = (ps.rs.getId, ps.rs.getInt("Count"))
   }
 
-  def getResultForScalarListField(field: Field): GetResult[ScalarListElement] = GetResult { ps: PositionedResult =>
+  def getResultForScalarListField(field: ScalarField): GetResult[ScalarListElement] = GetResult { ps: PositionedResult =>
     val resultSet = ps.rs
     val nodeId    = resultSet.getString("nodeId")
     val position  = resultSet.getInt("position")
@@ -117,7 +117,7 @@ class MySqlDatabaseQueryBuilder()(implicit ec: ExecutionContext) {
 
   def selectAllFromListTable(projectId: String,
                              model: Model,
-                             field: Field,
+                             field: ScalarField,
                              args: Option[QueryArguments],
                              overrideMaxNodeCount: Option[Int] = None): DBIOAction[ResolverResult[ScalarListValues], NoStream, Effect] = {
 
@@ -176,7 +176,7 @@ class MySqlDatabaseQueryBuilder()(implicit ec: ExecutionContext) {
 
   def selectFromScalarList(projectId: String,
                            modelName: String,
-                           field: Field,
+                           field: ScalarField,
                            nodeIds: Vector[IdGCValue]): DBIOAction[Vector[ScalarListValues], NoStream, Effect] = {
     val query = sql"select nodeId, position, value from `#$projectId`.`#${modelName}_#${field.name}` where nodeId in (" ++ combineByComma(
       nodeIds.map(v => sql"$v")) ++ sql")"
@@ -192,15 +192,15 @@ class MySqlDatabaseQueryBuilder()(implicit ec: ExecutionContext) {
   }
 
   def batchSelectAllFromRelatedModel(project: Project,
-                                     fromField: Field,
+                                     fromField: RelationField,
                                      fromModelIds: Vector[IdGCValue],
                                      args: Option[QueryArguments]): DBIOAction[Vector[ResolverResult[PrismaNodeWithParent]], NoStream, Effect] = {
 
-    val relatedModel         = fromField.relatedModel.get
-    val fieldTable           = fromField.relatedModel.get.name
-    val unsafeRelationId     = fromField.relation.get.relationTableName
-    val modelRelationSide    = fromField.relationSide.get.toString
-    val oppositeRelationSide = fromField.oppositeRelationSide.get.toString
+    val relatedModel         = fromField.relatedModel_!
+    val fieldTable           = fromField.relatedModel_!.name
+    val unsafeRelationId     = fromField.relation.relationTableName
+    val modelRelationSide    = fromField.relationSide.toString
+    val oppositeRelationSide = fromField.oppositeRelationSide.toString
 
     val (conditionCommand, orderByCommand, limitCommand) =
       extractQueryArgs(project.id, fieldTable, args, defaultOrderShortcut = Some(s"""`${project.id}`.`$unsafeRelationId`.$oppositeRelationSide"""), None)
@@ -217,7 +217,7 @@ class MySqlDatabaseQueryBuilder()(implicit ec: ExecutionContext) {
     }
 
     // see https://github.com/graphcool/internal-docs/blob/master/relations.md#findings
-    val resolveFromBothSidesAndMerge = fromField.relation.get.isSameFieldSameModelRelation
+    val resolveFromBothSidesAndMerge = fromField.relation.isSameFieldSameModelRelation
 
     val query = resolveFromBothSidesAndMerge match {
       case false =>
@@ -245,14 +245,14 @@ class MySqlDatabaseQueryBuilder()(implicit ec: ExecutionContext) {
   }
 
   def countAllFromRelatedModels(project: Project,
-                                relationField: Field,
+                                relationField: RelationField,
                                 parentNodeIds: Vector[IdGCValue],
                                 args: Option[QueryArguments]): SqlStreamingAction[Vector[(IdGCValue, Int)], (IdGCValue, Int), Effect] = {
 
-    val fieldTable        = relationField.relatedModel.get.name
-    val unsafeRelationId  = relationField.relation.get.relationTableName
-    val modelRelationSide = relationField.relationSide.get.toString
-    val fieldRelationSide = relationField.oppositeRelationSide.get.toString
+    val fieldTable        = relationField.relatedModel_!.name
+    val unsafeRelationId  = relationField.relation.relationTableName
+    val modelRelationSide = relationField.relationSide.toString
+    val fieldRelationSide = relationField.oppositeRelationSide.toString
 
     val (conditionCommand, orderByCommand, limitCommand) =
       extractQueryArgs(project.id, fieldTable, args, defaultOrderShortcut = Some(s"""`${project.id}`.`$unsafeRelationId`.$fieldRelationSide"""), None)

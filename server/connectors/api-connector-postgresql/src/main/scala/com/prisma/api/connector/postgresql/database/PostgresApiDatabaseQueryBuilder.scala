@@ -52,7 +52,7 @@ case class PostgresApiDatabaseQueryBuilder(
     override def apply(ps: PositionedResult): (IdGCValue, Int) = (ps.rs.getAsID("id"), ps.rs.getInt("Count"))
   }
 
-  def getResultForScalarListField(field: Field): GetResult[ScalarListElement] = GetResult { ps: PositionedResult =>
+  def getResultForScalarListField(field: ScalarField): GetResult[ScalarListElement] = GetResult { ps: PositionedResult =>
     val resultSet = ps.rs
     val nodeId    = resultSet.getString("nodeId")
     val position  = resultSet.getInt("position")
@@ -110,7 +110,7 @@ case class PostgresApiDatabaseQueryBuilder(
 
   def selectAllFromListTable(
       model: Model,
-      field: Field,
+      field: ScalarField,
       args: Option[QueryArguments],
       overrideMaxNodeCount: Option[Int] = None
   ): DBIOAction[ResolverResult[ScalarListValues], NoStream, Effect] = {
@@ -167,7 +167,7 @@ case class PostgresApiDatabaseQueryBuilder(
       result
     }
 
-  def selectFromScalarList(modelName: String, field: Field, nodeIds: Vector[IdGCValue]): DBIOAction[Vector[ScalarListValues], NoStream, Effect] = {
+  def selectFromScalarList(modelName: String, field: ScalarField, nodeIds: Vector[IdGCValue]): DBIOAction[Vector[ScalarListValues], NoStream, Effect] = {
     val query = sql"""select "nodeId", "position", "value" from "#$schemaName"."#${modelName}_#${field.dbName}" where "nodeId" in (""" ++ combineByComma(
       nodeIds.map(v => sql"$v")) ++ sql")"
 
@@ -183,7 +183,7 @@ case class PostgresApiDatabaseQueryBuilder(
 
   def batchSelectAllFromRelatedModel(
       schema: Schema,
-      fromField: Field,
+      fromField: RelationField,
       fromModelIds: Vector[IdGCValue],
       args: Option[QueryArguments]
   ): DBIOAction[Vector[ResolverResult[PrismaNodeWithParent]], NoStream, Effect] = {
@@ -193,18 +193,18 @@ case class PostgresApiDatabaseQueryBuilder(
 
   def batchSelectAllFromRelatedModelNew(
       schema: Schema,
-      fromField: Field,
+      fromField: RelationField,
       fromModelIds: Vector[IdGCValue],
       args: Option[QueryArguments]
   ): DBIOAction[Vector[ResolverResult[PrismaNodeWithParent]], NoStream, Effect] = {
-    val relation     = fromField.relation.get
-    val relatedModel = fromField.relatedModel.get
+    val relation     = fromField.relation
+    val relatedModel = fromField.relatedModel_!
     val modelTable   = relatedModel.dbName
 
-    val relationTableName     = fromField.relation.get.relationTableName
+    val relationTableName     = fromField.relation.relationTableName
     val (aColumn, bColumn)    = (relation.modelAColumn, relation.modelBColumn)
-    val columnForFromModel    = relation.columnForRelationSide(fromField.relationSide.get)
-    val columnForRelatedModel = relation.columnForRelationSide(fromField.oppositeRelationSide.get)
+    val columnForFromModel    = relation.columnForRelationSide(fromField.relationSide)
+    val columnForRelatedModel = relation.columnForRelationSide(fromField.oppositeRelationSide)
 
     val (conditionCommand, orderByCommand, limitCommand) = extractQueryArgs(
       projectId = schemaName,
@@ -228,7 +228,7 @@ case class PostgresApiDatabaseQueryBuilder(
     }
 
     // see https://github.com/graphcool/internal-docs/blob/master/relations.md#findings
-    val resolveFromBothSidesAndMerge = fromField.relation.get.isSameFieldSameModelRelation
+    val resolveFromBothSidesAndMerge = fromField.relation.isSameFieldSameModelRelation
 
     val query = resolveFromBothSidesAndMerge match {
       case false =>
@@ -244,8 +244,8 @@ case class PostgresApiDatabaseQueryBuilder(
               createQuery(b._1.value, columnForRelatedModel, columnForFromModel))
     }
 
-    val modelRelationSide    = fromField.relationSide.get.toString
-    val oppositeRelationSide = fromField.oppositeRelationSide.get.toString
+    val modelRelationSide    = fromField.relationSide.toString
+    val oppositeRelationSide = fromField.oppositeRelationSide.toString
     query
       .as[PrismaNodeWithParent](getResultForModelAndRelationSide(relatedModel, modelRelationSide, oppositeRelationSide))
       .map { items =>
@@ -261,17 +261,17 @@ case class PostgresApiDatabaseQueryBuilder(
 
   def batchSelectAllFromRelatedModelOld(
       schema: Schema,
-      fromField: Field,
+      fromField: RelationField,
       fromModelIds: Vector[IdGCValue],
       args: Option[QueryArguments]
   ): DBIOAction[Vector[ResolverResult[PrismaNodeWithParent]], NoStream, Effect] = {
 
-    val relatedModel                  = fromField.relatedModel.get
+    val relatedModel                  = fromField.relatedModel_!
     val fieldTable                    = relatedModel.dbName
-    val relation                      = fromField.relation.get
+    val relation                      = fromField.relation
     val unsafeRelationId              = relation.relationTableName
-    val modelRelationSide             = fromField.relationSide.get.toString
-    val columnForOppositeRelationSide = relation.columnForRelationSide(fromField.oppositeRelationSide.get)
+    val modelRelationSide             = fromField.relationSide.toString
+    val columnForOppositeRelationSide = relation.columnForRelationSide(fromField.oppositeRelationSide)
 
     val (conditionCommand, orderByCommand, limitCommand) = extractQueryArgs(
       projectId = schemaName,
@@ -294,7 +294,7 @@ case class PostgresApiDatabaseQueryBuilder(
     }
 
     // see https://github.com/graphcool/internal-docs/blob/master/relations.md#findings
-    val resolveFromBothSidesAndMerge = fromField.relation.get.isSameFieldSameModelRelation
+    val resolveFromBothSidesAndMerge = fromField.relation.isSameFieldSameModelRelation
 
     val query = resolveFromBothSidesAndMerge match {
       case false =>
@@ -325,17 +325,17 @@ case class PostgresApiDatabaseQueryBuilder(
 
   def countAllFromRelatedModels(
       schema: Schema,
-      relationField: Field,
+      relationField: RelationField,
       parentNodeIds: Vector[IdGCValue],
       args: Option[QueryArguments]
   ): SqlStreamingAction[Vector[(IdGCValue, Int)], (IdGCValue, Int), Effect] = {
 
-    val relatedModel               = relationField.relatedModel.get
+    val relatedModel               = relationField.relatedModel_!
     val fieldTable                 = relatedModel.dbName
-    val relation                   = relationField.relation.get
+    val relation                   = relationField.relation
     val unsafeRelationId           = relation.relationTableName
-    val modelRelationSide          = relationField.relationSide.get.toString
-    val columnForFieldRelationSide = relation.columnForRelationSide(relationField.oppositeRelationSide.get)
+    val modelRelationSide          = relationField.relationSide.toString
+    val columnForFieldRelationSide = relation.columnForRelationSide(relationField.oppositeRelationSide)
 
     val (conditionCommand, orderByCommand, limitCommand) = extractQueryArgs(
       projectId = schemaName,

@@ -6,20 +6,19 @@ import com.prisma.shared.models._
 
 trait Edge {
   def parent: Model
-  def parentField: Field
+  def parentField: RelationField
   def columnForParentRelationSide(schema: Schema) = relation.columnForRelationSide(parentRelationSide)
-  def parentRelationSide: RelationSide            = parentField.relationSide.get
+  def parentRelationSide: RelationSide            = parentField.relationSide
   def child: Model
-  def childField: Option[Field]
+  def childField: Option[RelationField]
   def columnForChildRelationSide(schema: Schema) = relation.columnForRelationSide(childRelationSide)
-  def childRelationSide: RelationSide            = parentField.oppositeRelationSide.get
+  def childRelationSide: RelationSide            = parentField.oppositeRelationSide
   def relation: Relation
-  def toNodeEdge(where: NodeSelector): NodeEdge = {
-    NodeEdge(parent, parentField, child, childField, where, relation)
-  }
+  def toNodeEdge(where: NodeSelector): NodeEdge = NodeEdge(parent, parentField, child, childField, where, relation)
 }
-case class ModelEdge(parent: Model, parentField: Field, child: Model, childField: Option[Field], relation: Relation)                          extends Edge
-case class NodeEdge(parent: Model, parentField: Field, child: Model, childField: Option[Field], childWhere: NodeSelector, relation: Relation) extends Edge
+case class ModelEdge(parent: Model, parentField: RelationField, child: Model, childField: Option[RelationField], relation: Relation) extends Edge
+case class NodeEdge(parent: Model, parentField: RelationField, child: Model, childField: Option[RelationField], childWhere: NodeSelector, relation: Relation)
+    extends Edge
 
 //  case class NodePath(root: NodeSelector, edges: List[Edge], last: NodeEdge)
 
@@ -27,7 +26,7 @@ case class Path(root: NodeSelector, edges: List[Edge]) {
 
   def relations                    = edges.map(_.relation)
   def models                       = root.model +: edges.map(_.child)
-  def otherCascadingRelationFields = lastModel.cascadingRelationFields.filter(relationField => !relations.contains(relationField.relation.get))
+  def otherCascadingRelationFields = lastModel.cascadingRelationFields.filter(relationField => !relations.contains(relationField.relation))
   def lastEdge                     = edges.lastOption
   def lastEdge_!                   = edges.last
   def lastRelation_!               = lastRelation.get
@@ -42,14 +41,14 @@ case class Path(root: NodeSelector, edges: List[Edge]) {
     case _   => copy(root, edges.dropRight(1))
   }
 
-  def appendCascadingEdge(project: Project, field: Field): Path = {
-    val edge = ModelEdge(lastModel, field, field.relatedModel_!, field.relatedField, field.relation.get)
+  def appendCascadingEdge(project: Project, field: RelationField): Path = {
+    val edge = ModelEdge(lastModel, field, field.relatedModel_!, field.relatedField, field.relation)
     if (edge.relation.bothSidesCascade || models.contains(edge.child)) throw APIErrors.CascadingDeletePathLoops()
     copy(root, edges :+ edge)
   }
 
-  def appendEdge(project: Project, field: Field): Path = {
-    val edge = ModelEdge(lastModel, field, field.relatedModel_!, field.relatedField, field.relation.get)
+  def appendEdge(project: Project, field: RelationField): Path = {
+    val edge = ModelEdge(lastModel, field, field.relatedModel_!, field.relatedField, field.relation)
     copy(root, edges :+ edge)
   }
 

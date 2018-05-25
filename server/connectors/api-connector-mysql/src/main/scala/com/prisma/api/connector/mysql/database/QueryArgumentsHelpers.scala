@@ -5,7 +5,7 @@ import com.prisma.api.connector._
 import com.prisma.api.connector.mysql.database.SlickExtensions._
 import com.prisma.api.schema.APIErrors
 import com.prisma.gc_values.{GCValue, GCValueExtractor, ListGCValue, NullGCValue}
-import com.prisma.shared.models.{Field, Model, Relation}
+import com.prisma.shared.models.{Field, Model, Relation, RelationField}
 import slick.jdbc.MySQLProfile.api._
 import slick.jdbc.SQLActionBuilder
 
@@ -24,11 +24,11 @@ object QueryArgumentsHelpers {
       Some(generateFilterConditions(projectId, relationTableName, nestedFilter).getOrElse(sql"True"))
     }
 
-    def joinRelations(relation: Relation, toModel: Model, alias: String, field: Field, modTableName: String) = {
+    def joinRelations(relation: Relation, toModel: Model, alias: String, field: RelationField, modTableName: String) = {
       sql"""select * from `#$projectId`.`#${toModel.name}` as `#$alias`
                      inner join `#$projectId`.`#${relation.relationTableName}`
-                     on `#$alias`.`id` = `#$projectId`.`#${relation.relationTableName}`.`#${field.oppositeRelationSide.get}`
-                     where `#$projectId`.`#${relation.relationTableName}`.`#${field.relationSide.get}` = `#$modTableName`.`id`"""
+                     on `#$alias`.`id` = `#$projectId`.`#${relation.relationTableName}`.`#${field.oppositeRelationSide}`
+                     where `#$projectId`.`#${relation.relationTableName}`.`#${field.relationSide}` = `#$modTableName`.`id`"""
     }
 
     //key, value, field, filterName, relationFilter
@@ -163,8 +163,8 @@ object QueryArgumentsHelpers {
           if (field.isList) throw APIErrors.FilterCannotBeNullOnToManyField(field.name)
 
           Some(sql""" not exists (select  *
-                                  from    `#$projectId`.`#${field.relation.get.relationTableName}`
-                                  where   `#$projectId`.`#${field.relation.get.relationTableName}`.`#${field.relationSide.get}` = `#$projectId`.`#$tableName`.`id`
+                                  from    `#$projectId`.`#${field.relation.relationTableName}`
+                                  where   `#$projectId`.`#${field.relation.relationTableName}`.`#${field.relationSide}` = `#$projectId`.`#$tableName`.`id`
                                   )""")
 
         // this is used for the node: {} field in the Subscription Filter

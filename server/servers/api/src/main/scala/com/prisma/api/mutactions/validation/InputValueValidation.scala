@@ -4,7 +4,7 @@ import com.prisma.api.connector.PrismaArgs
 import com.prisma.api.schema.APIErrors
 import com.prisma.api.schema.APIErrors.ClientApiError
 import com.prisma.gc_values._
-import com.prisma.shared.models.{Field, Model}
+import com.prisma.shared.models.{Field, Model, ScalarField}
 
 object InputValueValidation {
 
@@ -17,7 +17,7 @@ object InputValueValidation {
     }
   }
 
-  def checkValueSize(args: PrismaArgs, updatedFields: List[Field]): List[Field] = {
+  def checkValueSize(args: PrismaArgs, updatedFields: List[ScalarField]): List[ScalarField] = {
     updatedFields
       .filter(field => args.hasArgFor(field))
       .filter(field => !isValueSizeValid(args.getFieldValue(field.name).get))
@@ -37,7 +37,7 @@ object InputValueValidation {
     case NullGCValue        => true
   }
 
-  def scalarFieldsWithValues(model: Model, args: PrismaArgs): List[Field] = {
+  def scalarFieldsWithValues(model: Model, args: PrismaArgs): List[ScalarField] = {
     model.scalarFields.filter(field => args.getFieldValue(field.name).isDefined).filter(_.name != "id")
   }
 }

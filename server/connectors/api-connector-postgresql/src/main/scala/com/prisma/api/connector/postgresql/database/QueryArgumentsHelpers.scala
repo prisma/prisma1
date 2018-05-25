@@ -5,7 +5,7 @@ import com.prisma.api.connector._
 import com.prisma.api.connector.postgresql.database.SlickExtensions._
 import com.prisma.api.schema.APIErrors
 import com.prisma.gc_values.{GCValue, GCValueExtractor, ListGCValue, NullGCValue}
-import com.prisma.shared.models.{Field, Model, Relation, Schema}
+import com.prisma.shared.models._
 import slick.jdbc.PostgresProfile.api._
 import slick.jdbc.SQLActionBuilder
 
@@ -27,10 +27,10 @@ object QueryArgumentsHelpers {
       Some(generateFilterConditions(projectId, relationTableName, nestedFilter).getOrElse(sql"True"))
     }
 
-    def joinRelations(schema: Schema, relation: Relation, toModel: Model, alias: String, field: Field, fromModel: Model, modTableName: String) = {
+    def joinRelations(schema: Schema, relation: Relation, toModel: Model, alias: String, field: RelationField, fromModel: Model, modTableName: String) = {
       val relationTableName = relation.relationTableName
-      val column            = relation.columnForRelationSide(field.relationSide.get)
-      val oppositeColumn    = relation.columnForRelationSide(field.oppositeRelationSide.get)
+      val column            = relation.columnForRelationSide(field.relationSide)
+      val oppositeColumn    = relation.columnForRelationSide(field.oppositeRelationSide)
       sql"""select *
             from "#$projectId"."#${toModel.dbName}" as "#$alias"
             inner join "#$projectId"."#${relationTableName}"
@@ -181,9 +181,9 @@ object QueryArgumentsHelpers {
         case FinalRelationFilter(schema, key, null, field, filterName) =>
           if (field.isList) throw APIErrors.FilterCannotBeNullOnToManyField(field.name)
 
-          val relation          = field.relation.get
+          val relation          = field.relation
           val relationTableName = relation.relationTableName
-          val column            = relation.columnForRelationSide(field.relationSide.get)
+          val column            = relation.columnForRelationSide(field.relationSide)
           // fixme: an ugly hack that is hard to explain. ask marcus.
           val otherIdColumn = schema.models.find(_.dbName == tableName) match {
             case Some(model) => model.idField_!.dbName

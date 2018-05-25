@@ -88,8 +88,8 @@ case class SchemaInferrerImpl(
       //For self relations we were inferring the relationSide A for both sides, this now assigns A to the lexicographically lower field name and B to the other
       //If in the previous schema both relationSides are A we reassign the relationsides otherwise we keep the one from the previous schema.
       def inferRelationSide(relation: Option[RelationTemplate]) = {
-        def oldRelationSidesNotBothEqual(oldField: Field) = oldField.otherRelationField match {
-          case Some(relatedField) => oldField.relationSide.isDefined && oldField.relationSide != relatedField.relationSide
+        def oldRelationSidesNotBothEqual(oldField: RelationField) = oldField.otherRelationField match {
+          case Some(relatedField) => oldField.relationSide != relatedField.relationSide
           case None               => true
         }
 
@@ -100,15 +100,15 @@ case class SchemaInferrerImpl(
             val oldField     = baseSchema.getFieldByName(oldModelName, oldFieldName)
 
             oldField match {
-              case Some(field) if field.isRelation && oldRelationSidesNotBothEqual(field) =>
-                field.relationSide.get
+              case Some(field: RelationField) if oldRelationSidesNotBothEqual(field) =>
+                field.relationSide
 
               case _ =>
                 val relationFieldNames = prismaType.relationalPrismaFields.filter(f => f.relationName.contains(relation.name)).map(_.name)
                 if (relationFieldNames.exists(name => name < prismaField.name)) RelationSide.B else RelationSide.A
             }
           } else {
-            if (relation.modelAId == prismaType.name) RelationSide.A else RelationSide.B
+            if (relation.modelAName == prismaType.name) RelationSide.A else RelationSide.B
           }
         }
       }
@@ -219,8 +219,8 @@ case class SchemaInferrerImpl(
 
       val nextRelation = RelationTemplate(
         name = relationName,
-        modelAId = modelA,
-        modelBId = modelB,
+        modelAName = modelA,
+        modelBName = modelB,
         modelAOnDelete = modelAOnDelete,
         modelBOnDelete = modelBOnDelete,
         manifestation = relationManifestation
@@ -228,9 +228,9 @@ case class SchemaInferrerImpl(
 
       oldEquivalentRelation match {
         case Some(relation) =>
-          val nextModelAId = if (previousModelAName == relation.modelAId) modelA else modelB
-          val nextModelBId = if (previousModelBName == relation.modelBId) modelB else modelA
-          nextRelation.copy(modelAId = nextModelAId, modelBId = nextModelBId)
+          val nextModelAId = if (previousModelAName == relation.modelAName) modelA else modelB
+          val nextModelBId = if (previousModelBName == relation.modelBName) modelB else modelA
+          nextRelation.copy(modelAName = nextModelAId, modelBName = nextModelBId)
 
         case None => nextRelation
       }

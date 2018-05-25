@@ -31,7 +31,7 @@ object FilteredResolver {
       }
 
     val filter = filterInput.filter(removeTopLevelIdFilter(_)) ++ List(
-      FinalValueFilter(key = "id", value = IdGCValue(id), field = model.getFieldByName_!("id"), ""))
+      FinalValueFilter(key = "id", value = IdGCValue(id), field = model.getScalarFieldByName_!("id"), ""))
 
     dataResolver.resolveByModel(model, Some(QueryArguments.filterOnly(filter = Some(filter)))).map(_.nodes.headOption)
   }

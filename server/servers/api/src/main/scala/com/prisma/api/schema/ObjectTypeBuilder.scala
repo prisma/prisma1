@@ -8,7 +8,7 @@ import com.prisma.api.resolver.{IdBasedConnection, IdBasedConnectionDefinition}
 import com.prisma.api.schema.CustomScalarTypes.{DateTimeType, JsonType}
 import com.prisma.gc_values._
 import com.prisma.shared.models
-import com.prisma.shared.models.{Field, Model, TypeIdentifier}
+import com.prisma.shared.models.{Field => _, _}
 import com.prisma.util.coolArgs.GCAnyConverter
 import sangria.schema.{Field => SangriaField, _}
 
@@ -111,38 +111,43 @@ class ObjectTypeBuilder(
   )
 
   def mapToOutputType(model: Option[models.Model], field: models.Field): OutputType[Any] = {
-    var outputType: OutputType[Any] = field.typeIdentifier match {
-      case TypeIdentifier.String    => StringType
-      case TypeIdentifier.Int       => IntType
-      case TypeIdentifier.Float     => FloatType
-      case TypeIdentifier.Boolean   => BooleanType
-      case TypeIdentifier.GraphQLID => IDType
-      case TypeIdentifier.DateTime  => DateTimeType
-      case TypeIdentifier.Json      => JsonType
-      case TypeIdentifier.Enum      => SchemaBuilderUtils.mapEnumFieldToInputType(field)
-      case TypeIdentifier.Relation  => resolveConnection(field)
+    val outputType: OutputType[Any] = field match {
+      case f: RelationField => resolveConnection(f)
+      case f: ScalarField =>
+        f.typeIdentifier match {
+          case TypeIdentifier.String    => StringType
+          case TypeIdentifier.Int       => IntType
+          case TypeIdentifier.Float     => FloatType
+          case TypeIdentifier.Boolean   => BooleanType
+          case TypeIdentifier.GraphQLID => IDType
+          case TypeIdentifier.DateTime  => DateTimeType
+          case TypeIdentifier.Json      => JsonType
+          case TypeIdentifier.Enum      => SchemaBuilderUtils.mapEnumFieldToInputType(f)
+        }
     }
 
-    if (field.isScalar && field.isList) outputType = ListType(outputType)
-
-    if (!field.isRequired) outputType = OptionType(outputType)
-
-    outputType
+    if (field.isScalar && field.isList) {
+      ListType(outputType)
+    } else if (!field.isRequired) {
+      OptionType(outputType)
+    } else {
+      outputType
+    }
   }
 
-  def resolveConnection(field: Field): OutputType[Any] = {
+  def resolveConnection(field: RelationField): OutputType[Any] = {
     field.isList match {
-      case true  => ListType(modelObjectTypes(field.relatedModel.get.name))
+      case true  => ListType(modelObjectTypes(field.relatedModel_!.name))
       case false => modelObjectTypes(field.relatedModel_!.name)
     }
   }
 
   def mapToListConnectionArguments(model: models.Model, field: models.Field): List[Argument[Option[Any]]] = {
-    (field.isHidden, field.isScalar, field.isList) match {
-      case (true, _, _)      => List()
-      case (_, true, _)      => List()
-      case (_, false, true)  => mapToListConnectionArguments(field.relatedModel.get)
-      case (_, false, false) => mapToSingleConnectionArguments(field.relatedModel.get)
+    field match {
+      case f if f.isHidden               => List.empty
+      case _: ScalarField                => List.empty
+      case f: RelationField if f.isList  => mapToListConnectionArguments(f.relatedModel_!)
+      case f: RelationField if !f.isList => mapToSingleConnectionArguments(f.relatedModel_!)
     }
   }
 
@@ -182,6 +187,8 @@ class ObjectTypeBuilder(
       .map {
         case (key, value) =>
           val FieldFilterTuple(field, filter) = filterArguments.lookup(key)
+          lazy val asRelationField            = field.get.asInstanceOf[RelationField]
+          lazy val asScalarField              = field.get.asInstanceOf[ScalarField]
           value match {
             case value: Map[_, _] =>
               val typedValue = value.asInstanceOf[Map[String, Any]]
@@ -191,12 +198,12 @@ class ObjectTypeBuilder(
                 // this must be a relation filter
                 TransitiveRelationFilter(
                   project.schema,
-                  field.get,
+                  asRelationField,
                   model,
-                  field.get.relatedModel.get,
-                  field.get.relation.get,
+                  asRelationField.relatedModel_!,
+                  asRelationField.relation,
                   filter.name,
-                  generateFilterElement(typedValue, field.get.relatedModel.get, isSubscriptionFilter)
+                  generateFilterElement(typedValue, asRelationField.relatedModel_!, isSubscriptionFilter)
                 )
               }
 
@@ -207,21 +214,21 @@ class ObjectTypeBuilder(
 
             case value: Seq[Any] if field.isDefined && field.get.isScalar =>
               val converter = GCAnyConverter(field.get.typeIdentifier, isList = false)
-              FinalValueFilter(key, ListGCValue(value.map(x => converter.toGCValue(x).get).toVector), field.get, filter.name)
+              FinalValueFilter(key, ListGCValue(value.map(x => converter.toGCValue(x).get).toVector), asScalarField, filter.name)
 
             case Some(filterValue) if field.isDefined && field.get.isScalar =>
               val converter = GCAnyConverter(field.get.typeIdentifier, isList = false)
-              FinalValueFilter(key, converter.toGCValue(filterValue).get, field.get, filter.name)
+              FinalValueFilter(key, converter.toGCValue(filterValue).get, asScalarField, filter.name)
 
             case Some(filterValue) if field.isDefined && field.get.isRelation =>
-              FinalRelationFilter(project.schema, key, filterValue, field.get, filter.name)
+              FinalRelationFilter(project.schema, key, filterValue, field.get.asInstanceOf[RelationField], filter.name)
 
             case valueNew if field.isDefined && field.get.isRelation =>
-              FinalRelationFilter(project.schema, key, valueNew, field.get, filter.name)
+              FinalRelationFilter(project.schema, key, valueNew, field.get.asInstanceOf[RelationField], filter.name)
 
             case valueNew if field.isDefined && field.get.isScalar =>
               val converter = GCAnyConverter(field.get.typeIdentifier, isList = false)
-              FinalValueFilter(key, converter.toGCValue(valueNew).get, field.get, filter.name)
+              FinalValueFilter(key, converter.toGCValue(valueNew).get, asScalarField, filter.name)
 
             case _ =>
               FilterElement(key, value, field, filter.name)
@@ -256,13 +263,21 @@ class ObjectTypeBuilder(
       ctx: Context[C, PrismaNode]): sangria.schema.Action[ApiUserContext, _] = {
 
     val item: PrismaNode = unwrapDataItemFromContext(ctx)
-    lazy val arguments   = extractQueryArgumentsFromContext(field.relatedModel.get, ctx.asInstanceOf[Context[ApiUserContext, Unit]])
 
-    (field.isScalar, field.isList) match {
-      case (true, true)   => ScalarListDeferred(model, field, item.id)
-      case (true, false)  => GCValueExtractor.fromGCValue(item.data.map(field.name))
-      case (false, true)  => DeferredValue(ToManyDeferred(field, item.id, arguments)).map(_.toNodes)
-      case (false, false) => ToOneDeferred(field, item.id, arguments)
+    field match {
+      case f: ScalarField if f.isList =>
+        ScalarListDeferred(model, f, item.id)
+
+      case f: ScalarField if !f.isList =>
+        GCValueExtractor.fromGCValue(item.data.map(field.name))
+
+      case f: RelationField if f.isList =>
+        val arguments = extractQueryArgumentsFromContext(f.relatedModel_!, ctx.asInstanceOf[Context[ApiUserContext, Unit]])
+        DeferredValue(ToManyDeferred(f, item.id, arguments)).map(_.toNodes)
+
+      case f: RelationField if !f.isList =>
+        val arguments = extractQueryArgumentsFromContext(f.relatedModel_!, ctx.asInstanceOf[Context[ApiUserContext, Unit]])
+        ToOneDeferred(f, item.id, arguments)
     }
   }
 

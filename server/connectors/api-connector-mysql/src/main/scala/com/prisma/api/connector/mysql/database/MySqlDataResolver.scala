@@ -52,29 +52,31 @@ case class MySqlDataResolver(project: Project, readonlyClientDatabase: MySQLProf
     performWithTiming("countByModel", readonlyClientDatabase.run(query))
   }
 
-  override def batchResolveByUnique(model: Model, field: Field, values: Vector[GCValue]): Future[Vector[PrismaNode]] = {
+  override def batchResolveByUnique(model: Model, field: ScalarField, values: Vector[GCValue]): Future[Vector[PrismaNode]] = {
     val query = queryBuilder.batchSelectFromModelByUnique(project.id, model, field.dbName, values)
     performWithTiming("batchResolveByUnique", readonlyClientDatabase.run(query))
   }
 
-  override def batchResolveScalarList(model: Model, listField: Field, nodeIds: Vector[IdGCValue]): Future[Vector[ScalarListValues]] = {
+  override def batchResolveScalarList(model: Model, listField: ScalarField, nodeIds: Vector[IdGCValue]): Future[Vector[ScalarListValues]] = {
     val query = queryBuilder.selectFromScalarList(project.id, model.name, listField, nodeIds)
     performWithTiming("batchResolveScalarList", readonlyClientDatabase.run(query))
   }
 
-  override def resolveByRelationManyModels(fromField: Field,
+  override def resolveByRelationManyModels(fromField: RelationField,
                                            fromNodeIds: Vector[IdGCValue],
                                            args: Option[QueryArguments]): Future[Vector[ResolverResult[PrismaNodeWithParent]]] = {
     val query = queryBuilder.batchSelectAllFromRelatedModel(project, fromField, fromNodeIds, args)
     performWithTiming("resolveByRelation", readonlyClientDatabase.run(query))
   }
 
-  override def countByRelationManyModels(fromField: Field, fromNodeIds: Vector[IdGCValue], args: Option[QueryArguments]): Future[Vector[(IdGCValue, Int)]] = {
+  override def countByRelationManyModels(fromField: RelationField,
+                                         fromNodeIds: Vector[IdGCValue],
+                                         args: Option[QueryArguments]): Future[Vector[(IdGCValue, Int)]] = {
     val query = queryBuilder.countAllFromRelatedModels(project, fromField, fromNodeIds, args)
     performWithTiming("countByRelation", readonlyClientDatabase.run(query))
   }
 
-  override def loadListRowsForExport(model: Model, field: Field, args: Option[QueryArguments] = None): Future[ResolverResult[ScalarListValues]] = {
+  override def loadListRowsForExport(model: Model, field: ScalarField, args: Option[QueryArguments] = None): Future[ResolverResult[ScalarListValues]] = {
     val query = queryBuilder.selectAllFromListTable(project.id, model, field, args, None)
     performWithTiming("loadListRowsForExport", readonlyClientDatabase.run(query))
   }

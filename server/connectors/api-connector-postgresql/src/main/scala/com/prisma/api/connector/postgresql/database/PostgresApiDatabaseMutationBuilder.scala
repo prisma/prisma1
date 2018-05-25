@@ -72,10 +72,10 @@ case class PostgresApiDatabaseMutationBuilder(
       val inlineManifestation = relation.inlineManifestation.get
       val referencingColumn   = inlineManifestation.referencingColumn
       val tableName           = relation.relationTableName
-      val otherModel = if (inlineManifestation.inTableOfModelId == relation.modelAId) {
-        schema.getModelById_!(relation.modelBId)
+      val otherModel = if (inlineManifestation.inTableOfModelId == relation.modelAName) {
+        relation.modelB
       } else {
-        schema.getModelById_!(relation.modelAId)
+        relation.modelA
       }
       val childWhereCondition = sql"""where "#$schemaName"."#${childWhere.model.dbName}"."#${childWhere.field.dbName}" = ${childWhere.fieldValue}"""
       val otherWhereCondition = sql"""where "#$schemaName"."#${path.removeLastEdge.lastModel.dbName}"."#${path.removeLastEdge.lastModel.dbNameOfIdField_!}" in (""" ++ pathQueryForLastChild(
@@ -84,7 +84,7 @@ case class PostgresApiDatabaseMutationBuilder(
       val selectIdOfOther = sql"""select "#${otherModel.dbNameOfIdField_!}" as id from "#$schemaName"."#${otherModel.dbName}" """ ++ otherWhereCondition
 
       val rowToUpdateCondition = if (relation.isSameModelRelation) {
-        if (path.lastEdge_!.childField.get.relationSide.get == RelationSide.A) {
+        if (path.lastEdge_!.childField.get.relationSide == RelationSide.A) {
           childWhereCondition
         } else {
           otherWhereCondition
@@ -98,7 +98,7 @@ case class PostgresApiDatabaseMutationBuilder(
       }
 
       val nodeToLinkToCondition = if (relation.isSameModelRelation) {
-        if (path.lastEdge_!.childField.get.relationSide.get == RelationSide.A) {
+        if (path.lastEdge_!.childField.get.relationSide == RelationSide.A) {
           selectIdOfOther
         } else {
           selectIdOfChild
@@ -121,8 +121,8 @@ case class PostgresApiDatabaseMutationBuilder(
       val parentModel     = nodeEdge.parent
       val childModel      = nodeEdge.child
       val manifestation   = relation.manifestation.get.asInstanceOf[RelationTableManifestation]
-      val columnForParent = if (parentModel.name == relation.modelAId) manifestation.modelAColumn else manifestation.modelBColumn
-      val columnForChild  = if (childModel.name == relation.modelAId) manifestation.modelAColumn else manifestation.modelBColumn
+      val columnForParent = if (parentModel.name == relation.modelAName) manifestation.modelAColumn else manifestation.modelBColumn
+      val columnForChild  = if (childModel.name == relation.modelAName) manifestation.modelAColumn else manifestation.modelBColumn
 
       (sql"""insert into "#$schemaName"."#${path.lastRelation_!.relationTableName}" ("#$columnForParent", "#$columnForChild")""" ++
         sql"""Select """ ++ pathQueryForLastChild(path.removeLastEdge) ++ sql"," ++
@@ -486,22 +486,22 @@ case class PostgresApiDatabaseMutationBuilder(
     triggerFailureWhenExists(query, table, triggerString)
   }
 
-  def oldParentFailureTriggerByField(path: Path, field: Field, triggerString: String) = {
-    val relation       = field.relation.get
+  def oldParentFailureTriggerByField(path: Path, field: RelationField, triggerString: String) = {
+    val relation       = field.relation
     val table          = relation.relationTableName
-    val oppositeColumn = relation.columnForRelationSide(field.oppositeRelationSide.get)
-    val column         = relation.columnForRelationSide(field.relationSide.get)
+    val oppositeColumn = relation.columnForRelationSide(field.oppositeRelationSide)
+    val column         = relation.columnForRelationSide(field.relationSide)
     val query = sql"""SELECT * FROM "#$schemaName"."#$table" OLDPARENTPATHFAILURETRIGGERBYFIELD""" ++
       sql"""WHERE "#$oppositeColumn" IN (""" ++ pathQueryForLastChild(path) ++ sql") " ++
       sql"""AND "#$column" IS NOT NULL"""
     triggerFailureWhenExists(query, table, triggerString)
   }
 
-  def oldParentFailureTriggerByFieldAndFilter(model: Model, whereFilter: Option[DataItemFilterCollection], field: Field, causeString: String) = {
-    val relation       = field.relation.get
+  def oldParentFailureTriggerByFieldAndFilter(model: Model, whereFilter: Option[DataItemFilterCollection], field: RelationField, causeString: String) = {
+    val relation       = field.relation
     val table          = relation.relationTableName
-    val column         = relation.columnForRelationSide(field.oppositeRelationSide.get)
-    val oppositeColumn = relation.columnForRelationSide(field.relationSide.get)
+    val column         = relation.columnForRelationSide(field.oppositeRelationSide)
+    val oppositeColumn = relation.columnForRelationSide(field.relationSide)
 
     val query =
       sql"""SELECT * FROM "#$schemaName"."#$table" OLDPARENTPATHFAILURETRIGGERBYFIELDANDFILTER""" ++

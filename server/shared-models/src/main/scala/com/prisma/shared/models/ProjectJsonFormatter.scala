@@ -230,8 +230,7 @@ object ProjectJsonFormatter {
       (JsPath \ "defaultValue").readNullable[GCValue] and
       readEitherPathNullable[String](JsPath \ "relation" \ "name", JsPath \ "relationName") and
       (JsPath \ "relationSide").readNullable[RelationSide.Value] and
-      (JsPath \ "manifestation").readNullable[FieldManifestation] and
-      (JsPath \ "constraints").read[List[FieldConstraint]]
+      (JsPath \ "manifestation").readNullable[FieldManifestation]
   )(FieldTemplate.apply _)
 
   implicit val fieldWrites: Writes[FieldTemplate] = (
@@ -246,8 +245,7 @@ object ProjectJsonFormatter {
       (JsPath \ "defaultValue").writeNullable[GCValue] and
       (JsPath \ "relationName").writeNullable[String] and
       (JsPath \ "relationSide").writeNullable[RelationSide.Value] and
-      (JsPath \ "manifestation").writeNullable[FieldManifestation] and
-      (JsPath \ "constraints").write[List[FieldConstraint]]
+      (JsPath \ "manifestation").writeNullable[FieldManifestation]
   )(unlift(FieldTemplate.unapply))
 
   implicit val modelReads: Reads[ModelTemplate] = (
