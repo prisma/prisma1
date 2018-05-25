@@ -15,7 +15,7 @@ object InferredTablesValidator {
           Some(SchemaError.global(s"Could not find the relation between the models ${modelA.name} and ${modelB.name} in the database"))
 
         case Some(m: InlineRelationManifestation) =>
-          val model = schema.getModelById_!(m.inTableOfModelId)
+          val model = schema.getModelByName_!(m.inTableOfModelId)
           inferredTables.modelTables.find(_.name == model.dbName) match {
             case None =>
               Some(SchemaError.global(s"Could not find the model table ${model.dbName} in the database"))

@@ -20,9 +20,6 @@ case class Schema(
 
   def fieldsWhereThisModelIsRequired(model: Model) = allRelationFields.filter(f => f.isRequired && !f.isList && f.relatedModel_! == model)
 
-  def getModelById(id: Id): Option[Model] = models.find(_.name == id)
-  def getModelById_!(id: Id): Model       = getModelById(id).getOrElse(throw SharedErrors.InvalidModel(id))
-
   def getModelByStableIdentifier_!(stableId: String): Model = {
     models.find(_.stableIdentifier == stableId).getOrElse(throw SharedErrors.InvalidModel(s"Could not find a model for the stable identifier: $stableId"))
   }

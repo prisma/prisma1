@@ -46,7 +46,7 @@ class Relation(
 
   lazy val relationTableName = manifestation match {
     case Some(m: RelationTableManifestation)  => m.table
-    case Some(m: InlineRelationManifestation) => schema.getModelById_!(m.inTableOfModelId).dbName
+    case Some(m: InlineRelationManifestation) => schema.getModelByName_!(m.inTableOfModelId).dbName
     case None                                 => "_" + name
   }
 
@@ -68,9 +68,9 @@ class Relation(
     modelAFieldIsList && modelBFieldIsList
   }
 
-  private def modelFieldFor(modelId: String, relationSide: RelationSide.Value): Option[RelationField] = {
+  private def modelFieldFor(model: String, relationSide: RelationSide.Value): Option[RelationField] = {
     for {
-      model <- schema.getModelById(modelId)
+      model <- schema.getModelByName(model)
       field <- model.relationFieldForIdAndSide(relationId = relationTableName, relationSide = relationSide)
     } yield field
   }

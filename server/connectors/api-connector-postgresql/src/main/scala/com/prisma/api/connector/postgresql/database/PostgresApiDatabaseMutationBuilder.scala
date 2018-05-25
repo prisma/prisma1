@@ -73,9 +73,9 @@ case class PostgresApiDatabaseMutationBuilder(
       val referencingColumn   = inlineManifestation.referencingColumn
       val tableName           = relation.relationTableName
       val otherModel = if (inlineManifestation.inTableOfModelId == relation.modelAId) {
-        schema.getModelById_!(relation.modelBId)
+        relation.modelB_!
       } else {
-        schema.getModelById_!(relation.modelAId)
+        relation.modelA_!
       }
       val childWhereCondition = sql"""where "#$schemaName"."#${childWhere.model.dbName}"."#${childWhere.field.dbName}" = ${childWhere.fieldValue}"""
       val otherWhereCondition = sql"""where "#$schemaName"."#${path.removeLastEdge.lastModel.dbName}"."#${path.removeLastEdge.lastModel.dbNameOfIdField_!}" in (""" ++ pathQueryForLastChild(
