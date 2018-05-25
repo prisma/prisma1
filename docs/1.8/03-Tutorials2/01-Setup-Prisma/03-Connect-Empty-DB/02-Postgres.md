@@ -103,8 +103,6 @@ services:
             user: __YOUR_POSTGRES_USER__
             password: __YOUR_POSTGRES_PASSWORD__
             migrations: true
-volumes:
-  postgres:
 ```
 
 </Instruction>
@@ -168,7 +166,7 @@ datamodel: datamodel.graphql
 To complete the setup, open `datamodel.graphql` and add the following `User` type to it:
 
 ```graphql
-type User{
+type User {
   id: ID! @unique
   name: String!
 }
