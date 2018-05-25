@@ -41,15 +41,15 @@ class ToOneDeferredResolver(dataResolver: DataResolver) {
       prismaNodeWithParent.parentId == deferred.parentNodeId
 
     // see https://github.com/graphcool/internal-docs/blob/master/relations.md#findings
-    val resolveFromBothSidesAndMerge = deferred.relationField.relation.get.isSameFieldSameModelRelation
+    val resolveFromBothSidesAndMerge = deferred.relationField.relation.isSameFieldSameModelRelation
 
     nodes
       .find(node => {
         resolveFromBothSidesAndMerge match {
-          case false => matchesRelation(node, deferred.relationField.relationSide.get.toString)
+          case false => matchesRelation(node, deferred.relationField.relationSide.toString)
           case true =>
-            node.prismaNode.id != deferred.parentNodeId && (matchesRelation(node, deferred.relationField.relationSide.get.toString) ||
-              matchesRelation(node, deferred.relationField.oppositeRelationSide.get.toString))
+            node.prismaNode.id != deferred.parentNodeId && (matchesRelation(node, deferred.relationField.relationSide.toString) ||
+              matchesRelation(node, deferred.relationField.oppositeRelationSide.toString))
         }
       })
       .map(_.prismaNode)

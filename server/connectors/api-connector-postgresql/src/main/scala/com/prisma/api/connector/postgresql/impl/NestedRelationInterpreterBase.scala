@@ -22,7 +22,8 @@ trait NestedRelationInterpreterBase extends DatabaseMutactionInterpreter {
   val otherFieldOption  = edge.childField
   val c = otherFieldOption match {
     case Some(x) => x
-    case None    => p.copy(isRequired = false, isList = true).build(otherModel) // fixme: 1. obsolete magical back relation 2. passingOtherModel is not right
+    case None =>
+      p.template.copy(isRequired = false, isList = true).build(otherModel) // fixme: 1. obsolete magical back relation 2. passingOtherModel is not right
   }
   val parentCauseString = edge match {
     case edge: NodeEdge => s"-OLDPARENTFAILURETRIGGER@${relationTableName}@${edge.columnForChildRelationSide}@${edge.childWhere.fieldValueAsString}-"

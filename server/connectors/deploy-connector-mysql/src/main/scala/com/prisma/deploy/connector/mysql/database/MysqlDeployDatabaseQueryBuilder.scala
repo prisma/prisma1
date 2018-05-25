@@ -1,7 +1,7 @@
 package com.prisma.deploy.connector.mysql.database
 
 import com.prisma.shared.models.RelationSide.RelationSide
-import com.prisma.shared.models.{Field, Model}
+import com.prisma.shared.models.{Field, Model, RelationField}
 import slick.jdbc.MySQLProfile.api._
 import slick.jdbc.{PositionedParameters, SQLActionBuilder}
 
@@ -37,9 +37,9 @@ object MySqlDeployDatabaseQueryBuilder {
           WHERE `#$projectId`.`#$modelName`.#$fieldName IS NULL)"""
   }
 
-  def existsNullByModelAndRelationField(projectId: String, modelName: String, field: Field) = {
-    val relationTableName = field.relation_!.relationTableName
-    val relationSide      = field.relationSide.get.toString
+  def existsNullByModelAndRelationField(projectId: String, modelName: String, field: RelationField) = {
+    val relationTableName = field.relation.relationTableName
+    val relationSide      = field.relationSide.toString
 
     sql"""select EXISTS (
             select `id`from `#$projectId`.`#$modelName`

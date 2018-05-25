@@ -3,7 +3,7 @@ package com.prisma.api.connector.postgresql.database
 import com.prisma.api.connector._
 import com.prisma.api.connector.postgresql.database.PostgresSlickExtensions._
 import com.prisma.gc_values.{GCValue, GCValueExtractor, NullGCValue}
-import com.prisma.shared.models.Field
+import com.prisma.shared.models.{Field, RelationField}
 import slick.jdbc.PostgresProfile.api._
 import slick.jdbc.SQLActionBuilder
 
@@ -17,12 +17,12 @@ object PostgresQueryArgumentsHelpers {
       (newAlias, modTableName)
     }
 
-    def relationFilterStatement(field: Field, nestedFilter: Filter, relationCondition: RelationCondition) = {
+    def relationFilterStatement(field: RelationField, nestedFilter: Filter, relationCondition: RelationCondition) = {
       val (alias, modTableName) = getAliasAndTableName(field.model.name, field.relatedModel_!.name)
 
-      val relationTableName = field.relation_!.relationTableName
-      val column            = field.relation_!.columnForRelationSide(field.relationSide.get)
-      val oppositeColumn    = field.relation_!.columnForRelationSide(field.oppositeRelationSide.get)
+      val relationTableName = field.relation.relationTableName
+      val column            = field.relation.columnForRelationSide(field.relationSide)
+      val oppositeColumn    = field.relation.columnForRelationSide(field.oppositeRelationSide)
 
       val join = sql"""select *
             from "#$projectId"."#${field.relatedModel_!.dbName}" as "#$alias"
@@ -71,9 +71,9 @@ object PostgresQueryArgumentsHelpers {
       case ScalarFilter(field, In(values))                 => Some(if (values.nonEmpty) valueOf(field) ++ in(values) else sql"false")
       case ScalarFilter(field, NotIn(values))              => Some(if (values.nonEmpty) valueOf(field) ++ sql""" NOT """ ++ in(values) else sql"true")
       case OneRelationIsNullFilter(field) =>
-        val relation          = field.relation_!
+        val relation          = field.relation
         val relationTableName = relation.relationTableName
-        val column            = relation.columnForRelationSide(field.relationSide.get)
+        val column            = relation.columnForRelationSide(field.relationSide)
         val otherIdColumn     = field.relatedModel_!.dbNameOfIdField_!
 
         Some(sql""" not exists (select  *

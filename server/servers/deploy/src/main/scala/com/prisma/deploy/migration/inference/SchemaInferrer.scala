@@ -1,6 +1,6 @@
 package com.prisma.deploy.migration.inference
 
-import com.prisma.deploy.connector.InferredTables
+import com.prisma.deploy.connector.{InferredTables, MissingBackRelations}
 import com.prisma.deploy.migration.DirectiveTypes.{InlineRelationDirective, RelationTableDirective}
 import com.prisma.deploy.migration.validation._
 import com.prisma.deploy.schema.InvalidRelationName
@@ -40,10 +40,7 @@ case class SchemaInferrerImpl(
 
   val isPassive = !isActive
 
-  def infer(): Schema = {
-    val schema = Schema(modelTemplates = nextModels.toList, relationTemplates = nextRelations.toList, enums = nextEnums.toList)
-    addMissingBackRelations(schema)
-  }
+  def infer(): Schema = Schema(modelTemplates = nextModels.toList, relationTemplates = nextRelations.toList, enums = nextEnums.toList)
 
   lazy val nextModels: Vector[ModelTemplate] = {
     prismaSdl.types.map { prismaType =>
@@ -91,8 +88,8 @@ case class SchemaInferrerImpl(
       //For self relations we were inferring the relationSide A for both sides, this now assigns A to the lexicographically lower field name and B to the other
       //If in the previous schema both relationSides are A we reassign the relationsides otherwise we keep the one from the previous schema.
       def inferRelationSide(relation: Option[RelationTemplate]) = {
-        def oldRelationSidesNotBothEqual(oldField: Field) = oldField.otherRelationField match {
-          case Some(relatedField) => oldField.relationSide.isDefined && oldField.relationSide != relatedField.relationSide
+        def oldRelationSidesNotBothEqual(oldField: RelationField) = oldField.otherRelationField match {
+          case Some(relatedField) => oldField.relationSide != relatedField.relationSide
           case None               => true
         }
 
@@ -103,15 +100,15 @@ case class SchemaInferrerImpl(
             val oldField     = baseSchema.getFieldByName(oldModelName, oldFieldName)
 
             oldField match {
-              case Some(field) if field.isRelation && oldRelationSidesNotBothEqual(field) =>
-                field.relationSide.get
+              case Some(field: RelationField) if oldRelationSidesNotBothEqual(field) =>
+                field.relationSide
 
               case _ =>
                 val relationFieldNames = prismaType.relationalPrismaFields.filter(f => f.relationName.contains(relation.name)).map(_.name)
                 if (relationFieldNames.exists(name => name < prismaField.name)) RelationSide.B else RelationSide.A
             }
           } else {
-            if (relation.modelAId == prismaType.name) RelationSide.A else RelationSide.B
+            if (relation.modelAName == prismaType.name) RelationSide.A else RelationSide.B
           }
         }
       }
@@ -222,8 +219,8 @@ case class SchemaInferrerImpl(
 
       val nextRelation = RelationTemplate(
         name = relationName,
-        modelAId = modelA,
-        modelBId = modelB,
+        modelAName = modelA,
+        modelBName = modelB,
         modelAOnDelete = modelAOnDelete,
         modelBOnDelete = modelBOnDelete,
         manifestation = relationManifestation
@@ -231,9 +228,9 @@ case class SchemaInferrerImpl(
 
       oldEquivalentRelation match {
         case Some(relation) =>
-          val nextModelAId = if (previousModelAName == relation.modelAId) modelA else modelB
-          val nextModelBId = if (previousModelBName == relation.modelBId) modelB else modelA
-          nextRelation.copy(modelAId = nextModelAId, modelBId = nextModelBId)
+          val nextModelAId = if (previousModelAName == relation.modelAName) modelA else modelB
+          val nextModelBId = if (previousModelBName == relation.modelBName) modelB else modelA
+          nextRelation.copy(modelAName = nextModelAId, modelBName = nextModelBId)
 
         case None => nextRelation
       }
@@ -308,55 +305,6 @@ case class SchemaInferrerImpl(
             columnOption.map(column => InlineRelationManifestation(prismaType.name, column))
           }
     }
-  }
-
-  def addMissingBackRelations(schema: Schema): Schema = {
-    if (isPassive) {
-      schema.relations.foldLeft(schema) { (schema, relation) =>
-        addMissingBackRelationFieldIfMissing(schema, relation)
-      }
-    } else {
-      schema
-    }
-  }
-
-  def addMissingBackRelationFieldIfMissing(schema: Schema, relation: Relation): Schema = {
-    val isAFieldMissing = relation.modelAField.isEmpty
-    val isBFieldMissing = relation.modelBField.isEmpty
-    if (relation.isSameFieldSameModelRelation) { // fixme: we want to remove that in 1.9
-      schema
-    } else if (isAFieldMissing) {
-      addMissingFieldFor(schema, relation, RelationSide.A)
-    } else if (isBFieldMissing) {
-      addMissingFieldFor(schema, relation, RelationSide.B)
-    } else {
-      schema
-    }
-  }
-
-  def addMissingFieldFor(schema: Schema, relation: Relation, relationSide: RelationSide.Value): Schema = {
-    val model     = if (relationSide == RelationSide.A) relation.modelA_! else relation.modelB_!
-    val newModel  = model.copy(fieldTemplates = model.fieldTemplates :+ missingBackRelationField(relation, relationSide))
-    val newModels = schema.models.filter(_.name != model.name).map(_.copy()) :+ newModel
-    schema.copy(modelTemplates = newModels)
-  }
-
-  def missingBackRelationField(relation: Relation, relationSide: RelationSide.Value): FieldTemplate = {
-    val name = "_back_" + relation.name
-    FieldTemplate(
-      name = name,
-      typeIdentifier = TypeIdentifier.Relation,
-      isRequired = false,
-      isList = true,
-      isUnique = false,
-      isHidden = true,
-      isReadonly = false,
-      enum = None,
-      defaultValue = None,
-      relationName = Some(relation.name),
-      relationSide = Some(relationSide),
-      manifestation = None
-    )
   }
 
   lazy val nextEnums: Vector[Enum] = prismaSdl.enums.map(enumType => Enum(name = enumType.name, values = enumType.values))

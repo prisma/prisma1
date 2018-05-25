@@ -70,10 +70,10 @@ case class PostgresApiDatabaseMutationBuilder(
       val inlineManifestation = relation.inlineManifestation.get
       val referencingColumn   = inlineManifestation.referencingColumn
       val tableName           = relation.relationTableName
-      val otherModel = if (inlineManifestation.inTableOfModelId == relation.modelAId) {
-        schema.getModelById_!(relation.modelBId)
+      val otherModel = if (inlineManifestation.inTableOfModelId == relation.modelAName) {
+        relation.modelB
       } else {
-        schema.getModelById_!(relation.modelAId)
+        relation.modelA
       }
       val childWhereCondition = sql"""where "#$schemaName"."#${childWhere.model.dbName}"."#${childWhere.field.dbName}" = ${childWhere.fieldValue}"""
       val otherWhereCondition = sql"""where "#$schemaName"."#${path.removeLastEdge.lastModel.dbName}"."#${path.removeLastEdge.lastModel.dbNameOfIdField_!}" in (""" ++ pathQueryForLastChild(
@@ -82,7 +82,7 @@ case class PostgresApiDatabaseMutationBuilder(
       val selectIdOfOther = sql"""select "#${otherModel.dbNameOfIdField_!}" as id from "#$schemaName"."#${otherModel.dbName}" """ ++ otherWhereCondition
 
       val rowToUpdateCondition = if (relation.isSameModelRelation) {
-        if (path.lastEdge_!.childField.get.relationSide.get == RelationSide.A) {
+        if (path.lastEdge_!.childField.get.relationSide == RelationSide.A) {
           childWhereCondition
         } else {
           otherWhereCondition
@@ -96,7 +96,7 @@ case class PostgresApiDatabaseMutationBuilder(
       }
 
       val nodeToLinkToCondition = if (relation.isSameModelRelation) {
-        if (path.lastEdge_!.childField.get.relationSide.get == RelationSide.A) {
+        if (path.lastEdge_!.childField.get.relationSide == RelationSide.A) {
           selectIdOfOther
         } else {
           selectIdOfChild
@@ -119,8 +119,8 @@ case class PostgresApiDatabaseMutationBuilder(
       val parentModel     = nodeEdge.parent
       val childModel      = nodeEdge.child
       val manifestation   = relation.manifestation.get.asInstanceOf[RelationTableManifestation]
-      val columnForParent = if (parentModel.name == relation.modelAId) manifestation.modelAColumn else manifestation.modelBColumn
-      val columnForChild  = if (childModel.name == relation.modelAId) manifestation.modelAColumn else manifestation.modelBColumn
+      val columnForParent = if (parentModel.name == relation.modelAName) manifestation.modelAColumn else manifestation.modelBColumn
+      val columnForChild  = if (childModel.name == relation.modelAName) manifestation.modelAColumn else manifestation.modelBColumn
 
       (sql"""insert into "#$schemaName"."#${path.lastRelation_!.relationTableName}" ("#$columnForParent", "#$columnForChild")""" ++
         sql"""Select """ ++ pathQueryForLastChild(path.removeLastEdge) ++ sql"," ++
@@ -128,7 +128,7 @@ case class PostgresApiDatabaseMutationBuilder(
     } else {
       val relationId = Cuid.createCuid()
       (sql"""insert into "#$schemaName"."#${path.lastRelation_!.relationTableName}" """ ++
-        sql"""("id", "#${path.columnForParentSideOfLastEdge(schema)}", "#${path.columnForChildSideOfLastEdge(schema)}")""" ++
+        sql"""("id", "#${path.columnForParentSideOfLastEdge}", "#${path.columnForChildSideOfLastEdge}")""" ++
         sql"""Select '#$relationId',""" ++ pathQueryForLastChild(path.removeLastEdge) ++ sql""","#${childWhere.model.dbNameOfIdField_!}" """ ++
         sql"""FROM "#$schemaName"."#${childWhere.model.dbName}" where "#${childWhere.field.dbName}" = ${childWhere.fieldValue}""").asUpdate
     }
@@ -156,7 +156,7 @@ case class PostgresApiDatabaseMutationBuilder(
     val model        = path.lastModel
     val updateValues = combineByComma(updateArgs.raw.asRoot.map.map { case (k, v) => escapeKey(model.getFieldByName_!(k).dbName) ++ sql" = $v" })
     def fromEdge(edge: Edge) = edge match {
-      case edge: NodeEdge => sql""" "#${path.columnForChildSideOfLastEdge(schema)}"""" ++ idFromWhereEquals(edge.childWhere) ++ sql" AND "
+      case edge: NodeEdge => sql""" "#${path.columnForChildSideOfLastEdge}"""" ++ idFromWhereEquals(edge.childWhere) ++ sql" AND "
       case _: ModelEdge   => sql""
     }
 
@@ -168,9 +168,9 @@ case class PostgresApiDatabaseMutationBuilder(
 
       val query = path.lastEdge match {
         case Some(edge) =>
-          baseQuery ++ sql"""(SELECT "#${path.columnForChildSideOfLastEdge(schema)}" """ ++
+          baseQuery ++ sql"""(SELECT "#${path.columnForChildSideOfLastEdge}" """ ++
             sql"""FROM "#$schemaName"."#${path.lastRelation_!.relationTableName}"""" ++
-            sql"WHERE" ++ fromEdge(edge) ++ sql""""#${path.columnForParentSideOfLastEdge(schema)}" = """ ++ pathQueryForLastParent(path) ++ sql")"
+            sql"WHERE" ++ fromEdge(edge) ++ sql""""#${path.columnForParentSideOfLastEdge}" = """ ++ pathQueryForLastParent(path) ++ sql")"
         case None => baseQuery ++ idFromWhere(path.root)
       }
       query.asUpdate
@@ -272,9 +272,9 @@ case class PostgresApiDatabaseMutationBuilder(
       case Some(manifestation) =>
         (sql"""UPDATE "#$schemaName"."#$relationTable" """ ++
           sql"""SET "#${manifestation.referencingColumn}" = NULL""" ++
-          sql"""WHERE "#${path.columnForParentSideOfLastEdge(schema)}" IN """ ++ pathQueryThatUsesWholePath(path.removeLastEdge)).asUpdate
+          sql"""WHERE "#${path.columnForParentSideOfLastEdge}" IN """ ++ pathQueryThatUsesWholePath(path.removeLastEdge)).asUpdate
       case None =>
-        (sql"""DELETE FROM "#$schemaName"."#$relationTable" WHERE "#${path.columnForParentSideOfLastEdge(schema)}" = """ ++ pathQueryForLastParent(path)).asUpdate
+        (sql"""DELETE FROM "#$schemaName"."#$relationTable" WHERE "#${path.columnForParentSideOfLastEdge}" = """ ++ pathQueryForLastParent(path)).asUpdate
     }
     action.andThen(dbioUnit)
   }
@@ -290,10 +290,10 @@ case class PostgresApiDatabaseMutationBuilder(
       case Some(manifestation) =>
         (sql"""UPDATE "#$schemaName"."#$relationTable" """ ++
           sql"""SET "#${manifestation.referencingColumn}" = NULL""" ++
-          sql"""WHERE "#${path.columnForChildSideOfLastEdge(schema)}" IN """ ++ pathQueryThatUsesWholePath(path) ++
-          sql""" AND "#${path.columnForParentSideOfLastEdge(schema)}" IN """ ++ pathQueryThatUsesWholePath(path.removeLastEdge)).asUpdate
+          sql"""WHERE "#${path.columnForChildSideOfLastEdge}" IN """ ++ pathQueryThatUsesWholePath(path) ++
+          sql""" AND "#${path.columnForParentSideOfLastEdge}" IN """ ++ pathQueryThatUsesWholePath(path.removeLastEdge)).asUpdate
       case None =>
-        (sql"""DELETE FROM "#$schemaName"."#$relationTable" WHERE "#${path.columnForChildSideOfLastEdge(schema)}"""" ++ idFromWhereEquals(where)).asUpdate
+        (sql"""DELETE FROM "#$schemaName"."#$relationTable" WHERE "#${path.columnForChildSideOfLastEdge}"""" ++ idFromWhereEquals(where)).asUpdate
     }
     action.andThen(dbioUnit)
   }
@@ -304,12 +304,12 @@ case class PostgresApiDatabaseMutationBuilder(
       case Some(manifestation) =>
         (sql"""UPDATE "#$schemaName"."#${path.lastRelation_!.relationTableName}"  """ ++
           sql"""SET "#${manifestation.referencingColumn}" = NULL """ ++
-          sql"""WHERE "#${path.columnForChildSideOfLastEdge(schema)}" = """ ++ pathQueryForLastChild(path) ++
-          sql""" AND "#${path.columnForParentSideOfLastEdge(schema)}" = """ ++ pathQueryForLastParent(path)).asUpdate.andThen(dbioUnit)
+          sql"""WHERE "#${path.columnForChildSideOfLastEdge}" = """ ++ pathQueryForLastChild(path) ++
+          sql""" AND "#${path.columnForParentSideOfLastEdge}" = """ ++ pathQueryForLastParent(path)).asUpdate.andThen(dbioUnit)
       case _ =>
         (sql"""DELETE FROM "#$schemaName"."#${path.lastRelation_!.relationTableName}" """ ++
-          sql"""WHERE "#${path.columnForChildSideOfLastEdge(schema)}" = """ ++ pathQueryForLastChild(path) ++
-          sql""" AND "#${path.columnForParentSideOfLastEdge(schema)}" = """ ++ pathQueryForLastParent(path)).asUpdate.andThen(dbioUnit)
+          sql"""WHERE "#${path.columnForChildSideOfLastEdge}" = """ ++ pathQueryForLastChild(path) ++
+          sql""" AND "#${path.columnForParentSideOfLastEdge}" = """ ++ pathQueryForLastParent(path)).asUpdate.andThen(dbioUnit)
     }
   }
 
@@ -453,13 +453,13 @@ case class PostgresApiDatabaseMutationBuilder(
     val table = path.lastRelation.get.relationTableName
 
     val lastChildWhere = path.lastEdge_! match {
-      case edge: NodeEdge => sql""" "#${path.columnForChildSideOfLastEdge(schema)}"""" ++ idFromWhereEquals(edge.childWhere) ++ sql" AND "
-      case _: ModelEdge   => sql""" "#${path.columnForChildSideOfLastEdge(schema)}" IS NOT NULL AND """
+      case edge: NodeEdge => sql""" "#${path.columnForChildSideOfLastEdge}"""" ++ idFromWhereEquals(edge.childWhere) ++ sql" AND "
+      case _: ModelEdge   => sql""" "#${path.columnForChildSideOfLastEdge}" IS NOT NULL AND """
     }
 
     val query =
       sql"""SELECT * FROM "#$schemaName"."#$table" CONNECTIONFAILURETRIGGERPATH""" ++
-        sql"WHERE" ++ lastChildWhere ++ sql""""#${path.columnForParentSideOfLastEdge(schema)}" = """ ++ pathQueryForLastParent(path)
+        sql"WHERE" ++ lastChildWhere ++ sql""""#${path.columnForParentSideOfLastEdge}" = """ ++ pathQueryForLastParent(path)
 
     triggerFailureWhenNotExists(query, table, causeString)
   }
@@ -479,27 +479,28 @@ case class PostgresApiDatabaseMutationBuilder(
 
   def oldParentFailureTrigger(path: Path, triggerString: String) = {
     val table = path.lastRelation_!.relationTableName
-    val query = sql"""SELECT * FROM "#$schemaName"."#$table" OLDPARENTPATHFAILURETRIGGER WHERE "#${path.columnForChildSideOfLastEdge(schema)}" IN (""" ++
+    val query = sql"""SELECT * FROM "#$schemaName"."#$table" OLDPARENTPATHFAILURETRIGGER WHERE "#${path.columnForChildSideOfLastEdge}" IN (""" ++
       pathQueryForLastChild(path) ++ sql")"
     triggerFailureWhenExists(query, table, triggerString)
   }
 
-  def oldParentFailureTriggerByField(path: Path, field: Field, triggerString: String) = {
-    val relation       = field.relation.get
+  def oldParentFailureTriggerByField(path: Path, field: RelationField, triggerString: String) = {
+    val relation       = field.relation
     val table          = relation.relationTableName
-    val oppositeColumn = relation.columnForRelationSide(field.oppositeRelationSide.get)
-    val column         = relation.columnForRelationSide(field.relationSide.get)
+    val oppositeColumn = relation.columnForRelationSide(field.oppositeRelationSide)
+    val column         = relation.columnForRelationSide(field.relationSide)
     val query = sql"""SELECT * FROM "#$schemaName"."#$table" OLDPARENTPATHFAILURETRIGGERBYFIELD""" ++
       sql"""WHERE "#$oppositeColumn" IN (""" ++ pathQueryForLastChild(path) ++ sql") " ++
       sql"""AND "#$column" IS NOT NULL"""
     triggerFailureWhenExists(query, table, triggerString)
   }
 
-  def oldParentFailureTriggerByFieldAndFilter(model: Model, whereFilter: Option[Filter], field: Field, causeString: String) = {
-    val relation       = field.relation.get
-    val table          = relation.relationTableName
-    val column         = relation.columnForRelationSide(field.oppositeRelationSide.get)
-    val oppositeColumn = relation.columnForRelationSide(field.relationSide.get)
+  def oldParentFailureTriggerByFieldAndFilter(model: Model, whereFilter: Option[Filter], field: RelationField, causeString: String) = {
+    val relation = field.relation
+    val table    = relation.relationTableName
+
+    val column         = relation.columnForRelationSide(field.oppositeRelationSide)
+    val oppositeColumn = relation.columnForRelationSide(field.relationSide)
 
     val query =
       sql"""SELECT * FROM "#$schemaName"."#$table" OLDPARENTPATHFAILURETRIGGERBYFIELDANDFILTER""" ++
@@ -513,8 +514,8 @@ case class PostgresApiDatabaseMutationBuilder(
   def oldChildFailureTrigger(path: Path, triggerString: String) = {
     val table = path.lastRelation_!.relationTableName
     val query = sql"""SELECT * FROM "#$schemaName"."#$table" OLDCHILDPATHFAILURETRIGGER""" ++
-      sql"""WHERE "#${path.columnForParentSideOfLastEdge(schema)}" IN (""" ++ pathQueryForLastParent(path) ++ sql") " ++
-      sql"""AND "#${path.columnForChildSideOfLastEdge(schema)}" IS NOT NULL """
+      sql"""WHERE "#${path.columnForParentSideOfLastEdge}" IN (""" ++ pathQueryForLastParent(path) ++ sql") " ++
+      sql"""AND "#${path.columnForChildSideOfLastEdge}" IS NOT NULL """
     triggerFailureWhenExists(query, table, triggerString)
   }
 
@@ -670,9 +671,7 @@ case class PostgresApiDatabaseMutationBuilder(
                 e.getCause.toString)}"
             }
             .toVector
-        case e: Exception =>
-          println(e.getMessage)
-          Vector(e.getMessage)
+        case e: Exception => Vector(e.getMessage)
       }
 
       if (res.nonEmpty) throw new Exception(res.mkString("-@-"))
@@ -721,9 +720,7 @@ case class PostgresApiDatabaseMutationBuilder(
             }
             .toVector
 
-        case e: Exception =>
-          println(e.getMessage)
-          Vector(e.getMessage)
+        case e: Exception => Vector(e.getMessage)
       }
 
       if (rowResult.nonEmpty) throw new Exception(rowResult.mkString("-@-"))

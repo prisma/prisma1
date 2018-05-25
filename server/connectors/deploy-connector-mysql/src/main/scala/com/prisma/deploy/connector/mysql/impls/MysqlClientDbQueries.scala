@@ -3,7 +3,7 @@ package com.prisma.deploy.connector.mysql.impls
 import com.prisma.deploy.connector.ClientDbQueries
 import com.prisma.deploy.connector.mysql.database.MySqlDeployDatabaseQueryBuilder
 import com.prisma.shared.models.RelationSide.RelationSide
-import com.prisma.shared.models.{Field, Model, Project}
+import com.prisma.shared.models._
 import slick.dbio.Effect.Read
 import slick.jdbc.MySQLProfile.api._
 import slick.jdbc.SQLActionBuilder
@@ -11,7 +11,7 @@ import slick.sql.SqlStreamingAction
 
 import scala.concurrent.{ExecutionContext, Future}
 
-case class MysqlClientDbQueries(project: Project, clientDatabase: Database)(implicit ec: ExecutionContext) extends ClientDbQueries {
+case class MySqlClientDbQueries(project: Project, clientDatabase: Database)(implicit ec: ExecutionContext) extends ClientDbQueries {
 
   def existsByModel(modelName: String): Future[Boolean] = {
     val query = MySqlDeployDatabaseQueryBuilder.existsByModel(project.id, modelName)
@@ -29,14 +29,15 @@ case class MysqlClientDbQueries(project: Project, clientDatabase: Database)(impl
   }
 
   def existsNullByModelAndField(model: Model, field: Field): Future[Boolean] = {
-    val query = field.isScalar match {
-      case true  => MySqlDeployDatabaseQueryBuilder.existsNullByModelAndScalarField(project.id, model.name, field.name)
-      case false => MySqlDeployDatabaseQueryBuilder.existsNullByModelAndRelationField(project.id, model.name, field)
+
+    val query = field match {
+      case f: ScalarField   => MySqlDeployDatabaseQueryBuilder.existsNullByModelAndScalarField(project.id, model.name, f.name)
+      case f: RelationField => MySqlDeployDatabaseQueryBuilder.existsNullByModelAndRelationField(project.id, model.name, f)
     }
     clientDatabase.run(readOnlyBoolean(query)).map(_.head).recover { case _: java.sql.SQLSyntaxErrorException => false }
   }
 
-  def existsDuplicateValueByModelAndField(model: Model, field: Field): Future[Boolean] = {
+  def existsDuplicateValueByModelAndField(model: Model, field: ScalarField): Future[Boolean] = {
     val query = MySqlDeployDatabaseQueryBuilder.existsDuplicateValueByModelAndField(project.id, model.name, field.name)
     clientDatabase.run(readOnlyBoolean(query)).map(_.head).recover { case _: java.sql.SQLSyntaxErrorException => false }
   }

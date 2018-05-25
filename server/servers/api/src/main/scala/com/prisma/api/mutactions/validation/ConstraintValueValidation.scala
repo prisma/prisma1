@@ -6,15 +6,16 @@ import scala.util.matching.Regex
 
 object ConstraintValueValidation {
 
-  case class ConstraintError(field: Field, value: Any, constraintType: String, arg: Any)
+  case class ConstraintError(field: ScalarField, value: Any, constraintType: String, arg: Any)
 
-  def checkConstraintsOnField(f: Field, value: Any): List[ConstraintError] = {
-    f.constraints.flatMap { constraint =>
-      checkConstraintOnField(f, constraint, value)
-    }
+  def checkConstraintsOnField(f: ScalarField, value: Any): List[ConstraintError] = {
+//    f.constraints.flatMap { constraint =>
+//      checkConstraintOnField(f, constraint, value)
+//    }
+    ???
   }
 
-  def checkConstraintOnField(f: Field, constraint: FieldConstraint, value: Any): List[ConstraintError] = {
+  private def checkConstraintOnField(f: ScalarField, constraint: FieldConstraint, value: Any): List[ConstraintError] = {
     if (f.isList) {
       val values = value.asInstanceOf[Vector[Any]].toList
 
@@ -34,7 +35,7 @@ object ConstraintValueValidation {
     }
   }
 
-  def checkStringConstraint(f: Field, value: Any, constraint: StringConstraint): List[ConstraintError] = {
+  private def checkStringConstraint(f: ScalarField, value: Any, constraint: StringConstraint): List[ConstraintError] = {
     def regexFound(regex: String, value: String): Boolean = { (new Regex(regex) findAllIn value).nonEmpty }
 
     value match {
@@ -58,8 +59,8 @@ object ConstraintValueValidation {
     }
   }
 
-  def checkNumberConstraint(field: Field, value: Any, constraint: NumberConstraint): List[ConstraintError] = {
-    def checkNumConstraint(f: Field, v: Double): List[ConstraintError] = {
+  private def checkNumberConstraint(field: ScalarField, value: Any, constraint: NumberConstraint): List[ConstraintError] = {
+    def checkNumConstraint(f: ScalarField, v: Double): List[ConstraintError] = {
       val oneOfNumberError =
         if (constraint.oneOfNumber.nonEmpty && !constraint.oneOfNumber.contains(v))
           List(ConstraintError(f, v, "oneOfNumber", constraint.oneOfNumber.toString))
@@ -82,7 +83,7 @@ object ConstraintValueValidation {
     }
   }
 
-  def checkBooleanConstraint(f: Field, value: Any, constraint: BooleanConstraint): List[ConstraintError] = {
+  private def checkBooleanConstraint(f: ScalarField, value: Any, constraint: BooleanConstraint): List[ConstraintError] = {
     value match {
       case v: Boolean =>
         List(constraint.equalsBoolean.collect { case x if x != v => ConstraintError(f, v, "equalsBoolean", x) }).flatten
@@ -90,7 +91,7 @@ object ConstraintValueValidation {
     }
   }
 
-  def checkListConstraint(f: Field, value: Any, constraint: ListConstraint): List[ConstraintError] = {
+  private def checkListConstraint(f: ScalarField, value: Any, constraint: ListConstraint): List[ConstraintError] = {
     def unique(list: List[Any]) = list.toSet.size == list.size
 
     value match {

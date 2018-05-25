@@ -2,7 +2,7 @@ package com.prisma.deploy.gc_value
 
 import com.prisma.gc_values._
 import com.prisma.shared.models.TypeIdentifier.TypeIdentifier
-import com.prisma.shared.models.{Field, TypeIdentifier}
+import com.prisma.shared.models.{Field, ScalarField, TypeIdentifier}
 import org.apache.commons.lang.StringEscapeUtils
 import org.joda.time.format.ISODateTimeFormat
 import org.joda.time.{DateTime, DateTimeZone}
@@ -163,7 +163,7 @@ case class GCStringConverter(typeIdentifier: TypeIdentifier, isList: Boolean) ex
   * This validates a GCValue against the field it is being used on, for example after an UpdateFieldMutation
   */
 object OtherGCStuff {
-  def isValidGCValueForField(value: GCValue, field: Field): Boolean = {
+  def isValidGCValueForField(value: GCValue, field: ScalarField): Boolean = {
     (value, field.typeIdentifier) match {
       case (NullGCValue, _)                              => true
       case (_: StringGCValue, TypeIdentifier.String)     => true

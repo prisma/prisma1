@@ -1,6 +1,6 @@
 package com.prisma.shared.schema_dsl
 
-import com.prisma.deploy.connector.{DeployConnector, InferredTables}
+import com.prisma.deploy.connector.{DeployConnector, InferredTables, MissingBackRelations}
 import com.prisma.deploy.migration.inference.{SchemaInferrer, SchemaMapping}
 import com.prisma.deploy.migration.validation.SchemaSyntaxValidator
 import com.prisma.gc_values.GCValue
@@ -66,19 +66,19 @@ object SchemaDsl extends AwaitUtils {
   )(sdlString: String): Project = {
     val emptyBaseSchema    = Schema()
     val emptySchemaMapping = SchemaMapping.empty
-    val sqlDocument        = QueryParser.parse(sdlString.stripMargin).get
     val validator = SchemaSyntaxValidator(
       sdlString,
       SchemaSyntaxValidator.directiveRequirements,
       SchemaSyntaxValidator.reservedFieldsRequirementsForAllConnectors,
       SchemaSyntaxValidator.requiredReservedFields,
-      true
+      allowScalarLists = true
     )
 
     val prismaSdl = validator.generateSDL
 
-    val schema = SchemaInferrer(isActive, shouldCheckAgainstInferredTables).infer(emptyBaseSchema, emptySchemaMapping, prismaSdl, inferredTables)
-    TestProject().copy(id = id, schema = schema)
+    val schema                 = SchemaInferrer(isActive, shouldCheckAgainstInferredTables).infer(emptyBaseSchema, emptySchemaMapping, prismaSdl, inferredTables)
+    val withBackRelationsAdded = MissingBackRelations.add(schema)
+    TestProject().copy(id = id, schema = withBackRelationsAdded)
   }
 
   private def addManifestations(project: Project): Project = {
@@ -103,10 +103,10 @@ object SchemaDsl extends AwaitUtils {
     }
     val newModels = project.models.map { model =>
       val newFields = model.fields.map { field =>
-        val newRelation = field.relation.flatMap { relation =>
+        val newRelation = field.relationOpt.flatMap { relation =>
           newRelations.find(_.name == relation.name)
         }
-        field.copy(relationName = newRelation.map(_.name), manifestation = Some(FieldManifestation(field.name + "_column")))
+        field.template.copy(relationName = newRelation.map(_.name), manifestation = Some(FieldManifestation(field.name + "_column")))
       }
 
       model.copy(fieldTemplates = newFields, manifestation = Some(ModelManifestation(model.name + "_Table")))
@@ -233,8 +233,8 @@ object SchemaDsl extends AwaitUtils {
     ): ModelBuilder = {
       val relation = RelationTemplate(
         name = relationName.getOrElse(s"${this.name}To${modelB.name}"),
-        modelAId = this.id,
-        modelBId = modelB.id,
+        modelAName = this.id,
+        modelBName = modelB.id,
         modelAOnDelete = modelAOnDelete,
         modelBOnDelete = modelBOnDelete,
         manifestation = None
@@ -263,8 +263,8 @@ object SchemaDsl extends AwaitUtils {
     ): ModelBuilder = {
       val relation = RelationTemplate(
         name = relationName.getOrElse(s"${this.name}To${modelB.name}"),
-        modelAId = this.id,
-        modelBId = modelB.id,
+        modelAName = this.id,
+        modelBName = modelB.id,
         modelAOnDelete = modelAOnDelete,
         modelBOnDelete = modelBOnDelete,
         manifestation = None
@@ -293,8 +293,8 @@ object SchemaDsl extends AwaitUtils {
     ): ModelBuilder = {
       val relation = RelationTemplate(
         name = relationName.getOrElse(s"${this.name}To${modelB.name}"),
-        modelAId = this.id,
-        modelBId = modelB.id,
+        modelAName = this.id,
+        modelBName = modelB.id,
         modelAOnDelete = modelAOnDelete,
         modelBOnDelete = modelBOnDelete,
         manifestation = None
@@ -323,8 +323,8 @@ object SchemaDsl extends AwaitUtils {
     ): ModelBuilder = {
       val relation = RelationTemplate(
         name = relationName.getOrElse(s"${this.name}To${modelB.name}"),
-        modelAId = this.id,
-        modelBId = modelB.id,
+        modelAName = this.id,
+        modelBName = modelB.id,
         modelAOnDelete = modelAOnDelete,
         modelBOnDelete = modelBOnDelete,
         manifestation = None
@@ -352,8 +352,8 @@ object SchemaDsl extends AwaitUtils {
     ): ModelBuilder = {
       val relation = RelationTemplate(
         name = relationName.getOrElse(s"${this.name}To${modelB.name}"),
-        modelAId = this.id,
-        modelBId = modelB.id,
+        modelAName = this.id,
+        modelBName = modelB.id,
         modelAOnDelete = modelAOnDelete,
         modelBOnDelete = modelBOnDelete,
         manifestation = None
@@ -381,8 +381,8 @@ object SchemaDsl extends AwaitUtils {
     ): ModelBuilder = {
       val relation = RelationTemplate(
         name = relationName.getOrElse(s"${this.name}To${modelB.name}"),
-        modelAId = this.id,
-        modelBId = modelB.id,
+        modelAName = this.id,
+        modelBName = modelB.id,
         modelAOnDelete = modelAOnDelete,
         modelBOnDelete = modelBOnDelete,
         manifestation = None
@@ -433,7 +433,6 @@ object SchemaDsl extends AwaitUtils {
       isHidden = isHidden,
       relationName = None,
       relationSide = None,
-      constraints = constraints,
       manifestation = None
     )
   }

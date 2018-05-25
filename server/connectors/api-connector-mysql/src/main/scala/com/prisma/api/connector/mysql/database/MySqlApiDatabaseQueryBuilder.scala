@@ -11,6 +11,7 @@ import slick.dbio.Effect.Read
 import slick.jdbc.MySQLProfile.api._
 import slick.jdbc.meta.{DatabaseMeta, MTable}
 import slick.jdbc.{SQLActionBuilder, _}
+import slick.sql.SqlStreamingAction
 
 import scala.concurrent.ExecutionContext
 
@@ -46,7 +47,7 @@ case class MySqlApiDatabaseQueryBuilder(project: Project)(implicit ec: Execution
     override def apply(ps: PositionedResult): (IdGCValue, Int) = (ps.rs.getId, ps.rs.getInt("Count"))
   }
 
-  def getResultForScalarListField(field: Field): GetResult[ScalarListElement] = GetResult { ps: PositionedResult =>
+  def getResultForScalarListField(field: ScalarField): GetResult[ScalarListElement] = GetResult { ps: PositionedResult =>
     val resultSet = ps.rs
     val nodeId    = resultSet.getString("nodeId")
     val position  = resultSet.getInt("position")
@@ -69,8 +70,10 @@ case class MySqlApiDatabaseQueryBuilder(project: Project)(implicit ec: Execution
     query.as[RelationNode].map(args.get.resultTransform)
   }
 
-  def selectAllFromListTable(model: Model, field: Field, args: Option[QueryArguments], overrideMaxNodeCount: Option[Int] = None) = {
-
+  def selectAllFromListTable(model: Model,
+                             field: ScalarField,
+                             args: Option[QueryArguments],
+                             overrideMaxNodeCount: Option[Int] = None): DBIOAction[ResolverResult[ScalarListValues], NoStream, Effect] = {
     val tableName = s"${model.name}_${field.name}"
     val query     = sql"""select * from `#${project.id}`.`#$tableName`  as `#${ALIAS}` """ ++ whereOrderByLimitCommands(args, overrideMaxNodeCount, tableName, true)
 
@@ -115,7 +118,7 @@ case class MySqlApiDatabaseQueryBuilder(project: Project)(implicit ec: Execution
     override def apply(ps: PreparedStatement, index: Int, value: GCValue): Unit = ps.setGcValue(index, value)
   }
 
-  def selectFromScalarList(modelName: String, field: Field, nodeIds: Vector[IdGCValue]): DBIOAction[Vector[ScalarListValues], NoStream, Effect] = {
+  def selectFromScalarList(modelName: String, field: ScalarField, nodeIds: Vector[IdGCValue]): DBIOAction[Vector[ScalarListValues], NoStream, Effect] = {
     val query = sql"select nodeId, position, value from `#${project.id}`.`#${modelName}_#${field.name}` where nodeId in (" ++ combineByComma(
       nodeIds.map(v => sql"$v")) ++ sql")"
 
@@ -129,13 +132,15 @@ case class MySqlApiDatabaseQueryBuilder(project: Project)(implicit ec: Execution
     }
   }
 
-  def batchSelectAllFromRelatedModel(fromField: Field, fromModelIds: Vector[IdGCValue], args: Option[QueryArguments]) = {
+  def batchSelectAllFromRelatedModel(fromField: RelationField,
+                                     fromModelIds: Vector[IdGCValue],
+                                     args: Option[QueryArguments]): DBIOAction[Vector[ResolverResult[PrismaNodeWithParent]], NoStream, Effect] = {
 
     val relatedModel         = fromField.relatedModel_!
     val fieldTable           = fromField.relatedModel_!.name
-    val unsafeRelationId     = fromField.relation_!.relationTableName
-    val modelRelationSide    = fromField.relationSide.get.toString
-    val oppositeRelationSide = fromField.oppositeRelationSide.get.toString
+    val unsafeRelationId     = fromField.relation.relationTableName
+    val modelRelationSide    = fromField.relationSide.toString
+    val oppositeRelationSide = fromField.oppositeRelationSide.toString
 
     val (conditionCommand, orderByCommand, limitCommand) =
       extractQueryArgs(project.id,
@@ -157,7 +162,7 @@ case class MySqlApiDatabaseQueryBuilder(project: Project)(implicit ec: Execution
     }
 
     // see https://github.com/graphcool/internal-docs/blob/master/relations.md#findings
-    val resolveFromBothSidesAndMerge = fromField.relation.get.isSameFieldSameModelRelation
+    val resolveFromBothSidesAndMerge = fromField.relation.isSameFieldSameModelRelation
 
     val query = resolveFromBothSidesAndMerge match {
       case false =>
@@ -184,12 +189,14 @@ case class MySqlApiDatabaseQueryBuilder(project: Project)(implicit ec: Execution
       }
   }
 
-  def countAllFromRelatedModels(relationField: Field, parentNodeIds: Vector[IdGCValue], args: Option[QueryArguments]) = {
+  def countAllFromRelatedModels(relationField: RelationField,
+                                parentNodeIds: Vector[IdGCValue],
+                                args: Option[QueryArguments]): SqlStreamingAction[Vector[(IdGCValue, Int)], (IdGCValue, Int), Effect] = {
 
     val fieldTable        = relationField.relatedModel_!.name
-    val unsafeRelationId  = relationField.relation.get.relationTableName
-    val modelRelationSide = relationField.relationSide.get.toString
-    val fieldRelationSide = relationField.oppositeRelationSide.get.toString
+    val unsafeRelationId  = relationField.relation.relationTableName
+    val modelRelationSide = relationField.relationSide.toString
+    val fieldRelationSide = relationField.oppositeRelationSide.toString
 
     val (conditionCommand, orderByCommand, limitCommand) =
       extractQueryArgs(project.id,

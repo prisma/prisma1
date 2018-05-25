@@ -2,7 +2,7 @@ package com.prisma.api.connector
 
 import com.prisma.gc_values.{GCValue, IdGCValue}
 import com.prisma.shared.models.IdType.Id
-import com.prisma.shared.models.{Field, Model, Relation, Schema}
+import com.prisma.shared.models._
 
 case class ScalarListElement(nodeId: Id, position: Int, value: GCValue)
 
@@ -35,15 +35,13 @@ object SortOrder extends Enumeration {
 }
 
 case class OrderBy(
-    field: Field,
+    field: ScalarField,
     sortOrder: SortOrder.Value
 )
 
 object LogicalKeyWords {
-  val logicCombinators = List("AND", "OR", "NOT")
-
+  val logicCombinators           = List("AND", "OR", "NOT")
   def isLogicFilter(key: String) = logicCombinators.contains(key)
-
 }
 
 sealed trait Filter
@@ -53,7 +51,7 @@ case class OrFilter(filters: Vector[Filter])   extends Filter
 case class NotFilter(filters: Vector[Filter])  extends Filter
 case class NodeFilter(filters: Vector[Filter]) extends Filter
 
-case class ScalarFilter(field: Field, condition: ScalarCondition) extends Filter
+case class ScalarFilter(field: ScalarField, condition: ScalarCondition) extends Filter
 
 sealed trait ScalarCondition
 case class Equals(value: GCValue)              extends ScalarCondition
@@ -78,9 +76,9 @@ case class ListContains(value: GCValue)              extends ScalarListCondition
 case class ListContainsEvery(value: Vector[GCValue]) extends ScalarListCondition
 case class ListContainsSome(value: Vector[GCValue])  extends ScalarListCondition
 
-case class OneRelationIsNullFilter(field: Field) extends Filter
+case class OneRelationIsNullFilter(field: RelationField) extends Filter
 
-case class RelationFilter(field: Field, nestedFilter: Filter, condition: RelationCondition) extends Filter
+case class RelationFilter(field: RelationField, nestedFilter: Filter, condition: RelationCondition) extends Filter
 
 sealed trait RelationCondition
 object EveryRelatedNode      extends RelationCondition

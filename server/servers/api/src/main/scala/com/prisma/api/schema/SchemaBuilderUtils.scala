@@ -6,11 +6,11 @@ import com.prisma.shared.models.{Model, Project, TypeIdentifier}
 import sangria.schema._
 
 object SchemaBuilderUtils {
-  def mapToOptionalInputType(field: models.Field): InputType[Any] = {
+  def mapToOptionalInputType(field: models.ScalarField): InputType[Any] = {
     OptionInputType(mapToRequiredInputType(field))
   }
 
-  def mapToRequiredInputType(field: models.Field): InputType[Any] = {
+  def mapToRequiredInputType(field: models.ScalarField): InputType[Any] = {
     assert(field.isScalar)
 
     val inputType: InputType[Any] = field.typeIdentifier match {
@@ -31,7 +31,7 @@ object SchemaBuilderUtils {
     }
   }
 
-  def mapEnumFieldToInputType(field: models.Field): EnumType[Any] = {
+  def mapEnumFieldToInputType(field: models.ScalarField): EnumType[Any] = {
     require(field.typeIdentifier == TypeIdentifier.Enum, "This function must be called with Enum fields only!")
     val enum = field.enum.getOrElse(sys.error("A field with TypeIdentifier Enum must always have an enum."))
     EnumType(
@@ -41,7 +41,7 @@ object SchemaBuilderUtils {
     )
   }
 
-  def mapToInputField(field: models.Field): List[InputField[_ >: Option[Seq[Any]] <: Option[Any]]] = {
+  def mapToInputField(field: models.ScalarField): List[InputField[_ >: Option[Seq[Any]] <: Option[Any]]] = {
     FilterArguments
       .getFieldFilters(field)
       .map({
@@ -55,7 +55,7 @@ object SchemaBuilderUtils {
 }
 
 case class FilterObjectTypeBuilder(model: Model, project: Project) {
-  def mapToRelationFilterInputField(field: models.Field): List[InputField[_ >: Option[Seq[Any]] <: Option[Any]]] = {
+  def mapToRelationFilterInputField(field: models.RelationField): List[InputField[_ >: Option[Seq[Any]] <: Option[Any]]] = {
     assert(!field.isScalar)
     val relatedModelInputType = FilterObjectTypeBuilder(field.relatedModel_!, project).filterObjectType
 
