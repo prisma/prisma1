@@ -5,8 +5,8 @@ import com.prisma.deploy.connector.{CreateRelationTable, DeleteRelationTable}
 
 object CreateRelationInterpreter extends SqlMutactionInterpreter[CreateRelationTable] {
   override def execute(mutaction: CreateRelationTable) = {
-    val aModel = mutaction.relation.modelA_!
-    val bModel = mutaction.relation.modelB_!
+    val aModel = mutaction.relation.modelA
+    val bModel = mutaction.relation.modelB
 
     MysqlDeployDatabaseMutationBuilder.createRelationTable(
       projectId = mutaction.projectId,

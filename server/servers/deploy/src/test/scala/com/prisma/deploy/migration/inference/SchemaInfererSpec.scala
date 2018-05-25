@@ -25,8 +25,8 @@ class SchemaInfererSpec extends WordSpec with Matchers {
       val schema = infer(emptyProject.schema, types)
 
       val relation = schema.getRelationByName_!("MyNameForTodoToComments")
-      relation.modelA should equal("Comment")
-      relation.modelB should equal("Todo")
+      relation.modelAName should equal("Comment")
+      relation.modelBName should equal("Todo")
     }
 
     "infer relations with the given name if a relation directive is provided on both sides and there are two relations between models" in {
@@ -43,12 +43,12 @@ class SchemaInfererSpec extends WordSpec with Matchers {
       val schema = infer(emptyProject.schema, types)
 
       val relation = schema.getRelationByName_!("CallRequester")
-      relation.modelA should equal("Call")
-      relation.modelB should equal("User")
+      relation.modelAName should equal("Call")
+      relation.modelBName should equal("User")
 
       val relation2 = schema.getRelationByName_!("CallMembers")
-      relation2.modelA should equal("Call")
-      relation2.modelB should equal("User")
+      relation2.modelAName should equal("Call")
+      relation2.modelBName should equal("User")
     }
 
     "infer relations with provided name if only one relation directive is given" in {
@@ -66,8 +66,8 @@ class SchemaInfererSpec extends WordSpec with Matchers {
 
       schema.relations should have(size(1))
       val relation = schema.getRelationByName_!("MyRelationName")
-      relation.modelA should equal("Comment")
-      relation.modelB should equal("Todo")
+      relation.modelAName should equal("Comment")
+      relation.modelBName should equal("Todo")
     }
 
     "infer relations with an auto generated name if no relation directive is given" in {
@@ -85,8 +85,8 @@ class SchemaInfererSpec extends WordSpec with Matchers {
       schema.relations.foreach(println(_))
 
       val relation = schema.getRelationByName_!("CommentToTodo")
-      relation.modelA should equal("Comment")
-      relation.modelB should equal("Todo")
+      relation.modelAName should equal("Comment")
+      relation.modelBName should equal("Todo")
 
       val field1 = schema.getModelByName_!("Todo").getRelationFieldByName_!("comments")
       field1.isList should be(true)
@@ -127,8 +127,8 @@ class SchemaInfererSpec extends WordSpec with Matchers {
       newSchema.relations.foreach(println(_))
 
       val relation = newSchema.getRelationByName_!("CommentNewToTodoNew")
-      relation.modelA should be("TodoNew")
-      relation.modelB should be("CommentNew")
+      relation.modelAName should be("TodoNew")
+      relation.modelBName should be("CommentNew")
 
       val field1 = newSchema.getModelByName_!("TodoNew").getRelationFieldByName_!("comments")
       field1.isList should be(true)
@@ -166,8 +166,8 @@ class SchemaInfererSpec extends WordSpec with Matchers {
       newSchema.relations.foreach(println(_))
 
       val relation = newSchema.getRelationByName_!("CommentNewToTodoNew")
-      relation.modelA should be("TodoNew")
-      relation.modelB should be("CommentNew")
+      relation.modelAName should be("TodoNew")
+      relation.modelBName should be("CommentNew")
 
       val field1 = newSchema.getModelByName_!("TodoNew").getRelationFieldByName_!("commentsNew")
       field1.isList should be(true)
@@ -218,8 +218,8 @@ class SchemaInfererSpec extends WordSpec with Matchers {
 
       schema.relations should have(size(1))
       val relation = schema.getRelationByName_!("ChildTechnologies")
-      relation.modelA should equal("Technology")
-      relation.modelB should equal("Technology")
+      relation.modelAName should equal("Technology")
+      relation.modelBName should equal("Technology")
       relation.modelAField.get.name should be("childTechnologies")
       relation.modelBField.get.name should be("parentTechnologies")
 
@@ -236,8 +236,8 @@ class SchemaInfererSpec extends WordSpec with Matchers {
 
       schema.relations should have(size(1))
       val relation = schema.getRelationByName_!("ChildTechnologies")
-      relation.modelA should equal("Technology")
-      relation.modelB should equal("Technology")
+      relation.modelAName should equal("Technology")
+      relation.modelBName should equal("Technology")
       relation.modelAField.get.name should be("childTechnologies")
       relation.modelBField.get.name should be("parentTechnologies")
 
@@ -258,8 +258,8 @@ class SchemaInfererSpec extends WordSpec with Matchers {
       newSchema.relations.foreach(println(_))
 
       val newRelation = newSchema.getRelationByName_!("ChildTechnologies")
-      newRelation.modelA should be("NewTechnology")
-      newRelation.modelB should be("NewTechnology")
+      newRelation.modelAName should be("NewTechnology")
+      newRelation.modelBName should be("NewTechnology")
 
       val field1 = newSchema.getModelByName_!("NewTechnology").getRelationFieldByName_!("xTechnologies")
       field1.relation should be(newRelation)
@@ -282,8 +282,8 @@ class SchemaInfererSpec extends WordSpec with Matchers {
 
     schema.relations should have(size(1))
     val relation = schema.getRelationByName_!("ChildTechnologies")
-    relation.modelA should equal("Technology")
-    relation.modelB should equal("Technology")
+    relation.modelAName should equal("Technology")
+    relation.modelBName should equal("Technology")
     relation.modelAField.get.name should be("childTechnologies")
     relation.modelBField.get.name should be("parentTechnologies")
 
@@ -299,8 +299,8 @@ class SchemaInfererSpec extends WordSpec with Matchers {
     newSchema.relations.foreach(println(_))
 
     val newRelation = newSchema.getRelationByName_!("ChildTechnologies")
-    newRelation.modelA should be("Technology")
-    newRelation.modelB should be("Technology")
+    newRelation.modelAName should be("Technology")
+    newRelation.modelBName should be("Technology")
 
     val field1 = newSchema.getModelByName_!("Technology").getRelationFieldByName_!("childTechnologies")
     field1.relation should be(newRelation)
@@ -321,8 +321,8 @@ class SchemaInfererSpec extends WordSpec with Matchers {
 
     schema.relations should have(size(1))
     val relation = schema.relations.head
-    relation.modelA should equal("Technology")
-    relation.modelB should equal("Technology")
+    relation.modelAName should equal("Technology")
+    relation.modelBName should equal("Technology")
     relation.modelAField.get.name should be("childTechnologies")
   }
 
@@ -361,8 +361,8 @@ class SchemaInfererSpec extends WordSpec with Matchers {
 
     val relation = schema.getModelByName_!("List").getRelationFieldByName_!("todos").relation
     // assert model ids to make sure that the generated manifestation refers to the right modelAColumn/modelBColumn
-    relation.modelA should equal("List")
-    relation.modelB should equal("Todo")
+    relation.modelAName should equal("List")
+    relation.modelBName should equal("Todo")
 
     val expectedManifestation = RelationTableManifestation(table = "list_to_todo", modelAColumn = "list_id", modelBColumn = "todo_id")
     relation.manifestation should equal(Some(expectedManifestation))

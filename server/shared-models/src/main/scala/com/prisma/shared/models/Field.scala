@@ -149,8 +149,8 @@ case class RelationField(
 
   lazy val relatedModel_! : Model = {
     relationSide match {
-      case RelationSide.A => relation.modelB_!
-      case RelationSide.B => relation.modelA_!
+      case RelationSide.A => relation.modelB
+      case RelationSide.B => relation.modelA
       case x              => sys.error(s"received invalid relation side $x")
     }
   }

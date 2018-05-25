@@ -27,9 +27,9 @@ class SchemaInfererOnDeleteSpec extends WordSpec with Matchers {
 
       schema.relations should have(size(1))
       val relation = schema.getRelationByName_!("MyRelationName")
-      relation.modelA should equal("Comment")
+      relation.modelAName should equal("Comment")
       relation.modelAOnDelete should equal(OnDelete.SetNull)
-      relation.modelB should equal("Todo")
+      relation.modelBName should equal("Todo")
       relation.modelBOnDelete should equal(OnDelete.Cascade)
     }
 
@@ -48,9 +48,9 @@ class SchemaInfererOnDeleteSpec extends WordSpec with Matchers {
 
       schema.relations should have(size(1))
       val relation = schema.getRelationByName_!("MyRelationName")
-      relation.modelA should equal("Comment")
+      relation.modelAName should equal("Comment")
       relation.modelAOnDelete should equal(OnDelete.SetNull)
-      relation.modelB should equal("Todo")
+      relation.modelBName should equal("Todo")
       relation.modelBOnDelete should equal(OnDelete.Cascade)
     }
 
@@ -69,9 +69,9 @@ class SchemaInfererOnDeleteSpec extends WordSpec with Matchers {
 
       schema.relations should have(size(1))
       val relation = schema.getRelationByName_!("MyRelationName")
-      relation.modelA should equal("Comment")
+      relation.modelAName should equal("Comment")
       relation.modelAOnDelete should equal(OnDelete.Cascade)
-      relation.modelB should equal("Todo")
+      relation.modelBName should equal("Todo")
       relation.modelBOnDelete should equal(OnDelete.SetNull)
     }
 
@@ -92,15 +92,15 @@ class SchemaInfererOnDeleteSpec extends WordSpec with Matchers {
 
       schema.relations should have(size(2))
       val relation = schema.getRelationByName_!("MyRelationName")
-      relation.modelA should equal("Comment")
+      relation.modelAName should equal("Comment")
       relation.modelAOnDelete should equal(OnDelete.Cascade)
-      relation.modelB should equal("Todo")
+      relation.modelBName should equal("Todo")
       relation.modelBOnDelete should equal(OnDelete.SetNull)
 
       val relation2 = schema.getRelationByName_!("MyRelationName2")
-      relation2.modelA should equal("Comment")
+      relation2.modelAName should equal("Comment")
       relation2.modelAOnDelete should equal(OnDelete.SetNull)
-      relation2.modelB should equal("Todo")
+      relation2.modelBName should equal("Todo")
       relation2.modelBOnDelete should equal(OnDelete.Cascade)
     }
 
@@ -121,15 +121,15 @@ class SchemaInfererOnDeleteSpec extends WordSpec with Matchers {
 
       schema.relations should have(size(2))
       val relation = schema.getRelationByName_!("MyRelationName")
-      relation.modelA should equal("Comment")
+      relation.modelAName should equal("Comment")
       relation.modelAOnDelete should equal(OnDelete.Cascade)
-      relation.modelB should equal("Todo")
+      relation.modelBName should equal("Todo")
       relation.modelBOnDelete should equal(OnDelete.Cascade)
 
       val relation2 = schema.getRelationByName_!("MyRelationName2")
-      relation2.modelA should equal("Comment")
+      relation2.modelAName should equal("Comment")
       relation2.modelAOnDelete should equal(OnDelete.Cascade)
-      relation2.modelB should equal("Todo")
+      relation2.modelBName should equal("Todo")
       relation2.modelBOnDelete should equal(OnDelete.Cascade)
     }
 
@@ -153,15 +153,15 @@ class SchemaInfererOnDeleteSpec extends WordSpec with Matchers {
 
       schema.relations should have(size(2))
       val relation = schema.getRelationByName_!("ParentToChild")
-      relation.modelA should equal("Child")
+      relation.modelAName should equal("Child")
       relation.modelAOnDelete should equal(OnDelete.SetNull)
-      relation.modelB should equal("Parent")
+      relation.modelBName should equal("Parent")
       relation.modelBOnDelete should equal(OnDelete.Cascade)
 
       val relation2 = schema.getRelationByName_!("ParentToStepChild")
-      relation2.modelA should equal("Parent")
+      relation2.modelAName should equal("Parent")
       relation2.modelAOnDelete should equal(OnDelete.Cascade)
-      relation2.modelB should equal("StepChild")
+      relation2.modelBName should equal("StepChild")
       relation2.modelBOnDelete should equal(OnDelete.SetNull)
     }
   }

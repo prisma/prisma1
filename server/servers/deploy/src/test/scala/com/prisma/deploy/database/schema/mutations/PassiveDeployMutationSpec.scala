@@ -183,8 +183,8 @@ class PassiveDeployMutationSpec extends FlatSpec with Matchers with PassiveDeplo
     result.schema.models should have(size(2))
     result.schema.relations should have(size(1))
     val relation = result.schema.relations.head
-    relation.modelA should be("List")
-    relation.modelB should be("Todo")
+    relation.modelAName should be("List")
+    relation.modelBName should be("Todo")
     relation.manifestation should be(Some(RelationTableManifestation(table = "todotolist", modelAColumn = "list_id", modelBColumn = "todo_id")))
   }
 
@@ -228,8 +228,8 @@ class PassiveDeployMutationSpec extends FlatSpec with Matchers with PassiveDeplo
     result.schema.models should have(size(2))
     result.schema.relations should have(size(1))
     val relation = result.schema.relations.head
-    relation.modelA should be("List")
-    relation.modelB should be("Todo")
+    relation.modelAName should be("List")
+    relation.modelBName should be("Todo")
     relation.manifestation should be(Some(RelationTableManifestation(table = "todotolist", modelAColumn = "list_id", modelBColumn = "todo_id")))
   }
 

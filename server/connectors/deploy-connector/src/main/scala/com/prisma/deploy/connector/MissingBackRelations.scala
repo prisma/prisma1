@@ -26,7 +26,7 @@ object MissingBackRelations {
   }
 
   private def addMissingFieldFor(schema: Schema, relation: Relation, relationSide: RelationSide.Value): Schema = {
-    val model     = if (relationSide == RelationSide.A) relation.modelA_! else relation.modelB_!
+    val model     = if (relationSide == RelationSide.A) relation.modelA else relation.modelB
     val newModel  = model.copy(fieldTemplates = model.fieldTemplates :+ missingBackRelationField(relation, relationSide))
     val newModels = schema.modelTemplates.filter(_.name != model.name) :+ newModel
     schema.copy(modelTemplates = newModels)

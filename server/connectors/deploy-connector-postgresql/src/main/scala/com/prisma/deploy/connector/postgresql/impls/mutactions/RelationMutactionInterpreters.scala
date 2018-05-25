@@ -5,8 +5,8 @@ import com.prisma.deploy.connector.{CreateInlineRelation, CreateRelationTable, D
 
 object CreateRelationInterpreter extends SqlMutactionInterpreter[CreateRelationTable] {
   override def execute(mutaction: CreateRelationTable) = {
-    val modelA = mutaction.relation.modelA_!
-    val modelB = mutaction.relation.modelB_!
+    val modelA = mutaction.relation.modelA
+    val modelB = mutaction.relation.modelB
 
     PostgresDeployDatabaseMutationBuilder.createRelationTable(
       projectId = mutaction.projectId,
