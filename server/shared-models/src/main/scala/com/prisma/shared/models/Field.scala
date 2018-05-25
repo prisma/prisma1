@@ -102,7 +102,6 @@ sealed trait Field {
   def isReadonly: Boolean
   def enum: Option[Enum]
   def defaultValue: Option[GCValue]
-  def manifestation: Option[FieldManifestation]
   def relationOpt: Option[Relation]
   def model: Model
   def schema: Schema
@@ -138,7 +137,6 @@ case class RelationField(
   override def isReadonly     = false
   override def enum           = None
   override def defaultValue   = None
-  override def manifestation  = None
   override def schema         = model.schema
 
   lazy val dbName = relation.manifestation match {

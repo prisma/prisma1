@@ -3,7 +3,7 @@ package com.prisma.api.resolver
 import com.prisma.api.connector.QueryArguments
 import com.prisma.api.resolver.DeferredTypes._
 import com.prisma.shared.models.RelationSide.RelationSide
-import com.prisma.shared.models.{Field, Model}
+import com.prisma.shared.models.{Field, Model, ScalarField}
 import sangria.execution.deferred.Deferred
 
 object DeferredUtils {
@@ -27,7 +27,7 @@ object DeferredUtils {
     oneDeferred.groupBy(ordered => ordered.deferred.model)
   }
 
-  def groupScalarListDeferreds[T <: ScalarListDeferred](oneDeferred: Vector[OrderedDeferred[T]]): Map[Field, Vector[OrderedDeferred[T]]] = {
+  def groupScalarListDeferreds[T <: ScalarListDeferred](oneDeferred: Vector[OrderedDeferred[T]]): Map[ScalarField, Vector[OrderedDeferred[T]]] = {
     oneDeferred.groupBy(ordered => ordered.deferred.field)
   }
 

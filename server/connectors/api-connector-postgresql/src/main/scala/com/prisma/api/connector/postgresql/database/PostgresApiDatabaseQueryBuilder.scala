@@ -52,7 +52,7 @@ case class PostgresApiDatabaseQueryBuilder(
     override def apply(ps: PositionedResult): (IdGCValue, Int) = (ps.rs.getAsID("id"), ps.rs.getInt("Count"))
   }
 
-  def getResultForScalarListField(field: Field): GetResult[ScalarListElement] = GetResult { ps: PositionedResult =>
+  def getResultForScalarListField(field: ScalarField): GetResult[ScalarListElement] = GetResult { ps: PositionedResult =>
     val resultSet = ps.rs
     val nodeId    = resultSet.getString("nodeId")
     val position  = resultSet.getInt("position")

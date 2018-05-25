@@ -103,7 +103,7 @@ case class DestructiveChanges(deployConnector: DeployConnector, project: Project
 
   private def updateFieldValidation(x: UpdateField) = {
     val model                    = previousSchema.getModelByName_!(x.model)
-    val oldField                 = model.fields.find(_.name == x.name).get
+    val oldField                 = model.getFieldByName_!(x.name)
     val cardinalityChanges       = x.isList.isDefined
     val typeChanges              = x.typeName.isDefined
     val goesFromScalarToRelation = oldField.isScalar && x.relation.isDefined
@@ -139,7 +139,7 @@ case class DestructiveChanges(deployConnector: DeployConnector, project: Project
 
     def uniqueErrors: Future[Vector[SchemaError]] = becomesUnique match {
       case true =>
-        clientDataResolver.existsDuplicateValueByModelAndField(model, oldField).map {
+        clientDataResolver.existsDuplicateValueByModelAndField(model, oldField.asInstanceOf[ScalarField]).map {
           case true =>
             Vector(
               SchemaError(`type` = model.name,
@@ -194,7 +194,7 @@ case class DestructiveChanges(deployConnector: DeployConnector, project: Project
 
     def checkRelationSide(modelName: String) = {
       val nextModelA      = nextSchema.models.find(_.name == modelName).get
-      val nextModelAField = nextModelA.fields.find(field => field.relationOpt.contains(nextRelation))
+      val nextModelAField = nextModelA.relationFields.find(field => field.relation == nextRelation)
 
       val modelARequired = nextModelAField match {
         case None        => false

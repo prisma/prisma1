@@ -122,7 +122,7 @@ class ObjectTypeBuilder(
           case TypeIdentifier.GraphQLID => IDType
           case TypeIdentifier.DateTime  => DateTimeType
           case TypeIdentifier.Json      => JsonType
-          case TypeIdentifier.Enum      => SchemaBuilderUtils.mapEnumFieldToInputType(field)
+          case TypeIdentifier.Enum      => SchemaBuilderUtils.mapEnumFieldToInputType(f)
         }
     }
 

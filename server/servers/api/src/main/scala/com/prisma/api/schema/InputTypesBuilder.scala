@@ -203,7 +203,7 @@ abstract class UncachedInputTypesBuilder(project: Project) extends InputTypesBui
   protected def computeInputObjectTypeForWhere(model: Model): InputObjectType[Any] = FilterObjectTypeBuilder(model, project).filterObjectType
 
   protected def computeInputObjectTypeForWhereUnique(model: Model): Option[InputObjectType[Any]] = {
-    val uniqueFields = model.fields.filter(f => f.isUnique && f.isVisible)
+    val uniqueFields = model.scalarFields.filter(f => f.isUnique && f.isVisible)
 
     if (uniqueFields.isEmpty) {
       None

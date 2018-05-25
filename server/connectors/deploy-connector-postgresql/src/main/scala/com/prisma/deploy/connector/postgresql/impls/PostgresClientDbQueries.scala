@@ -37,7 +37,7 @@ case class PostgresClientDbQueries(project: Project, clientDatabase: Database)(i
     clientDatabase.run(readOnlyBoolean(query)).map(_.head).recover { case _: java.sql.SQLSyntaxErrorException => false }
   }
 
-  def existsDuplicateValueByModelAndField(model: Model, field: Field): Future[Boolean] = {
+  def existsDuplicateValueByModelAndField(model: Model, field: ScalarField): Future[Boolean] = {
     val query = PostgresDeployDatabaseQueryBuilder.existsDuplicateValueByModelAndField(project.id, model, field.dbName)
     clientDatabase.run(readOnlyBoolean(query)).map(_.head).recover { case _: java.sql.SQLSyntaxErrorException => false }
   }

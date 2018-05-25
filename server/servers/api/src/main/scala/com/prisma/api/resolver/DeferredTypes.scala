@@ -33,7 +33,7 @@ object DeferredTypes {
   case class CountManyModelDeferred(model: Model, args: Option[QueryArguments]) extends ModelDeferred[Int]
 
   trait RelatedArgs {
-    def relationField: Field
+    def relationField: RelationField
     def parentNodeId: IdGCValue
     def args: Option[QueryArguments]
   }

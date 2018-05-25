@@ -82,7 +82,7 @@ case class CoolArgs(raw: Map[String, Any]) {
     }
   }
 
-  def subScalarList(scalarListField: Field): Option[ListGCValue] = {
+  def subScalarList(scalarListField: ScalarField): Option[ListGCValue] = {
     subArgsOption(scalarListField.name).flatten.flatMap { args =>
       args.getFieldValuesAs[Any]("set") match {
         case None =>

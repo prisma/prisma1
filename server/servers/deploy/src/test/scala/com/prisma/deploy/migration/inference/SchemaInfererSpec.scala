@@ -344,7 +344,7 @@ class SchemaInfererSpec extends WordSpec with Matchers {
          |}""".stripMargin
     val schema = infer(emptyProject.schema, types)
 
-    val field = schema.getModelByName_!("Todo").getFieldByName_!("name")
+    val field = schema.getModelByName_!("Todo").getScalarFieldByName_!("name")
     field.manifestation should equal(Some(FieldManifestation("my_name_column")))
   }
 
