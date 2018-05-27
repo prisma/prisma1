@@ -312,7 +312,8 @@ val allServerProjects = List(
   deploy,
   subscriptions,
   workers,
-  serversShared
+  serversShared,
+  sharedModels
 )
 
 lazy val deployConnectorProjects = List(

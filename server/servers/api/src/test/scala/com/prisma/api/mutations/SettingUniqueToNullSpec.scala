@@ -46,7 +46,7 @@ class SettingUniqueToNullSpec extends FlatSpec with Matchers with ApiSpecBase {
     res.toString() should be("""{"data":{"updateA":{"b":null}}}""")
   }
 
-  "Setting a where value to null " should "when there is further nesting " in {
+  "Setting a where value to null " should "should error if there are nested operations" in {
     val project = SchemaDsl.fromString() {
       """
         |type A {
@@ -73,14 +73,31 @@ class SettingUniqueToNullSpec extends FlatSpec with Matchers with ApiSpecBase {
         |       create:{ c: "C"}
         |    }
         |  }) {
-        |    id
+        |    key,
+        |    b,
+        |    c {c}
         |  }
         |}""",
       project
     )
 
-    //todo this will update all nodes that have b as null to NewC
-    val res = server.query(
+    server.query(
+      """mutation a {
+        |  createA(data: {
+        |    key: "abc2"
+        |    c: {
+        |       create:{ c: "C2"}
+        |    }
+        |  }) {
+        |    key,
+        |    b,
+        |    c {c}
+        |  }
+        |}""",
+      project
+    )
+
+    server.queryThatMustFail(
       """mutation b {
         |  updateA(
         |    where: { b: "abc" }
@@ -92,10 +109,9 @@ class SettingUniqueToNullSpec extends FlatSpec with Matchers with ApiSpecBase {
         |    c{c}
         |  }
         |}""",
-      project
+      project,
+      3044
     )
-
-    res.toString() should be("""{"data":{"updateA":{"b":null,"c":{"c":"NewC"}}}}""")
   }
 
 }

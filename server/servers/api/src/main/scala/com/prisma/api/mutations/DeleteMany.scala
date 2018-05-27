@@ -1,8 +1,7 @@
 package com.prisma.api.mutations
 
 import com.prisma.api.ApiDependencies
-import com.prisma.api.connector.DataResolver
-import com.prisma.api.connector.Types.DataItemFilterCollection
+import com.prisma.api.connector.{DataResolver, Filter}
 import com.prisma.api.mutactions.DatabaseMutactions
 import com.prisma.shared.models.{Model, Project}
 
@@ -11,7 +10,7 @@ import scala.concurrent.Future
 case class DeleteMany(
     project: Project,
     model: Model,
-    whereFilter: Option[DataItemFilterCollection],
+    whereFilter: Option[Filter],
     dataResolver: DataResolver
 )(implicit apiDependencies: ApiDependencies)
     extends ClientMutation[BatchPayload] {

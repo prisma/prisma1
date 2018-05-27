@@ -1,12 +1,12 @@
 package com.prisma.api.connector.mysql.database
 
-import com.prisma.api.connector.Types.DataItemFilterCollection
+import com.prisma.api.connector.Filter
 import com.prisma.api.connector.mysql.database.JdbcExtensions._
 import com.prisma.gc_values._
 import slick.jdbc.MySQLProfile.api._
 import slick.jdbc.{PositionedParameters, SQLActionBuilder, SetParameter}
 
-object SlickExtensions {
+object MySqlSlickExtensions {
 
   implicit object SetGcValueParam extends SetParameter[GCValue] {
     override def apply(gcValue: GCValue, pp: PositionedParameters): Unit = {
@@ -69,8 +69,8 @@ object SlickExtensions {
     if (action.isEmpty) None else Some(sql"#$prefix " ++ action.get)
   }
 
-  def whereFilterAppendix(projectId: String, table: String, filter: Option[DataItemFilterCollection]) = {
-    val whereSql = filter.flatMap(where => QueryArgumentsHelpers.generateFilterConditions(projectId, table, where))
+  def whereFilterAppendix(projectId: String, table: String, filter: Option[Filter]) = {
+    val whereSql = filter.flatMap(where => MySqlQueryArgumentsHelpers.generateFilterConditions(projectId, table, table, where))
     prefixIfNotNone("WHERE", whereSql)
   }
 }

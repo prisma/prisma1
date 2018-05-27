@@ -1,12 +1,12 @@
 package com.prisma.api.connector.postgresql.database
 
-import com.prisma.api.connector.Types.DataItemFilterCollection
+import com.prisma.api.connector.Filter
 import com.prisma.api.connector.postgresql.database.JdbcExtensions._
 import com.prisma.gc_values._
 import slick.jdbc.PostgresProfile.api._
 import slick.jdbc.{PositionedParameters, SQLActionBuilder, SetParameter}
 
-object SlickExtensions {
+object PostgresSlickExtensions {
 
   implicit object SetGcValueParam extends SetParameter[GCValue] {
     override def apply(gcValue: GCValue, pp: PositionedParameters): Unit = {
@@ -32,7 +32,7 @@ object SlickExtensions {
     def ++(b: Option[SQLActionBuilder]): SQLActionBuilder = concat(b)
   }
 
-  def escapeUnsafeParam(string: String): SQLActionBuilder = sql"$string"
+  def escapeUnsafe(string: String): SQLActionBuilder = sql"$string"
 
   def escapeKey(key: String) = sql""""#$key""""
 
@@ -69,8 +69,8 @@ object SlickExtensions {
     if (action.isEmpty) None else Some(sql"#$prefix " ++ action.get)
   }
 
-  def whereFilterAppendix(projectId: String, table: String, filter: Option[DataItemFilterCollection]) = {
-    val whereSql = filter.flatMap(where => QueryArgumentsHelpers.generateFilterConditions(projectId, table, where))
+  def whereFilterAppendix(projectId: String, table: String, filter: Option[Filter]) = {
+    val whereSql = filter.flatMap(where => PostgresQueryArgumentsHelpers.generateFilterConditions(projectId, table, table, where))
     prefixIfNotNone("WHERE", whereSql)
   }
 }

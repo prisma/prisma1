@@ -1,6 +1,5 @@
 package com.prisma.api.filters
 
-import com.prisma.IgnorePostgres
 import com.prisma.api.ApiSpecBase
 import com.prisma.shared.schema_dsl.SchemaDsl
 import org.scalatest._
@@ -73,7 +72,6 @@ class RelationFilterSpec extends FlatSpec with Matchers with ApiSpecBase {
   }
 
   "simple scalar filter" should "work" in {
-
     server.query(query = """{blogs{posts(where:{popularity_gte: 5}){title}}}""", project = project).toString should be(
       """{"data":{"blogs":[{"posts":[{"title":"post 1"}]},{"posts":[{"title":"post 3"}]}]}}""")
   }
@@ -168,7 +166,7 @@ class RelationFilterSpec extends FlatSpec with Matchers with ApiSpecBase {
       """{"data":{"blogs":[{"name":"blog 2"}]}}""")
   }
 
-  "crazy filters" should "work" taggedAs (IgnorePostgres) in {
+  "crazy filters" should "work" in {
 
     server
       .query(
@@ -192,26 +190,5 @@ class RelationFilterSpec extends FlatSpec with Matchers with ApiSpecBase {
       )
       .toString should be("""{"data":{"posts":[]}}""")
 
-    server
-      .query(
-        query = """{posts(where: {
-                |  blog: {
-                |    posts_some: {
-                |      popularity_gte: 5
-                |    }
-                |    name_contains: "Blog 1"
-                |  }
-                |  comments_none: {
-                |    likes_gte: 500
-                |  }
-                |  comments_some: {
-                |    likes_lte: 2
-                |  }
-                |}) {
-                |  title
-                |}}""".stripMargin,
-        project = project
-      )
-      .toString should be("""{"data":{"posts":[{"title":"post 1"}]}}""")
   }
 }

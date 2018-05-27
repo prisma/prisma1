@@ -36,7 +36,7 @@ class SubscriptionFilterSpec extends FlatSpec with Matchers with SubscriptionSpe
 
     testDatabase.runDatabaseMutactionOnClientDb(CreateDataItem(project = project, path = path, nonListArgs = args, listArgs = Vector.empty))
 
-    val extendedPath = path.appendEdge(project, model.getFieldByName_!("comments")).lastEdgeToNodeEdge(NodeSelector.forId(model, "comment-id"))
+    val extendedPath = path.appendEdge(model.getRelationFieldByName_!("comments")).lastEdgeToNodeEdge(NodeSelector.forId(model, "comment-id"))
     testDatabase.runDatabaseMutactionOnClientDb(AddDataItemToManyRelationByPath(project, extendedPath))
   }
 
@@ -61,7 +61,7 @@ class SubscriptionFilterSpec extends FlatSpec with Matchers with SubscriptionSpe
       sleep(8000)
 
       val event = nodeEvent(
-        modelId = model.id,
+        modelId = model.name,
         changedFields = Seq("text"),
         previousValues = """{"id":"test-node-id", "text":"event1", "status": "Active", "tags":[]}"""
       )
@@ -103,7 +103,7 @@ class SubscriptionFilterSpec extends FlatSpec with Matchers with SubscriptionSpe
       sleep(4000)
 
       val event = nodeEvent(
-        modelId = model.id,
+        modelId = model.name,
         changedFields = Seq("text"),
         previousValues = """{"id":"test-node-id", "text":"event2", "status": "Active", "tags": ["important"]}"""
       )
@@ -125,6 +125,6 @@ class SubscriptionFilterSpec extends FlatSpec with Matchers with SubscriptionSpe
                 changedFields: Seq[String],
                 previousValues: String): String = {
     Json.parse(previousValues) // throws if the string is not valid json
-    s"""{"nodeId":"test-node-id","modelId":"${model.id}","mutationType":"UpdateNode","changedFields":["text"], "previousValues": $previousValues}"""
+    s"""{"nodeId":"test-node-id","modelId":"${model.name}","mutationType":"UpdateNode","changedFields":["text"], "previousValues": $previousValues}"""
   }
 }

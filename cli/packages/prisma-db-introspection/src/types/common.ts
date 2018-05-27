@@ -15,6 +15,7 @@ export interface Relation {
 
 export interface Column {
   name: string
+  isPrimaryKey: boolean
   isUnique: boolean
   defaultValue: any
   type: string
@@ -28,6 +29,11 @@ export interface Table {
   name: string
   isJunctionTable: boolean
   columns: Column[]
+}
+
+export interface PrimaryKey {
+  tableName: string
+  fields: string[]
 }
 
 export type PostgresConnectionDetails = string | ClientConfig
