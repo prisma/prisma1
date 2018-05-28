@@ -3,8 +3,6 @@ package com.prisma.deploy.migration.validation
 import com.prisma.shared.errors.SchemaCheckResult
 import sangria.ast.{EnumTypeDefinition, ObjectTypeDefinition, TypeDefinition}
 
-import scala.collection.immutable
-
 case class SchemaError(`type`: String, description: String, field: Option[String]) extends SchemaCheckResult
 
 object SchemaError {
