@@ -1,8 +1,7 @@
 package com.prisma.deploy.validation
 
 import com.prisma.deploy.connector.DeployConnector
-import com.prisma.deploy.migration.validation.{DeployError, DeployWarning, DeployWarnings}
-import com.prisma.shared.errors.SchemaCheckResult
+import com.prisma.deploy.migration.validation.{DeployError, DeployResult, DeployWarning, DeployWarnings}
 import com.prisma.shared.models._
 import org.scalactic.{Bad, Good, Or}
 
@@ -25,7 +24,7 @@ case class DestructiveChanges(deployConnector: DeployConnector, project: Project
     }
   }
 
-  private def checkAgainstExistingData: Future[Vector[SchemaCheckResult]] = {
+  private def checkAgainstExistingData: Future[Vector[DeployResult]] = {
     val checkResults = steps.map {
       case x: CreateModel    => validationSuccessful
       case x: DeleteModel    => deleteModelValidation(x)
