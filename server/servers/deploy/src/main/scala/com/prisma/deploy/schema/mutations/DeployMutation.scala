@@ -61,7 +61,7 @@ case class DeployMutation(
 
       result <- (args.force.getOrElse(false), warnings.isEmpty) match {
                  case (_, true)     => FutureOr(persist(inferredNextSchema, steps, functions))
-                 case (true, false) => FutureOr(persist(inferredNextSchema, steps, functions))
+                 case (true, false) => FutureOr(persist(inferredNextSchema, steps, functions)).map(_.copy(warnings = warnings))
                  case (false, false) =>
                    FutureOr(Future.successful(
                      Good(DeployMutationPayload(args.clientMutationId, Some(Migration.empty(project.id)), errors = Vector.empty, warnings)))) // don't do it
