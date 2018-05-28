@@ -120,17 +120,7 @@ case class DeployMutation(
   }
 
   private def checkForDestructiveChanges(nextSchema: Schema, steps: Vector[MigrationStep]): Future[Vector[DeployWarning] Or Vector[DeployError]] = {
-    val existingDataValidation = DestructiveChanges(deployConnector, project, nextSchema, steps)
-    val checkResults           = existingDataValidation.checkAgainstExistingData
-    checkResults.map { results =>
-      val destructiveWarnings: Vector[DeployWarning] = results.collect { case warning: DeployWarning => warning }
-      val inconsistencyErrors: Vector[DeployError]   = results.collect { case error: DeployError     => error }
-      if (inconsistencyErrors.isEmpty) {
-        Good(destructiveWarnings)
-      } else {
-        Bad(inconsistencyErrors)
-      }
-    }
+    DestructiveChanges(deployConnector, project, nextSchema, steps).check
   }
 
   private def getFunctionModelsOrErrors(fns: Vector[FunctionInput]): Vector[Function] Or Vector[DeployError] = {

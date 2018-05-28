@@ -4,6 +4,7 @@ import com.prisma.deploy.connector.DeployConnector
 import com.prisma.deploy.migration.validation.{DeployError, DeployWarning, DeployWarnings}
 import com.prisma.shared.errors.SchemaCheckResult
 import com.prisma.shared.models._
+import org.scalactic.{Bad, Good, Or}
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
@@ -12,7 +13,19 @@ case class DestructiveChanges(deployConnector: DeployConnector, project: Project
   val clientDataResolver = deployConnector.clientDBQueries(project)
   val previousSchema     = project.schema
 
-  def checkAgainstExistingData: Future[Vector[SchemaCheckResult]] = {
+  def check: Future[Vector[DeployWarning] Or Vector[DeployError]] = {
+    checkAgainstExistingData.map { results =>
+      val destructiveWarnings: Vector[DeployWarning] = results.collect { case warning: DeployWarning => warning }
+      val inconsistencyErrors: Vector[DeployError]   = results.collect { case error: DeployError     => error }
+      if (inconsistencyErrors.isEmpty) {
+        Good(destructiveWarnings)
+      } else {
+        Bad(inconsistencyErrors)
+      }
+    }
+  }
+
+  private def checkAgainstExistingData: Future[Vector[SchemaCheckResult]] = {
     val checkResults = steps.map {
       case x: CreateModel    => validationSuccessful
       case x: DeleteModel    => deleteModelValidation(x)
