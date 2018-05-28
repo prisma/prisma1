@@ -26,7 +26,7 @@ class PassiveDeployMutationSpec extends FlatSpec with Matchers with PassiveDeplo
        | }
      """.stripMargin
 
-    setupProjectDatabaseForProject(projectId, sqlSchema)
+    setupProjectDatabaseForProject(sqlSchema)
 
     val result = server.deploySchema(projectId, schema)
 
@@ -54,7 +54,7 @@ class PassiveDeployMutationSpec extends FlatSpec with Matchers with PassiveDeplo
         | }
       """.stripMargin
 
-    setupProjectDatabaseForProject(projectId, sqlSchema)
+    setupProjectDatabaseForProject(sqlSchema)
 
     val result = server.deploySchemaThatMustError(projectId, schema)
     result.pathAsString("data.deploy.errors.[0].description") should be(
@@ -90,7 +90,7 @@ class PassiveDeployMutationSpec extends FlatSpec with Matchers with PassiveDeplo
         | }
       """.stripMargin
 
-    setupProjectDatabaseForProject(projectId, sqlSchema)
+    setupProjectDatabaseForProject(sqlSchema)
 
     val result = server.deploySchema(projectId, schema)
 
@@ -131,7 +131,7 @@ class PassiveDeployMutationSpec extends FlatSpec with Matchers with PassiveDeplo
         | }
       """.stripMargin
 
-    setupProjectDatabaseForProject(projectId, sqlSchema)
+    setupProjectDatabaseForProject(sqlSchema)
 
     val result = server.deploySchema(projectId, schema)
 
@@ -176,7 +176,7 @@ class PassiveDeployMutationSpec extends FlatSpec with Matchers with PassiveDeplo
         | }
       """.stripMargin
 
-    setupProjectDatabaseForProject(projectId, sqlSchema)
+    setupProjectDatabaseForProject(sqlSchema)
 
     val result = server.deploySchema(projectId, schema)
 
@@ -221,7 +221,7 @@ class PassiveDeployMutationSpec extends FlatSpec with Matchers with PassiveDeplo
         | }
       """.stripMargin
 
-    setupProjectDatabaseForProject(projectId, sqlSchema)
+    setupProjectDatabaseForProject(sqlSchema)
 
     val result = server.deploySchema(projectId, schema)
 
@@ -266,7 +266,7 @@ class PassiveDeployMutationSpec extends FlatSpec with Matchers with PassiveDeplo
         | }
       """.stripMargin
 
-    setupProjectDatabaseForProject(projectId, sqlSchema)
+    setupProjectDatabaseForProject(sqlSchema)
 
     val result = server.deploySchemaThatMustError(projectId, schema)
 
