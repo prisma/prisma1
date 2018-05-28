@@ -3,10 +3,11 @@ package com.prisma.deploy.migration.validation
 import com.prisma.deploy.gc_value.GCStringConverter
 import com.prisma.deploy.validation._
 import com.prisma.shared.models.TypeIdentifier
-import org.scalactic.{Bad, Good}
-import sangria.ast._
+import org.scalactic.{Bad, Good, Or}
+import sangria.ast.{Argument => SangriaArgument, _}
 
 import scala.collection.immutable.Seq
+import scala.concurrent.Future
 import scala.util.{Failure, Success}
 
 case class DirectiveRequirement(directiveName: String, requiredArguments: Seq[RequiredArg], optionalArguments: Seq[Argument])
@@ -94,6 +95,15 @@ case class SchemaSyntaxValidator(
 
   val result   = SdlSchemaParser.parse(schema)
   lazy val doc = result.get
+
+  def validateSyntax: PrismaSdl Or Vector[DeployError] = {
+    val errors = validate
+    if (errors.isEmpty) {
+      Good(generateSDL)
+    } else {
+      Bad(errors.toVector)
+    }
+  }
 
   def validate: Seq[DeployError] = {
     result match {

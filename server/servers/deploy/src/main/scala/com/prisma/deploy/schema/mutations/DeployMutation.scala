@@ -90,13 +90,7 @@ case class DeployMutation(
   }
 
   private def validateSyntax: Future[PrismaSdl Or Vector[DeployError]] = Future.successful {
-    val validator = SchemaSyntaxValidator(args.types, isActive = deployConnector.isActive)
-    val errors    = validator.validate
-    if (errors.isEmpty) {
-      Good(validator.generateSDL)
-    } else {
-      Bad(errors.toVector)
-    }
+    SchemaSyntaxValidator(args.types, isActive = deployConnector.isActive).validateSyntax
   }
 
   private def inferTables: Future[InferredTables Or Vector[DeployError]] = {
