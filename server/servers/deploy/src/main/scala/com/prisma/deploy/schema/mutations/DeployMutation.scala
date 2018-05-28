@@ -36,24 +36,6 @@ case class DeployMutation(
 ) extends Mutation[DeployMutationPayload]
     with AwaitUtils {
 
-  val projectId = dependencies.projectIdEncoder.toEncodedString(args.name, args.stage)
-
-  //parse Schema
-  //validate Schema
-  //infer Tables
-  //map Schema
-  //create prismaSDL
-  //inferSchema
-  //inferred Table Validations
-  //get Function Models -> validateFunctionInputs
-  //infer MigrationSteps
-  //check For Destructive Changes
-  //check for Force
-  //update Secrets
-  //invalidateSchema
-  //schedule Migration
-  //if something fails during the migration steps we have no way of returning that error i think
-
   val graphQlSdl: Document = QueryParser.parse(args.types) match {
     case Success(res) => res
     case Failure(e)   => throw InvalidQuery(e.getMessage)
@@ -73,7 +55,7 @@ case class DeployMutation(
       inferredTables     <- FutureOr(inferTables)
       inferredNextSchema = schemaInferrer.infer(project.schema, schemaMapping, prismaSdl, inferredTables)
       _                  <- FutureOr(checkSchemaAgainstInferredTables(inferredNextSchema, inferredTables))
-      functions          <- FutureOr(Future.successful(getFunctionModelsOrErrors(args.functions)))
+      functions          <- FutureOr(getFunctionModels(args.functions))
       steps              <- FutureOr(inferMigrationSteps(inferredNextSchema, schemaMapping))
       warnings           <- FutureOr(checkForDestructiveChanges(inferredNextSchema, steps))
 
@@ -123,28 +105,8 @@ case class DeployMutation(
     DestructiveChanges(deployConnector, project, nextSchema, steps).check
   }
 
-  private def getFunctionModelsOrErrors(fns: Vector[FunctionInput]): Vector[Function] Or Vector[DeployError] = {
-    val errors = validateFunctionInputs(fns)
-    if (errors.nonEmpty) {
-      Bad(errors)
-    } else {
-      Good(args.functions.map(convertFunctionInput))
-    }
-  }
-
-  private def validateFunctionInputs(fns: Vector[FunctionInput]): Vector[DeployError] =
-    fns.flatMap(dependencies.functionValidator.validateFunctionInput(project, _))
-
-  private def convertFunctionInput(fnInput: FunctionInput): ServerSideSubscriptionFunction = {
-    ServerSideSubscriptionFunction(
-      name = fnInput.name,
-      isActive = true,
-      delivery = WebhookDelivery(
-        url = fnInput.url,
-        headers = fnInput.headers.map(header => header.name -> header.value)
-      ),
-      query = fnInput.query
-    )
+  private def getFunctionModels(fns: Vector[FunctionInput]): Future[Vector[Function] Or Vector[DeployError]] = Future.successful {
+    dependencies.functionValidator.validateFunctionInputs(project, fns)
   }
 
   private def persist(nextSchema: Schema, steps: Vector[MigrationStep], functions: Vector[Function]): Future[Good[DeployMutationPayload]] = {

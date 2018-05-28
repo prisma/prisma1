@@ -13,6 +13,7 @@ import com.prisma.deploy.server.auth.DummyManagementAuth
 import com.prisma.errors.{BugsnagErrorReporter, ErrorReporter}
 import com.prisma.messagebus.pubsub.inmemory.InMemoryAkkaPubSub
 import com.prisma.shared.models.{Project, ProjectIdEncoder}
+import org.scalactic.{Bad, Good}
 
 case class TestDeployDependencies()(implicit val system: ActorSystem, val materializer: ActorMaterializer) extends DeployDependencies {
   import system.dispatcher
@@ -32,8 +33,13 @@ case class TestDeployDependencies()(implicit val system: ActorSystem, val materi
 
   override def projectIdEncoder: ProjectIdEncoder = deployConnector.projectIdEncoder
 
-  override def functionValidator: FunctionValidator = (project: Project, fn: FunctionInput) => {
-    if (fn.name == "failing") Vector(DeployError(`type` = "model", field = "field", description = "error")) else Vector.empty
+  override def functionValidator: FunctionValidator = new FunctionValidator {
+    override def validateFunctionInputs(project: Project, functionInputs: Vector[FunctionInput]) = {
+      if (functionInputs.map(_.name).contains("failing"))
+        Bad(Vector(DeployError(`type` = "model", field = "field", description = "error")))
+      else
+        Good(Vector.empty)
+    }
   }
 
   lazy val telemetryActor = TestProbe().ref
