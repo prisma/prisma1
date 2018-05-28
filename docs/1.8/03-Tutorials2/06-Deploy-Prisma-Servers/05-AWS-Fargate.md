@@ -49,12 +49,6 @@ Navigate to [https://console.aws.amazon.com/cloudformation/](https://console.aws
 
 </Instruction>
 
-<InfoBox type=warning>
-
-**Attention:** Fargate is currently only available in the **US East (N. Virginia)** region. So be sure to select this region in the top-right corner of the AWS console!
-
-</InfoBox>
-
 <Instruction>
 
 Once you have the **US East (N. Virginia)** region selected, click the **Create Stack **button. On the next screen, you then need to provide your CloudFormation template.
