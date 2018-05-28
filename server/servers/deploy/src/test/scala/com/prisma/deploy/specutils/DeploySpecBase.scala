@@ -76,14 +76,20 @@ trait PassiveDeploySpecBase extends DeploySpecBase { self: Suite =>
 
   override def runSuiteOnlyForPassiveConnectors = true
 
-  def setupProjectDatabaseForProject(sql: String)(implicit suite: Suite) = {
+  def setupProjectDatabaseForProject(sql: String)(implicit suite: Suite): Unit = {
     val name      = suite.getClass.getSimpleName
     val stage     = "default"
     val projectId = testDependencies.projectIdEncoder.toEncodedString(name, stage)
+    setupProjectDatabaseForProject(projectId, sql)
+  }
+
+  def setupProjectDatabaseForProject(projectId: String, sql: String): Unit = {
     val connector = testDependencies.deployConnector.asInstanceOf[PostgresDeployConnector]
     val session   = connector.internalDatabase.createSession()
     val statement = session.createStatement()
     statement.execute(s"drop schema if exists $projectId cascade;")
+
+    val ProjectId(name, stage) = testDependencies.projectIdEncoder.fromEncodedString(projectId)
     server.addProject(name, stage)
 
     statement.execute(s"SET search_path TO $projectId;")
