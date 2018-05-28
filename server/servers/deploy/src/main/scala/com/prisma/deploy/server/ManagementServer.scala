@@ -56,21 +56,21 @@ case class ManagementServer(prefix: String = "", server2serverSecret: Option[Str
     val requestBeginningTime = System.currentTimeMillis()
 
     def logRequestEnd(projectId: Option[String] = None, clientId: Option[String] = None) = {
-      log(
-        Json
-          .toJson(
-            LogData(
-              key = LogKey.RequestComplete,
-              requestId = requestId,
-              projectId = projectId,
-              clientId = clientId,
-              payload = Some(Map("request_duration" -> (System.currentTimeMillis() - requestBeginningTime)))
-            )
-          )
-          .toString())
+//      log(
+//        Json
+//          .toJson(
+//            LogData(
+//              key = LogKey.RequestComplete,
+//              requestId = requestId,
+//              projectId = projectId,
+//              clientId = clientId,
+//              payload = Some(Map("request_duration" -> (System.currentTimeMillis() - requestBeginningTime)))
+//            )
+//          )
+//          .toString())
     }
 
-    logger.info(Json.toJson(LogData(LogKey.RequestNew, requestId)).toString())
+//    logger.info(Json.toJson(LogData(LogKey.RequestNew, requestId)).toString())
 
     handleExceptions(toplevelExceptionHandler(requestId)) {
       TimeResponseDirectiveImpl(DeployMetrics).timeResponse {

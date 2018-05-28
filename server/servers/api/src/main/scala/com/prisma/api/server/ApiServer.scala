@@ -1,7 +1,6 @@
 package com.prisma.api.server
 
 import akka.actor.ActorSystem
-import akka.http.javadsl.model.StatusCode
 import akka.http.scaladsl.model.StatusCodes
 import akka.http.scaladsl.model.StatusCodes._
 import akka.http.scaladsl.model.headers.RawHeader
@@ -15,8 +14,6 @@ import com.prisma.api.schema.APIErrors.ProjectNotFound
 import com.prisma.api.schema.CommonErrors.ThrottlerBufferFullException
 import com.prisma.api.schema.{SchemaBuilder, UserFacingError}
 import com.prisma.api.{ApiDependencies, ApiMetrics}
-import com.prisma.logging.LogDataWrites.logDataWrites
-import com.prisma.logging.{LogData, LogKey}
 import com.prisma.metrics.extensions.TimeResponseDirectiveImpl
 import com.prisma.shared.models.{ProjectId, ProjectWithClientId}
 import com.prisma.util.env.EnvUtils
@@ -27,7 +24,6 @@ import play.api.libs.json._
 
 import scala.concurrent.Future
 import scala.language.postfixOps
-import scala.util.Try
 
 case class ApiServer(
     schemaBuilder: SchemaBuilder,
@@ -77,23 +73,26 @@ case class ApiServer(
     def logRequestEnd(projectId: String, throttledBy: Long = 0) = {
       val end            = System.currentTimeMillis()
       val actualDuration = end - requestBeginningTime - throttledBy
-      ApiMetrics.requestDuration.record(actualDuration, Seq(projectId))
-      ApiMetrics.requestCounter.inc(projectId)
-      log(
-        Json
-          .toJson(
-            LogData(
-              key = LogKey.RequestComplete,
-              requestId = requestId,
-              projectId = Some(projectId),
-              payload = Some(
-                Map(
-                  "request_duration" -> (end - requestBeginningTime),
-                  "throttled_by"     -> throttledBy
-                ))
-            )
-          )
-          .toString())
+      val metricKey      = metricKeyFor(projectId)
+
+      ApiMetrics.requestDuration.record(actualDuration, Seq(metricKey))
+      ApiMetrics.requestCounter.inc(metricKey)
+
+//      log(
+//        Json
+//          .toJson(
+//            LogData(
+//              key = LogKey.RequestComplete,
+//              requestId = requestId,
+//              projectId = Some(projectId),
+//              payload = Some(
+//                Map(
+//                  "request_duration" -> (end - requestBeginningTime),
+//                  "throttled_by"     -> throttledBy
+//                ))
+//            )
+//          )
+//          .toString())
     }
 
     def throttleApiCallIfNeeded(projectId: ProjectId, rawRequest: RawRequest) = {
@@ -127,7 +126,12 @@ case class ApiServer(
     }
 
     def handleRequestForPublicApi(projectId: ProjectId, rawRequest: RawRequest) = {
-      apiDependencies.requestHandler.handleRawRequestForPublicApi(projectIdEncoder.toEncodedString(projectId), rawRequest)
+      val result = apiDependencies.requestHandler.handleRawRequestForPublicApi(projectIdEncoder.toEncodedString(projectId), rawRequest)
+      result.onComplete { res =>
+        logRequestEnd(projectIdEncoder.toEncodedString(projectId))
+      }
+      result
+
     }
 
     pathPrefix(Segments(min = 0, max = 4)) { segments =>
@@ -220,4 +224,6 @@ case class ApiServer(
       apiDependencies.reporter.report(e)
       complete(InternalServerError -> JsonErrorHelper.errorJson(requestId, e.getMessage))
   }
+
+  def metricKeyFor(projectId: String): String = projectId.replace(projectIdEncoder.stageSeparator, '-').replace(projectIdEncoder.workspaceSeparator, '-')
 }
