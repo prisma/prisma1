@@ -64,6 +64,10 @@ services:
       MYSQL_ROOT_PASSWORD: prisma
 ```
 
+> Notice: you can use `PRISMA_CONFIG_PATH` environment variable to set the path to Prisma configuration file, that is valid yaml file with the same shape as `PRISMA_CONFIG`.
+>
+> This can be helpfully when want to build your own Docker image. 
+
 ##### `prisma`
 
 The `prisma-db` service is based on the [`prismagraphlq/prisma`](https://hub.docker.com/r/prismagraphql/prisma/) Docker `image`. Here is an overview of its most important properties:
@@ -74,7 +78,7 @@ The `prisma-db` service is based on the [`prismagraphlq/prisma`](https://hub.doc
   - `port`: The port on which the Prisma server is running.
   - `databases`: Specify which databases the Prisma server should connect to (currently Prisma servers can only connect to one database).
     - `default.connector`: Specify which Prisma database connector is to be used.
-  
+
     - `default.active`: Setting this to `true` means you're using an _active_ (as opposed to a _passive_) database connector
     - `default.host`: The host machine of the database.
     - `default.port`: The port on whcih the database is running.
