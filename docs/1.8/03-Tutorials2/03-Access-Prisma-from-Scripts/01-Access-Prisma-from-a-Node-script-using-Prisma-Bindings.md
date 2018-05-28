@@ -18,7 +18,7 @@ The tutorial assumes that you already have a running Prisma service, so please m
 <InfoBox>
 
 To ensure you're not accidentally skipping an instruction in the tutorial, all required actions are highlighted with a little _counter_ on the left.
-
+<br />
 💡 **Pro tip**: If you're only keen on getting started but don't care so much about the explanations of what's going on, you can simply jump from instruction to instruction.
 
 </InfoBox>
