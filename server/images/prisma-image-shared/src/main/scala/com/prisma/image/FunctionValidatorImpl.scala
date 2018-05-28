@@ -28,16 +28,4 @@ case class FunctionValidatorImpl()(implicit ec: ExecutionContext, dependencies: 
       case Good(_)     => Good(convertFunctionInput(fn))
     }
   }
-
-  private def convertFunctionInput(fnInput: FunctionInput): ServerSideSubscriptionFunction = {
-    ServerSideSubscriptionFunction(
-      name = fnInput.name,
-      isActive = true,
-      delivery = WebhookDelivery(
-        url = fnInput.url,
-        headers = fnInput.headers.map(header => header.name -> header.value)
-      ),
-      query = fnInput.query
-    )
-  }
 }

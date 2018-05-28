@@ -35,10 +35,11 @@ case class TestDeployDependencies()(implicit val system: ActorSystem, val materi
 
   override def functionValidator: FunctionValidator = new FunctionValidator {
     override def validateFunctionInputs(project: Project, functionInputs: Vector[FunctionInput]) = {
-      if (functionInputs.map(_.name).contains("failing"))
+      if (functionInputs.map(_.name).contains("failing")) {
         Bad(Vector(DeployError(`type` = "model", field = "field", description = "error")))
-      else
-        Good(Vector.empty)
+      } else {
+        Good(functionInputs.map(convertFunctionInput))
+      }
     }
   }
 
