@@ -42,13 +42,13 @@ case class DeployMutation(
   }
 
   override def execute: Future[MutationResult[DeployMutationPayload]] = {
-    performDeploy.map {
+    internalExecute.map {
       case Good(payload) => MutationSuccess(payload)
       case Bad(errors)   => MutationSuccess(DeployMutationPayload(args.clientMutationId, None, errors = errors, warnings = Vector.empty))
     }
   }
 
-  private def performDeploy: Future[DeployMutationPayload Or Vector[DeployError]] = {
+  private def internalExecute: Future[DeployMutationPayload Or Vector[DeployError]] = {
     val x = for {
       prismaSdl          <- FutureOr(validateSyntax)
       schemaMapping      = schemaMapper.createMapping(graphQlSdl)
@@ -60,8 +60,8 @@ case class DeployMutation(
       warnings           <- FutureOr(checkForDestructiveChanges(inferredNextSchema, steps))
 
       result <- (args.force.getOrElse(false), warnings.isEmpty) match {
-                 case (_, true)      => FutureOr(persist(inferredNextSchema, steps, functions))
-                 case (true, false)  => FutureOr(persist(inferredNextSchema, steps, functions)).map(_.copy(warnings = warnings))
+                 case (_, true)      => FutureOr(performDeployment(inferredNextSchema, steps, functions))
+                 case (true, false)  => FutureOr(performDeployment(inferredNextSchema, steps, functions)).map(_.copy(warnings = warnings))
                  case (false, false) => FutureOr(Future.successful(Good(DeployMutationPayload(args.clientMutationId, None, errors = Vector.empty, warnings))))
                }
     } yield result
@@ -107,7 +107,7 @@ case class DeployMutation(
     dependencies.functionValidator.validateFunctionInputs(project, fns)
   }
 
-  private def persist(nextSchema: Schema, steps: Vector[MigrationStep], functions: Vector[Function]): Future[Good[DeployMutationPayload]] = {
+  private def performDeployment(nextSchema: Schema, steps: Vector[MigrationStep], functions: Vector[Function]): Future[Good[DeployMutationPayload]] = {
     for {
       secretsStep <- updateSecretsIfNecessary()
       migration   <- handleMigration(nextSchema, steps ++ secretsStep, functions)
