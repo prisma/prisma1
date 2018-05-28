@@ -61,10 +61,10 @@ trait ActiveDeploySpecBase extends DeploySpecBase { self: Suite =>
 
   def setupProject(
       schema: String,
+      stage: String = "default",
       secrets: Vector[String] = Vector.empty
   )(implicit suite: Suite): (Project, Migration) = {
     val name      = suite.getClass.getSimpleName
-    val stage     = "default"
     val idAsStrig = testDependencies.projectIdEncoder.toEncodedString(name, stage)
     internalDB.deleteProjectDatabase(idAsStrig).await()
     server.addProject(name, stage)
