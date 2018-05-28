@@ -71,7 +71,7 @@ custom:
   serverlessEndpoint: https://bcdeaxokbj.execute-api.eu-west-1.amazonaws.com/dev
 ```
 
-This service definition expects the following file structure:
+Note that above service definition expects the following file structure:
 
 ```
 .
@@ -83,6 +83,74 @@ This service definition expects the following file structure:
 │   └── enums.graphql
 └── schemas
     └── prisma.graphql
+```
+
+## Using variables
+
+Variables allow you to dynamically replace configuration values in your service definition file.
+
+They are especially useful when providing _secrets_ for your service and when you have a multi-staging developer workflow.
+
+To use variables inside `prisma.yml`, you need to reference the values enclosed in `${}` brackets:
+
+```yml
+# graphcool.yml file
+yamlKeyXYZ: ${variableSource} # see list of current variable sources below
+# this is an example of providing a default value as the second parameter
+otherYamlKey: ${variableSource, defaultValue}
+```
+
+A _variable source_ can be either of the following two options:
+
+- A _recursive self-reference_ to another value inside the same service
+- An _environment variable_
+- An _option from the command line_
+
+> Note that you can only use variables in property **values** - not in property keys. So you can't use variables to generate dynamic logical IDs in the custom resources section for example.
+
+### Recursive self-reference
+
+You can recursively reference other property values that live inside the same `prisma.yml` file.
+
+When using a recursive self-reference as a variable, the value that you put into the bracket is composed of:
+
+- the _prefix_ `self:`
+- (optional) the _path_ to the referenced property
+
+> If no path is specified, the value of the variable will be the full YAML file.
+
+```yml
+subscriptions:
+  sendWelcomeEmail:
+    query: database/subscriptions/sendWelcomeEmail.graphql
+    webhook:
+      url: https://${self:custom.serverlessEndpoint}/sendWelcomeEmail
+
+custom:
+  serverlessEndpoint: example.org
+```
+
+> **Note**: This works for any property inside `prisma.yml`, not just `custom`.
+
+### Environment variable
+
+You can reference [environment variables](https://en.wikipedia.org/wiki/Environment_variable) inside the service definition file.
+
+When using an environment variable, the value that you put into the bracket is composed of:
+
+- the _prefix_ `env:`
+- the _name_ of the environment variable
+
+In the following example, an environment variable is referenced to specify the URL and the authentication token for a webhook:
+
+```yml
+subscriptions:
+  sendWelcomeEmail:
+    query: database/subscriptions/sendWelcomeEmail.graphql
+    webhook:
+      url: https://example.org/sendWelcomeEmail
+      headers:
+        Authorization: ${env:MY_ENDPOINT_SECRET}
 ```
 
 ## Tooling integrations
@@ -105,6 +173,7 @@ Add the following to the [user and workspace settings](https://code.visualstudio
   "http://json.schemastore.org/prisma": "prisma.yml"
 }
 ```
+
 **Step 3.**
 
 Trigger the intellisense using your usual hotkey (*Ctrl + Space* by default) on your `prisma.yml` file. It should now display all the available fields, along with their descriptions. If any errors are made, VSCode will instantly catch them.

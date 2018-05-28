@@ -188,8 +188,6 @@ The `seed` property expects an **object**, with either one of two sub-properties
   * or a path to a `.zip` file that contains a data set in [Normalized Data Format (NDF)](!alias-teroo5uxih)
 * `run`: shell command that will be executed when seeding a service. This is meant for more complex seed setups that are not covered by `import`.
 
-> Note: `run` is currently not supported. Follow [the proposal](https://github.com/graphcool/framework/issues/1181) to stay informed.
-
 Seeds are implicitly executed when deploying a service for the first time (unless explicitly disabled using the `--no-seed` flag). Track [this feature request for additional seeding workflows](https://github.com/graphcool/prisma/issues/1536).
 
 #### Examples

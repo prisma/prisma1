@@ -191,7 +191,7 @@ Prisma servers run as standalone processes which allows for them to be scaled in
 
 <!-- Prisma is a secure API layer that sits in front of your database. Acting as a _GraphQL database proxy_, Prisma exposes a powerful GraphQL API and manages rate limiting, authentication, logging and a host of other features. Because Prisma is a standalone process, it can be scaled independently from your application layer and provide scalable subscriptions infrastructure. -->
 
-<p align="center"><img src="https://imgur.com/lMV1tMg.png" height="280" /></p>
+<p align="center"><img src="https://i.imgur.com/vVaq6yq.png" height="250" /></p>
 
 ## Is Prisma an ORM?
 

@@ -5,9 +5,14 @@ description: Overview
 
 # Overview
 
-[`prisma-binding`](https://github.com/graphcool/prisma-binding/) is a dedicated [GraphQL binding](!alias-quaidah9ph) for Prisma services.
+[`prisma-binding`](https://github.com/graphcool/prisma-binding/) is a dedicated [GraphQL binding](https://oss.prisma.io/content/GraphQL-Binding/01-Overview.html) for Prisma GraphQL APIs. Think of it like an _auto-generated SDK_ for Prisma services:
 
-> **Note**: If you're curious about this topic, you can read the [blog post](https://blog.graph.cool/80a4aa37cff5) which introduces the general idea of GraphQL bindings.
+![](https://oss.prisma.io/assets/bindings.png)
+
+> **Note**: If you're curious about this topic, you can read the following two blog posts:
+> - [Reusing & Composing GraphQL APIs with GraphQL Bindings]
+(https://blog.graph.cool/reusing-composing-graphql-apis-with-graphql-bindings-80a4aa37cff5)
+> - [GraphQL Binding 2.0: Improved API, schema transforms & automatic codegen](https://www.prisma.io/blog/graphql-binding-2-0-improved-api-schema-transforms-automatic-codegen-5934cd039db1/)
 
 `prisma-binding` provides a convenience layer for building GraphQL servers on top of Prisma services. In short, it simplifies implementing your GraphQL resolvers by _delegating_ execution of queries (or mutations) to the API of the underlying Prisma database service. Rather than writing SQL or accessing a NoSQL database API like MongoDB inside your resolvers, most of your resolver will be implemented as simple one-liners.
 
@@ -31,7 +36,7 @@ type Mutation {
 }
 ```
 
-This is how the corresponding resolvers are implemented:
+This is how the corresponding resolvers are implemented with a `Prisma` binding available as a `db` object on `ctx`:
 
 ```js
 const resolvers = {
@@ -71,24 +76,16 @@ const resolvers = {
 }
 ```
 
-> **Note**: To learn more about this particular example, check out [this](https://blog.graph.cool/tutorial-how-to-build-a-graphql-server-with-graphql-yoga-6da86f346e68) tutorial.
+> **Note**: To learn more about this particular example, check out [this](!alias-nahgaghei6) tutorial.
 
 ## Using Prisma bindings to build GraphQL servers with Prisma
 
 Here is how it works:
 
 1. Create your Prisma service by defining data model
-1. Download generated database schema definition `database.graphql` (contains the full CRUD API)
-1. Define your application schema, typically called `app.graphql`
-1. Instantiate `Prisma` with information about your Prisma service (such as its endpoint and the path to the database schema definition)
+1. Download generated the Prisma database schema `prisma.graphql` (contains the full CRUD API)
+1. Define your application schema, typically called `schema.graphql`
+1. Instantiate `Prisma` with information about your Prisma service (such as its `endpoint` and the path to the database schema definition)
 1. Implement the resolvers for your application schema by delegating to the underlying Prisma service using the generated delegate resolver functions
 
 > **Note**: If you're using a [GraphQL boilerplate](https://github.com/graphql-boilerplates/) project (e.g. with `graphql create`), the Prisma binding will already be configured and a few example resolvers implemented for you. You can either try the _dynamic binding_ (e.g. in the [`node-basic`](https://github.com/graphql-boilerplates/node-graphql-server/tree/master/basic) boilerplate) or a _static binding_ (e.g in the [`typescript-basic`](https://github.com/graphql-boilerplates/typescript-graphql-server/tree/master/basic) boilerplate).
-
-## Installation
-
-```sh
-yarn add prisma-binding
-# or
-npm install --save prisma-binding
-```

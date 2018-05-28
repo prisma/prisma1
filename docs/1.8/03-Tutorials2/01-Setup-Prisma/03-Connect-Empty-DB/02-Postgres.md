@@ -62,7 +62,7 @@ In this tutorial, you'll create all the files for your Prisma setup manually.
 Open a terminal and navigate to a folder of your choice and create a new directory to store the files for your Prisma project:
 
 ```sh
-mdkir hello-world
+mkdir hello-world
 ```
 
 </Instruction>
@@ -103,8 +103,6 @@ services:
             user: __YOUR_POSTGRES_USER__
             password: __YOUR_POSTGRES_PASSWORD__
             migrations: true
-volumes:
-  postgres:
 ```
 
 </Instruction>
@@ -168,7 +166,7 @@ datamodel: datamodel.graphql
 To complete the setup, open `datamodel.graphql` and add the following `User` type to it:
 
 ```graphql
-type User{
+type User {
   id: ID! @unique
   name: String!
 }
