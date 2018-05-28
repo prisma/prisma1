@@ -7,7 +7,7 @@ import com.prisma.auth.AuthImpl
 import com.prisma.config.ConfigLoader
 import com.prisma.connectors.utils.ConnectorUtils
 import com.prisma.deploy.DeployDependencies
-import com.prisma.deploy.migration.validation.SchemaError
+import com.prisma.deploy.migration.validation.DeployError
 import com.prisma.deploy.schema.mutations.{FunctionInput, FunctionValidator}
 import com.prisma.deploy.server.auth.DummyManagementAuth
 import com.prisma.errors.{BugsnagErrorReporter, ErrorReporter}
@@ -33,7 +33,7 @@ case class TestDeployDependencies()(implicit val system: ActorSystem, val materi
   override def projectIdEncoder: ProjectIdEncoder = deployConnector.projectIdEncoder
 
   override def functionValidator: FunctionValidator = (project: Project, fn: FunctionInput) => {
-    if (fn.name == "failing") Vector(SchemaError(`type` = "model", field = "field", description = "error")) else Vector.empty
+    if (fn.name == "failing") Vector(DeployError(`type` = "model", field = "field", description = "error")) else Vector.empty
   }
 
   lazy val telemetryActor = TestProbe().ref

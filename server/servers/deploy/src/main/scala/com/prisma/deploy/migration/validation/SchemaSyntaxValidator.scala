@@ -95,10 +95,10 @@ case class SchemaSyntaxValidator(
   val result   = SdlSchemaParser.parse(schema)
   lazy val doc = result.get
 
-  def validate: Seq[SchemaError] = {
+  def validate: Seq[DeployError] = {
     result match {
       case Success(_) => validateInternal
-      case Failure(e) => List(SchemaError.global(s"There's a syntax error in the Schema Definition. ${e.getMessage}"))
+      case Failure(e) => List(DeployError.global(s"There's a syntax error in the Schema Definition. ${e.getMessage}"))
     }
   }
 
@@ -125,7 +125,7 @@ case class SchemaSyntaxValidator(
     PrismaSdl(typesFn = prismaTypes, enumsFn = enumTypes)
   }
 
-  def validateInternal: Seq[SchemaError] = {
+  def validateInternal: Seq[DeployError] = {
 
     val allFieldAndTypes: Seq[FieldAndType] = for {
       objectType <- doc.objectTypes
@@ -152,51 +152,51 @@ case class SchemaSyntaxValidator(
       validateEnumTypes
   }
 
-  def validateReservedFields(fieldAndTypes: Seq[FieldAndType]): Seq[SchemaError] = {
+  def validateReservedFields(fieldAndTypes: Seq[FieldAndType]): Seq[DeployError] = {
     for {
       field        <- fieldAndTypes
       failedChecks = reservedFieldsRequirements.filterNot { _.isValid(field.fieldDef) }
       if failedChecks.nonEmpty
-    } yield SchemaErrors.malformedReservedField(field, failedChecks.head)
+    } yield DeployErrors.malformedReservedField(field, failedChecks.head)
   }
 
-  def validateRequiredReservedFields(objectTypes: Seq[ObjectTypeDefinition]): Seq[SchemaError] = {
+  def validateRequiredReservedFields(objectTypes: Seq[ObjectTypeDefinition]): Seq[DeployError] = {
     for {
       objectType   <- objectTypes
       fieldNames   = objectType.fields.map(_.name)
       failedChecks = requiredReservedFields.filterNot(req => fieldNames.contains(req.name))
       if failedChecks.nonEmpty
-    } yield SchemaErrors.missingReservedField(objectType, failedChecks.head.name, failedChecks.head)
+    } yield DeployErrors.missingReservedField(objectType, failedChecks.head.name, failedChecks.head)
   }
 
-  def validateDuplicateTypes(objectTypes: Seq[ObjectTypeDefinition], fieldAndTypes: Seq[FieldAndType]): Seq[SchemaError] = {
+  def validateDuplicateTypes(objectTypes: Seq[ObjectTypeDefinition], fieldAndTypes: Seq[FieldAndType]): Seq[DeployError] = {
     val typeNames          = objectTypes.map(_.name)
     val duplicateTypeNames = typeNames.filter(name => typeNames.count(_ == name) > 1)
 
-    duplicateTypeNames.map(name => SchemaErrors.duplicateTypeName(fieldAndTypes.find(_.objectType.name == name).head)).distinct
+    duplicateTypeNames.map(name => DeployErrors.duplicateTypeName(fieldAndTypes.find(_.objectType.name == name).head)).distinct
   }
 
-  def validateDuplicateFields(fieldAndTypes: Seq[FieldAndType]): Seq[SchemaError] = {
+  def validateDuplicateFields(fieldAndTypes: Seq[FieldAndType]): Seq[DeployError] = {
     for {
       objectType <- fieldAndTypes.map(_.objectType).distinct
       fieldNames = objectType.fields.map(_.name)
       fieldName  <- fieldNames
       if fieldNames.count(_ == fieldName) > 1
     } yield {
-      SchemaErrors.duplicateFieldName(fieldAndTypes.find(ft => ft.objectType == objectType & ft.fieldDef.name == fieldName).get)
+      DeployErrors.duplicateFieldName(fieldAndTypes.find(ft => ft.objectType == objectType & ft.fieldDef.name == fieldName).get)
     }
   }
 
-  def validateMissingTypes(fieldAndTypes: Seq[FieldAndType]): Seq[SchemaError] = {
+  def validateMissingTypes(fieldAndTypes: Seq[FieldAndType]): Seq[DeployError] = {
     fieldAndTypes
       .filter(!isScalarField(_))
-      .collect { case fieldAndType if !doc.isObjectOrEnumType(fieldAndType.fieldDef.typeName) => SchemaErrors.missingType(fieldAndType) }
+      .collect { case fieldAndType if !doc.isObjectOrEnumType(fieldAndType.fieldDef.typeName) => DeployErrors.missingType(fieldAndType) }
   }
 
-  def validateRelationFields(fieldAndTypes: Seq[FieldAndType]): Seq[SchemaError] = {
+  def validateRelationFields(fieldAndTypes: Seq[FieldAndType]): Seq[DeployError] = {
     val relationFields = fieldAndTypes.filter(isRelationField)
     val wrongTypeDefinitions = relationFields.collect {
-      case fieldAndType if !fieldAndType.fieldDef.isValidRelationType => SchemaErrors.relationFieldTypeWrong(fieldAndType)
+      case fieldAndType if !fieldAndType.fieldDef.isValidRelationType => DeployErrors.relationFieldTypeWrong(fieldAndType)
     }
 
     def ambiguousRelationFieldsForType(objectType: ObjectTypeDefinition): Vector[FieldAndType] = {
@@ -210,13 +210,13 @@ case class SchemaSyntaxValidator(
 
     val (schemaErrors, _) = partition(ambiguousRelationFields) {
       case fieldAndType if !fieldAndType.fieldDef.hasRelationDirective =>
-        Left(SchemaErrors.missingRelationDirective(fieldAndType))
+        Left(DeployErrors.missingRelationDirective(fieldAndType))
 
       case fieldAndType if !isSelfRelation(fieldAndType) && relationCount(fieldAndType) > 2 =>
-        Left(SchemaErrors.relationDirectiveCannotAppearMoreThanTwice(fieldAndType))
+        Left(DeployErrors.relationDirectiveCannotAppearMoreThanTwice(fieldAndType))
 
       case fieldAndType if isSelfRelation(fieldAndType) && relationCount(fieldAndType) != 1 && relationCount(fieldAndType) != 2 =>
-        Left(SchemaErrors.selfRelationMustAppearOneOrTwoTimes(fieldAndType))
+        Left(DeployErrors.selfRelationMustAppearOneOrTwoTimes(fieldAndType))
 
       case fieldAndType =>
         Right(fieldAndType)
@@ -239,7 +239,7 @@ case class SchemaSyntaxValidator(
         val fieldsOnOppositeObjectType       = oppositeObjectType.fields.filter(_.typeName == thisType.objectType.name)
         val relationFieldsWithoutDirective   = fieldsOnOppositeObjectType.filter(f => !f.hasRelationDirective && isRelationField(f))
         val relationFieldsPointingToThisType = relationFieldsWithoutDirective.filter(f => f.typeName == thisType.objectType.name)
-        if (relationFieldsPointingToThisType.nonEmpty) Some(SchemaErrors.ambiguousRelationSinceThereIsOnlyOneRelationDirective(thisType)) else None
+        if (relationFieldsPointingToThisType.nonEmpty) Some(DeployErrors.ambiguousRelationSinceThereIsOnlyOneRelationDirective(thisType)) else None
 
       case _ =>
         None
@@ -256,12 +256,12 @@ case class SchemaSyntaxValidator(
           val first  = fieldAndTypes.head
           val second = fieldAndTypes.last
           val firstError = if (first.fieldDef.typeName != second.objectType.name) {
-            Option(SchemaErrors.typesForOppositeRelationFieldsDoNotMatch(first, second))
+            Option(DeployErrors.typesForOppositeRelationFieldsDoNotMatch(first, second))
           } else {
             None
           }
           val secondError = if (second.fieldDef.typeName != first.objectType.name) {
-            Option(SchemaErrors.typesForOppositeRelationFieldsDoNotMatch(second, first))
+            Option(DeployErrors.typesForOppositeRelationFieldsDoNotMatch(second, first))
           } else {
             None
           }
@@ -273,21 +273,21 @@ case class SchemaSyntaxValidator(
     wrongTypeDefinitions ++ schemaErrors ++ relationFieldsWithNonMatchingTypes ++ allowOnlyOneDirectiveOnlyWhenUnambigous
   }
 
-  def validateScalarFields(fieldAndTypes: Seq[FieldAndType]): Seq[SchemaError] = {
+  def validateScalarFields(fieldAndTypes: Seq[FieldAndType]): Seq[DeployError] = {
     val scalarFields = fieldAndTypes.filter(isScalarField)
     if (allowScalarLists) {
       scalarFields.collect {
-        case fieldAndType if !fieldAndType.fieldDef.isValidScalarListOrNonListType => SchemaErrors.invalidScalarListOrNonListType(fieldAndType)
+        case fieldAndType if !fieldAndType.fieldDef.isValidScalarListOrNonListType => DeployErrors.invalidScalarListOrNonListType(fieldAndType)
       }
     } else {
       scalarFields.collect {
-        case fieldAndType if !fieldAndType.fieldDef.isValidScalarNonListType => SchemaErrors.invalidScalarNonListType(fieldAndType)
+        case fieldAndType if !fieldAndType.fieldDef.isValidScalarNonListType => DeployErrors.invalidScalarNonListType(fieldAndType)
       }
     }
   }
 
-  def validateFieldDirectives(fieldAndType: FieldAndType): Seq[SchemaError] = {
-    def validateDirectiveRequirements(directive: Directive): Seq[SchemaError] = {
+  def validateFieldDirectives(fieldAndType: FieldAndType): Seq[DeployError] = {
+    def validateDirectiveRequirements(directive: Directive): Seq[DeployError] = {
       val optionalArgs = for {
         requirement         <- directiveRequirements if requirement.directiveName == directive.name
         argumentRequirement <- requirement.optionalArguments
@@ -295,7 +295,7 @@ case class SchemaSyntaxValidator(
         schemaError <- if (argumentRequirement.isValid(argument.value)) {
                         None
                       } else {
-                        Some(SchemaError(fieldAndType, s"not a valid value for ${argumentRequirement.name}"))
+                        Some(DeployError(fieldAndType, s"not a valid value for ${argumentRequirement.name}"))
                       }
       } yield schemaError
 
@@ -303,7 +303,7 @@ case class SchemaSyntaxValidator(
         requirement <- directiveRequirements if requirement.directiveName == directive.name
         requiredArg <- requirement.requiredArguments
         schemaError <- if (!directive.containsArgument(requiredArg.name, requiredArg.mustBeAString)) {
-                        Some(SchemaErrors.directiveMissesRequiredArgument(fieldAndType, requirement.directiveName, requiredArg.name))
+                        Some(DeployErrors.directiveMissesRequiredArgument(fieldAndType, requirement.directiveName, requiredArg.name))
                       } else {
                         None
                       }
@@ -312,53 +312,53 @@ case class SchemaSyntaxValidator(
       requiredArgs ++ optionalArgs
     }
 
-    def ensureDirectivesAreUnique(fieldAndType: FieldAndType): Option[SchemaError] = {
+    def ensureDirectivesAreUnique(fieldAndType: FieldAndType): Option[DeployError] = {
       val directives       = fieldAndType.fieldDef.directives
       val uniqueDirectives = directives.map(_.name).toSet
       if (uniqueDirectives.size != directives.size) {
-        Some(SchemaErrors.directivesMustAppearExactlyOnce(fieldAndType))
+        Some(DeployErrors.directivesMustAppearExactlyOnce(fieldAndType))
       } else {
         None
       }
     }
 
-    def ensureRelationDirectivesArePlacedCorrectly(fieldAndType: FieldAndType): Option[SchemaError] = {
+    def ensureRelationDirectivesArePlacedCorrectly(fieldAndType: FieldAndType): Option[DeployError] = {
       if (!isRelationField(fieldAndType.fieldDef) && fieldAndType.fieldDef.hasRelationDirective) {
-        Some(SchemaErrors.relationDirectiveNotAllowedOnScalarFields(fieldAndType))
+        Some(DeployErrors.relationDirectiveNotAllowedOnScalarFields(fieldAndType))
       } else {
         None
       }
     }
 
-    def ensureNoOldDefaultValueDirectives(fieldAndTypes: FieldAndType): Option[SchemaError] = {
+    def ensureNoOldDefaultValueDirectives(fieldAndTypes: FieldAndType): Option[DeployError] = {
       if (fieldAndType.fieldDef.hasOldDefaultValueDirective) {
-        Some(SchemaErrors.invalidSyntaxForDefaultValue(fieldAndType))
+        Some(DeployErrors.invalidSyntaxForDefaultValue(fieldAndType))
       } else {
         None
       }
     }
 
-    def ensureNoDefaultValuesOnListFields(fieldAndTypes: FieldAndType): Option[SchemaError] = {
+    def ensureNoDefaultValuesOnListFields(fieldAndTypes: FieldAndType): Option[DeployError] = {
       if (fieldAndType.fieldDef.isList && fieldAndType.fieldDef.hasDefaultValueDirective) {
-        Some(SchemaErrors.listFieldsCantHaveDefaultValues(fieldAndType))
+        Some(DeployErrors.listFieldsCantHaveDefaultValues(fieldAndType))
       } else {
         None
       }
     }
 
-    def ensureNoInvalidEnumValuesInDefaultValues(fieldAndTypes: FieldAndType): Option[SchemaError] = {
+    def ensureNoInvalidEnumValuesInDefaultValues(fieldAndTypes: FieldAndType): Option[DeployError] = {
       def containsInvalidEnumValue: Boolean = {
         val enumValues = doc.enumType(fieldAndType.fieldDef.typeName).get.values.map(_.name)
         !enumValues.contains(fieldAndType.fieldDef.directiveArgumentAsString("default", "value").get)
       }
 
       fieldAndType.fieldDef.hasDefaultValueDirective && isEnumField(fieldAndType.fieldDef) match {
-        case true if containsInvalidEnumValue => Some(SchemaErrors.invalidEnumValueInDefaultValue(fieldAndType))
+        case true if containsInvalidEnumValue => Some(DeployErrors.invalidEnumValueInDefaultValue(fieldAndType))
         case _                                => None
       }
     }
 
-    def ensureDefaultValuesHaveCorrectType(fieldAndTypes: FieldAndType): Option[SchemaError] = {
+    def ensureDefaultValuesHaveCorrectType(fieldAndTypes: FieldAndType): Option[DeployError] = {
       def hasInvalidType: Boolean = {
         getDefaultValueFromField(fieldAndType.fieldDef) match {
           case Some(Good(_)) => false
@@ -370,7 +370,7 @@ case class SchemaSyntaxValidator(
       def isNotList = !fieldAndTypes.fieldDef.isList
 
       fieldAndType.fieldDef.hasDefaultValueDirective match {
-        case true if isNotList && hasInvalidType => Some(SchemaErrors.invalidTypeForDefaultValue(fieldAndType))
+        case true if isNotList && hasInvalidType => Some(DeployErrors.invalidTypeForDefaultValue(fieldAndType))
         case _                                   => None
       }
     }
@@ -392,16 +392,16 @@ case class SchemaSyntaxValidator(
 
   def getDefaultValueFromField_!(fieldDef: FieldDefinition) = getDefaultValueFromField(fieldDef).map(_.get)
 
-  def validateEnumTypes: Seq[SchemaError] = {
-    val duplicateNames = doc.enumNames.diff(doc.enumNames.distinct).distinct.flatMap(dupe => Some(SchemaErrors.enumNamesMustBeUnique(doc.enumType(dupe).get)))
+  def validateEnumTypes: Seq[DeployError] = {
+    val duplicateNames = doc.enumNames.diff(doc.enumNames.distinct).distinct.flatMap(dupe => Some(DeployErrors.enumNamesMustBeUnique(doc.enumType(dupe).get)))
 
     val otherErrors = doc.enumTypes.flatMap { enumType =>
       val invalidEnumValues = enumType.valuesAsStrings.filter(!NameConstraints.isValidEnumValueName(_))
 
       if (enumType.values.exists(value => value.name.head.isLower)) {
-        Some(SchemaErrors.enumValuesMustBeginUppercase(enumType))
+        Some(DeployErrors.enumValuesMustBeginUppercase(enumType))
       } else if (invalidEnumValues.nonEmpty) {
-        Some(SchemaErrors.enumValuesMustBeValid(enumType, invalidEnumValues))
+        Some(DeployErrors.enumValuesMustBeValid(enumType, invalidEnumValues))
       } else {
         None
       }

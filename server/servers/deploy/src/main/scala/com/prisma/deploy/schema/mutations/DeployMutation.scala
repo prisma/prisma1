@@ -66,7 +66,7 @@ case class DeployMutation(
     }
   }
 
-  private def performDeploy: Future[DeployMutationPayload Or Vector[SchemaError]] = {
+  private def performDeploy: Future[DeployMutationPayload Or Vector[DeployError]] = {
     val x = for {
       prismaSdl          <- FutureOr(validateSyntax)
       schemaMapping      = schemaMapper.createMapping(graphQlSdl)
@@ -89,7 +89,7 @@ case class DeployMutation(
     x.future
   }
 
-  private def validateSyntax: Future[PrismaSdl Or Vector[SchemaError]] = Future.successful {
+  private def validateSyntax: Future[PrismaSdl Or Vector[DeployError]] = Future.successful {
     val validator = SchemaSyntaxValidator(args.types, isActive = deployConnector.isActive)
     val errors    = validator.validate
     if (errors.isEmpty) {
@@ -99,11 +99,11 @@ case class DeployMutation(
     }
   }
 
-  private def inferTables: Future[InferredTables Or Vector[SchemaError]] = {
+  private def inferTables: Future[InferredTables Or Vector[DeployError]] = {
     deployConnector.databaseIntrospectionInferrer(project.id).infer().map(Good(_))
   }
 
-  private def checkSchemaAgainstInferredTables(nextSchema: Schema, inferredTables: InferredTables): Future[Unit Or Vector[SchemaError]] = {
+  private def checkSchemaAgainstInferredTables(nextSchema: Schema, inferredTables: InferredTables): Future[Unit Or Vector[DeployError]] = {
     if (deployConnector.isPassive) {
       val errors = InferredTablesValidator.checkRelationsAgainstInferredTables(nextSchema, inferredTables)
       if (errors.isEmpty) {
@@ -116,7 +116,7 @@ case class DeployMutation(
     }
   }
 
-  private def inferMigrationSteps(nextSchema: Schema, schemaMapping: SchemaMapping): Future[Vector[MigrationStep] Or Vector[SchemaError]] = {
+  private def inferMigrationSteps(nextSchema: Schema, schemaMapping: SchemaMapping): Future[Vector[MigrationStep] Or Vector[DeployError]] = {
     val steps = if (deployConnector.isActive) {
       migrationStepsInferrer.infer(project.schema, nextSchema, schemaMapping)
     } else {
@@ -125,12 +125,12 @@ case class DeployMutation(
     Future.successful(Good(steps))
   }
 
-  private def checkForDestructiveChanges(nextSchema: Schema, steps: Vector[MigrationStep]): Future[Vector[SchemaWarning] Or Vector[SchemaError]] = {
+  private def checkForDestructiveChanges(nextSchema: Schema, steps: Vector[MigrationStep]): Future[Vector[DeployWarning] Or Vector[DeployError]] = {
     val existingDataValidation = DestructiveChanges(deployConnector, project, nextSchema, steps)
     val checkResults           = existingDataValidation.checkAgainstExistingData
     checkResults.map { results =>
-      val destructiveWarnings: Vector[SchemaWarning] = results.collect { case warning: SchemaWarning => warning }
-      val inconsistencyErrors: Vector[SchemaError]   = results.collect { case error: SchemaError     => error }
+      val destructiveWarnings: Vector[DeployWarning] = results.collect { case warning: DeployWarning => warning }
+      val inconsistencyErrors: Vector[DeployError]   = results.collect { case error: DeployError     => error }
       if (inconsistencyErrors.isEmpty) {
         Good(destructiveWarnings)
       } else {
@@ -139,7 +139,7 @@ case class DeployMutation(
     }
   }
 
-  private def getFunctionModelsOrErrors(fns: Vector[FunctionInput]): Vector[Function] Or Vector[SchemaError] = {
+  private def getFunctionModelsOrErrors(fns: Vector[FunctionInput]): Vector[Function] Or Vector[DeployError] = {
     val errors = validateFunctionInputs(fns)
     if (errors.nonEmpty) {
       Bad(errors)
@@ -148,7 +148,7 @@ case class DeployMutation(
     }
   }
 
-  private def validateFunctionInputs(fns: Vector[FunctionInput]): Vector[SchemaError] =
+  private def validateFunctionInputs(fns: Vector[FunctionInput]): Vector[DeployError] =
     fns.flatMap(dependencies.functionValidator.validateFunctionInput(project, _))
 
   private def convertFunctionInput(fnInput: FunctionInput): ServerSideSubscriptionFunction = {
@@ -224,6 +224,6 @@ case class HeaderInput(
 case class DeployMutationPayload(
     clientMutationId: Option[String],
     migration: Option[Migration],
-    errors: Seq[SchemaError],
-    warnings: Seq[SchemaWarning]
+    errors: Seq[DeployError],
+    warnings: Seq[DeployWarning]
 ) extends sangria.relay.Mutation
