@@ -1,10 +1,9 @@
 #! /bin/bash
 
 if [ -z "$BUILDKITE_TAG" ]; then
-    # Regular commit
+    # Regular commit, not a tag
     git diff --exit-code --name-only ${BUILDKITE_COMMIT} ${BUILDKITE_COMMIT}~1 | grep "server/"
     if [ $? -ne 0 ]; then
-#      buildkite-agent pipeline upload ./server/.buildkite/empty-pipeline.yml
         echo "Nothing to do"
         exit 0
     fi
@@ -43,7 +42,7 @@ static=$(printf "    - label: \":mysql: MySql API connector\"
 
     - label: \":scala: subscriptions\"
       command: cd server && ./.buildkite/scripts/test.sh subscriptions mysql
-      
+
 ")
 
 dynamic=""
@@ -71,15 +70,15 @@ docker=$(printf "
     - wait
 
     - label: \":docker: Build alpha channel\"
-      command: ./server/.buildkite/scripts/docker-build.sh alpha
+      command: ./server/.buildkite/scripts/unstable.sh alpha 2
       branches: alpha
 
     - label: \":docker: Build beta channel\"
-      command: ./server/.buildkite/scripts/docker-build.sh beta
+      command: ./server/.buildkite/scripts/unstable.sh beta 1
       branches: beta
 
     - label: \":docker: Build stable channel\"
-      command: ./server/.buildkite/scripts/docker-build.sh stable
+      command: ./server/.buildkite/scripts/stable.sh
       branches: master
     ")
 
