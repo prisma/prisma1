@@ -7,7 +7,7 @@ import org.scalatest.{FlatSpec, Matchers}
 
 class UpsertDesignSpec extends FlatSpec with Matchers with ApiSpecBase {
 
-  //top level upserts
+  //region top level upserts
 
   "An upsert on the top level" should "execute a nested connect in the create branch" in {
 
@@ -133,7 +133,7 @@ class UpsertDesignSpec extends FlatSpec with Matchers with ApiSpecBase {
     countItems(project, "todoes") should be(0)
   }
 
-  "An upsert on the top level" should "only execute the nested mutations of the correct update branch" ignore {
+  "An upsert on the top level" should "only execute the nested create mutations of the correct update branch" ignore {
 
     val project = SchemaDsl.fromBuilder { schema =>
       val list = schema.model("List").field("listInts", _.Int, isList = true).field("uList", _.String, isUnique = true)
@@ -261,7 +261,9 @@ class UpsertDesignSpec extends FlatSpec with Matchers with ApiSpecBase {
     countItems(project, "todoes") should be(0)
   }
 
-  // nested upserts
+  //endregion
+
+  //region nested upserts
 
   "A nested upsert" should "only execute the nested scalarlists of the correct update branch" in {
 
@@ -453,8 +455,9 @@ class UpsertDesignSpec extends FlatSpec with Matchers with ApiSpecBase {
 
   }
 
+  //endregion
+
   def countItems(project: Project, name: String): Int = {
     server.query(s"""query{$name{id}}""", project).pathAsSeq(s"data.$name").length
   }
-
 }
