@@ -84,15 +84,14 @@ case class DatabaseMutactions(project: Project) {
       nestedMutations = args.subNestedMutation(field, subModel)
     } yield {
 
-      val checkMutactions = getMutactionsForWhereChecks(nestedMutations) ++ getMutactionsForConnectionChecks(subModel, nestedMutations, path, field)
-
+      val checkMutactions                 = getMutactionsForWhereChecks(nestedMutations) ++ getMutactionsForConnectionChecks(subModel, nestedMutations, path, field)
       val mutactionsThatACreateCanTrigger = getMutactionsForNestedConnectMutation(nestedMutations, path, field, triggeredFromCreate)
-
-      // val otherMutactions = getMutactionsForNestedDisconnectMutation(nestedMutations, path, field) ++ getMutactionsForNestedDeleteMutation(nestedMutations, path, field)
-
+      val otherMutactions = getMutactionsForNestedDisconnectMutation(nestedMutations, path, field) ++ getMutactionsForNestedDeleteMutation(nestedMutations,
+                                                                                                                                           path,
+                                                                                                                                           field)
       if (triggeredFromCreate && mutactionsThatACreateCanTrigger.isEmpty && field.isRequired) throw RelationIsRequired(field.name, path.lastModel.name)
 
-      checkMutactions ++ mutactionsThatACreateCanTrigger //++ otherMutactions
+      checkMutactions ++ mutactionsThatACreateCanTrigger ++ otherMutactions
     }
     x.flatten.toVector
   }

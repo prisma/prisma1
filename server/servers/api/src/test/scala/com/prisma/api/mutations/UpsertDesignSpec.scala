@@ -71,6 +71,68 @@ class UpsertDesignSpec extends FlatSpec with Matchers with ApiSpecBase {
     countItems(project, "todoes") should be(1)
   }
 
+  "An upsert on the top level" should "execute a nested disconnect in the update branch" in {
+
+    val project = SchemaDsl.fromBuilder { schema =>
+      val list = schema.model("List").field("listInts", _.Int, isList = true).field("uList", _.String, isUnique = true)
+      val todo = schema.model("Todo").field("todoInts", _.Int, isList = true).field("uTodo", _.String, isUnique = true)
+      todo.oneToOneRelation("list", "todo", list)
+    }
+
+    database.setup(project)
+
+    server.query("""mutation{createTodo(data:{uTodo: "B", list: {create: {uList:"A"}}}){uTodo}}""", project)
+
+    server
+      .query(
+        """mutation {upsertList(
+          |                     where:{uList: "A"}
+          |                     create:{uList:"A" todo: {connect: {uTodo: "Should not Matter"}}}
+          |                     update:{todo: {disconnect: true}}
+          |){id}}""",
+        project
+      )
+
+    val result = server.query(s"""query{lists {uList, todo {uTodo}}}""", project)
+    result.toString should equal("""{"data":{"lists":[{"uList":"A","todo":null}]}}""")
+
+    server.query(s"""query{todoes {uTodo}}""", project).toString should be("""{"data":{"todoes":[{"uTodo":"B"}]}}""")
+
+    countItems(project, "lists") should be(1)
+    countItems(project, "todoes") should be(1)
+  }
+
+  "An upsert on the top level" should "execute a nested delete in the update branch" in {
+
+    val project = SchemaDsl.fromBuilder { schema =>
+      val list = schema.model("List").field("listInts", _.Int, isList = true).field("uList", _.String, isUnique = true)
+      val todo = schema.model("Todo").field("todoInts", _.Int, isList = true).field("uTodo", _.String, isUnique = true)
+      todo.oneToOneRelation("list", "todo", list)
+    }
+
+    database.setup(project)
+
+    server.query("""mutation{createTodo(data:{uTodo: "B", list: {create: {uList:"A"}}}){uTodo}}""", project)
+
+    server
+      .query(
+        """mutation {upsertList(
+          |                     where:{uList: "A"}
+          |                     create:{uList:"A" todo: {connect: {uTodo: "Should not Matter"}}}
+          |                     update:{todo: {delete: true}}
+          |){id}}""",
+        project
+      )
+
+    val result = server.query(s"""query{lists {uList, todo {uTodo}}}""", project)
+    result.toString should equal("""{"data":{"lists":[{"uList":"A","todo":null}]}}""")
+
+    server.query(s"""query{todoes {uTodo}}""", project).toString should be("""{"data":{"todoes":[]}}""")
+
+    countItems(project, "lists") should be(1)
+    countItems(project, "todoes") should be(0)
+  }
+
   "An upsert on the top level" should "only execute the nested mutations of the correct update branch" ignore {
 
     val project = SchemaDsl.fromBuilder { schema =>
