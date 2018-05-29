@@ -138,8 +138,10 @@ object PostgresDeployDatabaseMutationBuilder {
     ;"""
 
     val indexCreate = sqlu"""CREATE UNIQUE INDEX "#${relationTableName}_AB_unique" on  "#$projectId"."#$relationTableName" ("A" ASC, "B" ASC)"""
+    val indexA      = sqlu"""CREATE UNIQUE INDEX "#${relationTableName}_A_unique" on  "#$projectId"."#$relationTableName" ("A" ASC)"""
+    val indexB      = sqlu"""CREATE UNIQUE INDEX "#${relationTableName}_B_unique" on  "#$projectId"."#$relationTableName" ("B" ASC)"""
 
-    DBIOAction.seq(tableCreate, indexCreate)
+    DBIOAction.seq(tableCreate, indexCreate, indexA, indexB)
   }
 
   def createRelationColumn(projectId: String, model: Model, field: Option[Field], references: Model, column: String) = {
