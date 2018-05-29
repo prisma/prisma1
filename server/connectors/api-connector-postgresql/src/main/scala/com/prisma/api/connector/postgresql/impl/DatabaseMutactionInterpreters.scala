@@ -226,12 +226,17 @@ case class UpsertDataItemInterpreter(mutaction: UpsertDataItem, executor: Postgr
   }
 }
 
-case class UpsertDataItemIfInRelationWithInterpreter(mutaction: UpsertDataItemIfInRelationWith) extends DatabaseMutactionInterpreter {
+case class UpsertDataItemIfInRelationWithInterpreter(mutaction: UpsertDataItemIfInRelationWith, executor: PostgresDatabaseMutactionExecutor)
+    extends DatabaseMutactionInterpreter {
   val project         = mutaction.project
   val model           = mutaction.createPath.lastModel
   val relationChecker = NestedCreateRelationInterpreter(NestedCreateRelation(project, mutaction.createPath, false))
 
   def action(mutationBuilder: PostgresApiDatabaseMutationBuilder) = {
+
+    val createNested: Vector[DBIOAction[Any, NoStream, Effect.All]] = mutaction.createMutactions.map(executor.interpreterFor).map(_.action(mutationBuilder))
+    val updateNested: Vector[DBIOAction[Any, NoStream, Effect.All]] = mutaction.updateMutactions.map(executor.interpreterFor).map(_.action(mutationBuilder))
+
     val createCheck       = DBIOAction.seq(relationChecker.allActions(mutationBuilder): _*)
     val scalarListsCreate = mutationBuilder.setScalarList(mutaction.createPath, mutaction.createListArgs)
     val scalarListsUpdate = mutationBuilder.setScalarList(mutaction.updatePath, mutaction.updateListArgs)
@@ -242,7 +247,9 @@ case class UpsertDataItemIfInRelationWithInterpreter(mutaction: UpsertDataItemIf
       updateArgs = mutaction.updateNonListArgs,
       scalarListCreate = scalarListsCreate,
       scalarListUpdate = scalarListsUpdate,
-      createCheck = createCheck
+      createCheck = createCheck,
+      createNested,
+      updateNested
     )
   }
 

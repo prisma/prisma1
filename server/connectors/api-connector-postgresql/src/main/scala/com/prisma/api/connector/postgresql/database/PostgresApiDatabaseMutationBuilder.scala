@@ -227,6 +227,8 @@ case class PostgresApiDatabaseMutationBuilder(
       scalarListCreate: DBIO[_],
       scalarListUpdate: DBIO[_],
       createCheck: DBIO[_],
+      createNested: Vector[DBIOAction[Any, NoStream, Effect.All]],
+      updateNested: Vector[DBIOAction[Any, NoStream, Effect.All]]
   ) = {
 
     def existsNodeIsInRelationshipWith = {
@@ -243,11 +245,14 @@ case class PostgresApiDatabaseMutationBuilder(
 
     val condition = existsNodeIsInRelationshipWith.as[Boolean]
     //insert creates item first and then the listvalues
-    val qInsert = DBIOAction.seq(createDataItem(createPath, createArgs), createRelayRow(createPath), createCheck, scalarListCreate)
-    //update updates list values first and then the item
-    val qUpdate = DBIOAction.seq(scalarListUpdate, updateDataItemByPath(updatePath, updateArgs))
 
-    ifThenElseNestedUpsert(condition, qUpdate, qInsert)
+    val allCreateActions = Vector(createDataItem(createPath, createArgs), createRelayRow(createPath), createCheck, scalarListCreate) ++ createNested
+    val qCreate          = DBIOAction.seq(allCreateActions: _*)
+    //update updates list values first and then the item
+    val allUpdateActions = scalarListUpdate +: updateNested :+ updateDataItemByPath(updatePath, updateArgs)
+    val qUpdate          = DBIOAction.seq(allUpdateActions: _*)
+
+    ifThenElseNestedUpsert(condition, qUpdate, qCreate)
   }
 
   //endregion

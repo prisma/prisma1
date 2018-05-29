@@ -65,7 +65,9 @@ case class UpsertDataItemIfInRelationWith(
     createListArgs: Vector[(String, ListGCValue)],
     createNonListArgs: PrismaArgs,
     updateListArgs: Vector[(String, ListGCValue)],
-    updateNonListArgs: PrismaArgs
+    updateNonListArgs: PrismaArgs,
+    createMutactions: Vector[DatabaseMutaction],
+    updateMutactions: Vector[DatabaseMutaction]
 ) extends DatabaseMutaction
 case class VerifyConnection(project: Project, path: Path)     extends DatabaseMutaction
 case class VerifyWhere(project: Project, where: NodeSelector) extends DatabaseMutaction

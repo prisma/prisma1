@@ -389,32 +389,34 @@ class UpsertDesignSpec extends FlatSpec with Matchers with ApiSpecBase {
     countItems(project, "todoes") should be(1)
   }
 
-  "A nested upsert" should "only execute the nested mutations of the correct update branch" ignore {
+  "A nested upsert" should "execute the nested connect mutations of the correct create branch" in {
 
     val project = SchemaDsl.fromBuilder { schema =>
       val list = schema.model("List").field("uList", _.String, isUnique = true)
-      val todo = schema.model("Todo").field("uTodo", _.String, isUnique = true).oneToOneRelation("list", "todo", list)
-      val tag  = schema.model("Tag").field("uTag", _.String, isUnique = true).oneToOneRelation("todo", "tag", todo)
+      val todo = schema.model("Todo").field("uTodo", _.String, isUnique = true).manyToManyRelation("list", "todo", list)
+      val tag  = schema.model("Tag").field("uTag", _.String, isUnique = true).manyToManyRelation("todo", "tag", todo)
     }
 
     database.setup(project)
 
-    server.query("""mutation {createList(data: {uList: "A" todo: {create: {uTodo: "B"}}}){id}}""", project)
+    server.query("""mutation { createTag(data:{uTag: "D"}){uTag}}""", project)
+    server.query("""mutation {createList(data: {uList: "A"}){id}}""", project)
 
     server
       .query(
         s"""mutation{updateList(where:{uList: "A"}
-           |                       data:{todo: { upsert:{
+           |                    data:{todo: {
+           |                        upsert:{
            |                               where:{uTodo: "B"}
-           |		                            create:{uTodo:"Should Not Matter" tag: {create: {uTag: "D"}}}
-           |		                            update:{uTodo:"C" tag: {create: {uTag: "E"}}}
+           |		                           create:{uTodo:"C" tag: {connect: {uTag: "D"}}}
+           |		                           update:{uTodo:"Should Not Matter" tag: {create: {uTag: "D"}}}
            |}}
            |}){id}}""".stripMargin,
         project
       )
 
     val result = server.query(s"""query{lists {uList, todo {uTodo, tag {uTag }}}}""", project)
-    result.toString should equal("""{"data":{"lists":[{"uList":"A","todo":{"uTodo":"C","tag":{"uTag":"E"}}}]}}""")
+    result.toString should equal("""{"data":{"lists":[{"uList":"A","todo":[{"uTodo":"C","tag":[{"uTag":"D"}]}]}]}}""")
 
     countItems(project, "lists") should be(1)
     countItems(project, "todoes") should be(1)
@@ -422,32 +424,34 @@ class UpsertDesignSpec extends FlatSpec with Matchers with ApiSpecBase {
 
   }
 
-  "A nested upsert" should "only execute the nested mutations of the correct create branch" ignore {
+  "A nested upsert" should "execute the nested connect mutations of the correct update branch" in {
 
     val project = SchemaDsl.fromBuilder { schema =>
       val list = schema.model("List").field("uList", _.String, isUnique = true)
-      val todo = schema.model("Todo").field("uTodo", _.String, isUnique = true).oneToOneRelation("list", "todo", list)
-      val tag  = schema.model("Tag").field("uTag", _.String, isUnique = true).oneToOneRelation("todo", "tag", todo)
+      val todo = schema.model("Todo").field("uTodo", _.String, isUnique = true).manyToManyRelation("list", "todo", list)
+      val tag  = schema.model("Tag").field("uTag", _.String, isUnique = true).manyToManyRelation("todo", "tag", todo)
     }
 
     database.setup(project)
 
-    server.query("""mutation {createList(data: {uList: "A"}){id}}""", project)
+    server.query("""mutation { createTag(data:{uTag: "D"}){uTag}}""", project)
+    server.query("""mutation {createList(data: {uList: "A" todo: {create: {uTodo: "B"}}}){id}}""", project)
 
     server
       .query(
         s"""mutation{updateList(where:{uList: "A"}
-           |                       data:{todo: { upsert:{
-           |                               where:{uTodo: "Does not exist"}
-           |		                            create:{uTodo:"D" tag: {create: {uTag: "D"}}}
-           |		                            update:{uTodo:"C" tag: {create: {uTag: "E"}}}
+           |                    data:{todo: {
+           |                        upsert:{
+           |                               where:{uTodo: "B"}
+           |		                           create:{uTodo:"Should Not Matter" tag: {connect: {uTag: "D"}}}
+           |		                           update:{uTodo:"C" tag: {connect: {uTag: "D"}}}
            |}}
            |}){id}}""".stripMargin,
         project
       )
 
     val result = server.query(s"""query{lists {uList, todo {uTodo, tag {uTag }}}}""", project)
-    result.toString should equal("""{"data":{"lists":[{"uList":"A","todo":{"uTodo":"D","tag":{"uTag":"D"}}}]}}""")
+    result.toString should equal("""{"data":{"lists":[{"uList":"A","todo":[{"uTodo":"C","tag":[{"uTag":"D"}]}]}]}}""")
 
     countItems(project, "lists") should be(1)
     countItems(project, "todoes") should be(1)
