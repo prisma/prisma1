@@ -112,13 +112,13 @@ object MySqlApiDatabaseMutationBuilder {
                                                                                                                                            updatePath) ++ sql")"
     val condition = query.as[Boolean]
     // insert creates item first, then the list values
-    val insert  = Vector(createDataItem(projectId, createPath, createArgs), createRelayRow(projectId, createPath), create) ++ createNested
-    val qInsert = DBIOAction.seq(insert: _*)
+    val allCreateActions = Vector(createDataItem(projectId, createPath, createArgs), createRelayRow(projectId, createPath), create) ++ createNested
+    val qCreate          = DBIOAction.seq(allCreateActions: _*)
     // update first sets the lists, then updates the item
-    val update2 = Vector(update, updateDataItemByPath(projectId, updatePath, updateArgs)) ++ updateNested
-    val qUpdate = DBIOAction.seq(update2: _*)
+    val allUpdateActions = update +: updateNested :+ updateDataItemByPath(projectId, updatePath, updateArgs)
+    val qUpdate          = DBIOAction.seq(allUpdateActions: _*)
 
-    ifThenElse(condition, qUpdate, qInsert)
+    ifThenElse(condition, qUpdate, qCreate)
   }
 
   def upsertIfInRelationWith(

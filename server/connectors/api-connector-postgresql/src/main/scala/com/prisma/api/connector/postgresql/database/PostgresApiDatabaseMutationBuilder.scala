@@ -209,14 +209,14 @@ case class PostgresApiDatabaseMutationBuilder(
     val model = updatePath.lastModel
     val query = sql"""select exists ( SELECT "#${model.dbNameOfIdField_!}" FROM "#$schemaName"."#${model.dbName}" WHERE "#${model.dbNameOfIdField_!}" = """ ++
       pathQueryForLastChild(updatePath) ++ sql")"
-    val condition = query.as[Boolean]
-    val insert    = Vector(createDataItem(createPath, createArgs), createRelayRow(createPath), create) ++ createNested
-    val qInsert   = DBIOAction.seq(insert: _*)
+    val condition        = query.as[Boolean]
+    val allCreateActions = Vector(createDataItem(createPath, createArgs), createRelayRow(createPath), create) ++ createNested
+    val qCreate          = DBIOAction.seq(allCreateActions: _*)
     // update first sets the lists, then updates the item
-    val update2 = Vector(update, updateDataItemByPath(updatePath, updateArgs)) ++ updateNested
-    val qUpdate = DBIOAction.seq(update2: _*)
+    val allUpdateActions = update +: updateNested :+ updateDataItemByPath(updatePath, updateArgs)
+    val qUpdate          = DBIOAction.seq(allUpdateActions: _*)
 
-    ifThenElse(condition, qUpdate, qInsert)
+    ifThenElse(condition, qUpdate, qCreate)
   }
 
   def upsertIfInRelationWith(
