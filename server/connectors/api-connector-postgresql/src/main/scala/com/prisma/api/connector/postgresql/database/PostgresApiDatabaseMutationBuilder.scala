@@ -133,7 +133,7 @@ case class PostgresApiDatabaseMutationBuilder(
         sql"""("id", "#${path.columnForParentSideOfLastEdge(schema)}", "#${path.columnForChildSideOfLastEdge(schema)}")""" ++
         sql"""Select '#$relationId',""" ++ pathQueryForLastChild(path.removeLastEdge) ++ sql""","#${childWhere.model.dbNameOfIdField_!}" """ ++
         sql"""FROM "#$schemaName"."#${childWhere.model.dbName}" where "#${childWhere.field.dbName}" = ${childWhere.fieldValue}
-             ON CONFLICT DO NOTHING
+              ON CONFLICT DO NOTHING
            """).asUpdate
 
     }
