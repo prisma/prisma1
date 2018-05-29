@@ -235,13 +235,16 @@ case class UpsertDataItemInterpreter(mutaction: UpsertDataItem, executor: MySqlD
   }
 }
 
-case class UpsertDataItemIfInRelationWithInterpreter(mutaction: UpsertDataItemIfInRelationWith) extends DatabaseMutactionInterpreter {
+case class UpsertDataItemIfInRelationWithInterpreter(mutaction: UpsertDataItemIfInRelationWith, executor: MySqlDatabaseMutactionExecutor)
+    extends DatabaseMutactionInterpreter {
   val project = mutaction.project
 
-  val scalarListsCreate = MySqlApiDatabaseMutationBuilder.getDbActionForScalarLists(project, mutaction.createPath, mutaction.createListArgs)
-  val scalarListsUpdate = MySqlApiDatabaseMutationBuilder.getDbActionForScalarLists(project, mutaction.updatePath, mutaction.updateListArgs)
-  val relationChecker   = NestedCreateRelationInterpreter(NestedCreateRelation(project, mutaction.createPath, false))
-  val createCheck       = DBIOAction.seq(relationChecker.allActions: _*)
+  val scalarListsCreate                                           = MySqlApiDatabaseMutationBuilder.getDbActionForScalarLists(project, mutaction.createPath, mutaction.createListArgs)
+  val scalarListsUpdate                                           = MySqlApiDatabaseMutationBuilder.getDbActionForScalarLists(project, mutaction.updatePath, mutaction.updateListArgs)
+  val relationChecker                                             = NestedCreateRelationInterpreter(NestedCreateRelation(project, mutaction.createPath, false))
+  val createCheck                                                 = DBIOAction.seq(relationChecker.allActions: _*)
+  val createNested: Vector[DBIOAction[Any, NoStream, Effect.All]] = mutaction.createMutactions.map(executor.interpreterFor).map(_.action)
+  val updateNested: Vector[DBIOAction[Any, NoStream, Effect.All]] = mutaction.updateMutactions.map(executor.interpreterFor).map(_.action)
 
   override val action = MySqlApiDatabaseMutationBuilder.upsertIfInRelationWith(
     project = project,
@@ -251,7 +254,9 @@ case class UpsertDataItemIfInRelationWithInterpreter(mutaction: UpsertDataItemIf
     updateArgs = mutaction.updateNonListArgs,
     scalarListCreate = scalarListsCreate,
     scalarListUpdate = scalarListsUpdate,
-    createCheck = createCheck
+    createCheck = createCheck,
+    createNested,
+    updateNested
   )
 
   override val errorMapper = {

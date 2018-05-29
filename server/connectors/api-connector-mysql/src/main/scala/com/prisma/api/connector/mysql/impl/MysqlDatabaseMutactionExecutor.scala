@@ -41,7 +41,7 @@ case class MySqlDatabaseMutactionExecutor(clientDb: Database)(implicit ec: Execu
     case m: NestedUpdateDataItem              => UpdateDataItemInterpreter(m)
     case m: UpdateDataItems                   => UpdateDataItemsInterpreter(m)
     case m: UpsertDataItem                    => UpsertDataItemInterpreter(m, this)
-    case m: UpsertDataItemIfInRelationWith    => UpsertDataItemIfInRelationWithInterpreter(m)
+    case m: UpsertDataItemIfInRelationWith    => UpsertDataItemIfInRelationWithInterpreter(m, this)
     case m: VerifyConnection                  => VerifyConnectionInterpreter(m)
     case m: VerifyWhere                       => VerifyWhereInterpreter(m)
     case m: CreateDataItemsImport             => CreateDataItemsImportInterpreter(m)
