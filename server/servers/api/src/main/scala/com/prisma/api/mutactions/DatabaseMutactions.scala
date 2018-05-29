@@ -40,7 +40,6 @@ case class DatabaseMutactions(project: Project) {
     updateMutaction +: nested
   }
 
-  //todo this does not support scalar lists at the moment
   def getMutactionsForUpdateMany(model: Model, whereFilter: Option[Filter], args: CoolArgs): Vector[DatabaseMutaction] = report {
     val (nonListArgs, listArgs) = args.getUpdateArgs(model)
     Vector(UpdateDataItems(project, model, whereFilter, nonListArgs, listArgs))
@@ -54,7 +53,6 @@ case class DatabaseMutactions(project: Project) {
     createMutaction +: nestedMutactions
   }
 
-  // todo this still needs to implement execution of nested mutactions
   def getMutactionsForUpsert(createPath: Path, updatePath: Path, allArgs: CoolArgs): Vector[DatabaseMutaction] =
     report {
       val (nonListCreateArgs, listCreateArgs) = allArgs.createArgumentsAsCoolArgs.getCreateArgs(createPath)
@@ -75,9 +73,7 @@ case class DatabaseMutactions(project: Project) {
                        updateNestedActions))
     }
 
-  // todo WIP
   def getNestedMutactionsForUpsert(args: CoolArgs, path: Path, triggeredFromCreate: Boolean): Vector[DatabaseMutaction] = {
-
     val x = for {
       field           <- path.relationFieldsNotOnPathOnLastModel
       subModel        = field.relatedModel_!

@@ -21,7 +21,7 @@ case class PostgresDatabaseMutactionExecutor(clientDb: Database)(implicit ec: Ex
     }
 
     clientDb
-      .run(singleAction.withTransactionIsolation(TransactionIsolation.ReadCommitted))
+      .run(singleAction)
       .recover { case error => throw combinedErrorMapper.lift(error).getOrElse(error) }
   }
 
@@ -41,7 +41,7 @@ case class PostgresDatabaseMutactionExecutor(clientDb: Database)(implicit ec: Ex
     case m: UpdateDataItem                    => UpdateDataItemInterpreter(m)
     case m: NestedUpdateDataItem              => UpdateDataItemInterpreter(m)
     case m: UpdateDataItems                   => UpdateDataItemsInterpreter(m)
-    case m: UpsertDataItem                    => UpsertDataItemInterpreter(m)
+    case m: UpsertDataItem                    => UpsertDataItemInterpreter(m, this)
     case m: UpsertDataItemIfInRelationWith    => UpsertDataItemIfInRelationWithInterpreter(m)
     case m: VerifyConnection                  => VerifyConnectionInterpreter(m)
     case m: VerifyWhere                       => VerifyWhereInterpreter(m)

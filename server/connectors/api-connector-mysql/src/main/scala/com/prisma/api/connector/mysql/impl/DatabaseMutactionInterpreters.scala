@@ -199,7 +199,7 @@ case class UpdateDataItemsInterpreter(mutaction: UpdateDataItems) extends Databa
   override val action = DBIOAction.seq(listActions, nonListActions)
 }
 
-case class UpsertDataItemInterpreter(mutaction: UpsertDataItem, executer: MySqlDatabaseMutactionExecutor) extends DatabaseMutactionInterpreter {
+case class UpsertDataItemInterpreter(mutaction: UpsertDataItem, executor: MySqlDatabaseMutactionExecutor) extends DatabaseMutactionInterpreter {
   val model      = mutaction.updatePath.lastModel
   val project    = mutaction.project
   val createArgs = mutaction.nonListCreateArgs
@@ -207,8 +207,8 @@ case class UpsertDataItemInterpreter(mutaction: UpsertDataItem, executer: MySqlD
 
   override val action = {
 
-    val createNested: Vector[DBIOAction[Any, NoStream, Effect.All]] = mutaction.createMutactions.map(executer.interpreterFor).map(_.action)
-    val updateNested: Vector[DBIOAction[Any, NoStream, Effect.All]] = mutaction.updateMutactions.map(executer.interpreterFor).map(_.action)
+    val createNested: Vector[DBIOAction[Any, NoStream, Effect.All]] = mutaction.createMutactions.map(executor.interpreterFor).map(_.action)
+    val updateNested: Vector[DBIOAction[Any, NoStream, Effect.All]] = mutaction.updateMutactions.map(executor.interpreterFor).map(_.action)
 
     val createAction = MySqlApiDatabaseMutationBuilder.getDbActionForScalarLists(project, mutaction.createPath, mutaction.listCreateArgs)
     val updateAction = MySqlApiDatabaseMutationBuilder.getDbActionForScalarLists(project, mutaction.updatePath, mutaction.listUpdateArgs)

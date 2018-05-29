@@ -198,16 +198,20 @@ case class UpdateDataItemsInterpreter(mutaction: UpdateDataItems) extends Databa
   }
 }
 
-case class UpsertDataItemInterpreter(mutaction: UpsertDataItem) extends DatabaseMutactionInterpreter {
+case class UpsertDataItemInterpreter(mutaction: UpsertDataItem, executor: PostgresDatabaseMutactionExecutor) extends DatabaseMutactionInterpreter {
   val model      = mutaction.updatePath.lastModel
   val project    = mutaction.project
   val createArgs = mutaction.nonListCreateArgs
   val updateArgs = mutaction.nonListUpdateArgs
 
   def action(mutationBuilder: PostgresApiDatabaseMutationBuilder) = {
+
+    val createNested: Vector[DBIOAction[Any, NoStream, Effect.All]] = mutaction.createMutactions.map(executor.interpreterFor).map(_.action(mutationBuilder))
+    val updateNested: Vector[DBIOAction[Any, NoStream, Effect.All]] = mutaction.updateMutactions.map(executor.interpreterFor).map(_.action(mutationBuilder))
+
     val createAction = mutationBuilder.setScalarList(mutaction.createPath, mutaction.listCreateArgs)
     val updateAction = mutationBuilder.setScalarList(mutaction.updatePath, mutaction.listUpdateArgs)
-    mutationBuilder.upsert(mutaction.createPath, mutaction.updatePath, createArgs, updateArgs, createAction, updateAction)
+    mutationBuilder.upsert(mutaction.createPath, mutaction.updatePath, createArgs, updateArgs, createAction, updateAction, createNested, updateNested)
   }
 
   override val errorMapper = {

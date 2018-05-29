@@ -199,16 +199,19 @@ case class PostgresApiDatabaseMutationBuilder(
       createArgs: PrismaArgs,
       updateArgs: PrismaArgs,
       create: slick.dbio.DBIOAction[Unit, slick.dbio.NoStream, slick.dbio.Effect with slick.dbio.Effect.All],
-      update: slick.dbio.DBIOAction[Unit, slick.dbio.NoStream, slick.dbio.Effect with slick.dbio.Effect.All]
+      update: slick.dbio.DBIOAction[Unit, slick.dbio.NoStream, slick.dbio.Effect with slick.dbio.Effect.All],
+      createNested: Vector[DBIOAction[Any, NoStream, Effect.All]],
+      updateNested: Vector[DBIOAction[Any, NoStream, Effect.All]]
   ) = {
     val model = updatePath.lastModel
     val query = sql"""select exists ( SELECT "#${model.dbNameOfIdField_!}" FROM "#$schemaName"."#${model.dbName}" WHERE "#${model.dbNameOfIdField_!}" = """ ++
       pathQueryForLastChild(updatePath) ++ sql")"
     val condition = query.as[Boolean]
-    // insert creates item first, then the list values
-    val qInsert = DBIOAction.seq(createDataItem(createPath, createArgs), createRelayRow(createPath), create)
+    val insert    = Vector(createDataItem(createPath, createArgs), createRelayRow(createPath), create) ++ createNested
+    val qInsert   = DBIOAction.seq(insert: _*)
     // update first sets the lists, then updates the item
-    val qUpdate = DBIOAction.seq(update, updateDataItemByPath(updatePath, updateArgs))
+    val update2 = Vector(update, updateDataItemByPath(updatePath, updateArgs)) ++ updateNested
+    val qUpdate = DBIOAction.seq(update2: _*)
 
     ifThenElse(condition, qUpdate, qInsert)
   }
