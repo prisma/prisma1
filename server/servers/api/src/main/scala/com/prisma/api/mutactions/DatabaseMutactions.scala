@@ -60,8 +60,42 @@ case class DatabaseMutactions(project: Project) {
       val (nonListCreateArgs, listCreateArgs) = allArgs.createArgumentsAsCoolArgs.getCreateArgs(createPath)
       val (nonListUpdateArgs, listUpdateArgs) = allArgs.updateArgumentsAsCoolArgs.getUpdateArgs(updatePath.lastModel)
 
-      Vector(UpsertDataItem(project, createPath, updatePath, nonListCreateArgs, listCreateArgs, nonListUpdateArgs, listUpdateArgs))
+      val createdNestedActions = getNestedMutactionsForUpsert(allArgs.createArgumentsAsCoolArgs, createPath, true)
+      val updateNestedActions  = getNestedMutactionsForUpsert(allArgs.updateArgumentsAsCoolArgs, updatePath, false)
+
+      Vector(
+        UpsertDataItem(project,
+                       createPath,
+                       updatePath,
+                       nonListCreateArgs,
+                       listCreateArgs,
+                       nonListUpdateArgs,
+                       listUpdateArgs,
+                       createdNestedActions,
+                       updateNestedActions))
     }
+
+  // todo WIP
+  def getNestedMutactionsForUpsert(args: CoolArgs, path: Path, triggeredFromCreate: Boolean): Vector[DatabaseMutaction] = {
+
+    val x = for {
+      field           <- path.relationFieldsNotOnPathOnLastModel
+      subModel        = field.relatedModel_!
+      nestedMutations = args.subNestedMutation(field, subModel)
+    } yield {
+
+      val checkMutactions = getMutactionsForWhereChecks(nestedMutations) ++ getMutactionsForConnectionChecks(subModel, nestedMutations, path, field)
+
+      val mutactionsThatACreateCanTrigger = getMutactionsForNestedConnectMutation(nestedMutations, path, field, triggeredFromCreate)
+
+      // val otherMutactions = getMutactionsForNestedDisconnectMutation(nestedMutations, path, field) ++ getMutactionsForNestedDeleteMutation(nestedMutations, path, field)
+
+      if (triggeredFromCreate && mutactionsThatACreateCanTrigger.isEmpty && field.isRequired) throw RelationIsRequired(field.name, path.lastModel.name)
+
+      checkMutactions ++ mutactionsThatACreateCanTrigger //++ otherMutactions
+    }
+    x.flatten.toVector
+  }
 
   // Todo filter for duplicates here? multiple identical where checks for example?
   def getMutactionsForNestedMutation(args: CoolArgs, path: Path, triggeredFromCreate: Boolean): Vector[DatabaseMutaction] = {

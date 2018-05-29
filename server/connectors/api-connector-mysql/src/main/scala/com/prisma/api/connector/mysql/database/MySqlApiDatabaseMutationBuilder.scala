@@ -104,15 +104,20 @@ object MySqlApiDatabaseMutationBuilder {
              createArgs: PrismaArgs,
              updateArgs: PrismaArgs,
              create: DBIOAction[Any, NoStream, Effect],
-             update: DBIOAction[Any, NoStream, Effect]) = {
+             update: DBIOAction[Any, NoStream, Effect],
+             createNested: Vector[DBIOAction[Any, NoStream, Effect.All]],
+             updateNested: Vector[DBIOAction[Any, NoStream, Effect.All]]) = {
 
     val query = sql"select exists ( SELECT `id` FROM `#$projectId`.`#${updatePath.lastModel.name}` WHERE `id` = " ++ pathQueryForLastChild(projectId,
                                                                                                                                            updatePath) ++ sql")"
     val condition = query.as[Boolean]
     // insert creates item first, then the list values
-    val qInsert = DBIOAction.seq(createDataItem(projectId, createPath, createArgs), createRelayRow(projectId, createPath), create)
+    val insert = Vector(createDataItem(projectId, createPath, createArgs), createRelayRow(projectId, createPath), create) ++ createNested
+
+    val qInsert = DBIOAction.seq(insert: _*)
     // update first sets the lists, then updates the item
-    val qUpdate = DBIOAction.seq(update, updateDataItemByPath(projectId, updatePath, updateArgs))
+    val update2 = Vector(update, updateDataItemByPath(projectId, updatePath, updateArgs)) ++ updateNested
+    val qUpdate = DBIOAction.seq(update2: _*)
 
     ifThenElse(condition, qUpdate, qInsert)
   }

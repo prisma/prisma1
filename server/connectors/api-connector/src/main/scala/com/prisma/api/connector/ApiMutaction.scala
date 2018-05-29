@@ -54,7 +54,9 @@ case class UpsertDataItem(project: Project,
                           nonListCreateArgs: PrismaArgs,
                           listCreateArgs: Vector[(String, ListGCValue)],
                           nonListUpdateArgs: PrismaArgs,
-                          listUpdateArgs: Vector[(String, ListGCValue)])
+                          listUpdateArgs: Vector[(String, ListGCValue)],
+                          createMutactions: Vector[DatabaseMutaction],
+                          updateMutactions: Vector[DatabaseMutaction])
     extends DatabaseMutaction
 case class UpsertDataItemIfInRelationWith(
     project: Project,

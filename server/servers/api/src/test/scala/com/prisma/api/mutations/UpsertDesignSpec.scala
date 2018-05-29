@@ -9,7 +9,7 @@ class UpsertDesignSpec extends FlatSpec with Matchers with ApiSpecBase {
 
   //top level upserts
 
-  "An upsert on the top level" should "only execute the nested mutations of the correct create branch" ignore {
+  "An upsert on the top level" should "execute a nested connect in the create branch" in {
 
     val project = SchemaDsl.fromBuilder { schema =>
       val list = schema.model("List").field("listInts", _.Int, isList = true).field("uList", _.String, isUnique = true)
@@ -19,13 +19,46 @@ class UpsertDesignSpec extends FlatSpec with Matchers with ApiSpecBase {
 
     database.setup(project)
 
+    server.query("""mutation{createTodo(data:{uTodo: "B"}){uTodo}}""", project)
+
     server
       .query(
-        s"""mutation {upsertList(
+        """mutation {upsertList(
            |                     where:{uList: "Does not Exist"}
-           |                     create:{uList:"A" todo: {create: {uTodo: "B"}}}
-           |                     update:{todo: {create: {uTodo: "C"}}}
-           |){id}}""".stripMargin,
+           |                     create:{uList:"A" todo: {connect: {uTodo: "B"}}}
+           |                     update:{todo: {connect: {uTodo: "Should not matter"}}}
+           |){id}}""",
+        project
+      )
+
+    val result = server.query(s"""query{lists {uList, todo {uTodo}}}""", project)
+    result.toString should equal("""{"data":{"lists":[{"uList":"A","todo":{"uTodo":"B"}}]}}""")
+
+    server.query(s"""query{todoes {uTodo}}""", project).toString should be("""{"data":{"todoes":[{"uTodo":"B"}]}}""")
+
+    countItems(project, "lists") should be(1)
+    countItems(project, "todoes") should be(1)
+  }
+
+  "An upsert on the top level" should "execute a nested connect in the update branch" in {
+
+    val project = SchemaDsl.fromBuilder { schema =>
+      val list = schema.model("List").field("listInts", _.Int, isList = true).field("uList", _.String, isUnique = true)
+      val todo = schema.model("Todo").field("todoInts", _.Int, isList = true).field("uTodo", _.String, isUnique = true)
+      todo.oneToOneRelation("list", "todo", list)
+    }
+
+    database.setup(project)
+
+    server.query("""mutation{createTodo(data:{uTodo: "B"}){uTodo}}""", project)
+    server.query("""mutation{createList(data:{uList:"A"}){uList}}""", project)
+    server
+      .query(
+        """mutation {upsertList(
+          |                     where:{uList: "A"}
+          |                     create:{uList:"A" todo: {connect: {uTodo: "Should not Matter"}}}
+          |                     update:{todo: {connect: {uTodo: "B"}}}
+          |){id}}""",
         project
       )
 
