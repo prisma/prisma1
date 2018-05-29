@@ -51,13 +51,13 @@ Navigate to [https://console.aws.amazon.com/cloudformation/](https://console.aws
 
 <InfoBox type=warning>
 
-**Attention:** Fargate is currently only available in the **US East (N. Virginia)** region. So be sure to select this region in the top-right corner of the AWS console!
+**Attention:** Fargate is currently only available in the **US East (N. Virginia), US East (Ohio), US West (Oregon), and EU (Ireland)** regions. So be sure to select one of these regions in the top-right corner of the AWS console!
 
 </InfoBox>
 
 <Instruction>
 
-Once you have the **US East (N. Virginia)** region selected, click the **Create Stack **button. On the next screen, you then need to provide your CloudFormation template.
+Once you have a fargate-supporting region selected, click the **Create Stack **button. On the next screen, you then need to provide your CloudFormation template.
 
 ![](https://cdn-images-1.medium.com/max/2724/1*5YhGCnRB5d9PLoBnKsRXNw.png)
 
@@ -146,7 +146,7 @@ Clone or download that repo so you can use provide the template in the next step
 
 <Instruction>
 
-Like in the previous section, navigate your browser to [https://console.aws.amazon.com/cloudformation](https://console.aws.amazon.com/cloudformation/) and click the **Create Stack** button (be sure to have the **US East (N. Virginia)** region selected in the top-right corner).
+Like in the previous section, navigate your browser to [https://console.aws.amazon.com/cloudformation](https://console.aws.amazon.com/cloudformation/) and click the **Create Stack** button (be sure to have the **US East (N. Virginia), US East (Ohio), US West (Oregon), or EU (Ireland)** region selected in the top-right corner).
 
 </Instruction>
 
