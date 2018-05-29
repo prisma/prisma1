@@ -1,9 +1,21 @@
 package com.prisma.deploy.schema.mutations
 
-import com.prisma.deploy.migration.validation.SchemaError
-import com.prisma.shared.models.Project
+import com.prisma.deploy.migration.validation.DeployError
+import com.prisma.shared.models.{Project, ServerSideSubscriptionFunction, WebhookDelivery}
+import org.scalactic.Or
 
 trait FunctionValidator {
+  def validateFunctionInputs(project: Project, functionInputs: Vector[FunctionInput]): Vector[ServerSideSubscriptionFunction] Or Vector[DeployError]
 
-  def validateFunctionInput(project: Project, fn: FunctionInput): Vector[SchemaError]
+  protected def convertFunctionInput(fnInput: FunctionInput): ServerSideSubscriptionFunction = {
+    ServerSideSubscriptionFunction(
+      name = fnInput.name,
+      isActive = true,
+      delivery = WebhookDelivery(
+        url = fnInput.url,
+        headers = fnInput.headers.map(header => header.name -> header.value)
+      ),
+      query = fnInput.query
+    )
+  }
 }

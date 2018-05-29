@@ -1,5 +1,7 @@
 package com.prisma.utils.future
 
+import org.scalactic.{Bad, Good, Or}
+
 import scala.concurrent.{ExecutionContext, Future, Promise}
 import scala.util.{Failure, Success, Try}
 
@@ -99,6 +101,20 @@ object FutureUtils {
           case x @ Some(_) => Future.successful(x)
         }
         .recoverWith { case _ => other }
+    }
+  }
+
+  case class FutureOr[+G, +B](future: Future[G Or B]) extends AnyVal {
+    def flatMap[H, C >: B](f: G => FutureOr[H, C])(implicit ec: ExecutionContext): FutureOr[H, C] = {
+      val newFuture: Future[Or[H, C]] = future.flatMap {
+        case Good(g)    => f(g).future
+        case b @ Bad(_) => Future.successful(b)
+      }
+      FutureOr(newFuture)
+    }
+
+    def map[H](f: G => H)(implicit ec: ExecutionContext): FutureOr[H, B] = {
+      FutureOr(future.map(or => or.map(f)))
     }
   }
 }

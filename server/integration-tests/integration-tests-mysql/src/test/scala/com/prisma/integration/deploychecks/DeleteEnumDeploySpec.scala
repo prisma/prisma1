@@ -51,7 +51,7 @@ class DeleteEnumDeploySpec extends FlatSpec with Matchers with IntegrationBaseSp
         |}"""
 
     deployServer.deploySchemaThatMustWarn(project, schema2).toString should be(
-      """{"data":{"deploy":{"migration":{"applied":0,"revision":0},"errors":[],"warnings":[{"description":"You already have nodes for this model. This change may result in data loss."}]}}}""")
+      """{"data":{"deploy":{"migration":null,"errors":[],"warnings":[{"description":"You already have nodes for this model. This change may result in data loss."}]}}}""")
   }
 
   "Deleting an Enum" should "throw a warning if there is already data but proceed with -force" in {
