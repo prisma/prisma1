@@ -233,7 +233,7 @@ class AddingOptionalBackRelationDuringMigrationSpec extends FlatSpec with Matche
     val res = deployServer.deploySchemaThatMustError(project, schema1)
 
     res.toString should be(
-      """{"data":{"deploy":{"migration":{"applied":0,"revision":0},"errors":[{"description":"You are adding a singular backrelation field to a type but there are already pairs in the relation that would violate that constraint."}],"warnings":[]}}}""")
+      """{"data":{"deploy":{"migration":null,"errors":[{"description":"You are adding a singular backrelation field to a type but there are already pairs in the relation that would violate that constraint."}],"warnings":[]}}}""")
   }
 
   "Adding a missing back-relation of non-list type" should "work when there are already multiple nodes but they are not in a relation" in {

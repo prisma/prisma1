@@ -24,7 +24,7 @@ class DeleteFieldDeploySpec extends FlatSpec with Matchers with IntegrationBaseS
         |}""".stripMargin
 
     deployServer.deploySchemaThatMustWarn(project, schema2).toString should be(
-      """{"data":{"deploy":{"migration":{"applied":0,"revision":0},"errors":[],"warnings":[{"description":"You already have nodes for this model. This change may result in data loss."}]}}}""")
+      """{"data":{"deploy":{"migration":null,"errors":[],"warnings":[{"description":"You already have nodes for this model. This change may result in data loss."}]}}}""")
   }
 
   "Deleting a field" should "throw a warning if nodes are present but proceed with -force flag" in {
