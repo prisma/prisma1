@@ -3,13 +3,10 @@ package com.prisma.api.connector.postgresql.database
 import java.sql.PreparedStatement
 
 import com.prisma.api.connector._
-import com.prisma.gc_values.{GCValue, GCValueExtractor, NullGCValue, StringGCValue}
+import com.prisma.api.connector.postgresql.database.PostgresSlickExtensions._
+import com.prisma.gc_values.{GCValue, NullGCValue, StringGCValue}
 import com.prisma.shared.models.{Field, Model, RelationField}
-import slick.jdbc.{PositionedParameters, SQLActionBuilder}
-import slick.jdbc.PostgresProfile.api._
-import PostgresSlickExtensions._
-import JdbcExtensions._
-import com.prisma.api.connector.postgresql.database.PostgresQueryArgumentsHelpers.{generateFilterConditions, in}
+import slick.jdbc.PositionedParameters
 
 object QueryDsl {
   def select(schemaName: String, model: Model): QueryBuilder = QueryBuilder(schemaName, model, Vector.empty, None)

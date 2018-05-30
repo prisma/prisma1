@@ -145,7 +145,7 @@ object PostgresQueryArgumentsExtensions {
       }
     }
 
-    def invertOrder(order: String) = order.trim().toLowerCase match {
+    private def invertOrder(order: String) = order.trim().toLowerCase match {
       case "desc" => "asc"
       case "asc"  => "desc"
       case _      => throw new IllegalArgumentException
@@ -154,7 +154,7 @@ object PostgresQueryArgumentsExtensions {
     // This creates a query that checks if the id is in a certain set returned by a subquery Q.
     // The subquery Q fetches all the ID's defined by the cursors and order.
     // On invalid cursor params, no error is thrown. The result set will just be empty.
-    def buildCursorCondition(projectId: String, modelId: String, injectedFilter: Option[SQLActionBuilder]): Option[SQLActionBuilder] = {
+    private def buildCursorCondition(projectId: String, modelId: String, injectedFilter: Option[SQLActionBuilder]): Option[SQLActionBuilder] = {
       // If both params are empty, don't generate any query.
       if (before.isEmpty && after.isEmpty) return None
 
