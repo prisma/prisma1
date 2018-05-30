@@ -87,7 +87,7 @@ object SchemaDsl extends AwaitUtils {
       if (relation.isManyToMany) {
         relation.template
       } else {
-        val relationFields = Vector(relation.modelAField, relation.modelBField).flatten
+        val relationFields = Vector(relation.modelAField, relation.modelBField)
         val fieldToRepresentAsInlineRelation = relationFields.find(_.isList) match {
           case Some(field) => field
           case None        => relationFields.head // happens for one to one relations
@@ -239,13 +239,12 @@ object SchemaDsl extends AwaitUtils {
         modelBOnDelete = modelBOnDelete,
         manifestation = None
       )
-      val newField = relationField(fieldAName, this, modelB, relation, isList = false, isBackward = false)
+      val newField = relationField(fieldAName, this, modelB, relation, isList = false, isBackward = false, false, true)
       fields += newField
 
-      if (includeFieldB) {
-        val newBField = relationField(fieldBName, modelB, this, relation, isList = false, isBackward = true)
-        modelB.fields += newBField
-      }
+      val newBField = relationField(fieldBName, modelB, this, relation, isList = false, isBackward = true, false, includeFieldB)
+      modelB.fields += newBField
+
       this.relations += relation
 
       this
@@ -270,13 +269,11 @@ object SchemaDsl extends AwaitUtils {
         manifestation = None
       )
 
-      val newField = relationField(fieldAName, this, modelB, relation, isList = false, isBackward = false, isRequired = true)
+      val newField = relationField(fieldAName, this, modelB, relation, isList = false, isBackward = false, isRequired = true, true)
       fields += newField
 
-      if (includeFieldB) {
-        val newBField = relationField(fieldBName, modelB, this, relation, isList = false, isBackward = true, isRequired = isRequiredOnFieldB)
-        modelB.fields += newBField
-      }
+      val newBField = relationField(fieldBName, modelB, this, relation, isList = false, isBackward = true, isRequired = isRequiredOnFieldB, includeFieldB)
+      modelB.fields += newBField
       this.relations += relation
 
       this
@@ -300,13 +297,11 @@ object SchemaDsl extends AwaitUtils {
         manifestation = None
       )
 
-      val newField = relationField(fieldAName, this, modelB, relation, isList = true, isBackward = false, isRequired = false)
+      val newField = relationField(fieldAName, this, modelB, relation, isList = true, isBackward = false, isRequired = false, true)
       fields += newField
 
-      if (includeFieldB) {
-        val newBField = relationField(fieldBName, modelB, this, relation, isList = false, isBackward = true, isRequired = true)
-        modelB.fields += newBField
-      }
+      val newBField = relationField(fieldBName, modelB, this, relation, isList = false, isBackward = true, isRequired = true, includeFieldB)
+      modelB.fields += newBField
       this.relations += relation
 
       this
@@ -329,13 +324,11 @@ object SchemaDsl extends AwaitUtils {
         modelBOnDelete = modelBOnDelete,
         manifestation = None
       )
-      val newField = relationField(fieldAName, this, modelB, relation, isList = true, isBackward = false)
+      val newField = relationField(fieldAName, this, modelB, relation, isList = true, isBackward = false, false, true)
       fields += newField
 
-      if (includeFieldB) {
-        val newBField = relationField(fieldBName, modelB, this, relation, isList = false, isBackward = true)
-        modelB.fields += newBField
-      }
+      val newBField = relationField(fieldBName, modelB, this, relation, isList = false, isBackward = true, false, includeFieldB)
+      modelB.fields += newBField
       this.relations += relation
 
       this
@@ -358,13 +351,11 @@ object SchemaDsl extends AwaitUtils {
         modelBOnDelete = modelBOnDelete,
         manifestation = None
       )
-      val newField = relationField(fieldAName, this, modelB, relation, isList = false, isBackward = false)
+      val newField = relationField(fieldAName, this, modelB, relation, isList = false, isBackward = false, false, true)
       fields += newField
 
-      if (includeFieldB) {
-        val newBField = relationField(fieldBName, modelB, this, relation, isList = true, isBackward = true)
-        modelB.fields += newBField
-      }
+      val newBField = relationField(fieldBName, modelB, this, relation, isList = true, isBackward = true, false, includeFieldB)
+      modelB.fields += newBField
       this.relations += relation
 
       this
@@ -375,7 +366,7 @@ object SchemaDsl extends AwaitUtils {
         fieldBName: String,
         modelB: ModelBuilder,
         relationName: Option[String] = None,
-        includeFieldB: Boolean = true,
+        includeFieldBInSchema: Boolean = true,
         modelAOnDelete: OnDelete.Value = OnDelete.SetNull,
         modelBOnDelete: OnDelete.Value = OnDelete.SetNull
     ): ModelBuilder = {
@@ -387,13 +378,11 @@ object SchemaDsl extends AwaitUtils {
         modelBOnDelete = modelBOnDelete,
         manifestation = None
       )
-      val newField = relationField(fieldAName, from = this, to = modelB, relation, isList = true, isBackward = false)
+      val newField = relationField(fieldAName, from = this, to = modelB, relation, isList = true, isBackward = false, false, true)
       fields += newField
 
-      if (includeFieldB) {
-        val newBField = relationField(fieldBName, from = modelB, to = this, relation, isList = true, isBackward = true)
-        modelB.fields += newBField
-      }
+      val newBField = relationField(fieldBName, from = modelB, to = this, relation, isList = true, isBackward = true, false, includeFieldBInSchema)
+      modelB.fields += newBField
       this.relations += relation
 
       this
@@ -443,18 +432,18 @@ object SchemaDsl extends AwaitUtils {
                     relation: RelationTemplate,
                     isList: Boolean,
                     isBackward: Boolean,
-                    isRequired: Boolean = false): FieldTemplate = {
+                    isRequired: Boolean = false,
+                    includeInSchema: Boolean): FieldTemplate = {
     FieldTemplate(
-      name = name,
+      name = if (!includeInSchema) Field.magicalBackRelationPrefix + relation.name else name,
       isList = isList,
-      relationSide = Some {
-        if (!isBackward) RelationSide.A else RelationSide.B
-      },
+      relationSide = Some(if (!isBackward) RelationSide.A else RelationSide.B),
       relationName = Some(relation.name),
       // hardcoded values
       typeIdentifier = TypeIdentifier.Relation,
       isRequired = isRequired,
       isUnique = false,
+      isHidden = !includeInSchema,
       isReadonly = false,
       defaultValue = None,
       enum = None,

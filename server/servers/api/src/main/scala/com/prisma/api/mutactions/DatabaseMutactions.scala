@@ -2,7 +2,8 @@ package com.prisma.api.mutactions
 
 import com.prisma.api.ApiMetrics
 import com.prisma.api.connector._
-import com.prisma.api.schema.APIErrors.RelationIsRequired
+import com.prisma.api.schema.APIErrors.{RelationIsRequired, UpdatingUniqueToNullAndThenNestingMutations}
+import com.prisma.gc_values.NullGCValue
 import com.prisma.shared.models.{Field, Model, Project, RelationField}
 import com.prisma.util.coolArgs._
 import cool.graph.cuid.Cuid.createCuid
@@ -34,8 +35,8 @@ case class DatabaseMutactions(project: Project) {
     val whereFieldValue         = args.raw.get(path.root.field.name)
     val updatedWhere            = whereFieldValue.map(updateNodeSelectorValue(path.root)).getOrElse(path.root)
     val updatedPath             = path.copy(root = updatedWhere)
-
-    val nested = getMutactionsForNestedMutation(args, updatedPath, triggeredFromCreate = false)
+    val nested                  = getMutactionsForNestedMutation(args, updatedPath, triggeredFromCreate = false)
+    if (whereFieldValue.contains(None) && nested.nonEmpty) throw UpdatingUniqueToNullAndThenNestingMutations(path.root.model.name)
 
     updateMutaction +: nested
   }
@@ -140,16 +141,20 @@ case class DatabaseMutactions(project: Project) {
 
   def getMutactionsForNestedUpdateMutation(nestedMutation: NestedMutations, path: Path, field: RelationField): Vector[DatabaseMutaction] = {
     nestedMutation.updates.flatMap { update =>
-      val extendedPath = extend(path, field, update)
-      val updatedPath = update match {
-        case x: UpdateByWhere    => extendedPath.lastEdgeToNodeEdge(currentWhere(x.where, x.data))
-        case _: UpdateByRelation => extendedPath
-      }
+      val extendedPath            = extend(path, field, update)
       val (nonListArgs, listArgs) = update.data.getUpdateArgs(extendedPath.lastModel)
+      val updateMutaction         = NestedUpdateDataItem(project, extendedPath, nonListArgs, listArgs)
 
-      val updateMutaction = NestedUpdateDataItem(project, extendedPath, nonListArgs, listArgs)
+      update match {
+        case x: UpdateByWhere =>
+          val updatedPath = extendedPath.lastEdgeToNodeEdge(currentWhere(x.where, x.data))
+          val nested      = getMutactionsForNestedMutation(update.data, updatedPath, triggeredFromCreate = false)
+          if (x.where.fieldValue == NullGCValue && nested.nonEmpty) throw UpdatingUniqueToNullAndThenNestingMutations(x.where.model.name)
+          updateMutaction +: nested
 
-      updateMutaction +: getMutactionsForNestedMutation(update.data, updatedPath, triggeredFromCreate = false)
+        case _: UpdateByRelation =>
+          updateMutaction +: getMutactionsForNestedMutation(update.data, extendedPath, triggeredFromCreate = false)
+      }
     }
   }
 

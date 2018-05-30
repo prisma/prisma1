@@ -3,11 +3,11 @@ package com.prisma.api.connector.mysql.impl
 import java.sql.SQLException
 
 import com.prisma.api.connector.mysql.DatabaseMutactionInterpreter
-import com.prisma.api.connector.mysql.database.MySqlApiDatabaseMutationBuilder._
 import com.prisma.api.connector.mysql.database.ErrorMessageParameterHelper.parameterString
-import com.prisma.api.connector.{ModelEdge, NodeEdge, Path}
+import com.prisma.api.connector.mysql.database.MySqlApiDatabaseMutationBuilder._
+import com.prisma.api.connector.{Edge, ModelEdge, NodeEdge, Path}
 import com.prisma.api.schema.APIErrors.RequiredRelationWouldBeViolated
-import com.prisma.shared.models.Project
+import com.prisma.shared.models.{Model, Project, RelationField}
 import slick.dbio.{DBIOAction, Effect, NoStream}
 
 trait NestedRelationInterpreterBase extends DatabaseMutactionInterpreter {
@@ -16,15 +16,10 @@ trait NestedRelationInterpreterBase extends DatabaseMutactionInterpreter {
   def project: Project
   def topIsCreate: Boolean
 
-  val lastEdge         = path.lastEdge_!
-  val p                = lastEdge.parentField
-  val otherModel       = lastEdge.child
-  val otherFieldOption = lastEdge.childField
-  val c = otherFieldOption match {
-    case Some(x) => x
-    case None =>
-      p.template.copy(isRequired = false, isList = true).build(otherModel) // fixme: 1. obsolete magical back relation 2. passingOtherModel is not right
-  }
+  val lastEdge: Edge    = path.lastEdge_!
+  val p: RelationField  = lastEdge.parentField
+  val otherModel: Model = lastEdge.child
+  val c: RelationField  = lastEdge.childField
 
   def checkForOldParent = oldParentFailureTrigger(project, path)
   def checkForOldParentByChildWhere = path.lastEdge_! match {
@@ -32,26 +27,21 @@ trait NestedRelationInterpreterBase extends DatabaseMutactionInterpreter {
     case edge: NodeEdge => oldParentFailureTriggerForRequiredRelations(project, edge.relation, edge.childWhere, edge.childRelationSide)
   }
 
-  def checkForOldChild = oldChildFailureTrigger(project, path)
-  def noCheckRequired  = List.empty
-
-  def removalByParent         = deleteRelationRowByParent(project.id, path)
-  def removalByChildWhere     = deleteRelationRowByChildWithWhere(project.id, path)
-  def removalByParentAndChild = deleteRelationRowByParentAndChild(project.id, path)
-  def createRelationRow       = List(createRelationRowByPath(project.id, path))
-  def noActionRequired        = List.empty
-
+  def checkForOldChild                = oldChildFailureTrigger(project, path)
+  def noCheckRequired: List[Nothing]  = List.empty
+  def removalByParent                 = deleteRelationRowByParent(project.id, path)
+  def removalByChildWhere             = deleteRelationRowByChildWithWhere(project.id, path)
+  def removalByParentAndChild         = deleteRelationRowByParentAndChild(project.id, path)
+  def createRelationRow               = List(createRelationRowByPath(project.id, path))
+  def noActionRequired: List[Nothing] = List.empty
   def requiredCheck: List[DBIOAction[_, NoStream, Effect]]
-
   def removalActions: List[DBIOAction[_, NoStream, Effect]]
-
   def addAction: List[DBIOAction[_, NoStream, Effect]]
-
-  def allActions = requiredCheck ++ removalActions ++ addAction
+  def allActions: List[DBIOAction[_, NoStream, Effect]] = requiredCheck ++ removalActions ++ addAction
 
   override val action = DBIOAction.seq(allActions: _*)
 
-  override val errorMapper = {
+  override val errorMapper: PartialFunction[Throwable, Nothing] = {
     case e: SQLException if e.getErrorCode == 1242 && causedByThisMutaction(path, e.getCause.toString) =>
       throw RequiredRelationWouldBeViolated(project, path.lastRelation_!)
   }
@@ -60,7 +50,7 @@ trait NestedRelationInterpreterBase extends DatabaseMutactionInterpreter {
 
   def sysError = sys.error("This should not happen, since it means a many side is required")
 
-  def causedByThisMutaction(path: Path, cause: String) = {
+  def causedByThisMutaction(path: Path, cause: String): Boolean = {
     val parentCheckString = s"`${path.lastRelation_!.relationTableName}` OLDPARENTFAILURETRIGGER WHERE `${path.lastEdge_!.childRelationSide}`"
     val childCheckString  = s"`${path.lastRelation_!.relationTableName}` OLDCHILDPATHFAILURETRIGGER WHERE `${path.lastEdge_!.parentRelationSide}`"
 

@@ -82,7 +82,7 @@ case class PostgresApiDatabaseMutationBuilder(
       val selectIdOfOther = sql"""select "#${otherModel.dbNameOfIdField_!}" as id from "#$schemaName"."#${otherModel.dbName}" """ ++ otherWhereCondition
 
       val rowToUpdateCondition = if (relation.isSameModelRelation) {
-        if (path.lastEdge_!.childField.get.relationSide == RelationSide.A) {
+        if (path.lastEdge_!.childField.relationSide == RelationSide.A) {
           childWhereCondition
         } else {
           otherWhereCondition
@@ -96,7 +96,7 @@ case class PostgresApiDatabaseMutationBuilder(
       }
 
       val nodeToLinkToCondition = if (relation.isSameModelRelation) {
-        if (path.lastEdge_!.childField.get.relationSide == RelationSide.A) {
+        if (path.lastEdge_!.childField.relationSide == RelationSide.A) {
           selectIdOfOther
         } else {
           selectIdOfChild
@@ -401,18 +401,19 @@ case class PostgresApiDatabaseMutationBuilder(
 
   // region HELPERS
 
-  def idFromWhere(where: NodeSelector): SQLActionBuilder = {
-    if (where.isId) {
-      sql"""${where.fieldValue}"""
-    } else {
-      sql"""(SELECT "#${where.model.dbNameOfIdField_!}" FROM (SELECT * FROM "#$schemaName"."#${where.model.dbName}") IDFROMWHERE WHERE "#${where.field.dbName}" = ${where.fieldValue})"""
-    }
+  def idFromWhere(where: NodeSelector): SQLActionBuilder = (where.isId, where.fieldValue) match {
+    case (true, NullGCValue) => sys.error("id should not be NULL")
+    case (true, idValue)     => sql"$idValue"
+    case (false, NullGCValue) =>
+      sql"""(SELECT "#${where.model.dbNameOfIdField_!}" FROM "#$schemaName"."#${where.model.dbName}" IDFROMWHERE WHERE "#${where.field.dbName}" is NULL)"""
+    case (false, value) =>
+      sql"""(SELECT "#${where.model.dbNameOfIdField_!}" FROM "#$schemaName"."#${where.model.dbName}" IDFROMWHERE WHERE "#${where.field.dbName}" = $value)"""
   }
 
   def idFromWhereEquals(where: NodeSelector): SQLActionBuilder = sql" = " ++ idFromWhere(where)
 
   def idFromWherePath(where: NodeSelector): SQLActionBuilder = {
-    sql"""(SELECT "#${where.model.dbNameOfIdField_!}" FROM (SELECT  * From "#$schemaName"."#${where.model.dbName}") IDFROMWHEREPATH WHERE "#${where.field.dbName}" = ${where.fieldValue})"""
+    sql"""(SELECT "#${where.model.dbNameOfIdField_!}" FROM "#$schemaName"."#${where.model.dbName}" IDFROMWHEREPATH WHERE "#${where.field.dbName}" = ${where.fieldValue})"""
   }
 
   def pathQueryForLastParent(path: Path): SQLActionBuilder = pathQueryForLastChild(path.removeLastEdge)
