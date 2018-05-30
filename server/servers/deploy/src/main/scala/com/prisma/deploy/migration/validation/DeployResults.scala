@@ -1,25 +1,18 @@
 package com.prisma.deploy.migration.validation
 
-import com.prisma.shared.errors.SchemaCheckResult
 import sangria.ast.{EnumTypeDefinition, ObjectTypeDefinition, TypeDefinition}
 
-case class DeployError(`type`: String, description: String, field: Option[String]) extends SchemaCheckResult
-
-object DeployError {
-  def apply(`type`: String, field: String, description: String): DeployError = {
-    DeployError(`type`, description, Some(field))
+object DeployWarnings {
+  def dataLossModel(`type`: String): DeployWarning = {
+    DeployWarning(`type`, "You already have nodes for this model. This change will result in data loss.", None)
   }
 
-  def apply(`type`: String, description: String): DeployError = {
-    DeployError(`type`, description, None)
+  def dataLossRelation(`type`: String): DeployWarning = {
+    DeployWarning(`type`, "You already have nodes for this relation. This change will result in data loss.", None)
   }
 
-  def apply(fieldAndType: FieldAndType, description: String): DeployError = {
-    apply(fieldAndType.objectType.name, fieldAndType.fieldDef.name, description)
-  }
-
-  def global(description: String): DeployError = {
-    DeployError("Global", description, None)
+  def dataLossField(`type`: String, field: String): DeployWarning = {
+    DeployWarning(`type`, "You already have nodes for this model. This change may result in data loss.", Some(field))
   }
 }
 
