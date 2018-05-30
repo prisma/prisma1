@@ -34,6 +34,36 @@ When you're running `prisma deploy` for a Prisma API, there are two scenarios wi
 - The `endpoint` property in `prisma.yml` is **specified**. In this case, the CLI will directly deploy the API to that endpoint.
 - The `endpoint` property in `prisma.yml` is **not specified**. In this case, the Prisma CLI wizard will prompt you with a few questions, construct the `endpoint` for you and deploy the API to the corresponding server. It also writes the `endpoint` into `prisma.yml`, this will be used as the default for future deploys. To bring up the wizard again, you can run `prisma deploy --new` or remove the `endpoint` manually from `prisma.yml`.
 
+## Channels
+
+When isntalling Prisma you can pick between 3 different channels:
+
+- **stable** is a production-ready release that has been thoroughly tested.
+- **beta** is a release that is currently uundergoing extensive testing before being promoted to stable.
+- **alpha** is updated every time a new feature or bugfix lands in Prisma.
+
+If you follow a quickstart or any other material in the documentation, you will be installing from the stable channel. To install Prisma from the beta or alpha channel, follow these steps:
+
+### Installing Prisma Beta
+
+Using NPM:
+
+```sh
+npm install -g prisma@beta
+```
+
+If you are using the docker images directly, you can find the latest beta image on https://hub.docker.com/r/prismagraphql/prisma/tags/ or simply use the `beta` tag to always get the latest.
+
+### Installing Prisma Alpha
+
+Using NPM:
+
+```sh
+npm install -g prisma@alpha
+```
+
+If you are using the docker images directly, you can find the latest alpha image on https://hub.docker.com/r/prismagraphql/prisma/tags/ or simply use the `alpha` tag to always get the latest.
+
 ## Authentication
 
 ### Docker
