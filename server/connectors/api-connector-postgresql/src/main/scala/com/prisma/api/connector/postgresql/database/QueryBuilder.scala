@@ -4,25 +4,41 @@ import java.sql.PreparedStatement
 
 import com.prisma.api.connector._
 import com.prisma.api.connector.postgresql.database.PostgresSlickExtensions._
+import com.prisma.api.schema.APIErrors
+import com.prisma.api.schema.APIErrors.{InvalidFirstArgument, InvalidLastArgument, InvalidSkipArgument}
 import com.prisma.gc_values.{GCValue, NullGCValue, StringGCValue}
 import com.prisma.shared.models.{Field, Model, RelationField}
 import slick.jdbc.PositionedParameters
 
 object QueryDsl {
-  def select(schemaName: String, model: Model): QueryBuilder = QueryBuilder(schemaName, model, Vector.empty, None)
+  def select(schemaName: String, model: Model): QueryBuilder = QueryBuilder(schemaName, model, None)
 
 }
 
 case class QueryBuilderWhere(field: Field, value: GCValue)
 
-case class QueryBuilder(schemaName: String, model: Model, wheres: Vector[QueryBuilderWhere], filter: Option[Filter]) {
+case class QueryBuilder(schemaName: String, model: Model, queryArguments: Option[QueryArguments]) {
   val alias = PostgresQueryArgumentsExtensions.ALIAS
 
-  def where(filter: Option[Filter]): QueryBuilder = copy(filter = filter)
+  def filter         = queryArguments.flatMap(_.filter)
+  def orderBy        = queryArguments.flatMap(_.orderBy)
+  def skip           = queryArguments.flatMap(_.skip)
+  def before         = queryArguments.flatMap(_.before)
+  def after          = queryArguments.flatMap(_.after)
+  def first          = queryArguments.flatMap(_.first)
+  def last           = queryArguments.flatMap(_.last)
+  def isReverseOrder = last.isDefined
 
-  def build(): String = s"""SELECT * FROM "${schemaName}"."${model.dbName}" AS "$alias" """ + buildWhereClause()
+  def where(queryArguments: Option[QueryArguments]): QueryBuilder = copy(queryArguments = queryArguments)
 
-  private def buildWhereClause() = {
+  lazy val queryString: String = {
+    s"""SELECT * FROM "$schemaName"."${model.dbName}" AS "$alias" """ +
+      whereClause +
+      orderByClause +
+      limitClause
+  }
+
+  lazy val whereClause = {
     filter match {
       case Some(filter) =>
         val filterConditions = buildWheresForFilter(filter)
@@ -35,6 +51,59 @@ case class QueryBuilder(schemaName: String, model: Model, wheres: Vector[QueryBu
       case None =>
         ""
     }
+  }
+
+  lazy val limitClause: String = {
+    val maxNodeCount = 1000
+    (first, last, skip) match {
+      case (Some(first), _, _) if first < 0 => throw InvalidFirstArgument()
+      case (_, Some(last), _) if last < 0   => throw InvalidLastArgument()
+      case (_, _, Some(skip)) if skip < 0   => throw InvalidSkipArgument()
+      case _ =>
+        val count: Option[Int] = last.isDefined match {
+          case true  => last
+          case false => first
+        }
+        // Increase by 1 to know if we have a next page / previous page for relay queries
+        val limitedCount: String = count match {
+          case None                        => maxNodeCount.toString
+          case Some(x) if x > maxNodeCount => throw APIErrors.TooManyNodesRequested(x)
+          case Some(x)                     => (x + 1).toString
+        }
+        s"LIMIT $limitedCount OFFSET ${skip.getOrElse(0)}"
+    }
+  }
+
+  lazy val orderByClause: String = {
+    if (first.isDefined && last.isDefined) throw APIErrors.InvalidConnectionArguments()
+
+    // The limit instruction only works from up to down. Therefore, we have to invert order when we use before.
+    val defaultOrder = orderBy.map(_.sortOrder.toString).getOrElse("asc")
+    val (order, idOrder) = isReverseOrder match {
+      case true  => (invertOrder(defaultOrder), "desc")
+      case false => (defaultOrder, "asc")
+    }
+
+    val idFieldName = model.dbNameOfIdField_!
+    val idField     = s""" "$alias"."$idFieldName" """
+
+    orderBy match {
+      case Some(orderByArg) if orderByArg.field.name != idFieldName =>
+        val orderByField = s""" "$alias"."${orderByArg.field.dbName}" """
+
+        // First order by the orderByField, then by id to break ties
+        s""" ORDER BY $orderByField $order, $idField $idOrder """
+
+      case _ =>
+        // by default, order by id. For performance reasons use the id in the relation table
+        s""" ORDER BY $idField $order """
+    }
+  }
+
+  private def invertOrder(order: String) = order.trim().toLowerCase match {
+    case "desc" => "asc"
+    case "asc"  => "desc"
+    case _      => throw new IllegalArgumentException
   }
 
   private def buildWheresForFilter(filter: Filter): String = {
