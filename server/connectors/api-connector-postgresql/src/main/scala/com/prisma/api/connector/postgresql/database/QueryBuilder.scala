@@ -18,7 +18,7 @@ object QueryDsl {
 case class QueryBuilderWhere(field: Field, value: GCValue)
 
 case class QueryBuilder(schemaName: String, model: Model, queryArguments: Option[QueryArguments]) {
-  val alias = PostgresQueryArgumentsExtensions.ALIAS
+  val topLevelAlias = PostgresQueryArgumentsExtensions.ALIAS
 
   def filter         = queryArguments.flatMap(_.filter)
   def orderBy        = queryArguments.flatMap(_.orderBy)
@@ -32,7 +32,7 @@ case class QueryBuilder(schemaName: String, model: Model, queryArguments: Option
   def where(queryArguments: Option[QueryArguments]): QueryBuilder = copy(queryArguments = queryArguments)
 
   lazy val queryString: String = {
-    s"""SELECT * FROM "$schemaName"."${model.dbName}" AS "$alias" """ +
+    s"""SELECT * FROM "$schemaName"."${model.dbName}" AS "${alias(model)}" """ +
       whereClause +
       orderByClause +
       limitClause
@@ -85,11 +85,11 @@ case class QueryBuilder(schemaName: String, model: Model, queryArguments: Option
     }
 
     val idFieldName = model.dbNameOfIdField_!
-    val idField     = s""" "$alias"."$idFieldName" """
+    val idField     = s""" "${alias(model)}"."$idFieldName" """
 
     orderBy match {
       case Some(orderByArg) if orderByArg.field.name != idFieldName =>
-        val orderByField = s""" "$alias"."${orderByArg.field.dbName}" """
+        val orderByField = s""" "${alias(model)}"."${orderByArg.field.dbName}" """
 
         // First order by the orderByField, then by id to break ties
         s""" ORDER BY $orderByField $order, $idField $idOrder """
@@ -143,24 +143,22 @@ case class QueryBuilder(schemaName: String, model: Model, queryArguments: Option
 
         s""" not exists (select  *
                 from    "$schemaName"."$relationTableName"
-                where   "$schemaName"."$relationTableName"."$column" = "$alias"."$otherIdColumn"
+                where   "$schemaName"."$relationTableName"."$column" = "${alias(field.model)}"."$otherIdColumn"
               )"""
       case x => sys.error(s"Not supported: $x")
     }
   }
 
   private def relationFilterStatement(field: RelationField, nestedFilter: Filter, relationCondition: RelationCondition): String = {
-    val (alias, modTableName) = getAliasAndTableName(field.model.name, field.relatedModel_!.name)
-
     val relationTableName = field.relation.relationTableName
     val column            = field.relation.columnForRelationSide(field.relationSide)
     val oppositeColumn    = field.relation.columnForRelationSide(field.oppositeRelationSide)
 
     val join = s"""select *
-            from "$schemaName"."${field.relatedModel_!.dbName}" as "$alias"
+            from "$schemaName"."${field.relatedModel_!.dbName}" as "${alias(field.relatedModel_!)}"
             inner join "$schemaName"."${relationTableName}"
-            on "$alias"."${field.relatedModel_!.dbNameOfIdField_!}" = "$schemaName"."${relationTableName}"."${oppositeColumn}"
-            where "$schemaName"."${relationTableName}"."${column}" = "$modTableName"."${field.model.dbNameOfIdField_!}" """
+            on "${alias(field.relatedModel_!)}"."${field.relatedModel_!.dbNameOfIdField_!}" = "$schemaName"."${relationTableName}"."${oppositeColumn}"
+            where "$schemaName"."${relationTableName}"."${column}" = "${alias(field.model)}"."${field.model.dbNameOfIdField_!}" """
 
     val nestedFilterStatement = {
       val x = buildWheresForFilter(nestedFilter)
@@ -175,11 +173,7 @@ case class QueryBuilder(schemaName: String, model: Model, queryArguments: Option
     }
   }
 
-  private def getAliasAndTableName(fromModel: String, toModel: String): (String, String) = {
-    val modTableName = if (!alias.contains("_")) schemaName + """"."""" + fromModel else alias
-    val newAlias     = toModel + "_" + alias
-    (newAlias, modTableName)
-  }
+  def alias(model: Model): String = model.name + "_" + topLevelAlias
 
   private def valueOf(field: Field): String = s""""${field.dbName}" """
   private def in(items: Vector[GCValue])    = s" IN (" + items.map(_ => "?").mkString(",") + ")"
