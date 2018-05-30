@@ -236,9 +236,7 @@ case class UpsertDataItemInterpreter(mutaction: UpsertDataItem, executor: MySqlD
 
   val createErrors: Vector[PartialFunction[Throwable, UserFacingError]] = mutaction.createMutactions.map(executor.interpreterFor).map(_.errorMapper)
   val updateErrors: Vector[PartialFunction[Throwable, UserFacingError]] = mutaction.updateMutactions.map(executor.interpreterFor).map(_.errorMapper)
-  override val errorMapper = (updateErrors ++ createErrors).foldLeft(upsertErrors) { (acc, i) =>
-    acc orElse i
-  }
+  override val errorMapper                                              = (updateErrors ++ createErrors).foldLeft(upsertErrors)(_ orElse _)
 
 }
 
@@ -285,9 +283,7 @@ case class UpsertDataItemIfInRelationWithInterpreter(mutaction: UpsertDataItemIf
 
   val createErrors: Vector[PartialFunction[Throwable, UserFacingError]] = mutaction.createMutactions.map(executor.interpreterFor).map(_.errorMapper)
   val updateErrors: Vector[PartialFunction[Throwable, UserFacingError]] = mutaction.updateMutactions.map(executor.interpreterFor).map(_.errorMapper)
-  override val errorMapper = (updateErrors ++ createErrors).foldLeft(upsertErrors) { (acc, i) =>
-    acc orElse i
-  }
+  override val errorMapper                                              = (updateErrors ++ createErrors).foldLeft(upsertErrors)(_ orElse _)
 }
 
 case class VerifyConnectionInterpreter(mutaction: VerifyConnection) extends DatabaseMutactionInterpreter {
