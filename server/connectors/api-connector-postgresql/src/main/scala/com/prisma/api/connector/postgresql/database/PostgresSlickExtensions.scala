@@ -8,6 +8,14 @@ import slick.jdbc.{PositionedParameters, SQLActionBuilder, SetParameter}
 
 object PostgresSlickExtensions {
 
+  implicit class PositionedParameterExtensions(val pp: PositionedParameters) extends AnyVal {
+    def setGcValue(value: GCValue): Unit = {
+      val npos = pp.pos + 1
+      pp.ps.setGcValue(npos, value)
+      pp.pos = npos
+    }
+  }
+
   implicit object SetGcValueParam extends SetParameter[GCValue] {
     override def apply(gcValue: GCValue, pp: PositionedParameters): Unit = {
       val npos = pp.pos + 1

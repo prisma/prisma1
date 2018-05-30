@@ -82,14 +82,30 @@ case class PostgresApiDatabaseQueryBuilder(
       model: Model,
       args: Option[QueryArguments],
       overrideMaxNodeCount: Option[Int] = None
-  ): DBIOAction[ResolverResult[PrismaNode], NoStream, Effect] = {
+  ): DBIO[ResolverResult[PrismaNode]] = {
 
-    val query = sql"""select * from "#$schemaName"."#${model.dbName}" as "#$ALIAS" """ ++ whereOrderByLimitCommands(args,
-                                                                                                                    overrideMaxNodeCount,
-                                                                                                                    model.dbName,
-                                                                                                                    model.dbNameOfIdField_!)
+//    val query = sql"""select * from "#$schemaName"."#${model.dbName}" as "#$ALIAS" """ ++ whereOrderByLimitCommands(args,
+//                                                                                                                    overrideMaxNodeCount,
+//                                                                                                                    model.dbName,
+//                                                                                                                    model.dbNameOfIdField_!)
 
-    query.as[PrismaNode](getResultForModel(model)).map(args.get.resultTransform)
+    SimpleDBIO[ResolverResult[PrismaNode]] { ctx =>
+      val builder = QueryDsl.select(schemaName, model).where(args.flatMap(_.filter))
+      val ps      = ctx.connection.prepareStatement(builder.build())
+      println(builder.build())
+      builder.setParams(ps)
+      val rs: ResultSet = ps.executeQuery()
+
+      var result: Vector[PrismaNode] = Vector.empty
+      while (rs.next) {
+        val data = model.scalarNonListFields.map(field => field.name -> rs.getGcValue(field.dbName, field.typeIdentifier))
+        result = result :+ PrismaNode(id = rs.getId(model), data = RootGCValue(data: _*))
+      }
+
+      ResolverResult(result, hasNextPage = false, hasPreviousPage = false)
+    }
+
+//    query.as[PrismaNode](getResultForModel(model)).map(args.get.resultTransform)
   }
 
   def selectAllFromRelationTable(
