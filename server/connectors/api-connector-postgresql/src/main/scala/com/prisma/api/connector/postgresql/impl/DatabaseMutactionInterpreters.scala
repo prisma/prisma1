@@ -4,7 +4,7 @@ import com.prisma.api.connector._
 import com.prisma.api.connector.postgresql.DatabaseMutactionInterpreter
 import com.prisma.api.connector.postgresql.database.PostgresApiDatabaseMutationBuilder
 import com.prisma.api.connector.postgresql.impl.GetFieldFromSQLUniqueException.getFieldOption
-import com.prisma.api.schema.APIErrors
+import com.prisma.api.schema.{APIErrors, UserFacingError}
 import com.prisma.api.schema.APIErrors.RequiredRelationWouldBeViolated
 import com.prisma.shared.models.{Field, Relation, RelationField}
 import org.postgresql.util.PSQLException
@@ -214,7 +214,7 @@ case class UpsertDataItemInterpreter(mutaction: UpsertDataItem, executor: Postgr
     mutationBuilder.upsert(mutaction.createPath, mutaction.updatePath, createArgs, updateArgs, createAction, updateAction, createNested, updateNested)
   }
 
-  override val errorMapper = {
+  val upsertErrors: PartialFunction[Throwable, UserFacingError] = {
     case e: PSQLException if e.getSQLState == "23505" && getFieldOption(model, e).isDefined =>
       APIErrors.UniqueConstraintViolation(model.name, getFieldOption(model, e).get)
 
@@ -224,6 +224,14 @@ case class UpsertDataItemInterpreter(mutaction: UpsertDataItem, executor: Postgr
     case e: PSQLException if e.getSQLState == "23502" =>
       APIErrors.FieldCannotBeNull(e.getMessage)
   }
+
+  val createErrors: Vector[PartialFunction[Throwable, UserFacingError]] = mutaction.createMutactions.map(executor.interpreterFor).map(_.errorMapper)
+  val updateErrors: Vector[PartialFunction[Throwable, UserFacingError]] = mutaction.updateMutactions.map(executor.interpreterFor).map(_.errorMapper)
+
+  override val errorMapper = (updateErrors ++ createErrors).foldLeft(upsertErrors) { (acc, i) =>
+    acc orElse i
+  }
+
 }
 
 case class UpsertDataItemIfInRelationWithInterpreter(mutaction: UpsertDataItemIfInRelationWith, executor: PostgresDatabaseMutactionExecutor)
@@ -253,7 +261,7 @@ case class UpsertDataItemIfInRelationWithInterpreter(mutaction: UpsertDataItemIf
     )
   }
 
-  override val errorMapper = {
+  val errors: PartialFunction[Throwable, UserFacingError] = {
     // https://dev.mysql.com/doc/refman/5.5/en/error-messages-server.html#error_er_dup_entry
     case e: PSQLException if e.getSQLState == "23505" && getFieldOption(model, e).isDefined =>
       APIErrors.UniqueConstraintViolation(mutaction.createPath.lastModel.name, getFieldOption(model, e).get)
@@ -267,6 +275,13 @@ case class UpsertDataItemIfInRelationWithInterpreter(mutaction: UpsertDataItemIf
     case e: PSQLException if relationChecker.causedByThisMutaction(e.getMessage) =>
       throw RequiredRelationWouldBeViolated(project, mutaction.createPath.lastRelation_!)
   }
+
+  val createErrors: Vector[PartialFunction[Throwable, UserFacingError]] = mutaction.createMutactions.map(executor.interpreterFor).map(_.errorMapper)
+  val updateErrors: Vector[PartialFunction[Throwable, UserFacingError]] = mutaction.updateMutactions.map(executor.interpreterFor).map(_.errorMapper)
+  override val errorMapper = (updateErrors ++ createErrors).foldLeft(upsertErrors) { (acc, i) =>
+    acc orElse i
+  }
+
 }
 
 case class VerifyConnectionInterpreter(mutaction: VerifyConnection) extends DatabaseMutactionInterpreter {

@@ -12,7 +12,7 @@ import com.prisma.api.connector.mysql.database.MySqlApiDatabaseMutationBuilder.{
 }
 import com.prisma.api.connector.mysql.database.ErrorMessageParameterHelper.parameterString
 import com.prisma.api.connector.mysql.impl.GetFieldFromSQLUniqueException.getFieldOption
-import com.prisma.api.schema.APIErrors
+import com.prisma.api.schema.{APIErrors, UserFacingError}
 import com.prisma.api.schema.APIErrors.RequiredRelationWouldBeViolated
 import com.prisma.shared.models.{Field, Relation, RelationField}
 import slick.dbio.DBIOAction
@@ -223,7 +223,7 @@ case class UpsertDataItemInterpreter(mutaction: UpsertDataItem, executor: MySqlD
                                            updateNested)
   }
 
-  override val errorMapper = {
+  val upsertErrors: PartialFunction[Throwable, UserFacingError] = {
     case e: SQLIntegrityConstraintViolationException if e.getErrorCode == 1062 && getFieldOption(createArgs.keys ++ updateArgs.keys, e).isDefined =>
       APIErrors.UniqueConstraintViolation(model.name, getFieldOption(createArgs.keys ++ updateArgs.keys, e).get)
 
@@ -233,6 +233,13 @@ case class UpsertDataItemInterpreter(mutaction: UpsertDataItem, executor: MySqlD
     case e: SQLIntegrityConstraintViolationException if e.getErrorCode == 1048 =>
       APIErrors.FieldCannotBeNull(e.getCause.getMessage)
   }
+
+  val createErrors: Vector[PartialFunction[Throwable, UserFacingError]] = mutaction.createMutactions.map(executor.interpreterFor).map(_.errorMapper)
+  val updateErrors: Vector[PartialFunction[Throwable, UserFacingError]] = mutaction.updateMutactions.map(executor.interpreterFor).map(_.errorMapper)
+  override val errorMapper = (updateErrors ++ createErrors).foldLeft(upsertErrors) { (acc, i) =>
+    acc orElse i
+  }
+
 }
 
 case class UpsertDataItemIfInRelationWithInterpreter(mutaction: UpsertDataItemIfInRelationWith, executor: MySqlDatabaseMutactionExecutor)
@@ -259,7 +266,7 @@ case class UpsertDataItemIfInRelationWithInterpreter(mutaction: UpsertDataItemIf
     updateNested
   )
 
-  override val errorMapper = {
+  val upsertErrors: PartialFunction[Throwable, UserFacingError] = {
     // https://dev.mysql.com/doc/refman/5.5/en/error-messages-server.html#error_er_dup_entry
     case e: SQLIntegrityConstraintViolationException
         if e.getErrorCode == 1062 && getFieldOption(mutaction.createNonListArgs.keys ++ mutaction.updateNonListArgs.keys, e).isDefined =>
@@ -274,6 +281,12 @@ case class UpsertDataItemIfInRelationWithInterpreter(mutaction: UpsertDataItemIf
 
     case e: SQLException if e.getErrorCode == 1242 && relationChecker.causedByThisMutaction(mutaction.createPath, e.getCause.toString) =>
       throw RequiredRelationWouldBeViolated(project, mutaction.createPath.lastRelation_!)
+  }
+
+  val createErrors: Vector[PartialFunction[Throwable, UserFacingError]] = mutaction.createMutactions.map(executor.interpreterFor).map(_.errorMapper)
+  val updateErrors: Vector[PartialFunction[Throwable, UserFacingError]] = mutaction.updateMutactions.map(executor.interpreterFor).map(_.errorMapper)
+  override val errorMapper = (updateErrors ++ createErrors).foldLeft(upsertErrors) { (acc, i) =>
+    acc orElse i
   }
 }
 

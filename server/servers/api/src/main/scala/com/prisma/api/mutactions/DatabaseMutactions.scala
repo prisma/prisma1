@@ -182,7 +182,6 @@ case class DatabaseMutactions(project: Project) {
     }
   }
 
-  // todo this still needs to implement execution of nested mutactions
   def getMutactionsForNestedUpsertMutation(nestedMutation: NestedMutations, path: Path, field: RelationField): Vector[DatabaseMutaction] = {
     nestedMutation.upserts.flatMap { upsert =>
       val extendedPath = extend(path, field, upsert)

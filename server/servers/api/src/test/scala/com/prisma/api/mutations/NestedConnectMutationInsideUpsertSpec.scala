@@ -71,6 +71,24 @@ class NestedConnectMutationInsideUpsertSpec extends FlatSpec with Matchers with 
     mustBeEqual(result.pathAsJsValue("data.upsertCustomer.tenant").toString, """{"name":"Gustav G"}""")
   }
 
-  //other direction
+  "a one to many relation" should "throw the correct error for a connect by unique field within an upsert in the update case" in {
+    val project = SchemaDsl.fromBuilder { schema =>
+      val customer = schema.model("Customer").field_!("name", _.String, isUnique = true)
+      schema.model("Tenant").field_!("name", _.String, isUnique = true).oneToManyRelation("customers", "tenant", customer)
+    }
+    database.setup(project)
+
+    server.query("""mutation { createTenant(data: {name:"Gustav G"}){ id } }""", project)
+    server.query("""mutation { createCustomer(data: {name:"Paul P"}){ id } }""", project)
+
+    val result = server.query(
+      s"""mutation{upsertCustomer(where: {name: "Paul P"}, create: {name: "Bernd B"}, update: {name: "Bernd B",tenant:{connect:{name:"DOES NOT EXIST"}}}) {
+         |    tenant{name}
+         |  }
+         |}
+      """,
+      project
+    )
+  }
 
 }
