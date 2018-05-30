@@ -17,7 +17,6 @@ object PostgresQueryArgumentsExtensions {
       idFieldName: String,
       args: Option[QueryArguments],
       defaultOrderShortcut: Option[String],
-      overrideMaxNodeCount: Option[Int],
       forList: Boolean = false
   ): (Option[SQLActionBuilder], Option[SQLActionBuilder], Option[SQLActionBuilder]) = {
     args match {
@@ -30,7 +29,7 @@ object PostgresQueryArgumentsExtensions {
         (
           givenArgs.extractWhereConditionCommand(projectId, alias, tableName),
           orderByCommand,
-          givenArgs.extractLimitCommand(overrideMaxNodeCount.getOrElse(MAX_NODE_COUNT))
+          givenArgs.extractLimitCommand(MAX_NODE_COUNT)
         )
     }
   }

@@ -86,7 +86,7 @@ case class PostgresDataResolver(
   }
 
   override def loadListRowsForExport(model: Model, field: ScalarField, args: Option[QueryArguments] = None): Future[ResolverResult[ScalarListValues]] = {
-    val query = queryBuilder.selectAllFromListTable(model, field, args, None)
+    val query = queryBuilder.selectAllFromListTable(model, field, args)
     performWithTiming("loadListRowsForExport", readonlyClientDatabase.run(query))
   }
 
