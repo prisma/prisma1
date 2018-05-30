@@ -114,6 +114,7 @@ my-yoga-server
 │   └── prisma.yml
 └── src
     └── index.js
+    └── schema.graphql
 ```
 
 <Instruction>
