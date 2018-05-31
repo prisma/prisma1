@@ -7,7 +7,7 @@ import com.prisma.gc_values._
 import com.prisma.shared.models.IdType.Id
 import com.prisma.shared.models.{Function => _, _}
 import slick.jdbc.PostgresProfile.api._
-import slick.jdbc.{SQLActionBuilder, _}
+import slick.jdbc._
 
 import scala.concurrent.ExecutionContext
 
@@ -16,7 +16,6 @@ case class PostgresApiDatabaseQueryBuilder(
     schemaName: String
 )(implicit ec: ExecutionContext) {
   import JdbcExtensions._
-  import PostgresQueryArgumentsExtensions._
   import PostgresSlickExtensions._
   import com.prisma.slick.NewJdbcExtensions._
 

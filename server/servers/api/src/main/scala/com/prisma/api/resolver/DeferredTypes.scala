@@ -26,10 +26,7 @@ object DeferredTypes {
     args: Option[QueryArguments]
   }
 
-  case class ManyModelDeferred(model: Model, args: Option[QueryArguments]) extends ModelDeferred[RelayConnectionOutputType]
-
-  case class ManyModelExistsDeferred(model: Model, args: Option[QueryArguments]) extends ModelDeferred[Boolean]
-
+  case class ManyModelDeferred(model: Model, args: Option[QueryArguments])      extends ModelDeferred[RelayConnectionOutputType]
   case class CountManyModelDeferred(model: Model, args: Option[QueryArguments]) extends ModelDeferred[Int]
 
   trait RelatedArgs {
