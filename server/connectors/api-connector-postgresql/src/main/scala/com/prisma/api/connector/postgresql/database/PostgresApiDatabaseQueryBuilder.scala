@@ -20,15 +20,6 @@ case class PostgresApiDatabaseQueryBuilder(
   import PostgresSlickExtensions._
   import com.prisma.slick.NewJdbcExtensions._
 
-  private def andWhereOrderByLimitCommands(args: Option[QueryArguments],
-                                           tableName: String,
-                                           idFieldName: String,
-                                           defaultOrderShortCut: Option[String] = None,
-                                           forList: Boolean = false) = {
-    val (where, orderBy, limit) = extractQueryArgs(schemaName, alias = ALIAS, tableName, idFieldName, args, defaultOrderShortCut, forList)
-    sql"" ++ prefixIfNotNone("and", where) ++ prefixIfNotNone("order by", orderBy) ++ prefixIfNotNone("limit", limit)
-  }
-
   def getResultForScalarListField(field: ScalarField): GetResult[ScalarListElement] = GetResult { ps: PositionedResult =>
     readScalarListElement(field, ps.rs)
   }
@@ -210,11 +201,4 @@ case class PostgresApiDatabaseQueryBuilder(
       rs.as(readsPrismaNode(model))
     }
   }
-
-  implicit object GetRelationCount extends GetResult[(IdGCValue, Int)] {
-    override def apply(ps: PositionedResult): (IdGCValue, Int) = (ps.rs.getAsID("id"), ps.rs.getInt("Count"))
-  }
-
-  private def unionIfNotFirst(index: Int): SQLActionBuilder = if (index == 0) sql"" else sql"union all "
-
 }
