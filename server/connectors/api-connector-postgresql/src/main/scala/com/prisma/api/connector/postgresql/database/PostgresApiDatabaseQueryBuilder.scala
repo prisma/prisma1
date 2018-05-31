@@ -34,16 +34,17 @@ case class PostgresApiDatabaseQueryBuilder(
     PrismaNode(id = rs.getId(model), data = RootGCValue(data: _*))
   }
 
-  def getResultForModelAndRelationSide(model: Model, side: String, oppositeSide: String): GetResult[PrismaNodeWithParent] = GetResult { ps: PositionedResult =>
-    val node       = getPrismaNode(model, ps)
-    val firstSide  = ps.rs.getParentId(side)
-    val secondSide = ps.rs.getParentId(oppositeSide)
-    val parentId   = if (firstSide == node.id) secondSide else firstSide
+  def getResultForModelAndRelationSide(model: Model, side: RelationSide.Value, oppositeSide: RelationSide.Value): GetResult[PrismaNodeWithParent] = GetResult {
+    ps: PositionedResult =>
+      val node       = getPrismaNode(model, ps)
+      val firstSide  = ps.rs.getParentId(side)
+      val secondSide = ps.rs.getParentId(oppositeSide)
+      val parentId   = if (firstSide == node.id) secondSide else firstSide
 
-    PrismaNodeWithParent(parentId, node)
+      PrismaNodeWithParent(parentId, node)
   }
 
-  def readPrismaNodeWithParent(model: Model, side: String, oppositeSide: String, rs: ResultSet): PrismaNodeWithParent = {
+  def readPrismaNodeWithParent(model: Model, side: RelationSide.Value, oppositeSide: RelationSide.Value, rs: ResultSet): PrismaNodeWithParent = {
     val node       = readPrismaNode(model, rs)
     val firstSide  = rs.getParentId(side)
     val secondSide = rs.getParentId(oppositeSide)
@@ -217,7 +218,7 @@ case class PostgresApiDatabaseQueryBuilder(
       var result: Vector[PrismaNodeWithParent] = Vector.empty
       val model                                = fromField.relatedModel_!
       while (rs.next) {
-        val prismaNode = readPrismaNodeWithParent(model, columnForFromModel, columnForRelatedModel, rs)
+        val prismaNode = readPrismaNodeWithParent(model, fromField.relationSide, fromField.oppositeRelationSide, rs)
         result = result :+ prismaNode
       }
       val itemGroupsByModelId = result.groupBy(_.parentId)
