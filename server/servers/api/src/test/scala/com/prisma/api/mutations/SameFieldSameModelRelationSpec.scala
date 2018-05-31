@@ -43,6 +43,10 @@ class SameFieldSameModelRelationSpec extends FlatSpec with Matchers with ApiSpec
       """{"data":{"post":{"identifier":1,"related":[{"identifier":2}]}}}""")
     server.query("{post(where:{identifier: 2}){identifier, related{identifier}}}", project).toString should be(
       """{"data":{"post":{"identifier":2,"related":[{"identifier":1}]}}}""")
+
+    server.query("{posts{identifier, related{identifier}}}", project).toString should be(
+      """{"data":{"posts":[{"identifier":1,"related":[{"identifier":2}]},{"identifier":2,"related":[{"identifier":1}]}]}}"""
+    )
   }
 
   "A One to One Self Relation" should "be accessible from both sides" taggedAs (IgnorePassive) in {

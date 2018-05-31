@@ -178,14 +178,22 @@ case class PostgresApiDatabaseQueryBuilder(
       val relation              = fromField.relation
       val columnForFromModel    = relation.columnForRelationSide(fromField.relationSide)
       val columnForRelatedModel = relation.columnForRelationSide(fromField.oppositeRelationSide)
+      // see https://github.com/graphcool/internal-docs/blob/master/relations.md#findings
+      val resolveFromBothSidesAndMerge = fromField.relation.isSameFieldSameModelRelation
 
-      val baseQuery        = "(" + builder.queryString + ")"
+      val baseQuery = if (resolveFromBothSidesAndMerge) {
+        "((" + builder.queryString + ") union all " + "(" + builder.queryStringFromOtherSide + "))"
+      } else {
+        "(" + builder.queryString + ")"
+      }
       val distinctModelIds = fromModelIds.distinct
 
       val queries = Vector.fill(distinctModelIds.size)(baseQuery)
       val query   = queries.mkString(" union all ")
 
       val ps = ctx.connection.prepareStatement(query)
+      println("!!" * 50)
+      println(query)
 
       // injecting params
       val pp     = new PositionedParameters(ps)
@@ -194,6 +202,12 @@ case class PostgresApiDatabaseQueryBuilder(
         pp.setGcValue(id)
         filter.foreach { filter =>
           SetParams.setParams(pp, filter)
+        }
+        if (resolveFromBothSidesAndMerge) { // each query is repeated so we have to set them a second time
+          pp.setGcValue(id)
+          filter.foreach { filter =>
+            SetParams.setParams(pp, filter)
+          }
         }
       }
 
@@ -332,10 +346,6 @@ case class PostgresApiDatabaseQueryBuilder(
     query.as[(IdGCValue, Int)]
   }
 
-  def unionIfNotFirst(index: Int): SQLActionBuilder = if (index == 0) sql"" else sql"union all "
-
-// used in tests only
-
-  def itemCountForTable(projectId: String, modelName: String) = sql"""SELECT COUNT(*) AS Count FROM "#$projectId"."#$modelName"""".as[Int] //todo schemaName??
+  private def unionIfNotFirst(index: Int): SQLActionBuilder = if (index == 0) sql"" else sql"union all "
 
 }

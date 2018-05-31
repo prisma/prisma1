@@ -63,9 +63,15 @@ case class ScalarListQueryBuilder(schemaName: String, field: ScalarField, queryA
 }
 
 case class RelatedModelQueryBuilder(schemaName: String, fromField: RelationField, queryArguments: Option[QueryArguments]) extends QueryBuilder {
-  val ALIAS = "Alias"
+  val ALIAS                   = "Alias"
+  val relation                = fromField.relation
+  val modelRelationSideColumn = relation.columnForRelationSide(fromField.relationSide)
+  val fieldRelationSideColumn = relation.columnForRelationSide(fromField.oppositeRelationSide)
 
-  lazy val queryString: String = {
+  lazy val queryString: String = buildQuery(modelRelationSideColumn, fieldRelationSideColumn)
+  val queryStringFromOtherSide = buildQuery(fieldRelationSideColumn, modelRelationSideColumn)
+
+  private def buildQuery(modelRelationSideColumn: String, fieldRelationSideColumn: String): String = {
     val relation              = fromField.relation
     val relatedModel          = fromField.relatedModel_!
     val modelTable            = relatedModel.dbName
@@ -74,14 +80,11 @@ case class RelatedModelQueryBuilder(schemaName: String, fromField: RelationField
     val bColumn               = relation.modelBColumn
     val columnForRelatedModel = relation.columnForRelationSide(fromField.oppositeRelationSide)
 
-    val modelRelationSide = relation.columnForRelationSide(fromField.relationSide)
-    val fieldRelationSide = relation.columnForRelationSide(fromField.oppositeRelationSide)
-
     s"""select "$ALIAS".*, "RelationTable"."$aColumn" as "__Relation__A",  "RelationTable"."$bColumn" as "__Relation__B"
             from "$schemaName"."$modelTable" as "$ALIAS"
             inner join "$schemaName"."$relationTableName" as "RelationTable"
-            on "$ALIAS"."${relatedModel.dbNameOfIdField_!}" = "RelationTable"."$fieldRelationSide"
-            where "RelationTable"."$modelRelationSide" = ? AND """ +
+            on "$ALIAS"."${relatedModel.dbNameOfIdField_!}" = "RelationTable"."$fieldRelationSideColumn"
+            where "RelationTable"."$modelRelationSideColumn" = ? AND """ +
       WhereClauseBuilder(schemaName).buildWhereClauseWithoutWhereKeyWord(queryArguments.flatMap(_.filter)) +
       OrderByClauseBuilder.internal("RelationTable", columnForRelatedModel, queryArguments) +
       LimitClauseBuilder.limitClause(queryArguments)
