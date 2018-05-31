@@ -11,35 +11,88 @@ import com.prisma.shared.models.{Field, Model, RelationField, ScalarField}
 import slick.jdbc.PositionedParameters
 
 object QueryBuilders {
-  def model(schemaName: String, model: Model, args: Option[QueryArguments]): QueryBuilder                      = ModelQueryBuilder(schemaName, model, args)
-  def scalarList(schemaName: String, field: ScalarField, queryArguments: Option[QueryArguments]): QueryBuilder = ???
+  def model(schemaName: String, model: Model, args: Option[QueryArguments]): QueryBuilder            = ModelQueryBuilder(schemaName, model, args)
+  def scalarList(schemaName: String, field: ScalarField, args: Option[QueryArguments]): QueryBuilder = ScalarListQueryBuilder(schemaName, field, args)
 }
 
 trait QueryBuilder {
   def queryString: String
-  def setParams(preparedStatement: PreparedStatement, queryArguments: Option[QueryArguments]): Unit
+  def setParams(preparedStatement: PreparedStatement, queryArguments: Option[QueryArguments]): Unit = SetParams(preparedStatement, queryArguments)
+}
+
+case class ScalarListQueryBuilder(schemaName: String, field: ScalarField, queryArguments: Option[QueryArguments]) extends QueryBuilder {
+  require(field.isList, "This must be called only with scalar list fields")
+  val topLevelAlias = "Alias"
+
+  lazy val queryString: String = {
+    val tableName = s"${field.model.dbName}_${field.dbName}"
+    s"""SELECT * FROM "$schemaName"."$tableName" AS "$topLevelAlias" """ +
+      WhereClauseBuilder(schemaName).buildWhereClause(queryArguments.flatMap(_.filter)) +
+      OrderByClauseBuilder.forScalarListField(field, topLevelAlias, queryArguments) +
+      LimitClauseBuilder.limitClause(queryArguments)
+  }
 }
 
 case class ModelQueryBuilder(schemaName: String, model: Model, queryArguments: Option[QueryArguments]) extends QueryBuilder {
   val topLevelAlias = "Alias"
 
-  def filter         = queryArguments.flatMap(_.filter)
-  def orderBy        = queryArguments.flatMap(_.orderBy)
-  def skip           = queryArguments.flatMap(_.skip)
-  def before         = queryArguments.flatMap(_.before)
-  def after          = queryArguments.flatMap(_.after)
-  def first          = queryArguments.flatMap(_.first)
-  def last           = queryArguments.flatMap(_.last)
-  def isReverseOrder = last.isDefined
-
   lazy val queryString: String = {
     s"""SELECT * FROM "$schemaName"."${model.dbName}" AS "$topLevelAlias" """ +
-      whereClause +
-      orderByClause +
-      limitClause
+      WhereClauseBuilder(schemaName).buildWhereClause(queryArguments.flatMap(_.filter)) +
+      OrderByClauseBuilder.forModel(model, topLevelAlias, queryArguments) +
+      LimitClauseBuilder.limitClause(queryArguments)
+  }
+}
+
+object SetParams {
+  def apply(preparedStatement: PreparedStatement, queryArguments: Option[QueryArguments]): Unit = {
+    for {
+      queryArgs <- queryArguments
+      filter    <- queryArgs.filter
+    } yield {
+      setParams(new PositionedParameters(preparedStatement), filter)
+    }
   }
 
-  lazy val whereClause = {
+  private def setParams(pp: PositionedParameters, filter: Filter): Unit = {
+    filter match {
+      //-------------------------------RECURSION------------------------------------
+      case NodeSubscriptionFilter()                       => // NOOP
+      case AndFilter(filters)                             => filters.foreach(setParams(pp, _))
+      case OrFilter(filters)                              => filters.foreach(setParams(pp, _))
+      case NotFilter(filters)                             => filters.foreach(setParams(pp, _))
+      case NodeFilter(filters)                            => setParams(pp, OrFilter(filters))
+      case RelationFilter(field, nestedFilter, condition) => setParams(pp, nestedFilter)
+      //--------------------------------ANCHORS------------------------------------
+      case PreComputedSubscriptionFilter(value)                     => // NOOP
+      case ScalarFilter(field, Contains(value: StringGCValue))      => pp.setString("%" + value.value + "%")
+      case ScalarFilter(field, NotContains(value: StringGCValue))   => pp.setString("%" + value.value + "%")
+      case ScalarFilter(field, StartsWith(value: StringGCValue))    => pp.setString(value.value + "%")
+      case ScalarFilter(field, NotStartsWith(value: StringGCValue)) => pp.setString(value.value + "%")
+      case ScalarFilter(field, EndsWith(value: StringGCValue))      => pp.setString("%" + value.value)
+      case ScalarFilter(field, NotEndsWith(value: StringGCValue))   => pp.setString("%" + value.value)
+      case ScalarFilter(field, LessThan(value))                     => pp.setGcValue(value)
+      case ScalarFilter(field, GreaterThan(value))                  => pp.setGcValue(value)
+      case ScalarFilter(field, LessThanOrEquals(value))             => pp.setGcValue(value)
+      case ScalarFilter(field, GreaterThanOrEquals(value))          => pp.setGcValue(value)
+      case ScalarFilter(field, NotEquals(NullGCValue))              => // NOOP
+      case ScalarFilter(field, NotEquals(value))                    => pp.setGcValue(value)
+      case ScalarFilter(field, Equals(NullGCValue))                 => // NOOP
+      case ScalarFilter(field, Equals(value))                       => pp.setGcValue(value)
+      case ScalarFilter(field, In(Vector(NullGCValue)))             => // NOOP
+      case ScalarFilter(field, NotIn(Vector(NullGCValue)))          => // NOOP
+      case ScalarFilter(field, In(values))                          => values.foreach(pp.setGcValue)
+      case ScalarFilter(field, NotIn(values))                       => values.foreach(pp.setGcValue)
+      case OneRelationIsNullFilter(field)                           => // NOOP
+      case x                                                        => sys.error(s"Not supported: $x")
+    }
+  }
+}
+
+case class WhereClauseBuilder(schemaName: String) {
+  val topLevelAlias = "Alias"
+
+  def buildWhereClause(filter: Option[Filter]) = {
     filter match {
       case Some(filter) =>
         val filterConditions = buildWheresForFilter(filter, topLevelAlias)
@@ -52,59 +105,6 @@ case class ModelQueryBuilder(schemaName: String, model: Model, queryArguments: O
       case None =>
         ""
     }
-  }
-
-  lazy val limitClause: String = {
-    val maxNodeCount = 1000
-    (first, last, skip) match {
-      case (Some(first), _, _) if first < 0 => throw InvalidFirstArgument()
-      case (_, Some(last), _) if last < 0   => throw InvalidLastArgument()
-      case (_, _, Some(skip)) if skip < 0   => throw InvalidSkipArgument()
-      case _ =>
-        val count: Option[Int] = last.isDefined match {
-          case true  => last
-          case false => first
-        }
-        // Increase by 1 to know if we have a next page / previous page for relay queries
-        val limitedCount: String = count match {
-          case None                        => maxNodeCount.toString
-          case Some(x) if x > maxNodeCount => throw APIErrors.TooManyNodesRequested(x)
-          case Some(x)                     => (x + 1).toString
-        }
-        s"LIMIT $limitedCount OFFSET ${skip.getOrElse(0)}"
-    }
-  }
-
-  lazy val orderByClause: String = {
-    if (first.isDefined && last.isDefined) throw APIErrors.InvalidConnectionArguments()
-
-    // The limit instruction only works from up to down. Therefore, we have to invert order when we use before.
-    val defaultOrder = orderBy.map(_.sortOrder.toString).getOrElse("asc")
-    val (order, idOrder) = isReverseOrder match {
-      case true  => (invertOrder(defaultOrder), "desc")
-      case false => (defaultOrder, "asc")
-    }
-
-    val idFieldName = model.dbNameOfIdField_!
-    val idField     = s""" "$topLevelAlias"."$idFieldName" """
-
-    orderBy match {
-      case Some(orderByArg) if orderByArg.field.name != idFieldName =>
-        val orderByField = s""" "$topLevelAlias"."${orderByArg.field.dbName}" """
-
-        // First order by the orderByField, then by id to break ties
-        s""" ORDER BY $orderByField $order, $idField $idOrder """
-
-      case _ =>
-        // by default, order by id. For performance reasons use the id in the relation table
-        s""" ORDER BY $idField $order """
-    }
-  }
-
-  private def invertOrder(order: String) = order.trim().toLowerCase match {
-    case "desc" => "asc"
-    case "asc"  => "desc"
-    case _      => throw new IllegalArgumentException
   }
 
   private def buildWheresForFilter(filter: Filter, alias: String): String = {
@@ -178,42 +178,85 @@ case class ModelQueryBuilder(schemaName: String, model: Model, queryArguments: O
 
   private def column(alias: String, field: Field): String = s""""$alias"."${field.dbName}" """
   private def in(items: Vector[GCValue])                  = s" IN (" + items.map(_ => "?").mkString(",") + ")"
+}
 
-  def setParams(preparedStatement: PreparedStatement, queryArguments: Option[QueryArguments]): Unit = queryArguments.flatMap(_.filter).foreach { filter =>
-    setParams(new PositionedParameters(preparedStatement), filter)
+object LimitClauseBuilder {
+
+  def limitClause(args: Option[QueryArguments]): String = {
+    val maxNodeCount                 = 1000
+    val (firstOpt, lastOpt, skipOpt) = (args.flatMap(_.first), args.flatMap(_.last), args.flatMap(_.skip))
+
+    (firstOpt, lastOpt, skipOpt) match {
+      case (Some(first), _, _) if first < 0 => throw InvalidFirstArgument()
+      case (_, Some(last), _) if last < 0   => throw InvalidLastArgument()
+      case (_, _, Some(skip)) if skip < 0   => throw InvalidSkipArgument()
+      case _ =>
+        val count: Option[Int] = lastOpt.isDefined match {
+          case true  => lastOpt
+          case false => firstOpt
+        }
+        // Increase by 1 to know if we have a next page / previous page for relay queries
+        val limitedCount = count match {
+          case None                        => maxNodeCount
+          case Some(x) if x > maxNodeCount => throw APIErrors.TooManyNodesRequested(x)
+          case Some(x)                     => x + 1
+        }
+        s"LIMIT $limitedCount OFFSET ${skipOpt.getOrElse(0)}"
+    }
+  }
+}
+
+object OrderByClauseBuilder {
+
+  def forModel(model: Model, alias: String, args: Option[QueryArguments]): String = {
+    val (first, last, orderBy) = (args.flatMap(_.first), args.flatMap(_.last), args.flatMap(_.orderBy))
+    val isReverseOrder         = last.isDefined
+
+    if (first.isDefined && last.isDefined) throw APIErrors.InvalidConnectionArguments()
+
+    // The limit instruction only works from up to down. Therefore, we have to invert order when we use before.
+    val defaultOrder = orderBy.map(_.sortOrder.toString).getOrElse("asc")
+    val (order, idOrder) = isReverseOrder match {
+      case true  => (invertOrder(defaultOrder), "desc")
+      case false => (defaultOrder, "asc")
+    }
+
+    val idFieldName = model.dbNameOfIdField_!
+    val idField     = s""" "$alias"."$idFieldName" """
+
+    orderBy match {
+      case Some(orderByArg) if orderByArg.field.name != idFieldName =>
+        val orderByField = s""" "$alias"."${orderByArg.field.dbName}" """
+
+        // First order by the orderByField, then by id to break ties
+        s""" ORDER BY $orderByField $order, $idField $idOrder """
+
+      case _ =>
+        // by default, order by id. For performance reasons use the id in the relation table
+        s""" ORDER BY $idField $order """
+    }
   }
 
-  def setParams(pp: PositionedParameters, filter: Filter): Unit = {
-    filter match {
-      //-------------------------------RECURSION------------------------------------
-      case NodeSubscriptionFilter()                       => // NOOP
-      case AndFilter(filters)                             => filters.foreach(setParams(pp, _))
-      case OrFilter(filters)                              => filters.foreach(setParams(pp, _))
-      case NotFilter(filters)                             => filters.foreach(setParams(pp, _))
-      case NodeFilter(filters)                            => setParams(pp, OrFilter(filters))
-      case RelationFilter(field, nestedFilter, condition) => setParams(pp, nestedFilter)
-      //--------------------------------ANCHORS------------------------------------
-      case PreComputedSubscriptionFilter(value)                     => // NOOP
-      case ScalarFilter(field, Contains(value: StringGCValue))      => pp.setString("%" + value.value + "%")
-      case ScalarFilter(field, NotContains(value: StringGCValue))   => pp.setString("%" + value.value + "%")
-      case ScalarFilter(field, StartsWith(value: StringGCValue))    => pp.setString(value.value + "%")
-      case ScalarFilter(field, NotStartsWith(value: StringGCValue)) => pp.setString(value.value + "%")
-      case ScalarFilter(field, EndsWith(value: StringGCValue))      => pp.setString("%" + value.value)
-      case ScalarFilter(field, NotEndsWith(value: StringGCValue))   => pp.setString("%" + value.value)
-      case ScalarFilter(field, LessThan(value))                     => pp.setGcValue(value)
-      case ScalarFilter(field, GreaterThan(value))                  => pp.setGcValue(value)
-      case ScalarFilter(field, LessThanOrEquals(value))             => pp.setGcValue(value)
-      case ScalarFilter(field, GreaterThanOrEquals(value))          => pp.setGcValue(value)
-      case ScalarFilter(field, NotEquals(NullGCValue))              => // NOOP
-      case ScalarFilter(field, NotEquals(value))                    => pp.setGcValue(value)
-      case ScalarFilter(field, Equals(NullGCValue))                 => // NOOP
-      case ScalarFilter(field, Equals(value))                       => pp.setGcValue(value)
-      case ScalarFilter(field, In(Vector(NullGCValue)))             => // NOOP
-      case ScalarFilter(field, NotIn(Vector(NullGCValue)))          => // NOOP
-      case ScalarFilter(field, In(values))                          => values.foreach(pp.setGcValue)
-      case ScalarFilter(field, NotIn(values))                       => values.foreach(pp.setGcValue)
-      case OneRelationIsNullFilter(field)                           => // NOOP
-      case x                                                        => sys.error(s"Not supported: $x")
+  def forScalarListField(field: ScalarField, alias: String, args: Option[QueryArguments]): String = {
+    val (first, last, orderBy) = (args.flatMap(_.first), args.flatMap(_.last), args.flatMap(_.orderBy))
+    val isReverseOrder         = last.isDefined
+
+    if (first.isDefined && last.isDefined) throw APIErrors.InvalidConnectionArguments()
+
+    // The limit instruction only works from up to down. Therefore, we have to invert order when we use before.
+    val defaultOrder = "asc"
+    val (order, idOrder) = isReverseOrder match {
+      case true  => (invertOrder(defaultOrder), "desc")
+      case false => (defaultOrder, "asc")
     }
+
+    //always order by nodeId, then positionfield ascending
+    s""""#$alias"."nodeId" #$order, "#$alias"."position" #$idOrder"""
+  }
+
+  private def invertOrder(order: String) = order.trim().toLowerCase match {
+    case "desc" => "asc"
+    case "asc"  => "desc"
+    case _      => throw new IllegalArgumentException
   }
 }

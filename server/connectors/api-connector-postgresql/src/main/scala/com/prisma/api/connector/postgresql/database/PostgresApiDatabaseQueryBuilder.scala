@@ -69,10 +69,13 @@ case class PostgresApiDatabaseQueryBuilder(
   }
 
   def getResultForScalarListField(field: ScalarField): GetResult[ScalarListElement] = GetResult { ps: PositionedResult =>
-    val resultSet = ps.rs
-    val nodeId    = resultSet.getString("nodeId")
-    val position  = resultSet.getInt("position")
-    val value     = resultSet.getGcValue("value", field.typeIdentifier)
+    readScalarListElement(field, ps.rs)
+  }
+
+  def readScalarListElement(field: ScalarField, resultSet: ResultSet): ScalarListElement = {
+    val nodeId   = resultSet.getString("nodeId")
+    val position = resultSet.getInt("position")
+    val value    = resultSet.getGcValue("value", field.typeIdentifier)
     ScalarListElement(nodeId, position, value)
   }
 
@@ -126,25 +129,25 @@ case class PostgresApiDatabaseQueryBuilder(
       model: Model,
       field: ScalarField,
       args: Option[QueryArguments]
-  ): DBIOAction[ResolverResult[ScalarListValues], NoStream, Effect] = {
+  ): DBIO[ResolverResult[ScalarListValues]] = {
 
-    val tableName = s"${model.dbName}_${field.dbName}"
-    val query = sql"""select *from "#$schemaName"."#$tableName" "#$ALIAS" """ ++ whereOrderByLimitCommands(
-      args = args,
-      tableName = tableName,
-      idFieldName = model.dbNameOfIdField_!,
-      defaultOrderShortCut = None,
-      forList = true
-    )
+    SimpleDBIO[ResolverResult[ScalarListValues]] { ctx =>
+      val builder = QueryBuilders.scalarList(schemaName, field, args)
+      val ps      = ctx.connection.prepareStatement(builder.queryString)
+      builder.setParams(ps, args)
+      val rs: ResultSet = ps.executeQuery()
 
-    query.as[ScalarListElement](getResultForScalarListField(field)).map { scalarListElements =>
-      val res = args.get.resultTransform(scalarListElements)
-      val convertedValues =
-        res.nodes
-          .groupBy(_.nodeId)
-          .map { case (id, values) => ScalarListValues(IdGCValue(id), ListGCValue(values.sortBy(_.position).map(_.value))) }
-          .toVector
-      res.copy(nodes = convertedValues)
+      var result: Vector[ScalarListElement] = Vector.empty
+      while (rs.next) {
+        result = result :+ readScalarListElement(field, rs)
+      }
+
+      val convertedValues = result
+        .groupBy(_.nodeId)
+        .map { case (id, values) => ScalarListValues(IdGCValue(id), ListGCValue(values.sortBy(_.position).map(_.value))) }
+        .toVector
+
+      ResolverResult(convertedValues, hasNextPage = false, hasPreviousPage = false)
     }
   }
 
