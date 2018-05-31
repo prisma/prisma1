@@ -7,17 +7,20 @@ import com.prisma.api.connector.postgresql.database.PostgresSlickExtensions._
 import com.prisma.api.schema.APIErrors
 import com.prisma.api.schema.APIErrors.{InvalidFirstArgument, InvalidLastArgument, InvalidSkipArgument}
 import com.prisma.gc_values.{GCValue, NullGCValue, StringGCValue}
-import com.prisma.shared.models.{Field, Model, RelationField}
+import com.prisma.shared.models.{Field, Model, RelationField, ScalarField}
 import slick.jdbc.PositionedParameters
 
-object QueryDsl {
-  def select(schemaName: String, model: Model): QueryBuilder = QueryBuilder(schemaName, model, None)
-
+object QueryBuilders {
+  def model(schemaName: String, model: Model, args: Option[QueryArguments]): QueryBuilder                      = ModelQueryBuilder(schemaName, model, args)
+  def scalarList(schemaName: String, field: ScalarField, queryArguments: Option[QueryArguments]): QueryBuilder = ???
 }
 
-case class QueryBuilderWhere(field: Field, value: GCValue)
+trait QueryBuilder {
+  def queryString: String
+  def setParams(preparedStatement: PreparedStatement, queryArguments: Option[QueryArguments]): Unit
+}
 
-case class QueryBuilder(schemaName: String, model: Model, queryArguments: Option[QueryArguments]) {
+case class ModelQueryBuilder(schemaName: String, model: Model, queryArguments: Option[QueryArguments]) extends QueryBuilder {
   val topLevelAlias = "Alias"
 
   def filter         = queryArguments.flatMap(_.filter)
@@ -28,8 +31,6 @@ case class QueryBuilder(schemaName: String, model: Model, queryArguments: Option
   def first          = queryArguments.flatMap(_.first)
   def last           = queryArguments.flatMap(_.last)
   def isReverseOrder = last.isDefined
-
-  def where(queryArguments: Option[QueryArguments]): QueryBuilder = copy(queryArguments = queryArguments)
 
   lazy val queryString: String = {
     s"""SELECT * FROM "$schemaName"."${model.dbName}" AS "$topLevelAlias" """ +

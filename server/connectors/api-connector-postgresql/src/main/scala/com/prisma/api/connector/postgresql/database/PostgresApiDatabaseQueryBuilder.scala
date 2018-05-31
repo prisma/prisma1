@@ -88,7 +88,7 @@ case class PostgresApiDatabaseQueryBuilder(
 //                                                                                                                    model.dbNameOfIdField_!)
 
     SimpleDBIO[ResolverResult[PrismaNode]] { ctx =>
-      val builder = QueryDsl.select(schemaName, model).where(args)
+      val builder = QueryBuilders.model(schemaName, model, args)
       val ps      = ctx.connection.prepareStatement(builder.queryString)
       builder.setParams(ps, args)
       val rs: ResultSet = ps.executeQuery()
