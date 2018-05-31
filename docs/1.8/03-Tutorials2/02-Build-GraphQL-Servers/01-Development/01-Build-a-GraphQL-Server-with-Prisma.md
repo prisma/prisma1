@@ -207,7 +207,7 @@ Put the following contents into it, defining the two GraphQL APIs you're working
 ```yml
 projects:
   app:
-    schemPath: src/schema.graphql
+    schemaPath: src/schema.graphql
     extensions:
       endpoints:
         default: http://localhost:4000
