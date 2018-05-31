@@ -7,11 +7,12 @@ import com.prisma.api.connector.postgresql.database.PostgresSlickExtensions._
 import com.prisma.api.schema.APIErrors
 import com.prisma.api.schema.APIErrors.{InvalidFirstArgument, InvalidLastArgument, InvalidSkipArgument}
 import com.prisma.gc_values.{GCValue, NullGCValue, StringGCValue}
-import com.prisma.shared.models.{Field, Model, RelationField, ScalarField}
+import com.prisma.shared.models._
 import slick.jdbc.PositionedParameters
 
 object QueryBuilders {
   def model(schemaName: String, model: Model, args: Option[QueryArguments]): QueryBuilder            = ModelQueryBuilder(schemaName, model, args)
+  def relation(schemaName: String, relation: Relation, args: Option[QueryArguments]): QueryBuilder   = RelationQueryBuilder(schemaName, relation, args)
   def scalarList(schemaName: String, field: ScalarField, args: Option[QueryArguments]): QueryBuilder = ScalarListQueryBuilder(schemaName, field, args)
   def count(schemaName: String, table: String, filter: Option[Filter]): QueryBuilder                 = CountQueryBuilder(schemaName, table, filter)
 }
@@ -27,9 +28,23 @@ trait QueryBuilder {
   }
 }
 
-case class CountQueryBuilder(schemaName: String, table: String, filter: Option[Filter]) extends QueryBuilder {
+case class RelationQueryBuilder(schemaName: String, relation: Relation, queryArguments: Option[QueryArguments]) extends QueryBuilder {
+  val topLevelAlias = "Alias"
+
   lazy val queryString: String = {
-    s"""SELECT COUNT(*) FROM "$schemaName"."$table" """ +
+    val tableName = relation.relationTableName
+    s"""SELECT * FROM "$schemaName"."$tableName" AS "$topLevelAlias" """ +
+      WhereClauseBuilder(schemaName).buildWhereClause(queryArguments.flatMap(_.filter)) +
+      OrderByClauseBuilder.forRelation(relation, topLevelAlias, queryArguments) +
+      LimitClauseBuilder.limitClause(queryArguments)
+  }
+}
+
+case class CountQueryBuilder(schemaName: String, table: String, filter: Option[Filter]) extends QueryBuilder {
+  val topLevelAlias = "Alias"
+
+  lazy val queryString: String = {
+    s"""SELECT COUNT(*) FROM "$schemaName"."$table" AS "$topLevelAlias" """ +
       WhereClauseBuilder(schemaName).buildWhereClause(filter)
   }
 }
@@ -226,6 +241,38 @@ object LimitClauseBuilder {
 object OrderByClauseBuilder {
 
   def forModel(model: Model, alias: String, args: Option[QueryArguments]): String = {
+    internal(
+      alias = alias,
+      secondaryOrderByField = model.dbNameOfIdField_!,
+      args = args
+    )
+  }
+
+  def forScalarListField(field: ScalarField, alias: String, args: Option[QueryArguments]): String = {
+    val (first, last)  = (args.flatMap(_.first), args.flatMap(_.last))
+    val isReverseOrder = last.isDefined
+
+    if (first.isDefined && last.isDefined) throw APIErrors.InvalidConnectionArguments()
+
+    // The limit instruction only works from up to down. Therefore, we have to invert order when we use before.
+    val order = isReverseOrder match {
+      case true  => "desc"
+      case false => "asc"
+    }
+
+    //always order by nodeId, then positionfield ascending
+    s""" ORDER BY "$alias"."nodeId" $order, "$alias"."position" $order """
+  }
+
+  def forRelation(relation: Relation, alias: String, args: Option[QueryArguments]): String = {
+    internal(
+      alias = alias,
+      secondaryOrderByField = relation.columnForRelationSide(RelationSide.A),
+      args = args
+    )
+  }
+
+  private def internal(alias: String, secondaryOrderByField: String, args: Option[QueryArguments]): String = {
     val (first, last, orderBy) = (args.flatMap(_.first), args.flatMap(_.last), args.flatMap(_.orderBy))
     val isReverseOrder         = last.isDefined
 
@@ -233,42 +280,23 @@ object OrderByClauseBuilder {
 
     // The limit instruction only works from up to down. Therefore, we have to invert order when we use before.
     val defaultOrder = orderBy.map(_.sortOrder.toString).getOrElse("asc")
-    val (order, idOrder) = isReverseOrder match {
+    val (order, secondaryOrderByOrder) = isReverseOrder match {
       case true  => (invertOrder(defaultOrder), "desc")
       case false => (defaultOrder, "asc")
     }
 
-    val idFieldName = model.dbNameOfIdField_!
-    val idField     = s""" "$alias"."$idFieldName" """
+    val aliasedSecondaryOrderByField = s""" "$alias"."$secondaryOrderByField" """
 
     orderBy match {
-      case Some(orderByArg) if orderByArg.field.name != idFieldName =>
+      case Some(orderByArg) if orderByArg.field.dbName != secondaryOrderByField =>
         val orderByField = s""" "$alias"."${orderByArg.field.dbName}" """
 
-        // First order by the orderByField, then by id to break ties
-        s""" ORDER BY $orderByField $order, $idField $idOrder """
+        // First order by the orderByField, then by the secondary order by field to break ties
+        s""" ORDER BY $orderByField $order, $aliasedSecondaryOrderByField $secondaryOrderByOrder """
 
       case _ =>
-        // by default, order by id. For performance reasons use the id in the relation table
-        s""" ORDER BY $idField $order """
+        s""" ORDER BY $aliasedSecondaryOrderByField $order """
     }
-  }
-
-  def forScalarListField(field: ScalarField, alias: String, args: Option[QueryArguments]): String = {
-    val (first, last, orderBy) = (args.flatMap(_.first), args.flatMap(_.last), args.flatMap(_.orderBy))
-    val isReverseOrder         = last.isDefined
-
-    if (first.isDefined && last.isDefined) throw APIErrors.InvalidConnectionArguments()
-
-    // The limit instruction only works from up to down. Therefore, we have to invert order when we use before.
-    val defaultOrder = "asc"
-    val (order, idOrder) = isReverseOrder match {
-      case true  => (invertOrder(defaultOrder), "desc")
-      case false => (defaultOrder, "asc")
-    }
-
-    //always order by nodeId, then positionfield ascending
-    s""" ORDER BY "$alias"."nodeId" $order, "$alias"."position" $idOrder """
   }
 
   private def invertOrder(order: String) = order.trim().toLowerCase match {

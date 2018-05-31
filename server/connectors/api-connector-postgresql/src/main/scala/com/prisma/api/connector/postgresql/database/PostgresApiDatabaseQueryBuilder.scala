@@ -39,11 +39,17 @@ case class PostgresApiDatabaseQueryBuilder(
 
     PrismaNodeWithParent(parentId, node)
   }
+//
+//  private def getResultForRelation(relation: Relation): GetResult[RelationNode] = GetResult { ps: PositionedResult =>
+//    val modelAColumn = relation.columnForRelationSide(RelationSide.A)
+//    val modelBColumn = relation.columnForRelationSide(RelationSide.B)
+//    RelationNode(a = ps.rs.getAsID(modelAColumn), b = ps.rs.getAsID(modelBColumn))
+//  }
 
-  private def getResultForRelation(relation: Relation): GetResult[RelationNode] = GetResult { ps: PositionedResult =>
+  private def readRelation(relation: Relation, resultSet: ResultSet): RelationNode = {
     val modelAColumn = relation.columnForRelationSide(RelationSide.A)
     val modelBColumn = relation.columnForRelationSide(RelationSide.B)
-    RelationNode(a = ps.rs.getAsID(modelAColumn), b = ps.rs.getAsID(modelBColumn))
+    RelationNode(a = resultSet.getAsID(modelAColumn), b = resultSet.getAsID(modelBColumn))
   }
 
   implicit object GetRelationCount extends GetResult[(IdGCValue, Int)] {
@@ -111,18 +117,21 @@ case class PostgresApiDatabaseQueryBuilder(
   def selectAllFromRelationTable(
       relation: Relation,
       args: Option[QueryArguments]
-  ): DBIOAction[ResolverResult[RelationNode], NoStream, Effect] = {
+  ): DBIO[ResolverResult[RelationNode]] = {
 
-    val tableName = relation.relationTableName
+    SimpleDBIO[ResolverResult[RelationNode]] { ctx =>
+      val builder = QueryBuilders.relation(schemaName, relation, args)
+      val ps      = ctx.connection.prepareStatement(builder.queryString)
+      builder.setParamsForQueryArgs(ps, args)
+      val rs: ResultSet = ps.executeQuery()
 
-    val query = sql"""select * from "#$schemaName"."#$tableName" as "#$ALIAS" """ ++
-      whereOrderByLimitCommands(
-        args = args,
-        tableName = tableName,
-        idFieldName = relation.columnForRelationSide(RelationSide.A)
-      )
+      var result: Vector[RelationNode] = Vector.empty
+      while (rs.next) {
+        result = result :+ readRelation(relation, rs)
+      }
 
-    query.as[RelationNode](getResultForRelation(relation)).map(args.get.resultTransform)
+      ResolverResult(result, hasNextPage = false, hasPreviousPage = false)
+    }
   }
 
   def selectAllFromListTable(
