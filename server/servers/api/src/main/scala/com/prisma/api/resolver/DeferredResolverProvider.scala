@@ -13,7 +13,6 @@ class DeferredResolverProvider[CtxType](dataResolver: DataResolver) extends Defe
   val manyModelDeferredResolver: ManyModelDeferredResolver = new ManyModelDeferredResolver(dataResolver)
   val manyModelsExistsDeferredResolver                     = new ManyModelExistsDeferredResolver(dataResolver)
   val countManyModelDeferredResolver                       = new CountManyModelDeferredResolver(dataResolver)
-  val countToManyDeferredResolver                          = new CountToManyDeferredResolver(dataResolver)
   val toOneDeferredResolver                                = new ToOneDeferredResolver(dataResolver)
   val oneDeferredResolver                                  = new OneDeferredResolver(dataResolver)
   val scalarListDeferredResolver                           = new ScalarListDeferredResolver(dataResolver)
@@ -43,11 +42,6 @@ class DeferredResolverProvider[CtxType](dataResolver: DataResolver) extends Defe
         OrderedDeferred(deferred, order)
     }
 
-    val countToManyDeferreds = orderedDeferred.collect {
-      case OrderedDeferred(deferred: CountToManyDeferred, order) =>
-        OrderedDeferred(deferred, order)
-    }
-
     val toOneDeferreds = orderedDeferred.collect {
       case OrderedDeferred(deferred: ToOneDeferred, order) =>
         OrderedDeferred(deferred, order)
@@ -71,8 +65,6 @@ class DeferredResolverProvider[CtxType](dataResolver: DataResolver) extends Defe
     val countManyModelDeferredsMap = DeferredUtils.groupModelDeferred[CountManyModelDeferred](countManyModelDeferreds)
 
     val toManyDeferredsMap = DeferredUtils.groupRelatedDeferred[ToManyDeferred](toManyDeferreds)
-
-    val countToManyDeferredsMap = DeferredUtils.groupRelatedDeferred[CountToManyDeferred](countToManyDeferreds)
 
     val toOneDeferredMap = DeferredUtils.groupRelatedDeferred[ToOneDeferred](toOneDeferreds)
 
@@ -109,13 +101,6 @@ class DeferredResolverProvider[CtxType](dataResolver: DataResolver) extends Defe
       .toVector
       .flatten
 
-    val countToManyFutureResults = countToManyDeferredsMap
-      .map {
-        case (key, value) => countToManyDeferredResolver.resolve(value, ec)
-      }
-      .toVector
-      .flatten
-
     val toOneFutureResults = toOneDeferredMap
       .map {
         case (key, value) => toOneDeferredResolver.resolve(value, ec)
@@ -141,7 +126,6 @@ class DeferredResolverProvider[CtxType](dataResolver: DataResolver) extends Defe
       manyModelExistsFutureResults ++
       countManyModelFutureResults ++
       toManyFutureResults ++
-      countToManyFutureResults ++
       toOneFutureResults ++
       oneFutureResult ++
       scalarListFutureResult).sortBy(_.order).map(_.future)

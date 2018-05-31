@@ -78,13 +78,6 @@ case class PostgresDataResolver(
     performWithTiming("resolveByRelation", readonlyClientDatabase.run(query))
   }
 
-  override def countByRelationManyModels(fromField: RelationField,
-                                         fromNodeIds: Vector[IdGCValue],
-                                         args: Option[QueryArguments]): Future[Vector[(IdGCValue, Int)]] = {
-    val query = queryBuilder.countAllFromRelatedModels(project.schema, fromField, fromNodeIds, args)
-    performWithTiming("countByRelation", readonlyClientDatabase.run(query))
-  }
-
   override def loadListRowsForExport(model: Model, field: ScalarField, args: Option[QueryArguments] = None): Future[ResolverResult[ScalarListValues]] = {
     val query = queryBuilder.selectAllFromListTable(model, field, args)
     performWithTiming("loadListRowsForExport", readonlyClientDatabase.run(query))

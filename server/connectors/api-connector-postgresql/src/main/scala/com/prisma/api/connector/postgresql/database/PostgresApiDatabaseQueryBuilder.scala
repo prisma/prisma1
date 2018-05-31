@@ -89,7 +89,7 @@ case class PostgresApiDatabaseQueryBuilder(
       args: Option[QueryArguments]
   ): DBIO[Vector[ResolverResult[PrismaNodeWithParent]]] = {
     SimpleDBIO[Vector[ResolverResult[PrismaNodeWithParent]]] { ctx =>
-      val builder = RelatedModelQueryBuilder(schemaName, fromField, args)
+      val builder = RelatedModelsQueryBuilder(schemaName, fromField, args)
       // see https://github.com/graphcool/internal-docs/blob/master/relations.md#findings
       val resolveFromBothSidesAndMerge = fromField.relation.isSameFieldSameModelRelation
 
@@ -213,36 +213,6 @@ case class PostgresApiDatabaseQueryBuilder(
 
   implicit object GetRelationCount extends GetResult[(IdGCValue, Int)] {
     override def apply(ps: PositionedResult): (IdGCValue, Int) = (ps.rs.getAsID("id"), ps.rs.getInt("Count"))
-  }
-
-  def countAllFromRelatedModels(
-      schema: Schema,
-      relationField: RelationField,
-      parentNodeIds: Vector[IdGCValue],
-      args: Option[QueryArguments]
-  ): DBIO[Vector[(IdGCValue, Int)]] = {
-
-    val relatedModel               = relationField.relatedModel_!
-    val relation                   = relationField.relation
-    val unsafeRelationId           = relation.relationTableName
-    val modelRelationSide          = relationField.relationSide.toString
-    val columnForFieldRelationSide = relation.columnForRelationSide(relationField.oppositeRelationSide)
-
-    def createQuery(id: String) = {
-      sql"""(select "#$id", count(*)
-            from "#$schemaName"."#${relatedModel.dbName}" AS "#$ALIAS"
-            inner join "#$schemaName"."#$unsafeRelationId"
-            on "#$ALIAS"."#${relatedModel.dbNameOfIdField_!}" = "#$schemaName"."#$unsafeRelationId"."#$columnForFieldRelationSide"
-            where "#$schemaName"."#$unsafeRelationId"."#$modelRelationSide" = '#$id' """ ++ andWhereOrderByLimitCommands(
-        args,
-        relatedModel.dbName,
-        relatedModel.dbNameOfIdField_!,
-        Some(s"""$schemaName.$unsafeRelationId.$columnForFieldRelationSide""")) ++ sql")"
-    }
-
-    val query = parentNodeIds.distinct.view.zipWithIndex.foldLeft(sql"")((a, b) => a ++ unionIfNotFirst(b._2) ++ createQuery(b._1.value))
-
-    query.as[(IdGCValue, Int)]
   }
 
   private def unionIfNotFirst(index: Int): SQLActionBuilder = if (index == 0) sql"" else sql"union all "

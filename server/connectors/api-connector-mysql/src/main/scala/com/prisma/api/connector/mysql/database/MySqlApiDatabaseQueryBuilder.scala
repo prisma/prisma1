@@ -189,38 +189,6 @@ case class MySqlApiDatabaseQueryBuilder(project: Project)(implicit ec: Execution
       }
   }
 
-  def countAllFromRelatedModels(relationField: RelationField,
-                                parentNodeIds: Vector[IdGCValue],
-                                args: Option[QueryArguments]): SqlStreamingAction[Vector[(IdGCValue, Int)], (IdGCValue, Int), Effect] = {
-
-    val fieldTable        = relationField.relatedModel_!.name
-    val unsafeRelationId  = relationField.relation.relationTableName
-    val modelRelationSide = relationField.relationSide.toString
-    val fieldRelationSide = relationField.oppositeRelationSide.toString
-
-    val (conditionCommand, orderByCommand, limitCommand) =
-      extractQueryArgs(project.id,
-                       fieldTable,
-                       fieldTable,
-                       args,
-                       defaultOrderShortcut = Some(s"""`${project.id}`.`$unsafeRelationId`.$fieldRelationSide"""),
-                       None)
-
-    def createQuery(id: String) = {
-      sql"""(select '#$id', count(*) from `#${project.id}`.`#$fieldTable`
-           inner join `#${project.id}`.`#$unsafeRelationId`
-           on `#${project.id}`.`#$fieldTable`.id = `#${project.id}`.`#$unsafeRelationId`.#$fieldRelationSide
-           where `#${project.id}`.`#$unsafeRelationId`.#$modelRelationSide = '#$id' """ ++
-        prefixIfNotNone("and", conditionCommand) ++
-        prefixIfNotNone("order by", orderByCommand) ++
-        prefixIfNotNone("limit", limitCommand) ++ sql")"
-    }
-
-    val query = parentNodeIds.distinct.view.zipWithIndex.foldLeft(sql"")((a, b) => a ++ unionIfNotFirst(b._2) ++ createQuery(b._1.value))
-
-    query.as[(IdGCValue, Int)]
-  }
-
   def unionIfNotFirst(index: Int): SQLActionBuilder = if (index == 0) sql"" else sql"union all "
 
 // used in tests only

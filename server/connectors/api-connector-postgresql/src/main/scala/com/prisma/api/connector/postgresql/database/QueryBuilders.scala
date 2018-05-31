@@ -62,7 +62,11 @@ case class ScalarListQueryBuilder(schemaName: String, field: ScalarField, queryA
   }
 }
 
-case class RelatedModelQueryBuilder(schemaName: String, fromField: RelationField, queryArguments: Option[QueryArguments]) extends QueryBuilder {
+//case class CountRelatedModelsQueryBuilder(schemaName: String, fromField: RelationField, queryArguments: Option[QueryArguments]){
+//
+//}
+
+case class RelatedModelsQueryBuilder(schemaName: String, fromField: RelationField, queryArguments: Option[QueryArguments]) extends QueryBuilder {
   val ALIAS                   = "Alias"
   val relation                = fromField.relation
   val modelRelationSideColumn = relation.columnForRelationSide(fromField.relationSide)

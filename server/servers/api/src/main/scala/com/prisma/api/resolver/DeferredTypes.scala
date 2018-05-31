@@ -46,13 +46,11 @@ object DeferredTypes {
 
   type OneDeferredResultType = Option[PrismaNode]
 
-  case class OneDeferred(model: Model, where: NodeSelector)                                                     extends Deferred[OneDeferredResultType] {}
+  case class OneDeferred(model: Model, where: NodeSelector)                                                     extends Deferred[OneDeferredResultType]
   case class ToOneDeferred(relationField: RelationField, parentNodeId: IdGCValue, args: Option[QueryArguments]) extends RelationDeferred[OneDeferredResultType]
 
   case class ToManyDeferred(relationField: RelationField, parentNodeId: IdGCValue, args: Option[QueryArguments])
       extends RelationDeferred[RelayConnectionOutputType]
-
-  case class CountToManyDeferred(relationField: RelationField, parentNodeId: IdGCValue, args: Option[QueryArguments]) extends RelationDeferred[Int]
 
   type SimpleConnectionOutputType   = Seq[PrismaNode]
   type RelayConnectionOutputType    = IdBasedConnection[PrismaNode]
