@@ -90,7 +90,7 @@ case class PostgresApiDatabaseQueryBuilder(
     SimpleDBIO[ResolverResult[PrismaNode]] { ctx =>
       val builder = QueryDsl.select(schemaName, model).where(args)
       val ps      = ctx.connection.prepareStatement(builder.queryString)
-      builder.setParams(ps)
+      builder.setParams(ps, args)
       val rs: ResultSet = ps.executeQuery()
 
       var result: Vector[PrismaNode] = Vector.empty

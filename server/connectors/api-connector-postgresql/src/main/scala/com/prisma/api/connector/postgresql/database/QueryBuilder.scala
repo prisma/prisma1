@@ -178,11 +178,11 @@ case class QueryBuilder(schemaName: String, model: Model, queryArguments: Option
   private def column(alias: String, field: Field): String = s""""$alias"."${field.dbName}" """
   private def in(items: Vector[GCValue])                  = s" IN (" + items.map(_ => "?").mkString(",") + ")"
 
-  def setParams(preparedStatement: PreparedStatement): Unit = filter.foreach { filter =>
+  def setParams(preparedStatement: PreparedStatement, queryArguments: Option[QueryArguments]): Unit = queryArguments.flatMap(_.filter).foreach { filter =>
     setParams(new PositionedParameters(preparedStatement), filter)
   }
 
-  private def setParams(pp: PositionedParameters, filter: Filter): Unit = {
+  def setParams(pp: PositionedParameters, filter: Filter): Unit = {
     filter match {
       //-------------------------------RECURSION------------------------------------
       case NodeSubscriptionFilter()                       => // NOOP
