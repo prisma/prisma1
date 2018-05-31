@@ -202,20 +202,12 @@ case class PostgresApiDatabaseQueryBuilder(
 
   def batchSelectFromModelByUnique(model: Model, field: ScalarField, values: Vector[GCValue]): DBIO[Vector[PrismaNode]] = {
     SimpleDBIO { ctx =>
-      val filter    = ScalarFilter(field, In(values))
-      val queryArgs = Some(QueryArguments.withFilter(filter))
+      val queryArgs = Some(QueryArguments.withFilter(ScalarFilter(field, In(values))))
       val builder   = QueryBuilders.model(schemaName, model, queryArgs)
       val ps        = ctx.connection.prepareStatement(builder.queryString)
       builder.setParamsForQueryArgs(ps, queryArgs)
       val rs: ResultSet = ps.executeQuery()
-
-      var result: Vector[PrismaNode] = Vector.empty
-      while (rs.next) {
-        val data = model.scalarNonListFields.map(field => field.name -> rs.getGcValue(field.dbName, field.typeIdentifier))
-        result = result :+ PrismaNode(id = rs.getId(model), data = RootGCValue(data: _*))
-      }
-
-      result
+      rs.as(readsPrismaNode(model))
     }
   }
 
