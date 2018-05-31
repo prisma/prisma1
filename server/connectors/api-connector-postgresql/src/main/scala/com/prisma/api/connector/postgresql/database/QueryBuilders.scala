@@ -151,7 +151,12 @@ case class WhereClauseBuilder(schemaName: String) {
   val topLevelAlias = "Alias"
 
   def buildWhereClause(filter: Option[Filter]) = {
-    "WHERE " + buildWhereClauseWithoutWhereKeyWord(filter)
+    val conditions = buildWhereClauseWithoutWhereKeyWord(filter)
+    if (conditions.nonEmpty) {
+      "WHERE " + conditions
+    } else {
+      ""
+    }
   }
 
   def buildWhereClauseWithoutWhereKeyWord(filter: Option[Filter]) = {
@@ -219,7 +224,7 @@ case class WhereClauseBuilder(schemaName: String) {
 
     val nestedFilterStatement = {
       val x = buildWheresForFilter(nestedFilter, newAlias)
-      if (x.isEmpty) s"TRUE" else x
+      if (x.isEmpty) "TRUE" else x
     }
 
     relationCondition match {
