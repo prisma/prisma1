@@ -211,6 +211,10 @@ case class PostgresApiDatabaseQueryBuilder(
     }
   }
 
+  implicit object GetRelationCount extends GetResult[(IdGCValue, Int)] {
+    override def apply(ps: PositionedResult): (IdGCValue, Int) = (ps.rs.getAsID("id"), ps.rs.getInt("Count"))
+  }
+
   def countAllFromRelatedModels(
       schema: Schema,
       relationField: RelationField,
