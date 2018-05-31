@@ -26,15 +26,27 @@ case class PostgresApiDatabaseQueryBuilder(
   }
 
   private def getPrismaNode(model: Model, ps: PositionedResult) = {
-    val data = model.scalarNonListFields.map(field => field.name -> ps.rs.getGcValue(field.dbName, field.typeIdentifier))
+    readPrismaNode(model, ps.rs)
+  }
 
-    PrismaNode(id = ps.rs.getId(model), data = RootGCValue(data: _*))
+  private def readPrismaNode(model: Model, rs: ResultSet) = {
+    val data = model.scalarNonListFields.map(field => field.name -> rs.getGcValue(field.dbName, field.typeIdentifier))
+    PrismaNode(id = rs.getId(model), data = RootGCValue(data: _*))
   }
 
   def getResultForModelAndRelationSide(model: Model, side: String, oppositeSide: String): GetResult[PrismaNodeWithParent] = GetResult { ps: PositionedResult =>
     val node       = getPrismaNode(model, ps)
     val firstSide  = ps.rs.getParentId(side)
     val secondSide = ps.rs.getParentId(oppositeSide)
+    val parentId   = if (firstSide == node.id) secondSide else firstSide
+
+    PrismaNodeWithParent(parentId, node)
+  }
+
+  def readPrismaNodeWithParent(model: Model, side: String, oppositeSide: String, rs: ResultSet): PrismaNodeWithParent = {
+    val node       = readPrismaNode(model, rs)
+    val firstSide  = rs.getParentId(side)
+    val secondSide = rs.getParentId(oppositeSide)
     val parentId   = if (firstSide == node.id) secondSide else firstSide
 
     PrismaNodeWithParent(parentId, node)
@@ -112,6 +124,96 @@ case class PostgresApiDatabaseQueryBuilder(
     }
 
 //    query.as[PrismaNode](getResultForModel(model)).map(args.get.resultTransform)
+  }
+
+  def batchSelectAllFromRelatedModel(
+      schema: Schema,
+      fromField: RelationField,
+      fromModelIds: Vector[IdGCValue],
+      args: Option[QueryArguments]
+  ): DBIO[Vector[ResolverResult[PrismaNodeWithParent]]] = {
+//    val relation     = fromField.relation
+//    val relatedModel = fromField.relatedModel_!
+//    val modelTable   = relatedModel.dbName
+//
+//    val relationTableName     = fromField.relation.relationTableName
+//    val (aColumn, bColumn)    = (relation.modelAColumn, relation.modelBColumn)
+//    val columnForFromModel    = relation.columnForRelationSide(fromField.relationSide)
+//    val columnForRelatedModel = relation.columnForRelationSide(fromField.oppositeRelationSide)
+//
+//    def createQuery(id: String, modelRelationSide: String, fieldRelationSide: String) = {
+//      sql"""(select "#$ALIAS".*, "RelationTable"."#$aColumn" as "__Relation__A",  "RelationTable"."#$bColumn" as "__Relation__B"
+//            from "#$schemaName"."#$modelTable" as "#$ALIAS"
+//            inner join "#$schemaName"."#$relationTableName" as "RelationTable"
+//            on "#$ALIAS"."#${relatedModel.dbNameOfIdField_!}" = "RelationTable"."#$fieldRelationSide"
+//            where "RelationTable"."#$modelRelationSide" = '#$id' """ ++ andWhereOrderByLimitCommands(
+//        args,
+//        relatedModel.dbName,
+//        relatedModel.dbNameOfIdField_!,
+//        Some(s""" "RelationTable"."$columnForRelatedModel" """)) ++ sql")"
+//    }
+//
+//    // see https://github.com/graphcool/internal-docs/blob/master/relations.md#findings
+//    val resolveFromBothSidesAndMerge = fromField.relation.isSameFieldSameModelRelation
+//
+//    val query = resolveFromBothSidesAndMerge match {
+//      case false =>
+//        fromModelIds.distinct.view.zipWithIndex.foldLeft(sql"")((a, b) =>
+//          a ++ unionIfNotFirst(b._2) ++ createQuery(b._1.value, columnForFromModel, columnForRelatedModel))
+//
+//      case true =>
+//        fromModelIds.distinct.view.zipWithIndex.foldLeft(sql"")(
+//          (a, b) =>
+//            a ++ unionIfNotFirst(b._2) ++
+//              createQuery(b._1.value, columnForFromModel, columnForRelatedModel) ++
+//              sql"union all " ++
+//              createQuery(b._1.value, columnForRelatedModel, columnForFromModel))
+//    }
+//
+//    val modelRelationSide    = fromField.relationSide.toString
+//    val oppositeRelationSide = fromField.oppositeRelationSide.toString
+
+    SimpleDBIO[Vector[ResolverResult[PrismaNodeWithParent]]] { ctx =>
+      val builder               = RelatedModelQueryBuilder(schemaName, fromField, args)
+      val relation              = fromField.relation
+      val columnForFromModel    = relation.columnForRelationSide(fromField.relationSide)
+      val columnForRelatedModel = relation.columnForRelationSide(fromField.oppositeRelationSide)
+
+      val baseQuery        = "(" + builder.queryString + ")"
+      val distinctModelIds = fromModelIds.distinct
+
+      val queries = Vector.fill(distinctModelIds.size)(baseQuery)
+      val query   = queries.mkString(" union all ")
+
+      val ps = ctx.connection.prepareStatement(query)
+
+      // injecting params
+      val filter = args.flatMap(_.filter)
+      distinctModelIds.foreach { id =>
+        val pp = new PositionedParameters(ps)
+        pp.setGcValue(id)
+        filter.foreach { filter =>
+          SetParams.setParams(pp, filter)
+        }
+      }
+
+      // executing
+      val rs: ResultSet = ps.executeQuery()
+
+      var result: Vector[PrismaNodeWithParent] = Vector.empty
+      val model                                = fromField.relatedModel_!
+      while (rs.next) {
+        val prismaNode = readPrismaNodeWithParent(model, columnForFromModel, columnForRelatedModel, rs)
+        result = result :+ prismaNode
+      }
+      val itemGroupsByModelId = result.groupBy(_.parentId)
+      fromModelIds.map { id =>
+        itemGroupsByModelId.find(_._1 == id) match {
+          case Some((_, itemsForId)) => ResolverResult(itemsForId, hasPreviousPage = false, hasNextPage = false, parentModelId = Some(id))
+          case None                  => ResolverResult(Vector.empty[PrismaNodeWithParent], hasPreviousPage = false, hasNextPage = false, parentModelId = Some(id))
+        }
+      }
+    }
   }
 
   def selectAllFromRelationTable(
@@ -198,65 +300,6 @@ case class PostgresApiDatabaseQueryBuilder(
 
       result
     }
-  }
-
-  def batchSelectAllFromRelatedModel(
-      schema: Schema,
-      fromField: RelationField,
-      fromModelIds: Vector[IdGCValue],
-      args: Option[QueryArguments]
-  ): DBIOAction[Vector[ResolverResult[PrismaNodeWithParent]], NoStream, Effect] = {
-    val relation     = fromField.relation
-    val relatedModel = fromField.relatedModel_!
-    val modelTable   = relatedModel.dbName
-
-    val relationTableName     = fromField.relation.relationTableName
-    val (aColumn, bColumn)    = (relation.modelAColumn, relation.modelBColumn)
-    val columnForFromModel    = relation.columnForRelationSide(fromField.relationSide)
-    val columnForRelatedModel = relation.columnForRelationSide(fromField.oppositeRelationSide)
-
-    def createQuery(id: String, modelRelationSide: String, fieldRelationSide: String) = {
-      sql"""(select "#$ALIAS".*, "RelationTable"."#$aColumn" as "__Relation__A",  "RelationTable"."#$bColumn" as "__Relation__B"
-            from "#$schemaName"."#$modelTable" as "#$ALIAS"
-            inner join "#$schemaName"."#$relationTableName" as "RelationTable"
-            on "#$ALIAS"."#${relatedModel.dbNameOfIdField_!}" = "RelationTable"."#$fieldRelationSide"
-            where "RelationTable"."#$modelRelationSide" = '#$id' """ ++ andWhereOrderByLimitCommands(
-        args,
-        relatedModel.dbName,
-        relatedModel.dbNameOfIdField_!,
-        Some(s""" "RelationTable"."$columnForRelatedModel" """)) ++ sql")"
-    }
-
-    // see https://github.com/graphcool/internal-docs/blob/master/relations.md#findings
-    val resolveFromBothSidesAndMerge = fromField.relation.isSameFieldSameModelRelation
-
-    val query = resolveFromBothSidesAndMerge match {
-      case false =>
-        fromModelIds.distinct.view.zipWithIndex.foldLeft(sql"")((a, b) =>
-          a ++ unionIfNotFirst(b._2) ++ createQuery(b._1.value, columnForFromModel, columnForRelatedModel))
-
-      case true =>
-        fromModelIds.distinct.view.zipWithIndex.foldLeft(sql"")(
-          (a, b) =>
-            a ++ unionIfNotFirst(b._2) ++
-              createQuery(b._1.value, columnForFromModel, columnForRelatedModel) ++
-              sql"union all " ++
-              createQuery(b._1.value, columnForRelatedModel, columnForFromModel))
-    }
-
-    val modelRelationSide    = fromField.relationSide.toString
-    val oppositeRelationSide = fromField.oppositeRelationSide.toString
-    query
-      .as[PrismaNodeWithParent](getResultForModelAndRelationSide(relatedModel, modelRelationSide, oppositeRelationSide))
-      .map { items =>
-        val itemGroupsByModelId = items.groupBy(_.parentId)
-        fromModelIds.map { id =>
-          itemGroupsByModelId.find(_._1 == id) match {
-            case Some((_, itemsForId)) => args.get.resultTransform(itemsForId).copy(parentModelId = Some(id))
-            case None                  => ResolverResult(Vector.empty[PrismaNodeWithParent], hasPreviousPage = false, hasNextPage = false, parentModelId = Some(id))
-          }
-        }
-      }
   }
 
   def countAllFromRelatedModels(

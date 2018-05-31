@@ -62,6 +62,32 @@ case class ScalarListQueryBuilder(schemaName: String, field: ScalarField, queryA
   }
 }
 
+case class RelatedModelQueryBuilder(schemaName: String, fromField: RelationField, queryArguments: Option[QueryArguments]) extends QueryBuilder {
+  val ALIAS = "Alias"
+
+  lazy val queryString: String = {
+    val relation              = fromField.relation
+    val relatedModel          = fromField.relatedModel_!
+    val modelTable            = relatedModel.dbName
+    val relationTableName     = fromField.relation.relationTableName
+    val aColumn               = relation.modelAColumn
+    val bColumn               = relation.modelBColumn
+    val columnForRelatedModel = relation.columnForRelationSide(fromField.oppositeRelationSide)
+
+    val modelRelationSide = relation.columnForRelationSide(fromField.relationSide)
+    val fieldRelationSide = relation.columnForRelationSide(fromField.oppositeRelationSide)
+
+    s"""select "$ALIAS".*, "RelationTable"."$aColumn" as "__Relation__A",  "RelationTable"."$bColumn" as "__Relation__B"
+            from "$schemaName"."$modelTable" as "$ALIAS"
+            inner join "$schemaName"."$relationTableName" as "RelationTable"
+            on "$ALIAS"."${relatedModel.dbNameOfIdField_!}" = "RelationTable"."$fieldRelationSide"
+            where "RelationTable"."$modelRelationSide" = ? """ +
+      WhereClauseBuilder(schemaName).buildWhereClause(queryArguments.flatMap(_.filter)) +
+      OrderByClauseBuilder.internal("RelationTable", columnForRelatedModel, queryArguments) +
+      LimitClauseBuilder.limitClause(queryArguments)
+  }
+}
+
 case class ModelQueryBuilder(schemaName: String, model: Model, queryArguments: Option[QueryArguments]) extends QueryBuilder {
   val topLevelAlias = "Alias"
 
@@ -86,7 +112,7 @@ object SetParams {
     }
   }
 
-  private def setParams(pp: PositionedParameters, filter: Filter): Unit = {
+  def setParams(pp: PositionedParameters, filter: Filter): Unit = {
     filter match {
       //-------------------------------RECURSION------------------------------------
       case NodeSubscriptionFilter()                       => // NOOP
@@ -272,7 +298,7 @@ object OrderByClauseBuilder {
     )
   }
 
-  private def internal(alias: String, secondaryOrderByField: String, args: Option[QueryArguments]): String = {
+  def internal(alias: String, secondaryOrderByField: String, args: Option[QueryArguments]): String = {
     val (first, last, orderBy) = (args.flatMap(_.first), args.flatMap(_.last), args.flatMap(_.orderBy))
     val isReverseOrder         = last.isDefined
 
