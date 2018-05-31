@@ -81,8 +81,8 @@ case class RelatedModelQueryBuilder(schemaName: String, fromField: RelationField
             from "$schemaName"."$modelTable" as "$ALIAS"
             inner join "$schemaName"."$relationTableName" as "RelationTable"
             on "$ALIAS"."${relatedModel.dbNameOfIdField_!}" = "RelationTable"."$fieldRelationSide"
-            where "RelationTable"."$modelRelationSide" = ? """ +
-      WhereClauseBuilder(schemaName).buildWhereClause(queryArguments.flatMap(_.filter)) +
+            where "RelationTable"."$modelRelationSide" = ? AND """ +
+      WhereClauseBuilder(schemaName).buildWhereClauseWithoutWhereKeyWord(queryArguments.flatMap(_.filter)) +
       OrderByClauseBuilder.internal("RelationTable", columnForRelatedModel, queryArguments) +
       LimitClauseBuilder.limitClause(queryArguments)
   }
@@ -151,17 +151,13 @@ case class WhereClauseBuilder(schemaName: String) {
   val topLevelAlias = "Alias"
 
   def buildWhereClause(filter: Option[Filter]) = {
-    filter match {
-      case Some(filter) =>
-        val filterConditions = buildWheresForFilter(filter, topLevelAlias)
-        if (filterConditions.isEmpty) {
-          ""
-        } else {
-          "WHERE " + filterConditions
-        }
+    "WHERE " + buildWhereClauseWithoutWhereKeyWord(filter)
+  }
 
-      case None =>
-        ""
+  def buildWhereClauseWithoutWhereKeyWord(filter: Option[Filter]) = {
+    filter match {
+      case Some(filter) => buildWheresForFilter(filter, topLevelAlias)
+      case None         => "TRUE"
     }
   }
 
