@@ -117,24 +117,24 @@ case class QueryBuilder(schemaName: String, model: Model, queryArguments: Option
       case RelationFilter(field, nestedFilter, condition) => relationFilterStatement(alias, field, nestedFilter, condition)
       //--------------------------------ANCHORS------------------------------------
       case PreComputedSubscriptionFilter(value)            => if (value) "TRUE" else "FALSE"
-      case ScalarFilter(field, Contains(value))            => valueOf(field) + s""" LIKE ? """
-      case ScalarFilter(field, NotContains(value))         => valueOf(field) + s""" NOT LIKE ? """
-      case ScalarFilter(field, StartsWith(value))          => valueOf(field) + s""" LIKE ? """
-      case ScalarFilter(field, NotStartsWith(value))       => valueOf(field) + s""" NOT LIKE ?"""
-      case ScalarFilter(field, EndsWith(value))            => valueOf(field) + s""" LIKE ?"""
-      case ScalarFilter(field, NotEndsWith(value))         => valueOf(field) + s""" NOT LIKE ?"""
-      case ScalarFilter(field, LessThan(value))            => valueOf(field) ++ s""" < ?"""
-      case ScalarFilter(field, GreaterThan(value))         => valueOf(field) ++ s""" > ?"""
-      case ScalarFilter(field, LessThanOrEquals(value))    => valueOf(field) ++ s""" <= ?"""
-      case ScalarFilter(field, GreaterThanOrEquals(value)) => valueOf(field) ++ s""" >= ?"""
-      case ScalarFilter(field, NotEquals(NullGCValue))     => valueOf(field) ++ s""" IS NOT NULL"""
-      case ScalarFilter(field, NotEquals(value))           => valueOf(field) ++ s""" != ?"""
-      case ScalarFilter(field, Equals(NullGCValue))        => valueOf(field) + s""" IS NULL"""
-      case ScalarFilter(field, Equals(value))              => valueOf(field) + s""" = ?"""
-      case ScalarFilter(field, In(Vector(NullGCValue)))    => if (field.isRequired) s"false" else valueOf(field) ++ s""" IS NULL"""
-      case ScalarFilter(field, NotIn(Vector(NullGCValue))) => if (field.isRequired) s"true" else valueOf(field) ++ s""" IS NOT NULL"""
-      case ScalarFilter(field, In(values))                 => if (values.nonEmpty) valueOf(field) ++ in(values) else s"false"
-      case ScalarFilter(field, NotIn(values))              => if (values.nonEmpty) valueOf(field) ++ s""" NOT """ ++ in(values) else s"true"
+      case ScalarFilter(field, Contains(value))            => column(alias, field) + s""" LIKE ? """
+      case ScalarFilter(field, NotContains(value))         => column(alias, field) + s""" NOT LIKE ? """
+      case ScalarFilter(field, StartsWith(value))          => column(alias, field) + s""" LIKE ? """
+      case ScalarFilter(field, NotStartsWith(value))       => column(alias, field) + s""" NOT LIKE ?"""
+      case ScalarFilter(field, EndsWith(value))            => column(alias, field) + s""" LIKE ?"""
+      case ScalarFilter(field, NotEndsWith(value))         => column(alias, field) + s""" NOT LIKE ?"""
+      case ScalarFilter(field, LessThan(value))            => column(alias, field) ++ s""" < ?"""
+      case ScalarFilter(field, GreaterThan(value))         => column(alias, field) ++ s""" > ?"""
+      case ScalarFilter(field, LessThanOrEquals(value))    => column(alias, field) ++ s""" <= ?"""
+      case ScalarFilter(field, GreaterThanOrEquals(value)) => column(alias, field) ++ s""" >= ?"""
+      case ScalarFilter(field, NotEquals(NullGCValue))     => column(alias, field) ++ s""" IS NOT NULL"""
+      case ScalarFilter(field, NotEquals(value))           => column(alias, field) ++ s""" != ?"""
+      case ScalarFilter(field, Equals(NullGCValue))        => column(alias, field) + s""" IS NULL"""
+      case ScalarFilter(field, Equals(value))              => column(alias, field) + s""" = ?"""
+      case ScalarFilter(field, In(Vector(NullGCValue)))    => if (field.isRequired) s"false" else column(alias, field) ++ s""" IS NULL"""
+      case ScalarFilter(field, NotIn(Vector(NullGCValue))) => if (field.isRequired) s"true" else column(alias, field) ++ s""" IS NOT NULL"""
+      case ScalarFilter(field, In(values))                 => if (values.nonEmpty) column(alias, field) ++ in(values) else s"false"
+      case ScalarFilter(field, NotIn(values))              => if (values.nonEmpty) column(alias, field) ++ s""" NOT """ ++ in(values) else s"true"
       case OneRelationIsNullFilter(field) =>
         val relation          = field.relation
         val relationTableName = relation.relationTableName
@@ -175,8 +175,8 @@ case class QueryBuilder(schemaName: String, model: Model, queryArguments: Option
     }
   }
 
-  private def valueOf(field: Field): String = s""""${field.dbName}" """
-  private def in(items: Vector[GCValue])    = s" IN (" + items.map(_ => "?").mkString(",") + ")"
+  private def column(alias: String, field: Field): String = s""""$alias"."${field.dbName}" """
+  private def in(items: Vector[GCValue])                  = s" IN (" + items.map(_ => "?").mkString(",") + ")"
 
   def setParams(preparedStatement: PreparedStatement): Unit = filter.foreach { filter =>
     setParams(new PositionedParameters(preparedStatement), filter)
