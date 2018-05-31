@@ -36,7 +36,7 @@ When you're running `prisma deploy` for a Prisma API, there are two scenarios wi
 
 ## Channels
 
-When isntalling Prisma you can pick between 3 different channels:
+When installing Prisma you can pick between 3 different channels:
 
 - **stable** is a production-ready release that has been thoroughly tested.
 - **beta** is a release that is currently undergoing extensive testing before being promoted to stable.
@@ -46,7 +46,7 @@ If you follow a quickstart or any other material in the documentation, you will 
 
 ### Installing Prisma Beta
 
-Using NPM:
+Using npm:
 
 ```sh
 npm install -g prisma@beta
@@ -56,7 +56,7 @@ If you are using the docker images directly, you can find the latest beta image 
 
 ### Installing Prisma Alpha
 
-Using NPM:
+Using npm:
 
 ```sh
 npm install -g prisma@alpha
