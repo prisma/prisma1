@@ -1,17 +1,14 @@
 package com.prisma.api.connector.postgresql.database
 
-import java.sql.{PreparedStatement, ResultSet}
+import java.sql.ResultSet
 
 import com.prisma.api.connector._
 import com.prisma.gc_values._
 import com.prisma.shared.models.IdType.Id
 import com.prisma.shared.models.{Function => _, _}
-import slick.dbio.DBIOAction
 import slick.jdbc.PostgresProfile.api._
 import slick.jdbc.{SQLActionBuilder, _}
-import slick.sql.SqlStreamingAction
 
-import scala.collection.immutable
 import scala.concurrent.ExecutionContext
 
 case class PostgresApiDatabaseQueryBuilder(
@@ -22,63 +19,6 @@ case class PostgresApiDatabaseQueryBuilder(
   import PostgresQueryArgumentsExtensions._
   import PostgresSlickExtensions._
   import com.prisma.slick.NewJdbcExtensions._
-
-  def getResultForModel(model: Model): GetResult[PrismaNode] = GetResult { ps: PositionedResult =>
-    getPrismaNode(model, ps)
-  }
-
-  private def getPrismaNode(model: Model, ps: PositionedResult) = {
-    readPrismaNode(model, ps.rs)
-  }
-
-  private def readPrismaNode(model: Model, rs: ResultSet) = {
-    val data = model.scalarNonListFields.map(field => field.name -> rs.getGcValue(field.dbName, field.typeIdentifier))
-    PrismaNode(id = rs.getId(model), data = RootGCValue(data: _*))
-  }
-
-  def getResultForModelAndRelationSide(model: Model, side: RelationSide.Value, oppositeSide: RelationSide.Value): GetResult[PrismaNodeWithParent] = GetResult {
-    ps: PositionedResult =>
-      val node       = getPrismaNode(model, ps)
-      val firstSide  = ps.rs.getParentId(side)
-      val secondSide = ps.rs.getParentId(oppositeSide)
-      val parentId   = if (firstSide == node.id) secondSide else firstSide
-
-      PrismaNodeWithParent(parentId, node)
-  }
-
-  def readPrismaNodeWithParent(model: Model, side: RelationSide.Value, oppositeSide: RelationSide.Value, rs: ResultSet): PrismaNodeWithParent = {
-    val node       = readPrismaNode(model, rs)
-    val firstSide  = rs.getParentId(side)
-    val secondSide = rs.getParentId(oppositeSide)
-    val parentId   = if (firstSide == node.id) secondSide else firstSide
-
-    PrismaNodeWithParent(parentId, node)
-  }
-//
-//  private def getResultForRelation(relation: Relation): GetResult[RelationNode] = GetResult { ps: PositionedResult =>
-//    val modelAColumn = relation.columnForRelationSide(RelationSide.A)
-//    val modelBColumn = relation.columnForRelationSide(RelationSide.B)
-//    RelationNode(a = ps.rs.getAsID(modelAColumn), b = ps.rs.getAsID(modelBColumn))
-//  }
-
-  private def readRelation(relation: Relation, resultSet: ResultSet): RelationNode = {
-    val modelAColumn = relation.columnForRelationSide(RelationSide.A)
-    val modelBColumn = relation.columnForRelationSide(RelationSide.B)
-    RelationNode(a = resultSet.getAsID(modelAColumn), b = resultSet.getAsID(modelBColumn))
-  }
-
-  implicit object GetRelationCount extends GetResult[(IdGCValue, Int)] {
-    override def apply(ps: PositionedResult): (IdGCValue, Int) = (ps.rs.getAsID("id"), ps.rs.getInt("Count"))
-  }
-
-  private def whereOrderByLimitCommands(args: Option[QueryArguments],
-                                        tableName: String,
-                                        idFieldName: String,
-                                        defaultOrderShortCut: Option[String] = None,
-                                        forList: Boolean = false) = {
-    val (where, orderBy, limit) = extractQueryArgs(schemaName, alias = ALIAS, tableName, idFieldName, args, defaultOrderShortCut, forList)
-    sql"" ++ prefixIfNotNone("where", where) ++ prefixIfNotNone("order by", orderBy) ++ prefixIfNotNone("limit", limit)
-  }
 
   private def andWhereOrderByLimitCommands(args: Option[QueryArguments],
                                            tableName: String,
@@ -100,9 +40,28 @@ case class PostgresApiDatabaseQueryBuilder(
     ScalarListElement(nodeId, position, value)
   }
 
-  def readsPrismeNode(model: Model): ReadsResultSet[PrismaNode] = ReadsResultSet { rs =>
+  private def readsPrismaNode(model: Model): ReadsResultSet[PrismaNode] = ReadsResultSet { rs =>
+    readPrismaNode(model, rs)
+  }
+
+  private def readPrismaNodeWithParent(model: Model, side: RelationSide.Value, oppositeSide: RelationSide.Value) = ReadsResultSet { rs =>
+    val node       = readPrismaNode(model, rs)
+    val firstSide  = rs.getParentId(side)
+    val secondSide = rs.getParentId(oppositeSide)
+    val parentId   = if (firstSide == node.id) secondSide else firstSide
+
+    PrismaNodeWithParent(parentId, node)
+  }
+
+  private def readPrismaNode(model: Model, rs: ResultSet) = {
     val data = model.scalarNonListFields.map(field => field.name -> rs.getGcValue(field.dbName, field.typeIdentifier))
     PrismaNode(id = rs.getId(model), data = RootGCValue(data: _*))
+  }
+
+  private def readRelation(relation: Relation): ReadsResultSet[RelationNode] = ReadsResultSet { resultSet =>
+    val modelAColumn = relation.columnForRelationSide(RelationSide.A)
+    val modelBColumn = relation.columnForRelationSide(RelationSide.B)
+    RelationNode(a = resultSet.getAsID(modelAColumn), b = resultSet.getAsID(modelBColumn))
   }
 
   def selectAllFromTable(
@@ -118,7 +77,7 @@ case class PostgresApiDatabaseQueryBuilder(
       // execute
       val rs: ResultSet = ps.executeQuery()
       // read result
-      val result: Vector[PrismaNode] = rs.as[PrismaNode](readsPrismeNode(model))
+      val result: Vector[PrismaNode] = rs.as[PrismaNode](readsPrismaNode(model))
       ResolverResult(result, hasNextPage = false, hasPreviousPage = false)
     }
   }
@@ -165,14 +124,8 @@ case class PostgresApiDatabaseQueryBuilder(
       }
 
       // executing
-      val rs: ResultSet = ps.executeQuery()
-
-      var result: Vector[PrismaNodeWithParent] = Vector.empty
-      val model                                = fromField.relatedModel_!
-      while (rs.next) {
-        val prismaNode = readPrismaNodeWithParent(model, fromField.relationSide, fromField.oppositeRelationSide, rs)
-        result = result :+ prismaNode
-      }
+      val rs: ResultSet       = ps.executeQuery()
+      val result              = rs.as[PrismaNodeWithParent](readPrismaNodeWithParent(fromField.relatedModel_!, fromField.relationSide, fromField.oppositeRelationSide))
       val itemGroupsByModelId = result.groupBy(_.parentId)
       fromModelIds.map { id =>
         itemGroupsByModelId.find(_._1 == id) match {
@@ -194,10 +147,7 @@ case class PostgresApiDatabaseQueryBuilder(
       builder.setParamsForQueryArgs(ps, args)
       val rs: ResultSet = ps.executeQuery()
 
-      var result: Vector[RelationNode] = Vector.empty
-      while (rs.next) {
-        result = result :+ readRelation(relation, rs)
-      }
+      val result = rs.as(readRelation(relation))
 
       ResolverResult(result, hasNextPage = false, hasPreviousPage = false)
     }
