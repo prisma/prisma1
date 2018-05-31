@@ -188,9 +188,9 @@ case class PostgresApiDatabaseQueryBuilder(
       val ps = ctx.connection.prepareStatement(query)
 
       // injecting params
+      val pp     = new PositionedParameters(ps)
       val filter = args.flatMap(_.filter)
       distinctModelIds.foreach { id =>
-        val pp = new PositionedParameters(ps)
         pp.setGcValue(id)
         filter.foreach { filter =>
           SetParams.setParams(pp, filter)
