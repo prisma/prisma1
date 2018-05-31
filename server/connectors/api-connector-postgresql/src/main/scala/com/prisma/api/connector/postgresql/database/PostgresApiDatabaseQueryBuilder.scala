@@ -11,6 +11,7 @@ import slick.jdbc.PostgresProfile.api._
 import slick.jdbc.{SQLActionBuilder, _}
 import slick.sql.SqlStreamingAction
 
+import scala.collection.immutable
 import scala.concurrent.ExecutionContext
 
 case class PostgresApiDatabaseQueryBuilder(
@@ -20,6 +21,7 @@ case class PostgresApiDatabaseQueryBuilder(
   import JdbcExtensions._
   import PostgresQueryArgumentsExtensions._
   import PostgresSlickExtensions._
+  import com.prisma.slick.NewJdbcExtensions._
 
   def getResultForModel(model: Model): GetResult[PrismaNode] = GetResult { ps: PositionedResult =>
     getPrismaNode(model, ps)
@@ -98,33 +100,27 @@ case class PostgresApiDatabaseQueryBuilder(
     ScalarListElement(nodeId, position, value)
   }
 
+  def readsPrismeNode(model: Model): ReadsResultSet[PrismaNode] = ReadsResultSet { rs =>
+    val data = model.scalarNonListFields.map(field => field.name -> rs.getGcValue(field.dbName, field.typeIdentifier))
+    PrismaNode(id = rs.getId(model), data = RootGCValue(data: _*))
+  }
+
   def selectAllFromTable(
       model: Model,
       args: Option[QueryArguments],
       overrideMaxNodeCount: Option[Int] = None
   ): DBIO[ResolverResult[PrismaNode]] = {
-
-//    val query = sql"""select * from "#$schemaName"."#${model.dbName}" as "#$ALIAS" """ ++ whereOrderByLimitCommands(args,
-//                                                                                                                    overrideMaxNodeCount,
-//                                                                                                                    model.dbName,
-//                                                                                                                    model.dbNameOfIdField_!)
-
     SimpleDBIO[ResolverResult[PrismaNode]] { ctx =>
+      // prepare statement
       val builder = QueryBuilders.model(schemaName, model, args)
       val ps      = ctx.connection.prepareStatement(builder.queryString)
       builder.setParamsForQueryArgs(ps, args)
+      // execute
       val rs: ResultSet = ps.executeQuery()
-
-      var result: Vector[PrismaNode] = Vector.empty
-      while (rs.next) {
-        val data = model.scalarNonListFields.map(field => field.name -> rs.getGcValue(field.dbName, field.typeIdentifier))
-        result = result :+ PrismaNode(id = rs.getId(model), data = RootGCValue(data: _*))
-      }
-
+      // read result
+      val result: Vector[PrismaNode] = rs.as[PrismaNode](readsPrismeNode(model))
       ResolverResult(result, hasNextPage = false, hasPreviousPage = false)
     }
-
-//    query.as[PrismaNode](getResultForModel(model)).map(args.get.resultTransform)
   }
 
   def batchSelectAllFromRelatedModel(
@@ -133,52 +129,8 @@ case class PostgresApiDatabaseQueryBuilder(
       fromModelIds: Vector[IdGCValue],
       args: Option[QueryArguments]
   ): DBIO[Vector[ResolverResult[PrismaNodeWithParent]]] = {
-//    val relation     = fromField.relation
-//    val relatedModel = fromField.relatedModel_!
-//    val modelTable   = relatedModel.dbName
-//
-//    val relationTableName     = fromField.relation.relationTableName
-//    val (aColumn, bColumn)    = (relation.modelAColumn, relation.modelBColumn)
-//    val columnForFromModel    = relation.columnForRelationSide(fromField.relationSide)
-//    val columnForRelatedModel = relation.columnForRelationSide(fromField.oppositeRelationSide)
-//
-//    def createQuery(id: String, modelRelationSide: String, fieldRelationSide: String) = {
-//      sql"""(select "#$ALIAS".*, "RelationTable"."#$aColumn" as "__Relation__A",  "RelationTable"."#$bColumn" as "__Relation__B"
-//            from "#$schemaName"."#$modelTable" as "#$ALIAS"
-//            inner join "#$schemaName"."#$relationTableName" as "RelationTable"
-//            on "#$ALIAS"."#${relatedModel.dbNameOfIdField_!}" = "RelationTable"."#$fieldRelationSide"
-//            where "RelationTable"."#$modelRelationSide" = '#$id' """ ++ andWhereOrderByLimitCommands(
-//        args,
-//        relatedModel.dbName,
-//        relatedModel.dbNameOfIdField_!,
-//        Some(s""" "RelationTable"."$columnForRelatedModel" """)) ++ sql")"
-//    }
-//
-//    // see https://github.com/graphcool/internal-docs/blob/master/relations.md#findings
-//    val resolveFromBothSidesAndMerge = fromField.relation.isSameFieldSameModelRelation
-//
-//    val query = resolveFromBothSidesAndMerge match {
-//      case false =>
-//        fromModelIds.distinct.view.zipWithIndex.foldLeft(sql"")((a, b) =>
-//          a ++ unionIfNotFirst(b._2) ++ createQuery(b._1.value, columnForFromModel, columnForRelatedModel))
-//
-//      case true =>
-//        fromModelIds.distinct.view.zipWithIndex.foldLeft(sql"")(
-//          (a, b) =>
-//            a ++ unionIfNotFirst(b._2) ++
-//              createQuery(b._1.value, columnForFromModel, columnForRelatedModel) ++
-//              sql"union all " ++
-//              createQuery(b._1.value, columnForRelatedModel, columnForFromModel))
-//    }
-//
-//    val modelRelationSide    = fromField.relationSide.toString
-//    val oppositeRelationSide = fromField.oppositeRelationSide.toString
-
     SimpleDBIO[Vector[ResolverResult[PrismaNodeWithParent]]] { ctx =>
-      val builder               = RelatedModelQueryBuilder(schemaName, fromField, args)
-      val relation              = fromField.relation
-      val columnForFromModel    = relation.columnForRelationSide(fromField.relationSide)
-      val columnForRelatedModel = relation.columnForRelationSide(fromField.oppositeRelationSide)
+      val builder = RelatedModelQueryBuilder(schemaName, fromField, args)
       // see https://github.com/graphcool/internal-docs/blob/master/relations.md#findings
       val resolveFromBothSidesAndMerge = fromField.relation.isSameFieldSameModelRelation
 
@@ -322,7 +274,7 @@ case class PostgresApiDatabaseQueryBuilder(
       relationField: RelationField,
       parentNodeIds: Vector[IdGCValue],
       args: Option[QueryArguments]
-  ): SqlStreamingAction[Vector[(IdGCValue, Int)], (IdGCValue, Int), Effect] = {
+  ): DBIO[Vector[(IdGCValue, Int)]] = {
 
     val relatedModel               = relationField.relatedModel_!
     val relation                   = relationField.relation
