@@ -2,6 +2,8 @@ package com.prisma.slick
 
 import java.sql.{Connection, PreparedStatement, ResultSet}
 
+import scala.collection.mutable
+
 object PreparedStatementExtensions {}
 
 object NewJdbcExtensions {
@@ -36,11 +38,11 @@ object NewJdbcExtensions {
 
   implicit class ResultSetExtensions2(val resultSet: ResultSet) extends AnyVal {
     def as[T](implicit reads: ReadsResultSet[T]): Vector[T] = {
-      var result = Vector.empty[T]
+      val result = mutable.Buffer.empty[T]
       while (resultSet.next) {
-        result = result :+ reads.read(resultSet)
+        result += reads.read(resultSet)
       }
-      result
+      result.toVector
     }
   }
 
