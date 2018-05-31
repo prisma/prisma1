@@ -62,7 +62,7 @@ case class PostgresDataResolver(
   }
 
   override def batchResolveByUnique(model: Model, field: ScalarField, values: Vector[GCValue]): Future[Vector[PrismaNode]] = {
-    val query = queryBuilder.batchSelectFromModelByUnique(model, field.dbName, values)
+    val query = queryBuilder.batchSelectFromModelByUnique(model, field, values)
     performWithTiming("batchResolveByUnique", readonlyClientDatabase.run(query))
   }
 

@@ -181,15 +181,14 @@ case class PostgresApiDatabaseQueryBuilder(
     }
   }
 
-  def batchSelectFromModelByUnique(model: Model, fieldName: String, values: Vector[GCValue]): SimpleDBIO[Vector[PrismaNode]] =
-    SimpleDBIO[Vector[PrismaNode]] { x =>
-      val placeHolders                   = values.map(_ => "?").mkString(",")
-      val query                          = s"""select * from "$schemaName"."${model.dbName}" where "$fieldName" in ($placeHolders)"""
-      val batchSelect: PreparedStatement = x.connection.prepareStatement(query)
-      values.zipWithIndex.foreach { gcValueWithIndex =>
-        batchSelect.setGcValue(gcValueWithIndex._2 + 1, gcValueWithIndex._1)
-      }
-      val rs: ResultSet = batchSelect.executeQuery()
+  def batchSelectFromModelByUnique(model: Model, field: ScalarField, values: Vector[GCValue]): DBIO[Vector[PrismaNode]] = {
+    SimpleDBIO { ctx =>
+      val filter    = ScalarFilter(field, In(values))
+      val queryArgs = Some(QueryArguments.withFilter(filter))
+      val builder   = QueryBuilders.model(schemaName, model, queryArgs)
+      val ps        = ctx.connection.prepareStatement(builder.queryString)
+      builder.setParamsForQueryArgs(ps, queryArgs)
+      val rs: ResultSet = ps.executeQuery()
 
       var result: Vector[PrismaNode] = Vector.empty
       while (rs.next) {
@@ -199,6 +198,7 @@ case class PostgresApiDatabaseQueryBuilder(
 
       result
     }
+  }
 
   def batchSelectAllFromRelatedModel(
       schema: Schema,

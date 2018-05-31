@@ -24,8 +24,8 @@ case class QueryArguments(
 )
 
 object QueryArguments {
-  def empty                              = QueryArguments(skip = None, after = None, first = None, before = None, last = None, filter = None, orderBy = None)
-  def filterOnly(filter: Option[Filter]) = QueryArguments.empty.copy(filter = filter)
+  def empty                      = QueryArguments(skip = None, after = None, first = None, before = None, last = None, filter = None, orderBy = None)
+  def withFilter(filter: Filter) = QueryArguments.empty.copy(filter = Some(filter))
 }
 
 object SortOrder extends Enumeration {
