@@ -93,7 +93,7 @@ case class PostgresApiDatabaseQueryBuilder(
     SimpleDBIO[ResolverResult[PrismaNode]] { ctx =>
       val builder = QueryBuilders.model(schemaName, model, args)
       val ps      = ctx.connection.prepareStatement(builder.queryString)
-      builder.setParams(ps, args)
+      builder.setParamsForQueryArgs(ps, args)
       val rs: ResultSet = ps.executeQuery()
 
       var result: Vector[PrismaNode] = Vector.empty
@@ -134,7 +134,7 @@ case class PostgresApiDatabaseQueryBuilder(
     SimpleDBIO[ResolverResult[ScalarListValues]] { ctx =>
       val builder = QueryBuilders.scalarList(schemaName, field, args)
       val ps      = ctx.connection.prepareStatement(builder.queryString)
-      builder.setParams(ps, args)
+      builder.setParamsForQueryArgs(ps, args)
       val rs: ResultSet = ps.executeQuery()
 
       var result: Vector[ScalarListElement] = Vector.empty
@@ -151,10 +151,25 @@ case class PostgresApiDatabaseQueryBuilder(
     }
   }
 
-  def countAllFromTable(table: String, whereFilter: Option[Filter]): DBIOAction[Int, NoStream, Effect] = {
-    val query = sql"""select count(*)from "#$schemaName"."#$table" """ ++ whereFilterAppendix(schemaName, table, whereFilter)
+  def selectFromScalarList(modelName: String, field: ScalarField, nodeIds: Vector[IdGCValue]): DBIO[Vector[ScalarListValues]] = {
+    val query = sql"""select "nodeId", "position", "value" from "#$schemaName"."#${modelName}_#${field.dbName}" where "nodeId" in (""" ++ combineByComma(
+      nodeIds.map(v => sql"$v")) ++ sql")"
 
-    query.as[Int].map(_.head)
+    query.as[ScalarListElement](getResultForScalarListField(field)).map { scalarListElements =>
+      val grouped: Map[Id, Vector[ScalarListElement]] = scalarListElements.groupBy(_.nodeId)
+      grouped.map { case (id, values) => ScalarListValues(IdGCValue(id), ListGCValue(values.sortBy(_.position).map(_.value))) }.toVector
+    }
+  }
+
+  def countAllFromTable(table: String, whereFilter: Option[Filter]): DBIO[Int] = {
+    SimpleDBIO[Int] { ctx =>
+      val builder = CountQueryBuilder(schemaName, table, whereFilter)
+      val ps      = ctx.connection.prepareStatement(builder.queryString)
+      builder.setParamsForFilter(ps, whereFilter)
+      val rs = ps.executeQuery()
+      rs.next()
+      rs.getInt(1)
+    }
   }
 
   def batchSelectFromModelByUnique(model: Model, fieldName: String, values: Vector[GCValue]): SimpleDBIO[Vector[PrismaNode]] =
@@ -175,16 +190,6 @@ case class PostgresApiDatabaseQueryBuilder(
 
       result
     }
-
-  def selectFromScalarList(modelName: String, field: ScalarField, nodeIds: Vector[IdGCValue]): DBIOAction[Vector[ScalarListValues], NoStream, Effect] = {
-    val query = sql"""select "nodeId", "position", "value" from "#$schemaName"."#${modelName}_#${field.dbName}" where "nodeId" in (""" ++ combineByComma(
-      nodeIds.map(v => sql"$v")) ++ sql")"
-
-    query.as[ScalarListElement](getResultForScalarListField(field)).map { scalarListElements =>
-      val grouped: Map[Id, Vector[ScalarListElement]] = scalarListElements.groupBy(_.nodeId)
-      grouped.map { case (id, values) => ScalarListValues(IdGCValue(id), ListGCValue(values.sortBy(_.position).map(_.value))) }.toVector
-    }
-  }
 
   def batchSelectAllFromRelatedModel(
       schema: Schema,

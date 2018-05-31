@@ -13,11 +13,25 @@ import slick.jdbc.PositionedParameters
 object QueryBuilders {
   def model(schemaName: String, model: Model, args: Option[QueryArguments]): QueryBuilder            = ModelQueryBuilder(schemaName, model, args)
   def scalarList(schemaName: String, field: ScalarField, args: Option[QueryArguments]): QueryBuilder = ScalarListQueryBuilder(schemaName, field, args)
+  def count(schemaName: String, table: String, filter: Option[Filter]): QueryBuilder                 = CountQueryBuilder(schemaName, table, filter)
 }
 
 trait QueryBuilder {
   def queryString: String
-  def setParams(preparedStatement: PreparedStatement, queryArguments: Option[QueryArguments]): Unit = SetParams(preparedStatement, queryArguments)
+  def setParamsForQueryArgs(preparedStatement: PreparedStatement, queryArguments: Option[QueryArguments]): Unit = {
+    SetParams.setQueryArgs(preparedStatement, queryArguments)
+  }
+
+  def setParamsForFilter(preparedStatement: PreparedStatement, filter: Option[Filter]): Unit = {
+    SetParams.setFilter(preparedStatement, filter)
+  }
+}
+
+case class CountQueryBuilder(schemaName: String, table: String, filter: Option[Filter]) extends QueryBuilder {
+  lazy val queryString: String = {
+    s"""SELECT COUNT(*) FROM "$schemaName"."$table" """ +
+      WhereClauseBuilder(schemaName).buildWhereClause(filter)
+  }
 }
 
 case class ScalarListQueryBuilder(schemaName: String, field: ScalarField, queryArguments: Option[QueryArguments]) extends QueryBuilder {
@@ -45,11 +59,14 @@ case class ModelQueryBuilder(schemaName: String, model: Model, queryArguments: O
 }
 
 object SetParams {
-  def apply(preparedStatement: PreparedStatement, queryArguments: Option[QueryArguments]): Unit = {
-    for {
-      queryArgs <- queryArguments
-      filter    <- queryArgs.filter
-    } yield {
+  def setQueryArgs(preparedStatement: PreparedStatement, queryArguments: Option[QueryArguments]): Unit = {
+    queryArguments.foreach { queryArgs =>
+      setFilter(preparedStatement, queryArgs.filter)
+    }
+  }
+
+  def setFilter(preparedStatement: PreparedStatement, filter: Option[Filter]): Unit = {
+    filter.foreach { filter =>
       setParams(new PositionedParameters(preparedStatement), filter)
     }
   }
@@ -251,7 +268,7 @@ object OrderByClauseBuilder {
     }
 
     //always order by nodeId, then positionfield ascending
-    s""""#$alias"."nodeId" #$order, "#$alias"."position" #$idOrder"""
+    s""" ORDER BY "$alias"."nodeId" $order, "$alias"."position" $idOrder """
   }
 
   private def invertOrder(order: String) = order.trim().toLowerCase match {
