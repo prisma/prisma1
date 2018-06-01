@@ -63,7 +63,7 @@ prisma deploy
 
 The GraphQL API of your Prisma service now exposes CRUD operations for the `User` as well as the `Post` type that are defined in your data model and also lets you modify _relations_ between them.
 
-## Step 2: Setup directory
+## Step 2: Setup project directory
 
 Now that you have updated your data model, you will setup your directory structure.
 
@@ -116,7 +116,7 @@ yarn add prisma-binding graphql
 
 ## Step 3: Download the Prisma database schema
 
-The next step is to download the GraphQL schema of Prisma's GraphQL API (also referred to as _Prisma database schema_) into your project so you can point Prisma binding to them.
+The next step is to download the GraphQL schema of Prisma's GraphQL API (also referred to as _Prisma database schema_) into your project so you can point [Prisma binding](https://github.com/prismagraphql/prisma-binding) to them.
 
 Downloading the Prisma database schema is done using the [GraphQL CLI](https://oss.prisma.io/content/GraphQL-CLI/01-Overview.html) and [GraphQL Config](https://oss.prisma.io/content/GraphQL-Config/Overview.html).
 
@@ -132,7 +132,7 @@ yarn global add graphql-cli
 
 <Instruction>
 
-Next, create your `.graphqlconfig` in the root directory of the server (i.e. in the `my-yoga-server` directory):
+Next, create your `.graphqlconfig` in the root directory of the server (i.e. in the `my-node-script` directory):
 
 ```sh
 touch .graphqlconfig.yml
@@ -142,15 +142,10 @@ touch .graphqlconfig.yml
 
 <Instruction>
 
-Put the following contents into it, defining the two GraphQL APIs you're working with in this project (Prisma's GraphQL API as well as the customized API of your `graphql-yoga` server):
+Put the following contents into it, defining Prisma's GraphQL API as a _project_:
 
 ```yml
 projects:
-  app:
-    schemPath: src/schema.graphql
-    extensions:
-      endpoints:
-        default: http://localhost:4000
   prisma:
     schemaPath: src/generated/prisma.graphql
     extensions:
@@ -159,19 +154,19 @@ projects:
 
 </Instruction>
 
-The information you provide in this file is used by the GraphQL CLI as well as the GraphQL Playground. In the Playground specifically it allows you to work with both APIs side-by-side.
+The information you provide in this file is used by the GraphQL CLI as well as the GraphQL Playground.
 
 <Instruction>
 
 To download the Prisma database schema to `src/generated/prisma.graphql`, run the following command in your terminal:
 
 ```sh
-graphql get-schema --project prisma
+graphql get-schema
 ```
 
 </Instruction>
 
-The Prisma database schema which defines the full CRUD API for your database is now available in the location you specified in the `projects.prisma.schemaPath` property in your `.graphqlconfig.yml` (which is `src/generated/prisma.graphql`) and the import statements will work properly.
+The Prisma database schema which defines the full CRUD API for your database is now available in the location you specified in the `projects.prisma.schemaPath` property in your `.graphqlconfig.yml` (which is `src/generated/prisma.graphql`).
 
 <InfoBox>
 
@@ -187,15 +182,17 @@ hooks:
 
 ## Step 4: Send queries and mutations
 
-In this step you will communicate with your Prisma service using Prisma binding.
+In this step, you will communicate with your Prisma service using Prisma binding.
 
-Instantiate a Prisma binding by pointing it to the schema you downloaded in the previous step. You also need to point it to your Prisma URL, which is stored in `prisma/prisma.yml`.
+Therefore, you first instnatiate a Prisma binding by pointing it to the schema you downloaded in the previous step. The binding instance needs to connect to your Prisma API, so you also need to provide the `endpoint` of your Prisma API (which you can find stored in `prisma/prisma.yml`).
 
-The Prisma bindings instance acts as a Javascript SDK of your Prisma service. You can use this expressive API to send queries and mutations to your Prisma database.
+The Prisma binding instance acts as a "JavaScript SDK" for your Prisma service. You can use its API to send queries and mutations to your Prisma database.
+
+![](https://cdn-images-1.medium.com/max/2800/1*RzlbHpIbo1g46x3x2lPUkQ.png)
 
 <Instruction>
 
-Put the following code in `src/index.js`. It instantiates a Prisma binding instance and uses it to send queries and mutations to your Prisma service.
+Put the following code in `src/index.js`. It creates a `Prisma` binding instance and uses it to send queries and mutations to your Prisma service.
 
 <InfoBox type=warning>
 
@@ -204,12 +201,12 @@ Put the following code in `src/index.js`. It instantiates a Prisma binding insta
 </InfoBox>
 
 ```js
-const { Prisma } = require("prisma-binding");
+const { Prisma } = require("prisma-binding")
 
 const prisma = new Prisma({
   typeDefs: "src/generated/prisma.graphql",
   endpoint: "__YOUR_PRISMA_ENDPOINT__"
-});
+})
 
 prisma.mutation
   .createUser({ data: { name: "Alice" } }, "{ id name }")
@@ -217,7 +214,7 @@ prisma.mutation
   // { id: 'cjhcidn31c88i0b62zp4tdemt', name: 'Alice' }
   .then(() => prisma.query.users(null, "{ id name }"))
   .then(response => {
-    console.log(response);
+    console.log(response)
     // [ { id: 'cjhcidn31c88i0b62zp4tdemt', name: 'Alice' } ]
     return prisma.mutation.createPost({
       data: {
@@ -229,10 +226,10 @@ prisma.mutation
           }
         }
       }
-    });
+    })
   })
   .then(response => {
-    console.log(response);
+    console.log(response)
     /*
       { id: 'cjhcidoo5c8af0b62kv4dtv3c',
         title: 'Prisma rocks!',
@@ -242,7 +239,7 @@ prisma.mutation
     return prisma.mutation.updatePost({
       where: { id: response.id },
       data: { published: true }
-    });
+    })
   })
   .then(console.log)
   /*
@@ -258,7 +255,7 @@ prisma.mutation
   .then(console.log)
   // { count: 1 }
   .then(() => prisma.mutation.deleteManyUsers())
-  .then(console.log);
+  .then(console.log)
 // { count: 1 }
 ```
 
@@ -274,11 +271,11 @@ node src/index.js
 
 </Instruction>
 
-## Step 5: Checking for existence
+## Step 5: Check for existence of specific nodes
 
-Besides query and mutation, Prisma binding provides a handy property called `exists`. Just like query or mutation, it contains several auto generated functions. It generates a function for every type in your schema. These functions receive filter arguments and return `true` or `false`.
+Besides `query` and `mutation`, Prisma binding provides a handy property called `exists` which allows you to check whether a node with certain properties exists in the database that is managed by Prisma. The `exists` property exposes one function per type in your data model - each function is named after the type it represents (in your case that's `prisma.exists.User(filter)` and `prisma.exists.Post(filter)`). These functions receive _filter_ arguments and always return `true` or `false`.
 
-Because the schema you created in Step 1 has two models, User and Post, Prisma generated `exists.User` and `exists.Post`.
+Because the schema you created in **Step 1** has two models, `User` and `Post`, Prisma generated `exists.User` and `exists.Post`.
 
 <Instruction>
 
@@ -291,12 +288,12 @@ Put the following code in `src/index.js`. It instantiates a Prisma binding insta
 </InfoBox>
 
 ```js
-const { Prisma } = require("prisma-binding");
+const { Prisma } = require("prisma-binding")
 
 const prisma = new Prisma({
   typeDefs: "src/generated/prisma.graphql",
   endpoint: "__YOUR_PRISMA_ENDPOINT__"
-});
+})
 
 prisma.mutation
   .createUser({ data: { name: "Alice" } }, "{ id name }")
@@ -311,7 +308,7 @@ prisma.mutation
           }
         }
       }
-    });
+    })
   })
   .then(() => prisma.exists.User({ name: "Alice" }))
   .then(response => console.log(response))
@@ -325,7 +322,7 @@ prisma.mutation
   .then(response => console.log(response))
   // false
   .then(() => prisma.exists.User({ name: "Alice" }))
-  .then(console.log);
+  .then(console.log)
   // false
 ```
 
@@ -333,7 +330,7 @@ prisma.mutation
 
 <Instruction>
 
-Run the script to see the query results printed in your terminal.
+Run the script to see the query results printed in your terminal:
 
 ```bash
 node src/index.js
@@ -343,11 +340,9 @@ node src/index.js
 
 ## Step 6: Send raw queries and mutations
 
-Prisma binding also lets you send queries and mutations to your Prisma service. They work exactly the same as the functions generated based on your schema, but they are a little more verbose.
+Prisma binding also lets you send queries and mutations as strings to your Prisma service using the `request` property. This is more verbose because you need to give spell out the entire query/mutation, and also their responses have a little more overhead because they include the _name_ of the query/mutation as a top level key.
 
-Using request is more verbose because you need to give them the full query/mutation, and also their responses have a little more overhead because they include the name of the query/mutation as a top level key.
-
-Prisma binding's `request` uses [`graphql-request`](https://github.com/graphcool/graphql-request) under the hood.
+> Prisma binding's `request` uses [`graphql-request`](https://github.com/prismagraphql/graphql-request) under the hood and therefore has the same API.
 
 <Instruction>
 
@@ -360,12 +355,12 @@ Replace the contents of `src/index.js` with the following code.
 </InfoBox>
 
 ```js
-const { Prisma } = require("prisma-binding");
+const { Prisma } = require("prisma-binding")
 
 const prisma = new Prisma({
   typeDefs: "src/generated/prisma.graphql",
   endpoint: "__YOUR_PRISMA_ENDPOINT__"
-});
+})
 
 const query = `
   {
@@ -374,7 +369,7 @@ const query = `
       name
     }
   }
-`;
+`
 const mutation = `
   mutation CreateUser($name: String!) {
     createUser(data: { name: $name }) {
@@ -382,9 +377,9 @@ const mutation = `
       name
     }
   }
-`;
+`
 
-const variables = { name: 'Bob' };
+const variables = { name: 'Bob' }
 
 prisma.mutation
   .createUser({ data: { name: 'Alice' } }, '{ id name }')
