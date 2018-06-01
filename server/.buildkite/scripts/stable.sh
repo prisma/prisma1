@@ -2,6 +2,11 @@
 
 set -e
 
+# Stable only builds on tag
+if [ -z "$BUILDKITE_TAG" ]; then
+  exit 0
+fi
+
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 $DIR/kill-all-docker-containers.sh
 
