@@ -6,9 +6,10 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 $DIR/kill-all-docker-containers.sh
 
 # Stable release through tag. Tag both x.x and x.x.x.
-NEXT_VERSION=${BUILDKITE_TAG}
 NEXT_DOCKER_TAG=${BUILDKITE_TAG}
 IFS=. read major minor patch <<< ${BUILDKITE_TAG}
+
+ADDITIONALLY_RELEASE=""
 
 # Check which image we additionally have to tag. Either x.x or x.x.x, depending which tag we pushed
 if [ -z $patch ]; then
@@ -19,4 +20,5 @@ else
     ADDITIONALLY_RELEASE="$major.$minor"
 fi
 
+echo "Releasing stable ${NEXT_DOCKER_TAG} and ${ADDITIONALLY_RELEASE}..."
 ${DIR}/docker-build.sh stable ${NEXT_DOCKER_TAG} ${ADDITIONALLY_RELEASE}

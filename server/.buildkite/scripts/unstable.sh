@@ -5,7 +5,7 @@ set -e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 $DIR/kill-all-docker-containers.sh
 
-CHANNEL="${1:?Provide the channel this script is run on (e.g. alpha, beta, stable)}"
+CHANNEL="${1:?Provide the channel this script is run on (e.g. alpha, beta)}"
 VERSION_OFFSET="${2:?Offset in minor version to build against}"
 
 # Rolling number versioning for unstable channels
@@ -17,6 +17,8 @@ LAST_DOCKER_TAG=$(curl -sS 'https://registry.hub.docker.com/v2/repositories/pris
 echo "Last git tag: $LAST_GIT_TAG"
 echo "Next version: $NEXT_VERSION"
 echo "Last docker tag: $LAST_DOCKER_TAG"
+
+NEXT_DOCKER_TAG=""
 
 if [ -z LAST_DOCKER_TAG ]; then
     NEXT_DOCKER_TAG="$NEXT_VERSION-$CHANNEL-1"
@@ -31,4 +33,5 @@ fi
 # Always release -CHANNEL as well
 ADDITIONALLY_RELEASE="$NEXT_VERSION-$CHANNEL"
 
+echo "Releasing ${CHANNEL} ${NEXT_DOCKER_TAG} and ${ADDITIONALLY_RELEASE}..."
 ${DIR}/docker-build.sh ${CHANNEL} ${NEXT_DOCKER_TAG} ${ADDITIONALLY_RELEASE}
