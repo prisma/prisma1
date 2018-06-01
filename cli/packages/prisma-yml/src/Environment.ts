@@ -81,14 +81,15 @@ export class Environment {
     if (this.cloudSessionKey) {
       this.renewToken()
       try {
-        const res = await fetch('https://api.cloud.prisma.sh', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${this.cloudSessionKey}`,
-          } as any,
-          body: JSON.stringify({
-            query: `
+        const res = (await Promise.race([
+          fetch('https://api.cloud.prisma.sh', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${this.cloudSessionKey}`,
+            } as any,
+            body: JSON.stringify({
+              query: `
           {
             me {
               memberships {
@@ -110,9 +111,14 @@ export class Environment {
             }
           }
         `,
-          }),
-          agent: getProxyAgent('https://api.cloud.prisma.sh'),
-        } as any)
+            }),
+            agent: getProxyAgent('https://api.cloud.prisma.sh'),
+          } as any),
+          new Promise((_, r) => setTimeout(() => r(), 6000)),
+        ])) as any
+        if (!res) {
+          return
+        }
         const json = await res.json()
         if (
           json &&
