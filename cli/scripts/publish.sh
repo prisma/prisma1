@@ -11,11 +11,14 @@
 set -e
 set -x
 
-if [[ $CIRCLE_TAG ]]; then
+if [ $CIRCLE_TAG ] && [ $CIRCLE_BRANCH != "master" ]; then
+  echo "The Tag ${CIRCLE_TAG} has been set, but the branch is set to ${CIRCLE_BRANCH}. Tags are only allowed on master"
+fi
+
+if [ $CIRCLE_TAG ] && [ $CIRCLE_BRANCH == "master" ]; then
   echo "WARNING: CIRCLE_TAG is set to $CIRCLE_TAG. This will publish a new version on the @latest tag."
-  sleep 5
 else
-  echo "INFO: This will deploy a new version on the @beta tag"
+  echo "INFO: This will deploy a new version on the @$CIRCLE_BRANCH tag"
 fi
 
 if [[ $CIRCLE_COMPARE_URL ]]; then
@@ -63,7 +66,7 @@ if [[ $CIRCLE_TAG ]]; then
 else
   step=1
   nextDockerMinor=$((nextDockerMinor + step))
-  nextDockerTag="${tagElements[0]}.${nextDockerMinor}-beta"
+  nextDockerTag="${tagElements[0]}.${nextDockerMinor}-${CIRCLE_BRANCH}"
 fi
 
 node cli/scripts/waitUntilTagPublished.js $nextDockerTag
@@ -82,9 +85,9 @@ if [ $introspectionChanged ] || [ $CIRCLE_TAG ]; then
     npm version patch --no-git-tag-version
     npm publish
   else
-    npm version --allow-same-version $(npm info prisma-db-introspection version --tag beta)
+    npm version --allow-same-version $(npm info prisma-db-introspection version --tag $CIRCLE_BRANCH)
     npm version prerelease --no-git-tag-version
-    npm publish --tag beta
+    npm publish --tag $CIRCLE_BRANCH
   fi
   cd ..
 fi
@@ -104,9 +107,9 @@ if [ $ymlChanged ] || [ $CIRCLE_TAG ]; then
     npm version patch --no-git-tag-version
     npm publish
   else
-    npm version --allow-same-version $(npm info prisma-yml version --tag beta)
+    npm version --allow-same-version $(npm info prisma-yml version --tag $CIRCLE_BRANCH)
     npm version prerelease --no-git-tag-version
-    npm publish --tag beta
+    npm publish --tag $CIRCLE_BRANCH
   fi
   yarn install
   cd ..
@@ -125,9 +128,9 @@ if [ $ymlVersionBefore != $ymlVersion ] || [ $engineChanged ]; then
     npm version patch --no-git-tag-version
     npm publish
   else
-    npm version --allow-same-version $(npm info prisma-cli-engine version --tag beta)
+    npm version --allow-same-version $(npm info prisma-cli-engine version --tag $CIRCLE_BRANCH)
     npm version prerelease --no-git-tag-version
-    npm publish --tag beta
+    npm publish --tag $CIRCLE_BRANCH
   fi
   cd ..
 fi
@@ -155,9 +158,9 @@ if [ $ymlVersionBefore != $ymlVersion ] || [ $coreChanged ] || [ $introspectionC
     npm version patch --no-git-tag-version
     npm publish
   else
-    npm version --allow-same-version $(npm info prisma-cli-core version --tag beta)
+    npm version --allow-same-version $(npm info prisma-cli-core version --tag $CIRCLE_BRANCH)
     npm version prerelease --no-git-tag-version
-    npm publish --tag beta
+    npm publish --tag $CIRCLE_BRANCH
   fi
   cd ..
 fi
@@ -170,7 +173,7 @@ yarn install
 yarn build
 
 if [ -z "$CIRCLE_TAG" ]; then
-  latestBetaVersion=$(npm info prisma version --tag beta)
+  latestBetaVersion=$(npm info prisma version --tag $CIRCLE_BRANCH)
   latestVersionElements=(${latestVersion//./ })
   latestBetaVersionElements=(${latestBetaVersion//./ })
 
@@ -178,12 +181,15 @@ if [ -z "$CIRCLE_TAG" ]; then
   latestMinor=${latestVersionElements[1]}
   latestMajor=${latestVersionElements[0]}
 
-  betaLastNumber=`echo $latestBetaVersion | sed -n 's/.*beta\.\([0-9]\{1,\}\)/\1/p'`
+  betaLastNumber=`echo $latestBetaVersion | sed -n "s/.*$CIRCLE_BRANCH\.\([0-9]\{1,\}\)/\1/p"`
 
   echo "betaLastNumber $betaLastNumber"
 
   # calc next minor
   step=1
+  if [ $CIRCLE_BRANCH == "alpha" ]; then
+    step=2
+  fi
   nextMinor=$((latestMinor + step))
 
   nextLastNumber=0
@@ -196,11 +202,11 @@ if [ -z "$CIRCLE_TAG" ]; then
     nextLastNumber=$((betaLastNumber + step))
   fi
 
-  newVersion="$latestMajor.$nextMinor.0-beta.$nextLastNumber"
+  newVersion="$latestMajor.$nextMinor.0-$CIRCLE_BRANCH.$nextLastNumber"
   echo "new version: $newVersion"
 
   npm version $newVersion
-  npm publish --tag beta
+  npm publish --tag $CIRCLE_BRANCH
 else
   newVersion=$CIRCLE_TAG
 
