@@ -29,21 +29,9 @@ You can either improve existing content or add new resources.
 
 If you miss a particular information in [the reference documentation](https://www.prismagraphql.com/docs), feel free to either create an issue or PR. We also welcome [tutorials](https://www.prismagraphql.com/docs/tutorials/) for related topics that you're interested in. If you come across an interesting pattern, feel free to add a new example [to our example list](https://github.com/graphcool/prisma/tree/master/examples)!
 
-## The Unstable Channel
+## Release Channels
 
-Running against the unstable channel in your development or staging environment is a great way to help out. This way you can benefit from features before they are released on the stable channel, and help detect bugs or performance issues.
-
-Note that when running the unstable channel, you might encounter unexpected behaviour.
-Therefore, make sure to run a local backup using `prisma export` before, to stay on the safe side.
-
-Checking out the unstable channel locally is as easy as this:
-
-```
-npm install -g prisma@beta
-prisma local upgrade
-```
-
-Let us know if you encounter any problems on the unstable channel or help improving the documentation for upcoming features!
+Releases are separated into three _channels_: **alpha**, **beta** and **stable**. You can learn more about these three channels and Prisma's release process [here](https://www.prisma.io/blog/improving-prismas-release-process-yaey8deiwaex/).
 
 ## Features
 
