@@ -137,7 +137,7 @@ object MySqlQueryArgumentsExtensions {
         case None            => None
       }
 
-      val cursorCondition = buildCursorCondition(projectId, alias, standardCondition)
+      val cursorCondition = buildCursorCondition(projectId, alias, tableName, standardCondition)
 
       cursorCondition match {
         case None                     => standardCondition
@@ -154,17 +154,20 @@ object MySqlQueryArgumentsExtensions {
     // This creates a query that checks if the id is in a certain set returned by a subquery Q.
     // The subquery Q fetches all the ID's defined by the cursors and order.
     // On invalid cursor params, no error is thrown. The result set will just be empty.
-    def buildCursorCondition(projectId: String, modelId: String, injectedFilter: Option[SQLActionBuilder]): Option[SQLActionBuilder] = {
+    def buildCursorCondition(projectId: String, alias: String, tableName: String, injectedFilter: Option[SQLActionBuilder]): Option[SQLActionBuilder] = {
       // If both params are empty, don't generate any query.
       if (before.isEmpty && after.isEmpty) return None
 
-      val idField = s"`$projectId`.`$modelId`.`id`"
+      val idFieldWithAlias = s"""`$alias`.`id`"""
+      val idField          = s"""`$projectId`.`$tableName`.`id`"""
 
       // First, we fetch the ordering for the query. If none is passed, we order by id, ascending.
       // We need that since before/after are dependent on the order.
-      val (orderByField, sortDirection) = orderBy match {
-        case Some(orderByArg) => (s"`$projectId`.`$modelId`.`${orderByArg.field.dbName}`", orderByArg.sortOrder.toString)
-        case None             => (idField, "asc")
+      val (orderByField, orderByFieldWithAlias, sortDirection) = orderBy match {
+        case Some(orderByArg) =>
+          (s"`$projectId`.`$tableName`.`${orderByArg.field.dbName}`", s"`$alias`.`${orderByArg.field.dbName}`", orderByArg.sortOrder.toString)
+        case None =>
+          (idField, idFieldWithAlias, "asc")
       }
 
       // Then, we select the comparison operation and construct the cursors. For instance, if we use ascending order, and we want
@@ -178,7 +181,8 @@ object MySqlQueryArgumentsExtensions {
           case _                  => throw new IllegalArgumentException
         }
 
-        Some(sql"(#$orderByField, #$idField) #$compOperator ((select #$orderByField from `#$projectId`.`#$modelId` where #$idField = '#$cursor'), '#$cursor')")
+        Some(
+          sql"(#$orderByFieldWithAlias, #$idFieldWithAlias) #$compOperator ((select #$orderByField from `#$projectId`.`#$tableName` where #$idField = '#$cursor'), '#$cursor')")
       }
 
       val afterCursorFilter = after match {

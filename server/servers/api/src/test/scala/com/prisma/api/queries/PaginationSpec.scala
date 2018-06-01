@@ -1,9 +1,7 @@
 package com.prisma.api.queries
 
 import com.prisma.api.ApiSpecBase
-import com.prisma.api.import_export.BulkImport
 import com.prisma.shared.schema_dsl.SchemaDsl
-import cool.graph.cuid.Cuid
 import org.scalatest.{FlatSpec, Matchers}
 
 class PaginationSpec extends FlatSpec with Matchers with ApiSpecBase {
