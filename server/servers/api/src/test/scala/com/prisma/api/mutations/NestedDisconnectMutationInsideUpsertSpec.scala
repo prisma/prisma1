@@ -843,10 +843,11 @@ class NestedDisconnectMutationInsideUpsertSpec extends FlatSpec with Matchers wi
          |      middles: {
          |        upsert: [{
          |              where: {nameMiddle: "the middle"},
-         |              data:{  nameMiddle: "updated middle"
-         |                      bottoms: {disconnect: [{nameBottom: "the bottom"}]
-         |              }
-         |       }}]
+         |              update:{nameMiddle: "updated middle"
+         |                      bottoms: {disconnect: [{nameBottom: "the bottom"}]}
+         |              },
+         |              create:{nameMiddle: "Should not Matter"}
+         |       }]
          |     }
          |   }
          |  ) {
@@ -925,10 +926,10 @@ class NestedDisconnectMutationInsideUpsertSpec extends FlatSpec with Matchers wi
          |      middles: {
          |        upsert: [{
          |              where: {nameMiddle: "the middle"},
-         |              data:{  nameMiddle: "updated middle"
-         |                      bottoms: {disconnect: [{nameBottom: "the bottom"}]
-         |              }
-         |       }}]
+         |              update:{nameMiddle: "updated middle"
+         |                      bottoms: {disconnect: [{nameBottom: "the bottom"}]}},
+         |              create:{nameMiddle: "Should not matter"}
+         |       }]
          |     }
          |   }
          |  ) {
@@ -1005,9 +1006,9 @@ class NestedDisconnectMutationInsideUpsertSpec extends FlatSpec with Matchers wi
          |      middles: {
          |        upsert: [{
          |              where: {nameMiddle: "the middle"},
-         |              data:{  nameMiddle: "updated middle"
-         |                      bottom: {disconnect: true}
-         |              }
+         |              update:{nameMiddle: "updated middle"
+         |                      bottom: {disconnect: true}}
+         |              create:{nameMiddle: "Should not matter"}
          |              }]
          |     }
          |   }
@@ -1089,11 +1090,9 @@ class NestedDisconnectMutationInsideUpsertSpec extends FlatSpec with Matchers wi
          |               nameMiddle: "updated middle"
          |               bottom: {
          |                upsert: {
-         |                  nameBottom: "updated bottom"
-         |                  below: { disconnect: {nameBelow: "below"}
-         |
-         |          }
-         |                }
+         |                  update:{nameBottom: "updated bottom", below: { disconnect: {nameBelow: "below"}}},
+         |                  create:{nameBottom: "Should not matter"}
+         |              }
          |          }
          |       }
          |     }
@@ -1175,10 +1174,10 @@ class NestedDisconnectMutationInsideUpsertSpec extends FlatSpec with Matchers wi
          |    data: {
          |      nameTop: "updated top",
          |      middle: {
-         |        upsert: {
-         |              nameMiddle: "updated middle"
-         |              bottom: {disconnect: true}
-         |      }
+         |        upsert:{
+         |          update:{nameMiddle: "updated middle", bottom: {disconnect: true}},
+         |          create:{nameMiddle: "Should not Matter"}
+         |        }
          |     }
          |   }
          |  ) {
@@ -1252,8 +1251,8 @@ class NestedDisconnectMutationInsideUpsertSpec extends FlatSpec with Matchers wi
          |      nameTop: "updated top",
          |      middle: {
          |        upsert: {
-         |              nameMiddle: "updated middle"
-         |              bottom: {disconnect: true}
+         |              update:{nameMiddle: "updated middle",bottom: {disconnect: true}}
+         |              create:{nameMiddle: "Should not matter"}
          |      }
          |     }
          |   }
