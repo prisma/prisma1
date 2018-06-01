@@ -233,6 +233,13 @@ export class Client {
             return result
           }
 
+          if (e.message.includes('ECONNRESET')) {
+            await new Promise(r => setTimeout(r, 5000))
+            const result = await this.clusterClient.request(query, variables)
+            debug(result)
+            return result
+          }
+
           if (
             e.message.includes('ECONNREFUSED') &&
             (e.message.includes('localhost') || e.message.includes('127.0.0.1'))
