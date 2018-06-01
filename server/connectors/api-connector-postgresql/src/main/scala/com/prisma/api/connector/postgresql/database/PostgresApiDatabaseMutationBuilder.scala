@@ -631,7 +631,7 @@ case class PostgresApiDatabaseMutationBuilder(
               s"Failure inserting RelayRow with Id: $failedId. Cause: ${removeConnectionInfoFromCause(e.getCause.toString)}"
             }
             .toVector
-        case e: Exception => Vector(e.getCause.toString)
+        case e: Exception => Vector(e.getMessage)
       }
 
       val res = nodeResult ++ relayResult
