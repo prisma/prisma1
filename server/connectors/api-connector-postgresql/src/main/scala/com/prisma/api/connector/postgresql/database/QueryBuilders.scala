@@ -8,7 +8,7 @@ import com.prisma.api.schema.APIErrors
 import com.prisma.api.schema.APIErrors.{InvalidFirstArgument, InvalidLastArgument, InvalidSkipArgument}
 import com.prisma.gc_values.{GCValue, NullGCValue, StringGCValue}
 import com.prisma.shared.models._
-import slick.jdbc.PositionedParameters
+import slick.jdbc.{PositionedParameters, SQLActionBuilder}
 
 object QueryBuilders {
   def model(schemaName: String, model: Model, args: Option[QueryArguments]): QueryBuilder            = ModelQueryBuilder(schemaName, model, args)
@@ -34,7 +34,7 @@ case class RelationQueryBuilder(schemaName: String, relation: Relation, queryArg
   lazy val queryString: String = {
     val tableName = relation.relationTableName
     s"""SELECT * FROM "$schemaName"."$tableName" AS "$topLevelAlias" """ +
-      WhereClauseBuilder(schemaName).buildWhereClause(queryArguments.flatMap(_.filter)) +
+      WhereClauseBuilder(schemaName).buildWhereClause(queryArguments.flatMap(_.filter)).getOrElse("") +
       OrderByClauseBuilder.forRelation(relation, topLevelAlias, queryArguments) +
       LimitClauseBuilder.limitClause(queryArguments)
   }
@@ -45,7 +45,7 @@ case class CountQueryBuilder(schemaName: String, table: String, filter: Option[F
 
   lazy val queryString: String = {
     s"""SELECT COUNT(*) FROM "$schemaName"."$table" AS "$topLevelAlias" """ +
-      WhereClauseBuilder(schemaName).buildWhereClause(filter)
+      WhereClauseBuilder(schemaName).buildWhereClause(filter).getOrElse("")
   }
 }
 
@@ -56,7 +56,7 @@ case class ScalarListQueryBuilder(schemaName: String, field: ScalarField, queryA
   lazy val queryString: String = {
     val tableName = s"${field.model.dbName}_${field.dbName}"
     s"""SELECT * FROM "$schemaName"."$tableName" AS "$topLevelAlias" """ +
-      WhereClauseBuilder(schemaName).buildWhereClause(queryArguments.flatMap(_.filter)) +
+      WhereClauseBuilder(schemaName).buildWhereClause(queryArguments.flatMap(_.filter)).getOrElse("") +
       OrderByClauseBuilder.forScalarListField(field, topLevelAlias, queryArguments) +
       LimitClauseBuilder.limitClause(queryArguments)
   }
@@ -90,6 +90,7 @@ case class RelatedModelsQueryBuilder(schemaName: String, fromField: RelationFiel
             on "$ALIAS"."${relatedModel.dbNameOfIdField_!}" = "RelationTable"."$fieldRelationSideColumn"
             where "RelationTable"."$modelRelationSideColumn" = ? AND """ +
       WhereClauseBuilder(schemaName).buildWhereClauseWithoutWhereKeyWord(queryArguments.flatMap(_.filter)) +
+      WhereClauseBuilder(schemaName).buildCursorCondition(queryArguments, relatedModel).map(" AND " + _).getOrElse("") +
       OrderByClauseBuilder.internal("RelationTable", columnForRelatedModel, queryArguments) +
       LimitClauseBuilder.limitClause(queryArguments)
   }
@@ -100,10 +101,12 @@ case class ModelQueryBuilder(schemaName: String, model: Model, queryArguments: O
 
   lazy val queryString: String = {
     s"""SELECT * FROM "$schemaName"."${model.dbName}" AS "$topLevelAlias" """ +
-      WhereClauseBuilder(schemaName).buildWhereClause(queryArguments.flatMap(_.filter)) +
+      WhereClauseBuilder(schemaName).buildWhereClause(queryArguments.flatMap(_.filter)).getOrElse("") +
+      WhereClauseBuilder(schemaName).buildCursorCondition(queryArguments, model).map(" AND " + _).getOrElse("") +
       OrderByClauseBuilder.forModel(model, topLevelAlias, queryArguments) +
       LimitClauseBuilder.limitClause(queryArguments)
   }
+
 }
 
 object SetParams {
@@ -157,12 +160,12 @@ object SetParams {
 case class WhereClauseBuilder(schemaName: String) {
   val topLevelAlias = "Alias"
 
-  def buildWhereClause(filter: Option[Filter]) = {
+  def buildWhereClause(filter: Option[Filter]): Option[String] = {
     val conditions = buildWhereClauseWithoutWhereKeyWord(filter)
     if (conditions.nonEmpty) {
-      "WHERE " + conditions
+      Some("WHERE " + conditions)
     } else {
-      ""
+      None
     }
   }
 
@@ -171,6 +174,54 @@ case class WhereClauseBuilder(schemaName: String) {
       case Some(filter) => buildWheresForFilter(filter, topLevelAlias)
       case None         => "TRUE"
     }
+  }
+
+  // This creates a query that checks if the id is in a certain set returned by a subquery Q.
+  // The subquery Q fetches all the ID's defined by the cursors and order.
+  // On invalid cursor params, no error is thrown. The result set will just be empty.
+
+  def buildCursorCondition(queryArguments: Option[QueryArguments], model: Model): Option[String] = {
+    for {
+      args   <- queryArguments
+      result <- buildCursorCondition(args, model)
+    } yield result
+  }
+
+  def buildCursorCondition(queryArguments: QueryArguments, model: Model): Option[String] = {
+    val (before, after, orderBy) = (queryArguments.before, queryArguments.after, queryArguments.orderBy)
+    // If both params are empty, don't generate any query.
+    if (before.isEmpty && after.isEmpty) return None
+
+    val tableName        = model.dbName
+    val idFieldWithAlias = s""""$topLevelAlias"."${model.dbNameOfIdField_!}""""
+    val idField          = s""""$schemaName"."$tableName"."${model.dbNameOfIdField_!}""""
+
+    // First, we fetch the ordering for the query. If none is passed, we order by id, ascending.
+    // We need that since before/after are dependent on the order.
+    val (orderByField, orderByFieldWithAlias, sortDirection) = orderBy match {
+      case Some(orderByArg) =>
+        (s""""$schemaName"."$tableName"."${orderByArg.field.dbName}"""", s""""$topLevelAlias"."${orderByArg.field.dbName}"""", orderByArg.sortOrder.toString)
+      case None => (idField, idFieldWithAlias, "asc")
+    }
+
+    // Then, we select the comparison operation and construct the cursors. For instance, if we use ascending order, and we want
+    // to get the items before, we use the "<" comparator on the column that defines the order.
+    def cursorFor(cursor: String, cursorType: String): String = {
+      val compOperator = (cursorType, sortDirection.toLowerCase.trim) match {
+        case ("before", "asc")  => "<"
+        case ("before", "desc") => ">"
+        case ("after", "asc")   => ">"
+        case ("after", "desc")  => "<"
+        case _                  => throw new IllegalArgumentException
+      }
+
+      s"""($orderByFieldWithAlias, $idFieldWithAlias) $compOperator ((select $orderByField from "$schemaName"."$tableName" where $idField = '$cursor'), '$cursor')"""
+    }
+
+    val afterCursorFilter  = after.map(cursorFor(_, "after"))
+    val beforeCursorFilter = before.map(cursorFor(_, "before"))
+
+    Some((afterCursorFilter ++ beforeCursorFilter).mkString(" AND "))
   }
 
   private def buildWheresForFilter(filter: Filter, alias: String): String = {
