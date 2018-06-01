@@ -251,9 +251,8 @@ export class Environment {
   }
 
   private initClusters(rc: RC): Cluster[] {
-    const rcClusters = this.getClustersFromRC(rc)
     const sharedClusters = this.getSharedClusters(rc)
-    return [...rcClusters, ...sharedClusters]
+    return [...sharedClusters]
   }
 
   private getSharedClusters(rc: RC): Cluster[] {
@@ -265,23 +264,6 @@ export class Environment {
         rc && rc.cloudSessionKey,
         false,
         true,
-      )
-    })
-  }
-
-  private getClustersFromRC(rc: RC): Cluster[] {
-    if (!rc.clusters) {
-      return []
-    }
-    return Object.keys(rc.clusters).map(name => {
-      const cluster = rc.clusters![name]
-      return new Cluster(
-        this.out,
-        name,
-        cluster.host,
-        cluster.clusterSecret,
-        isLocal(cluster.host),
-        false,
       )
     })
   }
