@@ -81,13 +81,14 @@ class NestedConnectMutationInsideUpsertSpec extends FlatSpec with Matchers with 
     server.query("""mutation { createTenant(data: {name:"Gustav G"}){ id } }""", project)
     server.query("""mutation { createCustomer(data: {name:"Paul P"}){ id } }""", project)
 
-    val result = server.query(
+    server.queryThatMustFail(
       s"""mutation{upsertCustomer(where: {name: "Paul P"}, create: {name: "Bernd B"}, update: {name: "Bernd B",tenant:{connect:{name:"DOES NOT EXIST"}}}) {
          |    tenant{name}
          |  }
          |}
       """,
-      project
+      project,
+      3039
     )
   }
 
