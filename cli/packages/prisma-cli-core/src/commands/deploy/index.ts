@@ -129,27 +129,38 @@ ${chalk.gray(
     if (
       cluster &&
       cluster.local &&
-      !await cluster.isOnline() &&
-      !fs.readdirSync(this.config.definitionDir).includes('docker-compose.yml')
+      !await cluster.isOnline()
+      // !fs.readdirSync(this.config.definitionDir).includes('docker-compose.yml')
     ) {
-      fs.writeFileSync(
-        path.join(this.config.definitionDir, 'docker-compose.yml'),
-        dockerComposeYml,
+      //       if (
+      //         cluster.baseUrl.includes('127.0.0.1') ||
+      //         cluster.baseUrl.includes('localhost')
+      //       ) {
+      //         fs.writeFileSync(
+      //           path.join(this.config.definitionDir, 'docker-compose.yml'),
+      //           dockerComposeYml,
+      //         )
+      //         this.out.log(
+      //           `Created docker-compose.yml with a local prisma server.
+      // Please run ${chalk.cyan('$ docker-compose up -d')} to start your local prisma.
+      // Note: prisma local start will be deprecated soon in favor of the direct usage of docker-compose.`,
+      //         )
+      //         const dockerComposeInstalled = await isDockerComposeInstalled()
+      //         if (!dockerComposeInstalled) {
+      //           this.out.log(
+      //             `To install docker-compose, please follow this link: ${chalk.cyan(
+      //               'https://docs.docker.com/compose/install/',
+      //             )}`,
+      //           )
+      //         }
+      //         process.exit(1)
+      // } else {
+      throw new Error(
+        `Could not connect to server at ${
+          cluster.baseUrl
+        }. Please check if your server is running.`,
       )
-      this.out.log(
-        `Created docker-compose.yml with a local prisma server.
-Please run ${chalk.cyan('$ docker-compose up -d')} to start your local prisma.
-Note: prisma local start will be deprecated soon in favor of the direct usage of docker-compose.`,
-      )
-      const dockerComposeInstalled = await isDockerComposeInstalled()
-      if (!dockerComposeInstalled) {
-        this.out.log(
-          `To install docker-compose, please follow this link: ${chalk.cyan(
-            'https://docs.docker.com/compose/install/',
-          )}`,
-        )
-      }
-      process.exit(1)
+      // }
     }
 
     /**
