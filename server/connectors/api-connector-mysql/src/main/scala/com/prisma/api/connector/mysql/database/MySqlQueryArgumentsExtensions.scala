@@ -122,9 +122,9 @@ object MySqlQueryArgumentsExtensions {
       }
 
       (first, last) match {
-        case (Some(f), _) if items.size > f => ResolverResult(items.dropRight(1), hasPreviousPage = false, hasNextPage = true)
-        case (_, Some(l)) if items.size > l => ResolverResult(items.tail, hasPreviousPage = true, hasNextPage = false)
-        case _                              => ResolverResult(items, hasPreviousPage = false, hasNextPage = false)
+        case (Some(f), _) if items.size > f => ResolverResult(items.dropRight(1), hasPreviousPage = false, hasNextPage = true, parentModelId = None)
+        case (_, Some(l)) if items.size > l => ResolverResult(items.tail, hasPreviousPage = true, hasNextPage = false, parentModelId = None)
+        case _                              => ResolverResult(items, hasPreviousPage = false, hasNextPage = false, parentModelId = None)
       }
     }
 

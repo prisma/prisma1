@@ -61,14 +61,14 @@ case class PostgresApiDatabaseQueryBuilder(
   ): DBIO[ResolverResult[PrismaNode]] = {
     SimpleDBIO[ResolverResult[PrismaNode]] { ctx =>
       // prepare statement
-      val builder = QueryBuilders.model(schemaName, model, args)
+      val builder = ModelQueryBuilder(schemaName, model, args)
       val ps      = ctx.connection.prepareStatement(builder.queryString)
       builder.setParamsForQueryArgs(ps, args)
       // execute
       val rs: ResultSet = ps.executeQuery()
       // read result
       val result: Vector[PrismaNode] = rs.as[PrismaNode](readsPrismaNode(model))
-      ResolverResult(result, hasNextPage = false, hasPreviousPage = false)
+      ResolverResult(args, result)
     }
   }
 
@@ -119,7 +119,7 @@ case class PostgresApiDatabaseQueryBuilder(
       val itemGroupsByModelId = result.groupBy(_.parentId)
       fromModelIds.map { id =>
         itemGroupsByModelId.find(_._1 == id) match {
-          case Some((_, itemsForId)) => ResolverResult(itemsForId, hasPreviousPage = false, hasNextPage = false, parentModelId = Some(id))
+          case Some((_, itemsForId)) => ResolverResult(args, itemsForId, parentModelId = Some(id))
           case None                  => ResolverResult(Vector.empty[PrismaNodeWithParent], hasPreviousPage = false, hasNextPage = false, parentModelId = Some(id))
         }
       }
@@ -139,7 +139,7 @@ case class PostgresApiDatabaseQueryBuilder(
 
       val result = rs.as(readRelation(relation))
 
-      ResolverResult(result, hasNextPage = false, hasPreviousPage = false)
+      ResolverResult(result)
     }
   }
 
@@ -165,7 +165,7 @@ case class PostgresApiDatabaseQueryBuilder(
         .map { case (id, values) => ScalarListValues(IdGCValue(id), ListGCValue(values.sortBy(_.position).map(_.value))) }
         .toVector
 
-      ResolverResult(convertedValues, hasNextPage = false, hasPreviousPage = false)
+      ResolverResult(convertedValues)
     }
   }
 
