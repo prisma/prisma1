@@ -1,3 +1,0 @@
-steps:
-  - label: ":tada: Nothing to do :tada:"
-    command: "echo 'Nothing changed in /server'"
