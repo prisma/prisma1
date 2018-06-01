@@ -114,7 +114,7 @@ volumes:
 
 </Instruction>
 
-To learn more about the structure of this Docker compose file, check out the [reference documentation](!alias-ajai7auhoo).
+To learn more about the structure of this Docker compose file, check out the [reference documentation](!alias-aira9zama5).
 
 <Instruction>
 
