@@ -221,6 +221,19 @@ export class Client {
           }
 
           if (
+            e.message.includes('HTTP method not allowed') &&
+            (this.clusterClient as any).url.endsWith('management')
+          ) {
+            // TODO: make url mutable in graphql client
+            ;(this.clusterClient as any).url = (this
+              .clusterClient as any).url.replace(/management$/, 'cluster')
+
+            const result = await this.clusterClient.request(query, variables)
+            debug(result)
+            return result
+          }
+
+          if (
             e.message.includes('ECONNREFUSED') &&
             (e.message.includes('localhost') || e.message.includes('127.0.0.1'))
           ) {
