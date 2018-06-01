@@ -65,6 +65,9 @@ if [[ $CIRCLE_TAG ]]; then
   nextDockerTag="${tagElements[0]}.${nextDockerMinor}"
 else
   step=1
+  if [ $CIRCLE_BRANCH == "alpha" ]; then
+    step=2
+  fi
   nextDockerMinor=$((nextDockerMinor + step))
   nextDockerTag="${tagElements[0]}.${nextDockerMinor}-${CIRCLE_BRANCH}"
 fi
