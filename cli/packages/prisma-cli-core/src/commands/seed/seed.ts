@@ -22,6 +22,13 @@ export default class Seed extends Command {
     const cluster = this.definition.getCluster()
     this.env.setActiveCluster(cluster!)
 
+    await this.client.initClusterClient(
+      cluster!,
+      serviceName,
+      this.definition.stage,
+      this.definition.getWorkspace() || '*',
+    )
+
     const seed = this.definition.definition!.seed
     if (!seed) {
       throw new Error(
