@@ -4,6 +4,7 @@ import { Importer } from '../import/Importer'
 import { Seeder } from './Seeder'
 import { prettyTime } from '../../util'
 import chalk from 'chalk'
+import * as path from 'path'
 
 export default class Seed extends Command {
   static topic = 'seed'
@@ -13,10 +14,20 @@ export default class Seed extends Command {
       char: 'r',
       description: 'Reset the service before seeding',
     }),
+    ['env-file']: flags.string({
+      description: 'Path to .env file to inject env vars',
+      char: 'e',
+    }),
   }
   async run() {
     const { reset } = this.flags
-    await this.definition.load(this.flags)
+    const envFile = this.flags['env-file']
+
+    if (envFile && !fs.pathExistsSync(path.join(this.config.cwd, envFile))) {
+      await this.out.error(`--env-file path '${envFile}' does not exist`)
+    }
+
+    await this.definition.load(this.flags, envFile)
     const serviceName = this.definition.service!
 
     const cluster = this.definition.getCluster()
