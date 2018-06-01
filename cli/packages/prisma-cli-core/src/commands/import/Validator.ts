@@ -198,7 +198,7 @@ export class Validator {
           ...acc,
           [curr.name.value]: {
             definition: curr,
-            fields: curr.fields.reduce((acc2, curr2) => {
+            fields: curr.fields!.reduce((acc2, curr2) => {
               return {
                 ...acc2,
                 [curr2.name.value]: curr2,
@@ -230,7 +230,7 @@ export class Validator {
       }
       return {
         ...acc,
-        [curr.name.value]: curr.values.reduce((acc2, curr2) => {
+        [curr.name.value]: curr.values!.reduce((acc2, curr2) => {
           return [...acc2, curr2.name.value]
         }, []),
       }
@@ -253,7 +253,7 @@ export class Validator {
     requiredOnly: boolean = false,
     listsOnly: boolean = false,
   ) {
-    return definition.fields
+    return definition.fields!
       .filter(field => {
         const nonNull = field.type.kind === 'NonNullType'
         const isRelation = field.directives
