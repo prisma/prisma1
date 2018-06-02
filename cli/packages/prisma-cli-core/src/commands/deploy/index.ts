@@ -21,6 +21,7 @@ import Up from '../local/up'
 import { EndpointDialog } from '../../utils/EndpointDialog'
 import { isDockerComposeInstalled } from '../../utils/dockerComposeInstalled'
 import { spawnSync } from 'npm-run'
+import * as figures from 'figures'
 
 export default class Deploy extends Command {
   static topic = 'deploy'
@@ -457,10 +458,15 @@ ${chalk.gray(
         this.out.log(stderr)
       }
       const stdout = child.stdout && child.stdout.toString()
-      if (stdout) {
+      if (stdout && stdout.length > 0) {
         this.out.log(stdout)
       }
-      this.out.action.stop()
+      const {status} = child
+      if (status != 0) {
+        this.out.action.stop(chalk.red(figures.cross))
+      } else {
+        this.out.action.stop()
+      }
     }
   }
 
