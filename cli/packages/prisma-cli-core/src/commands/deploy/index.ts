@@ -455,14 +455,17 @@ ${chalk.gray(
       const child = spawnSync(splittedHook[0], splittedHook.slice(1))
       const stderr = child.stderr && child.stderr.toString()
       if (stderr && stderr.length > 0) {
-        this.out.log(stderr)
+        this.out.log(chalk.red(stderr))
       }
       const stdout = child.stdout && child.stdout.toString()
       if (stdout && stdout.length > 0) {
         this.out.log(stdout)
       }
-      const {status} = child
-      if (status != 0) {
+      const {status, error} = child
+      if (error || status != 0) {
+        if (error) {
+          this.out.log(chalk.red(error.message))
+        }
         this.out.action.stop(chalk.red(figures.cross))
       } else {
         this.out.action.stop()
