@@ -106,7 +106,7 @@ This will create a USER role and assign the role to the just created user.
 
 > `assignRole` mutation is open so you don't lock yourself out of your own system :). This kind of mutation should be restricted to only Admins.
 
-Here is what the [restrictions/permissions](./src/permissions/index.js) look like:
+Here is what the [restrictions/permissions](./src/permissions/index.js#L52-L62) look like:
 
 ```js
 const permissions = shield({
