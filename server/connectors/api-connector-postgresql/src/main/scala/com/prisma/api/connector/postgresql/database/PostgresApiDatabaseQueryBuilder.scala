@@ -28,7 +28,7 @@ case class PostgresApiDatabaseQueryBuilder(
   private def getPrismaNode(model: Model, ps: PositionedResult) = {
     val data = model.scalarNonListFields.map(field => field.name -> ps.rs.getGcValue(field.dbName, field.typeIdentifier))
 
-    PrismaNode(id = ps.rs.getId(model), data = RootGCValue(data: _*))
+    PrismaNode(id = ps.rs.getId(model), data = RootGCValue(data: _*), Some(model.name))
   }
 
   def getResultForModelAndRelationSide(model: Model, side: String, oppositeSide: String): GetResult[PrismaNodeWithParent] = GetResult { ps: PositionedResult =>
