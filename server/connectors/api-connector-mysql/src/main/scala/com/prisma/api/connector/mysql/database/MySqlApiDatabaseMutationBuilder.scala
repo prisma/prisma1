@@ -1,14 +1,15 @@
 package com.prisma.api.connector.mysql.database
 
 import java.sql.{PreparedStatement, Statement}
-
+import java.util.Date
 import com.prisma.api.connector._
 import com.prisma.api.connector.mysql.database.JdbcExtensions._
 import com.prisma.api.connector.mysql.database.MySqlSlickExtensions._
 import com.prisma.api.schema.UserFacingError
-import com.prisma.gc_values.{GCValue, GCValueExtractor, ListGCValue, NullGCValue}
+import com.prisma.gc_values._
 import com.prisma.shared.models._
 import cool.graph.cuid.Cuid
+import org.joda.time.{DateTime, DateTimeZone}
 import slick.dbio.{DBIOAction, Effect, NoStream}
 import slick.jdbc.MySQLProfile.api._
 import slick.jdbc.SQLActionBuilder
@@ -65,7 +66,9 @@ object MySqlApiDatabaseMutationBuilder {
     val updateValues = combineByComma(args.raw.asRoot.map.map { case (k, v) => escapeKey(k) ++ sql" = $v" })
 
     if (updateValues.isDefined) {
-      (sql"UPDATE `#${projectId}`.`#${model.name}`" ++ sql"SET " ++ updateValues ++ whereFilterAppendix(projectId, model.name, whereFilter)).asUpdate
+      (sql"UPDATE `#${projectId}`.`#${model.name}`" ++ sql"SET " ++ addUpdatedDateTime(model, updateValues) ++ whereFilterAppendix(projectId,
+                                                                                                                                   model.name,
+                                                                                                                                   whereFilter)).asUpdate
     } else {
       DBIOAction.successful(())
     }
@@ -78,7 +81,7 @@ object MySqlApiDatabaseMutationBuilder {
       case _: ModelEdge   => sql""
     }
 
-    val baseQuery = sql"UPDATE `#${projectId}`.`#${path.lastModel.name}` SET " ++ updateValues ++ sql"WHERE `id` ="
+    val baseQuery = sql"UPDATE `#${projectId}`.`#${path.lastModel.name}` SET " ++ addUpdatedDateTime(path.lastModel, updateValues) ++ sql"WHERE `id` ="
 
     if (updateArgs.raw.asRoot.map.isEmpty) {
       DBIOAction.successful(())
@@ -95,6 +98,19 @@ object MySqlApiDatabaseMutationBuilder {
   }
 
   //endregion
+
+  private def addUpdatedDateTime(model: Model, updateValues: Option[SQLActionBuilder]): Option[SQLActionBuilder] = {
+    model.updatedAtField match {
+      case Some(updatedAtField) =>
+        val today              = new Date()
+        val exactlyNow         = new DateTime(today).withZone(DateTimeZone.UTC)
+        val currentDateGCValue = DateTimeGCValue(exactlyNow)
+        val updatedAt          = sql""""#${updatedAtField.dbName}" = $currentDateGCValue """
+        combineByComma(updateValues ++ List(updatedAt))
+      case None =>
+        updateValues
+    }
+  }
 
   //region UPSERT
 

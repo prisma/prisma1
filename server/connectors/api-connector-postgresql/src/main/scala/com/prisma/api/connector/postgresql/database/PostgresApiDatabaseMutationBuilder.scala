@@ -193,7 +193,6 @@ case class PostgresApiDatabaseMutationBuilder(
 
   //endregion
 
-  //region UPSERT
   private def addUpdatedDateTime(model: Model, updateValues: Option[SQLActionBuilder]): Option[SQLActionBuilder] = {
     model.updatedAtField match {
       case Some(updatedAtField) =>
@@ -206,6 +205,8 @@ case class PostgresApiDatabaseMutationBuilder(
         updateValues
     }
   }
+
+  //region UPSERT
 
   def upsert(
       createPath: Path,
