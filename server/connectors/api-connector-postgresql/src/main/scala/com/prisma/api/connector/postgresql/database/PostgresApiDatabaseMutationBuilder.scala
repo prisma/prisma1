@@ -263,10 +263,15 @@ case class PostgresApiDatabaseMutationBuilder(
   }
 
   def deleteRelayIds(model: Model, whereFilter: Option[Filter]) = {
-    (sql"""DELETE FROM "#$schemaName"."_RelayId" WHERE "id" IN ( SELECT "#${model.dbNameOfIdField_!}" FROM "#$schemaName"."#${model.dbName}"""" ++ whereFilterAppendix(
-      schemaName,
-      model.dbName,
-      whereFilter) ++ sql")").asUpdate
+    SimpleDBIO { ctx =>
+      val query = s"""DELETE FROM "$schemaName"."_RelayId" WHERE "id" IN ( """ +
+        s"""SELECT "${model.dbNameOfIdField_!}" FROM "$schemaName"."${model.dbName}" as "$topLevelAlias" """ +
+        WhereClauseBuilder(schemaName).buildWhereClause(whereFilter).getOrElse("") +
+        ")"
+      val ps = ctx.connection.prepareStatement(query)
+      SetParams.setFilter(ps, whereFilter)
+      ps.executeUpdate()
+    }
   }
 
   def deleteDataItem(path: Path) =
