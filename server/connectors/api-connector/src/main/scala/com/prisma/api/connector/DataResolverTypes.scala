@@ -10,8 +10,35 @@ case class ResolverResult[T](
     nodes: Vector[T],
     hasNextPage: Boolean,
     hasPreviousPage: Boolean,
-    parentModelId: Option[IdGCValue] = None
+    parentModelId: Option[IdGCValue]
 )
+
+object ResolverResult {
+  def apply[T](nodes: Vector[T]): ResolverResult[T] = {
+    ResolverResult(nodes, hasNextPage = false, hasPreviousPage = false, parentModelId = None)
+  }
+
+  def apply[T](queryArguments: Option[QueryArguments], vector: Vector[T], parentModelId: Option[IdGCValue] = None): ResolverResult[T] = queryArguments match {
+    case Some(args) => apply(args, vector, parentModelId)
+    case None       => ResolverResult(vector, hasPreviousPage = false, hasNextPage = false, parentModelId = parentModelId)
+  }
+
+  // If order is inverted we have to reverse the returned data items. We do this in-mem to keep the sql query simple.
+  // Also, remove excess items from limit + 1 queries and set page info (hasNext, hasPrevious).
+  def apply[T](queryArguments: QueryArguments, vector: Vector[T], parentModelId: Option[IdGCValue]): ResolverResult[T] = {
+    val isReverseOrder = queryArguments.last.isDefined
+    val items = isReverseOrder match {
+      case true  => vector.reverse
+      case false => vector
+    }
+
+    (queryArguments.first, queryArguments.last) match {
+      case (Some(f), _) if items.size > f => ResolverResult(items.dropRight(1), hasPreviousPage = false, hasNextPage = true, parentModelId = parentModelId)
+      case (_, Some(l)) if items.size > l => ResolverResult(items.tail, hasPreviousPage = true, hasNextPage = false, parentModelId = parentModelId)
+      case _                              => ResolverResult(items, hasPreviousPage = false, hasNextPage = false, parentModelId = parentModelId)
+    }
+  }
+}
 
 case class QueryArguments(
     skip: Option[Int],
@@ -24,8 +51,8 @@ case class QueryArguments(
 )
 
 object QueryArguments {
-  def empty                              = QueryArguments(skip = None, after = None, first = None, before = None, last = None, filter = None, orderBy = None)
-  def filterOnly(filter: Option[Filter]) = QueryArguments.empty.copy(filter = filter)
+  def empty                      = QueryArguments(skip = None, after = None, first = None, before = None, last = None, filter = None, orderBy = None)
+  def withFilter(filter: Filter) = QueryArguments.empty.copy(filter = Some(filter))
 }
 
 object SortOrder extends Enumeration {

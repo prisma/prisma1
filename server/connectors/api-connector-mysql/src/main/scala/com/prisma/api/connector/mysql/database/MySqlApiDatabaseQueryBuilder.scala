@@ -103,7 +103,7 @@ case class MySqlApiDatabaseQueryBuilder(project: Project)(implicit ec: Execution
 
   def batchSelectFromModelByUniqueSimple(model: Model, fieldName: String, values: Vector[GCValue]): SimpleDBIO[Vector[PrismaNode]] =
     SimpleDBIO[Vector[PrismaNode]] { x =>
-      val query                 = s"select * from `${project.id}`.`${model.name}` where `$fieldName` in ${placeHolders(values)}"
+      val query                 = s"select * from `${project.id}`.`${model.name}` where `$fieldName` in ${queryPlaceHolders(values)}"
       val ps: PreparedStatement = x.connection.prepareStatement(query).setValues(values)
       val rs: ResultSet         = ps.executeQuery()
       rs.as[PrismaNode](readsPrismaNode(model))
@@ -187,38 +187,6 @@ case class MySqlApiDatabaseQueryBuilder(project: Project)(implicit ec: Execution
               case None                  => ResolverResult(Vector.empty[PrismaNodeWithParent], hasPreviousPage = false, hasNextPage = false, parentModelId = Some(id))
           })
       }
-  }
-
-  def countAllFromRelatedModels(relationField: RelationField,
-                                parentNodeIds: Vector[IdGCValue],
-                                args: Option[QueryArguments]): SqlStreamingAction[Vector[(IdGCValue, Int)], (IdGCValue, Int), Effect] = {
-
-    val fieldTable        = relationField.relatedModel_!.name
-    val unsafeRelationId  = relationField.relation.relationTableName
-    val modelRelationSide = relationField.relationSide.toString
-    val fieldRelationSide = relationField.oppositeRelationSide.toString
-
-    val (conditionCommand, orderByCommand, limitCommand) =
-      extractQueryArgs(project.id,
-                       fieldTable,
-                       fieldTable,
-                       args,
-                       defaultOrderShortcut = Some(s"""`${project.id}`.`$unsafeRelationId`.$fieldRelationSide"""),
-                       None)
-
-    def createQuery(id: String) = {
-      sql"""(select '#$id', count(*) from `#${project.id}`.`#$fieldTable`
-           inner join `#${project.id}`.`#$unsafeRelationId`
-           on `#${project.id}`.`#$fieldTable`.id = `#${project.id}`.`#$unsafeRelationId`.#$fieldRelationSide
-           where `#${project.id}`.`#$unsafeRelationId`.#$modelRelationSide = '#$id' """ ++
-        prefixIfNotNone("and", conditionCommand) ++
-        prefixIfNotNone("order by", orderByCommand) ++
-        prefixIfNotNone("limit", limitCommand) ++ sql")"
-    }
-
-    val query = parentNodeIds.distinct.view.zipWithIndex.foldLeft(sql"")((a, b) => a ++ unionIfNotFirst(b._2) ++ createQuery(b._1.value))
-
-    query.as[(IdGCValue, Int)]
   }
 
   def unionIfNotFirst(index: Int): SQLActionBuilder = if (index == 0) sql"" else sql"union all "
