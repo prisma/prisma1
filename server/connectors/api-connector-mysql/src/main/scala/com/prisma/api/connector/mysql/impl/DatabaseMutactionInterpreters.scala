@@ -12,7 +12,7 @@ import com.prisma.api.connector.mysql.database.MySqlApiDatabaseMutationBuilder.{
 }
 import com.prisma.api.connector.mysql.database.ErrorMessageParameterHelper.parameterString
 import com.prisma.api.connector.mysql.impl.GetFieldFromSQLUniqueException.getFieldOption
-import com.prisma.api.schema.APIErrors
+import com.prisma.api.schema.{APIErrors, UserFacingError}
 import com.prisma.api.schema.APIErrors.RequiredRelationWouldBeViolated
 import com.prisma.shared.models.{Field, Relation, RelationField}
 import slick.dbio.DBIOAction
@@ -199,19 +199,31 @@ case class UpdateDataItemsInterpreter(mutaction: UpdateDataItems) extends Databa
   override val action = DBIOAction.seq(listActions, nonListActions)
 }
 
-case class UpsertDataItemInterpreter(mutaction: UpsertDataItem) extends DatabaseMutactionInterpreter {
+case class UpsertDataItemInterpreter(mutaction: UpsertDataItem, executor: MySqlDatabaseMutactionExecutor) extends DatabaseMutactionInterpreter {
   val model      = mutaction.updatePath.lastModel
   val project    = mutaction.project
   val createArgs = mutaction.nonListCreateArgs
   val updateArgs = mutaction.nonListUpdateArgs
 
   override val action = {
+
+    val createNested: Vector[DBIOAction[Any, NoStream, Effect.All]] = mutaction.createMutactions.map(executor.interpreterFor).map(_.action)
+    val updateNested: Vector[DBIOAction[Any, NoStream, Effect.All]] = mutaction.updateMutactions.map(executor.interpreterFor).map(_.action)
+
     val createAction = MySqlApiDatabaseMutationBuilder.getDbActionForScalarLists(project, mutaction.createPath, mutaction.listCreateArgs)
     val updateAction = MySqlApiDatabaseMutationBuilder.getDbActionForScalarLists(project, mutaction.updatePath, mutaction.listUpdateArgs)
-    MySqlApiDatabaseMutationBuilder.upsert(project.id, mutaction.createPath, mutaction.updatePath, createArgs, updateArgs, createAction, updateAction)
+    MySqlApiDatabaseMutationBuilder.upsert(project.id,
+                                           mutaction.createPath,
+                                           mutaction.updatePath,
+                                           createArgs,
+                                           updateArgs,
+                                           createAction,
+                                           updateAction,
+                                           createNested,
+                                           updateNested)
   }
 
-  override val errorMapper = {
+  val upsertErrors: PartialFunction[Throwable, UserFacingError] = {
     case e: SQLIntegrityConstraintViolationException if e.getErrorCode == 1062 && getFieldOption(createArgs.keys ++ updateArgs.keys, e).isDefined =>
       APIErrors.UniqueConstraintViolation(model.name, getFieldOption(createArgs.keys ++ updateArgs.keys, e).get)
 
@@ -221,15 +233,23 @@ case class UpsertDataItemInterpreter(mutaction: UpsertDataItem) extends Database
     case e: SQLIntegrityConstraintViolationException if e.getErrorCode == 1048 =>
       APIErrors.FieldCannotBeNull(e.getCause.getMessage)
   }
+
+  val createErrors: Vector[PartialFunction[Throwable, UserFacingError]] = mutaction.createMutactions.map(executor.interpreterFor).map(_.errorMapper)
+  val updateErrors: Vector[PartialFunction[Throwable, UserFacingError]] = mutaction.updateMutactions.map(executor.interpreterFor).map(_.errorMapper)
+  override val errorMapper                                              = (updateErrors ++ createErrors).foldLeft(upsertErrors)(_ orElse _)
+
 }
 
-case class UpsertDataItemIfInRelationWithInterpreter(mutaction: UpsertDataItemIfInRelationWith) extends DatabaseMutactionInterpreter {
+case class UpsertDataItemIfInRelationWithInterpreter(mutaction: UpsertDataItemIfInRelationWith, executor: MySqlDatabaseMutactionExecutor)
+    extends DatabaseMutactionInterpreter {
   val project = mutaction.project
 
-  val scalarListsCreate = MySqlApiDatabaseMutationBuilder.getDbActionForScalarLists(project, mutaction.createPath, mutaction.createListArgs)
-  val scalarListsUpdate = MySqlApiDatabaseMutationBuilder.getDbActionForScalarLists(project, mutaction.updatePath, mutaction.updateListArgs)
-  val relationChecker   = NestedCreateRelationInterpreter(NestedCreateRelation(project, mutaction.createPath, false))
-  val createCheck       = DBIOAction.seq(relationChecker.allActions: _*)
+  val scalarListsCreate                                           = MySqlApiDatabaseMutationBuilder.getDbActionForScalarLists(project, mutaction.createPath, mutaction.createListArgs)
+  val scalarListsUpdate                                           = MySqlApiDatabaseMutationBuilder.getDbActionForScalarLists(project, mutaction.updatePath, mutaction.updateListArgs)
+  val relationChecker                                             = NestedCreateRelationInterpreter(NestedCreateRelation(project, mutaction.createPath, false))
+  val createCheck                                                 = DBIOAction.seq(relationChecker.allActions: _*)
+  val createNested: Vector[DBIOAction[Any, NoStream, Effect.All]] = mutaction.createMutactions.map(executor.interpreterFor).map(_.action)
+  val updateNested: Vector[DBIOAction[Any, NoStream, Effect.All]] = mutaction.updateMutactions.map(executor.interpreterFor).map(_.action)
 
   override val action = MySqlApiDatabaseMutationBuilder.upsertIfInRelationWith(
     project = project,
@@ -239,10 +259,12 @@ case class UpsertDataItemIfInRelationWithInterpreter(mutaction: UpsertDataItemIf
     updateArgs = mutaction.updateNonListArgs,
     scalarListCreate = scalarListsCreate,
     scalarListUpdate = scalarListsUpdate,
-    createCheck = createCheck
+    createCheck = createCheck,
+    createNested,
+    updateNested
   )
 
-  override val errorMapper = {
+  val upsertErrors: PartialFunction[Throwable, UserFacingError] = {
     // https://dev.mysql.com/doc/refman/5.5/en/error-messages-server.html#error_er_dup_entry
     case e: SQLIntegrityConstraintViolationException
         if e.getErrorCode == 1062 && getFieldOption(mutaction.createNonListArgs.keys ++ mutaction.updateNonListArgs.keys, e).isDefined =>
@@ -258,6 +280,10 @@ case class UpsertDataItemIfInRelationWithInterpreter(mutaction: UpsertDataItemIf
     case e: SQLException if e.getErrorCode == 1242 && relationChecker.causedByThisMutaction(mutaction.createPath, e.getCause.toString) =>
       throw RequiredRelationWouldBeViolated(project, mutaction.createPath.lastRelation_!)
   }
+
+  val createErrors: Vector[PartialFunction[Throwable, UserFacingError]] = mutaction.createMutactions.map(executor.interpreterFor).map(_.errorMapper)
+  val updateErrors: Vector[PartialFunction[Throwable, UserFacingError]] = mutaction.updateMutactions.map(executor.interpreterFor).map(_.errorMapper)
+  override val errorMapper                                              = (updateErrors ++ createErrors).foldLeft(upsertErrors)(_ orElse _)
 }
 
 case class VerifyConnectionInterpreter(mutaction: VerifyConnection) extends DatabaseMutactionInterpreter {

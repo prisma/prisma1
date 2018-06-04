@@ -120,29 +120,33 @@ object MySqlApiDatabaseMutationBuilder {
              createArgs: PrismaArgs,
              updateArgs: PrismaArgs,
              create: DBIOAction[Any, NoStream, Effect],
-             update: DBIOAction[Any, NoStream, Effect]) = {
+             update: DBIOAction[Any, NoStream, Effect],
+             createNested: Vector[DBIOAction[Any, NoStream, Effect.All]],
+             updateNested: Vector[DBIOAction[Any, NoStream, Effect.All]]) = {
 
     val query = sql"select exists ( SELECT `id` FROM `#$projectId`.`#${updatePath.lastModel.name}` WHERE `id` = " ++ pathQueryForLastChild(projectId,
                                                                                                                                            updatePath) ++ sql")"
     val condition = query.as[Boolean]
     // insert creates item first, then the list values
-    val qInsert = DBIOAction.seq(createDataItem(projectId, createPath, createArgs), createRelayRow(projectId, createPath), create)
+    val allCreateActions = Vector(createDataItem(projectId, createPath, createArgs), createRelayRow(projectId, createPath), create) ++ createNested
+    val qCreate          = DBIOAction.seq(allCreateActions: _*)
     // update first sets the lists, then updates the item
-    val qUpdate = DBIOAction.seq(update, updateDataItemByPath(projectId, updatePath, updateArgs))
+    val allUpdateActions = update +: updateNested :+ updateDataItemByPath(projectId, updatePath, updateArgs)
+    val qUpdate          = DBIOAction.seq(allUpdateActions: _*)
 
-    ifThenElse(condition, qUpdate, qInsert)
+    ifThenElse(condition, qUpdate, qCreate)
   }
 
-  def upsertIfInRelationWith(
-      project: Project,
-      createPath: Path,
-      updatePath: Path,
-      createArgs: PrismaArgs,
-      updateArgs: PrismaArgs,
-      scalarListCreate: DBIOAction[Any, NoStream, Effect],
-      scalarListUpdate: DBIOAction[Any, NoStream, Effect],
-      createCheck: DBIOAction[Any, NoStream, Effect],
-  ) = {
+  def upsertIfInRelationWith(project: Project,
+                             createPath: Path,
+                             updatePath: Path,
+                             createArgs: PrismaArgs,
+                             updateArgs: PrismaArgs,
+                             scalarListCreate: DBIOAction[Any, NoStream, Effect],
+                             scalarListUpdate: DBIOAction[Any, NoStream, Effect],
+                             createCheck: DBIOAction[Any, NoStream, Effect],
+                             createNested: Vector[DBIOAction[Any, NoStream, Effect.All]],
+                             updateNested: Vector[DBIOAction[Any, NoStream, Effect.All]]) = {
 
     def existsNodeIsInRelationshipWith = {
       def nodeSelector(last: Edge) = last match {
@@ -156,13 +160,14 @@ object MySqlApiDatabaseMutationBuilder {
         sql""" `id` IN""" ++ MySqlApiDatabaseMutationBuilder.pathQueryThatUsesWholePath(project.id, updatePath) ++ sql")"
     }
 
-    val condition = existsNodeIsInRelationshipWith.as[Boolean]
-    //insert creates item first and then the listvalues
-    val qInsert = DBIOAction.seq(createDataItem(project.id, createPath, createArgs), createRelayRow(project.id, createPath), createCheck, scalarListCreate)
+    val condition        = existsNodeIsInRelationshipWith.as[Boolean]
+    val allCreateActions = Vector(createDataItem(project.id, createPath, createArgs), createRelayRow(project.id, createPath), createCheck, scalarListCreate) ++ createNested
+    val qCreate          = DBIOAction.seq(allCreateActions: _*)
     //update updates list values first and then the item
-    val qUpdate = DBIOAction.seq(scalarListUpdate, updateDataItemByPath(project.id, updatePath, updateArgs))
+    val allUpdateActions = scalarListUpdate +: updateNested :+ updateDataItemByPath(project.id, updatePath, updateArgs)
+    val qUpdate          = DBIOAction.seq(allUpdateActions: _*)
 
-    ifThenElseNestedUpsert(condition, qUpdate, qInsert)
+    ifThenElseNestedUpsert(condition, qUpdate, qCreate)
   }
 
   //endregion

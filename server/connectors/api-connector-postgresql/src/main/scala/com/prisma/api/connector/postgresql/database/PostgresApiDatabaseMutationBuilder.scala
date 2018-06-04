@@ -214,18 +214,21 @@ case class PostgresApiDatabaseMutationBuilder(
       createArgs: PrismaArgs,
       updateArgs: PrismaArgs,
       create: slick.dbio.DBIOAction[Unit, slick.dbio.NoStream, slick.dbio.Effect with slick.dbio.Effect.All],
-      update: slick.dbio.DBIOAction[Unit, slick.dbio.NoStream, slick.dbio.Effect with slick.dbio.Effect.All]
+      update: slick.dbio.DBIOAction[Unit, slick.dbio.NoStream, slick.dbio.Effect with slick.dbio.Effect.All],
+      createNested: Vector[DBIOAction[Any, NoStream, Effect.All]],
+      updateNested: Vector[DBIOAction[Any, NoStream, Effect.All]]
   ) = {
     val model = updatePath.lastModel
     val query = sql"""select exists ( SELECT "#${model.dbNameOfIdField_!}" FROM "#$schemaName"."#${model.dbName}" WHERE "#${model.dbNameOfIdField_!}" = """ ++
       pathQueryForLastChild(updatePath) ++ sql")"
-    val condition = query.as[Boolean]
-    // insert creates item first, then the list values
-    val qInsert = DBIOAction.seq(createDataItem(createPath, createArgs), createRelayRow(createPath), create)
+    val condition        = query.as[Boolean]
+    val allCreateActions = Vector(createDataItem(createPath, createArgs), createRelayRow(createPath), create) ++ createNested
+    val qCreate          = DBIOAction.seq(allCreateActions: _*)
     // update first sets the lists, then updates the item
-    val qUpdate = DBIOAction.seq(update, updateDataItemByPath(updatePath, updateArgs))
+    val allUpdateActions = update +: updateNested :+ updateDataItemByPath(updatePath, updateArgs)
+    val qUpdate          = DBIOAction.seq(allUpdateActions: _*)
 
-    ifThenElse(condition, qUpdate, qInsert)
+    ifThenElse(condition, qUpdate, qCreate)
   }
 
   def upsertIfInRelationWith(
@@ -236,6 +239,8 @@ case class PostgresApiDatabaseMutationBuilder(
       scalarListCreate: DBIO[_],
       scalarListUpdate: DBIO[_],
       createCheck: DBIO[_],
+      createNested: Vector[DBIOAction[Any, NoStream, Effect.All]],
+      updateNested: Vector[DBIOAction[Any, NoStream, Effect.All]]
   ) = {
 
     def existsNodeIsInRelationshipWith = {
@@ -252,11 +257,14 @@ case class PostgresApiDatabaseMutationBuilder(
 
     val condition = existsNodeIsInRelationshipWith.as[Boolean]
     //insert creates item first and then the listvalues
-    val qInsert = DBIOAction.seq(createDataItem(createPath, createArgs), createRelayRow(createPath), createCheck, scalarListCreate)
-    //update updates list values first and then the item
-    val qUpdate = DBIOAction.seq(scalarListUpdate, updateDataItemByPath(updatePath, updateArgs))
 
-    ifThenElseNestedUpsert(condition, qUpdate, qInsert)
+    val allCreateActions = Vector(createDataItem(createPath, createArgs), createRelayRow(createPath), createCheck, scalarListCreate) ++ createNested
+    val qCreate          = DBIOAction.seq(allCreateActions: _*)
+    //update updates list values first and then the item
+    val allUpdateActions = scalarListUpdate +: updateNested :+ updateDataItemByPath(updatePath, updateArgs)
+    val qUpdate          = DBIOAction.seq(allUpdateActions: _*)
+
+    ifThenElseNestedUpsert(condition, qUpdate, qCreate)
   }
 
   //endregion

@@ -40,7 +40,6 @@ case class DatabaseMutactions(project: Project) {
     updateMutaction +: nested
   }
 
-  //todo this does not support scalar lists at the moment
   def getMutactionsForUpdateMany(model: Model, whereFilter: Option[Filter], args: CoolArgs): Vector[DatabaseMutaction] = report {
     val (nonListArgs, listArgs) = args.getUpdateArgs(model)
     Vector(UpdateDataItems(project, model, whereFilter, nonListArgs, listArgs))
@@ -54,14 +53,44 @@ case class DatabaseMutactions(project: Project) {
     createMutaction +: nestedMutactions
   }
 
-  // todo this still needs to implement execution of nested mutactions
   def getMutactionsForUpsert(createPath: Path, updatePath: Path, allArgs: CoolArgs): Vector[DatabaseMutaction] =
     report {
       val (nonListCreateArgs, listCreateArgs) = allArgs.createArgumentsAsCoolArgs.getCreateArgs(createPath)
       val (nonListUpdateArgs, listUpdateArgs) = allArgs.updateArgumentsAsCoolArgs.getUpdateArgs(updatePath.lastModel)
 
-      Vector(UpsertDataItem(project, createPath, updatePath, nonListCreateArgs, listCreateArgs, nonListUpdateArgs, listUpdateArgs))
+      val createdNestedActions = getNestedMutactionsForUpsert(allArgs.createArgumentsAsCoolArgs, createPath, true)
+      val updateNestedActions  = getNestedMutactionsForUpsert(allArgs.updateArgumentsAsCoolArgs, updatePath, false)
+
+      Vector(
+        UpsertDataItem(project,
+                       createPath,
+                       updatePath,
+                       nonListCreateArgs,
+                       listCreateArgs,
+                       nonListUpdateArgs,
+                       listUpdateArgs,
+                       createdNestedActions,
+                       updateNestedActions))
     }
+
+  def getNestedMutactionsForUpsert(args: CoolArgs, path: Path, triggeredFromCreate: Boolean): Vector[DatabaseMutaction] = {
+    val x = for {
+      field           <- path.relationFieldsNotOnPathOnLastModel
+      subModel        = field.relatedModel_!
+      nestedMutations = args.subNestedMutation(field, subModel)
+    } yield {
+
+      val checkMutactions                 = getMutactionsForWhereChecks(nestedMutations) ++ getMutactionsForConnectionChecks(subModel, nestedMutations, path, field)
+      val mutactionsThatACreateCanTrigger = getMutactionsForNestedConnectMutation(nestedMutations, path, field, triggeredFromCreate)
+      val otherMutactions = getMutactionsForNestedDisconnectMutation(nestedMutations, path, field) ++ getMutactionsForNestedDeleteMutation(nestedMutations,
+                                                                                                                                           path,
+                                                                                                                                           field)
+      if (triggeredFromCreate && mutactionsThatACreateCanTrigger.isEmpty && field.isRequired) throw RelationIsRequired(field.name, path.lastModel.name)
+
+      checkMutactions ++ mutactionsThatACreateCanTrigger ++ otherMutactions
+    }
+    x.flatten.toVector
+  }
 
   // Todo filter for duplicates here? multiple identical where checks for example?
   def getMutactionsForNestedMutation(args: CoolArgs, path: Path, triggeredFromCreate: Boolean): Vector[DatabaseMutaction] = {
@@ -153,7 +182,6 @@ case class DatabaseMutactions(project: Project) {
     }
   }
 
-  // todo this still needs to implement execution of nested mutactions
   def getMutactionsForNestedUpsertMutation(nestedMutation: NestedMutations, path: Path, field: RelationField): Vector[DatabaseMutaction] = {
     nestedMutation.upserts.flatMap { upsert =>
       val extendedPath = extend(path, field, upsert)
@@ -168,6 +196,9 @@ case class DatabaseMutactions(project: Project) {
       val (nonListCreateArgs, listCreateArgs) = upsert.create.getCreateArgs(pathForCreate)
       val (nonListUpdateArgs, listUpdateArgs) = upsert.update.getUpdateArgs(pathForUpdate.lastModel)
 
+      val createdNestedActions = getNestedMutactionsForUpsert(upsert.create, pathForCreate, true)
+      val updateNestedActions  = getNestedMutactionsForUpsert(upsert.update, pathForUpdate, false)
+
       Vector(
         UpsertDataItemIfInRelationWith(
           project = project,
@@ -176,7 +207,9 @@ case class DatabaseMutactions(project: Project) {
           createListArgs = listCreateArgs,
           createNonListArgs = nonListCreateArgs,
           updateListArgs = listUpdateArgs,
-          updateNonListArgs = nonListUpdateArgs
+          updateNonListArgs = nonListUpdateArgs,
+          createdNestedActions,
+          updateNestedActions
         ))
     }
   }
