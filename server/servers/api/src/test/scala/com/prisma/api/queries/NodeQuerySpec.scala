@@ -6,6 +6,8 @@ import org.scalatest.{FlatSpec, Matchers}
 
 class NodeQuerySpec extends FlatSpec with Matchers with ApiSpecBase {
 
+  override def runSuiteOnlyForActiveConnectors: Boolean = true
+
   "the node query" should "return null if the id does not exist" in {
     val project = SchemaDsl.fromString() {
       """
