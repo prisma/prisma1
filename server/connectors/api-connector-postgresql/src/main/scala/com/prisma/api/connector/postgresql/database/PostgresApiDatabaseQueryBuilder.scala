@@ -153,7 +153,7 @@ case class PostgresApiDatabaseQueryBuilder(
       var result: Vector[PrismaNode] = Vector.empty
       while (rs.next) {
         val data = model.scalarNonListFields.map(field => field.name -> rs.getGcValue(field.dbName, field.typeIdentifier))
-        result = result :+ PrismaNode(id = rs.getId(model), data = RootGCValue(data: _*))
+        result = result :+ PrismaNode(id = rs.getId(model), data = RootGCValue(data: _*), Some(model.name))
       }
 
       result

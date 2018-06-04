@@ -111,7 +111,7 @@ case class MySqlApiDatabaseQueryBuilder(project: Project)(implicit ec: Execution
 
   def readsPrismaNode(model: Model): ReadsResultSet[PrismaNode] = ReadsResultSet { rs =>
     val data = model.scalarNonListFields.map(field => field.name -> rs.getGcValue(field.name, field.typeIdentifier))
-    PrismaNode(id = rs.getId, data = RootGCValue(data: _*))
+    PrismaNode(id = rs.getId, data = RootGCValue(data: _*), Some(model.name))
   }
 
   implicit val setGcValue: SetParam[GCValue] = new SetParam[GCValue] {
