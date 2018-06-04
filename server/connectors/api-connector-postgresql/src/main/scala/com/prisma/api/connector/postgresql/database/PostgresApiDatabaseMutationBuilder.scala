@@ -14,7 +14,7 @@ import cool.graph.cuid.Cuid
 import org.joda.time.{DateTime, DateTimeZone}
 import slick.dbio.{DBIOAction, Effect, NoStream}
 import slick.jdbc.PostgresProfile.api._
-import slick.jdbc.SQLActionBuilder
+import slick.jdbc.{PositionedParameters, SQLActionBuilder}
 import slick.sql.{SqlAction, SqlStreamingAction}
 
 case class PostgresApiDatabaseMutationBuilder(
@@ -145,12 +145,21 @@ case class PostgresApiDatabaseMutationBuilder(
 
   //region UPDATE
 
-  def updateDataItems(model: Model, args: PrismaArgs, whereFilter: Option[Filter]) = {
-    val updateValues = combineByComma(args.raw.asRoot.map.map { case (k, v) => escapeKey(model.getFieldByName_!(k).dbName) ++ sql" = $v" })
+  def updateDataItems(model: Model, args: PrismaArgs, whereFilter: Option[Filter]): DBIO[_] = {
+    val map = args.raw.asRoot.map
+    if (map.nonEmpty) {
+      SimpleDBIO { ctx =>
+        val placeHolders = map.map { case (k, _) => model.getFieldByName_!(k).dbName + " = ?" }.mkString(",")
 
-    if (updateValues.isDefined) {
-      (sql"""UPDATE "#$schemaName"."#${model.dbName}"""" ++ sql"SET " ++ addUpdatedDateTime(model, updateValues) ++
-        whereFilterAppendix(schemaName, model.dbName, whereFilter)).asUpdate
+        val query = s"""UPDATE "$schemaName"."${model.dbName}" as "$topLevelAlias" """ + s"""SET $placeHolders """ +
+          WhereClauseBuilder(schemaName).buildWhereClause(whereFilter).getOrElse("")
+
+        val ps = ctx.connection.prepareStatement(query)
+        val pp = new PositionedParameters(ps)
+        map.foreach { case (_, v) => pp.setGcValue(v) }
+        whereFilter.foreach(filter => SetParams.setParams(pp, filter))
+        ps.executeUpdate()
+      }
     } else {
       DBIOAction.successful(())
     }
