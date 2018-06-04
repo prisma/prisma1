@@ -21,6 +21,7 @@ case class PostgresApiDatabaseMutationBuilder(
     schemaName: String,
     schema: Schema,
 ) {
+  import QueryBuilders._
 
   // region CREATE
 
@@ -252,7 +253,13 @@ case class PostgresApiDatabaseMutationBuilder(
   //region DELETE
 
   def deleteDataItems(model: Model, whereFilter: Option[Filter]) = {
-    (sql"""DELETE FROM "#$schemaName"."#${model.dbName}"""" ++ whereFilterAppendix(schemaName, model.dbName, whereFilter)).asUpdate
+    SimpleDBIO { ctx =>
+      val query = s"""DELETE FROM "$schemaName"."${model.dbName}" as "$topLevelAlias" """ +
+        WhereClauseBuilder(schemaName).buildWhereClause(whereFilter).getOrElse("")
+      val ps = ctx.connection.prepareStatement(query)
+      SetParams.setFilter(ps, whereFilter)
+      ps.executeUpdate()
+    }
   }
 
   def deleteRelayIds(model: Model, whereFilter: Option[Filter]) = {

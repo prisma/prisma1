@@ -15,6 +15,8 @@ object QueryBuilders {
   def relation(schemaName: String, relation: Relation, args: Option[QueryArguments]): QueryBuilder   = RelationQueryBuilder(schemaName, relation, args)
   def scalarList(schemaName: String, field: ScalarField, args: Option[QueryArguments]): QueryBuilder = ScalarListQueryBuilder(schemaName, field, args)
   def count(schemaName: String, table: String, filter: Option[Filter]): QueryBuilder                 = CountQueryBuilder(schemaName, table, filter)
+
+  val topLevelAlias = "Alias"
 }
 
 trait QueryBuilder {
