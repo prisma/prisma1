@@ -41,7 +41,7 @@ case class PostgresApiDatabaseQueryBuilder(
 
   private def readPrismaNode(model: Model, rs: ResultSet) = {
     val data = model.scalarNonListFields.map(field => field.name -> rs.getGcValue(field.dbName, field.typeIdentifier))
-    PrismaNode(id = rs.getId(model), data = RootGCValue(data: _*))
+    PrismaNode(id = rs.getId(model), data = RootGCValue(data: _*), Some(model.name))
   }
 
   private def readRelation(relation: Relation): ReadsResultSet[RelationNode] = ReadsResultSet { resultSet =>

@@ -27,7 +27,7 @@ case class MySqlApiDatabaseQueryBuilder(project: Project)(implicit ec: Execution
   private def getPrismaNode(model: Model, ps: PositionedResult) = {
     val data = model.scalarNonListFields.map(field => field.name -> ps.rs.getGcValue(field.name, field.typeIdentifier))
 
-    PrismaNode(id = ps.rs.getId, data = RootGCValue(data: _*))
+    PrismaNode(id = ps.rs.getId, data = RootGCValue(data: _*), Some(model.name))
   }
 
   def getResultForModelAndRelationSide(model: Model, side: String, oppositeSide: String): GetResult[PrismaNodeWithParent] = GetResult { ps: PositionedResult =>
@@ -111,7 +111,7 @@ case class MySqlApiDatabaseQueryBuilder(project: Project)(implicit ec: Execution
 
   def readsPrismaNode(model: Model): ReadsResultSet[PrismaNode] = ReadsResultSet { rs =>
     val data = model.scalarNonListFields.map(field => field.name -> rs.getGcValue(field.name, field.typeIdentifier))
-    PrismaNode(id = rs.getId, data = RootGCValue(data: _*))
+    PrismaNode(id = rs.getId, data = RootGCValue(data: _*), Some(model.name))
   }
 
   implicit val setGcValue: SetParam[GCValue] = new SetParam[GCValue] {

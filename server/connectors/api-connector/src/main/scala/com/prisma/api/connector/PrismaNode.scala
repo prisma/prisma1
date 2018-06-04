@@ -2,9 +2,7 @@ package com.prisma.api.connector
 
 import com.prisma.gc_values.{IdGCValue, ListGCValue, RootGCValue}
 
-case class PrismaNode(id: IdGCValue, data: RootGCValue, typeName: Option[String] = None) {
-//  def toDataItem = DataItem(id.value, data.map.map { case (k, v) => (k, GCValueExtractor.fromGCValueToOption(v)) })
-}
+case class PrismaNode(id: IdGCValue, data: RootGCValue, typeName: Option[String] = None)
 
 object PrismaNode {
   def dummy: PrismaNode = PrismaNode(IdGCValue(""), RootGCValue.empty)
