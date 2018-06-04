@@ -17,7 +17,9 @@ export class Introspector {
     return this.connector.listSchemas()
   }
 
-  async introspect(schemaName: string): Promise<{ numTables: number; sdl: string }> {
+  async introspect(
+    schemaName: string,
+  ): Promise<{ numTables: number; sdl: string }> {
     const tables = await this.connector.listTables(schemaName)
     const sdl = this.printer.print(tables)
 
