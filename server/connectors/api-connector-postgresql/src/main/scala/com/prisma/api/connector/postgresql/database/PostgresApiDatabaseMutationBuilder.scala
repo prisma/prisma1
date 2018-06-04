@@ -4,6 +4,7 @@ import java.sql.{PreparedStatement, Statement}
 import java.util.Date
 
 import com.prisma.api.connector._
+import com.prisma.slick.NewJdbcExtensions._
 import com.prisma.api.connector.postgresql.database.JdbcExtensions._
 import com.prisma.api.connector.postgresql.database.PostgresSlickExtensions._
 import com.prisma.api.schema.UserFacingError
@@ -357,13 +358,22 @@ case class PostgresApiDatabaseMutationBuilder(
   }
 
   def setManyScalarLists(model: Model, listFieldMap: Vector[(String, ListGCValue)], whereFilter: Option[Filter]) = {
-    val idQuery =
-      (sql"""SELECT "#${model.dbNameOfIdField_!}" FROM "#$schemaName"."#${model.dbName}"""" ++ whereFilterAppendix(schemaName, model.dbName, whereFilter))
-        .as[String]
+    val idQuery = SimpleDBIO { ctx =>
+      val query = s"""SELECT "${model.dbNameOfIdField_!}" FROM "$schemaName"."${model.dbName}" as "$topLevelAlias"""" +
+        WhereClauseBuilder(schemaName)
+          .buildWhereClause(whereFilter)
+          .getOrElse("")
+
+      val ps = ctx.connection.prepareStatement(query)
+      SetParams.setFilter(ps, whereFilter)
+      val rs = ps.executeQuery()
+      rs.as(readFirstColumnAsString)
+    }
+
     if (listFieldMap.isEmpty) DBIOAction.successful(()) else setManyScalarListHelper(model, listFieldMap, idQuery)
   }
 
-  def setManyScalarListHelper(model: Model, listFieldMap: Vector[(String, ListGCValue)], idQuery: SqlStreamingAction[Vector[String], String, Effect]) = {
+  def setManyScalarListHelper(model: Model, listFieldMap: Vector[(String, ListGCValue)], idQuery: DBIO[Vector[String]]) = {
     import scala.concurrent.ExecutionContext.Implicits.global
 
     def listInsert(ids: Vector[String]) = {
@@ -760,4 +770,6 @@ case class PostgresApiDatabaseMutationBuilder(
   }
 
   private val dbioUnit = DBIO.successful(())
+
+  private val readFirstColumnAsString: ReadsResultSet[String] = ReadsResultSet(_.getString(1))
 }
