@@ -22,11 +22,11 @@ trait DataResolver {
 
   def batchResolveScalarList(model: Model, listField: ScalarField, nodeIds: Vector[IdGCValue]): Future[Vector[ScalarListValues]]
 
-  def resolveByRelationManyModels(fromField: RelationField,
-                                  fromNodeIds: Vector[IdGCValue],
-                                  args: Option[QueryArguments]): Future[Vector[ResolverResult[PrismaNodeWithParent]]]
-
-  def countByRelationManyModels(fromField: RelationField, fromNodeIds: Vector[IdGCValue], args: Option[QueryArguments]): Future[Vector[(IdGCValue, Int)]]
+  def resolveByRelationManyModels(
+      fromField: RelationField,
+      fromNodeIds: Vector[IdGCValue],
+      args: Option[QueryArguments]
+  ): Future[Vector[ResolverResult[PrismaNodeWithParent]]]
 
   def loadListRowsForExport(model: Model, listField: ScalarField, args: Option[QueryArguments] = None): Future[ResolverResult[ScalarListValues]]
 

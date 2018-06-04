@@ -5,7 +5,8 @@ import java.time.{LocalDateTime, ZoneOffset}
 import java.util.{Calendar, Date, TimeZone}
 
 import com.prisma.gc_values._
-import com.prisma.shared.models.{Model, TypeIdentifier}
+import com.prisma.shared.models.RelationSide.RelationSide
+import com.prisma.shared.models.{Model, RelationSide, TypeIdentifier}
 import org.joda.time.{DateTime, DateTimeZone}
 import play.api.libs.json.Json
 
@@ -44,9 +45,9 @@ object JdbcExtensions {
 
   implicit class ResultSetExtensions(val resultSet: ResultSet) extends AnyVal {
 
-    def getId(model: Model)       = getAsID(model.idField_!.dbName)
-    def getAsID(column: String)   = IdGCValue(resultSet.getString(column))
-    def getParentId(side: String) = IdGCValue(resultSet.getString("__Relation__" + side))
+    def getId(model: Model)                   = getAsID(model.idField_!.dbName)
+    def getAsID(column: String)               = IdGCValue(resultSet.getString(column))
+    def getParentId(side: RelationSide.Value) = IdGCValue(resultSet.getString("__Relation__" + side.toString))
 
     def getGcValue(name: String, typeIdentifier: TypeIdentifier.Value): GCValue = {
       val calendar: java.util.Calendar = Calendar.getInstance(TimeZone.getTimeZone("UTC"))

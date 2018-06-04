@@ -6,7 +6,7 @@ import * as path from 'path'
 import * as childProcess from 'child_process'
 import chalk from 'chalk'
 import { parse } from 'graphql'
-import crossSpawn from 'cross-spawn'
+import * as crossSpawn from 'cross-spawn'
 const debug = require('debug')('Seeder')
 
 export class Seeder {
