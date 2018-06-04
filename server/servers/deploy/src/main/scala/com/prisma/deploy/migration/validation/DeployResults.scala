@@ -1,50 +1,41 @@
 package com.prisma.deploy.migration.validation
 
-import com.prisma.shared.errors.SchemaCheckResult
 import sangria.ast.{EnumTypeDefinition, ObjectTypeDefinition, TypeDefinition}
 
-import scala.collection.immutable
-
-case class SchemaError(`type`: String, description: String, field: Option[String]) extends SchemaCheckResult
-
-object SchemaError {
-  def apply(`type`: String, field: String, description: String): SchemaError = {
-    SchemaError(`type`, description, Some(field))
+object DeployWarnings {
+  def dataLossModel(`type`: String): DeployWarning = {
+    DeployWarning(`type`, "You already have nodes for this model. This change will result in data loss.", None)
   }
 
-  def apply(`type`: String, description: String): SchemaError = {
-    SchemaError(`type`, description, None)
+  def dataLossRelation(`type`: String): DeployWarning = {
+    DeployWarning(`type`, "You already have nodes for this relation. This change will result in data loss.", None)
   }
 
-  def apply(fieldAndType: FieldAndType, description: String): SchemaError = {
-    apply(fieldAndType.objectType.name, fieldAndType.fieldDef.name, description)
-  }
-
-  def global(description: String): SchemaError = {
-    SchemaError("Global", description, None)
+  def dataLossField(`type`: String, field: String): DeployWarning = {
+    DeployWarning(`type`, "You already have nodes for this model. This change may result in data loss.", Some(field))
   }
 }
 
-object SchemaErrors {
+object DeployErrors {
   import com.prisma.deploy.migration.DataSchemaAstExtensions._
 
-  def missingIdField(typeDefinition: TypeDefinition): SchemaError = {
+  def missingIdField(typeDefinition: TypeDefinition): DeployError = {
     error(typeDefinition, "All models must specify the `id` field: `id: ID! @unique`")
   }
 
-  def missingUniqueDirective(fieldAndType: FieldAndType): SchemaError = {
+  def missingUniqueDirective(fieldAndType: FieldAndType): DeployError = {
     error(fieldAndType, s"""All id fields must specify the `@unique` directive.""")
   }
 
-  def missingRelationDirective(fieldAndType: FieldAndType): SchemaError = {
+  def missingRelationDirective(fieldAndType: FieldAndType): DeployError = {
     error(fieldAndType, s"""The relation field `${fieldAndType.fieldDef.name}` must specify a `@relation` directive: `@relation(name: "MyRelation")`""")
   }
 
-  def relationDirectiveNotAllowedOnScalarFields(fieldAndType: FieldAndType): SchemaError = {
+  def relationDirectiveNotAllowedOnScalarFields(fieldAndType: FieldAndType): DeployError = {
     error(fieldAndType, s"""The field `${fieldAndType.fieldDef.name}` is a scalar field and cannot specify the `@relation` directive.""")
   }
 
-  def ambiguousRelationSinceThereIsOnlyOneRelationDirective(fieldAndType: FieldAndType): SchemaError = {
+  def ambiguousRelationSinceThereIsOnlyOneRelationDirective(fieldAndType: FieldAndType): DeployError = {
     val relationName = fieldAndType.fieldDef.previousRelationName.get
     val nameA        = fieldAndType.objectType.name
     val nameB        = fieldAndType.fieldDef.fieldType.namedType.name
@@ -57,17 +48,17 @@ object SchemaErrors {
     )
   }
 
-  def relationDirectiveCannotAppearMoreThanTwice(fieldAndType: FieldAndType): SchemaError = {
+  def relationDirectiveCannotAppearMoreThanTwice(fieldAndType: FieldAndType): DeployError = {
     val relationName = fieldAndType.fieldDef.previousRelationName.get
     error(fieldAndType, s"A relation directive cannot appear more than twice. Relation name: '$relationName'")
   }
 
-  def selfRelationMustAppearOneOrTwoTimes(fieldAndType: FieldAndType): SchemaError = {
+  def selfRelationMustAppearOneOrTwoTimes(fieldAndType: FieldAndType): DeployError = {
     val relationName = fieldAndType.fieldDef.previousRelationName.get
     error(fieldAndType, s"A relation directive for a self relation must appear either 1 or 2 times. Relation name: '$relationName'")
   }
 
-  def typesForOppositeRelationFieldsDoNotMatch(fieldAndType: FieldAndType, other: FieldAndType): SchemaError = {
+  def typesForOppositeRelationFieldsDoNotMatch(fieldAndType: FieldAndType, other: FieldAndType): DeployError = {
     error(
       fieldAndType,
       s"The relation field `${fieldAndType.fieldDef.name}` has the type `${fieldAndType.fieldDef.typeString}`. But the other directive for this relation appeared on the type `${other.objectType.name}`"
@@ -81,15 +72,15 @@ object SchemaErrors {
     )
   }
 
-  def malformedReservedField(fieldAndType: FieldAndType, requirement: FieldRequirement): SchemaError = {
+  def malformedReservedField(fieldAndType: FieldAndType, requirement: FieldRequirement): DeployError = {
     error(
       fieldAndType,
       s"The field `${fieldAndType.fieldDef.name}` is reserved and has to have the format: ${requirementMessage(requirement)}."
     )
   }
 
-  def missingReservedField(objectType: ObjectTypeDefinition, fieldName: String, requirement: FieldRequirement): SchemaError = {
-    SchemaError(
+  def missingReservedField(objectType: ObjectTypeDefinition, fieldName: String, requirement: FieldRequirement): DeployError = {
+    DeployError(
       objectType.name,
       fieldName,
       s"The required field `$fieldName` is missing and has to have the format: ${requirementMessage(requirement)}."
@@ -168,7 +159,7 @@ object SchemaErrors {
     error(fieldAndType, s"""You are using a '@defaultValue' directive. Prisma uses '@default(value: "Value as String")' to declare default values.""")
   }
 
-  def relationFieldTypeWrong(fieldAndType: FieldAndType): SchemaError = {
+  def relationFieldTypeWrong(fieldAndType: FieldAndType): DeployError = {
     val oppositeType = fieldAndType.fieldDef.fieldType.namedType.name
     error(
       fieldAndType,
@@ -179,7 +170,7 @@ object SchemaErrors {
   def invalidScalarNonListType(fieldAndType: FieldAndType)       = invalidScalarType(fieldAndType, listTypesAllowed = false)
   def invalidScalarListOrNonListType(fieldAndType: FieldAndType) = invalidScalarType(fieldAndType, listTypesAllowed = true)
 
-  private def invalidScalarType(fieldAndType: FieldAndType, listTypesAllowed: Boolean): SchemaError = {
+  private def invalidScalarType(fieldAndType: FieldAndType, listTypesAllowed: Boolean): DeployError = {
     val scalarType      = fieldAndType.fieldDef.fieldType.namedType.name
     val nonListFormats  = s"`$scalarType`, `$scalarType!`"
     val listFormats     = s", `[$scalarType!]` or `[$scalarType!]!"
@@ -203,11 +194,11 @@ object SchemaErrors {
   }
 
   def systemFieldCannotBeRemoved(theType: String, field: String) = {
-    SchemaError(theType, field, s"The field `$field` is a system field and cannot be removed.")
+    DeployError(theType, field, s"The field `$field` is a system field and cannot be removed.")
   }
 
   def schemaFileHeaderIsMissing() = {
-    SchemaError.global(s"""The schema must specify the project id and version as a front matter, e.g.:
+    DeployError.global(s"""The schema must specify the project id and version as a front matter, e.g.:
                           |# projectId: your-project-id
                           |# version: 3
                           |type MyType {
@@ -217,24 +208,24 @@ object SchemaErrors {
   }
 
   def schemaFileHeaderIsReferencingWrongVersion(expected: Int) = {
-    SchemaError.global(s"The schema is referencing the wrong project version. Expected version $expected.")
+    DeployError.global(s"The schema is referencing the wrong project version. Expected version $expected.")
   }
 
   def error(fieldAndType: FieldAndType, description: String) = {
-    SchemaError(fieldAndType.objectType.name, fieldAndType.fieldDef.name, description)
+    DeployError(fieldAndType.objectType.name, fieldAndType.fieldDef.name, description)
   }
 
   def error(typeDef: TypeDefinition, description: String) = {
-    SchemaError(typeDef.name, description)
+    DeployError(typeDef.name, description)
   }
 
   // note: the cli relies on the string "destructive changes" being present in this error message. Ugly but effective
-  def forceArgumentRequired: SchemaError = {
-    SchemaError.global(
+  def forceArgumentRequired: DeployError = {
+    DeployError.global(
       "Your migration includes potentially destructive changes. Review using `graphcool deploy --dry-run` and continue using `graphcool deploy --force`.")
   }
 
   def invalidEnv(message: String) = {
-    SchemaError.global(s"""the environment file is invalid: $message""")
+    DeployError.global(s"""the environment file is invalid: $message""")
   }
 }

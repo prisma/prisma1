@@ -21,7 +21,7 @@ case class PostgresDatabaseMutactionExecutor(clientDb: Database)(implicit ec: Ex
     }
 
     clientDb
-      .run(singleAction.withTransactionIsolation(TransactionIsolation.ReadCommitted))
+      .run(singleAction)
       .recover { case error => throw combinedErrorMapper.lift(error).getOrElse(error) }
   }
 

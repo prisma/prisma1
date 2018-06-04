@@ -52,6 +52,8 @@ workflows:
             branches:
               only:
                 - master
+                - beta
+                - alpha
       - content:
           filters:
             branches:

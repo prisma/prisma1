@@ -48,7 +48,7 @@ prisma init
 
 3. **Define your data model:**
 
-Edit `datamodel.graphql` to define your data model using the [GraphQL SDL notation](https://www.prismagraphql.com/docs/reference/service-configuration/data-modelling-(sdl)-eiroozae8u).
+Edit `datamodel.graphql` to define your data model using the [GraphQL SDL notation](<https://www.prismagraphql.com/docs/reference/service-configuration/data-modelling-(sdl)-eiroozae8u>).
 
 ```graphql
 type Tweet {
@@ -92,14 +92,13 @@ Use the endpoint from the previous step in your frontend (or backend) applicatio
 
 ## Examples
 
-- [demo-application](https://github.com/graphcool/graphql-server-example)
-- [auth](examples/auth)
-- [file-handling-s3](examples/file-handling-s3)
-- [github-auth](examples/github-auth)
-- [permissions](examples/permissions)
-- [resolver-forwarding](examples/resolver-forwarding)
-- [subscriptions](examples/subscriptions)
-
+* [demo-application](https://github.com/graphcool/graphql-server-example)
+* [auth](examples/auth)
+* [file-handling-s3](examples/file-handling-s3)
+* [github-auth](examples/github-auth)
+* [permissions](examples/permissions)
+* [resolver-forwarding](examples/resolver-forwarding)
+* [subscriptions](examples/subscriptions)
 
 ## Architecture
 
@@ -155,5 +154,3 @@ Prisma has a community of thousands of amazing developers and contributors. Welc
 
 Contributions are **welcome and extremely helpful** 🙌
 Please refer [to the contribution guide](https://github.com/graphcool/prisma/blob/master/CONTRIBUTING.md) for more information.
-
-

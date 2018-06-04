@@ -25,7 +25,7 @@ class DeployingUniqueConstraintSpec extends FlatSpec with Matchers with Integrat
 
     val res = deployServer.deploySchemaThatMustError(project, schema1)
     res.toString should be(
-      """{"data":{"deploy":{"migration":{"applied":0,"revision":0},"errors":[{"description":"You are making a field unique, but there are already nodes that would violate that constraint."}],"warnings":[]}}}""")
+      """{"data":{"deploy":{"migration":null,"errors":[{"description":"You are making a field unique, but there are already nodes that would violate that constraint."}],"warnings":[]}}}""")
   }
 
   "Adding a unique constraint without violating data" should "work" in {
@@ -117,7 +117,7 @@ class DeployingUniqueConstraintSpec extends FlatSpec with Matchers with Integrat
 
     val res = deployServer.deploySchemaThatMustError(project, schema1)
     res.toString should be(
-      """{"data":{"deploy":{"migration":{"applied":0,"revision":0},"errors":[{"description":"You are creating a required field but there are already nodes present that would violate that constraint."}],"warnings":[]}}}""")
+      """{"data":{"deploy":{"migration":null,"errors":[{"description":"You are creating a required field but there are already nodes present that would violate that constraint."}],"warnings":[]}}}""")
   }
 
   "Adding a new Int field with a unique constraint" should "work" in {
