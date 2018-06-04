@@ -21,6 +21,7 @@ import Up from '../local/up'
 import { EndpointDialog } from '../../utils/EndpointDialog'
 import { isDockerComposeInstalled } from '../../utils/dockerComposeInstalled'
 import { spawnSync } from 'npm-run'
+import * as figures from 'figures'
 
 export default class Deploy extends Command {
   static topic = 'deploy'
@@ -454,13 +455,21 @@ ${chalk.gray(
       const child = spawnSync(splittedHook[0], splittedHook.slice(1))
       const stderr = child.stderr && child.stderr.toString()
       if (stderr && stderr.length > 0) {
-        this.out.log(stderr)
+        this.out.log(chalk.red(stderr))
       }
       const stdout = child.stdout && child.stdout.toString()
-      if (stdout) {
+      if (stdout && stdout.length > 0) {
         this.out.log(stdout)
       }
-      this.out.action.stop()
+      const {status, error} = child
+      if (error || status != 0) {
+        if (error) {
+          this.out.log(chalk.red(error.message))
+        }
+        this.out.action.stop(chalk.red(figures.cross))
+      } else {
+        this.out.action.stop()
+      }
     }
   }
 

@@ -62,7 +62,7 @@ case class PostgresDataResolver(
   }
 
   override def batchResolveByUnique(model: Model, field: ScalarField, values: Vector[GCValue]): Future[Vector[PrismaNode]] = {
-    val query = queryBuilder.batchSelectFromModelByUnique(model, field.dbName, values)
+    val query = queryBuilder.batchSelectFromModelByUnique(model, field, values)
     performWithTiming("batchResolveByUnique", readonlyClientDatabase.run(query))
   }
 
@@ -78,15 +78,8 @@ case class PostgresDataResolver(
     performWithTiming("resolveByRelation", readonlyClientDatabase.run(query))
   }
 
-  override def countByRelationManyModels(fromField: RelationField,
-                                         fromNodeIds: Vector[IdGCValue],
-                                         args: Option[QueryArguments]): Future[Vector[(IdGCValue, Int)]] = {
-    val query = queryBuilder.countAllFromRelatedModels(project.schema, fromField, fromNodeIds, args)
-    performWithTiming("countByRelation", readonlyClientDatabase.run(query))
-  }
-
   override def loadListRowsForExport(model: Model, field: ScalarField, args: Option[QueryArguments] = None): Future[ResolverResult[ScalarListValues]] = {
-    val query = queryBuilder.selectAllFromListTable(model, field, args, None)
+    val query = queryBuilder.selectAllFromListTable(model, field, args)
     performWithTiming("loadListRowsForExport", readonlyClientDatabase.run(query))
   }
 
