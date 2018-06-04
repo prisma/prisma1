@@ -103,7 +103,7 @@ case class MySqlApiDatabaseQueryBuilder(project: Project)(implicit ec: Execution
 
   def batchSelectFromModelByUniqueSimple(model: Model, fieldName: String, values: Vector[GCValue]): SimpleDBIO[Vector[PrismaNode]] =
     SimpleDBIO[Vector[PrismaNode]] { x =>
-      val query                 = s"select * from `${project.id}`.`${model.name}` where `$fieldName` in ${placeHolders(values)}"
+      val query                 = s"select * from `${project.id}`.`${model.name}` where `$fieldName` in ${queryPlaceHolders(values)}"
       val ps: PreparedStatement = x.connection.prepareStatement(query).setValues(values)
       val rs: ResultSet         = ps.executeQuery()
       rs.as[PrismaNode](readsPrismaNode(model))

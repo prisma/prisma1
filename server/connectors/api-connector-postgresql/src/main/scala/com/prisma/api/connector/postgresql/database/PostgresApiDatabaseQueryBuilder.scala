@@ -19,14 +19,10 @@ case class PostgresApiDatabaseQueryBuilder(
   import PostgresSlickExtensions._
   import com.prisma.slick.NewJdbcExtensions._
 
-  def getResultForScalarListField(field: ScalarField): GetResult[ScalarListElement] = GetResult { ps: PositionedResult =>
-    readScalarListElement(field, ps.rs)
-  }
-
-  def readScalarListElement(field: ScalarField, resultSet: ResultSet): ScalarListElement = {
-    val nodeId   = resultSet.getString("nodeId")
-    val position = resultSet.getInt("position")
-    val value    = resultSet.getGcValue("value", field.typeIdentifier)
+  private def readsScalarListField(field: ScalarField): ReadsResultSet[ScalarListElement] = ReadsResultSet { rs =>
+    val nodeId   = rs.getString("nodeId")
+    val position = rs.getInt("position")
+    val value    = rs.getGcValue("value", field.typeIdentifier)
     ScalarListElement(nodeId, position, value)
   }
 
@@ -155,10 +151,7 @@ case class PostgresApiDatabaseQueryBuilder(
       builder.setParamsForQueryArgs(ps, args)
       val rs: ResultSet = ps.executeQuery()
 
-      var result: Vector[ScalarListElement] = Vector.empty
-      while (rs.next) {
-        result = result :+ readScalarListElement(field, rs)
-      }
+      val result = rs.as(readsScalarListField(field))
 
       val convertedValues = result
         .groupBy(_.nodeId)
@@ -170,10 +163,16 @@ case class PostgresApiDatabaseQueryBuilder(
   }
 
   def selectFromScalarList(modelName: String, field: ScalarField, nodeIds: Vector[IdGCValue]): DBIO[Vector[ScalarListValues]] = {
-    val query = sql"""select "nodeId", "position", "value" from "#$schemaName"."#${modelName}_#${field.dbName}" where "nodeId" in (""" ++ combineByComma(
-      nodeIds.map(v => sql"$v")) ++ sql")"
+    SimpleDBIO[Vector[ScalarListValues]] { ctx =>
+      val placeHolders = queryPlaceHolders(nodeIds)
+      val q            = s"""select "nodeId", "position", "value" from "$schemaName"."${modelName}_${field.dbName}" where "nodeId" in """ + placeHolders
+      val ps           = ctx.connection.prepareStatement(q)
+      val pp           = new PositionedParameters(ps)
+      nodeIds.foreach(pp.setGcValue)
 
-    query.as[ScalarListElement](getResultForScalarListField(field)).map { scalarListElements =>
+      val rs                 = ps.executeQuery()
+      val scalarListElements = rs.as(readsScalarListField(field))
+
       val grouped: Map[Id, Vector[ScalarListElement]] = scalarListElements.groupBy(_.nodeId)
       grouped.map { case (id, values) => ScalarListValues(IdGCValue(id), ListGCValue(values.sortBy(_.position).map(_.value))) }.toVector
     }

@@ -52,5 +52,5 @@ object NewJdbcExtensions {
   }
 
   // MISC
-  def placeHolders(values: Vector[_]): String = "(" + values.map(_ => "?").mkString(",") + ")"
+  def queryPlaceHolders(values: Vector[_]): String = "(" + values.map(_ => "?").mkString(",") + ")"
 }
