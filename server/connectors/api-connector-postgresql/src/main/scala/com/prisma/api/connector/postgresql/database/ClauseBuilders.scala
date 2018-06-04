@@ -149,26 +149,25 @@ case class WhereClauseBuilder(schemaName: String) {
 object LimitClauseBuilder {
 
   def limitClause(args: Option[QueryArguments]): String = {
-    val maxNodeCount                 = 1000
     val (firstOpt, lastOpt, skipOpt) = (args.flatMap(_.first), args.flatMap(_.last), args.flatMap(_.skip))
-
-    (firstOpt, lastOpt, skipOpt) match {
-      case (Some(first), _, _) if first < 0 => throw InvalidFirstArgument()
-      case (_, Some(last), _) if last < 0   => throw InvalidLastArgument()
-      case (_, _, Some(skip)) if skip < 0   => throw InvalidSkipArgument()
-      case _ =>
-        val count: Option[Int] = lastOpt.isDefined match {
-          case true  => lastOpt
-          case false => firstOpt
-        }
-        // Increase by 1 to know if we have a next page / previous page for relay queries
-        val limitedCount = count match {
-          case None                        => maxNodeCount
-          case Some(x) if x > maxNodeCount => throw APIErrors.TooManyNodesRequested(x)
-          case Some(x)                     => x + 1
-        }
-        s"LIMIT $limitedCount OFFSET ${skipOpt.getOrElse(0)}"
+    validate(args)
+    lastOpt.orElse(firstOpt) match {
+      case Some(limitedCount) =>
+        // Increase by 1 to know if we have a next page / previous page
+        s"LIMIT ${limitedCount + 1} OFFSET ${skipOpt.getOrElse(0)}"
+      case None =>
+        ""
     }
+  }
+
+  private def validate(args: Option[QueryArguments]): Unit = {
+    throwIfBelowZero(args.flatMap(_.first), InvalidFirstArgument())
+    throwIfBelowZero(args.flatMap(_.last), InvalidLastArgument())
+    throwIfBelowZero(args.flatMap(_.skip), InvalidSkipArgument())
+  }
+
+  private def throwIfBelowZero(opt: Option[Int], exception: Exception): Unit = {
+    if (opt.exists(_ < 0)) throw exception
   }
 }
 
