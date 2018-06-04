@@ -529,20 +529,27 @@ case class PostgresApiDatabaseMutationBuilder(
     triggerFailureWhenExists(query, triggerString)
   }
 
-  def oldParentFailureTriggerByFieldAndFilter(model: Model, whereFilter: Option[Filter], field: RelationField, causeString: String) = {
+  def oldParentFailureTriggerByFieldAndFilter(model: Model, whereFilter: Option[Filter], field: RelationField, causeString: String): DBIO[_] = {
     val relation = field.relation
     val table    = relation.relationTableName
 
     val column         = relation.columnForRelationSide(field.oppositeRelationSide)
     val oppositeColumn = relation.columnForRelationSide(field.relationSide)
 
-    val query =
-      sql"""SELECT * FROM "#$schemaName"."#$table" OLDPARENTPATHFAILURETRIGGERBYFIELDANDFILTER""" ++
-        sql"""WHERE "#$oppositeColumn" IS NOT NULL """ ++
-        sql"""AND "#$column" IN (""" ++
-        sql"""SELECT "#${model.dbNameOfIdField_!}" FROM "#$schemaName"."#${model.dbName}" """ ++
-        whereFilterAppendix(schemaName, model.dbName, whereFilter) ++ sql""")"""
-    triggerFailureWhenExists(query, causeString)
+    SimpleDBIO { ctx =>
+      val innerQuery =
+        s"""SELECT * FROM "$schemaName"."$table" OLDPARENTPATHFAILURETRIGGERBYFIELDANDFILTER """ +
+          s"""WHERE "$oppositeColumn" IS NOT NULL """ +
+          s"""AND "$column" IN (""" +
+          s"""SELECT "${model.dbNameOfIdField_!}" FROM "$schemaName"."${model.dbName}" as "$topLevelAlias" """ +
+          WhereClauseBuilder(schemaName).buildWhereClause(whereFilter).getOrElse("") + ")"
+
+      val query = triggerFailureWhenExists(innerQuery, causeString)
+      val ps    = ctx.connection.prepareStatement(query)
+
+      SetParams.setFilter(ps, whereFilter)
+      ps.executeQuery()
+    }
   }
 
   def oldChildFailureTrigger(path: Path, triggerString: String) = {
@@ -583,15 +590,25 @@ case class PostgresApiDatabaseMutationBuilder(
     } yield action
   }
 
+  def triggerFailureWhenExists(query: String, triggerString: String) = triggerFailureInternal(query, triggerString, notExists = false)
+
   def triggerFailureWhenExists(query: SQLActionBuilder, triggerString: String)    = triggerFailureInternal(query, triggerString, notExists = false)
   def triggerFailureWhenNotExists(query: SQLActionBuilder, triggerString: String) = triggerFailureInternal(query, triggerString, notExists = true)
 
   private def triggerFailureInternal(query: SQLActionBuilder, triggerString: String, notExists: Boolean) = {
     val notValue = if (notExists) s"" else s"not"
 
-    (sql"select case when #$notValue exists ( " ++ query ++ sql" )" ++
+    (sql"select case when #$notValue exists ( " ++ query ++ sql" ) " ++
       sql"then '' " ++
       sql"""else ("#$schemaName".raise_exception($triggerString))end;""").as[String]
+  }
+
+  private def triggerFailureInternal(query: String, triggerString: String, notExists: Boolean) = {
+    val notValue = if (notExists) s"" else s"not"
+
+    s"select case when $notValue exists ( " + query + " )" +
+      "then '' " +
+      s"""else ("$schemaName".raise_exception('$triggerString'))end;"""
   }
 
   //endregion
