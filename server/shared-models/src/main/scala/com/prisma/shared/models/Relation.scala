@@ -37,8 +37,8 @@ class Relation(
   lazy val bothSidesCascade: Boolean                                = modelAOnDelete == OnDelete.Cascade && modelBOnDelete == OnDelete.Cascade
   lazy val modelA: Model                                            = schema.getModelByName_!(modelAName)
   lazy val modelB: Model                                            = schema.getModelByName_!(modelBName)
-  lazy val modelAField: RelationField                               = modelFieldFor(modelAName, RelationSide.A)
-  lazy val modelBField: RelationField                               = modelFieldFor(modelBName, RelationSide.B)
+  lazy val modelAField: RelationField                               = modelA.relationFields.find(_.isRelationWithNameAndSide(name, RelationSide.A)).get
+  lazy val modelBField: RelationField                               = modelB.relationFields.find(_.isRelationWithNameAndSide(name, RelationSide.B)).get
   lazy val hasManifestation: Boolean                                = manifestation.isDefined
   lazy val isInlineRelation: Boolean                                = manifestation.exists(_.isInstanceOf[InlineRelationManifestation])
   lazy val inlineManifestation: Option[InlineRelationManifestation] = manifestation.collect { case x: InlineRelationManifestation => x }
@@ -65,11 +65,6 @@ class Relation(
     val modelAFieldIsList = modelAField.isList
     val modelBFieldIsList = modelBField.isList
     modelAFieldIsList && modelBFieldIsList
-  }
-
-  private def modelFieldFor(model: String, relationSide: RelationSide.Value): RelationField = relationSide match {
-    case RelationSide.A => modelAField
-    case RelationSide.B => modelBField
   }
 
   def columnForRelationSide(relationSide: RelationSide.Value): String = if (relationSide == RelationSide.A) modelAColumn else modelBColumn
