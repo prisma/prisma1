@@ -2,6 +2,13 @@
 
 set -e
 
+if [ -n "$BUILDKITE_TAG" ]; then
+    # Triggered by a tag - has to be beta to have any effect
+    if [[ ! $BUILDKITE_TAG =~ "-beta" ]]; then
+      exit 0
+    fi
+fi
+
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 $DIR/kill-all-docker-containers.sh
 
@@ -9,7 +16,7 @@ CHANNEL="${1:?Provide the channel this script is run on (e.g. alpha, beta)}"
 VERSION_OFFSET="${2:?Offset in minor version to build against}"
 
 # Rolling number versioning for unstable channels
-LAST_GIT_TAG=$(git describe origin/master --abbrev=0 --tags)
+LAST_GIT_TAG=$(git tag --sort=-version:refname | grep -v -e v -e beta | head -n 1)
 TAG_ELEMENTS=(${LAST_GIT_TAG//./ })
 NEXT_VERSION="${TAG_ELEMENTS[0]}.$((${TAG_ELEMENTS[1]} + ${VERSION_OFFSET}))"
 LAST_DOCKER_TAG=$(curl -sS 'https://registry.hub.docker.com/v2/repositories/prismagraphql/prisma/tags/' | jq '."results"[]["name"]' --raw-output | grep -v latest | grep ${NEXT_VERSION}-${CHANNEL}- | head -n 1)
