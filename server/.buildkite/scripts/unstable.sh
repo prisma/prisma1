@@ -10,7 +10,7 @@ if [ -n "$BUILDKITE_TAG" ]; then
   if [[ ! $BUILDKITE_TAG =~ "-beta" ]]; then
     exit 0
   fi
-elif [ "$BUILDKITE_BRANCH" != "$CHANNEL" ]
+elif [ "$BUILDKITE_BRANCH" != "$CHANNEL" ]; then
   # Not triggered by tag - has to be on the branch of the corresponding channel to have any effect
   exit 0
 fi
