@@ -26,7 +26,6 @@ case class ApiTestDatabase()(implicit dependencies: TestApiDependencies) extends
   private def createProjectDatabase(project: Project) = runMutaction(CreateProject(project.id))
 
   private def createRelationTable(project: Project, relation: Relation) = {
-    val schema = project.schema
     val mutaction = relation.manifestation match {
       case Some(m: InlineRelationManifestation) =>
         val modelA = relation.modelA

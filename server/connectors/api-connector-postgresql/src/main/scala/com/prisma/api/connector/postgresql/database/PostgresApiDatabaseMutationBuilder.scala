@@ -84,7 +84,7 @@ case class PostgresApiDatabaseMutationBuilder(
       val selectIdOfOther = sql"""select "#${otherModel.dbNameOfIdField_!}" as id from "#$schemaName"."#${otherModel.dbName}" """ ++ otherWhereCondition
 
       val rowToUpdateCondition = if (relation.isSameModelRelation) {
-        if (path.lastEdge_!.childField.get.relationSide == RelationSide.A) {
+        if (path.lastEdge_!.childField.relationSide == RelationSide.A) {
           childWhereCondition
         } else {
           otherWhereCondition
@@ -98,7 +98,7 @@ case class PostgresApiDatabaseMutationBuilder(
       }
 
       val nodeToLinkToCondition = if (relation.isSameModelRelation) {
-        if (path.lastEdge_!.childField.get.relationSide == RelationSide.A) {
+        if (path.lastEdge_!.childField.relationSide == RelationSide.A) {
           selectIdOfOther
         } else {
           selectIdOfChild

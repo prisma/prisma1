@@ -73,9 +73,9 @@ package object ImportExport {
     RelationData(
       r.relationTableName,
       r.modelB.name,
-      r.modelBField.map(_.name),
+      if (r.modelBField.isHidden) None else Some(r.modelBField.name),
       r.modelA.name,
-      r.modelAField.map(_.name)
+      if (r.modelAField.isHidden) None else Some(r.modelAField.name)
     )
   }
 

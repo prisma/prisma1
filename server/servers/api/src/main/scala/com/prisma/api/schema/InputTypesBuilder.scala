@@ -53,7 +53,7 @@ abstract class UncachedInputTypesBuilder(project: Project) extends InputTypesBui
   }
 
   protected def computeInputObjectTypeForCreate(model: Model, parentField: Option[RelationField]): Option[InputObjectType[Any]] = {
-    val inputObjectTypeName = parentField.flatMap(_.otherRelationField) match {
+    val inputObjectTypeName = parentField.map(_.relatedField) match {
       case Some(field) if !field.isHidden => s"${model.name}CreateWithout${field.name.capitalize}Input"
       case _                              => s"${model.name}CreateInput"
     }
@@ -98,9 +98,9 @@ abstract class UncachedInputTypesBuilder(project: Project) extends InputTypesBui
         for {
           whereArg <- computeInputObjectTypeForWhereUnique(subModel)
         } yield {
-          val typeName = parentField.otherRelationField match {
-            case Some(field) if !field.isHidden => s"${subModel.name}UpdateWithWhereUniqueWithout${field.name.capitalize}Input"
-            case _                              => s"${subModel.name}UpdateWithWhereUniqueNestedInput"
+          val typeName = parentField.relatedField.isHidden match {
+            case false => s"${subModel.name}UpdateWithWhereUniqueWithout${parentField.relatedField.name.capitalize}Input"
+            case true  => s"${subModel.name}UpdateWithWhereUniqueNestedInput"
           }
 
           InputObjectType[Any](
@@ -124,9 +124,9 @@ abstract class UncachedInputTypesBuilder(project: Project) extends InputTypesBui
     val fields   = computeScalarInputFieldsForUpdate(subModel) ++ computeRelationalInputFieldsForUpdate(subModel, parentField = Some(parentField))
 
     if (fields.nonEmpty) {
-      val typeName = parentField.otherRelationField match {
-        case Some(field) if !field.isHidden => s"${subModel.name}UpdateWithout${field.name.capitalize}DataInput"
-        case _                              => s"${subModel.name}UpdateDataInput"
+      val typeName = parentField.relatedField.isHidden match {
+        case false => s"${subModel.name}UpdateWithout${parentField.relatedField.name.capitalize}DataInput"
+        case true  => s"${subModel.name}UpdateDataInput"
       }
 
       Some(
@@ -158,9 +158,9 @@ abstract class UncachedInputTypesBuilder(project: Project) extends InputTypesBui
     for {
       createArg <- computeInputObjectTypeForCreate(subModel, Some(parentField))
     } yield {
-      val typeName = parentField.otherRelationField match {
-        case Some(field) if !field.isHidden => s"${subModel.name}UpsertWithout${field.name.capitalize}Input"
-        case _                              => s"${subModel.name}UpsertNestedInput"
+      val typeName = parentField.relatedField.isHidden match {
+        case false => s"${subModel.name}UpsertWithout${parentField.relatedField.name.capitalize}Input"
+        case true  => s"${subModel.name}UpsertNestedInput"
       }
 
       InputObjectType[Any](
@@ -182,9 +182,9 @@ abstract class UncachedInputTypesBuilder(project: Project) extends InputTypesBui
       whereArg  <- computeInputObjectTypeForWhereUnique(subModel)
       createArg <- computeInputObjectTypeForCreate(subModel, Some(parentField))
     } yield {
-      val typeName = parentField.otherRelationField match {
-        case Some(field) if !field.isHidden => s"${subModel.name}UpsertWithWhereUniqueWithout${field.name.capitalize}Input"
-        case _                              => s"${subModel.name}UpsertWithWhereUniqueNestedInput"
+      val typeName = parentField.relatedField.isHidden match {
+        case false => s"${subModel.name}UpsertWithWhereUniqueWithout${parentField.relatedField.name.capitalize}Input"
+        case true  => s"${subModel.name}UpsertWithWhereUniqueNestedInput"
       }
 
       InputObjectType[Any](
@@ -250,18 +250,18 @@ abstract class UncachedInputTypesBuilder(project: Project) extends InputTypesBui
   private def computeRelationalInputFieldsForUpdate(model: Model, parentField: Option[RelationField]): List[InputField[Any]] = {
     model.visibleRelationFields.flatMap { field =>
       val subModel     = field.relatedModel_!
-      val relatedField = field.otherRelationField
+      val relatedField = field.relatedField
 
       val inputObjectTypeName = {
         val arityPart = if (field.isList) "Many" else "One"
-        val withoutPart = relatedField match {
-          case Some(field) if !field.isHidden => s"Without${field.name.capitalize}"
-          case _                              => ""
+        val withoutPart = relatedField.isHidden match {
+          case false => s"Without${relatedField.name.capitalize}"
+          case true  => ""
         }
         s"${subModel.name}Update${arityPart}${withoutPart}Input"
       }
 
-      val fieldIsOppositeRelationField = parentField.flatMap(_.otherRelationField).contains(field)
+      val fieldIsOppositeRelationField = parentField.map(_.relatedField).contains(field)
 
       if (fieldIsOppositeRelationField) {
         None
@@ -287,18 +287,16 @@ abstract class UncachedInputTypesBuilder(project: Project) extends InputTypesBui
   private def computeRelationalInputFieldsForCreate(model: Model, parentField: Option[RelationField]): List[InputField[Any]] = {
     model.visibleRelationFields.flatMap { field =>
       val subModel     = field.relatedModel_!
-      val relatedField = field.otherRelationField
+      val relatedField = field.relatedField
 
       val inputObjectTypeName = {
-        val arityPart = if (field.isList) "Many" else "One"
-        val withoutPart = relatedField match {
-          case Some(field) if !field.isHidden => s"Without${field.name.capitalize}"
-          case _                              => ""
-        }
+        val arityPart   = if (field.isList) "Many" else "One"
+        val withoutPart = if (!relatedField.isHidden) s"Without${relatedField.name.capitalize}" else ""
+
         s"${subModel.name}Create${arityPart}${withoutPart}Input"
       }
 
-      val fieldIsOppositeRelationField = parentField.flatMap(_.otherRelationField).contains(field)
+      val fieldIsOppositeRelationField = parentField.map(_.relatedField).contains(field)
 
       if (fieldIsOppositeRelationField) {
         None

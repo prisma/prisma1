@@ -77,13 +77,9 @@ case class PostgresApiDatabaseQueryBuilder(
     SimpleDBIO[Vector[ResolverResult[PrismaNodeWithParent]]] { ctx =>
       val builder = RelatedModelsQueryBuilder(schemaName, fromField, args)
       // see https://github.com/graphcool/internal-docs/blob/master/relations.md#findings
-      val resolveFromBothSidesAndMerge = fromField.relation.isSameFieldSameModelRelation
 
-      val baseQuery = if (resolveFromBothSidesAndMerge) {
-        "((" + builder.queryString + ") union all " + "(" + builder.queryStringFromOtherSide + "))"
-      } else {
-        "(" + builder.queryString + ")"
-      }
+      val baseQuery = "(" + builder.queryString + ")"
+
       val distinctModelIds = fromModelIds.distinct
 
       val queries = Vector.fill(distinctModelIds.size)(baseQuery)
@@ -100,12 +96,6 @@ case class PostgresApiDatabaseQueryBuilder(
         pp.setGcValue(id)
         filter.foreach { filter =>
           SetParams.setParams(pp, filter)
-        }
-        if (resolveFromBothSidesAndMerge) { // each query is repeated so we have to set them a second time
-          pp.setGcValue(id)
-          filter.foreach { filter =>
-            SetParams.setParams(pp, filter)
-          }
         }
       }
 

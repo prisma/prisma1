@@ -1,6 +1,5 @@
 package com.prisma.api.mutations
 
-import com.prisma.IgnorePassive
 import com.prisma.api.ApiSpecBase
 import com.prisma.shared.models.Project
 import com.prisma.shared.schema_dsl.SchemaDsl
@@ -8,7 +7,7 @@ import org.scalatest.{FlatSpec, Matchers}
 
 class SameFieldSameModelRelationSpec extends FlatSpec with Matchers with ApiSpecBase {
 
-  "A Many to Many Self Relation" should "be accessible from both sides" in {
+  "A Many to Many Self Relation" should "be accessible from only one side" in {
     val project: Project = SchemaDsl.fromString() { """type Post {
                                                       |  id: ID! @unique
                                                       |  identifier: Int @unique
@@ -42,14 +41,10 @@ class SameFieldSameModelRelationSpec extends FlatSpec with Matchers with ApiSpec
     server.query("{post(where:{identifier: 1}){identifier, related{identifier}}}", project).toString should be(
       """{"data":{"post":{"identifier":1,"related":[{"identifier":2}]}}}""")
     server.query("{post(where:{identifier: 2}){identifier, related{identifier}}}", project).toString should be(
-      """{"data":{"post":{"identifier":2,"related":[{"identifier":1}]}}}""")
-
-    server.query("{posts{identifier, related{identifier}}}", project).toString should be(
-      """{"data":{"posts":[{"identifier":1,"related":[{"identifier":2}]},{"identifier":2,"related":[{"identifier":1}]}]}}"""
-    )
+      """{"data":{"post":{"identifier":2,"related":[]}}}""")
   }
 
-  "A One to One Self Relation" should "be accessible from both sides" taggedAs (IgnorePassive) in {
+  "A One to One Self Relation" should "be accessible from only one side" in {
     val project: Project = SchemaDsl.fromString() { """type Post {
                                                       |  id: ID! @unique
                                                       |  identifier: Int @unique
@@ -83,7 +78,7 @@ class SameFieldSameModelRelationSpec extends FlatSpec with Matchers with ApiSpec
     server.query("{post(where:{identifier: 1}){identifier, related{identifier}}}", project).toString should be(
       """{"data":{"post":{"identifier":1,"related":{"identifier":2}}}}""")
     server.query("{post(where:{identifier: 2}){identifier, related{identifier}}}", project).toString should be(
-      """{"data":{"post":{"identifier":2,"related":{"identifier":1}}}}""")
+      """{"data":{"post":{"identifier":2,"related":null}}}""")
 
   }
 }

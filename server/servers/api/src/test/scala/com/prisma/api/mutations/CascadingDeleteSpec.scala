@@ -240,7 +240,7 @@ class CascadingDeleteSpec extends FlatSpec with Matchers with ApiSpecBase {
       val child     = schema.model("C").field_!("c", _.String, isUnique = true)
       val stepChild = schema.model("SC").field_!("sc", _.String, isUnique = true)
 
-      parent.oneToOneRelation_!("c", "doesNotMatter", child, modelAOnDelete = OnDelete.Cascade, includeFieldB = false)
+      parent.oneToOneRelation_!("c", "doesNotMatter", child, modelAOnDelete = OnDelete.Cascade, isRequiredOnFieldB = false, includeFieldB = false)
       parent.oneToManyRelation("scs", "doesNotMatter", stepChild, modelAOnDelete = OnDelete.Cascade, includeFieldB = false)
       child.oneToOneRelation("sc", "c", stepChild, modelAOnDelete = OnDelete.Cascade)
     }

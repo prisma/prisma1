@@ -161,20 +161,8 @@ case class MySqlApiDatabaseQueryBuilder(project: Project)(implicit ec: Execution
         prefixIfNotNone("limit", limitCommand) ++ sql")"
     }
 
-    // see https://github.com/graphcool/internal-docs/blob/master/relations.md#findings
-    val resolveFromBothSidesAndMerge = fromField.relation.isSameFieldSameModelRelation
-
-    val query = resolveFromBothSidesAndMerge match {
-      case false =>
-        fromModelIds.distinct.view.zipWithIndex.foldLeft(sql"")((a, b) =>
-          a ++ unionIfNotFirst(b._2) ++ createQuery(b._1.value, modelRelationSide, oppositeRelationSide))
-
-      case true =>
-        fromModelIds.distinct.view.zipWithIndex.foldLeft(sql"")((a, b) =>
-          a ++ unionIfNotFirst(b._2) ++ createQuery(b._1.value, modelRelationSide, oppositeRelationSide) ++ sql"union all " ++ createQuery(b._1.value,
-                                                                                                                                           oppositeRelationSide,
-                                                                                                                                           modelRelationSide))
-    }
+    val query = fromModelIds.distinct.view.zipWithIndex.foldLeft(sql"")((a, b) =>
+      a ++ unionIfNotFirst(b._2) ++ createQuery(b._1.value, modelRelationSide, oppositeRelationSide))
 
     query
       .as[PrismaNodeWithParent](getResultForModelAndRelationSide(relatedModel, modelRelationSide, oppositeRelationSide))
