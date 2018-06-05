@@ -3,7 +3,7 @@ projects:
     schemaPath: generated-schema.graphql
     extensions:
       endpoints:
-        default: 'http://localhost:4466/yaml-structure'
+        default: 'http://localhost:4466/yml-structure'
       prisma: prisma.yml
       prepare-binding:
         output: generated-prisma.ts
