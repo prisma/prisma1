@@ -27,7 +27,7 @@ case class MySqlApiDatabaseQueryBuilder(project: Project)(implicit ec: Execution
   private def getPrismaNode(model: Model, ps: PositionedResult) = {
     val data = model.scalarNonListFields.map(field => field.name -> ps.rs.getGcValue(field.name, field.typeIdentifier))
 
-    PrismaNode(id = ps.rs.getId, data = RootGCValue(data: _*))
+    PrismaNode(id = ps.rs.getId, data = RootGCValue(data: _*), Some(model.name))
   }
 
   def getResultForModelAndRelationSide(model: Model, side: String, oppositeSide: String): GetResult[PrismaNodeWithParent] = GetResult { ps: PositionedResult =>
@@ -103,7 +103,7 @@ case class MySqlApiDatabaseQueryBuilder(project: Project)(implicit ec: Execution
 
   def batchSelectFromModelByUniqueSimple(model: Model, fieldName: String, values: Vector[GCValue]): SimpleDBIO[Vector[PrismaNode]] =
     SimpleDBIO[Vector[PrismaNode]] { x =>
-      val query                 = s"select * from `${project.id}`.`${model.name}` where `$fieldName` in ${placeHolders(values)}"
+      val query                 = s"select * from `${project.id}`.`${model.name}` where `$fieldName` in ${queryPlaceHolders(values)}"
       val ps: PreparedStatement = x.connection.prepareStatement(query).setValues(values)
       val rs: ResultSet         = ps.executeQuery()
       rs.as[PrismaNode](readsPrismaNode(model))
@@ -111,7 +111,7 @@ case class MySqlApiDatabaseQueryBuilder(project: Project)(implicit ec: Execution
 
   def readsPrismaNode(model: Model): ReadsResultSet[PrismaNode] = ReadsResultSet { rs =>
     val data = model.scalarNonListFields.map(field => field.name -> rs.getGcValue(field.name, field.typeIdentifier))
-    PrismaNode(id = rs.getId, data = RootGCValue(data: _*))
+    PrismaNode(id = rs.getId, data = RootGCValue(data: _*), Some(model.name))
   }
 
   implicit val setGcValue: SetParam[GCValue] = new SetParam[GCValue] {
@@ -161,20 +161,8 @@ case class MySqlApiDatabaseQueryBuilder(project: Project)(implicit ec: Execution
         prefixIfNotNone("limit", limitCommand) ++ sql")"
     }
 
-    // see https://github.com/graphcool/internal-docs/blob/master/relations.md#findings
-    val resolveFromBothSidesAndMerge = fromField.relation.isSameFieldSameModelRelation
-
-    val query = resolveFromBothSidesAndMerge match {
-      case false =>
-        fromModelIds.distinct.view.zipWithIndex.foldLeft(sql"")((a, b) =>
-          a ++ unionIfNotFirst(b._2) ++ createQuery(b._1.value, modelRelationSide, oppositeRelationSide))
-
-      case true =>
-        fromModelIds.distinct.view.zipWithIndex.foldLeft(sql"")((a, b) =>
-          a ++ unionIfNotFirst(b._2) ++ createQuery(b._1.value, modelRelationSide, oppositeRelationSide) ++ sql"union all " ++ createQuery(b._1.value,
-                                                                                                                                           oppositeRelationSide,
-                                                                                                                                           modelRelationSide))
-    }
+    val query = fromModelIds.distinct.view.zipWithIndex.foldLeft(sql"")((a, b) =>
+      a ++ unionIfNotFirst(b._2) ++ createQuery(b._1.value, modelRelationSide, oppositeRelationSide))
 
     query
       .as[PrismaNodeWithParent](getResultForModelAndRelationSide(relatedModel, modelRelationSide, oppositeRelationSide))
@@ -187,38 +175,6 @@ case class MySqlApiDatabaseQueryBuilder(project: Project)(implicit ec: Execution
               case None                  => ResolverResult(Vector.empty[PrismaNodeWithParent], hasPreviousPage = false, hasNextPage = false, parentModelId = Some(id))
           })
       }
-  }
-
-  def countAllFromRelatedModels(relationField: RelationField,
-                                parentNodeIds: Vector[IdGCValue],
-                                args: Option[QueryArguments]): SqlStreamingAction[Vector[(IdGCValue, Int)], (IdGCValue, Int), Effect] = {
-
-    val fieldTable        = relationField.relatedModel_!.name
-    val unsafeRelationId  = relationField.relation.relationTableName
-    val modelRelationSide = relationField.relationSide.toString
-    val fieldRelationSide = relationField.oppositeRelationSide.toString
-
-    val (conditionCommand, orderByCommand, limitCommand) =
-      extractQueryArgs(project.id,
-                       fieldTable,
-                       fieldTable,
-                       args,
-                       defaultOrderShortcut = Some(s"""`${project.id}`.`$unsafeRelationId`.$fieldRelationSide"""),
-                       None)
-
-    def createQuery(id: String) = {
-      sql"""(select '#$id', count(*) from `#${project.id}`.`#$fieldTable`
-           inner join `#${project.id}`.`#$unsafeRelationId`
-           on `#${project.id}`.`#$fieldTable`.id = `#${project.id}`.`#$unsafeRelationId`.#$fieldRelationSide
-           where `#${project.id}`.`#$unsafeRelationId`.#$modelRelationSide = '#$id' """ ++
-        prefixIfNotNone("and", conditionCommand) ++
-        prefixIfNotNone("order by", orderByCommand) ++
-        prefixIfNotNone("limit", limitCommand) ++ sql")"
-    }
-
-    val query = parentNodeIds.distinct.view.zipWithIndex.foldLeft(sql"")((a, b) => a ++ unionIfNotFirst(b._2) ++ createQuery(b._1.value))
-
-    query.as[(IdGCValue, Int)]
   }
 
   def unionIfNotFirst(index: Int): SQLActionBuilder = if (index == 0) sql"" else sql"union all "

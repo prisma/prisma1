@@ -59,6 +59,8 @@ trait PlayJsonExtensions extends JsonUtils {
 
     def pathAsJsObject(path: String): JsObject = pathAs[JsObject](path)
 
+    def pathAsJsArray(path: String): JsArray = pathAs[JsArray](path)
+
     def pathExists(path: String): Boolean = Try(pathAsJsValue(path)).map(_ => true).getOrElse(false)
 
     def pathAsSeq(path: String): Seq[JsValue] = PlayJson.getPathAs[JsArray](jsValue, path).value

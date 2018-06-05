@@ -1,14 +1,15 @@
 package com.prisma.api.connector.mysql.database
 
 import java.sql.{PreparedStatement, Statement}
-
+import java.util.Date
 import com.prisma.api.connector._
 import com.prisma.api.connector.mysql.database.JdbcExtensions._
 import com.prisma.api.connector.mysql.database.MySqlSlickExtensions._
 import com.prisma.api.schema.UserFacingError
-import com.prisma.gc_values.{GCValue, GCValueExtractor, ListGCValue, NullGCValue}
+import com.prisma.gc_values._
 import com.prisma.shared.models._
 import cool.graph.cuid.Cuid
+import org.joda.time.{DateTime, DateTimeZone}
 import slick.dbio.{DBIOAction, Effect, NoStream}
 import slick.jdbc.MySQLProfile.api._
 import slick.jdbc.SQLActionBuilder
@@ -65,7 +66,9 @@ object MySqlApiDatabaseMutationBuilder {
     val updateValues = combineByComma(args.raw.asRoot.map.map { case (k, v) => escapeKey(k) ++ sql" = $v" })
 
     if (updateValues.isDefined) {
-      (sql"UPDATE `#${projectId}`.`#${model.name}`" ++ sql"SET " ++ updateValues ++ whereFilterAppendix(projectId, model.name, whereFilter)).asUpdate
+      (sql"UPDATE `#${projectId}`.`#${model.name}`" ++ sql"SET " ++ addUpdatedDateTime(model, updateValues) ++ whereFilterAppendix(projectId,
+                                                                                                                                   model.name,
+                                                                                                                                   whereFilter)).asUpdate
     } else {
       DBIOAction.successful(())
     }
@@ -78,7 +81,7 @@ object MySqlApiDatabaseMutationBuilder {
       case _: ModelEdge   => sql""
     }
 
-    val baseQuery = sql"UPDATE `#${projectId}`.`#${path.lastModel.name}` SET " ++ updateValues ++ sql"WHERE `id` ="
+    val baseQuery = sql"UPDATE `#${projectId}`.`#${path.lastModel.name}` SET " ++ addUpdatedDateTime(path.lastModel, updateValues) ++ sql"WHERE `id` ="
 
     if (updateArgs.raw.asRoot.map.isEmpty) {
       DBIOAction.successful(())
@@ -96,6 +99,19 @@ object MySqlApiDatabaseMutationBuilder {
 
   //endregion
 
+  private def addUpdatedDateTime(model: Model, updateValues: Option[SQLActionBuilder]): Option[SQLActionBuilder] = {
+    model.updatedAtField match {
+      case Some(updatedAtField) =>
+        val today              = new Date()
+        val exactlyNow         = new DateTime(today).withZone(DateTimeZone.UTC)
+        val currentDateGCValue = DateTimeGCValue(exactlyNow)
+        val updatedAt          = sql""""#${updatedAtField.dbName}" = $currentDateGCValue """
+        combineByComma(updateValues ++ List(updatedAt))
+      case None =>
+        updateValues
+    }
+  }
+
   //region UPSERT
 
   def upsert(projectId: String,
@@ -104,29 +120,33 @@ object MySqlApiDatabaseMutationBuilder {
              createArgs: PrismaArgs,
              updateArgs: PrismaArgs,
              create: DBIOAction[Any, NoStream, Effect],
-             update: DBIOAction[Any, NoStream, Effect]) = {
+             update: DBIOAction[Any, NoStream, Effect],
+             createNested: Vector[DBIOAction[Any, NoStream, Effect.All]],
+             updateNested: Vector[DBIOAction[Any, NoStream, Effect.All]]) = {
 
     val query = sql"select exists ( SELECT `id` FROM `#$projectId`.`#${updatePath.lastModel.name}` WHERE `id` = " ++ pathQueryForLastChild(projectId,
                                                                                                                                            updatePath) ++ sql")"
     val condition = query.as[Boolean]
     // insert creates item first, then the list values
-    val qInsert = DBIOAction.seq(createDataItem(projectId, createPath, createArgs), createRelayRow(projectId, createPath), create)
+    val allCreateActions = Vector(createDataItem(projectId, createPath, createArgs), createRelayRow(projectId, createPath), create) ++ createNested
+    val qCreate          = DBIOAction.seq(allCreateActions: _*)
     // update first sets the lists, then updates the item
-    val qUpdate = DBIOAction.seq(update, updateDataItemByPath(projectId, updatePath, updateArgs))
+    val allUpdateActions = update +: updateNested :+ updateDataItemByPath(projectId, updatePath, updateArgs)
+    val qUpdate          = DBIOAction.seq(allUpdateActions: _*)
 
-    ifThenElse(condition, qUpdate, qInsert)
+    ifThenElse(condition, qUpdate, qCreate)
   }
 
-  def upsertIfInRelationWith(
-      project: Project,
-      createPath: Path,
-      updatePath: Path,
-      createArgs: PrismaArgs,
-      updateArgs: PrismaArgs,
-      scalarListCreate: DBIOAction[Any, NoStream, Effect],
-      scalarListUpdate: DBIOAction[Any, NoStream, Effect],
-      createCheck: DBIOAction[Any, NoStream, Effect],
-  ) = {
+  def upsertIfInRelationWith(project: Project,
+                             createPath: Path,
+                             updatePath: Path,
+                             createArgs: PrismaArgs,
+                             updateArgs: PrismaArgs,
+                             scalarListCreate: DBIOAction[Any, NoStream, Effect],
+                             scalarListUpdate: DBIOAction[Any, NoStream, Effect],
+                             createCheck: DBIOAction[Any, NoStream, Effect],
+                             createNested: Vector[DBIOAction[Any, NoStream, Effect.All]],
+                             updateNested: Vector[DBIOAction[Any, NoStream, Effect.All]]) = {
 
     def existsNodeIsInRelationshipWith = {
       def nodeSelector(last: Edge) = last match {
@@ -140,13 +160,14 @@ object MySqlApiDatabaseMutationBuilder {
         sql""" `id` IN""" ++ MySqlApiDatabaseMutationBuilder.pathQueryThatUsesWholePath(project.id, updatePath) ++ sql")"
     }
 
-    val condition = existsNodeIsInRelationshipWith.as[Boolean]
-    //insert creates item first and then the listvalues
-    val qInsert = DBIOAction.seq(createDataItem(project.id, createPath, createArgs), createRelayRow(project.id, createPath), createCheck, scalarListCreate)
+    val condition        = existsNodeIsInRelationshipWith.as[Boolean]
+    val allCreateActions = Vector(createDataItem(project.id, createPath, createArgs), createRelayRow(project.id, createPath), createCheck, scalarListCreate) ++ createNested
+    val qCreate          = DBIOAction.seq(allCreateActions: _*)
     //update updates list values first and then the item
-    val qUpdate = DBIOAction.seq(scalarListUpdate, updateDataItemByPath(project.id, updatePath, updateArgs))
+    val allUpdateActions = scalarListUpdate +: updateNested :+ updateDataItemByPath(project.id, updatePath, updateArgs)
+    val qUpdate          = DBIOAction.seq(allUpdateActions: _*)
 
-    ifThenElseNestedUpsert(condition, qUpdate, qInsert)
+    ifThenElseNestedUpsert(condition, qUpdate, qCreate)
   }
 
   //endregion
@@ -294,12 +315,11 @@ object MySqlApiDatabaseMutationBuilder {
 
   // region HELPERS
 
-  def idFromWhere(projectId: String, where: NodeSelector): SQLActionBuilder = {
-    if (where.isId) {
-      sql"${where.fieldValue}"
-    } else {
-      sql"(SELECT `id` FROM (SELECT * FROM `#$projectId`.`#${where.model.name}`) IDFROMWHERE WHERE `#${where.field.name}` = ${where.fieldValue})"
-    }
+  def idFromWhere(projectId: String, where: NodeSelector): SQLActionBuilder = (where.isId, where.fieldValue) match {
+    case (true, NullGCValue)  => sys.error("id should not be NULL")
+    case (true, idValue)      => sql"$idValue"
+    case (false, NullGCValue) => sql"(SELECT `id` FROM (SELECT * FROM `#$projectId`.`#${where.model.name}`) IDFROMWHERE WHERE `#${where.field.name}` is NULL)"
+    case (false, value)       => sql"(SELECT `id` FROM (SELECT * FROM `#$projectId`.`#${where.model.name}`) IDFROMWHERE WHERE `#${where.field.name}` = $value)"
   }
 
   def idFromWhereEquals(projectId: String, where: NodeSelector): SQLActionBuilder = sql" = " ++ idFromWhere(projectId, where)

@@ -36,22 +36,8 @@ class ToOneDeferredResolver(dataResolver: DataResolver) {
   }
 
   private def prismaNodesToToOneDeferredResultType(project: Project, deferred: ToOneDeferred, nodes: Vector[PrismaNodeWithParent]): Option[PrismaNode] = {
+    def matchesRelation(prismaNodeWithParent: PrismaNodeWithParent, relationSide: String) = prismaNodeWithParent.parentId == deferred.parentNodeId
 
-    def matchesRelation(prismaNodeWithParent: PrismaNodeWithParent, relationSide: String) =
-      prismaNodeWithParent.parentId == deferred.parentNodeId
-
-    // see https://github.com/graphcool/internal-docs/blob/master/relations.md#findings
-    val resolveFromBothSidesAndMerge = deferred.relationField.relation.isSameFieldSameModelRelation
-
-    nodes
-      .find(node => {
-        resolveFromBothSidesAndMerge match {
-          case false => matchesRelation(node, deferred.relationField.relationSide.toString)
-          case true =>
-            node.prismaNode.id != deferred.parentNodeId && (matchesRelation(node, deferred.relationField.relationSide.toString) ||
-              matchesRelation(node, deferred.relationField.oppositeRelationSide.toString))
-        }
-      })
-      .map(_.prismaNode)
+    nodes.find(node => matchesRelation(node, deferred.relationField.relationSide.toString)).map(_.prismaNode)
   }
 }

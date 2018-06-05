@@ -10,7 +10,7 @@ trait Edge {
   def columnForParentRelationSide: String       = relation.columnForRelationSide(parentRelationSide)
   def parentRelationSide: RelationSide          = parentField.relationSide
   def child: Model                              = parentField.relatedModel_!
-  def childField: Option[RelationField]         = parentField.otherRelationField
+  def childField: RelationField                 = parentField.relatedField
   def columnForChildRelationSide: String        = relation.columnForRelationSide(childRelationSide)
   def childRelationSide: RelationSide           = parentField.oppositeRelationSide
   def relation: Relation                        = parentField.relation
@@ -69,7 +69,7 @@ case class Path(root: NodeSelector, edges: List[Edge]) {
 
   def relationFieldsNotOnPathOnLastModel: List[RelationField] = lastModel.relationFields.filter { f =>
     lastEdge match {
-      case Some(edge) => !edge.childField.contains(f)
+      case Some(edge) => edge.childField != f
       case None       => true
     }
   }

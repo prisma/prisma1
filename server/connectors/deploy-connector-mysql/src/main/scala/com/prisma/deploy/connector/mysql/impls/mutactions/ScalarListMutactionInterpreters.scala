@@ -1,12 +1,12 @@
 package com.prisma.deploy.connector.mysql.impls.mutactions
 
-import com.prisma.deploy.connector.mysql.database.MysqlDeployDatabaseMutationBuilder
+import com.prisma.deploy.connector.mysql.database.MySqlDeployDatabaseMutationBuilder
 import com.prisma.deploy.connector.{CreateScalarListTable, DeleteScalarListTable, UpdateScalarListTable}
 import slick.jdbc.MySQLProfile.api._
 
 object CreateScalarListInterpreter extends SqlMutactionInterpreter[CreateScalarListTable] {
   override def execute(mutaction: CreateScalarListTable) = {
-    MysqlDeployDatabaseMutationBuilder.createScalarListTable(
+    MySqlDeployDatabaseMutationBuilder.createScalarListTable(
       projectId = mutaction.projectId,
       modelName = mutaction.model.name,
       fieldName = mutaction.field.name,
@@ -16,7 +16,7 @@ object CreateScalarListInterpreter extends SqlMutactionInterpreter[CreateScalarL
 
   override def rollback(mutaction: CreateScalarListTable) = {
     DBIO.seq(
-      MysqlDeployDatabaseMutationBuilder
+      MySqlDeployDatabaseMutationBuilder
         .dropScalarListTable(projectId = mutaction.projectId, modelName = mutaction.model.name, fieldName = mutaction.field.name))
   }
 }
@@ -24,12 +24,12 @@ object CreateScalarListInterpreter extends SqlMutactionInterpreter[CreateScalarL
 object DeleteScalarListInterpreter extends SqlMutactionInterpreter[DeleteScalarListTable] {
   override def execute(mutaction: DeleteScalarListTable) = {
     DBIO.seq(
-      MysqlDeployDatabaseMutationBuilder
+      MySqlDeployDatabaseMutationBuilder
         .dropScalarListTable(projectId = mutaction.projectId, modelName = mutaction.model.name, fieldName = mutaction.field.name))
   }
 
   override def rollback(mutaction: DeleteScalarListTable) = {
-    MysqlDeployDatabaseMutationBuilder.createScalarListTable(
+    MySqlDeployDatabaseMutationBuilder.createScalarListTable(
       projectId = mutaction.projectId,
       modelName = mutaction.model.name,
       fieldName = mutaction.field.name,
@@ -47,13 +47,13 @@ object UpdateScalarListInterpreter extends SqlMutactionInterpreter[UpdateScalarL
     val newModel  = mutaction.newModel
 
     val updateType = if (oldField.typeIdentifier != newField.typeIdentifier) {
-      List(MysqlDeployDatabaseMutationBuilder.updateScalarListType(projectId, oldModel.name, oldField.name, newField.typeIdentifier))
+      List(MySqlDeployDatabaseMutationBuilder.updateScalarListType(projectId, oldModel.name, oldField.name, newField.typeIdentifier))
     } else {
       List.empty
     }
 
     val renameTable = if (oldField.name != newField.name || oldModel.name != newModel.name) {
-      List(MysqlDeployDatabaseMutationBuilder.renameScalarListTable(projectId, oldModel.name, oldField.name, newModel.name, newField.name))
+      List(MySqlDeployDatabaseMutationBuilder.renameScalarListTable(projectId, oldModel.name, oldField.name, newModel.name, newField.name))
     } else {
       List.empty
     }
