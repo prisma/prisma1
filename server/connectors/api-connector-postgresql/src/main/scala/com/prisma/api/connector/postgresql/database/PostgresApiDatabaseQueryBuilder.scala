@@ -59,7 +59,7 @@ case class PostgresApiDatabaseQueryBuilder(
       // prepare statement
       val builder = ModelQueryBuilder(schemaName, model, args)
       val ps      = ctx.connection.prepareStatement(builder.queryString)
-      builder.setParamsForQueryArgs(ps, args)
+      SetParams.setQueryArgs(ps, args)
       // execute
       val rs: ResultSet = ps.executeQuery()
       // read result
@@ -74,11 +74,55 @@ case class PostgresApiDatabaseQueryBuilder(
       fromModelIds: Vector[IdGCValue],
       args: Option[QueryArguments]
   ): DBIO[Vector[ResolverResult[PrismaNodeWithParent]]] = {
+    val isWithPagination = args.flatMap(_.last).orElse(args.flatMap(_.first)).isDefined
+    if (isWithPagination) {
+      batchSelectAllFromRelatedModelWithPagination(schema, fromField, fromModelIds, args)
+    } else {
+      batchSelectAllFromRelatedModelWithoutPagination(schema, fromField, fromModelIds, args)
+    }
+
+  }
+
+  def batchSelectAllFromRelatedModelWithoutPagination(
+      schema: Schema,
+      fromField: RelationField,
+      fromModelIds: Vector[IdGCValue],
+      args: Option[QueryArguments]
+  ): DBIO[Vector[ResolverResult[PrismaNodeWithParent]]] = {
     SimpleDBIO[Vector[ResolverResult[PrismaNodeWithParent]]] { ctx =>
-      val builder = RelatedModelsQueryBuilder(schemaName, fromField, args)
+      val builder = RelatedModelsQueryBuilder(schemaName, fromField, args, fromModelIds)
+      val ps      = ctx.connection.prepareStatement(builder.queryStringWithoutPagination)
+
+      // injecting params
+      val pp     = new PositionedParameters(ps)
+      val filter = args.flatMap(_.filter)
+      fromModelIds.distinct.foreach(pp.setGcValue)
+      filter.foreach(filter => SetParams.setParams(pp, filter))
+
+      // executing
+      val rs: ResultSet       = ps.executeQuery()
+      val result              = rs.as[PrismaNodeWithParent](readPrismaNodeWithParent(fromField.relatedModel_!, fromField.relationSide, fromField.oppositeRelationSide))
+      val itemGroupsByModelId = result.groupBy(_.parentId)
+      fromModelIds.map { id =>
+        itemGroupsByModelId.find(_._1 == id) match {
+          case Some((_, itemsForId)) => ResolverResult(args, itemsForId, parentModelId = Some(id))
+          case None                  => ResolverResult(Vector.empty[PrismaNodeWithParent], hasPreviousPage = false, hasNextPage = false, parentModelId = Some(id))
+        }
+      }
+    }
+  }
+
+  def batchSelectAllFromRelatedModelWithPagination(
+      schema: Schema,
+      fromField: RelationField,
+      fromModelIds: Vector[IdGCValue],
+      args: Option[QueryArguments]
+  ): DBIO[Vector[ResolverResult[PrismaNodeWithParent]]] = {
+    SimpleDBIO[Vector[ResolverResult[PrismaNodeWithParent]]] { ctx =>
+      val builder = RelatedModelsQueryBuilder(schemaName, fromField, args, fromModelIds)
       // see https://github.com/graphcool/internal-docs/blob/master/relations.md#findings
 
-      val baseQuery = "(" + builder.queryString + ")"
+      val baseQuery = "(" + builder.queryStringWithPagination + ")"
 
       val distinctModelIds = fromModelIds.distinct
 
@@ -86,8 +130,6 @@ case class PostgresApiDatabaseQueryBuilder(
       val query   = queries.mkString(" union all ")
 
       val ps = ctx.connection.prepareStatement(query)
-      println("!!" * 50)
-      println(query)
 
       // injecting params
       val pp     = new PositionedParameters(ps)
@@ -118,9 +160,9 @@ case class PostgresApiDatabaseQueryBuilder(
   ): DBIO[ResolverResult[RelationNode]] = {
 
     SimpleDBIO[ResolverResult[RelationNode]] { ctx =>
-      val builder = QueryBuilders.relation(schemaName, relation, args)
+      val builder = RelationQueryBuilder(schemaName, relation, args)
       val ps      = ctx.connection.prepareStatement(builder.queryString)
-      builder.setParamsForQueryArgs(ps, args)
+      SetParams.setQueryArgs(ps, args)
       val rs: ResultSet = ps.executeQuery()
 
       val result = rs.as(readRelation(relation))
@@ -136,9 +178,9 @@ case class PostgresApiDatabaseQueryBuilder(
   ): DBIO[ResolverResult[ScalarListValues]] = {
 
     SimpleDBIO[ResolverResult[ScalarListValues]] { ctx =>
-      val builder = QueryBuilders.scalarList(schemaName, field, args)
+      val builder = ScalarListQueryBuilder(schemaName, field, args)
       val ps      = ctx.connection.prepareStatement(builder.queryString)
-      builder.setParamsForQueryArgs(ps, args)
+      SetParams.setQueryArgs(ps, args)
       val rs: ResultSet = ps.executeQuery()
 
       val result = rs.as(readsScalarListField(field))
@@ -172,7 +214,7 @@ case class PostgresApiDatabaseQueryBuilder(
     SimpleDBIO[Int] { ctx =>
       val builder = CountQueryBuilder(schemaName, table, whereFilter)
       val ps      = ctx.connection.prepareStatement(builder.queryString)
-      builder.setParamsForFilter(ps, whereFilter)
+      SetParams.setFilter(ps, whereFilter)
       val rs = ps.executeQuery()
       rs.next()
       rs.getInt(1)
@@ -182,9 +224,9 @@ case class PostgresApiDatabaseQueryBuilder(
   def batchSelectFromModelByUnique(model: Model, field: ScalarField, values: Vector[GCValue]): DBIO[Vector[PrismaNode]] = {
     SimpleDBIO { ctx =>
       val queryArgs = Some(QueryArguments.withFilter(ScalarFilter(field, In(values))))
-      val builder   = QueryBuilders.model(schemaName, model, queryArgs)
+      val builder   = ModelQueryBuilder(schemaName, model, queryArgs)
       val ps        = ctx.connection.prepareStatement(builder.queryString)
-      builder.setParamsForQueryArgs(ps, queryArgs)
+      SetParams.setQueryArgs(ps, queryArgs)
       val rs: ResultSet = ps.executeQuery()
       rs.as(readsPrismaNode(model))
     }

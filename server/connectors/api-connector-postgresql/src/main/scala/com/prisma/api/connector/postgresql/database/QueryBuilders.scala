@@ -3,34 +3,18 @@ package com.prisma.api.connector.postgresql.database
 import java.sql.PreparedStatement
 
 import com.prisma.api.connector._
+import com.prisma.slick.NewJdbcExtensions._
 import com.prisma.api.connector.postgresql.database.PostgresSlickExtensions._
-import com.prisma.gc_values.{NullGCValue, StringGCValue}
+import com.prisma.gc_values.{IdGCValue, NullGCValue, StringGCValue}
 import com.prisma.shared.models._
 import slick.jdbc.PositionedParameters
 
 object QueryBuilders {
-  def model(schemaName: String, model: Model, args: Option[QueryArguments]): QueryBuilder            = ModelQueryBuilder(schemaName, model, args)
-  def relation(schemaName: String, relation: Relation, args: Option[QueryArguments]): QueryBuilder   = RelationQueryBuilder(schemaName, relation, args)
-  def scalarList(schemaName: String, field: ScalarField, args: Option[QueryArguments]): QueryBuilder = ScalarListQueryBuilder(schemaName, field, args)
-  def count(schemaName: String, table: String, filter: Option[Filter]): QueryBuilder                 = CountQueryBuilder(schemaName, table, filter)
-
   val topLevelAlias = "Alias"
 }
 
-trait QueryBuilder {
-  def topLevelAlias = QueryBuilders.topLevelAlias
-
-  def queryString: String
-  def setParamsForQueryArgs(preparedStatement: PreparedStatement, queryArguments: Option[QueryArguments]): Unit = {
-    SetParams.setQueryArgs(preparedStatement, queryArguments)
-  }
-
-  def setParamsForFilter(preparedStatement: PreparedStatement, filter: Option[Filter]): Unit = {
-    SetParams.setFilter(preparedStatement, filter)
-  }
-}
-
-case class RelationQueryBuilder(schemaName: String, relation: Relation, queryArguments: Option[QueryArguments]) extends QueryBuilder {
+case class RelationQueryBuilder(schemaName: String, relation: Relation, queryArguments: Option[QueryArguments]) {
+  import QueryBuilders.topLevelAlias
 
   lazy val queryString: String = {
     val tableName = relation.relationTableName
@@ -41,7 +25,8 @@ case class RelationQueryBuilder(schemaName: String, relation: Relation, queryArg
   }
 }
 
-case class CountQueryBuilder(schemaName: String, table: String, filter: Option[Filter]) extends QueryBuilder {
+case class CountQueryBuilder(schemaName: String, table: String, filter: Option[Filter]) {
+  import QueryBuilders.topLevelAlias
 
   lazy val queryString: String = {
     s"""SELECT COUNT(*) FROM "$schemaName"."$table" AS "$topLevelAlias" """ +
@@ -49,7 +34,8 @@ case class CountQueryBuilder(schemaName: String, table: String, filter: Option[F
   }
 }
 
-case class ScalarListQueryBuilder(schemaName: String, field: ScalarField, queryArguments: Option[QueryArguments]) extends QueryBuilder {
+case class ScalarListQueryBuilder(schemaName: String, field: ScalarField, queryArguments: Option[QueryArguments]) {
+  import QueryBuilders.topLevelAlias
   require(field.isList, "This must be called only with scalar list fields")
 
   lazy val queryString: String = {
@@ -61,27 +47,25 @@ case class ScalarListQueryBuilder(schemaName: String, field: ScalarField, queryA
   }
 }
 
-//case class CountRelatedModelsQueryBuilder(schemaName: String, fromField: RelationField, queryArguments: Option[QueryArguments]){
-//
-//}
+case class RelatedModelsQueryBuilder(
+    schemaName: String,
+    fromField: RelationField,
+    queryArguments: Option[QueryArguments],
+    relatedNodeIds: Vector[IdGCValue]
+) {
+  import QueryBuilders.topLevelAlias
 
-case class RelatedModelsQueryBuilder(schemaName: String, fromField: RelationField, queryArguments: Option[QueryArguments]) extends QueryBuilder {
   val relation                = fromField.relation
+  val relatedModel            = fromField.relatedModel_!
+  val modelTable              = relatedModel.dbName
+  val relationTableName       = fromField.relation.relationTableName
   val modelRelationSideColumn = relation.columnForRelationSide(fromField.relationSide)
   val fieldRelationSideColumn = relation.columnForRelationSide(fromField.oppositeRelationSide)
+  val aColumn                 = relation.modelAColumn
+  val bColumn                 = relation.modelBColumn
+  val columnForRelatedModel   = relation.columnForRelationSide(fromField.oppositeRelationSide)
 
-  lazy val queryString: String = buildQuery(modelRelationSideColumn, fieldRelationSideColumn)
-  val queryStringFromOtherSide = buildQuery(fieldRelationSideColumn, modelRelationSideColumn)
-
-  private def buildQuery(modelRelationSideColumn: String, fieldRelationSideColumn: String): String = {
-    val relation              = fromField.relation
-    val relatedModel          = fromField.relatedModel_!
-    val modelTable            = relatedModel.dbName
-    val relationTableName     = fromField.relation.relationTableName
-    val aColumn               = relation.modelAColumn
-    val bColumn               = relation.modelBColumn
-    val columnForRelatedModel = relation.columnForRelationSide(fromField.oppositeRelationSide)
-
+  lazy val queryStringWithPagination: String = {
     s"""select "$topLevelAlias".*, "RelationTable"."$aColumn" as "__Relation__A",  "RelationTable"."$bColumn" as "__Relation__B"
             from "$schemaName"."$modelTable" as "$topLevelAlias"
             inner join "$schemaName"."$relationTableName" as "RelationTable"
@@ -92,9 +76,20 @@ case class RelatedModelsQueryBuilder(schemaName: String, fromField: RelationFiel
       OrderByClauseBuilder.internal("RelationTable", columnForRelatedModel, queryArguments) +
       LimitClauseBuilder.limitClause(queryArguments)
   }
+
+  lazy val queryStringWithoutPagination: String = {
+    s"""select "$topLevelAlias".*, "RelationTable"."$aColumn" as "__Relation__A",  "RelationTable"."$bColumn" as "__Relation__B"
+            from "$schemaName"."$modelTable" as "$topLevelAlias"
+            inner join "$schemaName"."$relationTableName" as "RelationTable"
+            on "$topLevelAlias"."${relatedModel.dbNameOfIdField_!}" = "RelationTable"."$fieldRelationSideColumn"
+            where "RelationTable"."$modelRelationSideColumn" IN ${queryPlaceHolders(relatedNodeIds)} AND """ +
+      WhereClauseBuilder(schemaName).buildWhereClauseWithoutWhereKeyWord(queryArguments.flatMap(_.filter)) +
+      OrderByClauseBuilder.internal(alias = "RelationTable", columnForRelatedModel, queryArguments)
+  }
 }
 
-case class ModelQueryBuilder(schemaName: String, model: Model, queryArguments: Option[QueryArguments]) extends QueryBuilder {
+case class ModelQueryBuilder(schemaName: String, model: Model, queryArguments: Option[QueryArguments]) {
+  import QueryBuilders.topLevelAlias
 
   lazy val queryString: String = {
     s"""SELECT * FROM "$schemaName"."${model.dbName}" AS "$topLevelAlias" """ +
