@@ -221,7 +221,8 @@ lazy val metrics = libProject("metrics")
       akkaHttp,
       finagle,
       akka,
-      librato
+      librato,
+      microMeter
     )
   )
 
