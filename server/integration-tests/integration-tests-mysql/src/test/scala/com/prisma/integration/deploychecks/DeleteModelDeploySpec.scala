@@ -29,7 +29,7 @@ class DeleteModelDeploySpec extends FlatSpec with Matchers with IntegrationBaseS
         |}"""
 
     deployServer.deploySchemaThatMustWarn(project, schema2).toString should be(
-      """{"data":{"deploy":{"migration":{"applied":0,"revision":0},"errors":[],"warnings":[{"description":"You already have nodes for this model. This change will result in data loss."}]}}}""")
+      """{"data":{"deploy":{"migration":null,"errors":[],"warnings":[{"description":"You already have nodes for this model. This change will result in data loss."}]}}}""")
   }
 
   "Deleting a model" should "throw a warning if nodes already exist but proceed if the -force flag is present" in {

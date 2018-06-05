@@ -22,6 +22,7 @@ async function testSchema(sql: string) {
 describe('Introspector', () => {
   test('text columns', async () => {
     await testSchema(`CREATE TABLE "Strings" (
+      "pk" varchar(55) NOT NULL PRIMARY KEY,
       "a" char(1) DEFAULT NULL UNIQUE,
       "aa" char(1) NOT NULL UNIQUE,
       "b" varchar(255) DEFAULT NULL,
@@ -72,7 +73,8 @@ describe('Introspector', () => {
   test('DateTime columns', async () => {
     await testSchema(`CREATE TABLE "Booleans" (
       "a" timestamp DEFAULT NULL,
-      "b" timestamp NOT NULL
+      "b" timestamp NOT NULL,
+      "c" timestamp NOT NULL DEFAULT now()
       );`)
   })
 
@@ -80,6 +82,14 @@ describe('Introspector', () => {
     await testSchema(`CREATE TABLE "Booleans" (
       "a" json DEFAULT NULL,
       "b" json NOT NULL
+      );`)
+  })
+
+  test('Unmapped columns', async () => {
+    await testSchema(`CREATE TABLE "Unmapped" (
+      "a" jsonb,
+      "c" tsvector,
+      "d" date[]
       );`)
   })
 })

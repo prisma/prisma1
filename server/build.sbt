@@ -5,6 +5,7 @@ import Dependencies._
 
 name := "server"
 
+
 lazy val commonSettings = Seq(
   organization := "com.prisma",
   organizationName := "graphcool",
@@ -312,7 +313,8 @@ val allServerProjects = List(
   deploy,
   subscriptions,
   workers,
-  serversShared
+  serversShared,
+  sharedModels
 )
 
 lazy val deployConnectorProjects = List(

@@ -1,43 +1,40 @@
-package com.prisma.api.connector.postgresql.database
+package com.prisma.api.connector.mysql.database
 import com.prisma.api.connector._
-import com.prisma.api.connector.postgresql.database.SlickExtensions._
+import com.prisma.api.connector.mysql.database.MySqlSlickExtensions._
 import com.prisma.api.schema.APIErrors
 import com.prisma.api.schema.APIErrors.{InvalidFirstArgument, InvalidLastArgument, InvalidSkipArgument}
-import slick.jdbc.PostgresProfile.api._
+import slick.jdbc.MySQLProfile.api._
 import slick.jdbc.SQLActionBuilder
 
-object QueryArgumentsExtensions {
+object MySqlQueryArgumentsExtensions {
   val MAX_NODE_COUNT = 1000
+  val ALIAS          = "Top_Level_Alias"
 
   def extractQueryArgs(
       projectId: String,
+      alias: String,
       tableName: String,
-      idFieldName: String,
       args: Option[QueryArguments],
       defaultOrderShortcut: Option[String],
       overrideMaxNodeCount: Option[Int],
-      forList: Boolean = false,
-      quoteTableName: Boolean = true,
+      forList: Boolean = false
   ): (Option[SQLActionBuilder], Option[SQLActionBuilder], Option[SQLActionBuilder]) = {
     args match {
       case None => (None, None, None)
       case Some(givenArgs: QueryArguments) =>
         val orderByCommand =
-          if (forList) givenArgs.extractOrderByCommandForLists(projectId, tableName, defaultOrderShortcut)
-          else givenArgs.extractOrderByCommand(projectId, tableName, idFieldName, defaultOrderShortcut)
+          if (forList) givenArgs.extractOrderByCommandForLists(alias, defaultOrderShortcut)
+          else givenArgs.extractOrderByCommand(alias, defaultOrderShortcut)
 
         (
-          givenArgs.extractWhereConditionCommand(projectId, tableName, quoteTableName),
+          givenArgs.extractWhereConditionCommand(projectId, alias, tableName),
           orderByCommand,
-          overrideMaxNodeCount match {
-            case None                => givenArgs.extractLimitCommand(projectId, tableName)
-            case Some(maxCount: Int) => givenArgs.extractLimitCommand(projectId, tableName, maxCount)
-          }
+          givenArgs.extractLimitCommand(overrideMaxNodeCount.getOrElse(MAX_NODE_COUNT))
         )
     }
   }
 
-  implicit class QueryArgumentsExtensions(val queryArguments: QueryArguments) extends AnyVal {
+  implicit class MySqlQueryArgumentsExtensions(val queryArguments: QueryArguments) extends AnyVal {
     def skip    = queryArguments.skip
     def after   = queryArguments.after
     def first   = queryArguments.first
@@ -53,7 +50,7 @@ object QueryArgumentsExtensions {
     // "where" keyword. This is because we might need to combine these commands with other commands. If nothing is to be
     // returned, DO NOT return an empty string, but None instead.
 
-    def extractOrderByCommandForLists(projectId: String, modelId: String, defaultOrderShortcut: Option[String] = None): Option[SQLActionBuilder] = {
+    def extractOrderByCommandForLists(topLevelAlias: String, defaultOrderShortcut: Option[String] = None): Option[SQLActionBuilder] = {
 
       if (first.isDefined && last.isDefined) throw APIErrors.InvalidConnectionArguments()
 
@@ -65,15 +62,10 @@ object QueryArgumentsExtensions {
       }
 
       //always order by nodeId, then positionfield ascending
-      Some(sql""""#$projectId"."#$modelId"."nodeId" #$order, "#$projectId"."#$modelId"."position" #$idOrder""")
+      Some(sql"""`#$topLevelAlias`.`nodeId` #$order, `#$topLevelAlias`.`position` #$idOrder""")
     }
 
-    def extractOrderByCommand(
-        projectId: String,
-        tableName: String,
-        idFieldName: String,
-        defaultOrderShortcut: Option[String] = None
-    ): Option[SQLActionBuilder] = {
+    def extractOrderByCommand(alias: String, defaultOrderShortcut: Option[String] = None): Option[SQLActionBuilder] = {
 
       if (first.isDefined && last.isDefined) throw APIErrors.InvalidConnectionArguments()
 
@@ -84,11 +76,11 @@ object QueryArgumentsExtensions {
         case false => (defaultOrder, "asc")
       }
 
-      val idField = s""""$projectId"."$tableName"."$idFieldName""""
+      val idField = s"`$alias`.`id`"
 
       orderBy match {
-        case Some(orderByArg) if orderByArg.field.dbName != idFieldName =>
-          val orderByField = s""""$projectId"."$tableName"."${orderByArg.field.dbName}""""
+        case Some(orderByArg) if orderByArg.field.name != "id" =>
+          val orderByField = s"`$alias`.`${orderByArg.field.dbName}`"
 
           // First order by the orderByField, then by id to break ties
           Some(sql"#$orderByField #$order, #$idField #$idOrder")
@@ -100,7 +92,7 @@ object QueryArgumentsExtensions {
       }
     }
 
-    def extractLimitCommand(projectId: String, modelId: String, maxNodeCount: Int = MAX_NODE_COUNT): Option[SQLActionBuilder] = {
+    def extractLimitCommand(maxNodeCount: Int): Option[SQLActionBuilder] = {
 
       (first, last, skip) match {
         case (Some(first), _, _) if first < 0 => throw InvalidFirstArgument()
@@ -117,7 +109,7 @@ object QueryArgumentsExtensions {
             case Some(x) if x > maxNodeCount => throw APIErrors.TooManyNodesRequested(x)
             case Some(x)                     => (x + 1).toString
           }
-          Some(sql"#$limitedCount OFFSET ${skip.getOrElse(0)}")
+          Some(sql"${skip.getOrElse(0)}, #$limitedCount")
       }
     }
 
@@ -130,22 +122,22 @@ object QueryArgumentsExtensions {
       }
 
       (first, last) match {
-        case (Some(f), _) if items.size > f => ResolverResult(items.dropRight(1), hasPreviousPage = false, hasNextPage = true)
-        case (_, Some(l)) if items.size > l => ResolverResult(items.tail, hasPreviousPage = true, hasNextPage = false)
-        case _                              => ResolverResult(items, hasPreviousPage = false, hasNextPage = false)
+        case (Some(f), _) if items.size > f => ResolverResult(items.dropRight(1), hasPreviousPage = false, hasNextPage = true, parentModelId = None)
+        case (_, Some(l)) if items.size > l => ResolverResult(items.tail, hasPreviousPage = true, hasNextPage = false, parentModelId = None)
+        case _                              => ResolverResult(items, hasPreviousPage = false, hasNextPage = false, parentModelId = None)
       }
     }
 
-    def extractWhereConditionCommand(projectId: String, tableName: String, quoteTableName: Boolean): Option[SQLActionBuilder] = {
+    def extractWhereConditionCommand(projectId: String, alias: String, tableName: String): Option[SQLActionBuilder] = {
 
       if (first.isDefined && last.isDefined) throw APIErrors.InvalidConnectionArguments()
 
       val standardCondition = filter match {
-        case Some(filterArg) => QueryArgumentsHelpers.generateFilterConditions(projectId, tableName, filterArg, quoteTableName = quoteTableName)
+        case Some(filterArg) => MySqlQueryArgumentsHelpers.generateFilterConditions(projectId, alias, tableName, filterArg)
         case None            => None
       }
 
-      val cursorCondition = buildCursorCondition(projectId, tableName, standardCondition)
+      val cursorCondition = buildCursorCondition(projectId, alias, tableName, standardCondition)
 
       cursorCondition match {
         case None                     => standardCondition
@@ -162,17 +154,20 @@ object QueryArgumentsExtensions {
     // This creates a query that checks if the id is in a certain set returned by a subquery Q.
     // The subquery Q fetches all the ID's defined by the cursors and order.
     // On invalid cursor params, no error is thrown. The result set will just be empty.
-    def buildCursorCondition(projectId: String, modelId: String, injectedFilter: Option[SQLActionBuilder]): Option[SQLActionBuilder] = {
+    def buildCursorCondition(projectId: String, alias: String, tableName: String, injectedFilter: Option[SQLActionBuilder]): Option[SQLActionBuilder] = {
       // If both params are empty, don't generate any query.
       if (before.isEmpty && after.isEmpty) return None
 
-      val idField = s""""$projectId"."$modelId"."i""""
+      val idFieldWithAlias = s"""`$alias`.`id`"""
+      val idField          = s"""`$projectId`.`$tableName`.`id`"""
 
       // First, we fetch the ordering for the query. If none is passed, we order by id, ascending.
       // We need that since before/after are dependent on the order.
-      val (orderByField, sortDirection) = orderBy match {
-        case Some(orderByArg) => (s""""$projectId"."$modelId"."${orderByArg.field.dbName}"""", orderByArg.sortOrder.toString)
-        case None             => (idField, "asc")
+      val (orderByField, orderByFieldWithAlias, sortDirection) = orderBy match {
+        case Some(orderByArg) =>
+          (s"`$projectId`.`$tableName`.`${orderByArg.field.dbName}`", s"`$alias`.`${orderByArg.field.dbName}`", orderByArg.sortOrder.toString)
+        case None =>
+          (idField, idFieldWithAlias, "asc")
       }
 
       // Then, we select the comparison operation and construct the cursors. For instance, if we use ascending order, and we want
@@ -186,7 +181,8 @@ object QueryArgumentsExtensions {
           case _                  => throw new IllegalArgumentException
         }
 
-        Some(sql"(#$orderByField, #$idField) #$compOperator ((select #$orderByField from #$projectId.#$modelId where #$idField = '#$cursor'), '#$cursor')")
+        Some(
+          sql"(#$orderByFieldWithAlias, #$idFieldWithAlias) #$compOperator ((select #$orderByField from `#$projectId`.`#$tableName` where #$idField = '#$cursor'), '#$cursor')")
       }
 
       val afterCursorFilter = after match {
