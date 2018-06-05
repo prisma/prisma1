@@ -226,16 +226,18 @@ and execute ${chalk.bold.green(
       } = parseEndpoint(this.endpoint)
       if (clusterBaseUrl) {
         debug('making cluster here')
-        const cluster = new Cluster(
-          this.out!,
-          clusterName,
-          clusterBaseUrl,
-          shared ? this.env.cloudSessionKey : undefined,
-          local,
-          shared,
-          isPrivate,
-          workspaceSlug,
-        )
+        const cluster =
+          this.env.clusters.find(c => c.baseUrl === clusterBaseUrl) ||
+          new Cluster(
+            this.out!,
+            clusterName,
+            clusterBaseUrl,
+            shared ? this.env.cloudSessionKey : undefined,
+            local,
+            shared,
+            isPrivate,
+            workspaceSlug,
+          )
         this.env.removeCluster(clusterName)
         this.env.addCluster(cluster)
         return cluster

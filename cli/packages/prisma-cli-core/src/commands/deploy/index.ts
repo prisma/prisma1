@@ -192,7 +192,7 @@ ${chalk.gray(
      */
     if (cluster && !cluster.local && cluster.isPrivate) {
       if (!workspace) {
-        workspace = this.definition.getWorkspace() || '*'
+        workspace = this.definition.getWorkspace()
       }
       if (
         workspace &&
@@ -461,7 +461,7 @@ ${chalk.gray(
       if (stdout && stdout.length > 0) {
         this.out.log(stdout)
       }
-      const {status, error} = child
+      const { status, error } = child
       if (error || status != 0) {
         if (error) {
           this.out.log(chalk.red(error.message))
