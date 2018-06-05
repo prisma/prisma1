@@ -20,6 +20,7 @@ case class GCAnyConverter(typeIdentifier: TypeIdentifier, isList: Boolean) exten
   override def toGCValue(t: Any): Or[GCValue, InvalidValueForScalarType] = {
     try {
       val result = (t, typeIdentifier) match {
+        case (None, _)                                                                => NullGCValue
         case (null, _)                                                                => NullGCValue
         case (_: NullValue, _)                                                        => NullGCValue
         case (x: String, _) if x == "null" && typeIdentifier != TypeIdentifier.String => NullGCValue
