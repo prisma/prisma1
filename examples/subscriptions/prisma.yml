@@ -1,4 +1,4 @@
-endpoint: http://localhost:4466/application-server
+endpoint: http://localhost:4466/subscriptions
 datamodel: datamodel.graphql
 
 seed: 
@@ -8,4 +8,4 @@ hooks:
   post-deploy:
     - echo "Deployment finished"
     - graphql get-schema --project db
-    - graphql codegen
+    - graphql prepare

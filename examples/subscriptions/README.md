@@ -1,6 +1,6 @@
-# Resolver Forwarding
+# Subscriptions
 
-This example demonstrates how to use **resolver forwarding (which creates a 1-to-1 mapping from application schema to Prisma database schema)** when building a GraphQL server based on Prisma & graphql-yoga.
+This example demonstrates how to implement **event-based realtime updates with GraphQL subscriptions** when building a GraphQL server based on Prisma & [graphql-yoga](https://github.com/graphcool/graphql-yoga).
 
 ## Get started
 
@@ -11,13 +11,13 @@ This example demonstrates how to use **resolver forwarding (which creates a 1-to
 Clone the Prisma monorepo and navigate to this directory or download _only_ this example with the following command:
 
 ```sh
-curl https://codeload.github.com/graphcool/prisma/tar.gz/master | tar -xz --strip=2 prisma-master/examples/resolver-forwarding
+curl https://codeload.github.com/graphcool/prisma/tar.gz/master | tar -xz --strip=2 prisma-master/examples/subscriptions
 ```
 
 Next, navigate into the downloaded folder and install the NPM dependencies:
 
 ```sh
-cd resolver-forwarding
+cd subscriptions
 yarn install
 ```
 
@@ -56,27 +56,25 @@ yarn playground
 
 Or you can open a Playground by navigating to [http://localhost:4000](http://localhost:4000) in your browser.
 
-### Run the following query
+### Run the following subscription in one tab
 
 ```graphql
-query {
- posts(where: { author: { name_in: ["Prisma"] } }) {
-  id
-  title
-  status
-  author {
+subscription Publications {
+ publications {
+  node {
    id
-   name
-   handle
+   title
+   content
+   status
   }
  }
 }
 ```
 
-### Run the following mutation
+### Run the following mutation in another tab
 
 ```graphql
-mutation {
+mutation M {
  createPost(
   data: {
    title: "Second Post"
@@ -89,6 +87,8 @@ mutation {
  }
 }
 ```
+
+The first tab would have listened to use post creation event and listed the payload using web sockets.
 
 Notice that how we are able to associate a `User` with this newly created post. The user was created using `seed.graphql` when the first deploy happened.
 

@@ -195,6 +195,17 @@ and execute ${chalk.bold.green(
         } points to a demo cluster, but is missing the workspace slug. A valid demo endpoint looks like this: https://eu1.prisma.sh/myworkspace/service-name/stage-name`,
       )
     }
+    if (
+      this.definition &&
+      this.definition.endpoint &&
+      !this.definition.endpoint.startsWith('http')
+    ) {
+      throw new Error(
+        `${chalk.bold(
+          this.definition.endpoint,
+        )} is not a valid endpoint. It must start with http:// or https://`,
+      )
+    }
     this.env.sharedClusters
   }
 

@@ -1,8 +1,8 @@
 {
-  "name": "application-server",
+  "name": "authentication",
   "version": "1.0.0",
   "description":
-    "This example demonstrates usage of Prisma with graphql-yoga and prisma-binding to build an application server and expose a domain specific API.",
+    "This example demonstrates how to implement a GraphQL server with an email-password-based authentication workflow based on Prisma & graphql-yoga.",
   "main": "index.js",
   "repository": "https://github.com/prismagraphql/prisma/tree/master/examples",
   "author": "Prisma",
@@ -14,7 +14,9 @@
     "prisma": "1.8.3"
   },
   "dependencies": {
+    "bcryptjs": "2.4.3",
     "graphql-yoga": "1.13.1",
+    "jsonwebtoken": "8.2.1",
     "prisma-binding": "2.0.0"
   }
 }

@@ -1,6 +1,6 @@
-# Resolver Forwarding
+# Authentication
 
-This example demonstrates how to use **resolver forwarding (which creates a 1-to-1 mapping from application schema to Prisma database schema)** when building a GraphQL server based on Prisma & graphql-yoga.
+This example demonstrates how to implement a GraphQL server with an email-password-based authentication workflow based on Prisma & [graphql-yoga](https://github.com/graphcool/graphql-yoga).
 
 ## Get started
 
@@ -11,13 +11,13 @@ This example demonstrates how to use **resolver forwarding (which creates a 1-to
 Clone the Prisma monorepo and navigate to this directory or download _only_ this example with the following command:
 
 ```sh
-curl https://codeload.github.com/graphcool/prisma/tar.gz/master | tar -xz --strip=2 prisma-master/examples/resolver-forwarding
+curl https://codeload.github.com/graphcool/prisma/tar.gz/application-server | tar -xz --strip=2 prisma-master/examples/application-server
 ```
 
 Next, navigate into the downloaded folder and install the NPM dependencies:
 
 ```sh
-cd resolver-forwarding
+cd application-server
 yarn install
 ```
 
@@ -56,42 +56,45 @@ yarn playground
 
 Or you can open a Playground by navigating to [http://localhost:4000](http://localhost:4000) in your browser.
 
-### Run the following query
+#### Register a new user with the `signup` mutation
 
-```graphql
-query {
- posts(where: { author: { name_in: ["Prisma"] } }) {
-  id
-  title
-  status
-  author {
-   id
-   name
-   handle
-  }
- }
-}
-```
-
-### Run the following mutation
+You can send the following mutation in the Playground to create a new `User` node and at the same time retrieve an authentication token for it:
 
 ```graphql
 mutation {
- createPost(
-  data: {
-   title: "Second Post"
-   content: "Second Post Content"
-   status: DRAFT
-   author: { connect: { handle: "prisma" } }
-  }
- ) {
-  id
+ signup(email: "alice@prisma.io", password: "graphql") {
+  token
  }
 }
 ```
 
-Notice that how we are able to associate a `User` with this newly created post. The user was created using `seed.graphql` when the first deploy happened.
+#### Logging in an existing user with the `login` mutation
 
-We are able to associate the user using their `handle` field as it is decorated with `@unique` directive.
+This mutation will log in an _existing_ user by requesting a new authentication token for her:
 
-Feel free to play around with the API.
+```graphql
+mutation {
+ login(email: "alice@prisma.io", password: "graphql") {
+  token
+ }
+}
+```
+
+#### Checking whether a user is currently logged in with the `me` query
+
+For this query, you need to make sure a valid authentication token is sent along with the `Bearer`-prefix in the `Authorization` header of the request. Inside the Playground, you can set HTTP headers in the bottom-left corner:
+
+![](https://imgur.com/bEGUtO0.png)
+
+Once you've set the header, you can send the following query to check whether the token is valid:
+
+```graphql
+{
+ me {
+  id
+  email
+ }
+}
+```
+
+If the token is valid, the server will return the `id` and `email` of the `User` node that it belongs to.

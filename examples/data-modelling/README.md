@@ -11,7 +11,7 @@ This example demonstrates various [data modelling](<https://www.prisma.io/docs/r
 Clone the Prisma monorepo and navigate to this directory or download _only_ this example with the following command:
 
 ```sh
-curl https://codeload.github.com/graphcool/prisma/tar.gz/data-modelling | tar -xz --strip=2 prisma-master/examples/data-modelling
+curl https://codeload.github.com/graphcool/prisma/tar.gz/master | tar -xz --strip=2 prisma-master/examples/data-modelling
 ```
 
 Next, navigate into the downloaded folder and install the NPM dependencies:
@@ -23,7 +23,7 @@ yarn install
 
 ### 2. Deploy the Prisma database service
 
-You can now [deploy](https://www.prismagraphql.com/docs/reference/cli-command-reference/database-service/prisma-deploy-kee1iedaov) the Prisma service (note that this requires you to have [Docker](https://www.docker.com) installed on your machine - if that's not the case, follow the collapsed instructions below the code block):
+You can now [deploy](https://www.prisma.io/docs/reference/cli-command-reference/database-service/prisma-deploy-kee1iedaov) the Prisma service (note that this requires you to have [Docker](https://www.docker.com) installed on your machine - if that's not the case, follow the collapsed instructions below the code block):
 
 ```sh
 yarn prisma deploy
@@ -32,20 +32,15 @@ yarn prisma deploy
 <details>
  <summary><strong>I don't have <a href="https://www.docker.com">Docker</a> installed on my machine</strong></summary>
 
-To deploy your service to a public cluster (rather than locally with Docker), you need to perform the following steps:
-
-1.  Remove the `cluster` property from `prisma.yml`
-1.  Run `yarn prisma deploy`
-1.  When prompted by the CLI, select a public cluster (e.g. `prisma-eu1` or `prisma-us1`)
-1.  Replace the [`endpoint`](./src/index.js#L23) in `index.js` with the HTTP endpoint that was printed after the previous command
+To deploy your service to a demo server (rather than locally with Docker), please follow [this link](https://www.prisma.io/docs/quickstart/).
 
 </details>
 
 ### 3. Explore the generated datamodel
 
-This example seeds some code into the database for us to explore some queries and features of the data model. Please take a look at `seed.graphql` for reference. Feel free to add/remove more data via mutations.
+This example seeds some data into the database for us to explore some queries and features of the data model. Please take a look at `seed.graphql` for reference. Feel free to add/remove more data via mutations.
 
-The easiest way to explore this deployed service and play with the API generated from the data model is by using a [GraphQL Playground](https://github.com/graphcool/graphql-playground).
+The easiest way to explore this deployed service and play with the API generated from the data model is by using the [GraphQL Playground](https://github.com/graphcool/graphql-playground).
 
 ### Open a Playground
 
@@ -59,16 +54,18 @@ Or you can open a Playground by navigating to [http://localhost:4466/data-modell
 
 This example illustrates a few important concepts when working with your data model:
 
-#### The three types Tweet, User and Location are mapped to tables in the database. We can query any of these types (say Tweet) in the following ways
+### There are three types Tweet, User and Location
+
+These types are mapped to tables in the database. We can query any of these types (say Tweet) in the following ways
 
 ##### Get one tweet by its id (or any other field with @unique directive)
 
 ```graphql
 query Tweet {
-  tweet(where: { id: "<tweet-id>" }) {
-    id
-    text
-  }
+ tweet(where: { id: "<tweet-id>" }) {
+  id
+  text
+ }
 }
 ```
 
@@ -76,10 +73,10 @@ query Tweet {
 
 ```graphql
 query Tweets {
-  tweets(first: 10, skip: 20) {
-    id
-    text
-  }
+ tweets(first: 10, skip: 20) {
+  id
+  text
+ }
 }
 ```
 
@@ -87,10 +84,10 @@ query Tweets {
 
 ```graphql
 query Tweets {
-  tweets(orderBy: createdAt_DESC) {
-    id
-    text
-  }
+ tweets(orderBy: createdAt_DESC) {
+  id
+  text
+ }
 }
 ```
 
@@ -98,31 +95,31 @@ query Tweets {
 
 ```graphql
 query Tweets {
-  tweets(
-    where: {
-      AND: [{ text_contains: "GraphQL" }, { owner: { name_not: "Graphcool" } }]
-    }
-  ) {
-    id
-    text
+ tweets(
+  where: {
+   AND: [{ text_contains: "GraphQL" }, { owner: { name_not: "Graphcool" } }]
   }
+ ) {
+  id
+  text
+ }
 }
 ```
 
-#### There is a bidirectional relation between User and Tweet
+### There is a bidirectional relation between User and Tweet
 
 ##### Get user for a tweet
 
 ```graphql
 query Tweets {
-  tweets {
-    id
-    text
-    owner {
-      id
-      name
-    }
+ tweets {
+  id
+  text
+  owner {
+   id
+   name
   }
+ }
 }
 ```
 
@@ -130,18 +127,18 @@ query Tweets {
 
 ```graphql
 query UserTweets {
-  user(where: { handle: "graphcool" }) {
-    id
-    name
-    tweets(orderBy: createdAt_DESC) {
-      id
-      text
-    }
+ user(where: { handle: "graphcool" }) {
+  id
+  name
+  tweets(orderBy: createdAt_DESC) {
+   id
+   text
   }
+ }
 }
 ```
 
-#### GraphQL Directives
+### GraphQL Directives
 
 ##### Unique
 
@@ -149,10 +146,10 @@ query UserTweets {
 
 ```graphql
 query UserTweets {
-  user(where: { handle: "graphcool" }) {
-    id
-    name
-  }
+ user(where: { handle: "graphcool" }) {
+  id
+  name
+ }
 }
 ```
 
@@ -167,6 +164,8 @@ The deletion behaviour in this example is as follows:
 * When a `User` node gets deleted, all its related `Tweet` nodes will be deleted as well.
 
 * When a `Tweet` node gets deleted, it will simply be removed from the tweets list on the related `User` node.
+
+Note that `deleteMany` does not activate a cascade delete yet. This feature is being tracked [here](https://github.com/prismagraphql/prisma/issues/1936).
 
 ##### Default
 

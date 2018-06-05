@@ -1,6 +1,6 @@
 # Postgres
 
-This example demonstrates how to implement a Postgres connector with Prisma.
+This example demonstrates how to use Prisma with Postgres.
 
 ## Get started
 
@@ -23,7 +23,7 @@ yarn install
 
 ### 2. Deploy the Prisma database service
 
-You can now [deploy](https://www.prismagraphql.com/docs/reference/cli-command-reference/database-service/prisma-deploy-kee1iedaov) the Prisma service (note that this requires you to have [Docker](https://www.docker.com) installed on your machine - if that's not the case, follow the collapsed instructions below the code block):
+You can now [deploy](https://www.prisma.io/docs/reference/cli-command-reference/database-service/prisma-deploy-kee1iedaov) the Prisma service (note that this requires you to have [Docker](https://www.docker.com) installed on your machine - if that's not the case, follow the collapsed instructions below the code block):
 
 ```sh
 yarn prisma deploy
@@ -32,15 +32,43 @@ yarn prisma deploy
 <details>
  <summary><strong>I don't have <a href="https://www.docker.com">Docker</a> installed on my machine</strong></summary>
 
-To deploy your service to a public cluster (rather than locally with Docker), you need to perform the following steps:
-
-1.  Remove the `cluster` property from `prisma.yml`
-1.  Run `yarn prisma deploy`
-1.  When prompted by the CLI, select a public cluster (e.g. `prisma-eu1` or `prisma-us1`)
-1.  Replace the [`endpoint`](./src/index.js#L23) in `index.js` with the HTTP endpoint that was printed after the previous command
+To deploy your service to a demo server (rather than locally with Docker), please follow [this link](https://www.prisma.io/docs/quickstart/).
 
 </details>
 
 ### 3. Explore the Postgres
 
 Running the command `docker ps` will show you an image running for Postgres running at port 5432 and an image running the Prisma which connects to this external Postgres running at port 5432.
+
+Let us take a look at the Postgres specific parts of the `docker-compose.yml` file in this example.
+
+This part of the configuration declares the service for postgres database which runs on its default port 5432.
+
+```yml
+postgres:
+    image: postgres
+    restart: always
+    environment:
+      POSTGRES_USER: prisma
+      POSTGRES_PASSWORD: prisma
+    volumes:
+      - postgres:/var/lib/postgresql/data
+```
+
+This part of configurations declares the environment for Prisma server to connect to the external Postgres database running at the port 5432.
+
+```yml
+environment:
+      PRISMA_CONFIG: |
+        port: 4466
+        # uncomment the next line and provide the env var PRISMA_MANAGEMENT_API_SECRET=my-secret to activate cluster security
+        # managementApiSecret: my-secret
+        databases:
+          default:
+            connector: postgres
+            host: postgres
+            port: 5432
+            user: prisma
+            password: prisma
+            migrations: true
+```
