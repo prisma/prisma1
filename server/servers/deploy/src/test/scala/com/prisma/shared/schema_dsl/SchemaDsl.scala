@@ -239,10 +239,10 @@ object SchemaDsl extends AwaitUtils {
         modelBOnDelete = modelBOnDelete,
         manifestation = None
       )
-      val newField = relationField(fieldAName, this, modelB, relation, isList = false, isBackward = false, false, true)
+      val newField = relationField(fieldAName, from = this, modelB, relation, isList = false, isBackward = false, isRequired = false, includeInSchema = true)
       fields += newField
 
-      val newBField = relationField(fieldBName, modelB, this, relation, isList = false, isBackward = true, false, includeFieldB)
+      val newBField = relationField(fieldBName, modelB, to = this, relation, isList = false, isBackward = true, isRequired = false, includeFieldB)
       modelB.fields += newBField
 
       this.relations += relation

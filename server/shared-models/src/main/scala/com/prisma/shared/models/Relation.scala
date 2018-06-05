@@ -67,12 +67,9 @@ class Relation(
     modelAFieldIsList && modelBFieldIsList
   }
 
-  private def modelFieldFor(model: String, relationSide: RelationSide.Value): RelationField = {
-    val model = relationSide match {
-      case RelationSide.A => modelA
-      case RelationSide.B => modelB
-    }
-    model.relationFields.find(_.isRelationWithNameAndSide(name, relationSide)).get
+  private def modelFieldFor(model: String, relationSide: RelationSide.Value): RelationField = relationSide match {
+    case RelationSide.A => modelAField
+    case RelationSide.B => modelBField
   }
 
   def columnForRelationSide(relationSide: RelationSide.Value): String = if (relationSide == RelationSide.A) modelAColumn else modelBColumn
