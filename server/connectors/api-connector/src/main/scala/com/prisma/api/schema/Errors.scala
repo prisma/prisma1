@@ -114,6 +114,14 @@ object APIErrors {
         3043
       )
 
+  case class UpdatingUniqueToNullAndThenNestingMutations(modelName: String)
+      extends ClientApiError(
+        s"You are updating a unique value to null and have nested mutations below that node. Since we execute from top to bottom" +
+          s" and there could now be several nodes with null for that unique field there is the possibility for errors. Please do the mutation in two steps" +
+          s"or use a different unique value to address the nodes. Affected model: $modelName",
+        +3044
+      )
+
   def pathErrorMessage(path: Path): String = {
 
     path.edges.length match {
