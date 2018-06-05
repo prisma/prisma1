@@ -90,8 +90,8 @@ case class PostgresApiDatabaseQueryBuilder(
       args: Option[QueryArguments]
   ): DBIO[Vector[ResolverResult[PrismaNodeWithParent]]] = {
     SimpleDBIO[Vector[ResolverResult[PrismaNodeWithParent]]] { ctx =>
-      val builder = RelatedModelsQueryBuilderWithoutPagination(schemaName, fromField, args, fromModelIds)
-      val ps      = ctx.connection.prepareStatement(builder.queryString)
+      val builder = RelatedModelsQueryBuilder(schemaName, fromField, args, fromModelIds)
+      val ps      = ctx.connection.prepareStatement(builder.queryStringWithoutPagination)
 
       // injecting params
       val pp     = new PositionedParameters(ps)
@@ -119,10 +119,10 @@ case class PostgresApiDatabaseQueryBuilder(
       args: Option[QueryArguments]
   ): DBIO[Vector[ResolverResult[PrismaNodeWithParent]]] = {
     SimpleDBIO[Vector[ResolverResult[PrismaNodeWithParent]]] { ctx =>
-      val builder = RelatedModelsQueryBuilder(schemaName, fromField, args)
+      val builder = RelatedModelsQueryBuilder(schemaName, fromField, args, fromModelIds)
       // see https://github.com/graphcool/internal-docs/blob/master/relations.md#findings
 
-      val baseQuery = "(" + builder.queryString + ")"
+      val baseQuery = "(" + builder.queryStringWithPagination + ")"
 
       val distinctModelIds = fromModelIds.distinct
 
