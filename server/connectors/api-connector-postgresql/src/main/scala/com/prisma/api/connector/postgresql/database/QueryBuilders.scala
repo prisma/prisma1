@@ -10,28 +10,11 @@ import com.prisma.shared.models._
 import slick.jdbc.PositionedParameters
 
 object QueryBuilders {
-  def model(schemaName: String, model: Model, args: Option[QueryArguments]): QueryBuilder            = ModelQueryBuilder(schemaName, model, args)
-  def relation(schemaName: String, relation: Relation, args: Option[QueryArguments]): QueryBuilder   = RelationQueryBuilder(schemaName, relation, args)
-  def scalarList(schemaName: String, field: ScalarField, args: Option[QueryArguments]): QueryBuilder = ScalarListQueryBuilder(schemaName, field, args)
-  def count(schemaName: String, table: String, filter: Option[Filter]): QueryBuilder                 = CountQueryBuilder(schemaName, table, filter)
-
   val topLevelAlias = "Alias"
 }
 
-trait QueryBuilder {
-  def topLevelAlias = QueryBuilders.topLevelAlias
-
-  def queryString: String
-  def setParamsForQueryArgs(preparedStatement: PreparedStatement, queryArguments: Option[QueryArguments]): Unit = {
-    SetParams.setQueryArgs(preparedStatement, queryArguments)
-  }
-
-  def setParamsForFilter(preparedStatement: PreparedStatement, filter: Option[Filter]): Unit = {
-    SetParams.setFilter(preparedStatement, filter)
-  }
-}
-
-case class RelationQueryBuilder(schemaName: String, relation: Relation, queryArguments: Option[QueryArguments]) extends QueryBuilder {
+case class RelationQueryBuilder(schemaName: String, relation: Relation, queryArguments: Option[QueryArguments]) {
+  import QueryBuilders.topLevelAlias
 
   lazy val queryString: String = {
     val tableName = relation.relationTableName
@@ -42,7 +25,8 @@ case class RelationQueryBuilder(schemaName: String, relation: Relation, queryArg
   }
 }
 
-case class CountQueryBuilder(schemaName: String, table: String, filter: Option[Filter]) extends QueryBuilder {
+case class CountQueryBuilder(schemaName: String, table: String, filter: Option[Filter]) {
+  import QueryBuilders.topLevelAlias
 
   lazy val queryString: String = {
     s"""SELECT COUNT(*) FROM "$schemaName"."$table" AS "$topLevelAlias" """ +
@@ -50,7 +34,8 @@ case class CountQueryBuilder(schemaName: String, table: String, filter: Option[F
   }
 }
 
-case class ScalarListQueryBuilder(schemaName: String, field: ScalarField, queryArguments: Option[QueryArguments]) extends QueryBuilder {
+case class ScalarListQueryBuilder(schemaName: String, field: ScalarField, queryArguments: Option[QueryArguments]) {
+  import QueryBuilders.topLevelAlias
   require(field.isList, "This must be called only with scalar list fields")
 
   lazy val queryString: String = {
@@ -103,7 +88,8 @@ case class RelatedModelsQueryBuilder(
   }
 }
 
-case class ModelQueryBuilder(schemaName: String, model: Model, queryArguments: Option[QueryArguments]) extends QueryBuilder {
+case class ModelQueryBuilder(schemaName: String, model: Model, queryArguments: Option[QueryArguments]) {
+  import QueryBuilders.topLevelAlias
 
   lazy val queryString: String = {
     s"""SELECT * FROM "$schemaName"."${model.dbName}" AS "$topLevelAlias" """ +

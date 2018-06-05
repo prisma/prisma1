@@ -59,7 +59,7 @@ case class PostgresApiDatabaseQueryBuilder(
       // prepare statement
       val builder = ModelQueryBuilder(schemaName, model, args)
       val ps      = ctx.connection.prepareStatement(builder.queryString)
-      builder.setParamsForQueryArgs(ps, args)
+      SetParams.setQueryArgs(ps, args)
       // execute
       val rs: ResultSet = ps.executeQuery()
       // read result
@@ -160,9 +160,9 @@ case class PostgresApiDatabaseQueryBuilder(
   ): DBIO[ResolverResult[RelationNode]] = {
 
     SimpleDBIO[ResolverResult[RelationNode]] { ctx =>
-      val builder = QueryBuilders.relation(schemaName, relation, args)
+      val builder = RelationQueryBuilder(schemaName, relation, args)
       val ps      = ctx.connection.prepareStatement(builder.queryString)
-      builder.setParamsForQueryArgs(ps, args)
+      SetParams.setQueryArgs(ps, args)
       val rs: ResultSet = ps.executeQuery()
 
       val result = rs.as(readRelation(relation))
@@ -178,9 +178,9 @@ case class PostgresApiDatabaseQueryBuilder(
   ): DBIO[ResolverResult[ScalarListValues]] = {
 
     SimpleDBIO[ResolverResult[ScalarListValues]] { ctx =>
-      val builder = QueryBuilders.scalarList(schemaName, field, args)
+      val builder = ScalarListQueryBuilder(schemaName, field, args)
       val ps      = ctx.connection.prepareStatement(builder.queryString)
-      builder.setParamsForQueryArgs(ps, args)
+      SetParams.setQueryArgs(ps, args)
       val rs: ResultSet = ps.executeQuery()
 
       val result = rs.as(readsScalarListField(field))
@@ -214,7 +214,7 @@ case class PostgresApiDatabaseQueryBuilder(
     SimpleDBIO[Int] { ctx =>
       val builder = CountQueryBuilder(schemaName, table, whereFilter)
       val ps      = ctx.connection.prepareStatement(builder.queryString)
-      builder.setParamsForFilter(ps, whereFilter)
+      SetParams.setFilter(ps, whereFilter)
       val rs = ps.executeQuery()
       rs.next()
       rs.getInt(1)
@@ -224,9 +224,9 @@ case class PostgresApiDatabaseQueryBuilder(
   def batchSelectFromModelByUnique(model: Model, field: ScalarField, values: Vector[GCValue]): DBIO[Vector[PrismaNode]] = {
     SimpleDBIO { ctx =>
       val queryArgs = Some(QueryArguments.withFilter(ScalarFilter(field, In(values))))
-      val builder   = QueryBuilders.model(schemaName, model, queryArgs)
+      val builder   = ModelQueryBuilder(schemaName, model, queryArgs)
       val ps        = ctx.connection.prepareStatement(builder.queryString)
-      builder.setParamsForQueryArgs(ps, queryArgs)
+      SetParams.setQueryArgs(ps, queryArgs)
       val rs: ResultSet = ps.executeQuery()
       rs.as(readsPrismaNode(model))
     }
