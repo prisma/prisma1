@@ -74,8 +74,22 @@ case class PostgresApiDatabaseQueryBuilder(
       fromModelIds: Vector[IdGCValue],
       args: Option[QueryArguments]
   ): DBIO[Vector[ResolverResult[PrismaNodeWithParent]]] = {
+    val isWithPagination = args.flatMap(_.last).orElse(args.flatMap(_.first)).isDefined
+    if (isWithPagination) {
+      batchSelectAllFromRelatedModelWithPagination(schema, fromField, fromModelIds, args)
+    } else {
+      batchSelectAllFromRelatedModelWithoutPagination(schema, fromField, fromModelIds, args)
+    }
+  }
+
+  private def batchSelectAllFromRelatedModelWithPagination(
+      schema: Schema,
+      fromField: RelationField,
+      fromModelIds: Vector[IdGCValue],
+      args: Option[QueryArguments]
+  ): DBIO[Vector[ResolverResult[PrismaNodeWithParent]]] = {
     SimpleDBIO[Vector[ResolverResult[PrismaNodeWithParent]]] { ctx =>
-      val builder = RelatedModelsQueryBuilder(schemaName, fromField, args)
+      val builder = RelatedModelsQueryBuilderWithPagination(schemaName, fromField, args)
       // see https://github.com/graphcool/internal-docs/blob/master/relations.md#findings
       val resolveFromBothSidesAndMerge = fromField.relation.isSameFieldSameModelRelation
 
@@ -90,8 +104,6 @@ case class PostgresApiDatabaseQueryBuilder(
       val query   = queries.mkString(" union all ")
 
       val ps = ctx.connection.prepareStatement(query)
-      println("!!" * 50)
-      println(query)
 
       // injecting params
       val pp     = new PositionedParameters(ps)
@@ -107,6 +119,49 @@ case class PostgresApiDatabaseQueryBuilder(
             SetParams.setParams(pp, filter)
           }
         }
+      }
+
+      // executing
+      val rs: ResultSet       = ps.executeQuery()
+      val result              = rs.as[PrismaNodeWithParent](readPrismaNodeWithParent(fromField.relatedModel_!, fromField.relationSide, fromField.oppositeRelationSide))
+      val itemGroupsByModelId = result.groupBy(_.parentId)
+      fromModelIds.map { id =>
+        itemGroupsByModelId.find(_._1 == id) match {
+          case Some((_, itemsForId)) => ResolverResult(args, itemsForId, parentModelId = Some(id))
+          case None                  => ResolverResult(Vector.empty[PrismaNodeWithParent], hasPreviousPage = false, hasNextPage = false, parentModelId = Some(id))
+        }
+      }
+    }
+  }
+
+  private def batchSelectAllFromRelatedModelWithoutPagination(
+      schema: Schema,
+      fromField: RelationField,
+      fromModelIds: Vector[IdGCValue],
+      args: Option[QueryArguments]
+  ): DBIO[Vector[ResolverResult[PrismaNodeWithParent]]] = {
+    SimpleDBIO[Vector[ResolverResult[PrismaNodeWithParent]]] { ctx =>
+      val builder = RelatedModelsQueryBuilderWithoutPagination(schemaName, fromField, args, fromModelIds)
+      // see https://github.com/graphcool/internal-docs/blob/master/relations.md#findings
+      val resolveFromBothSidesAndMerge = fromField.relation.isSameFieldSameModelRelation
+
+      val query = if (resolveFromBothSidesAndMerge) {
+        "((" + builder.queryString + ") union all " + "(" + builder.queryStringFromOtherSide + "))"
+      } else {
+        "(" + builder.queryString + ")"
+      }
+
+      val ps = ctx.connection.prepareStatement(query)
+
+      // injecting params
+      val pp     = new PositionedParameters(ps)
+      val filter = args.flatMap(_.filter)
+      fromModelIds.distinct.foreach(pp.setGcValue)
+      filter.foreach(filter => SetParams.setParams(pp, filter))
+
+      if (resolveFromBothSidesAndMerge) { // each query is repeated so we have to set them a second time
+        fromModelIds.distinct.foreach(pp.setGcValue)
+        filter.foreach(filter => SetParams.setParams(pp, filter))
       }
 
       // executing
