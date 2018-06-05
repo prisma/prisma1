@@ -127,16 +127,13 @@ export class Client {
     cluster: Cluster,
     serviceName: string,
     stageName?: string,
-    workspaceSlug: string | undefined | null = '*',
+    workspaceSlug?: string | undefined | null,
   ) {
     debug('Initializing cluster client')
     try {
-      if (!workspaceSlug) {
-        workspaceSlug = '*'
-      }
       const token = await cluster.getToken(
         serviceName,
-        workspaceSlug,
+        workspaceSlug || undefined,
         stageName,
       )
       const agent = getProxyAgent(cluster.getDeployEndpoint())
