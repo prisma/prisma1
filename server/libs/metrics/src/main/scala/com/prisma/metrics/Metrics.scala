@@ -7,30 +7,14 @@ import io.micrometer.core.instrument.{Counter, MeterRegistry, Tag, Timer}
 
 import scala.concurrent.{ExecutionContext, Future}
 
-case class CustomTag(name: String, recordingThreshold: Long = 0) {
-
-  /**
-    * Returns the tag string for this tag + value combination.
-    * Sets the empty value for the tag ("-") if the value to record is above the threshold.
-    * This is mostly interesting for timings right now to reduce noise in custom dimensions.
-    */
-  def apply(recordedValue: Long, tagValue: String): String = {
-    if (recordedValue >= recordingThreshold) {
-      s"$name=${sanitizeValue(tagValue)}"
-    } else {
-      s"$name=-"
-    }
-  }
-
-  def sanitizeValue(tagValue: String) = tagValue.replace('@', '-').replace('~', '-')
-}
+case class CustomTag(name: String, recordingThreshold: Long = 0)
 
 trait Metric {
 
   val name: String
   val customTags: Seq[CustomTag]
 
-  def createTags(customTagValues: Seq[String]): java.util.List[Tag] = {
+  protected def createTags(customTagValues: Seq[String]): java.util.List[Tag] = {
     import collection.JavaConverters._
     customTags
       .zip(customTagValues)

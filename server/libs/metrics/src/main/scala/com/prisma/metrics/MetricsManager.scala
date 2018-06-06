@@ -1,9 +1,6 @@
 package com.prisma.metrics
 
-import java.util.concurrent.TimeUnit
-
-import akka.actor.{ActorSystem, Props}
-import com.librato.metrics.client.{Duration, LibratoClient}
+import akka.actor.ActorSystem
 import com.prisma.akkautil.SingleThreadedActorSystem
 import com.prisma.errors.ErrorReporter
 import io.micrometer.prometheus.{PrometheusConfig, PrometheusMeterRegistry}
@@ -11,7 +8,6 @@ import io.prometheus.client.exporter.PushGateway
 
 import scala.concurrent.Await
 import scala.concurrent.duration._
-import scala.util.{Failure, Success, Try}
 
 abstract class MetricsManager(reporter: ErrorReporter) {
   def serviceName: String
@@ -25,7 +21,7 @@ abstract class MetricsManager(reporter: ErrorReporter) {
 
   private def log(msg: String): Unit = println(s"[Metrics] $msg")
 
-  private val prometheusRegistry = new PrometheusMeterRegistry(PrometheusConfig.DEFAULT)
+  private val prometheusRegistry = new PrometheusMeterRegistry(PrometheusConfig.DEFAULT) // TODO: create dummy if metrics collection is disabled
   private val pushGateway        = new PushGateway("localhost:9091")
 
   gaugeFlushSystem.scheduler.schedule(30.seconds, 30.seconds) {
