@@ -31,9 +31,9 @@ export default class Delete extends Command {
 
     await this.client.initClusterClient(
       cluster!,
-      this.definition.getWorkspace() || '*',
       serviceName,
       stage,
+      this.definition.getWorkspace() || '*',
     )
 
     const prettyName = `${chalk.bold(serviceName)}@${stage}`

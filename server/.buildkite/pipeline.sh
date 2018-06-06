@@ -73,13 +73,11 @@ docker=$(printf "
       command: ./server/.buildkite/scripts/unstable.sh alpha 2
       branches: alpha
 
-    - label: \":docker: Build beta channel\"
+    - label: \":docker: Check & Build beta channel\"
       command: ./server/.buildkite/scripts/unstable.sh beta 1
-      branches: beta
 
-    - label: \":docker: Build stable channel\"
+    - label: \":docker: Check & Build stable channel\"
       command: ./server/.buildkite/scripts/stable.sh
-      branches: master
     ")
 
 pipeline=$(printf "

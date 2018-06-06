@@ -20,6 +20,7 @@ export class Cluster {
   workspaceSlug?: string
   private cachedToken?: string
   hasOldDeployEndpoint: boolean
+  custom?: boolean
   constructor(
     out: IOutput,
     name: string,
@@ -103,7 +104,7 @@ Original error: ${e.message}`,
 
   async generateClusterToken(
     serviceName: string,
-    workspaceSlug: string = '*',
+    workspaceSlug: string = this.workspaceSlug || '*',
     stageName?: string,
   ): Promise<string> {
     const query = `
