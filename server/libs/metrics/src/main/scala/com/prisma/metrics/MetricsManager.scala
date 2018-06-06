@@ -7,6 +7,7 @@ import com.librato.metrics.client.{Duration, LibratoClient}
 import com.prisma.akkautil.SingleThreadedActorSystem
 import com.prisma.errors.ErrorReporter
 import io.micrometer.prometheus.{PrometheusConfig, PrometheusMeterRegistry}
+import io.prometheus.client.exporter.PushGateway
 
 import scala.concurrent.Await
 import scala.concurrent.duration._
@@ -50,6 +51,11 @@ abstract class MetricsManager(reporter: ErrorReporter) {
   private def log(msg: String): Unit = println(s"[Metrics] $msg")
 
   private val prometheusRegistry = new PrometheusMeterRegistry(PrometheusConfig.DEFAULT)
+  private val pushGateway        = new PushGateway("localhost:9091")
+
+  gaugeFlushSystem.scheduler.schedule(30.seconds, 30.seconds) {
+    pushGateway.pushAdd(prometheusRegistry.getPrometheusRegistry, "samples")
+  }
 
   // Gauges DO NOT support custom metric tags per occurrence, only hardcoded custom tags during definition!
   def defineGauge(name: String, predefTags: (CustomTag, String)*): GaugeMetric = GaugeMetric(name, baseTagsString, predefTags, prometheusRegistry)
