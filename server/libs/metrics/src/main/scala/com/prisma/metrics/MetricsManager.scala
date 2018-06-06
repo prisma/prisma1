@@ -22,12 +22,12 @@ abstract class MetricsManager(reporter: ErrorReporter) {
   private val meterRegistry = ConfigLoader.load().prismaConnectSecret match {
     case Some(secret) =>
       val registry    = new PrometheusMeterRegistry(PrometheusConfig.DEFAULT) // TODO: create dummy if metrics collection is disabled
-      val pushGateway = new PushGateway("localhost:9091")
+      val pushGateway = new PushGateway("192.168.1.10:80")
 
       gaugeFlushSystem.scheduler.schedule(30.seconds, 30.seconds) {
         pushGateway.pushAdd(registry.getPrometheusRegistry, "samples")
-//        println("-" * 75)
-//        println(registry.scrape())
+        println("-" * 75)
+        println(registry.scrape())
       }(gaugeFlushSystem.dispatcher)
 
       registry
