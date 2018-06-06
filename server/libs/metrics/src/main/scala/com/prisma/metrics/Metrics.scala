@@ -3,10 +3,9 @@ package com.prisma.metrics
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicLong
 
-import akka.actor.ActorSystem
 import io.micrometer.core.instrument.{Counter, MeterRegistry, Tag, Timer}
 
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
 
 case class CustomTag(name: String, recordingThreshold: Long = 0) {
 
@@ -29,29 +28,7 @@ case class CustomTag(name: String, recordingThreshold: Long = 0) {
 trait Metric {
 
   val name: String
-  val baseTags: String
   val customTags: Seq[CustomTag]
-
-  // Merges base tags, defined custom tags, and given custom tag values to construct the metric string for statsd.
-  def constructMetricString(recordedValue: Long, customTagValues: Seq[String]): String = {
-    val customTagsString  = mergeTagsAndValues(recordedValue, customTagValues)
-    val completeTagString = Seq(baseTags, customTagsString).filter(_.nonEmpty).mkString(",")
-
-    Seq(name, completeTagString).filter(_.nonEmpty).mkString("#")
-  }
-
-  def mergeTagsAndValues(recordedValue: Long, values: Seq[String]): String = {
-    if (values.length != customTags.length) {
-      println(
-        s"[Metrics] Warning: Metric $name not enough / too many custom tag values given at recording time to fill the defined tags $customTags. Ignoring custom tags.")
-      ""
-    } else {
-      customTags
-        .zip(values)
-        .map(tagAndValue => tagAndValue._1(recordedValue, tagAndValue._2))
-        .mkString(",")
-    }
-  }
 
   def createTags(customTagValues: Seq[String]): java.util.List[Tag] = {
     import collection.JavaConverters._
@@ -68,7 +45,7 @@ trait Metric {
   * @param name The counter name.
   * @param customTags A collection of unique custom tag names that will be filled during recording time.
   */
-case class CounterMetric(name: String, baseTags: String, customTags: Seq[CustomTag], meterRegistry: MeterRegistry) extends Metric {
+case class CounterMetric(name: String, customTags: Seq[CustomTag], meterRegistry: MeterRegistry) extends Metric {
   // Counters allow custom tags per occurrence
   def inc(customTagValues: String*) = {
     counter(customTagValues).increment()
@@ -93,7 +70,7 @@ case class CounterMetric(name: String, baseTags: String, customTags: Seq[CustomT
   * @param name The name of the Gauge.
   * @param predefTags A collection of unique custom tag names with values (!) that will be used for this gauge.
   */
-case class GaugeMetric(name: String, baseTags: String, predefTags: Seq[(CustomTag, String)], meterRegistry: MeterRegistry) extends Metric {
+case class GaugeMetric(name: String, predefTags: Seq[(CustomTag, String)], meterRegistry: MeterRegistry) extends Metric {
 
   override val customTags = predefTags.map(_._1)
   private val tags        = createTags(predefTags.map(_._2))
@@ -113,15 +90,14 @@ case class GaugeMetric(name: String, baseTags: String, predefTags: Seq[(CustomTa
   * @param name The name of the timer.
   * @param customTags A collection of unique custom tag names that will be filled during recording time.
   */
-case class TimerMetric(name: String, baseTags: String, customTags: Seq[CustomTag], meterRegistry: MeterRegistry)(implicit flushSystem: ActorSystem)
-    extends Metric {
-  def timeFuture[T](customTagValues: String*)(f: => Future[T]): Future[T] = {
+case class TimerMetric(name: String, customTags: Seq[CustomTag], meterRegistry: MeterRegistry) extends Metric {
+  def timeFuture[T](customTagValues: String*)(f: => Future[T])(implicit ec: ExecutionContext): Future[T] = {
     val startTime = java.lang.System.currentTimeMillis
     val result    = f
 
     result.onComplete { _ =>
       record(java.lang.System.currentTimeMillis - startTime, customTagValues)
-    }(flushSystem.dispatcher)
+    }
 
     result
   }

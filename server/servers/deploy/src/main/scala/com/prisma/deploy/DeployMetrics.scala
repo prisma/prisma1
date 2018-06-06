@@ -5,7 +5,7 @@ import com.prisma.akkautil.LogUnhandled
 import com.prisma.deploy.DatabaseSizeReporter.Report
 import com.prisma.deploy.connector.{DatabaseSize, DeployConnector, ProjectPersistence}
 import com.prisma.errors.{BugsnagErrorReporter, ErrorReporter}
-import com.prisma.metrics.{CustomTag, GaugeMetric, LibratoGaugeMetric, MetricsManager}
+import com.prisma.metrics.{CustomTag, GaugeMetric, MetricsManager}
 import com.prisma.profiling.JvmProfiler
 import com.prisma.shared.models.Project
 
