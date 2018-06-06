@@ -9,6 +9,7 @@ class ConfigLoaderSpec extends WordSpec with Matchers {
       val validConfig = """
                           |port: 4466
                           |managementApiSecret: somesecret
+                          |prismaConnectSecret: othersecret
                           |databases:
                           |  default:
                           |    connector: mysql
@@ -26,6 +27,7 @@ class ConfigLoaderSpec extends WordSpec with Matchers {
       config.isSuccess shouldBe true
       config.get.port shouldBe Some(4466)
       config.get.managementApiSecret should contain("somesecret")
+      config.get.prismaConnectSecret should contain("othersecret")
       config.get.databases.length shouldBe 1
       config.get.databases.head.connector shouldBe "mysql"
       config.get.databases.head.active shouldBe true
