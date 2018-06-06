@@ -26,6 +26,8 @@ abstract class MetricsManager(reporter: ErrorReporter) {
 
   gaugeFlushSystem.scheduler.schedule(30.seconds, 30.seconds) {
     pushGateway.pushAdd(prometheusRegistry.getPrometheusRegistry, "samples")
+//    println("-" * 75)
+//    println(prometheusRegistry.scrape())
   }(gaugeFlushSystem.dispatcher)
 
   // Gauges DO NOT support custom metric tags per occurrence, only hardcoded custom tags during definition!
