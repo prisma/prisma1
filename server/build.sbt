@@ -222,7 +222,8 @@ lazy val metrics = libProject("metrics")
       finagle,
       akka,
       librato,
-      microMeter
+      microMeter,
+      prometheusPushGateway
     )
   )
 
