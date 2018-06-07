@@ -37,7 +37,7 @@ object Databases {
         |database {
         |  dataSourceClass = "slick.jdbc.DriverDataSource"
         |  properties {
-        |    url = "jdbc:postgresql://${dbConfig.host}:${dbConfig.port}/$database?currentSchema=$schema"
+        |    url = "jdbc:postgresql://${dbConfig.host}:${dbConfig.port}/$database?currentSchema=$schema&ssl=${booleanAsNumber(dbConfig.ssl)}"
         |    user = "${dbConfig.user}"
         |    password = "${dbConfig.password.getOrElse("")}"
         |  }
@@ -48,4 +48,6 @@ object Databases {
       """.stripMargin)
       .resolve
   }
+
+  def booleanAsNumber(bool: Boolean) = if (bool) "1" else "0"
 }
