@@ -1,0 +1,7 @@
+  mutation {
+    createRole(data: {
+      name: USER
+    }) {
+      id
+    }
+  }
