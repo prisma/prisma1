@@ -5,8 +5,6 @@ import org.specs2.mutable.Specification
 
 class StubDslSpec extends Specification {
 
-  val uri = "postgres://tim:\"N8cl%&eHEn<{?1yYkzG>*ks=\"@tims-test-db.clfeqqifnebj.eu-west-1.rds.amazonaws.com/postgres?ssl=1"
-
   val path   = "some/freaking/path"
   val params = Map("a" -> 1)
 
