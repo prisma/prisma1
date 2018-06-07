@@ -68,113 +68,25 @@ case class PostgresApiDatabaseQueryBuilder(
     }
   }
 
-  //todo merge both branches after rework of with pagination query
   def batchSelectAllFromRelatedModel(
       schema: Schema,
       fromField: RelationField,
       fromModelIds: Vector[IdGCValue],
       args: Option[QueryArguments]
   ): DBIO[Vector[ResolverResult[PrismaNodeWithParent]]] = {
-
-    if (args.exists(_.isWithPagination)) {
-      batchSelectAllFromRelatedModelWithPagination2(schema, fromField, fromModelIds, args)
-    } else {
-      batchSelectAllFromRelatedModelWithoutPagination(schema, fromField, fromModelIds, args)
-    }
-
-  }
-
-  def batchSelectAllFromRelatedModelWithoutPagination(
-      schema: Schema,
-      fromField: RelationField,
-      fromModelIds: Vector[IdGCValue],
-      args: Option[QueryArguments]
-  ): DBIO[Vector[ResolverResult[PrismaNodeWithParent]]] = {
     SimpleDBIO[Vector[ResolverResult[PrismaNodeWithParent]]] { ctx =>
       val builder = RelatedModelsQueryBuilder(schemaName, fromField, args, fromModelIds)
-      println(builder.queryStringWithPagination)
-      println(builder.queryStringWithoutPagination)
-      val ps = ctx.connection.prepareStatement(builder.queryStringWithoutPagination)
+      val query   = if (args.exists(_.isWithPagination)) builder.queryStringWithPagination2 else builder.queryStringWithPagination2
 
-      // injecting params
-      val pp     = new PositionedParameters(ps)
-      val filter = args.flatMap(_.filter)
-      fromModelIds.foreach(pp.setGcValue)
-      filter.foreach(filter => SetParams.setParams(pp, filter))
-
-      // executing
-      val rs: ResultSet       = ps.executeQuery()
-      val result              = rs.as[PrismaNodeWithParent](readPrismaNodeWithParent(fromField.relatedModel_!, fromField.relationSide, fromField.oppositeRelationSide))
-      val itemGroupsByModelId = result.groupBy(_.parentId)
-      fromModelIds.map { id =>
-        itemGroupsByModelId.find(_._1 == id) match {
-          case Some((_, itemsForId)) => ResolverResult(args, itemsForId, parentModelId = Some(id))
-          case None                  => ResolverResult(Vector.empty[PrismaNodeWithParent], hasPreviousPage = false, hasNextPage = false, parentModelId = Some(id))
-        }
-      }
-    }
-  }
-
-  def batchSelectAllFromRelatedModelWithPagination2(
-      schema: Schema,
-      fromField: RelationField,
-      fromModelIds: Vector[IdGCValue],
-      args: Option[QueryArguments]
-  ): DBIO[Vector[ResolverResult[PrismaNodeWithParent]]] = {
-    SimpleDBIO[Vector[ResolverResult[PrismaNodeWithParent]]] { ctx =>
-      val builder = RelatedModelsQueryBuilder(schemaName, fromField, args, fromModelIds)
       println(builder.queryStringWithPagination2)
       println(builder.queryStringWithoutPagination)
-
-      val ps = ctx.connection.prepareStatement(builder.queryStringWithPagination2)
-
-      // injecting params
-      val pp     = new PositionedParameters(ps)
-      val filter = args.flatMap(_.filter)
-      fromModelIds.foreach(pp.setGcValue)
-      filter.foreach(filter => SetParams.setParams(pp, filter))
-
-      // executing
-      val rs: ResultSet       = ps.executeQuery()
-      val result              = rs.as[PrismaNodeWithParent](readPrismaNodeWithParent(fromField.relatedModel_!, fromField.relationSide, fromField.oppositeRelationSide))
-      val itemGroupsByModelId = result.groupBy(_.parentId)
-      fromModelIds.map { id =>
-        itemGroupsByModelId.find(_._1 == id) match {
-          case Some((_, itemsForId)) => ResolverResult(args, itemsForId, parentModelId = Some(id))
-          case None                  => ResolverResult(Vector.empty[PrismaNodeWithParent], hasPreviousPage = false, hasNextPage = false, parentModelId = Some(id))
-        }
-      }
-    }
-  }
-
-  def batchSelectAllFromRelatedModelWithPagination(
-      schema: Schema,
-      fromField: RelationField,
-      fromModelIds: Vector[IdGCValue],
-      args: Option[QueryArguments]
-  ): DBIO[Vector[ResolverResult[PrismaNodeWithParent]]] = {
-    SimpleDBIO[Vector[ResolverResult[PrismaNodeWithParent]]] { ctx =>
-      val builder = RelatedModelsQueryBuilder(schemaName, fromField, args, fromModelIds)
-      // see https://github.com/graphcool/internal-docs/blob/master/relations.md#findings
-
-      val baseQuery = "(" + builder.queryStringWithPagination + ")"
-
-      val distinctModelIds = fromModelIds.distinct
-
-      val queries = Vector.fill(distinctModelIds.size)(baseQuery)
-      val query   = queries.mkString(" union all ")
-
       val ps = ctx.connection.prepareStatement(query)
 
       // injecting params
       val pp     = new PositionedParameters(ps)
       val filter = args.flatMap(_.filter)
-      distinctModelIds.foreach { id =>
-        pp.setGcValue(id)
-        filter.foreach { filter =>
-          SetParams.setParams(pp, filter)
-        }
-      }
+      fromModelIds.foreach(pp.setGcValue)
+      filter.foreach(filter => SetParams.setParams(pp, filter))
 
       // executing
       val rs: ResultSet       = ps.executeQuery()
@@ -188,6 +100,80 @@ case class PostgresApiDatabaseQueryBuilder(
       }
     }
   }
+
+//  def batchSelectAllFromRelatedModelWithPagination2(
+//      schema: Schema,
+//      fromField: RelationField,
+//      fromModelIds: Vector[IdGCValue],
+//      args: Option[QueryArguments]
+//  ): DBIO[Vector[ResolverResult[PrismaNodeWithParent]]] = {
+//    SimpleDBIO[Vector[ResolverResult[PrismaNodeWithParent]]] { ctx =>
+//      val builder = RelatedModelsQueryBuilder(schemaName, fromField, args, fromModelIds)
+//      println(builder.queryStringWithPagination2)
+//      println(builder.queryStringWithoutPagination)
+//
+//      val ps = ctx.connection.prepareStatement(builder.queryStringWithPagination2)
+//
+//      // injecting params
+//      val pp     = new PositionedParameters(ps)
+//      val filter = args.flatMap(_.filter)
+//      fromModelIds.foreach(pp.setGcValue)
+//      filter.foreach(filter => SetParams.setParams(pp, filter))
+//
+//      // executing
+//      val rs: ResultSet       = ps.executeQuery()
+//      val result              = rs.as[PrismaNodeWithParent](readPrismaNodeWithParent(fromField.relatedModel_!, fromField.relationSide, fromField.oppositeRelationSide))
+//      val itemGroupsByModelId = result.groupBy(_.parentId)
+//      fromModelIds.map { id =>
+//        itemGroupsByModelId.find(_._1 == id) match {
+//          case Some((_, itemsForId)) => ResolverResult(args, itemsForId, parentModelId = Some(id))
+//          case None                  => ResolverResult(Vector.empty[PrismaNodeWithParent], hasPreviousPage = false, hasNextPage = false, parentModelId = Some(id))
+//        }
+//      }
+//    }
+//  }
+//
+//  def batchSelectAllFromRelatedModelWithPagination(
+//      schema: Schema,
+//      fromField: RelationField,
+//      fromModelIds: Vector[IdGCValue],
+//      args: Option[QueryArguments]
+//  ): DBIO[Vector[ResolverResult[PrismaNodeWithParent]]] = {
+//    SimpleDBIO[Vector[ResolverResult[PrismaNodeWithParent]]] { ctx =>
+//      val builder = RelatedModelsQueryBuilder(schemaName, fromField, args, fromModelIds)
+//      // see https://github.com/graphcool/internal-docs/blob/master/relations.md#findings
+//
+//      val baseQuery = "(" + builder.queryStringWithPagination + ")"
+//
+//      val distinctModelIds = fromModelIds.distinct
+//
+//      val queries = Vector.fill(distinctModelIds.size)(baseQuery)
+//      val query   = queries.mkString(" union all ")
+//
+//      val ps = ctx.connection.prepareStatement(query)
+//
+//      // injecting params
+//      val pp     = new PositionedParameters(ps)
+//      val filter = args.flatMap(_.filter)
+//      distinctModelIds.foreach { id =>
+//        pp.setGcValue(id)
+//        filter.foreach { filter =>
+//          SetParams.setParams(pp, filter)
+//        }
+//      }
+//
+//      // executing
+//      val rs: ResultSet       = ps.executeQuery()
+//      val result              = rs.as[PrismaNodeWithParent](readPrismaNodeWithParent(fromField.relatedModel_!, fromField.relationSide, fromField.oppositeRelationSide))
+//      val itemGroupsByModelId = result.groupBy(_.parentId)
+//      fromModelIds.map { id =>
+//        itemGroupsByModelId.find(_._1 == id) match {
+//          case Some((_, itemsForId)) => ResolverResult(args, itemsForId, parentModelId = Some(id))
+//          case None                  => ResolverResult(Vector.empty[PrismaNodeWithParent], hasPreviousPage = false, hasNextPage = false, parentModelId = Some(id))
+//        }
+//      }
+//    }
+//  }
 
   def selectAllFromRelationTable(
       relation: Relation,
