@@ -28,8 +28,7 @@ object Databases {
   }
 
   def typeSafeConfigFromDatabaseConfig(dbConfig: DatabaseConfig): Config = {
-    val pooled = if (dbConfig.pooled) "" else "connectionPool = disabled"
-
+    val pooled   = if (dbConfig.pooled) "" else "connectionPool = disabled"
     val database = dbConfig.database.getOrElse(defaultDatabase)
 
     ConfigFactory
@@ -37,7 +36,7 @@ object Databases {
         |database {
         |  dataSourceClass = "slick.jdbc.DriverDataSource"
         |  properties {
-        |    url = "jdbc:postgresql://${dbConfig.host}:${dbConfig.port}/$database?currentSchema=$schema&ssl=${booleanAsNumber(dbConfig.ssl)}"
+        |    url = "jdbc:postgresql://${dbConfig.host}:${dbConfig.port}/$database?currentSchema=$schema&ssl=${dbConfig.ssl}&sslfactory=org.postgresql.ssl.NonValidatingFactory"
         |    user = "${dbConfig.user}"
         |    password = "${dbConfig.password.getOrElse("")}"
         |  }
@@ -48,6 +47,4 @@ object Databases {
       """.stripMargin)
       .resolve
   }
-
-  def booleanAsNumber(bool: Boolean) = if (bool) "1" else "0"
 }
