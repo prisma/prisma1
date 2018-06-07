@@ -1,6 +1,9 @@
 endpoint: ${env:PRISMA_ENDPOINT}
 datamodel: datamodel.graphql
 
+seed:
+  import: seed.graphql
+
 hooks:
     post-deploy:
         - echo "Deployment finished"
