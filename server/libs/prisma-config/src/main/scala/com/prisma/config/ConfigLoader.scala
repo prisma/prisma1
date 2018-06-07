@@ -1,10 +1,10 @@
 package com.prisma.config
 
 import java.io.File
+import java.net.URI
 
 import org.yaml.snakeyaml.Yaml
 
-import scala.collection.mutable
 import scala.util.{Failure, Success, Try}
 
 object ConfigLoader {
@@ -111,33 +111,7 @@ object ConfigLoader {
     val mgmtApiEnabled = extractBooleanOpt("enableManagementApi", map)
     val databases = extractScalaMap(map.getOrElse("databases", emptyJavaMap), path = "databases").map {
       case (dbName, dbMap) =>
-        val db          = extractScalaMap(dbMap, path = dbName)
-        val dbConnector = extractString("connector", db)
-        val dbActive    = extractBooleanOpt("migrations", db).orElse(extractBooleanOpt("active", db)).getOrElse(true)
-        val dbHost      = extractString("host", db)
-        val dbPort      = extractInt("port", db)
-        val dbUser      = extractString("user", db)
-        val dbPass      = extractStringOpt("password", db)
-        val connLimit   = extractIntOpt("connectionLimit", db)
-        val mgmtSchema  = extractStringOpt("managementSchema", db)
-        val pooled      = extractBooleanOpt("pooled", db)
-        val database    = extractStringOpt("database", db)
-        val schema      = extractStringOpt("schema", db)
-
-        DatabaseConfig(
-          name = dbName,
-          connector = dbConnector,
-          active = dbActive,
-          host = dbHost,
-          port = dbPort,
-          user = dbUser,
-          password = dbPass,
-          connectionLimit = connLimit,
-          pooled = pooled.getOrElse(true),
-          database = database,
-          schema = schema,
-          managementSchema = mgmtSchema
-        )
+        readDbWithConnectionString(dbName, dbMap).getOrElse(readExplicitDb(dbName, dbMap))
     }.toSeq
 
     if (databases.isEmpty) {
@@ -145,6 +119,105 @@ object ConfigLoader {
     }
 
     PrismaConfig(port, secret, legacySecret, s2sSecret, clusterAddress, rabbitUri, mgmtApiEnabled, databases)
+  }
+
+  private def readDbWithConnectionString(dbName: String, dbJavaMap: Any) = Try {
+    val db          = extractScalaMap(dbJavaMap, path = dbName)
+    val dbConnector = extractString("connector", db)
+    val dbActive    = extractBooleanOpt("migrations", db).orElse(extractBooleanOpt("active", db))
+    val uriString   = extractString("uri", db)
+    val connLimit   = extractIntOpt("connectionLimit", db)
+    val pooled      = extractBooleanOpt("pooled", db)
+    val schema      = extractStringOpt("schema", db)
+    val mgmtSchema  = extractStringOpt("managementSchema", db)
+    val uri         = URI.create(uriString)
+    val dbHost      = uri.getHost
+    val userInfo    = uri.getUserInfo.split(':')
+    val dbUser      = userInfo.head
+    val dbPass      = userInfo.lastOption
+    val dbPort      = uri.getPort
+    val database    = uri.getPath.split('/').find(_.nonEmpty)
+    val ssl         = uri.getQuery.split('&').find(param => param.startsWith("ssl=")).map(_.stripPrefix("ssl=") == "1")
+
+    databaseConfig(
+      name = dbName,
+      connector = dbConnector,
+      active = dbActive,
+      host = dbHost,
+      port = dbPort,
+      user = dbUser,
+      password = dbPass,
+      connectionLimit = connLimit,
+      pooled = pooled,
+      database = database,
+      schema = schema,
+      managementSchema = mgmtSchema,
+      ssl = ssl
+    )
+  }
+
+  private def readExplicitDb(dbName: String, dbJavaMap: Any) = {
+    val db          = extractScalaMap(dbJavaMap, path = dbName)
+    val dbConnector = extractString("connector", db)
+    val dbActive    = extractBooleanOpt("migrations", db).orElse(extractBooleanOpt("active", db))
+    val dbHost      = extractString("host", db)
+    val dbPort      = extractInt("port", db)
+    val dbUser      = extractString("user", db)
+    val dbPass      = extractStringOpt("password", db)
+    val connLimit   = extractIntOpt("connectionLimit", db)
+    val mgmtSchema  = extractStringOpt("managementSchema", db)
+    val pooled      = extractBooleanOpt("pooled", db)
+    val database    = extractStringOpt("database", db)
+    val schema      = extractStringOpt("schema", db)
+    val ssl         = extractBooleanOpt("ssl", db)
+
+    databaseConfig(
+      name = dbName,
+      connector = dbConnector,
+      active = dbActive,
+      host = dbHost,
+      port = dbPort,
+      user = dbUser,
+      password = dbPass,
+      connectionLimit = connLimit,
+      pooled = pooled,
+      database = database,
+      schema = schema,
+      managementSchema = mgmtSchema,
+      ssl = ssl
+    )
+  }
+
+  def databaseConfig(
+      name: String,
+      connector: String,
+      active: Option[Boolean],
+      host: String,
+      port: Int,
+      user: String,
+      password: Option[String],
+      connectionLimit: Option[Int],
+      pooled: Option[Boolean],
+      database: Option[String],
+      schema: Option[String],
+      managementSchema: Option[String],
+      ssl: Option[Boolean]
+  ): DatabaseConfig = {
+    DatabaseConfig(
+      name = name,
+      connector = connector,
+      active = active.getOrElse(true),
+      host = host,
+      port = port,
+      user = user,
+      password = password,
+      connectionLimit = connectionLimit,
+      pooled = pooled.getOrElse(true),
+      database = database,
+      schema = schema,
+      managementSchema = managementSchema,
+      ssl = ssl.getOrElse(false)
+    )
   }
 
   private def extractScalaMap(in: Any, required: Boolean = true, path: String = ""): Map[String, Any] = {
@@ -222,7 +295,8 @@ case class DatabaseConfig(
     connectionLimit: Option[Int],
     pooled: Boolean,
     database: Option[String],
-    schema: Option[String]
+    schema: Option[String],
+    ssl: Boolean
 )
 
 abstract class ConfigError(reason: String)       extends Exception(reason)
