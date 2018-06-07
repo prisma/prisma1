@@ -101,7 +101,7 @@ object ConfigLoader {
       """.stripMargin
     }.toOption
 
-  def convertToConfig(map: mutable.Map[String, Any]): PrismaConfig = {
+  def convertToConfig(map: Map[String, Any]): PrismaConfig = {
     val port           = extractIntOpt("port", map)
     val secret         = extractStringOpt("managementApiSecret", map)
     val legacySecret   = extractStringOpt("legacySecret", map)
@@ -147,8 +147,8 @@ object ConfigLoader {
     PrismaConfig(port, secret, legacySecret, s2sSecret, clusterAddress, rabbitUri, mgmtApiEnabled, databases)
   }
 
-  private def extractScalaMap(in: Any, required: Boolean = true, path: String = ""): mutable.Map[String, Any] = {
-    val out = mapAsScalaMap(in.asInstanceOf[java.util.Map[String, Any]]).filter(kv => kv._2 != null)
+  private def extractScalaMap(in: Any, required: Boolean = true, path: String = ""): Map[String, Any] = {
+    val out = mapAsScalaMap(in.asInstanceOf[java.util.Map[String, Any]]).toMap.filter(kv => kv._2 != null)
     if (required && out.isEmpty) {
       throw InvalidConfiguration(s"Expected hash under '$path' to be non-empty")
     }
@@ -156,28 +156,28 @@ object ConfigLoader {
     out
   }
 
-  private def extractString(key: String, map: mutable.Map[String, Any]): String = {
+  private def extractString(key: String, map: Map[String, Any]): String = {
     extractStringOpt(key, map) match {
       case Some(x) => x
       case None    => throw InvalidConfiguration(s"Expected $key to be non-empty")
     }
   }
 
-  private def extractStringOpt(key: String, map: mutable.Map[String, Any]): Option[String] = {
+  private def extractStringOpt(key: String, map: Map[String, Any]): Option[String] = {
     map.get(key) match {
       case x @ Some(v) if v.toString.nonEmpty => x.map(_.toString)
       case _                                  => None
     }
   }
 
-  private def extractBoolean(key: String, map: mutable.Map[String, Any]): Boolean = {
+  private def extractBoolean(key: String, map: Map[String, Any]): Boolean = {
     extractBooleanOpt(key, map) match {
       case Some(x) => x
       case None    => throw InvalidConfiguration(s"Expected Boolean for field $key, got ${map.getOrElse(key, "<unset>").toString}")
     }
   }
 
-  private def extractBooleanOpt(key: String, map: mutable.Map[String, Any]): Option[Boolean] = {
+  private def extractBooleanOpt(key: String, map: Map[String, Any]): Option[Boolean] = {
     map.get(key).map(_.toString.toLowerCase()) match {
       case Some("true")  => Some(true)
       case Some("false") => Some(false)
@@ -185,14 +185,14 @@ object ConfigLoader {
     }
   }
 
-  private def extractInt(key: String, map: mutable.Map[String, Any]): Int = {
+  private def extractInt(key: String, map: Map[String, Any]): Int = {
     extractIntOpt(key, map) match {
       case Some(x) => x
       case None    => throw InvalidConfiguration(s"Expected Int for field $key, got ${map.getOrElse(key, "<unset>").toString}")
     }
   }
 
-  private def extractIntOpt(key: String, map: mutable.Map[String, Any]): Option[Int] = {
+  private def extractIntOpt(key: String, map: Map[String, Any]): Option[Int] = {
     try { map.get(key).map(_.toString.toInt) } catch {
       case _: Throwable => None
     }
