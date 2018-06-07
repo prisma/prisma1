@@ -3,6 +3,9 @@ package com.prisma.config
 import java.io.File
 import java.net.URI
 
+import io.lemonlabs.uri.{Uri, Url}
+import io.lemonlabs.uri.config.UriConfig
+import io.lemonlabs.uri.decoding.NoopDecoder
 import org.yaml.snakeyaml.Yaml
 
 import scala.util.{Failure, Success, Try}
@@ -111,7 +114,9 @@ object ConfigLoader {
     val mgmtApiEnabled = extractBooleanOpt("enableManagementApi", map)
     val databases = extractScalaMap(map.getOrElse("databases", emptyJavaMap), path = "databases").map {
       case (dbName, dbMap) =>
-        readDbWithConnectionString(dbName, dbMap).getOrElse(readExplicitDb(dbName, dbMap))
+        val x = readDbWithConnectionString(dbName, dbMap)
+        x.failed.foreach(_.printStackTrace())
+        x.getOrElse(readExplicitDb(dbName, dbMap))
     }.toSeq
 
     if (databases.isEmpty) {
@@ -130,14 +135,13 @@ object ConfigLoader {
     val pooled      = extractBooleanOpt("pooled", db)
     val schema      = extractStringOpt("schema", db)
     val mgmtSchema  = extractStringOpt("managementSchema", db)
-    val uri         = URI.create(uriString)
-    val dbHost      = uri.getHost
-    val userInfo    = uri.getUserInfo.split(':')
-    val dbUser      = userInfo.head
-    val dbPass      = userInfo.lastOption
-    val dbPort      = uri.getPort
-    val database    = uri.getPath.split('/').find(_.nonEmpty)
-    val ssl         = uri.getQuery.split('&').find(param => param.startsWith("ssl=")).map(_.stripPrefix("ssl=") == "1")
+    val uri         = Url.parse(uriString)(UriConfig(decoder = NoopDecoder))
+    val dbHost      = uri.hostOption.get.value
+    val dbUser      = uri.user.get
+    val dbPass      = uri.password
+    val dbPort      = uri.port.getOrElse(5432)
+    val database    = uri.path.toAbsolute.parts.headOption
+    val ssl         = uri.query.paramMap.get("ssl").flatMap(_.headOption).map(_ == "1")
 
     databaseConfig(
       name = dbName,
