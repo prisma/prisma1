@@ -139,7 +139,7 @@ object ConfigLoader {
     val dbHost      = uri.hostOption.get.value
     val dbUser      = uri.user.get
     val dbPass      = uri.password
-    val dbPort      = uri.port.getOrElse(5432)
+    val dbPort      = uri.port.getOrElse(5432) // FIXME: how could we not hardcode the postgres port
     val database    = uri.path.toAbsolute.parts.headOption
     val ssl         = uri.query.paramMap.get("ssl").flatMap(_.headOption).map(_ == "1")
 
