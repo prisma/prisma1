@@ -105,8 +105,9 @@ object MySqlApiDatabaseMutationBuilder {
         val today              = new Date()
         val exactlyNow         = new DateTime(today).withZone(DateTimeZone.UTC)
         val currentDateGCValue = DateTimeGCValue(exactlyNow)
-        val updatedAt          = sql""""#${updatedAtField.dbName}" = $currentDateGCValue """
+        val updatedAt          = sql"""`#${updatedAtField.dbName}` = $currentDateGCValue """
         combineByComma(updateValues ++ List(updatedAt))
+
       case None =>
         updateValues
     }
