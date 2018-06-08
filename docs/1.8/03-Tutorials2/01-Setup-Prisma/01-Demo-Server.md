@@ -13,7 +13,7 @@ ckstart:docs/1.8/03-Tutorials/01-Setup-Prisma/01-Demo-Server.md
 <InfoBox>
 
 To ensure you're not accidentally skipping an instruction in the tutorial, all required actions are highlighted with a little _counter_ on the left.
-
+<br />
 **Pro tip**: 💡 If you're only keen on getting started but don't care so much about the explanations of what's going on, you can simply jump from instruction to instruction.
 
 </InfoBox>

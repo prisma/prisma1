@@ -2,8 +2,8 @@
 
 set -e
 
-# Stable only builds on tag
-if [ -z "$BUILDKITE_TAG" ]; then
+# Stable only builds on non-beta tag
+if [[ (-z "$BUILDKITE_TAG") || ($BUILDKITE_TAG =~ "-beta") ]]; then
   exit 0
 fi
 
