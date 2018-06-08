@@ -27,14 +27,10 @@ class ToManyDeferredResolver(dataResolver: DataResolver) {
     // and 500 items seems to be the cutoff point where there is no more value to be had.
     // todo figure out the correct group size see to not run into parameter limits see:
     // https://stackoverflow.com/questions/6581573/what-are-the-max-number-of-allowable-parameters-per-database-provider-type
-    val batchFutures = if (args.exists(_.isWithPagination)) {
-      relatedModelInstanceIds.distinct
-        .grouped(2000)
-        .toVector
-        .map(ids => dataResolver.resolveByRelationManyModels(relatedField, ids, args))
-    } else {
-      Vector(dataResolver.resolveByRelationManyModels(relatedField, relatedModelInstanceIds.distinct, args))
-    }
+    val batchFutures: Vector[Future[Vector[ResolverResult[PrismaNodeWithParent]]]] = relatedModelInstanceIds.distinct
+      .grouped(500)
+      .toVector
+      .map(ids => dataResolver.resolveByRelationManyModels(relatedField, ids, args))
 
     // Fetch resolver results
     val futureResolverResults: Future[Vector[ResolverResult[PrismaNodeWithParent]]] = Future
