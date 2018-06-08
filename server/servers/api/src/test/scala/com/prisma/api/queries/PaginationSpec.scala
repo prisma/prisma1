@@ -19,7 +19,7 @@ class PaginationSpec extends FlatSpec with Matchers with ApiSpecBase {
       |  title: String! @unique
       |  list: List!
       |}
-    """.stripMargin
+    """
   }
 
   override protected def beforeAll(): Unit = {
@@ -47,7 +47,7 @@ class PaginationSpec extends FlatSpec with Matchers with ApiSpecBase {
         |    }
         |  }
         |}
-      """.stripMargin,
+      """,
       project
     )
 
@@ -72,7 +72,7 @@ class PaginationSpec extends FlatSpec with Matchers with ApiSpecBase {
         |    }
         |  }
         |}
-      """.stripMargin,
+      """,
       project
     )
     result2.pathAsJsArray("data.listsConnection.edges").value should have(size(3))
@@ -98,7 +98,7 @@ class PaginationSpec extends FlatSpec with Matchers with ApiSpecBase {
         |    }
         |  }
         |}
-      """.stripMargin,
+      """,
       project
     )
 
@@ -122,7 +122,7 @@ class PaginationSpec extends FlatSpec with Matchers with ApiSpecBase {
         |    }
         |  }
         |}
-      """.stripMargin,
+      """,
       project
     )
     result2.pathAsJsArray("data.listsConnection.edges").toString should equal("""[{"node":{"name":"4"}},{"node":{"name":"5"}},{"node":{"name":"6"}}]""")
@@ -140,7 +140,7 @@ class PaginationSpec extends FlatSpec with Matchers with ApiSpecBase {
         |    }
         |  }
         |}
-      """.stripMargin,
+      """,
       project
     )
 
@@ -158,7 +158,7 @@ class PaginationSpec extends FlatSpec with Matchers with ApiSpecBase {
         |    }
         |  }
         |}
-      """.stripMargin,
+      """,
       project
     )
     result2.pathAsJsArray("data.list.todos").value.map(_.pathAsString("title")) should equal(List("4", "5", "6"))
@@ -176,7 +176,7 @@ class PaginationSpec extends FlatSpec with Matchers with ApiSpecBase {
         |  f: createList(data: {name: "6"}){ id }
         |  g: createList(data: {name: "7"}){ id }
         |}
-      """.stripMargin,
+      """,
       project
     )
   }
@@ -193,7 +193,7 @@ class PaginationSpec extends FlatSpec with Matchers with ApiSpecBase {
         |  f: createTodo(data: {title: "6", list: { connect: {name:"1"}}}){ id }
         |  g: createTodo(data: {title: "7", list: { connect: {name:"1"}}}){ id }
         |}
-      """.stripMargin,
+      """,
       project
     )
   }

@@ -161,8 +161,8 @@ case class MySqlApiDatabaseQueryBuilder(project: Project)(implicit ec: Execution
         prefixIfNotNone("limit", limitCommand) ++ sql")"
     }
 
-    val query = fromModelIds.distinct.view.zipWithIndex.foldLeft(sql"")((a, b) =>
-      a ++ unionIfNotFirst(b._2) ++ createQuery(b._1.value, modelRelationSide, oppositeRelationSide))
+    val query =
+      fromModelIds.view.zipWithIndex.foldLeft(sql"")((a, b) => a ++ unionIfNotFirst(b._2) ++ createQuery(b._1.value, modelRelationSide, oppositeRelationSide))
 
     query
       .as[PrismaNodeWithParent](getResultForModelAndRelationSide(relatedModel, modelRelationSide, oppositeRelationSide))
