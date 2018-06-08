@@ -218,11 +218,6 @@ lazy val metrics = libProject("metrics")
   .dependsOn(prismaConfig)
   .settings(
     libraryDependencies ++= Seq(
-      datadogStatsd,
-      akkaHttp,
-      finagle,
-      akka,
-      librato,
       microMeter,
       prometheusPushGateway
     )
