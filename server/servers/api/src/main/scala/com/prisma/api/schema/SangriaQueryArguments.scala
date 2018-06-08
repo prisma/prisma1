@@ -35,15 +35,4 @@ object SangriaQueryArguments {
     val filterObject: InputObjectType[Any] = utils.internalSubscriptionFilterObjectType
     Argument(name, OptionInputType(filterObject), description = "")
   }
-
-  // use given arguments if they exist or use sensible default values
-  def createSimpleQueryArguments(skipOpt: Option[Int],
-                                 after: Option[String],
-                                 first: Option[Int],
-                                 before: Option[String],
-                                 last: Option[Int],
-                                 filterOpt: Option[Filter],
-                                 orderByOpt: Option[OrderBy]) = {
-    QueryArguments(skipOpt, after, first, before, last, filterOpt, orderByOpt)
-  }
 }
