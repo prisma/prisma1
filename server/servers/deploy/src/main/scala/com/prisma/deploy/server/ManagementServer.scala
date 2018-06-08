@@ -1,6 +1,6 @@
 package com.prisma.deploy.server
 
-import akka.actor.{ActorSystem, Props}
+import akka.actor.ActorSystem
 import akka.http.scaladsl.model.StatusCode
 import akka.http.scaladsl.model.StatusCodes._
 import akka.http.scaladsl.model.headers.RawHeader
@@ -8,12 +8,10 @@ import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.ExceptionHandler
 import akka.stream.ActorMaterializer
 import com.prisma.akkautil.http.Server
+import com.prisma.deploy.DeployDependencies
 import com.prisma.deploy.connector.ProjectPersistence
 import com.prisma.deploy.schema.{DeployApiError, InvalidProjectId, SchemaBuilder, SystemUserContext}
-import com.prisma.deploy.{DeployDependencies, DeployMetrics}
 import com.prisma.errors.RequestMetadata
-import com.prisma.logging.LogDataWrites.logDataWrites
-import com.prisma.logging.{LogData, LogKey}
 import com.prisma.metrics.extensions.TimeResponseDirectiveImpl
 import com.prisma.sangria.utils.ErrorHandler
 import com.prisma.shared.models.ProjectWithClientId
@@ -73,7 +71,7 @@ case class ManagementServer(prefix: String = "", server2serverSecret: Option[Str
 //    logger.info(Json.toJson(LogData(LogKey.RequestNew, requestId)).toString())
 
     handleExceptions(toplevelExceptionHandler(requestId)) {
-      TimeResponseDirectiveImpl(DeployMetrics).timeResponse {
+      TimeResponseDirectiveImpl.timeResponse {
         post {
           optionalHeaderValueByName("Authorization") { authorizationHeader =>
             respondWithHeader(RawHeader("Request-Id", requestId)) {

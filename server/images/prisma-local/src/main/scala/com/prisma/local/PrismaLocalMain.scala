@@ -7,9 +7,8 @@ import akka.stream.ActorMaterializer
 import com.prisma.akkautil.http.ServerExecutor
 import com.prisma.api.ApiMetrics
 import com.prisma.api.server.ApiServer
-import com.prisma.deploy.DeployMetrics
 import com.prisma.deploy.server.ManagementServer
-import com.prisma.metrics.CustomTag
+import com.prisma.metrics.{CustomTag, DefaultMetricsManager}
 import com.prisma.subscriptions.SimpleSubscriptionsServer
 import com.prisma.websocket.WebsocketServer
 import com.prisma.workers.WorkerServer
@@ -40,16 +39,17 @@ object PrismaLocalMain extends App {
 object DummyValues {
   val movingProject              = "moving-project"
   val constantProject            = "constant-project"
-  val movingProjectSizeGauge     = DeployMetrics.defineGauge("projectDatabase.sizeInMb", (CustomTag("projectId"), movingProject))
-  val constantProjectSizeGauge   = DeployMetrics.defineGauge("projectDatabase.sizeInMb", (CustomTag("projectId"), constantProject))
+  val movingProjectSizeGauge     = DefaultMetricsManager.defineGauge("projectDatabase.sizeInMb", (CustomTag("projectId"), movingProject))
+  val constantProjectSizeGauge   = DefaultMetricsManager.defineGauge("projectDatabase.sizeInMb", (CustomTag("projectId"), constantProject))
   val movingRequestTimeMax       = 1000 // 1s
   val movingRequestCountMax      = 100 // per 5s => 20/s
   val movingSubscriptionEventMax = 10 // per 5s => 20/s
   val movingDatabaseSizeMax      = 500
 
   def create(system: ActorSystem) = {
-    import scala.concurrent.duration._
     import system.dispatcher
+
+    import scala.concurrent.duration._
     val i = new AtomicInteger(0)
 
     def fractionForTick(tick: Int) = {
