@@ -26,9 +26,9 @@ yarn install
 You can deploy locally but for simplicity, use the Prisma free demo server. To deploy your service to a public cluster (rather than locally with Docker), you need to perform the following steps:
 
 1.  Create a `.env` file and copy over the content of `.env.example` to it.
-1.  Create a [Prisma instance](https://app.prisma.io)
-1.  Replace the value of `PRISMA_ENDPOINT` in your `.env` file with the URL of yout service instance. The URL looks like this: `https://us1.prisma.sh/your-username-fd2dcf/service-name/stage`
-1.  Remember to add an app secret in the `.env` file too.
+1.  Run `prisma deploy` to create a new Prisma service.
+1.  Replace the value of `PRISMA_ENDPOINT` in your `.env` file with the URL of your service instance. The URL looks similar to this: `https://us1.prisma.sh/your-username-fd2dcf/service-name/stage`
+1.  Remember to change the `APP_SECRET` in the `.env` file too.
 
 ### 3. Explore the API
 
@@ -51,10 +51,10 @@ Run the following mutation to signup:
 ```graphql
 mutation {
   signup(username: "test", email: "test@gmail.com", password: "pass") {
-    token,
+    token
     user {
-      email,
-      username,
+      email
+      username
       createdAt
     }
   }
@@ -66,10 +66,10 @@ You can also login:
 ```graphql
 mutation {
   login(email: "test@gmail.com", password: "pass") {
-    token,
+    token
     user {
-      email,
-      username,
+      email
+      username
       createdAt
     }
   }
@@ -97,7 +97,7 @@ mutation CreateRole {
 
 mutation AssignRole {
   assignRole(role: ADMIN, assigneeEmail: "test@gmail.com") {
-   id
+    id
   }
 }
 ```
@@ -111,13 +111,13 @@ Here is what the [restrictions/permissions](./src/permissions/index.js#L52-L62) 
 ```js
 const permissions = shield({
   Query: {
-    posts: rules.isUser
+    posts: rules.isUser,
   },
   Mutation: {
     createPost: or(rules.isAdmin, rules.isAuthor, rules.isEditor),
     updatePost: or(rules.isEditor, rules.isPostOwner),
     assignRole: rules.isAdmin,
-    createRole: rules.isAdmin
-  }
+    createRole: rules.isAdmin,
+  },
 })
 ```
