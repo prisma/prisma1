@@ -267,7 +267,7 @@ class ObjectTypeBuilder(
     val firstOpt                               = ctx.argOpt[Int](IdBasedConnection.Args.First.name)
     val lastOpt                                = ctx.argOpt[Int](IdBasedConnection.Args.Last.name)
 
-    Some(SangriaQueryArguments.createSimpleQueryArguments(skipOpt, afterOpt, firstOpt, beforeOpt, lastOpt, filterOpt, orderByOpt))
+    Some(QueryArguments(skipOpt, afterOpt, firstOpt, beforeOpt, lastOpt, filterOpt, orderByOpt))
   }
 
   def mapToOutputResolve[C <: ApiUserContext](model: models.Model, field: models.Field)(
