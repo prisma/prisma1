@@ -3,9 +3,9 @@ package com.prisma.metrics
 import akka.actor.ActorSystem
 import com.prisma.akkautil.SingleThreadedActorSystem
 import com.prisma.config.ConfigLoader
+import com.prisma.metrics.prometheus.CustomPushGateway
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry
 import io.micrometer.prometheus.{PrometheusConfig, PrometheusMeterRegistry}
-import io.prometheus.client.exporter.PushGateway
 
 import scala.concurrent.duration._
 
@@ -21,18 +21,19 @@ trait MetricsManager {
 object DefaultMetricsManager extends MetricsManager
 
 object MetricsRegistry {
+  private val prismaPushGateway = "192.168.1.10:80" // FIXME: use final address
+
   // System used to periodically flush the metrics
   implicit lazy val gaugeFlushSystem: ActorSystem = SingleThreadedActorSystem(s"metrics-manager")
 
   private[metrics] val instance = ConfigLoader.load().prismaConnectSecret match {
     case Some(secret) =>
-      val registry    = new PrometheusMeterRegistry(PrometheusConfig.DEFAULT)
-      val pushGateway = new PushGateway("192.168.1.10:80")
+      val registry = new PrometheusMeterRegistry(PrometheusConfig.DEFAULT)
+//      val pushGateway = new PushGateway(prismaPushGateway)
+      val pushGateway = CustomPushGateway.http(prismaPushGateway, secret) // use https
 
       gaugeFlushSystem.scheduler.schedule(30.seconds, 30.seconds) {
-        pushGateway.pushAdd(registry.getPrometheusRegistry, "samples")
-        println("-" * 75)
-        println(registry.scrape())
+        pushGateway.pushAdd(registry.getPrometheusRegistry, "prisma-connect")
       }(gaugeFlushSystem.dispatcher)
 
       registry
