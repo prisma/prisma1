@@ -56,7 +56,8 @@ const permissions = shield({
   Mutation: {
     createPost: or(rules.isAdmin, rules.isAuthor, rules.isEditor),
     updatePost: or(rules.isEditor, rules.isPostOwner),
-    assignRole: rules.isAdmin,
+    // Uncomment the following line after assigning at least one admin user
+    // assignRole: rules.isAdmin,
     createRole: rules.isAdmin
   }
 })
