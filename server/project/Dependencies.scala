@@ -88,6 +88,7 @@ object Dependencies {
   val apacheCommons         = "commons-lang"               % "commons-lang"                   % "2.6"
   val microMeter            = "io.micrometer"              % "micrometer-registry-prometheus" % "1.0.4"
   val prometheusPushGateway = "io.prometheus"              % "simpleclient_pushgateway"       % "0.4.0"
+  val jooq                  = "org.jooq"                   % "jooq"                           % "3.10.7"
 
   lazy val common: Seq[ModuleID] = Seq(
     java8Compat,

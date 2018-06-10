@@ -160,7 +160,7 @@ lazy val apiConnectorPostgres = connectorProject("api-connector-postgresql")
   .dependsOn(metrics)
   .dependsOn(slickUtils)
   .settings(
-    libraryDependencies ++= slick ++ Seq(postgresClient)
+    libraryDependencies ++= slick ++ Seq(postgresClient, jooq)
   )
 
 lazy val apiConnectorPostgresPassive = connectorProject("api-connector-postgresql-passive")
