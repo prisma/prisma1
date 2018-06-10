@@ -86,15 +86,9 @@ query {
 }
 ```
 
-You will get an 'Not Authorized` error. This is because you need to be authorized as a user to read posts. Run the following accordingly:
+You will get an `Not Authorized` error. This is because you need to be authorized as a user to read posts. Run the following:
 
 ```graphql
-mutation CreateRole {
-  createRole(name: USER) {
-    name
-  }
-}
-
 mutation AssignRole {
   assignRole(role: ADMIN, assigneeEmail: "test@gmail.com") {
     id
@@ -102,7 +96,7 @@ mutation AssignRole {
 }
 ```
 
-This will create a USER role and assign the role to the just created user.
+This will assign the USER role to the just created user.
 
 > `assignRole` mutation is open so you don't lock yourself out of your own system :). This kind of mutation should be restricted to only Admins.
 
