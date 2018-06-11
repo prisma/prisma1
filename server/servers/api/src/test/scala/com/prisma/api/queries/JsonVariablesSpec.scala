@@ -26,6 +26,12 @@ class JsonVariablesSpec extends FlatSpec with Matchers with ApiSpecBase {
     server.queryThatMustFail(queryString, project, variables = variables, errorCode = 0, errorContains = """Reason: Not valid JSON""")
   }
 
+  "Invalid json 2" should "be rejected" in {
+    val variables = Json.parse("""{"json":  1 }""")
+
+    server.queryThatMustFail(queryString, project, variables = variables, errorCode = 0, errorContains = """Reason: Not valid JSON""")
+  }
+
   "Valid Json object" should "be validated " in {
     val variables = Json.parse("""{"json": {"test": 1}}""")
 
