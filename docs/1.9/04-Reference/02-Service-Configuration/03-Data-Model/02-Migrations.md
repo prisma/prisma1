@@ -19,8 +19,6 @@ Currently it is only possible to configure a single database and it has to be ca
 
 ## Disable migrations
 
-Bigrations
-
 > note: currently Prisma can only migrate databases operating in multi-tenancy mode. This will be improved in the future
 
 If you are using Prisma together with a database that is controlled by an existing application, you probably do not want Prisma to migrate the database structure. You can disable Prisma migrations by setting the `migrations` configuration option to false:

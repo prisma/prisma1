@@ -5,4 +5,4 @@ description: Learn how to setup a Prisma server by connecting your MySQL databas
 
 # Setup a Prisma server by connecting your MySQL database with existing data
 
-Coming soon
+Coming soon - see [feature request](https://github.com/prismagraphql/prisma/issues/2506)
