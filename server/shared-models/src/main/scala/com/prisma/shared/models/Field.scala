@@ -42,8 +42,13 @@ object TypeIdentifier {
     case "ID" => Cuid
     case _    => withName(name)
   }
-  def withName(name: String): TypeIdentifier            = withNameOpt(name).getOrElse(throw new NoSuchElementException(s"No value found for '$name'"))
-  def withNameOpt(name: String): Option[TypeIdentifier] = instances.find(_.code == name)
+
+  def withName(name: String): TypeIdentifier = withNameOpt(name).getOrElse(throw new NoSuchElementException(s"No value found for '$name'"))
+
+  def withNameOpt(name: String): Option[TypeIdentifier] = name match {
+    case "ID" => Some(Cuid)
+    case _    => instances.find(_.code == name)
+  }
 
 }
 
