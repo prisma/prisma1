@@ -167,6 +167,7 @@ object PostgresDeployDatabaseMutationBuilder {
       case TypeIdentifier.Enum      => "text"
       case TypeIdentifier.Json      => "text"
       case TypeIdentifier.DateTime  => "timestamp (3)"
+      case TypeIdentifier.UUID      => "uuid"
     }
   }
 

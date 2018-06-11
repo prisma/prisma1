@@ -1,6 +1,6 @@
 package com.prisma.api.schema
 
-import com.prisma.api.schema.CustomScalarTypes.{DateTimeType, JsonType}
+import com.prisma.api.schema.CustomScalarTypes.{DateTimeType, JsonType, UUIDType}
 import com.prisma.shared.models
 import com.prisma.shared.models.{Model, Project, TypeIdentifier}
 import sangria.schema._
@@ -19,6 +19,7 @@ object SchemaBuilderUtils {
       case TypeIdentifier.Float     => FloatType
       case TypeIdentifier.Boolean   => BooleanType
       case TypeIdentifier.GraphQLID => IDType
+      case TypeIdentifier.UUID      => UUIDType
       case TypeIdentifier.DateTime  => DateTimeType
       case TypeIdentifier.Json      => JsonType
       case TypeIdentifier.Enum      => mapEnumFieldToInputType(field)

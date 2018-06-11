@@ -1,5 +1,7 @@
 package com.prisma.api.import_export
 
+import java.util.UUID
+
 import com.prisma.gc_values._
 import com.prisma.shared.models.{Enum, Field, Model, ScalarField, TypeIdentifier}
 import org.joda.time.DateTimeZone
@@ -7,7 +9,7 @@ import org.joda.time.format.{DateTimeFormat, ISODateTimeFormat}
 import play.api.libs.json._
 
 import scala.collection.immutable.SortedMap
-import scala.util.Try
+import scala.util.{Failure, Success, Try}
 
 object GCValueJsonFormatter {
 
@@ -92,6 +94,19 @@ object GCValueJsonFormatter {
     }
   }
 
+  implicit object UUIDValueReads extends Reads[UuidGCValue] {
+    override def reads(json: JsValue) = {
+      json.validate[JsString] match {
+        case JsSuccess(json, _) =>
+          UUIDUtil.parse(json.value) match {
+            case Success(x) => JsSuccess(x)
+            case Failure(e) => JsError(e.getMessage)
+          }
+        case e: JsError => e
+      }
+    }
+  }
+
   implicit object DateTimeGCValueReads extends Reads[DateTimeGCValue] {
     ISODateTimeFormat.basicDateTime()
     val isoFormatter            = DateTimeFormat.forPattern("yyyy-MM-dd'T'HH:mm:ss.SSSZ")
@@ -162,6 +177,7 @@ object GCValueJsonFormatter {
     field.typeIdentifier match {
       case TypeIdentifier.String    => json.validate[StringGCValue]
       case TypeIdentifier.GraphQLID => json.validate[IdGCValue]
+      case TypeIdentifier.UUID      => json.validate[UuidGCValue]
       case TypeIdentifier.Enum      => readEnumGCValue(field.enum.get)(json)
       case TypeIdentifier.DateTime  => json.validate[DateTimeGCValue]
       case TypeIdentifier.Boolean   => json.validate[BooleanGCValue]

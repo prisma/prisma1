@@ -5,7 +5,7 @@ import com.prisma.api.connector._
 import com.prisma.api.mutations.BatchPayload
 import com.prisma.api.resolver.DeferredTypes._
 import com.prisma.api.resolver.{IdBasedConnection, IdBasedConnectionDefinition}
-import com.prisma.api.schema.CustomScalarTypes.{DateTimeType, JsonType}
+import com.prisma.api.schema.CustomScalarTypes.{DateTimeType, JsonType, UUIDType}
 import com.prisma.gc_values._
 import com.prisma.shared.models
 import com.prisma.shared.models.{Field => _, _}
@@ -120,6 +120,7 @@ class ObjectTypeBuilder(
           case TypeIdentifier.Float     => FloatType
           case TypeIdentifier.Boolean   => BooleanType
           case TypeIdentifier.GraphQLID => IDType
+          case TypeIdentifier.UUID      => UUIDType
           case TypeIdentifier.DateTime  => DateTimeType
           case TypeIdentifier.Json      => JsonType
           case TypeIdentifier.Enum      => SchemaBuilderUtils.mapEnumFieldToInputType(f)

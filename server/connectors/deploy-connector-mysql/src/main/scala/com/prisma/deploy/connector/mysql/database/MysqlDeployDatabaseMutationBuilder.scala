@@ -169,6 +169,7 @@ object MySqlDeployDatabaseMutationBuilder {
       case TypeIdentifier.Int       => "int"
       case TypeIdentifier.Float     => "Decimal(65,30)"
       case TypeIdentifier.GraphQLID => "char(25)"
+      case TypeIdentifier.UUID      => "char(36)" // TODO: verify whether this is the right thing to do
       case TypeIdentifier.Enum      => "varchar(191)"
       case TypeIdentifier.Json      => "mediumtext"
       case TypeIdentifier.DateTime  => "datetime(3)"
@@ -185,6 +186,7 @@ object MySqlDeployDatabaseMutationBuilder {
       case TypeIdentifier.Int       => ""
       case TypeIdentifier.Float     => ""
       case TypeIdentifier.GraphQLID => "CHARACTER SET utf8 COLLATE utf8_general_ci"
+      case TypeIdentifier.UUID      => "CHARACTER SET utf8 COLLATE utf8_general_ci"
       case TypeIdentifier.Enum      => "CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci"
       case TypeIdentifier.Json      => "CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci"
       case TypeIdentifier.DateTime  => ""

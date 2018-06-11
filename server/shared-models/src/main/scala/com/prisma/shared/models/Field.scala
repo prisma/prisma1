@@ -29,7 +29,7 @@ object TypeIdentifier {
   object Json                       extends ScalarTypeIdentifier { def code = "Json" }
   object DateTime                   extends ScalarTypeIdentifier { def code = "DateTime" }
   object GraphQLID                  extends ScalarTypeIdentifier { def code = "GraphQLID" }
-//  object UUID                       extends ScalarTypeIdentifier { def code = "UUID" }
+  object UUID                       extends ScalarTypeIdentifier { def code = "UUID" }
 
   // compatibility with Enumeration interface
   type Value = TypeIdentifier
