@@ -15,7 +15,7 @@ import scala.util.control.NonFatal
 import scala.util.{Failure, Success}
 
 /**
-  * 2. SangriaAST <-> GCValue - This is used to transform Sangria parsed values into GCValue and back
+  * SangriaAST <-> GCValue - This is used to transform Sangria parsed values into GCValue and back
   */
 case class GCSangriaValueConverter(typeIdentifier: TypeIdentifier, isList: Boolean) extends GCConverter[SangriaValue] {
   import OtherGCStuff._
@@ -47,7 +47,7 @@ case class GCSangriaValueConverter(typeIdentifier: TypeIdentifier, isList: Boole
 }
 
 /**
-  * 5. String <-> SangriaAST - This is reads and writes Default values we get/need as String.
+  * String <-> SangriaAST - This is reads and writes Default values we get/need as String.
   */
 class MyQueryParser(val input: ParserInput) extends Parser with Tokens with Ignored with Operations with Fragments with Values with Directives with Types
 
@@ -68,7 +68,9 @@ case class StringSangriaValueConverter(typeIdentifier: TypeIdentifier, isList: B
     val parser = new MyQueryParser(ParserInput(escapedIfNecessary))
 
     parser.Value.run() match {
-      case Failure(e) => e.printStackTrace(); Bad(InvalidValueForScalarType(string, typeIdentifier.toString))
+      case Failure(e) =>
+        e.printStackTrace() //todo is this intentional
+        Bad(InvalidValueForScalarType(string, typeIdentifier.toString))
       case Success(x) => Good(x)
     }
   }
@@ -90,29 +92,17 @@ case class StringSangriaValueConverter(typeIdentifier: TypeIdentifier, isList: B
     }
   }
 
-  def to(sangriaValue: SangriaValue): String = {
-    sangriaValue match {
-      case _: NullValue                                          => sangriaValue.renderCompact
-      case x: StringValue if !isList                             => unescape(sangriaValue.renderCompact)
-      case x: ListValue if typeIdentifier == TypeIdentifier.Json => "[" + x.values.map(y => unescape(y.renderCompact)).mkString(",") + "]"
-      case _                                                     => sangriaValue.renderCompact
-    }
-  }
-
-  private def escape(str: String): String   = "\"" + StringEscapeUtils.escapeJava(str) + "\""
-  private def unescape(str: String): String = StringEscapeUtils.unescapeJava(str).stripPrefix("\"").stripSuffix("\"")
+  private def escape(str: String): String = "\"" + StringEscapeUtils.escapeJava(str) + "\""
 }
 
 /**
-  * 6. String <-> GC Value - This combines the StringSangriaConverter and GCSangriaValueConverter for convenience.
+  * String <-> GC Value - This combines the StringSangriaConverter and GCSangriaValueConverter for convenience.
   */
 case class GCStringConverter(typeIdentifier: TypeIdentifier, isList: Boolean) extends GCConverter[String] {
 
-  override def toGCValue(t: String): Or[GCValue, InvalidValueForScalarType] = {
-
+  override def toGCValue(t: String): Or[GCValue, InvalidValueForScalarType] =
     for {
       sangriaValue <- StringSangriaValueConverter(typeIdentifier, isList).fromAbleToHandleJsonLists(t)
       result       <- GCSangriaValueConverter(typeIdentifier, isList).toGCValue(sangriaValue)
     } yield result
-  }
 }
