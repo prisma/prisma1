@@ -280,7 +280,7 @@ class ObjectTypeBuilder(
         ScalarListDeferred(model, f, item.id)
 
       case f: ScalarField if !f.isList =>
-        GCValueExtractor.fromGCValue(item.data.map(field.name))
+        item.data.map(field.name).value
 
       case f: RelationField if f.isList =>
         val arguments = extractQueryArgumentsFromContext(f.relatedModel_!, ctx.asInstanceOf[Context[ApiUserContext, Unit]])

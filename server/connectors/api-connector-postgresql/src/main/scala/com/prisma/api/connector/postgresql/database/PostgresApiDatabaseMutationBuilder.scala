@@ -4,13 +4,13 @@ import java.sql.{PreparedStatement, Statement}
 import java.util.Date
 
 import com.prisma.api.connector._
-import com.prisma.slick.NewJdbcExtensions._
 import com.prisma.api.connector.postgresql.database.JdbcExtensions._
 import com.prisma.api.connector.postgresql.database.PostgresSlickExtensions._
 import com.prisma.api.schema.UserFacingError
-import com.prisma.gc_values.{GCValue, GCValueExtractor, ListGCValue, NullGCValue, _}
+import com.prisma.gc_values.{GCValue, ListGCValue, NullGCValue, _}
 import com.prisma.shared.models.Manifestations.RelationTableManifestation
 import com.prisma.shared.models._
+import com.prisma.slick.NewJdbcExtensions._
 import cool.graph.cuid.Cuid
 import org.joda.time.{DateTime, DateTimeZone}
 import slick.dbio.{DBIOAction, Effect, NoStream}
@@ -775,8 +775,7 @@ case class PostgresApiDatabaseMutationBuilder(
             .filter(element => element._1 == Statement.EXECUTE_FAILED)
             .map { failed =>
               val failedValue: GCValue = argsWithIndex.find(_._2 == failed._2).get._1
-              s"Failure inserting into listTable $tableName for the id $nodeId for value ${GCValueExtractor
-                .fromGCValue(failedValue)}. Cause: ${removeConnectionInfoFromCause(e.getCause.toString)}"
+              s"Failure inserting into listTable $tableName for the id $nodeId for value ${failedValue.value}. Cause: ${removeConnectionInfoFromCause(e.getCause.toString)}"
             }
             .toVector
 

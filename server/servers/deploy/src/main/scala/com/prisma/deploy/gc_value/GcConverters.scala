@@ -1,10 +1,9 @@
 package com.prisma.deploy.gc_value
 
 import com.prisma.gc_values._
+import com.prisma.shared.models.TypeIdentifier
 import com.prisma.shared.models.TypeIdentifier.TypeIdentifier
-import com.prisma.shared.models.{Field, ScalarField, TypeIdentifier}
 import org.apache.commons.lang.StringEscapeUtils
-import org.joda.time.format.ISODateTimeFormat
 import org.joda.time.{DateTime, DateTimeZone}
 import org.parboiled2.{Parser, ParserInput}
 import org.scalactic.{Bad, Good, Or}
@@ -15,16 +14,6 @@ import sangria.parser._
 import scala.util.control.NonFatal
 import scala.util.{Failure, Success}
 
-/**
-  * We need a bunch of different converters from / to GC values
-  *
-  * 1.  DBValue       <->  GCValue     for writing into typed value fields in the Client-DB -> Deploy does not need to write GCValues anymore
-  * 2.  SangriaValue  <->  GCValue     for transforming the Any we get from Sangria per field back and forth
-  * 3.  DBString      <->  GCValue     for writing default values in the System-DB since they are always a String, and JSArray for Lists
-  * 4.  Json          <->  GCValue     for SchemaSerialization
-  * 5.  SangriaValue  <->  String      for reading and writing default values
-  * 6.  InputString   <->  GCValue     chains String -> SangriaValue -> GCValue and back
-  */
 /**
   * 2. SangriaAST <-> GCValue - This is used to transform Sangria parsed values into GCValue and back
   */
@@ -53,25 +42,6 @@ case class GCSangriaValueConverter(typeIdentifier: TypeIdentifier, isList: Boole
       Good(result)
     } catch {
       case NonFatal(_) => Bad(InvalidValueForScalarType(t.renderCompact, typeIdentifier.toString))
-    }
-  }
-
-  override def fromGCValue(gcValue: GCValue): SangriaValue = {
-
-    val formatter = ISODateTimeFormat.dateHourMinuteSecondFraction()
-
-    gcValue match {
-      case NullGCValue        => NullValue()
-      case x: StringGCValue   => StringValue(value = x.value)
-      case x: IntGCValue      => BigIntValue(x.value)
-      case x: FloatGCValue    => FloatValue(x.value)
-      case x: BooleanGCValue  => BooleanValue(x.value)
-      case x: IdGCValue       => StringValue(x.value)
-      case x: DateTimeGCValue => StringValue(formatter.print(x.value))
-      case x: EnumGCValue     => EnumValue(x.value)
-      case x: JsonGCValue     => StringValue(Json.prettyPrint(x.value))
-      case x: ListGCValue     => ListValue(values = x.values.map(this.fromGCValue))
-      case x: RootGCValue     => sys.error("Default Value cannot be a RootGCValue. Value " + x.toString)
     }
   }
 }
@@ -144,56 +114,5 @@ case class GCStringConverter(typeIdentifier: TypeIdentifier, isList: Boolean) ex
       sangriaValue <- StringSangriaValueConverter(typeIdentifier, isList).fromAbleToHandleJsonLists(t)
       result       <- GCSangriaValueConverter(typeIdentifier, isList).toGCValue(sangriaValue)
     } yield result
-  }
-
-  override def fromGCValue(t: GCValue): String = {
-    val sangriaValue = GCSangriaValueConverter(typeIdentifier, isList).fromGCValue(t)
-    StringSangriaValueConverter(typeIdentifier, isList).to(sangriaValue)
-  }
-
-  def fromGCValueToOptionalString(t: GCValue): Option[String] = {
-    t match {
-      case NullGCValue => None
-      case value       => Some(fromGCValue(value))
-    }
-  }
-}
-
-/**
-  * This validates a GCValue against the field it is being used on, for example after an UpdateFieldMutation
-  */
-object OtherGCStuff {
-  def isValidGCValueForField(value: GCValue, field: ScalarField): Boolean = {
-    (value, field.typeIdentifier) match {
-      case (NullGCValue, _)                              => true
-      case (_: StringGCValue, TypeIdentifier.String)     => true
-      case (_: IdGCValue, TypeIdentifier.GraphQLID)      => true
-      case (_: EnumGCValue, TypeIdentifier.Enum)         => true
-      case (_: JsonGCValue, TypeIdentifier.Json)         => true
-      case (_: DateTimeGCValue, TypeIdentifier.DateTime) => true
-      case (_: IntGCValue, TypeIdentifier.Int)           => true
-      case (_: FloatGCValue, TypeIdentifier.Float)       => true
-      case (_: BooleanGCValue, TypeIdentifier.Boolean)   => true
-      case (x: ListGCValue, _) if field.isList           => x.values.map(isValidGCValueForField(_, field)).forall(identity)
-      case (_: RootGCValue, _)                           => false
-      case (_, _)                                        => false
-    }
-  }
-
-  /**
-    * This helps convert Or listvalues.
-    */
-  def sequence[A, B](seq: Vector[Or[A, B]]): Or[Vector[A], B] = {
-    def recurse(seq: Vector[Or[A, B]])(acc: Vector[A]): Or[Vector[A], B] = {
-      if (seq.isEmpty) {
-        Good(acc)
-      } else {
-        seq.head match {
-          case Good(x)    => recurse(seq.tail)(acc :+ x)
-          case Bad(error) => Bad(error)
-        }
-      }
-    }
-    recurse(seq)(Vector.empty)
   }
 }

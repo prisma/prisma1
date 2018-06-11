@@ -624,8 +624,7 @@ object MySqlApiDatabaseMutationBuilder {
             .filter(element => element._1 == Statement.EXECUTE_FAILED)
             .map { failed =>
               val failedValue: GCValue = argsWithIndex.find(_._2 == failed._2).get._1
-              s"Failure inserting into listTable $tableName for the id $nodeId for value ${GCValueExtractor.fromGCValue(failedValue)}. Cause: ${removeConnectionInfoFromCause(
-                e.getCause.toString)}"
+              s"Failure inserting into listTable $tableName for the id $nodeId for value ${failedValue.value}. Cause: ${removeConnectionInfoFromCause(e.getCause.toString)}"
             }
             .toVector
 

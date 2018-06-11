@@ -3,7 +3,7 @@ package com.prisma.api.connector.mysql.database
 import com.prisma.api.connector._
 import com.prisma.api.connector.mysql.database.MySqlSlickExtensions._
 import com.prisma.gc_values.{GCValue, GCValueExtractor, NullGCValue}
-import com.prisma.shared.models.{Field, RelationField}
+import com.prisma.shared.models.RelationField
 import slick.jdbc.MySQLProfile.api._
 import slick.jdbc.SQLActionBuilder
 
@@ -48,26 +48,13 @@ object MySqlQueryArgumentsHelpers {
       case NodeFilter(filters)                                               => combineByOr(filters.map(generateFilterConditions(projectId, alias, modelName, _)).collect { case Some(x) => x })
       case RelationFilter(field, nestedFilter, condition: RelationCondition) => relationFilterStatement(field, nestedFilter, condition)
       //--------------------------------ANCHORS------------------------------------
-      case PreComputedSubscriptionFilter(value) => Some(if (value) sql"TRUE" else sql"FALSE")
-
-      case ScalarFilter(field, Contains(value)) =>
-        Some(sql"""`#$alias`.`#${field.dbName}` LIKE """ ++ escapeUnsafeParam(s"%${GCValueExtractor.fromGCValue(value)}%"))
-
-      case ScalarFilter(field, NotContains(value)) =>
-        Some(sql"""`#$alias`.`#${field.dbName}` NOT LIKE """ ++ escapeUnsafeParam(s"%${GCValueExtractor.fromGCValue(value)}%"))
-
-      case ScalarFilter(field, StartsWith(value)) =>
-        Some(sql"""`#$alias`.`#${field.dbName}` LIKE """ ++ escapeUnsafeParam(s"${GCValueExtractor.fromGCValue(value)}%"))
-
-      case ScalarFilter(field, NotStartsWith(value)) =>
-        Some(sql"""`#$alias`.`#${field.dbName}` NOT LIKE """ ++ escapeUnsafeParam(s"${GCValueExtractor.fromGCValue(value)}%"))
-
-      case ScalarFilter(field, EndsWith(value)) =>
-        Some(sql"""`#$alias`.`#${field.dbName}` LIKE """ ++ escapeUnsafeParam(s"%${GCValueExtractor.fromGCValue(value)}"))
-
-      case ScalarFilter(field, NotEndsWith(value)) =>
-        Some(sql"""`#$alias`.`#${field.dbName}` NOT LIKE """ ++ escapeUnsafeParam(s"%${GCValueExtractor.fromGCValue(value)}"))
-
+      case PreComputedSubscriptionFilter(value)            => Some(if (value) sql"TRUE" else sql"FALSE")
+      case ScalarFilter(field, Contains(value))            => Some(sql"""`#$alias`.`#${field.dbName}` LIKE """ ++ escapeUnsafeParam(s"%${value.value}%"))
+      case ScalarFilter(field, NotContains(value))         => Some(sql"""`#$alias`.`#${field.dbName}` NOT LIKE """ ++ escapeUnsafeParam(s"%${value.value}%"))
+      case ScalarFilter(field, StartsWith(value))          => Some(sql"""`#$alias`.`#${field.dbName}` LIKE """ ++ escapeUnsafeParam(s"${value.value}%"))
+      case ScalarFilter(field, NotStartsWith(value))       => Some(sql"""`#$alias`.`#${field.dbName}` NOT LIKE """ ++ escapeUnsafeParam(s"${value.value}%"))
+      case ScalarFilter(field, EndsWith(value))            => Some(sql"""`#$alias`.`#${field.dbName}` LIKE """ ++ escapeUnsafeParam(s"%${value.value}"))
+      case ScalarFilter(field, NotEndsWith(value))         => Some(sql"""`#$alias`.`#${field.dbName}` NOT LIKE """ ++ escapeUnsafeParam(s"%${value.value}"))
       case ScalarFilter(field, LessThan(value))            => Some(sql"""`#$alias`.`#${field.dbName}` < $value""")
       case ScalarFilter(field, GreaterThan(value))         => Some(sql"""`#$alias`.`#${field.dbName}` > $value""")
       case ScalarFilter(field, LessThanOrEquals(value))    => Some(sql"""`#$alias`.`#${field.dbName}` <= $value""")
