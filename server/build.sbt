@@ -160,7 +160,7 @@ lazy val apiConnectorPostgres = connectorProject("api-connector-postgresql")
   .dependsOn(metrics)
   .dependsOn(slickUtils)
   .settings(
-    libraryDependencies ++= slick ++ Seq(postgresClient)
+    libraryDependencies ++= slick ++ Seq(postgresClient) ++ jooq
   )
 
 lazy val apiConnectorPostgresPassive = connectorProject("api-connector-postgresql-passive")
@@ -215,13 +215,16 @@ lazy val akkaUtils = libProject("akka-utils")
 lazy val metrics = libProject("metrics")
   .dependsOn(errorReporting)
   .dependsOn(akkaUtils)
+  .dependsOn(prismaConfig)
   .settings(
     libraryDependencies ++= Seq(
       datadogStatsd,
       akkaHttp,
       finagle,
       akka,
-      librato
+      librato,
+      microMeter,
+      prometheusPushGateway
     )
   )
 

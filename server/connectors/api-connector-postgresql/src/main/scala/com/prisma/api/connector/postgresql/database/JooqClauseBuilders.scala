@@ -1,23 +1,23 @@
 package com.prisma.api.connector.postgresql.database
 
+import java.sql.Connection
+
 import com.prisma.api.connector._
-import com.prisma.api.connector.postgresql.database.LimitClauseBuilder.validate
 import com.prisma.api.schema.APIErrors
 import com.prisma.api.schema.APIErrors.{InvalidFirstArgument, InvalidLastArgument, InvalidSkipArgument}
 import com.prisma.gc_values.{GCValue, NullGCValue}
 import com.prisma.shared.models._
+import org.jooq.{Condition, SQLDialect}
+import org.jooq.impl._
+import org.jooq.impl.DSL._
 
-case class WhereClauseBuilder(schemaName: String) {
+case class JooqWhereClauseBuilder(connection: Connection, schemaName: String) {
   val topLevelAlias: String = QueryBuilders.topLevelAlias
+  val sql                   = DSL.using(connection, SQLDialect.POSTGRES_9_5)
 
-  def buildWhereClause(filter: Option[Filter]): Option[String] = {
-    val conditions = buildWhereClauseWithoutWhereKeyWord(filter)
-    if (conditions.nonEmpty) Some("WHERE " + conditions) else None
-  }
-
-  def buildWhereClauseWithoutWhereKeyWord(filter: Option[Filter]): String = filter match {
+  def buildWhereClause(filter: Option[Filter]): Vector[Condition] = filter match {
     case Some(filter) => buildWheresForFilter(filter, topLevelAlias)
-    case None         => "TRUE"
+    case None         => Vector.empty
   }
 
   // This creates a query that checks if the id is in a certain set returned by a subquery Q.
@@ -68,50 +68,56 @@ case class WhereClauseBuilder(schemaName: String) {
     Some((afterCursorFilter ++ beforeCursorFilter).mkString(" AND "))
   }
 
-  private def buildWheresForFilter(filter: Filter, alias: String): String = {
-    def oneRelationIsNullFilter(field: RelationField) = {
-      val relation          = field.relation
+  private def buildWheresForFilter(filter: Filter, alias: String): Vector[Condition] = {
+    def oneRelationIsNullFilter(field2: RelationField): Condition = {
+      val relation          = field2.relation
       val relationTableName = relation.relationTableName
-      val column            = relation.columnForRelationSide(field.relationSide)
-      val otherIdColumn     = field.relatedModel_!.dbNameOfIdField_!
+      val column            = relation.columnForRelationSide(field2.relationSide)
+      val otherIdColumn     = field2.relatedModel_!.dbNameOfIdField_!
 
-      s""" not exists (select  *
-                from    "$schemaName"."$relationTableName"
-                where   "$schemaName"."$relationTableName"."$column" = "$alias"."$otherIdColumn"
-              )"""
+      val select = sql
+        .select()
+        .from(name(schemaName, relationTableName))
+        .where(field(name(schemaName, relationTableName, column)).eq(field(name(alias, otherIdColumn))))
+
+      trueCondition().andNotExists(select)
     }
 
     filter match {
       //-------------------------------RECURSION------------------------------------
-      case NodeSubscriptionFilter()                       => ""
-      case AndFilter(filters)                             => filters.map(buildWheresForFilter(_, alias)).mkString(" AND ")
-      case OrFilter(filters)                              => filters.map(buildWheresForFilter(_, alias)).mkString(" OR ")
-      case NotFilter(filters)                             => "NOT " + filters.map(buildWheresForFilter(_, alias)).mkString(" AND NOT ")
-      case NodeFilter(filters)                            => buildWheresForFilter(OrFilter(filters), alias)
-      case RelationFilter(field, nestedFilter, condition) => relationFilterStatement(alias, field, nestedFilter, condition)
+      case NodeSubscriptionFilter()                       => Vector.empty
+      case AndFilter(filters)                             => filters.flatMap(buildWheresForFilter(_, alias))
+      case OrFilter(filters)                              => Vector(trueCondition())
+      case NotFilter(filters)                             => Vector(trueCondition())
+      case NodeFilter(filters)                            => Vector(trueCondition())
+      case RelationFilter(field, nestedFilter, condition) => Vector(trueCondition())
       //--------------------------------ANCHORS------------------------------------
-      case PreComputedSubscriptionFilter(value)            => if (value) "TRUE" else "FALSE"
-      case ScalarFilter(field, Contains(_))                => column(alias, field) + s""" LIKE ? """
-      case ScalarFilter(field, NotContains(_))             => column(alias, field) + s""" NOT LIKE ? """
-      case ScalarFilter(field, StartsWith(_))              => column(alias, field) + s""" LIKE ? """
-      case ScalarFilter(field, NotStartsWith(_))           => column(alias, field) + s""" NOT LIKE ?"""
-      case ScalarFilter(field, EndsWith(_))                => column(alias, field) + s""" LIKE ?"""
-      case ScalarFilter(field, NotEndsWith(_))             => column(alias, field) + s""" NOT LIKE ?"""
-      case ScalarFilter(field, LessThan(_))                => column(alias, field) ++ s""" < ?"""
-      case ScalarFilter(field, GreaterThan(_))             => column(alias, field) ++ s""" > ?"""
-      case ScalarFilter(field, LessThanOrEquals(_))        => column(alias, field) ++ s""" <= ?"""
-      case ScalarFilter(field, GreaterThanOrEquals(_))     => column(alias, field) ++ s""" >= ?"""
-      case ScalarFilter(field, NotEquals(NullGCValue))     => column(alias, field) ++ s""" IS NOT NULL"""
-      case ScalarFilter(field, NotEquals(_))               => column(alias, field) ++ s""" != ?"""
-      case ScalarFilter(field, Equals(NullGCValue))        => column(alias, field) + s""" IS NULL"""
-      case ScalarFilter(field, Equals(_))                  => column(alias, field) + s""" = ?"""
-      case ScalarFilter(field, In(Vector(NullGCValue)))    => if (field.isRequired) s"false" else column(alias, field) ++ s""" IS NULL"""
-      case ScalarFilter(field, NotIn(Vector(NullGCValue))) => if (field.isRequired) s"true" else column(alias, field) ++ s""" IS NOT NULL"""
-      case ScalarFilter(field, In(values))                 => if (values.nonEmpty) column(alias, field) ++ in(values) else s"false"
-      case ScalarFilter(field, NotIn(values))              => if (values.nonEmpty) column(alias, field) ++ s""" NOT """ ++ in(values) else s"true"
-      case OneRelationIsNullFilter(field)                  => oneRelationIsNullFilter(field)
+      case PreComputedSubscriptionFilter(value)            => if (value) Vector(trueCondition()) else Vector(falseCondition())
+      case ScalarFilter(field, Contains(_))                => Vector(trueCondition())
+      case ScalarFilter(field, NotContains(_))             => Vector(trueCondition())
+      case ScalarFilter(field, StartsWith(_))              => Vector(trueCondition())
+      case ScalarFilter(field, NotStartsWith(_))           => Vector(trueCondition())
+      case ScalarFilter(field, EndsWith(_))                => Vector(trueCondition())
+      case ScalarFilter(field, NotEndsWith(_))             => Vector(trueCondition())
+      case ScalarFilter(field, LessThan(_))                => Vector(trueCondition())
+      case ScalarFilter(field, GreaterThan(_))             => Vector(trueCondition())
+      case ScalarFilter(field, LessThanOrEquals(_))        => Vector(trueCondition())
+      case ScalarFilter(field, GreaterThanOrEquals(_))     => Vector(trueCondition())
+      case ScalarFilter(field, NotEquals(NullGCValue))     => Vector(trueCondition())
+      case ScalarFilter(field, NotEquals(_))               => Vector(trueCondition())
+      case ScalarFilter(field, Equals(NullGCValue))        => Vector(trueCondition())
+      case ScalarFilter(field2, Equals(x))                 => Vector(field(name(alias, field2.dbName), classOf[Long]).eq(x.value.asInstanceOf[Long]))
+      case ScalarFilter(field, In(Vector(NullGCValue)))    => Vector(trueCondition())
+      case ScalarFilter(field, NotIn(Vector(NullGCValue))) => Vector(trueCondition())
+      case ScalarFilter(field, In(values))                 => Vector(trueCondition())
+      case ScalarFilter(field, NotIn(values))              => Vector(trueCondition())
+      case OneRelationIsNullFilter(field)                  => Vector(oneRelationIsNullFilter(field))
       case x                                               => sys.error(s"Not supported: $x")
     }
+  }
+
+  private def equalsGcValue(scalarField: ScalarField) = scalarField.typeIdentifier match {
+    case TypeIdentifier.Int => field(scalarField.dbName, classOf[Long]).eq(12)
   }
 
   private def relationFilterStatement(alias: String, field: RelationField, nestedFilter: Filter, relationCondition: RelationCondition): String = {
@@ -140,28 +146,21 @@ case class WhereClauseBuilder(schemaName: String) {
     }
   }
 
-  private def column(alias: String, field: Field): String = s""""$alias"."${field.dbName}" """
-  private def in(items: Vector[GCValue])                  = s" IN (" + items.map(_ => "?").mkString(",") + ")"
+//  private def column(alias: String, field: Field): String = s""""$alias"."${field.dbName}" """
+  private def in(items: Vector[GCValue]) = s" IN (" + items.map(_ => "?").mkString(",") + ")"
 }
 
-object LimitClauseBuilder {
-  // Increase by 1 to know if we have a next page / previous page
-  def limitClauseForWindowFunction(args: Option[QueryArguments]): String = {
-    val (firstOpt, lastOpt, skipOpt) = (args.flatMap(_.first), args.flatMap(_.last), args.flatMap(_.skip))
-    validate(args)
-
-    lastOpt.orElse(firstOpt) match {
-      case Some(limitedCount) => s" Between ${skipOpt.getOrElse(0)} And ${limitedCount + skipOpt.getOrElse(0) + 1} "
-      case None               => " < 99999999999999"
-    }
-  }
+object JooqLimitClauseBuilder {
 
   def limitClause(args: Option[QueryArguments]): String = {
     val (firstOpt, lastOpt, skipOpt) = (args.flatMap(_.first), args.flatMap(_.last), args.flatMap(_.skip))
     validate(args)
     lastOpt.orElse(firstOpt) match {
-      case Some(limitedCount) => s"LIMIT ${limitedCount + 1} OFFSET ${skipOpt.getOrElse(0)}"
-      case None               => ""
+      case Some(limitedCount) =>
+        // Increase by 1 to know if we have a next page / previous page
+        s"LIMIT ${limitedCount + 1} OFFSET ${skipOpt.getOrElse(0)}"
+      case None =>
+        ""
     }
   }
 
@@ -176,12 +175,11 @@ object LimitClauseBuilder {
   }
 }
 
-object OrderByClauseBuilder {
+object JooqOrderByClauseBuilder {
 
   def forModel(model: Model, alias: String, args: Option[QueryArguments]): String = {
     internal(
       alias = alias,
-      secondaryAlias = alias,
       secondaryOrderByField = model.dbNameOfIdField_!,
       args = args
     )
@@ -206,13 +204,12 @@ object OrderByClauseBuilder {
   def forRelation(relation: Relation, alias: String, args: Option[QueryArguments]): String = {
     internal(
       alias = alias,
-      secondaryAlias = alias,
       secondaryOrderByField = relation.columnForRelationSide(RelationSide.A),
       args = args
     )
   }
 
-  def internal(alias: String, secondaryAlias: String, secondaryOrderByField: String, args: Option[QueryArguments]): String = {
+  def internal(alias: String, secondaryOrderByField: String, args: Option[QueryArguments]): String = {
     val (first, last, orderBy) = (args.flatMap(_.first), args.flatMap(_.last), args.flatMap(_.orderBy))
     val isReverseOrder         = last.isDefined
 
@@ -225,7 +222,7 @@ object OrderByClauseBuilder {
       case false => (defaultOrder, "asc")
     }
 
-    val aliasedSecondaryOrderByField = s""" "$secondaryAlias"."$secondaryOrderByField" """
+    val aliasedSecondaryOrderByField = s""" "$alias"."$secondaryOrderByField" """
 
     orderBy match {
       case Some(orderByArg) if orderByArg.field.dbName != secondaryOrderByField =>

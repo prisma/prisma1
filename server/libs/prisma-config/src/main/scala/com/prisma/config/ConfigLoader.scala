@@ -2,7 +2,6 @@ package com.prisma.config
 
 import java.io.File
 import java.net.URI
-
 import io.lemonlabs.uri.{Uri, Url}
 import io.lemonlabs.uri.config.UriConfig
 import io.lemonlabs.uri.decoding.NoopDecoder
@@ -84,23 +83,23 @@ object ConfigLoader {
       }
 
       s"""
-        |port: $port
-        |managementApiSecret: $secret
-        |legacySecret: $legacySecret
-        |server2serverSecret: $s2sSecret
-        |clusterAddress: $clusterAddress
-        |rabbitUri: $rabbitUri
-        |enableManagementApi: $mgmtApiEnabled
-        |databases:
-        |  default:
-        |    connector: mysql
-        |    migrations: true
-        |    host: $dbHost
-        |    port: $dbPort
-        |    user: $dbUser
-        |    password: $dbPass
-        |    connectionLimit: $dbConn
-        |    managementSchema: $database
+         |port: $port
+         |managementApiSecret: $secret
+         |legacySecret: $legacySecret
+         |server2serverSecret: $s2sSecret
+         |clusterAddress: $clusterAddress
+         |rabbitUri: $rabbitUri
+         |enableManagementApi: $mgmtApiEnabled
+         |databases:
+         |  default:
+         |    connector: mysql
+         |    migrations: true
+         |    host: $dbHost
+         |    port: $dbPort
+         |    user: $dbUser
+         |    password: $dbPass
+         |    connectionLimit: $dbConn
+         |    managementSchema: $database
       """.stripMargin
     }.toOption
 
