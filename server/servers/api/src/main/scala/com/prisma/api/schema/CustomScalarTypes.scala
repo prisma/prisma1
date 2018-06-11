@@ -46,21 +46,9 @@ object CustomScalarTypes {
     description = Some("Raw JSON value"),
     coerceOutput = (value, _) ⇒ value,
     coerceUserInput = {
-      case v: String     ⇒ Right(JsString(v))
-      case v: Boolean    ⇒ Right(JsBoolean(v))
-      case v: Int        ⇒ Right(JsNumber(v))
-      case v: Long       ⇒ Right(JsNumber(v))
-      case v: Float      ⇒ Right(JsNumber(BigDecimal(v.toDouble)))
-      case v: Double     ⇒ Right(JsNumber(v))
-      case v: BigInt     ⇒ Right(JsNumber(BigDecimal(v)))
-      case v: BigDecimal ⇒ Right(JsNumber(v))
-      case v: DateTime ⇒
-        Right(
-          JsString(
-            v.toString(DateTimeFormat
-              .forPattern("yyyy-MM-dd'T'HH:mm:ss.SSS'Z")
-              .withZoneUTC())))
-      case v: JsValue ⇒ Right(v)
+      case v: JsObject ⇒ Right(v)
+      case v: JsArray  ⇒ Right(v)
+      case _           ⇒ Left(JsonCoercionViolation)
     },
     coerceInput = {
       case ast.StringValue(jsonStr, _, _, _, _) ⇒ parseJson(jsonStr)
