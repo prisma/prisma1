@@ -4,8 +4,8 @@ import com.prisma.gc_values.{GCValue, IdGCValue}
 import com.prisma.shared.models.{Model, ScalarField}
 
 object NodeSelector {
-  def forId(model: Model, id: String): NodeSelector                = NodeSelector(model, model.getScalarFieldByName_!("id"), IdGCValue(id))
-  def forIdGCValue(model: Model, gcValue: GCValue): NodeSelector   = NodeSelector(model, model.getScalarFieldByName_!("id"), gcValue)
+  def forId(model: Model, id: String): NodeSelector                = NodeSelector(model, model.idField_!, IdGCValue(id))
+  def forIdGCValue(model: Model, gcValue: GCValue): NodeSelector   = NodeSelector(model, model.idField_!, gcValue)
   def forGCValue(model: Model, field: ScalarField, value: GCValue) = NodeSelector(model, field, value)
 }
 
