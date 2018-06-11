@@ -10,9 +10,7 @@ import scala.collection.immutable.SortedMap
   */
 sealed trait GCValue {
   def asRoot: RootGCValue = this.asInstanceOf[RootGCValue]
-
   def value: Any
-  def toStringValue: String = value.toString
 }
 
 object RootGCValue {
@@ -50,7 +48,6 @@ case class ListGCValue(values: Vector[GCValue]) extends GCValue {
   def isEmpty: Boolean   = values.isEmpty
   def size: Int          = values.size
   def value: Vector[Any] = values.map(_.value)
-
 }
 
 sealed trait LeafGCValue extends GCValue

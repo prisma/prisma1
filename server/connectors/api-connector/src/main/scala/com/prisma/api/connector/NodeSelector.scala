@@ -9,8 +9,8 @@ object NodeSelector {
   def forGCValue(model: Model, field: ScalarField, value: GCValue) = NodeSelector(model, field, value)
 }
 
-case class NodeSelector(model: Model, field: ScalarField, fieldValue: GCValue) {
-  lazy val fieldName                  = field.name
-  lazy val fieldValueAsString: String = fieldValue.toStringValue
-  lazy val isId: Boolean              = field.name == "id"
+case class NodeSelector(model: Model, field: ScalarField, fieldGCValue: GCValue) {
+  lazy val value         = fieldGCValue.value
+  lazy val fieldName     = field.name
+  lazy val isId: Boolean = field.name == "id"
 }

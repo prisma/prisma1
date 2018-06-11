@@ -166,7 +166,7 @@ case class CoolArgs(raw: Map[String, Any]) {
             case None                                                           => None
           }
         }
-        .toMap + ("id" -> where.fieldValueAsString))
+        .toMap + ("id" -> where.value))
   }
 
   def generateNonListUpdateGCValues(model: Model): PrismaArgs = {

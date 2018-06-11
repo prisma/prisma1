@@ -178,7 +178,7 @@ case class DatabaseMutactions(project: Project) {
         case x: UpdateByWhere =>
           val updatedPath = extendedPath.lastEdgeToNodeEdge(currentWhere(x.where, x.data))
           val nested      = getMutactionsForNestedMutation(update.data, updatedPath, triggeredFromCreate = false)
-          if (x.where.fieldValue == NullGCValue && nested.nonEmpty) throw UpdatingUniqueToNullAndThenNestingMutations(x.where.model.name)
+          if (x.where.fieldGCValue == NullGCValue && nested.nonEmpty) throw UpdatingUniqueToNullAndThenNestingMutations(x.where.model.name)
           updateMutaction +: nested
 
         case _: UpdateByRelation =>
@@ -260,6 +260,6 @@ case class DatabaseMutactions(project: Project) {
     }
 
     val newGCValue = GCAnyConverter(nodeSelector.field.typeIdentifier, isList = false).toGCValue(unwrapped).get
-    nodeSelector.copy(fieldValue = newGCValue)
+    nodeSelector.copy(fieldGCValue = newGCValue)
   }
 }

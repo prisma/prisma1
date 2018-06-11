@@ -44,7 +44,7 @@ case class MySqlDataResolver(project: Project, readonlyClientDatabase: MySQLProf
   }
 
   override def resolveByUnique(where: NodeSelector): Future[Option[PrismaNode]] =
-    batchResolveByUnique(where.model, where.field, Vector(where.fieldValue)).map(_.headOption)
+    batchResolveByUnique(where.model, where.field, Vector(where.fieldGCValue)).map(_.headOption)
 
   override def countByTable(table: String, whereFilter: Option[Filter] = None): Future[Int] = {
     val query = queryBuilder.countAllFromTable(table, whereFilter)

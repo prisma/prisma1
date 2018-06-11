@@ -22,16 +22,16 @@ trait NestedRelationInterpreterBase extends DatabaseMutactionInterpreter {
   val c                 = edge.childField
 
   val parentCauseString = edge match {
-    case edge: NodeEdge => s"-OLDPARENTFAILURETRIGGER@${relationTableName}@${edge.columnForChildRelationSide}@${edge.childWhere.fieldValueAsString}-"
+    case edge: NodeEdge => s"-OLDPARENTFAILURETRIGGER@${relationTableName}@${edge.columnForChildRelationSide}@${edge.childWhere.value}-"
     case _: ModelEdge   => s"-OLDPARENTFAILURETRIGGER@${relationTableName}@${edge.columnForChildRelationSide}-"
   }
 
   val childCauseString = path.edges.length match {
     case 0 => sys.error("There should always be at least one edge on the path if this is called.")
-    case 1 => s"-OLDCHILDPATHFAILURETRIGGER@${relationTableName}@${path.lastEdge_!.columnForParentRelationSide}@${path.root.fieldValueAsString}-"
+    case 1 => s"-OLDCHILDPATHFAILURETRIGGER@${relationTableName}@${path.lastEdge_!.columnForParentRelationSide}@${path.root.value}-"
     case _ =>
       path.removeLastEdge.lastEdge_! match {
-        case edge: NodeEdge => s"-OLDCHILDPATHFAILURETRIGGER@${relationTableName}@${edge.columnForParentRelationSide}@${edge.childWhere.fieldValueAsString}-"
+        case edge: NodeEdge => s"-OLDCHILDPATHFAILURETRIGGER@${relationTableName}@${edge.columnForParentRelationSide}@${edge.childWhere.value}-"
         case _: ModelEdge   => s"-OLDCHILDPATHFAILURETRIGGER@${relationTableName}@${edge.columnForParentRelationSide}-"
       }
   }

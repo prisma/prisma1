@@ -58,7 +58,7 @@ case class PostgresApiDatabaseMutationBuilder(
 
   def createRelayRow(path: Path): SqlStreamingAction[Vector[Int], Int, Effect]#ResultAction[Int, NoStream, Effect] = {
     val where = path.lastCreateWhere_!
-    sql"""INSERT INTO "#$schemaName"."_RelayId" ("id", "stableModelIdentifier") VALUES (${where.fieldValue}, ${where.model.stableIdentifier})""".asUpdate
+    sql"""INSERT INTO "#$schemaName"."_RelayId" ("id", "stableModelIdentifier") VALUES (${where.fieldGCValue}, ${where.model.stableIdentifier})""".asUpdate
   }
 
   def createRelationRowByPath(path: Path): SqlAction[Int, NoStream, Effect] = {
@@ -77,7 +77,7 @@ case class PostgresApiDatabaseMutationBuilder(
       } else {
         relation.modelA
       }
-      val childWhereCondition = sql"""where "#$schemaName"."#${childWhere.model.dbName}"."#${childWhere.field.dbName}" = ${childWhere.fieldValue}"""
+      val childWhereCondition = sql"""where "#$schemaName"."#${childWhere.model.dbName}"."#${childWhere.field.dbName}" = ${childWhere.fieldGCValue}"""
       val otherWhereCondition = sql"""where "#$schemaName"."#${path.removeLastEdge.lastModel.dbName}"."#${path.removeLastEdge.lastModel.dbNameOfIdField_!}" in (""" ++ pathQueryForLastChild(
         path.removeLastEdge) ++ sql")"
       val selectIdOfChild = sql"""select "#${childWhere.model.dbNameOfIdField_!}" as id from "#$schemaName"."#${childWhere.model.dbName}" """ ++ childWhereCondition
@@ -126,13 +126,13 @@ case class PostgresApiDatabaseMutationBuilder(
 
       (sql"""insert into "#$schemaName"."#${path.lastRelation_!.relationTableName}" ("#$columnForParent", "#$columnForChild")""" ++
         sql"""Select """ ++ pathQueryForLastChild(path.removeLastEdge) ++ sql"," ++
-        sql""" "#${childWhere.model.dbNameOfIdField_!}" FROM "#$schemaName"."#${childWhere.model.dbName}" where "#${childWhere.field.dbName}" = ${childWhere.fieldValue}""").asUpdate
+        sql""" "#${childWhere.model.dbNameOfIdField_!}" FROM "#$schemaName"."#${childWhere.model.dbName}" where "#${childWhere.field.dbName}" = ${childWhere.fieldGCValue}""").asUpdate
     } else {
       val relationId = Cuid.createCuid()
       (sql"""insert into "#$schemaName"."#${path.lastRelation_!.relationTableName}" """ ++
         sql"""("id", "#${path.columnForParentSideOfLastEdge}", "#${path.columnForChildSideOfLastEdge}")""" ++
         sql"""Select '#$relationId',""" ++ pathQueryForLastChild(path.removeLastEdge) ++ sql""","#${childWhere.model.dbNameOfIdField_!}" """ ++
-        sql"""FROM "#$schemaName"."#${childWhere.model.dbName}" where "#${childWhere.field.dbName}" = ${childWhere.fieldValue}
+        sql"""FROM "#$schemaName"."#${childWhere.model.dbName}" where "#${childWhere.field.dbName}" = ${childWhere.fieldGCValue}
               ON CONFLICT DO NOTHING
            """).asUpdate
 
@@ -441,7 +441,7 @@ case class PostgresApiDatabaseMutationBuilder(
 
   // region HELPERS
 
-  def idFromWhere(where: NodeSelector): SQLActionBuilder = (where.isId, where.fieldValue) match {
+  def idFromWhere(where: NodeSelector): SQLActionBuilder = (where.isId, where.fieldGCValue) match {
     case (true, NullGCValue) => sys.error("id should not be NULL")
     case (true, idValue)     => sql"$idValue"
     case (false, NullGCValue) =>
@@ -453,7 +453,7 @@ case class PostgresApiDatabaseMutationBuilder(
   def idFromWhereEquals(where: NodeSelector): SQLActionBuilder = sql" = " ++ idFromWhere(where)
 
   def idFromWherePath(where: NodeSelector): SQLActionBuilder = {
-    sql"""(SELECT "#${where.model.dbNameOfIdField_!}" FROM "#$schemaName"."#${where.model.dbName}" IDFROMWHEREPATH WHERE "#${where.field.dbName}" = ${where.fieldValue})"""
+    sql"""(SELECT "#${where.model.dbNameOfIdField_!}" FROM "#$schemaName"."#${where.model.dbName}" IDFROMWHEREPATH WHERE "#${where.field.dbName}" = ${where.fieldGCValue})"""
   }
 
   def pathQueryForLastParent(path: Path): SQLActionBuilder = pathQueryForLastChild(path.removeLastEdge)
@@ -488,7 +488,7 @@ case class PostgresApiDatabaseMutationBuilder(
   def whereFailureTrigger(where: NodeSelector, causeString: String) = {
     val table = where.model.dbName
     val query =
-      sql"""(SELECT "#${where.model.dbNameOfIdField_!}" FROM "#$schemaName"."#${table}" WHEREFAILURETRIGGER WHERE "#${where.field.dbName}" = ${where.fieldValue})"""
+      sql"""(SELECT "#${where.model.dbNameOfIdField_!}" FROM "#$schemaName"."#${table}" WHEREFAILURETRIGGER WHERE "#${where.field.dbName}" = ${where.fieldGCValue})"""
 
     triggerFailureWhenNotExists(query, causeString)
   }
