@@ -3,6 +3,7 @@ package com.prisma.api.connector.postgresql.database
 import java.sql.ResultSet
 
 import com.prisma.api.connector._
+import com.prisma.api.connector.postgresql.database.QueryBuilders.topLevelAlias
 import com.prisma.gc_values._
 import com.prisma.shared.models.IdType.Id
 import com.prisma.shared.models.{Function => _, _}
@@ -58,14 +59,18 @@ case class PostgresApiDatabaseQueryBuilder(
       overrideMaxNodeCount: Option[Int] = None
   ): DBIO[ResolverResult[PrismaNode]] = {
     SimpleDBIO[ResolverResult[PrismaNode]] { ctx =>
-      import DSL._
-      val sql = DSL.using(ctx.connection, SQLDialect.POSTGRES_9_5)
-
-      sql.select(field("*"), field("bla")).from("Bla").where(field("id").equal("1")).execute()
-
       // prepare statement
-      val builder = ModelQueryBuilder(schemaName, model, args)
-      val ps      = ctx.connection.prepareStatement(builder.queryString)
+      val builder     = ModelQueryBuilder(schemaName, model, args)
+      val jooqBuilder = JooqModelQueryBuilder(ctx.connection, schemaName, model, args)
+      val stringQuery = builder.queryString
+      val jooqQuery   = jooqBuilder.queryString
+
+      println("String")
+      println(stringQuery)
+      println(jooqQuery)
+
+//      val ps = ctx.connection.prepareStatement(builder.queryString)
+      val ps = ctx.connection.prepareStatement(jooqBuilder.queryString)
       SetParams.setQueryArgs(ps, args)
       // execute
       val rs: ResultSet = ps.executeQuery()

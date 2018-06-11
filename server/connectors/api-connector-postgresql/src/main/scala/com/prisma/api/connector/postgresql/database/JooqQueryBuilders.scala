@@ -1,19 +1,20 @@
 package com.prisma.api.connector.postgresql.database
 
-import java.sql.PreparedStatement
+import java.sql.{Connection, PreparedStatement}
 
 import com.prisma.api.connector._
 import com.prisma.slick.NewJdbcExtensions._
 import com.prisma.api.connector.postgresql.database.PostgresSlickExtensions._
 import com.prisma.gc_values.{IdGCValue, NullGCValue, StringGCValue}
 import com.prisma.shared.models._
+import org.jooq.{Condition, Name, SQLDialect}
 import slick.jdbc.PositionedParameters
 
-object QueryBuilders {
+object JooqQueryBuilders {
   val topLevelAlias = "Alias"
 }
 
-case class RelationQueryBuilder(schemaName: String, relation: Relation, queryArguments: Option[QueryArguments]) {
+case class JooqRelationQueryBuilder(schemaName: String, relation: Relation, queryArguments: Option[QueryArguments]) {
   import QueryBuilders.topLevelAlias
 
   lazy val queryString: String = {
@@ -25,7 +26,7 @@ case class RelationQueryBuilder(schemaName: String, relation: Relation, queryArg
   }
 }
 
-case class CountQueryBuilder(schemaName: String, table: String, filter: Option[Filter]) {
+case class JooqCountQueryBuilder(schemaName: String, table: String, filter: Option[Filter]) {
   import QueryBuilders.topLevelAlias
 
   lazy val queryString: String = {
@@ -34,7 +35,7 @@ case class CountQueryBuilder(schemaName: String, table: String, filter: Option[F
   }
 }
 
-case class ScalarListQueryBuilder(schemaName: String, field: ScalarField, queryArguments: Option[QueryArguments]) {
+case class JooqScalarListQueryBuilder(schemaName: String, field: ScalarField, queryArguments: Option[QueryArguments]) {
   import QueryBuilders.topLevelAlias
   require(field.isList, "This must be called only with scalar list fields")
 
@@ -47,7 +48,7 @@ case class ScalarListQueryBuilder(schemaName: String, field: ScalarField, queryA
   }
 }
 
-case class RelatedModelsQueryBuilder(
+case class JooqRelatedModelsQueryBuilder(
     schemaName: String,
     fromField: RelationField,
     queryArguments: Option[QueryArguments],
@@ -88,20 +89,38 @@ case class RelatedModelsQueryBuilder(
   }
 }
 
-case class ModelQueryBuilder(schemaName: String, model: Model, queryArguments: Option[QueryArguments]) {
+case class JooqModelQueryBuilder(connection: Connection, schemaName: String, model: Model, queryArguments: Option[QueryArguments]) {
   import QueryBuilders.topLevelAlias
 
+//  lazy val queryString2: String = {
+//    s"""SELECT * FROM "$schemaName"."${model.dbName}" AS "$topLevelAlias" """ +
+//      JooqWhereClauseBuilder(schemaName).buildWhereClause(queryArguments.flatMap(_.filter)).getOrElse("") +
+//      WhereClauseBuilder(schemaName).buildCursorCondition(queryArguments, model).map(" AND " + _).getOrElse("") +
+//      OrderByClauseBuilder.forModel(model, topLevelAlias, queryArguments) +
+//      LimitClauseBuilder.limitClause(queryArguments)
+//  }
+
   lazy val queryString: String = {
-    s"""SELECT * FROM "$schemaName"."${model.dbName}" AS "$topLevelAlias" """ +
-      WhereClauseBuilder(schemaName).buildWhereClause(queryArguments.flatMap(_.filter)).getOrElse("") +
-      WhereClauseBuilder(schemaName).buildCursorCondition(queryArguments, model).map(" AND " + _).getOrElse("") +
-      OrderByClauseBuilder.forModel(model, topLevelAlias, queryArguments) +
-      LimitClauseBuilder.limitClause(queryArguments)
+    import org.jooq.impl.DSL
+    import org.jooq.impl.DSL._
+
+    val sql = DSL.using(connection, SQLDialect.POSTGRES_9_5)
+
+    val conditions: Vector[Condition] = JooqWhereClauseBuilder(connection: Connection, schemaName).buildWhereClause(queryArguments.flatMap(_.filter))
+
+    val aliasedTable = table(name(schemaName, model.dbName)).as(topLevelAlias)
+
+    val string = sql
+      .select()
+      .from(aliasedTable)
+      .where(conditions: _*)
+
+    string.getSQL
   }
 
 }
 
-object SetParams {
+object JooqSetParams {
   def setQueryArgs(preparedStatement: PreparedStatement, queryArguments: Option[QueryArguments]): Unit = {
     queryArguments.foreach { queryArgs =>
       setFilter(preparedStatement, queryArgs.filter)

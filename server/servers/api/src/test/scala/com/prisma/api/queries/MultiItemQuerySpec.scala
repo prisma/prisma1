@@ -18,7 +18,7 @@ class MultiItemQuerySpec extends FlatSpec with Matchers with ApiSpecBase {
          |  todoes {
          |    title
          |  }
-         |}""".stripMargin,
+         |}""",
       project
     )
 
@@ -38,7 +38,7 @@ class MultiItemQuerySpec extends FlatSpec with Matchers with ApiSpecBase {
            |  createTodo(data: {title: "$title"}) {
            |    id
            |  }
-           |}""".stripMargin,
+           |}""",
         project
       )
       .pathAsString("data.createTodo.id")
@@ -48,7 +48,7 @@ class MultiItemQuerySpec extends FlatSpec with Matchers with ApiSpecBase {
          |  todoes {
          |    title
          |  }
-         |}""".stripMargin,
+         |}""",
       project
     )
 
@@ -68,7 +68,7 @@ class MultiItemQuerySpec extends FlatSpec with Matchers with ApiSpecBase {
            |  createTodo(data: {title: "$title"}) {
            |    id
            |  }
-           |}""".stripMargin,
+           |}""",
         project
       )
       .pathAsString("data.createTodo.id")
@@ -79,7 +79,7 @@ class MultiItemQuerySpec extends FlatSpec with Matchers with ApiSpecBase {
            |  todoes(where: {title: "INVALID"}) {
            |    title
            |  }
-           |}""".stripMargin,
+           |}""",
         project
       )
       .toString should equal("""{"data":{"todoes":[]}}""")
@@ -87,10 +87,10 @@ class MultiItemQuerySpec extends FlatSpec with Matchers with ApiSpecBase {
     server
       .query(
         s"""{
-           |  todoes(where: {title: "${title}"}) {
+           |  todoes(where: {title: "$title"}) {
            |    title
            |  }
-           |}""".stripMargin,
+           |}""",
         project
       )
       .toString should equal("""{"data":{"todoes":[{"title":"Hello World!"}]}}""")
