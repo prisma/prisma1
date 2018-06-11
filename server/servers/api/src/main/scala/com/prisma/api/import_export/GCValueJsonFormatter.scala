@@ -20,6 +20,7 @@ object GCValueJsonFormatter {
     override def writes(gcValue: GCValue): JsValue = gcValue match {
       case v: StringGCValue   => JsString(v.value)
       case v: IdGCValue       => JsString(v.value)
+      case v: UuidGCValue     => JsString(v.value.toString)
       case v: EnumGCValue     => JsString(v.value)
       case v: DateTimeGCValue => JsString(isoFormatter.print(v.value.withZone(DateTimeZone.UTC)))
       case v: BooleanGCValue  => JsBoolean(v.value)

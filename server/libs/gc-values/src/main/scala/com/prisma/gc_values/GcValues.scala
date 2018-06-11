@@ -1,7 +1,10 @@
 package com.prisma.gc_values
 
+import java.util.UUID
+
 import org.joda.time.DateTime
 import play.api.libs.json._
+
 import scala.collection.immutable.SortedMap
 
 /**
@@ -59,6 +62,7 @@ case class IntGCValue(value: Int)           extends LeafGCValue
 case class FloatGCValue(value: Double)      extends LeafGCValue
 case class BooleanGCValue(value: Boolean)   extends LeafGCValue
 case class IdGCValue(value: String)         extends LeafGCValue
+case class UuidGCValue(value: UUID)         extends LeafGCValue
 case class DateTimeGCValue(value: DateTime) extends LeafGCValue
 case class EnumGCValue(value: String)       extends LeafGCValue
 case class JsonGCValue(value: JsValue)      extends LeafGCValue

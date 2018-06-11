@@ -1,5 +1,7 @@
 package com.prisma.shared.models
 
+import java.util.UUID
+
 import com.prisma.gc_values._
 import com.prisma.shared.models.FieldConstraintType.FieldConstraintType
 import com.prisma.shared.models.Manifestations._
@@ -62,6 +64,7 @@ object ProjectJsonFormatter {
     val passwordType       = "password"
     val enumType           = "enum"
     val graphQlIdType      = "graphQlId"
+    val uuidType           = "uuid"
     val dateTimeType       = "datetime"
     val intType            = "int"
     val floatType          = "float"
@@ -84,6 +87,7 @@ object ProjectJsonFormatter {
       case (`stringType`, JsString(str))    => JsSuccess(StringGCValue(str))
       case (`enumType`, JsString(str))      => JsSuccess(EnumGCValue(str))
       case (`graphQlIdType`, JsString(str)) => JsSuccess(IdGCValue(str))
+      case (`uuidType`, JsString(str))      => JsSuccess(UuidGCValue(UUID.fromString(str)))
       case (`dateTimeType`, JsString(str))  => JsSuccess(DateTimeGCValue(new DateTime(str, DateTimeZone.UTC)))
       case (`intType`, JsNumber(x))         => JsSuccess(IntGCValue(x.toInt))
       case (`floatType`, JsNumber(x))       => JsSuccess(FloatGCValue(x.toDouble))
@@ -106,6 +110,7 @@ object ProjectJsonFormatter {
         case x: StringGCValue   => json(stringType, JsString(x.value))
         case x: EnumGCValue     => json(enumType, JsString(x.value))
         case x: IdGCValue       => json(graphQlIdType, JsString(x.value))
+        case x: UuidGCValue     => json(uuidType, JsString(x.value.toString))
         case x: DateTimeGCValue => json(dateTimeType, JsString(formatter.print(x.value)))
         case x: IntGCValue      => json(intType, JsNumber(x.value))
         case x: FloatGCValue    => json(floatType, JsNumber(x.value))

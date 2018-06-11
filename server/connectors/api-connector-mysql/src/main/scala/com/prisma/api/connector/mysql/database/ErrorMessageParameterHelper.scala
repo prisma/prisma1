@@ -15,6 +15,7 @@ object ErrorMessageParameterHelper {
     case BooleanGCValue(false) => s"parameters [0,"
     case BooleanGCValue(true)  => s"parameters [1,"
     case IdGCValue(x)          => s"parameters ['$x',"
+    case UuidGCValue(x)        => s"parameters ['$x',"
     case EnumGCValue(x)        => s"parameters ['$x',"
     case DateTimeGCValue(x)    => s"parameters ['${dateTimeFromISO8601(x)}"
     case JsonGCValue(x)        => s"parameters ['$x'," // Todo

@@ -4,7 +4,7 @@ import com.prisma.api.connector.PrismaArgs
 import com.prisma.api.schema.APIErrors
 import com.prisma.api.schema.APIErrors.ClientApiError
 import com.prisma.gc_values._
-import com.prisma.shared.models.{Field, Model, ScalarField}
+import com.prisma.shared.models.{Model, ScalarField}
 
 object InputValueValidation {
 
@@ -31,6 +31,7 @@ object InputValueValidation {
     case x: DateTimeGCValue => true
     case x: EnumGCValue     => x.value.length <= 191
     case x: IdGCValue       => x.value.length <= 25
+    case x: UuidGCValue     => true
     case x: FloatGCValue    => BigDecimal(x.value).underlying().toPlainString.length <= 35
     case x: ListGCValue     => sys.error("handle this case")
     case x: RootGCValue     => sys.error("handle this case")
