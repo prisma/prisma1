@@ -20,22 +20,24 @@ class ConfigLoaderSpec extends WordSpec with Matchers {
                           |    password: prisma
                           |    database: my_database
                           |    schema: my_schema
+                          |    ssl: true
                         """.stripMargin
 
       val config = ConfigLoader.tryLoadString(validConfig)
 
-      config.isSuccess shouldBe true
       config.get.port shouldBe Some(4466)
       config.get.managementApiSecret should contain("somesecret")
       config.get.prismaConnectSecret should contain("othersecret")
       config.get.databases.length shouldBe 1
-      config.get.databases.head.connector shouldBe "mysql"
-      config.get.databases.head.active shouldBe true
-      config.get.databases.head.port shouldBe 3306
-      config.get.databases.head.user shouldBe "root"
-      config.get.databases.head.password shouldBe Some("prisma")
-      config.get.databases.head.database shouldBe Some("my_database")
-      config.get.databases.head.schema shouldBe Some("my_schema")
+      val database = config.get.databases.head
+      database.connector shouldBe "mysql"
+      database.active shouldBe true
+      database.port shouldBe 3306
+      database.user shouldBe "root"
+      database.password shouldBe Some("prisma")
+      database.database shouldBe Some("my_database")
+      database.schema shouldBe Some("my_schema")
+      database.ssl shouldBe true
     }
 
     "be parsed without errors if an optional field is missing" in {
@@ -56,13 +58,15 @@ class ConfigLoaderSpec extends WordSpec with Matchers {
       config.get.port should contain(4466)
       config.get.managementApiSecret shouldBe None
       config.get.databases.length shouldBe 1
-      config.get.databases.head.connector shouldBe "mysql"
-      config.get.databases.head.active shouldBe true
-      config.get.databases.head.port shouldBe 3306
-      config.get.databases.head.user shouldBe "root"
-      config.get.databases.head.password shouldBe Some("prisma")
-      config.get.databases.head.database shouldBe None
-      config.get.databases.head.schema shouldBe None
+      val database = config.get.databases.head
+      database.connector shouldBe "mysql"
+      database.active shouldBe true
+      database.port shouldBe 3306
+      database.user shouldBe "root"
+      database.password shouldBe Some("prisma")
+      database.database shouldBe None
+      database.schema shouldBe None
+      database.ssl shouldBe false
     }
 
     "be parsed without errors if an optional field is there but set to nothing" in {
@@ -79,6 +83,7 @@ class ConfigLoaderSpec extends WordSpec with Matchers {
                           |    password: prisma
                           |    database:
                           |    schema:
+                          |    ssl:
                         """.stripMargin
 
       val config = ConfigLoader.tryLoadString(validConfig)
@@ -87,13 +92,43 @@ class ConfigLoaderSpec extends WordSpec with Matchers {
       config.get.port should contain(4466)
       config.get.managementApiSecret shouldBe None
       config.get.databases.length shouldBe 1
-      config.get.databases.head.connector shouldBe "mysql"
-      config.get.databases.head.active shouldBe true
-      config.get.databases.head.port shouldBe 3306
-      config.get.databases.head.user shouldBe "root"
-      config.get.databases.head.password shouldBe Some("prisma")
-      config.get.databases.head.database shouldBe None
-      config.get.databases.head.schema shouldBe None
+      val database = config.get.databases.head
+      database.connector shouldBe "mysql"
+      database.active shouldBe true
+      database.port shouldBe 3306
+      database.user shouldBe "root"
+      database.password shouldBe Some("prisma")
+      database.database shouldBe None
+      database.schema shouldBe None
+      database.ssl shouldBe false
+    }
+
+    "be parsed without errors if the URI is used" in {
+      val validConfig = """
+          |port: 4466
+          |managementApiSecret:
+          |databases:
+          |  default:
+          |    connector: postgres
+          |    migrations: true
+          |    uri: postgres://user:password@host:5432/database?ssl=1
+        """.stripMargin
+
+      val config = ConfigLoader.tryLoadString(validConfig)
+
+      config.isSuccess shouldBe true
+      config.get.port should contain(4466)
+      config.get.managementApiSecret shouldBe None
+      config.get.databases.length shouldBe 1
+      val database = config.get.databases.head
+      database.connector shouldBe "postgres"
+      database.active shouldBe true
+      database.port shouldBe 5432
+      database.user shouldBe "user"
+      database.password shouldBe Some("password")
+      database.database shouldBe Some("database")
+      database.schema shouldBe None
+      database.ssl shouldBe true
     }
   }
 

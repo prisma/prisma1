@@ -1,15 +1,7 @@
-# import Post, PostWhereInput, PostOrderByInput, PostCreateInput from "./generated-schema.graphql"
+# import PostCreateInput from "./generated-schema.graphql"
 
 type Query {
-  posts(
-    where: PostWhereInput
-    orderBy: PostOrderByInput
-    skip: Int
-    after: String
-    before: String
-    first: Int
-    last: Int
-  ): [Post!]!
+  drafts: [Post!]!
 }
 
 type Mutation {

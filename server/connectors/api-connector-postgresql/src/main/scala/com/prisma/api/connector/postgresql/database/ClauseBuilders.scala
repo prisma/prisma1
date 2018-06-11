@@ -1,6 +1,7 @@
 package com.prisma.api.connector.postgresql.database
 
 import com.prisma.api.connector._
+import com.prisma.api.connector.postgresql.database.LimitClauseBuilder.validate
 import com.prisma.api.schema.APIErrors
 import com.prisma.api.schema.APIErrors.{InvalidFirstArgument, InvalidLastArgument, InvalidSkipArgument}
 import com.prisma.gc_values.{GCValue, NullGCValue}
@@ -144,16 +145,23 @@ case class WhereClauseBuilder(schemaName: String) {
 }
 
 object LimitClauseBuilder {
+  // Increase by 1 to know if we have a next page / previous page
+  def limitClauseForWindowFunction(args: Option[QueryArguments]): String = {
+    val (firstOpt, lastOpt, skipOpt) = (args.flatMap(_.first), args.flatMap(_.last), args.flatMap(_.skip))
+    validate(args)
+
+    lastOpt.orElse(firstOpt) match {
+      case Some(limitedCount) => s" Between ${skipOpt.getOrElse(0)} And ${limitedCount + skipOpt.getOrElse(0) + 1} "
+      case None               => " < 99999999999999"
+    }
+  }
 
   def limitClause(args: Option[QueryArguments]): String = {
     val (firstOpt, lastOpt, skipOpt) = (args.flatMap(_.first), args.flatMap(_.last), args.flatMap(_.skip))
     validate(args)
     lastOpt.orElse(firstOpt) match {
-      case Some(limitedCount) =>
-        // Increase by 1 to know if we have a next page / previous page
-        s"LIMIT ${limitedCount + 1} OFFSET ${skipOpt.getOrElse(0)}"
-      case None =>
-        ""
+      case Some(limitedCount) => s"LIMIT ${limitedCount + 1} OFFSET ${skipOpt.getOrElse(0)}"
+      case None               => ""
     }
   }
 
@@ -173,6 +181,7 @@ object OrderByClauseBuilder {
   def forModel(model: Model, alias: String, args: Option[QueryArguments]): String = {
     internal(
       alias = alias,
+      secondaryAlias = alias,
       secondaryOrderByField = model.dbNameOfIdField_!,
       args = args
     )
@@ -197,12 +206,13 @@ object OrderByClauseBuilder {
   def forRelation(relation: Relation, alias: String, args: Option[QueryArguments]): String = {
     internal(
       alias = alias,
+      secondaryAlias = alias,
       secondaryOrderByField = relation.columnForRelationSide(RelationSide.A),
       args = args
     )
   }
 
-  def internal(alias: String, secondaryOrderByField: String, args: Option[QueryArguments]): String = {
+  def internal(alias: String, secondaryAlias: String, secondaryOrderByField: String, args: Option[QueryArguments]): String = {
     val (first, last, orderBy) = (args.flatMap(_.first), args.flatMap(_.last), args.flatMap(_.orderBy))
     val isReverseOrder         = last.isDefined
 
@@ -215,7 +225,7 @@ object OrderByClauseBuilder {
       case false => (defaultOrder, "asc")
     }
 
-    val aliasedSecondaryOrderByField = s""" "$alias"."$secondaryOrderByField" """
+    val aliasedSecondaryOrderByField = s""" "$secondaryAlias"."$secondaryOrderByField" """
 
     orderBy match {
       case Some(orderByArg) if orderByArg.field.dbName != secondaryOrderByField =>

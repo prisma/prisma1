@@ -74,7 +74,7 @@ case class JooqRelatedModelsQueryBuilder(
             where "RelationTable"."$modelRelationSideColumn" = ? AND """ +
       WhereClauseBuilder(schemaName).buildWhereClauseWithoutWhereKeyWord(queryArguments.flatMap(_.filter)) +
       WhereClauseBuilder(schemaName).buildCursorCondition(queryArguments, relatedModel).map(" AND " + _).getOrElse("") +
-      OrderByClauseBuilder.internal("RelationTable", columnForRelatedModel, queryArguments) +
+//      OrderByClauseBuilder.internal("RelationTable", columnForRelatedModel, queryArguments) +
       LimitClauseBuilder.limitClause(queryArguments)
   }
 
@@ -84,8 +84,8 @@ case class JooqRelatedModelsQueryBuilder(
             inner join "$schemaName"."$relationTableName" as "RelationTable"
             on "$topLevelAlias"."${relatedModel.dbNameOfIdField_!}" = "RelationTable"."$fieldRelationSideColumn"
             where "RelationTable"."$modelRelationSideColumn" IN ${queryPlaceHolders(relatedNodeIds)} AND """ +
-      WhereClauseBuilder(schemaName).buildWhereClauseWithoutWhereKeyWord(queryArguments.flatMap(_.filter)) +
-      OrderByClauseBuilder.internal(alias = "RelationTable", columnForRelatedModel, queryArguments)
+      WhereClauseBuilder(schemaName).buildWhereClauseWithoutWhereKeyWord(queryArguments.flatMap(_.filter)) // +
+//      OrderByClauseBuilder.internal(alias = "RelationTable", columnForRelatedModel, queryArguments)
   }
 }
 

@@ -5,10 +5,10 @@ import java.sql.Connection
 import com.prisma.api.connector._
 import com.prisma.api.schema.APIErrors
 import com.prisma.api.schema.APIErrors.{InvalidFirstArgument, InvalidLastArgument, InvalidSkipArgument}
-import com.prisma.gc_values.{GCValue, GCValueExtractor, NullGCValue}
+import com.prisma.gc_values.{GCValue, NullGCValue}
 import com.prisma.shared.models._
 import org.jooq.{Condition, SQLDialect}
-import org.jooq.impl.DSL
+import org.jooq.impl._
 import org.jooq.impl.DSL._
 
 case class JooqWhereClauseBuilder(connection: Connection, schemaName: String) {
@@ -106,7 +106,7 @@ case class JooqWhereClauseBuilder(connection: Connection, schemaName: String) {
       case ScalarFilter(field, NotEquals(NullGCValue))     => Vector(trueCondition())
       case ScalarFilter(field, NotEquals(_))               => Vector(trueCondition())
       case ScalarFilter(field, Equals(NullGCValue))        => Vector(trueCondition())
-      case ScalarFilter(field2, Equals(x))                 => Vector(field(alias, field2.dbName).equals(x))
+      case ScalarFilter(field2, Equals(x))                 => Vector(field(name(alias, field2.dbName), classOf[Long]).eq(x.value.asInstanceOf[Long]))
       case ScalarFilter(field, In(Vector(NullGCValue)))    => Vector(trueCondition())
       case ScalarFilter(field, NotIn(Vector(NullGCValue))) => Vector(trueCondition())
       case ScalarFilter(field, In(values))                 => Vector(trueCondition())
@@ -114,6 +114,10 @@ case class JooqWhereClauseBuilder(connection: Connection, schemaName: String) {
       case OneRelationIsNullFilter(field)                  => Vector(oneRelationIsNullFilter(field))
       case x                                               => sys.error(s"Not supported: $x")
     }
+  }
+
+  private def equalsGcValue(scalarField: ScalarField) = scalarField.typeIdentifier match {
+    case TypeIdentifier.Int => field(scalarField.dbName, classOf[Long]).eq(12)
   }
 
   private def relationFilterStatement(alias: String, field: RelationField, nestedFilter: Filter, relationCondition: RelationCondition): String = {
@@ -142,8 +146,8 @@ case class JooqWhereClauseBuilder(connection: Connection, schemaName: String) {
     }
   }
 
-  private def column(alias: String, field: Field): String = s""""$alias"."${field.dbName}" """
-  private def in(items: Vector[GCValue])                  = s" IN (" + items.map(_ => "?").mkString(",") + ")"
+//  private def column(alias: String, field: Field): String = s""""$alias"."${field.dbName}" """
+  private def in(items: Vector[GCValue]) = s" IN (" + items.map(_ => "?").mkString(",") + ")"
 }
 
 object JooqLimitClauseBuilder {

@@ -55,36 +55,41 @@ case class RelatedModelsQueryBuilder(
 ) {
   import QueryBuilders.topLevelAlias
 
-  val relation                = fromField.relation
-  val relatedModel            = fromField.relatedModel_!
-  val modelTable              = relatedModel.dbName
-  val relationTableName       = fromField.relation.relationTableName
-  val modelRelationSideColumn = relation.columnForRelationSide(fromField.relationSide)
-  val fieldRelationSideColumn = relation.columnForRelationSide(fromField.oppositeRelationSide)
-  val aColumn                 = relation.modelAColumn
-  val bColumn                 = relation.modelBColumn
-  val columnForRelatedModel   = relation.columnForRelationSide(fromField.oppositeRelationSide)
+  val relation                        = fromField.relation
+  val relatedModel                    = fromField.relatedModel_!
+  val modelTable                      = relatedModel.dbName
+  val relationTableName               = fromField.relation.relationTableName
+  val modelRelationSideColumn         = relation.columnForRelationSide(fromField.relationSide)
+  val oppositeModelRelationSideColumn = relation.columnForRelationSide(fromField.oppositeRelationSide)
+  val aColumn                         = relation.modelAColumn
+  val bColumn                         = relation.modelBColumn
+  val secondaryOrderByForPagination   = if (fromField.oppositeRelationSide == RelationSide.A) "__Relation__A" else "__Relation__B"
 
   lazy val queryStringWithPagination: String = {
-    s"""select "$topLevelAlias".*, "RelationTable"."$aColumn" as "__Relation__A",  "RelationTable"."$bColumn" as "__Relation__B"
-            from "$schemaName"."$modelTable" as "$topLevelAlias"
-            inner join "$schemaName"."$relationTableName" as "RelationTable"
-            on "$topLevelAlias"."${relatedModel.dbNameOfIdField_!}" = "RelationTable"."$fieldRelationSideColumn"
-            where "RelationTable"."$modelRelationSideColumn" = ? AND """ +
-      WhereClauseBuilder(schemaName).buildWhereClauseWithoutWhereKeyWord(queryArguments.flatMap(_.filter)) +
-      WhereClauseBuilder(schemaName).buildCursorCondition(queryArguments, relatedModel).map(" AND " + _).getOrElse("") +
-      OrderByClauseBuilder.internal("RelationTable", columnForRelatedModel, queryArguments) +
-      LimitClauseBuilder.limitClause(queryArguments)
+    s"""SELECT *
+        FROM
+        ( SELECT ROW_NUMBER() OVER (PARTITION BY "t"."__Relation__A"""" + OrderByClauseBuilder.internal("t", "t", secondaryOrderByForPagination, queryArguments) +
+      s""") AS "r", "t".*
+          FROM (
+              SELECT "$topLevelAlias".*, "RelationTable"."$aColumn" AS "__Relation__A",  "RelationTable"."$bColumn" AS "__Relation__B"
+              FROM "$schemaName"."$modelTable" AS "$topLevelAlias"
+              INNER JOIN "$schemaName"."$relationTableName" AS "RelationTable"
+              ON "$topLevelAlias"."${relatedModel.dbNameOfIdField_!}" = "RelationTable"."$oppositeModelRelationSideColumn"
+              WHERE "RelationTable"."$modelRelationSideColumn" IN ${queryPlaceHolders(relatedNodeIds)}
+              AND """ + WhereClauseBuilder(schemaName).buildWhereClauseWithoutWhereKeyWord(queryArguments.flatMap(_.filter)) +
+      WhereClauseBuilder(schemaName).buildCursorCondition(queryArguments, relatedModel).map(" AND " + _).getOrElse("") + s""") AS "t"
+       ) AS "x"
+       WHERE "x"."r"""" + LimitClauseBuilder.limitClauseForWindowFunction(queryArguments)
   }
 
   lazy val queryStringWithoutPagination: String = {
     s"""select "$topLevelAlias".*, "RelationTable"."$aColumn" as "__Relation__A",  "RelationTable"."$bColumn" as "__Relation__B"
             from "$schemaName"."$modelTable" as "$topLevelAlias"
             inner join "$schemaName"."$relationTableName" as "RelationTable"
-            on "$topLevelAlias"."${relatedModel.dbNameOfIdField_!}" = "RelationTable"."$fieldRelationSideColumn"
+            on "$topLevelAlias"."${relatedModel.dbNameOfIdField_!}" = "RelationTable"."$oppositeModelRelationSideColumn"
             where "RelationTable"."$modelRelationSideColumn" IN ${queryPlaceHolders(relatedNodeIds)} AND """ +
       WhereClauseBuilder(schemaName).buildWhereClauseWithoutWhereKeyWord(queryArguments.flatMap(_.filter)) +
-      OrderByClauseBuilder.internal(alias = "RelationTable", columnForRelatedModel, queryArguments)
+      OrderByClauseBuilder.internal(topLevelAlias, "RelationTable", oppositeModelRelationSideColumn, queryArguments)
   }
 }
 

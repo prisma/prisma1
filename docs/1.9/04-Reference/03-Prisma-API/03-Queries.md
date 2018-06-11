@@ -445,4 +445,4 @@ query {
 
 #### Limitations
 
-Note that *a maximum of 1000 nodes* can be returned per pagination field on the shared demo cluster. This limit can be increased on other clusters using [the cluster configuration](https://github.com/graphcool/framework/issues/748).
+Note that by default, Prisma returns *a maximum of 1000 nodes*. This can be overridden by setting the pagination parameters accordingly. If you do not set any pagination parameters, Prisma will set a limit of 1000.

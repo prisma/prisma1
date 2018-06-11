@@ -267,7 +267,7 @@ class ObjectTypeBuilder(
     val firstOpt                               = ctx.argOpt[Int](IdBasedConnection.Args.First.name)
     val lastOpt                                = ctx.argOpt[Int](IdBasedConnection.Args.Last.name)
 
-    Some(SangriaQueryArguments.createSimpleQueryArguments(skipOpt, afterOpt, firstOpt, beforeOpt, lastOpt, filterOpt, orderByOpt))
+    Some(QueryArguments(skipOpt, afterOpt, firstOpt, beforeOpt, lastOpt, filterOpt, orderByOpt))
   }
 
   def mapToOutputResolve[C <: ApiUserContext](model: models.Model, field: models.Field)(
@@ -280,7 +280,7 @@ class ObjectTypeBuilder(
         ScalarListDeferred(model, f, item.id)
 
       case f: ScalarField if !f.isList =>
-        GCValueExtractor.fromGCValue(item.data.map(field.name))
+        item.data.map(field.name).value
 
       case f: RelationField if f.isList =>
         val arguments = extractQueryArgumentsFromContext(f.relatedModel_!, ctx.asInstanceOf[Context[ApiUserContext, Unit]])
