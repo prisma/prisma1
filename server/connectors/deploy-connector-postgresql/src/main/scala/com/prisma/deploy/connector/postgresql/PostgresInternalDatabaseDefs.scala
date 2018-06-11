@@ -31,7 +31,7 @@ case class PostgresInternalDatabaseDefs(dbConfig: DatabaseConfig) {
         |database {
         |  dataSourceClass = "slick.jdbc.DriverDataSource"
         |  properties {
-        |    url = "jdbc:postgresql://${dbConfig.host}:${dbConfig.port}/$database?currentSchema=$schema"
+        |    url = "jdbc:postgresql://${dbConfig.host}:${dbConfig.port}/$database?currentSchema=$schema&ssl=${dbConfig.ssl}&sslfactory=org.postgresql.ssl.NonValidatingFactory"
         |    user = "${dbConfig.user}"
         |    password = "${dbConfig.password.getOrElse("")}"
         |  }
@@ -42,4 +42,5 @@ case class PostgresInternalDatabaseDefs(dbConfig: DatabaseConfig) {
       """.stripMargin)
       .resolve
   }
+
 }

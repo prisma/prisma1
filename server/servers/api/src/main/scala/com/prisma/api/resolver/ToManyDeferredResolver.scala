@@ -25,7 +25,9 @@ class ToManyDeferredResolver(dataResolver: DataResolver) {
 
     // As we are using `union all` as our batching mechanism there is very little gain from batching,
     // and 500 items seems to be the cutoff point where there is no more value to be had.
-    val batchFutures: Vector[Future[Vector[ResolverResult[PrismaNodeWithParent]]]] = relatedModelInstanceIds
+    // todo figure out the correct group size see to not run into parameter limits see:
+    // https://stackoverflow.com/questions/6581573/what-are-the-max-number-of-allowable-parameters-per-database-provider-type
+    val batchFutures: Vector[Future[Vector[ResolverResult[PrismaNodeWithParent]]]] = relatedModelInstanceIds.distinct
       .grouped(500)
       .toVector
       .map(ids => dataResolver.resolveByRelationManyModels(relatedField, ids, args))

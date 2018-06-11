@@ -32,7 +32,7 @@ case class CoolArgs(raw: Map[String, Any]) {
   def isEmpty: Boolean    = raw.isEmpty
   def isNonEmpty: Boolean = raw.nonEmpty
 
-  def subNestedMutation(relationField: Field, subModel: Model): NestedMutations = {
+  def subNestedMutation(relationField: RelationField, subModel: Model): NestedMutations = {
     subArgsOption(relationField.name) match {
       case None             => NestedMutations.empty
       case Some(None)       => NestedMutations.empty
@@ -50,7 +50,7 @@ case class CoolArgs(raw: Map[String, Any]) {
     x.toVector
   }
 
-  private def asNestedMutation(relationField: Field, subModel: Model): NestedMutations = {
+  private def asNestedMutation(relationField: RelationField, subModel: Model): NestedMutations = {
     if (relationField.isList) {
       NestedMutations(
         creates = subArgsVector("create").getOrElse(Vector.empty).map(CreateOne),
@@ -82,7 +82,7 @@ case class CoolArgs(raw: Map[String, Any]) {
     }
   }
 
-  def subScalarList(scalarListField: Field): Option[ListGCValue] = {
+  def subScalarList(scalarListField: ScalarField): Option[ListGCValue] = {
     subArgsOption(scalarListField.name).flatten.flatMap { args =>
       args.getFieldValuesAs[Any]("set") match {
         case None =>
@@ -143,7 +143,7 @@ case class CoolArgs(raw: Map[String, Any]) {
     raw.asInstanceOf[Map[String, Option[Any]]].collectFirst {
       case (fieldName, Some(value)) =>
         NodeSelector(model,
-                     model.getFieldByName_!(fieldName),
+                     model.getScalarFieldByName_!(fieldName),
                      GCAnyConverter(model.getFieldByName_!(fieldName).typeIdentifier, isList = false).toGCValue(value).get)
     } getOrElse {
       throw APIErrors.NullProvidedForWhereError(model.name)

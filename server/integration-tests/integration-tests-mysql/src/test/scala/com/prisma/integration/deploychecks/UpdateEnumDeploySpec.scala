@@ -97,7 +97,7 @@ class UpdateEnumDeploySpec extends FlatSpec with Matchers with IntegrationBaseSp
          |}"""
 
     deployServer.deploySchemaThatMustError(project, schema2).toString should be(
-      """{"data":{"deploy":{"migration":{"applied":0,"revision":0},"errors":[{"description":"You are deleting the value 'B' of the enum 'AB', but that value is in use."}],"warnings":[]}}}""")
+      """{"data":{"deploy":{"migration":null,"errors":[{"description":"You are deleting the value 'B' of the enum 'AB', but that value is in use."}],"warnings":[]}}}""")
   }
 
   "Updating an Enum to delete cases" should "throw an error if there is already data and the removed enum value is in use on a non-list" in {
@@ -130,7 +130,7 @@ class UpdateEnumDeploySpec extends FlatSpec with Matchers with IntegrationBaseSp
          |}"""
 
     deployServer.deploySchemaThatMustError(project, schema2).toString should be(
-      """{"data":{"deploy":{"migration":{"applied":0,"revision":0},"errors":[{"description":"You are deleting the value 'B' of the enum 'AB', but that value is in use."}],"warnings":[]}}}""")
+      """{"data":{"deploy":{"migration":null,"errors":[{"description":"You are deleting the value 'B' of the enum 'AB', but that value is in use."}],"warnings":[]}}}""")
   }
 
   "Updating an Enum to delete cases" should "throw multiple errors if several of the removed cases are in use" in {
@@ -165,7 +165,7 @@ class UpdateEnumDeploySpec extends FlatSpec with Matchers with IntegrationBaseSp
          |}"""
 
     deployServer.deploySchemaThatMustError(project, schema2).toString should be(
-      """{"data":{"deploy":{"migration":{"applied":0,"revision":0},"errors":[{"description":"You are deleting the value 'B' of the enum 'ABCD', but that value is in use."},{"description":"You are deleting the value 'C' of the enum 'ABCD', but that value is in use."},{"description":"You are deleting the value 'D' of the enum 'ABCD', but that value is in use."}],"warnings":[]}}}""")
+      """{"data":{"deploy":{"migration":null,"errors":[{"description":"You are deleting the value 'B' of the enum 'ABCD', but that value is in use."},{"description":"You are deleting the value 'C' of the enum 'ABCD', but that value is in use."},{"description":"You are deleting the value 'D' of the enum 'ABCD', but that value is in use."}],"warnings":[]}}}""")
   }
 
   "Updating an Enum to rename it" should "succeed even if there is data" in {

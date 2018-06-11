@@ -19,9 +19,9 @@ class ListProjectsSpec extends FlatSpec with Matchers with ActiveDeploySpecBase 
   }
 
   "MigrationStatus" should "return all projects" in {
-    val (project, _)  = setupProject(basicTypesGql)
-    val (project2, _) = setupProject(basicTypesGql)
-    val (project3, _) = setupProject(basicTypesGql)
+    val (project, _)  = setupProject(basicTypesGql, stage = "stage1")
+    val (project2, _) = setupProject(basicTypesGql, stage = "stage2")
+    val (project3, _) = setupProject(basicTypesGql, stage = "stage3")
     val result        = server.query(s"""
        |query {
        |  listProjects {

@@ -80,10 +80,10 @@ object Dependencies {
   val evoInflector      = "org.atteo"                  % "evo-inflector"             % "1.2"
   val logBack           = "ch.qos.logback"             % "logback-classic"           % "1.1.7"
   val snakeYML          = "org.yaml"                   % "snakeyaml"                 % "1.19"
+  val scalaUri          = "io.lemonlabs"               %% "scala-uri"                % "1.1.1"
   val logstash          = "net.logstash.logback"       % "logstash-logback-encoder"  % "4.7"
   val librato           = "com.librato.metrics"        % "librato-java"              % "2.1.0"
   val jettyServer       = "org.eclipse.jetty"          % "jetty-server"              % "9.3.0.v20150612"
-  val scalaUri          = "com.netaporter"             %% "scala-uri"                % "0.4.16"
   val parserCombinators = "org.scala-lang.modules"     %% "scala-parser-combinators" % "1.0.4"
   val apacheCommons     = "commons-lang"               % "commons-lang"              % "2.6"
 

@@ -135,13 +135,13 @@ class PortedFiltersSpec extends FlatSpec with Matchers with ApiSpecBase {
 
     filterOnNotNull.toString() should be("""{"data":{"scalarModels":[{"idTest":"id2"}]}}""")
 
-    val filterOnInNull = server.query(query = """{scalarModels(where: {optString_in: null}){optBoolean}}""", project = project)
+    val filterOnInNull = server.query(query = """{scalarModels(where: {optString_in: null}){idTest}}""", project = project)
 
-    filterOnInNull.toString() should be("""{"data":{"scalarModels":[]}}""")
+    filterOnInNull.toString() should be("""{"data":{"scalarModels":[{"idTest":"id1"},{"idTest":"id3"}]}}""")
 
-    val filterOnNotInNull = server.query(query = """{scalarModels(where: {optString_not_in: null}){optBoolean}}""", project = project)
+    val filterOnNotInNull = server.query(query = """{scalarModels(where: {optString_not_in: null}){idTest}}""", project = project)
 
-    filterOnNotInNull.toString() should be("""{"data":{"scalarModels":[]}}""")
+    filterOnNotInNull.toString() should be("""{"data":{"scalarModels":[{"idTest":"id2"}]}}""")
 
   }
 

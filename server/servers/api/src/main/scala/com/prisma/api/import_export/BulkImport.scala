@@ -70,7 +70,7 @@ class BulkImport(project: Project)(implicit apiDependencies: ApiDependencies) {
     val fieldName    = jsObject.value.filterKeys(k => k != "_typeName" && k != "id").keys.head
     val jsonForField = jsObject.value(fieldName)
     val model        = project.schema.getModelByName_!(typeName)
-    val field        = model.getFieldByName_!(fieldName)
+    val field        = model.getScalarFieldByName_!(fieldName)
     val tableName    = s"${model.dbName}_${field.dbName}"
     val gcValue      = GCValueJsonFormatter.readListGCValue(field)(jsonForField).get
     ImportList(ImportIdentifier(typeName, id), tableName, gcValue)
@@ -103,9 +103,9 @@ class BulkImport(project: Project)(implicit apiDependencies: ApiDependencies) {
       }
 
       val fromModel                                                 = project.schema.getModelByName_!(left.identifier.typeName)
-      val fromField                                                 = fromModel.getFieldByName_!(left.fieldName.get)
-      val relationSide: com.prisma.shared.models.RelationSide.Value = fromField.relationSide.get
-      val relation: Relation                                        = fromField.relation.get
+      val fromField                                                 = fromModel.getRelationFieldByName_!(left.fieldName.get)
+      val relationSide: com.prisma.shared.models.RelationSide.Value = fromField.relationSide
+      val relation: Relation                                        = fromField.relation
       val aValue: String                                            = if (relationSide == RelationSide.A) left.identifier.id else right.identifier.id
       val bValue: String                                            = if (relationSide == RelationSide.A) right.identifier.id else left.identifier.id
       CreateRelationRow(project, relation, aValue, bValue)

@@ -43,6 +43,9 @@ static=$(printf "    - label: \":mysql: MySql API connector\"
     - label: \":scala: subscriptions\"
       command: cd server && ./.buildkite/scripts/test.sh subscriptions mysql
 
+    - label: \":scala: shared-models\"
+      command: cd server && ./.buildkite/scripts/test.sh shared-models mysql
+
 ")
 
 dynamic=""

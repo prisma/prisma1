@@ -56,7 +56,7 @@ package object ImportExport {
     lazy val currentTable: String = s"${currentModel}_$currentField"
 
     lazy val currentModelModel = dataResolver.project.schema.getModelByName_!(currentModel)
-    lazy val currentFieldModel = currentModelModel.getFieldByName_!(currentField)
+    lazy val currentFieldModel = currentModelModel.getScalarFieldByName_!(currentField)
   }
 
   case class RelationInfo(dataResolver: DataResolver, relations: List[(RelationData, Int)], cursor: Cursor) extends ExportInfo {
@@ -72,10 +72,10 @@ package object ImportExport {
   def toRelationData(r: Relation, project: Project): RelationData = {
     RelationData(
       r.relationTableName,
-      r.getModelB_!(project.schema).name,
-      r.getModelBField(project.schema).map(_.name),
-      r.getModelA_!(project.schema).name,
-      r.getModelAField(project.schema).map(_.name)
+      r.modelB.name,
+      if (r.modelBField.isHidden) None else Some(r.modelBField.name),
+      r.modelA.name,
+      if (r.modelAField.isHidden) None else Some(r.modelAField.name)
     )
   }
 

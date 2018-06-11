@@ -1,7 +1,6 @@
 package com.prisma.api.schema
 
-import com.prisma.api.connector.Types.DataItemFilterCollection
-import com.prisma.api.connector.{OrderBy, QueryArguments, SortOrder}
+import com.prisma.api.connector.{Filter, OrderBy, QueryArguments, SortOrder}
 import com.prisma.shared.models
 import com.prisma.shared.models.Model
 import sangria.schema.{EnumType, EnumValue, _}
@@ -35,16 +34,5 @@ object SangriaQueryArguments {
     val utils                              = FilterObjectTypeBuilder(model, project)
     val filterObject: InputObjectType[Any] = utils.internalSubscriptionFilterObjectType
     Argument(name, OptionInputType(filterObject), description = "")
-  }
-
-  // use given arguments if they exist or use sensible default values
-  def createSimpleQueryArguments(skipOpt: Option[Int],
-                                 after: Option[String],
-                                 first: Option[Int],
-                                 before: Option[String],
-                                 last: Option[Int],
-                                 filterOpt: Option[DataItemFilterCollection],
-                                 orderByOpt: Option[OrderBy]) = {
-    QueryArguments(skipOpt, after, first, before, last, filterOpt, orderByOpt)
   }
 }
