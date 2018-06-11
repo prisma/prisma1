@@ -15,9 +15,21 @@ import scala.util.control.NonFatal
 import scala.util.{Failure, Success}
 
 /**
+  * String <-> GC Value - This combines the StringSangriaConverter and GCSangriaValueConverter for convenience.
+  */
+case class GCStringConverter(typeIdentifier: TypeIdentifier, isList: Boolean) extends GCConverter[String] {
+
+  override def toGCValue(t: String): Or[GCValue, InvalidValueForScalarType] =
+    for {
+      sangriaValue <- StringSangriaValueConverter(typeIdentifier, isList).fromAbleToHandleJsonLists(t)
+      result       <- GCSangriaValueConverter(typeIdentifier, isList).toGCValue(sangriaValue)
+    } yield result
+}
+
+/**
   * SangriaAST <-> GCValue - This is used to transform Sangria parsed values into GCValue and back
   */
-case class GCSangriaValueConverter(typeIdentifier: TypeIdentifier, isList: Boolean) extends GCConverter[SangriaValue] {
+private case class GCSangriaValueConverter(typeIdentifier: TypeIdentifier, isList: Boolean) extends GCConverter[SangriaValue] {
   import OtherGCStuff._
 
   override def toGCValue(t: SangriaValue): Or[GCValue, InvalidValueForScalarType] = {
@@ -49,12 +61,20 @@ case class GCSangriaValueConverter(typeIdentifier: TypeIdentifier, isList: Boole
 /**
   * String <-> SangriaAST - This is reads and writes Default values we get/need as String.
   */
-class MyQueryParser(val input: ParserInput) extends Parser with Tokens with Ignored with Operations with Fragments with Values with Directives with Types
+private class MyQueryParser(val input: ParserInput)
+    extends Parser
+    with Tokens
+    with Ignored
+    with Operations
+    with Fragments
+    with Values
+    with Directives
+    with Types
 
-case class StringSangriaValueConverter(typeIdentifier: TypeIdentifier, isList: Boolean) {
+private case class StringSangriaValueConverter(typeIdentifier: TypeIdentifier, isList: Boolean) {
   import OtherGCStuff._
 
-  def from(string: String): Or[SangriaValue, InvalidValueForScalarType] = {
+  private def from(string: String): Or[SangriaValue, InvalidValueForScalarType] = {
 
     val escapedIfNecessary = typeIdentifier match {
       case _ if string == "null"               => string
@@ -68,12 +88,12 @@ case class StringSangriaValueConverter(typeIdentifier: TypeIdentifier, isList: B
     val parser = new MyQueryParser(ParserInput(escapedIfNecessary))
 
     parser.Value.run() match {
-      case Failure(e) =>
-        e.printStackTrace() //todo is this intentional
-        Bad(InvalidValueForScalarType(string, typeIdentifier.toString))
+      case Failure(e) => Bad(InvalidValueForScalarType(string, typeIdentifier.toString))
       case Success(x) => Good(x)
     }
   }
+
+  private def escape(str: String): String = "\"" + StringEscapeUtils.escapeJava(str) + "\""
 
   def fromAbleToHandleJsonLists(string: String): Or[SangriaValue, InvalidValueForScalarType] = {
 
@@ -92,17 +112,4 @@ case class StringSangriaValueConverter(typeIdentifier: TypeIdentifier, isList: B
     }
   }
 
-  private def escape(str: String): String = "\"" + StringEscapeUtils.escapeJava(str) + "\""
-}
-
-/**
-  * String <-> GC Value - This combines the StringSangriaConverter and GCSangriaValueConverter for convenience.
-  */
-case class GCStringConverter(typeIdentifier: TypeIdentifier, isList: Boolean) extends GCConverter[String] {
-
-  override def toGCValue(t: String): Or[GCValue, InvalidValueForScalarType] =
-    for {
-      sangriaValue <- StringSangriaValueConverter(typeIdentifier, isList).fromAbleToHandleJsonLists(t)
-      result       <- GCSangriaValueConverter(typeIdentifier, isList).toGCValue(sangriaValue)
-    } yield result
 }
