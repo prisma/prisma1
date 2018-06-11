@@ -44,7 +44,7 @@ private case class GCSangriaValueConverter(typeIdentifier: TypeIdentifier, isLis
         case (x: FloatValue, TypeIdentifier.Float)                                               => FloatGCValue(x.value)
         case (x: BooleanValue, TypeIdentifier.Boolean)                                           => BooleanGCValue(x.value)
         case (x: StringValue, TypeIdentifier.DateTime)                                           => DateTimeGCValue(new DateTime(x.value, DateTimeZone.UTC))
-        case (x: StringValue, TypeIdentifier.GraphQLID)                                          => IdGCValue(x.value)
+        case (x: StringValue, TypeIdentifier.Cuid)                                               => CuidGCValue(x.value)
         case (x: EnumValue, TypeIdentifier.Enum)                                                 => EnumGCValue(x.value)
         case (x: StringValue, TypeIdentifier.Json)                                               => JsonGCValue(Json.parse(x.value))
         case (x: ListValue, _) if isList                                                         => sequence(x.values.map(this.toGCValue)).map(seq => ListGCValue(seq)).get
@@ -77,12 +77,12 @@ private case class StringSangriaValueConverter(typeIdentifier: TypeIdentifier, i
   private def from(string: String): Or[SangriaValue, InvalidValueForScalarType] = {
 
     val escapedIfNecessary = typeIdentifier match {
-      case _ if string == "null"               => string
-      case TypeIdentifier.DateTime if !isList  => escape(string)
-      case TypeIdentifier.String if !isList    => escape(string)
-      case TypeIdentifier.GraphQLID if !isList => escape(string)
-      case TypeIdentifier.Json                 => escape(string)
-      case _                                   => string
+      case _ if string == "null"              => string
+      case TypeIdentifier.DateTime if !isList => escape(string)
+      case TypeIdentifier.String if !isList   => escape(string)
+      case TypeIdentifier.Cuid if !isList     => escape(string)
+      case TypeIdentifier.Json                => escape(string)
+      case _                                  => string
     }
 
     val parser = new MyQueryParser(ParserInput(escapedIfNecessary))

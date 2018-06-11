@@ -1,7 +1,7 @@
 package com.prisma.api.resolver
 
 import com.prisma.api.connector.{NodeSelector, PrismaNode, QueryArguments}
-import com.prisma.gc_values.IdGCValue
+import com.prisma.gc_values.CuidGCValue
 import com.prisma.shared.models.{Field, Model, RelationField, ScalarField}
 import sangria.execution.deferred.Deferred
 
@@ -31,27 +31,28 @@ object DeferredTypes {
 
   trait RelatedArgs {
     def relationField: RelationField
-    def parentNodeId: IdGCValue
+    def parentNodeId: CuidGCValue
     def args: Option[QueryArguments]
   }
 
   trait RelationDeferred[+T] extends RelatedArgs with Deferred[T] {
     def relationField: RelationField
-    def parentNodeId: IdGCValue
+    def parentNodeId: CuidGCValue
     def args: Option[QueryArguments]
   }
 
   type OneDeferredResultType = Option[PrismaNode]
 
-  case class OneDeferred(model: Model, where: NodeSelector)                                                     extends Deferred[OneDeferredResultType]
-  case class ToOneDeferred(relationField: RelationField, parentNodeId: IdGCValue, args: Option[QueryArguments]) extends RelationDeferred[OneDeferredResultType]
+  case class OneDeferred(model: Model, where: NodeSelector) extends Deferred[OneDeferredResultType]
+  case class ToOneDeferred(relationField: RelationField, parentNodeId: CuidGCValue, args: Option[QueryArguments])
+      extends RelationDeferred[OneDeferredResultType]
 
-  case class ToManyDeferred(relationField: RelationField, parentNodeId: IdGCValue, args: Option[QueryArguments])
+  case class ToManyDeferred(relationField: RelationField, parentNodeId: CuidGCValue, args: Option[QueryArguments])
       extends RelationDeferred[RelayConnectionOutputType]
 
   type SimpleConnectionOutputType   = Seq[PrismaNode]
   type RelayConnectionOutputType    = IdBasedConnection[PrismaNode]
   type ScalarListDeferredResultType = Vector[Any]
 
-  case class ScalarListDeferred(model: Model, field: ScalarField, nodeId: IdGCValue) extends Deferred[ScalarListDeferredResultType]
+  case class ScalarListDeferred(model: Model, field: ScalarField, nodeId: CuidGCValue) extends Deferred[ScalarListDeferredResultType]
 }

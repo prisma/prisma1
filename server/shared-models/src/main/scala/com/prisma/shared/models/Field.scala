@@ -28,16 +28,18 @@ object TypeIdentifier {
   object Enum                       extends ScalarTypeIdentifier { def code = "Enum" }
   object Json                       extends ScalarTypeIdentifier { def code = "Json" }
   object DateTime                   extends ScalarTypeIdentifier { def code = "DateTime" }
-  object GraphQLID                  extends ScalarTypeIdentifier { def code = "GraphQLID" }
-  object UUID                       extends ScalarTypeIdentifier { def code = "UUID" }
+
+  sealed trait IdTypeIdentifier extends ScalarTypeIdentifier
+  object Cuid                   extends IdTypeIdentifier { def code = "GraphQLID" }
+  object UUID                   extends IdTypeIdentifier { def code = "UUID" }
 
   // compatibility with Enumeration interface
   type Value = TypeIdentifier
 
-  private val instances = Vector(Relation, String, Int, Float, Boolean, Enum, Json, DateTime, GraphQLID)
+  private val instances = Vector(Relation, String, Int, Float, Boolean, Enum, Json, DateTime, Cuid)
 
   def withNameHacked(name: String) = name match {
-    case "ID" => GraphQLID
+    case "ID" => Cuid
     case _    => withName(name)
   }
   def withName(name: String): TypeIdentifier            = withNameOpt(name).getOrElse(throw new NoSuchElementException(s"No value found for '$name'"))

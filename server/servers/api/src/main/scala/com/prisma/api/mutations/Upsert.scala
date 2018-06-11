@@ -32,7 +32,7 @@ case class Upsert(
   }
 
   val updatePath = Path.empty(outerWhere)
-  val createPath = Path.empty(NodeSelector.forId(model, Cuid.createCuid()))
+  val createPath = Path.empty(NodeSelector.forCuid(model, Cuid.createCuid()))
 
   override def prepareMutactions: Future[PreparedMutactions] = {
     val sqlMutactions          = DatabaseMutactions(project).getMutactionsForUpsert(createPath, updatePath, coolArgs)

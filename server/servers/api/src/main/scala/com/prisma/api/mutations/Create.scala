@@ -5,7 +5,7 @@ import akka.stream.ActorMaterializer
 import com.prisma.api.ApiDependencies
 import com.prisma.api.connector.{CreateDataItemResult, DataResolver, NodeSelector, Path}
 import com.prisma.api.mutactions.{DatabaseMutactions, ServerSideSubscriptions, SubscriptionEvents}
-import com.prisma.gc_values.IdGCValue
+import com.prisma.gc_values.CuidGCValue
 import com.prisma.shared.models.IdType.Id
 import com.prisma.shared.models._
 import com.prisma.util.coolArgs.CoolArgs
@@ -31,7 +31,7 @@ case class Create(
 
   val coolArgs: CoolArgs = CoolArgs.fromSchemaArgs(args.raw)
 
-  val path = Path.empty(NodeSelector.forId(model, id))
+  val path = Path.empty(NodeSelector.forCuid(model, id))
 
   def prepareMutactions(): Future[PreparedMutactions] = {
     val createMutactionsResult = DatabaseMutactions(project).getMutactionsForCreate(path, coolArgs)
@@ -48,7 +48,7 @@ case class Create(
 
   override def getReturnValue(results: MutactionResults): Future[ReturnValueResult] = {
     val createdItem = results.databaseResults.collectFirst { case x: CreateDataItemResult => x }
-    val idGcValue   = IdGCValue(id)
+    val idGcValue   = CuidGCValue(id)
     for {
       returnValue <- returnValueByUnique(NodeSelector.forIdGCValue(model, createdItem.map(_.id).getOrElse(idGcValue)))
       prismaNode  = returnValue.asInstanceOf[ReturnValue].prismaNode

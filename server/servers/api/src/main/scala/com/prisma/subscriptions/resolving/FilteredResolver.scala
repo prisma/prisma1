@@ -2,7 +2,7 @@ package com.prisma.subscriptions.resolving
 
 import com.prisma.api.connector._
 import com.prisma.api.schema.ObjectTypeBuilder
-import com.prisma.gc_values.IdGCValue
+import com.prisma.gc_values.CuidGCValue
 import com.prisma.shared.models.Model
 import sangria.schema.Context
 
@@ -29,7 +29,7 @@ object FilteredResolver {
         case _               => true
       }
 
-    val filterValues = filterInput.filters.filter(removeTopLevelIdFilter) ++ Vector(ScalarFilter(model.idField_!, Equals(IdGCValue(id))))
+    val filterValues = filterInput.filters.filter(removeTopLevelIdFilter) ++ Vector(ScalarFilter(model.idField_!, Equals(CuidGCValue(id))))
     val filter       = AndFilter(filterValues)
     dataResolver.resolveByModel(model, Some(QueryArguments.withFilter(filter = filter))).map(_.nodes.headOption)
   }

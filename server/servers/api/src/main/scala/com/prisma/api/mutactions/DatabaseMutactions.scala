@@ -137,7 +137,7 @@ case class DatabaseMutactions(project: Project) {
       triggeredFromCreate: Boolean
   ): Vector[DatabaseMutaction] = {
     nestedMutation.creates.flatMap { create =>
-      val extendedPath            = extend(path, field, create).lastEdgeToNodeEdge(NodeSelector.forId(model, createCuid()))
+      val extendedPath            = extend(path, field, create).lastEdgeToNodeEdge(NodeSelector.forCuid(model, createCuid()))
       val (nonListArgs, listArgs) = create.data.getCreateArgs(extendedPath)
 
       val createMutactions = List(CreateDataItem(project, extendedPath, nonListArgs, listArgs))
@@ -190,7 +190,7 @@ case class DatabaseMutactions(project: Project) {
   def getMutactionsForNestedUpsertMutation(nestedMutation: NestedMutations, path: Path, field: RelationField): Vector[DatabaseMutaction] = {
     nestedMutation.upserts.flatMap { upsert =>
       val extendedPath = extend(path, field, upsert)
-      val createWhere  = NodeSelector.forId(extendedPath.lastModel, createCuid())
+      val createWhere  = NodeSelector.forCuid(extendedPath.lastModel, createCuid())
 
       val pathForUpdate = upsert match {
         case upsert: UpsertByWhere => extendedPath.lastEdgeToNodeEdge(upsert.where)

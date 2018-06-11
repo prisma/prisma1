@@ -71,7 +71,7 @@ case class PostgresApiDatabaseQueryBuilder(
   def batchSelectAllFromRelatedModel(
       schema: Schema,
       fromField: RelationField,
-      fromModelIds: Vector[IdGCValue],
+      fromModelIds: Vector[CuidGCValue],
       args: Option[QueryArguments]
   ): DBIO[Vector[ResolverResult[PrismaNodeWithParent]]] = {
     SimpleDBIO[Vector[ResolverResult[PrismaNodeWithParent]]] { ctx =>
@@ -131,14 +131,14 @@ case class PostgresApiDatabaseQueryBuilder(
 
       val convertedValues = result
         .groupBy(_.nodeId)
-        .map { case (id, values) => ScalarListValues(IdGCValue(id), ListGCValue(values.sortBy(_.position).map(_.value))) }
+        .map { case (id, values) => ScalarListValues(CuidGCValue(id), ListGCValue(values.sortBy(_.position).map(_.value))) }
         .toVector
 
       ResolverResult(convertedValues)
     }
   }
 
-  def selectFromScalarList(modelName: String, field: ScalarField, nodeIds: Vector[IdGCValue]): DBIO[Vector[ScalarListValues]] = {
+  def selectFromScalarList(modelName: String, field: ScalarField, nodeIds: Vector[CuidGCValue]): DBIO[Vector[ScalarListValues]] = {
     SimpleDBIO[Vector[ScalarListValues]] { ctx =>
       val placeHolders = queryPlaceHolders(nodeIds)
       val q            = s"""select "nodeId", "position", "value" from "$schemaName"."${modelName}_${field.dbName}" where "nodeId" in """ + placeHolders
@@ -150,7 +150,7 @@ case class PostgresApiDatabaseQueryBuilder(
       val scalarListElements = rs.as(readsScalarListField(field))
 
       val grouped: Map[Id, Vector[ScalarListElement]] = scalarListElements.groupBy(_.nodeId)
-      grouped.map { case (id, values) => ScalarListValues(IdGCValue(id), ListGCValue(values.sortBy(_.position).map(_.value))) }.toVector
+      grouped.map { case (id, values) => ScalarListValues(CuidGCValue(id), ListGCValue(values.sortBy(_.position).map(_.value))) }.toVector
     }
   }
 

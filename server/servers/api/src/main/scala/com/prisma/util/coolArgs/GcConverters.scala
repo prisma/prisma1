@@ -34,7 +34,7 @@ case class GCAnyConverter(typeIdentifier: TypeIdentifier, isList: Boolean) exten
         case (x: Boolean, TypeIdentifier.Boolean)                                     => BooleanGCValue(x)
         case (x: String, TypeIdentifier.DateTime)                                     => DateTimeGCValue(new DateTime(x))
         case (x: DateTime, TypeIdentifier.DateTime)                                   => DateTimeGCValue(x)
-        case (x: String, TypeIdentifier.GraphQLID)                                    => IdGCValue(x)
+        case (x: String, TypeIdentifier.Cuid)                                         => CuidGCValue(x)
         case (x: String, TypeIdentifier.Enum)                                         => EnumGCValue(x)
         case (x: JsObject, TypeIdentifier.Json)                                       => JsonGCValue(x)
         case (x: String, TypeIdentifier.Json)                                         => JsonGCValue(Json.parse(x))

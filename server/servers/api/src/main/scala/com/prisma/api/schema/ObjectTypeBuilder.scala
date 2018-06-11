@@ -85,7 +85,7 @@ class ObjectTypeBuilder(
           .map(mapClientField(model))
       },
       interfaces = {
-        val idFieldHasRightType = model.idField.exists(f => f.typeIdentifier == TypeIdentifier.String || f.typeIdentifier == TypeIdentifier.GraphQLID)
+        val idFieldHasRightType = model.idField.exists(f => f.typeIdentifier == TypeIdentifier.String || f.typeIdentifier == TypeIdentifier.Cuid)
         if (model.hasVisibleIdField && idFieldHasRightType) {
           nodeInterface.toList
         } else {
@@ -115,15 +115,15 @@ class ObjectTypeBuilder(
       case f: RelationField => resolveConnection(f)
       case f: ScalarField =>
         f.typeIdentifier match {
-          case TypeIdentifier.String    => StringType
-          case TypeIdentifier.Int       => IntType
-          case TypeIdentifier.Float     => FloatType
-          case TypeIdentifier.Boolean   => BooleanType
-          case TypeIdentifier.GraphQLID => IDType
-          case TypeIdentifier.UUID      => UUIDType
-          case TypeIdentifier.DateTime  => DateTimeType
-          case TypeIdentifier.Json      => JsonType
-          case TypeIdentifier.Enum      => SchemaBuilderUtils.mapEnumFieldToInputType(f)
+          case TypeIdentifier.String   => StringType
+          case TypeIdentifier.Int      => IntType
+          case TypeIdentifier.Float    => FloatType
+          case TypeIdentifier.Boolean  => BooleanType
+          case TypeIdentifier.Cuid     => IDType
+          case TypeIdentifier.UUID     => UUIDType
+          case TypeIdentifier.DateTime => DateTimeType
+          case TypeIdentifier.Json     => JsonType
+          case TypeIdentifier.Enum     => SchemaBuilderUtils.mapEnumFieldToInputType(f)
         }
     }
 

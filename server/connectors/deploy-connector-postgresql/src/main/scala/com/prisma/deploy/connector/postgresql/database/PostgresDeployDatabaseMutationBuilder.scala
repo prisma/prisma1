@@ -149,7 +149,7 @@ object PostgresDeployDatabaseMutationBuilder {
   }
 
   def createRelationColumn(projectId: String, model: Model, references: Model, column: String) = {
-    val sqlType    = sqlTypeForScalarTypeIdentifier(TypeIdentifier.GraphQLID)
+    val sqlType    = sqlTypeForScalarTypeIdentifier(TypeIdentifier.Cuid)
     val isRequired = false //field.exists(_.isRequired)
     val nullString = if (isRequired) "NOT NULL" else "NULL"
     val addColumn  = sqlu"""ALTER TABLE "#$projectId"."#${model.dbName}" ADD COLUMN "#$column" #$sqlType #$nullString
@@ -159,15 +159,15 @@ object PostgresDeployDatabaseMutationBuilder {
 
   private def sqlTypeForScalarTypeIdentifier(typeIdentifier: ScalarTypeIdentifier): String = {
     typeIdentifier match {
-      case TypeIdentifier.String    => "text"
-      case TypeIdentifier.Boolean   => "boolean"
-      case TypeIdentifier.Int       => "int"
-      case TypeIdentifier.Float     => "Decimal(65,30)"
-      case TypeIdentifier.GraphQLID => "varchar (25)"
-      case TypeIdentifier.Enum      => "text"
-      case TypeIdentifier.Json      => "text"
-      case TypeIdentifier.DateTime  => "timestamp (3)"
-      case TypeIdentifier.UUID      => "uuid"
+      case TypeIdentifier.String   => "text"
+      case TypeIdentifier.Boolean  => "boolean"
+      case TypeIdentifier.Int      => "int"
+      case TypeIdentifier.Float    => "Decimal(65,30)"
+      case TypeIdentifier.Cuid     => "varchar (25)"
+      case TypeIdentifier.Enum     => "text"
+      case TypeIdentifier.Json     => "text"
+      case TypeIdentifier.DateTime => "timestamp (3)"
+      case TypeIdentifier.UUID     => "uuid"
     }
   }
 

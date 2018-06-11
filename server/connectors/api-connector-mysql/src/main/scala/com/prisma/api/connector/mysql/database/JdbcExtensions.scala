@@ -34,7 +34,7 @@ object JdbcExtensions {
       case BooleanGCValue(boolean)   => ps.setBoolean(index, boolean)
       case IntGCValue(int)           => ps.setInt(index, int)
       case FloatGCValue(float)       => ps.setDouble(index, float)
-      case IdGCValue(id)             => ps.setString(index, id)
+      case CuidGCValue(id)           => ps.setString(index, id)
       case DateTimeGCValue(dateTime) => ps.setTimestamp(index, timeStampUTC(dateTime))
       case EnumGCValue(enum)         => ps.setString(index, enum)
       case JsonGCValue(json)         => ps.setString(index, json.toString)
@@ -45,20 +45,21 @@ object JdbcExtensions {
 
   implicit class ResultSetExtensions(val resultSet: ResultSet) extends AnyVal {
 
-    def getId                     = IdGCValue(resultSet.getString("id"))
-    def getAsID(column: String)   = IdGCValue(resultSet.getString(column))
-    def getParentId(side: String) = IdGCValue(resultSet.getString("__Relation__" + side))
+    def getId                     = CuidGCValue(resultSet.getString("id"))
+    def getAsID(column: String)   = CuidGCValue(resultSet.getString(column))
+    def getParentId(side: String) = CuidGCValue(resultSet.getString("__Relation__" + side))
 
     def getGcValue(name: String, typeIdentifier: TypeIdentifier.Value): GCValue = {
       val dateTimeFormat = DateTimeFormat.forPattern("yyyy-MM-dd HH:mm:ss.SSS").withZoneUTC()
 
       val gcValue: GCValue = typeIdentifier match {
-        case TypeIdentifier.String    => StringGCValue(resultSet.getString(name))
-        case TypeIdentifier.GraphQLID => IdGCValue(resultSet.getString(name))
-        case TypeIdentifier.Enum      => EnumGCValue(resultSet.getString(name))
-        case TypeIdentifier.Int       => IntGCValue(resultSet.getInt(name))
-        case TypeIdentifier.Float     => FloatGCValue(resultSet.getDouble(name))
-        case TypeIdentifier.Boolean   => BooleanGCValue(resultSet.getBoolean(name))
+        case TypeIdentifier.String  => StringGCValue(resultSet.getString(name))
+        case TypeIdentifier.Cuid    => CuidGCValue(resultSet.getString(name))
+        case TypeIdentifier.UUID    => UuidGCValue.parse(resultSet.getString(name)).get
+        case TypeIdentifier.Enum    => EnumGCValue(resultSet.getString(name))
+        case TypeIdentifier.Int     => IntGCValue(resultSet.getInt(name))
+        case TypeIdentifier.Float   => FloatGCValue(resultSet.getDouble(name))
+        case TypeIdentifier.Boolean => BooleanGCValue(resultSet.getBoolean(name))
         case TypeIdentifier.DateTime =>
           val sqlType = resultSet.getString(name)
           if (sqlType != null) {

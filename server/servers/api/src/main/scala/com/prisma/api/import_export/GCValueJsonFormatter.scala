@@ -21,7 +21,7 @@ object GCValueJsonFormatter {
 
     override def writes(gcValue: GCValue): JsValue = gcValue match {
       case v: StringGCValue   => JsString(v.value)
-      case v: IdGCValue       => JsString(v.value)
+      case v: CuidGCValue     => JsString(v.value)
       case v: UuidGCValue     => JsString(v.value.toString)
       case v: EnumGCValue     => JsString(v.value)
       case v: DateTimeGCValue => JsString(isoFormatter.print(v.value.withZone(DateTimeZone.UTC)))
@@ -85,10 +85,10 @@ object GCValueJsonFormatter {
     }
   }
 
-  implicit object GraphQLIDValueReads extends Reads[IdGCValue] {
+  implicit object GraphQLIDValueReads extends Reads[CuidGCValue] {
     override def reads(json: JsValue) = {
       json.validate[JsString] match {
-        case JsSuccess(json, _) => JsSuccess(IdGCValue(json.value))
+        case JsSuccess(json, _) => JsSuccess(CuidGCValue(json.value))
         case e: JsError         => e
       }
     }
@@ -98,7 +98,7 @@ object GCValueJsonFormatter {
     override def reads(json: JsValue) = {
       json.validate[JsString] match {
         case JsSuccess(json, _) =>
-          UUIDUtil.parse(json.value) match {
+          UuidGCValue.parse(json.value) match {
             case Success(x) => JsSuccess(x)
             case Failure(e) => JsError(e.getMessage)
           }
@@ -175,15 +175,15 @@ object GCValueJsonFormatter {
 
   def readLeafGCValueForField(field: ScalarField)(json: JsValue): JsResult[LeafGCValue] = {
     field.typeIdentifier match {
-      case TypeIdentifier.String    => json.validate[StringGCValue]
-      case TypeIdentifier.GraphQLID => json.validate[IdGCValue]
-      case TypeIdentifier.UUID      => json.validate[UuidGCValue]
-      case TypeIdentifier.Enum      => readEnumGCValue(field.enum.get)(json)
-      case TypeIdentifier.DateTime  => json.validate[DateTimeGCValue]
-      case TypeIdentifier.Boolean   => json.validate[BooleanGCValue]
-      case TypeIdentifier.Int       => json.validate[IntGCValue]
-      case TypeIdentifier.Float     => json.validate[FloatGCValue]
-      case TypeIdentifier.Json      => json.validate[JsonGCValue]
+      case TypeIdentifier.String   => json.validate[StringGCValue]
+      case TypeIdentifier.Cuid     => json.validate[CuidGCValue]
+      case TypeIdentifier.UUID     => json.validate[UuidGCValue]
+      case TypeIdentifier.Enum     => readEnumGCValue(field.enum.get)(json)
+      case TypeIdentifier.DateTime => json.validate[DateTimeGCValue]
+      case TypeIdentifier.Boolean  => json.validate[BooleanGCValue]
+      case TypeIdentifier.Int      => json.validate[IntGCValue]
+      case TypeIdentifier.Float    => json.validate[FloatGCValue]
+      case TypeIdentifier.Json     => json.validate[JsonGCValue]
     }
   }
 

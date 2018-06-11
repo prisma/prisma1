@@ -176,7 +176,7 @@ class ScalarListsQuerySpec extends FlatSpec with Matchers with ApiSpecBase {
     val outputValue = """"someID123""""
 
     val project = SchemaDsl.fromBuilder { schema =>
-      schema.model("Model").field(fieldName, _.GraphQLID, isList = true)
+      schema.model("Model").field(fieldName, _.Cuid, isList = true)
     }
 
     verifySuccessfulSetAndRetrieval(fieldName, inputValue, outputValue, project)

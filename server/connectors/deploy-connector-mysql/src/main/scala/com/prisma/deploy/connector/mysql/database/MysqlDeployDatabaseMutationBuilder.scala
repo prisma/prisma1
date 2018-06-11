@@ -7,7 +7,7 @@ import slick.jdbc.MySQLProfile.api._
 object MySqlDeployDatabaseMutationBuilder {
 
   def createClientDatabaseForProject(projectId: String) = {
-    val idCharset = charsetTypeForScalarTypeIdentifier(isList = false, TypeIdentifier.GraphQLID)
+    val idCharset = charsetTypeForScalarTypeIdentifier(isList = false, TypeIdentifier.Cuid)
     DBIO.seq(
       sqlu"""CREATE SCHEMA `#$projectId` DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci; """,
       sqlu"""CREATE TABLE `#$projectId`.`_RelayId` (
@@ -34,7 +34,7 @@ object MySqlDeployDatabaseMutationBuilder {
   def dropScalarListTable(projectId: String, modelName: String, fieldName: String) = sqlu"DROP TABLE `#$projectId`.`#${modelName}_#${fieldName}`"
 
   def createTable(projectId: String, name: String) = {
-    val idCharset = charsetTypeForScalarTypeIdentifier(isList = false, TypeIdentifier.GraphQLID)
+    val idCharset = charsetTypeForScalarTypeIdentifier(isList = false, TypeIdentifier.Cuid)
 
     sqlu"""CREATE TABLE `#$projectId`.`#$name`
     (`id` CHAR(25) #$idCharset NOT NULL,
@@ -44,7 +44,7 @@ object MySqlDeployDatabaseMutationBuilder {
   }
 
   def createScalarListTable(projectId: String, modelName: String, fieldName: String, typeIdentifier: ScalarTypeIdentifier) = {
-    val idCharset     = charsetTypeForScalarTypeIdentifier(isList = false, TypeIdentifier.GraphQLID)
+    val idCharset     = charsetTypeForScalarTypeIdentifier(isList = false, TypeIdentifier.Cuid)
     val sqlType       = sqlTypeForScalarTypeIdentifier(false, typeIdentifier)
     val charsetString = charsetTypeForScalarTypeIdentifier(false, typeIdentifier)
     val indexSize = sqlType match {
@@ -140,7 +140,7 @@ object MySqlDeployDatabaseMutationBuilder {
   }
 
   def createRelationTable(projectId: String, tableName: String, aTableName: String, bTableName: String) = {
-    val idCharset = charsetTypeForScalarTypeIdentifier(isList = false, TypeIdentifier.GraphQLID)
+    val idCharset = charsetTypeForScalarTypeIdentifier(isList = false, TypeIdentifier.Cuid)
 
     sqlu"""CREATE TABLE `#$projectId`.`#$tableName` (`id` CHAR(25) #$idCharset NOT NULL,
            PRIMARY KEY (`id`), UNIQUE INDEX `id_UNIQUE` (`id` ASC),
@@ -164,15 +164,15 @@ object MySqlDeployDatabaseMutationBuilder {
     }
 
     typeIdentifier match {
-      case TypeIdentifier.String    => "mediumtext"
-      case TypeIdentifier.Boolean   => "boolean"
-      case TypeIdentifier.Int       => "int"
-      case TypeIdentifier.Float     => "Decimal(65,30)"
-      case TypeIdentifier.GraphQLID => "char(25)"
-      case TypeIdentifier.UUID      => "char(36)" // TODO: verify whether this is the right thing to do
-      case TypeIdentifier.Enum      => "varchar(191)"
-      case TypeIdentifier.Json      => "mediumtext"
-      case TypeIdentifier.DateTime  => "datetime(3)"
+      case TypeIdentifier.String   => "mediumtext"
+      case TypeIdentifier.Boolean  => "boolean"
+      case TypeIdentifier.Int      => "int"
+      case TypeIdentifier.Float    => "Decimal(65,30)"
+      case TypeIdentifier.Cuid     => "char(25)"
+      case TypeIdentifier.UUID     => "char(36)" // TODO: verify whether this is the right thing to do
+      case TypeIdentifier.Enum     => "varchar(191)"
+      case TypeIdentifier.Json     => "mediumtext"
+      case TypeIdentifier.DateTime => "datetime(3)"
     }
   }
   def charsetTypeForScalarTypeIdentifier(isList: Boolean, typeIdentifier: ScalarTypeIdentifier): String = {
@@ -181,15 +181,15 @@ object MySqlDeployDatabaseMutationBuilder {
     }
 
     typeIdentifier match {
-      case TypeIdentifier.String    => "CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci"
-      case TypeIdentifier.Boolean   => ""
-      case TypeIdentifier.Int       => ""
-      case TypeIdentifier.Float     => ""
-      case TypeIdentifier.GraphQLID => "CHARACTER SET utf8 COLLATE utf8_general_ci"
-      case TypeIdentifier.UUID      => "CHARACTER SET utf8 COLLATE utf8_general_ci"
-      case TypeIdentifier.Enum      => "CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci"
-      case TypeIdentifier.Json      => "CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci"
-      case TypeIdentifier.DateTime  => ""
+      case TypeIdentifier.String   => "CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci"
+      case TypeIdentifier.Boolean  => ""
+      case TypeIdentifier.Int      => ""
+      case TypeIdentifier.Float    => ""
+      case TypeIdentifier.Cuid     => "CHARACTER SET utf8 COLLATE utf8_general_ci"
+      case TypeIdentifier.UUID     => "CHARACTER SET utf8 COLLATE utf8_general_ci"
+      case TypeIdentifier.Enum     => "CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci"
+      case TypeIdentifier.Json     => "CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci"
+      case TypeIdentifier.DateTime => ""
     }
   }
 
