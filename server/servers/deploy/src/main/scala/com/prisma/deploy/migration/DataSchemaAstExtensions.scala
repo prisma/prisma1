@@ -69,7 +69,7 @@ object DataSchemaAstExtensions {
 
   implicit class CoolField(val fieldDefinition: FieldDefinition) extends AnyVal {
 
-    def hasScalarType: Boolean = TypeIdentifier.withNameOpt(typeName).isDefined
+    def hasScalarType: Boolean = TypeIdentifier.withNameOpt(typeName).exists(_.isInstanceOf[ScalarTypeDefinition])
 
     def previousName: String = {
       val nameBeforeRename = fieldDefinition.directiveArgumentAsString("rename", "oldName")
