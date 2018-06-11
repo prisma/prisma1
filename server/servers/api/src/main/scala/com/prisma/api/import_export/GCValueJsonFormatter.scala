@@ -168,7 +168,6 @@ object GCValueJsonFormatter {
       case TypeIdentifier.Int       => json.validate[IntGCValue]
       case TypeIdentifier.Float     => json.validate[FloatGCValue]
       case TypeIdentifier.Json      => json.validate[JsonGCValue]
-      case TypeIdentifier.Relation  => JsError("TypeIdentifier Relation is not supported here,")
     }
   }
 

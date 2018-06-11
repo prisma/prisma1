@@ -1,6 +1,6 @@
 package com.prisma.deploy.connector.mysql.database
 
-import com.prisma.shared.models.TypeIdentifier.TypeIdentifier
+import com.prisma.shared.models.TypeIdentifier.{ScalarTypeIdentifier, TypeIdentifier}
 import com.prisma.shared.models.{Project, TypeIdentifier}
 import slick.jdbc.MySQLProfile.api._
 
@@ -43,7 +43,7 @@ object MySqlDeployDatabaseMutationBuilder {
     DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci"""
   }
 
-  def createScalarListTable(projectId: String, modelName: String, fieldName: String, typeIdentifier: TypeIdentifier) = {
+  def createScalarListTable(projectId: String, modelName: String, fieldName: String, typeIdentifier: ScalarTypeIdentifier) = {
     val idCharset     = charsetTypeForScalarTypeIdentifier(isList = false, TypeIdentifier.GraphQLID)
     val sqlType       = sqlTypeForScalarTypeIdentifier(false, typeIdentifier)
     val charsetString = charsetTypeForScalarTypeIdentifier(false, typeIdentifier)
@@ -62,7 +62,7 @@ object MySqlDeployDatabaseMutationBuilder {
     DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci"""
   }
 
-  def updateScalarListType(projectId: String, modelName: String, fieldName: String, typeIdentifier: TypeIdentifier) = {
+  def updateScalarListType(projectId: String, modelName: String, fieldName: String, typeIdentifier: ScalarTypeIdentifier) = {
     val sqlType = sqlTypeForScalarTypeIdentifier(false, typeIdentifier)
     val indexSize = sqlType match {
       case "text" | "mediumtext" => "(191)"
@@ -78,13 +78,15 @@ object MySqlDeployDatabaseMutationBuilder {
 
   def renameTable(projectId: String, name: String, newName: String) = sqlu"""RENAME TABLE `#$projectId`.`#$name` TO `#$projectId`.`#$newName`;"""
 
-  def createColumn(projectId: String,
-                   tableName: String,
-                   columnName: String,
-                   isRequired: Boolean,
-                   isUnique: Boolean,
-                   isList: Boolean,
-                   typeIdentifier: TypeIdentifier.TypeIdentifier) = {
+  def createColumn(
+      projectId: String,
+      tableName: String,
+      columnName: String,
+      isRequired: Boolean,
+      isUnique: Boolean,
+      isList: Boolean,
+      typeIdentifier: ScalarTypeIdentifier
+  ) = {
 
     val sqlType       = sqlTypeForScalarTypeIdentifier(isList, typeIdentifier)
     val charsetString = charsetTypeForScalarTypeIdentifier(isList, typeIdentifier)
@@ -107,20 +109,22 @@ object MySqlDeployDatabaseMutationBuilder {
     sqlu"ALTER TABLE `#$projectId`.`#$tableName` DROP COLUMN `#$columnName`, ALGORITHM = INPLACE"
   }
 
-  def updateColumn(projectId: String,
-                   tableName: String,
-                   oldColumnName: String,
-                   newColumnName: String,
-                   newIsRequired: Boolean,
-                   newIsList: Boolean,
-                   newTypeIdentifier: TypeIdentifier) = {
+  def updateColumn(
+      projectId: String,
+      tableName: String,
+      oldColumnName: String,
+      newColumnName: String,
+      newIsRequired: Boolean,
+      newIsList: Boolean,
+      newTypeIdentifier: ScalarTypeIdentifier
+  ) = {
     val nulls   = if (newIsRequired) { "NOT NULL" } else { "NULL" }
     val sqlType = sqlTypeForScalarTypeIdentifier(newIsList, newTypeIdentifier)
 
     sqlu"ALTER TABLE `#$projectId`.`#$tableName` CHANGE COLUMN `#$oldColumnName` `#$newColumnName` #$sqlType #$nulls"
   }
 
-  def addUniqueConstraint(projectId: String, tableName: String, columnName: String, typeIdentifier: TypeIdentifier, isList: Boolean) = {
+  def addUniqueConstraint(projectId: String, tableName: String, columnName: String, typeIdentifier: ScalarTypeIdentifier, isList: Boolean) = {
     val sqlType = sqlTypeForScalarTypeIdentifier(isList = isList, typeIdentifier = typeIdentifier)
 
     val indexSize = sqlType match {
@@ -154,7 +158,7 @@ object MySqlDeployDatabaseMutationBuilder {
   // We limit enums to 191, and create text indexes over the first 191 characters of the string, but
   // allow the actual content to be much larger.
   // Key columns are utf8_general_ci as this collation is ~10% faster when sorting and requires less memory
-  private def sqlTypeForScalarTypeIdentifier(isList: Boolean, typeIdentifier: TypeIdentifier): String = {
+  private def sqlTypeForScalarTypeIdentifier(isList: Boolean, typeIdentifier: ScalarTypeIdentifier): String = {
     if (isList) {
       return "mediumtext"
     }
@@ -168,10 +172,9 @@ object MySqlDeployDatabaseMutationBuilder {
       case TypeIdentifier.Enum      => "varchar(191)"
       case TypeIdentifier.Json      => "mediumtext"
       case TypeIdentifier.DateTime  => "datetime(3)"
-      case TypeIdentifier.Relation  => sys.error("Relation is not a scalar type. Are you trying to create a db column for a relation?")
     }
   }
-  def charsetTypeForScalarTypeIdentifier(isList: Boolean, typeIdentifier: TypeIdentifier): String = {
+  def charsetTypeForScalarTypeIdentifier(isList: Boolean, typeIdentifier: ScalarTypeIdentifier): String = {
     if (isList) {
       return "CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci"
     }

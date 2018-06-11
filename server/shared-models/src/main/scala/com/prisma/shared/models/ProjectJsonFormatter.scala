@@ -17,9 +17,19 @@ object ProjectJsonFormatter {
 
   // ENUMS
   implicit lazy val relationSide        = enumFormat(RelationSide)
-  implicit lazy val typeIdentifier      = enumFormat(TypeIdentifier)
   implicit lazy val fieldConstraintType = enumFormat(FieldConstraintType)
   implicit lazy val modelMutationType   = enumFormat(ModelMutationType)
+
+  implicit lazy val typeIdentifier = new Format[TypeIdentifier.TypeIdentifier] {
+    override def reads(json: JsValue) = {
+      json match {
+        case JsString(str) => JsSuccess(TypeIdentifier.withName(str))
+        case _             => JsError(s"$json is not a string and can therefore not be deserialized into an enum")
+      }
+    }
+
+    override def writes(o: TypeIdentifier.TypeIdentifier) = JsString(o.code)
+  }
 
   // MODELS
   implicit lazy val numberConstraint  = Json.format[NumberConstraint]

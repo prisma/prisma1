@@ -13,28 +13,36 @@ object RelationSide extends Enumeration {
   def opposite(side: RelationSide.Value) = if (side == A) B else A
 }
 
-object TypeIdentifier extends Enumeration {
-  // note: casing of values are chosen to match our TypeIdentifiers
-  type TypeIdentifier = Value
-  val String    = Value("String")
-  val Int       = Value("Int")
-  val Float     = Value("Float")
-  val Boolean   = Value("Boolean")
-  val DateTime  = Value("DateTime")
-  val GraphQLID = Value("GraphQLID")
-  val Enum      = Value("Enum")
-  val Json      = Value("Json")
-  val Relation  = Value("Relation")
-
-  def withNameOpt(name: String): Option[TypeIdentifier.Value] = name match {
-    case "ID" => Some(GraphQLID)
-    case _    => this.values.find(_.toString == name)
+object TypeIdentifier {
+  sealed trait TypeIdentifier {
+    def code: String
   }
+
+  object Relation extends TypeIdentifier { def code = "Relation" }
+
+  sealed trait ScalarTypeIdentifier extends TypeIdentifier
+  object String                     extends ScalarTypeIdentifier { def code = "String" }
+  object Int                        extends ScalarTypeIdentifier { def code = "Int" }
+  object Float                      extends ScalarTypeIdentifier { def code = "Float" }
+  object Boolean                    extends ScalarTypeIdentifier { def code = "Boolean" }
+  object Enum                       extends ScalarTypeIdentifier { def code = "Enum" }
+  object Json                       extends ScalarTypeIdentifier { def code = "Json" }
+  object DateTime                   extends ScalarTypeIdentifier { def code = "DateTime" }
+  object GraphQLID                  extends ScalarTypeIdentifier { def code = "GraphQLID" }
+//  object UUID                       extends ScalarTypeIdentifier { def code = "UUID" }
+
+  // compatibility with Enumeration interface
+  type Value = TypeIdentifier
+
+  private val instances = Vector(Relation, String, Int, Float, Boolean, Enum, Json, DateTime, GraphQLID)
 
   def withNameHacked(name: String) = name match {
     case "ID" => GraphQLID
     case _    => withName(name)
   }
+  def withName(name: String): TypeIdentifier            = withNameOpt(name).getOrElse(throw new NoSuchElementException(s"No value found for '$name'"))
+  def withNameOpt(name: String): Option[TypeIdentifier] = instances.find(_.code == name)
+
 }
 
 case class Enum(
@@ -57,32 +65,34 @@ case class FieldTemplate(
     manifestation: Option[FieldManifestation]
 ) {
   def build(model: Model): Field = {
-    if (typeIdentifier == TypeIdentifier.Relation) {
-      RelationField(
-        name = name,
-        isRequired = isRequired,
-        isList = isList,
-        isHidden = isHidden,
-        relationName = relationName.get,
-        relationSide = relationSide.get,
-        template = this,
-        model = model
-      )
-    } else {
-      ScalarField(
-        name = name,
-        typeIdentifier = typeIdentifier,
-        isRequired = isRequired,
-        isList = isList,
-        isUnique = isUnique,
-        isHidden = isHidden,
-        isReadonly = isReadonly,
-        enum = enum,
-        defaultValue = defaultValue,
-        manifestation = manifestation,
-        template = this,
-        model = model
-      )
+    typeIdentifier match {
+      case TypeIdentifier.Relation =>
+        RelationField(
+          name = name,
+          isRequired = isRequired,
+          isList = isList,
+          isHidden = isHidden,
+          relationName = relationName.get,
+          relationSide = relationSide.get,
+          template = this,
+          model = model
+        )
+      case ti: TypeIdentifier.ScalarTypeIdentifier =>
+        ScalarField(
+          name = name,
+          typeIdentifier = ti,
+          isRequired = isRequired,
+          isList = isList,
+          isUnique = isUnique,
+          isHidden = isHidden,
+          isReadonly = isReadonly,
+          enum = enum,
+          defaultValue = defaultValue,
+          manifestation = manifestation,
+          template = this,
+          model = model
+        )
+
     }
   }
 }
@@ -177,7 +187,7 @@ case class RelationField(
 
 case class ScalarField(
     name: String,
-    typeIdentifier: TypeIdentifier.Value,
+    typeIdentifier: TypeIdentifier.ScalarTypeIdentifier,
     isRequired: Boolean,
     isList: Boolean,
     isUnique: Boolean,

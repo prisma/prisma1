@@ -2,7 +2,7 @@ package com.prisma.deploy.connector.postgresql.database
 
 import java.sql.PreparedStatement
 
-import com.prisma.shared.models.TypeIdentifier.TypeIdentifier
+import com.prisma.shared.models.TypeIdentifier.{ScalarTypeIdentifier, TypeIdentifier}
 import com.prisma.shared.models._
 import slick.dbio.DBIOAction
 import slick.jdbc.PostgresProfile.api._
@@ -53,7 +53,7 @@ object PostgresDeployDatabaseMutationBuilder {
     )"""
   }
 
-  def createScalarListTable(projectId: String, model: Model, fieldName: String, typeIdentifier: TypeIdentifier) = {
+  def createScalarListTable(projectId: String, model: Model, fieldName: String, typeIdentifier: ScalarTypeIdentifier) = {
     val sqlType = sqlTypeForScalarTypeIdentifier(typeIdentifier)
     sqlu"""CREATE TABLE "#$projectId"."#${model.dbName}_#$fieldName"
     ("nodeId" VARCHAR (25) NOT NULL REFERENCES "#$projectId"."#${model.dbName}" ("#${model.dbNameOfIdField_!}"),
@@ -63,7 +63,7 @@ object PostgresDeployDatabaseMutationBuilder {
     )"""
   }
 
-  def updateScalarListType(projectId: String, modelName: String, fieldName: String, typeIdentifier: TypeIdentifier) = {
+  def updateScalarListType(projectId: String, modelName: String, fieldName: String, typeIdentifier: ScalarTypeIdentifier) = {
     val sqlType = sqlTypeForScalarTypeIdentifier(typeIdentifier)
     sqlu"""ALTER TABLE "#$projectId"."#${modelName}_#${fieldName}" DROP INDEX "value", CHANGE COLUMN "value" "value" #$sqlType, ADD INDEX "value" ("value" ASC)"""
   }
@@ -74,13 +74,15 @@ object PostgresDeployDatabaseMutationBuilder {
 
   def renameTable(projectId: String, name: String, newName: String) = sqlu"""ALTER TABLE "#$projectId"."#$name" RENAME TO "#$newName";"""
 
-  def createColumn(projectId: String,
-                   tableName: String,
-                   columnName: String,
-                   isRequired: Boolean,
-                   isUnique: Boolean,
-                   isList: Boolean,
-                   typeIdentifier: TypeIdentifier.TypeIdentifier) = {
+  def createColumn(
+      projectId: String,
+      tableName: String,
+      columnName: String,
+      isRequired: Boolean,
+      isUnique: Boolean,
+      isList: Boolean,
+      typeIdentifier: TypeIdentifier.ScalarTypeIdentifier
+  ) = {
 
     val sqlType    = sqlTypeForScalarTypeIdentifier(typeIdentifier)
     val nullString = if (isRequired) "NOT NULL" else "NULL"
@@ -98,13 +100,15 @@ object PostgresDeployDatabaseMutationBuilder {
     sqlu"""ALTER TABLE "#$projectId"."#$tableName" DROP COLUMN "#$columnName""""
   }
 
-  def updateColumn(projectId: String,
-                   tableName: String,
-                   oldColumnName: String,
-                   newColumnName: String,
-                   newIsRequired: Boolean,
-                   newIsList: Boolean,
-                   newTypeIdentifier: TypeIdentifier) = {
+  def updateColumn(
+      projectId: String,
+      tableName: String,
+      oldColumnName: String,
+      newColumnName: String,
+      newIsRequired: Boolean,
+      newIsList: Boolean,
+      newTypeIdentifier: ScalarTypeIdentifier
+  ) = {
     val nulls   = if (newIsRequired) { "SET NOT NULL" } else { "DROP NOT NULL" }
     val sqlType = sqlTypeForScalarTypeIdentifier(newTypeIdentifier)
     val renameIfNecessary =
@@ -153,7 +157,7 @@ object PostgresDeployDatabaseMutationBuilder {
     addColumn
   }
 
-  private def sqlTypeForScalarTypeIdentifier(typeIdentifier: TypeIdentifier): String = {
+  private def sqlTypeForScalarTypeIdentifier(typeIdentifier: ScalarTypeIdentifier): String = {
     typeIdentifier match {
       case TypeIdentifier.String    => "text"
       case TypeIdentifier.Boolean   => "boolean"
@@ -163,7 +167,6 @@ object PostgresDeployDatabaseMutationBuilder {
       case TypeIdentifier.Enum      => "text"
       case TypeIdentifier.Json      => "text"
       case TypeIdentifier.DateTime  => "timestamp (3)"
-      case TypeIdentifier.Relation  => sys.error("Relation is not a scalar type. Are you trying to create a db column for a relation?")
     }
   }
 
