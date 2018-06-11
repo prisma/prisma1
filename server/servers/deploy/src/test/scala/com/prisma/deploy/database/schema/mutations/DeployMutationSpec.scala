@@ -710,6 +710,20 @@ class DeployMutationSpec extends FlatSpec with Matchers with ActiveDeploySpecBas
     migrations2.head.revision shouldEqual 4 // order is DESC
   }
 
+  "DeployMutation" should "succeed with id fields of type UUID" in {
+    val (project, _) = setupProject(basicTypesGql)
+    val schema =
+      """
+        |type A {
+        | id: UUID! @unique
+        |}
+      """.stripMargin
+
+    val updatedProject = server.deploySchema(project, schema)
+    val idField        = updatedProject.schema.getModelByName_!("A").idField_!
+    idField.typeIdentifier should be(TypeIdentifier.UUID)
+  }
+
   private def formatFunctions(functions: Vector[FunctionInput]) = {
     def formatFunction(fn: FunctionInput) = {
       s"""{

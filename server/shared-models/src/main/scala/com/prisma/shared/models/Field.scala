@@ -36,7 +36,7 @@ object TypeIdentifier {
   // compatibility with Enumeration interface
   type Value = TypeIdentifier
 
-  private val instances = Vector(Relation, String, Int, Float, Boolean, Enum, Json, DateTime, Cuid)
+  private val instances = Vector(Relation, String, Int, Float, Boolean, Enum, Json, DateTime, Cuid, UUID)
 
   def withName(name: String): TypeIdentifier = withNameOpt(name).getOrElse(throw new NoSuchElementException(s"No value found for '$name'"))
 

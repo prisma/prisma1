@@ -58,8 +58,8 @@ object SchemaSyntaxValidator {
     DirectiveRequirement("unique", requiredArguments = Seq.empty, optionalArguments = Seq.empty)
   )
 
-  val idFieldRequirementForPassiveConnectors = FieldRequirement("id", Vector("ID", "Int"), required = true, unique = true, list = false)
-  val idFieldRequirementForActiveConnectors  = FieldRequirement("id", "ID", required = true, unique = true, list = false)
+  val idFieldRequirementForPassiveConnectors = FieldRequirement("id", Vector("ID", "UUID", "Int"), required = true, unique = true, list = false)
+  val idFieldRequirementForActiveConnectors  = FieldRequirement("id", Vector("ID", "UUID"), required = true, unique = true, list = false)
 
   val reservedFieldsRequirementsForAllConnectors = Seq(
     FieldRequirement("updatedAt", "DateTime", required = true, unique = false, list = false),
