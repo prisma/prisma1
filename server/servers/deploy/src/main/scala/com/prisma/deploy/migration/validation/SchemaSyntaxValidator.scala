@@ -457,7 +457,7 @@ case class SchemaSyntaxValidator(
     } else if (doc.enumType(typeName).isDefined) {
       TypeIdentifier.Enum
     } else {
-      TypeIdentifier.withNameHacked(typeName)
+      TypeIdentifier.withName(typeName)
     }
   }
 }

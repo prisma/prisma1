@@ -38,11 +38,6 @@ object TypeIdentifier {
 
   private val instances = Vector(Relation, String, Int, Float, Boolean, Enum, Json, DateTime, Cuid)
 
-  def withNameHacked(name: String) = name match {
-    case "ID" => Cuid
-    case _    => withName(name)
-  }
-
   def withName(name: String): TypeIdentifier = withNameOpt(name).getOrElse(throw new NoSuchElementException(s"No value found for '$name'"))
 
   def withNameOpt(name: String): Option[TypeIdentifier] = name match {
