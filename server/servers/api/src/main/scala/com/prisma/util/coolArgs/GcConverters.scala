@@ -48,7 +48,7 @@ case class GCAnyConverter(typeIdentifier: TypeIdentifier, isList: Boolean) exten
 
       Good(result)
     } catch {
-      case NonFatal(_) => Bad(InvalidValueForScalarType(t.toString, typeIdentifier.toString))
+      case NonFatal(_) => Bad(InvalidValueForScalarType(t.toString, typeIdentifier.code))
     }
   }
 }

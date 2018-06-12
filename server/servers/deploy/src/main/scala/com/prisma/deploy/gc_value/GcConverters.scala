@@ -53,7 +53,7 @@ private case class GCSangriaValueConverter(typeIdentifier: TypeIdentifier, isLis
 
       Good(result)
     } catch {
-      case NonFatal(_) => Bad(InvalidValueForScalarType(t.renderCompact, typeIdentifier.toString))
+      case NonFatal(_) => Bad(InvalidValueForScalarType(t.renderCompact, typeIdentifier.code))
     }
   }
 }
@@ -88,7 +88,7 @@ private case class StringSangriaValueConverter(typeIdentifier: TypeIdentifier, i
     val parser = new MyQueryParser(ParserInput(escapedIfNecessary))
 
     parser.Value.run() match {
-      case Failure(e) => Bad(InvalidValueForScalarType(string, typeIdentifier.toString))
+      case Failure(e) => Bad(InvalidValueForScalarType(string, typeIdentifier.code))
       case Success(x) => Good(x)
     }
   }
@@ -102,10 +102,10 @@ private case class StringSangriaValueConverter(typeIdentifier: TypeIdentifier, i
         Json.parse(string) match {
           case JsNull     => Good(NullValue())
           case x: JsArray => sequence(x.value.toVector.map(x => from(x.toString))).map(seq => ListValue(seq))
-          case _          => Bad(InvalidValueForScalarType(string, typeIdentifier.toString))
+          case _          => Bad(InvalidValueForScalarType(string, typeIdentifier.code))
         }
       } catch {
-        case e: Exception => Bad(InvalidValueForScalarType(string, typeIdentifier.toString))
+        case e: Exception => Bad(InvalidValueForScalarType(string, typeIdentifier.code))
       }
     } else {
       from(string)
