@@ -24,7 +24,7 @@ object PostgresDeployDatabaseMutationBuilder {
     DBIO.seq(
       sqlu"""CREATE SCHEMA "#$projectId";""",
       sqlu"""CREATE TABLE "#$projectId"."_RelayId" (
-            "id" VARCHAR (25) NOT NULL,
+            "id" VARCHAR (36) NOT NULL,
             "stableModelIdentifier" VARCHAR (25) NOT NULL,
              PRIMARY KEY ("id"))""",
       createFunction
@@ -45,11 +45,12 @@ object PostgresDeployDatabaseMutationBuilder {
   def dropTable(projectId: String, tableName: String)                              = sqlu"""DROP TABLE "#$projectId"."#$tableName""""
   def dropScalarListTable(projectId: String, modelName: String, fieldName: String) = sqlu"""DROP TABLE "#$projectId"."#${modelName}_#${fieldName}""""
 
-  def createTable(projectId: String, name: String, nameOfIdField: String) = {
+  def createModelTable(projectId: String, model: Model) = {
+    val idField = model.idField_!
 
-    sqlu"""CREATE TABLE "#$projectId"."#$name"
-    ("#$nameOfIdField" VARCHAR (25) NOT NULL,
-    PRIMARY KEY ("#$nameOfIdField")
+    sqlu"""CREATE TABLE "#$projectId"."#${model.dbName}"
+    ("#${idField.dbName}" #${sqlTypeForScalarTypeIdentifier(idField.typeIdentifier)} NOT NULL,
+    PRIMARY KEY ("#${idField.dbName}")
     )"""
   }
 

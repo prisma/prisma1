@@ -7,29 +7,27 @@ import slick.dbio.{DBIOAction, Effect, NoStream}
 import slick.jdbc.PostgresProfile.api._
 
 object CreateModelInterpreter extends SqlMutactionInterpreter[CreateModelTable] {
-  override def execute(mutaction: CreateModelTable) = createTable(
+  override def execute(mutaction: CreateModelTable) = createModelTable(
     projectId = mutaction.projectId,
-    name = mutaction.model,
-    nameOfIdField = mutaction.nameOfIdField
+    model = mutaction.model
   )
 
-  override def rollback(mutaction: CreateModelTable) = dropTable(projectId = mutaction.projectId, tableName = mutaction.model)
+  override def rollback(mutaction: CreateModelTable) = dropTable(projectId = mutaction.projectId, tableName = mutaction.model.dbName)
 }
 
 object DeleteModelInterpreter extends SqlMutactionInterpreter[DeleteModelTable] {
   // TODO: this is not symmetric
 
   override def execute(mutaction: DeleteModelTable) = {
-    val droppingTable        = dropTable(projectId = mutaction.projectId, tableName = mutaction.model)
-    val dropScalarListFields = mutaction.scalarListFields.map(field => dropScalarListTable(mutaction.projectId, mutaction.model, field))
+    val droppingTable        = dropTable(projectId = mutaction.projectId, tableName = mutaction.model.dbName)
+    val dropScalarListFields = mutaction.scalarListFields.map(field => dropScalarListTable(mutaction.projectId, mutaction.model.dbName, field))
 
     DBIO.seq(dropScalarListFields :+ droppingTable: _*)
   }
 
-  override def rollback(mutaction: DeleteModelTable) = createTable(
+  override def rollback(mutaction: DeleteModelTable) = createModelTable(
     projectId = mutaction.projectId,
-    name = mutaction.model,
-    nameOfIdField = mutaction.nameOfIdField
+    model = mutaction.model
   )
 }
 
