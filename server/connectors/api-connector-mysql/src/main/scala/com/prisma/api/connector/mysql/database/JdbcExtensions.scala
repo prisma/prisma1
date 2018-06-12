@@ -55,7 +55,7 @@ object JdbcExtensions {
       val gcValue: GCValue = typeIdentifier match {
         case TypeIdentifier.String  => StringGCValue(resultSet.getString(name))
         case TypeIdentifier.Cuid    => CuidGCValue(resultSet.getString(name))
-        case TypeIdentifier.UUID    => UuidGCValue.parse(resultSet.getString(name)).get
+        case TypeIdentifier.UUID    => UuidGCValue.parse_!(resultSet.getString(name))
         case TypeIdentifier.Enum    => EnumGCValue(resultSet.getString(name))
         case TypeIdentifier.Int     => IntGCValue(resultSet.getInt(name))
         case TypeIdentifier.Float   => FloatGCValue(resultSet.getDouble(name))
