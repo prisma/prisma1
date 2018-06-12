@@ -7,6 +7,7 @@ import com.prisma.slick.NewJdbcExtensions._
 import com.prisma.api.connector.postgresql.database.PostgresSlickExtensions._
 import com.prisma.gc_values.{IdGCValue, NullGCValue, StringGCValue}
 import com.prisma.shared.models._
+import org.jooq.conf.Settings
 import org.jooq.{Condition, Name, SQLDialect}
 import slick.jdbc.PositionedParameters
 
@@ -104,10 +105,9 @@ case class JooqModelQueryBuilder(connection: Connection, schemaName: String, mod
     import org.jooq.impl.DSL
     import org.jooq.impl.DSL._
 
-    val sql = DSL.using(connection, SQLDialect.POSTGRES_9_5)
+    val sql = DSL.using(SQLDialect.POSTGRES_9_5, new Settings().withRenderFormatted(true))
 
-    val condition =
-      JooqWhereClauseBuilder(connection: Connection, schemaName).buildWhereClause(queryArguments.flatMap(_.filter)).getOrElse(and(trueCondition()))
+    val condition = JooqWhereClauseBuilder(schemaName).buildWhereClause(queryArguments.flatMap(_.filter)).getOrElse(and(trueCondition()))
 
     val aliasedTable = table(name(schemaName, model.dbName)).as(topLevelAlias)
 

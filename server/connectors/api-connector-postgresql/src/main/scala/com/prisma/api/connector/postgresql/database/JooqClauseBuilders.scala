@@ -1,24 +1,18 @@
 package com.prisma.api.connector.postgresql.database
 
-import java.sql.Connection
-
 import com.prisma.api.connector._
 import com.prisma.api.schema.APIErrors
 import com.prisma.api.schema.APIErrors.{InvalidFirstArgument, InvalidLastArgument, InvalidSkipArgument}
-import com.prisma.gc_values.{GCValue, NullGCValue}
+import com.prisma.gc_values.NullGCValue
 import com.prisma.shared.models._
-import org.apache.commons.lang.ObjectUtils.Null
-import org.jooq.{Condition, SQLDialect}
-import org.jooq._
-import org.jooq.impl._
+import org.jooq.conf.Settings
 import org.jooq.impl.DSL.{field, _}
+import org.jooq.impl._
+import org.jooq.{Condition, SQLDialect}
 
-import collection.JavaConverters._
-import org.jooq.scalaextensions.Conversions._
-
-case class JooqWhereClauseBuilder(connection: Connection, schemaName: String) {
+case class JooqWhereClauseBuilder(schemaName: String) {
   val topLevelAlias: String = QueryBuilders.topLevelAlias
-  val sql                   = DSL.using(connection, SQLDialect.POSTGRES_9_5)
+  val sql                   = DSL.using(SQLDialect.POSTGRES_9_5, new Settings().withRenderFormatted(true))
 
   def buildWhereClause(filter: Option[Filter]): Option[Condition] = filter match {
     case Some(filter) => Some(buildWheresForFilter(filter, topLevelAlias))
@@ -85,15 +79,16 @@ case class JooqWhereClauseBuilder(connection: Connection, schemaName: String) {
         .from(name(schemaName, relationTableName))
         .where(field(name(schemaName, relationTableName, column)).eq(field(name(alias, otherIdColumn))))
 
-      trueCondition().andNotExists(select)
+      notExists(select)
     }
 
     def relationFilterStatement(alias: String, relationFilter: RelationFilter): Condition = {
-      val relationField     = relationFilter.field
-      val relationTableName = relationField.relation.relationTableName
-      val column            = relationField.relation.columnForRelationSide(relationField.relationSide)
-      val oppositeColumn    = relationField.relation.columnForRelationSide(relationField.oppositeRelationSide)
-      val newAlias          = relationField.relatedModel_!.dbName + "_" + alias
+      val relationField         = relationFilter.field
+      val relationTableName     = relationField.relation.relationTableName
+      val column                = relationField.relation.columnForRelationSide(relationField.relationSide)
+      val oppositeColumn        = relationField.relation.columnForRelationSide(relationField.oppositeRelationSide)
+      val newAlias              = relationField.relatedModel_!.dbName + "_" + alias
+      val nestedFilterStatement = buildWheresForFilter(relationFilter.nestedFilter, newAlias)
 
       val select = sql
         .select()
@@ -102,25 +97,25 @@ case class JooqWhereClauseBuilder(connection: Connection, schemaName: String) {
         .on(field(name(newAlias, relationField.relatedModel_!.dbNameOfIdField_!)).eq(field(name(schemaName, relationTableName, oppositeColumn))))
         .where(field(name(schemaName, relationTableName, column)).eq(field(name(alias, relationField.model.dbNameOfIdField_!))))
 
-      trueCondition().andNotExists(select)
-
-      val nestedFilterStatement = buildWheresForFilter(relationFilter.nestedFilter, newAlias)
-
       relationFilter.condition match {
-        case AtLeastOneRelatedNode => trueCondition().andExists(select.and(nestedFilterStatement))
-        case EveryRelatedNode      => trueCondition().andNotExists(select.andNot(nestedFilterStatement))
-        case NoRelatedNode         => trueCondition().andNotExists(select.and(nestedFilterStatement))
-        case NoRelationCondition   => trueCondition().andExists(select.and(nestedFilterStatement))
+        case AtLeastOneRelatedNode => exists(select.and(nestedFilterStatement))
+        case EveryRelatedNode      => notExists(select.andNot(nestedFilterStatement))
+        case NoRelatedNode         => notExists(select.and(nestedFilterStatement))
+        case NoRelationCondition   => exists(select.and(nestedFilterStatement))
       }
     }
 
     def fieldFrom(scalarField: ScalarField) = field(name(alias, scalarField.dbName))
+    def nonEmptyConditions(filters: Vector[Filter]) = filters.map(buildWheresForFilter(_, alias)) match {
+      case x if x.isEmpty => Vector(trueCondition())
+      case x              => x
+    }
 
     filter match {
       //-------------------------------RECURSION------------------------------------
       case NodeSubscriptionFilter() => and(trueCondition())
-      case AndFilter(filters)       => filters.map(buildWheresForFilter(_, alias)).foldLeft(and(trueCondition()))(_ and _)
-      case OrFilter(filters)        => filters.map(buildWheresForFilter(_, alias)).foldLeft(and(falseCondition()))(_ or _)
+      case AndFilter(filters)       => nonEmptyConditions(filters).reduceLeft(_ and _)
+      case OrFilter(filters)        => nonEmptyConditions(filters).reduceLeft(_ or _)
       case NotFilter(filters)       => filters.map(buildWheresForFilter(_, alias)).foldLeft(and(trueCondition()))(_ andNot _)
       case NodeFilter(filters)      => buildWheresForFilter(OrFilter(filters), alias)
       case x: RelationFilter        => relationFilterStatement(alias, x)
