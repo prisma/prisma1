@@ -55,10 +55,12 @@ class JooqTestingSpec extends FlatSpec with Matchers with ApiSpecBase {
 
     database.setup(project)
 
+    server.query("""mutation{createB(data:{int: 12}){id}}""", project)
+
     server.query(
       s"""{
-         |  users (where: {name: "Paul"}){
-         |    name
+         |  bs (where: {int: 12}){
+         |    id
          |  }
          |}""",
       project

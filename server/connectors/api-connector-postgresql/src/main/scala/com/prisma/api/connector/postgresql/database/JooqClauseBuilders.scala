@@ -8,8 +8,11 @@ import com.prisma.api.schema.APIErrors.{InvalidFirstArgument, InvalidLastArgumen
 import com.prisma.gc_values.{GCValue, NullGCValue}
 import com.prisma.shared.models._
 import org.jooq.{Condition, SQLDialect}
+import org.jooq._
 import org.jooq.impl._
 import org.jooq.impl.DSL._
+import collection.JavaConverters._
+import org.jooq.scalaextensions.Conversions._
 
 case class JooqWhereClauseBuilder(connection: Connection, schemaName: String) {
   val topLevelAlias: String = QueryBuilders.topLevelAlias
@@ -106,7 +109,7 @@ case class JooqWhereClauseBuilder(connection: Connection, schemaName: String) {
       case ScalarFilter(field, NotEquals(NullGCValue))     => Vector(trueCondition())
       case ScalarFilter(field, NotEquals(_))               => Vector(trueCondition())
       case ScalarFilter(field, Equals(NullGCValue))        => Vector(trueCondition())
-      case ScalarFilter(field2, Equals(x))                 => Vector(trueCondition())
+      case ScalarFilter(field2, Equals(x))                 => Vector(field(name(alias, field2.dbName)) === x.value)
       case ScalarFilter(field, In(Vector(NullGCValue)))    => Vector(trueCondition())
       case ScalarFilter(field, NotIn(Vector(NullGCValue))) => Vector(trueCondition())
       case ScalarFilter(field, In(values))                 => Vector(trueCondition())
