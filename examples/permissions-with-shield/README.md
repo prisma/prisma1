@@ -86,7 +86,7 @@ query {
 }
 ```
 
-You will get an `Not Authorized` error. This is because you need to be authorized as a user to read posts. Run the following:
+You will get an `Not Authorised` error. This is because you need to be authorized as a user to read posts. Run the following:
 
 ```graphql
 mutation AssignRole {
