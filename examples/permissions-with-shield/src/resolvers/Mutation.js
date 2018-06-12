@@ -5,7 +5,8 @@ const {
   USER,
   findRoleIdByName,
   createUserRole,
-  findUserIdByEmail
+  findUserIdByEmail,
+  userRoleExists
 } = require('../utils')
 
 const createPost = async (root, args, context, info) => {
