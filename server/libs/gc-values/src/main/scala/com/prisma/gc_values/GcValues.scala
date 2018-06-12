@@ -70,5 +70,6 @@ case class CuidGCValue(value: String) extends IdGcValue
 case class UuidGCValue(value: UUID)   extends IdGcValue
 
 object UuidGCValue {
+  def parse_!(s: String): UuidGCValue    = parse(s).get
   def parse(s: String): Try[UuidGCValue] = Try { UuidGCValue(UUID.fromString(s)) }
 }
