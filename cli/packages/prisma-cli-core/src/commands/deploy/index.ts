@@ -115,6 +115,8 @@ ${chalk.gray(
       stage = results.stage
       dockerComposeYml = results.dockerComposeYml
       this.definition.replaceEndpoint(results.endpoint)
+      // Reload definition because we are changing the yml file
+      await this.definition.load(this.flags, envFile)
       this.out.log(
         `\nWritten endpoint \`${chalk.bold(
           results.endpoint,
