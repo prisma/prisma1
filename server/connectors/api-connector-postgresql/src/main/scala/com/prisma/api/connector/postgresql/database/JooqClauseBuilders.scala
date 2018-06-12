@@ -23,48 +23,46 @@ case class JooqWhereClauseBuilder(schemaName: String) {
   // The subquery Q fetches all the ID's defined by the cursors and order.
   // On invalid cursor params, no error is thrown. The result set will just be empty.
 
-  def buildCursorCondition(queryArguments: Option[QueryArguments], model: Model): Option[String] = {
-    for {
-      args   <- queryArguments
-      result <- buildCursorCondition(args, model)
-    } yield result
+  def buildCursorCondition(queryArguments: Option[QueryArguments], model: Model): Condition = queryArguments match {
+    case Some(args) => buildCursorCondition(args, model)
+    case None       => trueCondition()
   }
 
-  def buildCursorCondition(queryArguments: QueryArguments, model: Model): Option[String] = {
+  def buildCursorCondition(queryArguments: QueryArguments, model: Model): Condition = {
     val (before, after, orderBy) = (queryArguments.before, queryArguments.after, queryArguments.orderBy)
     // If both params are empty, don't generate any query.
-    if (before.isEmpty && after.isEmpty) return None
+    if (before.isEmpty && after.isEmpty) return trueCondition()
 
     val tableName        = model.dbName
-    val idFieldWithAlias = s""""$topLevelAlias"."${model.dbNameOfIdField_!}""""
-    val idField          = s""""$schemaName"."$tableName"."${model.dbNameOfIdField_!}""""
+    val idFieldWithAlias = field(name(topLevelAlias, model.dbNameOfIdField_!))
+    val idField          = field(name(schemaName, tableName, model.dbNameOfIdField_!))
 
     // First, we fetch the ordering for the query. If none is passed, we order by id, ascending.
     // We need that since before/after are dependent on the order.
     val (orderByField, orderByFieldWithAlias, sortDirection) = orderBy match {
-      case Some(orderByArg) =>
-        (s""""$schemaName"."$tableName"."${orderByArg.field.dbName}"""", s""""$topLevelAlias"."${orderByArg.field.dbName}"""", orderByArg.sortOrder.toString)
-      case None => (idField, idFieldWithAlias, "asc")
+      case Some(order) => (field(name(schemaName, tableName, order.field.dbName)), field(name(topLevelAlias, order.field.dbName)), order.sortOrder.toString)
+      case None        => (idField, idFieldWithAlias, "asc")
     }
+
+    val selectQuery = sql
+      .select(orderByField)
+      .from(table(name(schemaName, tableName)))
+      .where(idField.equal(""))
 
     // Then, we select the comparison operation and construct the cursors. For instance, if we use ascending order, and we want
     // to get the items before, we use the "<" comparator on the column that defines the order.
-    def cursorFor(cursor: String, cursorType: String): String = {
-      val compOperator = (cursorType, sortDirection.toLowerCase.trim) match {
-        case ("before", "asc")  => "<"
-        case ("before", "desc") => ">"
-        case ("after", "asc")   => ">"
-        case ("after", "desc")  => "<"
-        case _                  => throw new IllegalArgumentException
-      }
-
-      s"""($orderByFieldWithAlias, $idFieldWithAlias) $compOperator ((select $orderByField from "$schemaName"."$tableName" where $idField = '$cursor'), '$cursor')"""
+    def cursorFor(cursor: String, cursorType: String): Condition = (cursorType, sortDirection.toLowerCase.trim) match {
+      case ("before", "asc")  => row(orderByFieldWithAlias, idFieldWithAlias).lessThan(selectQuery, "")
+      case ("before", "desc") => row(orderByFieldWithAlias, idFieldWithAlias).greaterThan(selectQuery, "")
+      case ("after", "asc")   => row(orderByFieldWithAlias, idFieldWithAlias).greaterThan(selectQuery, "")
+      case ("after", "desc")  => row(orderByFieldWithAlias, idFieldWithAlias).lessThan(selectQuery, "")
+      case _                  => throw new IllegalArgumentException
     }
 
-    val afterCursorFilter  = after.map(cursorFor(_, "after"))
-    val beforeCursorFilter = before.map(cursorFor(_, "before"))
+    val afterCursorFilter  = after.map(cursorFor(_, "after")).getOrElse(trueCondition())
+    val beforeCursorFilter = before.map(cursorFor(_, "before")).getOrElse(trueCondition())
 
-    Some((afterCursorFilter ++ beforeCursorFilter).mkString(" AND "))
+    afterCursorFilter.and(beforeCursorFilter)
   }
 
   private def buildWheresForFilter(filter: Filter, alias: String): Condition = {
@@ -76,7 +74,7 @@ case class JooqWhereClauseBuilder(schemaName: String) {
 
       val select = sql
         .select()
-        .from(name(schemaName, relationTableName))
+        .from(table(name(schemaName, relationTableName)))
         .where(field(name(schemaName, relationTableName, column)).eq(field(name(alias, otherIdColumn))))
 
       notExists(select)
@@ -173,7 +171,7 @@ object JooqOrderByClauseBuilder {
   def forModel(model: Model, alias: String, args: Option[QueryArguments]): Vector[SortField[AnyRef]] = {
     internal(
       alias = alias,
-      secondaryOrderByField = model.dbNameOfIdField_!,
+      secondOrderField = model.dbNameOfIdField_!,
       args = args
     )
   }
@@ -197,33 +195,29 @@ object JooqOrderByClauseBuilder {
   def forRelation(relation: Relation, alias: String, args: Option[QueryArguments]): Vector[SortField[AnyRef]] = {
     internal(
       alias = alias,
-      secondaryOrderByField = relation.columnForRelationSide(RelationSide.A),
+      secondOrderField = relation.columnForRelationSide(RelationSide.A),
       args = args
     )
   }
 
-  def internal(alias: String, secondaryOrderByField: String, args: Option[QueryArguments]): Vector[SortField[AnyRef]] = {
+  def internal(alias: String, secondOrderField: String, args: Option[QueryArguments]): Vector[SortField[AnyRef]] = {
     val (first, last, orderBy) = (args.flatMap(_.first), args.flatMap(_.last), args.flatMap(_.orderBy))
     val isReverseOrder         = last.isDefined
     if (first.isDefined && last.isDefined) throw APIErrors.InvalidConnectionArguments()
     // The limit instruction only works from up to down. Therefore, we have to invert order when we use before.
-    val defaultOrder   = orderBy.map(_.sortOrder.toString).getOrElse("asc")
-    val secondaryField = field(name(alias, secondaryOrderByField))
+    val defaultOrder = orderBy.map(_.sortOrder.toString).getOrElse("asc")
+    val secondField  = field(name(alias, secondOrderField))
 
     (orderBy, defaultOrder, isReverseOrder) match {
-      case (Some(orderByArg), "asc", true) if orderByArg.field.dbName != secondaryOrderByField =>
-        Vector(field(name(alias, orderByArg.field.dbName)).desc(), secondaryField.desc())
-      case (Some(orderByArg), "desc", true) if orderByArg.field.dbName != secondaryOrderByField =>
-        Vector(field(name(alias, orderByArg.field.dbName)).asc(), secondaryField.asc())
-      case (Some(orderByArg), "asc", false) if orderByArg.field.dbName != secondaryOrderByField =>
-        Vector(field(name(alias, orderByArg.field.dbName)).asc(), secondaryField.asc())
-      case (Some(orderByArg), "desc", false) if orderByArg.field.dbName != secondaryOrderByField =>
-        Vector(field(name(alias, orderByArg.field.dbName)).desc(), secondaryField.desc())
-      case (_, "asc", true)   => Vector(secondaryField.desc())
-      case (_, "desc", true)  => Vector(secondaryField.asc())
-      case (_, "asc", false)  => Vector(secondaryField.asc())
-      case (_, "desc", false) => Vector(secondaryField.desc())
-      case _                  => throw new IllegalArgumentException
+      case (Some(order), "asc", true) if order.field.dbName != secondOrderField   => Vector(field(name(alias, order.field.dbName)).desc(), secondField.desc())
+      case (Some(order), "desc", true) if order.field.dbName != secondOrderField  => Vector(field(name(alias, order.field.dbName)).asc(), secondField.asc())
+      case (Some(order), "asc", false) if order.field.dbName != secondOrderField  => Vector(field(name(alias, order.field.dbName)).asc(), secondField.asc())
+      case (Some(order), "desc", false) if order.field.dbName != secondOrderField => Vector(field(name(alias, order.field.dbName)).desc(), secondField.desc())
+      case (_, "asc", true)                                                       => Vector(secondField.desc())
+      case (_, "desc", true)                                                      => Vector(secondField.asc())
+      case (_, "asc", false)                                                      => Vector(secondField.asc())
+      case (_, "desc", false)                                                     => Vector(secondField.desc())
+      case _                                                                      => throw new IllegalArgumentException
     }
   }
 }

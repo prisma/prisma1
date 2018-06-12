@@ -107,6 +107,7 @@ case class ModelQueryBuilder(schemaName: String, model: Model, queryArguments: O
 }
 
 object SetParams {
+
   def setQueryArgs(preparedStatement: PreparedStatement, queryArguments: Option[QueryArguments]): Unit = {
     queryArguments.foreach { queryArgs =>
       setFilter(preparedStatement, queryArgs.filter)

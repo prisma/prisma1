@@ -57,49 +57,46 @@ case class JooqRelatedModelsQueryBuilder(
 ) {
   import QueryBuilders.topLevelAlias
 
-  val relation                = fromField.relation
-  val relatedModel            = fromField.relatedModel_!
-  val modelTable              = relatedModel.dbName
-  val relationTableName       = fromField.relation.relationTableName
-  val modelRelationSideColumn = relation.columnForRelationSide(fromField.relationSide)
-  val fieldRelationSideColumn = relation.columnForRelationSide(fromField.oppositeRelationSide)
-  val aColumn                 = relation.modelAColumn
-  val bColumn                 = relation.modelBColumn
-  val columnForRelatedModel   = relation.columnForRelationSide(fromField.oppositeRelationSide)
+  val relation                        = fromField.relation
+  val relatedModel                    = fromField.relatedModel_!
+  val modelTable                      = relatedModel.dbName
+  val relationTableName               = fromField.relation.relationTableName
+  val modelRelationSideColumn         = relation.columnForRelationSide(fromField.relationSide)
+  val oppositeModelRelationSideColumn = relation.columnForRelationSide(fromField.oppositeRelationSide)
+  val aColumn                         = relation.modelAColumn
+  val bColumn                         = relation.modelBColumn
+  val secondaryOrderByForPagination   = if (fromField.oppositeRelationSide == RelationSide.A) "__Relation__A" else "__Relation__B"
 
   lazy val queryStringWithPagination: String = {
-    s"""select "$topLevelAlias".*, "RelationTable"."$aColumn" as "__Relation__A",  "RelationTable"."$bColumn" as "__Relation__B"
-            from "$schemaName"."$modelTable" as "$topLevelAlias"
-            inner join "$schemaName"."$relationTableName" as "RelationTable"
-            on "$topLevelAlias"."${relatedModel.dbNameOfIdField_!}" = "RelationTable"."$fieldRelationSideColumn"
-            where "RelationTable"."$modelRelationSideColumn" = ? AND """ +
-      WhereClauseBuilder(schemaName).buildWhereClauseWithoutWhereKeyWord(queryArguments.flatMap(_.filter)) +
-      WhereClauseBuilder(schemaName).buildCursorCondition(queryArguments, relatedModel).map(" AND " + _).getOrElse("") +
-      //      OrderByClauseBuilder.internal("RelationTable", columnForRelatedModel, queryArguments) +
-      LimitClauseBuilder.limitClause(queryArguments)
+    s"""SELECT *
+        FROM
+        ( SELECT ROW_NUMBER() OVER (PARTITION BY "t"."__Relation__A"""" + OrderByClauseBuilder.internal("t", "t", secondaryOrderByForPagination, queryArguments) +
+      s""") AS "r", "t".*
+          FROM (
+              SELECT "$topLevelAlias".*, "RelationTable"."$aColumn" AS "__Relation__A",  "RelationTable"."$bColumn" AS "__Relation__B"
+              FROM "$schemaName"."$modelTable" AS "$topLevelAlias"
+              INNER JOIN "$schemaName"."$relationTableName" AS "RelationTable"
+              ON "$topLevelAlias"."${relatedModel.dbNameOfIdField_!}" = "RelationTable"."$oppositeModelRelationSideColumn"
+              WHERE "RelationTable"."$modelRelationSideColumn" IN ${queryPlaceHolders(relatedNodeIds)}
+              AND """ + WhereClauseBuilder(schemaName).buildWhereClauseWithoutWhereKeyWord(queryArguments.flatMap(_.filter)) +
+      WhereClauseBuilder(schemaName).buildCursorCondition(queryArguments, relatedModel).map(" AND " + _).getOrElse("") + s""") AS "t"
+       ) AS "x"
+       WHERE "x"."r"""" + LimitClauseBuilder.limitClauseForWindowFunction(queryArguments)
   }
 
   lazy val queryStringWithoutPagination: String = {
     s"""select "$topLevelAlias".*, "RelationTable"."$aColumn" as "__Relation__A",  "RelationTable"."$bColumn" as "__Relation__B"
             from "$schemaName"."$modelTable" as "$topLevelAlias"
             inner join "$schemaName"."$relationTableName" as "RelationTable"
-            on "$topLevelAlias"."${relatedModel.dbNameOfIdField_!}" = "RelationTable"."$fieldRelationSideColumn"
+            on "$topLevelAlias"."${relatedModel.dbNameOfIdField_!}" = "RelationTable"."$oppositeModelRelationSideColumn"
             where "RelationTable"."$modelRelationSideColumn" IN ${queryPlaceHolders(relatedNodeIds)} AND """ +
-      WhereClauseBuilder(schemaName).buildWhereClauseWithoutWhereKeyWord(queryArguments.flatMap(_.filter)) // +
-    //      OrderByClauseBuilder.internal(alias = "RelationTable", columnForRelatedModel, queryArguments)
+      WhereClauseBuilder(schemaName).buildWhereClauseWithoutWhereKeyWord(queryArguments.flatMap(_.filter)) +
+      OrderByClauseBuilder.internal(topLevelAlias, "RelationTable", oppositeModelRelationSideColumn, queryArguments)
   }
 }
 
 case class JooqModelQueryBuilder(connection: Connection, schemaName: String, model: Model, queryArguments: Option[QueryArguments]) {
   import QueryBuilders.topLevelAlias
-
-  //  lazy val queryString2: String = {
-  //    s"""SELECT * FROM "$schemaName"."${model.dbName}" AS "$topLevelAlias" """ +
-  //      JooqWhereClauseBuilder(schemaName).buildWhereClause(queryArguments.flatMap(_.filter)).getOrElse("") +
-  //      WhereClauseBuilder(schemaName).buildCursorCondition(queryArguments, model).map(" AND " + _).getOrElse("") +
-//  OrderByClauseBuilder.forModel(model, topLevelAlias, queryArguments) +
-  //      LimitClauseBuilder.limitClause(queryArguments)
-  //  }
 
   lazy val queryString: String = {
     import org.jooq.impl.DSL
@@ -107,44 +104,77 @@ case class JooqModelQueryBuilder(connection: Connection, schemaName: String, mod
 
     val sql = DSL.using(SQLDialect.POSTGRES_9_5, new Settings().withRenderFormatted(true))
 
-    val condition = JooqWhereClauseBuilder(schemaName).buildWhereClause(queryArguments.flatMap(_.filter)).getOrElse(and(trueCondition()))
-    val cursor    = JooqWhereClauseBuilder(schemaName).buildCursorCondition(queryArguments, model)
-    val order     = JooqOrderByClauseBuilder.forModel(model, topLevelAlias, queryArguments)
-    val limit     = JooqLimitClauseBuilder.limitClause(queryArguments)
+    val condition       = JooqWhereClauseBuilder(schemaName).buildWhereClause(queryArguments.flatMap(_.filter)).getOrElse(and(trueCondition()))
+    val cursorCondition = JooqWhereClauseBuilder(schemaName).buildCursorCondition(queryArguments, model)
+    val order           = JooqOrderByClauseBuilder.forModel(model, topLevelAlias, queryArguments)
+    val limit           = JooqLimitClauseBuilder.limitClause(queryArguments)
 
     val aliasedTable = table(name(schemaName, model.dbName)).as(topLevelAlias)
 
-    val base: SelectSeekStepN[Record] = sql
+    val base = sql
       .select()
       .from(aliasedTable)
-      .where(condition)
+      .where(condition, cursorCondition)
       .orderBy(order: _*)
 
-    val withSeek = true match {
-      case true  => base
-      case false => base
-    }
-
     val finalQuery = limit match {
-      case Some((lim, off)) => withSeek.limit(lim).offset(off)
-      case None             => withSeek
+      case Some(_) => base.limit(10).offset(10)
+      case None    => base
     }
 
     finalQuery.getSQL
   }
-
 }
 
 object JooqSetParams {
   def setQueryArgs(preparedStatement: PreparedStatement, queryArguments: Option[QueryArguments]): Unit = {
+    val pp = new PositionedParameters(preparedStatement)
     queryArguments.foreach { queryArgs =>
-      setFilter(preparedStatement, queryArgs.filter)
+      setFilter(pp, queryArgs.filter)
+    }
+
+    queryArguments.foreach { queryArgs =>
+      setCursor(pp, queryArgs)
+    }
+
+    queryArguments.foreach { queryArgs =>
+      setLimit(pp, queryArgs)
+    }
+
+  }
+
+  def setFilter(pp: PositionedParameters, filter: Option[Filter]): Unit = {
+    filter.foreach { filter =>
+      setParams(pp, filter)
     }
   }
 
-  def setFilter(preparedStatement: PreparedStatement, filter: Option[Filter]): Unit = {
-    filter.foreach { filter =>
-      setParams(new PositionedParameters(preparedStatement), filter)
+  def setCursor(pp: PositionedParameters, queryArguments: QueryArguments): Unit = {
+    queryArguments.after.foreach {
+      pp.setString
+    }
+    queryArguments.after.foreach {
+      pp.setString
+    }
+    queryArguments.before.foreach {
+      pp.setString
+    }
+    queryArguments.before.foreach {
+      pp.setString
+    }
+  }
+
+  def setLimit(pp: PositionedParameters, queryArguments: QueryArguments): Unit = {
+    queryArguments.first.foreach { _ =>
+      val (first, second) = JooqLimitClauseBuilder.limitClause(Some(queryArguments)).get
+      pp.setInt(first)
+      pp.setInt(second)
+    }
+
+    queryArguments.last.foreach { _ =>
+      val (first, second) = JooqLimitClauseBuilder.limitClause(Some(queryArguments)).get
+      pp.setInt(first)
+      pp.setInt(second)
     }
   }
 

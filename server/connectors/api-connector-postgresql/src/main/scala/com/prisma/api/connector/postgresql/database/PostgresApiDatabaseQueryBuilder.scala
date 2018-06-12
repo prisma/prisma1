@@ -70,9 +70,8 @@ case class PostgresApiDatabaseQueryBuilder(
       println("Jooq")
       println(jooqQuery)
 
-      //      val ps = ctx.connection.prepareStatement(builder.queryString)
       val ps = ctx.connection.prepareStatement(jooqBuilder.queryString)
-      SetParams.setQueryArgs(ps, args)
+      JooqSetParams.setQueryArgs(ps, args)
       // execute
       val rs: ResultSet = ps.executeQuery()
       // read result
