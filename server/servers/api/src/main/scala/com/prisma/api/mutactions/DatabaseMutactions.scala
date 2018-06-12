@@ -201,8 +201,8 @@ case class DatabaseMutactions(project: Project) {
       val (nonListCreateArgs, listCreateArgs) = upsert.create.getCreateArgs(pathForCreate)
       val (nonListUpdateArgs, listUpdateArgs) = upsert.update.getUpdateArgs(pathForUpdate.lastModel)
 
-      val createdNestedActions = getNestedMutactionsForUpsert(upsert.create, pathForCreate, true)
-      val updateNestedActions  = getNestedMutactionsForUpsert(upsert.update, pathForUpdate, false)
+      val createdNestedActions = getNestedMutactionsForUpsert(upsert.create, pathForCreate, triggeredFromCreate = true)
+      val updateNestedActions  = getNestedMutactionsForUpsert(upsert.update, pathForUpdate, triggeredFromCreate = false)
 
       Vector(
         UpsertDataItemIfInRelationWith(
