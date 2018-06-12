@@ -24,7 +24,7 @@ class QueriesSchemaBuilderSpec extends WordSpec with Matchers with ApiSpecBase w
       val project = SchemaDsl.fromBuilder { schema =>
         val testSchema = schema.model("Todo")
         testSchema.fields.clear()
-        testSchema.field("id", _.GraphQLID, isUnique = true, isHidden = true)
+        testSchema.field("id", _.Cuid, isUnique = true, isHidden = true)
       }
 
       val schema = SchemaRenderer.renderSchema(schemaBuilder(project))
@@ -35,7 +35,7 @@ class QueriesSchemaBuilderSpec extends WordSpec with Matchers with ApiSpecBase w
       val project = SchemaDsl.fromBuilder { schema =>
         val testSchema = schema.model("Todo")
         testSchema.fields.clear()
-        testSchema.field("id", _.GraphQLID, isUnique = true, isHidden = true)
+        testSchema.field("id", _.Cuid, isUnique = true, isHidden = true)
         testSchema.field("test", _.String, isUnique = true)
       }
 

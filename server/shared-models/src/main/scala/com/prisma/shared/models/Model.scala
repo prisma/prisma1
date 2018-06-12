@@ -38,8 +38,8 @@ class Model(
   lazy val visibleRelationFields: List[RelationField]   = relationFields.filter(_.isVisible)
   lazy val cascadingRelationFields: List[RelationField] = relationFields.filter(field => field.relation.sideOfModelCascades(this))
   lazy val nonListFields                                = fields.filter(!_.isList)
-  lazy val idField                                      = getFieldByName("id")
-  lazy val idField_!                                    = getFieldByName_!("id")
+  lazy val idField                                      = getScalarFieldByName("id")
+  lazy val idField_!                                    = getScalarFieldByName_!("id")
   lazy val dbNameOfIdField_!                            = idField_!.dbName
   lazy val updatedAtField                               = getFieldByName("updatedAt")
   lazy val hasVisibleIdField: Boolean                   = idField.exists(_.isVisible)

@@ -1,5 +1,8 @@
 package com.prisma.api.schema
 
+import java.util.UUID
+
+import com.prisma.gc_values.UuidGCValue
 import org.joda.time.format.DateTimeFormat
 import org.joda.time.{DateTime, DateTimeZone}
 import play.api.libs.json._
@@ -67,4 +70,27 @@ object CustomScalarTypes {
       case _                                    ⇒ Left(JsonCoercionViolation)
     }
   )
+
+  val UUIDType = ScalarType[UUID](
+    name = "UUID",
+    description = Some("A type 4 UUID according to IETF RFC 4122."),
+    coerceOutput = (value, _) => value,
+    coerceInput = {
+      case str: ast.StringValue => parseStringAsUUID(str.value)
+      case _                    => Left(UUIDCoercionViolation)
+    },
+    coerceUserInput = {
+      case str: String => parseStringAsUUID(str)
+      case _           => Left(UUIDCoercionViolation)
+    }
+  )
+
+  object UUIDCoercionViolation extends ValueCoercionViolation("This is not a valid type 4 UUID.")
+
+  private def parseStringAsUUID(str: String): Either[UUIDCoercionViolation.type, UUID] = {
+    UuidGCValue.parse(str) match {
+      case Success(x) => Right(x.value)
+      case Failure(_) => Left(UUIDCoercionViolation)
+    }
+  }
 }

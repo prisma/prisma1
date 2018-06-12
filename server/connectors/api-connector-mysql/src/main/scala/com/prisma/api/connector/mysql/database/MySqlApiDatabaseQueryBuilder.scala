@@ -43,8 +43,8 @@ case class MySqlApiDatabaseQueryBuilder(project: Project)(implicit ec: Execution
     override def apply(ps: PositionedResult): RelationNode = RelationNode(ps.rs.getAsID("A"), ps.rs.getAsID("B"))
   }
 
-  implicit object GetRelationCount extends GetResult[(IdGCValue, Int)] {
-    override def apply(ps: PositionedResult): (IdGCValue, Int) = (ps.rs.getId, ps.rs.getInt("Count"))
+  implicit object GetRelationCount extends GetResult[(CuidGCValue, Int)] {
+    override def apply(ps: PositionedResult): (CuidGCValue, Int) = (ps.rs.getId, ps.rs.getInt("Count"))
   }
 
   def getResultForScalarListField(field: ScalarField): GetResult[ScalarListElement] = GetResult { ps: PositionedResult =>
@@ -82,7 +82,7 @@ case class MySqlApiDatabaseQueryBuilder(project: Project)(implicit ec: Execution
       val convertedValues =
         res.nodes
           .groupBy(_.nodeId)
-          .map { case (id, values) => ScalarListValues(IdGCValue(id), ListGCValue(values.sortBy(_.position).map(_.value))) }
+          .map { case (id, values) => ScalarListValues(CuidGCValue(id), ListGCValue(values.sortBy(_.position).map(_.value))) }
           .toVector
       res.copy(nodes = convertedValues)
     }
@@ -118,7 +118,7 @@ case class MySqlApiDatabaseQueryBuilder(project: Project)(implicit ec: Execution
     override def apply(ps: PreparedStatement, index: Int, value: GCValue): Unit = ps.setGcValue(index, value)
   }
 
-  def selectFromScalarList(modelName: String, field: ScalarField, nodeIds: Vector[IdGCValue]): DBIOAction[Vector[ScalarListValues], NoStream, Effect] = {
+  def selectFromScalarList(modelName: String, field: ScalarField, nodeIds: Vector[CuidGCValue]): DBIOAction[Vector[ScalarListValues], NoStream, Effect] = {
     val query = sql"select nodeId, position, value from `#${project.id}`.`#${modelName}_#${field.name}` where nodeId in (" ++ combineByComma(
       nodeIds.map(v => sql"$v")) ++ sql")"
 
@@ -127,13 +127,13 @@ case class MySqlApiDatabaseQueryBuilder(project: Project)(implicit ec: Execution
       grouped.map {
         case (id, values) =>
           val gcValues = values.sortBy(_.position).map(_.value)
-          ScalarListValues(IdGCValue(id), ListGCValue(gcValues))
+          ScalarListValues(CuidGCValue(id), ListGCValue(gcValues))
       }.toVector
     }
   }
 
   def batchSelectAllFromRelatedModel(fromField: RelationField,
-                                     fromModelIds: Vector[IdGCValue],
+                                     fromModelIds: Vector[CuidGCValue],
                                      args: Option[QueryArguments]): DBIOAction[Vector[ResolverResult[PrismaNodeWithParent]], NoStream, Effect] = {
 
     val relatedModel         = fromField.relatedModel_!

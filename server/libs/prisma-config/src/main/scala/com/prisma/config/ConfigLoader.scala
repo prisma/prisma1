@@ -115,7 +115,6 @@ object ConfigLoader {
     val databases = extractScalaMap(map.getOrElse("databases", emptyJavaMap), path = "databases").map {
       case (dbName, dbMap) =>
         val x = readDbWithConnectionString(dbName, dbMap)
-        x.failed.foreach(_.printStackTrace())
         x.getOrElse(readExplicitDb(dbName, dbMap))
     }.toSeq
 

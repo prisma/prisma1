@@ -1,8 +1,12 @@
 package com.prisma.gc_values
 
+import java.util.UUID
+
 import org.joda.time.DateTime
 import play.api.libs.json._
+
 import scala.collection.immutable.SortedMap
+import scala.util.Try
 
 /**
   * GCValues should be the sole way to represent data within our system.
@@ -22,7 +26,7 @@ object RootGCValue {
 }
 case class RootGCValue(map: SortedMap[String, GCValue]) extends GCValue {
   def idField = map.get("id") match {
-    case Some(id) => id.asInstanceOf[IdGCValue]
+    case Some(id) => id.asInstanceOf[CuidGCValue]
     case None     => sys.error("There was no field with name 'id'.")
   }
 
@@ -51,14 +55,21 @@ case class ListGCValue(values: Vector[GCValue]) extends GCValue {
 }
 
 sealed trait LeafGCValue extends GCValue
-object NullGCValue extends LeafGCValue {
-  def value = None
-}
+
+object NullGCValue                          extends LeafGCValue { def value = None }
 case class StringGCValue(value: String)     extends LeafGCValue
 case class IntGCValue(value: Int)           extends LeafGCValue
 case class FloatGCValue(value: Double)      extends LeafGCValue
 case class BooleanGCValue(value: Boolean)   extends LeafGCValue
-case class IdGCValue(value: String)         extends LeafGCValue
 case class DateTimeGCValue(value: DateTime) extends LeafGCValue
 case class EnumGCValue(value: String)       extends LeafGCValue
 case class JsonGCValue(value: JsValue)      extends LeafGCValue
+
+sealed trait IdGcValue                extends LeafGCValue
+case class CuidGCValue(value: String) extends IdGcValue
+case class UuidGCValue(value: UUID)   extends IdGcValue
+
+object UuidGCValue {
+  def parse_!(s: String): UuidGCValue    = parse(s).get
+  def parse(s: String): Try[UuidGCValue] = Try { UuidGCValue(UUID.fromString(s)) }
+}

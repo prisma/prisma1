@@ -1,5 +1,7 @@
 package com.prisma.api.server
 
+import java.util.UUID
+
 import org.joda.time.DateTime
 import org.joda.time.format.DateTimeFormat
 import play.api.libs.json._
@@ -22,23 +24,24 @@ object JsonMarshalling {
     def arrayNode(values: Vector[JsValue]) = JsArray(values)
 
     def optionalArrayNodeValue(value: Option[JsValue]) = value match {
-      case Some(v) ⇒ v
-      case None    ⇒ nullNode
+      case Some(v) => v
+      case None    => nullNode
     }
 
     def scalarNode(value: Any, typeName: String, info: Set[ScalarValueInfo]): JsValue =
       value match {
-        case v: String     ⇒ JsString(v)
-        case v: Boolean    ⇒ JsBoolean(v)
-        case v: Int        ⇒ JsNumber(v)
-        case v: Long       ⇒ JsNumber(v)
-        case v: Float      ⇒ JsNumber(BigDecimal(v.toDouble))
-        case v: Double     ⇒ JsNumber(v)
-        case v: BigInt     ⇒ JsNumber(BigDecimal(v))
-        case v: BigDecimal ⇒ JsNumber(v)
-        case v: DateTime   ⇒ JsString(v.toString(DateTimeFormat.forPattern("yyyy-MM-dd'T'HH:mm:ss.SSS'Z").withZoneUTC()))
-        case v: JsValue    ⇒ v
-        case v             ⇒ throw new IllegalArgumentException("Unsupported scalar value in CustomSprayJsonResultMarshaller: " + v)
+        case v: String     => JsString(v)
+        case v: Boolean    => JsBoolean(v)
+        case v: Int        => JsNumber(v)
+        case v: Long       => JsNumber(v)
+        case v: Float      => JsNumber(BigDecimal(v.toDouble))
+        case v: Double     => JsNumber(v)
+        case v: BigInt     => JsNumber(BigDecimal(v))
+        case v: BigDecimal => JsNumber(v)
+        case v: DateTime   => JsString(v.toString(DateTimeFormat.forPattern("yyyy-MM-dd'T'HH:mm:ss.SSS'Z").withZoneUTC()))
+        case v: JsValue    => v
+        case v: UUID       => JsString(v.toString)
+        case v             => throw new IllegalArgumentException("Unsupported scalar value in CustomSprayJsonResultMarshaller: " + v)
       }
 
     def enumNode(value: String, typeName: String) = JsString(value)
@@ -67,10 +70,10 @@ object JsonMarshalling {
     def isDefined(node: JsValue) = node != JsNull
 
     def getScalarValue(node: JsValue): Any = node match {
-      case JsBoolean(b) ⇒ b
-      case JsNumber(d)  ⇒ d.toBigIntExact getOrElse d
-      case JsString(s)  ⇒ s
-      case n            ⇒ n
+      case JsBoolean(b) => b
+      case JsNumber(d)  => d.toBigIntExact getOrElse d
+      case JsString(s)  => s
+      case n            => n
     }
 
     def getScalaScalarValue(node: JsValue) = getScalarValue(node)

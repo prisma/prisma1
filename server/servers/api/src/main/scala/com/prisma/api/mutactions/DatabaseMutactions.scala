@@ -137,7 +137,7 @@ case class DatabaseMutactions(project: Project) {
       triggeredFromCreate: Boolean
   ): Vector[DatabaseMutaction] = {
     nestedMutation.creates.flatMap { create =>
-      val extendedPath            = extend(path, field, create).lastEdgeToNodeEdge(NodeSelector.forId(model, createCuid()))
+      val extendedPath            = extend(path, field, create).lastEdgeToNodeEdge(NodeSelector.forIdGCValue(model, NodeIds.createNodeIdForModel(model)))
       val (nonListArgs, listArgs) = create.data.getCreateArgs(extendedPath)
 
       val createMutactions = List(CreateDataItem(project, extendedPath, nonListArgs, listArgs))
@@ -190,7 +190,7 @@ case class DatabaseMutactions(project: Project) {
   def getMutactionsForNestedUpsertMutation(nestedMutation: NestedMutations, path: Path, field: RelationField): Vector[DatabaseMutaction] = {
     nestedMutation.upserts.flatMap { upsert =>
       val extendedPath = extend(path, field, upsert)
-      val createWhere  = NodeSelector.forId(extendedPath.lastModel, createCuid())
+      val createWhere  = NodeSelector.forIdGCValue(extendedPath.lastModel, NodeIds.createNodeIdForModel(extendedPath.lastModel))
 
       val pathForUpdate = upsert match {
         case upsert: UpsertByWhere => extendedPath.lastEdgeToNodeEdge(upsert.where)
@@ -201,8 +201,8 @@ case class DatabaseMutactions(project: Project) {
       val (nonListCreateArgs, listCreateArgs) = upsert.create.getCreateArgs(pathForCreate)
       val (nonListUpdateArgs, listUpdateArgs) = upsert.update.getUpdateArgs(pathForUpdate.lastModel)
 
-      val createdNestedActions = getNestedMutactionsForUpsert(upsert.create, pathForCreate, true)
-      val updateNestedActions  = getNestedMutactionsForUpsert(upsert.update, pathForUpdate, false)
+      val createdNestedActions = getNestedMutactionsForUpsert(upsert.create, pathForCreate, triggeredFromCreate = true)
+      val updateNestedActions  = getNestedMutactionsForUpsert(upsert.update, pathForUpdate, triggeredFromCreate = false)
 
       Vector(
         UpsertDataItemIfInRelationWith(

@@ -5,7 +5,7 @@ import com.prisma.api.connector._
 import com.prisma.api.mutations.BatchPayload
 import com.prisma.api.resolver.DeferredTypes._
 import com.prisma.api.resolver.{IdBasedConnection, IdBasedConnectionDefinition}
-import com.prisma.api.schema.CustomScalarTypes.{DateTimeType, JsonType}
+import com.prisma.api.schema.CustomScalarTypes.{DateTimeType, JsonType, UUIDType}
 import com.prisma.gc_values._
 import com.prisma.shared.models
 import com.prisma.shared.models.{Field => _, _}
@@ -85,7 +85,7 @@ class ObjectTypeBuilder(
           .map(mapClientField(model))
       },
       interfaces = {
-        val idFieldHasRightType = model.idField.exists(f => f.typeIdentifier == TypeIdentifier.String || f.typeIdentifier == TypeIdentifier.GraphQLID)
+        val idFieldHasRightType = model.idField.exists(f => f.typeIdentifier == TypeIdentifier.String || f.typeIdentifier == TypeIdentifier.Cuid)
         if (model.hasVisibleIdField && idFieldHasRightType) {
           nodeInterface.toList
         } else {
@@ -115,14 +115,15 @@ class ObjectTypeBuilder(
       case f: RelationField => resolveConnection(f)
       case f: ScalarField =>
         f.typeIdentifier match {
-          case TypeIdentifier.String    => StringType
-          case TypeIdentifier.Int       => IntType
-          case TypeIdentifier.Float     => FloatType
-          case TypeIdentifier.Boolean   => BooleanType
-          case TypeIdentifier.GraphQLID => IDType
-          case TypeIdentifier.DateTime  => DateTimeType
-          case TypeIdentifier.Json      => JsonType
-          case TypeIdentifier.Enum      => SchemaBuilderUtils.mapEnumFieldToInputType(f)
+          case TypeIdentifier.String   => StringType
+          case TypeIdentifier.Int      => IntType
+          case TypeIdentifier.Float    => FloatType
+          case TypeIdentifier.Boolean  => BooleanType
+          case TypeIdentifier.Cuid     => IDType
+          case TypeIdentifier.UUID     => UUIDType
+          case TypeIdentifier.DateTime => DateTimeType
+          case TypeIdentifier.Json     => JsonType
+          case TypeIdentifier.Enum     => SchemaBuilderUtils.mapEnumFieldToInputType(f)
         }
     }
 
