@@ -43,7 +43,7 @@ object MySqlApiDatabaseMutationBuilder {
 
   def createRelayRow(projectId: String, path: Path): SqlStreamingAction[Vector[Int], Int, Effect]#ResultAction[Int, NoStream, Effect] = {
     val where = path.lastCreateWhere_!
-    (sql"INSERT INTO `#$projectId`.`_RelayId` (`id`, `stableModelIdentifier`) VALUES (${where.fieldValue}, ${where.model.stableIdentifier})").asUpdate
+    (sql"INSERT INTO `#$projectId`.`_RelayId` (`id`, `stableModelIdentifier`) VALUES (${where.fieldGCValue}, ${where.model.stableIdentifier})").asUpdate
   }
 
   def createRelationRowByPath(projectId: String, path: Path): SqlAction[Int, NoStream, Effect] = {
@@ -54,7 +54,7 @@ object MySqlApiDatabaseMutationBuilder {
     val relationId = Cuid.createCuid()
     (sql"insert into `#$projectId`.`#${path.lastRelation_!.relationTableName}` (`id`, `#${path.parentSideOfLastEdge}`, `#${path.childSideOfLastEdge}`)" ++
       sql"Select '#$relationId'," ++ pathQueryForLastChild(projectId, path.removeLastEdge) ++ sql"," ++
-      sql"`id` FROM `#$projectId`.`#${childWhere.model.name}` where `#${childWhere.field.name}` = ${childWhere.fieldValue}" ++
+      sql"`id` FROM `#$projectId`.`#${childWhere.model.name}` where `#${childWhere.field.name}` = ${childWhere.fieldGCValue}" ++
       sql"on duplicate key update `#$projectId`.`#${path.lastRelation_!.relationTableName}`.id = `#$projectId`.`#${path.lastRelation_!.relationTableName}`.id").asUpdate
   }
 
@@ -316,7 +316,7 @@ object MySqlApiDatabaseMutationBuilder {
 
   // region HELPERS
 
-  def idFromWhere(projectId: String, where: NodeSelector): SQLActionBuilder = (where.isId, where.fieldValue) match {
+  def idFromWhere(projectId: String, where: NodeSelector): SQLActionBuilder = (where.isId, where.fieldGCValue) match {
     case (true, NullGCValue)  => sys.error("id should not be NULL")
     case (true, idValue)      => sql"$idValue"
     case (false, NullGCValue) => sql"(SELECT `id` FROM (SELECT * FROM `#$projectId`.`#${where.model.name}`) IDFROMWHERE WHERE `#${where.field.name}` is NULL)"
@@ -326,7 +326,7 @@ object MySqlApiDatabaseMutationBuilder {
   def idFromWhereEquals(projectId: String, where: NodeSelector): SQLActionBuilder = sql" = " ++ idFromWhere(projectId, where)
 
   def idFromWherePath(projectId: String, where: NodeSelector): SQLActionBuilder = {
-    sql"(SELECT `id` FROM (SELECT  * From `#$projectId`.`#${where.model.name}`) IDFROMWHEREPATH WHERE `#${where.field.name}` = ${where.fieldValue})"
+    sql"(SELECT `id` FROM (SELECT  * From `#$projectId`.`#${where.model.name}`) IDFROMWHEREPATH WHERE `#${where.field.name}` = ${where.fieldGCValue})"
   }
 
   //we could probably save even more joins if we start the paths always at the last node edge
@@ -362,7 +362,7 @@ object MySqlApiDatabaseMutationBuilder {
 
   def whereFailureTrigger(project: Project, where: NodeSelector) = {
     val table = where.model.name
-    val query = sql"(SELECT `id` FROM `#${project.id}`.`#${where.model.name}` WHEREFAILURETRIGGER WHERE `#${where.field.name}` = ${where.fieldValue})"
+    val query = sql"(SELECT `id` FROM `#${project.id}`.`#${where.model.name}` WHEREFAILURETRIGGER WHERE `#${where.field.name}` = ${where.fieldGCValue})"
 
     triggerFailureWhenNotExists(project, query, table)
   }
@@ -624,8 +624,7 @@ object MySqlApiDatabaseMutationBuilder {
             .filter(element => element._1 == Statement.EXECUTE_FAILED)
             .map { failed =>
               val failedValue: GCValue = argsWithIndex.find(_._2 == failed._2).get._1
-              s"Failure inserting into listTable $tableName for the id $nodeId for value ${GCValueExtractor.fromGCValue(failedValue)}. Cause: ${removeConnectionInfoFromCause(
-                e.getCause.toString)}"
+              s"Failure inserting into listTable $tableName for the id $nodeId for value ${failedValue.value}. Cause: ${removeConnectionInfoFromCause(e.getCause.toString)}"
             }
             .toVector
 

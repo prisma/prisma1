@@ -1,6 +1,7 @@
 package com.prisma.deploy.migration
 
 import com.prisma.deploy.migration.DirectiveTypes.{InlineRelationDirective, RelationTableDirective}
+import com.prisma.shared.models.TypeIdentifier.ScalarTypeIdentifier
 import com.prisma.shared.models.{OnDelete, TypeIdentifier}
 import sangria.ast._
 
@@ -69,7 +70,10 @@ object DataSchemaAstExtensions {
 
   implicit class CoolField(val fieldDefinition: FieldDefinition) extends AnyVal {
 
-    def hasScalarType: Boolean = TypeIdentifier.withNameOpt(typeName).isDefined
+    def hasScalarType: Boolean = TypeIdentifier.withNameOpt(typeName) match {
+      case Some(_: ScalarTypeIdentifier) => true
+      case _                             => false
+    }
 
     def previousName: String = {
       val nameBeforeRename = fieldDefinition.directiveArgumentAsString("rename", "oldName")

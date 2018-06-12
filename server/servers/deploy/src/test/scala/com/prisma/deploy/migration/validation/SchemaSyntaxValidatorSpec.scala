@@ -464,7 +464,7 @@ class SchemaSyntaxValidatorSpec extends WordSpecLike with Matchers {
     val error1 = result.head
     error1.`type` should equal("Todo")
     error1.field should equal(Some("id"))
-    error1.description should include(s"The field `id` is reserved and has to have the format: id: ID! @unique.")
+    error1.description should include(s"The field `id` is reserved and has to have the format: id: ID! @unique or id: UUID! @unique.")
   }
 
   "fail if an id field does not match the valid types for a passive connector" in {
@@ -478,7 +478,7 @@ class SchemaSyntaxValidatorSpec extends WordSpecLike with Matchers {
     val error1 = result.head
     error1.`type` should equal("Todo")
     error1.field should equal(Some("id"))
-    error1.description should include(s"The field `id` is reserved and has to have the format: id: ID! @unique or id: Int! @unique.")
+    error1.description should include(s"The field `id` is reserved and has to have the format: id: ID! @unique or id: UUID! @unique or id: Int! @unique.")
   }
 
   "not fail if an id field is of type Int for a passive connector" in {
@@ -514,7 +514,8 @@ class SchemaSyntaxValidatorSpec extends WordSpecLike with Matchers {
     val error1 = result.head
     error1.`type` should equal("Todo")
     error1.field should equal(Some("id"))
-    error1.description should include(s"The required field `id` is missing and has to have the format: id: ID! @unique or id: Int! @unique.")
+    error1.description should include(
+      s"The required field `id` is missing and has to have the format: id: ID! @unique or id: UUID! @unique or id: Int! @unique.")
   }
 
   "fail if there is a duplicate enum in datamodel" in {

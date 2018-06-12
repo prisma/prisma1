@@ -148,7 +148,7 @@ class MutationsSchemaBuilderSpec extends FlatSpec with Matchers with ApiSpecBase
     val project = SchemaDsl.fromBuilder { schema =>
       val model = schema.model("Todo")
       model.fields.clear()
-      model.field_!("id", _.GraphQLID, isHidden = true)
+      model.field_!("id", _.Cuid, isHidden = true)
     }
 
     val schema = SchemaRenderer.renderSchema(schemaBuilder(project))

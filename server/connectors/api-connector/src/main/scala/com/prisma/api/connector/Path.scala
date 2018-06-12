@@ -61,7 +61,7 @@ case class Path(root: NodeSelector, edges: List[Edge]) {
   def lastCreateWhere_! : NodeSelector = if (edges.isEmpty) root else lastEdge_!.asInstanceOf[NodeEdge].childWhere
 
   def pretty: String =
-    s"Where: ${root.model.name}, ${root.field.name}, ${root.fieldValueAsString} |  " + edges
+    s"Where: ${root.model.name}, ${root.field.name}, ${root.value} |  " + edges
       .map(edge => s"${edge.parent.name}<->${edge.child.name}")
       .mkString(" ")
 
