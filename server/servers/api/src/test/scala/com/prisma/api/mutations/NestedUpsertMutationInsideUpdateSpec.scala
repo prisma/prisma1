@@ -2,7 +2,7 @@ package com.prisma.api.mutations
 
 import java.util.UUID
 
-import com.prisma.IgnorePassive
+import com.prisma.{IgnoreMySql, IgnorePassive}
 import com.prisma.api.ApiSpecBase
 import com.prisma.shared.schema_dsl.SchemaDsl
 import org.scalatest.{FlatSpec, Matchers}
@@ -1693,7 +1693,7 @@ class NestedUpsertMutationInsideUpdateSpec extends FlatSpec with Matchers with A
     server.query("query{bottoms{nameBottom}}", project).toString should be("""{"data":{"bottoms":[{"nameBottom":"created bottom"}]}}""")
   }
 
-  "a nested upsert for a type with an id field of type uuid" should "work" in {
+  "a nested upsert for a type with an id field of type uuid" should "work" taggedAs (IgnoreMySql) {
     val project = SchemaDsl.fromString() {
       s"""
          |type List {

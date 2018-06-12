@@ -2,12 +2,13 @@ package com.prisma.api.mutations
 
 import java.util.UUID
 
+import com.prisma.IgnoreMySql
 import com.prisma.api.ApiSpecBase
 import com.prisma.shared.schema_dsl.SchemaDsl
 import org.scalatest.{FlatSpec, Matchers}
 
 class CreateGraphQLSpec extends FlatSpec with Matchers with ApiSpecBase {
-  "Creating an item with an id field of type UUID" should "work" in {
+  "Creating an item with an id field of type UUID" should "work" taggedAs (IgnoreMySql) {
     val project = SchemaDsl.fromString() {
       s"""
          |type Todo {
