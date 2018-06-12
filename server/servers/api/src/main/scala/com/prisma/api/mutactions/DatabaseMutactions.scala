@@ -121,7 +121,7 @@ case class DatabaseMutactions(project: Project) {
 
   def getMutactionsForWhereChecks(nestedMutation: NestedMutations): Vector[DatabaseMutaction] = {
     (nestedMutation.updates ++ nestedMutation.deletes ++ nestedMutation.connects ++ nestedMutation.disconnects).collect {
-      case x: NestedWhere => VerifyWhere(project, x.where)
+      case x: HasNestedWhere => VerifyWhere(project, x.where)
     }
   }
 
@@ -248,8 +248,8 @@ case class DatabaseMutactions(project: Project) {
 
   def extend(path: Path, field: RelationField, nestedMutation: NestedMutation): Path = {
     nestedMutation match {
-      case x: NestedWhere => path.append(NodeEdge(field, x.where))
-      case _              => path.append(ModelEdge(field))
+      case x: HasNestedWhere => path.append(NodeEdge(field, x.where))
+      case _                 => path.append(ModelEdge(field))
     }
   }
 
