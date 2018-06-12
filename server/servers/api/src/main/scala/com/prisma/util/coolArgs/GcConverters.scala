@@ -3,7 +3,7 @@ package com.prisma.util.coolArgs
 import com.prisma.api.connector.PrismaArgs
 import com.prisma.gc_values._
 import com.prisma.shared.models.TypeIdentifier.TypeIdentifier
-import com.prisma.shared.models.{Field, Model, ScalarField, TypeIdentifier}
+import com.prisma.shared.models.{Model, ScalarField, TypeIdentifier}
 import org.joda.time.DateTime
 import org.scalactic.{Bad, Good, Or}
 import play.api.libs.json.{JsValue, _}
@@ -12,7 +12,7 @@ import sangria.ast._
 import scala.util.control.NonFatal
 
 /**
-  * 7. Any <-> GCValue - This is used to transform Sangria arguments
+  *  Any <-> GCValue - This is used to transform Sangria arguments
   */
 case class GCAnyConverter(typeIdentifier: TypeIdentifier, isList: Boolean) extends GCConverter[Any] {
   import OtherGCStuff._
@@ -48,12 +48,10 @@ case class GCAnyConverter(typeIdentifier: TypeIdentifier, isList: Boolean) exten
       case NonFatal(_) => Bad(InvalidValueForScalarType(t.toString, typeIdentifier.toString))
     }
   }
-
-  override def fromGCValue(t: GCValue): Any = GCValueExtractor.fromGCValue(t)
 }
 
 /**
-  * 7. CoolArgs <-> ReallyCoolArgs - This is used to transform from Coolargs for create on a model to typed ReallyCoolArgs
+  *  CoolArgs <-> ReallyCoolArgs - This is used to transform from Coolargs for create on a model to typed ReallyCoolArgs
   */
 case class GCCreateReallyCoolArgsConverter(model: Model) {
 
@@ -106,25 +104,5 @@ case class GCCreateReallyCoolArgsConverter(model: Model) {
       field.name -> converted
     }
     PrismaArgs(RootGCValue(res: _*))
-  }
-}
-
-object OtherGCStuff {
-
-  /**
-    * This helps convert Or listvalues.
-    */
-  def sequence[A, B](seq: Vector[Or[A, B]]): Or[Vector[A], B] = {
-    def recurse(seq: Vector[Or[A, B]])(acc: Vector[A]): Or[Vector[A], B] = {
-      if (seq.isEmpty) {
-        Good(acc)
-      } else {
-        seq.head match {
-          case Good(x)    => recurse(seq.tail)(acc :+ x)
-          case Bad(error) => Bad(error)
-        }
-      }
-    }
-    recurse(seq)(Vector.empty)
   }
 }

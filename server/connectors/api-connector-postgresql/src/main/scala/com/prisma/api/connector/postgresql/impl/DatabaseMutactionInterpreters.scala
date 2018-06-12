@@ -45,7 +45,7 @@ case class CascadingDeleteRelationMutactionsInterpreter(mutaction: CascadingDele
 
   private def causeString(field: RelationField) = path.lastEdge match {
     case Some(edge: NodeEdge) =>
-      s"-OLDPARENTPATHFAILURETRIGGERBYFIELD@${field.relation.relationTableName}@${field.oppositeRelationSide}@${edge.childWhere.fieldValueAsString}-"
+      s"-OLDPARENTPATHFAILURETRIGGERBYFIELD@${field.relation.relationTableName}@${field.oppositeRelationSide}@${edge.childWhere.value}-"
     case _ => s"-OLDPARENTPATHFAILURETRIGGERBYFIELD@${field.relation.relationTableName}@${field.oppositeRelationSide}-"
   }
 }
@@ -151,7 +151,7 @@ case class DeleteRelationCheckInterpreter(mutaction: DeleteRelationCheck) extend
 
   private def causeString(field: RelationField) = path.lastEdge match {
     case Some(edge: NodeEdge) =>
-      s"-OLDPARENTPATHFAILURETRIGGERBYFIELD@${field.relation.relationTableName}@${field.oppositeRelationSide}@${edge.childWhere.fieldValueAsString}-"
+      s"-OLDPARENTPATHFAILURETRIGGERBYFIELD@${field.relation.relationTableName}@${field.oppositeRelationSide}@${edge.childWhere.value}-"
     case _ => s"-OLDPARENTPATHFAILURETRIGGERBYFIELD@${field.relation.relationTableName}@${field.oppositeRelationSide}-"
   }
 }
@@ -288,7 +288,7 @@ case class VerifyConnectionInterpreter(mutaction: VerifyConnection) extends Data
     case _: ModelEdge =>
       s"CONNECTIONFAILURETRIGGERPATH@${path.lastRelation_!.relationTableName}@${path.columnForParentSideOfLastEdge}"
     case edge: NodeEdge =>
-      s"CONNECTIONFAILURETRIGGERPATH@${path.lastRelation_!.relationTableName}@${path.columnForParentSideOfLastEdge}@${path.columnForChildSideOfLastEdge}@${edge.childWhere.fieldValueAsString}}"
+      s"CONNECTIONFAILURETRIGGERPATH@${path.lastRelation_!.relationTableName}@${path.columnForParentSideOfLastEdge}@${path.columnForChildSideOfLastEdge}@${edge.childWhere.value}}"
   }
 
   def action(mutationBuilder: PostgresApiDatabaseMutationBuilder) = mutationBuilder.connectionFailureTrigger(path, causeString)
@@ -299,7 +299,7 @@ case class VerifyConnectionInterpreter(mutaction: VerifyConnection) extends Data
 case class VerifyWhereInterpreter(mutaction: VerifyWhere) extends DatabaseMutactionInterpreter {
   val project     = mutaction.project
   val where       = mutaction.where
-  val causeString = s"WHEREFAILURETRIGGER@${where.model.name}@${where.field.name}@${where.fieldValueAsString}"
+  val causeString = s"WHEREFAILURETRIGGER@${where.model.name}@${where.field.name}@${where.value}"
 
   def action(mutationBuilder: PostgresApiDatabaseMutationBuilder) = mutationBuilder.whereFailureTrigger(where, causeString)
 
