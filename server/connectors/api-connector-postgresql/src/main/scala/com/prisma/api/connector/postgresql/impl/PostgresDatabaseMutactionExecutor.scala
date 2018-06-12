@@ -4,11 +4,36 @@ import com.prisma.api.connector._
 import com.prisma.api.connector.postgresql.DatabaseMutactionInterpreter
 import com.prisma.api.connector.postgresql.database.PostgresApiDatabaseMutationBuilder
 import slick.jdbc.PostgresProfile.api._
-import slick.jdbc.TransactionIsolation
 
 import scala.concurrent.{ExecutionContext, Future}
 
 case class PostgresDatabaseMutactionExecutor(clientDb: Database)(implicit ec: ExecutionContext) extends DatabaseMutactionExecutor {
+
+  override def execute(mutation: Mutation): Future[MutationResult] = {
+    val mutactions          = allMutactions(mutation)
+    val interpreters        = mutactions.map(interpreterFor)
+    val combinedErrorMapper = interpreters.map(_.errorMapper).reduceLeft(_ orElse _)
+    val mutationBuilder     = PostgresApiDatabaseMutationBuilder(schemaName = mutactions.head.project.id, schema = mutactions.head.project.schema)
+    val transactionalAction = recurse(mutation, mutationBuilder).transactionally
+
+    mutactions.foreach { m =>
+      println(m.getClass.getSimpleName)
+    }
+
+    clientDb
+      .run(transactionalAction)
+      .recover { case error => throw combinedErrorMapper.lift(error).getOrElse(error) }
+  }
+
+  private def allMutactions(mutation: Mutation): Vector[DatabaseMutaction] = mutation.mutactions ++ mutation.childs.flatMap(allMutactions)
+
+  private def recurse(mutation: Mutation, mutationBuilder: PostgresApiDatabaseMutationBuilder): DBIO[MutationResult] = {
+    val interpreters = mutation.mutactions.map(interpreterFor)
+    for {
+      mutactionResults <- DBIO.sequence(interpreters.map(_.newAction(mutationBuilder)))
+      childResults     <- DBIO.sequence(mutation.childs.map(recurse(_, mutationBuilder)))
+    } yield MutationResult(mutactionResults, childResults)
+  }
 
   override def execute(mutactions: Vector[DatabaseMutaction], runTransactionally: Boolean): Future[Vector[DatabaseMutactionResult]] = {
     val interpreters        = mutactions.map(interpreterFor)

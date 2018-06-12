@@ -9,6 +9,8 @@ import scala.concurrent.{ExecutionContext, Future}
 
 case class MySqlDatabaseMutactionExecutor(clientDb: Database)(implicit ec: ExecutionContext) extends DatabaseMutactionExecutor {
 
+  override def execute(mutation: Mutation) = ??? // FIXME: implement
+
   override def execute(mutactions: Vector[DatabaseMutaction], runTransactionally: Boolean): Future[Vector[DatabaseMutactionResult]] = {
     val interpreters        = mutactions.map(interpreterFor)
     val combinedErrorMapper = interpreters.map(_.errorMapper).reduceLeft(_ orElse _)
