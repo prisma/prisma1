@@ -29,17 +29,26 @@ object JdbcExtensions {
   }
 
   implicit class PreparedStatementExtensions(val ps: PreparedStatement) extends AnyVal {
-    def setGcValue(index: Int, value: GCValue): Unit = value match {
-      case StringGCValue(string)     => ps.setString(index, string)
-      case BooleanGCValue(boolean)   => ps.setBoolean(index, boolean)
-      case IntGCValue(int)           => ps.setInt(index, int)
-      case FloatGCValue(float)       => ps.setDouble(index, float)
-      case CuidGCValue(id)           => ps.setString(index, id)
-      case DateTimeGCValue(dateTime) => ps.setTimestamp(index, timeStampUTC(dateTime))
-      case EnumGCValue(enum)         => ps.setString(index, enum)
-      case JsonGCValue(json)         => ps.setString(index, json.toString)
-      case NullGCValue               => ps.setNull(index, java.sql.Types.NULL)
-      case x                         => sys.error(s"This method must only be called with LeafGCValues. Was called with: ${x.getClass}")
+    def setGcValue(index: Int, value: GCValue): Unit = {
+      value match {
+        case v: LeafGCValue => setLeafValue(index, v)
+        case x              => sys.error(s"This method must only be called with LeafGCValues. Was called with: ${x.getClass}")
+      }
+    }
+
+    private def setLeafValue(index: Int, value: LeafGCValue): Unit = {
+      value match {
+        case StringGCValue(string)     => ps.setString(index, string)
+        case BooleanGCValue(boolean)   => ps.setBoolean(index, boolean)
+        case IntGCValue(int)           => ps.setInt(index, int)
+        case FloatGCValue(float)       => ps.setDouble(index, float)
+        case CuidGCValue(id)           => ps.setString(index, id)
+        case UuidGCValue(uuid)         => ps.setObject(index, uuid)
+        case DateTimeGCValue(dateTime) => ps.setTimestamp(index, timeStampUTC(dateTime))
+        case EnumGCValue(enum)         => ps.setString(index, enum)
+        case JsonGCValue(json)         => ps.setString(index, json.toString)
+        case NullGCValue               => ps.setNull(index, java.sql.Types.NULL)
+      }
     }
   }
 
