@@ -2,7 +2,6 @@ package com.prisma.config
 
 import java.io.File
 import java.net.URI
-
 import io.lemonlabs.uri.{Uri, Url}
 import io.lemonlabs.uri.config.UriConfig
 import io.lemonlabs.uri.decoding.NoopDecoder
