@@ -10,7 +10,6 @@ import com.prisma.shared.models._
 import com.prisma.utils.await.AwaitUtils
 import cool.graph.cuid.Cuid
 import org.scalatest.Suite
-import sangria.parser.QueryParser
 
 object SchemaDsl extends AwaitUtils {
 
@@ -21,7 +20,7 @@ object SchemaDsl extends AwaitUtils {
   def fromBuilder(fn: SchemaBuilder => Unit)(implicit deployConnector: DeployConnector, suite: Suite) = {
     val schemaBuilder = SchemaBuilder()
     fn(schemaBuilder)
-    val project = schemaBuilder.buildProject(id = projectId(suite))
+    val project = schemaBuilder.build(id = projectId(suite))
     if (deployConnector.isPassive) {
       addManifestations(project)
     } else {
@@ -122,7 +121,7 @@ object SchemaDsl extends AwaitUtils {
 
     def apply(fn: SchemaBuilder => Unit): Project = {
       fn(this)
-      this.buildProject()
+      this.build(TestIds.testProjectId)
     }
 
     def model(name: String): ModelBuilder = {
@@ -139,15 +138,9 @@ object SchemaDsl extends AwaitUtils {
       newEnum
     }
 
-    private def build(): (Set[ModelTemplate], Set[RelationTemplate]) = {
+    private[schema_dsl] def build(id: String): Project = {
       val models    = modelBuilders.map(_.build())
       val relations = modelBuilders.flatMap(_.relations)
-
-      (models.toSet, relations.toSet)
-    }
-
-    def buildProject(id: String = TestIds.testProjectId): Project = {
-      val (models, relations) = build()
       TestProject().copy(
         id = id,
         schema = Schema(

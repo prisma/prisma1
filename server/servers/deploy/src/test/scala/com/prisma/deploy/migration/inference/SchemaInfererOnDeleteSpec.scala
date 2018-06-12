@@ -3,13 +3,13 @@ package com.prisma.deploy.migration.inference
 import com.prisma.deploy.connector.InferredTables
 import com.prisma.deploy.migration.validation.SchemaSyntaxValidator
 import com.prisma.shared.models.{OnDelete, Schema}
-import com.prisma.shared.schema_dsl.SchemaDsl
+import com.prisma.shared.schema_dsl.TestProject
 import org.scalatest.{Matchers, WordSpec}
 
 class SchemaInfererOnDeleteSpec extends WordSpec with Matchers {
 
   val inferer      = SchemaInferrer()
-  val emptyProject = SchemaDsl().buildProject()
+  val emptyProject = TestProject.empty
 
   "Inferring onDelete relationDirectives" should {
     "work if one side provides onDelete" in {
