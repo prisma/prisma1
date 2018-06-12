@@ -190,7 +190,7 @@ case class DatabaseMutactions(project: Project) {
   def getMutactionsForNestedUpsertMutation(nestedMutation: NestedMutations, path: Path, field: RelationField): Vector[DatabaseMutaction] = {
     nestedMutation.upserts.flatMap { upsert =>
       val extendedPath = extend(path, field, upsert)
-      val createWhere  = NodeSelector.forCuid(extendedPath.lastModel, createCuid())
+      val createWhere  = NodeSelector.forIdGCValue(extendedPath.lastModel, NodeIds.createNodeIdForModel(extendedPath.lastModel))
 
       val pathForUpdate = upsert match {
         case upsert: UpsertByWhere => extendedPath.lastEdgeToNodeEdge(upsert.where)

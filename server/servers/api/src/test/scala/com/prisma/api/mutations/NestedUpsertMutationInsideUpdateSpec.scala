@@ -1,5 +1,7 @@
 package com.prisma.api.mutations
 
+import java.util.UUID
+
 import com.prisma.IgnorePassive
 import com.prisma.api.ApiSpecBase
 import com.prisma.shared.schema_dsl.SchemaDsl
@@ -1691,4 +1693,61 @@ class NestedUpsertMutationInsideUpdateSpec extends FlatSpec with Matchers with A
     server.query("query{bottoms{nameBottom}}", project).toString should be("""{"data":{"bottoms":[{"nameBottom":"created bottom"}]}}""")
   }
 
+  "a nested upsert for a type with an id field of type uuid" should "work" in {
+    val project = SchemaDsl.fromString() {
+      s"""
+         |type List {
+         |  id: ID! @unique
+         |  todos: [Todo]
+         |}
+         |
+         |type Todo {
+         |  id: UUID! @unique
+         |  title: String!
+         |}
+       """.stripMargin
+    }
+    database.setup(project)
+
+    val listId = server
+      .query("""
+        |mutation {
+        |  createList(data: {}) {
+        |    id
+        |  }
+        |}
+      """.stripMargin,
+             project)
+      .pathAsString("data.createList.id")
+
+    val result = server.query(
+      s"""
+        |mutation {
+        |  updateList(
+        |  where: {id: "$listId"}
+        |  data: {
+        |    todos: {
+        |      upsert: [
+        |        {
+        |          where: { id: "00000000-0000-0000-0000-000000000000" }
+        |          create: { title: "the todo" }
+        |          update: { title: "the updated title" }
+        |        }
+        |      ]
+        |    }
+        |  }){
+        |    todos {
+        |      id
+        |      title
+        |    }
+        |  }
+        |}
+      """.stripMargin,
+      project
+    )
+
+    result.pathAsString("data.updateList.todos.[0].title") should equal("the todo")
+    val theUuid = result.pathAsString("data.updateList.todos.[0].id")
+    UUID.fromString(theUuid) // should now blow up
+  }
 }
