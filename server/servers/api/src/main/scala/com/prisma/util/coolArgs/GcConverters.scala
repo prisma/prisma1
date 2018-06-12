@@ -1,5 +1,7 @@
 package com.prisma.util.coolArgs
 
+import java.util.UUID
+
 import com.prisma.api.connector.PrismaArgs
 import com.prisma.gc_values._
 import com.prisma.shared.models.TypeIdentifier.TypeIdentifier
@@ -35,6 +37,7 @@ case class GCAnyConverter(typeIdentifier: TypeIdentifier, isList: Boolean) exten
         case (x: String, TypeIdentifier.DateTime)                                     => DateTimeGCValue(new DateTime(x))
         case (x: DateTime, TypeIdentifier.DateTime)                                   => DateTimeGCValue(x)
         case (x: String, TypeIdentifier.Cuid)                                         => CuidGCValue(x)
+        case (x: UUID, TypeIdentifier.UUID)                                           => UuidGCValue(x)
         case (x: String, TypeIdentifier.Enum)                                         => EnumGCValue(x)
         case (x: JsObject, TypeIdentifier.Json)                                       => JsonGCValue(x)
         case (x: String, TypeIdentifier.Json)                                         => JsonGCValue(Json.parse(x))
