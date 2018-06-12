@@ -6,10 +6,11 @@ import com.prisma.shared.models.ModelMutationType.ModelMutationType
 import com.prisma.shared.models._
 
 sealed trait ApiMutaction
+
+// DATBASE MUTACTIONS
 sealed trait DatabaseMutaction extends ApiMutaction {
   def project: Project
 }
-sealed trait SideEffectMutaction extends ApiMutaction
 
 case class AddDataItemToManyRelationByPath(project: Project, path: Path)   extends DatabaseMutaction
 case class CascadingDeleteRelationMutactions(project: Project, path: Path) extends DatabaseMutaction
@@ -43,21 +44,34 @@ case class UpdateDataItem(project: Project, path: Path, nonListArgs: PrismaArgs,
 }
 
 sealed trait UpdateWrapper
-case class NestedUpdateDataItem(project: Project, path: Path, nonListArgs: PrismaArgs, listArgs: Vector[(String, ListGCValue)])
-    extends DatabaseMutaction
+case class NestedUpdateDataItem(
+    project: Project,
+    path: Path,
+    nonListArgs: PrismaArgs,
+    listArgs: Vector[(String, ListGCValue)]
+) extends DatabaseMutaction
     with UpdateWrapper
-case class UpdateDataItems(project: Project, model: Model, whereFilter: Option[Filter], updateArgs: PrismaArgs, listArgs: Vector[(String, ListGCValue)])
-    extends DatabaseMutaction
-case class UpsertDataItem(project: Project,
-                          createPath: Path,
-                          updatePath: Path,
-                          nonListCreateArgs: PrismaArgs,
-                          listCreateArgs: Vector[(String, ListGCValue)],
-                          nonListUpdateArgs: PrismaArgs,
-                          listUpdateArgs: Vector[(String, ListGCValue)],
-                          createMutactions: Vector[DatabaseMutaction],
-                          updateMutactions: Vector[DatabaseMutaction])
-    extends DatabaseMutaction
+
+case class UpdateDataItems(
+    project: Project,
+    model: Model,
+    whereFilter: Option[Filter],
+    updateArgs: PrismaArgs,
+    listArgs: Vector[(String, ListGCValue)]
+) extends DatabaseMutaction
+
+case class UpsertDataItem(
+    project: Project,
+    createPath: Path,
+    updatePath: Path,
+    nonListCreateArgs: PrismaArgs,
+    listCreateArgs: Vector[(String, ListGCValue)],
+    nonListUpdateArgs: PrismaArgs,
+    listUpdateArgs: Vector[(String, ListGCValue)],
+    createMutactions: Vector[DatabaseMutaction],
+    updateMutactions: Vector[DatabaseMutaction]
+) extends DatabaseMutaction
+
 case class UpsertDataItemIfInRelationWith(
     project: Project,
     createPath: Path,
@@ -69,9 +83,12 @@ case class UpsertDataItemIfInRelationWith(
     createMutactions: Vector[DatabaseMutaction],
     updateMutactions: Vector[DatabaseMutaction]
 ) extends DatabaseMutaction
+
 case class VerifyConnection(project: Project, path: Path)     extends DatabaseMutaction
 case class VerifyWhere(project: Project, where: NodeSelector) extends DatabaseMutaction
 
+// SIDE EFFECTS
+sealed trait SideEffectMutaction                                                                     extends ApiMutaction
 case class PublishSubscriptionEvent(project: Project, value: Map[String, Any], mutationName: String) extends SideEffectMutaction
 case class ServerSideSubscription(
     project: Project,
