@@ -8,7 +8,7 @@ import com.prisma.api.connector.postgresql.database.PostgresSlickExtensions._
 import com.prisma.gc_values.{IdGCValue, NullGCValue, StringGCValue}
 import com.prisma.shared.models._
 import org.jooq.conf.Settings
-import org.jooq.{Condition, Name, SQLDialect, SortField}
+import org.jooq._
 import slick.jdbc.PositionedParameters
 
 object JooqQueryBuilders {
@@ -108,17 +108,29 @@ case class JooqModelQueryBuilder(connection: Connection, schemaName: String, mod
     val sql = DSL.using(SQLDialect.POSTGRES_9_5, new Settings().withRenderFormatted(true))
 
     val condition = JooqWhereClauseBuilder(schemaName).buildWhereClause(queryArguments.flatMap(_.filter)).getOrElse(and(trueCondition()))
+    val cursor    = JooqWhereClauseBuilder(schemaName).buildCursorCondition(queryArguments, model)
     val order     = JooqOrderByClauseBuilder.forModel(model, topLevelAlias, queryArguments)
+    val limit     = JooqLimitClauseBuilder.limitClause(queryArguments)
 
     val aliasedTable = table(name(schemaName, model.dbName)).as(topLevelAlias)
 
-    val string = sql
+    val base: SelectSeekStepN[Record] = sql
       .select()
       .from(aliasedTable)
       .where(condition)
       .orderBy(order: _*)
 
-    string.getSQL
+    val withSeek = true match {
+      case true  => base
+      case false => base
+    }
+
+    val finalQuery = limit match {
+      case Some((lim, off)) => withSeek.limit(lim).offset(off)
+      case None             => withSeek
+    }
+
+    finalQuery.getSQL
   }
 
 }
@@ -147,12 +159,12 @@ object JooqSetParams {
       case RelationFilter(_, nestedFilter, _) => setParams(pp, nestedFilter)
       //--------------------------------ANCHORS------------------------------------
       case PreComputedSubscriptionFilter(_)                     => // NOOP
-      case ScalarFilter(_, Contains(value: StringGCValue))      => pp.setString("%" + value.value + "%")
-      case ScalarFilter(_, NotContains(value: StringGCValue))   => pp.setString("%" + value.value + "%")
-      case ScalarFilter(_, StartsWith(value: StringGCValue))    => pp.setString(value.value + "%")
-      case ScalarFilter(_, NotStartsWith(value: StringGCValue)) => pp.setString(value.value + "%")
-      case ScalarFilter(_, EndsWith(value: StringGCValue))      => pp.setString("%" + value.value)
-      case ScalarFilter(_, NotEndsWith(value: StringGCValue))   => pp.setString("%" + value.value)
+      case ScalarFilter(_, Contains(StringGCValue(value)))      => pp.setString(value)
+      case ScalarFilter(_, NotContains(StringGCValue(value)))   => pp.setString(value)
+      case ScalarFilter(_, StartsWith(StringGCValue(value)))    => pp.setString(value)
+      case ScalarFilter(_, NotStartsWith(StringGCValue(value))) => pp.setString(value)
+      case ScalarFilter(_, EndsWith(StringGCValue(value)))      => pp.setString(value)
+      case ScalarFilter(_, NotEndsWith(StringGCValue(value)))   => pp.setString(value)
       case ScalarFilter(_, LessThan(value))                     => pp.setGcValue(value)
       case ScalarFilter(_, GreaterThan(value))                  => pp.setGcValue(value)
       case ScalarFilter(_, LessThanOrEquals(value))             => pp.setGcValue(value)

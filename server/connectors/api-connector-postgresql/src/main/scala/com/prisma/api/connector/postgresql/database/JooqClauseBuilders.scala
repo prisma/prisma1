@@ -147,15 +147,12 @@ case class JooqWhereClauseBuilder(schemaName: String) {
 
 object JooqLimitClauseBuilder {
 
-  def limitClause(args: Option[QueryArguments]): String = {
+  def limitClause(args: Option[QueryArguments]): Option[(Int, Int)] = {
     val (firstOpt, lastOpt, skipOpt) = (args.flatMap(_.first), args.flatMap(_.last), args.flatMap(_.skip))
     validate(args)
     lastOpt.orElse(firstOpt) match {
-      case Some(limitedCount) =>
-        // Increase by 1 to know if we have a next page / previous page
-        s"LIMIT ${limitedCount + 1} OFFSET ${skipOpt.getOrElse(0)}"
-      case None =>
-        ""
+      case Some(limitedCount) => Some(limitedCount + 1, skipOpt.getOrElse(0))
+      case None               => None
     }
   }
 
@@ -181,21 +178,21 @@ object JooqOrderByClauseBuilder {
     )
   }
 
-//  def forScalarListField(field: ScalarField, alias: String, args: Option[QueryArguments]): Vector[SortField[AnyRef]] = {
-//    val (first, last)  = (args.flatMap(_.first), args.flatMap(_.last))
-//    val isReverseOrder = last.isDefined
-//
-//    if (first.isDefined && last.isDefined) throw APIErrors.InvalidConnectionArguments()
-//
-//    // The limit instruction only works from up to down. Therefore, we have to invert order when we use before.
-//    val order = isReverseOrder match {
-//      case true  => "desc"
-//      case false => "asc"
-//    }
-//
-//    //always order by nodeId, then positionfield ascending
-//    s""" ORDER BY "$alias"."nodeId" $order, "$alias"."position" $order """
-//  }
+  def forScalarListField(alias: String, args: Option[QueryArguments]): Vector[SortField[AnyRef]] = {
+    val (first, last)  = (args.flatMap(_.first), args.flatMap(_.last))
+    val isReverseOrder = last.isDefined
+
+    if (first.isDefined && last.isDefined) throw APIErrors.InvalidConnectionArguments()
+
+    val nodeIdField   = field(name(alias, "nodeId"))
+    val positionField = field(name(alias, "position"))
+
+    // The limit instruction only works from up to down. Therefore, we have to invert order when we use before.
+    isReverseOrder match {
+      case true  => Vector(nodeIdField.desc, positionField.desc)
+      case false => Vector(nodeIdField.asc, positionField.asc)
+    }
+  }
 
   def forRelation(relation: Relation, alias: String, args: Option[QueryArguments]): Vector[SortField[AnyRef]] = {
     internal(
