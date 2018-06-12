@@ -6,9 +6,9 @@ import com.prisma.api.schema.APIErrors.{InvalidFirstArgument, InvalidLastArgumen
 import com.prisma.gc_values.NullGCValue
 import com.prisma.shared.models._
 import org.jooq.conf.Settings
-import org.jooq.impl.DSL.{field, _}
+import org.jooq.impl.DSL._
 import org.jooq.impl._
-import org.jooq.{Condition, SQLDialect}
+import org.jooq.{Condition, SQLDialect, SortField}
 
 case class JooqWhereClauseBuilder(schemaName: String) {
   val topLevelAlias: String = QueryBuilders.topLevelAlias
@@ -171,8 +171,9 @@ object JooqLimitClauseBuilder {
 }
 
 object JooqOrderByClauseBuilder {
+  import org.jooq.impl.DSL._
 
-  def forModel(model: Model, alias: String, args: Option[QueryArguments]): String = {
+  def forModel(model: Model, alias: String, args: Option[QueryArguments]): Vector[SortField[AnyRef]] = {
     internal(
       alias = alias,
       secondaryOrderByField = model.dbNameOfIdField_!,
@@ -180,23 +181,23 @@ object JooqOrderByClauseBuilder {
     )
   }
 
-  def forScalarListField(field: ScalarField, alias: String, args: Option[QueryArguments]): String = {
-    val (first, last)  = (args.flatMap(_.first), args.flatMap(_.last))
-    val isReverseOrder = last.isDefined
+//  def forScalarListField(field: ScalarField, alias: String, args: Option[QueryArguments]): Vector[SortField[AnyRef]] = {
+//    val (first, last)  = (args.flatMap(_.first), args.flatMap(_.last))
+//    val isReverseOrder = last.isDefined
+//
+//    if (first.isDefined && last.isDefined) throw APIErrors.InvalidConnectionArguments()
+//
+//    // The limit instruction only works from up to down. Therefore, we have to invert order when we use before.
+//    val order = isReverseOrder match {
+//      case true  => "desc"
+//      case false => "asc"
+//    }
+//
+//    //always order by nodeId, then positionfield ascending
+//    s""" ORDER BY "$alias"."nodeId" $order, "$alias"."position" $order """
+//  }
 
-    if (first.isDefined && last.isDefined) throw APIErrors.InvalidConnectionArguments()
-
-    // The limit instruction only works from up to down. Therefore, we have to invert order when we use before.
-    val order = isReverseOrder match {
-      case true  => "desc"
-      case false => "asc"
-    }
-
-    //always order by nodeId, then positionfield ascending
-    s""" ORDER BY "$alias"."nodeId" $order, "$alias"."position" $order """
-  }
-
-  def forRelation(relation: Relation, alias: String, args: Option[QueryArguments]): String = {
+  def forRelation(relation: Relation, alias: String, args: Option[QueryArguments]): Vector[SortField[AnyRef]] = {
     internal(
       alias = alias,
       secondaryOrderByField = relation.columnForRelationSide(RelationSide.A),
@@ -204,36 +205,28 @@ object JooqOrderByClauseBuilder {
     )
   }
 
-  def internal(alias: String, secondaryOrderByField: String, args: Option[QueryArguments]): String = {
+  def internal(alias: String, secondaryOrderByField: String, args: Option[QueryArguments]): Vector[SortField[AnyRef]] = {
     val (first, last, orderBy) = (args.flatMap(_.first), args.flatMap(_.last), args.flatMap(_.orderBy))
     val isReverseOrder         = last.isDefined
-
     if (first.isDefined && last.isDefined) throw APIErrors.InvalidConnectionArguments()
-
     // The limit instruction only works from up to down. Therefore, we have to invert order when we use before.
-    val defaultOrder = orderBy.map(_.sortOrder.toString).getOrElse("asc")
-    val (order, secondaryOrderByOrder) = isReverseOrder match {
-      case true  => (invertOrder(defaultOrder), "desc")
-      case false => (defaultOrder, "asc")
+    val defaultOrder   = orderBy.map(_.sortOrder.toString).getOrElse("asc")
+    val secondaryField = field(name(alias, secondaryOrderByField))
+
+    (orderBy, defaultOrder, isReverseOrder) match {
+      case (Some(orderByArg), "asc", true) if orderByArg.field.dbName != secondaryOrderByField =>
+        Vector(field(name(alias, orderByArg.field.dbName)).desc(), secondaryField.desc())
+      case (Some(orderByArg), "desc", true) if orderByArg.field.dbName != secondaryOrderByField =>
+        Vector(field(name(alias, orderByArg.field.dbName)).asc(), secondaryField.asc())
+      case (Some(orderByArg), "asc", false) if orderByArg.field.dbName != secondaryOrderByField =>
+        Vector(field(name(alias, orderByArg.field.dbName)).asc(), secondaryField.asc())
+      case (Some(orderByArg), "desc", false) if orderByArg.field.dbName != secondaryOrderByField =>
+        Vector(field(name(alias, orderByArg.field.dbName)).desc(), secondaryField.desc())
+      case (_, "asc", true)   => Vector(secondaryField.desc())
+      case (_, "desc", true)  => Vector(secondaryField.asc())
+      case (_, "asc", false)  => Vector(secondaryField.asc())
+      case (_, "desc", false) => Vector(secondaryField.desc())
+      case _                  => throw new IllegalArgumentException
     }
-
-    val aliasedSecondaryOrderByField = s""" "$alias"."$secondaryOrderByField" """
-
-    orderBy match {
-      case Some(orderByArg) if orderByArg.field.dbName != secondaryOrderByField =>
-        val orderByField = s""" "$alias"."${orderByArg.field.dbName}" """
-
-        // First order by the orderByField, then by the secondary order by field to break ties
-        s""" ORDER BY $orderByField $order, $aliasedSecondaryOrderByField $secondaryOrderByOrder """
-
-      case _ =>
-        s""" ORDER BY $aliasedSecondaryOrderByField $order """
-    }
-  }
-
-  private def invertOrder(order: String) = order.trim().toLowerCase match {
-    case "desc" => "asc"
-    case "asc"  => "desc"
-    case _      => throw new IllegalArgumentException
   }
 }

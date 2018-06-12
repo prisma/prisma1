@@ -8,7 +8,7 @@ import com.prisma.api.connector.postgresql.database.PostgresSlickExtensions._
 import com.prisma.gc_values.{IdGCValue, NullGCValue, StringGCValue}
 import com.prisma.shared.models._
 import org.jooq.conf.Settings
-import org.jooq.{Condition, Name, SQLDialect}
+import org.jooq.{Condition, Name, SQLDialect, SortField}
 import slick.jdbc.PositionedParameters
 
 object JooqQueryBuilders {
@@ -97,7 +97,7 @@ case class JooqModelQueryBuilder(connection: Connection, schemaName: String, mod
   //    s"""SELECT * FROM "$schemaName"."${model.dbName}" AS "$topLevelAlias" """ +
   //      JooqWhereClauseBuilder(schemaName).buildWhereClause(queryArguments.flatMap(_.filter)).getOrElse("") +
   //      WhereClauseBuilder(schemaName).buildCursorCondition(queryArguments, model).map(" AND " + _).getOrElse("") +
-  //      OrderByClauseBuilder.forModel(model, topLevelAlias, queryArguments) +
+//  OrderByClauseBuilder.forModel(model, topLevelAlias, queryArguments) +
   //      LimitClauseBuilder.limitClause(queryArguments)
   //  }
 
@@ -108,6 +108,7 @@ case class JooqModelQueryBuilder(connection: Connection, schemaName: String, mod
     val sql = DSL.using(SQLDialect.POSTGRES_9_5, new Settings().withRenderFormatted(true))
 
     val condition = JooqWhereClauseBuilder(schemaName).buildWhereClause(queryArguments.flatMap(_.filter)).getOrElse(and(trueCondition()))
+    val order     = JooqOrderByClauseBuilder.forModel(model, topLevelAlias, queryArguments)
 
     val aliasedTable = table(name(schemaName, model.dbName)).as(topLevelAlias)
 
@@ -115,6 +116,7 @@ case class JooqModelQueryBuilder(connection: Connection, schemaName: String, mod
       .select()
       .from(aliasedTable)
       .where(condition)
+      .orderBy(order: _*)
 
     string.getSQL
   }
