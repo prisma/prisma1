@@ -106,14 +106,15 @@ case class JooqModelQueryBuilder(connection: Connection, schemaName: String, mod
 
     val sql = DSL.using(connection, SQLDialect.POSTGRES_9_5)
 
-    val conditions: Vector[Condition] = JooqWhereClauseBuilder(connection: Connection, schemaName).buildWhereClause(queryArguments.flatMap(_.filter))
+    val condition =
+      JooqWhereClauseBuilder(connection: Connection, schemaName).buildWhereClause(queryArguments.flatMap(_.filter)).getOrElse(and(trueCondition()))
 
     val aliasedTable = table(name(schemaName, model.dbName)).as(topLevelAlias)
 
     val string = sql
       .select()
       .from(aliasedTable)
-      .where(conditions: _*)
+      .where(condition)
 
     string.getSQL
   }

@@ -7,10 +7,12 @@ import com.prisma.api.schema.APIErrors
 import com.prisma.api.schema.APIErrors.{InvalidFirstArgument, InvalidLastArgument, InvalidSkipArgument}
 import com.prisma.gc_values.{GCValue, NullGCValue}
 import com.prisma.shared.models._
+import org.apache.commons.lang.ObjectUtils.Null
 import org.jooq.{Condition, SQLDialect}
 import org.jooq._
 import org.jooq.impl._
-import org.jooq.impl.DSL._
+import org.jooq.impl.DSL.{field, _}
+
 import collection.JavaConverters._
 import org.jooq.scalaextensions.Conversions._
 
@@ -18,9 +20,9 @@ case class JooqWhereClauseBuilder(connection: Connection, schemaName: String) {
   val topLevelAlias: String = QueryBuilders.topLevelAlias
   val sql                   = DSL.using(connection, SQLDialect.POSTGRES_9_5)
 
-  def buildWhereClause(filter: Option[Filter]): Vector[Condition] = filter match {
-    case Some(filter) => buildWheresForFilter(filter, topLevelAlias)
-    case None         => Vector.empty
+  def buildWhereClause(filter: Option[Filter]): Option[Condition] = filter match {
+    case Some(filter) => Some(buildWheresForFilter(filter, topLevelAlias))
+    case None         => None
   }
 
   // This creates a query that checks if the id is in a certain set returned by a subquery Q.
@@ -71,12 +73,12 @@ case class JooqWhereClauseBuilder(connection: Connection, schemaName: String) {
     Some((afterCursorFilter ++ beforeCursorFilter).mkString(" AND "))
   }
 
-  private def buildWheresForFilter(filter: Filter, alias: String): Vector[Condition] = {
-    def oneRelationIsNullFilter(field2: RelationField): Condition = {
-      val relation          = field2.relation
+  private def buildWheresForFilter(filter: Filter, alias: String): Condition = {
+    def oneRelationIsNullFilter(relationField: RelationField): Condition = {
+      val relation          = relationField.relation
       val relationTableName = relation.relationTableName
-      val column            = relation.columnForRelationSide(field2.relationSide)
-      val otherIdColumn     = field2.relatedModel_!.dbNameOfIdField_!
+      val column            = relation.columnForRelationSide(relationField.relationSide)
+      val otherIdColumn     = relationField.relatedModel_!.dbNameOfIdField_!
 
       val select = sql
         .select()
@@ -86,72 +88,66 @@ case class JooqWhereClauseBuilder(connection: Connection, schemaName: String) {
       trueCondition().andNotExists(select)
     }
 
+    def relationFilterStatement(alias: String, relationFilter: RelationFilter): Condition = {
+      val relationField     = relationFilter.field
+      val relationTableName = relationField.relation.relationTableName
+      val column            = relationField.relation.columnForRelationSide(relationField.relationSide)
+      val oppositeColumn    = relationField.relation.columnForRelationSide(relationField.oppositeRelationSide)
+      val newAlias          = relationField.relatedModel_!.dbName + "_" + alias
+
+      val select = sql
+        .select()
+        .from(table(name(schemaName, relationField.relatedModel_!.dbName)).as(newAlias))
+        .innerJoin(name(schemaName, relationTableName))
+        .on(field(name(newAlias, relationField.relatedModel_!.dbNameOfIdField_!)).eq(field(name(schemaName, relationTableName, oppositeColumn))))
+        .where(field(name(schemaName, relationTableName, column)).eq(field(name(alias, relationField.model.dbNameOfIdField_!))))
+
+      trueCondition().andNotExists(select)
+
+      val nestedFilterStatement = buildWheresForFilter(relationFilter.nestedFilter, newAlias)
+
+      relationFilter.condition match {
+        case AtLeastOneRelatedNode => trueCondition().andExists(select.and(nestedFilterStatement))
+        case EveryRelatedNode      => trueCondition().andNotExists(select.andNot(nestedFilterStatement))
+        case NoRelatedNode         => trueCondition().andNotExists(select.and(nestedFilterStatement))
+        case NoRelationCondition   => trueCondition().andExists(select.and(nestedFilterStatement))
+      }
+    }
+
+    def fieldFrom(scalarField: ScalarField) = field(name(alias, scalarField.dbName))
+
     filter match {
       //-------------------------------RECURSION------------------------------------
-      case NodeSubscriptionFilter()                       => Vector.empty
-      case AndFilter(filters)                             => filters.flatMap(buildWheresForFilter(_, alias))
-      case OrFilter(filters)                              => Vector(trueCondition())
-      case NotFilter(filters)                             => Vector(trueCondition())
-      case NodeFilter(filters)                            => Vector(trueCondition())
-      case RelationFilter(field, nestedFilter, condition) => Vector(trueCondition())
+      case NodeSubscriptionFilter() => and(trueCondition())
+      case AndFilter(filters)       => filters.map(buildWheresForFilter(_, alias)).foldLeft(and(trueCondition()))(_ and _)
+      case OrFilter(filters)        => filters.map(buildWheresForFilter(_, alias)).foldLeft(and(falseCondition()))(_ or _)
+      case NotFilter(filters)       => filters.map(buildWheresForFilter(_, alias)).foldLeft(and(trueCondition()))(_ andNot _)
+      case NodeFilter(filters)      => buildWheresForFilter(OrFilter(filters), alias)
+      case x: RelationFilter        => relationFilterStatement(alias, x)
       //--------------------------------ANCHORS------------------------------------
-      case PreComputedSubscriptionFilter(value)            => if (value) Vector(trueCondition()) else Vector(falseCondition())
-      case ScalarFilter(field, Contains(_))                => Vector(trueCondition())
-      case ScalarFilter(field, NotContains(_))             => Vector(trueCondition())
-      case ScalarFilter(field, StartsWith(_))              => Vector(trueCondition())
-      case ScalarFilter(field, NotStartsWith(_))           => Vector(trueCondition())
-      case ScalarFilter(field, EndsWith(_))                => Vector(trueCondition())
-      case ScalarFilter(field, NotEndsWith(_))             => Vector(trueCondition())
-      case ScalarFilter(field, LessThan(_))                => Vector(trueCondition())
-      case ScalarFilter(field, GreaterThan(_))             => Vector(trueCondition())
-      case ScalarFilter(field, LessThanOrEquals(_))        => Vector(trueCondition())
-      case ScalarFilter(field, GreaterThanOrEquals(_))     => Vector(trueCondition())
-      case ScalarFilter(field, NotEquals(NullGCValue))     => Vector(trueCondition())
-      case ScalarFilter(field, NotEquals(_))               => Vector(trueCondition())
-      case ScalarFilter(field, Equals(NullGCValue))        => Vector(trueCondition())
-      case ScalarFilter(field2, Equals(x))                 => Vector(field(name(alias, field2.dbName)) === x.value)
-      case ScalarFilter(field, In(Vector(NullGCValue)))    => Vector(trueCondition())
-      case ScalarFilter(field, NotIn(Vector(NullGCValue))) => Vector(trueCondition())
-      case ScalarFilter(field, In(values))                 => Vector(trueCondition())
-      case ScalarFilter(field, NotIn(values))              => Vector(trueCondition())
-      case OneRelationIsNullFilter(field)                  => Vector(oneRelationIsNullFilter(field))
-      case x                                               => sys.error(s"Not supported: $x")
+      case PreComputedSubscriptionFilter(value)                  => if (value) trueCondition() else falseCondition()
+      case ScalarFilter(scalarField, Contains(_))                => fieldFrom(scalarField).contains("")
+      case ScalarFilter(scalarField, NotContains(_))             => fieldFrom(scalarField).notContains("")
+      case ScalarFilter(scalarField, StartsWith(_))              => fieldFrom(scalarField).startsWith("")
+      case ScalarFilter(scalarField, NotStartsWith(_))           => fieldFrom(scalarField).startsWith("").not()
+      case ScalarFilter(scalarField, EndsWith(_))                => fieldFrom(scalarField).endsWith("")
+      case ScalarFilter(scalarField, NotEndsWith(_))             => fieldFrom(scalarField).endsWith("").not()
+      case ScalarFilter(scalarField, LessThan(_))                => fieldFrom(scalarField).lessThan("")
+      case ScalarFilter(scalarField, GreaterThan(_))             => fieldFrom(scalarField).greaterThan("")
+      case ScalarFilter(scalarField, LessThanOrEquals(_))        => fieldFrom(scalarField).lessOrEqual("")
+      case ScalarFilter(scalarField, GreaterThanOrEquals(_))     => fieldFrom(scalarField).greaterOrEqual("")
+      case ScalarFilter(scalarField, NotEquals(NullGCValue))     => fieldFrom(scalarField).isNotNull
+      case ScalarFilter(scalarField, NotEquals(_))               => fieldFrom(scalarField).notEqual("")
+      case ScalarFilter(scalarField, Equals(NullGCValue))        => fieldFrom(scalarField).isNull
+      case ScalarFilter(scalarField, Equals(x))                  => fieldFrom(scalarField).equal("")
+      case ScalarFilter(scalarField, In(Vector(NullGCValue)))    => fieldFrom(scalarField).isNull
+      case ScalarFilter(scalarField, NotIn(Vector(NullGCValue))) => fieldFrom(scalarField).isNotNull
+      case ScalarFilter(scalarField, In(values))                 => fieldFrom(scalarField).in(Vector.fill(values.length) { "" }: _*)
+      case ScalarFilter(scalarField, NotIn(values))              => fieldFrom(scalarField).notIn(Vector.fill(values.length) { "" }: _*)
+      case OneRelationIsNullFilter(field)                        => oneRelationIsNullFilter(field)
+      case x                                                     => sys.error(s"Not supported: $x")
     }
   }
-//
-//  private def equalsGcValue(scalarField: ScalarField) = scalarField.typeIdentifier match {
-//    case TypeIdentifier.Int => field(scalarField.dbName, classOf[Long]).eq(12)
-//      Vector(field(name(alias, field2.dbName), classOf[Long]).eq(x.value.asInstanceOf[Long]))
-//  }
-
-  private def relationFilterStatement(alias: String, field: RelationField, nestedFilter: Filter, relationCondition: RelationCondition): String = {
-    val relationTableName = field.relation.relationTableName
-    val column            = field.relation.columnForRelationSide(field.relationSide)
-    val oppositeColumn    = field.relation.columnForRelationSide(field.oppositeRelationSide)
-
-    val newAlias = field.relatedModel_!.dbName + "_" + alias
-
-    val join = s"""select *
-            from "$schemaName"."${field.relatedModel_!.dbName}" as "$newAlias"
-            inner join "$schemaName"."$relationTableName"
-            on "$newAlias"."${field.relatedModel_!.dbNameOfIdField_!}" = "$schemaName"."$relationTableName"."$oppositeColumn"
-            where "$schemaName"."$relationTableName"."$column" = "$alias"."${field.model.dbNameOfIdField_!}" """
-
-    val nestedFilterStatement = {
-      val x = buildWheresForFilter(nestedFilter, newAlias)
-      if (x.isEmpty) "TRUE" else x
-    }
-
-    relationCondition match {
-      case AtLeastOneRelatedNode => s" exists (" + join + s"and " + nestedFilterStatement + ")"
-      case EveryRelatedNode      => s" not exists (" + join + s"and not " + nestedFilterStatement + ")"
-      case NoRelatedNode         => s" not exists (" + join + s"and " + nestedFilterStatement + ")"
-      case NoRelationCondition   => s" exists (" + join + s"and " + nestedFilterStatement + ")"
-    }
-  }
-
-  //  private def column(alias: String, field: Field): String = s""""$alias"."${field.dbName}" """
-  private def in(items: Vector[GCValue]) = s" IN (" + items.map(_ => "?").mkString(",") + ")"
 }
 
 object JooqLimitClauseBuilder {
