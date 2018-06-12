@@ -133,11 +133,13 @@ object PostgresDeployDatabaseMutationBuilder {
 
   def createRelationTable(projectId: String, relationTableName: String, modelA: Model, modelB: Model) = {
 
-    val tableCreate = sqlu"""CREATE TABLE "#$projectId"."#$relationTableName" (
+    val sqlTypeForIdOfModelA = sqlTypeForScalarTypeIdentifier(modelA.idField_!.typeIdentifier)
+    val sqlTypeForIdOfModelB = sqlTypeForScalarTypeIdentifier(modelB.idField_!.typeIdentifier)
+    val tableCreate          = sqlu"""CREATE TABLE "#$projectId"."#$relationTableName" (
     "id" CHAR(25)  NOT NULL,
     PRIMARY KEY ("id"),
-    "A" VARCHAR (25)  NOT NULL,
-    "B" VARCHAR (25)  NOT NULL,
+    "A" #$sqlTypeForIdOfModelA  NOT NULL,
+    "B" #$sqlTypeForIdOfModelB  NOT NULL,
     FOREIGN KEY ("A") REFERENCES "#$projectId"."#${modelA.dbName}"("#${modelA.dbNameOfIdField_!}") ON DELETE CASCADE,
     FOREIGN KEY ("B") REFERENCES "#$projectId"."#${modelB.dbName}"("#${modelA.dbNameOfIdField_!}") ON DELETE CASCADE)
     ;"""
@@ -150,7 +152,7 @@ object PostgresDeployDatabaseMutationBuilder {
   }
 
   def createRelationColumn(projectId: String, model: Model, references: Model, column: String) = {
-    val sqlType    = sqlTypeForScalarTypeIdentifier(TypeIdentifier.Cuid)
+    val sqlType    = sqlTypeForScalarTypeIdentifier(model.idField_!.typeIdentifier)
     val isRequired = false //field.exists(_.isRequired)
     val nullString = if (isRequired) "NOT NULL" else "NULL"
     val addColumn  = sqlu"""ALTER TABLE "#$projectId"."#${model.dbName}" ADD COLUMN "#$column" #$sqlType #$nullString
