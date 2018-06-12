@@ -11,6 +11,7 @@ object NodeIds {
     model.idField_!.typeIdentifier match {
       case TypeIdentifier.UUID => UuidGCValue(UUID.randomUUID()) // todo: decide whether this is our best choice
       case TypeIdentifier.Cuid => CuidGCValue(Cuid.createCuid())
+      case TypeIdentifier.Int  => CuidGCValue(Cuid.createCuid()) // fixme: this is not right. should not be called at all
       case x                   => sys.error(s"Id field had type identifier $x. This should never happen.")
     }
   }
