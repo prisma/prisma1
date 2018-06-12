@@ -1693,7 +1693,7 @@ class NestedUpsertMutationInsideUpdateSpec extends FlatSpec with Matchers with A
     server.query("query{bottoms{nameBottom}}", project).toString should be("""{"data":{"bottoms":[{"nameBottom":"created bottom"}]}}""")
   }
 
-  "a nested upsert for a type with an id field of type uuid" should "work" taggedAs (IgnoreMySql) {
+  "a nested upsert for a type with an id field of type uuid" should "work" taggedAs (IgnoreMySql) in {
     val project = SchemaDsl.fromString() {
       s"""
          |type List {

@@ -8,7 +8,7 @@ import com.prisma.shared.schema_dsl.SchemaDsl
 import org.scalatest.{FlatSpec, Matchers}
 
 class CreateGraphQLSpec extends FlatSpec with Matchers with ApiSpecBase {
-  "Creating an item with an id field of type UUID" should "work" taggedAs (IgnoreMySql) {
+  "Creating an item with an id field of type UUID" should "work" taggedAs (IgnoreMySql) in {
     val project = SchemaDsl.fromString() {
       s"""
          |type Todo {

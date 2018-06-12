@@ -672,7 +672,7 @@ class NestedCreateMutationInsideCreateSpec extends FlatSpec with Matchers with A
 
   }
 
-  "creating a nested item with an id of type UUID" should "work" taggedAs (IgnoreMySql) {
+  "creating a nested item with an id of type UUID" should "work" taggedAs (IgnoreMySql) in {
     val project = SchemaDsl.fromString() {
       s"""
          |type List {
