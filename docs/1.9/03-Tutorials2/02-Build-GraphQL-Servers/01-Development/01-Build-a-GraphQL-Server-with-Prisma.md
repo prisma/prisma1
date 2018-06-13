@@ -467,7 +467,7 @@ mutation {
 
 ```graphql
 query {
-  posts(searchString: "GraphQL") {
+  posts(searchString: "GraphQL Europe") {
     id
     title
     content
