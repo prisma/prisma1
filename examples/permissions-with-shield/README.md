@@ -49,7 +49,7 @@ The fastest way to open one is by going to [http://localhost:7200](http://localh
 Run the following mutation to signup:
 
 ```graphql
-mutation {
+mutation signup {
   signup(username: "test", email: "test@gmail.com", password: "pass") {
     token
     user {
@@ -64,7 +64,7 @@ mutation {
 You can also login:
 
 ```graphql
-mutation {
+mutation login {
   login(email: "test@gmail.com", password: "pass") {
     token
     user {
@@ -76,10 +76,26 @@ mutation {
 }
 ```
 
-Try quering for data:
+Adjust the HTTP header with the received `token` like so:
+
+```
+{
+  "Authorization": "Bearer <token>"
+}
+```
+
+for example
+
+```
+{
+  "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiJjamlkN3hmY3RwcXc1MGE5NnBjaDM1dmtuIiwiaWF0IjoxNTI4OTAwNjc3fQ.IqZ94TjeBaeY22y3XtzfK48fUON-IHk6B62C2xQyChs"
+}
+```
+
+Try querying for data:
 
 ```graphql
-query {
+query posts {
   posts {
     content
   }
