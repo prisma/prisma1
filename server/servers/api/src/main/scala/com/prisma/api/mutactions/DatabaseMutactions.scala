@@ -47,10 +47,10 @@ case class DatabaseMutactions(project: Project) {
     Vector(UpdateDataItems(project, model, whereFilter, nonListArgs, listArgs))
   }
 
-  def getMutactionsForCreate(path: Path, args: CoolArgs): Vector[DatabaseMutaction] = report {
-    val (nonListArgs, listArgs) = args.getCreateArgs(path)
-    val createMutaction         = CreateDataItem(project, path, nonListArgs, listArgs)
-    val nestedMutactions        = getMutactionsForNestedMutation(args, path, triggeredFromCreate = true)
+  def getMutactionsForCreate(model: Model, args: CoolArgs): Vector[DatabaseMutaction] = report {
+    val (nonListArgs, listArgs) = args.getCreateArgs(model)
+    val createMutaction         = CreateDataItem(project, model, nonListArgs, listArgs)
+    val nestedMutactions        = getMutactionsForNestedMutation(args, UnqualifiedPath.empty, triggeredFromCreate = true)
 
     createMutaction +: nestedMutactions
   }

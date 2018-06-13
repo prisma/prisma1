@@ -14,13 +14,13 @@ sealed trait DatabaseMutaction extends ApiMutaction {
 
 case class AddDataItemToManyRelationByPath(project: Project, path: Path)   extends DatabaseMutaction
 case class CascadingDeleteRelationMutactions(project: Project, path: Path) extends DatabaseMutaction
-case class CreateDataItem(project: Project, path: Path, nonListArgs: PrismaArgs, listArgs: Vector[(String, ListGCValue)]) extends DatabaseMutaction {
-  val model = path.lastModel
-  val where = path.edges match {
+case class CreateDataItem(project: Project, model: Model, nonListArgs: PrismaArgs, listArgs: Vector[(String, ListGCValue)]) extends DatabaseMutaction {
+//  val model = path.lastModel
+  /*val where = path.edges match {
     case x if x.isEmpty => path.root
     case x              => x.last.asInstanceOf[NodeEdge].childWhere
-  }
-  val id = where.fieldGCValue.value.toString
+  }*/
+  val id = ???
 }
 
 case class PushScalarListsImport(project: Project, tableName: String, id: String, args: ListGCValue)      extends DatabaseMutaction
