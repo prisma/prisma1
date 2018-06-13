@@ -116,9 +116,9 @@ case class PostgresApiDatabaseQueryBuilder(
   ): DBIO[ResolverResult[RelationNode]] = {
 
     SimpleDBIO[ResolverResult[RelationNode]] { ctx =>
-      val builder = RelationQueryBuilder(schemaName, relation, args)
+      val builder = JooqRelationQueryBuilder(ctx.connection, schemaName, relation, args)
       val ps      = ctx.connection.prepareStatement(builder.queryString)
-      SetParams.setQueryArgs(ps, args)
+      JooqSetParams.setQueryArgs(ps, args)
       val rs: ResultSet = ps.executeQuery()
 
       val result = rs.as(readRelation(relation))
@@ -168,9 +168,10 @@ case class PostgresApiDatabaseQueryBuilder(
 
   def countAllFromTable(table: String, whereFilter: Option[Filter]): DBIO[Int] = {
     SimpleDBIO[Int] { ctx =>
-      val builder = CountQueryBuilder(schemaName, table, whereFilter)
+      val builder = JooqCountQueryBuilder(ctx.connection, schemaName, table, whereFilter)
       val ps      = ctx.connection.prepareStatement(builder.queryString)
-      SetParams.setFilter(ps, whereFilter)
+
+      JooqSetParams.setFilter(new PositionedParameters(ps), whereFilter)
       val rs = ps.executeQuery()
       rs.next()
       rs.getInt(1)
@@ -180,9 +181,9 @@ case class PostgresApiDatabaseQueryBuilder(
   def batchSelectFromModelByUnique(model: Model, field: ScalarField, values: Vector[GCValue]): DBIO[Vector[PrismaNode]] = {
     SimpleDBIO { ctx =>
       val queryArgs = Some(QueryArguments.withFilter(ScalarFilter(field, In(values))))
-      val builder   = ModelQueryBuilder(schemaName, model, queryArgs)
+      val builder   = JooqModelQueryBuilder(ctx.connection, schemaName, model, queryArgs)
       val ps        = ctx.connection.prepareStatement(builder.queryString)
-      SetParams.setQueryArgs(ps, queryArgs)
+      JooqSetParams.setQueryArgs(ps, queryArgs)
       val rs: ResultSet = ps.executeQuery()
       rs.as(readsPrismaNode(model))
     }

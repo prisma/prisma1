@@ -10,34 +10,58 @@ import com.prisma.shared.models._
 import org.jooq.conf.Settings
 import org.jooq._
 import slick.jdbc.PositionedParameters
+import org.jooq.impl.DSL
+import org.jooq.impl.DSL._
+import QueryBuilders.topLevelAlias
 
 object JooqQueryBuilders {
-  val topLevelAlias = "Alias"
+  val topLevelAlias    = "Alias"
+  val intDummyValue    = 1
+  val stringDummyValue = ""
 }
 
-case class JooqRelationQueryBuilder(schemaName: String, relation: Relation, queryArguments: Option[QueryArguments]) {
-  import QueryBuilders.topLevelAlias
+case class JooqRelationQueryBuilder(connection: Connection, schemaName: String, relation: Relation, queryArguments: Option[QueryArguments]) {
 
   lazy val queryString: String = {
-    val tableName = relation.relationTableName
-    s"""SELECT * FROM "$schemaName"."$tableName" AS "$topLevelAlias" """ +
-      WhereClauseBuilder(schemaName).buildWhereClause(queryArguments.flatMap(_.filter)).getOrElse("") +
-      OrderByClauseBuilder.forRelation(relation, topLevelAlias, queryArguments) +
-      LimitClauseBuilder.limitClause(queryArguments)
+
+    val sql          = DSL.using(SQLDialect.POSTGRES_9_5, new Settings().withRenderFormatted(true))
+    val aliasedTable = table(name(schemaName, relation.relationTableName)).as(topLevelAlias)
+    val condition    = JooqWhereClauseBuilder(schemaName).buildWhereClause(queryArguments.flatMap(_.filter)).getOrElse(trueCondition())
+    val order        = JooqOrderByClauseBuilder.forRelation(relation, topLevelAlias, queryArguments)
+    val limit        = JooqLimitClauseBuilder.limitClause(queryArguments)
+
+    val base = sql
+      .select()
+      .from(aliasedTable)
+      .where(condition)
+      .orderBy(order: _*)
+
+    val finalQuery = limit match {
+      case Some(_) => base.limit(10).offset(10)
+      case None    => base
+    }
+
+    finalQuery.getSQL
   }
 }
 
-case class JooqCountQueryBuilder(schemaName: String, table: String, filter: Option[Filter]) {
-  import QueryBuilders.topLevelAlias
+case class JooqCountQueryBuilder(connection: Connection, schemaName: String, tableName: String, filter: Option[Filter]) {
 
   lazy val queryString: String = {
-    s"""SELECT COUNT(*) FROM "$schemaName"."$table" AS "$topLevelAlias" """ +
-      WhereClauseBuilder(schemaName).buildWhereClause(filter).getOrElse("")
+    val sql          = DSL.using(SQLDialect.POSTGRES_9_5, new Settings().withRenderFormatted(true))
+    val aliasedTable = table(name(schemaName, tableName)).as(topLevelAlias)
+    val condition    = JooqWhereClauseBuilder(schemaName).buildWhereClause(filter).getOrElse(trueCondition())
+
+    val query = sql
+      .selectCount()
+      .from(aliasedTable)
+      .where(condition)
+
+    query.getSQL
   }
 }
 
 case class JooqScalarListQueryBuilder(schemaName: String, field: ScalarField, queryArguments: Option[QueryArguments]) {
-  import QueryBuilders.topLevelAlias
   require(field.isList, "This must be called only with scalar list fields")
 
   lazy val queryString: String = {
@@ -55,7 +79,6 @@ case class JooqRelatedModelsQueryBuilder(
     queryArguments: Option[QueryArguments],
     relatedNodeIds: Vector[IdGCValue]
 ) {
-  import QueryBuilders.topLevelAlias
 
   val relation                        = fromField.relation
   val relatedModel                    = fromField.relatedModel_!
@@ -96,7 +119,6 @@ case class JooqRelatedModelsQueryBuilder(
 }
 
 case class JooqModelQueryBuilder(connection: Connection, schemaName: String, model: Model, queryArguments: Option[QueryArguments]) {
-  import QueryBuilders.topLevelAlias
 
   lazy val queryString: String = {
     import org.jooq.impl.DSL
