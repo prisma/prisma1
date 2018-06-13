@@ -2,9 +2,9 @@ datamodel:
   - datamodel.graphql
   - enums.graphql
 
-endpoint: http://${self:custom.serverIP}:${self:custom.serverPort}/yaml-structure/default
+endpoint: http://${self:custom.serverIP}:${self:custom.serverPort}/yml-structure/default
 
-secret: symmetric-secret-key
+secret: my-secret-key, another-secret-key
 
 seed:
   import: seed.graphql

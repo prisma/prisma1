@@ -33,7 +33,7 @@ Another major change to the Graphcool Framework is that in Prisma you now genera
 
 The following instructions assume you're using `graphql-yoga` as your GraphQL server and that your schema definition is written in SDL.
 
-> To learn what the implementation authentication and permissions with Prisma looks like in practice, you can check out our examples: [auth](https://github.com/graphcool/prisma/tree/master/examples/auth) & [permissions](https://github.com/graphcool/prisma/tree/master/examples/permissions).
+> To learn what the implementation authentication and permissions with Prisma looks like in practice, you can check out our examples: [authentication](https://github.com/graphcool/prisma/tree/master/examples/authentication) & [permissions-with-shield](https://github.com/graphcool/prisma/tree/master/examples/permissions-with-shield).
 
 ### Step 1: Migrate schema definitions
 

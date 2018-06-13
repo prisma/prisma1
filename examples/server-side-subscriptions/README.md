@@ -1,6 +1,6 @@
 # Server Side Subscription
 
-This example demonstrates `subscriptions` property available to us in `prisma.yml`.
+This example demonstrates `subscriptions` property available to us in `prisma.yml` that can be used to implement event-driven business logic.
 
 ## Get started
 
@@ -23,7 +23,7 @@ yarn install
 
 ### 2. Deploy the Prisma database service
 
-You can now [deploy](https://www.prismagraphql.com/docs/reference/cli-command-reference/database-service/prisma-deploy-kee1iedaov) the Prisma service (note that this requires you to have [Docker](https://www.docker.com) installed on your machine - if that's not the case, follow the collapsed instructions below the code block):
+You can now [deploy](https://www.prisma.io/docs/reference/cli-command-reference/database-service/prisma-deploy-kee1iedaov) the Prisma service (note that this requires you to have [Docker](https://www.docker.com) installed on your machine - if that's not the case, follow the collapsed instructions below the code block):
 
 ```sh
 yarn prisma deploy
@@ -32,12 +32,7 @@ yarn prisma deploy
 <details>
  <summary><strong>I don't have <a href="https://www.docker.com">Docker</a> installed on my machine</strong></summary>
 
-To deploy your service to a public cluster (rather than locally with Docker), you need to perform the following steps:
-
-1.  Remove the `cluster` property from `prisma.yml`
-1.  Run `yarn prisma deploy`
-1.  When prompted by the CLI, select a public cluster (e.g. `prisma-eu1` or `prisma-us1`)
-1.  Replace the [`endpoint`](./src/index.js#L23) in `index.js` with the HTTP endpoint that was printed after the previous command
+To deploy your service to a demo server (rather than locally with Docker), please follow [this link](https://www.prisma.io/docs/quickstart/).
 
 </details>
 
@@ -62,13 +57,13 @@ Let us assume that we want to send a welcome email to new user. We will define t
 
 ```graphql
 subscription {
-  user(where: { mutation_in: [CREATED] }) {
-    mutation
-    node {
-      id
-      name
-    }
+ user(where: { mutation_in: [CREATED] }) {
+  mutation
+  node {
+   id
+   name
   }
+ }
 }
 ```
 
@@ -92,10 +87,10 @@ Or you can open a Playground by navigating to [http://localhost:4466/server-side
 
 ```graphql
 mutation M {
-  createUser(data: { name: "Graphcool" }) {
-    id
-    name
-  }
+ createUser(data: { name: "Graphcool" }) {
+  id
+  name
+ }
 }
 ```
 

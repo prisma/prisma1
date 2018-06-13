@@ -51,7 +51,7 @@ services:
         databases:
           default:
             connector: mysql  # or `postgres`
-            active: true
+            migrations: true
             host: db
             port: 3306        # or `5432` for `postgres`
             user: root
@@ -75,7 +75,7 @@ The `prisma-db` service is based on the [`prismagraphlq/prisma`](https://hub.doc
   - `databases`: Specify which databases the Prisma server should connect to (currently Prisma servers can only connect to one database).
     - `default.connector`: Specify which Prisma database connector is to be used.
   
-    - `default.active`: Setting this to `true` means you're using an _active_ (as opposed to a _passive_) database connector
+    - `default.migrations`: Setting this to `true` means Prisma will migrate the structure of your database
     - `default.host`: The host machine of the database.
     - `default.port`: The port on whcih the database is running.
     - `default.user` and `default.password`: Credentials to authentivate against the database.

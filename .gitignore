@@ -35,3 +35,6 @@ project/plugins/project/
 # buildkite artifacts
 buildkite-script-*
 .envrc
+
+# VSCode specific
+.vscode/

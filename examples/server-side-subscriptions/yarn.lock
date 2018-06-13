@@ -2556,7 +2556,7 @@ prisma-yml@1.0.55:
     scuid "^1.0.2"
     yaml-ast-parser "^0.0.40"
 
-prisma@^1.8.3:
+prisma@1.8.3:
   version "1.8.3"
   resolved "https://registry.yarnpkg.com/prisma/-/prisma-1.8.3.tgz#28eb3ce0c63732542988a2aaa1effa1d91b5c60f"
   dependencies:

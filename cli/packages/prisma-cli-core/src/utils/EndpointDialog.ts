@@ -30,6 +30,7 @@ export interface DatabaseCredentials {
   database?: string
   alreadyData?: boolean
   schema?: string
+  ssl?: boolean
 }
 
 export interface GetEndpointResult {
@@ -415,6 +416,14 @@ export class EndpointDialog {
             key: 'database',
           })
         : null
+    const ssl =
+      type === 'postgres'
+        ? await this.ask({
+            message: 'Use SSL?',
+            inputType: 'confirm',
+            key: 'ssl',
+          })
+        : undefined
     const schema = await this.ask({
       message: `Enter name of existing schema`,
       key: 'schema',
@@ -429,6 +438,7 @@ export class EndpointDialog {
       database,
       alreadyData,
       schema,
+      ssl,
     }
   }
 

@@ -195,6 +195,17 @@ and execute ${chalk.bold.green(
         } points to a demo cluster, but is missing the workspace slug. A valid demo endpoint looks like this: https://eu1.prisma.sh/myworkspace/service-name/stage-name`,
       )
     }
+    if (
+      this.definition &&
+      this.definition.endpoint &&
+      !this.definition.endpoint.startsWith('http')
+    ) {
+      throw new Error(
+        `${chalk.bold(
+          this.definition.endpoint,
+        )} is not a valid endpoint. It must start with http:// or https://`,
+      )
+    }
     this.env.sharedClusters
   }
 
@@ -215,23 +226,6 @@ and execute ${chalk.bold.green(
   }
 
   getCluster(throws: boolean = false): Cluster | undefined {
-    const clusterName = this.getClusterName()
-    if (clusterName) {
-      const cluster = this.env.clusterByName(clusterName)
-      if (!cluster && clusterName !== 'local') {
-        if (throws) {
-          throw new Error(
-            `Cluster ${clusterName}, that is provided in the prisma.yml could not be found.
-If it is a private cluster, make sure that you're logged in with ${chalk.bold.green(
-              'prisma login',
-            )}`,
-          )
-        }
-      } else if (cluster) {
-        return cluster
-      }
-    }
-
     if (this.definition && this.endpoint) {
       const {
         clusterBaseUrl,
@@ -243,16 +237,18 @@ If it is a private cluster, make sure that you're logged in with ${chalk.bold.gr
       } = parseEndpoint(this.endpoint)
       if (clusterBaseUrl) {
         debug('making cluster here')
-        const cluster = new Cluster(
-          this.out!,
-          clusterName,
-          clusterBaseUrl,
-          shared ? this.env.cloudSessionKey : undefined,
-          local,
-          shared,
-          isPrivate,
-          workspaceSlug,
-        )
+        const cluster =
+          this.env.clusters.find(c => c.baseUrl === clusterBaseUrl) ||
+          new Cluster(
+            this.out!,
+            clusterName,
+            clusterBaseUrl,
+            shared ? this.env.cloudSessionKey : undefined,
+            local,
+            shared,
+            isPrivate,
+            workspaceSlug,
+          )
         this.env.removeCluster(clusterName)
         this.env.addCluster(cluster)
         return cluster

@@ -1,13 +1,16 @@
 projects:
-  db:
+  app: 
+    schemaPath: schema.graphql
+    extensions:
+      endpoints:
+        default: 'http://localhost:4000'
+  db: 
     schemaPath: generated-schema.graphql
     extensions:
       endpoints:
-        default: 'http://localhost:4466/hooks'
+        default: 'http://localhost:4466/authentication'
       prisma: prisma.yml
       codegen:
-        input: 
-          schema: generated-schema.graphql
         output: 
           typings: generated-prisma.ts
         generator: typegen

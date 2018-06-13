@@ -188,7 +188,7 @@ export class Output {
             ? '$ set -x DEBUG "*"'
             : '$ export DEBUG="*"'
         this.stderr.log(
-          `\nGet in touch if you need help: https://www.graph.cool/forum
+          `\nGet in touch if you need help: https://www.prisma.io/forum/
 To get more detailed output, run ${chalk.dim(instruction)}`,
         )
       }
