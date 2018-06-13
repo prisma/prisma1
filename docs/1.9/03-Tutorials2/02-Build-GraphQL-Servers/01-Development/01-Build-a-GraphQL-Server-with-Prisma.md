@@ -18,16 +18,16 @@ The tutorial assumes that you already have a running Prisma service, so please m
 <InfoBox>
 
 To ensure you're not accidentally skipping an instruction in the tutorial, all required actions are highlighted with a little _counter_ on the left.
-<br>
+
 💡 **Pro tip**: If you're only keen on getting started but don't care so much about the explanations of what's going on, you can simply jump from instruction to instruction.
 
 </InfoBox>
 
-## Why not access the Prisma API directly from your client applications?
+## Why not use the Prisma API directly from your client applications?
 
 One commonly asked question is why not to use Prisma's GraphQL API as your entire backend - it has a GraphQL API, so why bother writing another GraphQL server on top of it?
 
-Prisma turns your database into a GraphQL API, exposing powerful CRUD operations to read and modify the data. This means letting your client applications talk to Prisma directly is equivalent to _exposing your entire database_ to them.
+Prisma turns your database into a GraphQL API, exposing powerful CRUD operations to read and modify the data. This means letting your clients talk to Prisma directly is equivalent to directly exposing your entire database to your clients.
 
 There are several reasons why this is not a suitable setup for production use cases:
 
@@ -35,7 +35,7 @@ There are several reasons why this is not a suitable setup for production use ca
 - You want to provide authentication functionality for your users so that they can register with a password or some 3rd-party authentication provider
 - You want your API to integrate with microservices or other legacy systems
 - You want to include 3-rd party services (such as Stripe, GitHub, Yelp, ...) or other public APIs into your server
-- You don't want to expose your entire database schema to everyone (which would be the case due to GrapHQL's [introspection](http://graphql.org/learn/introspection/) feature)
+- You don't want to expose your entire database schema to everyone (which would be the case due to GraphQL's [introspection](http://graphql.org/learn/introspection/) feature)
 
 ## Step 1: Update the data model
 
@@ -345,7 +345,7 @@ const resolvers = {
         {
           data: {
             title: args.title,
-            content: args.content,
+            content: args.title,
             author: {
               connect: {
                 id: args.authorId,

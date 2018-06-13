@@ -330,5 +330,3 @@ After the command has finished running, the CLI outputs the URL of your Prisma s
 ## Summary
 
 In this tutorial, you learned how to deploy a Prisma server with a backing database to AWS Fargate. In both cases, you were using preconfigured CloudFormation templates for the deployment process.
-
-<iframe src="https://upscri.be/38bbbd/" frameBorder="0"></iframe>
