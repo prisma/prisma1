@@ -40,14 +40,14 @@ case class Delete(
         case Success(x) => deletedItemOpt = x.map(dataItem => dataItem)
       }
       .map { _ =>
-        val itemToDelete           = deletedItemOpt.getOrElse(throw APIErrors.NodeNotFoundForWhereError(where))
-        val sqlMutactions          = DatabaseMutactions(project).getMutactionsForDelete(Path.empty(where), itemToDelete)
-        val subscriptionMutactions = SubscriptionEvents.extractFromSqlMutactions(project, mutationId, sqlMutactions)
-        val sssActions             = ServerSideSubscriptions.extractFromMutactions(project, sqlMutactions, requestId)
+        val itemToDelete  = deletedItemOpt.getOrElse(throw APIErrors.NodeNotFoundForWhereError(where))
+        val sqlMutactions = DatabaseMutactions(project).getMutactionsForDelete(Path.empty(where), itemToDelete)
+//        val subscriptionMutactions = SubscriptionEvents.extractFromSqlMutactions(project, mutationId, sqlMutactions) // fixme: bring this back
+//        val sssActions             = ServerSideSubscriptions.extractFromMutactions(project, sqlMutactions, requestId)
 
-        PreparedMutactions(databaseMutactions = sqlMutactions, sideEffectMutactions = subscriptionMutactions ++ sssActions)
+        PreparedMutactions(sqlMutactions, sideEffectMutactions = Vector.empty)
       }
   }
 
-  override def getReturnValue(results: MutactionResults): Future[ReturnValueResult] = Future.successful(ReturnValue(deletedItemOpt.get))
+  override def getReturnValue(results: MutationResult): Future[ReturnValueResult] = Future.successful(ReturnValue(deletedItemOpt.get))
 }

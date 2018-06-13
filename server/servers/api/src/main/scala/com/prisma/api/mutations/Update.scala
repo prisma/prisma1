@@ -32,20 +32,21 @@ case class Update(
   def prepareMutactions(): Future[PreparedMutactions] = {
     prismaNodes map {
       case Some(prismaNode) =>
-        val sqlMutactions          = DatabaseMutactions(project).getMutactionsForUpdate(Path.empty(where), coolArgs, prismaNode)
-        val subscriptionMutactions = SubscriptionEvents.extractFromSqlMutactions(project, mutationId, sqlMutactions)
-        val sssActions             = ServerSideSubscriptions.extractFromMutactions(project, sqlMutactions, requestId = "")
+        val sqlMutactions = DatabaseMutactions(project).getMutactionsForUpdate(Path.empty(where), coolArgs, prismaNode)
+        // fixme: bring this back
+//        val subscriptionMutactions = SubscriptionEvents.extractFromSqlMutactions(project, mutationId, sqlMutactions)
+//        val sssActions             = ServerSideSubscriptions.extractFromMutactions(project, sqlMutactions, requestId = "")
 
         PreparedMutactions(
-          databaseMutactions = sqlMutactions,
-          sideEffectMutactions = sssActions ++ subscriptionMutactions
+          mutation = sqlMutactions,
+          sideEffectMutactions = Vector.empty
         )
       case None =>
         throw APIErrors.NodeNotFoundForWhereError(where)
     }
   }
 
-  override def getReturnValue(results: MutactionResults): Future[ReturnValueResult] = {
+  override def getReturnValue(results: MutationResult): Future[ReturnValueResult] = {
     prismaNodes flatMap {
       case Some(prismaNode) => returnValueByUnique(NodeSelector.forIdGCValue(model, prismaNode.id))
       case None             => Future.successful(NoReturnValue(where))

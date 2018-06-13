@@ -1,7 +1,7 @@
 package com.prisma.api.mutations
 
 import com.prisma.api.ApiDependencies
-import com.prisma.api.connector.{DataResolver, NodeSelector, Path}
+import com.prisma.api.connector.{DataResolver, MutationResult, NodeSelector, Path}
 import com.prisma.api.mutactions.{DatabaseMutactions, NodeIds, ServerSideSubscriptions, SubscriptionEvents}
 import com.prisma.shared.models.{Model, Project}
 import com.prisma.util.coolArgs.CoolArgs
@@ -35,19 +35,20 @@ case class Upsert(
   val createPath = Path.empty(NodeSelector.forIdGCValue(model, NodeIds.createNodeIdForModel(model)))
 
   override def prepareMutactions: Future[PreparedMutactions] = {
-    val sqlMutactions          = DatabaseMutactions(project).getMutactionsForUpsert(createPath, updatePath, coolArgs)
-    val subscriptionMutactions = SubscriptionEvents.extractFromSqlMutactions(project, mutationId, sqlMutactions)
-    val sssActions             = ServerSideSubscriptions.extractFromMutactions(project, sqlMutactions, requestId = "")
+    val sqlMutactions = DatabaseMutactions(project).getMutactionsForUpsert(createPath, updatePath, coolArgs)
+    // fixme: bring this back
+//    val subscriptionMutactions = SubscriptionEvents.extractFromSqlMutactions(project, mutationId, sqlMutactions)
+//    val sssActions             = ServerSideSubscriptions.extractFromMutactions(project, sqlMutactions, requestId = "")
 
     Future.successful {
       PreparedMutactions(
-        databaseMutactions = sqlMutactions,
-        sideEffectMutactions = sssActions ++ subscriptionMutactions
+        mutation = sqlMutactions,
+        sideEffectMutactions = Vector.empty
       )
     }
   }
 
-  override def getReturnValue(results: MutactionResults): Future[ReturnValueResult] = {
+  override def getReturnValue(results: MutationResult): Future[ReturnValueResult] = {
     val createItemFuture = dataResolver.resolveByUnique(createPath.lastCreateWhere_!)
     val upsertItemFuture = dataResolver.resolveByUnique(updatedWhere)
 

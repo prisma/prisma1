@@ -1,7 +1,7 @@
 package com.prisma.api.mutations
 
 import com.prisma.api.ApiDependencies
-import com.prisma.api.connector.{DataResolver, Filter}
+import com.prisma.api.connector.{DataResolver, Filter, MutationResult}
 import com.prisma.api.mutactions.DatabaseMutactions
 import com.prisma.shared.models.{Model, Project}
 
@@ -25,12 +25,12 @@ case class DeleteMany(
       val sssActions             = Vector.empty
 
       PreparedMutactions(
-        databaseMutactions = sqlMutactions,
+        mutation = sqlMutactions,
         sideEffectMutactions = sssActions ++ subscriptionMutactions
       )
     }
   }
 
-  override def getReturnValue(results: MutactionResults): Future[BatchPayload] = count.map(value => BatchPayload(count = value))
+  override def getReturnValue(results: MutationResult): Future[BatchPayload] = count.map(value => BatchPayload(count = value))
 
 }

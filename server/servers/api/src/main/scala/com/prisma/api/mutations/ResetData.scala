@@ -18,11 +18,11 @@ case class ResetData(project: Project, dataResolver: DataResolver)(implicit apiD
 
     Future.successful {
       PreparedMutactions(
-        databaseMutactions = Vector(resetData),
+        mutation = Mutation(Vector(resetData)),
         sideEffectMutactions = Vector.empty
       )
     }
   }
 
-  override def getReturnValue(results: MutactionResults): Future[ReturnValueResult] = Future.successful(ReturnValue(PrismaNode.dummy))
+  override def getReturnValue(results: MutationResult): Future[ReturnValueResult] = Future.successful(ReturnValue(PrismaNode.dummy))
 }

@@ -1,6 +1,6 @@
 package com.prisma.api.mutations
 
-import com.prisma.api.connector.{DatabaseMutactionExecutor, DatabaseMutactionResult}
+import com.prisma.api.connector.{DatabaseMutactionExecutor, DatabaseMutactionResult, MutationResult}
 import com.prisma.api.mutactions.{DatabaseMutactionVerifier, SideEffectMutactionExecutor}
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -15,10 +15,10 @@ object ClientMutationRunner {
   )(implicit ec: ExecutionContext): Future[T] = {
     for {
       preparedMutactions <- clientMutation.prepareMutactions()
-      errors             = databaseMutactionVerifier.verify(preparedMutactions.databaseMutactions)
-      _                  = if (errors.nonEmpty) throw errors.head
-      databaseResults    <- performMutactions(preparedMutactions, clientMutation.projectId, databaseMutactionExecutor, sideEffectMutactionExecutor)
-      prismaNode         <- clientMutation.getReturnValue(MutactionResults(databaseResults))
+      //errors             = databaseMutactionVerifier.verify(preparedMutactions.databaseMutactions) // fixme: bring this back
+//      _               = if (errors.nonEmpty) throw errors.head
+      mutationResult <- performMutactions(preparedMutactions, clientMutation.projectId, databaseMutactionExecutor, sideEffectMutactionExecutor)
+      prismaNode     <- clientMutation.getReturnValue(mutationResult)
     } yield prismaNode
   }
 
@@ -27,9 +27,9 @@ object ClientMutationRunner {
       projectId: String,
       databaseMutactionExecutor: DatabaseMutactionExecutor,
       sideEffectMutactionExecutor: SideEffectMutactionExecutor
-  )(implicit ec: ExecutionContext): Future[Vector[DatabaseMutactionResult]] = {
+  )(implicit ec: ExecutionContext): Future[MutationResult] = {
     for {
-      databaseResults <- databaseMutactionExecutor.execute(preparedMutactions.databaseMutactions)
+      databaseResults <- databaseMutactionExecutor.execute(preparedMutactions.mutation)
       _               <- sideEffectMutactionExecutor.execute(preparedMutactions.sideEffectMutactions)
     } yield databaseResults
   }

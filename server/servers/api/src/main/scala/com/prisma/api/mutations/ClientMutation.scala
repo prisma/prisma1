@@ -11,7 +11,7 @@ trait ClientMutation[T] {
   val mutationId: Id = Cuid.createCuid()
   def dataResolver: DataResolver
   def prepareMutactions(): Future[PreparedMutactions]
-  def getReturnValue(results: MutactionResults): Future[T]
+  def getReturnValue(results: MutationResult): Future[T]
 
   def projectId: String = dataResolver.project.id
 }
@@ -26,11 +26,9 @@ trait SingleItemClientMutation extends ClientMutation[ReturnValueResult] {
 }
 
 case class PreparedMutactions(
-    databaseMutactions: Vector[DatabaseMutaction], // DatabaseMutaction
-    sideEffectMutactions: Vector[SideEffectMutaction] // SideEffectMutaction
-) {
-  lazy val allMutactions = databaseMutactions ++ sideEffectMutactions
-}
+    mutation: Mutation,
+    sideEffectMutactions: Vector[SideEffectMutaction]
+)
 
 case class MutactionResults(databaseResults: Vector[DatabaseMutactionResult])
 
