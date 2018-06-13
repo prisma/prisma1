@@ -28,5 +28,5 @@ server.start(
   {
     port,
   },
-  () => console.log(`Server at ${port}`),
+  () => console.log(`Server at http://localhost:${port}`),
 )
