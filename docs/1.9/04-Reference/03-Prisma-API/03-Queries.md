@@ -445,4 +445,4 @@ query {
 
 #### Limitations
 
-Note that by default, Prisma returns *a maximum of 1000 nodes*. This can be overridden by setting the pagination parameters accordingly. If you do not set any pagination parameters, Prisma will set a limit of 1000.
+Note that by default, Prisma returns *a maximum of 1000 nodes*. This can be overridden by setting the pagination parameters accordingly. If you do not set any pagination parameters, Prisma will set a limit of 1000. 
