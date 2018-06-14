@@ -406,7 +406,7 @@ The implementation of your GraphQL server is now done and you can work with it i
 In your terminal, start the server using the following command:
 
 ```sh
-node src/index.js
+node --harmony src/index.js
 ```
 
 </Instruction>
@@ -424,7 +424,7 @@ To test the API, you can send the following queries and mutations:
 **Create a new user**:
 
 ```graphql
-mutation {
+mutation createAlice {
   signup(name: "Alice") {
     id
   }
@@ -436,7 +436,7 @@ mutation {
 Note that you need to replace the `__USER_ID__` placeholder with the `id` of an actual `User` from your database.
 
 ```graphql
-mutation {
+mutation createDraft {
   createDraft(
     title: "Join us at GraphQL Europe 🇪🇺 ",
     content: "Get a 10%-discount with this promo code on graphql-europe.org: gql-boilerplates",
@@ -453,7 +453,7 @@ mutation {
 Note that you need to replace the `__POST_ID__` placeholder with the `id` of an actual `Post` from your database.
 
 ```graphql
-mutation {
+mutation publishDraft {
   publish(
     id: "__POST_ID__",
   ) {
@@ -466,7 +466,7 @@ mutation {
 **Filter posts for "GraphQL Europe"**
 
 ```graphql
-query {
+query getEuropePosts {
   posts(searchString: "GraphQL") {
     id
     title
@@ -485,7 +485,7 @@ query {
 Note that you need to replace the `__POST_ID__` placeholder with the `id` of an actual `Post` from your database.
 
 ```graphql
-mutation {
+mutation deletePost {
   deletePost(
     id: "__POST_ID__",
   ) {
