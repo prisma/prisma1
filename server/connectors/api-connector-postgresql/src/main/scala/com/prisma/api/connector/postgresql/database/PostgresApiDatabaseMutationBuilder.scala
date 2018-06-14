@@ -26,16 +26,16 @@ case class PostgresApiDatabaseMutationBuilder(
 
   // region CREATE
 
-  def createDataItem(path: Path, args: PrismaArgs): DBIO[CreateDataItemResult] = {
+  def createDataItem(model: Model, args: PrismaArgs): DBIO[CreateDataItemResult] = {
 
     SimpleDBIO[CreateDataItemResult] { x =>
       val argsAsRoot   = args.raw.asRoot
-      val fields       = path.lastModel.fields.filter(field => argsAsRoot.hasArgFor(field.name))
+      val fields       = model.fields.filter(field => argsAsRoot.hasArgFor(field.name))
       val columns      = fields.map(_.dbName)
       val escapedKeys  = columns.map(column => s""""$column"""").mkString(",")
       val placeHolders = columns.map(_ => "?").mkString(",")
 
-      val query                         = s"""INSERT INTO "$schemaName"."${path.lastModel.dbName}" ($escapedKeys) VALUES ($placeHolders)"""
+      val query                         = s"""INSERT INTO "$schemaName"."${model.dbName}" ($escapedKeys) VALUES ($placeHolders)"""
       val itemInsert: PreparedStatement = x.connection.prepareStatement(query, Statement.RETURN_GENERATED_KEYS)
 
       fields.map(_.name).zipWithIndex.foreach {
@@ -51,7 +51,7 @@ case class PostgresApiDatabaseMutationBuilder(
 
       val generatedKeys = itemInsert.getGeneratedKeys
       generatedKeys.next()
-      val field = path.lastModel.idField_!
+      val field = model.idField_!
       CreateDataItemResult(generatedKeys.getGcValue(field.dbName, field.typeIdentifier))
     }
   }
@@ -218,17 +218,19 @@ case class PostgresApiDatabaseMutationBuilder(
       createNested: Vector[DBIOAction[Any, NoStream, Effect.All]],
       updateNested: Vector[DBIOAction[Any, NoStream, Effect.All]]
   ) = {
-    val model = updatePath.lastModel
-    val query = sql"""select exists ( SELECT "#${model.dbNameOfIdField_!}" FROM "#$schemaName"."#${model.dbName}" WHERE "#${model.dbNameOfIdField_!}" = """ ++
-      pathQueryForLastChild(updatePath) ++ sql")"
-    val condition        = query.as[Boolean]
-    val allCreateActions = Vector(createDataItem(createPath, createArgs), createRelayRow(createPath), create) ++ createNested
-    val qCreate          = DBIOAction.seq(allCreateActions: _*)
-    // update first sets the lists, then updates the item
-    val allUpdateActions = update +: updateNested :+ updateDataItemByPath(updatePath, updateArgs)
-    val qUpdate          = DBIOAction.seq(allUpdateActions: _*)
-
-    ifThenElse(condition, qUpdate, qCreate)
+//    val model = updatePath.lastModel
+//    val query = sql"""select exists ( SELECT "#${model.dbNameOfIdField_!}" FROM "#$schemaName"."#${model.dbName}" WHERE "#${model.dbNameOfIdField_!}" = """ ++
+//      pathQueryForLastChild(updatePath) ++ sql")"
+//    val condition        = query.as[Boolean]
+//    val allCreateActions = Vector(createDataItem(createPath, createArgs), createRelayRow(createPath), create) ++ createNested
+//    val qCreate          = DBIOAction.seq(allCreateActions: _*)
+//    // update first sets the lists, then updates the item
+//    val allUpdateActions = update +: updateNested :+ updateDataItemByPath(updatePath, updateArgs)
+//    val qUpdate          = DBIOAction.seq(allUpdateActions: _*)
+//
+//    ifThenElse(condition, qUpdate, qCreate)
+    // fixme: upsert must be completely reimplemented
+    ???
   }
 
   def upsertIfInRelationWith(
@@ -243,28 +245,31 @@ case class PostgresApiDatabaseMutationBuilder(
       updateNested: Vector[DBIOAction[Any, NoStream, Effect.All]]
   ) = {
 
-    def existsNodeIsInRelationshipWith = {
-      def nodeSelector(last: Edge) = last match {
-        case edge: NodeEdge => sql" #${edge.child.dbNameOfIdField_!}" ++ idFromWhereEquals(edge.childWhere) ++ sql" AND "
-        case _: ModelEdge   => sql""
-      }
-      val model = updatePath.lastModel
-      sql"""select EXISTS (
-            select "#${model.dbNameOfIdField_!}" from "#$schemaName"."#${updatePath.lastModel.dbName}"
-            where""" ++ nodeSelector(updatePath.lastEdge_!) ++
-        sql""" "#${model.dbNameOfIdField_!}" IN""" ++ pathQueryThatUsesWholePath(updatePath) ++ sql")"
-    }
+//    def existsNodeIsInRelationshipWith = {
+//      def nodeSelector(last: Edge) = last match {
+//        case edge: NodeEdge => sql" #${edge.child.dbNameOfIdField_!}" ++ idFromWhereEquals(edge.childWhere) ++ sql" AND "
+//        case _: ModelEdge   => sql""
+//      }
+//      val model = updatePath.lastModel
+//      sql"""select EXISTS (
+//            select "#${model.dbNameOfIdField_!}" from "#$schemaName"."#${updatePath.lastModel.dbName}"
+//            where""" ++ nodeSelector(updatePath.lastEdge_!) ++
+//        sql""" "#${model.dbNameOfIdField_!}" IN""" ++ pathQueryThatUsesWholePath(updatePath) ++ sql")"
+//    }
+//
+//    val condition = existsNodeIsInRelationshipWith.as[Boolean]
+//    //insert creates item first and then the listvalues
+//
+//    val allCreateActions = Vector(createDataItem(createPath, createArgs), createRelayRow(createPath), createCheck, scalarListCreate) ++ createNested
+//    val qCreate          = DBIOAction.seq(allCreateActions: _*)
+//    //update updates list values first and then the item
+//    val allUpdateActions = scalarListUpdate +: updateNested :+ updateDataItemByPath(updatePath, updateArgs)
+//    val qUpdate          = DBIOAction.seq(allUpdateActions: _*)
+//
+//    ifThenElseNestedUpsert(condition, qUpdate, qCreate)
 
-    val condition = existsNodeIsInRelationshipWith.as[Boolean]
-    //insert creates item first and then the listvalues
-
-    val allCreateActions = Vector(createDataItem(createPath, createArgs), createRelayRow(createPath), createCheck, scalarListCreate) ++ createNested
-    val qCreate          = DBIOAction.seq(allCreateActions: _*)
-    //update updates list values first and then the item
-    val allUpdateActions = scalarListUpdate +: updateNested :+ updateDataItemByPath(updatePath, updateArgs)
-    val qUpdate          = DBIOAction.seq(allUpdateActions: _*)
-
-    ifThenElseNestedUpsert(condition, qUpdate, qCreate)
+    // fixme: upsert must be completely reimplemented
+    ???
   }
 
   //endregion

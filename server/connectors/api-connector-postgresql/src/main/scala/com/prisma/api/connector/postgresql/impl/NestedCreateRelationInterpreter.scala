@@ -1,14 +1,15 @@
 package com.prisma.api.connector.postgresql.impl
 
-import com.prisma.api.connector.NestedCreateDataItem
+import com.prisma.api.connector.{NestedCreateDataItem, Path}
 import com.prisma.api.connector.postgresql.database.PostgresApiDatabaseMutationBuilder
 import slick.dbio.{DBIO, Effect, NoStream}
 import slick.sql.{SqlAction, SqlStreamingAction}
 
 case class NestedCreateRelationInterpreter(mutaction: NestedCreateDataItem) extends NestedRelationInterpreterBase {
-  override def path        = mutaction.path
-  override def project     = mutaction.project
-  override def topIsCreate = mutaction.topIsCreate
+  // fixme: this must be implemented differently somehow
+  override def path                 = ??? //mutaction.path
+  override def project              = ??? //mutaction.project
+  override def topIsCreate: Boolean = ??? //mutaction.topIsCreate
 
   override def requiredCheck(implicit mutationBuilder: PostgresApiDatabaseMutationBuilder): List[SqlStreamingAction[Vector[String], String, Effect]] =
     topIsCreate match {

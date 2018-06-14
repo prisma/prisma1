@@ -1,7 +1,7 @@
 package com.prisma.api.mutations
 
 import com.prisma.api.ApiDependencies
-import com.prisma.api.connector.{DataResolver, DatabaseMutaction, Filter}
+import com.prisma.api.connector.{DataResolver, DatabaseMutaction, Filter, TopLevelDatabaseMutaction}
 import com.prisma.api.mutactions.DatabaseMutactions
 import com.prisma.shared.models.{Model, Project}
 import com.prisma.util.coolArgs.CoolArgs
@@ -23,7 +23,7 @@ case class UpdateMany(
   val coolArgs   = CoolArgs.fromSchemaArgs(args.raw)
   lazy val count = dataResolver.countByModel(model, whereFilter)
 
-  def prepareMutactions(): Future[DatabaseMutaction] = {
+  def prepareMutactions(): Future[TopLevelDatabaseMutaction] = {
     count map { _ =>
 //      val sqlMutactions          = DatabaseMutactions(project).getMutactionsForUpdateMany(model, whereFilter, coolArgs)
 //      val subscriptionMutactions = Vector.empty

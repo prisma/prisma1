@@ -10,7 +10,7 @@ import scala.concurrent.Future
 trait ClientMutation[T] {
   val mutationId: Id = Cuid.createCuid()
   def dataResolver: DataResolver
-  def prepareMutactions(): Future[DatabaseMutaction]
+  def prepareMutactions(): Future[TopLevelDatabaseMutaction]
   def getReturnValue(results: MutactionResults): Future[T]
 
   def projectId: String = dataResolver.project.id

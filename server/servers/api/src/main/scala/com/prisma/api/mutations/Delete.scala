@@ -33,7 +33,7 @@ case class Delete(
   val coolArgs            = CoolArgs(args.raw)
   val where: NodeSelector = coolArgs.extractNodeSelectorFromWhereField(model)
 
-  override def prepareMutactions(): Future[DatabaseMutaction] = {
+  override def prepareMutactions(): Future[TopLevelDatabaseMutaction] = {
     dataResolver
       .resolveByUnique(where)
       .andThen {

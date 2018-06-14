@@ -8,7 +8,7 @@ import scala.concurrent.Future
 
 case class ResetData(project: Project, dataResolver: DataResolver)(implicit apiDependencies: ApiDependencies) extends SingleItemClientMutation {
 
-  override def prepareMutactions(): Future[DatabaseMutaction] = {
+  override def prepareMutactions(): Future[TopLevelDatabaseMutaction] = {
     val relationTableNames = project.relations.map(_.relationTableName).toVector
     val modelTableNames    = project.models.map(_.name).toVector
     val listTableNames     = project.models.flatMap(model => model.scalarListFields.map(field => s"${model.name}_${field.name}"))

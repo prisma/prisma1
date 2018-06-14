@@ -8,7 +8,12 @@ import slick.dbio.{DBIO, DBIOAction, Effect, NoStream}
 trait DatabaseMutactionInterpreter {
   private val unitResult = DBIO.successful(UnitDatabaseMutactionResult)
 
-  def newAction(mutationBuilder: PostgresApiDatabaseMutationBuilder): DBIO[DatabaseMutactionResult] = action(mutationBuilder).andThen(unitResult)
+  def newAction(
+      mutationBuilder: PostgresApiDatabaseMutationBuilder,
+      parentResult: DatabaseMutactionResult
+  ): DBIO[DatabaseMutactionResult] = {
+    action(mutationBuilder).andThen(unitResult)
+  }
 
   def action(mutationBuilder: PostgresApiDatabaseMutationBuilder): DBIOAction[Any, NoStream, Effect.All]
 

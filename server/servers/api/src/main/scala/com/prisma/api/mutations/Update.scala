@@ -29,7 +29,7 @@ case class Update(
 
   lazy val prismaNodes: Future[Option[PrismaNode]] = dataResolver.resolveByUnique(where)
 
-  def prepareMutactions(): Future[DatabaseMutaction] = {
+  def prepareMutactions(): Future[TopLevelDatabaseMutaction] = {
     prismaNodes map {
       case Some(prismaNode) =>
 //        val sqlMutactions = DatabaseMutactions(project).getMutactionsForUpdate(Path.empty(where), coolArgs, prismaNode)
