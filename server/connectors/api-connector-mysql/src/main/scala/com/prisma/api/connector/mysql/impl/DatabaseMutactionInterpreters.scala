@@ -87,7 +87,7 @@ case class DeleteDataItemInterpreter(mutaction: DeleteDataItem) extends Database
   )
 }
 
-case class DeleteDataItemNestedInterpreter(mutaction: DeleteDataItemNested) extends DatabaseMutactionInterpreter {
+case class DeleteDataItemNestedInterpreter(mutaction: NestedDeleteDataItem) extends DatabaseMutactionInterpreter {
   override val action = DBIO.seq(
     MySqlApiDatabaseMutationBuilder.deleteRelayRow(mutaction.project.id, mutaction.path),
     MySqlApiDatabaseMutationBuilder.deleteDataItem(mutaction.project.id, mutaction.path)

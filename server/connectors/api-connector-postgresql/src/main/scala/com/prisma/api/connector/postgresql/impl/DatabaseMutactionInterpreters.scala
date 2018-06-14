@@ -87,7 +87,7 @@ case class DeleteDataItemInterpreter(mutaction: DeleteDataItem) extends Database
   )
 }
 
-case class DeleteDataItemNestedInterpreter(mutaction: DeleteDataItemNested) extends DatabaseMutactionInterpreter {
+case class DeleteDataItemNestedInterpreter(mutaction: NestedDeleteDataItem) extends DatabaseMutactionInterpreter {
   def action(mutationBuilder: PostgresApiDatabaseMutationBuilder) = DBIO.seq(
     mutationBuilder.deleteRelayRow(mutaction.path),
     mutationBuilder.deleteDataItem(mutaction.path)

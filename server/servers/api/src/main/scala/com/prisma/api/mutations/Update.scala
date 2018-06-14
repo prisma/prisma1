@@ -29,17 +29,13 @@ case class Update(
 
   lazy val prismaNodes: Future[Option[PrismaNode]] = dataResolver.resolveByUnique(where)
 
-  def prepareMutactions(): Future[PreparedMutactions] = {
+  def prepareMutactions(): Future[DatabaseMutaction] = {
     prismaNodes map {
       case Some(prismaNode) =>
-        val sqlMutactions          = DatabaseMutactions(project).getMutactionsForUpdate(Path.empty(where), coolArgs, prismaNode)
-        val subscriptionMutactions = SubscriptionEvents.extractFromSqlMutactions(project, mutationId, sqlMutactions)
-        val sssActions             = ServerSideSubscriptions.extractFromMutactions(project, sqlMutactions, requestId = "")
-
-        PreparedMutactions(
-          databaseMutactions = sqlMutactions,
-          sideEffectMutactions = sssActions ++ subscriptionMutactions
-        )
+//        val sqlMutactions = DatabaseMutactions(project).getMutactionsForUpdate(Path.empty(where), coolArgs, prismaNode)
+//        val subscriptionMutactions = SubscriptionEvents.extractFromSqlMutactions(project, mutationId, sqlMutactions)
+//        val sssActions             = ServerSideSubscriptions.extractFromMutactions(project, sqlMutactions, requestId = "")
+        DatabaseMutactions(project).getMutactionsForUpdate(Path.empty(where), coolArgs, prismaNode)
       case None =>
         throw APIErrors.NodeNotFoundForWhereError(where)
     }

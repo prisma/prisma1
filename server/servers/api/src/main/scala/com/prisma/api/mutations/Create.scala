@@ -3,7 +3,7 @@ package com.prisma.api.mutations
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
 import com.prisma.api.ApiDependencies
-import com.prisma.api.connector.{CreateDataItemResult, DataResolver, NodeSelector, Path}
+import com.prisma.api.connector._
 import com.prisma.api.mutactions.{DatabaseMutactions, NodeIds, ServerSideSubscriptions, SubscriptionEvents}
 import com.prisma.gc_values.CuidGCValue
 import com.prisma.shared.models.IdType.Id
@@ -33,17 +33,12 @@ case class Create(
 
   val path = Path.empty(NodeSelector.forIdGCValue(model, id))
 
-  def prepareMutactions(): Future[PreparedMutactions] = {
+  def prepareMutactions(): Future[DatabaseMutaction] = {
     val createMutactionsResult = DatabaseMutactions(project).getMutactionsForCreate(path, coolArgs)
-    val subscriptionMutactions = SubscriptionEvents.extractFromSqlMutactions(project, mutationId, createMutactionsResult)
-    val sssActions             = ServerSideSubscriptions.extractFromMutactions(project, createMutactionsResult, requestId)
+//    val subscriptionMutactions = SubscriptionEvents.extractFromSqlMutactions(project, mutationId, createMutactionsResult)
+//    val sssActions             = ServerSideSubscriptions.extractFromMutactions(project, createMutactionsResult, requestId)
 
-    Future.successful {
-      PreparedMutactions(
-        databaseMutactions = createMutactionsResult,
-        sideEffectMutactions = sssActions ++ subscriptionMutactions
-      )
-    }
+    Future.successful(createMutactionsResult)
   }
 
   override def getReturnValue(results: MutactionResults): Future[ReturnValueResult] = {

@@ -1,10 +1,10 @@
 package com.prisma.api.connector.mysql.impl
 
-import com.prisma.api.connector.NestedCreateRelation
+import com.prisma.api.connector.NestedCreateDataItem
 import slick.dbio.{Effect, NoStream}
 import slick.sql.{SqlAction, SqlStreamingAction}
 
-case class NestedCreateRelationInterpreter(mutaction: NestedCreateRelation) extends NestedRelationInterpreterBase {
+case class NestedCreateRelationInterpreter(mutaction: NestedCreateDataItem) extends NestedRelationInterpreterBase {
   override def path        = mutaction.path
   override def project     = mutaction.project
   override def topIsCreate = mutaction.topIsCreate

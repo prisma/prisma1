@@ -65,11 +65,11 @@ case class PassiveDatabaseMutactionExecutorImpl(activeExecutor: PostgresDatabase
     val replacements: Map[DatabaseMutaction, PassiveDatabaseMutaction] = mutactions
       .collect {
         case candidate: CreateDataItem =>
-          val partner: Option[NestedCreateRelation] = mutactions
+          val partner: Option[NestedCreateDataItem] = mutactions
             .collect {
-              case m: NestedCreateRelation => m
+              case m: NestedCreateDataItem => m
             }
-            .find { m: NestedCreateRelation =>
+            .find { m: NestedCreateDataItem =>
               m.path.lastRelation_!.inlineManifestation match {
                 case Some(manifestation: InlineRelationManifestation) =>
                   val mutactionsHaveTheSamePath = m.path == candidate.path
@@ -108,7 +108,7 @@ sealed trait PassiveDatabaseMutaction {
 case class PlainActiveDatabaseMutaction(databaseMutaction: DatabaseMutaction) extends PassiveDatabaseMutaction {
   override def replaces = Vector.empty
 }
-case class NestedCreateDataItem(create: CreateDataItem, nestedCreateRelation: NestedCreateRelation) extends PassiveDatabaseMutaction {
+case class NestedCreateDataItem(create: CreateDataItem, nestedCreateRelation: NestedCreateDataItem) extends PassiveDatabaseMutaction {
   override def replaces = Vector(create, nestedCreateRelation)
 }
 

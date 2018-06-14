@@ -17,6 +17,9 @@ trait ApiConnector {
 
 trait DatabaseMutactionExecutor {
   def execute(mutactions: Vector[DatabaseMutaction], runTransactionally: Boolean = true): Future[Vector[DatabaseMutactionResult]]
+
+  def executeTransactionally(mutaction: DatabaseMutaction): Future[Vector[DatabaseMutactionResult]]
+  def executeNonTransactionally(mutaction: DatabaseMutaction): Future[Vector[DatabaseMutactionResult]]
 }
 
 sealed trait ApiConnectorCapability

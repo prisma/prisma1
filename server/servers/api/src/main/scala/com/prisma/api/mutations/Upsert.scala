@@ -1,7 +1,7 @@
 package com.prisma.api.mutations
 
 import com.prisma.api.ApiDependencies
-import com.prisma.api.connector.{DataResolver, NodeSelector, Path}
+import com.prisma.api.connector.{DataResolver, DatabaseMutaction, NodeSelector, Path}
 import com.prisma.api.mutactions.{DatabaseMutactions, NodeIds, ServerSideSubscriptions, SubscriptionEvents}
 import com.prisma.shared.models.{Model, Project}
 import com.prisma.util.coolArgs.CoolArgs
@@ -34,17 +34,19 @@ case class Upsert(
   val updatePath = Path.empty(outerWhere)
   val createPath = Path.empty(NodeSelector.forIdGCValue(model, NodeIds.createNodeIdForModel(model)))
 
-  override def prepareMutactions: Future[PreparedMutactions] = {
-    val sqlMutactions          = DatabaseMutactions(project).getMutactionsForUpsert(createPath, updatePath, coolArgs)
-    val subscriptionMutactions = SubscriptionEvents.extractFromSqlMutactions(project, mutationId, sqlMutactions)
-    val sssActions             = ServerSideSubscriptions.extractFromMutactions(project, sqlMutactions, requestId = "")
+  override def prepareMutactions: Future[DatabaseMutaction] = {
+//    val sqlMutactions          = DatabaseMutactions(project).getMutactionsForUpsert(createPath, updatePath, coolArgs)
+//    val subscriptionMutactions = SubscriptionEvents.extractFromSqlMutactions(project, mutationId, sqlMutactions)
+//    val sssActions             = ServerSideSubscriptions.extractFromMutactions(project, sqlMutactions, requestId = "")
+//
+//    Future.successful {
+//      PreparedMutactions(
+//        databaseMutactions = sqlMutactions,
+//        sideEffectMutactions = sssActions ++ subscriptionMutactions
+//      )
+//    }
 
-    Future.successful {
-      PreparedMutactions(
-        databaseMutactions = sqlMutactions,
-        sideEffectMutactions = sssActions ++ subscriptionMutactions
-      )
-    }
+    Future.successful(DatabaseMutactions(project).getMutactionsForUpsert(createPath, updatePath, coolArgs))
   }
 
   override def getReturnValue(results: MutactionResults): Future[ReturnValueResult] = {

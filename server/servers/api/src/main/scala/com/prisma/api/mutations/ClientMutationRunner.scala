@@ -14,23 +14,24 @@ object ClientMutationRunner {
       databaseMutactionVerifier: DatabaseMutactionVerifier
   )(implicit ec: ExecutionContext): Future[T] = {
     for {
-      preparedMutactions <- clientMutation.prepareMutactions()
-      errors             = databaseMutactionVerifier.verify(preparedMutactions.databaseMutactions)
-      _                  = if (errors.nonEmpty) throw errors.head
-      databaseResults    <- performMutactions(preparedMutactions, clientMutation.projectId, databaseMutactionExecutor, sideEffectMutactionExecutor)
-      prismaNode         <- clientMutation.getReturnValue(MutactionResults(databaseResults))
+      mutaction <- clientMutation.prepareMutactions()
+      // fixme: bring back verification
+//      errors             = databaseMutactionVerifier.verify(preparedMutactions.databaseMutactions)
+//      _                  = if (errors.nonEmpty) throw errors.head
+      databaseResults <- databaseMutactionExecutor.executeTransactionally(mutaction)
+      prismaNode      <- clientMutation.getReturnValue(MutactionResults(databaseResults))
     } yield prismaNode
   }
 
-  private def performMutactions(
-      preparedMutactions: PreparedMutactions,
-      projectId: String,
-      databaseMutactionExecutor: DatabaseMutactionExecutor,
-      sideEffectMutactionExecutor: SideEffectMutactionExecutor
-  )(implicit ec: ExecutionContext): Future[Vector[DatabaseMutactionResult]] = {
-    for {
-      databaseResults <- databaseMutactionExecutor.execute(preparedMutactions.databaseMutactions)
-      _               <- sideEffectMutactionExecutor.execute(preparedMutactions.sideEffectMutactions)
-    } yield databaseResults
-  }
+//  private def performMutactions(
+//      preparedMutactions: PreparedMutactions,
+//      projectId: String,
+//      databaseMutactionExecutor: DatabaseMutactionExecutor,
+//      sideEffectMutactionExecutor: SideEffectMutactionExecutor
+//  )(implicit ec: ExecutionContext): Future[Vector[DatabaseMutactionResult]] = {
+//    for {
+//      databaseResults <- databaseMutactionExecutor.execute(preparedMutactions.databaseMutactions)
+//      _               <- sideEffectMutactionExecutor.execute(preparedMutactions.sideEffectMutactions)
+//    } yield databaseResults
+//  }
 }

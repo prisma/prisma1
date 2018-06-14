@@ -13,16 +13,16 @@ trait DatabaseMutactionVerifier {
 object DatabaseMutactionVerifierImpl extends DatabaseMutactionVerifier {
   override def verify(mutactions: Vector[DatabaseMutaction]): Vector[UserFacingError] = {
     mutactions.flatMap {
-      case m: CreateDataItem                 => verify(m)
-      case m: UpdateDataItem                 => verify(m)
-      case m: UpsertDataItem                 => verify(m)
-      case m: UpsertDataItemIfInRelationWith => verify(m)
-      case _                                 => None
+      case m: CreateDataItem       => verify(m)
+      case m: UpdateDataItem       => verify(m)
+      case m: UpsertDataItem       => verify(m)
+      case m: NestedUpsertDataItem => verify(m)
+      case _                       => None
     }
   }
 
   def verify(mutaction: CreateDataItem): Option[ClientApiError] = InputValueValidation.validateDataItemInputs(mutaction.model, mutaction.nonListArgs)
-  def verify(mutaction: UpdateDataItem): Option[ClientApiError] = InputValueValidation.validateDataItemInputs(mutaction.path.lastModel, mutaction.nonListArgs)
+  def verify(mutaction: UpdateDataItem): Option[ClientApiError] = InputValueValidation.validateDataItemInputs(mutaction.where.model, mutaction.nonListArgs)
 
   def verify(mutaction: UpsertDataItem): Iterable[ClientApiError] = {
     val model      = mutaction.createPath.lastModel
@@ -31,7 +31,7 @@ object DatabaseMutactionVerifierImpl extends DatabaseMutactionVerifier {
     verifyUpsert(model, createArgs, updateArgs)
   }
 
-  def verify(mutaction: UpsertDataItemIfInRelationWith): Iterable[ClientApiError] = {
+  def verify(mutaction: NestedUpsertDataItem): Iterable[ClientApiError] = {
     verifyUpsert(mutaction.createPath.lastModel, mutaction.createNonListArgs, mutaction.updateNonListArgs)
   }
 
