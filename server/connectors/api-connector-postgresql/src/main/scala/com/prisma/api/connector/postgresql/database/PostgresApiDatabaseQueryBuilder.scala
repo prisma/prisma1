@@ -88,7 +88,22 @@ case class PostgresApiDatabaseQueryBuilder(
       val pp     = new PositionedParameters(ps)
       val filter = args.flatMap(_.filter)
       fromModelIds.foreach(pp.setGcValue)
-      filter.foreach(filter => SetParams.setParams(pp, filter))
+      filter.foreach(filter => JooqSetParams.setParams(pp, filter))
+      if (args.get.after.isDefined)       {
+        pp.setString(args.get.after.get)
+        pp.setString(args.get.after.get)}
+      if (args.get.before.isDefined) {
+
+      pp.setString(args.get.before.get)
+        pp.setString(args.get.before.get)
+      }
+
+      if (args.exists(_.isWithPagination)) {
+        val params = JooqLimitClauseBuilder.limitClauseForWindowFunction(args)
+        pp.setInt(params._1)
+        pp.setInt(params._2)
+      }
+
 
       // executing
       val rs: ResultSet       = ps.executeQuery()

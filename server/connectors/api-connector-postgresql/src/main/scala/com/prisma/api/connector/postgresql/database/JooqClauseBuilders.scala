@@ -1,6 +1,7 @@
 package com.prisma.api.connector.postgresql.database
 
 import com.prisma.api.connector._
+import com.prisma.api.connector.postgresql.database.LimitClauseBuilder.validate
 import com.prisma.api.schema.APIErrors
 import com.prisma.api.schema.APIErrors.{InvalidFirstArgument, InvalidLastArgument, InvalidSkipArgument}
 import com.prisma.gc_values.NullGCValue
@@ -144,6 +145,17 @@ case class JooqWhereClauseBuilder(schemaName: String) {
 }
 
 object JooqLimitClauseBuilder {
+
+  // Increase by 1 to know if we have a next page / previous page
+  def limitClauseForWindowFunction(args: Option[QueryArguments]): (Int, Int) = {
+    val (firstOpt, lastOpt, skipOpt) = (args.flatMap(_.first), args.flatMap(_.last), args.flatMap(_.skip))
+    validate(args)
+
+    lastOpt.orElse(firstOpt) match {
+      case Some(limitedCount) => (skipOpt.getOrElse(0),limitedCount + skipOpt.getOrElse(0) + 1)
+      case None               => (0, 100000000)
+    }
+  }
 
   def limitClause(args: Option[QueryArguments]): Option[(Int, Int)] = {
     val (firstOpt, lastOpt, skipOpt) = (args.flatMap(_.first), args.flatMap(_.last), args.flatMap(_.skip))
