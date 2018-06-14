@@ -106,7 +106,7 @@ case class JooqScalarListByUniquesQueryBuilder(schemaName: String, scalarField: 
     val sql         = DSL.using(SQLDialect.POSTGRES_9_5, new Settings().withRenderFormatted(true))
     val nodeIdField = field(name(schemaName, tableName, nodeIdFieldName))
 
-    val condition = nodeIdField.in(Vector.fill(nodeIds.length) { "" }: _*)
+    val condition = nodeIdField.in(Vector.fill(nodeIds.length) { stringDummy }: _*)
     val query = sql
       .select(nodeIdField, field(name(positionFieldName)), field(name(valueFieldName)))
       .from(table(name(schemaName, tableName)))
@@ -149,7 +149,7 @@ case class JooqRelatedModelsQueryBuilder(
     val order = JooqOrderByClauseBuilder.internal(baseTableAlias, baseTableAlias, secondaryOrderByForPagination, queryArguments)
     val cursorCondition = JooqWhereClauseBuilder(schemaName).buildCursorCondition(queryArguments, relatedModel)
 
-    val aliasedBase = base.where(condition1, condition2, cursorCondition).asTable().as(baseTableAlias)  //todo cursor condition needs to go in here
+    val aliasedBase = base.where(condition1, condition2, cursorCondition).asTable().as(baseTableAlias)
 
     val rowNumberPart = rowNumber().over().partitionBy(aliasedBase.field(aSideAlias)).orderBy(order:_*).as(rowNumberAlias)
 

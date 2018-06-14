@@ -12,7 +12,6 @@ import org.jooq.{Condition, SQLDialect, SortField}
 import JooqQueryBuilders._
 
 case class JooqWhereClauseBuilder(schemaName: String) {
-  val topLevelAlias: String = JooqQueryBuilders.topLevelAlias
   val sql                   = DSL.using(SQLDialect.POSTGRES_9_5, new Settings().withRenderFormatted(true))
 
   def buildWhereClause(filter: Option[Filter]): Option[Condition] = filter match {
@@ -48,7 +47,7 @@ case class JooqWhereClauseBuilder(schemaName: String) {
     val selectQuery = sql
       .select(orderByField)
       .from(table(name(schemaName, tableName)))
-      .where(idField.equal(""))
+      .where(idField.equal(stringDummy))
 
     // Then, we select the comparison operation and construct the cursors. For instance, if we use ascending order, and we want
     // to get the items before, we use the "<" comparator on the column that defines the order.
