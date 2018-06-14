@@ -65,6 +65,39 @@ class JooqTestingSpec extends FlatSpec with Matchers with ApiSpecBase {
          |}""",
       project
     )
+  }
 
+  "Selecting nested" should "work 2" in {
+
+    val project = SchemaDsl.fromString() {
+
+      """type User {
+        |  id: ID! @unique
+        |  name: String!
+        |  b: [B!]!
+        |}
+        |
+        |type B {
+        |  id: ID! @unique
+        |  int: Int
+        |  rel: User
+        |}"""
+    }
+
+    database.setup(project)
+
+    server.query("""mutation{createUser(data:{name: "test", b:{create:{int: 12}}}){id}}""", project)
+
+    server.query(
+      s"""{
+         |  users{
+         |    name
+         |    b (first:10){
+         |      int
+         |    }
+         |  }
+         |}""",
+      project
+    )
   }
 }

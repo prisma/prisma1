@@ -91,7 +91,7 @@ case class JooqWhereClauseBuilder(schemaName: String) {
       val select = sql
         .select()
         .from(table(name(schemaName, relationField.relatedModel_!.dbName)).as(newAlias))
-        .innerJoin(name(schemaName, relationTableName))
+        .innerJoin(table(name(schemaName, relationTableName)))
         .on(field(name(newAlias, relationField.relatedModel_!.dbNameOfIdField_!)).eq(field(name(schemaName, relationTableName, oppositeColumn))))
         .where(field(name(schemaName, relationTableName, column)).eq(field(name(alias, relationField.model.dbNameOfIdField_!))))
 
@@ -171,6 +171,7 @@ object JooqOrderByClauseBuilder {
   def forModel(model: Model, alias: String, args: Option[QueryArguments]): Vector[SortField[AnyRef]] = {
     internal(
       alias = alias,
+      secondaryAlias = alias,
       secondOrderField = model.dbNameOfIdField_!,
       args = args
     )
@@ -195,18 +196,19 @@ object JooqOrderByClauseBuilder {
   def forRelation(relation: Relation, alias: String, args: Option[QueryArguments]): Vector[SortField[AnyRef]] = {
     internal(
       alias = alias,
+      secondaryAlias = alias,
       secondOrderField = relation.columnForRelationSide(RelationSide.A),
       args = args
     )
   }
 
-  def internal(alias: String, secondOrderField: String, args: Option[QueryArguments]): Vector[SortField[AnyRef]] = {
+  def internal(alias: String, secondaryAlias: String, secondOrderField: String, args: Option[QueryArguments]): Vector[SortField[AnyRef]] = {
     val (first, last, orderBy) = (args.flatMap(_.first), args.flatMap(_.last), args.flatMap(_.orderBy))
     val isReverseOrder         = last.isDefined
     if (first.isDefined && last.isDefined) throw APIErrors.InvalidConnectionArguments()
     // The limit instruction only works from up to down. Therefore, we have to invert order when we use before.
     val defaultOrder = orderBy.map(_.sortOrder.toString).getOrElse("asc")
-    val secondField  = field(name(alias, secondOrderField))
+    val secondField  = field(name(secondaryAlias, secondOrderField))
 
     (orderBy, defaultOrder, isReverseOrder) match {
       case (Some(order), "asc", true) if order.field.dbName != secondOrderField   => Vector(field(name(alias, order.field.dbName)).desc(), secondField.desc())

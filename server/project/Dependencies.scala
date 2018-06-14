@@ -87,8 +87,8 @@ object Dependencies {
   val parserCombinators = "org.scala-lang.modules"     %% "scala-parser-combinators" % "1.0.4"
   val apacheCommons     = "commons-lang"               % "commons-lang"              % "2.6"
   val jooq = Vector(
-    "org.jooq" % "jooq"            % "3.10.7",
-    "org.jooq" % "jooq-scala_2.12" % "3.10.7"
+    "org.jooq" % "jooq"            % "3.11.0",
+    "org.jooq" % "jooq-scala_2.12" % "3.11.0"
   )
 
   lazy val common: Seq[ModuleID] = Seq(

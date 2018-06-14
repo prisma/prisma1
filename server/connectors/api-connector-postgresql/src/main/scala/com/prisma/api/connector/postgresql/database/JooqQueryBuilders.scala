@@ -3,24 +3,27 @@ package com.prisma.api.connector.postgresql.database
 import java.sql.{Connection, PreparedStatement}
 
 import com.prisma.api.connector._
-import com.prisma.slick.NewJdbcExtensions._
 import com.prisma.api.connector.postgresql.database.PostgresSlickExtensions._
-import com.prisma.gc_values.{IdGCValue, NullGCValue, StringGCValue}
+import com.prisma.api.connector.postgresql.database.JooqQueryBuilders._
+import com.prisma.gc_values.{GCValue, IdGCValue, NullGCValue, StringGCValue}
 import com.prisma.shared.models._
+import com.prisma.slick.NewJdbcExtensions._
+import org.jooq.{Field, _}
 import org.jooq.conf.Settings
-import org.jooq._
-import slick.jdbc.PositionedParameters
 import org.jooq.impl.DSL
 import org.jooq.impl.DSL._
-import QueryBuilders.topLevelAlias
+import slick.jdbc.PositionedParameters
 
 object JooqQueryBuilders {
-  val topLevelAlias    = "Alias"
-  val intDummyValue    = 1
-  val stringDummyValue = ""
+  val topLevelAlias      = "Alias"
+  val relationTableAlias = "RelationTable"
+  val intDummyValue      = 1
+  val stringDummy        = ""
+  val aSideAlias         = "__Relation__A"
+  val bSideAlias         = "__Relation__B"
 }
 
-case class JooqRelationQueryBuilder(connection: Connection, schemaName: String, relation: Relation, queryArguments: Option[QueryArguments]) {
+case class JooqRelationQueryBuilder(schemaName: String, relation: Relation, queryArguments: Option[QueryArguments]) {
 
   lazy val queryString: String = {
 
@@ -37,7 +40,7 @@ case class JooqRelationQueryBuilder(connection: Connection, schemaName: String, 
       .orderBy(order: _*)
 
     val finalQuery = limit match {
-      case Some(_) => base.limit(10).offset(10)
+      case Some(_) => base.limit(intDummyValue).offset(intDummyValue)
       case None    => base
     }
 
@@ -45,7 +48,7 @@ case class JooqRelationQueryBuilder(connection: Connection, schemaName: String, 
   }
 }
 
-case class JooqCountQueryBuilder(connection: Connection, schemaName: String, tableName: String, filter: Option[Filter]) {
+case class JooqCountQueryBuilder(schemaName: String, tableName: String, filter: Option[Filter]) {
 
   lazy val queryString: String = {
     val sql          = DSL.using(SQLDialect.POSTGRES_9_5, new Settings().withRenderFormatted(true))
@@ -64,12 +67,45 @@ case class JooqCountQueryBuilder(connection: Connection, schemaName: String, tab
 case class JooqScalarListQueryBuilder(schemaName: String, field: ScalarField, queryArguments: Option[QueryArguments]) {
   require(field.isList, "This must be called only with scalar list fields")
 
+  val tableName = s"${field.model.dbName}_${field.dbName}"
   lazy val queryString: String = {
-    val tableName = s"${field.model.dbName}_${field.dbName}"
-    s"""SELECT * FROM "$schemaName"."$tableName" AS "$topLevelAlias" """ +
-      WhereClauseBuilder(schemaName).buildWhereClause(queryArguments.flatMap(_.filter)).getOrElse("") +
-      OrderByClauseBuilder.forScalarListField(field, topLevelAlias, queryArguments) +
-      LimitClauseBuilder.limitClause(queryArguments)
+    val sql          = DSL.using(SQLDialect.POSTGRES_9_5, new Settings().withRenderFormatted(true))
+    val aliasedTable = table(name(schemaName, tableName)).as(topLevelAlias)
+    val condition    = JooqWhereClauseBuilder(schemaName).buildWhereClause(queryArguments.flatMap(_.filter)).getOrElse(trueCondition())
+    val order        = JooqOrderByClauseBuilder.forScalarListField(topLevelAlias, queryArguments)
+    val limit        = JooqLimitClauseBuilder.limitClause(queryArguments)
+
+    val base = sql
+      .select()
+      .from(aliasedTable)
+      .where(condition)
+      .orderBy(order: _*)
+
+    val finalQuery = limit match {
+      case Some(_) => base.limit(intDummyValue).offset(intDummyValue)
+      case None    => base
+    }
+
+    finalQuery.getSQL
+  }
+}
+
+case class JooqScalarListByUniquesQueryBuilder(schemaName: String, scalarField: ScalarField, nodeIds: Vector[GCValue]) {
+  require(scalarField.isList, "This must be called only with scalar list fields")
+
+  val tableName = s"${scalarField.model.dbName}_${scalarField.dbName}"
+  lazy val queryString: String = {
+
+    val sql         = DSL.using(SQLDialect.POSTGRES_9_5, new Settings().withRenderFormatted(true))
+    val nodeIdField = field(name(schemaName, tableName, "nodeId"))
+
+    val condition = nodeIdField.in(Vector.fill(nodeIds.length) { "" }: _*)
+    val query = sql
+      .select(nodeIdField, field(name("position")), field(name("value")))
+      .from(table(name(schemaName, tableName)))
+      .where(condition)
+
+    query.getSQL
   }
 }
 
@@ -90,7 +126,7 @@ case class JooqRelatedModelsQueryBuilder(
   val bColumn                         = relation.modelBColumn
   val secondaryOrderByForPagination   = if (fromField.oppositeRelationSide == RelationSide.A) "__Relation__A" else "__Relation__B"
 
-  lazy val queryStringWithPagination: String = {
+  lazy val queryStringWithPagination2: String = {
     s"""SELECT *
         FROM
         ( SELECT ROW_NUMBER() OVER (PARTITION BY "t"."__Relation__A"""" + OrderByClauseBuilder.internal("t", "t", secondaryOrderByForPagination, queryArguments) +
@@ -107,7 +143,7 @@ case class JooqRelatedModelsQueryBuilder(
        WHERE "x"."r"""" + LimitClauseBuilder.limitClauseForWindowFunction(queryArguments)
   }
 
-  lazy val queryStringWithoutPagination: String = {
+  lazy val queryStringWithoutPagination2: String = {
     s"""select "$topLevelAlias".*, "RelationTable"."$aColumn" as "__Relation__A",  "RelationTable"."$bColumn" as "__Relation__B"
             from "$schemaName"."$modelTable" as "$topLevelAlias"
             inner join "$schemaName"."$relationTableName" as "RelationTable"
@@ -116,9 +152,45 @@ case class JooqRelatedModelsQueryBuilder(
       WhereClauseBuilder(schemaName).buildWhereClauseWithoutWhereKeyWord(queryArguments.flatMap(_.filter)) +
       OrderByClauseBuilder.internal(topLevelAlias, "RelationTable", oppositeModelRelationSideColumn, queryArguments)
   }
+
+  val sql           = DSL.using(SQLDialect.POSTGRES_9_5, new Settings().withRenderFormatted(true))
+  val aliasedTable  = table(name(schemaName, modelTable)).as(topLevelAlias)
+  val relationTable = table(name(schemaName, relationTableName)).as(relationTableAlias)
+  val condition1    = field(name(relationTableAlias, modelRelationSideColumn)).in(Vector.fill(relatedNodeIds.length) { stringDummy }: _*)
+  val condition2    = JooqWhereClauseBuilder(schemaName).buildWhereClause(queryArguments.flatMap(_.filter)).getOrElse(trueCondition())
+
+  val base = sql
+    .select(aliasedTable.asterisk(), field(name(relationTableAlias, aColumn)).as(aSideAlias),field(name(relationTableAlias, bColumn)).as(bSideAlias) )
+    .from(aliasedTable)
+    .innerJoin(relationTable)
+    .on(field(name(topLevelAlias, relatedModel.dbNameOfIdField_!)).eq(field(name(relationTableAlias, oppositeModelRelationSideColumn))))
+    .where(condition1, condition2)
+
+  lazy val queryStringWithPagination: String = {
+    val order = JooqOrderByClauseBuilder.internal(topLevelAlias, relationTableAlias, oppositeModelRelationSideColumn, queryArguments)
+
+    val aliasedBase = base.asTable().as("t")
+
+    val rowNumberPart = rowNumber().over().partitionBy(field(name("t", aSideAlias))).orderBy(field(name(aSideAlias))).as("r")
+
+    val withRowNumbers = select(rowNumberPart, aliasedBase.asterisk()).from(aliasedBase).asTable().as("x")
+
+    val withPagination = sql
+      .select(withRowNumbers.asterisk())
+      .from(withRowNumbers)
+      .where()
+
+    withPagination.getSQL
+  }
+
+  lazy val queryStringWithoutPagination: String = {
+    val order             = JooqOrderByClauseBuilder.internal(topLevelAlias, relationTableAlias, oppositeModelRelationSideColumn, queryArguments) 
+    val withoutPagination = base.orderBy(order: _*)
+    withoutPagination.getSQL
+  }
 }
 
-case class JooqModelQueryBuilder(connection: Connection, schemaName: String, model: Model, queryArguments: Option[QueryArguments]) {
+case class JooqModelQueryBuilder(schemaName: String, model: Model, queryArguments: Option[QueryArguments]) {
 
   lazy val queryString: String = {
     import org.jooq.impl.DSL
@@ -140,7 +212,7 @@ case class JooqModelQueryBuilder(connection: Connection, schemaName: String, mod
       .orderBy(order: _*)
 
     val finalQuery = limit match {
-      case Some(_) => base.limit(10).offset(10)
+      case Some(_) => base.limit(intDummyValue).offset(intDummyValue)
       case None    => base
     }
 

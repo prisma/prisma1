@@ -3,12 +3,9 @@ package com.prisma.api.connector.postgresql.database
 import java.sql.ResultSet
 
 import com.prisma.api.connector._
-import com.prisma.api.connector.postgresql.database.QueryBuilders.topLevelAlias
 import com.prisma.gc_values._
 import com.prisma.shared.models.IdType.Id
 import com.prisma.shared.models.{Function => _, _}
-import org.jooq.SQLDialect
-import org.jooq.impl.DSL
 import slick.jdbc.PostgresProfile.api._
 import slick.jdbc._
 
@@ -59,22 +56,10 @@ case class PostgresApiDatabaseQueryBuilder(
       overrideMaxNodeCount: Option[Int] = None
   ): DBIO[ResolverResult[PrismaNode]] = {
     SimpleDBIO[ResolverResult[PrismaNode]] { ctx =>
-      // prepare statement
-      val builder     = ModelQueryBuilder(schemaName, model, args)
-      val jooqBuilder = JooqModelQueryBuilder(ctx.connection, schemaName, model, args)
-      val stringQuery = builder.queryString
-      val jooqQuery   = jooqBuilder.queryString
-
-      println("String")
-      println(stringQuery)
-      println("Jooq")
-      println(jooqQuery)
-
-      val ps = ctx.connection.prepareStatement(jooqBuilder.queryString)
+      val jooqBuilder = JooqModelQueryBuilder(schemaName, model, args)
+      val ps          = ctx.connection.prepareStatement(jooqBuilder.queryString)
       JooqSetParams.setQueryArgs(ps, args)
-      // execute
-      val rs: ResultSet = ps.executeQuery()
-      // read result
+      val rs: ResultSet              = ps.executeQuery()
       val result: Vector[PrismaNode] = rs.as[PrismaNode](readsPrismaNode(model))
       ResolverResult(args, result)
     }
@@ -87,9 +72,17 @@ case class PostgresApiDatabaseQueryBuilder(
       args: Option[QueryArguments]
   ): DBIO[Vector[ResolverResult[PrismaNodeWithParent]]] = {
     SimpleDBIO[Vector[ResolverResult[PrismaNodeWithParent]]] { ctx =>
-      val builder = RelatedModelsQueryBuilder(schemaName, fromField, args, fromModelIds)
-      val query   = if (args.exists(_.isWithPagination)) builder.queryStringWithPagination else builder.queryStringWithoutPagination
-      val ps      = ctx.connection.prepareStatement(query)
+      val builder  = JooqRelatedModelsQueryBuilder(schemaName, fromField, args, fromModelIds)
+      val query    = if (args.exists(_.isWithPagination)) builder.queryStringWithPagination else builder.queryStringWithoutPagination
+      val builder2 = RelatedModelsQueryBuilder(schemaName, fromField, args, fromModelIds)
+      val query2   = if (args.exists(_.isWithPagination)) builder2.queryStringWithPagination else builder2.queryStringWithoutPagination
+
+      println("Old: ")
+      println(query2)
+      println("jOOQ: ")
+      println(query)
+
+      val ps = ctx.connection.prepareStatement(query)
 
       // injecting params
       val pp     = new PositionedParameters(ps)
@@ -116,13 +109,11 @@ case class PostgresApiDatabaseQueryBuilder(
   ): DBIO[ResolverResult[RelationNode]] = {
 
     SimpleDBIO[ResolverResult[RelationNode]] { ctx =>
-      val builder = JooqRelationQueryBuilder(ctx.connection, schemaName, relation, args)
+      val builder = JooqRelationQueryBuilder(schemaName, relation, args)
       val ps      = ctx.connection.prepareStatement(builder.queryString)
       JooqSetParams.setQueryArgs(ps, args)
       val rs: ResultSet = ps.executeQuery()
-
-      val result = rs.as(readRelation(relation))
-
+      val result        = rs.as(readRelation(relation))
       ResolverResult(result)
     }
   }
@@ -134,9 +125,9 @@ case class PostgresApiDatabaseQueryBuilder(
   ): DBIO[ResolverResult[ScalarListValues]] = {
 
     SimpleDBIO[ResolverResult[ScalarListValues]] { ctx =>
-      val builder = ScalarListQueryBuilder(schemaName, field, args)
+      val builder = JooqScalarListQueryBuilder(schemaName, field, args)
       val ps      = ctx.connection.prepareStatement(builder.queryString)
-      SetParams.setQueryArgs(ps, args)
+      JooqSetParams.setQueryArgs(ps, args)
       val rs: ResultSet = ps.executeQuery()
 
       val result = rs.as(readsScalarListField(field))
@@ -152,10 +143,9 @@ case class PostgresApiDatabaseQueryBuilder(
 
   def selectFromScalarList(modelName: String, field: ScalarField, nodeIds: Vector[IdGCValue]): DBIO[Vector[ScalarListValues]] = {
     SimpleDBIO[Vector[ScalarListValues]] { ctx =>
-      val placeHolders = queryPlaceHolders(nodeIds)
-      val q            = s"""select "nodeId", "position", "value" from "$schemaName"."${modelName}_${field.dbName}" where "nodeId" in """ + placeHolders
-      val ps           = ctx.connection.prepareStatement(q)
-      val pp           = new PositionedParameters(ps)
+      val builder = JooqScalarListByUniquesQueryBuilder(schemaName, field, nodeIds)
+      val ps      = ctx.connection.prepareStatement(builder.queryString)
+      val pp      = new PositionedParameters(ps)
       nodeIds.foreach(pp.setGcValue)
 
       val rs                 = ps.executeQuery()
@@ -168,9 +158,8 @@ case class PostgresApiDatabaseQueryBuilder(
 
   def countAllFromTable(table: String, whereFilter: Option[Filter]): DBIO[Int] = {
     SimpleDBIO[Int] { ctx =>
-      val builder = JooqCountQueryBuilder(ctx.connection, schemaName, table, whereFilter)
+      val builder = JooqCountQueryBuilder(schemaName, table, whereFilter)
       val ps      = ctx.connection.prepareStatement(builder.queryString)
-
       JooqSetParams.setFilter(new PositionedParameters(ps), whereFilter)
       val rs = ps.executeQuery()
       rs.next()
@@ -181,7 +170,7 @@ case class PostgresApiDatabaseQueryBuilder(
   def batchSelectFromModelByUnique(model: Model, field: ScalarField, values: Vector[GCValue]): DBIO[Vector[PrismaNode]] = {
     SimpleDBIO { ctx =>
       val queryArgs = Some(QueryArguments.withFilter(ScalarFilter(field, In(values))))
-      val builder   = JooqModelQueryBuilder(ctx.connection, schemaName, model, queryArgs)
+      val builder   = JooqModelQueryBuilder(schemaName, model, queryArgs)
       val ps        = ctx.connection.prepareStatement(builder.queryString)
       JooqSetParams.setQueryArgs(ps, queryArgs)
       val rs: ResultSet = ps.executeQuery()
