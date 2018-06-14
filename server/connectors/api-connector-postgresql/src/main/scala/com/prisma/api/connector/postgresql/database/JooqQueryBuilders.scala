@@ -24,6 +24,10 @@ object JooqQueryBuilders {
   val rowNumberAlias = "prismaRowNumberAlias"
   val baseTableAlias = "prismaBaseTableAlias"
   val rowNumberTableAlias = "prismaRowNumberTableAlias"
+  val nodeIdFieldName = "nodeId"
+  val positionFieldName = "position"
+  val valueFieldName= "value"
+
 }
 
 case class JooqRelationQueryBuilder(schemaName: String, relation: Relation, queryArguments: Option[QueryArguments]) {
@@ -100,11 +104,11 @@ case class JooqScalarListByUniquesQueryBuilder(schemaName: String, scalarField: 
   lazy val queryString: String = {
 
     val sql         = DSL.using(SQLDialect.POSTGRES_9_5, new Settings().withRenderFormatted(true))
-    val nodeIdField = field(name(schemaName, tableName, "nodeId"))
+    val nodeIdField = field(name(schemaName, tableName, nodeIdFieldName))
 
     val condition = nodeIdField.in(Vector.fill(nodeIds.length) { "" }: _*)
     val query = sql
-      .select(nodeIdField, field(name("position")), field(name("value")))
+      .select(nodeIdField, field(name(positionFieldName)), field(name(valueFieldName)))
       .from(table(name(schemaName, tableName)))
       .where(condition)
 
@@ -128,23 +132,6 @@ case class JooqRelatedModelsQueryBuilder(
   val aColumn                         = relation.modelAColumn
   val bColumn                         = relation.modelBColumn
   val secondaryOrderByForPagination   = if (fromField.oppositeRelationSide == RelationSide.A) aSideAlias else bSideAlias
-
-  lazy val queryStringWithPagination2: String = {
-    s"""SELECT *
-        FROM
-        ( SELECT ROW_NUMBER() OVER (PARTITION BY "t"."__Relation__A"""" + OrderByClauseBuilder.internal("t", "t", secondaryOrderByForPagination, queryArguments) +
-      s""") AS "r", "t".*
-          FROM (
-              SELECT "$topLevelAlias".*, "RelationTable"."$aColumn" AS "__Relation__A",  "RelationTable"."$bColumn" AS "__Relation__B"
-              FROM "$schemaName"."$modelTable" AS "$topLevelAlias"
-              INNER JOIN "$schemaName"."$relationTableName" AS "RelationTable"
-              ON "$topLevelAlias"."${relatedModel.dbNameOfIdField_!}" = "RelationTable"."$oppositeModelRelationSideColumn"
-              WHERE "RelationTable"."$modelRelationSideColumn" IN ${queryPlaceHolders(relatedNodeIds)}
-              AND """ + WhereClauseBuilder(schemaName).buildWhereClauseWithoutWhereKeyWord(queryArguments.flatMap(_.filter)) +
-      WhereClauseBuilder(schemaName).buildCursorCondition(queryArguments, relatedModel).map(" AND " + _).getOrElse("") + s""") AS "t"
-       ) AS "x"
-       WHERE "x"."r"""" + LimitClauseBuilder.limitClauseForWindowFunction(queryArguments)
-  }
 
   val sql           = DSL.using(SQLDialect.POSTGRES_10, new Settings().withRenderFormatted(true))
   val aliasedTable  = table(name(schemaName, modelTable)).as(topLevelAlias)

@@ -18,11 +18,12 @@ case class PostgresApiDatabaseQueryBuilder(
   import JdbcExtensions._
   import PostgresSlickExtensions._
   import com.prisma.slick.NewJdbcExtensions._
+  import JooqQueryBuilders._
 
   private def readsScalarListField(field: ScalarField): ReadsResultSet[ScalarListElement] = ReadsResultSet { rs =>
-    val nodeId   = rs.getString("nodeId")
-    val position = rs.getInt("position")
-    val value    = rs.getGcValue("value", field.typeIdentifier)
+    val nodeId   = rs.getString(nodeIdFieldName)
+    val position = rs.getInt(positionFieldName)
+    val value    = rs.getGcValue(valueFieldName, field.typeIdentifier)
     ScalarListElement(nodeId, position, value)
   }
 
@@ -74,13 +75,6 @@ case class PostgresApiDatabaseQueryBuilder(
     SimpleDBIO[Vector[ResolverResult[PrismaNodeWithParent]]] { ctx =>
       val builder  = JooqRelatedModelsQueryBuilder(schemaName, fromField, args, fromModelIds)
       val query    = if (args.exists(_.isWithPagination)) builder.queryStringWithPagination else builder.queryStringWithoutPagination
-      val builder2 = RelatedModelsQueryBuilder(schemaName, fromField, args, fromModelIds)
-      val query2   = if (args.exists(_.isWithPagination)) builder2.queryStringWithPagination else builder2.queryStringWithoutPagination
-
-      println("Old: ")
-      println(query2)
-      println("jOOQ: ")
-      println(query)
 
       val ps = ctx.connection.prepareStatement(query)
 
@@ -89,12 +83,14 @@ case class PostgresApiDatabaseQueryBuilder(
       val filter = args.flatMap(_.filter)
       fromModelIds.foreach(pp.setGcValue)
       filter.foreach(filter => JooqSetParams.setParams(pp, filter))
+
       if (args.get.after.isDefined)       {
         pp.setString(args.get.after.get)
-        pp.setString(args.get.after.get)}
-      if (args.get.before.isDefined) {
+        pp.setString(args.get.after.get)
+      }
 
-      pp.setString(args.get.before.get)
+      if (args.get.before.isDefined) {
+        pp.setString(args.get.before.get)
         pp.setString(args.get.before.get)
       }
 
@@ -103,7 +99,6 @@ case class PostgresApiDatabaseQueryBuilder(
         pp.setInt(params._1)
         pp.setInt(params._2)
       }
-
 
       // executing
       val rs: ResultSet       = ps.executeQuery()

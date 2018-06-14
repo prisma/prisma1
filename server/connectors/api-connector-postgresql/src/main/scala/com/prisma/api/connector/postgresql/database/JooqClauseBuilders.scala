@@ -1,7 +1,6 @@
 package com.prisma.api.connector.postgresql.database
 
 import com.prisma.api.connector._
-import com.prisma.api.connector.postgresql.database.LimitClauseBuilder.validate
 import com.prisma.api.schema.APIErrors
 import com.prisma.api.schema.APIErrors.{InvalidFirstArgument, InvalidLastArgument, InvalidSkipArgument}
 import com.prisma.gc_values.NullGCValue
@@ -10,9 +9,10 @@ import org.jooq.conf.Settings
 import org.jooq.impl.DSL._
 import org.jooq.impl._
 import org.jooq.{Condition, SQLDialect, SortField}
+import JooqQueryBuilders._
 
 case class JooqWhereClauseBuilder(schemaName: String) {
-  val topLevelAlias: String = QueryBuilders.topLevelAlias
+  val topLevelAlias: String = JooqQueryBuilders.topLevelAlias
   val sql                   = DSL.using(SQLDialect.POSTGRES_9_5, new Settings().withRenderFormatted(true))
 
   def buildWhereClause(filter: Option[Filter]): Option[Condition] = filter match {
@@ -53,10 +53,10 @@ case class JooqWhereClauseBuilder(schemaName: String) {
     // Then, we select the comparison operation and construct the cursors. For instance, if we use ascending order, and we want
     // to get the items before, we use the "<" comparator on the column that defines the order.
     def cursorFor(cursor: String, cursorType: String): Condition = (cursorType, sortDirection.toLowerCase.trim) match {
-      case ("before", "asc")  => row(orderByFieldWithAlias, idFieldWithAlias).lessThan(selectQuery, "")
-      case ("before", "desc") => row(orderByFieldWithAlias, idFieldWithAlias).greaterThan(selectQuery, "")
-      case ("after", "asc")   => row(orderByFieldWithAlias, idFieldWithAlias).greaterThan(selectQuery, "")
-      case ("after", "desc")  => row(orderByFieldWithAlias, idFieldWithAlias).lessThan(selectQuery, "")
+      case ("before", "asc")  => row(orderByFieldWithAlias, idFieldWithAlias).lessThan(selectQuery, stringDummy)
+      case ("before", "desc") => row(orderByFieldWithAlias, idFieldWithAlias).greaterThan(selectQuery, stringDummy)
+      case ("after", "asc")   => row(orderByFieldWithAlias, idFieldWithAlias).greaterThan(selectQuery, stringDummy)
+      case ("after", "desc")  => row(orderByFieldWithAlias, idFieldWithAlias).lessThan(selectQuery, stringDummy)
       case _                  => throw new IllegalArgumentException
     }
 
@@ -120,24 +120,24 @@ case class JooqWhereClauseBuilder(schemaName: String) {
       case x: RelationFilter        => relationFilterStatement(alias, x)
       //--------------------------------ANCHORS------------------------------------
       case PreComputedSubscriptionFilter(value)                  => if (value) trueCondition() else falseCondition()
-      case ScalarFilter(scalarField, Contains(_))                => fieldFrom(scalarField).contains("")
-      case ScalarFilter(scalarField, NotContains(_))             => fieldFrom(scalarField).notContains("")
-      case ScalarFilter(scalarField, StartsWith(_))              => fieldFrom(scalarField).startsWith("")
-      case ScalarFilter(scalarField, NotStartsWith(_))           => fieldFrom(scalarField).startsWith("").not()
-      case ScalarFilter(scalarField, EndsWith(_))                => fieldFrom(scalarField).endsWith("")
-      case ScalarFilter(scalarField, NotEndsWith(_))             => fieldFrom(scalarField).endsWith("").not()
-      case ScalarFilter(scalarField, LessThan(_))                => fieldFrom(scalarField).lessThan("")
-      case ScalarFilter(scalarField, GreaterThan(_))             => fieldFrom(scalarField).greaterThan("")
-      case ScalarFilter(scalarField, LessThanOrEquals(_))        => fieldFrom(scalarField).lessOrEqual("")
-      case ScalarFilter(scalarField, GreaterThanOrEquals(_))     => fieldFrom(scalarField).greaterOrEqual("")
+      case ScalarFilter(scalarField, Contains(_))                => fieldFrom(scalarField).contains(stringDummy)
+      case ScalarFilter(scalarField, NotContains(_))             => fieldFrom(scalarField).notContains(stringDummy)
+      case ScalarFilter(scalarField, StartsWith(_))              => fieldFrom(scalarField).startsWith(stringDummy)
+      case ScalarFilter(scalarField, NotStartsWith(_))           => fieldFrom(scalarField).startsWith(stringDummy).not()
+      case ScalarFilter(scalarField, EndsWith(_))                => fieldFrom(scalarField).endsWith(stringDummy)
+      case ScalarFilter(scalarField, NotEndsWith(_))             => fieldFrom(scalarField).endsWith(stringDummy).not()
+      case ScalarFilter(scalarField, LessThan(_))                => fieldFrom(scalarField).lessThan(stringDummy)
+      case ScalarFilter(scalarField, GreaterThan(_))             => fieldFrom(scalarField).greaterThan(stringDummy)
+      case ScalarFilter(scalarField, LessThanOrEquals(_))        => fieldFrom(scalarField).lessOrEqual(stringDummy)
+      case ScalarFilter(scalarField, GreaterThanOrEquals(_))     => fieldFrom(scalarField).greaterOrEqual(stringDummy)
       case ScalarFilter(scalarField, NotEquals(NullGCValue))     => fieldFrom(scalarField).isNotNull
-      case ScalarFilter(scalarField, NotEquals(_))               => fieldFrom(scalarField).notEqual("")
+      case ScalarFilter(scalarField, NotEquals(_))               => fieldFrom(scalarField).notEqual(stringDummy)
       case ScalarFilter(scalarField, Equals(NullGCValue))        => fieldFrom(scalarField).isNull
-      case ScalarFilter(scalarField, Equals(x))                  => fieldFrom(scalarField).equal("")
+      case ScalarFilter(scalarField, Equals(x))                  => fieldFrom(scalarField).equal(stringDummy)
       case ScalarFilter(scalarField, In(Vector(NullGCValue)))    => fieldFrom(scalarField).isNull
       case ScalarFilter(scalarField, NotIn(Vector(NullGCValue))) => fieldFrom(scalarField).isNotNull
-      case ScalarFilter(scalarField, In(values))                 => fieldFrom(scalarField).in(Vector.fill(values.length) { "" }: _*)
-      case ScalarFilter(scalarField, NotIn(values))              => fieldFrom(scalarField).notIn(Vector.fill(values.length) { "" }: _*)
+      case ScalarFilter(scalarField, In(values))                 => fieldFrom(scalarField).in(Vector.fill(values.length) { stringDummy }: _*)
+      case ScalarFilter(scalarField, NotIn(values))              => fieldFrom(scalarField).notIn(Vector.fill(values.length) { stringDummy }: _*)
       case OneRelationIsNullFilter(field)                        => oneRelationIsNullFilter(field)
       case x                                                     => sys.error(s"Not supported: $x")
     }
@@ -195,8 +195,8 @@ object JooqOrderByClauseBuilder {
 
     if (first.isDefined && last.isDefined) throw APIErrors.InvalidConnectionArguments()
 
-    val nodeIdField   = field(name(alias, "nodeId"))
-    val positionField = field(name(alias, "position"))
+    val nodeIdField   = field(name(alias, nodeIdFieldName))
+    val positionField = field(name(alias, positionFieldName))
 
     // The limit instruction only works from up to down. Therefore, we have to invert order when we use before.
     isReverseOrder match {

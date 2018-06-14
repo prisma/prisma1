@@ -22,7 +22,7 @@ case class PostgresApiDatabaseMutationBuilder(
     schemaName: String,
     schema: Schema,
 ) {
-  import QueryBuilders._
+  import JooqQueryBuilders._
 
   // region CREATE
 
