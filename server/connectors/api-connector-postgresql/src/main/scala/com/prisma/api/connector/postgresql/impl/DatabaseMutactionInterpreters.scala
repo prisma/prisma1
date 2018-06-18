@@ -6,7 +6,8 @@ import com.prisma.api.connector.postgresql.database.PostgresApiDatabaseMutationB
 import com.prisma.api.connector.postgresql.impl.GetFieldFromSQLUniqueException.getFieldOption
 import com.prisma.api.schema.{APIErrors, UserFacingError}
 import com.prisma.api.schema.APIErrors.RequiredRelationWouldBeViolated
-import com.prisma.shared.models.{Field, Relation, RelationField}
+import com.prisma.gc_values.ListGCValue
+import com.prisma.shared.models.{Field, Project, Relation, RelationField}
 import org.postgresql.util.PSQLException
 import slick.dbio.DBIOAction
 import slick.jdbc.PostgresProfile.api._
@@ -206,12 +207,15 @@ case class ResetDataInterpreter(mutaction: ResetDataMutaction) extends DatabaseM
 }
 
 case class UpdateDataItemInterpreter(mutaction: UpdateDataItem) extends DatabaseMutactionInterpreter {
+  val interpreter = SharedUpdateDataItemInterpreter(mutaction.project, Path.empty(mutaction.where), mutaction.nonListArgs, mutaction.listArgs)
 
   override def newAction(mutationBuilder: PostgresApiDatabaseMutationBuilder, parentResult: DatabaseMutactionResult) = {
-    ???
+    interpreter.newAction(mutationBuilder, parentResult)
   }
 
-  override def action(mutationBuilder: PostgresApiDatabaseMutationBuilder) = ???
+  def action(mutationBuilder: PostgresApiDatabaseMutationBuilder) = ???
+
+  override val errorMapper = interpreter.errorMapper
 }
 
 case class NestedUpdateDataItemInterpreter(mutaction: NestedUpdateDataItem) extends DatabaseMutactionInterpreter {
@@ -220,31 +224,32 @@ case class NestedUpdateDataItemInterpreter(mutaction: NestedUpdateDataItem) exte
   override def action(mutationBuilder: PostgresApiDatabaseMutationBuilder)                                           = ???
 }
 
-//case class UpdateDataItemInterpreter(mutaction: UpdateWrapper) extends DatabaseMutactionInterpreter {
-//  val (project, path, nonListArgs, listArgs) = mutaction match {
-//    case x: UpdateDataItem       => (x.project, x.path, x.nonListArgs, x.listArgs)
-//    case x: NestedUpdateDataItem => (x.project, x.path, x.nonListArgs, x.listArgs)
-//  }
-//  val model = path.lastModel
-//
-//  def action(mutationBuilder: PostgresApiDatabaseMutationBuilder) = {
-//    val nonListAction = mutationBuilder.updateDataItemByPath(path, nonListArgs)
-//    val listAction    = mutationBuilder.setScalarList(path, listArgs)
-//    DBIO.seq(listAction, nonListAction)
-//  }
-//
-//  override val errorMapper = {
-//    // https://dev.mysql.com/doc/refman/5.5/en/error-messages-server.html#error_er_dup_entry
-//    case e: PSQLException if e.getSQLState == "23505" && GetFieldFromSQLUniqueException.getFieldOption(model, e).isDefined =>
-//      APIErrors.UniqueConstraintViolation(path.lastModel.name, GetFieldFromSQLUniqueException.getFieldOption(model, e).get)
-//
-//    case e: PSQLException if e.getSQLState == "23503" =>
-//      APIErrors.NodeNotFoundForWhereError(path.root)
-//
-//    case e: PSQLException if e.getSQLState == "23502" =>
-//      APIErrors.FieldCannotBeNull()
-//  }
-//}
+case class SharedUpdateDataItemInterpreter(
+    project: Project,
+    path: Path,
+    nonListArgs: PrismaArgs,
+    listArgs: Vector[(String, ListGCValue)]
+) extends DatabaseMutactionInterpreter {
+  val model = path.lastModel
+
+  def action(mutationBuilder: PostgresApiDatabaseMutationBuilder) = {
+    val nonListAction = mutationBuilder.updateDataItemByPath(path, nonListArgs)
+    val listAction    = mutationBuilder.setScalarList(path, listArgs)
+    DBIO.seq(listAction, nonListAction)
+  }
+
+  override val errorMapper = {
+    // https://dev.mysql.com/doc/refman/5.5/en/error-messages-server.html#error_er_dup_entry
+    case e: PSQLException if e.getSQLState == "23505" && GetFieldFromSQLUniqueException.getFieldOption(model, e).isDefined =>
+      APIErrors.UniqueConstraintViolation(path.lastModel.name, GetFieldFromSQLUniqueException.getFieldOption(model, e).get)
+
+    case e: PSQLException if e.getSQLState == "23503" =>
+      APIErrors.NodeNotFoundForWhereError(path.root)
+
+    case e: PSQLException if e.getSQLState == "23502" =>
+      APIErrors.FieldCannotBeNull()
+  }
+}
 
 case class UpdateDataItemsInterpreter(mutaction: UpdateDataItems) extends DatabaseMutactionInterpreter {
   //update Lists before updating the nodes
