@@ -4,6 +4,7 @@ import com.prisma.api.connector._
 import com.prisma.api.connector.postgresql.DatabaseMutactionInterpreter
 import com.prisma.api.connector.postgresql.database.PostgresApiDatabaseMutationBuilder
 import com.prisma.api.schema.UserFacingError
+import com.prisma.gc_values.{CuidGCValue, IdGcValue}
 import slick.jdbc.PostgresProfile.api._
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -16,9 +17,10 @@ case class PostgresDatabaseMutactionExecutor(clientDb: Database, createRelayIds:
 
   private def execute(mutaction: TopLevelDatabaseMutaction, transactionally: Boolean): Future[DatabaseMutactionResult] = {
     val mutationBuilder = PostgresApiDatabaseMutationBuilder(schemaName = mutaction.project.id, schema = mutaction.project.schema)
+    // fixme: handing in those non existent values should not happen
     val singleAction = transactionally match {
-      case true  => recurse(mutaction, UnitDatabaseMutactionResult, mutationBuilder).transactionally
-      case false => recurse(mutaction, UnitDatabaseMutactionResult, mutationBuilder)
+      case true  => recurse(mutaction, CuidGCValue("does-not-exist"), mutationBuilder).transactionally
+      case false => recurse(mutaction, CuidGCValue("does-not-exist"), mutationBuilder)
     }
 
     clientDb.run(singleAction)
@@ -26,19 +28,22 @@ case class PostgresDatabaseMutactionExecutor(clientDb: Database, createRelayIds:
 
   private def recurse(
       mutaction: DatabaseMutaction,
-      parentResult: DatabaseMutactionResult,
+      parentId: IdGcValue,
       mutationBuilder: PostgresApiDatabaseMutationBuilder
   ): DBIO[DatabaseMutactionResult] = {
     mutaction match {
       case m: FurtherNestedMutaction =>
         for {
-          result       <- interpreterFor(m).newActionWithErrorMapped(mutationBuilder, parentResult)
-          childResults <- DBIO.sequence(m.allMutactions.map(recurse(_, result, mutationBuilder)))
+          result <- interpreterFor(m).newActionWithErrorMapped(mutationBuilder, parentId)
+          childResults <- result.id match {
+                           case Some(id) => DBIO.sequence(m.allMutactions.map(recurse(_, id, mutationBuilder)))
+                           case None     => DBIO.successful(())
+                         }
           //DBIO.sequence(mutation.childs.map(recurse(_, mutationBuilder)))
         } yield result
       case m: FinalMutaction =>
         for {
-          result <- interpreterFor(m).newActionWithErrorMapped(mutationBuilder, parentResult)
+          result <- interpreterFor(m).newActionWithErrorMapped(mutationBuilder, parentId)
         } yield result
     }
   }

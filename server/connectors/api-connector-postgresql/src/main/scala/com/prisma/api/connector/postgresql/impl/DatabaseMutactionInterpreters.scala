@@ -6,7 +6,7 @@ import com.prisma.api.connector.postgresql.database.PostgresApiDatabaseMutationB
 import com.prisma.api.connector.postgresql.impl.GetFieldFromSQLUniqueException.getFieldOption
 import com.prisma.api.schema.{APIErrors, UserFacingError}
 import com.prisma.api.schema.APIErrors.RequiredRelationWouldBeViolated
-import com.prisma.gc_values.{ListGCValue, RootGCValue}
+import com.prisma.gc_values.{CuidGCValue, IdGcValue, ListGCValue, RootGCValue}
 import com.prisma.shared.models.{Field, Project, Relation, RelationField}
 import org.postgresql.util.PSQLException
 import slick.dbio.DBIOAction
@@ -57,13 +57,13 @@ case class CreateDataItemInterpreter(mutaction: CreateDataItem, includeRelayRow:
   val project = mutaction.project
   val model   = mutaction.model
 
-  override def newAction(mutationBuilder: PostgresApiDatabaseMutationBuilder, parentResult: DatabaseMutactionResult)(
+  override def newAction(mutationBuilder: PostgresApiDatabaseMutationBuilder, parentId: IdGcValue)(
       implicit ec: ExecutionContext): DBIO[DatabaseMutactionResult] = {
     for {
       createResult <- mutationBuilder.createDataItem(model, mutaction.nonListArgs)
-      _            <- mutationBuilder.setScalarList(Path.empty(NodeSelector.forIdGCValue(model, createResult.id)), mutaction.listArgs)
+      _            <- mutationBuilder.setScalarList(Path.empty(NodeSelector.forIdGCValue(model, createResult.createdId)), mutaction.listArgs)
       _ <- if (includeRelayRow) {
-            mutationBuilder.createRelayRow(Path.empty(NodeSelector.forIdGCValue(model, createResult.id)))
+            mutationBuilder.createRelayRow(Path.empty(NodeSelector.forIdGCValue(model, createResult.createdId)))
           } else {
             DBIO.successful(())
           }
@@ -87,9 +87,9 @@ case class NestedCreateDataItemInterpreter(mutaction: NestedCreateDataItem)(impl
   val parent   = mutaction.relationField.model
   val relation = mutaction.relationField.relation
 
-  override def newAction(mutationBuilder: PostgresApiDatabaseMutationBuilder, parentResult: DatabaseMutactionResult)(implicit ec: ExecutionContext) = {
+  override def newAction(mutationBuilder: PostgresApiDatabaseMutationBuilder, parentId: IdGcValue)(implicit ec: ExecutionContext) = {
     for {
-      createResult <- createNodeAndConnectToParent(mutationBuilder, parentResult)
+      createResult <- createNodeAndConnectToParent(mutationBuilder, parentId)
       // 1. fixme: feed the id into the action for scalar lists
       // 2. fixme: feed the id into the action for the relay row
     } yield createResult
@@ -97,20 +97,20 @@ case class NestedCreateDataItemInterpreter(mutaction: NestedCreateDataItem)(impl
 
   private def createNodeAndConnectToParent(
       mutationBuilder: PostgresApiDatabaseMutationBuilder,
-      parentResult: DatabaseMutactionResult
+      parentId: IdGcValue
   )(implicit ec: ExecutionContext) = {
 
     if (relation.isInlineRelation) {
       val inlineField  = relation.getFieldOnModel(model.name)
       val argsMap      = mutaction.nonListArgs.raw.asRoot.map
-      val modifiedArgs = argsMap.updated(inlineField.name, parentResult.id)
+      val modifiedArgs = argsMap.updated(inlineField.name, parentId)
       mutationBuilder.createDataItem(model, PrismaArgs(RootGCValue(modifiedArgs)))
     } else {
       for {
         createResult <- mutationBuilder.createDataItem(model, mutaction.nonListArgs)
         path = Path
-          .empty(NodeSelector.forIdGCValue(parent, parentResult.id))
-          .append(NodeEdge(mutaction.relationField, NodeSelector.forIdGCValue(model, createResult.id)))
+          .empty(NodeSelector.forIdGCValue(parent, parentId))
+          .append(NodeEdge(mutaction.relationField, NodeSelector.forIdGCValue(model, createResult.createdId)))
         _ <- mutationBuilder.createRelationRowByPath(path)
       } yield createResult
     }
@@ -121,7 +121,7 @@ case class NestedCreateDataItemInterpreter(mutaction: NestedCreateDataItem)(impl
 
 case class DeleteDataItemInterpreter(mutaction: DeleteDataItem)(implicit ec: ExecutionContext) extends DatabaseMutactionInterpreter {
 
-  override def newAction(mutationBuilder: PostgresApiDatabaseMutationBuilder, parentResult: DatabaseMutactionResult)(implicit ec: ExecutionContext) = {
+  override def newAction(mutationBuilder: PostgresApiDatabaseMutationBuilder, parentId: IdGcValue)(implicit ec: ExecutionContext) = {
     for {
       _ <- mutationBuilder.deleteRelayRow(Path.empty(mutaction.where))
       _ <- mutationBuilder.deleteDataItem(Path.empty(mutaction.where))
@@ -133,9 +133,9 @@ case class DeleteDataItemInterpreter(mutaction: DeleteDataItem)(implicit ec: Exe
 
 case class DeleteDataItemNestedInterpreter(mutaction: NestedDeleteDataItem)(implicit ec: ExecutionContext) extends DatabaseMutactionInterpreter {
 
-  override def newAction(mutationBuilder: PostgresApiDatabaseMutationBuilder, parentResult: DatabaseMutactionResult)(implicit ec: ExecutionContext) = {
+  override def newAction(mutationBuilder: PostgresApiDatabaseMutationBuilder, parentId: IdGcValue)(implicit ec: ExecutionContext) = {
     val parent         = mutaction.relationField.model
-    val parentSelector = NodeSelector(parent, parent.idField_!, parentResult.id)
+    val parentSelector = NodeSelector(parent, parent.idField_!, parentId)
     val path           = Path.empty(parentSelector).appendEdge(mutaction.relationField)
     for {
       _ <- mutationBuilder.deleteRelayRow(path)
@@ -218,8 +218,8 @@ case class ResetDataInterpreter(mutaction: ResetDataMutaction) extends DatabaseM
 case class UpdateDataItemInterpreter(mutaction: UpdateDataItem) extends DatabaseMutactionInterpreter {
   val interpreter = SharedUpdateDataItemInterpreter(mutaction.project, Path.empty(mutaction.where), mutaction.nonListArgs, mutaction.listArgs)
 
-  override def newAction(mutationBuilder: PostgresApiDatabaseMutationBuilder, parentResult: DatabaseMutactionResult)(implicit ec: ExecutionContext) = {
-    interpreter.newAction(mutationBuilder, parentResult)
+  override def newAction(mutationBuilder: PostgresApiDatabaseMutationBuilder, parent: IdGcValue)(implicit ec: ExecutionContext) = {
+    interpreter.newAction(mutationBuilder, parent)
   }
 
   def action(mutationBuilder: PostgresApiDatabaseMutationBuilder) = ???
@@ -228,9 +228,20 @@ case class UpdateDataItemInterpreter(mutaction: UpdateDataItem) extends Database
 }
 
 case class NestedUpdateDataItemInterpreter(mutaction: NestedUpdateDataItem) extends DatabaseMutactionInterpreter {
+  val model = mutaction.relationField.model
 
-  override def newAction(mutationBuilder: PostgresApiDatabaseMutationBuilder, parentResult: DatabaseMutactionResult)(implicit ec: ExecutionContext) = ???
-  override def action(mutationBuilder: PostgresApiDatabaseMutationBuilder)                                                                          = ???
+  override def newAction(mutationBuilder: PostgresApiDatabaseMutationBuilder, parent: IdGcValue)(implicit ec: ExecutionContext) = {
+    val path = {
+      val pathToParent = Path.empty(NodeSelector.forIdGCValue(model, parent))
+      mutaction.where match {
+        case Some(where) => pathToParent.append(NodeEdge(mutaction.relationField, where))
+        case None        => pathToParent.append(ModelEdge(mutaction.relationField))
+      }
+    }
+    val interpreter = SharedUpdateDataItemInterpreter(mutaction.project, path, mutaction.nonListArgs, mutaction.listArgs)
+    interpreter.newAction(mutationBuilder, parent)
+  }
+  override def action(mutationBuilder: PostgresApiDatabaseMutationBuilder) = ???
 }
 
 case class SharedUpdateDataItemInterpreter(
@@ -239,13 +250,19 @@ case class SharedUpdateDataItemInterpreter(
     nonListArgs: PrismaArgs,
     listArgs: Vector[(String, ListGCValue)]
 ) extends DatabaseMutactionInterpreter {
+  import scala.concurrent.ExecutionContext.Implicits.global
+
   val model = path.lastModel
 
-  def action(mutationBuilder: PostgresApiDatabaseMutationBuilder) = {
-    val nonListAction = mutationBuilder.updateDataItemByPath(path, nonListArgs)
-    val listAction    = mutationBuilder.setScalarList(path, listArgs)
-    DBIO.seq(listAction, nonListAction)
+  def newAction(mutationBuilder: PostgresApiDatabaseMutationBuilder, parentId: IdGcValue) = {
+    for {
+      id <- mutationBuilder.pathQueryForLastChild(path).as[String].headOption
+      _  <- mutationBuilder.updateDataItemByPath(path, nonListArgs)
+      _  <- mutationBuilder.setScalarList(path, listArgs)
+    } yield UpdateItemResult(id.map(CuidGCValue))
   }
+
+  override def action(mutationBuilder: PostgresApiDatabaseMutationBuilder) = ???
 
   override val errorMapper = {
     // https://dev.mysql.com/doc/refman/5.5/en/error-messages-server.html#error_er_dup_entry
@@ -313,8 +330,8 @@ case class UpsertDataItemInterpreter(mutaction: UpsertDataItem, executor: Postgr
 
 case class NestedUpsertDataItemInterpreter(mutaction: NestedUpsertDataItem) extends DatabaseMutactionInterpreter {
 
-  override def newAction(mutationBuilder: PostgresApiDatabaseMutationBuilder, parentResult: DatabaseMutactionResult)(implicit ec: ExecutionContext) = ???
-  override def action(mutationBuilder: PostgresApiDatabaseMutationBuilder)                                                                          = ???
+  override def newAction(mutationBuilder: PostgresApiDatabaseMutationBuilder, parent: IdGcValue)(implicit ec: ExecutionContext) = ???
+  override def action(mutationBuilder: PostgresApiDatabaseMutationBuilder)                                                      = ???
 }
 
 //case class UpsertDataItemIfInRelationWithInterpreter(mutaction: UpsertDataItemIfInRelationWith, executor: PostgresDatabaseMutactionExecutor)

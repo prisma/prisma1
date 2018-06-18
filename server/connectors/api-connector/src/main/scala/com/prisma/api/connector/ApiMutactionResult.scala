@@ -1,12 +1,15 @@
 package com.prisma.api.connector
 
-import com.prisma.gc_values.{GCValue, IdGcValue}
+import com.prisma.gc_values.IdGcValue
 
 sealed trait ApiMutactionResult
 sealed trait DatabaseMutactionResult {
-  def id: IdGcValue
+  def id: Option[IdGcValue]
 }
-case class CreateDataItemResult(id: IdGcValue) extends DatabaseMutactionResult
+case class CreateDataItemResult(createdId: IdGcValue) extends DatabaseMutactionResult {
+  override def id = Some(createdId)
+}
+case class UpdateItemResult(id: Option[IdGcValue]) extends DatabaseMutactionResult
 object UnitDatabaseMutactionResult extends DatabaseMutactionResult {
-  override def id = throw new NoSuchElementException("Unit results don't have ids")
+  override def id = None
 }

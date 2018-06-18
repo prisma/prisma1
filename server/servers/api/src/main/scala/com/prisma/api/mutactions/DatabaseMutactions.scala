@@ -225,20 +225,20 @@ case class DatabaseMutactions(project: Project) {
       val extendedPath            = extend(path, field, update)
       val (nonListArgs, listArgs) = update.data.getUpdateArgs(extendedPath.lastModel)
 
-      val (finalPath, nested) = update match {
+      val (where, nested) = update match {
         case x: UpdateByWhere =>
           val updatedPath = extendedPath.lastEdgeToNodeEdge(currentWhere(x.where, x.data))
           val nested      = getMutactionsForNestedMutation(update.data, updatedPath, triggeredFromCreate = false)
-          (updatedPath, nested)
+          (Some(x.where), nested)
         case _: UpdateByRelation =>
           val nested = getMutactionsForNestedMutation(update.data, extendedPath, triggeredFromCreate = false)
-          (extendedPath, nested)
+          (None, nested)
       }
 
       NestedUpdateDataItem(
         project = project,
         relationField = field,
-        path = finalPath,
+        where = where,
         nonListArgs = nonListArgs,
         listArgs = listArgs,
         nestedCreates = nested.nestedCreates,

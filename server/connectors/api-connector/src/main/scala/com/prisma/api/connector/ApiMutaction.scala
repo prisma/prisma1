@@ -103,7 +103,7 @@ case class NestedCreateDataItem(
 case class NestedUpdateDataItem(
     project: Project,
     relationField: RelationField,
-    path: Path,
+    where: Option[NodeSelector],
     nonListArgs: PrismaArgs,
     listArgs: Vector[(String, ListGCValue)],
     override val nestedCreates: Vector[NestedCreateDataItem],
