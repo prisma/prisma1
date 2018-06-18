@@ -60,21 +60,14 @@ case class CreateDataItemInterpreter(mutaction: CreateDataItem, includeRelayRow:
   import scala.concurrent.ExecutionContext.Implicits.global
 
   override def newAction(mutationBuilder: PostgresApiDatabaseMutationBuilder, parentResult: DatabaseMutactionResult): DBIO[DatabaseMutactionResult] = {
-//    val unitAction    = DBIO.successful(UnitDatabaseMutactionResult)
-//    val createNonList = mutationBuilder.createDataItem(model, mutaction.nonListArgs)
-//    val listAction    = mutationBuilder.setScalarList(model, mutaction.listArgs).andThen(unitAction)
-//
-//    if (includeRelayRow) {
-//      val createRelayRow = mutationBuilder.createRelayRow(path).andThen(unitAction)
-//      DBIO.sequence(Vector(createNonList, createRelayRow, listAction)).map(_.head)
-//    } else {
-//      DBIO.sequence(Vector(createNonList, listAction)).map(_.head)
-//    }
-
     for {
       createResult <- mutationBuilder.createDataItem(model, mutaction.nonListArgs)
-      // 1. fixme: feed the id into the action for scalar lists
-      // 2. fixme: feed the id into the action for the relay row
+      _            <- mutationBuilder.setScalarList(Path.empty(NodeSelector.forIdGCValue(model, createResult.id)), mutaction.listArgs)
+      _ <- if (includeRelayRow) {
+            mutationBuilder.createRelayRow(Path.empty(NodeSelector.forIdGCValue(model, createResult.id)))
+          } else {
+            DBIO.successful(())
+          }
     } yield createResult
   }
 
