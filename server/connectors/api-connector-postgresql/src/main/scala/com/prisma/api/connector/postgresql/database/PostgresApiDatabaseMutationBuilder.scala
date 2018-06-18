@@ -217,19 +217,17 @@ case class PostgresApiDatabaseMutationBuilder(
       createNested: Vector[DBIOAction[Any, NoStream, Effect.All]],
       updateNested: Vector[DBIOAction[Any, NoStream, Effect.All]]
   ) = {
-//    val model = updatePath.lastModel
-//    val query = sql"""select exists ( SELECT "#${model.dbNameOfIdField_!}" FROM "#$schemaName"."#${model.dbName}" WHERE "#${model.dbNameOfIdField_!}" = """ ++
-//      pathQueryForLastChild(updatePath) ++ sql")"
-//    val condition        = query.as[Boolean]
-//    val allCreateActions = Vector(createDataItem(createPath, createArgs), createRelayRow(createPath), create) ++ createNested
-//    val qCreate          = DBIOAction.seq(allCreateActions: _*)
-//    // update first sets the lists, then updates the item
-//    val allUpdateActions = update +: updateNested :+ updateDataItemByPath(updatePath, updateArgs)
-//    val qUpdate          = DBIOAction.seq(allUpdateActions: _*)
-//
-//    ifThenElse(condition, qUpdate, qCreate)
-    // fixme: upsert must be completely reimplemented
-    ???
+    val model = updatePath.lastModel
+    val query = sql"""select exists ( SELECT "#${model.dbNameOfIdField_!}" FROM "#$schemaName"."#${model.dbName}" WHERE "#${model.dbNameOfIdField_!}" = """ ++
+      pathQueryForLastChild(updatePath) ++ sql")"
+    val condition        = query.as[Boolean]
+    val allCreateActions = Vector(createDataItem(model, createArgs), createRelayRow(createPath), create) ++ createNested
+    val qCreate          = DBIOAction.seq(allCreateActions: _*)
+    // update first sets the lists, then updates the item
+    val allUpdateActions = update +: updateNested :+ updateDataItemByPath(updatePath, updateArgs)
+    val qUpdate          = DBIOAction.seq(allUpdateActions: _*)
+
+    ifThenElse(condition, qUpdate, qCreate)
   }
 
   def upsertIfInRelationWith(
