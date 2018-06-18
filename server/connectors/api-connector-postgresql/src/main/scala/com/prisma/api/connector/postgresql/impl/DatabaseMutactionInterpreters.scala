@@ -88,7 +88,7 @@ case class CreateDataItemInterpreter(mutaction: CreateDataItem, includeRelayRow:
 
 }
 
-case class NestedCreateDataItemInterpreter(mutaction: NestedCreateDataItem) extends DatabaseMutactionInterpreter {
+case class NestedCreateDataItemInterpreter(mutaction: NestedCreateDataItem)(implicit ec: ExecutionContext) extends DatabaseMutactionInterpreter {
   val project = mutaction.project
   val model   = mutaction.relationField.relatedModel_!
   val parent  = mutaction.relationField.model

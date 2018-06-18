@@ -32,7 +32,7 @@ case class PreparedMutactions(
   lazy val allMutactions = databaseMutactions ++ sideEffectMutactions
 }
 
-case class MutactionResults(databaseResults: Vector[DatabaseMutactionResult])
+case class MutactionResults(databaseResult: DatabaseMutactionResult)
 
 sealed trait ReturnValueResult
 case class BatchPayload(count: Long)
