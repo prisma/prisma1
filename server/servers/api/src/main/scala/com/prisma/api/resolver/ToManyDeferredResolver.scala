@@ -2,7 +2,7 @@ package com.prisma.api.resolver
 
 import com.prisma.api.connector._
 import com.prisma.api.resolver.DeferredTypes._
-import com.prisma.gc_values.IdGCValue
+import com.prisma.gc_values.CuidGCValue
 import com.prisma.shared.models.Project
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -21,11 +21,13 @@ class ToManyDeferredResolver(dataResolver: DataResolver) {
     val args         = headDeferred.args
 
     // Get ids of nodes in related model we need to fetch (actual rows of data)
-    val relatedModelInstanceIds: Vector[IdGCValue] = deferreds.map(deferred => deferred.parentNodeId)
+    val relatedModelInstanceIds: Vector[CuidGCValue] = deferreds.map(deferred => deferred.parentNodeId)
 
     // As we are using `union all` as our batching mechanism there is very little gain from batching,
     // and 500 items seems to be the cutoff point where there is no more value to be had.
-    val batchFutures: Vector[Future[Vector[ResolverResult[PrismaNodeWithParent]]]] = relatedModelInstanceIds
+    // todo figure out the correct group size see to not run into parameter limits see:
+    // https://stackoverflow.com/questions/6581573/what-are-the-max-number-of-allowable-parameters-per-database-provider-type
+    val batchFutures: Vector[Future[Vector[ResolverResult[PrismaNodeWithParent]]]] = relatedModelInstanceIds.distinct
       .grouped(500)
       .toVector
       .map(ids => dataResolver.resolveByRelationManyModels(relatedField, ids, args))

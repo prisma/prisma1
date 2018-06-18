@@ -1,10 +1,12 @@
 package com.prisma.config
 
 import java.io.File
-
+import java.net.URI
+import io.lemonlabs.uri.{Uri, Url}
+import io.lemonlabs.uri.config.UriConfig
+import io.lemonlabs.uri.decoding.NoopDecoder
 import org.yaml.snakeyaml.Yaml
 
-import scala.collection.mutable
 import scala.util.{Failure, Success, Try}
 
 object ConfigLoader {
@@ -101,7 +103,7 @@ object ConfigLoader {
       """.stripMargin
     }.toOption
 
-  def convertToConfig(map: mutable.Map[String, Any]): PrismaConfig = {
+  def convertToConfig(map: Map[String, Any]): PrismaConfig = {
     val port           = extractIntOpt("port", map)
     val secret         = extractStringOpt("managementApiSecret", map)
     val legacySecret   = extractStringOpt("legacySecret", map)
@@ -111,33 +113,8 @@ object ConfigLoader {
     val mgmtApiEnabled = extractBooleanOpt("enableManagementApi", map)
     val databases = extractScalaMap(map.getOrElse("databases", emptyJavaMap), path = "databases").map {
       case (dbName, dbMap) =>
-        val db          = extractScalaMap(dbMap, path = dbName)
-        val dbConnector = extractString("connector", db)
-        val dbActive    = extractBooleanOpt("migrations", db).orElse(extractBooleanOpt("active", db)).getOrElse(true)
-        val dbHost      = extractString("host", db)
-        val dbPort      = extractInt("port", db)
-        val dbUser      = extractString("user", db)
-        val dbPass      = extractStringOpt("password", db)
-        val connLimit   = extractIntOpt("connectionLimit", db)
-        val mgmtSchema  = extractStringOpt("managementSchema", db)
-        val pooled      = extractBooleanOpt("pooled", db)
-        val database    = extractStringOpt("database", db)
-        val schema      = extractStringOpt("schema", db)
-
-        DatabaseConfig(
-          name = dbName,
-          connector = dbConnector,
-          active = dbActive,
-          host = dbHost,
-          port = dbPort,
-          user = dbUser,
-          password = dbPass,
-          connectionLimit = connLimit,
-          pooled = pooled.getOrElse(true),
-          database = database,
-          schema = schema,
-          managementSchema = mgmtSchema
-        )
+        val x = readDbWithConnectionString(dbName, dbMap)
+        x.getOrElse(readExplicitDb(dbName, dbMap))
     }.toSeq
 
     if (databases.isEmpty) {
@@ -147,8 +124,106 @@ object ConfigLoader {
     PrismaConfig(port, secret, legacySecret, s2sSecret, clusterAddress, rabbitUri, mgmtApiEnabled, databases)
   }
 
-  private def extractScalaMap(in: Any, required: Boolean = true, path: String = ""): mutable.Map[String, Any] = {
-    val out = mapAsScalaMap(in.asInstanceOf[java.util.Map[String, Any]]).filter(kv => kv._2 != null)
+  private def readDbWithConnectionString(dbName: String, dbJavaMap: Any) = Try {
+    val db          = extractScalaMap(dbJavaMap, path = dbName)
+    val dbConnector = extractString("connector", db)
+    val dbActive    = extractBooleanOpt("migrations", db).orElse(extractBooleanOpt("active", db))
+    val uriString   = extractString("uri", db)
+    val connLimit   = extractIntOpt("connectionLimit", db)
+    val pooled      = extractBooleanOpt("pooled", db)
+    val schema      = extractStringOpt("schema", db)
+    val mgmtSchema  = extractStringOpt("managementSchema", db)
+    val uri         = Url.parse(uriString)(UriConfig(decoder = NoopDecoder))
+    val dbHost      = uri.hostOption.get.value
+    val dbUser      = uri.user.get
+    val dbPass      = uri.password
+    val dbPort      = uri.port.getOrElse(5432) // FIXME: how could we not hardcode the postgres port
+    val database    = uri.path.toAbsolute.parts.headOption
+    val ssl         = uri.query.paramMap.get("ssl").flatMap(_.headOption).map(_ == "1")
+
+    databaseConfig(
+      name = dbName,
+      connector = dbConnector,
+      active = dbActive,
+      host = dbHost,
+      port = dbPort,
+      user = dbUser,
+      password = dbPass,
+      connectionLimit = connLimit,
+      pooled = pooled,
+      database = database,
+      schema = schema,
+      managementSchema = mgmtSchema,
+      ssl = ssl
+    )
+  }
+
+  private def readExplicitDb(dbName: String, dbJavaMap: Any) = {
+    val db          = extractScalaMap(dbJavaMap, path = dbName)
+    val dbConnector = extractString("connector", db)
+    val dbActive    = extractBooleanOpt("migrations", db).orElse(extractBooleanOpt("active", db))
+    val dbHost      = extractString("host", db)
+    val dbPort      = extractInt("port", db)
+    val dbUser      = extractString("user", db)
+    val dbPass      = extractStringOpt("password", db)
+    val connLimit   = extractIntOpt("connectionLimit", db)
+    val mgmtSchema  = extractStringOpt("managementSchema", db)
+    val pooled      = extractBooleanOpt("pooled", db)
+    val database    = extractStringOpt("database", db)
+    val schema      = extractStringOpt("schema", db)
+    val ssl         = extractBooleanOpt("ssl", db)
+
+    databaseConfig(
+      name = dbName,
+      connector = dbConnector,
+      active = dbActive,
+      host = dbHost,
+      port = dbPort,
+      user = dbUser,
+      password = dbPass,
+      connectionLimit = connLimit,
+      pooled = pooled,
+      database = database,
+      schema = schema,
+      managementSchema = mgmtSchema,
+      ssl = ssl
+    )
+  }
+
+  def databaseConfig(
+      name: String,
+      connector: String,
+      active: Option[Boolean],
+      host: String,
+      port: Int,
+      user: String,
+      password: Option[String],
+      connectionLimit: Option[Int],
+      pooled: Option[Boolean],
+      database: Option[String],
+      schema: Option[String],
+      managementSchema: Option[String],
+      ssl: Option[Boolean]
+  ): DatabaseConfig = {
+    DatabaseConfig(
+      name = name,
+      connector = connector,
+      active = active.getOrElse(true),
+      host = host,
+      port = port,
+      user = user,
+      password = password,
+      connectionLimit = connectionLimit,
+      pooled = pooled.getOrElse(true),
+      database = database,
+      schema = schema,
+      managementSchema = managementSchema,
+      ssl = ssl.getOrElse(false)
+    )
+  }
+
+  private def extractScalaMap(in: Any, required: Boolean = true, path: String = ""): Map[String, Any] = {
+    val out = mapAsScalaMap(in.asInstanceOf[java.util.Map[String, Any]]).toMap.filter(kv => kv._2 != null)
     if (required && out.isEmpty) {
       throw InvalidConfiguration(s"Expected hash under '$path' to be non-empty")
     }
@@ -156,28 +231,28 @@ object ConfigLoader {
     out
   }
 
-  private def extractString(key: String, map: mutable.Map[String, Any]): String = {
+  private def extractString(key: String, map: Map[String, Any]): String = {
     extractStringOpt(key, map) match {
       case Some(x) => x
       case None    => throw InvalidConfiguration(s"Expected $key to be non-empty")
     }
   }
 
-  private def extractStringOpt(key: String, map: mutable.Map[String, Any]): Option[String] = {
+  private def extractStringOpt(key: String, map: Map[String, Any]): Option[String] = {
     map.get(key) match {
       case x @ Some(v) if v.toString.nonEmpty => x.map(_.toString)
       case _                                  => None
     }
   }
 
-  private def extractBoolean(key: String, map: mutable.Map[String, Any]): Boolean = {
+  private def extractBoolean(key: String, map: Map[String, Any]): Boolean = {
     extractBooleanOpt(key, map) match {
       case Some(x) => x
       case None    => throw InvalidConfiguration(s"Expected Boolean for field $key, got ${map.getOrElse(key, "<unset>").toString}")
     }
   }
 
-  private def extractBooleanOpt(key: String, map: mutable.Map[String, Any]): Option[Boolean] = {
+  private def extractBooleanOpt(key: String, map: Map[String, Any]): Option[Boolean] = {
     map.get(key).map(_.toString.toLowerCase()) match {
       case Some("true")  => Some(true)
       case Some("false") => Some(false)
@@ -185,14 +260,14 @@ object ConfigLoader {
     }
   }
 
-  private def extractInt(key: String, map: mutable.Map[String, Any]): Int = {
+  private def extractInt(key: String, map: Map[String, Any]): Int = {
     extractIntOpt(key, map) match {
       case Some(x) => x
       case None    => throw InvalidConfiguration(s"Expected Int for field $key, got ${map.getOrElse(key, "<unset>").toString}")
     }
   }
 
-  private def extractIntOpt(key: String, map: mutable.Map[String, Any]): Option[Int] = {
+  private def extractIntOpt(key: String, map: Map[String, Any]): Option[Int] = {
     try { map.get(key).map(_.toString.toInt) } catch {
       case _: Throwable => None
     }
@@ -222,7 +297,8 @@ case class DatabaseConfig(
     connectionLimit: Option[Int],
     pooled: Boolean,
     database: Option[String],
-    schema: Option[String]
+    schema: Option[String],
+    ssl: Boolean
 )
 
 abstract class ConfigError(reason: String)       extends Exception(reason)

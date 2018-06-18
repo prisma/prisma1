@@ -2,7 +2,7 @@ package com.prisma.deploy.connector
 
 import com.prisma.shared.models.RelationSide.RelationSide
 import org.joda.time.DateTime
-import com.prisma.shared.models.{Field, Model, Project, ProjectIdEncoder}
+import com.prisma.shared.models._
 
 import scala.concurrent.Future
 
@@ -37,6 +37,6 @@ trait ClientDbQueries {
   def existsByRelation(relationId: String): Future[Boolean]
   def existsDuplicateByRelationAndSide(relationId: String, side: RelationSide): Future[Boolean]
   def existsNullByModelAndField(model: Model, field: Field): Future[Boolean]
-  def existsDuplicateValueByModelAndField(model: Model, field: Field): Future[Boolean]
+  def existsDuplicateValueByModelAndField(model: Model, field: ScalarField): Future[Boolean]
   def enumValueIsInUse(models: Vector[Model], enumName: String, value: String): Future[Boolean]
 }

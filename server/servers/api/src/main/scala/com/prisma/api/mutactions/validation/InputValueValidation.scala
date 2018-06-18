@@ -4,7 +4,7 @@ import com.prisma.api.connector.PrismaArgs
 import com.prisma.api.schema.APIErrors
 import com.prisma.api.schema.APIErrors.ClientApiError
 import com.prisma.gc_values._
-import com.prisma.shared.models.{Field, Model}
+import com.prisma.shared.models.{Model, ScalarField}
 
 object InputValueValidation {
 
@@ -17,7 +17,7 @@ object InputValueValidation {
     }
   }
 
-  def checkValueSize(args: PrismaArgs, updatedFields: List[Field]): List[Field] = {
+  def checkValueSize(args: PrismaArgs, updatedFields: List[ScalarField]): List[ScalarField] = {
     updatedFields
       .filter(field => args.hasArgFor(field))
       .filter(field => !isValueSizeValid(args.getFieldValue(field.name).get))
@@ -30,14 +30,15 @@ object InputValueValidation {
     case x: BooleanGCValue  => true
     case x: DateTimeGCValue => true
     case x: EnumGCValue     => x.value.length <= 191
-    case x: IdGCValue       => x.value.length <= 25
+    case x: CuidGCValue     => x.value.length <= 25
+    case x: UuidGCValue     => true
     case x: FloatGCValue    => BigDecimal(x.value).underlying().toPlainString.length <= 35
     case x: ListGCValue     => sys.error("handle this case")
     case x: RootGCValue     => sys.error("handle this case")
     case NullGCValue        => true
   }
 
-  def scalarFieldsWithValues(model: Model, args: PrismaArgs): List[Field] = {
+  def scalarFieldsWithValues(model: Model, args: PrismaArgs): List[ScalarField] = {
     model.scalarFields.filter(field => args.getFieldValue(field.name).isDefined).filter(_.name != "id")
   }
 }

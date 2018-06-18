@@ -93,7 +93,7 @@ case class MigrationStepsInferrerImpl(previousSchema: Schema, nextSchema: Schema
     for {
       nextModel         <- nextSchema.models.toVector
       previousModelName = renames.getPreviousModelName(nextModel.name)
-      previousModel     = previousSchema.getModelByName(previousModelName).getOrElse(emptyModel)
+      previousModel     = previousSchema.getModelByName(previousModelName).getOrElse(Model.empty)
       fieldOfNextModel  <- nextModel.fields.toVector
       previousFieldName = renames.getPreviousFieldName(nextModel.name, fieldOfNextModel.name)
       if previousModel.getFieldByName(previousFieldName).isEmpty
@@ -101,12 +101,12 @@ case class MigrationStepsInferrerImpl(previousSchema: Schema, nextSchema: Schema
       CreateField(
         model = nextModel.name,
         name = fieldOfNextModel.name,
-        typeName = fieldOfNextModel.typeIdentifier.toString,
+        typeName = fieldOfNextModel.typeIdentifier.code,
         isRequired = fieldOfNextModel.isRequired,
         isList = fieldOfNextModel.isList,
         isUnique = fieldOfNextModel.isUnique,
         defaultValue = fieldOfNextModel.defaultValue.map(_.toString),
-        relation = fieldOfNextModel.relation.map(_.name),
+        relation = fieldOfNextModel.relationOpt.map(_.name),
         enum = fieldOfNextModel.enum.map(_.name)
       )
     }
@@ -116,7 +116,7 @@ case class MigrationStepsInferrerImpl(previousSchema: Schema, nextSchema: Schema
     val updates = for {
       nextModel         <- nextSchema.models.toVector
       previousModelName = renames.getPreviousModelName(nextModel.name)
-      previousModel     = previousSchema.getModelByName(previousModelName).getOrElse(emptyModel)
+      previousModel     = previousSchema.getModelByName(previousModelName).getOrElse(Model.empty)
       fieldOfNextModel  <- nextModel.fields.toVector
       previousFieldName = renames.getPreviousFieldName(nextModel.name, fieldOfNextModel.name)
       previousField     <- previousModel.getFieldByName(previousFieldName)
@@ -126,12 +126,12 @@ case class MigrationStepsInferrerImpl(previousSchema: Schema, nextSchema: Schema
         newModel = nextModel.name,
         name = previousFieldName,
         newName = diff(previousField.name, fieldOfNextModel.name),
-        typeName = diff(previousField.typeIdentifier.toString, fieldOfNextModel.typeIdentifier.toString),
+        typeName = diff(previousField.typeIdentifier.code, fieldOfNextModel.typeIdentifier.code),
         isRequired = diff(previousField.isRequired, fieldOfNextModel.isRequired),
         isList = diff(previousField.isList, fieldOfNextModel.isList),
         isUnique = diff(previousField.isUnique, fieldOfNextModel.isUnique),
         isHidden = diff(previousField.isHidden, fieldOfNextModel.isHidden),
-        relation = diff(previousField.relation.map(_.relationTableName), fieldOfNextModel.relation.map(_.relationTableName)),
+        relation = diff(previousField.relationOpt.map(_.relationTableName), fieldOfNextModel.relationOpt.map(_.relationTableName)),
         defaultValue = diff(previousField.defaultValue, fieldOfNextModel.defaultValue).map(_.map(_.toString)),
         enum = diff(previousField.enum.map(_.name), fieldOfNextModel.enum.map(_.name))
       )
@@ -143,7 +143,7 @@ case class MigrationStepsInferrerImpl(previousSchema: Schema, nextSchema: Schema
   lazy val fieldsToDelete: Vector[DeleteField] = {
     for {
       previousModel <- previousSchema.models.toVector
-      previousField <- previousModel.fields
+      previousField <- previousModel.fields.filterNot(_.isMagicalBackRelation)
       nextModelName = renames.getNextModelName(previousModel.name)
       nextFieldName = renames.getNextFieldName(previousModel.name, previousField.name)
       nextModel     <- nextSchema.getModelByName(nextModelName)
@@ -158,8 +158,8 @@ case class MigrationStepsInferrerImpl(previousSchema: Schema, nextSchema: Schema
     } yield {
       CreateRelation(
         name = nextRelation.name,
-        modelAName = nextRelation.modelAId,
-        modelBName = nextRelation.modelBId,
+        modelAName = nextRelation.modelAName,
+        modelBName = nextRelation.modelBName,
         modelAOnDelete = nextRelation.modelAOnDelete,
         modelBOnDelete = nextRelation.modelBOnDelete
       )
@@ -176,13 +176,15 @@ case class MigrationStepsInferrerImpl(previousSchema: Schema, nextSchema: Schema
   lazy val relationsToUpdate: Vector[UpdateRelation] = {
     val updates = for {
       previousRelation <- previousSchema.relations.toVector
-      nextModelAName   = renames.getNextModelName(previousRelation.modelAId)
-      nextModelBName   = renames.getNextModelName(previousRelation.modelBId)
+      nextModelAName   = renames.getNextModelName(previousRelation.modelAName)
+      nextModelBName   = renames.getNextModelName(previousRelation.modelBName)
       nextRelation <- nextSchema
                        .getRelationByName(renames.getNextRelationName(previousRelation.name))
                        .orElse {
-                         val previousWasAmbiguous = previousSchema.getRelationsThatConnectModels(previousRelation.modelAId, previousRelation.modelBId).size > 1
-                         val nextIsAmbiguous      = nextSchema.getRelationsThatConnectModels(nextModelAName, nextModelBName).size > 1
+                         val previousWasAmbiguous = previousSchema
+                           .getRelationsThatConnectModels(previousRelation.modelAName, previousRelation.modelBName)
+                           .size > 1
+                         val nextIsAmbiguous = nextSchema.getRelationsThatConnectModels(nextModelAName, nextModelBName).size > 1
 
                          (previousWasAmbiguous, nextIsAmbiguous) match {
                            case (true, true)   => None
@@ -195,8 +197,8 @@ case class MigrationStepsInferrerImpl(previousSchema: Schema, nextSchema: Schema
       UpdateRelation(
         name = previousRelation.name,
         newName = diff(previousRelation.name, nextRelation.name),
-        modelAId = diff(previousRelation.modelAId, nextRelation.modelAId),
-        modelBId = diff(previousRelation.modelBId, nextRelation.modelBId),
+        modelAId = diff(previousRelation.modelAName, nextRelation.modelAName),
+        modelBId = diff(previousRelation.modelBName, nextRelation.modelBName),
         modelAOnDelete = diff(previousRelation.modelAOnDelete, nextRelation.modelAOnDelete),
         modelBOnDelete = diff(previousRelation.modelBOnDelete, nextRelation.modelBOnDelete)
       )
@@ -236,24 +238,22 @@ case class MigrationStepsInferrerImpl(previousSchema: Schema, nextSchema: Schema
     updates.filter(isAnyOptionSet)
   }
 
-  lazy val emptyModel = Model(name = "", stableIdentifier = "", fields = List.empty, manifestation = None)
-
   def relationNotInPreviousSchema(previousSchema: Schema,
                                   nextSchema: Schema,
                                   nextRelation: Relation,
                                   previousModelName: String => String,
                                   previousRelationName: String => String): Boolean = {
 
-    val nextGeneratedRelationName      = generateRelationName(nextRelation.modelAId, nextRelation.modelBId)
-    val nextRelationCountBetweenModels = nextSchema.relations.count(relation => relation.connectsTheModels(nextRelation.modelAId, nextRelation.modelBId))
+    val nextGeneratedRelationName      = generateRelationName(nextRelation.modelAName, nextRelation.modelBName)
+    val nextRelationCountBetweenModels = nextSchema.relations.count(relation => relation.connectsTheModels(nextRelation.modelAName, nextRelation.modelBName))
 
     val relationInPreviousSchema = previousSchema.relations.exists { previousRelation =>
-      val previousModelAId              = previousModelName(nextRelation.modelAId)
-      val previousModelBId              = previousModelName(nextRelation.modelBId)
+      val previousModelAId              = previousModelName(nextRelation.modelAName)
+      val previousModelBId              = previousModelName(nextRelation.modelBName)
       val previousGeneratedRelationName = generateRelationName(previousModelAId, previousModelBId)
 
-      val refersToModelsExactlyRight = previousRelation.modelAId == previousModelAId && previousRelation.modelBId == previousModelBId
-      val refersToModelsSwitched     = previousRelation.modelAId == previousModelBId && previousRelation.modelBId == previousModelAId
+      val refersToModelsExactlyRight = previousRelation.modelAName == previousModelAId && previousRelation.modelBName == previousModelBId
+      val refersToModelsSwitched     = previousRelation.modelAName == previousModelBId && previousRelation.modelBName == previousModelAId
 
       val nameIsUnchanged = previousRelation.name == nextRelation.name && !renames.relations.exists(m => m.next == nextRelation.name && m.previous != m.next)
 
@@ -264,7 +264,7 @@ case class MigrationStepsInferrerImpl(previousSchema: Schema, nextSchema: Schema
 
       if (nextRelation.name == nextGeneratedRelationName && nextRelationCountBetweenModels == 1 && previousRelationCountBetweenModels > 1)
         throw UpdatedRelationAmbiguous(
-          s"There is a relation ambiguity during the migration. The ambiguity is on a relation between ${previousRelation.modelAId} and ${previousRelation.modelBId}. Please name relations or change the schema in steps.")
+          s"There is a relation ambiguity during the migration. The ambiguity is on a relation between ${previousRelation.modelAName} and ${previousRelation.modelBName}. Please name relations or change the schema in steps.")
 
       val isNameRemovalOfPreviouslyNamedRelation = nextRelation.name == nextGeneratedRelationName && nextRelationCountBetweenModels == 1 && previousRelationCountBetweenModels == 1
       (relationNameMatches || isNameRemovalOfPreviouslyNamedRelation) && (refersToModelsExactlyRight || refersToModelsSwitched)
@@ -277,16 +277,16 @@ case class MigrationStepsInferrerImpl(previousSchema: Schema, nextSchema: Schema
                               previousRelation: Relation,
                               nextModelName: String => String,
                               nextRelationName: String => String): Boolean = {
-    val previousGeneratedRelationName      = generateRelationName(previousRelation.modelAId, previousRelation.modelBId)
-    val previousRelationCountBetweenModels = previousSchema.relations.count(_.connectsTheModels(previousRelation.modelAId, previousRelation.modelBId))
+    val previousGeneratedRelationName      = generateRelationName(previousRelation.modelAName, previousRelation.modelBName)
+    val previousRelationCountBetweenModels = previousSchema.relations.count(_.connectsTheModels(previousRelation.modelAName, previousRelation.modelBName))
 
     val relationInNextSchema = nextSchema.relations.exists { nextRelation =>
-      val nextModelAId              = nextModelName(previousRelation.modelAId)
-      val nextModelBId              = nextModelName(previousRelation.modelBId)
+      val nextModelAId              = nextModelName(previousRelation.modelAName)
+      val nextModelBId              = nextModelName(previousRelation.modelBName)
       val nextGeneratedRelationName = generateRelationName(nextModelAId, nextModelBId)
 
-      val refersToModelsExactlyRight = nextRelation.modelAId == nextModelAId && nextRelation.modelBId == nextModelBId
-      val refersToModelsSwitched     = nextRelation.modelAId == nextModelBId && nextRelation.modelBId == nextModelAId
+      val refersToModelsExactlyRight = nextRelation.modelAName == nextModelAId && nextRelation.modelBName == nextModelBId
+      val refersToModelsSwitched     = nextRelation.modelAName == nextModelBId && nextRelation.modelBName == nextModelAId
 
       val nameIsUnchanged = nextRelation.name == previousRelation.name && !renames.relations.exists(m => m.next == nextRelation.name && m.previous != m.next)
 
@@ -299,7 +299,7 @@ case class MigrationStepsInferrerImpl(previousSchema: Schema, nextSchema: Schema
 
       if (previousRelation.name == previousGeneratedRelationName && nextRelationCountBetweenModels > 1 && previousRelationCountBetweenModels == 1)
         throw UpdatedRelationAmbiguous(
-          s"There is a relation ambiguity during the migration. Please first name the old relation on your schema. The ambiguity is on a relation between ${previousRelation.modelAId} and ${previousRelation.modelBId}. Please name relations or change the schema in steps.")
+          s"There is a relation ambiguity during the migration. Please first name the old relation on your schema. The ambiguity is on a relation between ${previousRelation.modelAName} and ${previousRelation.modelBName}. Please name relations or change the schema in steps.")
 
       val isRenameOfPreviouslyUnnamedRelation = previousRelation.name == previousGeneratedRelationName && nextRelationCountBetweenModels == 1 && previousRelationCountBetweenModels == 1
 

@@ -237,8 +237,11 @@ and execute ${chalk.bold.green(
       } = parseEndpoint(this.endpoint)
       if (clusterBaseUrl) {
         debug('making cluster here')
+        const existingCluster = this.env.clusters.find(
+          c => c.baseUrl.toLowerCase() === clusterBaseUrl,
+        )
         const cluster =
-          this.env.clusters.find(c => c.baseUrl === clusterBaseUrl) ||
+          existingCluster ||
           new Cluster(
             this.out!,
             clusterName,

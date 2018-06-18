@@ -27,7 +27,7 @@ class NestedConnectMutationInsideUpdateSpec extends FlatSpec with Matchers with 
           |       id
           |    }
           |  }
-          |}""".stripMargin,
+          |}""",
         project
       )
       .pathAsString("data.createParent.childReq.id")
@@ -43,7 +43,7 @@ class NestedConnectMutationInsideUpdateSpec extends FlatSpec with Matchers with 
           |  }){
           |  id
           |  }
-          |}""".stripMargin,
+          |}""",
         project
       )
       .pathAsString("data.createParent.id")
@@ -64,10 +64,10 @@ class NestedConnectMutationInsideUpdateSpec extends FlatSpec with Matchers with 
          |    }
          |  }
          |}
-      """.stripMargin,
+      """,
       project,
       errorCode = 3042,
-      errorContains = "The change you are trying to make would violate the required relation '_ChildToParent' between Child and Parent"
+      errorContains = "The change you are trying to make would violate the required relation 'ChildToParent' between Child and Parent"
     )
 
     ifConnectorIsActive { dataResolver(project).countByTable("_ChildToParent").await should be(2) }
@@ -93,7 +93,7 @@ class NestedConnectMutationInsideUpdateSpec extends FlatSpec with Matchers with 
           |       id
           |    }
           |  }
-          |}""".stripMargin,
+          |}""",
         project
       )
       .pathAsString("data.createParent.childReq.id")
@@ -109,7 +109,7 @@ class NestedConnectMutationInsideUpdateSpec extends FlatSpec with Matchers with 
           |  }){
           |    id
           |  }
-          |}""".stripMargin,
+          |}""",
         project
       )
       .pathAsString("data.createParent.id")
@@ -130,10 +130,10 @@ class NestedConnectMutationInsideUpdateSpec extends FlatSpec with Matchers with 
          |    }
          |  }
          |}
-      """.stripMargin,
+      """,
       project,
       errorCode = 3042,
-      errorContains = "The change you are trying to make would violate the required relation '_ParentToChild' between Parent and Child"
+      errorContains = "The change you are trying to make would violate the required relation 'ParentToChild' between Parent and Child"
     )
 
     ifConnectorIsActive { dataResolver(project).countByTable("_ParentToChild").await should be(2) }
@@ -153,7 +153,7 @@ class NestedConnectMutationInsideUpdateSpec extends FlatSpec with Matchers with 
           |  {
           |    id
           |  }
-          |}""".stripMargin,
+          |}""",
         project
       )
       .pathAsString("data.createChild.id")
@@ -169,7 +169,7 @@ class NestedConnectMutationInsideUpdateSpec extends FlatSpec with Matchers with 
           |  }){
           |    id
           |  }
-          |}""".stripMargin,
+          |}""",
         project
       )
       .pathAsString("data.createParent.id")
@@ -190,7 +190,7 @@ class NestedConnectMutationInsideUpdateSpec extends FlatSpec with Matchers with 
          |    }
          |  }
          |}
-      """.stripMargin,
+      """,
       project
     )
 
@@ -218,7 +218,7 @@ class NestedConnectMutationInsideUpdateSpec extends FlatSpec with Matchers with 
           |       id
           |    }
           |  }
-          |}""".stripMargin,
+          |}""",
         project
       )
       .pathAsString("data.createParent.childOpt.id")
@@ -234,7 +234,7 @@ class NestedConnectMutationInsideUpdateSpec extends FlatSpec with Matchers with 
           |  }){
           |    id
           |  }
-          |}""".stripMargin,
+          |}""",
         project
       )
       .pathAsString("data.createParent.id")
@@ -255,7 +255,7 @@ class NestedConnectMutationInsideUpdateSpec extends FlatSpec with Matchers with 
          |    }
          |  }
          |}
-      """.stripMargin,
+      """,
       project
     )
 
@@ -278,7 +278,7 @@ class NestedConnectMutationInsideUpdateSpec extends FlatSpec with Matchers with 
           |  {
           |    id
           |  }
-          |}""".stripMargin,
+          |}""",
         project
       )
       .pathAsString("data.createChild.id")
@@ -290,7 +290,7 @@ class NestedConnectMutationInsideUpdateSpec extends FlatSpec with Matchers with 
           |  {
           |    id
           |  }
-          |}""".stripMargin,
+          |}""",
         project
       )
       .pathAsString("data.createParent.id")
@@ -311,7 +311,7 @@ class NestedConnectMutationInsideUpdateSpec extends FlatSpec with Matchers with 
          |    }
          |  }
          |}
-      """.stripMargin,
+      """,
       project
     )
 
@@ -334,7 +334,7 @@ class NestedConnectMutationInsideUpdateSpec extends FlatSpec with Matchers with 
           |  {
           |    id
           |  }
-          |}""".stripMargin,
+          |}""",
         project
       )
       .pathAsString("data.createChild.id")
@@ -350,7 +350,7 @@ class NestedConnectMutationInsideUpdateSpec extends FlatSpec with Matchers with 
           |  }){
           |    id
           |  }
-          |}""".stripMargin,
+          |}""",
         project
       )
       .pathAsString("data.createParent.id")
@@ -371,7 +371,7 @@ class NestedConnectMutationInsideUpdateSpec extends FlatSpec with Matchers with 
          |    }
          |  }
          |}
-      """.stripMargin,
+      """,
       project
     )
 
@@ -394,7 +394,7 @@ class NestedConnectMutationInsideUpdateSpec extends FlatSpec with Matchers with 
           |  {
           |    id
           |  }
-          |}""".stripMargin,
+          |}""",
         project
       )
       .pathAsString("data.createParent.id")
@@ -410,7 +410,7 @@ class NestedConnectMutationInsideUpdateSpec extends FlatSpec with Matchers with 
           |  }){
           |    childOpt{id}
           |  }
-          |}""".stripMargin,
+          |}""",
         project
       )
       .pathAsString("data.createParent.childOpt.id")
@@ -430,7 +430,7 @@ class NestedConnectMutationInsideUpdateSpec extends FlatSpec with Matchers with 
          |    }
          |  }
          |}
-      """.stripMargin,
+      """,
       project
     )
 
@@ -458,7 +458,7 @@ class NestedConnectMutationInsideUpdateSpec extends FlatSpec with Matchers with 
         |       c
         |    }
         |  }
-        |}""".stripMargin,
+        |}""",
       project
     )
 
@@ -474,7 +474,7 @@ class NestedConnectMutationInsideUpdateSpec extends FlatSpec with Matchers with 
         |       c
         |    }
         |  }
-        |}""".stripMargin,
+        |}""",
       project
     )
 
@@ -488,12 +488,12 @@ class NestedConnectMutationInsideUpdateSpec extends FlatSpec with Matchers with 
          |    data:{
          |    childrenOpt: {connect: {c: "c1"}}
          |  }){
-         |    childrenOpt {
+         |    childrenOpt(first:10) {
          |      c
          |    }
          |  }
          |}
-      """.stripMargin,
+      """,
       project
     )
 
@@ -521,7 +521,7 @@ class NestedConnectMutationInsideUpdateSpec extends FlatSpec with Matchers with 
         |       c
         |    }
         |  }
-        |}""".stripMargin,
+        |}""",
       project
     )
 
@@ -537,7 +537,7 @@ class NestedConnectMutationInsideUpdateSpec extends FlatSpec with Matchers with 
         |       c
         |    }
         |  }
-        |}""".stripMargin,
+        |}""",
       project
     )
 
@@ -556,10 +556,10 @@ class NestedConnectMutationInsideUpdateSpec extends FlatSpec with Matchers with 
          |    }
          |  }
          |}
-      """.stripMargin,
+      """,
       project,
       errorCode = 3042,
-      errorContains = "The change you are trying to make would violate the required relation '_ChildToParent' between Child and Parent"
+      errorContains = "The change you are trying to make would violate the required relation 'ChildToParent' between Child and Parent"
     )
 
     ifConnectorIsActive { dataResolver(project).countByTable("_ChildToParent").await should be(2) }
@@ -584,7 +584,7 @@ class NestedConnectMutationInsideUpdateSpec extends FlatSpec with Matchers with 
         |       c
         |    }
         |  }
-        |}""".stripMargin,
+        |}""",
       project
     )
 
@@ -595,7 +595,7 @@ class NestedConnectMutationInsideUpdateSpec extends FlatSpec with Matchers with 
         |  }){
         |  p
         |  }
-        |}""".stripMargin,
+        |}""",
       project
     )
 
@@ -614,7 +614,7 @@ class NestedConnectMutationInsideUpdateSpec extends FlatSpec with Matchers with 
          |    }
          |  }
          |}
-      """.stripMargin,
+      """,
       project
     )
 
@@ -643,7 +643,7 @@ class NestedConnectMutationInsideUpdateSpec extends FlatSpec with Matchers with 
           |       c
           |    }
           |  }
-          |}""".stripMargin,
+          |}""",
         project
       )
 
@@ -653,7 +653,7 @@ class NestedConnectMutationInsideUpdateSpec extends FlatSpec with Matchers with 
           |  createParent(data: {p: "p2"}){
           |    p
           |  }
-          |}""".stripMargin,
+          |}""",
         project
       )
 
@@ -674,7 +674,7 @@ class NestedConnectMutationInsideUpdateSpec extends FlatSpec with Matchers with 
          |    }
          |  }
          |}
-      """.stripMargin,
+      """,
       project
     )
 
@@ -697,7 +697,7 @@ class NestedConnectMutationInsideUpdateSpec extends FlatSpec with Matchers with 
           |  {
           |    id
           |  }
-          |}""".stripMargin,
+          |}""",
         project
       )
 
@@ -708,7 +708,7 @@ class NestedConnectMutationInsideUpdateSpec extends FlatSpec with Matchers with 
           |  {
           |    id
           |  }
-          |}""".stripMargin,
+          |}""",
         project
       )
 
@@ -727,7 +727,7 @@ class NestedConnectMutationInsideUpdateSpec extends FlatSpec with Matchers with 
          |    }
          |  }
          |}
-      """.stripMargin,
+      """,
       project
     )
 
@@ -755,7 +755,7 @@ class NestedConnectMutationInsideUpdateSpec extends FlatSpec with Matchers with 
         |       c
         |    }
         |  }
-        |}""".stripMargin,
+        |}""",
       project
     )
 
@@ -771,7 +771,7 @@ class NestedConnectMutationInsideUpdateSpec extends FlatSpec with Matchers with 
         |       c
         |    }
         |  }
-        |}""".stripMargin,
+        |}""",
       project
     )
 
@@ -790,7 +790,7 @@ class NestedConnectMutationInsideUpdateSpec extends FlatSpec with Matchers with 
          |    }
          |  }
          |}
-      """.stripMargin,
+      """,
       project
     )
 
@@ -814,7 +814,7 @@ class NestedConnectMutationInsideUpdateSpec extends FlatSpec with Matchers with 
         |  createChild(data: {c: "c1"}){
         |       c
         |  }
-        |}""".stripMargin,
+        |}""",
       project
     )
 
@@ -830,7 +830,7 @@ class NestedConnectMutationInsideUpdateSpec extends FlatSpec with Matchers with 
         |       c
         |    }
         |  }
-        |}""".stripMargin,
+        |}""",
       project
     )
 
@@ -849,7 +849,7 @@ class NestedConnectMutationInsideUpdateSpec extends FlatSpec with Matchers with 
          |    }
          |  }
          |}
-      """.stripMargin,
+      """,
       project
     )
 
@@ -880,7 +880,7 @@ class NestedConnectMutationInsideUpdateSpec extends FlatSpec with Matchers with 
         |       c
         |    }
         |  }
-        |}""".stripMargin,
+        |}""",
       project
     )
 
@@ -889,7 +889,7 @@ class NestedConnectMutationInsideUpdateSpec extends FlatSpec with Matchers with 
         |  createParent(data: {p: "p2"}){
         |    p
         |  }
-        |}""".stripMargin,
+        |}""",
       project
     )
 
@@ -908,7 +908,7 @@ class NestedConnectMutationInsideUpdateSpec extends FlatSpec with Matchers with 
          |    }
          |  }
          |}
-      """.stripMargin,
+      """,
       project
     )
 
@@ -932,7 +932,7 @@ class NestedConnectMutationInsideUpdateSpec extends FlatSpec with Matchers with 
         |  createChild(data: {c: "c1"}){
         |       c
         |  }
-        |}""".stripMargin,
+        |}""",
       project
     )
 
@@ -941,7 +941,7 @@ class NestedConnectMutationInsideUpdateSpec extends FlatSpec with Matchers with 
         |  createParent(data: {p: "p1"}){
         |       p
         |  }
-        |}""".stripMargin,
+        |}""",
       project
     )
 
@@ -960,7 +960,7 @@ class NestedConnectMutationInsideUpdateSpec extends FlatSpec with Matchers with 
          |    }
          |  }
          |}
-      """.stripMargin,
+      """,
       project
     )
 
@@ -990,7 +990,7 @@ class NestedConnectMutationInsideUpdateSpec extends FlatSpec with Matchers with 
         |       c
         |    }
         |  }
-        |}""".stripMargin,
+        |}""",
       project
     )
 
@@ -1006,7 +1006,7 @@ class NestedConnectMutationInsideUpdateSpec extends FlatSpec with Matchers with 
         |       c
         |    }
         |  }
-        |}""".stripMargin,
+        |}""",
       project
     )
 
@@ -1025,7 +1025,7 @@ class NestedConnectMutationInsideUpdateSpec extends FlatSpec with Matchers with 
          |    }
          |  }
          |}
-      """.stripMargin,
+      """,
       project
     )
 
@@ -1049,7 +1049,7 @@ class NestedConnectMutationInsideUpdateSpec extends FlatSpec with Matchers with 
         |  createChild(data: {c: "c1"}){
         |       c
         |  }
-        |}""".stripMargin,
+        |}""",
       project
     )
 
@@ -1058,7 +1058,7 @@ class NestedConnectMutationInsideUpdateSpec extends FlatSpec with Matchers with 
         |  createParent(data: {p: "p1"}){
         |       p
         |  }
-        |}""".stripMargin,
+        |}""",
       project
     )
 
@@ -1077,7 +1077,7 @@ class NestedConnectMutationInsideUpdateSpec extends FlatSpec with Matchers with 
          |    }
          |  }
          |}
-      """.stripMargin,
+      """,
       project
     )
 
@@ -1116,7 +1116,7 @@ class NestedConnectMutationInsideUpdateSpec extends FlatSpec with Matchers with 
          |    }
          |  }
          |}
-      """.stripMargin,
+      """,
       project
     )
 
@@ -1151,7 +1151,7 @@ class NestedConnectMutationInsideUpdateSpec extends FlatSpec with Matchers with 
          |    }
          |  }
          |}
-      """.stripMargin,
+      """,
       project
     )
 
@@ -1187,7 +1187,7 @@ class NestedConnectMutationInsideUpdateSpec extends FlatSpec with Matchers with 
          |    }
          |  }
          |}
-      """.stripMargin,
+      """,
       project
     )
     mustBeEqual(result.pathAsString("data.updateComment.todo.title"), "the title")
@@ -1222,7 +1222,7 @@ class NestedConnectMutationInsideUpdateSpec extends FlatSpec with Matchers with 
          |    }
          |  }
          |}
-      """.stripMargin,
+      """,
       project
     )
     mustBeEqual(result.pathAsString("data.updateNote.todo.title"), "the title")
@@ -1257,7 +1257,7 @@ class NestedConnectMutationInsideUpdateSpec extends FlatSpec with Matchers with 
          |    }
          |  }
          |}
-      """.stripMargin,
+      """,
       project
     )
     mustBeEqual(result.pathAsString("data.updateNote.todo.title"), "the title")
@@ -1281,7 +1281,7 @@ class NestedConnectMutationInsideUpdateSpec extends FlatSpec with Matchers with 
          |    }
          |  }
          |}
-      """.stripMargin,
+      """,
       project
     )
   }
@@ -1314,7 +1314,7 @@ class NestedConnectMutationInsideUpdateSpec extends FlatSpec with Matchers with 
          |    }
          |  }
          |}
-      """.stripMargin,
+      """,
       project
     )
 
@@ -1327,7 +1327,7 @@ class NestedConnectMutationInsideUpdateSpec extends FlatSpec with Matchers with 
                                              |  name: String! @unique
                                              |  childTechnologies: [Technology!]! @relation(name: "ChildTechnologies")
                                              |  parentTechnologies: [Technology!]! @relation(name: "ChildTechnologies")
-                                             |}""".stripMargin }
+                                             |}""" }
     database.setup(project)
 
     server.query("""mutation {createTechnology(data: {name: "techA"}){name}}""", project)
@@ -1342,7 +1342,7 @@ class NestedConnectMutationInsideUpdateSpec extends FlatSpec with Matchers with 
          |       childTechnologies  {name}
          |       parentTechnologies {name}}
          |}
-      """.stripMargin,
+      """,
       project
     )
 
@@ -1355,7 +1355,7 @@ class NestedConnectMutationInsideUpdateSpec extends FlatSpec with Matchers with 
          |       parentTechnologies {name}
          |  }
          |}
-      """.stripMargin,
+      """,
       project
     )
 

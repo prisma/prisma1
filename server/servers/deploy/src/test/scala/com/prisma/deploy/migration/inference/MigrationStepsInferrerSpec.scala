@@ -132,7 +132,7 @@ class MigrationStepsInferrerSpec extends FlatSpec with Matchers with DeploySpecB
     val previousProject = SchemaBuilder() { schema =>
       schema
         .model("Test")
-        .field_!("id", _.GraphQLID, isUnique = true)
+        .field_!("id", _.Cuid, isUnique = true)
         .field("a", _.String)
         .field("b", _.String)
         .field("c", _.String)
@@ -143,7 +143,7 @@ class MigrationStepsInferrerSpec extends FlatSpec with Matchers with DeploySpecB
     val nextProject = SchemaBuilder() { schema =>
       schema
         .model("Test")
-        .field_!("id", _.GraphQLID, isUnique = true, isHidden = true) // Id field hidden
+        .field_!("id", _.Cuid, isUnique = true, isHidden = true) // Id field hidden
         .field("a2", _.String) // Rename
         .field("b", _.Int) // Type change
         .field_!("c", _.String) // Now required

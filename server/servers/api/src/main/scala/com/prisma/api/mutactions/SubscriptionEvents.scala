@@ -24,7 +24,7 @@ object SubscriptionEvents {
 
     PublishSubscriptionEvent(
       project = project,
-      value = Map("nodeId" -> mutaction.id, "node" -> previousValues, "modelId" -> mutaction.path.root.model.id, "mutationType" -> "DeleteNode"),
+      value = Map("nodeId" -> mutaction.id, "node" -> previousValues, "modelId" -> mutaction.path.root.model.name, "mutationType" -> "DeleteNode"),
       mutationName = s"delete${mutaction.path.root.model.name}"
     )
   }
@@ -32,7 +32,7 @@ object SubscriptionEvents {
   def fromCreateMutaction(project: Project, mutationId: Id, mutaction: CreateDataItem)(implicit apiDependencies: ApiDependencies): PublishSubscriptionEvent = {
     PublishSubscriptionEvent(
       project = project,
-      value = Map("nodeId" -> mutaction.id, "modelId" -> mutaction.model.id, "mutationType" -> "CreateNode"),
+      value = Map("nodeId" -> mutaction.id, "modelId" -> mutaction.model.name, "mutationType" -> "CreateNode"),
       mutationName = s"create${mutaction.model.name}"
     )
   }
@@ -48,7 +48,7 @@ object SubscriptionEvents {
         "nodeId"         -> previousValues("id"),
         "changedFields"  -> mutaction.namesOfUpdatedFields.toList, // must be a List as Vector is printed verbatim
         "previousValues" -> previousValues,
-        "modelId"        -> mutaction.path.lastModel.id,
+        "modelId"        -> mutaction.path.lastModel.name,
         "mutationType"   -> "UpdateNode"
       ),
       mutationName = s"update${mutaction.path.lastModel.name}"

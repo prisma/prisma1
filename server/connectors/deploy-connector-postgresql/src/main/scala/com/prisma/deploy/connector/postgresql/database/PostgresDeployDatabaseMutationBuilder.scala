@@ -2,8 +2,8 @@ package com.prisma.deploy.connector.postgresql.database
 
 import java.sql.PreparedStatement
 
-import com.prisma.shared.models.TypeIdentifier.TypeIdentifier
-import com.prisma.shared.models.{Field, Model, Project, TypeIdentifier}
+import com.prisma.shared.models.TypeIdentifier.{ScalarTypeIdentifier, TypeIdentifier}
+import com.prisma.shared.models._
 import slick.dbio.DBIOAction
 import slick.jdbc.PostgresProfile.api._
 
@@ -24,7 +24,7 @@ object PostgresDeployDatabaseMutationBuilder {
     DBIO.seq(
       sqlu"""CREATE SCHEMA "#$projectId";""",
       sqlu"""CREATE TABLE "#$projectId"."_RelayId" (
-            "id" VARCHAR (25) NOT NULL,
+            "id" VARCHAR (36) NOT NULL,
             "stableModelIdentifier" VARCHAR (25) NOT NULL,
              PRIMARY KEY ("id"))""",
       createFunction
@@ -35,7 +35,7 @@ object PostgresDeployDatabaseMutationBuilder {
     val listTableNames: List[String] =
       project.models.flatMap(model => model.fields.collect { case field if field.isScalar && field.isList => s"${model.dbName}_${field.dbName}" })
 
-    val tables = Vector("_RelayId") ++ project.models.map(_.dbName) ++ project.relations.map(_.relationTableNameNew(project.schema)) ++ listTableNames
+    val tables = Vector("_RelayId") ++ project.models.map(_.dbName) ++ project.relations.map(_.relationTableName) ++ listTableNames
 
     DBIO.seq(tables.map(name => sqlu"""TRUNCATE TABLE  "#${project.id}"."#$name" CASCADE """): _*)
   }
@@ -45,15 +45,16 @@ object PostgresDeployDatabaseMutationBuilder {
   def dropTable(projectId: String, tableName: String)                              = sqlu"""DROP TABLE "#$projectId"."#$tableName""""
   def dropScalarListTable(projectId: String, modelName: String, fieldName: String) = sqlu"""DROP TABLE "#$projectId"."#${modelName}_#${fieldName}""""
 
-  def createTable(projectId: String, name: String, nameOfIdField: String) = {
+  def createModelTable(projectId: String, model: Model) = {
+    val idField = model.idField_!
 
-    sqlu"""CREATE TABLE "#$projectId"."#$name"
-    ("#$nameOfIdField" VARCHAR (25) NOT NULL,
-    PRIMARY KEY ("#$nameOfIdField")
+    sqlu"""CREATE TABLE "#$projectId"."#${model.dbName}"
+    ("#${idField.dbName}" #${sqlTypeForScalarTypeIdentifier(idField.typeIdentifier)} NOT NULL,
+    PRIMARY KEY ("#${idField.dbName}")
     )"""
   }
 
-  def createScalarListTable(projectId: String, model: Model, fieldName: String, typeIdentifier: TypeIdentifier) = {
+  def createScalarListTable(projectId: String, model: Model, fieldName: String, typeIdentifier: ScalarTypeIdentifier) = {
     val sqlType = sqlTypeForScalarTypeIdentifier(typeIdentifier)
     sqlu"""CREATE TABLE "#$projectId"."#${model.dbName}_#$fieldName"
     ("nodeId" VARCHAR (25) NOT NULL REFERENCES "#$projectId"."#${model.dbName}" ("#${model.dbNameOfIdField_!}"),
@@ -63,7 +64,7 @@ object PostgresDeployDatabaseMutationBuilder {
     )"""
   }
 
-  def updateScalarListType(projectId: String, modelName: String, fieldName: String, typeIdentifier: TypeIdentifier) = {
+  def updateScalarListType(projectId: String, modelName: String, fieldName: String, typeIdentifier: ScalarTypeIdentifier) = {
     val sqlType = sqlTypeForScalarTypeIdentifier(typeIdentifier)
     sqlu"""ALTER TABLE "#$projectId"."#${modelName}_#${fieldName}" DROP INDEX "value", CHANGE COLUMN "value" "value" #$sqlType, ADD INDEX "value" ("value" ASC)"""
   }
@@ -74,13 +75,15 @@ object PostgresDeployDatabaseMutationBuilder {
 
   def renameTable(projectId: String, name: String, newName: String) = sqlu"""ALTER TABLE "#$projectId"."#$name" RENAME TO "#$newName";"""
 
-  def createColumn(projectId: String,
-                   tableName: String,
-                   columnName: String,
-                   isRequired: Boolean,
-                   isUnique: Boolean,
-                   isList: Boolean,
-                   typeIdentifier: TypeIdentifier.TypeIdentifier) = {
+  def createColumn(
+      projectId: String,
+      tableName: String,
+      columnName: String,
+      isRequired: Boolean,
+      isUnique: Boolean,
+      isList: Boolean,
+      typeIdentifier: TypeIdentifier.ScalarTypeIdentifier
+  ) = {
 
     val sqlType    = sqlTypeForScalarTypeIdentifier(typeIdentifier)
     val nullString = if (isRequired) "NOT NULL" else "NULL"
@@ -98,13 +101,15 @@ object PostgresDeployDatabaseMutationBuilder {
     sqlu"""ALTER TABLE "#$projectId"."#$tableName" DROP COLUMN "#$columnName""""
   }
 
-  def updateColumn(projectId: String,
-                   tableName: String,
-                   oldColumnName: String,
-                   newColumnName: String,
-                   newIsRequired: Boolean,
-                   newIsList: Boolean,
-                   newTypeIdentifier: TypeIdentifier) = {
+  def updateColumn(
+      projectId: String,
+      tableName: String,
+      oldColumnName: String,
+      newColumnName: String,
+      newIsRequired: Boolean,
+      newIsList: Boolean,
+      newTypeIdentifier: ScalarTypeIdentifier
+  ) = {
     val nulls   = if (newIsRequired) { "SET NOT NULL" } else { "DROP NOT NULL" }
     val sqlType = sqlTypeForScalarTypeIdentifier(newTypeIdentifier)
     val renameIfNecessary =
@@ -128,22 +133,26 @@ object PostgresDeployDatabaseMutationBuilder {
 
   def createRelationTable(projectId: String, relationTableName: String, modelA: Model, modelB: Model) = {
 
-    val tableCreate = sqlu"""CREATE TABLE "#$projectId"."#$relationTableName" (
+    val sqlTypeForIdOfModelA = sqlTypeForScalarTypeIdentifier(modelA.idField_!.typeIdentifier)
+    val sqlTypeForIdOfModelB = sqlTypeForScalarTypeIdentifier(modelB.idField_!.typeIdentifier)
+    val tableCreate          = sqlu"""CREATE TABLE "#$projectId"."#$relationTableName" (
     "id" CHAR(25)  NOT NULL,
     PRIMARY KEY ("id"),
-    "A" VARCHAR (25)  NOT NULL,
-    "B" VARCHAR (25)  NOT NULL,
+    "A" #$sqlTypeForIdOfModelA  NOT NULL,
+    "B" #$sqlTypeForIdOfModelB  NOT NULL,
     FOREIGN KEY ("A") REFERENCES "#$projectId"."#${modelA.dbName}"("#${modelA.dbNameOfIdField_!}") ON DELETE CASCADE,
     FOREIGN KEY ("B") REFERENCES "#$projectId"."#${modelB.dbName}"("#${modelA.dbNameOfIdField_!}") ON DELETE CASCADE)
     ;"""
 
     val indexCreate = sqlu"""CREATE UNIQUE INDEX "#${relationTableName}_AB_unique" on  "#$projectId"."#$relationTableName" ("A" ASC, "B" ASC)"""
+    val indexA      = sqlu"""CREATE INDEX "#${relationTableName}_A" on  "#$projectId"."#$relationTableName" ("A" ASC)"""
+    val indexB      = sqlu"""CREATE INDEX "#${relationTableName}_B" on  "#$projectId"."#$relationTableName" ("B" ASC)"""
 
-    DBIOAction.seq(tableCreate, indexCreate)
+    DBIOAction.seq(tableCreate, indexCreate, indexA, indexB)
   }
 
-  def createRelationColumn(projectId: String, model: Model, field: Option[Field], references: Model, column: String) = {
-    val sqlType    = sqlTypeForScalarTypeIdentifier(TypeIdentifier.GraphQLID)
+  def createRelationColumn(projectId: String, model: Model, references: Model, column: String) = {
+    val sqlType    = sqlTypeForScalarTypeIdentifier(model.idField_!.typeIdentifier)
     val isRequired = false //field.exists(_.isRequired)
     val nullString = if (isRequired) "NOT NULL" else "NULL"
     val addColumn  = sqlu"""ALTER TABLE "#$projectId"."#${model.dbName}" ADD COLUMN "#$column" #$sqlType #$nullString
@@ -151,17 +160,17 @@ object PostgresDeployDatabaseMutationBuilder {
     addColumn
   }
 
-  private def sqlTypeForScalarTypeIdentifier(typeIdentifier: TypeIdentifier): String = {
+  private def sqlTypeForScalarTypeIdentifier(typeIdentifier: ScalarTypeIdentifier): String = {
     typeIdentifier match {
-      case TypeIdentifier.String    => "text"
-      case TypeIdentifier.Boolean   => "boolean"
-      case TypeIdentifier.Int       => "int"
-      case TypeIdentifier.Float     => "Decimal(65,30)"
-      case TypeIdentifier.GraphQLID => "varchar (25)"
-      case TypeIdentifier.Enum      => "text"
-      case TypeIdentifier.Json      => "text"
-      case TypeIdentifier.DateTime  => "timestamp (3)"
-      case TypeIdentifier.Relation  => sys.error("Relation is not a scalar type. Are you trying to create a db column for a relation?")
+      case TypeIdentifier.String   => "text"
+      case TypeIdentifier.Boolean  => "boolean"
+      case TypeIdentifier.Int      => "int"
+      case TypeIdentifier.Float    => "Decimal(65,30)"
+      case TypeIdentifier.Cuid     => "varchar (25)"
+      case TypeIdentifier.Enum     => "text"
+      case TypeIdentifier.Json     => "text"
+      case TypeIdentifier.DateTime => "timestamp (3)"
+      case TypeIdentifier.UUID     => "uuid"
     }
   }
 

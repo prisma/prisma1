@@ -106,7 +106,7 @@ class RelationGraphQLSpec extends FlatSpec with Matchers with ApiSpecBase {
         |}""".stripMargin,
       project,
       errorCode = 3042,
-      errorContains = "The change you are trying to make would violate the required relation '_OwnerToCat' between Owner and Cat"
+      errorContains = "The change you are trying to make would violate the required relation 'OwnerToCat' between Owner and Cat"
     )
 
     val res5 = server.query("""query{owner(where:{ownerName:"jon"}){ownerName, cat{catName}}}""", project)

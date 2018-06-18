@@ -1,16 +1,16 @@
 package com.prisma.api.connector
 
-import com.prisma.gc_values.{GCValue, GCValueExtractor, IdGCValue}
-import com.prisma.shared.models.{Field, Model}
+import com.prisma.gc_values.{CuidGCValue, GCValue, IdGCValue}
+import com.prisma.shared.models.{Model, ScalarField}
 
 object NodeSelector {
-  def forId(model: Model, id: String): NodeSelector              = NodeSelector(model, model.getFieldByName_!("id"), IdGCValue(id))
-  def forIdGCValue(model: Model, gcValue: GCValue): NodeSelector = NodeSelector(model, model.getFieldByName_!("id"), gcValue)
-  def forGCValue(model: Model, field: Field, value: GCValue)     = NodeSelector(model, field, value)
+  def forCuid(model: Model, id: String): NodeSelector              = NodeSelector(model, model.idField_!, CuidGCValue(id))
+  def forIdGCValue(model: Model, gcValue: GCValue): NodeSelector   = NodeSelector(model, model.idField_!, gcValue)
+  def forGCValue(model: Model, field: ScalarField, value: GCValue) = NodeSelector(model, field, value)
 }
 
-case class NodeSelector(model: Model, field: Field, fieldValue: GCValue) {
-  lazy val fieldName                  = field.name
-  lazy val fieldValueAsString: String = GCValueExtractor.fromGCValueToString(fieldValue)
-  lazy val isId: Boolean              = field.name == "id"
+case class NodeSelector(model: Model, field: ScalarField, fieldGCValue: GCValue) {
+  lazy val value         = fieldGCValue.value
+  lazy val fieldName     = field.name
+  lazy val isId: Boolean = field.name == "id"
 }
