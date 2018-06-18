@@ -8,7 +8,7 @@ import slick.jdbc.PostgresProfile.api._
 
 import scala.concurrent.{ExecutionContext, Future}
 
-case class PostgresDatabaseMutactionExecutor(clientDb: Database)(implicit ec: ExecutionContext) extends DatabaseMutactionExecutor {
+case class PostgresDatabaseMutactionExecutor(clientDb: Database, createRelayIds: Boolean)(implicit ec: ExecutionContext) extends DatabaseMutactionExecutor {
 
   override def executeTransactionally(mutaction: TopLevelDatabaseMutaction) = execute(mutaction, transactionally = true)
 
@@ -67,7 +67,7 @@ case class PostgresDatabaseMutactionExecutor(clientDb: Database)(implicit ec: Ex
   def interpreterFor(mutaction: DatabaseMutaction): DatabaseMutactionInterpreter = mutaction match {
     case m: AddDataItemToManyRelationByPath   => AddDataItemToManyRelationByPathInterpreter(m)
     case m: CascadingDeleteRelationMutactions => CascadingDeleteRelationMutactionsInterpreter(m)
-    case m: CreateDataItem                    => CreateDataItemInterpreter(m)
+    case m: CreateDataItem                    => CreateDataItemInterpreter(mutaction = m, includeRelayRow = createRelayIds)
     case m: DeleteDataItem                    => DeleteDataItemInterpreter(m)
     case m: NestedDeleteDataItem              => DeleteDataItemNestedInterpreter(m)
     case m: DeleteDataItems                   => DeleteDataItemsInterpreter(m)
