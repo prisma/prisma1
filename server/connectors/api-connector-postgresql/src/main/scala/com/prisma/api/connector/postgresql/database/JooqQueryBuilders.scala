@@ -1,14 +1,13 @@
 package com.prisma.api.connector.postgresql.database
 
-import java.sql.{Connection, PreparedStatement}
+import java.sql.PreparedStatement
 
 import com.prisma.api.connector._
-import com.prisma.api.connector.postgresql.database.PostgresSlickExtensions._
 import com.prisma.api.connector.postgresql.database.JooqQueryBuilders._
+import com.prisma.api.connector.postgresql.database.PostgresSlickExtensions._
 import com.prisma.gc_values.{GCValue, IdGCValue, NullGCValue, StringGCValue}
 import com.prisma.shared.models._
-import com.prisma.slick.NewJdbcExtensions._
-import org.jooq.{Field, _}
+import org.jooq._
 import org.jooq.conf.Settings
 import org.jooq.impl.DSL
 import org.jooq.impl.DSL._
@@ -27,7 +26,6 @@ object JooqQueryBuilders {
   val nodeIdFieldName = "nodeId"
   val positionFieldName = "position"
   val valueFieldName= "value"
-
 }
 
 case class JooqRelationQueryBuilder(schemaName: String, relation: Relation, queryArguments: Option[QueryArguments]) {

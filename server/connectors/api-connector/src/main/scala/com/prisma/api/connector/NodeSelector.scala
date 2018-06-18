@@ -1,6 +1,6 @@
 package com.prisma.api.connector
 
-import com.prisma.gc_values.{CuidGCValue, GCValue, IdGcValue}
+import com.prisma.gc_values.{CuidGCValue, GCValue, IdGCValue}
 import com.prisma.shared.models.{Model, ScalarField}
 
 object NodeSelector {
