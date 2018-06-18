@@ -318,12 +318,21 @@ case class PostgresApiDatabaseMutationBuilder(schemaName: String) {
 
   def deleteRelayIds(model: Model, whereFilter: Option[Filter]) = {
     SimpleDBIO { ctx =>
-      val query = s"""DELETE FROM "$schemaName"."_RelayId" WHERE "id" IN ( """ +
-        s"""SELECT "${model.dbNameOfIdField_!}" FROM "$schemaName"."${model.dbName}" as "$topLevelAlias" """ +
-        WhereClauseBuilder(schemaName).buildWhereClause(whereFilter).getOrElse("") +
-        ")"
-      val ps = ctx.connection.prepareStatement(query)
-      SetParams.setFilter(ps, whereFilter)
+      val sql = DSL.using(SQLDialect.POSTGRES_9_5, new Settings().withRenderFormatted(true))
+
+      val relayTable      = table(name(schemaName, relayTableName))
+      val aliasedTable    = table(name(schemaName, model.dbName)).as(topLevelAlias)
+      val filterCondition = JooqWhereClauseBuilder(schemaName).buildWhereClause(whereFilter).getOrElse(trueCondition())
+      val condition = field(name(schemaName, relayTableName, "id"))
+        .in(select(field(name(topLevelAlias, model.dbNameOfIdField_!))).from(aliasedTable).where(filterCondition))
+
+      lazy val queryString: String = sql
+        .deleteFrom(relayTable)
+        .where(condition)
+        .getSQL
+
+      val ps = ctx.connection.prepareStatement(queryString)
+      JooqSetParams.setFilter(new PositionedParameters(ps), whereFilter)
       ps.executeUpdate()
     }
   }
