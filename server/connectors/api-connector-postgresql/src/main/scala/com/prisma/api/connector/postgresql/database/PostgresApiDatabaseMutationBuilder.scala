@@ -13,15 +13,16 @@ import com.prisma.shared.models._
 import com.prisma.slick.NewJdbcExtensions._
 import cool.graph.cuid.Cuid
 import org.joda.time.{DateTime, DateTimeZone}
+import org.jooq._
+import org.jooq.conf.Settings
+import org.jooq.impl.DSL
+import org.jooq.impl.DSL._
 import slick.dbio.{DBIOAction, Effect, NoStream}
 import slick.jdbc.PostgresProfile.api._
 import slick.jdbc.{PositionedParameters, SQLActionBuilder}
 import slick.sql.{SqlAction, SqlStreamingAction}
 
-import org.jooq._
-import org.jooq.conf.Settings
-import org.jooq.impl.DSL
-import org.jooq.impl.DSL._
+import scala.collection.JavaConverters._
 
 case class PostgresApiDatabaseMutationBuilder(schemaName: String) {
   import JooqQueryBuilders._
@@ -31,18 +32,18 @@ case class PostgresApiDatabaseMutationBuilder(schemaName: String) {
   def createDataItem(path: Path, args: PrismaArgs): DBIO[CreateDataItemResult] = {
 
     SimpleDBIO[CreateDataItemResult] { x =>
-      val argsAsRoot   = args.raw.asRoot
-        val fields       = path.lastModel.fields.filter(field => argsAsRoot.hasArgFor(field.name))
-        val columns      = fields.map(_.dbName)
+      val argsAsRoot = args.raw.asRoot
+      val fields     = path.lastModel.fields.filter(field => argsAsRoot.hasArgFor(field.name))
+      val columns    = fields.map(_.dbName)
 
       lazy val queryString: String = {
-        val sql          = DSL.using(SQLDialect.POSTGRES_9_5, new Settings().withRenderFormatted(true))
-        val generatedFields  = columns.map(fieldName => field(name(schemaName, path.lastModel.dbName, fieldName)))
+        val sql             = DSL.using(SQLDialect.POSTGRES_9_5, new Settings().withRenderFormatted(true))
+        val generatedFields = columns.map(fieldName => field(name(schemaName, path.lastModel.dbName, fieldName)))
 
         sql
           .insertInto(table(name(schemaName, path.lastModel.dbName)))
-          .columns(generatedFields:_*)
-          .values( columns.map(_ => placeHolder):_*)
+          .columns(generatedFields: _*)
+          .values(columns.map(_ => placeHolder): _*)
           .getSQL
       }
 
@@ -51,10 +52,10 @@ case class PostgresApiDatabaseMutationBuilder(schemaName: String) {
       fields.map(_.name).zipWithIndex.foreach {
         case (column, index) =>
           argsAsRoot.map.get(column) match {
-            case Some(NullGCValue) if column == "createdAt" || column == "updatedAt" => itemInsert.setTimestamp(index + 1, currentTimeStampUTC)
-            case Some(gCValue)                                                       => itemInsert.setGcValue(index + 1, gCValue)
-            case None if column == "createdAt" || column == "updatedAt"              => itemInsert.setTimestamp(index + 1, currentTimeStampUTC)
-            case None                                                                => itemInsert.setNull(index + 1, java.sql.Types.NULL)
+            case Some(NullGCValue) if column == createdAtField || column == updatedAtField => itemInsert.setTimestamp(index + 1, currentTimeStampUTC)
+            case Some(gCValue)                                                             => itemInsert.setGcValue(index + 1, gCValue)
+            case None if column == createdAtField || column == updatedAtField              => itemInsert.setTimestamp(index + 1, currentTimeStampUTC)
+            case None                                                                      => itemInsert.setNull(index + 1, java.sql.Types.NULL)
           }
       }
       itemInsert.execute()
@@ -68,15 +69,14 @@ case class PostgresApiDatabaseMutationBuilder(schemaName: String) {
 
   def createRelayRow(path: Path): DBIO[_] = {
 
-    SimpleDBIO[_] { x =>
-
+    SimpleDBIO[Boolean] { x =>
       lazy val queryString: String = {
-        val sql          = DSL.using(SQLDialect.POSTGRES_9_5, new Settings().withRenderFormatted(true))
+        val sql = DSL.using(SQLDialect.POSTGRES_9_5, new Settings().withRenderFormatted(true))
 
         sql
-          .insertInto(table(name(schemaName,relayTableName)))
-          .columns(field(name(schemaName, relayTableName, "id")), field(name(schemaName,relayTableName, "stableModelIdentifier")))
-          .values( placeHolder, placeHolder)
+          .insertInto(table(name(schemaName, relayTableName)))
+          .columns(field(name(schemaName, relayTableName, "id")), field(name(schemaName, relayTableName, "stableModelIdentifier")))
+          .values(placeHolder, placeHolder)
           .getSQL
       }
 
@@ -99,7 +99,7 @@ case class PostgresApiDatabaseMutationBuilder(schemaName: String) {
       val inlineManifestation = relation.inlineManifestation.get
       val referencingColumn   = inlineManifestation.referencingColumn
       val tableName           = relation.relationTableName
-      val otherModel = if (inlineManifestation.inTableOfModelId == relation.modelAName) relation.modelB else relation.modelA
+      val otherModel          = if (inlineManifestation.inTableOfModelId == relation.modelAName) relation.modelB else relation.modelA
 
       val childWhereCondition = sql"""where "#$schemaName"."#${childWhere.model.dbName}"."#${childWhere.field.dbName}" = ${childWhere.fieldGCValue}"""
       val otherWhereCondition = sql"""where "#$schemaName"."#${path.removeLastEdge.lastModel.dbName}"."#${path.removeLastEdge.lastModel.dbNameOfIdField_!}" in (""" ++ pathQueryForLastChild(
@@ -145,9 +145,6 @@ case class PostgresApiDatabaseMutationBuilder(schemaName: String) {
            """).asUpdate
 
     }
-//    https://stackoverflow.com/questions/1109061/insert-on-duplicate-update-in-postgresql
-//    ++
-//      sql"on conflict (id )  key update #$databaseName.#${path.lastRelation_!.relationTableName}.id = #$databaseName.#${path.lastRelation_!.relationTableName}.id").asUpdate
   }
 
   //endregion
@@ -158,19 +155,41 @@ case class PostgresApiDatabaseMutationBuilder(schemaName: String) {
     val map = args.raw.asRoot.map
     if (map.nonEmpty) {
       SimpleDBIO { ctx =>
-        val placeHolders = map.map { case (k, _) => model.getFieldByName_!(k).dbName + " = ?" }.mkString(",")
+        val sql = DSL.using(SQLDialect.POSTGRES_9_5, new Settings().withRenderFormatted(true))
 
-        val query = s"""UPDATE "$schemaName"."${model.dbName}" as "$topLevelAlias" """ + s"""SET $placeHolders """ +
-          WhereClauseBuilder(schemaName).buildWhereClause(whereFilter).getOrElse("")
+        val aliasedTable = table(name(schemaName, model.dbName)).as(topLevelAlias)
+        val condition    = JooqWhereClauseBuilder(schemaName).buildWhereClause(whereFilter).getOrElse(trueCondition())
 
-        val ps = ctx.connection.prepareStatement(query)
+        val base = sql.update(aliasedTable)
+
+        lazy val queryString: String = if (map.size > 1) {
+
+          val fields = map.map { case (k, _) => field(model.getFieldByName_!(k).dbName) }.toList.asJava
+          val values = map.map(_ => placeHolder).toList.asJava
+
+          base
+            .set(row(fields), row(values))
+            .where(condition)
+            .getSQL
+
+        } else {
+          val fieldDef = map.map { case (k, _) => field(model.getFieldByName_!(k).dbName) }.head
+          val value    = map.map(_ => placeHolder).head
+
+          base
+            .set(fieldDef, value)
+            .where(condition)
+            .getSQL
+        }
+
+        val ps = ctx.connection.prepareStatement(queryString)
         val pp = new PositionedParameters(ps)
         map.foreach { case (_, v) => pp.setGcValue(v) }
-        whereFilter.foreach(filter => SetParams.setParams(pp, filter))
+        whereFilter.foreach(filter => JooqSetParams.setParams(pp, filter))
         ps.executeUpdate()
       }
     } else {
-      DBIOAction.successful(())
+      dbioUnit
     }
   }
 
@@ -281,10 +300,18 @@ case class PostgresApiDatabaseMutationBuilder(schemaName: String) {
 
   def deleteDataItems(model: Model, whereFilter: Option[Filter]) = {
     SimpleDBIO { ctx =>
-      val query = s"""DELETE FROM "$schemaName"."${model.dbName}" as "$topLevelAlias" """ +
-        WhereClauseBuilder(schemaName).buildWhereClause(whereFilter).getOrElse("")
-      val ps = ctx.connection.prepareStatement(query)
-      SetParams.setFilter(ps, whereFilter)
+      val sql = DSL.using(SQLDialect.POSTGRES_9_5, new Settings().withRenderFormatted(true))
+
+      val aliasedTable = table(name(schemaName, model.dbName)).as(topLevelAlias)
+      val condition    = JooqWhereClauseBuilder(schemaName).buildWhereClause(whereFilter).getOrElse(trueCondition())
+
+      lazy val queryString: String = sql
+        .deleteFrom(aliasedTable)
+        .where(condition)
+        .getSQL
+
+      val ps = ctx.connection.prepareStatement(queryString)
+      JooqSetParams.setFilter(new PositionedParameters(ps), whereFilter)
       ps.executeUpdate()
     }
   }
@@ -651,10 +678,10 @@ case class PostgresApiDatabaseMutationBuilder(schemaName: String) {
           model.scalarNonListFields.zipWithIndex.foreach {
             case (field, index) =>
               argsAsRoot.map.get(field.name) match {
-                case Some(NullGCValue) if field.name == "createdAt" || field.name == "updatedAt" => itemInsert.setTimestamp(index + 1, currentTimeStamp)
-                case Some(gCValue)                                                               => itemInsert.setGcValue(index + 1, gCValue)
-                case None if field.name == "createdAt" || field.name == "updatedAt"              => itemInsert.setTimestamp(index + 1, currentTimeStamp)
-                case None                                                                        => itemInsert.setNull(index + 1, java.sql.Types.NULL)
+                case Some(NullGCValue) if field.name == createdAtField || field.name == updatedAtField => itemInsert.setTimestamp(index + 1, currentTimeStamp)
+                case Some(gCValue)                                                                     => itemInsert.setGcValue(index + 1, gCValue)
+                case None if field.name == createdAtField || field.name == updatedAtField              => itemInsert.setTimestamp(index + 1, currentTimeStamp)
+                case None                                                                              => itemInsert.setNull(index + 1, java.sql.Types.NULL)
               }
           }
           itemInsert.addBatch()

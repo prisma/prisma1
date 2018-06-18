@@ -28,6 +28,8 @@ object JooqQueryBuilders {
   val valueFieldName= "value"
   val placeHolder = "?"
   val relayTableName = "_RelayId"
+  val updatedAtField = "updatedAt"
+  val createdAtField = "createdAt"
 }
 
 case class JooqRelationQueryBuilder(schemaName: String, relation: Relation, queryArguments: Option[QueryArguments]) {
