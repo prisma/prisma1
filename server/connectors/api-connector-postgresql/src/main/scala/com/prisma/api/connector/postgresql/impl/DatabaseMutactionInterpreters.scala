@@ -6,7 +6,7 @@ import com.prisma.api.connector.postgresql.database.PostgresApiDatabaseMutationB
 import com.prisma.api.connector.postgresql.impl.GetFieldFromSQLUniqueException.getFieldOption
 import com.prisma.api.schema.{APIErrors, UserFacingError}
 import com.prisma.api.schema.APIErrors.RequiredRelationWouldBeViolated
-import com.prisma.gc_values.ListGCValue
+import com.prisma.gc_values.{ListGCValue, RootGCValue}
 import com.prisma.shared.models.{Field, Project, Relation, RelationField}
 import org.postgresql.util.PSQLException
 import slick.dbio.DBIOAction
@@ -82,21 +82,38 @@ case class CreateDataItemInterpreter(mutaction: CreateDataItem, includeRelayRow:
 }
 
 case class NestedCreateDataItemInterpreter(mutaction: NestedCreateDataItem)(implicit ec: ExecutionContext) extends DatabaseMutactionInterpreter {
-  val project = mutaction.project
-  val model   = mutaction.relationField.relatedModel_!
-  val parent  = mutaction.relationField.model
+  val project  = mutaction.project
+  val model    = mutaction.relationField.relatedModel_!
+  val parent   = mutaction.relationField.model
+  val relation = mutaction.relationField.relation
 
   override def newAction(mutationBuilder: PostgresApiDatabaseMutationBuilder, parentResult: DatabaseMutactionResult)(implicit ec: ExecutionContext) = {
     for {
-      createResult <- mutationBuilder.createDataItem(model, mutaction.nonListArgs)
-      path = Path
-        .empty(NodeSelector.forIdGCValue(parent, parentResult.id))
-        .append(NodeEdge(mutaction.relationField, NodeSelector.forIdGCValue(model, createResult.id)))
-      _ <- mutationBuilder.createRelationRowByPath(path)
+      createResult <- createNodeAndConnectToParent(mutationBuilder, parentResult)
       // 1. fixme: feed the id into the action for scalar lists
       // 2. fixme: feed the id into the action for the relay row
-
     } yield createResult
+  }
+
+  private def createNodeAndConnectToParent(
+      mutationBuilder: PostgresApiDatabaseMutationBuilder,
+      parentResult: DatabaseMutactionResult
+  )(implicit ec: ExecutionContext) = {
+
+    if (relation.isInlineRelation) {
+      val inlineField  = relation.getFieldOnModel(model.name)
+      val argsMap      = mutaction.nonListArgs.raw.asRoot.map
+      val modifiedArgs = argsMap.updated(inlineField.name, parentResult.id)
+      mutationBuilder.createDataItem(model, PrismaArgs(RootGCValue(modifiedArgs)))
+    } else {
+      for {
+        createResult <- mutationBuilder.createDataItem(model, mutaction.nonListArgs)
+        path = Path
+          .empty(NodeSelector.forIdGCValue(parent, parentResult.id))
+          .append(NodeEdge(mutaction.relationField, NodeSelector.forIdGCValue(model, createResult.id)))
+        _ <- mutationBuilder.createRelationRowByPath(path)
+      } yield createResult
+    }
   }
 
   override def action(mutationBuilder: PostgresApiDatabaseMutationBuilder) = ???
