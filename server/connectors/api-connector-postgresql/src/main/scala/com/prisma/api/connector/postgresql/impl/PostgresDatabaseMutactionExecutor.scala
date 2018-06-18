@@ -73,7 +73,7 @@ case class PostgresDatabaseMutactionExecutor(clientDb: Database)(implicit ec: Ex
     case m: DeleteManyRelationChecks          => DeleteManyRelationChecksInterpreter(m)
     case m: DeleteRelationCheck               => DeleteRelationCheckInterpreter(m)
     case m: NestedConnectRelation             => NestedConnectRelationInterpreter(m)
-    case m: NestedCreateDataItem              => NestedCreateRelationInterpreter(m)
+    case m: NestedCreateDataItem              => NestedCreateDataItemInterpreter(m)
     case m: NestedDisconnectRelation          => NestedDisconnectRelationInterpreter(m)
     case m: ResetDataMutaction                => ResetDataInterpreter(m)
     case m: UpdateDataItem                    => UpdateDataItemInterpreter(m)

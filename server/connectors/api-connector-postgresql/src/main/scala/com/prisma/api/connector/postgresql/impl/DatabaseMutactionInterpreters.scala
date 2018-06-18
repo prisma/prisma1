@@ -88,6 +88,27 @@ case class CreateDataItemInterpreter(mutaction: CreateDataItem, includeRelayRow:
 
 }
 
+case class NestedCreateDataItemInterpreter(mutaction: NestedCreateDataItem) extends DatabaseMutactionInterpreter {
+  val project = mutaction.project
+  val model   = mutaction.relationField.relatedModel_!
+  val parent  = mutaction.relationField.model
+
+  override def newAction(mutationBuilder: PostgresApiDatabaseMutationBuilder, parentResult: DatabaseMutactionResult) = {
+    for {
+      createResult <- mutationBuilder.createDataItem(model, mutaction.nonListArgs)
+      path = Path
+        .empty(NodeSelector.forIdGCValue(parent, parentResult.id))
+        .append(NodeEdge(mutaction.relationField, NodeSelector.forIdGCValue(model, createResult.id)))
+      _ <- mutationBuilder.createRelationRowByPath(path)
+      // 1. fixme: feed the id into the action for scalar lists
+      // 2. fixme: feed the id into the action for the relay row
+
+    } yield createResult
+  }
+
+  override def action(mutationBuilder: PostgresApiDatabaseMutationBuilder) = ???
+}
+
 case class DeleteDataItemInterpreter(mutaction: DeleteDataItem)(implicit ec: ExecutionContext) extends DatabaseMutactionInterpreter {
 
   override def newAction(mutationBuilder: PostgresApiDatabaseMutationBuilder, parentResult: DatabaseMutactionResult) = {
