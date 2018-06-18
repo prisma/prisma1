@@ -65,9 +65,9 @@ case class DateTimeGCValue(value: DateTime) extends LeafGCValue
 case class EnumGCValue(value: String)       extends LeafGCValue
 case class JsonGCValue(value: JsValue)      extends LeafGCValue
 
-sealed trait IdGcValue                extends LeafGCValue
-case class CuidGCValue(value: String) extends IdGcValue
-case class UuidGCValue(value: UUID)   extends IdGcValue
+sealed trait IdGCValue                extends LeafGCValue
+case class CuidGCValue(value: String) extends IdGCValue
+case class UuidGCValue(value: UUID)   extends IdGCValue
 
 object UuidGCValue {
   def parse_!(s: String): UuidGCValue    = parse(s).get
