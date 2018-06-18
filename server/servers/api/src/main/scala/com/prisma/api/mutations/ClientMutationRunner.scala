@@ -14,10 +14,9 @@ object ClientMutationRunner {
       databaseMutactionVerifier: DatabaseMutactionVerifier
   )(implicit ec: ExecutionContext): Future[T] = {
     for {
-      mutaction <- clientMutation.prepareMutactions()
-      // fixme: bring back verification
-//      errors             = databaseMutactionVerifier.verify(preparedMutactions.databaseMutactions)
-//      _                  = if (errors.nonEmpty) throw errors.head
+      mutaction       <- clientMutation.prepareMutactions()
+      errors          = databaseMutactionVerifier.verify(mutaction +: mutaction.allMutactions)
+      _               = if (errors.nonEmpty) throw errors.head
       databaseResults <- databaseMutactionExecutor.executeTransactionally(mutaction)
       prismaNode      <- clientMutation.getReturnValue(MutactionResults(databaseResults))
     } yield prismaNode

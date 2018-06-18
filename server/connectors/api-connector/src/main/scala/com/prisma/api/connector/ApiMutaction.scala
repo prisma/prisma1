@@ -10,6 +10,7 @@ sealed trait ApiMutaction
 // DATABASE MUTACTIONS
 sealed trait DatabaseMutaction extends ApiMutaction {
   def project: Project
+  def allMutactions: Vector[DatabaseMutaction]
 }
 
 sealed trait TopLevelDatabaseMutaction extends DatabaseMutaction
@@ -25,7 +26,9 @@ sealed trait FurtherNestedMutaction extends DatabaseMutaction {
   def allMutactions: Vector[DatabaseMutaction] = nestedCreates ++ nestedUpdates ++ nestedUpserts ++ nestedDeletes ++ nestedConnects ++ nestedDisconnects
 }
 
-sealed trait FinalMutaction extends DatabaseMutaction
+sealed trait FinalMutaction extends DatabaseMutaction {
+  override def allMutactions = Vector.empty
+}
 
 // TOP LEVEL - SINGLE
 case class CreateDataItem(
