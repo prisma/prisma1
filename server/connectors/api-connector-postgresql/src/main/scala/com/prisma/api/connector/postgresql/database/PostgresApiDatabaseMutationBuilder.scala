@@ -18,10 +18,12 @@ import slick.jdbc.PostgresProfile.api._
 import slick.jdbc.{PositionedParameters, SQLActionBuilder}
 import slick.sql.{SqlAction, SqlStreamingAction}
 
-case class PostgresApiDatabaseMutationBuilder(
-    schemaName: String,
-    schema: Schema,
-) {
+import org.jooq._
+import org.jooq.conf.Settings
+import org.jooq.impl.DSL
+import org.jooq.impl.DSL._
+
+case class PostgresApiDatabaseMutationBuilder(schemaName: String) {
   import JooqQueryBuilders._
 
   // region CREATE
@@ -30,13 +32,20 @@ case class PostgresApiDatabaseMutationBuilder(
 
     SimpleDBIO[CreateDataItemResult] { x =>
       val argsAsRoot   = args.raw.asRoot
-      val fields       = path.lastModel.fields.filter(field => argsAsRoot.hasArgFor(field.name))
-      val columns      = fields.map(_.dbName)
-      val escapedKeys  = columns.map(column => s""""$column"""").mkString(",")
-      val placeHolders = columns.map(_ => "?").mkString(",")
+        val fields       = path.lastModel.fields.filter(field => argsAsRoot.hasArgFor(field.name))
+        val columns      = fields.map(_.dbName)
 
-      val query                         = s"""INSERT INTO "$schemaName"."${path.lastModel.dbName}" ($escapedKeys) VALUES ($placeHolders)"""
-      val itemInsert: PreparedStatement = x.connection.prepareStatement(query, Statement.RETURN_GENERATED_KEYS)
+      lazy val queryString: String = {
+        val sql          = DSL.using(SQLDialect.POSTGRES_9_5, new Settings().withRenderFormatted(true))
+        val generatedFields  = columns.map(fieldName => field(name(schemaName, path.lastModel.dbName, fieldName)))
+
+        sql
+          .insertInto(table(name(schemaName, path.lastModel.dbName)))
+          .columns(generatedFields:_*).values( columns.map(_ => placeHolder):_*)
+          .getSQL
+      }
+
+      val itemInsert: PreparedStatement = x.connection.prepareStatement(queryString, Statement.RETURN_GENERATED_KEYS)
 
       fields.map(_.name).zipWithIndex.foreach {
         case (column, index) =>
@@ -51,8 +60,8 @@ case class PostgresApiDatabaseMutationBuilder(
 
       val generatedKeys = itemInsert.getGeneratedKeys
       generatedKeys.next()
-      val field = path.lastModel.idField_!
-      CreateDataItemResult(generatedKeys.getGcValue(field.dbName, field.typeIdentifier))
+      val field2 = path.lastModel.idField_!
+      CreateDataItemResult(generatedKeys.getGcValue(field2.dbName, field2.typeIdentifier))
     }
   }
 

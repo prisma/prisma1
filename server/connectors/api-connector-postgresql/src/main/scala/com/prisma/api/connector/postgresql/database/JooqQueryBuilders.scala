@@ -26,6 +26,7 @@ object JooqQueryBuilders {
   val nodeIdFieldName = "nodeId"
   val positionFieldName = "position"
   val valueFieldName= "value"
+  val placeHolder = "?"
 }
 
 case class JooqRelationQueryBuilder(schemaName: String, relation: Relation, queryArguments: Option[QueryArguments]) {
