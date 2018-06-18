@@ -267,13 +267,21 @@ case class UpsertDataItemInterpreter(mutaction: UpsertDataItem, executor: Postgr
   val updateArgs = mutaction.nonListUpdateArgs
 
   def action(mutationBuilder: PostgresApiDatabaseMutationBuilder) = {
-
     val createNested: Vector[DBIOAction[Any, NoStream, Effect.All]] = mutaction.createMutactions.map(executor.interpreterFor).map(_.action(mutationBuilder))
     val updateNested: Vector[DBIOAction[Any, NoStream, Effect.All]] = mutaction.updateMutactions.map(executor.interpreterFor).map(_.action(mutationBuilder))
 
     val createAction = mutationBuilder.setScalarList(mutaction.createPath, mutaction.listCreateArgs)
     val updateAction = mutationBuilder.setScalarList(mutaction.updatePath, mutaction.listUpdateArgs)
-    mutationBuilder.upsert(mutaction.createPath, mutaction.updatePath, createArgs, updateArgs, createAction, updateAction, createNested, updateNested)
+    mutationBuilder.upsert(
+      createPath = mutaction.createPath,
+      updatePath = mutaction.updatePath,
+      createArgs = createArgs,
+      updateArgs = updateArgs,
+      create = createAction,
+      update = updateAction,
+      createNested = createNested,
+      updateNested = updateNested
+    )
   }
 
   val upsertErrors: PartialFunction[Throwable, UserFacingError] = {
