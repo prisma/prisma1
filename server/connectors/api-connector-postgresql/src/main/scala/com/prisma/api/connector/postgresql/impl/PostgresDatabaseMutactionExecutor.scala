@@ -22,7 +22,8 @@ case class PostgresDatabaseMutactionExecutor(clientDb: Database)(implicit ec: Ex
     }
 
     // fixme: should error mapping/handling be directly handled within the interpreters?
-    val combinedErrorMapper: PartialFunction[Throwable, UserFacingError] = PartialFunction.empty
+    val interpreters        = (mutaction +: mutaction.allMutactions).map(interpreterFor)
+    val combinedErrorMapper = interpreters.map(_.errorMapper).reduceLeft(_ orElse _)
     clientDb
       .run(singleAction)
       .recover { case error => throw combinedErrorMapper.lift(error).getOrElse(error) }
