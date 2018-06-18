@@ -107,6 +107,7 @@ case class ModelQueryBuilder(schemaName: String, model: Model, queryArguments: O
 }
 
 object SetParams {
+
   def setQueryArgs(preparedStatement: PreparedStatement, queryArguments: Option[QueryArguments]): Unit = {
     queryArguments.foreach { queryArgs =>
       setFilter(preparedStatement, queryArgs.filter)
@@ -130,12 +131,12 @@ object SetParams {
       case RelationFilter(_, nestedFilter, _) => setParams(pp, nestedFilter)
       //--------------------------------ANCHORS------------------------------------
       case PreComputedSubscriptionFilter(_)                     => // NOOP
-      case ScalarFilter(_, Contains(value: StringGCValue))      => pp.setString("%" + value.value + "%")
-      case ScalarFilter(_, NotContains(value: StringGCValue))   => pp.setString("%" + value.value + "%")
-      case ScalarFilter(_, StartsWith(value: StringGCValue))    => pp.setString(value.value + "%")
-      case ScalarFilter(_, NotStartsWith(value: StringGCValue)) => pp.setString(value.value + "%")
-      case ScalarFilter(_, EndsWith(value: StringGCValue))      => pp.setString("%" + value.value)
-      case ScalarFilter(_, NotEndsWith(value: StringGCValue))   => pp.setString("%" + value.value)
+      case ScalarFilter(_, Contains(StringGCValue(value)))      => pp.setString(value)
+      case ScalarFilter(_, NotContains(StringGCValue(value)))   => pp.setString(value)
+      case ScalarFilter(_, StartsWith(StringGCValue(value)))    => pp.setString(value)
+      case ScalarFilter(_, NotStartsWith(StringGCValue(value))) => pp.setString(value)
+      case ScalarFilter(_, EndsWith(StringGCValue(value)))      => pp.setString(value)
+      case ScalarFilter(_, NotEndsWith(StringGCValue(value)))   => pp.setString(value)
       case ScalarFilter(_, LessThan(value))                     => pp.setGcValue(value)
       case ScalarFilter(_, GreaterThan(value))                  => pp.setGcValue(value)
       case ScalarFilter(_, LessThanOrEquals(value))             => pp.setGcValue(value)
