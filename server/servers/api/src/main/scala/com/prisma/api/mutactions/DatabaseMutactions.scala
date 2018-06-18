@@ -32,6 +32,10 @@ case class DatabaseMutactions(project: Project) {
     val isEmpty    = nestedCreates.isEmpty && nestedUpdates.isEmpty && nestedUpserts.isEmpty && nestedDeletes.isEmpty && nestedConnects.isEmpty && nestedDisconnects.isEmpty
     val isNonEmpty = !isEmpty
   }
+
+  object NestedMutactions {
+    val empty = NestedMutactions(Vector.empty, Vector.empty, Vector.empty, Vector.empty, Vector.empty, Vector.empty)
+  }
 //
 //  def report[T](mutactions: Vector[T]): Vector[T] = {
 //    ApiMetrics.mutactionCount.incBy(mutactions.size, project.id)
@@ -159,7 +163,7 @@ case class DatabaseMutactions(project: Project) {
         nestedDisconnects = nestedDisconnects
       )
     }
-    x.reduce(_ ++ _)
+    x.foldLeft(NestedMutactions.empty)(_ ++ _)
   }
 
 //  def getMutactionsForWhereChecks(nestedMutation: NestedMutations): Vector[DatabaseMutaction] = {
