@@ -41,7 +41,8 @@ case class PostgresApiDatabaseMutationBuilder(schemaName: String) {
 
         sql
           .insertInto(table(name(schemaName, path.lastModel.dbName)))
-          .columns(generatedFields:_*).values( columns.map(_ => placeHolder):_*)
+          .columns(generatedFields:_*)
+          .values( columns.map(_ => placeHolder):_*)
           .getSQL
       }
 
@@ -65,9 +66,26 @@ case class PostgresApiDatabaseMutationBuilder(schemaName: String) {
     }
   }
 
-  def createRelayRow(path: Path): SqlStreamingAction[Vector[Int], Int, Effect]#ResultAction[Int, NoStream, Effect] = {
-    val where = path.lastCreateWhere_!
-    sql"""INSERT INTO "#$schemaName"."_RelayId" ("id", "stableModelIdentifier") VALUES (${where.fieldGCValue}, ${where.model.stableIdentifier})""".asUpdate
+  def createRelayRow(path: Path): DBIO[_] = {
+
+    SimpleDBIO[_] { x =>
+
+      lazy val queryString: String = {
+        val sql          = DSL.using(SQLDialect.POSTGRES_9_5, new Settings().withRenderFormatted(true))
+
+        sql
+          .insertInto(table(name(schemaName,relayTableName)))
+          .columns(field(name(schemaName, relayTableName, "id")), field(name(schemaName,relayTableName, "stableModelIdentifier")))
+          .values( placeHolder, placeHolder)
+          .getSQL
+      }
+
+      val itemInsert: PreparedStatement = x.connection.prepareStatement(queryString, Statement.RETURN_GENERATED_KEYS)
+      itemInsert.setGcValue(1, path.lastCreateWhere_!.fieldGCValue)
+      itemInsert.setString(2, path.lastCreateWhere_!.model.stableIdentifier)
+
+      itemInsert.execute()
+    }
   }
 
   def createRelationRowByPath(path: Path): SqlAction[Int, NoStream, Effect] = {
@@ -81,11 +99,8 @@ case class PostgresApiDatabaseMutationBuilder(schemaName: String) {
       val inlineManifestation = relation.inlineManifestation.get
       val referencingColumn   = inlineManifestation.referencingColumn
       val tableName           = relation.relationTableName
-      val otherModel = if (inlineManifestation.inTableOfModelId == relation.modelAName) {
-        relation.modelB
-      } else {
-        relation.modelA
-      }
+      val otherModel = if (inlineManifestation.inTableOfModelId == relation.modelAName) relation.modelB else relation.modelA
+
       val childWhereCondition = sql"""where "#$schemaName"."#${childWhere.model.dbName}"."#${childWhere.field.dbName}" = ${childWhere.fieldGCValue}"""
       val otherWhereCondition = sql"""where "#$schemaName"."#${path.removeLastEdge.lastModel.dbName}"."#${path.removeLastEdge.lastModel.dbNameOfIdField_!}" in (""" ++ pathQueryForLastChild(
         path.removeLastEdge) ++ sql")"
@@ -93,31 +108,15 @@ case class PostgresApiDatabaseMutationBuilder(schemaName: String) {
       val selectIdOfOther = sql"""select "#${otherModel.dbNameOfIdField_!}" as id from "#$schemaName"."#${otherModel.dbName}" """ ++ otherWhereCondition
 
       val rowToUpdateCondition = if (relation.isSameModelRelation) {
-        if (path.lastEdge_!.childField.relationSide == RelationSide.A) {
-          childWhereCondition
-        } else {
-          otherWhereCondition
-        }
+        if (path.lastEdge_!.childField.relationSide == RelationSide.A) childWhereCondition else otherWhereCondition
       } else {
-        if (inlineManifestation.inTableOfModelId == childWhere.model.name) {
-          childWhereCondition
-        } else {
-          otherWhereCondition
-        }
+        if (inlineManifestation.inTableOfModelId == childWhere.model.name) childWhereCondition else otherWhereCondition
       }
 
       val nodeToLinkToCondition = if (relation.isSameModelRelation) {
-        if (path.lastEdge_!.childField.relationSide == RelationSide.A) {
-          selectIdOfOther
-        } else {
-          selectIdOfChild
-        }
+        if (path.lastEdge_!.childField.relationSide == RelationSide.A) selectIdOfOther else selectIdOfChild
       } else {
-        if (inlineManifestation.inTableOfModelId == childWhere.model.name) {
-          selectIdOfOther
-        } else {
-          selectIdOfChild
-        }
+        if (inlineManifestation.inTableOfModelId == childWhere.model.name) selectIdOfOther else selectIdOfChild
       }
 
       (sql"""update "#$schemaName"."#$tableName" """ ++

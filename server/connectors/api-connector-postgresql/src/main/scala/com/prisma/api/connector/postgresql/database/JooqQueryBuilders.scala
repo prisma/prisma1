@@ -27,6 +27,7 @@ object JooqQueryBuilders {
   val positionFieldName = "position"
   val valueFieldName= "value"
   val placeHolder = "?"
+  val relayTableName = "_RelayId"
 }
 
 case class JooqRelationQueryBuilder(schemaName: String, relation: Relation, queryArguments: Option[QueryArguments]) {
