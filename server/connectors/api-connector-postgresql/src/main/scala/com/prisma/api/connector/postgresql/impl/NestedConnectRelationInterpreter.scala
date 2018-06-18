@@ -1,17 +1,20 @@
 package com.prisma.api.connector.postgresql.impl
 
-import com.prisma.api.connector.NestedConnectRelation
+import com.prisma.api.connector.{NestedConnectRelation, VerifyConnection}
 import com.prisma.api.connector.postgresql.database.PostgresApiDatabaseMutationBuilder
 import slick.dbio.{DBIO, Effect, NoStream}
 import slick.sql.{SqlAction, SqlStreamingAction}
 
-case class NestedConnectRelationInterpreter(mutaction: NestedConnectRelation) extends NestedRelationInterpreterBase {
+import scala.concurrent.ExecutionContext
+import scala.util.{Failure, Success}
+
+case class NestedConnectRelationInterpreter(mutaction: NestedConnectRelation)(implicit ec: ExecutionContext) extends NestedRelationInterpreterBase {
   override def path        = mutaction.path
   override def project     = mutaction.project
   override def topIsCreate = mutaction.topIsCreate
 
-  override def requiredCheck(implicit mutationBuilder: PostgresApiDatabaseMutationBuilder): List[SqlStreamingAction[Vector[String], String, Effect]] =
-    topIsCreate match {
+  override def requiredCheck(implicit mutationBuilder: PostgresApiDatabaseMutationBuilder): List[DBIO[_]] = {
+    val x = topIsCreate match {
       case false =>
         (p.isList, p.isRequired, c.isList, c.isRequired) match {
           case (false, true, false, true)   => requiredRelationViolation
@@ -39,6 +42,10 @@ case class NestedConnectRelationInterpreter(mutaction: NestedConnectRelation) ex
           case _                            => sysError
         }
     }
+    val verifyConnnection = VerifyConnectionInterpreter(VerifyConnection(project, path)).actionWithErrorMapped(mutationBuilder)
+
+    verifyConnnection +: x
+  }
 
   override def removalActions(implicit mutationBuilder: PostgresApiDatabaseMutationBuilder): List[DBIO[Unit]] =
     topIsCreate match {

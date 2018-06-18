@@ -21,12 +21,7 @@ case class PostgresDatabaseMutactionExecutor(clientDb: Database, createRelayIds:
       case false => recurse(mutaction, UnitDatabaseMutactionResult, mutationBuilder)
     }
 
-    // fixme: should error mapping/handling be directly handled within the interpreters?
-    val interpreters        = (mutaction +: mutaction.allMutactions).map(interpreterFor)
-    val combinedErrorMapper = interpreters.map(_.errorMapper).reduceLeft(_ orElse _)
-    clientDb
-      .run(singleAction)
-      .recover { case error => throw combinedErrorMapper.lift(error).getOrElse(error) }
+    clientDb.run(singleAction)
   }
 
   private def recurse(
@@ -37,13 +32,13 @@ case class PostgresDatabaseMutactionExecutor(clientDb: Database, createRelayIds:
     mutaction match {
       case m: FurtherNestedMutaction =>
         for {
-          result       <- interpreterFor(m).newAction(mutationBuilder, parentResult)
+          result       <- interpreterFor(m).newActionWithErrorMapped(mutationBuilder, parentResult)
           childResults <- DBIO.sequence(m.allMutactions.map(recurse(_, result, mutationBuilder)))
           //DBIO.sequence(mutation.childs.map(recurse(_, mutationBuilder)))
         } yield result
       case m: FinalMutaction =>
         for {
-          result <- interpreterFor(m).newAction(mutationBuilder, parentResult)
+          result <- interpreterFor(m).newActionWithErrorMapped(mutationBuilder, parentResult)
         } yield result
     }
   }

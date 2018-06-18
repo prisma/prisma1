@@ -5,14 +5,45 @@ import com.prisma.api.connector.{DatabaseMutactionResult, UnitDatabaseMutactionR
 import com.prisma.api.schema.UserFacingError
 import slick.dbio.{DBIO, DBIOAction, Effect, NoStream}
 
+import scala.concurrent.ExecutionContext
+import scala.util.{Failure, Success}
+
 trait DatabaseMutactionInterpreter {
   private val unitResult = DBIO.successful(UnitDatabaseMutactionResult)
+
+  // FIXME: only new action should be implemented by subclasses (make protected);
+  // FIXME: and only newActionWithErrorMapped should be called from the outside
+
+  def newActionWithErrorMapped(
+      mutationBuilder: PostgresApiDatabaseMutationBuilder,
+      parentResult: DatabaseMutactionResult
+  )(implicit ec: ExecutionContext): DBIO[DatabaseMutactionResult] = {
+    newAction(mutationBuilder, parentResult).asTry.map {
+      case Success(x) => x
+      case Failure(e) =>
+        errorMapper.lift(e) match {
+          case Some(mappedError) => throw mappedError
+          case None              => throw e
+        }
+    }
+  }
 
   def newAction(
       mutationBuilder: PostgresApiDatabaseMutationBuilder,
       parentResult: DatabaseMutactionResult
-  ): DBIO[DatabaseMutactionResult] = {
-    action(mutationBuilder).andThen(unitResult)
+  )(implicit ec: ExecutionContext): DBIO[DatabaseMutactionResult] = {
+    actionWithErrorMapped(mutationBuilder).andThen(unitResult)
+  }
+
+  def actionWithErrorMapped(mutationBuilder: PostgresApiDatabaseMutationBuilder)(implicit ec: ExecutionContext): DBIO[_] = {
+    action(mutationBuilder).asTry.map {
+      case Success(x) => x
+      case Failure(e) =>
+        errorMapper.lift(e) match {
+          case Some(mappedError) => throw mappedError
+          case None              => throw e
+        }
+    }
   }
 
   def action(mutationBuilder: PostgresApiDatabaseMutationBuilder): DBIOAction[Any, NoStream, Effect.All]

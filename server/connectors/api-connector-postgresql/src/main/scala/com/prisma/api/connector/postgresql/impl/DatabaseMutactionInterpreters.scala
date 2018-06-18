@@ -57,9 +57,8 @@ case class CreateDataItemInterpreter(mutaction: CreateDataItem, includeRelayRow:
   val project = mutaction.project
   val model   = mutaction.model
 
-  import scala.concurrent.ExecutionContext.Implicits.global
-
-  override def newAction(mutationBuilder: PostgresApiDatabaseMutationBuilder, parentResult: DatabaseMutactionResult): DBIO[DatabaseMutactionResult] = {
+  override def newAction(mutationBuilder: PostgresApiDatabaseMutationBuilder, parentResult: DatabaseMutactionResult)(
+      implicit ec: ExecutionContext): DBIO[DatabaseMutactionResult] = {
     for {
       createResult <- mutationBuilder.createDataItem(model, mutaction.nonListArgs)
       _            <- mutationBuilder.setScalarList(Path.empty(NodeSelector.forIdGCValue(model, createResult.id)), mutaction.listArgs)
@@ -87,7 +86,7 @@ case class NestedCreateDataItemInterpreter(mutaction: NestedCreateDataItem)(impl
   val model   = mutaction.relationField.relatedModel_!
   val parent  = mutaction.relationField.model
 
-  override def newAction(mutationBuilder: PostgresApiDatabaseMutationBuilder, parentResult: DatabaseMutactionResult) = {
+  override def newAction(mutationBuilder: PostgresApiDatabaseMutationBuilder, parentResult: DatabaseMutactionResult)(implicit ec: ExecutionContext) = {
     for {
       createResult <- mutationBuilder.createDataItem(model, mutaction.nonListArgs)
       path = Path
@@ -105,7 +104,7 @@ case class NestedCreateDataItemInterpreter(mutaction: NestedCreateDataItem)(impl
 
 case class DeleteDataItemInterpreter(mutaction: DeleteDataItem)(implicit ec: ExecutionContext) extends DatabaseMutactionInterpreter {
 
-  override def newAction(mutationBuilder: PostgresApiDatabaseMutationBuilder, parentResult: DatabaseMutactionResult) = {
+  override def newAction(mutationBuilder: PostgresApiDatabaseMutationBuilder, parentResult: DatabaseMutactionResult)(implicit ec: ExecutionContext) = {
     for {
       _ <- mutationBuilder.deleteRelayRow(Path.empty(mutaction.where))
       _ <- mutationBuilder.deleteDataItem(Path.empty(mutaction.where))
@@ -117,7 +116,7 @@ case class DeleteDataItemInterpreter(mutaction: DeleteDataItem)(implicit ec: Exe
 
 case class DeleteDataItemNestedInterpreter(mutaction: NestedDeleteDataItem)(implicit ec: ExecutionContext) extends DatabaseMutactionInterpreter {
 
-  override def newAction(mutationBuilder: PostgresApiDatabaseMutationBuilder, parentResult: DatabaseMutactionResult) = {
+  override def newAction(mutationBuilder: PostgresApiDatabaseMutationBuilder, parentResult: DatabaseMutactionResult)(implicit ec: ExecutionContext) = {
     val parent         = mutaction.relationField.model
     val parentSelector = NodeSelector(parent, parent.idField_!, parentResult.id)
     val path           = Path.empty(parentSelector).appendEdge(mutaction.relationField)
@@ -202,7 +201,7 @@ case class ResetDataInterpreter(mutaction: ResetDataMutaction) extends DatabaseM
 case class UpdateDataItemInterpreter(mutaction: UpdateDataItem) extends DatabaseMutactionInterpreter {
   val interpreter = SharedUpdateDataItemInterpreter(mutaction.project, Path.empty(mutaction.where), mutaction.nonListArgs, mutaction.listArgs)
 
-  override def newAction(mutationBuilder: PostgresApiDatabaseMutationBuilder, parentResult: DatabaseMutactionResult) = {
+  override def newAction(mutationBuilder: PostgresApiDatabaseMutationBuilder, parentResult: DatabaseMutactionResult)(implicit ec: ExecutionContext) = {
     interpreter.newAction(mutationBuilder, parentResult)
   }
 
@@ -213,8 +212,8 @@ case class UpdateDataItemInterpreter(mutaction: UpdateDataItem) extends Database
 
 case class NestedUpdateDataItemInterpreter(mutaction: NestedUpdateDataItem) extends DatabaseMutactionInterpreter {
 
-  override def newAction(mutationBuilder: PostgresApiDatabaseMutationBuilder, parentResult: DatabaseMutactionResult) = ???
-  override def action(mutationBuilder: PostgresApiDatabaseMutationBuilder)                                           = ???
+  override def newAction(mutationBuilder: PostgresApiDatabaseMutationBuilder, parentResult: DatabaseMutactionResult)(implicit ec: ExecutionContext) = ???
+  override def action(mutationBuilder: PostgresApiDatabaseMutationBuilder)                                                                          = ???
 }
 
 case class SharedUpdateDataItemInterpreter(
@@ -297,8 +296,8 @@ case class UpsertDataItemInterpreter(mutaction: UpsertDataItem, executor: Postgr
 
 case class NestedUpsertDataItemInterpreter(mutaction: NestedUpsertDataItem) extends DatabaseMutactionInterpreter {
 
-  override def newAction(mutationBuilder: PostgresApiDatabaseMutationBuilder, parentResult: DatabaseMutactionResult) = ???
-  override def action(mutationBuilder: PostgresApiDatabaseMutationBuilder)                                           = ???
+  override def newAction(mutationBuilder: PostgresApiDatabaseMutationBuilder, parentResult: DatabaseMutactionResult)(implicit ec: ExecutionContext) = ???
+  override def action(mutationBuilder: PostgresApiDatabaseMutationBuilder)                                                                          = ???
 }
 
 //case class UpsertDataItemIfInRelationWithInterpreter(mutaction: UpsertDataItemIfInRelationWith, executor: PostgresDatabaseMutactionExecutor)
