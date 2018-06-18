@@ -4,7 +4,7 @@ import com.prisma.api.ApiDependencies
 import com.prisma.api.connector._
 import com.prisma.api.import_export.ImportExport.MyJsonProtocol._
 import com.prisma.api.import_export.ImportExport._
-import com.prisma.gc_values.{JsonGCValue, ListGCValue, StringGCValue}
+import com.prisma.gc_values._
 import com.prisma.shared.models.Project
 import play.api.libs.json._
 
@@ -93,7 +93,12 @@ class BulkExport(project: Project)(implicit apiDependencies: ApiDependencies) {
   private def prismaNodeToExportNode(item: PrismaNode, info: NodeInfo): JsValue = {
     import GCValueJsonFormatter.RootGcValueWritesWithoutNulls
     val jsonForNode = Json.toJsObject(item.data)
-    Json.obj("_typeName" -> info.current.name, "id" -> item.id.value) ++ jsonForNode
+    val id = item.id match {
+      case CuidGCValue(id) => JsString(id)
+      case UuidGCValue(id) => JsString(id.toString)
+      case IntGCValue(id)  => JsNumber(id)
+    }
+    Json.obj("_typeName" -> info.current.name, "id" -> id) ++ jsonForNode
   }
 
   def dataItemToExportList(dataItems: Vector[ScalarListValues], info: ListInfo): Vector[JsValue] = {
@@ -109,9 +114,11 @@ class BulkExport(project: Project)(implicit apiDependencies: ApiDependencies) {
   }
 
   private def dataItemToExportRelation(item: RelationNode, info: RelationInfo): JsValue = {
-    val leftSide  = ExportRelationSide(info.current.modelBName, item.b.value, info.current.fieldBName)
-    val rightSide = ExportRelationSide(info.current.modelAName, item.a.value, info.current.fieldAName)
-    JsArray(Seq(Json.toJson(leftSide), Json.toJson(rightSide)))
+    // fixme: does this mean that we have to change the import/export protocol?
+//    val leftSide  = ExportRelationSide(info.current.modelBName, item.b.value, info.current.fieldBName)
+//    val rightSide = ExportRelationSide(info.current.modelAName, item.a.value, info.current.fieldAName)
+//    JsArray(Seq(Json.toJson(leftSide), Json.toJson(rightSide)))
+    ???
   }
 
   private def serializePage(in: JsonBundle, page: PrismaNodesPage, info: ExportInfo, startOnPage: Int = 0, amount: Int = 1000): ResultFormat = {

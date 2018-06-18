@@ -58,7 +58,6 @@ sealed trait LeafGCValue extends GCValue
 
 object NullGCValue                          extends LeafGCValue { def value = None }
 case class StringGCValue(value: String)     extends LeafGCValue
-case class IntGCValue(value: Int)           extends LeafGCValue
 case class FloatGCValue(value: Double)      extends LeafGCValue
 case class BooleanGCValue(value: Boolean)   extends LeafGCValue
 case class DateTimeGCValue(value: DateTime) extends LeafGCValue
@@ -68,6 +67,7 @@ case class JsonGCValue(value: JsValue)      extends LeafGCValue
 sealed trait IdGcValue                extends LeafGCValue
 case class CuidGCValue(value: String) extends IdGcValue
 case class UuidGCValue(value: UUID)   extends IdGcValue
+case class IntGCValue(value: Int)     extends IdGcValue
 
 object UuidGCValue {
   def parse_!(s: String): UuidGCValue    = parse(s).get

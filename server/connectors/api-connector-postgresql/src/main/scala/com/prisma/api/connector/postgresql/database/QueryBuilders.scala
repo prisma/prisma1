@@ -5,7 +5,7 @@ import java.sql.PreparedStatement
 import com.prisma.api.connector._
 import com.prisma.slick.NewJdbcExtensions._
 import com.prisma.api.connector.postgresql.database.PostgresSlickExtensions._
-import com.prisma.gc_values.{CuidGCValue, NullGCValue, StringGCValue}
+import com.prisma.gc_values.{CuidGCValue, IdGcValue, NullGCValue, StringGCValue}
 import com.prisma.shared.models._
 import slick.jdbc.PositionedParameters
 
@@ -51,7 +51,7 @@ case class RelatedModelsQueryBuilder(
     schemaName: String,
     fromField: RelationField,
     queryArguments: Option[QueryArguments],
-    relatedNodeIds: Vector[CuidGCValue]
+    relatedNodeIds: Vector[IdGcValue]
 ) {
   import QueryBuilders.topLevelAlias
 

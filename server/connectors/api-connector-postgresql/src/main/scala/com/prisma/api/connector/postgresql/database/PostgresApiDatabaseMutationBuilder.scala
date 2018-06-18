@@ -51,8 +51,7 @@ case class PostgresApiDatabaseMutationBuilder(
 
       val generatedKeys = itemInsert.getGeneratedKeys
       generatedKeys.next()
-      val field = model.idField_!
-      CreateDataItemResult(generatedKeys.getGcValue(field.dbName, field.typeIdentifier))
+      CreateDataItemResult(generatedKeys.getId(model))
     }
   }
 

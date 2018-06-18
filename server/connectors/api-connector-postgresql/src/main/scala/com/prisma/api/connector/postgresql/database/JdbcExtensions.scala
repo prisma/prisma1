@@ -6,7 +6,7 @@ import java.util.{Calendar, Date, TimeZone}
 
 import com.prisma.gc_values._
 import com.prisma.shared.models.RelationSide.RelationSide
-import com.prisma.shared.models.{Model, RelationSide, TypeIdentifier}
+import com.prisma.shared.models.{Field, Model, RelationSide, TypeIdentifier}
 import org.joda.time.{DateTime, DateTimeZone}
 import play.api.libs.json.Json
 
@@ -54,9 +54,17 @@ object JdbcExtensions {
 
   implicit class ResultSetExtensions(val resultSet: ResultSet) extends AnyVal {
 
-    def getId(model: Model)                   = getAsID(model.idField_!.dbName)
-    def getAsID(column: String)               = CuidGCValue(resultSet.getString(column))
-    def getParentId(side: RelationSide.Value) = CuidGCValue(resultSet.getString("__Relation__" + side.toString))
+    def getId(model: Model): IdGcValue = getAsID(model.idField_!)
+
+    def getAsID(field: Field): IdGcValue = {
+      val gcValue = getGcValue(field.dbName, field.typeIdentifier)
+      gcValue.asInstanceOf[IdGcValue]
+    }
+
+    def getParentId(side: RelationSide.Value, typeIdentifier: TypeIdentifier.Value): IdGcValue = {
+      val gcValue = getGcValue("__Relation__" + side.toString, typeIdentifier)
+      gcValue.asInstanceOf[IdGcValue]
+    }
 
     def getGcValue(name: String, typeIdentifier: TypeIdentifier.Value): GCValue = {
       val calendar: java.util.Calendar = Calendar.getInstance(TimeZone.getTimeZone("UTC"))

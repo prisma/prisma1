@@ -259,7 +259,7 @@ case class SchemaBuilderImpl(
 
 object SangriaEvidences {
   implicit object DataItemNodeEvidence extends IdentifiableNode[ApiUserContext, PrismaNode] {
-    override def id(ctx: Context[ApiUserContext, PrismaNode]) = ctx.value.id.value
+    override def id(ctx: Context[ApiUserContext, PrismaNode]) = ctx.value.id.value.toString // fixme: is this the right approach for numeric ids?
   }
 }
 

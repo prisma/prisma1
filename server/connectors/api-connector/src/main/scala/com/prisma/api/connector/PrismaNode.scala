@@ -1,14 +1,14 @@
 package com.prisma.api.connector
 
-import com.prisma.gc_values.{CuidGCValue, ListGCValue, RootGCValue}
+import com.prisma.gc_values.{CuidGCValue, IdGcValue, ListGCValue, RootGCValue}
 
-case class PrismaNode(id: CuidGCValue, data: RootGCValue, typeName: Option[String] = None)
+case class PrismaNode(id: IdGcValue, data: RootGCValue, typeName: Option[String] = None)
 
 object PrismaNode {
   def dummy: PrismaNode = PrismaNode(CuidGCValue(""), RootGCValue.empty)
 }
 
-case class PrismaNodeWithParent(parentId: CuidGCValue, prismaNode: PrismaNode)
+case class PrismaNodeWithParent(parentId: IdGcValue, prismaNode: PrismaNode)
 
-case class RelationNode(a: CuidGCValue, b: CuidGCValue)
-case class ScalarListValues(nodeId: CuidGCValue, value: ListGCValue)
+case class RelationNode(a: IdGcValue, b: IdGcValue)
+case class ScalarListValues(nodeId: IdGcValue, value: ListGCValue)

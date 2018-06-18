@@ -66,14 +66,16 @@ case class PostgresDataResolver(
     performWithTiming("batchResolveByUnique", readonlyClientDatabase.run(query))
   }
 
-  override def batchResolveScalarList(model: Model, listField: ScalarField, nodeIds: Vector[CuidGCValue]): Future[Vector[ScalarListValues]] = {
+  override def batchResolveScalarList(model: Model, listField: ScalarField, nodeIds: Vector[IdGcValue]): Future[Vector[ScalarListValues]] = {
     val query = queryBuilder.selectFromScalarList(model.dbName, listField, nodeIds)
     performWithTiming("batchResolveScalarList", readonlyClientDatabase.run(query))
   }
 
-  override def resolveByRelationManyModels(fromField: RelationField,
-                                           fromNodeIds: Vector[CuidGCValue],
-                                           args: Option[QueryArguments]): Future[Vector[ResolverResult[PrismaNodeWithParent]]] = {
+  override def resolveByRelationManyModels(
+      fromField: RelationField,
+      fromNodeIds: Vector[IdGcValue],
+      args: Option[QueryArguments]
+  ): Future[Vector[ResolverResult[PrismaNodeWithParent]]] = {
     val query = queryBuilder.batchSelectAllFromRelatedModel(project.schema, fromField, fromNodeIds, args)
     performWithTiming("resolveByRelation", readonlyClientDatabase.run(query))
   }

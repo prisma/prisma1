@@ -23,9 +23,11 @@ object TestData extends AwaitUtils {
 
     val mutaction = CreateDataItem(
       project = project,
-      path = Path.empty(NodeSelector.forCuid(model, id)),
+      model = model,
       nonListArgs = args,
-      listArgs = Vector.empty
+      listArgs = Vector.empty,
+      nestedConnects = Vector.empty,
+      nestedCreates = Vector.empty
     )
 
     testDatabase.runDatabaseMutactionOnClientDb(mutaction)

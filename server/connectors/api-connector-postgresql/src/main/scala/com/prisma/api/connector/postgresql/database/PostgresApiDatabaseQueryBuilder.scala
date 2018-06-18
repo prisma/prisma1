@@ -32,8 +32,8 @@ case class PostgresApiDatabaseQueryBuilder(
 
   private def readPrismaNodeWithParent(model: Model, side: RelationSide.Value, oppositeSide: RelationSide.Value) = ReadsResultSet { rs =>
     val node       = readPrismaNode(model, rs)
-    val firstSide  = rs.getParentId(side)
-    val secondSide = rs.getParentId(oppositeSide)
+    val firstSide  = rs.getParentId(side, model.idField_!.typeIdentifier)
+    val secondSide = rs.getParentId(oppositeSide, model.idField_!.typeIdentifier)
     val parentId   = if (firstSide == node.id) secondSide else firstSide
 
     PrismaNodeWithParent(parentId, node)
@@ -45,9 +45,7 @@ case class PostgresApiDatabaseQueryBuilder(
   }
 
   private def readRelation(relation: Relation): ReadsResultSet[RelationNode] = ReadsResultSet { resultSet =>
-    val modelAColumn = relation.columnForRelationSide(RelationSide.A)
-    val modelBColumn = relation.columnForRelationSide(RelationSide.B)
-    RelationNode(a = resultSet.getAsID(modelAColumn), b = resultSet.getAsID(modelBColumn))
+    RelationNode(a = resultSet.getAsID(relation.modelAField), b = resultSet.getAsID(relation.modelBField))
   }
 
   def selectAllFromTable(
@@ -71,7 +69,7 @@ case class PostgresApiDatabaseQueryBuilder(
   def batchSelectAllFromRelatedModel(
       schema: Schema,
       fromField: RelationField,
-      fromModelIds: Vector[CuidGCValue],
+      fromModelIds: Vector[IdGcValue],
       args: Option[QueryArguments]
   ): DBIO[Vector[ResolverResult[PrismaNodeWithParent]]] = {
     SimpleDBIO[Vector[ResolverResult[PrismaNodeWithParent]]] { ctx =>
@@ -138,7 +136,7 @@ case class PostgresApiDatabaseQueryBuilder(
     }
   }
 
-  def selectFromScalarList(modelName: String, field: ScalarField, nodeIds: Vector[CuidGCValue]): DBIO[Vector[ScalarListValues]] = {
+  def selectFromScalarList(modelName: String, field: ScalarField, nodeIds: Vector[IdGcValue]): DBIO[Vector[ScalarListValues]] = {
     SimpleDBIO[Vector[ScalarListValues]] { ctx =>
       val placeHolders = queryPlaceHolders(nodeIds)
       val q            = s"""select "nodeId", "position", "value" from "$schemaName"."${modelName}_${field.dbName}" where "nodeId" in """ + placeHolders
