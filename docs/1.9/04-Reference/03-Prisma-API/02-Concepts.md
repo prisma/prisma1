@@ -250,7 +250,7 @@ The JWT must contain different [claims](https://jwt.io/introduction/#payload):
 
 > In the future there might be support for more fine grained access control by introducing a concept of roles such as `["write:Log", "read:*"]`
 
-Here is the sample Payload of a JTW.
+Here is the sample Payload of a JWT.
 
 ```json
 {
