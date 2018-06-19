@@ -10,11 +10,11 @@ import io.prometheus.client.CollectorRegistry
 import io.prometheus.client.exporter.common.TextFormat
 
 object CustomPushGateway {
-  def http(address: String, secret: String)(implicit as: ActorSystem)  = CustomPushGateway("http", address, secret)
-  def https(address: String, secret: String)(implicit as: ActorSystem) = CustomPushGateway("https", address, secret)
+  def http(address: String)(implicit as: ActorSystem)  = CustomPushGateway("http", address)
+  def https(address: String)(implicit as: ActorSystem) = CustomPushGateway("https", address)
 }
 
-case class CustomPushGateway(protocol: String, address: String, secret: String)(implicit as: ActorSystem) {
+case class CustomPushGateway(protocol: String, address: String)(implicit as: ActorSystem) {
   implicit val materializer = ActorMaterializer()
   val httpClient            = SimpleHttpClient()
 
@@ -22,7 +22,7 @@ case class CustomPushGateway(protocol: String, address: String, secret: String)(
 
   val pushGatewayUrl = s"$protocol://$address/metrics/job/"
 
-  def pushAdd(collectorRegistry: CollectorRegistry, job: String): Unit = {
+  def pushAdd(collectorRegistry: CollectorRegistry, job: String, secret: String): Unit = {
     httpClient
       .post(
         uri = pushGatewayUrl + job,
