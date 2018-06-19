@@ -21,7 +21,7 @@ trait MetricsManager {
 object DefaultMetricsManager extends MetricsManager
 
 object MetricsRegistry {
-  private val prismaPushGateway = "192.168.1.10:80" // FIXME: use final address
+  private val prismaPushGateway = "metrics-eu1.prisma.io"
 
   // System used to periodically flush the metrics
   implicit lazy val gaugeFlushSystem: ActorSystem = SingleThreadedActorSystem(s"metrics-manager")
@@ -29,8 +29,7 @@ object MetricsRegistry {
   private[metrics] val instance = ConfigLoader.load().prismaConnectSecret match {
     case Some(secret) =>
       val registry = new PrometheusMeterRegistry(PrometheusConfig.DEFAULT)
-//      val pushGateway = new PushGateway(prismaPushGateway)
-      val pushGateway = CustomPushGateway.http(prismaPushGateway, secret) // use https
+      val pushGateway = CustomPushGateway.https(prismaPushGateway, secret)
 
       gaugeFlushSystem.scheduler.schedule(30.seconds, 30.seconds) {
         pushGateway.pushAdd(registry.getPrometheusRegistry, "prisma-connect")

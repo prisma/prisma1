@@ -78,7 +78,6 @@ object DummyValues {
       // project db size
       movingProjectSizeGauge.set(math.round(fraction * movingDatabaseSizeMax))
       constantProjectSizeGauge.set(100)
-
     }
   }
 }
