@@ -384,8 +384,47 @@ case class PostgresApiDatabaseMutationBuilder(schemaName: String) {
     }
   }
 
+  def deleteDataItemJooq(where: NodeSelector) = {
+    SimpleDBIO[Boolean] { x =>
+      lazy val queryString: String = {
+        val sql = DSL.using(SQLDialect.POSTGRES_9_5, new Settings().withRenderFormatted(true))
+
+        sql
+          .deleteFrom(table(name(schemaName, where.model.dbName)))
+          .where(field(name(schemaName, where.model.dbName, where.field.dbName)).equal(placeHolder))
+          .getSQL
+      }
+
+      val statement: PreparedStatement = x.connection.prepareStatement(queryString, Statement.RETURN_GENERATED_KEYS)
+      statement.setGcValue(1, where.fieldGCValue)
+
+      statement.execute()
+    }
+  }
+
   def deleteDataItem(path: Path) =
     (sql"""DELETE FROM "#$schemaName"."#${path.lastModel.dbName}" WHERE "#${path.lastModel.dbNameOfIdField_!}" = """ ++ pathQueryForLastChild(path)).asUpdate
+
+  def deleteRelayRowJooq(where: NodeSelector) = {
+    SimpleDBIO[Boolean] { x =>
+      lazy val queryString: String = {
+        val sql = DSL.using(SQLDialect.POSTGRES_9_5, new Settings().withRenderFormatted(true))
+        val subSelect = select(field(name(schemaName, where.model.dbName, where.model.dbNameOfIdField_!)))
+          .from(table(name(schemaName, where.model.dbName)))
+          .where(field(name(schemaName, where.model.dbName, where.field.dbName)).equal(placeHolder))
+
+        sql
+          .deleteFrom(table(name(schemaName, relayTableName)))
+          .where(field(name(schemaName, relayTableName, "id")).equal(subSelect))
+          .getSQL
+      }
+
+      val statement: PreparedStatement = x.connection.prepareStatement(queryString, Statement.RETURN_GENERATED_KEYS)
+      statement.setGcValue(1, where.fieldGCValue)
+
+      statement.execute()
+    }
+  }
 
   def deleteRelayRow(path: Path) =
     (sql"""DELETE FROM "#$schemaName"."_RelayId" WHERE "id" = """ ++ pathQueryForLastChild(path)).asUpdate

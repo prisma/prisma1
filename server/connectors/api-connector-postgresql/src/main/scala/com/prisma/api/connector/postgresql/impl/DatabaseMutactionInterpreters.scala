@@ -113,11 +113,11 @@ case class NestedCreateDataItemInterpreter(mutaction: NestedCreateDataItem, incl
 }
 
 case class DeleteDataItemInterpreter(mutaction: DeleteDataItem)(implicit ec: ExecutionContext) extends DatabaseMutactionInterpreter {
-
+//Fixme Toplevel Mutations should not have a parentId
   override def newAction(mutationBuilder: PostgresApiDatabaseMutationBuilder, parentId: IdGCValue)(implicit ec: ExecutionContext) = {
     for {
-      _ <- mutationBuilder.deleteRelayRow(Path.empty(mutaction.where))
-      _ <- mutationBuilder.deleteDataItem(Path.empty(mutaction.where))
+      _ <- mutationBuilder.deleteRelayRowJooq(mutaction.where)
+      _ <- mutationBuilder.deleteDataItemJooq(mutaction.where)
     } yield UnitDatabaseMutactionResult
   }
 
