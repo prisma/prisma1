@@ -5,7 +5,7 @@ import java.sql.PreparedStatement
 import com.prisma.api.connector._
 import com.prisma.slick.NewJdbcExtensions._
 import com.prisma.api.connector.postgresql.database.PostgresSlickExtensions._
-import com.prisma.gc_values.{CuidGCValue, IdGcValue, NullGCValue, StringGCValue}
+import com.prisma.gc_values.{CuidGCValue, IdGCValue, NullGCValue, StringGCValue}
 import com.prisma.shared.models._
 import slick.jdbc.PositionedParameters
 
@@ -51,7 +51,7 @@ case class RelatedModelsQueryBuilder(
     schemaName: String,
     fromField: RelationField,
     queryArguments: Option[QueryArguments],
-    relatedNodeIds: Vector[IdGcValue]
+    relatedNodeIds: Vector[IdGCValue]
 ) {
   import QueryBuilders.topLevelAlias
 
@@ -107,6 +107,7 @@ case class ModelQueryBuilder(schemaName: String, model: Model, queryArguments: O
 }
 
 object SetParams {
+
   def setQueryArgs(preparedStatement: PreparedStatement, queryArguments: Option[QueryArguments]): Unit = {
     queryArguments.foreach { queryArgs =>
       setFilter(preparedStatement, queryArgs.filter)
@@ -130,12 +131,12 @@ object SetParams {
       case RelationFilter(_, nestedFilter, _) => setParams(pp, nestedFilter)
       //--------------------------------ANCHORS------------------------------------
       case PreComputedSubscriptionFilter(_)                     => // NOOP
-      case ScalarFilter(_, Contains(value: StringGCValue))      => pp.setString("%" + value.value + "%")
-      case ScalarFilter(_, NotContains(value: StringGCValue))   => pp.setString("%" + value.value + "%")
-      case ScalarFilter(_, StartsWith(value: StringGCValue))    => pp.setString(value.value + "%")
-      case ScalarFilter(_, NotStartsWith(value: StringGCValue)) => pp.setString(value.value + "%")
-      case ScalarFilter(_, EndsWith(value: StringGCValue))      => pp.setString("%" + value.value)
-      case ScalarFilter(_, NotEndsWith(value: StringGCValue))   => pp.setString("%" + value.value)
+      case ScalarFilter(_, Contains(StringGCValue(value)))      => pp.setString(value)
+      case ScalarFilter(_, NotContains(StringGCValue(value)))   => pp.setString(value)
+      case ScalarFilter(_, StartsWith(StringGCValue(value)))    => pp.setString(value)
+      case ScalarFilter(_, NotStartsWith(StringGCValue(value))) => pp.setString(value)
+      case ScalarFilter(_, EndsWith(StringGCValue(value)))      => pp.setString(value)
+      case ScalarFilter(_, NotEndsWith(StringGCValue(value)))   => pp.setString(value)
       case ScalarFilter(_, LessThan(value))                     => pp.setGcValue(value)
       case ScalarFilter(_, GreaterThan(value))                  => pp.setGcValue(value)
       case ScalarFilter(_, LessThanOrEquals(value))             => pp.setGcValue(value)

@@ -3,7 +3,7 @@ package com.prisma.api.connector.postgresql
 import com.prisma.api.connector.postgresql.database.PostgresApiDatabaseMutationBuilder
 import com.prisma.api.connector.{DatabaseMutactionResult, UnitDatabaseMutactionResult}
 import com.prisma.api.schema.UserFacingError
-import com.prisma.gc_values.IdGcValue
+import com.prisma.gc_values.IdGCValue
 import slick.dbio.{DBIO, DBIOAction, Effect, NoStream}
 
 import scala.concurrent.ExecutionContext
@@ -17,7 +17,7 @@ trait DatabaseMutactionInterpreter {
 
   def newActionWithErrorMapped(
       mutationBuilder: PostgresApiDatabaseMutationBuilder,
-      parentId: IdGcValue
+      parentId: IdGCValue
   )(implicit ec: ExecutionContext): DBIO[DatabaseMutactionResult] = {
     newAction(mutationBuilder, parentId).asTry.map {
       case Success(x) => x
@@ -31,7 +31,7 @@ trait DatabaseMutactionInterpreter {
 
   def newAction(
       mutationBuilder: PostgresApiDatabaseMutationBuilder,
-      parentId: IdGcValue
+      parentId: IdGCValue
   )(implicit ec: ExecutionContext): DBIO[DatabaseMutactionResult] = {
     actionWithErrorMapped(mutationBuilder).andThen(unitResult)
   }

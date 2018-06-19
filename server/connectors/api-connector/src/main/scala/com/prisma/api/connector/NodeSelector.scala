@@ -1,11 +1,11 @@
 package com.prisma.api.connector
 
-import com.prisma.gc_values.{CuidGCValue, GCValue, IdGcValue}
+import com.prisma.gc_values.{CuidGCValue, GCValue, IdGCValue}
 import com.prisma.shared.models.{Model, ScalarField}
 
 object NodeSelector {
   def forCuid(model: Model, id: String): NodeSelector              = NodeSelector(model, model.idField_!, CuidGCValue(id))
-  def forIdGCValue(model: Model, gcValue: IdGcValue): NodeSelector = NodeSelector(model, model.idField_!, gcValue)
+  def forIdGCValue(model: Model, gcValue: IdGCValue): NodeSelector = NodeSelector(model, model.idField_!, gcValue)
   def forGCValue(model: Model, field: ScalarField, value: GCValue) = NodeSelector(model, field, value)
 }
 

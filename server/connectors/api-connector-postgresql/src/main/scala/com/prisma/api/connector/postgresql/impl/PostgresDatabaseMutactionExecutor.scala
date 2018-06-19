@@ -4,7 +4,7 @@ import com.prisma.api.connector._
 import com.prisma.api.connector.postgresql.DatabaseMutactionInterpreter
 import com.prisma.api.connector.postgresql.database.PostgresApiDatabaseMutationBuilder
 import com.prisma.api.schema.UserFacingError
-import com.prisma.gc_values.{CuidGCValue, IdGcValue}
+import com.prisma.gc_values.{CuidGCValue, IdGCValue}
 import slick.jdbc.PostgresProfile.api._
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -28,7 +28,7 @@ case class PostgresDatabaseMutactionExecutor(clientDb: Database, createRelayIds:
 
   private def recurse(
       mutaction: DatabaseMutaction,
-      parentId: IdGcValue,
+      parentId: IdGCValue,
       mutationBuilder: PostgresApiDatabaseMutationBuilder
   ): DBIO[DatabaseMutactionResult] = {
     mutaction match {

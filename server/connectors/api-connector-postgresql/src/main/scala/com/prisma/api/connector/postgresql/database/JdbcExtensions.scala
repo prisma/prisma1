@@ -54,16 +54,16 @@ object JdbcExtensions {
 
   implicit class ResultSetExtensions(val resultSet: ResultSet) extends AnyVal {
 
-    def getId(model: Model): IdGcValue = getAsID(model.idField_!)
+    def getId(model: Model): IdGCValue = getAsID(model.idField_!)
 
-    def getAsID(field: Field): IdGcValue = {
+    def getAsID(field: Field): IdGCValue = {
       val gcValue = getGcValue(field.dbName, field.typeIdentifier)
-      gcValue.asInstanceOf[IdGcValue]
+      gcValue.asInstanceOf[IdGCValue]
     }
 
-    def getParentId(side: RelationSide.Value, typeIdentifier: TypeIdentifier.Value): IdGcValue = {
+    def getParentId(side: RelationSide.Value, typeIdentifier: TypeIdentifier.Value): IdGCValue = {
       val gcValue = getGcValue("__Relation__" + side.toString, typeIdentifier)
-      gcValue.asInstanceOf[IdGcValue]
+      gcValue.asInstanceOf[IdGCValue]
     }
 
     def getGcValue(name: String, typeIdentifier: TypeIdentifier.Value): GCValue = {
