@@ -450,22 +450,32 @@ case class PostgresApiDatabaseMutationBuilder(schemaName: String) {
   //endregion
 
   //region SCALAR LISTS
-  def setScalarList(path: Path, listFieldMap: Vector[(String, ListGCValue)]) = {
-    val model = path.lastModel
-    val idQuery = (sql"""SELECT "#${model.dbNameOfIdField_!}" FROM "#$schemaName"."#${model.dbName}" WHERE "#${model.dbNameOfIdField_!}" = """ ++
-      pathQueryForLastChild(path)).as[String]
-    if (listFieldMap.isEmpty) DBIOAction.successful(()) else setManyScalarListHelper(path.lastModel, listFieldMap, idQuery)
+  def setScalarList(where: NodeSelector, listFieldMap: Vector[(String, ListGCValue)]) = {
+    val idQuery = SimpleDBIO { ctx =>
+      val sql                      = DSL.using(SQLDialect.POSTGRES_9_5, new Settings().withRenderFormatted(true))
+      lazy val queryString: String = sql.select(DSL.value(placeHolder)).getSQL
+      val ps                       = ctx.connection.prepareStatement(queryString)
+      val pp                       = new PositionedParameters(ps)
+      pp.setGcValue(where.fieldGCValue)
+      val rs = ps.executeQuery()
+      rs.as(readFirstColumnAsString)
+    }
+
+    if (listFieldMap.isEmpty) DBIOAction.successful(()) else setManyScalarListHelper(where.model, listFieldMap, idQuery)
   }
 
   def setManyScalarLists(model: Model, listFieldMap: Vector[(String, ListGCValue)], whereFilter: Option[Filter]) = {
     val idQuery = SimpleDBIO { ctx =>
-      val query = s"""SELECT "${model.dbNameOfIdField_!}" FROM "$schemaName"."${model.dbName}" as "$topLevelAlias"""" +
-        WhereClauseBuilder(schemaName)
-          .buildWhereClause(whereFilter)
-          .getOrElse("")
+      val condition    = JooqWhereClauseBuilder(schemaName).buildWhereClause(whereFilter).getOrElse(trueCondition())
+      val aliasedTable = table(name(schemaName, model.dbName)).as(topLevelAlias)
 
-      val ps = ctx.connection.prepareStatement(query)
-      SetParams.setFilter(ps, whereFilter)
+      val queryString = select(field(name(topLevelAlias, model.dbNameOfIdField_!)))
+        .from(aliasedTable)
+        .where(condition)
+        .getSQL
+
+      val ps = ctx.connection.prepareStatement(queryString)
+      JooqSetParams.setFilter(new PositionedParameters(ps), whereFilter)
       val rs = ps.executeQuery()
       rs.as(readFirstColumnAsString)
     }
@@ -482,27 +492,48 @@ case class PostgresApiDatabaseMutationBuilder(schemaName: String) {
       } else {
 
         SimpleDBIO[Unit] { x =>
-          def valueTuplesForListField(listGCValue: ListGCValue) =
+          def valueTuplesForListField(listGCValue: ListGCValue) = {
             for {
               nodeId                   <- ids
               (escapedValue, position) <- listGCValue.values.zip((1 to listGCValue.size).map(_ * 1000))
             } yield {
               (nodeId, position, escapedValue)
             }
-
-          val whereString = ids.length match {
-            case 1 => s""" WHERE "nodeId" =  '${ids.head}'"""
-            case _ => s""" WHERE "nodeId" in ${ids.map(id => s"'$id'").mkString("(", ",", ")")}"""
           }
 
           listFieldMap.foreach {
             case (fieldName, listGCValue) =>
-              val dbNameOfField                    = model.getFieldByName_!(fieldName).dbName
-              val wipe                             = s"""DELETE  FROM "$schemaName"."${model.dbName}_$dbNameOfField" $whereString"""
+              val dbNameOfField = model.getFieldByName_!(fieldName).dbName
+              val tableName     = s"${model.dbName}_$dbNameOfField"
+              val sql           = DSL.using(SQLDialect.POSTGRES_9_5, new Settings().withRenderFormatted(true))
+
+              val condition = ids.length match {
+                case 1 => field(name(schemaName, tableName, nodeIdFieldName)).equal(placeHolder)
+                case _ => field(name(schemaName, tableName, nodeIdFieldName)).in(ids.map(_ => placeHolder): _*)
+              }
+
+              val wipe = sql
+                .deleteFrom(table(name(schemaName, tableName)))
+                .where(condition)
+                .getSQL
+
               val wipeOldValues: PreparedStatement = x.connection.prepareStatement(wipe)
+              ids.zipWithIndex.foreach { zip =>
+                wipeOldValues.setString(zip._2 + 1, zip._1)
+              }
+
               wipeOldValues.executeUpdate()
 
-              val insert                             = s"""INSERT INTO "$schemaName"."${model.dbName}_$dbNameOfField" ("nodeId", "position", "value") VALUES (?,?,?)"""
+              val insert = sql
+                .insertInto(table(name(schemaName, tableName)))
+                .columns(
+                  field(name(schemaName, tableName, nodeIdFieldName)),
+                  field(name(schemaName, tableName, positionFieldName)),
+                  field(name(schemaName, tableName, valueFieldName))
+                )
+                .values(placeHolder, placeHolder, placeHolder)
+                .getSQL
+
               val insertNewValues: PreparedStatement = x.connection.prepareStatement(insert)
               val newValueTuples                     = valueTuplesForListField(listGCValue)
               newValueTuples.foreach { tuple =>

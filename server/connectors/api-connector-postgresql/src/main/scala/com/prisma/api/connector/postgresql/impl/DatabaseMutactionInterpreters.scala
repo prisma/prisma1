@@ -61,7 +61,7 @@ case class CreateDataItemInterpreter(mutaction: CreateDataItem, includeRelayRow:
       implicit ec: ExecutionContext): DBIO[DatabaseMutactionResult] = {
     for {
       createResult <- mutationBuilder.createDataItem(model, mutaction.nonListArgs)
-      _            <- mutationBuilder.setScalarList(Path.empty(NodeSelector.forIdGCValue(model, createResult.createdId)), mutaction.listArgs)
+      _            <- mutationBuilder.setScalarList(NodeSelector.forIdGCValue(model, createResult.createdId), mutaction.listArgs)
       _ <- if (includeRelayRow) {
             mutationBuilder.createRelayRow(NodeSelector.forIdGCValue(model, createResult.createdId))
           } else {
@@ -255,7 +255,7 @@ case class SharedUpdateDataItemInterpreter(
     for {
       id <- mutationBuilder.pathQueryForLastChild(path).as[String].headOption
       _  <- mutationBuilder.updateDataItemByPath(path, nonListArgs)
-      _  <- mutationBuilder.setScalarList(path, listArgs)
+      _  <- mutationBuilder.setScalarList(path.lastCreateWhere_!, listArgs)
     } yield UpdateItemResult(id.map(CuidGCValue))
   }
 
@@ -293,8 +293,8 @@ case class UpsertDataItemInterpreter(mutaction: UpsertDataItem, executor: Postgr
     val createNested: Vector[DBIOAction[Any, NoStream, Effect.All]] = mutaction.createMutactions.map(executor.interpreterFor).map(_.action(mutationBuilder))
     val updateNested: Vector[DBIOAction[Any, NoStream, Effect.All]] = mutaction.updateMutactions.map(executor.interpreterFor).map(_.action(mutationBuilder))
 
-    val createAction = mutationBuilder.setScalarList(mutaction.createPath, mutaction.listCreateArgs)
-    val updateAction = mutationBuilder.setScalarList(mutaction.updatePath, mutaction.listUpdateArgs)
+    val createAction = mutationBuilder.setScalarList(mutaction.createPath.lastCreateWhere_!, mutaction.listCreateArgs)
+    val updateAction = mutationBuilder.setScalarList(mutaction.updatePath.lastCreateWhere_!, mutaction.listUpdateArgs)
     mutationBuilder.upsert(
       createPath = mutaction.createPath,
       updatePath = mutaction.updatePath,
