@@ -24,7 +24,7 @@ class UpdateFieldDeploySpec extends FlatSpec with Matchers with IntegrationBaseS
         |}""".stripMargin
 
     deployServer.deploySchemaThatMustWarn(project, schema2).toString should be(
-      """{"data":{"deploy":{"migration":{"applied":0,"revision":0},"errors":[],"warnings":[{"description":"You already have nodes for this model. This change may result in data loss."}]}}}""")
+      """{"data":{"deploy":{"migration":null,"errors":[],"warnings":[{"description":"You already have nodes for this model. This change may result in data loss."}]}}}""")
   }
 
   "Updating a field from scalar non-list to scalar list" should "throw a warning if there is already data but proceed with -force" in {
@@ -88,7 +88,7 @@ class UpdateFieldDeploySpec extends FlatSpec with Matchers with IntegrationBaseS
         |}""".stripMargin
 
     deployServer.deploySchemaThatMustWarn(project, schema2).toString should be(
-      """{"data":{"deploy":{"migration":{"applied":0,"revision":0},"errors":[],"warnings":[{"description":"You already have nodes for this model. This change may result in data loss."}]}}}""")
+      """{"data":{"deploy":{"migration":null,"errors":[],"warnings":[{"description":"You already have nodes for this model. This change may result in data loss."}]}}}""")
   }
 
   "Updating a field from scalar List to scalar non-list" should "succeed if there are no nodes yet" in {
@@ -129,7 +129,7 @@ class UpdateFieldDeploySpec extends FlatSpec with Matchers with IntegrationBaseS
         |}""".stripMargin
 
     deployServer.deploySchemaThatMustWarn(project, schema2).toString should be(
-      """{"data":{"deploy":{"migration":{"applied":0,"revision":0},"errors":[],"warnings":[{"description":"You already have nodes for this model. This change may result in data loss."}]}}}""")
+      """{"data":{"deploy":{"migration":null,"errors":[],"warnings":[{"description":"You already have nodes for this model. This change may result in data loss."}]}}}""")
   }
 
   "Updating a field from string to int" should "throw a warning if there is already data but proceed with -force" in {
@@ -192,7 +192,7 @@ class UpdateFieldDeploySpec extends FlatSpec with Matchers with IntegrationBaseS
         |}""".stripMargin
 
     deployServer.deploySchemaThatMustWarn(project, schema2).toString should be(
-      """{"data":{"deploy":{"migration":{"applied":0,"revision":0},"errors":[],"warnings":[{"description":"You already have nodes for this model. This change may result in data loss."}]}}}""")
+      """{"data":{"deploy":{"migration":null,"errors":[],"warnings":[{"description":"You already have nodes for this model. This change may result in data loss."}]}}}""")
   }
 
   "Updating a field from string to a relation" should "throw a warning if there is already data but proceed with -force" in {
@@ -295,7 +295,7 @@ class UpdateFieldDeploySpec extends FlatSpec with Matchers with IntegrationBaseS
         |}"""
 
     deployServer.deploySchemaThatMustError(project, schema2).toString should be(
-      """{"data":{"deploy":{"migration":{"applied":0,"revision":0},"errors":[{"description":"You are making a field required, but there are already nodes that would violate that constraint."}],"warnings":[]}}}""")
+      """{"data":{"deploy":{"migration":null,"errors":[{"description":"You are making a field required, but there are already nodes that would violate that constraint."}],"warnings":[]}}}""")
   }
 
   "Updating a relation field to required" should "not throw an error if there is no data yet" in {
@@ -387,7 +387,7 @@ class UpdateFieldDeploySpec extends FlatSpec with Matchers with IntegrationBaseS
          |}"""
 
     deployServer.deploySchemaThatMustError(project, schema2).toString should be(
-      """{"data":{"deploy":{"migration":{"applied":0,"revision":0},"errors":[{"description":"You are making a field required, but there are already nodes that would violate that constraint."}],"warnings":[]}}}""")
+      """{"data":{"deploy":{"migration":null,"errors":[{"description":"You are making a field required, but there are already nodes that would violate that constraint."}],"warnings":[]}}}""")
   }
 
 }

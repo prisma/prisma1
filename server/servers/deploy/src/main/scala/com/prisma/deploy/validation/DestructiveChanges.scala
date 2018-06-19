@@ -1,9 +1,9 @@
 package com.prisma.deploy.validation
 
 import com.prisma.deploy.connector.DeployConnector
-import com.prisma.deploy.migration.validation.{SchemaError, SchemaWarning, SchemaWarnings}
-import com.prisma.shared.errors.SchemaCheckResult
+import com.prisma.deploy.migration.validation.{DeployError, DeployResult, DeployWarning, DeployWarnings}
 import com.prisma.shared.models._
+import org.scalactic.{Bad, Good, Or}
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
@@ -12,7 +12,19 @@ case class DestructiveChanges(deployConnector: DeployConnector, project: Project
   val clientDataResolver = deployConnector.clientDBQueries(project)
   val previousSchema     = project.schema
 
-  def checkAgainstExistingData: Future[Vector[SchemaCheckResult]] = {
+  def check: Future[Vector[DeployWarning] Or Vector[DeployError]] = {
+    checkAgainstExistingData.map { results =>
+      val destructiveWarnings: Vector[DeployWarning] = results.collect { case warning: DeployWarning => warning }
+      val inconsistencyErrors: Vector[DeployError]   = results.collect { case error: DeployError     => error }
+      if (inconsistencyErrors.isEmpty) {
+        Good(destructiveWarnings)
+      } else {
+        Bad(inconsistencyErrors)
+      }
+    }
+  }
+
+  private def checkAgainstExistingData: Future[Vector[DeployResult]] = {
     val checkResults = steps.map {
       case x: CreateModel    => validationSuccessful
       case x: DeleteModel    => deleteModelValidation(x)
@@ -34,7 +46,7 @@ case class DestructiveChanges(deployConnector: DeployConnector, project: Project
 
   private def deleteModelValidation(x: DeleteModel) = {
     clientDataResolver.existsByModel(x.name).map {
-      case true  => Vector(SchemaWarnings.dataLossModel(x.name))
+      case true  => Vector(DeployWarnings.dataLossModel(x.name))
       case false => Vector.empty
     }
   }
@@ -45,7 +57,7 @@ case class DestructiveChanges(deployConnector: DeployConnector, project: Project
         clientDataResolver.existsByModel(model.name).map {
           case true =>
             Vector(
-              SchemaError(`type` = model.name,
+              DeployError(`type` = model.name,
                           description = s"You are creating a required field but there are already nodes present that would violate that constraint."))
           case false => Vector.empty
         }
@@ -56,12 +68,12 @@ case class DestructiveChanges(deployConnector: DeployConnector, project: Project
     def newToOneBackRelationField(model: Model) = x.relation.nonEmpty && !x.isList && previousSchema.relations.map(_.name).contains(x.relation.get) match {
       case true =>
         val previousRelation                   = previousSchema.relations.find(r => x.relation.contains(r.name)).get
-        val relationSideThatCantHaveDuplicates = if (previousRelation.modelAId == model.name) RelationSide.A else RelationSide.B
+        val relationSideThatCantHaveDuplicates = if (previousRelation.modelAName == model.name) RelationSide.A else RelationSide.B
 
         clientDataResolver.existsDuplicateByRelationAndSide(s"_${x.relation.get}", relationSideThatCantHaveDuplicates).map {
           case true =>
             Vector(
-              SchemaError(
+              DeployError(
                 `type` = model.name,
                 description =
                   s"You are adding a singular backrelation field to a type but there are already pairs in the relation that would violate that constraint."
@@ -93,7 +105,7 @@ case class DestructiveChanges(deployConnector: DeployConnector, project: Project
 
     if (isScalar) {
       clientDataResolver.existsByModel(model.name).map {
-        case true  => Vector(SchemaWarnings.dataLossField(x.name, x.name))
+        case true  => Vector(DeployWarnings.dataLossField(x.name, x.name))
         case false => Vector.empty
       }
     } else {
@@ -103,7 +115,7 @@ case class DestructiveChanges(deployConnector: DeployConnector, project: Project
 
   private def updateFieldValidation(x: UpdateField) = {
     val model                    = previousSchema.getModelByName_!(x.model)
-    val oldField                 = model.fields.find(_.name == x.name).get
+    val oldField                 = model.getFieldByName_!(x.name)
     val cardinalityChanges       = x.isList.isDefined
     val typeChanges              = x.typeName.isDefined
     val goesFromScalarToRelation = oldField.isScalar && x.relation.isDefined
@@ -112,22 +124,22 @@ case class DestructiveChanges(deployConnector: DeployConnector, project: Project
     val becomesRequired = x.isRequired.contains(true)
     val becomesUnique   = x.isUnique.contains(true)
 
-    def warnings: Future[Vector[SchemaWarning]] = cardinalityChanges || typeChanges || goesFromRelationToScalar || goesFromScalarToRelation match {
+    def warnings: Future[Vector[DeployWarning]] = cardinalityChanges || typeChanges || goesFromRelationToScalar || goesFromScalarToRelation match {
       case true =>
         clientDataResolver.existsByModel(model.name).map {
-          case true  => Vector(SchemaWarnings.dataLossField(x.name, x.name))
+          case true  => Vector(DeployWarnings.dataLossField(x.name, x.name))
           case false => Vector.empty
         }
       case false =>
         validationSuccessful
     }
 
-    def requiredErrors: Future[Vector[SchemaError]] = becomesRequired match {
+    def requiredErrors: Future[Vector[DeployError]] = becomesRequired match {
       case true =>
         clientDataResolver.existsNullByModelAndField(model, oldField).map {
           case true =>
             Vector(
-              SchemaError(`type` = model.name,
+              DeployError(`type` = model.name,
                           field = oldField.name,
                           "You are making a field required, but there are already nodes that would violate that constraint."))
           case false => Vector.empty
@@ -137,12 +149,12 @@ case class DestructiveChanges(deployConnector: DeployConnector, project: Project
         validationSuccessful
     }
 
-    def uniqueErrors: Future[Vector[SchemaError]] = becomesUnique match {
+    def uniqueErrors: Future[Vector[DeployError]] = becomesUnique match {
       case true =>
-        clientDataResolver.existsDuplicateValueByModelAndField(model, oldField).map {
+        clientDataResolver.existsDuplicateValueByModelAndField(model, oldField.asInstanceOf[ScalarField]).map {
           case true =>
             Vector(
-              SchemaError(`type` = model.name,
+              DeployError(`type` = model.name,
                           field = oldField.name,
                           "You are making a field unique, but there are already nodes that would violate that constraint."))
           case false => Vector.empty
@@ -153,9 +165,9 @@ case class DestructiveChanges(deployConnector: DeployConnector, project: Project
     }
 
     for {
-      warnings: Vector[SchemaWarning]    <- warnings
-      requiredError: Vector[SchemaError] <- requiredErrors
-      uniqueError: Vector[SchemaError]   <- uniqueErrors
+      warnings: Vector[DeployWarning]    <- warnings
+      requiredError: Vector[DeployError] <- requiredErrors
+      uniqueError: Vector[DeployError]   <- uniqueErrors
     } yield {
       warnings ++ requiredError ++ uniqueError
     }
@@ -177,7 +189,7 @@ case class DestructiveChanges(deployConnector: DeployConnector, project: Project
       val modelsWithFieldsThatUseEnum = previousSchema.models.filter(m => m.fields.exists(f => f.enum.isDefined && f.enum.get.name == x.name)).toVector
       val res = deletedValues.map { deletedValue =>
         clientDataResolver.enumValueIsInUse(modelsWithFieldsThatUseEnum, x.name, deletedValue).map {
-          case true  => Vector(SchemaError.global(s"You are deleting the value '$deletedValue' of the enum '${x.name}', but that value is in use."))
+          case true  => Vector(DeployError.global(s"You are deleting the value '$deletedValue' of the enum '${x.name}', but that value is in use."))
           case false => Vector.empty
         }
       }
@@ -194,7 +206,7 @@ case class DestructiveChanges(deployConnector: DeployConnector, project: Project
 
     def checkRelationSide(modelName: String) = {
       val nextModelA      = nextSchema.models.find(_.name == modelName).get
-      val nextModelAField = nextModelA.fields.find(field => field.relation.contains(nextRelation))
+      val nextModelAField = nextModelA.relationFields.find(field => field.relation == nextRelation)
 
       val modelARequired = nextModelAField match {
         case None        => false
@@ -205,7 +217,7 @@ case class DestructiveChanges(deployConnector: DeployConnector, project: Project
         case Some(model) =>
           clientDataResolver.existsByModel(model.name).map {
             case true =>
-              Vector(SchemaError(`type` = model.name, s"You are creating a required relation, but there are already nodes that would violate that constraint."))
+              Vector(DeployError(`type` = model.name, s"You are creating a required relation, but there are already nodes that would violate that constraint."))
             case false => Vector.empty
           }
 
@@ -224,7 +236,7 @@ case class DestructiveChanges(deployConnector: DeployConnector, project: Project
     val previousRelation = previousSchema.relations.find(_.name == x.name).get
 
     clientDataResolver.existsByRelation(previousRelation.relationTableName).map {
-      case true  => Vector(SchemaWarnings.dataLossRelation(x.name))
+      case true  => Vector(DeployWarnings.dataLossRelation(x.name))
       case false => Vector.empty
     }
   }

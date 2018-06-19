@@ -4,9 +4,9 @@ import com.prisma.api.connector._
 import com.prisma.api.connector.postgresql.DatabaseMutactionInterpreter
 import com.prisma.api.connector.postgresql.database.PostgresApiDatabaseMutationBuilder
 import com.prisma.api.connector.postgresql.impl.GetFieldFromSQLUniqueException.getFieldOption
-import com.prisma.api.schema.APIErrors
+import com.prisma.api.schema.{APIErrors, UserFacingError}
 import com.prisma.api.schema.APIErrors.RequiredRelationWouldBeViolated
-import com.prisma.shared.models.{Field, Relation}
+import com.prisma.shared.models.{Field, Relation, RelationField}
 import org.postgresql.util.PSQLException
 import slick.dbio.DBIOAction
 import slick.jdbc.PostgresProfile.api._
@@ -41,12 +41,12 @@ case class CascadingDeleteRelationMutactionsInterpreter(mutaction: CascadingDele
   }
 
   private def otherFailingRequiredRelationOnChild(cause: String): Option[Relation] =
-    otherFieldsWhereThisModelIsRequired.collectFirst { case f if cause.contains(causeString(f)) => f.relation.get }
+    otherFieldsWhereThisModelIsRequired.collectFirst { case f if cause.contains(causeString(f)) => f.relation }
 
-  private def causeString(field: Field) = path.lastEdge match {
+  private def causeString(field: RelationField) = path.lastEdge match {
     case Some(edge: NodeEdge) =>
-      s"-OLDPARENTPATHFAILURETRIGGERBYFIELD@${field.relation.get.relationTableNameNew(schema)}@${field.oppositeRelationSide.get}@${edge.childWhere.fieldValueAsString}-"
-    case _ => s"-OLDPARENTPATHFAILURETRIGGERBYFIELD@${field.relation.get.relationTableNameNew(schema)}@${field.oppositeRelationSide.get}-"
+      s"-OLDPARENTPATHFAILURETRIGGERBYFIELD@${field.relation.relationTableName}@${field.oppositeRelationSide}@${edge.childWhere.fieldValueAsString}-"
+    case _ => s"-OLDPARENTPATHFAILURETRIGGERBYFIELD@${field.relation.relationTableName}@${field.oppositeRelationSide}-"
   }
 }
 
@@ -121,11 +121,11 @@ case class DeleteManyRelationChecksInterpreter(mutaction: DeleteManyRelationChec
   }
 
   private def otherFailingRequiredRelationOnChild(cause: String): Option[Relation] = fieldsWhereThisModelIsRequired.collectFirst {
-    case f if cause.contains(causeString(f)) => f.relation.get
+    case f if cause.contains(causeString(f)) => f.relation
   }
 
-  private def causeString(field: Field) =
-    s"-OLDPARENTPATHFAILURETRIGGERBYFIELDANDFILTER@${field.relation.get.relationTableNameNew(schema)}@${field.oppositeRelationSide.get}-"
+  private def causeString(field: RelationField) =
+    s"-OLDPARENTPATHFAILURETRIGGERBYFIELDANDFILTER@${field.relation.relationTableName}@${field.oppositeRelationSide}-"
 
 }
 
@@ -147,12 +147,12 @@ case class DeleteRelationCheckInterpreter(mutaction: DeleteRelationCheck) extend
   }
 
   private def otherFailingRequiredRelationOnChild(cause: String): Option[Relation] =
-    fieldsWhereThisModelIsRequired.collectFirst { case f if cause.contains(causeString(f)) => f.relation.get }
+    fieldsWhereThisModelIsRequired.collectFirst { case f if cause.contains(causeString(f)) => f.relation }
 
-  private def causeString(field: Field) = path.lastEdge match {
+  private def causeString(field: RelationField) = path.lastEdge match {
     case Some(edge: NodeEdge) =>
-      s"-OLDPARENTPATHFAILURETRIGGERBYFIELD@${field.relation.get.relationTableNameNew(schema)}@${field.oppositeRelationSide.get}@${edge.childWhere.fieldValueAsString}-"
-    case _ => s"-OLDPARENTPATHFAILURETRIGGERBYFIELD@${field.relation.get.relationTableNameNew(schema)}@${field.oppositeRelationSide.get}-"
+      s"-OLDPARENTPATHFAILURETRIGGERBYFIELD@${field.relation.relationTableName}@${field.oppositeRelationSide}@${edge.childWhere.fieldValueAsString}-"
+    case _ => s"-OLDPARENTPATHFAILURETRIGGERBYFIELD@${field.relation.relationTableName}@${field.oppositeRelationSide}-"
   }
 }
 
@@ -198,19 +198,23 @@ case class UpdateDataItemsInterpreter(mutaction: UpdateDataItems) extends Databa
   }
 }
 
-case class UpsertDataItemInterpreter(mutaction: UpsertDataItem) extends DatabaseMutactionInterpreter {
+case class UpsertDataItemInterpreter(mutaction: UpsertDataItem, executor: PostgresDatabaseMutactionExecutor) extends DatabaseMutactionInterpreter {
   val model      = mutaction.updatePath.lastModel
   val project    = mutaction.project
   val createArgs = mutaction.nonListCreateArgs
   val updateArgs = mutaction.nonListUpdateArgs
 
   def action(mutationBuilder: PostgresApiDatabaseMutationBuilder) = {
+
+    val createNested: Vector[DBIOAction[Any, NoStream, Effect.All]] = mutaction.createMutactions.map(executor.interpreterFor).map(_.action(mutationBuilder))
+    val updateNested: Vector[DBIOAction[Any, NoStream, Effect.All]] = mutaction.updateMutactions.map(executor.interpreterFor).map(_.action(mutationBuilder))
+
     val createAction = mutationBuilder.setScalarList(mutaction.createPath, mutaction.listCreateArgs)
     val updateAction = mutationBuilder.setScalarList(mutaction.updatePath, mutaction.listUpdateArgs)
-    mutationBuilder.upsert(mutaction.createPath, mutaction.updatePath, createArgs, updateArgs, createAction, updateAction)
+    mutationBuilder.upsert(mutaction.createPath, mutaction.updatePath, createArgs, updateArgs, createAction, updateAction, createNested, updateNested)
   }
 
-  override val errorMapper = {
+  val upsertErrors: PartialFunction[Throwable, UserFacingError] = {
     case e: PSQLException if e.getSQLState == "23505" && getFieldOption(model, e).isDefined =>
       APIErrors.UniqueConstraintViolation(model.name, getFieldOption(model, e).get)
 
@@ -220,14 +224,25 @@ case class UpsertDataItemInterpreter(mutaction: UpsertDataItem) extends Database
     case e: PSQLException if e.getSQLState == "23502" =>
       APIErrors.FieldCannotBeNull(e.getMessage)
   }
+
+  val createErrors: Vector[PartialFunction[Throwable, UserFacingError]] = mutaction.createMutactions.map(executor.interpreterFor).map(_.errorMapper)
+  val updateErrors: Vector[PartialFunction[Throwable, UserFacingError]] = mutaction.updateMutactions.map(executor.interpreterFor).map(_.errorMapper)
+
+  override val errorMapper = (updateErrors ++ createErrors).foldLeft(upsertErrors)(_ orElse _)
+
 }
 
-case class UpsertDataItemIfInRelationWithInterpreter(mutaction: UpsertDataItemIfInRelationWith) extends DatabaseMutactionInterpreter {
+case class UpsertDataItemIfInRelationWithInterpreter(mutaction: UpsertDataItemIfInRelationWith, executor: PostgresDatabaseMutactionExecutor)
+    extends DatabaseMutactionInterpreter {
   val project         = mutaction.project
   val model           = mutaction.createPath.lastModel
   val relationChecker = NestedCreateRelationInterpreter(NestedCreateRelation(project, mutaction.createPath, false))
 
   def action(mutationBuilder: PostgresApiDatabaseMutationBuilder) = {
+
+    val createNested: Vector[DBIOAction[Any, NoStream, Effect.All]] = mutaction.createMutactions.map(executor.interpreterFor).map(_.action(mutationBuilder))
+    val updateNested: Vector[DBIOAction[Any, NoStream, Effect.All]] = mutaction.updateMutactions.map(executor.interpreterFor).map(_.action(mutationBuilder))
+
     val createCheck       = DBIOAction.seq(relationChecker.allActions(mutationBuilder): _*)
     val scalarListsCreate = mutationBuilder.setScalarList(mutaction.createPath, mutaction.createListArgs)
     val scalarListsUpdate = mutationBuilder.setScalarList(mutaction.updatePath, mutaction.updateListArgs)
@@ -238,11 +253,13 @@ case class UpsertDataItemIfInRelationWithInterpreter(mutaction: UpsertDataItemIf
       updateArgs = mutaction.updateNonListArgs,
       scalarListCreate = scalarListsCreate,
       scalarListUpdate = scalarListsUpdate,
-      createCheck = createCheck
+      createCheck = createCheck,
+      createNested,
+      updateNested
     )
   }
 
-  override val errorMapper = {
+  val upsertErrors: PartialFunction[Throwable, UserFacingError] = {
     // https://dev.mysql.com/doc/refman/5.5/en/error-messages-server.html#error_er_dup_entry
     case e: PSQLException if e.getSQLState == "23505" && getFieldOption(model, e).isDefined =>
       APIErrors.UniqueConstraintViolation(mutaction.createPath.lastModel.name, getFieldOption(model, e).get)
@@ -256,6 +273,10 @@ case class UpsertDataItemIfInRelationWithInterpreter(mutaction: UpsertDataItemIf
     case e: PSQLException if relationChecker.causedByThisMutaction(e.getMessage) =>
       throw RequiredRelationWouldBeViolated(project, mutaction.createPath.lastRelation_!)
   }
+
+  val createErrors: Vector[PartialFunction[Throwable, UserFacingError]] = mutaction.createMutactions.map(executor.interpreterFor).map(_.errorMapper)
+  val updateErrors: Vector[PartialFunction[Throwable, UserFacingError]] = mutaction.updateMutactions.map(executor.interpreterFor).map(_.errorMapper)
+  override val errorMapper                                              = (updateErrors ++ createErrors).foldLeft(upsertErrors)(_ orElse _)
 }
 
 case class VerifyConnectionInterpreter(mutaction: VerifyConnection) extends DatabaseMutactionInterpreter {
@@ -265,10 +286,9 @@ case class VerifyConnectionInterpreter(mutaction: VerifyConnection) extends Data
 
   val causeString = path.lastEdge_! match {
     case _: ModelEdge =>
-      s"CONNECTIONFAILURETRIGGERPATH@${path.lastRelation_!.relationTableNameNew(schema)}@${path.columnForParentSideOfLastEdge(schema)}"
+      s"CONNECTIONFAILURETRIGGERPATH@${path.lastRelation_!.relationTableName}@${path.columnForParentSideOfLastEdge}"
     case edge: NodeEdge =>
-      s"CONNECTIONFAILURETRIGGERPATH@${path.lastRelation_!.relationTableNameNew(schema)}@${path.columnForParentSideOfLastEdge(schema)}@${path
-        .columnForChildSideOfLastEdge(schema)}@${edge.childWhere.fieldValueAsString}}"
+      s"CONNECTIONFAILURETRIGGERPATH@${path.lastRelation_!.relationTableName}@${path.columnForParentSideOfLastEdge}@${path.columnForChildSideOfLastEdge}@${edge.childWhere.fieldValueAsString}}"
   }
 
   def action(mutationBuilder: PostgresApiDatabaseMutationBuilder) = mutationBuilder.connectionFailureTrigger(path, causeString)

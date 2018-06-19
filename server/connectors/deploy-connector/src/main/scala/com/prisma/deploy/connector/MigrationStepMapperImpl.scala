@@ -22,21 +22,21 @@ case class MigrationStepMapperImpl(projectId: String) extends MigrationStepMappe
       val model = nextSchema.getModelByName_!(x.model)
       val field = model.getFieldByName_!(x.name)
 
-      () match {
+      field match {
         case _ if ReservedFields.idFieldName == field.name => Vector.empty
-        case _ if field.isRelation                         => Vector.empty
-        case _ if field.isScalarList                       => Vector(CreateScalarListTable(projectId, model, field))
-        case _ if field.isScalarNonList                    => Vector(CreateColumn(projectId, model, field))
+        case _: RelationField                              => Vector.empty
+        case f: ScalarField if field.isScalarList          => Vector(CreateScalarListTable(projectId, model, f))
+        case f: ScalarField if field.isScalarNonList       => Vector(CreateColumn(projectId, model, f))
       }
 
     case x: DeleteField =>
       val model = previousSchema.getModelByName_!(x.model)
       val field = model.getFieldByName_!(x.name)
 
-      () match {
-        case _ if field.isRelation      => Vector.empty
-        case _ if field.isScalarList    => Vector(DeleteScalarListTable(projectId, model, field))
-        case _ if field.isScalarNonList => Vector(DeleteColumn(projectId, model, field))
+      field match {
+        case _ if field.isRelation                   => Vector.empty
+        case f: ScalarField if field.isScalarList    => Vector(DeleteScalarListTable(projectId, model, f))
+        case f: ScalarField if field.isScalarNonList => Vector(DeleteColumn(projectId, model, f))
       }
 
     case x: UpdateField =>
@@ -45,12 +45,12 @@ case class MigrationStepMapperImpl(projectId: String) extends MigrationStepMappe
       val next     = nextSchema.getFieldByName_!(x.newModel, x.finalName)
       val previous = previousSchema.getFieldByName_!(x.model, x.name)
 
-      lazy val createColumn          = CreateColumn(projectId, oldModel, next)
-      lazy val updateColumn          = UpdateColumn(projectId, oldModel, previous, next)
-      lazy val deleteColumn          = DeleteColumn(projectId, oldModel, previous)
-      lazy val createScalarListTable = CreateScalarListTable(projectId, oldModel, next)
-      lazy val deleteScalarListTable = DeleteScalarListTable(projectId, oldModel, previous)
-      lazy val updateScalarListTable = UpdateScalarListTable(projectId, oldModel, newModel, previous, next)
+      lazy val createColumn          = CreateColumn(projectId, oldModel, next.asInstanceOf[ScalarField])
+      lazy val updateColumn          = UpdateColumn(projectId, oldModel, previous.asInstanceOf[ScalarField], next.asInstanceOf[ScalarField])
+      lazy val deleteColumn          = DeleteColumn(projectId, oldModel, previous.asInstanceOf[ScalarField])
+      lazy val createScalarListTable = CreateScalarListTable(projectId, oldModel, next.asInstanceOf[ScalarField])
+      lazy val deleteScalarListTable = DeleteScalarListTable(projectId, oldModel, previous.asInstanceOf[ScalarField])
+      lazy val updateScalarListTable = UpdateScalarListTable(projectId, oldModel, newModel, previous.asInstanceOf[ScalarField], next.asInstanceOf[ScalarField])
 
       () match {
         case _ if previous.isRelation && next.isRelation                                                             => Vector.empty

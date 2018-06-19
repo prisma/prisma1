@@ -1,12 +1,12 @@
 package com.prisma.deploy.connector.mysql.impls.mutactions
 
-import com.prisma.deploy.connector.mysql.database.MysqlDeployDatabaseMutationBuilder
+import com.prisma.deploy.connector.mysql.database.MySqlDeployDatabaseMutationBuilder
 import com.prisma.deploy.connector.{CreateColumn, DeleteColumn, UpdateColumn}
 import slick.jdbc.MySQLProfile.api._
 
 object CreateColumnInterpreter extends SqlMutactionInterpreter[CreateColumn] {
   override def execute(mutaction: CreateColumn) = {
-    MysqlDeployDatabaseMutationBuilder.createColumn(
+    MySqlDeployDatabaseMutationBuilder.createColumn(
       projectId = mutaction.projectId,
       tableName = mutaction.model.name,
       columnName = mutaction.field.name,
@@ -18,7 +18,7 @@ object CreateColumnInterpreter extends SqlMutactionInterpreter[CreateColumn] {
   }
 
   override def rollback(mutaction: CreateColumn) = {
-    MysqlDeployDatabaseMutationBuilder.deleteColumn(
+    MySqlDeployDatabaseMutationBuilder.deleteColumn(
       projectId = mutaction.projectId,
       tableName = mutaction.model.name,
       columnName = mutaction.field.name
@@ -28,7 +28,7 @@ object CreateColumnInterpreter extends SqlMutactionInterpreter[CreateColumn] {
 
 object DeleteColumnInterpreter extends SqlMutactionInterpreter[DeleteColumn] {
   override def execute(mutaction: DeleteColumn) = {
-    MysqlDeployDatabaseMutationBuilder.deleteColumn(
+    MySqlDeployDatabaseMutationBuilder.deleteColumn(
       projectId = mutaction.projectId,
       tableName = mutaction.model.name,
       columnName = mutaction.field.name
@@ -36,7 +36,7 @@ object DeleteColumnInterpreter extends SqlMutactionInterpreter[DeleteColumn] {
   }
 
   override def rollback(mutaction: DeleteColumn) = {
-    MysqlDeployDatabaseMutationBuilder.createColumn(
+    MySqlDeployDatabaseMutationBuilder.createColumn(
       projectId = mutaction.projectId,
       tableName = mutaction.model.name,
       columnName = mutaction.field.name,
@@ -85,7 +85,7 @@ object UpdateColumnInterpreter extends SqlMutactionInterpreter[UpdateColumn] {
     val hasIndex     = before.isUnique
     val indexIsDirty = before.isRequired != after.isRequired || before.name != after.name || before.typeIdentifier != after.typeIdentifier
 
-    val updateColumn = MysqlDeployDatabaseMutationBuilder.updateColumn(
+    val updateColumn = MySqlDeployDatabaseMutationBuilder.updateColumn(
       projectId = mutaction.projectId,
       tableName = mutaction.model.name,
       oldColumnName = before.name,
@@ -95,13 +95,13 @@ object UpdateColumnInterpreter extends SqlMutactionInterpreter[UpdateColumn] {
       newTypeIdentifier = after.typeIdentifier
     )
 
-    val removeUniqueConstraint = MysqlDeployDatabaseMutationBuilder.removeUniqueConstraint(
+    val removeUniqueConstraint = MySqlDeployDatabaseMutationBuilder.removeUniqueConstraint(
       projectId = mutaction.projectId,
       tableName = mutaction.model.name,
       columnName = before.name
     )
 
-    val addUniqueConstraint = MysqlDeployDatabaseMutationBuilder.addUniqueConstraint(
+    val addUniqueConstraint = MySqlDeployDatabaseMutationBuilder.addUniqueConstraint(
       projectId = mutaction.projectId,
       tableName = mutaction.model.name,
       columnName = after.name,
