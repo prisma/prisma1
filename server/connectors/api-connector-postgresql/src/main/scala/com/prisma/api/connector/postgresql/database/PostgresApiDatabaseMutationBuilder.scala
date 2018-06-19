@@ -17,6 +17,11 @@ import slick.dbio.{DBIOAction, Effect, NoStream}
 import slick.jdbc.PostgresProfile.api._
 import slick.jdbc.{PositionedParameters, SQLActionBuilder}
 import slick.sql.{SqlAction, SqlStreamingAction}
+import org.jooq._
+import org.jooq.conf.Settings
+import org.jooq.impl.DSL
+import org.jooq.impl.DSL._
+import scala.collection.JavaConverters._
 
 case class PostgresApiDatabaseMutationBuilder(schemaName: String) {
   import JooqQueryBuilders._
@@ -26,22 +31,30 @@ case class PostgresApiDatabaseMutationBuilder(schemaName: String) {
   def createDataItem(model: Model, args: PrismaArgs): DBIO[CreateDataItemResult] = {
 
     SimpleDBIO[CreateDataItemResult] { x =>
-      val argsAsRoot   = args.raw.asRoot
-      val fields       = model.fields.filter(field => argsAsRoot.hasArgFor(field.name))
-      val columns      = fields.map(_.dbName)
-      val escapedKeys  = columns.map(column => s""""$column"""").mkString(",")
-      val placeHolders = columns.map(_ => "?").mkString(",")
+      val argsAsRoot = args.raw.asRoot
+      val fields     = model.fields.filter(field => argsAsRoot.hasArgFor(field.name))
+      val columns    = fields.map(_.dbName)
 
-      val query                         = s"""INSERT INTO "$schemaName"."${model.dbName}" ($escapedKeys) VALUES ($placeHolders)"""
-      val itemInsert: PreparedStatement = x.connection.prepareStatement(query, Statement.RETURN_GENERATED_KEYS)
+      lazy val queryString: String = {
+        val sql             = DSL.using(SQLDialect.POSTGRES_9_5, new Settings().withRenderFormatted(true))
+        val generatedFields = columns.map(fieldName => field(name(schemaName, model.dbName, fieldName)))
+
+        sql
+          .insertInto(table(name(schemaName, model.dbName)))
+          .columns(generatedFields: _*)
+          .values(columns.map(_ => placeHolder): _*)
+          .getSQL
+      }
+
+      val itemInsert: PreparedStatement = x.connection.prepareStatement(queryString, Statement.RETURN_GENERATED_KEYS)
 
       fields.map(_.name).zipWithIndex.foreach {
         case (column, index) =>
           argsAsRoot.map.get(column) match {
-            case Some(NullGCValue) if column == "createdAt" || column == "updatedAt" => itemInsert.setTimestamp(index + 1, currentTimeStampUTC)
-            case Some(gCValue)                                                       => itemInsert.setGcValue(index + 1, gCValue)
-            case None if column == "createdAt" || column == "updatedAt"              => itemInsert.setTimestamp(index + 1, currentTimeStampUTC)
-            case None                                                                => itemInsert.setNull(index + 1, java.sql.Types.NULL)
+            case Some(NullGCValue) if column == createdAtField || column == updatedAtField => itemInsert.setTimestamp(index + 1, currentTimeStampUTC)
+            case Some(gCValue)                                                             => itemInsert.setGcValue(index + 1, gCValue)
+            case None if column == createdAtField || column == updatedAtField              => itemInsert.setTimestamp(index + 1, currentTimeStampUTC)
+            case None                                                                      => itemInsert.setNull(index + 1, java.sql.Types.NULL)
           }
       }
       itemInsert.execute()
@@ -52,9 +65,24 @@ case class PostgresApiDatabaseMutationBuilder(schemaName: String) {
     }
   }
 
-  def createRelayRow(path: Path): SqlStreamingAction[Vector[Int], Int, Effect]#ResultAction[Int, NoStream, Effect] = {
-    val where = path.lastCreateWhere_!
-    sql"""INSERT INTO "#$schemaName"."_RelayId" ("id", "stableModelIdentifier") VALUES (${where.fieldGCValue}, ${where.model.stableIdentifier})""".asUpdate
+  def createRelayRow(where: NodeSelector): DBIO[_] = {
+    SimpleDBIO[Boolean] { x =>
+      lazy val queryString: String = {
+        val sql = DSL.using(SQLDialect.POSTGRES_9_5, new Settings().withRenderFormatted(true))
+
+        sql
+          .insertInto(table(name(schemaName, relayTableName)))
+          .columns(field(name(schemaName, relayTableName, "id")), field(name(schemaName, relayTableName, "stableModelIdentifier")))
+          .values(placeHolder, placeHolder)
+          .getSQL
+      }
+
+      val itemInsert: PreparedStatement = x.connection.prepareStatement(queryString, Statement.RETURN_GENERATED_KEYS)
+      itemInsert.setGcValue(1, where.fieldGCValue)
+      itemInsert.setString(2, where.model.stableIdentifier)
+
+      itemInsert.execute()
+    }
   }
 
   def createRelationRowByPath(path: Path): SqlAction[Int, NoStream, Effect] = {
@@ -146,19 +174,42 @@ case class PostgresApiDatabaseMutationBuilder(schemaName: String) {
     val map = args.raw.asRoot.map
     if (map.nonEmpty) {
       SimpleDBIO { ctx =>
-        val placeHolders = map.map { case (k, _) => model.getFieldByName_!(k).dbName + " = ?" }.mkString(",")
+        val sql = DSL.using(SQLDialect.POSTGRES_9_5, new Settings().withRenderFormatted(true))
 
-        val query = s"""UPDATE "$schemaName"."${model.dbName}" as "$topLevelAlias" """ + s"""SET $placeHolders """ +
-          WhereClauseBuilder(schemaName).buildWhereClause(whereFilter).getOrElse("")
+        val aliasedTable = table(name(schemaName, model.dbName)).as(topLevelAlias)
+        val condition    = JooqWhereClauseBuilder(schemaName).buildWhereClause(whereFilter).getOrElse(trueCondition())
 
-        val ps = ctx.connection.prepareStatement(query)
+        val base = sql.update(aliasedTable)
+
+        //https://www.postgresql.org/message-id/20170719174507.GA19616%40telsasoft.com
+        lazy val queryString: String = if (map.size > 1) {
+
+          val fields = map.map { case (k, _) => field(model.getFieldByName_!(k).dbName) }.toList.asJava
+          val values = map.map(_ => placeHolder).toList.asJava
+
+          base
+            .set(row(fields), row(values))
+            .where(condition)
+            .getSQL
+
+        } else {
+          val fieldDef = map.map { case (k, _) => field(model.getFieldByName_!(k).dbName) }.head
+          val value    = map.map(_ => placeHolder).head
+
+          base
+            .set(fieldDef, value)
+            .where(condition)
+            .getSQL
+        }
+
+        val ps = ctx.connection.prepareStatement(queryString)
         val pp = new PositionedParameters(ps)
         map.foreach { case (_, v) => pp.setGcValue(v) }
-        whereFilter.foreach(filter => SetParams.setParams(pp, filter))
+        whereFilter.foreach(filter => JooqSetParams.setParams(pp, filter))
         ps.executeUpdate()
       }
     } else {
-      DBIOAction.successful(())
+      dbioUnit
     }
   }
 
@@ -218,7 +269,7 @@ case class PostgresApiDatabaseMutationBuilder(schemaName: String) {
     val query = sql"""select exists ( SELECT "#${model.dbNameOfIdField_!}" FROM "#$schemaName"."#${model.dbName}" WHERE "#${model.dbNameOfIdField_!}" = """ ++
       pathQueryForLastChild(updatePath) ++ sql")"
     val condition        = query.as[Boolean]
-    val allCreateActions = Vector(createDataItem(model, createArgs), createRelayRow(createPath), create) ++ createNested
+    val allCreateActions = Vector(createDataItem(model, createArgs), createRelayRow(createPath.lastCreateWhere_!), create) ++ createNested
     val qCreate          = DBIOAction.seq(allCreateActions: _*)
     // update first sets the lists, then updates the item
     val allUpdateActions = update +: updateNested :+ updateDataItemByPath(updatePath, updateArgs)
@@ -272,22 +323,39 @@ case class PostgresApiDatabaseMutationBuilder(schemaName: String) {
 
   def deleteDataItems(model: Model, whereFilter: Option[Filter]) = {
     SimpleDBIO { ctx =>
-      val query = s"""DELETE FROM "$schemaName"."${model.dbName}" as "$topLevelAlias" """ +
-        WhereClauseBuilder(schemaName).buildWhereClause(whereFilter).getOrElse("")
-      val ps = ctx.connection.prepareStatement(query)
-      SetParams.setFilter(ps, whereFilter)
+      val sql = DSL.using(SQLDialect.POSTGRES_9_5, new Settings().withRenderFormatted(true))
+
+      val aliasedTable = table(name(schemaName, model.dbName)).as(topLevelAlias)
+      val condition    = JooqWhereClauseBuilder(schemaName).buildWhereClause(whereFilter).getOrElse(trueCondition())
+
+      lazy val queryString: String = sql
+        .deleteFrom(aliasedTable)
+        .where(condition)
+        .getSQL
+
+      val ps = ctx.connection.prepareStatement(queryString)
+      JooqSetParams.setFilter(new PositionedParameters(ps), whereFilter)
       ps.executeUpdate()
     }
   }
 
   def deleteRelayIds(model: Model, whereFilter: Option[Filter]) = {
     SimpleDBIO { ctx =>
-      val query = s"""DELETE FROM "$schemaName"."_RelayId" WHERE "id" IN ( """ +
-        s"""SELECT "${model.dbNameOfIdField_!}" FROM "$schemaName"."${model.dbName}" as "$topLevelAlias" """ +
-        WhereClauseBuilder(schemaName).buildWhereClause(whereFilter).getOrElse("") +
-        ")"
-      val ps = ctx.connection.prepareStatement(query)
-      SetParams.setFilter(ps, whereFilter)
+      val sql = DSL.using(SQLDialect.POSTGRES_9_5, new Settings().withRenderFormatted(true))
+
+      val relayTable      = table(name(schemaName, relayTableName))
+      val aliasedTable    = table(name(schemaName, model.dbName)).as(topLevelAlias)
+      val filterCondition = JooqWhereClauseBuilder(schemaName).buildWhereClause(whereFilter).getOrElse(trueCondition())
+      val condition = field(name(schemaName, relayTableName, "id"))
+        .in(select(field(name(topLevelAlias, model.dbNameOfIdField_!))).from(aliasedTable).where(filterCondition))
+
+      lazy val queryString: String = sql
+        .deleteFrom(relayTable)
+        .where(condition)
+        .getSQL
+
+      val ps = ctx.connection.prepareStatement(queryString)
+      JooqSetParams.setFilter(new PositionedParameters(ps), whereFilter)
       ps.executeUpdate()
     }
   }
