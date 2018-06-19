@@ -72,7 +72,6 @@ case class SimpleHttpClient()(implicit val system: ActorSystem, materializer: Ac
         headers = akkaHeaders,
         entity = HttpEntity(contentType, body)
       )
-
       execute(akkaRequest, statusCodeValidator, timeout)
     }
   }

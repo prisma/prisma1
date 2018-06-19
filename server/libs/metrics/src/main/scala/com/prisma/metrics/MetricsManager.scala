@@ -1,95 +1,43 @@
 package com.prisma.metrics
 
-import java.util.concurrent.TimeUnit
+import akka.actor.ActorSystem
+import com.prisma.metrics.prometheus.CustomPushGateway
+import io.micrometer.prometheus.{PrometheusConfig, PrometheusMeterRegistry}
 
-import akka.actor.{ActorSystem, Props}
-import com.librato.metrics.client.{Duration, LibratoClient}
-import com.prisma.akkautil.SingleThreadedActorSystem
-import com.prisma.errors.ErrorReporter
-import com.timgroup.statsd.{NonBlockingStatsDClient, StatsDClient}
-
-import scala.concurrent.Await
+import scala.concurrent.Future
 import scala.concurrent.duration._
-import scala.util.{Failure, Success, Try}
+import scala.util.{Failure, Success}
 
-abstract class MetricsManager(reporter: ErrorReporter) {
-  def serviceName: String
+trait MetricsManager {
+  // Gauges DO NOT support custom metric tags per occurrence, only hardcoded custom tags during definition!
+  def defineGauge(name: String, predefTags: (CustomTag, String)*): GaugeMetric = GaugeMetric(name, predefTags, MetricsRegistry.meterRegistry)
+  def defineCounter(name: String, customTags: CustomTag*): CounterMetric       = CounterMetric(name, customTags, MetricsRegistry.meterRegistry)
+  def defineTimer(name: String, customTags: CustomTag*): TimerMetric           = TimerMetric(name, customTags, MetricsRegistry.meterRegistry)
+}
 
-  // System used to periodically flush the state of individual gauges
-  implicit lazy val gaugeFlushSystem: ActorSystem = SingleThreadedActorSystem(s"$serviceName-gauges")
+object DefaultMetricsManager extends MetricsManager
 
-  lazy val errorHandler = CustomErrorHandler()(reporter)
+object MetricsRegistry {
+  private val prismaPushGatewayAddress = "metrics-eu1.prisma.io"
 
-  private val metricsCollectionIsEnabled: Boolean = sys.env.getOrElse("ENABLE_METRICS", "0") == "1"
+  private[metrics] val meterRegistry = new PrometheusMeterRegistry(PrometheusConfig.DEFAULT)
 
-  protected lazy val baseTags: Map[String, String] = {
-    if (metricsCollectionIsEnabled) {
-      Try {
-        Map(
-          "env"       -> sys.env.getOrElse("ENV", "local"),
-          "region"    -> sys.env.getOrElse("AWS_REGION", "no_region"),
-          "container" -> ContainerMetadata.fetchContainerId(),
-          "service"   -> serviceName
-        )
-      } match {
-        case Success(tags) => tags
-        case Failure(err)  => errorHandler.handle(new Exception(err)); Map.empty
+  def init(secretLoader: PrismaCloudSecretLoader)(implicit as: ActorSystem): Unit = {
+    import as.dispatcher
+    val pushGateway = CustomPushGateway.https(prismaPushGatewayAddress)
+
+    as.scheduler.schedule(30.seconds, 30.seconds) {
+      secretLoader.loadCloudSecret().onComplete {
+        case Success(Some(secret)) => pushGateway.pushAdd(meterRegistry.getPrometheusRegistry, "prisma-connect", secret)
+        case Success(None)         => log("No Prisma Cloud secret is set. Metrics collection is disabled.")
+        case Failure(e)            => e.printStackTrace()
       }
-    } else {
-      Map.empty
     }
-  }
-  protected lazy val baseTagsString: String = {
-    baseTags
-      .map {
-        case (key, value) => s"$key=$value"
-      }
-      .mkString(",")
-  }
-
-  protected val client: StatsDClient = {
-    if (metricsCollectionIsEnabled) {
-      val dnsNameOpt = sys.env.get("STATSD_DNS_NAME")
-      val portOpt    = Utils.envVarAsInt("STATSD_PORT")
-
-      (dnsNameOpt, portOpt) match {
-        case (Some(dnsName), Some(port)) =>
-          log(s"Will report metrics to $dnsName on port $port")
-          new NonBlockingStatsDClient("", Integer.MAX_VALUE, new Array[String](0), errorHandler, StatsdHostLookup(dnsName, port))
-
-        case _ =>
-          log("Warning: no metrics will be recorded. The env vars STATSD_DNS_NAME and STATSD_PORT must be set.")
-          DummyStatsDClient()
-      }
-    } else {
-      log("Warning: no metrics will be recorded.")
-      DummyStatsDClient()
-    }
-  }
-
-  private lazy val libratoReporter = {
-    val email = Utils.envVar_!("LIBRATO_EMAIL")
-    val token = Utils.envVar_!("LIBRATO_TOKEN")
-    val client = LibratoClient
-      .builder(email, token)
-      .setConnectTimeout(new Duration(5, TimeUnit.SECONDS))
-      .setReadTimeout(new Duration(5, TimeUnit.SECONDS))
-      .setAgentIdentifier("my app name")
-      .build()
-    val actorRef = gaugeFlushSystem.actorOf(Props(LibratoFlushActor(client)))
-    LibratoReporter(actorRef)
   }
 
   private def log(msg: String): Unit = println(s"[Metrics] $msg")
+}
 
-  // Gauges DO NOT support custom metric tags per occurrence, only hardcoded custom tags during definition!
-  def defineGauge(name: String, predefTags: (CustomTag, String)*): GaugeMetric = GaugeMetric(name, baseTagsString, predefTags, client)
-  def defineCounter(name: String, customTags: CustomTag*): CounterMetric       = CounterMetric(name, baseTagsString, customTags, client)
-  def defineTimer(name: String, customTags: CustomTag*): TimerMetric           = TimerMetric(name, baseTagsString, customTags, client)
-
-  def defineLibratoGauge(name: String, flushInterval: FiniteDuration, predefTags: (CustomTag, String)*): LibratoGaugeMetric = {
-    LibratoGaugeMetric(name, baseTags, predefTags, libratoReporter, flushInterval)
-  }
-
-  def shutdown: Unit = Await.result(gaugeFlushSystem.terminate(), 10.seconds)
+trait PrismaCloudSecretLoader {
+  def loadCloudSecret(): Future[Option[String]]
 }

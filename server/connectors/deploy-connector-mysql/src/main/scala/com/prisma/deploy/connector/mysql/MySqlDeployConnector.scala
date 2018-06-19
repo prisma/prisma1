@@ -3,7 +3,7 @@ package com.prisma.deploy.connector.mysql
 import com.prisma.config.DatabaseConfig
 import com.prisma.deploy.connector._
 import com.prisma.deploy.connector.mysql.database.{MySqlDeployDatabaseMutationBuilder, MysqlInternalDatabaseSchema, TelemetryTable}
-import com.prisma.deploy.connector.mysql.impls.{MySqlClientDbQueries, MysqlMigrationPersistence, MySqlDeployMutactionExectutor, MysqlProjectPersistence}
+import com.prisma.deploy.connector.mysql.impls._
 import com.prisma.shared.models.{Project, ProjectIdEncoder}
 import org.joda.time.DateTime
 import slick.dbio.Effect.Read
@@ -51,6 +51,7 @@ case class MySqlDeployConnector(config: DatabaseConfig)(implicit ec: ExecutionCo
   override def getOrCreateTelemetryInfo(): Future[TelemetryInfo]       = internalDatabaseRoot.run(TelemetryTable.getOrCreateInfo())
   override def updateTelemetryInfo(lastPinged: DateTime): Future[Unit] = internalDatabaseRoot.run(TelemetryTable.updateInfo(lastPinged)).map(_ => ())
   override def projectIdEncoder: ProjectIdEncoder                      = ProjectIdEncoder('@')
+  override def cloudSecretPersistence                                  = CloudSecretPersistenceImpl(internalDatabase)
 
   override def initialize(): Future[Unit] = {
     val action = MysqlInternalDatabaseSchema.createSchemaActions(internalDatabaseDefs.managementSchemaName, recreate = false)
