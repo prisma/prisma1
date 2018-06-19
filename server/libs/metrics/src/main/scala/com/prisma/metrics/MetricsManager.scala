@@ -18,21 +18,13 @@ trait MetricsManager {
 object DefaultMetricsManager extends MetricsManager
 
 object MetricsRegistry {
-  private val prismaPushGateway = "metrics-eu1.prisma.io"
-
-  // System used to periodically flush the metrics
-  implicit lazy val gaugeFlushSystem: ActorSystem = SingleThreadedActorSystem(s"metrics-manager")
-
-  private[metrics] val instance = ConfigLoader.load().prismaConnectSecret match {
-    case Some(secret) =>
-      val registry = new PrometheusMeterRegistry(PrometheusConfig.DEFAULT)
-      val pushGateway = CustomPushGateway.https(prismaPushGateway, secret)
+  private val prismaPushGatewayAddress = "metrics-eu1.prisma.io"
 
   private[metrics] val meterRegistry = new PrometheusMeterRegistry(PrometheusConfig.DEFAULT)
 
   def init(secretLoader: PrismaCloudSecretLoader)(implicit as: ActorSystem): Unit = {
     import as.dispatcher
-    val pushGateway = CustomPushGateway.http(prismaPushGatewayAddress) // FIXME: use https
+    val pushGateway = CustomPushGateway.https(prismaPushGatewayAddress)
 
     as.scheduler.schedule(30.seconds, 30.seconds) {
       secretLoader.loadCloudSecret().onComplete {
