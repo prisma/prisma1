@@ -225,6 +225,15 @@ case class PostgresApiDatabaseMutationBuilder(schemaName: String) {
     if (map.isEmpty) {
       DBIOAction.successful(())
     } else {
+      val mapWithUpdatedAtValue = path.lastModel.updatedAtField match {
+        case Some(_) =>
+          val today              = new Date()
+          val exactlyNow         = new DateTime(today).withZone(DateTimeZone.UTC)
+          val currentDateGCValue = DateTimeGCValue(exactlyNow)
+          map + (updatedAtField -> currentDateGCValue)
+        case None =>
+          map
+      }
       val model = path.lastModel
 
       SimpleDBIO { ctx =>
@@ -232,8 +241,8 @@ case class PostgresApiDatabaseMutationBuilder(schemaName: String) {
 
         val equals = path.lastEdge match {
           case Some(edge) =>
-            val parentSideField = field(schemaName, edge.relation.relationTableName, path.columnForParentSideOfLastEdge)
-            val childSideField  = field(schemaName, edge.relation.relationTableName, path.columnForChildSideOfLastEdge)
+            val parentSideField = field(name(schemaName, edge.relation.relationTableName, path.columnForParentSideOfLastEdge))
+            val childSideField  = field(name(schemaName, edge.relation.relationTableName, path.columnForChildSideOfLastEdge))
 
             val fromEdge = edge match {
               case edge: NodeEdge => childSideField.equal(idFromWhereJooq(edge.childWhere))
@@ -243,6 +252,7 @@ case class PostgresApiDatabaseMutationBuilder(schemaName: String) {
             select(childSideField)
               .from(table(name(schemaName, edge.relation.relationTableName)))
               .where(fromEdge, parentSideField.equal(pathQueryForLastParentJooq(path)))
+              .asField()
 
           case None =>
             idFromWhereJooq(path.root)
@@ -252,10 +262,10 @@ case class PostgresApiDatabaseMutationBuilder(schemaName: String) {
 
         val base = sql.update(table(name(schemaName, model.dbName)))
 
-        lazy val queryString: String = if (map.size > 1) {
+        lazy val queryString: String = if (mapWithUpdatedAtValue.size > 1) {
 
-          val fields = map.map { case (k, _) => field(name(model.getFieldByName_!(k).dbName)) }.toList.asJava
-          val values = map.map(_ => placeHolder).toList.asJava
+          val fields = mapWithUpdatedAtValue.map { case (k, _) => field(name(model.getFieldByName_!(k).dbName)) }.toList.asJava
+          val values = mapWithUpdatedAtValue.map(_ => placeHolder).toList.asJava
 
           base
             .set(row(fields), row(values))
@@ -263,8 +273,8 @@ case class PostgresApiDatabaseMutationBuilder(schemaName: String) {
             .getSQL
 
         } else {
-          val fieldDef = map.map { case (k, _) => field(model.getFieldByName_!(k).dbName) }.head
-          val value    = map.map(_ => placeHolder).head
+          val fieldDef = mapWithUpdatedAtValue.map { case (k, _) => field(model.getFieldByName_!(k).dbName) }.head
+          val value    = mapWithUpdatedAtValue.map(_ => placeHolder).head
 
           base
             .set(fieldDef, value)
@@ -276,8 +286,7 @@ case class PostgresApiDatabaseMutationBuilder(schemaName: String) {
 
         val ps = ctx.connection.prepareStatement(queryString)
         val pp = new PositionedParameters(ps)
-        map.foreach { case (_, v) => pp.setGcValue(v) }
-
+        mapWithUpdatedAtValue.foreach { case (_, v) => pp.setGcValue(v) }
         setPathVariables(path, pp)
 
         ps.executeUpdate()
@@ -575,7 +584,9 @@ case class PostgresApiDatabaseMutationBuilder(schemaName: String) {
   def idFromWhereEquals(where: NodeSelector): SQLActionBuilder = sql" = " ++ idFromWhere(where)
 
   def idFromWhereJooq(where: NodeSelector) = {
-    val aliasedTable = table(name(schemaName, where.model.dbName)).as("IDFROMWHERE")
+
+    val alias        = "IDFROMWHERE"
+    val aliasedTable = table(name(schemaName, where.model.dbName)).as(alias)
 
     (where.isId, where.fieldGCValue) match {
       case (true, NullGCValue) =>
@@ -585,15 +596,15 @@ case class PostgresApiDatabaseMutationBuilder(schemaName: String) {
         DSL.value(placeHolder)
 
       case (false, NullGCValue) =>
-        select(field(name(schemaName, where.model.dbName, where.model.dbNameOfIdField_!)))
+        select(field(name(alias, where.model.dbNameOfIdField_!)))
           .from(aliasedTable)
-          .where(field(name(schemaName, where.model.dbName, where.field.dbName)).isNull)
+          .where(field(name(alias, where.field.dbName)).isNull)
           .asField()
 
       case (false, value) =>
-        select(field(name(schemaName, where.model.dbName, where.model.dbNameOfIdField_!)))
+        select(field(name(alias, where.model.dbNameOfIdField_!)))
           .from(aliasedTable)
-          .where(field(name(schemaName, where.model.dbName, where.field.dbName)).equal(DSL.value(value.value)))
+          .where(field(name(alias, where.field.dbName)).equal(DSL.value(placeHolder)))
           .asField()
     }
   }
@@ -603,11 +614,9 @@ case class PostgresApiDatabaseMutationBuilder(schemaName: String) {
   }
 
   def idFromWherePathJooq(where: NodeSelector) = {
-    val sql          = DSL.using(SQLDialect.POSTGRES_9_5, new Settings().withRenderFormatted(true))
     val aliasedTable = table(name(schemaName, where.model.dbName)).as("IDFROMWHEREPATH")
 
-    sql
-      .select(field(name(schemaName, where.model.dbName, where.model.dbNameOfIdField_!)))
+    select(field(name(schemaName, where.model.dbName, where.model.dbNameOfIdField_!)))
       .from(aliasedTable)
       .where(field(name(where.field.dbName)).equal(where.fieldGCValue))
   }
