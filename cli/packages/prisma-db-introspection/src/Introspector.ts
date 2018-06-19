@@ -17,6 +17,10 @@ export class Introspector {
     return this.connector.listSchemas()
   }
 
+  async disconnect() {
+    this.connector.disconnect()
+  }
+
   async introspect(
     schemaName: string,
   ): Promise<{ numTables: number; sdl: string }> {
