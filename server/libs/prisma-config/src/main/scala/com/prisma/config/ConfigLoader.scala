@@ -104,14 +104,13 @@ object ConfigLoader {
     }.toOption
 
   def convertToConfig(map: Map[String, Any]): PrismaConfig = {
-    val port                = extractIntOpt("port", map)
-    val secret              = extractStringOpt("managementApiSecret", map)
-    val prismaConnectSecret = extractStringOpt("prismaConnectSecret", map)
-    val legacySecret        = extractStringOpt("legacySecret", map)
-    val s2sSecret           = extractStringOpt("server2serverSecret", map)
-    val clusterAddress      = extractStringOpt("clusterAddress", map)
-    val rabbitUri           = extractStringOpt("rabbitUri", map)
-    val mgmtApiEnabled      = extractBooleanOpt("enableManagementApi", map)
+    val port           = extractIntOpt("port", map)
+    val secret         = extractStringOpt("managementApiSecret", map)
+    val legacySecret   = extractStringOpt("legacySecret", map)
+    val s2sSecret      = extractStringOpt("server2serverSecret", map)
+    val clusterAddress = extractStringOpt("clusterAddress", map)
+    val rabbitUri      = extractStringOpt("rabbitUri", map)
+    val mgmtApiEnabled = extractBooleanOpt("enableManagementApi", map)
     val databases = extractScalaMap(map.getOrElse("databases", emptyJavaMap), path = "databases").map {
       case (dbName, dbMap) =>
         val x = readDbWithConnectionString(dbName, dbMap)
@@ -130,8 +129,7 @@ object ConfigLoader {
       clusterAddress = clusterAddress,
       rabbitUri = rabbitUri,
       managmentApiEnabled = mgmtApiEnabled,
-      databases = databases,
-      prismaConnectSecret = prismaConnectSecret
+      databases = databases
     )
   }
 
@@ -293,8 +291,7 @@ case class PrismaConfig(
     clusterAddress: Option[String],
     rabbitUri: Option[String],
     managmentApiEnabled: Option[Boolean],
-    databases: Seq[DatabaseConfig],
-    prismaConnectSecret: Option[String]
+    databases: Seq[DatabaseConfig]
 )
 
 case class DatabaseConfig(
