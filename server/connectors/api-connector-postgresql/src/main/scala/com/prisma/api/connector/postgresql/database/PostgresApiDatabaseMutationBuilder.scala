@@ -29,19 +29,19 @@ case class PostgresApiDatabaseMutationBuilder(schemaName: String) {
 
   // region CREATE
 
-  def createDataItem(path: Path, args: PrismaArgs): DBIO[CreateDataItemResult] = {
+  def createDataItem(model: Model, args: PrismaArgs): DBIO[CreateDataItemResult] = {
 
     SimpleDBIO[CreateDataItemResult] { x =>
       val argsAsRoot = args.raw.asRoot
-      val fields     = path.lastModel.fields.filter(field => argsAsRoot.hasArgFor(field.name))
+      val fields     = model.fields.filter(field => argsAsRoot.hasArgFor(field.name))
       val columns    = fields.map(_.dbName)
 
       lazy val queryString: String = {
         val sql             = DSL.using(SQLDialect.POSTGRES_9_5, new Settings().withRenderFormatted(true))
-        val generatedFields = columns.map(fieldName => field(name(schemaName, path.lastModel.dbName, fieldName)))
+        val generatedFields = columns.map(fieldName => field(name(schemaName, model.dbName, fieldName)))
 
         sql
-          .insertInto(table(name(schemaName, path.lastModel.dbName)))
+          .insertInto(table(name(schemaName, model.dbName)))
           .columns(generatedFields: _*)
           .values(columns.map(_ => placeHolder): _*)
           .getSQL
@@ -62,7 +62,7 @@ case class PostgresApiDatabaseMutationBuilder(schemaName: String) {
 
       val generatedKeys = itemInsert.getGeneratedKeys
       generatedKeys.next()
-      val field2 = path.lastModel.idField_!
+      val field2 = model.idField_!
       CreateDataItemResult(generatedKeys.getGcValue(field2.dbName, field2.typeIdentifier))
     }
   }
@@ -273,7 +273,7 @@ case class PostgresApiDatabaseMutationBuilder(schemaName: String) {
             .getSQL
 
         } else {
-          val fieldDef = mapWithUpdatedAtValue.map { case (k, _) => field(model.getFieldByName_!(k).dbName) }.head
+          val fieldDef = mapWithUpdatedAtValue.map { case (k, _) => field(name(model.getFieldByName_!(k).dbName)) }.head
           val value    = mapWithUpdatedAtValue.map(_ => placeHolder).head
 
           base
@@ -295,12 +295,12 @@ case class PostgresApiDatabaseMutationBuilder(schemaName: String) {
   }
 
   def setPathVariables(path: Path, positionedParameters: PositionedParameters): PositionedParameters = {
-    positionedParameters.setGcValue(path.root.fieldGCValue)
 
-    path.edges.foreach {
+    path.edges.reverse.foreach {
       case NodeEdge(_, where) => positionedParameters.setGcValue(where.fieldGCValue)
       case ModelEdge(_)       =>
     }
+    positionedParameters.setGcValue(path.root.fieldGCValue)
 
     positionedParameters
   }
@@ -619,6 +619,7 @@ case class PostgresApiDatabaseMutationBuilder(schemaName: String) {
     select(field(name(schemaName, where.model.dbName, where.model.dbNameOfIdField_!)))
       .from(aliasedTable)
       .where(field(name(where.field.dbName)).equal(where.fieldGCValue))
+      .asField()
   }
 
   def pathQueryForLastParent(path: Path): SQLActionBuilder = pathQueryForLastChild(path.removeLastEdge)
@@ -632,7 +633,7 @@ case class PostgresApiDatabaseMutationBuilder(schemaName: String) {
     }
   }
 
-  def pathQueryForLastChildJooq(path: Path) = {
+  def pathQueryForLastChildJooq(path: Path): org.jooq.Field[_] = {
     path.edges match {
       case Nil                                => idFromWhereJooq(path.root)
       case x if x.last.isInstanceOf[NodeEdge] => idFromWhereJooq(x.last.asInstanceOf[NodeEdge].childWhere)
@@ -672,11 +673,12 @@ case class PostgresApiDatabaseMutationBuilder(schemaName: String) {
 
         val aliasedTable = table(name(schemaName, last.relation.relationTableName)).as("PATHQUERY")
 
-        val inCondition = field(name("PATHQUERY", last.columnForParentRelationSide)).in(pathQueryForLastParent(path))
+        val inCondition = field(name("PATHQUERY", last.columnForParentRelationSide)).in(pathQueryForLastParentJooq(path))
 
         select(field(name(schemaName, last.child.dbName, last.columnForChildRelationSide)))
           .from(aliasedTable)
           .where(childWhere, inCondition)
+          .asField()
     }
   }
 
