@@ -54,19 +54,14 @@ case class CascadingDeleteRelationMutactionsInterpreter(mutaction: CascadingDele
 }
 
 case class CreateDataItemInterpreter(mutaction: CreateDataItem, includeRelayRow: Boolean = true) extends DatabaseMutactionInterpreter {
-  val project = mutaction.project
-  val model   = mutaction.model
+  val model = mutaction.model
 
   override def newAction(mutationBuilder: PostgresApiDatabaseMutationBuilder, parentId: IdGCValue)(
       implicit ec: ExecutionContext): DBIO[DatabaseMutactionResult] = {
     for {
       createResult <- mutationBuilder.createDataItem(model, mutaction.nonListArgs)
       _            <- mutationBuilder.setScalarList(NodeSelector.forIdGCValue(model, createResult.createdId), mutaction.listArgs)
-      _ <- if (includeRelayRow) {
-            mutationBuilder.createRelayRow(NodeSelector.forIdGCValue(model, createResult.createdId))
-          } else {
-            DBIO.successful(())
-          }
+      _            <- if (includeRelayRow) mutationBuilder.createRelayRow(NodeSelector.forIdGCValue(model, createResult.createdId)) else DBIO.successful(())
     } yield createResult
   }
 
@@ -81,7 +76,8 @@ case class CreateDataItemInterpreter(mutaction: CreateDataItem, includeRelayRow:
 
 }
 
-case class NestedCreateDataItemInterpreter(mutaction: NestedCreateDataItem)(implicit ec: ExecutionContext) extends DatabaseMutactionInterpreter {
+case class NestedCreateDataItemInterpreter(mutaction: NestedCreateDataItem, includeRelayRow: Boolean = true)(implicit ec: ExecutionContext)
+    extends DatabaseMutactionInterpreter {
   val project  = mutaction.project
   val model    = mutaction.relationField.relatedModel_!
   val parent   = mutaction.relationField.model
@@ -90,8 +86,8 @@ case class NestedCreateDataItemInterpreter(mutaction: NestedCreateDataItem)(impl
   override def newAction(mutationBuilder: PostgresApiDatabaseMutationBuilder, parentId: IdGCValue)(implicit ec: ExecutionContext) = {
     for {
       createResult <- createNodeAndConnectToParent(mutationBuilder, parentId)
-      // 1. fixme: feed the id into the action for scalar lists
-      // 2. fixme: feed the id into the action for the relay row
+      _            <- mutationBuilder.setScalarList(NodeSelector.forIdGCValue(model, createResult.createdId), mutaction.listArgs)
+      _            <- if (includeRelayRow) mutationBuilder.createRelayRow(NodeSelector.forIdGCValue(model, createResult.createdId)) else DBIO.successful(())
     } yield createResult
   }
 
