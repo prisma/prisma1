@@ -234,7 +234,7 @@ class NestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matchers with A
         |  createParent(data: {
         |    p: "p1"
         |    childrenOpt: {
-        |      create: {c: "c1"}
+        |      create: [{c: "c1"},{c: "c2"}]
         |    }
         |  }){
         |    childrenOpt{
@@ -245,7 +245,7 @@ class NestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matchers with A
       project
     )
 
-    ifConnectorIsActive { dataResolver(project).countByTable("_ParentToChild").await should be(1) }
+    ifConnectorIsActive { dataResolver(project).countByTable("_ParentToChild").await should be(2) }
 
     server.query(
       s"""
@@ -264,9 +264,9 @@ class NestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matchers with A
       project
     )
 
-    ifConnectorIsActive { dataResolver(project).countByTable("_ParentToChild").await should be(0) }
+    ifConnectorIsActive { dataResolver(project).countByTable("_ParentToChild").await should be(1) }
     dataResolver(project).countByTable("Parent").await should be(1)
-    dataResolver(project).countByTable("Child").await should be(0)
+    dataResolver(project).countByTable("Child").await should be(1)
   }
 
   "a P1 to C1!  relation " should "work" in {

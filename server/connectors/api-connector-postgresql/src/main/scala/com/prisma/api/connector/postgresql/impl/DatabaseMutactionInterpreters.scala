@@ -127,12 +127,16 @@ case class DeleteDataItemInterpreter(mutaction: DeleteDataItem)(implicit ec: Exe
 case class DeleteDataItemNestedInterpreter(mutaction: NestedDeleteDataItem)(implicit ec: ExecutionContext) extends DatabaseMutactionInterpreter {
 
   override def newAction(mutationBuilder: PostgresApiDatabaseMutationBuilder, parentId: IdGCValue)(implicit ec: ExecutionContext) = {
-    val parent         = mutaction.relationField.model
-    val parentSelector = NodeSelector(parent, parent.idField_!, parentId)
-    val path           = Path.empty(parentSelector).appendEdge(mutaction.relationField)
+    val parentField = mutaction.relationField
+
+    val childWhere: Option[NodeSelector] = mutaction.path.lastEdge_! match {
+      case ModelEdge(_)       => None
+      case NodeEdge(_, where) => Some(where)
+    }
+
     for {
-      _ <- mutationBuilder.deleteRelayRow(path)
-      _ <- mutationBuilder.deleteDataItem(path)
+      _ <- mutationBuilder.deleteRelayRowNested(parentField, parentId, childWhere)
+      _ <- mutationBuilder.deleteDataItemNested(parentField, parentId, childWhere)
     } yield UnitDatabaseMutactionResult
   }
 
