@@ -89,8 +89,8 @@ object Dependencies {
   val microMeter            = "io.micrometer"              % "micrometer-registry-prometheus" % "1.0.4"
   val prometheusPushGateway = "io.prometheus"              % "simpleclient_pushgateway"       % "0.4.0"
   val jooq = Vector(
-    "org.jooq" % "jooq"            % "3.11.0",
-    "org.jooq" % "jooq-scala_2.12" % "3.11.0"
+    "org.jooq" % "jooq"        % "3.11.0",
+    "org.jooq" %% "jooq-scala" % "3.11.0"
   )
 
   lazy val common: Seq[ModuleID] = Seq(
