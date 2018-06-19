@@ -1,6 +1,6 @@
 package com.prisma.api.connector
 
-import com.prisma.gc_values.{GCValue, IdGCValue}
+import com.prisma.gc_values.{GCValue, CuidGCValue}
 import com.prisma.shared.models._
 
 import scala.concurrent.Future
@@ -8,7 +8,7 @@ import scala.concurrent.Future
 trait DataResolver {
   def project: Project
 
-  def resolveByGlobalId(globalId: IdGCValue): Future[Option[PrismaNode]]
+  def resolveByGlobalId(globalId: CuidGCValue): Future[Option[PrismaNode]]
 
   def resolveByModel(model: Model, args: Option[QueryArguments] = None): Future[ResolverResult[PrismaNode]]
 
@@ -20,11 +20,11 @@ trait DataResolver {
 
   def batchResolveByUnique(model: Model, field: ScalarField, values: Vector[GCValue]): Future[Vector[PrismaNode]]
 
-  def batchResolveScalarList(model: Model, listField: ScalarField, nodeIds: Vector[IdGCValue]): Future[Vector[ScalarListValues]]
+  def batchResolveScalarList(model: Model, listField: ScalarField, nodeIds: Vector[CuidGCValue]): Future[Vector[ScalarListValues]]
 
   def resolveByRelationManyModels(
       fromField: RelationField,
-      fromNodeIds: Vector[IdGCValue],
+      fromNodeIds: Vector[CuidGCValue],
       args: Option[QueryArguments]
   ): Future[Vector[ResolverResult[PrismaNodeWithParent]]]
 

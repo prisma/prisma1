@@ -29,15 +29,17 @@ case class ApiTestServer()(implicit dependencies: ApiDependencies) extends PlayJ
       query: String,
       project: Project,
       dataContains: String = "",
+      variables: JsValue = JsObject.empty,
       requestId: String = "CombinedTestDatabase.requestId"
   ): JsValue = awaitInfinitely {
-    queryAsync(query, project, dataContains, requestId)
+    queryAsync(query, project, dataContains, variables, requestId)
   }
 
   def queryAsync(
       query: String,
       project: Project,
       dataContains: String = "",
+      variables: JsValue = JsObject.empty,
       requestId: String = "CombinedTestDatabase.requestId"
   ): Future[JsValue] = {
     val schemaBuilder = SchemaBuilder()(dependencies.system, dependencies)
@@ -45,7 +47,7 @@ case class ApiTestServer()(implicit dependencies: ApiDependencies) extends PlayJ
       query = query.stripMargin,
       project = project,
       schema = schemaBuilder(project),
-      variables = JsObject.empty,
+      variables = variables,
       requestId = requestId
     )
 

@@ -19,7 +19,7 @@ class OneDeferredResolver(dataResolver: DataResolver) {
 
     // fetch prismaNodes
     val futurePrismaNodes =
-      dataResolver.batchResolveByUnique(headDeferred.model, headDeferred.where.field, deferreds.map(deferred => deferred.where.fieldValue))
+      dataResolver.batchResolveByUnique(headDeferred.model, headDeferred.where.field, deferreds.map(deferred => deferred.where.fieldGCValue))
 
     // assign the prismaNode that was requested by each deferred
     orderedDeferreds.map {
@@ -32,8 +32,8 @@ class OneDeferredResolver(dataResolver: DataResolver) {
 
   private def prismaNodesToToOneDeferredResultType(project: Project, deferred: OneDeferred, prismaNodes: Vector[PrismaNode]): Option[PrismaNode] = {
     deferred.where.fieldName match {
-      case "id" => prismaNodes.find(_.id == deferred.where.fieldValue)
-      case _    => prismaNodes.find(prismaNode => deferred.where.fieldValue == prismaNode.data.map(deferred.where.fieldName))
+      case "id" => prismaNodes.find(_.id == deferred.where.fieldGCValue)
+      case _    => prismaNodes.find(prismaNode => deferred.where.fieldGCValue == prismaNode.data.map(deferred.where.fieldName))
     }
   }
 }

@@ -18,12 +18,12 @@ object TestData extends AwaitUtils {
   ) = {
 
     val raw: List[(String, GCValue)] =
-      List(("text", StringGCValue(text)), ("id", IdGCValue(id)), ("done", BooleanGCValue(done.getOrElse(true))), ("json", JsonGCValue(json)))
+      List(("text", StringGCValue(text)), ("id", CuidGCValue(id)), ("done", BooleanGCValue(done.getOrElse(true))), ("json", JsonGCValue(json)))
     val args = PrismaArgs(RootGCValue(raw: _*))
 
     val mutaction = CreateDataItem(
       project = project,
-      path = Path.empty(NodeSelector.forId(model, id)),
+      path = Path.empty(NodeSelector.forCuid(model, id)),
       nonListArgs = args,
       listArgs = Vector.empty
     )

@@ -2,7 +2,7 @@ package com.prisma.util.coolArgs
 
 import com.prisma.api.connector._
 import com.prisma.api.schema.APIErrors
-import com.prisma.gc_values.{GCValueExtractor, ListGCValue, NullGCValue, RootGCValue}
+import com.prisma.gc_values.{ListGCValue, NullGCValue, RootGCValue}
 import com.prisma.shared.models._
 
 import scala.collection.immutable.Seq
@@ -162,11 +162,11 @@ case class CoolArgs(raw: Map[String, Any]) {
           raw.get(field.name) match {
             case Some(None) if field.defaultValue.isDefined && field.isRequired => throw APIErrors.InputInvalid("null", field.name, where.model.name)
             case Some(value)                                                    => Some((field.name, value))
-            case None if field.defaultValue.isDefined                           => Some((field.name, GCValueExtractor.fromGCValue(field.defaultValue.get)))
+            case None if field.defaultValue.isDefined                           => Some((field.name, field.defaultValue.get.value))
             case None                                                           => None
           }
         }
-        .toMap + ("id" -> where.fieldValueAsString))
+        .toMap + ("id" -> where.value))
   }
 
   def generateNonListUpdateGCValues(model: Model): PrismaArgs = {

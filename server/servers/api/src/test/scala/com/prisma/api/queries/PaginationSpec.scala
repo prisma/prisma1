@@ -164,6 +164,35 @@ class PaginationSpec extends FlatSpec with Matchers with ApiSpecBase {
     result2.pathAsJsArray("data.list.todos").value.map(_.pathAsString("title")) should equal(List("4", "5", "6"))
   }
 
+  "the cursor returned on the top level" should "work 2" in {
+    val result1 = server.query(
+      """
+        |{
+        |  list(where: {name: "1"}) {
+        |    name
+        |    id
+        |  }
+        |}
+      """,
+      project
+    )
+
+    val cursor = result1.pathAsString("data.list.id")
+
+    val result2 = server.query(
+      s"""
+         |{
+         |  lists(first: 2 after:"$cursor") {
+         |    name
+         |  }
+         |}
+      """,
+      project
+    )
+
+    result2.toString should be("""{"data":{"lists":[{"name":"2"},{"name":"3"}]}}""")
+  }
+
   private def createLists(): Unit = {
     server.query(
       """

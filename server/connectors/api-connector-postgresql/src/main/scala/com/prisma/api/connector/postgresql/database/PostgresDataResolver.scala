@@ -22,7 +22,7 @@ case class PostgresDataResolver(
 
   val queryBuilder = PostgresApiDatabaseQueryBuilder(project, schemaName = schemaName.getOrElse(project.id))(ec)
 
-  override def resolveByGlobalId(globalId: IdGCValue): Future[Option[PrismaNode]] = { //todo rewrite this to use normal query?
+  override def resolveByGlobalId(globalId: CuidGCValue): Future[Option[PrismaNode]] = { //todo rewrite this to use normal query?
     if (globalId.value == "viewer-fixed") return Future.successful(Some(PrismaNode(globalId, RootGCValue.empty, Some("Viewer"))))
 
     val query: SqlAction[Option[String], NoStream, Read] = TableQuery(new ProjectRelayIdTable(_, project.id))
@@ -50,7 +50,7 @@ case class PostgresDataResolver(
   }
 
   override def resolveByUnique(where: NodeSelector): Future[Option[PrismaNode]] =
-    batchResolveByUnique(where.model, where.field, Vector(where.fieldValue)).map(_.headOption)
+    batchResolveByUnique(where.model, where.field, Vector(where.fieldGCValue)).map(_.headOption)
 
   override def countByTable(table: String, whereFilter: Option[Filter] = None): Future[Int] = {
     val actualTable = project.schema.getModelByName(table) match {
@@ -66,13 +66,13 @@ case class PostgresDataResolver(
     performWithTiming("batchResolveByUnique", readonlyClientDatabase.run(query))
   }
 
-  override def batchResolveScalarList(model: Model, listField: ScalarField, nodeIds: Vector[IdGCValue]): Future[Vector[ScalarListValues]] = {
+  override def batchResolveScalarList(model: Model, listField: ScalarField, nodeIds: Vector[CuidGCValue]): Future[Vector[ScalarListValues]] = {
     val query = queryBuilder.selectFromScalarList(model.dbName, listField, nodeIds)
     performWithTiming("batchResolveScalarList", readonlyClientDatabase.run(query))
   }
 
   override def resolveByRelationManyModels(fromField: RelationField,
-                                           fromNodeIds: Vector[IdGCValue],
+                                           fromNodeIds: Vector[CuidGCValue],
                                            args: Option[QueryArguments]): Future[Vector[ResolverResult[PrismaNodeWithParent]]] = {
     val query = queryBuilder.batchSelectAllFromRelatedModel(project.schema, fromField, fromNodeIds, args)
     performWithTiming("resolveByRelation", readonlyClientDatabase.run(query))
