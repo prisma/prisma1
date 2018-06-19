@@ -216,11 +216,9 @@ lazy val akkaUtils = libProject("akka-utils")
 lazy val metrics = libProject("metrics")
   .dependsOn(errorReporting)
   .dependsOn(akkaUtils)
-  .dependsOn(prismaConfig)
   .settings(
     libraryDependencies ++= Seq(
       microMeter,
-      prometheusPushGateway
     )
   )
 
