@@ -23,7 +23,7 @@ class BulkExportNullHandlingSpec extends FlatSpec with Matchers with ApiSpecBase
 
       val model0 = schema
         .model("Model0")
-        .manyToManyRelation("bla", "bla", model1)
+        .manyToManyRelation("bla", "bla2", model1)
         .field("nonList", _.String)
         .field("testList", _.String, isList = true)
         .field("isNull", _.String)

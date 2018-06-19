@@ -18,6 +18,7 @@ trait DeploySpecBase extends ConnectorAwareTest with BeforeAndAfterEach with Bef
   implicit lazy val system                                   = ActorSystem()
   implicit lazy val materializer                             = ActorMaterializer()
   implicit lazy val testDependencies: TestDeployDependencies = TestDeployDependencies()
+  implicit lazy val implicitSuite                            = self
 
   override def prismaConfig = testDependencies.config
 
@@ -60,13 +61,12 @@ trait ActiveDeploySpecBase extends DeploySpecBase { self: Suite =>
 
   def setupProject(
       schema: String,
-      name: String = Cuid.createCuid(),
-      stage: String = Cuid.createCuid(),
+      stage: String = "default",
       secrets: Vector[String] = Vector.empty
-  ): (Project, Migration) = {
-
-    val projectId = testDependencies.projectIdEncoder.fromSegments(List(name, stage))
-    projectsToCleanUp :+ projectId
+  )(implicit suite: Suite): (Project, Migration) = {
+    val name      = suite.getClass.getSimpleName
+    val idAsStrig = testDependencies.projectIdEncoder.toEncodedString(name, stage)
+    internalDB.deleteProjectDatabase(idAsStrig).await()
     server.addProject(name, stage)
     server.deploySchema(name, stage, schema.stripMargin, secrets)
   }
@@ -76,7 +76,14 @@ trait PassiveDeploySpecBase extends DeploySpecBase { self: Suite =>
 
   override def runSuiteOnlyForPassiveConnectors = true
 
-  def setupProjectDatabaseForProject(projectId: String, sql: String) = {
+  def setupProjectDatabaseForProject(sql: String)(implicit suite: Suite): Unit = {
+    val name      = suite.getClass.getSimpleName
+    val stage     = "default"
+    val projectId = testDependencies.projectIdEncoder.toEncodedString(name, stage)
+    setupProjectDatabaseForProject(projectId, sql)
+  }
+
+  def setupProjectDatabaseForProject(projectId: String, sql: String): Unit = {
     val connector = testDependencies.deployConnector.asInstanceOf[PostgresDeployConnector]
     val session   = connector.internalDatabase.createSession()
     val statement = session.createStatement()

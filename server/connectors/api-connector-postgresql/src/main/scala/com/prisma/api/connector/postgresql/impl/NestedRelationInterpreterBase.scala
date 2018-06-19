@@ -15,41 +15,32 @@ trait NestedRelationInterpreterBase extends DatabaseMutactionInterpreter {
   def topIsCreate: Boolean
   def schema: Schema = project.schema
 
-  val lastEdge         = path.lastEdge_!
-  val p                = lastEdge.parentField
-  val otherModel       = lastEdge.child
-  val otherFieldOption = lastEdge.childField
-  val c = otherFieldOption match {
-    case Some(x) => x
-    case None    => p.copy(isRequired = false, isList = true) //optional back-relation defaults to List-NonRequired
-  }
+  val edge              = path.lastEdge_!
+  val relationTableName = path.lastRelation_!.relationTableName
+  val p                 = edge.parentField
+  val otherModel        = edge.child
+  val c                 = edge.childField
 
-  val parentCauseString = path.lastEdge_! match {
-    case edge: NodeEdge =>
-      s"-OLDPARENTFAILURETRIGGER@${path.lastRelation_!.relationTableNameNew(schema)}@${path.lastEdge_!.columnForChildRelationSide(schema)}@${edge.childWhere.fieldValueAsString}-"
-    case _: ModelEdge =>
-      s"-OLDPARENTFAILURETRIGGER@${path.lastRelation_!.relationTableNameNew(schema)}@${path.lastEdge_!.columnForChildRelationSide(schema)}-"
+  val parentCauseString = edge match {
+    case edge: NodeEdge => s"-OLDPARENTFAILURETRIGGER@${relationTableName}@${edge.columnForChildRelationSide}@${edge.childWhere.fieldValueAsString}-"
+    case _: ModelEdge   => s"-OLDPARENTFAILURETRIGGER@${relationTableName}@${edge.columnForChildRelationSide}-"
   }
 
   val childCauseString = path.edges.length match {
     case 0 => sys.error("There should always be at least one edge on the path if this is called.")
-    case 1 =>
-      s"-OLDCHILDPATHFAILURETRIGGER@${path.lastRelation_!.relationTableNameNew(schema)}@${path.lastEdge_!.columnForParentRelationSide(schema)}@${path.root.fieldValueAsString}-"
+    case 1 => s"-OLDCHILDPATHFAILURETRIGGER@${relationTableName}@${path.lastEdge_!.columnForParentRelationSide}@${path.root.fieldValueAsString}-"
     case _ =>
       path.removeLastEdge.lastEdge_! match {
-        case edge: NodeEdge =>
-          s"-OLDCHILDPATHFAILURETRIGGER@${path.lastRelation_!.relationTableNameNew(schema)}@${path.lastEdge_!.columnForParentRelationSide(schema)}@${edge.childWhere.fieldValueAsString}-"
-        case _: ModelEdge =>
-          s"-OLDCHILDPATHFAILURETRIGGER@${path.lastRelation_!.relationTableNameNew(schema)}@${path.lastEdge_!.columnForParentRelationSide(schema)}-"
+        case edge: NodeEdge => s"-OLDCHILDPATHFAILURETRIGGER@${relationTableName}@${edge.columnForParentRelationSide}@${edge.childWhere.fieldValueAsString}-"
+        case _: ModelEdge   => s"-OLDCHILDPATHFAILURETRIGGER@${relationTableName}@${edge.columnForParentRelationSide}-"
       }
   }
 
   def checkForOldParent(implicit mb: PostgresApiDatabaseMutationBuilder) = mb.oldParentFailureTrigger(path, parentCauseString)
   def checkForOldParentByChildWhere(implicit mb: PostgresApiDatabaseMutationBuilder): slick.sql.SqlStreamingAction[Vector[String], String, slick.dbio.Effect] =
     path.lastEdge_! match {
-      case _: ModelEdge => sys.error("Should be a node edge")
-      case edge: NodeEdge =>
-        mb.oldParentFailureTriggerForRequiredRelations(edge.relation, edge.childWhere, edge.childRelationSide, parentCauseString)
+      case _: ModelEdge   => sys.error("Should be a node edge")
+      case edge: NodeEdge => mb.oldParentFailureTriggerForRequiredRelations(edge.relation, edge.childWhere, edge.childRelationSide, parentCauseString)
     }
 
   def checkForOldChild(implicit mb: PostgresApiDatabaseMutationBuilder) = mb.oldChildFailureTrigger(path, childCauseString)

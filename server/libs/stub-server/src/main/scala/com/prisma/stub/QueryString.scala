@@ -1,6 +1,6 @@
 package com.prisma.stub
 
-import com.netaporter.uri.Uri
+import io.lemonlabs.uri.{Uri, Url}
 
 import scala.collection.SortedMap
 
@@ -8,7 +8,7 @@ object QueryString {
   def queryStringToMap(asNullableString: String): Map[String, String] = {
     Option(asNullableString) match {
       case Some(string) =>
-        Map(Uri.parse(s"?$string").query.params: _*).filterKeys(_.trim != "").mapValues(_.getOrElse(""))
+        Map(Url.parse(s"?$string").query.params: _*).filterKeys(_.trim != "").mapValues(_.getOrElse(""))
       case None =>
         Map.empty
     }

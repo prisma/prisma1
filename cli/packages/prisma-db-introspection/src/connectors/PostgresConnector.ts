@@ -2,6 +2,7 @@ import {
   Table,
   Column,
   TypeIdentifier,
+  PrimaryKey,
   PostgresConnectionDetails,
 } from '../types/common'
 import * as _ from 'lodash'
@@ -22,7 +23,8 @@ export class PostgresConnector {
 
   async queryRelations(schemaName: string) {
     const res = await this.client.query(
-      `SELECT
+      `
+SELECT
     tc.table_schema, tc.constraint_name, tc.table_name, kcu.column_name, 
     ccu.table_schema AS foreign_table_schema,
     ccu.table_name AS foreign_table_name,
@@ -40,21 +42,53 @@ WHERE constraint_type = 'FOREIGN KEY' AND tc.table_schema = $1::text;`,
     return res.rows
   }
 
+  // Queries all columns of all tables in given schema and returns them grouped by table_name
   async queryTables(schemaName: string) {
+    //, table_name, column_name, is_nullable, data_type, udt_name, column_default
     const res = await this.client.query(
-      `select table_name, column_name, is_nullable, data_type, udt_name, column_default, (SELECT EXISTS(
+      `
+      SELECT *, (SELECT EXISTS(
         SELECT *
-        FROM 
-            information_schema.table_constraints AS tc 
-            JOIN information_schema.key_column_usage AS kcu
-              ON tc.constraint_name = kcu.constraint_name
-        WHERE constraint_type = 'UNIQUE' AND tc.table_schema = 'databaseintrospector' AND tc.table_name = c.table_name AND kcu.column_name = c.column_name)) as is_unique from information_schema.columns c where table_schema = $1::text`,
+        FROM information_schema.table_constraints AS tc 
+        JOIN information_schema.key_column_usage AS kcu
+          ON tc.constraint_name = kcu.constraint_name
+        WHERE constraint_type = 'UNIQUE' 
+        AND tc.table_schema = $1::text
+        AND tc.table_name = c.table_name
+        AND kcu.column_name = c.column_name)) as is_unique
+      FROM  information_schema.columns c
+      WHERE table_schema = $1::text
+      `,
       [schemaName.toLowerCase()]
     )
 
-    const tables = _.groupBy(res.rows, 'table_name')
+    return _.groupBy(res.rows, 'table_name')
+  }
 
-    return tables
+  async queryPrimaryKeys(schemaName: string): Promise<PrimaryKey[]> {
+    return this.client.query(
+      `
+      SELECT tc.table_name, kc.column_name
+      FROM information_schema.table_constraints tc
+      JOIN information_schema.key_column_usage kc 
+        ON kc.table_name = tc.table_name 
+        AND kc.table_schema = tc.table_schema
+        AND kc.constraint_name = tc.constraint_name
+      WHERE tc.constraint_type = 'PRIMARY KEY'
+      AND tc.table_schema = $1::text
+      AND kc.ordinal_position IS NOT NULL
+      ORDER BY tc.table_name, kc.position_in_unique_constraint;
+      `,
+      [schemaName.toLowerCase()]
+    ).then(keys => {
+      const grouped = _.groupBy(keys.rows, 'table_name')
+      return _.map(grouped, (pks, key) => {
+        return {
+          tableName: key,
+          fields: pks.map(x => x.column_name)
+        } as PrimaryKey
+      })
+    })
   }
 
   async querySchemas() {
@@ -82,32 +116,43 @@ WHERE constraint_type = 'FOREIGN KEY' AND tc.table_schema = $1::text;`,
 
   async listSchemas(): Promise<string[]> {
     await this.connectionPromise
-
-    const schemas = await this.querySchemas()
-
-    return schemas
+    return await this.querySchemas()
   }
 
-  async listTables(schemaName): Promise<Table[]> {
+  async listTables(schemaName: string): Promise<Table[]> {
     await this.connectionPromise
 
-    const relations = await this.queryRelations(schemaName)
-    const tables = await this.queryTables(schemaName)
+    const [relations, tables, primaryKeys] = await Promise.all([
+      this.queryRelations(schemaName),
+      this.queryTables(schemaName),
+      this.queryPrimaryKeys(schemaName)
+    ])
 
     const withColumns = _.map(tables, (originalColumns, key) => {
+      const tablePrimaryKey = primaryKeys.find(pk => pk.tableName === key) || null
       const columns = _.map(originalColumns, column => {
+
+        // Ignore compound keys for now
+        const isPk = Boolean(tablePrimaryKey
+          && tablePrimaryKey.fields.length == 1
+          && Boolean(tablePrimaryKey.fields.includes(column.column_name))
+        )
+
         const { typeIdentifier, comment, error } = this.toTypeIdentifier(
           column.data_type,
-          column.column_name
+          column.column_name,
+          isPk
         )
+
         const relation = this.extractRelation(
           column.table_name,
           column.column_name,
           relations
         )
 
-        return {
-          isUnique: column.is_unique,
+        const col = {
+          isUnique: column.is_unique || isPk,
+          isPrimaryKey: isPk,
           defaultValue: this.parseDefaultValue(column.column_default),
           name: column.column_name,
           type: column.data_type,
@@ -116,9 +161,17 @@ WHERE constraint_type = 'FOREIGN KEY' AND tc.table_schema = $1::text;`,
           relation: relation,
           nullable: column.is_nullable === 'YES',
         } as Column
+
+        return col
       }).filter(x => x != null) as Column[]
 
-      const sortedColumns = _.sortBy(columns, x => x.name)
+      // todo: relation table if 2 foreign keys. Also: No id field? + no other column that has NOT NULL and no default
+      const sortedColumns = _.sortBy(columns.filter(c => !c.isPrimaryKey), x => x.name)
+      const primaryKeyCol = columns.find(c => c.isPrimaryKey)
+      if (primaryKeyCol) {
+        sortedColumns.unshift(primaryKeyCol)
+      }
+
       const isJunctionTable =
         sortedColumns.length === 2 &&
         sortedColumns.every(x => x.relation != null)
@@ -130,9 +183,7 @@ WHERE constraint_type = 'FOREIGN KEY' AND tc.table_schema = $1::text;`,
       }
     })
 
-    const sortedTables = _.sortBy(withColumns, x => x.name)
-
-    return sortedTables
+    return _.sortBy(withColumns, x => x.name)
   }
 
   parseDefaultValue(string) {
@@ -144,6 +195,10 @@ WHERE constraint_type = 'FOREIGN KEY' AND tc.table_schema = $1::text;`,
       return '[AUTO INCREMENT]'
     }
 
+    if (string.includes('now()') || string.includes("'now'::text")) {
+      return null
+    }
+
     if (string.includes('::')) {
       const candidate = string.split('::')[0]
       const withoutSuffix = candidate.endsWith(`'`)
@@ -153,6 +208,10 @@ WHERE constraint_type = 'FOREIGN KEY' AND tc.table_schema = $1::text;`,
         ? withoutSuffix.substring(1, withoutSuffix.length)
         : withoutSuffix
 
+      if (withoutPrefix === "NULL") {
+        return null
+      }
+
       return withoutPrefix
     }
 
@@ -161,14 +220,15 @@ WHERE constraint_type = 'FOREIGN KEY' AND tc.table_schema = $1::text;`,
 
   toTypeIdentifier(
     type: string,
-    field: string
+    field: string,
+    isPrimaryKey: boolean
   ): {
-    typeIdentifier: TypeIdentifier | null
-    comment: string | null
-    error: string | null
-  } {
+      typeIdentifier: TypeIdentifier | null
+      comment: string | null
+      error: string | null
+    } {
     if (
-      field == 'id' &&
+      isPrimaryKey &&
       (type === 'character' ||
         type === 'character varying' ||
         type === 'text' ||
@@ -222,10 +282,13 @@ WHERE constraint_type = 'FOREIGN KEY' AND tc.table_schema = $1::text;`,
     if (type === 'json') {
       return { typeIdentifier: 'Json', comment: null, error: null }
     }
+    if (type === 'date') {
+      return { typeIdentifier: 'DateTime', comment: null, error: null }
+    }
 
     return {
       typeIdentifier: null,
-      comment: null,
+      comment: `Type '${type}' is not yet supported.`,
       error: `Not able to handle type '${type}'`,
     }
   }

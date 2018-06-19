@@ -3,7 +3,7 @@ package com.prisma.util.coolArgs
 import com.prisma.api.connector.PrismaArgs
 import com.prisma.gc_values._
 import com.prisma.shared.models.TypeIdentifier.TypeIdentifier
-import com.prisma.shared.models.{Field, Model, TypeIdentifier}
+import com.prisma.shared.models.{Field, Model, ScalarField, TypeIdentifier}
 import org.joda.time.DateTime
 import org.scalactic.{Bad, Good, Or}
 import play.api.libs.json.{JsValue, _}
@@ -20,6 +20,7 @@ case class GCAnyConverter(typeIdentifier: TypeIdentifier, isList: Boolean) exten
   override def toGCValue(t: Any): Or[GCValue, InvalidValueForScalarType] = {
     try {
       val result = (t, typeIdentifier) match {
+        case (None, _)                                                                => NullGCValue
         case (null, _)                                                                => NullGCValue
         case (_: NullValue, _)                                                        => NullGCValue
         case (x: String, _) if x == "null" && typeIdentifier != TypeIdentifier.String => NullGCValue
@@ -79,7 +80,7 @@ case class GCCreateReallyCoolArgsConverter(model: Model) {
 
   def toReallyCoolArgsFromJson(json: JsValue): PrismaArgs = {
 
-    def fromSingleJsValue(jsValue: JsValue, field: Field): GCValue = jsValue match {
+    def fromSingleJsValue(jsValue: JsValue, field: ScalarField): GCValue = jsValue match {
       case JsString(x)                                                    => StringGCValue(x)
       case JsNumber(x) if field.typeIdentifier == TypeIdentifier.Int      => IntGCValue(x.toInt)
       case JsNumber(x) if field.typeIdentifier == TypeIdentifier.Float    => FloatGCValue(x.toDouble)

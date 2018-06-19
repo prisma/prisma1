@@ -301,7 +301,7 @@ lazy val auth = libProject("auth").settings(libraryDependencies ++= Seq(jwt))
 
 lazy val slickUtils = libProject("slick-utils").settings(libraryDependencies ++= slick)
 
-lazy val prismaConfig = libProject("prisma-config").settings(libraryDependencies ++= Seq(snakeYML))
+lazy val prismaConfig = libProject("prisma-config").settings(libraryDependencies ++= Seq(snakeYML, scalaUri))
 
 val allDockerImageProjects = List(
   prismaLocal,
@@ -313,7 +313,8 @@ val allServerProjects = List(
   deploy,
   subscriptions,
   workers,
-  serversShared
+  serversShared,
+  sharedModels
 )
 
 lazy val deployConnectorProjects = List(
