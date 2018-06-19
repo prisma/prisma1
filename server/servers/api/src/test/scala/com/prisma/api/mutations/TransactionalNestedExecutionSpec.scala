@@ -102,8 +102,8 @@ class TransactionalNestedExecutionSpec extends FlatSpec with Matchers with ApiSp
     val falseWhereInError = "Some False ID"
 
     val project = SchemaDsl.fromBuilder { schema =>
-      val note = schema.model("Note").field("outerString", _.String).field("outerUnique", _.GraphQLID, isUnique = true)
-      schema.model("Todo").field_!("innerString", _.String).field("innerUnique", _.GraphQLID, isUnique = true).manyToManyRelation("note", "todo", note)
+      val note = schema.model("Note").field("outerString", _.String).field("outerUnique", _.Cuid, isUnique = true)
+      schema.model("Todo").field_!("innerString", _.String).field("innerUnique", _.Cuid, isUnique = true).manyToManyRelation("note", "todo", note)
     }
     database.setup(project)
 
@@ -176,8 +176,8 @@ class TransactionalNestedExecutionSpec extends FlatSpec with Matchers with ApiSp
     val falseWhereInError2 = "Some False ID2"
 
     val project = SchemaDsl.fromBuilder { schema =>
-      val note = schema.model("Note").field("outerString", _.String).field("outerUnique", _.GraphQLID, isUnique = true)
-      schema.model("Todo").field_!("innerString", _.String).field("innerUnique", _.GraphQLID, isUnique = true).manyToManyRelation("notes", "todos", note)
+      val note = schema.model("Note").field("outerString", _.String).field("outerUnique", _.Cuid, isUnique = true)
+      schema.model("Todo").field_!("innerString", _.String).field("innerUnique", _.Cuid, isUnique = true).manyToManyRelation("notes", "todos", note)
     }
     database.setup(project)
 
@@ -265,8 +265,8 @@ class TransactionalNestedExecutionSpec extends FlatSpec with Matchers with ApiSp
     val innerWhere2 = """"Some Inner ID2""""
 
     val project = SchemaDsl.fromBuilder { schema =>
-      val note = schema.model("Note").field("outerString", _.String).field("outerUnique", _.GraphQLID, isUnique = true)
-      schema.model("Todo").field_!("innerString", _.String).field("innerUnique", _.GraphQLID, isUnique = true).manyToManyRelation("notes", "todos", note)
+      val note = schema.model("Note").field("outerString", _.String).field("outerUnique", _.Cuid, isUnique = true)
+      schema.model("Todo").field_!("innerString", _.String).field("innerUnique", _.Cuid, isUnique = true).manyToManyRelation("notes", "todos", note)
     }
     database.setup(project)
 

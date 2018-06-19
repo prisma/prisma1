@@ -29,36 +29,46 @@ object JdbcExtensions {
   }
 
   implicit class PreparedStatementExtensions(val ps: PreparedStatement) extends AnyVal {
-    def setGcValue(index: Int, value: GCValue): Unit = value match {
-      case StringGCValue(string)     => ps.setString(index, string)
-      case BooleanGCValue(boolean)   => ps.setBoolean(index, boolean)
-      case IntGCValue(int)           => ps.setInt(index, int)
-      case FloatGCValue(float)       => ps.setDouble(index, float)
-      case IdGCValue(id)             => ps.setString(index, id)
-      case DateTimeGCValue(dateTime) => ps.setTimestamp(index, timeStampUTC(dateTime))
-      case EnumGCValue(enum)         => ps.setString(index, enum)
-      case JsonGCValue(json)         => ps.setString(index, json.toString)
-      case NullGCValue               => ps.setNull(index, java.sql.Types.NULL)
-      case x                         => sys.error(s"This method must only be called with LeafGCValues. Was called with: ${x.getClass}")
+    def setGcValue(index: Int, value: GCValue): Unit = {
+      value match {
+        case v: LeafGCValue => setLeafValue(index, v)
+        case x              => sys.error(s"This method must only be called with LeafGCValues. Was called with: ${x.getClass}")
+      }
+    }
+
+    private def setLeafValue(index: Int, value: LeafGCValue): Unit = {
+      value match {
+        case StringGCValue(string)     => ps.setString(index, string)
+        case BooleanGCValue(boolean)   => ps.setBoolean(index, boolean)
+        case IntGCValue(int)           => ps.setInt(index, int)
+        case FloatGCValue(float)       => ps.setDouble(index, float)
+        case CuidGCValue(id)           => ps.setString(index, id)
+        case UuidGCValue(uuid)         => ps.setObject(index, uuid)
+        case DateTimeGCValue(dateTime) => ps.setTimestamp(index, timeStampUTC(dateTime))
+        case EnumGCValue(enum)         => ps.setString(index, enum)
+        case JsonGCValue(json)         => ps.setString(index, json.toString)
+        case NullGCValue               => ps.setNull(index, java.sql.Types.NULL)
+      }
     }
   }
 
   implicit class ResultSetExtensions(val resultSet: ResultSet) extends AnyVal {
 
     def getId(model: Model)                   = getAsID(model.idField_!.dbName)
-    def getAsID(column: String)               = IdGCValue(resultSet.getString(column))
-    def getParentId(side: RelationSide.Value) = IdGCValue(resultSet.getString("__Relation__" + side.toString))
+    def getAsID(column: String)               = CuidGCValue(resultSet.getString(column))
+    def getParentId(side: RelationSide.Value) = CuidGCValue(resultSet.getString("__Relation__" + side.toString))
 
     def getGcValue(name: String, typeIdentifier: TypeIdentifier.Value): GCValue = {
       val calendar: java.util.Calendar = Calendar.getInstance(TimeZone.getTimeZone("UTC"))
 
       val gcValue: GCValue = typeIdentifier match {
-        case TypeIdentifier.String    => StringGCValue(resultSet.getString(name))
-        case TypeIdentifier.GraphQLID => IdGCValue(resultSet.getString(name))
-        case TypeIdentifier.Enum      => EnumGCValue(resultSet.getString(name))
-        case TypeIdentifier.Int       => IntGCValue(resultSet.getInt(name))
-        case TypeIdentifier.Float     => FloatGCValue(resultSet.getDouble(name))
-        case TypeIdentifier.Boolean   => BooleanGCValue(resultSet.getBoolean(name))
+        case TypeIdentifier.String  => StringGCValue(resultSet.getString(name))
+        case TypeIdentifier.Cuid    => CuidGCValue(resultSet.getString(name))
+        case TypeIdentifier.UUID    => UuidGCValue.parse_!(resultSet.getString(name))
+        case TypeIdentifier.Enum    => EnumGCValue(resultSet.getString(name))
+        case TypeIdentifier.Int     => IntGCValue(resultSet.getInt(name))
+        case TypeIdentifier.Float   => FloatGCValue(resultSet.getDouble(name))
+        case TypeIdentifier.Boolean => BooleanGCValue(resultSet.getBoolean(name))
         case TypeIdentifier.DateTime =>
           val sqlType = resultSet.getTimestamp(name, calendar)
           if (sqlType != null) {

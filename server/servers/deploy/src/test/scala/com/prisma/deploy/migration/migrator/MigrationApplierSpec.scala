@@ -26,10 +26,14 @@ class MigrationApplierSpec extends FlatSpec with Matchers with ActiveDeploySpecB
     errors = Vector.empty
   )
 
+  val step1Model = Model.empty.copy(name = "Step1").build(emptySchema)
+  val step2Model = Model.empty.copy(name = "Step2").build(emptySchema)
+  val step3Model = Model.empty.copy(name = "Step3").build(emptySchema)
+
   val mapper = stepMapper({
-    case CreateModel("Step1") => Vector(CreateModelTable(projectId, "Step1", "idColumn"))
-    case CreateModel("Step2") => Vector(CreateModelTable(projectId, "Step2", "idColumn"))
-    case CreateModel("Step3") => Vector(CreateModelTable(projectId, "Step3", "idColumn"))
+    case CreateModel("Step1") => Vector(CreateModelTable(projectId, step1Model))
+    case CreateModel("Step2") => Vector(CreateModelTable(projectId, step2Model))
+    case CreateModel("Step3") => Vector(CreateModelTable(projectId, step3Model))
   })
 
   override protected def beforeEach(): Unit = {
@@ -64,14 +68,14 @@ class MigrationApplierSpec extends FlatSpec with Matchers with ActiveDeploySpecB
 
     val executor = mutactionExecutor(
       execute = {
-        case CreateModelTable(_, "Step1", _) => None
-        case CreateModelTable(_, "Step2", _) => Some(new Exception("booom!"))
-        case CreateModelTable(_, "Step3", _) => None
+        case CreateModelTable(_, `step1Model`) => None
+        case CreateModelTable(_, `step2Model`) => Some(new Exception("booom!"))
+        case CreateModelTable(_, `step3Model`) => None
       },
       rollback = {
-        case CreateModelTable(_, "Step1", _) => None
-        case CreateModelTable(_, "Step2", _) => None
-        case CreateModelTable(_, "Step3", _) => None
+        case CreateModelTable(_, `step1Model`) => None
+        case CreateModelTable(_, `step2Model`) => None
+        case CreateModelTable(_, `step3Model`) => None
       }
     )
     val applier = migrationApplier(mapper, executor)
@@ -89,14 +93,14 @@ class MigrationApplierSpec extends FlatSpec with Matchers with ActiveDeploySpecB
 
     val executor = mutactionExecutor(
       execute = {
-        case CreateModelTable(_, "Step1", _) => None
-        case CreateModelTable(_, "Step2", _) => None
-        case CreateModelTable(_, "Step3", _) => Some(new Exception("booom!"))
+        case CreateModelTable(_, `step1Model`) => None
+        case CreateModelTable(_, `step2Model`) => None
+        case CreateModelTable(_, `step3Model`) => Some(new Exception("booom!"))
       },
       rollback = {
-        case CreateModelTable(_, "Step1", _) => Some(new Exception("booom!"))
-        case CreateModelTable(_, "Step2", _) => None
-        case CreateModelTable(_, "Step3", _) => None
+        case CreateModelTable(_, `step1Model`) => Some(new Exception("booom!"))
+        case CreateModelTable(_, `step2Model`) => None
+        case CreateModelTable(_, `step3Model`) => None
       }
     )
 

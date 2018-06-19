@@ -90,16 +90,16 @@ object FilterArguments {
         }
       } else {
         field.typeIdentifier match {
-          case TypeIdentifier.GraphQLID => List(baseFilters, inclusionFilters, alphanumericFilters, stringFilters)
-          case TypeIdentifier.String    => List(baseFilters, inclusionFilters, alphanumericFilters, stringFilters)
-          case TypeIdentifier.Int       => List(baseFilters, inclusionFilters, alphanumericFilters)
-          case TypeIdentifier.Float     => List(baseFilters, inclusionFilters, alphanumericFilters)
-          case TypeIdentifier.Boolean   => List(baseFilters)
-          case TypeIdentifier.Enum      => List(baseFilters, inclusionFilters)
-          case TypeIdentifier.DateTime  => List(baseFilters, inclusionFilters, alphanumericFilters)
-          case TypeIdentifier.Json      => List()
-          case TypeIdentifier.Relation  => List(oneRelationFilters)
-          case _                        => List()
+          case TypeIdentifier.Cuid     => List(baseFilters, inclusionFilters, alphanumericFilters, stringFilters)
+          case TypeIdentifier.String   => List(baseFilters, inclusionFilters, alphanumericFilters, stringFilters)
+          case TypeIdentifier.Int      => List(baseFilters, inclusionFilters, alphanumericFilters)
+          case TypeIdentifier.Float    => List(baseFilters, inclusionFilters, alphanumericFilters)
+          case TypeIdentifier.Boolean  => List(baseFilters)
+          case TypeIdentifier.Enum     => List(baseFilters, inclusionFilters)
+          case TypeIdentifier.DateTime => List(baseFilters, inclusionFilters, alphanumericFilters)
+          case TypeIdentifier.Json     => List()
+          case TypeIdentifier.Relation => List(oneRelationFilters)
+          case _                       => List()
         }
       }
 
