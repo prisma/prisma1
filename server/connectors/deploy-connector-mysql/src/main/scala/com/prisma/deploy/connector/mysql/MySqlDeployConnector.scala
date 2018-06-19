@@ -51,7 +51,7 @@ case class MySqlDeployConnector(config: DatabaseConfig)(implicit ec: ExecutionCo
   override def getOrCreateTelemetryInfo(): Future[TelemetryInfo]       = internalDatabaseRoot.run(TelemetryTable.getOrCreateInfo())
   override def updateTelemetryInfo(lastPinged: DateTime): Future[Unit] = internalDatabaseRoot.run(TelemetryTable.updateInfo(lastPinged)).map(_ => ())
   override def projectIdEncoder: ProjectIdEncoder                      = ProjectIdEncoder('@')
-  override def cloudSecretPersistence                                  = MySqlPrismaCloudSecretLoaderImpl()
+  override def cloudSecretPersistence                                  = CloudSecretPersistenceImpl(internalDatabase)
 
   override def initialize(): Future[Unit] = {
     val action = MysqlInternalDatabaseSchema.createSchemaActions(internalDatabaseDefs.managementSchemaName, recreate = false)
