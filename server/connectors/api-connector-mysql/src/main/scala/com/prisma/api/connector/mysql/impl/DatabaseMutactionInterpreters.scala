@@ -61,7 +61,7 @@ case class CascadingDeleteRelationMutactionsInterpreter(mutaction: CascadingDele
 
 case class CreateDataItemInterpreter(mutaction: CreateDataItem) extends DatabaseMutactionInterpreter {
   val project = mutaction.project
-  val path    = mutaction.path
+  val model    = mutaction.model
 
   override val action = {
     val createNonList  = MySqlApiDatabaseMutationBuilder.createDataItem(project.id, path, mutaction.nonListArgs)

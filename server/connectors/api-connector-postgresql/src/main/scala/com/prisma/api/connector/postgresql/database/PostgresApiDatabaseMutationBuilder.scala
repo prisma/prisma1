@@ -8,19 +8,19 @@ import com.prisma.api.connector.postgresql.database.JdbcExtensions._
 import com.prisma.api.connector.postgresql.database.PostgresSlickExtensions._
 import com.prisma.api.schema.UserFacingError
 import com.prisma.gc_values.{GCValue, ListGCValue, NullGCValue, _}
-import com.prisma.shared.models.Manifestations.RelationTableManifestation
 import com.prisma.shared.models._
 import com.prisma.slick.NewJdbcExtensions._
 import cool.graph.cuid.Cuid
 import org.joda.time.{DateTime, DateTimeZone}
-import slick.dbio.{DBIOAction, Effect, NoStream}
-import slick.jdbc.PostgresProfile.api._
-import slick.jdbc.{PositionedParameters, SQLActionBuilder}
-import slick.sql.{SqlAction, SqlStreamingAction}
 import org.jooq._
 import org.jooq.conf.Settings
 import org.jooq.impl.DSL
 import org.jooq.impl.DSL._
+import slick.dbio.{DBIOAction, Effect, NoStream}
+import slick.jdbc.PostgresProfile.api._
+import slick.jdbc.{PositionedParameters, SQLActionBuilder}
+import slick.sql.SqlStreamingAction
+
 import scala.collection.JavaConverters._
 
 case class PostgresApiDatabaseMutationBuilder(schemaName: String) {
@@ -77,93 +77,117 @@ case class PostgresApiDatabaseMutationBuilder(schemaName: String) {
           .getSQL
       }
 
-      val itemInsert: PreparedStatement = x.connection.prepareStatement(queryString, Statement.RETURN_GENERATED_KEYS)
-      itemInsert.setGcValue(1, where.fieldGCValue)
-      itemInsert.setString(2, where.model.stableIdentifier)
+      val statement: PreparedStatement = x.connection.prepareStatement(queryString, Statement.RETURN_GENERATED_KEYS)
+      statement.setGcValue(1, where.fieldGCValue)
+      statement.setString(2, where.model.stableIdentifier)
 
-      itemInsert.execute()
+      statement.execute()
     }
   }
 
-  def createRelationRowByPath(path: Path): SqlAction[Int, NoStream, Effect] = {
-    val relation = path.lastRelation_!
-    val childWhere = path.lastEdge_! match {
-      case _: ModelEdge   => sys.error("Needs to be a node edge.")
-      case edge: NodeEdge => edge.childWhere
-    }
+  def createRelationRowByPath(relationField: RelationField, parentId: IdGCValue, childId: IdGCValue): DBIO[_] = {
+    val relation = relationField.relation
 
     if (relation.isInlineRelation) {
-      val inlineManifestation = relation.inlineManifestation.get
-      val referencingColumn   = inlineManifestation.referencingColumn
-      val tableName           = relation.relationTableName
-      val otherModel = if (inlineManifestation.inTableOfModelId == relation.modelAName) {
-        relation.modelB
-      } else {
-        relation.modelA
-      }
-      val childWhereCondition = sql"""where "#$schemaName"."#${childWhere.model.dbName}"."#${childWhere.field.dbName}" = ${childWhere.fieldGCValue}"""
-      val otherWhereCondition = sql"""where "#$schemaName"."#${path.removeLastEdge.lastModel.dbName}"."#${path.removeLastEdge.lastModel.dbNameOfIdField_!}" in (""" ++ pathQueryForLastChild(
-        path.removeLastEdge) ++ sql")"
-      val selectIdOfChild = sql"""select "#${childWhere.model.dbNameOfIdField_!}" as id from "#$schemaName"."#${childWhere.model.dbName}" """ ++ childWhereCondition
-      val selectIdOfOther = sql"""select "#${otherModel.dbNameOfIdField_!}" as id from "#$schemaName"."#${otherModel.dbName}" """ ++ otherWhereCondition
+      ???
 
-      val rowToUpdateCondition = if (relation.isSameModelRelation) {
-        if (path.lastEdge_!.childField.relationSide == RelationSide.A) {
-          childWhereCondition
-        } else {
-          otherWhereCondition
-        }
-      } else {
-        if (inlineManifestation.inTableOfModelId == childWhere.model.name) {
-          childWhereCondition
-        } else {
-          otherWhereCondition
-        }
-      }
+      //Fixme
 
-      val nodeToLinkToCondition = if (relation.isSameModelRelation) {
-        if (path.lastEdge_!.childField.relationSide == RelationSide.A) {
-          selectIdOfOther
-        } else {
-          selectIdOfChild
-        }
-      } else {
-        if (inlineManifestation.inTableOfModelId == childWhere.model.name) {
-          selectIdOfOther
-        } else {
-          selectIdOfChild
-        }
-      }
-
-      (sql"""update "#$schemaName"."#$tableName" """ ++
-        sql"""set "#$referencingColumn" = subquery.id""" ++
-        sql"""from (""" ++ nodeToLinkToCondition ++ sql""") as subquery""" ++
-        rowToUpdateCondition).asUpdate
+//      val inlineManifestation = relation.inlineManifestation.get
+//      val referencingColumn   = inlineManifestation.referencingColumn
+//      val tableName           = relation.relationTableName
+//      val otherModel = if (inlineManifestation.inTableOfModelId == relation.modelAName) {
+//        relation.modelB
+//      } else {
+//        relation.modelA
+//      }
+//      val childWhereCondition = sql"""where "#$schemaName"."#${childWhere.model.dbName}"."#${childWhere.field.dbName}" = ${childWhere.fieldGCValue}"""
+//      val otherWhereCondition = sql"""where "#$schemaName"."#${path.removeLastEdge.lastModel.dbName}"."#${path.removeLastEdge.lastModel.dbNameOfIdField_!}" in (""" ++ pathQueryForLastChild(
+//        path.removeLastEdge) ++ sql")"
+//      val selectIdOfChild = sql"""select "#${childWhere.model.dbNameOfIdField_!}" as id from "#$schemaName"."#${childWhere.model.dbName}" """ ++ childWhereCondition
+//      val selectIdOfOther = sql"""select "#${otherModel.dbNameOfIdField_!}" as id from "#$schemaName"."#${otherModel.dbName}" """ ++ otherWhereCondition
+//
+//      val rowToUpdateCondition = if (relation.isSameModelRelation) {
+//        if (path.lastEdge_!.childField.relationSide == RelationSide.A) {
+//          childWhereCondition
+//        } else {
+//          otherWhereCondition
+//        }
+//      } else {
+//        if (inlineManifestation.inTableOfModelId == childWhere.model.name) {
+//          childWhereCondition
+//        } else {
+//          otherWhereCondition
+//        }
+//      }
+//
+//      val nodeToLinkToCondition = if (relation.isSameModelRelation) {
+//        if (path.lastEdge_!.childField.relationSide == RelationSide.A) {
+//          selectIdOfOther
+//        } else {
+//          selectIdOfChild
+//        }
+//      } else {
+//        if (inlineManifestation.inTableOfModelId == childWhere.model.name) {
+//          selectIdOfOther
+//        } else {
+//          selectIdOfChild
+//        }
+//      }
+//
+//      (sql"""update "#$schemaName"."#$tableName" """ ++
+//        sql"""set "#$referencingColumn" = subquery.id""" ++
+//        sql"""from (""" ++ nodeToLinkToCondition ++ sql""") as subquery""" ++
+//        rowToUpdateCondition).asUpdate
 
     } else if (relation.hasManifestation) {
-      val nodeEdge        = path.lastEdge_!.asInstanceOf[NodeEdge]
-      val parentModel     = nodeEdge.parent
-      val childModel      = nodeEdge.child
-      val manifestation   = relation.manifestation.get.asInstanceOf[RelationTableManifestation]
-      val columnForParent = if (parentModel.name == relation.modelAName) manifestation.modelAColumn else manifestation.modelBColumn
-      val columnForChild  = if (childModel.name == relation.modelAName) manifestation.modelAColumn else manifestation.modelBColumn
+      SimpleDBIO[Boolean] { x =>
+        lazy val queryString: String = {
+          val sql = DSL.using(SQLDialect.POSTGRES_9_5, new Settings().withRenderFormatted(true))
 
-      (sql"""insert into "#$schemaName"."#${path.lastRelation_!.relationTableName}" ("#$columnForParent", "#$columnForChild")""" ++
-        sql"""Select """ ++ pathQueryForLastChild(path.removeLastEdge) ++ sql"," ++
-        sql""" "#${childWhere.model.dbNameOfIdField_!}" FROM "#$schemaName"."#${childWhere.model.dbName}" where "#${childWhere.field.dbName}" = ${childWhere.fieldGCValue}""").asUpdate
+          val relationTable = table(name(schemaName, relation.relationTableName))
+
+          sql
+            .insertInto(relationTable)
+            .columns(
+              field(name(schemaName, relation.relationTableName, relationField.relationSide.toString)),
+              field(name(schemaName, relation.relationTableName, relationField.oppositeRelationSide.toString))
+            )
+            .values(placeHolder, placeHolder)
+            .getSQL
+        }
+
+        val statement: PreparedStatement = x.connection.prepareStatement(queryString, Statement.RETURN_GENERATED_KEYS)
+        statement.setGcValue(1, parentId)
+        statement.setGcValue(2, childId)
+
+        statement.execute()
+      }
     } else {
-      val relationId = Cuid.createCuid()
-      (sql"""insert into "#$schemaName"."#${path.lastRelation_!.relationTableName}" """ ++
-        sql"""("id", "#${path.columnForParentSideOfLastEdge}", "#${path.columnForChildSideOfLastEdge}")""" ++
-        sql"""Select '#$relationId',""" ++ pathQueryForLastChild(path.removeLastEdge) ++ sql""","#${childWhere.model.dbNameOfIdField_!}" """ ++
-        sql"""FROM "#$schemaName"."#${childWhere.model.dbName}" where "#${childWhere.field.dbName}" = ${childWhere.fieldGCValue}
-              ON CONFLICT DO NOTHING
-           """).asUpdate
+      SimpleDBIO[Boolean] { x =>
+        lazy val queryString: String = {
+          val sql           = DSL.using(SQLDialect.POSTGRES_9_5, new Settings().withRenderFormatted(true))
+          val relationTable = table(name(schemaName, relation.relationTableName))
 
+          sql
+            .insertInto(relationTable)
+            .columns(
+              field(name(schemaName, relation.relationTableName, "id")),
+              field(name(schemaName, relation.relationTableName, relationField.relationSide.toString)),
+              field(name(schemaName, relation.relationTableName, relationField.oppositeRelationSide.toString))
+            )
+            .values(placeHolder, placeHolder, placeHolder)
+            .getSQL
+        }
+
+        val statement: PreparedStatement = x.connection.prepareStatement(queryString, Statement.RETURN_GENERATED_KEYS)
+        statement.setString(1, Cuid.createCuid())
+        statement.setGcValue(2, parentId)
+        statement.setGcValue(3, childId)
+
+        statement.execute()
+      }
     }
-//    https://stackoverflow.com/questions/1109061/insert-on-duplicate-update-in-postgresql
-//    ++
-//      sql"on conflict (id )  key update #$databaseName.#${path.lastRelation_!.relationTableName}.id = #$databaseName.#${path.lastRelation_!.relationTableName}.id").asUpdate
   }
 
   //endregion

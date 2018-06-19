@@ -16,7 +16,7 @@ import scala.concurrent.ExecutionContext
 
 case class AddDataItemToManyRelationByPathInterpreter(mutaction: AddDataItemToManyRelationByPath) extends DatabaseMutactionInterpreter {
 
-  def action(mutationBuilder: PostgresApiDatabaseMutationBuilder) = mutationBuilder.createRelationRowByPath(mutaction.path)
+  def action(mutationBuilder: PostgresApiDatabaseMutationBuilder) = ??? //Fixme remove this alltogether
 }
 
 case class CascadingDeleteRelationMutactionsInterpreter(mutaction: CascadingDeleteRelationMutactions) extends DatabaseMutactionInterpreter {
@@ -63,7 +63,7 @@ case class CreateDataItemInterpreter(mutaction: CreateDataItem, includeRelayRow:
       createResult <- mutationBuilder.createDataItem(model, mutaction.nonListArgs)
       _            <- mutationBuilder.setScalarList(Path.empty(NodeSelector.forIdGCValue(model, createResult.createdId)), mutaction.listArgs)
       _ <- if (includeRelayRow) {
-            mutationBuilder.createRelayRow(Path.empty(NodeSelector.forIdGCValue(model, createResult.createdId)))
+            mutationBuilder.createRelayRow(NodeSelector.forIdGCValue(model, createResult.createdId))
           } else {
             DBIO.successful(())
           }
@@ -108,10 +108,7 @@ case class NestedCreateDataItemInterpreter(mutaction: NestedCreateDataItem)(impl
     } else {
       for {
         createResult <- mutationBuilder.createDataItem(model, mutaction.nonListArgs)
-        path = Path
-          .empty(NodeSelector.forIdGCValue(parent, parentId))
-          .append(NodeEdge(mutaction.relationField, NodeSelector.forIdGCValue(model, createResult.createdId)))
-        _ <- mutationBuilder.createRelationRowByPath(path)
+        _            <- mutationBuilder.createRelationRowByPath(mutaction.relationField, parentId, createResult.createdId)
       } yield createResult
     }
   }
