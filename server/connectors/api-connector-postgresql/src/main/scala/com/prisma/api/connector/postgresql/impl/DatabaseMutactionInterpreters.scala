@@ -113,11 +113,10 @@ case class NestedCreateDataItemInterpreter(mutaction: NestedCreateDataItem, incl
 }
 
 case class DeleteDataItemInterpreter(mutaction: DeleteDataItem)(implicit ec: ExecutionContext) extends DatabaseMutactionInterpreter {
-//Fixme Toplevel Mutations should not have a parentId
   override def newAction(mutationBuilder: PostgresApiDatabaseMutationBuilder, parentId: IdGCValue)(implicit ec: ExecutionContext) = {
     for {
-      _ <- mutationBuilder.deleteRelayRowJooq(mutaction.where)
-      _ <- mutationBuilder.deleteDataItemJooq(mutaction.where)
+      _ <- mutationBuilder.deleteRelayRowByWhere(mutaction.where)
+      _ <- mutationBuilder.deleteDataItemByWhere(mutaction.where)
     } yield UnitDatabaseMutactionResult
   }
 
@@ -129,15 +128,20 @@ case class DeleteDataItemNestedInterpreter(mutaction: NestedDeleteDataItem)(impl
   override def newAction(mutationBuilder: PostgresApiDatabaseMutationBuilder, parentId: IdGCValue)(implicit ec: ExecutionContext) = {
     val parentField = mutaction.relationField
 
-    val childWhere: Option[NodeSelector] = mutaction.path.lastEdge_! match {
-      case ModelEdge(_)       => None
-      case NodeEdge(_, where) => Some(where)
+    mutaction.where match {
+      case Some(where) =>
+        for {
+          _ <- mutationBuilder.deleteRelayRowByWhere(where)
+          _ <- mutationBuilder.deleteDataItemByWhere(where)
+        } yield UnitDatabaseMutactionResult
+      case None =>
+        for {
+          _ <- mutationBuilder.deleteRelayRowByParentId(parentField, parentId)
+          _ <- mutationBuilder.deleteDataItemByParentId(parentField, parentId)
+        } yield UnitDatabaseMutactionResult
+
     }
 
-    for {
-      _ <- mutationBuilder.deleteRelayRowNested(parentField, parentId, childWhere)
-      _ <- mutationBuilder.deleteDataItemNested(parentField, parentId, childWhere)
-    } yield UnitDatabaseMutactionResult
   }
 
   override def action(mutationBuilder: PostgresApiDatabaseMutationBuilder) = ???

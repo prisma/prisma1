@@ -384,7 +384,7 @@ case class PostgresApiDatabaseMutationBuilder(schemaName: String) {
     }
   }
 
-  def deleteDataItemJooq(where: NodeSelector) = {
+  def deleteDataItemByWhere(where: NodeSelector) = {
     SimpleDBIO[Boolean] { x =>
       lazy val queryString: String = {
         val sql = DSL.using(SQLDialect.POSTGRES_9_5, new Settings().withRenderFormatted(true))
@@ -402,21 +402,14 @@ case class PostgresApiDatabaseMutationBuilder(schemaName: String) {
     }
   }
 
-  def deleteDataItemNested(parent: RelationField, parentId: IdGCValue, childWhere: Option[NodeSelector]) = {
+  def deleteDataItemByParentId(parent: RelationField, parentId: IdGCValue) = {
     SimpleDBIO[Boolean] { x =>
       val sql = DSL.using(SQLDialect.POSTGRES_9_5, new Settings().withRenderFormatted(true))
 
-      val condition = childWhere match {
-        case Some(where) =>
-          field(name(schemaName, where.model.dbName, where.field.dbName)).equal(placeHolder)
-
-        case None =>
-          //get it by parentId from relationTable
-          val subSelect = select(field(name(schemaName, parent.relation.relationTableName, parent.oppositeRelationSide.toString)))
-            .from(table(name(schemaName, parent.relation.relationTableName)))
-            .where(field(name(parent.relation.relationTableName, parent.relationSide.toString)).equal(placeHolder))
-          field(name(schemaName, parent.relatedModel_!.dbName, "id")).equal(subSelect)
-      }
+      val subSelect = select(field(name(schemaName, parent.relation.relationTableName, parent.oppositeRelationSide.toString)))
+        .from(table(name(schemaName, parent.relation.relationTableName)))
+        .where(field(name(parent.relation.relationTableName, parent.relationSide.toString)).equal(placeHolder))
+      val condition = field(name(schemaName, parent.relatedModel_!.dbName, "id")).equal(subSelect)
 
       val queryString = sql
         .deleteFrom(table(name(schemaName, parent.relatedModel_!.dbName)))
@@ -424,11 +417,7 @@ case class PostgresApiDatabaseMutationBuilder(schemaName: String) {
         .getSQL
 
       val statement: PreparedStatement = x.connection.prepareStatement(queryString, Statement.RETURN_GENERATED_KEYS)
-      childWhere match {
-        case Some(where) => statement.setGcValue(1, where.fieldGCValue)
-        case None        => statement.setGcValue(1, parentId)
-
-      }
+      statement.setGcValue(1, parentId)
 
       statement.execute()
     }
@@ -437,7 +426,7 @@ case class PostgresApiDatabaseMutationBuilder(schemaName: String) {
   def deleteDataItem(path: Path) =
     (sql"""DELETE FROM "#$schemaName"."#${path.lastModel.dbName}" WHERE "#${path.lastModel.dbNameOfIdField_!}" = """ ++ pathQueryForLastChild(path)).asUpdate
 
-  def deleteRelayRowJooq(where: NodeSelector) = {
+  def deleteRelayRowByWhere(where: NodeSelector) = {
     SimpleDBIO[Boolean] { x =>
       lazy val queryString: String = {
         val sql = DSL.using(SQLDialect.POSTGRES_9_5, new Settings().withRenderFormatted(true))
@@ -458,25 +447,13 @@ case class PostgresApiDatabaseMutationBuilder(schemaName: String) {
     }
   }
 
-  def deleteRelayRowNested(parent: RelationField, parentId: IdGCValue, childWhere: Option[NodeSelector]) = {
+  def deleteRelayRowByParentId(parent: RelationField, parentId: IdGCValue) = {
     SimpleDBIO[Boolean] { x =>
       val sql = DSL.using(SQLDialect.POSTGRES_9_5, new Settings().withRenderFormatted(true))
-
-      val condition = childWhere match {
-        case Some(where) =>
-          val subSelect = select(field(name(schemaName, parent.relatedModel_!.dbName, parent.relatedModel_!.dbNameOfIdField_!)))
-            .from(table(name(schemaName, parent.relatedModel_!.dbName)))
-            .where(field(name(schemaName, where.model.dbName, where.field.dbName)).equal(placeHolder))
-
-          field(name(schemaName, relayTableName, "id")).equal(subSelect)
-
-        case None =>
-          //get it by parentId from relationTable
-          val subSelect = select(field(name(schemaName, parent.relation.relationTableName, parent.oppositeRelationSide.toString)))
-            .from(table(name(schemaName, parent.relation.relationTableName)))
-            .where(field(name(parent.relation.relationTableName, parent.relationSide.toString)).equal(placeHolder))
-          field(name(schemaName, relayTableName, "id")).equal(subSelect)
-      }
+      val subSelect = select(field(name(schemaName, parent.relation.relationTableName, parent.oppositeRelationSide.toString)))
+        .from(table(name(schemaName, parent.relation.relationTableName)))
+        .where(field(name(parent.relation.relationTableName, parent.relationSide.toString)).equal(placeHolder))
+      val condition = field(name(schemaName, relayTableName, "id")).equal(subSelect)
 
       val queryString = sql
         .deleteFrom(table(name(schemaName, relayTableName)))
@@ -484,11 +461,7 @@ case class PostgresApiDatabaseMutationBuilder(schemaName: String) {
         .getSQL
 
       val statement: PreparedStatement = x.connection.prepareStatement(queryString, Statement.RETURN_GENERATED_KEYS)
-      childWhere match {
-        case Some(where) => statement.setGcValue(1, where.fieldGCValue)
-        case None        => statement.setGcValue(1, parentId)
-
-      }
+      statement.setGcValue(1, parentId)
 
       statement.execute()
     }

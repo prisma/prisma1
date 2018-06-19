@@ -213,10 +213,14 @@ case class DatabaseMutactions(project: Project) {
 
   def getMutactionsForNestedDeleteMutation(nestedMutation: NestedMutations, path: Path, field: RelationField): Vector[NestedDeleteDataItem] = {
     nestedMutation.deletes.map { delete =>
-      val extendedPath = extend(path, field, delete)
+      val childWhere = delete match {
+        case DeleteByRelation(_)  => None
+        case DeleteByWhere(where) => Some(where)
+
+      }
 //      val cascadingDeleteMutactions = generateCascadingDeleteMutactions(extendedPath)
 //      cascadingDeleteMutactions ++ List(DeleteRelationCheck(project, extendedPath), NestedDeleteDataItem(project, extendedPath))
-      NestedDeleteDataItem(project, field, extendedPath)
+      NestedDeleteDataItem(project, field, childWhere)
     }
   }
 

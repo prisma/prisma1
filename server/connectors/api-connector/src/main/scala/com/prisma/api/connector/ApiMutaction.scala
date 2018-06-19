@@ -129,7 +129,7 @@ case class NestedUpsertDataItem(
 ) extends NestedDatabaseMutaction
     with FurtherNestedMutaction
 
-case class NestedDeleteDataItem(project: Project, relationField: RelationField, path: Path) extends NestedDatabaseMutaction with FinalMutaction
+case class NestedDeleteDataItem(project: Project, relationField: RelationField, where: Option[NodeSelector]) extends NestedDatabaseMutaction with FinalMutaction
 case class NestedConnectRelation(project: Project, relationField: RelationField, path: Path, topIsCreate: Boolean)
     extends NestedDatabaseMutaction
     with FinalMutaction
