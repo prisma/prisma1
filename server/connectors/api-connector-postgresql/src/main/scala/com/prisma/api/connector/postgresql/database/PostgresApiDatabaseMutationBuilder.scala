@@ -18,10 +18,7 @@ import slick.jdbc.PostgresProfile.api._
 import slick.jdbc.{PositionedParameters, SQLActionBuilder}
 import slick.sql.{SqlAction, SqlStreamingAction}
 
-case class PostgresApiDatabaseMutationBuilder(
-    schemaName: String,
-    schema: Schema,
-) {
+case class PostgresApiDatabaseMutationBuilder(schemaName: String) {
   import JooqQueryBuilders._
 
   // region CREATE

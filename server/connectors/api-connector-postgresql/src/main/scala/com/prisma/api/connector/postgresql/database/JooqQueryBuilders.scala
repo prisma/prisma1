@@ -14,18 +14,22 @@ import org.jooq.impl.DSL._
 import slick.jdbc.PositionedParameters
 
 object JooqQueryBuilders {
-  val topLevelAlias      = "Alias"
-  val relationTableAlias = "RelationTable"
-  val intDummy      = 1
-  val stringDummy        = ""
-  val aSideAlias         = "__Relation__A"
-  val bSideAlias         = "__Relation__B"
-  val rowNumberAlias = "prismaRowNumberAlias"
-  val baseTableAlias = "prismaBaseTableAlias"
+  val topLevelAlias       = "Alias"
+  val relationTableAlias  = "RelationTable"
+  val intDummy            = 1
+  val stringDummy         = ""
+  val aSideAlias          = "__Relation__A"
+  val bSideAlias          = "__Relation__B"
+  val rowNumberAlias      = "prismaRowNumberAlias"
+  val baseTableAlias      = "prismaBaseTableAlias"
   val rowNumberTableAlias = "prismaRowNumberTableAlias"
-  val nodeIdFieldName = "nodeId"
-  val positionFieldName = "position"
-  val valueFieldName= "value"
+  val nodeIdFieldName     = "nodeId"
+  val positionFieldName   = "position"
+  val valueFieldName      = "value"
+  val placeHolder         = "?"
+  val relayTableName      = "_RelayId"
+  val updatedAtField      = "updatedAt"
+  val createdAtField      = "createdAt"
 }
 
 case class JooqRelationQueryBuilder(schemaName: String, relation: Relation, queryArguments: Option[QueryArguments]) {
@@ -138,18 +142,18 @@ case class JooqRelatedModelsQueryBuilder(
   val condition2    = JooqWhereClauseBuilder(schemaName).buildWhereClause(queryArguments.flatMap(_.filter)).getOrElse(trueCondition())
 
   val base = sql
-    .select(aliasedTable.asterisk(), field(name(relationTableAlias, aColumn)).as(aSideAlias),field(name(relationTableAlias, bColumn)).as(bSideAlias) )
+    .select(aliasedTable.asterisk(), field(name(relationTableAlias, aColumn)).as(aSideAlias), field(name(relationTableAlias, bColumn)).as(bSideAlias))
     .from(aliasedTable)
     .innerJoin(relationTable)
     .on(field(name(topLevelAlias, relatedModel.dbNameOfIdField_!)).eq(field(name(relationTableAlias, oppositeModelRelationSideColumn))))
 
   lazy val queryStringWithPagination: String = {
-    val order = JooqOrderByClauseBuilder.internal(baseTableAlias, baseTableAlias, secondaryOrderByForPagination, queryArguments)
+    val order           = JooqOrderByClauseBuilder.internal(baseTableAlias, baseTableAlias, secondaryOrderByForPagination, queryArguments)
     val cursorCondition = JooqWhereClauseBuilder(schemaName).buildCursorCondition(queryArguments, relatedModel)
 
     val aliasedBase = base.where(condition1, condition2, cursorCondition).asTable().as(baseTableAlias)
 
-    val rowNumberPart = rowNumber().over().partitionBy(aliasedBase.field(aSideAlias)).orderBy(order:_*).as(rowNumberAlias)
+    val rowNumberPart = rowNumber().over().partitionBy(aliasedBase.field(aSideAlias)).orderBy(order: _*).as(rowNumberAlias)
 
     val withRowNumbers = select(rowNumberPart, aliasedBase.asterisk()).from(aliasedBase).asTable().as(rowNumberTableAlias)
 
@@ -164,10 +168,10 @@ case class JooqRelatedModelsQueryBuilder(
   }
 
   lazy val queryStringWithoutPagination: String = {
-    val order             = JooqOrderByClauseBuilder.internal(topLevelAlias, relationTableAlias, oppositeModelRelationSideColumn, queryArguments)
+    val order = JooqOrderByClauseBuilder.internal(topLevelAlias, relationTableAlias, oppositeModelRelationSideColumn, queryArguments)
     val withoutPagination = base
-                              .where(condition1, condition2)
-                              .orderBy(order: _*)
+      .where(condition1, condition2)
+      .orderBy(order: _*)
 
     withoutPagination.getSQL
   }
@@ -220,11 +224,11 @@ object JooqSetParams {
   }
 
   def setCursor(pp: PositionedParameters, queryArguments: QueryArguments): Unit = {
-    queryArguments.after.foreach {value =>
+    queryArguments.after.foreach { value =>
       pp.setString(value)
       pp.setString(value)
     }
-    queryArguments.before.foreach {value =>
+    queryArguments.before.foreach { value =>
       pp.setString(value)
       pp.setString(value)
     }

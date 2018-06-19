@@ -16,7 +16,7 @@ case class PostgresDatabaseMutactionExecutor(clientDb: Database, createRelayIds:
   override def executeNonTransactionally(mutaction: TopLevelDatabaseMutaction) = execute(mutaction, transactionally = false)
 
   private def execute(mutaction: TopLevelDatabaseMutaction, transactionally: Boolean): Future[DatabaseMutactionResult] = {
-    val mutationBuilder = PostgresApiDatabaseMutationBuilder(schemaName = mutaction.project.id, schema = mutaction.project.schema)
+    val mutationBuilder = PostgresApiDatabaseMutationBuilder(schemaName = mutaction.project.id)
     // fixme: handing in those non existent values should not happen
     val singleAction = transactionally match {
       case true  => recurse(mutaction, CuidGCValue("does-not-exist"), mutationBuilder).transactionally
