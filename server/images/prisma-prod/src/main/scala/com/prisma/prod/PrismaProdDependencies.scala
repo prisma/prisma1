@@ -22,6 +22,7 @@ import com.prisma.messagebus.pubsub.inmemory.InMemoryAkkaPubSub
 import com.prisma.messagebus.pubsub.rabbit.RabbitAkkaPubSub
 import com.prisma.messagebus.queue.inmemory.InMemoryAkkaQueue
 import com.prisma.messagebus.queue.rabbit.RabbitQueue
+import com.prisma.metrics.MetricsRegistry
 import com.prisma.shared.models.ProjectIdEncoder
 import com.prisma.subscriptions.protocol.SubscriptionProtocolV05.Responses.SubscriptionSessionResponseV05
 import com.prisma.subscriptions.protocol.SubscriptionProtocolV07.Responses.SubscriptionSessionResponse
@@ -38,6 +39,8 @@ case class PrismaProdDependencies()(implicit val system: ActorSystem, val materi
     with ApiDependencies
     with SubscriptionDependencies
     with WorkerDependencies {
+
+  MetricsRegistry.init(deployConnector.cloudSecretPersistence)
 
   val config: PrismaConfig      = ConfigLoader.load()
   private val rabbitUri: String = config.rabbitUri.getOrElse("RabbitMQ URI required but not found in Prisma configuration.")

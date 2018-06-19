@@ -3,7 +3,8 @@ package com.prisma.deploy.connector.postgresql
 import com.prisma.config.DatabaseConfig
 import com.prisma.deploy.connector._
 import com.prisma.deploy.connector.postgresql.database.{InternalDatabaseSchema, PostgresDeployDatabaseMutationBuilder, TelemetryTable}
-import com.prisma.deploy.connector.postgresql.impls.{PostgresClientDbQueries, PostgresDeployMutactionExecutor, MigrationPersistenceImpl, ProjectPersistenceImpl}
+import com.prisma.deploy.connector.postgresql.impls._
+import com.prisma.metrics.PrismaCloudSecretLoader
 import com.prisma.shared.models.{Project, ProjectIdEncoder}
 import org.joda.time.DateTime
 import slick.dbio.Effect.Read
@@ -51,6 +52,7 @@ case class PostgresDeployConnector(dbConfig: DatabaseConfig)(implicit ec: Execut
   override def getOrCreateTelemetryInfo(): Future[TelemetryInfo]       = internalDatabase.run(TelemetryTable.getOrCreateInfo())
   override def updateTelemetryInfo(lastPinged: DateTime): Future[Unit] = internalDatabase.run(TelemetryTable.updateInfo(lastPinged)).map(_ => ())
   override def projectIdEncoder: ProjectIdEncoder                      = ProjectIdEncoder('$')
+  override def cloudSecretPersistence: CloudSecretPersistence          = CloudSecretPersistenceImpl(internalDatabase)
 
   override def initialize(): Future[Unit] = {
     // We're ignoring failures for createDatabaseAction as there is no "create if not exists" in psql

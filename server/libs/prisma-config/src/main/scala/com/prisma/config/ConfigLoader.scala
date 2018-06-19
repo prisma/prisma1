@@ -121,7 +121,16 @@ object ConfigLoader {
       throw InvalidConfiguration("No databases defined")
     }
 
-    PrismaConfig(port, secret, legacySecret, s2sSecret, clusterAddress, rabbitUri, mgmtApiEnabled, databases)
+    PrismaConfig(
+      port = port,
+      managementApiSecret = secret,
+      legacySecret = legacySecret,
+      server2serverSecret = s2sSecret,
+      clusterAddress = clusterAddress,
+      rabbitUri = rabbitUri,
+      managmentApiEnabled = mgmtApiEnabled,
+      databases = databases
+    )
   }
 
   private def readDbWithConnectionString(dbName: String, dbJavaMap: Any) = Try {
