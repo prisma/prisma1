@@ -14,10 +14,11 @@ import com.prisma.deploy.DeployDependencies
 import com.prisma.deploy.migration.migrator.{AsyncMigrator, Migrator}
 import com.prisma.deploy.server.TelemetryActor
 import com.prisma.deploy.server.auth.{AsymmetricManagementAuth, DummyManagementAuth, SymmetricManagementAuth}
-import com.prisma.image.{Converters, FunctionValidatorImpl, SingleServerProjectFetcher}
+import com.prisma.image.{Converters, FunctionValidatorImpl, PrismaCloudSecretLoaderImpl, SingleServerProjectFetcher}
 import com.prisma.messagebus.pubsub.inmemory.InMemoryAkkaPubSub
 import com.prisma.messagebus.queue.inmemory.InMemoryAkkaQueue
 import com.prisma.messagebus.{PubSubPublisher, PubSubSubscriber, QueueConsumer, QueuePublisher}
+import com.prisma.metrics.MetricsRegistry
 import com.prisma.shared.models.ProjectIdEncoder
 import com.prisma.subscriptions.protocol.SubscriptionProtocolV05.Responses.SubscriptionSessionResponseV05
 import com.prisma.subscriptions.protocol.SubscriptionProtocolV07.Responses.SubscriptionSessionResponse
@@ -35,6 +36,8 @@ case class PrismaLocalDependencies()(implicit val system: ActorSystem, val mater
     with WorkerDependencies
     with SubscriptionDependencies {
   override implicit def self = this
+
+  MetricsRegistry.init(new PrismaCloudSecretLoaderImpl)
 
   val config: PrismaConfig = ConfigLoader.load()
 
