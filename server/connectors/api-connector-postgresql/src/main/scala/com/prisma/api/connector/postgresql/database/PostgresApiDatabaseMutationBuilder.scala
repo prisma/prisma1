@@ -162,6 +162,7 @@ case class PostgresApiDatabaseMutationBuilder(schemaName: String) {
 
         val base = sql.update(aliasedTable)
 
+        //https://www.postgresql.org/message-id/20170719174507.GA19616%40telsasoft.com
         lazy val queryString: String = if (map.size > 1) {
 
           val fields = map.map { case (k, _) => field(model.getFieldByName_!(k).dbName) }.toList.asJava
@@ -193,7 +194,7 @@ case class PostgresApiDatabaseMutationBuilder(schemaName: String) {
     }
   }
 
-  def updateDataItemByPath(path: Path, updateArgs: PrismaArgs) = {
+  def updateDataItemByPath2(path: Path, updateArgs: PrismaArgs) = {
     val model        = path.lastModel
     val updateValues = combineByComma(updateArgs.raw.asRoot.map.map { case (k, v) => escapeKey(model.getFieldByName_!(k).dbName) ++ sql" = $v" })
     def fromEdge(edge: Edge) = edge match {
@@ -216,6 +217,83 @@ case class PostgresApiDatabaseMutationBuilder(schemaName: String) {
       }
       query.asUpdate
     }
+  }
+
+  def updateDataItemByPath(path: Path, updateArgs: PrismaArgs) = {
+    val map = updateArgs.raw.asRoot.map
+
+    if (map.isEmpty) {
+      DBIOAction.successful(())
+    } else {
+      val model = path.lastModel
+
+      SimpleDBIO { ctx =>
+        val sql = DSL.using(SQLDialect.POSTGRES_9_5, new Settings().withRenderFormatted(true))
+
+        val equals = path.lastEdge match {
+          case Some(edge) =>
+            val parentSideField = field(schemaName, edge.relation.relationTableName, path.columnForParentSideOfLastEdge)
+            val childSideField  = field(schemaName, edge.relation.relationTableName, path.columnForChildSideOfLastEdge)
+
+            val fromEdge = edge match {
+              case edge: NodeEdge => childSideField.equal(idFromWhereJooq(edge.childWhere))
+              case _: ModelEdge   => trueCondition()
+            }
+
+            select(childSideField)
+              .from(table(name(schemaName, edge.relation.relationTableName)))
+              .where(fromEdge, parentSideField.equal(pathQueryForLastParentJooq(path)))
+
+          case None =>
+            idFromWhereJooq(path.root)
+        }
+
+        val condition = field(name(schemaName, path.lastModel.dbName, path.lastModel.dbNameOfIdField_!)).equal(equals)
+
+        val base = sql.update(table(name(schemaName, model.dbName)))
+
+        lazy val queryString: String = if (map.size > 1) {
+
+          val fields = map.map { case (k, _) => field(name(model.getFieldByName_!(k).dbName)) }.toList.asJava
+          val values = map.map(_ => placeHolder).toList.asJava
+
+          base
+            .set(row(fields), row(values))
+            .where(condition)
+            .getSQL
+
+        } else {
+          val fieldDef = map.map { case (k, _) => field(model.getFieldByName_!(k).dbName) }.head
+          val value    = map.map(_ => placeHolder).head
+
+          base
+            .set(fieldDef, value)
+            .where(condition)
+            .getSQL
+        }
+
+        println(queryString)
+
+        val ps = ctx.connection.prepareStatement(queryString)
+        val pp = new PositionedParameters(ps)
+        map.foreach { case (_, v) => pp.setGcValue(v) }
+
+        setPathVariables(path, pp)
+
+        ps.executeUpdate()
+      }
+    }
+  }
+
+  def setPathVariables(path: Path, positionedParameters: PositionedParameters): PositionedParameters = {
+    positionedParameters.setGcValue(path.root.fieldGCValue)
+
+    path.edges.foreach {
+      case NodeEdge(_, where) => positionedParameters.setGcValue(where.fieldGCValue)
+      case ModelEdge(_)       =>
+    }
+
+    positionedParameters
   }
 
   //endregion
@@ -496,17 +574,60 @@ case class PostgresApiDatabaseMutationBuilder(schemaName: String) {
 
   def idFromWhereEquals(where: NodeSelector): SQLActionBuilder = sql" = " ++ idFromWhere(where)
 
+  def idFromWhereJooq(where: NodeSelector) = {
+    val aliasedTable = table(name(schemaName, where.model.dbName)).as("IDFROMWHERE")
+
+    (where.isId, where.fieldGCValue) match {
+      case (true, NullGCValue) =>
+        sys.error("id should not be NULL")
+
+      case (true, idValue) =>
+        DSL.value(placeHolder)
+
+      case (false, NullGCValue) =>
+        select(field(name(schemaName, where.model.dbName, where.model.dbNameOfIdField_!)))
+          .from(aliasedTable)
+          .where(field(name(schemaName, where.model.dbName, where.field.dbName)).isNull)
+          .asField()
+
+      case (false, value) =>
+        select(field(name(schemaName, where.model.dbName, where.model.dbNameOfIdField_!)))
+          .from(aliasedTable)
+          .where(field(name(schemaName, where.model.dbName, where.field.dbName)).equal(DSL.value(value.value)))
+          .asField()
+    }
+  }
+
   def idFromWherePath(where: NodeSelector): SQLActionBuilder = {
     sql"""(SELECT "#${where.model.dbNameOfIdField_!}" FROM "#$schemaName"."#${where.model.dbName}" IDFROMWHEREPATH WHERE "#${where.field.dbName}" = ${where.fieldGCValue})"""
   }
 
-  def pathQueryForLastParent(path: Path): SQLActionBuilder = pathQueryForLastChild(path.removeLastEdge)
+  def idFromWherePathJooq(where: NodeSelector) = {
+    val sql          = DSL.using(SQLDialect.POSTGRES_9_5, new Settings().withRenderFormatted(true))
+    val aliasedTable = table(name(schemaName, where.model.dbName)).as("IDFROMWHEREPATH")
 
-  def pathQueryForLastChild(path: Path): SQLActionBuilder = {
+    sql
+      .select(field(name(schemaName, where.model.dbName, where.model.dbNameOfIdField_!)))
+      .from(aliasedTable)
+      .where(field(name(where.field.dbName)).equal(where.fieldGCValue))
+  }
+
+  def pathQueryForLastParent(path: Path): SQLActionBuilder = pathQueryForLastChild(path.removeLastEdge)
+  def pathQueryForLastParentJooq(path: Path)               = pathQueryForLastChildJooq(path.removeLastEdge)
+
+  def pathQueryForLastChild(path: Path) = {
     path.edges match {
       case Nil                                => idFromWhere(path.root)
       case x if x.last.isInstanceOf[NodeEdge] => idFromWhere(x.last.asInstanceOf[NodeEdge].childWhere)
       case _                                  => pathQueryThatUsesWholePath(path)
+    }
+  }
+
+  def pathQueryForLastChildJooq(path: Path) = {
+    path.edges match {
+      case Nil                                => idFromWhereJooq(path.root)
+      case x if x.last.isInstanceOf[NodeEdge] => idFromWhereJooq(x.last.asInstanceOf[NodeEdge].childWhere)
+      case _                                  => pathQueryThatUsesWholePathJooq(path)
     }
   }
 
@@ -526,6 +647,27 @@ case class PostgresApiDatabaseMutationBuilder(schemaName: String) {
         sql"""(SELECT "#${last.columnForChildRelationSide}"""" ++
           sql""" FROM "#$schemaName"."#${last.relation.relationTableName}" PATHQUERY""" ++
           sql" WHERE " ++ childWhere ++ sql""""#${last.columnForParentRelationSide}" IN (""" ++ pathQueryForLastParent(path) ++ sql"))"
+    }
+  }
+
+  def pathQueryThatUsesWholePathJooq(path: Path) = {
+    path.edges match {
+      case Nil =>
+        idFromWherePathJooq(path.root)
+
+      case _ ::> last =>
+        val childWhere = last match {
+          case edge: NodeEdge => field(name("PATHQUERY", edge.columnForChildRelationSide)).equal(idFromWhereJooq(edge.childWhere))
+          case _: ModelEdge   => trueCondition()
+        }
+
+        val aliasedTable = table(name(schemaName, last.relation.relationTableName)).as("PATHQUERY")
+
+        val inCondition = field(name("PATHQUERY", last.columnForParentRelationSide)).in(pathQueryForLastParent(path))
+
+        select(field(name(schemaName, last.child.dbName, last.columnForChildRelationSide)))
+          .from(aliasedTable)
+          .where(childWhere, inCondition)
     }
   }
 
@@ -744,7 +886,6 @@ case class PostgresApiDatabaseMutationBuilder(schemaName: String) {
   def removeConnectionInfoFromCause(cause: String): String = {
     val connectionSubStringStart = cause.indexOf(": ERROR:")
     cause.substring(connectionSubStringStart + 9)
-
   }
 
   def createRelationRowsImport(mutaction: CreateRelationRowsImport): SimpleDBIO[Vector[String]] = {
