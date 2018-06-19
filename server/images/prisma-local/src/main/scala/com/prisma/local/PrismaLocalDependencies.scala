@@ -37,7 +37,7 @@ case class PrismaLocalDependencies()(implicit val system: ActorSystem, val mater
     with SubscriptionDependencies {
   override implicit def self = this
 
-  MetricsRegistry.init(deployConnector.cloudSecretLoader)
+  MetricsRegistry.init(deployConnector.cloudSecretPersistence)
 
   val config: PrismaConfig = ConfigLoader.load()
 

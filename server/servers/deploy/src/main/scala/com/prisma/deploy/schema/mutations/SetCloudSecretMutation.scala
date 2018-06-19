@@ -1,12 +1,19 @@
 package com.prisma.deploy.schema.mutations
 
-import scala.concurrent.Future
+import com.prisma.deploy.DeployDependencies
+
+import scala.concurrent.{ExecutionContext, Future}
 
 case class SetCloudSecretMutation(
     args: SetCloudSecretMutationInput
+)(
+    implicit ec: ExecutionContext,
+    dependencies: DeployDependencies
 ) extends Mutation[SetCloudSecretMutationPayload] {
   override def execute: Future[MutationResult[SetCloudSecretMutationPayload]] = {
-    Future.successful(MutationSuccess(SetCloudSecretMutationPayload(args.clientMutationId)))
+    dependencies.deployConnector.cloudSecretPersistence.update(args.cloudSecret).flatMap { _ =>
+      Future.successful(MutationSuccess(SetCloudSecretMutationPayload(args.clientMutationId)))
+    }
   }
 }
 

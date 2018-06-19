@@ -1,9 +1,9 @@
 package com.prisma.deploy.connector.mysql.impls
 
-import com.prisma.metrics.PrismaCloudSecretLoader
+import com.prisma.deploy.connector.CloudSecretPersistence
 
-import scala.concurrent.Future
+case class MySqlPrismaCloudSecretLoaderImpl() extends CloudSecretPersistence {
+  override def load() = ???
 
-case class MySqlPrismaCloudSecretLoaderImpl() extends PrismaCloudSecretLoader {
-  override def loadCloudSecret() = Future.successful(None)
+  override def update(secret: Option[String]) = ???
 }

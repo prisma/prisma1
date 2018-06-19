@@ -1,9 +1,8 @@
 package com.prisma.deploy.connector
 
-import com.prisma.metrics.PrismaCloudSecretLoader
 import com.prisma.shared.models.RelationSide.RelationSide
-import org.joda.time.DateTime
 import com.prisma.shared.models._
+import org.joda.time.DateTime
 
 import scala.concurrent.Future
 
@@ -16,7 +15,7 @@ trait DeployConnector {
   def clientDBQueries(project: Project): ClientDbQueries
   def projectIdEncoder: ProjectIdEncoder
   def databaseIntrospectionInferrer(projectId: String): DatabaseIntrospectionInferrer
-  def cloudSecretLoader: PrismaCloudSecretLoader
+  def cloudSecretPersistence: CloudSecretPersistence
 
   def initialize(): Future[Unit]
   def reset(): Future[Unit]

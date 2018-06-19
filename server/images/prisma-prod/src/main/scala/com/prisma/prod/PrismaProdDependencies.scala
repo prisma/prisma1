@@ -40,7 +40,7 @@ case class PrismaProdDependencies()(implicit val system: ActorSystem, val materi
     with SubscriptionDependencies
     with WorkerDependencies {
 
-  MetricsRegistry.init(deployConnector.cloudSecretLoader)
+  MetricsRegistry.init(deployConnector.cloudSecretPersistence)
 
   val config: PrismaConfig      = ConfigLoader.load()
   private val rabbitUri: String = config.rabbitUri.getOrElse("RabbitMQ URI required but not found in Prisma configuration.")
