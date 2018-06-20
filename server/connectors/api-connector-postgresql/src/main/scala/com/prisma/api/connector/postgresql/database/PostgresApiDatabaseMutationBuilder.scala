@@ -846,20 +846,7 @@ case class PostgresApiDatabaseMutationBuilder(schemaName: String) {
     triggerFailureWhenNotExists(query, causeString)
   }
 
-  def oldParentFailureTriggerForRequiredRelations(relation: Relation,
-                                                  where: NodeSelector,
-                                                  childSide: RelationSide.Value,
-                                                  triggerString: String): slick.sql.SqlStreamingAction[Vector[String], String, slick.dbio.Effect] = {
-    val table       = relation.relationTableName
-    val column      = relation.columnForRelationSide(childSide)
-    val otherColumn = relation.columnForRelationSide(RelationSide.opposite(childSide))
-    val query = sql"""SELECT * FROM "#$schemaName"."#$table" OLDPARENTFAILURETRIGGER WHERE "#$column" """ ++
-      idFromWhereEquals(where) ++ sql""" AND "#$otherColumn" IS NOT NULL """
-
-    triggerFailureWhenExists(query, triggerString)
-  }
-
-  def oldParentFailureTriggerForRequiredRelations2(
+  def ensureThatNodeIsNotConnected(
       relationField: RelationField,
       childId: IdGCValue
   )(implicit ec: ExecutionContext): DBIO[Unit] = {
@@ -872,13 +859,6 @@ case class PostgresApiDatabaseMutationBuilder(schemaName: String) {
     action.map { result =>
       if (result.nonEmpty) throw RequiredRelationWouldBeViolated(relation)
     }
-  }
-
-  def oldParentFailureTrigger(path: Path, triggerString: String) = {
-    val table = path.lastRelation_!.relationTableName
-    val query = sql"""SELECT * FROM "#$schemaName"."#$table" OLDPARENTPATHFAILURETRIGGER WHERE "#${path.columnForChildSideOfLastEdge}" IN (""" ++
-      pathQueryForLastChild(path) ++ sql")"
-    triggerFailureWhenExists(query, triggerString)
   }
 
   def oldParentFailureTriggerByField(path: Path, field: RelationField, triggerString: String) = {
@@ -913,14 +893,6 @@ case class PostgresApiDatabaseMutationBuilder(schemaName: String) {
       SetParams.setFilter(ps, whereFilter)
       ps.executeQuery()
     }
-  }
-
-  def oldChildFailureTrigger(path: Path, triggerString: String) = {
-    val table = path.lastRelation_!.relationTableName
-    val query = sql"""SELECT * FROM "#$schemaName"."#$table" OLDCHILDPATHFAILURETRIGGER""" ++
-      sql"""WHERE "#${path.columnForParentSideOfLastEdge}" IN (""" ++ pathQueryForLastParent(path) ++ sql") " ++
-      sql"""AND "#${path.columnForChildSideOfLastEdge}" IS NOT NULL """
-    triggerFailureWhenExists(query, triggerString)
   }
 
   def ifThenElse(condition: SqlStreamingAction[Vector[Boolean], Boolean, Effect],

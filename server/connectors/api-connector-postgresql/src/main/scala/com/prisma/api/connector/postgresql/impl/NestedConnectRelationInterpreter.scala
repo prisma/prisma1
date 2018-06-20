@@ -98,13 +98,13 @@ case class NestedConnectRelationInterpreter(mutaction: NestedConnectRelation)(im
       id <- mutationBuilder.queryIdFromWhere(mutaction.where)
       _ <- id match {
             case None          => throw APIErrors.NodeNotFoundForWhereError(mutaction.where)
-            case Some(childId) => mutationBuilder.oldParentFailureTriggerForRequiredRelations2(mutaction.relationField, childId)
+            case Some(childId) => mutationBuilder.ensureThatNodeIsNotConnected(mutaction.relationField, childId)
           }
     } yield ()
   }
 
   def checkForOldChild2(parentId: IdGCValue)(implicit mb: PostgresApiDatabaseMutationBuilder) = {
-    mb.oldParentFailureTriggerForRequiredRelations2(mutaction.relationField.relatedField, parentId)
+    mb.ensureThatNodeIsNotConnected(mutaction.relationField.relatedField, parentId)
   }
 
   override def addAction(parentId: IdGCValue)(implicit mutationBuilder: PostgresApiDatabaseMutationBuilder): List[DBIO[Unit]] = {
