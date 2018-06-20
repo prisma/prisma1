@@ -237,7 +237,7 @@ case class UpdateDataItemInterpreter(mutaction: UpdateDataItem) extends Database
 }
 
 case class NestedUpdateDataItemInterpreter(mutaction: NestedUpdateDataItem) extends DatabaseMutactionInterpreter {
-  val model = mutaction.relationField.model
+  val model = mutaction.relationField.relatedModel_!
 
   override def newAction(mutationBuilder: PostgresApiDatabaseMutationBuilder, parent: IdGCValue)(implicit ec: ExecutionContext) = {
     val interpreter = SharedUpdateDataItemInterpreter(mutaction.project, model, mutaction.where, mutaction.nonListArgs, mutaction.listArgs)
