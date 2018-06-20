@@ -31,11 +31,9 @@ case class PostgresApiDatabaseQueryBuilder(
     readPrismaNode(model, rs)
   }
 
-  private def readPrismaNodeWithParent(model: Model, side: RelationSide.Value, oppositeSide: RelationSide.Value) = ReadsResultSet { rs =>
-    val node       = readPrismaNode(model, rs)
-    val firstSide  = rs.getParentId(side, model.idField_!.typeIdentifier)
-    val secondSide = rs.getParentId(oppositeSide, model.idField_!.typeIdentifier)
-    val parentId   = if (firstSide == node.id) secondSide else firstSide
+  private def readPrismaNodeWithParent(model: Model, parent: Model, parentSide: RelationSide.Value) = ReadsResultSet { rs =>
+    val node     = readPrismaNode(model, rs)
+    val parentId = rs.getParentId(parentSide, parent.idField_!.typeIdentifier)
 
     PrismaNodeWithParent(parentId, node)
   }
@@ -100,7 +98,9 @@ case class PostgresApiDatabaseQueryBuilder(
 
       // executing
       val rs: ResultSet       = ps.executeQuery()
-      val result              = rs.as[PrismaNodeWithParent](readPrismaNodeWithParent(fromField.relatedModel_!, fromField.relationSide, fromField.oppositeRelationSide))
+      val model               = fromField.relatedModel_!
+      val parent              = fromField.model
+      val result              = rs.as[PrismaNodeWithParent](readPrismaNodeWithParent(model, parent, fromField.relation.relationSide(parent)))
       val itemGroupsByModelId = result.groupBy(_.parentId)
       fromModelIds.map { id =>
         itemGroupsByModelId.find(_._1 == id) match {

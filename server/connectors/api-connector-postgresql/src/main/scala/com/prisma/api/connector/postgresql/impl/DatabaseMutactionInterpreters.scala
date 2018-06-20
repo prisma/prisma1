@@ -7,7 +7,7 @@ import com.prisma.api.connector.postgresql.impl.GetFieldFromSQLUniqueException.g
 import com.prisma.api.schema.{APIErrors, UserFacingError}
 import com.prisma.api.schema.APIErrors.RequiredRelationWouldBeViolated
 import com.prisma.gc_values.{CuidGCValue, IdGCValue, ListGCValue, RootGCValue}
-import com.prisma.shared.models.{Field, Project, Relation, RelationField}
+import com.prisma.shared.models._
 import org.postgresql.util.PSQLException
 import slick.dbio.DBIOAction
 import slick.jdbc.PostgresProfile.api._
@@ -110,6 +110,13 @@ case class NestedCreateDataItemInterpreter(mutaction: NestedCreateDataItem, incl
   }
 
   override def action(mutationBuilder: PostgresApiDatabaseMutationBuilder) = ???
+
+  override val errorMapper = {
+    case e: PSQLException if e.getSQLState == "23505" && GetFieldFromSQLUniqueException.getFieldOption(model, e).isDefined =>
+      APIErrors.UniqueConstraintViolation(model.name, GetFieldFromSQLUniqueException.getFieldOption(model, e).get)
+    case e: PSQLException if e.getSQLState == "23503" =>
+      APIErrors.NodeDoesNotExist("")
+  }
 }
 
 case class DeleteDataItemInterpreter(mutaction: DeleteDataItem)(implicit ec: ExecutionContext) extends DatabaseMutactionInterpreter {
@@ -217,7 +224,8 @@ case class ResetDataInterpreter(mutaction: ResetDataMutaction) extends DatabaseM
 }
 
 case class UpdateDataItemInterpreter(mutaction: UpdateDataItem) extends DatabaseMutactionInterpreter {
-  val interpreter = SharedUpdateDataItemInterpreter(mutaction.project, Path.empty(mutaction.where), mutaction.nonListArgs, mutaction.listArgs)
+  val model       = mutaction.where.model
+  val interpreter = SharedUpdateDataItemInterpreter(mutaction.project, model, Some(mutaction.where), mutaction.nonListArgs, mutaction.listArgs)
 
   override def newAction(mutationBuilder: PostgresApiDatabaseMutationBuilder, parent: IdGCValue)(implicit ec: ExecutionContext) = {
     interpreter.newAction(mutationBuilder, parent)
@@ -229,17 +237,10 @@ case class UpdateDataItemInterpreter(mutaction: UpdateDataItem) extends Database
 }
 
 case class NestedUpdateDataItemInterpreter(mutaction: NestedUpdateDataItem) extends DatabaseMutactionInterpreter {
-  val model = mutaction.relationField.model
+  val model = mutaction.relationField.relatedModel_!
 
   override def newAction(mutationBuilder: PostgresApiDatabaseMutationBuilder, parent: IdGCValue)(implicit ec: ExecutionContext) = {
-    val path = {
-      val pathToParent = Path.empty(NodeSelector.forIdGCValue(model, parent))
-      mutaction.where match {
-        case Some(where) => pathToParent.append(NodeEdge(mutaction.relationField, where))
-        case None        => pathToParent.append(ModelEdge(mutaction.relationField))
-      }
-    }
-    val interpreter = SharedUpdateDataItemInterpreter(mutaction.project, path, mutaction.nonListArgs, mutaction.listArgs)
+    val interpreter = SharedUpdateDataItemInterpreter(mutaction.project, model, mutaction.where, mutaction.nonListArgs, mutaction.listArgs)
     interpreter.newAction(mutationBuilder, parent)
   }
   override def action(mutationBuilder: PostgresApiDatabaseMutationBuilder) = ???
@@ -247,20 +248,29 @@ case class NestedUpdateDataItemInterpreter(mutaction: NestedUpdateDataItem) exte
 
 case class SharedUpdateDataItemInterpreter(
     project: Project,
-    path: Path,
+    model: Model,
+    whereOpt: Option[NodeSelector],
     nonListArgs: PrismaArgs,
     listArgs: Vector[(String, ListGCValue)]
 ) extends DatabaseMutactionInterpreter {
   import scala.concurrent.ExecutionContext.Implicits.global
 
-  val model = path.lastModel
-
   def newAction(mutationBuilder: PostgresApiDatabaseMutationBuilder, parentId: IdGCValue) = {
     for {
-      id <- mutationBuilder.pathQueryForLastChild(path).as[String].headOption
-      _  <- mutationBuilder.updateDataItemByPath(path, nonListArgs)
-      _  <- mutationBuilder.setScalarList(path.lastCreateWhere_!, listArgs)
-    } yield UpdateItemResult(id.map(CuidGCValue))
+      id <- whereOpt match {
+             case Some(where) => mutationBuilder.queryIdFromWhere(where)
+             case None        => ??? // query by parent id
+           }
+      _ <- id match {
+            case Some(id) =>
+              for {
+                _ <- mutationBuilder.updateDataItemById(model, id, nonListArgs)
+//                _ <- mutationBuilder.setScalarList(path.lastCreateWhere_!, listArgs)
+              } yield ()
+            case None =>
+              DBIO.successful(())
+          }
+    } yield UpdateItemResult(id)
   }
 
   override def action(mutationBuilder: PostgresApiDatabaseMutationBuilder) = ???
@@ -268,10 +278,10 @@ case class SharedUpdateDataItemInterpreter(
   override val errorMapper = {
     // https://dev.mysql.com/doc/refman/5.5/en/error-messages-server.html#error_er_dup_entry
     case e: PSQLException if e.getSQLState == "23505" && GetFieldFromSQLUniqueException.getFieldOption(model, e).isDefined =>
-      APIErrors.UniqueConstraintViolation(path.lastModel.name, GetFieldFromSQLUniqueException.getFieldOption(model, e).get)
+      APIErrors.UniqueConstraintViolation(model.name, GetFieldFromSQLUniqueException.getFieldOption(model, e).get)
 
     case e: PSQLException if e.getSQLState == "23503" =>
-      APIErrors.NodeNotFoundForWhereError(path.root)
+      APIErrors.NodeNotFoundForWhereError(whereOpt.get)
 
     case e: PSQLException if e.getSQLState == "23502" =>
       APIErrors.FieldCannotBeNull()

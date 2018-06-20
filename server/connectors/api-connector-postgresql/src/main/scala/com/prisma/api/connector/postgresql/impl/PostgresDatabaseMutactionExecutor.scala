@@ -1,5 +1,7 @@
 package com.prisma.api.connector.postgresql.impl
 
+import java.util.concurrent.Executors
+
 import com.prisma.api.connector._
 import com.prisma.api.connector.postgresql.DatabaseMutactionInterpreter
 import com.prisma.api.connector.postgresql.database.PostgresApiDatabaseMutationBuilder
@@ -26,6 +28,9 @@ case class PostgresDatabaseMutactionExecutor(clientDb: Database, createRelayIds:
     clientDb.run(singleAction)
   }
 
+  // FIXME: the recursion part may deadlock when no dedicated ec is used. This can be observed with test cases in DeadlockSpec that use nested mutations.
+  private val recurseEc = ExecutionContext.fromExecutor(Executors.newFixedThreadPool(10))
+
   private def recurse(
       mutaction: DatabaseMutaction,
       parentId: IdGCValue,
@@ -34,16 +39,15 @@ case class PostgresDatabaseMutactionExecutor(clientDb: Database, createRelayIds:
     mutaction match {
       case m: FurtherNestedMutaction =>
         for {
-          result <- interpreterFor(m).newActionWithErrorMapped(mutationBuilder, parentId)
+          result <- interpreterFor(m).newActionWithErrorMapped(mutationBuilder, parentId)(recurseEc)
           childResults <- result.id match {
                            case Some(id) => DBIO.sequence(m.allMutactions.map(recurse(_, id, mutationBuilder)))
                            case None     => DBIO.successful(())
                          }
-          //DBIO.sequence(mutation.childs.map(recurse(_, mutationBuilder)))
         } yield result
       case m: FinalMutaction =>
         for {
-          result <- interpreterFor(m).newActionWithErrorMapped(mutationBuilder, parentId)
+          result <- interpreterFor(m).newActionWithErrorMapped(mutationBuilder, parentId)(recurseEc)
         } yield result
     }
   }
