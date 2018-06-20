@@ -19,12 +19,12 @@ trait DatabaseMutactionInterpreter {
       mutationBuilder: PostgresApiDatabaseMutationBuilder,
       parentId: IdGCValue
   )(implicit ec: ExecutionContext): DBIO[DatabaseMutactionResult] = {
-    newAction(mutationBuilder, parentId).asTry.map {
-      case Success(x) => x
+    newAction(mutationBuilder, parentId).asTry.flatMap {
+      case Success(x) => DBIO.successful(x)
       case Failure(e) =>
         errorMapper.lift(e) match {
-          case Some(mappedError) => throw mappedError
-          case None              => throw e
+          case Some(mappedError) => DBIO.failed(mappedError)
+          case None              => DBIO.failed(e)
         }
     }
   }
@@ -37,12 +37,12 @@ trait DatabaseMutactionInterpreter {
   }
 
   def actionWithErrorMapped(mutationBuilder: PostgresApiDatabaseMutationBuilder)(implicit ec: ExecutionContext): DBIO[_] = {
-    action(mutationBuilder).asTry.map {
-      case Success(x) => x
+    action(mutationBuilder).asTry.flatMap {
+      case Success(x) => DBIO.successful(x)
       case Failure(e) =>
         errorMapper.lift(e) match {
-          case Some(mappedError) => throw mappedError
-          case None              => throw e
+          case Some(mappedError) => DBIO.failed(mappedError)
+          case None              => DBIO.failed(e)
         }
     }
   }
