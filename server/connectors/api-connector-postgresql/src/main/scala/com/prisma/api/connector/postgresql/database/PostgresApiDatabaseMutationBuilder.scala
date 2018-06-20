@@ -695,22 +695,28 @@ case class PostgresApiDatabaseMutationBuilder(schemaName: String) {
     }
   }
 
-  def queryIdFromWhere(where: NodeSelector): DBIO[Option[IdGCValue]] = SimpleDBIO { ctx =>
-    val model = where.model
-    val query = sql
-      .select(field(name(schemaName, model.dbName, model.dbNameOfIdField_!)))
-      .from(table(name(schemaName, model.dbName)))
-      .where(field(name(schemaName, model.dbName, where.fieldName)).equal(placeHolder))
-
-    val ps = ctx.connection.prepareStatement(query.getSQL)
-    ps.setGcValue(1, where.fieldGCValue)
-
-    val rs = ps.executeQuery()
-
-    if (rs.next()) {
-      Some(rs.getId(model))
+  def queryIdFromWhere(where: NodeSelector): DBIO[Option[IdGCValue]] = {
+    if (where.isId) {
+      DBIO.successful(Some(where.fieldGCValue.asInstanceOf[IdGCValue]))
     } else {
-      None
+      SimpleDBIO { ctx =>
+        val model = where.model
+        val query = sql
+          .select(field(name(schemaName, model.dbName, model.dbNameOfIdField_!)))
+          .from(table(name(schemaName, model.dbName)))
+          .where(field(name(schemaName, model.dbName, where.fieldName)).equal(placeHolder))
+
+        val ps = ctx.connection.prepareStatement(query.getSQL)
+        ps.setGcValue(1, where.fieldGCValue)
+
+        val rs = ps.executeQuery()
+
+        if (rs.next()) {
+          Some(rs.getId(model))
+        } else {
+          None
+        }
+      }
     }
   }
 
