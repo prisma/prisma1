@@ -259,17 +259,15 @@ case class NestedUpdateDataItemInterpreter(mutaction: NestedUpdateDataItem) exte
 
   override def newAction(mutationBuilder: PostgresApiDatabaseMutationBuilder, parentId: IdGCValue)(implicit ec: ExecutionContext) = {
     for {
+      _ <- verifyWhere(mutationBuilder, mutaction.where)
       id <- mutaction.where match {
-             case Some(where) => mutationBuilder.queryIdFromWhere(where)
+             case Some(where) => mutationBuilder.queryIdByParentIdAndWhere(mutaction.relationField, parentId, where)
              case None        => mutationBuilder.queryIdByParentId(mutaction.relationField, parentId)
            }
       _ <- id match {
             case Some(id) => doIt(mutationBuilder, id)
             case None =>
-              mutaction.where match {
-                case Some(where) => throw APIErrors.NodeNotFoundForWhereError(where)
-                case None        => throw APIErrors.NodesNotConnectedError(Path.empty(NodeSelector.forIdGCValue(parent, parentId)))
-              }
+              throw APIErrors.NodesNotConnectedError(Path.empty(NodeSelector.forIdGCValue(parent, parentId)).append(ModelEdge(mutaction.relationField)))
           }
     } yield UpdateItemResult(id)
   }
@@ -288,6 +286,19 @@ case class NestedUpdateDataItemInterpreter(mutaction: NestedUpdateDataItem) exte
 trait SharedUpdateLogic {
   def model: Model
   def nonListArgs: PrismaArgs
+
+  def verifyWhere(mutationBuilder: PostgresApiDatabaseMutationBuilder, where: Option[NodeSelector])(implicit ec: ExecutionContext) = {
+    where match {
+      case Some(where) =>
+        for {
+          id <- mutationBuilder.queryIdFromWhere(where)
+        } yield {
+          if (id.isEmpty) throw APIErrors.NodeNotFoundForWhereError(where)
+        }
+      case None =>
+        DBIO.successful(())
+    }
+  }
 
   def doIt(mutationBuilder: PostgresApiDatabaseMutationBuilder, id: IdGCValue)(implicit ec: ExecutionContext): DBIO[Unit] = {
     for {

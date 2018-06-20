@@ -440,7 +440,7 @@ case class PostgresApiDatabaseMutationBuilder(schemaName: String) {
         .where(parentIdField.equal(placeHolder))
 
     val idFieldOfRelatedModel = field(name(schemaName, parentField.relatedModel_!.dbName, parentField.relatedModel_!.dbNameOfIdField_!))
-    val condition             = idFieldOfRelatedModel.equal(subSelect)
+    val condition             = idFieldOfRelatedModel.in(subSelect)
 
     condition
   }
@@ -716,6 +716,29 @@ case class PostgresApiDatabaseMutationBuilder(schemaName: String) {
 
     jooqToDBIO(q)(
       setParams = _.setGcValue(parentId),
+      readResult = { rs =>
+        if (rs.next()) {
+          Some(rs.getId(model))
+        } else {
+          None
+        }
+      }
+    )
+  }
+
+  def queryIdByParentIdAndWhere(parentField: RelationField, parentId: IdGCValue, where: NodeSelector): DBIO[Option[IdGCValue]] = {
+    val model                 = parentField.relatedModel_!
+    val nodeSelectorCondition = field(name(schemaName, model.dbName, where.fieldName)).equal(placeHolder)
+    val q: SelectConditionStep[Record1[AnyRef]] = sql
+      .select(idField(model))
+      .from(modelTable(model))
+      .where(parentIdCondition(parentField, parentId), nodeSelectorCondition)
+
+    jooqToDBIO(q)(
+      setParams = { pp =>
+        pp.setGcValue(parentId)
+        pp.setGcValue(where.fieldGCValue)
+      },
       readResult = { rs =>
         if (rs.next()) {
           Some(rs.getId(model))
