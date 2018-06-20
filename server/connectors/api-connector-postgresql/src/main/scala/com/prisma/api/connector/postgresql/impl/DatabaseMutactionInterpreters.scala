@@ -110,6 +110,13 @@ case class NestedCreateDataItemInterpreter(mutaction: NestedCreateDataItem, incl
   }
 
   override def action(mutationBuilder: PostgresApiDatabaseMutationBuilder) = ???
+
+  override val errorMapper = {
+    case e: PSQLException if e.getSQLState == "23505" && GetFieldFromSQLUniqueException.getFieldOption(model, e).isDefined =>
+      APIErrors.UniqueConstraintViolation(model.name, GetFieldFromSQLUniqueException.getFieldOption(model, e).get)
+    case e: PSQLException if e.getSQLState == "23503" =>
+      APIErrors.NodeDoesNotExist("")
+  }
 }
 
 case class DeleteDataItemInterpreter(mutaction: DeleteDataItem)(implicit ec: ExecutionContext) extends DatabaseMutactionInterpreter {
