@@ -26,6 +26,8 @@ import scala.collection.JavaConverters._
 case class PostgresApiDatabaseMutationBuilder(schemaName: String) {
   import JooqQueryBuilders._
 
+  val sql = DSL.using(SQLDialect.POSTGRES_9_5, new Settings().withRenderFormatted(true))
+
   // region CREATE
 
   def createDataItem(model: Model, args: PrismaArgs): DBIO[CreateDataItemResult] = {
@@ -36,7 +38,6 @@ case class PostgresApiDatabaseMutationBuilder(schemaName: String) {
       val columns    = fields.map(_.dbName)
 
       lazy val queryString: String = {
-        val sql             = DSL.using(SQLDialect.POSTGRES_9_5, new Settings().withRenderFormatted(true))
         val generatedFields = columns.map(fieldName => field(name(schemaName, model.dbName, fieldName)))
 
         sql
@@ -68,8 +69,6 @@ case class PostgresApiDatabaseMutationBuilder(schemaName: String) {
   def createRelayRow(where: NodeSelector): DBIO[_] = {
     SimpleDBIO[Boolean] { x =>
       lazy val queryString: String = {
-        val sql = DSL.using(SQLDialect.POSTGRES_9_5, new Settings().withRenderFormatted(true))
-
         sql
           .insertInto(table(name(schemaName, relayTableName)))
           .columns(field(name(schemaName, relayTableName, "id")), field(name(schemaName, relayTableName, "stableModelIdentifier")))
@@ -143,7 +142,6 @@ case class PostgresApiDatabaseMutationBuilder(schemaName: String) {
     } else if (relation.hasManifestation) {
       SimpleDBIO[Boolean] { x =>
         lazy val queryString: String = {
-          val sql = DSL.using(SQLDialect.POSTGRES_9_5, new Settings().withRenderFormatted(true))
 
           val relationTable = table(name(schemaName, relation.relationTableName))
 
@@ -166,7 +164,6 @@ case class PostgresApiDatabaseMutationBuilder(schemaName: String) {
     } else {
       SimpleDBIO[Boolean] { x =>
         lazy val queryString: String = {
-          val sql           = DSL.using(SQLDialect.POSTGRES_9_5, new Settings().withRenderFormatted(true))
           val relationTable = table(name(schemaName, relation.relationTableName))
 
           sql
@@ -198,8 +195,6 @@ case class PostgresApiDatabaseMutationBuilder(schemaName: String) {
     val map = args.raw.asRoot.map
     if (map.nonEmpty) {
       SimpleDBIO { ctx =>
-        val sql = DSL.using(SQLDialect.POSTGRES_9_5, new Settings().withRenderFormatted(true))
-
         val aliasedTable = table(name(schemaName, model.dbName)).as(topLevelAlias)
         val condition    = JooqWhereClauseBuilder(schemaName).buildWhereClause(whereFilter).getOrElse(trueCondition())
 
@@ -347,8 +342,6 @@ case class PostgresApiDatabaseMutationBuilder(schemaName: String) {
 
   def deleteDataItems(model: Model, whereFilter: Option[Filter]) = {
     SimpleDBIO { ctx =>
-      val sql = DSL.using(SQLDialect.POSTGRES_9_5, new Settings().withRenderFormatted(true))
-
       val aliasedTable = table(name(schemaName, model.dbName)).as(topLevelAlias)
       val condition    = JooqWhereClauseBuilder(schemaName).buildWhereClause(whereFilter).getOrElse(trueCondition())
 
@@ -363,10 +356,8 @@ case class PostgresApiDatabaseMutationBuilder(schemaName: String) {
     }
   }
 
-  def deleteRelayIds(model: Model, whereFilter: Option[Filter]) = {
+  def deleteRelayIds(model: Model, whereFilter: Option[Filter]): DBIO[_] = {
     SimpleDBIO { ctx =>
-      val sql = DSL.using(SQLDialect.POSTGRES_9_5, new Settings().withRenderFormatted(true))
-
       val relayTable      = table(name(schemaName, relayTableName))
       val aliasedTable    = table(name(schemaName, model.dbName)).as(topLevelAlias)
       val filterCondition = JooqWhereClauseBuilder(schemaName).buildWhereClause(whereFilter).getOrElse(trueCondition())
@@ -387,7 +378,6 @@ case class PostgresApiDatabaseMutationBuilder(schemaName: String) {
   def deleteDataItemByWhere(where: NodeSelector) = {
     SimpleDBIO[Boolean] { x =>
       lazy val queryString: String = {
-        val sql = DSL.using(SQLDialect.POSTGRES_9_5, new Settings().withRenderFormatted(true))
 
         sql
           .deleteFrom(table(name(schemaName, where.model.dbName)))
@@ -404,8 +394,6 @@ case class PostgresApiDatabaseMutationBuilder(schemaName: String) {
 
   def deleteDataItemByParentId(parent: RelationField, parentId: IdGCValue) = {
     SimpleDBIO[Boolean] { x =>
-      val sql = DSL.using(SQLDialect.POSTGRES_9_5, new Settings().withRenderFormatted(true))
-
       val subSelect = select(field(name(schemaName, parent.relation.relationTableName, parent.oppositeRelationSide.toString)))
         .from(table(name(schemaName, parent.relation.relationTableName)))
         .where(field(name(parent.relation.relationTableName, parent.relationSide.toString)).equal(placeHolder))
@@ -429,7 +417,6 @@ case class PostgresApiDatabaseMutationBuilder(schemaName: String) {
   def deleteRelayRowByWhere(where: NodeSelector) = {
     SimpleDBIO[Boolean] { x =>
       lazy val queryString: String = {
-        val sql = DSL.using(SQLDialect.POSTGRES_9_5, new Settings().withRenderFormatted(true))
         val subSelect = select(field(name(schemaName, where.model.dbName, where.model.dbNameOfIdField_!)))
           .from(table(name(schemaName, where.model.dbName)))
           .where(field(name(schemaName, where.model.dbName, where.field.dbName)).equal(placeHolder))
@@ -449,7 +436,6 @@ case class PostgresApiDatabaseMutationBuilder(schemaName: String) {
 
   def deleteRelayRowByParentId(parent: RelationField, parentId: IdGCValue) = {
     SimpleDBIO[Boolean] { x =>
-      val sql = DSL.using(SQLDialect.POSTGRES_9_5, new Settings().withRenderFormatted(true))
       val subSelect = select(field(name(schemaName, parent.relation.relationTableName, parent.oppositeRelationSide.toString)))
         .from(table(name(schemaName, parent.relation.relationTableName)))
         .where(field(name(parent.relation.relationTableName, parent.relationSide.toString)).equal(placeHolder))
@@ -532,8 +518,7 @@ case class PostgresApiDatabaseMutationBuilder(schemaName: String) {
   //region SCALAR LISTS
   def setScalarList(where: NodeSelector, listFieldMap: Vector[(String, ListGCValue)]) = {
     val idQuery = SimpleDBIO { ctx =>
-      val sql                      = DSL.using(SQLDialect.POSTGRES_9_5, new Settings().withRenderFormatted(true))
-      lazy val queryString: String = sql.select(DSL.value(placeHolder)).getSQL
+      lazy val queryString: String = sql.select(value(placeHolder)).getSQL
       val ps                       = ctx.connection.prepareStatement(queryString)
       val pp                       = new PositionedParameters(ps)
       pp.setGcValue(where.fieldGCValue)
@@ -585,7 +570,6 @@ case class PostgresApiDatabaseMutationBuilder(schemaName: String) {
             case (fieldName, listGCValue) =>
               val dbNameOfField = model.getFieldByName_!(fieldName).dbName
               val tableName     = s"${model.dbName}_$dbNameOfField"
-              val sql           = DSL.using(SQLDialect.POSTGRES_9_5, new Settings().withRenderFormatted(true))
 
               val condition = ids.length match {
                 case 1 => field(name(schemaName, tableName, nodeIdFieldName)).equal(placeHolder)
