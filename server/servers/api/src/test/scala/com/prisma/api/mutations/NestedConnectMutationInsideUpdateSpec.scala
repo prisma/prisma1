@@ -1350,7 +1350,8 @@ class NestedConnectMutationInsideUpdateSpec extends FlatSpec with Matchers with 
 
     val res2 = server.query(
       s"""query {
-         |  technologies{name,
+         |  technologies{
+         |       name
          |       childTechnologies  {name}
          |       parentTechnologies {name}
          |  }

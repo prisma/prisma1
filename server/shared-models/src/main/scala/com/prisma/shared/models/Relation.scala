@@ -42,6 +42,7 @@ class Relation(
   lazy val hasManifestation: Boolean                                = manifestation.isDefined
   lazy val isInlineRelation: Boolean                                = manifestation.exists(_.isInstanceOf[InlineRelationManifestation])
   lazy val inlineManifestation: Option[InlineRelationManifestation] = manifestation.collect { case x: InlineRelationManifestation => x }
+  lazy val isSelfRelation                                           = modelA == modelB
 
   lazy val relationTableName = manifestation match {
     case Some(m: RelationTableManifestation)  => m.table
@@ -65,12 +66,6 @@ class Relation(
     val modelAFieldIsList = modelAField.isList
     val modelBFieldIsList = modelBField.isList
     modelAFieldIsList && modelBFieldIsList
-  }
-
-  def relationSide(model: Model) = model.name match {
-    case `modelAName` => RelationSide.A
-    case `modelBName` => RelationSide.B
-    case _            => sys.error(s"The model id ${model.name} is not part of this relation $name")
   }
 
   def columnForRelationSide(relationSide: RelationSide.Value): String = if (relationSide == RelationSide.A) modelAColumn else modelBColumn

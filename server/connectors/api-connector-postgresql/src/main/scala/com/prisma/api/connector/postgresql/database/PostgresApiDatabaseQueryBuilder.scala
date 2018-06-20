@@ -31,10 +31,20 @@ case class PostgresApiDatabaseQueryBuilder(
     readPrismaNode(model, rs)
   }
 
-  private def readPrismaNodeWithParent(model: Model, parent: Model, parentSide: RelationSide.Value) = ReadsResultSet { rs =>
-    val node     = readPrismaNode(model, rs)
-    val parentId = rs.getParentId(parentSide, parent.idField_!.typeIdentifier)
+  private def readPrismaNodeWithParent(rf: RelationField) = ReadsResultSet { rs =>
+    val node = readPrismaNode(rf.relatedModel_!, rs)
 
+    val parentId = if (rf.relation.isSameModelRelation) {
+      val firstSide  = rs.getParentId(RelationSide.A, rf.model.idField_!.typeIdentifier)
+      val secondSide = rs.getParentId(RelationSide.B, rf.model.idField_!.typeIdentifier)
+      if (firstSide == node.id) secondSide else firstSide
+    } else {
+      val parentRelationSide = rf.relation.modelA match {
+        case x if x == rf.relatedModel_! => RelationSide.B
+        case _                           => RelationSide.A
+      }
+      rs.getParentId(parentRelationSide, rf.model.idField_!.typeIdentifier)
+    }
     PrismaNodeWithParent(parentId, node)
   }
 
@@ -100,7 +110,7 @@ case class PostgresApiDatabaseQueryBuilder(
       val rs: ResultSet       = ps.executeQuery()
       val model               = fromField.relatedModel_!
       val parent              = fromField.model
-      val result              = rs.as[PrismaNodeWithParent](readPrismaNodeWithParent(model, parent, fromField.relation.relationSide(parent)))
+      val result              = rs.as[PrismaNodeWithParent](readPrismaNodeWithParent(fromField))
       val itemGroupsByModelId = result.groupBy(_.parentId)
       fromModelIds.map { id =>
         itemGroupsByModelId.find(_._1 == id) match {
