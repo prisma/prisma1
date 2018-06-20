@@ -40,7 +40,7 @@ case class CascadingDeleteRelationMutactionsInterpreter(mutaction: CascadingDele
 
   override def errorMapper = {
     case e: PSQLException if otherFailingRequiredRelationOnChild(e.getMessage).isDefined =>
-      throw RequiredRelationWouldBeViolated(project, otherFailingRequiredRelationOnChild(e.getMessage).get)
+      throw RequiredRelationWouldBeViolated(otherFailingRequiredRelationOnChild(e.getMessage).get)
   }
 
   private def otherFailingRequiredRelationOnChild(cause: String): Option[Relation] =
@@ -177,7 +177,7 @@ case class DeleteManyRelationChecksInterpreter(mutaction: DeleteManyRelationChec
 
   override def errorMapper = {
     case e: PSQLException if otherFailingRequiredRelationOnChild(e.getMessage).isDefined =>
-      throw RequiredRelationWouldBeViolated(project, otherFailingRequiredRelationOnChild(e.getMessage).get)
+      throw RequiredRelationWouldBeViolated(otherFailingRequiredRelationOnChild(e.getMessage).get)
   }
 
   private def otherFailingRequiredRelationOnChild(cause: String): Option[Relation] = fieldsWhereThisModelIsRequired.collectFirst {
@@ -203,7 +203,7 @@ case class DeleteRelationCheckInterpreter(mutaction: DeleteRelationCheck) extend
 
   override val errorMapper = {
     case e: PSQLException if otherFailingRequiredRelationOnChild(e.getMessage).isDefined =>
-      throw RequiredRelationWouldBeViolated(project, otherFailingRequiredRelationOnChild(e.getMessage).get)
+      throw RequiredRelationWouldBeViolated(otherFailingRequiredRelationOnChild(e.getMessage).get)
   }
 
   private def otherFailingRequiredRelationOnChild(cause: String): Option[Relation] =

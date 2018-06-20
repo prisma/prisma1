@@ -11,6 +11,7 @@ import com.prisma.gc_values.{GCValue, ListGCValue, NullGCValue, _}
 import com.prisma.shared.models._
 import com.prisma.slick.NewJdbcExtensions._
 import com.prisma.api.connector.postgresql.database.JooqExtensions._
+import com.prisma.api.schema.APIErrors.RequiredRelationWouldBeViolated
 import cool.graph.cuid.Cuid
 import org.joda.time.{DateTime, DateTimeZone}
 import org.jooq.{Query => JooqQuery, _}
@@ -23,6 +24,7 @@ import slick.jdbc.{PositionedParameters, PostgresProfile, SQLActionBuilder}
 import slick.sql.SqlStreamingAction
 
 import scala.collection.JavaConverters._
+import scala.concurrent.ExecutionContext
 
 case class PostgresApiDatabaseMutationBuilder(schemaName: String) {
   import JooqQueryBuilders._
@@ -857,6 +859,21 @@ case class PostgresApiDatabaseMutationBuilder(schemaName: String) {
     triggerFailureWhenExists(query, triggerString)
   }
 
+  def oldParentFailureTriggerForRequiredRelations2(
+      relationField: RelationField,
+      childId: IdGCValue
+  )(implicit ec: ExecutionContext): DBIO[Unit] = {
+    val relation = relationField.relation
+    val idQuery  = sql.select(asterisk()).from(relationTable(relation)).where(relationColumn(relation, relationField.oppositeRelationSide).equal(placeHolder))
+    val action = queryToDBIO(idQuery)(
+      setParams = _.setGcValue(childId),
+      readResult = rs => rs.as(readsAsUnit)
+    )
+    action.map { result =>
+      if (result.nonEmpty) throw RequiredRelationWouldBeViolated(relation)
+    }
+  }
+
   def oldParentFailureTrigger(path: Path, triggerString: String) = {
     val table = path.lastRelation_!.relationTableName
     val query = sql"""SELECT * FROM "#$schemaName"."#$table" OLDPARENTPATHFAILURETRIGGER WHERE "#${path.columnForChildSideOfLastEdge}" IN (""" ++
@@ -1133,4 +1150,5 @@ case class PostgresApiDatabaseMutationBuilder(schemaName: String) {
   private val dbioUnit = DBIO.successful(())
 
   private val readFirstColumnAsString: ReadsResultSet[String] = ReadsResultSet(_.getString(1))
+  private val readsAsUnit: ReadsResultSet[Unit]               = ReadsResultSet(_ => ())
 }

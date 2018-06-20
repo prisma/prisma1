@@ -4,7 +4,7 @@ import com.prisma.api.connector.{ModelEdge, NestedConnectRelation, Path, VerifyC
 import com.prisma.api.connector.postgresql.database.PostgresApiDatabaseMutationBuilder
 import com.prisma.api.schema.APIErrors
 import com.prisma.gc_values.IdGCValue
-import slick.dbio.{DBIO, Effect, NoStream}
+import slick.dbio.{DBIO, DBIOAction, Effect, NoStream}
 import slick.sql.{SqlAction, SqlStreamingAction}
 
 import scala.concurrent.ExecutionContext
@@ -15,13 +15,15 @@ case class NestedConnectRelationInterpreter(mutaction: NestedConnectRelation)(im
   override def project     = mutaction.project
   override def topIsCreate = mutaction.topIsCreate
 
-  override def requiredCheck(implicit mutationBuilder: PostgresApiDatabaseMutationBuilder): List[DBIO[_]] = {
-    val x = topIsCreate match {
+  val relation = mutaction.relationField.relation
+
+  override def requiredCheck(parentId: IdGCValue)(implicit mutationBuilder: PostgresApiDatabaseMutationBuilder): List[DBIO[_]] = {
+    topIsCreate match {
       case false =>
         (p.isList, p.isRequired, c.isList, c.isRequired) match {
           case (false, true, false, true)   => requiredRelationViolation
-          case (false, true, false, false)  => List(checkForOldParentByChildWhere)
-          case (false, false, false, true)  => List(checkForOldChild)
+          case (false, true, false, false)  => List(checkForOldParentByChildWhere2)
+          case (false, false, false, true)  => List(checkForOldChild2(parentId))
           case (false, false, false, false) => noCheckRequired
           case (true, false, false, true)   => noCheckRequired
           case (true, false, false, false)  => noCheckRequired
@@ -33,7 +35,7 @@ case class NestedConnectRelationInterpreter(mutaction: NestedConnectRelation)(im
       case true =>
         (p.isList, p.isRequired, c.isList, c.isRequired) match {
           case (false, true, false, true)   => requiredRelationViolation
-          case (false, true, false, false)  => List(checkForOldParentByChildWhere)
+          case (false, true, false, false)  => List(checkForOldParentByChildWhere2)
           case (false, false, false, true)  => noActionRequired
           case (false, false, false, false) => noActionRequired
           case (true, false, false, true)   => noActionRequired
@@ -44,9 +46,6 @@ case class NestedConnectRelationInterpreter(mutaction: NestedConnectRelation)(im
           case _                            => sysError
         }
     }
-    val verifyConnnection = VerifyConnectionInterpreter(VerifyConnection(project, path)).actionWithErrorMapped(mutationBuilder)
-
-    verifyConnnection +: x
   }
 
   override def removalActions(parentId: IdGCValue)(implicit mutationBuilder: PostgresApiDatabaseMutationBuilder): List[DBIO[Unit]] =
@@ -92,6 +91,20 @@ case class NestedConnectRelationInterpreter(mutaction: NestedConnectRelation)(im
 
   def removalByParent(parentId: IdGCValue)(implicit mutationBuilder: PostgresApiDatabaseMutationBuilder) = {
     mutationBuilder.deleteRelationRowByParentId(mutaction.relationField, parentId)
+  }
+
+  def checkForOldParentByChildWhere2()(implicit mutationBuilder: PostgresApiDatabaseMutationBuilder): DBIO[Unit] = {
+    for {
+      id <- mutationBuilder.queryIdFromWhere(mutaction.where)
+      _ <- id match {
+            case None          => throw APIErrors.NodeNotFoundForWhereError(mutaction.where)
+            case Some(childId) => mutationBuilder.oldParentFailureTriggerForRequiredRelations2(mutaction.relationField, childId)
+          }
+    } yield ()
+  }
+
+  def checkForOldChild2(parentId: IdGCValue)(implicit mb: PostgresApiDatabaseMutationBuilder) = {
+    mb.oldParentFailureTriggerForRequiredRelations2(mutaction.relationField.relatedField, parentId)
   }
 
   override def addAction(parentId: IdGCValue)(implicit mutationBuilder: PostgresApiDatabaseMutationBuilder): List[DBIO[Unit]] = {

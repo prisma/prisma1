@@ -9,7 +9,7 @@ case class NestedDisconnectRelationInterpreter(mutaction: NestedDisconnectRelati
   override def project     = mutaction.project
   override def topIsCreate = mutaction.topIsCreate
 
-  override def requiredCheck(implicit mutationBuilder: PostgresApiDatabaseMutationBuilder) =
+  override def requiredCheck(parentId: IdGCValue)(implicit mutationBuilder: PostgresApiDatabaseMutationBuilder) =
     (p.isList, p.isRequired, c.isList, c.isRequired) match {
       case (false, true, false, true)   => requiredRelationViolation
       case (false, true, false, false)  => requiredRelationViolation

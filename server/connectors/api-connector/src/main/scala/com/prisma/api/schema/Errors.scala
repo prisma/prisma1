@@ -102,7 +102,7 @@ object APIErrors {
 
   case class NodesNotConnectedError(path: Path) extends ClientApiError(pathErrorMessage(path), 3041)
 
-  case class RequiredRelationWouldBeViolated(project: Project, relation: Relation)
+  case class RequiredRelationWouldBeViolated(relation: Relation)
       extends ClientApiError(
         s"The change you are trying to make would violate the required relation '${relation.name}' between ${relation.modelA.name} and ${relation.modelB.name}",
         3042
