@@ -33,7 +33,7 @@ class WhereAndDateTimeSpec extends FlatSpec with Matchers with ApiSpecBase {
          |  ){
          |    id
          |  }
-         |}""".stripMargin,
+         |}""",
       project
     )
 
@@ -52,7 +52,7 @@ class WhereAndDateTimeSpec extends FlatSpec with Matchers with ApiSpecBase {
          |    id
          |  }
          |}
-      """.stripMargin,
+      """,
       project
     )
 
@@ -94,7 +94,7 @@ class WhereAndDateTimeSpec extends FlatSpec with Matchers with ApiSpecBase {
          |  ){
          |    id
          |  }
-         |}""".stripMargin,
+         |}""",
       project
     )
 
@@ -115,7 +115,7 @@ class WhereAndDateTimeSpec extends FlatSpec with Matchers with ApiSpecBase {
          |    id
          |  }
          |}
-      """.stripMargin,
+      """,
       project
     )
 
