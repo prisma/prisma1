@@ -55,10 +55,10 @@ case class NestedConnectRelationInterpreter(mutaction: NestedConnectRelation)(im
         (p.isList, p.isRequired, c.isList, c.isRequired) match {
           case (false, true, false, true)   => requiredRelationViolation
           case (false, true, false, false)  => List(removalByParent)
-          case (false, false, false, true)  => List(removalByParent, removalByChildWhere)
-          case (false, false, false, false) => List(removalByParent, removalByChildWhere)
-          case (true, false, false, true)   => List(removalByChildWhere)
-          case (true, false, false, false)  => List(removalByChildWhere)
+          case (false, false, false, true)  => List(removalByParent, removalByChild)
+          case (false, false, false, false) => List(removalByParent, removalByChild)
+          case (true, false, false, true)   => List(removalByChild)
+          case (true, false, false, false)  => List(removalByChild)
           case (false, true, true, false)   => List(removalByParent)
           case (false, false, true, false)  => List(removalByParent)
           case (true, false, true, false)   => noActionRequired
@@ -68,16 +68,27 @@ case class NestedConnectRelationInterpreter(mutaction: NestedConnectRelation)(im
         (p.isList, p.isRequired, c.isList, c.isRequired) match {
           case (false, true, false, true)   => requiredRelationViolation
           case (false, true, false, false)  => noActionRequired
-          case (false, false, false, true)  => List(removalByChildWhere)
-          case (false, false, false, false) => List(removalByChildWhere)
-          case (true, false, false, true)   => List(removalByChildWhere)
-          case (true, false, false, false)  => List(removalByChildWhere)
+          case (false, false, false, true)  => List(removalByChild)
+          case (false, false, false, false) => List(removalByChild)
+          case (true, false, false, true)   => List(removalByChild)
+          case (true, false, false, false)  => List(removalByChild)
           case (false, true, true, false)   => noActionRequired
           case (false, false, true, false)  => noActionRequired
           case (true, false, true, false)   => noActionRequired
           case _                            => sysError
         }
     }
+
+  def removalByChild(implicit mutationBuilder: PostgresApiDatabaseMutationBuilder) = {
+    val action = for {
+      id <- mutationBuilder.queryIdFromWhere(mutaction.where)
+      _ <- id match {
+            case None          => throw APIErrors.NodeNotFoundForWhereError(mutaction.where)
+            case Some(childId) => mutationBuilder.deleteRelationRowByChildId(mutaction.relationField, childId)
+          }
+    } yield ()
+    action
+  }
 
   override def addAction(parentId: IdGCValue)(implicit mutationBuilder: PostgresApiDatabaseMutationBuilder): List[DBIO[Unit]] = {
     val action = for {
@@ -89,4 +100,5 @@ case class NestedConnectRelationInterpreter(mutaction: NestedConnectRelation)(im
     } yield ()
     List(action)
   }
+
 }

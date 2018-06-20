@@ -49,8 +49,7 @@ trait NestedRelationInterpreterBase extends DatabaseMutactionInterpreter {
   def checkForOldChild(implicit mb: PostgresApiDatabaseMutationBuilder) = mb.oldChildFailureTrigger(path, childCauseString)
   def noCheckRequired                                                   = List.empty
 
-  def removalByParent(implicit mb: PostgresApiDatabaseMutationBuilder)         = mb.deleteRelationRowByParent(path)
-  def removalByChildWhere(implicit mb: PostgresApiDatabaseMutationBuilder)     = mb.deleteRelationRowByChildWithWhere(path)
+  def removalByParent(implicit mb: PostgresApiDatabaseMutationBuilder)         = mb.deleteRelationRowByParent(path) // fixme: this is used but no test failed so far
   def removalByParentAndChild(implicit mb: PostgresApiDatabaseMutationBuilder) = mb.deleteRelationRowByParentAndChild(path)
   def createRelationRow(implicit mb: PostgresApiDatabaseMutationBuilder)       = ??? // todo : implement
   def noActionRequired                                                         = List.empty

@@ -523,6 +523,19 @@ case class PostgresApiDatabaseMutationBuilder(schemaName: String) {
     action.andThen(dbioUnit)
   }
 
+  def deleteRelationRowByChildId(relationField: RelationField, childId: IdGCValue): DBIO[Unit] = {
+    val relation = relationField.relation
+    val jooqQuery = relation.inlineManifestation match {
+      case Some(manifestation) =>
+        ???
+      case None =>
+        val condition = relationColumn(relation, relationField.oppositeRelationSide).equal(placeHolder)
+        sql.deleteFrom(relationTable(relation)).where(condition)
+    }
+
+    deleteToDBIO(jooqQuery)(setParams = _.setGcValue(childId))
+  }
+
   def deleteRelationRowByParentAndChild(path: Path) = {
     val relation = path.lastRelation_!
     relation.inlineManifestation match {
@@ -714,7 +727,7 @@ case class PostgresApiDatabaseMutationBuilder(schemaName: String) {
       .from(modelTable(model))
       .where(parentIdCondition(parentField, parentId))
 
-    jooqToDBIO(q)(
+    queryToDBIO(q)(
       setParams = _.setGcValue(parentId),
       readResult = { rs =>
         if (rs.next()) {
@@ -734,7 +747,7 @@ case class PostgresApiDatabaseMutationBuilder(schemaName: String) {
       .from(modelTable(model))
       .where(parentIdCondition(parentField, parentId), nodeSelectorCondition)
 
-    jooqToDBIO(q)(
+    queryToDBIO(q)(
       setParams = { pp =>
         pp.setGcValue(parentId)
         pp.setGcValue(where.fieldGCValue)
@@ -749,7 +762,7 @@ case class PostgresApiDatabaseMutationBuilder(schemaName: String) {
     )
   }
 
-  def jooqToDBIO[T](query: JooqQuery)(setParams: PositionedParameters => Unit, readResult: ResultSet => T): DBIO[T] = {
+  def queryToDBIO[T](query: JooqQuery)(setParams: PositionedParameters => Unit, readResult: ResultSet => T): DBIO[T] = {
     SimpleDBIO { ctx =>
       val ps = ctx.connection.prepareStatement(query.getSQL)
       val pp = new PositionedParameters(ps)
@@ -760,8 +773,21 @@ case class PostgresApiDatabaseMutationBuilder(schemaName: String) {
     }
   }
 
-  def idField(model: Model)    = field(name(schemaName, model.dbName, model.dbNameOfIdField_!))
-  def modelTable(model: Model) = table(name(schemaName, model.dbName))
+  def deleteToDBIO(query: Delete[Record])(setParams: PositionedParameters => Unit): DBIO[Unit] = {
+    SimpleDBIO { ctx =>
+      val ps = ctx.connection.prepareStatement(query.getSQL)
+      val pp = new PositionedParameters(ps)
+      setParams(pp)
+
+      ps.execute()
+    }
+  }
+
+  def idField(model: Model)                                        = field(name(schemaName, model.dbName, model.dbNameOfIdField_!))
+  def modelTable(model: Model)                                     = table(name(schemaName, model.dbName))
+  def modelColumn(model: Model, column: String)                    = field(name(schemaName, model.dbName, column))
+  def relationTable(relation: Relation)                            = table(name(schemaName, relation.relationTableName))
+  def relationColumn(relation: Relation, side: RelationSide.Value) = field(name(schemaName, relation.relationTableName, relation.columnForRelationSide(side)))
 
   object ::> { def unapply[A](l: List[A]) = Some((l.init, l.last)) }
 
