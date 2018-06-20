@@ -69,7 +69,7 @@ Click the **Choose File** button and select the `mysql.yml` file from the locati
 
 </Instruction>
 
-> **Note:** If you’d like the `aurora.yml` template instead, you’ll need to [create a service linked tole in IAM]((http://docs.aws.amazon.com/cli/latest/reference/iam/create-service-linked-role.html)) using this CLI command: `aws iam create-service-linked-role aws-service-name ecs.amazonaws.com`. You can find more info about this [here](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/using-service-linked-roles.html). Thanks to [John Walsh](https://medium.com/@jwlsh) for figuring that out!
+> **Note:** If you’d like the `aurora.yml` template instead, you’ll need to [create a service linked role in IAM](http://docs.aws.amazon.com/cli/latest/reference/iam/create-service-linked-role.html) using this CLI command: `aws iam create-service-linked-role --aws-service-name ecs.amazonaws.com`. You can find more info about this [here](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/using-service-linked-roles.html). Thanks to [John Walsh](https://medium.com/@jwlsh) for figuring that out!
 
 <Instruction>
 
