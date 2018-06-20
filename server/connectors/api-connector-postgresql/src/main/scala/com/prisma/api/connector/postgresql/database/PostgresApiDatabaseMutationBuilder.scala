@@ -10,6 +10,7 @@ import com.prisma.api.schema.UserFacingError
 import com.prisma.gc_values.{GCValue, ListGCValue, NullGCValue, _}
 import com.prisma.shared.models._
 import com.prisma.slick.NewJdbcExtensions._
+import com.prisma.api.connector.postgresql.database.JooqExtensions._
 import cool.graph.cuid.Cuid
 import org.joda.time.{DateTime, DateTimeZone}
 import org.jooq._
@@ -269,13 +270,12 @@ case class PostgresApiDatabaseMutationBuilder(schemaName: String) {
       DBIOAction.successful(())
     } else {
       SimpleDBIO { ctx =>
-        val columns           = updateArgs.raw.asRoot.map.map { case (k, _) => field(name(model.getFieldByName_!(k).dbName)) }.toList
-        val values            = updateArgs.raw.asRoot.map.map { case (_, v) => v }
-        val valuePlaceholders = values.toList.map(_ => placeHolder)
+        val columns = updateArgs.raw.asRoot.map.map { case (k, _) => model.getFieldByName_!(k).dbName }.toList
+        val values  = updateArgs.raw.asRoot.map.map { case (_, v) => v }
 
         val query = sql
           .update(table(name(schemaName, model.dbName)))
-          .set(row(columns.asJava), row(valuePlaceholders.asJava))
+          .setColumnsWithPlaceHolders(columns)
           .where(field(name(model.dbNameOfIdField_!)).equal(placeHolder))
 
         val ps = ctx.connection.prepareStatement(query.getSQL)

@@ -242,7 +242,7 @@ case class NestedUpdateDataItemInterpreter(mutaction: NestedUpdateDataItem) exte
 case class SharedUpdateDataItemInterpreter(
     project: Project,
     model: Model,
-    where: Option[NodeSelector],
+    whereOpt: Option[NodeSelector],
     nonListArgs: PrismaArgs,
     listArgs: Vector[(String, ListGCValue)]
 ) extends DatabaseMutactionInterpreter {
@@ -250,7 +250,7 @@ case class SharedUpdateDataItemInterpreter(
 
   def newAction(mutationBuilder: PostgresApiDatabaseMutationBuilder, parentId: IdGCValue) = {
     for {
-      id <- where match {
+      id <- whereOpt match {
              case Some(where) => mutationBuilder.queryIdFromWhere(where)
              case None        => ??? // query by parent id
            }
@@ -274,7 +274,7 @@ case class SharedUpdateDataItemInterpreter(
       APIErrors.UniqueConstraintViolation(model.name, GetFieldFromSQLUniqueException.getFieldOption(model, e).get)
 
     case e: PSQLException if e.getSQLState == "23503" =>
-      APIErrors.NodeNotFoundForWhereError(where.get)
+      APIErrors.NodeNotFoundForWhereError(whereOpt.get)
 
     case e: PSQLException if e.getSQLState == "23502" =>
       APIErrors.FieldCannotBeNull()
