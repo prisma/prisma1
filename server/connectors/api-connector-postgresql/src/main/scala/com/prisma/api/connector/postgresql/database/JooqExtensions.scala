@@ -19,7 +19,7 @@ object JooqExtensions {
 
         x.set(row(fields.asJava), row(values.asJava))
       } else {
-        x.set(field(columns.head), placeHolder)
+        x.set(field(name(columns.head)), placeHolder)
       }
     }
   }
