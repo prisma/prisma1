@@ -67,6 +67,12 @@ class Relation(
     modelAFieldIsList && modelBFieldIsList
   }
 
+  def relationSide(model: Model) = model.name match {
+    case `modelAName` => RelationSide.A
+    case `modelBName` => RelationSide.B
+    case _            => sys.error(s"The model id ${model.name} is not part of this relation $name")
+  }
+
   def columnForRelationSide(relationSide: RelationSide.Value): String = if (relationSide == RelationSide.A) modelAColumn else modelBColumn
 
   def getFieldOnModel(modelId: String): RelationField = {
