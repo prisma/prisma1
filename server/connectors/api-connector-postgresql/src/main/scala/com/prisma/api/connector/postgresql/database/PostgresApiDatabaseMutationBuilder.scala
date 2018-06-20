@@ -1,6 +1,6 @@
 package com.prisma.api.connector.postgresql.database
 
-import java.sql.{PreparedStatement, Statement}
+import java.sql.{PreparedStatement, ResultSet, Statement}
 import java.util.Date
 
 import com.prisma.api.connector._
@@ -13,13 +13,13 @@ import com.prisma.slick.NewJdbcExtensions._
 import com.prisma.api.connector.postgresql.database.JooqExtensions._
 import cool.graph.cuid.Cuid
 import org.joda.time.{DateTime, DateTimeZone}
-import org.jooq._
+import org.jooq.{Query => JooqQuery, _}
 import org.jooq.conf.Settings
 import org.jooq.impl.DSL
 import org.jooq.impl.DSL._
 import slick.dbio.{DBIOAction, Effect, NoStream}
 import slick.jdbc.PostgresProfile.api._
-import slick.jdbc.{PositionedParameters, SQLActionBuilder}
+import slick.jdbc.{PositionedParameters, PostgresProfile, SQLActionBuilder}
 import slick.sql.SqlStreamingAction
 
 import scala.collection.JavaConverters._
@@ -417,16 +417,11 @@ case class PostgresApiDatabaseMutationBuilder(schemaName: String) {
     }
   }
 
-  def deleteDataItemByParentId(parent: RelationField, parentId: IdGCValue) = {
+  def deleteDataItemByParentId(parentField: RelationField, parentId: IdGCValue) = {
     SimpleDBIO[Boolean] { x =>
-      val subSelect = select(field(name(schemaName, parent.relation.relationTableName, parent.oppositeRelationSide.toString)))
-        .from(table(name(schemaName, parent.relation.relationTableName)))
-        .where(field(name(parent.relation.relationTableName, parent.relationSide.toString)).equal(placeHolder))
-      val condition = field(name(schemaName, parent.relatedModel_!.dbName, "id")).equal(subSelect)
-
       val queryString = sql
-        .deleteFrom(table(name(schemaName, parent.relatedModel_!.dbName)))
-        .where(condition)
+        .deleteFrom(table(name(schemaName, parentField.relatedModel_!.dbName)))
+        .where(parentIdCondition(parentField, parentId))
         .getSQL
 
       val statement: PreparedStatement = x.connection.prepareStatement(queryString, Statement.RETURN_GENERATED_KEYS)
@@ -434,6 +429,20 @@ case class PostgresApiDatabaseMutationBuilder(schemaName: String) {
 
       statement.execute()
     }
+  }
+
+  def parentIdCondition(parentField: RelationField, parentId: IdGCValue): Condition = {
+    val childIdField  = field(name(schemaName, parentField.relation.relationTableName, parentField.oppositeRelationSide.toString))
+    val parentIdField = field(name(parentField.relation.relationTableName, parentField.relationSide.toString))
+    val subSelect =
+      select(childIdField)
+        .from(table(name(schemaName, parentField.relation.relationTableName)))
+        .where(parentIdField.equal(placeHolder))
+
+    val idFieldOfRelatedModel = field(name(schemaName, parentField.relatedModel_!.dbName, parentField.relatedModel_!.dbNameOfIdField_!))
+    val condition             = idFieldOfRelatedModel.equal(subSelect)
+
+    condition
   }
 
   def deleteDataItem(path: Path) =
@@ -678,29 +687,58 @@ case class PostgresApiDatabaseMutationBuilder(schemaName: String) {
   }
 
   def queryIdFromWhere(where: NodeSelector): DBIO[Option[IdGCValue]] = {
-    if (where.isId) {
-      DBIO.successful(Some(where.fieldGCValue.asInstanceOf[IdGCValue]))
-    } else {
-      SimpleDBIO { ctx =>
-        val model = where.model
-        val query = sql
-          .select(field(name(schemaName, model.dbName, model.dbNameOfIdField_!)))
-          .from(table(name(schemaName, model.dbName)))
-          .where(field(name(schemaName, model.dbName, where.fieldName)).equal(placeHolder))
+    SimpleDBIO { ctx =>
+      val model = where.model
+      val query = sql
+        .select(field(name(schemaName, model.dbName, model.dbNameOfIdField_!)))
+        .from(table(name(schemaName, model.dbName)))
+        .where(field(name(schemaName, model.dbName, where.fieldName)).equal(placeHolder))
 
-        val ps = ctx.connection.prepareStatement(query.getSQL)
-        ps.setGcValue(1, where.fieldGCValue)
+      val ps = ctx.connection.prepareStatement(query.getSQL)
+      ps.setGcValue(1, where.fieldGCValue)
 
-        val rs = ps.executeQuery()
+      val rs = ps.executeQuery()
 
+      if (rs.next()) {
+        Some(rs.getId(model))
+      } else {
+        None
+      }
+    }
+  }
+
+  def queryIdByParentId(parentField: RelationField, parentId: IdGCValue): DBIO[Option[IdGCValue]] = {
+    val model = parentField.relatedModel_!
+    val q: SelectConditionStep[Record1[AnyRef]] = sql
+      .select(idField(model))
+      .from(modelTable(model))
+      .where(parentIdCondition(parentField, parentId))
+
+    jooqToDBIO(q)(
+      setParams = _.setGcValue(parentId),
+      readResult = { rs =>
         if (rs.next()) {
           Some(rs.getId(model))
         } else {
           None
         }
       }
+    )
+  }
+
+  def jooqToDBIO[T](query: JooqQuery)(setParams: PositionedParameters => Unit, readResult: ResultSet => T): DBIO[T] = {
+    SimpleDBIO { ctx =>
+      val ps = ctx.connection.prepareStatement(query.getSQL)
+      val pp = new PositionedParameters(ps)
+      setParams(pp)
+
+      val rs = ps.executeQuery()
+      readResult(rs)
     }
   }
+
+  def idField(model: Model)    = field(name(schemaName, model.dbName, model.dbNameOfIdField_!))
+  def modelTable(model: Model) = table(name(schemaName, model.dbName))
 
   object ::> { def unapply[A](l: List[A]) = Some((l.init, l.last)) }
 
