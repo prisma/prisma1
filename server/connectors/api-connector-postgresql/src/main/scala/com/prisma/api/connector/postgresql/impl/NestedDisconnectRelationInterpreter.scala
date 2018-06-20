@@ -2,6 +2,7 @@ package com.prisma.api.connector.postgresql.impl
 
 import com.prisma.api.connector.NestedDisconnectRelation
 import com.prisma.api.connector.postgresql.database.PostgresApiDatabaseMutationBuilder
+import com.prisma.gc_values.IdGCValue
 
 case class NestedDisconnectRelationInterpreter(mutaction: NestedDisconnectRelation) extends NestedRelationInterpreterBase {
   override def path        = mutaction.path
@@ -24,5 +25,5 @@ case class NestedDisconnectRelationInterpreter(mutaction: NestedDisconnectRelati
 
   override def removalActions(implicit mutationBuilder: PostgresApiDatabaseMutationBuilder) = List(removalByParentAndChild)
 
-  override def addAction(implicit mutationBuilder: PostgresApiDatabaseMutationBuilder) = noActionRequired
+  override def addAction(parentId: IdGCValue)(implicit mutationBuilder: PostgresApiDatabaseMutationBuilder) = noActionRequired
 }

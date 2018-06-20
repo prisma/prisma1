@@ -1,7 +1,9 @@
 package com.prisma.api.connector.postgresql.impl
 
-import com.prisma.api.connector.{NestedConnectRelation, VerifyConnection}
+import com.prisma.api.connector.{ModelEdge, NestedConnectRelation, Path, VerifyConnection}
 import com.prisma.api.connector.postgresql.database.PostgresApiDatabaseMutationBuilder
+import com.prisma.api.schema.APIErrors
+import com.prisma.gc_values.IdGCValue
 import slick.dbio.{DBIO, Effect, NoStream}
 import slick.sql.{SqlAction, SqlStreamingAction}
 
@@ -9,7 +11,7 @@ import scala.concurrent.ExecutionContext
 import scala.util.{Failure, Success}
 
 case class NestedConnectRelationInterpreter(mutaction: NestedConnectRelation)(implicit ec: ExecutionContext) extends NestedRelationInterpreterBase {
-  override def path        = mutaction.path
+  override def path        = Path.empty(mutaction.where).append(ModelEdge(mutaction.relationField))
   override def project     = mutaction.project
   override def topIsCreate = mutaction.topIsCreate
 
@@ -77,5 +79,14 @@ case class NestedConnectRelationInterpreter(mutaction: NestedConnectRelation)(im
         }
     }
 
-  override def addAction(implicit mutationBuilder: PostgresApiDatabaseMutationBuilder): List[SqlAction[Int, NoStream, Effect]] = createRelationRow
+  override def addAction(parentId: IdGCValue)(implicit mutationBuilder: PostgresApiDatabaseMutationBuilder): List[DBIO[Unit]] = {
+    val action = for {
+      id <- mutationBuilder.queryIdFromWhere(mutaction.where)
+      _ <- id match {
+            case None          => throw APIErrors.NodeNotFoundForWhereError(mutaction.where)
+            case Some(childId) => mutationBuilder.createRelationRowByPath(mutaction.relationField, parentId, childId)
+          }
+    } yield ()
+    List(action)
+  }
 }

@@ -2,11 +2,14 @@ package com.prisma.api.connector.postgresql.impl
 
 import com.prisma.api.connector.postgresql.DatabaseMutactionInterpreter
 import com.prisma.api.connector.postgresql.database.PostgresApiDatabaseMutationBuilder
-import com.prisma.api.connector.{ModelEdge, NodeEdge, Path}
+import com.prisma.api.connector.{ModelEdge, NodeEdge, Path, UnitDatabaseMutactionResult}
 import com.prisma.api.schema.APIErrors.RequiredRelationWouldBeViolated
+import com.prisma.gc_values.IdGCValue
 import com.prisma.shared.models.{Project, Schema}
 import org.postgresql.util.PSQLException
 import slick.dbio.{DBIO, DBIOAction, Effect, NoStream}
+
+import scala.concurrent.ExecutionContext
 
 trait NestedRelationInterpreterBase extends DatabaseMutactionInterpreter {
 
@@ -49,18 +52,25 @@ trait NestedRelationInterpreterBase extends DatabaseMutactionInterpreter {
   def removalByParent(implicit mb: PostgresApiDatabaseMutationBuilder)         = mb.deleteRelationRowByParent(path)
   def removalByChildWhere(implicit mb: PostgresApiDatabaseMutationBuilder)     = mb.deleteRelationRowByChildWithWhere(path)
   def removalByParentAndChild(implicit mb: PostgresApiDatabaseMutationBuilder) = mb.deleteRelationRowByParentAndChild(path)
-  def createRelationRow(implicit mb: PostgresApiDatabaseMutationBuilder)       = ??? //todo
+  def createRelationRow(implicit mb: PostgresApiDatabaseMutationBuilder)       = ??? // todo : implement
   def noActionRequired                                                         = List.empty
 
   def requiredCheck(implicit mb: PostgresApiDatabaseMutationBuilder): List[DBIO[_]]
 
   def removalActions(implicit mb: PostgresApiDatabaseMutationBuilder): List[DBIO[_]]
 
-  def addAction(implicit mb: PostgresApiDatabaseMutationBuilder): List[DBIO[_]]
+  def addAction(parentId: IdGCValue)(implicit mb: PostgresApiDatabaseMutationBuilder): List[DBIO[_]]
 
-  def allActions(implicit mb: PostgresApiDatabaseMutationBuilder) = requiredCheck ++ removalActions ++ addAction
+  def allActions(implicit mb: PostgresApiDatabaseMutationBuilder, parentId: IdGCValue) = {
+//    requiredCheck ++ removalActions ++ addAction(parentId)
+    removalActions ++ addAction(parentId)
+  }
 
-  override def action(mb: PostgresApiDatabaseMutationBuilder) = DBIOAction.seq(allActions(mb): _*)
+  override def newAction(mutationBuilder: PostgresApiDatabaseMutationBuilder, parentId: IdGCValue)(implicit ec: ExecutionContext) = {
+    DBIOAction.seq(allActions(mutationBuilder, parentId): _*).andThen(DBIO.successful(UnitDatabaseMutactionResult))
+  }
+
+  override def action(mb: PostgresApiDatabaseMutationBuilder) = ???
 
   override val errorMapper = {
     case e: PSQLException if causedByThisMutaction(e.getMessage) => throw RequiredRelationWouldBeViolated(project, path.lastRelation_!)

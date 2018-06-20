@@ -2,6 +2,7 @@ package com.prisma.api.connector.postgresql.impl
 
 import com.prisma.api.connector.{NestedCreateDataItem, Path}
 import com.prisma.api.connector.postgresql.database.PostgresApiDatabaseMutationBuilder
+import com.prisma.gc_values.IdGCValue
 import slick.dbio.{DBIO, Effect, NoStream}
 import slick.sql.{SqlAction, SqlStreamingAction}
 
@@ -51,5 +52,6 @@ case class NestedCreateRelationInterpreter(mutaction: NestedCreateDataItem) exte
         noActionRequired
     }
 
-  override def addAction(implicit mutationBuilder: PostgresApiDatabaseMutationBuilder): List[SqlAction[Int, NoStream, Effect]] = createRelationRow
+  override def addAction(parentId: IdGCValue)(implicit mutationBuilder: PostgresApiDatabaseMutationBuilder): List[SqlAction[Int, NoStream, Effect]] =
+    createRelationRow
 }

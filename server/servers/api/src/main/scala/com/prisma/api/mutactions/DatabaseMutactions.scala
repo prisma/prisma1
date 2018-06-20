@@ -147,7 +147,7 @@ case class DatabaseMutactions(project: Project) {
       val nestedUpdates = getMutactionsForNestedUpdateMutation(nestedMutations, path, field)
 //      val nestedUpserts     = getMutactionsForNestedUpsertMutation(nestedMutations, path, field)
       val nestedDeletes     = getMutactionsForNestedDeleteMutation(nestedMutations, path, field)
-      val nestedConnects    = getMutactionsForNestedConnectMutation(nestedMutations, path, field, triggeredFromCreate)
+      val nestedConnects    = getMutactionsForNestedConnectMutation(nestedMutations, field, triggeredFromCreate)
       val nestedDisconnects = getMutactionsForNestedDisconnectMutation(nestedMutations, path, field)
 
       val mutactionsThatACreateCanTrigger = nestedCreates ++ nestedConnects
@@ -200,11 +200,10 @@ case class DatabaseMutactions(project: Project) {
 
   def getMutactionsForNestedConnectMutation(
       nestedMutation: NestedMutations,
-      path: Path,
       field: RelationField,
       topIsCreate: Boolean
   ): Vector[NestedConnectRelation] = {
-    nestedMutation.connects.map(connect => NestedConnectRelation(project, field, extend(path, field, connect), topIsCreate))
+    nestedMutation.connects.map(connect => NestedConnectRelation(project, field, connect.where, topIsCreate))
   }
 
   def getMutactionsForNestedDisconnectMutation(nestedMutation: NestedMutations, path: Path, field: RelationField): Vector[NestedDisconnectRelation] = {
