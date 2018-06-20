@@ -28,8 +28,8 @@ case class PostgresDatabaseMutactionExecutor(clientDb: Database, createRelayIds:
     clientDb.run(singleAction)
   }
 
-  // FIXME: the recursion part may deadlock when no dedicated ec is used. This can be observed with test cases in DeadlockSpec that used nested mutations.
-  private val recurseEc = ExecutionContext.fromExecutor(Executors.newFixedThreadPool(2))
+  // FIXME: the recursion part may deadlock when no dedicated ec is used. This can be observed with test cases in DeadlockSpec that use nested mutations.
+  private val recurseEc = ExecutionContext.fromExecutor(Executors.newFixedThreadPool(10))
 
   private def recurse(
       mutaction: DatabaseMutaction,
