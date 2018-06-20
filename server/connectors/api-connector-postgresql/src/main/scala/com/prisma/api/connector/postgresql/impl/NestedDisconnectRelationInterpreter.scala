@@ -23,7 +23,7 @@ case class NestedDisconnectRelationInterpreter(mutaction: NestedDisconnectRelati
       case _                            => sysError
     }
 
-  override def removalActions(implicit mutationBuilder: PostgresApiDatabaseMutationBuilder) = List(removalByParentAndChild)
+  override def removalActions(parentId: IdGCValue)(implicit mutationBuilder: PostgresApiDatabaseMutationBuilder) = List(removalByParentAndChild)
 
   override def addAction(parentId: IdGCValue)(implicit mutationBuilder: PostgresApiDatabaseMutationBuilder) = noActionRequired
 }

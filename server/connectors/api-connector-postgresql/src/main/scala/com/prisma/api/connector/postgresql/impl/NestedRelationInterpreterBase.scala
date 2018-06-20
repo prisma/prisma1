@@ -56,13 +56,13 @@ trait NestedRelationInterpreterBase extends DatabaseMutactionInterpreter {
 
   def requiredCheck(implicit mb: PostgresApiDatabaseMutationBuilder): List[DBIO[_]]
 
-  def removalActions(implicit mb: PostgresApiDatabaseMutationBuilder): List[DBIO[_]]
+  def removalActions(parentId: IdGCValue)(implicit mb: PostgresApiDatabaseMutationBuilder): List[DBIO[_]]
 
   def addAction(parentId: IdGCValue)(implicit mb: PostgresApiDatabaseMutationBuilder): List[DBIO[_]]
 
   def allActions(implicit mb: PostgresApiDatabaseMutationBuilder, parentId: IdGCValue) = {
 //    requiredCheck ++ removalActions ++ addAction(parentId)
-    removalActions ++ addAction(parentId)
+    removalActions(parentId) ++ addAction(parentId)
   }
 
   override def newAction(mutationBuilder: PostgresApiDatabaseMutationBuilder, parentId: IdGCValue)(implicit ec: ExecutionContext) = {

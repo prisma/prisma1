@@ -49,18 +49,18 @@ case class NestedConnectRelationInterpreter(mutaction: NestedConnectRelation)(im
     verifyConnnection +: x
   }
 
-  override def removalActions(implicit mutationBuilder: PostgresApiDatabaseMutationBuilder): List[DBIO[Unit]] =
+  override def removalActions(parentId: IdGCValue)(implicit mutationBuilder: PostgresApiDatabaseMutationBuilder): List[DBIO[Unit]] =
     topIsCreate match {
       case false =>
         (p.isList, p.isRequired, c.isList, c.isRequired) match {
           case (false, true, false, true)   => requiredRelationViolation
-          case (false, true, false, false)  => List(removalByParent)
-          case (false, false, false, true)  => List(removalByParent, removalByChild)
-          case (false, false, false, false) => List(removalByParent, removalByChild)
+          case (false, true, false, false)  => List(removalByParent(parentId))
+          case (false, false, false, true)  => List(removalByParent(parentId), removalByChild)
+          case (false, false, false, false) => List(removalByParent(parentId), removalByChild)
           case (true, false, false, true)   => List(removalByChild)
           case (true, false, false, false)  => List(removalByChild)
-          case (false, true, true, false)   => List(removalByParent)
-          case (false, false, true, false)  => List(removalByParent)
+          case (false, true, true, false)   => List(removalByParent(parentId))
+          case (false, false, true, false)  => List(removalByParent(parentId))
           case (true, false, true, false)   => noActionRequired
           case _                            => sysError
         }
@@ -88,6 +88,10 @@ case class NestedConnectRelationInterpreter(mutaction: NestedConnectRelation)(im
           }
     } yield ()
     action
+  }
+
+  def removalByParent(parentId: IdGCValue)(implicit mutationBuilder: PostgresApiDatabaseMutationBuilder) = {
+    mutationBuilder.deleteRelationRowByParentId(mutaction.relationField, parentId)
   }
 
   override def addAction(parentId: IdGCValue)(implicit mutationBuilder: PostgresApiDatabaseMutationBuilder): List[DBIO[Unit]] = {

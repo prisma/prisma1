@@ -536,6 +536,19 @@ case class PostgresApiDatabaseMutationBuilder(schemaName: String) {
     deleteToDBIO(jooqQuery)(setParams = _.setGcValue(childId))
   }
 
+  def deleteRelationRowByParentId(relationField: RelationField, parentId: IdGCValue): DBIO[Unit] = {
+    val relation = relationField.relation
+    val jooqQuery = relation.inlineManifestation match {
+      case Some(manifestation) =>
+        ???
+      case None =>
+        val condition = relationColumn(relation, relationField.relationSide).equal(placeHolder)
+        sql.deleteFrom(relationTable(relation)).where(condition)
+    }
+
+    deleteToDBIO(jooqQuery)(setParams = _.setGcValue(parentId))
+  }
+
   def deleteRelationRowByParentAndChild(path: Path) = {
     val relation = path.lastRelation_!
     relation.inlineManifestation match {
