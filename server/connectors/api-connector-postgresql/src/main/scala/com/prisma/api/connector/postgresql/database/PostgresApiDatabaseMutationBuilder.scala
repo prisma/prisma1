@@ -26,6 +26,8 @@ import scala.collection.JavaConverters._
 case class PostgresApiDatabaseMutationBuilder(schemaName: String) {
   import JooqQueryBuilders._
 
+  val sql = DSL.using(SQLDialect.POSTGRES_9_5, new Settings().withRenderFormatted(true))
+
   // region CREATE
 
   def createDataItem(model: Model, args: PrismaArgs): DBIO[CreateDataItemResult] = {
@@ -259,6 +261,31 @@ case class PostgresApiDatabaseMutationBuilder(schemaName: String) {
         case None => baseQuery ++ idFromWhere(path.root)
       }
       query.asUpdate
+    }
+  }
+
+  def updateDataItemById(model: Model, id: IdGCValue, updateArgs: PrismaArgs): DBIO[_] = {
+    if (updateArgs.raw.asRoot.map.isEmpty) {
+      DBIOAction.successful(())
+    } else {
+      SimpleDBIO { ctx =>
+        val columns           = updateArgs.raw.asRoot.map.map { case (k, _) => field(name(model.getFieldByName_!(k).dbName)) }.toList
+        val values            = updateArgs.raw.asRoot.map.map { case (_, v) => v }
+        val valuePlaceholders = values.toList.map(_ => placeHolder)
+
+        val query = sql
+          .update(table(name(schemaName, model.dbName)))
+          .set(row(columns.asJava), row(valuePlaceholders.asJava))
+          .where(field(name(model.dbNameOfIdField_!)).equal(placeHolder))
+
+        val ps = ctx.connection.prepareStatement(query.getSQL)
+        val pp = new PositionedParameters(ps)
+
+        values.foreach(pp.setGcValue)
+        pp.setGcValue(id)
+
+        ps.execute()
+      }
     }
   }
 
@@ -665,6 +692,25 @@ case class PostgresApiDatabaseMutationBuilder(schemaName: String) {
       case Nil                                => idFromWhere(path.root)
       case x if x.last.isInstanceOf[NodeEdge] => idFromWhere(x.last.asInstanceOf[NodeEdge].childWhere)
       case _                                  => pathQueryThatUsesWholePath(path)
+    }
+  }
+
+  def queryIdFromWhere(where: NodeSelector): DBIO[Option[IdGCValue]] = SimpleDBIO { ctx =>
+    val model = where.model
+    val query = sql
+      .select(field(name(schemaName, model.dbName, model.dbNameOfIdField_!)))
+      .from(table(name(schemaName, model.dbName)))
+      .where(field(name(schemaName, model.dbName, where.fieldName)).equal(placeHolder))
+
+    val ps = ctx.connection.prepareStatement(query.getSQL)
+    ps.setGcValue(1, where.fieldGCValue)
+
+    val rs = ps.executeQuery()
+
+    if (rs.next()) {
+      Some(rs.getId(model))
+    } else {
+      None
     }
   }
 
