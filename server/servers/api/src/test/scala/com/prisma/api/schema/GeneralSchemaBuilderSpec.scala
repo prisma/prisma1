@@ -14,7 +14,7 @@ class GeneralSchemaBuilderSpec extends WordSpec with Matchers with ApiSpecBase w
     SchemaDsl.fromBuilder { schema =>
       val testSchema = schema.model("Todo")
       testSchema.fields.clear()
-      testSchema.field("id", _.GraphQLID, isUnique = true, isHidden = true).field("someOtherField", _.Int)
+      testSchema.field("id", _.Cuid, isUnique = true, isHidden = true).field("someOtherField", _.Int)
     }
   }
 

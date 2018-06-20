@@ -9,6 +9,7 @@
 # Idea
 .idea
 .idea_modules
+*.iml
 
 # sbt specific
 .sbt
