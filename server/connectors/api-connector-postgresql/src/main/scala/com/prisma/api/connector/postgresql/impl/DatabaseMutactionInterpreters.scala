@@ -452,12 +452,12 @@ case class NestedUpsertDataItemInterpreter(mutaction: NestedUpsertDataItem) exte
   override def newAction(mutationBuilder: PostgresApiDatabaseMutationBuilder, parentId: IdGCValue)(implicit ec: ExecutionContext) = {
     for {
       id <- mutaction.where match {
-             case Some(where) => mutationBuilder.queryIdFromWhere(where)
+             case Some(where) => mutationBuilder.queryIdByParentIdAndWhere(mutaction.relationField, parentId, where)
              case None        => mutationBuilder.queryIdByParentId(mutaction.relationField, parentId)
            }
       result <- id match {
-                 case Some(id) => NestedUpdateDataItemInterpreter(mutaction.update).newAction(mutationBuilder, parentId)
-                 case None     => NestedCreateDataItemInterpreter(mutaction.create).newAction(mutationBuilder, parentId)
+                 case Some(id) => NestedUpdateDataItemInterpreter(mutaction.update).newActionWithErrorMapped(mutationBuilder, parentId)
+                 case None     => NestedCreateDataItemInterpreter(mutaction.create).newActionWithErrorMapped(mutationBuilder, parentId)
                }
     } yield result
   }

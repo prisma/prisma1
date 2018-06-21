@@ -29,7 +29,7 @@ trait DatabaseMutactionInterpreter {
     }
   }
 
-  def newAction(
+  protected def newAction(
       mutationBuilder: PostgresApiDatabaseMutationBuilder,
       parentId: IdGCValue
   )(implicit ec: ExecutionContext): DBIO[DatabaseMutactionResult] = {
@@ -47,7 +47,7 @@ trait DatabaseMutactionInterpreter {
     }
   }
 
-  def action(mutationBuilder: PostgresApiDatabaseMutationBuilder): DBIOAction[Any, NoStream, Effect.All]
+  protected def action(mutationBuilder: PostgresApiDatabaseMutationBuilder): DBIOAction[Any, NoStream, Effect.All]
 
   def errorMapper: PartialFunction[Throwable, UserFacingError] = PartialFunction.empty
 }
