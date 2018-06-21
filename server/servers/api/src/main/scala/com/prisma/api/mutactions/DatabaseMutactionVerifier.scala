@@ -26,8 +26,8 @@ object DatabaseMutactionVerifierImpl extends DatabaseMutactionVerifier {
 
   def verify(mutaction: UpsertDataItem): Iterable[ClientApiError] = {
     val model      = mutaction.where.model
-    val createArgs = mutaction.nonListCreateArgs
-    val updateArgs = mutaction.nonListUpdateArgs
+    val createArgs = mutaction.create.nonListArgs
+    val updateArgs = mutaction.update.nonListArgs
     verifyUpsert(model, createArgs, updateArgs)
   }
 

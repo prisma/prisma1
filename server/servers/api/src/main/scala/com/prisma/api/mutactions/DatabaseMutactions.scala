@@ -60,21 +60,23 @@ case class DatabaseMutactions(project: Project) {
     DeleteDataItems(project, model, whereFilter)
   }
 
-  def getMutactionsForUpdate(path: Path, args: CoolArgs, previousValues: PrismaNode): UpdateDataItem = {
-    val (nonListArgs, listArgs) = args.getUpdateArgs(path.lastModel)
+  def getMutactionsForUpdate(model: Model, where: NodeSelector, args: CoolArgs, previousValues: PrismaNode): UpdateDataItem = {
+    val (nonListArgs, listArgs) = args.getUpdateArgs(model)
 //    val updateMutaction         = UpdateDataItem(project, path, nonListArgs, listArgs, previousValues)
-    val whereFieldValue = args.raw.get(path.root.field.name)
-    val updatedWhere    = whereFieldValue.map(updateNodeSelectorValue(path.root)).getOrElse(path.root)
-    val updatedPath     = path.copy(root = updatedWhere)
+//    val whereFieldValue = args.raw.get(where.field.name)
+//    val updatedWhere    = whereFieldValue.map(updateNodeSelectorValue(where)).getOrElse(where)
+//    val updatedPath     = path.copy(root = updatedWhere)
+    val path = Path.empty(NodeSelector.forIdGCValue(model, NodeIds.createNodeIdForModel(model)))
 
-    val nested = getMutactionsForNestedMutation(args, updatedPath, triggeredFromCreate = false)
-    if (whereFieldValue.contains(None) && nested.isNonEmpty) throw UpdatingUniqueToNullAndThenNestingMutations(path.root.model.name)
+    val nested = getMutactionsForNestedMutation(args, path, triggeredFromCreate = false)
+    // fixme: what is this about again?
+//    if (whereFieldValue.contains(None) && nested.isNonEmpty) throw UpdatingUniqueToNullAndThenNestingMutations(model.name)
 
 //    updateMutaction +: nested
 
     UpdateDataItem(
       project = project,
-      where = path.root,
+      where = where,
       nonListArgs = nonListArgs,
       listArgs = listArgs,
       previousValues = previousValues,
@@ -92,12 +94,14 @@ case class DatabaseMutactions(project: Project) {
     UpdateDataItems(project, model, whereFilter, nonListArgs, listArgs)
   }
 
-  def getMutactionsForCreate(path: Path, args: CoolArgs): CreateDataItem = {
-    val (nonListArgs, listArgs) = args.getCreateArgs(path.lastModel)
-    val nestedMutactions        = getMutactionsForNestedMutation(args, path, triggeredFromCreate = true)
+  def getMutactionsForCreate(model: Model, args: CoolArgs): CreateDataItem = {
+    val (nonListArgs, listArgs) = args.getCreateArgs(model)
+
+    val path             = Path.empty(NodeSelector.forIdGCValue(model, NodeIds.createNodeIdForModel(model)))
+    val nestedMutactions = getMutactionsForNestedMutation(args, path, triggeredFromCreate = true)
     CreateDataItem(
       project = project,
-      model = path.root.model,
+      model = model,
       nonListArgs = nonListArgs,
       listArgs = listArgs,
       nestedCreates = nestedMutactions.nestedCreates,
@@ -106,13 +110,30 @@ case class DatabaseMutactions(project: Project) {
   }
 
   def getMutactionsForUpsert(where: NodeSelector, allArgs: CoolArgs): UpsertDataItem = {
-    val (nonListCreateArgs, listCreateArgs) = allArgs.createArgumentsAsCoolArgs.getCreateArgs(where.model)
-    val (nonListUpdateArgs, listUpdateArgs) = allArgs.updateArgumentsAsCoolArgs.getUpdateArgs(where.model)
+//    val (nonListCreateArgs, listCreateArgs) = allArgs.createArgumentsAsCoolArgs.getCreateArgs(where.model)
+//    val (nonListUpdateArgs, listUpdateArgs) = allArgs.updateArgumentsAsCoolArgs.getUpdateArgs(where.model)
 
 //    val createdNestedActions = getNestedMutactionsForUpsert(allArgs.createArgumentsAsCoolArgs, createPath, true)
 //    val updateNestedActions  = getNestedMutactionsForUpsert(allArgs.updateArgumentsAsCoolArgs, updatePath, false)
+//    val model = field.relatedModel_!
+//    val where = upsert match {
+//      case x: UpsertByWhere    => Some(x.where)
+//      case _: UpsertByRelation => None
+//    }
+//    val create: NestedCreateDataItem = getMutactionForNestedCreate(model, path, field, triggeredFromCreate = false, upsert.create)
+//    val update: NestedUpdateDataItem = getMutactionForNestedUpdate(model, path, field, where, upsert.update)
+//    NestedUpsertDataItem(project, field, where, create, update)
+    val create = getMutactionsForCreate(where.model, allArgs.createArgumentsAsCoolArgs)
+    val update = getMutactionsForUpdate(where.model, where, allArgs.updateArgumentsAsCoolArgs, PrismaNode.dummy)
 
-    UpsertDataItem(project, where, nonListCreateArgs, listCreateArgs, nonListUpdateArgs, listUpdateArgs, Vector.empty, Vector.empty)
+//    UpsertDataItem(project, where, nonListCreateArgs, listCreateArgs, nonListUpdateArgs, listUpdateArgs, Vector.empty, Vector.empty)
+
+    UpsertDataItem(
+      project = project,
+      where = where,
+      create = create,
+      update = update
+    )
   }
 
 //  def getNestedMutactionsForUpsert(args: CoolArgs, path: Path, triggeredFromCreate: Boolean): Vector[DatabaseMutaction] = {

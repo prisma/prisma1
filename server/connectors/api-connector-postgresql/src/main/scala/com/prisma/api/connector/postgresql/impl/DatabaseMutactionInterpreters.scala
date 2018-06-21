@@ -391,16 +391,16 @@ case class UpdateDataItemsInterpreter(mutaction: UpdateDataItems) extends Databa
 }
 
 case class UpsertDataItemInterpreter(mutaction: UpsertDataItem, executor: PostgresDatabaseMutactionExecutor) extends DatabaseMutactionInterpreter {
-  val model      = mutaction.where.model
-  val project    = mutaction.project
-  val createArgs = mutaction.nonListCreateArgs
-  val updateArgs = mutaction.nonListUpdateArgs
+  val model   = mutaction.where.model
+  val project = mutaction.project
+//  val createArgs = mutaction.nonListCreateArgs
+//  val updateArgs = mutaction.nonListUpdateArgs
 
   override def newAction(mutationBuilder: PostgresApiDatabaseMutationBuilder, parentId: IdGCValue)(implicit ec: ExecutionContext) = {
-    val createNested: Vector[DBIOAction[Any, NoStream, Effect.All]] =
-      mutaction.createMutactions.map(executor.interpreterFor).map(_.newActionWithErrorMapped(mutationBuilder, parentId))
-    val updateNested: Vector[DBIOAction[Any, NoStream, Effect.All]] =
-      mutaction.updateMutactions.map(executor.interpreterFor).map(_.newActionWithErrorMapped(mutationBuilder, parentId))
+//    val createNested: Vector[DBIOAction[Any, NoStream, Effect.All]] =
+//      mutaction.createMutactions.map(executor.interpreterFor).map(_.newActionWithErrorMapped(mutationBuilder, parentId))
+//    val updateNested: Vector[DBIOAction[Any, NoStream, Effect.All]] =
+//      mutaction.updateMutactions.map(executor.interpreterFor).map(_.newActionWithErrorMapped(mutationBuilder, parentId))
 
 //    val createAction = mutationBuilder.setScalarList(mutaction.createPath.lastCreateWhere_!, mutaction.listCreateArgs)
 //    val updateAction = mutationBuilder.setScalarList(mutaction.updatePath.lastCreateWhere_!, mutaction.listUpdateArgs)
@@ -420,8 +420,8 @@ case class UpsertDataItemInterpreter(mutaction: UpsertDataItem, executor: Postgr
     for {
       id <- mutationBuilder.queryIdFromWhere(mutaction.where)
       result <- id match {
-                 case Some(id) => mutationBuilder.updateDataItemById(model, id, updateArgs)
-                 case None     => mutationBuilder.createDataItem(model, createArgs)
+                 case Some(id) => UpdateDataItemInterpreter(mutaction.update).newAction(mutationBuilder, parentId)
+                 case None     => CreateDataItemInterpreter(mutaction.create).newAction(mutationBuilder, parentId)
                }
     } yield result
   }
@@ -439,10 +439,10 @@ case class UpsertDataItemInterpreter(mutaction: UpsertDataItem, executor: Postgr
       APIErrors.FieldCannotBeNull(e.getMessage)
   }
 
-  val createErrors: Vector[PartialFunction[Throwable, UserFacingError]] = mutaction.createMutactions.map(executor.interpreterFor).map(_.errorMapper)
-  val updateErrors: Vector[PartialFunction[Throwable, UserFacingError]] = mutaction.updateMutactions.map(executor.interpreterFor).map(_.errorMapper)
-
-  override val errorMapper = (updateErrors ++ createErrors).foldLeft(upsertErrors)(_ orElse _)
+//  val createErrors: Vector[PartialFunction[Throwable, UserFacingError]] = mutaction.createMutactions.map(executor.interpreterFor).map(_.errorMapper)
+//  val updateErrors: Vector[PartialFunction[Throwable, UserFacingError]] = mutaction.updateMutactions.map(executor.interpreterFor).map(_.errorMapper)
+//
+//  override val errorMapper = (updateErrors ++ createErrors).foldLeft(upsertErrors)(_ orElse _)
 
 }
 

@@ -34,7 +34,7 @@ case class Create(
   val path = Path.empty(NodeSelector.forIdGCValue(model, id))
 
   def prepareMutactions(): Future[TopLevelDatabaseMutaction] = {
-    val createMutactionsResult = DatabaseMutactions(project).getMutactionsForCreate(path, coolArgs)
+    val createMutactionsResult = DatabaseMutactions(project).getMutactionsForCreate(model, coolArgs)
 //    val subscriptionMutactions = SubscriptionEvents.extractFromSqlMutactions(project, mutationId, createMutactionsResult)
 //    val sssActions             = ServerSideSubscriptions.extractFromMutactions(project, createMutactionsResult, requestId)
 
