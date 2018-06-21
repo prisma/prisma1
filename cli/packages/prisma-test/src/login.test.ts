@@ -35,14 +35,14 @@ describe('login and add project', () => {
       STAGE_NAME,
       userToken,
     )
-    const projectPayload = await addProject(
+    const addProjectPayload = await addProject(
       EU_CLUSTER_ENDPOINT,
       workspaceSlug,
       SERVICE_NAME,
       STAGE_NAME,
       clusterToken,
     )
-    const projectName = (projectPayload as any).project.name
+    const projectName = (addProjectPayload as any).project.name
     expect(projectName).toBe(`${workspaceSlug}~${SERVICE_NAME}`)
 
     const deployProjectPayload = await deployProject(
@@ -82,14 +82,14 @@ describe('login and add project', () => {
       STAGE_NAME,
       userToken,
     )
-    const projectPayload = await addProject(
+    const addProjectPayload = await addProject(
       US_CLUSTER_ENDPOINT,
       workspaceSlug,
       SERVICE_NAME,
       STAGE_NAME,
       clusterToken,
     )
-    const projectName = (projectPayload as any).project.name
+    const projectName = (addProjectPayload as any).project.name
     expect(projectName).toBe(`${workspaceSlug}~${SERVICE_NAME}`)
 
     const deployProjectPayload = await deployProject(
