@@ -267,7 +267,13 @@ case class NestedUpdateDataItemInterpreter(mutaction: NestedUpdateDataItem) exte
       _ <- id match {
             case Some(id) => doIt(mutationBuilder, id)
             case None =>
-              throw APIErrors.NodesNotConnectedErrorByPath(Path.empty(NodeSelector.forIdGCValue(parent, parentId)).append(ModelEdge(mutaction.relationField)))
+              throw APIErrors.NodesNotConnectedError(
+                relation = mutaction.relationField.relation,
+                parent = parent,
+                parentWhere = None,
+                child = model,
+                childWhere = mutaction.where
+              )
           }
     } yield UpdateItemResult(id)
   }
