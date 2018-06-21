@@ -420,8 +420,10 @@ case class UpsertDataItemInterpreter(mutaction: UpsertDataItem, executor: Postgr
     for {
       id <- mutationBuilder.queryIdFromWhere(mutaction.where)
       result <- id match {
-                 case Some(id) => UpdateDataItemInterpreter(mutaction.update).newAction(mutationBuilder, parentId)
-                 case None     => CreateDataItemInterpreter(mutaction.create).newAction(mutationBuilder, parentId)
+                 case Some(id) =>
+                   executor.recurse(mutaction.update, parentId, mutationBuilder) //UpdateDataItemInterpreter(mutaction.update).newAction(mutationBuilder, parentId)
+                 case None =>
+                   executor.recurse(mutaction.create, parentId, mutationBuilder) //CreateDataItemInterpreter(mutaction.create).newAction(mutationBuilder, parentId)
                }
     } yield result
   }
@@ -446,7 +448,7 @@ case class UpsertDataItemInterpreter(mutaction: UpsertDataItem, executor: Postgr
 
 }
 
-case class NestedUpsertDataItemInterpreter(mutaction: NestedUpsertDataItem) extends DatabaseMutactionInterpreter {
+case class NestedUpsertDataItemInterpreter(mutaction: NestedUpsertDataItem, executor: PostgresDatabaseMutactionExecutor) extends DatabaseMutactionInterpreter {
   val model = mutaction.relationField.relatedModel_!
 
   override def newAction(mutationBuilder: PostgresApiDatabaseMutationBuilder, parentId: IdGCValue)(implicit ec: ExecutionContext) = {
@@ -456,8 +458,10 @@ case class NestedUpsertDataItemInterpreter(mutaction: NestedUpsertDataItem) exte
              case None        => mutationBuilder.queryIdByParentId(mutaction.relationField, parentId)
            }
       result <- id match {
-                 case Some(id) => NestedUpdateDataItemInterpreter(mutaction.update).newActionWithErrorMapped(mutationBuilder, parentId)
-                 case None     => NestedCreateDataItemInterpreter(mutaction.create).newActionWithErrorMapped(mutationBuilder, parentId)
+                 case Some(id) =>
+                   executor.recurse(mutaction.update, parentId, mutationBuilder) //NestedUpdateDataItemInterpreter(mutaction.update).newActionWithErrorMapped(mutationBuilder, parentId)
+                 case None =>
+                   executor.recurse(mutaction.create, parentId, mutationBuilder) //NestedCreateDataItemInterpreter(mutaction.create).newActionWithErrorMapped(mutationBuilder, parentId)
                }
     } yield result
   }
