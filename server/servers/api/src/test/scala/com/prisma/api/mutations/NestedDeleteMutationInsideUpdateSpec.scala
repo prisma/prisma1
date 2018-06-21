@@ -510,7 +510,7 @@ class NestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matchers with A
     ifConnectorIsActive { dataResolver(project).countByTable("_ChildToParent").await should be(0) }
   }
 
-  "a PM to CM  relation" should "delete fail if other req relations would be violated" in {
+  "a PM to CM relation" should "delete fail if other req relations would be violated" in {
     val project = SchemaDsl.fromBuilder { schema =>
       val parent   = schema.model("Parent").field_!("p", _.String, isUnique = true)
       val child    = schema.model("Child").field_!("c", _.String, isUnique = true).manyToManyRelation("parentsOpt", "childrenOpt", parent)
@@ -655,10 +655,10 @@ class NestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matchers with A
         |        create: [{text: "comment1"}, {text: "comment2"}]
         |      }
         |    }
-        |  ){ 
-        |    id 
+        |  ){
+        |    id
         |    comments { id }
-        |  } 
+        |  }
         |}""".stripMargin,
       project
     )
@@ -807,17 +807,17 @@ class NestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matchers with A
     database.setup(project)
 
     val createResult = server.query(
-      """mutation { 
+      """mutation {
         |  createNote(
         |    data: {
         |      todo: {
         |        create: { title: "the title" }
         |      }
         |    }
-        |  ){ 
+        |  ){
         |    id
         |    todo { id }
-        |  } 
+        |  }
         |}""".stripMargin,
       project
     )
@@ -984,7 +984,7 @@ class NestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matchers with A
         |  createTop(data: {
         |    nameTop: "the top",
         |    middles: {
-        |      create:[ 
+        |      create:[
         |        {
         |          nameMiddle: "the middle"
         |          bottoms: {
@@ -1269,7 +1269,7 @@ class NestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matchers with A
          |        below{
          |           nameBelow
          |        }
-         |        
+         |
          |      }
          |    }
          |  }
@@ -1309,7 +1309,7 @@ class NestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matchers with A
         |  createTop(data: {
         |    nameTop: "the top",
         |    middle: {
-        |      create: 
+        |      create:
         |        {
         |          nameMiddle: "the middle"
         |          bottom: {

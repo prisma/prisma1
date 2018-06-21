@@ -905,7 +905,7 @@ case class PostgresApiDatabaseMutationBuilder(schemaName: String) {
     }
   }
 
-  def oldParentFailureTriggerByField(path: Path, field: RelationField, triggerString: String) = {
+  def oldParentFailureTriggerByFieldLegacy(path: Path, field: RelationField, triggerString: String) = {
     val relation       = field.relation
     val table          = relation.relationTableName
     val oppositeColumn = relation.columnForRelationSide(field.oppositeRelationSide)
@@ -914,6 +914,27 @@ case class PostgresApiDatabaseMutationBuilder(schemaName: String) {
       sql"""WHERE "#$oppositeColumn" IN (""" ++ pathQueryForLastChild(path) ++ sql") " ++
       sql"""AND "#$column" IS NOT NULL"""
     triggerFailureWhenExists(query, triggerString)
+  }
+
+  def oldParentFailureTriggerByField(parentId: IdGCValue, field: RelationField)(implicit ec: ExecutionContext): DBIO[Unit] = {
+    val relation = field.relation
+    val query = sql
+      .select(asterisk())
+      .from(relationTable(relation))
+      .where(
+        relationColumn(relation, field.oppositeRelationSide).equal(placeHolder),
+        relationColumn(relation, field.relationSide).isNotNull
+      )
+
+    val action = queryToDBIO(query)(
+      setParams = _.setGcValue(parentId),
+      readResult = rs => rs.as(readsAsUnit)
+    )
+    action.map { result =>
+      if (result.nonEmpty) {
+        throw RequiredRelationWouldBeViolated(relation)
+      }
+    }
   }
 
   def oldParentFailureTriggerByFieldAndFilter(model: Model, whereFilter: Option[Filter], field: RelationField, causeString: String): DBIO[_] = {
