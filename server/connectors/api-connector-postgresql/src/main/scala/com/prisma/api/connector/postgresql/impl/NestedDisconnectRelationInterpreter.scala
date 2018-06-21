@@ -1,14 +1,19 @@
 package com.prisma.api.connector.postgresql.impl
 
-import com.prisma.api.connector.{ModelEdge, NestedDisconnectRelation, NodeSelector, Path}
+import com.prisma.api.connector._
 import com.prisma.api.connector.postgresql.database.PostgresApiDatabaseMutationBuilder
 import com.prisma.api.schema.APIErrors
 import com.prisma.gc_values.{IdGCValue, IntGCValue}
+import slick.dbio.{DBIO, DBIOAction}
 
 import scala.concurrent.ExecutionContext
 
-case class NestedDisconnectRelationInterpreter(mutaction: NestedDisconnectRelation)(implicit ec: ExecutionContext) extends NestedRelationInterpreterBase {
+case class NestedDisconnectRelationInterpreter(mutaction: NestedDisconnectRelation)(implicit val ec: ExecutionContext) extends NestedRelationInterpreterBase {
   override def relationField = mutaction.relationField
+
+  override def newAction(mutationBuilder: PostgresApiDatabaseMutationBuilder, parentId: IdGCValue)(implicit ec: ExecutionContext) = {
+    DBIOAction.seq(allActions(mutationBuilder, parentId): _*).andThen(DBIO.successful(UnitDatabaseMutactionResult))
+  }
 
   override def requiredCheck(parentId: IdGCValue)(implicit mutationBuilder: PostgresApiDatabaseMutationBuilder) =
     (p.isList, p.isRequired, c.isList, c.isRequired) match {

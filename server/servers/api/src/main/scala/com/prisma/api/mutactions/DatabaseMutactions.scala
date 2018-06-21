@@ -193,7 +193,8 @@ case class DatabaseMutactions(project: Project) {
         nonListArgs = nonListArgs,
         listArgs = listArgs,
         nestedCreates = nestedMutactions.nestedCreates,
-        nestedConnects = nestedMutactions.nestedConnects
+        nestedConnects = nestedMutactions.nestedConnects,
+        topIsCreate = triggeredFromCreate
       )
     }
   }

@@ -1,8 +1,9 @@
 package com.prisma.api.connector.postgresql.impl
 
-import com.prisma.api.connector.UnitDatabaseMutactionResult
+import com.prisma.api.connector.{NodeSelector, UnitDatabaseMutactionResult}
 import com.prisma.api.connector.postgresql.DatabaseMutactionInterpreter
 import com.prisma.api.connector.postgresql.database.PostgresApiDatabaseMutationBuilder
+import com.prisma.api.schema.APIErrors
 import com.prisma.api.schema.APIErrors.RequiredRelationWouldBeViolated
 import com.prisma.gc_values.IdGCValue
 import com.prisma.shared.models.{Relation, RelationField}
@@ -16,9 +17,11 @@ trait NestedRelationInterpreterBase extends DatabaseMutactionInterpreter {
   val p                  = relationField
   val c                  = relationField.relatedField
 
-  override def newAction(mutationBuilder: PostgresApiDatabaseMutationBuilder, parentId: IdGCValue)(implicit ec: ExecutionContext) = {
-    DBIOAction.seq(allActions(mutationBuilder, parentId): _*).andThen(DBIO.successful(UnitDatabaseMutactionResult))
-  }
+  implicit def ec: ExecutionContext
+
+//  override def newAction(mutationBuilder: PostgresApiDatabaseMutationBuilder, parentId: IdGCValue)(implicit ec: ExecutionContext) = {
+//    DBIOAction.seq(allActions(mutationBuilder, parentId): _*).andThen(DBIO.successful(UnitDatabaseMutactionResult))
+//  }
 
   override def action(mb: PostgresApiDatabaseMutationBuilder) = ???
 
@@ -34,4 +37,12 @@ trait NestedRelationInterpreterBase extends DatabaseMutactionInterpreter {
   def noActionRequired          = List.empty
   def requiredRelationViolation = throw RequiredRelationWouldBeViolated(relation)
   def sysError                  = sys.error("This should not happen, since it means a many side is required")
+
+  def removalByParent(parentId: IdGCValue)(implicit mutationBuilder: PostgresApiDatabaseMutationBuilder) = {
+    mutationBuilder.deleteRelationRowByParentId(relationField, parentId)
+  }
+
+  def checkForOldChild(parentId: IdGCValue)(implicit mb: PostgresApiDatabaseMutationBuilder) = {
+    mb.ensureThatNodeIsNotConnected(relationField.relatedField, parentId)
+  }
 }

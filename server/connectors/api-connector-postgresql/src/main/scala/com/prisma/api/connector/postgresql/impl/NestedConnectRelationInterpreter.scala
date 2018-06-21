@@ -1,6 +1,6 @@
 package com.prisma.api.connector.postgresql.impl
 
-import com.prisma.api.connector.{ModelEdge, NestedConnectRelation, Path, VerifyConnection}
+import com.prisma.api.connector._
 import com.prisma.api.connector.postgresql.database.PostgresApiDatabaseMutationBuilder
 import com.prisma.api.schema.APIErrors
 import com.prisma.gc_values.IdGCValue
@@ -10,18 +10,22 @@ import slick.sql.{SqlAction, SqlStreamingAction}
 import scala.concurrent.ExecutionContext
 import scala.util.{Failure, Success}
 
-case class NestedConnectRelationInterpreter(mutaction: NestedConnectRelation)(implicit ec: ExecutionContext) extends NestedRelationInterpreterBase {
-  def topIsCreate = mutaction.topIsCreate
-
+case class NestedConnectRelationInterpreter(mutaction: NestedConnectRelation)(implicit val ec: ExecutionContext) extends NestedRelationInterpreterBase {
+  def topIsCreate            = mutaction.topIsCreate
+  val where                  = mutaction.where
   override def relationField = mutaction.relationField
+
+  override def newAction(mutationBuilder: PostgresApiDatabaseMutationBuilder, parentId: IdGCValue)(implicit ec: ExecutionContext) = {
+    DBIOAction.seq(allActions(mutationBuilder, parentId): _*).andThen(DBIO.successful(UnitDatabaseMutactionResult))
+  }
 
   override def requiredCheck(parentId: IdGCValue)(implicit mutationBuilder: PostgresApiDatabaseMutationBuilder): List[DBIO[_]] = {
     topIsCreate match {
       case false =>
         (p.isList, p.isRequired, c.isList, c.isRequired) match {
           case (false, true, false, true)   => requiredRelationViolation
-          case (false, true, false, false)  => List(checkForOldParentByChildWhere2)
-          case (false, false, false, true)  => List(checkForOldChild2(parentId))
+          case (false, true, false, false)  => List(checkForOldParentByChildWhere(where))
+          case (false, false, false, true)  => List(checkForOldChild(parentId))
           case (false, false, false, false) => noCheckRequired
           case (true, false, false, true)   => noCheckRequired
           case (true, false, false, false)  => noCheckRequired
@@ -33,7 +37,7 @@ case class NestedConnectRelationInterpreter(mutaction: NestedConnectRelation)(im
       case true =>
         (p.isList, p.isRequired, c.isList, c.isRequired) match {
           case (false, true, false, true)   => requiredRelationViolation
-          case (false, true, false, false)  => List(checkForOldParentByChildWhere2)
+          case (false, true, false, false)  => List(checkForOldParentByChildWhere(where))
           case (false, false, false, true)  => noActionRequired
           case (false, false, false, false) => noActionRequired
           case (true, false, false, true)   => noActionRequired
@@ -87,22 +91,14 @@ case class NestedConnectRelationInterpreter(mutaction: NestedConnectRelation)(im
     action
   }
 
-  def removalByParent(parentId: IdGCValue)(implicit mutationBuilder: PostgresApiDatabaseMutationBuilder) = {
-    mutationBuilder.deleteRelationRowByParentId(mutaction.relationField, parentId)
-  }
-
-  def checkForOldParentByChildWhere2()(implicit mutationBuilder: PostgresApiDatabaseMutationBuilder): DBIO[Unit] = {
+  def checkForOldParentByChildWhere(where: NodeSelector)(implicit mutationBuilder: PostgresApiDatabaseMutationBuilder): DBIO[Unit] = {
     for {
-      id <- mutationBuilder.queryIdFromWhere(mutaction.where)
+      id <- mutationBuilder.queryIdFromWhere(where)
       _ <- id match {
-            case None          => throw APIErrors.NodeNotFoundForWhereError(mutaction.where)
-            case Some(childId) => mutationBuilder.ensureThatNodeIsNotConnected(mutaction.relationField, childId)
+            case None          => throw APIErrors.NodeNotFoundForWhereError(where)
+            case Some(childId) => mutationBuilder.ensureThatNodeIsNotConnected(relationField, childId)
           }
     } yield ()
-  }
-
-  def checkForOldChild2(parentId: IdGCValue)(implicit mb: PostgresApiDatabaseMutationBuilder) = {
-    mb.ensureThatNodeIsNotConnected(mutaction.relationField.relatedField, parentId)
   }
 
   override def addAction(parentId: IdGCValue)(implicit mutationBuilder: PostgresApiDatabaseMutationBuilder): List[DBIO[Unit]] = {

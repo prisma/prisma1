@@ -96,7 +96,8 @@ case class NestedCreateDataItem(
     nonListArgs: PrismaArgs,
     listArgs: Vector[(String, ListGCValue)],
     override val nestedCreates: Vector[NestedCreateDataItem],
-    override val nestedConnects: Vector[NestedConnectRelation]
+    override val nestedConnects: Vector[NestedConnectRelation],
+    topIsCreate: Boolean
 ) extends NestedDatabaseMutaction
     with FurtherNestedMutaction
 

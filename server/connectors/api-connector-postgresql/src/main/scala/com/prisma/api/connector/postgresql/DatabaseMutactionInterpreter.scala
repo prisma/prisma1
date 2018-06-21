@@ -10,7 +10,7 @@ import scala.concurrent.ExecutionContext
 import scala.util.{Failure, Success}
 
 trait DatabaseMutactionInterpreter {
-  private val unitResult = DBIO.successful(UnitDatabaseMutactionResult)
+  protected val unitResult = DBIO.successful(UnitDatabaseMutactionResult)
 
   // FIXME: only new action should be implemented by subclasses (make protected);
   // FIXME: and only newActionWithErrorMapped should be called from the outside
