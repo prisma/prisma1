@@ -12,6 +12,7 @@ import com.prisma.shared.models._
 import com.prisma.slick.NewJdbcExtensions._
 import com.prisma.api.connector.postgresql.database.JooqExtensions._
 import com.prisma.api.schema.APIErrors.{NodesNotConnectedError, RequiredRelationWouldBeViolated}
+import com.prisma.shared.models.TypeIdentifier.IdTypeIdentifier
 import cool.graph.cuid.Cuid
 import org.joda.time.{DateTime, DateTimeZone}
 import org.jooq.{Query => JooqQuery, _}
@@ -36,12 +37,12 @@ case class PostgresApiDatabaseMutationBuilder(schemaName: String) {
   def createDataItem(model: Model, args: PrismaArgs): DBIO[CreateDataItemResult] = {
 
     SimpleDBIO[CreateDataItemResult] { x =>
-      val argsAsRoot = args.raw.asRoot
+      val argsAsRoot = args.raw.asRoot.add(model.idField_!.name, generateId(model))
       val fields     = model.fields.filter(field => argsAsRoot.hasArgFor(field.name))
       val columns    = fields.map(_.dbName)
 
       lazy val queryString: String = {
-        val generatedFields = columns.map(fieldName => field(name(schemaName, model.dbName, fieldName)))
+        val generatedFields = columns.map(column => modelColumn(model, column))
 
         sql
           .insertInto(table(name(schemaName, model.dbName)))
@@ -67,6 +68,13 @@ case class PostgresApiDatabaseMutationBuilder(schemaName: String) {
       val generatedKeys = itemInsert.getGeneratedKeys
       generatedKeys.next()
       CreateDataItemResult(generatedKeys.getId(model))
+    }
+  }
+
+  def generateId(model: Model) = {
+    model.idField_!.typeIdentifier.asInstanceOf[IdTypeIdentifier] match {
+      case TypeIdentifier.UUID => UuidGCValue.random()
+      case TypeIdentifier.Cuid => CuidGCValue.random()
     }
   }
 
@@ -261,9 +269,9 @@ case class PostgresApiDatabaseMutationBuilder(schemaName: String) {
     }
   }
 
-  def updateDataItemById(model: Model, id: IdGCValue, updateArgs: PrismaArgs): DBIO[_] = {
+  def updateDataItemById(model: Model, id: IdGCValue, updateArgs: PrismaArgs): DBIO[UpdateItemResult] = {
     if (updateArgs.raw.asRoot.map.isEmpty) {
-      DBIOAction.successful(())
+      DBIOAction.successful(UpdateItemResult(id))
     } else {
       SimpleDBIO { ctx =>
         val actualArgs = addUpdatedAt(model, updateArgs.raw.asRoot)
@@ -282,6 +290,8 @@ case class PostgresApiDatabaseMutationBuilder(schemaName: String) {
         pp.setGcValue(id)
 
         ps.execute()
+
+        UpdateItemResult(id)
       }
     }
   }

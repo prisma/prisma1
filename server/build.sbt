@@ -193,7 +193,8 @@ lazy val integrationTestsMySql = integrationTestProject("integration-tests-mysql
 
 lazy val gcValues = libProject("gc-values")
   .settings(libraryDependencies ++= Seq(
-    playJson
+    playJson,
+    cuid,
   ) ++ joda)
 
 lazy val akkaUtils = libProject("akka-utils")

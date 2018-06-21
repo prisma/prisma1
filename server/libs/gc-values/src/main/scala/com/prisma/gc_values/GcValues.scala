@@ -2,6 +2,7 @@ package com.prisma.gc_values
 
 import java.util.UUID
 
+import cool.graph.cuid.Cuid
 import org.joda.time.DateTime
 import play.api.libs.json._
 
@@ -73,4 +74,10 @@ case class IntGCValue(value: Int)     extends IdGCValue
 object UuidGCValue {
   def parse_!(s: String): UuidGCValue    = parse(s).get
   def parse(s: String): Try[UuidGCValue] = Try { UuidGCValue(UUID.fromString(s)) }
+
+  def random(): UuidGCValue = UuidGCValue(UUID.randomUUID())
+}
+
+object CuidGCValue {
+  def random(): CuidGCValue = CuidGCValue(Cuid.createCuid())
 }
