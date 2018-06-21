@@ -26,13 +26,13 @@ case class Upsert(
   val outerWhere: NodeSelector = coolArgs.extractNodeSelectorFromWhereField(model)
 
   val updateArgs: CoolArgs = coolArgs.updateArgumentsAsCoolArgs
-  val updatedWhere: NodeSelector = updateArgs.raw.get(outerWhere.field.name) match {
-    case Some(_) => updateArgs.extractNodeSelector(model)
-    case None    => outerWhere
-  }
+//  val updatedWhere: NodeSelector = updateArgs.raw.get(outerWhere.field.name) match {
+//    case Some(_) => updateArgs.extractNodeSelector(model)
+//    case None    => outerWhere
+//  }
 
-  val updatePath = Path.empty(outerWhere)
-  val createPath = Path.empty(NodeSelector.forIdGCValue(model, NodeIds.createNodeIdForModel(model)))
+//  val updatePath = Path.empty(outerWhere)
+//  val createPath = Path.empty(NodeSelector.forIdGCValue(model, NodeIds.createNodeIdForModel(model)))
 
   override def prepareMutactions: Future[TopLevelDatabaseMutaction] = {
 //    val sqlMutactions          = DatabaseMutactions(project).getMutactionsForUpsert(createPath, updatePath, coolArgs)
@@ -46,22 +46,15 @@ case class Upsert(
 //      )
 //    }
 
-    Future.successful(DatabaseMutactions(project).getMutactionsForUpsert(createPath, updatePath, coolArgs))
+    Future.successful(DatabaseMutactions(project).getMutactionsForUpsert(outerWhere, coolArgs))
   }
 
   override def getReturnValue(results: MutactionResults): Future[ReturnValueResult] = {
-    val createItemFuture = dataResolver.resolveByUnique(createPath.lastCreateWhere_!)
-    val upsertItemFuture = dataResolver.resolveByUnique(updatedWhere)
-
-    for {
-      createItem <- createItemFuture
-      updateItem <- upsertItemFuture
-    } yield {
-      (createItem, updateItem) match {
-        case (Some(create), _) => ReturnValue(create)
-        case (_, Some(update)) => ReturnValue(update)
-        case (None, None)      => sys.error("Could not find an item after an Upsert. This should not be possible.")
-      }
+    val selector   = NodeSelector.forIdGCValue(model, results.databaseResult.id.get)
+    val itemFuture = dataResolver.resolveByUnique(selector)
+    itemFuture.map {
+      case Some(prismaNode) => ReturnValue(prismaNode)
+      case None             => sys.error("Could not find an item after an Upsert. This should not be possible.")
     }
   }
 }

@@ -10,6 +10,10 @@ case class CreateDataItemResult(createdId: IdGCValue) extends DatabaseMutactionR
   override def id = Some(createdId)
 }
 case class UpdateItemResult(id: Option[IdGCValue]) extends DatabaseMutactionResult // fixme: we think that the option is wrong here. This could only happen when we error anyway.
+object UpdateItemResult {
+  def apply(id: IdGCValue): UpdateItemResult = UpdateItemResult(Some(id))
+}
+
 object UnitDatabaseMutactionResult extends DatabaseMutactionResult {
   override def id = None
 }

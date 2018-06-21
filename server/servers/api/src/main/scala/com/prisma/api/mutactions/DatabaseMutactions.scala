@@ -93,7 +93,7 @@ case class DatabaseMutactions(project: Project) {
   }
 
   def getMutactionsForCreate(path: Path, args: CoolArgs): CreateDataItem = {
-    val (nonListArgs, listArgs) = args.getCreateArgs(path)
+    val (nonListArgs, listArgs) = args.getCreateArgs(path.lastModel)
     val nestedMutactions        = getMutactionsForNestedMutation(args, path, triggeredFromCreate = true)
     CreateDataItem(
       project = project,
@@ -105,14 +105,14 @@ case class DatabaseMutactions(project: Project) {
     )
   }
 
-  def getMutactionsForUpsert(createPath: Path, updatePath: Path, allArgs: CoolArgs): UpsertDataItem = {
-    val (nonListCreateArgs, listCreateArgs) = allArgs.createArgumentsAsCoolArgs.getCreateArgs(createPath)
-    val (nonListUpdateArgs, listUpdateArgs) = allArgs.updateArgumentsAsCoolArgs.getUpdateArgs(updatePath.lastModel)
+  def getMutactionsForUpsert(where: NodeSelector, allArgs: CoolArgs): UpsertDataItem = {
+    val (nonListCreateArgs, listCreateArgs) = allArgs.createArgumentsAsCoolArgs.getCreateArgs(where.model)
+    val (nonListUpdateArgs, listUpdateArgs) = allArgs.updateArgumentsAsCoolArgs.getUpdateArgs(where.model)
 
 //    val createdNestedActions = getNestedMutactionsForUpsert(allArgs.createArgumentsAsCoolArgs, createPath, true)
 //    val updateNestedActions  = getNestedMutactionsForUpsert(allArgs.updateArgumentsAsCoolArgs, updatePath, false)
 
-    UpsertDataItem(project, createPath, updatePath, nonListCreateArgs, listCreateArgs, nonListUpdateArgs, listUpdateArgs, Vector.empty, Vector.empty)
+    UpsertDataItem(project, where, nonListCreateArgs, listCreateArgs, nonListUpdateArgs, listUpdateArgs, Vector.empty, Vector.empty)
   }
 
 //  def getNestedMutactionsForUpsert(args: CoolArgs, path: Path, triggeredFromCreate: Boolean): Vector[DatabaseMutaction] = {
@@ -185,7 +185,7 @@ case class DatabaseMutactions(project: Project) {
   ): Vector[NestedCreateDataItem] = {
     nestedMutation.creates.map { create =>
       val extendedPath            = extend(path, field, create).lastEdgeToNodeEdge(NodeSelector.forIdGCValue(model, NodeIds.createNodeIdForModel(model)))
-      val (nonListArgs, listArgs) = create.data.getCreateArgs(extendedPath)
+      val (nonListArgs, listArgs) = create.data.getCreateArgs(model)
       val nestedMutactions        = getMutactionsForNestedMutation(create.data, extendedPath, triggeredFromCreate = true)
       NestedCreateDataItem(
         project = project,

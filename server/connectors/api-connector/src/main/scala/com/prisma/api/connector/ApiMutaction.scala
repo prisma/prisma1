@@ -58,14 +58,13 @@ case class UpdateDataItem(
 
 case class UpsertDataItem(
     project: Project,
-    createPath: Path,
-    updatePath: Path,
+    where: NodeSelector,
     nonListCreateArgs: PrismaArgs,
     listCreateArgs: Vector[(String, ListGCValue)],
     nonListUpdateArgs: PrismaArgs,
     listUpdateArgs: Vector[(String, ListGCValue)],
-    createMutactions: Vector[DatabaseMutaction],
-    updateMutactions: Vector[DatabaseMutaction]
+    createMutactions: Vector[CreateDataItem],
+    updateMutactions: Vector[UpdateDataItem]
 ) extends FurtherNestedMutaction
     with TopLevelDatabaseMutaction
 
