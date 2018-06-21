@@ -28,7 +28,8 @@ export function setupMockEnvironment(environment: MockEnvironment): MockEnvironm
       }
     `,
   )
-  const endpoint = `https://${region}1.prisma.sh/public-${cuid()}/default/default`
+  // const endpoint = `https://${region}1.prisma.sh/public-${cuid()}/test/test`
+  const endpoint = `http://localhost:4466/test-${cuid()}/test`
   fs.writeFileSync(
     `${cwd}/prisma.yml`,
     `

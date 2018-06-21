@@ -22,7 +22,7 @@ describe('deploy, test, and delete', () => {
   test('delete the EU service', async () => {
     const deleteCmd = spawnSync('prisma', ['delete', '-f'], { cwd: cwdEU })
     expect(
-      deleteCmd.stderr.toString().indexOf(`Deleting service default@default`) >
+      deleteCmd.stderr.toString().indexOf(`Deleting service`) >
         -1,
     ).toBe(true)
     expect(deleteCmd.status).toBe(0)
@@ -40,7 +40,7 @@ describe('deploy, test, and delete', () => {
   test('delete the US service', async () => {
     const deleteCmd = spawnSync('prisma', ['delete', '-f'], { cwd: cwdUS })
     expect(
-      deleteCmd.stderr.toString().indexOf(`Deleting service default@default`) >
+      deleteCmd.stderr.toString().indexOf(`Deleting service`) >
         -1,
     ).toBe(true)
     expect(deleteCmd.status).toBe(0)
