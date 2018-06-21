@@ -872,7 +872,14 @@ case class PostgresApiDatabaseMutationBuilder(schemaName: String) {
       readResult = rs => rs.as(readsAsUnit)
     )
     action.map { result =>
-      if (result.isEmpty) throw NodesNotConnectedError()
+      if (result.isEmpty)
+        throw NodesNotConnectedError(
+          relation = relationField.relation,
+          parent = relationField.model,
+          parentWhere = None,
+          child = relationField.relatedModel_!,
+          childWhere = Some(NodeSelector.forIdGCValue(relationField.relatedModel_!, childId))
+        )
     }
   }
 
@@ -887,7 +894,14 @@ case class PostgresApiDatabaseMutationBuilder(schemaName: String) {
       readResult = rs => rs.as(readsAsUnit)
     )
     action.map { result =>
-      if (result.isEmpty) throw NodesNotConnectedError()
+      if (result.isEmpty)
+        throw NodesNotConnectedError(
+          relation = relationField.relation,
+          parent = relationField.model,
+          parentWhere = Some(NodeSelector.forIdGCValue(relationField.model, parentId)),
+          child = relationField.relatedModel_!,
+          childWhere = None
+        )
     }
   }
 
