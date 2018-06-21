@@ -156,12 +156,16 @@ case class RelationField(
   }
 
   lazy val relatedField: RelationField = {
-    relatedModel_!.relationFields.find { field =>
-      val relation          = field.relation
-      val isTheSameField    = field.name == this.name
-      val isTheSameRelation = relation.relationTableName == this.relation.relationTableName
-      isTheSameRelation && !isTheSameField
-    }.get
+    relatedModel_!.relationFields
+      .find { field =>
+        val relation          = field.relation
+        val isTheSameField    = field == this
+        val isTheSameRelation = relation == this.relation
+        isTheSameRelation && !isTheSameField
+      }
+      .getOrElse {
+        sys.error(s"Could not find related field of $name on model ${model.name}. Relation is ${relation.name}")
+      }
   }
 
   lazy val oppositeRelationSide: RelationSide.Value = {
