@@ -447,9 +447,22 @@ case class UpsertDataItemInterpreter(mutaction: UpsertDataItem, executor: Postgr
 }
 
 case class NestedUpsertDataItemInterpreter(mutaction: NestedUpsertDataItem) extends DatabaseMutactionInterpreter {
+  val model = mutaction.relationField.relatedModel_!
 
-  override def newAction(mutationBuilder: PostgresApiDatabaseMutationBuilder, parent: IdGCValue)(implicit ec: ExecutionContext) = ???
-  override def action(mutationBuilder: PostgresApiDatabaseMutationBuilder)                                                      = ???
+  override def newAction(mutationBuilder: PostgresApiDatabaseMutationBuilder, parentId: IdGCValue)(implicit ec: ExecutionContext) = {
+    for {
+      id <- mutaction.where match {
+             case Some(where) => mutationBuilder.queryIdFromWhere(where)
+             case None        => mutationBuilder.queryIdByParentId(mutaction.relationField, parentId)
+           }
+      result <- id match {
+                 case Some(id) => NestedUpdateDataItemInterpreter(mutaction.update).newAction(mutationBuilder, parentId)
+                 case None     => NestedCreateDataItemInterpreter(mutaction.create).newAction(mutationBuilder, parentId)
+               }
+    } yield result
+  }
+
+  override def action(mutationBuilder: PostgresApiDatabaseMutationBuilder) = ???
 }
 
 //case class UpsertDataItemIfInRelationWithInterpreter(mutaction: UpsertDataItemIfInRelationWith, executor: PostgresDatabaseMutactionExecutor)

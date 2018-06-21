@@ -118,14 +118,9 @@ case class NestedUpdateDataItem(
 case class NestedUpsertDataItem(
     project: Project,
     relationField: RelationField,
-    createPath: Path,
-    updatePath: Path,
-    createListArgs: Vector[(String, ListGCValue)],
-    createNonListArgs: PrismaArgs,
-    updateListArgs: Vector[(String, ListGCValue)],
-    updateNonListArgs: PrismaArgs,
-    createMutactions: Vector[DatabaseMutaction],
-    updateMutactions: Vector[DatabaseMutaction]
+    where: Option[NodeSelector],
+    create: NestedCreateDataItem,
+    update: NestedUpdateDataItem
 ) extends NestedDatabaseMutaction
     with FurtherNestedMutaction
 

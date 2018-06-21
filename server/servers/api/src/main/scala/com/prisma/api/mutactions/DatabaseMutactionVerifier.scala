@@ -32,7 +32,7 @@ object DatabaseMutactionVerifierImpl extends DatabaseMutactionVerifier {
   }
 
   def verify(mutaction: NestedUpsertDataItem): Iterable[ClientApiError] = {
-    verifyUpsert(mutaction.createPath.lastModel, mutaction.createNonListArgs, mutaction.updateNonListArgs)
+    verifyUpsert(mutaction.relationField.relatedModel_!, mutaction.create.nonListArgs, mutaction.update.nonListArgs)
   }
 
   def verifyUpsert(model: Model, createArgs: PrismaArgs, updateArgs: PrismaArgs): Iterable[ClientApiError] = {
