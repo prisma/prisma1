@@ -207,7 +207,10 @@ case class DatabaseMutactions(project: Project) {
   }
 
   def getMutactionsForNestedDisconnectMutation(nestedMutation: NestedMutations, path: Path, field: RelationField): Vector[NestedDisconnectRelation] = {
-    nestedMutation.disconnects.map(disconnect => NestedDisconnectRelation(project, field, extend(path, field, disconnect)))
+    nestedMutation.disconnects.map {
+      case _: DisconnectByRelation       => NestedDisconnectRelation(project, field, where = None)
+      case disconnect: DisconnectByWhere => NestedDisconnectRelation(project, field, where = Some(disconnect.where))
+    }
   }
 
   def getMutactionsForNestedDeleteMutation(nestedMutation: NestedMutations, path: Path, field: RelationField): Vector[NestedDeleteDataItem] = {

@@ -11,11 +11,9 @@ import scala.concurrent.ExecutionContext
 import scala.util.{Failure, Success}
 
 case class NestedConnectRelationInterpreter(mutaction: NestedConnectRelation)(implicit ec: ExecutionContext) extends NestedRelationInterpreterBase {
-  override def path        = Path.empty(mutaction.where).append(ModelEdge(mutaction.relationField))
-  override def project     = mutaction.project
-  override def topIsCreate = mutaction.topIsCreate
+  def topIsCreate = mutaction.topIsCreate
 
-  val relation = mutaction.relationField.relation
+  override def relationField = mutaction.relationField
 
   override def requiredCheck(parentId: IdGCValue)(implicit mutationBuilder: PostgresApiDatabaseMutationBuilder): List[DBIO[_]] = {
     topIsCreate match {

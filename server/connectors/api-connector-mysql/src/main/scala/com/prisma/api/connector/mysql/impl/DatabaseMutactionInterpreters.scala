@@ -293,7 +293,7 @@ case class VerifyConnectionInterpreter(mutaction: VerifyConnection) extends Data
   override val action = MySqlApiDatabaseMutationBuilder.connectionFailureTrigger(project, path)
 
   override val errorMapper = {
-    case e: SQLException if e.getErrorCode == 1242 && causedByThisMutaction(e.getCause.toString) => throw APIErrors.NodesNotConnectedError(path)
+    case e: SQLException if e.getErrorCode == 1242 && causedByThisMutaction(e.getCause.toString) => throw APIErrors.NodesNotConnectedErrorByPath(path)
   }
 
   private def causedByThisMutaction(cause: String) = {

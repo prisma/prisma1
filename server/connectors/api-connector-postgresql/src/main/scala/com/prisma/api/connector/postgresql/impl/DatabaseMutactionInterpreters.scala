@@ -267,7 +267,7 @@ case class NestedUpdateDataItemInterpreter(mutaction: NestedUpdateDataItem) exte
       _ <- id match {
             case Some(id) => doIt(mutationBuilder, id)
             case None =>
-              throw APIErrors.NodesNotConnectedError(Path.empty(NodeSelector.forIdGCValue(parent, parentId)).append(ModelEdge(mutaction.relationField)))
+              throw APIErrors.NodesNotConnectedErrorByPath(Path.empty(NodeSelector.forIdGCValue(parent, parentId)).append(ModelEdge(mutaction.relationField)))
           }
     } yield UpdateItemResult(id)
   }
@@ -426,7 +426,7 @@ case class VerifyConnectionInterpreter(mutaction: VerifyConnection) extends Data
 
   def action(mutationBuilder: PostgresApiDatabaseMutationBuilder) = mutationBuilder.connectionFailureTrigger(path, causeString)
 
-  override val errorMapper = { case e: PSQLException if e.getMessage.contains(causeString) => throw APIErrors.NodesNotConnectedError(path) }
+  override val errorMapper = { case e: PSQLException if e.getMessage.contains(causeString) => throw APIErrors.NodesNotConnectedErrorByPath(path) }
 }
 
 case class VerifyWhereInterpreter(mutaction: VerifyWhere) extends DatabaseMutactionInterpreter {

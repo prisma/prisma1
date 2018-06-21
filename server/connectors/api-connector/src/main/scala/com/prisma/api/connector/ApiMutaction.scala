@@ -133,7 +133,7 @@ case class NestedDeleteDataItem(project: Project, relationField: RelationField, 
 case class NestedConnectRelation(project: Project, relationField: RelationField, where: NodeSelector, topIsCreate: Boolean)
     extends NestedDatabaseMutaction
     with FinalMutaction
-case class NestedDisconnectRelation(project: Project, relationField: RelationField, path: Path, topIsCreate: Boolean = false)
+case class NestedDisconnectRelation(project: Project, relationField: RelationField, where: Option[NodeSelector])
     extends NestedDatabaseMutaction
     with FinalMutaction
 

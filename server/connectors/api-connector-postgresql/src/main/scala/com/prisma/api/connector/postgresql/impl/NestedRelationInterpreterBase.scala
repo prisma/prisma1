@@ -1,61 +1,20 @@
 package com.prisma.api.connector.postgresql.impl
 
+import com.prisma.api.connector.UnitDatabaseMutactionResult
 import com.prisma.api.connector.postgresql.DatabaseMutactionInterpreter
 import com.prisma.api.connector.postgresql.database.PostgresApiDatabaseMutationBuilder
-import com.prisma.api.connector.{ModelEdge, NodeEdge, Path, UnitDatabaseMutactionResult}
 import com.prisma.api.schema.APIErrors.RequiredRelationWouldBeViolated
 import com.prisma.gc_values.IdGCValue
-import com.prisma.shared.models.{Project, Schema}
-import org.postgresql.util.PSQLException
-import slick.dbio.{DBIO, DBIOAction, Effect, NoStream}
+import com.prisma.shared.models.{Relation, RelationField}
+import slick.dbio.{DBIO, DBIOAction}
 
 import scala.concurrent.ExecutionContext
 
 trait NestedRelationInterpreterBase extends DatabaseMutactionInterpreter {
-
-  def path: Path
-  def project: Project
-  def topIsCreate: Boolean
-  def schema: Schema = project.schema
-
-  val edge              = path.lastEdge_!
-  val relationTableName = path.lastRelation_!.relationTableName
-  val p                 = edge.parentField
-  val otherModel        = edge.child
-  val c                 = edge.childField
-
-  val parentCauseString = edge match {
-    case edge: NodeEdge => s"-OLDPARENTFAILURETRIGGER@${relationTableName}@${edge.columnForChildRelationSide}@${edge.childWhere.value}-"
-    case _: ModelEdge   => s"-OLDPARENTFAILURETRIGGER@${relationTableName}@${edge.columnForChildRelationSide}-"
-  }
-
-  val childCauseString = path.edges.length match {
-    case 0 => sys.error("There should always be at least one edge on the path if this is called.")
-    case 1 => s"-OLDCHILDPATHFAILURETRIGGER@${relationTableName}@${path.lastEdge_!.columnForParentRelationSide}@${path.root.value}-"
-    case _ =>
-      path.removeLastEdge.lastEdge_! match {
-        case edge: NodeEdge => s"-OLDCHILDPATHFAILURETRIGGER@${relationTableName}@${edge.columnForParentRelationSide}@${edge.childWhere.value}-"
-        case _: ModelEdge   => s"-OLDCHILDPATHFAILURETRIGGER@${relationTableName}@${edge.columnForParentRelationSide}-"
-      }
-  }
-
-  def noCheckRequired = List.empty
-
-  def removalByParent(implicit mb: PostgresApiDatabaseMutationBuilder)         = mb.deleteRelationRowByParent(path) // fixme: this is used but no test failed so far
-  def removalByParentAndChild(implicit mb: PostgresApiDatabaseMutationBuilder) = mb.deleteRelationRowByParentAndChild(path)
-  def createRelationRow(implicit mb: PostgresApiDatabaseMutationBuilder)       = ??? // todo : implement
-  def noActionRequired                                                         = List.empty
-
-  def requiredCheck(parentId: IdGCValue)(implicit mb: PostgresApiDatabaseMutationBuilder): List[DBIO[_]]
-
-  def removalActions(parentId: IdGCValue)(implicit mb: PostgresApiDatabaseMutationBuilder): List[DBIO[_]]
-
-  def addAction(parentId: IdGCValue)(implicit mb: PostgresApiDatabaseMutationBuilder): List[DBIO[_]]
-
-  def allActions(implicit mb: PostgresApiDatabaseMutationBuilder, parentId: IdGCValue) = {
-    requiredCheck(parentId) ++ removalActions(parentId) ++ addAction(parentId)
-//    removalActions(parentId) ++ addAction(parentId)
-  }
+  def relationField: RelationField
+  def relation: Relation = relationField.relation
+  val p                  = relationField
+  val c                  = relationField.relatedField
 
   override def newAction(mutationBuilder: PostgresApiDatabaseMutationBuilder, parentId: IdGCValue)(implicit ec: ExecutionContext) = {
     DBIOAction.seq(allActions(mutationBuilder, parentId): _*).andThen(DBIO.successful(UnitDatabaseMutactionResult))
@@ -63,14 +22,16 @@ trait NestedRelationInterpreterBase extends DatabaseMutactionInterpreter {
 
   override def action(mb: PostgresApiDatabaseMutationBuilder) = ???
 
-  override val errorMapper = {
-    case e: PSQLException if causedByThisMutaction(e.getMessage) => throw RequiredRelationWouldBeViolated(path.lastRelation_!)
+  def allActions(implicit mb: PostgresApiDatabaseMutationBuilder, parentId: IdGCValue) = {
+    requiredCheck(parentId) ++ removalActions(parentId) ++ addAction(parentId)
   }
 
-  def requiredRelationViolation = throw RequiredRelationWouldBeViolated(path.lastRelation_!)
+  def requiredCheck(parentId: IdGCValue)(implicit mb: PostgresApiDatabaseMutationBuilder): List[DBIO[_]]
+  def removalActions(parentId: IdGCValue)(implicit mb: PostgresApiDatabaseMutationBuilder): List[DBIO[_]]
+  def addAction(parentId: IdGCValue)(implicit mb: PostgresApiDatabaseMutationBuilder): List[DBIO[_]]
 
-  def sysError = sys.error("This should not happen, since it means a many side is required")
-
-  def causedByThisMutaction(cause: String) = cause.contains(parentCauseString) || cause.contains(childCauseString)
-
+  def noCheckRequired           = List.empty
+  def noActionRequired          = List.empty
+  def requiredRelationViolation = throw RequiredRelationWouldBeViolated(relation)
+  def sysError                  = sys.error("This should not happen, since it means a many side is required")
 }

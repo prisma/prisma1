@@ -11,7 +11,7 @@ import com.prisma.gc_values.{GCValue, ListGCValue, NullGCValue, _}
 import com.prisma.shared.models._
 import com.prisma.slick.NewJdbcExtensions._
 import com.prisma.api.connector.postgresql.database.JooqExtensions._
-import com.prisma.api.schema.APIErrors.RequiredRelationWouldBeViolated
+import com.prisma.api.schema.APIErrors.{NodesNotConnectedError, RequiredRelationWouldBeViolated}
 import cool.graph.cuid.Cuid
 import org.joda.time.{DateTime, DateTimeZone}
 import org.jooq.{Query => JooqQuery, _}
@@ -858,6 +858,36 @@ case class PostgresApiDatabaseMutationBuilder(schemaName: String) {
     )
     action.map { result =>
       if (result.nonEmpty) throw RequiredRelationWouldBeViolated(relation)
+    }
+  }
+
+  def ensureThatNodeIsConnected(
+      relationField: RelationField,
+      childId: IdGCValue
+  )(implicit ec: ExecutionContext): DBIO[Unit] = {
+    val relation = relationField.relation
+    val idQuery  = sql.select(asterisk()).from(relationTable(relation)).where(relationColumn(relation, relationField.oppositeRelationSide).equal(placeHolder))
+    val action = queryToDBIO(idQuery)(
+      setParams = _.setGcValue(childId),
+      readResult = rs => rs.as(readsAsUnit)
+    )
+    action.map { result =>
+      if (result.isEmpty) throw NodesNotConnectedError()
+    }
+  }
+
+  def ensureThatParentIsConnected(
+      relationField: RelationField,
+      parentId: IdGCValue
+  )(implicit ec: ExecutionContext): DBIO[Unit] = {
+    val relation = relationField.relation
+    val idQuery  = sql.select(asterisk()).from(relationTable(relation)).where(relationColumn(relation, relationField.relationSide).equal(placeHolder))
+    val action = queryToDBIO(idQuery)(
+      setParams = _.setGcValue(parentId),
+      readResult = rs => rs.as(readsAsUnit)
+    )
+    action.map { result =>
+      if (result.isEmpty) throw NodesNotConnectedError()
     }
   }
 

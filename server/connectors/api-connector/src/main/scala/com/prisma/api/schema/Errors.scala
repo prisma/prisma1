@@ -100,7 +100,8 @@ object APIErrors {
   case class NullProvidedForWhereError(modelName: String)
       extends ClientApiError(s"You provided an invalid argument for the where selector on $modelName.", 3040)
 
-  case class NodesNotConnectedError(path: Path) extends ClientApiError(pathErrorMessage(path), 3041)
+  case class NodesNotConnectedErrorByPath(path: Path) extends ClientApiError(pathErrorMessage(path), 3041)
+  case class NodesNotConnectedError()                 extends ClientApiError("error message not implemented yet", 3041)
 
   case class RequiredRelationWouldBeViolated(relation: Relation)
       extends ClientApiError(
