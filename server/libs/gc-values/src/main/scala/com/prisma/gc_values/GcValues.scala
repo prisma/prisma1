@@ -43,7 +43,8 @@ case class RootGCValue(map: SortedMap[String, GCValue]) extends GCValue {
       (key, convertedValue)
   }
 
-  def hasArgFor(name: String): Boolean = map.get(name).isDefined
+  def hasArgFor(name: String): Boolean   = map.get(name).isDefined
+  def add(field: String, value: GCValue) = copy(map = map.updated(field, value))
 
   def value = sys.error("RootGCValues not implemented yet in GCValueExtractor")
 }

@@ -52,12 +52,13 @@ case class PostgresApiDatabaseMutationBuilder(schemaName: String) {
 
       val itemInsert: PreparedStatement = x.connection.prepareStatement(queryString, Statement.RETURN_GENERATED_KEYS)
 
+      val currentTimestamp = currentTimeStampUTC
       fields.map(_.name).zipWithIndex.foreach {
         case (column, index) =>
           argsAsRoot.map.get(column) match {
-            case Some(NullGCValue) if column == createdAtField || column == updatedAtField => itemInsert.setTimestamp(index + 1, currentTimeStampUTC)
+            case Some(NullGCValue) if column == createdAtField || column == updatedAtField => itemInsert.setTimestamp(index + 1, currentTimestamp)
             case Some(gCValue)                                                             => itemInsert.setGcValue(index + 1, gCValue)
-            case None if column == createdAtField || column == updatedAtField              => itemInsert.setTimestamp(index + 1, currentTimeStampUTC)
+            case None if column == createdAtField || column == updatedAtField              => itemInsert.setTimestamp(index + 1, currentTimestamp)
             case None                                                                      => itemInsert.setNull(index + 1, java.sql.Types.NULL)
           }
       }
@@ -265,8 +266,9 @@ case class PostgresApiDatabaseMutationBuilder(schemaName: String) {
       DBIOAction.successful(())
     } else {
       SimpleDBIO { ctx =>
-        val columns = updateArgs.raw.asRoot.map.map { case (k, _) => model.getFieldByName_!(k).dbName }.toList
-        val values  = updateArgs.raw.asRoot.map.map { case (_, v) => v }
+        val actualArgs = addUpdatedAt(model, updateArgs.raw.asRoot)
+        val columns    = actualArgs.map.map { case (k, _) => model.getFieldByName_!(k).dbName }.toList
+        val values     = actualArgs.map.map { case (_, v) => v }
 
         val query = sql
           .update(table(name(schemaName, model.dbName)))
@@ -285,6 +287,18 @@ case class PostgresApiDatabaseMutationBuilder(schemaName: String) {
   }
 
   //endregion
+
+  private def addUpdatedAt(model: Model, updateValues: RootGCValue): RootGCValue = {
+    model.updatedAtField match {
+      case Some(updatedAtField) =>
+        val today              = new Date()
+        val exactlyNow         = new DateTime(today).withZone(DateTimeZone.UTC)
+        val currentDateGCValue = DateTimeGCValue(exactlyNow)
+        updateValues.add(updatedAtField.name, currentDateGCValue)
+      case None =>
+        updateValues
+    }
+  }
 
   private def addUpdatedDateTime(model: Model, updateValues: Option[SQLActionBuilder]): Option[SQLActionBuilder] = {
     model.updatedAtField match {
