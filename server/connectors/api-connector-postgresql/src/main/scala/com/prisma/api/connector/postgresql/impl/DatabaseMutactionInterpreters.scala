@@ -137,35 +137,33 @@ case class DeleteDataItemNestedInterpreter(mutaction: NestedDeleteDataItem)(impl
 
   override def newAction(mutationBuilder: PostgresApiDatabaseMutationBuilder, parentId: IdGCValue)(implicit ec: ExecutionContext) = {
     for {
-      id <- getChildId(mutationBuilder, parentId)
-      _ <- id match {
-            case None =>
-              mutaction.where match {
-                case Some(where) =>
-                  throw APIErrors.NodeNotFoundForWhereError(where)
-                case None =>
-                  throw NodesNotConnectedError(
-                    relation = parentField.relation,
-                    parent = parentField.model,
-                    parentWhere = Some(NodeSelector.forIdGCValue(parent, parentId)),
-                    child = parentField.relatedModel_!,
-                    childWhere = None
-                  )
-              }
-            case Some(childId) => mutationBuilder.ensureThatNodeIsConnected(mutaction.relationField, childId)
-          }
+      childId <- getChildId(mutationBuilder, parentId)
       _       <- mutationBuilder.ensureThatParentIsConnected(parentField, parentId)
-      childId = id.get
       _       <- checkForRequiredRelationsViolations(mutationBuilder, childId)
       _       <- mutationBuilder.deleteRelayRowByWhere(NodeSelector.forIdGCValue(child, childId))
       _       <- mutationBuilder.deleteDataItemByWhere(NodeSelector.forIdGCValue(child, childId))
     } yield UnitDatabaseMutactionResult
   }
 
-  private def getChildId(mutationBuilder: PostgresApiDatabaseMutationBuilder, parentId: IdGCValue): DBIO[Option[IdGCValue]] = {
+  private def getChildId(mutationBuilder: PostgresApiDatabaseMutationBuilder, parentId: IdGCValue): DBIO[IdGCValue] = {
     mutaction.where match {
-      case Some(where) => mutationBuilder.queryIdFromWhere(where)
-      case None        => mutationBuilder.queryIdByParentId(parentField, parentId)
+      case Some(where) =>
+        mutationBuilder.queryIdFromWhere(where).map {
+          case Some(id) => id
+          case None     => throw APIErrors.NodeNotFoundForWhereError(where)
+        }
+      case None =>
+        mutationBuilder.queryIdByParentId(parentField, parentId).map {
+          case Some(id) => id
+          case None =>
+            throw NodesNotConnectedError(
+              relation = parentField.relation,
+              parent = parentField.model,
+              parentWhere = Some(NodeSelector.forIdGCValue(parent, parentId)),
+              child = parentField.relatedModel_!,
+              childWhere = None
+            )
+        }
     }
   }
 
