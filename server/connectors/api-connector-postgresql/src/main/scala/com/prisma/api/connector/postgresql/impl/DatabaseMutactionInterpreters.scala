@@ -291,8 +291,9 @@ case class ResetDataInterpreter(mutaction: ResetDataMutaction) extends DatabaseM
 }
 
 case class UpdateDataItemInterpreter(mutaction: UpdateDataItem) extends DatabaseMutactionInterpreter with SharedUpdateLogic {
-  val model       = mutaction.where.model
-  val nonListArgs = mutaction.nonListArgs
+  val model             = mutaction.where.model
+  val nonListArgs       = mutaction.nonListArgs
+  override def listArgs = mutaction.listArgs
 
   override def newAction(mutationBuilder: PostgresApiDatabaseMutationBuilder, parent: IdGCValue)(implicit ec: ExecutionContext) = {
     for {
@@ -323,6 +324,7 @@ case class NestedUpdateDataItemInterpreter(mutaction: NestedUpdateDataItem) exte
   val model       = mutaction.relationField.relatedModel_!
   val parent      = mutaction.relationField.model
   val nonListArgs = mutaction.nonListArgs
+  val listArgs    = mutaction.listArgs
 
   override def newAction(mutationBuilder: PostgresApiDatabaseMutationBuilder, parentId: IdGCValue)(implicit ec: ExecutionContext) = {
     for {
@@ -359,6 +361,7 @@ case class NestedUpdateDataItemInterpreter(mutaction: NestedUpdateDataItem) exte
 trait SharedUpdateLogic {
   def model: Model
   def nonListArgs: PrismaArgs
+  def listArgs: Vector[(String, ListGCValue)]
 
   def verifyWhere(mutationBuilder: PostgresApiDatabaseMutationBuilder, where: Option[NodeSelector])(implicit ec: ExecutionContext) = {
     where match {
@@ -376,7 +379,7 @@ trait SharedUpdateLogic {
   def doIt(mutationBuilder: PostgresApiDatabaseMutationBuilder, id: IdGCValue)(implicit ec: ExecutionContext): DBIO[Unit] = {
     for {
       _ <- mutationBuilder.updateDataItemById(model, id, nonListArgs)
-      //                _ <- mutationBuilder.setScalarList(path.lastCreateWhere_!, listArgs)
+      _ <- mutationBuilder.setScalarListById(model, id, listArgs)
     } yield ()
   }
 }

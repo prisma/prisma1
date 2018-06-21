@@ -615,6 +615,14 @@ case class PostgresApiDatabaseMutationBuilder(schemaName: String) {
     if (listFieldMap.isEmpty) DBIOAction.successful(()) else setManyScalarListHelper(where.model, listFieldMap, idQuery)
   }
 
+  def setScalarListById(model: Model, id: IdGCValue, listFieldMap: Vector[(String, ListGCValue)]) = {
+    if (listFieldMap.isEmpty) {
+      DBIOAction.successful(())
+    } else {
+      setManyScalarListHelper(model, listFieldMap, DBIO.successful(Vector(id.value.toString)))
+    }
+  }
+
   def setManyScalarLists(model: Model, listFieldMap: Vector[(String, ListGCValue)], whereFilter: Option[Filter]) = {
     val idQuery = SimpleDBIO { ctx =>
       val condition    = JooqWhereClauseBuilder(schemaName).buildWhereClause(whereFilter).getOrElse(trueCondition())
