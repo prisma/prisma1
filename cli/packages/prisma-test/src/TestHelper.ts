@@ -47,7 +47,33 @@ export function setupMockEnvironment(
   }
 }
 
-export async function getUserToken(api, email, password, name) {
+export async function getCloudClusterEnvironment(
+  api,
+  region,
+  email,
+  password,
+  name,
+  service,
+  stage,
+) {
+  const userToken = await getUserToken(api, email, password, name)
+  const workspaceSlug = await getWorkspaceSlug(api, userToken)
+  const clusterToken = await getClusterToken(
+    api,
+    workspaceSlug,
+    region,
+    service,
+    stage,
+    userToken,
+  )
+  return {
+    userToken,
+    workspaceSlug,
+    clusterToken,
+  }
+}
+
+async function getUserToken(api, email, password, name) {
   const queryForUserToken = `
       mutation LoginToken {
         authenticateWithEmail(
@@ -63,7 +89,7 @@ export async function getUserToken(api, email, password, name) {
   return userToken
 }
 
-export async function getWorkspaceSlug(api, userToken) {
+async function getWorkspaceSlug(api, userToken) {
   const queryForWorkspaceSlug = `
       query WorkspaceSlug {
         me {
@@ -83,7 +109,7 @@ export async function getWorkspaceSlug(api, userToken) {
   return workspaceSlug
 }
 
-export async function getClusterToken(
+async function getClusterToken(
   api,
   workspace,
   region,

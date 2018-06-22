@@ -1,0 +1,41 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`login and project workflow add project in EU 1`] = `
+Object {
+  "project": Object {
+    "metricKey": "test-6f0ffa-test-test",
+    "name": "test-6f0ffa~test",
+    "stage": "test",
+  },
+}
+`;
+
+exports[`login and project workflow add project in US 1`] = `
+Object {
+  "project": Object {
+    "metricKey": "test-6f0ffa-test-test",
+    "name": "test-6f0ffa~test",
+    "stage": "test",
+  },
+}
+`;
+
+exports[`login and project workflow delete project in EU 1`] = `
+Object {
+  "project": Object {
+    "metricKey": "test-6f0ffa-test-test",
+    "name": "test-6f0ffa~test",
+    "stage": "test",
+  },
+}
+`;
+
+exports[`login and project workflow delete project in US 1`] = `
+Object {
+  "project": Object {
+    "metricKey": "test-6f0ffa-test-test",
+    "name": "test-6f0ffa~test",
+    "stage": "test",
+  },
+}
+`;
