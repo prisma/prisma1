@@ -221,11 +221,20 @@ case class DeleteDataItemNestedInterpreter(mutaction: NestedDeleteDataItem)(impl
   override def action(mutationBuilder: PostgresApiDatabaseMutationBuilder) = ???
 }
 
-case class DeleteDataItemsInterpreter(mutaction: DeleteDataItems) extends DatabaseMutactionInterpreter {
+case class DeleteDataItemsInterpreter(mutaction: DeleteDataItems)(implicit ec: ExecutionContext) extends DatabaseMutactionInterpreter {
   def action(mutationBuilder: PostgresApiDatabaseMutationBuilder) = DBIOAction.seq(
+    checkForRequiredRelationsViolations(mutationBuilder),
     mutationBuilder.deleteRelayIds(mutaction.model, mutaction.whereFilter),
     mutationBuilder.deleteDataItems(mutaction.model, mutaction.whereFilter)
   )
+
+  private def checkForRequiredRelationsViolations(mutationBuilder: PostgresApiDatabaseMutationBuilder): DBIO[_] = {
+    val model                          = mutaction.model
+    val filter                         = mutaction.whereFilter
+    val fieldsWhereThisModelIsRequired = mutaction.project.schema.fieldsWhereThisModelIsRequired(model)
+    val actions                        = fieldsWhereThisModelIsRequired.map(field => mutationBuilder.oldParentFailureTriggerByFieldAndFilter(model, filter, field))
+    DBIO.sequence(actions)
+  }
 }
 
 case class DeleteManyRelationChecksInterpreter(mutaction: DeleteManyRelationChecks) extends DatabaseMutactionInterpreter {
@@ -238,7 +247,7 @@ case class DeleteManyRelationChecksInterpreter(mutaction: DeleteManyRelationChec
 
   def action(mutationBuilder: PostgresApiDatabaseMutationBuilder) = {
     val requiredChecks =
-      fieldsWhereThisModelIsRequired.map(field => mutationBuilder.oldParentFailureTriggerByFieldAndFilter(model, filter, field, causeString(field)))
+      fieldsWhereThisModelIsRequired.map(field => mutationBuilder.oldParentFailureTriggerByFieldAndFilterLegacy(model, filter, field, causeString(field)))
     DBIOAction.seq(requiredChecks: _*)
   }
 

@@ -41,6 +41,7 @@ trait BuilderBase {
   def modelColumn(model: Model, column: String)                    = field(name(schemaName, model.dbName, column))
   def relationColumn(relation: Relation, side: RelationSide.Value) = field(name(schemaName, relation.relationTableName, relation.columnForRelationSide(side)))
   def scalarListColumn(scalarField: ScalarField, column: String)   = field(name(schemaName, scalarListTableName(scalarField), column))
+  def column(table: String, column: String)                        = field(name(schemaName, table, column))
 
   def queryToDBIO[T](query: JooqQuery)(setParams: PositionedParameters => Unit, readResult: ResultSet => T): DBIO[T] = {
     SimpleDBIO { ctx =>
@@ -983,7 +984,34 @@ case class PostgresApiDatabaseMutationBuilder(schemaName: String) extends Builde
     }
   }
 
-  def oldParentFailureTriggerByFieldAndFilter(model: Model, whereFilter: Option[Filter], field: RelationField, causeString: String): DBIO[_] = {
+  def oldParentFailureTriggerByFieldAndFilter(model: Model, whereFilter: Option[Filter], relationField: RelationField)(
+      implicit ec: ExecutionContext): DBIO[_] = {
+    val relation = relationField.relation
+    val query = sql
+      .select(asterisk())
+      .from(relationTable(relation))
+      .where(relationColumn(relation, relationField.relationSide).isNotNull)
+      .and(relationColumn(relation, relationField.oppositeRelationSide).in {
+        sql
+          .select(field(name("Alias", model.dbNameOfIdField_!)))
+          .from(modelTable(model).as("Alias"))
+          .where(JooqWhereClauseBuilder(schemaName).buildWhereClause(whereFilter).getOrElse(trueCondition()))
+      })
+
+    val action = queryToDBIO(query)(
+      setParams = pp => SetParams.setFilter(pp.ps, whereFilter),
+      readResult = _.as(readsAsUnit)
+    )
+    action.map { result =>
+      if (result.nonEmpty) {
+        // fixme: decide which error to use
+        throw RequiredRelationWouldBeViolated(relation)
+        //        throw RelationIsRequired(field.name, field.model.name)
+      }
+    }
+  }
+
+  def oldParentFailureTriggerByFieldAndFilterLegacy(model: Model, whereFilter: Option[Filter], field: RelationField, causeString: String): DBIO[_] = {
     val relation = field.relation
     val table    = relation.relationTableName
 
