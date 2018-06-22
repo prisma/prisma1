@@ -222,6 +222,23 @@ export async function deleteProject(
   return deletedProjectPayload
 }
 
+export async function listProjects(api, clusterToken) {
+  const clusterClient = getClusterClient(api, clusterToken)
+  const queryToListProjects = `
+    query ListProjects {
+      listProjects {
+        metricKey
+        name
+        stage
+      }
+    }
+  `
+  const listProjectsPayload = ((await clusterClient.request(
+    queryToListProjects,
+  )) as any)
+  return listProjectsPayload
+}
+
 function getCloudClient(api, userToken) {
   return new GraphQLClient(api, {
     headers: {
