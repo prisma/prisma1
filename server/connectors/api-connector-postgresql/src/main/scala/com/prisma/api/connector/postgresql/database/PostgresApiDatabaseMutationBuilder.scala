@@ -5,33 +5,50 @@ import java.util.Date
 
 import com.prisma.api.connector._
 import com.prisma.api.connector.postgresql.database.JdbcExtensions._
+import com.prisma.api.connector.postgresql.database.JooqExtensions._
 import com.prisma.api.connector.postgresql.database.PostgresSlickExtensions._
+import com.prisma.api.schema.APIErrors.{NodesNotConnectedError, RequiredRelationWouldBeViolated}
 import com.prisma.api.schema.UserFacingError
-import com.prisma.gc_values.{GCValue, ListGCValue, NullGCValue, _}
+import com.prisma.gc_values.{ListGCValue, NullGCValue, _}
+import com.prisma.shared.models.TypeIdentifier.IdTypeIdentifier
 import com.prisma.shared.models._
 import com.prisma.slick.NewJdbcExtensions._
-import com.prisma.api.connector.postgresql.database.JooqExtensions._
-import com.prisma.api.schema.APIErrors.{NodesNotConnectedError, RequiredRelationWouldBeViolated}
-import com.prisma.shared.models.TypeIdentifier.IdTypeIdentifier
 import cool.graph.cuid.Cuid
 import org.joda.time.{DateTime, DateTimeZone}
-import org.jooq.{Query => JooqQuery, _}
 import org.jooq.conf.Settings
 import org.jooq.impl.DSL
 import org.jooq.impl.DSL._
+import org.jooq.{Query => JooqQuery, _}
 import slick.dbio.{DBIOAction, Effect, NoStream}
 import slick.jdbc.PostgresProfile.api._
-import slick.jdbc.{PositionedParameters, PostgresProfile, SQLActionBuilder}
+import slick.jdbc.{PositionedParameters, SQLActionBuilder}
 import slick.sql.SqlStreamingAction
 
 import scala.collection.JavaConverters._
-import scala.collection.immutable
 import scala.concurrent.ExecutionContext
 
-case class PostgresApiDatabaseMutationBuilder(schemaName: String) {
+trait BuilderBase {
+  def schemaName: String
+
+  def dialect: SQLDialect
+
+  val sql = DSL.using(dialect, new Settings().withRenderFormatted(true))
+
+  def idField(model: Model)                                        = field(name(schemaName, model.dbName, model.dbNameOfIdField_!))
+  def modelTable(model: Model)                                     = table(name(schemaName, model.dbName))
+  def relationTable(relation: Relation)                            = table(name(schemaName, relation.relationTableName))
+  def scalarListTable(field: ScalarField)                          = table(name(schemaName, scalarListTableName(field)))
+  def modelColumn(model: Model, column: String)                    = field(name(schemaName, model.dbName, column))
+  def relationColumn(relation: Relation, side: RelationSide.Value) = field(name(schemaName, relation.relationTableName, relation.columnForRelationSide(side)))
+  def scalarListColumn(scalarField: ScalarField, column: String)   = field(name(schemaName, scalarListTableName(scalarField), column))
+
+  private def scalarListTableName(field: ScalarField) = field.model.dbName + "_" + field.dbName
+}
+
+case class PostgresApiDatabaseMutationBuilder(schemaName: String) extends BuilderBase with ImportActions {
   import JooqQueryBuilders._
 
-  val sql = DSL.using(SQLDialect.POSTGRES_9_5, new Settings().withRenderFormatted(true))
+  override def dialect = SQLDialect.POSTGRES_9_5
 
   // region CREATE
 
@@ -831,14 +848,6 @@ case class PostgresApiDatabaseMutationBuilder(schemaName: String) {
     }
   }
 
-  def idField(model: Model)                                        = field(name(schemaName, model.dbName, model.dbNameOfIdField_!))
-  def modelTable(model: Model)                                     = table(name(schemaName, model.dbName))
-  def relationTable(relation: Relation)                            = table(name(schemaName, relation.relationTableName))
-  def scalarListTable(field: ScalarField)                          = table(name(schemaName, field.model.dbName + "_" + field.dbName))
-  def modelColumn(model: Model, column: String)                    = field(name(schemaName, model.dbName, column))
-  def relationColumn(relation: Relation, side: RelationSide.Value) = field(name(schemaName, relation.relationTableName, relation.columnForRelationSide(side)))
-  def scalarListColumn(scalarField: ScalarField, column: String)   = field(name(schemaName, scalarField.model.dbName + "_" + scalarField.dbName, column))
-
   object ::> { def unapply[A](l: List[A]) = Some((l.init, l.last)) }
 
   def pathQueryThatUsesWholePath(path: Path): SQLActionBuilder = {
@@ -1047,197 +1056,6 @@ case class PostgresApiDatabaseMutationBuilder(schemaName: String) {
   }
 
   //endregion
-
-  def createDataItemsImport(mutaction: CreateDataItemsImport): SimpleDBIO[Vector[String]] = {
-
-    SimpleDBIO[Vector[String]] { jdbcActionContext =>
-      val model         = mutaction.model
-      val argsWithIndex = mutaction.args.zipWithIndex
-
-      val nodeResult: Vector[String] = try {
-        val columns      = model.scalarNonListFields.map(_.dbName)
-        val escapedKeys  = columns.map(column => s""""$column"""").mkString(",")
-        val placeHolders = columns.map(_ => "?").mkString(",")
-
-        val query                         = s"""INSERT INTO "$schemaName"."${model.dbName}" ($escapedKeys) VALUES ($placeHolders)"""
-        val itemInsert: PreparedStatement = jdbcActionContext.connection.prepareStatement(query)
-        val currentTimeStamp              = currentTimeStampUTC
-
-        //Fixme have a helper for adding updatedAt / createdAt
-        mutaction.args.foreach { arg =>
-          val argsAsRoot = arg.raw.asRoot
-          model.scalarNonListFields.zipWithIndex.foreach {
-            case (field, index) =>
-              argsAsRoot.map.get(field.name) match {
-                case Some(NullGCValue) if field.name == "createdAt" || field.name == "updatedAt" => itemInsert.setTimestamp(index + 1, currentTimeStamp)
-                case Some(gCValue)                                                               => itemInsert.setGcValue(index + 1, gCValue)
-                case None if field.name == "createdAt" || field.name == "updatedAt"              => itemInsert.setTimestamp(index + 1, currentTimeStamp)
-                case None                                                                        => itemInsert.setNull(index + 1, java.sql.Types.NULL)
-              }
-          }
-          itemInsert.addBatch()
-        }
-
-        itemInsert.executeBatch()
-
-        Vector.empty
-      } catch {
-        case e: java.sql.BatchUpdateException =>
-          e.getUpdateCounts.zipWithIndex
-            .filter(element => element._1 == Statement.EXECUTE_FAILED)
-            .map { failed =>
-              val failedId = argsWithIndex.find(_._2 == failed._2).get._1.raw.asRoot.idField.value
-              s"Failure inserting ${model.dbName} with Id: $failedId. Cause: ${removeConnectionInfoFromCause(e.getCause.toString)}"
-            }
-            .toVector
-        case e: Exception => Vector(e.getCause.toString)
-      }
-
-      val relayResult: Vector[String] = try {
-        val relayQuery                     = s"""INSERT INTO "$schemaName"."_RelayId" ("id", "stableModelIdentifier") VALUES (?,?)"""
-        val relayInsert: PreparedStatement = jdbcActionContext.connection.prepareStatement(relayQuery)
-
-        mutaction.args.foreach { arg =>
-          relayInsert.setString(1, arg.raw.asRoot.idField.value)
-          relayInsert.setString(2, model.stableIdentifier)
-          relayInsert.addBatch()
-        }
-        relayInsert.executeBatch()
-
-        Vector.empty
-      } catch {
-        case e: java.sql.BatchUpdateException =>
-          e.getUpdateCounts.zipWithIndex
-            .filter(element => element._1 == Statement.EXECUTE_FAILED)
-            .map { failed =>
-              val failedId = argsWithIndex.find(_._2 == failed._2).get._1.raw.asRoot.idField.value
-              s"Failure inserting RelayRow with Id: $failedId. Cause: ${removeConnectionInfoFromCause(e.getCause.toString)}"
-            }
-            .toVector
-        case e: Exception => Vector(e.getMessage)
-      }
-
-      val res = nodeResult ++ relayResult
-      if (res.nonEmpty) throw new Exception(res.mkString("-@-"))
-      res
-    }
-  }
-
-  def removeConnectionInfoFromCause(cause: String): String = {
-    val connectionSubStringStart = cause.indexOf(": ERROR:")
-    cause.substring(connectionSubStringStart + 9)
-
-  }
-
-  def createRelationRowsImport(mutaction: CreateRelationRowsImport): SimpleDBIO[Vector[String]] = {
-    val argsWithIndex: Seq[((IdGCValue, IdGCValue), Int)] = mutaction.args.zipWithIndex
-
-    SimpleDBIO[Vector[String]] { x =>
-      val res = try {
-        val query                             = s"""INSERT INTO "$schemaName"."${mutaction.relation.relationTableName}" ("id", "A","B") VALUES (?,?,?)"""
-        val relationInsert: PreparedStatement = x.connection.prepareStatement(query)
-        mutaction.args.foreach { arg =>
-          relationInsert.setString(1, Cuid.createCuid())
-          relationInsert.setGcValue(2, arg._1)
-          relationInsert.setGcValue(3, arg._2)
-          relationInsert.addBatch()
-        }
-        relationInsert.executeBatch()
-        Vector.empty
-      } catch {
-        case e: java.sql.BatchUpdateException =>
-          val faileds = e.getUpdateCounts.zipWithIndex
-
-          faileds
-            .filter(element => element._1 == Statement.EXECUTE_FAILED)
-            .map { failed =>
-              val failedA = argsWithIndex.find(_._2 == failed._2).get._1._1
-              val failedB = argsWithIndex.find(_._2 == failed._2).get._1._2
-              s"Failure inserting into relationtable ${mutaction.relation.relationTableName} with ids $failedA and $failedB. Cause: ${removeConnectionInfoFromCause(
-                e.getCause.toString)}"
-            }
-            .toVector
-        case e: Exception => Vector(e.getMessage)
-      }
-
-      if (res.nonEmpty) throw new Exception(res.mkString("-@-"))
-      res
-    }
-  }
-
-  def pushScalarListsImport(mutactionArg: PushScalarListsImport) = {
-    val field = mutactionArg.field
-
-    val mutaction = {
-      val x: Map[IdGCValue, ListGCValue] = mutactionArg.valueTuples.groupBy(_._1).mapValues { values =>
-        val listGcValues  = values.map(_._2)
-        val combinedValue = listGcValues.foldLeft(ListGCValue(Vector.empty))(_ ++ _)
-        combinedValue
-      }
-      mutactionArg.copy(valueTuples = x.toVector)
-    }
-
-    val positions: DBIO[Map[IdGCValue, Int]] = SimpleDBIO[Map[IdGCValue, Int]] { ctx =>
-      val nodeIdField  = scalarListColumn(field, "nodeId")
-      val placeholders = mutaction.valueTuples.map(_ => placeHolder)
-
-      val query = sql
-        .select(nodeIdField, max(scalarListColumn(field, "position")))
-        .from(scalarListTable(field))
-        .groupBy(nodeIdField)
-        .having(nodeIdField.in(placeholders: _*))
-
-      val ps = ctx.connection.prepareStatement(query.getSQL)
-
-      val pp = new PositionedParameters(ps)
-
-      mutaction.valueTuples.map(_._1).foreach(pp.setGcValue)
-      val rs = ps.executeQuery()
-      val reads = ReadsResultSet { rs =>
-        val nodeId = rs.getId(field.model, "nodeId")
-        val start  = rs.getInt("max")
-        (nodeId, start)
-      }
-      rs.as(reads).toMap
-    }
-
-    // id, listvalue, start
-    def push1(values: Iterable[(IdGCValue, ListGCValue, Int)]): Iterable[(IdGCValue, GCValue, Int)] = values.flatMap {
-      case (id, list, start) =>
-        list.values.zipWithIndex.map { case (value, index) => (id, value, start + (index * 1000)) }
-    }
-
-    // id, value, positions
-    def push2(values: Iterable[(IdGCValue, GCValue, Int)]) = SimpleDBIO[Unit] { ctx =>
-      val query = sql
-        .insertInto(scalarListTable(field))
-        .columns(scalarListColumn(field, "nodeId"), scalarListColumn(field, "value"), scalarListColumn(field, "position"))
-        .values(placeHolder, placeHolder, placeHolder)
-
-      val ps: PreparedStatement = ctx.connection.prepareStatement(query.getSQL)
-      // do it
-      values.foreach { value =>
-        ps.setGcValue(1, value._1)
-        ps.setGcValue(2, value._2)
-        ps.setInt(3, value._3)
-        ps.addBatch()
-      }
-      ps.executeBatch()
-    }
-
-    import scala.concurrent.ExecutionContext.Implicits.global
-
-    for {
-      positions <- positions
-      x = mutaction.valueTuples.map {
-        case (id, listValue) =>
-          val start = positions.get(id).getOrElse(0)
-          (id, listValue, start)
-      }
-      y = push1(x)
-      _ <- push2(y)
-    } yield Vector.empty
-  }
 
   private val dbioUnit = DBIO.successful(())
 
