@@ -167,9 +167,24 @@ case class NestedCreateDataItemInterpreter(mutaction: NestedCreateDataItem, incl
 case class DeleteDataItemInterpreter(mutaction: DeleteDataItem)(implicit ec: ExecutionContext) extends DatabaseMutactionInterpreter {
   override def newAction(mutationBuilder: PostgresApiDatabaseMutationBuilder, parentId: IdGCValue)(implicit ec: ExecutionContext) = {
     for {
-      _ <- mutationBuilder.deleteRelayRowByWhere(mutaction.where)
-      _ <- mutationBuilder.deleteDataItemByWhere(mutaction.where)
+      id <- mutationBuilder.queryIdFromWhere(mutaction.where)
+      _ <- id match {
+            case Some(id) =>
+              for {
+                _ <- checkForRequiredRelationsViolations(mutationBuilder, id)
+                _ <- mutationBuilder.deleteRelayRowByWhere(mutaction.where)
+                _ <- mutationBuilder.deleteDataItemByWhere(mutaction.where)
+              } yield ()
+            case None =>
+              DBIO.failed(APIErrors.NodeNotFoundForWhereError(mutaction.where))
+          }
     } yield UnitDatabaseMutactionResult
+  }
+
+  private def checkForRequiredRelationsViolations(mutationBuilder: PostgresApiDatabaseMutationBuilder, id: IdGCValue): DBIO[_] = {
+    val fieldsWhereThisModelIsRequired = mutaction.project.schema.fieldsWhereThisModelIsRequired(mutaction.where.model)
+    val actions                        = fieldsWhereThisModelIsRequired.map(field => mutationBuilder.oldParentFailureTriggerByField(id, field))
+    DBIO.sequence(actions)
   }
 
   def action(mutationBuilder: PostgresApiDatabaseMutationBuilder) = ???
