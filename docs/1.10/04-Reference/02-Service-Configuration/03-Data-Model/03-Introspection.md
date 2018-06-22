@@ -9,7 +9,7 @@ description: Introspection
 
 When connecting Prisma to an existing database it can be tedious to write the data model from scratch. To automate this process you can use the `prisma introspect` command to generate a data model based on your actual database schema.
 
-The generated SDL serves as a basis for your Prisma service, but you can easily make modifications afterwards as you see fit. Some common modifications include hiding a table from the GraphQL API or making a column to a different name.
+The generated SDL serves as a basis for your Prisma service, but you can easily make modifications afterwards as you see fit. Some common modifications include hiding a table from the GraphQL API or giving a column to a different name.
 
 ## Limitations
 
