@@ -54,6 +54,8 @@ case class ListGCValue(values: Vector[GCValue]) extends GCValue {
   def isEmpty: Boolean   = values.isEmpty
   def size: Int          = values.size
   def value: Vector[Any] = values.map(_.value)
+
+  def ++(other: ListGCValue) = ListGCValue(this.values ++ other.values)
 }
 
 sealed trait LeafGCValue extends GCValue

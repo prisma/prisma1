@@ -25,6 +25,7 @@ import slick.jdbc.{PositionedParameters, PostgresProfile, SQLActionBuilder}
 import slick.sql.SqlStreamingAction
 
 import scala.collection.JavaConverters._
+import scala.collection.immutable
 import scala.concurrent.ExecutionContext
 
 case class PostgresApiDatabaseMutationBuilder(schemaName: String) {
@@ -832,9 +833,11 @@ case class PostgresApiDatabaseMutationBuilder(schemaName: String) {
 
   def idField(model: Model)                                        = field(name(schemaName, model.dbName, model.dbNameOfIdField_!))
   def modelTable(model: Model)                                     = table(name(schemaName, model.dbName))
-  def modelColumn(model: Model, column: String)                    = field(name(schemaName, model.dbName, column))
   def relationTable(relation: Relation)                            = table(name(schemaName, relation.relationTableName))
+  def scalarListTable(field: ScalarField)                          = table(name(schemaName, field.model.dbName + "_" + field.dbName))
+  def modelColumn(model: Model, column: String)                    = field(name(schemaName, model.dbName, column))
   def relationColumn(relation: Relation, side: RelationSide.Value) = field(name(schemaName, relation.relationTableName, relation.columnForRelationSide(side)))
+  def scalarListColumn(scalarField: ScalarField, column: String)   = field(name(schemaName, scalarField.model.dbName + "_" + scalarField.dbName, column))
 
   object ::> { def unapply[A](l: List[A]) = Some((l.init, l.last)) }
 
@@ -1126,7 +1129,7 @@ case class PostgresApiDatabaseMutationBuilder(schemaName: String) {
   }
 
   def createRelationRowsImport(mutaction: CreateRelationRowsImport): SimpleDBIO[Vector[String]] = {
-    val argsWithIndex: Seq[((String, String), Int)] = mutaction.args.zipWithIndex
+    val argsWithIndex: Seq[((IdGCValue, IdGCValue), Int)] = mutaction.args.zipWithIndex
 
     SimpleDBIO[Vector[String]] { x =>
       val res = try {
@@ -1134,8 +1137,8 @@ case class PostgresApiDatabaseMutationBuilder(schemaName: String) {
         val relationInsert: PreparedStatement = x.connection.prepareStatement(query)
         mutaction.args.foreach { arg =>
           relationInsert.setString(1, Cuid.createCuid())
-          relationInsert.setString(2, arg._1)
-          relationInsert.setString(3, arg._2)
+          relationInsert.setGcValue(2, arg._1)
+          relationInsert.setGcValue(3, arg._2)
           relationInsert.addBatch()
         }
         relationInsert.executeBatch()
@@ -1161,59 +1164,78 @@ case class PostgresApiDatabaseMutationBuilder(schemaName: String) {
     }
   }
 
-  def pushScalarListsImport(mutaction: PushScalarListsImport) = {
-    val tableName = mutaction.tableName
-    val nodeId    = mutaction.id
+  def pushScalarListsImport(mutactionArg: PushScalarListsImport) = {
+    val field = mutactionArg.field
 
-    val idQuery =
-      sql"""Select "case" from (
-            Select max("position"),
-            CASE WHEN max("position") IS NULL THEN 1000
-            ELSE max("position") +1000
-            END
-            FROM "#$schemaName"."#$tableName"
-            WHERE "nodeId" = $nodeId
-            ) as "ALIAS"
-      """.as[Int]
-
-    def pushQuery(baseLine: Int) = SimpleDBIO[Vector[String]] { x =>
-      val argsWithIndex = mutaction.args.values.zipWithIndex
-      val rowResult: Vector[String] = try {
-        val query                         = s"""insert into "$schemaName"."$tableName" ("nodeId", "position", "value") values (?, $baseLine + ? , ?)"""
-        val insertRows: PreparedStatement = x.connection.prepareStatement(query)
-
-        argsWithIndex.foreach { argWithIndex =>
-          insertRows.setString(1, nodeId)
-          insertRows.setInt(2, argWithIndex._2 * 1000)
-          insertRows.setGcValue(3, argWithIndex._1)
-          insertRows.addBatch()
-        }
-        insertRows.executeBatch()
-
-        Vector.empty
-      } catch {
-        case e: java.sql.BatchUpdateException =>
-          e.getUpdateCounts.zipWithIndex
-            .filter(element => element._1 == Statement.EXECUTE_FAILED)
-            .map { failed =>
-              val failedValue: GCValue = argsWithIndex.find(_._2 == failed._2).get._1
-              s"Failure inserting into listTable $tableName for the id $nodeId for value ${failedValue.value}. Cause: ${removeConnectionInfoFromCause(e.getCause.toString)}"
-            }
-            .toVector
-
-        case e: Exception => Vector(e.getMessage)
+    val mutaction = {
+      val x: Map[IdGCValue, ListGCValue] = mutactionArg.valueTuples.groupBy(_._1).mapValues { values =>
+        val listGcValues  = values.map(_._2)
+        val combinedValue = listGcValues.foldLeft(ListGCValue(Vector.empty))(_ ++ _)
+        combinedValue
       }
+      mutactionArg.copy(valueTuples = x.toVector)
+    }
 
-      if (rowResult.nonEmpty) throw new Exception(rowResult.mkString("-@-"))
-      rowResult
+    val positions: DBIO[Map[IdGCValue, Int]] = SimpleDBIO[Map[IdGCValue, Int]] { ctx =>
+      val nodeIdField  = scalarListColumn(field, "nodeId")
+      val placeholders = mutaction.valueTuples.map(_ => placeHolder)
+
+      val query = sql
+        .select(nodeIdField, max(scalarListColumn(field, "position")))
+        .from(scalarListTable(field))
+        .groupBy(nodeIdField)
+        .having(nodeIdField.in(placeholders: _*))
+
+      val ps = ctx.connection.prepareStatement(query.getSQL)
+
+      val pp = new PositionedParameters(ps)
+
+      mutaction.valueTuples.map(_._1).foreach(pp.setGcValue)
+      val rs = ps.executeQuery()
+      val reads = ReadsResultSet { rs =>
+        val nodeId = rs.getId(field.model, "nodeId")
+        val start  = rs.getInt("max")
+        (nodeId, start)
+      }
+      rs.as(reads).toMap
+    }
+
+    // id, listvalue, start
+    def push1(values: Iterable[(IdGCValue, ListGCValue, Int)]): Iterable[(IdGCValue, GCValue, Int)] = values.flatMap {
+      case (id, list, start) =>
+        list.values.zipWithIndex.map { case (value, index) => (id, value, start + (index * 1000)) }
+    }
+
+    // id, value, positions
+    def push2(values: Iterable[(IdGCValue, GCValue, Int)]) = SimpleDBIO[Unit] { ctx =>
+      val query = sql
+        .insertInto(scalarListTable(field))
+        .columns(scalarListColumn(field, "nodeId"), scalarListColumn(field, "value"), scalarListColumn(field, "position"))
+        .values(placeHolder, placeHolder, placeHolder)
+
+      val ps: PreparedStatement = ctx.connection.prepareStatement(query.getSQL)
+      // do it
+      values.foreach { value =>
+        ps.setGcValue(1, value._1)
+        ps.setGcValue(2, value._2)
+        ps.setInt(3, value._3)
+        ps.addBatch()
+      }
+      ps.executeBatch()
     }
 
     import scala.concurrent.ExecutionContext.Implicits.global
 
     for {
-      nodeIds <- idQuery
-      action  <- pushQuery(nodeIds.head)
-    } yield action
+      positions <- positions
+      x = mutaction.valueTuples.map {
+        case (id, listValue) =>
+          val start = positions.get(id).getOrElse(0)
+          (id, listValue, start)
+      }
+      y = push1(x)
+      _ <- push2(y)
+    } yield Vector.empty
   }
 
   private val dbioUnit = DBIO.successful(())

@@ -1,9 +1,11 @@
 package com.prisma.api.import_export
 
 import com.prisma.api.connector.{DataResolver, PrismaArgs}
-import com.prisma.gc_values.{ListGCValue, RootGCValue}
-import com.prisma.shared.models.{Model, Project, Relation}
+import com.prisma.gc_values._
+import com.prisma.shared.models.{Model, Project, Relation, ScalarField}
 import play.api.libs.json._
+
+import scala.util.Success
 
 package object ImportExport {
 
@@ -16,15 +18,15 @@ package object ImportExport {
 
   // IMPORT
   case class ImportBundle(valueType: String, values: JsArray)
-  case class ImportIdentifier(typeName: String, id: String)
+  case class ImportIdentifier(typeName: String, id: IdGCValue)
   case class ImportRelationSide(identifier: ImportIdentifier, fieldName: Option[String])
-  case class ImportNode(id: String, model: Model, values: RootGCValue)
+  case class ImportNode(id: IdGCValue, model: Model, values: RootGCValue)
   case class ImportRelation(left: ImportRelationSide, right: ImportRelationSide)
-  case class ImportList(identifier: ImportIdentifier, tableName: String, values: ListGCValue)
+  case class ImportList(identifier: ImportIdentifier, field: ScalarField, values: ListGCValue)
 
   // TEMP STRUCTURES
   case class CreateDataItemImport(project: Project, model: Model, args: PrismaArgs)
-  case class CreateRelationRow(project: Project, relation: Relation, a: String, b: String)
+  case class CreateRelationRow(project: Project, relation: Relation, a: IdGCValue, b: IdGCValue)
   case class PushScalarListImport(project: Project, tableName: String, id: String, values: Vector[Any])
 
   sealed trait ExportInfo {
@@ -87,6 +89,32 @@ package object ImportExport {
       override def writes(o: Cursor): JsValue = {
         val dummyValue = if (o.table == -1 && o.row == -1) -1 else 0
         Json.obj("table" -> o.table, "row" -> o.row, "field" -> dummyValue, "array" -> dummyValue)
+      }
+    }
+    implicit val idWrites = new Writes[IdGCValue] {
+      override def writes(o: IdGCValue): JsValue = o match {
+        case id: UuidGCValue => JsString(id.value.toString)
+        case id: CuidGCValue => JsString(id.value)
+        case id: IntGCValue  => JsNumber(id.value)
+      }
+    }
+    implicit val idReads = new Reads[IdGCValue] {
+      override def reads(json: JsValue): JsResult[IdGCValue] = {
+
+        val result = json match {
+          case id: JsNumber =>
+            IntGCValue(id.value.toInt)
+
+          case id: JsString =>
+            UuidGCValue.parse(id.value) match {
+              case Success(id) => id
+              case _           => CuidGCValue(id.value)
+            }
+
+          case x => sys.error("An id should always be of type JsNumber or JsString. " + x)
+        }
+
+        JsSuccess(result)
       }
     }
     implicit val cursorFormat       = Format(cursorReads, cursorWrites)

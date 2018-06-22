@@ -1,6 +1,6 @@
 package com.prisma.api.connector
 
-import com.prisma.gc_values.ListGCValue
+import com.prisma.gc_values.{IdGCValue, ListGCValue}
 import com.prisma.shared.models.IdType.Id
 import com.prisma.shared.models.ModelMutationType.ModelMutationType
 import com.prisma.shared.models._
@@ -129,9 +129,13 @@ case class NestedDisconnectRelation(project: Project, relationField: RelationFie
     with FinalMutaction
 
 // IMPORT
-case class PushScalarListsImport(project: Project, tableName: String, id: String, args: ListGCValue)      extends DatabaseMutaction with FinalMutaction
-case class CreateRelationRowsImport(project: Project, relation: Relation, args: Vector[(String, String)]) extends DatabaseMutaction with FinalMutaction
-case class CreateDataItemsImport(project: Project, model: Model, args: Vector[PrismaArgs])                extends DatabaseMutaction with FinalMutaction
+case class PushScalarListsImport(project: Project, field: ScalarField, valueTuples: Vector[(IdGCValue, ListGCValue)])
+    extends TopLevelDatabaseMutaction
+    with FinalMutaction
+case class CreateRelationRowsImport(project: Project, relation: Relation, args: Vector[(IdGCValue, IdGCValue)])
+    extends TopLevelDatabaseMutaction
+    with FinalMutaction
+case class CreateDataItemsImport(project: Project, model: Model, args: Vector[PrismaArgs]) extends TopLevelDatabaseMutaction with FinalMutaction
 
 // OBSOLETE ??
 case class AddDataItemToManyRelationByPath(project: Project, path: Path)

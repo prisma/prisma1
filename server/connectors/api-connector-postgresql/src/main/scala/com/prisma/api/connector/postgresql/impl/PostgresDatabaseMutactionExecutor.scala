@@ -52,22 +52,6 @@ case class PostgresDatabaseMutactionExecutor(clientDb: Database, createRelayIds:
     }
   }
 
-  override def execute(mutactions: Vector[DatabaseMutaction], runTransactionally: Boolean): Future[Vector[DatabaseMutactionResult]] = {
-//    val interpreters        = mutactions.map(interpreterFor)
-//    val combinedErrorMapper = interpreters.map(_.errorMapper).reduceLeft(_ orElse _)
-//    val mutationBuilder     = PostgresApiDatabaseMutationBuilder(schemaName = mutactions.head.project.id, schema = mutactions.head.project.schema)
-//
-//    val singleAction = runTransactionally match {
-//      case true  => DBIO.sequence(interpreters.map(_.newAction(mutationBuilder))).transactionally
-//      case false => DBIO.sequence(interpreters.map(_.newAction(mutationBuilder)))
-//    }
-//
-//    clientDb
-//      .run(singleAction)
-//      .recover { case error => throw combinedErrorMapper.lift(error).getOrElse(error) }
-    ???
-  }
-
   def interpreterFor(mutaction: DatabaseMutaction): DatabaseMutactionInterpreter = mutaction match {
     case m: AddDataItemToManyRelationByPath   => AddDataItemToManyRelationByPathInterpreter(m)
     case m: CascadingDeleteRelationMutactions => CascadingDeleteRelationMutactionsInterpreter(m)
