@@ -14,7 +14,7 @@ package object ImportExport {
   case class Cursor(table: Int, row: Int)                    //{"table":INT,"row":INT}
   case class ResultFormat(out: JsonBundle, cursor: Cursor, isFull: Boolean)
   case class JsonBundle(jsonElements: Vector[JsValue], size: Int)
-  case class ExportRelationSide(_typeName: String, id: String, fieldName: Option[String])
+  case class ExportRelationSide(_typeName: String, id: IdGCValue, fieldName: Option[String])
 
   // IMPORT
   case class ImportBundle(valueType: String, values: JsArray)
@@ -91,32 +91,32 @@ package object ImportExport {
         Json.obj("table" -> o.table, "row" -> o.row, "field" -> dummyValue, "array" -> dummyValue)
       }
     }
-    implicit val idWrites = new Writes[IdGCValue] {
+    val idWrites = new Writes[IdGCValue] {
       override def writes(o: IdGCValue): JsValue = o match {
         case id: UuidGCValue => JsString(id.value.toString)
         case id: CuidGCValue => JsString(id.value)
         case id: IntGCValue  => JsNumber(id.value)
       }
     }
-    implicit val idReads = new Reads[IdGCValue] {
+    val idReads = new Reads[IdGCValue] {
       override def reads(json: JsValue): JsResult[IdGCValue] = {
-
         val result = json match {
-          case id: JsNumber =>
-            IntGCValue(id.value.toInt)
-
-          case id: JsString =>
-            UuidGCValue.parse(id.value) match {
-              case Success(id) => id
-              case _           => CuidGCValue(id.value)
-            }
-
-          case x => sys.error("An id should always be of type JsNumber or JsString. " + x)
+          case id: JsNumber => IntGCValue(id.value.toInt)
+          case id: JsString => stringToIdGcValue(id.value)
+          case x            => sys.error("An id should always be of type JsNumber or JsString. " + x)
         }
-
         JsSuccess(result)
       }
+
+      private def stringToIdGcValue(str: String): IdGCValue = {
+        UuidGCValue.parse(str) match {
+          case Success(id) => id
+          case _           => CuidGCValue(str)
+        }
+      }
     }
+
+    implicit val idFormat           = Format(idReads, idWrites)
     implicit val cursorFormat       = Format(cursorReads, cursorWrites)
     implicit val jsonBundle         = Json.format[JsonBundle]
     implicit val importBundle       = Json.format[ImportBundle]

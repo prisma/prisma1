@@ -102,23 +102,24 @@ class BulkExport(project: Project)(implicit apiDependencies: ApiDependencies) {
   }
 
   def dataItemToExportList(dataItems: Vector[ScalarListValues], info: ListInfo): Vector[JsValue] = {
-    import GCValueJsonFormatter.GcValueWrites
     dataItems.map { listValues =>
       // the old implementation directly passed the JSON as String instead of directly embedding it as JSON. Reproducing this behaviour here.
       val blackMagic = ListGCValue(listValues.value.values.map {
         case x: JsonGCValue => StringGCValue(x.value.toString)
         case x              => x
       })
-      Json.obj("_typeName" -> info.currentModel, "id" -> listValues.nodeId, info.currentField -> blackMagic)
+      Json.obj(
+        "_typeName"       -> info.currentModel,
+        "id"              -> Json.toJson(listValues.nodeId),
+        info.currentField -> Json.toJson(blackMagic)(GCValueJsonFormatter.GcValueWrites)
+      )
     }
   }
 
   private def dataItemToExportRelation(item: RelationNode, info: RelationInfo): JsValue = {
-    // fixme: does this mean that we have to change the import/export protocol?
-//    val leftSide  = ExportRelationSide(info.current.modelBName, item.b.value, info.current.fieldBName)
-//    val rightSide = ExportRelationSide(info.current.modelAName, item.a.value, info.current.fieldAName)
-//    JsArray(Seq(Json.toJson(leftSide), Json.toJson(rightSide)))
-    ???
+    val leftSide  = ExportRelationSide(info.current.modelBName, item.b, info.current.fieldBName)
+    val rightSide = ExportRelationSide(info.current.modelAName, item.a, info.current.fieldAName)
+    JsArray(Seq(Json.toJson(leftSide), Json.toJson(rightSide)))
   }
 
   private def serializePage(in: JsonBundle, page: PrismaNodesPage, info: ExportInfo, startOnPage: Int = 0, amount: Int = 1000): ResultFormat = {

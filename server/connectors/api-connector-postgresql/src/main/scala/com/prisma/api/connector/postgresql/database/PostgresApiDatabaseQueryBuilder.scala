@@ -54,7 +54,10 @@ case class PostgresApiDatabaseQueryBuilder(
   }
 
   private def readRelation(relation: Relation): ReadsResultSet[RelationNode] = ReadsResultSet { resultSet =>
-    RelationNode(a = resultSet.getAsID(relation.modelAField), b = resultSet.getAsID(relation.modelBField))
+    RelationNode(
+      a = resultSet.getAsID("A", relation.modelA.idField_!.typeIdentifier),
+      b = resultSet.getAsID("B", relation.modelB.idField_!.typeIdentifier)
+    )
   }
 
   def selectAllFromTable(
