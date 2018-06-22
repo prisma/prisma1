@@ -7,7 +7,7 @@ import com.prisma.api.connector._
 import com.prisma.api.connector.postgresql.database.JdbcExtensions._
 import com.prisma.api.connector.postgresql.database.JooqExtensions._
 import com.prisma.api.connector.postgresql.database.PostgresSlickExtensions._
-import com.prisma.api.schema.APIErrors.{NodesNotConnectedError, RequiredRelationWouldBeViolated}
+import com.prisma.api.schema.APIErrors.{NodesNotConnectedError, RelationIsRequired, RequiredRelationWouldBeViolated}
 import com.prisma.api.schema.UserFacingError
 import com.prisma.gc_values.{ListGCValue, NullGCValue, _}
 import com.prisma.shared.models.TypeIdentifier.IdTypeIdentifier
@@ -976,7 +976,9 @@ case class PostgresApiDatabaseMutationBuilder(schemaName: String) extends Builde
     )
     action.map { result =>
       if (result.nonEmpty) {
+        // fixme: decide which error to use
         throw RequiredRelationWouldBeViolated(relation)
+//        throw RelationIsRequired(field.name, field.model.name)
       }
     }
   }
