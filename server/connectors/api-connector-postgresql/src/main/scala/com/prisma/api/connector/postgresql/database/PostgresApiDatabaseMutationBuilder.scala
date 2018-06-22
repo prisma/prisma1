@@ -42,6 +42,27 @@ trait BuilderBase {
   def relationColumn(relation: Relation, side: RelationSide.Value) = field(name(schemaName, relation.relationTableName, relation.columnForRelationSide(side)))
   def scalarListColumn(scalarField: ScalarField, column: String)   = field(name(schemaName, scalarListTableName(scalarField), column))
 
+  def queryToDBIO[T](query: JooqQuery)(setParams: PositionedParameters => Unit, readResult: ResultSet => T): DBIO[T] = {
+    SimpleDBIO { ctx =>
+      val ps = ctx.connection.prepareStatement(query.getSQL)
+      val pp = new PositionedParameters(ps)
+      setParams(pp)
+
+      val rs = ps.executeQuery()
+      readResult(rs)
+    }
+  }
+
+  def deleteToDBIO(query: Delete[Record])(setParams: PositionedParameters => Unit): DBIO[Unit] = {
+    SimpleDBIO { ctx =>
+      val ps = ctx.connection.prepareStatement(query.getSQL)
+      val pp = new PositionedParameters(ps)
+      setParams(pp)
+
+      ps.execute()
+    }
+  }
+
   private def scalarListTableName(field: ScalarField) = field.model.dbName + "_" + field.dbName
 }
 
@@ -825,27 +846,6 @@ case class PostgresApiDatabaseMutationBuilder(schemaName: String) extends Builde
         }
       }
     )
-  }
-
-  def queryToDBIO[T](query: JooqQuery)(setParams: PositionedParameters => Unit, readResult: ResultSet => T): DBIO[T] = {
-    SimpleDBIO { ctx =>
-      val ps = ctx.connection.prepareStatement(query.getSQL)
-      val pp = new PositionedParameters(ps)
-      setParams(pp)
-
-      val rs = ps.executeQuery()
-      readResult(rs)
-    }
-  }
-
-  def deleteToDBIO(query: Delete[Record])(setParams: PositionedParameters => Unit): DBIO[Unit] = {
-    SimpleDBIO { ctx =>
-      val ps = ctx.connection.prepareStatement(query.getSQL)
-      val pp = new PositionedParameters(ps)
-      setParams(pp)
-
-      ps.execute()
-    }
   }
 
   object ::> { def unapply[A](l: List[A]) = Some((l.init, l.last)) }

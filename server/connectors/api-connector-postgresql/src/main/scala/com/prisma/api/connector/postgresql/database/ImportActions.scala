@@ -5,15 +5,16 @@ import java.sql.{PreparedStatement, Statement}
 import com.prisma.api.connector.postgresql.database.JooqQueryBuilders.placeHolder
 import com.prisma.api.connector.{CreateDataItemsImport, CreateRelationRowsImport, PushScalarListsImport}
 import com.prisma.gc_values.{GCValue, IdGCValue, ListGCValue, NullGCValue}
-import com.prisma.slick.NewJdbcExtensions.ReadsResultSet
+import com.prisma.shared.models.ScalarField
 import cool.graph.cuid.Cuid
 import org.jooq.impl.DSL.max
-import slick.jdbc.PositionedParameters
+
+import scala.concurrent.ExecutionContext
 
 trait ImportActions extends BuilderBase {
-  import com.prisma.slick.NewJdbcExtensions._
   import com.prisma.api.connector.postgresql.database.JdbcExtensions._
   import com.prisma.api.connector.postgresql.database.PostgresSlickExtensions._
+  import com.prisma.slick.NewJdbcExtensions._
   import slick.jdbc.PostgresProfile.api._
 
   def createDataItemsImport(mutaction: CreateDataItemsImport): SimpleDBIO[Vector[String]] = {
@@ -133,9 +134,11 @@ trait ImportActions extends BuilderBase {
     }
   }
 
-  def pushScalarListsImport(mutactionArg: PushScalarListsImport) = {
-    val field = mutactionArg.field
+  def pushScalarListsImport(mutactionArg: PushScalarListsImport)(implicit ec: ExecutionContext) = {
+    val field   = mutactionArg.field
+    val nodeIds = mutactionArg.valueTuples.map(_._1)
 
+    // fixme: this should happen at the business logic layer
     val mutaction = {
       val x: Map[IdGCValue, ListGCValue] = mutactionArg.valueTuples.groupBy(_._1).mapValues { values =>
         val listGcValues  = values.map(_._2)
@@ -145,65 +148,63 @@ trait ImportActions extends BuilderBase {
       mutactionArg.copy(valueTuples = x.toVector)
     }
 
-    val positions: DBIO[Map[IdGCValue, Int]] = SimpleDBIO[Map[IdGCValue, Int]] { ctx =>
-      val nodeIdField  = scalarListColumn(field, "nodeId")
-      val placeholders = mutaction.valueTuples.map(_ => placeHolder)
-
-      val query = sql
-        .select(nodeIdField, max(scalarListColumn(field, "position")))
-        .from(scalarListTable(field))
-        .groupBy(nodeIdField)
-        .having(nodeIdField.in(placeholders: _*))
-
-      val ps = ctx.connection.prepareStatement(query.getSQL)
-
-      val pp = new PositionedParameters(ps)
-
-      mutaction.valueTuples.map(_._1).foreach(pp.setGcValue)
-      val rs = ps.executeQuery()
-      val reads = ReadsResultSet { rs =>
-        val nodeId = rs.getId(field.model, "nodeId")
-        val start  = rs.getInt("max")
-        (nodeId, start)
-      }
-      rs.as(reads).toMap
-    }
-
-    // id, listvalue, start
-    def push1(values: Iterable[(IdGCValue, ListGCValue, Int)]): Iterable[(IdGCValue, GCValue, Int)] = values.flatMap {
+    def flattenListValueAndCalculatePosition(values: Iterable[(IdGCValue, ListGCValue, Int)]): Iterable[(IdGCValue, GCValue, Int)] = values.flatMap {
       case (id, list, start) =>
         list.values.zipWithIndex.map { case (value, index) => (id, value, start + (index * 1000)) }
     }
 
-    // id, value, positions
-    def push2(values: Iterable[(IdGCValue, GCValue, Int)]) = SimpleDBIO[Unit] { ctx =>
-      val query = sql
-        .insertInto(scalarListTable(field))
-        .columns(scalarListColumn(field, "nodeId"), scalarListColumn(field, "value"), scalarListColumn(field, "position"))
-        .values(placeHolder, placeHolder, placeHolder)
-
-      val ps: PreparedStatement = ctx.connection.prepareStatement(query.getSQL)
-      // do it
-      values.foreach { value =>
-        ps.setGcValue(1, value._1)
-        ps.setGcValue(2, value._2)
-        ps.setInt(3, value._3)
-        ps.addBatch()
+    for {
+      startPositions <- startPositions(field, nodeIds)
+      // begin massage
+      listValuesWithStartPosition: Iterable[(IdGCValue, ListGCValue, Int)] = {
+        mutaction.valueTuples.map {
+          case (id, listValue) => (id, listValue, startPositions.getOrElse(id, 0))
+        }
       }
-      ps.executeBatch()
+      individualValuesWithPosition: Iterable[(IdGCValue, GCValue, Int)] = {
+        flattenListValueAndCalculatePosition(listValuesWithStartPosition)
+      }
+      // end massage
+      _ <- importScalarListValues(field, individualValuesWithPosition)
+    } yield Vector.empty
+  }
+
+  private def startPositions(field: ScalarField, nodeIds: Vector[IdGCValue]): DBIO[Map[IdGCValue, Int]] = {
+    val nodeIdField  = scalarListColumn(field, "nodeId")
+    val placeholders = nodeIds.map(_ => placeHolder)
+
+    val query = sql
+      .select(nodeIdField, max(scalarListColumn(field, "position")))
+      .from(scalarListTable(field))
+      .groupBy(nodeIdField)
+      .having(nodeIdField.in(placeholders: _*))
+
+    val reads = ReadsResultSet { rs =>
+      val nodeId = rs.getId(field.model, "nodeId")
+      val start  = rs.getInt("max")
+      (nodeId, start)
     }
 
-    import scala.concurrent.ExecutionContext.Implicits.global
+    queryToDBIO(query)(
+      setParams = pp => nodeIds.foreach(pp.setGcValue),
+      readResult = rs => rs.as(reads).toMap
+    )
+  }
 
-    for {
-      positions <- positions
-      x = mutaction.valueTuples.map {
-        case (id, listValue) =>
-          val start = positions.get(id).getOrElse(0)
-          (id, listValue, start)
-      }
-      y = push1(x)
-      _ <- push2(y)
-    } yield Vector.empty
+  private def importScalarListValues(field: ScalarField, values: Iterable[(IdGCValue, GCValue, Int)]): DBIO[Unit] = SimpleDBIO { ctx =>
+    val query = sql
+      .insertInto(scalarListTable(field))
+      .columns(scalarListColumn(field, "nodeId"), scalarListColumn(field, "value"), scalarListColumn(field, "position"))
+      .values(placeHolder, placeHolder, placeHolder)
+
+    val ps: PreparedStatement = ctx.connection.prepareStatement(query.getSQL)
+    // do it
+    values.foreach { value =>
+      ps.setGcValue(1, value._1)
+      ps.setGcValue(2, value._2)
+      ps.setInt(3, value._3)
+      ps.addBatch()
+    }
+    ps.executeBatch()
   }
 }

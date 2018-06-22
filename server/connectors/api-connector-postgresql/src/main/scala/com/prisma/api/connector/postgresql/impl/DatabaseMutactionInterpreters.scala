@@ -554,6 +554,6 @@ case class CreateRelationRowsImportInterpreter(mutaction: CreateRelationRowsImpo
   def action(mutationBuilder: PostgresApiDatabaseMutationBuilder) = mutationBuilder.createRelationRowsImport(mutaction)
 }
 
-case class PushScalarListsImportInterpreter(mutaction: PushScalarListsImport) extends DatabaseMutactionInterpreter {
+case class PushScalarListsImportInterpreter(mutaction: PushScalarListsImport)(implicit ec: ExecutionContext) extends DatabaseMutactionInterpreter {
   def action(mutationBuilder: PostgresApiDatabaseMutationBuilder) = mutationBuilder.pushScalarListsImport(mutaction)
 }
