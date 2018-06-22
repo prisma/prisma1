@@ -21,6 +21,10 @@ export class PostgresConnector {
     }, 3000)
   }
 
+  disconnect() {
+    return this.client.end()
+  }
+
   async queryRelations(schemaName: string) {
     const res = await this.client.query(
       `

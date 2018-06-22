@@ -39,6 +39,7 @@ export default class StreamOutput {
     }
     if (this.out.mock) {
       this.output += msg
+      this.stream.write(msg)
     } else {
       this.stream.write(msg)
     }

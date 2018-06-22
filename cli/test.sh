@@ -14,3 +14,5 @@ yarn test
 cd ../prisma-db-introspection
 yarn build
 yarn test
+cd ../prisma-test
+yarn test

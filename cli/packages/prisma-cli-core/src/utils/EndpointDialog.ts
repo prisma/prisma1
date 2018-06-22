@@ -295,6 +295,8 @@ export class EndpointDialog {
         } else {
           this.out.action.stop(prettyTime(Date.now() - before))
         }
+        introspector.disconnect()
+
         dockerComposeYml += this.printDatabaseConfig(credentials)
         cluster = new Cluster(this.out, 'custom', 'http://localhost:4466')
         break
