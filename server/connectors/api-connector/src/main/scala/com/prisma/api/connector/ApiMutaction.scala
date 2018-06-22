@@ -129,7 +129,7 @@ case class NestedDisconnectRelation(project: Project, relationField: RelationFie
     with FinalMutaction
 
 // IMPORT
-case class PushScalarListsImport(project: Project, field: ScalarField, valueTuples: Vector[(IdGCValue, ListGCValue)])
+case class PushScalarListsImport(project: Project, field: ScalarField, valueTuples: Map[IdGCValue, ListGCValue])
     extends TopLevelDatabaseMutaction
     with FinalMutaction
 case class CreateRelationRowsImport(project: Project, relation: Relation, args: Vector[(IdGCValue, IdGCValue)])

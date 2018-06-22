@@ -9,6 +9,7 @@ import com.prisma.shared.models.ScalarField
 import cool.graph.cuid.Cuid
 import org.jooq.impl.DSL.max
 
+import scala.collection.immutable
 import scala.concurrent.ExecutionContext
 
 trait ImportActions extends BuilderBase {
@@ -134,42 +135,31 @@ trait ImportActions extends BuilderBase {
     }
   }
 
-  def pushScalarListsImport(mutactionArg: PushScalarListsImport)(implicit ec: ExecutionContext) = {
-    val field   = mutactionArg.field
-    val nodeIds = mutactionArg.valueTuples.map(_._1)
-
-    // fixme: this should happen at the business logic layer
-    val mutaction = {
-      val x: Map[IdGCValue, ListGCValue] = mutactionArg.valueTuples.groupBy(_._1).mapValues { values =>
-        val listGcValues  = values.map(_._2)
-        val combinedValue = listGcValues.foldLeft(ListGCValue(Vector.empty))(_ ++ _)
-        combinedValue
-      }
-      mutactionArg.copy(valueTuples = x.toVector)
-    }
-
-    def flattenListValueAndCalculatePosition(values: Iterable[(IdGCValue, ListGCValue, Int)]): Iterable[(IdGCValue, GCValue, Int)] = values.flatMap {
-      case (id, list, start) =>
-        list.values.zipWithIndex.map { case (value, index) => (id, value, start + (index * 1000)) }
-    }
+  def pushScalarListsImport(mutaction: PushScalarListsImport)(implicit ec: ExecutionContext) = {
+    val field   = mutaction.field
+    val nodeIds = mutaction.valueTuples.keys
 
     for {
-      startPositions <- startPositions(field, nodeIds)
+      startPositions <- startPositions(field, nodeIds.toSeq)
       // begin massage
+      listValues: Map[IdGCValue, ListGCValue] = mutaction.valueTuples
+
       listValuesWithStartPosition: Iterable[(IdGCValue, ListGCValue, Int)] = {
         mutaction.valueTuples.map {
           case (id, listValue) => (id, listValue, startPositions.getOrElse(id, 0))
         }
       }
-      individualValuesWithPosition: Iterable[(IdGCValue, GCValue, Int)] = {
-        flattenListValueAndCalculatePosition(listValuesWithStartPosition)
+
+      individualValuesWithPosition: Iterable[(IdGCValue, GCValue, Int)] = listValuesWithStartPosition.flatMap {
+        case (id, list, start) =>
+          list.values.zipWithIndex.map { case (value, index) => (id, value, start + (index * 1000)) }
       }
       // end massage
       _ <- importScalarListValues(field, individualValuesWithPosition)
     } yield Vector.empty
   }
 
-  private def startPositions(field: ScalarField, nodeIds: Vector[IdGCValue]): DBIO[Map[IdGCValue, Int]] = {
+  private def startPositions(field: ScalarField, nodeIds: Seq[IdGCValue]): DBIO[Map[IdGCValue, Int]] = {
     val nodeIdField  = scalarListColumn(field, "nodeId")
     val placeholders = nodeIds.map(_ => placeHolder)
 

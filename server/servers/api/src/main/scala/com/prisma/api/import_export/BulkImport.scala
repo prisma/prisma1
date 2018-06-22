@@ -5,7 +5,7 @@ import com.prisma.api.connector._
 import com.prisma.api.import_export.GCValueJsonFormatter.UnknownFieldException
 import com.prisma.api.import_export.ImportExport.MyJsonProtocol._
 import com.prisma.api.import_export.ImportExport._
-import com.prisma.gc_values.{CuidGCValue, IdGCValue, UuidGCValue}
+import com.prisma.gc_values.{CuidGCValue, IdGCValue, ListGCValue, UuidGCValue}
 import com.prisma.shared.models._
 import org.scalactic.{Bad, Good, Or}
 import play.api.libs.json._
@@ -122,13 +122,16 @@ class BulkImport(project: Project)(implicit apiDependencies: ApiDependencies) {
     groupedItems.map { case (relation, group) => CreateRelationRowsImport(project, relation, group.map(item => (item.a, item.b))) }.toVector
   }
 
-  private def generateImportListsDBActions(lists: Vector[ImportList]): Vector[PushScalarListsImport] =
+  private def generateImportListsDBActions(lists: Vector[ImportList]): Vector[PushScalarListsImport] = {
     lists
       .groupBy(_.field)
       .map {
         case (field: ScalarField, importLists: Vector[ImportList]) =>
-          val tuples = importLists.map(importList => (importList.identifier.id, importList.values))
-          PushScalarListsImport(project, field, tuples)
+          val emptyListValue                                             = ListGCValue(Vector.empty)
+          val listValuesGroupedById: Map[IdGCValue, Vector[ListGCValue]] = importLists.groupBy(_.identifier.id).mapValues(_.map(_.values))
+          val listValuesMerged: Map[IdGCValue, ListGCValue]              = listValuesGroupedById.mapValues(_.foldLeft(emptyListValue)(_ ++ _))
+          PushScalarListsImport(project, field, listValuesMerged)
       }
       .toVector
+  }
 }
