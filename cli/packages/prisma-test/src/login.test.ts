@@ -56,8 +56,7 @@ describe('login and project workflow', () => {
       STAGE_NAME,
       clusterToken,
     )
-    const { errors } = deployProjectPayload
-    expect(errors.length).toBe(0)
+    expect(deployProjectPayload).toMatchSnapshot()
   })
 
   test('delete project in EU', async () => {
@@ -119,8 +118,7 @@ describe('login and project workflow', () => {
       STAGE_NAME,
       clusterToken,
     )
-    const { errors } = deployProjectPayload
-    expect(errors.length).toBe(0)
+    expect(deployProjectPayload).toMatchSnapshot()
   })
 
   test('delete project in US', async () => {

@@ -39,3 +39,21 @@ Object {
   },
 }
 `;
+
+exports[`login and project workflow deploy project in EU 1`] = `
+Object {
+  "errors": Array [],
+  "migration": Object {
+    "revision": 2,
+  },
+}
+`;
+
+exports[`login and project workflow deploy project in US 1`] = `
+Object {
+  "errors": Array [],
+  "migration": Object {
+    "revision": 2,
+  },
+}
+`;
