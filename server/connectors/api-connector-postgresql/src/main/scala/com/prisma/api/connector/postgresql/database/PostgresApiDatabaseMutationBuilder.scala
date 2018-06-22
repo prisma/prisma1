@@ -1063,6 +1063,7 @@ case class PostgresApiDatabaseMutationBuilder(schemaName: String) {
         val itemInsert: PreparedStatement = jdbcActionContext.connection.prepareStatement(query)
         val currentTimeStamp              = currentTimeStampUTC
 
+        //Fixme have a helper for adding updatedAt / createdAt
         mutaction.args.foreach { arg =>
           val argsAsRoot = arg.raw.asRoot
           model.scalarNonListFields.zipWithIndex.foreach {
