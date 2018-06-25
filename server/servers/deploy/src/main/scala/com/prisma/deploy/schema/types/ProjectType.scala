@@ -11,7 +11,6 @@ object ProjectType {
     "Project",
     "This is a project",
     fields[SystemUserContext, models.Project](
-      Field("metricKey", StringType, resolve = ctx => ctx.value.id),
       Field("name", StringType, resolve = x => encoder.fromEncodedString(x.value.id).name),
       Field("stage", StringType, resolve = x => encoder.fromEncodedString(x.value.id).stage)
     )
