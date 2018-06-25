@@ -13,6 +13,7 @@ import scala.collection.immutable
 import scala.concurrent.ExecutionContext
 
 trait ImportActions extends BuilderBase {
+
   import com.prisma.api.connector.postgresql.database.JdbcExtensions._
   import com.prisma.api.connector.postgresql.database.PostgresSlickExtensions._
   import com.prisma.slick.NewJdbcExtensions._
@@ -166,8 +167,8 @@ trait ImportActions extends BuilderBase {
           list.values.zipWithIndex.map { case (value, index) => (id, value, start + (index * 1000)) }
       }
       // end massage
-      _ <- importScalarListValues(field, individualValuesWithPosition)
-    } yield Vector.empty
+      res <- importScalarListValues(field, individualValuesWithPosition)
+    } yield res
   }
 
   private def startPositions(field: ScalarField, nodeIds: Seq[IdGCValue]): DBIO[Map[IdGCValue, Int]] = {
@@ -192,20 +193,40 @@ trait ImportActions extends BuilderBase {
     )
   }
 
-  private def importScalarListValues(field: ScalarField, values: Iterable[(IdGCValue, GCValue, Int)]): DBIO[Unit] = SimpleDBIO { ctx =>
-    val query = sql
-      .insertInto(scalarListTable(field))
-      .columns(scalarListColumn(field, "nodeId"), scalarListColumn(field, "value"), scalarListColumn(field, "position"))
-      .values(placeHolder, placeHolder, placeHolder)
+  private def importScalarListValues(field: ScalarField, values: Iterable[(IdGCValue, GCValue, Int)]): DBIO[Vector[String]] = SimpleDBIO { ctx =>
+    val argsWithIndex: Iterable[((IdGCValue, GCValue, Int), Int)] = values.zipWithIndex
 
-    val ps: PreparedStatement = ctx.connection.prepareStatement(query.getSQL)
-    // do it
-    values.foreach { value =>
-      ps.setGcValue(1, value._1)
-      ps.setGcValue(2, value._2)
-      ps.setInt(3, value._3)
-      ps.addBatch()
+    val res = try {
+      val query = sql
+        .insertInto(scalarListTable(field))
+        .columns(scalarListColumn(field, "nodeId"), scalarListColumn(field, "value"), scalarListColumn(field, "position"))
+        .values(placeHolder, placeHolder, placeHolder)
+
+      val ps: PreparedStatement = ctx.connection.prepareStatement(query.getSQL)
+      // do it
+      values.foreach { value =>
+        ps.setGcValue(1, value._1)
+        ps.setGcValue(2, value._2)
+        ps.setInt(3, value._3)
+        ps.addBatch()
+      }
+      ps.executeBatch()
+      Vector.empty
+    } catch {
+      case e: java.sql.BatchUpdateException =>
+        e.getUpdateCounts.zipWithIndex
+          .filter(element => element._1 == Statement.EXECUTE_FAILED)
+          .map { failed =>
+            val failedValue = argsWithIndex.find(_._2 == failed._2).get._1._2
+            val failedId    = argsWithIndex.find(_._2 == failed._2).get._1._1
+
+            s"Failure inserting into listTable ${field.model.dbName}_${field.dbName} for the id ${failedId.value} for value ${failedValue.value}. Cause: ${removeConnectionInfoFromCause(
+              e.getCause.toString)}"
+          }
+          .toVector
+      case e: Exception => Vector(e.getMessage)
     }
-    ps.executeBatch()
+    if (res.nonEmpty) throw new Exception(res.mkString("-@-"))
+    res
   }
 }

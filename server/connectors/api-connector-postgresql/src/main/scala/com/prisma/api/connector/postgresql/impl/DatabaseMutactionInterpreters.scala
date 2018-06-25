@@ -510,13 +510,13 @@ case class NestedUpsertDataItemInterpreter(mutaction: NestedUpsertDataItem, exec
 //}
 
 case class CreateDataItemsImportInterpreter(mutaction: CreateDataItemsImport) extends DatabaseMutactionInterpreter {
-  def action(mutationBuilder: PostgresApiDatabaseMutationBuilder) = mutationBuilder.createDataItemsImport(mutaction)
+  def action(mutationBuilder: PostgresApiDatabaseMutationBuilder): DBIO[Vector[String]] = mutationBuilder.createDataItemsImport(mutaction)
 }
 
 case class CreateRelationRowsImportInterpreter(mutaction: CreateRelationRowsImport) extends DatabaseMutactionInterpreter {
-  def action(mutationBuilder: PostgresApiDatabaseMutationBuilder) = mutationBuilder.createRelationRowsImport(mutaction)
+  def action(mutationBuilder: PostgresApiDatabaseMutationBuilder): DBIO[Vector[String]] = mutationBuilder.createRelationRowsImport(mutaction)
 }
 
 case class PushScalarListsImportInterpreter(mutaction: PushScalarListsImport)(implicit ec: ExecutionContext) extends DatabaseMutactionInterpreter {
-  def action(mutationBuilder: PostgresApiDatabaseMutationBuilder) = mutationBuilder.pushScalarListsImport(mutaction)
+  def action(mutationBuilder: PostgresApiDatabaseMutationBuilder): DBIO[Vector[String]] = mutationBuilder.pushScalarListsImport(mutaction)
 }
