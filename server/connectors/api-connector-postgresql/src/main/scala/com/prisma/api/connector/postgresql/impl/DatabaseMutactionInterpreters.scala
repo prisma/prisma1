@@ -14,11 +14,6 @@ import slick.jdbc.PostgresProfile.api._
 
 import scala.concurrent.ExecutionContext
 
-case class AddDataItemToManyRelationByPathInterpreter(mutaction: AddDataItemToManyRelationByPath) extends DatabaseMutactionInterpreter {
-
-  def action(mutationBuilder: PostgresApiDatabaseMutationBuilder) = ??? //Fixme remove this alltogether
-}
-
 case class CreateDataItemInterpreter(mutaction: CreateDataItem, includeRelayRow: Boolean = true) extends DatabaseMutactionInterpreter {
   val model = mutaction.model
 
@@ -75,7 +70,7 @@ case class NestedCreateDataItemInterpreter(mutaction: NestedCreateDataItem, incl
     } else {
       for {
         createResult <- mutationBuilder.createDataItem(model, mutaction.nonListArgs)
-        _            <- mutationBuilder.createRelationRowByPath(mutaction.relationField, parentId, createResult.createdId)
+        _            <- mutationBuilder.createRelation(mutaction.relationField, parentId, createResult.createdId)
       } yield createResult
     }
   }
@@ -127,40 +122,6 @@ case class NestedCreateDataItemInterpreter(mutaction: NestedCreateDataItem, incl
       APIErrors.UniqueConstraintViolation(model.name, GetFieldFromSQLUniqueException.getFieldOption(model, e).get)
     case e: PSQLException if e.getSQLState == "23503" =>
       APIErrors.NodeDoesNotExist("")
-  }
-}
-
-case class CascadingDeleteRelationMutactionsInterpreter(mutaction: CascadingDeleteRelationMutactions) extends DatabaseMutactionInterpreter {
-  val path    = mutaction.path
-  val project = mutaction.project
-  val schema  = project.schema
-
-  val fieldsWhereThisModelIsRequired = project.schema.fieldsWhereThisModelIsRequired(path.lastModel)
-
-  val otherFieldsWhereThisModelIsRequired = path.lastEdge match {
-    case Some(edge) => fieldsWhereThisModelIsRequired.filter(f => f != edge.parentField)
-    case None       => fieldsWhereThisModelIsRequired
-  }
-
-  def action(mutationBuilder: PostgresApiDatabaseMutationBuilder) = {
-    val requiredCheck = otherFieldsWhereThisModelIsRequired.map(field => mutationBuilder.oldParentFailureTriggerByFieldLegacy(path, field, causeString(field)))
-    val deleteAction  = List(mutationBuilder.cascadingDeleteChildActions(path))
-    val allActions    = requiredCheck ++ deleteAction
-    DBIOAction.seq(allActions: _*)
-  }
-
-  override def errorMapper = {
-    case e: PSQLException if otherFailingRequiredRelationOnChild(e.getMessage).isDefined =>
-      throw RequiredRelationWouldBeViolated(otherFailingRequiredRelationOnChild(e.getMessage).get)
-  }
-
-  private def otherFailingRequiredRelationOnChild(cause: String): Option[Relation] =
-    otherFieldsWhereThisModelIsRequired.collectFirst { case f if cause.contains(causeString(f)) => f.relation }
-
-  private def causeString(field: RelationField) = path.lastEdge match {
-    case Some(edge: NodeEdge) =>
-      s"-OLDPARENTPATHFAILURETRIGGERBYFIELD@${field.relation.relationTableName}@${field.oppositeRelationSide}@${edge.childWhere.value}-"
-    case _ => s"-OLDPARENTPATHFAILURETRIGGERBYFIELD@${field.relation.relationTableName}@${field.oppositeRelationSide}-"
   }
 }
 
@@ -309,61 +270,6 @@ case class DeleteDataItemsInterpreter(mutaction: DeleteDataItems)(implicit ec: E
     val fieldsWhereThisModelIsRequired = mutaction.project.schema.fieldsWhereThisModelIsRequired(model)
     val actions                        = fieldsWhereThisModelIsRequired.map(field => mutationBuilder.oldParentFailureTriggerByFieldAndFilter(model, filter, field))
     DBIO.sequence(actions)
-  }
-}
-
-case class DeleteManyRelationChecksInterpreter(mutaction: DeleteManyRelationChecks) extends DatabaseMutactionInterpreter {
-  val project = mutaction.project
-  val model   = mutaction.model
-  val filter  = mutaction.whereFilter
-  val schema  = project.schema
-
-  val fieldsWhereThisModelIsRequired = project.schema.fieldsWhereThisModelIsRequired(model)
-
-  def action(mutationBuilder: PostgresApiDatabaseMutationBuilder) = {
-    val requiredChecks =
-      fieldsWhereThisModelIsRequired.map(field => mutationBuilder.oldParentFailureTriggerByFieldAndFilterLegacy(model, filter, field, causeString(field)))
-    DBIOAction.seq(requiredChecks: _*)
-  }
-
-  override def errorMapper = {
-    case e: PSQLException if otherFailingRequiredRelationOnChild(e.getMessage).isDefined =>
-      throw RequiredRelationWouldBeViolated(otherFailingRequiredRelationOnChild(e.getMessage).get)
-  }
-
-  private def otherFailingRequiredRelationOnChild(cause: String): Option[Relation] = fieldsWhereThisModelIsRequired.collectFirst {
-    case f if cause.contains(causeString(f)) => f.relation
-  }
-
-  private def causeString(field: RelationField) =
-    s"-OLDPARENTPATHFAILURETRIGGERBYFIELDANDFILTER@${field.relation.relationTableName}@${field.oppositeRelationSide}-"
-
-}
-
-case class DeleteRelationCheckInterpreter(mutaction: DeleteRelationCheck) extends DatabaseMutactionInterpreter {
-  val project = mutaction.project
-  val path    = mutaction.path
-  val schema  = project.schema
-
-  val fieldsWhereThisModelIsRequired = project.schema.fieldsWhereThisModelIsRequired(path.lastModel)
-
-  def action(mutationBuilder: PostgresApiDatabaseMutationBuilder) = {
-    val requiredCheck = fieldsWhereThisModelIsRequired.map(field => mutationBuilder.oldParentFailureTriggerByFieldLegacy(path, field, causeString(field)))
-    DBIOAction.seq(requiredCheck: _*)
-  }
-
-  override val errorMapper = {
-    case e: PSQLException if otherFailingRequiredRelationOnChild(e.getMessage).isDefined =>
-      throw RequiredRelationWouldBeViolated(otherFailingRequiredRelationOnChild(e.getMessage).get)
-  }
-
-  private def otherFailingRequiredRelationOnChild(cause: String): Option[Relation] =
-    fieldsWhereThisModelIsRequired.collectFirst { case f if cause.contains(causeString(f)) => f.relation }
-
-  private def causeString(field: RelationField) = path.lastEdge match {
-    case Some(edge: NodeEdge) =>
-      s"-OLDPARENTPATHFAILURETRIGGERBYFIELD@${field.relation.relationTableName}@${field.oppositeRelationSide}@${edge.childWhere.value}-"
-    case _ => s"-OLDPARENTPATHFAILURETRIGGERBYFIELD@${field.relation.relationTableName}@${field.oppositeRelationSide}-"
   }
 }
 
@@ -602,33 +508,6 @@ case class NestedUpsertDataItemInterpreter(mutaction: NestedUpsertDataItem, exec
 //  val updateErrors: Vector[PartialFunction[Throwable, UserFacingError]] = mutaction.updateMutactions.map(executor.interpreterFor).map(_.errorMapper)
 //  override val errorMapper                                              = (updateErrors ++ createErrors).foldLeft(upsertErrors)(_ orElse _)
 //}
-
-case class VerifyConnectionInterpreter(mutaction: VerifyConnection) extends DatabaseMutactionInterpreter {
-  val project = mutaction.project
-  val path    = mutaction.path
-  val schema  = project.schema
-
-  val causeString = path.lastEdge_! match {
-    case _: ModelEdge =>
-      s"CONNECTIONFAILURETRIGGERPATH@${path.lastRelation_!.relationTableName}@${path.columnForParentSideOfLastEdge}"
-    case edge: NodeEdge =>
-      s"CONNECTIONFAILURETRIGGERPATH@${path.lastRelation_!.relationTableName}@${path.columnForParentSideOfLastEdge}@${path.columnForChildSideOfLastEdge}@${edge.childWhere.value}}"
-  }
-
-  def action(mutationBuilder: PostgresApiDatabaseMutationBuilder) = mutationBuilder.connectionFailureTrigger(path, causeString)
-
-  override val errorMapper = { case e: PSQLException if e.getMessage.contains(causeString) => throw APIErrors.NodesNotConnectedErrorByPath(path) }
-}
-
-case class VerifyWhereInterpreter(mutaction: VerifyWhere) extends DatabaseMutactionInterpreter {
-  val project     = mutaction.project
-  val where       = mutaction.where
-  val causeString = s"WHEREFAILURETRIGGER@${where.model.name}@${where.field.name}@${where.value}"
-
-  def action(mutationBuilder: PostgresApiDatabaseMutationBuilder) = mutationBuilder.whereFailureTrigger(where, causeString)
-
-  override val errorMapper = { case e: PSQLException if e.getMessage.contains(causeString) => throw APIErrors.NodeNotFoundForWhereError(where) }
-}
 
 case class CreateDataItemsImportInterpreter(mutaction: CreateDataItemsImport) extends DatabaseMutactionInterpreter {
   def action(mutationBuilder: PostgresApiDatabaseMutationBuilder) = mutationBuilder.createDataItemsImport(mutaction)

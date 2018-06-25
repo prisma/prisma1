@@ -74,11 +74,11 @@ case class DeleteDataItems(project: Project, model: Model, whereFilter: Option[F
     extends DatabaseMutaction
     with TopLevelDatabaseMutaction
     with FinalMutaction
-case class ResetDataMutaction(project: Project, tableNames: Vector[String]) extends DatabaseMutaction with TopLevelDatabaseMutaction with FinalMutaction
 case class UpdateDataItems(project: Project, model: Model, whereFilter: Option[Filter], updateArgs: PrismaArgs, listArgs: Vector[(String, ListGCValue)])
     extends DatabaseMutaction
     with TopLevelDatabaseMutaction
     with FinalMutaction
+case class ResetDataMutaction(project: Project, tableNames: Vector[String]) extends DatabaseMutaction with TopLevelDatabaseMutaction with FinalMutaction
 
 // NESTED
 sealed trait NestedDatabaseMutaction extends DatabaseMutaction {
@@ -136,14 +136,6 @@ case class CreateRelationRowsImport(project: Project, relation: Relation, args: 
     extends TopLevelDatabaseMutaction
     with FinalMutaction
 case class CreateDataItemsImport(project: Project, model: Model, args: Vector[PrismaArgs]) extends TopLevelDatabaseMutaction with FinalMutaction
-
-// OBSOLETE ??
-case class AddDataItemToManyRelationByPath(project: Project, path: Path)
-case class VerifyConnection(project: Project, path: Path)
-case class VerifyWhere(project: Project, where: NodeSelector)
-case class CascadingDeleteRelationMutactions(project: Project, path: Path)
-case class DeleteManyRelationChecks(project: Project, model: Model, whereFilter: Option[Filter])
-case class DeleteRelationCheck(project: Project, path: Path)
 
 // SIDE EFFECT MUTACTIONS
 sealed trait SideEffectMutaction                                                                     extends ApiMutaction

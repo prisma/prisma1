@@ -106,7 +106,7 @@ case class NestedConnectRelationInterpreter(mutaction: NestedConnectRelation)(im
       id <- mutationBuilder.queryIdFromWhere(mutaction.where)
       _ <- id match {
             case None          => throw APIErrors.NodeNotFoundForWhereError(mutaction.where)
-            case Some(childId) => mutationBuilder.createRelationRowByPath(mutaction.relationField, parentId, childId)
+            case Some(childId) => mutationBuilder.createRelation(mutaction.relationField, parentId, childId)
           }
     } yield ()
     List(action)
