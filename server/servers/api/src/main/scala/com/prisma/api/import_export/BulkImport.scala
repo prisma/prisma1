@@ -52,6 +52,7 @@ class BulkImport(project: Project)(implicit apiDependencies: ApiDependencies) {
     val typeName = jsObject.value("_typeName").as[String]
     val model    = project.schema.getModelByName_!(typeName)
     val id       = parseIdGCValue(jsObject, model)
+    val idStr    = id.value.toString
 
     val newJsObject = JsObject(jsObject.fields.filter(_._1 != "_typeName"))
 
@@ -59,7 +60,7 @@ class BulkImport(project: Project)(implicit apiDependencies: ApiDependencies) {
       GCValueJsonFormatter.readModelAwareGcValue(model)(newJsObject).get
     } match {
       case Success(x)                        => Good(ImportNode(id, model, x))
-      case Failure(e: UnknownFieldException) => Bad(new Exception(s"The model ${model.name} with id $id has an unknown field '${e.field}' in field list."))
+      case Failure(e: UnknownFieldException) => Bad(new Exception(s"The model ${model.name} with id $idStr has an unknown field '${e.field}' in field list."))
       case Failure(e)                        => throw e
     }
   }
