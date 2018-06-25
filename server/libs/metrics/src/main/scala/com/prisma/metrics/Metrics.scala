@@ -18,9 +18,11 @@ trait Metric {
     import collection.JavaConverters._
     customTags
       .zip(customTagValues)
-      .map(tagAndValue => Tag.of(tagAndValue._1.name, tagAndValue._2))
+      .map(tagAndValue => Tag.of(tagAndValue._1.name, sanitizeValue(tagAndValue._2)))
       .asJava
   }
+
+  private def sanitizeValue(tagValue: String) = tagValue.replace('~', '-').replace('@', '-').replace('$', '-')
 }
 
 /**
