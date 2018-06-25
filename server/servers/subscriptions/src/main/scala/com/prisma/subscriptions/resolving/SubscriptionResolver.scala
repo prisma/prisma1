@@ -3,7 +3,7 @@ package com.prisma.subscriptions.resolving
 import java.util.concurrent.TimeUnit
 
 import com.prisma.api.connector.{PrismaArgs, PrismaNode}
-import com.prisma.gc_values.CuidGCValue
+import com.prisma.gc_values.{CuidGCValue, IdGCValue}
 import com.prisma.shared.models.ModelMutationType.ModelMutationType
 import com.prisma.shared.models.{Model, ModelMutationType, Project}
 import com.prisma.subscriptions.metrics.SubscriptionMetrics.handleDatabaseEventTimer
@@ -63,19 +63,19 @@ case class SubscriptionResolver(
 
   def handleDatabaseUpdateEvent(event: DatabaseUpdateEvent): Future[Option[JsValue]] = {
     val reallyCoolArgs: PrismaArgs = converter.toReallyCoolArgsFromJson(event.previousValues)
-    val previousValues             = PrismaNode(CuidGCValue(event.nodeId), reallyCoolArgs.raw.asRoot)
+    val previousValues             = PrismaNode(event.nodeId, reallyCoolArgs.raw.asRoot)
 
     executeQuery(event.nodeId, Some(previousValues), updatedFields = Some(event.changedFields.toList))
   }
 
   def handleDatabaseDeleteEvent(event: DatabaseDeleteEvent): Future[Option[JsValue]] = {
     val reallyCoolArgs: PrismaArgs = converter.toReallyCoolArgsFromJson(event.node)
-    val previousValues             = PrismaNode(CuidGCValue(event.nodeId), reallyCoolArgs.raw.asRoot)
+    val previousValues             = PrismaNode(event.nodeId, reallyCoolArgs.raw.asRoot)
 
     executeQuery(event.nodeId, Some(previousValues), updatedFields = None)
   }
 
-  def executeQuery(nodeId: String, previousValues: Option[PrismaNode], updatedFields: Option[List[String]]): Future[Option[JsValue]] = {
+  def executeQuery(nodeId: IdGCValue, previousValues: Option[PrismaNode], updatedFields: Option[List[String]]): Future[Option[JsValue]] = {
     SubscriptionExecutor.execute(
       project = project,
       model = model,

@@ -30,6 +30,12 @@ sealed trait FinalMutaction extends DatabaseMutaction {
   override def allMutactions = Vector.empty
 }
 
+sealed trait CreateNode extends FurtherNestedMutaction {
+  def model: Model
+  def nonListArgs: PrismaArgs
+  def listArgs: Vector[(String, ListGCValue)]
+}
+
 // TOP LEVEL - SINGLE
 case class CreateDataItem(
     project: Project,
@@ -38,7 +44,7 @@ case class CreateDataItem(
     listArgs: Vector[(String, ListGCValue)],
     override val nestedCreates: Vector[NestedCreateDataItem],
     override val nestedConnects: Vector[NestedConnectRelation]
-) extends FurtherNestedMutaction
+) extends CreateNode
     with TopLevelDatabaseMutaction
 
 case class UpdateDataItem(
@@ -59,7 +65,7 @@ case class UpdateDataItem(
 case class UpsertDataItem(
     project: Project,
     where: NodeSelector,
-    create: CreateDataItem,
+    create: CreateNode,
     update: UpdateDataItem
 ) extends FurtherNestedMutaction
     with TopLevelDatabaseMutaction
@@ -93,8 +99,10 @@ case class NestedCreateDataItem(
     override val nestedCreates: Vector[NestedCreateDataItem],
     override val nestedConnects: Vector[NestedConnectRelation],
     topIsCreate: Boolean
-) extends NestedDatabaseMutaction
-    with FurtherNestedMutaction
+) extends CreateNode
+    with FurtherNestedMutaction {
+  override def model = relationField.relatedModel_!
+}
 
 case class NestedUpdateDataItem(
     project: Project,
@@ -145,7 +153,7 @@ case class ServerSideSubscription(
     model: Model,
     mutationType: ModelMutationType,
     function: ServerSideSubscriptionFunction,
-    nodeId: Id, //todo
+    nodeId: IdGCValue,
     requestId: String,
     updatedFields: Option[List[String]] = None,
     previousValues: Option[PrismaNode] = None

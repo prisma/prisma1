@@ -1,7 +1,7 @@
 package com.prisma.api.mutations
 
-import com.prisma.api.connector.{DatabaseMutactionExecutor, DatabaseMutactionResult}
-import com.prisma.api.mutactions.{DatabaseMutactionVerifier, SideEffectMutactionExecutor}
+import com.prisma.api.connector.{DatabaseMutactionExecutor, DatabaseMutactionResult, ServerSideSubscription}
+import com.prisma.api.mutactions.{DatabaseMutactionVerifier, ServerSideSubscriptions, SideEffectMutactionExecutor}
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -14,11 +14,14 @@ object ClientMutationRunner {
       databaseMutactionVerifier: DatabaseMutactionVerifier
   )(implicit ec: ExecutionContext): Future[T] = {
     for {
-      mutaction       <- clientMutation.prepareMutactions()
-      errors          = databaseMutactionVerifier.verify(mutaction +: mutaction.allMutactions)
-      _               = if (errors.nonEmpty) throw errors.head
-      databaseResults <- databaseMutactionExecutor.executeTransactionally(mutaction)
-      prismaNode      <- clientMutation.getReturnValue(databaseResults)
+      mutaction               <- clientMutation.prepareMutactions()
+      errors                  = databaseMutactionVerifier.verify(mutaction +: mutaction.allMutactions)
+      _                       = if (errors.nonEmpty) throw errors.head
+      databaseResults         <- databaseMutactionExecutor.executeTransactionally(mutaction)
+      serverSideSubscriptions = ServerSideSubscriptions.extractFromMutactions(clientMutation.project, databaseResults, requestId = "")
+      // fixme: also add PublishSubscriptionEvents
+      _          <- sideEffectMutactionExecutor.execute(serverSideSubscriptions)
+      prismaNode <- clientMutation.getReturnValue(databaseResults)
     } yield prismaNode
   }
 

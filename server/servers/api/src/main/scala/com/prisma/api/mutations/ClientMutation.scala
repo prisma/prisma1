@@ -2,6 +2,7 @@ package com.prisma.api.mutations
 
 import com.prisma.api.connector._
 import com.prisma.shared.models.IdType.Id
+import com.prisma.shared.models.Project
 import cool.graph.cuid.Cuid
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -14,6 +15,7 @@ trait ClientMutation[T] {
   def getReturnValue(results: MutactionResults): Future[T]
 
   def projectId: String = dataResolver.project.id
+  def project: Project
 }
 
 trait SingleItemClientMutation extends ClientMutation[ReturnValueResult] {

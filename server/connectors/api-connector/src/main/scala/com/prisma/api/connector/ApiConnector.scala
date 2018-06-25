@@ -15,7 +15,12 @@ trait ApiConnector {
   def shutdown(): Future[Unit]
 }
 
-case class MutactionResults(databaseResult: DatabaseMutactionResult, nestedResults: Vector[DatabaseMutactionResult])
+case class MutactionResults(
+    databaseResult: DatabaseMutactionResult,
+    nestedResults: Vector[MutactionResults]
+) {
+  def allResults: Vector[DatabaseMutactionResult] = databaseResult +: nestedResults.flatMap(_.allResults)
+}
 
 trait DatabaseMutactionExecutor {
   def executeTransactionally(mutaction: TopLevelDatabaseMutaction): Future[MutactionResults]

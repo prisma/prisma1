@@ -11,42 +11,42 @@ import sangria.parser.QueryParser
 object ServerSideSubscriptions {
   def extractFromMutactions(
       project: Project,
-      mutactions: Vector[DatabaseMutaction],
+      mutactionResults: MutactionResults,
       requestId: Id
-  )(implicit apiDependencies: ApiDependencies): Vector[ServerSideSubscription] = {
-//    val createMutactions = mutactions.collect { case x: CreateDataItem => x }
+  ): Vector[ServerSideSubscription] = {
+    val createResults = mutactionResults.allResults.collect { case m: CreateNodeResult => m }
 //    val updateMutactions = mutactions.collect { case x: UpdateDataItem => x }
 //    val deleteMutactions = mutactions.collect { case x: DeleteDataItem => x }
 //
-//    val result = extractFromCreateMutactions(project, createMutactions, requestId) ++
+    val result = extractFromCreateMutactions(project, createResults, requestId)
 //      extractFromUpdateMutactions(project, updateMutactions, requestId) ++
 //      extractFromDeleteMutactions(project, deleteMutactions, requestId)
 //    ApiMetrics.subscriptionEventCounter.incBy(result.size, project.id)
 //    result
 
     // FIXME: this must be based on the results of the Mutactions
-    Vector.empty
+    result
   }
 
-//  def extractFromCreateMutactions(
-//      project: Project,
-//      mutactions: Vector[CreateDataItem],
-//      requestId: Id
-//  )(implicit apiDependencies: ApiDependencies): Vector[ServerSideSubscription] = {
-//    for {
-//      mutaction <- mutactions
-//      sssFn     <- serverSideSubscriptionFunctionsFor(project, mutaction.model, ModelMutationType.Created)
-//    } yield {
-//      ServerSideSubscription(
-//        project,
-//        mutaction.model,
-//        ModelMutationType.Created,
-//        sssFn,
-//        nodeId = mutaction.id,
-//        requestId = requestId
-//      )
-//    }
-//  }
+  def extractFromCreateMutactions(
+      project: Project,
+      mutactionResults: Vector[CreateNodeResult],
+      requestId: Id
+  ): Vector[ServerSideSubscription] = {
+    for {
+      mutactionResult <- mutactionResults
+      sssFn           <- serverSideSubscriptionFunctionsFor(project, mutactionResult.mutaction.model, ModelMutationType.Created)
+    } yield {
+      ServerSideSubscription(
+        project,
+        mutactionResult.mutaction.model,
+        ModelMutationType.Created,
+        sssFn,
+        nodeId = mutactionResult.id,
+        requestId = requestId
+      )
+    }
+  }
 //
 //  def extractFromUpdateMutactions(
 //      project: Project,

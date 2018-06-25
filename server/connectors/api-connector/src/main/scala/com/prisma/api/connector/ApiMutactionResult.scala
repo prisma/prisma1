@@ -8,7 +8,7 @@ sealed trait FurtherNestedMutactionResult extends DatabaseMutactionResult {
   def id: IdGCValue
 }
 
-case class CreateDataItemResult(id: IdGCValue)                             extends FurtherNestedMutactionResult
+case class CreateNodeResult(id: IdGCValue, mutaction: CreateNode)          extends FurtherNestedMutactionResult
 case class UpdateItemResult(id: IdGCValue)                                 extends FurtherNestedMutactionResult
 case class DeleteDataItemResult(id: IdGCValue, previousValues: PrismaNode) extends FurtherNestedMutactionResult
 case class UpsertDataItemResult(mutaction: DatabaseMutaction)              extends DatabaseMutactionResult

@@ -45,11 +45,19 @@ case class PostgresDatabaseMutactionExecutor(clientDb: Database, createRelayIds:
                            case result: FurtherNestedMutactionResult => DBIO.sequence(m.allMutactions.map(recurse(_, result.id, mutationBuilder)))
                            case _                                    => DBIO.successful(Vector.empty)
                          }
-        } yield MutactionResults(databaseResult = result, nestedResults = childResults.flatMap(_.nestedResults))
+        } yield
+          MutactionResults(
+            databaseResult = result,
+            nestedResults = childResults.flatMap(_.nestedResults)
+          )
       case m: FinalMutaction =>
         for {
           result <- interpreterFor(m).newActionWithErrorMapped(mutationBuilder, parentId)(recurseEc)
-        } yield MutactionResults(databaseResult = result, nestedResults = Vector.empty)
+        } yield
+          MutactionResults(
+            databaseResult = result,
+            nestedResults = Vector.empty
+          )
     }
   }
 

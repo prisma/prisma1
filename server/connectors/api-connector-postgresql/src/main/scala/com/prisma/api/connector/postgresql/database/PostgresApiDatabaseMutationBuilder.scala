@@ -81,9 +81,8 @@ case class PostgresApiDatabaseMutationBuilder(schemaName: String) extends Builde
 
   // region CREATE
 
-  def createDataItem(model: Model, args: PrismaArgs): DBIO[CreateDataItemResult] = {
-
-    SimpleDBIO[CreateDataItemResult] { x =>
+  def createDataItem(model: Model, args: PrismaArgs): DBIO[IdGCValue] = {
+    SimpleDBIO { x =>
       val argsAsRoot = args.raw.asRoot.add(model.idField_!.name, generateId(model))
       val fields     = model.fields.filter(field => argsAsRoot.hasArgFor(field.name))
       val columns    = fields.map(_.dbName)
@@ -114,7 +113,7 @@ case class PostgresApiDatabaseMutationBuilder(schemaName: String) extends Builde
 
       val generatedKeys = itemInsert.getGeneratedKeys
       generatedKeys.next()
-      CreateDataItemResult(generatedKeys.getId(model))
+      generatedKeys.getId(model)
     }
   }
 
@@ -291,9 +290,9 @@ case class PostgresApiDatabaseMutationBuilder(schemaName: String) extends Builde
     }
   }
 
-  def updateDataItemById(model: Model, id: IdGCValue, updateArgs: PrismaArgs): DBIO[UpdateItemResult] = {
+  def updateDataItemById(model: Model, id: IdGCValue, updateArgs: PrismaArgs): DBIO[_] = {
     if (updateArgs.raw.asRoot.map.isEmpty) {
-      DBIOAction.successful(UpdateItemResult(id))
+      DBIOAction.successful(id)
     } else {
       SimpleDBIO { ctx =>
         val actualArgs = addUpdatedAt(model, updateArgs.raw.asRoot)
@@ -313,7 +312,7 @@ case class PostgresApiDatabaseMutationBuilder(schemaName: String) extends Builde
 
         ps.execute()
 
-        UpdateItemResult(id)
+        id
       }
     }
   }

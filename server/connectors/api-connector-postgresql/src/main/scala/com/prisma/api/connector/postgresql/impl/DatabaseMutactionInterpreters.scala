@@ -14,16 +14,16 @@ import slick.jdbc.PostgresProfile.api._
 
 import scala.concurrent.ExecutionContext
 
-case class CreateDataItemInterpreter(mutaction: CreateDataItem, includeRelayRow: Boolean = true) extends DatabaseMutactionInterpreter {
+case class CreateDataItemInterpreter(mutaction: CreateNode, includeRelayRow: Boolean = true) extends DatabaseMutactionInterpreter {
   val model = mutaction.model
 
   override def newAction(mutationBuilder: PostgresApiDatabaseMutationBuilder, parentId: IdGCValue)(
       implicit ec: ExecutionContext): DBIO[DatabaseMutactionResult] = {
     for {
-      createResult <- mutationBuilder.createDataItem(model, mutaction.nonListArgs)
-      _            <- mutationBuilder.setScalarList(NodeSelector.forIdGCValue(model, createResult.id), mutaction.listArgs)
-      _            <- if (includeRelayRow) mutationBuilder.createRelayRow(NodeSelector.forIdGCValue(model, createResult.id)) else DBIO.successful(())
-    } yield createResult
+      id <- mutationBuilder.createDataItem(model, mutaction.nonListArgs)
+      _  <- mutationBuilder.setScalarList(NodeSelector.forIdGCValue(model, id), mutaction.listArgs)
+      _  <- if (includeRelayRow) mutationBuilder.createRelayRow(NodeSelector.forIdGCValue(model, id)) else DBIO.successful(())
+    } yield CreateNodeResult(id, mutaction)
   }
 
   override def action(mutationBuilder: PostgresApiDatabaseMutationBuilder) = ???
@@ -41,7 +41,6 @@ case class NestedCreateDataItemInterpreter(mutaction: NestedCreateDataItem, incl
     extends DatabaseMutactionInterpreter
     with NestedRelationInterpreterBase {
   override def relationField = mutaction.relationField
-  val project                = mutaction.project
   val model                  = relationField.relatedModel_!
   val parent                 = relationField.model
 
@@ -49,12 +48,12 @@ case class NestedCreateDataItemInterpreter(mutaction: NestedCreateDataItem, incl
 
   override def newAction(mutationBuilder: PostgresApiDatabaseMutationBuilder, parentId: IdGCValue)(implicit ec: ExecutionContext) = {
     for {
-      _            <- DBIO.sequence(requiredCheck(parentId)(mutationBuilder))
-      _            <- DBIO.sequence(removalActions(parentId)(mutationBuilder))
-      createResult <- createNodeAndConnectToParent(mutationBuilder, parentId)
-      _            <- mutationBuilder.setScalarList(NodeSelector.forIdGCValue(model, createResult.id), mutaction.listArgs)
-      _            <- if (includeRelayRow) mutationBuilder.createRelayRow(NodeSelector.forIdGCValue(model, createResult.id)) else DBIO.successful(())
-    } yield createResult
+      _  <- DBIO.sequence(requiredCheck(parentId)(mutationBuilder))
+      _  <- DBIO.sequence(removalActions(parentId)(mutationBuilder))
+      id <- createNodeAndConnectToParent(mutationBuilder, parentId)
+      _  <- mutationBuilder.setScalarList(NodeSelector.forIdGCValue(model, id), mutaction.listArgs)
+      _  <- if (includeRelayRow) mutationBuilder.createRelayRow(NodeSelector.forIdGCValue(model, id)) else DBIO.successful(())
+    } yield CreateNodeResult(id, mutaction)
   }
 
   private def createNodeAndConnectToParent(
@@ -69,9 +68,9 @@ case class NestedCreateDataItemInterpreter(mutaction: NestedCreateDataItem, incl
       mutationBuilder.createDataItem(model, PrismaArgs(RootGCValue(modifiedArgs)))
     } else {
       for {
-        createResult <- mutationBuilder.createDataItem(model, mutaction.nonListArgs)
-        _            <- mutationBuilder.createRelation(mutaction.relationField, parentId, createResult.id)
-      } yield createResult
+        id <- mutationBuilder.createDataItem(model, mutaction.nonListArgs)
+        _  <- mutationBuilder.createRelation(mutaction.relationField, parentId, id)
+      } yield id
     }
   }
 
@@ -178,7 +177,7 @@ case class DeleteDataItemInterpreter(mutaction: DeleteDataItem)(implicit val ec:
     extends DatabaseMutactionInterpreter
     with CascadingDeleteSharedStuff {
 
-  override def schema = mutaction.project.schema
+  override def schema = mutaction.where.model.schema
 
   override def newAction(mutationBuilder: PostgresApiDatabaseMutationBuilder, parentId: IdGCValue)(implicit ec: ExecutionContext) = {
     for {
@@ -198,7 +197,7 @@ case class DeleteDataItemInterpreter(mutaction: DeleteDataItem)(implicit val ec:
   }
 
   private def checkForRequiredRelationsViolations(mutationBuilder: PostgresApiDatabaseMutationBuilder, id: IdGCValue): DBIO[_] = {
-    val fieldsWhereThisModelIsRequired = mutaction.project.schema.fieldsWhereThisModelIsRequired(mutaction.where.model)
+    val fieldsWhereThisModelIsRequired = schema.fieldsWhereThisModelIsRequired(mutaction.where.model)
     val actions                        = fieldsWhereThisModelIsRequired.map(field => mutationBuilder.oldParentFailureTriggerByField(id, field))
     DBIO.sequence(actions)
   }
