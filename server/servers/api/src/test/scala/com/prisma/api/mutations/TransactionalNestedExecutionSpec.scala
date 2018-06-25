@@ -313,7 +313,7 @@ class TransactionalNestedExecutionSpec extends FlatSpec with Matchers with ApiSp
       project,
       errorCode = 3041,
       errorContains =
-        s"The relation TodoToNote has no node for the model Note with the value 'Some Outer ID' for the field 'outerUnique' connected to a node for the model Todo with the value 'Some Inner ID2' for the field 'innerUnique'"
+        s"The relation TodoToNote has no node for the model Note connected to a Node for the model Todo with the value 'Some Inner ID2' for the field 'innerUnique' on your mutation path."
     )
 
     server.query(s"""query{note(where:{outerUnique:$outerWhere}){outerString}}""", project, dataContains = s"""{"note":{"outerString":"Outer String"}}""")
