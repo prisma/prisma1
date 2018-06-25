@@ -37,9 +37,8 @@ case class PrismaLocalDependencies()(implicit val system: ActorSystem, val mater
     with SubscriptionDependencies {
   override implicit def self = this
 
-  MetricsRegistry.init(deployConnector.cloudSecretPersistence)
-
   val config: PrismaConfig = ConfigLoader.load()
+  MetricsRegistry.init(deployConnector.cloudSecretPersistence)
 
   override lazy val apiSchemaBuilder = CachedSchemaBuilder(SchemaBuilder(), invalidationPubSub)
   override lazy val projectFetcher: ProjectFetcher = {
