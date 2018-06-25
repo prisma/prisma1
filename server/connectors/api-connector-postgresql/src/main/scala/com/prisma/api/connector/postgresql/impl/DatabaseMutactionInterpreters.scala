@@ -21,8 +21,8 @@ case class CreateDataItemInterpreter(mutaction: CreateDataItem, includeRelayRow:
       implicit ec: ExecutionContext): DBIO[DatabaseMutactionResult] = {
     for {
       createResult <- mutationBuilder.createDataItem(model, mutaction.nonListArgs)
-      _            <- mutationBuilder.setScalarList(NodeSelector.forIdGCValue(model, createResult.createdId), mutaction.listArgs)
-      _            <- if (includeRelayRow) mutationBuilder.createRelayRow(NodeSelector.forIdGCValue(model, createResult.createdId)) else DBIO.successful(())
+      _            <- mutationBuilder.setScalarList(NodeSelector.forIdGCValue(model, createResult.id), mutaction.listArgs)
+      _            <- if (includeRelayRow) mutationBuilder.createRelayRow(NodeSelector.forIdGCValue(model, createResult.id)) else DBIO.successful(())
     } yield createResult
   }
 
@@ -52,8 +52,8 @@ case class NestedCreateDataItemInterpreter(mutaction: NestedCreateDataItem, incl
       _            <- DBIO.sequence(requiredCheck(parentId)(mutationBuilder))
       _            <- DBIO.sequence(removalActions(parentId)(mutationBuilder))
       createResult <- createNodeAndConnectToParent(mutationBuilder, parentId)
-      _            <- mutationBuilder.setScalarList(NodeSelector.forIdGCValue(model, createResult.createdId), mutaction.listArgs)
-      _            <- if (includeRelayRow) mutationBuilder.createRelayRow(NodeSelector.forIdGCValue(model, createResult.createdId)) else DBIO.successful(())
+      _            <- mutationBuilder.setScalarList(NodeSelector.forIdGCValue(model, createResult.id), mutaction.listArgs)
+      _            <- if (includeRelayRow) mutationBuilder.createRelayRow(NodeSelector.forIdGCValue(model, createResult.id)) else DBIO.successful(())
     } yield createResult
   }
 
@@ -70,7 +70,7 @@ case class NestedCreateDataItemInterpreter(mutaction: NestedCreateDataItem, incl
     } else {
       for {
         createResult <- mutationBuilder.createDataItem(model, mutaction.nonListArgs)
-        _            <- mutationBuilder.createRelation(mutaction.relationField, parentId, createResult.createdId)
+        _            <- mutationBuilder.createRelation(mutaction.relationField, parentId, createResult.id)
       } yield createResult
     }
   }
@@ -287,11 +287,11 @@ case class UpdateDataItemInterpreter(mutaction: UpdateDataItem) extends Database
 
   override def newAction(mutationBuilder: PostgresApiDatabaseMutationBuilder, parent: IdGCValue)(implicit ec: ExecutionContext) = {
     for {
-      id <- mutationBuilder.queryIdFromWhere(mutaction.where)
-      _ <- id match {
-            case Some(id) => doIt(mutationBuilder, id)
-            case None     => DBIO.failed(APIErrors.NodeNotFoundForWhereError(mutaction.where))
-          }
+      idOpt <- mutationBuilder.queryIdFromWhere(mutaction.where)
+      id <- idOpt match {
+             case Some(id) => doIt(mutationBuilder, id)
+             case None     => DBIO.failed(APIErrors.NodeNotFoundForWhereError(mutaction.where))
+           }
     } yield UpdateItemResult(id)
   }
 
@@ -319,21 +319,21 @@ case class NestedUpdateDataItemInterpreter(mutaction: NestedUpdateDataItem) exte
   override def newAction(mutationBuilder: PostgresApiDatabaseMutationBuilder, parentId: IdGCValue)(implicit ec: ExecutionContext) = {
     for {
       _ <- verifyWhere(mutationBuilder, mutaction.where)
-      id <- mutaction.where match {
-             case Some(where) => mutationBuilder.queryIdByParentIdAndWhere(mutaction.relationField, parentId, where)
-             case None        => mutationBuilder.queryIdByParentId(mutaction.relationField, parentId)
+      idOpt <- mutaction.where match {
+                case Some(where) => mutationBuilder.queryIdByParentIdAndWhere(mutaction.relationField, parentId, where)
+                case None        => mutationBuilder.queryIdByParentId(mutaction.relationField, parentId)
+              }
+      id <- idOpt match {
+             case Some(id) => doIt(mutationBuilder, id)
+             case None =>
+               throw APIErrors.NodesNotConnectedError(
+                 relation = mutaction.relationField.relation,
+                 parent = parent,
+                 parentWhere = None,
+                 child = model,
+                 childWhere = mutaction.where
+               )
            }
-      _ <- id match {
-            case Some(id) => doIt(mutationBuilder, id)
-            case None =>
-              throw APIErrors.NodesNotConnectedError(
-                relation = mutaction.relationField.relation,
-                parent = parent,
-                parentWhere = None,
-                child = model,
-                childWhere = mutaction.where
-              )
-          }
     } yield UpdateItemResult(id)
   }
   override def action(mutationBuilder: PostgresApiDatabaseMutationBuilder) = ???
@@ -366,11 +366,11 @@ trait SharedUpdateLogic {
     }
   }
 
-  def doIt(mutationBuilder: PostgresApiDatabaseMutationBuilder, id: IdGCValue)(implicit ec: ExecutionContext): DBIO[Unit] = {
+  def doIt(mutationBuilder: PostgresApiDatabaseMutationBuilder, id: IdGCValue)(implicit ec: ExecutionContext): DBIO[IdGCValue] = {
     for {
       _ <- mutationBuilder.updateDataItemById(model, id, nonListArgs)
       _ <- mutationBuilder.setScalarListById(model, id, listArgs)
-    } yield ()
+    } yield id
   }
 }
 
