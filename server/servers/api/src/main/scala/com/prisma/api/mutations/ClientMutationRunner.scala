@@ -18,7 +18,7 @@ object ClientMutationRunner {
       errors          = databaseMutactionVerifier.verify(mutaction +: mutaction.allMutactions)
       _               = if (errors.nonEmpty) throw errors.head
       databaseResults <- databaseMutactionExecutor.executeTransactionally(mutaction)
-      prismaNode      <- clientMutation.getReturnValue(MutactionResults(databaseResults))
+      prismaNode      <- clientMutation.getReturnValue(databaseResults)
     } yield prismaNode
   }
 

@@ -383,7 +383,7 @@ case class UpdateDataItemsInterpreter(mutaction: UpdateDataItems) extends Databa
   }
 }
 
-case class UpsertDataItemInterpreter(mutaction: UpsertDataItem, executor: PostgresDatabaseMutactionExecutor) extends DatabaseMutactionInterpreter {
+case class UpsertDataItemInterpreter(mutaction: UpsertDataItem) extends DatabaseMutactionInterpreter {
   val model   = mutaction.where.model
   val project = mutaction.project
 //  val createArgs = mutaction.nonListCreateArgs
@@ -412,13 +412,11 @@ case class UpsertDataItemInterpreter(mutaction: UpsertDataItem, executor: Postgr
 
     for {
       id <- mutationBuilder.queryIdFromWhere(mutaction.where)
-      result <- id match {
-                 case Some(id) =>
-                   executor.recurse(mutaction.update, parentId, mutationBuilder) //UpdateDataItemInterpreter(mutaction.update).newAction(mutationBuilder, parentId)
-                 case None =>
-                   executor.recurse(mutaction.create, parentId, mutationBuilder) //CreateDataItemInterpreter(mutaction.create).newAction(mutationBuilder, parentId)
-               }
-    } yield result
+    } yield
+      id match {
+        case Some(_) => UpsertDataItemResult(mutaction.update)
+        case None    => UpsertDataItemResult(mutaction.create)
+      }
   }
 
   def action(mutationBuilder: PostgresApiDatabaseMutationBuilder) = ???
@@ -441,7 +439,7 @@ case class UpsertDataItemInterpreter(mutaction: UpsertDataItem, executor: Postgr
 
 }
 
-case class NestedUpsertDataItemInterpreter(mutaction: NestedUpsertDataItem, executor: PostgresDatabaseMutactionExecutor) extends DatabaseMutactionInterpreter {
+case class NestedUpsertDataItemInterpreter(mutaction: NestedUpsertDataItem) extends DatabaseMutactionInterpreter {
   val model = mutaction.relationField.relatedModel_!
 
   override def newAction(mutationBuilder: PostgresApiDatabaseMutationBuilder, parentId: IdGCValue)(implicit ec: ExecutionContext) = {
@@ -450,13 +448,11 @@ case class NestedUpsertDataItemInterpreter(mutaction: NestedUpsertDataItem, exec
              case Some(where) => mutationBuilder.queryIdByParentIdAndWhere(mutaction.relationField, parentId, where)
              case None        => mutationBuilder.queryIdByParentId(mutaction.relationField, parentId)
            }
-      result <- id match {
-                 case Some(id) =>
-                   executor.recurse(mutaction.update, parentId, mutationBuilder) //NestedUpdateDataItemInterpreter(mutaction.update).newActionWithErrorMapped(mutationBuilder, parentId)
-                 case None =>
-                   executor.recurse(mutaction.create, parentId, mutationBuilder) //NestedCreateDataItemInterpreter(mutaction.create).newActionWithErrorMapped(mutationBuilder, parentId)
-               }
-    } yield result
+    } yield
+      id match {
+        case Some(_) => UpsertDataItemResult(mutaction.update)
+        case None    => UpsertDataItemResult(mutaction.create)
+      }
   }
 
   override def action(mutationBuilder: PostgresApiDatabaseMutationBuilder) = ???

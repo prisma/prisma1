@@ -17,7 +17,7 @@ case class PostgresDatabaseMutactionExecutor(clientDb: Database, createRelayIds:
 
   override def executeNonTransactionally(mutaction: TopLevelDatabaseMutaction) = execute(mutaction, transactionally = false)
 
-  private def execute(mutaction: TopLevelDatabaseMutaction, transactionally: Boolean): Future[DatabaseMutactionResult] = {
+  private def execute(mutaction: TopLevelDatabaseMutaction, transactionally: Boolean): Future[MutactionResults] = {
     val mutationBuilder = PostgresApiDatabaseMutationBuilder(schemaName = mutaction.project.id)
     // fixme: handing in those non existent values should not happen
     val singleAction = transactionally match {
@@ -35,20 +35,21 @@ case class PostgresDatabaseMutactionExecutor(clientDb: Database, createRelayIds:
       mutaction: DatabaseMutaction,
       parentId: IdGCValue,
       mutationBuilder: PostgresApiDatabaseMutationBuilder
-  ): DBIO[DatabaseMutactionResult] = {
+  ): DBIO[MutactionResults] = {
     mutaction match {
       case m: FurtherNestedMutaction =>
         for {
           result <- interpreterFor(m).newActionWithErrorMapped(mutationBuilder, parentId)(recurseEc)
           childResults <- result match {
+                           case result: UpsertDataItemResult         => recurse(result.mutaction, parentId, mutationBuilder).map(Vector(_))
                            case result: FurtherNestedMutactionResult => DBIO.sequence(m.allMutactions.map(recurse(_, result.id, mutationBuilder)))
                            case _                                    => DBIO.successful(Vector.empty)
                          }
-        } yield result
+        } yield MutactionResults(databaseResult = result, nestedResults = childResults.flatMap(_.nestedResults))
       case m: FinalMutaction =>
         for {
           result <- interpreterFor(m).newActionWithErrorMapped(mutationBuilder, parentId)(recurseEc)
-        } yield result
+        } yield MutactionResults(databaseResult = result, nestedResults = Vector.empty)
     }
   }
 
@@ -64,8 +65,8 @@ case class PostgresDatabaseMutactionExecutor(clientDb: Database, createRelayIds:
     case m: UpdateDataItem           => UpdateDataItemInterpreter(m)
     case m: NestedUpdateDataItem     => NestedUpdateDataItemInterpreter(m)
     case m: UpdateDataItems          => UpdateDataItemsInterpreter(m)
-    case m: UpsertDataItem           => UpsertDataItemInterpreter(m, this)
-    case m: NestedUpsertDataItem     => NestedUpsertDataItemInterpreter(m, this)
+    case m: UpsertDataItem           => UpsertDataItemInterpreter(m)
+    case m: NestedUpsertDataItem     => NestedUpsertDataItemInterpreter(m)
     case m: CreateDataItemsImport    => CreateDataItemsImportInterpreter(m)
     case m: CreateRelationRowsImport => CreateRelationRowsImportInterpreter(m)
     case m: PushScalarListsImport    => PushScalarListsImportInterpreter(m)

@@ -4,12 +4,9 @@ import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
 import com.prisma.api.ApiDependencies
 import com.prisma.api.connector._
-import com.prisma.api.mutactions.{DatabaseMutactions, NodeIds, ServerSideSubscriptions, SubscriptionEvents}
-import com.prisma.gc_values.CuidGCValue
-import com.prisma.shared.models.IdType.Id
+import com.prisma.api.mutactions.{DatabaseMutactions, NodeIds}
 import com.prisma.shared.models._
 import com.prisma.util.coolArgs.CoolArgs
-import cool.graph.cuid.Cuid
 import sangria.schema
 
 import scala.concurrent.ExecutionContext.Implicits.global
