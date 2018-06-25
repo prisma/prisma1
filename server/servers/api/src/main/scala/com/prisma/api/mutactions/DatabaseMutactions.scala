@@ -1,14 +1,9 @@
 package com.prisma.api.mutactions
 
-import com.prisma.api.ApiMetrics
 import com.prisma.api.connector._
-import com.prisma.api.schema.APIErrors.{RelationIsRequired, UpdatingUniqueToNullAndThenNestingMutations}
-import com.prisma.gc_values.NullGCValue
-import com.prisma.shared.models.{Field, Model, Project, RelationField}
+import com.prisma.api.schema.APIErrors.RelationIsRequired
+import com.prisma.shared.models.{Model, Project, RelationField}
 import com.prisma.util.coolArgs._
-import cool.graph.cuid.Cuid.createCuid
-
-import scala.collection.immutable.Seq
 
 case class DatabaseMutactions(project: Project) {
 
