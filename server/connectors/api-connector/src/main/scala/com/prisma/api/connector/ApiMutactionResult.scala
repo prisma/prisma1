@@ -16,12 +16,3 @@ case class UpsertNodeCreated(result: CreateDataItemResult)                 exten
 case class UpsertNodeUpdated(result: UpdateItemResult)                     extends UpsertDataItemResult { def id = result.id }
 
 object UnitDatabaseMutactionResult extends DatabaseMutactionResult
-/**
-  * Subscriptions:
-  *
-  * - Create
-  * - NestedCreateDataItem
-  * - UpdateDataItem
-  * - DeleteDataItem
-  * - UpsertDataItem
-  */
