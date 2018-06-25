@@ -37,6 +37,7 @@ trait BuilderBase {
   private val relayIdTableName = "_RelayId"
 
   val relayIdColumn                                                = field(name(schemaName, relayIdTableName, "id"))
+  val relayStableIdentifierColumn                                  = field(name(schemaName, relayIdTableName, "stableModelIdentifier"))
   val relayTable                                                   = table(name(schemaName, relayIdTableName))
   def idField(model: Model)                                        = field(name(schemaName, model.dbName, model.dbNameOfIdField_!))
   def modelTable(model: Model)                                     = table(name(schemaName, model.dbName))
@@ -44,6 +45,7 @@ trait BuilderBase {
   def scalarListTable(field: ScalarField)                          = table(name(schemaName, scalarListTableName(field)))
   def modelColumn(model: Model, column: String)                    = field(name(schemaName, model.dbName, column))
   def relationColumn(relation: Relation, side: RelationSide.Value) = field(name(schemaName, relation.relationTableName, relation.columnForRelationSide(side)))
+  def relationIdColumn(relation: Relation)                         = field(name(schemaName, relation.relationTableName, "id"))
   def scalarListColumn(scalarField: ScalarField, column: String)   = field(name(schemaName, scalarListTableName(scalarField), column))
   def column(table: String, column: String)                        = field(name(schemaName, table, column))
   def placeHolders(vector: Vector[Any])                            = vector.map(_ => placeHolder).asJava

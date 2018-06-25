@@ -25,12 +25,15 @@ trait ImportActions extends BuilderBase {
       val argsWithIndex = mutaction.args.zipWithIndex
 
       val nodeResult: Vector[String] = try {
-        val columns      = model.scalarNonListFields.map(_.dbName)
-        val escapedKeys  = columns.map(column => s""""$column"""").mkString(",")
-        val placeHolders = columns.map(_ => "?").mkString(",")
+        val columns = model.scalarNonListFields.map(_.dbName)
+        val fields  = columns.map(modelColumn(model, _)).toVector
 
-        val query                         = s"""INSERT INTO "$schemaName"."${model.dbName}" ($escapedKeys) VALUES ($placeHolders)"""
-        val itemInsert: PreparedStatement = jdbcActionContext.connection.prepareStatement(query)
+        val query = sql
+          .insertInto(modelTable(model))
+          .columns(fields: _*)
+          .values(placeHolders(fields))
+
+        val itemInsert: PreparedStatement = jdbcActionContext.connection.prepareStatement(query.getSQL)
         val currentTimeStamp              = currentTimeStampUTC
 
         //Fixme have a helper for adding updatedAt / createdAt
@@ -64,8 +67,12 @@ trait ImportActions extends BuilderBase {
       }
 
       val relayResult: Vector[String] = try {
-        val relayQuery                     = s"""INSERT INTO "$schemaName"."_RelayId" ("id", "stableModelIdentifier") VALUES (?,?)"""
-        val relayInsert: PreparedStatement = jdbcActionContext.connection.prepareStatement(relayQuery)
+        val query = sql
+          .insertInto(relayTable)
+          .columns(relayIdColumn, relayStableIdentifierColumn)
+          .values(placeHolder, placeHolder)
+
+        val relayInsert: PreparedStatement = jdbcActionContext.connection.prepareStatement(query.getSQL)
 
         mutaction.args.foreach { arg =>
           relayInsert.setString(1, arg.raw.asRoot.idField.value)
@@ -96,16 +103,22 @@ trait ImportActions extends BuilderBase {
   def removeConnectionInfoFromCause(cause: String): String = {
     val connectionSubStringStart = cause.indexOf(": ERROR:")
     cause.substring(connectionSubStringStart + 9)
-
   }
 
   def createRelationRowsImport(mutaction: CreateRelationRowsImport): SimpleDBIO[Vector[String]] = {
     val argsWithIndex: Seq[((IdGCValue, IdGCValue), Int)] = mutaction.args.zipWithIndex
+    val relation                                          = mutaction.relation
 
     SimpleDBIO[Vector[String]] { x =>
       val res = try {
-        val query                             = s"""INSERT INTO "$schemaName"."${mutaction.relation.relationTableName}" ("id", "A","B") VALUES (?,?,?)"""
-        val relationInsert: PreparedStatement = x.connection.prepareStatement(query)
+        val query = sql
+          .insertInto(relationTable(relation))
+          .columns(relationIdColumn(relation),
+                   relationColumn(relation, relation.modelAField.relationSide),
+                   relationColumn(relation, relation.modelBField.relationSide))
+          .values(placeHolder, placeHolder, placeHolder)
+
+        val relationInsert: PreparedStatement = x.connection.prepareStatement(query.getSQL)
         mutaction.args.foreach { arg =>
           relationInsert.setString(1, Cuid.createCuid())
           relationInsert.setGcValue(2, arg._1)
@@ -123,8 +136,7 @@ trait ImportActions extends BuilderBase {
             .map { failed =>
               val failedA = argsWithIndex.find(_._2 == failed._2).get._1._1
               val failedB = argsWithIndex.find(_._2 == failed._2).get._1._2
-              s"Failure inserting into relationtable ${mutaction.relation.relationTableName} with ids $failedA and $failedB. Cause: ${removeConnectionInfoFromCause(
-                e.getCause.toString)}"
+              s"Failure inserting into relationtable ${relation.relationTableName} with ids $failedA and $failedB. Cause: ${removeConnectionInfoFromCause(e.getCause.toString)}"
             }
             .toVector
         case e: Exception => Vector(e.getMessage)
@@ -142,7 +154,6 @@ trait ImportActions extends BuilderBase {
     for {
       startPositions <- startPositions(field, nodeIds.toSeq)
       // begin massage
-      listValues: Map[IdGCValue, ListGCValue] = mutaction.valueTuples
 
       listValuesWithStartPosition: Iterable[(IdGCValue, ListGCValue, Int)] = {
         mutaction.valueTuples.map {
