@@ -40,9 +40,9 @@ case class PostgresDatabaseMutactionExecutor(clientDb: Database, createRelayIds:
       case m: FurtherNestedMutaction =>
         for {
           result <- interpreterFor(m).newActionWithErrorMapped(mutationBuilder, parentId)(recurseEc)
-          childResults <- result.id match {
-                           case Some(id) => DBIO.sequence(m.allMutactions.map(recurse(_, id, mutationBuilder)))
-                           case None     => DBIO.successful(())
+          childResults <- result match {
+                           case result: FurtherNestedMutactionResult => DBIO.sequence(m.allMutactions.map(recurse(_, result.id, mutationBuilder)))
+                           case _                                    => DBIO.successful(Vector.empty)
                          }
         } yield result
       case m: FinalMutaction =>

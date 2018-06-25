@@ -44,7 +44,7 @@ case class Create(
   override def getReturnValue(results: MutactionResults): Future[ReturnValueResult] = {
     val createdItem = results.databaseResult.asInstanceOf[CreateDataItemResult]
     for {
-      returnValue <- returnValueByUnique(NodeSelector.forIdGCValue(model, createdItem.createdId))
+      returnValue <- returnValueByUnique(NodeSelector.forIdGCValue(model, createdItem.id))
       prismaNode  = returnValue.asInstanceOf[ReturnValue].prismaNode
     } yield {
       ReturnValue(prismaNode)

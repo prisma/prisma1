@@ -50,7 +50,7 @@ case class Upsert(
   }
 
   override def getReturnValue(results: MutactionResults): Future[ReturnValueResult] = {
-    val selector   = NodeSelector.forIdGCValue(model, results.databaseResult.id.get)
+    val selector   = NodeSelector.forIdGCValue(model, results.databaseResult.asInstanceOf[FurtherNestedMutactionResult].id)
     val itemFuture = dataResolver.resolveByUnique(selector)
     itemFuture.map {
       case Some(prismaNode) => ReturnValue(prismaNode)

@@ -3,17 +3,21 @@ package com.prisma.api.connector
 import com.prisma.gc_values.IdGCValue
 
 sealed trait ApiMutactionResult
-sealed trait DatabaseMutactionResult {
-  def id: Option[IdGCValue]
-}
-case class CreateDataItemResult(createdId: IdGCValue) extends DatabaseMutactionResult {
-  override def id = Some(createdId)
-}
-case class UpdateItemResult(id: Option[IdGCValue]) extends DatabaseMutactionResult // fixme: we think that the option is wrong here. This could only happen when we error anyway.
-object UpdateItemResult {
-  def apply(id: IdGCValue): UpdateItemResult = UpdateItemResult(Some(id))
+sealed trait DatabaseMutactionResult
+sealed trait FurtherNestedMutactionResult extends DatabaseMutactionResult {
+  def id: IdGCValue
 }
 
-object UnitDatabaseMutactionResult extends DatabaseMutactionResult {
-  override def id = None
-}
+case class CreateDataItemResult(id: IdGCValue) extends FurtherNestedMutactionResult
+case class UpdateItemResult(id: IdGCValue)     extends FurtherNestedMutactionResult
+
+object UnitDatabaseMutactionResult extends DatabaseMutactionResult
+/**
+  * Subscriptions:
+  *
+  * - Create
+  * - NestedCreateDataItem
+  * - UpdateDataItem
+  * - DeleteDataItem
+  * - UpsertDataItem
+  */
