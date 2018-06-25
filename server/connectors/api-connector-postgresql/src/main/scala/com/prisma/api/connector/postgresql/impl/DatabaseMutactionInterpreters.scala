@@ -19,40 +19,6 @@ case class AddDataItemToManyRelationByPathInterpreter(mutaction: AddDataItemToMa
   def action(mutationBuilder: PostgresApiDatabaseMutationBuilder) = ??? //Fixme remove this alltogether
 }
 
-case class CascadingDeleteRelationMutactionsInterpreter(mutaction: CascadingDeleteRelationMutactions) extends DatabaseMutactionInterpreter {
-  val path    = mutaction.path
-  val project = mutaction.project
-  val schema  = project.schema
-
-  val fieldsWhereThisModelIsRequired = project.schema.fieldsWhereThisModelIsRequired(path.lastModel)
-
-  val otherFieldsWhereThisModelIsRequired = path.lastEdge match {
-    case Some(edge) => fieldsWhereThisModelIsRequired.filter(f => f != edge.parentField)
-    case None       => fieldsWhereThisModelIsRequired
-  }
-
-  def action(mutationBuilder: PostgresApiDatabaseMutationBuilder) = {
-    val requiredCheck = otherFieldsWhereThisModelIsRequired.map(field => mutationBuilder.oldParentFailureTriggerByFieldLegacy(path, field, causeString(field)))
-    val deleteAction  = List(mutationBuilder.cascadingDeleteChildActions(path))
-    val allActions    = requiredCheck ++ deleteAction
-    DBIOAction.seq(allActions: _*)
-  }
-
-  override def errorMapper = {
-    case e: PSQLException if otherFailingRequiredRelationOnChild(e.getMessage).isDefined =>
-      throw RequiredRelationWouldBeViolated(otherFailingRequiredRelationOnChild(e.getMessage).get)
-  }
-
-  private def otherFailingRequiredRelationOnChild(cause: String): Option[Relation] =
-    otherFieldsWhereThisModelIsRequired.collectFirst { case f if cause.contains(causeString(f)) => f.relation }
-
-  private def causeString(field: RelationField) = path.lastEdge match {
-    case Some(edge: NodeEdge) =>
-      s"-OLDPARENTPATHFAILURETRIGGERBYFIELD@${field.relation.relationTableName}@${field.oppositeRelationSide}@${edge.childWhere.value}-"
-    case _ => s"-OLDPARENTPATHFAILURETRIGGERBYFIELD@${field.relation.relationTableName}@${field.oppositeRelationSide}-"
-  }
-}
-
 case class CreateDataItemInterpreter(mutaction: CreateDataItem, includeRelayRow: Boolean = true) extends DatabaseMutactionInterpreter {
   val model = mutaction.model
 
@@ -164,13 +130,102 @@ case class NestedCreateDataItemInterpreter(mutaction: NestedCreateDataItem, incl
   }
 }
 
-case class DeleteDataItemInterpreter(mutaction: DeleteDataItem)(implicit ec: ExecutionContext) extends DatabaseMutactionInterpreter {
+case class CascadingDeleteRelationMutactionsInterpreter(mutaction: CascadingDeleteRelationMutactions) extends DatabaseMutactionInterpreter {
+  val path    = mutaction.path
+  val project = mutaction.project
+  val schema  = project.schema
+
+  val fieldsWhereThisModelIsRequired = project.schema.fieldsWhereThisModelIsRequired(path.lastModel)
+
+  val otherFieldsWhereThisModelIsRequired = path.lastEdge match {
+    case Some(edge) => fieldsWhereThisModelIsRequired.filter(f => f != edge.parentField)
+    case None       => fieldsWhereThisModelIsRequired
+  }
+
+  def action(mutationBuilder: PostgresApiDatabaseMutationBuilder) = {
+    val requiredCheck = otherFieldsWhereThisModelIsRequired.map(field => mutationBuilder.oldParentFailureTriggerByFieldLegacy(path, field, causeString(field)))
+    val deleteAction  = List(mutationBuilder.cascadingDeleteChildActions(path))
+    val allActions    = requiredCheck ++ deleteAction
+    DBIOAction.seq(allActions: _*)
+  }
+
+  override def errorMapper = {
+    case e: PSQLException if otherFailingRequiredRelationOnChild(e.getMessage).isDefined =>
+      throw RequiredRelationWouldBeViolated(otherFailingRequiredRelationOnChild(e.getMessage).get)
+  }
+
+  private def otherFailingRequiredRelationOnChild(cause: String): Option[Relation] =
+    otherFieldsWhereThisModelIsRequired.collectFirst { case f if cause.contains(causeString(f)) => f.relation }
+
+  private def causeString(field: RelationField) = path.lastEdge match {
+    case Some(edge: NodeEdge) =>
+      s"-OLDPARENTPATHFAILURETRIGGERBYFIELD@${field.relation.relationTableName}@${field.oppositeRelationSide}@${edge.childWhere.value}-"
+    case _ => s"-OLDPARENTPATHFAILURETRIGGERBYFIELD@${field.relation.relationTableName}@${field.oppositeRelationSide}-"
+  }
+}
+
+trait CascadingDeleteSharedStuff extends DatabaseMutactionInterpreter {
+  def schema: Schema
+  implicit def ec: ExecutionContext
+
+  def performCascadingDelete(mutationBuilder: PostgresApiDatabaseMutationBuilder, model: Model, parentId: IdGCValue): DBIO[Unit] = {
+    val actions = model.cascadingRelationFields.map { field =>
+      recurse(
+        mutationBuilder = mutationBuilder,
+        parentField = field,
+        parentIds = Vector(parentId),
+        visitedModels = Vector(model)
+      )
+    }
+    DBIO.seq(actions: _*)
+  }
+
+  private def recurse(
+      mutationBuilder: PostgresApiDatabaseMutationBuilder,
+      parentField: RelationField,
+      parentIds: Vector[IdGCValue],
+      visitedModels: Vector[Model]
+  ): DBIO[Unit] = {
+    for {
+      ids            <- mutationBuilder.queryIdsByParentIds(parentField, parentIds)
+      model          = parentField.relatedModel_!
+      _              = if (visitedModels.contains(model)) throw APIErrors.CascadingDeletePathLoops()
+      nextCascadings = model.cascadingRelationFields.filter(_ != parentField)
+      childActions   = nextCascadings.map(field => recurse(mutationBuilder, field, ids, visitedModels :+ model))
+      _              <- DBIO.seq(childActions: _*)
+      // eigentliche Actions
+      _ <- checkTheseOnes(mutationBuilder, parentField, ids)
+      _ <- mutationBuilder.deleteNodes(model, ids)
+    } yield ()
+  }
+
+  private def checkTheseOnes(mutationBuilder: PostgresApiDatabaseMutationBuilder, parentField: RelationField, parentIds: Vector[IdGCValue]) = {
+    val model                          = parentField.relatedModel_!
+    val fieldsWhereThisModelIsRequired = schema.fieldsWhereThisModelIsRequired(model).filter(_ != parentField)
+    val actions                        = fieldsWhereThisModelIsRequired.map(field => mutationBuilder.oldParentFailureTriggerByField(parentIds, field))
+    DBIO.sequence(actions)
+  }
+  /**
+  * input: relationField, parentIds
+  * 1. recurse for children
+  * 2. check for required relation violations
+  * 3. delete itself
+  */
+}
+
+case class DeleteDataItemInterpreter(mutaction: DeleteDataItem)(implicit val ec: ExecutionContext)
+    extends DatabaseMutactionInterpreter
+    with CascadingDeleteSharedStuff {
+
+  override def schema = mutaction.project.schema
+
   override def newAction(mutationBuilder: PostgresApiDatabaseMutationBuilder, parentId: IdGCValue)(implicit ec: ExecutionContext) = {
     for {
       id <- mutationBuilder.queryIdFromWhere(mutaction.where)
       _ <- id match {
             case Some(id) =>
               for {
+                _ <- performCascadingDelete(mutationBuilder, mutaction.where.model, id)
                 _ <- checkForRequiredRelationsViolations(mutationBuilder, id)
                 _ <- mutationBuilder.deleteRelayRowByWhere(mutaction.where)
                 _ <- mutationBuilder.deleteDataItemByWhere(mutaction.where)
@@ -190,15 +245,20 @@ case class DeleteDataItemInterpreter(mutaction: DeleteDataItem)(implicit ec: Exe
   def action(mutationBuilder: PostgresApiDatabaseMutationBuilder) = ???
 }
 
-case class DeleteDataItemNestedInterpreter(mutaction: NestedDeleteDataItem)(implicit ec: ExecutionContext) extends DatabaseMutactionInterpreter {
-  val parentField = mutaction.relationField
-  val parent      = mutaction.relationField.model
-  val child       = mutaction.relationField.relatedModel_!
+case class DeleteDataItemNestedInterpreter(mutaction: NestedDeleteDataItem)(implicit val ec: ExecutionContext)
+    extends DatabaseMutactionInterpreter
+    with CascadingDeleteSharedStuff {
+
+  override def schema = mutaction.project.schema
+  val parentField     = mutaction.relationField
+  val parent          = mutaction.relationField.model
+  val child           = mutaction.relationField.relatedModel_!
 
   override def newAction(mutationBuilder: PostgresApiDatabaseMutationBuilder, parentId: IdGCValue)(implicit ec: ExecutionContext) = {
     for {
       childId <- getChildId(mutationBuilder, parentId)
       _       <- mutationBuilder.ensureThatParentIsConnected(parentField, parentId)
+      _       <- performCascadingDelete(mutationBuilder, child, childId)
       _       <- checkForRequiredRelationsViolations(mutationBuilder, childId)
       _       <- mutationBuilder.deleteRelayRowByWhere(NodeSelector.forIdGCValue(child, childId))
       _       <- mutationBuilder.deleteDataItemByWhere(NodeSelector.forIdGCValue(child, childId))

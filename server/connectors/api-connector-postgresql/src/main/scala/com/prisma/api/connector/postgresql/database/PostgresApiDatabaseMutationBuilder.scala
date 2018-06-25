@@ -28,12 +28,18 @@ import scala.collection.JavaConverters._
 import scala.concurrent.ExecutionContext
 
 trait BuilderBase {
+  import JooqQueryBuilders.placeHolder
+
   def schemaName: String
 
   def dialect: SQLDialect
 
   val sql = DSL.using(dialect, new Settings().withRenderFormatted(true))
 
+  private val relayIdTableName = "_RelayId"
+
+  val relayIdColumn                                                = field(name(schemaName, relayIdTableName, "id"))
+  val relayTable                                                   = table(name(schemaName, relayIdTableName))
   def idField(model: Model)                                        = field(name(schemaName, model.dbName, model.dbNameOfIdField_!))
   def modelTable(model: Model)                                     = table(name(schemaName, model.dbName))
   def relationTable(relation: Relation)                            = table(name(schemaName, relation.relationTableName))
@@ -42,6 +48,7 @@ trait BuilderBase {
   def relationColumn(relation: Relation, side: RelationSide.Value) = field(name(schemaName, relation.relationTableName, relation.columnForRelationSide(side)))
   def scalarListColumn(scalarField: ScalarField, column: String)   = field(name(schemaName, scalarListTableName(scalarField), column))
   def column(table: String, column: String)                        = field(name(schemaName, table, column))
+  def placeHolders(vector: Vector[Any])                            = vector.map(_ => placeHolder).asJava
 
   def queryToDBIO[T](query: JooqQuery)(setParams: PositionedParameters => Unit, readResult: ResultSet => T): DBIO[T] = {
     SimpleDBIO { ctx =>
@@ -466,6 +473,33 @@ case class PostgresApiDatabaseMutationBuilder(schemaName: String) extends Builde
     }
   }
 
+  def deleteNodes(model: Model, ids: Vector[IdGCValue])(implicit ec: ExecutionContext): DBIO[Unit] = {
+    for {
+      _ <- deleteDataItemsByIds(model, ids)
+      _ <- deleteRelayRowsByids(model, ids)
+    } yield ()
+  }
+
+  private def deleteDataItemsByIds(model: Model, ids: Vector[IdGCValue]): DBIO[Unit] = {
+    val query = sql
+      .deleteFrom(modelTable(model))
+      .where(idField(model).in(placeHolders(ids)))
+
+    deleteToDBIO(query)(
+      setParams = pp => ids.foreach(pp.setGcValue)
+    )
+  }
+
+  private def deleteRelayRowsByids(model: Model, ids: Vector[IdGCValue]): DBIO[Unit] = {
+    val query = sql
+      .deleteFrom(relayTable)
+      .where(column("_RelayId", "id").in(placeHolders(ids)))
+
+    deleteToDBIO(query)(
+      setParams = pp => ids.foreach(pp.setGcValue)
+    )
+  }
+
   def deleteDataItemByWhere(where: NodeSelector) = {
     SimpleDBIO[Boolean] { x =>
       lazy val queryString: String = {
@@ -487,7 +521,7 @@ case class PostgresApiDatabaseMutationBuilder(schemaName: String) extends Builde
     SimpleDBIO[Boolean] { x =>
       val queryString = sql
         .deleteFrom(table(name(schemaName, parentField.relatedModel_!.dbName)))
-        .where(parentIdCondition(parentField, parentId))
+        .where(parentIdCondition(parentField))
         .getSQL
 
       val statement: PreparedStatement = x.connection.prepareStatement(queryString, Statement.RETURN_GENERATED_KEYS)
@@ -497,18 +531,18 @@ case class PostgresApiDatabaseMutationBuilder(schemaName: String) extends Builde
     }
   }
 
-  def parentIdCondition(parentField: RelationField, parentId: IdGCValue): Condition = {
-    val childIdField  = field(name(schemaName, parentField.relation.relationTableName, parentField.oppositeRelationSide.toString))
-    val parentIdField = field(name(parentField.relation.relationTableName, parentField.relationSide.toString))
+  def parentIdCondition(parentField: RelationField): Condition = parentIdCondition(parentField, Vector(1))
+
+  def parentIdCondition(parentField: RelationField, parentIds: Vector[Any]): Condition = {
+    val relation      = parentField.relation
+    val childIdField  = relationColumn(relation, parentField.oppositeRelationSide)
+    val parentIdField = relationColumn(relation, parentField.relationSide)
     val subSelect =
       select(childIdField)
-        .from(table(name(schemaName, parentField.relation.relationTableName)))
-        .where(parentIdField.equal(placeHolder))
+        .from(relationTable(relation))
+        .where(parentIdField.in(placeHolders(parentIds)))
 
-    val idFieldOfRelatedModel = field(name(schemaName, parentField.relatedModel_!.dbName, parentField.relatedModel_!.dbNameOfIdField_!))
-    val condition             = idFieldOfRelatedModel.in(subSelect)
-
-    condition
+    idField(parentField.relatedModel_!).in(subSelect)
   }
 
   def deleteDataItem(path: Path) =
@@ -807,22 +841,19 @@ case class PostgresApiDatabaseMutationBuilder(schemaName: String) extends Builde
     }
   }
 
-  def queryIdByParentId(parentField: RelationField, parentId: IdGCValue): DBIO[Option[IdGCValue]] = {
+  def queryIdByParentId(parentField: RelationField, parentId: IdGCValue)(implicit ec: ExecutionContext): DBIO[Option[IdGCValue]] = {
+    queryIdsByParentIds(parentField, Vector(parentId)).map(_.headOption)
+  }
+
+  def queryIdsByParentIds(parentField: RelationField, parentIds: Vector[IdGCValue]): DBIO[Vector[IdGCValue]] = {
     val model = parentField.relatedModel_!
     val q: SelectConditionStep[Record1[AnyRef]] = sql
       .select(idField(model))
       .from(modelTable(model))
-      .where(parentIdCondition(parentField, parentId))
-
+      .where(parentIdCondition(parentField, parentIds))
     queryToDBIO(q)(
-      setParams = _.setGcValue(parentId),
-      readResult = { rs =>
-        if (rs.next()) {
-          Some(rs.getId(model))
-        } else {
-          None
-        }
-      }
+      setParams = pp => parentIds.foreach(pp.setGcValue),
+      readResult = rs => rs.as(readId(model))
     )
   }
 
@@ -832,7 +863,7 @@ case class PostgresApiDatabaseMutationBuilder(schemaName: String) extends Builde
     val q: SelectConditionStep[Record1[AnyRef]] = sql
       .select(idField(model))
       .from(modelTable(model))
-      .where(parentIdCondition(parentField, parentId), nodeSelectorCondition)
+      .where(parentIdCondition(parentField), nodeSelectorCondition)
 
     queryToDBIO(q)(
       setParams = { pp =>
@@ -962,24 +993,28 @@ case class PostgresApiDatabaseMutationBuilder(schemaName: String) extends Builde
   }
 
   def oldParentFailureTriggerByField(parentId: IdGCValue, field: RelationField)(implicit ec: ExecutionContext): DBIO[Unit] = {
+    oldParentFailureTriggerByField(Vector(parentId), field)
+  }
+
+  def oldParentFailureTriggerByField(parentIds: Vector[IdGCValue], field: RelationField)(implicit ec: ExecutionContext): DBIO[Unit] = {
     val relation = field.relation
     val query = sql
       .select(asterisk())
       .from(relationTable(relation))
       .where(
-        relationColumn(relation, field.oppositeRelationSide).equal(placeHolder),
+        relationColumn(relation, field.oppositeRelationSide).in(placeHolders(parentIds)),
         relationColumn(relation, field.relationSide).isNotNull
       )
 
     val action = queryToDBIO(query)(
-      setParams = _.setGcValue(parentId),
+      setParams = pp => parentIds.foreach(pp.setGcValue),
       readResult = rs => rs.as(readsAsUnit)
     )
     action.map { result =>
       if (result.nonEmpty) {
         // fixme: decide which error to use
         throw RequiredRelationWouldBeViolated(relation)
-//        throw RelationIsRequired(field.name, field.model.name)
+        //        throw RelationIsRequired(field.name, field.model.name)
       }
     }
   }
@@ -1091,4 +1126,6 @@ case class PostgresApiDatabaseMutationBuilder(schemaName: String) extends Builde
 
   private val readFirstColumnAsString: ReadsResultSet[String] = ReadsResultSet(_.getString(1))
   private val readsAsUnit: ReadsResultSet[Unit]               = ReadsResultSet(_ => ())
+
+  private def readId(model: Model) = ReadsResultSet(_.getId(model))
 }
