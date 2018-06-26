@@ -21,8 +21,8 @@ case class CreateDataItemInterpreter(mutaction: CreateNode, includeRelayRow: Boo
       implicit ec: ExecutionContext): DBIO[DatabaseMutactionResult] = {
     for {
       id <- mutationBuilder.createDataItem(model, mutaction.nonListArgs)
-      _  <- mutationBuilder.setScalarList(NodeSelector.forIdGCValue(model, id), mutaction.listArgs)
-      _  <- if (includeRelayRow) mutationBuilder.createRelayRow(NodeSelector.forIdGCValue(model, id)) else DBIO.successful(())
+      _  <- mutationBuilder.setScalarListById(model, id, mutaction.listArgs)
+      _  <- if (includeRelayRow) mutationBuilder.createRelayRowById(model, id) else DBIO.successful(())
     } yield CreateNodeResult(id, mutaction)
   }
 
@@ -50,8 +50,8 @@ case class NestedCreateDataItemInterpreter(mutaction: NestedCreateDataItem, incl
       _  <- DBIO.sequence(requiredCheck(parentId)(mutationBuilder))
       _  <- DBIO.sequence(removalActions(parentId)(mutationBuilder))
       id <- createNodeAndConnectToParent(mutationBuilder, parentId)
-      _  <- mutationBuilder.setScalarList(NodeSelector.forIdGCValue(model, id), mutaction.listArgs)
-      _  <- if (includeRelayRow) mutationBuilder.createRelayRow(NodeSelector.forIdGCValue(model, id)) else DBIO.successful(())
+      _  <- mutationBuilder.setScalarListById(model, id, mutaction.listArgs)
+      _  <- if (includeRelayRow) mutationBuilder.createRelayRowById(model, id) else DBIO.successful(())
     } yield CreateNodeResult(id, mutaction)
   }
 
@@ -186,8 +186,7 @@ case class DeleteDataItemInterpreter(mutaction: DeleteDataItem)(implicit val ec:
                  for {
                    _ <- performCascadingDelete(mutationBuilder, mutaction.where.model, node.id)
                    _ <- checkForRequiredRelationsViolations(mutationBuilder, node.id)
-                   _ <- mutationBuilder.deleteRelayRowByWhere(mutaction.where)
-                   _ <- mutationBuilder.deleteDataItemByWhere(mutaction.where)
+                   _ <- mutationBuilder.deleteNodeById(mutaction.where.model, node.id)
                  } yield node
                case None =>
                  DBIO.failed(APIErrors.NodeNotFoundForWhereError(mutaction.where))
@@ -219,8 +218,7 @@ case class DeleteDataItemNestedInterpreter(mutaction: NestedDeleteDataItem)(impl
       _       <- mutationBuilder.ensureThatParentIsConnected(parentField, parentId)
       _       <- performCascadingDelete(mutationBuilder, child, childId)
       _       <- checkForRequiredRelationsViolations(mutationBuilder, childId)
-      _       <- mutationBuilder.deleteRelayRowByWhere(NodeSelector.forIdGCValue(child, childId))
-      _       <- mutationBuilder.deleteDataItemByWhere(NodeSelector.forIdGCValue(child, childId))
+      _       <- mutationBuilder.deleteNodeById(child, childId)
     } yield UnitDatabaseMutactionResult
   }
 
@@ -255,6 +253,7 @@ case class DeleteDataItemNestedInterpreter(mutaction: NestedDeleteDataItem)(impl
   override def action(mutationBuilder: PostgresApiDatabaseMutationBuilder) = ???
 }
 
+//Fixme also switch this to fetch the Ids first
 case class DeleteDataItemsInterpreter(mutaction: DeleteDataItems)(implicit ec: ExecutionContext) extends DatabaseMutactionInterpreter {
   def action(mutationBuilder: PostgresApiDatabaseMutationBuilder) = DBIOAction.seq(
     checkForRequiredRelationsViolations(mutationBuilder),

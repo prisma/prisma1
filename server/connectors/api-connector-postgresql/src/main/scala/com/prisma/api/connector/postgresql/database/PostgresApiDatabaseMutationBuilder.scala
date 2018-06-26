@@ -44,6 +44,7 @@ trait BuilderBase {
   def relationTable(relation: Relation)                            = table(name(schemaName, relation.relationTableName))
   def scalarListTable(field: ScalarField)                          = table(name(schemaName, scalarListTableName(field)))
   def modelColumn(model: Model, column: String)                    = field(name(schemaName, model.dbName, column))
+  def modelIdColumn(model: Model)                                  = field(name(schemaName, model.dbName, model.dbNameOfIdField_!))
   def relationColumn(relation: Relation, side: RelationSide.Value) = field(name(schemaName, relation.relationTableName, relation.columnForRelationSide(side)))
   def relationIdColumn(relation: Relation)                         = field(name(schemaName, relation.relationTableName, "id"))
   def scalarListColumn(scalarField: ScalarField, column: String)   = field(name(schemaName, scalarListTableName(scalarField), column))
@@ -150,19 +151,19 @@ case class PostgresApiDatabaseMutationBuilder(schemaName: String) extends Builde
     }
   }
 
-  def createRelayRow(where: NodeSelector): DBIO[_] = {
+  def createRelayRowById(model: Model, id: IdGCValue): DBIO[_] = {
     SimpleDBIO[Boolean] { x =>
       lazy val queryString: String = {
         sql
-          .insertInto(table(name(schemaName, relayTableName)))
-          .columns(field(name(schemaName, relayTableName, "id")), field(name(schemaName, relayTableName, "stableModelIdentifier")))
+          .insertInto(relayTable)
+          .columns(relayIdColumn, relayStableIdentifierColumn)
           .values(placeHolder, placeHolder)
           .getSQL
       }
 
       val statement: PreparedStatement = x.connection.prepareStatement(queryString, Statement.RETURN_GENERATED_KEYS)
-      statement.setGcValue(1, where.fieldGCValue)
-      statement.setString(2, where.model.stableIdentifier)
+      statement.setGcValue(1, id)
+      statement.setString(2, model.stableIdentifier)
 
       statement.execute()
     }
@@ -394,10 +395,12 @@ case class PostgresApiDatabaseMutationBuilder(schemaName: String) extends Builde
     }
   }
 
+  def deleteNodeById(model: Model, id: IdGCValue)(implicit ec: ExecutionContext) = deleteNodes(model, Vector(id))
+
   def deleteNodes(model: Model, ids: Vector[IdGCValue])(implicit ec: ExecutionContext): DBIO[Unit] = {
     for {
       _ <- deleteDataItemsByIds(model, ids)
-      _ <- deleteRelayRowsByIds(model, ids)
+      _ <- deleteRelayRowsByIds(ids)
     } yield ()
   }
 
@@ -411,7 +414,7 @@ case class PostgresApiDatabaseMutationBuilder(schemaName: String) extends Builde
     )
   }
 
-  private def deleteRelayRowsByIds(model: Model, ids: Vector[IdGCValue]): DBIO[Unit] = {
+  private def deleteRelayRowsByIds(ids: Vector[IdGCValue]): DBIO[Unit] = {
     val query = sql
       .deleteFrom(relayTable)
       .where(relayIdColumn.in(placeHolders(ids)))
@@ -419,37 +422,6 @@ case class PostgresApiDatabaseMutationBuilder(schemaName: String) extends Builde
     deleteToDBIO(query)(
       setParams = pp => ids.foreach(pp.setGcValue)
     )
-  }
-
-  def deleteDataItemByWhere(where: NodeSelector) = {
-    SimpleDBIO[Boolean] { x =>
-      lazy val queryString: String = {
-
-        sql
-          .deleteFrom(table(name(schemaName, where.model.dbName)))
-          .where(field(name(schemaName, where.model.dbName, where.field.dbName)).equal(placeHolder))
-          .getSQL
-      }
-
-      val statement: PreparedStatement = x.connection.prepareStatement(queryString, Statement.RETURN_GENERATED_KEYS)
-      statement.setGcValue(1, where.fieldGCValue)
-
-      statement.execute()
-    }
-  }
-
-  def deleteDataItemByParentId(parentField: RelationField, parentId: IdGCValue) = {
-    SimpleDBIO[Boolean] { x =>
-      val queryString = sql
-        .deleteFrom(table(name(schemaName, parentField.relatedModel_!.dbName)))
-        .where(parentIdCondition(parentField))
-        .getSQL
-
-      val statement: PreparedStatement = x.connection.prepareStatement(queryString, Statement.RETURN_GENERATED_KEYS)
-      statement.setGcValue(1, parentId)
-
-      statement.execute()
-    }
   }
 
   def parentIdCondition(parentField: RelationField): Condition = parentIdCondition(parentField, Vector(1))
@@ -466,44 +438,25 @@ case class PostgresApiDatabaseMutationBuilder(schemaName: String) extends Builde
     idField(parentField.relatedModel_!).in(subSelect)
   }
 
-  def deleteRelayRowByWhere(where: NodeSelector) = {
-    SimpleDBIO[Boolean] { x =>
-      lazy val queryString: String = {
-        val subSelect = select(field(name(schemaName, where.model.dbName, where.model.dbNameOfIdField_!)))
-          .from(table(name(schemaName, where.model.dbName)))
-          .where(field(name(schemaName, where.model.dbName, where.field.dbName)).equal(placeHolder))
-
-        sql
-          .deleteFrom(table(name(schemaName, relayTableName)))
-          .where(field(name(schemaName, relayTableName, "id")).equal(subSelect))
-          .getSQL
-      }
-
-      val statement: PreparedStatement = x.connection.prepareStatement(queryString, Statement.RETURN_GENERATED_KEYS)
-      statement.setGcValue(1, where.fieldGCValue)
-
-      statement.execute()
-    }
-  }
-
-  def deleteRelayRowByParentId(parent: RelationField, parentId: IdGCValue) = {
-    SimpleDBIO[Boolean] { x =>
-      val subSelect = select(field(name(schemaName, parent.relation.relationTableName, parent.oppositeRelationSide.toString)))
-        .from(table(name(schemaName, parent.relation.relationTableName)))
-        .where(field(name(parent.relation.relationTableName, parent.relationSide.toString)).equal(placeHolder))
-      val condition = field(name(schemaName, relayTableName, "id")).equal(subSelect)
-
-      val queryString = sql
-        .deleteFrom(table(name(schemaName, relayTableName)))
-        .where(condition)
-        .getSQL
-
-      val statement: PreparedStatement = x.connection.prepareStatement(queryString, Statement.RETURN_GENERATED_KEYS)
-      statement.setGcValue(1, parentId)
-
-      statement.execute()
-    }
-  }
+//  def deleteScalarListEntriesByIds(model:Model, ids: Vector[IdGCValue]) = {
+//    SimpleDBIO[Boolean] { x =>
+//      lazy val queryString: String = {
+//        val subSelect = select(field(name(schemaName, where.model.dbName, where.model.dbNameOfIdField_!)))
+//          .from(table(name(schemaName, where.model.dbName)))
+//          .where(field(name(schemaName, where.model.dbName, where.field.dbName)).equal(placeHolder))
+//
+//        sql
+//          .deleteFrom(table(name(schemaName, relayTableName)))
+//          .where(field(name(schemaName, relayTableName, "id")).equal(subSelect))
+//          .getSQL
+//      }
+//
+//      val statement: PreparedStatement = x.connection.prepareStatement(queryString, Statement.RETURN_GENERATED_KEYS)
+//      statement.setGcValue(1, where.fieldGCValue)
+//
+//      statement.execute()
+//    }
+//  }
 
   def deleteRelationRowByChildId(relationField: RelationField, childId: IdGCValue): DBIO[Unit] = {
     val relation = relationField.relation
@@ -534,25 +487,8 @@ case class PostgresApiDatabaseMutationBuilder(schemaName: String) extends Builde
   //endregion
 
   //region SCALAR LISTS
-  def setScalarList(where: NodeSelector, listFieldMap: Vector[(String, ListGCValue)]) = {
-    val idQuery = SimpleDBIO { ctx =>
-      lazy val queryString: String = sql.select(value(placeHolder)).getSQL
-      val ps                       = ctx.connection.prepareStatement(queryString)
-      val pp                       = new PositionedParameters(ps)
-      pp.setGcValue(where.fieldGCValue)
-      val rs = ps.executeQuery()
-      rs.as(readFirstColumnAsString)
-    }
-
-    if (listFieldMap.isEmpty) DBIOAction.successful(()) else setManyScalarListHelper(where.model, listFieldMap, idQuery)
-  }
-
   def setScalarListById(model: Model, id: IdGCValue, listFieldMap: Vector[(String, ListGCValue)]) = {
-    if (listFieldMap.isEmpty) {
-      DBIOAction.successful(())
-    } else {
-      setManyScalarListHelper(model, listFieldMap, DBIO.successful(Vector(id.value.toString)))
-    }
+    if (listFieldMap.isEmpty) DBIOAction.successful(()) else setManyScalarListHelper(model, listFieldMap, DBIO.successful(Vector(id)))
   }
 
   def setManyScalarLists(model: Model, listFieldMap: Vector[(String, ListGCValue)], whereFilter: Option[Filter]) = {
@@ -568,16 +504,16 @@ case class PostgresApiDatabaseMutationBuilder(schemaName: String) extends Builde
       val ps = ctx.connection.prepareStatement(queryString)
       JooqSetParams.setFilter(new PositionedParameters(ps), whereFilter)
       val rs = ps.executeQuery()
-      rs.as(readFirstColumnAsString)
+      rs.as(readId(model))
     }
 
     if (listFieldMap.isEmpty) DBIOAction.successful(()) else setManyScalarListHelper(model, listFieldMap, idQuery)
   }
 
-  def setManyScalarListHelper(model: Model, listFieldMap: Vector[(String, ListGCValue)], idQuery: DBIO[Vector[String]]) = {
+  def setManyScalarListHelper(model: Model, listFieldMap: Vector[(String, ListGCValue)], idQuery: DBIO[Vector[IdGCValue]]) = {
     import scala.concurrent.ExecutionContext.Implicits.global
 
-    def listInsert(ids: Vector[String]) = {
+    def listInsert(ids: Vector[IdGCValue]) = {
       if (ids.isEmpty) {
         DBIOAction.successful(())
       } else {
@@ -609,7 +545,7 @@ case class PostgresApiDatabaseMutationBuilder(schemaName: String) extends Builde
 
               val wipeOldValues: PreparedStatement = x.connection.prepareStatement(wipe)
               ids.zipWithIndex.foreach { zip =>
-                wipeOldValues.setString(zip._2 + 1, zip._1)
+                wipeOldValues.setGcValue(zip._2 + 1, zip._1)
               }
 
               wipeOldValues.executeUpdate()
@@ -627,7 +563,7 @@ case class PostgresApiDatabaseMutationBuilder(schemaName: String) extends Builde
               val insertNewValues: PreparedStatement = x.connection.prepareStatement(insert)
               val newValueTuples                     = valueTuplesForListField(listGCValue)
               newValueTuples.foreach { tuple =>
-                insertNewValues.setString(1, tuple._1)
+                insertNewValues.setGcValue(1, tuple._1)
                 insertNewValues.setInt(2, tuple._2)
                 insertNewValues.setGcValue(3, tuple._3)
                 insertNewValues.addBatch()
@@ -840,10 +776,8 @@ case class PostgresApiDatabaseMutationBuilder(schemaName: String) extends Builde
   }
   //endregion
 
-  private val dbioUnit = DBIO.successful(())
-
-  private val readFirstColumnAsString: ReadsResultSet[String] = ReadsResultSet(_.getString(1))
-  private val readsAsUnit: ReadsResultSet[Unit]               = ReadsResultSet(_ => ())
+  private val dbioUnit                          = DBIO.successful(())
+  private val readsAsUnit: ReadsResultSet[Unit] = ReadsResultSet(_ => ())
 
   private def readId(model: Model) = ReadsResultSet(_.getId(model))
 }
