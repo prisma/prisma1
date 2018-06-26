@@ -72,6 +72,16 @@ trait BuilderBase {
     }
   }
 
+  def updateToDBIO(query: Update[Record])(setParams: PositionedParameters => Unit): DBIO[Unit] = {
+    SimpleDBIO { ctx =>
+      val ps = ctx.connection.prepareStatement(query.getSQL)
+      val pp = new PositionedParameters(ps)
+      setParams(pp)
+
+      ps.executeUpdate()
+    }
+  }
+
   private def scalarListTableName(field: ScalarField) = field.model.dbName + "_" + field.dbName
 
   def readPrismaNodeWithParent(rf: RelationField) = ReadsResultSet { rs =>
@@ -173,57 +183,53 @@ case class PostgresApiDatabaseMutationBuilder(schemaName: String) extends Builde
     val relation = relationField.relation
 
     if (relation.isInlineRelation) {
-      ???
+      val inlineManifestation = relation.inlineManifestation.get
+      val referencingColumn   = inlineManifestation.referencingColumn
+      val childModel          = relationField.relatedModel_!
+      val parentModel         = relationField.model
 
-      //Fixme
+      val childWhereCondition = idField(childModel).equal(placeHolder)
+      val otherWhereCondition = idField(parentModel).equal(placeHolder)
 
-//      val inlineManifestation = relation.inlineManifestation.get
-//      val referencingColumn   = inlineManifestation.referencingColumn
-//      val tableName           = relation.relationTableName
-//      val otherModel = if (inlineManifestation.inTableOfModelId == relation.modelAName) {
-//        relation.modelB
-//      } else {
-//        relation.modelA
-//      }
-//      val childWhereCondition = sql"""where "#$schemaName"."#${childWhere.model.dbName}"."#${childWhere.field.dbName}" = ${childWhere.fieldGCValue}"""
-//      val otherWhereCondition = sql"""where "#$schemaName"."#${path.removeLastEdge.lastModel.dbName}"."#${path.removeLastEdge.lastModel.dbNameOfIdField_!}" in (""" ++ pathQueryForLastChild(
-//        path.removeLastEdge) ++ sql")"
-//      val selectIdOfChild = sql"""select "#${childWhere.model.dbNameOfIdField_!}" as id from "#$schemaName"."#${childWhere.model.dbName}" """ ++ childWhereCondition
-//      val selectIdOfOther = sql"""select "#${otherModel.dbNameOfIdField_!}" as id from "#$schemaName"."#${otherModel.dbName}" """ ++ otherWhereCondition
-//
-//      val rowToUpdateCondition = if (relation.isSameModelRelation) {
-//        if (path.lastEdge_!.childField.relationSide == RelationSide.A) {
-//          childWhereCondition
-//        } else {
-//          otherWhereCondition
-//        }
-//      } else {
-//        if (inlineManifestation.inTableOfModelId == childWhere.model.name) {
-//          childWhereCondition
-//        } else {
-//          otherWhereCondition
-//        }
-//      }
-//
-//      val nodeToLinkToCondition = if (relation.isSameModelRelation) {
-//        if (path.lastEdge_!.childField.relationSide == RelationSide.A) {
-//          selectIdOfOther
-//        } else {
-//          selectIdOfChild
-//        }
-//      } else {
-//        if (inlineManifestation.inTableOfModelId == childWhere.model.name) {
-//          selectIdOfOther
-//        } else {
-//          selectIdOfChild
-//        }
-//      }
-//
-//      (sql"""update "#$schemaName"."#$tableName" """ ++
-//        sql"""set "#$referencingColumn" = subquery.id""" ++
-//        sql"""from (""" ++ nodeToLinkToCondition ++ sql""") as subquery""" ++
-//        rowToUpdateCondition).asUpdate
+      val rowToUpdateCondition = if (relation.isSameModelRelation) {
+        if (relationField.relationSide == RelationSide.A) {
+          childWhereCondition
+        } else {
+          otherWhereCondition
+        }
+      } else {
+        if (inlineManifestation.inTableOfModelId == childModel.name) {
+          childWhereCondition
+        } else {
+          otherWhereCondition
+        }
+      }
 
+      val (idToLinkTo, idToUpdate) = if (relation.isSameModelRelation) {
+        if (relationField.relationSide == RelationSide.A) {
+          (parentId, childId)
+        } else {
+          (childId, parentId)
+        }
+      } else {
+        if (inlineManifestation.inTableOfModelId == childModel.name) {
+          (parentId, childId)
+        } else {
+          (childId, parentId)
+        }
+      }
+
+      val query = sql
+        .update(relationTable(relation))
+        .setColumnsWithPlaceHolders(Vector(referencingColumn))
+        .where(rowToUpdateCondition)
+
+      updateToDBIO(query)(
+        setParams = { pp =>
+          pp.setGcValue(idToLinkTo)
+          pp.setGcValue(idToUpdate)
+        }
+      )
     } else if (relation.hasManifestation) {
       SimpleDBIO[Boolean] { x =>
         lazy val queryString: String = {
