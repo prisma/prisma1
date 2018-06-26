@@ -31,7 +31,7 @@ case class DatabaseMutactions(project: Project) {
   object NestedMutactions {
     val empty = NestedMutactions(Vector.empty, Vector.empty, Vector.empty, Vector.empty, Vector.empty, Vector.empty)
   }
-//
+
 //  def report[T](mutactions: Vector[T]): Vector[T] = {
 //    ApiMetrics.mutactionCount.incBy(mutactions.size, project.id)
 //    mutactions
@@ -42,12 +42,7 @@ case class DatabaseMutactions(project: Project) {
   }
 
   //todo this does not support cascading delete behavior at the moment
-  def getMutactionsForDeleteMany(model: Model, whereFilter: Option[Filter]): DeleteDataItems = {
-//    val requiredRelationChecks = DeleteManyRelationChecks(project, model, whereFilter)
-//    val deleteItems            = DeleteDataItems(project, model, whereFilter)
-//    Vector(requiredRelationChecks, deleteItems)
-    DeleteDataItems(project, model, whereFilter)
-  }
+  def getMutactionsForDeleteMany(model: Model, whereFilter: Option[Filter]): DeleteDataItems = DeleteDataItems(project, model, whereFilter)
 
   def getMutactionsForUpdate(model: Model, where: NodeSelector, args: CoolArgs, previousValues: PrismaNode): UpdateDataItem = {
     val (nonListArgs, listArgs)  = args.getUpdateArgs(model)
@@ -212,8 +207,8 @@ case class DatabaseMutactions(project: Project) {
       val childWhere = delete match {
         case DeleteByRelation(_)  => None
         case DeleteByWhere(where) => Some(where)
-
       }
+
       NestedDeleteDataItem(project, field, childWhere)
     }
   }
