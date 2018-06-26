@@ -22,7 +22,6 @@ object TypeIdentifier {
 
   sealed trait ScalarTypeIdentifier extends TypeIdentifier
   object String                     extends ScalarTypeIdentifier { def code = "String" }
-  object Int                        extends ScalarTypeIdentifier { def code = "Int" }
   object Float                      extends ScalarTypeIdentifier { def code = "Float" }
   object Boolean                    extends ScalarTypeIdentifier { def code = "Boolean" }
   object Enum                       extends ScalarTypeIdentifier { def code = "Enum" }
@@ -32,6 +31,7 @@ object TypeIdentifier {
   sealed trait IdTypeIdentifier extends ScalarTypeIdentifier
   object Cuid                   extends IdTypeIdentifier { def code = "GraphQLID" }
   object UUID                   extends IdTypeIdentifier { def code = "UUID" }
+  object Int                    extends IdTypeIdentifier { def code = "Int" }
 
   // compatibility with Enumeration interface
   type Value = TypeIdentifier
