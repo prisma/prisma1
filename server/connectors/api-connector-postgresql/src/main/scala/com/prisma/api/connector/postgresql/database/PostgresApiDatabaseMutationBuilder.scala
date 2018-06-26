@@ -18,7 +18,7 @@ import org.joda.time.{DateTime, DateTimeZone}
 import org.jooq.conf.Settings
 import org.jooq.impl.DSL
 import org.jooq.impl.DSL._
-import org.jooq.{Query => JooqQuery, _}
+import org.jooq.{Field, Query => JooqQuery, _}
 import slick.dbio.DBIOAction
 import slick.jdbc.PositionedParameters
 import slick.jdbc.PostgresProfile.api._
@@ -44,7 +44,7 @@ trait BuilderBase {
   def modelTable(model: Model)                                                    = table(name(schemaName, model.dbName))
   def relationTable(relation: Relation)                                           = table(name(schemaName, relation.relationTableName))
   def scalarListTable(field: ScalarField)                                         = table(name(schemaName, scalarListTableName(field)))
-  def modelColumn(model: Model, column: String)                                   = field(name(schemaName, model.dbName, column))
+  def modelColumn(model: Model, scalarField: ScalarField): Field[AnyRef]          = field(name(schemaName, model.dbName, scalarField.dbName))
   def modelIdColumn(model: Model)                                                 = field(name(schemaName, model.dbName, model.dbNameOfIdField_!))
   def relationColumn(relation: Relation, side: RelationSide.Value)                = field(name(schemaName, relation.relationTableName, relation.columnForRelationSide(side)))
   def relationIdColumn(relation: Relation)                                        = field(name(schemaName, relation.relationTableName, "id"))
@@ -123,16 +123,15 @@ case class PostgresApiDatabaseMutationBuilder(schemaName: String) extends Builde
   def createDataItem(model: Model, args: PrismaArgs): DBIO[IdGCValue] = {
     SimpleDBIO { x =>
       val argsAsRoot = args.raw.asRoot.add(model.idField_!.name, generateId(model))
-      val fields     = model.fields.filter(field => argsAsRoot.hasArgFor(field.name))
-      val columns    = fields.map(_.dbName)
+      val fields     = model.scalarFields.filter(field => argsAsRoot.hasArgFor(field.name))
 
       lazy val queryString: String = {
-        val generatedFields = columns.map(column => modelColumn(model, column))
+        val generatedFields = fields.map(field => modelColumn(model, field))
 
         sql
           .insertInto(modelTable(model))
           .columns(generatedFields: _*)
-          .values(columns.map(_ => placeHolder): _*)
+          .values(fields.map(_ => placeHolder): _*)
           .getSQL
       }
 
@@ -613,7 +612,7 @@ case class PostgresApiDatabaseMutationBuilder(schemaName: String) extends Builde
     val query = sql
       .select(asterisk())
       .from(modelTable(model))
-      .where(modelColumn(model, where.field.dbName).equal(placeHolder))
+      .where(modelColumn(model, where.field).equal(placeHolder))
 
     queryToDBIO(query)(
       setParams = pp => pp.setGcValue(where.fieldGCValue),
@@ -627,7 +626,7 @@ case class PostgresApiDatabaseMutationBuilder(schemaName: String) extends Builde
       val query = sql
         .select(idField(model))
         .from(modelTable(model))
-        .where(modelColumn(model, where.field.dbName).equal(placeHolder))
+        .where(modelColumn(model, where.field).equal(placeHolder))
 
       val ps = ctx.connection.prepareStatement(query.getSQL)
       ps.setGcValue(1, where.fieldGCValue)
@@ -660,7 +659,7 @@ case class PostgresApiDatabaseMutationBuilder(schemaName: String) extends Builde
 
   def queryIdByParentIdAndWhere(parentField: RelationField, parentId: IdGCValue, where: NodeSelector): DBIO[Option[IdGCValue]] = {
     val model                 = parentField.relatedModel_!
-    val nodeSelectorCondition = field(name(schemaName, model.dbName, where.fieldName)).equal(placeHolder)
+    val nodeSelectorCondition = modelColumn(model, where.field).equal(placeHolder)
     val q: SelectConditionStep[Record1[AnyRef]] = sql
       .select(idField(model))
       .from(modelTable(model))

@@ -26,8 +26,7 @@ trait ImportActions extends BuilderBase {
       val argsWithIndex = mutaction.args.zipWithIndex
 
       val nodeResult: Vector[String] = try {
-        val columns = model.scalarNonListFields.map(_.dbName)
-        val fields  = columns.map(modelColumn(model, _)).toVector
+        val fields = model.scalarNonListFields.map(modelColumn(model, _)).toVector
 
         val query = sql
           .insertInto(modelTable(model))
