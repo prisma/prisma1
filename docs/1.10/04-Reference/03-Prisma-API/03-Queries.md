@@ -442,7 +442,3 @@ query {
 ```
 
 > **Note**: You cannot combine `first` with `before` or `last` with `after`. You can also query for more nodes than exist without an error message.
-
-#### Limitations
-
-Note that by default, Prisma returns *a maximum of 1000 nodes*. This can be overridden by setting the pagination parameters accordingly. If you do not set any pagination parameters, Prisma will set a limit of 1000. 
