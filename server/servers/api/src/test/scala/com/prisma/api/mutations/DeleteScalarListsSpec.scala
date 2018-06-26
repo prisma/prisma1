@@ -11,6 +11,7 @@ class DeleteScalarListsSpec extends FlatSpec with Matchers with ApiSpecBase {
 
     val project: Project = SchemaDsl.fromString() {
       """type TestModel {
+        | id: ID! @unique
         | name: String! @unique
         | list: [Int!]!
         |}"""
@@ -40,11 +41,13 @@ class DeleteScalarListsSpec extends FlatSpec with Matchers with ApiSpecBase {
 
     val project: Project = SchemaDsl.fromString() {
       """type Top {
+        | id: ID! @unique
         | name: String! @unique
         | bottom: Bottom
         |}
         |
         |type Bottom {
+        | id: ID! @unique
         | name: String! @unique
         | list: [Int!]!
         |}"""
@@ -74,6 +77,7 @@ class DeleteScalarListsSpec extends FlatSpec with Matchers with ApiSpecBase {
 
     val project: Project = SchemaDsl.fromString() {
       """type Top {
+        | id: ID! @unique
         | name: String! @unique
         | list: [Int!]!
         |}"""
@@ -94,11 +98,13 @@ class DeleteScalarListsSpec extends FlatSpec with Matchers with ApiSpecBase {
 
     val project: Project = SchemaDsl.fromString() {
       """type Top {
+        | id: ID! @unique
         | name: String! @unique
         | bottom: Bottom @relation(name: "Test", onDelete:"CASCADE")
         |}
         |
         |type Bottom {
+        | id: ID! @unique
         | name: String! @unique
         | list: [Int!]!
         | top: Top! @relation(name: "Test")
