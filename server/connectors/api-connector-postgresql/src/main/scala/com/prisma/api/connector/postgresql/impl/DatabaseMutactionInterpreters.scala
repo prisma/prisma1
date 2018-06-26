@@ -7,6 +7,7 @@ import com.prisma.api.connector.postgresql.impl.GetFieldFromSQLUniqueException.g
 import com.prisma.api.schema.{APIErrors, UserFacingError}
 import com.prisma.api.schema.APIErrors.{NodesNotConnectedError, RequiredRelationWouldBeViolated}
 import com.prisma.gc_values.{CuidGCValue, IdGCValue, ListGCValue, RootGCValue}
+import com.prisma.shared.models.Manifestations.InlineRelationManifestation
 import com.prisma.shared.models._
 import org.postgresql.util.PSQLException
 import slick.dbio.DBIOAction
@@ -60,16 +61,18 @@ case class NestedCreateDataItemInterpreter(mutaction: NestedCreateDataItem, incl
       parentId: IdGCValue
   )(implicit ec: ExecutionContext) = {
 
-    if (relation.isInlineRelation) {
-      val inlineField  = relation.getFieldOnModel(model.name)
-      val argsMap      = mutaction.nonListArgs.raw.asRoot.map
-      val modifiedArgs = argsMap.updated(inlineField.name, parentId)
-      mutationBuilder.createDataItem(model, PrismaArgs(RootGCValue(modifiedArgs)))
-    } else {
-      for {
-        id <- mutationBuilder.createDataItem(model, mutaction.nonListArgs)
-        _  <- mutationBuilder.createRelation(mutaction.parentField, parentId, id)
-      } yield id
+    relation.manifestation match {
+      case Some(m: InlineRelationManifestation) if m.inTableOfModelId == model.name =>
+        val inlineField  = relation.getFieldOnModel(model.name)
+        val argsMap      = mutaction.nonListArgs.raw.asRoot.map
+        val modifiedArgs = argsMap.updated(inlineField.name, parentId)
+        mutationBuilder.createDataItem(model, PrismaArgs(RootGCValue(modifiedArgs)))
+      case _ =>
+        for {
+          id <- mutationBuilder.createDataItem(model, mutaction.nonListArgs)
+          _  <- mutationBuilder.createRelation(mutaction.parentField, parentId, id)
+        } yield id
+
     }
   }
 

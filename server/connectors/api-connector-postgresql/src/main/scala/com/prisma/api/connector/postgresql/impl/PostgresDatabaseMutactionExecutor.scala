@@ -63,7 +63,7 @@ case class PostgresDatabaseMutactionExecutor(clientDb: Database, createRelayIds:
     case m: NestedDeleteDataItem     => DeleteDataItemNestedInterpreter(m)
     case m: DeleteDataItems          => DeleteDataItemsInterpreter(m)
     case m: NestedConnectRelation    => NestedConnectRelationInterpreter(m)
-    case m: NestedCreateDataItem     => NestedCreateDataItemInterpreter(m)
+    case m: NestedCreateDataItem     => NestedCreateDataItemInterpreter(m, includeRelayRow = createRelayIds)
     case m: NestedDisconnectRelation => NestedDisconnectRelationInterpreter(m)
     case m: ResetDataMutaction       => ResetDataInterpreter(m)
     case m: UpdateDataItem           => UpdateDataItemInterpreter(m)
