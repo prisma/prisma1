@@ -1,7 +1,7 @@
 package com.prisma.api.schema
 
-import com.prisma.api.connector.{ModelEdge, NodeEdge, NodeSelector, Path}
-import com.prisma.shared.models.{Model, Project, Relation}
+import com.prisma.api.connector.NodeSelector
+import com.prisma.shared.models.{Model, Relation}
 
 abstract class UserFacingError(val message: String, val code: Int) extends Exception(message)
 
@@ -100,7 +100,6 @@ object APIErrors {
   case class NullProvidedForWhereError(modelName: String)
       extends ClientApiError(s"You provided an invalid argument for the where selector on $modelName.", 3040)
 
-  case class NodesNotConnectedErrorByPath(path: Path) extends ClientApiError(pathErrorMessage(path), 3041)
   case class NodesNotConnectedError(relation: Relation, parent: Model, parentWhere: Option[NodeSelector], child: Model, childWhere: Option[NodeSelector])
       extends ClientApiError(pathErrorMessage(relation, parent, parentWhere, child, childWhere), 3041)
 
@@ -128,40 +127,4 @@ object APIErrors {
         s"The relation ${relation.name} has no node for the model ${parent.name} connected to a Node for the model ${child.name} on your mutation path."
     }
   }
-
-  def pathErrorMessage(path: Path): String = {
-
-    path.edges.length match {
-      case 0 => sys.error("Should not trigger on empty paths.")
-      case 1 =>
-        path.lastEdge_! match {
-          case edge: ModelEdge => // root -> ModelEdge
-            s"The relation ${edge.relation.name} has no node for the model ${edge.parent.name} with the value '${path.root.value}' for the field '${path.root.field.name}' connected to a node for the model ${edge.child.name} on your mutation path."
-          case edge: NodeEdge => // root -> NodeEdge
-            s"The relation ${edge.relation.name} has no node for the model ${edge.parent.name} with the value '${path.root.value}' for the field '${path.root.field.name}' connected to a node for the model ${edge.child.name} with the value '${edge.childWhere.value}' for the field '${edge.childWhere.field.name}'"
-        }
-
-      case _ =>
-        path.lastEdge_! match {
-          case lastEdge: ModelEdge =>
-            path.removeLastEdge.lastEdge_! match {
-              case _: ModelEdge => // root -> ModelEdge -> ModelEdge
-                s"The relation ${lastEdge.relation.name} has no node for the model ${lastEdge.parent.name} connected to a Node for the model ${lastEdge.child.name} on your mutation path."
-
-              case parentEdge: NodeEdge => // root -> NodeEdge -> ModelEdge
-                s"The relation ${lastEdge.relation.name} has no node for the model ${lastEdge.parent.name} with the value '${parentEdge.childWhere.value}' for the field '${parentEdge.childWhere.field.name}' connected to a node for the model ${lastEdge.child.name} on your mutation path.'"
-            }
-
-          case lastEdge: NodeEdge =>
-            path.removeLastEdge.lastEdge_! match {
-              case _: ModelEdge => // root -> ModelEdge -> NodeEdge
-                s"The relation ${lastEdge.relation.name} has no node for the model ${lastEdge.parent.name} connected to a Node for the model ${lastEdge.child.name} with the value '${lastEdge.childWhere.value}' for the field '${lastEdge.childWhere.field.name}' on your mutation path."
-
-              case parentEdge: NodeEdge => // root -> NodeEdge -> NodeEdge
-                s"The relation ${lastEdge.relation.name} has no node for the model ${lastEdge.parent.name} with the value '${parentEdge.childWhere.value}' for the field '${parentEdge.childWhere.field.name}' connected to a node for the model ${lastEdge.child.name} with the value '${lastEdge.childWhere.value}' for the field '${lastEdge.childWhere.field.name}' on your mutation path.'"
-            }
-        }
-    }
-  }
-
 }

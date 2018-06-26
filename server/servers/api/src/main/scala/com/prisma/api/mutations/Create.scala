@@ -28,8 +28,6 @@ case class Create(
 
   val coolArgs: CoolArgs = CoolArgs.fromSchemaArgs(args.raw)
 
-  val path = Path.empty(NodeSelector.forIdGCValue(model, id))
-
   def prepareMutactions(): Future[TopLevelDatabaseMutaction] = {
     val createMutactionsResult = DatabaseMutactions(project).getMutactionsForCreate(model, coolArgs)
 //    val subscriptionMutactions = SubscriptionEvents.extractFromSqlMutactions(project, mutationId, createMutactionsResult)

@@ -29,8 +29,6 @@ class SubscriptionFilterSpec extends FlatSpec with Matchers with SubscriptionSpe
     TestData.createTodo("test-node-id", "some todo", JsString("[1,2,{\"a\":\"b\"}]"), None, project, model, testDatabase)
     TestData.createTodo("important-test-node-id", "important!", JsString("[1,2,{\"a\":\"b\"}]"), None, project, model, testDatabase)
 
-    val path = Path.empty(NodeSelector.forCuid(project.schema.getModelByName_!("Comment"), "comment-id"))
-
     val raw: List[(String, GCValue)] = List(("text", StringGCValue("some comment")), ("id", CuidGCValue("comment-id")))
     val args                         = PrismaArgs(RootGCValue(raw: _*))
 
