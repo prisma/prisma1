@@ -116,8 +116,13 @@ object SchemaDsl extends AwaitUtils {
 
   private def addIdFields(project: Project, idField: FieldTemplate): Project = {
     val newModels = project.models.map { model =>
-      val newFields = model.fields.map(_.template) :+ idField
-      model.copy(fieldTemplates = newFields)
+      val modelContainsAlreadyAnIdField = model.idField.isDefined
+      if (modelContainsAlreadyAnIdField) {
+        model.copy()
+      } else {
+        val newFields = model.fields.map(_.template) :+ idField
+        model.copy(fieldTemplates = newFields)
+      }
     }
     project.copy(schema = project.schema.copy(modelTemplates = newModels))
   }
