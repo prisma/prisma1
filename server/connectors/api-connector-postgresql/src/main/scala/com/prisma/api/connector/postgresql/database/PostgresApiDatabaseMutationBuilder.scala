@@ -668,7 +668,12 @@ case class PostgresApiDatabaseMutationBuilder(schemaName: String) extends Builde
       childId: IdGCValue
   )(implicit ec: ExecutionContext): DBIO[Unit] = {
     val relation = relationField.relation
-    val idQuery  = sql.select(asterisk()).from(relationTable(relation)).where(relationColumn(relation, relationField.oppositeRelationSide).equal(placeHolder))
+    val idQuery = sql
+      .select(asterisk())
+      .from(relationTable(relation))
+      .where(relationColumn(relation, relationField.oppositeRelationSide).equal(placeHolder))
+      .and(relationColumn(relation, relationField.relationSide).isNotNull)
+
     val action = queryToDBIO(idQuery)(
       setParams = _.setGcValue(childId),
       readResult = rs => rs.as(readsAsUnit)
@@ -683,7 +688,12 @@ case class PostgresApiDatabaseMutationBuilder(schemaName: String) extends Builde
       childId: IdGCValue
   )(implicit ec: ExecutionContext): DBIO[Unit] = {
     val relation = relationField.relation
-    val idQuery  = sql.select(asterisk()).from(relationTable(relation)).where(relationColumn(relation, relationField.oppositeRelationSide).equal(placeHolder))
+    val idQuery = sql
+      .select(asterisk())
+      .from(relationTable(relation))
+      .where(relationColumn(relation, relationField.oppositeRelationSide).equal(placeHolder))
+      .and(relationColumn(relation, relationField.relationSide).isNotNull)
+
     val action = queryToDBIO(idQuery)(
       setParams = _.setGcValue(childId),
       readResult = rs => rs.as(readsAsUnit)
@@ -705,7 +715,12 @@ case class PostgresApiDatabaseMutationBuilder(schemaName: String) extends Builde
       parentId: IdGCValue
   )(implicit ec: ExecutionContext): DBIO[Unit] = {
     val relation = relationField.relation
-    val idQuery  = sql.select(asterisk()).from(relationTable(relation)).where(relationColumn(relation, relationField.relationSide).equal(placeHolder))
+    val idQuery = sql
+      .select(asterisk())
+      .from(relationTable(relation))
+      .where(relationColumn(relation, relationField.relationSide).equal(placeHolder))
+      .and(relationColumn(relation, relationField.oppositeRelationSide).isNotNull)
+
     val action = queryToDBIO(idQuery)(
       setParams = _.setGcValue(parentId),
       readResult = rs => rs.as(readsAsUnit)
