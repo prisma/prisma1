@@ -48,7 +48,7 @@ case class PostgresDatabaseMutactionExecutor(clientDb: Database, createRelayIds:
         } yield
           MutactionResults(
             databaseResult = result,
-            nestedResults = childResults.flatMap(_.nestedResults)
+            nestedResults = childResults
           )
       case m: FinalMutaction =>
         for {
