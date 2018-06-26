@@ -72,6 +72,32 @@ trait BuilderBase {
   }
 
   private def scalarListTableName(field: ScalarField) = field.model.dbName + "_" + field.dbName
+
+  def readPrismaNodeWithParent(rf: RelationField) = ReadsResultSet { rs =>
+    val node = readPrismaNode(rf.relatedModel_!, rs)
+
+    val parentId = if (rf.relation.isSameModelRelation) {
+      val firstSide  = rs.getParentId(RelationSide.A, rf.model.idField_!.typeIdentifier)
+      val secondSide = rs.getParentId(RelationSide.B, rf.model.idField_!.typeIdentifier)
+      if (firstSide == node.id) secondSide else firstSide
+    } else {
+      val parentRelationSide = rf.relation.modelA match {
+        case x if x == rf.relatedModel_! => RelationSide.B
+        case _                           => RelationSide.A
+      }
+      rs.getParentId(parentRelationSide, rf.model.idField_!.typeIdentifier)
+    }
+    PrismaNodeWithParent(parentId, node)
+  }
+
+  def readsPrismaNode(model: Model): ReadsResultSet[PrismaNode] = ReadsResultSet { rs =>
+    readPrismaNode(model, rs)
+  }
+
+  private def readPrismaNode(model: Model, rs: ResultSet) = {
+    val data = model.scalarNonListFields.map(field => field.name -> rs.getGcValue(field.dbName, field.typeIdentifier))
+    PrismaNode(id = rs.getId(model), data = RootGCValue(data: _*), Some(model.name))
+  }
 }
 
 case class PostgresApiDatabaseMutationBuilder(schemaName: String) extends BuilderBase with ImportActions {
@@ -627,13 +653,26 @@ case class PostgresApiDatabaseMutationBuilder(schemaName: String) extends Builde
 
   // region HELPERS
 
+  def queryNodeByWhere(where: NodeSelector): DBIO[Option[PrismaNode]] = {
+    val model = where.model
+    val query = sql
+      .select(asterisk())
+      .from(modelTable(model))
+      .where(modelColumn(model, where.field.dbName).equal(placeHolder))
+
+    queryToDBIO(query)(
+      setParams = pp => pp.setGcValue(where.fieldGCValue),
+      readResult = rs => rs.as(readsPrismaNode(model)).headOption
+    )
+  }
+
   def queryIdFromWhere(where: NodeSelector): DBIO[Option[IdGCValue]] = {
     SimpleDBIO { ctx =>
       val model = where.model
       val query = sql
-        .select(field(name(schemaName, model.dbName, model.dbNameOfIdField_!)))
-        .from(table(name(schemaName, model.dbName)))
-        .where(field(name(schemaName, model.dbName, where.fieldName)).equal(placeHolder))
+        .select(idField(model))
+        .from(modelTable(model))
+        .where(modelColumn(model, where.field.dbName).equal(placeHolder))
 
       val ps = ctx.connection.prepareStatement(query.getSQL)
       ps.setGcValue(1, where.fieldGCValue)

@@ -286,12 +286,12 @@ case class UpdateDataItemInterpreter(mutaction: UpdateDataItem) extends Database
 
   override def newAction(mutationBuilder: PostgresApiDatabaseMutationBuilder, parent: IdGCValue)(implicit ec: ExecutionContext) = {
     for {
-      idOpt <- mutationBuilder.queryIdFromWhere(mutaction.where)
-      id <- idOpt match {
-             case Some(id) => doIt(mutationBuilder, id)
-             case None     => DBIO.failed(APIErrors.NodeNotFoundForWhereError(mutaction.where))
-           }
-    } yield UpdateItemResult(id)
+      nodeOpt <- mutationBuilder.queryNodeByWhere(mutaction.where)
+      node <- nodeOpt match {
+               case Some(node) => doIt(mutationBuilder, node.id).andThen(DBIO.successful(node))
+               case None       => DBIO.failed(APIErrors.NodeNotFoundForWhereError(mutaction.where))
+             }
+    } yield UpdateNodeResult(node.id, node, mutaction)
   }
 
   def action(mutationBuilder: PostgresApiDatabaseMutationBuilder) = ???
@@ -333,7 +333,7 @@ case class NestedUpdateDataItemInterpreter(mutaction: NestedUpdateDataItem) exte
                  childWhere = mutaction.where
                )
            }
-    } yield UpdateItemResult(id)
+    } yield UpdateNodeResult(id, PrismaNode(id, RootGCValue.empty), mutaction)
   }
   override def action(mutationBuilder: PostgresApiDatabaseMutationBuilder) = ???
 

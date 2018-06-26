@@ -36,6 +36,12 @@ sealed trait CreateNode extends FurtherNestedMutaction {
   def listArgs: Vector[(String, ListGCValue)]
 }
 
+sealed trait UpdateNode extends FurtherNestedMutaction {
+  def model: Model
+  def nonListArgs: PrismaArgs
+  def listArgs: Vector[(String, ListGCValue)]
+}
+
 // TOP LEVEL - SINGLE
 case class CreateDataItem(
     project: Project,
@@ -59,8 +65,10 @@ case class UpdateDataItem(
     override val nestedDeletes: Vector[NestedDeleteDataItem],
     override val nestedConnects: Vector[NestedConnectRelation],
     override val nestedDisconnects: Vector[NestedDisconnectRelation]
-) extends FurtherNestedMutaction
-    with TopLevelDatabaseMutaction
+) extends UpdateNode
+    with TopLevelDatabaseMutaction {
+  override def model = where.model
+}
 
 case class UpsertDataItem(
     project: Project,
@@ -117,7 +125,9 @@ case class NestedUpdateDataItem(
     override val nestedConnects: Vector[NestedConnectRelation],
     override val nestedDisconnects: Vector[NestedDisconnectRelation]
 ) extends NestedDatabaseMutaction
-    with FurtherNestedMutaction
+    with UpdateNode {
+  override def model = relationField.relatedModel_!
+}
 
 case class NestedUpsertDataItem(
     project: Project,

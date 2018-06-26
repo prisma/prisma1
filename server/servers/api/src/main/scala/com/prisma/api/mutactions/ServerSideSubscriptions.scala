@@ -14,17 +14,14 @@ object ServerSideSubscriptions {
       mutactionResults: MutactionResults,
       requestId: Id
   ): Vector[ServerSideSubscription] = {
-    val createResults = mutactionResults.allResults.collect { case m: CreateNodeResult => m }
-//    val updateMutactions = mutactions.collect { case x: UpdateDataItem => x }
+    val createResults    = mutactionResults.allResults.collect { case m: CreateNodeResult => m }
+    val updateMutactions = mutactionResults.allResults.collect { case x: UpdateNodeResult => x }
 //    val deleteMutactions = mutactions.collect { case x: DeleteDataItem => x }
 //
-    val result = extractFromCreateMutactions(project, createResults, requestId)
-//      extractFromUpdateMutactions(project, updateMutactions, requestId) ++
+    val result = extractFromCreateMutactions(project, createResults, requestId) ++
+      extractFromUpdateMutactions(project, updateMutactions, requestId)
 //      extractFromDeleteMutactions(project, deleteMutactions, requestId)
-//    ApiMetrics.subscriptionEventCounter.incBy(result.size, project.id)
-//    result
-
-    // FIXME: this must be based on the results of the Mutactions
+    ApiMetrics.subscriptionEventCounter.incBy(result.size, project.id)
     result
   }
 
@@ -47,29 +44,29 @@ object ServerSideSubscriptions {
       )
     }
   }
-//
-//  def extractFromUpdateMutactions(
-//      project: Project,
-//      mutactions: Vector[UpdateDataItem],
-//      requestId: Id
-//  )(implicit apiDependencies: ApiDependencies): Vector[ServerSideSubscription] = {
-//    for {
-//      mutaction <- mutactions
-//      sssFn     <- serverSideSubscriptionFunctionsFor(project, mutaction.path.lastModel, ModelMutationType.Updated)
-//    } yield {
-//      ServerSideSubscription(
-//        project,
-//        mutaction.path.lastModel,
-//        ModelMutationType.Updated,
-//        sssFn,
-//        nodeId = mutaction.previousValues.id.value,
-//        requestId = requestId,
-//        updatedFields = Some(mutaction.namesOfUpdatedFields.toList),
-//        previousValues = Some(mutaction.previousValues)
-//      )
-//    }
-//
-//  }
+
+  def extractFromUpdateMutactions(
+      project: Project,
+      mutactionResults: Vector[UpdateNodeResult],
+      requestId: Id
+  ): Vector[ServerSideSubscription] = {
+    for {
+      mutactionResult <- mutactionResults
+      sssFn           <- serverSideSubscriptionFunctionsFor(project, mutactionResult.mutaction.model, ModelMutationType.Updated)
+    } yield {
+      ServerSideSubscription(
+        project,
+        mutactionResult.mutaction.model,
+        ModelMutationType.Updated,
+        sssFn,
+        nodeId = mutactionResult.id,
+        requestId = requestId,
+        updatedFields = Some(mutactionResult.namesOfUpdatedFields.toList),
+        previousValues = Some(mutactionResult.previousValues)
+      )
+    }
+
+  }
 //
 //  def extractFromDeleteMutactions(
 //      project: Project,
