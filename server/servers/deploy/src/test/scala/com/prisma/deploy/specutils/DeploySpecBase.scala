@@ -19,6 +19,7 @@ trait DeploySpecBase extends ConnectorAwareTest with BeforeAndAfterEach with Bef
   implicit lazy val materializer                             = ActorMaterializer()
   implicit lazy val testDependencies: TestDeployDependencies = TestDeployDependencies()
   implicit lazy val implicitSuite                            = self
+  implicit lazy val deployConnector                          = testDependencies.deployConnector
 
   override def prismaConfig = testDependencies.config
 
@@ -35,20 +36,20 @@ trait DeploySpecBase extends ConnectorAwareTest with BeforeAndAfterEach with Bef
 
   override protected def beforeAll(): Unit = {
     super.beforeAll()
-    testDependencies.deployConnector.initialize().await()
+    deployConnector.initialize().await()
   }
 
   override protected def afterAll(): Unit = {
     super.afterAll()
 //    projectsToCleanUp.foreach(internalDB.deleteProjectDatabase)
-    testDependencies.deployConnector.shutdown().await()
+    deployConnector.shutdown().await()
   }
 
   override protected def beforeEach(): Unit = {
     super.beforeEach()
 //    projectsToCleanUp.foreach(internalDB.deleteProjectDatabase)
 //    projectsToCleanUp.clear()
-    testDependencies.deployConnector.reset().await
+    deployConnector.reset().await
   }
 
   def formatSchema(schema: String): String = JsString(schema).toString()
@@ -84,7 +85,7 @@ trait PassiveDeploySpecBase extends DeploySpecBase { self: Suite =>
   }
 
   def setupProjectDatabaseForProject(projectId: String, sql: String): Unit = {
-    val connector = testDependencies.deployConnector.asInstanceOf[PostgresDeployConnector]
+    val connector = deployConnector.asInstanceOf[PostgresDeployConnector]
     val session   = connector.internalDatabase.createSession()
     val statement = session.createStatement()
     statement.execute(s"drop schema if exists $projectId cascade;")
