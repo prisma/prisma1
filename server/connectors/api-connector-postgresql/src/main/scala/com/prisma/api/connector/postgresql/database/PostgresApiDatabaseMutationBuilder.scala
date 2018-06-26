@@ -399,8 +399,9 @@ case class PostgresApiDatabaseMutationBuilder(schemaName: String) extends Builde
 
   def deleteNodes(model: Model, ids: Vector[IdGCValue])(implicit ec: ExecutionContext): DBIO[Unit] = {
     for {
-      _ <- deleteDataItemsByIds(model, ids)
+      _ <- deleteScalarListEntriesByIds(model, ids)
       _ <- deleteRelayRowsByIds(ids)
+      _ <- deleteDataItemsByIds(model, ids)
     } yield ()
   }
 
@@ -424,6 +425,20 @@ case class PostgresApiDatabaseMutationBuilder(schemaName: String) extends Builde
     )
   }
 
+  private def deleteScalarListEntriesByIds(model: Model, ids: Vector[IdGCValue]): DBIO[Unit] = {
+
+    val actions = model.scalarListFields.map { listField =>
+      val query = sql
+        .deleteFrom(scalarListTable(listField))
+        .where(scalarListColumn(listField, "nodeId").in(placeHolders(ids)))
+
+      deleteToDBIO(query)(
+        setParams = pp => ids.foreach(pp.setGcValue)
+      )
+    }
+    DBIO.seq(actions: _*)
+  }
+
   def parentIdCondition(parentField: RelationField): Condition = parentIdCondition(parentField, Vector(1))
 
   def parentIdCondition(parentField: RelationField, parentIds: Vector[Any]): Condition = {
@@ -437,26 +452,6 @@ case class PostgresApiDatabaseMutationBuilder(schemaName: String) extends Builde
 
     idField(parentField.relatedModel_!).in(subSelect)
   }
-
-//  def deleteScalarListEntriesByIds(model:Model, ids: Vector[IdGCValue]) = {
-//    SimpleDBIO[Boolean] { x =>
-//      lazy val queryString: String = {
-//        val subSelect = select(field(name(schemaName, where.model.dbName, where.model.dbNameOfIdField_!)))
-//          .from(table(name(schemaName, where.model.dbName)))
-//          .where(field(name(schemaName, where.model.dbName, where.field.dbName)).equal(placeHolder))
-//
-//        sql
-//          .deleteFrom(table(name(schemaName, relayTableName)))
-//          .where(field(name(schemaName, relayTableName, "id")).equal(subSelect))
-//          .getSQL
-//      }
-//
-//      val statement: PreparedStatement = x.connection.prepareStatement(queryString, Statement.RETURN_GENERATED_KEYS)
-//      statement.setGcValue(1, where.fieldGCValue)
-//
-//      statement.execute()
-//    }
-//  }
 
   def deleteRelationRowByChildId(relationField: RelationField, childId: IdGCValue): DBIO[Unit] = {
     val relation = relationField.relation

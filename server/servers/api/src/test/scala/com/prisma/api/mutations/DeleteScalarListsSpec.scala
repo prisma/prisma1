@@ -33,5 +33,8 @@ class DeleteScalarListsSpec extends FlatSpec with Matchers with ApiSpecBase {
 
     server.query("""mutation{deleteTestModel(where:{name:"test" }){name}}""", project)
   }
+  // nested delete
+  // deleteMany
+  // cascading delete
 
 }
