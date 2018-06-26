@@ -41,7 +41,7 @@ static=$(printf "    - label: \":mysql: MySql API connector\"
       command: cd server && ./.buildkite/scripts/test.sh libs mysql
 
     - label: \":scala: subscriptions\"
-      command: cd server && ./.buildkite/scripts/test.sh subscriptions mysql
+      command: cd server && ./.buildkite/scripts/test.sh subscriptions postgres
 
     - label: \":scala: shared-models\"
       command: cd server && ./.buildkite/scripts/test.sh shared-models mysql
