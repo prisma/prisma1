@@ -23,7 +23,7 @@ object SchemaDsl extends AwaitUtils {
     fn(schemaBuilder)
     val project = schemaBuilder.build(id = projectId(suite))
     if (deployConnector.isPassive) {
-      addIdFields(addManifestations(project), intIdField)
+      addIdFields(addManifestations(project), cuidField)
     } else {
       addIdFields(project, cuidField)
     }
