@@ -49,7 +49,7 @@ trait BuilderBase {
   def relationIdColumn(relation: Relation)                         = field(name(schemaName, relation.relationTableName, "id"))
   def scalarListColumn(scalarField: ScalarField, column: String)   = field(name(schemaName, scalarListTableName(scalarField), column))
   def column(table: String, column: String)                        = field(name(schemaName, table, column))
-  def placeHolders(vector: Vector[Any])                            = vector.map(_ => placeHolder).asJava
+  def placeHolders(vector: Iterable[Any])                          = vector.toList.map(_ => placeHolder).asJava
 
   def queryToDBIO[T](query: JooqQuery)(setParams: PositionedParameters => Unit, readResult: ResultSet => T): DBIO[T] = {
     SimpleDBIO { ctx =>
@@ -124,17 +124,12 @@ case class PostgresApiDatabaseMutationBuilder(schemaName: String) extends Builde
       val fields     = model.fields.filter(field => argsAsRoot.hasArgFor(field.name))
       val columns    = fields.map(_.dbName)
 
-      lazy val queryString: String = {
-        val generatedFields = columns.map(column => modelColumn(model, column))
+      val query = sql
+        .insertInto(table(name(schemaName, model.dbName)))
+        .columns(columns.map(column => modelColumn(model, column)): _*)
+        .values(placeHolders(columns.toVector))
 
-        sql
-          .insertInto(table(name(schemaName, model.dbName)))
-          .columns(generatedFields: _*)
-          .values(columns.map(_ => placeHolder): _*)
-          .getSQL
-      }
-
-      val itemInsert: PreparedStatement = x.connection.prepareStatement(queryString, Statement.RETURN_GENERATED_KEYS)
+      val itemInsert: PreparedStatement = x.connection.prepareStatement(query.getSQL, Statement.RETURN_GENERATED_KEYS)
 
       val currentTimestamp = currentTimeStampUTC
       fields.map(_.name).zipWithIndex.foreach {
@@ -366,43 +361,9 @@ case class PostgresApiDatabaseMutationBuilder(schemaName: String) extends Builde
 
   //region DELETE
 
-  def deleteDataItems(model: Model, whereFilter: Option[Filter]) = {
-    SimpleDBIO { ctx =>
-      val aliasedTable = table(name(schemaName, model.dbName)).as(topLevelAlias)
-      val condition    = JooqWhereClauseBuilder(schemaName).buildWhereClause(whereFilter).getOrElse(trueCondition())
-
-      lazy val queryString: String = sql
-        .deleteFrom(aliasedTable)
-        .where(condition)
-        .getSQL
-
-      val ps = ctx.connection.prepareStatement(queryString)
-      JooqSetParams.setFilter(new PositionedParameters(ps), whereFilter)
-      ps.executeUpdate()
-    }
-  }
-
-  def deleteRelayIds(model: Model, whereFilter: Option[Filter]): DBIO[_] = {
-    SimpleDBIO { ctx =>
-      val relayTable      = table(name(schemaName, relayTableName))
-      val aliasedTable    = table(name(schemaName, model.dbName)).as(topLevelAlias)
-      val filterCondition = JooqWhereClauseBuilder(schemaName).buildWhereClause(whereFilter).getOrElse(trueCondition())
-      val condition = field(name(schemaName, relayTableName, "id"))
-        .in(select(field(name(topLevelAlias, model.dbNameOfIdField_!))).from(aliasedTable).where(filterCondition))
-
-      lazy val queryString: String = sql
-        .deleteFrom(relayTable)
-        .where(condition)
-        .getSQL
-
-      val ps = ctx.connection.prepareStatement(queryString)
-      JooqSetParams.setFilter(new PositionedParameters(ps), whereFilter)
-      ps.executeUpdate()
-    }
-  }
-
   def deleteNodeById(model: Model, id: IdGCValue)(implicit ec: ExecutionContext) = deleteNodes(model, Vector(id))
 
+  //Todo check how much of a performance gain it would be to chain these using andThen instead of the for comprehension
   def deleteNodes(model: Model, ids: Vector[IdGCValue])(implicit ec: ExecutionContext): DBIO[Unit] = {
     for {
       _ <- deleteScalarListEntriesByIds(model, ids)
@@ -636,6 +597,17 @@ case class PostgresApiDatabaseMutationBuilder(schemaName: String) extends Builde
       .where(parentIdCondition(parentField, parentIds))
     queryToDBIO(q)(
       setParams = pp => parentIds.foreach(pp.setGcValue),
+      readResult = rs => rs.as(readId(model))
+    )
+  }
+
+  def queryIdsByWhereFilter(model: Model, filter: Option[Filter]): DBIO[Vector[IdGCValue]] = {
+    val aliasedTable    = modelTable(model).as(topLevelAlias)
+    val filterCondition = JooqWhereClauseBuilder(schemaName).buildWhereClause(filter).getOrElse(trueCondition())
+    val query           = sql.select(field(name(topLevelAlias, model.dbNameOfIdField_!))).from(aliasedTable).where(filterCondition)
+
+    queryToDBIO(query)(
+      setParams = pp => JooqSetParams.setFilter(pp, filter),
       readResult = rs => rs.as(readId(model))
     )
   }

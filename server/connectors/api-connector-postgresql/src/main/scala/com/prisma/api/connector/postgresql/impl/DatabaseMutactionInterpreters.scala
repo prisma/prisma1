@@ -258,11 +258,12 @@ case class DeleteDataItemNestedInterpreter(mutaction: NestedDeleteDataItem)(impl
 
 //Fixme also switch this to fetch the Ids first
 case class DeleteDataItemsInterpreter(mutaction: DeleteDataItems)(implicit ec: ExecutionContext) extends DatabaseMutactionInterpreter {
-  def action(mutationBuilder: PostgresApiDatabaseMutationBuilder) = DBIOAction.seq(
-    checkForRequiredRelationsViolations(mutationBuilder),
-    mutationBuilder.deleteRelayIds(mutaction.model, mutaction.whereFilter),
-    mutationBuilder.deleteDataItems(mutaction.model, mutaction.whereFilter)
-  )
+  def action(mutationBuilder: PostgresApiDatabaseMutationBuilder) =
+    for {
+      _   <- checkForRequiredRelationsViolations(mutationBuilder)
+      ids <- mutationBuilder.queryIdsByWhereFilter(mutaction.model, mutaction.whereFilter)
+      _   <- mutationBuilder.deleteNodes(mutaction.model, ids)
+    } yield UnitDatabaseMutactionResult
 
   private def checkForRequiredRelationsViolations(mutationBuilder: PostgresApiDatabaseMutationBuilder): DBIO[_] = {
     val model                          = mutaction.model
