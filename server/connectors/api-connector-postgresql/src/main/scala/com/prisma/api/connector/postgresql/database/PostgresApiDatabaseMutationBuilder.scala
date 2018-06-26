@@ -203,9 +203,9 @@ case class PostgresApiDatabaseMutationBuilder(schemaName: String) extends Builde
 
       val (idToLinkTo, idToUpdate) = if (relation.isSameModelRelation) {
         if (relationField.relationSide == RelationSide.A) {
-          (parentId, childId)
-        } else {
           (childId, parentId)
+        } else {
+          (parentId, childId)
         }
       } else {
         if (inlineManifestation.inTableOfModelId == childModel.name) {
