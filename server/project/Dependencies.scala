@@ -16,7 +16,7 @@ object Dependencies {
     val play        = "2.6.8"
     val scalactic   = "3.0.4"
     val scalaTest   = "3.0.4"
-    val slick       = "3.2.0"
+    val slick       = "3.2.3"
     val jackson     = "2.8.4"
   }
 

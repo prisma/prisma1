@@ -29,7 +29,7 @@ case class PostgresDatabaseMutactionExecutor(clientDb: Database, createRelayIds:
   }
 
   // FIXME: the recursion part may deadlock when no dedicated ec is used. This can be observed with test cases in DeadlockSpec that use nested mutations.
-  private val recurseEc = ExecutionContext.fromExecutor(Executors.newFixedThreadPool(10))
+//  private val recurseEc = ExecutionContext.fromExecutor(Executors.newFixedThreadPool(10))
 
   def recurse(
       mutaction: DatabaseMutaction,
@@ -39,7 +39,7 @@ case class PostgresDatabaseMutactionExecutor(clientDb: Database, createRelayIds:
     mutaction match {
       case m: FurtherNestedMutaction =>
         for {
-          result <- interpreterFor(m).newActionWithErrorMapped(mutationBuilder, parentId)(recurseEc)
+          result <- interpreterFor(m).newActionWithErrorMapped(mutationBuilder, parentId)
           childResults <- result match {
                            case result: UpsertDataItemResult         => recurse(result.mutaction, parentId, mutationBuilder).map(Vector(_))
                            case result: FurtherNestedMutactionResult => DBIO.sequence(m.allMutactions.map(recurse(_, result.id, mutationBuilder)))
@@ -52,7 +52,7 @@ case class PostgresDatabaseMutactionExecutor(clientDb: Database, createRelayIds:
           )
       case m: FinalMutaction =>
         for {
-          result <- interpreterFor(m).newActionWithErrorMapped(mutationBuilder, parentId)(recurseEc)
+          result <- interpreterFor(m).newActionWithErrorMapped(mutationBuilder, parentId)
         } yield
           MutactionResults(
             databaseResult = result,
