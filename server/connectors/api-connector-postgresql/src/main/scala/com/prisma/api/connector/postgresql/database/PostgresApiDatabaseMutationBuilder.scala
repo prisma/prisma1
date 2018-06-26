@@ -9,6 +9,7 @@ import com.prisma.api.connector.postgresql.database.JooqExtensions._
 import com.prisma.api.connector.postgresql.database.PostgresSlickExtensions._
 import com.prisma.api.schema.APIErrors.{NodesNotConnectedError, RequiredRelationWouldBeViolated}
 import com.prisma.gc_values.{ListGCValue, NullGCValue, _}
+import com.prisma.shared.models.Manifestations.InlineRelationManifestation
 import com.prisma.shared.models.TypeIdentifier.IdTypeIdentifier
 import com.prisma.shared.models._
 import com.prisma.slick.NewJdbcExtensions._
@@ -17,7 +18,7 @@ import org.joda.time.{DateTime, DateTimeZone}
 import org.jooq.conf.Settings
 import org.jooq.impl.DSL
 import org.jooq.impl.DSL._
-import org.jooq.{Query => JooqQuery, _}
+import org.jooq.{Field, Query => JooqQuery, _}
 import slick.dbio.DBIOAction
 import slick.jdbc.PositionedParameters
 import slick.jdbc.PostgresProfile.api._
@@ -36,20 +37,21 @@ trait BuilderBase {
 
   private val relayIdTableName = "_RelayId"
 
-  val relayIdColumn                                                = field(name(schemaName, relayIdTableName, "id"))
-  val relayStableIdentifierColumn                                  = field(name(schemaName, relayIdTableName, "stableModelIdentifier"))
-  val relayTable                                                   = table(name(schemaName, relayIdTableName))
-  def idField(model: Model)                                        = field(name(schemaName, model.dbName, model.dbNameOfIdField_!))
-  def modelTable(model: Model)                                     = table(name(schemaName, model.dbName))
-  def relationTable(relation: Relation)                            = table(name(schemaName, relation.relationTableName))
-  def scalarListTable(field: ScalarField)                          = table(name(schemaName, scalarListTableName(field)))
-  def modelColumn(model: Model, column: String)                    = field(name(schemaName, model.dbName, column))
-  def modelIdColumn(model: Model)                                  = field(name(schemaName, model.dbName, model.dbNameOfIdField_!))
-  def relationColumn(relation: Relation, side: RelationSide.Value) = field(name(schemaName, relation.relationTableName, relation.columnForRelationSide(side)))
-  def relationIdColumn(relation: Relation)                         = field(name(schemaName, relation.relationTableName, "id"))
-  def scalarListColumn(scalarField: ScalarField, column: String)   = field(name(schemaName, scalarListTableName(scalarField), column))
-  def column(table: String, column: String)                        = field(name(schemaName, table, column))
-  def placeHolders(vector: Iterable[Any])                          = vector.toList.map(_ => placeHolder).asJava
+  val relayIdColumn                                                               = field(name(schemaName, relayIdTableName, "id"))
+  val relayStableIdentifierColumn                                                 = field(name(schemaName, relayIdTableName, "stableModelIdentifier"))
+  val relayTable                                                                  = table(name(schemaName, relayIdTableName))
+  def idField(model: Model)                                                       = field(name(schemaName, model.dbName, model.dbNameOfIdField_!))
+  def modelTable(model: Model)                                                    = table(name(schemaName, model.dbName))
+  def relationTable(relation: Relation)                                           = table(name(schemaName, relation.relationTableName))
+  def scalarListTable(field: ScalarField)                                         = table(name(schemaName, scalarListTableName(field)))
+  def modelColumn(model: Model, scalarField: ScalarField): Field[AnyRef]          = field(name(schemaName, model.dbName, scalarField.dbName))
+  def modelIdColumn(model: Model)                                                 = field(name(schemaName, model.dbName, model.dbNameOfIdField_!))
+  def relationColumn(relation: Relation, side: RelationSide.Value)                = field(name(schemaName, relation.relationTableName, relation.columnForRelationSide(side)))
+  def relationIdColumn(relation: Relation)                                        = field(name(schemaName, relation.relationTableName, "id"))
+  def inlineRelationColumn(relation: Relation, mani: InlineRelationManifestation) = field(name(schemaName, relation.relationTableName, mani.referencingColumn))
+  def scalarListColumn(scalarField: ScalarField, column: String)                  = field(name(schemaName, scalarListTableName(scalarField), column))
+  def column(table: String, column: String)                                       = field(name(schemaName, table, column))
+  def placeHolders(vector: Iterable[Any])                                         = vector.toList.map(_ => placeHolder).asJava
 
   def queryToDBIO[T](query: JooqQuery)(setParams: PositionedParameters => Unit, readResult: ResultSet => T): DBIO[T] = {
     SimpleDBIO { ctx =>
@@ -121,13 +123,12 @@ case class PostgresApiDatabaseMutationBuilder(schemaName: String) extends Builde
   def createDataItem(model: Model, args: PrismaArgs): DBIO[IdGCValue] = {
     SimpleDBIO { x =>
       val argsAsRoot = args.raw.asRoot.add(model.idField_!.name, generateId(model))
-      val fields     = model.fields.filter(field => argsAsRoot.hasArgFor(field.name))
-      val columns    = fields.map(_.dbName)
+      val fields     = model.scalarFields.filter(field => argsAsRoot.hasArgFor(field.name))
 
       val query = sql
-        .insertInto(table(name(schemaName, model.dbName)))
-        .columns(columns.map(column => modelColumn(model, column)): _*)
-        .values(placeHolders(columns.toVector))
+        .insertInto(modelTable(model))
+        .columns(fields.map(field => modelColumn(model, field)): _*)
+        .values(placeHolders(fields))
 
       val itemInsert: PreparedStatement = x.connection.prepareStatement(query.getSQL, Statement.RETURN_GENERATED_KEYS)
 
@@ -228,14 +229,11 @@ case class PostgresApiDatabaseMutationBuilder(schemaName: String) extends Builde
     } else if (relation.hasManifestation) {
       SimpleDBIO[Boolean] { x =>
         lazy val queryString: String = {
-
-          val relationTable = table(name(schemaName, relation.relationTableName))
-
           sql
-            .insertInto(relationTable)
+            .insertInto(relationTable(relation))
             .columns(
-              field(name(schemaName, relation.relationTableName, relationField.relationSide.toString)),
-              field(name(schemaName, relation.relationTableName, relationField.oppositeRelationSide.toString))
+              relationColumn(relation, relationField.relationSide),
+              relationColumn(relation, relationField.oppositeRelationSide)
             )
             .values(placeHolder, placeHolder)
             .getSQL
@@ -250,14 +248,12 @@ case class PostgresApiDatabaseMutationBuilder(schemaName: String) extends Builde
     } else {
       SimpleDBIO[Boolean] { x =>
         lazy val queryString: String = {
-          val relationTable = table(name(schemaName, relation.relationTableName))
-
           sql
-            .insertInto(relationTable)
+            .insertInto(relationTable(relation))
             .columns(
-              field(name(schemaName, relation.relationTableName, "id")),
-              field(name(schemaName, relation.relationTableName, relationField.relationSide.toString)),
-              field(name(schemaName, relation.relationTableName, relationField.oppositeRelationSide.toString))
+              relationIdColumn(relation),
+              relationColumn(relation, relationField.relationSide),
+              relationColumn(relation, relationField.oppositeRelationSide)
             )
             .values(placeHolder, placeHolder, placeHolder)
             .getSQL
@@ -281,28 +277,25 @@ case class PostgresApiDatabaseMutationBuilder(schemaName: String) extends Builde
     val map = args.raw.asRoot.map
     if (map.nonEmpty) {
       SimpleDBIO { ctx =>
-        val aliasedTable = table(name(schemaName, model.dbName)).as(topLevelAlias)
+        val aliasedTable = modelTable(model).as(topLevelAlias)
         val condition    = JooqWhereClauseBuilder(schemaName).buildWhereClause(whereFilter).getOrElse(trueCondition())
 
         val base = sql.update(aliasedTable)
 
         //https://www.postgresql.org/message-id/20170719174507.GA19616%40telsasoft.com
         lazy val queryString: String = if (map.size > 1) {
-
-          val fields = map.map { case (k, _) => field(model.getFieldByName_!(k).dbName) }.toList.asJava
-          val values = map.map(_ => placeHolder).toList.asJava
+          val columns = map.map { case (k, _) => model.getFieldByName_!(k).dbName }.toList
 
           base
-            .set(row(fields), row(values))
+            .setColumnsWithPlaceHolders(columns)
             .where(condition)
             .getSQL
 
         } else {
           val fieldDef = map.map { case (k, _) => field(model.getFieldByName_!(k).dbName) }.head
-          val value    = map.map(_ => placeHolder).head
 
           base
-            .set(fieldDef, value)
+            .set(fieldDef, placeHolder)
             .where(condition)
             .getSQL
         }
@@ -328,9 +321,9 @@ case class PostgresApiDatabaseMutationBuilder(schemaName: String) extends Builde
         val values     = actualArgs.map.map { case (_, v) => v }
 
         val query = sql
-          .update(table(name(schemaName, model.dbName)))
+          .update(modelTable(model))
           .setColumnsWithPlaceHolders(columns)
-          .where(field(name(model.dbNameOfIdField_!)).equal(placeHolder))
+          .where(idField(model).equal(placeHolder))
 
         val ps = ctx.connection.prepareStatement(query.getSQL)
         val pp = new PositionedParameters(ps)
@@ -421,29 +414,55 @@ case class PostgresApiDatabaseMutationBuilder(schemaName: String) extends Builde
   }
 
   def deleteRelationRowByChildId(relationField: RelationField, childId: IdGCValue): DBIO[Unit] = {
-    val relation = relationField.relation
-    val jooqQuery = relation.inlineManifestation match {
+    val relation  = relationField.relation
+    val condition = relationColumn(relation, relationField.oppositeRelationSide).equal(placeHolder)
+
+    relation.inlineManifestation match {
       case Some(manifestation) =>
-        ???
+        val query = sql
+          .update(relationTable(relation))
+          .set(inlineRelationColumn(relation, manifestation), placeHolder)
+          .where(condition)
+
+        updateToDBIO(query)(
+          setParams = { pp =>
+            pp.setGcValue(NullGCValue)
+            pp.setGcValue(childId)
+          }
+        )
+
       case None =>
-        val condition = relationColumn(relation, relationField.oppositeRelationSide).equal(placeHolder)
-        sql.deleteFrom(relationTable(relation)).where(condition)
+        val query = sql
+          .deleteFrom(relationTable(relation))
+          .where(condition)
+        deleteToDBIO(query)(setParams = _.setGcValue(childId))
     }
 
-    deleteToDBIO(jooqQuery)(setParams = _.setGcValue(childId))
   }
 
   def deleteRelationRowByParentId(relationField: RelationField, parentId: IdGCValue): DBIO[Unit] = {
-    val relation = relationField.relation
-    val jooqQuery = relation.inlineManifestation match {
+    val relation  = relationField.relation
+    val condition = relationColumn(relation, relationField.relationSide).equal(placeHolder)
+    relation.inlineManifestation match {
       case Some(manifestation) =>
-        ???
+        val query = sql
+          .update(relationTable(relation))
+          .set(inlineRelationColumn(relation, manifestation), placeHolder)
+          .where(condition)
+
+        updateToDBIO(query)(setParams = { pp =>
+          pp.setGcValue(NullGCValue)
+          pp.setGcValue(parentId)
+        })
+
       case None =>
-        val condition = relationColumn(relation, relationField.relationSide).equal(placeHolder)
-        sql.deleteFrom(relationTable(relation)).where(condition)
+        val query = sql
+          .deleteFrom(relationTable(relation))
+          .where(condition)
+
+        deleteToDBIO(query)(setParams = _.setGcValue(parentId))
     }
 
-    deleteToDBIO(jooqQuery)(setParams = _.setGcValue(parentId))
   }
 
   //endregion
@@ -556,7 +575,7 @@ case class PostgresApiDatabaseMutationBuilder(schemaName: String) extends Builde
     val query = sql
       .select(asterisk())
       .from(modelTable(model))
-      .where(modelColumn(model, where.field.dbName).equal(placeHolder))
+      .where(modelColumn(model, where.field).equal(placeHolder))
 
     queryToDBIO(query)(
       setParams = pp => pp.setGcValue(where.fieldGCValue),
@@ -570,7 +589,7 @@ case class PostgresApiDatabaseMutationBuilder(schemaName: String) extends Builde
       val query = sql
         .select(idField(model))
         .from(modelTable(model))
-        .where(modelColumn(model, where.field.dbName).equal(placeHolder))
+        .where(modelColumn(model, where.field).equal(placeHolder))
 
       val ps = ctx.connection.prepareStatement(query.getSQL)
       ps.setGcValue(1, where.fieldGCValue)
@@ -614,7 +633,7 @@ case class PostgresApiDatabaseMutationBuilder(schemaName: String) extends Builde
 
   def queryIdByParentIdAndWhere(parentField: RelationField, parentId: IdGCValue, where: NodeSelector): DBIO[Option[IdGCValue]] = {
     val model                 = parentField.relatedModel_!
-    val nodeSelectorCondition = field(name(schemaName, model.dbName, where.fieldName)).equal(placeHolder)
+    val nodeSelectorCondition = modelColumn(model, where.field).equal(placeHolder)
     val q: SelectConditionStep[Record1[AnyRef]] = sql
       .select(idField(model))
       .from(modelTable(model))
@@ -640,7 +659,12 @@ case class PostgresApiDatabaseMutationBuilder(schemaName: String) extends Builde
       childId: IdGCValue
   )(implicit ec: ExecutionContext): DBIO[Unit] = {
     val relation = relationField.relation
-    val idQuery  = sql.select(asterisk()).from(relationTable(relation)).where(relationColumn(relation, relationField.oppositeRelationSide).equal(placeHolder))
+    val idQuery = sql
+      .select(asterisk())
+      .from(relationTable(relation))
+      .where(relationColumn(relation, relationField.oppositeRelationSide).equal(placeHolder))
+      .and(relationColumn(relation, relationField.relationSide).isNotNull)
+
     val action = queryToDBIO(idQuery)(
       setParams = _.setGcValue(childId),
       readResult = rs => rs.as(readsAsUnit)
@@ -655,7 +679,12 @@ case class PostgresApiDatabaseMutationBuilder(schemaName: String) extends Builde
       childId: IdGCValue
   )(implicit ec: ExecutionContext): DBIO[Unit] = {
     val relation = relationField.relation
-    val idQuery  = sql.select(asterisk()).from(relationTable(relation)).where(relationColumn(relation, relationField.oppositeRelationSide).equal(placeHolder))
+    val idQuery = sql
+      .select(asterisk())
+      .from(relationTable(relation))
+      .where(relationColumn(relation, relationField.oppositeRelationSide).equal(placeHolder))
+      .and(relationColumn(relation, relationField.relationSide).isNotNull)
+
     val action = queryToDBIO(idQuery)(
       setParams = _.setGcValue(childId),
       readResult = rs => rs.as(readsAsUnit)
@@ -677,7 +706,12 @@ case class PostgresApiDatabaseMutationBuilder(schemaName: String) extends Builde
       parentId: IdGCValue
   )(implicit ec: ExecutionContext): DBIO[Unit] = {
     val relation = relationField.relation
-    val idQuery  = sql.select(asterisk()).from(relationTable(relation)).where(relationColumn(relation, relationField.relationSide).equal(placeHolder))
+    val idQuery = sql
+      .select(asterisk())
+      .from(relationTable(relation))
+      .where(relationColumn(relation, relationField.relationSide).equal(placeHolder))
+      .and(relationColumn(relation, relationField.oppositeRelationSide).isNotNull)
+
     val action = queryToDBIO(idQuery)(
       setParams = _.setGcValue(parentId),
       readResult = rs => rs.as(readsAsUnit)
