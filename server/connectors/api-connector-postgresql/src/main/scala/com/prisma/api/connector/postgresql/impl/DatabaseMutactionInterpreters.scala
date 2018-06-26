@@ -181,19 +181,19 @@ case class DeleteDataItemInterpreter(mutaction: DeleteDataItem)(implicit val ec:
 
   override def newAction(mutationBuilder: PostgresApiDatabaseMutationBuilder, parentId: IdGCValue)(implicit ec: ExecutionContext) = {
     for {
-      id <- mutationBuilder.queryIdFromWhere(mutaction.where)
-      _ <- id match {
-            case Some(id) =>
-              for {
-                _ <- performCascadingDelete(mutationBuilder, mutaction.where.model, id)
-                _ <- checkForRequiredRelationsViolations(mutationBuilder, id)
-                _ <- mutationBuilder.deleteRelayRowByWhere(mutaction.where)
-                _ <- mutationBuilder.deleteDataItemByWhere(mutaction.where)
-              } yield ()
-            case None =>
-              DBIO.failed(APIErrors.NodeNotFoundForWhereError(mutaction.where))
-          }
-    } yield UnitDatabaseMutactionResult
+      nodeOpt <- mutationBuilder.queryNodeByWhere(mutaction.where)
+      node <- nodeOpt match {
+               case Some(node) =>
+                 for {
+                   _ <- performCascadingDelete(mutationBuilder, mutaction.where.model, node.id)
+                   _ <- checkForRequiredRelationsViolations(mutationBuilder, node.id)
+                   _ <- mutationBuilder.deleteRelayRowByWhere(mutaction.where)
+                   _ <- mutationBuilder.deleteDataItemByWhere(mutaction.where)
+                 } yield node
+               case None =>
+                 DBIO.failed(APIErrors.NodeNotFoundForWhereError(mutaction.where))
+             }
+    } yield DeleteNodeResult(node.id, node, mutaction)
   }
 
   private def checkForRequiredRelationsViolations(mutationBuilder: PostgresApiDatabaseMutationBuilder, id: IdGCValue): DBIO[_] = {

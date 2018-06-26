@@ -16,11 +16,12 @@ object ServerSideSubscriptions {
   ): Vector[ServerSideSubscription] = {
     val createResults    = mutactionResults.allResults.collect { case m: CreateNodeResult => m }
     val updateMutactions = mutactionResults.allResults.collect { case x: UpdateNodeResult => x }
-//    val deleteMutactions = mutactions.collect { case x: DeleteDataItem => x }
-//
+    val deleteMutactions = mutactionResults.allResults.collect { case x: DeleteNodeResult => x }
+
     val result = extractFromCreateMutactions(project, createResults, requestId) ++
-      extractFromUpdateMutactions(project, updateMutactions, requestId)
-//      extractFromDeleteMutactions(project, deleteMutactions, requestId)
+      extractFromUpdateMutactions(project, updateMutactions, requestId) ++
+      extractFromDeleteMutactions(project, deleteMutactions, requestId)
+
     ApiMetrics.subscriptionEventCounter.incBy(result.size, project.id)
     result
   }
@@ -67,27 +68,27 @@ object ServerSideSubscriptions {
     }
 
   }
-//
-//  def extractFromDeleteMutactions(
-//      project: Project,
-//      mutactions: Vector[DeleteDataItem],
-//      requestId: Id
-//  )(implicit apiDependencies: ApiDependencies): Vector[ServerSideSubscription] = {
-//    for {
-//      mutaction <- mutactions
-//      sssFn     <- serverSideSubscriptionFunctionsFor(project, mutaction.path.lastModel, ModelMutationType.Deleted)
-//    } yield {
-//      ServerSideSubscription(
-//        project,
-//        mutaction.path.lastModel,
-//        ModelMutationType.Deleted,
-//        sssFn,
-//        nodeId = mutaction.id,
-//        requestId = requestId,
-//        previousValues = Some(mutaction.previousValues)
-//      )
-//    }
-//  }
+
+  def extractFromDeleteMutactions(
+      project: Project,
+      mutactionResults: Vector[DeleteNodeResult],
+      requestId: Id
+  ): Vector[ServerSideSubscription] = {
+    for {
+      mutactionResult <- mutactionResults
+      sssFn           <- serverSideSubscriptionFunctionsFor(project, mutactionResult.mutaction.model, ModelMutationType.Deleted)
+    } yield {
+      ServerSideSubscription(
+        project,
+        mutactionResult.mutaction.model,
+        ModelMutationType.Deleted,
+        sssFn,
+        nodeId = mutactionResult.id,
+        requestId = requestId,
+        previousValues = Some(mutactionResult.previousValues)
+      )
+    }
+  }
 
   private def serverSideSubscriptionFunctionsFor(project: Project, model: Model, mutationType: ModelMutationType) = {
     def isServerSideSubscriptionForModelAndMutationType(function: ServerSideSubscriptionFunction): Boolean = {
