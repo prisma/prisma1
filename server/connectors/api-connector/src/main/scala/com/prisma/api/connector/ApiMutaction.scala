@@ -93,7 +93,7 @@ sealed trait NestedDatabaseMutaction extends DatabaseMutaction {
 
 case class NestedCreateDataItem(
     project: Project,
-    relationField: RelationField,
+    parentField: RelationField,
     nonListArgs: PrismaArgs,
     listArgs: Vector[(String, ListGCValue)],
     override val nestedCreates: Vector[NestedCreateDataItem],
@@ -101,7 +101,7 @@ case class NestedCreateDataItem(
     topIsCreate: Boolean
 ) extends CreateNode
     with FurtherNestedMutaction {
-  override def model = relationField.relatedModel_!
+  override def model = parentField.relatedModel_!
 }
 
 case class NestedUpdateDataItem(

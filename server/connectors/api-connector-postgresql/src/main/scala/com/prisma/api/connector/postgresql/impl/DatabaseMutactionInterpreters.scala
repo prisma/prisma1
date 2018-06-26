@@ -40,9 +40,8 @@ case class CreateDataItemInterpreter(mutaction: CreateNode, includeRelayRow: Boo
 case class NestedCreateDataItemInterpreter(mutaction: NestedCreateDataItem, includeRelayRow: Boolean = true)(implicit val ec: ExecutionContext)
     extends DatabaseMutactionInterpreter
     with NestedRelationInterpreterBase {
-  override def relationField = mutaction.relationField
+  override def relationField = mutaction.parentField
   val model                  = relationField.relatedModel_!
-  val parent                 = relationField.model
 
   override def addAction(parentId: IdGCValue)(implicit mb: PostgresApiDatabaseMutationBuilder) = ???
 
@@ -69,7 +68,7 @@ case class NestedCreateDataItemInterpreter(mutaction: NestedCreateDataItem, incl
     } else {
       for {
         id <- mutationBuilder.createDataItem(model, mutaction.nonListArgs)
-        _  <- mutationBuilder.createRelation(mutaction.relationField, parentId, id)
+        _  <- mutationBuilder.createRelation(mutaction.parentField, parentId, id)
       } yield id
     }
   }
