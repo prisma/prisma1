@@ -23,11 +23,13 @@ class SubscriptionFilterSpec extends FlatSpec with Matchers with SubscriptionSpe
   }
   val model: Model = project.schema.getModelByName_!("Todo")
 
+  var testNodeId, importantTestNodeId: String = null
+
   override def beforeEach(): Unit = {
     super.beforeEach()
     testDatabase.setup(project)
-    TestData.createTodo("test-node-id", "some todo", JsString("[1,2,{\"a\":\"b\"}]"), None, project, model, testDatabase)
-    TestData.createTodo("important-test-node-id", "important!", JsString("[1,2,{\"a\":\"b\"}]"), None, project, model, testDatabase)
+    testNodeId = TestData.createTodo("some todo", JsString("[1,2,{\"a\":\"b\"}]"), None, project, model, testDatabase).value.toString
+    importantTestNodeId = TestData.createTodo("important!", JsString("[1,2,{\"a\":\"b\"}]"), None, project, model, testDatabase).value.toString
 
     val path = Path.empty(NodeSelector.forCuid(project.schema.getModelByName_!("Comment"), "comment-id"))
 
@@ -72,7 +74,7 @@ class SubscriptionFilterSpec extends FlatSpec with Matchers with SubscriptionSpe
       val event = nodeEvent(
         modelId = model.name,
         changedFields = Seq("text"),
-        previousValues = """{"id":"test-node-id", "text":"event1", "status": "Active", "tags":[]}"""
+        previousValues = s"""{"id":"$testNodeId", "text":"event1", "status": "Active", "tags":[]}"""
       )
 
       sssEventsTestKit.publish(Only(s"subscription:event:${project.id}:updateTodo"), event)
@@ -80,10 +82,10 @@ class SubscriptionFilterSpec extends FlatSpec with Matchers with SubscriptionSpe
       wsClient.expectMessage(
         dataMessage(
           id = "3",
-          payload = """{
+          payload = s"""{
               |  "todo":{
               |    "mutation":"UPDATED",
-              |    "previousValues":{"id":"test-node-id", "text":"event1", "status":"Active"}
+              |    "previousValues":{"id":"$testNodeId", "text":"event1", "status":"Active"}
               |  }
               |}""".stripMargin
         )
@@ -114,7 +116,7 @@ class SubscriptionFilterSpec extends FlatSpec with Matchers with SubscriptionSpe
       val event = nodeEvent(
         modelId = model.name,
         changedFields = Seq("text"),
-        previousValues = """{"id":"test-node-id", "text":"event2", "status": "Active", "tags": ["important"]}"""
+        previousValues = s"""{"id":"$testNodeId", "text":"event2", "status": "Active", "tags": ["important"]}"""
       )
 
       sssEventsTestKit.publish(Only(s"subscription:event:${project.id}:updateTodo"), event)
@@ -122,18 +124,18 @@ class SubscriptionFilterSpec extends FlatSpec with Matchers with SubscriptionSpe
       wsClient.expectMessage(
         dataMessage(
           id = "3",
-          payload = """{"todo":{"mutation":"UPDATED","previousValues":{"id":"test-node-id","text":"event2", "tags":["important"]}}}"""
+          payload = s"""{"todo":{"mutation":"UPDATED","previousValues":{"id":"$testNodeId","text":"event2", "tags":["important"]}}}"""
         )
       )
     }
   }
 
-  def nodeEvent(nodeId: String = "test-node-id",
+  def nodeEvent(nodeId: String = "$testNodeId",
                 mutationType: String = "UpdateNode",
                 modelId: String,
                 changedFields: Seq[String],
                 previousValues: String): String = {
     Json.parse(previousValues) // throws if the string is not valid json
-    s"""{"nodeId":"test-node-id","modelId":"${model.name}","mutationType":"UpdateNode","changedFields":["text"], "previousValues": $previousValues}"""
+    s"""{"nodeId":"$testNodeId","modelId":"${model.name}","mutationType":"UpdateNode","changedFields":["text"], "previousValues": $previousValues}"""
   }
 }

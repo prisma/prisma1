@@ -1,5 +1,6 @@
 package com.prisma.subscriptions.specs
 
+import com.prisma.gc_values.IdGCValue
 import com.prisma.messagebus.pubsub.Only
 import com.prisma.shared.schema_dsl.SchemaDsl
 import org.scalatest._
@@ -20,12 +21,14 @@ class SubscriptionsProtocolV07Spec extends FlatSpec with Matchers with Subscript
   }
   val model = project.schema.getModelByName_!("Todo")
 
+  var testNodeId, importantTestNodeId: String = null
+
   override def beforeEach() = {
     super.beforeEach()
     testDatabase.setup(project)
     val json = Json.arr(1, 2, Json.obj("a" -> "b"))
-    TestData.createTodo("test-node-id", "some todo", json, None, project, model, testDatabase)
-    TestData.createTodo("important-test-node-id", "important!", json, None, project, model, testDatabase)
+    testNodeId = TestData.createTodo("some todo", json, None, project, model, testDatabase).value.toString
+    importantTestNodeId = TestData.createTodo("important!", json, None, project, model, testDatabase).value.toString
   }
 
   "sending weird messages" should "result in a parsing error" in {
@@ -74,13 +77,13 @@ class SubscriptionsProtocolV07Spec extends FlatSpec with Matchers with Subscript
 
       sssEventsTestKit.publish(
         Only(s"subscription:event:${project.id}:createTodo"),
-        s"""{"nodeId":"test-node-id","modelId":"${model.name}","mutationType":"CreateNode"}"""
+        s"""{"nodeId":"$testNodeId","modelId":"${model.name}","mutationType":"CreateNode"}"""
       )
 
       wsClient.expectMessage(
         dataMessage(
           id = id,
-          payload = """{"todo":{"node":{"id":"test-node-id","text":"some todo","json":[1,2,{"a":"b"}]}}}"""
+          payload = s"""{"todo":{"node":{"id":"$testNodeId","text":"some todo","json":[1,2,{"a":"b"}]}}}"""
         )
       )
 
@@ -100,13 +103,13 @@ class SubscriptionsProtocolV07Spec extends FlatSpec with Matchers with Subscript
 
       sssEventsTestKit.publish(
         Only(s"subscription:event:${project.id}:createTodo"),
-        s"""{"nodeId":"test-node-id","modelId":"${model.name}","mutationType":"CreateNode"}"""
+        s"""{"nodeId":"$testNodeId","modelId":"${model.name}","mutationType":"CreateNode"}"""
       )
 
       wsClient.expectMessage(
         dataMessage(
           id = id,
-          payload = """{"todo":{"node":{"id":"test-node-id","text":"some todo","json":[1,2,{"a":"b"}]}}}"""
+          payload = s"""{"todo":{"node":{"id":"$testNodeId","text":"some todo","json":[1,2,{"a":"b"}]}}}"""
         )
       )
 
@@ -125,13 +128,13 @@ class SubscriptionsProtocolV07Spec extends FlatSpec with Matchers with Subscript
 
       sssEventsTestKit.publish(
         Only(s"subscription:event:${project.id}:createTodo"),
-        s"""{"nodeId":"test-node-id","modelId":"${model.name}","mutationType":"CreateNode"}"""
+        s"""{"nodeId":"$testNodeId","modelId":"${model.name}","mutationType":"CreateNode"}"""
       )
 
       wsClient.expectMessage(
         dataMessage(
           id = "2",
-          payload = """{"todo":{"node":{"id":"test-node-id"}}}"""
+          payload = s"""{"todo":{"node":{"id":"$testNodeId"}}}"""
         )
       )
     }
@@ -151,7 +154,7 @@ class SubscriptionsProtocolV07Spec extends FlatSpec with Matchers with Subscript
 
       sssEventsTestKit.publish(
         Only(s"subscription:event:${project.id}:deleteTodo"),
-        s"""{"nodeId":"test-node-id","node":{"id":"test-node-id","text":"some text"},"modelId":"${model.name}","mutationType":"DeleteNode"}"""
+        s"""{"nodeId":"$testNodeId","node":{"id":"$testNodeId","text":"some text"},"modelId":"${model.name}","mutationType":"DeleteNode"}"""
       )
 
       wsClient.expectMessage(
@@ -175,13 +178,13 @@ class SubscriptionsProtocolV07Spec extends FlatSpec with Matchers with Subscript
 
       sssEventsTestKit.publish(
         Only(s"subscription:event:${project.id}:updateTodo"),
-        s"""{"nodeId":"test-node-id","modelId":"${model.name}","mutationType":"UpdateNode","changedFields":["text"], "previousValues": {"id": "text-node-id", "text": "asd", "json": [], "float": 1.23, "int": 1}}"""
+        s"""{"nodeId":"$testNodeId","modelId":"${model.name}","mutationType":"UpdateNode","changedFields":["text"], "previousValues": {"id": "text-node-id", "text": "asd", "json": [], "float": 1.23, "int": 1}}"""
       )
 
       wsClient.expectMessage(
         dataMessage(
           id = "4",
-          payload = """{"todo":{"node":{"id":"test-node-id","text":"some todo"}}}"""
+          payload = s"""{"todo":{"node":{"id":"$testNodeId","text":"some todo"}}}"""
         )
       )
     }
@@ -202,13 +205,13 @@ class SubscriptionsProtocolV07Spec extends FlatSpec with Matchers with Subscript
 
       sssEventsTestKit.publish(
         Only(s"subscription:event:${project.id}:createTodo"),
-        s"""{"nodeId":"test-node-id","modelId":"${model.name}","mutationType":"CreateNode"}"""
+        s"""{"nodeId":"$testNodeId","modelId":"${model.name}","mutationType":"CreateNode"}"""
       )
 
       wsClient.expectMessage(
         dataMessage(
           id = "3",
-          payload = """{"todo":{"mutation":"CREATED","node":{"id":"test-node-id"},"previousValues":null,"updatedFields":null}}"""
+          payload = s"""{"todo":{"mutation":"CREATED","node":{"id":"$testNodeId"},"previousValues":null,"updatedFields":null}}"""
         )
       )
 
@@ -232,13 +235,13 @@ class SubscriptionsProtocolV07Spec extends FlatSpec with Matchers with Subscript
 
       sssEventsTestKit.publish(
         Only(s"subscription:event:${project.id}:updateTodo"),
-        s"""{"nodeId":"test-node-id","modelId":"${model.name}","mutationType":"UpdateNode","changedFields":["text"], "previousValues": {"id": "text-node-id", "text": "asd", "json": null, "int": 8, "createdAt": "2017"}}"""
+        s"""{"nodeId":"$testNodeId","modelId":"${model.name}","mutationType":"UpdateNode","changedFields":["text"], "previousValues": {"id": "text-node-id", "text": "asd", "json": null, "int": 8, "createdAt": "2017"}}"""
       )
 
       wsClient.expectMessage(
         dataMessage(
           id = "3",
-          payload = """{"todo":{"mutation":"UPDATED","previousValues":{"id":"text-node-id","json":null,"int":8},"node":{"id":"test-node-id"}}}"""
+          payload = s"""{"todo":{"mutation":"UPDATED","previousValues":{"id":"text-node-id","json":null,"int":8},"node":{"id":"$testNodeId"}}}"""
         )
       )
     }
@@ -288,13 +291,13 @@ class SubscriptionsProtocolV07Spec extends FlatSpec with Matchers with Subscript
 
       sssEventsTestKit.publish(
         Only(s"subscription:event:${project.id}:updateTodo"),
-        s"""{"nodeId":"important-test-node-id","modelId":"${model.name}","mutationType":"UpdateNode","changedFields":["text"], "previousValues": {"id": "text-node-id", "text": "asd", "json": null, "createdAt": "2017"}}"""
+        s"""{"nodeId":"$importantTestNodeId","modelId":"${model.name}","mutationType":"UpdateNode","changedFields":["text"], "previousValues": {"id": "text-node-id", "text": "asd", "json": null, "createdAt": "2017"}}"""
       )
 
       wsClient.expectMessage(
         dataMessage(
           id = "update-filters",
-          payload = """{"todo":{"node":{"id":"important-test-node-id","text":"important!"}}}"""
+          payload = s"""{"todo":{"node":{"id":"$importantTestNodeId","text":"important!"}}}"""
         )
       )
 

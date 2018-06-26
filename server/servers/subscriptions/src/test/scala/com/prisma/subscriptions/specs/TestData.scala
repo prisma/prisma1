@@ -8,18 +8,16 @@ import com.prisma.utils.await.AwaitUtils
 import play.api.libs.json._
 object TestData extends AwaitUtils {
   def createTodo(
-      id: String,
       text: String,
       json: JsValue,
       done: Option[Boolean] = None,
       project: Project,
       model: Model,
       testDatabase: ApiTestDatabase
-  ) = {
+  ): IdGCValue = {
 
-    val raw: List[(String, GCValue)] =
-      List(("text", StringGCValue(text)), ("id", CuidGCValue(id)), ("done", BooleanGCValue(done.getOrElse(true))), ("json", JsonGCValue(json)))
-    val args = PrismaArgs(RootGCValue(raw: _*))
+    val raw: List[(String, GCValue)] = List(("text", StringGCValue(text)), ("done", BooleanGCValue(done.getOrElse(true))), ("json", JsonGCValue(json)))
+    val args                         = PrismaArgs(RootGCValue(raw: _*))
 
     val mutaction = CreateDataItem(
       project = project,
@@ -30,6 +28,6 @@ object TestData extends AwaitUtils {
       nestedCreates = Vector.empty
     )
 
-    testDatabase.runDatabaseMutactionOnClientDb(mutaction)
+    testDatabase.runDatabaseMutactionOnClientDb(mutaction).databaseResult.asInstanceOf[CreateNodeResult].id
   }
 }
