@@ -6,6 +6,7 @@ import com.prisma.api.connector._
 import com.prisma.gc_values._
 import com.prisma.shared.models.IdType.Id
 import com.prisma.shared.models.{Function => _, _}
+import org.jooq.SQLDialect
 import slick.jdbc.PostgresProfile.api._
 import slick.jdbc._
 
@@ -14,7 +15,11 @@ import scala.concurrent.ExecutionContext
 case class PostgresApiDatabaseQueryBuilder(
     project: Project,
     schemaName: String
-)(implicit ec: ExecutionContext) {
+)(implicit ec: ExecutionContext)
+    extends BuilderBase {
+
+  override def dialect = SQLDialect.POSTGRES_9_5
+
   import JdbcExtensions._
   import PostgresSlickExtensions._
   import com.prisma.slick.NewJdbcExtensions._
@@ -25,32 +30,6 @@ case class PostgresApiDatabaseQueryBuilder(
     val position = rs.getInt(positionFieldName)
     val value    = rs.getGcValue(valueFieldName, field.typeIdentifier)
     ScalarListElement(nodeId, position, value)
-  }
-
-  private def readsPrismaNode(model: Model): ReadsResultSet[PrismaNode] = ReadsResultSet { rs =>
-    readPrismaNode(model, rs)
-  }
-
-  private def readPrismaNodeWithParent(rf: RelationField) = ReadsResultSet { rs =>
-    val node = readPrismaNode(rf.relatedModel_!, rs)
-
-    val parentId = if (rf.relation.isSameModelRelation) {
-      val firstSide  = rs.getParentId(RelationSide.A, rf.model.idField_!.typeIdentifier)
-      val secondSide = rs.getParentId(RelationSide.B, rf.model.idField_!.typeIdentifier)
-      if (firstSide == node.id) secondSide else firstSide
-    } else {
-      val parentRelationSide = rf.relation.modelA match {
-        case x if x == rf.relatedModel_! => RelationSide.B
-        case _                           => RelationSide.A
-      }
-      rs.getParentId(parentRelationSide, rf.model.idField_!.typeIdentifier)
-    }
-    PrismaNodeWithParent(parentId, node)
-  }
-
-  private def readPrismaNode(model: Model, rs: ResultSet) = {
-    val data = model.scalarNonListFields.map(field => field.name -> rs.getGcValue(field.dbName, field.typeIdentifier))
-    PrismaNode(id = rs.getId(model), data = RootGCValue(data: _*), Some(model.name))
   }
 
   private def readRelation(relation: Relation): ReadsResultSet[RelationNode] = ReadsResultSet { resultSet =>
