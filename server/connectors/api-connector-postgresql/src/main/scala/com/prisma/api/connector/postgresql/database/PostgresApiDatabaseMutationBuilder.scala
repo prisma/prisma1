@@ -233,14 +233,11 @@ case class PostgresApiDatabaseMutationBuilder(schemaName: String) extends Builde
     } else if (relation.hasManifestation) {
       SimpleDBIO[Boolean] { x =>
         lazy val queryString: String = {
-
-          val relationTable = table(name(schemaName, relation.relationTableName))
-
           sql
-            .insertInto(relationTable)
+            .insertInto(relationTable(relation))
             .columns(
-              field(name(schemaName, relation.relationTableName, relationField.relationSide.toString)),
-              field(name(schemaName, relation.relationTableName, relationField.oppositeRelationSide.toString))
+              relationColumn(relation, relationField.relationSide),
+              relationColumn(relation, relationField.oppositeRelationSide)
             )
             .values(placeHolder, placeHolder)
             .getSQL
@@ -255,14 +252,12 @@ case class PostgresApiDatabaseMutationBuilder(schemaName: String) extends Builde
     } else {
       SimpleDBIO[Boolean] { x =>
         lazy val queryString: String = {
-          val relationTable = table(name(schemaName, relation.relationTableName))
-
           sql
-            .insertInto(relationTable)
+            .insertInto(relationTable(relation))
             .columns(
-              field(name(schemaName, relation.relationTableName, "id")),
-              field(name(schemaName, relation.relationTableName, relationField.relationSide.toString)),
-              field(name(schemaName, relation.relationTableName, relationField.oppositeRelationSide.toString))
+              relationIdColumn(relation),
+              relationColumn(relation, relationField.relationSide),
+              relationColumn(relation, relationField.oppositeRelationSide)
             )
             .values(placeHolder, placeHolder, placeHolder)
             .getSQL
