@@ -37,21 +37,21 @@ trait BuilderBase {
 
   private val relayIdTableName = "_RelayId"
 
-  val relayIdColumn                                                               = field(name(schemaName, relayIdTableName, "id"))
-  val relayStableIdentifierColumn                                                 = field(name(schemaName, relayIdTableName, "stableModelIdentifier"))
-  val relayTable                                                                  = table(name(schemaName, relayIdTableName))
-  def idField(model: Model)                                                       = field(name(schemaName, model.dbName, model.dbNameOfIdField_!))
-  def modelTable(model: Model)                                                    = table(name(schemaName, model.dbName))
-  def relationTable(relation: Relation)                                           = table(name(schemaName, relation.relationTableName))
-  def scalarListTable(field: ScalarField)                                         = table(name(schemaName, scalarListTableName(field)))
-  def modelColumn(model: Model, scalarField: ScalarField): Field[AnyRef]          = field(name(schemaName, model.dbName, scalarField.dbName))
-  def modelIdColumn(model: Model)                                                 = field(name(schemaName, model.dbName, model.dbNameOfIdField_!))
-  def relationColumn(relation: Relation, side: RelationSide.Value)                = field(name(schemaName, relation.relationTableName, relation.columnForRelationSide(side)))
-  def relationIdColumn(relation: Relation)                                        = field(name(schemaName, relation.relationTableName, "id"))
-  def inlineRelationColumn(relation: Relation, mani: InlineRelationManifestation) = field(name(schemaName, relation.relationTableName, mani.referencingColumn))
-  def scalarListColumn(scalarField: ScalarField, column: String)                  = field(name(schemaName, scalarListTableName(scalarField), column))
-  def column(table: String, column: String)                                       = field(name(schemaName, table, column))
-  def placeHolders(vector: Iterable[Any])                                         = vector.toList.map(_ => placeHolder).asJava
+  val relayIdColumn                                                                         = field(name(schemaName, relayIdTableName, "id"))
+  val relayStableIdentifierColumn                                                           = field(name(schemaName, relayIdTableName, "stableModelIdentifier"))
+  val relayTable                                                                            = table(name(schemaName, relayIdTableName))
+  def idField(model: Model)                                                                 = field(name(schemaName, model.dbName, model.dbNameOfIdField_!))
+  def modelTable(model: Model)                                                              = table(name(schemaName, model.dbName))
+  def relationTable(relation: Relation)                                                     = table(name(schemaName, relation.relationTableName))
+  def scalarListTable(field: ScalarField)                                                   = table(name(schemaName, scalarListTableName(field)))
+  def modelColumn(model: Model, scalarField: com.prisma.shared.models.Field): Field[AnyRef] = field(name(schemaName, model.dbName, scalarField.dbName))
+  def modelIdColumn(model: Model)                                                           = field(name(schemaName, model.dbName, model.dbNameOfIdField_!))
+  def relationColumn(relation: Relation, side: RelationSide.Value)                          = field(name(schemaName, relation.relationTableName, relation.columnForRelationSide(side)))
+  def relationIdColumn(relation: Relation)                                                  = field(name(schemaName, relation.relationTableName, "id"))
+  def inlineRelationColumn(relation: Relation, mani: InlineRelationManifestation)           = field(name(schemaName, relation.relationTableName, mani.referencingColumn))
+  def scalarListColumn(scalarField: ScalarField, column: String)                            = field(name(schemaName, scalarListTableName(scalarField), column))
+  def column(table: String, column: String)                                                 = field(name(schemaName, table, column))
+  def placeHolders(vector: Iterable[Any])                                                   = vector.toList.map(_ => placeHolder).asJava
 
   def queryToDBIO[T](query: JooqQuery)(setParams: PositionedParameters => Unit, readResult: ResultSet => T): DBIO[T] = {
     SimpleDBIO { ctx =>
@@ -123,7 +123,7 @@ case class PostgresApiDatabaseMutationBuilder(schemaName: String) extends Builde
   def createDataItem(model: Model, args: PrismaArgs): DBIO[IdGCValue] = {
     SimpleDBIO { x =>
       val argsAsRoot = args.raw.asRoot.add(model.idField_!.name, generateId(model))
-      val fields     = model.scalarFields.filter(field => argsAsRoot.hasArgFor(field.name))
+      val fields     = model.fields.filter(field => argsAsRoot.hasArgFor(field.name))
 
       val query = sql
         .insertInto(modelTable(model))
