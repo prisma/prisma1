@@ -193,7 +193,7 @@ case class PostgresApiDatabaseMutationBuilder(schemaName: String) extends Builde
       val otherWhereCondition = idField(parentModel).equal(placeHolder)
 
       val rowToUpdateCondition = if (relation.isSameModelRelation) {
-        if (relationField.relationSide == RelationSide.A) {
+        if (relationField.relationSide == RelationSide.B) {
           childWhereCondition
         } else {
           otherWhereCondition
@@ -207,7 +207,7 @@ case class PostgresApiDatabaseMutationBuilder(schemaName: String) extends Builde
       }
 
       val (idToLinkTo, idToUpdate) = if (relation.isSameModelRelation) {
-        if (relationField.relationSide == RelationSide.A) {
+        if (relationField.relationSide == RelationSide.B) {
           (childId, parentId)
         } else {
           (parentId, childId)

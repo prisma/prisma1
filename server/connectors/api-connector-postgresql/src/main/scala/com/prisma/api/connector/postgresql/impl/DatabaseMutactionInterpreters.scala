@@ -60,7 +60,6 @@ case class NestedCreateDataItemInterpreter(mutaction: NestedCreateDataItem, incl
       mutationBuilder: PostgresApiDatabaseMutationBuilder,
       parentId: IdGCValue
   )(implicit ec: ExecutionContext) = {
-
     relation.manifestation match {
       case Some(m: InlineRelationManifestation) if m.inTableOfModelId == model.name =>
         val inlineField  = relation.getFieldOnModel(model.name)
