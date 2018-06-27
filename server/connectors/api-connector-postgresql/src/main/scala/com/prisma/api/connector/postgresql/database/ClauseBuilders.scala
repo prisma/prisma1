@@ -8,7 +8,7 @@ import com.prisma.gc_values.{GCValue, NullGCValue}
 import com.prisma.shared.models._
 
 case class WhereClauseBuilder(schemaName: String) {
-  val topLevelAlias = QueryBuilders.topLevelAlias
+  val topLevelAlias = JooqQueryBuilders.topLevelAlias
 
   def buildWhereClause(filter: Option[Filter]): Option[String] = {
     val conditions = buildWhereClauseWithoutWhereKeyWord(filter)

@@ -811,7 +811,7 @@ case class PostgresApiDatabaseMutationBuilder(
       })
 
     val action = queryToDBIO(query)(
-      setParams = pp => SetParams.setFilter(pp.ps, whereFilter),
+      setParams = pp => JooqSetParams.setFilter(pp, whereFilter),
       readResult = _.as(readsAsUnit)
     )
     action.map { result =>
