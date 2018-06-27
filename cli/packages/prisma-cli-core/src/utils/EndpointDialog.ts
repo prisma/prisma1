@@ -12,7 +12,6 @@ import * as sillyname from 'sillyname'
 import * as path from 'path'
 import * as fs from 'fs'
 import { Introspector } from 'prisma-db-introspection'
-import { defaultDBPort } from '../commands/local/constants'
 import * as yaml from 'js-yaml'
 
 export interface GetEndpointParams {
