@@ -1,24 +1,22 @@
 package com.prisma.api.connector.mysql.database
 
+import com.prisma.api.connector.postgresql.database.{Databases, SlickDatabase}
 import com.prisma.config.DatabaseConfig
 import com.typesafe.config.{Config, ConfigFactory}
+import slick.jdbc.MySQLProfile
 import slick.jdbc.MySQLProfile.api._
 import slick.jdbc.MySQLProfile.backend.DatabaseDef
 
-case class Databases(master: DatabaseDef, readOnly: DatabaseDef)
+//case class Databases(master: DatabaseDef, readOnly: DatabaseDef)
 
-object Databases {
+object MySqlDatabases {
   private lazy val dbDriver = new org.mariadb.jdbc.Driver
 
   def initialize(dbConfig: DatabaseConfig): Databases = {
-    val config   = typeSafeConfigFromDatabaseConfig(dbConfig)
-    val masterDb = Database.forConfig("database", config, driver = dbDriver)
-    val dbs = Databases(
-      master = masterDb,
-      readOnly = masterDb //if (config.hasPath(readOnlyPath)) readOnlyDb else masterDb
-    )
-
-    dbs
+    val config                       = typeSafeConfigFromDatabaseConfig(dbConfig)
+    val masterDb                     = Database.forConfig("database", config, driver = dbDriver)
+    val slickDatabase: SlickDatabase = SlickDatabase(MySQLProfile, masterDb)
+    Databases(primary = slickDatabase, replica = slickDatabase)
   }
 
   def typeSafeConfigFromDatabaseConfig(dbConfig: DatabaseConfig): Config = {

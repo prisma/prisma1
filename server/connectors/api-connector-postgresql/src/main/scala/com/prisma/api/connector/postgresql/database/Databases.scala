@@ -25,8 +25,8 @@ object Databases {
   val schema = "public" // default schema
 
   def initialize(dbConfig: DatabaseConfig): Databases = {
-    val theConfig                    = typeSafeConfigFromDatabaseConfig(dbConfig)
-    val masterDb                     = Database.forConfig("database", theConfig, driver = dbDriver)
+    val config                       = typeSafeConfigFromDatabaseConfig(dbConfig)
+    val masterDb                     = Database.forConfig("database", config, driver = dbDriver)
     val slickDatabase: SlickDatabase = SlickDatabase(PostgresProfile, masterDb)
     Databases(primary = slickDatabase, replica = slickDatabase)
   }

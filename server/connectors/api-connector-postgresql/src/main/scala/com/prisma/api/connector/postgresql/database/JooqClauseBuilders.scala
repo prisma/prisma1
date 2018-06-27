@@ -11,8 +11,7 @@ import org.jooq.impl._
 import org.jooq.{Condition, SQLDialect, SortField}
 import JooqQueryBuilders._
 
-case class JooqWhereClauseBuilder(schemaName: String) {
-  val sql                   = DSL.using(SQLDialect.POSTGRES_9_5, new Settings().withRenderFormatted(true))
+case class JooqWhereClauseBuilder(slickDatabase: SlickDatabase, schemaName: String) extends BuilderBase {
 
   def buildWhereClause(filter: Option[Filter]): Option[Condition] = filter match {
     case Some(filter) => Some(buildWheresForFilter(filter, topLevelAlias))
@@ -151,7 +150,7 @@ object JooqLimitClauseBuilder {
     validate(args)
 
     lastOpt.orElse(firstOpt) match {
-      case Some(limitedCount) => (skipOpt.getOrElse(0),limitedCount + skipOpt.getOrElse(0) + 1)
+      case Some(limitedCount) => (skipOpt.getOrElse(0), limitedCount + skipOpt.getOrElse(0) + 1)
       case None               => (0, 100000000)
     }
   }

@@ -74,7 +74,7 @@ trait ImportActions extends BuilderBase {
         val relayInsert: PreparedStatement = jdbcActionContext.connection.prepareStatement(query.getSQL)
 
         mutaction.args.foreach { arg =>
-          relayInsert.setString(1, arg.raw.asRoot.idField.value)
+          relayInsert.setGcValue(1, arg.raw.asRoot.idField)
           relayInsert.setString(2, model.stableIdentifier)
           relayInsert.addBatch()
         }

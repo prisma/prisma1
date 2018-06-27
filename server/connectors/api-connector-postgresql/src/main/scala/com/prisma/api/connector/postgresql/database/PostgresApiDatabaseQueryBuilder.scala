@@ -7,6 +7,7 @@ import com.prisma.gc_values._
 import com.prisma.shared.models.IdType.Id
 import com.prisma.shared.models.{Function => _, _}
 import slick.jdbc._
+import scala.language.existentials
 
 import scala.concurrent.ExecutionContext
 
@@ -72,7 +73,7 @@ case class PostgresApiDatabaseQueryBuilder(
       overrideMaxNodeCount: Option[Int] = None
   ): DBIO[ResolverResult[PrismaNode]] = {
     SimpleDBIO[ResolverResult[PrismaNode]] { ctx =>
-      val jooqBuilder = JooqModelQueryBuilder(schemaName, model, args)
+      val jooqBuilder = JooqModelQueryBuilder(slickDatabase, schemaName, model, args)
       val ps          = ctx.connection.prepareStatement(jooqBuilder.queryString)
       JooqSetParams.setQueryArgs(ps, args)
       val rs: ResultSet              = ps.executeQuery()
@@ -88,7 +89,7 @@ case class PostgresApiDatabaseQueryBuilder(
       args: Option[QueryArguments]
   ): DBIO[Vector[ResolverResult[PrismaNodeWithParent]]] = {
     SimpleDBIO[Vector[ResolverResult[PrismaNodeWithParent]]] { ctx =>
-      val builder = JooqRelatedModelsQueryBuilder(schemaName, fromField, args, fromModelIds)
+      val builder = JooqRelatedModelsQueryBuilder(slickDatabase, schemaName, fromField, args, fromModelIds)
       val query   = if (args.exists(_.isWithPagination)) builder.queryStringWithPagination else builder.queryStringWithoutPagination
 
       val ps = ctx.connection.prepareStatement(query)
@@ -136,7 +137,7 @@ case class PostgresApiDatabaseQueryBuilder(
   ): DBIO[ResolverResult[RelationNode]] = {
 
     SimpleDBIO[ResolverResult[RelationNode]] { ctx =>
-      val builder = JooqRelationQueryBuilder(schemaName, relation, args)
+      val builder = JooqRelationQueryBuilder(slickDatabase, schemaName, relation, args)
       val ps      = ctx.connection.prepareStatement(builder.queryString)
       JooqSetParams.setQueryArgs(ps, args)
       val rs: ResultSet = ps.executeQuery()
@@ -152,7 +153,7 @@ case class PostgresApiDatabaseQueryBuilder(
   ): DBIO[ResolverResult[ScalarListValues]] = {
 
     SimpleDBIO[ResolverResult[ScalarListValues]] { ctx =>
-      val builder = JooqScalarListQueryBuilder(schemaName, field, args)
+      val builder = JooqScalarListQueryBuilder(slickDatabase, schemaName, field, args)
       val ps      = ctx.connection.prepareStatement(builder.queryString)
       JooqSetParams.setQueryArgs(ps, args)
       val rs: ResultSet = ps.executeQuery()
@@ -170,7 +171,7 @@ case class PostgresApiDatabaseQueryBuilder(
 
   def selectFromScalarList(modelName: String, field: ScalarField, nodeIds: Vector[IdGCValue]): DBIO[Vector[ScalarListValues]] = {
     SimpleDBIO[Vector[ScalarListValues]] { ctx =>
-      val builder = JooqScalarListByUniquesQueryBuilder(schemaName, field, nodeIds)
+      val builder = JooqScalarListByUniquesQueryBuilder(slickDatabase, schemaName, field, nodeIds)
       val ps      = ctx.connection.prepareStatement(builder.queryString)
       val pp      = new PositionedParameters(ps)
       nodeIds.foreach(pp.setGcValue)
@@ -185,7 +186,7 @@ case class PostgresApiDatabaseQueryBuilder(
 
   def countAllFromTable(table: String, whereFilter: Option[Filter]): DBIO[Int] = {
     SimpleDBIO[Int] { ctx =>
-      val builder = JooqCountQueryBuilder(schemaName, table, whereFilter)
+      val builder = JooqCountQueryBuilder(slickDatabase, schemaName, table, whereFilter)
       val ps      = ctx.connection.prepareStatement(builder.queryString)
       JooqSetParams.setFilter(new PositionedParameters(ps), whereFilter)
       val rs = ps.executeQuery()
@@ -197,7 +198,7 @@ case class PostgresApiDatabaseQueryBuilder(
   def batchSelectFromModelByUnique(model: Model, field: ScalarField, values: Vector[GCValue]): DBIO[Vector[PrismaNode]] = {
     SimpleDBIO { ctx =>
       val queryArgs = Some(QueryArguments.withFilter(ScalarFilter(field, In(values))))
-      val builder   = JooqModelQueryBuilder(schemaName, model, queryArgs)
+      val builder   = JooqModelQueryBuilder(slickDatabase, schemaName, model, queryArgs)
       val ps        = ctx.connection.prepareStatement(builder.queryString)
       JooqSetParams.setQueryArgs(ps, queryArgs)
       val rs: ResultSet = ps.executeQuery()

@@ -32,13 +32,16 @@ object JooqQueryBuilders {
   val createdAtField      = "createdAt"
 }
 
-case class JooqRelationQueryBuilder(schemaName: String, relation: Relation, queryArguments: Option[QueryArguments]) {
+case class JooqRelationQueryBuilder(
+    slickDatabase: SlickDatabase,
+    schemaName: String,
+    relation: Relation,
+    queryArguments: Option[QueryArguments]
+) extends BuilderBase {
 
   lazy val queryString: String = {
-
-    val sql          = DSL.using(SQLDialect.POSTGRES_9_5, new Settings().withRenderFormatted(true))
     val aliasedTable = table(name(schemaName, relation.relationTableName)).as(topLevelAlias)
-    val condition    = JooqWhereClauseBuilder(schemaName).buildWhereClause(queryArguments.flatMap(_.filter)).getOrElse(trueCondition())
+    val condition    = JooqWhereClauseBuilder(slickDatabase, schemaName).buildWhereClause(queryArguments.flatMap(_.filter)).getOrElse(trueCondition())
     val order        = JooqOrderByClauseBuilder.forRelation(relation, topLevelAlias, queryArguments)
     val limit        = JooqLimitClauseBuilder.limitClause(queryArguments)
 
@@ -57,12 +60,16 @@ case class JooqRelationQueryBuilder(schemaName: String, relation: Relation, quer
   }
 }
 
-case class JooqCountQueryBuilder(schemaName: String, tableName: String, filter: Option[Filter]) {
+case class JooqCountQueryBuilder(
+    slickDatabase: SlickDatabase,
+    schemaName: String,
+    tableName: String,
+    filter: Option[Filter]
+) extends BuilderBase {
 
   lazy val queryString: String = {
-    val sql          = DSL.using(SQLDialect.POSTGRES_9_5, new Settings().withRenderFormatted(true))
     val aliasedTable = table(name(schemaName, tableName)).as(topLevelAlias)
-    val condition    = JooqWhereClauseBuilder(schemaName).buildWhereClause(filter).getOrElse(trueCondition())
+    val condition    = JooqWhereClauseBuilder(slickDatabase, schemaName).buildWhereClause(filter).getOrElse(trueCondition())
 
     val query = sql
       .selectCount()
@@ -73,14 +80,18 @@ case class JooqCountQueryBuilder(schemaName: String, tableName: String, filter: 
   }
 }
 
-case class JooqScalarListQueryBuilder(schemaName: String, field: ScalarField, queryArguments: Option[QueryArguments]) {
+case class JooqScalarListQueryBuilder(
+    slickDatabase: SlickDatabase,
+    schemaName: String,
+    field: ScalarField,
+    queryArguments: Option[QueryArguments]
+) extends BuilderBase {
   require(field.isList, "This must be called only with scalar list fields")
 
   val tableName = s"${field.model.dbName}_${field.dbName}"
   lazy val queryString: String = {
-    val sql          = DSL.using(SQLDialect.POSTGRES_9_5, new Settings().withRenderFormatted(true))
     val aliasedTable = table(name(schemaName, tableName)).as(topLevelAlias)
-    val condition    = JooqWhereClauseBuilder(schemaName).buildWhereClause(queryArguments.flatMap(_.filter)).getOrElse(trueCondition())
+    val condition    = JooqWhereClauseBuilder(slickDatabase, schemaName).buildWhereClause(queryArguments.flatMap(_.filter)).getOrElse(trueCondition())
     val order        = JooqOrderByClauseBuilder.forScalarListField(topLevelAlias, queryArguments)
     val limit        = JooqLimitClauseBuilder.limitClause(queryArguments)
 
@@ -99,13 +110,16 @@ case class JooqScalarListQueryBuilder(schemaName: String, field: ScalarField, qu
   }
 }
 
-case class JooqScalarListByUniquesQueryBuilder(schemaName: String, scalarField: ScalarField, nodeIds: Vector[GCValue]) {
+case class JooqScalarListByUniquesQueryBuilder(
+    slickDatabase: SlickDatabase,
+    schemaName: String,
+    scalarField: ScalarField,
+    nodeIds: Vector[GCValue]
+) extends BuilderBase {
   require(scalarField.isList, "This must be called only with scalar list fields")
 
   val tableName = s"${scalarField.model.dbName}_${scalarField.dbName}"
   lazy val queryString: String = {
-
-    val sql         = DSL.using(SQLDialect.POSTGRES_9_5, new Settings().withRenderFormatted(true))
     val nodeIdField = field(name(schemaName, tableName, nodeIdFieldName))
 
     val condition = nodeIdField.in(Vector.fill(nodeIds.length) { stringDummy }: _*)
@@ -119,11 +133,12 @@ case class JooqScalarListByUniquesQueryBuilder(schemaName: String, scalarField: 
 }
 
 case class JooqRelatedModelsQueryBuilder(
+    slickDatabase: SlickDatabase,
     schemaName: String,
     fromField: RelationField,
     queryArguments: Option[QueryArguments],
     relatedNodeIds: Vector[IdGCValue]
-) {
+) extends BuilderBase {
 
   val relation                        = fromField.relation
   val relatedModel                    = fromField.relatedModel_!
@@ -135,11 +150,10 @@ case class JooqRelatedModelsQueryBuilder(
   val bColumn                         = relation.modelBColumn
   val secondaryOrderByForPagination   = if (fromField.oppositeRelationSide == RelationSide.A) aSideAlias else bSideAlias
 
-  val sql           = DSL.using(SQLDialect.POSTGRES_10, new Settings().withRenderFormatted(true))
   val aliasedTable  = table(name(schemaName, modelTable)).as(topLevelAlias)
   val relationTable = table(name(schemaName, relationTableName)).as(relationTableAlias)
   val condition1    = field(name(relationTableAlias, modelRelationSideColumn)).in(Vector.fill(relatedNodeIds.length) { stringDummy }: _*)
-  val condition2    = JooqWhereClauseBuilder(schemaName).buildWhereClause(queryArguments.flatMap(_.filter)).getOrElse(trueCondition())
+  val condition2    = JooqWhereClauseBuilder(slickDatabase, schemaName).buildWhereClause(queryArguments.flatMap(_.filter)).getOrElse(trueCondition())
 
   val base = sql
     .select(aliasedTable.asterisk(), field(name(relationTableAlias, aColumn)).as(aSideAlias), field(name(relationTableAlias, bColumn)).as(bSideAlias))
@@ -149,7 +163,7 @@ case class JooqRelatedModelsQueryBuilder(
 
   lazy val queryStringWithPagination: String = {
     val order           = JooqOrderByClauseBuilder.internal(baseTableAlias, baseTableAlias, secondaryOrderByForPagination, queryArguments)
-    val cursorCondition = JooqWhereClauseBuilder(schemaName).buildCursorCondition(queryArguments, relatedModel)
+    val cursorCondition = JooqWhereClauseBuilder(slickDatabase, schemaName).buildCursorCondition(queryArguments, relatedModel)
 
     val aliasedBase = base.where(condition1, condition2, cursorCondition).asTable().as(baseTableAlias)
 
@@ -177,16 +191,16 @@ case class JooqRelatedModelsQueryBuilder(
   }
 }
 
-case class JooqModelQueryBuilder(schemaName: String, model: Model, queryArguments: Option[QueryArguments]) {
+case class JooqModelQueryBuilder(
+    slickDatabase: SlickDatabase,
+    schemaName: String,
+    model: Model,
+    queryArguments: Option[QueryArguments]
+) extends BuilderBase {
 
   lazy val queryString: String = {
-    import org.jooq.impl.DSL
-    import org.jooq.impl.DSL._
-
-    val sql = DSL.using(SQLDialect.POSTGRES_9_5, new Settings().withRenderFormatted(true))
-
-    val condition       = JooqWhereClauseBuilder(schemaName).buildWhereClause(queryArguments.flatMap(_.filter)).getOrElse(and(trueCondition()))
-    val cursorCondition = JooqWhereClauseBuilder(schemaName).buildCursorCondition(queryArguments, model)
+    val condition       = JooqWhereClauseBuilder(slickDatabase, schemaName).buildWhereClause(queryArguments.flatMap(_.filter)).getOrElse(and(trueCondition()))
+    val cursorCondition = JooqWhereClauseBuilder(slickDatabase, schemaName).buildCursorCondition(queryArguments, model)
     val order           = JooqOrderByClauseBuilder.forModel(model, topLevelAlias, queryArguments)
     val limit           = JooqLimitClauseBuilder.limitClause(queryArguments)
 
