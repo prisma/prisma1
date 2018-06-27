@@ -21,7 +21,6 @@ import org.jooq.impl.DSL._
 import org.jooq.{Field, Query => JooqQuery, _}
 import slick.dbio.DBIOAction
 import slick.jdbc.{MySQLProfile, PositionedParameters, PostgresProfile}
-import slick.sql.SqlAction
 
 import scala.collection.JavaConverters._
 import scala.concurrent.ExecutionContext
@@ -418,10 +417,10 @@ case class PostgresApiDatabaseMutationBuilder(
     val relation      = parentField.relation
     val childIdField  = relationColumn(relation, parentField.oppositeRelationSide)
     val parentIdField = relationColumn(relation, parentField.relationSide)
-    val subSelect =
-      select(childIdField)
-        .from(relationTable(relation))
-        .where(parentIdField.in(placeHolders(parentIds)))
+    val subSelect = sql
+      .select(childIdField)
+      .from(relationTable(relation))
+      .where(parentIdField.in(placeHolders(parentIds)))
 
     idField(parentField.relatedModel_!).in(subSelect)
   }
@@ -488,9 +487,10 @@ case class PostgresApiDatabaseMutationBuilder(
   def setManyScalarLists(model: Model, listFieldMap: Vector[(String, ListGCValue)], whereFilter: Option[Filter]) = {
     val idQuery = SimpleDBIO { ctx =>
       val condition    = JooqWhereClauseBuilder(slickDatabase, schemaName).buildWhereClause(whereFilter).getOrElse(trueCondition())
-      val aliasedTable = table(name(schemaName, model.dbName)).as(topLevelAlias)
+      val aliasedTable = modelTable(model).as(topLevelAlias)
 
-      val queryString = select(field(name(topLevelAlias, model.dbNameOfIdField_!)))
+      val queryString = sql
+        .select(column(topLevelAlias, model.dbNameOfIdField_!))
         .from(aliasedTable)
         .where(condition)
         .getSQL
