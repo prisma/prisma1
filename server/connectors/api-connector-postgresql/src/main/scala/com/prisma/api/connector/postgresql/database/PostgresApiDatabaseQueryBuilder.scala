@@ -23,6 +23,11 @@ case class PostgresApiDatabaseQueryBuilder(
   import com.prisma.slick.NewJdbcExtensions._
   import slickDatabase.profile.api._
 
+  val relayIdTableQuery = {
+    val bla = RelayIdTableWrapper(slickDatabase.profile)
+    TableQuery(new bla.SlickTable(_, project.id))
+  }
+
   private def readsScalarListField(field: ScalarField): ReadsResultSet[ScalarListElement] = ReadsResultSet { rs =>
     val nodeId   = rs.getString(nodeIdFieldName)
     val position = rs.getInt(positionFieldName)
@@ -35,6 +40,30 @@ case class PostgresApiDatabaseQueryBuilder(
       a = resultSet.getAsID("A", relation.modelA.idField_!.typeIdentifier),
       b = resultSet.getAsID("B", relation.modelB.idField_!.typeIdentifier)
     )
+  }
+
+  def selectByGlobalId(idGCValue: IdGCValue): DBIO[Option[PrismaNode]] = {
+    val modelNameForId: DBIO[Option[String]] = relayIdTableQuery
+      .filter(_.id === idGCValue.value.toString)
+      .map(_.stableModelIdentifier)
+      .take(1)
+      .result
+      .headOption
+
+    for {
+      stableModelIdentifier <- modelNameForId
+      result <- stableModelIdentifier match {
+                 case Some(stableModelIdentifier) =>
+                   val model = project.schema.getModelByStableIdentifier_!(stableModelIdentifier.trim)
+                   selectById(model, idGCValue)
+                 case None =>
+                   DBIO.successful(None)
+               }
+    } yield result
+  }
+
+  def selectById(model: Model, idGcValue: IdGCValue): DBIO[Option[PrismaNode]] = {
+    batchSelectFromModelByUnique(model, model.idField_!, Vector(idGcValue)).map(_.headOption)
   }
 
   def selectAllFromTable(

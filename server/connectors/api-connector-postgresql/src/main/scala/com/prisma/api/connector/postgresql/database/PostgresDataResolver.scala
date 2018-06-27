@@ -14,8 +14,6 @@ case class PostgresDataResolver(
 )(implicit ec: ExecutionContext)
     extends DataResolver {
 
-  import slickDatabase.profile.api._
-
   val queryBuilder = PostgresApiDatabaseQueryBuilder(
     project = project,
     schemaName = schemaName.getOrElse(project.id),
@@ -25,23 +23,8 @@ case class PostgresDataResolver(
   override def resolveByGlobalId(globalId: CuidGCValue): Future[Option[PrismaNode]] = { //todo rewrite this to use normal query?
     if (globalId.value == "viewer-fixed") return Future.successful(Some(PrismaNode(globalId, RootGCValue.empty, Some("Viewer"))))
 
-    val query: DBIO[Option[String]] = TableQuery(new ProjectRelayIdTable(_, project.id))
-      .filter(_.id === globalId.value)
-      .map(_.stableModelIdentifier)
-      .take(1)
-      .result
-      .headOption
-
-    slickDatabase.database
-      .run(query)
-      .flatMap {
-        case Some(stableModelIdentifier) =>
-          val model = project.schema.getModelByStableIdentifier_!(stableModelIdentifier.trim)
-          resolveByUnique(NodeSelector.forIdGCValue(model, globalId))
-
-        case _ =>
-          Future.successful(None)
-      }
+    val query = queryBuilder.selectByGlobalId(globalId)
+    performWithTiming("resolveByGlobalId", slickDatabase.database.run(query))
   }
 
   override def resolveByModel(model: Model, args: Option[QueryArguments] = None): Future[ResolverResult[PrismaNode]] = {
