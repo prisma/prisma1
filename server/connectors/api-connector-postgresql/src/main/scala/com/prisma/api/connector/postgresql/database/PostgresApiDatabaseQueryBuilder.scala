@@ -88,7 +88,7 @@ case class PostgresApiDatabaseQueryBuilder(
       fromModelIds: Vector[IdGCValue],
       args: Option[QueryArguments]
   ): DBIO[Vector[ResolverResult[PrismaNodeWithParent]]] = {
-    SimpleDBIO[Vector[ResolverResult[PrismaNodeWithParent]]] { ctx =>
+    SimpleDBIO { ctx =>
       val builder = JooqRelatedModelsQueryBuilder(slickDatabase, schemaName, fromField, args, fromModelIds)
       val query   = if (args.exists(_.isWithPagination)) builder.queryStringWithPagination else builder.queryStringWithoutPagination
 

@@ -57,6 +57,7 @@ trait BuilderBase {
   def inlineRelationColumn(relation: Relation, mani: InlineRelationManifestation)           = field(name(schemaName, relation.relationTableName, mani.referencingColumn))
   def scalarListColumn(scalarField: ScalarField, column: String)                            = field(name(schemaName, scalarListTableName(scalarField), column))
   def column(table: String, column: String)                                                 = field(name(schemaName, table, column))
+  def aliasColumn(column: String)                                                           = field(name(JooqQueryBuilders.topLevelAlias, column))
   def placeHolders(vector: Iterable[Any])                                                   = vector.toList.map(_ => placeHolder).asJava
   private def scalarListTableName(field: ScalarField)                                       = field.model.dbName + "_" + field.dbName
 
@@ -490,7 +491,7 @@ case class PostgresApiDatabaseMutationBuilder(
       val aliasedTable = modelTable(model).as(topLevelAlias)
 
       val queryString = sql
-        .select(column(topLevelAlias, model.dbNameOfIdField_!))
+        .select(aliasColumn(model.dbNameOfIdField_!))
         .from(aliasedTable)
         .where(condition)
         .getSQL

@@ -33,8 +33,8 @@ case class JooqWhereClauseBuilder(slickDatabase: SlickDatabase, schemaName: Stri
     if (before.isEmpty && after.isEmpty) return trueCondition()
 
     val tableName        = model.dbName
-    val idFieldWithAlias = field(name(topLevelAlias, model.dbNameOfIdField_!))
-    val idField          = field(name(schemaName, tableName, model.dbNameOfIdField_!))
+    val idFieldWithAlias = aliasColumn(model.dbNameOfIdField_!)
+    val idField          = modelIdColumn(model)
 
     // First, we fetch the ordering for the query. If none is passed, we order by id, ascending.
     // We need that since before/after are dependent on the order.
