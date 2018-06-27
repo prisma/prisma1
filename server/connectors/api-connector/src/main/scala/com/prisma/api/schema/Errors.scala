@@ -44,6 +44,7 @@ object APIErrors {
   case class UniqueConstraintViolation(modelName: String, details: String)
       extends ClientApiError(s"A unique constraint would be violated on $modelName. Details: $details", 3010)
 
+  // todo: this error may not be required anymore. It is just used in creates and i cannot see how this can happen within a create.
   case class NodeDoesNotExist(id: String)
       extends ClientApiError(
         s"You are referencing a node that does not exist. Please check your mutation to make sure you are only creating edges between existing nodes. Id if available: $id",

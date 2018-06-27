@@ -1,5 +1,7 @@
 package com.prisma.api.connector.postgresql.impl
 
+import java.sql.SQLIntegrityConstraintViolationException
+
 import com.prisma.api.connector._
 import com.prisma.api.connector.postgresql.DatabaseMutactionInterpreter
 import com.prisma.api.connector.postgresql.database.PostgresApiDatabaseMutationBuilder
@@ -34,6 +36,10 @@ case class CreateDataItemInterpreter(mutaction: CreateNode, includeRelayRow: Boo
       APIErrors.UniqueConstraintViolation(model.name, GetFieldFromSQLUniqueException.getFieldOption(mutaction.model, e).get)
     case e: PSQLException if e.getSQLState == "23503" =>
       APIErrors.NodeDoesNotExist("")
+    case e: SQLIntegrityConstraintViolationException
+        if e.getErrorCode == 1062 &&
+          GetFieldFromSQLUniqueException.getFieldOptionMySql(mutaction.nonListArgs.keys, e).isDefined =>
+      APIErrors.UniqueConstraintViolation(model.name, GetFieldFromSQLUniqueException.getFieldOptionMySql(mutaction.nonListArgs.keys, e).get)
   }
 
 }
@@ -122,6 +128,10 @@ case class NestedCreateDataItemInterpreter(mutaction: NestedCreateDataItem, incl
       APIErrors.UniqueConstraintViolation(model.name, GetFieldFromSQLUniqueException.getFieldOption(model, e).get)
     case e: PSQLException if e.getSQLState == "23503" =>
       APIErrors.NodeDoesNotExist("")
+    case e: SQLIntegrityConstraintViolationException
+        if e.getErrorCode == 1062 &&
+          GetFieldFromSQLUniqueException.getFieldOptionMySql(mutaction.nonListArgs.keys, e).isDefined =>
+      APIErrors.UniqueConstraintViolation(model.name, GetFieldFromSQLUniqueException.getFieldOptionMySql(mutaction.nonListArgs.keys, e).get)
   }
 }
 
@@ -307,6 +317,14 @@ case class UpdateDataItemInterpreter(mutaction: UpdateDataItem) extends Database
 
     case e: PSQLException if e.getSQLState == "23502" =>
       APIErrors.FieldCannotBeNull()
+
+    case e: SQLIntegrityConstraintViolationException
+        if e.getErrorCode == 1062 &&
+          GetFieldFromSQLUniqueException.getFieldOptionMySql(mutaction.nonListArgs.keys, e).isDefined =>
+      APIErrors.UniqueConstraintViolation(model.name, GetFieldFromSQLUniqueException.getFieldOptionMySql(mutaction.nonListArgs.keys, e).get)
+
+    case e: SQLIntegrityConstraintViolationException if e.getErrorCode == 1048 =>
+      APIErrors.FieldCannotBeNull()
   }
 }
 
@@ -344,6 +362,14 @@ case class NestedUpdateDataItemInterpreter(mutaction: NestedUpdateDataItem) exte
       APIErrors.UniqueConstraintViolation(model.name, GetFieldFromSQLUniqueException.getFieldOption(model, e).get)
 
     case e: PSQLException if e.getSQLState == "23502" =>
+      APIErrors.FieldCannotBeNull()
+
+    case e: SQLIntegrityConstraintViolationException
+        if e.getErrorCode == 1062 &&
+          GetFieldFromSQLUniqueException.getFieldOptionMySql(mutaction.nonListArgs.keys, e).isDefined =>
+      APIErrors.UniqueConstraintViolation(model.name, GetFieldFromSQLUniqueException.getFieldOptionMySql(mutaction.nonListArgs.keys, e).get)
+
+    case e: SQLIntegrityConstraintViolationException if e.getErrorCode == 1048 =>
       APIErrors.FieldCannotBeNull()
   }
 }
