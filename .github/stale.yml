@@ -14,3 +14,5 @@ markComment: >
   for your contributions.
 # Comment to post when closing a stale issue. Set to `false` to disable
 closeComment: false
+# Limit to only `issues`
+only: issues
