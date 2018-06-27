@@ -6,10 +6,14 @@ import org.scalatest.{FlatSpec, Matchers}
 import play.api.libs.json._
 
 class JsonVariablesSpec extends FlatSpec with Matchers with ApiSpecBase {
-
-
-  val project = SchemaDsl.fromBuilder { schema =>
-    schema.model("MyRequiredJson").field_!("json", _.Json)
+  
+  val project = SchemaDsl.fromString() {
+    """
+      | type MyRequiredJson {
+      |   id: ID! @unique
+      |   json: Json!
+      | }
+    """.stripMargin
   }
   database.setup(project)
 

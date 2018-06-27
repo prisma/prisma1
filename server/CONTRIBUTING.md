@@ -23,8 +23,14 @@ This tutorial aims to get you started with testing your API queries against ApiT
 1. The test class that you have created should extend traits `FlatSpec` and `Matchers` which are part of ScalaTest and `ApiSpecBase` which is trait provided in Prisma.
 1. The next thing is to define a schema against which you will test your APIs. For that, we will be using `com.prisma.shared.schema_dsl.SchemaDsl`. Import this in your test file and declare your schema. There different ways to declare schema. An example would be 
     ```
-        val project = SchemaDsl.fromBuilder { schema =>
-        schema.model("MyRequiredJson").field_!("json", _.Json)
+         val project = SchemaDsl.fromString() {
+            """
+              | type MyRequiredJson {
+              |   id: ID! @unique
+              |   json: Json!
+              | }
+            """.stripMargin
+          }
     ```
     PS: If your are interested in declaring complex schema then there are a lot of test cases in package `com.prisma.api.queries`. You can check them out. They help you in setting up a complex schema.  
 
