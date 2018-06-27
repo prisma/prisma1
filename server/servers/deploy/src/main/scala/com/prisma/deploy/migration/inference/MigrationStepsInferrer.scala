@@ -101,7 +101,7 @@ case class MigrationStepsInferrerImpl(previousSchema: Schema, nextSchema: Schema
       CreateField(
         model = nextModel.name,
         name = fieldOfNextModel.name,
-        typeName = fieldOfNextModel.typeIdentifier.toString,
+        typeName = fieldOfNextModel.typeIdentifier.code,
         isRequired = fieldOfNextModel.isRequired,
         isList = fieldOfNextModel.isList,
         isUnique = fieldOfNextModel.isUnique,
@@ -126,7 +126,7 @@ case class MigrationStepsInferrerImpl(previousSchema: Schema, nextSchema: Schema
         newModel = nextModel.name,
         name = previousFieldName,
         newName = diff(previousField.name, fieldOfNextModel.name),
-        typeName = diff(previousField.typeIdentifier.toString, fieldOfNextModel.typeIdentifier.toString),
+        typeName = diff(previousField.typeIdentifier.code, fieldOfNextModel.typeIdentifier.code),
         isRequired = diff(previousField.isRequired, fieldOfNextModel.isRequired),
         isList = diff(previousField.isList, fieldOfNextModel.isList),
         isUnique = diff(previousField.isUnique, fieldOfNextModel.isUnique),

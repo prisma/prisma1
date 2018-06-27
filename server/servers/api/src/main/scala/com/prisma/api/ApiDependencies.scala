@@ -12,6 +12,7 @@ import com.prisma.auth.{Auth, AuthImpl}
 import com.prisma.client.server.{GraphQlRequestHandler, GraphQlRequestHandlerImpl}
 import com.prisma.errors.{BugsnagErrorReporter, ErrorReporter}
 import com.prisma.messagebus.{PubSub, PubSubPublisher, QueuePublisher}
+import com.prisma.profiling.JvmProfiler
 import com.prisma.shared.models.{Project, ProjectIdEncoder}
 import com.prisma.subscriptions.Webhook
 import com.prisma.utils.await.AwaitUtils
@@ -42,6 +43,8 @@ trait ApiDependencies extends AwaitUtils {
 
   val sssEventsPubSub: PubSub[String]
   lazy val sssEventsPublisher: PubSubPublisher[String] = sssEventsPubSub
+
+  JvmProfiler.schedule(ApiMetrics) // kick off JVM Profiler
 
   def dataResolver(project: Project): DataResolver       = apiConnector.dataResolver(project)
   def masterDataResolver(project: Project): DataResolver = apiConnector.masterDataResolver(project)

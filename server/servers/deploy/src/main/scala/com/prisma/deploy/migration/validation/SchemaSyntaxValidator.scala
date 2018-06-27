@@ -58,8 +58,8 @@ object SchemaSyntaxValidator {
     DirectiveRequirement("unique", requiredArguments = Seq.empty, optionalArguments = Seq.empty)
   )
 
-  val idFieldRequirementForPassiveConnectors = FieldRequirement("id", Vector("ID", "Int"), required = true, unique = true, list = false)
-  val idFieldRequirementForActiveConnectors  = FieldRequirement("id", "ID", required = true, unique = true, list = false)
+  val idFieldRequirementForPassiveConnectors = FieldRequirement("id", Vector("ID", "UUID", "Int"), required = true, unique = true, list = false)
+  val idFieldRequirementForActiveConnectors  = FieldRequirement("id", Vector("ID", "UUID"), required = true, unique = true, list = false)
 
   val reservedFieldsRequirementsForAllConnectors = Seq(
     FieldRequirement("updatedAt", "DateTime", required = true, unique = false, list = false),
@@ -438,7 +438,7 @@ case class SchemaSyntaxValidator(
   def isRelationField(fieldDef: FieldDefinition): Boolean  = !isScalarField(fieldDef) && !isEnumField(fieldDef)
 
   def isScalarField(fieldAndType: FieldAndType): Boolean = isScalarField(fieldAndType.fieldDef)
-  def isScalarField(fieldDef: FieldDefinition): Boolean  = TypeIdentifier.withNameOpt(fieldDef.typeName).isDefined
+  def isScalarField(fieldDef: FieldDefinition): Boolean  = fieldDef.hasScalarType
 
   def isEnumField(fieldDef: FieldDefinition): Boolean = doc.enumType(fieldDef.typeName).isDefined
 
@@ -457,7 +457,7 @@ case class SchemaSyntaxValidator(
     } else if (doc.enumType(typeName).isDefined) {
       TypeIdentifier.Enum
     } else {
-      TypeIdentifier.withNameHacked(typeName)
+      TypeIdentifier.withName(typeName)
     }
   }
 }

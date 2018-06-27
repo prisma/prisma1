@@ -5,7 +5,7 @@ import akka.event.{Logging, LoggingAdapter}
 import akka.http.scaladsl.model.HttpRequest
 import akka.http.scaladsl.server.RouteResult.{Complete, Rejected}
 import akka.http.scaladsl.server.directives.{DebuggingDirectives, LoggingMagnet}
-import com.prisma.metrics.{CustomTag, MetricsManager, TimerMetric}
+import com.prisma.metrics.{CustomTag, DefaultMetricsManager, MetricsManager, TimerMetric}
 
 trait TimeResponseDirective {
 
@@ -40,6 +40,6 @@ trait TimeResponseDirective {
   val timeResponse = DebuggingDirectives.logRequestResult(LoggingMagnet(captureResponseTime(_)))
 }
 
-case class TimeResponseDirectiveImpl(metricsManager: MetricsManager) extends TimeResponseDirective {
-  val requestTimer: TimerMetric = metricsManager.defineTimer("responseTime", CustomTag("status"))
+object TimeResponseDirectiveImpl extends TimeResponseDirective {
+  val requestTimer: TimerMetric = DefaultMetricsManager.defineTimer("responseTime", CustomTag("status"))
 }

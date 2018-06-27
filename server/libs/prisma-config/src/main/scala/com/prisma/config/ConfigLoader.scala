@@ -2,7 +2,6 @@ package com.prisma.config
 
 import java.io.File
 import java.net.URI
-
 import io.lemonlabs.uri.{Uri, Url}
 import io.lemonlabs.uri.config.UriConfig
 import io.lemonlabs.uri.decoding.NoopDecoder
@@ -115,7 +114,6 @@ object ConfigLoader {
     val databases = extractScalaMap(map.getOrElse("databases", emptyJavaMap), path = "databases").map {
       case (dbName, dbMap) =>
         val x = readDbWithConnectionString(dbName, dbMap)
-        x.failed.foreach(_.printStackTrace())
         x.getOrElse(readExplicitDb(dbName, dbMap))
     }.toSeq
 
@@ -123,7 +121,16 @@ object ConfigLoader {
       throw InvalidConfiguration("No databases defined")
     }
 
-    PrismaConfig(port, secret, legacySecret, s2sSecret, clusterAddress, rabbitUri, mgmtApiEnabled, databases)
+    PrismaConfig(
+      port = port,
+      managementApiSecret = secret,
+      legacySecret = legacySecret,
+      server2serverSecret = s2sSecret,
+      clusterAddress = clusterAddress,
+      rabbitUri = rabbitUri,
+      managmentApiEnabled = mgmtApiEnabled,
+      databases = databases
+    )
   }
 
   private def readDbWithConnectionString(dbName: String, dbJavaMap: Any) = Try {

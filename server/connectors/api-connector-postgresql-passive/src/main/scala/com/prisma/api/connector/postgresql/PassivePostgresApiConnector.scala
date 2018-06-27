@@ -4,7 +4,7 @@ import com.prisma.api.connector._
 import com.prisma.api.connector.postgresql.database.{Databases, PostgresApiDatabaseMutationBuilder, PostgresDataResolver}
 import com.prisma.api.connector.postgresql.impl._
 import com.prisma.config.DatabaseConfig
-import com.prisma.gc_values.{IdGCValue, RootGCValue}
+import com.prisma.gc_values.{CuidGCValue, RootGCValue}
 import com.prisma.shared.models.Manifestations.InlineRelationManifestation
 import com.prisma.shared.models.{Project, ProjectIdEncoder}
 import slick.jdbc.PostgresProfile.api._
@@ -145,7 +145,7 @@ case class NestedCreateDataItemInterpreterForInlineRelations(mutaction: NestedCr
   def createDataItemWithLinkToParent(mutationBuilder: PostgresApiDatabaseMutationBuilder)(parentId: String) = {
     val inlineField  = relation.getFieldOnModel(model.name)
     val argsMap      = mutaction.create.nonListArgs.raw.asRoot.map
-    val modifiedArgs = argsMap.updated(inlineField.name, IdGCValue(parentId))
+    val modifiedArgs = argsMap.updated(inlineField.name, CuidGCValue(parentId))
     mutationBuilder.createDataItem(path, PrismaArgs(RootGCValue(modifiedArgs)))
   }
 }

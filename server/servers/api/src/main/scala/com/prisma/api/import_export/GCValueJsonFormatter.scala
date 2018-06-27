@@ -1,5 +1,7 @@
 package com.prisma.api.import_export
 
+import java.util.UUID
+
 import com.prisma.gc_values._
 import com.prisma.shared.models.{Enum, Field, Model, ScalarField, TypeIdentifier}
 import org.joda.time.DateTimeZone
@@ -7,7 +9,7 @@ import org.joda.time.format.{DateTimeFormat, ISODateTimeFormat}
 import play.api.libs.json._
 
 import scala.collection.immutable.SortedMap
-import scala.util.Try
+import scala.util.{Failure, Success, Try}
 
 object GCValueJsonFormatter {
 
@@ -19,7 +21,8 @@ object GCValueJsonFormatter {
 
     override def writes(gcValue: GCValue): JsValue = gcValue match {
       case v: StringGCValue   => JsString(v.value)
-      case v: IdGCValue       => JsString(v.value)
+      case v: CuidGCValue     => JsString(v.value)
+      case v: UuidGCValue     => JsString(v.value.toString)
       case v: EnumGCValue     => JsString(v.value)
       case v: DateTimeGCValue => JsString(isoFormatter.print(v.value.withZone(DateTimeZone.UTC)))
       case v: BooleanGCValue  => JsBoolean(v.value)
@@ -82,11 +85,24 @@ object GCValueJsonFormatter {
     }
   }
 
-  implicit object GraphQLIDValueReads extends Reads[IdGCValue] {
+  implicit object GraphQLIDValueReads extends Reads[CuidGCValue] {
     override def reads(json: JsValue) = {
       json.validate[JsString] match {
-        case JsSuccess(json, _) => JsSuccess(IdGCValue(json.value))
+        case JsSuccess(json, _) => JsSuccess(CuidGCValue(json.value))
         case e: JsError         => e
+      }
+    }
+  }
+
+  implicit object UUIDValueReads extends Reads[UuidGCValue] {
+    override def reads(json: JsValue) = {
+      json.validate[JsString] match {
+        case JsSuccess(json, _) =>
+          UuidGCValue.parse(json.value) match {
+            case Success(x) => JsSuccess(x)
+            case Failure(e) => JsError(e.getMessage)
+          }
+        case e: JsError => e
       }
     }
   }
@@ -159,15 +175,15 @@ object GCValueJsonFormatter {
 
   def readLeafGCValueForField(field: ScalarField)(json: JsValue): JsResult[LeafGCValue] = {
     field.typeIdentifier match {
-      case TypeIdentifier.String    => json.validate[StringGCValue]
-      case TypeIdentifier.GraphQLID => json.validate[IdGCValue]
-      case TypeIdentifier.Enum      => readEnumGCValue(field.enum.get)(json)
-      case TypeIdentifier.DateTime  => json.validate[DateTimeGCValue]
-      case TypeIdentifier.Boolean   => json.validate[BooleanGCValue]
-      case TypeIdentifier.Int       => json.validate[IntGCValue]
-      case TypeIdentifier.Float     => json.validate[FloatGCValue]
-      case TypeIdentifier.Json      => json.validate[JsonGCValue]
-      case TypeIdentifier.Relation  => JsError("TypeIdentifier Relation is not supported here,")
+      case TypeIdentifier.String   => json.validate[StringGCValue]
+      case TypeIdentifier.Cuid     => json.validate[CuidGCValue]
+      case TypeIdentifier.UUID     => json.validate[UuidGCValue]
+      case TypeIdentifier.Enum     => readEnumGCValue(field.enum.get)(json)
+      case TypeIdentifier.DateTime => json.validate[DateTimeGCValue]
+      case TypeIdentifier.Boolean  => json.validate[BooleanGCValue]
+      case TypeIdentifier.Int      => json.validate[IntGCValue]
+      case TypeIdentifier.Float    => json.validate[FloatGCValue]
+      case TypeIdentifier.Json     => json.validate[JsonGCValue]
     }
   }
 

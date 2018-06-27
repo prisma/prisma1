@@ -29,14 +29,14 @@ class SubscriptionFilterSpec extends FlatSpec with Matchers with SubscriptionSpe
     TestData.createTodo("test-node-id", "some todo", JsString("[1,2,{\"a\":\"b\"}]"), None, project, model, testDatabase)
     TestData.createTodo("important-test-node-id", "important!", JsString("[1,2,{\"a\":\"b\"}]"), None, project, model, testDatabase)
 
-    val path = Path.empty(NodeSelector.forId(project.schema.getModelByName_!("Comment"), "comment-id"))
+    val path = Path.empty(NodeSelector.forCuid(project.schema.getModelByName_!("Comment"), "comment-id"))
 
-    val raw: List[(String, GCValue)] = List(("text", StringGCValue("some comment")), ("id", IdGCValue("comment-id")))
+    val raw: List[(String, GCValue)] = List(("text", StringGCValue("some comment")), ("id", CuidGCValue("comment-id")))
     val args                         = PrismaArgs(RootGCValue(raw: _*))
 
     testDatabase.runDatabaseMutactionOnClientDb(CreateDataItem(project = project, path = path, nonListArgs = args, listArgs = Vector.empty))
 
-    val extendedPath = path.appendEdge(model.getRelationFieldByName_!("comments")).lastEdgeToNodeEdge(NodeSelector.forId(model, "comment-id"))
+    val extendedPath = path.appendEdge(model.getRelationFieldByName_!("comments")).lastEdgeToNodeEdge(NodeSelector.forCuid(model, "comment-id"))
     testDatabase.runDatabaseMutactionOnClientDb(AddDataItemToManyRelationByPath(project, extendedPath))
   }
 

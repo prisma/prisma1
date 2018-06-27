@@ -124,6 +124,7 @@ lazy val connectorUtils = connectorProject("utils").dependsOn(deployConnectorPro
 
 lazy val deployConnector = connectorProject("deploy-connector")
   .dependsOn(sharedModels)
+  .dependsOn(metrics)
 
 lazy val deployConnectorMySql = connectorProject("deploy-connector-mysql")
   .dependsOn(deployConnector)
@@ -160,7 +161,7 @@ lazy val apiConnectorPostgres = connectorProject("api-connector-postgresql")
   .dependsOn(metrics)
   .dependsOn(slickUtils)
   .settings(
-    libraryDependencies ++= slick ++ Seq(postgresClient)
+    libraryDependencies ++= slick ++ Seq(postgresClient) ++ jooq
   )
 
 lazy val apiConnectorPostgresPassive = connectorProject("api-connector-postgresql-passive")
@@ -217,11 +218,7 @@ lazy val metrics = libProject("metrics")
   .dependsOn(akkaUtils)
   .settings(
     libraryDependencies ++= Seq(
-      datadogStatsd,
-      akkaHttp,
-      finagle,
-      akka,
-      librato
+      microMeter,
     )
   )
 

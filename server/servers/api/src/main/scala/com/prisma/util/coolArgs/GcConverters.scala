@@ -1,9 +1,11 @@
 package com.prisma.util.coolArgs
 
+import java.util.UUID
+
 import com.prisma.api.connector.PrismaArgs
 import com.prisma.gc_values._
 import com.prisma.shared.models.TypeIdentifier.TypeIdentifier
-import com.prisma.shared.models.{Field, Model, ScalarField, TypeIdentifier}
+import com.prisma.shared.models.{Model, ScalarField, TypeIdentifier}
 import org.joda.time.DateTime
 import org.scalactic.{Bad, Good, Or}
 import play.api.libs.json.{JsValue, _}
@@ -12,7 +14,7 @@ import sangria.ast._
 import scala.util.control.NonFatal
 
 /**
-  * 7. Any <-> GCValue - This is used to transform Sangria arguments
+  *  Any <-> GCValue - This is used to transform Sangria arguments
   */
 case class GCAnyConverter(typeIdentifier: TypeIdentifier, isList: Boolean) extends GCConverter[Any] {
   import OtherGCStuff._
@@ -34,7 +36,8 @@ case class GCAnyConverter(typeIdentifier: TypeIdentifier, isList: Boolean) exten
         case (x: Boolean, TypeIdentifier.Boolean)                                     => BooleanGCValue(x)
         case (x: String, TypeIdentifier.DateTime)                                     => DateTimeGCValue(new DateTime(x))
         case (x: DateTime, TypeIdentifier.DateTime)                                   => DateTimeGCValue(x)
-        case (x: String, TypeIdentifier.GraphQLID)                                    => IdGCValue(x)
+        case (x: String, TypeIdentifier.Cuid)                                         => CuidGCValue(x)
+        case (x: UUID, TypeIdentifier.UUID)                                           => UuidGCValue(x)
         case (x: String, TypeIdentifier.Enum)                                         => EnumGCValue(x)
         case (x: JsObject, TypeIdentifier.Json)                                       => JsonGCValue(x)
         case (x: String, TypeIdentifier.Json)                                         => JsonGCValue(Json.parse(x))
@@ -45,15 +48,13 @@ case class GCAnyConverter(typeIdentifier: TypeIdentifier, isList: Boolean) exten
 
       Good(result)
     } catch {
-      case NonFatal(_) => Bad(InvalidValueForScalarType(t.toString, typeIdentifier.toString))
+      case NonFatal(_) => Bad(InvalidValueForScalarType(t.toString, typeIdentifier.code))
     }
   }
-
-  override def fromGCValue(t: GCValue): Any = GCValueExtractor.fromGCValue(t)
 }
 
 /**
-  * 7. CoolArgs <-> ReallyCoolArgs - This is used to transform from Coolargs for create on a model to typed ReallyCoolArgs
+  *  CoolArgs <-> ReallyCoolArgs - This is used to transform from Coolargs for create on a model to typed ReallyCoolArgs
   */
 case class GCCreateReallyCoolArgsConverter(model: Model) {
 
@@ -106,25 +107,5 @@ case class GCCreateReallyCoolArgsConverter(model: Model) {
       field.name -> converted
     }
     PrismaArgs(RootGCValue(res: _*))
-  }
-}
-
-object OtherGCStuff {
-
-  /**
-    * This helps convert Or listvalues.
-    */
-  def sequence[A, B](seq: Vector[Or[A, B]]): Or[Vector[A], B] = {
-    def recurse(seq: Vector[Or[A, B]])(acc: Vector[A]): Or[Vector[A], B] = {
-      if (seq.isEmpty) {
-        Good(acc)
-      } else {
-        seq.head match {
-          case Good(x)    => recurse(seq.tail)(acc :+ x)
-          case Bad(error) => Bad(error)
-        }
-      }
-    }
-    recurse(seq)(Vector.empty)
   }
 }

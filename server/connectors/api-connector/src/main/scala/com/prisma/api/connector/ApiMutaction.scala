@@ -19,7 +19,7 @@ case class CreateDataItem(project: Project, path: Path, nonListArgs: PrismaArgs,
     case x if x.isEmpty => path.root
     case x              => x.last.asInstanceOf[NodeEdge].childWhere
   }
-  val id = where.fieldValueAsString
+  val id = where.fieldGCValue.value.toString
 }
 
 case class PushScalarListsImport(project: Project, tableName: String, id: String, args: ListGCValue)      extends DatabaseMutaction

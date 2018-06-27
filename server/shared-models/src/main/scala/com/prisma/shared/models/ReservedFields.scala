@@ -52,7 +52,7 @@ object ReservedFields {
   private def idField(): FieldTemplate = {
     FieldTemplate(
       name = idFieldName,
-      typeIdentifier = TypeIdentifier.GraphQLID,
+      typeIdentifier = TypeIdentifier.Cuid,
       isRequired = true,
       isList = false,
       isUnique = true,
