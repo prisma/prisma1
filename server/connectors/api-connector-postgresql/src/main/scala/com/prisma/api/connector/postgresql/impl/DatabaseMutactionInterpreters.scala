@@ -285,8 +285,7 @@ case class DeleteDataItemsInterpreter(mutaction: DeleteDataItems)(implicit ec: E
 
 case class ResetDataInterpreter(mutaction: ResetDataMutaction) extends DatabaseMutactionInterpreter {
   def action(mutationBuilder: PostgresApiDatabaseMutationBuilder) = {
-    val truncateTables = DBIOAction.sequence(mutaction.tableNames.map(mutationBuilder.truncateTable))
-    DBIOAction.seq(truncateTables)
+    mutationBuilder.truncateTables(mutaction.project)
   }
 }
 

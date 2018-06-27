@@ -21,6 +21,7 @@ import org.jooq.impl.DSL._
 import org.jooq.{Field, Query => JooqQuery, _}
 import slick.dbio.DBIOAction
 import slick.jdbc.{MySQLProfile, PositionedParameters, PostgresProfile}
+import slick.sql.SqlAction
 
 import scala.collection.JavaConverters._
 import scala.concurrent.ExecutionContext
@@ -58,6 +59,7 @@ trait BuilderBase {
   def scalarListColumn(scalarField: ScalarField, column: String)                            = field(name(schemaName, scalarListTableName(scalarField), column))
   def column(table: String, column: String)                                                 = field(name(schemaName, table, column))
   def placeHolders(vector: Iterable[Any])                                                   = vector.toList.map(_ => placeHolder).asJava
+  private def scalarListTableName(field: ScalarField)                                       = field.model.dbName + "_" + field.dbName
 
   def queryToDBIO[T](query: JooqQuery)(setParams: PositionedParameters => Unit, readResult: ResultSet => T): DBIO[T] = {
     SimpleDBIO { ctx =>
@@ -90,7 +92,12 @@ trait BuilderBase {
     }
   }
 
-  private def scalarListTableName(field: ScalarField) = field.model.dbName + "_" + field.dbName
+  def truncateToDBIO(query: Truncate[Record]): DBIO[Unit] = {
+    SimpleDBIO { ctx =>
+      val ps = ctx.connection.prepareStatement(query.getSQL)
+      ps.executeUpdate()
+    }
+  }
 
   def readPrismaNodeWithParent(rf: RelationField) = ReadsResultSet { rs =>
     val node = readPrismaNode(rf.relatedModel_!, rs)
@@ -568,7 +575,28 @@ case class PostgresApiDatabaseMutationBuilder(
   //endregion
 
   //region RESET DATA
-  def truncateTable(tableName: String) = sqlu"""TRUNCATE TABLE "#$schemaName"."#$tableName" CASCADE"""
+  def truncateTables(project: Project): DBIO[_] = {
+    val relationTables = project.relations.map(relationTable)
+    val modelTables    = project.models.map(modelTable)
+    val listTables     = project.models.flatMap(model => model.scalarListFields.map(scalarListTable))
+    val actions = (relationTables ++ listTables ++ Vector(relayTable) ++ modelTables).map { table =>
+      truncateToDBIO(sql.truncate(table))
+    }
+
+    def disableForeignKeyChecks = SimpleDBIO { ctx =>
+      val ps = ctx.connection.prepareStatement("SET FOREIGN_KEY_CHECKS=0")
+      ps.executeUpdate()
+    }
+    def enableForeignKeyChecks = SimpleDBIO { ctx =>
+      val ps = ctx.connection.prepareStatement("SET FOREIGN_KEY_CHECKS=1")
+      ps.executeUpdate()
+    }
+    val truncatesAction = DBIO.sequence(actions)
+    dialect.family() match {
+      case SQLDialect.MYSQL => DBIO.seq(disableForeignKeyChecks, truncatesAction, enableForeignKeyChecks)
+      case _                => truncatesAction
+    }
+  }
 
   //endregion
 
