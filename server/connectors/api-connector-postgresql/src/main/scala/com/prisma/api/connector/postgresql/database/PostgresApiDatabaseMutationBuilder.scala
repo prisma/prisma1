@@ -61,6 +61,8 @@ trait BuilderBase {
   def placeHolders(vector: Iterable[Any])                                                   = vector.toList.map(_ => placeHolder).asJava
   private def scalarListTableName(field: ScalarField)                                       = field.model.dbName + "_" + field.dbName
 
+  val isMySql = dialect.family() == SQLDialect.MYSQL
+
   def queryToDBIO[T](query: JooqQuery)(setParams: PositionedParameters => Unit, readResult: ResultSet => T): DBIO[T] = {
     SimpleDBIO { ctx =>
       val ps = ctx.connection.prepareStatement(query.getSQL)
@@ -580,8 +582,13 @@ case class PostgresApiDatabaseMutationBuilder(
     val modelTables    = project.models.map(modelTable)
     val listTables     = project.models.flatMap(model => model.scalarListFields.map(scalarListTable))
     val actions = (relationTables ++ listTables ++ Vector(relayTable) ++ modelTables).map { table =>
-      truncateToDBIO(sql.truncate(table))
+      if (isMySql) {
+        truncateToDBIO(sql.truncate(table))
+      } else {
+        truncateToDBIO(sql.truncate(table).cascade())
+      }
     }
+    val truncatesAction = DBIO.sequence(actions)
 
     def disableForeignKeyChecks = SimpleDBIO { ctx =>
       val ps = ctx.connection.prepareStatement("SET FOREIGN_KEY_CHECKS=0")
@@ -591,10 +598,11 @@ case class PostgresApiDatabaseMutationBuilder(
       val ps = ctx.connection.prepareStatement("SET FOREIGN_KEY_CHECKS=1")
       ps.executeUpdate()
     }
-    val truncatesAction = DBIO.sequence(actions)
-    dialect.family() match {
-      case SQLDialect.MYSQL => DBIO.seq(disableForeignKeyChecks, truncatesAction, enableForeignKeyChecks)
-      case _                => truncatesAction
+
+    if (isMySql) {
+      DBIO.seq(disableForeignKeyChecks, truncatesAction, enableForeignKeyChecks)
+    } else {
+      truncatesAction
     }
   }
 
