@@ -8,6 +8,7 @@ exemptLabels:
   - proposal/needs-spec
   - proposal/accepted
   - proposal/needs-review
+  - component/docs 
 # Label to use when marking an issue as stale
 staleLabel: stale
 # Comment to post when marking an issue as stale. Set to `false` to disable
