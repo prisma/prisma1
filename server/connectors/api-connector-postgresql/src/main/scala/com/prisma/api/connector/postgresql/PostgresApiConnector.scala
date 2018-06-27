@@ -8,7 +8,7 @@ import com.prisma.shared.models.{Project, ProjectIdEncoder}
 
 import scala.concurrent.{ExecutionContext, Future}
 
-case class PostgresApiConnector(config: DatabaseConfig)(implicit ec: ExecutionContext) extends ApiConnector {
+case class PostgresApiConnector(config: DatabaseConfig, createRelayIds: Boolean)(implicit ec: ExecutionContext) extends ApiConnector {
   lazy val databases = Databases.initialize(config)
 
   override def initialize() = {
