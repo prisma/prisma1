@@ -9,7 +9,6 @@ import com.prisma.shared.models.ScalarField
 import cool.graph.cuid.Cuid
 import org.jooq.impl.DSL.max
 
-import scala.collection.immutable
 import scala.concurrent.ExecutionContext
 
 trait ImportActions extends BuilderBase {
@@ -17,7 +16,7 @@ trait ImportActions extends BuilderBase {
   import com.prisma.api.connector.postgresql.database.JdbcExtensions._
   import com.prisma.api.connector.postgresql.database.PostgresSlickExtensions._
   import com.prisma.slick.NewJdbcExtensions._
-  import slick.jdbc.PostgresProfile.api._
+  import slickDatabase.profile.api._
 
   def createDataItemsImport(mutaction: CreateDataItemsImport): SimpleDBIO[Vector[String]] = {
 

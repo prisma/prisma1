@@ -4,35 +4,35 @@ import com.prisma.api.connector._
 import com.prisma.api.connector.postgresql.Metrics
 import com.prisma.gc_values._
 import com.prisma.shared.models._
-import slick.dbio.Effect.Read
-import slick.dbio.NoStream
-import slick.jdbc.PostgresProfile
-import slick.jdbc.PostgresProfile.api._
-import slick.lifted.TableQuery
-import slick.sql.SqlAction
 
 import scala.concurrent.{ExecutionContext, Future}
 
 case class PostgresDataResolver(
     project: Project,
-    readonlyClientDatabase: PostgresProfile.backend.DatabaseDef,
+    slickDatabase: SlickDatabase,
     schemaName: Option[String]
 )(implicit ec: ExecutionContext)
     extends DataResolver {
 
-  val queryBuilder = PostgresApiDatabaseQueryBuilder(project, schemaName = schemaName.getOrElse(project.id))(ec)
+  import slickDatabase.profile.api._
+
+  val queryBuilder = PostgresApiDatabaseQueryBuilder(
+    project = project,
+    schemaName = schemaName.getOrElse(project.id),
+    slickDatabase = slickDatabase
+  )(ec)
 
   override def resolveByGlobalId(globalId: CuidGCValue): Future[Option[PrismaNode]] = { //todo rewrite this to use normal query?
     if (globalId.value == "viewer-fixed") return Future.successful(Some(PrismaNode(globalId, RootGCValue.empty, Some("Viewer"))))
 
-    val query: SqlAction[Option[String], NoStream, Read] = TableQuery(new ProjectRelayIdTable(_, project.id))
+    val query: DBIO[Option[String]] = TableQuery(new ProjectRelayIdTable(_, project.id))
       .filter(_.id === globalId.value)
       .map(_.stableModelIdentifier)
       .take(1)
       .result
       .headOption
 
-    readonlyClientDatabase
+    slickDatabase.database
       .run(query)
       .flatMap {
         case Some(stableModelIdentifier) =>
@@ -46,7 +46,7 @@ case class PostgresDataResolver(
 
   override def resolveByModel(model: Model, args: Option[QueryArguments] = None): Future[ResolverResult[PrismaNode]] = {
     val query = queryBuilder.selectAllFromTable(model, args)
-    performWithTiming("loadModelRowsForExport", readonlyClientDatabase.run(query))
+    performWithTiming("loadModelRowsForExport", slickDatabase.database.run(query))
   }
 
   override def resolveByUnique(where: NodeSelector): Future[Option[PrismaNode]] =
@@ -58,17 +58,17 @@ case class PostgresDataResolver(
       case None        => table
     }
     val query = queryBuilder.countAllFromTable(actualTable, whereFilter)
-    performWithTiming("countByModel", readonlyClientDatabase.run(query))
+    performWithTiming("countByModel", slickDatabase.database.run(query))
   }
 
   override def batchResolveByUnique(model: Model, field: ScalarField, values: Vector[GCValue]): Future[Vector[PrismaNode]] = {
     val query = queryBuilder.batchSelectFromModelByUnique(model, field, values)
-    performWithTiming("batchResolveByUnique", readonlyClientDatabase.run(query))
+    performWithTiming("batchResolveByUnique", slickDatabase.database.run(query))
   }
 
   override def batchResolveScalarList(model: Model, listField: ScalarField, nodeIds: Vector[IdGCValue]): Future[Vector[ScalarListValues]] = {
     val query = queryBuilder.selectFromScalarList(model.dbName, listField, nodeIds)
-    performWithTiming("batchResolveScalarList", readonlyClientDatabase.run(query))
+    performWithTiming("batchResolveScalarList", slickDatabase.database.run(query))
   }
 
   override def resolveByRelationManyModels(
@@ -77,18 +77,18 @@ case class PostgresDataResolver(
       args: Option[QueryArguments]
   ): Future[Vector[ResolverResult[PrismaNodeWithParent]]] = {
     val query = queryBuilder.batchSelectAllFromRelatedModel(project.schema, fromField, fromNodeIds, args)
-    performWithTiming("resolveByRelation", readonlyClientDatabase.run(query))
+    performWithTiming("resolveByRelation", slickDatabase.database.run(query))
   }
 
   override def loadListRowsForExport(model: Model, field: ScalarField, args: Option[QueryArguments] = None): Future[ResolverResult[ScalarListValues]] = {
     val query = queryBuilder.selectAllFromListTable(model, field, args)
-    performWithTiming("loadListRowsForExport", readonlyClientDatabase.run(query))
+    performWithTiming("loadListRowsForExport", slickDatabase.database.run(query))
   }
 
   override def loadRelationRowsForExport(relationId: String, args: Option[QueryArguments] = None): Future[ResolverResult[RelationNode]] = {
     val relation = project.schema.relations.find(_.relationTableName == relationId).get
     val query    = queryBuilder.selectAllFromRelationTable(relation, args)
-    performWithTiming("loadRelationRowsForExport", readonlyClientDatabase.run(query))
+    performWithTiming("loadRelationRowsForExport", slickDatabase.database.run(query))
   }
 
   protected def performWithTiming[A](name: String, f: => Future[A]): Future[A] = Metrics.sqlQueryTimer.timeFuture(project.id, name) { f }

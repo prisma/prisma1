@@ -6,24 +6,22 @@ import com.prisma.api.connector._
 import com.prisma.gc_values._
 import com.prisma.shared.models.IdType.Id
 import com.prisma.shared.models.{Function => _, _}
-import org.jooq.SQLDialect
-import slick.jdbc.PostgresProfile.api._
 import slick.jdbc._
 
 import scala.concurrent.ExecutionContext
 
 case class PostgresApiDatabaseQueryBuilder(
     project: Project,
-    schemaName: String
+    schemaName: String,
+    slickDatabase: SlickDatabase
 )(implicit ec: ExecutionContext)
     extends BuilderBase {
 
-  override def dialect = SQLDialect.POSTGRES_9_5
-
   import JdbcExtensions._
+  import JooqQueryBuilders._
   import PostgresSlickExtensions._
   import com.prisma.slick.NewJdbcExtensions._
-  import JooqQueryBuilders._
+  import slickDatabase.profile.api._
 
   private def readsScalarListField(field: ScalarField): ReadsResultSet[ScalarListElement] = ReadsResultSet { rs =>
     val nodeId   = rs.getString(nodeIdFieldName)

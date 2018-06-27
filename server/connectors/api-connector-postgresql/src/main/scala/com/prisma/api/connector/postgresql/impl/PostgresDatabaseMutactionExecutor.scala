@@ -2,27 +2,31 @@ package com.prisma.api.connector.postgresql.impl
 
 import com.prisma.api.connector._
 import com.prisma.api.connector.postgresql.DatabaseMutactionInterpreter
-import com.prisma.api.connector.postgresql.database.PostgresApiDatabaseMutationBuilder
+import com.prisma.api.connector.postgresql.database.{PostgresApiDatabaseMutationBuilder, SlickDatabase}
 import com.prisma.gc_values.{CuidGCValue, IdGCValue}
-import slick.jdbc.PostgresProfile.api._
 
 import scala.concurrent.{ExecutionContext, Future}
 
-case class PostgresDatabaseMutactionExecutor(clientDb: Database, createRelayIds: Boolean)(implicit ec: ExecutionContext) extends DatabaseMutactionExecutor {
+case class PostgresDatabaseMutactionExecutor(
+    slickDatabase: SlickDatabase,
+    createRelayIds: Boolean
+)(implicit ec: ExecutionContext)
+    extends DatabaseMutactionExecutor {
+  import slickDatabase.profile.api._
 
   override def executeTransactionally(mutaction: TopLevelDatabaseMutaction) = execute(mutaction, transactionally = true)
 
   override def executeNonTransactionally(mutaction: TopLevelDatabaseMutaction) = execute(mutaction, transactionally = false)
 
   private def execute(mutaction: TopLevelDatabaseMutaction, transactionally: Boolean): Future[MutactionResults] = {
-    val mutationBuilder = PostgresApiDatabaseMutationBuilder(schemaName = mutaction.project.id)
+    val mutationBuilder = PostgresApiDatabaseMutationBuilder(schemaName = mutaction.project.id, slickDatabase)
     // fixme: handing in those non existent values should not happen
     val singleAction = transactionally match {
       case true  => recurse(mutaction, CuidGCValue("does-not-exist"), mutationBuilder).transactionally
       case false => recurse(mutaction, CuidGCValue("does-not-exist"), mutationBuilder)
     }
 
-    clientDb.run(singleAction)
+    slickDatabase.database.run(singleAction)
   }
 
   def recurse(

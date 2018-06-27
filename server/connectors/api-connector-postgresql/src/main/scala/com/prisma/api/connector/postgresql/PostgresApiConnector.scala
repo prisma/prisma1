@@ -18,14 +18,14 @@ case class PostgresApiConnector(config: DatabaseConfig, createRelayIds: Boolean)
 
   override def shutdown() = {
     for {
-      _ <- databases.master.shutdown
-      _ <- databases.readOnly.shutdown
+      _ <- databases.primary.database.shutdown
+      _ <- databases.replica.database.shutdown
     } yield ()
   }
 
-  override val databaseMutactionExecutor: PostgresDatabaseMutactionExecutor = PostgresDatabaseMutactionExecutor(databases.master, createRelayIds = true)
-  override def dataResolver(project: Project)                               = PostgresDataResolver(project, databases.readOnly, schemaName = None)
-  override def masterDataResolver(project: Project)                         = PostgresDataResolver(project, databases.master, schemaName = None)
+  override val databaseMutactionExecutor: PostgresDatabaseMutactionExecutor = PostgresDatabaseMutactionExecutor(databases.primary, createRelayIds)
+  override def dataResolver(project: Project)                               = PostgresDataResolver(project, databases.primary, schemaName = None)
+  override def masterDataResolver(project: Project)                         = PostgresDataResolver(project, databases.primary, schemaName = None)
   override def projectIdEncoder: ProjectIdEncoder                           = ProjectIdEncoder('$')
   override def capabilities                                                 = Vector(NodeQueryCapability)
 }

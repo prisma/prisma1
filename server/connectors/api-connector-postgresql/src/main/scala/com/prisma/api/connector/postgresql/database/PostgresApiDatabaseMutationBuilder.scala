@@ -20,8 +20,7 @@ import org.jooq.impl.DSL
 import org.jooq.impl.DSL._
 import org.jooq.{Field, Query => JooqQuery, _}
 import slick.dbio.DBIOAction
-import slick.jdbc.PositionedParameters
-import slick.jdbc.PostgresProfile.api._
+import slick.jdbc.{PositionedParameters, PostgresProfile}
 
 import scala.collection.JavaConverters._
 import scala.concurrent.ExecutionContext
@@ -31,7 +30,13 @@ trait BuilderBase {
 
   def schemaName: String
 
-  def dialect: SQLDialect
+  val slickDatabase: SlickDatabase
+  val dialect: SQLDialect = slickDatabase.profile match {
+    case PostgresProfile => SQLDialect.POSTGRES_9_5
+    case x               => sys.error(s"No Jooq SQLDialect for Slick profile $x configured yet")
+  }
+
+  import slickDatabase.profile.api._
 
   val sql = DSL.using(dialect, new Settings().withRenderFormatted(true))
 
@@ -113,10 +118,13 @@ trait BuilderBase {
   }
 }
 
-case class PostgresApiDatabaseMutationBuilder(schemaName: String) extends BuilderBase with ImportActions {
+case class PostgresApiDatabaseMutationBuilder(
+    schemaName: String,
+    slickDatabase: SlickDatabase
+) extends BuilderBase
+    with ImportActions {
   import JooqQueryBuilders._
-
-  override def dialect = SQLDialect.POSTGRES_9_5
+  import slickDatabase.profile.api._
 
   // region CREATE
 
