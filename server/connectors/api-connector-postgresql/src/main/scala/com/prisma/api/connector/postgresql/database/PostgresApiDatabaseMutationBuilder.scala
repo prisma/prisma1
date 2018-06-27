@@ -184,39 +184,24 @@ case class PostgresApiDatabaseMutationBuilder(schemaName: String) extends Builde
     val relation = relationField.relation
 
     if (relation.isInlineRelation) {
-      val inlineManifestation = relation.inlineManifestation.get
-      val referencingColumn   = inlineManifestation.referencingColumn
-      val childModel          = relationField.relatedModel_!
-      val parentModel         = relationField.model
+      val inlineManifestation  = relation.inlineManifestation.get
+      val referencingColumn    = inlineManifestation.referencingColumn
+      val childModel           = relationField.relatedModel_!
+      val parentModel          = relationField.model
+      val childWhereCondition  = idField(childModel).equal(placeHolder)
+      val parentWhereCondition = idField(parentModel).equal(placeHolder)
 
-      val childWhereCondition = idField(childModel).equal(placeHolder)
-      val otherWhereCondition = idField(parentModel).equal(placeHolder)
-
-      val rowToUpdateCondition = if (relation.isSameModelRelation) {
+      val (idToLinkTo, idToUpdate, rowToUpdateCondition) = if (relation.isSameModelRelation) {
         if (relationField.relationSide == RelationSide.B) {
-          childWhereCondition
+          (childId, parentId, childWhereCondition)
         } else {
-          otherWhereCondition
+          (parentId, childId, parentWhereCondition)
         }
       } else {
         if (inlineManifestation.inTableOfModelId == childModel.name) {
-          childWhereCondition
+          (parentId, childId, childWhereCondition)
         } else {
-          otherWhereCondition
-        }
-      }
-
-      val (idToLinkTo, idToUpdate) = if (relation.isSameModelRelation) {
-        if (relationField.relationSide == RelationSide.B) {
-          (childId, parentId)
-        } else {
-          (parentId, childId)
-        }
-      } else {
-        if (inlineManifestation.inTableOfModelId == childModel.name) {
-          (parentId, childId)
-        } else {
-          (childId, parentId)
+          (childId, parentId, parentWhereCondition)
         }
       }
 
