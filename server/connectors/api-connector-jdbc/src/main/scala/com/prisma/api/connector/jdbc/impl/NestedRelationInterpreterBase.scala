@@ -1,7 +1,7 @@
 package com.prisma.api.connector.jdbc.impl
 
 import com.prisma.api.connector.jdbc.DatabaseMutactionInterpreter
-import com.prisma.api.connector.jdbc.database.PostgresApiDatabaseMutationBuilder
+import com.prisma.api.connector.jdbc.database.JdbcApiDatabaseMutationBuilder
 import com.prisma.api.schema.APIErrors.RequiredRelationWouldBeViolated
 import com.prisma.gc_values.IdGCValue
 import com.prisma.shared.models.{Relation, RelationField}
@@ -22,11 +22,11 @@ trait NestedRelationInterpreterBase extends DatabaseMutactionInterpreter {
   def requiredRelationViolation      = throw RequiredRelationWouldBeViolated(relation)
   def errorBecauseManySideIsRequired = sys.error("This should not happen, since it means a many side is required")
 
-  def removalByParent(parentId: IdGCValue)(implicit mutationBuilder: PostgresApiDatabaseMutationBuilder) = {
+  def removalByParent(parentId: IdGCValue)(implicit mutationBuilder: JdbcApiDatabaseMutationBuilder) = {
     mutationBuilder.deleteRelationRowByParentId(relationField, parentId)
   }
 
-  def checkForOldChild(parentId: IdGCValue)(implicit mb: PostgresApiDatabaseMutationBuilder) = {
+  def checkForOldChild(parentId: IdGCValue)(implicit mb: JdbcApiDatabaseMutationBuilder) = {
     mb.ensureThatNodeIsNotConnected(relationField.relatedField, parentId)
   }
 }

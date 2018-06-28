@@ -1,29 +1,24 @@
 package com.prisma.api.connector.jdbc.database
 
-import java.sql.{PreparedStatement, ResultSet, Statement}
+import java.sql.{PreparedStatement, Statement}
 import java.util.Date
 
 import com.prisma.api.connector._
-import com.prisma.api.connector.jdbc.extensions.{JdbcExtensions, JooqExtensions, SlickExtensions}
 import com.prisma.api.schema.APIErrors.{NodesNotConnectedError, RequiredRelationWouldBeViolated}
 import com.prisma.gc_values.{ListGCValue, NullGCValue, _}
-import com.prisma.shared.models.Manifestations.InlineRelationManifestation
 import com.prisma.shared.models.TypeIdentifier.IdTypeIdentifier
 import com.prisma.shared.models._
 import com.prisma.slick.NewJdbcExtensions._
 import cool.graph.cuid.Cuid
 import org.joda.time.{DateTime, DateTimeZone}
-import org.jooq.conf.Settings
-import org.jooq.impl.DSL
 import org.jooq.impl.DSL._
-import org.jooq.{Field, Query => JooqQuery, _}
+import org.jooq.{Query => JooqQuery, _}
 import slick.dbio.DBIOAction
-import slick.jdbc.{MySQLProfile, PositionedParameters, PostgresProfile}
+import slick.jdbc.PositionedParameters
 
-import scala.collection.JavaConverters._
 import scala.concurrent.ExecutionContext
 
-case class PostgresApiDatabaseMutationBuilder(
+case class JdbcApiDatabaseMutationBuilder(
     schemaName: String,
     slickDatabase: SlickDatabase
 ) extends BuilderBase

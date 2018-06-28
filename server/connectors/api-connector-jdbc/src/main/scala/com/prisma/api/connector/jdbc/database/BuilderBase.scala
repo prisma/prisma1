@@ -3,11 +3,8 @@ package com.prisma.api.connector.jdbc.database
 import java.sql.ResultSet
 
 import com.prisma.api.connector.jdbc.extensions.{JdbcExtensions, JooqExtensions, SlickExtensions}
-import com.prisma.api.connector.{PrismaNode, PrismaNodeWithParent}
-import com.prisma.gc_values.RootGCValue
 import com.prisma.shared.models.Manifestations.InlineRelationManifestation
 import com.prisma.shared.models._
-import com.prisma.slick.NewJdbcExtensions.ReadsResultSet
 import org.jooq.conf.Settings
 import org.jooq.impl.DSL
 import org.jooq.impl.DSL.{field, name, table}

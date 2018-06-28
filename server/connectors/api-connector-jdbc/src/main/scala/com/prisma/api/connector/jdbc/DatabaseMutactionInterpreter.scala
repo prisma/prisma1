@@ -1,6 +1,6 @@
 package com.prisma.api.connector.jdbc
 
-import com.prisma.api.connector.jdbc.database.PostgresApiDatabaseMutationBuilder
+import com.prisma.api.connector.jdbc.database.JdbcApiDatabaseMutationBuilder
 import com.prisma.api.connector.{DatabaseMutactionResult, UnitDatabaseMutactionResult}
 import com.prisma.api.schema.UserFacingError
 import com.prisma.gc_values.IdGCValue
@@ -13,7 +13,7 @@ trait DatabaseMutactionInterpreter {
   protected val unitResult = DBIO.successful(UnitDatabaseMutactionResult)
 
   def dbioActionWithErrorMapped(
-      mutationBuilder: PostgresApiDatabaseMutationBuilder,
+      mutationBuilder: JdbcApiDatabaseMutationBuilder,
       parentId: IdGCValue
   )(implicit ec: ExecutionContext): DBIO[DatabaseMutactionResult] = {
     dbioAction(mutationBuilder, parentId).asTry.flatMap {
@@ -27,7 +27,7 @@ trait DatabaseMutactionInterpreter {
   }
 
   protected def dbioAction(
-      mutationBuilder: PostgresApiDatabaseMutationBuilder,
+      mutationBuilder: JdbcApiDatabaseMutationBuilder,
       parentId: IdGCValue
   ): DBIO[DatabaseMutactionResult]
 
