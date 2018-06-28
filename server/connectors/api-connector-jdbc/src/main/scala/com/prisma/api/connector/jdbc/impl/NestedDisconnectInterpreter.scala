@@ -12,10 +12,13 @@ case class NestedDisconnectInterpreter(mutaction: NestedDisconnect)(implicit val
   override def relationField = mutaction.relationField
 
   override def dbioAction(mutationBuilder: PostgresApiDatabaseMutationBuilder, parentId: IdGCValue) = {
-    DBIOAction.seq(allActions(mutationBuilder, parentId): _*).andThen(DBIO.successful(UnitDatabaseMutactionResult))
+    implicit val implicitMb = mutationBuilder
+    DBIOAction
+      .seq(requiredCheck(parentId), removalAction(parentId))
+      .andThen(unitResult)
   }
 
-  override def requiredCheck(parentId: IdGCValue)(implicit mutationBuilder: PostgresApiDatabaseMutationBuilder) =
+  def requiredCheck(parentId: IdGCValue)(implicit mutationBuilder: PostgresApiDatabaseMutationBuilder): DBIO[Unit] = {
     (p.isList, p.isRequired, c.isList, c.isRequired) match {
       case (false, true, false, true)   => requiredRelationViolation
       case (false, true, false, false)  => requiredRelationViolation
@@ -26,11 +29,12 @@ case class NestedDisconnectInterpreter(mutaction: NestedDisconnect)(implicit val
       case (false, true, true, false)   => requiredRelationViolation
       case (false, false, true, false)  => noCheckRequired
       case (true, false, true, false)   => noCheckRequired
-      case _                            => sysError
+      case _                            => errorBecauseManySideIsRequired
     }
+  }
 
-  override def removalActions(parentId: IdGCValue)(implicit mutationBuilder: PostgresApiDatabaseMutationBuilder) = {
-    val action = mutaction.where match {
+  def removalAction(parentId: IdGCValue)(implicit mutationBuilder: PostgresApiDatabaseMutationBuilder): DBIO[Unit] = {
+    mutaction.where match {
       case None =>
         for {
           _ <- mutationBuilder.ensureThatParentIsConnected(mutaction.relationField, parentId)
@@ -50,8 +54,5 @@ case class NestedDisconnectInterpreter(mutaction: NestedDisconnect)(implicit val
               }
         } yield ()
     }
-    List(action)
   }
-
-  override def addAction(parentId: IdGCValue)(implicit mutationBuilder: PostgresApiDatabaseMutationBuilder) = noActionRequired
 }

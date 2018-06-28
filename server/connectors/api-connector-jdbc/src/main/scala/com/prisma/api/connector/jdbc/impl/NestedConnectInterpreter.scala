@@ -14,28 +14,31 @@ case class NestedConnectInterpreter(mutaction: NestedConnect)(implicit val ec: E
   override def relationField = mutaction.relationField
 
   override def dbioAction(mutationBuilder: PostgresApiDatabaseMutationBuilder, parentId: IdGCValue) = {
-    DBIOAction.seq(allActions(mutationBuilder, parentId): _*).andThen(DBIO.successful(UnitDatabaseMutactionResult))
+    implicit val implicitMb = mutationBuilder
+    DBIOAction
+      .seq(requiredCheck(parentId), removalAction(parentId), addAction(parentId))
+      .andThen(unitResult)
   }
 
-  override def requiredCheck(parentId: IdGCValue)(implicit mutationBuilder: PostgresApiDatabaseMutationBuilder): List[DBIO[_]] = {
+  def requiredCheck(parentId: IdGCValue)(implicit mutationBuilder: PostgresApiDatabaseMutationBuilder): DBIO[_] = {
     topIsCreate match {
       case false =>
         (p.isList, p.isRequired, c.isList, c.isRequired) match {
           case (false, true, false, true)   => requiredRelationViolation
-          case (false, true, false, false)  => List(checkForOldParentByChildWhere(where))
-          case (false, false, false, true)  => List(checkForOldChild(parentId))
+          case (false, true, false, false)  => checkForOldParentByChildWhere(where)
+          case (false, false, false, true)  => checkForOldChild(parentId)
           case (false, false, false, false) => noCheckRequired
           case (true, false, false, true)   => noCheckRequired
           case (true, false, false, false)  => noCheckRequired
           case (false, true, true, false)   => noCheckRequired
           case (false, false, true, false)  => noCheckRequired
           case (true, false, true, false)   => noCheckRequired
-          case _                            => sysError
+          case _                            => errorBecauseManySideIsRequired
         }
       case true =>
         (p.isList, p.isRequired, c.isList, c.isRequired) match {
           case (false, true, false, true)   => requiredRelationViolation
-          case (false, true, false, false)  => List(checkForOldParentByChildWhere(where))
+          case (false, true, false, false)  => checkForOldParentByChildWhere(where)
           case (false, false, false, true)  => noActionRequired
           case (false, false, false, false) => noActionRequired
           case (true, false, false, true)   => noActionRequired
@@ -43,38 +46,38 @@ case class NestedConnectInterpreter(mutaction: NestedConnect)(implicit val ec: E
           case (false, true, true, false)   => noActionRequired
           case (false, false, true, false)  => noActionRequired
           case (true, false, true, false)   => noActionRequired
-          case _                            => sysError
+          case _                            => errorBecauseManySideIsRequired
         }
     }
   }
 
-  override def removalActions(parentId: IdGCValue)(implicit mutationBuilder: PostgresApiDatabaseMutationBuilder): List[DBIO[Unit]] =
+  def removalAction(parentId: IdGCValue)(implicit mutationBuilder: PostgresApiDatabaseMutationBuilder): DBIO[Unit] =
     topIsCreate match {
       case false =>
         (p.isList, p.isRequired, c.isList, c.isRequired) match {
           case (false, true, false, true)   => requiredRelationViolation
-          case (false, true, false, false)  => List(removalByParent(parentId))
-          case (false, false, false, true)  => List(removalByParent(parentId), removalByChild)
-          case (false, false, false, false) => List(removalByParent(parentId), removalByChild)
-          case (true, false, false, true)   => List(removalByChild)
-          case (true, false, false, false)  => List(removalByChild)
-          case (false, true, true, false)   => List(removalByParent(parentId))
-          case (false, false, true, false)  => List(removalByParent(parentId))
+          case (false, true, false, false)  => removalByParent(parentId)
+          case (false, false, false, true)  => DBIO.seq(removalByParent(parentId), removalByChild)
+          case (false, false, false, false) => DBIO.seq(removalByParent(parentId), removalByChild)
+          case (true, false, false, true)   => removalByChild
+          case (true, false, false, false)  => removalByChild
+          case (false, true, true, false)   => removalByParent(parentId)
+          case (false, false, true, false)  => removalByParent(parentId)
           case (true, false, true, false)   => noActionRequired
-          case _                            => sysError
+          case _                            => errorBecauseManySideIsRequired
         }
       case true =>
         (p.isList, p.isRequired, c.isList, c.isRequired) match {
           case (false, true, false, true)   => requiredRelationViolation
           case (false, true, false, false)  => noActionRequired
-          case (false, false, false, true)  => List(removalByChild)
-          case (false, false, false, false) => List(removalByChild)
-          case (true, false, false, true)   => List(removalByChild)
-          case (true, false, false, false)  => List(removalByChild)
+          case (false, false, false, true)  => removalByChild
+          case (false, false, false, false) => removalByChild
+          case (true, false, false, true)   => removalByChild
+          case (true, false, false, false)  => removalByChild
           case (false, true, true, false)   => noActionRequired
           case (false, false, true, false)  => noActionRequired
           case (true, false, true, false)   => noActionRequired
-          case _                            => sysError
+          case _                            => errorBecauseManySideIsRequired
         }
     }
 
@@ -99,15 +102,14 @@ case class NestedConnectInterpreter(mutaction: NestedConnect)(implicit val ec: E
     } yield ()
   }
 
-  override def addAction(parentId: IdGCValue)(implicit mutationBuilder: PostgresApiDatabaseMutationBuilder): List[DBIO[Unit]] = {
-    val action = for {
+  def addAction(parentId: IdGCValue)(implicit mutationBuilder: PostgresApiDatabaseMutationBuilder): DBIO[Unit] = {
+    for {
       id <- mutationBuilder.queryIdFromWhere(mutaction.where)
       _ <- id match {
             case None          => throw APIErrors.NodeNotFoundForWhereError(mutaction.where)
             case Some(childId) => mutationBuilder.createRelation(mutaction.relationField, parentId, childId)
           }
     } yield ()
-    List(action)
   }
 
 }

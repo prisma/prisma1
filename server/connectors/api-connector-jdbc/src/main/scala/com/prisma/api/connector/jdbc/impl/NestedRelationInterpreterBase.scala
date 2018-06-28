@@ -17,18 +17,10 @@ trait NestedRelationInterpreterBase extends DatabaseMutactionInterpreter {
 
   implicit def ec: ExecutionContext
 
-  def allActions(implicit mb: PostgresApiDatabaseMutationBuilder, parentId: IdGCValue) = {
-    requiredCheck(parentId) ++ removalActions(parentId) ++ addAction(parentId)
-  }
-
-  def requiredCheck(parentId: IdGCValue)(implicit mb: PostgresApiDatabaseMutationBuilder): List[DBIO[_]]
-  def removalActions(parentId: IdGCValue)(implicit mb: PostgresApiDatabaseMutationBuilder): List[DBIO[_]]
-  def addAction(parentId: IdGCValue)(implicit mb: PostgresApiDatabaseMutationBuilder): List[DBIO[_]]
-
-  def noCheckRequired           = List.empty
-  def noActionRequired          = List.empty
-  def requiredRelationViolation = throw RequiredRelationWouldBeViolated(relation)
-  def sysError                  = sys.error("This should not happen, since it means a many side is required")
+  val noCheckRequired                = DBIO.successful(())
+  val noActionRequired               = DBIO.successful(())
+  def requiredRelationViolation      = throw RequiredRelationWouldBeViolated(relation)
+  def errorBecauseManySideIsRequired = sys.error("This should not happen, since it means a many side is required")
 
   def removalByParent(parentId: IdGCValue)(implicit mutationBuilder: PostgresApiDatabaseMutationBuilder) = {
     mutationBuilder.deleteRelationRowByParentId(relationField, parentId)

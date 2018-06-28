@@ -51,12 +51,10 @@ case class NestedCreateNodeInterpreter(
   override def relationField = mutaction.relationField
   val model                  = relationField.relatedModel_!
 
-  override def addAction(parentId: IdGCValue)(implicit mb: PostgresApiDatabaseMutationBuilder) = ???
-
   override def dbioAction(mutationBuilder: PostgresApiDatabaseMutationBuilder, parentId: IdGCValue) = {
+    implicit val implicitMb = mutationBuilder
     for {
-      _  <- DBIO.sequence(requiredCheck(parentId)(mutationBuilder))
-      _  <- DBIO.sequence(removalActions(parentId)(mutationBuilder))
+      _  <- DBIO.seq(requiredCheck(parentId), removalAction(parentId))
       id <- createNodeAndConnectToParent(mutationBuilder, parentId)
       _  <- mutationBuilder.setScalarListById(model, id, mutaction.listArgs)
       _  <- if (includeRelayRow) mutationBuilder.createRelayRowById(model, id) else DBIO.successful(())
@@ -82,40 +80,41 @@ case class NestedCreateNodeInterpreter(
     }
   }
 
-  override def requiredCheck(parentId: IdGCValue)(implicit mutationBuilder: PostgresApiDatabaseMutationBuilder): List[DBIO[Unit]] =
+  def requiredCheck(parentId: IdGCValue)(implicit mutationBuilder: PostgresApiDatabaseMutationBuilder): DBIO[Unit] = {
     mutaction.topIsCreate match {
       case false =>
         (p.isList, p.isRequired, c.isList, c.isRequired) match {
           case (false, true, false, true)   => requiredRelationViolation
           case (false, true, false, false)  => noCheckRequired
-          case (false, false, false, true)  => List(checkForOldChild(parentId))
+          case (false, false, false, true)  => checkForOldChild(parentId)
           case (false, false, false, false) => noCheckRequired
           case (true, false, false, true)   => noCheckRequired
           case (true, false, false, false)  => noCheckRequired
           case (false, true, true, false)   => noCheckRequired
           case (false, false, true, false)  => noCheckRequired
           case (true, false, true, false)   => noCheckRequired
-          case _                            => sysError
+          case _                            => errorBecauseManySideIsRequired
         }
 
       case true =>
         noCheckRequired
     }
+  }
 
-  override def removalActions(parentId: IdGCValue)(implicit mutationBuilder: PostgresApiDatabaseMutationBuilder): List[DBIO[Unit]] =
+  def removalAction(parentId: IdGCValue)(implicit mutationBuilder: PostgresApiDatabaseMutationBuilder): DBIO[Unit] =
     mutaction.topIsCreate match {
       case false =>
         (p.isList, p.isRequired, c.isList, c.isRequired) match {
           case (false, true, false, true)   => requiredRelationViolation
-          case (false, true, false, false)  => List(removalByParent(parentId))
-          case (false, false, false, true)  => List(removalByParent(parentId))
-          case (false, false, false, false) => List(removalByParent(parentId))
+          case (false, true, false, false)  => removalByParent(parentId)
+          case (false, false, false, true)  => removalByParent(parentId)
+          case (false, false, false, false) => removalByParent(parentId)
           case (true, false, false, true)   => noActionRequired
           case (true, false, false, false)  => noActionRequired
-          case (false, true, true, false)   => List(removalByParent(parentId))
-          case (false, false, true, false)  => List(removalByParent(parentId))
+          case (false, true, true, false)   => removalByParent(parentId)
+          case (false, false, true, false)  => removalByParent(parentId)
           case (true, false, true, false)   => noActionRequired
-          case _                            => sysError
+          case _                            => errorBecauseManySideIsRequired
         }
 
       case true =>
