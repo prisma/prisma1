@@ -136,7 +136,7 @@ case class JooqRelatedModelsQueryBuilder(
 
   lazy val queryStringWithPagination: String = {
     val order           = orderByInternal(baseTableAlias, baseTableAlias, secondaryOrderByForPagination, queryArguments)
-    val cursorCondition = JooqWhereClauseBuilder(slickDatabase, schemaName).buildCursorCondition(queryArguments, relatedModel)
+    val cursorCondition = buildCursorCondition(queryArguments, relatedModel)
 
     val aliasedBase = base.where(relatedNodesCondition, queryArgumentsCondition, cursorCondition).asTable().as(baseTableAlias)
 
@@ -157,7 +157,7 @@ case class JooqRelatedModelsQueryBuilder(
   lazy val mysqlHack = {
     val relatedNodeCondition = field(name(relationTableAlias, modelRelationSideColumn)).equal(placeHolder)
     val order                = orderByInternal2(secondaryOrderByForPagination, queryArguments)
-    val cursorCondition      = JooqWhereClauseBuilder(slickDatabase, schemaName).buildCursorCondition(queryArguments, relatedModel)
+    val cursorCondition      = buildCursorCondition(queryArguments, relatedModel)
 
     val singleQuery =
       base
@@ -187,8 +187,8 @@ case class JooqModelQueryBuilder(
 ) extends AllBuilders {
 
   lazy val queryString: String = {
-    val condition       = buildConditionForFilter(queryArguments.flatMap(_.filter)))
-    val cursorCondition = JooqWhereClauseBuilder(slickDatabase, schemaName).buildCursorCondition(queryArguments, model)
+    val condition       = buildConditionForFilter(queryArguments.flatMap(_.filter))
+    val cursorCondition = buildCursorCondition(queryArguments, model)
     val order           = orderByForModel(model, topLevelAlias, queryArguments)
     val limit           = limitClause(queryArguments)
 

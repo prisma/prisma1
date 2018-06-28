@@ -16,7 +16,7 @@ case class JdbcApiDatabaseQueryBuilder(
     schemaName: String,
     slickDatabase: SlickDatabase
 )(implicit ec: ExecutionContext)
-    extends BuilderBase {
+    extends AllBuilders {
 
   import com.prisma.slick.NewJdbcExtensions._
   import slickDatabase.profile.api._

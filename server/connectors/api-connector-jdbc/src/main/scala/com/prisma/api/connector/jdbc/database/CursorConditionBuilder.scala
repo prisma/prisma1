@@ -1,13 +1,11 @@
 package com.prisma.api.connector.jdbc.database
 
 import com.prisma.api.connector._
-import com.prisma.api.schema.APIErrors.{InvalidFirstArgument, InvalidLastArgument, InvalidSkipArgument}
-import com.prisma.gc_values.NullGCValue
 import com.prisma.shared.models._
 import org.jooq.Condition
 import org.jooq.impl.DSL._
 
-case class JooqWhereClauseBuilder(slickDatabase: SlickDatabase, schemaName: String) extends BuilderBase {
+trait CursorConditionBuilder extends BuilderBase {
   // This creates a query that checks if the id is in a certain set returned by a subquery Q.
   // The subquery Q fetches all the ID's defined by the cursors and order.
   // On invalid cursor params, no error is thrown. The result set will just be empty.
@@ -17,7 +15,7 @@ case class JooqWhereClauseBuilder(slickDatabase: SlickDatabase, schemaName: Stri
     case None       => trueCondition()
   }
 
-  def buildCursorCondition(queryArguments: QueryArguments, model: Model): Condition = {
+  private def buildCursorCondition(queryArguments: QueryArguments, model: Model): Condition = {
     val (before, after, orderBy) = (queryArguments.before, queryArguments.after, queryArguments.orderBy)
     // If both params are empty, don't generate any query.
     if (before.isEmpty && after.isEmpty) return trueCondition()
