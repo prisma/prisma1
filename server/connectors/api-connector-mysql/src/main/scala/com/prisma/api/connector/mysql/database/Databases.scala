@@ -5,9 +5,6 @@ import com.prisma.config.DatabaseConfig
 import com.typesafe.config.{Config, ConfigFactory}
 import slick.jdbc.MySQLProfile
 import slick.jdbc.MySQLProfile.api._
-import slick.jdbc.MySQLProfile.backend.DatabaseDef
-
-//case class Databases(master: DatabaseDef, readOnly: DatabaseDef)
 
 object MySqlDatabases {
   private lazy val dbDriver = new org.mariadb.jdbc.Driver
