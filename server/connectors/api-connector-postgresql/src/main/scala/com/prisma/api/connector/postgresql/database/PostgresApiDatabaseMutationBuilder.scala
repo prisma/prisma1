@@ -155,7 +155,7 @@ case class PostgresApiDatabaseMutationBuilder(
 
       val itemInsert: PreparedStatement = x.connection.prepareStatement(query.getSQL, Statement.RETURN_GENERATED_KEYS)
 
-      val currentTimestamp = currentTimeStampUTC
+      val currentTimestamp = currentSqlTimestampUTC
       fields.map(_.name).zipWithIndex.foreach {
         case (column, index) =>
           argsAsRoot.map.get(column) match {

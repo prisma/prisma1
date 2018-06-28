@@ -33,7 +33,7 @@ trait ImportActions extends BuilderBase {
           .values(placeHolders(fields))
 
         val itemInsert: PreparedStatement = jdbcActionContext.connection.prepareStatement(query.getSQL)
-        val currentTimeStamp              = currentTimeStampUTC
+        val currentTimeStamp              = currentSqlTimestampUTC
 
         //Fixme have a helper for adding updatedAt / createdAt
         mutaction.args.foreach { arg =>

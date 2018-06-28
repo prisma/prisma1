@@ -5,23 +5,22 @@ import java.time.{LocalDateTime, ZoneOffset}
 import java.util.{Calendar, Date, TimeZone}
 
 import com.prisma.gc_values._
-import com.prisma.shared.models.RelationSide.RelationSide
 import com.prisma.shared.models.{Field, Model, RelationSide, TypeIdentifier}
 import org.joda.time.{DateTime, DateTimeZone}
 import play.api.libs.json.Json
 
 object JdbcExtensions {
 
-  def currentTimeStampUTC = {
+  def currentSqlTimestampUTC: Timestamp = {
     val today      = new Date()
     val exactlyNow = new DateTime(today).withZone(DateTimeZone.UTC)
-    timeStampUTC(exactlyNow)
+    jodaDateTimeToSqlTimestampUTC(exactlyNow)
   }
 
-  def timeStampUTC(dateTime: DateTime) = {
-    val millies    = dateTime.getMillis
-    val seconds    = millies / 1000
-    val difference = millies - seconds * 1000
+  private def jodaDateTimeToSqlTimestampUTC(dateTime: DateTime): Timestamp = {
+    val millis     = dateTime.getMillis
+    val seconds    = millis / 1000
+    val difference = millis - seconds * 1000
     val nanos      = difference * 1000000
 
     val res = Timestamp.valueOf(LocalDateTime.ofEpochSecond(seconds, nanos.toInt, ZoneOffset.UTC))
@@ -44,7 +43,7 @@ object JdbcExtensions {
         case FloatGCValue(float)       => ps.setDouble(index, float)
         case CuidGCValue(id)           => ps.setString(index, id)
         case UuidGCValue(uuid)         => ps.setObject(index, uuid)
-        case DateTimeGCValue(dateTime) => ps.setTimestamp(index, timeStampUTC(dateTime))
+        case DateTimeGCValue(dateTime) => ps.setTimestamp(index, jodaDateTimeToSqlTimestampUTC(dateTime))
         case EnumGCValue(enum)         => ps.setString(index, enum)
         case JsonGCValue(json)         => ps.setString(index, json.toString)
         case NullGCValue               => ps.setNull(index, java.sql.Types.NULL)
