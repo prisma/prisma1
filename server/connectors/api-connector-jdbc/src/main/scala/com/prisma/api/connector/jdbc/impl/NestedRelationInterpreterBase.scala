@@ -1,13 +1,11 @@
 package com.prisma.api.connector.jdbc.impl
 
-import com.prisma.api.connector.{NodeSelector, UnitDatabaseMutactionResult}
 import com.prisma.api.connector.jdbc.DatabaseMutactionInterpreter
 import com.prisma.api.connector.jdbc.database.PostgresApiDatabaseMutationBuilder
-import com.prisma.api.schema.APIErrors
 import com.prisma.api.schema.APIErrors.RequiredRelationWouldBeViolated
 import com.prisma.gc_values.IdGCValue
 import com.prisma.shared.models.{Relation, RelationField}
-import slick.dbio.{DBIO, DBIOAction}
+import slick.dbio.DBIO
 
 import scala.concurrent.ExecutionContext
 
@@ -18,12 +16,6 @@ trait NestedRelationInterpreterBase extends DatabaseMutactionInterpreter {
   val c                  = relationField.relatedField
 
   implicit def ec: ExecutionContext
-
-//  override def newAction(mutationBuilder: PostgresApiDatabaseMutationBuilder, parentId: IdGCValue)(implicit ec: ExecutionContext) = {
-//    DBIOAction.seq(allActions(mutationBuilder, parentId): _*).andThen(DBIO.successful(UnitDatabaseMutactionResult))
-//  }
-
-  override def action(mb: PostgresApiDatabaseMutationBuilder) = ???
 
   def allActions(implicit mb: PostgresApiDatabaseMutationBuilder, parentId: IdGCValue) = {
     requiredCheck(parentId) ++ removalActions(parentId) ++ addAction(parentId)

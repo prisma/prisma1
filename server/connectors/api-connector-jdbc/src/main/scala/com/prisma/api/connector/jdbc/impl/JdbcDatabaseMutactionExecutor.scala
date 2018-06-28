@@ -37,13 +37,13 @@ case class JdbcDatabaseMutactionExecutor(
     mutaction match {
       case m: UpsertNode =>
         for {
-          result       <- interpreterFor(m).newActionWithErrorMapped(mutationBuilder, parentId)
+          result       <- interpreterFor(m).dbioActionWithErrorMapped(mutationBuilder, parentId)
           childResults <- recurse(result.asInstanceOf[UpsertNodeResult].result, parentId, mutationBuilder).map(Vector(_))
         } yield MutactionResults(result, childResults)
 
       case m: FurtherNestedMutaction =>
         for {
-          result <- interpreterFor(m).newActionWithErrorMapped(mutationBuilder, parentId)
+          result <- interpreterFor(m).dbioActionWithErrorMapped(mutationBuilder, parentId)
           childResults <- result match {
                            case result: FurtherNestedMutactionResult => DBIO.sequence(m.allNestedMutactions.map(recurse(_, result.id, mutationBuilder)))
                            case _                                    => DBIO.successful(Vector.empty)
@@ -52,7 +52,7 @@ case class JdbcDatabaseMutactionExecutor(
 
       case m: FinalMutaction =>
         for {
-          result <- interpreterFor(m).newActionWithErrorMapped(mutationBuilder, parentId)
+          result <- interpreterFor(m).dbioActionWithErrorMapped(mutationBuilder, parentId)
         } yield MutactionResults(result, Vector.empty)
     }
   }
@@ -71,8 +71,8 @@ case class JdbcDatabaseMutactionExecutor(
     case m: UpdateNodes        => UpdateDataItemsInterpreter(m)
     case m: TopLevelUpsertNode => UpsertDataItemInterpreter(m)
     case m: NestedUpsertNode   => NestedUpsertDataItemInterpreter(m)
-    case m: ImportNodes        => CreateDataItemsImportInterpreter(m)
-    case m: ImportRelations    => CreateRelationRowsImportInterpreter(m)
-    case m: ImportScalarLists  => PushScalarListsImportInterpreter(m)
+    case m: ImportNodes        => ImportNodesInterpreter(m)
+    case m: ImportRelations    => ImportRelationsInterpreter(m)
+    case m: ImportScalarLists  => ImportScalarListsInterpreter(m)
   }
 }

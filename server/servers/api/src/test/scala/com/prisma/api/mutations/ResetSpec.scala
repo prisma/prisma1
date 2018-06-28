@@ -7,7 +7,7 @@ import com.prisma.shared.schema_dsl.SchemaDsl
 import com.prisma.utils.await.AwaitUtils
 import org.scalatest.{FlatSpec, Matchers}
 
-class ResetDataSpec extends FlatSpec with Matchers with ApiSpecBase with AwaitUtils {
+class ResetSpec extends FlatSpec with Matchers with ApiSpecBase with AwaitUtils {
 
   override def runSuiteOnlyForActiveConnectors = true
 
