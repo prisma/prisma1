@@ -1,6 +1,6 @@
 package com.prisma.api.connector.mysql.database
 
-import com.prisma.api.connector.postgresql.database.{Databases, SlickDatabase}
+import com.prisma.api.connector.jdbc.database.{Databases, SlickDatabase}
 import com.prisma.config.DatabaseConfig
 import com.typesafe.config.{Config, ConfigFactory}
 import slick.jdbc.MySQLProfile

@@ -1,12 +1,12 @@
-package com.prisma.api.connector.postgresql.database
+package com.prisma.api.connector.jdbc.database
 
 import java.sql.{PreparedStatement, ResultSet, Statement}
 import java.util.Date
 
 import com.prisma.api.connector._
-import com.prisma.api.connector.postgresql.database.JdbcExtensions._
-import com.prisma.api.connector.postgresql.database.JooqExtensions._
-import com.prisma.api.connector.postgresql.database.PostgresSlickExtensions._
+import com.prisma.api.connector.jdbc.database.JdbcExtensions._
+import com.prisma.api.connector.jdbc.database.JooqExtensions._
+import com.prisma.api.connector.jdbc.database.SlickExtensions._
 import com.prisma.api.schema.APIErrors.{NodesNotConnectedError, RequiredRelationWouldBeViolated}
 import com.prisma.gc_values.{ListGCValue, NullGCValue, _}
 import com.prisma.shared.models.Manifestations.InlineRelationManifestation

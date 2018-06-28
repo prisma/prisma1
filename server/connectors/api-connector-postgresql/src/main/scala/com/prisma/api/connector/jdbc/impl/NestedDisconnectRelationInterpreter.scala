@@ -1,7 +1,7 @@
-package com.prisma.api.connector.postgresql.impl
+package com.prisma.api.connector.jdbc.impl
 
 import com.prisma.api.connector._
-import com.prisma.api.connector.postgresql.database.PostgresApiDatabaseMutationBuilder
+import com.prisma.api.connector.jdbc.database.PostgresApiDatabaseMutationBuilder
 import com.prisma.api.schema.APIErrors
 import com.prisma.gc_values.{IdGCValue, IntGCValue}
 import slick.dbio.{DBIO, DBIOAction}

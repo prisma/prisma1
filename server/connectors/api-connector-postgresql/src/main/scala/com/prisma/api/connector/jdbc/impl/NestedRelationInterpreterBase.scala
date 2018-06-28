@@ -1,8 +1,8 @@
-package com.prisma.api.connector.postgresql.impl
+package com.prisma.api.connector.jdbc.impl
 
 import com.prisma.api.connector.{NodeSelector, UnitDatabaseMutactionResult}
-import com.prisma.api.connector.postgresql.DatabaseMutactionInterpreter
-import com.prisma.api.connector.postgresql.database.PostgresApiDatabaseMutationBuilder
+import com.prisma.api.connector.jdbc.DatabaseMutactionInterpreter
+import com.prisma.api.connector.jdbc.database.PostgresApiDatabaseMutationBuilder
 import com.prisma.api.schema.APIErrors
 import com.prisma.api.schema.APIErrors.RequiredRelationWouldBeViolated
 import com.prisma.gc_values.IdGCValue

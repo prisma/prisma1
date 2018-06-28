@@ -1,4 +1,4 @@
-package com.prisma.api.connector.postgresql.database
+package com.prisma.api.connector.jdbc.database
 
 import com.prisma.api.connector._
 import com.prisma.api.schema.APIErrors

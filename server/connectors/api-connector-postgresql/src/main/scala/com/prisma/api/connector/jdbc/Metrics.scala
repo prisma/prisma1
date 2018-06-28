@@ -1,4 +1,4 @@
-package com.prisma.api.connector.postgresql
+package com.prisma.api.connector.jdbc
 
 import com.prisma.metrics.{CustomTag, MetricsManager}
 

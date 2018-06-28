@@ -1,7 +1,7 @@
-package com.prisma.api.connector.postgresql.database
+package com.prisma.api.connector.jdbc.database
 
 import com.prisma.api.connector._
-import com.prisma.api.connector.postgresql.database.LimitClauseBuilder.validate
+import com.prisma.api.connector.jdbc.database.LimitClauseBuilder.validate
 import com.prisma.api.schema.APIErrors
 import com.prisma.api.schema.APIErrors.{InvalidFirstArgument, InvalidLastArgument, InvalidSkipArgument}
 import com.prisma.gc_values.{GCValue, NullGCValue}

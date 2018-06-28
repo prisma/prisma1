@@ -1,8 +1,8 @@
 package com.prisma.api.connector.mysql
 
 import com.prisma.api.connector.mysql.database.MySqlDatabases
-import com.prisma.api.connector.postgresql.database.{Databases, PostgresDataResolver}
-import com.prisma.api.connector.postgresql.impl.PostgresDatabaseMutactionExecutor
+import com.prisma.api.connector.jdbc.database.{Databases, JdbcDataResolver}
+import com.prisma.api.connector.jdbc.impl.JdbcDatabaseMutactionExecutor
 import com.prisma.api.connector.{ApiConnector, DatabaseMutactionExecutor, NodeQueryCapability}
 import com.prisma.config.DatabaseConfig
 import com.prisma.shared.models.{Project, ProjectIdEncoder}
@@ -24,9 +24,9 @@ case class MySqlApiConnector(config: DatabaseConfig)(implicit ec: ExecutionConte
     } yield ()
   }
 
-  override def databaseMutactionExecutor: DatabaseMutactionExecutor = PostgresDatabaseMutactionExecutor(databases.primary, createRelayIds = true)
-  override def dataResolver(project: Project)                       = PostgresDataResolver(project, databases.replica, None)(ec)
-  override def masterDataResolver(project: Project)                 = PostgresDataResolver(project, databases.primary, None)(ec)
+  override def databaseMutactionExecutor: DatabaseMutactionExecutor = JdbcDatabaseMutactionExecutor(databases.primary, createRelayIds = true)
+  override def dataResolver(project: Project)                       = JdbcDataResolver(project, databases.replica, None)(ec)
+  override def masterDataResolver(project: Project)                 = JdbcDataResolver(project, databases.primary, None)(ec)
 
   override def projectIdEncoder: ProjectIdEncoder = ProjectIdEncoder('@')
 

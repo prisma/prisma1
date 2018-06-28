@@ -1,10 +1,10 @@
-package com.prisma.api.connector.postgresql.database
+package com.prisma.api.connector.jdbc.database
 
-import com.prisma.api.connector.postgresql.database.JdbcExtensions._
+import com.prisma.api.connector.jdbc.database.JdbcExtensions._
 import com.prisma.gc_values._
 import slick.jdbc.PositionedParameters
 
-object PostgresSlickExtensions {
+object SlickExtensions {
 
   implicit class PositionedParameterExtensions(val pp: PositionedParameters) extends AnyVal {
     def setGcValue(value: GCValue): Unit = {

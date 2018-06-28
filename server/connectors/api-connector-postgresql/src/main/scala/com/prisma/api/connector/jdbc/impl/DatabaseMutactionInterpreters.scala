@@ -1,11 +1,11 @@
-package com.prisma.api.connector.postgresql.impl
+package com.prisma.api.connector.jdbc.impl
 
 import java.sql.SQLIntegrityConstraintViolationException
 
 import com.prisma.api.connector._
-import com.prisma.api.connector.postgresql.DatabaseMutactionInterpreter
-import com.prisma.api.connector.postgresql.database.PostgresApiDatabaseMutationBuilder
-import com.prisma.api.connector.postgresql.impl.GetFieldFromSQLUniqueException.getFieldOption
+import com.prisma.api.connector.jdbc.DatabaseMutactionInterpreter
+import com.prisma.api.connector.jdbc.database.PostgresApiDatabaseMutationBuilder
+import com.prisma.api.connector.jdbc.impl.GetFieldFromSQLUniqueException.getFieldOption
 import com.prisma.api.schema.{APIErrors, UserFacingError}
 import com.prisma.api.schema.APIErrors.{NodesNotConnectedError, RequiredRelationWouldBeViolated}
 import com.prisma.gc_values.{CuidGCValue, IdGCValue, ListGCValue, RootGCValue}

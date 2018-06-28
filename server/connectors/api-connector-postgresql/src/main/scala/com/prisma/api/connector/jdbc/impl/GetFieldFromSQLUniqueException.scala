@@ -1,4 +1,4 @@
-package com.prisma.api.connector.postgresql.impl
+package com.prisma.api.connector.jdbc.impl
 import java.sql.SQLIntegrityConstraintViolationException
 
 import com.prisma.shared.models.{Field, Model}

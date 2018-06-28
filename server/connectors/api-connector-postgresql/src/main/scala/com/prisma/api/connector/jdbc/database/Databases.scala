@@ -1,4 +1,4 @@
-package com.prisma.api.connector.postgresql.database
+package com.prisma.api.connector.jdbc.database
 
 import com.prisma.config.DatabaseConfig
 import com.typesafe.config.{Config, ConfigFactory}

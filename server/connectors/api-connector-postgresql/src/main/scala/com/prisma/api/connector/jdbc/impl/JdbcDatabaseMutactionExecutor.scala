@@ -1,13 +1,13 @@
-package com.prisma.api.connector.postgresql.impl
+package com.prisma.api.connector.jdbc.impl
 
 import com.prisma.api.connector._
-import com.prisma.api.connector.postgresql.DatabaseMutactionInterpreter
-import com.prisma.api.connector.postgresql.database.{PostgresApiDatabaseMutationBuilder, SlickDatabase}
+import com.prisma.api.connector.jdbc.DatabaseMutactionInterpreter
+import com.prisma.api.connector.jdbc.database.{PostgresApiDatabaseMutationBuilder, SlickDatabase}
 import com.prisma.gc_values.{CuidGCValue, IdGCValue}
 
 import scala.concurrent.{ExecutionContext, Future}
 
-case class PostgresDatabaseMutactionExecutor(
+case class JdbcDatabaseMutactionExecutor(
     slickDatabase: SlickDatabase,
     createRelayIds: Boolean
 )(implicit ec: ExecutionContext)

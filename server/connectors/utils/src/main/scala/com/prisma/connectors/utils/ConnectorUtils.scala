@@ -2,7 +2,7 @@ package com.prisma.connectors.utils
 
 import com.prisma.api.connector.ApiConnector
 import com.prisma.api.connector.mysql.MySqlApiConnector
-import com.prisma.api.connector.postgresql.PostgresApiConnector
+import com.prisma.api.connector.jdbc.PostgresApiConnector
 import com.prisma.config.PrismaConfig
 import com.prisma.deploy.connector.DeployConnector
 import com.prisma.deploy.connector.mysql.MySqlDeployConnector

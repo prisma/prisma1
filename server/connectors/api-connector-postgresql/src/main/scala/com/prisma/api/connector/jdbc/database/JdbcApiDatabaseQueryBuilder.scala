@@ -1,4 +1,4 @@
-package com.prisma.api.connector.postgresql.database
+package com.prisma.api.connector.jdbc.database
 
 import java.sql.ResultSet
 
@@ -11,7 +11,7 @@ import scala.language.existentials
 
 import scala.concurrent.ExecutionContext
 
-case class PostgresApiDatabaseQueryBuilder(
+case class JdbcApiDatabaseQueryBuilder(
     project: Project,
     schemaName: String,
     slickDatabase: SlickDatabase
@@ -20,7 +20,7 @@ case class PostgresApiDatabaseQueryBuilder(
 
   import JdbcExtensions._
   import JooqQueryBuilders._
-  import PostgresSlickExtensions._
+  import SlickExtensions._
   import com.prisma.slick.NewJdbcExtensions._
   import slickDatabase.profile.api._
 

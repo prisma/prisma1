@@ -1,20 +1,20 @@
-package com.prisma.api.connector.postgresql.database
+package com.prisma.api.connector.jdbc.database
 
 import com.prisma.api.connector._
-import com.prisma.api.connector.postgresql.Metrics
+import com.prisma.api.connector.jdbc.Metrics
 import com.prisma.gc_values._
 import com.prisma.shared.models._
 
 import scala.concurrent.{ExecutionContext, Future}
 
-case class PostgresDataResolver(
+case class JdbcDataResolver(
     project: Project,
     slickDatabase: SlickDatabase,
     schemaName: Option[String]
 )(implicit ec: ExecutionContext)
     extends DataResolver {
 
-  val queryBuilder = PostgresApiDatabaseQueryBuilder(
+  val queryBuilder = JdbcApiDatabaseQueryBuilder(
     project = project,
     schemaName = schemaName.getOrElse(project.id),
     slickDatabase = slickDatabase

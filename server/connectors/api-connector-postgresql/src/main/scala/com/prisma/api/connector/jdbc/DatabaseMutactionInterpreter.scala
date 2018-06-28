@@ -1,6 +1,6 @@
-package com.prisma.api.connector.postgresql
+package com.prisma.api.connector.jdbc
 
-import com.prisma.api.connector.postgresql.database.PostgresApiDatabaseMutationBuilder
+import com.prisma.api.connector.jdbc.database.PostgresApiDatabaseMutationBuilder
 import com.prisma.api.connector.{DatabaseMutactionResult, UnitDatabaseMutactionResult}
 import com.prisma.api.schema.UserFacingError
 import com.prisma.gc_values.IdGCValue

@@ -1,10 +1,10 @@
-package com.prisma.api.connector.postgresql.database
+package com.prisma.api.connector.jdbc.database
 
 import java.sql.PreparedStatement
 
 import com.prisma.api.connector._
-import com.prisma.api.connector.postgresql.database.JooqQueryBuilders._
-import com.prisma.api.connector.postgresql.database.PostgresSlickExtensions._
+import com.prisma.api.connector.jdbc.database.JooqQueryBuilders._
+import com.prisma.api.connector.jdbc.database.SlickExtensions._
 import com.prisma.gc_values.{GCValue, IdGCValue, NullGCValue, StringGCValue}
 import com.prisma.shared.models._
 import org.jooq._

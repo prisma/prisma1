@@ -1,4 +1,4 @@
-package com.prisma.api.connector.postgresql.database
+package com.prisma.api.connector.jdbc.database
 
 import java.sql.{PreparedStatement, ResultSet, Timestamp}
 import java.time.{LocalDateTime, ZoneOffset}
