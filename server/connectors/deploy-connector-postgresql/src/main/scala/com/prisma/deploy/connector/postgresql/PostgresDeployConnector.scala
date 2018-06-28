@@ -13,8 +13,11 @@ import slick.jdbc.PostgresProfile.api._
 
 import scala.concurrent.{ExecutionContext, Future}
 
-case class PostgresDeployConnector(dbConfig: DatabaseConfig)(implicit ec: ExecutionContext) extends DeployConnector {
-  override def isActive         = true
+case class PostgresDeployConnector(
+    dbConfig: DatabaseConfig,
+    isActive: Boolean
+)(implicit ec: ExecutionContext)
+    extends DeployConnector {
   lazy val internalDatabaseDefs = PostgresInternalDatabaseDefs(dbConfig)
   lazy val internalDatabaseRoot = internalDatabaseDefs.internalDatabaseRoot // DB prisma, schema public
   lazy val internalDatabase     = internalDatabaseDefs.internalDatabase // DB prisma, schema management
@@ -74,7 +77,14 @@ case class PostgresDeployConnector(dbConfig: DatabaseConfig)(implicit ec: Execut
     } yield ()
   }
 
-  override def databaseIntrospectionInferrer(projectId: String): DatabaseIntrospectionInferrer = EmptyDatabaseIntrospectionInferrer
+  override def databaseIntrospectionInferrer(projectId: String): DatabaseIntrospectionInferrer = {
+    if (isActive) {
+      EmptyDatabaseIntrospectionInferrer
+    } else {
+      val schema = dbConfig.schema.getOrElse(projectId)
+      DatabaseIntrospectionInferrerImpl(internalDatabaseRoot, schema)
+    }
+  }
 
   protected def truncateManagementTablesInDatabase(database: Database)(implicit ec: ExecutionContext): Future[Unit] = {
     for {

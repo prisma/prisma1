@@ -1,12 +1,12 @@
-package com.prisma.deploy.connector.postgresql
+package com.prisma.deploy.connector.postgresql.impls
 
 import com.prisma.deploy.connector._
+import com.prisma.utils.boolean.BooleanUtils._
+import slick.jdbc.PostgresProfile.api._
+import slick.jdbc.PostgresProfile.backend.DatabaseDef
 import slick.jdbc.meta.{MColumn, MForeignKey, MTable}
 
 import scala.concurrent.{ExecutionContext, Future}
-import slick.jdbc.PostgresProfile.api._
-import slick.jdbc.PostgresProfile.backend.DatabaseDef
-import com.prisma.utils.boolean.BooleanUtils._
 
 case class DatabaseIntrospectionInferrerImpl(db: DatabaseDef, schema: String)(implicit ec: ExecutionContext) extends DatabaseIntrospectionInferrer {
 
