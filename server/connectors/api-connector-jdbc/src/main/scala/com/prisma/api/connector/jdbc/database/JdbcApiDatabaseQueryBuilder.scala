@@ -58,7 +58,7 @@ case class JdbcApiDatabaseQueryBuilder(
     SimpleDBIO[ResolverResult[PrismaNode]] { ctx =>
       val jooqBuilder = JooqModelQueryBuilder(slickDatabase, schemaName, model, args)
       val ps          = ctx.connection.prepareStatement(jooqBuilder.queryString)
-      JooqSetParams.setQueryArgs(ps, args)
+      SetParams.setQueryArgs(ps, args)
       val rs: ResultSet              = ps.executeQuery()
       val result: Vector[PrismaNode] = rs.as[PrismaNode](readsPrismaNode(model))
       ResolverResult(args, result)
@@ -84,7 +84,7 @@ case class JdbcApiDatabaseQueryBuilder(
         val pp = new PositionedParameters(ps)
         fromNodeIds.foreach(pp.setGcValue)
         val filter = args.flatMap(_.filter)
-        filter.foreach(filter => JooqSetParams.setParams(pp, filter))
+        filter.foreach(filter => SetParams.setFilter(pp, filter))
 
         if (args.get.after.isDefined) {
           pp.setString(args.get.after.get)
@@ -142,7 +142,7 @@ case class JdbcApiDatabaseQueryBuilder(
       distinctModelIds.foreach { id =>
         pp.setGcValue(id)
         filter.foreach { filter =>
-          JooqSetParams.setParams(pp, filter)
+          SetParams.setFilter(pp, filter)
         }
         if (args.get.after.isDefined) {
           pp.setString(args.get.after.get)
@@ -181,7 +181,7 @@ case class JdbcApiDatabaseQueryBuilder(
     SimpleDBIO[ResolverResult[RelationNode]] { ctx =>
       val builder = JooqRelationQueryBuilder(slickDatabase, schemaName, relation, args)
       val ps      = ctx.connection.prepareStatement(builder.queryString)
-      JooqSetParams.setQueryArgs(ps, args)
+      SetParams.setQueryArgs(ps, args)
       val rs: ResultSet = ps.executeQuery()
       val result        = rs.as(readRelation(relation))
       ResolverResult(result)
@@ -197,7 +197,7 @@ case class JdbcApiDatabaseQueryBuilder(
     SimpleDBIO[ResolverResult[ScalarListValues]] { ctx =>
       val builder = JooqScalarListQueryBuilder(slickDatabase, schemaName, field, args)
       val ps      = ctx.connection.prepareStatement(builder.queryString)
-      JooqSetParams.setQueryArgs(ps, args)
+      SetParams.setQueryArgs(ps, args)
       val rs: ResultSet = ps.executeQuery()
 
       val result = rs.as(readsScalarListField(field))
@@ -230,7 +230,7 @@ case class JdbcApiDatabaseQueryBuilder(
     SimpleDBIO[Int] { ctx =>
       val builder = JooqCountQueryBuilder(slickDatabase, schemaName, table, whereFilter)
       val ps      = ctx.connection.prepareStatement(builder.queryString)
-      JooqSetParams.setFilter(new PositionedParameters(ps), whereFilter)
+      SetParams.setFilter(new PositionedParameters(ps), whereFilter)
       val rs = ps.executeQuery()
       rs.next()
       rs.getInt(1)
@@ -242,7 +242,7 @@ case class JdbcApiDatabaseQueryBuilder(
       val queryArgs = Some(QueryArguments.withFilter(ScalarFilter(field, In(values))))
       val builder   = JooqModelQueryBuilder(slickDatabase, schemaName, model, queryArgs)
       val ps        = ctx.connection.prepareStatement(builder.queryString)
-      JooqSetParams.setQueryArgs(ps, queryArgs)
+      SetParams.setQueryArgs(ps, queryArgs)
       val rs: ResultSet = ps.executeQuery()
       rs.as(readsPrismaNode(model))
     }

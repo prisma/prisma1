@@ -205,7 +205,7 @@ case class JdbcApiDatabaseMutationBuilder(
         val ps = ctx.connection.prepareStatement(queryString)
         val pp = new PositionedParameters(ps)
         map.foreach { case (_, v) => pp.setGcValue(v) }
-        whereFilter.foreach(filter => JooqSetParams.setParams(pp, filter))
+        whereFilter.foreach(filter => SetParams.setFilter(pp, filter))
         ps.executeUpdate()
       }
     } else {
@@ -386,7 +386,7 @@ case class JdbcApiDatabaseMutationBuilder(
         .getSQL
 
       val ps = ctx.connection.prepareStatement(queryString)
-      JooqSetParams.setFilter(new PositionedParameters(ps), whereFilter)
+      SetParams.setFilter(new PositionedParameters(ps), whereFilter)
       val rs = ps.executeQuery()
       rs.as(readNodeId(model))
     }
@@ -556,7 +556,7 @@ case class JdbcApiDatabaseMutationBuilder(
     val query           = sql.select(field(name(topLevelAlias, model.dbNameOfIdField_!))).from(aliasedTable).where(filterCondition)
 
     queryToDBIO(query)(
-      setParams = pp => JooqSetParams.setFilter(pp, filter),
+      setParams = pp => SetParams.setFilter(pp, filter),
       readResult = rs => rs.as(readNodeId(model))
     )
   }
@@ -700,7 +700,7 @@ case class JdbcApiDatabaseMutationBuilder(
       })
 
     val action = queryToDBIO(query)(
-      setParams = pp => JooqSetParams.setFilter(pp, whereFilter),
+      setParams = pp => SetParams.setFilter(pp, whereFilter),
       readResult = _.as(readsAsUnit)
     )
     action.map { result =>

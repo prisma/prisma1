@@ -1,13 +1,9 @@
 package com.prisma.api.connector.jdbc.database
 
-import java.sql.PreparedStatement
-
 import com.prisma.api.connector._
-import com.prisma.api.connector.jdbc.extensions.SlickExtensions
-import com.prisma.gc_values.{GCValue, IdGCValue, NullGCValue, StringGCValue}
+import com.prisma.gc_values.{GCValue, IdGCValue}
 import com.prisma.shared.models._
 import org.jooq.impl.DSL._
-import slick.jdbc.PositionedParameters
 
 case class JooqRelationQueryBuilder(
     slickDatabase: SlickDatabase,
@@ -210,81 +206,5 @@ case class JooqModelQueryBuilder(
     }
 
     finalQuery.getSQL
-  }
-}
-
-object JooqSetParams extends SlickExtensions {
-  def setQueryArgs(preparedStatement: PreparedStatement, queryArguments: Option[QueryArguments]): Unit = {
-    val pp = new PositionedParameters(preparedStatement)
-    queryArguments.foreach { queryArgs =>
-      setFilter(pp, queryArgs.filter)
-      setCursor(pp, queryArgs)
-      setLimit(pp, queryArgs)
-    }
-  }
-
-  def setFilter(pp: PositionedParameters, filter: Option[Filter]): Unit = {
-    filter.foreach { filter =>
-      setParams(pp, filter)
-    }
-  }
-
-  def setCursor(pp: PositionedParameters, queryArguments: QueryArguments): Unit = {
-    queryArguments.after.foreach { value =>
-      pp.setString(value)
-      pp.setString(value)
-    }
-    queryArguments.before.foreach { value =>
-      pp.setString(value)
-      pp.setString(value)
-    }
-  }
-
-  def setLimit(pp: PositionedParameters, queryArguments: QueryArguments): Unit = {
-    queryArguments.first.foreach { _ =>
-      val (first, second) = JooqLimitClauseBuilder.limitClause(Some(queryArguments)).get
-      pp.setInt(first)
-      pp.setInt(second)
-    }
-
-    queryArguments.last.foreach { _ =>
-      val (first, second) = JooqLimitClauseBuilder.limitClause(Some(queryArguments)).get
-      pp.setInt(first)
-      pp.setInt(second)
-    }
-  }
-
-  def setParams(pp: PositionedParameters, filter: Filter): Unit = {
-    filter match {
-      //-------------------------------RECURSION------------------------------------
-      case NodeSubscriptionFilter()           => // NOOP
-      case AndFilter(filters)                 => filters.foreach(setParams(pp, _))
-      case OrFilter(filters)                  => filters.foreach(setParams(pp, _))
-      case NotFilter(filters)                 => filters.foreach(setParams(pp, _))
-      case NodeFilter(filters)                => setParams(pp, OrFilter(filters))
-      case RelationFilter(_, nestedFilter, _) => setParams(pp, nestedFilter)
-      //--------------------------------ANCHORS------------------------------------
-      case PreComputedSubscriptionFilter(_)                     => // NOOP
-      case ScalarFilter(_, Contains(StringGCValue(value)))      => pp.setString(value)
-      case ScalarFilter(_, NotContains(StringGCValue(value)))   => pp.setString(value)
-      case ScalarFilter(_, StartsWith(StringGCValue(value)))    => pp.setString(value)
-      case ScalarFilter(_, NotStartsWith(StringGCValue(value))) => pp.setString(value)
-      case ScalarFilter(_, EndsWith(StringGCValue(value)))      => pp.setString(value)
-      case ScalarFilter(_, NotEndsWith(StringGCValue(value)))   => pp.setString(value)
-      case ScalarFilter(_, LessThan(value))                     => pp.setGcValue(value)
-      case ScalarFilter(_, GreaterThan(value))                  => pp.setGcValue(value)
-      case ScalarFilter(_, LessThanOrEquals(value))             => pp.setGcValue(value)
-      case ScalarFilter(_, GreaterThanOrEquals(value))          => pp.setGcValue(value)
-      case ScalarFilter(_, NotEquals(NullGCValue))              => // NOOP
-      case ScalarFilter(_, NotEquals(value))                    => pp.setGcValue(value)
-      case ScalarFilter(_, Equals(NullGCValue))                 => // NOOP
-      case ScalarFilter(_, Equals(value))                       => pp.setGcValue(value)
-      case ScalarFilter(_, In(Vector(NullGCValue)))             => // NOOP
-      case ScalarFilter(_, NotIn(Vector(NullGCValue)))          => // NOOP
-      case ScalarFilter(_, In(values))                          => values.foreach(pp.setGcValue)
-      case ScalarFilter(_, NotIn(values))                       => values.foreach(pp.setGcValue)
-      case OneRelationIsNullFilter(_)                           => // NOOP
-      case x                                                    => sys.error(s"Not supported: $x")
-    }
   }
 }
