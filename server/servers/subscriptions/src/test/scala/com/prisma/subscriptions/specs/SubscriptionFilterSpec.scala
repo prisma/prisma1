@@ -35,7 +35,7 @@ class SubscriptionFilterSpec extends FlatSpec with Matchers with SubscriptionSpe
     val args                         = PrismaArgs(RootGCValue(raw: _*))
 
     testDatabase.runDatabaseMutactionOnClientDb(
-      CreateDataItem(
+      TopLevelCreateNode(
         project = project,
         model = model,
         nonListArgs = args,

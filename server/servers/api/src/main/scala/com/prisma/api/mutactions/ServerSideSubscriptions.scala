@@ -13,7 +13,7 @@ object ServerSideSubscriptions {
       project: Project,
       mutactionResults: MutactionResults,
       requestId: Id
-  ): Vector[ServerSideSubscription] = {
+  ): Vector[ExecuteServerSideSubscription] = {
     val createResults    = mutactionResults.allResults.collect { case m: CreateNodeResult => m }
     val updateMutactions = mutactionResults.allResults.collect { case x: UpdateNodeResult => x }
     val deleteMutactions = mutactionResults.allResults.collect { case x: DeleteNodeResult => x }
@@ -30,12 +30,12 @@ object ServerSideSubscriptions {
       project: Project,
       mutactionResults: Vector[CreateNodeResult],
       requestId: Id
-  ): Vector[ServerSideSubscription] = {
+  ): Vector[ExecuteServerSideSubscription] = {
     for {
       mutactionResult <- mutactionResults
       sssFn           <- serverSideSubscriptionFunctionsFor(project, mutactionResult.mutaction.model, ModelMutationType.Created)
     } yield {
-      ServerSideSubscription(
+      ExecuteServerSideSubscription(
         project,
         mutactionResult.mutaction.model,
         ModelMutationType.Created,
@@ -50,12 +50,12 @@ object ServerSideSubscriptions {
       project: Project,
       mutactionResults: Vector[UpdateNodeResult],
       requestId: Id
-  ): Vector[ServerSideSubscription] = {
+  ): Vector[ExecuteServerSideSubscription] = {
     for {
       mutactionResult <- mutactionResults
       sssFn           <- serverSideSubscriptionFunctionsFor(project, mutactionResult.mutaction.model, ModelMutationType.Updated)
     } yield {
-      ServerSideSubscription(
+      ExecuteServerSideSubscription(
         project,
         mutactionResult.mutaction.model,
         ModelMutationType.Updated,
@@ -73,12 +73,12 @@ object ServerSideSubscriptions {
       project: Project,
       mutactionResults: Vector[DeleteNodeResult],
       requestId: Id
-  ): Vector[ServerSideSubscription] = {
+  ): Vector[ExecuteServerSideSubscription] = {
     for {
       mutactionResult <- mutactionResults
       sssFn           <- serverSideSubscriptionFunctionsFor(project, mutactionResult.mutaction.model, ModelMutationType.Deleted)
     } yield {
-      ServerSideSubscription(
+      ExecuteServerSideSubscription(
         project,
         mutactionResult.mutaction.model,
         ModelMutationType.Deleted,

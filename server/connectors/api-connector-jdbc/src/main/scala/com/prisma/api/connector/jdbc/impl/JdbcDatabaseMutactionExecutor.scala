@@ -35,48 +35,44 @@ case class JdbcDatabaseMutactionExecutor(
       mutationBuilder: PostgresApiDatabaseMutationBuilder
   ): DBIO[MutactionResults] = {
     mutaction match {
+      case m: UpsertNode =>
+        for {
+          result       <- interpreterFor(m).newActionWithErrorMapped(mutationBuilder, parentId)
+          childResults <- recurse(result.asInstanceOf[UpsertDataItemResult].mutaction, parentId, mutationBuilder).map(Vector(_))
+        } yield MutactionResults(result, childResults)
+
       case m: FurtherNestedMutaction =>
         for {
           result <- interpreterFor(m).newActionWithErrorMapped(mutationBuilder, parentId)
           childResults <- result match {
-                           case result: UpsertDataItemResult         => recurse(result.mutaction, parentId, mutationBuilder).map(Vector(_))
-                           case result: FurtherNestedMutactionResult => DBIO.sequence(m.allMutactions.map(recurse(_, result.id, mutationBuilder)))
+                           case result: FurtherNestedMutactionResult => DBIO.sequence(m.allNestedMutactions.map(recurse(_, result.id, mutationBuilder)))
                            case _                                    => DBIO.successful(Vector.empty)
                          }
-        } yield {
-          MutactionResults(
-            databaseResult = result,
-            nestedResults = childResults
-          )
-        }
+        } yield MutactionResults(result, childResults)
+
       case m: FinalMutaction =>
         for {
           result <- interpreterFor(m).newActionWithErrorMapped(mutationBuilder, parentId)
-        } yield {
-          MutactionResults(
-            databaseResult = result,
-            nestedResults = Vector.empty
-          )
-        }
+        } yield MutactionResults(result, Vector.empty)
     }
   }
 
   def interpreterFor(mutaction: DatabaseMutaction): DatabaseMutactionInterpreter = mutaction match {
-    case m: CreateDataItem           => CreateDataItemInterpreter(mutaction = m, includeRelayRow = createRelayIds)
-    case m: DeleteDataItem           => DeleteDataItemInterpreter(m)
-    case m: NestedDeleteDataItem     => DeleteDataItemNestedInterpreter(m)
-    case m: DeleteDataItems          => DeleteDataItemsInterpreter(m)
-    case m: NestedConnectRelation    => NestedConnectRelationInterpreter(m)
-    case m: NestedCreateDataItem     => NestedCreateDataItemInterpreter(m, includeRelayRow = createRelayIds)
-    case m: NestedDisconnectRelation => NestedDisconnectRelationInterpreter(m)
-    case m: ResetDataMutaction       => ResetDataInterpreter(m)
-    case m: UpdateDataItem           => UpdateDataItemInterpreter(m)
-    case m: NestedUpdateDataItem     => NestedUpdateDataItemInterpreter(m)
-    case m: UpdateDataItems          => UpdateDataItemsInterpreter(m)
-    case m: UpsertDataItem           => UpsertDataItemInterpreter(m)
-    case m: NestedUpsertDataItem     => NestedUpsertDataItemInterpreter(m)
-    case m: CreateDataItemsImport    => CreateDataItemsImportInterpreter(m)
-    case m: CreateRelationRowsImport => CreateRelationRowsImportInterpreter(m)
-    case m: PushScalarListsImport    => PushScalarListsImportInterpreter(m)
+    case m: TopLevelCreateNode => CreateDataItemInterpreter(mutaction = m, includeRelayRow = createRelayIds)
+    case m: TopLevelDeleteNode => DeleteDataItemInterpreter(m)
+    case m: NestedDeleteNode   => DeleteDataItemNestedInterpreter(m)
+    case m: DeleteNodes        => DeleteDataItemsInterpreter(m)
+    case m: NestedConnect      => NestedConnectRelationInterpreter(m)
+    case m: NestedCreateNode   => NestedCreateDataItemInterpreter(m, includeRelayRow = createRelayIds)
+    case m: NestedDisconnect   => NestedDisconnectRelationInterpreter(m)
+    case m: ResetData          => ResetDataInterpreter(m)
+    case m: TopLevelUpdateNode => UpdateDataItemInterpreter(m)
+    case m: NestedUpdateNode   => NestedUpdateDataItemInterpreter(m)
+    case m: UpdateNodes        => UpdateDataItemsInterpreter(m)
+    case m: TopLevelUpsertNode => UpsertDataItemInterpreter(m)
+    case m: NestedUpsertNode   => NestedUpsertDataItemInterpreter(m)
+    case m: ImportNodes        => CreateDataItemsImportInterpreter(m)
+    case m: ImportRelations    => CreateRelationRowsImportInterpreter(m)
+    case m: ImportScalarLists  => PushScalarListsImportInterpreter(m)
   }
 }

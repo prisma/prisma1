@@ -10,7 +10,7 @@ import slick.sql.{SqlAction, SqlStreamingAction}
 import scala.concurrent.ExecutionContext
 import scala.util.{Failure, Success}
 
-case class NestedConnectRelationInterpreter(mutaction: NestedConnectRelation)(implicit val ec: ExecutionContext) extends NestedRelationInterpreterBase {
+case class NestedConnectRelationInterpreter(mutaction: NestedConnect)(implicit val ec: ExecutionContext) extends NestedRelationInterpreterBase {
   def topIsCreate            = mutaction.topIsCreate
   val where                  = mutaction.where
   override def relationField = mutaction.relationField

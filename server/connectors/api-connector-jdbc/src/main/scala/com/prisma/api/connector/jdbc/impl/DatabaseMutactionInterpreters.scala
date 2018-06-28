@@ -44,10 +44,10 @@ case class CreateDataItemInterpreter(mutaction: CreateNode, includeRelayRow: Boo
 
 }
 
-case class NestedCreateDataItemInterpreter(mutaction: NestedCreateDataItem, includeRelayRow: Boolean = true)(implicit val ec: ExecutionContext)
+case class NestedCreateDataItemInterpreter(mutaction: NestedCreateNode, includeRelayRow: Boolean = true)(implicit val ec: ExecutionContext)
     extends DatabaseMutactionInterpreter
     with NestedRelationInterpreterBase {
-  override def relationField = mutaction.parentField
+  override def relationField = mutaction.relationField
   val model                  = relationField.relatedModel_!
 
   override def addAction(parentId: IdGCValue)(implicit mb: PostgresApiDatabaseMutationBuilder) = ???
@@ -75,7 +75,7 @@ case class NestedCreateDataItemInterpreter(mutaction: NestedCreateDataItem, incl
       case _ =>
         for {
           id <- mutationBuilder.createDataItem(model, mutaction.nonListArgs)
-          _  <- mutationBuilder.createRelation(mutaction.parentField, parentId, id)
+          _  <- mutationBuilder.createRelation(mutaction.relationField, parentId, id)
         } yield id
 
     }
@@ -184,7 +184,7 @@ trait CascadingDeleteSharedStuff extends DatabaseMutactionInterpreter {
   */
 }
 
-case class DeleteDataItemInterpreter(mutaction: DeleteDataItem)(implicit val ec: ExecutionContext)
+case class DeleteDataItemInterpreter(mutaction: TopLevelDeleteNode)(implicit val ec: ExecutionContext)
     extends DatabaseMutactionInterpreter
     with CascadingDeleteSharedStuff {
 
@@ -215,7 +215,7 @@ case class DeleteDataItemInterpreter(mutaction: DeleteDataItem)(implicit val ec:
   def action(mutationBuilder: PostgresApiDatabaseMutationBuilder) = ???
 }
 
-case class DeleteDataItemNestedInterpreter(mutaction: NestedDeleteDataItem)(implicit val ec: ExecutionContext)
+case class DeleteDataItemNestedInterpreter(mutaction: NestedDeleteNode)(implicit val ec: ExecutionContext)
     extends DatabaseMutactionInterpreter
     with CascadingDeleteSharedStuff {
 
@@ -266,7 +266,7 @@ case class DeleteDataItemNestedInterpreter(mutaction: NestedDeleteDataItem)(impl
 }
 
 //Fixme also switch this to fetch the Ids first
-case class DeleteDataItemsInterpreter(mutaction: DeleteDataItems)(implicit ec: ExecutionContext) extends DatabaseMutactionInterpreter {
+case class DeleteDataItemsInterpreter(mutaction: DeleteNodes)(implicit ec: ExecutionContext) extends DatabaseMutactionInterpreter {
   def action(mutationBuilder: PostgresApiDatabaseMutationBuilder) =
     for {
       _   <- checkForRequiredRelationsViolations(mutationBuilder)
@@ -283,13 +283,13 @@ case class DeleteDataItemsInterpreter(mutaction: DeleteDataItems)(implicit ec: E
   }
 }
 
-case class ResetDataInterpreter(mutaction: ResetDataMutaction) extends DatabaseMutactionInterpreter {
+case class ResetDataInterpreter(mutaction: ResetData) extends DatabaseMutactionInterpreter {
   def action(mutationBuilder: PostgresApiDatabaseMutationBuilder) = {
     mutationBuilder.truncateTables(mutaction.project)
   }
 }
 
-case class UpdateDataItemInterpreter(mutaction: UpdateDataItem) extends DatabaseMutactionInterpreter with SharedUpdateLogic {
+case class UpdateDataItemInterpreter(mutaction: TopLevelUpdateNode) extends DatabaseMutactionInterpreter with SharedUpdateLogic {
   val model             = mutaction.where.model
   val nonListArgs       = mutaction.nonListArgs
   override def listArgs = mutaction.listArgs
@@ -327,7 +327,7 @@ case class UpdateDataItemInterpreter(mutaction: UpdateDataItem) extends Database
   }
 }
 
-case class NestedUpdateDataItemInterpreter(mutaction: NestedUpdateDataItem) extends DatabaseMutactionInterpreter with SharedUpdateLogic {
+case class NestedUpdateDataItemInterpreter(mutaction: NestedUpdateNode) extends DatabaseMutactionInterpreter with SharedUpdateLogic {
   val model       = mutaction.relationField.relatedModel_!
   val parent      = mutaction.relationField.model
   val nonListArgs = mutaction.nonListArgs
@@ -399,7 +399,7 @@ trait SharedUpdateLogic {
   }
 }
 
-case class UpdateDataItemsInterpreter(mutaction: UpdateDataItems) extends DatabaseMutactionInterpreter {
+case class UpdateDataItemsInterpreter(mutaction: UpdateNodes) extends DatabaseMutactionInterpreter {
   //update Lists before updating the nodes
   def action(mutationBuilder: PostgresApiDatabaseMutationBuilder) = {
     val nonListActions = mutationBuilder.updateDataItems(mutaction.model, mutaction.updateArgs, mutaction.whereFilter)
@@ -408,7 +408,7 @@ case class UpdateDataItemsInterpreter(mutaction: UpdateDataItems) extends Databa
   }
 }
 
-case class UpsertDataItemInterpreter(mutaction: UpsertDataItem) extends DatabaseMutactionInterpreter {
+case class UpsertDataItemInterpreter(mutaction: TopLevelUpsertNode) extends DatabaseMutactionInterpreter {
   val model   = mutaction.where.model
   val project = mutaction.project
 //  val createArgs = mutaction.nonListCreateArgs
@@ -464,7 +464,7 @@ case class UpsertDataItemInterpreter(mutaction: UpsertDataItem) extends Database
 
 }
 
-case class NestedUpsertDataItemInterpreter(mutaction: NestedUpsertDataItem) extends DatabaseMutactionInterpreter {
+case class NestedUpsertDataItemInterpreter(mutaction: NestedUpsertNode) extends DatabaseMutactionInterpreter {
   val model = mutaction.relationField.relatedModel_!
 
   override def newAction(mutationBuilder: PostgresApiDatabaseMutationBuilder, parentId: IdGCValue)(implicit ec: ExecutionContext) = {
@@ -530,14 +530,14 @@ case class NestedUpsertDataItemInterpreter(mutaction: NestedUpsertDataItem) exte
 //  override val errorMapper                                              = (updateErrors ++ createErrors).foldLeft(upsertErrors)(_ orElse _)
 //}
 
-case class CreateDataItemsImportInterpreter(mutaction: CreateDataItemsImport) extends DatabaseMutactionInterpreter {
+case class CreateDataItemsImportInterpreter(mutaction: ImportNodes) extends DatabaseMutactionInterpreter {
   def action(mutationBuilder: PostgresApiDatabaseMutationBuilder): DBIO[Vector[String]] = mutationBuilder.createDataItemsImport(mutaction)
 }
 
-case class CreateRelationRowsImportInterpreter(mutaction: CreateRelationRowsImport) extends DatabaseMutactionInterpreter {
+case class CreateRelationRowsImportInterpreter(mutaction: ImportRelations) extends DatabaseMutactionInterpreter {
   def action(mutationBuilder: PostgresApiDatabaseMutationBuilder): DBIO[Vector[String]] = mutationBuilder.createRelationRowsImport(mutaction)
 }
 
-case class PushScalarListsImportInterpreter(mutaction: PushScalarListsImport)(implicit ec: ExecutionContext) extends DatabaseMutactionInterpreter {
+case class PushScalarListsImportInterpreter(mutaction: ImportScalarLists)(implicit ec: ExecutionContext) extends DatabaseMutactionInterpreter {
   def action(mutationBuilder: PostgresApiDatabaseMutationBuilder): DBIO[Vector[String]] = mutationBuilder.pushScalarListsImport(mutaction)
 }

@@ -8,12 +8,12 @@ import com.prisma.util.coolArgs._
 case class DatabaseMutactions(project: Project) {
 
   case class NestedMutactions(
-      nestedCreates: Vector[NestedCreateDataItem],
-      nestedUpdates: Vector[NestedUpdateDataItem],
-      nestedUpserts: Vector[NestedUpsertDataItem],
-      nestedDeletes: Vector[NestedDeleteDataItem],
-      nestedConnects: Vector[NestedConnectRelation],
-      nestedDisconnects: Vector[NestedDisconnectRelation]
+      nestedCreates: Vector[NestedCreateNode],
+      nestedUpdates: Vector[NestedUpdateNode],
+      nestedUpserts: Vector[NestedUpsertNode],
+      nestedDeletes: Vector[NestedDeleteNode],
+      nestedConnects: Vector[NestedConnect],
+      nestedDisconnects: Vector[NestedDisconnect]
   ) {
     def ++(other: NestedMutactions) = NestedMutactions(
       nestedCreates = nestedCreates ++ other.nestedCreates,
@@ -37,18 +37,18 @@ case class DatabaseMutactions(project: Project) {
 //    mutactions
 //  }
 
-  def getMutactionsForDelete(where: NodeSelector, previousValues: PrismaNode): DeleteDataItem = {
-    DeleteDataItem(project = project, where = where, previousValues = previousValues)
+  def getMutactionsForDelete(where: NodeSelector, previousValues: PrismaNode): TopLevelDeleteNode = {
+    TopLevelDeleteNode(project = project, where = where, previousValues = previousValues)
   }
 
   //todo this does not support cascading delete behavior at the moment
-  def getMutactionsForDeleteMany(model: Model, whereFilter: Option[Filter]): DeleteDataItems = DeleteDataItems(project, model, whereFilter)
+  def getMutactionsForDeleteMany(model: Model, whereFilter: Option[Filter]): DeleteNodes = DeleteNodes(project, model, whereFilter)
 
-  def getMutactionsForUpdate(model: Model, where: NodeSelector, args: CoolArgs, previousValues: PrismaNode): UpdateDataItem = {
+  def getMutactionsForUpdate(model: Model, where: NodeSelector, args: CoolArgs, previousValues: PrismaNode): TopLevelUpdateNode = {
     val (nonListArgs, listArgs)  = args.getUpdateArgs(model)
     val nested: NestedMutactions = getMutactionsForNestedMutation(args, model, None, triggeredFromCreate = false)
 
-    UpdateDataItem(
+    TopLevelUpdateNode(
       project = project,
       where = where,
       nonListArgs = nonListArgs,
@@ -63,16 +63,16 @@ case class DatabaseMutactions(project: Project) {
     )
   }
 
-  def getMutactionsForUpdateMany(model: Model, whereFilter: Option[Filter], args: CoolArgs): UpdateDataItems = {
+  def getMutactionsForUpdateMany(model: Model, whereFilter: Option[Filter], args: CoolArgs): UpdateNodes = {
     val (nonListArgs, listArgs) = args.getUpdateArgs(model)
-    UpdateDataItems(project, model, whereFilter, nonListArgs, listArgs)
+    UpdateNodes(project, model, whereFilter, nonListArgs, listArgs)
   }
 
-  def getMutactionsForCreate(model: Model, args: CoolArgs): CreateDataItem = {
+  def getMutactionsForCreate(model: Model, args: CoolArgs): TopLevelCreateNode = {
     val (nonListArgs, listArgs) = args.getCreateArgs(model)
 
     val nestedMutactions = getMutactionsForNestedMutation(args, model, None, triggeredFromCreate = true)
-    CreateDataItem(
+    TopLevelCreateNode(
       project = project,
       model = model,
       nonListArgs = nonListArgs,
@@ -82,11 +82,11 @@ case class DatabaseMutactions(project: Project) {
     )
   }
 
-  def getMutactionsForUpsert(where: NodeSelector, allArgs: CoolArgs): UpsertDataItem = {
+  def getMutactionsForUpsert(where: NodeSelector, allArgs: CoolArgs): TopLevelUpsertNode = {
     val creates = getMutactionsForCreate(where.model, allArgs.createArgumentsAsCoolArgs)
     val updates = getMutactionsForUpdate(where.model, where, allArgs.updateArgumentsAsCoolArgs, PrismaNode.dummy)
 
-    UpsertDataItem(
+    TopLevelUpsertNode(
       project = project,
       where = where,
       create = creates,
@@ -133,13 +133,13 @@ case class DatabaseMutactions(project: Project) {
       nestedMutation: NestedMutations,
       parentField: RelationField,
       triggeredFromCreate: Boolean
-  ): Vector[NestedCreateDataItem] = {
+  ): Vector[NestedCreateNode] = {
     nestedMutation.creates.map { create =>
       val (nonListArgs, listArgs) = create.data.getCreateArgs(model)
       val nestedMutactions        = getMutactionsForNestedMutation(create.data, model, Some(parentField.relatedField), triggeredFromCreate = true)
-      NestedCreateDataItem(
+      NestedCreateNode(
         project = project,
-        parentField = parentField,
+        relationField = parentField,
         nonListArgs = nonListArgs,
         listArgs = listArgs,
         nestedCreates = nestedMutactions.nestedCreates,
@@ -154,12 +154,12 @@ case class DatabaseMutactions(project: Project) {
       field: RelationField,
       triggeredFromCreate: Boolean,
       create: CoolArgs
-  ): NestedCreateDataItem = {
+  ): NestedCreateNode = {
     val (nonListArgs, listArgs) = create.getCreateArgs(model)
     val nestedMutactions        = getMutactionsForNestedMutation(create, model, Some(field.relatedField), triggeredFromCreate = true)
-    NestedCreateDataItem(
+    NestedCreateNode(
       project = project,
-      parentField = field,
+      relationField = field,
       nonListArgs = nonListArgs,
       listArgs = listArgs,
       nestedCreates = nestedMutactions.nestedCreates,
@@ -173,10 +173,10 @@ case class DatabaseMutactions(project: Project) {
       field: RelationField,
       where: Option[NodeSelector],
       args: CoolArgs
-  ): NestedUpdateDataItem = {
+  ): NestedUpdateNode = {
     val (nonListArgs, listArgs) = args.getUpdateArgs(model)
     val nestedMutactions        = getMutactionsForNestedMutation(args, model, Some(field.relatedField), triggeredFromCreate = false)
-    NestedUpdateDataItem(
+    NestedUpdateNode(
       project = project,
       relationField = field,
       where = where,
@@ -191,29 +191,29 @@ case class DatabaseMutactions(project: Project) {
     )
   }
 
-  def getMutactionsForNestedConnectMutation(nestedMutation: NestedMutations, field: RelationField, topIsCreate: Boolean): Vector[NestedConnectRelation] = {
-    nestedMutation.connects.map(connect => NestedConnectRelation(project, field, connect.where, topIsCreate))
+  def getMutactionsForNestedConnectMutation(nestedMutation: NestedMutations, field: RelationField, topIsCreate: Boolean): Vector[NestedConnect] = {
+    nestedMutation.connects.map(connect => NestedConnect(project, field, connect.where, topIsCreate))
   }
 
-  def getMutactionsForNestedDisconnectMutation(nestedMutation: NestedMutations, field: RelationField): Vector[NestedDisconnectRelation] = {
+  def getMutactionsForNestedDisconnectMutation(nestedMutation: NestedMutations, field: RelationField): Vector[NestedDisconnect] = {
     nestedMutation.disconnects.map {
-      case _: DisconnectByRelation       => NestedDisconnectRelation(project, field, where = None)
-      case disconnect: DisconnectByWhere => NestedDisconnectRelation(project, field, where = Some(disconnect.where))
+      case _: DisconnectByRelation       => NestedDisconnect(project, field, where = None)
+      case disconnect: DisconnectByWhere => NestedDisconnect(project, field, where = Some(disconnect.where))
     }
   }
 
-  def getMutactionsForNestedDeleteMutation(nestedMutation: NestedMutations, field: RelationField): Vector[NestedDeleteDataItem] = {
+  def getMutactionsForNestedDeleteMutation(nestedMutation: NestedMutations, field: RelationField): Vector[NestedDeleteNode] = {
     nestedMutation.deletes.map { delete =>
       val childWhere = delete match {
         case DeleteByRelation(_)  => None
         case DeleteByWhere(where) => Some(where)
       }
 
-      NestedDeleteDataItem(project, field, childWhere)
+      NestedDeleteNode(project, field, childWhere)
     }
   }
 
-  def getMutactionsForNestedUpdateMutation(model: Model, nestedMutation: NestedMutations, parentField: RelationField): Vector[NestedUpdateDataItem] = {
+  def getMutactionsForNestedUpdateMutation(model: Model, nestedMutation: NestedMutations, parentField: RelationField): Vector[NestedUpdateNode] = {
     nestedMutation.updates.map { update =>
       val (nonListArgs, listArgs) = update.data.getUpdateArgs(model)
       val nested                  = getMutactionsForNestedMutation(update.data, model, Some(parentField.relatedField), triggeredFromCreate = false)
@@ -223,7 +223,7 @@ case class DatabaseMutactions(project: Project) {
         case _: UpdateByRelation => None
       }
 
-      NestedUpdateDataItem(
+      NestedUpdateNode(
         project = project,
         relationField = parentField,
         where = where,
@@ -239,16 +239,16 @@ case class DatabaseMutactions(project: Project) {
     }
   }
 
-  def getMutactionsForNestedUpsertMutation(nestedMutation: NestedMutations, parentField: RelationField): Vector[NestedUpsertDataItem] = {
+  def getMutactionsForNestedUpsertMutation(nestedMutation: NestedMutations, parentField: RelationField): Vector[NestedUpsertNode] = {
     nestedMutation.upserts.map { upsert =>
       val subModel = parentField.relatedModel_!
       val where = upsert match {
         case x: UpsertByWhere    => Some(x.where)
         case _: UpsertByRelation => None
       }
-      val create: NestedCreateDataItem = getMutactionForNestedCreate(subModel, parentField, triggeredFromCreate = false, upsert.create)
-      val update: NestedUpdateDataItem = getMutactionForNestedUpdate(subModel, parentField, where, upsert.update)
-      NestedUpsertDataItem(project, parentField, where, create, update)
+      val create: NestedCreateNode = getMutactionForNestedCreate(subModel, parentField, triggeredFromCreate = false, upsert.create)
+      val update: NestedUpdateNode = getMutactionForNestedUpdate(subModel, parentField, where, upsert.update)
+      NestedUpsertNode(project, parentField, where, create, update)
     }
   }
 }

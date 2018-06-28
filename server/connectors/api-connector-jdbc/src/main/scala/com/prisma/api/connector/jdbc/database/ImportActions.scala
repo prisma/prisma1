@@ -3,7 +3,7 @@ package com.prisma.api.connector.jdbc.database
 import java.sql.{PreparedStatement, Statement}
 
 import com.prisma.api.connector.jdbc.database.JooqQueryBuilders.placeHolder
-import com.prisma.api.connector.{CreateDataItemsImport, CreateRelationRowsImport, PushScalarListsImport}
+import com.prisma.api.connector.{ImportNodes, ImportRelations, ImportScalarLists}
 import com.prisma.gc_values.{GCValue, IdGCValue, ListGCValue, NullGCValue}
 import com.prisma.shared.models.ScalarField
 import cool.graph.cuid.Cuid
@@ -16,7 +16,7 @@ trait ImportActions extends BuilderBase {
   import com.prisma.slick.NewJdbcExtensions._
   import slickDatabase.profile.api._
 
-  def createDataItemsImport(mutaction: CreateDataItemsImport): SimpleDBIO[Vector[String]] = {
+  def createDataItemsImport(mutaction: ImportNodes): SimpleDBIO[Vector[String]] = {
 
     SimpleDBIO[Vector[String]] { jdbcActionContext =>
       val model         = mutaction.model
@@ -102,7 +102,7 @@ trait ImportActions extends BuilderBase {
     cause.substring(connectionSubStringStart + 9)
   }
 
-  def createRelationRowsImport(mutaction: CreateRelationRowsImport): SimpleDBIO[Vector[String]] = {
+  def createRelationRowsImport(mutaction: ImportRelations): SimpleDBIO[Vector[String]] = {
     val argsWithIndex: Seq[((IdGCValue, IdGCValue), Int)] = mutaction.args.zipWithIndex
     val relation                                          = mutaction.relation
 
@@ -144,16 +144,16 @@ trait ImportActions extends BuilderBase {
     }
   }
 
-  def pushScalarListsImport(mutaction: PushScalarListsImport)(implicit ec: ExecutionContext) = {
+  def pushScalarListsImport(mutaction: ImportScalarLists)(implicit ec: ExecutionContext) = {
     val field   = mutaction.field
-    val nodeIds = mutaction.valueTuples.keys
+    val nodeIds = mutaction.values.keys
 
     for {
       startPositions <- startPositions(field, nodeIds.toSeq)
       // begin massage
 
       listValuesWithStartPosition: Iterable[(IdGCValue, ListGCValue, Int)] = {
-        mutaction.valueTuples.map {
+        mutaction.values.map {
           case (id, listValue) => (id, listValue, startPositions.getOrElse(id, 0))
         }
       }

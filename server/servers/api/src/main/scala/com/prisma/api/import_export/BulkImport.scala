@@ -24,10 +24,10 @@ class BulkImport(project: Project)(implicit apiDependencies: ApiDependencies) {
     val res: Future[Vector[Try[_]]] =
       bundle.valueType match {
         case "nodes" =>
-          val importNodes                             = bundle.values.value.map(convertToImportNode).toVector
-          val goods: Vector[ImportNode]               = importNodes.collect { case Good(x) => x }
-          val bads: Vector[Exception]                 = importNodes.collect { case x: Bad[Exception] => x.b }
-          val newGoods: Vector[CreateDataItemsImport] = generateImportNodesDBActions(goods)
+          val importNodes                   = bundle.values.value.map(convertToImportNode).toVector
+          val goods: Vector[ImportNode]     = importNodes.collect { case Good(x) => x }
+          val bads: Vector[Exception]       = importNodes.collect { case x: Bad[Exception] => x.b }
+          val newGoods: Vector[ImportNodes] = generateImportNodesDBActions(goods)
 
           val creates = newGoods.map(m => apiDependencies.databaseMutactionExecutor.executeNonTransactionally(m).toFutureTry)
           val errors  = bads.map(exception => Future.successful(Failure(exception)))
@@ -97,13 +97,13 @@ class BulkImport(project: Project)(implicit apiDependencies: ApiDependencies) {
     ImportRelation(left, right)
   }
 
-  private def generateImportNodesDBActions(nodes: Vector[ImportNode]): Vector[CreateDataItemsImport] = {
+  private def generateImportNodesDBActions(nodes: Vector[ImportNode]): Vector[ImportNodes] = {
     val creates                                                = nodes.map(node => CreateDataItemImport(project, node.model, PrismaArgs(node.values)))
     val groupedItems: Map[Model, Vector[CreateDataItemImport]] = creates.groupBy(_.model)
-    groupedItems.map { case (model, group) => CreateDataItemsImport(project, model, group.map(_.args)) }.toVector
+    groupedItems.map { case (model, group) => ImportNodes(project, model, group.map(_.args)) }.toVector
   }
 
-  private def generateImportRelationsDBActions(relations: Vector[ImportRelation]): Vector[CreateRelationRowsImport] = {
+  private def generateImportRelationsDBActions(relations: Vector[ImportRelation]): Vector[ImportRelations] = {
     val createRows = relations.map { element =>
       val (left, right) = (element.left, element.right) match {
         case (l, r) if l.fieldName.isDefined => (l, r)
@@ -120,10 +120,10 @@ class BulkImport(project: Project)(implicit apiDependencies: ApiDependencies) {
       CreateRelationRow(project, relation, aValue, bValue)
     }
     val groupedItems = createRows.groupBy(_.relation)
-    groupedItems.map { case (relation, group) => CreateRelationRowsImport(project, relation, group.map(item => (item.a, item.b))) }.toVector
+    groupedItems.map { case (relation, group) => ImportRelations(project, relation, group.map(item => (item.a, item.b))) }.toVector
   }
 
-  private def generateImportListsDBActions(lists: Vector[ImportList]): Vector[PushScalarListsImport] = {
+  private def generateImportListsDBActions(lists: Vector[ImportList]): Vector[ImportScalarLists] = {
     lists
       .groupBy(_.field)
       .map {
@@ -131,7 +131,7 @@ class BulkImport(project: Project)(implicit apiDependencies: ApiDependencies) {
           val emptyListValue                                             = ListGCValue(Vector.empty)
           val listValuesGroupedById: Map[IdGCValue, Vector[ListGCValue]] = importLists.groupBy(_.identifier.id).mapValues(_.map(_.values))
           val listValuesMerged: Map[IdGCValue, ListGCValue]              = listValuesGroupedById.mapValues(_.foldLeft(emptyListValue)(_ ++ _))
-          PushScalarListsImport(project, field, listValuesMerged)
+          ImportScalarLists(project, field, listValuesMerged)
       }
       .toVector
   }

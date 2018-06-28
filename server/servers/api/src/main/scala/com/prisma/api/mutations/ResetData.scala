@@ -9,21 +9,7 @@ import scala.concurrent.Future
 case class ResetData(project: Project, dataResolver: DataResolver)(implicit apiDependencies: ApiDependencies) extends SingleItemClientMutation {
 
   override def prepareMutactions(): Future[TopLevelDatabaseMutaction] = {
-    val relationTableNames = project.relations.map(_.relationTableName).toVector
-    val modelTableNames    = project.models.map(_.name).toVector
-    val listTableNames     = project.models.flatMap(model => model.scalarListFields.map(field => s"${model.name}_${field.name}"))
-    val relayTableName     = "_RelayId"
-
-    val resetData = ResetDataMutaction(project, relationTableNames ++ modelTableNames ++ listTableNames :+ relayTableName)
-//
-//    Future.successful {
-//      PreparedMutactions(
-//        databaseMutactions = Vector(resetData),
-//        sideEffectMutactions = Vector.empty
-//      )
-//    }
-
-    Future.successful(resetData)
+    Future.successful(ResetData(project))
   }
 
   override def getReturnValue(results: MutactionResults): Future[ReturnValueResult] = Future.successful(ReturnValue(PrismaNode.dummy))
