@@ -4,6 +4,7 @@ import java.sql.PreparedStatement
 
 import com.prisma.api.connector._
 import com.prisma.api.connector.jdbc.database.JooqQueryBuilders._
+import com.prisma.api.connector.jdbc.extensions.SlickExtensions
 import com.prisma.gc_values.{GCValue, IdGCValue, NullGCValue, StringGCValue}
 import com.prisma.shared.models._
 import org.jooq._

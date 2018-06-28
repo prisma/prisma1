@@ -1,4 +1,4 @@
-package com.prisma.api.connector.jdbc.database
+package com.prisma.api.connector.jdbc.extensions
 
 import org.jooq.{Record, UpdateSetFirstStep}
 
@@ -9,9 +9,11 @@ trait JooqExtensions {
 }
 
 object JooqExtensionValueClasses {
-  import scala.collection.JavaConverters._
   import org.jooq.impl.DSL._
-  import JooqQueryBuilders.placeHolder
+
+  import scala.collection.JavaConverters._
+
+  private val placeHolder = "?"
 
   class UpdateSetFirstStepExtensions(val x: UpdateSetFirstStep[Record]) extends AnyVal {
     def setColumnsWithPlaceHolders(columns: scala.collection.immutable.Seq[String]) = {

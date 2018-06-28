@@ -1,4 +1,4 @@
-package com.prisma.api.connector.jdbc.database
+package com.prisma.api.connector.jdbc.extensions
 
 import com.prisma.gc_values._
 import slick.jdbc.PositionedParameters

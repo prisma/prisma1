@@ -4,6 +4,7 @@ import java.sql.{PreparedStatement, ResultSet, Statement}
 import java.util.Date
 
 import com.prisma.api.connector._
+import com.prisma.api.connector.jdbc.extensions.{JdbcExtensions, JooqExtensions, SlickExtensions}
 import com.prisma.api.schema.APIErrors.{NodesNotConnectedError, RequiredRelationWouldBeViolated}
 import com.prisma.gc_values.{ListGCValue, NullGCValue, _}
 import com.prisma.shared.models.Manifestations.InlineRelationManifestation
