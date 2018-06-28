@@ -16,14 +16,14 @@ Prisma's auto-generated GraphQL API provides powerful abstractions and modular b
 
 ## Contents
 
-* [Quickstart](#quickstart)
-* [Examples](#examples)
-* [Architecture](#architecture)
-* [Is Prisma an ORM?](#is-prisma-an-orm)
-* [Database Connectors](#database-connectors)
-* [GraphQL API](#graphql-api)
-* [Community](#community)
-* [Contributing](#contributing)
+- [Quickstart](#quickstart)
+- [Examples](#examples)
+- [Architecture](#architecture)
+- [Is Prisma an ORM?](#is-prisma-an-orm)
+- [Database Connectors](#database-connectors)
+- [GraphQL API](#graphql-api)
+- [Community](#community)
+- [Contributing](#contributing)
 
 ## Quickstart
 
@@ -103,12 +103,7 @@ prisma playground
 
 ```graphql
 mutation {
-  createUser(
-    data: {
-      name: "Alice"
-      handle: "alice"
-    }
-  ) {
+  createUser(data: { name: "Alice", handle: "alice" }) {
     id
   }
 }
@@ -139,11 +134,7 @@ mutation {
   createTweet(
     data: {
       text: "Prisma makes building GraphQL servers fun & easy"
-      owner: {
-        connect: {
-          id: "__USER_ID__"
-        }
-      }
+      owner: { connect: { id: "__USER_ID__" } }
     }
   ) {
     id
@@ -170,17 +161,18 @@ You can now connect to Prisma's GraphQL API, select what you would like to do ne
 
 Collection of Prisma example projects 💡
 
-* [application-server](./examples/application-server)
-* [authentication](./examples/authentication)
-* [cli-tool](./examples/cli-tool)
-* [data-modelling](./examples/data-modelling)
-* [hooks](./examples/hooks)
-* [permissions-with-shield](./examples/permissions-with-shield)
-* [postgres](./examples/postgres)
-* [resolver-forwarding](./examples/resolver-forwarding)
-* [server-side-subscriptions](./examples/server-side-subscriptions)
-* [subscriptions](./examples/subscriptions)
-* [yml-structure](./examples/yml-structure)
+- [application-server](./examples/application-server)
+- [authentication](./examples/authentication)
+- [cli-tool](./examples/cli-tool)
+- [data-modelling](./examples/data-modelling)
+- [hooks](./examples/hooks)
+- [permissions-with-shield](./examples/permissions-with-shield)
+- [postgres](./examples/postgres)
+- [resolver-forwarding](./examples/resolver-forwarding)
+- [server-side-subscriptions](./examples/server-side-subscriptions)
+- [subscriptions](./examples/subscriptions)
+- [travis](./examples/travis)
+- [yml-structure](./examples/yml-structure)
 
 You can also check the [**AirBnB clone example**](https://github.com/prismagraphql/graphql-server-example) we built as a fully-featured demo app for Prisma.
 
@@ -225,27 +217,27 @@ More database connectors will follow.
 
 If you are interested to participate in the preview for one of the following connectors, please reach out in our [Slack](https://slack.prisma.io).
 
-* [MongoDB Connector](https://github.com/prismagraphql/prisma/issues/1643)
-* [Elastic Search Connector](https://github.com/prismagraphql/prisma/issues/1665)
+- [MongoDB Connector](https://github.com/prismagraphql/prisma/issues/1643)
+- [Elastic Search Connector](https://github.com/prismagraphql/prisma/issues/1665)
 
 ### Further Connectors
 
 We are still collecting use cases and feedback for the API design and feature set of the following connectors:
 
-* [MS SQL Connector](https://github.com/prismagraphql/prisma/issues/1642)
-* [Oracle Connector](https://github.com/prismagraphql/prisma/issues/1644)
-* [ArangoDB Connector](https://github.com/prismagraphql/prisma/issues/1645)
-* [Neo4j Connector](https://github.com/prismagraphql/prisma/issues/1646)
-* [Druid Connector](https://github.com/prismagraphql/prisma/issues/1647)
-* [Dgraph Connector](https://github.com/prismagraphql/prisma/issues/1648)
-* [DynamoDB Connector](https://github.com/prismagraphql/prisma/issues/1655)
-* [Cloud Firestore Connector](https://github.com/prismagraphql/prisma/issues/1660)
-* [CockroachDB Connector](https://github.com/prismagraphql/prisma/issues/1705)
-* [Cassandra Connector](https://github.com/prismagraphql/prisma/issues/1750)
-* [Redis Connector](https://github.com/prismagraphql/prisma/issues/1722)
-* [AWS Neptune Connector](https://github.com/prismagraphql/prisma/issues/1752)
-* [CosmosDB Connector](https://github.com/prismagraphql/prisma/issues/1663)
-* [Influx Connector](https://github.com/prismagraphql/prisma/issues/1857)
+- [MS SQL Connector](https://github.com/prismagraphql/prisma/issues/1642)
+- [Oracle Connector](https://github.com/prismagraphql/prisma/issues/1644)
+- [ArangoDB Connector](https://github.com/prismagraphql/prisma/issues/1645)
+- [Neo4j Connector](https://github.com/prismagraphql/prisma/issues/1646)
+- [Druid Connector](https://github.com/prismagraphql/prisma/issues/1647)
+- [Dgraph Connector](https://github.com/prismagraphql/prisma/issues/1648)
+- [DynamoDB Connector](https://github.com/prismagraphql/prisma/issues/1655)
+- [Cloud Firestore Connector](https://github.com/prismagraphql/prisma/issues/1660)
+- [CockroachDB Connector](https://github.com/prismagraphql/prisma/issues/1705)
+- [Cassandra Connector](https://github.com/prismagraphql/prisma/issues/1750)
+- [Redis Connector](https://github.com/prismagraphql/prisma/issues/1722)
+- [AWS Neptune Connector](https://github.com/prismagraphql/prisma/issues/1752)
+- [CosmosDB Connector](https://github.com/prismagraphql/prisma/issues/1663)
+- [Influx Connector](https://github.com/prismagraphql/prisma/issues/1857)
 
 Join the discussion or contribute to influence which we'll work on next!
 
@@ -253,8 +245,8 @@ Join the discussion or contribute to influence which we'll work on next!
 
 The most important component in Prisma is the GraphQL API:
 
-* Query, mutate & stream data via a auto-generated GraphQL CRUD API
-* Define your data model and perform migrations using GraphQL SDL
+- Query, mutate & stream data via a auto-generated GraphQL CRUD API
+- Define your data model and perform migrations using GraphQL SDL
 
 Prisma's auto-generated GraphQL APIs are fully compatible with the [OpenCRUD](https://www.opencrud.org/) standard.
 
