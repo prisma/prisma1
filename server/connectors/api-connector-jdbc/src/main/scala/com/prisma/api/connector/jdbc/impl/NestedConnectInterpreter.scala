@@ -4,13 +4,11 @@ import com.prisma.api.connector._
 import com.prisma.api.connector.jdbc.database.PostgresApiDatabaseMutationBuilder
 import com.prisma.api.schema.APIErrors
 import com.prisma.gc_values.IdGCValue
-import slick.dbio.{DBIO, DBIOAction, Effect, NoStream}
-import slick.sql.{SqlAction, SqlStreamingAction}
+import slick.dbio.{DBIO, DBIOAction}
 
 import scala.concurrent.ExecutionContext
-import scala.util.{Failure, Success}
 
-case class NestedConnectRelationInterpreter(mutaction: NestedConnect)(implicit val ec: ExecutionContext) extends NestedRelationInterpreterBase {
+case class NestedConnectInterpreter(mutaction: NestedConnect)(implicit val ec: ExecutionContext) extends NestedRelationInterpreterBase {
   def topIsCreate            = mutaction.topIsCreate
   val where                  = mutaction.where
   override def relationField = mutaction.relationField

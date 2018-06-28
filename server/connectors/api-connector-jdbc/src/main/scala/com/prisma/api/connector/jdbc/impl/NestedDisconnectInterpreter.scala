@@ -3,12 +3,12 @@ package com.prisma.api.connector.jdbc.impl
 import com.prisma.api.connector._
 import com.prisma.api.connector.jdbc.database.PostgresApiDatabaseMutationBuilder
 import com.prisma.api.schema.APIErrors
-import com.prisma.gc_values.{IdGCValue, IntGCValue}
+import com.prisma.gc_values.IdGCValue
 import slick.dbio.{DBIO, DBIOAction}
 
 import scala.concurrent.ExecutionContext
 
-case class NestedDisconnectRelationInterpreter(mutaction: NestedDisconnect)(implicit val ec: ExecutionContext) extends NestedRelationInterpreterBase {
+case class NestedDisconnectInterpreter(mutaction: NestedDisconnect)(implicit val ec: ExecutionContext) extends NestedRelationInterpreterBase {
   override def relationField = mutaction.relationField
 
   override def dbioAction(mutationBuilder: PostgresApiDatabaseMutationBuilder, parentId: IdGCValue) = {
