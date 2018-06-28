@@ -4,27 +4,7 @@ import java.sql.{Connection, PreparedStatement, ResultSet}
 
 import scala.collection.mutable
 
-object PreparedStatementExtensions {}
-
 object NewJdbcExtensions {
-  // PREPARED STATEMENTS
-  trait SetParam[T] {
-    def apply(ps: PreparedStatement, index: Int, value: T): Unit
-  }
-
-  implicit class PreparedStatementExtensions2(val ps: PreparedStatement) extends AnyVal {
-//    def inValues[T](values: Vector[T]) = {
-//      //
-//    }
-
-    def setValues[T](values: Vector[T])(implicit setParam: SetParam[T]): PreparedStatement = {
-      values.zipWithIndex.foreach { valueWithIndex =>
-        setParam(ps, valueWithIndex._2 + 1, valueWithIndex._1)
-      }
-      ps
-    }
-  }
-
   // RESULTSETS
   trait ReadsResultSet[T] {
     def read(resultSet: ResultSet): T
@@ -45,12 +25,4 @@ object NewJdbcExtensions {
       result.toVector
     }
   }
-
-  // CONNECTIONS
-  implicit class ConnectionExtensions(val connection: Connection) extends AnyVal {
-    //
-  }
-
-  // MISC
-  def queryPlaceHolders(values: Vector[_]): String = "(" + values.map(_ => "?").mkString(",") + ")"
 }
