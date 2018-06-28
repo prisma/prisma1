@@ -17,20 +17,22 @@ trait BuilderBase extends JooqExtensions with JdbcExtensions with SlickExtension
   import JooqQueryBuilders.placeHolder
 
   def schemaName: String
-
   val slickDatabase: SlickDatabase
+
   val dialect: SQLDialect = slickDatabase.profile match {
     case PostgresProfile => SQLDialect.POSTGRES_9_5
     case MySQLProfile    => SQLDialect.MYSQL_5_7
     case x               => sys.error(s"No Jooq SQLDialect for Slick profile $x configured yet")
   }
 
+  val isMySql    = dialect.family() == SQLDialect.MYSQL
+  val isPostgres = dialect.family() == SQLDialect.POSTGRES
+
   import slickDatabase.profile.api._
 
   val sql = DSL.using(dialect, new Settings().withRenderFormatted(true))
 
-  private val relayIdTableName = "_RelayId"
-
+  private val relayIdTableName                                                              = "_RelayId"
   val relayIdColumn                                                                         = field(name(schemaName, relayIdTableName, "id"))
   val relayStableIdentifierColumn                                                           = field(name(schemaName, relayIdTableName, "stableModelIdentifier"))
   val relayTable                                                                            = table(name(schemaName, relayIdTableName))
@@ -48,8 +50,6 @@ trait BuilderBase extends JooqExtensions with JdbcExtensions with SlickExtension
   def aliasColumn(column: String)                                                           = field(name(JooqQueryBuilders.topLevelAlias, column))
   def placeHolders(vector: Iterable[Any])                                                   = vector.toList.map(_ => placeHolder).asJava
   private def scalarListTableName(field: ScalarField)                                       = field.model.dbName + "_" + field.dbName
-
-  val isMySql = dialect.family() == SQLDialect.MYSQL
 
   def queryToDBIO[T](query: JooqQuery)(setParams: PositionedParameters => Unit, readResult: ResultSet => T): DBIO[T] = {
     SimpleDBIO { ctx =>

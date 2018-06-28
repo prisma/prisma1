@@ -2,10 +2,11 @@ package com.prisma.api.connector.jdbc.database
 
 import java.sql.ResultSet
 
+import com.prisma.api.connector.jdbc.database.JooqQueryBuilders.{nodeIdFieldName, positionFieldName, valueFieldName}
 import com.prisma.api.connector.jdbc.extensions.JdbcExtensions
-import com.prisma.api.connector.{PrismaNode, PrismaNodeWithParent}
+import com.prisma.api.connector.{PrismaNode, PrismaNodeWithParent, RelationNode, ScalarListElement}
 import com.prisma.gc_values.RootGCValue
-import com.prisma.shared.models.{Model, RelationField, RelationSide}
+import com.prisma.shared.models._
 import com.prisma.slick.NewJdbcExtensions.ReadsResultSet
 
 trait ResultSetReaders extends JdbcExtensions {
@@ -37,5 +38,19 @@ trait ResultSetReaders extends JdbcExtensions {
   private def readPrismaNode(model: Model, rs: ResultSet) = {
     val data = model.scalarNonListFields.map(field => field.name -> rs.getGcValue(field.dbName, field.typeIdentifier))
     PrismaNode(id = rs.getId(model), data = RootGCValue(data: _*), Some(model.name))
+  }
+
+  def readsScalarListField(field: ScalarField): ReadsResultSet[ScalarListElement] = ReadsResultSet { rs =>
+    val nodeId   = rs.getString(nodeIdFieldName)
+    val position = rs.getInt(positionFieldName)
+    val value    = rs.getGcValue(valueFieldName, field.typeIdentifier)
+    ScalarListElement(nodeId, position, value)
+  }
+
+  def readRelation(relation: Relation): ReadsResultSet[RelationNode] = ReadsResultSet { resultSet =>
+    RelationNode(
+      a = resultSet.getAsID("A", relation.modelA.idField_!.typeIdentifier),
+      b = resultSet.getAsID("B", relation.modelB.idField_!.typeIdentifier)
+    )
   }
 }

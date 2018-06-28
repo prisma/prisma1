@@ -18,27 +18,12 @@ case class JdbcApiDatabaseQueryBuilder(
 )(implicit ec: ExecutionContext)
     extends BuilderBase {
 
-  import JooqQueryBuilders._
   import com.prisma.slick.NewJdbcExtensions._
   import slickDatabase.profile.api._
 
   val relayIdTableQuery = {
     val bla = RelayIdTableWrapper(slickDatabase.profile)
     TableQuery(new bla.SlickTable(_, project.id))
-  }
-
-  private def readsScalarListField(field: ScalarField): ReadsResultSet[ScalarListElement] = ReadsResultSet { rs =>
-    val nodeId   = rs.getString(nodeIdFieldName)
-    val position = rs.getInt(positionFieldName)
-    val value    = rs.getGcValue(valueFieldName, field.typeIdentifier)
-    ScalarListElement(nodeId, position, value)
-  }
-
-  private def readRelation(relation: Relation): ReadsResultSet[RelationNode] = ReadsResultSet { resultSet =>
-    RelationNode(
-      a = resultSet.getAsID("A", relation.modelA.idField_!.typeIdentifier),
-      b = resultSet.getAsID("B", relation.modelB.idField_!.typeIdentifier)
-    )
   }
 
   def selectByGlobalId(idGCValue: IdGCValue): DBIO[Option[PrismaNode]] = {
