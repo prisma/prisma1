@@ -113,7 +113,8 @@ my-yoga-server
 │   ├── datamodel.graphql
 │   └── prisma.yml
 └── src
-    └── index.js
+    ├── index.js
+    └── schema.graphql
 ```
 
 <Instruction>
