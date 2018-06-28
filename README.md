@@ -190,9 +190,9 @@ Prisma servers run as standalone processes which allows for them to be scaled in
 
 ## Is Prisma an ORM?
 
-Prisma provides a mapping from your API to your database. In that sense, it solves similar problems as conventional ORMs. The big difference between Prisma and other ORMs is the way _how_ the mapping is implemented.
+Prisma provides a mapping from your API to your database. In that sense, it solves similar problems as conventional ORMs. The big difference between Prisma and other ORMs is _how_ the mapping is implemented.
 
-**Prisma takes a radically different approach which avoids the shortcomings and limitations commonly experienced with ORMs.** The core idea is that Prisma turns your database into a GraphQL API which is then consumed by your API server (via [GraphQL binding](https://oss.prisma.io/content/graphql-binding/01-overview)). While this makes Prisma particularly well-suited for building GraphQL servers, it can definetely be used in other contexts as well.
+**Prisma takes a radically different approach which avoids the shortcomings and limitations commonly experienced with ORMs.** The core idea is that Prisma turns your database into a GraphQL API which is then consumed by your API server (via [GraphQL binding](https://oss.prisma.io/content/graphql-binding/01-overview)). While this makes Prisma particularly well-suited for building GraphQL servers, it can definitely be used in other contexts as well.
 
 Here is how Prisma compares to conventional ORMs:
 
