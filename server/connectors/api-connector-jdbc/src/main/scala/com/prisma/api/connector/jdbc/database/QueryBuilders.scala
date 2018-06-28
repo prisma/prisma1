@@ -10,11 +10,11 @@ case class JooqRelationQueryBuilder(
     schemaName: String,
     relation: Relation,
     queryArguments: Option[QueryArguments]
-) extends BuilderBase {
+) extends AllBuilders {
 
   lazy val queryString: String = {
     val aliasedTable = table(name(schemaName, relation.relationTableName)).as(topLevelAlias)
-    val condition    = JooqWhereClauseBuilder(slickDatabase, schemaName).buildWhereClause(queryArguments.flatMap(_.filter)).getOrElse(trueCondition())
+    val condition    = buildConditionForFilter(queryArguments.flatMap(_.filter))
     val order        = orderByForRelation(relation, topLevelAlias, queryArguments)
     val limit        = limitClause(queryArguments)
 
@@ -38,11 +38,11 @@ case class JooqCountQueryBuilder(
     schemaName: String,
     tableName: String,
     filter: Option[Filter]
-) extends BuilderBase {
+) extends AllBuilders {
 
   lazy val queryString: String = {
     val aliasedTable = table(name(schemaName, tableName)).as(topLevelAlias)
-    val condition    = JooqWhereClauseBuilder(slickDatabase, schemaName).buildWhereClause(filter).getOrElse(trueCondition())
+    val condition    = buildConditionForFilter(filter)
 
     val query = sql
       .selectCount()
@@ -58,13 +58,13 @@ case class JooqScalarListQueryBuilder(
     schemaName: String,
     field: ScalarField,
     queryArguments: Option[QueryArguments]
-) extends BuilderBase {
+) extends AllBuilders {
   require(field.isList, "This must be called only with scalar list fields")
 
   val tableName = s"${field.model.dbName}_${field.dbName}"
   lazy val queryString: String = {
     val aliasedTable = table(name(schemaName, tableName)).as(topLevelAlias)
-    val condition    = JooqWhereClauseBuilder(slickDatabase, schemaName).buildWhereClause(queryArguments.flatMap(_.filter)).getOrElse(trueCondition())
+    val condition    = buildConditionForFilter(queryArguments.flatMap(_.filter))
     val order        = orderByForScalarListField(topLevelAlias, queryArguments)
     val limit        = limitClause(queryArguments)
 
@@ -88,7 +88,7 @@ case class JooqScalarListByUniquesQueryBuilder(
     schemaName: String,
     scalarField: ScalarField,
     nodeIds: Vector[GCValue]
-) extends BuilderBase {
+) extends AllBuilders {
   require(scalarField.isList, "This must be called only with scalar list fields")
 
   val tableName = s"${scalarField.model.dbName}_${scalarField.dbName}"
@@ -111,7 +111,7 @@ case class JooqRelatedModelsQueryBuilder(
     fromField: RelationField,
     queryArguments: Option[QueryArguments],
     relatedNodeIds: Vector[IdGCValue]
-) extends BuilderBase {
+) extends AllBuilders {
 
   val relation                        = fromField.relation
   val relatedModel                    = fromField.relatedModel_!
@@ -126,7 +126,7 @@ case class JooqRelatedModelsQueryBuilder(
   val aliasedTable            = table(name(schemaName, modelTable)).as(topLevelAlias)
   val relationTable           = table(name(schemaName, relationTableName)).as(relationTableAlias)
   val relatedNodesCondition   = field(name(relationTableAlias, modelRelationSideColumn)).in(placeHolders(relatedNodeIds))
-  val queryArgumentsCondition = JooqWhereClauseBuilder(slickDatabase, schemaName).buildWhereClause(queryArguments.flatMap(_.filter)).getOrElse(trueCondition())
+  val queryArgumentsCondition = buildConditionForFilter(queryArguments.flatMap(_.filter))
 
   val base = sql
     .select(aliasedTable.asterisk(), field(name(relationTableAlias, aColumn)).as(aSideAlias), field(name(relationTableAlias, bColumn)).as(bSideAlias))
@@ -184,10 +184,10 @@ case class JooqModelQueryBuilder(
     schemaName: String,
     model: Model,
     queryArguments: Option[QueryArguments]
-) extends BuilderBase {
+) extends AllBuilders {
 
   lazy val queryString: String = {
-    val condition       = JooqWhereClauseBuilder(slickDatabase, schemaName).buildWhereClause(queryArguments.flatMap(_.filter)).getOrElse(and(trueCondition()))
+    val condition       = buildConditionForFilter(queryArguments.flatMap(_.filter)))
     val cursorCondition = JooqWhereClauseBuilder(slickDatabase, schemaName).buildCursorCondition(queryArguments, model)
     val order           = orderByForModel(model, topLevelAlias, queryArguments)
     val limit           = limitClause(queryArguments)

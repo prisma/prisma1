@@ -21,8 +21,7 @@ import scala.concurrent.ExecutionContext
 case class JdbcApiDatabaseMutationBuilder(
     schemaName: String,
     slickDatabase: SlickDatabase
-) extends BuilderBase
-    with ImportActions {
+) extends AllBuilders {
   import slickDatabase.profile.api._
 
   // region CREATE
@@ -180,7 +179,7 @@ case class JdbcApiDatabaseMutationBuilder(
     if (map.nonEmpty) {
       SimpleDBIO { ctx =>
         val aliasedTable = modelTable(model).as(topLevelAlias)
-        val condition    = JooqWhereClauseBuilder(slickDatabase, schemaName).buildWhereClause(whereFilter).getOrElse(trueCondition())
+        val condition    = buildConditionForFilter(whereFilter)
 
         val base = sql.update(aliasedTable)
 
@@ -376,7 +375,7 @@ case class JdbcApiDatabaseMutationBuilder(
 
   def setManyScalarLists(model: Model, listFieldMap: Vector[(String, ListGCValue)], whereFilter: Option[Filter]) = {
     val idQuery = SimpleDBIO { ctx =>
-      val condition    = JooqWhereClauseBuilder(slickDatabase, schemaName).buildWhereClause(whereFilter).getOrElse(trueCondition())
+      val condition    = buildConditionForFilter(whereFilter)
       val aliasedTable = modelTable(model).as(topLevelAlias)
 
       val queryString = sql
@@ -552,7 +551,7 @@ case class JdbcApiDatabaseMutationBuilder(
 
   def queryIdsByWhereFilter(model: Model, filter: Option[Filter]): DBIO[Vector[IdGCValue]] = {
     val aliasedTable    = modelTable(model).as(topLevelAlias)
-    val filterCondition = JooqWhereClauseBuilder(slickDatabase, schemaName).buildWhereClause(filter).getOrElse(trueCondition())
+    val filterCondition = buildConditionForFilter(filter)
     val query           = sql.select(field(name(topLevelAlias, model.dbNameOfIdField_!))).from(aliasedTable).where(filterCondition)
 
     queryToDBIO(query)(
@@ -696,7 +695,7 @@ case class JdbcApiDatabaseMutationBuilder(
         sql
           .select(field(name("Alias", model.dbNameOfIdField_!)))
           .from(modelTable(model).as("Alias"))
-          .where(JooqWhereClauseBuilder(slickDatabase, schemaName).buildWhereClause(whereFilter).getOrElse(trueCondition()))
+          .where(buildConditionForFilter(whereFilter))
       })
 
     val action = queryToDBIO(query)(

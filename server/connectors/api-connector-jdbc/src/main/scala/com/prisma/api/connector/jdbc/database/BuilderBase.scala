@@ -13,6 +13,8 @@ import slick.jdbc.{MySQLProfile, PositionedParameters, PostgresProfile}
 
 import scala.collection.JavaConverters._
 
+trait AllBuilders extends BuilderBase with FilterConditionBuilder with ImportActions
+
 trait BuilderBase
     extends JooqExtensions
     with JdbcExtensions
