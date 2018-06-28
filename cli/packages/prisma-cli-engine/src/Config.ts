@@ -115,7 +115,7 @@ export class Config {
     return path.join(this.cacheDir, '/.requests.json')
   }
   findConfigDir(): null | string {
-    const configPath = findUp.sync(['.graphqlconfig', '.graphqlconfig.yml'], {
+    const configPath = findUp.sync(['.graphqlconfig', '.graphqlconfig.yml', '.graphqlconfig.yaml'], {
       cwd: this.cwd,
     })
 
