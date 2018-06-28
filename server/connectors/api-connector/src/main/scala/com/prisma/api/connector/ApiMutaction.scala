@@ -26,9 +26,7 @@ sealed trait FurtherNestedMutaction extends DatabaseMutaction {
   def nestedConnects: Vector[NestedConnect]
   def nestedDisconnects: Vector[NestedDisconnect]
 
-  override def allNestedMutactions: Vector[DatabaseMutaction] = {
-    Vector(this) ++ nestedCreates ++ nestedUpdates ++ nestedUpserts ++ nestedDeletes ++ nestedConnects ++ nestedDisconnects
-  }
+  override def allNestedMutactions = nestedCreates ++ nestedUpdates ++ nestedUpserts ++ nestedDeletes ++ nestedConnects ++ nestedDisconnects
 }
 
 sealed trait FinalMutaction extends DatabaseMutaction
