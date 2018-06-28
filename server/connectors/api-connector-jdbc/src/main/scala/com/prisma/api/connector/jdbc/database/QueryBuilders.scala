@@ -3,34 +3,11 @@ package com.prisma.api.connector.jdbc.database
 import java.sql.PreparedStatement
 
 import com.prisma.api.connector._
-import com.prisma.api.connector.jdbc.database.JooqQueryBuilders._
 import com.prisma.api.connector.jdbc.extensions.SlickExtensions
 import com.prisma.gc_values.{GCValue, IdGCValue, NullGCValue, StringGCValue}
 import com.prisma.shared.models._
-import org.jooq._
-import org.jooq.conf.Settings
-import org.jooq.impl.DSL
 import org.jooq.impl.DSL._
 import slick.jdbc.PositionedParameters
-
-object JooqQueryBuilders {
-  val topLevelAlias       = "Alias"
-  val relationTableAlias  = "RelationTable"
-  val intDummy            = 1
-  val stringDummy         = ""
-  val aSideAlias          = "__Relation__A"
-  val bSideAlias          = "__Relation__B"
-  val rowNumberAlias      = "prismaRowNumberAlias"
-  val baseTableAlias      = "prismaBaseTableAlias"
-  val rowNumberTableAlias = "prismaRowNumberTableAlias"
-  val nodeIdFieldName     = "nodeId"
-  val positionFieldName   = "position"
-  val valueFieldName      = "value"
-  val placeHolder         = "?"
-  val relayTableName      = "_RelayId"
-  val updatedAtField      = "updatedAt"
-  val createdAtField      = "createdAt"
-}
 
 case class JooqRelationQueryBuilder(
     slickDatabase: SlickDatabase,
@@ -42,7 +19,7 @@ case class JooqRelationQueryBuilder(
   lazy val queryString: String = {
     val aliasedTable = table(name(schemaName, relation.relationTableName)).as(topLevelAlias)
     val condition    = JooqWhereClauseBuilder(slickDatabase, schemaName).buildWhereClause(queryArguments.flatMap(_.filter)).getOrElse(trueCondition())
-    val order        = JooqOrderByClauseBuilder.forRelation(relation, topLevelAlias, queryArguments)
+    val order        = orderByForRelation(relation, topLevelAlias, queryArguments)
     val limit        = JooqLimitClauseBuilder.limitClause(queryArguments)
 
     val base = sql
@@ -92,7 +69,7 @@ case class JooqScalarListQueryBuilder(
   lazy val queryString: String = {
     val aliasedTable = table(name(schemaName, tableName)).as(topLevelAlias)
     val condition    = JooqWhereClauseBuilder(slickDatabase, schemaName).buildWhereClause(queryArguments.flatMap(_.filter)).getOrElse(trueCondition())
-    val order        = JooqOrderByClauseBuilder.forScalarListField(topLevelAlias, queryArguments)
+    val order        = orderByForScalarListField(topLevelAlias, queryArguments)
     val limit        = JooqLimitClauseBuilder.limitClause(queryArguments)
 
     val base = sql
@@ -162,7 +139,7 @@ case class JooqRelatedModelsQueryBuilder(
     .on(aliasColumn(relatedModel.dbNameOfIdField_!).eq(field(name(relationTableAlias, oppositeModelRelationSideColumn))))
 
   lazy val queryStringWithPagination: String = {
-    val order           = JooqOrderByClauseBuilder.internal(baseTableAlias, baseTableAlias, secondaryOrderByForPagination, queryArguments)
+    val order           = orderByInternal(baseTableAlias, baseTableAlias, secondaryOrderByForPagination, queryArguments)
     val cursorCondition = JooqWhereClauseBuilder(slickDatabase, schemaName).buildCursorCondition(queryArguments, relatedModel)
 
     val aliasedBase = base.where(relatedNodesCondition, queryArgumentsCondition, cursorCondition).asTable().as(baseTableAlias)
@@ -183,7 +160,7 @@ case class JooqRelatedModelsQueryBuilder(
 
   lazy val mysqlHack = {
     val relatedNodeCondition = field(name(relationTableAlias, modelRelationSideColumn)).equal(placeHolder)
-    val order                = JooqOrderByClauseBuilder.internal2(secondaryOrderByForPagination, queryArguments)
+    val order                = orderByInternal2(secondaryOrderByForPagination, queryArguments)
     val cursorCondition      = JooqWhereClauseBuilder(slickDatabase, schemaName).buildCursorCondition(queryArguments, relatedModel)
 
     val singleQuery =
@@ -197,7 +174,7 @@ case class JooqRelatedModelsQueryBuilder(
   }
 
   lazy val queryStringWithoutPagination: String = {
-    val order = JooqOrderByClauseBuilder.internal(topLevelAlias, relationTableAlias, oppositeModelRelationSideColumn, queryArguments)
+    val order = orderByInternal(topLevelAlias, relationTableAlias, oppositeModelRelationSideColumn, queryArguments)
     val withoutPagination = base
       .where(relatedNodesCondition, queryArgumentsCondition)
       .orderBy(order: _*)
@@ -216,7 +193,7 @@ case class JooqModelQueryBuilder(
   lazy val queryString: String = {
     val condition       = JooqWhereClauseBuilder(slickDatabase, schemaName).buildWhereClause(queryArguments.flatMap(_.filter)).getOrElse(and(trueCondition()))
     val cursorCondition = JooqWhereClauseBuilder(slickDatabase, schemaName).buildCursorCondition(queryArguments, model)
-    val order           = JooqOrderByClauseBuilder.forModel(model, topLevelAlias, queryArguments)
+    val order           = orderByForModel(model, topLevelAlias, queryArguments)
     val limit           = JooqLimitClauseBuilder.limitClause(queryArguments)
 
     val aliasedTable = table(name(schemaName, model.dbName)).as(topLevelAlias)

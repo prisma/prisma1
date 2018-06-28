@@ -2,7 +2,6 @@ package com.prisma.api.connector.jdbc.database
 
 import java.sql.{PreparedStatement, Statement}
 
-import com.prisma.api.connector.jdbc.database.JooqQueryBuilders.placeHolder
 import com.prisma.api.connector.{ImportNodes, ImportRelations, ImportScalarLists}
 import com.prisma.gc_values.{GCValue, IdGCValue, ListGCValue, NullGCValue}
 import com.prisma.shared.models.ScalarField

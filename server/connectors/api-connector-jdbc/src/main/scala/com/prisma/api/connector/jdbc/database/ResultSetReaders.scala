@@ -2,14 +2,13 @@ package com.prisma.api.connector.jdbc.database
 
 import java.sql.ResultSet
 
-import com.prisma.api.connector.jdbc.database.JooqQueryBuilders.{nodeIdFieldName, positionFieldName, valueFieldName}
 import com.prisma.api.connector.jdbc.extensions.JdbcExtensions
 import com.prisma.api.connector.{PrismaNode, PrismaNodeWithParent, RelationNode, ScalarListElement}
 import com.prisma.gc_values.RootGCValue
 import com.prisma.shared.models._
 import com.prisma.slick.NewJdbcExtensions.ReadsResultSet
 
-trait ResultSetReaders extends JdbcExtensions {
+trait ResultSetReaders extends JdbcExtensions with QueryBuilderConstants {
   val readsAsUnit: ReadsResultSet[Unit] = ReadsResultSet(_ => ())
 
   def readNodeId(model: Model) = ReadsResultSet(_.getId(model))

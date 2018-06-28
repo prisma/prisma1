@@ -13,8 +13,7 @@ import slick.jdbc.{MySQLProfile, PositionedParameters, PostgresProfile}
 
 import scala.collection.JavaConverters._
 
-trait BuilderBase extends JooqExtensions with JdbcExtensions with SlickExtensions with ResultSetReaders {
-  import JooqQueryBuilders.placeHolder
+trait BuilderBase extends JooqExtensions with JdbcExtensions with SlickExtensions with ResultSetReaders with QueryBuilderConstants with OrderByClauseBuilder {
 
   def schemaName: String
   val slickDatabase: SlickDatabase
@@ -47,7 +46,7 @@ trait BuilderBase extends JooqExtensions with JdbcExtensions with SlickExtension
   def inlineRelationColumn(relation: Relation, mani: InlineRelationManifestation)           = field(name(schemaName, relation.relationTableName, mani.referencingColumn))
   def scalarListColumn(scalarField: ScalarField, column: String)                            = field(name(schemaName, scalarListTableName(scalarField), column))
   def column(table: String, column: String)                                                 = field(name(schemaName, table, column))
-  def aliasColumn(column: String)                                                           = field(name(JooqQueryBuilders.topLevelAlias, column))
+  def aliasColumn(column: String)                                                           = field(name(topLevelAlias, column))
   def placeHolders(vector: Iterable[Any])                                                   = vector.toList.map(_ => placeHolder).asJava
   private def scalarListTableName(field: ScalarField)                                       = field.model.dbName + "_" + field.dbName
 

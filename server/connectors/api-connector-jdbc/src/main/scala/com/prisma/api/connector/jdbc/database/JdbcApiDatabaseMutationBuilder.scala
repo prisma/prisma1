@@ -23,7 +23,6 @@ case class JdbcApiDatabaseMutationBuilder(
     slickDatabase: SlickDatabase
 ) extends BuilderBase
     with ImportActions {
-  import JooqQueryBuilders._
   import slickDatabase.profile.api._
 
   // region CREATE
