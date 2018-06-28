@@ -38,7 +38,7 @@ case class JdbcDatabaseMutactionExecutor(
       case m: UpsertNode =>
         for {
           result       <- interpreterFor(m).newActionWithErrorMapped(mutationBuilder, parentId)
-          childResults <- recurse(result.asInstanceOf[UpsertDataItemResult].mutaction, parentId, mutationBuilder).map(Vector(_))
+          childResults <- recurse(result.asInstanceOf[UpsertNodeResult].result, parentId, mutationBuilder).map(Vector(_))
         } yield MutactionResults(result, childResults)
 
       case m: FurtherNestedMutaction =>

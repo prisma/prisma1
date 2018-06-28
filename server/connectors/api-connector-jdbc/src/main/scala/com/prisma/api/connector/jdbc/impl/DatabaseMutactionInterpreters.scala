@@ -439,8 +439,8 @@ case class UpsertDataItemInterpreter(mutaction: TopLevelUpsertNode) extends Data
       id <- mutationBuilder.queryIdFromWhere(mutaction.where)
     } yield
       id match {
-        case Some(_) => UpsertDataItemResult(mutaction.update)
-        case None    => UpsertDataItemResult(mutaction.create)
+        case Some(_) => UpsertNodeResult(mutaction.update, mutaction)
+        case None    => UpsertNodeResult(mutaction.create, mutaction)
       }
   }
 
@@ -475,8 +475,8 @@ case class NestedUpsertDataItemInterpreter(mutaction: NestedUpsertNode) extends 
            }
     } yield
       id match {
-        case Some(_) => UpsertDataItemResult(mutaction.update)
-        case None    => UpsertDataItemResult(mutaction.create)
+        case Some(_) => UpsertNodeResult(mutaction.update, mutaction)
+        case None    => UpsertNodeResult(mutaction.create, mutaction)
       }
   }
 

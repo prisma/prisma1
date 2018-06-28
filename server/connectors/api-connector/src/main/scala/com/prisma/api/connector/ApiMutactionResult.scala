@@ -13,7 +13,7 @@ case class UpdateNodeResult(id: IdGCValue, previousValues: PrismaNode, mutaction
   val namesOfUpdatedFields = mutaction.nonListArgs.keys ++ mutaction.listArgs.map(_._1)
 }
 case class DeleteNodeResult(id: IdGCValue, previousValues: PrismaNode, mutaction: DeleteNode) extends FurtherNestedMutactionResult
-case class UpsertDataItemResult(mutaction: DatabaseMutaction)                                 extends DatabaseMutactionResult
+case class UpsertNodeResult(result: DatabaseMutaction, mutaction: UpsertNode)                 extends DatabaseMutactionResult
 //sealed trait UpsertDataItemResult                                          extends FurtherNestedMutactionResult
 //case class UpsertNodeCreated(result: CreateDataItemResult)                 extends UpsertDataItemResult { def id = result.id }
 //case class UpsertNodeUpdated(result: UpdateItemResult)                     extends UpsertDataItemResult { def id = result.id }
