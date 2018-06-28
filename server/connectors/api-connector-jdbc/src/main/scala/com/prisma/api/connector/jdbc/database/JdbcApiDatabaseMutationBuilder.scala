@@ -23,109 +23,6 @@ import slick.jdbc.{MySQLProfile, PositionedParameters, PostgresProfile}
 import scala.collection.JavaConverters._
 import scala.concurrent.ExecutionContext
 
-trait BuilderBase extends JooqExtensions with JdbcExtensions with SlickExtensions {
-  import JooqQueryBuilders.placeHolder
-
-  def schemaName: String
-
-  val slickDatabase: SlickDatabase
-  val dialect: SQLDialect = slickDatabase.profile match {
-    case PostgresProfile => SQLDialect.POSTGRES_9_5
-    case MySQLProfile    => SQLDialect.MYSQL_5_7
-    case x               => sys.error(s"No Jooq SQLDialect for Slick profile $x configured yet")
-  }
-
-  import slickDatabase.profile.api._
-
-  val sql = DSL.using(dialect, new Settings().withRenderFormatted(true))
-
-  private val relayIdTableName = "_RelayId"
-
-  val relayIdColumn                                                                         = field(name(schemaName, relayIdTableName, "id"))
-  val relayStableIdentifierColumn                                                           = field(name(schemaName, relayIdTableName, "stableModelIdentifier"))
-  val relayTable                                                                            = table(name(schemaName, relayIdTableName))
-  def idField(model: Model)                                                                 = field(name(schemaName, model.dbName, model.dbNameOfIdField_!))
-  def modelTable(model: Model)                                                              = table(name(schemaName, model.dbName))
-  def relationTable(relation: Relation)                                                     = table(name(schemaName, relation.relationTableName))
-  def scalarListTable(field: ScalarField)                                                   = table(name(schemaName, scalarListTableName(field)))
-  def modelColumn(model: Model, scalarField: com.prisma.shared.models.Field): Field[AnyRef] = field(name(schemaName, model.dbName, scalarField.dbName))
-  def modelIdColumn(model: Model)                                                           = field(name(schemaName, model.dbName, model.dbNameOfIdField_!))
-  def relationColumn(relation: Relation, side: RelationSide.Value)                          = field(name(schemaName, relation.relationTableName, relation.columnForRelationSide(side)))
-  def relationIdColumn(relation: Relation)                                                  = field(name(schemaName, relation.relationTableName, "id"))
-  def inlineRelationColumn(relation: Relation, mani: InlineRelationManifestation)           = field(name(schemaName, relation.relationTableName, mani.referencingColumn))
-  def scalarListColumn(scalarField: ScalarField, column: String)                            = field(name(schemaName, scalarListTableName(scalarField), column))
-  def column(table: String, column: String)                                                 = field(name(schemaName, table, column))
-  def aliasColumn(column: String)                                                           = field(name(JooqQueryBuilders.topLevelAlias, column))
-  def placeHolders(vector: Iterable[Any])                                                   = vector.toList.map(_ => placeHolder).asJava
-  private def scalarListTableName(field: ScalarField)                                       = field.model.dbName + "_" + field.dbName
-
-  val isMySql = dialect.family() == SQLDialect.MYSQL
-
-  def queryToDBIO[T](query: JooqQuery)(setParams: PositionedParameters => Unit, readResult: ResultSet => T): DBIO[T] = {
-    SimpleDBIO { ctx =>
-      val ps = ctx.connection.prepareStatement(query.getSQL)
-      val pp = new PositionedParameters(ps)
-      setParams(pp)
-
-      val rs = ps.executeQuery()
-      readResult(rs)
-    }
-  }
-
-  def deleteToDBIO(query: Delete[Record])(setParams: PositionedParameters => Unit): DBIO[Unit] = {
-    SimpleDBIO { ctx =>
-      val ps = ctx.connection.prepareStatement(query.getSQL)
-      val pp = new PositionedParameters(ps)
-      setParams(pp)
-
-      ps.execute()
-    }
-  }
-
-  def updateToDBIO(query: Update[Record])(setParams: PositionedParameters => Unit): DBIO[Unit] = {
-    SimpleDBIO { ctx =>
-      val ps = ctx.connection.prepareStatement(query.getSQL)
-      val pp = new PositionedParameters(ps)
-      setParams(pp)
-
-      ps.executeUpdate()
-    }
-  }
-
-  def truncateToDBIO(query: Truncate[Record]): DBIO[Unit] = {
-    SimpleDBIO { ctx =>
-      val ps = ctx.connection.prepareStatement(query.getSQL)
-      ps.executeUpdate()
-    }
-  }
-
-  def readPrismaNodeWithParent(rf: RelationField) = ReadsResultSet { rs =>
-    val node = readPrismaNode(rf.relatedModel_!, rs)
-
-    val parentId = if (rf.relation.isSameModelRelation) {
-      val firstSide  = rs.getParentId(RelationSide.A, rf.model.idField_!.typeIdentifier)
-      val secondSide = rs.getParentId(RelationSide.B, rf.model.idField_!.typeIdentifier)
-      if (firstSide == node.id) secondSide else firstSide
-    } else {
-      val parentRelationSide = rf.relation.modelA match {
-        case x if x == rf.relatedModel_! => RelationSide.B
-        case _                           => RelationSide.A
-      }
-      rs.getParentId(parentRelationSide, rf.model.idField_!.typeIdentifier)
-    }
-    PrismaNodeWithParent(parentId, node)
-  }
-
-  def readsPrismaNode(model: Model): ReadsResultSet[PrismaNode] = ReadsResultSet { rs =>
-    readPrismaNode(model, rs)
-  }
-
-  private def readPrismaNode(model: Model, rs: ResultSet) = {
-    val data = model.scalarNonListFields.map(field => field.name -> rs.getGcValue(field.dbName, field.typeIdentifier))
-    PrismaNode(id = rs.getId(model), data = RootGCValue(data: _*), Some(model.name))
-  }
-}
-
 case class PostgresApiDatabaseMutationBuilder(
     schemaName: String,
     slickDatabase: SlickDatabase
@@ -497,7 +394,7 @@ case class PostgresApiDatabaseMutationBuilder(
       val ps = ctx.connection.prepareStatement(queryString)
       JooqSetParams.setFilter(new PositionedParameters(ps), whereFilter)
       val rs = ps.executeQuery()
-      rs.as(readId(model))
+      rs.as(readNodeId(model))
     }
 
     if (listFieldMap.isEmpty) DBIOAction.successful(()) else setManyScalarListHelper(model, listFieldMap, idQuery)
@@ -655,7 +552,7 @@ case class PostgresApiDatabaseMutationBuilder(
       .where(parentIdCondition(parentField, parentIds))
     queryToDBIO(q)(
       setParams = pp => parentIds.foreach(pp.setGcValue),
-      readResult = rs => rs.as(readId(model))
+      readResult = rs => rs.as(readNodeId(model))
     )
   }
 
@@ -666,7 +563,7 @@ case class PostgresApiDatabaseMutationBuilder(
 
     queryToDBIO(query)(
       setParams = pp => JooqSetParams.setFilter(pp, filter),
-      readResult = rs => rs.as(readId(model))
+      readResult = rs => rs.as(readNodeId(model))
     )
   }
 
@@ -822,8 +719,5 @@ case class PostgresApiDatabaseMutationBuilder(
   }
   //endregion
 
-  private val dbioUnit                          = DBIO.successful(())
-  private val readsAsUnit: ReadsResultSet[Unit] = ReadsResultSet(_ => ())
-
-  private def readId(model: Model) = ReadsResultSet(_.getId(model))
+  private val dbioUnit = DBIO.successful(())
 }
