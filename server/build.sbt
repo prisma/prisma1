@@ -124,6 +124,7 @@ lazy val connectorUtils = connectorProject("utils").dependsOn(deployConnectorPro
 
 lazy val deployConnector = connectorProject("deploy-connector")
   .dependsOn(sharedModels)
+  .dependsOn(metrics)
 
 lazy val deployConnectorMySql = connectorProject("deploy-connector-mysql")
   .dependsOn(deployConnector)
@@ -216,11 +217,7 @@ lazy val metrics = libProject("metrics")
   .dependsOn(akkaUtils)
   .settings(
     libraryDependencies ++= Seq(
-      datadogStatsd,
-      akkaHttp,
-      finagle,
-      akka,
-      librato
+      microMeter,
     )
   )
 

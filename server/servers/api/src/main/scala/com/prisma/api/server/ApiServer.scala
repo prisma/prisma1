@@ -178,7 +178,7 @@ case class ApiServer(
 
   def extractRawRequest(requestId: String)(fn: RawRequest => Route): Route = {
     optionalHeaderValueByName("Authorization") { authorizationHeader =>
-      TimeResponseDirectiveImpl(ApiMetrics).timeResponse {
+      TimeResponseDirectiveImpl.timeResponse {
         entity(as[JsValue]) { requestJson =>
           extractClientIP { clientIp =>
             respondWithHeader(RawHeader("Request-Id", requestId)) {

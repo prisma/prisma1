@@ -62,5 +62,11 @@ object InternalDatabaseSchema {
         "lastPinged" timestamp NOT NULL,
         PRIMARY KEY ("id")
       );""",
+    // CloudSecret
+    sqlu"""
+      CREATE TABLE IF NOT EXISTS "CloudSecret" (
+        "secret" varchar(255) NOT NULL,
+        PRIMARY KEY ("secret")
+      );"""
   )
 }

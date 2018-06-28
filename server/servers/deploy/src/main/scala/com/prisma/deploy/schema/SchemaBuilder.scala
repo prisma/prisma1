@@ -6,7 +6,7 @@ import com.prisma.deploy.connector.{DeployConnector, MigrationPersistence, Proje
 import com.prisma.deploy.migration.SchemaMapper
 import com.prisma.deploy.migration.inference.{MigrationStepsInferrer, SchemaInferrer}
 import com.prisma.deploy.migration.migrator.Migrator
-import com.prisma.deploy.schema.fields.{AddProjectField, DeleteProjectField, DeployField, ManualMarshallerHelpers}
+import com.prisma.deploy.schema.fields._
 import com.prisma.deploy.schema.mutations._
 import com.prisma.deploy.schema.types._
 import com.prisma.shared.models.{Project, ProjectIdEncoder}
@@ -69,7 +69,8 @@ case class SchemaBuilderImpl(
   def getMutationFields: Vector[Field[SystemUserContext, Unit]] = Vector(
     deployField,
     addProjectField,
-    deleteProjectField
+    deleteProjectField,
+    setCloudSecretField
   )
 
   val migrationStatusField: Field[SystemUserContext, Unit] = Field(
@@ -254,6 +255,21 @@ case class SchemaBuilderImpl(
             invalidationPubSub = dependencies.invalidationPublisher,
             deployConnector = dependencies.deployConnector
           ).execute
+      }
+    )
+  }
+
+  def setCloudSecretField: Field[SystemUserContext, Unit] = {
+    import SetCloudSecretField.fromInput
+    Mutation.fieldWithClientMutationId[SystemUserContext, Unit, SetCloudSecretMutationPayload, SetCloudSecretMutationInput](
+      fieldName = "setCloudSecret",
+      typeName = "SetCloudSecret",
+      inputFields = SetCloudSecretField.inputFields,
+      outputFields = List.empty,
+      mutateAndGetPayload = (args, ctx) =>
+        handleMutationResult {
+          verifyAuthOrThrow("", "", ctx.ctx.authorizationHeader)
+          SetCloudSecretMutation(args).execute
       }
     )
   }

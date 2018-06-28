@@ -98,104 +98,113 @@ export class Importer {
     token?: string,
     workspaceSlug?: string,
   ) {
-    if (!this.isDir) {
-      this.unzip()
-    }
-    let before = Date.now()
-    this.out.action.start('Validating data')
-    const files = await this.getFiles()
-    this.validateFiles(files)
-    this.out.action.stop(chalk.cyan(`${Date.now() - before}ms`))
-    before = Date.now()
-    this.out.log('\nUploading nodes...')
-    const state = this.getState()
-
-    for (const fileName of files.nodes) {
-      const n = this.getNumber(fileName)
-      if (state.nodes >= n) {
-        this.out.log(`Skipping file ${fileName} (already imported)`)
-        continue
+    try {
+      if (!this.isDir) {
+        this.unzip()
       }
-      const file = fs.readFileSync(fileName, 'utf-8')
-      const json = JSON.parse(file)
-      const result = await this.client.upload(
-        serviceName,
-        stage,
-        file,
-        token,
-        workspaceSlug,
+      let before = Date.now()
+      this.out.action.start('Validating data')
+      const files = await this.getFiles()
+      this.validateFiles(files)
+      this.out.action.stop(chalk.cyan(`${Date.now() - before}ms`))
+      before = Date.now()
+      this.out.log('\nUploading nodes...')
+      const state = this.getState()
+  
+      for (const fileName of files.nodes) {
+        const n = this.getNumber(fileName)
+        if (state.nodes >= n) {
+          this.out.log(`Skipping file ${fileName} (already imported)`)
+          continue
+        }
+        const file = fs.readFileSync(fileName, 'utf-8')
+        const json = JSON.parse(file)
+        const result = await this.client.upload(
+          serviceName,
+          stage,
+          file,
+          token,
+          workspaceSlug,
+        )
+        this.checkForErrors(result)
+        if (result.length > 0) {
+          this.out.log(this.out.getStyledJSON(result))
+          this.out.exit(1)
+        }
+  
+        state.nodes = n
+        this.saveState(state)
+      }
+      this.out.log(
+        'Uploading nodes done ' + chalk.cyan(`${Date.now() - before}ms`),
       )
-      this.checkForErrors(result)
-      if (result.length > 0) {
-        this.out.log(this.out.getStyledJSON(result))
-        this.out.exit(1)
+      before = Date.now()
+      this.out.log('\nUploading lists')
+      for (const fileName of files.lists) {
+        const n = this.getNumber(fileName)
+        if (state.lists >= n) {
+          this.out.log(`Skipping file ${fileName} (already imported)`)
+          continue
+        }
+        const file = fs.readFileSync(fileName, 'utf-8')
+        const json = JSON.parse(file)
+        const result = await this.client.upload(
+          serviceName,
+          stage,
+          file,
+          token,
+          workspaceSlug,
+        )
+        this.checkForErrors(result)
+        if (result.length > 0) {
+          this.out.log(this.out.getStyledJSON(result))
+          this.out.exit(1)
+        }
+        state.lists = n
+        this.saveState(state)
       }
-
-      state.nodes = n
-      this.saveState(state)
-    }
-    this.out.log(
-      'Uploading nodes done ' + chalk.cyan(`${Date.now() - before}ms`),
-    )
-    before = Date.now()
-    this.out.log('\nUploading lists')
-    for (const fileName of files.lists) {
-      const n = this.getNumber(fileName)
-      if (state.lists >= n) {
-        this.out.log(`Skipping file ${fileName} (already imported)`)
-        continue
-      }
-      const file = fs.readFileSync(fileName, 'utf-8')
-      const json = JSON.parse(file)
-      const result = await this.client.upload(
-        serviceName,
-        stage,
-        file,
-        token,
-        workspaceSlug,
+      this.out.log(
+        'Uploading lists done ' + chalk.cyan(`${Date.now() - before}ms`),
       )
-      this.checkForErrors(result)
-      if (result.length > 0) {
-        this.out.log(this.out.getStyledJSON(result))
-        this.out.exit(1)
+      before = Date.now()
+      this.out.log('\nUploading relations')
+      for (const fileName of files.relations) {
+        const n = this.getNumber(fileName)
+        if (state.relations >= n) {
+          this.out.log(`Skipping file ${fileName} (already imported)`)
+          continue
+        }
+        const file = fs.readFileSync(fileName, 'utf-8')
+        const json = JSON.parse(file)
+        const result = await this.client.upload(
+          serviceName,
+          stage,
+          file,
+          token,
+          workspaceSlug,
+        )
+        this.checkForErrors(result)
+        if (result.length > 0) {
+          this.out.log(this.out.getStyledJSON(result))
+          this.out.exit(1)
+        }
+        state.relations = n
+        this.saveState(state)
       }
-      state.lists = n
-      this.saveState(state)
-    }
-    this.out.log(
-      'Uploading lists done ' + chalk.cyan(`${Date.now() - before}ms`),
-    )
-    before = Date.now()
-    this.out.log('\nUploading relations')
-    for (const fileName of files.relations) {
-      const n = this.getNumber(fileName)
-      if (state.relations >= n) {
-        this.out.log(`Skipping file ${fileName} (already imported)`)
-        continue
-      }
-      const file = fs.readFileSync(fileName, 'utf-8')
-      const json = JSON.parse(file)
-      const result = await this.client.upload(
-        serviceName,
-        stage,
-        file,
-        token,
-        workspaceSlug,
+      this.saveState(defaultState)
+      this.out.log(
+        'Uploading relations done ' + chalk.cyan(`${Date.now() - before}ms`),
       )
-      this.checkForErrors(result)
-      if (result.length > 0) {
-        this.out.log(this.out.getStyledJSON(result))
-        this.out.exit(1)
+      if (!this.isDir) {
+        fs.removeSync(this.importDir)
       }
-      state.relations = n
-      this.saveState(state)
-    }
-    this.saveState(defaultState)
-    this.out.log(
-      'Uploading relations done ' + chalk.cyan(`${Date.now() - before}ms`),
-    )
-    if (!this.isDir) {
-      fs.removeSync(this.importDir)
+    } catch (e) {
+      this.out.log(
+        chalk.yellow(`Uncaught exception, cleaning up: ${e}`)
+      )
+      if (!this.isDir) {
+        fs.removeSync(this.importDir)
+      }
     }
   }
 

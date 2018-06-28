@@ -52,14 +52,6 @@ trait DeploySpecBase extends ConnectorAwareTest with BeforeAndAfterEach with Bef
     deployConnector.reset().await
   }
 
-  def formatSchema(schema: String): String = JsString(schema).toString()
-  def escapeString(str: String): String    = JsString(str).toString()
-}
-
-trait ActiveDeploySpecBase extends DeploySpecBase { self: Suite =>
-
-  override def runSuiteOnlyForActiveConnectors = true
-
   def setupProject(
       schema: String,
       stage: String = "default",
@@ -71,6 +63,14 @@ trait ActiveDeploySpecBase extends DeploySpecBase { self: Suite =>
     server.addProject(name, stage)
     server.deploySchema(name, stage, schema.stripMargin, secrets)
   }
+
+  def formatSchema(schema: String): String = JsString(schema).toString()
+  def escapeString(str: String): String    = JsString(str).toString()
+}
+
+trait ActiveDeploySpecBase extends DeploySpecBase { self: Suite =>
+
+  override def runSuiteOnlyForActiveConnectors = true
 }
 
 trait PassiveDeploySpecBase extends DeploySpecBase { self: Suite =>
