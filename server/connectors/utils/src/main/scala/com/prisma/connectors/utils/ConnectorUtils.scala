@@ -2,7 +2,7 @@ package com.prisma.connectors.utils
 
 import com.prisma.api.connector.ApiConnector
 import com.prisma.api.connector.mysql.MySqlApiConnector
-import com.prisma.api.connector.jdbc.PostgresApiConnector
+import com.prisma.api.connector.postgres.PostgresApiConnector
 import com.prisma.config.PrismaConfig
 import com.prisma.deploy.connector.DeployConnector
 import com.prisma.deploy.connector.mysql.MySqlDeployConnector
@@ -16,7 +16,7 @@ object ConnectorUtils {
     (databaseConfig.connector, databaseConfig.active) match {
       case ("mysql", true)        => MySqlApiConnector(databaseConfig)
       case ("mysql", false)       => sys.error("There is not passive mysql deploy connector yet!")
-      case ("postgres", isActive) => PostgresApiConnector(databaseConfig, createRelayIds = isActive)
+      case ("postgres", isActive) => PostgresApiConnector(databaseConfig, isActive = isActive)
       case (conn, _)              => sys.error(s"Unknown connector $conn")
     }
   }

@@ -1,15 +1,15 @@
-package com.prisma.api.connector.jdbc
+package com.prisma.api.connector.postgres
 
-import com.prisma.api.connector.{ApiConnector, NodeQueryCapability}
-import com.prisma.api.connector.jdbc.database.{Databases, JdbcDataResolver}
+import com.prisma.api.connector.jdbc.database.JdbcDataResolver
 import com.prisma.api.connector.jdbc.impl.JdbcDatabaseMutactionExecutor
+import com.prisma.api.connector.{ApiConnector, NodeQueryCapability}
 import com.prisma.config.DatabaseConfig
 import com.prisma.shared.models.{Project, ProjectIdEncoder}
 
 import scala.concurrent.{ExecutionContext, Future}
 
-case class PostgresApiConnector(config: DatabaseConfig, createRelayIds: Boolean)(implicit ec: ExecutionContext) extends ApiConnector {
-  lazy val databases = Databases.initialize(config)
+case class PostgresApiConnector(config: DatabaseConfig, isActive: Boolean)(implicit ec: ExecutionContext) extends ApiConnector {
+  lazy val databases = PostgresDatabasesFactory.initialize(config)
 
   override def initialize() = {
     databases
@@ -23,9 +23,9 @@ case class PostgresApiConnector(config: DatabaseConfig, createRelayIds: Boolean)
     } yield ()
   }
 
-  override val databaseMutactionExecutor: JdbcDatabaseMutactionExecutor = JdbcDatabaseMutactionExecutor(databases.primary, createRelayIds)
+  override val databaseMutactionExecutor: JdbcDatabaseMutactionExecutor = JdbcDatabaseMutactionExecutor(databases.primary, isActive)
   override def dataResolver(project: Project)                           = JdbcDataResolver(project, databases.primary, schemaName = None)
   override def masterDataResolver(project: Project)                     = JdbcDataResolver(project, databases.primary, schemaName = None)
   override def projectIdEncoder: ProjectIdEncoder                       = ProjectIdEncoder('$')
-  override def capabilities                                             = Vector(NodeQueryCapability)
+  override def capabilities                                             = if (isActive) Vector(NodeQueryCapability) else Vector.empty
 }

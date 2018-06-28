@@ -1,4 +1,4 @@
-package com.prisma.api.connector.mysql.database
+package com.prisma.api.connector.mysql
 
 import com.prisma.api.connector.jdbc.database.{Databases, SlickDatabase}
 import com.prisma.config.DatabaseConfig
@@ -6,7 +6,7 @@ import com.typesafe.config.{Config, ConfigFactory}
 import slick.jdbc.MySQLProfile
 import slick.jdbc.MySQLProfile.api._
 
-object MySqlDatabases {
+object MySqlDatabasesFactory {
   private lazy val dbDriver = new org.mariadb.jdbc.Driver
 
   def initialize(dbConfig: DatabaseConfig): Databases = {
