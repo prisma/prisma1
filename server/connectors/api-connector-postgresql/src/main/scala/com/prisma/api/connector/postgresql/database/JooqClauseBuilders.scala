@@ -232,4 +232,25 @@ object JooqOrderByClauseBuilder {
       case _                                                                      => throw new IllegalArgumentException
     }
   }
+
+  def internal2(secondOrderField: String, args: Option[QueryArguments]): Vector[SortField[AnyRef]] = {
+    val (first, last, orderBy) = (args.flatMap(_.first), args.flatMap(_.last), args.flatMap(_.orderBy))
+    val isReverseOrder         = last.isDefined
+    if (first.isDefined && last.isDefined) throw APIErrors.InvalidConnectionArguments()
+    // The limit instruction only works from up to down. Therefore, we have to invert order when we use before.
+    val defaultOrder = orderBy.map(_.sortOrder.toString).getOrElse("asc")
+    val secondField  = field(name(secondOrderField))
+
+    (orderBy, defaultOrder, isReverseOrder) match {
+      case (Some(order), "asc", true) if order.field.dbName != secondOrderField   => Vector(field(name(order.field.dbName)).desc(), secondField.desc())
+      case (Some(order), "desc", true) if order.field.dbName != secondOrderField  => Vector(field(name(order.field.dbName)).asc(), secondField.asc())
+      case (Some(order), "asc", false) if order.field.dbName != secondOrderField  => Vector(field(name(order.field.dbName)).asc(), secondField.asc())
+      case (Some(order), "desc", false) if order.field.dbName != secondOrderField => Vector(field(name(order.field.dbName)).desc(), secondField.desc())
+      case (_, "asc", true)                                                       => Vector(secondField.desc())
+      case (_, "desc", true)                                                      => Vector(secondField.asc())
+      case (_, "asc", false)                                                      => Vector(secondField.asc())
+      case (_, "desc", false)                                                     => Vector(secondField.desc())
+      case _                                                                      => throw new IllegalArgumentException
+    }
+  }
 }

@@ -150,22 +150,22 @@ case class JooqRelatedModelsQueryBuilder(
   val bColumn                         = relation.modelBColumn
   val secondaryOrderByForPagination   = if (fromField.oppositeRelationSide == RelationSide.A) aSideAlias else bSideAlias
 
-  val aliasedTable  = table(name(schemaName, modelTable)).as(topLevelAlias)
-  val relationTable = table(name(schemaName, relationTableName)).as(relationTableAlias)
-  val condition1    = field(name(relationTableAlias, modelRelationSideColumn)).in(Vector.fill(relatedNodeIds.length) { stringDummy }: _*)
-  val condition2    = JooqWhereClauseBuilder(slickDatabase, schemaName).buildWhereClause(queryArguments.flatMap(_.filter)).getOrElse(trueCondition())
+  val aliasedTable            = table(name(schemaName, modelTable)).as(topLevelAlias)
+  val relationTable           = table(name(schemaName, relationTableName)).as(relationTableAlias)
+  val relatedNodesCondition   = field(name(relationTableAlias, modelRelationSideColumn)).in(placeHolders(relatedNodeIds))
+  val queryArgumentsCondition = JooqWhereClauseBuilder(slickDatabase, schemaName).buildWhereClause(queryArguments.flatMap(_.filter)).getOrElse(trueCondition())
 
   val base = sql
     .select(aliasedTable.asterisk(), field(name(relationTableAlias, aColumn)).as(aSideAlias), field(name(relationTableAlias, bColumn)).as(bSideAlias))
     .from(aliasedTable)
     .innerJoin(relationTable)
-    .on(field(name(topLevelAlias, relatedModel.dbNameOfIdField_!)).eq(field(name(relationTableAlias, oppositeModelRelationSideColumn))))
+    .on(aliasColumn(relatedModel.dbNameOfIdField_!).eq(field(name(relationTableAlias, oppositeModelRelationSideColumn))))
 
   lazy val queryStringWithPagination: String = {
     val order           = JooqOrderByClauseBuilder.internal(baseTableAlias, baseTableAlias, secondaryOrderByForPagination, queryArguments)
     val cursorCondition = JooqWhereClauseBuilder(slickDatabase, schemaName).buildCursorCondition(queryArguments, relatedModel)
 
-    val aliasedBase = base.where(condition1, condition2, cursorCondition).asTable().as(baseTableAlias)
+    val aliasedBase = base.where(relatedNodesCondition, queryArgumentsCondition, cursorCondition).asTable().as(baseTableAlias)
 
     val rowNumberPart = rowNumber().over().partitionBy(aliasedBase.field(aSideAlias)).orderBy(order: _*).as(rowNumberAlias)
 
@@ -181,10 +181,25 @@ case class JooqRelatedModelsQueryBuilder(
     withPagination.getSQL
   }
 
+  lazy val mysqlHack = {
+    val relatedNodeCondition = field(name(relationTableAlias, modelRelationSideColumn)).equal(placeHolder)
+    val order                = JooqOrderByClauseBuilder.internal2(secondaryOrderByForPagination, queryArguments)
+    val cursorCondition      = JooqWhereClauseBuilder(slickDatabase, schemaName).buildCursorCondition(queryArguments, relatedModel)
+
+    val singleQuery =
+      base
+        .where(relatedNodeCondition, queryArgumentsCondition, cursorCondition)
+        .orderBy(order: _*)
+        .limit(intDummy)
+        .offset(intDummy)
+
+    singleQuery
+  }
+
   lazy val queryStringWithoutPagination: String = {
     val order = JooqOrderByClauseBuilder.internal(topLevelAlias, relationTableAlias, oppositeModelRelationSideColumn, queryArguments)
     val withoutPagination = base
-      .where(condition1, condition2)
+      .where(relatedNodesCondition, queryArgumentsCondition)
       .orderBy(order: _*)
 
     withoutPagination.getSQL
