@@ -17,7 +17,6 @@ import { spawn } from '../../spawn'
 import * as sillyname from 'sillyname'
 import { getSchemaPathFromConfig } from './getSchemaPathFromConfig'
 import * as findUp from 'find-up'
-import Up from '../local/up'
 import { EndpointDialog } from '../../utils/EndpointDialog'
 import { isDockerComposeInstalled } from '../../utils/dockerComposeInstalled'
 import { spawnSync } from 'npm-run'
@@ -308,14 +307,6 @@ ${chalk.gray(
     return `public-${this.getSillyName()}`
   }
 
-  private async localUp(): Promise<Cluster> {
-    await Up.run(this.config)
-    await this.env.load()
-    const cluster = this.env.clusterByName('local')!
-    this.env.setActiveCluster(cluster)
-    return cluster
-  }
-
   private async projectExists(
     cluster: Cluster,
     name: string,
@@ -360,7 +351,6 @@ ${chalk.gray(
     workspace: string | null,
   ): Promise<void> {
     this.deploying = true
-    const localNote = cluster.local ? ' locally' : ''
     let before = Date.now()
 
     const b = s => `\`${chalk.bold(s)}\``

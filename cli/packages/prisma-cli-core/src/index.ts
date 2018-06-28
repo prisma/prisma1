@@ -3,32 +3,16 @@ import Init from './commands/init'
 // import Auth from './commands/auth/index'
 import Info from './commands/info/index'
 import Playground from './commands/playground/index'
-// import Console from './commands/console'
 import List from './commands/list/index'
-// import Delete from './commands/delete/index'
-// import RootTokens from './commands/root-token/index'
-// import FunctionLogs from './commands/logs/function'
-import UpgradeLocal from './commands/local/upgrade'
-import Stop from './commands/local/stop'
-import Up from './commands/local/up'
-import Eject from './commands/local/eject'
-// import PsLocal from './commands/local/ps'
 import Account from './commands/account/account'
 import Reset from './commands/reset/reset'
-import ClusterList from './commands/cluster/list'
 import Import from './commands/import/index'
 import Export from './commands/export/index'
-import Nuke from './commands/local/nuke'
 import ConsoleCommand from './commands/console/index'
-import Logs from './commands/local/logs'
-import PsLocal from './commands/local/ps'
 import Token from './commands/token/token'
 import Login from './commands/login/login'
 import ClusterToken from './commands/token/cluster-token'
 import Delete from './commands/delete/index'
-import ClusterLogs from './commands/cluster/logs'
-import ClusterAdd from './commands/cluster/add'
-import ClusterRemove from './commands/cluster/remove'
 import InitPrisma from './commands/init-prisma'
 import IntrospectCommand from './commands/introspect/introspect'
 import Seed from './commands/seed/seed'
@@ -123,63 +107,36 @@ export const topics = [
 export const commands = [
   Deploy,
   Init,
-  // Auth,
   Info,
   Playground,
   ConsoleCommand,
   List,
   Seed,
   Delete,
-  Up,
-  Stop,
-  Logs,
-  UpgradeLocal,
-  Eject,
-  Nuke,
   Reset,
   Import,
   Export,
-  PsLocal,
   Token,
   Login,
   Account,
   ClusterToken,
-  ClusterList,
-  ClusterLogs,
-  ClusterAdd,
-  ClusterRemove,
   IntrospectCommand,
 ]
 
 export {
   Deploy,
   Init,
-  // Auth,
   Info,
   Playground,
-  // Console,
   List,
   Seed,
   Delete,
-  // RootTokens,
-  // FunctionLogs,
-  UpgradeLocal,
-  Stop,
-  Up,
-  Eject,
-  Logs,
-  PsLocal,
   Reset,
   Account,
   Import,
   Export,
   Token,
   Login,
-  ClusterToken,
-  ClusterList,
-  ClusterLogs,
-  ClusterAdd,
-  ClusterRemove,
   InitPrisma,
   IntrospectCommand,
 }
