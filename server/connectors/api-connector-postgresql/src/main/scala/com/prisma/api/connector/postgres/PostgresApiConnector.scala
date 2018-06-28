@@ -1,7 +1,6 @@
 package com.prisma.api.connector.postgres
 
-import com.prisma.api.connector.jdbc.database.JdbcDataResolver
-import com.prisma.api.connector.jdbc.impl.JdbcDatabaseMutactionExecutor
+import com.prisma.api.connector.jdbc.impl.{JdbcDataResolver, JdbcDatabaseMutactionExecutor}
 import com.prisma.api.connector.{ApiConnector, NodeQueryCapability}
 import com.prisma.config.DatabaseConfig
 import com.prisma.shared.models.{Project, ProjectIdEncoder}
