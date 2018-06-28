@@ -14,7 +14,7 @@ lazy val commonSettings = Seq(
   publishArtifact in Test := true,
   // We should gradually introduce https://tpolecat.github.io/2014/04/11/scalac-flags.html
   // These needs to separately be configured in Idea
-  scalacOptions ++= Seq("-deprecation", "-feature", "-Xfatal-warnings"),
+  scalacOptions ++= Seq("-deprecation", "-feature", "-Xfatal-warnings", "-language:implicitConversions"),
   resolvers ++= Seq(
     "Sonatype snapshots" at "https://oss.sonatype.org/content/repositories/snapshots/",
     "scalaz-bintray" at "http://dl.bintray.com/scalaz/releases"

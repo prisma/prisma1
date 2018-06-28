@@ -18,9 +18,7 @@ case class JdbcApiDatabaseQueryBuilder(
 )(implicit ec: ExecutionContext)
     extends BuilderBase {
 
-  import JdbcExtensions._
   import JooqQueryBuilders._
-  import SlickExtensions._
   import com.prisma.slick.NewJdbcExtensions._
   import slickDatabase.profile.api._
 

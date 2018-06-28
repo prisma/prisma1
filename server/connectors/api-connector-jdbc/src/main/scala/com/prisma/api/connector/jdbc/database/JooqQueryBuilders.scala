@@ -4,7 +4,6 @@ import java.sql.PreparedStatement
 
 import com.prisma.api.connector._
 import com.prisma.api.connector.jdbc.database.JooqQueryBuilders._
-import com.prisma.api.connector.jdbc.database.SlickExtensions._
 import com.prisma.gc_values.{GCValue, IdGCValue, NullGCValue, StringGCValue}
 import com.prisma.shared.models._
 import org.jooq._
@@ -236,7 +235,7 @@ case class JooqModelQueryBuilder(
   }
 }
 
-object JooqSetParams {
+object JooqSetParams extends SlickExtensions {
   def setQueryArgs(preparedStatement: PreparedStatement, queryArguments: Option[QueryArguments]): Unit = {
     val pp = new PositionedParameters(preparedStatement)
     queryArguments.foreach { queryArgs =>

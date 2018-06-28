@@ -4,9 +4,6 @@ import java.sql.{PreparedStatement, ResultSet, Statement}
 import java.util.Date
 
 import com.prisma.api.connector._
-import com.prisma.api.connector.jdbc.database.JdbcExtensions._
-import com.prisma.api.connector.jdbc.database.JooqExtensions._
-import com.prisma.api.connector.jdbc.database.SlickExtensions._
 import com.prisma.api.schema.APIErrors.{NodesNotConnectedError, RequiredRelationWouldBeViolated}
 import com.prisma.gc_values.{ListGCValue, NullGCValue, _}
 import com.prisma.shared.models.Manifestations.InlineRelationManifestation
@@ -25,7 +22,7 @@ import slick.jdbc.{MySQLProfile, PositionedParameters, PostgresProfile}
 import scala.collection.JavaConverters._
 import scala.concurrent.ExecutionContext
 
-trait BuilderBase {
+trait BuilderBase extends JooqExtensions with JdbcExtensions with SlickExtensions {
   import JooqQueryBuilders.placeHolder
 
   def schemaName: String

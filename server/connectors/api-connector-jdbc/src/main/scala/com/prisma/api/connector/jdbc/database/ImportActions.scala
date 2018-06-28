@@ -13,8 +13,6 @@ import scala.concurrent.ExecutionContext
 
 trait ImportActions extends BuilderBase {
 
-  import com.prisma.api.connector.jdbc.database.JdbcExtensions._
-  import com.prisma.api.connector.jdbc.database.SlickExtensions._
   import com.prisma.slick.NewJdbcExtensions._
   import slickDatabase.profile.api._
 

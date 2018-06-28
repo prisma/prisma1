@@ -9,7 +9,8 @@ import com.prisma.shared.models.{Field, Model, RelationSide, TypeIdentifier}
 import org.joda.time.{DateTime, DateTimeZone}
 import play.api.libs.json.Json
 
-object JdbcExtensions {
+trait JdbcExtensions {
+  import JdbcExtensionsValueClasses._
 
   def currentSqlTimestampUTC: Timestamp = {
     val today      = new Date()
@@ -17,7 +18,13 @@ object JdbcExtensions {
     jodaDateTimeToSqlTimestampUTC(exactlyNow)
   }
 
-  private def jodaDateTimeToSqlTimestampUTC(dateTime: DateTime): Timestamp = {
+  implicit def preparedStatementExtensions(ps: PreparedStatement): PreparedStatementExtensions = new PreparedStatementExtensions(ps)
+  implicit def resultSetExtensions(resultSet: ResultSet): ResultSetExtensions                  = new ResultSetExtensions(resultSet)
+
+}
+
+object JdbcExtensionsValueClasses {
+  def jodaDateTimeToSqlTimestampUTC(dateTime: DateTime): Timestamp = {
     val millis     = dateTime.getMillis
     val seconds    = millis / 1000
     val difference = millis - seconds * 1000
@@ -27,7 +34,7 @@ object JdbcExtensions {
     res
   }
 
-  implicit class PreparedStatementExtensions(val ps: PreparedStatement) extends AnyVal {
+  class PreparedStatementExtensions(val ps: PreparedStatement) extends AnyVal {
     def setGcValue(index: Int, value: GCValue): Unit = {
       value match {
         case v: LeafGCValue => setLeafValue(index, v)
@@ -51,7 +58,7 @@ object JdbcExtensions {
     }
   }
 
-  implicit class ResultSetExtensions(val resultSet: ResultSet) extends AnyVal {
+  class ResultSetExtensions(val resultSet: ResultSet) extends AnyVal {
 
     def getId(model: Model): IdGCValue                 = getAsID(model.idField_!)
     def getId(model: Model, column: String): IdGCValue = getAsID(column, model.idField_!.typeIdentifier)
