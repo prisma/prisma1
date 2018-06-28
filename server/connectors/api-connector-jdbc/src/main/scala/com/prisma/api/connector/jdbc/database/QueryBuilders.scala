@@ -16,7 +16,7 @@ case class JooqRelationQueryBuilder(
     val aliasedTable = table(name(schemaName, relation.relationTableName)).as(topLevelAlias)
     val condition    = JooqWhereClauseBuilder(slickDatabase, schemaName).buildWhereClause(queryArguments.flatMap(_.filter)).getOrElse(trueCondition())
     val order        = orderByForRelation(relation, topLevelAlias, queryArguments)
-    val limit        = JooqLimitClauseBuilder.limitClause(queryArguments)
+    val limit        = limitClause(queryArguments)
 
     val base = sql
       .select()
@@ -66,7 +66,7 @@ case class JooqScalarListQueryBuilder(
     val aliasedTable = table(name(schemaName, tableName)).as(topLevelAlias)
     val condition    = JooqWhereClauseBuilder(slickDatabase, schemaName).buildWhereClause(queryArguments.flatMap(_.filter)).getOrElse(trueCondition())
     val order        = orderByForScalarListField(topLevelAlias, queryArguments)
-    val limit        = JooqLimitClauseBuilder.limitClause(queryArguments)
+    val limit        = limitClause(queryArguments)
 
     val base = sql
       .select()
@@ -190,7 +190,7 @@ case class JooqModelQueryBuilder(
     val condition       = JooqWhereClauseBuilder(slickDatabase, schemaName).buildWhereClause(queryArguments.flatMap(_.filter)).getOrElse(and(trueCondition()))
     val cursorCondition = JooqWhereClauseBuilder(slickDatabase, schemaName).buildCursorCondition(queryArguments, model)
     val order           = orderByForModel(model, topLevelAlias, queryArguments)
-    val limit           = JooqLimitClauseBuilder.limitClause(queryArguments)
+    val limit           = limitClause(queryArguments)
 
     val aliasedTable = table(name(schemaName, model.dbName)).as(topLevelAlias)
 

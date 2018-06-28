@@ -97,7 +97,7 @@ case class JdbcApiDatabaseQueryBuilder(
         }
 
         if (args.exists(_.isWithPagination)) {
-          val params = JooqLimitClauseBuilder.limitClauseForWindowFunction(args)
+          val params = limitClauseForWindowFunction(args)
           pp.setInt(params._1)
           pp.setInt(params._2)
         }
@@ -137,7 +137,7 @@ case class JdbcApiDatabaseQueryBuilder(
       val ps          = ctx.connection.prepareStatement(query)
       val pp          = new PositionedParameters(ps)
       val filter      = args.flatMap(_.filter)
-      val limitParams = JooqLimitClauseBuilder.limitClause(args)
+      val limitParams = limitClause(args)
 
       distinctModelIds.foreach { id =>
         pp.setGcValue(id)

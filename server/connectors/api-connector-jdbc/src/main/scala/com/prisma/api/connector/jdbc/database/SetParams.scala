@@ -7,7 +7,7 @@ import com.prisma.api.connector.jdbc.extensions.SlickExtensions
 import com.prisma.gc_values.{NullGCValue, StringGCValue}
 import slick.jdbc.PositionedParameters
 
-object SetParams extends SlickExtensions {
+object SetParams extends SlickExtensions with LimitClauseBuilder {
   def setQueryArgs(preparedStatement: PreparedStatement, queryArguments: Option[QueryArguments]): Unit = {
     val pp = new PositionedParameters(preparedStatement)
     queryArguments.foreach { queryArgs =>
@@ -30,13 +30,13 @@ object SetParams extends SlickExtensions {
 
   def setLimit(pp: PositionedParameters, queryArguments: QueryArguments): Unit = {
     queryArguments.first.foreach { _ =>
-      val (first, second) = JooqLimitClauseBuilder.limitClause(Some(queryArguments)).get
+      val (first, second) = limitClause(Some(queryArguments)).get
       pp.setInt(first)
       pp.setInt(second)
     }
 
     queryArguments.last.foreach { _ =>
-      val (first, second) = JooqLimitClauseBuilder.limitClause(Some(queryArguments)).get
+      val (first, second) = limitClause(Some(queryArguments)).get
       pp.setInt(first)
       pp.setInt(second)
     }

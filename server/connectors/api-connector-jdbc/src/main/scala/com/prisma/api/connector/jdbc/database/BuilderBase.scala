@@ -13,7 +13,14 @@ import slick.jdbc.{MySQLProfile, PositionedParameters, PostgresProfile}
 
 import scala.collection.JavaConverters._
 
-trait BuilderBase extends JooqExtensions with JdbcExtensions with SlickExtensions with ResultSetReaders with QueryBuilderConstants with OrderByClauseBuilder {
+trait BuilderBase
+    extends JooqExtensions
+    with JdbcExtensions
+    with SlickExtensions
+    with ResultSetReaders
+    with QueryBuilderConstants
+    with OrderByClauseBuilder
+    with LimitClauseBuilder {
 
   def schemaName: String
   val slickDatabase: SlickDatabase
