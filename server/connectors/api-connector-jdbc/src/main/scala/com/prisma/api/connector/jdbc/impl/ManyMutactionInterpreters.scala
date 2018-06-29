@@ -9,20 +9,18 @@ import slick.dbio._
 
 import scala.concurrent.ExecutionContext
 
-//Fixme also switch this to fetch the Ids first
 case class DeleteDataItemsInterpreter(mutaction: DeleteNodes)(implicit ec: ExecutionContext) extends DatabaseMutactionInterpreter {
   def dbioAction(mutationBuilder: JdbcActionsBuilder, parentId: IdGCValue) =
     for {
-      _   <- checkForRequiredRelationsViolations(mutationBuilder)
-      ids <- mutationBuilder.getNodesIdsByFilter(mutaction.model, mutaction.whereFilter)
+      ids <- mutationBuilder.getNodeIdsByFilter(mutaction.model, mutaction.whereFilter)
+      _   <- checkForRequiredRelationsViolations(mutationBuilder, ids)
       _   <- mutationBuilder.deleteNodes(mutaction.model, ids)
     } yield UnitDatabaseMutactionResult
 
-  private def checkForRequiredRelationsViolations(mutationBuilder: JdbcActionsBuilder): DBIO[_] = {
-    val model                          = mutaction.model
-    val filter                         = mutaction.whereFilter
-    val fieldsWhereThisModelIsRequired = mutaction.project.schema.fieldsWhereThisModelIsRequired(model)
-    val actions                        = fieldsWhereThisModelIsRequired.map(field => mutationBuilder.errorIfNodesAreInRelationByFilter(model, filter, field))
+  private def checkForRequiredRelationsViolations(mutationBuilder: JdbcActionsBuilder, nodeIds: Vector[IdGCValue]): DBIO[_] = {
+    val fieldsWhereThisModelIsRequired = mutaction.project.schema.fieldsWhereThisModelIsRequired(mutaction.model)
+    val actions                        = fieldsWhereThisModelIsRequired.map(field => mutationBuilder.errorIfNodesAreInRelation(nodeIds, field))
+
     DBIO.sequence(actions)
   }
 }

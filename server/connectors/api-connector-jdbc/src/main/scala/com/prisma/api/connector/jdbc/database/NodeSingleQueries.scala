@@ -91,7 +91,7 @@ trait NodeSingleQueries extends BuilderBase with NodeManyQueries with FilterCond
     )
   }
 
-  def getNodesIdsByFilter(model: Model, filter: Option[Filter]): DBIO[Vector[IdGCValue]] = {
+  def getNodeIdsByFilter(model: Model, filter: Option[Filter]): DBIO[Vector[IdGCValue]] = {
     val aliasedTable    = modelTable(model).as(topLevelAlias)
     val filterCondition = buildConditionForFilter(filter)
     val query           = sql.select(field(name(topLevelAlias, model.dbNameOfIdField_!))).from(aliasedTable).where(filterCondition)

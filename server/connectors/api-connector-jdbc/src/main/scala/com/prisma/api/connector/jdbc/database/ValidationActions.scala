@@ -111,30 +111,4 @@ trait ValidationActions extends BuilderBase with FilterConditionBuilder {
       }
     }
   }
-
-  def errorIfNodesAreInRelationByFilter(model: Model, whereFilter: Option[Filter], relationField: RelationField)(implicit ec: ExecutionContext): DBIO[_] = {
-    val relation = relationField.relation
-    val query = sql
-      .select(asterisk())
-      .from(relationTable(relation))
-      .where(relationColumn(relation, relationField.relationSide).isNotNull)
-      .and(relationColumn(relation, relationField.oppositeRelationSide).in {
-        sql
-          .select(field(name("Alias", model.dbNameOfIdField_!)))
-          .from(modelTable(model).as("Alias"))
-          .where(buildConditionForFilter(whereFilter))
-      })
-
-    val action = queryToDBIO(query)(
-      setParams = pp => SetParams.setFilter(pp, whereFilter),
-      readResult = _.as(readsAsUnit)
-    )
-    action.map { result =>
-      if (result.nonEmpty) {
-        // fixme: decide which error to use
-        throw RequiredRelationWouldBeViolated(relation)
-        //        throw RelationIsRequired(field.name, field.model.name)
-      }
-    }
-  }
 }
