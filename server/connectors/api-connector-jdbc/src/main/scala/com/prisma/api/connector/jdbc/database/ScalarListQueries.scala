@@ -11,7 +11,7 @@ import slick.jdbc.PositionedParameters
 trait ScalarListQueries extends BuilderBase {
   import slickDatabase.profile.api._
 
-  def selectAllFromListTable(
+  def getScalarListValues(
       model: Model,
       field: ScalarField,
       args: Option[QueryArguments]
@@ -34,7 +34,7 @@ trait ScalarListQueries extends BuilderBase {
     }
   }
 
-  def selectFromScalarList(modelName: String, field: ScalarField, nodeIds: Vector[IdGCValue]): DBIO[Vector[ScalarListValues]] = {
+  def getScalarListValuesByNodeIds(modelName: String, field: ScalarField, nodeIds: Vector[IdGCValue]): DBIO[Vector[ScalarListValues]] = {
     SimpleDBIO[Vector[ScalarListValues]] { ctx =>
       val builder = ScalarListByUniquesQueryBuilder(slickDatabase, schemaName, field, nodeIds)
       val ps      = ctx.connection.prepareStatement(builder.queryString)

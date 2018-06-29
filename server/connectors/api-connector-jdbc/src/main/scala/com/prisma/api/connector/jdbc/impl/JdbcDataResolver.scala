@@ -50,7 +50,7 @@ case class JdbcDataResolver(
   }
 
   override def batchResolveScalarList(model: Model, listField: ScalarField, nodeIds: Vector[IdGCValue]): Future[Vector[ScalarListValues]] = {
-    val query = queryBuilder.selectFromScalarList(model.dbName, listField, nodeIds)
+    val query = queryBuilder.getScalarListValuesByNodeIds(model.dbName, listField, nodeIds)
     performWithTiming("batchResolveScalarList", slickDatabase.database.run(query))
   }
 
@@ -64,7 +64,7 @@ case class JdbcDataResolver(
   }
 
   override def loadListRowsForExport(model: Model, field: ScalarField, args: Option[QueryArguments] = None): Future[ResolverResult[ScalarListValues]] = {
-    val query = queryBuilder.selectAllFromListTable(model, field, args)
+    val query = queryBuilder.getScalarListValues(model, field, args)
     performWithTiming("loadListRowsForExport", slickDatabase.database.run(query))
   }
 
