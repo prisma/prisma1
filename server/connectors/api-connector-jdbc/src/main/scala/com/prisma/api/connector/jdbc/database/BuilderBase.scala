@@ -1,6 +1,6 @@
 package com.prisma.api.connector.jdbc.database
 
-import java.sql.ResultSet
+import java.sql.{PreparedStatement, ResultSet}
 
 import com.prisma.api.connector.jdbc.extensions.{JdbcExtensions, JooqExtensions, SlickExtensions}
 import com.prisma.shared.models.Manifestations.InlineRelationManifestation
@@ -53,50 +53,22 @@ trait BuilderBase extends JooqExtensions with JdbcExtensions with SlickExtension
   private def scalarListTableName(field: ScalarField)                                       = field.model.dbName + "_" + field.dbName
 
   def queryToDBIO[T](query: JooqQuery)(setParams: PositionedParameters => Unit, readResult: ResultSet => T): DBIO[T] = {
-    SimpleDBIO { ctx =>
-      val ps = ctx.connection.prepareStatement(query.getSQL)
-      val pp = new PositionedParameters(ps)
-      setParams(pp)
-
+    jooqToDBIO(query, setParams) { ps =>
       val rs = ps.executeQuery()
       readResult(rs)
     }
   }
+  def insertToDBIO[T](query: Insert[Record])(setParams: PositionedParameters => Unit): DBIO[Unit] = jooqToDBIO(query, setParams)(_.execute())
+  def deleteToDBIO(query: Delete[Record])(setParams: PositionedParameters => Unit): DBIO[Unit]    = jooqToDBIO(query, setParams)(_.execute())
+  def updateToDBIO(query: Update[Record])(setParams: PositionedParameters => Unit): DBIO[Unit]    = jooqToDBIO(query, setParams)(_.executeUpdate)
+  def truncateToDBIO(query: Truncate[Record]): DBIO[Unit]                                         = jooqToDBIO(query, _ => ())(_.executeUpdate())
 
-  def insertToDBIO[T](query: Insert[Record])(setParams: PositionedParameters => Unit): DBIO[Unit] = {
+  private def jooqToDBIO[T](query: JooqQuery, setParams: PositionedParameters => Unit)(statementFn: PreparedStatement => T): DBIO[T] = {
     SimpleDBIO { ctx =>
       val ps = ctx.connection.prepareStatement(query.getSQL)
       val pp = new PositionedParameters(ps)
       setParams(pp)
-
-      ps.execute()
-    }
-  }
-
-  def deleteToDBIO(query: Delete[Record])(setParams: PositionedParameters => Unit): DBIO[Unit] = {
-    SimpleDBIO { ctx =>
-      val ps = ctx.connection.prepareStatement(query.getSQL)
-      val pp = new PositionedParameters(ps)
-      setParams(pp)
-
-      ps.execute()
-    }
-  }
-
-  def updateToDBIO(query: Update[Record])(setParams: PositionedParameters => Unit): DBIO[Unit] = {
-    SimpleDBIO { ctx =>
-      val ps = ctx.connection.prepareStatement(query.getSQL)
-      val pp = new PositionedParameters(ps)
-      setParams(pp)
-
-      ps.executeUpdate()
-    }
-  }
-
-  def truncateToDBIO(query: Truncate[Record]): DBIO[Unit] = {
-    SimpleDBIO { ctx =>
-      val ps = ctx.connection.prepareStatement(query.getSQL)
-      ps.executeUpdate()
+      statementFn(ps)
     }
   }
 }
