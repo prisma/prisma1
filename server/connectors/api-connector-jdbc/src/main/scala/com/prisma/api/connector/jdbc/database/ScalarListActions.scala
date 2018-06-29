@@ -5,7 +5,6 @@ import java.sql.PreparedStatement
 import com.prisma.api.connector.Filter
 import com.prisma.gc_values.{IdGCValue, ListGCValue}
 import com.prisma.shared.models.Model
-import org.jooq.impl.DSL.{field, name, table}
 import slick.dbio.DBIOAction
 import slick.jdbc.PositionedParameters
 
@@ -66,38 +65,33 @@ trait ScalarListActions extends BuilderBase with FilterConditionBuilder {
 
           listFieldMap.foreach {
             case (fieldName, listGCValue) =>
-              val dbNameOfField = model.getFieldByName_!(fieldName).dbName
-              val tableName     = s"${model.dbName}_$dbNameOfField"
-
-              val condition = ids.length match {
-                case 1 => field(name(schemaName, tableName, nodeIdFieldName)).equal(placeHolder)
-                case _ => field(name(schemaName, tableName, nodeIdFieldName)).in(ids.map(_ => placeHolder): _*)
-              }
+              val scalarField = model.getScalarFieldByName_!(fieldName)
+              val table       = scalarListTable(scalarField)
 
               val wipe = sql
-                .deleteFrom(table(name(schemaName, tableName)))
-                .where(condition)
+                .deleteFrom(table)
+                .where(scalarListColumn(scalarField, nodeIdFieldName).in(placeHolders(ids)))
                 .getSQL
 
               val wipeOldValues: PreparedStatement = x.connection.prepareStatement(wipe)
-              ids.zipWithIndex.foreach { zip =>
-                wipeOldValues.setGcValue(zip._2 + 1, zip._1)
-              }
+              val pp                               = new PositionedParameters(wipeOldValues)
+              ids.foreach(pp.setGcValue)
 
               wipeOldValues.executeUpdate()
 
               val insert = sql
-                .insertInto(table(name(schemaName, tableName)))
+                .insertInto(table)
                 .columns(
-                  field(name(schemaName, tableName, nodeIdFieldName)),
-                  field(name(schemaName, tableName, positionFieldName)),
-                  field(name(schemaName, tableName, valueFieldName))
+                  scalarListColumn(scalarField, nodeIdFieldName),
+                  scalarListColumn(scalarField, positionFieldName),
+                  scalarListColumn(scalarField, valueFieldName)
                 )
                 .values(placeHolder, placeHolder, placeHolder)
                 .getSQL
 
               val insertNewValues: PreparedStatement = x.connection.prepareStatement(insert)
               val newValueTuples                     = valueTuplesForListField(listGCValue)
+
               newValueTuples.foreach { tuple =>
                 insertNewValues.setGcValue(1, tuple._1)
                 insertNewValues.setInt(2, tuple._2)
