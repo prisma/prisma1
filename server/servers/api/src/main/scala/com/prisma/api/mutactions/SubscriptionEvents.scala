@@ -19,7 +19,7 @@ object SubscriptionEvents {
     }
   }
 
-  def fromCreateResult(project: Project, mutationId: Id, result: CreateNodeResult): PublishSubscriptionEvent = {
+  private def fromCreateResult(project: Project, mutationId: Id, result: CreateNodeResult): PublishSubscriptionEvent = {
     val model = result.mutaction.model
     PublishSubscriptionEvent(
       project = project,
@@ -28,7 +28,7 @@ object SubscriptionEvents {
     )
   }
 
-  def fromUpdateResult(project: Project, mutationId: Id, result: UpdateNodeResult): PublishSubscriptionEvent = {
+  private def fromUpdateResult(project: Project, mutationId: Id, result: UpdateNodeResult): PublishSubscriptionEvent = {
     val previousValues: Map[String, Any] = result.previousValues.data
       .filterValues(_ != NullGCValue)
       .toMapStringAny + ("id" -> result.previousValues.id.value)
@@ -48,7 +48,7 @@ object SubscriptionEvents {
     )
   }
 
-  def fromDeleteResult(project: Project, mutationId: Id, result: DeleteNodeResult): PublishSubscriptionEvent = {
+  private def fromDeleteResult(project: Project, mutationId: Id, result: DeleteNodeResult): PublishSubscriptionEvent = {
     val previousValues = result.previousValues.data.filterValues(_ != NullGCValue).toMapStringAny + ("id" -> result.id)
     val model          = result.mutaction.model
 

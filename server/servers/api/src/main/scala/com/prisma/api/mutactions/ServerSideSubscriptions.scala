@@ -26,7 +26,7 @@ object ServerSideSubscriptions {
     result
   }
 
-  def extractFromCreateMutactions(
+  private def extractFromCreateMutactions(
       project: Project,
       mutactionResults: Vector[CreateNodeResult],
       requestId: Id
@@ -46,7 +46,7 @@ object ServerSideSubscriptions {
     }
   }
 
-  def extractFromUpdateMutactions(
+  private def extractFromUpdateMutactions(
       project: Project,
       mutactionResults: Vector[UpdateNodeResult],
       requestId: Id
@@ -69,7 +69,7 @@ object ServerSideSubscriptions {
 
   }
 
-  def extractFromDeleteMutactions(
+  private def extractFromDeleteMutactions(
       project: Project,
       mutactionResults: Vector[DeleteNodeResult],
       requestId: Id
