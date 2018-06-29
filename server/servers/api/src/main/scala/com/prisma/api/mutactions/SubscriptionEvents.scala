@@ -11,7 +11,7 @@ object SubscriptionEvents {
       project: Project,
       mutationId: Id,
       mutactionResults: MutactionResults
-  )(implicit apiDependencies: ApiDependencies): Vector[PublishSubscriptionEvent] = {
+  ): Vector[PublishSubscriptionEvent] = {
     mutactionResults.allResults.collect {
       case result: CreateNodeResult => fromCreateResult(project, mutationId, result)
       case result: UpdateNodeResult => fromUpdateResult(project, mutationId, result)
