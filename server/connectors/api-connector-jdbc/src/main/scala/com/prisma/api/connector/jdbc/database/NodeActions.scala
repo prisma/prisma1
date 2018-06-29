@@ -147,7 +147,7 @@ trait NodeActions extends BuilderBase with FilterConditionBuilder with ScalarLis
   def deleteNodes(model: Model, ids: Vector[IdGCValue])(implicit ec: ExecutionContext): DBIO[Unit] = {
     for {
       _ <- deleteScalarListEntriesByIds(model, ids)
-      _ <- deleteRelayRowsByIds(ids)
+      _ <- deleteRelayIds(ids)
       _ <- deleteNodesByIds(model, ids)
     } yield ()
   }

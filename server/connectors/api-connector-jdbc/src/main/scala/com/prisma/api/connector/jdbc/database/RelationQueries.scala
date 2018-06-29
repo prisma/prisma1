@@ -8,7 +8,7 @@ import com.prisma.shared.models.Relation
 trait RelationQueries extends BuilderBase {
   import slickDatabase.profile.api._
 
-  def selectAllFromRelationTable(
+  def getRelationNodes(
       relation: Relation,
       args: Option[QueryArguments]
   ): DBIO[ResolverResult[RelationNode]] = {

@@ -8,7 +8,7 @@ import com.prisma.shared.models.Model
 trait RelayIdActions extends BuilderBase {
   import slickDatabase.profile.api._
 
-  def createRelayRowById(model: Model, id: IdGCValue): DBIO[_] = {
+  def createRelayId(model: Model, id: IdGCValue): DBIO[_] = {
     SimpleDBIO[Boolean] { x =>
       lazy val queryString: String = {
         sql
@@ -26,7 +26,7 @@ trait RelayIdActions extends BuilderBase {
     }
   }
 
-  def deleteRelayRowsByIds(ids: Vector[IdGCValue]): DBIO[Unit] = {
+  def deleteRelayIds(ids: Vector[IdGCValue]): DBIO[Unit] = {
     val query = sql
       .deleteFrom(relayTable)
       .where(relayIdColumn.in(placeHolders(ids)))

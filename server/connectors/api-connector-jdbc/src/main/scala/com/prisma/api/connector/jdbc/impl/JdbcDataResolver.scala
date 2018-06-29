@@ -70,7 +70,7 @@ case class JdbcDataResolver(
 
   override def loadRelationRowsForExport(relationId: String, args: Option[QueryArguments] = None): Future[ResolverResult[RelationNode]] = {
     val relation = project.schema.relations.find(_.relationTableName == relationId).get
-    val query    = queryBuilder.selectAllFromRelationTable(relation, args)
+    val query    = queryBuilder.getRelationNodes(relation, args)
     performWithTiming("loadRelationRowsForExport", slickDatabase.database.run(query))
   }
 

@@ -24,7 +24,7 @@ case class CreateNodeInterpreter(
     for {
       id <- mutationBuilder.createNode(model, mutaction.nonListArgs)
       _  <- mutationBuilder.setScalarListById(model, id, mutaction.listArgs)
-      _  <- if (includeRelayRow) mutationBuilder.createRelayRowById(model, id) else DBIO.successful(())
+      _  <- if (includeRelayRow) mutationBuilder.createRelayId(model, id) else DBIO.successful(())
     } yield CreateNodeResult(id, mutaction)
   }
 
@@ -57,7 +57,7 @@ case class NestedCreateNodeInterpreter(
       _  <- DBIO.seq(requiredCheck(parentId), removalAction(parentId))
       id <- createNodeAndConnectToParent(mutationBuilder, parentId)
       _  <- mutationBuilder.setScalarListById(model, id, mutaction.listArgs)
-      _  <- if (includeRelayRow) mutationBuilder.createRelayRowById(model, id) else DBIO.successful(())
+      _  <- if (includeRelayRow) mutationBuilder.createRelayId(model, id) else DBIO.successful(())
     } yield CreateNodeResult(id, mutaction)
   }
 
