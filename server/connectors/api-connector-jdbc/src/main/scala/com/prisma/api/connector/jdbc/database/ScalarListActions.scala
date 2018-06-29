@@ -13,7 +13,6 @@ trait ScalarListActions extends BuilderBase with FilterConditionBuilder {
   import slickDatabase.profile.api._
 
   def deleteScalarListValuesByNodeIds(model: Model, ids: Vector[IdGCValue]): DBIO[Unit] = {
-
     val actions = model.scalarListFields.map { listField =>
       val query = sql
         .deleteFrom(scalarListTable(listField))
@@ -31,21 +30,18 @@ trait ScalarListActions extends BuilderBase with FilterConditionBuilder {
   }
 
   def setScalarListValuesByFilter(model: Model, listFieldMap: Vector[(String, ListGCValue)], whereFilter: Option[Filter]) = {
-    val idQuery = SimpleDBIO { ctx =>
-      val condition    = buildConditionForFilter(whereFilter)
-      val aliasedTable = modelTable(model).as(topLevelAlias)
+    val condition    = buildConditionForFilter(whereFilter)
+    val aliasedTable = modelTable(model).as(topLevelAlias)
 
-      val queryString = sql
-        .select(aliasColumn(model.dbNameOfIdField_!))
-        .from(aliasedTable)
-        .where(condition)
-        .getSQL
+    val query = sql
+      .select(aliasColumn(model.dbNameOfIdField_!))
+      .from(aliasedTable)
+      .where(condition)
 
-      val ps = ctx.connection.prepareStatement(queryString)
-      SetParams.setFilter(new PositionedParameters(ps), whereFilter)
-      val rs = ps.executeQuery()
-      rs.as(readNodeId(model))
-    }
+    val idQuery = queryToDBIO(query)(
+      setParams = pp => SetParams.setFilter(pp, whereFilter),
+      readResult = rs => rs.readWith(readNodeId(model))
+    )
 
     if (listFieldMap.isEmpty) DBIOAction.successful(()) else setManyScalarListHelper(model, listFieldMap, idQuery)
   }
