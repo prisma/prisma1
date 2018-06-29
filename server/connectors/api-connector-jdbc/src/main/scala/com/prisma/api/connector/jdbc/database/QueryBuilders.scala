@@ -67,7 +67,7 @@ case class ScalarListQueryBuilder(
   require(field.isList, "This must be called only with scalar list fields")
 
   val tableName = s"${field.model.dbName}_${field.dbName}"
-  lazy val queryString: String = {
+  lazy val query = {
     val aliasedTable = table(name(schemaName, tableName)).as(topLevelAlias)
     val condition    = buildConditionForFilter(queryArguments.flatMap(_.filter))
     val order        = orderByForScalarListField(topLevelAlias, queryArguments)
@@ -84,7 +84,7 @@ case class ScalarListQueryBuilder(
       case None    => base
     }
 
-    finalQuery.getSQL
+    finalQuery
   }
 }
 
@@ -97,7 +97,7 @@ case class ScalarListByUniquesQueryBuilder(
   require(scalarField.isList, "This must be called only with scalar list fields")
 
   val tableName = s"${scalarField.model.dbName}_${scalarField.dbName}"
-  lazy val queryString: String = {
+  lazy val query = {
     val nodeIdField = field(name(schemaName, tableName, nodeIdFieldName))
 
     val condition = nodeIdField.in(Vector.fill(nodeIds.length) { stringDummy }: _*)
@@ -106,7 +106,7 @@ case class ScalarListByUniquesQueryBuilder(
       .from(table(name(schemaName, tableName)))
       .where(condition)
 
-    query.getSQL
+    query
   }
 }
 
