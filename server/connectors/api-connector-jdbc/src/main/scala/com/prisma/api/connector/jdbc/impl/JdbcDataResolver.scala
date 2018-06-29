@@ -56,7 +56,7 @@ case class JdbcDataResolver(
   }
 
   override def getScalarListValuesByNodeIds(model: Model, listField: ScalarField, nodeIds: Vector[IdGCValue]): Future[Vector[ScalarListValues]] = {
-    val query = queryBuilder.getScalarListValuesByNodeIds(model.dbName, listField, nodeIds)
+    val query = queryBuilder.getScalarListValuesByNodeIds(listField, nodeIds)
     performWithTiming("batchResolveScalarList", slickDatabase.database.run(query))
   }
 

@@ -28,7 +28,7 @@ trait ScalarListQueries extends BuilderBase {
     )
   }
 
-  def getScalarListValuesByNodeIds(modelName: String, field: ScalarField, nodeIds: Vector[IdGCValue]): DBIO[Vector[ScalarListValues]] = {
+  def getScalarListValuesByNodeIds(field: ScalarField, nodeIds: Vector[IdGCValue]): DBIO[Vector[ScalarListValues]] = {
     val builder = ScalarListByUniquesQueryBuilder(slickDatabase, schemaName, field, nodeIds)
     queryToDBIO(builder.query)(
       setParams = pp => nodeIds.foreach(pp.setGcValue),
