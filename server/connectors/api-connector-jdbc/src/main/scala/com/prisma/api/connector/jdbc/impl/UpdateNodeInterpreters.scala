@@ -3,21 +3,24 @@ package com.prisma.api.connector.jdbc.impl
 import java.sql.SQLIntegrityConstraintViolationException
 
 import com.prisma.api.connector._
-import com.prisma.api.connector.jdbc.DatabaseMutactionInterpreter
+import com.prisma.api.connector.jdbc.{NestedDatabaseMutactionInterpreter, TopLevelDatabaseMutactionInterpreter}
 import com.prisma.api.connector.jdbc.database.JdbcActionsBuilder
 import com.prisma.api.schema.APIErrors
 import com.prisma.gc_values.{IdGCValue, ListGCValue, RootGCValue}
 import com.prisma.shared.models.Model
 import org.postgresql.util.PSQLException
 import slick.dbio._
+
 import scala.concurrent.ExecutionContext
 
-case class UpdateNodeInterpreter(mutaction: TopLevelUpdateNode)(implicit ec: ExecutionContext) extends DatabaseMutactionInterpreter with SharedUpdateLogic {
+case class UpdateNodeInterpreter(mutaction: TopLevelUpdateNode)(implicit ec: ExecutionContext)
+    extends TopLevelDatabaseMutactionInterpreter
+    with SharedUpdateLogic {
   val model             = mutaction.where.model
   val nonListArgs       = mutaction.nonListArgs
   override def listArgs = mutaction.listArgs
 
-  override def dbioAction(mutationBuilder: JdbcActionsBuilder, parent: IdGCValue) = {
+  override def dbioAction(mutationBuilder: JdbcActionsBuilder) = {
     for {
       nodeOpt <- mutationBuilder.getNodeByWhere(mutaction.where)
       node <- nodeOpt match {
@@ -48,7 +51,9 @@ case class UpdateNodeInterpreter(mutaction: TopLevelUpdateNode)(implicit ec: Exe
   }
 }
 
-case class NestedUpdateNodeInterpreter(mutaction: NestedUpdateNode)(implicit ec: ExecutionContext) extends DatabaseMutactionInterpreter with SharedUpdateLogic {
+case class NestedUpdateNodeInterpreter(mutaction: NestedUpdateNode)(implicit ec: ExecutionContext)
+    extends NestedDatabaseMutactionInterpreter
+    with SharedUpdateLogic {
   val model       = mutaction.relationField.relatedModel_!
   val parent      = mutaction.relationField.model
   val nonListArgs = mutaction.nonListArgs

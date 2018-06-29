@@ -1,6 +1,6 @@
 package com.prisma.api.connector.jdbc.impl
 
-import com.prisma.api.connector.jdbc.DatabaseMutactionInterpreter
+import com.prisma.api.connector.jdbc.NestedDatabaseMutactionInterpreter
 import com.prisma.api.connector.jdbc.database.JdbcActionsBuilder
 import com.prisma.api.schema.APIErrors.RequiredRelationWouldBeViolated
 import com.prisma.gc_values.IdGCValue
@@ -9,7 +9,7 @@ import slick.dbio.DBIO
 
 import scala.concurrent.ExecutionContext
 
-trait NestedRelationInterpreterBase extends DatabaseMutactionInterpreter {
+trait NestedRelationInterpreterBase extends NestedDatabaseMutactionInterpreter {
   def relationField: RelationField
   def relation: Relation = relationField.relation
   val p                  = relationField

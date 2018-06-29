@@ -1,27 +1,26 @@
 package com.prisma.api.connector.jdbc.impl
 
-import com.prisma.api.connector.{DatabaseMutactionResult, ImportNodes, ImportRelations, ImportScalarLists}
-import com.prisma.api.connector.jdbc.DatabaseMutactionInterpreter
+import com.prisma.api.connector.jdbc.TopLevelDatabaseMutactionInterpreter
 import com.prisma.api.connector.jdbc.database.JdbcActionsBuilder
-import com.prisma.gc_values.IdGCValue
+import com.prisma.api.connector.{DatabaseMutactionResult, ImportNodes, ImportRelations, ImportScalarLists}
 import slick.dbio.DBIO
 
 import scala.concurrent.ExecutionContext
 
-case class ImportNodesInterpreter(mutaction: ImportNodes) extends DatabaseMutactionInterpreter {
-  override protected def dbioAction(mutationBuilder: JdbcActionsBuilder, parentId: IdGCValue): DBIO[DatabaseMutactionResult] = {
+case class ImportNodesInterpreter(mutaction: ImportNodes) extends TopLevelDatabaseMutactionInterpreter {
+  override protected def dbioAction(mutationBuilder: JdbcActionsBuilder): DBIO[DatabaseMutactionResult] = {
     mutationBuilder.importNodes(mutaction).andThen(unitResult)
   }
 }
 
-case class ImportRelationsInterpreter(mutaction: ImportRelations) extends DatabaseMutactionInterpreter {
-  override protected def dbioAction(mutationBuilder: JdbcActionsBuilder, parentId: IdGCValue): DBIO[DatabaseMutactionResult] = {
+case class ImportRelationsInterpreter(mutaction: ImportRelations) extends TopLevelDatabaseMutactionInterpreter {
+  override protected def dbioAction(mutationBuilder: JdbcActionsBuilder): DBIO[DatabaseMutactionResult] = {
     mutationBuilder.importRelations(mutaction).andThen(unitResult)
   }
 }
 
-case class ImportScalarListsInterpreter(mutaction: ImportScalarLists)(implicit ec: ExecutionContext) extends DatabaseMutactionInterpreter {
-  override protected def dbioAction(mutationBuilder: JdbcActionsBuilder, parentId: IdGCValue): DBIO[DatabaseMutactionResult] = {
+case class ImportScalarListsInterpreter(mutaction: ImportScalarLists)(implicit ec: ExecutionContext) extends TopLevelDatabaseMutactionInterpreter {
+  override protected def dbioAction(mutationBuilder: JdbcActionsBuilder): DBIO[DatabaseMutactionResult] = {
     mutationBuilder.importScalarLists(mutaction).andThen(unitResult)
   }
 }

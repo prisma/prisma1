@@ -4,6 +4,8 @@ import com.prisma.gc_values.{IdGCValue, ListGCValue}
 import com.prisma.shared.models.ModelMutationType.ModelMutationType
 import com.prisma.shared.models._
 
+import scala.collection.immutable
+
 sealed trait ApiMutaction
 
 // DATABASE MUTACTIONS
@@ -26,7 +28,9 @@ sealed trait FurtherNestedMutaction extends DatabaseMutaction {
   def nestedConnects: Vector[NestedConnect]
   def nestedDisconnects: Vector[NestedDisconnect]
 
-  override def allNestedMutactions = nestedCreates ++ nestedUpdates ++ nestedUpserts ++ nestedDeletes ++ nestedConnects ++ nestedDisconnects
+  override def allNestedMutactions: Vector[NestedDatabaseMutaction] = {
+    nestedCreates ++ nestedUpdates ++ nestedUpserts ++ nestedDeletes ++ nestedConnects ++ nestedDisconnects
+  }
 }
 
 sealed trait FinalMutaction extends DatabaseMutaction

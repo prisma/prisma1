@@ -1,7 +1,7 @@
 package com.prisma.api.connector.jdbc.impl
 
 import com.prisma.api.connector.{NestedUpsertNode, TopLevelUpsertNode, UpsertNodeResult}
-import com.prisma.api.connector.jdbc.DatabaseMutactionInterpreter
+import com.prisma.api.connector.jdbc.{NestedDatabaseMutactionInterpreter, TopLevelDatabaseMutactionInterpreter}
 import com.prisma.api.connector.jdbc.database.JdbcActionsBuilder
 import com.prisma.api.connector.jdbc.impl.GetFieldFromSQLUniqueException.getFieldOption
 import com.prisma.api.schema.{APIErrors, UserFacingError}
@@ -10,11 +10,11 @@ import org.postgresql.util.PSQLException
 
 import scala.concurrent.ExecutionContext
 
-case class UpsertDataItemInterpreter(mutaction: TopLevelUpsertNode)(implicit ec: ExecutionContext) extends DatabaseMutactionInterpreter {
+case class UpsertDataItemInterpreter(mutaction: TopLevelUpsertNode)(implicit ec: ExecutionContext) extends TopLevelDatabaseMutactionInterpreter {
   val model   = mutaction.where.model
   val project = mutaction.project
 
-  override def dbioAction(mutationBuilder: JdbcActionsBuilder, parentId: IdGCValue) = {
+  override def dbioAction(mutationBuilder: JdbcActionsBuilder) = {
     for {
       id <- mutationBuilder.getNodeIdByWhere(mutaction.where)
     } yield
@@ -36,7 +36,7 @@ case class UpsertDataItemInterpreter(mutaction: TopLevelUpsertNode)(implicit ec:
   }
 }
 
-case class NestedUpsertDataItemInterpreter(mutaction: NestedUpsertNode)(implicit ec: ExecutionContext) extends DatabaseMutactionInterpreter {
+case class NestedUpsertDataItemInterpreter(mutaction: NestedUpsertNode)(implicit ec: ExecutionContext) extends NestedDatabaseMutactionInterpreter {
   val model = mutaction.relationField.relatedModel_!
 
   override def dbioAction(mutationBuilder: JdbcActionsBuilder, parentId: IdGCValue) = {

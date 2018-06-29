@@ -3,7 +3,7 @@ package com.prisma.api.connector.jdbc.impl
 import java.sql.SQLIntegrityConstraintViolationException
 
 import com.prisma.api.connector._
-import com.prisma.api.connector.jdbc.DatabaseMutactionInterpreter
+import com.prisma.api.connector.jdbc.{NestedDatabaseMutactionInterpreter, TopLevelDatabaseMutactionInterpreter}
 import com.prisma.api.connector.jdbc.database.JdbcActionsBuilder
 import com.prisma.api.schema.APIErrors
 import com.prisma.gc_values.{IdGCValue, RootGCValue}
@@ -17,10 +17,10 @@ case class CreateNodeInterpreter(
     mutaction: CreateNode,
     includeRelayRow: Boolean = true
 )(implicit ec: ExecutionContext)
-    extends DatabaseMutactionInterpreter {
+    extends TopLevelDatabaseMutactionInterpreter {
   val model = mutaction.model
 
-  override def dbioAction(mutationBuilder: JdbcActionsBuilder, parentId: IdGCValue): DBIO[DatabaseMutactionResult] = {
+  override def dbioAction(mutationBuilder: JdbcActionsBuilder): DBIO[DatabaseMutactionResult] = {
     for {
       id <- mutationBuilder.createNode(model, mutaction.nonListArgs)
       _  <- mutationBuilder.setScalarListValuesByNodeId(model, id, mutaction.listArgs)
@@ -45,7 +45,7 @@ case class NestedCreateNodeInterpreter(
     mutaction: NestedCreateNode,
     includeRelayRow: Boolean = true
 )(implicit val ec: ExecutionContext)
-    extends DatabaseMutactionInterpreter
+    extends NestedDatabaseMutactionInterpreter
     with NestedRelationInterpreterBase {
 
   override def relationField = mutaction.relationField

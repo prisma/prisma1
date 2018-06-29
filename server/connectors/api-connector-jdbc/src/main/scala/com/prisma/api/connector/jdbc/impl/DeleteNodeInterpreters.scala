@@ -1,7 +1,7 @@
 package com.prisma.api.connector.jdbc.impl
 
 import com.prisma.api.connector._
-import com.prisma.api.connector.jdbc.DatabaseMutactionInterpreter
+import com.prisma.api.connector.jdbc.{NestedDatabaseMutactionInterpreter, TopLevelDatabaseMutactionInterpreter}
 import com.prisma.api.connector.jdbc.database.JdbcActionsBuilder
 import com.prisma.api.schema.APIErrors
 import com.prisma.api.schema.APIErrors.NodesNotConnectedError
@@ -12,12 +12,12 @@ import slick.dbio._
 import scala.concurrent.ExecutionContext
 
 case class DeleteNodeInterpreter(mutaction: TopLevelDeleteNode)(implicit val ec: ExecutionContext)
-    extends DatabaseMutactionInterpreter
+    extends TopLevelDatabaseMutactionInterpreter
     with CascadingDeleteSharedStuff {
 
   override def schema = mutaction.where.model.schema
 
-  override def dbioAction(mutationBuilder: JdbcActionsBuilder, parentId: IdGCValue) = {
+  override def dbioAction(mutationBuilder: JdbcActionsBuilder) = {
     for {
       nodeOpt <- mutationBuilder.getNodeByWhere(mutaction.where)
       node <- nodeOpt match {
@@ -41,7 +41,7 @@ case class DeleteNodeInterpreter(mutaction: TopLevelDeleteNode)(implicit val ec:
 }
 
 case class NestedDeleteNodeInterpreter(mutaction: NestedDeleteNode)(implicit val ec: ExecutionContext)
-    extends DatabaseMutactionInterpreter
+    extends NestedDatabaseMutactionInterpreter
     with CascadingDeleteSharedStuff {
 
   override def schema = mutaction.project.schema
@@ -88,7 +88,7 @@ case class NestedDeleteNodeInterpreter(mutaction: NestedDeleteNode)(implicit val
   }
 }
 
-trait CascadingDeleteSharedStuff extends DatabaseMutactionInterpreter {
+trait CascadingDeleteSharedStuff {
   def schema: Schema
   implicit def ec: ExecutionContext
 

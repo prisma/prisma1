@@ -1,7 +1,7 @@
 package com.prisma.api.connector.jdbc.impl
 
 import com.prisma.api.connector._
-import com.prisma.api.connector.jdbc.DatabaseMutactionInterpreter
+import com.prisma.api.connector.jdbc.{NestedDatabaseMutactionInterpreter, TopLevelDatabaseMutactionInterpreter}
 import com.prisma.api.connector.jdbc.database.JdbcActionsBuilder
 import com.prisma.gc_values.IdGCValue
 import slick.dbio.DBIOAction
@@ -9,8 +9,9 @@ import slick.dbio._
 
 import scala.concurrent.ExecutionContext
 
-case class DeleteDataItemsInterpreter(mutaction: DeleteNodes)(implicit ec: ExecutionContext) extends DatabaseMutactionInterpreter {
-  def dbioAction(mutationBuilder: JdbcActionsBuilder, parentId: IdGCValue) =
+case class DeleteDataItemsInterpreter(mutaction: DeleteNodes)(implicit ec: ExecutionContext) extends TopLevelDatabaseMutactionInterpreter {
+
+  def dbioAction(mutationBuilder: JdbcActionsBuilder) =
     for {
       ids <- mutationBuilder.getNodeIdsByFilter(mutaction.model, mutaction.whereFilter)
       _   <- checkForRequiredRelationsViolations(mutationBuilder, ids)
@@ -25,14 +26,14 @@ case class DeleteDataItemsInterpreter(mutaction: DeleteNodes)(implicit ec: Execu
   }
 }
 
-case class ResetDataInterpreter(mutaction: ResetData) extends DatabaseMutactionInterpreter {
-  def dbioAction(mutationBuilder: JdbcActionsBuilder, parentId: IdGCValue) = {
+case class ResetDataInterpreter(mutaction: ResetData) extends TopLevelDatabaseMutactionInterpreter {
+  def dbioAction(mutationBuilder: JdbcActionsBuilder) = {
     mutationBuilder.truncateTables(mutaction.project).andThen(unitResult)
   }
 }
 
-case class UpdateDataItemsInterpreter(mutaction: UpdateNodes) extends DatabaseMutactionInterpreter {
-  def dbioAction(mutationBuilder: JdbcActionsBuilder, parentId: IdGCValue) = {
+case class UpdateDataItemsInterpreter(mutaction: UpdateNodes) extends TopLevelDatabaseMutactionInterpreter {
+  def dbioAction(mutationBuilder: JdbcActionsBuilder) = {
     val nonListActions = mutationBuilder.updateNodes(mutaction.model, mutaction.updateArgs, mutaction.whereFilter)
     val listActions    = mutationBuilder.setScalarListValuesByFilter(mutaction.model, mutaction.listArgs, mutaction.whereFilter)
     DBIOAction.seq(listActions, nonListActions).andThen(unitResult)
