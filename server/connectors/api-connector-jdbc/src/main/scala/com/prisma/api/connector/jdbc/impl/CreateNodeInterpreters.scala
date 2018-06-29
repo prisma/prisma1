@@ -15,7 +15,7 @@ import slick.dbio._
 
 case class CreateNodeInterpreter(
     mutaction: CreateNode,
-    includeRelayRow: Boolean = true
+    includeRelayRow: Boolean
 )(implicit ec: ExecutionContext)
     extends TopLevelDatabaseMutactionInterpreter {
   val model = mutaction.model
@@ -43,7 +43,7 @@ case class CreateNodeInterpreter(
 
 case class NestedCreateNodeInterpreter(
     mutaction: NestedCreateNode,
-    includeRelayRow: Boolean = true
+    includeRelayRow: Boolean
 )(implicit val ec: ExecutionContext)
     extends NestedDatabaseMutactionInterpreter
     with NestedRelationInterpreterBase {
