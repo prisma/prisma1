@@ -10,18 +10,18 @@ import scala.concurrent.ExecutionContext
 
 case class ImportNodesInterpreter(mutaction: ImportNodes) extends DatabaseMutactionInterpreter {
   override protected def dbioAction(mutationBuilder: JdbcActionsBuilder, parentId: IdGCValue): DBIO[DatabaseMutactionResult] = {
-    mutationBuilder.createDataItemsImport(mutaction).andThen(unitResult)
+    mutationBuilder.importNodes(mutaction).andThen(unitResult)
   }
 }
 
 case class ImportRelationsInterpreter(mutaction: ImportRelations) extends DatabaseMutactionInterpreter {
   override protected def dbioAction(mutationBuilder: JdbcActionsBuilder, parentId: IdGCValue): DBIO[DatabaseMutactionResult] = {
-    mutationBuilder.createRelationRowsImport(mutaction).andThen(unitResult)
+    mutationBuilder.importRelations(mutaction).andThen(unitResult)
   }
 }
 
 case class ImportScalarListsInterpreter(mutaction: ImportScalarLists)(implicit ec: ExecutionContext) extends DatabaseMutactionInterpreter {
   override protected def dbioAction(mutationBuilder: JdbcActionsBuilder, parentId: IdGCValue): DBIO[DatabaseMutactionResult] = {
-    mutationBuilder.pushScalarListsImport(mutaction).andThen(unitResult)
+    mutationBuilder.importScalarLists(mutaction).andThen(unitResult)
   }
 }

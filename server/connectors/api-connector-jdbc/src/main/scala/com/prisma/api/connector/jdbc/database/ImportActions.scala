@@ -14,7 +14,7 @@ import scala.concurrent.ExecutionContext
 trait ImportActions extends BuilderBase {
   import slickDatabase.profile.api._
 
-  def createDataItemsImport(mutaction: ImportNodes): SimpleDBIO[Vector[String]] = {
+  def importNodes(mutaction: ImportNodes): SimpleDBIO[Vector[String]] = {
 
     SimpleDBIO[Vector[String]] { jdbcActionContext =>
       val model         = mutaction.model
@@ -95,12 +95,12 @@ trait ImportActions extends BuilderBase {
     }
   }
 
-  def removeConnectionInfoFromCause(cause: String): String = {
+  private def removeConnectionInfoFromCause(cause: String): String = {
     val connectionSubStringStart = cause.indexOf(": ERROR:")
     cause.substring(connectionSubStringStart + 9)
   }
 
-  def createRelationRowsImport(mutaction: ImportRelations): SimpleDBIO[Vector[String]] = {
+  def importRelations(mutaction: ImportRelations): SimpleDBIO[Vector[String]] = {
     val argsWithIndex: Seq[((IdGCValue, IdGCValue), Int)] = mutaction.args.zipWithIndex
     val relation                                          = mutaction.relation
 
@@ -142,7 +142,7 @@ trait ImportActions extends BuilderBase {
     }
   }
 
-  def pushScalarListsImport(mutaction: ImportScalarLists)(implicit ec: ExecutionContext) = {
+  def importScalarLists(mutaction: ImportScalarLists)(implicit ec: ExecutionContext) = {
     val field   = mutaction.field
     val nodeIds = mutaction.values.keys
 
