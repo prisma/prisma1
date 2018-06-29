@@ -35,7 +35,7 @@ case class Delete(
 
   override def prepareMutactions(): Future[TopLevelDatabaseMutaction] = {
     dataResolver
-      .resolveByUnique(where)
+      .getNodeByWhere(where)
       .andThen {
         case Success(x) => deletedItemOpt = x.map(dataItem => dataItem)
       }

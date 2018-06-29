@@ -20,7 +20,7 @@ trait ClientMutation[T] {
 
 trait SingleItemClientMutation extends ClientMutation[ReturnValueResult] {
   def returnValueByUnique(where: NodeSelector): Future[ReturnValueResult] = {
-    dataResolver.resolveByUnique(where).map {
+    dataResolver.getNodeByWhere(where).map {
       case Some(prismaNode) => ReturnValue(prismaNode)
       case None             => NoReturnValue(where)
     }

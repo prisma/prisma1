@@ -30,7 +30,7 @@ class ToManyDeferredResolver(dataResolver: DataResolver) {
     val batchFutures: Vector[Future[Vector[ResolverResult[PrismaNodeWithParent]]]] = relatedModelInstanceIds.distinct
       .grouped(500)
       .toVector
-      .map(ids => dataResolver.resolveByRelationManyModels(relatedField, ids, args))
+      .map(ids => dataResolver.getRelatedNodes(relatedField, ids, args))
 
     // Fetch resolver results
     val futureResolverResults: Future[Vector[ResolverResult[PrismaNodeWithParent]]] = Future

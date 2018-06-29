@@ -27,7 +27,7 @@ case class Update(
   val coolArgs = CoolArgs.fromSchemaArgs(args.raw)
   val where    = CoolArgs(args.raw).extractNodeSelectorFromWhereField(model)
 
-  lazy val prismaNodes: Future[Option[PrismaNode]] = dataResolver.resolveByUnique(where)
+  lazy val prismaNodes: Future[Option[PrismaNode]] = dataResolver.getNodeByWhere(where)
 
   def prepareMutactions(): Future[TopLevelDatabaseMutaction] = {
     prismaNodes map {

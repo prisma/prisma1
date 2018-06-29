@@ -52,7 +52,7 @@ case class Upsert(
   override def getReturnValue(results: MutactionResults): Future[ReturnValueResult] = {
     val firstResult = results.allResults.collectFirst { case m: FurtherNestedMutactionResult => m }.get
     val selector    = NodeSelector.forIdGCValue(model, firstResult.id)
-    val itemFuture  = dataResolver.resolveByUnique(selector)
+    val itemFuture  = dataResolver.getNodeByWhere(selector)
     itemFuture.map {
       case Some(prismaNode) => ReturnValue(prismaNode)
       case None             => sys.error("Could not find an item after an Upsert. This should not be possible.")

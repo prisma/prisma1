@@ -234,7 +234,7 @@ case class SchemaBuilderImpl(
 
   lazy val NodeDefinition(nodeInterface: InterfaceType[ApiUserContext, PrismaNode], nodeField, nodeRes) = Node.definitionById(
     resolve = (id: String, ctx: Context[ApiUserContext, Unit]) => {
-      dataResolver.resolveByGlobalId(CuidGCValue(id))
+      dataResolver.getNodeByGlobalId(CuidGCValue(id))
     },
     possibleTypes = {
       objectTypes.values.flatMap { o =>

@@ -31,6 +31,6 @@ object FilteredResolver {
 
     val filterValues = filterInput.filters.filter(removeTopLevelIdFilter) ++ Vector(ScalarFilter(model.idField_!, Equals(id)))
     val filter       = AndFilter(filterValues)
-    dataResolver.resolveByModel(model, Some(QueryArguments.withFilter(filter = filter))).map(_.nodes.headOption)
+    dataResolver.getNodes(model, Some(QueryArguments.withFilter(filter = filter))).map(_.nodes.headOption)
   }
 }

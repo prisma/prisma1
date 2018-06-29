@@ -20,41 +20,28 @@ case class JdbcDataResolver(
     slickDatabase = slickDatabase
   )
 
-  override def resolveByGlobalId(globalId: CuidGCValue): Future[Option[PrismaNode]] = {
+  override def getNodeByGlobalId(globalId: CuidGCValue): Future[Option[PrismaNode]] = {
     if (globalId.value == "viewer-fixed") return Future.successful(Some(PrismaNode(globalId, RootGCValue.empty, Some("Viewer"))))
 
     val query = queryBuilder.getNodeByGlobalId(project.schema, globalId)
     performWithTiming("resolveByGlobalId", slickDatabase.database.run(query))
   }
 
-  override def resolveByModel(model: Model, args: Option[QueryArguments] = None): Future[ResolverResult[PrismaNode]] = {
+  override def getNodeByWhere(where: NodeSelector): Future[Option[PrismaNode]] = {
+    getNodesByValuesForField(where.model, where.field, Vector(where.fieldGCValue)).map(_.headOption)
+  }
+
+  override def getNodes(model: Model, args: Option[QueryArguments] = None): Future[ResolverResult[PrismaNode]] = {
     val query = queryBuilder.getNodes(model, args)
     performWithTiming("loadModelRowsForExport", slickDatabase.database.run(query))
   }
 
-  override def resolveByUnique(where: NodeSelector): Future[Option[PrismaNode]] =
-    batchResolveByUnique(where.model, where.field, Vector(where.fieldGCValue)).map(_.headOption)
-
-  override def countByTable(table: String, whereFilter: Option[Filter] = None): Future[Int] = {
-    val actualTable = project.schema.getModelByName(table) match {
-      case Some(model) => model.dbName
-      case None        => table
-    }
-    val query = queryBuilder.countAllFromTable(actualTable, whereFilter)
-    performWithTiming("countByModel", slickDatabase.database.run(query))
-  }
-
-  override def batchResolveByUnique(model: Model, field: ScalarField, values: Vector[GCValue]): Future[Vector[PrismaNode]] = {
+  override def getNodesByValuesForField(model: Model, field: ScalarField, values: Vector[GCValue]): Future[Vector[PrismaNode]] = {
     val query = queryBuilder.getNodesByValuesForField(model, field, values)
     performWithTiming("batchResolveByUnique", slickDatabase.database.run(query))
   }
 
-  override def batchResolveScalarList(model: Model, listField: ScalarField, nodeIds: Vector[IdGCValue]): Future[Vector[ScalarListValues]] = {
-    val query = queryBuilder.getScalarListValuesByNodeIds(model.dbName, listField, nodeIds)
-    performWithTiming("batchResolveScalarList", slickDatabase.database.run(query))
-  }
-
-  override def resolveByRelationManyModels(
+  override def getRelatedNodes(
       fromField: RelationField,
       fromNodeIds: Vector[IdGCValue],
       args: Option[QueryArguments]
@@ -63,15 +50,29 @@ case class JdbcDataResolver(
     performWithTiming("resolveByRelation", slickDatabase.database.run(query))
   }
 
-  override def loadListRowsForExport(model: Model, field: ScalarField, args: Option[QueryArguments] = None): Future[ResolverResult[ScalarListValues]] = {
+  override def getScalarListValues(model: Model, field: ScalarField, args: Option[QueryArguments] = None): Future[ResolverResult[ScalarListValues]] = {
     val query = queryBuilder.getScalarListValues(model, field, args)
     performWithTiming("loadListRowsForExport", slickDatabase.database.run(query))
   }
 
-  override def loadRelationRowsForExport(relationId: String, args: Option[QueryArguments] = None): Future[ResolverResult[RelationNode]] = {
+  override def getScalarListValuesByNodeIds(model: Model, listField: ScalarField, nodeIds: Vector[IdGCValue]): Future[Vector[ScalarListValues]] = {
+    val query = queryBuilder.getScalarListValuesByNodeIds(model.dbName, listField, nodeIds)
+    performWithTiming("batchResolveScalarList", slickDatabase.database.run(query))
+  }
+
+  override def getRelationNodes(relationId: String, args: Option[QueryArguments] = None): Future[ResolverResult[RelationNode]] = {
     val relation = project.schema.relations.find(_.relationTableName == relationId).get
     val query    = queryBuilder.getRelationNodes(relation, args)
     performWithTiming("loadRelationRowsForExport", slickDatabase.database.run(query))
+  }
+
+  override def countByTable(table: String, whereFilter: Option[Filter] = None): Future[Int] = {
+    val actualTable = project.schema.getModelByName(table) match {
+      case Some(model) => model.dbName
+      case None        => table
+    }
+    val query = queryBuilder.countAllFromTable(actualTable, whereFilter)
+    performWithTiming("countByModel", slickDatabase.database.run(query))
   }
 
   protected def performWithTiming[A](name: String, f: => Future[A]): Future[A] = Metrics.sqlQueryTimer.timeFuture(project.id, name) { f }

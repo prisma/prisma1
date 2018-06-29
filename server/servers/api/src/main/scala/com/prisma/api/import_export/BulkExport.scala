@@ -68,7 +68,7 @@ class BulkExport(project: Project)(implicit apiDependencies: ApiDependencies) {
 
   private def fetch(info: NodeInfo): Future[PrismaNodesPage] = {
     val queryArguments = QueryArguments(skip = Some(info.cursor.row), after = None, first = Some(1000), None, None, None, None)
-    info.dataResolver.resolveByModel(info.current, Some(queryArguments)).map { resolverResult =>
+    info.dataResolver.getNodes(info.current, Some(queryArguments)).map { resolverResult =>
       val jsons = resolverResult.nodes.map(node => prismaNodeToExportNode(node, info))
       PrismaNodesPage(jsons, hasMore = resolverResult.hasNextPage)
     }
@@ -76,7 +76,7 @@ class BulkExport(project: Project)(implicit apiDependencies: ApiDependencies) {
 
   private def fetch(info: ListInfo): Future[PrismaNodesPage] = {
     val queryArguments = QueryArguments(skip = Some(info.cursor.row), after = None, first = Some(1000), None, None, None, None)
-    info.dataResolver.loadListRowsForExport(info.currentModelModel, info.currentFieldModel, Some(queryArguments)).map { resolverResult =>
+    info.dataResolver.getScalarListValues(info.currentModelModel, info.currentFieldModel, Some(queryArguments)).map { resolverResult =>
       val jsons = dataItemToExportList(resolverResult.nodes, info)
       PrismaNodesPage(jsons, hasMore = resolverResult.hasNextPage)
     }
@@ -84,7 +84,7 @@ class BulkExport(project: Project)(implicit apiDependencies: ApiDependencies) {
 
   private def fetch(info: RelationInfo): Future[PrismaNodesPage] = {
     val queryArguments = QueryArguments(skip = Some(info.cursor.row), after = None, first = Some(1000), None, None, None, None)
-    info.dataResolver.loadRelationRowsForExport(info.current.relationId, Some(queryArguments)).map { resolverResult =>
+    info.dataResolver.getRelationNodes(info.current.relationId, Some(queryArguments)).map { resolverResult =>
       val jsons = resolverResult.nodes.map(node => dataItemToExportRelation(node, info))
       PrismaNodesPage(jsons, hasMore = resolverResult.hasNextPage)
     }
