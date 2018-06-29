@@ -17,6 +17,7 @@ trait NodeSingleQueries extends BuilderBase with NodeManyQueries with FilterCond
     TableQuery(new bla.SlickTable(_, schemaName))
   }
 
+  // TODO: migrate this to a Jooq based query
   def getNodeByGlobalId(schema: Schema, idGCValue: IdGCValue)(implicit ec: ExecutionContext): DBIO[Option[PrismaNode]] = {
     val modelNameForId: DBIO[Option[String]] = relayIdTableQuery
       .filter(_.id === idGCValue.value.toString)
@@ -50,29 +51,21 @@ trait NodeSingleQueries extends BuilderBase with NodeManyQueries with FilterCond
 
     queryToDBIO(query)(
       setParams = pp => pp.setGcValue(where.fieldGCValue),
-      readResult = rs => rs.as(readsPrismaNode(model)).headOption
+      readResult = rs => rs.readWith(readsPrismaNode(model)).headOption
     )
   }
 
   def getNodeIdByWhere(where: NodeSelector): DBIO[Option[IdGCValue]] = {
-    SimpleDBIO { ctx =>
-      val model = where.model
-      val query = sql
-        .select(idField(model))
-        .from(modelTable(model))
-        .where(modelColumn(model, where.field).equal(placeHolder))
+    val model = where.model
+    val query = sql
+      .select(idField(model))
+      .from(modelTable(model))
+      .where(modelColumn(model, where.field).equal(placeHolder))
 
-      val ps = ctx.connection.prepareStatement(query.getSQL)
-      ps.setGcValue(1, where.fieldGCValue)
-
-      val rs = ps.executeQuery()
-
-      if (rs.next()) {
-        Some(rs.getId(model))
-      } else {
-        None
-      }
-    }
+    queryToDBIO(query)(
+      setParams = _.setGcValue(where.fieldGCValue),
+      readResult = _.readWith(readNodeId(model)).headOption
+    )
   }
 
   def getNodeIdByParentId(parentField: RelationField, parentId: IdGCValue)(implicit ec: ExecutionContext): DBIO[Option[IdGCValue]] = {
@@ -85,9 +78,10 @@ trait NodeSingleQueries extends BuilderBase with NodeManyQueries with FilterCond
       .select(idField(model))
       .from(modelTable(model))
       .where(parentIdCondition(parentField, parentIds))
+
     queryToDBIO(q)(
       setParams = pp => parentIds.foreach(pp.setGcValue),
-      readResult = rs => rs.as(readNodeId(model))
+      readResult = rs => rs.readWith(readNodeId(model))
     )
   }
 
@@ -98,7 +92,7 @@ trait NodeSingleQueries extends BuilderBase with NodeManyQueries with FilterCond
 
     queryToDBIO(query)(
       setParams = pp => SetParams.setFilter(pp, filter),
-      readResult = rs => rs.as(readNodeId(model))
+      readResult = rs => rs.readWith(readNodeId(model))
     )
   }
 
@@ -115,13 +109,7 @@ trait NodeSingleQueries extends BuilderBase with NodeManyQueries with FilterCond
         pp.setGcValue(parentId)
         pp.setGcValue(where.fieldGCValue)
       },
-      readResult = { rs =>
-        if (rs.next()) {
-          Some(rs.getId(model))
-        } else {
-          None
-        }
-      }
+      readResult = rs => rs.readWith(readNodeId(model)).headOption
     )
   }
 
