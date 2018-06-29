@@ -22,15 +22,16 @@ trait NodeActions extends BuilderBase with FilterConditionBuilder with ScalarLis
       args.raw.asRoot.add(model.idField_!.name, generateId(model))
     }
 
+    val fields = model.scalarNonListFields
     val query = sql
       .insertInto(modelTable(model))
-      .columns(model.fields.map(field => modelColumn(model, field)): _*)
-      .values(placeHolders(model.fields))
+      .columns(fields.map(field => modelColumn(model, field)): _*)
+      .values(placeHolders(fields))
 
     insertReturningGeneratedKeysToDBIO(query)(
       setParams = { pp =>
         val currentTimestamp = currentSqlTimestampUTC
-        model.fields.foreach { field =>
+        fields.foreach { field =>
           argsAsRoot.map(field.name) match {
             case NullGCValue if field.name == createdAtField || field.name == updatedAtField => pp.setTimestamp(currentTimestamp)
             case gcValue                                                                     => pp.setGcValue(gcValue)
