@@ -6,6 +6,8 @@ import com.prisma.gc_values._
 import com.prisma.shared.models.{Model, Project}
 import com.prisma.utils.await.AwaitUtils
 import play.api.libs.json._
+
+import scala.collection.immutable.SortedMap
 object TestData extends AwaitUtils {
   def createTodo(
       text: String,
@@ -16,8 +18,17 @@ object TestData extends AwaitUtils {
       testDatabase: ApiTestDatabase
   ): IdGCValue = {
 
-    val raw: List[(String, GCValue)] = List(("text", StringGCValue(text)), ("done", BooleanGCValue(done.getOrElse(true))), ("json", JsonGCValue(json)))
-    val args                         = PrismaArgs(RootGCValue(raw: _*))
+    val raw = Map(
+      "text" -> StringGCValue(text),
+      "done" -> BooleanGCValue(done.getOrElse(true)),
+      "json" -> JsonGCValue(json)
+    )
+    val withNullValues = model.scalarNonListFields.map { scalarField =>
+      val value = raw.getOrElse(scalarField.name, NullGCValue)
+      scalarField.name -> value
+    }
+    val mapWithNulls = SortedMap(withNullValues: _*)
+    val args         = PrismaArgs(RootGCValue(mapWithNulls))
 
     val mutaction = TopLevelCreateNode(
       project = project,
