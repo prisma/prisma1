@@ -2,7 +2,7 @@ package com.prisma.api.connector.jdbc.impl
 
 import com.prisma.api.connector._
 import com.prisma.api.connector.jdbc.DatabaseMutactionInterpreter
-import com.prisma.api.connector.jdbc.database.{JdbcApiDatabaseMutationBuilder, SlickDatabase}
+import com.prisma.api.connector.jdbc.database.{JdbcActionsBuilder, SlickDatabase}
 import com.prisma.gc_values.{CuidGCValue, IdGCValue}
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -19,7 +19,7 @@ case class JdbcDatabaseMutactionExecutor(
   override def executeNonTransactionally(mutaction: TopLevelDatabaseMutaction) = execute(mutaction, transactionally = false)
 
   private def execute(mutaction: TopLevelDatabaseMutaction, transactionally: Boolean): Future[MutactionResults] = {
-    val mutationBuilder = JdbcApiDatabaseMutationBuilder(schemaName = mutaction.project.id, slickDatabase)
+    val mutationBuilder = JdbcActionsBuilder(schemaName = mutaction.project.id, slickDatabase)
     // fixme: handing in those non existent values should not happen
     val singleAction = transactionally match {
       case true  => recurse(mutaction, CuidGCValue("does-not-exist"), mutationBuilder).transactionally
@@ -32,7 +32,7 @@ case class JdbcDatabaseMutactionExecutor(
   def recurse(
       mutaction: DatabaseMutaction,
       parentId: IdGCValue,
-      mutationBuilder: JdbcApiDatabaseMutationBuilder
+      mutationBuilder: JdbcActionsBuilder
   ): DBIO[MutactionResults] = {
     mutaction match {
       case m: UpsertNode =>

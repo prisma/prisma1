@@ -4,7 +4,7 @@ import java.sql.SQLIntegrityConstraintViolationException
 
 import com.prisma.api.connector._
 import com.prisma.api.connector.jdbc.DatabaseMutactionInterpreter
-import com.prisma.api.connector.jdbc.database.JdbcApiDatabaseMutationBuilder
+import com.prisma.api.connector.jdbc.database.JdbcActionsBuilder
 import com.prisma.api.schema.APIErrors
 import com.prisma.gc_values.{IdGCValue, ListGCValue, RootGCValue}
 import com.prisma.shared.models.Model
@@ -17,7 +17,7 @@ case class UpdateNodeInterpreter(mutaction: TopLevelUpdateNode)(implicit ec: Exe
   val nonListArgs       = mutaction.nonListArgs
   override def listArgs = mutaction.listArgs
 
-  override def dbioAction(mutationBuilder: JdbcApiDatabaseMutationBuilder, parent: IdGCValue) = {
+  override def dbioAction(mutationBuilder: JdbcActionsBuilder, parent: IdGCValue) = {
     for {
       nodeOpt <- mutationBuilder.queryNodeByWhere(mutaction.where)
       node <- nodeOpt match {
@@ -54,7 +54,7 @@ case class NestedUpdateNodeInterpreter(mutaction: NestedUpdateNode)(implicit ec:
   val nonListArgs = mutaction.nonListArgs
   val listArgs    = mutaction.listArgs
 
-  override def dbioAction(mutationBuilder: JdbcApiDatabaseMutationBuilder, parentId: IdGCValue) = {
+  override def dbioAction(mutationBuilder: JdbcActionsBuilder, parentId: IdGCValue) = {
     for {
       _ <- verifyWhere(mutationBuilder, mutaction.where)
       idOpt <- mutaction.where match {
@@ -98,7 +98,7 @@ trait SharedUpdateLogic {
   def nonListArgs: PrismaArgs
   def listArgs: Vector[(String, ListGCValue)]
 
-  def verifyWhere(mutationBuilder: JdbcApiDatabaseMutationBuilder, where: Option[NodeSelector])(implicit ec: ExecutionContext) = {
+  def verifyWhere(mutationBuilder: JdbcActionsBuilder, where: Option[NodeSelector])(implicit ec: ExecutionContext) = {
     where match {
       case Some(where) =>
         for {
@@ -111,7 +111,7 @@ trait SharedUpdateLogic {
     }
   }
 
-  def doIt(mutationBuilder: JdbcApiDatabaseMutationBuilder, id: IdGCValue)(implicit ec: ExecutionContext): DBIO[IdGCValue] = {
+  def doIt(mutationBuilder: JdbcActionsBuilder, id: IdGCValue)(implicit ec: ExecutionContext): DBIO[IdGCValue] = {
     for {
       _ <- mutationBuilder.updateDataItemById(model, id, nonListArgs)
       _ <- mutationBuilder.setScalarListById(model, id, listArgs)

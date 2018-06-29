@@ -2,7 +2,7 @@ package com.prisma.api.connector.jdbc.impl
 
 import com.prisma.api.connector._
 import com.prisma.api.connector.jdbc.Metrics
-import com.prisma.api.connector.jdbc.database.{JdbcApiDatabaseQueryBuilder, SlickDatabase}
+import com.prisma.api.connector.jdbc.database.{JdbcActionsBuilder, SlickDatabase}
 import com.prisma.gc_values._
 import com.prisma.shared.models._
 
@@ -15,12 +15,12 @@ case class JdbcDataResolver(
 )(implicit ec: ExecutionContext)
     extends DataResolver {
 
-  val queryBuilder = JdbcApiDatabaseQueryBuilder(
+  val queryBuilder = JdbcActionsBuilder(
     schemaName = schemaName.getOrElse(project.id),
     slickDatabase = slickDatabase
-  )(ec)
+  )
 
-  override def resolveByGlobalId(globalId: CuidGCValue): Future[Option[PrismaNode]] = { //todo rewrite this to use normal query?
+  override def resolveByGlobalId(globalId: CuidGCValue): Future[Option[PrismaNode]] = {
     if (globalId.value == "viewer-fixed") return Future.successful(Some(PrismaNode(globalId, RootGCValue.empty, Some("Viewer"))))
 
     val query = queryBuilder.selectByGlobalId(project.schema, globalId)

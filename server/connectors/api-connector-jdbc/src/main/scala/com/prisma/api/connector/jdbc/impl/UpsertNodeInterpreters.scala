@@ -2,7 +2,7 @@ package com.prisma.api.connector.jdbc.impl
 
 import com.prisma.api.connector.{NestedUpsertNode, TopLevelUpsertNode, UpsertNodeResult}
 import com.prisma.api.connector.jdbc.DatabaseMutactionInterpreter
-import com.prisma.api.connector.jdbc.database.JdbcApiDatabaseMutationBuilder
+import com.prisma.api.connector.jdbc.database.JdbcActionsBuilder
 import com.prisma.api.connector.jdbc.impl.GetFieldFromSQLUniqueException.getFieldOption
 import com.prisma.api.schema.{APIErrors, UserFacingError}
 import com.prisma.gc_values.IdGCValue
@@ -14,7 +14,7 @@ case class UpsertDataItemInterpreter(mutaction: TopLevelUpsertNode)(implicit ec:
   val model   = mutaction.where.model
   val project = mutaction.project
 
-  override def dbioAction(mutationBuilder: JdbcApiDatabaseMutationBuilder, parentId: IdGCValue) = {
+  override def dbioAction(mutationBuilder: JdbcActionsBuilder, parentId: IdGCValue) = {
     for {
       id <- mutationBuilder.queryIdFromWhere(mutaction.where)
     } yield
@@ -39,7 +39,7 @@ case class UpsertDataItemInterpreter(mutaction: TopLevelUpsertNode)(implicit ec:
 case class NestedUpsertDataItemInterpreter(mutaction: NestedUpsertNode)(implicit ec: ExecutionContext) extends DatabaseMutactionInterpreter {
   val model = mutaction.relationField.relatedModel_!
 
-  override def dbioAction(mutationBuilder: JdbcApiDatabaseMutationBuilder, parentId: IdGCValue) = {
+  override def dbioAction(mutationBuilder: JdbcActionsBuilder, parentId: IdGCValue) = {
     for {
       id <- mutaction.where match {
              case Some(where) => mutationBuilder.queryIdByParentIdAndWhere(mutaction.relationField, parentId, where)

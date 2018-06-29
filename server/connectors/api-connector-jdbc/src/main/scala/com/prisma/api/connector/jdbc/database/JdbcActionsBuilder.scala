@@ -18,7 +18,7 @@ trait AllQueries
     with MiscQueries
 // format: on
 
-case class JdbcApiDatabaseMutationBuilder(
+case class JdbcActionsBuilder(
     schemaName: String,
     slickDatabase: SlickDatabase
 ) extends AllActions

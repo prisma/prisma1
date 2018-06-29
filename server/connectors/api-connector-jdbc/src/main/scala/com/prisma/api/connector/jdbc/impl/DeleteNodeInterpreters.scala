@@ -2,7 +2,7 @@ package com.prisma.api.connector.jdbc.impl
 
 import com.prisma.api.connector._
 import com.prisma.api.connector.jdbc.DatabaseMutactionInterpreter
-import com.prisma.api.connector.jdbc.database.JdbcApiDatabaseMutationBuilder
+import com.prisma.api.connector.jdbc.database.JdbcActionsBuilder
 import com.prisma.api.schema.APIErrors
 import com.prisma.api.schema.APIErrors.NodesNotConnectedError
 import com.prisma.gc_values.IdGCValue
@@ -17,7 +17,7 @@ case class DeleteNodeInterpreter(mutaction: TopLevelDeleteNode)(implicit val ec:
 
   override def schema = mutaction.where.model.schema
 
-  override def dbioAction(mutationBuilder: JdbcApiDatabaseMutationBuilder, parentId: IdGCValue) = {
+  override def dbioAction(mutationBuilder: JdbcActionsBuilder, parentId: IdGCValue) = {
     for {
       nodeOpt <- mutationBuilder.queryNodeByWhere(mutaction.where)
       node <- nodeOpt match {
@@ -33,7 +33,7 @@ case class DeleteNodeInterpreter(mutaction: TopLevelDeleteNode)(implicit val ec:
     } yield DeleteNodeResult(node.id, node, mutaction)
   }
 
-  private def checkForRequiredRelationsViolations(mutationBuilder: JdbcApiDatabaseMutationBuilder, id: IdGCValue): DBIO[_] = {
+  private def checkForRequiredRelationsViolations(mutationBuilder: JdbcActionsBuilder, id: IdGCValue): DBIO[_] = {
     val fieldsWhereThisModelIsRequired = schema.fieldsWhereThisModelIsRequired(mutaction.where.model)
     val actions                        = fieldsWhereThisModelIsRequired.map(field => mutationBuilder.oldParentFailureTriggerByField(id, field))
     DBIO.sequence(actions)
@@ -49,7 +49,7 @@ case class NestedDeleteNodeInterpreter(mutaction: NestedDeleteNode)(implicit val
   val parent          = mutaction.relationField.model
   val child           = mutaction.relationField.relatedModel_!
 
-  override def dbioAction(mutationBuilder: JdbcApiDatabaseMutationBuilder, parentId: IdGCValue) = {
+  override def dbioAction(mutationBuilder: JdbcActionsBuilder, parentId: IdGCValue) = {
     for {
       childId <- getChildId(mutationBuilder, parentId)
       _       <- mutationBuilder.ensureThatParentIsConnected(parentField, parentId)
@@ -59,7 +59,7 @@ case class NestedDeleteNodeInterpreter(mutaction: NestedDeleteNode)(implicit val
     } yield UnitDatabaseMutactionResult
   }
 
-  private def getChildId(mutationBuilder: JdbcApiDatabaseMutationBuilder, parentId: IdGCValue): DBIO[IdGCValue] = {
+  private def getChildId(mutationBuilder: JdbcActionsBuilder, parentId: IdGCValue): DBIO[IdGCValue] = {
     mutaction.where match {
       case Some(where) =>
         mutationBuilder.queryIdFromWhere(where).map {
@@ -81,7 +81,7 @@ case class NestedDeleteNodeInterpreter(mutaction: NestedDeleteNode)(implicit val
     }
   }
 
-  private def checkForRequiredRelationsViolations(mutationBuilder: JdbcApiDatabaseMutationBuilder, parentId: IdGCValue): DBIO[_] = {
+  private def checkForRequiredRelationsViolations(mutationBuilder: JdbcActionsBuilder, parentId: IdGCValue): DBIO[_] = {
     val fieldsWhereThisModelIsRequired = mutaction.project.schema.fieldsWhereThisModelIsRequired(mutaction.relationField.relatedModel_!)
     val actions                        = fieldsWhereThisModelIsRequired.map(field => mutationBuilder.oldParentFailureTriggerByField(parentId, field))
     DBIO.sequence(actions)
@@ -92,7 +92,7 @@ trait CascadingDeleteSharedStuff extends DatabaseMutactionInterpreter {
   def schema: Schema
   implicit def ec: ExecutionContext
 
-  def performCascadingDelete(mutationBuilder: JdbcApiDatabaseMutationBuilder, model: Model, parentId: IdGCValue): DBIO[Unit] = {
+  def performCascadingDelete(mutationBuilder: JdbcActionsBuilder, model: Model, parentId: IdGCValue): DBIO[Unit] = {
     val actions = model.cascadingRelationFields.map { field =>
       recurse(
         mutationBuilder = mutationBuilder,
@@ -105,7 +105,7 @@ trait CascadingDeleteSharedStuff extends DatabaseMutactionInterpreter {
   }
 
   private def recurse(
-      mutationBuilder: JdbcApiDatabaseMutationBuilder,
+      mutationBuilder: JdbcActionsBuilder,
       parentField: RelationField,
       parentIds: Vector[IdGCValue],
       visitedModels: Vector[Model]
@@ -123,7 +123,7 @@ trait CascadingDeleteSharedStuff extends DatabaseMutactionInterpreter {
     } yield ()
   }
 
-  private def checkTheseOnes(mutationBuilder: JdbcApiDatabaseMutationBuilder, parentField: RelationField, parentIds: Vector[IdGCValue]) = {
+  private def checkTheseOnes(mutationBuilder: JdbcActionsBuilder, parentField: RelationField, parentIds: Vector[IdGCValue]) = {
     val model                          = parentField.relatedModel_!
     val fieldsWhereThisModelIsRequired = schema.fieldsWhereThisModelIsRequired(model).filter(_ != parentField)
     val actions                        = fieldsWhereThisModelIsRequired.map(field => mutationBuilder.oldParentFailureTriggerByField(parentIds, field))

@@ -4,7 +4,7 @@ import java.sql.SQLIntegrityConstraintViolationException
 
 import com.prisma.api.connector._
 import com.prisma.api.connector.jdbc.DatabaseMutactionInterpreter
-import com.prisma.api.connector.jdbc.database.JdbcApiDatabaseMutationBuilder
+import com.prisma.api.connector.jdbc.database.JdbcActionsBuilder
 import com.prisma.api.schema.APIErrors
 import com.prisma.gc_values.{IdGCValue, RootGCValue}
 import com.prisma.shared.models.Manifestations.InlineRelationManifestation
@@ -20,7 +20,7 @@ case class CreateNodeInterpreter(
     extends DatabaseMutactionInterpreter {
   val model = mutaction.model
 
-  override def dbioAction(mutationBuilder: JdbcApiDatabaseMutationBuilder, parentId: IdGCValue): DBIO[DatabaseMutactionResult] = {
+  override def dbioAction(mutationBuilder: JdbcActionsBuilder, parentId: IdGCValue): DBIO[DatabaseMutactionResult] = {
     for {
       id <- mutationBuilder.createDataItem(model, mutaction.nonListArgs)
       _  <- mutationBuilder.setScalarListById(model, id, mutaction.listArgs)
@@ -51,7 +51,7 @@ case class NestedCreateNodeInterpreter(
   override def relationField = mutaction.relationField
   val model                  = relationField.relatedModel_!
 
-  override def dbioAction(mutationBuilder: JdbcApiDatabaseMutationBuilder, parentId: IdGCValue) = {
+  override def dbioAction(mutationBuilder: JdbcActionsBuilder, parentId: IdGCValue) = {
     implicit val implicitMb = mutationBuilder
     for {
       _  <- DBIO.seq(requiredCheck(parentId), removalAction(parentId))
@@ -62,7 +62,7 @@ case class NestedCreateNodeInterpreter(
   }
 
   private def createNodeAndConnectToParent(
-      mutationBuilder: JdbcApiDatabaseMutationBuilder,
+      mutationBuilder: JdbcActionsBuilder,
       parentId: IdGCValue
   )(implicit ec: ExecutionContext) = {
     relation.manifestation match {
@@ -80,7 +80,7 @@ case class NestedCreateNodeInterpreter(
     }
   }
 
-  def requiredCheck(parentId: IdGCValue)(implicit mutationBuilder: JdbcApiDatabaseMutationBuilder): DBIO[Unit] = {
+  def requiredCheck(parentId: IdGCValue)(implicit mutationBuilder: JdbcActionsBuilder): DBIO[Unit] = {
     mutaction.topIsCreate match {
       case false =>
         (p.isList, p.isRequired, c.isList, c.isRequired) match {
@@ -101,7 +101,7 @@ case class NestedCreateNodeInterpreter(
     }
   }
 
-  def removalAction(parentId: IdGCValue)(implicit mutationBuilder: JdbcApiDatabaseMutationBuilder): DBIO[Unit] =
+  def removalAction(parentId: IdGCValue)(implicit mutationBuilder: JdbcActionsBuilder): DBIO[Unit] =
     mutaction.topIsCreate match {
       case false =>
         (p.isList, p.isRequired, c.isList, c.isRequired) match {

@@ -1,7 +1,7 @@
 package com.prisma.api.connector.jdbc.impl
 
 import com.prisma.api.connector._
-import com.prisma.api.connector.jdbc.database.JdbcApiDatabaseMutationBuilder
+import com.prisma.api.connector.jdbc.database.JdbcActionsBuilder
 import com.prisma.api.schema.APIErrors
 import com.prisma.gc_values.IdGCValue
 import slick.dbio.{DBIO, DBIOAction}
@@ -13,14 +13,14 @@ case class NestedConnectInterpreter(mutaction: NestedConnect)(implicit val ec: E
   val where                  = mutaction.where
   override def relationField = mutaction.relationField
 
-  override def dbioAction(mutationBuilder: JdbcApiDatabaseMutationBuilder, parentId: IdGCValue) = {
+  override def dbioAction(mutationBuilder: JdbcActionsBuilder, parentId: IdGCValue) = {
     implicit val implicitMb = mutationBuilder
     DBIOAction
       .seq(requiredCheck(parentId), removalAction(parentId), addAction(parentId))
       .andThen(unitResult)
   }
 
-  def requiredCheck(parentId: IdGCValue)(implicit mutationBuilder: JdbcApiDatabaseMutationBuilder): DBIO[_] = {
+  def requiredCheck(parentId: IdGCValue)(implicit mutationBuilder: JdbcActionsBuilder): DBIO[_] = {
     topIsCreate match {
       case false =>
         (p.isList, p.isRequired, c.isList, c.isRequired) match {
@@ -51,7 +51,7 @@ case class NestedConnectInterpreter(mutaction: NestedConnect)(implicit val ec: E
     }
   }
 
-  def removalAction(parentId: IdGCValue)(implicit mutationBuilder: JdbcApiDatabaseMutationBuilder): DBIO[Unit] =
+  def removalAction(parentId: IdGCValue)(implicit mutationBuilder: JdbcActionsBuilder): DBIO[Unit] =
     topIsCreate match {
       case false =>
         (p.isList, p.isRequired, c.isList, c.isRequired) match {
@@ -81,7 +81,7 @@ case class NestedConnectInterpreter(mutaction: NestedConnect)(implicit val ec: E
         }
     }
 
-  def removalByChild(implicit mutationBuilder: JdbcApiDatabaseMutationBuilder) = {
+  def removalByChild(implicit mutationBuilder: JdbcActionsBuilder) = {
     val action = for {
       id <- mutationBuilder.queryIdFromWhere(mutaction.where)
       _ <- id match {
@@ -92,7 +92,7 @@ case class NestedConnectInterpreter(mutaction: NestedConnect)(implicit val ec: E
     action
   }
 
-  def checkForOldParentByChildWhere(where: NodeSelector)(implicit mutationBuilder: JdbcApiDatabaseMutationBuilder): DBIO[Unit] = {
+  def checkForOldParentByChildWhere(where: NodeSelector)(implicit mutationBuilder: JdbcActionsBuilder): DBIO[Unit] = {
     for {
       id <- mutationBuilder.queryIdFromWhere(where)
       _ <- id match {
@@ -102,7 +102,7 @@ case class NestedConnectInterpreter(mutaction: NestedConnect)(implicit val ec: E
     } yield ()
   }
 
-  def addAction(parentId: IdGCValue)(implicit mutationBuilder: JdbcApiDatabaseMutationBuilder): DBIO[Unit] = {
+  def addAction(parentId: IdGCValue)(implicit mutationBuilder: JdbcActionsBuilder): DBIO[Unit] = {
     for {
       id <- mutationBuilder.queryIdFromWhere(mutaction.where)
       _ <- id match {

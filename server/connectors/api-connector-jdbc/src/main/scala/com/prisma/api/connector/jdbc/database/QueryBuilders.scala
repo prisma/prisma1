@@ -10,7 +10,10 @@ case class JooqRelationQueryBuilder(
     schemaName: String,
     relation: Relation,
     queryArguments: Option[QueryArguments]
-) extends AllBuilders {
+) extends BuilderBase
+    with FilterConditionBuilder
+    with OrderByClauseBuilder
+    with LimitClauseBuilder {
 
   lazy val queryString: String = {
     val aliasedTable = table(name(schemaName, relation.relationTableName)).as(topLevelAlias)
@@ -38,7 +41,8 @@ case class JooqCountQueryBuilder(
     schemaName: String,
     tableName: String,
     filter: Option[Filter]
-) extends AllBuilders {
+) extends BuilderBase
+    with FilterConditionBuilder {
 
   lazy val queryString: String = {
     val aliasedTable = table(name(schemaName, tableName)).as(topLevelAlias)
@@ -58,7 +62,10 @@ case class JooqScalarListQueryBuilder(
     schemaName: String,
     field: ScalarField,
     queryArguments: Option[QueryArguments]
-) extends AllBuilders {
+) extends BuilderBase
+    with FilterConditionBuilder
+    with OrderByClauseBuilder
+    with LimitClauseBuilder {
   require(field.isList, "This must be called only with scalar list fields")
 
   val tableName = s"${field.model.dbName}_${field.dbName}"
@@ -88,7 +95,7 @@ case class JooqScalarListByUniquesQueryBuilder(
     schemaName: String,
     scalarField: ScalarField,
     nodeIds: Vector[GCValue]
-) extends AllBuilders {
+) extends BuilderBase {
   require(scalarField.isList, "This must be called only with scalar list fields")
 
   val tableName = s"${scalarField.model.dbName}_${scalarField.dbName}"
@@ -111,7 +118,10 @@ case class JooqRelatedModelsQueryBuilder(
     fromField: RelationField,
     queryArguments: Option[QueryArguments],
     relatedNodeIds: Vector[IdGCValue]
-) extends AllBuilders {
+) extends BuilderBase
+    with FilterConditionBuilder
+    with OrderByClauseBuilder
+    with CursorConditionBuilder {
 
   val relation                        = fromField.relation
   val relatedModel                    = fromField.relatedModel_!
@@ -184,7 +194,11 @@ case class JooqModelQueryBuilder(
     schemaName: String,
     model: Model,
     queryArguments: Option[QueryArguments]
-) extends AllBuilders {
+) extends BuilderBase
+    with FilterConditionBuilder
+    with CursorConditionBuilder
+    with OrderByClauseBuilder
+    with LimitClauseBuilder {
 
   lazy val queryString: String = {
     val condition       = buildConditionForFilter(queryArguments.flatMap(_.filter))

@@ -1,7 +1,7 @@
 package com.prisma.api.connector.jdbc.impl
 
 import com.prisma.api.connector._
-import com.prisma.api.connector.jdbc.database.JdbcApiDatabaseMutationBuilder
+import com.prisma.api.connector.jdbc.database.JdbcActionsBuilder
 import com.prisma.api.schema.APIErrors
 import com.prisma.gc_values.IdGCValue
 import slick.dbio.{DBIO, DBIOAction}
@@ -11,14 +11,14 @@ import scala.concurrent.ExecutionContext
 case class NestedDisconnectInterpreter(mutaction: NestedDisconnect)(implicit val ec: ExecutionContext) extends NestedRelationInterpreterBase {
   override def relationField = mutaction.relationField
 
-  override def dbioAction(mutationBuilder: JdbcApiDatabaseMutationBuilder, parentId: IdGCValue) = {
+  override def dbioAction(mutationBuilder: JdbcActionsBuilder, parentId: IdGCValue) = {
     implicit val implicitMb = mutationBuilder
     DBIOAction
       .seq(requiredCheck(parentId), removalAction(parentId))
       .andThen(unitResult)
   }
 
-  def requiredCheck(parentId: IdGCValue)(implicit mutationBuilder: JdbcApiDatabaseMutationBuilder): DBIO[Unit] = {
+  def requiredCheck(parentId: IdGCValue)(implicit mutationBuilder: JdbcActionsBuilder): DBIO[Unit] = {
     (p.isList, p.isRequired, c.isList, c.isRequired) match {
       case (false, true, false, true)   => requiredRelationViolation
       case (false, true, false, false)  => requiredRelationViolation
@@ -33,7 +33,7 @@ case class NestedDisconnectInterpreter(mutaction: NestedDisconnect)(implicit val
     }
   }
 
-  def removalAction(parentId: IdGCValue)(implicit mutationBuilder: JdbcApiDatabaseMutationBuilder): DBIO[Unit] = {
+  def removalAction(parentId: IdGCValue)(implicit mutationBuilder: JdbcActionsBuilder): DBIO[Unit] = {
     mutaction.where match {
       case None =>
         for {
