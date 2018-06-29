@@ -2,14 +2,44 @@ package com.prisma.api.connector.jdbc.database
 
 import com.prisma.api.connector.{Filter, NodeSelector, PrismaNode}
 import com.prisma.gc_values.IdGCValue
-import com.prisma.shared.models.{Model, RelationField}
+import com.prisma.shared.models.{Model, RelationField, Schema}
 import org.jooq.{Condition, Record1, SelectConditionStep}
 import org.jooq.impl.DSL.{asterisk, field, name}
 
 import scala.concurrent.ExecutionContext
+import scala.language.existentials
 
-trait NodeQueries extends BuilderBase with FilterConditionBuilder {
+trait NodeSingleQueries extends BuilderBase with NodeManyQueries with FilterConditionBuilder {
   import slickDatabase.profile.api._
+
+  val relayIdTableQuery = {
+    val bla = RelayIdTableWrapper(slickDatabase.profile)
+    TableQuery(new bla.SlickTable(_, schemaName))
+  }
+
+  def selectByGlobalId(schema: Schema, idGCValue: IdGCValue)(implicit ec: ExecutionContext): DBIO[Option[PrismaNode]] = {
+    val modelNameForId: DBIO[Option[String]] = relayIdTableQuery
+      .filter(_.id === idGCValue.value.toString)
+      .map(_.stableModelIdentifier)
+      .take(1)
+      .result
+      .headOption
+
+    for {
+      stableModelIdentifier <- modelNameForId
+      result <- stableModelIdentifier match {
+                 case Some(stableModelIdentifier) =>
+                   val model = schema.getModelByStableIdentifier_!(stableModelIdentifier.trim)
+                   selectById(model, idGCValue)
+                 case None =>
+                   DBIO.successful(None)
+               }
+    } yield result
+  }
+
+  def selectById(model: Model, idGcValue: IdGCValue)(implicit ec: ExecutionContext): DBIO[Option[PrismaNode]] = {
+    batchSelectFromModelByUnique(model, model.idField_!, Vector(idGcValue)).map(_.headOption)
+  }
 
   def queryNodeByWhere(where: NodeSelector): DBIO[Option[PrismaNode]] = {
     val model = where.model

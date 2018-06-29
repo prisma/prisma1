@@ -16,7 +16,6 @@ case class JdbcDataResolver(
     extends DataResolver {
 
   val queryBuilder = JdbcApiDatabaseQueryBuilder(
-    project = project,
     schemaName = schemaName.getOrElse(project.id),
     slickDatabase = slickDatabase
   )(ec)
@@ -24,7 +23,7 @@ case class JdbcDataResolver(
   override def resolveByGlobalId(globalId: CuidGCValue): Future[Option[PrismaNode]] = { //todo rewrite this to use normal query?
     if (globalId.value == "viewer-fixed") return Future.successful(Some(PrismaNode(globalId, RootGCValue.empty, Some("Viewer"))))
 
-    val query = queryBuilder.selectByGlobalId(globalId)
+    val query = queryBuilder.selectByGlobalId(project.schema, globalId)
     performWithTiming("resolveByGlobalId", slickDatabase.database.run(query))
   }
 
