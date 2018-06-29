@@ -56,18 +56,16 @@ trait FilterConditionBuilder extends BuilderBase {
 
   private def relationFilterStatement(alias: String, relationFilter: RelationFilter): Condition = {
     val relationField         = relationFilter.field
-    val relationTableName     = relationField.relation.relationTableName
-    val column                = relationField.relation.columnForRelationSide(relationField.relationSide)
-    val oppositeColumn        = relationField.relation.columnForRelationSide(relationField.oppositeRelationSide)
+    val relation              = relationField.relation
     val newAlias              = relationField.relatedModel_!.dbName + "_" + alias
     val nestedFilterStatement = buildConditionForFilter(relationFilter.nestedFilter, newAlias)
 
     val select = sql
       .select()
-      .from(table(name(schemaName, relationField.relatedModel_!.dbName)).as(newAlias))
-      .innerJoin(table(name(schemaName, relationTableName)))
-      .on(field(name(newAlias, relationField.relatedModel_!.dbNameOfIdField_!)).eq(field(name(schemaName, relationTableName, oppositeColumn))))
-      .where(field(name(schemaName, relationTableName, column)).eq(field(name(alias, relationField.model.dbNameOfIdField_!))))
+      .from(modelTable(relationField.relatedModel_!).as(newAlias))
+      .innerJoin(relationTable(relation))
+      .on(modelIdColumn(newAlias, relationField.relatedModel_!).eq(relationColumn(relation, relationField.oppositeRelationSide)))
+      .where(relationColumn(relation, relationField.relationSide).eq(modelIdColumn(alias, relationField.model)))
 
     relationFilter.condition match {
       case AtLeastOneRelatedNode => exists(select.and(nestedFilterStatement))
@@ -78,15 +76,11 @@ trait FilterConditionBuilder extends BuilderBase {
   }
 
   private def oneRelationIsNullFilter(relationField: RelationField, alias: String): Condition = {
-    val relation          = relationField.relation
-    val relationTableName = relation.relationTableName
-    val column            = relation.columnForRelationSide(relationField.relationSide)
-    val otherIdColumn     = relationField.relatedModel_!.dbNameOfIdField_!
-
+    val relation = relationField.relation
     val select = sql
       .select()
-      .from(table(name(schemaName, relationTableName)))
-      .where(field(name(schemaName, relationTableName, column)).eq(field(name(alias, otherIdColumn))))
+      .from(relationTable(relation))
+      .where(relationColumn(relation, relationField.relationSide).eq(modelIdColumn(alias, relationField.relatedModel_!)))
 
     notExists(select)
   }
