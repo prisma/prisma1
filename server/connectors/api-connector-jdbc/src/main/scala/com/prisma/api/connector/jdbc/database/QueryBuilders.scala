@@ -15,7 +15,7 @@ case class RelationQueryBuilder(
     with OrderByClauseBuilder
     with LimitClauseBuilder {
 
-  lazy val queryString: String = {
+  lazy val query = {
     val aliasedTable = table(name(schemaName, relation.relationTableName)).as(topLevelAlias)
     val condition    = buildConditionForFilter(queryArguments.flatMap(_.filter))
     val order        = orderByForRelation(relation, topLevelAlias, queryArguments)
@@ -32,7 +32,7 @@ case class RelationQueryBuilder(
       case None    => base
     }
 
-    finalQuery.getSQL
+    finalQuery
   }
 }
 
