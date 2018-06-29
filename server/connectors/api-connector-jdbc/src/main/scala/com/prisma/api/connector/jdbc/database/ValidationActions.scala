@@ -85,11 +85,11 @@ trait ValidationActions extends BuilderBase with FilterConditionBuilder {
     }
   }
 
-  def oldParentFailureTriggerByField(parentId: IdGCValue, field: RelationField)(implicit ec: ExecutionContext): DBIO[Unit] = {
-    oldParentFailureTriggerByField(Vector(parentId), field)
+  def errorIfNodeIsInRelation(parentId: IdGCValue, field: RelationField)(implicit ec: ExecutionContext): DBIO[Unit] = {
+    errorIfNodesAreInRelation(Vector(parentId), field)
   }
 
-  def oldParentFailureTriggerByField(parentIds: Vector[IdGCValue], field: RelationField)(implicit ec: ExecutionContext): DBIO[Unit] = {
+  def errorIfNodesAreInRelation(parentIds: Vector[IdGCValue], field: RelationField)(implicit ec: ExecutionContext): DBIO[Unit] = {
     val relation = field.relation
     val query = sql
       .select(asterisk())
@@ -112,8 +112,7 @@ trait ValidationActions extends BuilderBase with FilterConditionBuilder {
     }
   }
 
-  def oldParentFailureTriggerByFieldAndFilter(model: Model, whereFilter: Option[Filter], relationField: RelationField)(
-      implicit ec: ExecutionContext): DBIO[_] = {
+  def errorIfNodesAreInRelationByFilter(model: Model, whereFilter: Option[Filter], relationField: RelationField)(implicit ec: ExecutionContext): DBIO[_] = {
     val relation = relationField.relation
     val query = sql
       .select(asterisk())

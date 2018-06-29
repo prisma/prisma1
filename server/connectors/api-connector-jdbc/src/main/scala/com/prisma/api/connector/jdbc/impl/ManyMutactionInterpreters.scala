@@ -22,7 +22,7 @@ case class DeleteDataItemsInterpreter(mutaction: DeleteNodes)(implicit ec: Execu
     val model                          = mutaction.model
     val filter                         = mutaction.whereFilter
     val fieldsWhereThisModelIsRequired = mutaction.project.schema.fieldsWhereThisModelIsRequired(model)
-    val actions                        = fieldsWhereThisModelIsRequired.map(field => mutationBuilder.oldParentFailureTriggerByFieldAndFilter(model, filter, field))
+    val actions                        = fieldsWhereThisModelIsRequired.map(field => mutationBuilder.errorIfNodesAreInRelationByFilter(model, filter, field))
     DBIO.sequence(actions)
   }
 }
