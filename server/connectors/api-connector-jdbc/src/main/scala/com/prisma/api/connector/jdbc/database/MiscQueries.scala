@@ -7,13 +7,13 @@ trait MiscQueries extends BuilderBase {
   import slickDatabase.profile.api._
 
   def countAllFromTable(table: String, whereFilter: Option[Filter]): DBIO[Int] = {
-    SimpleDBIO[Int] { ctx =>
-      val builder = CountQueryBuilder(slickDatabase, schemaName, table, whereFilter)
-      val ps      = ctx.connection.prepareStatement(builder.queryString)
-      SetParams.setFilter(new PositionedParameters(ps), whereFilter)
-      val rs = ps.executeQuery()
-      rs.next()
-      rs.getInt(1)
-    }
+    val builder = CountQueryBuilder(slickDatabase, schemaName, table, whereFilter)
+    queryToDBIO(builder.query)(
+      setParams = pp => SetParams.setFilter(pp, whereFilter),
+      readResult = rs => {
+        rs.next()
+        rs.getInt(1)
+      }
+    )
   }
 }

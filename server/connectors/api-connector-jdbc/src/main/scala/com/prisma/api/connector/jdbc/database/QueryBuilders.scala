@@ -44,17 +44,15 @@ case class CountQueryBuilder(
 ) extends BuilderBase
     with FilterConditionBuilder {
 
-  lazy val queryString: String = {
+  lazy val query = {
     val aliasedTable = table(name(schemaName, tableName)).as(topLevelAlias)
     val condition    = buildConditionForFilter(filter)
-
-    val query = sql
+    sql
       .selectCount()
       .from(aliasedTable)
       .where(condition)
-
-    query.getSQL
   }
+  lazy val queryString = query.getSQL
 }
 
 case class ScalarListQueryBuilder(
