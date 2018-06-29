@@ -1,7 +1,5 @@
 package com.prisma.api.connector.jdbc.database
 
-import java.sql.{PreparedStatement, Statement}
-
 import com.prisma.gc_values.{IdGCValue, NullGCValue}
 import com.prisma.shared.models.{RelationField, RelationSide}
 import cool.graph.cuid.Cuid
@@ -46,45 +44,37 @@ trait RelationActions extends BuilderBase {
         }
       )
     } else if (relation.hasManifestation) {
-      SimpleDBIO[Boolean] { x =>
-        lazy val queryString: String = {
-          sql
-            .insertInto(relationTable(relation))
-            .columns(
-              relationColumn(relation, relationField.relationSide),
-              relationColumn(relation, relationField.oppositeRelationSide)
-            )
-            .values(placeHolder, placeHolder)
-            .getSQL
+      val query = sql
+        .insertInto(relationTable(relation))
+        .columns(
+          relationColumn(relation, relationField.relationSide),
+          relationColumn(relation, relationField.oppositeRelationSide)
+        )
+        .values(placeHolder, placeHolder)
+
+      insertToDBIO(query)(
+        setParams = { pp =>
+          pp.setGcValue(parentId)
+          pp.setGcValue(childId)
         }
-
-        val statement: PreparedStatement = x.connection.prepareStatement(queryString, Statement.RETURN_GENERATED_KEYS)
-        statement.setGcValue(1, parentId)
-        statement.setGcValue(2, childId)
-
-        statement.execute()
-      }
+      )
     } else {
-      SimpleDBIO[Boolean] { x =>
-        lazy val queryString: String = {
-          sql
-            .insertInto(relationTable(relation))
-            .columns(
-              relationIdColumn(relation),
-              relationColumn(relation, relationField.relationSide),
-              relationColumn(relation, relationField.oppositeRelationSide)
-            )
-            .values(placeHolder, placeHolder, placeHolder)
-            .getSQL
+      val query = sql
+        .insertInto(relationTable(relation))
+        .columns(
+          relationIdColumn(relation),
+          relationColumn(relation, relationField.relationSide),
+          relationColumn(relation, relationField.oppositeRelationSide)
+        )
+        .values(placeHolder, placeHolder, placeHolder)
+
+      insertToDBIO(query)(
+        setParams = { pp =>
+          pp.setString(Cuid.createCuid())
+          pp.setGcValue(parentId)
+          pp.setGcValue(childId)
         }
-
-        val statement: PreparedStatement = x.connection.prepareStatement(queryString, Statement.RETURN_GENERATED_KEYS)
-        statement.setString(1, Cuid.createCuid())
-        statement.setGcValue(2, parentId)
-        statement.setGcValue(3, childId)
-
-        statement.execute()
-      }
+      )
     }
   }
 
@@ -125,17 +115,21 @@ trait RelationActions extends BuilderBase {
           .set(inlineRelationColumn(relation, manifestation), placeHolder)
           .where(condition)
 
-        updateToDBIO(query)(setParams = { pp =>
-          pp.setGcValue(NullGCValue)
-          pp.setGcValue(parentId)
-        })
+        updateToDBIO(query)(
+          setParams = { pp =>
+            pp.setGcValue(NullGCValue)
+            pp.setGcValue(parentId)
+          }
+        )
 
       case None =>
         val query = sql
           .deleteFrom(relationTable(relation))
           .where(condition)
 
-        deleteToDBIO(query)(setParams = _.setGcValue(parentId))
+        deleteToDBIO(query)(
+          setParams = _.setGcValue(parentId)
+        )
     }
   }
 }

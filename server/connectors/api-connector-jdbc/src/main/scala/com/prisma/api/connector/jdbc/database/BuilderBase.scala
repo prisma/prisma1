@@ -63,6 +63,16 @@ trait BuilderBase extends JooqExtensions with JdbcExtensions with SlickExtension
     }
   }
 
+  def insertToDBIO[T](query: Insert[Record])(setParams: PositionedParameters => Unit): DBIO[Unit] = {
+    SimpleDBIO { ctx =>
+      val ps = ctx.connection.prepareStatement(query.getSQL)
+      val pp = new PositionedParameters(ps)
+      setParams(pp)
+
+      ps.execute()
+    }
+  }
+
   def deleteToDBIO(query: Delete[Record])(setParams: PositionedParameters => Unit): DBIO[Unit] = {
     SimpleDBIO { ctx =>
       val ps = ctx.connection.prepareStatement(query.getSQL)
