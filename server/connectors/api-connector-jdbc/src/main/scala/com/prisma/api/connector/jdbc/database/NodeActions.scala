@@ -32,11 +32,9 @@ trait NodeActions extends BuilderBase with FilterConditionBuilder with ScalarLis
       setParams = { pp =>
         val currentTimestamp = currentSqlTimestampUTC
         fields.foreach { field =>
-          argsAsRoot.map.get(field.name) match {
-            case Some(NullGCValue) if field.name == createdAtField || field.name == updatedAtField => pp.setTimestamp(currentTimestamp)
-            case Some(gcValue)                                                                     => pp.setGcValue(gcValue)
-            case None if field.name == createdAtField || field.name == updatedAtField              => pp.setTimestamp(currentTimestamp)
-            case None                                                                              => pp.setGcValue(NullGCValue)
+          argsAsRoot.map(field.name) match {
+            case NullGCValue if field.name == createdAtField || field.name == updatedAtField => pp.setTimestamp(currentTimestamp)
+            case gcValue                                                                     => pp.setGcValue(gcValue)
           }
         }
       },
