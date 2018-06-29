@@ -4,14 +4,14 @@ import java.sql.ResultSet
 
 import com.prisma.api.connector.jdbc.extensions.JdbcExtensions
 import com.prisma.api.connector.{PrismaNode, PrismaNodeWithParent, RelationNode, ScalarListElement}
-import com.prisma.gc_values.RootGCValue
+import com.prisma.gc_values.{IdGCValue, RootGCValue}
 import com.prisma.shared.models._
 import com.prisma.slick.ReadsResultSet
 
 trait ResultSetReaders extends JdbcExtensions with QueryBuilderConstants {
   val readsAsUnit: ReadsResultSet[Unit] = ReadsResultSet(_ => ())
 
-  def readNodeId(model: Model) = ReadsResultSet(_.getId(model))
+  def readNodeId(model: Model): ReadsResultSet[IdGCValue] = ReadsResultSet(_.getId(model))
 
   def readPrismaNodeWithParent(rf: RelationField): ReadsResultSet[PrismaNodeWithParent] = ReadsResultSet { rs =>
     val node = readPrismaNode(rf.relatedModel_!, rs)

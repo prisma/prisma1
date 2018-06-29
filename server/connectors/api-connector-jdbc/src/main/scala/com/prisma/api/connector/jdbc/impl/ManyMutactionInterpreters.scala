@@ -36,7 +36,7 @@ case class ResetDataInterpreter(mutaction: ResetData) extends DatabaseMutactionI
 case class UpdateDataItemsInterpreter(mutaction: UpdateNodes) extends DatabaseMutactionInterpreter {
   def dbioAction(mutationBuilder: JdbcActionsBuilder, parentId: IdGCValue) = {
     val nonListActions = mutationBuilder.updateNodes(mutaction.model, mutaction.updateArgs, mutaction.whereFilter)
-    val listActions    = mutationBuilder.setManyScalarLists(mutaction.model, mutaction.listArgs, mutaction.whereFilter)
+    val listActions    = mutationBuilder.setScalarListValuesByFilter(mutaction.model, mutaction.listArgs, mutaction.whereFilter)
     DBIOAction.seq(listActions, nonListActions).andThen(unitResult)
   }
 }

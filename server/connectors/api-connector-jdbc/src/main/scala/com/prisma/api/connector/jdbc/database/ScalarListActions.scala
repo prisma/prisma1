@@ -12,7 +12,7 @@ import slick.jdbc.PositionedParameters
 trait ScalarListActions extends BuilderBase with FilterConditionBuilder {
   import slickDatabase.profile.api._
 
-  def deleteScalarListEntriesByIds(model: Model, ids: Vector[IdGCValue]): DBIO[Unit] = {
+  def deleteScalarListValuesByNodeIds(model: Model, ids: Vector[IdGCValue]): DBIO[Unit] = {
 
     val actions = model.scalarListFields.map { listField =>
       val query = sql
@@ -26,11 +26,11 @@ trait ScalarListActions extends BuilderBase with FilterConditionBuilder {
     DBIO.seq(actions: _*)
   }
 
-  def setScalarListById(model: Model, id: IdGCValue, listFieldMap: Vector[(String, ListGCValue)]) = {
+  def setScalarListValuesByNodeId(model: Model, id: IdGCValue, listFieldMap: Vector[(String, ListGCValue)]) = {
     if (listFieldMap.isEmpty) DBIOAction.successful(()) else setManyScalarListHelper(model, listFieldMap, DBIO.successful(Vector(id)))
   }
 
-  def setManyScalarLists(model: Model, listFieldMap: Vector[(String, ListGCValue)], whereFilter: Option[Filter]) = {
+  def setScalarListValuesByFilter(model: Model, listFieldMap: Vector[(String, ListGCValue)], whereFilter: Option[Filter]) = {
     val idQuery = SimpleDBIO { ctx =>
       val condition    = buildConditionForFilter(whereFilter)
       val aliasedTable = modelTable(model).as(topLevelAlias)
@@ -50,7 +50,7 @@ trait ScalarListActions extends BuilderBase with FilterConditionBuilder {
     if (listFieldMap.isEmpty) DBIOAction.successful(()) else setManyScalarListHelper(model, listFieldMap, idQuery)
   }
 
-  def setManyScalarListHelper(model: Model, listFieldMap: Vector[(String, ListGCValue)], idQuery: DBIO[Vector[IdGCValue]]) = {
+  private def setManyScalarListHelper(model: Model, listFieldMap: Vector[(String, ListGCValue)], idQuery: DBIO[Vector[IdGCValue]]) = {
     import scala.concurrent.ExecutionContext.Implicits.global
 
     def listInsert(ids: Vector[IdGCValue]) = {
