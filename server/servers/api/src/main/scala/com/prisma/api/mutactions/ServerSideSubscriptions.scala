@@ -1,7 +1,7 @@
 package com.prisma.api.mutactions
 
+import com.prisma.api.ApiMetrics
 import com.prisma.api.connector._
-import com.prisma.api.{ApiDependencies, ApiMetrics}
 import com.prisma.shared.models.IdType.Id
 import com.prisma.shared.models.ModelMutationType.ModelMutationType
 import com.prisma.shared.models.{Model, ModelMutationType, Project, ServerSideSubscriptionFunction}
@@ -9,7 +9,7 @@ import com.prisma.subscriptions.schema.QueryTransformer
 import sangria.parser.QueryParser
 
 object ServerSideSubscriptions {
-  def extractFromMutactions(
+  def extractFromMutactionResults(
       project: Project,
       mutactionResults: MutactionResults,
       requestId: Id

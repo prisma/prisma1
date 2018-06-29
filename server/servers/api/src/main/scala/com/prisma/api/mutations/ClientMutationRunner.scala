@@ -18,7 +18,7 @@ object ClientMutationRunner {
       errors                    = databaseMutactionVerifier.verify(mutaction +: mutaction.allNestedMutactions)
       _                         = if (errors.nonEmpty) throw errors.head
       databaseResults           <- databaseMutactionExecutor.executeTransactionally(mutaction)
-      serverSideSubscriptions   = ServerSideSubscriptions.extractFromMutactions(clientMutation.project, databaseResults, requestId = "")
+      serverSideSubscriptions   = ServerSideSubscriptions.extractFromMutactionResults(clientMutation.project, databaseResults, requestId = "")
       publishSubscriptionEvents = SubscriptionEvents.extractFromMutactionResults(clientMutation.project, clientMutation.mutationId, databaseResults)
       _                         <- sideEffectMutactionExecutor.execute(publishSubscriptionEvents ++ serverSideSubscriptions)
       prismaNode                <- clientMutation.getReturnValue(databaseResults)
