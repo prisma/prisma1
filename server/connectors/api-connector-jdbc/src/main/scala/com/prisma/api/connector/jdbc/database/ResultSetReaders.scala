@@ -6,7 +6,7 @@ import com.prisma.api.connector.jdbc.extensions.JdbcExtensions
 import com.prisma.api.connector.{PrismaNode, PrismaNodeWithParent, RelationNode, ScalarListElement}
 import com.prisma.gc_values.RootGCValue
 import com.prisma.shared.models._
-import com.prisma.slick.NewJdbcExtensions.ReadsResultSet
+import com.prisma.slick.ReadsResultSet
 
 trait ResultSetReaders extends JdbcExtensions with QueryBuilderConstants {
   val readsAsUnit: ReadsResultSet[Unit] = ReadsResultSet(_ => ())

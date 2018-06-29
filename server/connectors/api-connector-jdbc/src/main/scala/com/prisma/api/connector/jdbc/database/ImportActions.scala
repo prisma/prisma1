@@ -5,14 +5,13 @@ import java.sql.{PreparedStatement, Statement}
 import com.prisma.api.connector.{ImportNodes, ImportRelations, ImportScalarLists}
 import com.prisma.gc_values.{GCValue, IdGCValue, ListGCValue, NullGCValue}
 import com.prisma.shared.models.ScalarField
+import com.prisma.slick.ReadsResultSet
 import cool.graph.cuid.Cuid
 import org.jooq.impl.DSL.max
 
 import scala.concurrent.ExecutionContext
 
 trait ImportActions extends BuilderBase {
-
-  import com.prisma.slick.NewJdbcExtensions._
   import slickDatabase.profile.api._
 
   def createDataItemsImport(mutaction: ImportNodes): SimpleDBIO[Vector[String]] = {

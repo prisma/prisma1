@@ -17,8 +17,6 @@ case class JdbcApiDatabaseQueryBuilder(
     slickDatabase: SlickDatabase
 )(implicit ec: ExecutionContext)
     extends AllBuilders {
-
-  import com.prisma.slick.NewJdbcExtensions._
   import slickDatabase.profile.api._
 
   val relayIdTableQuery = {

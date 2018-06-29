@@ -5,6 +5,7 @@ import java.sql.ResultSet
 import com.prisma.api.connector.jdbc.extensions.{JdbcExtensions, JooqExtensions, SlickExtensions}
 import com.prisma.shared.models.Manifestations.InlineRelationManifestation
 import com.prisma.shared.models._
+import com.prisma.slick.ResultSetExtensions
 import org.jooq.conf.Settings
 import org.jooq.impl.DSL
 import org.jooq.impl.DSL.{field, name, table}
@@ -13,9 +14,15 @@ import slick.jdbc.{MySQLProfile, PositionedParameters, PostgresProfile}
 
 import scala.collection.JavaConverters._
 
-trait AllBuilders extends FilterConditionBuilder with CursorConditionBuilder with ImportActions with OrderByClauseBuilder with LimitClauseBuilder
+trait AllBuilders
+    extends FilterConditionBuilder
+    with CursorConditionBuilder
+    with ImportActions
+    with OrderByClauseBuilder
+    with LimitClauseBuilder
+    with NodeActions
 
-trait BuilderBase extends JooqExtensions with JdbcExtensions with SlickExtensions with ResultSetReaders with QueryBuilderConstants {
+trait BuilderBase extends JooqExtensions with JdbcExtensions with SlickExtensions with ResultSetReaders with QueryBuilderConstants with ResultSetExtensions {
 
   def schemaName: String
   val slickDatabase: SlickDatabase

@@ -1,0 +1,141 @@
+package com.prisma.api.connector.jdbc.database
+
+import java.sql.{PreparedStatement, Statement}
+
+import com.prisma.gc_values.{IdGCValue, NullGCValue}
+import com.prisma.shared.models.{RelationField, RelationSide}
+import cool.graph.cuid.Cuid
+
+trait RelationActions extends BuilderBase {
+  import slickDatabase.profile.api._
+
+  def createRelation(relationField: RelationField, parentId: IdGCValue, childId: IdGCValue): DBIO[_] = {
+    val relation = relationField.relation
+
+    if (relation.isInlineRelation) {
+      val inlineManifestation  = relation.inlineManifestation.get
+      val referencingColumn    = inlineManifestation.referencingColumn
+      val childModel           = relationField.relatedModel_!
+      val parentModel          = relationField.model
+      val childWhereCondition  = idField(childModel).equal(placeHolder)
+      val parentWhereCondition = idField(parentModel).equal(placeHolder)
+
+      val (idToLinkTo, idToUpdate, rowToUpdateCondition) = if (relation.isSameModelRelation) {
+        if (relationField.relationSide == RelationSide.B) {
+          (childId, parentId, childWhereCondition)
+        } else {
+          (parentId, childId, parentWhereCondition)
+        }
+      } else {
+        if (inlineManifestation.inTableOfModelId == childModel.name) {
+          (parentId, childId, childWhereCondition)
+        } else {
+          (childId, parentId, parentWhereCondition)
+        }
+      }
+
+      val query = sql
+        .update(relationTable(relation))
+        .setColumnsWithPlaceHolders(Vector(referencingColumn))
+        .where(rowToUpdateCondition)
+
+      updateToDBIO(query)(
+        setParams = { pp =>
+          pp.setGcValue(idToLinkTo)
+          pp.setGcValue(idToUpdate)
+        }
+      )
+    } else if (relation.hasManifestation) {
+      SimpleDBIO[Boolean] { x =>
+        lazy val queryString: String = {
+          sql
+            .insertInto(relationTable(relation))
+            .columns(
+              relationColumn(relation, relationField.relationSide),
+              relationColumn(relation, relationField.oppositeRelationSide)
+            )
+            .values(placeHolder, placeHolder)
+            .getSQL
+        }
+
+        val statement: PreparedStatement = x.connection.prepareStatement(queryString, Statement.RETURN_GENERATED_KEYS)
+        statement.setGcValue(1, parentId)
+        statement.setGcValue(2, childId)
+
+        statement.execute()
+      }
+    } else {
+      SimpleDBIO[Boolean] { x =>
+        lazy val queryString: String = {
+          sql
+            .insertInto(relationTable(relation))
+            .columns(
+              relationIdColumn(relation),
+              relationColumn(relation, relationField.relationSide),
+              relationColumn(relation, relationField.oppositeRelationSide)
+            )
+            .values(placeHolder, placeHolder, placeHolder)
+            .getSQL
+        }
+
+        val statement: PreparedStatement = x.connection.prepareStatement(queryString, Statement.RETURN_GENERATED_KEYS)
+        statement.setString(1, Cuid.createCuid())
+        statement.setGcValue(2, parentId)
+        statement.setGcValue(3, childId)
+
+        statement.execute()
+      }
+    }
+  }
+
+  def deleteRelationRowByChildId(relationField: RelationField, childId: IdGCValue): DBIO[Unit] = {
+    val relation  = relationField.relation
+    val condition = relationColumn(relation, relationField.oppositeRelationSide).equal(placeHolder)
+
+    relation.inlineManifestation match {
+      case Some(manifestation) =>
+        val query = sql
+          .update(relationTable(relation))
+          .set(inlineRelationColumn(relation, manifestation), placeHolder)
+          .where(condition)
+
+        updateToDBIO(query)(
+          setParams = { pp =>
+            pp.setGcValue(NullGCValue)
+            pp.setGcValue(childId)
+          }
+        )
+
+      case None =>
+        val query = sql
+          .deleteFrom(relationTable(relation))
+          .where(condition)
+        deleteToDBIO(query)(setParams = _.setGcValue(childId))
+    }
+
+  }
+
+  def deleteRelationRowByParentId(relationField: RelationField, parentId: IdGCValue): DBIO[Unit] = {
+    val relation  = relationField.relation
+    val condition = relationColumn(relation, relationField.relationSide).equal(placeHolder)
+    relation.inlineManifestation match {
+      case Some(manifestation) =>
+        val query = sql
+          .update(relationTable(relation))
+          .set(inlineRelationColumn(relation, manifestation), placeHolder)
+          .where(condition)
+
+        updateToDBIO(query)(setParams = { pp =>
+          pp.setGcValue(NullGCValue)
+          pp.setGcValue(parentId)
+        })
+
+      case None =>
+        val query = sql
+          .deleteFrom(relationTable(relation))
+          .where(condition)
+
+        deleteToDBIO(query)(setParams = _.setGcValue(parentId))
+    }
+  }
+}
