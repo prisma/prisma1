@@ -10,6 +10,10 @@ import slick.jdbc.PositionedParameters
 object SetParams extends SlickExtensions with LimitClauseBuilder {
   def setQueryArgs(preparedStatement: PreparedStatement, queryArguments: Option[QueryArguments]): Unit = {
     val pp = new PositionedParameters(preparedStatement)
+    setQueryArgs(pp, queryArguments)
+  }
+
+  def setQueryArgs(pp: PositionedParameters, queryArguments: Option[QueryArguments]): Unit = {
     queryArguments.foreach { queryArgs =>
       setFilter(pp, queryArgs.filter)
       setCursor(pp, queryArgs)

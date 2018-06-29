@@ -142,7 +142,7 @@ case class RelatedModelsQueryBuilder(
     .innerJoin(relationTable)
     .on(aliasColumn(relatedModel.dbNameOfIdField_!).eq(field(name(relationTableAlias, oppositeModelRelationSideColumn))))
 
-  lazy val queryStringWithPagination: String = {
+  lazy val queryWithPagination = {
     val order           = orderByInternal(baseTableAlias, baseTableAlias, secondaryOrderByForPagination, queryArguments)
     val cursorCondition = buildCursorCondition(queryArguments, relatedModel)
 
@@ -159,7 +159,7 @@ case class RelatedModelsQueryBuilder(
       .from(withRowNumbers)
       .where(limitCondition)
 
-    withPagination.getSQL
+    withPagination
   }
 
   lazy val mysqlHack = {
@@ -177,13 +177,13 @@ case class RelatedModelsQueryBuilder(
     singleQuery
   }
 
-  lazy val queryStringWithoutPagination: String = {
+  lazy val queryWithoutPagination = {
     val order = orderByInternal(topLevelAlias, relationTableAlias, oppositeModelRelationSideColumn, queryArguments)
     val withoutPagination = base
       .where(relatedNodesCondition, queryArgumentsCondition)
       .orderBy(order: _*)
 
-    withoutPagination.getSQL
+    withoutPagination
   }
 }
 
@@ -198,7 +198,7 @@ case class ModelQueryBuilder(
     with OrderByClauseBuilder
     with LimitClauseBuilder {
 
-  lazy val queryString: String = {
+  lazy val query = {
     val condition       = buildConditionForFilter(queryArguments.flatMap(_.filter))
     val cursorCondition = buildCursorCondition(queryArguments, model)
     val order           = orderByForModel(model, topLevelAlias, queryArguments)
@@ -217,6 +217,8 @@ case class ModelQueryBuilder(
       case None    => base
     }
 
-    finalQuery.getSQL
+    finalQuery
   }
+
+  lazy val queryString: String = query.getSQL
 }
