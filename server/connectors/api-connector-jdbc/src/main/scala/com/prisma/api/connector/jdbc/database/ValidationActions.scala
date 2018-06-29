@@ -26,7 +26,7 @@ trait ValidationActions extends BuilderBase with FilterConditionBuilder {
 
     val action = queryToDBIO(idQuery)(
       setParams = _.setGcValue(childId),
-      readResult = rs => rs.as(readsAsUnit)
+      readResult = rs => rs.readWith(readsAsUnit)
     )
     action.map { result =>
       if (result.nonEmpty) throw RequiredRelationWouldBeViolated(relation)
@@ -48,7 +48,7 @@ trait ValidationActions extends BuilderBase with FilterConditionBuilder {
 
     val action = queryToDBIO(idQuery)(
       setParams = _.setGcValue(childId),
-      readResult = rs => rs.as(readsAsUnit)
+      readResult = rs => rs.readWith(readsAsUnit)
     )
     action.map { result =>
       if (result.isEmpty)
@@ -77,7 +77,7 @@ trait ValidationActions extends BuilderBase with FilterConditionBuilder {
 
     val action = queryToDBIO(idQuery)(
       setParams = _.setGcValue(parentId),
-      readResult = rs => rs.as(readsAsUnit)
+      readResult = rs => rs.readWith(readsAsUnit)
     )
     action.map { result =>
       if (result.isEmpty)
@@ -107,7 +107,7 @@ trait ValidationActions extends BuilderBase with FilterConditionBuilder {
 
     val action = queryToDBIO(query)(
       setParams = pp => parentIds.foreach(pp.setGcValue),
-      readResult = rs => rs.as(readsAsUnit)
+      readResult = rs => rs.readWith(readsAsUnit)
     )
     action.map { result =>
       if (result.nonEmpty) {

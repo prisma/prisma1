@@ -114,7 +114,7 @@ trait NodeManyQueries extends BuilderBase with LimitClauseBuilder {
       }
 
       val rs                  = ps.executeQuery()
-      val result              = rs.as[PrismaNodeWithParent](readPrismaNodeWithParent(fromField))
+      val result              = rs.readWith(readPrismaNodeWithParent(fromField))
       val itemGroupsByModelId = result.groupBy(_.parentId)
       fromModelIds.map { id =>
         itemGroupsByModelId.find(_._1 == id) match {

@@ -183,7 +183,7 @@ trait ImportActions extends BuilderBase {
 
     queryToDBIO(query)(
       setParams = pp => nodeIds.foreach(pp.setGcValue),
-      readResult = rs => rs.as(reads).toMap
+      readResult = rs => rs.readWith(reads).toMap
     )
   }
 

@@ -24,8 +24,6 @@ trait ResultSetExtensions {
 object ResultSetExtensionsValueClasses {
   class ResultSetExtensions2(val resultSet: ResultSet) extends AnyVal {
 
-    def as[T](implicit reads: ReadsResultSet[T]): Vector[T] = readWith(reads)
-
     def readWith[T](reads: ReadsResultSet[T]): Vector[T] = {
       val result = mutable.Buffer.empty[T]
       while (resultSet.next) {

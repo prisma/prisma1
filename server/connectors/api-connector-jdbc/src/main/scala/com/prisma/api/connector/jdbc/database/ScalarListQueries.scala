@@ -33,7 +33,7 @@ trait ScalarListQueries extends BuilderBase {
     queryToDBIO(builder.query)(
       setParams = pp => nodeIds.foreach(pp.setGcValue),
       readResult = { rs =>
-        val scalarListElements                          = rs.as(readsScalarListField(field))
+        val scalarListElements                          = rs.readWith(readsScalarListField(field))
         val grouped: Map[Id, Vector[ScalarListElement]] = scalarListElements.groupBy(_.nodeId)
         grouped.map { case (id, values) => ScalarListValues(CuidGCValue(id), ListGCValue(values.sortBy(_.position).map(_.value))) }.toVector
       }
