@@ -23,12 +23,12 @@ case class JdbcDataResolver(
   override def resolveByGlobalId(globalId: CuidGCValue): Future[Option[PrismaNode]] = {
     if (globalId.value == "viewer-fixed") return Future.successful(Some(PrismaNode(globalId, RootGCValue.empty, Some("Viewer"))))
 
-    val query = queryBuilder.selectByGlobalId(project.schema, globalId)
+    val query = queryBuilder.getNodeByGlobalId(project.schema, globalId)
     performWithTiming("resolveByGlobalId", slickDatabase.database.run(query))
   }
 
   override def resolveByModel(model: Model, args: Option[QueryArguments] = None): Future[ResolverResult[PrismaNode]] = {
-    val query = queryBuilder.selectAllFromTable(model, args)
+    val query = queryBuilder.getNodes(model, args)
     performWithTiming("loadModelRowsForExport", slickDatabase.database.run(query))
   }
 
@@ -45,7 +45,7 @@ case class JdbcDataResolver(
   }
 
   override def batchResolveByUnique(model: Model, field: ScalarField, values: Vector[GCValue]): Future[Vector[PrismaNode]] = {
-    val query = queryBuilder.batchSelectFromModelByUnique(model, field, values)
+    val query = queryBuilder.getNodesByValuesForField(model, field, values)
     performWithTiming("batchResolveByUnique", slickDatabase.database.run(query))
   }
 
@@ -59,7 +59,7 @@ case class JdbcDataResolver(
       fromNodeIds: Vector[IdGCValue],
       args: Option[QueryArguments]
   ): Future[Vector[ResolverResult[PrismaNodeWithParent]]] = {
-    val query = queryBuilder.batchSelectAllFromRelatedModel(project.schema, fromField, fromNodeIds, args)
+    val query = queryBuilder.getRelatedNodes(project.schema, fromField, fromNodeIds, args)
     performWithTiming("resolveByRelation", slickDatabase.database.run(query))
   }
 

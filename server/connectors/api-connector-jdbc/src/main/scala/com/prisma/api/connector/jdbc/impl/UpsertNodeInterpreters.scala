@@ -16,7 +16,7 @@ case class UpsertDataItemInterpreter(mutaction: TopLevelUpsertNode)(implicit ec:
 
   override def dbioAction(mutationBuilder: JdbcActionsBuilder, parentId: IdGCValue) = {
     for {
-      id <- mutationBuilder.queryIdFromWhere(mutaction.where)
+      id <- mutationBuilder.getNodeIdByWhere(mutaction.where)
     } yield
       id match {
         case Some(_) => UpsertNodeResult(mutaction.update, mutaction)
@@ -42,8 +42,8 @@ case class NestedUpsertDataItemInterpreter(mutaction: NestedUpsertNode)(implicit
   override def dbioAction(mutationBuilder: JdbcActionsBuilder, parentId: IdGCValue) = {
     for {
       id <- mutaction.where match {
-             case Some(where) => mutationBuilder.queryIdByParentIdAndWhere(mutaction.relationField, parentId, where)
-             case None        => mutationBuilder.queryIdByParentId(mutaction.relationField, parentId)
+             case Some(where) => mutationBuilder.getNodeIdByParentIdAndWhere(mutaction.relationField, parentId, where)
+             case None        => mutationBuilder.getNodeIdByParentId(mutaction.relationField, parentId)
            }
     } yield
       id match {

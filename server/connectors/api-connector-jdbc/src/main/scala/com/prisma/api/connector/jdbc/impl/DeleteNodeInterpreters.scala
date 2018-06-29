@@ -19,7 +19,7 @@ case class DeleteNodeInterpreter(mutaction: TopLevelDeleteNode)(implicit val ec:
 
   override def dbioAction(mutationBuilder: JdbcActionsBuilder, parentId: IdGCValue) = {
     for {
-      nodeOpt <- mutationBuilder.queryNodeByWhere(mutaction.where)
+      nodeOpt <- mutationBuilder.getNodeByWhere(mutaction.where)
       node <- nodeOpt match {
                case Some(node) =>
                  for {
@@ -62,12 +62,12 @@ case class NestedDeleteNodeInterpreter(mutaction: NestedDeleteNode)(implicit val
   private def getChildId(mutationBuilder: JdbcActionsBuilder, parentId: IdGCValue): DBIO[IdGCValue] = {
     mutaction.where match {
       case Some(where) =>
-        mutationBuilder.queryIdFromWhere(where).map {
+        mutationBuilder.getNodeIdByWhere(where).map {
           case Some(id) => id
           case None     => throw APIErrors.NodeNotFoundForWhereError(where)
         }
       case None =>
-        mutationBuilder.queryIdByParentId(parentField, parentId).map {
+        mutationBuilder.getNodeIdByParentId(parentField, parentId).map {
           case Some(id) => id
           case None =>
             throw NodesNotConnectedError(
@@ -111,7 +111,7 @@ trait CascadingDeleteSharedStuff extends DatabaseMutactionInterpreter {
       visitedModels: Vector[Model]
   ): DBIO[Unit] = {
     for {
-      ids            <- mutationBuilder.queryIdsByParentIds(parentField, parentIds)
+      ids            <- mutationBuilder.getNodeIdsByParentIds(parentField, parentIds)
       model          = parentField.relatedModel_!
       _              = if (visitedModels.contains(model)) throw APIErrors.CascadingDeletePathLoops()
       nextCascadings = model.cascadingRelationFields.filter(_ != parentField)

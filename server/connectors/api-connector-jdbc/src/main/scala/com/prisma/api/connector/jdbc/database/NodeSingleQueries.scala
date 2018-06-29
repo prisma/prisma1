@@ -17,7 +17,7 @@ trait NodeSingleQueries extends BuilderBase with NodeManyQueries with FilterCond
     TableQuery(new bla.SlickTable(_, schemaName))
   }
 
-  def selectByGlobalId(schema: Schema, idGCValue: IdGCValue)(implicit ec: ExecutionContext): DBIO[Option[PrismaNode]] = {
+  def getNodeByGlobalId(schema: Schema, idGCValue: IdGCValue)(implicit ec: ExecutionContext): DBIO[Option[PrismaNode]] = {
     val modelNameForId: DBIO[Option[String]] = relayIdTableQuery
       .filter(_.id === idGCValue.value.toString)
       .map(_.stableModelIdentifier)
@@ -30,18 +30,18 @@ trait NodeSingleQueries extends BuilderBase with NodeManyQueries with FilterCond
       result <- stableModelIdentifier match {
                  case Some(stableModelIdentifier) =>
                    val model = schema.getModelByStableIdentifier_!(stableModelIdentifier.trim)
-                   selectById(model, idGCValue)
+                   getNodeById(model, idGCValue)
                  case None =>
                    DBIO.successful(None)
                }
     } yield result
   }
 
-  def selectById(model: Model, idGcValue: IdGCValue)(implicit ec: ExecutionContext): DBIO[Option[PrismaNode]] = {
-    batchSelectFromModelByUnique(model, model.idField_!, Vector(idGcValue)).map(_.headOption)
+  def getNodeById(model: Model, idGcValue: IdGCValue)(implicit ec: ExecutionContext): DBIO[Option[PrismaNode]] = {
+    getNodesByValuesForField(model, model.idField_!, Vector(idGcValue)).map(_.headOption)
   }
 
-  def queryNodeByWhere(where: NodeSelector): DBIO[Option[PrismaNode]] = {
+  def getNodeByWhere(where: NodeSelector): DBIO[Option[PrismaNode]] = {
     val model = where.model
     val query = sql
       .select(asterisk())
@@ -54,7 +54,7 @@ trait NodeSingleQueries extends BuilderBase with NodeManyQueries with FilterCond
     )
   }
 
-  def queryIdFromWhere(where: NodeSelector): DBIO[Option[IdGCValue]] = {
+  def getNodeIdByWhere(where: NodeSelector): DBIO[Option[IdGCValue]] = {
     SimpleDBIO { ctx =>
       val model = where.model
       val query = sql
@@ -75,11 +75,11 @@ trait NodeSingleQueries extends BuilderBase with NodeManyQueries with FilterCond
     }
   }
 
-  def queryIdByParentId(parentField: RelationField, parentId: IdGCValue)(implicit ec: ExecutionContext): DBIO[Option[IdGCValue]] = {
-    queryIdsByParentIds(parentField, Vector(parentId)).map(_.headOption)
+  def getNodeIdByParentId(parentField: RelationField, parentId: IdGCValue)(implicit ec: ExecutionContext): DBIO[Option[IdGCValue]] = {
+    getNodeIdsByParentIds(parentField, Vector(parentId)).map(_.headOption)
   }
 
-  def queryIdsByParentIds(parentField: RelationField, parentIds: Vector[IdGCValue]): DBIO[Vector[IdGCValue]] = {
+  def getNodeIdsByParentIds(parentField: RelationField, parentIds: Vector[IdGCValue]): DBIO[Vector[IdGCValue]] = {
     val model = parentField.relatedModel_!
     val q: SelectConditionStep[Record1[AnyRef]] = sql
       .select(idField(model))
@@ -91,7 +91,7 @@ trait NodeSingleQueries extends BuilderBase with NodeManyQueries with FilterCond
     )
   }
 
-  def queryIdsByWhereFilter(model: Model, filter: Option[Filter]): DBIO[Vector[IdGCValue]] = {
+  def getNodesIdsByFilter(model: Model, filter: Option[Filter]): DBIO[Vector[IdGCValue]] = {
     val aliasedTable    = modelTable(model).as(topLevelAlias)
     val filterCondition = buildConditionForFilter(filter)
     val query           = sql.select(field(name(topLevelAlias, model.dbNameOfIdField_!))).from(aliasedTable).where(filterCondition)
@@ -102,7 +102,7 @@ trait NodeSingleQueries extends BuilderBase with NodeManyQueries with FilterCond
     )
   }
 
-  def queryIdByParentIdAndWhere(parentField: RelationField, parentId: IdGCValue, where: NodeSelector): DBIO[Option[IdGCValue]] = {
+  def getNodeIdByParentIdAndWhere(parentField: RelationField, parentId: IdGCValue, where: NodeSelector): DBIO[Option[IdGCValue]] = {
     val model                 = parentField.relatedModel_!
     val nodeSelectorCondition = modelColumn(model, where.field).equal(placeHolder)
     val q: SelectConditionStep[Record1[AnyRef]] = sql

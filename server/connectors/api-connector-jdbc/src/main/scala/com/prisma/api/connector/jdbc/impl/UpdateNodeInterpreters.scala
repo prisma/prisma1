@@ -19,7 +19,7 @@ case class UpdateNodeInterpreter(mutaction: TopLevelUpdateNode)(implicit ec: Exe
 
   override def dbioAction(mutationBuilder: JdbcActionsBuilder, parent: IdGCValue) = {
     for {
-      nodeOpt <- mutationBuilder.queryNodeByWhere(mutaction.where)
+      nodeOpt <- mutationBuilder.getNodeByWhere(mutaction.where)
       node <- nodeOpt match {
                case Some(node) => doIt(mutationBuilder, node.id).andThen(DBIO.successful(node))
                case None       => DBIO.failed(APIErrors.NodeNotFoundForWhereError(mutaction.where))
@@ -58,8 +58,8 @@ case class NestedUpdateNodeInterpreter(mutaction: NestedUpdateNode)(implicit ec:
     for {
       _ <- verifyWhere(mutationBuilder, mutaction.where)
       idOpt <- mutaction.where match {
-                case Some(where) => mutationBuilder.queryIdByParentIdAndWhere(mutaction.relationField, parentId, where)
-                case None        => mutationBuilder.queryIdByParentId(mutaction.relationField, parentId)
+                case Some(where) => mutationBuilder.getNodeIdByParentIdAndWhere(mutaction.relationField, parentId, where)
+                case None        => mutationBuilder.getNodeIdByParentId(mutaction.relationField, parentId)
               }
       id <- idOpt match {
              case Some(id) => doIt(mutationBuilder, id)
@@ -102,7 +102,7 @@ trait SharedUpdateLogic {
     where match {
       case Some(where) =>
         for {
-          id <- mutationBuilder.queryIdFromWhere(where)
+          id <- mutationBuilder.getNodeIdByWhere(where)
         } yield {
           if (id.isEmpty) throw APIErrors.NodeNotFoundForWhereError(where)
         }

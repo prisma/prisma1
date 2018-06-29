@@ -14,7 +14,7 @@ case class DeleteDataItemsInterpreter(mutaction: DeleteNodes)(implicit ec: Execu
   def dbioAction(mutationBuilder: JdbcActionsBuilder, parentId: IdGCValue) =
     for {
       _   <- checkForRequiredRelationsViolations(mutationBuilder)
-      ids <- mutationBuilder.queryIdsByWhereFilter(mutaction.model, mutaction.whereFilter)
+      ids <- mutationBuilder.getNodesIdsByFilter(mutaction.model, mutaction.whereFilter)
       _   <- mutationBuilder.deleteNodes(mutaction.model, ids)
     } yield UnitDatabaseMutactionResult
 

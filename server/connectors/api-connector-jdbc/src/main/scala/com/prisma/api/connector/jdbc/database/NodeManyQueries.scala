@@ -10,7 +10,7 @@ import slick.jdbc.PositionedParameters
 trait NodeManyQueries extends BuilderBase with LimitClauseBuilder {
   import slickDatabase.profile.api._
 
-  def selectAllFromTable(
+  def getNodes(
       model: Model,
       args: Option[QueryArguments],
       overrideMaxNodeCount: Option[Int] = None
@@ -25,7 +25,7 @@ trait NodeManyQueries extends BuilderBase with LimitClauseBuilder {
     }
   }
 
-  def batchSelectAllFromRelatedModel(
+  def getRelatedNodes(
       schema: Schema,
       fromField: RelationField,
       fromNodeIds: Vector[IdGCValue],
@@ -78,7 +78,7 @@ trait NodeManyQueries extends BuilderBase with LimitClauseBuilder {
     }
   }
 
-  def selectAllFromRelatedWithPaginationForMySQL(
+  private def selectAllFromRelatedWithPaginationForMySQL(
       schema: Schema,
       fromField: RelationField,
       fromModelIds: Vector[IdGCValue],
@@ -132,7 +132,7 @@ trait NodeManyQueries extends BuilderBase with LimitClauseBuilder {
     }
   }
 
-  def batchSelectFromModelByUnique(model: Model, field: ScalarField, values: Vector[GCValue]): DBIO[Vector[PrismaNode]] = {
+  def getNodesByValuesForField(model: Model, field: ScalarField, values: Vector[GCValue]): DBIO[Vector[PrismaNode]] = {
     SimpleDBIO { ctx =>
       val queryArgs = Some(QueryArguments.withFilter(ScalarFilter(field, In(values))))
       val builder   = ModelQueryBuilder(slickDatabase, schemaName, model, queryArgs)

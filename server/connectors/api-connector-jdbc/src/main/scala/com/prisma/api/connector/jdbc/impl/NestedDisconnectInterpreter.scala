@@ -43,7 +43,7 @@ case class NestedDisconnectInterpreter(mutaction: NestedDisconnect)(implicit val
 
       case Some(where) =>
         for {
-          id <- mutationBuilder.queryIdFromWhere(where)
+          id <- mutationBuilder.getNodeIdByWhere(where)
           _ <- id match {
                 case None => throw APIErrors.NodeNotFoundForWhereError(where)
                 case Some(childId) =>
