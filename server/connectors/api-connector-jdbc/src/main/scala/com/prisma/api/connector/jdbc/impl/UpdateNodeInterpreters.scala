@@ -113,7 +113,7 @@ trait SharedUpdateLogic {
 
   def doIt(mutationBuilder: JdbcActionsBuilder, id: IdGCValue)(implicit ec: ExecutionContext): DBIO[IdGCValue] = {
     for {
-      _ <- mutationBuilder.updateDataItemById(model, id, nonListArgs)
+      _ <- mutationBuilder.updateNodeById(model, id, nonListArgs)
       _ <- mutationBuilder.setScalarListById(model, id, listArgs)
     } yield id
   }
