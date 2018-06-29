@@ -3,11 +3,10 @@ package com.prisma.deploy.specutils
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
 import com.prisma.ConnectorAwareTest
-import com.prisma.deploy.connector.postgresql.PostgresDeployConnector
+import com.prisma.deploy.connector.postgres.PostgresDeployConnector
 import com.prisma.shared.models.{Migration, Project, ProjectId}
 import com.prisma.utils.await.AwaitUtils
 import com.prisma.utils.json.PlayJsonExtensions
-import cool.graph.cuid.Cuid
 import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach, Suite}
 import play.api.libs.json.JsString
 

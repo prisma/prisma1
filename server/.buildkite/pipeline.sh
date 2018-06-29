@@ -22,10 +22,10 @@ static=$(printf "    - label: \":mysql: MySql API connector\"
       command: cd server && ./.buildkite/scripts/test.sh integration-tests-mysql mysql
 
     - label: \":postgres: Postgres API connector\"
-      command: cd server && ./.buildkite/scripts/test.sh api-connector-postgresql postgres
+      command: cd server && ./.buildkite/scripts/test.sh api-connector-postgres postgres
 
     - label: \":postgres: Postgres deploy connector\"
-      command: cd server && ./.buildkite/scripts/test.sh deploy-connector-postgresql postgres
+      command: cd server && ./.buildkite/scripts/test.sh deploy-connector-postgres postgres
 
     - label: \":scala: integration-tests-postgres\"
       command: cd server && ./.buildkite/scripts/test.sh integration-tests-mysql postgres

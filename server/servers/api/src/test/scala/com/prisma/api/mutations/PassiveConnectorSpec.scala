@@ -2,7 +2,7 @@ package com.prisma.api.mutations
 
 import com.prisma.IgnoreActive
 import com.prisma.api.ApiSpecBase
-import com.prisma.deploy.connector.postgresql.PostgresDeployConnector
+import com.prisma.deploy.connector.postgres.PostgresDeployConnector
 import com.prisma.shared.schema_dsl.SchemaDsl
 import org.scalatest.{FlatSpec, Matchers}
 

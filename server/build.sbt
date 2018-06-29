@@ -132,7 +132,7 @@ lazy val deployConnectorMySql = connectorProject("deploy-connector-mysql")
     libraryDependencies ++= slick ++ Seq(mariaDbClient)
   )
 
-lazy val deployConnectorPostgres = connectorProject("deploy-connector-postgresql")
+lazy val deployConnectorPostgres = connectorProject("deploy-connector-postgres")
   .dependsOn(deployConnector)
   .settings(
     libraryDependencies ++= slick ++ Seq(postgresClient)
@@ -159,7 +159,7 @@ lazy val apiConnectorMySql = connectorProject("api-connector-mysql")
     libraryDependencies ++= Seq(mariaDbClient)
   )
 
-lazy val apiConnectorPostgres = connectorProject("api-connector-postgresql")
+lazy val apiConnectorPostgres = connectorProject("api-connector-postgres")
   .dependsOn(apiConnectorJdbc)
 
 

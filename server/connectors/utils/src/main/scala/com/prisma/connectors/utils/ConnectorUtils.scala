@@ -6,7 +6,7 @@ import com.prisma.api.connector.postgres.PostgresApiConnector
 import com.prisma.config.PrismaConfig
 import com.prisma.deploy.connector.DeployConnector
 import com.prisma.deploy.connector.mysql.MySqlDeployConnector
-import com.prisma.deploy.connector.postgresql.PostgresDeployConnector
+import com.prisma.deploy.connector.postgres.PostgresDeployConnector
 
 import scala.concurrent.ExecutionContext
 
