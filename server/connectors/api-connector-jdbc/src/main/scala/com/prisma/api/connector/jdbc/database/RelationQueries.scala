@@ -14,7 +14,7 @@ trait RelationQueries extends BuilderBase {
   ): DBIO[ResolverResult[RelationNode]] = {
 
     SimpleDBIO[ResolverResult[RelationNode]] { ctx =>
-      val builder = JooqRelationQueryBuilder(slickDatabase, schemaName, relation, args)
+      val builder = RelationQueryBuilder(slickDatabase, schemaName, relation, args)
       val ps      = ctx.connection.prepareStatement(builder.queryString)
       SetParams.setQueryArgs(ps, args)
       val rs: ResultSet = ps.executeQuery()

@@ -18,7 +18,7 @@ trait ScalarListQueries extends BuilderBase {
   ): DBIO[ResolverResult[ScalarListValues]] = {
 
     SimpleDBIO[ResolverResult[ScalarListValues]] { ctx =>
-      val builder = JooqScalarListQueryBuilder(slickDatabase, schemaName, field, args)
+      val builder = ScalarListQueryBuilder(slickDatabase, schemaName, field, args)
       val ps      = ctx.connection.prepareStatement(builder.queryString)
       SetParams.setQueryArgs(ps, args)
       val rs: ResultSet = ps.executeQuery()
@@ -36,7 +36,7 @@ trait ScalarListQueries extends BuilderBase {
 
   def selectFromScalarList(modelName: String, field: ScalarField, nodeIds: Vector[IdGCValue]): DBIO[Vector[ScalarListValues]] = {
     SimpleDBIO[Vector[ScalarListValues]] { ctx =>
-      val builder = JooqScalarListByUniquesQueryBuilder(slickDatabase, schemaName, field, nodeIds)
+      val builder = ScalarListByUniquesQueryBuilder(slickDatabase, schemaName, field, nodeIds)
       val ps      = ctx.connection.prepareStatement(builder.queryString)
       val pp      = new PositionedParameters(ps)
       nodeIds.foreach(pp.setGcValue)

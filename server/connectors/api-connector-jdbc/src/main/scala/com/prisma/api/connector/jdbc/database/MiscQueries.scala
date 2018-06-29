@@ -8,7 +8,7 @@ trait MiscQueries extends BuilderBase {
 
   def countAllFromTable(table: String, whereFilter: Option[Filter]): DBIO[Int] = {
     SimpleDBIO[Int] { ctx =>
-      val builder = JooqCountQueryBuilder(slickDatabase, schemaName, table, whereFilter)
+      val builder = CountQueryBuilder(slickDatabase, schemaName, table, whereFilter)
       val ps      = ctx.connection.prepareStatement(builder.queryString)
       SetParams.setFilter(new PositionedParameters(ps), whereFilter)
       val rs = ps.executeQuery()

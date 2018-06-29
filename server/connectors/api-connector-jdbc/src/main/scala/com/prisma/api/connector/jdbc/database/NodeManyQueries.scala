@@ -16,8 +16,8 @@ trait NodeManyQueries extends BuilderBase with LimitClauseBuilder {
       overrideMaxNodeCount: Option[Int] = None
   ): DBIO[ResolverResult[PrismaNode]] = {
     SimpleDBIO[ResolverResult[PrismaNode]] { ctx =>
-      val jooqBuilder = JooqModelQueryBuilder(slickDatabase, schemaName, model, args)
-      val ps          = ctx.connection.prepareStatement(jooqBuilder.queryString)
+      val builder = ModelQueryBuilder(slickDatabase, schemaName, model, args)
+      val ps      = ctx.connection.prepareStatement(builder.queryString)
       SetParams.setQueryArgs(ps, args)
       val rs: ResultSet              = ps.executeQuery()
       val result: Vector[PrismaNode] = rs.as[PrismaNode](readsPrismaNode(model))
@@ -35,7 +35,7 @@ trait NodeManyQueries extends BuilderBase with LimitClauseBuilder {
       selectAllFromRelatedWithPaginationForMySQL(schema, fromField, fromNodeIds, args)
     } else {
       SimpleDBIO { ctx =>
-        val builder = JooqRelatedModelsQueryBuilder(slickDatabase, schemaName, fromField, args, fromNodeIds)
+        val builder = RelatedModelsQueryBuilder(slickDatabase, schemaName, fromField, args, fromNodeIds)
         val query   = if (args.exists(_.isWithPagination)) builder.queryStringWithPagination else builder.queryStringWithoutPagination
 
         val ps = ctx.connection.prepareStatement(query)
@@ -85,7 +85,7 @@ trait NodeManyQueries extends BuilderBase with LimitClauseBuilder {
       args: Option[QueryArguments]
   ): DBIO[Vector[ResolverResult[PrismaNodeWithParent]]] = {
     require(args.exists(_.isWithPagination))
-    val builder = JooqRelatedModelsQueryBuilder(slickDatabase, schemaName, fromField, args, fromModelIds)
+    val builder = RelatedModelsQueryBuilder(slickDatabase, schemaName, fromField, args, fromModelIds)
 
     SimpleDBIO { ctx =>
       val baseQuery        = "(" + builder.mysqlHack.getSQL + ")"
@@ -135,7 +135,7 @@ trait NodeManyQueries extends BuilderBase with LimitClauseBuilder {
   def batchSelectFromModelByUnique(model: Model, field: ScalarField, values: Vector[GCValue]): DBIO[Vector[PrismaNode]] = {
     SimpleDBIO { ctx =>
       val queryArgs = Some(QueryArguments.withFilter(ScalarFilter(field, In(values))))
-      val builder   = JooqModelQueryBuilder(slickDatabase, schemaName, model, queryArgs)
+      val builder   = ModelQueryBuilder(slickDatabase, schemaName, model, queryArgs)
       val ps        = ctx.connection.prepareStatement(builder.queryString)
       SetParams.setQueryArgs(ps, queryArgs)
       val rs: ResultSet = ps.executeQuery()

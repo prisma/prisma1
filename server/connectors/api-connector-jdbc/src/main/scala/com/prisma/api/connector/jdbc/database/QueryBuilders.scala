@@ -5,7 +5,7 @@ import com.prisma.gc_values.{GCValue, IdGCValue}
 import com.prisma.shared.models._
 import org.jooq.impl.DSL._
 
-case class JooqRelationQueryBuilder(
+case class RelationQueryBuilder(
     slickDatabase: SlickDatabase,
     schemaName: String,
     relation: Relation,
@@ -36,7 +36,7 @@ case class JooqRelationQueryBuilder(
   }
 }
 
-case class JooqCountQueryBuilder(
+case class CountQueryBuilder(
     slickDatabase: SlickDatabase,
     schemaName: String,
     tableName: String,
@@ -57,7 +57,7 @@ case class JooqCountQueryBuilder(
   }
 }
 
-case class JooqScalarListQueryBuilder(
+case class ScalarListQueryBuilder(
     slickDatabase: SlickDatabase,
     schemaName: String,
     field: ScalarField,
@@ -90,7 +90,7 @@ case class JooqScalarListQueryBuilder(
   }
 }
 
-case class JooqScalarListByUniquesQueryBuilder(
+case class ScalarListByUniquesQueryBuilder(
     slickDatabase: SlickDatabase,
     schemaName: String,
     scalarField: ScalarField,
@@ -112,7 +112,7 @@ case class JooqScalarListByUniquesQueryBuilder(
   }
 }
 
-case class JooqRelatedModelsQueryBuilder(
+case class RelatedModelsQueryBuilder(
     slickDatabase: SlickDatabase,
     schemaName: String,
     fromField: RelationField,
@@ -189,7 +189,7 @@ case class JooqRelatedModelsQueryBuilder(
   }
 }
 
-case class JooqModelQueryBuilder(
+case class ModelQueryBuilder(
     slickDatabase: SlickDatabase,
     schemaName: String,
     model: Model,
