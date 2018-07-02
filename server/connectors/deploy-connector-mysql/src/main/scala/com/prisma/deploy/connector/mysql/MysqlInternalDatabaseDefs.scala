@@ -32,7 +32,7 @@ case class MysqlInternalDatabaseDefs(dbConfig: DatabaseConfig) {
         |    user = "${dbConfig.user}"
         |    password = "${dbConfig.password.getOrElse("")}"
         |  }
-        |  numThreads = ${dbConfig.connectionLimit.getOrElse(10)}
+        |  numThreads = 1
         |  connectionTimeout = 5000
         |  $pooled
         |}
