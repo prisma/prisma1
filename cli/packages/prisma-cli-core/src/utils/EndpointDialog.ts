@@ -218,11 +218,13 @@ export class EndpointDialog {
         service = await this.ask({
           message: 'Choose a name for your service',
           key: 'serviceName',
+          defaultValue: 'default'
         })
 
         stage = await this.ask({
           message: 'Choose a name for your stage',
           key: 'stageName',
+          defaultValue: 'default'
         })
 
         writeDockerComposeYml = false
