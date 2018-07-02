@@ -20,6 +20,11 @@ trait Edge {
 case class ModelEdge(parentField: RelationField)                          extends Edge
 case class NodeEdge(parentField: RelationField, childWhere: NodeSelector) extends Edge
 
+case class UnqualifiedPath(edges: Vector[Edge])
+object UnqualifiedPath {
+  val empty = UnqualifiedPath(Vector.empty)
+}
+
 case class Path(root: NodeSelector, edges: List[Edge]) {
 
   def relations: List[Relation]                         = edges.map(_.relation)

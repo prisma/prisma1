@@ -47,10 +47,10 @@ case class DatabaseMutactions(project: Project) {
     Vector(UpdateDataItems(project, model, whereFilter, nonListArgs, listArgs))
   }
 
-  def getMutactionsForCreate(path: Path, args: CoolArgs): Vector[DatabaseMutaction] = report {
-    val (nonListArgs, listArgs) = args.getCreateArgs(path)
-    val createMutaction         = CreateDataItem(project, path, nonListArgs, listArgs)
-    val nestedMutactions        = getMutactionsForNestedMutation(args, path, triggeredFromCreate = true)
+  def getMutactionsForCreate(model: Model, args: CoolArgs): Vector[DatabaseMutaction] = report {
+    val (nonListArgs, listArgs) = args.getCreateArgs(model)
+    val createMutaction         = CreateDataItem(project, model, nonListArgs, listArgs)
+    val nestedMutactions        = getMutactionsForNestedMutation(args, UnqualifiedPath.empty, triggeredFromCreate = true)
 
     createMutaction +: nestedMutactions
   }
@@ -121,7 +121,7 @@ case class DatabaseMutactions(project: Project) {
 
   def getMutactionsForWhereChecks(nestedMutation: NestedMutations): Vector[DatabaseMutaction] = {
     (nestedMutation.updates ++ nestedMutation.deletes ++ nestedMutation.connects ++ nestedMutation.disconnects).collect {
-      case x: NestedWhere => VerifyWhere(project, x.where)
+      case x: HasNestedWhere => VerifyWhere(project, x.where)
     }
   }
 
@@ -248,8 +248,8 @@ case class DatabaseMutactions(project: Project) {
 
   def extend(path: Path, field: RelationField, nestedMutation: NestedMutation): Path = {
     nestedMutation match {
-      case x: NestedWhere => path.append(NodeEdge(field, x.where))
-      case _              => path.append(ModelEdge(field))
+      case x: HasNestedWhere => path.append(NodeEdge(field, x.where))
+      case _                 => path.append(ModelEdge(field))
     }
   }
 

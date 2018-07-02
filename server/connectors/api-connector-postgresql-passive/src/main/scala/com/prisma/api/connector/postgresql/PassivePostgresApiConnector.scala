@@ -42,6 +42,8 @@ case class PassivePostgresApiConnector(config: DatabaseConfig)(implicit ec: Exec
 case class PassiveDatabaseMutactionExecutorImpl(activeExecutor: PostgresDatabaseMutactionExecutor, schemaName: Option[String])(implicit ec: ExecutionContext)
     extends DatabaseMutactionExecutor {
 
+  override def execute(mutation: Mutation) = ??? // FIXME: implement
+
   override def execute(mutactions: Vector[DatabaseMutaction], runTransactionally: Boolean): Future[Vector[DatabaseMutactionResult]] = {
     val transformed         = transform(mutactions)
     val interpreters        = transformed.map(interpreterFor)
@@ -93,6 +95,8 @@ case class PassiveDatabaseMutactionExecutorImpl(activeExecutor: PostgresDatabase
       case m if replacements.contains(m) => replacements(m)
       case m if !removals.contains(m)    => PlainActiveDatabaseMutaction(m)
     }
+
+    mutactions.map(PlainActiveDatabaseMutaction(_)) // fixme: remove this line again
   }
 
   def interpreterFor(mutaction: PassiveDatabaseMutaction): DatabaseMutactionInterpreter = mutaction match {
