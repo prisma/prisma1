@@ -20,6 +20,7 @@ class ConfigLoaderSpec extends WordSpec with Matchers {
                           |    database: my_database
                           |    schema: my_schema
                           |    ssl: true
+                          |    connectionLimit: 2
                         """.stripMargin
 
       val config = ConfigLoader.tryLoadString(validConfig)
@@ -36,6 +37,7 @@ class ConfigLoaderSpec extends WordSpec with Matchers {
       database.database shouldBe Some("my_database")
       database.schema shouldBe Some("my_schema")
       database.ssl shouldBe true
+      database.connectionLimit shouldBe Some(2)
     }
 
     "be parsed without errors if an optional field is missing" in {
@@ -181,5 +183,25 @@ class ConfigLoaderSpec extends WordSpec with Matchers {
 
     config.isSuccess shouldBe false
     config.failed.get shouldBe a[InvalidConfiguration]
+  }
+
+  "fail if connectionLimit is set to less than 2 " in {
+    val configString = """
+                        |port: 4466
+                        |databases:
+                        |  default:
+                        |    connector: mysql
+                        |    host: localhost
+                        |    port: 3306
+                        |    user: root
+                        |    password: prisma
+                        |    connectionLimit: 1
+                      """.stripMargin
+
+    val config = ConfigLoader.tryLoadString(configString)
+    config.isSuccess shouldBe false
+    val exception = config.failed.get
+    exception shouldBe a[InvalidConfiguration]
+    exception.getMessage should equal("The parameter connectionLimit must be set to at least 2.")
   }
 }

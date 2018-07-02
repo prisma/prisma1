@@ -41,13 +41,6 @@ object ConfigLoader {
     }
   }
 
-  def loadString(config: String): PrismaConfig = {
-    tryLoadString(config) match {
-      case Success(c)   => c
-      case Failure(err) => sys.error(s"Unable to load Prisma config: $err")
-    }
-  }
-
   // Todo error propagation concept with meaningful user messages
   def tryLoad(): Try[PrismaConfig] =
     Try {
@@ -133,7 +126,7 @@ object ConfigLoader {
     )
   }
 
-  private def readDbWithConnectionString(dbName: String, dbJavaMap: Any) = Try {
+  private def readDbWithConnectionString(dbName: String, dbJavaMap: Any): Try[DatabaseConfig] = Try {
     val db          = extractScalaMap(dbJavaMap, path = dbName)
     val dbConnector = extractString("connector", db)
     val dbActive    = extractBooleanOpt("migrations", db).orElse(extractBooleanOpt("active", db))
@@ -165,6 +158,16 @@ object ConfigLoader {
       managementSchema = mgmtSchema,
       ssl = ssl
     )
+  }
+
+  private def validateDatabaseConfig(config: DatabaseConfig): DatabaseConfig = {
+    config.connectionLimit.foreach { connectionLimit =>
+      if (connectionLimit < 2) {
+        throw InvalidConfiguration("The parameter connectionLimit must be set to at least 2.")
+      }
+    }
+
+    config
   }
 
   private def readExplicitDb(dbName: String, dbJavaMap: Any) = {
@@ -214,7 +217,7 @@ object ConfigLoader {
       managementSchema: Option[String],
       ssl: Option[Boolean]
   ): DatabaseConfig = {
-    DatabaseConfig(
+    val config = DatabaseConfig(
       name = name,
       connector = connector,
       active = active.getOrElse(true),
@@ -229,6 +232,7 @@ object ConfigLoader {
       managementSchema = managementSchema,
       ssl = ssl.getOrElse(false)
     )
+    validateDatabaseConfig(config)
   }
 
   private def extractScalaMap(in: Any, required: Boolean = true, path: String = ""): Map[String, Any] = {
