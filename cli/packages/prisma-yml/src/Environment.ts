@@ -72,7 +72,7 @@ export class Environment {
           this.saveGlobalRC()
         }
       } catch (e) {
-        console.error(e)
+        debug(e)
       }
     }
   }
@@ -155,7 +155,6 @@ export class Environment {
         }
       } catch (e) {
         debug(e)
-        //
       }
     }
   }
