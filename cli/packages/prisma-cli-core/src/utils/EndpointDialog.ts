@@ -269,14 +269,14 @@ export class EndpointDialog {
         } catch (e) {
           throw new Error(`Could not connect to database. ${e.message}`)
         }
-        // TODO: ask for postres schema if more than one
+
         if (
           credentials &&
           credentials.alreadyData &&
           schemas &&
           schemas.length > 0
         ) {
-          const { numTables, sdl } = await introspector.introspect(schemas[0])
+          const { numTables, sdl } = await introspector.introspect(credentials.schema || schemas[0])
           if (numTables === 0) {
             this.out.log(
               chalk.red(
