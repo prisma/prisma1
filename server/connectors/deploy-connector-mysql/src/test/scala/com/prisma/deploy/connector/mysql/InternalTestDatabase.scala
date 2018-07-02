@@ -14,7 +14,7 @@ class InternalTestDatabase extends AwaitUtils {
   val config               = ConfigLoader.load()
   val databaseDefs         = MysqlInternalDatabaseDefs(config.databases.head.copy(pooled = false))
   val internalDatabaseRoot = databaseDefs.internalDatabaseRoot
-  val internalDatabase     = databaseDefs.internalDatabase
+  val internalDatabase     = databaseDefs.managementDatabase
 
   def createInternalDatabaseSchema() =
     internalDatabaseRoot.run(MysqlInternalDatabaseSchema.createSchemaActions(databaseDefs.managementSchemaName, recreate = true)).await(10)

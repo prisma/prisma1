@@ -8,8 +8,8 @@ case class MysqlInternalDatabaseDefs(dbConfig: DatabaseConfig) {
 
   val managementSchemaName = dbConfig.managementSchema.getOrElse("prisma")
 
-  lazy val internalDatabaseRoot = database(root = true)
-  lazy val internalDatabase     = database(root = false)
+  lazy val setupDatabase      = database(root = true)
+  lazy val managementDatabase = database(root = false)
 
   private lazy val dbDriver = new org.mariadb.jdbc.Driver
 

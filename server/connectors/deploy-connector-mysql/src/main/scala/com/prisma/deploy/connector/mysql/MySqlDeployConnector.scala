@@ -16,22 +16,22 @@ import scala.concurrent.{ExecutionContext, Future}
 case class MySqlDeployConnector(config: DatabaseConfig)(implicit ec: ExecutionContext) extends DeployConnector {
   override def isActive         = true
   lazy val internalDatabaseDefs = MysqlInternalDatabaseDefs(config)
-  lazy val internalDatabaseRoot = internalDatabaseDefs.internalDatabaseRoot
-  lazy val internalDatabase     = internalDatabaseDefs.internalDatabase
-  lazy val clientDatabase       = internalDatabaseDefs.internalDatabaseRoot
+  lazy val setupDatabase        = internalDatabaseDefs.setupDatabase
+  lazy val managementDatabase   = internalDatabaseDefs.managementDatabase
+  lazy val projectDatabase      = internalDatabaseDefs.managementDatabase
 
-  override val projectPersistence: ProjectPersistence           = MysqlProjectPersistence(internalDatabase)
-  override val migrationPersistence: MigrationPersistence       = MysqlMigrationPersistence(internalDatabase)
-  override val deployMutactionExecutor: DeployMutactionExecutor = MySqlDeployMutactionExectutor(clientDatabase)
+  override val projectPersistence: ProjectPersistence           = MysqlProjectPersistence(managementDatabase)
+  override val migrationPersistence: MigrationPersistence       = MysqlMigrationPersistence(managementDatabase)
+  override val deployMutactionExecutor: DeployMutactionExecutor = MySqlDeployMutactionExectutor(projectDatabase)
 
   override def createProjectDatabase(id: String): Future[Unit] = {
     val action = MySqlDeployDatabaseMutationBuilder.createClientDatabaseForProject(projectId = id)
-    clientDatabase.run(action)
+    projectDatabase.run(action)
   }
 
   override def deleteProjectDatabase(id: String): Future[Unit] = {
     val action = MySqlDeployDatabaseMutationBuilder.deleteProjectDatabase(projectId = id).map(_ => ())
-    clientDatabase.run(action)
+    projectDatabase.run(action)
   }
 
   override def getAllDatabaseSizes(): Future[Vector[DatabaseSize]] = {
@@ -44,26 +44,27 @@ case class MySqlDeployConnector(config: DatabaseConfig)(implicit ec: ExecutionCo
       }
     }
 
-    clientDatabase.run(action)
+    projectDatabase.run(action)
   }
 
-  override def clientDBQueries(project: Project): ClientDbQueries      = MySqlClientDbQueries(project, clientDatabase)
-  override def getOrCreateTelemetryInfo(): Future[TelemetryInfo]       = internalDatabaseRoot.run(TelemetryTable.getOrCreateInfo())
-  override def updateTelemetryInfo(lastPinged: DateTime): Future[Unit] = internalDatabaseRoot.run(TelemetryTable.updateInfo(lastPinged)).map(_ => ())
+  override def clientDBQueries(project: Project): ClientDbQueries      = MySqlClientDbQueries(project, projectDatabase)
+  override def getOrCreateTelemetryInfo(): Future[TelemetryInfo]       = managementDatabase.run(TelemetryTable.getOrCreateInfo())
+  override def updateTelemetryInfo(lastPinged: DateTime): Future[Unit] = managementDatabase.run(TelemetryTable.updateInfo(lastPinged)).map(_ => ())
   override def projectIdEncoder: ProjectIdEncoder                      = ProjectIdEncoder('@')
-  override def cloudSecretPersistence                                  = CloudSecretPersistenceImpl(internalDatabase)
+  override def cloudSecretPersistence                                  = CloudSecretPersistenceImpl(managementDatabase)
 
   override def initialize(): Future[Unit] = {
-    val action = MysqlInternalDatabaseSchema.createSchemaActions(internalDatabaseDefs.managementSchemaName, recreate = false)
-    internalDatabaseRoot.run(action)
+    setupDatabase
+      .run(MysqlInternalDatabaseSchema.createSchemaActions(internalDatabaseDefs.managementSchemaName, recreate = false))
+      .flatMap(_ => internalDatabaseDefs.setupDatabase.shutdown)
   }
 
-  override def reset(): Future[Unit] = truncateTablesInDatabase(internalDatabase)
+  override def reset(): Future[Unit] = truncateTablesInDatabase(managementDatabase)
 
   override def shutdown() = {
     for {
-      _ <- internalDatabaseRoot.shutdown
-      _ <- internalDatabase.shutdown
+      _ <- setupDatabase.shutdown
+      _ <- managementDatabase.shutdown
     } yield ()
   }
 
