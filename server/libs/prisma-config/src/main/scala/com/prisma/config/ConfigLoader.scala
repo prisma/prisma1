@@ -160,16 +160,6 @@ object ConfigLoader {
     )
   }
 
-  private def validateDatabaseConfig(config: DatabaseConfig): DatabaseConfig = {
-    config.connectionLimit.foreach { connectionLimit =>
-      if (connectionLimit < 2) {
-        throw InvalidConfiguration("The parameter connectionLimit must be set to at least 2.")
-      }
-    }
-
-    config
-  }
-
   private def readExplicitDb(dbName: String, dbJavaMap: Any) = {
     val db          = extractScalaMap(dbJavaMap, path = dbName)
     val dbConnector = extractString("connector", db)
@@ -233,6 +223,16 @@ object ConfigLoader {
       ssl = ssl.getOrElse(false)
     )
     validateDatabaseConfig(config)
+  }
+
+  private def validateDatabaseConfig(config: DatabaseConfig): DatabaseConfig = {
+    config.connectionLimit.foreach { connectionLimit =>
+      if (connectionLimit < 2) {
+        throw InvalidConfiguration("The parameter connectionLimit must be set to at least 2.")
+      }
+    }
+
+    config
   }
 
   private def extractScalaMap(in: Any, required: Boolean = true, path: String = ""): Map[String, Any] = {
