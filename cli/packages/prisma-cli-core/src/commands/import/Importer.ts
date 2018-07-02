@@ -216,7 +216,7 @@ export class Importer {
       (!files.relations || files.relations.length === 0)
     ) {
       throw new Error(
-        `'Folder 'folder' does not contain any of these folders: 'nodes', 'lists', 'relations'. Read more about data import here: https://www.prismagraphql.com/docs/reference/data-import-and-export/data-import-ol2eoh8xie'`,
+        `'Folder 'folder' does not contain any of these folders: 'nodes', 'lists', 'relations'. Read more about data import here: https://bit.ly/prisma-import-ndf'`,
       )
     }
 
