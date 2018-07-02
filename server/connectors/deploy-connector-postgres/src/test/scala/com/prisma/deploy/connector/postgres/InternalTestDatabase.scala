@@ -9,24 +9,24 @@ import slick.jdbc.PostgresProfile.api._
 class InternalTestDatabase extends AwaitUtils {
   import scala.concurrent.ExecutionContext.Implicits.global
 
-  val config               = ConfigLoader.load()
-  val databaseDefs         = PostgresInternalDatabaseDefs(config.databases.head.copy(pooled = false))
-  val setupDatabase        = databaseDefs.setupDatabase
-  val internalDatabase     = databaseDefs.internalDatabase
-  val internalDatabaseRoot = databaseDefs.internalDatabaseRoot
+  val config             = ConfigLoader.load()
+  val databaseDefs       = PostgresInternalDatabaseDefs(config.databases.head.copy(pooled = false))
+  val setupDatabase      = databaseDefs.setupDatabase
+  val managementDatabase = databaseDefs.managementDatabase
+  val projectDatabase    = managementDatabase
 
   def createInternalDatabaseSchema() =
     setupDatabase
       .run(InternalDatabaseSchema.createDatabaseAction(databaseDefs.dbName))
       .transformWith { _ =>
         val action = InternalDatabaseSchema.createSchemaActions(databaseDefs.managementSchemaName, recreate = false)
-        internalDatabaseRoot.run(action)
+        managementDatabase.run(action)
       }
       .await(10)
 
   def truncateTables(): Unit = {
-    val schemas = internalDatabase.run(getTables).await()
-    internalDatabase.run(dangerouslyTruncateTables(schemas)).await()
+    val schemas = managementDatabase.run(getTables).await()
+    managementDatabase.run(dangerouslyTruncateTables(schemas)).await()
   }
 
   private def dangerouslyTruncateTables(tableNames: Vector[String]): DBIOAction[Unit, NoStream, Effect] = {
@@ -40,11 +40,11 @@ class InternalTestDatabase extends AwaitUtils {
           AND table_type = 'BASE TABLE';""".as[String]
   }
 
-  def run[R](a: DBIOAction[R, NoStream, Nothing]) = internalDatabase.run(a).await()
+  def run[R](a: DBIOAction[R, NoStream, Nothing]) = managementDatabase.run(a).await()
 
   def shutdown() = {
     setupDatabase.close()
-    internalDatabaseRoot.close()
-    internalDatabase.close()
+    projectDatabase.close()
+    managementDatabase.close()
   }
 }

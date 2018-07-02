@@ -19,21 +19,21 @@ case class PostgresDeployConnector(
 )(implicit ec: ExecutionContext)
     extends DeployConnector {
   lazy val internalDatabaseDefs = PostgresInternalDatabaseDefs(dbConfig)
-  lazy val internalDatabaseRoot = internalDatabaseDefs.internalDatabaseRoot // DB prisma, schema public
-  lazy val internalDatabase     = internalDatabaseDefs.internalDatabase // DB prisma, schema management
+  lazy val projectDatabase      = internalDatabaseDefs.managementDatabase
+  lazy val managementDatabase   = internalDatabaseDefs.managementDatabase
 
-  override lazy val projectPersistence: ProjectPersistence           = ProjectPersistenceImpl(internalDatabase)
-  override lazy val migrationPersistence: MigrationPersistence       = MigrationPersistenceImpl(internalDatabase)
-  override lazy val deployMutactionExecutor: DeployMutactionExecutor = PostgresDeployMutactionExecutor(internalDatabaseRoot)
+  override lazy val projectPersistence: ProjectPersistence           = ProjectPersistenceImpl(managementDatabase)
+  override lazy val migrationPersistence: MigrationPersistence       = MigrationPersistenceImpl(managementDatabase)
+  override lazy val deployMutactionExecutor: DeployMutactionExecutor = PostgresDeployMutactionExecutor(projectDatabase)
 
   override def createProjectDatabase(id: String): Future[Unit] = {
     val action = PostgresDeployDatabaseMutationBuilder.createClientDatabaseForProject(projectId = id)
-    internalDatabaseRoot.run(action)
+    projectDatabase.run(action)
   }
 
   override def deleteProjectDatabase(id: String): Future[Unit] = {
     val action = PostgresDeployDatabaseMutationBuilder.deleteProjectDatabase(projectId = id).map(_ => ())
-    internalDatabaseRoot.run(action)
+    projectDatabase.run(action)
   }
 
   override def getAllDatabaseSizes(): Future[Vector[DatabaseSize]] = {
@@ -48,14 +48,14 @@ case class PostgresDeployConnector(
       }
     }
 
-    internalDatabaseRoot.run(action)
+    projectDatabase.run(action)
   }
 
-  override def clientDBQueries(project: Project): ClientDbQueries      = PostgresClientDbQueries(project, internalDatabaseRoot)
-  override def getOrCreateTelemetryInfo(): Future[TelemetryInfo]       = internalDatabase.run(TelemetryTable.getOrCreateInfo())
-  override def updateTelemetryInfo(lastPinged: DateTime): Future[Unit] = internalDatabase.run(TelemetryTable.updateInfo(lastPinged)).map(_ => ())
+  override def clientDBQueries(project: Project): ClientDbQueries      = PostgresClientDbQueries(project, projectDatabase)
+  override def getOrCreateTelemetryInfo(): Future[TelemetryInfo]       = managementDatabase.run(TelemetryTable.getOrCreateInfo())
+  override def updateTelemetryInfo(lastPinged: DateTime): Future[Unit] = managementDatabase.run(TelemetryTable.updateInfo(lastPinged)).map(_ => ())
   override def projectIdEncoder: ProjectIdEncoder                      = ProjectIdEncoder('$')
-  override def cloudSecretPersistence: CloudSecretPersistence          = CloudSecretPersistenceImpl(internalDatabase)
+  override def cloudSecretPersistence: CloudSecretPersistence          = CloudSecretPersistenceImpl(managementDatabase)
 
   override def initialize(): Future[Unit] = {
     // We're ignoring failures for createDatabaseAction as there is no "create if not exists" in psql
@@ -63,17 +63,17 @@ case class PostgresDeployConnector(
       .run(InternalDatabaseSchema.createDatabaseAction(internalDatabaseDefs.dbName))
       .transformWith { _ =>
         val action = InternalDatabaseSchema.createSchemaActions(internalDatabaseDefs.managementSchemaName, recreate = false)
-        internalDatabaseRoot.run(action)
+        projectDatabase.run(action)
       }
       .flatMap(_ => internalDatabaseDefs.setupDatabase.shutdown)
   }
 
-  override def reset(): Future[Unit] = truncateManagementTablesInDatabase(internalDatabase)
+  override def reset(): Future[Unit] = truncateManagementTablesInDatabase(managementDatabase)
 
   override def shutdown() = {
     for {
-      _ <- internalDatabaseRoot.shutdown
-      _ <- internalDatabase.shutdown
+      _ <- projectDatabase.shutdown
+      _ <- managementDatabase.shutdown
     } yield ()
   }
 
@@ -82,7 +82,7 @@ case class PostgresDeployConnector(
       EmptyDatabaseIntrospectionInferrer
     } else {
       val schema = dbConfig.schema.getOrElse(projectId)
-      DatabaseIntrospectionInferrerImpl(internalDatabaseRoot, schema)
+      DatabaseIntrospectionInferrerImpl(projectDatabase, schema)
     }
   }
 
