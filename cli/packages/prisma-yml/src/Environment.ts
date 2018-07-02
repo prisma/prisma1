@@ -6,17 +6,12 @@ import { ClusterNotFound } from './errors/ClusterNotFound'
 import { Variables } from './Variables'
 import { IOutput, Output } from './Output'
 import * as path from 'path'
-import * as os from 'os'
-import chalk from 'chalk'
 import 'isomorphic-fetch'
 import { RC } from './index'
 import { ClusterNotSet } from './errors/ClusterNotSet'
-import * as _ from 'lodash'
 import { clusterEndpointMap } from './constants'
 import { getProxyAgent } from './utils/getProxyAgent'
 const debug = require('debug')('Environment')
-
-const isDev = (process.env.ENV || '').toLowerCase() === 'dev'
 
 export class Environment {
   sharedClusters: string[] = ['prisma-eu1', 'prisma-us1']
