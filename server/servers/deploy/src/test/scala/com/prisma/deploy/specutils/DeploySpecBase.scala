@@ -85,7 +85,7 @@ trait PassiveDeploySpecBase extends DeploySpecBase { self: Suite =>
 
   def setupProjectDatabaseForProject(projectId: String, sql: String): Unit = {
     val connector = deployConnector.asInstanceOf[PostgresDeployConnector]
-    val session   = connector.internalDatabase.createSession()
+    val session   = connector.managementDatabase.createSession()
     val statement = session.createStatement()
     statement.execute(s"drop schema if exists $projectId cascade;")
 

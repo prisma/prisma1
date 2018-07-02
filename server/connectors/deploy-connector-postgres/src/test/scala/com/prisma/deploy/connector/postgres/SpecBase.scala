@@ -19,8 +19,8 @@ trait SpecBase extends BeforeAndAfterEach with BeforeAndAfterAll with AwaitUtils
       |}
     """.stripMargin.trim()
 
-  val projectPersistence   = ProjectPersistenceImpl(internalDb.internalDatabase)
-  val migrationPersistence = MigrationPersistenceImpl(internalDb.internalDatabase)
+  val projectPersistence   = ProjectPersistenceImpl(internalDb.managementDatabase)
+  val migrationPersistence = MigrationPersistenceImpl(internalDb.managementDatabase)
 
   def newTestProject(projectId: String = Cuid.createCuid()) = {
     Project(id = projectId, ownerId = Cuid.createCuid(), schema = Schema())

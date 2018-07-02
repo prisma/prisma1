@@ -27,7 +27,7 @@ object MySqlDatabasesFactory {
         |    user = "${dbConfig.user}"
         |    password = "${dbConfig.password.getOrElse("")}"
         |  }
-        |  numThreads = ${dbConfig.connectionLimit.getOrElse(10)}
+        |  numThreads = ${dbConfig.connectionLimit.getOrElse(10) - 1} // we subtract 1 because one connection is consumed already by deploy
         |  connectionTimeout = 5000
         |}
       """.stripMargin)
