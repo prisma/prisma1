@@ -2,7 +2,7 @@ package com.prisma.subscriptions.resolving
 
 import com.prisma.api.connector._
 import com.prisma.api.schema.ObjectTypeBuilder
-import com.prisma.gc_values.CuidGCValue
+import com.prisma.gc_values.{CuidGCValue, IdGCValue}
 import com.prisma.shared.models.Model
 import sangria.schema.Context
 
@@ -13,7 +13,7 @@ object FilteredResolver {
   def resolve(
       modelObjectTypes: ObjectTypeBuilder,
       model: Model,
-      id: String,
+      id: IdGCValue,
       ctx: Context[_, Unit],
       dataResolver: DataResolver
   ): Future[Option[PrismaNode]] = {
@@ -29,8 +29,8 @@ object FilteredResolver {
         case _               => true
       }
 
-    val filterValues = filterInput.filters.filter(removeTopLevelIdFilter) ++ Vector(ScalarFilter(model.idField_!, Equals(CuidGCValue(id))))
+    val filterValues = filterInput.filters.filter(removeTopLevelIdFilter) ++ Vector(ScalarFilter(model.idField_!, Equals(id)))
     val filter       = AndFilter(filterValues)
-    dataResolver.resolveByModel(model, Some(QueryArguments.withFilter(filter = filter))).map(_.nodes.headOption)
+    dataResolver.getNodes(model, Some(QueryArguments.withFilter(filter = filter))).map(_.nodes.headOption)
   }
 }

@@ -153,20 +153,19 @@ case class CoolArgs(raw: Map[String, Any]) {
   def createArgumentsAsCoolArgs: CoolArgs = CoolArgs(raw("create").asInstanceOf[Map[String, Any]])
   def updateArgumentsAsCoolArgs: CoolArgs = CoolArgs(raw("update").asInstanceOf[Map[String, Any]])
 
-  def generateNonListCreateArgs(where: NodeSelector): CoolArgs = {
-    require(where.isId)
+  def generateNonListCreateArgs(model: Model): CoolArgs = {
     CoolArgs(
-      where.model.scalarNonListFields
+      model.scalarNonListFields
         .filter(_.name != "id")
         .flatMap { field =>
           raw.get(field.name) match {
-            case Some(None) if field.defaultValue.isDefined && field.isRequired => throw APIErrors.InputInvalid("null", field.name, where.model.name)
+            case Some(None) if field.defaultValue.isDefined && field.isRequired => throw APIErrors.InputInvalid("null", field.name, model.name)
             case Some(value)                                                    => Some((field.name, value))
             case None if field.defaultValue.isDefined                           => Some((field.name, field.defaultValue.get.value))
             case None                                                           => None
           }
         }
-        .toMap + ("id" -> where.value))
+        .toMap)
   }
 
   def generateNonListUpdateGCValues(model: Model): PrismaArgs = {
@@ -183,11 +182,11 @@ case class CoolArgs(raw: Map[String, Any]) {
     PrismaArgs(RootGCValue(values: _*))
   }
 
-  def getCreateArgs(path: Path) = { //todo rewrite this
-    val nonListCreateArgs = generateNonListCreateArgs(path.lastCreateWhere_!)
-    val converter         = GCCreateReallyCoolArgsConverter(path.lastModel)
+  def getCreateArgs(model: Model) = {
+    val nonListCreateArgs = generateNonListCreateArgs(model)
+    val converter         = GCCreateReallyCoolArgsConverter(model)
     val nonListArgs       = converter.toReallyCoolArgs(nonListCreateArgs.raw)
-    val listArgs          = getScalarListArgs(path.lastModel)
+    val listArgs          = getScalarListArgs(model)
 
     (nonListArgs, listArgs)
   }

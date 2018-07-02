@@ -8,7 +8,7 @@ import org.scalatest.{FlatSpec, Matchers}
 class UpdateManySpec extends FlatSpec with Matchers with ApiSpecBase {
 
   val project: Project = SchemaDsl.fromBuilder { schema =>
-    schema.model("Todo").field_!("title", _.String)
+    schema.model("Todo").field_!("title", _.String).field("opt", _.String)
   }
 
   override protected def beforeAll(): Unit = {
@@ -25,7 +25,7 @@ class UpdateManySpec extends FlatSpec with Matchers with ApiSpecBase {
       """mutation {
         |  updateManyTodoes(
         |    where: { title: "title1" }
-        |    data: { title: "updated title" }
+        |    data: { title: "updated title", opt: "test" }
         |  ){
         |    count
         |  }
@@ -39,6 +39,7 @@ class UpdateManySpec extends FlatSpec with Matchers with ApiSpecBase {
       """{
         |  todoes {
         |    title
+        |    opt
         |  }
         |}
       """.stripMargin,
@@ -46,7 +47,7 @@ class UpdateManySpec extends FlatSpec with Matchers with ApiSpecBase {
     )
     mustBeEqual(
       todoes.pathAsJsValue("data.todoes").toString,
-      """[{"title":"updated title"},{"title":"title2"}]"""
+      """[{"title":"updated title","opt":"test"},{"title":"title2","opt":null}]"""
     )
   }
 

@@ -16,7 +16,7 @@ class ManyModelDeferredResolver(resolver: DataResolver) {
     val headDeferred                 = deferreds.head
     val model                        = headDeferred.model
     val args: Option[QueryArguments] = headDeferred.args
-    val futureResolverResults        = resolver.resolveByModel(model, args)
+    val futureResolverResults        = resolver.getNodes(model, args)
 
     orderedDeferreds.map {
       case OrderedDeferred(deferred, order) =>

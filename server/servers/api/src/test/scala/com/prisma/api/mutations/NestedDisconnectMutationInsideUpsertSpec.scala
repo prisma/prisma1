@@ -40,13 +40,12 @@ class NestedDisconnectMutationInsideUpsertSpec extends FlatSpec with Matchers wi
       s"""
          |mutation {
          |  upsertParent(
-         |  where:{id: "$parentId"}
-         |  update:{
-         |    p: "p2"
-         |    childOpt: {disconnect: true}
-         |  }
-         |  create:{p: "Should not Matter"}
-         |
+         |    where:{id: "$parentId"}
+         |    update:{
+         |      p: "p2"
+         |      childOpt: {disconnect: true}
+         |    }
+         |    create:{p: "Should not Matter"}
          |  ){
          |    childOpt {
          |      c

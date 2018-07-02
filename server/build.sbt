@@ -14,7 +14,7 @@ lazy val commonSettings = Seq(
   publishArtifact in Test := true,
   // We should gradually introduce https://tpolecat.github.io/2014/04/11/scalac-flags.html
   // These needs to separately be configured in Idea
-  scalacOptions ++= Seq("-deprecation", "-feature", "-Xfatal-warnings"),
+  scalacOptions ++= Seq("-deprecation", "-feature", "-Xfatal-warnings", "-language:implicitConversions"),
   resolvers ++= Seq(
     "Sonatype snapshots" at "https://oss.sonatype.org/content/repositories/snapshots/",
     "scalaz-bintray" at "http://dl.bintray.com/scalaz/releases"
@@ -132,14 +132,11 @@ lazy val deployConnectorMySql = connectorProject("deploy-connector-mysql")
     libraryDependencies ++= slick ++ Seq(mariaDbClient)
   )
 
-lazy val deployConnectorPostgres = connectorProject("deploy-connector-postgresql")
+lazy val deployConnectorPostgres = connectorProject("deploy-connector-postgres")
   .dependsOn(deployConnector)
   .settings(
     libraryDependencies ++= slick ++ Seq(postgresClient)
   )
-
-lazy val deployConnectorPostgresPassive = connectorProject("deploy-connector-postgresql-passive")
-  .dependsOn(deployConnectorPostgres)
 
 lazy val apiConnector = connectorProject("api-connector")
   .dependsOn(sharedModels)
@@ -148,24 +145,23 @@ lazy val apiConnector = connectorProject("api-connector")
     libraryDependencies ++= Seq(apacheCommons)
   )
 
+lazy val apiConnectorJdbc = connectorProject("api-connector-jdbc")
+  .dependsOn(apiConnector)
+  .dependsOn(metrics)
+  .dependsOn(slickUtils)
+  .settings(
+    libraryDependencies ++= slick ++ jooq ++ Seq(postgresClient)
+  )
+
 lazy val apiConnectorMySql = connectorProject("api-connector-mysql")
-  .dependsOn(apiConnector)
-  .dependsOn(metrics)
-  .dependsOn(slickUtils)
+  .dependsOn(apiConnectorJdbc)
   .settings(
-    libraryDependencies ++= slick ++ Seq(mariaDbClient)
+    libraryDependencies ++= Seq(mariaDbClient)
   )
 
-lazy val apiConnectorPostgres = connectorProject("api-connector-postgresql")
-  .dependsOn(apiConnector)
-  .dependsOn(metrics)
-  .dependsOn(slickUtils)
-  .settings(
-    libraryDependencies ++= slick ++ Seq(postgresClient) ++ jooq
-  )
+lazy val apiConnectorPostgres = connectorProject("api-connector-postgres")
+  .dependsOn(apiConnectorJdbc)
 
-lazy val apiConnectorPostgresPassive = connectorProject("api-connector-postgresql-passive")
-  .dependsOn(apiConnectorPostgres)
 
 // ####################
 //       SHARED
@@ -194,7 +190,8 @@ lazy val integrationTestsMySql = integrationTestProject("integration-tests-mysql
 
 lazy val gcValues = libProject("gc-values")
   .settings(libraryDependencies ++= Seq(
-    playJson
+    playJson,
+    cuid,
   ) ++ joda)
 
 lazy val akkaUtils = libProject("akka-utils")
@@ -317,15 +314,14 @@ val allServerProjects = List(
 lazy val deployConnectorProjects = List(
   deployConnector,
   deployConnectorMySql,
-  deployConnectorPostgres,
-  deployConnectorPostgresPassive
+  deployConnectorPostgres
 )
 
 lazy val apiConnectorProjects = List(
   apiConnector,
+  apiConnectorJdbc,
   apiConnectorMySql,
-  apiConnectorPostgres,
-  apiConnectorPostgresPassive,
+  apiConnectorPostgres
 )
 
 lazy val allConnectorProjects = deployConnectorProjects ++ apiConnectorProjects ++ Seq(connectorUtils)

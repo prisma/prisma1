@@ -244,7 +244,7 @@ class ServerSideSubscriptionSpec extends FlatSpec with Matchers with ApiSpecBase
     webhook.headers shouldEqual Map("header" -> "value")
   }
 
-  "ServerSideSubscription" should "send a message to our Webhook Queue if the SSS Query matches a nested Create mutation" in {
+  "ServerSideSubscription" should "send a message to our Webhook Queue if the SSS Query matches a nested Create inside a Create mutation" in {
     val theTitle = "The title of the new todo"
     val createCommentWithNestedTodo =
       s"""
@@ -291,7 +291,7 @@ class ServerSideSubscriptionSpec extends FlatSpec with Matchers with ApiSpecBase
     webhook.headers shouldEqual Map("header" -> "value")
   }
 
-  "ServerSideSubscription" should "send a message to our Webhook Queue if the SSS Query matches a nested Update mutation" in {
+  "ServerSideSubscription" should "send a message to our Webhook Queue if the SSS Query matches a nested Create in an Update mutation" in {
     val newTodoTitle = "The title of the new todo"
     val createComment =
       s"""
