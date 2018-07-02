@@ -589,7 +589,8 @@ export class EndpointDialog {
   }
 
   private async getDemoCluster(): Promise<Cluster | null> {
-    if (!this.env.cloudSessionKey) {
+    const isAuthenticated = await this.client.isAuthenticated()
+    if (!isAuthenticated) {
       await this.client.login()
     }
     return this.askForDemoCluster()
