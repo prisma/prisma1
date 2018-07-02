@@ -11,17 +11,17 @@ import slick.jdbc.meta.MTable
 class InternalTestDatabase extends AwaitUtils {
   import scala.concurrent.ExecutionContext.Implicits.global
 
-  val config               = ConfigLoader.load()
-  val databaseDefs         = MysqlInternalDatabaseDefs(config.databases.head.copy(pooled = false))
-  val internalDatabaseRoot = databaseDefs.internalDatabaseRoot
-  val internalDatabase     = databaseDefs.managementDatabase
+  val config             = ConfigLoader.load()
+  val databaseDefs       = MysqlInternalDatabaseDefs(config.databases.head.copy(pooled = false))
+  val managementDatabase = databaseDefs.managementDatabase
+  val projectDatabase    = managementDatabase
 
   def createInternalDatabaseSchema() =
-    internalDatabaseRoot.run(MysqlInternalDatabaseSchema.createSchemaActions(databaseDefs.managementSchemaName, recreate = true)).await(10)
+    managementDatabase.run(MysqlInternalDatabaseSchema.createSchemaActions(databaseDefs.managementSchemaName, recreate = true)).await(10)
 
   def truncateTables(): Unit = {
-    val schemas = internalDatabase.run(getTables(databaseDefs.managementSchemaName)).await()
-    internalDatabase.run(dangerouslyTruncateTables(schemas)).await()
+    val schemas = managementDatabase.run(getTables(databaseDefs.managementSchemaName)).await()
+    managementDatabase.run(dangerouslyTruncateTables(schemas)).await()
   }
 
   private def dangerouslyTruncateTables(tableNames: Vector[String]): DBIOAction[Unit, NoStream, Effect] = {
@@ -38,10 +38,10 @@ class InternalTestDatabase extends AwaitUtils {
     } yield metaTables.map(table => table.name.name)
   }
 
-  def run[R](a: DBIOAction[R, NoStream, Nothing]) = internalDatabase.run(a).await()
+  def run[R](a: DBIOAction[R, NoStream, Nothing]) = projectDatabase.run(a).await()
 
   def shutdown() = {
-    internalDatabaseRoot.close()
-    internalDatabase.close()
+    managementDatabase.close()
+    projectDatabase.close()
   }
 }
