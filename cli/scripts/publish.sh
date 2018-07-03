@@ -11,6 +11,15 @@
 set -e
 set -x
 
+if [[ -z "$CIRCLE_BRANCH" ]]; then
+  if [[ $CIRCLE_TAG == "*beta" ]]; then
+    export CIRCLE_BRANCH=beta
+  fi
+  if [[ $CIRCLE_TAG == "*alpha" ]]; then
+    export CIRCLE_BRANCH=alpha
+  fi
+fi
+
 if [ -z "$CIRCLE_TAG" ] && [ $CIRCLE_BRANCH == "master" ]; then
   echo "Builds on master are only executed when a tag is provided"
   exit 0
