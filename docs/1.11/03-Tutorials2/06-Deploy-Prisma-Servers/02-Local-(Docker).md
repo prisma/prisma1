@@ -52,7 +52,7 @@ Before:
 version: '3'
 services:
   prisma:
-    image: prismagraphql/prisma:1.7
+    image: prismagraphql/prisma:1.10
 ```
 
 After:
@@ -61,7 +61,7 @@ After:
 version: '3'
 services:
   prisma:
-    image: prismagraphql/prisma:1.8
+    image: prismagraphql/prisma:1.11
 ```
 
 For the change to take effect, run:

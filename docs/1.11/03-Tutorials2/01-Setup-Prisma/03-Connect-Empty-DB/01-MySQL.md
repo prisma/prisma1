@@ -86,7 +86,7 @@ Now paste the following contents into it:
 version: '3'
 services:
   prisma:
-    image: prismagraphql/prisma:1.8
+    image: prismagraphql/prisma:1.11
     restart: always
     ports:
     - "4466:4466"
