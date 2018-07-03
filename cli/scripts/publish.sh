@@ -11,6 +11,11 @@
 set -e
 set -x
 
+if [ -z "$CIRCLE_TAG" ] && [ $CIRCLE_BRANCH == "master" ]; then
+  echo "Builds on master are only executed when a tag is provided"
+  exit 0
+fi
+
 if [ $CIRCLE_TAG ] && [ $CIRCLE_BRANCH != "master" ]; then
   echo "The Tag ${CIRCLE_TAG} has been set, but the branch is set to ${CIRCLE_BRANCH}. Tags are only allowed on master"
 fi

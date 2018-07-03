@@ -1,0 +1,7 @@
+endpoint: http://localhost:4466/travis/test
+datamodel: datamodel.graphql
+
+secret: my-very-secret
+
+seed:
+  import: seed.graphql
