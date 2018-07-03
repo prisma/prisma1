@@ -5,7 +5,7 @@ import com.prisma.api.connector.{ApiConnectorCapability, NodeQueryCapability, Pr
 import com.prisma.api.mutations._
 import com.prisma.api.resolver.DeferredTypes.{ManyModelDeferred, OneDeferred}
 import com.prisma.api.{ApiDependencies, ApiMetrics}
-import com.prisma.gc_values.IdGCValue
+import com.prisma.gc_values.CuidGCValue
 import com.prisma.shared.models.{Model, Project}
 import com.prisma.util.coolArgs.CoolArgs
 import com.prisma.utils.boolean.BooleanUtils._
@@ -234,7 +234,7 @@ case class SchemaBuilderImpl(
 
   lazy val NodeDefinition(nodeInterface: InterfaceType[ApiUserContext, PrismaNode], nodeField, nodeRes) = Node.definitionById(
     resolve = (id: String, ctx: Context[ApiUserContext, Unit]) => {
-      dataResolver.resolveByGlobalId(IdGCValue(id))
+      dataResolver.resolveByGlobalId(CuidGCValue(id))
     },
     possibleTypes = {
       objectTypes.values.flatMap { o =>

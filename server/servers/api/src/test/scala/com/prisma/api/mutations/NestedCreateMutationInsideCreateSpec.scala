@@ -1,5 +1,8 @@
 package com.prisma.api.mutations
 
+import java.util.UUID
+
+import com.prisma.IgnoreMySql
 import com.prisma.api.ApiSpecBase
 import com.prisma.shared.schema_dsl.SchemaDsl
 import org.scalatest.{FlatSpec, Matchers}
@@ -667,6 +670,45 @@ class NestedCreateMutationInsideCreateSpec extends FlatSpec with Matchers with A
     server.query("{ todoes { id } }", project).pathAsSeq("data.todoes").size should be(2)
     server.query("{ comments { id } }", project).pathAsSeq("data.comments").size should be(2)
 
+  }
+
+  "creating a nested item with an id of type UUID" should "work" taggedAs (IgnoreMySql) in {
+    val project = SchemaDsl.fromString() {
+      s"""
+         |type List {
+         |  id: ID! @unique
+         |  todos: [Todo]
+         |}
+         |
+         |type Todo {
+         |  id: UUID! @unique
+         |  title: String!
+         |}
+       """.stripMargin
+    }
+    database.setup(project)
+
+    val result = server.query(
+      """
+        |mutation {
+        |  createList(data: {
+        |    todos: {
+        |      create: [ {title: "the todo"} ]
+        |    }
+        |  }){
+        |    todos {
+        |      id
+        |      title
+        |    }
+        |  }
+        |}
+      """.stripMargin,
+      project
+    )
+
+    result.pathAsString("data.createList.todos.[0].title") should equal("the todo")
+    val theUuid = result.pathAsString("data.createList.todos.[0].id")
+    UUID.fromString(theUuid) // should now blow up
   }
 
 }

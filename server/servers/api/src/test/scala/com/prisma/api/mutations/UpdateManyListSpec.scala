@@ -9,7 +9,7 @@ class UpdateManyListSpec extends FlatSpec with Matchers with ApiSpecBase {
 
   val project: Project = SchemaDsl.fromString() { """
                                                   |type MyObject {
-                                                  |  id: String! @unique
+                                                  |  id: ID! @unique
                                                   |  name: String! @unique
                                                   |  strings: [String!]!
                                                   |  ints: [Int!]!

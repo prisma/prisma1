@@ -1,6 +1,6 @@
 package com.prisma.api.schema
 
-import com.prisma.api.schema.CustomScalarTypes.{DateTimeType, JsonType}
+import com.prisma.api.schema.CustomScalarTypes.{DateTimeType, JsonType, UUIDType}
 import com.prisma.shared.models
 import com.prisma.shared.models.{Model, Project, TypeIdentifier}
 import sangria.schema._
@@ -14,14 +14,15 @@ object SchemaBuilderUtils {
     assert(field.isScalar)
 
     val inputType: InputType[Any] = field.typeIdentifier match {
-      case TypeIdentifier.String    => StringType
-      case TypeIdentifier.Int       => IntType
-      case TypeIdentifier.Float     => FloatType
-      case TypeIdentifier.Boolean   => BooleanType
-      case TypeIdentifier.GraphQLID => IDType
-      case TypeIdentifier.DateTime  => DateTimeType
-      case TypeIdentifier.Json      => JsonType
-      case TypeIdentifier.Enum      => mapEnumFieldToInputType(field)
+      case TypeIdentifier.String   => StringType
+      case TypeIdentifier.Int      => IntType
+      case TypeIdentifier.Float    => FloatType
+      case TypeIdentifier.Boolean  => BooleanType
+      case TypeIdentifier.Cuid     => IDType
+      case TypeIdentifier.UUID     => UUIDType
+      case TypeIdentifier.DateTime => DateTimeType
+      case TypeIdentifier.Json     => JsonType
+      case TypeIdentifier.Enum     => mapEnumFieldToInputType(field)
     }
 
     if (field.isList) {

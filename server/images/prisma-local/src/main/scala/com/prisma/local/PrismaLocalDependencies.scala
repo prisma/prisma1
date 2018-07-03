@@ -18,6 +18,7 @@ import com.prisma.image.{Converters, FunctionValidatorImpl, SingleServerProjectF
 import com.prisma.messagebus.pubsub.inmemory.InMemoryAkkaPubSub
 import com.prisma.messagebus.queue.inmemory.InMemoryAkkaQueue
 import com.prisma.messagebus.{PubSubPublisher, PubSubSubscriber, QueueConsumer, QueuePublisher}
+import com.prisma.metrics.MetricsRegistry
 import com.prisma.shared.models.ProjectIdEncoder
 import com.prisma.subscriptions.protocol.SubscriptionProtocolV05.Responses.SubscriptionSessionResponseV05
 import com.prisma.subscriptions.protocol.SubscriptionProtocolV07.Responses.SubscriptionSessionResponse
@@ -37,6 +38,7 @@ case class PrismaLocalDependencies()(implicit val system: ActorSystem, val mater
   override implicit def self = this
 
   val config: PrismaConfig = ConfigLoader.load()
+  MetricsRegistry.init(deployConnector.cloudSecretPersistence)
 
   override lazy val apiSchemaBuilder = CachedSchemaBuilder(SchemaBuilder(), invalidationPubSub)
   override lazy val projectFetcher: ProjectFetcher = {

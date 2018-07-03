@@ -1,5 +1,8 @@
 package com.prisma.api.schema
 
+import java.util.UUID
+
+import com.prisma.gc_values.UuidGCValue
 import org.joda.time.format.DateTimeFormat
 import org.joda.time.{DateTime, DateTimeZone}
 import play.api.libs.json._
@@ -46,25 +49,36 @@ object CustomScalarTypes {
     description = Some("Raw JSON value"),
     coerceOutput = (value, _) ⇒ value,
     coerceUserInput = {
-      case v: String     ⇒ Right(JsString(v))
-      case v: Boolean    ⇒ Right(JsBoolean(v))
-      case v: Int        ⇒ Right(JsNumber(v))
-      case v: Long       ⇒ Right(JsNumber(v))
-      case v: Float      ⇒ Right(JsNumber(BigDecimal(v.toDouble)))
-      case v: Double     ⇒ Right(JsNumber(v))
-      case v: BigInt     ⇒ Right(JsNumber(BigDecimal(v)))
-      case v: BigDecimal ⇒ Right(JsNumber(v))
-      case v: DateTime ⇒
-        Right(
-          JsString(
-            v.toString(DateTimeFormat
-              .forPattern("yyyy-MM-dd'T'HH:mm:ss.SSS'Z")
-              .withZoneUTC())))
-      case v: JsValue ⇒ Right(v)
+      case v: JsObject ⇒ Right(v)
+      case v: JsArray  ⇒ Right(v)
+      case _           ⇒ Left(JsonCoercionViolation)
     },
     coerceInput = {
       case ast.StringValue(jsonStr, _, _, _, _) ⇒ parseJson(jsonStr)
       case _                                    ⇒ Left(JsonCoercionViolation)
     }
   )
+
+  val UUIDType = ScalarType[UUID](
+    name = "UUID",
+    description = Some("A type 4 UUID according to IETF RFC 4122."),
+    coerceOutput = (value, _) => value,
+    coerceInput = {
+      case str: ast.StringValue => parseStringAsUUID(str.value)
+      case _                    => Left(UUIDCoercionViolation)
+    },
+    coerceUserInput = {
+      case str: String => parseStringAsUUID(str)
+      case _           => Left(UUIDCoercionViolation)
+    }
+  )
+
+  object UUIDCoercionViolation extends ValueCoercionViolation("This is not a valid type 4 UUID.")
+
+  private def parseStringAsUUID(str: String): Either[UUIDCoercionViolation.type, UUID] = {
+    UuidGCValue.parse(str) match {
+      case Success(x) => Right(x.value)
+      case Failure(_) => Left(UUIDCoercionViolation)
+    }
+  }
 }

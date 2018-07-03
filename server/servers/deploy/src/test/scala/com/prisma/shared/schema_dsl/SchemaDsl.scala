@@ -455,7 +455,7 @@ object SchemaDsl extends AwaitUtils {
 
   private val idField = FieldTemplate(
     name = "id",
-    typeIdentifier = TypeIdentifier.GraphQLID,
+    typeIdentifier = TypeIdentifier.Cuid,
     isRequired = true,
     isList = false,
     isUnique = true,

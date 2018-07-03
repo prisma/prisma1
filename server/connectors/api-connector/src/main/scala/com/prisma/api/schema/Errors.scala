@@ -95,7 +95,7 @@ object APIErrors {
       extends ClientApiError(s"The value in the field '$fieldName' on the model '$modelName' ist not valid for that field.", 3038)
 
   case class NodeNotFoundForWhereError(where: NodeSelector)
-      extends ClientApiError(s"No Node for the model ${where.model.name} with value ${where.fieldValueAsString} for ${where.field.name} found.", 3039)
+      extends ClientApiError(s"No Node for the model ${where.model.name} with value ${where.value} for ${where.field.name} found.", 3039)
 
   case class NullProvidedForWhereError(modelName: String)
       extends ClientApiError(s"You provided an invalid argument for the where selector on $modelName.", 3040)
@@ -129,9 +129,9 @@ object APIErrors {
       case 1 =>
         path.lastEdge_! match {
           case edge: ModelEdge =>
-            s"The relation ${edge.relation.name} has no node for the model ${edge.parent.name} with the value '${path.root.fieldValueAsString}' for the field '${path.root.field.name}' connected to a node for the model ${edge.child.name} on your mutation path."
+            s"The relation ${edge.relation.name} has no node for the model ${edge.parent.name} with the value '${path.root.value}' for the field '${path.root.field.name}' connected to a node for the model ${edge.child.name} on your mutation path."
           case edge: NodeEdge =>
-            s"The relation ${edge.relation.name} has no node for the model ${edge.parent.name} with the value '${path.root.fieldValueAsString}' for the field '${path.root.field.name}' connected to a node for the model ${edge.child.name} with the value '${edge.childWhere.fieldValueAsString}' for the field '${edge.childWhere.field.name}'"
+            s"The relation ${edge.relation.name} has no node for the model ${edge.parent.name} with the value '${path.root.value}' for the field '${path.root.field.name}' connected to a node for the model ${edge.child.name} with the value '${edge.childWhere.value}' for the field '${edge.childWhere.field.name}'"
         }
 
       case _ =>
@@ -142,16 +142,16 @@ object APIErrors {
                 s"The relation ${lastEdge.relation.name} has no node for the model ${lastEdge.parent.name} connected to a Node for the model ${lastEdge.child.name} on your mutation path."
 
               case parentEdge: NodeEdge =>
-                s"The relation ${lastEdge.relation.name} has no node for the model ${lastEdge.parent.name} with the value '${parentEdge.childWhere.fieldValueAsString}' for the field '${parentEdge.childWhere.field.name}' connected to a node for the model ${lastEdge.child.name} on your mutation path.'"
+                s"The relation ${lastEdge.relation.name} has no node for the model ${lastEdge.parent.name} with the value '${parentEdge.childWhere.value}' for the field '${parentEdge.childWhere.field.name}' connected to a node for the model ${lastEdge.child.name} on your mutation path.'"
             }
 
           case lastEdge: NodeEdge =>
             path.removeLastEdge.lastEdge_! match {
               case _: ModelEdge =>
-                s"The relation ${lastEdge.relation.name} has no node for the model ${lastEdge.parent.name} connected to a Node for the model ${lastEdge.child.name} with the value '${lastEdge.childWhere.fieldValueAsString}' for the field '${lastEdge.childWhere.field.name}' on your mutation path."
+                s"The relation ${lastEdge.relation.name} has no node for the model ${lastEdge.parent.name} connected to a Node for the model ${lastEdge.child.name} with the value '${lastEdge.childWhere.value}' for the field '${lastEdge.childWhere.field.name}' on your mutation path."
 
               case parentEdge: NodeEdge =>
-                s"The relation ${lastEdge.relation.name} has no node for the model ${lastEdge.parent.name} with the value '${parentEdge.childWhere.fieldValueAsString}' for the field '${parentEdge.childWhere.field.name}' connected to a node for the model ${lastEdge.child.name} with the value '${lastEdge.childWhere.fieldValueAsString}' for the field '${lastEdge.childWhere.field.name}' on your mutation path.'"
+                s"The relation ${lastEdge.relation.name} has no node for the model ${lastEdge.parent.name} with the value '${parentEdge.childWhere.value}' for the field '${parentEdge.childWhere.field.name}' connected to a node for the model ${lastEdge.child.name} with the value '${lastEdge.childWhere.value}' for the field '${lastEdge.childWhere.field.name}' on your mutation path.'"
             }
         }
     }
