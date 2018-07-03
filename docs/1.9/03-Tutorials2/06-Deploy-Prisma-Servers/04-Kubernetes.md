@@ -5,12 +5,6 @@ description: Learn how to deploy your Prisma database service to Kubernetes.
 
 # Kubernetes
 
-<InfoBox type=warning>
-
-**This tutorial only applies to Prisma versions lower than 1.7 and will be updated soon.**
-
-</InfoBox>
-
 In this tutorial, you will learn how to deploy a Prisma server on Kubernetes.
 
 [Kubernetes](https://kubernetes.io/) is a container orchestrator, that helps with deploying and scaling of your containerized applications.
@@ -36,7 +30,7 @@ You can go ahead now and create a new directory on your local machine – call 
 
 ## Creating a separate namespace
 
-As you may know, Kubernetes comes with a primitive called `namespace`. This allows you to group your applications logically. Before applying the actual namespace on the cluster, we have to write the definition file for it. Inside our project directory, create a file called `namespace.yml` with the following content:
+As you may know, Kubernetes comes with a primitive called `namespace`. This allows you to group your workload logically. Before applying the actual namespace on the cluster, we have to write the definition file for it. Inside our project directory, create a file called `namespace.yml` with the following content:
 
 ```yml(path="kubernetes-demo/namespace.yml")
 apiVersion: v1
@@ -64,27 +58,37 @@ prisma          Active    2s
 
 ## MySQL
 
-Now that we have a valid namespace in which we can rage, it is time to deploy MySQL. Kubernetes separates between stateless and stateful deployments. A database is by nature a stateful deployment and needs a disk to actually store the data. As described in the introduction above, every cloud provider comes with a different mechanism of creating disks. In the case of the [Google Cloud Platform](https://cloud.google.com), you can create a disk by following the following steps:
+Prisma supports a [good range](https://github.com/prismagraphql/prisma/issues/1751) of different database systems. Although we use MySQL for this tutorial, the steps can be easily adopted for a different database system, like PostgreSQL.
 
-1. Open the [Google Cloud Console](https://console.cloud.google.com)
-2. Go to the [Disk section](https://console.cloud.google.com/compute/disks) and select `Create`
+### Disk provisioning
 
-Please fill out the form with the following information:
+Now that we have a valid namespace in which we can rage, it is time to deploy MySQL. Kubernetes separates between stateless and stateful deployments. A database is by nature a stateful deployment and needs a disk to actually store the data. So how do we tell our cluster to create a new disk on the cluster? By using a [PersistentVolumeClaim](https://kubernetes.io/docs/concepts/storage/persistent-volumes/#persistentvolumeclaims):
 
-* **Name:** Should be `db-persistence`
-* **Zone:** The zone in which the Nodes of your Kubernetes cluster are deployed, e.g. `europe-west-1c`
-* **Disk type:** For a production scenario `SSD persistent disk`
-* **Source type:** `None (blank disk)`
-* **Size (GB):** Select a size that fits your requirements
-* **Encryption:** `Automatic (recommended)`
+```yml(path="kubernetes-demo/database/pvc.yml")
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: database-disk
+  namespace: prisma
+  labels:
+    stage: production
+    name: database
+    app: mysql
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 20Gi
+```
 
-Select `Create` for actually creating the disk.
+Here we request a disk with a storage capacity of 20 GB. You can apply this PVC by executing:
 
-<InfoBox>
+```
+kubectl apply -f database/pvc.yml
+```
 
-To keep things simple, we created the disk above manually. You can automate that process by provisioning a disk via [Terraform](https://www.terraform.io/) as well, but this is out of the scope of this tutorial.
-
-</InfoBox>
+You should see a new disk in the [Disk Overview](https://console.cloud.google.com/compute/disks) on the Google Cloud Platform after a couple of seconds.
 
 ### Deploying the Pod
 
@@ -122,27 +126,23 @@ spec:
           image: 'mysql:5.7'
           args:
             - --ignore-db-dir=lost+found
-            - --max-connections=1000
-            - --sql-mode=ALLOW_INVALID_DATES,ANSI_QUOTES,ERROR_FOR_DIVISION_BY_ZERO,HIGH_NOT_PRECEDENCE,IGNORE_SPACE,NO_AUTO_CREATE_USER,NO_AUTO_VALUE_ON_ZERO,NO_BACKSLASH_ESCAPES,NO_DIR_IN_CREATE,NO_ENGINE_SUBSTITUTION,NO_FIELD_OPTIONS,NO_KEY_OPTIONS,NO_TABLE_OPTIONS,NO_UNSIGNED_SUBTRACTION,NO_ZERO_DATE,NO_ZERO_IN_DATE,ONLY_FULL_GROUP_BY,PIPES_AS_CONCAT,REAL_AS_FLOAT,STRICT_ALL_TABLES,STRICT_TRANS_TABLES,ANSI,DB2,MAXDB,MSSQL,MYSQL323,MYSQL40,ORACLE,POSTGRESQL,TRADITIONAL
           env:
             - name: MYSQL_ROOT_PASSWORD
-              value: "graphcool"
+              value: "prisma"
           ports:
             - name: mysql-3306
               containerPort: 3306
           volumeMounts:
-            - name: db-persistence
+            - name: database-disk
               readOnly: false
               mountPath: /var/lib/mysql
       volumes:
-        - name: db-persistence
-          gcePersistentDisk:
-            readOnly: false
-            fsType: ext4
-            pdName: db-persistence
+        - name: database-disk
+          persistentVolumeClaim:
+            claimName: database-disk
 ```
 
-When applied, this definition schedules one Pod (`replicas: 1`), with a running container based on the image `mysql:5.7`, configures the environment (sets the password of the `root` user to `graphcool`) and mounts the disk `db-persistence` to the path `/var/lib/mysql`.
+When applied, this definition schedules one Pod (`replicas: 1`), with a running container based on the image `mysql:5.7`, configures the environment (sets the password of the `root` user to `prisma`) and mounts the disk `database-disk` to the path `/var/lib/mysql`.
 
 To actually apply that definition, execute:
 
@@ -216,6 +216,41 @@ Okay, fair enough, the database is deployed. Next up: Deploying the actual Prism
 
 This application communicates with the already deployed `database` service and uses it as the storage backend. Therefore, the Prisma server is a stateless application because it doesn't need any additional disk storage.
 
+### Deploying the ConfigMap
+
+The Prisma server needs some configuration, like the database connection information and which connector Prisma should use. We will deploy this configuration as a so-called `ConfigMap` which acts like an ordinary configuration file, but whose content can be injected into an environment variable:
+
+```yml(path="kubernetes-demo/prisma/configmap.yml")
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: prisma-configmap
+  namespace: prisma
+  labels:
+    stage: production
+    name: prisma
+    app: prisma
+data:
+  PRISMA_CONFIG: |
+    port: 4466
+    # uncomment the next line and provide the env var PRISMA_MANAGEMENT_API_SECRET=my-secret to activate cluster security
+    # managementApiSecret: my-secret
+    databases:
+      default:
+        connector: mysql
+        host: database
+        port: 3306
+        user: root
+        password: prisma
+        migrations: true
+```
+
+After defining the file, you can apply it via:
+
+```sh
+kubectl apply -f prisma/configmap.yml
+```
+
 ### Deploying the Pod
 
 Deploying the actual Prisma server to run in a Pod is pretty straightforward. First of all you have to define the deployment definition:
@@ -243,69 +278,19 @@ spec:
     spec:
       containers:
         - name: prisma
-          image: 'prismagraphql/prisma:1.1'
+          image: 'prismagraphql/prisma:1.8'
           ports:
             - name: prisma-4466
               containerPort: 4466
           env:
-            - name: PORT
-              value: "4466"
-            - name: SQL_CLIENT_HOST_CLIENT1
-              value: "database"
-            - name: SQL_CLIENT_HOST_READONLY_CLIENT1
-              value: "database"
-            - name: SQL_CLIENT_HOST
-              value: "database"
-            - name: SQL_CLIENT_PORT
-              value: "3306"
-            - name: SQL_CLIENT_USER
-              value: "root"
-            - name: SQL_CLIENT_PASSWORD
-              value: "graphcool"
-            - name: SQL_CLIENT_CONNECTION_LIMIT
-              value: "10"
-            - name: SQL_INTERNAL_HOST
-              value: "database"
-            - name: SQL_INTERNAL_PORT
-              value: "3306"
-            - name: SQL_INTERNAL_USER
-              value: "root"
-            - name: SQL_INTERNAL_PASSWORD
-              value: "graphcool"
-            - name: SQL_INTERNAL_DATABASE
-              value: "graphcool"
-            - name: SQL_INTERNAL_CONNECTION_LIMIT
-              value: "10"
-            - name: CLUSTER_ADDRESS
-              value: "http://prisma:4466"
-            - name: BUGSNAG_API_KEY
-              value: ""
-            - name: ENABLE_METRICS
-              value: "0"
-            - name: JAVA_OPTS
-              value: "-Xmx1G"
-            - name: SCHEMA_MANAGER_SECRET
-              value: "graphcool"
-            - name: SCHEMA_MANAGER_ENDPOINT
-              value: "http://prisma:4466/cluster/schema"
-            - name: CLUSTER_PUBLIC_KEY
-              value: "GENERATE VIA https://api.cloud.prisma.sh/"
+            - name: PRISMA_CONFIG
+              valueFrom:
+                configMapKeyRef:
+                  name: prisma-configmap
+                  key: PRISMA_CONFIG
 ```
 
-This configuration looks similar to the deployment configuration of the MySQL database. We tell Kubernetes that it should schedule one replica of the server and define the environment variables accordingly. As you can see, we use the name `database` for each `SQL_*_HOST*` variable. This works because of the fact that this `Pod` will run in the same namespace as the database service – the Kubernetes DNS server makes that possible.
-
-Before applying that definition, we have to generate a public/private-keypair so that the CLI is able to communicate with this Prisma server. Head over to [https://api.cloud.prisma.sh/](https://api.cloud.prisma.sh/) and execute the following query:
-
-```
-{
-  generateKeypair {
-    public
-    private
-  }
-}
-```
-
-Make sure to store those values in a safe place! Now, copy the `public` key and paste it into the `value` of the `CLUSTER_PUBLIC_KEY` environment variable in `prisma/deployment.yml`.
+This configuration looks similar to the deployment configuration of the MySQL database. We tell Kubernetes that it should schedule one replica of the server and define the environment variable by using the previously deployed `ConfigMap`.
 
 Afterwards, we are ready to apply that deployment definition:
 
@@ -359,31 +344,30 @@ That's all. Prisma is running on Kubernetes!
 The last step is to configure your local `Prisma CLI` so that you can communicate with the instance on the Kubernetes Cluster.
 
 <InfoBox>
-
 The upcoming last step is also necessary if you want to integrate `prisma deploy` into your CI/CD process.
-
 </InfoBox>
 
 ## Configuration of the Prisma CLI
 
 The Prisma server is running on the Kubernetes cluster and has an internal load balancer. This is a sane security default, because you won't expose the Prisma server to the public directly. Instead, you would develop a GraphQL API and deploy it to the Kubernetes cluster as well.
 
-You may ask: "Okay, but how do I execute `prisma deploy` in order to populate my data model when I'm not able to communicate with the Prisma server directly?`. That is indeed a very good question!`kubectl` comes with a mechanism that allows forwarding a local port to an application that lives on the Kubernetes cluster.
+You may ask: "Okay, but how do I execute `prisma deploy` in order to populate my data model when I'm not able to communicate with the Prisma server directly?". That is indeed a very good question! `kubectl` comes with a mechanism that allows forwarding a local port to an application that lives on the Kubernetes cluster.
 
 So every time you want to communicate with your Prisma server on the Kubernetes cluster, you have to perform the following steps:
 
-1. `kubectl get pods --namespace prisma` to identify the pod name
-2. `kubectl port-forward --namespace prisma <the-pod-name> 4467:4466` – This will forward from `127.0.0.1:4467` -> `kubernetes-cluster:4466`
+1.  `kubectl get pods --namespace prisma` to identify the pod name
+2.  `kubectl port-forward --namespace prisma <the-pod-name> 4467:4466` – This will forward from `127.0.0.1:4467` -> `kubernetes-cluster:4466`
 
-The Prisma server is now reachable via `http://localhost:4467`. With this in place, we can configure the CLI:
+The Prisma server is now reachable via `http://localhost:4467`. This is the actual `endpoint` you have to specify in your `prisma.yml`. So when your service should have the name `myservice` and you want to deploy to stage `production`, your endpoint URL would look like: `http://localhost:4467/myservice/production`.
 
-```sh
-prisma cluster add
+An example `prisma.yml` could look like:
 
-? Please provide the cluster endpoint http://localhost:4467
-? Please provide the cluster secret <the-private-key-from-the-api-call>
-? Please provide a name for your cluster kubernetes
+```yml
+endpoint: http://localhost:4467/myservice/production
+datamodel: datamodel.graphql
 ```
+
+With this in place, you can deploy the Prisma service via the Prisma CLI (`prisma deploy`) as long as your port forwarding to the cluster is active.
 
 Okay, you made it! Congratulations, you have successfully deployed a Prisma server to a production Kubernetes cluster environment.
 

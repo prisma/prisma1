@@ -208,9 +208,6 @@ ${chalk.gray(
 
     await this.client.initClusterClient(cluster, serviceName, stage, workspace!)
 
-    debug('checking verions')
-    await this.checkVersions(cluster!)
-
     let projectNew = false
     debug('checking if project exists')
     if (!await this.projectExists(cluster, serviceName, stage, workspace!)) {
@@ -254,50 +251,7 @@ ${chalk.gray(
         })
     }
   }
-
-  private async checkVersions(cluster: Cluster) {
-    const clusterVersion = await cluster!.getVersion()
-    if (clusterVersion) {
-      const gcSemverRegex = /(\d{1,2}\.\d{1,2}\.?\d{0,2})-?\w*(\d{1,2}\.\d{1,2}\.?\d{0,2})/
-      const clusterMatch = clusterVersion.match(gcSemverRegex)
-      const cliMatch = this.config.version.match(gcSemverRegex)
-      const localNote = cluster.local
-        ? `Please use ${chalk.green.bold(
-            'prisma local upgrade',
-          )} to get the latest cluster.`
-        : `Please update your prisma cli to the latest version ${chalk.green.bold(
-            'npm install -g prisma',
-          )}`
-      const error = new Error(
-        `The CLI version (${
-          this.config.version
-        }) and cluster version (${clusterVersion}) of cluster ${
-          cluster.name
-        } do not match. ${localNote}`,
-      )
-      if (clusterMatch && clusterMatch[1] && cliMatch && cliMatch[1]) {
-        const mainSatisfied = semver.satisfies(
-          cliMatch[1],
-          `~${clusterMatch[1]}`,
-        )
-        if (mainSatisfied) {
-          // disable minor check in beta
-          // if (clusterMatch[2] && cliMatch[2]) {
-          //   const secondarySatisfied = semver.satisfies(
-          //     cliMatch[2],
-          //     `~${clusterMatch[2]}`,
-          //   )
-          //   if (!secondarySatisfied) {
-          //     throw error
-          //   }
-          // }
-        } else {
-          throw error
-        }
-      }
-    }
-  }
-
+  
   private getSillyName() {
     return `${slugify(sillyname()).split('-')[0]}-${Math.round(
       Math.random() * 1000,
