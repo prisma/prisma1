@@ -5,7 +5,7 @@ import * as globby from 'globby'
 import { Validator } from './Validator'
 import chalk from 'chalk'
 import * as AdmZip from 'adm-zip'
-const debug = require('debug')('Importer')
+import * as figures from 'figures'
 
 export interface Files {
   lists: string[]
@@ -110,7 +110,7 @@ export class Importer {
       before = Date.now()
       this.out.log('\nUploading nodes...')
       const state = this.getState()
-  
+
       for (const fileName of files.nodes) {
         const n = this.getNumber(fileName)
         if (state.nodes >= n) {
@@ -131,7 +131,7 @@ export class Importer {
           this.out.log(this.out.getStyledJSON(result))
           this.out.exit(1)
         }
-  
+
         state.nodes = n
         this.saveState(state)
       }
@@ -199,9 +199,8 @@ export class Importer {
         fs.removeSync(this.importDir)
       }
     } catch (e) {
-      this.out.log(
-        chalk.yellow(`Uncaught exception, cleaning up: ${e}`)
-      )
+      this.out.log(chalk.yellow(`Uncaught exception, cleaning up: ${e}`))
+      this.out.action.stop(chalk.red(figures.cross))
       if (!this.isDir) {
         fs.removeSync(this.importDir)
       }
@@ -210,6 +209,17 @@ export class Importer {
 
   validateFiles(files: Files) {
     const validator = new Validator(this.types)
+
+    if (
+      (!files.nodes || files.nodes.length === 0) &&
+      (!files.lists || files.lists.length === 0) &&
+      (!files.relations || files.relations.length === 0)
+    ) {
+      throw new Error(
+        `'Folder 'folder' does not contain any of these folders: 'nodes', 'lists', 'relations'. Read more about data import here: https://bit.ly/prisma-import-ndf'`,
+      )
+    }
+
     for (const fileName of files.nodes) {
       const file = fs.readFileSync(fileName, 'utf-8')
       const json = JSON.parse(file)

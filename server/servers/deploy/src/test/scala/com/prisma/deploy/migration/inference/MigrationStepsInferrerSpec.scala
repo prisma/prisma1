@@ -30,10 +30,10 @@ class MigrationStepsInferrerSpec extends FlatSpec with Matchers with DeploySpecB
   "Creating models" should "create CreateModel and CreateField migration steps" in {
     val renames = SchemaMapping.empty
 
-    val previousProject = SchemaBuilder() { schema =>
+    val previousProject = SchemaDsl.fromBuilder { schema =>
       schema.model("Test").field("a", _.String).field("b", _.Int)
     }
-    val nextProject = SchemaBuilder() { schema =>
+    val nextProject = SchemaDsl.fromBuilder { schema =>
       schema.model("Test").field("a", _.String).field("b", _.Int)
       schema.model("Test2").field("c", _.String).field("d", _.Int)
     }

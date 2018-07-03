@@ -1,7 +1,7 @@
 package com.prisma.api.schema
 
-import com.prisma.api.connector.{ModelEdge, NodeEdge, NodeSelector, Path}
-import com.prisma.shared.models.{Project, Relation}
+import com.prisma.api.connector.NodeSelector
+import com.prisma.shared.models.{Model, Relation}
 
 abstract class UserFacingError(val message: String, val code: Int) extends Exception(message)
 
@@ -44,6 +44,7 @@ object APIErrors {
   case class UniqueConstraintViolation(modelName: String, details: String)
       extends ClientApiError(s"A unique constraint would be violated on $modelName. Details: $details", 3010)
 
+  // todo: this error may not be required anymore. It is just used in creates and i cannot see how this can happen within a create.
   case class NodeDoesNotExist(id: String)
       extends ClientApiError(
         s"You are referencing a node that does not exist. Please check your mutation to make sure you are only creating edges between existing nodes. Id if available: $id",
@@ -100,9 +101,10 @@ object APIErrors {
   case class NullProvidedForWhereError(modelName: String)
       extends ClientApiError(s"You provided an invalid argument for the where selector on $modelName.", 3040)
 
-  case class NodesNotConnectedError(path: Path) extends ClientApiError(pathErrorMessage(path), 3041)
+  case class NodesNotConnectedError(relation: Relation, parent: Model, parentWhere: Option[NodeSelector], child: Model, childWhere: Option[NodeSelector])
+      extends ClientApiError(pathErrorMessage(relation, parent, parentWhere, child, childWhere), 3041)
 
-  case class RequiredRelationWouldBeViolated(project: Project, relation: Relation)
+  case class RequiredRelationWouldBeViolated(relation: Relation)
       extends ClientApiError(
         s"The change you are trying to make would violate the required relation '${relation.name}' between ${relation.modelA.name} and ${relation.modelB.name}",
         3042
@@ -114,47 +116,16 @@ object APIErrors {
         3043
       )
 
-  case class UpdatingUniqueToNullAndThenNestingMutations(modelName: String)
-      extends ClientApiError(
-        s"You are updating a unique value to null and have nested mutations below that node. Since we execute from top to bottom" +
-          s" and there could now be several nodes with null for that unique field there is the possibility for errors. Please do the mutation in two steps" +
-          s"or use a different unique value to address the nodes. Affected model: $modelName",
-        +3044
-      )
-
-  def pathErrorMessage(path: Path): String = {
-
-    path.edges.length match {
-      case 0 => sys.error("Should not trigger on empty paths.")
-      case 1 =>
-        path.lastEdge_! match {
-          case edge: ModelEdge =>
-            s"The relation ${edge.relation.name} has no node for the model ${edge.parent.name} with the value '${path.root.value}' for the field '${path.root.field.name}' connected to a node for the model ${edge.child.name} on your mutation path."
-          case edge: NodeEdge =>
-            s"The relation ${edge.relation.name} has no node for the model ${edge.parent.name} with the value '${path.root.value}' for the field '${path.root.field.name}' connected to a node for the model ${edge.child.name} with the value '${edge.childWhere.value}' for the field '${edge.childWhere.field.name}'"
-        }
-
-      case _ =>
-        path.lastEdge_! match {
-          case lastEdge: ModelEdge =>
-            path.removeLastEdge.lastEdge_! match {
-              case _: ModelEdge =>
-                s"The relation ${lastEdge.relation.name} has no node for the model ${lastEdge.parent.name} connected to a Node for the model ${lastEdge.child.name} on your mutation path."
-
-              case parentEdge: NodeEdge =>
-                s"The relation ${lastEdge.relation.name} has no node for the model ${lastEdge.parent.name} with the value '${parentEdge.childWhere.value}' for the field '${parentEdge.childWhere.field.name}' connected to a node for the model ${lastEdge.child.name} on your mutation path.'"
-            }
-
-          case lastEdge: NodeEdge =>
-            path.removeLastEdge.lastEdge_! match {
-              case _: ModelEdge =>
-                s"The relation ${lastEdge.relation.name} has no node for the model ${lastEdge.parent.name} connected to a Node for the model ${lastEdge.child.name} with the value '${lastEdge.childWhere.value}' for the field '${lastEdge.childWhere.field.name}' on your mutation path."
-
-              case parentEdge: NodeEdge =>
-                s"The relation ${lastEdge.relation.name} has no node for the model ${lastEdge.parent.name} with the value '${parentEdge.childWhere.value}' for the field '${parentEdge.childWhere.field.name}' connected to a node for the model ${lastEdge.child.name} with the value '${lastEdge.childWhere.value}' for the field '${lastEdge.childWhere.field.name}' on your mutation path.'"
-            }
-        }
+  def pathErrorMessage(relation: Relation, parent: Model, parentWhere: Option[NodeSelector], child: Model, childWhere: Option[NodeSelector]) = {
+    (parentWhere, childWhere) match {
+      case (Some(parentWhere), Some(childWhere)) =>
+        s"The relation ${relation.name} has no node for the model ${parent.name} with the value '${parentWhere.value}' for the field '${parentWhere.field.name}' connected to a node for the model ${child.name} with the value '${childWhere.value}' for the field '${childWhere.field.name}'"
+      case (Some(parentWhere), None) =>
+        s"The relation ${relation.name} has no node for the model ${parent.name} with the value '${parentWhere.value}' for the field '${parentWhere.field.name}' connected to a node for the model ${child.name} on your mutation path."
+      case (None, Some(childWhere)) =>
+        s"The relation ${relation.name} has no node for the model ${parent.name} connected to a Node for the model ${child.name} with the value '${childWhere.value}' for the field '${childWhere.field.name}' on your mutation path."
+      case (None, None) =>
+        s"The relation ${relation.name} has no node for the model ${parent.name} connected to a Node for the model ${child.name} on your mutation path."
     }
   }
-
 }

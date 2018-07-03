@@ -46,7 +46,7 @@ class SettingNodeSelectorToNullSpec extends FlatSpec with Matchers with ApiSpecB
     res.toString() should be("""{"data":{"updateA":{"b":null}}}""")
   }
 
-  "Setting a where value to null " should "should error if there are nested operations" in {
+  "Setting a where value to null " should "should only update one if there are several nulls for the specified node selector" in {
     val project = SchemaDsl.fromString() {
       """
         |type A {
@@ -73,6 +73,7 @@ class SettingNodeSelectorToNullSpec extends FlatSpec with Matchers with ApiSpecB
         |       create:{ c: "C"}
         |    }
         |  }) {
+        |    id
         |    key,
         |    b,
         |    c {c}
@@ -84,6 +85,7 @@ class SettingNodeSelectorToNullSpec extends FlatSpec with Matchers with ApiSpecB
     server.query(
       """mutation a {
         |  createA(data: {
+        |    b: null
         |    key: "abc2"
         |    c: {
         |       create:{ c: "C2"}
@@ -97,7 +99,7 @@ class SettingNodeSelectorToNullSpec extends FlatSpec with Matchers with ApiSpecB
       project
     )
 
-    server.queryThatMustFail(
+    server.query(
       """mutation b {
         |  updateA(
         |    where: { b: "abc" }
@@ -109,9 +111,24 @@ class SettingNodeSelectorToNullSpec extends FlatSpec with Matchers with ApiSpecB
         |    c{c}
         |  }
         |}""",
-      project,
-      3044
+      project
     )
+
+    val result = server.query(
+      """
+        |{
+        | as {
+        |   b
+        |   c {
+        |     c
+        |   }
+        | }
+        |}
+      """.stripMargin,
+      project
+    )
+
+    result.toString should be("""{"data":{"as":[{"b":null,"c":{"c":"NewC"}},{"b":null,"c":{"c":"C2"}}]}}""")
   }
 
 }

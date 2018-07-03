@@ -1,25 +1,18 @@
 import { Command, flags, Flags, DeployPayload, Config } from 'prisma-cli-engine'
 import { Cluster } from 'prisma-yml'
 import chalk from 'chalk'
-import { ServiceDoesntExistError } from '../../errors/ServiceDoesntExistError'
-import { emptyDefinition } from './emptyDefinition'
 import * as chokidar from 'chokidar'
 import * as inquirer from 'inquirer'
 import * as path from 'path'
 import * as fs from 'fs-extra'
 import { fetchAndPrintSchema } from './printSchema'
 import { Seeder } from '../seed/Seeder'
-import * as childProcess from 'child_process'
 import * as semver from 'semver'
 const debug = require('debug')('deploy')
 import { prettyTime, concatName, defaultDockerCompose } from '../../util'
-import { spawn } from '../../spawn'
 import * as sillyname from 'sillyname'
 import { getSchemaPathFromConfig } from './getSchemaPathFromConfig'
-import * as findUp from 'find-up'
-import Up from '../local/up'
 import { EndpointDialog } from '../../utils/EndpointDialog'
-import { isDockerComposeInstalled } from '../../utils/dockerComposeInstalled'
 import { spawnSync } from 'npm-run'
 import * as figures from 'figures'
 
@@ -126,44 +119,16 @@ ${chalk.gray(
       cluster = this.definition.getCluster(false)
     }
 
-    /**
-     * If no cluster is running locally, don't start anymore but create docker-compose.yml and ask for starting
-     */
     if (
       cluster &&
       cluster.local &&
       !await cluster.isOnline()
-      // !fs.readdirSync(this.config.definitionDir).includes('docker-compose.yml')
     ) {
-      //       if (
-      //         cluster.baseUrl.includes('127.0.0.1') ||
-      //         cluster.baseUrl.includes('localhost')
-      //       ) {
-      //         fs.writeFileSync(
-      //           path.join(this.config.definitionDir, 'docker-compose.yml'),
-      //           dockerComposeYml,
-      //         )
-      //         this.out.log(
-      //           `Created docker-compose.yml with a local prisma server.
-      // Please run ${chalk.cyan('$ docker-compose up -d')} to start your local prisma.
-      // Note: prisma local start will be deprecated soon in favor of the direct usage of docker-compose.`,
-      //         )
-      //         const dockerComposeInstalled = await isDockerComposeInstalled()
-      //         if (!dockerComposeInstalled) {
-      //           this.out.log(
-      //             `To install docker-compose, please follow this link: ${chalk.cyan(
-      //               'https://docs.docker.com/compose/install/',
-      //             )}`,
-      //           )
-      //         }
-      //         process.exit(1)
-      // } else {
       throw new Error(
         `Could not connect to server at ${
           cluster.baseUrl
         }. Please check if your server is running.`,
       )
-      // }
     }
 
     /**
@@ -262,14 +227,6 @@ ${chalk.gray(
     return `public-${this.getSillyName()}`
   }
 
-  private async localUp(): Promise<Cluster> {
-    await Up.run(this.config)
-    await this.env.load()
-    const cluster = this.env.clusterByName('local')!
-    this.env.setActiveCluster(cluster)
-    return cluster
-  }
-
   private async projectExists(
     cluster: Cluster,
     name: string,
@@ -314,7 +271,6 @@ ${chalk.gray(
     workspace: string | null,
   ): Promise<void> {
     this.deploying = true
-    const localNote = cluster.local ? ' locally' : ''
     let before = Date.now()
 
     const b = s => `\`${chalk.bold(s)}\``

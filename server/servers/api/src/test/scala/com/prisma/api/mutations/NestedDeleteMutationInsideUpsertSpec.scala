@@ -53,8 +53,8 @@ class NestedDeleteMutationInsideUpsertSpec extends FlatSpec with Matchers with A
          |}
       """,
       project,
-      errorCode = 3032,
-      errorContains = "The field 'childReq' on type 'Parent' is required. Performing this mutation would violate that constraint"
+      errorCode = 3042,
+      errorContains = "The change you are trying to make would violate the required relation 'ChildToParent' between Child and Parent"
     )
 
     ifConnectorIsActive { dataResolver(project).countByTable("_ChildToParent").await should be(1) }
@@ -108,8 +108,8 @@ class NestedDeleteMutationInsideUpsertSpec extends FlatSpec with Matchers with A
          |}
       """,
       project,
-      errorCode = 3032,
-      errorContains = "The field 'childReq' on type 'Parent' is required. Performing this mutation would violate that constraint"
+      errorCode = 3042,
+      errorContains = "The change you are trying to make would violate the required relation 'ParentToChild' between Parent and Child"
     )
 
     ifConnectorIsActive { dataResolver(project).countByTable("_ParentToChild").await should be(1) }
@@ -423,7 +423,7 @@ class NestedDeleteMutationInsideUpsertSpec extends FlatSpec with Matchers with A
          |}
       """,
       project,
-      errorCode = 3032
+      errorCode = 3042
     )
 
     ifConnectorIsActive { dataResolver(project).countByTable("_ChildToParent").await should be(1) }

@@ -1,19 +1,15 @@
 import { readDefinition } from './yaml'
 import { PrismaDefinition } from 'prisma-json-schema'
 import * as fs from 'fs-extra'
-import { mapValues } from 'lodash'
-import * as yamlParser from 'yaml-ast-parser'
 import * as dotenv from 'dotenv'
 import * as path from 'path'
 import * as jwt from 'jsonwebtoken'
 import { Args } from './types/common'
-import { StageNotFound } from './errors/StageNotFound'
 import { Environment } from './Environment'
 import { IOutput } from './Output'
 import { Cluster } from './Cluster'
 import { FunctionInput, Header } from './types/rc'
 import chalk from 'chalk'
-import { clusterEndpointMap, clusterEndpointMapReverse } from './constants'
 import { replaceYamlValue } from './utils/yamlComment'
 import { DefinitionMigrator } from './utils/DefinitionMigrator'
 import { parseEndpoint } from './utils/parseEndpoint'
@@ -28,6 +24,8 @@ export interface EnvVars {
 }
 
 export type HookType = 'post-deploy'
+
+type DeprecationType = 'cluster'
 
 export class PrismaDefinitionClass {
   definition?: PrismaDefinition
@@ -83,6 +81,17 @@ export class PrismaDefinitionClass {
     }
   }
 
+  private handleDeprecation(deprecationType: DeprecationType) {
+    if (deprecationType === 'cluster') {
+      throw new Error(`
+        ${chalk.yellow(`cluster, service, and stage are deprecated.`)}
+        ${chalk.yellow(`Use the 'endpoint' property to define the endpoint of a service:`)}
+        ${chalk.yellow(`endpoint: http://localhost:4466/[<workspace>/]<service>/<stage>.`)}
+      `
+      )
+    }
+  }
+
   private async loadDefinition(args) {
     const { definition, rawJson } = await readDefinition(
       this.definitionPath!,
@@ -117,7 +126,10 @@ export class PrismaDefinitionClass {
     if (!this.definition) {
       return undefined
     }
-    if (this.definition.service) {
+    if (this.endpoint && this.definition.service) {
+      this.handleDeprecation('cluster')
+    }
+    if (!this.endpoint && this.definition.service) {
       return this.definition.service
     }
     if (!this.endpoint) {
@@ -131,7 +143,10 @@ export class PrismaDefinitionClass {
     if (!this.definition) {
       return undefined
     }
-    if (this.definition.stage) {
+    if (this.endpoint && this.definition.stage) {
+      this.handleDeprecation('cluster')
+    }
+    if (!this.endpoint && this.definition.stage) {
       return this.definition.stage
     }
     if (!this.endpoint) {
@@ -145,7 +160,10 @@ export class PrismaDefinitionClass {
     if (!this.definition) {
       return undefined
     }
-    if (this.definition.cluster) {
+    if (this.endpoint && this.definition.cluster) {
+      this.handleDeprecation('cluster')
+    }
+    if (!this.endpoint && this.definition.cluster) {
       return this.definition.cluster
     }
     if (!this.endpoint) {

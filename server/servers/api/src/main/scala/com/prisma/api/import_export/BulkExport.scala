@@ -4,7 +4,7 @@ import com.prisma.api.ApiDependencies
 import com.prisma.api.connector._
 import com.prisma.api.import_export.ImportExport.MyJsonProtocol._
 import com.prisma.api.import_export.ImportExport._
-import com.prisma.gc_values.{JsonGCValue, ListGCValue, StringGCValue}
+import com.prisma.gc_values._
 import com.prisma.shared.models.Project
 import play.api.libs.json._
 
@@ -68,7 +68,7 @@ class BulkExport(project: Project)(implicit apiDependencies: ApiDependencies) {
 
   private def fetch(info: NodeInfo): Future[PrismaNodesPage] = {
     val queryArguments = QueryArguments(skip = Some(info.cursor.row), after = None, first = Some(1000), None, None, None, None)
-    info.dataResolver.resolveByModel(info.current, Some(queryArguments)).map { resolverResult =>
+    info.dataResolver.getNodes(info.current, Some(queryArguments)).map { resolverResult =>
       val jsons = resolverResult.nodes.map(node => prismaNodeToExportNode(node, info))
       PrismaNodesPage(jsons, hasMore = resolverResult.hasNextPage)
     }
@@ -76,7 +76,7 @@ class BulkExport(project: Project)(implicit apiDependencies: ApiDependencies) {
 
   private def fetch(info: ListInfo): Future[PrismaNodesPage] = {
     val queryArguments = QueryArguments(skip = Some(info.cursor.row), after = None, first = Some(1000), None, None, None, None)
-    info.dataResolver.loadListRowsForExport(info.currentModelModel, info.currentFieldModel, Some(queryArguments)).map { resolverResult =>
+    info.dataResolver.getScalarListValues(info.currentModelModel, info.currentFieldModel, Some(queryArguments)).map { resolverResult =>
       val jsons = dataItemToExportList(resolverResult.nodes, info)
       PrismaNodesPage(jsons, hasMore = resolverResult.hasNextPage)
     }
@@ -84,7 +84,7 @@ class BulkExport(project: Project)(implicit apiDependencies: ApiDependencies) {
 
   private def fetch(info: RelationInfo): Future[PrismaNodesPage] = {
     val queryArguments = QueryArguments(skip = Some(info.cursor.row), after = None, first = Some(1000), None, None, None, None)
-    info.dataResolver.loadRelationRowsForExport(info.current.relationId, Some(queryArguments)).map { resolverResult =>
+    info.dataResolver.getRelationNodes(info.current.relationId, Some(queryArguments)).map { resolverResult =>
       val jsons = resolverResult.nodes.map(node => dataItemToExportRelation(node, info))
       PrismaNodesPage(jsons, hasMore = resolverResult.hasNextPage)
     }
@@ -93,24 +93,32 @@ class BulkExport(project: Project)(implicit apiDependencies: ApiDependencies) {
   private def prismaNodeToExportNode(item: PrismaNode, info: NodeInfo): JsValue = {
     import GCValueJsonFormatter.RootGcValueWritesWithoutNulls
     val jsonForNode = Json.toJsObject(item.data)
-    Json.obj("_typeName" -> info.current.name, "id" -> item.id.value) ++ jsonForNode
+    val id = item.id match {
+      case CuidGCValue(id) => JsString(id)
+      case UuidGCValue(id) => JsString(id.toString)
+      case IntGCValue(id)  => JsNumber(id)
+    }
+    Json.obj("_typeName" -> info.current.name, "id" -> id) ++ jsonForNode
   }
 
   def dataItemToExportList(dataItems: Vector[ScalarListValues], info: ListInfo): Vector[JsValue] = {
-    import GCValueJsonFormatter.GcValueWrites
     dataItems.map { listValues =>
       // the old implementation directly passed the JSON as String instead of directly embedding it as JSON. Reproducing this behaviour here.
       val blackMagic = ListGCValue(listValues.value.values.map {
         case x: JsonGCValue => StringGCValue(x.value.toString)
         case x              => x
       })
-      Json.obj("_typeName" -> info.currentModel, "id" -> listValues.nodeId, info.currentField -> blackMagic)
+      Json.obj(
+        "_typeName"       -> info.currentModel,
+        "id"              -> Json.toJson(listValues.nodeId),
+        info.currentField -> Json.toJson(blackMagic)(GCValueJsonFormatter.GcValueWrites)
+      )
     }
   }
 
   private def dataItemToExportRelation(item: RelationNode, info: RelationInfo): JsValue = {
-    val leftSide  = ExportRelationSide(info.current.modelBName, item.b.value, info.current.fieldBName)
-    val rightSide = ExportRelationSide(info.current.modelAName, item.a.value, info.current.fieldAName)
+    val leftSide  = ExportRelationSide(info.current.modelBName, item.b, info.current.fieldBName)
+    val rightSide = ExportRelationSide(info.current.modelAName, item.a, info.current.fieldAName)
     JsArray(Seq(Json.toJson(leftSide), Json.toJson(rightSide)))
   }
 

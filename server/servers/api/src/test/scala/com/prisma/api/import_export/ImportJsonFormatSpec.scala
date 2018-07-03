@@ -20,7 +20,6 @@ class ImportJsonFormatSpec extends FlatSpec with Matchers with ApiSpecBase with 
         .field("b", _.Json)
         .field("updatedAt", _.DateTime)
         .field("createdAt", _.DateTime)
-
     }
 
     database.setup(project)

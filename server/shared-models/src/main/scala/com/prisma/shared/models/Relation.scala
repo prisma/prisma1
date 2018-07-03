@@ -42,6 +42,7 @@ class Relation(
   lazy val hasManifestation: Boolean                                = manifestation.isDefined
   lazy val isInlineRelation: Boolean                                = manifestation.exists(_.isInstanceOf[InlineRelationManifestation])
   lazy val inlineManifestation: Option[InlineRelationManifestation] = manifestation.collect { case x: InlineRelationManifestation => x }
+  lazy val isSelfRelation                                           = modelA == modelB
 
   lazy val relationTableName = manifestation match {
     case Some(m: RelationTableManifestation)  => m.table
@@ -51,13 +52,13 @@ class Relation(
 
   lazy val modelAColumn: String = manifestation match {
     case Some(m: RelationTableManifestation)  => m.modelAColumn
-    case Some(m: InlineRelationManifestation) => if (m.inTableOfModelId == modelAName) modelA.idField_!.dbName else m.referencingColumn
+    case Some(m: InlineRelationManifestation) => if (m.inTableOfModelId == modelAName && !isSameModelRelation) modelA.idField_!.dbName else m.referencingColumn
     case None                                 => "A"
   }
 
   lazy val modelBColumn: String = manifestation match {
     case Some(m: RelationTableManifestation)  => m.modelBColumn
-    case Some(m: InlineRelationManifestation) => if (m.inTableOfModelId == modelBName && !isSameModelRelation) modelB.idField_!.dbName else m.referencingColumn
+    case Some(m: InlineRelationManifestation) => if (m.inTableOfModelId == modelBName) modelB.idField_!.dbName else m.referencingColumn
     case None                                 => "B"
   }
 

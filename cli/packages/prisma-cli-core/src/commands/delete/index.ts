@@ -43,7 +43,7 @@ export default class Delete extends Command {
     }
 
     const before = Date.now()
-    this.out.action.start(`${chalk.red.bold(`Deleting service ${prettyName}`)}`)
+    this.out.action.start(`${chalk.red.bold(`Deleting service ${prettyName} from ${this.definition.cluster}`)}`)
     await this.client.deleteProject(
       serviceName,
       stage,

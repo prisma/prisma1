@@ -234,7 +234,7 @@ case class SchemaBuilderImpl(
 
   lazy val NodeDefinition(nodeInterface: InterfaceType[ApiUserContext, PrismaNode], nodeField, nodeRes) = Node.definitionById(
     resolve = (id: String, ctx: Context[ApiUserContext, Unit]) => {
-      dataResolver.resolveByGlobalId(CuidGCValue(id))
+      dataResolver.getNodeByGlobalId(CuidGCValue(id))
     },
     possibleTypes = {
       objectTypes.values.flatMap { o =>
@@ -259,7 +259,7 @@ case class SchemaBuilderImpl(
 
 object SangriaEvidences {
   implicit object DataItemNodeEvidence extends IdentifiableNode[ApiUserContext, PrismaNode] {
-    override def id(ctx: Context[ApiUserContext, PrismaNode]) = ctx.value.id.value
+    override def id(ctx: Context[ApiUserContext, PrismaNode]) = ctx.value.id.value.toString // fixme: is this the right approach for numeric ids?
   }
 }
 
