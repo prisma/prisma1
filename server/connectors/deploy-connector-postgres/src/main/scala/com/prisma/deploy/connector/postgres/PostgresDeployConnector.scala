@@ -39,7 +39,7 @@ case class PostgresDeployConnector(
   override def getAllDatabaseSizes(): Future[Vector[DatabaseSize]] = {
     val action = {
       val query = sql"""
-           SELECT table_schema, sum( data_length + index_length) / 1024 / 1024 FROM information_schema.TABLES GROUP BY table_schema
+           SELECT schemaname, SUM(pg_total_relation_size(quote_ident(schemaname) || '.' || quote_ident(tablename))) / 1024 / 1024 FROM pg_tables GROUP BY schemaname
          """
       query.as[(String, Double)].map { tuples =>
         tuples.map { tuple =>

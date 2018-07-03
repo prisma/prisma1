@@ -18,6 +18,8 @@ fi
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 $DIR/kill-all-docker-containers.sh
 
+git fetch
+
 # Rolling number versioning for unstable channels
 LAST_GIT_TAG=$(git tag --sort=-version:refname | grep -v -e v -e beta | head -n 1)
 TAG_ELEMENTS=(${LAST_GIT_TAG//./ })

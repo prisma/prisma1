@@ -1,5 +1,4 @@
 import { Command, flags, Flags } from 'prisma-cli-engine'
-import * as opn from 'opn'
 const debug = require('debug')('login')
 
 export default class Login extends Command {
