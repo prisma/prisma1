@@ -9,9 +9,6 @@
   "scripts": {
     "start": "node src/index.js"
   },
-  "devDependencies": {
-    "prisma": "^1.11.0"
-  },
   "dependencies": {
     "graphql-yoga": "1.13.1",
     "prisma-binding": "^2.1.0"
