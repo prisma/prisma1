@@ -15,7 +15,7 @@ trait RelationQueries extends BuilderBase {
       setParams = pp => SetParams.setQueryArgs(pp, args),
       readResult = rs => {
         val result = rs.readWith(readRelation(relation))
-        ResolverResult(result)
+        ResolverResult(args, result)
       }
     )
   }
