@@ -27,12 +27,10 @@ case class RelationQueryBuilder(
       .where(condition)
       .orderBy(order: _*)
 
-    val finalQuery = limit match {
+    limit match {
       case Some(_) => base.limit(intDummy).offset(intDummy)
       case None    => base
     }
-
-    finalQuery
   }
 }
 
@@ -47,12 +45,12 @@ case class CountQueryBuilder(
   lazy val query = {
     val aliasedTable = table(name(schemaName, tableName)).as(topLevelAlias)
     val condition    = buildConditionForFilter(filter)
+
     sql
       .selectCount()
       .from(aliasedTable)
       .where(condition)
   }
-  lazy val queryString = query.getSQL
 }
 
 case class ScalarListQueryBuilder(
@@ -67,23 +65,20 @@ case class ScalarListQueryBuilder(
   require(field.isList, "This must be called only with scalar list fields")
 
   lazy val query = {
-    val aliasedTable = scalarListTable(field).as(topLevelAlias)
-    val condition    = buildConditionForFilter(queryArguments.flatMap(_.filter))
-    val order        = orderByForScalarListField(topLevelAlias, queryArguments)
-    val limit        = limitClause(queryArguments)
+    val condition = buildConditionForFilter(queryArguments.flatMap(_.filter))
+    val order     = orderByForScalarListField(topLevelAlias, queryArguments)
+    val limit     = limitClause(queryArguments)
 
     val base = sql
       .select()
-      .from(aliasedTable)
+      .from(scalarListTable(field).as(topLevelAlias))
       .where(condition)
       .orderBy(order: _*)
 
-    val finalQuery = limit match {
+    limit match {
       case Some(_) => base.limit(intDummy).offset(intDummy)
       case None    => base
     }
-
-    finalQuery
   }
 }
 
@@ -96,11 +91,13 @@ case class ScalarListByUniquesQueryBuilder(
   require(scalarField.isList, "This must be called only with scalar list fields")
 
   lazy val query = {
-    val nodeIdField = scalarListColumn(scalarField, nodeIdFieldName)
-    val condition   = nodeIdField.in(Vector.fill(nodeIds.length) { stringDummy }: _*)
+    val nodeIdField   = scalarListColumn(scalarField, nodeIdFieldName)
+    val positionField = scalarListColumn(scalarField, positionField)
+    val valueField    = scalarListColumn(scalarField, valueFieldName)
+    val condition     = nodeIdField.in(Vector.fill(nodeIds.length) { stringDummy }: _*)
 
     sql
-      .select(nodeIdField, field(name(positionFieldName)), field(name(valueFieldName)))
+      .select(nodeIdField, positionField, valueField)
       .from(scalarListTable(scalarField))
       .where(condition)
 
@@ -192,11 +189,9 @@ case class ModelQueryBuilder(
     val order           = orderByForModel(model, topLevelAlias, queryArguments)
     val limit           = limitClause(queryArguments)
 
-    val aliasedTable = table(name(schemaName, model.dbName)).as(topLevelAlias)
-
     val base = sql
       .select()
-      .from(aliasedTable)
+      .from(modelTable(model).as(topLevelAlias))
       .where(condition, cursorCondition)
       .orderBy(order: _*)
 
