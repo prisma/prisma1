@@ -29,7 +29,7 @@ You can now [deploy](https://www.prisma.io/docs/reference/cli-command-reference/
 # Ensure docker is running the server's dependencies
 docker-compose up
 # Deploy the server
-cd prisma && yarn prisma deploy
+cd prisma && prisma deploy
 ```
 
 <details>
