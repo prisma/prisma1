@@ -92,7 +92,7 @@ case class ScalarListByUniquesQueryBuilder(
 
   lazy val query = {
     val nodeIdField   = scalarListColumn(scalarField, nodeIdFieldName)
-    val positionField = scalarListColumn(scalarField, positionField)
+    val positionField = scalarListColumn(scalarField, positionFieldName)
     val valueField    = scalarListColumn(scalarField, valueFieldName)
     val condition     = nodeIdField.in(Vector.fill(nodeIds.length) { stringDummy }: _*)
 

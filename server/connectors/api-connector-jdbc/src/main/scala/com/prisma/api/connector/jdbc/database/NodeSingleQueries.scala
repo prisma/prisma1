@@ -38,6 +38,15 @@ trait NodeSingleQueries extends BuilderBase with NodeManyQueries with FilterCond
     } yield result
   }
 
+  def getNodeByGlobalId2(idGCValue: IdGCValue) = {
+
+    //stableIdentifier from RelayTable by Id
+    //model by stableIdentifier
+    // generate modeltable based on stableIdentifier and schema
+    // node from modelTable by id
+
+  }
+
   def getNodeById(model: Model, idGcValue: IdGCValue)(implicit ec: ExecutionContext): DBIO[Option[PrismaNode]] = {
     getNodesByValuesForField(model, model.idField_!, Vector(idGcValue)).map(_.headOption)
   }
