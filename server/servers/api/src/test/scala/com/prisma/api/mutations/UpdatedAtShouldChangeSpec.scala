@@ -74,40 +74,6 @@ class UpdatedAtShouldChangeSpec extends FlatSpec with Matchers with ApiSpecBase 
     updatedAt should not equal changedUpdatedAt
   }
 
-  "UpdateMany" should "change updatedAt values" in {
-    val updatedAt = server.query("""mutation a {createTop(data: { top: "top1" }) {updatedAt}}""", project).pathAsString("data.createTop.updatedAt")
-
-    val res = server
-      .query(
-        s"""mutation b {
-           |  updateManyTops(
-           |    where: { top: "top1" }
-           |    data: { top: "top10" }
-           |  ) {
-           |    count
-           |  }
-           |}
-      """,
-        project
-      )
-
-    res.toString should be("""{"data":{"updateManyTops":{"count":1}}}""")
-
-    val changedUpdatedAt = server
-      .query(
-        s"""query{
-           |  top(where: { top: "top10" }) {
-           |    updatedAt
-           |  }
-           |}
-      """,
-        project
-      )
-      .pathAsString("data.top.updatedAt")
-
-    updatedAt should not equal changedUpdatedAt
-  }
-
   "Upserting a data item" should "change it's updatedAt value" in {
     val updatedAt = server.query("""mutation a {createTop(data: { top: "top3" }) {updatedAt}}""", project).pathAsString("data.createTop.updatedAt")
 
@@ -151,6 +117,40 @@ class UpdatedAtShouldChangeSpec extends FlatSpec with Matchers with ApiSpecBase 
         project
       )
       .pathAsString("data.updateTop.bottom.updatedAt")
+
+    updatedAt should not equal changedUpdatedAt
+  }
+
+  "UpdateMany" should "change updatedAt values" in {
+    val updatedAt = server.query("""mutation a {createTop(data: { top: "top5" }) {updatedAt}}""", project).pathAsString("data.createTop.updatedAt")
+
+    val res = server
+      .query(
+        s"""mutation b {
+           |  updateManyTops(
+           |    where: { top: "top5" }
+           |    data: { top: "top50" }
+           |  ) {
+           |    count
+           |  }
+           |}
+      """,
+        project
+      )
+
+    res.toString should be("""{"data":{"updateManyTops":{"count":1}}}""")
+
+    val changedUpdatedAt = server
+      .query(
+        s"""query{
+           |  top(where: { top: "top50" }) {
+           |    updatedAt
+           |  }
+           |}
+      """,
+        project
+      )
+      .pathAsString("data.top.updatedAt")
 
     updatedAt should not equal changedUpdatedAt
   }
