@@ -1502,9 +1502,9 @@ graphcool-inquirer@^1.0.3:
     strip-ansi "^4.0.0"
     through "^2.3.6"
 
-graphql-binding@2:
-  version "2.0.0"
-  resolved "https://registry.yarnpkg.com/graphql-binding/-/graphql-binding-2.0.0.tgz#6dce5842fef724327a2c469c5366cdf6ba903f30"
+graphql-binding@2.1.1:
+  version "2.1.1"
+  resolved "https://registry.yarnpkg.com/graphql-binding/-/graphql-binding-2.1.1.tgz#8f01f8da8a99f9c703ba96167c5925bd05ef14f2"
   dependencies:
     graphql-import "^0.5.2"
     graphql-tools "3.0.1"
@@ -2063,7 +2063,7 @@ jsonify@~0.0.0:
   version "0.0.0"
   resolved "https://registry.yarnpkg.com/jsonify/-/jsonify-0.0.0.tgz#2c74b6ee41d93ca51b7b5aaee8f503631d252a73"
 
-jsonwebtoken@^8.1.0, jsonwebtoken@^8.2.1:
+jsonwebtoken@8.2.1, jsonwebtoken@^8.1.0:
   version "8.2.1"
   resolved "https://registry.yarnpkg.com/jsonwebtoken/-/jsonwebtoken-8.2.1.tgz#333ee39aa8f238f32fa41693e7a2fb7e42f82b31"
   dependencies:
@@ -2500,7 +2500,7 @@ npm-packlist@^1.1.6:
     ignore-walk "^3.0.1"
     npm-bundled "^1.0.1"
 
-npm-path@^2.0.2, npm-path@^2.0.4:
+npm-path@^2.0.2, npm-path@^2.0.3:
   version "2.0.4"
   resolved "https://registry.yarnpkg.com/npm-path/-/npm-path-2.0.4.tgz#c641347a5ff9d6a09e4d9bce5580c4f505278e64"
   dependencies:
@@ -2512,14 +2512,16 @@ npm-run-path@^2.0.0:
   dependencies:
     path-key "^2.0.0"
 
-npm-run@^5.0.1:
-  version "5.0.1"
-  resolved "https://registry.yarnpkg.com/npm-run/-/npm-run-5.0.1.tgz#1baea93389b50ae25a32382c8ca322398e50cd16"
+npm-run@4.1.2:
+  version "4.1.2"
+  resolved "https://registry.yarnpkg.com/npm-run/-/npm-run-4.1.2.tgz#1030e1ec56908c89fcc3fa366d03a2c2ba98eb99"
   dependencies:
+    cross-spawn "^5.1.0"
     minimist "^1.2.0"
-    npm-path "^2.0.4"
+    npm-path "^2.0.3"
     npm-which "^3.0.1"
     serializerr "^1.0.3"
+    sync-exec "^0.6.2"
 
 npm-which@^3.0.1:
   version "3.0.1"
@@ -2810,24 +2812,24 @@ preserve@^0.2.0:
   version "0.2.0"
   resolved "https://registry.yarnpkg.com/preserve/-/preserve-0.2.0.tgz#815ed1f6ebc65926f865b310c0713bcb3315ce4b"
 
-prisma-binding@2.0.0:
-  version "2.0.0"
-  resolved "https://registry.yarnpkg.com/prisma-binding/-/prisma-binding-2.0.0.tgz#837531d9079d9cf7ed2eeaf507935880c8c6b222"
+prisma-binding@^2.1.0:
+  version "2.1.0"
+  resolved "https://registry.yarnpkg.com/prisma-binding/-/prisma-binding-2.1.0.tgz#5aafe15df3d9049ccdee6d491700ed59b5063fc3"
   dependencies:
     apollo-link "1.2.2"
     apollo-link-error "1.0.9"
     apollo-link-ws "1.0.8"
     cross-fetch "2.1.1"
-    graphql-binding "2"
+    graphql-binding "2.1.1"
     graphql-import "0.5.2"
     graphql-tools "3.0.1"
     http-link-dataloader "^0.1.2"
-    jsonwebtoken "^8.2.1"
+    jsonwebtoken "8.2.1"
     subscriptions-transport-ws "0.9.8"
 
-prisma-cli-core@1.0.42:
-  version "1.0.42"
-  resolved "https://registry.yarnpkg.com/prisma-cli-core/-/prisma-cli-core-1.0.42.tgz#895f08b9718930c9d5789c9e1e72ccc074d55736"
+prisma-cli-core@1.0.53:
+  version "1.0.53"
+  resolved "https://registry.yarnpkg.com/prisma-cli-core/-/prisma-cli-core-1.0.53.tgz#01502d2b5b23560b5d410a3d4495e9babe743499"
   dependencies:
     adm-zip "^0.4.7"
     archiver "^2.0.3"
@@ -2856,13 +2858,13 @@ prisma-cli-core@1.0.42:
     lodash.differenceby "^4.8.0"
     multimatch "^2.1.0"
     node-forge "^0.7.1"
-    npm-run "^5.0.1"
+    npm-run "4.1.2"
     opn "^5.1.0"
     pause "^0.1.0"
     portfinder "^1.0.13"
-    prisma-db-introspection "0.0.10"
+    prisma-db-introspection "0.0.22"
     prisma-json-schema "0.0.4"
-    prisma-yml "1.0.55"
+    prisma-yml "1.0.67"
     scuid "^1.0.2"
     semver "^5.4.1"
     sillyname "^0.1.0"
@@ -2871,9 +2873,9 @@ prisma-cli-core@1.0.42:
     util.promisify "^1.0.0"
     validator "^8.2.0"
 
-prisma-cli-engine@1.0.44:
-  version "1.0.44"
-  resolved "https://registry.yarnpkg.com/prisma-cli-engine/-/prisma-cli-engine-1.0.44.tgz#cfd7a100a99c996d8ec17ad6e349245deb898b00"
+prisma-cli-engine@1.0.56:
+  version "1.0.56"
+  resolved "https://registry.yarnpkg.com/prisma-cli-engine/-/prisma-cli-engine-1.0.56.tgz#58b11c08db6a43142a5bd633d0771d9abf25efe6"
   dependencies:
     "@heroku/linewrap" "^1.0.0"
     ajv "5"
@@ -2915,7 +2917,7 @@ prisma-cli-engine@1.0.44:
     memfs "^2.5.3"
     opn "^5.1.0"
     prisma-json-schema "0.0.4"
-    prisma-yml "1.0.55"
+    prisma-yml "1.0.67"
     raven "2.3.0"
     replaceall "^0.1.6"
     rwlockfile "^1.4.8"
@@ -2930,9 +2932,9 @@ prisma-cli-engine@1.0.44:
     update-notifier "^2.3.0"
     validator "^8.2.0"
 
-prisma-db-introspection@0.0.10:
-  version "0.0.10"
-  resolved "https://registry.yarnpkg.com/prisma-db-introspection/-/prisma-db-introspection-0.0.10.tgz#5ed8d3bf99ec0f128fddd84a7dcec360ed1e3f3a"
+prisma-db-introspection@0.0.22:
+  version "0.0.22"
+  resolved "https://registry.yarnpkg.com/prisma-db-introspection/-/prisma-db-introspection-0.0.22.tgz#4574aee15378db851ed317f0cd0c34b442e85fda"
   dependencies:
     ajv "5"
     bluebird "^3.5.1"
@@ -2983,9 +2985,9 @@ prisma-yml@1.0.50:
     scuid "^1.0.2"
     yaml-ast-parser "^0.0.40"
 
-prisma-yml@1.0.55:
-  version "1.0.55"
-  resolved "https://registry.yarnpkg.com/prisma-yml/-/prisma-yml-1.0.55.tgz#726d1119fface263741929ee03aadec46ff792d5"
+prisma-yml@1.0.67:
+  version "1.0.67"
+  resolved "https://registry.yarnpkg.com/prisma-yml/-/prisma-yml-1.0.67.tgz#7c375c14137efdb9f6f78651e5852ace736ec6ed"
   dependencies:
     ajv "5"
     bluebird "^3.5.1"
@@ -3006,13 +3008,13 @@ prisma-yml@1.0.55:
     scuid "^1.0.2"
     yaml-ast-parser "^0.0.40"
 
-prisma@1.8.3:
-  version "1.8.3"
-  resolved "https://registry.yarnpkg.com/prisma/-/prisma-1.8.3.tgz#28eb3ce0c63732542988a2aaa1effa1d91b5c60f"
+prisma@^1.11.0:
+  version "1.11.0"
+  resolved "https://registry.yarnpkg.com/prisma/-/prisma-1.11.0.tgz#53a0558a118c1f8958183a8d6d7a334761edd473"
   dependencies:
     fs-extra "^5.0.0"
-    prisma-cli-core "1.0.42"
-    prisma-cli-engine "1.0.44"
+    prisma-cli-core "1.0.53"
+    prisma-cli-engine "1.0.56"
     semver "^5.4.1"
     source-map-support "^0.4.18"
 
@@ -3601,7 +3603,7 @@ symbol-observable@^1.0.4:
   version "1.2.0"
   resolved "https://registry.yarnpkg.com/symbol-observable/-/symbol-observable-1.2.0.tgz#c22688aed4eab3cdc2dfeacbb561660560a00804"
 
-sync-exec@~0.6.x:
+sync-exec@^0.6.2, sync-exec@~0.6.x:
   version "0.6.2"
   resolved "https://registry.yarnpkg.com/sync-exec/-/sync-exec-0.6.2.tgz#717d22cc53f0ce1def5594362f3a89a2ebb91105"
 

@@ -1,4 +1,4 @@
-# import PostCreateInput from "./generated-schema.graphql"
+# import PostCreateInput from "../generated/generated-schema.graphql"
 
 type Query {
   drafts: [Post!]!
