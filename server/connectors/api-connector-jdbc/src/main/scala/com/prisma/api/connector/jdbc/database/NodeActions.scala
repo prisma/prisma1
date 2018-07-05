@@ -80,14 +80,8 @@ trait NodeActions extends BuilderBase with FilterConditionBuilder with ScalarLis
   }
 
   private def addUpdatedAt(model: Model, updateValues: RootGCValue): RootGCValue = {
-    lazy val currentDateGCValue = {
-      val today      = new Date()
-      val exactlyNow = new DateTime(today).withZone(DateTimeZone.UTC)
-      DateTimeGCValue(exactlyNow)
-    }
-
     model.updatedAtField match {
-      case Some(updatedAtField) => updateValues.add(updatedAtField.name, currentDateGCValue)
+      case Some(updatedAtField) => updateValues.add(updatedAtField.name, currentDateTimeGCValue)
       case None                 => updateValues
     }
   }
