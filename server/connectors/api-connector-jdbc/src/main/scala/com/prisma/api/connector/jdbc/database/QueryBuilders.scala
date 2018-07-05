@@ -39,11 +39,11 @@ case class RelatedModelsQueryBuilder(
     val order           = orderByInternal(baseTableAlias, baseTableAlias, secondaryOrderByForPagination, queryArguments)
     val cursorCondition = buildCursorCondition(queryArguments, relatedModel)
 
-    val aliasedBase = base.where(relatedNodesCondition, queryArgumentsCondition, cursorCondition).asTable().as(baseTableAlias)
+    val aliasedBase = base.where(relatedNodesCondition, queryArgumentsCondition, cursorCondition).asTable(baseTableAlias)
 
     val rowNumberPart = rowNumber().over().partitionBy(aliasedBase.field(aSideAlias)).orderBy(order: _*).as(rowNumberAlias)
 
-    val withRowNumbers = select(rowNumberPart, aliasedBase.asterisk()).from(aliasedBase).asTable().as(rowNumberTableAlias)
+    val withRowNumbers = select(rowNumberPart, aliasedBase.asterisk()).from(aliasedBase).asTable(rowNumberTableAlias)
 
     val limitCondition = rowNumberPart.between(intDummy).and(intDummy)
 
@@ -54,15 +54,26 @@ case class RelatedModelsQueryBuilder(
   }
 
   lazy val mysqlHack = {
-    val relatedNodeCondition = field(name(relationTableAlias, modelRelationSideColumn)).equal(placeHolder)
-    val order                = orderByInternal2(secondaryOrderByForPagination, queryArguments)
-    val cursorCondition      = buildCursorCondition(queryArguments, relatedModel)
 
-    base
-      .where(relatedNodeCondition, queryArgumentsCondition, cursorCondition)
-      .orderBy(order: _*)
-      .limit(intDummy)
-      .offset(intDummy)
+    val order           = orderByInternal(baseTableAlias, baseTableAlias, secondaryOrderByForPagination, queryArguments)
+    val cursorCondition = buildCursorCondition(queryArguments, relatedModel)
+
+    val aliasedBase   = base.where(relatedNodesCondition, queryArgumentsCondition, cursorCondition).asTable(baseTableAlias)
+    val rowNumberPart = field("""@id_rank := IF(@current_id = `prismaBaseTableAlias`.`__Relation__A`, @id_rank + 1, 1)""", Integer.TYPE).as(rowNumberAlias)
+
+    val withRowNumbers =
+      select(rowNumberPart, field("""@current_id := `prismaBaseTableAlias`.`__Relation__A`"""), aliasedBase.asterisk())
+        .from(aliasedBase)
+        .orderBy(order: _*)
+        .asTable(rowNumberTableAlias)
+
+    val limitCondition = rowNumberPart.between(intDummy).and(intDummy)
+
+    sql
+      .select(withRowNumbers.asterisk())
+      .from(withRowNumbers)
+      .where(limitCondition)
+
   }
 
   lazy val queryWithoutPagination = {

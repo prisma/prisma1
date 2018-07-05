@@ -42,72 +42,21 @@ trait NodeManyQueries extends BuilderBase with FilterConditionBuilder with Curso
   def getRelatedNodes(fromField: RelationField,
                       fromNodeIds: Vector[IdGCValue],
                       args: Option[QueryArguments]): DBIO[Vector[ResolverResult[PrismaNodeWithParent]]] = {
-    if (isMySql && args.exists(_.isWithPagination)) {
-      selectAllFromRelatedWithPaginationForMySQL(fromField, fromNodeIds, args)
-    } else {
-      val builder = RelatedModelsQueryBuilder(slickDatabase, schemaName, fromField, args, fromNodeIds)
-      val query   = if (args.exists(_.isWithPagination)) builder.queryWithPagination else builder.queryWithoutPagination
 
-      queryToDBIO(query)(
-        setParams = { pp =>
-          fromNodeIds.foreach(pp.setGcValue)
-          val filter = args.flatMap(_.filter)
-          filter.foreach(filter => SetParams.setFilter(pp, filter))
-
-          if (args.get.after.isDefined) {
-            pp.setString(args.get.after.get)
-            pp.setString(args.get.after.get)
-          }
-
-          if (args.get.before.isDefined) {
-            pp.setString(args.get.before.get)
-            pp.setString(args.get.before.get)
-          }
-
-          if (args.exists(_.isWithPagination)) {
-            val params = limitClauseForWindowFunction(args)
-            pp.setInt(params._1)
-            pp.setInt(params._2)
-          }
-        },
-        readResult = { rs =>
-          val result              = rs.readWith(readPrismaNodeWithParent(fromField))
-          val itemGroupsByModelId = result.groupBy(_.parentId)
-          fromNodeIds.map { id =>
-            itemGroupsByModelId.find(_._1 == id) match {
-              case Some((_, itemsForId)) => ResolverResult(args, itemsForId, parentModelId = Some(id))
-              case None                  => ResolverResult(Vector.empty[PrismaNodeWithParent], hasPreviousPage = false, hasNextPage = false, parentModelId = Some(id))
-            }
-          }
-        }
-      )
+    val builder = RelatedModelsQueryBuilder(slickDatabase, schemaName, fromField, args, fromNodeIds)
+    val query = (isMySql, args.exists(_.isWithPagination)) match {
+      case (true, true)   => builder.mysqlHack
+      case (true, false)  => builder.queryWithoutPagination
+      case (false, true)  => builder.queryWithPagination
+      case (false, false) => builder.queryWithoutPagination
     }
-  }
 
-  private def selectAllFromRelatedWithPaginationForMySQL(
-      fromField: RelationField,
-      fromModelIds: Vector[IdGCValue],
-      args: Option[QueryArguments]
-  ): DBIO[Vector[ResolverResult[PrismaNodeWithParent]]] = {
-    require(args.exists(_.isWithPagination))
-    val builder = RelatedModelsQueryBuilder(slickDatabase, schemaName, fromField, args, fromModelIds)
+    queryToDBIO(query)(
+      setParams = { pp =>
+        fromNodeIds.foreach(pp.setGcValue)
+        val filter = args.flatMap(_.filter)
+        filter.foreach(filter => SetParams.setFilter(pp, filter))
 
-    SimpleDBIO { ctx =>
-      val baseQuery        = "(" + builder.mysqlHack.getSQL + ")"
-      val distinctModelIds = fromModelIds.distinct
-      val queries          = Vector.fill(distinctModelIds.size)(baseQuery)
-      val query            = queries.mkString(" union all ")
-
-      val ps          = ctx.connection.prepareStatement(query)
-      val pp          = new PositionedParameters(ps)
-      val filter      = args.flatMap(_.filter)
-      val limitParams = limitClause(args)
-
-      distinctModelIds.foreach { id =>
-        pp.setGcValue(id)
-        filter.foreach { filter =>
-          SetParams.setFilter(pp, filter)
-        }
         if (args.get.after.isDefined) {
           pp.setString(args.get.after.get)
           pp.setString(args.get.after.get)
@@ -117,24 +66,24 @@ trait NodeManyQueries extends BuilderBase with FilterConditionBuilder with Curso
           pp.setString(args.get.before.get)
           pp.setString(args.get.before.get)
         }
+
         if (args.exists(_.isWithPagination)) {
-          limitParams.foreach { params =>
-            pp.setInt(params._1)
-            pp.setInt(params._2)
+          val params = limitClauseForWindowFunction(args)
+          pp.setInt(params._1)
+          pp.setInt(params._2)
+        }
+      },
+      readResult = { rs =>
+        val result              = rs.readWith(readPrismaNodeWithParent(fromField))
+        val itemGroupsByModelId = result.groupBy(_.parentId)
+        fromNodeIds.map { id =>
+          itemGroupsByModelId.find(_._1 == id) match {
+            case Some((_, itemsForId)) => ResolverResult(args, itemsForId, parentModelId = Some(id))
+            case None                  => ResolverResult(Vector.empty[PrismaNodeWithParent], hasPreviousPage = false, hasNextPage = false, parentModelId = Some(id))
           }
         }
       }
-
-      val rs                  = ps.executeQuery()
-      val result              = rs.readWith(readPrismaNodeWithParent(fromField))
-      val itemGroupsByModelId = result.groupBy(_.parentId)
-      fromModelIds.map { id =>
-        itemGroupsByModelId.find(_._1 == id) match {
-          case Some((_, itemsForId)) => ResolverResult(args, itemsForId, parentModelId = Some(id))
-          case None                  => ResolverResult(Vector.empty[PrismaNodeWithParent], hasPreviousPage = false, hasNextPage = false, parentModelId = Some(id))
-        }
-      }
-    }
+    )
   }
 
   def getNodesByValuesForField(model: Model, field: ScalarField, values: Vector[GCValue]): DBIO[Vector[PrismaNode]] = {

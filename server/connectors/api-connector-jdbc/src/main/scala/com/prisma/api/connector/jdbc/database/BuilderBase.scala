@@ -54,6 +54,7 @@ trait BuilderBase extends JooqExtensions with JdbcExtensions with SlickExtension
 
   def queryToDBIO[T](query: JooqQuery)(setParams: PositionedParameters => Unit, readResult: ResultSet => T): DBIO[T] = {
     jooqToDBIO(query, setParams) { ps =>
+      println(ps)
       val rs = ps.executeQuery()
       readResult(rs)
     }
