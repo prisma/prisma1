@@ -3454,7 +3454,7 @@ npm-conf@^1.1.0:
     config-chain "^1.1.11"
     pify "^3.0.0"
 
-npm-path@^2.0.2, npm-path@^2.0.4:
+npm-path@^2.0.2, npm-path@^2.0.3:
   version "2.0.4"
   resolved "https://registry.yarnpkg.com/npm-path/-/npm-path-2.0.4.tgz#c641347a5ff9d6a09e4d9bce5580c4f505278e64"
   dependencies:
@@ -3466,14 +3466,16 @@ npm-run-path@^2.0.0:
   dependencies:
     path-key "^2.0.0"
 
-npm-run@^5.0.1:
-  version "5.0.1"
-  resolved "https://registry.yarnpkg.com/npm-run/-/npm-run-5.0.1.tgz#1baea93389b50ae25a32382c8ca322398e50cd16"
+npm-run@4.1.2:
+  version "4.1.2"
+  resolved "https://registry.yarnpkg.com/npm-run/-/npm-run-4.1.2.tgz#1030e1ec56908c89fcc3fa366d03a2c2ba98eb99"
   dependencies:
+    cross-spawn "^5.1.0"
     minimist "^1.2.0"
-    npm-path "^2.0.4"
+    npm-path "^2.0.3"
     npm-which "^3.0.1"
     serializerr "^1.0.3"
+    sync-exec "^0.6.2"
 
 npm-which@^3.0.1:
   version "3.0.1"
@@ -3805,6 +3807,10 @@ pkg-dir@^2.0.0:
   resolved "https://registry.yarnpkg.com/pkg-dir/-/pkg-dir-2.0.0.tgz#f6d5d1109e19d63edf428e0bd57e12777615334b"
   dependencies:
     find-up "^2.1.0"
+
+pluralize@^7.0.0:
+  version "7.0.0"
+  resolved "https://registry.yarnpkg.com/pluralize/-/pluralize-7.0.0.tgz#298b89df8b93b0221dbf421ad2b1b1ea23fc6777"
 
 portfinder@^1.0.13:
   version "1.0.13"
@@ -4620,7 +4626,7 @@ symbol-tree@^3.2.1:
   version "3.2.2"
   resolved "https://registry.yarnpkg.com/symbol-tree/-/symbol-tree-3.2.2.tgz#ae27db38f660a7ae2e1c3b7d1bc290819b8519e6"
 
-sync-exec@~0.6.x:
+sync-exec@^0.6.2, sync-exec@~0.6.x:
   version "0.6.2"
   resolved "https://registry.yarnpkg.com/sync-exec/-/sync-exec-0.6.2.tgz#717d22cc53f0ce1def5594362f3a89a2ebb91105"
 
