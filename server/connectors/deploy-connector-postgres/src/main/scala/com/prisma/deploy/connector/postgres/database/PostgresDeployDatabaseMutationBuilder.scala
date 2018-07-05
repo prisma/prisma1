@@ -14,7 +14,7 @@ object PostgresDeployDatabaseMutationBuilder {
       sqlu"""CREATE TABLE "#$projectId"."_RelayId" (
             "id" VARCHAR (36) NOT NULL,
             "stableModelIdentifier" VARCHAR (25) NOT NULL,
-             PRIMARY KEY ("id"))""",
+             PRIMARY KEY ("id"))"""
     )
   }
 
