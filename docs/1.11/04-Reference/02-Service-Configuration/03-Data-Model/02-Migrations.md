@@ -19,7 +19,7 @@ Currently it is only possible to configure a single database and it has to be ca
 
 ## Disable migrations
 
-Bigrations
+Migrations
 
 > note: currently Prisma can only migrate databases operating in multi-tenancy mode. This will be improved in the future
 
