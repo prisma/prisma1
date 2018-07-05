@@ -12,39 +12,28 @@ import scala.language.existentials
 trait NodeSingleQueries extends BuilderBase with NodeManyQueries with FilterConditionBuilder {
   import slickDatabase.profile.api._
 
-  val relayIdTableQuery = {
-    val bla = RelayIdTableWrapper(slickDatabase.profile)
-    TableQuery(new bla.SlickTable(_, schemaName))
-  }
-
-  // TODO: migrate this to a Jooq based query
+  //This could save a roundtrip if we would deploy a stored procedure that would contain a mapping from stablemodelidentifier to modeltable
   def getNodeByGlobalId(schema: Schema, idGCValue: IdGCValue)(implicit ec: ExecutionContext): DBIO[Option[PrismaNode]] = {
-    val modelNameForId: DBIO[Option[String]] = relayIdTableQuery
-      .filter(_.id === idGCValue.value.toString)
-      .map(_.stableModelIdentifier)
-      .take(1)
-      .result
-      .headOption
+
+    val modelNameForId: DBIO[Option[String]] = {
+      val query = sql
+        .select(relayStableIdentifierColumn)
+        .from(relayTable)
+        .where(relayIdColumn.equal(placeHolder))
+
+      queryToDBIO(query)(
+        setParams = pp => pp.setGcValue(idGCValue),
+        readResult = _.readWith(readStableModelIdentifier).headOption
+      )
+    }
 
     for {
       stableModelIdentifier <- modelNameForId
       result <- stableModelIdentifier match {
-                 case Some(stableModelIdentifier) =>
-                   val model = schema.getModelByStableIdentifier_!(stableModelIdentifier.trim)
-                   getNodeById(model, idGCValue)
-                 case None =>
-                   DBIO.successful(None)
+                 case Some(stableModelIdentifier) => getNodeById(schema.getModelByStableIdentifier_!(stableModelIdentifier.trim), idGCValue)
+                 case None                        => DBIO.successful(None)
                }
     } yield result
-  }
-
-  def getNodeByGlobalId2(idGCValue: IdGCValue) = {
-
-    //stableIdentifier from RelayTable by Id
-    //model by stableIdentifier
-    // generate modeltable based on stableIdentifier and schema
-    // node from modelTable by id
-
   }
 
   def getNodeById(model: Model, idGcValue: IdGCValue)(implicit ec: ExecutionContext): DBIO[Option[PrismaNode]] = {
