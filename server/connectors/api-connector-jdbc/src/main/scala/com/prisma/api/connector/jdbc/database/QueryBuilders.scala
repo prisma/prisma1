@@ -1,108 +1,9 @@
 package com.prisma.api.connector.jdbc.database
 
 import com.prisma.api.connector._
-import com.prisma.gc_values.{GCValue, IdGCValue}
+import com.prisma.gc_values.IdGCValue
 import com.prisma.shared.models._
 import org.jooq.impl.DSL._
-
-case class RelationQueryBuilder(
-    slickDatabase: SlickDatabase,
-    schemaName: String,
-    relation: Relation,
-    queryArguments: Option[QueryArguments]
-) extends BuilderBase
-    with FilterConditionBuilder
-    with OrderByClauseBuilder
-    with LimitClauseBuilder {
-
-  lazy val query = {
-    val aliasedTable = relationTable(relation).as(topLevelAlias)
-    val condition    = buildConditionForFilter(queryArguments.flatMap(_.filter))
-    val order        = orderByForRelation(relation, topLevelAlias, queryArguments)
-    val limit        = limitClause(queryArguments)
-
-    val base = sql
-      .select()
-      .from(aliasedTable)
-      .where(condition)
-      .orderBy(order: _*)
-
-    limit match {
-      case Some(_) => base.limit(intDummy).offset(intDummy)
-      case None    => base
-    }
-  }
-}
-
-case class CountQueryBuilder(
-    slickDatabase: SlickDatabase,
-    schemaName: String,
-    tableName: String,
-    filter: Option[Filter]
-) extends BuilderBase
-    with FilterConditionBuilder {
-
-  lazy val query = {
-    val aliasedTable = table(name(schemaName, tableName)).as(topLevelAlias)
-    val condition    = buildConditionForFilter(filter)
-
-    sql
-      .selectCount()
-      .from(aliasedTable)
-      .where(condition)
-  }
-}
-
-case class ScalarListQueryBuilder(
-    slickDatabase: SlickDatabase,
-    schemaName: String,
-    field: ScalarField,
-    queryArguments: Option[QueryArguments]
-) extends BuilderBase
-    with FilterConditionBuilder
-    with OrderByClauseBuilder
-    with LimitClauseBuilder {
-  require(field.isList, "This must be called only with scalar list fields")
-
-  lazy val query = {
-    val condition = buildConditionForFilter(queryArguments.flatMap(_.filter))
-    val order     = orderByForScalarListField(topLevelAlias, queryArguments)
-    val limit     = limitClause(queryArguments)
-
-    val base = sql
-      .select()
-      .from(scalarListTable(field).as(topLevelAlias))
-      .where(condition)
-      .orderBy(order: _*)
-
-    limit match {
-      case Some(_) => base.limit(intDummy).offset(intDummy)
-      case None    => base
-    }
-  }
-}
-
-case class ScalarListByUniquesQueryBuilder(
-    slickDatabase: SlickDatabase,
-    schemaName: String,
-    scalarField: ScalarField,
-    nodeIds: Vector[GCValue]
-) extends BuilderBase {
-  require(scalarField.isList, "This must be called only with scalar list fields")
-
-  lazy val query = {
-    val nodeIdField   = scalarListColumn(scalarField, nodeIdFieldName)
-    val positionField = scalarListColumn(scalarField, positionFieldName)
-    val valueField    = scalarListColumn(scalarField, valueFieldName)
-    val condition     = nodeIdField.in(Vector.fill(nodeIds.length) { stringDummy }: _*)
-
-    sql
-      .select(nodeIdField, positionField, valueField)
-      .from(scalarListTable(scalarField))
-      .where(condition)
-
-  }
-}
 
 case class RelatedModelsQueryBuilder(
     slickDatabase: SlickDatabase,
@@ -169,35 +70,5 @@ case class RelatedModelsQueryBuilder(
     base
       .where(relatedNodesCondition, queryArgumentsCondition)
       .orderBy(order: _*)
-  }
-}
-
-case class ModelQueryBuilder(
-    slickDatabase: SlickDatabase,
-    schemaName: String,
-    model: Model,
-    queryArguments: Option[QueryArguments]
-) extends BuilderBase
-    with FilterConditionBuilder
-    with CursorConditionBuilder
-    with OrderByClauseBuilder
-    with LimitClauseBuilder {
-
-  lazy val query = {
-    val condition       = buildConditionForFilter(queryArguments.flatMap(_.filter))
-    val cursorCondition = buildCursorCondition(queryArguments, model)
-    val order           = orderByForModel(model, topLevelAlias, queryArguments)
-    val limit           = limitClause(queryArguments)
-
-    val base = sql
-      .select()
-      .from(modelTable(model).as(topLevelAlias))
-      .where(condition, cursorCondition)
-      .orderBy(order: _*)
-
-    limit match {
-      case Some(_) => base.limit(intDummy).offset(intDummy)
-      case None    => base
-    }
   }
 }
