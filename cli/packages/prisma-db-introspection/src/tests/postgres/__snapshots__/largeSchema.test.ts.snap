@@ -5,10 +5,10 @@ Object {
   "numTables": 22,
   "sdl": "type Actor @pgTable(name: \\"actor\\") {
   id: Int! @unique @pgColumn(name: \\"actor_id\\")
+  film_actors: [Film_actor!]!
   first_name: String!
   last_name: String!
   last_update: DateTime!
-  film_actors: [Film_actor!]!
 }
 
 type Actor_info @pgTable(name: \\"actor_info\\") {
@@ -23,35 +23,35 @@ type Address @pgTable(name: \\"address\\") {
   address: String!
   address2: String
   city: City! @pgRelation(column: \\"city_id\\")
+  customers: [Customer!]!
   district: String!
   last_update: DateTime!
   phone: String!
   postal_code: String
-  customers: [Customer!]!
-  staffs: [Staff!]!
+  staff: [Staff!]!
   stores: [Store!]!
 }
 
 type Category @pgTable(name: \\"category\\") {
   id: Int! @unique @pgColumn(name: \\"category_id\\")
+  film_categories: [Film_category!]!
   last_update: DateTime!
   name: String!
-  film_categorys: [Film_category!]!
 }
 
 type City @pgTable(name: \\"city\\") {
   id: Int! @unique @pgColumn(name: \\"city_id\\")
+  addresses: [Address!]!
   city: String!
   country: Country! @pgRelation(column: \\"country_id\\")
   last_update: DateTime!
-  addresss: [Address!]!
 }
 
 type Country @pgTable(name: \\"country\\") {
   id: Int! @unique @pgColumn(name: \\"country_id\\")
+  cities: [City!]!
   country: String!
   last_update: DateTime!
-  citys: [City!]!
 }
 
 type Customer @pgTable(name: \\"customer\\") {
@@ -64,9 +64,9 @@ type Customer @pgTable(name: \\"customer\\") {
   first_name: String!
   last_name: String!
   last_update: DateTime
-  store_id: Int!
   payments: [Payment!]!
   rentals: [Rental!]!
+  store_id: Int!
 }
 
 type Customer_list @pgTable(name: \\"customer_list\\") {
@@ -84,7 +84,10 @@ type Customer_list @pgTable(name: \\"customer_list\\") {
 type Film @pgTable(name: \\"film\\") {
   id: Int! @unique @pgColumn(name: \\"film_id\\")
   description: String
+  film_actors: [Film_actor!]!
+  film_categories: [Film_category!]!
   # fulltext: null! # Type 'tsvector' is not yet supported.
+  inventories: [Inventory!]!
   language: Language! @pgRelation(column: \\"language_id\\")
   last_update: DateTime!
   length: Int
@@ -95,9 +98,6 @@ type Film @pgTable(name: \\"film\\") {
   replacement_cost: Float! @default(value: 19.99)
   # special_features: null # Type 'ARRAY' is not yet supported.
   title: String!
-  film_actors: [Film_actor!]!
-  film_categorys: [Film_category!]!
-  inventorys: [Inventory!]!
 }
 
 type Film_actor @pgTable(name: \\"film_actor\\") {
@@ -127,15 +127,15 @@ type Inventory @pgTable(name: \\"inventory\\") {
   id: Int! @unique @pgColumn(name: \\"inventory_id\\")
   film: Film! @pgRelation(column: \\"film_id\\")
   last_update: DateTime!
-  store_id: Int!
   rentals: [Rental!]!
+  store_id: Int!
 }
 
 type Language @pgTable(name: \\"language\\") {
   id: Int! @unique @pgColumn(name: \\"language_id\\")
+  films: [Film!]!
   last_update: DateTime!
   name: String!
-  films: [Film!]!
 }
 
 type Nicer_but_slower_film_list @pgTable(name: \\"nicer_but_slower_film_list\\") {
@@ -163,10 +163,10 @@ type Rental @pgTable(name: \\"rental\\") {
   customer: Customer! @pgRelation(column: \\"customer_id\\")
   inventory: Inventory! @pgRelation(column: \\"inventory_id\\")
   last_update: DateTime!
+  payments: [Payment!]!
   rental_date: DateTime!
   return_date: DateTime
   staff: Staff! @pgRelation(column: \\"staff_id\\")
-  payments: [Payment!]!
 }
 
 type Sales_by_film_category @pgTable(name: \\"sales_by_film_category\\") {
@@ -189,12 +189,12 @@ type Staff @pgTable(name: \\"staff\\") {
   last_name: String!
   last_update: DateTime!
   password: String
-  # picture: null # Type 'bytea' is not yet supported.
-  store_id: Int!
-  username: String!
   payments: [Payment!]!
+  # picture: null # Type 'bytea' is not yet supported.
   rentals: [Rental!]!
+  store_id: Int!
   stores: [Store!]!
+  username: String!
 }
 
 type Staff_list @pgTable(name: \\"staff_list\\") {
@@ -213,7 +213,6 @@ type Store @pgTable(name: \\"store\\") {
   address: Address! @pgRelation(column: \\"address_id\\")
   last_update: DateTime!
   manager_staff: Staff! @pgRelation(column: \\"manager_staff_id\\")
-}
-",
+}",
 }
 `;

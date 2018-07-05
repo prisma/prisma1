@@ -7,8 +7,7 @@ Object {
   a: DateTime
   b: DateTime!
   c: DateTime!
-}
-",
+}",
 }
 `;
 
@@ -18,20 +17,18 @@ Object {
   "sdl": "type Booleans @pgTable(name: \\"Booleans\\") {
   a: Json
   b: Json!
-}
-",
+}",
 }
 `;
 
 exports[`Introspector Unmapped columns 1`] = `
 Object {
   "numTables": 1,
-  "sdl": "type Unmapped @pgTable(name: \\"Unmapped\\") {
+  "sdl": "# type Unmapped @pgTable(name: \\"Unmapped\\") {
   # a: null # Type 'jsonb' is not yet supported.
   # c: null # Type 'tsvector' is not yet supported.
   # d: null # Type 'ARRAY' is not yet supported.
-}
-",
+# }",
 }
 `;
 
@@ -41,8 +38,7 @@ Object {
   "sdl": "type Booleans @pgTable(name: \\"Booleans\\") {
   a: Boolean
   b: Boolean!
-}
-",
+}",
 }
 `;
 
@@ -60,8 +56,7 @@ Object {
   h: Float!
   i: Float
   j: Float!
-}
-",
+}",
 }
 `;
 
@@ -75,8 +70,7 @@ Object {
   d: Int!
   e: Int!
   f: Int!
-}
-",
+}",
 }
 `;
 
@@ -95,7 +89,6 @@ Object {
   f: String!
   g: String
   h: String!
-}
-",
+}",
 }
 `;

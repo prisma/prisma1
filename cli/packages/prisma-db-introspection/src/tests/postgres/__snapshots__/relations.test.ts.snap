@@ -11,10 +11,9 @@ Object {
 
 type Product @pgTable(name: \\"product\\") {
   id: Int! @unique
-  description: String!
   bills: [Bill!]!
-}
-",
+  description: String!
+}",
 }
 `;
 
@@ -29,10 +28,9 @@ Object {
 
 type Product @pgTable(name: \\"product\\") {
   id: Int! @unique
-  description: String!
   bills: [Bill!]!
-}
-",
+  description: String!
+}",
 }
 `;
 
@@ -47,10 +45,9 @@ Object {
 
 type Product @pgTable(name: \\"product\\") {
   id: Int! @unique
-  product: String!
   bills: [Bill!]! @pgRelationTable(table: \\"bill_product\\" name: \\"bill_product\\")
-}
-",
+  product: String!
+}",
 }
 `;
 
@@ -71,9 +68,8 @@ type Bill_product @pgTable(name: \\"bill_product\\") {
 
 type Product @pgTable(name: \\"product\\") {
   id: Int! @unique
-  product: String!
   bill_products: [Bill_product!]!
-}
-",
+  product: String!
+}",
 }
 `;
