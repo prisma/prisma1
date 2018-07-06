@@ -45,7 +45,7 @@ trait NodeManyQueries extends BuilderBase with FilterConditionBuilder with Curso
 
     val builder = RelatedModelsQueryBuilder(slickDatabase, schemaName, fromField, args, fromNodeIds)
     val query = (isMySql, args.exists(_.isWithPagination)) match {
-      case (true, true)   => builder.mysqlHack
+      case (true, true)   => builder.mysqlHack2
       case (true, false)  => builder.queryWithoutPagination
       case (false, true)  => builder.queryWithPagination
       case (false, false) => builder.queryWithoutPagination

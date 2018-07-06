@@ -60,9 +60,10 @@ case class RelatedModelsQueryBuilder(
 
     val aliasedBase   = base.where(relatedNodesCondition, queryArgumentsCondition, cursorCondition).asTable(baseTableAlias)
     val rowNumberPart = field("""@id_rank := IF(@current_id = `prismaBaseTableAlias`.`__Relation__A`, @id_rank + 1, 1)""", Integer.TYPE).as(rowNumberAlias)
+    val currentId     = field("""@current_id := `prismaBaseTableAlias`.`__Relation__A`""").as("dummy")
 
     val withRowNumbers =
-      select(rowNumberPart, field("""@current_id := `prismaBaseTableAlias`.`__Relation__A`"""), aliasedBase.asterisk())
+      select(rowNumberPart, currentId, aliasedBase.asterisk())
         .from(aliasedBase)
         .orderBy(order: _*)
         .asTable(rowNumberTableAlias)
@@ -74,6 +75,26 @@ case class RelatedModelsQueryBuilder(
       .from(withRowNumbers)
       .where(limitCondition)
 
+  }
+
+  lazy val mysqlHack2 = {
+
+    val order           = orderByInternal2(secondaryOrderByForPagination, queryArguments)
+    val cursorCondition = buildCursorCondition(queryArguments, relatedModel)
+
+    val aliasedBase = base
+      .where(relatedNodesCondition, queryArgumentsCondition, cursorCondition)
+      .orderBy(order: _*)
+      .asTable(baseTableAlias)
+
+    val rank    = field("""(@id_rank := IF(@current_id = `prismaBaseTableAlias`.`__Relation__A`, @id_rank + 1, 1))""").isNotNull
+    val current = field("""(@current_id := `prismaBaseTableAlias`.`__Relation__A`)""").isNotNull
+    val between = field("""@id_rank""", Integer.TYPE).between(intDummy).and(intDummy)
+
+    sql
+      .select(field("""@id_rank"""), aliasedBase.asterisk())
+      .from(aliasedBase)
+      .where(rank, current, between)
   }
 
   lazy val queryWithoutPagination = {
