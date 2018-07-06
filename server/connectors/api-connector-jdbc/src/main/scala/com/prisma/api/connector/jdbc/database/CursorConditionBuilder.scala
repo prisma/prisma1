@@ -20,20 +20,19 @@ trait CursorConditionBuilder extends BuilderBase {
     // If both params are empty, don't generate any query.
     if (before.isEmpty && after.isEmpty) return trueCondition()
 
-    val tableName        = model.dbName
     val idFieldWithAlias = aliasColumn(model.dbNameOfIdField_!)
     val idField          = modelIdColumn(model)
 
     // First, we fetch the ordering for the query. If none is passed, we order by id, ascending.
     // We need that since before/after are dependent on the order.
     val (orderByField, orderByFieldWithAlias, sortDirection) = orderBy match {
-      case Some(order) => (field(name(schemaName, tableName, order.field.dbName)), field(name(topLevelAlias, order.field.dbName)), order.sortOrder.toString)
+      case Some(order) => (modelColumn(model, order.field), aliasColumn(order.field.dbName), order.sortOrder.toString)
       case None        => (idField, idFieldWithAlias, "asc")
     }
 
     val selectQuery = sql
       .select(orderByField)
-      .from(table(name(schemaName, tableName)))
+      .from(modelTable(model))
       .where(idField.equal(stringDummy))
 
     // Then, we select the comparison operation and construct the cursors. For instance, if we use ascending order, and we want

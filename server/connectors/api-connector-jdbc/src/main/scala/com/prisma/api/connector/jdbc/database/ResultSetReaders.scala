@@ -11,9 +11,12 @@ import com.prisma.slick.ReadsResultSet
 trait ResultSetReaders extends JdbcExtensions with QueryBuilderConstants {
   val readsAsUnit: ReadsResultSet[Unit] = ReadsResultSet(_ => ())
 
+  def readStableModelIdentifier: ReadsResultSet[String] = ReadsResultSet(_.getString(1))
+
   def readNodeId(model: Model): ReadsResultSet[IdGCValue] = ReadsResultSet(_.getId(model))
 
   def readPrismaNodeWithParent(rf: RelationField): ReadsResultSet[PrismaNodeWithParent] = ReadsResultSet { rs =>
+    println(rs.getInt(1))
     val node = readPrismaNode(rf.relatedModel_!, rs)
 
     val parentId = if (rf.relation.isSameModelRelation) {

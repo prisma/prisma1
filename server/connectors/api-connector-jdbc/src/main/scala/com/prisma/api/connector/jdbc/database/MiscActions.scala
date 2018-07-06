@@ -9,6 +9,7 @@ trait MiscActions extends BuilderBase {
     val relationTables = project.relations.map(relationTable)
     val modelTables    = project.models.map(modelTable)
     val listTables     = project.models.flatMap(model => model.scalarListFields.map(scalarListTable))
+
     val actions = (relationTables ++ listTables ++ Vector(relayTable) ++ modelTables).map { table =>
       if (isMySql) {
         truncateToDBIO(sql.truncate(table))
