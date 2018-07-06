@@ -11,8 +11,6 @@ export class SDLInferrer {
 
     // Assemble basic types
     const types = typeCandidates.map(tc => {
-      // tc.columns.some(f => f.isPrimaryKey)
-
       const name = this.capitalizeFirstLetter(tc.name)
       const directives = [`@pgTable(name: "${tc.name}")`]
 

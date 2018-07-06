@@ -68,9 +68,4 @@ export interface PrimaryKey {
   fields: string[]
 }
 
-// export interface ForeignKey {
-//   tableName: string
-//   field: string
-// }
-
 export type PostgresConnectionDetails = string | ClientConfig
