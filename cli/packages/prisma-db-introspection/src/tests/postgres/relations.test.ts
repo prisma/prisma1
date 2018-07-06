@@ -57,7 +57,7 @@ describe('Introspector', () => {
     );`)
   })
 
-  test('relation with inline relation column', async () => {
+  test.skip('relation with inline relation column', async () => {
     await testSchema(`CREATE TABLE product (
       id           serial PRIMARY KEY  -- implicit primary key constraint
     , description  text NOT NULL
@@ -70,7 +70,7 @@ describe('Introspector', () => {
     );`)
   })
 
-  test('relation with inline relation column NOT NULL', async () => {
+  test.skip('relation with inline relation column NOT NULL', async () => {
     await testSchema(`CREATE TABLE product (
       id           serial PRIMARY KEY  -- implicit primary key constraint
     , description  text NOT NULL

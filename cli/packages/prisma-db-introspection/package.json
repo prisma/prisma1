@@ -39,6 +39,7 @@
     "prisma-json-schema": "^0.0.1",
     "replaceall": "^0.1.6",
     "scuid": "^1.0.2",
+    "uppercamelcase": "^3.0.0",
     "yaml-ast-parser": "^0.0.40"
   },
   "scripts": {
