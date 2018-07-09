@@ -39,19 +39,25 @@ export class SDLInferrer {
         return relation.source_table === tc.name
       })
       const inlineRelationFields = inlineRelations.map(relation => {
-        // TODO: Can unify remoteColumns and ambiguousRelations
-        // into one structure
+        const ambiguousRelations = tc.relations.filter(innerRelation => innerRelation.source_table === relation.source_table && innerRelation.target_table === relation.target_table)
         const remoteColumns = _.intersectionWith(
           tc.columns,
-          tc.relations.filter(innerRelation => innerRelation.source_table === relation.source_table && innerRelation.target_table === relation.target_table),
+          ambiguousRelations,
           (a, b) => a.name === b.source_column
-        ).filter(remoteColumn => remoteColumn.name === relation.source_column);        
-        const ambiguousRelations = tc.relations.filter(innerRelation => innerRelation.source_table === relation.source_table && innerRelation.target_table === relation.target_table)
+        )
+        
+        const selfAmbiguousRelations = ambiguousRelations.filter(relation => relation.source_table === relation.target_table)
+        const selfRemoteColumns = _.intersectionWith(
+          tc.columns,
+          selfAmbiguousRelations,
+          (a, b) => a.name === b.source_column
+        )
 
         const relationName = pluralize(relation.source_table) + '_' + pluralize(this.removeIdSuffix(relation.source_column))
         const directives = [
           `@pgRelation(column: "${relation.source_column}")`,
-          ...(ambiguousRelations.length > 1 && remoteColumns && remoteColumns.length > 0 ? [`@relation(name: "${upperCamelCase(relationName)}")`] : [])
+          ...(ambiguousRelations.length > 1 && remoteColumns && remoteColumns.length > 0 ? [`@relation(name: "${upperCamelCase(relationName)}")`] : []),
+          ...(selfAmbiguousRelations.length > 0 && selfRemoteColumns && selfRemoteColumns.length > 0 ? [`@relation(name: "${upperCamelCase(relationName)}")`] : [])
         ]
 
         return new GQLField(

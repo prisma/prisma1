@@ -48,7 +48,7 @@ type Employee @pgTable(name: \\"Employee\\") {
   LastName: String!
   Phone: String
   PostalCode: String
-  ReportsTo: Employee @pgRelation(column: \\"ReportsTo\\")
+  ReportsTo: Employee @pgRelation(column: \\"ReportsTo\\") @relation(name: \\"EmployeesReportsTos\\")
   State: String
   Title: String
 }

@@ -23,7 +23,7 @@ Object {
   "sdl": "type Bill @pgTable(name: \\"bill\\") {
   id: Int! @unique
   bill: String!
-  product: Product! @pgRelation(column: \\"product_id\\")
+  product: Product @pgRelation(column: \\"product_id\\")
 }
 
 type Product @pgTable(name: \\"product\\") {
