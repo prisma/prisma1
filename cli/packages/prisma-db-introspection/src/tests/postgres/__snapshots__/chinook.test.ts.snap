@@ -41,7 +41,7 @@ type Employee @pgTable(name: \\"Employee\\") {
   Country: String
   Customers: [Customer!]!
   Email: String
-  Employees: [Employee!]!
+  Employees: [Employee!]! @relation(name: \\"Employees\\")
   Fax: String
   FirstName: String!
   HireDate: DateTime
