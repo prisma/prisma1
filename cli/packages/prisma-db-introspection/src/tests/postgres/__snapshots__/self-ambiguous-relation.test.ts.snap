@@ -10,7 +10,7 @@ Object {
   City: String
   Country: String
   Email: String
-  Employees: [Employee!]!
+  Employees: [Employee!]! @relation(name: \\"Employees\\")
   Fax: String
   FirstName: String!
   HireDate: DateTime

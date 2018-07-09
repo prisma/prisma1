@@ -75,14 +75,18 @@ export class SDLInferrer {
         return relation.target_table === tc.name
       })
       const relationFields = relations.map(relation => {
-        const duplicateRelations = relations.filter(r => relation.source_table === r.source_table )
-        const fieldName = duplicateRelations.length > 1 
+        const ambiguousRelations = tc.relations.filter(innerRelation => innerRelation.source_table === relation.source_table && innerRelation.target_table === relation.target_table)
+        const fieldName = ambiguousRelations.length > 1 
                 ? pluralize(relation.source_table) + '_' + pluralize(
                   this.removeIdSuffix(relation.source_column)
                 )
                 : pluralize(relation.source_table)
+
+        const selfAmbiguousRelations = ambiguousRelations.filter(relation => relation.source_table === relation.target_table)
+
         const directives = [
-          ...(duplicateRelations.length > 1 ? [`@relation(name: "${upperCamelCase(fieldName)}")`] : []) 
+          ...(ambiguousRelations.length > 1 ? [`@relation(name: "${upperCamelCase(fieldName)}")`] : []),
+          ...(selfAmbiguousRelations.length > 0 ? [`@relation(name: "${upperCamelCase(fieldName)}")`] : []) 
         ]
         return new GQLField(
           fieldName,
