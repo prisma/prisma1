@@ -1,3 +1,5 @@
+#!/bin/bash
+
 cd packages/prisma-yml
 yarn build
 cd ../prisma-cli-engine
