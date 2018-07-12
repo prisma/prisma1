@@ -11,6 +11,7 @@ import Export from './commands/export/index'
 import ConsoleCommand from './commands/console/index'
 import Token from './commands/token/token'
 import Login from './commands/login/login'
+import Logout from './commands/logout/logout'
 import ClusterToken from './commands/token/cluster-token'
 import Delete from './commands/delete/index'
 import InitPrisma from './commands/init-prisma'
@@ -90,6 +91,11 @@ export const topics = [
     group: 'cloud',
   },
   {
+    name: 'logout',
+    description: 'Logout from Prisma Cloud',
+    group: 'cloud',
+  },
+  {
     name: 'console',
     description: 'Opens the console for the current service',
     group: 'cloud',
@@ -118,6 +124,7 @@ export const commands = [
   Export,
   Token,
   Login,
+  Logout,
   Account,
   ClusterToken,
   IntrospectCommand,
@@ -137,6 +144,7 @@ export {
   Export,
   Token,
   Login,
+  Logout,
   InitPrisma,
   IntrospectCommand,
 }

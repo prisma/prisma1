@@ -511,6 +511,11 @@ export class Client {
     await this.env.getClusters()
   }
 
+  logout(): void {
+    delete this.env.globalRC.cloudSessionKey
+    this.env.saveGlobalRC()
+  }
+
   async getAccount(): Promise<User | null> {
     const query = `{
       me {
