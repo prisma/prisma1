@@ -60,9 +60,9 @@ trait FilterConditionBuilder extends BuilderBase {
     val relation      = relationField.relation
     val newAlias      = relationField.relatedModel_!.dbName + "_" + alias
 
-    // Todo if nested filter is only a relationFilter we could simplify the join by bypassing the modeltable
-    // Album - AlbumToArtist - Artist - ArtistToTrack - Track (condition on Track)
-    // in this case we could skip the Artist table
+    // Todo if nested filter is only a relationFilter we could simplify the join by bypassing intermediate modeltables
+    // Artist - AlbumToArtist - Album - ArtistToTrack - Track (condition on Track)
+    // in this case we could skip the Album table and directly join AlbumtoArtist and ArtistToTrack
     // We could also filter out andFilters that only contain one element for readability
 
     val nestedFilterStatement = buildConditionForFilter(relationFilter.nestedFilter, newAlias)
