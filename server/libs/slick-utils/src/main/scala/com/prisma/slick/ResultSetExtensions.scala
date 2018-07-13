@@ -1,10 +1,11 @@
 package com.prisma.slick
 
-import java.sql.{Connection, PreparedStatement, ResultSet}
+import java.sql.ResultSet
 
 import com.prisma.slick.ResultSetExtensionsValueClasses.ResultSetExtensions2
 
 import scala.collection.mutable
+import scala.language.implicitConversions
 
 trait ReadsResultSet[T] {
   def read(resultSet: ResultSet): T

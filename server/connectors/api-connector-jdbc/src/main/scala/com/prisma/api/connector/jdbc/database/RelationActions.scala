@@ -43,6 +43,7 @@ trait RelationActions extends BuilderBase {
           pp.setGcValue(idToUpdate)
         }
       )
+
     } else if (relation.hasManifestation) {
       val query = sql
         .insertInto(relationTable(relation))
@@ -58,6 +59,7 @@ trait RelationActions extends BuilderBase {
           pp.setGcValue(childId)
         }
       )
+
     } else {
       val query = sql
         .insertInto(relationTable(relation))
