@@ -13,6 +13,7 @@ trait FilterConditionBuilder extends BuilderBase {
   }
 
   private def buildConditionForFilter(filter: Filter, alias: String): Condition = {
+
     def fieldFrom(scalarField: ScalarField) = field(name(alias, scalarField.dbName))
     def nonEmptyConditions(filters: Vector[Filter]): Vector[Condition] = {
       filters.map(buildConditionForFilter(_, alias)) match {
@@ -44,7 +45,7 @@ trait FilterConditionBuilder extends BuilderBase {
       case ScalarFilter(scalarField, NotEquals(NullGCValue))     => fieldFrom(scalarField).isNotNull
       case ScalarFilter(scalarField, NotEquals(_))               => fieldFrom(scalarField).notEqual(stringDummy)
       case ScalarFilter(scalarField, Equals(NullGCValue))        => fieldFrom(scalarField).isNull
-      case ScalarFilter(scalarField, Equals(x))                  => fieldFrom(scalarField).equal(stringDummy)
+      case ScalarFilter(scalarField, Equals(_))                  => fieldFrom(scalarField).equal(stringDummy)
       case ScalarFilter(scalarField, In(Vector(NullGCValue)))    => fieldFrom(scalarField).isNull
       case ScalarFilter(scalarField, NotIn(Vector(NullGCValue))) => fieldFrom(scalarField).isNotNull
       case ScalarFilter(scalarField, In(values))                 => fieldFrom(scalarField).in(Vector.fill(values.length) { stringDummy }: _*)
@@ -55,23 +56,28 @@ trait FilterConditionBuilder extends BuilderBase {
   }
 
   private def relationFilterStatement(alias: String, relationFilter: RelationFilter): Condition = {
-    val relationField         = relationFilter.field
-    val relation              = relationField.relation
-    val newAlias              = relationField.relatedModel_!.dbName + "_" + alias
+    val relationField = relationFilter.field
+    val relation      = relationField.relation
+    val newAlias      = relationField.relatedModel_!.dbName + "_" + alias
+
+    // Todo if nested filter is only a relationFilter we could simplify the join by bypassing the modeltable
+    // Album - AlbumToArtist - Artist - ArtistToTrack - Track (condition on Track)
+    // in this case we could skip the Artist table
+    // We could also filter out andFilters that only contain one element for readability
+
     val nestedFilterStatement = buildConditionForFilter(relationFilter.nestedFilter, newAlias)
 
     val select = sql
-      .select()
+      .select(relationColumn(relation, relationField.relationSide))
       .from(modelTable(relationField.relatedModel_!).as(newAlias))
       .innerJoin(relationTable(relation))
       .on(modelIdColumn(newAlias, relationField.relatedModel_!).eq(relationColumn(relation, relationField.oppositeRelationSide)))
-      .where(relationColumn(relation, relationField.relationSide).eq(modelIdColumn(alias, relationField.model)))
 
     relationFilter.condition match {
-      case AtLeastOneRelatedNode => exists(select.and(nestedFilterStatement))
-      case EveryRelatedNode      => notExists(select.andNot(nestedFilterStatement))
-      case NoRelatedNode         => notExists(select.and(nestedFilterStatement))
-      case NoRelationCondition   => exists(select.and(nestedFilterStatement))
+      case AtLeastOneRelatedNode => modelIdColumn(alias, relationField.model).in(select.and(nestedFilterStatement))
+      case EveryRelatedNode      => modelIdColumn(alias, relationField.model).notIn(select.andNot(nestedFilterStatement))
+      case NoRelatedNode         => modelIdColumn(alias, relationField.model).notIn(select.and(nestedFilterStatement))
+      case NoRelationCondition   => modelIdColumn(alias, relationField.model).in(select.and(nestedFilterStatement))
     }
   }
 
