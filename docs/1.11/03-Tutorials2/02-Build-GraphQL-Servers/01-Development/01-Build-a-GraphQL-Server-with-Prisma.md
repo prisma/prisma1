@@ -346,7 +346,7 @@ const resolvers = {
         {
           data: {
             title: args.title,
-            content: args.title,
+            content: args.content,
             author: {
               connect: {
                 id: args.authorId,
