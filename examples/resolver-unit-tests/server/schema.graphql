@@ -1,0 +1,10 @@
+# import PostCreateInput from "./generated-schema.graphql"
+
+type Query {
+  drafts: [Post!]!
+}
+
+type Mutation {
+  createPost(data: PostCreateInput!): Post
+  deletePost(id: ID!): Post
+}

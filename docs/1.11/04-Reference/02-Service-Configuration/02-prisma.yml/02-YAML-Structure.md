@@ -12,7 +12,6 @@ The service definition file `prisma.yml` has the following root properties:
 - `datamodel` (required): Type definitions for database models, relations, enums and other types.
 - `endpoint`: HTTP endpoint for the Prisma API. Can be omitted to prompt CLI deployment wizard.
 - `secret`: Secret for securing the API endpoint.
-- `schema`: Path to the GraphQL schema for the Prisma API.
 - `subscriptions`: Configuration of subscription webhooks.
 - `seed`: Points to a file containing mutations for data seeding.
 - `custom`: Used to provide variables which can be referenced elsewhere in `prisma.yml`.
