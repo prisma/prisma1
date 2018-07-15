@@ -8,7 +8,7 @@ import play.api.libs.json.Json
 
 class SettingUpChinookSpec extends FlatSpec with Matchers with IntegrationBaseSpec {
 
-  "Importing Chinook" should "work " ignore {
+  "Importing Chinook" should "work " in {
 
     val schema =
       """type Artist {
@@ -65,11 +65,11 @@ class SettingUpChinookSpec extends FlatSpec with Matchers with IntegrationBaseSp
       importer.executeImport(json).await(50)
     }
 
-    importFile("nodes01.json")
-    importFile("nodes02.json")
-    importFile("relations01.json")
-    importFile("relations02.json")
-    importFile("lists01.json")
+//    importFile("nodes01.json")
+//    importFile("nodes02.json")
+//    importFile("relations01.json")
+//    importFile("relations02.json")
+//    importFile("lists01.json")
 
     def runquery = {
       val starttime = System.currentTimeMillis()
@@ -77,7 +77,7 @@ class SettingUpChinookSpec extends FlatSpec with Matchers with IntegrationBaseSp
       //    apiServer.query("""query{artists(where:{Albums_some:{Tracks_some:{Milliseconds_gt: 500000}}}){Name}}""", project)
       //    apiServer.query("""query{artists(where:{Albums_some:{Title_starts_with: "B" Title_ends_with:"C"}}){Name}}""", project)
       apiServer.query(
-        """query prisma_deeplyNested {albums(where: {Artist: {ArtistId: 127}}) { AlbumId Title  Tracks {TrackId Name Genre { Name } }  Artist{ Albums{ Tracks{ MediaType{   Name } Genre{ Name } } }  }}}""",
+        """query prisma_deeplyNested {albums(where: {Tracks_some:{ MediaType:{Name_starts_with:""}, Genre:{Name_starts_with:""}}}) { id}}""",
         project
       )
 
@@ -88,8 +88,8 @@ class SettingUpChinookSpec extends FlatSpec with Matchers with IntegrationBaseSp
 
     runquery
 
-    for (a <- 1 to 50) {
-      runquery
-    }
+//    for (a <- 1 to 50) {
+//      runquery
+//    }
   }
 }

@@ -14,6 +14,9 @@ trait NodeManyQueries extends BuilderBase with LimitClauseBuilder {
       overrideMaxNodeCount: Option[Int] = None
   ): DBIO[ResolverResult[PrismaNode]] = {
     val builder = ModelQueryBuilder(slickDatabase, schemaName, model, args)
+
+    println(builder.query)
+
     queryToDBIO(builder.query)(
       setParams = pp => SetParams.setQueryArgs(pp, args),
       readResult = { rs =>
