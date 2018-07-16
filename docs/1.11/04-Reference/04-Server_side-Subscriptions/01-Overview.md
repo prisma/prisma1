@@ -20,11 +20,8 @@ You configure a server-side subscription by adding the [`subscriptions`](!alias-
 ### prisma.yml
 
 ```yml
-service: my-service
-
-stage: ${env:PRISMA_STAGE}
+endpoint: ${env:PRISMA_ENDPOINT}
 secret: ${env:PRISMA_SECRET}
-cluster: ${env:PRISMA_CLUSTER}
 
 datamodel: database/datamodel.graphql
 
