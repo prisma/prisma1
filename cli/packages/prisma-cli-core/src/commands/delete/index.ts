@@ -33,7 +33,7 @@ export default class Delete extends Command {
       cluster!,
       serviceName,
       stage,
-      this.definition.getWorkspace() || '*',
+      this.definition.getWorkspace(),
     )
 
     const prettyName = `${chalk.bold(serviceName)}@${stage}`
@@ -47,7 +47,7 @@ export default class Delete extends Command {
     await this.client.deleteProject(
       serviceName,
       stage,
-      this.definition.getWorkspace(),
+      this.definition.getWorkspace() || (this.env.activeCluster.workspaceSlug as string),
     )
     this.out.action.stop(prettyTime(Date.now() - before))
   }
