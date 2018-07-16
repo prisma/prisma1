@@ -7,7 +7,7 @@ description: Learn how to build a GraphQL server for an existing Prisma service.
 
 This tutorial teaches you how to take an existing Prisma service and build a GraphQL server on top of it. The resolvers of the GraphQL servers will be connected to Prisma's GraphQL API via _Prisma bindings_.
 
-The tutorial assumes that you already have a running Prisma service, so please make sure to have the _endpoint_ of it available. If you're unsure about how you can get started with your own Prisma service, check one of these tutorials:
+The tutorial assumes that you already have a running Prisma service (this means you should at least have a `prisma.yml` and `datamodel.grapghql` available), so please make sure to have the _endpoint_ of it available. If you're unsure about how you can get started with your own Prisma service, check one of these tutorials:
 
 - [Setup Prisma on a Demo server](!alias-ouzia3ahqu)
 - [Setup Prisma with a new MySQL Database](!alias-gui4peul2u)
