@@ -12,7 +12,6 @@ import * as sillyname from 'sillyname'
 import * as path from 'path'
 import * as fs from 'fs'
 import { Introspector } from 'prisma-db-introspection'
-import { defaultDBPort } from '../commands/local/constants'
 import * as yaml from 'js-yaml'
 
 export interface GetEndpointParams {
@@ -219,11 +218,13 @@ export class EndpointDialog {
         service = await this.ask({
           message: 'Choose a name for your service',
           key: 'serviceName',
+          defaultValue: 'default'
         })
 
         stage = await this.ask({
           message: 'Choose a name for your stage',
           key: 'stageName',
+          defaultValue: 'default'
         })
 
         writeDockerComposeYml = false
@@ -268,14 +269,14 @@ export class EndpointDialog {
         } catch (e) {
           throw new Error(`Could not connect to database. ${e.message}`)
         }
-        // TODO: ask for postres schema if more than one
+
         if (
           credentials &&
           credentials.alreadyData &&
           schemas &&
           schemas.length > 0
         ) {
-          const { numTables, sdl } = await introspector.introspect(schemas[0])
+          const { numTables, sdl } = await introspector.introspect(credentials.schema || schemas[0])
           if (numTables === 0) {
             this.out.log(
               chalk.red(

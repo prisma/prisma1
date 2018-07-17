@@ -79,7 +79,7 @@ export default class Playground extends Command {
       const link = await this.startServer({ config, endpoint, port })
 
       if (shouldOpenBrowser) {
-        opn(link)
+        opn(link).catch(() => {}); // Prevent `unhandledRejection` error.
       }
     } else {
       const envPath = path.join(os.tmpdir(), `${randomString()}.json`)

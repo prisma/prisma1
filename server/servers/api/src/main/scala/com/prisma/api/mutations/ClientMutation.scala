@@ -2,6 +2,7 @@ package com.prisma.api.mutations
 
 import com.prisma.api.connector._
 import com.prisma.shared.models.IdType.Id
+import com.prisma.shared.models.Project
 import cool.graph.cuid.Cuid
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -10,15 +11,16 @@ import scala.concurrent.Future
 trait ClientMutation[T] {
   val mutationId: Id = Cuid.createCuid()
   def dataResolver: DataResolver
-  def prepareMutactions(): Future[PreparedMutactions]
+  def prepareMutactions(): Future[TopLevelDatabaseMutaction]
   def getReturnValue(results: MutactionResults): Future[T]
 
   def projectId: String = dataResolver.project.id
+  def project: Project
 }
 
 trait SingleItemClientMutation extends ClientMutation[ReturnValueResult] {
   def returnValueByUnique(where: NodeSelector): Future[ReturnValueResult] = {
-    dataResolver.resolveByUnique(where).map {
+    dataResolver.getNodeByWhere(where).map {
       case Some(prismaNode) => ReturnValue(prismaNode)
       case None             => NoReturnValue(where)
     }
@@ -31,8 +33,6 @@ case class PreparedMutactions(
 ) {
   lazy val allMutactions = databaseMutactions ++ sideEffectMutactions
 }
-
-case class MutactionResults(databaseResults: Vector[DatabaseMutactionResult])
 
 sealed trait ReturnValueResult
 case class BatchPayload(count: Long)

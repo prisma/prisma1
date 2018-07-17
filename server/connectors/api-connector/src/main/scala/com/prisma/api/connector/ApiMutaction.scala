@@ -1,84 +1,185 @@
 package com.prisma.api.connector
 
-import com.prisma.gc_values.ListGCValue
-import com.prisma.shared.models.IdType.Id
+import com.prisma.gc_values.{IdGCValue, ListGCValue}
 import com.prisma.shared.models.ModelMutationType.ModelMutationType
 import com.prisma.shared.models._
 
+import scala.collection.immutable
+
 sealed trait ApiMutaction
+
+// DATABASE MUTACTIONS
 sealed trait DatabaseMutaction extends ApiMutaction {
   def project: Project
+  def allNestedMutactions: Vector[DatabaseMutaction] = Vector.empty
 }
+
+sealed trait TopLevelDatabaseMutaction extends DatabaseMutaction
+
+sealed trait NestedDatabaseMutaction extends DatabaseMutaction {
+  def relationField: RelationField
+}
+
+sealed trait FurtherNestedMutaction extends DatabaseMutaction {
+  def nestedCreates: Vector[NestedCreateNode]
+  def nestedUpdates: Vector[NestedUpdateNode]
+  def nestedUpserts: Vector[NestedUpsertNode]
+  def nestedDeletes: Vector[NestedDeleteNode]
+  def nestedConnects: Vector[NestedConnect]
+  def nestedDisconnects: Vector[NestedDisconnect]
+
+  override def allNestedMutactions: Vector[NestedDatabaseMutaction] = {
+    nestedCreates ++ nestedUpdates ++ nestedUpserts ++ nestedDeletes ++ nestedConnects ++ nestedDisconnects
+  }
+}
+
+sealed trait FinalMutaction extends DatabaseMutaction
+
+// CREATE
+sealed trait CreateNode extends FurtherNestedMutaction {
+  def model: Model
+  def nonListArgs: PrismaArgs
+  def listArgs: Vector[(String, ListGCValue)]
+
+  override def nestedUpdates     = Vector.empty
+  override def nestedUpserts     = Vector.empty
+  override def nestedDeletes     = Vector.empty
+  override def nestedDisconnects = Vector.empty
+}
+case class TopLevelCreateNode(
+    project: Project,
+    model: Model,
+    nonListArgs: PrismaArgs,
+    listArgs: Vector[(String, ListGCValue)],
+    nestedCreates: Vector[NestedCreateNode],
+    nestedConnects: Vector[NestedConnect]
+) extends CreateNode
+    with TopLevelDatabaseMutaction
+
+case class NestedCreateNode(
+    project: Project,
+    relationField: RelationField,
+    nonListArgs: PrismaArgs,
+    listArgs: Vector[(String, ListGCValue)],
+    nestedCreates: Vector[NestedCreateNode],
+    nestedConnects: Vector[NestedConnect],
+    topIsCreate: Boolean
+) extends CreateNode
+    with NestedDatabaseMutaction {
+  override def model = relationField.relatedModel_!
+}
+
+// UPDATE
+sealed trait UpdateNode extends FurtherNestedMutaction {
+  def model: Model
+  def nonListArgs: PrismaArgs
+  def listArgs: Vector[(String, ListGCValue)]
+}
+
+case class TopLevelUpdateNode(
+    project: Project,
+    where: NodeSelector,
+    nonListArgs: PrismaArgs,
+    listArgs: Vector[(String, ListGCValue)],
+    previousValues: PrismaNode,
+    nestedCreates: Vector[NestedCreateNode],
+    nestedUpdates: Vector[NestedUpdateNode],
+    nestedUpserts: Vector[NestedUpsertNode],
+    nestedDeletes: Vector[NestedDeleteNode],
+    nestedConnects: Vector[NestedConnect],
+    nestedDisconnects: Vector[NestedDisconnect]
+) extends UpdateNode
+    with TopLevelDatabaseMutaction {
+  override def model = where.model
+}
+
+case class NestedUpdateNode(
+    project: Project,
+    relationField: RelationField,
+    where: Option[NodeSelector],
+    nonListArgs: PrismaArgs,
+    listArgs: Vector[(String, ListGCValue)],
+    nestedCreates: Vector[NestedCreateNode],
+    nestedUpdates: Vector[NestedUpdateNode],
+    nestedUpserts: Vector[NestedUpsertNode],
+    nestedDeletes: Vector[NestedDeleteNode],
+    nestedConnects: Vector[NestedConnect],
+    nestedDisconnects: Vector[NestedDisconnect]
+) extends UpdateNode
+    with NestedDatabaseMutaction {
+  override def model = relationField.relatedModel_!
+}
+
+// DELETE
+sealed trait DeleteNode extends FinalMutaction {
+  def model: Model
+}
+case class TopLevelDeleteNode(project: Project, where: NodeSelector, previousValues: PrismaNode) extends DeleteNode with TopLevelDatabaseMutaction {
+  override def model = where.model
+}
+case class NestedDeleteNode(project: Project, relationField: RelationField, where: Option[NodeSelector]) extends DeleteNode with NestedDatabaseMutaction {
+  override def model = relationField.relatedModel_!
+}
+
+// UPSERT
+sealed trait UpsertNode
+
+case class TopLevelUpsertNode(
+    project: Project,
+    where: NodeSelector,
+    create: CreateNode,
+    update: TopLevelUpdateNode
+) extends UpsertNode
+    with TopLevelDatabaseMutaction
+
+case class NestedUpsertNode(
+    project: Project,
+    relationField: RelationField,
+    where: Option[NodeSelector],
+    create: NestedCreateNode,
+    update: NestedUpdateNode
+) extends UpsertNode
+    with NestedDatabaseMutaction
+
+// TOP LEVEL - MANY
+case class ResetData(project: Project)                                              extends TopLevelDatabaseMutaction with FinalMutaction
+case class DeleteNodes(project: Project, model: Model, whereFilter: Option[Filter]) extends TopLevelDatabaseMutaction with FinalMutaction
+case class UpdateNodes(
+    project: Project,
+    model: Model,
+    whereFilter: Option[Filter],
+    updateArgs: PrismaArgs,
+    listArgs: Vector[(String, ListGCValue)]
+) extends TopLevelDatabaseMutaction
+    with FinalMutaction
+
+// NESTED
+
+case class NestedConnect(project: Project, relationField: RelationField, where: NodeSelector, topIsCreate: Boolean)
+    extends NestedDatabaseMutaction
+    with FinalMutaction
+case class NestedDisconnect(project: Project, relationField: RelationField, where: Option[NodeSelector]) extends NestedDatabaseMutaction with FinalMutaction
+
+// IMPORT
+case class ImportScalarLists(project: Project, field: ScalarField, values: Map[IdGCValue, ListGCValue]) extends TopLevelDatabaseMutaction with FinalMutaction
+case class ImportRelations(project: Project, relation: Relation, args: Vector[(IdGCValue, IdGCValue)])  extends TopLevelDatabaseMutaction with FinalMutaction
+case class ImportNodes(project: Project, model: Model, args: Vector[PrismaArgs])                        extends TopLevelDatabaseMutaction with FinalMutaction
+
+// SIDE EFFECT MUTACTIONS
 sealed trait SideEffectMutaction extends ApiMutaction
 
-case class AddDataItemToManyRelationByPath(project: Project, path: Path)   extends DatabaseMutaction
-case class CascadingDeleteRelationMutactions(project: Project, path: Path) extends DatabaseMutaction
-case class CreateDataItem(project: Project, path: Path, nonListArgs: PrismaArgs, listArgs: Vector[(String, ListGCValue)]) extends DatabaseMutaction {
-  val model = path.lastModel
-  val where = path.edges match {
-    case x if x.isEmpty => path.root
-    case x              => x.last.asInstanceOf[NodeEdge].childWhere
-  }
-  val id = where.fieldGCValue.value.toString
-}
-
-case class PushScalarListsImport(project: Project, tableName: String, id: String, args: ListGCValue)      extends DatabaseMutaction
-case class CreateRelationRowsImport(project: Project, relation: Relation, args: Vector[(String, String)]) extends DatabaseMutaction
-case class CreateDataItemsImport(project: Project, model: Model, args: Vector[PrismaArgs])                extends DatabaseMutaction
-case class DeleteDataItem(project: Project, path: Path, previousValues: PrismaNode) extends DatabaseMutaction {
-  val id = previousValues.data.idField.value
-}
-case class DeleteDataItemNested(project: Project, path: Path)                                    extends DatabaseMutaction
-case class DeleteDataItems(project: Project, model: Model, whereFilter: Option[Filter])          extends DatabaseMutaction
-case class DeleteManyRelationChecks(project: Project, model: Model, whereFilter: Option[Filter]) extends DatabaseMutaction
-case class DeleteRelationCheck(project: Project, path: Path)                                     extends DatabaseMutaction
-case class ResetDataMutaction(project: Project, tableNames: Vector[String])                      extends DatabaseMutaction
-case class NestedConnectRelation(project: Project, path: Path, topIsCreate: Boolean)             extends DatabaseMutaction
-case class NestedCreateRelation(project: Project, path: Path, topIsCreate: Boolean)              extends DatabaseMutaction
-case class NestedDisconnectRelation(project: Project, path: Path, topIsCreate: Boolean = false)  extends DatabaseMutaction
-case class UpdateDataItem(project: Project, path: Path, nonListArgs: PrismaArgs, listArgs: Vector[(String, ListGCValue)], previousValues: PrismaNode)
-    extends DatabaseMutaction
-    with UpdateWrapper {
-  val namesOfUpdatedFields: Vector[String] = nonListArgs.keys // TODO filter for fields which actually did change
-}
-
-sealed trait UpdateWrapper
-case class NestedUpdateDataItem(project: Project, path: Path, nonListArgs: PrismaArgs, listArgs: Vector[(String, ListGCValue)])
-    extends DatabaseMutaction
-    with UpdateWrapper
-case class UpdateDataItems(project: Project, model: Model, whereFilter: Option[Filter], updateArgs: PrismaArgs, listArgs: Vector[(String, ListGCValue)])
-    extends DatabaseMutaction
-case class UpsertDataItem(project: Project,
-                          createPath: Path,
-                          updatePath: Path,
-                          nonListCreateArgs: PrismaArgs,
-                          listCreateArgs: Vector[(String, ListGCValue)],
-                          nonListUpdateArgs: PrismaArgs,
-                          listUpdateArgs: Vector[(String, ListGCValue)],
-                          createMutactions: Vector[DatabaseMutaction],
-                          updateMutactions: Vector[DatabaseMutaction])
-    extends DatabaseMutaction
-case class UpsertDataItemIfInRelationWith(
+case class PublishSubscriptionEvent(
     project: Project,
-    createPath: Path,
-    updatePath: Path,
-    createListArgs: Vector[(String, ListGCValue)],
-    createNonListArgs: PrismaArgs,
-    updateListArgs: Vector[(String, ListGCValue)],
-    updateNonListArgs: PrismaArgs,
-    createMutactions: Vector[DatabaseMutaction],
-    updateMutactions: Vector[DatabaseMutaction]
-) extends DatabaseMutaction
-case class VerifyConnection(project: Project, path: Path)     extends DatabaseMutaction
-case class VerifyWhere(project: Project, where: NodeSelector) extends DatabaseMutaction
+    value: Map[String, Any],
+    mutationName: String
+) extends SideEffectMutaction
 
-case class PublishSubscriptionEvent(project: Project, value: Map[String, Any], mutationName: String) extends SideEffectMutaction
-case class ServerSideSubscription(
+case class ExecuteServerSideSubscription(
     project: Project,
     model: Model,
     mutationType: ModelMutationType,
     function: ServerSideSubscriptionFunction,
-    nodeId: Id, //todo
+    nodeId: IdGCValue,
     requestId: String,
     updatedFields: Option[List[String]] = None,
     previousValues: Option[PrismaNode] = None

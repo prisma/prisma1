@@ -13,26 +13,26 @@ trait DatabaseMutactionVerifier {
 object DatabaseMutactionVerifierImpl extends DatabaseMutactionVerifier {
   override def verify(mutactions: Vector[DatabaseMutaction]): Vector[UserFacingError] = {
     mutactions.flatMap {
-      case m: CreateDataItem                 => verify(m)
-      case m: UpdateDataItem                 => verify(m)
-      case m: UpsertDataItem                 => verify(m)
-      case m: UpsertDataItemIfInRelationWith => verify(m)
-      case _                                 => None
+      case m: TopLevelCreateNode => verify(m)
+      case m: TopLevelUpdateNode => verify(m)
+      case m: TopLevelUpsertNode => verify(m)
+      case m: NestedUpsertNode   => verify(m)
+      case _                     => None
     }
   }
 
-  def verify(mutaction: CreateDataItem): Option[ClientApiError] = InputValueValidation.validateDataItemInputs(mutaction.model, mutaction.nonListArgs)
-  def verify(mutaction: UpdateDataItem): Option[ClientApiError] = InputValueValidation.validateDataItemInputs(mutaction.path.lastModel, mutaction.nonListArgs)
+  def verify(mutaction: TopLevelCreateNode): Option[ClientApiError] = InputValueValidation.validateDataItemInputs(mutaction.model, mutaction.nonListArgs)
+  def verify(mutaction: TopLevelUpdateNode): Option[ClientApiError] = InputValueValidation.validateDataItemInputs(mutaction.where.model, mutaction.nonListArgs)
 
-  def verify(mutaction: UpsertDataItem): Iterable[ClientApiError] = {
-    val model      = mutaction.createPath.lastModel
-    val createArgs = mutaction.nonListCreateArgs
-    val updateArgs = mutaction.nonListUpdateArgs
+  def verify(mutaction: TopLevelUpsertNode): Iterable[ClientApiError] = {
+    val model      = mutaction.where.model
+    val createArgs = mutaction.create.nonListArgs
+    val updateArgs = mutaction.update.nonListArgs
     verifyUpsert(model, createArgs, updateArgs)
   }
 
-  def verify(mutaction: UpsertDataItemIfInRelationWith): Iterable[ClientApiError] = {
-    verifyUpsert(mutaction.createPath.lastModel, mutaction.createNonListArgs, mutaction.updateNonListArgs)
+  def verify(mutaction: NestedUpsertNode): Iterable[ClientApiError] = {
+    verifyUpsert(mutaction.relationField.relatedModel_!, mutaction.create.nonListArgs, mutaction.update.nonListArgs)
   }
 
   def verifyUpsert(model: Model, createArgs: PrismaArgs, updateArgs: PrismaArgs): Iterable[ClientApiError] = {

@@ -24,7 +24,7 @@ class ToOneDeferredResolver(dataResolver: DataResolver) {
 
     // fetch prismaNodes
     val futurePrismaNodes: Future[Vector[PrismaNodeWithParent]] =
-      dataResolver.resolveByRelationManyModels(relatedField, relatedModelIds, args).map(_.flatMap(_.nodes))
+      dataResolver.getRelatedNodes(relatedField, relatedModelIds, args).map(_.flatMap(_.nodes))
 
     // assign the prismaNode that was requested by each deferred
     orderedDeferreds.map {

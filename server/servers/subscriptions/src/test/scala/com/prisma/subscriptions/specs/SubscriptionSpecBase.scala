@@ -8,6 +8,7 @@ import com.prisma.akkautil.http.ServerExecutor
 import com.prisma.api.ApiTestDatabase
 import com.prisma.shared.models.{Project, ProjectId, ProjectWithClientId}
 import com.prisma.subscriptions._
+import com.prisma.utils.await.AwaitUtils
 import com.prisma.websocket.WebsocketServer
 import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach, Suite}
 import play.api.libs.json.{JsObject, JsValue, Json}
@@ -15,7 +16,14 @@ import play.api.libs.json.{JsObject, JsValue, Json}
 import scala.concurrent.duration._
 import scala.concurrent.{Await, ExecutionContextExecutor}
 
-trait SubscriptionSpecBase extends ConnectorAwareTest with TestFrameworkInterface with BeforeAndAfterEach with BeforeAndAfterAll with ScalatestRouteTest {
+trait SubscriptionSpecBase
+    extends ConnectorAwareTest
+    with AwaitUtils
+    with TestFrameworkInterface
+    with BeforeAndAfterEach
+    with BeforeAndAfterAll
+    with ScalatestRouteTest {
+
   this: Suite =>
   implicit val ec: ExecutionContextExecutor = system.dispatcher
   implicit val dependencies                 = new TestSubscriptionDependencies()
@@ -42,6 +50,7 @@ trait SubscriptionSpecBase extends ConnectorAwareTest with TestFrameworkInterfac
 
   override protected def beforeAll(): Unit = {
     super.beforeAll()
+    deployConnector.initialize().await()
 //    testDatabase.beforeAllPublic()
   }
 

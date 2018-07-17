@@ -7,51 +7,56 @@ import com.prisma.shared.models.IdType.Id
 import com.prisma.shared.models.Project
 
 object SubscriptionEvents {
-  def extractFromSqlMutactions(
+  def extractFromMutactionResults(
       project: Project,
       mutationId: Id,
-      mutactions: Vector[DatabaseMutaction]
-  )(implicit apiDependencies: ApiDependencies): Vector[PublishSubscriptionEvent] = {
-    mutactions.collect {
-      case x: UpdateDataItem => fromUpdateMutaction(project, mutationId, x)
-      case x: CreateDataItem => fromCreateMutaction(project, mutationId, x)
-      case x: DeleteDataItem => fromDeleteMutaction(project, mutationId, x)
+      mutactionResults: MutactionResults
+  ): Vector[PublishSubscriptionEvent] = {
+    mutactionResults.allResults.collect {
+      case result: CreateNodeResult => fromCreateResult(project, mutationId, result)
+      case result: UpdateNodeResult => fromUpdateResult(project, mutationId, result)
+      case result: DeleteNodeResult => fromDeleteResult(project, mutationId, result)
     }
   }
 
-  def fromDeleteMutaction(project: Project, mutationId: Id, mutaction: DeleteDataItem)(implicit apiDependencies: ApiDependencies): PublishSubscriptionEvent = {
-    val previousValues = mutaction.previousValues.data.filterValues(_ != NullGCValue).toMapStringAny + ("id" -> mutaction.id)
-
+  private def fromCreateResult(project: Project, mutationId: Id, result: CreateNodeResult): PublishSubscriptionEvent = {
+    val model = result.mutaction.model
     PublishSubscriptionEvent(
       project = project,
-      value = Map("nodeId" -> mutaction.id, "node" -> previousValues, "modelId" -> mutaction.path.root.model.name, "mutationType" -> "DeleteNode"),
-      mutationName = s"delete${mutaction.path.root.model.name}"
+      value = Map("nodeId" -> result.id, "modelId" -> model.name, "mutationType" -> "CreateNode"),
+      mutationName = s"create${model.name}"
     )
   }
 
-  def fromCreateMutaction(project: Project, mutationId: Id, mutaction: CreateDataItem)(implicit apiDependencies: ApiDependencies): PublishSubscriptionEvent = {
-    PublishSubscriptionEvent(
-      project = project,
-      value = Map("nodeId" -> mutaction.id, "modelId" -> mutaction.model.name, "mutationType" -> "CreateNode"),
-      mutationName = s"create${mutaction.model.name}"
-    )
-  }
-
-  def fromUpdateMutaction(project: Project, mutationId: Id, mutaction: UpdateDataItem)(implicit apiDependencies: ApiDependencies): PublishSubscriptionEvent = {
-    val previousValues: Map[String, Any] = mutaction.previousValues.data
+  private def fromUpdateResult(project: Project, mutationId: Id, result: UpdateNodeResult): PublishSubscriptionEvent = {
+    val previousValues: Map[String, Any] = result.previousValues.data
       .filterValues(_ != NullGCValue)
-      .toMapStringAny + ("id" -> mutaction.previousValues.id.value)
+      .toMapStringAny + ("id" -> result.previousValues.id.value)
+
+    val model = result.mutaction.model
 
     PublishSubscriptionEvent(
       project = project,
       value = Map(
         "nodeId"         -> previousValues("id"),
-        "changedFields"  -> mutaction.namesOfUpdatedFields.toList, // must be a List as Vector is printed verbatim
+        "changedFields"  -> result.namesOfUpdatedFields.toList, // must be a List as Vector is printed verbatim
         "previousValues" -> previousValues,
-        "modelId"        -> mutaction.path.lastModel.name,
+        "modelId"        -> model.name,
         "mutationType"   -> "UpdateNode"
       ),
-      mutationName = s"update${mutaction.path.lastModel.name}"
+      mutationName = s"update${model.name}"
     )
   }
+
+  private def fromDeleteResult(project: Project, mutationId: Id, result: DeleteNodeResult): PublishSubscriptionEvent = {
+    val previousValues = result.previousValues.data.filterValues(_ != NullGCValue).toMapStringAny + ("id" -> result.id)
+    val model          = result.mutaction.model
+
+    PublishSubscriptionEvent(
+      project = project,
+      value = Map("nodeId" -> result.id, "node" -> previousValues, "modelId" -> model.name, "mutationType" -> "DeleteNode"),
+      mutationName = s"delete${model.name}"
+    )
+  }
+
 }

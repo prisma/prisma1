@@ -2,7 +2,7 @@ package com.prisma.api
 
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
-import com.prisma.api.connector.DatabaseMutaction
+import com.prisma.api.connector.{DatabaseMutaction, TopLevelDatabaseMutaction}
 import com.prisma.deploy.connector._
 import com.prisma.shared.models.Manifestations.InlineRelationManifestation
 import com.prisma.shared.models._
@@ -44,8 +44,8 @@ case class ApiTestDatabase()(implicit dependencies: TestApiDependencies) extends
     runMutaction(mutaction)
   }
 
-  def runMutaction(mutaction: DeployMutaction)                     = dependencies.deployConnector.deployMutactionExecutor.execute(mutaction).await
-  def runDatabaseMutactionOnClientDb(mutaction: DatabaseMutaction) = dependencies.databaseMutactionExecutor.execute(Vector(mutaction)).await
+  def runMutaction(mutaction: DeployMutaction)                             = dependencies.deployConnector.deployMutactionExecutor.execute(mutaction).await
+  def runDatabaseMutactionOnClientDb(mutaction: TopLevelDatabaseMutaction) = dependencies.databaseMutactionExecutor.executeTransactionally(mutaction).await
 
   private def createModelTable(project: Project, model: Model) = {
     runMutaction(CreateModelTable(project.id, model))

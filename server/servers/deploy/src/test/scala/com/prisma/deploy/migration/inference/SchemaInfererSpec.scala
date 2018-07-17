@@ -4,11 +4,11 @@ import com.prisma.deploy.connector.InferredTables
 import com.prisma.deploy.migration.validation.SchemaSyntaxValidator
 import com.prisma.shared.models.Manifestations.{FieldManifestation, InlineRelationManifestation, ModelManifestation, RelationTableManifestation}
 import com.prisma.shared.models.{RelationSide, Schema}
-import com.prisma.shared.schema_dsl.SchemaDsl
+import com.prisma.shared.schema_dsl.{SchemaDsl, TestProject}
 import org.scalatest.{Matchers, WordSpec}
 
 class SchemaInfererSpec extends WordSpec with Matchers {
-  val emptyProject = SchemaDsl().buildProject()
+  val emptyProject = TestProject.empty
 
   "if a given relation does not exist yet, the inferer" should {
     "infer relations with the given name if a relation directive is provided on both sides" in {

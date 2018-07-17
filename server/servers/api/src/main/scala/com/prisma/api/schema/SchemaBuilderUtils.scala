@@ -60,11 +60,14 @@ case class FilterObjectTypeBuilder(model: Model, project: Project) {
     assert(!field.isScalar)
     val relatedModelInputType = FilterObjectTypeBuilder(field.relatedModel_!, project).filterObjectType
 
-    field.isList match {
-      case false =>
+    (field.isHidden, field.isList) match {
+      case (true, _) =>
+        List.empty
+
+      case (_, false) =>
         List(InputField(field.name, OptionInputType(relatedModelInputType)))
 
-      case true =>
+      case (_, true) =>
         FilterArguments
           .getFieldFilters(field)
           .map { filter =>

@@ -1,7 +1,6 @@
 import { Node, ImportData, RelationTuple, RelationNode } from './types'
 import {
   parse,
-  buildASTSchema,
   DocumentNode,
   ObjectTypeDefinitionNode,
   FieldDefinitionNode,

@@ -5,6 +5,7 @@ import com.prisma.api.ApiDependencies
 import com.prisma.api.connector.PrismaNode
 import com.prisma.api.resolver.DeferredResolverProvider
 import com.prisma.api.schema.UserFacingError
+import com.prisma.gc_values.IdGCValue
 import com.prisma.sangria.utils.ErrorHandler
 import com.prisma.shared.models.ModelMutationType.ModelMutationType
 import com.prisma.shared.models._
@@ -25,7 +26,7 @@ object SubscriptionExecutor {
       updatedFields: Option[List[String]],
       query: String,
       variables: JsValue,
-      nodeId: String,
+      nodeId: IdGCValue,
       requestId: String,
       operationName: Option[String],
       skipPermissionCheck: Boolean,
@@ -58,7 +59,7 @@ object SubscriptionExecutor {
       updatedFields: Option[List[String]],
       query: Document,
       variables: JsValue,
-      nodeId: String,
+      nodeId: IdGCValue,
       requestId: String,
       operationName: Option[String],
       skipPermissionCheck: Boolean,

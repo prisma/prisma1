@@ -142,10 +142,6 @@ if [ $ymlVersionBefore != $ymlVersion ] || [ $coreChanged ] || [ $introspectionC
   yarn add prisma-db-introspection@$introspectionVersion
   yarn install
 
-  # replace docker tag
-  sed -i.bak "s/CLUSTER_VERSION: [0-9]\{1,\}\.[0-9]\{1,\}/CLUSTER_VERSION: $nextDockerTag/g" src/commands/local/docker/docker-compose.yml
-  sed -i.bak "s/image: prismagraphql\/prisma:[0-9]\{1,\}\.[0-9]\{1,\}/image: prismagraphql\/prisma:$nextDockerTag/g" src/commands/local/docker/docker-compose.yml
-
   # new docker tag
   sed -i.bak "s/image: prismagraphql\/prisma:[0-9]\{1,\}\.[0-9]\{1,\}/image: prismagraphql\/prisma:$nextDockerTag/g" src/util.ts
 

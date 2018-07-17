@@ -164,6 +164,34 @@ class PaginationSpec extends FlatSpec with Matchers with ApiSpecBase {
     result2.pathAsJsArray("data.list.todos").value.map(_.pathAsString("title")) should equal(List("4", "5", "6"))
   }
 
+  "the pagination" should "work when starting from multiple nodes (== top level connection field)" in {
+    val result1 = server.query(
+      """
+        |{
+        |  lists {
+        |    name
+        |    todos(first: 3){
+        |      title
+        |    }
+        |  }
+        |}
+      """,
+      project
+    )
+
+    result1 should equal("""
+        |{"data":{"lists":[
+        |  {"name":"1","todos":[{"title":"1"},{"title":"2"},{"title":"3"}]},
+        |  {"name":"2","todos":[]},
+        |  {"name":"3","todos":[]},
+        |  {"name":"4","todos":[]},
+        |  {"name":"5","todos":[]},
+        |  {"name":"6","todos":[]},
+        |  {"name":"7","todos":[]}]
+        |}}
+      """.stripMargin.parseJson)
+  }
+
   "the cursor returned on the top level" should "work 2" in {
     val result1 = server.query(
       """

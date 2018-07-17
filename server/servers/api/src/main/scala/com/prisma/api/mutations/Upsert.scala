@@ -1,7 +1,7 @@
 package com.prisma.api.mutations
 
 import com.prisma.api.ApiDependencies
-import com.prisma.api.connector.{DataResolver, NodeSelector, Path}
+import com.prisma.api.connector._
 import com.prisma.api.mutactions.{DatabaseMutactions, NodeIds, ServerSideSubscriptions, SubscriptionEvents}
 import com.prisma.shared.models.{Model, Project}
 import com.prisma.util.coolArgs.CoolArgs
@@ -26,40 +26,36 @@ case class Upsert(
   val outerWhere: NodeSelector = coolArgs.extractNodeSelectorFromWhereField(model)
 
   val updateArgs: CoolArgs = coolArgs.updateArgumentsAsCoolArgs
-  val updatedWhere: NodeSelector = updateArgs.raw.get(outerWhere.field.name) match {
-    case Some(_) => updateArgs.extractNodeSelector(model)
-    case None    => outerWhere
-  }
+//  val updatedWhere: NodeSelector = updateArgs.raw.get(outerWhere.field.name) match {
+//    case Some(_) => updateArgs.extractNodeSelector(model)
+//    case None    => outerWhere
+//  }
 
-  val updatePath = Path.empty(outerWhere)
-  val createPath = Path.empty(NodeSelector.forIdGCValue(model, NodeIds.createNodeIdForModel(model)))
+//  val updatePath = Path.empty(outerWhere)
+//  val createPath = Path.empty(NodeSelector.forIdGCValue(model, NodeIds.createNodeIdForModel(model)))
 
-  override def prepareMutactions: Future[PreparedMutactions] = {
-    val sqlMutactions          = DatabaseMutactions(project).getMutactionsForUpsert(createPath, updatePath, coolArgs)
-    val subscriptionMutactions = SubscriptionEvents.extractFromSqlMutactions(project, mutationId, sqlMutactions)
-    val sssActions             = ServerSideSubscriptions.extractFromMutactions(project, sqlMutactions, requestId = "")
+  override def prepareMutactions: Future[TopLevelDatabaseMutaction] = {
+//    val sqlMutactions          = DatabaseMutactions(project).getMutactionsForUpsert(createPath, updatePath, coolArgs)
+//    val subscriptionMutactions = SubscriptionEvents.extractFromSqlMutactions(project, mutationId, sqlMutactions)
+//    val sssActions             = ServerSideSubscriptions.extractFromMutactions(project, sqlMutactions, requestId = "")
+//
+//    Future.successful {
+//      PreparedMutactions(
+//        databaseMutactions = sqlMutactions,
+//        sideEffectMutactions = sssActions ++ subscriptionMutactions
+//      )
+//    }
 
-    Future.successful {
-      PreparedMutactions(
-        databaseMutactions = sqlMutactions,
-        sideEffectMutactions = sssActions ++ subscriptionMutactions
-      )
-    }
+    Future.successful(DatabaseMutactions(project).getMutactionsForUpsert(outerWhere, coolArgs))
   }
 
   override def getReturnValue(results: MutactionResults): Future[ReturnValueResult] = {
-    val createItemFuture = dataResolver.resolveByUnique(createPath.lastCreateWhere_!)
-    val upsertItemFuture = dataResolver.resolveByUnique(updatedWhere)
-
-    for {
-      createItem <- createItemFuture
-      updateItem <- upsertItemFuture
-    } yield {
-      (createItem, updateItem) match {
-        case (Some(create), _) => ReturnValue(create)
-        case (_, Some(update)) => ReturnValue(update)
-        case (None, None)      => sys.error("Could not find an item after an Upsert. This should not be possible.")
-      }
+    val firstResult = results.allResults.collectFirst { case m: FurtherNestedMutactionResult => m }.get
+    val selector    = NodeSelector.forIdGCValue(model, firstResult.id)
+    val itemFuture  = dataResolver.getNodeByWhere(selector)
+    itemFuture.map {
+      case Some(prismaNode) => ReturnValue(prismaNode)
+      case None             => sys.error("Could not find an item after an Upsert. This should not be possible.")
     }
   }
 }

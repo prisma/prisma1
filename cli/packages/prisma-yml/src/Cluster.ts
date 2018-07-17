@@ -214,14 +214,14 @@ Original error: ${e.message}`,
     // if that doesn't work, try the old one
     try {
       const result = await this.request(`{
-        clusterInfo {
+        serverInfo {
           version
         }
       }`)
 
       const res = await result.json()
       const { data, errors } = res
-      return data.clusterInfo.version
+      return data.serverInfo.version
     } catch (e) {
       debug(e)
     }

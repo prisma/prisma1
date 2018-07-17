@@ -1,6 +1,6 @@
 package com.prisma.api.connector
 
-import com.prisma.gc_values.{GCValue, CuidGCValue}
+import com.prisma.gc_values.{CuidGCValue, GCValue, IdGCValue}
 import com.prisma.shared.models.IdType.Id
 import com.prisma.shared.models._
 
@@ -10,7 +10,7 @@ case class ResolverResult[T](
     nodes: Vector[T],
     hasNextPage: Boolean,
     hasPreviousPage: Boolean,
-    parentModelId: Option[CuidGCValue]
+    parentModelId: Option[IdGCValue]
 )
 
 object ResolverResult {
@@ -18,14 +18,14 @@ object ResolverResult {
     ResolverResult(nodes, hasNextPage = false, hasPreviousPage = false, parentModelId = None)
   }
 
-  def apply[T](queryArguments: Option[QueryArguments], vector: Vector[T], parentModelId: Option[CuidGCValue] = None): ResolverResult[T] = queryArguments match {
+  def apply[T](queryArguments: Option[QueryArguments], vector: Vector[T], parentModelId: Option[IdGCValue] = None): ResolverResult[T] = queryArguments match {
     case Some(args) => apply(args, vector, parentModelId)
     case None       => ResolverResult(vector, hasPreviousPage = false, hasNextPage = false, parentModelId = parentModelId)
   }
 
   // If order is inverted we have to reverse the returned data items. We do this in-mem to keep the sql query simple.
   // Also, remove excess items from limit + 1 queries and set page info (hasNext, hasPrevious).
-  def apply[T](queryArguments: QueryArguments, vector: Vector[T], parentModelId: Option[CuidGCValue]): ResolverResult[T] = {
+  def apply[T](queryArguments: QueryArguments, vector: Vector[T], parentModelId: Option[IdGCValue]): ResolverResult[T] = {
     val isReverseOrder = queryArguments.last.isDefined
     val items = isReverseOrder match {
       case true  => vector.reverse

@@ -19,7 +19,7 @@ class OneDeferredResolver(dataResolver: DataResolver) {
 
     // fetch prismaNodes
     val futurePrismaNodes =
-      dataResolver.batchResolveByUnique(headDeferred.model, headDeferred.where.field, deferreds.map(deferred => deferred.where.fieldGCValue))
+      dataResolver.getNodesByValuesForField(headDeferred.model, headDeferred.where.field, deferreds.map(deferred => deferred.where.fieldGCValue))
 
     // assign the prismaNode that was requested by each deferred
     orderedDeferreds.map {
