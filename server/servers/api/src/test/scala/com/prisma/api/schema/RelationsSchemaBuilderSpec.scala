@@ -1,6 +1,7 @@
 package com.prisma.api.schema
 
 import com.prisma.api.ApiSpecBase
+import com.prisma.shared.models.Field
 import com.prisma.shared.schema_dsl.SchemaDsl
 import com.prisma.util.GraphQLSchemaMatchers
 import org.scalatest.{FlatSpec, Matchers}
@@ -103,6 +104,26 @@ class RelationsSchemaBuilderSpec extends FlatSpec with Matchers with ApiSpecBase
         "update: TodoUpdateDataInput"
       )
     )
+  }
+
+  "a schema with optional back relations" should "not include any type related to magical back relations" in {
+    val project = SchemaDsl.fromString() {
+      s"""
+         |type List {
+         |  id: ID! @unique
+         |  title: String!
+         |  todos: [Todo!]!
+         |}
+         |type Todo {
+         |  id: ID! @unique
+         |  name: String
+         |}
+       """.stripMargin
+    }
+
+    val schema = SchemaRenderer.renderSchema(schemaBuilder(project))
+
+    schema should not(include(Field.magicalBackRelationPrefix))
   }
 
 }

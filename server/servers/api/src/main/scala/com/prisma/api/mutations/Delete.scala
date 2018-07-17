@@ -33,19 +33,19 @@ case class Delete(
   val coolArgs            = CoolArgs(args.raw)
   val where: NodeSelector = coolArgs.extractNodeSelectorFromWhereField(model)
 
-  override def prepareMutactions(): Future[PreparedMutactions] = {
+  override def prepareMutactions(): Future[TopLevelDatabaseMutaction] = {
     dataResolver
-      .resolveByUnique(where)
+      .getNodeByWhere(where)
       .andThen {
         case Success(x) => deletedItemOpt = x.map(dataItem => dataItem)
       }
       .map { _ =>
-        val itemToDelete           = deletedItemOpt.getOrElse(throw APIErrors.NodeNotFoundForWhereError(where))
-        val sqlMutactions          = DatabaseMutactions(project).getMutactionsForDelete(Path.empty(where), itemToDelete)
-        val subscriptionMutactions = SubscriptionEvents.extractFromSqlMutactions(project, mutationId, sqlMutactions)
-        val sssActions             = ServerSideSubscriptions.extractFromMutactions(project, sqlMutactions, requestId)
+        val itemToDelete = deletedItemOpt.getOrElse(throw APIErrors.NodeNotFoundForWhereError(where))
+        val mutaction    = DatabaseMutactions(project).getMutactionsForDelete(where, itemToDelete)
+//        val subscriptionMutactions = SubscriptionEvents.extractFromSqlMutactions(project, mutationId, mutaction)
+//        val sssActions             = ServerSideSubscriptions.extractFromMutactions(project, mutaction, requestId)
 
-        PreparedMutactions(databaseMutactions = sqlMutactions, sideEffectMutactions = subscriptionMutactions ++ sssActions)
+        mutaction
       }
   }
 

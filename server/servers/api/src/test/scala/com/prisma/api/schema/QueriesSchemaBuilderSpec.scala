@@ -20,7 +20,7 @@ class QueriesSchemaBuilderSpec extends WordSpec with Matchers with ApiSpecBase w
       schema should containQuery("todo(where: TodoWhereUniqueInput!): Todo")
     }
 
-    "not be present if there is no unique field" in {
+    "not be present if there is no visible unique field" in {
       val project = SchemaDsl.fromBuilder { schema =>
         val testSchema = schema.model("Todo")
         testSchema.fields.clear()

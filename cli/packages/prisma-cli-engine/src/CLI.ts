@@ -16,6 +16,7 @@ import * as os from 'os'
 import * as jwt from 'jsonwebtoken'
 import { getIsGlobal } from './utils/isGlobal'
 import { CommandReplacedError } from './errors/CommandReplacedError'
+import { CommandRemovedError } from './errors/CommandRemovedError'
 
 Raven.config(
   'https://1e57780fb0bb4b52938cbb3456268121:fc6a6c6fd8cd4bbf81e2cd5c7c814a49@sentry.io/271168',
@@ -175,10 +176,38 @@ export class CLI {
           throw new CommandReplacedError('push', 'deploy')
         } else if (id === 'seed') {
           throw new CommandReplacedError('seed', 'import')
-        } else if (id === 'cluster:info') {
-          throw new CommandReplacedError('cluster info', 'cluster list')
-        } else if (id === 'local:down') {
-          throw new CommandReplacedError('local down', 'local nuke')
+        } else if (
+          [
+            'cluster',
+            'cluster:info',
+            'cluster:add',
+            'cluster:remove',
+            'cluster:logs',
+            'cluster:info',
+          ].includes(id)
+        ) {
+          throw new CommandRemovedError(
+            '1.7',
+            'https://bit.ly/release-notes-1-7',
+            '',
+          )
+        } else if (
+          [
+            'local',
+            'local:up',
+            'local:down',
+            'local:start',
+            'local:stop',
+            'local:upgrade',
+            'local:nuke',
+            'local:ps',
+          ].includes(id)
+        ) {
+          throw new CommandRemovedError(
+            '1.7',
+            'https://bit.ly/release-notes-1-7',
+            'You can use docker-compose directly to manage the state of a local server.',
+          )
         } else {
           return new NotFound(out, this.config.argv).run()
         }

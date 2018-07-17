@@ -2,7 +2,7 @@ package com.prisma.api.schema
 
 import akka.actor.ActorSystem
 import com.prisma.api.ApiDependencies
-import com.prisma.api.mutations.{ClientMutationRunner, ResetData}
+import com.prisma.api.mutations.{ClientMutationRunner, Reset}
 import com.prisma.shared.models.{Model, Project}
 import com.prisma.subscriptions.schema.{SubscriptionQueryError, SubscriptionQueryValidator}
 import org.scalactic.{Bad, Good, Or}
@@ -47,7 +47,7 @@ case class PrivateSchemaBuilder(
       s"resetData",
       fieldType = OptionType(BooleanType),
       resolve = (ctx) => {
-        val mutation = ResetData(project = project, dataResolver = masterDataResolver)
+        val mutation = Reset(project = project, dataResolver = masterDataResolver)
         ClientMutationRunner.run(mutation, databaseMutactionExecutor, sideEffectMutactionExecutor, mutactionVerifier).map(_ => true)
       }
     )

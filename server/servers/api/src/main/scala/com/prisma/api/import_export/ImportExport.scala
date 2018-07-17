@@ -1,9 +1,11 @@
 package com.prisma.api.import_export
 
 import com.prisma.api.connector.{DataResolver, PrismaArgs}
-import com.prisma.gc_values.{ListGCValue, RootGCValue}
-import com.prisma.shared.models.{Model, Project, Relation}
+import com.prisma.gc_values._
+import com.prisma.shared.models.{Model, Project, Relation, ScalarField}
 import play.api.libs.json._
+
+import scala.util.Success
 
 package object ImportExport {
 
@@ -12,19 +14,19 @@ package object ImportExport {
   case class Cursor(table: Int, row: Int)                    //{"table":INT,"row":INT}
   case class ResultFormat(out: JsonBundle, cursor: Cursor, isFull: Boolean)
   case class JsonBundle(jsonElements: Vector[JsValue], size: Int)
-  case class ExportRelationSide(_typeName: String, id: String, fieldName: Option[String])
+  case class ExportRelationSide(_typeName: String, id: IdGCValue, fieldName: Option[String])
 
   // IMPORT
   case class ImportBundle(valueType: String, values: JsArray)
-  case class ImportIdentifier(typeName: String, id: String)
+  case class ImportIdentifier(typeName: String, id: IdGCValue)
   case class ImportRelationSide(identifier: ImportIdentifier, fieldName: Option[String])
-  case class ImportNode(id: String, model: Model, values: RootGCValue)
+  case class ImportNode(id: IdGCValue, model: Model, values: RootGCValue)
   case class ImportRelation(left: ImportRelationSide, right: ImportRelationSide)
-  case class ImportList(identifier: ImportIdentifier, tableName: String, values: ListGCValue)
+  case class ImportList(identifier: ImportIdentifier, field: ScalarField, values: ListGCValue)
 
   // TEMP STRUCTURES
   case class CreateDataItemImport(project: Project, model: Model, args: PrismaArgs)
-  case class CreateRelationRow(project: Project, relation: Relation, a: String, b: String)
+  case class CreateRelationRow(project: Project, relation: Relation, a: IdGCValue, b: IdGCValue)
   case class PushScalarListImport(project: Project, tableName: String, id: String, values: Vector[Any])
 
   sealed trait ExportInfo {
@@ -89,6 +91,32 @@ package object ImportExport {
         Json.obj("table" -> o.table, "row" -> o.row, "field" -> dummyValue, "array" -> dummyValue)
       }
     }
+    val idWrites = new Writes[IdGCValue] {
+      override def writes(o: IdGCValue): JsValue = o match {
+        case id: UuidGCValue => JsString(id.value.toString)
+        case id: CuidGCValue => JsString(id.value)
+        case id: IntGCValue  => JsNumber(id.value)
+      }
+    }
+    val idReads = new Reads[IdGCValue] {
+      override def reads(json: JsValue): JsResult[IdGCValue] = {
+        val result = json match {
+          case id: JsNumber => IntGCValue(id.value.toInt)
+          case id: JsString => stringToIdGcValue(id.value)
+          case x            => sys.error("An id should always be of type JsNumber or JsString. " + x)
+        }
+        JsSuccess(result)
+      }
+
+      private def stringToIdGcValue(str: String): IdGCValue = {
+        UuidGCValue.parse(str) match {
+          case Success(id) => id
+          case _           => CuidGCValue(str)
+        }
+      }
+    }
+
+    implicit val idFormat           = Format(idReads, idWrites)
     implicit val cursorFormat       = Format(cursorReads, cursorWrites)
     implicit val jsonBundle         = Json.format[JsonBundle]
     implicit val importBundle       = Json.format[ImportBundle]

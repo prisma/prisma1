@@ -1,6 +1,6 @@
 package com.prisma.api.connector
 
-import com.prisma.gc_values.{GCValue, CuidGCValue}
+import com.prisma.gc_values.{CuidGCValue, GCValue, IdGCValue}
 import com.prisma.shared.models._
 
 import scala.concurrent.Future
@@ -8,28 +8,27 @@ import scala.concurrent.Future
 trait DataResolver {
   def project: Project
 
-  def resolveByGlobalId(globalId: CuidGCValue): Future[Option[PrismaNode]]
+  def getNodeByGlobalId(globalId: CuidGCValue): Future[Option[PrismaNode]]
 
-  def resolveByModel(model: Model, args: Option[QueryArguments] = None): Future[ResolverResult[PrismaNode]]
+  def getNodeByWhere(where: NodeSelector): Future[Option[PrismaNode]]
 
-  def resolveByUnique(where: NodeSelector): Future[Option[PrismaNode]]
+  def getNodes(model: Model, args: Option[QueryArguments] = None): Future[ResolverResult[PrismaNode]]
+
+  def getNodesByValuesForField(model: Model, field: ScalarField, values: Vector[GCValue]): Future[Vector[PrismaNode]]
+
+  def getRelatedNodes(
+      fromField: RelationField,
+      fromNodeIds: Vector[IdGCValue],
+      args: Option[QueryArguments]
+  ): Future[Vector[ResolverResult[PrismaNodeWithParent]]]
+
+  def getScalarListValues(model: Model, listField: ScalarField, args: Option[QueryArguments] = None): Future[ResolverResult[ScalarListValues]]
+
+  def getScalarListValuesByNodeIds(model: Model, listField: ScalarField, nodeIds: Vector[IdGCValue]): Future[Vector[ScalarListValues]]
+
+  def getRelationNodes(relationTableName: String, args: Option[QueryArguments] = None): Future[ResolverResult[RelationNode]]
 
   def countByTable(table: String, whereFilter: Option[Filter] = None): Future[Int]
 
   def countByModel(model: Model, whereFilter: Option[Filter] = None): Future[Int] = countByTable(model.name, whereFilter)
-
-  def batchResolveByUnique(model: Model, field: ScalarField, values: Vector[GCValue]): Future[Vector[PrismaNode]]
-
-  def batchResolveScalarList(model: Model, listField: ScalarField, nodeIds: Vector[CuidGCValue]): Future[Vector[ScalarListValues]]
-
-  def resolveByRelationManyModels(
-      fromField: RelationField,
-      fromNodeIds: Vector[CuidGCValue],
-      args: Option[QueryArguments]
-  ): Future[Vector[ResolverResult[PrismaNodeWithParent]]]
-
-  def loadListRowsForExport(model: Model, listField: ScalarField, args: Option[QueryArguments] = None): Future[ResolverResult[ScalarListValues]]
-
-  def loadRelationRowsForExport(relationTableName: String, args: Option[QueryArguments] = None): Future[ResolverResult[RelationNode]]
-
 }

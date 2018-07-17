@@ -1,7 +1,6 @@
 package com.prisma.api.connector.mysql
 
-import com.prisma.api.connector.mysql.database.{Databases, MySqlDataResolver}
-import com.prisma.api.connector.mysql.impl.MySqlDatabaseMutactionExecutor
+import com.prisma.api.connector.jdbc.impl.{JdbcDataResolver, JdbcDatabaseMutactionExecutor}
 import com.prisma.api.connector.{ApiConnector, DatabaseMutactionExecutor, NodeQueryCapability}
 import com.prisma.config.DatabaseConfig
 import com.prisma.shared.models.{Project, ProjectIdEncoder}
@@ -9,7 +8,7 @@ import com.prisma.shared.models.{Project, ProjectIdEncoder}
 import scala.concurrent.{ExecutionContext, Future}
 
 case class MySqlApiConnector(config: DatabaseConfig)(implicit ec: ExecutionContext) extends ApiConnector {
-  lazy val databases = Databases.initialize(config)
+  lazy val databases = MySqlDatabasesFactory.initialize(config)
 
   override def initialize() = {
     databases
@@ -18,14 +17,14 @@ case class MySqlApiConnector(config: DatabaseConfig)(implicit ec: ExecutionConte
 
   override def shutdown() = {
     for {
-      _ <- databases.master.shutdown
-      _ <- databases.readOnly.shutdown
+      _ <- databases.primary.database.shutdown
+      _ <- databases.replica.database.shutdown
     } yield ()
   }
 
-  override def databaseMutactionExecutor: DatabaseMutactionExecutor = MySqlDatabaseMutactionExecutor(databases.master)
-  override def dataResolver(project: Project)                       = MySqlDataResolver(project, databases.readOnly)(ec)
-  override def masterDataResolver(project: Project)                 = MySqlDataResolver(project, databases.master)(ec)
+  override def databaseMutactionExecutor: DatabaseMutactionExecutor = JdbcDatabaseMutactionExecutor(databases.primary, createRelayIds = true)
+  override def dataResolver(project: Project)                       = JdbcDataResolver(project, databases.replica, None)(ec)
+  override def masterDataResolver(project: Project)                 = JdbcDataResolver(project, databases.primary, None)(ec)
 
   override def projectIdEncoder: ProjectIdEncoder = ProjectIdEncoder('@')
 

@@ -3,11 +3,10 @@ package com.prisma.deploy.specutils
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
 import com.prisma.ConnectorAwareTest
-import com.prisma.deploy.connector.postgresql.PostgresDeployConnector
+import com.prisma.deploy.connector.postgres.PostgresDeployConnector
 import com.prisma.shared.models.{Migration, Project, ProjectId}
 import com.prisma.utils.await.AwaitUtils
 import com.prisma.utils.json.PlayJsonExtensions
-import cool.graph.cuid.Cuid
 import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach, Suite}
 import play.api.libs.json.JsString
 
@@ -19,6 +18,7 @@ trait DeploySpecBase extends ConnectorAwareTest with BeforeAndAfterEach with Bef
   implicit lazy val materializer                             = ActorMaterializer()
   implicit lazy val testDependencies: TestDeployDependencies = TestDeployDependencies()
   implicit lazy val implicitSuite                            = self
+  implicit lazy val deployConnector                          = testDependencies.deployConnector
 
   override def prismaConfig = testDependencies.config
 
@@ -35,20 +35,20 @@ trait DeploySpecBase extends ConnectorAwareTest with BeforeAndAfterEach with Bef
 
   override protected def beforeAll(): Unit = {
     super.beforeAll()
-    testDependencies.deployConnector.initialize().await()
+    deployConnector.initialize().await()
   }
 
   override protected def afterAll(): Unit = {
     super.afterAll()
 //    projectsToCleanUp.foreach(internalDB.deleteProjectDatabase)
-    testDependencies.deployConnector.shutdown().await()
+    deployConnector.shutdown().await()
   }
 
   override protected def beforeEach(): Unit = {
     super.beforeEach()
 //    projectsToCleanUp.foreach(internalDB.deleteProjectDatabase)
 //    projectsToCleanUp.clear()
-    testDependencies.deployConnector.reset().await
+    deployConnector.reset().await
   }
 
   def setupProject(
@@ -84,8 +84,8 @@ trait PassiveDeploySpecBase extends DeploySpecBase { self: Suite =>
   }
 
   def setupProjectDatabaseForProject(projectId: String, sql: String): Unit = {
-    val connector = testDependencies.deployConnector.asInstanceOf[PostgresDeployConnector]
-    val session   = connector.internalDatabase.createSession()
+    val connector = deployConnector.asInstanceOf[PostgresDeployConnector]
+    val session   = connector.managementDatabase.createSession()
     val statement = session.createStatement()
     statement.execute(s"drop schema if exists $projectId cascade;")
 
