@@ -4,9 +4,10 @@ This example demonstrates usage of Prisma with [`graphql-yoga`](https://github.c
 
 ## Get started
 
-> **Note**: `prisma` should be installed as a global dependency, you can install this with `npm install -g prisma`
+### 1. Install the Prisma CLI
+The `prisma` cli is the core component of your development workflow. `prisma` should be installed as a global dependency, you can install this with `npm install -g prisma`
 
-### 1. Download the example & install dependencies
+### 2. Download the example & install dependencies
 
 Clone the Prisma monorepo and navigate to this directory or download _only_ this example with the following command:
 
@@ -21,7 +22,7 @@ cd application-server
 yarn install
 ```
 
-### 2. Deploy the Prisma database service
+### 3. Deploy the Prisma database service
 
 You can now [deploy](https://www.prisma.io/docs/reference/cli-command-reference/database-service/prisma-deploy-kee1iedaov) the Prisma service (note that this requires you to have [Docker](https://www.docker.com) installed on your machine - if that's not the case, follow the collapsed instructions below the code block):
 
@@ -39,7 +40,7 @@ To deploy your service to a demo server (rather than locally with Docker), pleas
 
 </details>
 
-### 3. Explore the API
+### 4. Explore the API
 
 This example seeds some data into the database for us to explore some queries and features of the data model. Please take a look at `seed.graphql` for reference. Feel free to add/remove more data via mutations.
 
