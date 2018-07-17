@@ -74,14 +74,14 @@ Note that these commands work closely in conjunction with `.graphqlconfig.yml` f
 ```yml
 projects:
   db:
-    schemaPath: generated-schema.graphql
+    schemaPath: src/generated/prisma.graphql
     extensions:
       endpoints:
         default: 'http://localhost:4466/hooks'
       prisma: prisma.yml
       codegen:
         input:
-          schema: generated-schema.graphql
+          schema: src/generated/prisma.graphql
         output:
           typings: generated-prisma.ts
         generator: typegen
