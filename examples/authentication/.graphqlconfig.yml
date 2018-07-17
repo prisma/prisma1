@@ -3,12 +3,12 @@ projects:
     schemaPath: src/schema/schema.graphql
     extensions:
       endpoints:
-        default: 'http://localhost:4000'
+        default: http://localhost:4000
   db:
     schemaPath: src/generated/generated-schema.graphql
     extensions:
       endpoints:
-        default: 'http://localhost:4466/authentication'
+        default: http://localhost:4466/authentication
       prisma: prisma.yml
       codegen:
         output:

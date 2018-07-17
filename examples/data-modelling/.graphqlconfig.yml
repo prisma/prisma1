@@ -3,4 +3,4 @@ projects:
     schemaPath: generated-schema.graphql
     extensions:
       endpoints:
-        default: 'http://localhost:4466/data-modelling'
+        default: http://localhost:4466/data-modelling
