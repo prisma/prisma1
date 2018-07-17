@@ -104,9 +104,8 @@ A _variable source_ can be either of the following two options:
 
 - A _recursive self-reference_ to another value inside the same service
 - An _environment variable_
-- An _option from the command line_
 
-> Note that you can only use variables in property **values** - not in property keys. So you can't use variables to generate dynamic logical IDs in the custom resources section for example.
+> **Note**: You can only use variables in property **values** - not in property keys. So you can't use variables to generate dynamic logical IDs in the custom resources section for example.
 
 ### Recursive self-reference
 
