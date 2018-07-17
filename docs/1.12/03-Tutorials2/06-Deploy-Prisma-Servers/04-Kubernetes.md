@@ -278,7 +278,7 @@ spec:
     spec:
       containers:
         - name: prisma
-          image: 'prismagraphql/prisma:1.11'
+          image: 'prismagraphql/prisma:1.12'
           ports:
             - name: prisma-4466
               containerPort: 4466
