@@ -3,10 +3,10 @@ projects:
     schemaPath: generated-schema.graphql
     extensions:
       endpoints:
-        default: 'http://localhost:4466/hooks'
+        default: http://localhost:4466/hooks
       prisma: prisma.yml
       codegen:
-        output: 
+        output:
           typings: generated-prisma.ts
         generator: typegen
         language: typescript
