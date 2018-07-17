@@ -10,13 +10,6 @@ const { resolvers } = require('./resolvers');
 
 const APP_SECRET = 'appsecret321';
 
-const getPrismaInstance = () => {
-  return new Prisma({
-    typeDefs: 'generated-schema.graphql',
-    endpoint: 'http://localhost:4466/graphql-authentication',
-  });
-};
-
 const mailer = new Email({
   message: {
     from: 'me@example.com',
@@ -32,7 +25,10 @@ const server = new GraphQLServer({
   middlewares: [permissions],
   context: req => ({
     ...req,
-    db: getPrismaInstance(),
+    db: new Prisma({
+      typeDefs: 'generated-schema.graphql',
+      endpoint: 'http://localhost:4466/graphql-authentication',
+    }),
     graphqlAuthentication: graphqlAuthenticationConfig({
       adapter: new GraphqlAuthenticationPrismaAdapter(),
       secret: APP_SECRET,
