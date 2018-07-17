@@ -491,7 +491,9 @@ export class Client {
     this.out.log(`Opening ${url} in the browser\n`)
 
     try {
-      await opn(url)
+      opn(url).catch(e => {
+        throw e
+      })
     } catch (e) {
       this.out.log(`Could not open url. Please open ${url} manually`)
     }

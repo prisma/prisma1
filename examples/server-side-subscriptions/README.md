@@ -87,7 +87,7 @@ Or you can open a Playground by navigating to [http://localhost:4466/server-side
 
 ```graphql
 mutation M {
- createUser(data: { name: "Graphcool" }) {
+ createUser(data: { name: "Prisma" }) {
   id
   name
  }
@@ -98,4 +98,9 @@ mutation M {
 
 http://ptsv2.com/t/prisma
 
-You will notice a dump of your request on this page.
+You will notice a dump of your request on this page of this shape:
+
+```json
+{"data":{"user":{"mutation":"CREATED","node":{"id":"cjjk6a0op000w0982jlzt4m55","name":"Prisma"}}}}
+
+```
