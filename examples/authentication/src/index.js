@@ -6,7 +6,7 @@ const { Context, getUserId, APP_SECRET } = require('./utils')
 
 const getPrismaInstance = () => {
   return new Prisma({
-    typeDefs: 'generated-schema.graphql',
+    typeDefs: 'src/generated/generated-schema.graphql',
     endpoint: 'http://localhost:4466/authentication',
   })
 }
@@ -56,7 +56,7 @@ const resolvers = {
 }
 
 const server = new GraphQLServer({
-  typeDefs: 'schema.graphql',
+  typeDefs: 'src/schema/schema.graphql',
   resolvers,
   context: req => ({
     ...req,

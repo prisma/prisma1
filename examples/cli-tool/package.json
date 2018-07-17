@@ -10,7 +10,7 @@
     "graphql": "0.13.2",
     "prisma-binding": "2.0.0"
   },
-  "devDependencies": {
-    "prisma": "1.8.3"
+  "scripts": {
+    "cli": "node src/index.js"
   }
 }

@@ -44,7 +44,7 @@ secret: mysecret123
 hooks:
   post-deploy:
     - graphql get-schema --project db
-    - graphql prepare
+    - graphql codegen
 
 # OPTIONAL
 # This service has one event subscription configured. The corresponding
