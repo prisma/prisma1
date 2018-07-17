@@ -4,13 +4,6 @@ const bcrypt = require('bcryptjs')
 const jwt = require('jsonwebtoken')
 const { Context, getUserId, APP_SECRET } = require('./utils')
 
-const getPrismaInstance = () => {
-  return new Prisma({
-    typeDefs: 'src/generated/generated-schema.graphql',
-    endpoint: 'http://localhost:4466/authentication',
-  })
-}
-
 const resolvers = {
   Query: {
     me: (parent, args, ctx, info) => {
@@ -60,7 +53,10 @@ const server = new GraphQLServer({
   resolvers,
   context: req => ({
     ...req,
-    db: getPrismaInstance(),
+    db: new Prisma({
+      typeDefs: 'src/generated/generated-schema.graphql',
+      endpoint: 'http://localhost:4466/authentication',
+    }),
   }),
 })
 server.start(() => console.log('Server is running on localhost:4000'))
