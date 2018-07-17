@@ -1,13 +1,6 @@
 const { GraphQLServer } = require('graphql-yoga')
 const { Prisma } = require('prisma-binding')
 
-const getPrismaInstance = () => {
-  return new Prisma({
-    typeDefs: 'src/generated/generated-schema.graphql',
-    endpoint: 'http://localhost:4466/application-server',
-  })
-}
-
 const resolvers = {
   Query: {
     drafts: (
@@ -42,7 +35,10 @@ const server = new GraphQLServer({
   typeDefs: 'src/schema/schema.graphql',
   resolvers,
   context: {
-    db: getPrismaInstance(),
+    db: new Prisma({
+      typeDefs: 'src/generated/prisma.graphql',
+      endpoint: 'http://localhost:4466/application-server',
+    }),
   },
 })
 server.start(() => console.log('Server is running on localhost:4000'))
