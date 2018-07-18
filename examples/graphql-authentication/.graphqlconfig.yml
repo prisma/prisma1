@@ -9,7 +9,7 @@ projects:
     extensions:
       endpoints:
         default: http://localhost:4466/graphql-authentication
-      prisma: prisma.yml
+      prisma: prisma/prisma.yml
       codegen:
         output:
           typings: src/generated/prisma.ts
