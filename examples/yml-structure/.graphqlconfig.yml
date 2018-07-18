@@ -4,7 +4,7 @@ projects:
     extensions:
       endpoints:
         default: http://localhost:4466/yml-structure
-      prisma: prisma.yml
+      prisma: prisma/prisma.yml
       prepare-binding:
         output: src/generated/prisma.ts
         generator: prisma-ts
