@@ -17,7 +17,7 @@ const mailer = new Email({
 });
 
 const server = new GraphQLServer({
-  typeDefs: 'schema.graphql',
+  typeDefs: 'src/schema/schema.graphql',
   resolvers,
   resolverValidationOptions: {
     requireResolversForResolveType: false,
@@ -26,7 +26,7 @@ const server = new GraphQLServer({
   context: req => ({
     ...req,
     db: new Prisma({
-      typeDefs: 'generated-schema.graphql',
+      typeDefs: 'src/generated/prisma.graphql',
       endpoint: 'http://localhost:4466/graphql-authentication',
     }),
     graphqlAuthentication: graphqlAuthenticationConfig({
