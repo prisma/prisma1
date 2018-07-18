@@ -1,4 +1,4 @@
-# import Post, User, Role, UserRole AvailableRoles from "./generated/prisma.graphql"
+# import Post, User, Role, UserRole AvailableRoles from "../generated/prisma.graphql"
 
 type Query {
   posts: [Post!]!
