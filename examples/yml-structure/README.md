@@ -141,7 +141,7 @@ hooks:
   post-deploy:
     - echo "Deployment finished"
     - graphql get-schema --project db
-    - graphql prepare
+    - graphql codegen
 ```
 
 Please refer to this detailed [example on `hooks`](../hooks).
@@ -150,14 +150,14 @@ Please refer to this detailed [example on `hooks`](../hooks).
 
 * Getting the latest schema
 
-* Running `graphql prepare` to generate TS bindings
+* Running `graphql codegen` to generate TS bindings
 
 Note that these commands work closely in conjunction with `.graphqlconfig.yml` file that looks like this and directs the output of generate schema and typescript bindings.
 
 ```yml
 projects:
   db:
-    schemaPath: generated-schema.graphql
+    schemaPath: src/generated/prisma.graphql
     extensions:
       endpoints:
         default: 'http://localhost:4466/yml-structure'
