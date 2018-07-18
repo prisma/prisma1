@@ -84,7 +84,7 @@ projects:
         input:
           schema: src/generated/prisma.graphql
         output:
-          typings: generated-prisma.ts
+          typings: src/generated/prisma.ts
         generator: typegen
         language: typescript
 ```
