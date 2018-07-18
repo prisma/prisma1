@@ -1,6 +1,6 @@
 projects:
   db:
-    schemaPath: generated-schema.graphql
+    schemaPath: src/generated/prisma.graphql
     extensions:
       endpoints:
-        default: 'http://localhost:4466/postgres'
+        default: http://localhost:4466/postgres
