@@ -163,7 +163,7 @@ projects:
         default: 'http://localhost:4466/yml-structure'
       prisma: prisma.yml
       prepare-binding:
-        output: generated-prisma.ts
+        output: src/generated/prisma.ts
         generator: prisma-ts
 ```
 

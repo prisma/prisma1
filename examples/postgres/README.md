@@ -4,9 +4,10 @@ This example demonstrates how to use Prisma with Postgres.
 
 ## Get started
 
-> **Note**: `prisma` is listed as a _development dependency_ and _script_ in this project's [`package.json`](./package.json). This means you can invoke the Prisma CLI without having it globally installed on your machine (by prefixing it with `yarn`), e.g. `yarn prisma deploy` or `yarn prisma playground`. If you have the Prisma CLI installed globally (which you can do with `npm install -g prisma`), you can omit the `yarn` prefix.
+### 1. Install the Prisma CLI
+The `prisma` cli is the core component of your development workflow. `prisma` should be installed as a global dependency, you can install this with `npm install -g prisma`
 
-### 1. Download the example & install dependencies
+### 2. Download the example & install dependencies
 
 Clone the Prisma monorepo and navigate to this directory or download _only_ this example with the following command:
 
@@ -21,12 +22,16 @@ cd postgres
 yarn install
 ```
 
-### 2. Deploy the Prisma database service
+### 3. Deploy the Prisma database service
 
 You can now [deploy](https://www.prisma.io/docs/reference/cli-command-reference/database-service/prisma-deploy-kee1iedaov) the Prisma service (note that this requires you to have [Docker](https://www.docker.com) installed on your machine - if that's not the case, follow the collapsed instructions below the code block):
 
 ```sh
-yarn prisma deploy
+# Ensure docker is running the server's dependencies
+docker-compose up
+# Deploy the server
+cd prisma
+prisma deploy
 ```
 
 <details>
@@ -36,7 +41,7 @@ To deploy your service to a demo server (rather than locally with Docker), pleas
 
 </details>
 
-### 3. Explore the Postgres
+### 4. Explore the Postgres
 
 Running the command `docker ps` will show you an image running for Postgres running at port 5432 and an image running the Prisma which connects to this external Postgres running at port 5432.
 

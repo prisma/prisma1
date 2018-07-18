@@ -12,6 +12,6 @@ projects:
       prisma: prisma.yml
       codegen:
         output:
-          typings: src/generated/generated-prisma.ts
+          typings: src/generated/prisma.ts
         generator: typegen
         language: typescript
