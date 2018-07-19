@@ -331,13 +331,98 @@ class ExtendedRelationFilterSpec extends FlatSpec with Matchers with ApiSpecBase
       """{"data":{"artists":[{"Name":"CompleteArtist"},{"Name":"ArtistWithoutAlbums"},{"Name":"CompleteArtist2"},{"Name":"CompleteArtistWith2Albums"}]}}""")
   }
 
-  // several relationfilters on one level without explicit AND
+  "2 level m-relation filters that have subfilters that are connected with an implicit AND" should "work" in {
 
-  //logical filters with one and several nested filters
+    server
+      .query(query = """{albums(where:{Tracks_some:{MediaType: {Name: "MediaType1"},Genre: {Name: "Genre1"}}}){Title}}""", project = project)
+      .toString should be("""{"data":{"albums":[{"Title":"Album1"},{"Title":"Album4"},{"Title":"Album5"}]}}""")
 
-  // AND
-  // OR
-  // NOT
+    server
+      .query(query = """{albums(where:{Tracks_every:{MediaType: {Name: "MediaType1"},Genre: {Name: "Genre1"}}}){Title}}""", project = project)
+      .toString should be("""{"data":{"albums":[{"Title":"Album1"},{"Title":"TheAlbumWithoutTracks"},{"Title":"Album4"}]}}""")
+
+  }
+
+  "2 level m-relation filters that have subfilters that are connected with an explicit AND" should "work" in {
+
+    server
+      .query(query = """{albums(where:{Tracks_some:{AND:[{MediaType: {Name: "MediaType1"}},{Genre: {Name: "Genre1"}}]}}){Title}}""", project = project)
+      .toString should be("""{"data":{"albums":[{"Title":"Album1"},{"Title":"Album4"},{"Title":"Album5"}]}}""")
+
+    server
+      .query(query = """{albums(where:{Tracks_every:{AND:[{MediaType: {Name: "MediaType1"}},{Genre: {Name: "Genre1"}}]}}){Title}}""", project = project)
+      .toString should be("""{"data":{"albums":[{"Title":"Album1"},{"Title":"TheAlbumWithoutTracks"},{"Title":"Album4"}]}}""")
+
+    server
+      .query(query = """{albums(where:{Tracks_some:{AND:[{MediaType: {Name: "MediaType2"}}]}}){Title}}""", project = project)
+      .toString should be("""{"data":{"albums":[{"Title":"Album3"}]}}""")
+
+    server
+      .query(query = """{albums(where:{Tracks_every:{AND:[{MediaType: {Name: "MediaType2"}}]}}){Title}}""", project = project)
+      .toString should be("""{"data":{"albums":[{"Title":"TheAlbumWithoutTracks"}]}}""")
+
+//    server
+//      .query(query = """{albums(where:{Tracks_some:{AND:[]}}){Title}}""", project = project)
+//      .toString should be("""{"data":{"albums":[{"Title":"Album3"}]}}""")
+//
+//    server
+//      .query(query = """{albums(where:{Tracks_every:{AND:[]}}){Title}}""", project = project)
+//      .toString should be("""{"data":{"albums":[{"Title":"TheAlbumWithoutTracks"}]}}""")
+  }
+
+  "2 level m-relation filters that have subfilters that are connected with an explicit OR" should "work" in {
+
+    server
+      .query(query = """{albums(where:{Tracks_some:{OR:[{MediaType: {Name: "MediaType1"}},{Genre: {Name: "Genre2"}}]}}){Title}}""", project = project)
+      .toString should be("""{"data":{"albums":[{"Title":"Album1"},{"Title":"Album3"},{"Title":"Album4"},{"Title":"Album5"}]}}""")
+
+    server
+      .query(query = """{albums(where:{Tracks_every:{OR:[{MediaType: {Name: "MediaType1"}},{Genre: {Name: "Genre2"}}]}}){Title}}""", project = project)
+      .toString should be("""{"data":{"albums":[{"Title":"Album1"},{"Title":"TheAlbumWithoutTracks"},{"Title":"Album4"},{"Title":"Album5"}]}}""")
+
+    server
+      .query(query = """{albums(where:{Tracks_some:{OR:[{MediaType: {Name: "MediaType2"}}]}}){Title}}""", project = project)
+      .toString should be("""{"data":{"albums":[{"Title":"Album3"}]}}""")
+
+    server
+      .query(query = """{albums(where:{Tracks_every:{OR:[{MediaType: {Name: "MediaType2"}}]}}){Title}}""", project = project)
+      .toString should be("""{"data":{"albums":[{"Title":"TheAlbumWithoutTracks"}]}}""")
+
+//    server
+//      .query(query = """{albums(where:{Tracks_some:{AND:[]}}){Title}}""", project = project)
+//      .toString should be("""{"data":{"albums":[{"Title":"Album3"}]}}""")
+//
+//    server
+//      .query(query = """{albums(where:{Tracks_every:{AND:[]}}){Title}}""", project = project)
+//      .toString should be("""{"data":{"albums":[{"Title":"TheAlbumWithoutTracks"}]}}""")
+  }
+
+  "2 level m-relation filters that have subfilters that are connected with an explicit NOT" should "work" in {
+
+    server
+      .query(query = """{albums(where:{Tracks_some:{NOT:[{MediaType: {Name: "MediaType1"}},{Genre: {Name: "Genre1"}}]}}){Title}}""", project = project)
+      .toString should be("""{"data":{"albums":[{"Title":"Album3"},{"Title":"Album5"}]}}""")
+
+    server
+      .query(query = """{albums(where:{Tracks_every:{NOT:[{MediaType: {Name: "MediaType1"}},{Genre: {Name: "Genre1"}}]}}){Title}}""", project = project)
+      .toString should be("""{"data":{"albums":[{"Title":"TheAlbumWithoutTracks"},{"Title":"Album3"}]}}""")
+
+    server
+      .query(query = """{albums(where:{Tracks_some:{NOT:[{MediaType: {Name: "MediaType2"}}]}}){Title}}""", project = project)
+      .toString should be("""{"data":{"albums":[{"Title":"Album1"},{"Title":"Album3"},{"Title":"Album4"},{"Title":"Album5"}]}}""")
+
+    server
+      .query(query = """{albums(where:{Tracks_every:{NOT:[{MediaType: {Name: "MediaType2"}}]}}){Title}}""", project = project)
+      .toString should be("""{"data":{"albums":[{"Title":"Album1"},{"Title":"TheAlbumWithoutTracks"},{"Title":"Album4"},{"Title":"Album5"}]}}""")
+
+//    server
+//      .query(query = """{albums(where:{Tracks_some:{NOT:[]}}){Title}}""", project = project)
+//      .toString should be("""{"data":{"albums":[{"Title":"Album3"}]}}""")
+//
+//    server
+//      .query(query = """{albums(where:{Tracks_every:{NOT:[]}}){Title}}""", project = project)
+//      .toString should be("""{"data":{"albums":[{"Title":"TheAlbumWithoutTracks"}]}}""")
+  }
 
   //three levels
 
