@@ -45,9 +45,9 @@ trait FilterConditionBuilder extends BuilderBase {
       case OrFilter(filters)        => nonEmptyConditions(filters).reduceLeft(_ or _)
       case NotFilter(filters)       => filters.map(buildConditionForFilter(_, alias)).foldLeft(and(trueCondition()))(_ andNot _)
       case NodeFilter(filters)      => buildConditionForFilter(OrFilter(filters), alias)
-      case x: RelationFilter        => relationFilterStatementWithInQueriesAndSkippingTables(alias, x, relField, invert)
+//      case x: RelationFilter        => relationFilterStatementWithInQueriesAndSkippingTables(alias, x, relField, invert)
 //      case x: RelationFilter => relationFilterStatementWithInQueries(alias, x)
-//      case x: RelationFilter => relationFilterStatementUnoptimized(alias, x)
+      case x: RelationFilter => relationFilterStatementUnoptimized(alias, x)
       //--------------------------------ANCHORS------------------------------------
       case PreComputedSubscriptionFilter(value)                  => if (value) trueCondition() else falseCondition()
       case ScalarFilter(scalarField, Contains(_))                => fieldFrom(scalarField).contains(stringDummy)
@@ -121,6 +121,7 @@ trait FilterConditionBuilder extends BuilderBase {
     // this skips intermediate table when there is no condition on it
     // artists(where:{albums_some:{tracks_some:{condition}}})
     // albums(where: {Tracks_some:{ MediaType:{Name_starts_with:""}, Genre:{Name_starts_with:""}}})    Todo also on cases where there are several filters below
+    // this will be an andFilter around the two nested ones
 
     val relationField = relationFilter.field
     val relation      = relationField.relation
