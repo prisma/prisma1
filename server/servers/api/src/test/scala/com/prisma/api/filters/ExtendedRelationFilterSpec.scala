@@ -1,5 +1,6 @@
 package com.prisma.api.filters
 
+import com.prisma.{IgnoreMySql, IgnorePostgres}
 import com.prisma.api.ApiSpecBase
 import com.prisma.shared.schema_dsl.SchemaDsl
 import org.scalatest._
@@ -220,15 +221,38 @@ class ExtendedRelationFilterSpec extends FlatSpec with Matchers with ApiSpecBase
       """{"data":{"albums":[{"AlbumId":1}]}}""")
   }
 
-  "1 level m-relation filter" should "work for _every, _some and _none" in {
+  // MySql is case insensitive and Postgres case sensitive
+
+  "MySql 1 level m-relation filter" should "work for _every, _some and _none" taggedAs (IgnorePostgres) in {
 
     server.query(query = """{artists(where:{Albums_some:{Title_starts_with: "album"}}){Name}}""", project = project).toString should be(
+      """{"data":{"artists":[{"Name":"CompleteArtist"},{"Name":"CompleteArtist2"},{"Name":"CompleteArtistWith2Albums"}]}}""")
+
+    server.query(query = """{artists(where:{Albums_some:{Title_starts_with: "t"}}){Name}}""", project = project).toString should be(
+      """{"data":{"artists":[{"Name":"ArtistWithOneAlbumWithoutTracks"}]}}""")
+
+    server.query(query = """{artists(where:{Albums_every:{Title_contains: "album"}}){Name}}""", project = project).toString should be(
+      """{"data":{"artists":[{"Name":"CompleteArtist"},{"Name":"ArtistWithoutAlbums"},{"Name":"ArtistWithOneAlbumWithoutTracks"},{"Name":"CompleteArtist2"},{"Name":"CompleteArtistWith2Albums"}]}}""")
+
+    server.query(query = """{artists(where:{Albums_every:{Title_not_contains: "the"}}){Name}}""", project = project).toString should be(
+      """{"data":{"artists":[{"Name":"CompleteArtist"},{"Name":"ArtistWithoutAlbums"},{"Name":"CompleteArtist2"},{"Name":"CompleteArtistWith2Albums"}]}}""")
+
+    server.query(query = """{artists(where:{Albums_none:{Title_contains: "the"}}){Name}}""", project = project).toString should be(
+      """{"data":{"artists":[{"Name":"CompleteArtist"},{"Name":"ArtistWithoutAlbums"},{"Name":"CompleteArtist2"},{"Name":"CompleteArtistWith2Albums"}]}}""")
+
+    server.query(query = """{artists(where:{Albums_none:{Title_contains: "album"}}){Name}}""", project = project).toString should be(
+      """{"data":{"artists":[{"Name":"ArtistWithoutAlbums"}]}}""")
+  }
+
+  "PostGres 1 level m-relation filter" should "work for _every, _some and _none" taggedAs (IgnoreMySql) in {
+
+    server.query(query = """{artists(where:{Albums_some:{Title_starts_with: "Album"}}){Name}}""", project = project).toString should be(
       """{"data":{"artists":[{"Name":"CompleteArtist"},{"Name":"CompleteArtist2"},{"Name":"CompleteArtistWith2Albums"}]}}""")
 
     server.query(query = """{artists(where:{Albums_some:{Title_starts_with: "T"}}){Name}}""", project = project).toString should be(
       """{"data":{"artists":[{"Name":"ArtistWithOneAlbumWithoutTracks"}]}}""")
 
-    server.query(query = """{artists(where:{Albums_every:{Title_contains: "album"}}){Name}}""", project = project).toString should be(
+    server.query(query = """{artists(where:{Albums_every:{Title_contains: "Album"}}){Name}}""", project = project).toString should be(
       """{"data":{"artists":[{"Name":"CompleteArtist"},{"Name":"ArtistWithoutAlbums"},{"Name":"ArtistWithOneAlbumWithoutTracks"},{"Name":"CompleteArtist2"},{"Name":"CompleteArtistWith2Albums"}]}}""")
 
     server.query(query = """{artists(where:{Albums_every:{Title_not_contains: "The"}}){Name}}""", project = project).toString should be(
@@ -237,7 +261,7 @@ class ExtendedRelationFilterSpec extends FlatSpec with Matchers with ApiSpecBase
     server.query(query = """{artists(where:{Albums_none:{Title_contains: "The"}}){Name}}""", project = project).toString should be(
       """{"data":{"artists":[{"Name":"CompleteArtist"},{"Name":"ArtistWithoutAlbums"},{"Name":"CompleteArtist2"},{"Name":"CompleteArtistWith2Albums"}]}}""")
 
-    server.query(query = """{artists(where:{Albums_none:{Title_contains: "album"}}){Name}}""", project = project).toString should be(
+    server.query(query = """{artists(where:{Albums_none:{Title_contains: "Album"}}){Name}}""", project = project).toString should be(
       """{"data":{"artists":[{"Name":"ArtistWithoutAlbums"}]}}""")
   }
 
