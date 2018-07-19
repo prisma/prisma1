@@ -81,23 +81,18 @@ trait NodeActions extends BuilderBase with FilterConditionBuilder with ScalarLis
 
   private def addUpdatedAt(model: Model, updateValues: RootGCValue): RootGCValue = {
     model.updatedAtField match {
-      case Some(updatedAtField) =>
-        val today              = new Date()
-        val exactlyNow         = new DateTime(today).withZone(DateTimeZone.UTC)
-        val currentDateGCValue = DateTimeGCValue(exactlyNow)
-        updateValues.add(updatedAtField.name, currentDateGCValue)
-      case None =>
-        updateValues
+      case Some(updatedAtField) => updateValues.add(updatedAtField.name, currentDateTimeGCValue)
+      case None                 => updateValues
     }
   }
 
   def updateNodes(model: Model, args: PrismaArgs, whereFilter: Option[Filter]): DBIO[_] = {
-    val argsMap = args.raw.asRoot.map
-    if (argsMap.nonEmpty) {
+    if (args.raw.asRoot.map.nonEmpty) {
+      val actualArgs   = addUpdatedAt(model, args.raw.asRoot).map
       val aliasedTable = modelTable(model).as(topLevelAlias)
       val condition    = buildConditionForFilter(whereFilter)
 
-      val columns = argsMap.map { case (k, _) => model.getFieldByName_!(k).dbName }.toList
+      val columns = actualArgs.map { case (k, _) => model.getFieldByName_!(k).dbName }.toList
       val query = sql
         .update(aliasedTable)
         .setColumnsWithPlaceHolders(columns)
@@ -105,7 +100,7 @@ trait NodeActions extends BuilderBase with FilterConditionBuilder with ScalarLis
 
       updateToDBIO(query)(
         setParams = pp => {
-          argsMap.foreach { case (_, v) => pp.setGcValue(v) }
+          actualArgs.foreach { case (_, v) => pp.setGcValue(v) }
           whereFilter.foreach(filter => SetParams.setFilter(pp, filter))
         }
       )
@@ -116,13 +111,8 @@ trait NodeActions extends BuilderBase with FilterConditionBuilder with ScalarLis
 
   def deleteNodeById(model: Model, id: IdGCValue)(implicit ec: ExecutionContext) = deleteNodes(model, Vector(id))
 
-  //Todo check how much of a performance gain it would be to chain these using andThen instead of the for comprehension
   def deleteNodes(model: Model, ids: Vector[IdGCValue])(implicit ec: ExecutionContext): DBIO[Unit] = {
-    for {
-      _ <- deleteScalarListValuesByNodeIds(model, ids)
-      _ <- deleteRelayIds(ids)
-      _ <- deleteNodesByIds(model, ids)
-    } yield ()
+    DBIO.seq(deleteScalarListValuesByNodeIds(model, ids), deleteRelayIds(ids), deleteNodesByIds(model, ids))
   }
 
   private def deleteNodesByIds(model: Model, ids: Vector[IdGCValue]): DBIO[Unit] = {

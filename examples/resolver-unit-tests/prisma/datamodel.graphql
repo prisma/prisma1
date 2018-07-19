@@ -1,0 +1,11 @@
+type Post {
+  id: ID! @unique
+  title: String!
+  content: String
+  status: PostStatus!
+}
+
+enum PostStatus {
+  DRAFT
+  PUBLISH
+}
