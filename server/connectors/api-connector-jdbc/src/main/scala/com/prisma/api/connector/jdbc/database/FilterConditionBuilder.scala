@@ -49,7 +49,8 @@ trait FilterConditionBuilder extends BuilderBase {
 //      case x: RelationFilter => relationFilterStatementWithInQueries(alias, x)
 //      case x: RelationFilter => relationFilterStatementUnoptimized(alias, x)
       //--------------------------------ANCHORS------------------------------------
-      case PreComputedSubscriptionFilter(value)                  => if (value) trueCondition() else falseCondition()
+      case _: TrueFilter                                         => trueCondition()
+      case _: FalseFilter                                        => falseCondition()
       case ScalarFilter(scalarField, Contains(_))                => fieldFrom(scalarField).contains(stringDummy)
       case ScalarFilter(scalarField, NotContains(_))             => fieldFrom(scalarField).notContains(stringDummy)
       case ScalarFilter(scalarField, StartsWith(_))              => fieldFrom(scalarField).startsWith(stringDummy)

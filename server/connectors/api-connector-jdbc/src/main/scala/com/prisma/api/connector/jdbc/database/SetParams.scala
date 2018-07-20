@@ -62,7 +62,8 @@ object SetParams extends SlickExtensions with LimitClauseBuilder {
       case NodeFilter(filters)                => setFilter(pp, OrFilter(filters))
       case RelationFilter(_, nestedFilter, _) => setFilter(pp, nestedFilter)
       //--------------------------------ANCHORS------------------------------------
-      case PreComputedSubscriptionFilter(_)                     => // NOOP
+      case _: TrueFilter                                        => // NOOP
+      case _: FalseFilter                                       => // NOOP
       case ScalarFilter(_, Contains(StringGCValue(value)))      => pp.setString(value)
       case ScalarFilter(_, NotContains(StringGCValue(value)))   => pp.setString(value)
       case ScalarFilter(_, StartsWith(StringGCValue(value)))    => pp.setString(value)
