@@ -2,7 +2,7 @@ package com.prisma.api.connector.jdbc.database
 
 import com.prisma.api.connector._
 import com.prisma.gc_values.{GCValue, IdGCValue}
-import com.prisma.shared.models.{Model, RelationField, ScalarField, Schema}
+import com.prisma.shared.models.{Model, RelationField, ScalarField}
 import org.jooq.{Record, SelectForUpdateStep}
 import slick.jdbc.PositionedParameters
 
