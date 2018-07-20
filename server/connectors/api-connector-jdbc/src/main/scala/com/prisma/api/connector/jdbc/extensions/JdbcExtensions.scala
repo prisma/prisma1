@@ -12,11 +12,13 @@ import play.api.libs.json.Json
 trait JdbcExtensions {
   import JdbcExtensionsValueClasses._
 
-  def currentSqlTimestampUTC: Timestamp = {
-    val today      = new Date()
-    val exactlyNow = new DateTime(today).withZone(DateTimeZone.UTC)
-    jodaDateTimeToSqlTimestampUTC(exactlyNow)
+  def exactlyNow = {
+    val today = new Date()
+    new DateTime(today).withZone(DateTimeZone.UTC)
   }
+
+  def currentSqlTimestampUTC: Timestamp = jodaDateTimeToSqlTimestampUTC(exactlyNow)
+  def currentDateTimeGCValue            = DateTimeGCValue(exactlyNow)
 
   implicit def preparedStatementExtensions(ps: PreparedStatement): PreparedStatementExtensions = new PreparedStatementExtensions(ps)
   implicit def resultSetExtensions(resultSet: ResultSet): ResultSetExtensions                  = new ResultSetExtensions(resultSet)

@@ -6,9 +6,5 @@
   "main": "index.js",
   "repository": "https://github.com/prismagraphql/prisma/tree/master/examples",
   "author": "Prisma",
-  "license": "Apache 2",
-
-  "devDependencies": {
-    "prisma": "1.8.3"
-  }
+  "license": "Apache 2"
 }

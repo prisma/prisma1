@@ -30,7 +30,7 @@ class DeadlockSpec extends FlatSpec with Matchers with ApiSpecBase with AwaitUti
              |    a
              |  }
              |}
-      """.stripMargin,
+      """,
           project
         )
       )
@@ -57,7 +57,7 @@ class DeadlockSpec extends FlatSpec with Matchers with ApiSpecBase with AwaitUti
         |    id
         |    comments { id }
         |  }
-        |}""".stripMargin,
+        |}""",
       project
     )
 
@@ -77,7 +77,7 @@ class DeadlockSpec extends FlatSpec with Matchers with ApiSpecBase with AwaitUti
              |    a
              |  }
              |}
-      """.stripMargin,
+      """,
         project
       )
 
@@ -107,7 +107,7 @@ class DeadlockSpec extends FlatSpec with Matchers with ApiSpecBase with AwaitUti
         |    id
         |    comments { id }
         |  }
-        |}""".stripMargin,
+        |}""",
       project
     )
 
@@ -130,7 +130,7 @@ class DeadlockSpec extends FlatSpec with Matchers with ApiSpecBase with AwaitUti
              |    a
              |  }
              |}
-      """.stripMargin,
+      """,
         project
       )
 
@@ -164,7 +164,7 @@ class DeadlockSpec extends FlatSpec with Matchers with ApiSpecBase with AwaitUti
                |    a
                |  }
                |}
-      """.stripMargin,
+      """,
         project
       )
 
@@ -192,7 +192,7 @@ class DeadlockSpec extends FlatSpec with Matchers with ApiSpecBase with AwaitUti
         |    id
         |    comments { id }
         |  }
-        |}""".stripMargin,
+        |}""",
         project
       )
 
@@ -207,7 +207,7 @@ class DeadlockSpec extends FlatSpec with Matchers with ApiSpecBase with AwaitUti
              |    a
              |  }
              |}
-      """.stripMargin,
+      """,
         project
       )
 

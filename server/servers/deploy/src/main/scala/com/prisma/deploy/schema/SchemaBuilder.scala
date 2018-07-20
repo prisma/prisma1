@@ -143,7 +143,7 @@ case class SchemaBuilderImpl(
 
   val serverInfoField: Field[SystemUserContext, Unit] = Field(
     "serverInfo",
-    ServerInfoType.Type,
+    ServerInfoType.Type(dependencies.config),
     description = Some("Information about the server"),
     resolve = (ctx) => ()
   )
