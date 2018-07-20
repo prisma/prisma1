@@ -45,9 +45,8 @@ trait FilterConditionBuilder extends BuilderBase {
       case OrFilter(filters)        => nonEmptyConditions(filters).reduceLeft(_ or _)
       case NotFilter(filters)       => filters.map(buildConditionForFilter(_, alias)).foldLeft(and(trueCondition()))(_ andNot _)
       case NodeFilter(filters)      => buildConditionForFilter(OrFilter(filters), alias)
-      case x: RelationFilter        => relationFilterStatementWithInQueriesAndSkippingTables(alias, x, relField, invert)
-//      case x: RelationFilter => relationFilterStatementWithInQueries(alias, x)
-//      case x: RelationFilter => relationFilterStatementUnoptimized(alias, x)
+      case x: RelationFilter        => relationFilterStatement(alias, x, relField, invert)
+
       //--------------------------------ANCHORS------------------------------------
       case _: TrueFilter                                         => trueCondition()
       case _: FalseFilter                                        => falseCondition()
@@ -74,82 +73,18 @@ trait FilterConditionBuilder extends BuilderBase {
     }
   }
 
-  private def relationFilterStatementUnoptimized(alias: String, relationFilter: RelationFilter): Condition = {
-    val relationField         = relationFilter.field
-    val relation              = relationField.relation
-    val newAlias              = relationField.relatedModel_!.dbName + "_" + alias
-    val nestedFilterStatement = buildConditionForFilter(relationFilter.nestedFilter, newAlias)
-
-    val select = sql
-      .select()
-      .from(modelTable(relationField.relatedModel_!).as(newAlias))
-      .innerJoin(relationTable(relation))
-      .on(modelIdColumn(newAlias, relationField.relatedModel_!).eq(relationColumn(relation, relationField.oppositeRelationSide)))
-      .where(relationColumn(relation, relationField.relationSide).eq(modelIdColumn(alias, relationField.model)))
-
-    relationFilter.condition match {
-      case AtLeastOneRelatedNode => exists(select.and(nestedFilterStatement))
-      case EveryRelatedNode      => notExists(select.andNot(nestedFilterStatement))
-      case NoRelatedNode         => notExists(select.and(nestedFilterStatement))
-      case NoRelationCondition   => exists(select.and(nestedFilterStatement))
-    }
-  }
-
-  private def relationFilterStatementWithInQueries(alias: String, relationFilter: RelationFilter): Condition = {
-    val relationField         = relationFilter.field
-    val relation              = relationField.relation
-    val newAlias              = relationField.relatedModel_!.dbName + "_" + alias
-    val nestedFilterStatement = buildConditionForFilter(relationFilter.nestedFilter, newAlias)
-
-    val select = sql
-      .select(relationColumn(relation, relationField.relationSide))
-      .from(modelTable(relationField.relatedModel_!).as(newAlias))
-      .innerJoin(relationTable(relation))
-      .on(modelIdColumn(newAlias, relationField.relatedModel_!).eq(relationColumn(relation, relationField.oppositeRelationSide)))
-
-    relationFilter.condition match {
-      case AtLeastOneRelatedNode => modelIdColumn(alias, relationField.model).in(select.and(nestedFilterStatement))
-      case EveryRelatedNode      => modelIdColumn(alias, relationField.model).notIn(select.andNot(nestedFilterStatement))
-      case NoRelatedNode         => modelIdColumn(alias, relationField.model).notIn(select.and(nestedFilterStatement))
-      case NoRelationCondition   => modelIdColumn(alias, relationField.model).in(select.and(nestedFilterStatement))
-    }
-  }
-
-  private def relationFilterStatementWithInQueriesAndSkippingTables(alias: String,
-                                                                    relationFilter: RelationFilter,
-                                                                    relField: Option[Field[AnyRef]],
-                                                                    invert: Boolean): Condition = {
+  private def relationFilterStatement(alias: String, relationFilter: RelationFilter, relField: Option[Field[AnyRef]], invert: Boolean): Condition = {
     // this skips intermediate table when there is no condition on it
     // artists(where:{albums_some:{tracks_some:{condition}}})
-    // albums(where: {Tracks_some:{ MediaType:{Name_starts_with:""}, Genre:{Name_starts_with:""}}})    Todo also on cases where there are several filters below
-    // this will be an andFilter around the two nested ones
+    // albums(where: {Tracks_some:{ MediaType:{Name_starts_with:""}, Genre:{Name_starts_with:""}}})
+    // this will be an andFilter around the two nested ones and will not be skipped at the moment
+    // implicit AND like above as well as explicit AND, OR, NOT can be improved this way
 
     val relationField = relationFilter.field
     val relation      = relationField.relation
     val newAlias      = relationField.relatedModel_!.dbName + "_" + alias
 
     relationFilter.nestedFilter match {
-//      case AndFilter(x) =>
-//      case OrFilter(x) =>
-//      case NotFilter(x) =>
-//        // if the andfilter contains only relationFilters shortcut all of them and fold them together with and
-//        // if it's a mix we can't shortcut
-      // shortcuts for not and or also need to be standardized
-      // maybe we do not need the step that gets rid of unnecessary ands/ors? since we need to handle them anyway?
-//
-//
-//        val relField = Some(relationColumn(relation, relationField.oppositeRelationSide))
-//        val select = sql
-//          .select(relationColumn(relation, relationField.relationSide))
-//          .from(relationTable(relation))
-//
-//        relationFilter.condition match {
-//          case AtLeastOneRelatedNode => modelIdColumn(alias, relationField.model).in(select.where(buildConditionForFilter(x, newAlias, relField)))
-//          case EveryRelatedNode      => modelIdColumn(alias, relationField.model).notIn(select.where(buildConditionForFilter(x, newAlias, relField, true)))
-//          case NoRelatedNode         => modelIdColumn(alias, relationField.model).notIn(select.where(buildConditionForFilter(x, newAlias, relField)))
-//          case NoRelationCondition   => modelIdColumn(alias, relationField.model).in(select.where(buildConditionForFilter(x, newAlias, relField)))
-//        }
-
       case x: RelationFilter =>
         val relField = Some(relationColumn(relation, relationField.oppositeRelationSide))
         val select = sql
@@ -196,4 +131,5 @@ trait FilterConditionBuilder extends BuilderBase {
 
     notExists(select)
   }
+
 }
