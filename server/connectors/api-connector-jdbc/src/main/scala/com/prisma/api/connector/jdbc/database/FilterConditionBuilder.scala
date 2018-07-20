@@ -78,7 +78,7 @@ trait FilterConditionBuilder extends BuilderBase {
     // artists(where:{albums_some:{tracks_some:{condition}}})
     // albums(where: {Tracks_some:{ MediaType:{Name_starts_with:""}, Genre:{Name_starts_with:""}}})
     // this will be an andFilter around the two nested ones and will not be skipped at the moment
-    // implicit AND like above as well as explicit AND, OR, NOT can be improved this way
+    // implicit AND like above as well as explicit AND, OR, NOT can be improve
 
     val relationField = relationFilter.field
     val relation      = relationField.relation
@@ -125,11 +125,9 @@ trait FilterConditionBuilder extends BuilderBase {
   private def oneRelationIsNullFilter(relationField: RelationField, alias: String): Condition = {
     val relation = relationField.relation
     val select = sql
-      .select()
+      .select(relationColumn(relation, relationField.relationSide))
       .from(relationTable(relation))
-      .where(relationColumn(relation, relationField.relationSide).eq(modelIdColumn(alias, relationField.relatedModel_!)))
 
-    notExists(select)
+    modelIdColumn(alias, relationField.relatedModel_!).notIn(select)
   }
-
 }
