@@ -8,7 +8,7 @@ import play.api.libs.json.Json
 
 class SettingUpChinookSpec extends FlatSpec with Matchers with IntegrationBaseSpec {
 
-  "Importing Chinook" should "work " in {
+  "Importing Chinook" should "work " ignore {
 
     val schema =
       """type Artist {
