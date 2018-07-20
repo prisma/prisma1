@@ -9,7 +9,7 @@ import org.jooq.impl.DSL._
 trait FilterConditionBuilder extends BuilderBase {
   def buildConditionForFilter(filter: Option[Filter]): Condition = filter match {
     case Some(filter) => buildConditionForFilter(filter, topLevelAlias)
-    case None         => trueCondition()
+    case None         => noCondition()
   }
 
   private def buildConditionForFilter(filter2: Filter, alias: String, relField: Option[Field[AnyRef]] = None, invert: Boolean = false): Condition = {
@@ -33,7 +33,7 @@ trait FilterConditionBuilder extends BuilderBase {
     def fieldFrom(scalarField: ScalarField) = field(name(alias, scalarField.dbName))
     def nonEmptyConditions(filters: Vector[Filter]): Vector[Condition] = {
       filters.map(buildConditionForFilter(_, alias)) match {
-        case x if x.isEmpty => Vector(trueCondition())
+        case x if x.isEmpty => Vector(noCondition())
         case x              => x
       }
     }
@@ -45,9 +45,9 @@ trait FilterConditionBuilder extends BuilderBase {
       case OrFilter(filters)        => nonEmptyConditions(filters).reduceLeft(_ or _)
       case NotFilter(filters)       => filters.map(buildConditionForFilter(_, alias)).foldLeft(and(trueCondition()))(_ andNot _)
       case NodeFilter(filters)      => buildConditionForFilter(OrFilter(filters), alias)
-//      case x: RelationFilter        => relationFilterStatementWithInQueriesAndSkippingTables(alias, x, relField, invert)
+      case x: RelationFilter        => relationFilterStatementWithInQueriesAndSkippingTables(alias, x, relField, invert)
 //      case x: RelationFilter => relationFilterStatementWithInQueries(alias, x)
-      case x: RelationFilter => relationFilterStatementUnoptimized(alias, x)
+//      case x: RelationFilter => relationFilterStatementUnoptimized(alias, x)
       //--------------------------------ANCHORS------------------------------------
       case PreComputedSubscriptionFilter(value)                  => if (value) trueCondition() else falseCondition()
       case ScalarFilter(scalarField, Contains(_))                => fieldFrom(scalarField).contains(stringDummy)
