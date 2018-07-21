@@ -1,5 +1,5 @@
 # source: http://localhost:4466/application-server
-# timestamp: Mon May 14 2018 23:27:46 GMT+0530 (IST)
+# timestamp: Wed Jul 18 2018 09:35:20 GMT-0700 (PDT)
 
 type AggregatePost {
   count: Int!
@@ -121,6 +121,7 @@ type PostPreviousValues {
 enum PostStatus {
   DRAFT
   PUBLISH
+  DELETED
 }
 
 type PostSubscriptionPayload {

@@ -4,5 +4,5 @@ datamodel: datamodel.graphql
 hooks:
   post-deploy:
     - echo "Deployment finished"
-    - graphql get-schema
-    - graphql prepare
+    - graphql get-schema --project db
+    - graphql codegen

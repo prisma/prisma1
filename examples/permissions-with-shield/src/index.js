@@ -3,7 +3,7 @@ const { Prisma } = require('prisma-binding')
 
 const resolvers = require('./resolvers')
 const permissions = require('./permissions')
-const typeDefs = './src/schema.graphql'
+const typeDefs = './src/schema/schema.graphql'
 
 const server = new GraphQLServer({
   typeDefs,

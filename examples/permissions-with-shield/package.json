@@ -5,7 +5,7 @@
   "main": "src/index.js",
   "license": "MIT",
   "scripts": {
-    "dev": "dotenv -- nodemon --inspect src/index.js"
+    "start": "dotenv -- nodemon --inspect src/index.js"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",

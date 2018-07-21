@@ -7,7 +7,7 @@
   "author": "Prisma",
   "license": "Apache 2",
   "scripts": {
-    "start": "node index.js"
+    "start": "node src/index.js"
   },
   "devDependencies": {
     "graphql-cli": "^2.16.4",

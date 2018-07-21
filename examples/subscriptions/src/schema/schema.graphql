@@ -1,4 +1,4 @@
-# import PostSubscriptionPayload from "./generated-schema.graphql"
+# import PostSubscriptionPayload from "../generated/prisma.graphql"
 
 type Query {
   posts: [Post!]!

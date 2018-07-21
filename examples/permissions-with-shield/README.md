@@ -4,9 +4,10 @@ This example demonstrates how to use the simple and declarative [GraphQL Shield]
 
 ## Get Started
 
-> **Note**: `prisma` is listed as a _development dependency_ and _script_ in this project's [`package.json`](./package.json). This means you can invoke the Prisma CLI without having it globally installed on your machine (by prefixing it with `yarn`), e.g. `yarn prisma deploy` or `yarn prisma playground`. If you have the Prisma CLI installed globally (which you can do with `npm install -g prisma`), you can omit the `yarn` prefix.
+### 1. Install the Prisma CLI
+The `prisma` cli is the core component of your development workflow. `prisma` should be installed as a global dependency, you can install this with `npm install -g prisma`
 
-### 1. Download the example & install dependencies
+### 2. Download the example & install dependencies
 
 Clone the Prisma monorepo and navigate to this directory or download _only_ this example with the following command:
 
@@ -21,7 +22,7 @@ cd permissions-with-shield
 yarn install
 ```
 
-### 2. Deploy the Prisma database service
+### 3. Deploy the Prisma database service
 
 You can deploy locally but for simplicity, use the Prisma free demo server. To deploy your service to a public cluster (rather than locally with Docker), you need to perform the following steps:
 
@@ -35,7 +36,7 @@ You can deploy locally but for simplicity, use the Prisma free demo server. To d
 To start the server, run the following command
 
 ```
-yarn dev
+yarn start
 ```
 
 ### Open a Playground

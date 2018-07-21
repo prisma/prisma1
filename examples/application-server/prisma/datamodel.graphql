@@ -15,4 +15,5 @@ type User {
 enum PostStatus {
   DRAFT
   PUBLISH
+  DELETED
 }
