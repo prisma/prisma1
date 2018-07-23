@@ -39,21 +39,19 @@ class ToManyDeferredResolver(dataResolver: DataResolver) extends Tracing {
       .map(_.flatten)
 
     // Assign the resolver results to each deferred
-    val results = time("assign results") {
-      orderedDeferreds.map {
-        case OrderedDeferred(deferred, order) =>
-          OrderedDeferredFutureResult(
-            futureResolverResults.map { resolverResults =>
-              // Each deferred has exactly one ResolverResult
-              val found: ResolverResult[PrismaNodeWithParent] = resolverResults.find(_.parentModelId.contains(deferred.parentNodeId)).get
 
-              mapToConnectionOutputType(found, deferred, dataResolver.project)
-            },
-            order
-          )
-      }
+    orderedDeferreds.map {
+      case OrderedDeferred(deferred, order) =>
+        OrderedDeferredFutureResult(
+          futureResolverResults.map { resolverResults =>
+            // Each deferred has exactly one ResolverResult
+            val found: ResolverResult[PrismaNodeWithParent] = resolverResults.find(_.parentModelId.contains(deferred.parentNodeId)).get
+
+            mapToConnectionOutputType(found, deferred, dataResolver.project)
+          },
+          order
+        )
     }
-    results
   }
 
   def mapToConnectionOutputType(input: ResolverResult[PrismaNodeWithParent], deferred: ToManyDeferred, project: Project): RelayConnectionOutputType = {
