@@ -11,7 +11,7 @@ class ManyModelDeferredResolver(resolver: DataResolver) {
     implicit val ec: ExecutionContext = executionContext
     val deferreds                     = orderedDeferreds.map(_.deferred)
 
-    DeferredUtils.checkSimilarityOfModelDeferredsAndThrow(deferreds)
+//    DeferredUtils.checkSimilarityOfModelDeferredsAndThrow(deferreds)
 
     val headDeferred                 = deferreds.head
     val model                        = headDeferred.model

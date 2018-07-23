@@ -11,6 +11,7 @@ class ScalarListDeferredResolver(dataResolver: DataResolver) {
     implicit val ec: ExecutionContext = executionContext
     val deferreds                     = orderedDeferreds.map(_.deferred)
 
+    // Todo I've removed the SimilarityCheck, validate that that is ok
     // check if we really can satisfy all deferreds with one database query
     DeferredUtils.checkSimilarityOfScalarListDeferredsAndThrow(deferreds)
 

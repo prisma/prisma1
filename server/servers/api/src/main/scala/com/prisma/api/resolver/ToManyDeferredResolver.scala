@@ -2,19 +2,20 @@ package com.prisma.api.resolver
 
 import com.prisma.api.connector._
 import com.prisma.api.resolver.DeferredTypes._
-import com.prisma.gc_values.{CuidGCValue, IdGCValue}
+import com.prisma.gc_values.IdGCValue
 import com.prisma.shared.models.Project
+import com.prisma.tracing.Tracing
 
 import scala.concurrent.{ExecutionContext, Future}
 
-class ToManyDeferredResolver(dataResolver: DataResolver) {
+class ToManyDeferredResolver(dataResolver: DataResolver) extends Tracing {
   def resolve(orderedDeferreds: Vector[OrderedDeferred[ToManyDeferred]],
               executionContext: ExecutionContext): Vector[OrderedDeferredFutureResult[RelayConnectionOutputType]] = {
     implicit val ec: ExecutionContext = executionContext
     val deferreds                     = orderedDeferreds.map(_.deferred)
 
     // Check if we really can satisfy all deferreds with one database query
-    DeferredUtils.checkSimilarityOfRelatedDeferredsAndThrow(deferreds)
+//    time("checksimilarity") { DeferredUtils.checkSimilarityOfRelatedDeferredsAndThrow(deferreds) }
 
     val headDeferred = deferreds.head
     val relatedField = headDeferred.relationField
@@ -38,19 +39,20 @@ class ToManyDeferredResolver(dataResolver: DataResolver) {
       .map(_.flatten)
 
     // Assign the resolver results to each deferred
-    val results = orderedDeferreds.map {
-      case OrderedDeferred(deferred, order) =>
-        OrderedDeferredFutureResult(
-          futureResolverResults.map { resolverResults =>
-            // Each deferred has exactly one ResolverResult
-            val found: ResolverResult[PrismaNodeWithParent] = resolverResults.find(_.parentModelId.contains(deferred.parentNodeId)).get
+    val results = time("assign results") {
+      orderedDeferreds.map {
+        case OrderedDeferred(deferred, order) =>
+          OrderedDeferredFutureResult(
+            futureResolverResults.map { resolverResults =>
+              // Each deferred has exactly one ResolverResult
+              val found: ResolverResult[PrismaNodeWithParent] = resolverResults.find(_.parentModelId.contains(deferred.parentNodeId)).get
 
-            mapToConnectionOutputType(found, deferred, dataResolver.project)
-          },
-          order
-        )
+              mapToConnectionOutputType(found, deferred, dataResolver.project)
+            },
+            order
+          )
+      }
     }
-
     results
   }
 
