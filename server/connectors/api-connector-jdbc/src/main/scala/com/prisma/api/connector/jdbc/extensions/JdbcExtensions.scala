@@ -80,22 +80,20 @@ object JdbcExtensionsValueClasses {
     }
 
     def getGcValue(name: String, typeIdentifier: TypeIdentifier.Value): GCValue = {
-      if (resultSet.wasNull) {
-        NullGCValue
-      } else {
-        typeIdentifier match {
-          case TypeIdentifier.String   => StringGCValue(resultSet.getString(name))
-          case TypeIdentifier.Cuid     => CuidGCValue(resultSet.getString(name))
-          case TypeIdentifier.UUID     => UuidGCValue.parse_!(resultSet.getString(name))
-          case TypeIdentifier.Enum     => EnumGCValue(resultSet.getString(name))
-          case TypeIdentifier.Int      => IntGCValue(resultSet.getInt(name))
-          case TypeIdentifier.Float    => FloatGCValue(resultSet.getDouble(name))
-          case TypeIdentifier.Boolean  => BooleanGCValue(resultSet.getBoolean(name))
-          case TypeIdentifier.DateTime => getDateTimeGCValue(name)
-          case TypeIdentifier.Json     => getJsonGCValue(name)
-          case TypeIdentifier.Relation => sys.error("TypeIdentifier.Relation is not supported here")
-        }
+      val gcValue = typeIdentifier match {
+        case TypeIdentifier.String   => StringGCValue(resultSet.getString(name))
+        case TypeIdentifier.Cuid     => CuidGCValue(resultSet.getString(name))
+        case TypeIdentifier.UUID     => UuidGCValue.parse_!(resultSet.getString(name))
+        case TypeIdentifier.Enum     => EnumGCValue(resultSet.getString(name))
+        case TypeIdentifier.Int      => IntGCValue(resultSet.getInt(name))
+        case TypeIdentifier.Float    => FloatGCValue(resultSet.getDouble(name))
+        case TypeIdentifier.Boolean  => BooleanGCValue(resultSet.getBoolean(name))
+        case TypeIdentifier.DateTime => getDateTimeGCValue(name)
+        case TypeIdentifier.Json     => getJsonGCValue(name)
+        case TypeIdentifier.Relation => sys.error("TypeIdentifier.Relation is not supported here")
       }
+
+      if (resultSet.wasNull) NullGCValue else gcValue
     }
 
     private def getDateTimeGCValue(name: String) = {
