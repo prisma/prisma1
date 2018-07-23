@@ -69,14 +69,14 @@ object JdbcExtensionsValueClasses {
 
     def getAsID(field: Field): IdGCValue = getAsID(field.dbName, field.typeIdentifier)
 
-    def getAsID(column: String, typeIdentifier: TypeIdentifier.Value): IdGCValue = {
-      val gcValue = getGcValue(column, typeIdentifier)
-      gcValue.asInstanceOf[IdGCValue]
-    }
+    def getAsID(column: String, typeIdentifier: TypeIdentifier.Value): IdGCValue         = getIDGcValue(column, typeIdentifier)
+    def getParentId(sideString: String, typeIdentifier: TypeIdentifier.Value): IdGCValue = getIDGcValue(sideString, typeIdentifier)
 
-    def getParentId(sideString: String, typeIdentifier: TypeIdentifier.Value): IdGCValue = {
-      val gcValue = getGcValue(sideString, typeIdentifier)
-      gcValue.asInstanceOf[IdGCValue]
+    def getIDGcValue(name: String, typeIdentifier: TypeIdentifier.Value): IdGCValue = typeIdentifier match {
+      case TypeIdentifier.Cuid => CuidGCValue(resultSet.getString(name))
+      case TypeIdentifier.UUID => UuidGCValue.parse_!(resultSet.getString(name))
+      case TypeIdentifier.Int  => IntGCValue(resultSet.getInt(name))
+      case _                   => sys.error("Should only be called with IdGCValues")
     }
 
     def getGcValue(name: String, typeIdentifier: TypeIdentifier.Value): GCValue = {
@@ -84,11 +84,11 @@ object JdbcExtensionsValueClasses {
         case TypeIdentifier.String   => StringGCValue(resultSet.getString(name))
         case TypeIdentifier.Cuid     => CuidGCValue(resultSet.getString(name))
         case TypeIdentifier.UUID     => UuidGCValue.parse_!(resultSet.getString(name))
-        case TypeIdentifier.Enum     => EnumGCValue(resultSet.getString(name))
         case TypeIdentifier.Int      => IntGCValue(resultSet.getInt(name))
+        case TypeIdentifier.DateTime => getDateTimeGCValue(name)
         case TypeIdentifier.Float    => FloatGCValue(resultSet.getDouble(name))
         case TypeIdentifier.Boolean  => BooleanGCValue(resultSet.getBoolean(name))
-        case TypeIdentifier.DateTime => getDateTimeGCValue(name)
+        case TypeIdentifier.Enum     => EnumGCValue(resultSet.getString(name))
         case TypeIdentifier.Json     => getJsonGCValue(name)
         case TypeIdentifier.Relation => sys.error("TypeIdentifier.Relation is not supported here")
       }
