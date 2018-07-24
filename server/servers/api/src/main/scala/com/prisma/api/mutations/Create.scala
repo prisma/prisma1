@@ -30,9 +30,6 @@ case class Create(
 
   def prepareMutactions(): Future[TopLevelDatabaseMutaction] = {
     val createMutactionsResult = DatabaseMutactions(project).getMutactionsForCreate(model, coolArgs)
-//    val subscriptionMutactions = SubscriptionEvents.extractFromSqlMutactions(project, mutationId, createMutactionsResult)
-//    val sssActions             = ServerSideSubscriptions.extractFromMutactions(project, createMutactionsResult, requestId)
-
     Future.successful(createMutactionsResult)
   }
 
