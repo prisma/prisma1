@@ -31,13 +31,8 @@ case class Update(
 
   def prepareMutactions(): Future[TopLevelDatabaseMutaction] = {
     prismaNodes map {
-      case Some(prismaNode) =>
-//        val sqlMutactions = DatabaseMutactions(project).getMutactionsForUpdate(Path.empty(where), coolArgs, prismaNode)
-//        val subscriptionMutactions = SubscriptionEvents.extractFromSqlMutactions(project, mutationId, sqlMutactions)
-//        val sssActions             = ServerSideSubscriptions.extractFromMutactions(project, sqlMutactions, requestId = "")
-        DatabaseMutactions(project).getMutactionsForUpdate(model, where, coolArgs, prismaNode)
-      case None =>
-        throw APIErrors.NodeNotFoundForWhereError(where)
+      case Some(prismaNode) => DatabaseMutactions(project).getMutactionsForUpdate(model, where, coolArgs, prismaNode)
+      case None             => throw APIErrors.NodeNotFoundForWhereError(where)
     }
   }
 
