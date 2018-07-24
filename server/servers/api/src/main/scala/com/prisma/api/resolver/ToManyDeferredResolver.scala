@@ -14,9 +14,6 @@ class ToManyDeferredResolver(dataResolver: DataResolver) extends Tracing {
     implicit val ec: ExecutionContext = executionContext
     val deferreds                     = orderedDeferreds.map(_.deferred)
 
-    // Check if we really can satisfy all deferreds with one database query
-//    time("checksimilarity") { DeferredUtils.checkSimilarityOfRelatedDeferredsAndThrow(deferreds) }
-
     val headDeferred = deferreds.head
     val relatedField = headDeferred.relationField
     val args         = headDeferred.args
