@@ -93,9 +93,8 @@ class DateTimeImportExportSpec extends FlatSpec with Matchers with ApiSpecBase w
     val cursor     = Cursor(0, 0)
     val request    = ExportRequest("nodes", cursor)
     val firstChunk = exporter.executeExport(dataResolver, request).await(5).as[ResultFormat]
-    println(firstChunk)
 
     JsArray(firstChunk.out.jsonElements).toString should be(
-      """[{"_typeName":"Model0","id":"0","a":"test1","b":0,"createdAt":"2017-12-05T12:34:23.000Z","updatedAt":"2017-12-05T12:34:23.000Z"}]""")
+      """[{"_typeName":"Model0","id":"0","updatedAt":"2017-12-05T12:34:23.000Z","a":"test1","b":0,"createdAt":"2017-12-05T12:34:23.000Z"}]""")
   }
 }
