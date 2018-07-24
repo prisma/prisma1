@@ -13,7 +13,7 @@ class OneDeferredResolver(dataResolver: DataResolver) {
     val deferreds                     = orderedDeferreds.map(_.deferred)
 
     // check if we really can satisfy all deferreds with one database query
-    DeferredUtils.checkSimilarityOfOneDeferredsAndThrow(deferreds)
+//    DeferredUtils.checkSimilarityOfOneDeferredsAndThrow(deferreds)
 
     val headDeferred = deferreds.head
 

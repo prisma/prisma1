@@ -11,6 +11,8 @@ object RelationSide extends Enumeration {
   val B = Value("B")
 
   def opposite(side: RelationSide.Value) = if (side == A) B else A
+  def relationColumnAliasA               = "__Relation__A"
+  def relationColumnAliasB               = "__Relation__B"
 }
 
 object TypeIdentifier {
