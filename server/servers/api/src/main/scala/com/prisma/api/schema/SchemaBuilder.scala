@@ -120,7 +120,7 @@ case class SchemaBuilderImpl(
           resolve = (ctx) => {
             val coolArgs = CoolArgs(ctx.args.raw)
             val where    = coolArgs.extractNodeSelectorFromWhereField(model)
-            OneDeferred(model, where)
+            masterDataResolver.getNodeByWhere(where)
           }
         )
       }
