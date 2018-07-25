@@ -9,7 +9,7 @@ In this tutorial, you’re going to learn how to deploy a Prisma server to [Zeit
 
 ## Overview
 
-Zeit Now
+[Zeit Now](https://zeit.co/now) provides real-time Node and Docker cloud deployments. 
 
 Google Cloud SQL provides fully-managed PostgreSQL & MySQL instances. You may follow the [tutorials and quick guides](https://cloud.google.com/sql/docs/) to configure and setup your SQL instance using either the console or command line.
 
@@ -25,7 +25,7 @@ You also should install the [Cloud SDK](https://cloud.google.com/sdk/).
 
 Sign up to [zeit.co](https://zeit.co).
 
-Install the (now-cli)[https://github.com/zeit/now-cli]
+Install the [now-cli)](https://github.com/zeit/now-cli)
 
 ## 1. MySQL
 
@@ -36,7 +36,7 @@ We'll be creating a MySQL instance called `prisma` on GCP via the command line. 
 ```console
 ❯ gcloud sql instances create prisma --tier=db-f1-micro --authorized-networks=0.0.0.0/0 --region=europe-west1
 
-NAME    DATABASE_VERSION  LOCATION        TIER              ADDRESS         STATUS
+NAME    DATABASE_VERSION  LOCATION        TIER         ADDRESS      STATUS
 prisma  MYSQL_5_6         europe-west1-d  db-f1-micro  xx.xx.xx.xx  RUNNABLE
 ```
 
@@ -46,8 +46,8 @@ prisma  MYSQL_5_6         europe-west1-d  db-f1-micro  xx.xx.xx.xx  RUNNABLE
 
 ---
 
-* You can learn the [command line flags](https://cloud.google.com/sdk/gcloud/reference/beta/sql/instances/create)
-* The steps for creating Postgres are virtually identical.
+* You can learn the additional [command line flags](https://cloud.google.com/sdk/gcloud/reference/beta/sql/instances/create)
+* The steps for creating a Postgres database instance are virtually identical.
 
 
 ### 1.2. Create SQL User
