@@ -152,5 +152,7 @@ Now will go through it's deployment process, which will take a few minutes.
 
 * From here you may wish to alias the deployment in Now: https://zeit.co/docs/features/aliases before updating your endpoint in `prisma.yml`.
 
+An example project can be found here: https://github.com/develomark/prisma-now.
+
 ## Author
-Mark Petty – (Intrusted)[https://intrusted.co.uk]
+[Mark Petty](https://github.com/develomark) – [Intrusted](https://intrusted.co.uk)
