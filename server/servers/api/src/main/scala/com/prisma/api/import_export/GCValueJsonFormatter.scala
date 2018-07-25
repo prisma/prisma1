@@ -1,11 +1,9 @@
 package com.prisma.api.import_export
 
-import java.util.UUID
-
 import com.prisma.gc_values._
-import com.prisma.shared.models.{Enum, Field, Model, ScalarField, TypeIdentifier}
+import com.prisma.shared.models.{Enum, Model, ScalarField, TypeIdentifier}
 import org.joda.time.DateTimeZone
-import org.joda.time.format.{DateTimeFormat, ISODateTimeFormat}
+import org.joda.time.format.DateTimeFormat
 import play.api.libs.json._
 
 import scala.collection.immutable.SortedMap
@@ -108,7 +106,6 @@ object GCValueJsonFormatter {
   }
 
   implicit object DateTimeGCValueReads extends Reads[DateTimeGCValue] {
-    ISODateTimeFormat.basicDateTime()
     val isoFormatter            = DateTimeFormat.forPattern("yyyy-MM-dd'T'HH:mm:ss.SSSZ")
     val fallbackIsoFormatter    = DateTimeFormat.forPattern("yyyy-MM-dd'T'HH:mm:ssZ")
     val secondFallbackFormatter = DateTimeFormat.forPattern("yyyy-MM-dd HH:mm:ss")
