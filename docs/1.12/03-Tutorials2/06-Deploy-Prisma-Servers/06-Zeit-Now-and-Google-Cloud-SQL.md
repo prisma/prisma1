@@ -1,15 +1,15 @@
 ---
-alias: joofei3ahd
+alias: mohj5eiwot
 description: Learn how to deploy Prisma servers to Zeit Now.
 ---
 
 # Zeit Now and GCP Cloud SQL
 
-In this tutorial, you’re going to learn how to deploy a Prisma server to [Zeit Now](https://zeit.co/now). The server will be backed by a MySQL database hosted in Google Cloud Platform (GCP). If you wish to host your database elsewhere such as AWS RDS just skip directly to [part 2]().
+In this tutorial, you’re going to learn how to deploy a Prisma server to [Zeit Now](https://zeit.co/now). The server will be backed by a MySQL database hosted in [Google Cloud Platform](https://cloud.google.com/gcp) (GCP).
 
 ## Overview
 
-[Zeit Now](https://zeit.co/now) provides real-time Node and Docker cloud deployments. 
+[Zeit Now](https://zeit.co/now) provides real-time Node and Docker cloud deployments.
 
 Google Cloud SQL provides fully-managed PostgreSQL & MySQL instances. You may follow the [tutorials and quick guides](https://cloud.google.com/sql/docs/) to configure and setup your SQL instance using either the console or command line.
 
@@ -21,7 +21,7 @@ For the purpose of this tutorial you will need to have signed up for GCP, create
 
 You also should install the [Cloud SDK](https://cloud.google.com/sdk/).
 
-#### Zeit Now
+### Zeit Now
 
 Sign up to [zeit.co](https://zeit.co).
 
@@ -33,9 +33,13 @@ Install the [now-cli)](https://github.com/zeit/now-cli)
 
 We'll be creating a MySQL instance called `prisma` on GCP via the command line. You may also do this via the console.
 
-```console
-❯ gcloud sql instances create prisma --tier=db-f1-micro --authorized-networks=0.0.0.0/0 --region=europe-west1
+```bash
+gcloud sql instances create prisma --tier=db-f1-micro --authorized-networks=0.0.0.0/0 --region=europe-west1
+```
 
+You'll see the following output:
+
+```
 NAME    DATABASE_VERSION  LOCATION        TIER         ADDRESS      STATUS
 prisma  MYSQL_5_6         europe-west1-d  db-f1-micro  xx.xx.xx.xx  RUNNABLE
 ```
@@ -49,39 +53,42 @@ prisma  MYSQL_5_6         europe-west1-d  db-f1-micro  xx.xx.xx.xx  RUNNABLE
 * You can learn the additional [command line flags](https://cloud.google.com/sdk/gcloud/reference/beta/sql/instances/create)
 * The steps for creating a Postgres database instance are virtually identical.
 
-
 ### 1.2. Create SQL User
 
 Create a user called `prisma` with a password of `my-secret`.
 
-```console
-❯ gcloud beta sql users create prisma --instance=prisma --password=my-secret
+```bash
+gcloud beta sql users create prisma --instance=prisma --password=my-secret
 ```
 
 Your MySQL Instance is now up and running.
 
-Note the IP address of the instance, your username and password.
+Note down the IP address of the instance, your username and password. You'll need this information later!
 
 ## 2. Deploying a Prisma server to Zeit Now
 
-Deployment to Now consists of 3 files; a Dockerfile, prisma configuration and Now deployment configuration.
+Deployment to Now consists of 3 files:
+
+- Dockerfile
+- Prisma configuration
+- Now deployment configuration
 
 ### 2.1 Now Secrets
 
-First we will add secrets to Now to store the sql password from earlier and the Prisma API password.
+First we will add secrets to Now to store the SQL password from earlier and the Prisma API password.
 
-```console
-❯ now secret add sql-password my-secret
-❯ now secret add prisma-management-api-secret so-secret
+```bash
+now secret add sql-password my-secret
+now secret add prisma-management-api-secret so-secret
 ```
 
-*  Learn more about Now secrets: https://zeit.co/docs/getting-started/secrets
+> Learn more about Now secrets: https://zeit.co/docs/getting-started/secrets
 
 ### 2.2 Prisma Configuration
 
 Create a file `config.yml`. This contains the Prisma Server configuration.
 
-```file
+```yml
 managementApiSecret: PRISMA_MANAGEMENT_API_SECRET
 port: 4466
 databases:
@@ -95,7 +102,7 @@ databases:
         active: true
 ```
 
-* SQL_HOST, SQL_PASSWORD and PRISMA_MANAGEMENT_API_SECRET will be replaced with Now build-time environment variables.
+* `SQL_HOST`, `SQL_PASSWORD` and `PRISMA_MANAGEMENT_API_SECRET` will be replaced with Now build-time environment variables.
 
 ### 2.2 Now Deployment Configuration
 
@@ -103,7 +110,7 @@ Create `now.json`. This file contains our build environment variables and refere
 
 Change `xx.xx.xx.xx` to the Cloud SQL IP address returned in 1.1.
 
-```file
+```json
 {
   "name": "prisma-now",
   "type": "docker",
@@ -117,8 +124,8 @@ Change `xx.xx.xx.xx` to the Cloud SQL IP address returned in 1.1.
 }
 ```
 
-* Learn more about environment variables: https://zeit.co/docs/features/build-env-and-secrets and more about `now.json`: https://zeit.co/docs/features/configuration.
-* To take advantage of Zeit's automatic scaling: https://zeit.co/docs/getting-started/scaling
+> Learn more about environment variables: https://zeit.co/docs/features/build-env-and-secrets and more about `now.json`: https://zeit.co/docs/features/configuration.
+> To take advantage of Zeit's automatic scaling: https://zeit.co/docs/getting-started/scaling
 
 ### 2.3 Dockerfile
 
@@ -138,21 +145,22 @@ RUN sed -i s/PRISMA_MANAGEMENT_API_SECRET/$PRISMA_MANAGEMENT_API_SECRET/g prisma
 EXPOSE 4466
 ```
 
-* Edit `Dockerfile` with the version of prisma you wish to deploy from [dockerhub](https://hub.docker.com/r/prismagraphql/prisma/tags/)
+You can edit `Dockerfile` with the version of Prisma you wish to deploy from [dockerhub](https://hub.docker.com/r/prismagraphql/prisma/tags/)
 
 ### 2.4 Deploy
 
 Then you are ready to deploy.
 
-```console
-❯ now
+```bash
+now
 ```
 
 Now will go through it's deployment process, which will take a few minutes.
 
-* From here you may wish to alias the deployment in Now: https://zeit.co/docs/features/aliases before updating your endpoint in `prisma.yml`.
+> From here you may wish to alias the deployment in Now: https://zeit.co/docs/features/aliases before updating your endpoint in `prisma.yml`.
 
 An example project can be found here: https://github.com/develomark/prisma-now.
 
 ## Author
+
 [Mark Petty](https://github.com/develomark) – [Intrusted](https://intrusted.co.uk)
