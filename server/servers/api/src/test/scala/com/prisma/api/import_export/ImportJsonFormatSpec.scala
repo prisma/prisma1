@@ -42,11 +42,13 @@ class ImportJsonFormatSpec extends FlatSpec with Matchers with ApiSpecBase with 
     val request    = ExportRequest("nodes", cursor)
     val firstChunk = exporter.executeExport(dataResolver, request).await(5).as[ResultFormat]
 
+    println(firstChunk)
+
     JsArray(firstChunk.out.jsonElements).toString should be(
       "[" +
-        """{"_typeName":"Model0","id":"0","a":"test1","createdAt":"2017-12-05T12:34:23.000Z","updatedAt":"2017-12-05T12:34:23.000Z"},""" +
-        """{"_typeName":"Model0","id":"1","a":"test1","b":{},"createdAt":"2017-12-05T12:34:23.000Z","updatedAt":"2017-12-05T12:34:23.000Z"},""" +
-        """{"_typeName":"Model0","id":"2","a":"test2","b":{"a":"b"},"createdAt":"2017-12-05T12:34:23.000Z","updatedAt":"2017-12-05T12:34:23.000Z"},""" +
-        """{"_typeName":"Model0","id":"3","a":"test2","b":{"a":2},"createdAt":"2017-12-05T12:34:23.000Z","updatedAt":"2017-12-05T12:34:23.000Z"}""" + "]")
+        """{"_typeName":"Model0","id":"0","updatedAt":"2017-12-05T12:34:23.000Z","a":"test1","createdAt":"2017-12-05T12:34:23.000Z"},""" +
+        """{"_typeName":"Model0","id":"1","updatedAt":"2017-12-05T12:34:23.000Z","a":"test1","b":{},"createdAt":"2017-12-05T12:34:23.000Z"},""" +
+        """{"_typeName":"Model0","id":"2","updatedAt":"2017-12-05T12:34:23.000Z","a":"test2","b":{"a":"b"},"createdAt":"2017-12-05T12:34:23.000Z"},""" +
+        """{"_typeName":"Model0","id":"3","updatedAt":"2017-12-05T12:34:23.000Z","a":"test2","b":{"a":2},"createdAt":"2017-12-05T12:34:23.000Z"}""" + "]")
   }
 }

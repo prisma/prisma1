@@ -19,13 +19,13 @@ sealed trait GCValue {
 }
 
 object RootGCValue {
-  def apply(elements: (String, GCValue)*): RootGCValue = RootGCValue(SortedMap(elements: _*))
+  def apply(elements: (String, GCValue)*): RootGCValue = RootGCValue(Map(elements: _*))
   def empty: RootGCValue = {
     val empty: SortedMap[String, GCValue] = SortedMap.empty
     RootGCValue(empty)
   }
 }
-case class RootGCValue(map: SortedMap[String, GCValue]) extends GCValue {
+case class RootGCValue(map: Map[String, GCValue]) extends GCValue {
   def idField = map.get("id") match {
     case Some(id) => id.asInstanceOf[IdGCValue]
     case None     => sys.error("There was no field with name 'id'.")
