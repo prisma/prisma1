@@ -1,5 +1,7 @@
 package com.prisma.metrics
 
+import java.util.UUID
+
 import akka.actor.ActorSystem
 import com.prisma.metrics.prometheus.CustomPushGateway
 import io.micrometer.prometheus.{PrometheusConfig, PrometheusMeterRegistry}
@@ -19,19 +21,24 @@ object DefaultMetricsManager extends MetricsManager
 
 object MetricsRegistry {
   private val prismaPushGatewayAddress = "metrics-eu1.prisma.io"
-
-  private[metrics] val meterRegistry = new PrometheusMeterRegistry(PrometheusConfig.DEFAULT)
+  private[metrics] val meterRegistry   = new PrometheusMeterRegistry(PrometheusConfig.DEFAULT)
+  private val job                      = "prisma-connect"
 
   def init(secretLoader: PrismaCloudSecretLoader)(implicit as: ActorSystem): Unit = {
     import as.dispatcher
-    val pushGateway = CustomPushGateway.https(prismaPushGatewayAddress)
+    CustomPushGateway.forAddress(prismaPushGatewayAddress) match {
+      case Success(pushGateway) =>
+        val instanceKey = UUID.randomUUID().toString
+        as.scheduler.schedule(30.seconds, 30.seconds) {
+          secretLoader.loadCloudSecret().onComplete {
+            case Success(Some(secret)) => pushGateway.pushAdd(meterRegistry.getPrometheusRegistry, job, instanceKey, secret)
+            case Success(None)         => log("No Prisma Cloud secret is set. Metrics collection is disabled.")
+            case Failure(e)            => e.printStackTrace()
+          }
+        }
 
-    as.scheduler.schedule(30.seconds, 30.seconds) {
-      secretLoader.loadCloudSecret().onComplete {
-        case Success(Some(secret)) => pushGateway.pushAdd(meterRegistry.getPrometheusRegistry, "prisma-connect", secret)
-        case Success(None)         => log("No Prisma Cloud secret is set. Metrics collection is disabled.")
-        case Failure(e)            => e.printStackTrace()
-      }
+      case Failure(err) =>
+        println(s"[Metrics] Error during init: $err. Metrics collection is disabled")
     }
   }
 
