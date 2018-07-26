@@ -426,4 +426,13 @@ class ExtendedRelationFilterSpec extends FlatSpec with Matchers with ApiSpecBase
       """{"data":{"albums":[{"Title":"Album1"},{"Title":"TheAlbumWithoutTracks"},{"Title":"Album3"},{"Title":"Album4"},{"Title":"Album5"}]}}""")
   }
 
+  "an empty _none filter" should "return all nodes that do have an empty relation" in {
+    server.query(query = """{genres(where:{Tracks_none:{}}){Name}}""", project = project).toString should be(
+      """{"data":{"genres":[{"Name":"GenreThatIsNotUsed"}]}}""")
+  }
+
+  "an empty _some filter" should "return all nodes that do have an non-empty relation" in {
+    server.query(query = """{genres(where:{Tracks_some:{}}){Name}}""", project = project).toString should be(
+      """{"data":{"genres":[{"Name":"Genre1"},{"Name":"Genre2"},{"Name":"Genre3"}]}}""")
+  }
 }
