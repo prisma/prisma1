@@ -1,6 +1,7 @@
 package com.prisma.metrics.prometheus
 
 import java.io.StringWriter
+import java.net.URI
 
 import akka.actor.ActorSystem
 import akka.http.scaladsl.model.ContentTypes
@@ -9,23 +10,31 @@ import com.prisma.akkautil.http.SimpleHttpClient
 import io.prometheus.client.CollectorRegistry
 import io.prometheus.client.exporter.common.TextFormat
 
+import scala.util.Try
+
 object CustomPushGateway {
-  def http(address: String)(implicit as: ActorSystem)  = CustomPushGateway("http", address)
-  def https(address: String)(implicit as: ActorSystem) = CustomPushGateway("https", address)
+  def forAddress(address: String)(implicit as: ActorSystem): Try[CustomPushGateway] = {
+    Try { URI.create(address) }.map { parsedUri =>
+      val sanitized = address.stripSuffix("/")
+      if (parsedUri.getScheme == null) {
+        CustomPushGateway("https://" + sanitized) // Default to https
+      } else {
+        CustomPushGateway(sanitized)
+      }
+    }
+  }
 }
 
-case class CustomPushGateway(protocol: String, address: String)(implicit as: ActorSystem) {
+case class CustomPushGateway(address: String)(implicit as: ActorSystem) {
   implicit val materializer = ActorMaterializer()
   val httpClient            = SimpleHttpClient()
 
   import as.dispatcher
 
-  val pushGatewayUrl = s"$protocol://$address/metrics/job/"
-
-  def pushAdd(collectorRegistry: CollectorRegistry, job: String, secret: String): Unit = {
+  def pushAdd(collectorRegistry: CollectorRegistry, job: String, instance: String, secret: String): Unit = {
     httpClient
       .post(
-        uri = pushGatewayUrl + job,
+        uri = s"$address/metrics/job/$job/instance/$instance",
         body = prometheusBody(collectorRegistry),
         contentType = ContentTypes.`text/plain(UTF-8)`,
         headers = Vector("Authorization" -> secret)
