@@ -22,7 +22,7 @@ cd server-side-subscriptions
 yarn install
 ```
 
-### 2. Deploy the Prisma database service
+### 3. Deploy the Prisma database service
 
 You can now [deploy](https://www.prisma.io/docs/reference/cli-command-reference/database-service/prisma-deploy-kee1iedaov) the Prisma service (note that this requires you to have [Docker](https://www.docker.com) installed on your machine - if that's not the case, follow the collapsed instructions below the code block):
 
@@ -41,7 +41,7 @@ To deploy your service to a demo server (rather than locally with Docker), pleas
 
 </details>
 
-### 3. `subscriptions` property of `prisma.yml`
+### 4. `subscriptions` property of `prisma.yml`
 
 The `subscriptions` property is used to implement event-based business logic using POST endpoints.
 
@@ -74,7 +74,7 @@ subscription {
 
 `webhook: http://ptsv2.com/t/prisma/post` is a mock endpoint consuming this query. On creation of a new `User` Prisma service will call this endpoint with Post data selected in the subscription query.
 
-### 3. Testing the server side subscription
+### 5. Testing the server side subscription
 
 The best way to test this subscription logic is to create a user and observe the mock POST endpoint.
 

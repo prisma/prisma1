@@ -4,9 +4,10 @@ This example demonstrates how to unit test GraphQL resolvers using [`graphql-yog
 
 ## Get started
 
-> **Note**: The project setup in this example is minimalistic. You can use it as a reference example for your own project, but you might want to evolve it into a more advanced setup. For example, you can use [encrypted environment variables](https://docs.travis-ci.com/user/environment-variables/#Defining-encrypted-variables-in-.travis.yml) for sensitive information like the Prisma API secret.
+### 1. Install the Prisma CLI
+The `prisma` cli is the core component of your development workflow. `prisma` should be installed as a global dependency, you can install this with `npm install -g prisma`
 
-### 1. Download the example
+### 2. Download the example
 
 Clone the Prisma monorepo and navigate to this directory or download _only_ this example with the following command:
 
@@ -14,7 +15,7 @@ Clone the Prisma monorepo and navigate to this directory or download _only_ this
 curl https://codeload.github.com/prismagraphql/prisma/tar.gz/master | tar -xz --strip=2 prisma-master/examples/resolver-unit-tests
 ```
 
-### 2. Set up repository locally and on GitHub
+### 3. Set up repository locally and on GitHub
 
 Next, navigate into the downloaded folder and initiate a new git repository:
 
@@ -33,7 +34,7 @@ Add a new remote to your local git repository:
 git remote add origin git@github.com:marktani/resolver-unit-tests.git
 ```
 
-### 3. Link GitHub and Travis CI
+### 4. Link GitHub and Travis CI
 
 Now, link your GitHub account in your [Travis CI](https://travis-ci.com/) account, and push the downloaded example to your repository:
 
@@ -41,7 +42,7 @@ Now, link your GitHub account in your [Travis CI](https://travis-ci.com/) accoun
 git push --set-upstream origin master
 ```
 
-### 4. Verify the build
+### 5. Verify the build
 
 In your Travis CI account, review the build and confirm that the build went through.
 

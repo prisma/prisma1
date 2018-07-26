@@ -8,4 +8,5 @@ type Post {
 enum PostStatus {
   DRAFT
   PUBLISH
+  DELETED
 }

@@ -2506,7 +2506,7 @@ graphql-playground-middleware-lambda@1.5.1:
   dependencies:
     graphql-playground-html "1.5.5"
 
-graphql-request@^1.4.0, graphql-request@^1.5.0, graphql-request@^1.6.0:
+graphql-request@^1.4.0, graphql-request@^1.5.0:
   version "1.6.0"
   resolved "https://registry.yarnpkg.com/graphql-request/-/graphql-request-1.6.0.tgz#afe87cf2a336acabb0cc2a875900202eda89f412"
   dependencies:
