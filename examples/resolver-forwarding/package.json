@@ -8,7 +8,7 @@
   "author": "Prisma",
   "license": "Apache 2",
   "scripts": {
-    "start": "node index.js"
+    "start": "node src/index.js"
   },
   "devDependencies": {
     "prisma": "1.8.3"
