@@ -16,7 +16,7 @@ trait FilterConditionBuilder extends BuilderBase {
 
     def stripLogicalFiltersWithOnlyOneFilterContained(filter: Filter): Filter = {
       filter match {
-        case NodeSubscriptionFilter()        => NodeSubscriptionFilter()
+        case NodeSubscriptionFilter          => NodeSubscriptionFilter
         case AndFilter(Vector(singleFilter)) => stripLogicalFiltersWithOnlyOneFilterContained(singleFilter)
         case OrFilter(Vector(singleFilter))  => stripLogicalFiltersWithOnlyOneFilterContained(singleFilter)
         case AndFilter(filters)              => AndFilter(filters.map(stripLogicalFiltersWithOnlyOneFilterContained))
@@ -40,16 +40,16 @@ trait FilterConditionBuilder extends BuilderBase {
 
     filter match {
       //-------------------------------RECURSION------------------------------------
-      case NodeSubscriptionFilter() => and(trueCondition())
-      case AndFilter(filters)       => nonEmptyConditions(filters).reduceLeft(_ and _)
-      case OrFilter(filters)        => nonEmptyConditions(filters).reduceLeft(_ or _)
-      case NotFilter(filters)       => filters.map(buildConditionForFilter(_, alias)).foldLeft(and(trueCondition()))(_ andNot _)
-      case NodeFilter(filters)      => buildConditionForFilter(OrFilter(filters), alias)
-      case x: RelationFilter        => relationFilterStatement(alias, x, relField, invert)
+      case NodeSubscriptionFilter => and(trueCondition())
+      case AndFilter(filters)     => nonEmptyConditions(filters).reduceLeft(_ and _)
+      case OrFilter(filters)      => nonEmptyConditions(filters).reduceLeft(_ or _)
+      case NotFilter(filters)     => filters.map(buildConditionForFilter(_, alias)).foldLeft(and(trueCondition()))(_ andNot _)
+      case NodeFilter(filters)    => buildConditionForFilter(OrFilter(filters), alias)
+      case x: RelationFilter      => relationFilterStatement(alias, x, relField, invert)
 
       //--------------------------------ANCHORS------------------------------------
-      case _: TrueFilter                                         => trueCondition()
-      case _: FalseFilter                                        => falseCondition()
+      case TrueFilter                                            => trueCondition()
+      case FalseFilter                                           => falseCondition()
       case ScalarFilter(scalarField, Contains(_))                => fieldFrom(scalarField).contains(stringDummy)
       case ScalarFilter(scalarField, NotContains(_))             => fieldFrom(scalarField).notContains(stringDummy)
       case ScalarFilter(scalarField, StartsWith(_))              => fieldFrom(scalarField).startsWith(stringDummy)
@@ -74,11 +74,13 @@ trait FilterConditionBuilder extends BuilderBase {
   }
 
   private def relationFilterStatement(alias: String, relationFilter: RelationFilter, relField: Option[Field[AnyRef]], invert: Boolean): Condition = {
-    // this skips intermediate table when there is no condition on it
+    // this skips intermediate tables when there is no condition on them. so the following will not join with the album table but join the artist-album relation with the album-track relation
     // artists(where:{albums_some:{tracks_some:{condition}}})
+    //
+    // the following query contains an implicit andFilter around the two nested ones and will not be improved at the moment
     // albums(where: {Tracks_some:{ MediaType:{Name_starts_with:""}, Genre:{Name_starts_with:""}}})
-    // this will be an andFilter around the two nested ones and will not be skipped at the moment
-    // implicit AND like above as well as explicit AND, OR, NOT can be improve
+    // the same is true for explicit AND, OR, NOT with more than one nested relationfilter. they do not profit from skipping intermediate tables at the moment
+    // these cases could be improved as well at the price of higher code complexity
 
     val relationField = relationFilter.field
     val relation      = relationField.relation
@@ -93,7 +95,7 @@ trait FilterConditionBuilder extends BuilderBase {
 
         relationFilter.condition match {
           case AtLeastOneRelatedNode => modelIdColumn(alias, relationField.model).in(select.where(buildConditionForFilter(x, newAlias, relField)))
-          case EveryRelatedNode      => modelIdColumn(alias, relationField.model).notIn(select.where(buildConditionForFilter(x, newAlias, relField, true)))
+          case EveryRelatedNode      => modelIdColumn(alias, relationField.model).notIn(select.where(buildConditionForFilter(x, newAlias, relField, invert = true)))
           case NoRelatedNode         => modelIdColumn(alias, relationField.model).notIn(select.where(buildConditionForFilter(x, newAlias, relField)))
           case NoRelationCondition   => modelIdColumn(alias, relationField.model).in(select.where(buildConditionForFilter(x, newAlias, relField)))
         }

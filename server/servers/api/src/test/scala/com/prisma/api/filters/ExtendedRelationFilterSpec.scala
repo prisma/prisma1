@@ -55,11 +55,6 @@ class ExtendedRelationFilterSpec extends FlatSpec with Matchers with ApiSpecBase
   override protected def beforeAll(): Unit = {
     super.beforeAll()
     database.setup(project)
-  }
-
-  override def beforeEach() = {
-    super.beforeEach()
-    database.truncateProjectTables(project)
 
     // add data
     server.query("""mutation {createGenre(data: {Name: "Genre1", GenreId: 1}){Name}}""", project = project)

@@ -115,6 +115,6 @@ object AtLeastOneRelatedNode extends RelationCondition
 object NoRelatedNode         extends RelationCondition
 object NoRelationCondition   extends RelationCondition
 
-case class NodeSubscriptionFilter() extends Filter
-case class TrueFilter()             extends Filter
-case class FalseFilter()            extends Filter
+object NodeSubscriptionFilter extends Filter
+object TrueFilter             extends Filter
+object FalseFilter            extends Filter
