@@ -54,7 +54,7 @@ case class GraphQlRequestHandlerImpl(
       request.id,
       HttpRequest(HttpMethods.POST),
       query.queryString,
-      query.variables.toString(),
+      query.variables,
       apiDependencies.reporter,
       projectId = Some(request.project.id),
       errorCodeExtractor = errorExtractor
