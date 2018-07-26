@@ -7,9 +7,8 @@ import com.prisma.api.mutactions.{DatabaseMutactionVerifier, SideEffectMutaction
 import com.prisma.api.project.ProjectFetcher
 import com.prisma.api.resolver.DeferredResolverProvider
 import com.prisma.api.schema.{ApiUserContext, SchemaBuilder}
-import com.prisma.api.server.RequestHandler
+import com.prisma.api.server.{GraphQlRequestHandler, GraphQlRequestHandlerImpl, RequestHandler}
 import com.prisma.auth.{Auth, AuthImpl}
-import com.prisma.client.server.{GraphQlRequestHandler, GraphQlRequestHandlerImpl}
 import com.prisma.errors.{BugsnagErrorReporter, ErrorReporter}
 import com.prisma.messagebus.{PubSub, PubSubPublisher, QueuePublisher}
 import com.prisma.profiling.JvmProfiler
