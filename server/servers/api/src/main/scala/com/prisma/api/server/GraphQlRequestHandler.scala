@@ -1,10 +1,9 @@
-package com.prisma.client.server
+package com.prisma.api.server
 
 import akka.http.scaladsl.model.StatusCodes.OK
 import akka.http.scaladsl.model._
 import com.prisma.api.ApiDependencies
 import com.prisma.api.schema.{ApiUserContext, UserFacingError}
-import com.prisma.api.server.{GraphQlQuery, GraphQlRequest}
 import com.prisma.cache.Cache
 import com.prisma.sangria.utils.ErrorHandler
 import play.api.libs.json.{JsArray, JsValue}
@@ -29,8 +28,7 @@ case class GraphQlRequestHandlerImpl(
 
   import apiDependencies.system.dispatcher
   import com.prisma.api.server.JsonMarshalling._
-  val cache            = Cache.lfu[(String, Document), Vector[Violation]](10, 100)
-  val generalValidator = QueryValidator.default
+  val queryValidationCache = Cache.lfu[(String, Document), Vector[Violation]](minimumCacheSize, maximumCacheSize)
 
   override def handle(graphQlRequest: GraphQlRequest): Future[(StatusCode, JsValue)] = {
     val jsonResult = if (!graphQlRequest.isBatch) {
@@ -62,10 +60,10 @@ case class GraphQlRequestHandlerImpl(
       errorCodeExtractor = errorExtractor
     )
 
-    val generalViolations = cache.getOrUpdate((request.project.id, query.query), () => generalValidator.validateQuery(request.schema, query.query))
-
     val queryValidator = new QueryValidator {
-      override def validateQuery(schema: Schema[_, _], queryAst: Document): Vector[Violation] = generalViolations
+      override def validateQuery(schema: Schema[_, _], queryAst: Document): Vector[Violation] = {
+        queryValidationCache.getOrUpdate((request.project.id, queryAst), () => QueryValidator.default.validateQuery(request.schema, query.query))
+      }
     }
 
     val result: Future[JsValue] = Executor.execute(
