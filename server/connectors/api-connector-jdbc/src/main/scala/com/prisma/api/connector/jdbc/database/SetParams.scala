@@ -55,14 +55,15 @@ object SetParams extends SlickExtensions with LimitClauseBuilder {
   def setFilter(pp: PositionedParameters, filter: Filter): Unit = {
     filter match {
       //-------------------------------RECURSION------------------------------------
-      case NodeSubscriptionFilter()           => // NOOP
+      case NodeSubscriptionFilter             => // NOOP
       case AndFilter(filters)                 => filters.foreach(setFilter(pp, _))
       case OrFilter(filters)                  => filters.foreach(setFilter(pp, _))
       case NotFilter(filters)                 => filters.foreach(setFilter(pp, _))
       case NodeFilter(filters)                => setFilter(pp, OrFilter(filters))
       case RelationFilter(_, nestedFilter, _) => setFilter(pp, nestedFilter)
       //--------------------------------ANCHORS------------------------------------
-      case PreComputedSubscriptionFilter(_)                     => // NOOP
+      case TrueFilter                                           => // NOOP
+      case FalseFilter                                          => // NOOP
       case ScalarFilter(_, Contains(StringGCValue(value)))      => pp.setString(value)
       case ScalarFilter(_, NotContains(StringGCValue(value)))   => pp.setString(value)
       case ScalarFilter(_, StartsWith(StringGCValue(value)))    => pp.setString(value)
