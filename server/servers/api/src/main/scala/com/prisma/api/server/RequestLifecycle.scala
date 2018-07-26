@@ -84,7 +84,7 @@ case class GraphQlQuery(
 
 object GraphQlQuery {
 
-  val queryParsingCache = Cache.lfu[String, Try[Document]](minimumCacheSize, maximumCacheSize)
+  val queryParsingCache = Cache.lfu[String, Try[Document]](sangriaMinimumCacheSize, maximumCacheSize)
 
   def tryFromJson(requestJson: JsValue): Try[GraphQlQuery] = {
     val JsObject(fields) = requestJson

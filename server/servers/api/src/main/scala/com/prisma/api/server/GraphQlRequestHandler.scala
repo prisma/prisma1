@@ -28,7 +28,7 @@ case class GraphQlRequestHandlerImpl(
 
   import apiDependencies.system.dispatcher
   import com.prisma.api.server.JsonMarshalling._
-  val queryValidationCache = Cache.lfu[(String, Document), Vector[Violation]](minimumCacheSize, maximumCacheSize)
+  val queryValidationCache = Cache.lfu[(String, Document), Vector[Violation]](sangriaMinimumCacheSize, maximumCacheSize)
 
   override def handle(graphQlRequest: GraphQlRequest): Future[(StatusCode, JsValue)] = {
     val jsonResult = if (!graphQlRequest.isBatch) {

@@ -1,6 +1,6 @@
 package com.prisma.api
 
 package object server {
-  val minimumCacheSize = 30
-  val maximumCacheSize = 100
+  val sangriaMinimumCacheSize = 30
+  val sangriaMaximumCacheSize = 100
 }
