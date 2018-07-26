@@ -5,9 +5,13 @@ import akka.http.scaladsl.model._
 import com.prisma.api.ApiDependencies
 import com.prisma.api.schema.{ApiUserContext, UserFacingError}
 import com.prisma.api.server.{GraphQlQuery, GraphQlRequest}
+import com.prisma.cache.Cache
 import com.prisma.sangria.utils.ErrorHandler
 import play.api.libs.json.{JsArray, JsValue}
+import sangria.ast.Document
 import sangria.execution.{Executor, QueryAnalysisError}
+import sangria.schema.Schema
+import sangria.validation.{QueryValidator, Violation}
 
 import scala.collection.immutable.Seq
 import scala.concurrent.Future
@@ -25,6 +29,8 @@ case class GraphQlRequestHandlerImpl(
 
   import apiDependencies.system.dispatcher
   import com.prisma.api.server.JsonMarshalling._
+  val cache            = Cache.lfu[(String, Document), Vector[Violation]](10, 100)
+  val generalValidator = QueryValidator.default
 
   override def handle(graphQlRequest: GraphQlRequest): Future[(StatusCode, JsValue)] = {
     val jsonResult = if (!graphQlRequest.isBatch) {
@@ -56,6 +62,12 @@ case class GraphQlRequestHandlerImpl(
       errorCodeExtractor = errorExtractor
     )
 
+    val generalViolations = cache.getOrUpdate((request.project.id, query.query), () => generalValidator.validateQuery(request.schema, query.query))
+
+    val queryValidator = new QueryValidator {
+      override def validateQuery(schema: Schema[_, _], queryAst: Document): Vector[Violation] = generalViolations
+    }
+
     val result: Future[JsValue] = Executor.execute(
       schema = request.schema,
       queryAst = query.query,
@@ -63,7 +75,8 @@ case class GraphQlRequestHandlerImpl(
       variables = query.variables,
       exceptionHandler = errorHandler.sangriaExceptionHandler,
       operationName = query.operationName,
-      deferredResolver = apiDependencies.deferredResolverProvider(request.project)
+      deferredResolver = apiDependencies.deferredResolverProvider(request.project),
+      queryValidator = queryValidator
     )
 
     result.recover {
