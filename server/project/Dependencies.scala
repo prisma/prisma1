@@ -86,7 +86,7 @@ object Dependencies {
   val scalaUri          = "io.lemonlabs"               %% "scala-uri"                     % "1.1.1"
   val parserCombinators = "org.scala-lang.modules"     %% "scala-parser-combinators"      % "1.0.4"
   val apacheCommons     = "commons-lang"               % "commons-lang"                   % "2.6"
-  val microMeter        = "io.micrometer"              % "micrometer-registry-prometheus" % "1.0.4"
+  val microMeter        = "io.micrometer"              % "micrometer-registry-prometheus" % "1.0.6"
   val jooq = Vector(
     "org.jooq" % "jooq"        % "3.11.0",
     "org.jooq" %% "jooq-scala" % "3.11.0"
