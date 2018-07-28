@@ -106,9 +106,6 @@ case class SchemaBuilderImpl(
       arguments = objectTypeBuilder.mapToListConnectionArguments(model),
       resolve = (ctx) => {
         val arguments = objectTypeBuilder.extractQueryArgumentsFromContext(model, ctx)
-        println("!" * 50)
-//        println(ctx.args)
-        println(ctx.astFields)
         def getSelectedFields(field: ast.Field): Vector[ast.Field] = {
           val fields = field.selections.collect {
             case f: ast.Field => f
@@ -116,11 +113,13 @@ case class SchemaBuilderImpl(
           fields ++ fields.flatMap(getSelectedFields)
         }
         val selectedFields = ctx.astFields.flatMap(getSelectedFields).map(_.name)
-        println(selectedFields)
         if (selectedFields == Vector("aggregate", "count")) {
-          val conn =
-            DefaultIdBasedConnection[PrismaNode](com.prisma.api.resolver.PageInfo.empty, Vector.empty, ConnectionParentElement(None, None, arguments))
-          DeferredValue(IdBasedConnectionDeferred(conn))
+          val connection = DefaultIdBasedConnection[PrismaNode](
+            com.prisma.api.resolver.PageInfo.empty,
+            Vector.empty,
+            ConnectionParentElement(None, None, arguments)
+          )
+          DeferredValue(IdBasedConnectionDeferred(connection))
         } else {
           DeferredValue(ManyModelDeferred(model, arguments))
         }

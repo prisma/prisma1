@@ -51,11 +51,6 @@ class DeferredResolverProvider[CtxType](dataResolver: DataResolver) extends Defe
         OrderedDeferred(deferred, order)
     }
 
-    val connectionDeferreds = orderedDeferred.collect {
-      case OrderedDeferred(deferred: IdBasedConnectionDeferred, order) =>
-        OrderedDeferred(deferred, order)
-    }
-
     // for every group, further break them down by their arguments
     val manyModelDeferredsMap      = DeferredUtils.groupModelDeferred[ManyModelDeferred](manyModelDeferreds)
     val countManyModelDeferredsMap = DeferredUtils.groupModelDeferred[CountManyModelDeferred](countManyModelDeferreds)
@@ -107,9 +102,10 @@ class DeferredResolverProvider[CtxType](dataResolver: DataResolver) extends Defe
       .toVector
       .flatten
 
-    val connectionFutureResult = connectionDeferreds.map {
-      case deferred => OrderedDeferredFutureResult(Future.successful(deferred.deferred.conn), deferred.order)
-    }.toVector
+    val connectionFutureResult = orderedDeferred.collect {
+      case OrderedDeferred(deferred: IdBasedConnectionDeferred, order) =>
+        OrderedDeferredFutureResult(Future.successful(deferred.conn), order)
+    }
 
     (manyModelFutureResults ++
       countManyModelFutureResults ++
