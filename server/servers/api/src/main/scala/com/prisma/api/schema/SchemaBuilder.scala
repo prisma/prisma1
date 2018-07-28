@@ -3,13 +3,15 @@ package com.prisma.api.schema
 import akka.actor.ActorSystem
 import com.prisma.api.connector.{ApiConnectorCapability, NodeQueryCapability, PrismaNode}
 import com.prisma.api.mutations._
-import com.prisma.api.resolver.DeferredTypes.{ManyModelDeferred, OneDeferred}
+import com.prisma.api.resolver.{ConnectionParentElement, DefaultIdBasedConnection}
+import com.prisma.api.resolver.DeferredTypes.{IdBasedConnectionDeferred, ManyModelDeferred, OneDeferred}
 import com.prisma.api.{ApiDependencies, ApiMetrics}
 import com.prisma.gc_values.CuidGCValue
 import com.prisma.shared.models.{Model, Project}
 import com.prisma.util.coolArgs.CoolArgs
 import com.prisma.utils.boolean.BooleanUtils._
 import org.atteo.evo.inflector.English
+import sangria.ast
 import sangria.relay._
 import sangria.schema._
 
@@ -104,7 +106,23 @@ case class SchemaBuilderImpl(
       arguments = objectTypeBuilder.mapToListConnectionArguments(model),
       resolve = (ctx) => {
         val arguments = objectTypeBuilder.extractQueryArgumentsFromContext(model, ctx)
-        DeferredValue(ManyModelDeferred(model, arguments))
+        def getSelectedFields(field: ast.Field): Vector[ast.Field] = {
+          val fields = field.selections.collect {
+            case f: ast.Field => f
+          }
+          fields ++ fields.flatMap(getSelectedFields)
+        }
+        val selectedFields = ctx.astFields.flatMap(getSelectedFields).map(_.name)
+        if (selectedFields == Vector("aggregate", "count")) {
+          val connection = DefaultIdBasedConnection[PrismaNode](
+            com.prisma.api.resolver.PageInfo.empty,
+            Vector.empty,
+            ConnectionParentElement(None, None, arguments)
+          )
+          DeferredValue(IdBasedConnectionDeferred(connection))
+        } else {
+          DeferredValue(ManyModelDeferred(model, arguments))
+        }
       }
     )
   }

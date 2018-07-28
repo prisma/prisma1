@@ -53,4 +53,6 @@ object DeferredTypes {
   type ScalarListDeferredResultType = Vector[Any]
 
   case class ScalarListDeferred(model: Model, field: ScalarField, nodeId: IdGCValue) extends Deferred[ScalarListDeferredResultType]
+
+  case class IdBasedConnectionDeferred(conn: DefaultIdBasedConnection[PrismaNode]) extends Deferred[RelayConnectionOutputType]
 }
