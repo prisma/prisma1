@@ -49,7 +49,7 @@ case class NestedDisconnectInterpreter(mutaction: NestedDisconnect)(implicit val
                 case Some(childId) =>
                   for {
                     _ <- mutationBuilder.ensureThatNodeIsConnected(mutaction.relationField, childId)
-                    _ <- mutationBuilder.deleteRelationRowByChildId(mutaction.relationField, childId)
+                    _ <- mutationBuilder.deleteRelationRowByChildIdAndParentId(mutaction.relationField, childId, parentId)
                   } yield ()
               }
         } yield ()

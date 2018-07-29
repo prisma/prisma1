@@ -92,6 +92,17 @@ case class NestedConnectInterpreter(mutaction: NestedConnect)(implicit val ec: E
     action
   }
 
+  def removalByChildAndParent(parentId: IdGCValue)(implicit mutationBuilder: JdbcActionsBuilder) = {
+    val action = for {
+      id <- mutationBuilder.getNodeIdByWhere(mutaction.where)
+      _ <- id match {
+            case None          => throw APIErrors.NodeNotFoundForWhereError(mutaction.where)
+            case Some(childId) => mutationBuilder.deleteRelationRowByChildIdAndParentId(mutaction.relationField, childId, parentId)
+          }
+    } yield ()
+    action
+  }
+
   def checkForOldParentByChildWhere(where: NodeSelector)(implicit mutationBuilder: JdbcActionsBuilder): DBIO[Unit] = {
     for {
       id <- mutationBuilder.getNodeIdByWhere(where)
