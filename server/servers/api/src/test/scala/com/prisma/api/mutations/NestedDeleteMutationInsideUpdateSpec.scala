@@ -540,13 +540,31 @@ class NestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matchers with A
 
     ifConnectorIsActive { dataResolver(project).countByTable("_ChildToParent").await should be(4) }
 
-    val res = server.query(
+    server.queryThatMustFail(
       s"""
          |mutation {
          |  updateParent(
          |  where: { p: "p1"}
          |  data:{
          |    childrenOpt: {delete: [{c: "c1"}, {c: "c2"}, {c: "otherChild"}]}
+         |  }){
+         |    childrenOpt{
+         |      c
+         |    }
+         |  }
+         |}
+      """.stripMargin,
+      project,
+      3041
+    )
+
+    val res = server.query(
+      s"""
+         |mutation {
+         |  updateParent(
+         |  where: { p: "p1"}
+         |  data:{
+         |    childrenOpt: {delete: [{c: "c1"}, {c: "c2"}]}
          |  }){
          |    childrenOpt{
          |      c
@@ -561,6 +579,7 @@ class NestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matchers with A
 
     server.query(s"""query{child(where:{c:"c3"}){c, parentsOpt{p}}}""", project).toString should be(
       """{"data":{"child":{"c":"c3","parentsOpt":[{"p":"p1"}]}}}""")
+
     server.query(s"""query{child(where:{c:"otherChild"}){c, parentsOpt{p}}}""", project).toString should be(
       """{"data":{"child":{"c":"otherChild","parentsOpt":[{"p":"otherParent"}]}}}""")
 
