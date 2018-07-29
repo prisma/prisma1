@@ -52,9 +52,9 @@ trait OrderByClauseBuilder extends QueryBuilderConstants {
 
     (orderBy, defaultOrder, isReverseOrder) match {
       case (Some(order), "asc", true) if order.field.dbName != secondOrderField   => Vector(field(name(alias, order.field.dbName)).desc(), secondField.desc())
-      case (Some(order), "desc", true) if order.field.dbName != secondOrderField  => Vector(field(name(alias, order.field.dbName)).asc(), secondField.asc())
+      case (Some(order), "desc", true) if order.field.dbName != secondOrderField  => Vector(field(name(alias, order.field.dbName)).asc(), secondField.desc())
       case (Some(order), "asc", false) if order.field.dbName != secondOrderField  => Vector(field(name(alias, order.field.dbName)).asc(), secondField.asc())
-      case (Some(order), "desc", false) if order.field.dbName != secondOrderField => Vector(field(name(alias, order.field.dbName)).desc(), secondField.desc())
+      case (Some(order), "desc", false) if order.field.dbName != secondOrderField => Vector(field(name(alias, order.field.dbName)).desc(), secondField.asc())
       case (_, "asc", true)                                                       => Vector(secondField.desc())
       case (_, "desc", true)                                                      => Vector(secondField.asc())
       case (_, "asc", false)                                                      => Vector(secondField.asc())
