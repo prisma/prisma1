@@ -61,7 +61,7 @@ case class NestedUpdateNodeInterpreter(mutaction: NestedUpdateNode)(implicit ec:
 
   override def dbioAction(mutationBuilder: JdbcActionsBuilder, parentId: IdGCValue) = {
     for {
-      _ <- verifyWhere(mutationBuilder, mutaction.where)
+      _ <- verifyChildWhere(mutationBuilder, mutaction.where)
       childId <- mutaction.where match {
                   case Some(where) => mutationBuilder.getNodeIdByParentIdAndWhere(mutaction.relationField, parentId, where)
                   case None        => mutationBuilder.getNodeIdByParentId(mutaction.relationField, parentId)
@@ -103,7 +103,7 @@ trait SharedUpdateLogic {
   def nonListArgs: PrismaArgs
   def listArgs: Vector[(String, ListGCValue)]
 
-  def verifyWhere(mutationBuilder: JdbcActionsBuilder, where: Option[NodeSelector])(implicit ec: ExecutionContext) = {
+  def verifyChildWhere(mutationBuilder: JdbcActionsBuilder, where: Option[NodeSelector])(implicit ec: ExecutionContext) = {
     where match {
       case Some(where) =>
         for {
