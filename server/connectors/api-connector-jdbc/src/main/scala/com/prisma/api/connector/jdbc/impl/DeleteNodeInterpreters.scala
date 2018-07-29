@@ -52,7 +52,7 @@ case class NestedDeleteNodeInterpreter(mutaction: NestedDeleteNode)(implicit val
   override def dbioAction(mutationBuilder: JdbcActionsBuilder, parentId: IdGCValue) = {
     for {
       childId <- getChildId(mutationBuilder, parentId)
-      _       <- mutationBuilder.ensureThatParentIsConnected(parentField, parentId)
+      _       <- mutationBuilder.ensureThatNodesAreConnected(parentField, childId, parentId)
       _       <- performCascadingDelete(mutationBuilder, child, childId)
       _       <- checkForRequiredRelationsViolations(mutationBuilder, childId)
       _       <- mutationBuilder.deleteNodeById(child, childId)
