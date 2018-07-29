@@ -109,6 +109,34 @@ class NestedConnectMutationInsideCreateSpec extends FlatSpec with Matchers with 
     }
     database.setup(project)
 
+    val looseChildId = server
+      .query(
+        """mutation {
+          |  createChild(data: {c: "looseChild"})
+          |  {
+          |    id
+          |  }
+          |}""".stripMargin,
+        project
+      )
+      .pathAsString("data.createChild.id")
+
+    val otherParentWithChildId = server
+      .query(
+        s"""
+         |mutation {
+         |  createParent(data:{
+         |    p: "otherParent"
+         |    childReq: {create: {c: "otherChild"}}
+         |  }){
+         |    id
+         |  }
+         |}
+      """.stripMargin,
+        project
+      )
+      .pathAsString("data.createParent.id")
+
     val child1Id = server
       .query(
         """mutation {
@@ -121,7 +149,7 @@ class NestedConnectMutationInsideCreateSpec extends FlatSpec with Matchers with 
       )
       .pathAsString("data.createChild.id")
 
-    ifConnectorIsActive { dataResolver(project).countByTable("_ParentToChild").await should be(0) }
+    ifConnectorIsActive { dataResolver(project).countByTable("_ParentToChild").await should be(1) }
 
     val res = server.query(
       s"""
@@ -140,7 +168,37 @@ class NestedConnectMutationInsideCreateSpec extends FlatSpec with Matchers with 
     )
 
     res.toString should be("""{"data":{"createParent":{"childReq":{"c":"c1"}}}}""")
-    ifConnectorIsActive { dataResolver(project).countByTable("_ParentToChild").await should be(1) }
+    ifConnectorIsActive { dataResolver(project).countByTable("_ParentToChild").await should be(2) }
+
+    // verify preexisting data
+
+    server
+      .query(
+        s"""
+         |{
+         |  parent(where: {id: "${otherParentWithChildId}"}){
+         |    childReq {
+         |      c
+         |    }
+         |  }
+         |}
+      """.stripMargin,
+        project
+      )
+      .pathAsString("data.parent.childReq.c") should be("otherChild")
+
+    server
+      .query(
+        s"""
+         |{
+         |  child(where: {id: "${looseChildId}"}){
+         |    c
+         |  }
+         |}
+      """.stripMargin,
+        project
+      )
+      .pathAsString("data.child.c") should be("looseChild")
   }
 
   "a P1 to C1  relation with the child already in a relation" should "be connectable through a nested mutation by id if the child is already in a relation" in {
