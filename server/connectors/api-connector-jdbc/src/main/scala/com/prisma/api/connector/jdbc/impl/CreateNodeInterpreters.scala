@@ -104,17 +104,11 @@ case class NestedCreateNodeInterpreter(
   def removalAction(parentId: IdGCValue)(implicit mutationBuilder: JdbcActionsBuilder): DBIO[Unit] =
     mutaction.topIsCreate match {
       case false =>
-        (p.isList, p.isRequired, c.isList, c.isRequired) match {
-          case (false, true, false, true)   => requiredRelationViolation
-          case (false, true, false, false)  => removalByParent(parentId)
-          case (false, false, false, true)  => removalByParent(parentId)
-          case (false, false, false, false) => removalByParent(parentId)
-          case (true, false, false, true)   => noActionRequired
-          case (true, false, false, false)  => noActionRequired
-          case (false, true, true, false)   => removalByParent(parentId)
-          case (false, false, true, false)  => removalByParent(parentId)
-          case (true, false, true, false)   => noActionRequired
-          case _                            => errorBecauseManySideIsRequired
+        (p.isList, c.isList) match {
+          case (false, false) => removalByParent(parentId)
+          case (true, false)  => noActionRequired
+          case (false, true)  => removalByParent(parentId)
+          case (true, true)   => noActionRequired
         }
 
       case true =>
@@ -124,11 +118,12 @@ case class NestedCreateNodeInterpreter(
   override val errorMapper = {
     case e: PSQLException if e.getSQLState == "23505" && GetFieldFromSQLUniqueException.getFieldOption(model, e).isDefined =>
       APIErrors.UniqueConstraintViolation(model.name, GetFieldFromSQLUniqueException.getFieldOption(model, e).get)
+
     case e: PSQLException if e.getSQLState == "23503" =>
       APIErrors.NodeDoesNotExist("")
+
     case e: SQLIntegrityConstraintViolationException
-        if e.getErrorCode == 1062 &&
-          GetFieldFromSQLUniqueException.getFieldOptionMySql(mutaction.nonListArgs.keys, e).isDefined =>
+        if e.getErrorCode == 1062 && GetFieldFromSQLUniqueException.getFieldOptionMySql(mutaction.nonListArgs.keys, e).isDefined =>
       APIErrors.UniqueConstraintViolation(model.name, GetFieldFromSQLUniqueException.getFieldOptionMySql(mutaction.nonListArgs.keys, e).get)
   }
 }
