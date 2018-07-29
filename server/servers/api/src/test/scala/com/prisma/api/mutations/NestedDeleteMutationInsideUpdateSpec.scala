@@ -1493,11 +1493,11 @@ class NestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matchers with A
 
     val result2 = server.query(deleteMutation, project)
 
-    result2.toString should be("""{"data":{"updateUser":{"name":"Y","following":[{"name":"Z"}]}}}""")
+    result2.toString should be("""{"data":{"updateUser":{"name":"Y","following":[]}}}""")
 
     val result3 = server.query("""query{users{name, following{name}}}""", project)
 
-    result3.toString should be("""{"data":{"users":[{"name":"X","following":[{"name":"Z"}]},{"name":"Y","following":[]},{"name":"Z","following":[]}]}}""")
+    result3.toString should be("""{"data":{"users":[{"name":"Y","following":[]},{"name":"Z","following":[]}]}}""")
   }
 
 }

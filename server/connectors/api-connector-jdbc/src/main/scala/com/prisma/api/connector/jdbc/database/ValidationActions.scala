@@ -62,6 +62,35 @@ trait ValidationActions extends BuilderBase with FilterConditionBuilder {
     }
   }
 
+  def ensureThatNodesAreConnected(relationField: RelationField, childId: IdGCValue, parentId: IdGCValue)(implicit ec: ExecutionContext): DBIO[Unit] = {
+    val relation = relationField.relation
+    val idQuery = sql
+      .select(asterisk())
+      .from(relationTable(relation))
+      .where(
+        relationColumn(relation, relationField.oppositeRelationSide).equal(placeHolder),
+        relationColumn(relation, relationField.relationSide).equal(placeHolder)
+      )
+
+    val action = queryToDBIO(idQuery)(
+      setParams = { pp =>
+        pp.setGcValue(childId)
+        pp.setGcValue(parentId)
+      },
+      readResult = rs => rs.readWith(readsAsUnit)
+    )
+    action.map { result =>
+      if (result.isEmpty)
+        throw NodesNotConnectedError(
+          relation = relationField.relation,
+          parent = relationField.model,
+          parentWhere = Some(NodeSelector.forIdGCValue(relationField.model, parentId)),
+          child = relationField.relatedModel_!,
+          childWhere = Some(NodeSelector.forIdGCValue(relationField.relatedModel_!, childId))
+        )
+    }
+  }
+
   def ensureThatParentIsConnected(
       relationField: RelationField,
       parentId: IdGCValue
