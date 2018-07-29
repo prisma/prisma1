@@ -11,10 +11,7 @@ import scala.concurrent.ExecutionContext
 trait ValidationActions extends BuilderBase with FilterConditionBuilder {
   import slickDatabase.profile.api._
 
-  def ensureThatNodeIsNotConnected(
-      relationField: RelationField,
-      childId: IdGCValue
-  )(implicit ec: ExecutionContext): DBIO[Unit] = {
+  def ensureThatNodeIsNotConnected(relationField: RelationField, id: IdGCValue)(implicit ec: ExecutionContext): DBIO[Unit] = {
     val relation = relationField.relation
     val idQuery = sql
       .select(asterisk())
@@ -25,40 +22,11 @@ trait ValidationActions extends BuilderBase with FilterConditionBuilder {
       )
 
     val action = queryToDBIO(idQuery)(
-      setParams = _.setGcValue(childId),
+      setParams = _.setGcValue(id),
       readResult = rs => rs.readWith(readsAsUnit)
     )
     action.map { result =>
       if (result.nonEmpty) throw RequiredRelationWouldBeViolated(relation)
-    }
-  }
-
-  def ensureThatNodeIsConnected(
-      relationField: RelationField,
-      childId: IdGCValue
-  )(implicit ec: ExecutionContext): DBIO[Unit] = {
-    val relation = relationField.relation
-    val idQuery = sql
-      .select(asterisk())
-      .from(relationTable(relation))
-      .where(
-        relationColumn(relation, relationField.oppositeRelationSide).equal(placeHolder),
-        relationColumn(relation, relationField.relationSide).isNotNull
-      )
-
-    val action = queryToDBIO(idQuery)(
-      setParams = _.setGcValue(childId),
-      readResult = rs => rs.readWith(readsAsUnit)
-    )
-    action.map { result =>
-      if (result.isEmpty)
-        throw NodesNotConnectedError(
-          relation = relationField.relation,
-          parent = relationField.model,
-          parentWhere = None,
-          child = relationField.relatedModel_!,
-          childWhere = Some(NodeSelector.forIdGCValue(relationField.relatedModel_!, childId))
-        )
     }
   }
 

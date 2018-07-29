@@ -81,6 +81,7 @@ trait RelationActions extends BuilderBase {
   }
 
   def deleteRelationRowByChildId(relationField: RelationField, childId: IdGCValue): DBIO[Unit] = {
+    assert(!relationField.relatedField.isList)
     val relation  = relationField.relation
     val condition = relationColumn(relation, relationField.oppositeRelationSide).equal(placeHolder)
 
@@ -105,7 +106,6 @@ trait RelationActions extends BuilderBase {
 
         deleteToDBIO(query)(setParams = _.setGcValue(childId))
     }
-
   }
 
   def deleteRelationRowByChildIdAndParentId(relationField: RelationField, childId: IdGCValue, parentId: IdGCValue): DBIO[Unit] = {
@@ -142,6 +142,7 @@ trait RelationActions extends BuilderBase {
   }
 
   def deleteRelationRowByParentId(relationField: RelationField, parentId: IdGCValue): DBIO[Unit] = {
+    assert(!relationField.isList)
     val relation  = relationField.relation
     val condition = relationColumn(relation, relationField.relationSide).equal(placeHolder)
     relation.inlineManifestation match {

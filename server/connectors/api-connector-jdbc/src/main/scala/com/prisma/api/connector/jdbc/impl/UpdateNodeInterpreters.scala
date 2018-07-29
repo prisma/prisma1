@@ -24,7 +24,7 @@ case class UpdateNodeInterpreter(mutaction: TopLevelUpdateNode)(implicit ec: Exe
     for {
       nodeOpt <- mutationBuilder.getNodeByWhere(mutaction.where)
       node <- nodeOpt match {
-               case Some(node) => doIt(mutationBuilder, node.id).andThen(DBIO.successful(node))
+               case Some(node) => updateNodeById(mutationBuilder, node.id).andThen(DBIO.successful(node))
                case None       => DBIO.failed(APIErrors.NodeNotFoundForWhereError(mutaction.where))
              }
     } yield UpdateNodeResult(node.id, node, mutaction)
@@ -62,12 +62,12 @@ case class NestedUpdateNodeInterpreter(mutaction: NestedUpdateNode)(implicit ec:
   override def dbioAction(mutationBuilder: JdbcActionsBuilder, parentId: IdGCValue) = {
     for {
       _ <- verifyWhere(mutationBuilder, mutaction.where)
-      idOpt <- mutaction.where match {
-                case Some(where) => mutationBuilder.getNodeIdByParentIdAndWhere(mutaction.relationField, parentId, where)
-                case None        => mutationBuilder.getNodeIdByParentId(mutaction.relationField, parentId)
-              }
-      id <- idOpt match {
-             case Some(id) => doIt(mutationBuilder, id)
+      childId <- mutaction.where match {
+                  case Some(where) => mutationBuilder.getNodeIdByParentIdAndWhere(mutaction.relationField, parentId, where)
+                  case None        => mutationBuilder.getNodeIdByParentId(mutaction.relationField, parentId)
+                }
+      id <- childId match {
+             case Some(id) => updateNodeById(mutationBuilder, id)
              case None =>
                throw APIErrors.NodesNotConnectedError(
                  relation = mutaction.relationField.relation,
@@ -116,7 +116,7 @@ trait SharedUpdateLogic {
     }
   }
 
-  def doIt(mutationBuilder: JdbcActionsBuilder, id: IdGCValue)(implicit ec: ExecutionContext): DBIO[IdGCValue] = {
+  def updateNodeById(mutationBuilder: JdbcActionsBuilder, id: IdGCValue)(implicit ec: ExecutionContext): DBIO[IdGCValue] = {
     for {
       _ <- mutationBuilder.updateNodeById(model, id, nonListArgs)
       _ <- mutationBuilder.setScalarListValuesByNodeId(model, id, listArgs)
