@@ -48,7 +48,7 @@ case class NestedDisconnectInterpreter(mutaction: NestedDisconnect)(implicit val
                 case None => throw APIErrors.NodeNotFoundForWhereError(where)
                 case Some(childId) =>
                   for {
-                    _ <- mutationBuilder.ensureThatNodeIsConnected(mutaction.relationField, childId)
+                    _ <- mutationBuilder.ensureThatNodesAreConnected(mutaction.relationField, childId, parentId)
                     _ <- mutationBuilder.deleteRelationRowByChildIdAndParentId(mutaction.relationField, childId, parentId)
                   } yield ()
               }
