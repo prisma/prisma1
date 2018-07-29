@@ -118,6 +118,27 @@ class NestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matchers with A
     }
     database.setup(project)
 
+    val existingDataRes = server
+      .query(
+        """mutation {
+          |  createParent(data: {
+          |    p: "existingParent"
+          |    childOpt: {
+          |      create: {c: "existingChild"}
+          |    }
+          |  }){
+          |    id
+          |    childOpt{
+          |       id
+          |    }
+          |  }
+          |}""".stripMargin,
+        project
+      )
+
+    val existingChildId  = existingDataRes.pathAsString("data.createParent.childOpt.id")
+    val existingParentId = existingDataRes.pathAsString("data.createParent.id")
+
     val res = server
       .query(
         """mutation {
@@ -139,7 +160,7 @@ class NestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matchers with A
     val childId  = res.pathAsString("data.createParent.childOpt.id")
     val parentId = res.pathAsString("data.createParent.id")
 
-    ifConnectorIsActive { dataResolver(project).countByTable("_ParentToChild").await should be(1) }
+    ifConnectorIsActive { dataResolver(project).countByTable("_ParentToChild").await should be(2) }
 
     val res2 = server.query(
       s"""
@@ -161,7 +182,24 @@ class NestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matchers with A
 
     res2.toString should be("""{"data":{"updateParent":{"childOpt":null}}}""")
 
-    ifConnectorIsActive { dataResolver(project).countByTable("_ParentToChild").await should be(0) }
+    ifConnectorIsActive { dataResolver(project).countByTable("_ParentToChild").await should be(1) }
+
+    // Verify existing data
+
+    server
+      .query(
+        s"""
+         |{
+         |  parent(where:{id: "$existingParentId"}){
+         |    childOpt {
+         |      c
+         |    }
+         |  }
+         |}
+      """.stripMargin,
+        project
+      )
+      .toString should be(s"""{"data":{"parent":{"childOpt":{"c":"existingChild"}}}}""")
   }
 
   "a P1 to C1  relation" should "error if the nodes are not connected" in {
@@ -471,9 +509,9 @@ class NestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matchers with A
     server.query(
       """mutation {
         |  createParent(data: {
-        |    p: "p1"
+        |    p: "otherParent"
         |    childrenOpt: {
-        |      create: [{c: "c1"},{c: "c2"}]
+        |      create: [{c: "otherChild"}]
         |    }
         |  }){
         |    childrenOpt{
@@ -484,7 +522,23 @@ class NestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matchers with A
       project
     )
 
-    ifConnectorIsActive { dataResolver(project).countByTable("_ChildToParent").await should be(2) }
+    server.query(
+      """mutation {
+        |  createParent(data: {
+        |    p: "p1"
+        |    childrenOpt: {
+        |      create: [{c: "c1"},{c: "c2"},{c: "c3"}]
+        |    }
+        |  }){
+        |    childrenOpt{
+        |       c
+        |    }
+        |  }
+        |}""".stripMargin,
+      project
+    )
+
+    ifConnectorIsActive { dataResolver(project).countByTable("_ChildToParent").await should be(4) }
 
     val res = server.query(
       s"""
@@ -492,7 +546,7 @@ class NestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matchers with A
          |  updateParent(
          |  where: { p: "p1"}
          |  data:{
-         |    childrenOpt: {delete: [{c: "c1"}, {c: "c2"}]}
+         |    childrenOpt: {delete: [{c: "c1"}, {c: "c2"}, {c: "otherChild"}]}
          |  }){
          |    childrenOpt{
          |      c
@@ -503,11 +557,14 @@ class NestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matchers with A
       project
     )
 
-    res.toString should be("""{"data":{"updateParent":{"childrenOpt":[]}}}""")
+    res.toString should be("""{"data":{"updateParent":{"childrenOpt":[{"c":"c3"}]}}}""")
 
-    server.query(s"""query{children{c, parentsOpt{p}}}""", project).toString should be("""{"data":{"children":[]}}""")
+    server.query(s"""query{child(where:{c:"c3"}){c, parentsOpt{p}}}""", project).toString should be(
+      """{"data":{"child":{"c":"c3","parentsOpt":[{"p":"p1"}]}}}""")
+    server.query(s"""query{child(where:{c:"otherChild"}){c, parentsOpt{p}}}""", project).toString should be(
+      """{"data":{"child":{"c":"otherChild","parentsOpt":[{"p":"otherParent"}]}}}""")
 
-    ifConnectorIsActive { dataResolver(project).countByTable("_ChildToParent").await should be(0) }
+    ifConnectorIsActive { dataResolver(project).countByTable("_ChildToParent").await should be(2) }
   }
 
   "a PM to CM relation" should "delete fail if other req relations would be violated" in {
@@ -647,6 +704,21 @@ class NestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matchers with A
     }
     database.setup(project)
 
+    val otherCommentId = server
+      .query(
+        """mutation {
+        |  createComment(
+        |    data: {
+        |      text: "otherComment"
+        |    }
+        |  ){
+        |    id
+        |  }
+        |}""".stripMargin,
+        project
+      )
+      .pathAsString("data.createComment.id")
+
     val createResult = server.query(
       """mutation {
         |  createTodo(
@@ -688,11 +760,33 @@ class NestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matchers with A
       project
     )
 
+    server.queryThatMustFail(
+      s"""mutation {
+         |  updateTodo(
+         |    where: {
+         |      id: "$todoId"
+         |    }
+         |    data:{
+         |      comments: {
+         |        delete: [{id: "$otherCommentId"}]
+         |      }
+         |    }
+         |  ){
+         |    comments {
+         |      text
+         |    }
+         |  }
+         |}
+      """.stripMargin,
+      project,
+      3041
+    )
+
     mustBeEqual(result.pathAsJsValue("data.updateTodo.comments").toString, """[]""")
 
-    val query = server.query("""{ comments { id }}""", project)
-    mustBeEqual(query.toString, """{"data":{"comments":[]}}""")
-    ifConnectorIsActive { dataResolver(project).countByTable("_RelayId").await should be(1) }
+    val query = server.query("""{ comments { text }}""", project)
+    mustBeEqual(query.toString, """{"data":{"comments":[{"text":"otherComment"}]}}""")
+    ifConnectorIsActive { dataResolver(project).countByTable("_RelayId").await should be(2) }
   }
 
   "a one to many relation" should "be deletable by any unique argument through a nested mutation" in {
