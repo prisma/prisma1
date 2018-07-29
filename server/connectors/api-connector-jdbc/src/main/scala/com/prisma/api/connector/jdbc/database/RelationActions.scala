@@ -102,9 +102,43 @@ trait RelationActions extends BuilderBase {
         val query = sql
           .deleteFrom(relationTable(relation))
           .where(condition)
+
         deleteToDBIO(query)(setParams = _.setGcValue(childId))
     }
 
+  }
+
+  def deleteRelationRowByChildIdAndParentId(relationField: RelationField, childId: IdGCValue, parentId: IdGCValue): DBIO[Unit] = {
+    val relation = relationField.relation
+    val condition = relationColumn(relation, relationField.oppositeRelationSide)
+      .equal(placeHolder)
+      .and(relationColumn(relation, relationField.relationSide).equal(placeHolder))
+
+    relation.inlineManifestation match {
+      case Some(manifestation) =>
+        val query = sql
+          .update(relationTable(relation))
+          .set(inlineRelationColumn(relation, manifestation), placeHolder)
+          .where(condition)
+
+        updateToDBIO(query)(
+          setParams = { pp =>
+            pp.setGcValue(NullGCValue)
+            pp.setGcValue(childId)
+            pp.setGcValue(parentId)
+          }
+        )
+
+      case None =>
+        val query = sql
+          .deleteFrom(relationTable(relation))
+          .where(condition)
+
+        deleteToDBIO(query)(setParams = { pp =>
+          pp.setGcValue(childId)
+          pp.setGcValue(parentId)
+        })
+    }
   }
 
   def deleteRelationRowByParentId(relationField: RelationField, parentId: IdGCValue): DBIO[Unit] = {
@@ -129,9 +163,7 @@ trait RelationActions extends BuilderBase {
           .deleteFrom(relationTable(relation))
           .where(condition)
 
-        deleteToDBIO(query)(
-          setParams = _.setGcValue(parentId)
-        )
+        deleteToDBIO(query)(setParams = _.setGcValue(parentId))
     }
   }
 }

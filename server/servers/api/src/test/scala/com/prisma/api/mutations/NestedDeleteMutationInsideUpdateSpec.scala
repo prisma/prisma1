@@ -1432,4 +1432,72 @@ class NestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matchers with A
     result.toString should be("""{"data":{"updateTop":{"nameTop":"updated top","middle":{"nameMiddle":"updated middle","bottom":null}}}}""")
   }
 
+  "Nested delete on self relations" should "only delete the specified nodes" in {
+    val project = SchemaDsl.fromString() { """type User {
+                                             |  id: ID! @unique
+                                             |  name: String! @unique
+                                             |  follower: [User!]! @relation(name: "UserFollow")
+                                             |  following: [User!]! @relation(name: "UserFollow")
+                                             |}""" }
+    database.setup(project)
+
+    server.query("""mutation  {createUser(data: {name: "X"}) {id}}""", project)
+    server.query("""mutation  {createUser(data: {name: "Y"}) {id}}""", project)
+    server.query("""mutation  {createUser(data: {name: "Z"}) {id}}""", project)
+
+    val updateMutation =
+      s""" mutation {
+         |  updateUser(data:{
+         |    following: {
+         |      connect: [{ name: "Y" }, { name: "Z"}]
+         |    }
+         |  },where:{
+         |    name:"X"
+         |  }) {
+         |    name
+         |    following{
+         |      name
+         |    }
+         |    follower{
+         |      name
+         |    }
+         |  }
+         |}
+      """
+
+    val result = server.query(updateMutation, project)
+
+    result.toString should be("""{"data":{"updateUser":{"name":"X","following":[{"name":"Y"},{"name":"Z"}],"follower":[]}}}""")
+
+    val check = server.query("""query{users{name, following{name}}}""", project)
+
+    check.toString should be(
+      """{"data":{"users":[{"name":"X","following":[{"name":"Y"},{"name":"Z"}]},{"name":"Y","following":[]},{"name":"Z","following":[]}]}}""")
+
+    val deleteMutation =
+      s""" mutation {
+         |  updateUser(data:{
+         |    follower: {
+         |      delete: [{ name: "X" }]
+         |    }
+         |  },where:{
+         |    name:"Y"
+         |  }) {
+         |    name
+         |    following{
+         |      name
+         |    }
+         |  }
+         |}
+      """
+
+    val result2 = server.query(deleteMutation, project)
+
+    result2.toString should be("""{"data":{"updateUser":{"name":"Y","following":[{"name":"Z"}]}}}""")
+
+    val result3 = server.query("""query{users{name, following{name}}}""", project)
+
+    result3.toString should be("""{"data":{"users":[{"name":"X","following":[{"name":"Z"}]},{"name":"Y","following":[]},{"name":"Z","following":[]}]}}""")
+  }
+
 }
