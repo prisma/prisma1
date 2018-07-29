@@ -867,6 +867,24 @@ class NestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matchers with A
     }
     database.setup(project)
 
+    val existingCreateResult = server.query(
+      """mutation {
+        |  createTodo(
+        |    data: {
+        |      comments: {
+        |        create: [{text: "otherComment"}]
+        |      }
+        |    }
+        |  ){
+        |    id
+        |    comments { id }
+        |  }
+        |}""".stripMargin,
+      project
+    )
+    val existingTodoId    = existingCreateResult.pathAsString("data.createTodo.id")
+    val existingCommentId = existingCreateResult.pathAsString("data.createTodo.comments.[0].id")
+
     val createResult = server.query(
       """mutation {
         |  createTodo(
@@ -908,8 +926,8 @@ class NestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matchers with A
     )
     mustBeEqual(result.pathAsJsValue("data.updateComment").toString, """{"todo":null}""")
 
-    val query = server.query("""{ todoes { id }}""", project)
-    mustBeEqual(query.toString, """{"data":{"todoes":[]}}""")
+    val query = server.query("""{ todoes { id comments { id } }}""", project)
+    mustBeEqual(query.toString, s"""{"data":{"todoes":[{"id":"${existingTodoId}","comments":[{"id":"${existingCommentId}"}]}]}}""")
   }
 
   "one2one relation both exist and are connected" should "be deletable by id through a nested mutation" in {
