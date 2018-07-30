@@ -19,6 +19,12 @@ class OrderBySpec extends FlatSpec with Matchers with ApiSpecBase {
       |  title: String! @unique
       |  lists: [List!]!
       |}
+      |
+      |type NeedsTiebreaker {
+      |  id: ID! @unique
+      |  name: String!
+      |  order: Int!
+      |}
     """
   }
 
@@ -27,6 +33,97 @@ class OrderBySpec extends FlatSpec with Matchers with ApiSpecBase {
     database.setup(project)
     createLists()
     createTodos()
+    createNeedsTiebreakers()
+  }
+
+  "The order when not giving an order by" should "be by Id ascending and therefore oldest first" in {
+    val result = server.query(
+      """
+        |{
+        |  needsTiebreakers {
+        |    order
+        |  }
+        |}
+      """,
+      project
+    )
+
+    result.toString should be("""{"data":{"needsTiebreakers":[{"order":1},{"order":2},{"order":3},{"order":4},{"order":5},{"order":6},{"order":7}]}}""")
+  }
+
+  "The order when not giving an order by and using last" should "be by Id ascending and therefore oldest first" in {
+    val result = server.query(
+      """
+        |{
+        |  needsTiebreakers(last: 3) {
+        |    order
+        |  }
+        |}
+      """,
+      project
+    )
+
+    result.toString should be("""{"data":{"needsTiebreakers":[{"order":5},{"order":6},{"order":7}]}}""")
+  }
+
+  "The order when giving an order by ASC that only has ties" should "be by Id ascending and therefore oldest first" in {
+    val result = server.query(
+      """
+        |{
+        |  needsTiebreakers(orderBy: name_ASC) {
+        |    order
+        |  }
+        |}
+      """,
+      project
+    )
+
+    result.toString should be("""{"data":{"needsTiebreakers":[{"order":1},{"order":2},{"order":3},{"order":4},{"order":5},{"order":6},{"order":7}]}}""")
+  }
+
+  "The order when giving an order by ASC that only has ties and uses last" should "be by Id ascending and therefore oldest first" in {
+    val result = server.query(
+      """
+        |{
+        |  needsTiebreakers(orderBy: name_ASC, last: 3) {
+        |    order
+        |  }
+        |}
+      """,
+      project
+    )
+
+    result.toString should be("""{"data":{"needsTiebreakers":[{"order":5},{"order":6},{"order":7}]}}""")
+  }
+
+  "The order when giving an order by DESC that only has ties" should "be by Id ascending and therefore oldest first" in {
+    val result = server.query(
+      """
+        |{
+        |  needsTiebreakers(orderBy: name_DESC) {
+        |    order
+        |  }
+        |}
+      """,
+      project
+    )
+
+    result.toString should be("""{"data":{"needsTiebreakers":[{"order":1},{"order":2},{"order":3},{"order":4},{"order":5},{"order":6},{"order":7}]}}""")
+  }
+
+  "The order when giving an order by DESC that only has ties and uses last" should "be by Id ascending and therefore oldest first" in {
+    val result = server.query(
+      """
+        |{
+        |  needsTiebreakers(orderBy: name_DESC, last: 3) {
+        |    order
+        |  }
+        |}
+      """,
+      project
+    )
+
+    result.toString should be("""{"data":{"needsTiebreakers":[{"order":5},{"order":6},{"order":7}]}}""")
   }
 
   "The order when not using order by" should "be the same no matter if pagination is used or not" in {
@@ -119,6 +216,23 @@ class OrderBySpec extends FlatSpec with Matchers with ApiSpecBase {
         |  g: createTodo(data: {title: "7", lists: { connect: [{name:"1"},{name:"2"},{name:"3"}]}}){ id }
         |  b: createTodo(data: {title: "2", lists: { connect: [{name:"1"},{name:"2"},{name:"3"}]}}){ id }
         |  e: createTodo(data: {title: "5", lists: { connect: [{name:"1"},{name:"2"},{name:"3"}]}}){ id }
+        |}
+      """,
+      project
+    )
+  }
+
+  private def createNeedsTiebreakers(): Unit = {
+    server.query(
+      """
+        |mutation {
+        |  a: createNeedsTiebreaker(data: {name: "SameSame", order: 1}){ id }
+        |  b: createNeedsTiebreaker(data: {name: "SameSame", order: 2}){ id }
+        |  c: createNeedsTiebreaker(data: {name: "SameSame", order: 3}){ id }
+        |  d: createNeedsTiebreaker(data: {name: "SameSame", order: 4}){ id }
+        |  e: createNeedsTiebreaker(data: {name: "SameSame", order: 5}){ id }
+        |  f: createNeedsTiebreaker(data: {name: "SameSame", order: 6}){ id }
+        |  g: createNeedsTiebreaker(data: {name: "SameSame", order: 7}){ id }
         |}
       """,
       project
