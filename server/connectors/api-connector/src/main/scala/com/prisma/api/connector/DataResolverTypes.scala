@@ -1,6 +1,6 @@
 package com.prisma.api.connector
 
-import com.prisma.gc_values.{CuidGCValue, GCValue, IdGCValue}
+import com.prisma.gc_values.{GCValue, IdGCValue}
 import com.prisma.shared.models.IdType.Id
 import com.prisma.shared.models._
 
