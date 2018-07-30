@@ -78,6 +78,7 @@ class DeleteSpec extends FlatSpec with Matchers with ApiSpecBase {
       """.stripMargin,
       project
     )
+    todoAndRelayCountShouldBe(0)
   }
 
   def todoAndRelayCountShouldBe(int: Int) = {
