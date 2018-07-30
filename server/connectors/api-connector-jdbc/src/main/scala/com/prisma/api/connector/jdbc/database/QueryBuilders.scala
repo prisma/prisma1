@@ -36,7 +36,7 @@ case class RelatedModelsQueryBuilder(
     .on(aliasColumn(relatedModel.dbNameOfIdField_!).eq(field(name(relationTableAlias, oppositeModelRelationSideColumn))))
 
   lazy val queryWithPagination = {
-    val order           = orderByInternal(baseTableAlias, baseTableAlias, secondaryOrderByForPagination, queryArguments)
+    val order           = orderByInternalWithAliases(baseTableAlias, baseTableAlias, secondaryOrderByForPagination, queryArguments)
     val cursorCondition = buildCursorCondition(queryArguments, relatedModel)
 
     val aliasedBase = base.where(relatedNodesCondition, queryArgumentsCondition, cursorCondition).asTable().as(baseTableAlias)
@@ -55,7 +55,7 @@ case class RelatedModelsQueryBuilder(
 
   lazy val mysqlHack = {
     val relatedNodeCondition = field(name(relationTableAlias, modelRelationSideColumn)).equal(placeHolder)
-    val order                = orderByInternal2(secondaryOrderByForPagination, queryArguments)
+    val order                = orderByInternal(secondaryOrderByForPagination, queryArguments)
     val cursorCondition      = buildCursorCondition(queryArguments, relatedModel)
 
     base
@@ -66,7 +66,7 @@ case class RelatedModelsQueryBuilder(
   }
 
   lazy val queryWithoutPagination = {
-    val order = orderByInternal(topLevelAlias, relationTableAlias, oppositeModelRelationSideColumn, queryArguments)
+    val order = orderByInternalWithAliases(topLevelAlias, relationTableAlias, oppositeModelRelationSideColumn, queryArguments)
     base
       .where(relatedNodesCondition, queryArgumentsCondition)
       .orderBy(order: _*)
