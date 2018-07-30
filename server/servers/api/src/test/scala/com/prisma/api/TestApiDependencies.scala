@@ -30,7 +30,7 @@ case class TestApiDependenciesImpl()(implicit val system: ActorSystem, val mater
   lazy val apiSchemaBuilder                     = SchemaBuilder()(system, this)
   lazy val projectFetcher: ProjectFetcher       = ???
   override lazy val maxImportExportSize: Int    = 1000
-  override lazy val sssEventsPubSub             = InMemoryPubSubTestKit[String]()
+  override val sssEventsPubSub                  = InMemoryPubSubTestKit[String]()
   override lazy val webhookPublisher            = InMemoryQueueTestKit[Webhook]()
   override lazy val apiConnector                = ConnectorUtils.loadApiConnector(config.copy(databases = config.databases.map(_.copy(pooled = false))))
   override lazy val sideEffectMutactionExecutor = SideEffectMutactionExecutorImpl()
