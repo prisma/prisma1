@@ -114,13 +114,15 @@ trait NodeActions extends BuilderBase with FilterConditionBuilder with ScalarLis
     }
   }
 
-  def deleteNodeById(model: Model, id: IdGCValue)(implicit ec: ExecutionContext) = deleteNodes(model, Vector(id))
+  def deleteNodeById(model: Model, id: IdGCValue, shouldDeleteRelayIds: Boolean)(implicit ec: ExecutionContext) = {
+    deleteNodes(model, Vector(id), shouldDeleteRelayIds)
+  }
 
   //Todo check how much of a performance gain it would be to chain these using andThen instead of the for comprehension
-  def deleteNodes(model: Model, ids: Vector[IdGCValue])(implicit ec: ExecutionContext): DBIO[Unit] = {
+  def deleteNodes(model: Model, ids: Vector[IdGCValue], shouldDeleteRelayIds: Boolean)(implicit ec: ExecutionContext): DBIO[Unit] = {
     for {
       _ <- deleteScalarListValuesByNodeIds(model, ids)
-      _ <- deleteRelayIds(ids)
+      _ <- if (shouldDeleteRelayIds) deleteRelayIds(ids) else dbioUnit
       _ <- deleteNodesByIds(model, ids)
     } yield ()
   }

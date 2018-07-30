@@ -11,7 +11,7 @@ import slick.dbio._
 
 import scala.concurrent.ExecutionContext
 
-case class DeleteNodeInterpreter(mutaction: TopLevelDeleteNode)(implicit val ec: ExecutionContext)
+case class DeleteNodeInterpreter(mutaction: TopLevelDeleteNode, shouldDeleteRelayIds: Boolean)(implicit val ec: ExecutionContext)
     extends TopLevelDatabaseMutactionInterpreter
     with CascadingDeleteSharedStuff {
 
@@ -25,7 +25,7 @@ case class DeleteNodeInterpreter(mutaction: TopLevelDeleteNode)(implicit val ec:
                  for {
                    _ <- performCascadingDelete(mutationBuilder, mutaction.where.model, node.id)
                    _ <- checkForRequiredRelationsViolations(mutationBuilder, node.id)
-                   _ <- mutationBuilder.deleteNodeById(mutaction.where.model, node.id)
+                   _ <- mutationBuilder.deleteNodeById(mutaction.where.model, node.id, shouldDeleteRelayIds)
                  } yield node
                case None =>
                  DBIO.failed(APIErrors.NodeNotFoundForWhereError(mutaction.where))
@@ -40,7 +40,7 @@ case class DeleteNodeInterpreter(mutaction: TopLevelDeleteNode)(implicit val ec:
   }
 }
 
-case class NestedDeleteNodeInterpreter(mutaction: NestedDeleteNode)(implicit val ec: ExecutionContext)
+case class NestedDeleteNodeInterpreter(mutaction: NestedDeleteNode, shouldDeleteRelayIds: Boolean)(implicit val ec: ExecutionContext)
     extends NestedDatabaseMutactionInterpreter
     with CascadingDeleteSharedStuff {
 
@@ -55,7 +55,7 @@ case class NestedDeleteNodeInterpreter(mutaction: NestedDeleteNode)(implicit val
       _       <- mutationBuilder.ensureThatNodesAreConnected(parentField, childId, parentId)
       _       <- performCascadingDelete(mutationBuilder, child, childId)
       _       <- checkForRequiredRelationsViolations(mutationBuilder, childId)
-      _       <- mutationBuilder.deleteNodeById(child, childId)
+      _       <- mutationBuilder.deleteNodeById(child, childId, shouldDeleteRelayIds)
     } yield UnitDatabaseMutactionResult
   }
 
@@ -89,6 +89,7 @@ case class NestedDeleteNodeInterpreter(mutaction: NestedDeleteNode)(implicit val
 }
 
 trait CascadingDeleteSharedStuff {
+  def shouldDeleteRelayIds: Boolean
   def schema: Schema
   implicit def ec: ExecutionContext
 
@@ -119,7 +120,7 @@ trait CascadingDeleteSharedStuff {
       _              <- DBIO.seq(childActions: _*)
       // eigentliche Actions
       _ <- checkTheseOnes(mutationBuilder, parentField, ids)
-      _ <- mutationBuilder.deleteNodes(model, ids)
+      _ <- mutationBuilder.deleteNodes(model, ids, shouldDeleteRelayIds)
     } yield ()
   }
 
