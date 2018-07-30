@@ -94,4 +94,12 @@ describe('Introspector', () => {
       "d" date[]
       );`)
   })
+
+  test('uuid columns', async () => {
+    await testSchema(`CREATE TABLE "UUIDs" (
+      "pk" uuid NOT NULL PRIMARY KEY,
+      "nk" uuid NOT NULL,
+      "tk" uuid
+      );`)
+  })
 })

@@ -87,8 +87,19 @@ Object {
   d: String!
   e: String!
   f: String!
-  g: String
-  h: String!
+  g: UUID
+  h: UUID!
+}",
+}
+`;
+
+exports[`Introspector uuid columns 1`] = `
+Object {
+  "numTables": 1,
+  "sdl": "type UUIDs @pgTable(name: \\"UUIDs\\") {
+  id: UUID! @unique @pgColumn(name: \\"pk\\")
+  nk: UUID!
+  tk: UUID
 }",
 }
 `;

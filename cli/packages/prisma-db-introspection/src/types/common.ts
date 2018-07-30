@@ -7,6 +7,7 @@ export type TypeIdentifier =
   | 'Boolean'
   | 'DateTime'
   | 'ID'
+  | 'UUID'
   | 'Json' // | 'Enum' | 'Relation'
 
 export interface Connector {

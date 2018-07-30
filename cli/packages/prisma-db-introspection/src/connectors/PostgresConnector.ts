@@ -213,13 +213,13 @@ export class PostgresConnector implements Connector {
       (type === 'character' ||
         type === 'character varying' ||
         type === 'text' ||
-        type == 'uuid')
+        type === 'uuid')
     ) {
-      return { typeIdentifier: 'ID', comment: null, error: null }
+      return { typeIdentifier: (type === 'uuid') ? 'UUID' : 'ID', comment: null, error: null }
     }
 
     if (type === 'uuid') {
-      return { typeIdentifier: 'String', comment: null, error: null }
+      return { typeIdentifier: 'UUID', comment: null, error: null }
     }
     if (type === 'character') {
       return { typeIdentifier: 'String', comment: null, error: null }
