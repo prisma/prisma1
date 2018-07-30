@@ -9,13 +9,14 @@ import slick.dbio._
 
 import scala.concurrent.ExecutionContext
 
-case class DeleteDataItemsInterpreter(mutaction: DeleteNodes)(implicit ec: ExecutionContext) extends TopLevelDatabaseMutactionInterpreter {
+case class DeleteDataItemsInterpreter(mutaction: DeleteNodes, shouldDeleteRelayIds: Boolean)(implicit ec: ExecutionContext)
+    extends TopLevelDatabaseMutactionInterpreter {
 
   def dbioAction(mutationBuilder: JdbcActionsBuilder) =
     for {
       ids <- mutationBuilder.getNodeIdsByFilter(mutaction.model, mutaction.whereFilter)
       _   <- checkForRequiredRelationsViolations(mutationBuilder, ids)
-      _   <- mutationBuilder.deleteNodes(mutaction.model, ids)
+      _   <- mutationBuilder.deleteNodes(mutaction.model, ids, shouldDeleteRelayIds)
     } yield UnitDatabaseMutactionResult
 
   private def checkForRequiredRelationsViolations(mutationBuilder: JdbcActionsBuilder, nodeIds: Vector[IdGCValue]): DBIO[_] = {

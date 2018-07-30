@@ -1,5 +1,6 @@
 package com.prisma.api.mutations
 
+import com.prisma.IgnoreMySql
 import com.prisma.api.ApiSpecBase
 import com.prisma.shared.models.Project
 import com.prisma.shared.schema_dsl.SchemaDsl
@@ -15,7 +16,7 @@ class DeleteSpec extends FlatSpec with Matchers with ApiSpecBase {
     database.setup(project)
     createTodo(project, "title1")
     createTodo(project, "title2")
-    todoAndRelayCountShouldBe(2)
+    todoAndRelayCountShouldBe(project, 2)
 
     server.query(
       """mutation {
@@ -29,7 +30,7 @@ class DeleteSpec extends FlatSpec with Matchers with ApiSpecBase {
       project
     )
 
-    todoAndRelayCountShouldBe(1)
+    todoAndRelayCountShouldBe(project, 1)
   }
 
   "The delete  mutation" should "error if the where clause misses" in {
@@ -37,7 +38,7 @@ class DeleteSpec extends FlatSpec with Matchers with ApiSpecBase {
     createTodo(project, "title1")
     createTodo(project, "title2")
     createTodo(project, "title3")
-    todoAndRelayCountShouldBe(3)
+    todoAndRelayCountShouldBe(project, 3)
 
     server.queryThatMustFail(
       """mutation {
@@ -53,10 +54,10 @@ class DeleteSpec extends FlatSpec with Matchers with ApiSpecBase {
       errorContains = """No Node for the model Todo with value does not exist for title found."""
     )
 
-    todoAndRelayCountShouldBe(3)
+    todoAndRelayCountShouldBe(project, 3)
   }
 
-  "the delete mutation" should "work when node ids are UUIDs" in {
+  "the delete mutation" should "work when node ids are UUIDs" taggedAs (IgnoreMySql) in {
     val project = SchemaDsl.fromString()(s"""
          |type Todo {
          |  id: UUID! @unique
@@ -67,7 +68,7 @@ class DeleteSpec extends FlatSpec with Matchers with ApiSpecBase {
     database.setup(project)
 
     val id = createTodo(project, "1")
-    todoAndRelayCountShouldBe(1)
+    todoAndRelayCountShouldBe(project, 1)
 
     server.query(
       s"""mutation {
@@ -78,10 +79,10 @@ class DeleteSpec extends FlatSpec with Matchers with ApiSpecBase {
       """.stripMargin,
       project
     )
-    todoAndRelayCountShouldBe(0)
+    todoAndRelayCountShouldBe(project, 0)
   }
 
-  def todoAndRelayCountShouldBe(int: Int) = {
+  def todoAndRelayCountShouldBe(project: Project, int: Int) = {
     val result = server.query(
       "{ todoes { id } }",
       project
