@@ -10,7 +10,7 @@ import com.prisma.config.ConfigLoader
 import com.prisma.connectors.utils.ConnectorUtils
 import com.prisma.deploy.connector.DeployConnector
 import com.prisma.messagebus.pubsub.inmemory.InMemoryAkkaPubSub
-import com.prisma.messagebus.testkits.InMemoryQueueTestKit
+import com.prisma.messagebus.testkits.{InMemoryPubSubTestKit, InMemoryQueueTestKit}
 import com.prisma.shared.models.ProjectIdEncoder
 import com.prisma.subscriptions.Webhook
 
@@ -30,7 +30,7 @@ case class TestApiDependenciesImpl()(implicit val system: ActorSystem, val mater
   lazy val apiSchemaBuilder                     = SchemaBuilder()(system, this)
   lazy val projectFetcher: ProjectFetcher       = ???
   override lazy val maxImportExportSize: Int    = 1000
-  override lazy val sssEventsPubSub             = InMemoryAkkaPubSub[String]()
+  override lazy val sssEventsPubSub             = InMemoryPubSubTestKit[String]()
   override lazy val webhookPublisher            = InMemoryQueueTestKit[Webhook]()
   override lazy val apiConnector                = ConnectorUtils.loadApiConnector(config.copy(databases = config.databases.map(_.copy(pooled = false))))
   override lazy val sideEffectMutactionExecutor = SideEffectMutactionExecutorImpl()
