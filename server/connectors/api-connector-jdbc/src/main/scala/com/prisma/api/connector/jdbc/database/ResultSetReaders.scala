@@ -11,19 +11,21 @@ import com.prisma.slick.ReadsResultSet
 trait ResultSetReaders extends JdbcExtensions with QueryBuilderConstants {
   val readsAsUnit: ReadsResultSet[Unit] = ReadsResultSet(_ => ())
 
+  def readStableModelIdentifier: ReadsResultSet[String] = ReadsResultSet(_.getString(1))
+
   def readNodeId(model: Model): ReadsResultSet[IdGCValue] = ReadsResultSet(_.getId(model))
 
   def readPrismaNodeWithParent(rf: RelationField): ReadsResultSet[PrismaNodeWithParent] = ReadsResultSet { rs =>
     val node = readPrismaNode(rf.relatedModel_!, rs)
 
     val parentId = if (rf.relation.isSameModelRelation) {
-      val firstSide  = rs.getParentId(RelationSide.A, rf.model.idField_!.typeIdentifier)
-      val secondSide = rs.getParentId(RelationSide.B, rf.model.idField_!.typeIdentifier)
+      val firstSide  = rs.getParentId(RelationSide.relationColumnAliasA, rf.model.idField_!.typeIdentifier)
+      val secondSide = rs.getParentId(RelationSide.relationColumnAliasB, rf.model.idField_!.typeIdentifier)
       if (firstSide == node.id) secondSide else firstSide
     } else {
       val parentRelationSide = rf.relation.modelA match {
-        case x if x == rf.relatedModel_! => RelationSide.B
-        case _                           => RelationSide.A
+        case x if x == rf.relatedModel_! => RelationSide.relationColumnAliasB
+        case _                           => RelationSide.relationColumnAliasA
       }
       rs.getParentId(parentRelationSide, rf.model.idField_!.typeIdentifier)
     }
@@ -35,7 +37,7 @@ trait ResultSetReaders extends JdbcExtensions with QueryBuilderConstants {
   }
 
   private def readPrismaNode(model: Model, rs: ResultSet) = {
-    val data = model.scalarNonListFields.map(field => field.name -> rs.getGcValue(field.dbName, field.typeIdentifier))
+    val data = model.visibleScalarNonListFields.map(field => field.name -> rs.getGcValue(field.dbName, field.typeIdentifier))
     PrismaNode(id = rs.getId(model), data = RootGCValue(data: _*), Some(model.name))
   }
 

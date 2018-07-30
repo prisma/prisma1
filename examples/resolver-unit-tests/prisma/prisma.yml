@@ -1,0 +1,4 @@
+endpoint: http://localhost:4466/travis-jest/test
+datamodel: datamodel.graphql
+
+secret: my-very-secret

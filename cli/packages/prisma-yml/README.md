@@ -20,6 +20,7 @@ The Prisma GraphQL API provides powerful abstractions and building blocks to dev
 <img align="right" width="400" src="https://imgur.com/EsopgE3.gif" />
 -->
 
+
 * [Quickstart](#quickstart)
 * [Examples](#examples)
 * [Architecture](#architecture)

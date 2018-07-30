@@ -491,7 +491,9 @@ export class Client {
     this.out.log(`Opening ${url} in the browser\n`)
 
     try {
-      await opn(url)
+      opn(url).catch(e => {
+        throw e
+      })
     } catch (e) {
       this.out.log(`Could not open url. Please open ${url} manually`)
     }
@@ -509,6 +511,11 @@ export class Client {
 
     this.env.saveGlobalRC()
     await this.env.getClusters()
+  }
+
+  logout(): void {
+    delete this.env.globalRC.cloudSessionKey
+    this.env.saveGlobalRC()
   }
 
   async getAccount(): Promise<User | null> {

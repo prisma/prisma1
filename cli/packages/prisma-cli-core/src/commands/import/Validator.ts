@@ -117,7 +117,6 @@ export class Validator {
   validateListNode(obj: any): true {
     this.checkTypeName(obj)
     this.checkIdField(obj)
-    this.checkRequiredFields(obj, true)
     this.checkUnknownFields(obj, true)
     this.checkType(obj, true)
     return true
@@ -126,7 +125,6 @@ export class Validator {
   validateRelationNode(node: RelationNode): true {
     this.checkTypeName(node)
     this.checkIdField(node)
-    // this.checkFieldName(node)
     return true
   }
 

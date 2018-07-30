@@ -3,7 +3,7 @@ package com.prisma.api.resolver
 import com.prisma.api.connector.QueryArguments
 import com.prisma.api.resolver.DeferredTypes._
 import com.prisma.shared.models.RelationSide.RelationSide
-import com.prisma.shared.models.{Field, Model, ScalarField}
+import com.prisma.shared.models.{Model, ScalarField}
 import sangria.execution.deferred.Deferred
 
 object DeferredUtils {

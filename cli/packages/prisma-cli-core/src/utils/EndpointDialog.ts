@@ -378,14 +378,8 @@ export class EndpointDialog {
     introspection: boolean = false,
   ): Promise<DatabaseCredentials> {
     const type = await this.askForDatabaseType(introspection)
-    // const alreadyData = await this.ask({
-    //   message: 'Does your database contain existing data?',
-    //   key: 'alreadyData',
-    //   defaultValue: 'no',
-    //   validate: value =>
-    //     ['yes', 'no'].includes(value) ? true : 'Please answer either yes or no',
-    // })
     const alreadyData = introspection || (await this.askForExistingData())
+    const askForSchema = introspection ? true : alreadyData ? true : false 
     if (type === 'mysql' && alreadyData) {
       throw new Error(
         `Existing MySQL databases with data are not yet supported.`,
@@ -426,10 +420,10 @@ export class EndpointDialog {
             key: 'ssl',
           })
         : undefined
-    const schema = await this.ask({
+    const schema = askForSchema ? await this.ask({
       message: `Enter name of existing schema`,
       key: 'schema',
-    })
+    }) : undefined
 
     return {
       type,
@@ -741,22 +735,7 @@ export class EndpointDialog {
     }
 
     const { existingData } = await this.out.prompt(question)
-
     return existingData === 'yes'
-
-    // this.out.log(
-    //   chalk.bold.red(
-    //     `\n\nWarning: Introspecting databases with existing data is an early alpha preview not ready for production yet. If you find any problems, please let us know\n`,
-    //   ),
-    // )
-    // this.out.log(
-    //   chalk.dim(
-    //     `Note: If you already have data in your database you won't be able to change the database schema with Prisma. If you want to use Prisma's migratino system, plrease choose ${chalk.bold(
-    //       'No',
-    //     )}`,
-    //   ),
-    // )
-    // this.out.up(7)
   }
 
   private async ask({

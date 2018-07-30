@@ -97,7 +97,7 @@ case class ManagementServer(prefix: String = "", server2serverSecret: Option[Str
 
                     case Success(queryAst) =>
                       val userContext  = SystemUserContext(authorizationHeader = authorizationHeader)
-                      val errorHandler = ErrorHandler(requestId, req, query, variables.toString(), dependencies.reporter, errorCodeExtractor = errorExtractor)
+                      val errorHandler = ErrorHandler(requestId, req, query, variables, dependencies.reporter, errorCodeExtractor = errorExtractor)
                       val result: Future[(StatusCode, JsValue)] =
                         Executor
                           .execute(
