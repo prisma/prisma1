@@ -25,7 +25,7 @@ class DateTimeSpec extends FlatSpec with Matchers with ApiSpecBase {
 
     server.query(s"""mutation {createPerson(data: {name: "Second", born: "1969-01-01T10:33:59.828Z"}){name}}""", project)
     val res = server.query(s"""query {person(where:{name: "Second"}){name, born}}""", project)
-    res.toString should be("""{"data":{"person":{"name":"Second","born":"1969-01-01T10:33:59.000Z"}}}""")
+    res.toString should be("""{"data":{"person":{"name":"Second","born":"1969-01-01T10:33:59.828Z"}}}""")
   }
 
   "Using a date after 1970" should "work" in {
