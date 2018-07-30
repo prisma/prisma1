@@ -3,7 +3,6 @@ package com.prisma.api.connector.jdbc.extensions
 import java.sql.{PreparedStatement, ResultSet, Timestamp}
 import java.time.ZoneOffset
 import java.util.{Calendar, TimeZone}
-
 import com.prisma.gc_values._
 import com.prisma.shared.models.{Field, Model, RelationSide, TypeIdentifier}
 import org.joda.time.{DateTime, DateTimeZone}
@@ -79,7 +78,7 @@ object JdbcExtensionsValueClasses {
         case TypeIdentifier.DateTime =>
           val sqlType = resultSet.getTimestamp(name, calendar)
           if (sqlType != null) {
-            DateTimeGCValue(new DateTime(sqlType.getTime))
+            DateTimeGCValue(new DateTime(sqlType.getTime, DateTimeZone.UTC))
           } else {
             NullGCValue
           }
