@@ -1,5 +1,6 @@
 package com.prisma.api.mutations
 
+import com.prisma.IgnoreMySql
 import com.prisma.api.ApiSpecBase
 import com.prisma.shared.schema_dsl.SchemaDsl
 import org.scalatest.{FlatSpec, Matchers}
@@ -8,6 +9,7 @@ class DateTimeSpec extends FlatSpec with Matchers with ApiSpecBase {
 
   val project = SchemaDsl.fromString() {
     """type Person {
+        | id: ID! @unique
         | name: String! @unique
         | born: DateTime!
         |}"""
@@ -42,14 +44,14 @@ class DateTimeSpec extends FlatSpec with Matchers with ApiSpecBase {
     res.toString should be("""{"data":{"person":{"name":"Fourth","born":"1979-01-01T10:33:59.828Z"}}}""")
   }
 
-  "Using a date after 10000" should "work" in {
+  "Using a date after 10000" should "work" taggedAs (IgnoreMySql) in {
 
     server.query(s"""mutation {createPerson(data: {name: "Fifth", born: "11979-01-01T10:33:59Z"}){name}}""", project)
     val res = server.query(s"""query {person(where:{name: "Fifth"}){name, born}}""", project)
     res.toString should be("""{"data":{"person":{"name":"Fifth","born":"11979-01-01T10:33:59.000Z"}}}""")
   }
 
-  "Using milliseconds in a date after 10000" should "work" in {
+  "Using milliseconds in a date after 10000" should "work" taggedAs (IgnoreMySql) in {
 
     server.query(s"""mutation {createPerson(data: {name: "Sixth", born: "11979-01-01T10:33:59.828Z"}){name}}""", project)
     val res = server.query(s"""query {person(where:{name: "Sixth"}){name, born}}""", project)
