@@ -49,12 +49,12 @@ trait NodeSingleQueries extends BuilderBase with NodeManyQueries with FilterCond
       case None =>
         sql.select(asterisk())
       case Some(selectedFields) =>
-        val jooqFields = (selectedFields.scalarNonListFields ++ where.model.idField).map(f => modelColumn(f.model, f))
+        val jooqFields = (selectedFields.scalarNonListFields ++ where.model.idField).map(modelColumn)
         sql.select(jooqFields.toVector: _*)
     }
     val query = select
       .from(modelTable(model))
-      .where(modelColumn(model, where.field).equal(placeHolder))
+      .where(modelColumn(where.field).equal(placeHolder))
 
     queryToDBIO(query)(
       setParams = pp => pp.setGcValue(where.fieldGCValue),
@@ -70,7 +70,7 @@ trait NodeSingleQueries extends BuilderBase with NodeManyQueries with FilterCond
     val query = sql
       .select(idField(model))
       .from(modelTable(model))
-      .where(modelColumn(model, where.field).equal(placeHolder))
+      .where(modelColumn(where.field).equal(placeHolder))
 
     queryToDBIO(query)(
       setParams = _.setGcValue(where.fieldGCValue),
@@ -108,7 +108,7 @@ trait NodeSingleQueries extends BuilderBase with NodeManyQueries with FilterCond
 
   def getNodeIdByParentIdAndWhere(parentField: RelationField, parentId: IdGCValue, where: NodeSelector): DBIO[Option[IdGCValue]] = {
     val model                 = parentField.relatedModel_!
-    val nodeSelectorCondition = modelColumn(model, where.field).equal(placeHolder)
+    val nodeSelectorCondition = modelColumn(where.field).equal(placeHolder)
     val q: SelectConditionStep[Record1[AnyRef]] = sql
       .select(idField(model))
       .from(modelTable(model))
