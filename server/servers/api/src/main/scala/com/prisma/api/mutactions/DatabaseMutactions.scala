@@ -44,7 +44,7 @@ case class DatabaseMutactions(project: Project) {
   //todo this does not support cascading delete behavior at the moment
   def getMutactionsForDeleteMany(model: Model, whereFilter: Option[Filter]): DeleteNodes = DeleteNodes(project, model, whereFilter)
 
-  def getMutactionsForUpdate(model: Model, where: NodeSelector, args: CoolArgs, previousValues: PrismaNode): TopLevelUpdateNode = {
+  def getMutactionsForUpdate(model: Model, where: NodeSelector, args: CoolArgs): TopLevelUpdateNode = {
     val (nonListArgs, listArgs)  = args.getUpdateArgs(model)
     val nested: NestedMutactions = getMutactionsForNestedMutation(args, model, None, triggeredFromCreate = false)
 
@@ -53,7 +53,6 @@ case class DatabaseMutactions(project: Project) {
       where = where,
       nonListArgs = nonListArgs,
       listArgs = listArgs,
-      previousValues = previousValues,
       nestedCreates = nested.nestedCreates,
       nestedUpdates = nested.nestedUpdates,
       nestedUpserts = nested.nestedUpserts,
@@ -84,7 +83,7 @@ case class DatabaseMutactions(project: Project) {
 
   def getMutactionsForUpsert(where: NodeSelector, allArgs: CoolArgs): TopLevelUpsertNode = {
     val creates = getMutactionsForCreate(where.model, allArgs.createArgumentsAsCoolArgs)
-    val updates = getMutactionsForUpdate(where.model, where, allArgs.updateArgumentsAsCoolArgs, PrismaNode.dummy)
+    val updates = getMutactionsForUpdate(where.model, where, allArgs.updateArgumentsAsCoolArgs)
 
     TopLevelUpsertNode(
       project = project,
