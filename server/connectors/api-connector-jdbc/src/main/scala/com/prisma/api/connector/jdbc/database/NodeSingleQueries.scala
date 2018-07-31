@@ -1,6 +1,6 @@
 package com.prisma.api.connector.jdbc.database
 
-import com.prisma.api.connector.{Filter, NodeSelector, PrismaNode}
+import com.prisma.api.connector.{Filter, NodeSelector, PrismaNode, SelectedFields}
 import com.prisma.gc_values.IdGCValue
 import com.prisma.shared.models.{Model, RelationField, Schema}
 import org.jooq.{Condition, Record1, SelectConditionStep}
@@ -40,16 +40,28 @@ trait NodeSingleQueries extends BuilderBase with NodeManyQueries with FilterCond
     getNodesByValuesForField(model, model.idField_!, Vector(idGcValue)).map(_.headOption)
   }
 
-  def getNodeByWhere(where: NodeSelector): DBIO[Option[PrismaNode]] = {
+  def getNodeByWhere(where: NodeSelector, selectedFields: SelectedFields): DBIO[Option[PrismaNode]] = getNodeByWhere(where, Some(selectedFields))
+  def getNodeByWhere(where: NodeSelector): DBIO[Option[PrismaNode]]                                 = getNodeByWhere(where, None)
+
+  def getNodeByWhere(where: NodeSelector, selectedFields: Option[SelectedFields] = None): DBIO[Option[PrismaNode]] = {
     val model = where.model
-    val query = sql
-      .select(asterisk())
+    val select = selectedFields match {
+      case None =>
+        sql.select(asterisk())
+      case Some(selectedFields) =>
+        val jooqFields = (selectedFields.scalarNonListFields ++ where.model.idField).map(f => modelColumn(f.model, f))
+        sql.select(jooqFields.toVector: _*)
+    }
+    val query = select
       .from(modelTable(model))
       .where(modelColumn(model, where.field).equal(placeHolder))
 
     queryToDBIO(query)(
       setParams = pp => pp.setGcValue(where.fieldGCValue),
-      readResult = rs => rs.readWith(readsPrismaNode(model)).headOption
+      readResult = rs => {
+        val fieldsToRead = selectedFields.map(_.scalarNonListFields).getOrElse(Set.empty)
+        rs.readWith(readsPrismaNode(model, fieldsToRead)).headOption
+      }
     )
   }
 

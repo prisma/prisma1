@@ -10,7 +10,7 @@ trait DataResolver {
 
   def getNodeByGlobalId(globalId: CuidGCValue): Future[Option[PrismaNode]]
 
-  def getNodeByWhere(where: NodeSelector): Future[Option[PrismaNode]]
+  def getNodeByWhere(where: NodeSelector, selectedFields: SelectedFields): Future[Option[PrismaNode]]
 
   def getNodes(model: Model, args: Option[QueryArguments] = None): Future[ResolverResult[PrismaNode]]
 

@@ -22,7 +22,7 @@ trait NodeActions extends BuilderBase with FilterConditionBuilder with ScalarLis
       args.raw.asRoot.add(model.idField_!.name, generateId(model))
     }
 
-    val fields = model.fields.filter(field => argsAsRoot.hasArgFor(field.name))
+    val fields = model.scalarFields.filter(field => argsAsRoot.hasArgFor(field.name))
     val query = sql
       .insertInto(modelTable(model))
       .columns(fields.map(field => modelColumn(model, field)): _*)

@@ -27,8 +27,8 @@ case class JdbcDataResolver(
     performWithTiming("resolveByGlobalId", slickDatabase.database.run(query))
   }
 
-  override def getNodeByWhere(where: NodeSelector): Future[Option[PrismaNode]] = {
-    getNodesByValuesForField(where.model, where.field, Vector(where.fieldGCValue)).map(_.headOption)
+  override def getNodeByWhere(where: NodeSelector, selectedFields: SelectedFields): Future[Option[PrismaNode]] = {
+    performWithTiming("getNodeByWhere", slickDatabase.database.run(queryBuilder.getNodeByWhere(where, selectedFields)))
   }
 
   override def getNodes(model: Model, args: Option[QueryArguments] = None): Future[ResolverResult[PrismaNode]] = {

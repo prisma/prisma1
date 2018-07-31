@@ -36,8 +36,13 @@ trait ResultSetReaders extends JdbcExtensions with QueryBuilderConstants {
     readPrismaNode(model, rs)
   }
 
-  private def readPrismaNode(model: Model, rs: ResultSet) = {
-    val data = model.visibleScalarNonListFields.map(field => field.name -> rs.getGcValue(field.dbName, field.typeIdentifier))
+  def readsPrismaNode(model: Model, fields: Set[ScalarField]): ReadsResultSet[PrismaNode] = ReadsResultSet { rs =>
+    readPrismaNode(model, fields, rs)
+  }
+
+  private def readPrismaNode(model: Model, rs: ResultSet): PrismaNode = readPrismaNode(model, model.visibleScalarNonListFields.toSet, rs)
+  private def readPrismaNode(model: Model, fields: Set[ScalarField], rs: ResultSet): PrismaNode = {
+    val data = fields.toVector.map(field => field.name -> rs.getGcValue(field.dbName, field.typeIdentifier))
     PrismaNode(id = rs.getId(model), data = RootGCValue(data: _*), Some(model.name))
   }
 

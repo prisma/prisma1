@@ -1,17 +1,18 @@
 package com.prisma.api.schema
 
 import akka.actor.ActorSystem
-import com.prisma.api.connector.{ApiConnectorCapability, NodeQueryCapability, PrismaNode}
+import com.prisma.api.connector.{ApiConnectorCapability, NodeQueryCapability, PrismaNode, SelectedFields}
 import com.prisma.api.mutations._
 import com.prisma.api.resolver.{ConnectionParentElement, DefaultIdBasedConnection}
 import com.prisma.api.resolver.DeferredTypes.{IdBasedConnectionDeferred, ManyModelDeferred, OneDeferred}
 import com.prisma.api.{ApiDependencies, ApiMetrics}
 import com.prisma.gc_values.CuidGCValue
-import com.prisma.shared.models.{Model, Project}
+import com.prisma.shared.models.{Model, Project, ScalarField}
 import com.prisma.util.coolArgs.CoolArgs
 import com.prisma.utils.boolean.BooleanUtils._
 import org.atteo.evo.inflector.English
 import sangria.ast
+import sangria.ast.Selection
 import sangria.relay._
 import sangria.schema._
 
@@ -132,13 +133,13 @@ case class SchemaBuilderImpl(
       .whereUniqueArgument(model)
       .map { whereArg =>
         Field(
-          camelCase(model.name),
+          name = camelCase(model.name),
           fieldType = OptionType(objectTypes(model.name)),
           arguments = List(whereArg),
-          resolve = (ctx) => {
+          resolve = { ctx =>
             val coolArgs = CoolArgs(ctx.args.raw)
             val where    = coolArgs.extractNodeSelectorFromWhereField(model)
-            masterDataResolver.getNodeByWhere(where)
+            masterDataResolver.getNodeByWhere(where, getSelectedFields(ctx, model))
           }
         )
       }
@@ -150,7 +151,8 @@ case class SchemaBuilderImpl(
       fieldType = outputTypesBuilder.mapCreateOutputType(model, objectTypes(model.name)),
       arguments = argumentsBuilder.getSangriaArgumentsForCreate(model).getOrElse(List.empty),
       resolve = (ctx) => {
-        val mutation       = Create(model = model, project = project, args = ctx.args, dataResolver = masterDataResolver)
+        val selectedFields = getSelectedFields(ctx, model)
+        val mutation       = Create(model = model, project = project, args = ctx.args, selectedFields = selectedFields, dataResolver = masterDataResolver)
         val mutationResult = ClientMutationRunner.run(mutation, databaseMutactionExecutor, sideEffectMutactionExecutor, mutactionVerifier)
         mapReturnValueResult(mutationResult, ctx.args)
       }
@@ -164,7 +166,8 @@ case class SchemaBuilderImpl(
         fieldType = OptionType(outputTypesBuilder.mapUpdateOutputType(model, objectTypes(model.name))),
         arguments = args,
         resolve = (ctx) => {
-          val mutation = Update(model = model, project = project, args = ctx.args, dataResolver = masterDataResolver)
+          val selectedFields = getSelectedFields(ctx, model)
+          val mutation       = Update(model = model, project = project, args = ctx.args, selectedFields = selectedFields, dataResolver = masterDataResolver)
 
           val mutationResult = ClientMutationRunner.run(mutation, databaseMutactionExecutor, sideEffectMutactionExecutor, mutactionVerifier)
           mapReturnValueResult(mutationResult, ctx.args)
@@ -195,7 +198,8 @@ case class SchemaBuilderImpl(
         fieldType = outputTypesBuilder.mapUpsertOutputType(model, objectTypes(model.name)),
         arguments = args,
         resolve = (ctx) => {
-          val mutation       = Upsert(model = model, project = project, args = ctx.args, dataResolver = masterDataResolver)
+          val selectedFields = getSelectedFields(ctx, model)
+          val mutation       = Upsert(model = model, project = project, args = ctx.args, selectedFields = selectedFields, dataResolver = masterDataResolver)
           val mutationResult = ClientMutationRunner.run(mutation, databaseMutactionExecutor, sideEffectMutactionExecutor, mutactionVerifier)
           mapReturnValueResult(mutationResult, ctx.args)
         }
@@ -210,11 +214,13 @@ case class SchemaBuilderImpl(
         fieldType = OptionType(outputTypesBuilder.mapDeleteOutputType(model, objectTypes(model.name), onlyId = false)),
         arguments = args,
         resolve = (ctx) => {
+          val selectedFields = getSelectedFields(ctx, model)
           val mutation = Delete(
             model = model,
             modelObjectTypes = objectTypeBuilder,
             project = project,
             args = ctx.args,
+            selectedFields = selectedFields,
             dataResolver = masterDataResolver
           )
           val mutationResult = ClientMutationRunner.run(mutation, databaseMutactionExecutor, sideEffectMutactionExecutor, mutactionVerifier)
