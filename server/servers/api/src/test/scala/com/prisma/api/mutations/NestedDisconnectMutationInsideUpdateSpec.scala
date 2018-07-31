@@ -327,7 +327,42 @@ class NestedDisconnectMutationInsideUpdateSpec extends FlatSpec with Matchers wi
       project
     )
 
-    ifConnectorIsActive { dataResolver(project).countByTable("_ChildToParent").await should be(2) }
+    server.query(
+      """mutation {
+        |  createParent(data: {
+        |    p: "otherParent"
+        |    childrenOpt: {
+        |      create: [{c: "otherChild"}]
+        |      connect: [{c: "c1"}]
+        |    }
+        |  }){
+        |    childrenOpt{
+        |       c
+        |    }
+        |  }
+        |}""".stripMargin,
+      project
+    )
+
+    ifConnectorIsActive { dataResolver(project).countByTable("_ChildToParent").await should be(4) }
+
+    server.queryThatMustFail(
+      s"""
+         |mutation {
+         |  updateParent(
+         |  where: { p: "p1"}
+         |  data:{
+         |    childrenOpt: {disconnect: [{c: "c1"}, {c: "otherChild"}]}
+         |  }){
+         |    childrenOpt{
+         |      c
+         |    }
+         |  }
+         |}
+      """.stripMargin,
+      project,
+      3041
+    )
 
     val res = server.query(
       s"""
@@ -348,10 +383,16 @@ class NestedDisconnectMutationInsideUpdateSpec extends FlatSpec with Matchers wi
 
     res.toString should be("""{"data":{"updateParent":{"childrenOpt":[{"c":"c2"}]}}}""")
 
-    server.query(s"""query{children{c, parentsOpt{p}}}""", project).toString should be(
-      """{"data":{"children":[{"c":"c1","parentsOpt":[]},{"c":"c2","parentsOpt":[{"p":"p1"}]}]}}""")
+    server.query(s"""query{child(where:{c:"c1"}){c, parentsOpt{p}}}""", project).toString should be(
+      """{"data":{"child":{"c":"c1","parentsOpt":[{"p":"otherParent"}]}}}""")
 
-    ifConnectorIsActive { dataResolver(project).countByTable("_ChildToParent").await should be(1) }
+    server.query(s"""query{child(where:{c:"c2"}){c, parentsOpt{p}}}""", project).toString should be(
+      """{"data":{"child":{"c":"c2","parentsOpt":[{"p":"p1"}]}}}""")
+
+    server.query(s"""query{child(where:{c:"otherChild"}){c, parentsOpt{p}}}""", project).toString should be(
+      """{"data":{"child":{"c":"otherChild","parentsOpt":[{"p":"otherParent"}]}}}""")
+
+    ifConnectorIsActive { dataResolver(project).countByTable("_ChildToParent").await should be(3) }
   }
 
   "a one to many relation" should "be disconnectable by id through a nested mutation" in {
@@ -1225,4 +1266,73 @@ class NestedDisconnectMutationInsideUpdateSpec extends FlatSpec with Matchers wi
 
     server.query("query{bottoms{nameBottom}}", project).toString should be("""{"data":{"bottoms":[{"nameBottom":"the bottom"}]}}""")
   }
+
+  "Nested disconnect on self relations" should "only disconnect the specified nodes" in {
+    val project = SchemaDsl.fromString() { """type User {
+                                             |  id: ID! @unique
+                                             |  name: String! @unique
+                                             |  follower: [User!]! @relation(name: "UserFollow")
+                                             |  following: [User!]! @relation(name: "UserFollow")
+                                             |}""" }
+    database.setup(project)
+
+    server.query("""mutation  {createUser(data: {name: "X"}) {id}}""", project)
+    server.query("""mutation  {createUser(data: {name: "Y"}) {id}}""", project)
+    server.query("""mutation  {createUser(data: {name: "Z"}) {id}}""", project)
+
+    val updateMutation =
+      s""" mutation {
+         |  updateUser(data:{
+         |    following: {
+         |      connect: [{ name: "Y" }, { name: "Z"}]
+         |    }
+         |  },where:{
+         |    name:"X"
+         |  }) {
+         |    name
+         |    following{
+         |      name
+         |    }
+         |    follower{
+         |      name
+         |    }
+         |  }
+         |}
+      """
+
+    val result = server.query(updateMutation, project)
+
+    result.toString should be("""{"data":{"updateUser":{"name":"X","following":[{"name":"Y"},{"name":"Z"}],"follower":[]}}}""")
+
+    val check = server.query("""query{users{name, following{name}}}""", project)
+
+    check.toString should be(
+      """{"data":{"users":[{"name":"X","following":[{"name":"Y"},{"name":"Z"}]},{"name":"Y","following":[]},{"name":"Z","following":[]}]}}""")
+
+    val disconnectMutation =
+      s""" mutation {
+         |  updateUser(data:{
+         |    follower: {
+         |      disconnect: [{ name: "X" }]
+         |    }
+         |  },where:{
+         |    name:"Y"
+         |  }) {
+         |    name
+         |    following{
+         |      name
+         |    }
+         |  }
+         |}
+      """
+
+    val result2 = server.query(disconnectMutation, project)
+
+    result2.toString should be("""{"data":{"updateUser":{"name":"Y","following":[]}}}""")
+
+    val result3 = server.query("""query{users{name, following{name}}}""", project)
+
+    result3.toString should be("""{"data":{"users":[{"name":"X","following":[{"name":"Z"}]},{"name":"Y","following":[]},{"name":"Z","following":[]}]}}""")
+  }
+
 }

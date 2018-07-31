@@ -9,7 +9,7 @@ import slick.dbio.{DBIO, DBIOAction}
 import scala.concurrent.ExecutionContext
 
 case class NestedConnectInterpreter(mutaction: NestedConnect)(implicit val ec: ExecutionContext) extends NestedRelationInterpreterBase {
-  def topIsCreate            = mutaction.topIsCreate
+  val topIsCreate            = mutaction.topIsCreate
   val where                  = mutaction.where
   override def relationField = mutaction.relationField
 
@@ -54,30 +54,18 @@ case class NestedConnectInterpreter(mutaction: NestedConnect)(implicit val ec: E
   def removalAction(parentId: IdGCValue)(implicit mutationBuilder: JdbcActionsBuilder): DBIO[Unit] =
     topIsCreate match {
       case false =>
-        (p.isList, p.isRequired, c.isList, c.isRequired) match {
-          case (false, true, false, true)   => requiredRelationViolation
-          case (false, true, false, false)  => removalByParent(parentId)
-          case (false, false, false, true)  => DBIO.seq(removalByParent(parentId), removalByChild)
-          case (false, false, false, false) => DBIO.seq(removalByParent(parentId), removalByChild)
-          case (true, false, false, true)   => removalByChild
-          case (true, false, false, false)  => removalByChild
-          case (false, true, true, false)   => removalByParent(parentId)
-          case (false, false, true, false)  => removalByParent(parentId)
-          case (true, false, true, false)   => noActionRequired
-          case _                            => errorBecauseManySideIsRequired
+        (p.isList, c.isList) match {
+          case (false, false) => DBIO.seq(removalByParent(parentId), removalByChild)
+          case (true, false)  => removalByChild
+          case (false, true)  => removalByParent(parentId)
+          case (true, true)   => noActionRequired
         }
       case true =>
-        (p.isList, p.isRequired, c.isList, c.isRequired) match {
-          case (false, true, false, true)   => requiredRelationViolation
-          case (false, true, false, false)  => noActionRequired
-          case (false, false, false, true)  => removalByChild
-          case (false, false, false, false) => removalByChild
-          case (true, false, false, true)   => removalByChild
-          case (true, false, false, false)  => removalByChild
-          case (false, true, true, false)   => noActionRequired
-          case (false, false, true, false)  => noActionRequired
-          case (true, false, true, false)   => noActionRequired
-          case _                            => errorBecauseManySideIsRequired
+        (p.isList, c.isList) match {
+          case (false, false) => removalByChild
+          case (true, false)  => removalByChild
+          case (false, true)  => noActionRequired
+          case (true, true)   => noActionRequired
         }
     }
 
@@ -92,11 +80,11 @@ case class NestedConnectInterpreter(mutaction: NestedConnect)(implicit val ec: E
     action
   }
 
-  def checkForOldParentByChildWhere(where: NodeSelector)(implicit mutationBuilder: JdbcActionsBuilder): DBIO[Unit] = {
+  def checkForOldParentByChildWhere(childWhere: NodeSelector)(implicit mutationBuilder: JdbcActionsBuilder): DBIO[Unit] = {
     for {
-      id <- mutationBuilder.getNodeIdByWhere(where)
+      id <- mutationBuilder.getNodeIdByWhere(childWhere)
       _ <- id match {
-            case None          => throw APIErrors.NodeNotFoundForWhereError(where)
+            case None          => throw APIErrors.NodeNotFoundForWhereError(childWhere)
             case Some(childId) => mutationBuilder.ensureThatNodeIsNotConnected(relationField, childId)
           }
     } yield ()

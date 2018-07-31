@@ -1,5 +1,5 @@
-const resolvers = require('../resolvers')
-const { getPrismaTestInstance } = require('../util')
+const resolvers = require('../src/resolvers')
+const { getPrismaTestInstance } = require('./getPrismaTestInstance')
 
 afterEach(async () => {
   await getPrismaTestInstance().mutation.deleteManyPosts({})
