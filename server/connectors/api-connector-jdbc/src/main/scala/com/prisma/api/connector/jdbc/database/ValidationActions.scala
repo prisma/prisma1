@@ -1,10 +1,10 @@
 package com.prisma.api.connector.jdbc.database
 
-import com.prisma.api.connector.{Filter, NodeSelector}
+import com.prisma.api.connector.NodeSelector
 import com.prisma.api.schema.APIErrors.{NodesNotConnectedError, RequiredRelationWouldBeViolated}
 import com.prisma.gc_values.IdGCValue
-import com.prisma.shared.models.{Model, RelationField}
-import org.jooq.impl.DSL.{asterisk, name, field}
+import com.prisma.shared.models.RelationField
+import org.jooq.impl.DSL.asterisk
 
 import scala.concurrent.ExecutionContext
 

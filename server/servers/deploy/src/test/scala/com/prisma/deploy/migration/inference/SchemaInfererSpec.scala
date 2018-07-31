@@ -412,6 +412,21 @@ class SchemaInfererSpec extends WordSpec with Matchers {
     model.fields.map(_.name) should equal(List("name"))
   }
 
+  "should not blow up when no @pgRelation is used and inferred tables is empty" in {
+    val types =
+      """|type Todo {
+         |  name: String!
+         |  comments: [Comment!]!
+         |}
+         |type Comment {
+         |  text: String
+         |}
+         |""".stripMargin
+    val schema        = infer(emptyProject.schema, types, isActive = false)
+    val relationField = schema.getModelByName_!("Todo").getRelationFieldByName_!("comments")
+    relationField.relation.manifestation should be(None)
+  }
+
   def infer(schema: Schema, types: String, mapping: SchemaMapping = SchemaMapping.empty, isActive: Boolean = true): Schema = {
     val validator = SchemaSyntaxValidator(
       types,
