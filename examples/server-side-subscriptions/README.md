@@ -4,14 +4,15 @@ This example demonstrates `subscriptions` property available to us in `prisma.ym
 
 ## Get started
 
-> **Note**: `prisma` is listed as a _development dependency_ and _script_ in this project's [`package.json`](./package.json). This means you can invoke the Prisma CLI without having it globally installed on your machine (by prefixing it with `yarn`), e.g. `yarn prisma deploy` or `yarn prisma playground`. If you have the Prisma CLI installed globally (which you can do with `npm install -g prisma`), you can omit the `yarn` prefix.
+### 1. Install the Prisma CLI
+The `prisma` cli is the core component of your development workflow. `prisma` should be installed as a global dependency, you can install this with `npm install -g prisma`
 
-### 1. Download the example & install dependencies
+### 2. Download the example & install dependencies
 
 Clone the Prisma monorepo and navigate to this directory or download _only_ this example with the following command:
 
 ```sh
-curl https://codeload.github.com/graphcool/prisma/tar.gz/master | tar -xz --strip=2 prisma-master/examples/server-side-subscriptions
+curl https://codeload.github.com/prismagraphql/prisma/tar.gz/master | tar -xz --strip=2 prisma-master/examples/server-side-subscriptions
 ```
 
 Next, navigate into the downloaded folder and install the NPM dependencies:
@@ -21,12 +22,16 @@ cd server-side-subscriptions
 yarn install
 ```
 
-### 2. Deploy the Prisma database service
+### 3. Deploy the Prisma database service
 
 You can now [deploy](https://www.prisma.io/docs/reference/cli-command-reference/database-service/prisma-deploy-kee1iedaov) the Prisma service (note that this requires you to have [Docker](https://www.docker.com) installed on your machine - if that's not the case, follow the collapsed instructions below the code block):
 
 ```sh
-yarn prisma deploy
+# Ensure docker is running the server's dependencies
+docker-compose up
+# Deploy the server
+cd prisma
+prisma deploy
 ```
 
 <details>
@@ -36,7 +41,7 @@ To deploy your service to a demo server (rather than locally with Docker), pleas
 
 </details>
 
-### 3. `subscriptions` property of `prisma.yml`
+### 4. `subscriptions` property of `prisma.yml`
 
 The `subscriptions` property is used to implement event-based business logic using POST endpoints.
 
@@ -69,7 +74,7 @@ subscription {
 
 `webhook: http://ptsv2.com/t/prisma/post` is a mock endpoint consuming this query. On creation of a new `User` Prisma service will call this endpoint with Post data selected in the subscription query.
 
-### 3. Testing the server side subscription
+### 5. Testing the server side subscription
 
 The best way to test this subscription logic is to create a user and observe the mock POST endpoint.
 
@@ -81,7 +86,7 @@ You can either start the [desktop app](https://github.com/graphcool/graphql-play
 yarn playground
 ```
 
-Or you can open a Playground by navigating to [http://localhost:4466/server-side-subscription](http://localhost:4466/server-side-subscription) in your browser.
+Or you can open a Playground by navigating to [http://localhost:4466/server-side-subscriptions](http://localhost:4466/server-side-subscriptions) in your browser.
 
 #### Run the following mutation to create a user
 

@@ -88,10 +88,16 @@ class DeferredResolverProvider[CtxType](dataResolver: DataResolver) extends Defe
       .toVector
       .flatten
 
+    val connectionFutureResult = orderedDeferred.collect {
+      case OrderedDeferred(deferred: IdBasedConnectionDeferred, order) =>
+        OrderedDeferredFutureResult(Future.successful(deferred.conn), order)
+    }
+
     (manyModelFutureResults ++
       countManyModelFutureResults ++
       toManyFutureResults ++
       toOneFutureResults ++
-      scalarListFutureResult).sortBy(_.order).map(_.future)
+      scalarListFutureResult ++
+      connectionFutureResult).sortBy(_.order).map(_.future)
   }
 }

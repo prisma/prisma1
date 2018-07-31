@@ -11,9 +11,10 @@ Using `hooks`, we can perform various workflows like:
 
 ## Get started
 
-> **Note**: `prisma` should be installed as a global dependency, you can install this with `npm install -g prisma`
+### 1. Install the Prisma CLI
+The `prisma` cli is the core component of your development workflow. `prisma` should be installed as a global dependency, you can install this with `npm install -g prisma`
 
-### 1. Download the example & install dependencies
+### 2. Download the example & install dependencies
 
 Clone the Prisma monorepo and navigate to this directory or download _only_ this example with the following command:
 
@@ -28,7 +29,7 @@ cd hooks
 yarn install
 ```
 
-### 2. Deploy the Prisma database service
+### 3. Deploy the Prisma database service
 
 You can now [deploy](https://www.prisma.io/docs/reference/cli-command-reference/database-service/prisma-deploy-kee1iedaov) the Prisma service (note that this requires you to have [Docker](https://www.docker.com) installed on your machine - if that's not the case, follow the collapsed instructions below the code block):
 
@@ -36,7 +37,8 @@ You can now [deploy](https://www.prisma.io/docs/reference/cli-command-reference/
 # Ensure docker is running the server's dependencies
 docker-compose up
 # Deploy the server
-cd prisma && prisma deploy
+cd prisma
+prisma deploy
 ```
 
 <details>
@@ -46,7 +48,7 @@ To deploy your service to a demo server (rather than locally with Docker), pleas
 
 </details>
 
-### 3. `hooks` property of `prisma.yml`
+### 4. `hooks` property of `prisma.yml`
 
 The `hooks` property is used to define terminal commands which will be executed by the Prisma CLI before or after certain commands.
 
@@ -73,16 +75,16 @@ Note that these commands work closely in conjunction with `.graphqlconfig.yml` f
 ```yml
 projects:
   db:
-    schemaPath: generated-schema.graphql
+    schemaPath: src/generated/prisma.graphql
     extensions:
       endpoints:
         default: 'http://localhost:4466/hooks'
       prisma: prisma.yml
       codegen:
         input:
-          schema: generated-schema.graphql
+          schema: src/generated/prisma.graphql
         output:
-          typings: generated-prisma.ts
+          typings: src/generated/prisma.ts
         generator: typegen
         language: typescript
 ```

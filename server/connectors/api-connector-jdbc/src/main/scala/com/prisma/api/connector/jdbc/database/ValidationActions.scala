@@ -11,10 +11,7 @@ import scala.concurrent.ExecutionContext
 trait ValidationActions extends BuilderBase with FilterConditionBuilder {
   import slickDatabase.profile.api._
 
-  def ensureThatNodeIsNotConnected(
-      relationField: RelationField,
-      childId: IdGCValue
-  )(implicit ec: ExecutionContext): DBIO[Unit] = {
+  def ensureThatNodeIsNotConnected(relationField: RelationField, id: IdGCValue)(implicit ec: ExecutionContext): DBIO[Unit] = {
     val relation = relationField.relation
     val idQuery = sql
       .select(asterisk())
@@ -25,7 +22,7 @@ trait ValidationActions extends BuilderBase with FilterConditionBuilder {
       )
 
     val action = queryToDBIO(idQuery)(
-      setParams = _.setGcValue(childId),
+      setParams = _.setGcValue(id),
       readResult = rs => rs.readWith(readsAsUnit)
     )
     action.map { result =>
@@ -33,21 +30,21 @@ trait ValidationActions extends BuilderBase with FilterConditionBuilder {
     }
   }
 
-  def ensureThatNodeIsConnected(
-      relationField: RelationField,
-      childId: IdGCValue
-  )(implicit ec: ExecutionContext): DBIO[Unit] = {
+  def ensureThatNodesAreConnected(relationField: RelationField, childId: IdGCValue, parentId: IdGCValue)(implicit ec: ExecutionContext): DBIO[Unit] = {
     val relation = relationField.relation
     val idQuery = sql
       .select(asterisk())
       .from(relationTable(relation))
       .where(
         relationColumn(relation, relationField.oppositeRelationSide).equal(placeHolder),
-        relationColumn(relation, relationField.relationSide).isNotNull
+        relationColumn(relation, relationField.relationSide).equal(placeHolder)
       )
 
     val action = queryToDBIO(idQuery)(
-      setParams = _.setGcValue(childId),
+      setParams = { pp =>
+        pp.setGcValue(childId)
+        pp.setGcValue(parentId)
+      },
       readResult = rs => rs.readWith(readsAsUnit)
     )
     action.map { result =>
@@ -55,7 +52,7 @@ trait ValidationActions extends BuilderBase with FilterConditionBuilder {
         throw NodesNotConnectedError(
           relation = relationField.relation,
           parent = relationField.model,
-          parentWhere = None,
+          parentWhere = Some(NodeSelector.forIdGCValue(relationField.model, parentId)),
           child = relationField.relatedModel_!,
           childWhere = Some(NodeSelector.forIdGCValue(relationField.relatedModel_!, childId))
         )

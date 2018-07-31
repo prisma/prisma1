@@ -1,12 +1,12 @@
 projects:
   db:
-    schemaPath: generated-schema.graphql
+    schemaPath: src/generated/prisma.graphql
     extensions:
       endpoints:
-        default: 'http://localhost:4466/hooks'
+        default: http://localhost:4466/hooks
       prisma: prisma.yml
       codegen:
-        output: 
-          typings: generated-prisma.ts
+        output:
+          typings: src/generated/prisma.ts
         generator: typegen
         language: typescript

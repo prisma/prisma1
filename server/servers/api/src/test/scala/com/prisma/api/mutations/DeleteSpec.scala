@@ -1,5 +1,6 @@
 package com.prisma.api.mutations
 
+import com.prisma.IgnoreMySql
 import com.prisma.api.ApiSpecBase
 import com.prisma.shared.models.Project
 import com.prisma.shared.schema_dsl.SchemaDsl
@@ -11,17 +12,11 @@ class DeleteSpec extends FlatSpec with Matchers with ApiSpecBase {
     schema.model("Todo").field_!("title", _.String, isUnique = true)
   }
 
-  override protected def beforeAll(): Unit = {
-    super.beforeAll()
+  "The delete mutation" should "delete the item matching the where clause" in {
     database.setup(project)
-  }
-
-  override def beforeEach(): Unit = database.truncateProjectTables(project)
-
-  "The delete  mutation" should "delete the item matching the where clause" in {
-    createTodo("title1")
-    createTodo("title2")
-    todoAndRelayCountShouldBe(2)
+    createTodo(project, "title1")
+    createTodo(project, "title2")
+    todoAndRelayCountShouldBe(project, 2)
 
     server.query(
       """mutation {
@@ -35,14 +30,15 @@ class DeleteSpec extends FlatSpec with Matchers with ApiSpecBase {
       project
     )
 
-    todoAndRelayCountShouldBe(1)
+    todoAndRelayCountShouldBe(project, 1)
   }
 
   "The delete  mutation" should "error if the where clause misses" in {
-    createTodo("title1")
-    createTodo("title2")
-    createTodo("title3")
-    todoAndRelayCountShouldBe(3)
+    database.setup(project)
+    createTodo(project, "title1")
+    createTodo(project, "title2")
+    createTodo(project, "title3")
+    todoAndRelayCountShouldBe(project, 3)
 
     server.queryThatMustFail(
       """mutation {
@@ -58,10 +54,35 @@ class DeleteSpec extends FlatSpec with Matchers with ApiSpecBase {
       errorContains = """No Node for the model Todo with value does not exist for title found."""
     )
 
-    todoAndRelayCountShouldBe(3)
+    todoAndRelayCountShouldBe(project, 3)
   }
 
-  def todoAndRelayCountShouldBe(int: Int) = {
+  "the delete mutation" should "work when node ids are UUIDs" taggedAs (IgnoreMySql) in {
+    val project = SchemaDsl.fromString()(s"""
+         |type Todo {
+         |  id: UUID! @unique
+         |  title: String
+         |}
+       """.stripMargin)
+
+    database.setup(project)
+
+    val id = createTodo(project, "1")
+    todoAndRelayCountShouldBe(project, 1)
+
+    server.query(
+      s"""mutation {
+        |  deleteTodo(where:{id: "$id"}){
+        |    id
+        |  }
+        |}
+      """.stripMargin,
+      project
+    )
+    todoAndRelayCountShouldBe(project, 0)
+  }
+
+  def todoAndRelayCountShouldBe(project: Project, int: Int) = {
     val result = server.query(
       "{ todoes { id } }",
       project
@@ -71,9 +92,10 @@ class DeleteSpec extends FlatSpec with Matchers with ApiSpecBase {
     ifConnectorIsActive { dataResolver(project).countByTable("_RelayId").await should be(int) }
   }
 
-  def createTodo(title: String): Unit = {
-    server.query(
-      s"""mutation {
+  def createTodo(project: Project, title: String) = {
+    server
+      .query(
+        s"""mutation {
         |  createTodo(
         |    data: {
         |      title: "$title"
@@ -83,7 +105,8 @@ class DeleteSpec extends FlatSpec with Matchers with ApiSpecBase {
         |  }
         |}
       """.stripMargin,
-      project
-    )
+        project
+      )
+      .pathAsString("data.createTodo.id")
   }
 }

@@ -1,7 +1,7 @@
 endpoint: http://localhost:4466/application-server
 datamodel: datamodel.graphql
 
-seed: 
+seed:
   import: seed.graphql
 
 hooks:

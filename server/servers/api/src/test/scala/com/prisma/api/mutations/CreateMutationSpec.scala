@@ -2,6 +2,7 @@ package com.prisma.api.mutations
 
 import com.prisma.api.ApiSpecBase
 import com.prisma.api.util.TroubleCharacters
+import com.prisma.messagebus.pubsub.Message
 import com.prisma.shared.schema_dsl.SchemaDsl
 import org.scalatest.{FlatSpec, Matchers}
 import play.api.libs.json._
@@ -41,13 +42,17 @@ class CreateMutationSpec extends FlatSpec with Matchers with ApiSpecBase {
       s"""mutation {
          |  createScalarModel(data: {
          |    optString: "lala${TroubleCharacters.value}", optInt: 1337, optFloat: 1.234, optBoolean: true, optEnum: A, optDateTime: "2016-07-31T23:59:01.000Z", optJson: "[1,2,3]"
-         |  }){optString, optInt, optFloat, optBoolean, optEnum, optDateTime, optJson}
+         |  }){id, optString, optInt, optFloat, optBoolean, optEnum, optDateTime, optJson}
          |}""".stripMargin,
       project = project
     )
+    val id = res.pathAsString("data.createScalarModel.id")
 
-    res.toString should be(
-      s"""{"data":{"createScalarModel":{"optJson":[1,2,3],"optInt":1337,"optBoolean":true,"optDateTime":"2016-07-31T23:59:01.000Z","optString":"lala${TroubleCharacters.value}","optEnum":"A","optFloat":1.234}}}""")
+    res should be(
+      s"""{"data":{"createScalarModel":{"id":"$id","optJson":[1,2,3],"optInt":1337,"optBoolean":true,"optDateTime":"2016-07-31T23:59:01.000Z","optString":"lala${TroubleCharacters.value}","optEnum":"A","optFloat":1.234}}}""".parseJson)
+
+    testDependencies.sssEventsPubSub.expectPublishedMsg(
+      Message(s"subscription:event:${project.id}:createScalarModel", s"""{"nodeId":"$id","modelId":"ScalarModel","mutationType":"CreateNode"}"""))
 
     val queryRes = server.query("""{ scalarModels{optString, optInt, optFloat, optBoolean, optEnum, optDateTime, optJson}}""", project = project)
 

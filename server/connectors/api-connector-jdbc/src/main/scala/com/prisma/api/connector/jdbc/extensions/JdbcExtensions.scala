@@ -1,9 +1,8 @@
 package com.prisma.api.connector.jdbc.extensions
 
 import java.sql.{PreparedStatement, ResultSet, Timestamp}
-import java.time.{LocalDateTime, ZoneOffset}
-import java.util.{Calendar, Date, TimeZone}
-
+import java.time.ZoneOffset
+import java.util.{Calendar, TimeZone}
 import com.prisma.gc_values._
 import com.prisma.shared.models.{Field, Model, TypeIdentifier}
 import org.joda.time.{DateTime, DateTimeZone}
@@ -12,13 +11,8 @@ import play.api.libs.json.Json
 trait JdbcExtensions {
   import JdbcExtensionsValueClasses._
 
-  def exactlyNow = {
-    val today = new Date()
-    new DateTime(today).withZone(DateTimeZone.UTC)
-  }
-
-  def currentSqlTimestampUTC: Timestamp = jodaDateTimeToSqlTimestampUTC(exactlyNow)
-  def currentDateTimeGCValue            = DateTimeGCValue(exactlyNow)
+  def currentSqlTimestampUTC: Timestamp = jodaDateTimeToSqlTimestampUTC(DateTime.now(DateTimeZone.UTC))
+  def currentDateTimeGCValue            = DateTimeGCValue(DateTime.now(DateTimeZone.UTC))
 
   implicit def preparedStatementExtensions(ps: PreparedStatement): PreparedStatementExtensions = new PreparedStatementExtensions(ps)
   implicit def resultSetExtensions(resultSet: ResultSet): ResultSetExtensions                  = new ResultSetExtensions(resultSet)
@@ -28,14 +22,8 @@ trait JdbcExtensions {
 object JdbcExtensionsValueClasses {
   val calendar = Calendar.getInstance(TimeZone.getTimeZone("UTC"))
 
-  def jodaDateTimeToSqlTimestampUTC(dateTime: DateTime): Timestamp = {
-    val millis     = dateTime.getMillis
-    val seconds    = millis / 1000
-    val difference = millis - seconds * 1000
-    val nanos      = difference * 1000000
-
-    Timestamp.valueOf(LocalDateTime.ofEpochSecond(seconds, nanos.toInt, ZoneOffset.UTC))
-  }
+  def jodaDateTimeToSqlTimestampUTC(dateTime: DateTime): Timestamp =
+    Timestamp.valueOf(java.time.LocalDateTime.ofInstant(java.time.Instant.ofEpochMilli(dateTime.getMillis), ZoneOffset.UTC))
 
   class PreparedStatementExtensions(val ps: PreparedStatement) extends AnyVal {
 
