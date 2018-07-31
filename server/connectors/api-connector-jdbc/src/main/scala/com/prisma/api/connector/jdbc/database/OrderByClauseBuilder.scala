@@ -70,11 +70,11 @@ trait OrderByClauseBuilder extends QueryBuilderConstants {
       case (Some(order), "desc", true) if order.field.dbName != secondField.getName  => Vector(firstField(order).asc(), secondField.desc())
       case (Some(order), "asc", false) if order.field.dbName != secondField.getName  => Vector(firstField(order).asc(), secondField.asc())
       case (Some(order), "desc", false) if order.field.dbName != secondField.getName => Vector(firstField(order).desc(), secondField.asc())
-      case (None, "asc", true)                                                       => Vector(secondField.desc())
-      case (None, "desc", true)                                                      => Vector(secondField.asc())
-      case (None, "asc", false)                                                      => Vector(secondField.asc())
-      case (None, "desc", false)                                                     => Vector(secondField.desc())
-      case _                                                                         => throw new IllegalArgumentException
+      case (_, "asc", true)                                                          => Vector(secondField.desc())
+      case (_, "desc", true)                                                         => Vector(secondField.asc())
+      case (_, "asc", false)                                                         => Vector(secondField.asc())
+      case (_, "desc", false)                                                        => Vector(secondField.desc())
+      case x                                                                         => sys.error(s"$x is unhandled in this pattern match")
     }
   }
 }
