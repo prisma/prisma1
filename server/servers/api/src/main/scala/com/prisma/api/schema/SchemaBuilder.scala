@@ -273,6 +273,23 @@ case class SchemaBuilderImpl(
       case NoReturnValue(where)    => throw APIErrors.NodeNotFoundForWhereError(where)
     }
   }
+
+  private def getSelectedFields(ctx: Context[_, _], model: Model): SelectedFields = {
+    val currentField = ctx.astFields.find(_.name == ctx.field.name).get
+
+    def recurse(selections: Vector[Selection]): Vector[com.prisma.shared.models.Field] = selections.flatMap {
+      case astField: sangria.ast.Field =>
+        model.getFieldByName(astField.name)
+      case fragmentSpread: sangria.ast.FragmentSpread =>
+        val fragment = ctx.query.fragments(fragmentSpread.name)
+        recurse(fragment.selections)
+      case _: sangria.ast.InlineFragment =>
+        sys.error("This must not be possible as we do not support interfaces yet.")
+    }
+
+    val selectedFields = recurse(currentField.selections)
+    SelectedFields(selectedFields.toSet)
+  }
 }
 
 object SangriaEvidences {
