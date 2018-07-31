@@ -14,6 +14,7 @@ trait DataResolver {
 
   def getNodes(model: Model, args: Option[QueryArguments] = None): Future[ResolverResult[PrismaNode]]
 
+  // fixme: this is unused
   def getNodesByValuesForField(model: Model, field: ScalarField, values: Vector[GCValue]): Future[Vector[PrismaNode]]
 
   def getRelatedNodes(

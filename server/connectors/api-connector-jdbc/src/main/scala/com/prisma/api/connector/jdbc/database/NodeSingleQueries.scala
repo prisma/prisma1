@@ -59,7 +59,7 @@ trait NodeSingleQueries extends BuilderBase with NodeManyQueries with FilterCond
     queryToDBIO(query)(
       setParams = pp => pp.setGcValue(where.fieldGCValue),
       readResult = rs => {
-        val fieldsToRead = selectedFields.map(_.scalarNonListFields).getOrElse(Set.empty)
+        val fieldsToRead = selectedFields.map(_.scalarNonListFields).getOrElse(model.scalarNonListFields.toSet)
         rs.readWith(readsPrismaNode(model, fieldsToRead)).headOption
       }
     )
