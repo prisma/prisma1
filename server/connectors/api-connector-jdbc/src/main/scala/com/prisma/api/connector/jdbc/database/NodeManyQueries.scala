@@ -9,6 +9,27 @@ import slick.jdbc.PositionedParameters
 trait NodeManyQueries extends BuilderBase with FilterConditionBuilder with CursorConditionBuilder with OrderByClauseBuilder with LimitClauseBuilder {
   import slickDatabase.profile.api._
 
+  def getNodes(model: Model, args: Option[QueryArguments], overrideMaxNodeCount: Option[Int] = None): DBIO[ResolverResult[PrismaNode]] = {
+    val query = modelQuery(model, args)
+
+    queryToDBIO(query)(
+      setParams = pp => SetParams.setQueryArgs(pp, args),
+      readResult = { rs =>
+        val result = rs.readWith(readsPrismaNode(model))
+        ResolverResult(args, result)
+      }
+    )
+  }
+
+  def getNodesByValuesForField(model: Model, field: ScalarField, values: Vector[GCValue]): DBIO[Vector[PrismaNode]] = {
+    val queryArgs = Some(QueryArguments.withFilter(ScalarFilter(field, In(values))))
+    val query     = modelQuery(model, queryArgs)
+    queryToDBIO(query)(
+      setParams = pp => SetParams.setQueryArgs(pp, queryArgs),
+      readResult = _.readWith(readsPrismaNode(model))
+    )
+  }
+
   private def modelQuery(model: Model, queryArguments: Option[QueryArguments]): SelectForUpdateStep[Record] = {
 
     val condition       = buildConditionForFilter(queryArguments.flatMap(_.filter))
@@ -26,18 +47,6 @@ trait NodeManyQueries extends BuilderBase with FilterConditionBuilder with Curso
       case Some(_) => base.limit(intDummy).offset(intDummy)
       case None    => base
     }
-  }
-
-  def getNodes(model: Model, args: Option[QueryArguments], overrideMaxNodeCount: Option[Int] = None): DBIO[ResolverResult[PrismaNode]] = {
-    val query = modelQuery(model, args)
-
-    queryToDBIO(query)(
-      setParams = pp => SetParams.setQueryArgs(pp, args),
-      readResult = { rs =>
-        val result = rs.readWith(readsPrismaNode(model))
-        ResolverResult(args, result)
-      }
-    )
   }
 
   def getRelatedNodes(fromField: RelationField,
@@ -136,14 +145,5 @@ trait NodeManyQueries extends BuilderBase with FilterConditionBuilder with Curso
         }
       }
     }
-  }
-
-  def getNodesByValuesForField(model: Model, field: ScalarField, values: Vector[GCValue]): DBIO[Vector[PrismaNode]] = {
-    val queryArgs = Some(QueryArguments.withFilter(ScalarFilter(field, In(values))))
-    val query     = modelQuery(model, queryArgs)
-    queryToDBIO(query)(
-      setParams = pp => SetParams.setQueryArgs(pp, queryArgs),
-      readResult = _.readWith(readsPrismaNode(model))
-    )
   }
 }
