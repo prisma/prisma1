@@ -77,6 +77,10 @@ export class Seeder {
     }
 
     if (seed.run) {
+      if (reset) {
+        await this.reset(serviceName, stageName)
+      }
+
       await this.run(seed.run)
     }
   }
