@@ -1,6 +1,6 @@
 import { Command, flags, Flags } from 'prisma-cli-engine'
 import { EndpointDialog } from '../../utils/EndpointDialog'
-import { Introspector } from 'prisma-db-introspection'
+import { Introspector, PostgresConnector } from 'prisma-db-introspection'
 import * as path from 'path'
 import * as fs from 'fs'
 import { prettyTime } from '../../util'
@@ -22,8 +22,8 @@ export default class IntrospectCommand extends Command {
     )
 
     const credentials = await endpointDialog.getDatabase(true)
-
-    const introspector = new Introspector(credentials)
+    const connector = new PostgresConnector(credentials)
+    const introspector = new Introspector(connector)
     let schemas
     const before = Date.now()
     this.out.action.start(`Introspecting database`)
