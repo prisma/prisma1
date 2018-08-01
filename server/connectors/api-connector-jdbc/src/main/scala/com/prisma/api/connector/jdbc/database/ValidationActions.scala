@@ -4,7 +4,6 @@ import com.prisma.api.connector.NodeSelector
 import com.prisma.api.schema.APIErrors.{NodesNotConnectedError, RequiredRelationWouldBeViolated}
 import com.prisma.gc_values.IdGCValue
 import com.prisma.shared.models.RelationField
-import org.jooq.impl.DSL.asterisk
 
 import scala.concurrent.ExecutionContext
 
@@ -21,13 +20,13 @@ trait ValidationActions extends BuilderBase with FilterConditionBuilder {
         relationColumn(relation, relationField.relationSide).isNotNull
       )
 
-    val action = queryToDBIO(idQuery)(
+    queryToDBIO(idQuery)(
       setParams = _.setGcValue(id),
-      readResult = rs => rs.readWith(readsAsUnit)
+      readResult = rs => {
+        if (rs.next)
+          throw RequiredRelationWouldBeViolated(relation)
+      }
     )
-    action.map { result =>
-      if (result.nonEmpty) throw RequiredRelationWouldBeViolated(relation)
-    }
   }
 
   def ensureThatNodesAreConnected(relationField: RelationField, childId: IdGCValue, parentId: IdGCValue)(implicit ec: ExecutionContext): DBIO[Unit] = {
@@ -40,23 +39,22 @@ trait ValidationActions extends BuilderBase with FilterConditionBuilder {
         relationColumn(relation, relationField.relationSide).equal(placeHolder)
       )
 
-    val action = queryToDBIO(idQuery)(
+    queryToDBIO(idQuery)(
       setParams = { pp =>
         pp.setGcValue(childId)
         pp.setGcValue(parentId)
       },
-      readResult = rs => rs.readWith(readsAsUnit)
+      readResult = rs => {
+        if (!rs.next)
+          throw NodesNotConnectedError(
+            relation = relationField.relation,
+            parent = relationField.model,
+            parentWhere = Some(NodeSelector.forIdGCValue(relationField.model, parentId)),
+            child = relationField.relatedModel_!,
+            childWhere = Some(NodeSelector.forIdGCValue(relationField.relatedModel_!, childId))
+          )
+      }
     )
-    action.map { result =>
-      if (result.isEmpty)
-        throw NodesNotConnectedError(
-          relation = relationField.relation,
-          parent = relationField.model,
-          parentWhere = Some(NodeSelector.forIdGCValue(relationField.model, parentId)),
-          child = relationField.relatedModel_!,
-          childWhere = Some(NodeSelector.forIdGCValue(relationField.relatedModel_!, childId))
-        )
-    }
   }
 
   def ensureThatParentIsConnected(
@@ -72,20 +70,19 @@ trait ValidationActions extends BuilderBase with FilterConditionBuilder {
         relationColumn(relation, relationField.oppositeRelationSide).isNotNull
       )
 
-    val action = queryToDBIO(idQuery)(
+    queryToDBIO(idQuery)(
       setParams = _.setGcValue(parentId),
-      readResult = rs => rs.readWith(readsAsUnit)
+      readResult = rs => {
+        if (!rs.next)
+          throw NodesNotConnectedError(
+            relation = relationField.relation,
+            parent = relationField.model,
+            parentWhere = Some(NodeSelector.forIdGCValue(relationField.model, parentId)),
+            child = relationField.relatedModel_!,
+            childWhere = None
+          )
+      }
     )
-    action.map { result =>
-      if (result.isEmpty)
-        throw NodesNotConnectedError(
-          relation = relationField.relation,
-          parent = relationField.model,
-          parentWhere = Some(NodeSelector.forIdGCValue(relationField.model, parentId)),
-          child = relationField.relatedModel_!,
-          childWhere = None
-        )
-    }
   }
 
   def errorIfNodeIsInRelation(parentId: IdGCValue, field: RelationField)(implicit ec: ExecutionContext): DBIO[Unit] = {
@@ -102,16 +99,16 @@ trait ValidationActions extends BuilderBase with FilterConditionBuilder {
         relationColumn(relation, field.relationSide).isNotNull
       )
 
-    val action = queryToDBIO(query)(
+    queryToDBIO(query)(
       setParams = pp => parentIds.foreach(pp.setGcValue),
-      readResult = rs => rs.readWith(readsAsUnit)
-    )
-    action.map { result =>
-      if (result.nonEmpty) {
-        // fixme: decide which error to use
-        throw RequiredRelationWouldBeViolated(relation)
-        //        throw RelationIsRequired(field.name, field.model.name)
+      readResult = rs => {
+        if (rs.next) {
+          // fixme: decide which error to use
+          throw RequiredRelationWouldBeViolated(relation)
+          //        throw RelationIsRequired(field.name, field.model.name)
+        }
+
       }
-    }
+    )
   }
 }
