@@ -7,6 +7,8 @@ import org.scalatest.{FlatSpec, Matchers}
 
 class UpdateManyListSpec extends FlatSpec with Matchers with ApiSpecBase {
 
+  override def runSuiteOnlyForActiveConnectors = true
+
   val project: Project = SchemaDsl.fromString() { """
                                                   |type MyObject {
                                                   |  id: ID! @unique
