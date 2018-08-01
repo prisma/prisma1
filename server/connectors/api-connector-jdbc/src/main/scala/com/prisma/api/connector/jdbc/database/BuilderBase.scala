@@ -49,6 +49,7 @@ trait BuilderBase extends JooqExtensions with JdbcExtensions with SlickExtension
   def scalarListColumn(scalarField: ScalarField, column: String)                  = field(name(schemaName, scalarListTableName(scalarField), column))
   def column(table: String, column: String)                                       = field(name(schemaName, table, column))
   def aliasColumn(column: String)                                                 = field(name(topLevelAlias, column))
+  def aliasColumn(scalarField: ScalarField)                                       = field(name(topLevelAlias, scalarField.dbName))
   def placeHolders(vector: Iterable[Any])                                         = vector.toList.map(_ => placeHolder).asJava
   private def scalarListTableName(field: ScalarField)                             = field.model.dbName + "_" + field.dbName
 

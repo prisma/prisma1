@@ -15,16 +15,17 @@ class ToOneDeferredResolver(dataResolver: DataResolver) {
     // check if we really can satisfy all deferreds with one database query
     DeferredUtils.checkSimilarityOfRelatedDeferredsAndThrow(deferreds)
 
-    val headDeferred = deferreds.head
-    val relatedField = headDeferred.relationField
-    val args         = headDeferred.args
+    val headDeferred   = deferreds.head
+    val relatedField   = headDeferred.relationField
+    val args           = headDeferred.args
+    val selectedFields = headDeferred.selectedFields
 
     // get ids of prismaNodes in related model we need to fetch
     val relatedModelIds = deferreds.map(deferred => deferred.parentNodeId)
 
     // fetch prismaNodes
     val futurePrismaNodes: Future[Vector[PrismaNodeWithParent]] =
-      dataResolver.getRelatedNodes(relatedField, relatedModelIds, args).map(_.flatMap(_.nodes))
+      dataResolver.getRelatedNodes(relatedField, relatedModelIds, args, selectedFields).map(_.flatMap(_.nodes))
 
     // assign the prismaNode that was requested by each deferred
     orderedDeferreds.map {

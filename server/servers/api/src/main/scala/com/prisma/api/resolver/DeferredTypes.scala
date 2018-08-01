@@ -1,6 +1,6 @@
 package com.prisma.api.resolver
 
-import com.prisma.api.connector.{NodeSelector, PrismaNode, QueryArguments}
+import com.prisma.api.connector.{NodeSelector, PrismaNode, QueryArguments, SelectedFields}
 import com.prisma.gc_values.IdGCValue
 import com.prisma.shared.models.{Model, RelationField, ScalarField}
 import sangria.execution.deferred.Deferred
@@ -43,10 +43,24 @@ object DeferredTypes {
 
   type OneDeferredResultType = Option[PrismaNode]
 
-  case class OneDeferred(model: Model, where: NodeSelector)                                                     extends Deferred[OneDeferredResultType]
-  case class ToOneDeferred(relationField: RelationField, parentNodeId: IdGCValue, args: Option[QueryArguments]) extends RelationDeferred[OneDeferredResultType]
-  case class ToManyDeferred(relationField: RelationField, parentNodeId: IdGCValue, args: Option[QueryArguments])
-      extends RelationDeferred[RelayConnectionOutputType]
+  case class OneDeferred(
+      model: Model,
+      where: NodeSelector
+  ) extends Deferred[OneDeferredResultType]
+
+  case class ToOneDeferred(
+      relationField: RelationField,
+      parentNodeId: IdGCValue,
+      args: Option[QueryArguments],
+      selectedFields: SelectedFields
+  ) extends RelationDeferred[OneDeferredResultType]
+
+  case class ToManyDeferred(
+      relationField: RelationField,
+      parentNodeId: IdGCValue,
+      args: Option[QueryArguments],
+      selectedFields: SelectedFields
+  ) extends RelationDeferred[RelayConnectionOutputType]
 
   type SimpleConnectionOutputType   = Seq[PrismaNode]
   type RelayConnectionOutputType    = IdBasedConnection[PrismaNode]

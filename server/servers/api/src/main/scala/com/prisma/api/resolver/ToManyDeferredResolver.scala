@@ -14,9 +14,10 @@ class ToManyDeferredResolver(dataResolver: DataResolver) extends Tracing {
     implicit val ec: ExecutionContext = executionContext
     val deferreds                     = orderedDeferreds.map(_.deferred)
 
-    val headDeferred = deferreds.head
-    val relatedField = headDeferred.relationField
-    val args         = headDeferred.args
+    val headDeferred   = deferreds.head
+    val relatedField   = headDeferred.relationField
+    val args           = headDeferred.args
+    val selectedFields = headDeferred.selectedFields
 
     // Get ids of nodes in related model we need to fetch (actual rows of data)
     val relatedModelInstanceIds: Vector[IdGCValue] = deferreds.map(deferred => deferred.parentNodeId)
@@ -28,7 +29,7 @@ class ToManyDeferredResolver(dataResolver: DataResolver) extends Tracing {
     val batchFutures: Vector[Future[Vector[ResolverResult[PrismaNodeWithParent]]]] = relatedModelInstanceIds.distinct
       .grouped(500)
       .toVector
-      .map(ids => dataResolver.getRelatedNodes(relatedField, ids, args))
+      .map(ids => dataResolver.getRelatedNodes(relatedField, ids, args, selectedFields))
 
     // Fetch resolver results
     val futureResolverResults: Future[Vector[ResolverResult[PrismaNodeWithParent]]] = Future

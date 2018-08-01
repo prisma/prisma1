@@ -20,7 +20,8 @@ trait DataResolver {
   def getRelatedNodes(
       fromField: RelationField,
       fromNodeIds: Vector[IdGCValue],
-      args: Option[QueryArguments]
+      args: Option[QueryArguments],
+      selectedFields: SelectedFields
   ): Future[Vector[ResolverResult[PrismaNodeWithParent]]]
 
   def getScalarListValues(model: Model, listField: ScalarField, args: Option[QueryArguments] = None): Future[ResolverResult[ScalarListValues]]
