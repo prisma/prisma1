@@ -19,7 +19,9 @@ class ObjectTypeBuilder(
     nodeInterface: Option[InterfaceType[ApiUserContext, PrismaNode]] = None,
     withRelations: Boolean = true,
     onlyId: Boolean = false
-)(implicit ec: ExecutionContext) {
+)(implicit ec: ExecutionContext)
+    extends SangriaExtensions {
+
   val batchPayloadType: ObjectType[ApiUserContext, BatchPayload] = ObjectType(
     name = "BatchPayload",
     description = "",
@@ -288,11 +290,11 @@ class ObjectTypeBuilder(
 
       case f: RelationField if f.isList =>
         val arguments = extractQueryArgumentsFromContext(f.relatedModel_!, ctx.asInstanceOf[Context[ApiUserContext, Unit]])
-        DeferredValue(ToManyDeferred(f, item.id, arguments)).map(_.toNodes)
+        DeferredValue(ToManyDeferred(f, item.id, arguments, ctx.getSelectedFields(f.relatedModel_!))).map(_.toNodes)
 
       case f: RelationField if !f.isList =>
         val arguments = extractQueryArgumentsFromContext(f.relatedModel_!, ctx.asInstanceOf[Context[ApiUserContext, Unit]])
-        ToOneDeferred(f, item.id, arguments)
+        ToOneDeferred(f, item.id, arguments, ctx.getSelectedFields(f.relatedModel_!))
     }
   }
 

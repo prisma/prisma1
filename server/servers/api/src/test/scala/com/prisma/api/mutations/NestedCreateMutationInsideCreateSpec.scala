@@ -677,7 +677,7 @@ class NestedCreateMutationInsideCreateSpec extends FlatSpec with Matchers with A
       s"""
          |type List {
          |  id: ID! @unique
-         |  todos: [Todo]
+         |  todos: [Todo!]!
          |}
          |
          |type Todo {

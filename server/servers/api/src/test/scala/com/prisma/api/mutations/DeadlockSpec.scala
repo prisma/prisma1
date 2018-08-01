@@ -135,7 +135,7 @@ class DeadlockSpec extends FlatSpec with Matchers with ApiSpecBase with AwaitUti
       )
 
     Future
-      .traverse(0 to 200) { (i) =>
+      .traverse(0 to 100) { (i) =>
         exec(i)
       }
       .await(seconds = 30)
