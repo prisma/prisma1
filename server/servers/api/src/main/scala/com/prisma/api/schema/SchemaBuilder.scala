@@ -34,7 +34,8 @@ object SchemaBuilder {
 case class SchemaBuilderImpl(
     project: Project,
     capabilities: Vector[ApiConnectorCapability]
-)(implicit apiDependencies: ApiDependencies, system: ActorSystem) {
+)(implicit apiDependencies: ApiDependencies, system: ActorSystem)
+    extends SangriaExtensions {
   import system.dispatcher
 
   val argumentsBuilder                     = ArgumentsBuilder(project = project)
@@ -139,7 +140,7 @@ case class SchemaBuilderImpl(
           resolve = { ctx =>
             val coolArgs = CoolArgs(ctx.args.raw)
             val where    = coolArgs.extractNodeSelectorFromWhereField(model)
-            masterDataResolver.getNodeByWhere(where, getSelectedFields(ctx, model))
+            masterDataResolver.getNodeByWhere(where, ctx.getSelectedFields(model))
           }
         )
       }
@@ -151,8 +152,13 @@ case class SchemaBuilderImpl(
       fieldType = outputTypesBuilder.mapCreateOutputType(model, objectTypes(model.name)),
       arguments = argumentsBuilder.getSangriaArgumentsForCreate(model).getOrElse(List.empty),
       resolve = (ctx) => {
-        val selectedFields = getSelectedFields(ctx, model)
-        val mutation       = Create(model = model, project = project, args = ctx.args, selectedFields = selectedFields, dataResolver = masterDataResolver)
+        val mutation = Create(
+          model = model,
+          project = project,
+          args = ctx.args,
+          selectedFields = ctx.getSelectedFields(model),
+          dataResolver = masterDataResolver
+        )
         val mutationResult = ClientMutationRunner.run(mutation, databaseMutactionExecutor, sideEffectMutactionExecutor, mutactionVerifier)
         mapReturnValueResult(mutationResult, ctx.args)
       }
@@ -166,8 +172,13 @@ case class SchemaBuilderImpl(
         fieldType = OptionType(outputTypesBuilder.mapUpdateOutputType(model, objectTypes(model.name))),
         arguments = args,
         resolve = (ctx) => {
-          val selectedFields = getSelectedFields(ctx, model)
-          val mutation       = Update(model = model, project = project, args = ctx.args, selectedFields = selectedFields, dataResolver = masterDataResolver)
+          val mutation = Update(
+            model = model,
+            project = project,
+            args = ctx.args,
+            selectedFields = ctx.getSelectedFields(model),
+            dataResolver = masterDataResolver
+          )
 
           val mutationResult = ClientMutationRunner.run(mutation, databaseMutactionExecutor, sideEffectMutactionExecutor, mutactionVerifier)
           mapReturnValueResult(mutationResult, ctx.args)
@@ -198,8 +209,13 @@ case class SchemaBuilderImpl(
         fieldType = outputTypesBuilder.mapUpsertOutputType(model, objectTypes(model.name)),
         arguments = args,
         resolve = (ctx) => {
-          val selectedFields = getSelectedFields(ctx, model)
-          val mutation       = Upsert(model = model, project = project, args = ctx.args, selectedFields = selectedFields, dataResolver = masterDataResolver)
+          val mutation = Upsert(
+            model = model,
+            project = project,
+            args = ctx.args,
+            selectedFields = ctx.getSelectedFields(model),
+            dataResolver = masterDataResolver
+          )
           val mutationResult = ClientMutationRunner.run(mutation, databaseMutactionExecutor, sideEffectMutactionExecutor, mutactionVerifier)
           mapReturnValueResult(mutationResult, ctx.args)
         }
@@ -214,13 +230,12 @@ case class SchemaBuilderImpl(
         fieldType = OptionType(outputTypesBuilder.mapDeleteOutputType(model, objectTypes(model.name), onlyId = false)),
         arguments = args,
         resolve = (ctx) => {
-          val selectedFields = getSelectedFields(ctx, model)
           val mutation = Delete(
             model = model,
             modelObjectTypes = objectTypeBuilder,
             project = project,
             args = ctx.args,
-            selectedFields = selectedFields,
+            selectedFields = ctx.getSelectedFields(model),
             dataResolver = masterDataResolver
           )
           val mutationResult = ClientMutationRunner.run(mutation, databaseMutactionExecutor, sideEffectMutactionExecutor, mutactionVerifier)
@@ -278,23 +293,6 @@ case class SchemaBuilderImpl(
       case ReturnValue(prismaNode) => outputTypesBuilder.mapResolve(prismaNode, args)
       case NoReturnValue(where)    => throw APIErrors.NodeNotFoundForWhereError(where)
     }
-  }
-
-  private def getSelectedFields(ctx: Context[_, _], model: Model): SelectedFields = {
-    val currentField = ctx.astFields.find(_.name == ctx.field.name).get
-
-    def recurse(selections: Vector[Selection]): Vector[com.prisma.shared.models.Field] = selections.flatMap {
-      case astField: sangria.ast.Field =>
-        model.getFieldByName(astField.name)
-      case fragmentSpread: sangria.ast.FragmentSpread =>
-        val fragment = ctx.query.fragments(fragmentSpread.name)
-        recurse(fragment.selections)
-      case _: sangria.ast.InlineFragment =>
-        sys.error("This must not be possible as we do not support interfaces yet.")
-    }
-
-    val selectedFields = recurse(currentField.selections)
-    SelectedFields(selectedFields.toSet)
   }
 }
 
