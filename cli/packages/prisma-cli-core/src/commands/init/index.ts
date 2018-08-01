@@ -19,7 +19,13 @@ export default class Init extends Command {
     },
   ]
 
-  static flags: Flags = {}
+  static flags: Flags = {
+    endpoint: flags.string({
+      char: 'e',
+      description: 'Initial service endpoint (optional)',
+      required: false,
+    }),
+  }
 
   async run() {
     const dirName = this.args!.dirName
@@ -31,10 +37,11 @@ export default class Init extends Command {
       this.config.definitionDir = this.config.cwd
     }
 
-    await this.runInit()
+    const endpoint = this.flags!.endpoint
+    await this.runInit({ endpoint })
   }
 
-  async runInit() {
+  async runInit({ endpoint }) {
     const files = fs.readdirSync(this.config.definitionDir)
     // the .prismarc must be allowed for the docker version to be functioning
     // CONTINUE: special env handling for dockaa. can't just override the host/dinges
@@ -56,6 +63,55 @@ Either try using a new directory name, or remove the files listed above.
       this.out.exit(1)
     }
 
+    if (endpoint) {
+      fs.copySync(
+        path.join(__dirname, 'boilerplate', 'datamodel.graphql'),
+        path.join(this.config.definitionDir, 'datamodel.graphql'),
+      )
+      fs.copySync(
+        path.join(__dirname, 'boilerplate', 'prisma.yml'),
+        path.join(this.config.definitionDir, 'prisma.yml'),
+      )
+
+      const endpointDefinitionPath = path.join(this.config.definitionDir, 'prisma.yml')
+      const endpointPrismaYml = fs.readFileSync(endpointDefinitionPath, 'utf-8')
+
+      const newEndpointPrismaYml = endpointPrismaYml.replace('ENDPOINT', endpoint)
+      fs.writeFileSync(endpointDefinitionPath, newEndpointPrismaYml)
+
+      const endpointSteps: string[] = []
+
+      const endpointDir = this.args!.dirName
+      if (endpointDir) {
+        endpointSteps.push(`Open folder: ${chalk.cyan(`cd ${endpointDir}`)}`)
+      }
+
+      endpointSteps.push(`Deploy your Prisma service: ${chalk.cyan('prisma deploy')}`)
+
+
+      const endpointCreatedFiles = [
+        `  ${chalk.cyan('prisma.yml')}           Prisma service definition`,
+        `  ${chalk.cyan(
+          'datamodel.graphql',
+        )}    GraphQL SDL-based datamodel (foundation for database)`,
+      ]
+
+      this.out.log(`
+${chalk.bold(
+          `Created ${
+          endpointCreatedFiles.length
+          } new files:                                                                          `,
+        )}
+
+${endpointCreatedFiles.join('\n')}
+
+${chalk.bold('Next steps:')}
+
+${endpointSteps.map((step, index) => `  ${index + 1}. ${step}`).join('\n')}`)
+
+      this.out.exit(0)
+    } 
+    
     const endpointDialog = new EndpointDialog(
       this.out,
       this.client,
@@ -84,9 +140,7 @@ Either try using a new directory name, or remove the files listed above.
         `PRISMA_MANAGEMENT_API_SECRET=${results.managementSecret}`,
       )
     }
-    let relativeDir = path.relative(this.config.cwd, this.config.definitionDir)
-    relativeDir = relativeDir.length === 0 ? '.' : relativeDir
-
+    
     const definitionPath = path.join(this.config.definitionDir, 'prisma.yml')
     const prismaYml = fs.readFileSync(definitionPath, 'utf-8')
 
