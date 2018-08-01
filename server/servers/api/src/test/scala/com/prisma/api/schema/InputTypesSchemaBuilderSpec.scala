@@ -9,6 +9,8 @@ import sangria.renderer.SchemaRenderer
 class InputTypesSchemaBuilderSpec extends FlatSpec with Matchers with ApiSpecBase with GraphQLSchemaMatchers {
   val schemaBuilder = testDependencies.apiSchemaBuilder
 
+  override def runSuiteOnlyForActiveConnectors = true // a lot of the schemas omit the id field which is required for passive connectors
+
   "Sample schema with relation and id only types" should "be generated correctly" in {
 
     val project = SchemaDsl.fromString() {
