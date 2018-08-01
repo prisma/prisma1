@@ -100,7 +100,7 @@ class DeleteScalarListsSpec extends FlatSpec with Matchers with ApiSpecBase {
       """type Top {
         | id: ID! @unique
         | name: String! @unique
-        | bottom: Bottom @relation(name: "Test", onDelete:"CASCADE")
+        | bottom: Bottom @relation(name: "Test", onDelete: CASCADE)
         |}
         |
         |type Bottom {
