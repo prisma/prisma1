@@ -3,6 +3,7 @@ package com.prisma.deploy
 import akka.actor.{ActorRef, ActorSystem, Props}
 import akka.stream.ActorMaterializer
 import com.prisma.auth.Auth
+import com.prisma.config.PrismaConfig
 import com.prisma.deploy.connector.DeployConnector
 import com.prisma.deploy.migration.migrator.Migrator
 import com.prisma.deploy.schema.SchemaBuilder
@@ -22,6 +23,7 @@ trait DeployDependencies extends AwaitUtils {
 
   implicit def self: DeployDependencies
 
+  def config: PrismaConfig
   def migrator: Migrator
   def managementAuth: ManagementAuth
   def invalidationPublisher: PubSubPublisher[String]

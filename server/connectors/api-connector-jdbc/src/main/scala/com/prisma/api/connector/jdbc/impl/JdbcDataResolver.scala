@@ -46,7 +46,7 @@ case class JdbcDataResolver(
       fromNodeIds: Vector[IdGCValue],
       args: Option[QueryArguments]
   ): Future[Vector[ResolverResult[PrismaNodeWithParent]]] = {
-    val query = queryBuilder.getRelatedNodes(project.schema, fromField, fromNodeIds, args)
+    val query = queryBuilder.getRelatedNodes(fromField, fromNodeIds, args)
     performWithTiming("resolveByRelation", slickDatabase.database.run(query))
   }
 

@@ -120,4 +120,38 @@ class UpdatedAtShouldChangeSpec extends FlatSpec with Matchers with ApiSpecBase 
 
     updatedAt should not equal changedUpdatedAt
   }
+
+  "UpdateMany" should "change updatedAt values" in {
+    val updatedAt = server.query("""mutation a {createTop(data: { top: "top5" }) {updatedAt}}""", project).pathAsString("data.createTop.updatedAt")
+
+    val res = server
+      .query(
+        s"""mutation b {
+           |  updateManyTops(
+           |    where: { top: "top5" }
+           |    data: { top: "top50" }
+           |  ) {
+           |    count
+           |  }
+           |}
+      """,
+        project
+      )
+
+    res.toString should be("""{"data":{"updateManyTops":{"count":1}}}""")
+
+    val changedUpdatedAt = server
+      .query(
+        s"""query{
+           |  top(where: { top: "top50" }) {
+           |    updatedAt
+           |  }
+           |}
+      """,
+        project
+      )
+      .pathAsString("data.top.updatedAt")
+
+    updatedAt should not equal changedUpdatedAt
+  }
 }

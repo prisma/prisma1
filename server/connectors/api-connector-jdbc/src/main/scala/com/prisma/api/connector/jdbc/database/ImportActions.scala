@@ -31,16 +31,15 @@ trait ImportActions extends BuilderBase {
         val itemInsert: PreparedStatement = jdbcActionContext.connection.prepareStatement(query.getSQL)
         val currentTimeStamp              = currentSqlTimestampUTC
 
-        //Fixme have a helper for adding updatedAt / createdAt
         mutaction.args.foreach { arg =>
           val argsAsRoot = arg.raw.asRoot
           model.scalarNonListFields.zipWithIndex.foreach {
             case (field, index) =>
               argsAsRoot.map.get(field.name) match {
-                case Some(NullGCValue) if field.name == "createdAt" || field.name == "updatedAt" => itemInsert.setTimestamp(index + 1, currentTimeStamp)
-                case Some(gCValue)                                                               => itemInsert.setGcValue(index + 1, gCValue)
-                case None if field.name == "createdAt" || field.name == "updatedAt"              => itemInsert.setTimestamp(index + 1, currentTimeStamp)
-                case None                                                                        => itemInsert.setNull(index + 1, java.sql.Types.NULL)
+                case Some(NullGCValue) if field.name == createdAtField || field.name == updatedAtField => itemInsert.setTimestamp(index + 1, currentTimeStamp)
+                case Some(gCValue)                                                                     => itemInsert.setGcValue(index + 1, gCValue)
+                case None if field.name == createdAtField || field.name == updatedAtField              => itemInsert.setTimestamp(index + 1, currentTimeStamp)
+                case None                                                                              => itemInsert.setNull(index + 1, java.sql.Types.NULL)
               }
           }
           itemInsert.addBatch()
@@ -166,17 +165,17 @@ trait ImportActions extends BuilderBase {
   }
 
   private def startPositions(field: ScalarField, nodeIds: Seq[IdGCValue]): DBIO[Map[IdGCValue, Int]] = {
-    val nodeIdField  = scalarListColumn(field, "nodeId")
+    val nodeIdField  = scalarListColumn(field, nodeIdFieldName)
     val placeholders = nodeIds.map(_ => placeHolder)
 
     val query = sql
-      .select(nodeIdField, max(scalarListColumn(field, "position")))
+      .select(nodeIdField, max(scalarListColumn(field, positionFieldName)))
       .from(scalarListTable(field))
       .groupBy(nodeIdField)
       .having(nodeIdField.in(placeholders: _*))
 
     val reads = ReadsResultSet { rs =>
-      val nodeId = rs.getId(field.model, "nodeId")
+      val nodeId = rs.getId(field.model, nodeIdFieldName)
       val start  = rs.getInt("max")
       (nodeId, start)
     }
@@ -193,7 +192,7 @@ trait ImportActions extends BuilderBase {
     val res = try {
       val query = sql
         .insertInto(scalarListTable(field))
-        .columns(scalarListColumn(field, "nodeId"), scalarListColumn(field, "value"), scalarListColumn(field, "position"))
+        .columns(scalarListColumn(field, nodeIdFieldName), scalarListColumn(field, valueFieldName), scalarListColumn(field, positionFieldName))
         .values(placeHolder, placeHolder, placeHolder)
 
       val ps: PreparedStatement = ctx.connection.prepareStatement(query.getSQL)

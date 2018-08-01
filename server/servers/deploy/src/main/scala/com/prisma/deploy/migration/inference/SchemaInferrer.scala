@@ -255,7 +255,7 @@ case class SchemaInferrerImpl(
     val tableForRelatedType = relatedType.finalTableName
     val isThisModelA        = isModelA(prismaType.name, relationField.referencesType)
 
-    relationField.inlineDirectiveColumn match {
+    relationField.relationDbDirective match {
       case Some(inlineDirective: InlineRelationDirective) =>
         Some(InlineRelationManifestation(inTableOfModelId = prismaType.name, referencingColumn = inlineDirective.column))
 
@@ -281,8 +281,8 @@ case class SchemaInferrerImpl(
             relationTable.referencesTheTables(tableForThisType, tableForRelatedType)
           }
           .flatMap { inferredTable =>
-            def columnForThisType    = inferredTable.columnForTable(tableForThisType)
-            def columnForRelatedType = inferredTable.columnForTable(tableForRelatedType)
+            val columnForThisType    = inferredTable.columnForTable(tableForThisType)
+            val columnForRelatedType = inferredTable.columnForTable(tableForRelatedType)
 
             for {
               modelAColumn <- if (isThisModelA) columnForThisType else columnForRelatedType
@@ -296,11 +296,13 @@ case class SchemaInferrerImpl(
             }
           }
           .orElse {
-            val referencedType = prismaSdl.types.find(_.name == relationField.referencesType).get
-            val columnOption = inferredTables
-              .modelTable_!(prismaType.tableName.getOrElse(prismaType.name))
-              .columnNameForReferencedTable(referencedType.tableName.getOrElse(referencedType.name))
-            columnOption.map(column => InlineRelationManifestation(prismaType.name, column))
+            for {
+              referencedType <- prismaSdl.types.find(_.name == relationField.referencesType)
+              modelTable     <- inferredTables.modelTables.find(_.name == prismaType.finalTableName)
+              column         <- modelTable.columnNameForReferencedTable(referencedType.tableName.getOrElse(referencedType.name))
+            } yield {
+              InlineRelationManifestation(prismaType.name, column)
+            }
           }
     }
   }
