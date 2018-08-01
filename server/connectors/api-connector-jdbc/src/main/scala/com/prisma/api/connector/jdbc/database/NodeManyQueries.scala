@@ -21,7 +21,7 @@ trait NodeManyQueries extends BuilderBase with FilterConditionBuilder with Curso
     )
   }
 
-  def getNodesByValuesForField(model: Model, field: ScalarField, values: Vector[GCValue]): DBIO[Vector[PrismaNode]] = {
+  protected def getNodesByValuesForField(model: Model, field: ScalarField, values: Vector[GCValue]): DBIO[Vector[PrismaNode]] = {
     val queryArgs = Some(QueryArguments.withFilter(ScalarFilter(field, In(values))))
     val query     = modelQuery(model, queryArgs)
     queryToDBIO(query)(

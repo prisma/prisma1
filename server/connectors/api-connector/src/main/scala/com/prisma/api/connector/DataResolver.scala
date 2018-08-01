@@ -1,6 +1,6 @@
 package com.prisma.api.connector
 
-import com.prisma.gc_values.{CuidGCValue, GCValue, IdGCValue}
+import com.prisma.gc_values.{CuidGCValue, IdGCValue}
 import com.prisma.shared.models._
 
 import scala.concurrent.Future
@@ -13,9 +13,6 @@ trait DataResolver {
   def getNodeByWhere(where: NodeSelector, selectedFields: SelectedFields): Future[Option[PrismaNode]]
 
   def getNodes(model: Model, args: Option[QueryArguments] = None): Future[ResolverResult[PrismaNode]]
-
-  // fixme: this is unused
-  def getNodesByValuesForField(model: Model, field: ScalarField, values: Vector[GCValue]): Future[Vector[PrismaNode]]
 
   def getRelatedNodes(
       fromField: RelationField,

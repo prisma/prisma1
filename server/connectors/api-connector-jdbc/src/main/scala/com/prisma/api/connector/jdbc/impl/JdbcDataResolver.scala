@@ -36,11 +36,6 @@ case class JdbcDataResolver(
     performWithTiming("loadModelRowsForExport", slickDatabase.database.run(query))
   }
 
-  override def getNodesByValuesForField(model: Model, field: ScalarField, values: Vector[GCValue]): Future[Vector[PrismaNode]] = {
-    val query = queryBuilder.getNodesByValuesForField(model, field, values)
-    performWithTiming("batchResolveByUnique", slickDatabase.database.run(query))
-  }
-
   override def getRelatedNodes(
       fromField: RelationField,
       fromNodeIds: Vector[IdGCValue],
