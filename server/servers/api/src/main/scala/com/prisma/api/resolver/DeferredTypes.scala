@@ -13,40 +13,35 @@ object DeferredTypes {
     def order: Int
   }
 
-  case class OrderedDeferred[T](deferred: T, order: Int)                                     extends Ordered
-  case class OrderedDeferredFutureResult[ResultType](future: Future[ResultType], order: Int) extends Ordered
+  case class OrderedDeferred[T](deferred: T, order: Int)                   extends Ordered
+  case class OrderedDeferredFutureResult[T](future: Future[T], order: Int) extends Ordered
 
-  trait ModelArgs {
+  trait ModelDeferred[+T] extends Deferred[T] {
     def model: Model
     def args: Option[QueryArguments]
   }
 
-  trait ModelDeferred[+T] extends ModelArgs with Deferred[T] {
-    model: Model
-    args: Option[QueryArguments]
-  }
-
-  case class ManyModelDeferred(model: Model, args: Option[QueryArguments], selectedFields: SelectedFields) extends ModelDeferred[RelayConnectionOutputType]
-  case class CountManyModelDeferred(model: Model, args: Option[QueryArguments])                            extends ModelDeferred[Int]
-
-  trait RelatedArgs {
-    def relationField: RelationField
-    def parentNodeId: IdGCValue
-    def args: Option[QueryArguments]
-  }
-
-  trait RelationDeferred[+T] extends RelatedArgs with Deferred[T] {
-    def relationField: RelationField
-    def parentNodeId: IdGCValue
-    def args: Option[QueryArguments]
-  }
-
-  type OneDeferredResultType = Option[PrismaNode]
+  case class ManyModelDeferred(
+      model: Model,
+      args: Option[QueryArguments],
+      selectedFields: SelectedFields
+  ) extends ModelDeferred[RelayConnectionOutputType]
 
   case class OneDeferred(
       model: Model,
       where: NodeSelector
   ) extends Deferred[OneDeferredResultType]
+
+  case class CountManyModelDeferred(
+      model: Model,
+      args: Option[QueryArguments]
+  ) extends ModelDeferred[Int]
+
+  trait RelationDeferred[+T] extends Deferred[T] {
+    def relationField: RelationField
+    def parentNodeId: IdGCValue
+    def args: Option[QueryArguments]
+  }
 
   case class ToOneDeferred(
       relationField: RelationField,
@@ -62,7 +57,7 @@ object DeferredTypes {
       selectedFields: SelectedFields
   ) extends RelationDeferred[RelayConnectionOutputType]
 
-  type SimpleConnectionOutputType   = Seq[PrismaNode]
+  type OneDeferredResultType        = Option[PrismaNode]
   type RelayConnectionOutputType    = IdBasedConnection[PrismaNode]
   type ScalarListDeferredResultType = Vector[Any]
 
