@@ -9,7 +9,7 @@ class UpdateManyListSpec extends FlatSpec with Matchers with ApiSpecBase {
 
   override def runSuiteOnlyForActiveConnectors = true
 
-  val project: Project = SchemaDsl.fromString() { """
+  lazy val project: Project = SchemaDsl.fromString() { """
                                                   |type MyObject {
                                                   |  id: ID! @unique
                                                   |  name: String! @unique
