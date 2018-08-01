@@ -14,7 +14,7 @@ trait ValidationActions extends BuilderBase with FilterConditionBuilder {
   def ensureThatNodeIsNotConnected(relationField: RelationField, id: IdGCValue)(implicit ec: ExecutionContext): DBIO[Unit] = {
     val relation = relationField.relation
     val idQuery = sql
-      .select(asterisk())
+      .select(relationColumn(relation, relationField.oppositeRelationSide))
       .from(relationTable(relation))
       .where(
         relationColumn(relation, relationField.oppositeRelationSide).equal(placeHolder),
@@ -33,7 +33,7 @@ trait ValidationActions extends BuilderBase with FilterConditionBuilder {
   def ensureThatNodesAreConnected(relationField: RelationField, childId: IdGCValue, parentId: IdGCValue)(implicit ec: ExecutionContext): DBIO[Unit] = {
     val relation = relationField.relation
     val idQuery = sql
-      .select(asterisk())
+      .select(relationColumn(relation, relationField.oppositeRelationSide))
       .from(relationTable(relation))
       .where(
         relationColumn(relation, relationField.oppositeRelationSide).equal(placeHolder),
@@ -65,7 +65,7 @@ trait ValidationActions extends BuilderBase with FilterConditionBuilder {
   )(implicit ec: ExecutionContext): DBIO[Unit] = {
     val relation = relationField.relation
     val idQuery = sql
-      .select(asterisk())
+      .select(relationColumn(relation, relationField.relationSide))
       .from(relationTable(relation))
       .where(
         relationColumn(relation, relationField.relationSide).equal(placeHolder),
@@ -95,7 +95,7 @@ trait ValidationActions extends BuilderBase with FilterConditionBuilder {
   def errorIfNodesAreInRelation(parentIds: Vector[IdGCValue], field: RelationField)(implicit ec: ExecutionContext): DBIO[Unit] = {
     val relation = field.relation
     val query = sql
-      .select(asterisk())
+      .select(relationColumn(relation, field.oppositeRelationSide))
       .from(relationTable(relation))
       .where(
         relationColumn(relation, field.oppositeRelationSide).in(placeHolders(parentIds)),
