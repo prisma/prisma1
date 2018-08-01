@@ -5,7 +5,7 @@ import akka.stream.ActorMaterializer
 import com.prisma.api.connector.{ApiConnector, ApiConnectorCapability, DataResolver, DatabaseMutactionExecutor}
 import com.prisma.api.mutactions.{DatabaseMutactionVerifier, SideEffectMutactionExecutor}
 import com.prisma.api.project.ProjectFetcher
-import com.prisma.api.resolver.DeferredResolverProvider
+import com.prisma.api.resolver.DeferredResolverImpl
 import com.prisma.api.schema.{ApiUserContext, SchemaBuilder}
 import com.prisma.api.server.{GraphQlRequestHandler, GraphQlRequestHandlerImpl, RequestHandler}
 import com.prisma.auth.{Auth, AuthImpl}
@@ -47,7 +47,7 @@ trait ApiDependencies extends AwaitUtils {
 
   def dataResolver(project: Project): DataResolver       = apiConnector.dataResolver(project)
   def masterDataResolver(project: Project): DataResolver = apiConnector.masterDataResolver(project)
-  def deferredResolverProvider(project: Project)         = new DeferredResolverProvider[ApiUserContext](dataResolver(project))
+  def deferredResolverProvider(project: Project)         = new DeferredResolverImpl[ApiUserContext](dataResolver(project))
 
   def destroy = {
     apiConnector.shutdown().await()

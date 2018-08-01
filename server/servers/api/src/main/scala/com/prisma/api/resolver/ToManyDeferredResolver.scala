@@ -3,17 +3,15 @@ package com.prisma.api.resolver
 import com.prisma.api.connector._
 import com.prisma.api.resolver.DeferredTypes._
 import com.prisma.gc_values.IdGCValue
-import com.prisma.shared.models.Project
 import com.prisma.tracing.Tracing
 
 import scala.concurrent.{ExecutionContext, Future}
 
 class ToManyDeferredResolver(dataResolver: DataResolver) extends Tracing {
-  def resolve(orderedDeferreds: Vector[OrderedDeferred[ToManyDeferred]],
-              executionContext: ExecutionContext): Vector[OrderedDeferredFutureResult[RelayConnectionOutputType]] = {
-    implicit val ec: ExecutionContext = executionContext
-    val deferreds                     = orderedDeferreds.map(_.deferred)
-
+  def resolve(
+      orderedDeferreds: Vector[OrderedDeferred[ToManyDeferred]]
+  )(implicit ec: ExecutionContext): Vector[OrderedDeferredFutureResult[RelayConnectionOutputType]] = {
+    val deferreds      = orderedDeferreds.map(_.deferred)
     val headDeferred   = deferreds.head
     val relatedField   = headDeferred.relationField
     val args           = headDeferred.args
@@ -45,14 +43,14 @@ class ToManyDeferredResolver(dataResolver: DataResolver) extends Tracing {
             // Each deferred has exactly one ResolverResult
             val found: ResolverResult[PrismaNodeWithParent] = resolverResults.find(_.parentModelId.contains(deferred.parentNodeId)).get
 
-            mapToConnectionOutputType(found, deferred, dataResolver.project)
+            mapToConnectionOutputType(found, deferred)
           },
           order
         )
     }
   }
 
-  def mapToConnectionOutputType(input: ResolverResult[PrismaNodeWithParent], deferred: ToManyDeferred, project: Project): RelayConnectionOutputType = {
+  private def mapToConnectionOutputType(input: ResolverResult[PrismaNodeWithParent], deferred: ToManyDeferred): RelayConnectionOutputType = {
     DefaultIdBasedConnection(
       PageInfo(
         hasNextPage = input.hasNextPage,

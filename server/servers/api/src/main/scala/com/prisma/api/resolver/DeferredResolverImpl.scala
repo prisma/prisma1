@@ -5,9 +5,8 @@ import com.prisma.api.resolver.DeferredTypes._
 import sangria.execution.deferred.{Deferred, DeferredResolver}
 
 import scala.concurrent.{ExecutionContext, Future}
-import scala.language.reflectiveCalls
 
-class DeferredResolverProvider[CtxType](dataResolver: DataResolver) extends DeferredResolver[CtxType] {
+class DeferredResolverImpl[CtxType](dataResolver: DataResolver) extends DeferredResolver[CtxType] {
 
   val toManyDeferredResolver: ToManyDeferredResolver       = new ToManyDeferredResolver(dataResolver)
   val manyModelDeferredResolver: ManyModelDeferredResolver = new ManyModelDeferredResolver(dataResolver)
@@ -55,35 +54,35 @@ class DeferredResolverProvider[CtxType](dataResolver: DataResolver) extends Defe
     // for every group of deferreds, resolve them
     val manyModelFutureResults = manyModelDeferredsMap
       .map {
-        case (key, value) => manyModelDeferredResolver.resolve(value, ec)
+        case (_, value) => manyModelDeferredResolver.resolve(value)
       }
       .toVector
       .flatten
 
     val countManyModelFutureResults = countManyModelDeferredsMap
       .map {
-        case (key, value) => countManyModelDeferredResolver.resolve(value)
+        case (_, value) => countManyModelDeferredResolver.resolve(value)
       }
       .toVector
       .flatten
 
     val toManyFutureResults = toManyDeferredsMap
       .map {
-        case (key, value) => toManyDeferredResolver.resolve(value, ec)
+        case (_, value) => toManyDeferredResolver.resolve(value)
       }
       .toVector
       .flatten
 
     val toOneFutureResults = toOneDeferredMap
       .map {
-        case (key, value) => toOneDeferredResolver.resolve(value, ec)
+        case (_, value) => toOneDeferredResolver.resolve(value)
       }
       .toVector
       .flatten
 
     val scalarListFutureResult = scalarListDeferredsMap
       .map {
-        case (field, value) => scalarListDeferredResolver.resolve(value, ec)
+        case (_, value) => scalarListDeferredResolver.resolve(value)
       }
       .toVector
       .flatten
