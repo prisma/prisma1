@@ -21,15 +21,15 @@ If you haven't already, you need to start by creating an account at for Digital 
 
 In this section we are going to walk through setting up a `Droplet`.
 
-![droplet-create](https://imgur.com/a/UXaW9KT)
+![droplet-create](https://i.imgur.com/5IXcUVw.png)
 
 First pick the latest Ubuntu Distribution, as of this writing it is `18.04.1 x64`.
 
-![distribution](https://imgur.com/vYTNX9q)
+![distribution](https://i.imgur.com/vYTNX9q.png)
 
 Next pick a region that is close to your end user. You should pick the region closest to you. Set a name for your Droplet, `prisma` for example.
 
-![name](https://imgur.com/q1rXXe2)
+![name](https://i.imgur.com/q1rXXe2.png)
 
 Relax while your Droplet is being created. This should take less than a minute.
 
