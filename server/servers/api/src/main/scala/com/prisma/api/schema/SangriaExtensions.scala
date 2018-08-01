@@ -20,7 +20,7 @@ object SangriaExtensions {
 
     private def recurse(model: Model, selections: Vector[Selection]): Vector[com.prisma.shared.models.Field] = selections.flatMap {
       case astField: sangria.ast.Field =>
-        model.getFieldByName(astField.name)
+        model.getFieldByName(astField.name) ++ recurse(model, astField.selections)
 
       case fragmentSpread: sangria.ast.FragmentSpread =>
         val fragment = ctx.query.fragments(fragmentSpread.name)
