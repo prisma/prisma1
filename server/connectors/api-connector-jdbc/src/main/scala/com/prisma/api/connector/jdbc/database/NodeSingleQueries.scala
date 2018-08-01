@@ -3,8 +3,8 @@ package com.prisma.api.connector.jdbc.database
 import com.prisma.api.connector.{Filter, NodeSelector, PrismaNode, SelectedFields}
 import com.prisma.gc_values.IdGCValue
 import com.prisma.shared.models.{Model, RelationField, Schema}
+import org.jooq.impl.DSL.{field, name}
 import org.jooq.{Condition, Record1, SelectConditionStep}
-import org.jooq.impl.DSL.{asterisk, field, name}
 
 import scala.concurrent.ExecutionContext
 import scala.language.existentials
