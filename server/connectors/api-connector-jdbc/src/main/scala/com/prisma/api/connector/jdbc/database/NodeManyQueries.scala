@@ -9,27 +9,27 @@ import slick.jdbc.PositionedParameters
 trait NodeManyQueries extends BuilderBase with FilterConditionBuilder with CursorConditionBuilder with OrderByClauseBuilder with LimitClauseBuilder {
   import slickDatabase.profile.api._
 
-  def getNodes(model: Model, args: Option[QueryArguments], overrideMaxNodeCount: Option[Int] = None): DBIO[ResolverResult[PrismaNode]] = {
-    val query = modelQuery(model, args)
+  def getNodes(model: Model, args: Option[QueryArguments], selectedFields: SelectedFields): DBIO[ResolverResult[PrismaNode]] = {
+    val query = modelQuery(model, args, selectedFields)
 
     queryToDBIO(query)(
       setParams = pp => SetParams.setQueryArgs(pp, args),
       readResult = { rs =>
-        val result = rs.readWith(readsPrismaNode(model))
+        val result = rs.readWith(readsPrismaNode(model, selectedFields.scalarNonListFields))
         ResolverResult(args, result)
       }
     )
   }
 
-  private def modelQuery(model: Model, queryArguments: Option[QueryArguments]): SelectForUpdateStep[Record] = {
-
+  private def modelQuery(model: Model, queryArguments: Option[QueryArguments], selectedFields: SelectedFields): SelectForUpdateStep[Record] = {
     val condition       = buildConditionForFilter(queryArguments.flatMap(_.filter))
     val cursorCondition = buildCursorCondition(queryArguments, model)
     val order           = orderByForModel(model, topLevelAlias, queryArguments)
     val limit           = limitClause(queryArguments)
+    val jooqFields      = selectedFields.scalarNonListFields.map(aliasColumn)
 
     val base = sql
-      .select()
+      .select(jooqFields.toVector: _*)
       .from(modelTable(model).as(topLevelAlias))
       .where(condition, cursorCondition)
       .orderBy(order: _*)

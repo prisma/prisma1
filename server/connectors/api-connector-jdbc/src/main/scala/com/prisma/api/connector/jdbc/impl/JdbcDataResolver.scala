@@ -29,8 +29,8 @@ case class JdbcDataResolver(
     performWithTiming("getNodeByWhere", slickDatabase.database.run(queryBuilder.getNodeByWhere(where, selectedFields)))
   }
 
-  override def getNodes(model: Model, args: Option[QueryArguments] = None): Future[ResolverResult[PrismaNode]] = {
-    val query = queryBuilder.getNodes(model, args)
+  override def getNodes(model: Model, args: Option[QueryArguments], selectedFields: SelectedFields): Future[ResolverResult[PrismaNode]] = {
+    val query = queryBuilder.getNodes(model, args, selectedFields)
     performWithTiming("loadModelRowsForExport", slickDatabase.database.run(query))
   }
 

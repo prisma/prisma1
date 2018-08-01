@@ -97,7 +97,7 @@ case class SchemaBuilderImpl(
       arguments = objectTypeBuilder.mapToListConnectionArguments(model),
       resolve = (ctx) => {
         val arguments = objectTypeBuilder.extractQueryArgumentsFromContext(model, ctx)
-        DeferredValue(ManyModelDeferred(model, arguments)).map(_.toNodes.map(Some(_)))
+        DeferredValue(ManyModelDeferred(model, arguments, ctx.getSelectedFields(model))).map(_.toNodes.map(Some(_)))
       }
     )
   }
@@ -124,7 +124,7 @@ case class SchemaBuilderImpl(
           )
           DeferredValue(IdBasedConnectionDeferred(connection))
         } else {
-          DeferredValue(ManyModelDeferred(model, arguments))
+          DeferredValue(ManyModelDeferred(model, arguments, ctx.getSelectedFields(model)))
         }
       }
     )

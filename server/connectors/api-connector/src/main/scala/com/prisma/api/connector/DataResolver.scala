@@ -12,7 +12,7 @@ trait DataResolver {
 
   def getNodeByWhere(where: NodeSelector, selectedFields: SelectedFields): Future[Option[PrismaNode]]
 
-  def getNodes(model: Model, args: Option[QueryArguments] = None): Future[ResolverResult[PrismaNode]]
+  def getNodes(model: Model, args: Option[QueryArguments], selectedFields: SelectedFields): Future[ResolverResult[PrismaNode]]
 
   def getRelatedNodes(
       fromField: RelationField,

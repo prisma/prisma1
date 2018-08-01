@@ -10,11 +10,11 @@ class ManyModelDeferredResolver(resolver: DataResolver) {
               executionContext: ExecutionContext): Vector[OrderedDeferredFutureResult[RelayConnectionOutputType]] = {
     implicit val ec: ExecutionContext = executionContext
     val deferreds                     = orderedDeferreds.map(_.deferred)
-
-    val headDeferred                 = deferreds.head
-    val model                        = headDeferred.model
-    val args: Option[QueryArguments] = headDeferred.args
-    val futureResolverResults        = resolver.getNodes(model, args)
+    val headDeferred                  = deferreds.head
+    val model                         = headDeferred.model
+    val args: Option[QueryArguments]  = headDeferred.args
+    val selectedFields                = headDeferred.selectedFields
+    val futureResolverResults         = resolver.getNodes(model, args, selectedFields)
 
     orderedDeferreds.map {
       case OrderedDeferred(deferred, order) =>

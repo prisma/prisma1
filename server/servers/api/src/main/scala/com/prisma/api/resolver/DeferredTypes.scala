@@ -26,8 +26,8 @@ object DeferredTypes {
     args: Option[QueryArguments]
   }
 
-  case class ManyModelDeferred(model: Model, args: Option[QueryArguments])      extends ModelDeferred[RelayConnectionOutputType]
-  case class CountManyModelDeferred(model: Model, args: Option[QueryArguments]) extends ModelDeferred[Int]
+  case class ManyModelDeferred(model: Model, args: Option[QueryArguments], selectedFields: SelectedFields) extends ModelDeferred[RelayConnectionOutputType]
+  case class CountManyModelDeferred(model: Model, args: Option[QueryArguments])                            extends ModelDeferred[Int]
 
   trait RelatedArgs {
     def relationField: RelationField
