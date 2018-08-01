@@ -10,13 +10,13 @@ class OptionalBackrelationSpec extends FlatSpec with Matchers with ApiSpecBase {
     val project = SchemaDsl.fromString() {
       """
         |type Owner {
-        |  id: ID!
+        |  id: ID! @unique
         |  ownerName: String! @unique
         |  cat: Cat
         |}
         |
         |type Cat {
-        |  id: ID!
+        |  id: ID! @unique
         |  catName: String! @unique
         |}
         |
@@ -54,13 +54,13 @@ class OptionalBackrelationSpec extends FlatSpec with Matchers with ApiSpecBase {
     val project = SchemaDsl.fromString() {
       """
         |type Owner {
-        |  id: ID!
+        |  id: ID! @unique
         |  ownerName: String! @unique
         |  cats: [Cat!]!
         |}
         |
         |type Cat {
-        |  id: ID!
+        |  id: ID! @unique
         |  catName: String! @unique
         |}
         |
@@ -103,13 +103,13 @@ class OptionalBackrelationSpec extends FlatSpec with Matchers with ApiSpecBase {
     val project = SchemaDsl.fromString() {
       """
         |type Owner {
-        |  id: ID!
+        |  id: ID! @unique
         |  ownerName: String! @unique
         |  cats: [Cat!]!
         |}
         |
         |type Cat {
-        |  id: ID!
+        |  id: ID! @unique
         |  catName: String! @unique
         |}
         |
