@@ -8,7 +8,7 @@ import scala.concurrent.Future
 trait DataResolver {
   def project: Project
 
-  def getNodeByGlobalId(globalId: CuidGCValue): Future[Option[PrismaNode]]
+  def getModelForGlobalId(globalId: CuidGCValue): Future[Option[Model]]
 
   def getNodeByWhere(where: NodeSelector, selectedFields: SelectedFields): Future[Option[PrismaNode]]
 

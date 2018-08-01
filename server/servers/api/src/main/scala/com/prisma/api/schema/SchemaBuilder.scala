@@ -1,7 +1,7 @@
 package com.prisma.api.schema
 
 import akka.actor.ActorSystem
-import com.prisma.api.connector.{ApiConnectorCapability, NodeQueryCapability, PrismaNode, SelectedFields}
+import com.prisma.api.connector._
 import com.prisma.api.mutations._
 import com.prisma.api.resolver.{ConnectionParentElement, DefaultIdBasedConnection}
 import com.prisma.api.resolver.DeferredTypes.{IdBasedConnectionDeferred, ManyModelDeferred, OneDeferred}
@@ -10,6 +10,7 @@ import com.prisma.gc_values.CuidGCValue
 import com.prisma.shared.models.{Model, Project, ScalarField}
 import com.prisma.util.coolArgs.CoolArgs
 import com.prisma.utils.boolean.BooleanUtils._
+import com.prisma.utils.future.FutureUtils.FutureOpt
 import org.atteo.evo.inflector.English
 import sangria.ast
 import sangria.ast.Selection
@@ -273,7 +274,15 @@ case class SchemaBuilderImpl(
 
   lazy val NodeDefinition(nodeInterface: InterfaceType[ApiUserContext, PrismaNode], nodeField, nodeRes) = Node.definitionById(
     resolve = (id: String, ctx: Context[ApiUserContext, Unit]) => {
-      dataResolver.getNodeByGlobalId(CuidGCValue(id))
+      for {
+        _         <- Future.unit
+        idGcValue = CuidGCValue(id)
+        modelOpt  <- dataResolver.getModelForGlobalId(idGcValue)
+        resultOpt <- modelOpt match {
+                      case Some(model) => dataResolver.getNodeByWhere(NodeSelector.forIdGCValue(model, idGcValue), ctx.getSelectedFields(model))
+                      case None        => Future.successful(None)
+                    }
+      } yield resultOpt
     },
     possibleTypes = {
       objectTypes.values.flatMap { o =>

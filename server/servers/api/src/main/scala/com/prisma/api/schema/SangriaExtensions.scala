@@ -21,11 +21,17 @@ object SangriaExtensions {
     private def recurse(model: Model, selections: Vector[Selection]): Vector[com.prisma.shared.models.Field] = selections.flatMap {
       case astField: sangria.ast.Field =>
         model.getFieldByName(astField.name)
+
       case fragmentSpread: sangria.ast.FragmentSpread =>
         val fragment = ctx.query.fragments(fragmentSpread.name)
         recurse(model, fragment.selections)
-      case _: sangria.ast.InlineFragment =>
-        sys.error("This must not be possible as we do not support interfaces yet.")
+
+      case inlineFragment: sangria.ast.InlineFragment =>
+        if (inlineFragment.typeCondition.forall(_.name == model.name)) {
+          recurse(model, inlineFragment.selections)
+        } else {
+          Vector.empty
+        }
     }
   }
 }

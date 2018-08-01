@@ -20,11 +20,9 @@ case class JdbcDataResolver(
     slickDatabase = slickDatabase
   )
 
-  override def getNodeByGlobalId(globalId: CuidGCValue): Future[Option[PrismaNode]] = {
-    if (globalId.value == "viewer-fixed") return Future.successful(Some(PrismaNode(globalId, RootGCValue.empty, Some("Viewer"))))
-
-    val query = queryBuilder.getNodeByGlobalId(project.schema, globalId)
-    performWithTiming("resolveByGlobalId", slickDatabase.database.run(query))
+  override def getModelForGlobalId(globalId: CuidGCValue): Future[Option[Model]] = {
+    val query = queryBuilder.getModelForGlobalId(project.schema, globalId)
+    performWithTiming("getModelForGlobalId", slickDatabase.database.run(query))
   }
 
   override def getNodeByWhere(where: NodeSelector, selectedFields: SelectedFields): Future[Option[PrismaNode]] = {

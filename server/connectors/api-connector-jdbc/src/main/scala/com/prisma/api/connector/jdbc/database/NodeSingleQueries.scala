@@ -12,32 +12,20 @@ import scala.language.existentials
 trait NodeSingleQueries extends BuilderBase with NodeManyQueries with FilterConditionBuilder {
   import slickDatabase.profile.api._
 
-  //This could save a roundtrip if we would deploy a stored procedure that would contain a mapping from stablemodelidentifier to modeltable
-  def getNodeByGlobalId(schema: Schema, idGCValue: IdGCValue)(implicit ec: ExecutionContext): DBIO[Option[PrismaNode]] = {
+  def getModelForGlobalId(schema: Schema, idGCValue: IdGCValue): DBIO[Option[Model]] = {
+    val query = sql
+      .select(relayStableIdentifierColumn)
+      .from(relayTable)
+      .where(relayIdColumn.equal(placeHolder))
 
-    val modelNameForId: DBIO[Option[String]] = {
-      val query = sql
-        .select(relayStableIdentifierColumn)
-        .from(relayTable)
-        .where(relayIdColumn.equal(placeHolder))
-
-      queryToDBIO(query)(
-        setParams = pp => pp.setGcValue(idGCValue),
-        readResult = _.readWith(readStableModelIdentifier).headOption
-      )
-    }
-
-    for {
-      stableModelIdentifier <- modelNameForId
-      result <- stableModelIdentifier match {
-                 case Some(stableModelIdentifier) => getNodeById(schema.getModelByStableIdentifier_!(stableModelIdentifier.trim), idGCValue)
-                 case None                        => DBIO.successful(None)
-               }
-    } yield result
-  }
-
-  def getNodeById(model: Model, idGcValue: IdGCValue)(implicit ec: ExecutionContext): DBIO[Option[PrismaNode]] = {
-    getNodesByValuesForField(model, model.idField_!, Vector(idGcValue)).map(_.headOption)
+    queryToDBIO(query)(
+      setParams = pp => pp.setGcValue(idGCValue),
+      readResult = { rs =>
+        rs.readWith(readStableModelIdentifier).headOption.map { stableModelIdentifier =>
+          schema.getModelByStableIdentifier_!(stableModelIdentifier.trim)
+        }
+      }
+    )
   }
 
   def getNodeByWhere(where: NodeSelector, selectedFields: SelectedFields): DBIO[Option[PrismaNode]] = getNodeByWhere(where, Some(selectedFields))
