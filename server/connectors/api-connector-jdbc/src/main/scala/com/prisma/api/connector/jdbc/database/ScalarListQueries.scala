@@ -5,7 +5,7 @@ import com.prisma.gc_values.{CuidGCValue, IdGCValue, ListGCValue}
 import com.prisma.shared.models.IdType.Id
 import com.prisma.shared.models.{Model, ScalarField}
 
-trait ScalarListQueries extends BuilderBase {
+trait ScalarListQueries extends BuilderBase with FilterConditionBuilder with OrderByClauseBuilder with LimitClauseBuilder {
   import slickDatabase.profile.api._
 
   def getScalarListValues(
@@ -13,8 +13,27 @@ trait ScalarListQueries extends BuilderBase {
       field: ScalarField,
       args: Option[QueryArguments]
   ): DBIO[ResolverResult[ScalarListValues]] = {
-    val builder = ScalarListQueryBuilder(slickDatabase, schemaName, field, args)
-    queryToDBIO(builder.query)(
+
+    require(field.isList, "This must be called only with scalar list fields")
+
+    lazy val query = {
+      val condition = buildConditionForFilter(args.flatMap(_.filter))
+      val order     = orderByForScalarListField(topLevelAlias, args)
+      val limit     = limitClause(args)
+
+      val base = sql
+        .select()
+        .from(scalarListTable(field).as(topLevelAlias))
+        .where(condition)
+        .orderBy(order: _*)
+
+      limit match {
+        case Some(_) => base.limit(intDummy).offset(intDummy)
+        case None    => base
+      }
+    }
+
+    queryToDBIO(query)(
       setParams = pp => SetParams.setQueryArgs(pp, args),
       readResult = { rs =>
         val result = rs.readWith(readsScalarListField(field))
@@ -29,8 +48,21 @@ trait ScalarListQueries extends BuilderBase {
   }
 
   def getScalarListValuesByNodeIds(field: ScalarField, nodeIds: Vector[IdGCValue]): DBIO[Vector[ScalarListValues]] = {
-    val builder = ScalarListByUniquesQueryBuilder(slickDatabase, schemaName, field, nodeIds)
-    queryToDBIO(builder.query)(
+    require(field.isList, "This must be called only with scalar list fields")
+
+    lazy val query = {
+      val nodeIdField   = scalarListColumn(field, nodeIdFieldName)
+      val positionField = scalarListColumn(field, positionFieldName)
+      val valueField    = scalarListColumn(field, valueFieldName)
+      val condition     = nodeIdField.in(Vector.fill(nodeIds.length) { stringDummy }: _*)
+
+      sql
+        .select(nodeIdField, positionField, valueField)
+        .from(scalarListTable(field))
+        .where(condition)
+    }
+
+    queryToDBIO(query)(
       setParams = pp => nodeIds.foreach(pp.setGcValue),
       readResult = { rs =>
         val scalarListElements                          = rs.readWith(readsScalarListField(field))

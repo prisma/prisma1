@@ -55,13 +55,15 @@ case class EnumPrismaField(
   override def typeIdentifier: TypeIdentifier = TypeIdentifier.Enum
 }
 
-case class RelationalPrismaField(name: String,
-                                 inlineDirectiveColumn: Option[RelationDBDirective],
-                                 isList: Boolean,
-                                 isRequired: Boolean,
-                                 referencesType: String,
-                                 relationName: Option[String],
-                                 cascade: OnDelete)(val tpe: PrismaType)
+case class RelationalPrismaField(
+    name: String,
+    relationDbDirective: Option[RelationDBDirective],
+    isList: Boolean,
+    isRequired: Boolean,
+    referencesType: String,
+    relationName: Option[String],
+    cascade: OnDelete
+)(val tpe: PrismaType)
     extends PrismaField {
   override def typeIdentifier: TypeIdentifier = TypeIdentifier.Relation
 
