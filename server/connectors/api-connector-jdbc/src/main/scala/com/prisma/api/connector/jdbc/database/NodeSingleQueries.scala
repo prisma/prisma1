@@ -49,7 +49,7 @@ trait NodeSingleQueries extends BuilderBase with NodeManyQueries with FilterCond
       case None =>
         sql.select(asterisk())
       case Some(selectedFields) =>
-        val jooqFields = (selectedFields.scalarNonListFields ++ where.model.idField).map(modelColumn)
+        val jooqFields = selectedFields.scalarNonListFields.map(modelColumn)
         sql.select(jooqFields.toVector: _*)
     }
     val query = select
