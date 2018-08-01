@@ -28,26 +28,20 @@ trait NodeSingleQueries extends BuilderBase with NodeManyQueries with FilterCond
     )
   }
 
-  def getNodeByWhere(where: NodeSelector, selectedFields: SelectedFields): DBIO[Option[PrismaNode]] = getNodeByWhere(where, Some(selectedFields))
-  def getNodeByWhere(where: NodeSelector): DBIO[Option[PrismaNode]]                                 = getNodeByWhere(where, None)
+  def getNodeByWhere(where: NodeSelector): DBIO[Option[PrismaNode]] = getNodeByWhere(where, SelectedFields.all(where.model))
 
-  def getNodeByWhere(where: NodeSelector, selectedFields: Option[SelectedFields] = None): DBIO[Option[PrismaNode]] = {
-    val model = where.model
-    val select = selectedFields match {
-      case None =>
-        sql.select(asterisk())
-      case Some(selectedFields) =>
-        val jooqFields = selectedFields.scalarNonListFields.map(modelColumn)
-        sql.select(jooqFields.toVector: _*)
-    }
-    val query = select
+  def getNodeByWhere(where: NodeSelector, selectedFields: SelectedFields): DBIO[Option[PrismaNode]] = {
+    val model      = where.model
+    val jooqFields = selectedFields.scalarNonListFields.map(modelColumn)
+    val query = sql
+      .select(jooqFields.toVector: _*)
       .from(modelTable(model))
       .where(modelColumn(where.field).equal(placeHolder))
 
     queryToDBIO(query)(
       setParams = pp => pp.setGcValue(where.fieldGCValue),
       readResult = rs => {
-        val fieldsToRead = selectedFields.map(_.scalarNonListFields).getOrElse(model.scalarNonListFields.toSet)
+        val fieldsToRead = selectedFields.scalarNonListFields
         rs.readWith(readsPrismaNode(model, fieldsToRead)).headOption
       }
     )
