@@ -9,7 +9,7 @@ if [ -z "$BUILDKITE_TAG" ]; then
     fi
 fi
 
-declare -a connectors=(mysql postgres postgres-passive)
+declare -a connectors=(mysql mysql8 postgres postgres-passive)
 
 # Projects with a locked connector
 static=$(printf "    - label: \":mysql: MySql 5.7 API connector\"
