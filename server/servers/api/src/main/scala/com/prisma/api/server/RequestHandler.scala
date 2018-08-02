@@ -8,7 +8,6 @@ import com.prisma.api.project.ProjectFetcher
 import com.prisma.api.schema.APIErrors.InvalidToken
 import com.prisma.api.schema._
 import com.prisma.auth.Auth
-import com.prisma.client.server.GraphQlRequestHandler
 import com.prisma.errors.{ErrorReporter, ProjectMetadata}
 import com.prisma.shared.models.{Project, ProjectWithClientId}
 import com.prisma.utils.`try`.TryExtensions._

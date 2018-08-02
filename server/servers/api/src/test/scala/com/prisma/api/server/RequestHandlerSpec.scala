@@ -6,7 +6,6 @@ import com.prisma.api.project.ProjectFetcher
 import com.prisma.api.schema.APIErrors.InvalidToken
 import com.prisma.api.schema.{ApiUserContext, SchemaBuilder}
 import com.prisma.auth.AuthImpl
-import com.prisma.client.server.GraphQlRequestHandler
 import com.prisma.shared.models.{Project, ProjectWithClientId}
 import com.prisma.shared.schema_dsl.TestProject
 import com.prisma.utils.await.AwaitUtils

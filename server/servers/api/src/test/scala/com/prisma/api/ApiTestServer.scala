@@ -123,7 +123,9 @@ case class ApiTestServer()(implicit dependencies: ApiDependencies) extends PlayJ
 
     val result = dependencies.graphQlRequestHandler.handle(graphQlRequest).map(_._2)
 
-    result.foreach(x => println("Request Result: " + x))
+    result.foreach(x => println(s"""Request Result:
+        |$x
+      """.stripMargin))
     result
   }
 

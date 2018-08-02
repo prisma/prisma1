@@ -1,13 +1,16 @@
-package com.prisma.client.server
+package com.prisma.api.server
 
 import akka.http.scaladsl.model.StatusCodes.OK
 import akka.http.scaladsl.model._
 import com.prisma.api.ApiDependencies
 import com.prisma.api.schema.{ApiUserContext, UserFacingError}
-import com.prisma.api.server.{GraphQlQuery, GraphQlRequest}
+import com.prisma.cache.Cache
 import com.prisma.sangria.utils.ErrorHandler
 import play.api.libs.json.{JsArray, JsValue}
+import sangria.ast.Document
 import sangria.execution.{Executor, QueryAnalysisError}
+import sangria.schema.Schema
+import sangria.validation.{QueryValidator, Violation}
 
 import scala.collection.immutable.Seq
 import scala.concurrent.Future
@@ -25,6 +28,7 @@ case class GraphQlRequestHandlerImpl(
 
   import apiDependencies.system.dispatcher
   import com.prisma.api.server.JsonMarshalling._
+  val queryValidationCache = Cache.lfu[(String, Document), Vector[Violation]](sangriaMinimumCacheSize, sangriaMaximumCacheSize)
 
   override def handle(graphQlRequest: GraphQlRequest): Future[(StatusCode, JsValue)] = {
     val jsonResult = if (!graphQlRequest.isBatch) {
@@ -50,11 +54,17 @@ case class GraphQlRequestHandlerImpl(
       request.id,
       HttpRequest(HttpMethods.POST),
       query.queryString,
-      query.variables.toString(),
+      query.variables,
       apiDependencies.reporter,
       projectId = Some(request.project.id),
       errorCodeExtractor = errorExtractor
     )
+
+    val queryValidator = new QueryValidator {
+      override def validateQuery(schema: Schema[_, _], queryAst: Document): Vector[Violation] = {
+        queryValidationCache.getOrUpdate((request.project.id, queryAst), () => QueryValidator.default.validateQuery(request.schema, query.query))
+      }
+    }
 
     val result: Future[JsValue] = Executor.execute(
       schema = request.schema,
@@ -63,7 +73,8 @@ case class GraphQlRequestHandlerImpl(
       variables = query.variables,
       exceptionHandler = errorHandler.sangriaExceptionHandler,
       operationName = query.operationName,
-      deferredResolver = apiDependencies.deferredResolverProvider(request.project)
+      deferredResolver = apiDependencies.deferredResolverProvider(request.project),
+      queryValidator = queryValidator
     )
 
     result.recover {
