@@ -221,6 +221,62 @@ class PaginationSpec extends FlatSpec with Matchers with ApiSpecBase {
     result2.toString should be("""{"data":{"lists":[{"name":"2"},{"name":"3"}]}}""")
   }
 
+  "Paginating with a value of 1 on first" should "only return one item" in {
+    val result = server.query(
+      """
+        |{
+        |  lists {
+        |    name
+        |    todos(first: 1){
+        |      title
+        |    }
+        |  }
+        |}
+      """,
+      project
+    )
+
+    result.toString should equal(
+      """{"data":{"lists":[{"name":"1","todos":[{"title":"1"}]},{"name":"2","todos":[]},{"name":"3","todos":[]},{"name":"4","todos":[]},{"name":"5","todos":[]},{"name":"6","todos":[]},{"name":"7","todos":[]}]}}""")
+  }
+
+  "Paginating with a value of 1 on last" should "only return one item" in {
+    val result = server.query(
+      """
+        |{
+        |  lists {
+        |    name
+        |    todos(last: 1){
+        |      title
+        |    }
+        |  }
+        |}
+      """,
+      project
+    )
+
+    result.toString should equal(
+      """{"data":{"lists":[{"name":"1","todos":[{"title":"7"}]},{"name":"2","todos":[]},{"name":"3","todos":[]},{"name":"4","todos":[]},{"name":"5","todos":[]},{"name":"6","todos":[]},{"name":"7","todos":[]}]}}""")
+  }
+
+  "Paginating with a value of 1 on last and a filter on the top level " should "only return one item" in {
+    val result = server.query(
+      """
+        |{
+        |  lists(where:{todos_some:{title_contains:"1"}}) {
+        |    name
+        |    todos(last: 1){
+        |      title
+        |    }
+        |  }
+        |}
+      """,
+      project
+    )
+
+    result.toString should equal("""{"data":{"lists":[{"name":"1","todos":[{"title":"7"}]}]}}""")
+  }
+
   private def createLists(): Unit = {
     server.query(
       """
