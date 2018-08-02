@@ -17,6 +17,12 @@ $ yarn install && yarn build
 $ node dist/index.js
 ```
 
+To execute the tests you have to [set up a local prisma server](<https://www.prisma.io/docs/tutorials/deploy-prisma-servers/local-(docker)-meemaesh3k>) with a postgres database and set up the following environment variables:
+
+- TEST_PG_USER
+- TEST_PG_PASSWORD
+- TEST_PG_DB
+
 To recreate jest snapshots:
 
 ```
