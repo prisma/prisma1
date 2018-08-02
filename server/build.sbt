@@ -156,7 +156,7 @@ lazy val apiConnectorJdbc = connectorProject("api-connector-jdbc")
 lazy val apiConnectorMySql = connectorProject("api-connector-mysql")
   .dependsOn(apiConnectorJdbc)
   .settings(
-    libraryDependencies ++= Seq(mariaDbClient)
+    libraryDependencies ++= Seq(mariaDbClient, mysql)
   )
 
 lazy val apiConnectorPostgres = connectorProject("api-connector-postgres")
