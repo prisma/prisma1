@@ -19,18 +19,12 @@ trait BuilderBase extends JooqExtensions with JdbcExtensions with SlickExtension
   def schemaName: String
   val slickDatabase: SlickDatabase
 
-  val dialect: SQLDialect = slickDatabase.profile match {
-    case PostgresProfile => SQLDialect.POSTGRES_9_5
-    case MySQLProfile    => SQLDialect.MYSQL_5_7
-    case x               => sys.error(s"No Jooq SQLDialect for Slick profile $x configured yet")
-  }
-
-  val isMySql    = dialect.family() == SQLDialect.MYSQL
-  val isPostgres = dialect.family() == SQLDialect.POSTGRES
+  val isMySql    = slickDatabase.isMySql
+  val isPostgres = slickDatabase.isPostgres
 
   import slickDatabase.profile.api._
 
-  val sql = DSL.using(dialect, new Settings().withRenderFormatted(true))
+  val sql = DSL.using(slickDatabase.dialect, new Settings().withRenderFormatted(true))
 
   private val relayIdTableName                                                              = "_RelayId"
   val relayIdColumn                                                                         = field(name(schemaName, relayIdTableName, "id"))
