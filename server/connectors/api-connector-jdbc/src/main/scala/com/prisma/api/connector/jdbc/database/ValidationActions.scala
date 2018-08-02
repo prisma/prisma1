@@ -10,7 +10,7 @@ import scala.concurrent.ExecutionContext
 trait ValidationActions extends BuilderBase with FilterConditionBuilder {
   import slickDatabase.profile.api._
 
-  def ensureThatNodeIsNotConnected(relationField: RelationField, id: IdGCValue)(implicit ec: ExecutionContext): DBIO[Unit] = {
+  def ensureThatNodeIsNotConnected(relationField: RelationField, id: IdGCValue): DBIO[Unit] = {
     val relation = relationField.relation
     val idQuery = sql
       .select(relationColumn(relation, relationField.oppositeRelationSide))
