@@ -17,7 +17,8 @@ $ yarn install && yarn build
 $ node dist/index.js
 ```
 
-To execute the tests you have to [set up a local prisma server](<https://www.prisma.io/docs/tutorials/deploy-prisma-servers/local-(docker)-meemaesh3k>) with a postgres database and set up the following environment variables:
+To execute the tests you have to [set up a local prisma server](<https://www.prisma.io/docs/tutorials/deploy-prisma-servers/local-(docker)-meemaesh3k>) with a postgres database and expose the port `5432` to localhost.
+Once you deployed your local prisma server, you have to set up the following environment variables:
 
 - TEST_PG_USER
 - TEST_PG_PASSWORD
