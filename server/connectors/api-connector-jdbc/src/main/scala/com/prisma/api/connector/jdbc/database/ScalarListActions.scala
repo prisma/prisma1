@@ -11,26 +11,16 @@ trait ScalarListActions extends BuilderBase with FilterConditionBuilder with Nod
   import slickDatabase.profile.api._
 
   def createScalarListValuesForNodeId(model: Model, id: IdGCValue, listFieldMap: Vector[(String, ListGCValue)]): DBIO[Unit] = {
-    if (listFieldMap.isEmpty) {
-      DBIOAction.successful(())
-    } else {
-      val actions = listFieldMap.map {
-        case (fieldName, listGCValue) =>
-          val scalarField = model.getScalarFieldByName_!(fieldName)
-          insertListValueForIds(scalarField, listGCValue, Vector(id))
-      }
-      DBIO.seq(actions: _*)
+    val actions = listFieldMap.map {
+      case (fieldName, listGCValue) =>
+        val scalarField = model.getScalarFieldByName_!(fieldName)
+        insertListValueForIds(scalarField, listGCValue, Vector(id))
     }
-
+    DBIO.seq(actions: _*)
   }
 
   def updateScalarListValuesForNodeId(model: Model, id: IdGCValue, listFieldMap: Vector[(String, ListGCValue)]): DBIO[Unit] = {
-    if (listFieldMap.isEmpty) {
-      DBIOAction.successful(())
-    } else {
-      updateScalarListValuesForIds(model, listFieldMap, Vector(id))
-    }
-
+    updateScalarListValuesForIds(model, listFieldMap, Vector(id))
   }
 
   def updateScalarListValuesByFilter(model: Model, listFieldMap: Vector[(String, ListGCValue)], whereFilter: Option[Filter]): DBIO[Unit] = {
