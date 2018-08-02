@@ -1,15 +1,14 @@
 package com.prisma.api.connector.jdbc.impl
 
 import com.prisma.api.connector._
-import com.prisma.api.connector.jdbc.{NestedDatabaseMutactionInterpreter, TopLevelDatabaseMutactionInterpreter}
+import com.prisma.api.connector.jdbc.TopLevelDatabaseMutactionInterpreter
 import com.prisma.api.connector.jdbc.database.JdbcActionsBuilder
 import com.prisma.gc_values.IdGCValue
-import slick.dbio.DBIOAction
-import slick.dbio._
+import slick.dbio.{DBIOAction, _}
 
 import scala.concurrent.ExecutionContext
 
-case class DeleteDataItemsInterpreter(mutaction: DeleteNodes, shouldDeleteRelayIds: Boolean)(implicit ec: ExecutionContext)
+case class DeleteNodesInterpreter(mutaction: DeleteNodes, shouldDeleteRelayIds: Boolean)(implicit ec: ExecutionContext)
     extends TopLevelDatabaseMutactionInterpreter {
 
   def dbioAction(mutationBuilder: JdbcActionsBuilder) =
@@ -33,7 +32,7 @@ case class ResetDataInterpreter(mutaction: ResetData) extends TopLevelDatabaseMu
   }
 }
 
-case class UpdateDataItemsInterpreter(mutaction: UpdateNodes) extends TopLevelDatabaseMutactionInterpreter {
+case class UpdateNodesInterpreter(mutaction: UpdateNodes) extends TopLevelDatabaseMutactionInterpreter {
   def dbioAction(mutationBuilder: JdbcActionsBuilder) = {
     val nonListActions = mutationBuilder.updateNodes(mutaction.model, mutaction.updateArgs, mutaction.whereFilter)
     val listActions    = mutationBuilder.setScalarListValuesByFilter(mutaction.model, mutaction.listArgs, mutaction.whereFilter)
