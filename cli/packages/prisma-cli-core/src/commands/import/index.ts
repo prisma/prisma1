@@ -15,6 +15,10 @@ export default class Import extends Command {
       description: 'Path to .env file to inject env vars',
       char: 'e',
     }),
+    ['generate-ids']: flags.string({
+      description: 'Automatically generate missing ids',
+      char: 'g'
+    })
   }
   async run() {
     const { data } = this.flags

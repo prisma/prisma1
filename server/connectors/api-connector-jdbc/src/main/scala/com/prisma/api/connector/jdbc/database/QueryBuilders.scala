@@ -10,7 +10,8 @@ case class RelatedModelsQueryBuilder(
     schemaName: String,
     fromField: RelationField,
     queryArguments: Option[QueryArguments],
-    relatedNodeIds: Vector[IdGCValue]
+    relatedNodeIds: Vector[IdGCValue],
+    selectedFields: SelectedFields
 ) extends BuilderBase
     with FilterConditionBuilder
     with OrderByClauseBuilder
@@ -29,8 +30,12 @@ case class RelatedModelsQueryBuilder(
   val relatedNodesCondition   = field(name(relationTableAlias, modelRelationSideColumn)).in(placeHolders(relatedNodeIds))
   val queryArgumentsCondition = buildConditionForFilter(queryArguments.flatMap(_.filter))
 
+  val selectedJooqFields = selectedFields.scalarNonListFields.map(aliasColumn).toVector :+
+    field(name(relationTableAlias, aColumn)).as(aSideAlias) :+
+    field(name(relationTableAlias, bColumn)).as(bSideAlias)
+
   val base = sql
-    .select(aliasedTable.asterisk(), field(name(relationTableAlias, aColumn)).as(aSideAlias), field(name(relationTableAlias, bColumn)).as(bSideAlias))
+    .select(selectedJooqFields: _*)
     .from(aliasedTable)
     .innerJoin(relationTable2)
     .on(aliasColumn(relatedModel.dbNameOfIdField_!).eq(field(name(relationTableAlias, oppositeModelRelationSideColumn))))

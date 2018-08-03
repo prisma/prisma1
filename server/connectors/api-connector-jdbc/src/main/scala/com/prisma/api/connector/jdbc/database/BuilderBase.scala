@@ -32,25 +32,26 @@ trait BuilderBase extends JooqExtensions with JdbcExtensions with SlickExtension
 
   val sql = DSL.using(dialect, new Settings().withRenderFormatted(true))
 
-  private val relayIdTableName                                                              = "_RelayId"
-  val relayIdColumn                                                                         = field(name(schemaName, relayIdTableName, "id"))
-  val relayStableIdentifierColumn                                                           = field(name(schemaName, relayIdTableName, "stableModelIdentifier"))
-  val relayTable                                                                            = table(name(schemaName, relayIdTableName))
-  def idField(model: Model)                                                                 = field(name(schemaName, model.dbName, model.dbNameOfIdField_!))
-  def modelTable(model: Model)                                                              = table(name(schemaName, model.dbName))
-  def relationTable(relation: Relation)                                                     = table(name(schemaName, relation.relationTableName))
-  def scalarListTable(field: ScalarField)                                                   = table(name(schemaName, scalarListTableName(field)))
-  def modelColumn(model: Model, scalarField: com.prisma.shared.models.Field): Field[AnyRef] = field(name(schemaName, model.dbName, scalarField.dbName))
-  def modelIdColumn(model: Model)                                                           = field(name(schemaName, model.dbName, model.dbNameOfIdField_!))
-  def modelIdColumn(alias: String, model: Model)                                            = field(name(alias, model.idField_!.dbName))
-  def relationColumn(relation: Relation, side: RelationSide.Value)                          = field(name(schemaName, relation.relationTableName, relation.columnForRelationSide(side)))
-  def relationIdColumn(relation: Relation)                                                  = field(name(schemaName, relation.relationTableName, "id"))
-  def inlineRelationColumn(relation: Relation, mani: InlineRelationManifestation)           = field(name(schemaName, relation.relationTableName, mani.referencingColumn))
-  def scalarListColumn(scalarField: ScalarField, column: String)                            = field(name(schemaName, scalarListTableName(scalarField), column))
-  def column(table: String, column: String)                                                 = field(name(schemaName, table, column))
-  def aliasColumn(column: String)                                                           = field(name(topLevelAlias, column))
-  def placeHolders(vector: Iterable[Any])                                                   = vector.toList.map(_ => placeHolder).asJava
-  private def scalarListTableName(field: ScalarField)                                       = field.model.dbName + "_" + field.dbName
+  private val relayIdTableName                                                    = "_RelayId"
+  val relayIdColumn                                                               = field(name(schemaName, relayIdTableName, "id"))
+  val relayStableIdentifierColumn                                                 = field(name(schemaName, relayIdTableName, "stableModelIdentifier"))
+  val relayTable                                                                  = table(name(schemaName, relayIdTableName))
+  def idField(model: Model)                                                       = field(name(schemaName, model.dbName, model.dbNameOfIdField_!))
+  def modelTable(model: Model)                                                    = table(name(schemaName, model.dbName))
+  def relationTable(relation: Relation)                                           = table(name(schemaName, relation.relationTableName))
+  def scalarListTable(field: ScalarField)                                         = table(name(schemaName, scalarListTableName(field)))
+  def modelColumn(fieldModel: com.prisma.shared.models.Field): Field[AnyRef]      = field(name(schemaName, fieldModel.model.dbName, fieldModel.dbName))
+  def modelIdColumn(model: Model)                                                 = field(name(schemaName, model.dbName, model.dbNameOfIdField_!))
+  def modelIdColumn(alias: String, model: Model)                                  = field(name(alias, model.idField_!.dbName))
+  def relationColumn(relation: Relation, side: RelationSide.Value)                = field(name(schemaName, relation.relationTableName, relation.columnForRelationSide(side)))
+  def relationIdColumn(relation: Relation)                                        = field(name(schemaName, relation.relationTableName, "id"))
+  def inlineRelationColumn(relation: Relation, mani: InlineRelationManifestation) = field(name(schemaName, relation.relationTableName, mani.referencingColumn))
+  def scalarListColumn(scalarField: ScalarField, column: String)                  = field(name(schemaName, scalarListTableName(scalarField), column))
+  def column(table: String, column: String)                                       = field(name(schemaName, table, column))
+  def aliasColumn(column: String)                                                 = field(name(topLevelAlias, column))
+  def aliasColumn(scalarField: ScalarField)                                       = field(name(topLevelAlias, scalarField.dbName))
+  def placeHolders(vector: Iterable[Any])                                         = vector.toList.map(_ => placeHolder).asJava
+  private def scalarListTableName(field: ScalarField)                             = field.model.dbName + "_" + field.dbName
 
   def queryToDBIO[T](query: JooqQuery)(setParams: PositionedParameters => Unit, readResult: ResultSet => T): DBIO[T] = {
     jooqToDBIO(query, setParams) { ps =>

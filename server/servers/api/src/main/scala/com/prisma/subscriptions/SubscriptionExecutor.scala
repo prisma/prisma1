@@ -3,7 +3,7 @@ package com.prisma.subscriptions
 import akka.http.scaladsl.model.HttpRequest
 import com.prisma.api.ApiDependencies
 import com.prisma.api.connector.PrismaNode
-import com.prisma.api.resolver.DeferredResolverProvider
+import com.prisma.api.resolver.DeferredResolverImpl
 import com.prisma.api.schema.UserFacingError
 import com.prisma.gc_values.IdGCValue
 import com.prisma.sangria.utils.ErrorHandler
@@ -90,7 +90,7 @@ object SubscriptionExecutor {
       requestId,
       HttpRequest(),
       query.renderPretty,
-      variables.toString,
+      variables,
       dependencies.reporter,
       Some(project.id),
       errorCodeExtractor = errorExtractor
@@ -104,7 +104,7 @@ object SubscriptionExecutor {
         variables = transformedVariables,
         exceptionHandler = sangriaHandler,
         operationName = operationName,
-        deferredResolver = new DeferredResolverProvider(dataResolver)
+        deferredResolver = new DeferredResolverImpl(dataResolver)
       )
       .map { result =>
         val lookup = result.as[JsObject] \ "data" \ camelCase(model.name)

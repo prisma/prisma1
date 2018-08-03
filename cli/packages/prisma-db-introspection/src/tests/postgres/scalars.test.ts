@@ -1,9 +1,11 @@
 import { Introspector } from '../../Introspector'
 import { Client } from 'pg'
 import { connectionDetails } from './connectionDetails'
+import { PostgresConnector } from '../../connectors/PostgresConnector';
 
 function introspect(): Promise<{ numTables: number; sdl: string }> {
-  return new Introspector(connectionDetails).introspect('DatabaseIntrospector')
+  const pgConnector = new PostgresConnector(connectionDetails)
+  return new Introspector(pgConnector).introspect('DatabaseIntrospector')
 }
 
 async function testSchema(sql: string) {
@@ -90,6 +92,14 @@ describe('Introspector', () => {
       "a" jsonb,
       "c" tsvector,
       "d" date[]
+      );`)
+  })
+
+  test('uuid columns', async () => {
+    await testSchema(`CREATE TABLE "UUIDs" (
+      "pk" uuid NOT NULL PRIMARY KEY,
+      "nk" uuid NOT NULL,
+      "tk" uuid
       );`)
   })
 })

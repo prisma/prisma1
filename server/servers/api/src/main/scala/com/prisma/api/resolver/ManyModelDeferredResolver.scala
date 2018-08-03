@@ -6,17 +6,15 @@ import com.prisma.api.resolver.DeferredTypes._
 import scala.concurrent.ExecutionContext
 
 class ManyModelDeferredResolver(resolver: DataResolver) {
-  def resolve(orderedDeferreds: Vector[OrderedDeferred[ManyModelDeferred]],
-              executionContext: ExecutionContext): Vector[OrderedDeferredFutureResult[RelayConnectionOutputType]] = {
-    implicit val ec: ExecutionContext = executionContext
-    val deferreds                     = orderedDeferreds.map(_.deferred)
-
-    DeferredUtils.checkSimilarityOfModelDeferredsAndThrow(deferreds)
-
+  def resolve(
+      orderedDeferreds: Vector[OrderedDeferred[ManyModelDeferred]]
+  )(implicit ec: ExecutionContext): Vector[OrderedDeferredFutureResult[RelayConnectionOutputType]] = {
+    val deferreds                    = orderedDeferreds.map(_.deferred)
     val headDeferred                 = deferreds.head
     val model                        = headDeferred.model
     val args: Option[QueryArguments] = headDeferred.args
-    val futureResolverResults        = resolver.getNodes(model, args)
+    val selectedFields               = headDeferred.selectedFields
+    val futureResolverResults        = resolver.getNodes(model, args, selectedFields)
 
     orderedDeferreds.map {
       case OrderedDeferred(deferred, order) =>

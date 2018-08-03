@@ -81,7 +81,6 @@ case class TopLevelUpdateNode(
     where: NodeSelector,
     nonListArgs: PrismaArgs,
     listArgs: Vector[(String, ListGCValue)],
-    previousValues: PrismaNode,
     nestedCreates: Vector[NestedCreateNode],
     nestedUpdates: Vector[NestedUpdateNode],
     nestedUpserts: Vector[NestedUpsertNode],

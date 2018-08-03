@@ -12,7 +12,7 @@ class NodeQuerySpec extends FlatSpec with Matchers with ApiSpecBase {
     val project = SchemaDsl.fromString() {
       """
         |type Todo {
-        |  id: ID!
+        |  id: ID! @unique
         |  title: String!
         |}
       """.stripMargin
@@ -38,7 +38,7 @@ class NodeQuerySpec extends FlatSpec with Matchers with ApiSpecBase {
     val project = SchemaDsl.fromString() {
       """
         |type Todo {
-        |  id: ID!
+        |  id: ID! @unique
         |  title: String!
         |}
       """.stripMargin

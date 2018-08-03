@@ -7,6 +7,8 @@ import org.scalatest.{FlatSpec, Matchers}
 
 class DeleteScalarListsSpec extends FlatSpec with Matchers with ApiSpecBase {
 
+  override def runSuiteOnlyForActiveConnectors = true
+
   "A toplevel delete  mutation" should "also delete ListTable entries" in {
 
     val project: Project = SchemaDsl.fromString() {
@@ -100,7 +102,7 @@ class DeleteScalarListsSpec extends FlatSpec with Matchers with ApiSpecBase {
       """type Top {
         | id: ID! @unique
         | name: String! @unique
-        | bottom: Bottom @relation(name: "Test", onDelete:"CASCADE")
+        | bottom: Bottom @relation(name: "Test", onDelete: CASCADE)
         |}
         |
         |type Bottom {

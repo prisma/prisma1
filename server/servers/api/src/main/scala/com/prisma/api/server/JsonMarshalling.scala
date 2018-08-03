@@ -8,6 +8,7 @@ import play.api.libs.json._
 import sangria.marshalling._
 
 object JsonMarshalling {
+  val dateTimeFormat = DateTimeFormat.forPattern("yyyy-MM-dd'T'HH:mm:ss.SSS'Z").withZoneUTC()
 
   implicit object CustomPlayJsonResultMarshaller extends ResultMarshaller {
     type Node       = JsValue
@@ -28,7 +29,7 @@ object JsonMarshalling {
       case None    => nullNode
     }
 
-    def scalarNode(value: Any, typeName: String, info: Set[ScalarValueInfo]): JsValue =
+    def scalarNode(value: Any, typeName: String, info: Set[ScalarValueInfo]): JsValue = {
       value match {
         case v: String     => JsString(v)
         case v: Boolean    => JsBoolean(v)
@@ -38,12 +39,12 @@ object JsonMarshalling {
         case v: Double     => JsNumber(v)
         case v: BigInt     => JsNumber(BigDecimal(v))
         case v: BigDecimal => JsNumber(v)
-        case v: DateTime   => JsString(v.toString(DateTimeFormat.forPattern("yyyy-MM-dd'T'HH:mm:ss.SSS'Z").withZoneUTC()))
+        case v: DateTime   => JsString(v.toString(dateTimeFormat))
         case v: JsValue    => v
         case v: UUID       => JsString(v.toString)
         case v             => throw new IllegalArgumentException("Unsupported scalar value in CustomSprayJsonResultMarshaller: " + v)
       }
-
+    }
     def enumNode(value: String, typeName: String) = JsString(value)
 
     def nullNode = JsNull
