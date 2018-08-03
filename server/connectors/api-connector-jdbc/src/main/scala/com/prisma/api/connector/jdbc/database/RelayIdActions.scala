@@ -28,10 +28,8 @@ trait RelayIdActions extends BuilderBase {
     deleteToDBIO(query)(
       setParams = pp =>
         ids.foreach {
-          case UuidGCValue(uuid) => // the id column in the relay table is defined as string, setting a uuid with .setObject() would blow up
-            pp.setString(uuid.toString)
-          case id =>
-            pp.setGcValue(id)
+          case UuidGCValue(uuid) => pp.setString(uuid.toString) // the id column in the relay table is a string, setting a uuid with .setObject() would blow up
+          case id                => pp.setGcValue(id)
       }
     )
   }
