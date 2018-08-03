@@ -1513,4 +1513,83 @@ class NestedConnectMutationInsideUpdateSpec extends FlatSpec with Matchers with 
       """{"data":{"technologies":[{"name":"techA","childTechnologies":[{"name":"techB"}],"parentTechnologies":[]},{"name":"techB","childTechnologies":[],"parentTechnologies":[{"name":"techA"}]}]}}""")
   }
 
+  "Connecting two nodes twice" should "not error" in {
+    val project = SchemaDsl.fromBuilder { schema =>
+      val child = schema.model("Child").field_!("c", _.String, isUnique = true)
+      schema.model("Parent").field_!("p", _.String, isUnique = true).manyToManyRelation("children", "parents", child)
+    }
+    database.setup(project)
+
+    val parentId = server
+      .query(
+        """mutation {
+          |  createParent(data: {p: "p1"})
+          |  {
+          |    id
+          |  }
+          |}""",
+        project
+      )
+      .pathAsString("data.createParent.id")
+
+    val childId = server
+      .query(
+        """mutation {
+          |  createParent(data: {
+          |    p: "p2"
+          |    children: {
+          |      create: {c: "c1"}
+          |    }
+          |  }){
+          |    children{id}
+          |  }
+          |}""",
+        project
+      )
+      .pathAsString("data.createParent.children.[0].id")
+
+    ifConnectorIsActive { dataResolver(project).countByTable("_ParentToChild").await should be(1) }
+
+    val res = server.query(
+      s"""
+         |mutation {
+         |  updateParent(
+         |  where:{id: "$parentId"}
+         |  data:{
+         |    children: {connect: {id: "$childId"}}
+         |  }){
+         |    children {
+         |      c
+         |    }
+         |  }
+         |}
+      """,
+      project
+    )
+
+    res.toString should be("""{"data":{"updateParent":{"children":[{"c":"c1"}]}}}""")
+
+    ifConnectorIsActive { dataResolver(project).countByTable("_ParentToChild").await should be(2) }
+
+    server.query(
+      s"""
+         |mutation {
+         |  updateParent(
+         |  where:{id: "$parentId"}
+         |  data:{
+         |    children: {connect: {id: "$childId"}}
+         |  }){
+         |    children {
+         |      c
+         |    }
+         |  }
+         |}
+      """,
+      project
+    )
+
+    ifConnectorIsActive { dataResolver(project).countByTable("_ParentToChild").await should be(2) }
+
+  }
+
 }
