@@ -2,7 +2,7 @@ package com.prisma.api.connector.jdbc.database
 
 import java.sql.PreparedStatement
 
-import com.prisma.api.connector._
+import com.prisma.api.connector.{TrueFilter, _}
 import com.prisma.api.connector.jdbc.extensions.SlickExtensions
 import com.prisma.gc_values.{NullGCValue, StringGCValue}
 import slick.jdbc.PositionedParameters
@@ -62,7 +62,8 @@ object SetParams extends SlickExtensions with LimitClauseBuilder {
       case NodeFilter(filters)                => setFilter(pp, OrFilter(filters))
       case RelationFilter(_, nestedFilter, _) => setFilter(pp, nestedFilter)
       //--------------------------------ANCHORS------------------------------------
-      case PreComputedSubscriptionFilter(_)                     => // NOOP
+      case TrueFilter                                           => // NOOP
+      case FalseFilter                                          => // NOOP
       case ScalarFilter(_, Contains(StringGCValue(value)))      => pp.setString(value)
       case ScalarFilter(_, NotContains(StringGCValue(value)))   => pp.setString(value)
       case ScalarFilter(_, StartsWith(StringGCValue(value)))    => pp.setString(value)

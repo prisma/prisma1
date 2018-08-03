@@ -30,7 +30,8 @@ trait FilterConditionBuilder extends BuilderBase {
       case NodeFilter(filters)      => buildConditionForFilter(OrFilter(filters), alias)
       case x: RelationFilter        => relationFilterStatement(alias, x)
       //--------------------------------ANCHORS------------------------------------
-      case PreComputedSubscriptionFilter(value)                  => if (value) trueCondition() else falseCondition()
+      case TrueFilter                                            => trueCondition()
+      case FalseFilter                                           => falseCondition()
       case ScalarFilter(scalarField, Contains(_))                => fieldFrom(scalarField).contains(stringDummy)
       case ScalarFilter(scalarField, NotContains(_))             => fieldFrom(scalarField).notContains(stringDummy)
       case ScalarFilter(scalarField, StartsWith(_))              => fieldFrom(scalarField).startsWith(stringDummy)
