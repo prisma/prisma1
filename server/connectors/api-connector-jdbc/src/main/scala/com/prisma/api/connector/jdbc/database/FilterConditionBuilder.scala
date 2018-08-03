@@ -9,14 +9,14 @@ import org.jooq.impl.DSL._
 trait FilterConditionBuilder extends BuilderBase {
   def buildConditionForFilter(filter: Option[Filter]): Condition = filter match {
     case Some(filter) => buildConditionForFilter(filter, topLevelAlias)
-    case None         => trueCondition()
+    case None         => noCondition()
   }
 
   private def buildConditionForFilter(filter: Filter, alias: String): Condition = {
     def fieldFrom(scalarField: ScalarField) = field(name(alias, scalarField.dbName))
     def nonEmptyConditions(filters: Vector[Filter]): Vector[Condition] = {
       filters.map(buildConditionForFilter(_, alias)) match {
-        case x if x.isEmpty => Vector(trueCondition())
+        case x if x.isEmpty => Vector(noCondition())
         case x              => x
       }
     }

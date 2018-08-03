@@ -84,6 +84,13 @@ class FilterSpec extends FlatSpec with Matchers with ApiSpecBase {
     userUniques(filter) should be(Vector())
   }
 
+  "Empty AND filter" should "work" in {
+
+    val filter = """(where: {AND:[]})"""
+
+    userUniques(filter) should be(Vector())
+  }
+
   "OR filter" should "work" in {
 
     val filter = """(where: {OR:[{unique_gt: 2},{name_starts_with: "P"}]})"""
