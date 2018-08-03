@@ -9,14 +9,14 @@ import org.jooq.impl.DSL._
 trait FilterConditionBuilder extends BuilderBase {
   def buildConditionForFilter(filter: Option[Filter]): Condition = filter match {
     case Some(filter) => buildConditionForFilter(filter, topLevelAlias)
-    case None         => trueCondition()
+    case None         => noCondition()
   }
 
   private def buildConditionForFilter(filter: Filter, alias: String): Condition = {
     def fieldFrom(scalarField: ScalarField) = field(name(alias, scalarField.dbName))
     def nonEmptyConditions(filters: Vector[Filter]): Vector[Condition] = {
       filters.map(buildConditionForFilter(_, alias)) match {
-        case x if x.isEmpty => Vector(trueCondition())
+        case x if x.isEmpty => Vector(noCondition())
         case x              => x
       }
     }
@@ -30,7 +30,8 @@ trait FilterConditionBuilder extends BuilderBase {
       case NodeFilter(filters)      => buildConditionForFilter(OrFilter(filters), alias)
       case x: RelationFilter        => relationFilterStatement(alias, x)
       //--------------------------------ANCHORS------------------------------------
-      case PreComputedSubscriptionFilter(value)                  => if (value) trueCondition() else falseCondition()
+      case TrueFilter                                            => trueCondition()
+      case FalseFilter                                           => falseCondition()
       case ScalarFilter(scalarField, Contains(_))                => fieldFrom(scalarField).contains(stringDummy)
       case ScalarFilter(scalarField, NotContains(_))             => fieldFrom(scalarField).notContains(stringDummy)
       case ScalarFilter(scalarField, StartsWith(_))              => fieldFrom(scalarField).startsWith(stringDummy)
