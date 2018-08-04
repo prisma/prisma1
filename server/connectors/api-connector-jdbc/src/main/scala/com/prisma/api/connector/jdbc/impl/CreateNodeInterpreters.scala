@@ -23,7 +23,7 @@ case class CreateNodeInterpreter(
   override def dbioAction(mutationBuilder: JdbcActionsBuilder): DBIO[DatabaseMutactionResult] = {
     for {
       id <- mutationBuilder.createNode(model, mutaction.nonListArgs)
-      _  <- mutationBuilder.setScalarListValuesByNodeId(model, id, mutaction.listArgs)
+      _  <- mutationBuilder.createScalarListValuesForNodeId(model, id, mutaction.listArgs)
       _  <- if (includeRelayRow) mutationBuilder.createRelayId(model, id) else DBIO.successful(())
     } yield CreateNodeResult(id, mutaction)
   }
@@ -56,7 +56,7 @@ case class NestedCreateNodeInterpreter(
     for {
       _  <- DBIO.seq(requiredCheck(parentId), removalAction(parentId))
       id <- createNodeAndConnectToParent(mutationBuilder, parentId)
-      _  <- mutationBuilder.setScalarListValuesByNodeId(model, id, mutaction.listArgs)
+      _  <- mutationBuilder.createScalarListValuesForNodeId(model, id, mutaction.listArgs)
       _  <- if (includeRelayRow) mutationBuilder.createRelayId(model, id) else DBIO.successful(())
     } yield CreateNodeResult(id, mutaction)
   }
