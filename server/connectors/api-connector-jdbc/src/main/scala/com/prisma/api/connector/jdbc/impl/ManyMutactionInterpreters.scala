@@ -14,11 +14,10 @@ case class DeleteDataItemsInterpreter(mutaction: DeleteNodes, shouldDeleteRelayI
 
   def dbioAction(mutationBuilder: JdbcActionsBuilder) =
     for {
-      ids <- mutationBuilder.getNodeIdsByFilter(mutaction.model, mutaction.whereFilter)
-      _ <- DBIO.seq(
-            DBIO.seq(ids.grouped(30000).toVector.map(checkForRequiredRelationsViolations(mutationBuilder, _)): _*),
-            DBIO.seq(ids.grouped(30000).toVector.map(mutationBuilder.deleteNodes(mutaction.model, _, shouldDeleteRelayIds)): _*)
-          )
+      ids        <- mutationBuilder.getNodeIdsByFilter(mutaction.model, mutaction.whereFilter)
+      groupedIds = ids.grouped(32767).toVector //Postgres has a limit of 32767 parameters
+      _          <- DBIO.seq(groupedIds.map(checkForRequiredRelationsViolations(mutationBuilder, _)): _*)
+      _          <- DBIO.seq(groupedIds.map(mutationBuilder.deleteNodes(mutaction.model, _, shouldDeleteRelayIds)): _*)
     } yield UnitDatabaseMutactionResult
 
   private def checkForRequiredRelationsViolations(mutationBuilder: JdbcActionsBuilder, nodeIds: Vector[IdGCValue]): DBIO[_] = {
