@@ -15,8 +15,10 @@ case class DeleteDataItemsInterpreter(mutaction: DeleteNodes, shouldDeleteRelayI
   def dbioAction(mutationBuilder: JdbcActionsBuilder) =
     for {
       ids <- mutationBuilder.getNodeIdsByFilter(mutaction.model, mutaction.whereFilter)
-      _   <- checkForRequiredRelationsViolations(mutationBuilder, ids)
-      _   <- mutationBuilder.deleteNodes(mutaction.model, ids, shouldDeleteRelayIds)
+      _ <- DBIO.seq(
+            DBIO.seq(ids.grouped(30000).toVector.map(checkForRequiredRelationsViolations(mutationBuilder, _)): _*),
+            DBIO.seq(ids.grouped(30000).toVector.map(mutationBuilder.deleteNodes(mutaction.model, _, shouldDeleteRelayIds)): _*)
+          )
     } yield UnitDatabaseMutactionResult
 
   private def checkForRequiredRelationsViolations(mutationBuilder: JdbcActionsBuilder, nodeIds: Vector[IdGCValue]): DBIO[_] = {

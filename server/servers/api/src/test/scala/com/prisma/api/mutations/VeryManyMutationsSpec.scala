@@ -32,7 +32,7 @@ class VeryManyMutationsSpec extends FlatSpec with Matchers with ApiSpecBase {
 
     val result = server.query("""mutation {deleteManyMiddles(where: { int_gt: 100 }){count}}""", project)
 
-    result.pathAsLong("data.deleteManyMiddles.count") should equal(0)
+    result.pathAsLong("data.deleteManyMiddles.count") should equal(36291)
   }
 
   def createVeryManyTops = for (int <- 1 to 1000) {
