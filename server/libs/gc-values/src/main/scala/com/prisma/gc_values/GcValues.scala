@@ -20,8 +20,9 @@ sealed trait GCValue {
 
 object RootGCValue {
   def apply(elements: (String, GCValue)*): RootGCValue = RootGCValue(Map(elements: _*))
+  def apply(map: Map[String, GCValue]): RootGCValue    = RootGCValue(map)
   def empty: RootGCValue = {
-    val empty: SortedMap[String, GCValue] = SortedMap.empty
+    val empty: Map[String, GCValue] = Map.empty
     RootGCValue(empty)
   }
 }

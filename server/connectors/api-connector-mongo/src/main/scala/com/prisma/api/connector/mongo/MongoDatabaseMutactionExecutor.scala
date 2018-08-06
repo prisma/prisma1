@@ -37,14 +37,19 @@ class MongoDatabaseMutactionExecutor(database: MongoDatabase)(implicit ec: Execu
   override def executeNonTransactionally(mutaction: TopLevelDatabaseMutaction): Future[MutactionResults] = ???
 
   def executeTopLevelMutaction(mutaction: TopLevelCreateNode) = {
+    val model = mutaction.model
 
-    val collection: MongoCollection[Document] = database.getCollection("firstcollection")
+    val collection: MongoCollection[Document] = database.getCollection(model.name)
 
-    // insert a document
     import GCBisonTransformer._
-    val document: Document = Document("_id" -> CuidGCValue.random(), "x" -> "this worked as well???")
-    val insertObservable   = collection.insertOne(document).toFuture()
-    insertObservable.map(_ => MutactionResults(new CreateNodeResult(CuidGCValue(""), mutaction), Vector.empty))
 
+    val id = CuidGCValue.random()
+
+    val nonListValues = Document(
+      model.scalarNonListFields
+        .filter(field => mutaction.nonListArgs.hasArgFor(field) && mutaction.nonListArgs.getFieldValue(field.name).get != NullGCValue)
+        .map(field => field.name -> mutaction.nonListArgs.getFieldValue(field).get) :+ "_id" -> id)
+
+    collection.insertOne(nonListValues).toFuture().map(_ => MutactionResults(CreateNodeResult(id, mutaction), Vector.empty))
   }
 }
