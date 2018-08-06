@@ -10,7 +10,7 @@ import org.jooq.conf.Settings
 import org.jooq.impl.DSL
 import org.jooq.impl.DSL.{field, name, table}
 import org.jooq.{Field, Query => JooqQuery, _}
-import slick.jdbc.{MySQLProfile, PositionedParameters, PostgresProfile}
+import slick.jdbc.PositionedParameters
 
 import scala.collection.JavaConverters._
 
