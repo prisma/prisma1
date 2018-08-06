@@ -4,9 +4,11 @@ import com.prisma.api.connector._
 import com.prisma.gc_values._
 import com.prisma.shared.models._
 import org.bson.BsonString
-import org.mongodb.scala.bson.{BsonDouble, BsonInt32, BsonValue}
+import org.joda.time.DateTime
+import org.mongodb.scala.bson.{BsonBoolean, BsonDateTime, BsonDouble, BsonInt32, BsonValue}
 import org.mongodb.scala.model.Filters
 import org.mongodb.scala.{Document, MongoCollection, MongoDatabase}
+import play.api.libs.json.Json
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -43,17 +45,23 @@ case class MongoDataResolver(project: Project, database: MongoDatabase)(implicit
 
 object DocumentToRoot {
   def apply(model: Model, document: Document): RootGCValue =
-    RootGCValue(document.map { case (k, v) => k -> BisonToGC(model.getScalarFieldByName_!(k), v) }.toMap)
+    RootGCValue(document.map {
+      case ("_id", v) => "id" -> BisonToGC(model.getScalarFieldByName_!("id"), v)
+      case (k, v)     => k    -> BisonToGC(model.getScalarFieldByName_!(k), v)
+    }.toMap)
 }
 
 object BisonToGC {
   def apply(field: Field, bison: BsonValue): GCValue = (field.typeIdentifier, bison) match {
-    case (TypeIdentifier.String, value: BsonString) => StringGCValue(value.getValue)
-    case (TypeIdentifier.Int, value: BsonInt32)     => IntGCValue(value.getValue)
-    case (TypeIdentifier.Float, value: BsonDouble)  => FloatGCValue(value.getValue)
-    case (TypeIdentifier.Enum, value: BsonString)   => EnumGCValue(value.getValue)
-    case (TypeIdentifier.Cuid, value: BsonString)   => CuidGCValue(value.getValue)
-    case (TypeIdentifier.UUID, value: BsonString)   => sys.error("implement this")
-    case (_, _)                                     => sys.error("later")
+    case (TypeIdentifier.String, value: BsonString)     => StringGCValue(value.getValue)
+    case (TypeIdentifier.Int, value: BsonInt32)         => IntGCValue(value.getValue)
+    case (TypeIdentifier.Float, value: BsonDouble)      => FloatGCValue(value.getValue)
+    case (TypeIdentifier.Enum, value: BsonString)       => EnumGCValue(value.getValue)
+    case (TypeIdentifier.Cuid, value: BsonString)       => CuidGCValue(value.getValue)
+    case (TypeIdentifier.Boolean, value: BsonBoolean)   => BooleanGCValue(value.getValue)
+    case (TypeIdentifier.DateTime, value: BsonDateTime) => DateTimeGCValue(new DateTime(value.getValue))
+    case (TypeIdentifier.Json, value: BsonString)       => JsonGCValue(Json.parse(value.getValue))
+    case (TypeIdentifier.UUID, value: BsonString)       => sys.error("implement this")
+    case (x, y)                                         => sys.error("Not implemented: " + x + y)
   }
 }

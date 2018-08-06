@@ -45,11 +45,13 @@ class MongoDatabaseMutactionExecutor(database: MongoDatabase)(implicit ec: Execu
 
     val id = CuidGCValue.random()
 
-    val nonListValues = Document(
+    val nonListValues =
       model.scalarNonListFields
         .filter(field => mutaction.nonListArgs.hasArgFor(field) && mutaction.nonListArgs.getFieldValue(field.name).get != NullGCValue)
-        .map(field => field.name -> mutaction.nonListArgs.getFieldValue(field).get) :+ "_id" -> id)
+        .map(field => field.name -> mutaction.nonListArgs.getFieldValue(field).get)
 
-    collection.insertOne(nonListValues).toFuture().map(_ => MutactionResults(CreateNodeResult(id, mutaction), Vector.empty))
+    val document = Document(nonListValues :+ "_id" -> id)
+
+    collection.insertOne(document).toFuture().map(_ => MutactionResults(CreateNodeResult(id, mutaction), Vector.empty))
   }
 }
