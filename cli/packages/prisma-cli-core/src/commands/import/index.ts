@@ -15,14 +15,16 @@ export default class Import extends Command {
       description: 'Path to .env file to inject env vars',
       char: 'e',
     }),
-    ['generate-ids']: flags.string({
+    ['generate-ids']: flags.boolean({
       description: 'Automatically generate missing ids',
-      char: 'g'
-    })
+      char: 'g',
+      defaultValue: true
+    }),
   }
   async run() {
     const { data } = this.flags
     const envFile = this.flags['env-file']
+    const generateIds = this.flags['generate-ids']
     await this.definition.load(this.flags, envFile)
     const serviceName = this.definition.service!
     const stage = this.definition.stage!
@@ -45,6 +47,7 @@ export default class Import extends Command {
       stage,
       this.definition.getToken(serviceName, stage),
       this.definition.getWorkspace() || undefined,
+      generateIds
     )
   }
 
@@ -54,6 +57,7 @@ export default class Import extends Command {
     stage: string,
     token?: string,
     workspaceSlug?: string,
+    generateIds?: boolean,
   ) {
     await this.definition.load({})
     const typesString = this.definition.typesString!
@@ -64,6 +68,7 @@ export default class Import extends Command {
       this.out,
       this.config,
     )
-    await importer.upload(serviceName, stage, token, workspaceSlug)
+    await importer.upload(serviceName, stage, token, workspaceSlug, generateIds)
   }
+
 }
