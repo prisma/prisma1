@@ -10,7 +10,7 @@ exemptLabels:
   - proposal/needs-review
   - component/docs
   - component/examples
-  - needs-reproduction
+  - reproduction-available
   - help-wanted
 # Label to use when marking an issue as stale
 staleLabel: stale
