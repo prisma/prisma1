@@ -32,7 +32,7 @@ describe('Importer', () => {
     expect(importer.out.stdout.output).toMatchSnapshot()
   })
 
-  it('Should generate missing ids for nodes', async () => {
+  it('Should pass the validatation and start uploading nodes', async () => {
     const importer = initImporter()
     await importer.upload('serviceName', 'stage', undefined, undefined, true)
     expect(importer.out.stdout.output).toContain('Uploading nodes...')
