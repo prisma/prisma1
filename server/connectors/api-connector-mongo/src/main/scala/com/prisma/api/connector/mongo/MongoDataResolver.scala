@@ -2,10 +2,11 @@ package com.prisma.api.connector.mongo
 
 import com.prisma.api.connector._
 import com.prisma.gc_values._
+import com.prisma.shared.models.TypeIdentifier.TypeIdentifier
 import com.prisma.shared.models._
 import org.bson.BsonString
 import org.joda.time.DateTime
-import org.mongodb.scala.bson.{BsonBoolean, BsonDateTime, BsonDouble, BsonInt32, BsonValue}
+import org.mongodb.scala.bson.{BsonBoolean, BsonDateTime, BsonDouble, BsonInt32, BsonNull, BsonValue}
 import org.mongodb.scala.model.Filters
 import org.mongodb.scala.{Document, MongoCollection, MongoDatabase}
 import play.api.libs.json.Json
@@ -29,7 +30,11 @@ case class MongoDataResolver(project: Project, database: MongoDatabase)(implicit
     }
   }
 
-  override def getNodes(model: Model, args: Option[QueryArguments], selectedFields: SelectedFields): Future[ResolverResult[PrismaNode]] = ???
+  override def countByTable(table: String, whereFilter: Option[Filter]): Future[Int] = ???
+
+  // implement these later
+  override def getNodes(model: Model, args: Option[QueryArguments], selectedFields: SelectedFields): Future[ResolverResult[PrismaNode]] =
+    Future.successful(ResolverResult[PrismaNode](Vector.empty, false, false, None))
 
   override def getRelatedNodes(fromField: RelationField,
                                fromNodeIds: Vector[IdGCValue],
@@ -41,20 +46,23 @@ case class MongoDataResolver(project: Project, database: MongoDatabase)(implicit
   override def getScalarListValuesByNodeIds(model: Model, listField: ScalarField, nodeIds: Vector[IdGCValue]): Future[Vector[ScalarListValues]] = ???
 
   override def getRelationNodes(relationTableName: String, args: Option[QueryArguments]): Future[ResolverResult[RelationNode]] = ???
-
-  override def countByTable(table: String, whereFilter: Option[Filter]): Future[Int] = ???
 }
 
 object DocumentToRoot {
   def apply(model: Model, document: Document): RootGCValue =
     RootGCValue(document.map {
-      case ("_id", v) => "id" -> BisonToGC(model.getScalarFieldByName_!("id"), v)
-      case (k, v)     => k    -> BisonToGC(model.getScalarFieldByName_!(k), v)
+      case ("_id", v)       => "id"        -> BisonToGC(model.getScalarFieldByName_!("id"), v)
+      case ("createdAt", v) => "createdAt" -> BisonToGC(TypeIdentifier.DateTime, v)
+      case ("updatedAt", v) => "updatedAt" -> BisonToGC(TypeIdentifier.DateTime, v)
+      case (k, v)           => k           -> BisonToGC(model.getScalarFieldByName_!(k), v)
     }.toMap)
 }
 
 object BisonToGC {
-  def apply(field: Field, bison: BsonValue): GCValue = (field.typeIdentifier, bison) match {
+
+  def apply(field: Field, bison: BsonValue): GCValue = apply(field.typeIdentifier, bison)
+
+  def apply(typeIdentifier: TypeIdentifier, bison: BsonValue): GCValue = (typeIdentifier, bison) match {
     case (TypeIdentifier.String, value: BsonString)     => StringGCValue(value.getValue)
     case (TypeIdentifier.Int, value: BsonInt32)         => IntGCValue(value.getValue)
     case (TypeIdentifier.Float, value: BsonDouble)      => FloatGCValue(value.getValue)
@@ -64,6 +72,7 @@ object BisonToGC {
     case (TypeIdentifier.DateTime, value: BsonDateTime) => DateTimeGCValue(new DateTime(value.getValue))
     case (TypeIdentifier.Json, value: BsonString)       => JsonGCValue(Json.parse(value.getValue))
     case (TypeIdentifier.UUID, value: BsonString)       => sys.error("implement this")
+    case (_, value: BsonNull)                           => NullGCValue
     case (x, y)                                         => sys.error("Not implemented: " + x + y)
   }
 }

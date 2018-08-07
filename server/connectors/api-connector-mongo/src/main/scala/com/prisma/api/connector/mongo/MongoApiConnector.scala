@@ -19,7 +19,12 @@ case class MongoApiConnector(config: DatabaseConfig)(implicit ec: ExecutionConte
 
   override def capabilities: Vector[ApiConnectorCapability] = Vector.empty
 
-  override def initialize(): Future[Unit] = ???
+  override def initialize(): Future[Unit] = {
+    database
+    Future.unit
+  }
 
-  override def shutdown(): Future[Unit] = ???
+  override def shutdown(): Future[Unit] = {
+    Future.unit
+  }
 }

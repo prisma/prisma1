@@ -27,7 +27,7 @@ trait SchemaBuilder {
 }
 
 object SchemaBuilder {
-  def apply()(implicit system: ActorSystem, apiDependencies: ApiDependencies): SchemaBuilder = { (project: Project) =>
+  def apply()(implicit system: ActorSystem, apiDependencies: ApiDependencies): SchemaBuilder = { project: Project =>
     SchemaBuilderImpl(project, apiDependencies.capabilities).build()
   }
 }

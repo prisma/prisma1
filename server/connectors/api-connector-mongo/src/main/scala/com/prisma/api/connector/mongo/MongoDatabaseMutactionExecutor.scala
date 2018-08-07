@@ -1,10 +1,16 @@
 package com.prisma.api.connector.mongo
 
+import java.sql.Timestamp
+
 import com.prisma.api.connector._
+import com.prisma.api.schema.APIErrors
 import com.prisma.gc_values._
+import org.joda.time.{DateTime, DateTimeZone}
+import org.mongodb.scala.bson.conversions.Bson
 import org.mongodb.scala.bson.{BsonArray, BsonBoolean, BsonDateTime, BsonDouble, BsonInt32, BsonString, BsonTransformer, BsonValue}
 import org.mongodb.scala.model.Filters
 import org.mongodb.scala.{Document, MongoCollection, MongoDatabase, Observable}
+import org.mongodb.scala.model.Updates._
 
 import scala.concurrent.{ExecutionContext, Future}
 object GCBisonTransformer {
@@ -25,10 +31,21 @@ object GCBisonTransformer {
       case _: RootGCValue     => sys.error("not implemented")
     }
   }
+
+}
+
+object NodeSelectorBsonTransformer {
+  implicit object WhereToBson {
+    def apply(where: NodeSelector): Bson = {
+      val fieldName = if (where.fieldName == "id") "_id" else where.fieldName
+      Filters.eq(fieldName, where.fieldGCValue.value)
+    }
+  }
 }
 
 class MongoDatabaseMutactionExecutor(database: MongoDatabase)(implicit ec: ExecutionContext) extends DatabaseMutactionExecutor {
   import GCBisonTransformer._
+  import NodeSelectorBsonTransformer._
 
   override def executeTransactionally(mutaction: TopLevelDatabaseMutaction): Future[MutactionResults] = {
     interpreterFor(mutaction)
@@ -38,7 +55,7 @@ class MongoDatabaseMutactionExecutor(database: MongoDatabase)(implicit ec: Execu
 
   def interpreterFor(mutaction: TopLevelDatabaseMutaction): Future[MutactionResults] = mutaction match {
     case m: TopLevelCreateNode => CreateNodeInterpreter(mutaction = m, includeRelayRow = false)
-    case m: TopLevelUpdateNode => ???
+    case m: TopLevelUpdateNode => UpdateNodeInterpreter(mutaction = m)
     case m: TopLevelUpsertNode => ???
     case m: TopLevelDeleteNode => DeleteNodeInterpreter(mutaction = m)
     case m: UpdateNodes        => ???
@@ -67,26 +84,58 @@ class MongoDatabaseMutactionExecutor(database: MongoDatabase)(implicit ec: Execu
         .filter(field => mutaction.nonListArgs.hasArgFor(field) && mutaction.nonListArgs.getFieldValue(field.name).get != NullGCValue)
         .map(field => field.name -> mutaction.nonListArgs.getFieldValue(field).get)
 
-    val document = Document(nonListValues :+ "_id" -> id)
+    val document = Document(nonListValues :+ "_id" -> id :+ "createdAt" -> currentDateTimeGCValue :+ "updatedAt" -> currentDateTimeGCValue)
 
     collection.insertOne(document).toFuture().map(_ => MutactionResults(CreateNodeResult(id, mutaction), Vector.empty))
   }
 
   def DeleteNodeInterpreter(mutaction: TopLevelDeleteNode) = {
     val collection: MongoCollection[Document] = database.getCollection(mutaction.model.name)
-    val fieldName                             = if (mutaction.where.fieldName == "id") "_id" else mutaction.where.fieldName
-    val filter                                = Filters.eq(fieldName, mutaction.where.fieldGCValue.value)
+    val filter                                = WhereToBson(mutaction.where)
 
     val previousValues: Future[Option[PrismaNode]] = collection.find(filter).collect().toFuture.map { results: Seq[Document] =>
       results.headOption.map { result =>
-        val root = DocumentToRoot(mutaction.where.model, result)
+        val root = DocumentToRoot(mutaction.model, result)
         PrismaNode(root.idField, root)
       }
     }
 
     previousValues.flatMap {
       case Some(node) => collection.deleteOne(filter).toFuture().map(_ => MutactionResults(DeleteNodeResult(node.id, node, mutaction), Vector.empty))
-      case None       => sys.error("handle this")
+      case None       => throw APIErrors.NodeNotFoundForWhereError(mutaction.where)
     }
   }
+
+  def UpdateNodeInterpreter(mutaction: TopLevelUpdateNode) = {
+    val collection: MongoCollection[Document] = database.getCollection(mutaction.model.name)
+    val filter                                = WhereToBson(mutaction.where)
+    val previousValues: Future[Option[PrismaNode]] = collection.find(filter).collect().toFuture.map { results: Seq[Document] =>
+      results.headOption.map { result =>
+        val root = DocumentToRoot(mutaction.model, result)
+        PrismaNode(root.idField, root)
+      }
+    }
+
+    val fieldsSet = mutaction.nonListArgs.raw.asRoot.map.map {
+      case ("id", v) => set("_id", GCValueBsonTransformer(v))
+      case (k, v)    => set(k, GCValueBsonTransformer(v))
+    }.toVector
+
+    val updatedAt = set("updatedAt", GCValueBsonTransformer(currentDateTimeGCValue))
+
+    val updates = combine(fieldsSet :+ updatedAt: _*)
+
+    previousValues.flatMap {
+      case Some(node) =>
+        collection
+          .updateOne(filter, updates)
+          .toFuture()
+          .map(_ => MutactionResults(UpdateNodeResult(node.id, node, mutaction), Vector.empty))
+      case None => throw APIErrors.NodeNotFoundForWhereError(mutaction.where)
+    }
+
+  }
+
+  def currentDateTimeGCValue = DateTimeGCValue(DateTime.now(DateTimeZone.UTC))
+
 }

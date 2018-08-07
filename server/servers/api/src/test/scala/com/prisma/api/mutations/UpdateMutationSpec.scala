@@ -156,7 +156,7 @@ class UpdateMutationSpec extends FlatSpec with Matchers with ApiSpecBase {
     )
   }
 
-  "Updating" should "change the updatedAt datetime" taggedAs (IgnoreMySql) in {
+  "Updating" should "change the updatedAt datetime" in {
     val project = SchemaDsl.fromBuilder { schema =>
       schema
         .model("Todo")
