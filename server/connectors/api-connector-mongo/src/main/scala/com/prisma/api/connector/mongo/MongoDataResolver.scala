@@ -18,12 +18,14 @@ case class MongoDataResolver(project: Project, database: MongoDatabase)(implicit
   override def getNodeByWhere(where: NodeSelector, selectedFields: SelectedFields): Future[Option[PrismaNode]] = {
     val collection: MongoCollection[Document] = database.getCollection(where.model.name)
 
-    val filter = Filters.eq("_id", where.fieldGCValue.value)
+    val fieldName = if (where.fieldName == "id") "_id" else where.fieldName
+    val filter    = Filters.eq(fieldName, where.fieldGCValue.value)
 
     collection.find(filter).collect().toFuture.map { results: Seq[Document] =>
-      val root = DocumentToRoot(where.model, results.head)
-
-      Some(PrismaNode(CuidGCValue(where.fieldGCValue.value.toString), root))
+      results.headOption.map { result =>
+        val root = DocumentToRoot(where.model, result)
+        PrismaNode(root.idField, root)
+      }
     }
   }
 
