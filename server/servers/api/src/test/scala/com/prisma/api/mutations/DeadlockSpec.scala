@@ -30,7 +30,37 @@ class DeadlockSpec extends FlatSpec with Matchers with ApiSpecBase with AwaitUti
              |    a
              |  }
              |}
-      """.stripMargin,
+      """,
+          project
+        )
+      )
+
+    Future.traverse(0 to 50)((i) => exec(i)).await(seconds = 30)
+  }
+
+  "creating many node with scalar list values" should "not cause deadlocks" in {
+    val project = SchemaDsl.fromBuilder { schema =>
+      val comment = schema.model("Comment").field("text", _.String)
+      schema.model("Todo").oneToManyRelation("comments", "todo", comment).field("a", _.String).field("tags", _.String, isList = true)
+    }
+    database.setup(project)
+
+    def exec(i: Int) =
+      Future(
+        server.query(
+          s"""mutation {
+             |  createTodo(
+             |    data:{
+             |      a: "$i"
+             |      tags: {
+             |        set: ["important", "doitnow"]
+             |      }
+             |    }
+             |  ){
+             |    a
+             |  }
+             |}
+      """,
           project
         )
       )
@@ -57,13 +87,11 @@ class DeadlockSpec extends FlatSpec with Matchers with ApiSpecBase with AwaitUti
         |    id
         |    comments { id }
         |  }
-        |}""".stripMargin,
+        |}""",
       project
     )
 
-    val todoId     = createResult.pathAsString("data.createTodo.id")
-    val comment1Id = createResult.pathAsString("data.createTodo.comments.[0].id")
-    val comment2Id = createResult.pathAsString("data.createTodo.comments.[1].id")
+    val todoId = createResult.pathAsString("data.createTodo.id")
 
     def exec(i: Int) =
       server.queryAsync(
@@ -77,12 +105,63 @@ class DeadlockSpec extends FlatSpec with Matchers with ApiSpecBase with AwaitUti
              |    a
              |  }
              |}
-      """.stripMargin,
+      """,
         project
       )
 
     Future
       .traverse(0 to 50) { (i) =>
+        exec(i)
+      }
+      .await(seconds = 30)
+  }
+
+  "updating single item many times with scalar list values" should "not cause deadlocks" in {
+    val project = SchemaDsl.fromBuilder { schema =>
+      val comment = schema.model("Comment").field("text", _.String)
+      schema.model("Todo").oneToManyRelation("comments", "todo", comment).field("a", _.String).field("tags", _.String, isList = true)
+    }
+    database.setup(project)
+
+    val createResult = server.query(
+      """mutation {
+        |  createTodo(
+        |    data: {
+        |      comments: {
+        |        create: [{text: "comment1"}, {text: "comment2"}]
+        |      }
+        |    }
+        |  ){
+        |    id
+        |    comments { id }
+        |  }
+        |}""",
+      project
+    )
+
+    val todoId = createResult.pathAsString("data.createTodo.id")
+
+    def exec(i: Int) =
+      server.queryAsync(
+        s"""mutation {
+           |  updateTodo(
+           |    where: { id: "${todoId}" }
+           |    data:{
+           |      a: "${i}"
+           |      tags: {
+           |        set: ["important", "doitnow"]
+           |      }
+           |    }
+           |  ){
+           |    a
+           |  }
+           |}
+      """,
+        project
+      )
+
+    Future
+      .traverse(0 to 150) { (i) =>
         exec(i)
       }
       .await(seconds = 30)
@@ -107,7 +186,7 @@ class DeadlockSpec extends FlatSpec with Matchers with ApiSpecBase with AwaitUti
         |    id
         |    comments { id }
         |  }
-        |}""".stripMargin,
+        |}""",
       project
     )
 
@@ -130,7 +209,7 @@ class DeadlockSpec extends FlatSpec with Matchers with ApiSpecBase with AwaitUti
              |    a
              |  }
              |}
-      """.stripMargin,
+      """,
         project
       )
 
@@ -164,7 +243,7 @@ class DeadlockSpec extends FlatSpec with Matchers with ApiSpecBase with AwaitUti
                |    a
                |  }
                |}
-      """.stripMargin,
+      """,
         project
       )
 
@@ -192,7 +271,7 @@ class DeadlockSpec extends FlatSpec with Matchers with ApiSpecBase with AwaitUti
         |    id
         |    comments { id }
         |  }
-        |}""".stripMargin,
+        |}""",
         project
       )
 
@@ -207,7 +286,7 @@ class DeadlockSpec extends FlatSpec with Matchers with ApiSpecBase with AwaitUti
              |    a
              |  }
              |}
-      """.stripMargin,
+      """,
         project
       )
 

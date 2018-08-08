@@ -9,7 +9,9 @@ exemptLabels:
   - proposal/accepted
   - proposal/needs-review
   - component/docs
-  - needs-reproduction
+  - component/examples
+  - reproduction-available
+  - help-wanted
 # Label to use when marking an issue as stale
 staleLabel: stale
 # Comment to post when marking an issue as stale. Set to `false` to disable

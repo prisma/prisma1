@@ -5,148 +5,177 @@ description: Learn how to deploy your Prisma database service to Digital Ocean m
 
 # Digital Ocean (manual)
 
-<InfoBox type=warning>
-
-**This tutorial only applies to Prisma versions lower than 1.7 and will be updated soon.**
-
-</InfoBox>
-
 This section describes how to set up a fully functioning Prisma server on Digital Ocean in less than 20 minutes.
 
-In the following procedure you will connect to your droplet with ssh, and manually install all required dependencies. Most users should use the procedure described in [Digital Ocean (Docker Machine)](!alias-texoo9aemu) instead.
+In the following procedure you will connect to your Droplet with SSH, and manually install all required dependencies. Most users should use the procedure described in [Digital Ocean (Docker Machine)](!alias-texoo9aemu) instead.
 
-Digital Ocean is an easy to use provider of virtual servers. They offer different compute sizes called droplets. The 10$ droplet is a good starting point for a Prisma server.
+[Digital Ocean](https://www.digitalocean.com/) is an easy-to-use provider of virtual servers. They offer configurable compute units of various sizes, called [Droplets](https://www.digitalocean.com/products/droplets/).
 
-> The setup described in this section does not include features you would normally expect from production ready servers, such as backup and active failover. We will add more guides in the future describing a more complete setup suitable for production use.
+> The setup described in this section does not include features you would normally expect from production-ready servers, such as _automated backups_ and _active failover_. We will add more guides in the future describing a more complete setup suitable for production use.
 
-## Creating a droplet
+## 1. Register at Digital Ocean
 
-If you are new to Digital Ocean you should start by creating an account at https://www.digitalocean.com/
+If you haven't already, you need to start by creating an account at for Digital Ocean. You can do so [here](https://cloud.digitalocean.com/registrations/new).
 
-After you log in, create a new Droplet:
+## 2. Create your Digital Ocean Droplet
 
-1. Pick the latest Ubuntu Distribution. As of this writing it is 17.10.
-2. Pick a standard droplet. The 10$/mo droplet with 1 GB memory is a good starting point.
-3. Pick a region that is close to your end user. If this Prisma will be used for development, you should pick the region closest to you.
-4. Create an ssh key that you will use to connect to your droplet. Follow the guide provided by Digital Ocean.
-5. Set a name for your droplet. For example `prisma`
-6. Relax while your droplet is being created. This should take less than a minute.
+In this section we are going to walk through setting up a `Droplet`.
 
-## Installing Prisma
+![droplet-create](https://i.imgur.com/5IXcUVw.png)
 
-### Connect
+First pick the latest Ubuntu Distribution, as of this writing it is `18.04.1 x64`.
 
-Digital Ocean will show you the ip address. If you are using MacOS or Linux you can now connect like this:
+![distribution](https://i.imgur.com/vYTNX9q.png)
+
+Next pick a region that is close to your end user. You should pick the region closest to you. Set a name for your Droplet, `prisma` for example.
+
+![name](https://i.imgur.com/q1rXXe2.png)
+
+Relax while your Droplet is being created. This should take less than a minute.
+
+Once you have your Droplet available, you need to generate a key which is needed to connect to your Droplet
+
+Follow the instructions [here](https://www.digitalocean.com/docs/droplets/how-to/add-ssh-keys/) to generate your SSH key
+
+## 3. Install Prisma on your Droplet
+
+Digital Ocean will show you the IP address. If you are using MacOS or Linux you can now connect like this:
 
 ```sh
-ssh root@37.139.15.166
-
-# You can optionally specify the path to your ssh key:
-ssh root@37.139.15.166 -i /Users/demo/.ssh/id_rsa_do
+ssh root@__IP_ADDRESS__ -i /Users/.ssh/id_rsa_do
 ```
 
-### Install Docker & node & Prisma
+Adding our Droplet's IP address this looks like the following:
 
-You need to install both Docker and Docker Compose. Digital Ocean has a detailed guide for installation that you can find [here](https://www.digitalocean.com/community/tutorials/how-to-install-and-use-docker-on-ubuntu-16-04) and [here](https://www.digitalocean.com/community/tutorials/how-to-install-docker-compose-on-ubuntu-16-04).
+```sh
+ssh root@37.139.15.166 -i /Users/.ssh/id_rsa_do
+```
 
-For the quick path, execute these commands on your droplet:
+You need to install both Docker and Docker Compose. Digital Ocean has detailed guides for installation that you can find [here](https://www.digitalocean.com/community/tutorials/how-to-install-and-use-docker-on-ubuntu-16-04) and [here](https://www.digitalocean.com/community/tutorials/how-to-install-docker-compose-on-ubuntu-16-04).
+
+For the quick path, execute these commands on your Droplet:
 
 ```sh
 curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
 sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
 sudo apt-get update
 sudo apt-get install -y docker-ce
-sudo curl -L https://github.com/docker/compose/releases/download/1.18.0/docker-compose-`uname -s`-`uname -m` -o /usr/local/bin/docker-compose
+sudo curl -L https://github.com/docker/compose/releases/download/1.22.0/docker-compose-`uname -s`-`uname -m` -o /usr/local/bin/docker-compose
 ```
 
-Install node:
+Install Node.JS:
 
 ```sh
-curl -sL https://deb.nodesource.com/setup_8.x | sudo -E bash -
+curl -sL https://deb.nodesource.com/setup_10.x | sudo -E bash -
 sudo apt-get install -y nodejs
 ```
 
-Install Prisma:
+Install the Prisma CLI:
 
 ```sh
 npm -g install prisma
-prisma local start
 ```
 
-Prisma is now installed and running. At this point you should verify that everything is running correctly.
+The Prisma CLI is now installed on your Digital Ocean Droplet. Next, you need to configure and start the Prisma server.
 
-### Verify Prisma Installation
+## 4. Start the Prisma server
 
-Verify that the correct docker containers are running:
+In this section you're going to setup the infrastructure needed to deploy the Prisma service to the Droplet.
+
+In your Droplet, create a `docker-compose.yml` file
 
 ```sh
-> docker ps
-CONTAINER ID        IMAGE                                COMMAND                  CREATED             STATUS              PORTS                    NAMES
-e5d2e028eba9        prismagraphql/prisma:1.0.0   "/app/bin/single-ser…"   51 seconds ago      Up 49 seconds       0.0.0.0:4466->4466/tcp   prisma
-42d9d5acd0e4        mysql:5.7                            "docker-entrypoint.s…"   51 seconds ago      Up 49 seconds       0.0.0.0:3306->3306/tcp   prisma-db
+touch docker-compose.yml
 ```
 
-Run `prisma cluster list` and verify that the local cluster is in the output.
-
-Finally, connect to the `/cluster` endpoint in a browser. If your droplet has the ip `37.139.15.166` open the following webpage: `http://37.139.15.166:4466/cluster`
-
-If a GraphQL Playground shows up, your Prisma cluster is set up correctly.
-
-### Connect and Deploy a Service
-
-Your Prisma cluster is secured by a public/private keypair. In order to connect with the `prisma` CLI on your local machine, you need to configure security settings.
-
-#### Copy cluster configuration from server
-
-On your digital ocean droplet, copy the clusterSecret for the `local` cluster:
-
-```sh
-> cat ~/.prisma/config.yml
-clusters:
-  local:
-    host: 'http://localhost:4466'
-    clusterSecret: "-----BEGIN RSA PRIVATE KEY----- [ long key omitted ] -----END RSA PRIVATE KEY-----\r\n"
-```
-
-#### Add new cluster in local configuration
-
-On your local development machine open `~/.prisma/config.yml` in your favourite editor. It is likely that you already have one or more clusters defined in this file. Add another cluster and give it a descriptive name. For example `do-cluster`:
+In this file, add the configuration below:
 
 ```yml
-clusters:
-  local:
-    host: 'http://localhost:4466'
-    clusterSecret: "-----BEGIN RSA PRIVATE KEY----- [ long key omitted ] -----END RSA PRIVATE KEY-----\r\n"
-  do-cluster:
-    host: 'http://37.139.15.166:4466'
-    clusterSecret: "-----BEGIN RSA PRIVATE KEY----- [ long key omitted ] -----END RSA PRIVATE KEY-----\r\n"
+version: '3'
+services:
+  prisma:
+    image: prismagraphql/prisma:1.12
+    restart: always
+    ports:
+    - "4466:4466"
+    environment:
+      PRISMA_CONFIG: |
+        port: 4466
+        managementApiSecret: my-secret
+        databases:
+          default:
+            connector: mysql
+            host: mysql
+            port: 3306
+            user: root
+            password: prisma
+            migrations: true
+  mysql:
+    image: mysql:5.7
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: prisma
+    volumes:
+      - mysql:/var/lib/mysql
+volumes:
+  mysql:
 ```
 
-Change the host to use the ip of your Digital Ocean droplet.
+The `managementApiSecret` is used to secure your Prisma server. It is specified in the server's Docker configuration and later used by the Prisma CLI to authenticate its requests against the server.
 
-#### Deploy a service
-
-On your local machine, verify that the cluster configuration is being picked up correctly:
+Now run the following command in your terminal:
 
 ```sh
-prisma cluster list
+docker-compose up -d
 ```
 
-The output should include your newly added cluster.
-
-Now you can create a new service and deploy it to the cluster:
+This will fetch the Docker images for both `prisma` and `mysql`. To verify that the Docker containers are running, run the following command:
 
 ```sh
-prisma init
+docker ps
+```
+
+```sh
+CONTAINER ID        IMAGE                       COMMAND                  CREATED             STATUS              PORTS                    NAMES
+24f4dd6222b1        prismagraphql/prisma:1.12   "/bin/sh -c /app/sta…"   15 seconds ago      Up 1 second         0.0.0.0:4466->4466/tcp   root_prisma_1
+d8cc3a393a9f        mysql:5.7                   "docker-entrypoint.s…"   15 seconds ago      Up 13 seconds       3306/tcp                 root_mysql_1
+```
+
+## 5. Deploy the Service
+
+Now that your Prisma server and its database are running via Docker, you will deploy the Prisma service.
+
+We are going to bootstrap a new Prisma service via `prisma init`.
+
+On your local machine ,run the following command in your terminal:
+
+```sh
+prisma init hello-world
+```
+
+Following the interactive prompt, select `Use other server`. Enter the IP of the digital ocean Droplet, a `service name` for your Prisma service, a `service stage`, and follow the prompt for adding the management secret.
+
+This command should output:
+
+```sh
+Created 3 new files:
+
+prisma.yml           Prisma service definition
+datamodel.graphql    GraphQL SDL-based datamodel (foundation for database)
+.env                 Env file including PRISMA_API_MANAGEMENT_SECRET
+```
+
+Next navigate into the `hello-world` directory that was generated from `prisma init` and deploy your Prisma service with the following commands:
+
+```sh
+cd hello-world
+
 prisma deploy
 ```
 
-Pick the new cluster in the deployment option. You should see output similar to this:
-
 ```sh
-Added cluster: do-cluster to prisma.yml
-Creating stage dev for service demo ✔
-Deploying service `demo` to stage `dev` on cluster `do-cluster` 1.3s
+Creating stage default for service default ✔
+Deploying service `default` to stage `default` to server `default` 653ms
 
 Changes:
 
@@ -157,14 +186,36 @@ Changes:
   + Created field `updatedAt` of type `DateTime!`
   + Created field `createdAt` of type `DateTime!`
 
-Applying changes 1.8s
+Applying changes 1.2s
 
-Hooks:
+Your Prisma GraphQL database endpoint is live:
 
-Running $ graphql prepare...
+  HTTP:  http://37.139.15.166:4466
+  WS:    ws://37.139.15.166:4466
+```
 
-Your Prisma database service endpoint is live:
+Connect to the `/management` endpoint in a browser. For example, if your Droplet has the IP address of 37.139.15.166 open the following webpage: http://37.139.15.166:4466/management. If a GraphQL Playground shows up, your Prisma server is set up correctly.
 
-  HTTP:  http://37.139.15.166:4466/demo/dev
-  WS:    ws://37.139.15.166:4466/demo/dev
+Finally, connect to the `/` endpoint in a browser. For example, if your Droplet has the IP address of 37.139.15.166 open the following webpage: http://37.139.15.166:4466. You can now explore the GraphQL API of your Prisma service.
+
+You can send the following mutation in GraphQL Playground to create a new user:
+
+```graphql
+mutation {
+  createUser(data: { name: "Alice" }) {
+    id
+    name
+  }
+}
+```
+
+With the newly created `User`, run a query by it's `id`:
+
+```graphql
+query {
+  user(where: { id: "cjkar2d62000k0847xuh4g70o"}) {
+    id
+    name
+  }
+}
 ```

@@ -37,7 +37,7 @@ export default class Seed extends Command {
       cluster!,
       serviceName,
       this.definition.stage,
-      this.definition.getWorkspace() || '*',
+      this.definition.getWorkspace(),
     )
 
     const seed = this.definition.definition!.seed

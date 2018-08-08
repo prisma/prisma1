@@ -28,7 +28,7 @@ services:
             password: prisma
             migrations: true
             managementSchema: management
-            database: prisma
+            database: root
   postgres:
     image: postgres
     restart: always

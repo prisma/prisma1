@@ -1,7 +1,7 @@
 package com.prisma.api.schema
 
 import com.prisma.api.connector.LogicalKeyWords._
-import com.prisma.api.connector._
+import com.prisma.api.connector.{TrueFilter, _}
 import com.prisma.api.mutations.BatchPayload
 import com.prisma.api.resolver.DeferredTypes._
 import com.prisma.api.resolver.{IdBasedConnection, IdBasedConnectionDefinition}
@@ -211,8 +211,11 @@ class ObjectTypeBuilder(
           case value: Map[_, _] if isManyRelationFilter(filterName = "_some")                    => relationFilter(value, AtLeastOneRelatedNode)
           case value: Map[_, _] if isManyRelationFilter(filterName = "_none")                    => relationFilter(value, NoRelatedNode)
           case value: Map[_, _] if isRelationFilter(filterName = "")                             => relationFilter(value, NoRelationCondition)
+          case Seq() if filter.name == "AND"                                                     => TrueFilter
           case value: Seq[Any] if isFilterList(value, filterName = "AND")                        => AndFilter(generateSubFilters(value))
+          case Seq() if filter.name == "OR"                                                      => FalseFilter
           case value: Seq[Any] if isFilterList(value, filterName = "OR")                         => OrFilter(generateSubFilters(value))
+          case Seq() if filter.name == "NOT"                                                     => TrueFilter
           case value: Seq[Any] if isFilterList(value, filterName = "NOT")                        => NotFilter(generateSubFilters(value))
           case value: Seq[Any] if isFilterList(value, filterName = "node")                       => NodeFilter(generateSubFilters(value))
           //--------------------------ANCHORS------------------------------
@@ -236,7 +239,7 @@ class ObjectTypeBuilder(
           case value if isScalarNonListFilter(filterName = "_gt")                     => scalarFilter(GreaterThan(getGCValue(value)))
           case value if isScalarNonListFilter(filterName = "_gte")                    => scalarFilter(GreaterThanOrEquals(getGCValue(value)))
           case _ if isOneRelationFilter(filterName = "")                              => OneRelationIsNullFilter(asRelationField)
-          case value: Boolean if field.isEmpty && filter.name == "boolean"            => PreComputedSubscriptionFilter(value)
+          case value: Boolean if field.isEmpty && filter.name == "boolean"            => if (value) TrueFilter else FalseFilter
           case None if field.isDefined                                                => NodeSubscriptionFilter()
           case null if field.isDefined && field.get.isList && field.get.isRelation    => throw APIErrors.FilterCannotBeNullOnToManyField(field.get.name)
           case x                                                                      => sys.error("Missing case " + x)

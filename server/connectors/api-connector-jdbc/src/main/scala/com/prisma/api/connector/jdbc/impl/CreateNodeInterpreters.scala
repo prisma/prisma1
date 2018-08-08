@@ -3,15 +3,15 @@ package com.prisma.api.connector.jdbc.impl
 import java.sql.SQLIntegrityConstraintViolationException
 
 import com.prisma.api.connector._
-import com.prisma.api.connector.jdbc.{NestedDatabaseMutactionInterpreter, TopLevelDatabaseMutactionInterpreter}
 import com.prisma.api.connector.jdbc.database.JdbcActionsBuilder
+import com.prisma.api.connector.jdbc.{NestedDatabaseMutactionInterpreter, TopLevelDatabaseMutactionInterpreter}
 import com.prisma.api.schema.APIErrors
 import com.prisma.gc_values.{IdGCValue, RootGCValue}
 import com.prisma.shared.models.Manifestations.InlineRelationManifestation
 import org.postgresql.util.PSQLException
+import slick.dbio._
 
 import scala.concurrent.ExecutionContext
-import slick.dbio._
 
 case class CreateNodeInterpreter(
     mutaction: CreateNode,
@@ -23,7 +23,7 @@ case class CreateNodeInterpreter(
   override def dbioAction(mutationBuilder: JdbcActionsBuilder): DBIO[DatabaseMutactionResult] = {
     for {
       id <- mutationBuilder.createNode(model, mutaction.nonListArgs)
-      _  <- mutationBuilder.setScalarListValuesByNodeId(model, id, mutaction.listArgs)
+      _  <- mutationBuilder.createScalarListValuesForNodeId(model, id, mutaction.listArgs)
       _  <- if (includeRelayRow) mutationBuilder.createRelayId(model, id) else DBIO.successful(())
     } yield CreateNodeResult(id, mutaction)
   }
@@ -56,7 +56,7 @@ case class NestedCreateNodeInterpreter(
     for {
       _  <- DBIO.seq(requiredCheck(parentId), removalAction(parentId))
       id <- createNodeAndConnectToParent(mutationBuilder, parentId)
-      _  <- mutationBuilder.setScalarListValuesByNodeId(model, id, mutaction.listArgs)
+      _  <- mutationBuilder.createScalarListValuesForNodeId(model, id, mutaction.listArgs)
       _  <- if (includeRelayRow) mutationBuilder.createRelayId(model, id) else DBIO.successful(())
     } yield CreateNodeResult(id, mutaction)
   }

@@ -12,6 +12,7 @@ trait JdbcExtensions {
   import JdbcExtensionsValueClasses._
 
   def currentSqlTimestampUTC: Timestamp = jodaDateTimeToSqlTimestampUTC(DateTime.now(DateTimeZone.UTC))
+  def currentDateTimeGCValue            = DateTimeGCValue(DateTime.now(DateTimeZone.UTC))
 
   implicit def preparedStatementExtensions(ps: PreparedStatement): PreparedStatementExtensions = new PreparedStatementExtensions(ps)
   implicit def resultSetExtensions(resultSet: ResultSet): ResultSetExtensions                  = new ResultSetExtensions(resultSet)
