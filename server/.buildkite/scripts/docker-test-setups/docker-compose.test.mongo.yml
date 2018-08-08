@@ -32,7 +32,7 @@ services:
       MONGO_INITDB_ROOT_USERNAME: prisma
       MONGO_INITDB_ROOT_PASSWORD: prisma
     ports:
-      - "127.0.0.1:27017:27017"
+      - "27017"
 
   rabbit:
     image: rabbitmq:3.7.2-management
