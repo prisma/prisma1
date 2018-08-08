@@ -38,23 +38,23 @@ dokku apps:create prisma-server
 
 ### Create the backing service
 
-Dokku by default does not provide any datastores such as MySQL or PostgreSQL. You will need to install plugins to handle that, but fortunately Dokku has official plugins for common datastores.
+Dokku by default does not provide any datastores such as MySQL or PostgreSQL. You will need to install plugins to handle that, but fortunately [Dokku has official plugins for common datastores.](http://dokku.viewdocs.io/dokku/community/plugins/#official-plugins-beta)
 
-### Install the postgres plugin and create service
+### Install the Postgres plugin and create a service
 
 ```bash
 # on the Dokku host
-# install the postgres plugin
-# plugin installation requires root, hence the user change
+# install the Postgres plugin
+# Plugin installation requires root, hence the user change
 sudo dokku plugin:install https://github.com/dokku/dokku-postgres.git
 
-# create a postgres service with the name prisma-server-db
+# create a Postgres service with the name prisma-server-db
 dokku postgres:create prisma-server-db
 ```
 
 You`ll see an output like that, once your server was created:
 
-```shell
+<pre><code>
        Waiting for container to be ready
        Creating container database
        Securing connection to database
@@ -62,7 +62,7 @@ You`ll see an output like that, once your server was created:
 =====> Container Information
        Config dir:          /var/lib/dokku/services/postgres/tst/config
        Data dir:            /var/lib/dokku/services/postgres/tst/data
-       Dsn:                 postgres://postgres:bd793d8a330715891698434697a0345b@dokku-postgres-prisma-server-db:5432/prisma-server-db
+       <b>Dsn:                 postgres://postgres:bd793d8a330715891698434697a0345b@dokku-postgres-prisma-server-db:5432/prisma-server-db</b>
        Exposed ports:       -
        Id:                  df03bfa7ca9ae3d42857dc5db2d98542542c5f4482fd2d269cf86ad663bcb2fe
        Internal ip:         172.17.0.5
@@ -70,7 +70,7 @@ You`ll see an output like that, once your server was created:
        Service root:        /var/lib/dokku/services/postgres/tst
        Status:              running
        Version:             postgres:10.2
-```
+</pre></code>
 
 The important part of that output is the Dsn. We'll need it later for setting up the prisma server!
 
@@ -110,12 +110,11 @@ databases:
         user: postgres
         password: bd793d8a330715891698434697a0345b
         migrations: true
-        active: true
 ```
 
-### Deploy the prisma server
+### Deploy the Prisma server
 
-Now you can deploy the prisma server to your Dokku server. All you have to do is initialize a git project and add a remote to the app.
+Now you can deploy the Prisma server to your Dokku server. All you have to do is initialize a git project and add a remote to the app.
 
 ```bash
 # from your local machine, inside your project folder
@@ -127,9 +126,9 @@ git remote add dokku dokku@YOUR_DOKKU_HOST:prisma-server
 git push --set-upstream dokku master
 ```
 
-### Access your new deployed prisma server
+### Access your new deployed Prisma server
 
-The prisma playground should be accessible at http://YOUR_DOKKU_HOST:4466 after dokku deployed your app!
+The GraphQL Playground should be accessible at http://YOUR_DOKKU_HOST:4466 after dokku deployed your app!
 
 ## Author
 
