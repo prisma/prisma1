@@ -234,7 +234,7 @@ The Prisma database schema which defines the full CRUD API for your database is 
 
 <InfoBox>
 
-💡 **Pro tip**: If you want you want the Prisma database schema to update automatically every time you deploy changes to your Prisma services (e.g. an update to the data model), you can add the following post-deployment [hook](!alias-ufeshusai8#hooks-optional) to your `prisma.yml` file:
+💡 **Pro tip**: If you want the Prisma database schema to update automatically every time you deploy changes to your Prisma services (e.g. an update to the data model), you can add the following post-deployment [hook](!alias-ufeshusai8#hooks-optional) to your `prisma.yml` file:
 
 ```yml
 hooks:
