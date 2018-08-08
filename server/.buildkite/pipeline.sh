@@ -18,7 +18,7 @@ static=$(printf "    - label: \":mysql: MySql API connector\"
     - label: \":mysql: MySql deploy connector\"
       command: cd server && ./.buildkite/scripts/test.sh deploy-connector-mysql mysql
 
-    - label: \":scala: integration-tests-mysql\"
+    - label: \":mysql: integration-tests-mysql\"
       command: cd server && ./.buildkite/scripts/test.sh integration-tests-mysql mysql
 
     - label: \":postgres: Postgres API connector\"
@@ -27,7 +27,7 @@ static=$(printf "    - label: \":mysql: MySql API connector\"
     - label: \":postgres: Postgres deploy connector\"
       command: cd server && ./.buildkite/scripts/test.sh deploy-connector-postgres postgres
 
-    - label: \":scala: integration-tests-postgres\"
+    - label: \":postgres: integration-tests-postgres\"
       command: cd server && ./.buildkite/scripts/test.sh integration-tests-mysql postgres
 
     - label: \":piedpiper: MongoDB API connector\"
@@ -36,7 +36,7 @@ static=$(printf "    - label: \":mysql: MySql API connector\"
     - label: \":piedpiper: MongoDB deploy connector\"
       command: cd server && ./.buildkite/scripts/test.sh deploy-connector-mongo mongo
 
-    - label: \":scala: integration-tests-mongodb\"
+    - label: \":piedpiper: integration-tests-mongodb\"
       command: cd server && ./.buildkite/scripts/test.sh integration-tests-mysql mongo
 
     # Libs are not specific to a connector, simply run with mysql
