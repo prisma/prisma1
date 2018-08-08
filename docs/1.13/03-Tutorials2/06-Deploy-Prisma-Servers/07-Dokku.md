@@ -29,7 +29,7 @@ You need to install an up-to-date version of Dokku on your system of choice. You
 
 ### Create the app
 
-Create the application on the Dokku host. You will need to ssh onto the host to run this command.
+Create the application on the Dokku host. You will need to `ssh` onto the host to run this command.
 
 ```bash
 # on the Dokku host
