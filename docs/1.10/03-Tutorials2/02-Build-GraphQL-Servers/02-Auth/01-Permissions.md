@@ -40,7 +40,7 @@ graphql create permissions-example --boilerplate node-advanced
 
 <Instruction>
 
-When prompted where (i.e. to which _cluster_) to deploy your Prisma service, choose one of the _public cluster_ options: `prisma-eu1` or `prisma-us1`.
+In the output you'll be given a public endpoint which will look like `https://eu1.prisma.sh/public-example-123/permissions-example/dev`.
 
 </Instruction>
 
