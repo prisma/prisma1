@@ -7,7 +7,7 @@ import com.prisma.shared.models.{Project, ProjectIdEncoder}
 import scala.concurrent.{ExecutionContext, Future}
 
 case class MongoApiConnector(config: DatabaseConfig)(implicit ec: ExecutionContext) extends ApiConnector {
-  lazy val database = MongoDatabasesFactory.database
+  lazy val database = MongoDatabasesFactory.initialize(config)
 
   override def databaseMutactionExecutor: DatabaseMutactionExecutor = new MongoDatabaseMutactionExecutor(database)
 
