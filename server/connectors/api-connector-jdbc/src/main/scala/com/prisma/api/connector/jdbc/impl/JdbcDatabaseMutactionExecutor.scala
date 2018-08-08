@@ -10,7 +10,8 @@ import scala.concurrent.{ExecutionContext, Future}
 
 case class JdbcDatabaseMutactionExecutor(
     slickDatabase: SlickDatabase,
-    isActive: Boolean
+    isActive: Boolean,
+    schemaName: Option[String]
 )(implicit ec: ExecutionContext)
     extends DatabaseMutactionExecutor {
   import slickDatabase.profile.api._
@@ -20,7 +21,7 @@ case class JdbcDatabaseMutactionExecutor(
   override def executeNonTransactionally(mutaction: TopLevelDatabaseMutaction) = execute(mutaction, transactionally = false)
 
   private def execute(mutaction: TopLevelDatabaseMutaction, transactionally: Boolean): Future[MutactionResults] = {
-    val actionsBuilder = JdbcActionsBuilder(schemaName = mutaction.project.id, slickDatabase)
+    val actionsBuilder = JdbcActionsBuilder(schemaName = schemaName.getOrElse(mutaction.project.id), slickDatabase)
     val singleAction = transactionally match {
       case true  => executeTopLevelMutaction(mutaction, actionsBuilder).transactionally
       case false => executeTopLevelMutaction(mutaction, actionsBuilder)
