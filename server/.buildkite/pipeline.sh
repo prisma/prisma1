@@ -31,10 +31,10 @@ static=$(printf "    - label: \":mysql: MySql API connector\"
       command: cd server && ./.buildkite/scripts/test.sh integration-tests-mysql postgres
 
     - label: \":piedpiper: MongoDB API connector\"
-      command: cd server && ./.buildkite/scripts/test.sh api-connector-postgres mongo
+      command: cd server && ./.buildkite/scripts/test.sh api-connector-mongo mongo
 
     - label: \":piedpiper: MongoDB deploy connector\"
-      command: cd server && ./.buildkite/scripts/test.sh deploy-connector-postgres mongo
+      command: cd server && ./.buildkite/scripts/test.sh deploy-connector-mongo mongo
 
     - label: \":scala: integration-tests-mongodb\"
       command: cd server && ./.buildkite/scripts/test.sh integration-tests-mysql mongo
