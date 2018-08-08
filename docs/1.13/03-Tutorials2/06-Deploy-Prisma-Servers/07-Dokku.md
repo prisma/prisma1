@@ -1,5 +1,5 @@
 ---
-alias: mohj5eiwot
+alias: zie0ahhaox
 description: Learn how to deploy Prisma servers to Dokku.
 ---
 
