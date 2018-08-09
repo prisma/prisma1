@@ -1,0 +1,13 @@
+enum KubernetesRating {
+  COOL
+  SO_UNCOOL_BRO
+  TOTALLY_RAD_MAN
+  WHAT_IS_THIS_THING
+}
+
+type Rating @model {
+  createdAt: DateTime!
+  id: ID! @isUnique
+  rating: KubernetesRating!
+  updatedAt: DateTime!
+}

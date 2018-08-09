@@ -1,0 +1,37 @@
+# Welcome to Graphcool!
+#
+# This file is the main config file for your Graphcool Service.
+# It's very minimal at this point and uses default values.
+# We've included a hello world function here.
+# Just run `graphcool deploy` to have the first running Graphcool Service.
+#
+# Check out some examples:
+#    https://github.com/graphcool/graphcool/tree/master/examples
+#
+# Here are the reference docs of this definition format:
+# https://docs-next.graph.cool/reference/service-definition/graphcool.yml-foatho8aip
+#
+# Happy Coding!
+
+
+# In the types.graphql you define your data schema
+types: ./types.graphql
+
+
+# functions:
+
+
+# Model/Relation permissions are used to limit the API access
+# To take the burden of thinking about those while development, we
+# preconfigured the wildcard ("*") permission that allows everything
+# Read more here:
+# https://docs-next.graph.cool/reference/auth/authorization/overview-iegoo0heez
+permissions:
+  - operation: "*"
+
+
+# Your root tokens used for functions to get full access to the API
+# Read more here:
+# https://docs-next.graph.cool/reference/auth/authentication/authentication-tokens-eip7ahqu5o
+rootTokens:
+  - editor

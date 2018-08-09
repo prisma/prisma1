@@ -1,0 +1,25 @@
+{
+  "compilerOptions": {
+    "lib": ["es6", "esnext.asynciterable"],
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "target": "es2015",
+
+    "outDir": "build",
+    "rootDir": "gateway",
+    "sourceMap": true,
+
+    "allowJs": true,
+    "forceConsistentCasingInFileNames": true,
+    "strictNullChecks": true,
+    "suppressImplicitAnyIndexErrors": true,
+    "noImplicitReturns": true,
+    "noImplicitThis": true,
+    "noImplicitAny": false,
+    "noUnusedLocals": true
+  },
+  "exclude": [
+    "node_modules",
+    "build"
+  ]
+}

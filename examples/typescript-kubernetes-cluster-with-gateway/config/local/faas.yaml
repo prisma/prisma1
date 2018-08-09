@@ -1,0 +1,65 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: faas
+  labels:
+    app: local-graphcool-app
+    tier: faas
+spec:
+  type: NodePort
+  ports:
+    - port: 31050
+      nodePort: 31050
+  selector:
+    app: local-graphcool-app
+    tier: faas
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: faas-persistence-claim
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 2Gi
+  storageClassName: standard
+---
+apiVersion: apps/v1beta2
+kind: Deployment
+metadata:
+  name: faas
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: local-graphcool-app
+      tier: faas
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: local-graphcool-app
+        tier: faas
+    spec:
+      containers:
+        - name: faas
+          image: graphcool/localfaas:0.9.0
+          ports:
+            - containerPort: 31050
+          volumeMounts:
+            - mountPath: /var/faas
+              name: faas-persistence
+          env:
+            - name: FUNCTIONS_PORT
+              valueFrom:
+                secretKeyRef:
+                  name: env-secrets
+                  key: FUNCTIONS_PORT
+      restartPolicy: Always
+      volumes:
+        - name: faas-persistence
+          persistentVolumeClaim:
+            claimName: faas-persistence-claim
