@@ -7,20 +7,20 @@ import com.prisma.shared.models.{Project, ProjectIdEncoder}
 import scala.concurrent.{ExecutionContext, Future}
 
 case class MongoApiConnector(config: DatabaseConfig)(implicit ec: ExecutionContext) extends ApiConnector {
-  lazy val database = MongoDatabasesFactory.initialize(config)
+  lazy val client = MongoDatabasesFactory.initialize(config)
 
-  override def databaseMutactionExecutor: DatabaseMutactionExecutor = new MongoDatabaseMutactionExecutor(database)
+  override def databaseMutactionExecutor: DatabaseMutactionExecutor = new MongoDatabaseMutactionExecutor(client)
 
-  override def dataResolver(project: Project): DataResolver = new MongoDataResolver(project, database)
+  override def dataResolver(project: Project): DataResolver = new MongoDataResolver(project, client)
 
-  override def masterDataResolver(project: Project): DataResolver = new MongoDataResolver(project, database)
+  override def masterDataResolver(project: Project): DataResolver = new MongoDataResolver(project, client)
 
   override def projectIdEncoder: ProjectIdEncoder = ???
 
   override def capabilities: Vector[ApiConnectorCapability] = Vector.empty
 
   override def initialize(): Future[Unit] = {
-    database
+    client
     Future.unit
   }
 

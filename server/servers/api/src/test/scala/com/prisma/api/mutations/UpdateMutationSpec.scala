@@ -1,6 +1,5 @@
 package com.prisma.api.mutations
 
-import com.prisma.IgnoreMySql
 import com.prisma.api.ApiSpecBase
 import com.prisma.api.util.TroubleCharacters
 import com.prisma.shared.schema_dsl.SchemaDsl

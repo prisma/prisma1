@@ -8,12 +8,14 @@ import org.bson.BsonString
 import org.joda.time.DateTime
 import org.mongodb.scala.bson.{BsonBoolean, BsonDateTime, BsonDouble, BsonInt32, BsonNull, BsonValue}
 import org.mongodb.scala.model.Filters
-import org.mongodb.scala.{Document, MongoCollection, MongoDatabase}
+import org.mongodb.scala.{Document, MongoClient, MongoCollection, MongoDatabase}
 import play.api.libs.json.Json
 
 import scala.concurrent.{ExecutionContext, Future}
 
-case class MongoDataResolver(project: Project, database: MongoDatabase)(implicit ec: ExecutionContext) extends DataResolver {
+case class MongoDataResolver(project: Project, client: MongoClient)(implicit ec: ExecutionContext) extends DataResolver {
+  val database = client.getDatabase(project.id)
+
   override def getModelForGlobalId(globalId: CuidGCValue): Future[Option[Model]] = ???
 
   override def getNodeByWhere(where: NodeSelector, selectedFields: SelectedFields): Future[Option[PrismaNode]] = {

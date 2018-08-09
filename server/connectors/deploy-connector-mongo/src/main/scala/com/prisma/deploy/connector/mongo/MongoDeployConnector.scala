@@ -8,6 +8,9 @@ import org.joda.time.DateTime
 import scala.concurrent.{ExecutionContext, Future}
 
 case class MongoDeployConnector(config: DatabaseConfig)(implicit ec: ExecutionContext) extends DeployConnector {
+  lazy val internalDatabaseDefs = MongoInternalDatabaseDefs(config)
+  lazy val mongoClient          = internalDatabaseDefs.client
+
   override def isActive: Boolean = false
 
   override def projectPersistence: ProjectPersistence = ???
@@ -34,9 +37,13 @@ case class MongoDeployConnector(config: DatabaseConfig)(implicit ec: ExecutionCo
 
   override def shutdown(): Future[Unit] = Future.unit
 
-  override def createProjectDatabase(id: String): Future[Unit] = Future.unit
+  override def createProjectDatabase(id: String): Future[Unit] = { // This is a hack
+    mongoClient.getDatabase(id).listCollectionNames().toFuture().map(_ -> Unit)
+  }
 
-  override def deleteProjectDatabase(id: String): Future[Unit] = Future.unit
+  override def deleteProjectDatabase(id: String): Future[Unit] = {
+    mongoClient.getDatabase(id).drop().toFuture().map(_ -> Unit)
+  }
 
   override def getAllDatabaseSizes(): Future[Vector[DatabaseSize]] = Future.successful(Vector.empty)
 

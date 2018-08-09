@@ -12,7 +12,7 @@ class InternalTestDatabase extends AwaitUtils {
   import scala.concurrent.ExecutionContext.Implicits.global
 
   val config             = ConfigLoader.load()
-  val databaseDefs       = MysqlInternalDatabaseDefs(config.databases.head.copy(pooled = false))
+  val databaseDefs       = MySqlInternalDatabaseDefs(config.databases.head.copy(pooled = false))
   val managementDatabase = databaseDefs.managementDatabase
   val projectDatabase    = managementDatabase
 

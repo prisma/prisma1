@@ -15,7 +15,7 @@ import scala.concurrent.{ExecutionContext, Future}
 
 case class MySqlDeployConnector(config: DatabaseConfig)(implicit ec: ExecutionContext) extends DeployConnector {
   override def isActive         = true
-  lazy val internalDatabaseDefs = MysqlInternalDatabaseDefs(config)
+  lazy val internalDatabaseDefs = MySqlInternalDatabaseDefs(config)
   lazy val setupDatabase        = internalDatabaseDefs.setupDatabase
   lazy val managementDatabase   = internalDatabaseDefs.managementDatabase
   lazy val projectDatabase      = internalDatabaseDefs.managementDatabase

@@ -8,10 +8,6 @@ object MongoDatabasesFactory {
     val uri: String = s"mongodb://${config.user}:${config.password.getOrElse("")}@${config.host}:${config.port}/?authSource=admin"
     println(s"mongoUri: $uri")
 
-    val mongoClient: MongoClient = MongoClient(uri)
-
-    val database: MongoDatabase = mongoClient.getDatabase("test")
-
-    database
+    MongoClient(uri)
   }
 }
