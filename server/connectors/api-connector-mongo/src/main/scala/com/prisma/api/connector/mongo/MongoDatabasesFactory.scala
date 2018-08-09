@@ -8,6 +8,4 @@ object MongoDatabasesFactory {
   val mongoClient: MongoClient = MongoClient(uri)
 
   val database: MongoDatabase = mongoClient.getDatabase("test")
-  Thread.sleep(5000)
-
 }

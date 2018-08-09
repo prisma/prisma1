@@ -1,7 +1,5 @@
 package com.prisma.api.connector.mongo
 
-import java.sql.Timestamp
-
 import com.prisma.api.connector._
 import com.prisma.api.schema.APIErrors
 import com.prisma.gc_values._
@@ -9,8 +7,8 @@ import org.joda.time.{DateTime, DateTimeZone}
 import org.mongodb.scala.bson.conversions.Bson
 import org.mongodb.scala.bson.{BsonArray, BsonBoolean, BsonDateTime, BsonDouble, BsonInt32, BsonString, BsonTransformer, BsonValue}
 import org.mongodb.scala.model.Filters
-import org.mongodb.scala.{Document, MongoCollection, MongoDatabase, Observable}
 import org.mongodb.scala.model.Updates._
+import org.mongodb.scala.{Document, MongoCollection, MongoDatabase, Observable}
 
 import scala.concurrent.{ExecutionContext, Future}
 object GCBisonTransformer {
@@ -60,7 +58,7 @@ class MongoDatabaseMutactionExecutor(database: MongoDatabase)(implicit ec: Execu
     case m: TopLevelDeleteNode => DeleteNodeInterpreter(mutaction = m)
     case m: UpdateNodes        => ???
     case m: DeleteNodes        => ???
-    case m: ResetData          => ???
+    case m: ResetData          => ResetDataInterpreter(mutaction = m)
     case m: ImportNodes        => ???
     case m: ImportRelations    => ???
     case m: ImportScalarLists  => ???
@@ -136,6 +134,24 @@ class MongoDatabaseMutactionExecutor(database: MongoDatabase)(implicit ec: Execu
 
   }
 
+  def ResetDataInterpreter(mutaction: ResetData): Future[MutactionResults] = {
+    val project        = mutaction.project
+    val relationTables = project.relations.map(relationTable)
+    val modelTables    = project.models.map(modelTable)
+    val listTables     = project.models.flatMap(model => model.scalarListFields.map(scalarListTable))
+
+    val actions = (relationTables ++ listTables ++ Vector(relayTable) ++ modelTables).map { table =>
+      if (isMySql) {
+        truncateToDBIO(sql.truncate(table))
+      } else {
+        truncateToDBIO(sql.truncate(table).cascade())
+      }
+    }
+    val truncatesAction = DBIO.sequence(actions)
+
+  }
+
+  //Fixme the core could do the datetime stuff
   def currentDateTimeGCValue = DateTimeGCValue(DateTime.now(DateTimeZone.UTC))
 
 }
