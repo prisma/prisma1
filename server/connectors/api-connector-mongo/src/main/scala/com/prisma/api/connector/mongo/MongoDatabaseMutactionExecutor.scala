@@ -3,7 +3,7 @@ package com.prisma.api.connector.mongo
 import com.prisma.api.connector._
 import com.prisma.api.connector.mongo.database._
 import com.prisma.api.connector.mongo.impl.{CreateNodeInterpreter, DeleteNodeInterpreter, ResetDataInterpreter, UpdateNodeInterpreter}
-import com.prisma.gc_values.IdGCValue
+import com.prisma.gc_values.{CuidGCValue, IdGCValue}
 import org.mongodb.scala.{MongoClient, MongoDatabase}
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -16,52 +16,56 @@ class MongoDatabaseMutactionExecutor(client: MongoClient)(implicit ec: Execution
 
   private def execute(mutaction: TopLevelDatabaseMutaction, transactionally: Boolean): Future[MutactionResults] = {
     val actionsBuilder = MongoActionsBuilder(mutaction.project.id, client)
-    executeTopLevelMutaction(actionsBuilder.database, mutaction, actionsBuilder)
+    val action         = generateTopLevelMutaction(actionsBuilder.database, mutaction, actionsBuilder)
+
+    run(actionsBuilder.database, action)
   }
 
-  def executeTopLevelMutaction(
+  def generateTopLevelMutaction(
       database: MongoDatabase,
       mutaction: TopLevelDatabaseMutaction,
       mutationBuilder: MongoActionsBuilder
-  ): Future[MutactionResults] = {
+  ): MongoAction[MutactionResults] = {
     mutaction match {
       case m: FurtherNestedMutaction =>
         for {
-          result <- interpreterFor(m).mongoAction(mutationBuilder).fn(database)
+          result <- interpreterFor(m).mongoAction(mutationBuilder)
           childResults <- result match {
                            case result: FurtherNestedMutactionResult =>
-                             Future.sequence(m.allNestedMutactions.map(executeNestedMutaction(database, _, result.id, mutationBuilder)))
-                           case _ => Future.successful(Vector.empty)
+                             val x = m.allNestedMutactions.map(x => generateNestedMutaction(database, x, result.id, mutationBuilder))
+                             MongoAction.seq(x)
+                           case _ => MongoAction.successful(Vector.empty)
                          }
         } yield MutactionResults(result, childResults)
 
       case m: FinalMutaction =>
         for {
-          result <- interpreterFor(m).mongoAction(mutationBuilder).fn(database)
+          result <- interpreterFor(m).mongoAction(mutationBuilder)
         } yield MutactionResults(result, Vector.empty)
 
       case _ => sys.error("not implemented yet")
     }
   }
 
-  def executeNestedMutaction(database: MongoDatabase,
-                             mutaction: NestedDatabaseMutaction,
-                             parentId: IdGCValue,
-                             mutationBuilder: MongoActionsBuilder): Future[MutactionResults] = {
+  def generateNestedMutaction(database: MongoDatabase,
+                              mutaction: NestedDatabaseMutaction,
+                              parentId: IdGCValue,
+                              mutationBuilder: MongoActionsBuilder): MongoAction[MutactionResults] = {
     mutaction match {
       case m: FurtherNestedMutaction =>
         for {
-          result <- interpreterFor(m).mongoAction(mutationBuilder, parentId).fn(database)
+          result <- interpreterFor(m).mongoAction(mutationBuilder, parentId)
           childResults <- result match {
                            case result: FurtherNestedMutactionResult =>
-                             Future.sequence(m.allNestedMutactions.map(executeNestedMutaction(database, _, result.id, mutationBuilder)))
-                           case _ => Future.successful(Vector.empty)
+                             val x = m.allNestedMutactions.map(x => generateNestedMutaction(database, x, result.id, mutationBuilder))
+                             MongoAction.seq(x)
+                           case _ => MongoAction.successful(Vector.empty)
                          }
         } yield MutactionResults(result, childResults)
 
       case m: FinalMutaction =>
         for {
-          result <- interpreterFor(m).mongoAction(mutationBuilder, parentId).fn(database)
+          result <- interpreterFor(m).mongoAction(mutationBuilder, parentId)
         } yield MutactionResults(result, Vector.empty)
 
       case _ => sys.error("not implemented yet")
@@ -90,27 +94,41 @@ class MongoDatabaseMutactionExecutor(client: MongoClient)(implicit ec: Execution
     case m: NestedDisconnect => ???
   }
 
-}
-
 //Slick replacement ideas
 
-//  def run[S, A](database: MongoDatabase, action: MongoAction[S, A]): Future[A] = {
-//    action match {
-//      case SuccessAction(value) =>
-//        Future.successful(value)
-//
-//      case SimpleMongoAction(fn) =>
-//        fn(database)
-//
-//      case FlatMapAction(source, fn) =>
-//        for {
-//          result     <- run(database, source)
-//          nextResult <- run(database, fn(result))
-//        } yield nextResult
-//
-//      case MapAction(source, fn) =>
-//        for {
-//          result <- run(database, source)
-//        } yield fn(result)
-//    }
-//  }
+  def run[A](database: MongoDatabase, action: MongoAction[A]): Future[A] = {
+    action match {
+      case SuccessAction(value) =>
+        Future.successful(value)
+
+      case SimpleMongoAction(fn) =>
+        fn(database)
+
+      case FlatMapAction(source, fn) =>
+        for {
+          result     <- run(database, source)
+          nextResult <- run(database, fn(result))
+        } yield nextResult
+
+      case MapAction(source, fn) =>
+        for {
+          result <- run(database, source)
+        } yield fn(result)
+
+      case SequenceAction(actions) =>
+        sequence(database, actions)
+
+    }
+  }
+
+  def sequence[A](database: MongoDatabase, actions: Vector[MongoAction[A]]): Future[Vector[A]] = {
+    if (actions.isEmpty) {
+      Future.successful(Vector.empty)
+    } else {
+      for {
+        headResult  <- run(database, actions.head)
+        nextResults <- sequence(database, actions.tail)
+      } yield headResult +: nextResults
+    }
+  }
+}

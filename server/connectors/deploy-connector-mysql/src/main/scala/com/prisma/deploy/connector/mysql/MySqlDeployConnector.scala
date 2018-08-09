@@ -2,7 +2,7 @@ package com.prisma.deploy.connector.mysql
 
 import com.prisma.config.DatabaseConfig
 import com.prisma.deploy.connector._
-import com.prisma.deploy.connector.mysql.database.{MySqlDeployDatabaseMutationBuilder, MysqlInternalDatabaseSchema, TelemetryTable}
+import com.prisma.deploy.connector.mysql.database.{MySqlDeployDatabaseMutationBuilder, MySqlInternalDatabaseSchema, TelemetryTable}
 import com.prisma.deploy.connector.mysql.impls._
 import com.prisma.shared.models.{Project, ProjectIdEncoder}
 import org.joda.time.DateTime
@@ -55,7 +55,7 @@ case class MySqlDeployConnector(config: DatabaseConfig)(implicit ec: ExecutionCo
 
   override def initialize(): Future[Unit] = {
     setupDatabase
-      .run(MysqlInternalDatabaseSchema.createSchemaActions(internalDatabaseDefs.managementSchemaName, recreate = false))
+      .run(MySqlInternalDatabaseSchema.createSchemaActions(internalDatabaseDefs.managementSchemaName, recreate = false))
       .flatMap(_ => internalDatabaseDefs.setupDatabase.shutdown)
   }
 
