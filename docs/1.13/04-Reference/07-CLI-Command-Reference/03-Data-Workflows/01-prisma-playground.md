@@ -5,9 +5,7 @@ description: Open the GraphQL Playground
 
 # `prisma playground`
 
-Open a [GraphQL Playground](https://github.com/graphcool/graphql-playground) for the current service. By default, this open the Desktop version of the Playground (if installed). The browser-based Playground can be forced by passing the `--web` flag.
-
-The Playground is running on port 3000.
+Open a [GraphQL Playground](https://github.com/graphcool/graphql-playground) for the current service. By default, this open the Desktop version of the Playground (if installed). The browser-based Playground can be forced by passing the `--web` flag. The Playground is running on port `3000`.
 
 #### Usage
 
