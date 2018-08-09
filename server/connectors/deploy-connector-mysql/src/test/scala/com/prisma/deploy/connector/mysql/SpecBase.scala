@@ -1,6 +1,6 @@
 package com.prisma.deploy.connector.mysql
 
-import com.prisma.deploy.connector.mysql.impls.{MysqlMigrationPersistence, MysqlProjectPersistence}
+import com.prisma.deploy.connector.mysql.impls.{MySqlMigrationPersistence, MySqlProjectPersistence}
 import com.prisma.shared.models._
 import com.prisma.utils.await.AwaitUtils
 import cool.graph.cuid.Cuid
@@ -19,8 +19,8 @@ trait SpecBase extends BeforeAndAfterEach with BeforeAndAfterAll with AwaitUtils
       |}
     """.stripMargin.trim()
 
-  val projectPersistence   = MysqlProjectPersistence(internalDb.managementDatabase)
-  val migrationPersistence = MysqlMigrationPersistence(internalDb.managementDatabase)
+  val projectPersistence   = MySqlProjectPersistence(internalDb.managementDatabase)
+  val migrationPersistence = MySqlMigrationPersistence(internalDb.managementDatabase)
 
   def newTestProject(projectId: String = Cuid.createCuid()) = {
     Project(id = projectId, ownerId = Cuid.createCuid(), schema = Schema())

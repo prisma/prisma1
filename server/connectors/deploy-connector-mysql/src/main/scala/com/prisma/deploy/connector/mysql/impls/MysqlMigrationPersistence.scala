@@ -12,7 +12,7 @@ import slick.jdbc.MySQLProfile.backend.DatabaseDef
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Failure, Success}
 
-case class MysqlMigrationPersistence(internalDatabase: DatabaseDef)(implicit ec: ExecutionContext) extends MigrationPersistence {
+case class MySqlMigrationPersistence(internalDatabase: DatabaseDef)(implicit ec: ExecutionContext) extends MigrationPersistence {
   val table = Tables.Migrations
 
   def lock(): Future[Int] = {

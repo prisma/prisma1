@@ -20,8 +20,8 @@ case class MySqlDeployConnector(config: DatabaseConfig)(implicit ec: ExecutionCo
   lazy val managementDatabase   = internalDatabaseDefs.managementDatabase
   lazy val projectDatabase      = internalDatabaseDefs.managementDatabase
 
-  override val projectPersistence: ProjectPersistence           = MysqlProjectPersistence(managementDatabase)
-  override val migrationPersistence: MigrationPersistence       = MysqlMigrationPersistence(managementDatabase)
+  override val projectPersistence: ProjectPersistence           = MySqlProjectPersistence(managementDatabase)
+  override val migrationPersistence: MigrationPersistence       = MySqlMigrationPersistence(managementDatabase)
   override val deployMutactionExecutor: DeployMutactionExecutor = MySqlDeployMutactionExectutor(projectDatabase)
 
   override def createProjectDatabase(id: String): Future[Unit] = {

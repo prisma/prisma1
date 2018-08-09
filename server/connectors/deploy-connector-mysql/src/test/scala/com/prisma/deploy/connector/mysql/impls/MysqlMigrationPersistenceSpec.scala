@@ -7,7 +7,7 @@ import org.joda.time.DateTime
 import org.scalatest.{FlatSpec, Matchers}
 import slick.jdbc.MySQLProfile.api._
 
-class MysqlMigrationPersistenceSpec extends FlatSpec with Matchers with SpecBase {
+class MySqlMigrationPersistenceSpec extends FlatSpec with Matchers with SpecBase {
 
   ".byId()" should "load a migration by project ID and revision" in {
     val (project1, _) = setupProject(basicTypesGql)
