@@ -94,12 +94,6 @@ The public ip can be found in the tab **Overview** of your instance located on *
 
 </Instruction>
 
-<Can you provide a right alias>
----
-alias: ua9gai4kie
-description: Learn how to deploy your Prisma services with Prisma Cloud.
----
-
 # Setting up Clusters with Prisma Cloud and Google Cloud SQL
 
 This guide gets you up and running with [Prisma Cloud](https://www.prismagraphql.com/cloud/) and [Google Cloud SQL](https://cloud.google.com/sql/).
