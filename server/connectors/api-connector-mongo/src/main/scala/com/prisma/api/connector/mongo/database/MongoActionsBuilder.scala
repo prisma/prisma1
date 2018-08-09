@@ -40,4 +40,23 @@ case class MongoActionsBuilder(
 //case class MapAction[A, B](source: MongoAction[_, A], fn: A => B)                     extends MongoAction[A, B]
 //case class FlatMapAction[A, B](source: MongoAction[_, A], fn: A => MongoAction[_, B]) extends MongoAction[A, B]
 
+object MongoActionTest {
+  sealed trait MongoAction[+A] {
+    def map[B](f: A => B): MongoAction[B] = MapAction(this, f)
+
+//    def flatMap[B](f: A => MongoAction[B]): MongoAction[B] = FlatMapAction(this, f)
+  }
+
+  case class MapAction[A, B](source: MongoAction[A], fn: A => B)                  extends MongoAction[B]
+  case class SimpleMongoAction[A](fn: MongoDatabase => Future[A])                 extends MongoAction[A]
+  case class FlatMapAction[A, B](source: MongoAction[A], fn: A => MongoAction[B]) extends MongoAction[B]
+
+  import scala.concurrent.ExecutionContext.Implicits.global
+  def doit[A](action: MongoAction[A]): Future[A] = action match {
+    case SimpleMongoAction(fn)     => fn(null)
+    case MapAction(source, fn)     => doit(source).map(x => fn(x))
+    case FlatMapAction(source, fn) => doit(source).flatMap(x => doit(fn(x)))
+  }
+}
+
 case class SimpleMongoAction[+A](fn: MongoDatabase => Future[A])
