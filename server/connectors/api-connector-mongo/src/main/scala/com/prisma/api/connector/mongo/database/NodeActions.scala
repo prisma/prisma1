@@ -57,10 +57,40 @@ trait NodeActions {
           .filter(field => mutaction.nonListArgs.hasArgFor(field) && mutaction.nonListArgs.getFieldValue(field.name).get != NullGCValue)
           .map(field => field.name -> mutaction.nonListArgs.getFieldValue(field).get)
 
-      val document = Document(nonListValues :+ "_id" -> id :+ "createdAt" -> currentDateTimeGCValue :+ "updatedAt" -> currentDateTimeGCValue)
+      val listValues = mutaction.listArgs.map { case (f, v) => f -> v }
+
+      val document = Document(nonListValues ++ listValues :+ "_id" -> id :+ "createdAt" -> currentDateTimeGCValue :+ "updatedAt" -> currentDateTimeGCValue)
 
       collection.insertOne(document).toFuture().map(_ => CreateNodeResult(id, mutaction))
   }
+
+  def createNestedNode(mutaction: NestedCreateNode, parentId: IdGCValue)(implicit ec: ExecutionContext): SimpleMongoAction[CreateNodeResult] =
+    SimpleMongoAction { database =>
+      val parentModel  = mutaction.relationField.model
+      val relatedField = mutaction.relationField
+
+      val filter = WhereToBson(NodeSelector.forIdGCValue(parentModel, parentId))
+
+      val collection: MongoCollection[Document] = database.getCollection(parentModel.name)
+      val id                                    = CuidGCValue.random()
+
+      val nonListValues =
+        mutaction.model.scalarNonListFields
+          .filter(field => mutaction.nonListArgs.hasArgFor(field) && mutaction.nonListArgs.getFieldValue(field.name).get != NullGCValue)
+          .map(field => field.name -> mutaction.nonListArgs.getFieldValue(field).get)
+
+      val listValues = mutaction.listArgs.map { case (f, v) => f -> v }
+
+      val document = Document(nonListValues ++ listValues :+ "id" -> id :+ "createdAt" -> currentDateTimeGCValue :+ "updatedAt" -> currentDateTimeGCValue)
+
+      val updates = set(relatedField.name, document)
+
+      val action = collection
+        .updateOne(filter, updates)
+        .toFuture()
+        .map(_ => CreateNodeResult(id, mutaction))
+      action
+    }
 
   def deleteNode(mutaction: TopLevelDeleteNode)(implicit ec: ExecutionContext): SimpleMongoAction[DeleteNodeResult] = SimpleMongoAction { database =>
     val collection: MongoCollection[Document] = database.getCollection(mutaction.model.name)
@@ -89,14 +119,16 @@ trait NodeActions {
       }
     }
 
-    val fieldsSet = mutaction.nonListArgs.raw.asRoot.map.map {
+    val nonListValues = mutaction.nonListArgs.raw.asRoot.map.map {
       case ("id", v) => set("_id", GCValueBsonTransformer(v))
       case (k, v)    => set(k, GCValueBsonTransformer(v))
     }.toVector
 
+    val listValues = mutaction.listArgs.map { case (f, v) => set(f, v) }
+
     val updatedAt = set("updatedAt", GCValueBsonTransformer(currentDateTimeGCValue))
 
-    val updates = combine(fieldsSet :+ updatedAt: _*)
+    val updates = combine(nonListValues ++ listValues :+ updatedAt: _*)
 
     previousValues.flatMap {
       case Some(node) =>

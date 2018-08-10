@@ -2,8 +2,8 @@ package com.prisma.api.connector.mongo
 
 import com.prisma.api.connector._
 import com.prisma.api.connector.mongo.database._
-import com.prisma.api.connector.mongo.impl.{CreateNodeInterpreter, DeleteNodeInterpreter, ResetDataInterpreter, UpdateNodeInterpreter}
-import com.prisma.gc_values.{CuidGCValue, IdGCValue}
+import com.prisma.api.connector.mongo.impl._
+import com.prisma.gc_values.IdGCValue
 import org.mongodb.scala.{MongoClient, MongoDatabase}
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -86,15 +86,13 @@ class MongoDatabaseMutactionExecutor(client: MongoClient)(implicit ec: Execution
   }
 
   def interpreterFor(mutaction: NestedDatabaseMutaction): NestedDatabaseMutactionInterpreter = mutaction match {
-    case m: NestedCreateNode => ???
+    case m: NestedCreateNode => NestedCreateNodeInterpreter(mutaction = m, includeRelayRow = false)
     case m: NestedUpdateNode => ???
     case m: NestedUpsertNode => ???
     case m: NestedDeleteNode => ???
     case m: NestedConnect    => ???
     case m: NestedDisconnect => ???
   }
-
-//Slick replacement ideas
 
   def run[A](database: MongoDatabase, action: MongoAction[A]): Future[A] = {
     action match {
