@@ -25,7 +25,7 @@ import scala.concurrent.ExecutionContext
 //}
 
 case class ResetDataInterpreter(mutaction: ResetData)(implicit ec: ExecutionContext) extends TopLevelDatabaseMutactionInterpreter {
-  def mongoAction(mutationBuilder: MongoActionsBuilder): SimpleMongoAction[UnitDatabaseMutactionResult.type] = {
+  def mongoAction(mutationBuilder: MongoActionsBuilder): SimpleMongoAction[MutactionResults] = {
     mutationBuilder.truncateTables(mutaction)
   }
 }

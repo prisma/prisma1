@@ -1,5 +1,7 @@
 package com.prisma.api.connector.mongo
 
+import java.util
+
 import com.prisma.api.connector._
 import com.prisma.gc_values._
 import com.prisma.shared.models.TypeIdentifier.TypeIdentifier
@@ -11,6 +13,7 @@ import org.mongodb.scala.model.Filters
 import org.mongodb.scala.{Document, MongoClient, MongoCollection, MongoDatabase}
 import play.api.libs.json.Json
 
+import scala.collection.mutable
 import scala.concurrent.{ExecutionContext, Future}
 
 case class MongoDataResolver(project: Project, client: MongoClient)(implicit ec: ExecutionContext) extends DataResolver {
@@ -56,13 +59,21 @@ object DocumentToRoot {
       case ("_id", v)       => "id"        -> BisonToGC(model.getScalarFieldByName_!("id"), v)
       case ("createdAt", v) => "createdAt" -> BisonToGC(TypeIdentifier.DateTime, v)
       case ("updatedAt", v) => "updatedAt" -> BisonToGC(TypeIdentifier.DateTime, v)
-      case (k, v)           => k           -> BisonToGC(model.getScalarFieldByName_!(k), v)
+      case (k, v)           => k           -> BisonToGC(model.getFieldByName_!(k), v)
     }.toMap)
 }
 
 object BisonToGC {
+  import scala.collection.JavaConverters._
 
-  def apply(field: Field, bison: BsonValue): GCValue = apply(field.typeIdentifier, bison)
+  def apply(field: Field, bison: BsonValue): GCValue = {
+    field.isList match {
+      case true if bison.isArray =>
+        val arrayValues: mutable.Seq[BsonValue] = bison.asArray().getValues.asScala
+        ListGCValue(arrayValues.map(v => apply(field.typeIdentifier, v)).toVector)
+      case false => apply(field.typeIdentifier, bison)
+    }
+  }
 
   def apply(typeIdentifier: TypeIdentifier, bison: BsonValue): GCValue = (typeIdentifier, bison) match {
     case (TypeIdentifier.String, value: BsonString)     => StringGCValue(value.getValue)

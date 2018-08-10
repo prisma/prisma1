@@ -3,7 +3,9 @@ package com.prisma.api.connector
 import com.prisma.gc_values.IdGCValue
 
 sealed trait ApiMutactionResult
-sealed trait DatabaseMutactionResult
+sealed trait DatabaseMutactionResult {
+  def mutaction: DatabaseMutaction
+}
 sealed trait FurtherNestedMutactionResult extends DatabaseMutactionResult {
   def id: IdGCValue
 }
@@ -18,4 +20,6 @@ case class UpsertNodeResult(result: DatabaseMutaction, mutaction: UpsertNode)   
 //case class UpsertNodeCreated(result: CreateDataItemResult)                 extends UpsertDataItemResult { def id = result.id }
 //case class UpsertNodeUpdated(result: UpdateItemResult)                     extends UpsertDataItemResult { def id = result.id }
 
-object UnitDatabaseMutactionResult extends DatabaseMutactionResult
+object UnitDatabaseMutactionResult extends DatabaseMutactionResult {
+  override def mutaction: DatabaseMutaction = ???
+}

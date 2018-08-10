@@ -7,7 +7,7 @@ import com.prisma.api.connector.mongo.database.{MongoActionsBuilder, SimpleMongo
 import scala.concurrent.ExecutionContext
 
 case class DeleteNodeInterpreter(mutaction: TopLevelDeleteNode)(implicit ec: ExecutionContext) extends TopLevelDatabaseMutactionInterpreter {
-  override def mongoAction(mutationBuilder: MongoActionsBuilder): SimpleMongoAction[DeleteNodeResult] = {
+  override def mongoAction(mutationBuilder: MongoActionsBuilder): SimpleMongoAction[MutactionResults] = {
     mutationBuilder.deleteNode(mutaction)
   }
 }

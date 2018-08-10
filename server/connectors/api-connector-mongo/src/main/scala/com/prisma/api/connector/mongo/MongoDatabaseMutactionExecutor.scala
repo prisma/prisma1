@@ -21,52 +21,46 @@ class MongoDatabaseMutactionExecutor(client: MongoClient)(implicit ec: Execution
     run(actionsBuilder.database, action)
   }
 
+  def generateNestedMutaction(
+      database: MongoDatabase,
+      mutaction: NestedDatabaseMutaction,
+      parentId: IdGCValue,
+      mutationBuilder: MongoActionsBuilder
+  ): MongoAction[MutactionResults] = {
+    generateMutaction[NestedDatabaseMutaction](database, mutaction, mutationBuilder, mut => interpreterFor(mut).mongoAction(mutationBuilder, parentId))
+  }
+
   def generateTopLevelMutaction(
       database: MongoDatabase,
       mutaction: TopLevelDatabaseMutaction,
       mutationBuilder: MongoActionsBuilder
   ): MongoAction[MutactionResults] = {
-    mutaction match {
-      case m: FurtherNestedMutaction =>
-        for {
-          result <- interpreterFor(m).mongoAction(mutationBuilder)
-          childResults <- result match {
-                           case result: FurtherNestedMutactionResult =>
-                             val x = m.allNestedMutactions.map(x => generateNestedMutaction(database, x, result.id, mutationBuilder))
-                             MongoAction.seq(x)
-                           case _ => MongoAction.successful(Vector.empty)
-                         }
-        } yield MutactionResults(result, childResults)
-
-      case m: FinalMutaction =>
-        for {
-          result <- interpreterFor(m).mongoAction(mutationBuilder)
-        } yield MutactionResults(result, Vector.empty)
-
-      case _ => sys.error("not implemented yet")
-    }
+    generateMutaction[TopLevelDatabaseMutaction](database, mutaction, mutationBuilder, mut => interpreterFor(mut).mongoAction(mutationBuilder))
   }
 
-  def generateNestedMutaction(database: MongoDatabase,
-                              mutaction: NestedDatabaseMutaction,
-                              parentId: IdGCValue,
-                              mutationBuilder: MongoActionsBuilder): MongoAction[MutactionResults] = {
+  def generateMutaction[T <: DatabaseMutaction](
+      database: MongoDatabase,
+      mutaction: T,
+      mutationBuilder: MongoActionsBuilder,
+      fn: T => MongoAction[MutactionResults]
+  ): MongoAction[MutactionResults] = {
     mutaction match {
       case m: FurtherNestedMutaction =>
         for {
-          result <- interpreterFor(m).mongoAction(mutationBuilder, parentId)
+          result <- fn(mutaction)
           childResults <- result match {
                            case result: FurtherNestedMutactionResult =>
-                             val x = m.allNestedMutactions.map(x => generateNestedMutaction(database, x, result.id, mutationBuilder))
+                             val stillToExecute = m.allNestedMutactions diff result.getExecuted
+                             val x              = stillToExecute.map(x => generateNestedMutaction(database, x, result.id, mutationBuilder))
                              MongoAction.seq(x)
                            case _ => MongoAction.successful(Vector.empty)
                          }
-        } yield MutactionResults(result, childResults)
+        } yield MutactionResults(result.databaseResult, childResults ++ result.nestedResults)
 
       case m: FinalMutaction =>
         for {
-          result <- interpreterFor(m).mongoAction(mutationBuilder, parentId)
-        } yield MutactionResults(result, Vector.empty)
+          result <- fn(mutaction)
+        } yield result
 
       case _ => sys.error("not implemented yet")
     }

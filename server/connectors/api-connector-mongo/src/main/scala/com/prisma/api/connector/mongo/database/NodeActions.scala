@@ -6,6 +6,7 @@ import com.prisma.api.connector.mongo.database.GCBisonTransformer.GCValueBsonTra
 import com.prisma.api.connector.mongo.database.NodeSelectorBsonTransformer.WhereToBson
 import com.prisma.api.schema.APIErrors
 import com.prisma.gc_values._
+import com.prisma.shared.models.RelationField
 import org.joda.time.{DateTime, DateTimeZone}
 import org.mongodb.scala.bson.conversions.Bson
 import org.mongodb.scala.bson.{BsonArray, BsonBoolean, BsonDateTime, BsonDouble, BsonInt32, BsonString, BsonTransformer, BsonValue}
@@ -13,6 +14,7 @@ import org.mongodb.scala.model.Filters
 import org.mongodb.scala.model.Updates.{combine, set}
 import org.mongodb.scala.{Document, MongoCollection}
 
+import scala.collection.immutable
 import scala.concurrent.{ExecutionContext, Future}
 
 object GCBisonTransformer {
@@ -47,52 +49,61 @@ object NodeSelectorBsonTransformer {
 
 trait NodeActions {
 
-  def createNode(mutaction: CreateNode, includeRelayRow: Boolean)(implicit ec: ExecutionContext): SimpleMongoAction[CreateNodeResult] = SimpleMongoAction {
-    database =>
-      val collection: MongoCollection[Document] = database.getCollection(mutaction.model.name)
-      val id                                    = CuidGCValue.random()
+  def createToDoc(mutaction: CreateNode): Document = {
+    val nonListValues =
+      mutaction.model.scalarNonListFields
+        .filter(field => mutaction.nonListArgs.hasArgFor(field) && mutaction.nonListArgs.getFieldValue(field.name).get != NullGCValue)
+        .map(field => field.name -> mutaction.nonListArgs.getFieldValue(field).get)
 
-      val nonListValues =
-        mutaction.model.scalarNonListFields
-          .filter(field => mutaction.nonListArgs.hasArgFor(field) && mutaction.nonListArgs.getFieldValue(field.name).get != NullGCValue)
-          .map(field => field.name -> mutaction.nonListArgs.getFieldValue(field).get)
+    val listValues = mutaction.listArgs.map { case (f, v) => f -> v }
 
-      val listValues = mutaction.listArgs.map { case (f, v) => f -> v }
-
-      val document = Document(nonListValues ++ listValues :+ "_id" -> id :+ "createdAt" -> currentDateTimeGCValue :+ "updatedAt" -> currentDateTimeGCValue)
-
-      collection.insertOne(document).toFuture().map(_ => CreateNodeResult(id, mutaction))
+    Document(nonListValues ++ listValues :+ "createdAt" -> currentDateTimeGCValue :+ "updatedAt" -> currentDateTimeGCValue)
   }
 
-  def createNestedNode(mutaction: NestedCreateNode, parentId: IdGCValue)(implicit ec: ExecutionContext): SimpleMongoAction[CreateNodeResult] =
-    SimpleMongoAction { database =>
-      val parentModel  = mutaction.relationField.model
-      val relatedField = mutaction.relationField
-
-      val filter = WhereToBson(NodeSelector.forIdGCValue(parentModel, parentId))
-
-      val collection: MongoCollection[Document] = database.getCollection(parentModel.name)
+  def createNode(mutaction: CreateNode, includeRelayRow: Boolean)(implicit ec: ExecutionContext): SimpleMongoAction[MutactionResults] = SimpleMongoAction {
+    database =>
+      val collection: MongoCollection[Document] = database.getCollection(mutaction.model.dbName)
       val id                                    = CuidGCValue.random()
 
-      val nonListValues =
-        mutaction.model.scalarNonListFields
-          .filter(field => mutaction.nonListArgs.hasArgFor(field) && mutaction.nonListArgs.getFieldValue(field.name).get != NullGCValue)
-          .map(field => field.name -> mutaction.nonListArgs.getFieldValue(field).get)
+      val docWithoutId: Document         = createToDoc(mutaction)
+      val newMap: Map[String, BsonValue] = docWithoutId.toMap + ("_id" -> GCValueBsonTransformer(id))
 
-      val listValues = mutaction.listArgs.map { case (f, v) => f -> v }
+      val nestedCreates: immutable.Seq[(RelationField, Document)] = mutaction.allNestedMutactions.collect {
+        case nested: NestedCreateNode => nested.relationField -> createToDoc(nested)
+      }
 
-      val document = Document(nonListValues ++ listValues :+ "id" -> id :+ "createdAt" -> currentDateTimeGCValue :+ "updatedAt" -> currentDateTimeGCValue)
+      val grouped: Map[RelationField, immutable.Seq[Document]] = nestedCreates.groupBy(_._1).mapValues(_.map(_._2))
 
-      val updates = set(relatedField.name, document)
+      val finalMap = grouped.foldLeft(newMap) { (map, t) =>
+        val rf: RelationField = t._1
+        val documents         = t._2.map(_.toBsonDocument)
 
-      val action = collection
+        if (rf.isList) {
+          map + (rf.dbName -> BsonArray(documents))
+        } else {
+          map + (rf.dbName -> documents.head)
+        }
+      }
+
+      collection.insertOne(Document(finalMap)).toFuture().map(_ => MutactionResults(CreateNodeResult(id, mutaction), Vector.empty))
+  }
+
+  def createNestedNode(mutaction: NestedCreateNode, parentId: IdGCValue)(implicit ec: ExecutionContext): SimpleMongoAction[MutactionResults] =
+    SimpleMongoAction { database =>
+      val parentModel                           = mutaction.relationField.model
+      val relatedField                          = mutaction.relationField
+      val filter                                = WhereToBson(NodeSelector.forIdGCValue(parentModel, parentId))
+      val collection: MongoCollection[Document] = database.getCollection(parentModel.name)
+      val docWithoutId: Document                = createToDoc(mutaction)
+      val updates                               = set(relatedField.name, docWithoutId)
+
+      collection
         .updateOne(filter, updates)
         .toFuture()
-        .map(_ => CreateNodeResult(id, mutaction))
-      action
+        .map(_ => MutactionResults(CreateNodeResult(CuidGCValue.random(), mutaction), Vector.empty))
     }
 
-  def deleteNode(mutaction: TopLevelDeleteNode)(implicit ec: ExecutionContext): SimpleMongoAction[DeleteNodeResult] = SimpleMongoAction { database =>
+  def deleteNode(mutaction: TopLevelDeleteNode)(implicit ec: ExecutionContext): SimpleMongoAction[MutactionResults] = SimpleMongoAction { database =>
     val collection: MongoCollection[Document] = database.getCollection(mutaction.model.name)
     val filter                                = WhereToBson(mutaction.where)
 
@@ -104,12 +115,12 @@ trait NodeActions {
     }
 
     previousValues.flatMap {
-      case Some(node) => collection.deleteOne(filter).toFuture().map(_ => DeleteNodeResult(node.id, node, mutaction))
+      case Some(node) => collection.deleteOne(filter).toFuture().map(_ => MutactionResults(DeleteNodeResult(node.id, node, mutaction), Vector.empty))
       case None       => throw APIErrors.NodeNotFoundForWhereError(mutaction.where)
     }
   }
 
-  def updateNode(mutaction: TopLevelUpdateNode)(implicit ec: ExecutionContext): SimpleMongoAction[UpdateNodeResult] = SimpleMongoAction { database =>
+  def updateNode(mutaction: TopLevelUpdateNode)(implicit ec: ExecutionContext): SimpleMongoAction[MutactionResults] = SimpleMongoAction { database =>
     val collection: MongoCollection[Document] = database.getCollection(mutaction.model.name)
     val filter                                = WhereToBson(mutaction.where)
     val previousValues: Future[Option[PrismaNode]] = collection.find(filter).collect().toFuture.map { results: Seq[Document] =>
@@ -135,7 +146,7 @@ trait NodeActions {
         collection
           .updateOne(filter, updates)
           .toFuture()
-          .map(_ => UpdateNodeResult(node.id, node, mutaction))
+          .map(_ => MutactionResults(UpdateNodeResult(node.id, node, mutaction), Vector.empty))
       case None => throw APIErrors.NodeNotFoundForWhereError(mutaction.where)
     }
 

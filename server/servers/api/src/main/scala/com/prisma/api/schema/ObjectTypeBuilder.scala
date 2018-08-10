@@ -283,7 +283,7 @@ class ObjectTypeBuilder(
 
     field match {
       case f: ScalarField if f.isList =>
-        ScalarListDeferred(model, f, item.id)
+        item.data.map(field.name).value //Fixme
 
       case f: ScalarField if !f.isList =>
         item.data.map(field.name).value

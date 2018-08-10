@@ -7,7 +7,7 @@ import com.prisma.api.connector.mongo.database.{SimpleMongoAction, MongoActionsB
 import scala.concurrent.ExecutionContext
 
 case class UpdateNodeInterpreter(mutaction: TopLevelUpdateNode)(implicit ec: ExecutionContext) extends TopLevelDatabaseMutactionInterpreter {
-  override def mongoAction(mutationBuilder: MongoActionsBuilder): SimpleMongoAction[UpdateNodeResult] = {
+  override def mongoAction(mutationBuilder: MongoActionsBuilder): SimpleMongoAction[MutactionResults] = {
     mutationBuilder.updateNode(mutaction)
   }
 }

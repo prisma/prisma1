@@ -20,6 +20,16 @@ case class MutactionResults(
     nestedResults: Vector[MutactionResults]
 ) {
   def allResults: Vector[DatabaseMutactionResult] = databaseResult +: nestedResults.flatMap(_.allResults)
+
+  def getExecuted: Vector[DatabaseMutaction] = {
+    nestedResults.map(_.databaseResult.mutaction)
+  }
+}
+
+case class MutactionResults2(
+    map: Map[DatabaseMutaction, DatabaseMutactionResult]
+) {
+  def allResults: Vector[DatabaseMutactionResult] = map.values.toVector
 }
 
 trait DatabaseMutactionExecutor {

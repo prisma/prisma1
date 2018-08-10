@@ -8,7 +8,7 @@ import com.prisma.gc_values.IdGCValue
 import scala.concurrent.ExecutionContext
 
 case class CreateNodeInterpreter(mutaction: CreateNode, includeRelayRow: Boolean)(implicit ec: ExecutionContext) extends TopLevelDatabaseMutactionInterpreter {
-  override def mongoAction(mutationBuilder: MongoActionsBuilder): SimpleMongoAction[CreateNodeResult] = {
+  override def mongoAction(mutationBuilder: MongoActionsBuilder): SimpleMongoAction[MutactionResults] = {
     mutationBuilder.createNode(mutaction, includeRelayRow)
   }
 }
