@@ -242,6 +242,8 @@ Finally, click the **Create** button to launch the stack.
 
 <iframe src="https://giphy.com/embed/88EvfARM1YaCQ" width="480" height="317" frameBorder="0" class="giphy-embed" allowFullScreen></iframe>
 
+**IF ERROR ON PrismaService regarding service-linked roles**
+
 ### 2.4. Save the server endpoint
 
 Once the stack has been launched, you need to save the endpoint of the server.
