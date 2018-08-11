@@ -5,6 +5,12 @@ description: Learn how to diredctly access your database with SQL.
 
 # Database Access (SQL)
 
+<InfoBox type=warning>
+
+**This tutorial only applies to Prisma versions lower than 1.7 and will be updated soon.**
+
+</InfoBox>
+
 Follow this guide to connect directly to the MySQL database powering your local Prisma cluster.
 
 If you used `prisma local start` to start your local Prisma cluster, you will have two containers running:
@@ -32,7 +38,7 @@ Verify that there is a container with the name `prisma-db` image `mysql:5.7`.
 To open the MySQL client in your terminal, run the following command. Note that prisma-db is the container name from the list above:
 
 ```sh
-docker exec -it prisma-db mysql -u root --host 127.0.0.1 --port 3306 --password=graphcool
+docker exec -it prisma-db mysql -u root --host 127.0.0.1 --port 3306 --password=pri
 ```
 
 #### 3. Send SQL queries to the database

@@ -22,9 +22,9 @@ case class PostgresApiConnector(config: DatabaseConfig, isActive: Boolean)(impli
     } yield ()
   }
 
-  override val databaseMutactionExecutor: JdbcDatabaseMutactionExecutor = JdbcDatabaseMutactionExecutor(databases.primary, isActive)
+  override val databaseMutactionExecutor: JdbcDatabaseMutactionExecutor = JdbcDatabaseMutactionExecutor(databases.primary, isActive, schemaName = config.schema)
   override def dataResolver(project: Project)                           = JdbcDataResolver(project, databases.primary, schemaName = config.schema)
   override def masterDataResolver(project: Project)                     = JdbcDataResolver(project, databases.primary, schemaName = config.schema)
   override def projectIdEncoder: ProjectIdEncoder                       = ProjectIdEncoder('$')
-  override def capabilities: Vector[NodeQueryCapability.type] = if (isActive) Vector(NodeQueryCapability) else Vector.empty
+  override def capabilities: Vector[NodeQueryCapability.type]           = if (isActive) Vector(NodeQueryCapability) else Vector.empty
 }

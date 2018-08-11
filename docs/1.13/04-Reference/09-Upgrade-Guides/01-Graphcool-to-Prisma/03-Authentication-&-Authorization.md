@@ -193,3 +193,26 @@ async function updatePost(parent, { id, title, text }, ctx, info) {
 ```
 
 For more information regarding implementing permission rules with Prisma, please refer to [this tutorial](!alias-thohp1zaih).
+
+The `getUserId` function could be implemented as follows:
+
+```js
+function getUserId(ctx) {
+  const Authorization = ctx.request.get('Authorization')
+  if (Authorization) {
+    const token = Authorization.replace('Bearer ', '')
+    const { userId } = jwt.verify(token, process.env.APP_SECRET)
+    return userId
+  }
+
+  throw new AuthError()
+}
+
+class AuthError extends Error {
+  constructor() {
+    super('Not authorized')
+  }
+}
+```
+
+It reads the `Authorization` field from the incoming HTTP header which contains a JWT. If the JWT is valid, if retrieves the `userId` from it, otherwise it throws an error.

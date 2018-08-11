@@ -81,7 +81,7 @@ case class PostgresDeployConnector(
     if (isActive) {
       EmptyDatabaseIntrospectionInferrer
     } else {
-      val schema = dbConfig.schema.getOrElse(projectId)
+      val schema = dbConfig.schema.getOrElse(projectId).toLowerCase
       DatabaseIntrospectionInferrerImpl(projectDatabase, schema)
     }
   }

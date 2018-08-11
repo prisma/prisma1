@@ -51,8 +51,8 @@ object SchemaDsl extends AwaitUtils {
   }
 
   def fromPassiveConnectorSdl(
-      id: String = TestIds.testProjectId,
-      deployConnector: DeployConnector
+      deployConnector: DeployConnector,
+      id: String = TestIds.testProjectId
   )(sdlString: String): Project = {
     val inferredTables = deployConnector.databaseIntrospectionInferrer(id).infer().await()
     fromString(id, inferredTables, isActive = false, shouldCheckAgainstInferredTables = true)(sdlString)
