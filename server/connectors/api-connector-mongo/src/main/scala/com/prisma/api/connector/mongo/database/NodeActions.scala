@@ -79,9 +79,9 @@ trait NodeActions {
         val documents         = t._2.map(_.toBsonDocument)
 
         if (rf.isList) {
-          map + (rf.dbName -> BsonArray(documents))
+          map + (rf.name -> BsonArray(documents))
         } else {
-          map + (rf.dbName -> documents.head)
+          map + (rf.name -> documents.head)
         }
       }
 
@@ -93,7 +93,7 @@ trait NodeActions {
       val parentModel                           = mutaction.relationField.model
       val relatedField                          = mutaction.relationField
       val filter                                = WhereToBson(NodeSelector.forIdGCValue(parentModel, parentId))
-      val collection: MongoCollection[Document] = database.getCollection(parentModel.name)
+      val collection: MongoCollection[Document] = database.getCollection(parentModel.dbName)
       val docWithoutId: Document                = createToDoc(mutaction)
       val updates                               = set(relatedField.name, docWithoutId)
 

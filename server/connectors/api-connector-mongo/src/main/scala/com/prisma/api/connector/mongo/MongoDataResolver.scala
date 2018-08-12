@@ -22,7 +22,7 @@ case class MongoDataResolver(project: Project, client: MongoClient)(implicit ec:
   override def getModelForGlobalId(globalId: CuidGCValue): Future[Option[Model]] = ???
 
   override def getNodeByWhere(where: NodeSelector, selectedFields: SelectedFields): Future[Option[PrismaNode]] = {
-    val collection: MongoCollection[Document] = database.getCollection(where.model.name)
+    val collection: MongoCollection[Document] = database.getCollection(where.model.dbName)
 
     val fieldName = if (where.fieldName == "id") "_id" else where.fieldName
     val filter    = Filters.eq(fieldName, where.fieldGCValue.value)
@@ -67,11 +67,20 @@ object BisonToGC {
   import scala.collection.JavaConverters._
 
   def apply(field: Field, bison: BsonValue): GCValue = {
-    field.isList match {
-      case true if bison.isArray =>
+    (field.isList, field.isRelation) match {
+      case (true, false) if bison.isArray =>
         val arrayValues: mutable.Seq[BsonValue] = bison.asArray().getValues.asScala
         ListGCValue(arrayValues.map(v => apply(field.typeIdentifier, v)).toVector)
-      case false => apply(field.typeIdentifier, bison)
+
+      case (false, false) =>
+        apply(field.typeIdentifier, bison)
+
+      case (true, true) if bison.isArray =>
+        val arrayValues: mutable.Seq[BsonValue] = bison.asArray().getValues.asScala
+        RootGCValue(field.name -> ListGCValue(arrayValues.map(v => DocumentToRoot(field.asInstanceOf[RelationField].relatedModel_!, v.asDocument())).toVector))
+
+      case (false, true) =>
+        DocumentToRoot(field.asInstanceOf[RelationField].relatedModel_!, bison.asDocument())
     }
   }
 

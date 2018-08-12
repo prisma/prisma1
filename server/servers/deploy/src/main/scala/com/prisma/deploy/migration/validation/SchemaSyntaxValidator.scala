@@ -55,7 +55,8 @@ object SchemaSyntaxValidator {
     ),
     DirectiveRequirement("rename", requiredArguments = Seq(RequiredArg("oldName", mustBeAString = true)), optionalArguments = Seq.empty),
     DirectiveRequirement("default", requiredArguments = Seq(RequiredArg("value", mustBeAString = false)), optionalArguments = Seq.empty),
-    DirectiveRequirement("unique", requiredArguments = Seq.empty, optionalArguments = Seq.empty)
+    DirectiveRequirement("unique", requiredArguments = Seq.empty, optionalArguments = Seq.empty),
+    DirectiveRequirement("embedded", requiredArguments = Seq.empty, optionalArguments = Seq.empty)
   )
 
   val idFieldRequirementForPassiveConnectors = FieldRequirement("id", Vector("ID", "UUID", "Int"), required = true, unique = true, list = false)

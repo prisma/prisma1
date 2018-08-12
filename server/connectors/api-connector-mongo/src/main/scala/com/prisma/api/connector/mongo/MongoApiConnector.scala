@@ -17,7 +17,7 @@ case class MongoApiConnector(config: DatabaseConfig)(implicit ec: ExecutionConte
 
   override def projectIdEncoder: ProjectIdEncoder = ???
 
-  override def capabilities: Vector[ApiConnectorCapability] = Vector(NodeQueryCapability, EmbeddedListsCapability)
+  override def capabilities: Vector[ApiConnectorCapability] = Vector(NodeQueryCapability, EmbeddedListsCapability, EmbeddedTypesCapability)
 
   override def initialize(): Future[Unit] = {
     client

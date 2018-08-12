@@ -40,3 +40,4 @@ trait DatabaseMutactionExecutor {
 sealed trait ApiConnectorCapability
 object NodeQueryCapability     extends ApiConnectorCapability
 object EmbeddedListsCapability extends ApiConnectorCapability
+object EmbeddedTypesCapability extends ApiConnectorCapability

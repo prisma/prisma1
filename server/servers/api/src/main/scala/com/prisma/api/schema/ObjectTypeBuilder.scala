@@ -292,12 +292,24 @@ class ObjectTypeBuilder(
         item.data.map(field.name).value
 
       case f: RelationField if f.isList =>
-        val arguments = extractQueryArgumentsFromContext(f.relatedModel_!, ctx.asInstanceOf[Context[ApiUserContext, Unit]])
-        DeferredValue(ToManyDeferred(f, item.id, arguments, ctx.getSelectedFields(f.relatedModel_!))).map(_.toNodes)
+        if (capabilities.contains(EmbeddedTypesCapability)) {
+          item.data.map(field.name)
+
+          //List of Prismanodes
+
+        } else {
+          val arguments = extractQueryArgumentsFromContext(f.relatedModel_!, ctx.asInstanceOf[Context[ApiUserContext, Unit]])
+          DeferredValue(ToManyDeferred(f, item.id, arguments, ctx.getSelectedFields(f.relatedModel_!))).map(_.toNodes)
+        }
 
       case f: RelationField if !f.isList =>
-        val arguments = extractQueryArgumentsFromContext(f.relatedModel_!, ctx.asInstanceOf[Context[ApiUserContext, Unit]])
-        ToOneDeferred(f, item.id, arguments, ctx.getSelectedFields(f.relatedModel_!))
+        if (capabilities.contains(EmbeddedTypesCapability)) {
+          val root = item.data.map(field.name).asInstanceOf[RootGCValue]
+          PrismaNode(CuidGCValue.random(), root)
+        } else {
+          val arguments = extractQueryArgumentsFromContext(f.relatedModel_!, ctx.asInstanceOf[Context[ApiUserContext, Unit]])
+          ToOneDeferred(f, item.id, arguments, ctx.getSelectedFields(f.relatedModel_!))
+        }
     }
   }
 
