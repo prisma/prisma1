@@ -42,7 +42,7 @@ case class SchemaBuilderImpl(
   val argumentsBuilder                     = ArgumentsBuilder(project = project)
   val dataResolver                         = apiDependencies.dataResolver(project)
   val masterDataResolver                   = apiDependencies.masterDataResolver(project)
-  val objectTypeBuilder: ObjectTypeBuilder = new ObjectTypeBuilder(project = project, nodeInterface = Some(nodeInterface))
+  val objectTypeBuilder: ObjectTypeBuilder = new ObjectTypeBuilder(project = project, nodeInterface = Some(nodeInterface), capabilities = capabilities)
   val objectTypes                          = objectTypeBuilder.modelObjectTypes
   val connectionTypes                      = objectTypeBuilder.modelConnectionTypes
   val outputTypesBuilder                   = OutputTypesBuilder(project, objectTypes, dataResolver)

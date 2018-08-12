@@ -18,7 +18,8 @@ class ObjectTypeBuilder(
     project: models.Project,
     nodeInterface: Option[InterfaceType[ApiUserContext, PrismaNode]] = None,
     withRelations: Boolean = true,
-    onlyId: Boolean = false
+    onlyId: Boolean = false,
+    capabilities: Vector[ApiConnectorCapability]
 )(implicit ec: ExecutionContext)
     extends SangriaExtensions {
 
@@ -281,9 +282,11 @@ class ObjectTypeBuilder(
 
     val item: PrismaNode = unwrapDataItemFromContext(ctx)
 
+    //Fixme the field needs to store embeddedtypes info
+
     field match {
       case f: ScalarField if f.isList =>
-        item.data.map(field.name).value //Fixme
+        if (capabilities.contains(EmbeddedListsCapability)) item.data.map(field.name).value else ScalarListDeferred(model, f, item.id)
 
       case f: ScalarField if !f.isList =>
         item.data.map(field.name).value
