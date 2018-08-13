@@ -50,43 +50,46 @@ object NodeSelectorBsonTransformer {
 trait NodeActions {
 
   def createToDoc(mutaction: CreateNode): Document = {
-    val nonListValues =
+    val nonListValues: List[(String, GCValue)] =
       mutaction.model.scalarNonListFields
         .filter(field => mutaction.nonListArgs.hasArgFor(field) && mutaction.nonListArgs.getFieldValue(field.name).get != NullGCValue)
         .map(field => field.name -> mutaction.nonListArgs.getFieldValue(field).get)
 
-    val listValues = mutaction.listArgs.map { case (f, v) => f -> v }
+    val listValues: Vector[(String, ListGCValue)] = mutaction.listArgs.map { case (f, v) => f -> v }
+    val nonRelationValues
+      : List[(String, GCValue)] = nonListValues ++ listValues :+ "createdAt" -> currentDateTimeGCValue :+ "updatedAt" -> currentDateTimeGCValue
 
-    Document(nonListValues ++ listValues :+ "createdAt" -> currentDateTimeGCValue :+ "updatedAt" -> currentDateTimeGCValue)
+    val nestedCreates: immutable.Seq[(RelationField, Document)] = mutaction.nestedCreates.map(m => m.relationField -> createToDoc(m))
+
+    val grouped: Map[RelationField, immutable.Seq[Document]] = nestedCreates.groupBy(_._1).mapValues(_.map(_._2))
+
+    val nestedCreateFields = grouped.foldLeft(Map.empty[String, BsonValue]) { (map, t) =>
+      val rf: RelationField = t._1
+      val documents         = t._2.map(_.toBsonDocument)
+
+      if (rf.isList) {
+        map + (rf.name -> BsonArray(documents))
+      } else {
+        map + (rf.name -> documents.head)
+      }
+    }
+
+    Document(nonRelationValues) ++ nestedCreateFields
+
+    //this should also return all the mutactions it hit
   }
 
-  def createNode(mutaction: CreateNode, includeRelayRow: Boolean)(implicit ec: ExecutionContext): SimpleMongoAction[MutactionResults] = SimpleMongoAction {
-    database =>
+  def createNode(mutaction: CreateNode, includeRelayRow: Boolean)(implicit ec: ExecutionContext): SimpleMongoAction[MutactionResults] =
+    SimpleMongoAction { database =>
       val collection: MongoCollection[Document] = database.getCollection(mutaction.model.dbName)
       val id                                    = CuidGCValue.random()
 
-      val docWithoutId: Document         = createToDoc(mutaction)
-      val newMap: Map[String, BsonValue] = docWithoutId.toMap + ("_id" -> GCValueBsonTransformer(id))
+      val docWithoutId: Document = createToDoc(mutaction)
+      val docWithId              = Document(docWithoutId.toMap + ("_id" -> GCValueBsonTransformer(id)))
 
-      val nestedCreates: immutable.Seq[(RelationField, Document)] = mutaction.allNestedMutactions.collect {
-        case nested: NestedCreateNode => nested.relationField -> createToDoc(nested)
-      }
-
-      val grouped: Map[RelationField, immutable.Seq[Document]] = nestedCreates.groupBy(_._1).mapValues(_.map(_._2))
-
-      val finalMap = grouped.foldLeft(newMap) { (map, t) =>
-        val rf: RelationField = t._1
-        val documents         = t._2.map(_.toBsonDocument)
-
-        if (rf.isList) {
-          map + (rf.name -> BsonArray(documents))
-        } else {
-          map + (rf.name -> documents.head)
-        }
-      }
-
-      collection.insertOne(Document(finalMap)).toFuture().map(_ => MutactionResults(CreateNodeResult(id, mutaction), Vector.empty))
-  }
+      // this needs to fill the nested mutaction results
+      collection.insertOne(docWithId).toFuture().map(_ => MutactionResults(CreateNodeResult(id, mutaction), Vector.empty))
+    }
 
   def createNestedNode(mutaction: NestedCreateNode, parentId: IdGCValue)(implicit ec: ExecutionContext): SimpleMongoAction[MutactionResults] =
     SimpleMongoAction { database =>

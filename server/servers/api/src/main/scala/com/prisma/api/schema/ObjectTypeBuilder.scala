@@ -293,10 +293,10 @@ class ObjectTypeBuilder(
 
       case f: RelationField if f.isList =>
         if (capabilities.contains(EmbeddedTypesCapability)) {
-          item.data.map(field.name)
-
-          //List of Prismanodes
-
+          item.data.map(field.name) match {
+            case ListGCValue(values) => values.map(v => PrismaNode(CuidGCValue.random(), v.asRoot))
+            case x                   => sys.error("ObjecttypeBuilder not handled" + x)
+          }
         } else {
           val arguments = extractQueryArgumentsFromContext(f.relatedModel_!, ctx.asInstanceOf[Context[ApiUserContext, Unit]])
           DeferredValue(ToManyDeferred(f, item.id, arguments, ctx.getSelectedFields(f.relatedModel_!))).map(_.toNodes)
@@ -304,7 +304,7 @@ class ObjectTypeBuilder(
 
       case f: RelationField if !f.isList =>
         if (capabilities.contains(EmbeddedTypesCapability)) {
-          val root = item.data.map(field.name).asInstanceOf[RootGCValue]
+          val root = item.data.map(field.name).asRoot
           PrismaNode(CuidGCValue.random(), root)
         } else {
           val arguments = extractQueryArgumentsFromContext(f.relatedModel_!, ctx.asInstanceOf[Context[ApiUserContext, Unit]])

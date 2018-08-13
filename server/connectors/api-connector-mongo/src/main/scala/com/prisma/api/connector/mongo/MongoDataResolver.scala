@@ -77,7 +77,7 @@ object BisonToGC {
 
       case (true, true) if bison.isArray =>
         val arrayValues: mutable.Seq[BsonValue] = bison.asArray().getValues.asScala
-        RootGCValue(field.name -> ListGCValue(arrayValues.map(v => DocumentToRoot(field.asInstanceOf[RelationField].relatedModel_!, v.asDocument())).toVector))
+        ListGCValue(arrayValues.map(v => DocumentToRoot(field.asInstanceOf[RelationField].relatedModel_!, v.asDocument())).toVector)
 
       case (false, true) =>
         DocumentToRoot(field.asInstanceOf[RelationField].relatedModel_!, bison.asDocument())
