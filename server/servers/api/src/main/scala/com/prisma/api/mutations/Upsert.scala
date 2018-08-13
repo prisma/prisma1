@@ -31,9 +31,11 @@ case class Upsert(
   override def prepareMutactions: Future[TopLevelDatabaseMutaction] = Future.successful(upsertMutaction)
 
   override def getReturnValue(results: MutactionResults): Future[ReturnValueResult] = {
-    val firstResult = results.results.collectFirst { case r: FurtherNestedMutactionResult if r.mutaction == upsertMutaction => r }.get
-    val selector    = NodeSelector.forIdGCValue(model, firstResult.id)
-    val itemFuture  = dataResolver.getNodeByWhere(selector, selectedFields)
+    val firstResult = results.results.collectFirst {
+      case r: FurtherNestedMutactionResult if r.mutaction == upsertMutaction.create || r.mutaction == upsertMutaction.update => r
+    }.get
+    val selector   = NodeSelector.forIdGCValue(model, firstResult.id)
+    val itemFuture = dataResolver.getNodeByWhere(selector, selectedFields)
     itemFuture.map {
       case Some(prismaNode) => ReturnValue(prismaNode)
       case None             => sys.error("Could not find an item after an Upsert. This should not be possible.")
