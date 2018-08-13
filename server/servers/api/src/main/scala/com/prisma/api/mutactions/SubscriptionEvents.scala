@@ -1,8 +1,7 @@
 package com.prisma.api.mutactions
 
-import com.prisma.api.ApiDependencies
 import com.prisma.api.connector._
-import com.prisma.gc_values.{CuidGCValue, IntGCValue, NullGCValue, UuidGCValue}
+import com.prisma.gc_values.NullGCValue
 import com.prisma.shared.models.IdType.Id
 import com.prisma.shared.models.Project
 
@@ -12,7 +11,7 @@ object SubscriptionEvents {
       mutationId: Id,
       mutactionResults: MutactionResults
   ): Vector[PublishSubscriptionEvent] = {
-    mutactionResults.allResults.collect {
+    mutactionResults.results.collect {
       case result: CreateNodeResult => fromCreateResult(project, mutationId, result)
       case result: UpdateNodeResult => fromUpdateResult(project, mutationId, result)
       case result: DeleteNodeResult => fromDeleteResult(project, mutationId, result)

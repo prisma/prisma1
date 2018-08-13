@@ -39,6 +39,6 @@ object TestData extends AwaitUtils {
       nestedCreates = Vector.empty
     )
 
-    testDatabase.runDatabaseMutactionOnClientDb(mutaction).databaseResult.asInstanceOf[CreateNodeResult].id
+    testDatabase.runDatabaseMutactionOnClientDb(mutaction).results.collectFirst { case r: CreateNodeResult if r.mutaction == mutaction => r }.get.id
   }
 }

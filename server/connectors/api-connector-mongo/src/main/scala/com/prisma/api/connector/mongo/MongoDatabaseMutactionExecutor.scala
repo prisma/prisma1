@@ -50,12 +50,12 @@ class MongoDatabaseMutactionExecutor(client: MongoClient)(implicit ec: Execution
           result <- fn(mutaction)
           childResults <- result match {
                            case result: FurtherNestedMutactionResult =>
-                             val stillToExecute = m.allNestedMutactions diff result.getExecuted
+                             val stillToExecute = m.allNestedMutactions diff result.results
                              val x              = stillToExecute.map(x => generateNestedMutaction(database, x, result.id, mutationBuilder))
                              MongoAction.seq(x)
                            case _ => MongoAction.successful(Vector.empty)
                          }
-        } yield MutactionResults(result.databaseResult, childResults ++ result.nestedResults)
+        } yield MutactionResults(result.results ++ childResults.flatMap(_.results))
 
       case m: FinalMutaction =>
         for {

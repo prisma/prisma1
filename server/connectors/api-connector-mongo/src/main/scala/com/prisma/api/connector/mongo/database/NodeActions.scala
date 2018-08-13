@@ -49,15 +49,18 @@ object NodeSelectorBsonTransformer {
 
 trait NodeActions {
 
-  def createToDoc(mutaction: CreateNode): Document = {
+  def createToDoc(mutaction: CreateNode, results: Vector[DatabaseMutactionResult] = Vector.empty): (Document, Vector[DatabaseMutactionResult]) = {
     val nonListValues: List[(String, GCValue)] =
       mutaction.model.scalarNonListFields
         .filter(field => mutaction.nonListArgs.hasArgFor(field) && mutaction.nonListArgs.getFieldValue(field.name).get != NullGCValue)
         .map(field => field.name -> mutaction.nonListArgs.getFieldValue(field).get)
 
-    val nestedCreates: immutable.Seq[(RelationField, Document)] = mutaction.nestedCreates.map(m => m.relationField -> createToDoc(m))
+    val nestedCreates: immutable.Seq[(RelationField, (Document, Vector[DatabaseMutactionResult]))] =
+      mutaction.nestedCreates.map(m => m.relationField -> createToDoc(m))
 
-    val grouped: Map[RelationField, immutable.Seq[Document]] = nestedCreates.groupBy(_._1).mapValues(_.map(_._2))
+    val childResults = nestedCreates.flatMap(x => x._2._2).toVector
+
+    val grouped: Map[RelationField, immutable.Seq[Document]] = nestedCreates.groupBy(_._1).mapValues(_.map(_._2._1))
 
     val nestedCreateFields = grouped.foldLeft(Map.empty[String, BsonValue]) { (map, t) =>
       val rf: RelationField = t._1
@@ -70,9 +73,9 @@ trait NodeActions {
       }
     }
 
-    Document(nonListValues ++ mutaction.listArgs) ++ nestedCreateFields
+    val doc = Document(nonListValues ++ mutaction.listArgs) ++ nestedCreateFields
 
-    //this should also return all the mutactions it hit
+    (doc, childResults)
   }
 
   def createNode(mutaction: CreateNode, includeRelayRow: Boolean)(implicit ec: ExecutionContext): SimpleMongoAction[MutactionResults] =
@@ -80,26 +83,25 @@ trait NodeActions {
       val collection: MongoCollection[Document] = database.getCollection(mutaction.model.dbName)
       val id                                    = CuidGCValue.random()
 
-      val docWithoutId: Document = createToDoc(mutaction)
-      val docWithId              = Document(docWithoutId.toMap + ("_id" -> GCValueBsonTransformer(id)))
+      val (docWithoutId: Document, childResults: Vector[DatabaseMutactionResult]) = createToDoc(mutaction)
+      val docWithId                                                               = Document(docWithoutId.toMap + ("_id" -> GCValueBsonTransformer(id)))
 
-      // this needs to fill the nested mutaction results
-      collection.insertOne(docWithId).toFuture().map(_ => MutactionResults(CreateNodeResult(id, mutaction), Vector.empty))
+      collection.insertOne(docWithId).toFuture().map(_ => MutactionResults(Vector(CreateNodeResult(id, mutaction)) ++ childResults))
     }
 
   def createNestedNode(mutaction: NestedCreateNode, parentId: IdGCValue)(implicit ec: ExecutionContext): SimpleMongoAction[MutactionResults] =
     SimpleMongoAction { database =>
-      val parentModel                           = mutaction.relationField.model
-      val relatedField                          = mutaction.relationField
-      val filter                                = WhereToBson(NodeSelector.forIdGCValue(parentModel, parentId))
-      val collection: MongoCollection[Document] = database.getCollection(parentModel.dbName)
-      val docWithoutId: Document                = createToDoc(mutaction)
-      val updates                               = set(relatedField.name, docWithoutId)
+      val parentModel                                                             = mutaction.relationField.model
+      val relatedField                                                            = mutaction.relationField
+      val filter                                                                  = WhereToBson(NodeSelector.forIdGCValue(parentModel, parentId))
+      val collection: MongoCollection[Document]                                   = database.getCollection(parentModel.dbName)
+      val (docWithoutId: Document, childResults: Vector[DatabaseMutactionResult]) = createToDoc(mutaction)
+      val updates                                                                 = set(relatedField.name, docWithoutId)
 
       collection
         .updateOne(filter, updates)
         .toFuture()
-        .map(_ => MutactionResults(CreateNodeResult(CuidGCValue.random(), mutaction), Vector.empty))
+        .map(_ => MutactionResults(Vector(CreateNodeResult(CuidGCValue.random(), mutaction)) ++ childResults))
     }
 
   def deleteNode(mutaction: TopLevelDeleteNode)(implicit ec: ExecutionContext): SimpleMongoAction[MutactionResults] = SimpleMongoAction { database =>
@@ -114,7 +116,7 @@ trait NodeActions {
     }
 
     previousValues.flatMap {
-      case Some(node) => collection.deleteOne(filter).toFuture().map(_ => MutactionResults(DeleteNodeResult(node.id, node, mutaction), Vector.empty))
+      case Some(node) => collection.deleteOne(filter).toFuture().map(_ => MutactionResults(Vector(DeleteNodeResult(node.id, node, mutaction))))
       case None       => throw APIErrors.NodeNotFoundForWhereError(mutaction.where)
     }
   }
@@ -136,16 +138,14 @@ trait NodeActions {
 
     val listValues = mutaction.listArgs.map { case (f, v) => set(f, v) }
 
-//    val updatedAt = set("updatedAt", GCValueBsonTransformer(currentDateTimeGCValue))
-
-    val updates = combine(nonListValues ++ listValues: _*) //:+ updatedAt: _*)
+    val updates = combine(nonListValues ++ listValues: _*)
 
     previousValues.flatMap {
       case Some(node) =>
         collection
           .updateOne(filter, updates)
           .toFuture()
-          .map(_ => MutactionResults(UpdateNodeResult(node.id, node, mutaction), Vector.empty))
+          .map(_ => MutactionResults(Vector(UpdateNodeResult(node.id, node, mutaction))))
       case None => throw APIErrors.NodeNotFoundForWhereError(mutaction.where)
     }
 

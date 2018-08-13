@@ -17,6 +17,6 @@ trait MiscActions {
       collection.drop().toFuture()
     }
 
-    Future.sequence(actions).map(_ => MutactionResults(UnitDatabaseMutactionResult, Vector.empty))
+    Future.sequence(actions).map(_ => MutactionResults(Vector(UnitDatabaseMutactionResult)))
   }
 }
