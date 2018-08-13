@@ -1,12 +1,13 @@
 package com.prisma.api.mutations
 
+import com.prisma.IgnorePassive
 import com.prisma.api.ApiSpecBase
 import com.prisma.shared.schema_dsl.SchemaDsl
 import org.scalatest.{FlatSpec, Matchers}
 
 class MongoPrototypingSpec extends FlatSpec with Matchers with ApiSpecBase {
 
-  "To one relations" should "work" in {
+  "To one relations" should "work" taggedAs (IgnorePassive) in {
 
     val project = SchemaDsl.fromString() {
       """type Top {
@@ -64,7 +65,7 @@ class MongoPrototypingSpec extends FlatSpec with Matchers with ApiSpecBase {
     )
   }
 
-  "To many relations" should "work" in {
+  "To many relations" should "work" taggedAs (IgnorePassive) in {
 
     val project = SchemaDsl.fromString() {
       """type Top {
@@ -124,7 +125,7 @@ class MongoPrototypingSpec extends FlatSpec with Matchers with ApiSpecBase {
     )
   }
 
-  "ListValues" should "work" in {
+  "ListValues" should "work" taggedAs (IgnorePassive) in {
 
     val project = SchemaDsl.fromString() {
       """type Top {
