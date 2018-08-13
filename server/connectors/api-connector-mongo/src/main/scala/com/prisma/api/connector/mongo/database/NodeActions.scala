@@ -47,7 +47,7 @@ object NodeSelectorBsonTransformer {
   }
 }
 
-trait NodeActions {
+trait NodeActions extends NodeSingleQueries {
 
   def createToDoc(mutaction: CreateNode, results: Vector[DatabaseMutactionResult] = Vector.empty): (Document, Vector[DatabaseMutactionResult]) = {
     val nonListValues: List[(String, GCValue)] =
@@ -122,33 +122,60 @@ trait NodeActions {
   }
 
   def updateNode(mutaction: TopLevelUpdateNode)(implicit ec: ExecutionContext): SimpleMongoAction[MutactionResults] = SimpleMongoAction { database =>
-    val collection: MongoCollection[Document] = database.getCollection(mutaction.model.name)
-    val filter                                = WhereToBson(mutaction.where)
-    val previousValues: Future[Option[PrismaNode]] = collection.find(filter).collect().toFuture.map { results: Seq[Document] =>
-      results.headOption.map { result =>
-        val root = DocumentToRoot(mutaction.model, result)
-        PrismaNode(root.idField, root)
-      }
-    }
-
-    val nonListValues = mutaction.nonListArgs.raw.asRoot.map.map { case (k, v) => set(k, GCValueBsonTransformer(v)) }.toVector
-
-    val listValues = mutaction.listArgs.map { case (f, v) => set(f, v) }
-
-    val updates = combine(nonListValues ++ listValues: _*)
+    val collection: MongoCollection[Document]      = database.getCollection(mutaction.model.name)
+    val previousValues: Future[Option[PrismaNode]] = getNodeByWhere(mutaction.where, database)
 
     previousValues.flatMap {
+      case None =>
+        throw APIErrors.NodeNotFoundForWhereError(mutaction.where)
+
       case Some(node) =>
+        val nonListValues = mutaction.nonListArgs.raw.asRoot.map.map { case (k, v) => set(k, GCValueBsonTransformer(v)) }.toVector
+        val listValues    = mutaction.listArgs.map { case (f, v) => set(f, v) }
+
+        // can have nested mutations
+        //    delete
+        //    update
+        //    create
+
         collection
-          .updateOne(filter, updates)
+          .updateOne(WhereToBson(mutaction.where), combine(nonListValues ++ listValues: _*))
           .toFuture()
           .map(_ => MutactionResults(Vector(UpdateNodeResult(node.id, node, mutaction))))
-      case None => throw APIErrors.NodeNotFoundForWhereError(mutaction.where)
     }
-
   }
 
-  //Fixme the core could do the datetime stuff
-  private def currentDateTimeGCValue = DateTimeGCValue(DateTime.now(DateTimeZone.UTC))
+  def nestedUpdateNode(mutaction: NestedUpdateNode, parentId: IdGCValue)(implicit ec: ExecutionContext): SimpleMongoAction[MutactionResults] =
+    SimpleMongoAction { database =>
+//    val collection: MongoCollection[Document] = database.getCollection(mutaction.model.name)
+//    val filter                                = WhereToBson(mutaction.where)
+//    val previousValues: Future[Option[PrismaNode]] = collection.find(filter).collect().toFuture.map { results: Seq[Document] =>
+//      results.headOption.map { result =>
+//        val root = DocumentToRoot(mutaction.model, result)
+//        PrismaNode(root.idField, root)
+//      }
+//    }
+//
+//    previousValues.flatMap {
+//      case None =>
+//        throw APIErrors.NodeNotFoundForWhereError(mutaction.where)
+//
+//      case Some(node) =>
+//        val nonListValues = mutaction.nonListArgs.raw.asRoot.map.map { case (k, v) => set(k, GCValueBsonTransformer(v)) }.toVector
+//        val listValues    = mutaction.listArgs.map { case (f, v) => set(f, v) }
+//
+//        // can have nested mutations
+//        //    delete
+//        //    update
+//        //    create
+//
+//
+//        collection
+//          .updateOne(filter, combine(nonListValues ++ listValues: _*))
+//          .toFuture()
+//          .map(_ => MutactionResults(Vector(UpdateNodeResult(node.id, node, mutaction))))
+//    }
 
+      ???
+    }
 }

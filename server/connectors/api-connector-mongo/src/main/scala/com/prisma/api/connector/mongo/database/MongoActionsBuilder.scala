@@ -14,7 +14,7 @@ trait AllActions
     with MiscActions
 
 trait AllQueries
-//  extends NodeSingleQueries
+  extends NodeSingleQueries
 //    with NodeManyQueries
 //    with RelationQueries
 //    with ScalarListQueries

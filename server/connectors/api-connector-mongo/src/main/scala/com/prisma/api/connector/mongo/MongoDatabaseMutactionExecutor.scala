@@ -69,23 +69,23 @@ class MongoDatabaseMutactionExecutor(client: MongoClient)(implicit ec: Execution
   def interpreterFor(mutaction: TopLevelDatabaseMutaction): TopLevelDatabaseMutactionInterpreter = mutaction match {
     case m: TopLevelCreateNode => CreateNodeInterpreter(mutaction = m, includeRelayRow = false)
     case m: TopLevelUpdateNode => UpdateNodeInterpreter(mutaction = m)
-    case m: TopLevelUpsertNode => ???
+    case m: TopLevelUpsertNode => ??? //delayed
     case m: TopLevelDeleteNode => DeleteNodeInterpreter(mutaction = m)
-    case m: UpdateNodes        => ???
-    case m: DeleteNodes        => ???
+    case m: UpdateNodes        => ??? //delayed
+    case m: DeleteNodes        => ??? //delayed
     case m: ResetData          => ResetDataInterpreter(mutaction = m)
-    case m: ImportNodes        => ???
-    case m: ImportRelations    => ???
-    case m: ImportScalarLists  => ???
+    case m: ImportNodes        => ??? //delayed
+    case m: ImportRelations    => ??? //delayed
+    case m: ImportScalarLists  => ??? //delayed
   }
 
   def interpreterFor(mutaction: NestedDatabaseMutaction): NestedDatabaseMutactionInterpreter = mutaction match {
     case m: NestedCreateNode => NestedCreateNodeInterpreter(mutaction = m, includeRelayRow = false)
-    case m: NestedUpdateNode => ???
-    case m: NestedUpsertNode => ???
+    case m: NestedUpdateNode => NestedUpdateNodeInterpreter(mutaction = m)
+    case m: NestedUpsertNode => ??? //delayed
     case m: NestedDeleteNode => ???
-    case m: NestedConnect    => ???
-    case m: NestedDisconnect => ???
+    case m: NestedConnect    => ??? //delayed
+    case m: NestedDisconnect => ??? //delayed
   }
 
   def run[A](database: MongoDatabase, action: MongoAction[A]): Future[A] = {
