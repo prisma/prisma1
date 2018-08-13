@@ -11,7 +11,7 @@ case class MongoDeployConnector(config: DatabaseConfig)(implicit ec: ExecutionCo
   lazy val internalDatabaseDefs = MongoInternalDatabaseDefs(config)
   lazy val mongoClient          = internalDatabaseDefs.client
 
-  override def isActive: Boolean = false
+  override def isActive: Boolean = true
 
   override def projectPersistence: ProjectPersistence = ???
 
