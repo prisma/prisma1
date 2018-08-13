@@ -131,10 +131,7 @@ trait NodeActions {
       }
     }
 
-    val nonListValues = mutaction.nonListArgs.raw.asRoot.map.map {
-      case ("id", v) => set("_id", GCValueBsonTransformer(v))
-      case (k, v)    => set(k, GCValueBsonTransformer(v))
-    }.toVector
+    val nonListValues = mutaction.nonListArgs.raw.asRoot.map.map { case (k, v) => set(k, GCValueBsonTransformer(v)) }.toVector
 
     val listValues = mutaction.listArgs.map { case (f, v) => set(f, v) }
 

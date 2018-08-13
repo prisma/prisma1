@@ -1,7 +1,5 @@
 package com.prisma.api.connector.mongo
 
-import java.util
-
 import com.prisma.api.connector._
 import com.prisma.gc_values._
 import com.prisma.shared.models.TypeIdentifier.TypeIdentifier
@@ -10,7 +8,7 @@ import org.bson.BsonString
 import org.joda.time.DateTime
 import org.mongodb.scala.bson.{BsonBoolean, BsonDateTime, BsonDouble, BsonInt32, BsonNull, BsonValue}
 import org.mongodb.scala.model.Filters
-import org.mongodb.scala.{Document, MongoClient, MongoCollection, MongoDatabase}
+import org.mongodb.scala.{Document, MongoClient, MongoCollection}
 import play.api.libs.json.Json
 
 import scala.collection.mutable
@@ -21,6 +19,7 @@ case class MongoDataResolver(project: Project, client: MongoClient)(implicit ec:
 
   override def getModelForGlobalId(globalId: CuidGCValue): Future[Option[Model]] = ???
 
+  //Fixme this does not use selected fields
   override def getNodeByWhere(where: NodeSelector, selectedFields: SelectedFields): Future[Option[PrismaNode]] = {
     val collection: MongoCollection[Document] = database.getCollection(where.model.dbName)
 
@@ -37,9 +36,18 @@ case class MongoDataResolver(project: Project, client: MongoClient)(implicit ec:
 
   override def countByTable(table: String, whereFilter: Option[Filter]): Future[Int] = ???
 
-  // implement these later
-  override def getNodes(model: Model, args: Option[QueryArguments], selectedFields: SelectedFields): Future[ResolverResult[PrismaNode]] =
-    Future.successful(ResolverResult[PrismaNode](Vector.empty, false, false, None))
+  // Fixme this does not use filters or selected fields
+  override def getNodes(model: Model, args: Option[QueryArguments], selectedFields: SelectedFields): Future[ResolverResult[PrismaNode]] = {
+    val collection: MongoCollection[Document] = database.getCollection(model.dbName)
+
+    val nodes: Future[Seq[PrismaNode]] = collection.find().collect().toFuture.map { results: Seq[Document] =>
+      results.map { result =>
+        val root = DocumentToRoot(model, result)
+        PrismaNode(root.idField, root)
+      }
+    }
+    nodes.map(n => ResolverResult[PrismaNode](n.toVector, false, false, None))
+  }
 
   override def getRelatedNodes(fromField: RelationField,
                                fromNodeIds: Vector[IdGCValue],
