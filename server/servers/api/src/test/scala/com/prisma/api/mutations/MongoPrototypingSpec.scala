@@ -14,6 +14,7 @@ class MongoPrototypingSpec extends FlatSpec with Matchers with ApiSpecBase {
         |   unique: Int! @unique
         |   name: String!
         |   middle: Middle
+        |   createdAt: DateTime!
         |}
         |
         |type Middle {
@@ -21,12 +22,14 @@ class MongoPrototypingSpec extends FlatSpec with Matchers with ApiSpecBase {
         |   unique: Int! @unique
         |   name: String!
         |   bottom: Bottom
+        |   createdAt: DateTime!
         |}
         |
         |type Bottom {
         |   id: ID! @unique
         |   unique: Int! @unique
         |   name: String!
+        |   updatedAt: DateTime!
         |}"""
     }
 
@@ -47,10 +50,13 @@ class MongoPrototypingSpec extends FlatSpec with Matchers with ApiSpecBase {
          |   }}
          |}){
          |  unique,
+         |  createdAt
          |  middle{
          |    unique,
+         |    createdAt,
          |    bottom{
          |      unique
+         |      updatedAt
          |    }
          |  }
          |}}""".stripMargin,
@@ -114,6 +120,33 @@ class MongoPrototypingSpec extends FlatSpec with Matchers with ApiSpecBase {
          |    }
          |  }
          |}}""".stripMargin,
+      project
+    )
+  }
+
+  "ListValues" should "work" in {
+
+    val project = SchemaDsl.fromString() {
+      """type Top {
+        |   id: ID! @unique
+        |   unique: Int! @unique
+        |   name: String!
+        |   ints: [Int!]!
+        |}"""
+    }
+
+    database.setup(project)
+
+    server.query(
+      s"""mutation {
+         |   createTop(data: {
+         |   unique: 1,
+         |   name: "Top",
+         |   ints: {set:[1,2,3,4,5]}
+         |}){
+         |  unique,
+         |  ints
+         |}}""",
       project
     )
   }

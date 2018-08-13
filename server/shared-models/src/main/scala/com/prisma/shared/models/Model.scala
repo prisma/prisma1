@@ -1,7 +1,7 @@
 package com.prisma.shared.models
 
-import com.prisma.shared.models.IdType.Id
 import com.prisma.shared.models.Manifestations.ModelManifestation
+
 import scala.language.implicitConversions
 
 case class ModelTemplate(
@@ -42,7 +42,8 @@ class Model(
   lazy val idField                                       = getScalarFieldByName("id")
   lazy val idField_!                                     = getScalarFieldByName_!("id")
   lazy val dbNameOfIdField_!                             = idField_!.dbName
-  lazy val updatedAtField                                = getFieldByName("updatedAt")
+  lazy val hasUpdatedAtField                             = getFieldByName("updatedAt").isDefined
+  lazy val hasCratedAtField                              = getFieldByName("createdAt").isDefined
   lazy val hasVisibleIdField: Boolean                    = idField.exists(_.isVisible)
 
   def filterScalarFields(fn: ScalarField => Boolean): Model = {

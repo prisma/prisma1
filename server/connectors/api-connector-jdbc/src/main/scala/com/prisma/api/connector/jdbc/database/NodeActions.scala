@@ -27,12 +27,8 @@ trait NodeActions extends BuilderBase with FilterConditionBuilder with ScalarLis
 
     insertReturningGeneratedKeysToDBIO(query)(
       setParams = { pp =>
-        val currentTimestamp = currentSqlTimestampUTC
         fields.foreach { field =>
-          argsAsRoot.map(field.name) match {
-            case NullGCValue if field.name == createdAtField || field.name == updatedAtField => pp.setTimestamp(currentTimestamp)
-            case gcValue                                                                     => pp.setGcValue(gcValue)
-          }
+          pp.setGcValue(argsAsRoot.map(field.name))
         }
       },
       readResult = { rs =>
@@ -58,7 +54,7 @@ trait NodeActions extends BuilderBase with FilterConditionBuilder with ScalarLis
     if (updateArgs.raw.asRoot.map.isEmpty) {
       DBIOAction.successful(id)
     } else {
-      val actualArgs = addUpdatedAt(model, updateArgs.raw.asRoot)
+      val actualArgs = updateArgs.raw.asRoot
       val columns    = actualArgs.map.map { case (k, _) => model.getFieldByName_!(k).dbName }.toList
       val values     = actualArgs.map.map { case (_, v) => v }
 
@@ -76,20 +72,12 @@ trait NodeActions extends BuilderBase with FilterConditionBuilder with ScalarLis
     }
   }
 
-  private def addUpdatedAt(model: Model, updateValues: RootGCValue): RootGCValue = {
-    model.updatedAtField match {
-      case Some(updatedAtField) => updateValues.add(updatedAtField.name, currentDateTimeGCValue)
-      case None                 => updateValues
-    }
-  }
-
   def updateNodes(model: Model, args: PrismaArgs, whereFilter: Option[Filter]): DBIO[_] = {
     if (args.raw.asRoot.map.nonEmpty) {
-      val actualArgs   = addUpdatedAt(model, args.raw.asRoot).map
       val aliasedTable = modelTable(model).as(topLevelAlias)
       val condition    = buildConditionForFilter(whereFilter)
 
-      val columns = actualArgs.map { case (k, _) => model.getFieldByName_!(k).dbName }.toList
+      val columns = args.raw.asRoot.map.map { case (k, _) => model.getFieldByName_!(k).dbName }.toList
       val query = sql
         .update(aliasedTable)
         .setColumnsWithPlaceHolders(columns)
@@ -97,7 +85,7 @@ trait NodeActions extends BuilderBase with FilterConditionBuilder with ScalarLis
 
       updateToDBIO(query)(
         setParams = pp => {
-          actualArgs.foreach { case (_, v) => pp.setGcValue(v) }
+          args.raw.asRoot.map.foreach { case (_, v) => pp.setGcValue(v) }
           whereFilter.foreach(filter => SetParams.setFilter(pp, filter))
         }
       )

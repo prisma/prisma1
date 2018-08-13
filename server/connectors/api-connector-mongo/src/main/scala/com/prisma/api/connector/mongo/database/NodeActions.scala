@@ -55,10 +55,6 @@ trait NodeActions {
         .filter(field => mutaction.nonListArgs.hasArgFor(field) && mutaction.nonListArgs.getFieldValue(field.name).get != NullGCValue)
         .map(field => field.name -> mutaction.nonListArgs.getFieldValue(field).get)
 
-    val listValues: Vector[(String, ListGCValue)] = mutaction.listArgs.map { case (f, v) => f -> v }
-    val nonRelationValues
-      : List[(String, GCValue)] = nonListValues ++ listValues :+ "createdAt" -> currentDateTimeGCValue :+ "updatedAt" -> currentDateTimeGCValue
-
     val nestedCreates: immutable.Seq[(RelationField, Document)] = mutaction.nestedCreates.map(m => m.relationField -> createToDoc(m))
 
     val grouped: Map[RelationField, immutable.Seq[Document]] = nestedCreates.groupBy(_._1).mapValues(_.map(_._2))
@@ -74,7 +70,7 @@ trait NodeActions {
       }
     }
 
-    Document(nonRelationValues) ++ nestedCreateFields
+    Document(nonListValues ++ mutaction.listArgs) ++ nestedCreateFields
 
     //this should also return all the mutactions it hit
   }
@@ -140,9 +136,9 @@ trait NodeActions {
 
     val listValues = mutaction.listArgs.map { case (f, v) => set(f, v) }
 
-    val updatedAt = set("updatedAt", GCValueBsonTransformer(currentDateTimeGCValue))
+//    val updatedAt = set("updatedAt", GCValueBsonTransformer(currentDateTimeGCValue))
 
-    val updates = combine(nonListValues ++ listValues :+ updatedAt: _*)
+    val updates = combine(nonListValues ++ listValues: _*) //:+ updatedAt: _*)
 
     previousValues.flatMap {
       case Some(node) =>
