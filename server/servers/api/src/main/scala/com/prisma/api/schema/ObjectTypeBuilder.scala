@@ -304,8 +304,8 @@ class ObjectTypeBuilder(
 
       case f: RelationField if !f.isList =>
         if (capabilities.contains(EmbeddedTypesCapability)) {
-          val root = item.data.map(field.name).asRoot
-          PrismaNode(CuidGCValue.random(), root)
+          item.data.map.get(field.name).map(value => PrismaNode(CuidGCValue.random(), value.asRoot))
+
         } else {
           val arguments = extractQueryArgumentsFromContext(f.relatedModel_!, ctx.asInstanceOf[Context[ApiUserContext, Unit]])
           ToOneDeferred(f, item.id, arguments, ctx.getSelectedFields(f.relatedModel_!))

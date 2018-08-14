@@ -11,7 +11,7 @@ import org.joda.time.{DateTime, DateTimeZone}
 import org.mongodb.scala.bson.conversions.Bson
 import org.mongodb.scala.bson.{BsonArray, BsonBoolean, BsonDateTime, BsonDouble, BsonInt32, BsonString, BsonTransformer, BsonValue}
 import org.mongodb.scala.model.Filters
-import org.mongodb.scala.model.Updates.{combine, set}
+import org.mongodb.scala.model.Updates.{combine, set, unset}
 import org.mongodb.scala.{Document, MongoCollection}
 
 import scala.collection.immutable
@@ -138,21 +138,43 @@ trait NodeActions extends NodeSingleQueries {
         val nonListValues = mutaction.nonListArgs.raw.asRoot.map.map { case (k, v) => set(k, GCValueBsonTransformer(v)) }.toVector
         val listValues    = mutaction.listArgs.map { case (f, v) => set(f, v) }
 
-        // can have nested mutations
-
-        //    delete - only toOne
-
-        //    update - only toOne
-
         //    create
         val (nestedCreateResults: Vector[DatabaseMutactionResult], nestedCreateFields: Map[String, BsonValue]) =
           nestedCreateDocsAndResults(mutaction.nestedCreates)
         val nestedCreateValues = nestedCreateFields.map { case (f, v) => set(f, v) }
 
+        //    delete - only toOne
+        val toOneDeletes = mutaction.nestedDeletes.collect { case m if !m.relationField.isList => m }
+        val nestedDeletes = toOneDeletes.map { delete =>
+          unset(delete.relationField.name)
+        }
+        val nestedDeleteResults = toOneDeletes.map { delete =>
+          val random = CuidGCValue.random
+          DeleteNodeResult(random, PrismaNode(random, node.data.map(delete.relationField.name).asRoot), delete)
+        }
+
+        //    update - only toOne
+//        val toOneUpdates = mutaction.nestedUpdates.collect { case m if !m.relationField.isList => m }
+//        val nestedUpdateValues = toOneUpdates.map { update =>
+//          val top = update.relationField.name
+//
+//          val nestedNonListValues = update.nonListArgs.raw.asRoot.map.map { case (k, v) => set(k, GCValueBsonTransformer(v)) }.toVector
+//          val nestedListValues    = update.listArgs.map { case (f, v) => set(f, v) }
+//          val (nestedNestedCreateResults: Vector[DatabaseMutactionResult], nestedNestedCreateFields: Map[String, BsonValue]) =
+//            nestedCreateDocsAndResults(update.nestedCreates)
+//          val nestedCreateValues = nestedNestedCreateFields.map { case (f, v) => set(f, v) }
+//
+//          val nestedDeletes = update.nestedDeletes.map{delete =>
+//            set(top, null)
+//          }
+//          update.nestedUpdates
+//
+//        }
+
         collection
-          .updateOne(WhereToBson(mutaction.where), combine(nonListValues ++ listValues ++ nestedCreateValues: _*))
+          .updateOne(WhereToBson(mutaction.where), combine(nonListValues ++ listValues ++ nestedCreateValues ++ nestedDeletes: _*))
           .toFuture()
-          .map(_ => MutactionResults(Vector(UpdateNodeResult(node.id, node, mutaction)) ++ nestedCreateResults))
+          .map(_ => MutactionResults(Vector(UpdateNodeResult(node.id, node, mutaction)) ++ nestedCreateResults ++ nestedDeleteResults))
     }
   }
 

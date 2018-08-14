@@ -1,7 +1,7 @@
 package com.prisma.api.mutactions
 
 import com.prisma.api.connector._
-import com.prisma.gc_values.NullGCValue
+import com.prisma.gc_values.{NullGCValue, RootGCValue}
 import com.prisma.shared.models.IdType.Id
 import com.prisma.shared.models.Project
 
@@ -29,7 +29,7 @@ object SubscriptionEvents {
 
   private def fromUpdateResult(project: Project, mutationId: Id, result: UpdateNodeResult): PublishSubscriptionEvent = {
     val previousValues: Map[String, Any] = result.previousValues.data
-      .filterValues(_ != NullGCValue)
+      .filterValues(v => v != NullGCValue && !v.isInstanceOf[RootGCValue])
       .toMapStringAny + ("id" -> result.previousValues.id.value)
 
     val model = result.mutaction.model
