@@ -46,11 +46,12 @@ export default class Playground extends Command {
     port: flags.number({
       char: 'p',
       defaultValue: 3000,
-      description: 'Port to serve the Playground web version on',
+      description: 'Port to serve the Playground web version on. Assumes --web.',
     }),
   }
   async run() {
-    const { web, port } = this.flags
+    const port = this.flags.port
+    const web = !!(this.flags.web || port)
     const envFile = this.flags['env-file']
     const serverOnly = this.flags['server-only']
     await this.definition.load(this.flags, envFile)
