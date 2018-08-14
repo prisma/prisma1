@@ -1975,9 +1975,9 @@ graphcool-inquirer@^1.0.3:
     strip-ansi "^4.0.0"
     through "^2.3.6"
 
-graphql-binding@3.0.0-alpha.1:
-  version "3.0.0-alpha.1"
-  resolved "https://registry.yarnpkg.com/graphql-binding/-/graphql-binding-3.0.0-alpha.1.tgz#431e522ba1ff75cace9999962983b334193490a7"
+graphql-binding@3.0.0-alpha.4:
+  version "3.0.0-alpha.4"
+  resolved "https://registry.yarnpkg.com/graphql-binding/-/graphql-binding-3.0.0-alpha.4.tgz#360d7843a1619bf2b0e018758426cde237014b06"
   dependencies:
     graphql-import "^0.5.2"
     graphql-tools "3.1.0"
@@ -4030,15 +4030,15 @@ pretty-format@^21.2.1:
     ansi-regex "^3.0.0"
     ansi-styles "^3.2.0"
 
-prisma-binding@3.0.0-alpha.1:
-  version "3.0.0-alpha.1"
-  resolved "https://registry.yarnpkg.com/prisma-binding/-/prisma-binding-3.0.0-alpha.1.tgz#5192cf7d45d2f4d9fea98d147dbe134e2ffd541f"
+prisma-binding@3.0.0-alpha.5:
+  version "3.0.0-alpha.5"
+  resolved "https://registry.yarnpkg.com/prisma-binding/-/prisma-binding-3.0.0-alpha.5.tgz#5a13418f98c9e6470841524d291adc3fa29cd310"
   dependencies:
     apollo-link "1.2.2"
     apollo-link-error "1.0.9"
     apollo-link-ws "1.0.8"
     cross-fetch "2.1.1"
-    graphql-binding "3.0.0-alpha.1"
+    graphql-binding "3.0.0-alpha.4"
     graphql-import "0.5.2"
     graphql-tools "3.1.0"
     http-link-dataloader "^0.1.2"

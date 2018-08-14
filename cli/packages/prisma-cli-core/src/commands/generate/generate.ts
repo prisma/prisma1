@@ -1,11 +1,10 @@
 import { Command, flags, Flags } from 'prisma-cli-engine'
-// import { sync } from 'cross-spawn'
-import { spawnSync } from 'npm-run'
 import { prettyTime, concatName } from '../../util'
 import { fetchAndPrintSchema } from '../deploy/printSchema'
 import * as fs from 'fs-extra'
 import * as path from 'path'
-import { getTmpDir } from './getTmpDir'
+import { buildSchema } from 'graphql'
+import { PrismaTypescriptGenerator } from 'prisma-binding'
 
 export default class GenereateCommand extends Command {
   static topic = 'generate'
@@ -71,41 +70,11 @@ export default class GenereateCommand extends Command {
   }
 
   async generateTypescript(output: string, schemaString: string) {
+    const schema = buildSchema(schemaString)
+
+    const generator = new PrismaTypescriptGenerator({ schema })
     this.out.log(`Saving Prisma ORM (TypeScript) at ${output}`)
-    const tmpDir = getTmpDir()
-    const tmpSchemaPath = path.join(tmpDir, 'schema.graphql')
-    fs.writeFileSync(tmpSchemaPath, schemaString)
-    const args = ['-i', tmpSchemaPath, '--language', 'typescript', '-b', output]
-    // const binPath = path.join(
-    //   __dirname,
-    //   '../../../../../node_modules/prisma-binding/dist/bin.js',
-    // )
-    // const child = sync(binPath, args)
-    // const binPath = path.join(
-    //   __dirname,
-    //   '../../../../../node_modules/prisma-binding/dist/bin.js',
-    // )
-    const child = spawnSync(this.getPrismaBindingBinPath(), args)
-
-    if (child.error) {
-      this.out.error(child.error)
-    }
-  }
-
-  getPrismaBindingBinPath() {
-    let dots = ''
-    let count = 0
-    while (count < 6) {
-      const modulePath = path.join(
-        __dirname,
-        dots + 'node_modules/prisma-binding/dist/bin.js',
-      )
-      if (fs.pathExistsSync(modulePath)) {
-        return modulePath
-      }
-      count++
-      dots = `../${dots}`
-    }
-    return 'prisma-binding'
+    const code = generator.render()
+    fs.writeFileSync(output, code)
   }
 }
