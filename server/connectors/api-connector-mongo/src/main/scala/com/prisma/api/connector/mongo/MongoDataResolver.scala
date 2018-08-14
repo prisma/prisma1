@@ -110,7 +110,7 @@ object BisonToGC {
     case (TypeIdentifier.Boolean, value: BsonBoolean)   => BooleanGCValue(value.getValue)
     case (TypeIdentifier.DateTime, value: BsonDateTime) => DateTimeGCValue(new DateTime(value.getValue))
     case (TypeIdentifier.Json, value: BsonString)       => JsonGCValue(Json.parse(value.getValue))
-    case (TypeIdentifier.UUID, value: BsonString)       => sys.error("implement this")
+    case (TypeIdentifier.UUID, value: BsonString)       => sys.error("implement this" + value)
     case (_, value: BsonNull)                           => NullGCValue
     case (x, y)                                         => sys.error("Not implemented: " + x + y)
   }

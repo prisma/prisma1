@@ -2,6 +2,7 @@ package com.prisma.deploy.connector.mongo
 
 import com.prisma.config.DatabaseConfig
 import com.prisma.deploy.connector._
+import com.prisma.deploy.connector.mongo.impls.mutactions.MongoDeployMutactionExecutor
 import com.prisma.shared.models.{Project, ProjectIdEncoder}
 import org.joda.time.DateTime
 
@@ -17,11 +18,7 @@ case class MongoDeployConnector(config: DatabaseConfig)(implicit ec: ExecutionCo
 
   override def migrationPersistence: MigrationPersistence = ???
 
-  override def deployMutactionExecutor: DeployMutactionExecutor = new DeployMutactionExecutor {
-    override def execute(mutaction: DeployMutaction): Future[Unit] = Future.unit
-
-    override def rollback(mutaction: DeployMutaction): Future[Unit] = Future.unit
-  }
+  override def deployMutactionExecutor: DeployMutactionExecutor = MongoDeployMutactionExecutor(mongoClient)
 
   override def clientDBQueries(project: Project): ClientDbQueries = ???
 

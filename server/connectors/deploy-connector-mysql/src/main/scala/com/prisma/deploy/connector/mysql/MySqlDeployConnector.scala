@@ -22,7 +22,7 @@ case class MySqlDeployConnector(config: DatabaseConfig)(implicit ec: ExecutionCo
 
   override val projectPersistence: ProjectPersistence           = MySqlProjectPersistence(managementDatabase)
   override val migrationPersistence: MigrationPersistence       = MySqlMigrationPersistence(managementDatabase)
-  override val deployMutactionExecutor: DeployMutactionExecutor = MySqlDeployMutactionExectutor(projectDatabase)
+  override val deployMutactionExecutor: DeployMutactionExecutor = MySqlDeployMutactionExecutor(projectDatabase)
 
   override def createProjectDatabase(id: String): Future[Unit] = {
     val action = MySqlDeployDatabaseMutationBuilder.createClientDatabaseForProject(projectId = id)

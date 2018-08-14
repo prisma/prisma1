@@ -6,7 +6,7 @@ import slick.jdbc.MySQLProfile.api._
 
 import scala.concurrent.{ExecutionContext, Future}
 
-case class MySqlDeployMutactionExectutor(database: Database)(implicit ec: ExecutionContext) extends DeployMutactionExecutor {
+case class MySqlDeployMutactionExecutor(database: Database)(implicit ec: ExecutionContext) extends DeployMutactionExecutor {
   override def execute(mutaction: DeployMutaction): Future[Unit] = {
     val action = MySqlAnyMutactionInterpreter.execute(mutaction)
     database.run(action).map(_ => ())
