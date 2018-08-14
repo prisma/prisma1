@@ -1,6 +1,6 @@
 {
   "name": "prisma-cli-core",
-  "version": "1.1.37-alpha.3",
+  "version": "1.1.37-alpha.4",
   "main": "dist/index.js",
   "files": [
     "dist"
