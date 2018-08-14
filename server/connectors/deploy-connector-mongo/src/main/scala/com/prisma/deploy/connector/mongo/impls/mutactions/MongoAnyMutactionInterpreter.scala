@@ -20,7 +20,6 @@ object MongoAnyMutactionInterpreter extends MongoMutactionInterpreter[DeployMuta
       case x: CreateRelationTable   => CreateRelationInterpreter.execute(x)
       case x: DeleteRelationTable   => DeleteRelationInterpreter.execute(x)
       case x: CreateInlineRelation  => sys.error("Not supported on mongo")
-      case x                        => sys.error("Not supported on mongo" + x)
     }
   }
 
@@ -41,7 +40,6 @@ object MongoAnyMutactionInterpreter extends MongoMutactionInterpreter[DeployMuta
       case x: CreateRelationTable   => CreateRelationInterpreter.rollback(x)
       case x: DeleteRelationTable   => DeleteRelationInterpreter.rollback(x)
       case x: CreateInlineRelation  => sys.error("Not supported on mongo")
-      case x                        => sys.error("Not supported on mongo" + x)
     }
   }
 }

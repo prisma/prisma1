@@ -48,7 +48,7 @@ object SubscriptionEvents {
   }
 
   private def fromDeleteResult(project: Project, mutationId: Id, result: DeleteNodeResult): PublishSubscriptionEvent = {
-    val previousValues = result.previousValues.data.filterValues(_ != NullGCValue).toMapStringAny + ("id" -> result.id)
+    val previousValues = result.previousValues.data.filterValues(v => v != NullGCValue && !v.isInstanceOf[RootGCValue]).toMapStringAny + ("id" -> result.id)
     val model          = result.mutaction.model
 
     PublishSubscriptionEvent(

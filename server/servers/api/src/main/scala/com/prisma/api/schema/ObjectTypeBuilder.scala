@@ -139,21 +139,16 @@ class ObjectTypeBuilder(
     }
   }
 
-  def resolveConnection(field: RelationField): OutputType[Any] = {
-    field.isList match {
-      case true  => ListType(modelObjectTypes(field.relatedModel_!.name))
-      case false => modelObjectTypes(field.relatedModel_!.name)
-    }
+  def resolveConnection(field: RelationField): OutputType[Any] = field.isList match {
+    case true  => ListType(modelObjectTypes(field.relatedModel_!.name))
+    case false => modelObjectTypes(field.relatedModel_!.name)
   }
 
-  def mapToListConnectionArguments(model: models.Model, field: models.Field): List[Argument[Option[Any]]] = {
-
-    field match {
-      case f if f.isHidden               => List.empty
-      case _: ScalarField                => List.empty
-      case f: RelationField if f.isList  => mapToListConnectionArguments(f.relatedModel_!)
-      case f: RelationField if !f.isList => mapToSingleConnectionArguments(f.relatedModel_!)
-    }
+  def mapToListConnectionArguments(model: models.Model, field: models.Field): List[Argument[Option[Any]]] = field match {
+    case f if f.isHidden               => List.empty
+    case _: ScalarField                => List.empty
+    case f: RelationField if f.isList  => mapToListConnectionArguments(f.relatedModel_!)
+    case f: RelationField if !f.isList => mapToSingleConnectionArguments(f.relatedModel_!)
   }
 
   def mapToListConnectionArguments(model: Model): List[Argument[Option[Any]]] = {
