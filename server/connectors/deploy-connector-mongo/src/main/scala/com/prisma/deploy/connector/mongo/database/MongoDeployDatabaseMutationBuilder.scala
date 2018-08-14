@@ -13,7 +13,7 @@ object MongoDeployDatabaseMutationBuilder {
     database.listCollectionNames().toFuture().map(_ => ())
   }
   def truncateProjectTables(project: Project) = DeployMongoAction { database =>
-    noAction
+    database.drop().toFuture().map(_ -> Unit)
   }
 
   def deleteProjectDatabase(projectId: String) = DeployMongoAction { database =>
