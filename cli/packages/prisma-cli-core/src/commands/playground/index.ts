@@ -1,13 +1,11 @@
 import { Command, flags, Flags } from 'prisma-cli-engine'
 import * as opn from 'opn'
 import * as fs from 'fs-extra'
-import * as childProcess from 'child_process'
 const debug = require('debug')('playground')
 import * as path from 'path'
 import * as os from 'os'
 import * as crypto from 'crypto'
 import chalk from 'chalk'
-import { spawn } from '../../spawn'
 import * as express from 'express'
 import * as requestProxy from 'express-request-proxy'
 import expressPlayground from 'graphql-playground-middleware-express'
@@ -52,13 +50,12 @@ export default class Playground extends Command {
   async run() {
     const port = this.flags.port
     const web = !!(this.flags.web || port)
+
     const envFile = this.flags['env-file']
     const serverOnly = this.flags['server-only']
     await this.definition.load(this.flags, envFile)
 
-    const serviceName = this.definition.service!
     const stage = this.definition.stage!
-    const workspace = this.definition.getWorkspace()
     const cluster = this.definition.getCluster()
 
     const localPlaygroundPath = `/Applications/GraphQL\ Playground.app/Contents/MacOS/GraphQL\ Playground`
