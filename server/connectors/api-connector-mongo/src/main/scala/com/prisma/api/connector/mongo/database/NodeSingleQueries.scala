@@ -1,15 +1,15 @@
 package com.prisma.api.connector.mongo.database
 
 import com.prisma.api.connector.mongo.DocumentToRoot
+import com.prisma.api.connector.mongo.database.NodeSelectorBsonTransformer.WhereToBson
 import com.prisma.api.connector.{Filter, NodeSelector, PrismaNode, SelectedFields}
 import com.prisma.gc_values.IdGCValue
 import com.prisma.shared.models.{Model, RelationField, Schema}
-import org.mongodb.scala.model.Filters
 import org.mongodb.scala.{Document, MongoCollection, MongoDatabase}
 
+import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.{ExecutionContext, Future}
 import scala.language.existentials
-import scala.concurrent.ExecutionContext.Implicits.global
 
 trait NodeSingleQueries {
 
@@ -20,11 +20,7 @@ trait NodeSingleQueries {
 
   def getNodeByWhere(where: NodeSelector, selectedFields: SelectedFields, database: MongoDatabase): Future[Option[PrismaNode]] = {
     val collection: MongoCollection[Document] = database.getCollection(where.model.dbName)
-
-    val fieldName = if (where.fieldName == "id") "_id" else where.fieldName
-    val filter    = Filters.eq(fieldName, where.fieldGCValue.value)
-
-    collection.find(filter).collect().toFuture.map { results: Seq[Document] =>
+    collection.find(WhereToBson(where)).collect().toFuture.map { results: Seq[Document] =>
       results.headOption.map { result =>
         val root = DocumentToRoot(where.model, result)
         PrismaNode(root.idField, root)

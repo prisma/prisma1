@@ -61,7 +61,7 @@ case class MongoDataResolver(project: Project, client: MongoClient)(implicit ec:
   override def getRelationNodes(relationTableName: String, args: Option[QueryArguments]): Future[ResolverResult[RelationNode]] = ???
 }
 
-object DocumentToRoot {
+object DocumentToRoot2 {
   def apply(model: Model, document: Document): RootGCValue =
     RootGCValue(document.map {
       case ("_id", v)       => "id"        -> BisonToGC(model.getScalarFieldByName_!("id"), v)
@@ -69,6 +69,25 @@ object DocumentToRoot {
       case ("updatedAt", v) => "updatedAt" -> BisonToGC(TypeIdentifier.DateTime, v)
       case (k, v)           => k           -> BisonToGC(model.getFieldByName_!(k), v)
     }.toMap)
+}
+
+object DocumentToRoot {
+  def apply(model: Model, document: Document): RootGCValue = {
+    val nonReservedFields = model.scalarNonListFields.filter(f => f.name != "createdAt" && f.name != "updatedAt" && f.name != "id")
+    val scalarNonList: List[(String, GCValue)] =
+      nonReservedFields.map(field => field.name -> document.get(field.name).map(v => BisonToGC(field, v)).getOrElse(NullGCValue))
+    val createdAt: (String, GCValue) =
+      document.get("createdAt").map(v => "createdAt" -> BisonToGC(TypeIdentifier.DateTime, v)).getOrElse("createdAt" -> NullGCValue)
+    val updatedAt: (String, GCValue) =
+      document.get("updatedAt").map(v => "updatedAt" -> BisonToGC(TypeIdentifier.DateTime, v)).getOrElse("updatedAt" -> NullGCValue)
+    val id: (String, GCValue) = document.get("_id").map(v => "id" -> BisonToGC(model.fields.find(_.name == "id").get, v)).getOrElse("id" -> CuidGCValue.random)
+    val scalarList: List[(String, GCValue)] =
+      model.scalarListFields.map(field => field.name -> document.get(field.name).map(v => BisonToGC(field, v)).getOrElse(NullGCValue))
+    val relationFields: List[(String, GCValue)] =
+      model.relationFields.map(field => field.name -> document.get(field.name).map(v => BisonToGC(field, v)).getOrElse(NullGCValue))
+
+    RootGCValue((scalarNonList ++ scalarList ++ relationFields :+ createdAt :+ updatedAt :+ id).toMap)
+  }
 }
 
 object BisonToGC {

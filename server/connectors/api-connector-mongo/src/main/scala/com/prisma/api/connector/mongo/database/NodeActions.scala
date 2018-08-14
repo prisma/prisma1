@@ -7,6 +7,7 @@ import com.prisma.api.connector.mongo.database.NodeSelectorBsonTransformer.Where
 import com.prisma.api.schema.APIErrors
 import com.prisma.gc_values._
 import com.prisma.shared.models.RelationField
+import org.joda.time.DateTime
 import org.mongodb.scala.bson.conversions.Bson
 import org.mongodb.scala.bson.{BsonArray, BsonBoolean, BsonDateTime, BsonDouble, BsonInt32, BsonString, BsonTransformer, BsonValue, conversions}
 import org.mongodb.scala.model.Filters
@@ -41,7 +42,12 @@ object NodeSelectorBsonTransformer {
   implicit object WhereToBson {
     def apply(where: NodeSelector): Bson = {
       val fieldName = if (where.fieldName == "id") "_id" else where.fieldName
-      Filters.eq(fieldName, where.fieldGCValue.value)
+      val value = where.fieldGCValue.value match {
+        case x: DateTime => x.getMillis
+        case z           => z
+      }
+
+      Filters.eq(fieldName, value)
     }
   }
 }
@@ -95,17 +101,19 @@ trait NodeActions extends NodeSingleQueries {
 
   def createNestedNode(mutaction: NestedCreateNode, parentId: IdGCValue)(implicit ec: ExecutionContext): SimpleMongoAction[MutactionResults] =
     SimpleMongoAction { database =>
-      val parentModel                                                             = mutaction.relationField.model
-      val relatedField                                                            = mutaction.relationField
-      val filter                                                                  = WhereToBson(NodeSelector.forIdGCValue(parentModel, parentId))
-      val collection: MongoCollection[Document]                                   = database.getCollection(parentModel.dbName)
-      val (docWithoutId: Document, childResults: Vector[DatabaseMutactionResult]) = createToDoc(mutaction)
-      val updates                                                                 = set(relatedField.name, docWithoutId)
+//      val parentModel                                                             = mutaction.relationField.model
+//      val relatedField                                                            = mutaction.relationField
+//      val filter                                                                  = WhereToBson(NodeSelector.forIdGCValue(parentModel, parentId))
+//      val collection: MongoCollection[Document]                                   = database.getCollection(parentModel.dbName)
+//      val (docWithoutId: Document, childResults: Vector[DatabaseMutactionResult]) = createToDoc(mutaction)
+//      val updates                                                                 = set(relatedField.name, docWithoutId)
+//
+//      collection
+//        .updateOne(filter, updates)
+//        .toFuture()
+//        .map(_ => MutactionResults(Vector(CreateNodeResult(CuidGCValue.random(), mutaction)) ++ childResults))
 
-      collection
-        .updateOne(filter, updates)
-        .toFuture()
-        .map(_ => MutactionResults(Vector(CreateNodeResult(CuidGCValue.random(), mutaction)) ++ childResults))
+      ???
     }
 
   def deleteNode(mutaction: TopLevelDeleteNode)(implicit ec: ExecutionContext): SimpleMongoAction[MutactionResults] = SimpleMongoAction { database =>
@@ -124,6 +132,11 @@ trait NodeActions extends NodeSingleQueries {
       case None       => throw APIErrors.NodeNotFoundForWhereError(mutaction.where)
     }
   }
+
+  def nestedDeleteNode(mutaction: NestedDeleteNode, parentId: IdGCValue)(implicit ec: ExecutionContext): SimpleMongoAction[MutactionResults] =
+    SimpleMongoAction { database =>
+      ???
+    }
 
   def updateNode(mutaction: TopLevelUpdateNode)(implicit ec: ExecutionContext): SimpleMongoAction[MutactionResults] = SimpleMongoAction { database =>
     val collection: MongoCollection[Document]      = database.getCollection(mutaction.model.name)

@@ -79,11 +79,12 @@ class MongoDatabaseMutactionExecutor(client: MongoClient)(implicit ec: Execution
     case m: ImportScalarLists  => ??? //delayed
   }
 
+  //for embedded types none of these should actually fire since they should be embedded in their toplevel actions
   def interpreterFor(mutaction: NestedDatabaseMutaction): NestedDatabaseMutactionInterpreter = mutaction match {
     case m: NestedCreateNode => NestedCreateNodeInterpreter(mutaction = m, includeRelayRow = false)
     case m: NestedUpdateNode => NestedUpdateNodeInterpreter(mutaction = m)
     case m: NestedUpsertNode => ??? //delayed
-    case m: NestedDeleteNode => ???
+    case m: NestedDeleteNode => NestedDeleteNodeInterpreter(mutaction = m)
     case m: NestedConnect    => ??? //delayed
     case m: NestedDisconnect => ??? //delayed
   }
