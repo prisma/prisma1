@@ -34,7 +34,7 @@ case class MongoDataResolver(project: Project, client: MongoClient)(implicit ec:
     }
   }
 
-  override def countByTable(table: String, whereFilter: Option[Filter]): Future[Int] = ???
+  override def countByTable(table: String, whereFilter: Option[Filter]): Future[Int] = database.getCollection(table).countDocuments().toFuture.map(_.toInt)
 
   // Fixme this does not use filters or selected fields
   override def getNodes(model: Model, args: Option[QueryArguments], selectedFields: SelectedFields): Future[ResolverResult[PrismaNode]] = {
@@ -59,16 +59,6 @@ case class MongoDataResolver(project: Project, client: MongoClient)(implicit ec:
   override def getScalarListValuesByNodeIds(model: Model, listField: ScalarField, nodeIds: Vector[IdGCValue]): Future[Vector[ScalarListValues]] = ???
 
   override def getRelationNodes(relationTableName: String, args: Option[QueryArguments]): Future[ResolverResult[RelationNode]] = ???
-}
-
-object DocumentToRoot2 {
-  def apply(model: Model, document: Document): RootGCValue =
-    RootGCValue(document.map {
-      case ("_id", v)       => "id"        -> BisonToGC(model.getScalarFieldByName_!("id"), v)
-      case ("createdAt", v) => "createdAt" -> BisonToGC(TypeIdentifier.DateTime, v)
-      case ("updatedAt", v) => "updatedAt" -> BisonToGC(TypeIdentifier.DateTime, v)
-      case (k, v)           => k           -> BisonToGC(model.getFieldByName_!(k), v)
-    }.toMap)
 }
 
 object DocumentToRoot {

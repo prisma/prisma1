@@ -7,6 +7,7 @@ object IgnorePostgres extends Tag("ignore.postgres")
 object IgnoreMySql    extends Tag("ignore.mysql")
 object IgnoreActive   extends Tag("ignore.active")
 object IgnorePassive  extends Tag("ignore.passive")
+object IgnoreMongo    extends Tag("ignore.mongo")
 
 trait ConnectorAwareTest extends SuiteMixin { self: Suite =>
   def prismaConfig: PrismaConfig
@@ -28,7 +29,7 @@ trait ConnectorAwareTest extends SuiteMixin { self: Suite =>
   }
 
   def ifConnectorIsActive[T](assertion: => T): Unit = {
-    if (connector.active) {
+    if (connector.active && connector.connector != "mongo") {
       assertion
     }
   }
