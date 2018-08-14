@@ -267,12 +267,13 @@ class MongoPrototypingSpec extends FlatSpec with Matchers with ApiSpecBase {
          |  unique,
          |  middle{
          |    unique
+         |    name
          |  }
          |}}""".stripMargin,
       project
     )
 
-    res2.toString should be("""{"data":{"createTop":{"unique":1,"middle":{"unique":11}}}}""")
+    res2.toString should be("""{"data":{"updateTop":{"unique":1,"middle":{"unique":11,"name":"Middle2"}}}}""")
   }
 
   "Deleting toOne relations" should "work" taggedAs (IgnorePassive) in {

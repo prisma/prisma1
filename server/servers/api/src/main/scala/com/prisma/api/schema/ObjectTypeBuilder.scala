@@ -295,7 +295,7 @@ class ObjectTypeBuilder(
         if (capabilities.contains(EmbeddedTypesCapability)) {
           item.data.map(field.name) match {
             case ListGCValue(values) => values.map(v => PrismaNode(CuidGCValue.random(), v.asRoot))
-            case x                   => sys.error("ObjecttypeBuilder not handled" + x)
+            case x                   => sys.error("ObjectTypeBuilder not handled" + x)
           }
         } else {
           val arguments = extractQueryArgumentsFromContext(f.relatedModel_!, ctx.asInstanceOf[Context[ApiUserContext, Unit]])

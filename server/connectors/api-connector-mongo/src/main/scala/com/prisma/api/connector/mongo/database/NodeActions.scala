@@ -7,9 +7,8 @@ import com.prisma.api.connector.mongo.database.NodeSelectorBsonTransformer.Where
 import com.prisma.api.schema.APIErrors
 import com.prisma.gc_values._
 import com.prisma.shared.models.RelationField
-import org.joda.time.{DateTime, DateTimeZone}
 import org.mongodb.scala.bson.conversions.Bson
-import org.mongodb.scala.bson.{BsonArray, BsonBoolean, BsonDateTime, BsonDouble, BsonInt32, BsonString, BsonTransformer, BsonValue}
+import org.mongodb.scala.bson.{BsonArray, BsonBoolean, BsonDateTime, BsonDouble, BsonInt32, BsonString, BsonTransformer, BsonValue, conversions}
 import org.mongodb.scala.model.Filters
 import org.mongodb.scala.model.Updates.{combine, set, unset}
 import org.mongodb.scala.{Document, MongoCollection}
@@ -135,79 +134,86 @@ trait NodeActions extends NodeSingleQueries {
         throw APIErrors.NodeNotFoundForWhereError(mutaction.where)
 
       case Some(node) =>
-        val nonListValues = mutaction.nonListArgs.raw.asRoot.map.map { case (k, v) => set(k, GCValueBsonTransformer(v)) }.toVector
-        val listValues    = mutaction.listArgs.map { case (f, v) => set(f, v) }
+        val nonListValues: Vector[Bson] = mutaction.nonListArgs.raw.asRoot.map.map { case (k, v) => set(k, GCValueBsonTransformer(v)) }.toVector
+        val listValues: Vector[Bson]    = mutaction.listArgs.map { case (f, v) => set(f, v) }
 
         //    create
-        val (nestedCreateResults: Vector[DatabaseMutactionResult], nestedCreateFields: Map[String, BsonValue]) =
+        val (nestedCreateResults: Vector[DatabaseMutactionResult], nestedCreateDocs: Map[String, BsonValue]) =
           nestedCreateDocsAndResults(mutaction.nestedCreates)
-        val nestedCreateValues = nestedCreateFields.map { case (f, v) => set(f, v) }
+        val nestedCreates: Vector[Bson] = nestedCreateDocs.map { case (f, v) => set(f, v) }.toVector
 
         //    delete - only toOne
-        val toOneDeletes = mutaction.nestedDeletes.collect { case m if !m.relationField.isList => m }
-        val nestedDeletes = toOneDeletes.map { delete =>
-          unset(delete.relationField.name)
-        }
+        val toOneDeletes                = mutaction.nestedDeletes.collect { case m if !m.relationField.isList => m }
+        val nestedDeletes: Vector[Bson] = toOneDeletes.map(delete => unset(delete.relationField.name))
         val nestedDeleteResults = toOneDeletes.map { delete =>
           val random = CuidGCValue.random
           DeleteNodeResult(random, PrismaNode(random, node.data.map(delete.relationField.name).asRoot), delete)
         }
 
         //    update - only toOne
-//        val toOneUpdates = mutaction.nestedUpdates.collect { case m if !m.relationField.isList => m }
-//        val nestedUpdateValues = toOneUpdates.map { update =>
-//          val top = update.relationField.name
-//
-//          val nestedNonListValues = update.nonListArgs.raw.asRoot.map.map { case (k, v) => set(k, GCValueBsonTransformer(v)) }.toVector
-//          val nestedListValues    = update.listArgs.map { case (f, v) => set(f, v) }
-//          val (nestedNestedCreateResults: Vector[DatabaseMutactionResult], nestedNestedCreateFields: Map[String, BsonValue]) =
-//            nestedCreateDocsAndResults(update.nestedCreates)
-//          val nestedCreateValues = nestedNestedCreateFields.map { case (f, v) => set(f, v) }
-//
-//          val nestedDeletes = update.nestedDeletes.map{delete =>
-//            set(top, null)
-//          }
-//          update.nestedUpdates
-//
-//        }
+        val toOneUpdates = mutaction.nestedUpdates.collect { case m if !m.relationField.isList => m }
+        val (nestedUpdateResults: Vector[DatabaseMutactionResult], nestedUpdates: Vector[conversions.Bson]) =
+          nestedUpdateDocsAndResults(node, toOneUpdates)
+
+        val updates = combine(nonListValues ++ listValues ++ nestedCreates ++ nestedDeletes ++ nestedUpdates: _*)
+        val results = Vector(UpdateNodeResult(node.id, node, mutaction)) ++ nestedCreateResults ++ nestedDeleteResults ++ nestedUpdateResults
 
         collection
-          .updateOne(WhereToBson(mutaction.where), combine(nonListValues ++ listValues ++ nestedCreateValues ++ nestedDeletes: _*))
+          .updateOne(WhereToBson(mutaction.where), updates)
           .toFuture()
-          .map(_ => MutactionResults(Vector(UpdateNodeResult(node.id, node, mutaction)) ++ nestedCreateResults ++ nestedDeleteResults))
+          .map(_ => MutactionResults(results))
     }
+  }
+
+  def combineThree(path: String, relationField: String, field: String) = {
+    path match {
+      case ""   => s"$relationField.$field"
+      case path => s"$path.$relationField.$field"
+    }
+  }
+
+  def combineTwo(path: String, relationField: String) = path match {
+    case ""   => relationField
+    case path => s"$path.$relationField"
+  }
+
+  def nestedUpdateDocsAndResults(previousValues: PrismaNode,
+                                 mutactions: Vector[NestedUpdateNode],
+                                 path: String = ""): (Vector[DatabaseMutactionResult], Vector[conversions.Bson]) = {
+
+    val first: Vector[(Vector[Bson], Vector[DatabaseMutactionResult])] = mutactions.map { mutaction =>
+      val rFN = mutaction.relationField.name
+
+      val nonListValues = mutaction.nonListArgs.raw.asRoot.map.map { case (f, v) => set(combineThree(path, rFN, f), GCValueBsonTransformer(v)) }.toVector
+      val listValues    = mutaction.listArgs.map { case (f, v) => set(combineThree(path, rFN, f), v) }
+
+      //    create
+      val (nestedCreateResults: Vector[DatabaseMutactionResult], nestedCreateFields: Map[String, BsonValue]) =
+        nestedCreateDocsAndResults(mutaction.nestedCreates)
+      val nestedCreates = nestedCreateFields.map { case (f, v) => set(combineThree(path, rFN, f), v) }
+
+      //    delete - only toOne
+      val toOneDeletes  = mutaction.nestedDeletes.collect { case m if !m.relationField.isList => m }
+      val nestedDeletes = toOneDeletes.map(delete => unset(combineThree(path, rFN, delete.relationField.name)))
+      val nestedDeleteResults = toOneDeletes.map { delete =>
+        val random = CuidGCValue.random
+        DeleteNodeResult(random, PrismaNode(random, previousValues.data.map(delete.relationField.name).asRoot), delete)
+      }
+
+      //    update - only toOne
+      val toOneUpdates = mutaction.nestedUpdates.collect { case m if !m.relationField.isList => m }
+      val (nestedUpdateResults: Vector[DatabaseMutactionResult], nestedUpdates: Vector[conversions.Bson]) =
+        nestedUpdateDocsAndResults(previousValues, toOneUpdates, combineTwo(path, rFN))
+
+      (nonListValues ++ listValues ++ nestedCreates ++ nestedDeletes ++ nestedUpdates, nestedCreateResults ++ nestedDeleteResults ++ nestedUpdateResults)
+    }
+
+    (first.flatMap(_._2), first.flatMap(_._1))
   }
 
   def nestedUpdateNode(mutaction: NestedUpdateNode, parentId: IdGCValue)(implicit ec: ExecutionContext): SimpleMongoAction[MutactionResults] =
     SimpleMongoAction { database =>
-//    val collection: MongoCollection[Document] = database.getCollection(mutaction.model.name)
-//    val filter                                = WhereToBson(mutaction.where)
-//    val previousValues: Future[Option[PrismaNode]] = collection.find(filter).collect().toFuture.map { results: Seq[Document] =>
-//      results.headOption.map { result =>
-//        val root = DocumentToRoot(mutaction.model, result)
-//        PrismaNode(root.idField, root)
-//      }
-//    }
-//
-//    previousValues.flatMap {
-//      case None =>
-//        throw APIErrors.NodeNotFoundForWhereError(mutaction.where)
-//
-//      case Some(node) =>
-//        val nonListValues = mutaction.nonListArgs.raw.asRoot.map.map { case (k, v) => set(k, GCValueBsonTransformer(v)) }.toVector
-//        val listValues    = mutaction.listArgs.map { case (f, v) => set(f, v) }
-//
-//        // can have nested mutations
-//        //    delete
-//        //    update
-//        //    create
-//
-//
-//        collection
-//          .updateOne(filter, combine(nonListValues ++ listValues: _*))
-//          .toFuture()
-//          .map(_ => MutactionResults(Vector(UpdateNodeResult(node.id, node, mutaction))))
-//    }
+      // this should not be called for embedded types since it should be rolled into the TopLevelUpdate
 
       ???
     }
