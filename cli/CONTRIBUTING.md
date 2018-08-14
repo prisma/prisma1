@@ -17,6 +17,12 @@ $ yarn install && yarn build
 $ node dist/index.js
 ```
 
+## Cache
+
+You might need to set the environment variable `GRAPHCOOL_CLI_CLEAR_CACHE` to some value to prevent overeager caching of your code.
+
+## Testing
+
 To recreate jest snapshots:
 
 ```
