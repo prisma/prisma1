@@ -36,7 +36,7 @@ class MongoPrototypingSpec extends FlatSpec with Matchers with ApiSpecBase {
 
     database.setup(project)
 
-    server.query(
+    val res = server.query(
       s"""mutation {
          |   createTop(data: {
          |   unique: 1, 
@@ -51,18 +51,17 @@ class MongoPrototypingSpec extends FlatSpec with Matchers with ApiSpecBase {
          |   }}
          |}){
          |  unique,
-         |  createdAt
          |  middle{
          |    unique,
-         |    createdAt,
          |    bottom{
          |      unique
-         |      updatedAt
          |    }
          |  }
          |}}""".stripMargin,
       project
     )
+
+    res.toString should be("""{"data":{"createTop":{"unique":1,"middle":{"unique":11,"bottom":{"unique":111}}}}}""")
   }
 
   "To many relations" should "work" taggedAs (IgnorePassive) in {
@@ -91,7 +90,7 @@ class MongoPrototypingSpec extends FlatSpec with Matchers with ApiSpecBase {
 
     database.setup(project)
 
-    server.query(
+    val res = server.query(
       s"""mutation {
          |   createTop(data: {
          |   unique: 1,
@@ -123,6 +122,8 @@ class MongoPrototypingSpec extends FlatSpec with Matchers with ApiSpecBase {
          |}}""".stripMargin,
       project
     )
+
+    res.toString should be("""{"data":{"createTop":{"unique":1,"middle":[{"unique":11,"bottom":[{"unique":111}]},{"unique":12,"bottom":[{"unique":112}]}]}}}""")
   }
 
   "ListValues" should "work" taggedAs (IgnorePassive) in {
@@ -138,7 +139,7 @@ class MongoPrototypingSpec extends FlatSpec with Matchers with ApiSpecBase {
 
     database.setup(project)
 
-    server.query(
+    val res = server.query(
       s"""mutation {
          |   createTop(data: {
          |   unique: 1,
@@ -150,5 +151,66 @@ class MongoPrototypingSpec extends FlatSpec with Matchers with ApiSpecBase {
          |}}""",
       project
     )
+
+    res.toString should be("""{"data":{"createTop":{"unique":1,"ints":[1,2,3,4,5]}}}""")
   }
+
+  "Update with nested Create" should "work" taggedAs (IgnorePassive) in {
+
+    val project = SchemaDsl.fromString() {
+      """type Top {
+        |   id: ID! @unique
+        |   unique: Int! @unique
+        |   name: String!
+        |   middle: [Middle!]!
+        |}
+        |
+        |type Middle {
+        |   id: ID! @unique
+        |   unique: Int! @unique
+        |   name: String!
+        |}"""
+    }
+
+    database.setup(project)
+
+    server.query(
+      s"""mutation {
+         |   createTop(data: {
+         |   unique: 1,
+         |   name: "Top"
+         |}){
+         |  unique
+         |}}""".stripMargin,
+      project
+    )
+
+    val res = server.query(
+      s"""mutation {
+         |   updateTop(
+         |   where:{unique:1}
+         |   data: {
+         |   name: "Top2",
+         |   middle: {create:[
+         |      {
+         |      unique: 11,
+         |      name: "Middle"
+         |      },
+         |      {
+         |      unique: 12,
+         |      name: "Middle2"
+         |    }]
+         |   }
+         |}){
+         |  unique,
+         |  middle{
+         |    unique
+         |  }
+         |}}""".stripMargin,
+      project
+    )
+
+    res.toString should be("""{"data":{"updateTop":{"unique":1,"middle":[{"unique":11},{"unique":12}]}}}""")
+  }
+
 }

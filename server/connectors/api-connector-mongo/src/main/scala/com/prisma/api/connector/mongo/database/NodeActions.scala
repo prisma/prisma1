@@ -55,8 +55,16 @@ trait NodeActions extends NodeSingleQueries {
         .filter(field => mutaction.nonListArgs.hasArgFor(field) && mutaction.nonListArgs.getFieldValue(field.name).get != NullGCValue)
         .map(field => field.name -> mutaction.nonListArgs.getFieldValue(field).get)
 
+    val (childResults: Vector[DatabaseMutactionResult], nestedCreateFields: Map[String, BsonValue]) = nestedCreateDocsAndResults(mutaction.nestedCreates)
+
+    val doc = Document(nonListValues ++ mutaction.listArgs) ++ nestedCreateFields
+
+    (doc, childResults)
+  }
+
+  private def nestedCreateDocsAndResults(mutactions: Vector[NestedCreateNode]) = {
     val nestedCreates: immutable.Seq[(RelationField, (Document, Vector[DatabaseMutactionResult]))] =
-      mutaction.nestedCreates.map(m => m.relationField -> createToDoc(m))
+      mutactions.map(m => m.relationField -> createToDoc(m))
 
     val childResults = nestedCreates.flatMap(x => x._2._2).toVector
 
@@ -72,10 +80,7 @@ trait NodeActions extends NodeSingleQueries {
         map + (rf.name -> documents.head)
       }
     }
-
-    val doc = Document(nonListValues ++ mutaction.listArgs) ++ nestedCreateFields
-
-    (doc, childResults)
+    (childResults, nestedCreateFields)
   }
 
   def createNode(mutaction: CreateNode, includeRelayRow: Boolean)(implicit ec: ExecutionContext): SimpleMongoAction[MutactionResults] =
@@ -134,14 +139,20 @@ trait NodeActions extends NodeSingleQueries {
         val listValues    = mutaction.listArgs.map { case (f, v) => set(f, v) }
 
         // can have nested mutations
-        //    delete
-        //    update
+
+        //    delete - only toOne
+
+        //    update - only toOne
+
         //    create
+        val (nestedCreateResults: Vector[DatabaseMutactionResult], nestedCreateFields: Map[String, BsonValue]) =
+          nestedCreateDocsAndResults(mutaction.nestedCreates)
+        val nestedCreateValues = nestedCreateFields.map { case (f, v) => set(f, v) }
 
         collection
-          .updateOne(WhereToBson(mutaction.where), combine(nonListValues ++ listValues: _*))
+          .updateOne(WhereToBson(mutaction.where), combine(nonListValues ++ listValues ++ nestedCreateValues: _*))
           .toFuture()
-          .map(_ => MutactionResults(Vector(UpdateNodeResult(node.id, node, mutaction))))
+          .map(_ => MutactionResults(Vector(UpdateNodeResult(node.id, node, mutaction)) ++ nestedCreateResults))
     }
   }
 
