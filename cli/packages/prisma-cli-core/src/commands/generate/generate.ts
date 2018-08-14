@@ -53,6 +53,8 @@ export default class GenereateCommand extends Command {
           ? path.resolve(output)
           : path.join(this.config.cwd, output)
 
+        fs.mkdirpSync(path.dirname(resolvedOutput))
+
         if (generator === 'schema') {
           await this.generateSchema(resolvedOutput, schemaString)
         }
@@ -69,7 +71,7 @@ export default class GenereateCommand extends Command {
   }
 
   async generateTypescript(output: string, schemaString: string) {
-    this.out.log(`Saving TypeScript bindings at ${output}`)
+    this.out.log(`Saving Prisma ORM (TypeScript) at ${output}`)
     const tmpDir = getTmpDir()
     const tmpSchemaPath = path.join(tmpDir, 'schema.graphql')
     fs.writeFileSync(tmpSchemaPath, schemaString)
