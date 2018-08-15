@@ -11,6 +11,7 @@ import org.scalatest.{FlatSpec, Matchers}
 import play.api.libs.json.JsArray
 
 class OptionalBackRelationImportExportSpec extends FlatSpec with Matchers with ApiSpecBase with AwaitUtils {
+  override def doNotRunSuiteForMongo: Boolean = true
 
   override def runSuiteOnlyForActiveConnectors = true
 

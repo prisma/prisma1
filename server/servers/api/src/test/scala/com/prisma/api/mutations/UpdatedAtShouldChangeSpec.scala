@@ -1,5 +1,6 @@
 package com.prisma.api.mutations
 
+import com.prisma.IgnoreMongo
 import com.prisma.api.ApiSpecBase
 import com.prisma.shared.schema_dsl.SchemaDsl
 import org.scalatest.{FlatSpec, Matchers}
@@ -74,7 +75,7 @@ class UpdatedAtShouldChangeSpec extends FlatSpec with Matchers with ApiSpecBase 
     updatedAt should not equal changedUpdatedAt
   }
 
-  "Upserting a data item" should "change it's updatedAt value" in {
+  "Upserting a data item" should "change it's updatedAt value" taggedAs (IgnoreMongo) in {
     val updatedAt = server.query("""mutation a {createTop(data: { top: "top3" }) {updatedAt}}""", project).pathAsString("data.createTop.updatedAt")
 
     val changedUpdatedAt = server
@@ -96,7 +97,7 @@ class UpdatedAtShouldChangeSpec extends FlatSpec with Matchers with ApiSpecBase 
     updatedAt should not equal changedUpdatedAt
   }
 
-  "Upserting a nested data item" should "change it's updatedAt value" in {
+  "Upserting a nested data item" should "change it's updatedAt value" taggedAs (IgnoreMongo) in {
     val updatedAt = server
       .query("""mutation a {createTop(data: { top: "top4", bottom: {create:{bottom: "Bottom4"}} }) {bottom{updatedAt}}}""", project)
       .pathAsString("data.createTop.bottom.updatedAt")
@@ -121,7 +122,7 @@ class UpdatedAtShouldChangeSpec extends FlatSpec with Matchers with ApiSpecBase 
     updatedAt should not equal changedUpdatedAt
   }
 
-  "UpdateMany" should "change updatedAt values" in {
+  "UpdateMany" should "change updatedAt values" taggedAs (IgnoreMongo) in {
     val updatedAt = server.query("""mutation a {createTop(data: { top: "top5" }) {updatedAt}}""", project).pathAsString("data.createTop.updatedAt")
 
     val res = server

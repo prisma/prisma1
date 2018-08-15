@@ -7,6 +7,8 @@ import org.scalatest.{FlatSpec, Matchers}
 
 class UpdateManySpec extends FlatSpec with Matchers with ApiSpecBase {
 
+  override def doNotRunSuiteForMongo: Boolean = true
+
   val project: Project = SchemaDsl.fromBuilder { schema =>
     schema.model("Todo").field_!("title", _.String).field("opt", _.String)
   }

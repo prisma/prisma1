@@ -1,5 +1,6 @@
 package com.prisma.api.mutations
 
+import com.prisma.IgnoreMongo
 import com.prisma.api.ApiSpecBase
 import com.prisma.shared.schema_dsl.SchemaDsl
 import org.scalatest.{FlatSpec, Matchers}
@@ -50,7 +51,7 @@ class OptionalBackrelationSpec extends FlatSpec with Matchers with ApiSpecBase {
     res.toString() should be("""{"data":{"updateOwner":{"ownerName":"jon","cat":{"catName":"azrael"}}}}""")
   }
 
-  "Nested Upsert" should "work for models with missing backrelations for update " in {
+  "Nested Upsert" should "work for models with missing backrelations for update " taggedAs (IgnoreMongo) in {
     val project = SchemaDsl.fromString() {
       """
         |type Owner {
@@ -99,7 +100,7 @@ class OptionalBackrelationSpec extends FlatSpec with Matchers with ApiSpecBase {
     res.toString should be("""{"data":{"updateOwner":{"ownerName":"jon","cats":[{"catName":"azrael"}]}}}""")
   }
 
-  "Nested Upsert" should "work for models with missing backrelations for create" in {
+  "Nested Upsert" should "work for models with missing backrelations for create" taggedAs (IgnoreMongo) in {
     val project = SchemaDsl.fromString() {
       """
         |type Owner {

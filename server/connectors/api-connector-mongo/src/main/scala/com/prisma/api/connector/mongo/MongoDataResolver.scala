@@ -1,6 +1,7 @@
 package com.prisma.api.connector.mongo
 
 import com.prisma.api.connector._
+import com.prisma.api.connector.mongo.database.NodeSelectorBsonTransformer.WhereToBson
 import com.prisma.gc_values._
 import com.prisma.shared.models.TypeIdentifier.TypeIdentifier
 import com.prisma.shared.models._
@@ -17,16 +18,23 @@ import scala.concurrent.{ExecutionContext, Future}
 case class MongoDataResolver(project: Project, client: MongoClient)(implicit ec: ExecutionContext) extends DataResolver {
   val database = client.getDatabase(project.id)
 
-  override def getModelForGlobalId(globalId: CuidGCValue): Future[Option[Model]] = ???
+  override def getModelForGlobalId(globalId: CuidGCValue): Future[Option[Model]] = {
+    val outer = project.models.map { model =>
+      val collection: MongoCollection[Document] = database.getCollection(model.name)
+      collection.find(Filters.eq("_id", globalId.value)).collect().toFuture.map { results: Seq[Document] =>
+        if (results.nonEmpty) Vector(model) else Vector.empty
+      }
+    }
+
+    val sequence: Future[List[Vector[Model]]] = Future.sequence(outer)
+
+    sequence.map(_.flatten.headOption)
+  }
 
   //Fixme this does not use selected fields
   override def getNodeByWhere(where: NodeSelector, selectedFields: SelectedFields): Future[Option[PrismaNode]] = {
     val collection: MongoCollection[Document] = database.getCollection(where.model.dbName)
-
-    val fieldName = if (where.fieldName == "id") "_id" else where.fieldName
-    val filter    = Filters.eq(fieldName, where.fieldGCValue.value)
-
-    collection.find(filter).collect().toFuture.map { results: Seq[Document] =>
+    collection.find(WhereToBson(where)).collect().toFuture.map { results: Seq[Document] =>
       results.headOption.map { result =>
         val root = DocumentToRoot(where.model, result)
         PrismaNode(root.idField, root)

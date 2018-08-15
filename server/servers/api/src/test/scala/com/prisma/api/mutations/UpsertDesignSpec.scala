@@ -6,6 +6,7 @@ import com.prisma.shared.schema_dsl.SchemaDsl
 import org.scalatest.{FlatSpec, Matchers}
 
 class UpsertDesignSpec extends FlatSpec with Matchers with ApiSpecBase {
+  override def doNotRunSuiteForMongo: Boolean = true
 
   //region top level upserts
 

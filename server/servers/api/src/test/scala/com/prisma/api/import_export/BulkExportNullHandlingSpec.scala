@@ -10,6 +10,7 @@ import com.prisma.utils.await.AwaitUtils
 import org.scalatest.{FlatSpec, Matchers}
 
 class BulkExportNullHandlingSpec extends FlatSpec with Matchers with ApiSpecBase with AwaitUtils {
+  override def doNotRunSuiteForMongo: Boolean = true
 
   val start       = Cursor(0, 0)
   val emptyResult = ResultFormat(JsonBundle(Vector.empty, 0), Cursor(-1, -1), isFull = false)

@@ -11,6 +11,7 @@ import org.scalatest.{FlatSpec, Matchers}
 import play.api.libs.json._
 
 class ListValueImportExportSpec extends FlatSpec with Matchers with ApiSpecBase with AwaitUtils {
+  override def doNotRunSuiteForMongo: Boolean = true
 
   val project: Project = SchemaDsl.fromBuilder { schema =>
     val enum = schema.enum("Enum", Vector("AB", "CD", "\uD83D\uDE0B", "\uD83D\uDCA9"))

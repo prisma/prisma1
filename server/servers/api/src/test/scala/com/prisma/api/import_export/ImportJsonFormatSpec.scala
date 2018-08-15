@@ -11,6 +11,7 @@ import org.scalatest.{FlatSpec, Matchers}
 import play.api.libs.json.JsArray
 
 class ImportJsonFormatSpec extends FlatSpec with Matchers with ApiSpecBase with AwaitUtils {
+  override def doNotRunSuiteForMongo: Boolean = true
 
   "Import json nodes" should "work" in {
     val project: Project = SchemaDsl.fromBuilder { schema =>

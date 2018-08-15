@@ -1,5 +1,6 @@
 package com.prisma.api.mutations
 
+import com.prisma.IgnoreMongo
 import com.prisma.api.ApiSpecBase
 import com.prisma.shared.models.Project
 import com.prisma.shared.schema_dsl.SchemaDsl
@@ -75,7 +76,7 @@ class DeleteScalarListsSpec extends FlatSpec with Matchers with ApiSpecBase {
     res.toString should be("""{"data":{"updateTop":{"name":"test","bottom":null}}}""")
   }
 
-  "A delete Many  mutation" should "also delete ListTable entries" in {
+  "A delete Many  mutation" should "also delete ListTable entries" taggedAs (IgnoreMongo) in {
 
     val project: Project = SchemaDsl.fromString() {
       """type Top {

@@ -5,6 +5,7 @@ import com.prisma.shared.schema_dsl.SchemaDsl
 import org.scalatest.{FlatSpec, Matchers}
 
 class NestedConnectMutationInsideUpsertSpec extends FlatSpec with Matchers with ApiSpecBase {
+  override def doNotRunSuiteForMongo: Boolean = true
 
   "a one to many relation" should "be connectable by id within an upsert in the create case" in {
     val project = SchemaDsl.fromBuilder { schema =>

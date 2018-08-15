@@ -7,6 +7,7 @@ import com.prisma.utils.await.AwaitUtils
 import org.scalatest.{FlatSpec, Matchers}
 
 class BulkImportSpec extends FlatSpec with Matchers with ApiSpecBase with AwaitUtils {
+  override def doNotRunSuiteForMongo: Boolean = true
 
   override def runSuiteOnlyForActiveConnectors = true
 

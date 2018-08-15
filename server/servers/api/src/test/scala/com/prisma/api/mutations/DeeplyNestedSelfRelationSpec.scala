@@ -6,6 +6,7 @@ import com.prisma.shared.schema_dsl.SchemaDsl
 import org.scalatest.{FlatSpec, Matchers}
 
 class DeeplyNestedSelfRelationSpec extends FlatSpec with Matchers with ApiSpecBase {
+  override def doNotRunSuiteForMongo: Boolean = true
 
   "A deeply nested self relation create" should "be executed completely" in {
     val project: Project = SchemaDsl.fromString() { """type User {

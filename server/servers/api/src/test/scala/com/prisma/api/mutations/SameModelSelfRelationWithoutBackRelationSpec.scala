@@ -6,6 +6,7 @@ import com.prisma.shared.schema_dsl.SchemaDsl
 import org.scalatest.{FlatSpec, Matchers}
 
 class SameModelSelfRelationWithoutBackRelationSpec extends FlatSpec with Matchers with ApiSpecBase {
+  override def doNotRunSuiteForMongo: Boolean = true
 
   "A Many to Many Self Relation" should "be accessible from only one side" in {
     val project: Project = SchemaDsl.fromString() { """type Post {

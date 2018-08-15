@@ -10,6 +10,7 @@ import org.scalatest.{FlatSpec, Matchers}
 import play.api.libs.json.JsArray
 
 class BulkExportSpec extends FlatSpec with Matchers with ApiSpecBase with AwaitUtils {
+  override def doNotRunSuiteForMongo: Boolean = true
 
   val project = SchemaDsl.fromBuilder { schema =>
     val model0: SchemaDsl.ModelBuilder = schema
