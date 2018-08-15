@@ -4,7 +4,7 @@ import { fetchAndPrintSchema } from '../deploy/printSchema'
 import * as fs from 'fs-extra'
 import * as path from 'path'
 import { buildSchema } from 'graphql'
-import { PrismaTypescriptGenerator } from 'prisma-binding'
+import { TypescriptGenerator } from 'prisma-lib'
 
 export default class GenereateCommand extends Command {
   static topic = 'generate'
@@ -72,7 +72,7 @@ export default class GenereateCommand extends Command {
   async generateTypescript(output: string, schemaString: string) {
     const schema = buildSchema(schemaString)
 
-    const generator = new PrismaTypescriptGenerator({ schema })
+    const generator = new TypescriptGenerator({ schema })
     this.out.log(`Saving Prisma ORM (TypeScript) at ${output}`)
     const endpoint = this.replaceEnv(this.definition.rawJson!.endpoint)
     const secret = this.definition.rawJson.secret
