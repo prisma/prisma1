@@ -170,7 +170,7 @@ This GraphQL schema defines six operations (two queries and four mutations):
 - `deletePost(id: ID!)`: Delete a `Post`
 - `signup(name: String!)`: Create a new `User` by providing a `name`
 
-There's one odd thing about the GraphQL schema right now though: The `Post` and `User` types are _imported_ from the `src/generated/prisma.graphql` which doesn't even exist yet - don't worry you'll download it next. Another thing to notice is that the import syntax uses GraphQL _comments_. These comments must not be deleted! They are used by [`graphql-import`](https://oss.prisma.io/content/GraphQL-Import/Overview.html), a tool that lets you import SDL types _across files_ which is not possible with standard SDL ([yet]((https://github.com/graphql/graphql-wg/blob/master/notes/2018-02-01.md#present-graphql-import))!).
+There's one odd thing about the GraphQL schema right now though: The `Post` and `User` types are _imported_ from the `src/generated/prisma.graphql` which doesn't even exist yet - don't worry you'll download it next. Another thing to notice is that the import syntax uses GraphQL _comments_. These comments must not be deleted! They are used by [`graphql-import`](https://oss.prisma.io/content/GraphQL-Import/Overview.html), a tool that lets you import SDL types _across files_ which is not possible with standard SDL ([yet](https://github.com/graphql/graphql-wg/blob/master/notes/2018-02-01.md#present-graphql-import)!).
 
 ## Step 4: Download the Prisma database schema
 
