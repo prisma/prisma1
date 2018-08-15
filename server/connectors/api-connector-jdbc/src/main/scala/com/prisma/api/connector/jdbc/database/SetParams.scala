@@ -2,7 +2,7 @@ package com.prisma.api.connector.jdbc.database
 
 import java.sql.PreparedStatement
 
-import com.prisma.api.connector._
+import com.prisma.api.connector.{TrueFilter, _}
 import com.prisma.api.connector.jdbc.extensions.SlickExtensions
 import com.prisma.gc_values.{NullGCValue, StringGCValue}
 import slick.jdbc.PositionedParameters

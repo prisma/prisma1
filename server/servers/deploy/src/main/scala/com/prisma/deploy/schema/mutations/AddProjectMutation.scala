@@ -46,9 +46,7 @@ case class AddProjectMutation(
 
     for {
       _ <- projectPersistence.create(newProject)
-//      stmt <- CreateClientDatabaseForProject(newProject.id).execute
-//      _    <- clientDb.run(stmt.sqlAction)
-      _ <- deployConnector.createProjectDatabase(newProject.id)
+      _ <- if (deployConnector.isActive) deployConnector.createProjectDatabase(newProject.id) else Future.unit
       _ <- migrationPersistence.create(migration)
     } yield MutationSuccess(AddProjectMutationPayload(args.clientMutationId, newProject))
   }

@@ -1,8 +1,7 @@
 package com.prisma.api.mutactions
 
-import com.prisma.api.ApiDependencies
 import com.prisma.api.connector._
-import com.prisma.gc_values.{CuidGCValue, IntGCValue, NullGCValue, UuidGCValue}
+import com.prisma.gc_values.NullGCValue
 import com.prisma.shared.models.IdType.Id
 import com.prisma.shared.models.Project
 
@@ -23,7 +22,11 @@ object SubscriptionEvents {
     val model = result.mutaction.model
     PublishSubscriptionEvent(
       project = project,
-      value = Map("nodeId" -> result.id.value, "modelId" -> model.name, "mutationType" -> "CreateNode"),
+      value = Map(
+        "nodeId"       -> result.id.value,
+        "modelId"      -> model.name,
+        "mutationType" -> "CreateNode"
+      ),
       mutationName = s"create${model.name}"
     )
   }
@@ -31,14 +34,14 @@ object SubscriptionEvents {
   private def fromUpdateResult(project: Project, mutationId: Id, result: UpdateNodeResult): PublishSubscriptionEvent = {
     val previousValues: Map[String, Any] = result.previousValues.data
       .filterValues(_ != NullGCValue)
-      .toMapStringAny + ("id" -> result.previousValues.id.value)
+      .toMapStringAny + ("id" -> result.id.value)
 
     val model = result.mutaction.model
 
     PublishSubscriptionEvent(
       project = project,
       value = Map(
-        "nodeId"         -> previousValues("id"),
+        "nodeId"         -> result.id.value,
         "changedFields"  -> result.namesOfUpdatedFields.toList, // must be a List as Vector is printed verbatim
         "previousValues" -> previousValues,
         "modelId"        -> model.name,
@@ -49,12 +52,20 @@ object SubscriptionEvents {
   }
 
   private def fromDeleteResult(project: Project, mutationId: Id, result: DeleteNodeResult): PublishSubscriptionEvent = {
-    val previousValues = result.previousValues.data.filterValues(_ != NullGCValue).toMapStringAny + ("id" -> result.id)
-    val model          = result.mutaction.model
+    val previousValues: Map[String, Any] = result.previousValues.data
+      .filterValues(_ != NullGCValue)
+      .toMapStringAny + ("id" -> result.id.value)
+
+    val model = result.mutaction.model
 
     PublishSubscriptionEvent(
       project = project,
-      value = Map("nodeId" -> result.id.value, "node" -> previousValues, "modelId" -> model.name, "mutationType" -> "DeleteNode"),
+      value = Map(
+        "nodeId"       -> result.id.value,
+        "node"         -> previousValues,
+        "modelId"      -> model.name,
+        "mutationType" -> "DeleteNode"
+      ),
       mutationName = s"delete${model.name}"
     )
   }
