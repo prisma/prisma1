@@ -55,23 +55,16 @@ trait NodeManyQueries extends BuilderBase with FilterConditionBuilder with Curso
       queryToDBIO(query)(
         setParams = { pp =>
           fromNodeIds.foreach(pp.setGcValue)
-          val filter = args.flatMap(_.filter)
-          filter.foreach(filter => SetParams.setFilter(pp, filter))
+          args.foreach { arg =>
+            arg.filter.foreach(filter => SetParams.setFilter(pp, filter))
 
-          if (args.get.after.isDefined) {
-            pp.setString(args.get.after.get)
-            pp.setString(args.get.after.get)
-          }
+            SetParams.setCursor(pp, arg)
 
-          if (args.get.before.isDefined) {
-            pp.setString(args.get.before.get)
-            pp.setString(args.get.before.get)
-          }
-
-          if (args.exists(_.isWithPagination)) {
-            val params = limitClauseForWindowFunction(args)
-            pp.setInt(params._1)
-            pp.setInt(params._2)
+            if (arg.isWithPagination) {
+              val params = limitClauseForWindowFunction(args)
+              pp.setInt(params._1)
+              pp.setInt(params._2)
+            }
           }
         },
         readResult = { rs =>
@@ -103,29 +96,22 @@ trait NodeManyQueries extends BuilderBase with FilterConditionBuilder with Curso
       val queries          = Vector.fill(distinctModelIds.size)(baseQuery)
       val query            = queries.mkString(" union all ")
 
-      val ps          = ctx.connection.prepareStatement(query)
-      val pp          = new PositionedParameters(ps)
-      val filter      = args.flatMap(_.filter)
-      val limitParams = limitClause(args)
+      val ps = ctx.connection.prepareStatement(query)
+      val pp = new PositionedParameters(ps)
 
       distinctModelIds.foreach { id =>
         pp.setGcValue(id)
-        filter.foreach { filter =>
-          SetParams.setFilter(pp, filter)
-        }
-        if (args.get.after.isDefined) {
-          pp.setString(args.get.after.get)
-          pp.setString(args.get.after.get)
-        }
 
-        if (args.get.before.isDefined) {
-          pp.setString(args.get.before.get)
-          pp.setString(args.get.before.get)
-        }
-        if (args.exists(_.isWithPagination)) {
-          limitParams.foreach { params =>
-            pp.setInt(params._1)
-            pp.setInt(params._2)
+        args.foreach { arg =>
+          arg.filter.foreach(filter => SetParams.setFilter(pp, filter))
+
+          SetParams.setCursor(pp, arg)
+
+          if (arg.isWithPagination) {
+            limitClause(args).foreach { params =>
+              pp.setInt(params._1)
+              pp.setInt(params._2)
+            }
           }
         }
       }

@@ -1,12 +1,9 @@
 package com.prisma.api.connector.jdbc.database
 
-import java.util.Date
-
 import com.prisma.api.connector.{Filter, PrismaArgs}
 import com.prisma.gc_values._
 import com.prisma.shared.models.TypeIdentifier.IdTypeIdentifier
 import com.prisma.shared.models.{Model, TypeIdentifier}
-import org.joda.time.{DateTime, DateTimeZone}
 import slick.dbio.DBIOAction
 
 import scala.concurrent.ExecutionContext
@@ -81,8 +78,8 @@ trait NodeActions extends BuilderBase with FilterConditionBuilder with ScalarLis
 
   private def addUpdatedAt(model: Model, updateValues: RootGCValue): RootGCValue = {
     model.updatedAtField match {
-      case Some(updatedAtField) => updateValues.add(updatedAtField.name, currentDateTimeGCValue)
-      case None                 => updateValues
+      case Some(field) => updateValues.add(field.name, currentDateTimeGCValue)
+      case None        => updateValues
     }
   }
 
