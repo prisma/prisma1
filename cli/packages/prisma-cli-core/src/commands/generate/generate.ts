@@ -74,7 +74,27 @@ export default class GenereateCommand extends Command {
 
     const generator = new PrismaTypescriptGenerator({ schema })
     this.out.log(`Saving Prisma ORM (TypeScript) at ${output}`)
-    const code = generator.render()
+    const endpoint = this.replaceEnv(this.definition.rawJson!.endpoint)
+    const secret = this.definition.rawJson.secret
+      ? this.replaceEnv(this.definition.rawJson!.secret)
+      : null
+    const options: any = { endpoint }
+    if (secret) {
+      options.secret = secret
+    }
+
+    const code = generator.render(options)
     fs.writeFileSync(output, code)
+  }
+
+  replaceEnv(str) {
+    const regex = /\${env:(.*?)}/
+    const match = regex.exec(str)
+    // tslint:disable-next-line:prefer-conditional-expression
+    if (match) {
+      return `process.env['${match[1]}']`
+    } else {
+      return `'${str}'`
+    }
   }
 }

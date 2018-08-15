@@ -4030,9 +4030,9 @@ pretty-format@^21.2.1:
     ansi-regex "^3.0.0"
     ansi-styles "^3.2.0"
 
-prisma-binding@3.0.0-alpha.5:
-  version "3.0.0-alpha.5"
-  resolved "https://registry.yarnpkg.com/prisma-binding/-/prisma-binding-3.0.0-alpha.5.tgz#5a13418f98c9e6470841524d291adc3fa29cd310"
+prisma-binding@3.0.0-alpha.10:
+  version "3.0.0-alpha.10"
+  resolved "https://registry.yarnpkg.com/prisma-binding/-/prisma-binding-3.0.0-alpha.10.tgz#7b48d9483b2f2d588fd01dfe467df0ce6822fe39"
   dependencies:
     apollo-link "1.2.2"
     apollo-link-error "1.0.9"
