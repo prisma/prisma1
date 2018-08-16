@@ -268,6 +268,7 @@ object ProjectJsonFormatter {
   implicit val modelReads: Reads[ModelTemplate] = (
     (JsPath \ "name").read[String] and
       (JsPath \ "stableIdentifier").read[String] and
+      (JsPath \ "isEmbedded").readNullable[Boolean].map(_.getOrElse(false)) and
       (JsPath \ "fields").read[List[FieldTemplate]] and
       (JsPath \ "manifestation").readNullable[ModelManifestation]
   )(ModelTemplate.apply _)
@@ -275,6 +276,7 @@ object ProjectJsonFormatter {
   implicit val modelWrites: Writes[ModelTemplate] = (
     (JsPath \ "name").write[String] and
       (JsPath \ "stableIdentifier").write[String] and
+      (JsPath \ "isEmbedded").write[Boolean] and
       (JsPath \ "fields").write[List[FieldTemplate]] and
       (JsPath \ "manifestation").writeNullable[ModelManifestation]
   )(unlift(ModelTemplate.unapply))

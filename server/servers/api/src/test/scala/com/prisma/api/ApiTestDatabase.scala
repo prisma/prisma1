@@ -2,7 +2,7 @@ package com.prisma.api
 
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
-import com.prisma.api.connector.{DatabaseMutaction, TopLevelDatabaseMutaction}
+import com.prisma.api.connector.TopLevelDatabaseMutaction
 import com.prisma.deploy.connector._
 import com.prisma.shared.models.Manifestations.InlineRelationManifestation
 import com.prisma.shared.models._

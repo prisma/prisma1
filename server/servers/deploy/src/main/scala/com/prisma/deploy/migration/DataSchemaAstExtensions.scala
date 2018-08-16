@@ -151,8 +151,6 @@ object DataSchemaAstExtensions {
 
   implicit class CoolWithDirectives(val withDirectives: WithDirectives) extends AnyVal {
 
-    def isEmbedded = directive("embedded").isDefined
-
     def relationName = directiveArgumentAsString("relation", "name")
     def onDelete = directiveArgumentAsString("relation", "onDelete") match {
       case Some("SET_NULL") => OnDelete.SetNull

@@ -125,7 +125,9 @@ case class SchemaSyntaxValidator(
           ScalarPrismaField(x.name, x.columnName, x.isList, x.isRequired, x.isUnique, typeIdentifierForTypename(x.fieldType), getDefaultValueFromField_!(x))(_)
       }
 
-      PrismaType(definition.name, definition.tableNameDirective, fieldFn = prismaFields)(_)
+      val isEmbedded = definition.directives.exists(_.name == "embedded")
+
+      PrismaType(definition.name, definition.tableNameDirective, isEmbedded, prismaFields)(_)
     }
 
     PrismaSdl(typesFn = prismaTypes, enumsFn = enumTypes)

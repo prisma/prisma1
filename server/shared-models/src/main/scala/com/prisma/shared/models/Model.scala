@@ -7,6 +7,7 @@ import scala.language.implicitConversions
 case class ModelTemplate(
     name: String,
     stableIdentifier: String,
+    isEmbedded: Boolean,
     fieldTemplates: List[FieldTemplate],
     manifestation: Option[ModelManifestation]
 ) {
@@ -17,7 +18,7 @@ object Model {
   implicit def asModelTemplate(model: Model): ModelTemplate = model.template
 
   val empty: Model = new Model(
-    template = ModelTemplate(name = "", stableIdentifier = "", fieldTemplates = List.empty, manifestation = None),
+    template = ModelTemplate(name = "", stableIdentifier = "", isEmbedded = false, fieldTemplates = List.empty, manifestation = None),
     schema = Schema.empty
   )
 }
