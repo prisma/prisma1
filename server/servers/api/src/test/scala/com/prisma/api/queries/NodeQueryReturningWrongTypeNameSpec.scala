@@ -8,7 +8,7 @@ class NodeQueryReturningWrongTypeNameSpec extends FlatSpec with Matchers with Ap
 
   override def runSuiteOnlyForActiveConnectors: Boolean = true
 
-  "the node query" should "return null if the id does not exist" in {
+  "the node query" should "return the correct typename" in {
     val project = SchemaDsl.fromString() {
       """
         |type User {

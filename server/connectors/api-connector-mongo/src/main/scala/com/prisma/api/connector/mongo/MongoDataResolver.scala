@@ -37,7 +37,7 @@ case class MongoDataResolver(project: Project, client: MongoClient)(implicit ec:
     collection.find(WhereToBson(where)).collect().toFuture.map { results: Seq[Document] =>
       results.headOption.map { result =>
         val root = DocumentToRoot(where.model, result)
-        PrismaNode(root.idField, root)
+        PrismaNode(root.idField, root, Some(where.model.name))
       }
     }
   }
@@ -51,7 +51,7 @@ case class MongoDataResolver(project: Project, client: MongoClient)(implicit ec:
     val nodes: Future[Seq[PrismaNode]] = collection.find().collect().toFuture.map { results: Seq[Document] =>
       results.map { result =>
         val root = DocumentToRoot(model, result)
-        PrismaNode(root.idField, root)
+        PrismaNode(root.idField, root, Some(model.name))
       }
     }
     nodes.map(n => ResolverResult[PrismaNode](n.toVector, false, false, None))
@@ -72,15 +72,21 @@ case class MongoDataResolver(project: Project, client: MongoClient)(implicit ec:
 object DocumentToRoot {
   def apply(model: Model, document: Document): RootGCValue = {
     val nonReservedFields = model.scalarNonListFields.filter(f => f.name != "createdAt" && f.name != "updatedAt" && f.name != "id")
+
     val scalarNonList: List[(String, GCValue)] =
       nonReservedFields.map(field => field.name -> document.get(field.name).map(v => BisonToGC(field, v)).getOrElse(NullGCValue))
+
     val createdAt: (String, GCValue) =
       document.get("createdAt").map(v => "createdAt" -> BisonToGC(TypeIdentifier.DateTime, v)).getOrElse("createdAt" -> NullGCValue)
+
     val updatedAt: (String, GCValue) =
       document.get("updatedAt").map(v => "updatedAt" -> BisonToGC(TypeIdentifier.DateTime, v)).getOrElse("updatedAt" -> NullGCValue)
+
     val id: (String, GCValue) = document.get("_id").map(v => "id" -> BisonToGC(model.fields.find(_.name == "id").get, v)).getOrElse("id" -> CuidGCValue.random)
+
     val scalarList: List[(String, GCValue)] =
       model.scalarListFields.map(field => field.name -> document.get(field.name).map(v => BisonToGC(field, v)).getOrElse(NullGCValue))
+
     val relationFields: List[(String, GCValue)] =
       model.relationFields.map(field => field.name -> document.get(field.name).map(v => BisonToGC(field, v)).getOrElse(NullGCValue))
 

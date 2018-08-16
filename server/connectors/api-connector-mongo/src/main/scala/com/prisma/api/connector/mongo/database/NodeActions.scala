@@ -42,9 +42,10 @@ object NodeSelectorBsonTransformer {
   implicit object WhereToBson {
     def apply(where: NodeSelector): Bson = {
       val fieldName = if (where.fieldName == "id") "_id" else where.fieldName
-      val value = where.fieldGCValue.value match {
-        case x: DateTime => x.getMillis
-        case z           => z
+      val value = where.fieldGCValue match {
+        case DateTimeGCValue(v) => v.getMillis
+        case JsonGCValue(v)     => v.toString
+        case z                  => z.value
       }
 
       Filters.eq(fieldName, value)

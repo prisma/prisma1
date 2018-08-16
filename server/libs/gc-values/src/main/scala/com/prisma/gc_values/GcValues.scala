@@ -32,6 +32,7 @@ case class RootGCValue(map: Map[String, GCValue]) extends GCValue {
   }
 
   def filterValues(p: GCValue => Boolean) = copy(map = map.filter(t => p(t._2)))
+  def filterKeys(p: String => Boolean)    = copy(map = map.filter(t => p(t._1)))
 
   def toMapStringAny: Map[String, Any] = map.collect {
     case (key, value) =>
