@@ -5,7 +5,9 @@ import akka.http.scaladsl.model._
 import com.prisma.api.ApiDependencies
 import com.prisma.api.schema.{ApiUserContext, UserFacingError}
 import com.prisma.cache.Cache
+import com.prisma.messagebus.pubsub.{Everything, Message}
 import com.prisma.sangria.utils.ErrorHandler
+import com.prisma.shared.messages.SchemaInvalidatedMessage
 import play.api.libs.json.{JsArray, JsValue}
 import sangria.ast.Document
 import sangria.execution.{Executor, QueryAnalysisError}
@@ -28,7 +30,12 @@ case class GraphQlRequestHandlerImpl(
 
   import apiDependencies.system.dispatcher
   import com.prisma.api.server.JsonMarshalling._
+
   val queryValidationCache = Cache.lfu[(String, Document), Vector[Violation]](sangriaMinimumCacheSize, sangriaMaximumCacheSize)
+
+  apiDependencies.invalidationSubscriber.subscribe(Everything, (msg: Message[SchemaInvalidatedMessage]) => {
+    queryValidationCache.removeAll(key => key._1 == msg.topic)
+  })
 
   override def handle(graphQlRequest: GraphQlRequest): Future[(StatusCode, JsValue)] = {
     val jsonResult = if (!graphQlRequest.isBatch) {

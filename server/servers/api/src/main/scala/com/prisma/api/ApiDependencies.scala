@@ -10,8 +10,9 @@ import com.prisma.api.schema.{ApiUserContext, SchemaBuilder}
 import com.prisma.api.server.{GraphQlRequestHandler, GraphQlRequestHandlerImpl, RequestHandler}
 import com.prisma.auth.{Auth, AuthImpl}
 import com.prisma.errors.{BugsnagErrorReporter, ErrorReporter}
-import com.prisma.messagebus.{PubSub, PubSubPublisher, QueuePublisher}
+import com.prisma.messagebus.{PubSub, PubSubPublisher, PubSubSubscriber, QueuePublisher}
 import com.prisma.profiling.JvmProfiler
+import com.prisma.shared.messages.SchemaInvalidatedMessage
 import com.prisma.shared.models.{Project, ProjectIdEncoder}
 import com.prisma.subscriptions.Webhook
 import com.prisma.utils.await.AwaitUtils
@@ -23,6 +24,7 @@ trait ApiDependencies extends AwaitUtils {
 
   implicit val system: ActorSystem
   val materializer: ActorMaterializer
+  def invalidationSubscriber: PubSubSubscriber[SchemaInvalidatedMessage]
   def projectFetcher: ProjectFetcher
   def apiSchemaBuilder: SchemaBuilder
   def webhookPublisher: QueuePublisher[Webhook]

@@ -3,6 +3,7 @@ package com.prisma.subscriptions.resolving
 import akka.actor.{Actor, ActorRef, Props, Stash, Terminated}
 import com.prisma.akkautil.{LogUnhandled, LogUnhandledExceptions}
 import com.prisma.messagebus.pubsub.Message
+import com.prisma.shared.messages.{SchemaInvalidated, SchemaInvalidatedMessage}
 import com.prisma.shared.models._
 import com.prisma.subscriptions.SubscriptionDependencies
 import com.prisma.subscriptions.helpers.ProjectHelper
@@ -10,17 +11,11 @@ import com.prisma.subscriptions.metrics.SubscriptionMetrics
 import com.prisma.subscriptions.protocol.StringOrInt
 import com.prisma.subscriptions.resolving.SubscriptionsManager.Responses.{CreateSubscriptionFailed, CreateSubscriptionResponse, CreateSubscriptionSucceeded}
 import com.prisma.subscriptions.resolving.SubscriptionsManagerForModel.Requests.StartSubscription
-import com.prisma.subscriptions.resolving.SubscriptionsManagerForProject.{SchemaInvalidated, SchemaInvalidatedMessage}
 import com.prisma.subscriptions.schema.{QueryTransformer, SubscriptionQueryValidator}
 import org.scalactic.{Bad, Good}
 
 import scala.collection.mutable
 import scala.concurrent.ExecutionContext.Implicits.global
-
-object SubscriptionsManagerForProject {
-  trait SchemaInvalidatedMessage
-  object SchemaInvalidated extends SchemaInvalidatedMessage
-}
 
 case class SubscriptionsManagerForProject(
     projectId: String
