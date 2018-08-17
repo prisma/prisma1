@@ -38,6 +38,8 @@ case class CaffeineImplForAsyncCache[K, V >: Null](underlying: AsyncCaffeineCach
     }
   }
 
+  def test = true
+
   override def put(key: K, value: Future[Option[V]]): Unit = {
     val asCompletableNullableFuture = value.map(_.orNull).toJava.toCompletableFuture
     underlying.put(key, asCompletableNullableFuture)
