@@ -19,7 +19,6 @@ import { mapValues } from './utils/mapValues'
 
 // to avoid recreation on each instantiation for the same schema, we cache the created methods
 const delegateCache = new Map()
-const ormCache = new Map()
 
 let instructionId = 0
 
@@ -109,7 +108,6 @@ export class Binding extends Delegate {
       ],
     }
     this.before()
-    // console.log({ debug: this.debug })
     if (this.debug) {
       console.log(`\nQuery:`)
       console.log(print(document))
@@ -284,11 +282,6 @@ export class Binding extends Delegate {
   }
 
   getORMTypes() {
-    const cachedTypes = ormCache.get(this.schema)
-    if (cachedTypes) {
-      return cachedTypes
-    }
-
     const typeMap = this.schema.getTypeMap()
     const types = Object.entries(typeMap)
       .map(([name, type]) => {
@@ -337,8 +330,6 @@ export class Binding extends Delegate {
         }
       })
       .reduce(reduceKeyValue, {})
-
-    ormCache.set(this.schema, types)
 
     return types
   }
