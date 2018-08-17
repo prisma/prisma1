@@ -1,0 +1,4 @@
+package com.prisma.shared.messages
+
+trait SchemaInvalidatedMessage
+object SchemaInvalidated extends SchemaInvalidatedMessage
