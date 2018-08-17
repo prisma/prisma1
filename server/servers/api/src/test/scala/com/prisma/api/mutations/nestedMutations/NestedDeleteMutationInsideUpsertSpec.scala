@@ -54,8 +54,8 @@ class NestedDeleteMutationInsideUpsertSpec extends FlatSpec with Matchers with A
          |}
       """,
       project,
-      errorCode = 3042,
-      errorContains = "The change you are trying to make would violate the required relation 'ChildToParent' between Child and Parent"
+      errorCode = 0,
+      errorContains = "Argument 'update' expected type 'ParentUpdateInput!'"
     )
 
     ifConnectorIsActive { dataResolver(project).countByTable("_ChildToParent").await should be(1) }
@@ -109,8 +109,8 @@ class NestedDeleteMutationInsideUpsertSpec extends FlatSpec with Matchers with A
          |}
       """,
       project,
-      errorCode = 3042,
-      errorContains = "The change you are trying to make would violate the required relation 'ParentToChild' between Parent and Child"
+      errorCode = 0,
+      errorContains = "Argument 'update' expected type 'ParentUpdateInput!'"
     )
 
     ifConnectorIsActive { dataResolver(project).countByTable("_ParentToChild").await should be(1) }
@@ -424,10 +424,9 @@ class NestedDeleteMutationInsideUpsertSpec extends FlatSpec with Matchers with A
          |}
       """,
       project,
-      errorCode = 3042
+      errorCode = 0,
+      errorContains = "Argument 'update' expected type 'ParentUpdateInput!'"
     )
-
-    ifConnectorIsActive { dataResolver(project).countByTable("_ChildToParent").await should be(1) }
   }
 
   "a P1 to CM  relation " should "work" in {
