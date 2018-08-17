@@ -98,4 +98,21 @@ class QueriesSchemaBuilderSpec extends WordSpec with Matchers with ApiSpecBase w
       schema should not(include("id: ID!): Node"))
     }
   }
+
+  "An embedded type" must {
+    "must not produce queries in the schema" in {
+      val project = SchemaDsl.fromString() {
+        """
+          |type Embedded @embedded {
+          |   name: String
+          |}
+        """
+      }
+
+      val schemaBuilder = SchemaBuilderImpl(project, capabilities = Vector.empty)(testDependencies, system)
+      val schema        = SchemaRenderer.renderSchema(schemaBuilder.build())
+
+      schema should not(include("type Query {"))
+    }
+  }
 }

@@ -562,7 +562,6 @@ class EmbeddedNestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matcher
 
     res.toString should be("""{"data":{"updateParent":{"childOpt":null}}}""")
 
-    server.query(s"""query{children{c, parentsOpt{p}}}""", project).toString should be("""{"data":{"children":[]}}""")
   }
 
   "a PM to CM  relation" should "work" in {
@@ -802,7 +801,6 @@ class EmbeddedNestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matcher
 
     res.toString should be("""{"data":{"updateParent":{"childrenOpt":[]}}}""")
 
-    server.query(s"""query{children{c, parentsOpt{p}}}""", project).toString should be("""{"data":{"children":[]}}""")
   }
 
   "a one to many relation" should "be deletable by id through a nested mutation" in {
@@ -1049,7 +1047,7 @@ class EmbeddedNestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matcher
     mustBeEqual(query.toString, s"""{"data":{"todoes":[{"id":"$existingTodoId","comments":[{"id":"$existingCommentId"}]}]}}""")
   }
 
-  "one2one relation both exist and are connected" should "be deletable by id through a nested mutation" in {
+  "one2one relation both exist and are connected" should "be deletable through a nested mutation" in {
     val project = SchemaDsl.fromString() {
       """
         |type Note {
@@ -1106,25 +1104,22 @@ class EmbeddedNestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matcher
       project
     )
     mustBeEqual(result.pathAsJsValue("data.updateNote").toString, """{"todo":null}""")
-
-    val query = server.query("""{ todoes { title }}""", project)
-    mustBeEqual(query.toString, """{"data":{"todoes":[]}}""")
   }
 
-  "one2one relation both exist and are connected" should "be deletable by unique field through a nested mutation" in {
+  "one2one relation where both sides exist and are connected" should "be deletable through a nested mutation" in {
     val project = SchemaDsl.fromString() {
       """
-        |type Todo{
+        |type Note {
         | id: ID! @unique
-        | title: String! @unique
-        | note: Note
-        |}
-        |
-        |type Note @embedded{
         | text: String! @unique
         | todo: Todo
         |}
-      """
+        |
+        |type Todo @embedded{
+        | title: String! @unique
+        | note: Note
+        |}
+        |"""
     }
     database.setup(project)
 
@@ -1168,27 +1163,24 @@ class EmbeddedNestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matcher
 
     mustBeEqual(result.pathAsJsValue("data.updateNote").toString, """{"todo":null}""")
 
-    val query = server.query("""{ todoes { id }}""", project)
-    mustBeEqual(query.toString, """{"data":{"todoes":[]}}""")
-
-    val query2 = server.query("""{ notes { text }}""", project)
-    mustBeEqual(query2.toString, """{"data":{"notes":[{"text":"FirstUnique"}]}}""")
+    val query = server.query("""{ notes { text }}""", project)
+    mustBeEqual(query.toString, """{"data":{"notes":[{"text":"FirstUnique"}]}}""")
   }
 
-  "a one to one relation" should "not do a nested delete by id if the nested node does not exist" in {
+  "a one to one relation" should "not do a nested delete if the nested node does not exist" in {
     val project = SchemaDsl.fromString() {
       """
-        |type Todo{
+        |type Note {
         | id: ID! @unique
-        | title: String
-        | note: Note
-        |}
-        |
-        |type Note @embedded{
-        | text: String
+        | text: String! @unique
         | todo: Todo
         |}
-      """
+        |
+        |type Todo @embedded{
+        | title: String! @unique
+        | note: Note
+        |}
+        |"""
     }
     database.setup(project)
 
@@ -1199,10 +1191,10 @@ class EmbeddedNestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matcher
         |      text: "Note"
         |    }
         |  ){
-        |    text
-        |    todo { id }
+        |    id
+        |    todo { title }
         |  }
-        |}""".stripMargin,
+        |}""",
       project
     )
     val noteId = createResult.pathAsString("data.createNote.id")
@@ -1223,15 +1215,12 @@ class EmbeddedNestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matcher
          |    }
          |  }
          |}
-      """.stripMargin,
+      """,
       project,
       errorCode = 3041,
       errorContains =
         s"The relation NoteToTodo has no node for the model Note with the value '$noteId' for the field 'id' connected to a node for the model Todo on your mutation path."
     )
-
-    val query = server.query("""{ todoes { title }}""", project)
-    mustBeEqual(query.toString, """{"data":{"todoes":[]}}""")
 
     val query2 = server.query("""{ notes { text }}""", project)
     mustBeEqual(query2.toString, """{"data":{"notes":[{"text":"Note"}]}}""")

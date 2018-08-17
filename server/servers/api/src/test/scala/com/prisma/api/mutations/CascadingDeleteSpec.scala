@@ -497,13 +497,12 @@ class CascadingDeleteSpec extends FlatSpec with Matchers with ApiSpecBase {
     server.query("""mutation{createP(data:{p:"p", c: {create:{c: "c"}}}){p, c {c}}}""", project)
     server.query("""mutation{createP(data:{p:"p2", c: {create:{c: "c2"}}}){p, c {c}}}""", project)
 
-    server.queryThatMustFail("""mutation{updateC(where: {c:"c"} data: {p: {delete: true}}){id}}""",
-                             project,
-                             errorCode = 3039,
-                             errorContains = "No Node for the model")
-    server.query("""query{ps{p, c {c}}}""", project).toString should be("""{"data":{"ps":[{"p":"p2","c":{"c":"c2"}}]}}""")
-    server.query("""query{cs{c, p {p}}}""", project).toString should be("""{"data":{"cs":[{"c":"c2","p":{"p":"p2"}}]}}""")
-    ifConnectorIsActive { dataResolver(project).countByTable("_RelayId").await should be(2) }
+    server.queryThatMustFail(
+      """mutation{updateC(where: {c:"c"} data: {p: {delete: true}}){id}}""",
+      project,
+      errorCode = 0,
+      errorContains = "Argument 'data' expected type 'CUpdateInput!'"
+    )
   }
 
   "P1-C1-C1!-GC! relation updating the parent to delete the child and grandchild if marked cascading" should "work" in {
@@ -549,18 +548,9 @@ class CascadingDeleteSpec extends FlatSpec with Matchers with ApiSpecBase {
     server.queryThatMustFail(
       """mutation{updateP(where: {p:"p"}, data: { c: {delete: true}}){id}}""",
       project,
-      errorCode = 3042,
-      errorContains = "The change you are trying to make would violate the required relation 'CToP' between C and P"
+      errorCode = 0,
+      errorContains = "Argument 'data' expected type 'PUpdateInput!'"
     )
-
-    server.query("""query{ps{p, c {c, gc{gc}}}}""", project).toString should be(
-      """{"data":{"ps":[{"p":"p","c":{"c":"c","gc":{"gc":"gc"}}},{"p":"p2","c":{"c":"c2","gc":{"gc":"gc2"}}}]}}""")
-    server.query("""query{cs{c, gc{gc}, p {p}}}""", project).toString should be(
-      """{"data":{"cs":[{"c":"c","gc":{"gc":"gc"},"p":{"p":"p"}},{"c":"c2","gc":{"gc":"gc2"},"p":{"p":"p2"}}]}}""")
-    server.query("""query{gCs{gc, c {c, p{p}}}}""", project).toString should be(
-      """{"data":{"gCs":[{"gc":"gc","c":{"c":"c","p":{"p":"p"}}},{"gc":"gc2","c":{"c":"c2","p":{"p":"p2"}}}]}}""")
-
-    ifConnectorIsActive { dataResolver(project).countByTable("_RelayId").await should be(6) }
   }
   //endregion
 }

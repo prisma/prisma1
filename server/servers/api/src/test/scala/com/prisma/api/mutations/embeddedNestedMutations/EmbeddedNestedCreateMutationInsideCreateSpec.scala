@@ -5,7 +5,7 @@ import com.prisma.shared.schema_dsl.SchemaDsl
 import org.scalatest.{FlatSpec, Matchers}
 
 class EmbeddedNestedCreateMutationInsideCreateSpec extends FlatSpec with Matchers with ApiSpecBase {
-  override def doNotRunSuiteForMongo: Boolean = true
+  override def onlyRunSuiteForMongo: Boolean = true
 
   "a P1! to C1! relation" should "be possible" in {
 
@@ -679,44 +679,4 @@ class EmbeddedNestedCreateMutationInsideCreateSpec extends FlatSpec with Matcher
     server.query("{ comments { id } }", project).pathAsSeq("data.comments").size should be(2)
 
   }
-
-  "creating a nested item with an id of type UUID" should "work" taggedAs (IgnoreMySql) in {
-    val project = SchemaDsl.fromString() {
-      s"""
-         |type List {
-         |  id: ID! @unique
-         |  todos: [Todo!]!
-         |}
-         |
-         |type Todo {
-         |  id: UUID! @unique
-         |  title: String!
-         |}
-       """.stripMargin
-    }
-    database.setup(project)
-
-    val result = server.query(
-      """
-        |mutation {
-        |  createList(data: {
-        |    todos: {
-        |      create: [ {title: "the todo"} ]
-        |    }
-        |  }){
-        |    todos {
-        |      id
-        |      title
-        |    }
-        |  }
-        |}
-      """.stripMargin,
-      project
-    )
-
-    result.pathAsString("data.createList.todos.[0].title") should equal("the todo")
-    val theUuid = result.pathAsString("data.createList.todos.[0].id")
-    UUID.fromString(theUuid) // should now blow up
-  }
-
 }

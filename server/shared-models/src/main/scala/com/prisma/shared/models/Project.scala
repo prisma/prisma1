@@ -13,9 +13,10 @@ case class Project(
     allowMutations: Boolean = true,
     functions: List[Function] = List.empty
 ) {
-  def models    = schema.models
-  def relations = schema.relations
-  def enums     = schema.enums
+  def models            = schema.models
+  def relations         = schema.relations
+  def enums             = schema.enums
+  def nonEmbeddedModels = schema.models.filterNot(_.isEmbedded)
 
   val serverSideSubscriptionFunctions = functions.collect { case x: ServerSideSubscriptionFunction => x }
 }
