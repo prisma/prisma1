@@ -1,6 +1,5 @@
 package com.prisma.api.import_export
 
-import com.prisma.{IgnoreMySql, IgnorePassive, IgnorePostgres}
 import com.prisma.api.ApiSpecBase
 import com.prisma.api.connector.DataResolver
 import com.prisma.api.import_export.ImportExport.MyJsonProtocol._
@@ -78,21 +77,20 @@ class BulkExportSpec extends FlatSpec with Matchers with ApiSpecBase with AwaitU
 
     importer.executeImport(nodes).await(5).toString should be("[]")
 
-    val cursor  = Cursor(0, 0)
-    val request = ExportRequest("nodes", cursor)
-    val temp0   = exporter.executeExport(dataResolver, request).await(5)
-    println(temp0)
+    val cursor     = Cursor(0, 0)
+    val request    = ExportRequest("nodes", cursor)
+    val temp0      = exporter.executeExport(dataResolver, request).await(5)
     val firstChunk = temp0.as[ResultFormat]
 
     JsArray(firstChunk.out.jsonElements).toString should be(
       "[" ++
-        """{"_typeName":"Model0","id":"0","a":"test1","b":0,"createdAt":"2017-11-29T14:35:13.000Z","updatedAt":"2017-12-05T12:34:23.000Z"},""" ++
-        """{"_typeName":"Model0","id":"11","a":"test4","b":3,"createdAt":"2017-11-29T14:35:13.000Z","updatedAt":"2017-12-05T12:34:23.000Z"},""" ++
-        """{"_typeName":"Model0","id":"13","a":"test4","b":3,"createdAt":"2017-11-29T14:35:13.000Z","updatedAt":"2017-12-05T12:34:23.000Z"},""" ++
-        """{"_typeName":"Model0","id":"14","a":"test1","b":0,"createdAt":"2017-11-29T14:35:13.000Z","updatedAt":"2017-12-05T12:34:23.000Z"},""" ++
-        """{"_typeName":"Model0","id":"17","a":"test4","b":3,"createdAt":"2017-11-29T14:35:13.000Z","updatedAt":"2017-12-05T12:34:23.000Z"},""" ++
-        """{"_typeName":"Model0","id":"3","a":"test4","b":3,"createdAt":"2017-11-29T14:35:13.000Z","updatedAt":"2017-12-05T12:34:23.000Z"},""" ++
-        """{"_typeName":"Model0","id":"4","a":"test1","b":0,"createdAt":"2017-11-29T14:35:13.000Z","updatedAt":"2017-12-05T12:34:23.000Z"}""" ++ "]")
+        """{"_typeName":"Model0","id":"0","updatedAt":"2017-12-05T12:34:23.000Z","a":"test1","b":0,"createdAt":"2017-11-29T14:35:13.000Z"},""" ++
+        """{"_typeName":"Model0","id":"11","updatedAt":"2017-12-05T12:34:23.000Z","a":"test4","b":3,"createdAt":"2017-11-29T14:35:13.000Z"},""" ++
+        """{"_typeName":"Model0","id":"13","updatedAt":"2017-12-05T12:34:23.000Z","a":"test4","b":3,"createdAt":"2017-11-29T14:35:13.000Z"},""" ++
+        """{"_typeName":"Model0","id":"14","updatedAt":"2017-12-05T12:34:23.000Z","a":"test1","b":0,"createdAt":"2017-11-29T14:35:13.000Z"},""" ++
+        """{"_typeName":"Model0","id":"17","updatedAt":"2017-12-05T12:34:23.000Z","a":"test4","b":3,"createdAt":"2017-11-29T14:35:13.000Z"},""" ++
+        """{"_typeName":"Model0","id":"3","updatedAt":"2017-12-05T12:34:23.000Z","a":"test4","b":3,"createdAt":"2017-11-29T14:35:13.000Z"},""" ++
+        """{"_typeName":"Model0","id":"4","updatedAt":"2017-12-05T12:34:23.000Z","a":"test1","b":0,"createdAt":"2017-11-29T14:35:13.000Z"}""" ++ "]")
     firstChunk.cursor.table should be(0)
     firstChunk.cursor.row should be(7)
 
@@ -100,18 +98,15 @@ class BulkExportSpec extends FlatSpec with Matchers with ApiSpecBase with AwaitU
     val temp        = exporter.executeExport(dataResolver, request2).await(5)
     val secondChunk = temp.as[ResultFormat]
 
-    println(s"second chunk:")
-    println(temp)
-
     JsArray(secondChunk.out.jsonElements).toString should be(
       "[" ++
-        """{"_typeName":"Model0","id":"7","a":"test4","b":3,"createdAt":"2017-11-29T14:35:13.000Z","updatedAt":"2017-12-05T12:34:23.000Z"},""" ++
-        """{"_typeName":"Model0","id":"8","a":"test1","b":0,"createdAt":"2017-11-29T14:35:13.000Z","updatedAt":"2017-12-05T12:34:23.000Z"},""" ++
-        """{"_typeName":"Model1","id":"1","a":"test2","b":1,"createdAt":"2017-11-29T14:35:13.000Z","updatedAt":"2017-12-05T12:34:23.000Z"},""" ++
-        """{"_typeName":"Model1","id":"15","a":"test2","b":1,"createdAt":"2017-11-29T14:35:13.000Z","updatedAt":"2017-12-05T12:34:23.000Z"},""" ++
-        """{"_typeName":"Model1","id":"5","a":"test2","b":1,"createdAt":"2017-11-29T14:35:13.000Z","updatedAt":"2017-12-05T12:34:23.000Z"},""" ++
-        """{"_typeName":"Model1","id":"9","a":"test2","b":1,"createdAt":"2017-11-29T14:35:13.000Z","updatedAt":"2017-12-05T12:34:23.000Z"},""" ++
-        """{"_typeName":"Model2","id":"10","a":"test3","b":2,"createdAt":"2017-11-29T14:35:13.000Z","updatedAt":"2017-12-05T12:34:23.000Z"}""" ++ "]")
+        """{"_typeName":"Model0","id":"7","updatedAt":"2017-12-05T12:34:23.000Z","a":"test4","b":3,"createdAt":"2017-11-29T14:35:13.000Z"},""" ++
+        """{"_typeName":"Model0","id":"8","updatedAt":"2017-12-05T12:34:23.000Z","a":"test1","b":0,"createdAt":"2017-11-29T14:35:13.000Z"},""" ++
+        """{"_typeName":"Model1","id":"1","updatedAt":"2017-12-05T12:34:23.000Z","a":"test2","b":1,"createdAt":"2017-11-29T14:35:13.000Z"},""" ++
+        """{"_typeName":"Model1","id":"15","updatedAt":"2017-12-05T12:34:23.000Z","a":"test2","b":1,"createdAt":"2017-11-29T14:35:13.000Z"},""" ++
+        """{"_typeName":"Model1","id":"5","updatedAt":"2017-12-05T12:34:23.000Z","a":"test2","b":1,"createdAt":"2017-11-29T14:35:13.000Z"},""" ++
+        """{"_typeName":"Model1","id":"9","updatedAt":"2017-12-05T12:34:23.000Z","a":"test2","b":1,"createdAt":"2017-11-29T14:35:13.000Z"},""" ++
+        """{"_typeName":"Model2","id":"10","updatedAt":"2017-12-05T12:34:23.000Z","a":"test3","b":2,"createdAt":"2017-11-29T14:35:13.000Z"}""" ++ "]")
 
     secondChunk.cursor.table should be(2)
     secondChunk.cursor.row should be(1)
@@ -121,10 +116,10 @@ class BulkExportSpec extends FlatSpec with Matchers with ApiSpecBase with AwaitU
 
     JsArray(thirdChunk.out.jsonElements).toString should be(
       "[" ++
-        """{"_typeName":"Model2","id":"12","a":"test3","b":2,"createdAt":"2017-11-29T14:35:13.000Z","updatedAt":"2017-12-05T12:34:23.000Z"},""" ++
-        """{"_typeName":"Model2","id":"16","a":"test3","b":2,"createdAt":"2017-11-29T14:35:13.000Z","updatedAt":"2017-12-05T12:34:23.000Z"},""" ++
-        """{"_typeName":"Model2","id":"2","a":"test3","b":2,"createdAt":"2017-11-29T14:35:13.000Z","updatedAt":"2017-12-05T12:34:23.000Z"},""" ++
-        """{"_typeName":"Model2","id":"6","a":"test3","b":2,"createdAt":"2017-11-29T14:35:13.000Z","updatedAt":"2017-12-05T12:34:23.000Z"}""" ++ "]")
+        """{"_typeName":"Model2","id":"12","updatedAt":"2017-12-05T12:34:23.000Z","a":"test3","b":2,"createdAt":"2017-11-29T14:35:13.000Z"},""" ++
+        """{"_typeName":"Model2","id":"16","updatedAt":"2017-12-05T12:34:23.000Z","a":"test3","b":2,"createdAt":"2017-11-29T14:35:13.000Z"},""" ++
+        """{"_typeName":"Model2","id":"2","updatedAt":"2017-12-05T12:34:23.000Z","a":"test3","b":2,"createdAt":"2017-11-29T14:35:13.000Z"},""" ++
+        """{"_typeName":"Model2","id":"6","updatedAt":"2017-12-05T12:34:23.000Z","a":"test3","b":2,"createdAt":"2017-11-29T14:35:13.000Z"}""" ++ "]")
 
     thirdChunk.cursor.table should be(-1)
     thirdChunk.cursor.row should be(-1)

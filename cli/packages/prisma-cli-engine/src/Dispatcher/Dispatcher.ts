@@ -104,6 +104,9 @@ export class Dispatcher {
 
   async findTopic(id: string) {
     if (!id) return {}
+    // TODO: Fix this hack for "cluster". 
+    // Find why cache does not invalidate for cluster command
+    if (id.trim() === 'cluster') return null
     for (let manager of this.managers) {
       let topic = await manager.findTopic(id)
       if (topic) return topic

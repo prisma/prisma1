@@ -90,7 +90,7 @@ object SubscriptionExecutor {
       requestId,
       HttpRequest(),
       query.renderPretty,
-      variables.toString,
+      variables,
       dependencies.reporter,
       Some(project.id),
       errorCodeExtractor = errorExtractor

@@ -240,7 +240,7 @@ class ObjectTypeBuilder(
           case value if isScalarNonListFilter(filterName = "_gte")                    => scalarFilter(GreaterThanOrEquals(getGCValue(value)))
           case _ if isOneRelationFilter(filterName = "")                              => OneRelationIsNullFilter(asRelationField)
           case value: Boolean if field.isEmpty && filter.name == "boolean"            => if (value) TrueFilter else FalseFilter
-          case None if field.isDefined                                                => NodeSubscriptionFilter()
+          case None if field.isDefined                                                => NodeSubscriptionFilter
           case null if field.isDefined && field.get.isList && field.get.isRelation    => throw APIErrors.FilterCannotBeNullOnToManyField(field.get.name)
           case x                                                                      => sys.error("Missing case " + x)
         }

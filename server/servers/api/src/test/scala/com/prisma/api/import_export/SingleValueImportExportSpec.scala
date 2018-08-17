@@ -60,13 +60,14 @@ class SingleValueImportExportSpec extends FlatSpec with Matchers with ApiSpecBas
 
     val res = JsArray(firstChunk.out.jsonElements).toString
 
-    res should include("""{"_typeName":"Model0","id":"0","createdAt":"2017-11-29T14:35:13.000Z","string":"string","updatedAt":"2017-12-05T12:34:23.000Z"}""")
-    res should include("""{"_typeName":"Model0","id":"2","createdAt":"2017-11-29T14:35:13.000Z","float":1.2345,"updatedAt":"2017-12-05T12:34:23.000Z"}""")
-    res should include("""{"_typeName":"Model0","id":"3","boolean":true,"createdAt":"2017-11-29T14:35:13.000Z","updatedAt":"2017-12-05T12:34:23.000Z"}""")
+    res should include("""{"_typeName":"Model0","id":"0","updatedAt":"2017-12-05T12:34:23.000Z","string":"string","createdAt":"2017-11-29T14:35:13.000Z"}""")
+    res should include("""{"_typeName":"Model0","id":"1","updatedAt":"2017-12-05T12:34:23.000Z","int":1,"createdAt":"2017-11-29T14:35:13.000Z"}""")
+    res should include("""{"_typeName":"Model0","id":"2","updatedAt":"2017-12-05T12:34:23.000Z","float":1.2345,"createdAt":"2017-11-29T14:35:13.000Z"}""")
+    res should include("""{"_typeName":"Model0","id":"3","updatedAt":"2017-12-05T12:34:23.000Z","boolean":true,"createdAt":"2017-11-29T14:35:13.000Z"}""")
     res should include(
-      """{"_typeName":"Model0","id":"4","createdAt":"2017-11-29T14:35:13.000Z","datetime":"2018-01-07T15:55:19.000Z","updatedAt":"2017-12-05T12:34:23.000Z"}""")
-    res should include("""{"_typeName":"Model0","id":"5","createdAt":"2017-11-29T14:35:13.000Z","enum":"HA","updatedAt":"2017-12-05T12:34:23.000Z"}""")
-    res should include("""{"_typeName":"Model0","id":"6","createdAt":"2017-11-29T14:35:13.000Z","json":{"a":2},"updatedAt":"2017-12-05T12:34:23.000Z"}""")
+      """{"_typeName":"Model0","id":"4","updatedAt":"2017-12-05T12:34:23.000Z","datetime":"2018-01-07T15:55:19.000Z","createdAt":"2017-11-29T14:35:13.000Z"}""")
+    res should include("""{"_typeName":"Model0","id":"5","updatedAt":"2017-12-05T12:34:23.000Z","enum":"HA","createdAt":"2017-11-29T14:35:13.000Z"}""")
+    res should include("""{"_typeName":"Model0","id":"6","updatedAt":"2017-12-05T12:34:23.000Z","json":{"a":2},"createdAt":"2017-11-29T14:35:13.000Z"}""")
 
     firstChunk.cursor.table should be(0)
     firstChunk.cursor.row should be(7)
@@ -77,7 +78,7 @@ class SingleValueImportExportSpec extends FlatSpec with Matchers with ApiSpecBas
     val res2 = JsArray(secondChunk.out.jsonElements).toString
 
     res2 should include(
-      """{"_typeName":"Model0","id":"7","createdAt":"2017-11-29T14:35:13.000Z","json":[{"a":{"b":{"c":[1,2,3]}}},{"a":{"b":{"c":[1,2,3]}}}],"updatedAt":"2017-12-05T12:34:23.000Z"}""")
+      """{"_typeName":"Model0","id":"7","updatedAt":"2017-12-05T12:34:23.000Z","json":[{"a":{"b":{"c":[1,2,3]}}},{"a":{"b":{"c":[1,2,3]}}}],"createdAt":"2017-11-29T14:35:13.000Z"}""")
 
     secondChunk.cursor.table should be(-1)
     secondChunk.cursor.row should be(-1)
