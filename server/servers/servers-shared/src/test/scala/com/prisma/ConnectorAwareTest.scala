@@ -21,6 +21,7 @@ trait ConnectorAwareTest extends SuiteMixin { self: Suite =>
   def runSuiteOnlyForActiveConnectors: Boolean  = false
   def runSuiteOnlyForPassiveConnectors: Boolean = false
   def doNotRunSuiteForMongo: Boolean            = false
+  def onlyRunSuiteForMongo: Boolean             = false
 
   abstract override def tags: Map[String, Set[String]] = {
     val superTags = super.tags
@@ -30,6 +31,8 @@ trait ConnectorAwareTest extends SuiteMixin { self: Suite =>
     } else if (runSuiteOnlyForPassiveConnectors && connector.active) {
       ignoreAllTests
     } else if (doNotRunSuiteForMongo && connector.connector == "mongo") {
+      ignoreAllTests
+    } else if (onlyRunSuiteForMongo && connector.connector != "mongo") {
       ignoreAllTests
     } else {
       ignoredTestsBasedOnIndividualTagging(connector, superTags)

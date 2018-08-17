@@ -13,7 +13,7 @@ case class PrismaArgs(raw: GCValue) {
 
   def addDateTimesIfNecessary(model: Model) = {
     lazy val now = DateTimeGCValue(DateTime.now(DateTimeZone.UTC))
-    (model.hasCratedAtField, model.hasUpdatedAtField) match {
+    (model.hasCreatedAtField, model.hasUpdatedAtField) match {
       case (true, true)   => PrismaArgs(RootGCValue(raw.asRoot.map + ("createdAt" -> now) + ("updatedAt" -> now)))
       case (true, false)  => PrismaArgs(RootGCValue(raw.asRoot.map + ("createdAt" -> now)))
       case (false, true)  => PrismaArgs(RootGCValue(raw.asRoot.map + ("updatedAt" -> now)))
