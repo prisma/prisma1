@@ -157,7 +157,9 @@ trait NodeActions extends NodeSingleQueries {
         val nestedCreates: Vector[Bson] = nestedCreateDocs.map { case (f, v) => set(f, v) }.toVector
 
         //    delete - only toOne
-        val toOneDeletes                = mutaction.nestedDeletes.collect { case m if !m.relationField.isList => m }
+        val toOneDeletes = mutaction.nestedDeletes.collect { case m if !m.relationField.isList => m }
+        //    Fixme error if there is no child
+
         val nestedDeletes: Vector[Bson] = toOneDeletes.map(delete => unset(delete.relationField.name))
         val nestedDeleteResults = toOneDeletes.map { delete =>
           val random = CuidGCValue.random

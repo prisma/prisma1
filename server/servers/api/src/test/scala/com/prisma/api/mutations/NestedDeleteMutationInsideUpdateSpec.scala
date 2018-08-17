@@ -64,8 +64,8 @@ class NestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matchers with A
          |}
       """.stripMargin,
       project,
-      errorCode = 3042,
-      errorContains = "The change you are trying to make would violate the required relation 'ChildToParent' between Child and Parent"
+      errorCode = 0,
+      errorContains = "Argument 'data' expected type 'ParentUpdateInput!'"
     )
 
     ifConnectorIsActive { dataResolver(project).countByTable("_ChildToParent").await should be(1) }
@@ -129,8 +129,8 @@ class NestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matchers with A
          |}
       """.stripMargin,
       project,
-      errorCode = 3042,
-      errorContains = "The change you are trying to make would violate the required relation 'ChildToParent' between Child and Parent"
+      errorCode = 0,
+      errorContains = "Argument 'data' expected type 'ParentUpdateInput!'"
     )
 
     ifConnectorIsActive { dataResolver(project).countByTable("_ChildToParent").await should be(1) }
@@ -541,7 +541,8 @@ class NestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matchers with A
          |}
       """.stripMargin,
       project,
-      errorCode = 3042
+      errorCode = 0,
+      errorContains = "Argument 'data' expected type 'ParentUpdateInput!'"
     )
 
     ifConnectorIsActive { dataResolver(project).countByTable("_ChildToParent").await should be(1) }

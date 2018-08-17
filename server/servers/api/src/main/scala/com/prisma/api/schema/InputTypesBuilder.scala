@@ -267,14 +267,12 @@ abstract class UncachedInputTypesBuilder(project: Project) extends InputTypesBui
         None
       } else {
 
-        val disconnectIfPossible = if (!field.isList && field.isRequired) None else nestedDisconnectInputField(field)
-
         val inputObjectType = InputObjectType[Any](
           name = inputObjectTypeName,
           fieldsFn = () =>
             nestedCreateInputField(field).toList ++
               nestedConnectInputField(field) ++
-              disconnectIfPossible ++
+              nestedDisconnectInputField(field) ++
               nestedDeleteInputField(field) ++
               nestedUpdateInputField(field) ++
               nestedUpsertInputField(field)
@@ -335,14 +333,16 @@ abstract class UncachedInputTypesBuilder(project: Project) extends InputTypesBui
 
   def nestedConnectInputField(field: RelationField): Option[InputField[Any]] = whereInputField(field, name = "connect")
 
-  def nestedDisconnectInputField(field: RelationField): Option[InputField[Any]] = field.isList match {
-    case true  => whereInputField(field, name = "disconnect")
-    case false => Some(InputField[Any]("disconnect", OptionInputType(BooleanType)))
+  def nestedDisconnectInputField(field: RelationField): Option[InputField[Any]] = (field.isList, field.isRequired) match {
+    case (true, _)      => whereInputField(field, name = "disconnect")
+    case (false, false) => Some(InputField[Any]("disconnect", OptionInputType(BooleanType)))
+    case (false, true)  => None
   }
 
-  def nestedDeleteInputField(field: RelationField): Option[InputField[Any]] = field.isList match {
-    case true  => whereInputField(field, name = "delete")
-    case false => Some(InputField[Any]("delete", OptionInputType(BooleanType)))
+  def nestedDeleteInputField(field: RelationField): Option[InputField[Any]] = (field.isList, field.isRequired) match {
+    case (true, _)      => whereInputField(field, name = "delete")
+    case (false, false) => Some(InputField[Any]("delete", OptionInputType(BooleanType)))
+    case (false, true)  => None
   }
 
   def trueInputFlag(field: RelationField, name: String): Option[InputField[Any]] = {

@@ -316,7 +316,6 @@ class InputTypesSchemaBuilderSpec extends FlatSpec with Matchers with ApiSpecBas
                        |input UserUpdateOneWithoutFriendInput {
                        |  create: UserCreateWithoutFriendInput
                        |  connect: UserWhereUniqueInput
-                       |  delete: Boolean
                        |  update: UserUpdateWithoutFriendDataInput
                        |  upsert: UserUpsertWithoutFriendInput
                        |}
@@ -324,7 +323,6 @@ class InputTypesSchemaBuilderSpec extends FlatSpec with Matchers with ApiSpecBas
                        |input UserUpdateOneWithoutFriendOfInput {
                        |  create: UserCreateWithoutFriendOfInput
                        |  connect: UserWhereUniqueInput
-                       |  delete: Boolean
                        |  update: UserUpdateWithoutFriendOfDataInput
                        |  upsert: UserUpsertWithoutFriendOfInput
                        |}
@@ -493,7 +491,6 @@ class InputTypesSchemaBuilderSpec extends FlatSpec with Matchers with ApiSpecBas
                        |input ParentUpdateOneWithoutChildInput {
                        |  create: ParentCreateWithoutChildInput
                        |  connect: ParentWhereUniqueInput
-                       |  delete: Boolean
                        |  update: ParentUpdateWithoutChildDataInput
                        |  upsert: ParentUpsertWithoutChildInput
                        |}

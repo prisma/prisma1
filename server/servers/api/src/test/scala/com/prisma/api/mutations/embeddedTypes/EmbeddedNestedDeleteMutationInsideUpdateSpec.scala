@@ -12,8 +12,11 @@ class EmbeddedNestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matcher
   //verify results using normal queries
   //do not use id on embedded types
   //test nestedDeleteMany
+  //test with backrelation on child and without
+  //backrelation should always be required
+  //P1! tests should be adapted to expect inputtypeerror
 
-  "a P1! to C1! relation " should "error when deleting the child" in {
+  "a P1! to C1! relation " should "error due to the operation not being in the schema anymore" in {
     val project = SchemaDsl.fromString() {
       """
         |type Parent{
@@ -67,8 +70,8 @@ class EmbeddedNestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matcher
          |}
       """.stripMargin,
       project,
-      errorCode = 3042,
-      errorContains = "The change you are trying to make would violate the required relation 'ChildToParent' between Child and Parent"
+      errorCode = 0,
+      errorContains = "Argument 'data' expected type 'ParentUpdateInput!'"
     )
 
   }
@@ -127,8 +130,8 @@ class EmbeddedNestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matcher
          |}
       """.stripMargin,
       project,
-      errorCode = 3042,
-      errorContains = "The change you are trying to make would violate the required relation 'ChildToParent' between Child and Parent"
+      errorCode = 0,
+      errorContains = "Argument 'data' expected type 'ParentUpdateInput!'"
     )
 
   }
@@ -257,7 +260,6 @@ class EmbeddedNestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matcher
           |}""".stripMargin,
         project
       )
-      .pathAsString("data.createChild.id")
 
     val parent1Id = server
       .query(
@@ -291,7 +293,6 @@ class EmbeddedNestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matcher
     )
 
     dataResolver(project).countByTable("Parent").await should be(1)
-    dataResolver(project).countByTable("Child").await should be(1)
 
   }
 
@@ -473,7 +474,8 @@ class EmbeddedNestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matcher
         | childReq: Child!
         |}
         |
-        |type Child @embedded{| c: String! @unique
+        |type Child @embedded{
+        | c: String! @unique
         | parentsOpt: [Parent!]!
         |}
       """
@@ -512,7 +514,8 @@ class EmbeddedNestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matcher
          |}
       """.stripMargin,
       project,
-      errorCode = 3042
+      errorCode = 0,
+      errorContains = "Argument 'data' expected type 'ParentUpdateInput!'"
     )
 
   }
