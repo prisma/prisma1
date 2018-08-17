@@ -62,11 +62,6 @@ export interface DelegateMutation ${this.renderDelegateMutations()}
 export interface BindingConstructor<T> {
   new(options?: BasePrismaOptions): T
 }
-/**
- * Type Defs
-*/
-
-${this.renderTypedefs()}
 
 ${this.renderExports(options)}
 

@@ -13,5 +13,8 @@ export { forwardTo } from './utils'
 export { makeBindingClass } from './makeBindingClass'
 export { Generator } from './codegen/Generator'
 export { TypescriptGenerator } from './codegen/TypescriptGenerator'
+export {
+  TypescriptDefinitionGenerator,
+} from './codegen/TypescriptDefinitionGenerator'
 export { Prisma } from './Prisma'
 export { makePrismaBindingClass } from './makePrismaBindingClass'

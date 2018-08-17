@@ -19,6 +19,8 @@ export function makePrismaLink({
     headers: token ? { Authorization: `Bearer ${token}` } : {},
   })
 
+  console.log('NEW LINK')
+
   // also works for https/wss
   const wsEndpoint = endpoint.replace(/^http/, 'ws')
   const wsLink = new WebSocketLink({
