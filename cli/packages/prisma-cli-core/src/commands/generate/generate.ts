@@ -31,26 +31,28 @@ export default class GenereateCommand extends Command {
       const stageName = this.definition.stage!
       const token = this.definition.getToken(serviceName, stageName)
       const cluster = this.definition.getCluster()
+      const workspace = this.definition.getWorkspace()
       this.env.setActiveCluster(cluster!)
 
       await this.client.initClusterClient(
         cluster!,
         serviceName,
-        this.definition.stage,
-        this.definition.getWorkspace(),
+        stageName,
+        workspace,
       )
       const schemaString = await fetchAndPrintSchema(
         this.client,
         serviceName,
         stageName!,
         token,
+        workspace!,
       )
       this.out.action.stop(prettyTime(Date.now() - before))
       for (const { generator, output } of this.definition.definition
         .generate!) {
-        const resolvedOutput = fs.pathExistsSync(output)
-          ? path.resolve(output)
-          : path.join(this.config.cwd, output)
+        const resolvedOutput = output.startsWith('/')
+          ? output
+          : path.join(this.config.definitionDir, output)
 
         fs.mkdirpSync(path.dirname(resolvedOutput))
 
