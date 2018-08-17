@@ -112,6 +112,7 @@ case class DeployMutation(
       secretsStep <- updateSecretsIfNecessary()
       migration   <- handleMigration(nextSchema, steps ++ secretsStep, functions)
     } yield {
+      dependencies.invalidationPublisher.publish(Only(project.id), project.id)
       Good(DeployMutationPayload(args.clientMutationId, migration, errors = Vector.empty, warnings = Vector.empty))
     }
   }
