@@ -17,6 +17,7 @@ import Delete from './commands/delete/index'
 import InitPrisma from './commands/init-prisma'
 import IntrospectCommand from './commands/introspect/introspect'
 import Seed from './commands/seed/seed'
+import ManagementToken from './commands/management-token'
 
 export const groups = [
   {
@@ -58,6 +59,11 @@ export const topics = [
   {
     name: 'token',
     description: 'Create a new service token',
+    group: 'service',
+  },
+  {
+    name: 'management-token',
+    description: 'Create a new management API token',
     group: 'service',
   },
   { name: 'list', description: 'List all deployed services', group: 'service' },
@@ -123,6 +129,7 @@ export const commands = [
   Import,
   Export,
   Token,
+  ManagementToken,
   Login,
   Logout,
   Account,
@@ -143,6 +150,7 @@ export {
   Import,
   Export,
   Token,
+  ManagementToken,
   Login,
   Logout,
   InitPrisma,
