@@ -209,7 +209,7 @@ import { GraphQLResolveInfo, GraphQLSchema } from 'graphql'
 import { IResolvers } from 'graphql-tools/dist/Interfaces'
 import { makePrismaBindingClass, BasePrismaOptions, Options } from 'prisma-lib'`
   }
-  renderExports(options?: RenderOptions) {
+  renderPrismaClassArgs(options?: RenderOptions) {
     let endpointString = ''
     let secretString = ''
     if (options) {
@@ -222,7 +222,12 @@ import { makePrismaBindingClass, BasePrismaOptions, Options } from 'prisma-lib'`
         secretString = options.secret ? `, secret: ${options.secret}` : ''
       }
     }
-    return `export const Prisma = makePrismaBindingClass<BindingConstructor<Prisma>>({typeDefs${endpointString}${secretString}})
+
+    return `{typeDefs${endpointString}${secretString}}`
+  }
+  renderExports(options?: RenderOptions) {
+    const args = this.renderPrismaClassArgs(options)
+    return `export const Prisma = makePrismaBindingClass<BindingConstructor<Prisma>>(${args})
 export const prisma = new Prisma()`
   }
   renderTypedefs() {

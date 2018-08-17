@@ -12,7 +12,8 @@
     "prepublish": "npm run build",
     "build": "rm -rf dist && tsc -d",
     "test-only": "npm run build && ava --verbose dist/**/*.test.js dist/*.test.js",
-    "test": "tslint src/**/*.ts && npm run test-only"
+    "test-generator-only": "npm run build && ava --verbose dist/codegen/**/*.test.js dist/codegen/*.test.js",
+    "test": "tslint src/**/*.ts && npm run test-generator-only"
   },
   "dependencies": {
     "@types/node": "^10.7.0",
