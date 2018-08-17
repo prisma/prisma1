@@ -81,10 +81,10 @@ export class TypescriptGenerator extends Generator {
       const fieldDefinition = Object.keys(type.getFields())
         .map(f => {
           const field = type.getFields()[f]
-          return `  ${this.renderFieldName(
-            field,
-            false,
-          )}: ${this.renderInputFieldType(field.type)}`
+          const isOptional = isNonNullType(field.type)
+          return `  ${this.renderFieldName(field, false)}${
+            isOptional ? '?' : ''
+          }: ${this.renderInputFieldType(field.type)}`
         })
         .join('\n')
 
@@ -222,7 +222,8 @@ import { makePrismaBindingClass, BasePrismaOptions, Options } from 'prisma-lib'`
         secretString = options.secret ? `, secret: ${options.secret}` : ''
       }
     }
-    return `export const Prisma = makePrismaBindingClass<BindingConstructor<Prisma>>({typeDefs${endpointString}${secretString}})`
+    return `export const Prisma = makePrismaBindingClass<BindingConstructor<Prisma>>({typeDefs${endpointString}${secretString}})
+export const prisma = new Prisma()`
   }
   renderTypedefs() {
     return (
@@ -241,14 +242,18 @@ import { makePrismaBindingClass, BasePrismaOptions, Options } from 'prisma-lib'`
     if (!queryType) {
       return '{}'
     }
-    return this.renderMainMethodFields('query', queryType.getFields())
+    return this.renderMainMethodFields('query', queryType.getFields(), false)
   }
   renderMutations() {
     const mutationType = this.schema.getMutationType()
     if (!mutationType) {
       return '{}'
     }
-    return this.renderMainMethodFields('mutation', mutationType.getFields())
+    return this.renderMainMethodFields(
+      'mutation',
+      mutationType.getFields(),
+      false,
+    )
   }
   renderDelegateQueries() {
     const queryType = this.schema.getQueryType()
@@ -276,6 +281,7 @@ import { makePrismaBindingClass, BasePrismaOptions, Options } from 'prisma-lib'`
     return this.renderMainMethodFields(
       'subscription',
       subscriptionType.getFields(),
+      true,
     )
   }
   getTypeNames() {
@@ -337,7 +343,13 @@ import { makePrismaBindingClass, BasePrismaOptions, Options } from 'prisma-lib'`
         a =>
           `${this.renderFieldName(a, false)}${
             isNonNullType(a.type) ? '' : '?'
-          }: ${this.renderFieldType(a, false, true)}`,
+          }: ${this.renderFieldType({
+            field: a,
+            node: false,
+            input: true,
+            partial: false,
+            renderFunction: false,
+          })}`,
       )
       .join(', ')}${args.length > 0 ? ' ' : ''}${infoString}}`
   }
@@ -350,12 +362,30 @@ import { makePrismaBindingClass, BasePrismaOptions, Options } from 'prisma-lib'`
     const methods = Object.keys(fields)
       .map(f => {
         const field = fields[f]
-        return `    ${field.name}: <T = ${this.renderFieldType(field, true)}${
-          !isNonNullType(field.type) ? ' | null' : ''
-        }>(${this.renderArgs(field, delegate)}) => ${
+        const T = delegate
+          ? `<T = ${this.renderFieldType({
+              field,
+              node: delegate,
+              input: false,
+              partial: delegate,
+              renderFunction: false,
+            })}>`
+          : ''
+        return `    ${field.name}: ${T}(${this.renderArgs(
+          field,
+          delegate,
+        )}) => ${
           operation === 'subscription'
             ? 'Promise<AsyncIterator<T>>'
-            : this.renderFieldType(field, delegate, false, delegate)
+            : delegate
+              ? 'T'
+              : this.renderFieldType({
+                  field,
+                  node: delegate,
+                  input: false,
+                  partial: delegate,
+                  renderFunction: false,
+                })
         } `
       })
       .join(',\n')
@@ -399,10 +429,13 @@ import { makePrismaBindingClass, BasePrismaOptions, Options } from 'prisma-lib'`
       })
       .map(f => {
         const field = fields[f]
-        return `  ${this.renderFieldName(field, node)}: ${this.renderFieldType(
+        return `  ${this.renderFieldName(field, node)}: ${this.renderFieldType({
           field,
           node,
-        )}`
+          input: false,
+          partial: false,
+          renderFunction: true,
+        })}`
       })
       .join('\n')
 
@@ -430,29 +463,56 @@ import { makePrismaBindingClass, BasePrismaOptions, Options } from 'prisma-lib'`
     return `${field.name}${isNonNullType(field.type) ? '' : '?'}`
   }
 
-  renderFieldType(
+  renderFieldType({
     field,
-    node: boolean = true,
-    input: boolean = false,
-    partial: boolean = false,
-  ) {
+    node,
+    input,
+    partial,
+    renderFunction,
+  }: {
+    field
+    node: boolean
+    input: boolean
+    partial: boolean
+    renderFunction: boolean
+    // node: boolean = true,
+    // input: boolean = false,
+    // partial: boolean = false,
+    // renderFunction: boolean = true,
+  }) {
     const { type } = field
     const deepType = this.getDeepType(type)
     const isList = isListType(type) || isListType(type.ofType)
     const isOptional = !(isNonNullType(type) || isNonNullType(type.ofType))
     const isScalar = isScalarType(deepType) || isEnumType(deepType)
     const isInput = isInputType(deepType) || input
-    const isObject = isObjectType(deepType)
+    // const isObject = isObjectType(deepType)
 
     let typeString = this.getInternalTypeName(type)
 
-    if (isList || node) {
-      if (!isScalar && !isInput) {
-        typeString += 'Node'
-      }
+    if ((node || isList) && !isScalar) {
+      typeString += `Node`
+    }
 
-      if (isOptional) {
-        typeString += ' | undefined'
+    if (isScalar) {
+      return typeString
+    }
+
+    if ((isList || node) && isOptional) {
+      typeString += ' | null'
+    }
+
+    if (isList) {
+      if (isScalar) {
+        return `${typeString}[]`
+      } else {
+        if (renderFunction) {
+          return `(${
+            field.args && field.args.length > 0 ? this.renderArgs(field) : ''
+          }) => Promise<Array<${typeString}>>`
+        } else {
+          return `Promise<Array<${typeString}>>`
+        }
       }
     }
 
@@ -461,28 +521,19 @@ import { makePrismaBindingClass, BasePrismaOptions, Options } from 'prisma-lib'`
     }
 
     if (node && (!isInput || isScalar)) {
-      if (isList) {
-        return `Promise<${typeString}[]>`
-      } else {
-        return `Promise<${typeString}>`
-      }
+      return `Promise<${typeString}>`
     }
 
-    if (isInput) {
+    if (isInput || !renderFunction) {
       return typeString
     }
 
-    if (isList && isObject) {
-      if (isOptional) {
-        return `Promise<Array<${typeString}>>`
-      } else {
-        return `Promise<${typeString}[]>`
-      }
-    } else {
-      return `(${
-        field.args && field.args.length > 0 ? this.renderArgs(field) : ''
-      }) => ${typeString}`
+    if (node && !typeString.endsWith('Node')) {
+      typeString = `${typeString}Node`
     }
+    return `(${
+      field.args && field.args.length > 0 ? this.renderArgs(field) : ''
+    }) => ${typeString}`
   }
 
   renderInputFieldType(type: GraphQLInputType | GraphQLOutputType) {

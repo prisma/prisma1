@@ -1,6 +1,6 @@
 {
   "name": "prisma-lib",
-  "version": "0.0.13",
+  "version": "0.1.7",
   "author": "Tim Suchanek <suchanek@prisma.io>",
   "license": "MIT",
   "files": [

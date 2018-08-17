@@ -10,23 +10,40 @@ import {
   Kind,
   execute,
   OperationTypeNode,
+  print,
+  GraphQLField,
 } from 'graphql'
 import { Delegate } from './Delegate'
+import { mapValues } from './utils/mapValues'
 // to make the TS compiler happy
 
 // to avoid recreation on each instantiation for the same schema, we cache the created methods
 const delegateCache = new Map()
 const ormCache = new Map()
 
+let instructionId = 0
+
+export interface InstructionsMap {
+  [key: string]: Instruction[]
+}
+
+export interface Instruction {
+  fieldName: string
+  args?: any
+  field: GraphQLField<any, any>
+}
+
 export class Binding extends Delegate {
   subscription: SubscriptionMap
   types: any
   query: any
+  debug
   mutation: any
-  currentInstructions: any[] = []
+  currentInstructions: InstructionsMap = {}
 
-  constructor({ schema, fragmentReplacements, before }: BindingOptions) {
+  constructor({ schema, fragmentReplacements, before, debug }: BindingOptions) {
     super({ schema, fragmentReplacements, before })
+    this.debug = debug
 
     this.buildMethods()
     this.subscription = this.buildSubscriptionMethods()
@@ -71,8 +88,10 @@ export class Binding extends Delegate {
       .reduce((acc, curr) => ({ ...acc, [curr.key]: curr.value }), {})
   }
 
-  processInstructions = async (): Promise<any> => {
-    const { ast, variables } = this.generateSelections(this.currentInstructions)
+  processInstructions = async (id: number): Promise<any> => {
+    const { ast, variables } = this.generateSelections(
+      this.currentInstructions[id],
+    )
     const { variableDefinitions, ...restAst } = ast
     const document = {
       kind: Kind.DOCUMENT,
@@ -90,6 +109,15 @@ export class Binding extends Delegate {
       ],
     }
     this.before()
+    // console.log({ debug: this.debug })
+    if (this.debug) {
+      console.log(`\nQuery:`)
+      console.log(print(document))
+      if (variables && Object.keys(variables).length > 0) {
+        console.log('Variables:')
+        console.log(JSON.stringify(variables))
+      }
+    }
     const result = await execute(this.schema, document, {}, {}, variables)
     let pointer = result
     while (pointer && typeof pointer === 'object' && !Array.isArray(pointer)) {
@@ -98,19 +126,24 @@ export class Binding extends Delegate {
     return pointer
   }
 
-  then = async (resolve, reject) => {
+  then = async (id, resolve, reject) => {
+    let result
     try {
-      const result = await this.processInstructions()
+      result = await this.processInstructions(id)
+      this.currentInstructions[id] = []
       resolve(result)
     } catch (e) {
+      this.currentInstructions[id] = []
       reject(e)
     }
+    return result
   }
 
-  catch = async reject => {
+  catch = async (id, reject) => {
     try {
-      await this.processInstructions()
+      await this.processInstructions(id)
     } catch (e) {
+      this.currentInstructions[id] = []
       reject(e)
     }
   }
@@ -119,6 +152,7 @@ export class Binding extends Delegate {
     const variableDefinitions: any[] = []
     const variables = {}
     let variableCounter = {}
+
     const ast = instructions.reduceRight((acc, instruction, index) => {
       let args: any[] = []
 
@@ -270,14 +304,26 @@ export class Binding extends Delegate {
               .map(([fieldName, field]) => {
                 return {
                   key: fieldName,
-                  value: args => {
-                    this.currentInstructions.push({
+                  value: (args, arg2) => {
+                    const id = typeof args === 'number' ? args : ++instructionId
+
+                    const realArgs = typeof args === 'number' ? arg2 : args
+                    this.currentInstructions[id] =
+                      this.currentInstructions[id] || []
+                    this.currentInstructions[id].push({
                       fieldName,
-                      args,
+                      args: realArgs,
                       field,
                     })
                     const typeName = this.getTypeName(field.type)
-                    return this.types[typeName]
+
+                    // this is black magic. what we do here: bind both .then, .catch and all resolvers to `id`
+                    return mapValues(this.types[typeName], (key, value) => {
+                      if (typeof value === 'function') {
+                        return value.bind(this, id)
+                      }
+                      return value
+                    })
                   },
                 }
               })
