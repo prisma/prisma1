@@ -5,6 +5,8 @@ import java.util.function.BiFunction
 
 import com.github.benmanes.caffeine.cache.{AsyncCacheLoader, Caffeine, AsyncLoadingCache => AsyncCaffeineCache}
 
+import scala.collection.JavaConverters.{mapAsJavaMap, mapAsScalaMap}
+import scala.collection.mutable
 import scala.compat.java8.FunctionConverters._
 import scala.compat.java8.FutureConverters._
 import scala.concurrent.{ExecutionContext, Future}
@@ -63,5 +65,10 @@ case class CaffeineImplForAsyncCache[K, V >: Null](underlying: AsyncCaffeineCach
 
   private def toCaffeineMappingFunction[K, V](genValue: () ⇒ Future[V]): BiFunction[K, Executor, CompletableFuture[V]] = {
     asJavaBiFunction[K, Executor, CompletableFuture[V]]((_, _) ⇒ genValue().toJava.toCompletableFuture)
+  }
+
+  override def removeAll(fn: K => Boolean): Unit = {
+    val keysToRemove: mutable.Map[K, V] = mapAsScalaMap(underlying.synchronous().asMap()).filter((kv: (K, V)) => fn(kv._1))
+    underlying.synchronous().invalidateAll(mapAsJavaMap(keysToRemove).keySet())
   }
 }

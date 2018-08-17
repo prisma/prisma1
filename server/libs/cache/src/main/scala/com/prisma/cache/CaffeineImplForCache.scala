@@ -3,6 +3,9 @@ package com.prisma.cache
 import com.github.benmanes.caffeine.cache.{Caffeine, Cache => CaffeineCache}
 
 import scala.compat.java8.FunctionConverters._
+import scala.collection.JavaConverters.mapAsScalaMap
+import scala.collection.JavaConverters.mapAsJavaMap
+import scala.collection.mutable
 
 object CaffeineImplForCache {
   def unbounded[K, V >: Null](): CaffeineImplForCache[K, V] = {
@@ -37,5 +40,10 @@ case class CaffeineImplForCache[K, V >: Null](underlying: CaffeineCache[K, V]) e
   override def getOrUpdateOpt(key: K, fn: () => Option[V]): Option[V] = {
     val caffeineFunction = (_: K) => fn().orNull
     Option(underlying.get(key, asJavaFunction(caffeineFunction)))
+  }
+
+  override def removeAll(fn: K => Boolean): Unit = {
+    val keysToRemove: mutable.Map[K, V] = mapAsScalaMap(underlying.asMap()).filter((kv: (K, V)) => fn(kv._1))
+    underlying.invalidateAll(mapAsJavaMap(keysToRemove).keySet())
   }
 }

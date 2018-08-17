@@ -6,6 +6,7 @@ import akka.actor.{Actor, ActorRef, Stash, Terminated}
 import com.prisma.akkautil.{LogUnhandled, LogUnhandledExceptions}
 import com.prisma.messagebus.pubsub.{Message, Only, Subscription}
 import com.prisma.metrics.GaugeMetric
+import com.prisma.shared.messages.SchemaInvalidated
 import com.prisma.shared.models.ModelMutationType.ModelMutationType
 import com.prisma.shared.models._
 import com.prisma.subscriptions.SubscriptionDependencies
@@ -13,7 +14,6 @@ import com.prisma.subscriptions.metrics.SubscriptionMetrics
 import com.prisma.subscriptions.protocol.StringOrInt
 import com.prisma.subscriptions.resolving.SubscriptionsManager.Requests.EndSubscription
 import com.prisma.subscriptions.resolving.SubscriptionsManager.Responses.{ProjectSchemaChanged, SubscriptionEvent}
-import com.prisma.subscriptions.resolving.SubscriptionsManagerForProject.SchemaInvalidated
 import play.api.libs.json._
 import sangria.ast.Document
 import sangria.renderer.QueryRenderer
