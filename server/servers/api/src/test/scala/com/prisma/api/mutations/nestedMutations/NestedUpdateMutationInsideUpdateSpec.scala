@@ -1,10 +1,11 @@
-package com.prisma.api.mutations
+package com.prisma.api.mutations.nestedMutations
 
 import com.prisma.api.ApiSpecBase
 import com.prisma.shared.schema_dsl.SchemaDsl
 import org.scalatest.{FlatSpec, Matchers}
 
 class NestedUpdateMutationInsideUpdateSpec extends FlatSpec with Matchers with ApiSpecBase {
+  override def doNotRunSuiteForMongo: Boolean = true
 
   "a one to many relation" should "be updateable by id through a nested mutation" in {
     val project = SchemaDsl.fromBuilder { schema =>

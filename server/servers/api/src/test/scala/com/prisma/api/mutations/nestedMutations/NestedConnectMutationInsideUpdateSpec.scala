@@ -1,4 +1,4 @@
-package com.prisma.api.mutations
+package com.prisma.api.mutations.nestedMutations
 
 import com.prisma.IgnorePassive
 import com.prisma.api.ApiSpecBase

@@ -1,22 +1,13 @@
-package com.prisma.api.mutations.embeddedTypes
+package com.prisma.api.mutations.nestedMutations
 
 import com.prisma.api.ApiSpecBase
 import com.prisma.shared.schema_dsl.SchemaDsl
 import org.scalatest.{FlatSpec, Matchers}
 
-class EmbeddedNestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matchers with ApiSpecBase {
+class NestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matchers with ApiSpecBase {
+  override def doNotRunSuiteForMongo: Boolean = true
 
-  override def onlyRunSuiteForMongo: Boolean = true
-
-  //Fixme
-  //verify results using normal queries
-  //do not use id on embedded types
-  //test nestedDeleteMany
-  //test with backrelation on child and without
-  //backrelation should always be required
-  //P1! tests should be adapted to expect inputtypeerror
-
-  "a P1! to C1! relation " should "error due to the operation not being in the schema anymore" in {
+  "a P1! to C1! relation " should "error when deleting the child" in {
     val project = SchemaDsl.fromString() {
       """
         |type Parent{
@@ -25,7 +16,8 @@ class EmbeddedNestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matcher
         | childReq: Child!
         |}
         |
-        |type Child @embedded {
+        |type Child{
+        | id: ID! @unique
         | c: String! @unique
         | parentReq: Parent!
         |}
@@ -45,14 +37,16 @@ class EmbeddedNestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matcher
           |  }){
           |    id
           |    childReq{
-          |       c
+          |       id
           |    }
           |  }
           |}""".stripMargin,
         project
       )
-
+    val childId  = res.pathAsString("data.createParent.childReq.id")
     val parentId = res.pathAsString("data.createParent.id")
+
+    ifConnectorIsActive { dataResolver(project).countByTable("_ChildToParent").await should be(1) }
 
     server.queryThatMustFail(
       s"""
@@ -74,6 +68,7 @@ class EmbeddedNestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matcher
       errorContains = "Argument 'data' expected type 'ParentUpdateInput!'"
     )
 
+    ifConnectorIsActive { dataResolver(project).countByTable("_ChildToParent").await should be(1) }
   }
 
   "a P1! to C1 relation" should "always fail when trying to delete the child" in {
@@ -85,7 +80,8 @@ class EmbeddedNestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matcher
         | childReq: Child!
         |}
         |
-        |type Child @embedded{
+        |type Child{
+        | id: ID! @unique
         | c: String! @unique
         | parentOpt: Parent
         |}
@@ -105,14 +101,17 @@ class EmbeddedNestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matcher
           |  }){
           |  id
           |    childReq{
-          |       c
+          |       id
           |    }
           |  }
           |}""".stripMargin,
         project
       )
 
+    val childId  = res.pathAsString("data.createParent.childReq.id")
     val parentId = res.pathAsString("data.createParent.id")
+
+    ifConnectorIsActive { dataResolver(project).countByTable("_ChildToParent").await should be(1) }
 
     server.queryThatMustFail(
       s"""
@@ -134,6 +133,7 @@ class EmbeddedNestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matcher
       errorContains = "Argument 'data' expected type 'ParentUpdateInput!'"
     )
 
+    ifConnectorIsActive { dataResolver(project).countByTable("_ChildToParent").await should be(1) }
   }
 
   "a P1 to C1  relation " should "work through a nested mutation by id" in {
@@ -145,7 +145,8 @@ class EmbeddedNestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matcher
         | childOpt: Child
         |}
         |
-        |type Child @embedded{
+        |type Child{
+        | id: ID! @unique
         | c: String! @unique
         | parentOpt: Parent
         |}
@@ -165,13 +166,14 @@ class EmbeddedNestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matcher
           |  }){
           |    id
           |    childOpt{
-          |       c
+          |       id
           |    }
           |  }
           |}""".stripMargin,
         project
       )
 
+    val existingChildId  = existingDataRes.pathAsString("data.createParent.childOpt.id")
     val existingParentId = existingDataRes.pathAsString("data.createParent.id")
 
     val res = server
@@ -185,14 +187,17 @@ class EmbeddedNestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matcher
           |  }){
           |    id
           |    childOpt{
-          |       c
+          |       id
           |    }
           |  }
           |}""".stripMargin,
         project
       )
 
+    val childId  = res.pathAsString("data.createParent.childOpt.id")
     val parentId = res.pathAsString("data.createParent.id")
+
+    ifConnectorIsActive { dataResolver(project).countByTable("_ChildToParent").await should be(2) }
 
     val res2 = server.query(
       s"""
@@ -213,6 +218,8 @@ class EmbeddedNestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matcher
     )
 
     res2.toString should be("""{"data":{"updateParent":{"childOpt":null}}}""")
+
+    ifConnectorIsActive { dataResolver(project).countByTable("_ChildToParent").await should be(1) }
 
     // Verify existing data
 
@@ -241,7 +248,8 @@ class EmbeddedNestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matcher
         | childOpt: Child
         |}
         |
-        |type Child @embedded{
+        |type Child{
+        | id: ID! @unique
         | c: String! @unique
         | parentOpt: Parent
         |}
@@ -250,16 +258,17 @@ class EmbeddedNestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matcher
 
     database.setup(project)
 
-    server
+    val child1Id = server
       .query(
         """mutation {
           |  createChild(data: {c: "c1"})
           |  {
-          |    c
+          |    id
           |  }
           |}""".stripMargin,
         project
       )
+      .pathAsString("data.createChild.id")
 
     val parent1Id = server
       .query(
@@ -272,6 +281,8 @@ class EmbeddedNestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matcher
         project
       )
       .pathAsString("data.createParent.id")
+
+    ifConnectorIsActive { dataResolver(project).countByTable("_ChildToParent").await should be(0) }
 
     val res = server.queryThatMustFail(
       s"""
@@ -293,7 +304,9 @@ class EmbeddedNestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matcher
     )
 
     dataResolver(project).countByTable("Parent").await should be(1)
+    dataResolver(project).countByTable("Child").await should be(1)
 
+    ifConnectorIsActive { dataResolver(project).countByTable("_ChildToParent").await should be(0) }
   }
 
   "a PM to C1!  relation " should "work" in {
@@ -305,7 +318,8 @@ class EmbeddedNestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matcher
         | childrenOpt: [Child!]!
         |}
         |
-        |type Child @embedded{
+        |type Child{
+        | id: ID! @unique
         | c: String! @unique
         | parentReq: Parent!
         |}
@@ -314,7 +328,7 @@ class EmbeddedNestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matcher
 
     database.setup(project)
 
-    val res1 = server.query(
+    server.query(
       """mutation {
         |  createParent(data: {
         |    p: "p1"
@@ -330,9 +344,9 @@ class EmbeddedNestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matcher
       project
     )
 
-    res1.toString should be("""{"data":{"createParent":{"childrenOpt":[{"c":"c1"},{"c":"c2"}]}}}""")
+    ifConnectorIsActive { dataResolver(project).countByTable("_ChildToParent").await should be(2) }
 
-    val res2 = server.query(
+    server.query(
       s"""
          |mutation {
          |  updateParent(
@@ -349,9 +363,9 @@ class EmbeddedNestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matcher
       project
     )
 
-    res2.toString should be("""{"data":{"createParent":{"childrenOpt":[{"c":"c1"},{"c":"c2"}]}}}""")
-
+    ifConnectorIsActive { dataResolver(project).countByTable("_ChildToParent").await should be(1) }
     dataResolver(project).countByTable("Parent").await should be(1)
+    dataResolver(project).countByTable("Child").await should be(1)
   }
 
   "a P1 to C1!  relation " should "work" in {
@@ -363,7 +377,8 @@ class EmbeddedNestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matcher
         | childOpt: Child
         |}
         |
-        |type Child @embedded{
+        |type Child{
+        | id: ID! @unique
         | c: String! @unique
         | parentReq: Parent!
         |}
@@ -388,6 +403,8 @@ class EmbeddedNestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matcher
       project
     )
 
+    ifConnectorIsActive { dataResolver(project).countByTable("_ChildToParent").await should be(1) }
+
     server.query(
       s"""
          |mutation {
@@ -405,7 +422,9 @@ class EmbeddedNestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matcher
       project
     )
 
+    ifConnectorIsActive { dataResolver(project).countByTable("_ChildToParent").await should be(0) }
     dataResolver(project).countByTable("Parent").await should be(1)
+    dataResolver(project).countByTable("Child").await should be(0)
   }
 
   "a PM to C1 " should "work" in {
@@ -417,7 +436,8 @@ class EmbeddedNestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matcher
         | childrenOpt: [Child!]!
         |}
         |
-        |type Child @embedded{
+        |type Child{
+        | id: ID! @unique
         | c: String! @unique
         | parentOpt: Parent
         |}
@@ -443,6 +463,8 @@ class EmbeddedNestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matcher
         project
       )
 
+    ifConnectorIsActive { dataResolver(project).countByTable("_ChildToParent").await should be(2) }
+
     val res = server.query(
       s"""
          |mutation {
@@ -462,7 +484,9 @@ class EmbeddedNestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matcher
 
     res.toString should be("""{"data":{"updateParent":{"childrenOpt":[{"c":"c1"}]}}}""")
 
+    ifConnectorIsActive { dataResolver(project).countByTable("_ChildToParent").await should be(1) }
     dataResolver(project).countByTable("Parent").await should be(1)
+    dataResolver(project).countByTable("Child").await should be(1)
   }
 
   "a P1! to CM  relation" should "error " in {
@@ -474,7 +498,8 @@ class EmbeddedNestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matcher
         | childReq: Child!
         |}
         |
-        |type Child @embedded{
+        |type Child{
+        | id: ID! @unique
         | c: String! @unique
         | parentsOpt: [Parent!]!
         |}
@@ -499,6 +524,8 @@ class EmbeddedNestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matcher
       project
     )
 
+    ifConnectorIsActive { dataResolver(project).countByTable("_ChildToParent").await should be(1) }
+
     server.queryThatMustFail(
       s"""
          |mutation {
@@ -518,6 +545,7 @@ class EmbeddedNestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matcher
       errorContains = "Argument 'data' expected type 'ParentUpdateInput!'"
     )
 
+    ifConnectorIsActive { dataResolver(project).countByTable("_ChildToParent").await should be(1) }
   }
 
   "a P1 to CM  relation " should "work" in {
@@ -529,7 +557,8 @@ class EmbeddedNestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matcher
         | childOpt: Child
         |}
         |
-        |type Child @embedded{
+        |type Child{
+        | id: ID! @unique
         | c: String! @unique
         | parentsOpt: [Parent!]!
         |}
@@ -554,6 +583,8 @@ class EmbeddedNestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matcher
       project
     )
 
+    ifConnectorIsActive { dataResolver(project).countByTable("_ChildToParent").await should be(1) }
+
     val res = server.query(
       s"""
          |mutation {
@@ -574,6 +605,8 @@ class EmbeddedNestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matcher
     res.toString should be("""{"data":{"updateParent":{"childOpt":null}}}""")
 
     server.query(s"""query{children{c, parentsOpt{p}}}""", project).toString should be("""{"data":{"children":[]}}""")
+
+    ifConnectorIsActive { dataResolver(project).countByTable("_ChildToParent").await should be(0) }
   }
 
   "a PM to CM  relation" should "work" in {
@@ -585,7 +618,8 @@ class EmbeddedNestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matcher
         | childrenOpt: [Child!]!
         |}
         |
-        |type Child @embedded{
+        |type Child{
+        | id: ID! @unique
         | c: String! @unique
         | parentsOpt: [Parent!]!
         |}
@@ -625,6 +659,8 @@ class EmbeddedNestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matcher
         |}""".stripMargin,
       project
     )
+
+    ifConnectorIsActive { dataResolver(project).countByTable("_ChildToParent").await should be(4) }
 
     server.queryThatMustFail(
       s"""
@@ -668,6 +704,8 @@ class EmbeddedNestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matcher
 
     server.query(s"""query{child(where:{c:"otherChild"}){c, parentsOpt{p}}}""", project).toString should be(
       """{"data":{"child":{"c":"otherChild","parentsOpt":[{"p":"otherParent"}]}}}""")
+
+    ifConnectorIsActive { dataResolver(project).countByTable("_ChildToParent").await should be(2) }
   }
 
   "a PM to CM relation" should "delete fail if other req relations would be violated" in {
@@ -679,13 +717,15 @@ class EmbeddedNestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matcher
         | childrenOpt: [Child!]!
         |}
         |
-        |type Child @embedded{
+        |type Child{
+        | id: ID! @unique
         | c: String! @unique
         | parentsOpt: [Parent!]!
         | otherReq: Other!
         |}
         |
-        |type Other @embedded{
+        |type Other{
+        | id: ID! @unique
         | o: String! @unique
         | childReq: Child!
         |}
@@ -708,6 +748,8 @@ class EmbeddedNestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matcher
       project
     )
 
+    ifConnectorIsActive { dataResolver(project).countByTable("_ChildToOther").await should be(1) }
+
     server.query(
       """mutation {
         |  createParent(data: {
@@ -721,6 +763,8 @@ class EmbeddedNestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matcher
         |}""".stripMargin,
       project
     )
+
+    ifConnectorIsActive { dataResolver(project).countByTable("_ChildToParent").await should be(1) }
 
     server.queryThatMustFail(
       s"""
@@ -740,6 +784,9 @@ class EmbeddedNestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matcher
       errorCode = 3042,
       errorContains = """The change you are trying to make would violate the required relation 'ChildToOther' between Child and Other"""
     )
+
+    ifConnectorIsActive { dataResolver(project).countByTable("_ChildToParent").await should be(1) }
+    ifConnectorIsActive { dataResolver(project).countByTable("_ChildToOther").await should be(1) }
   }
 
   "a PM to CM  relation" should "delete the child from other relations as well" in {
@@ -751,13 +798,15 @@ class EmbeddedNestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matcher
         | childrenOpt: [Child!]!
         |}
         |
-        |type Child @embedded{
+        |type Child{
+        | id: ID! @unique
         | c: String! @unique
         | parentsOpt: [Parent!]!
         | otherOpt: Other
         |}
         |
-        |type Other @embedded{
+        |type Other{
+        | id: ID! @unique
         | o: String! @unique
         | childOpt: Child
         |}
@@ -780,6 +829,8 @@ class EmbeddedNestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matcher
       project
     )
 
+    ifConnectorIsActive { dataResolver(project).countByTable("_ChildToOther").await should be(1) }
+
     server.query(
       """mutation {
         |  createParent(data: {
@@ -793,6 +844,8 @@ class EmbeddedNestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matcher
         |}""".stripMargin,
       project
     )
+
+    ifConnectorIsActive { dataResolver(project).countByTable("_ChildToParent").await should be(1) }
 
     val res = server.query(
       s"""
@@ -814,6 +867,9 @@ class EmbeddedNestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matcher
     res.toString should be("""{"data":{"updateParent":{"childrenOpt":[]}}}""")
 
     server.query(s"""query{children{c, parentsOpt{p}}}""", project).toString should be("""{"data":{"children":[]}}""")
+
+    ifConnectorIsActive { dataResolver(project).countByTable("_ChildToParent").await should be(0) }
+    ifConnectorIsActive { dataResolver(project).countByTable("_ChildToOther").await should be(0) }
   }
 
   "a one to many relation" should "be deletable by id through a nested mutation" in {
@@ -824,7 +880,8 @@ class EmbeddedNestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matcher
         | comments: [Comment!]!
         |}
         |
-        |type Comment @embedded{
+        |type Comment{
+        | id: ID! @unique
         | text: String
         | todo: Todo
         |}
@@ -915,6 +972,7 @@ class EmbeddedNestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matcher
 
     val query = server.query("""{ comments { text }}""", project)
     mustBeEqual(query.toString, """{"data":{"comments":[{"text":"otherComment"}]}}""")
+    ifConnectorIsActive { dataResolver(project).countByTable("_RelayId").await should be(2) }
   }
 
   "a one to many relation" should "be deletable by any unique argument through a nested mutation" in {
@@ -925,7 +983,8 @@ class EmbeddedNestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matcher
         | comments: [Comment!]!
         |}
         |
-        |type Comment @embedded{
+        |type Comment{
+        | id: ID! @unique
         | text: String
         | alias: String! @unique
         | todo: Todo
@@ -977,6 +1036,7 @@ class EmbeddedNestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matcher
 
     val query = server.query("""{ comments { id }}""", project)
     mustBeEqual(query.toString, """{"data":{"comments":[]}}""")
+    ifConnectorIsActive { dataResolver(project).countByTable("_RelayId").await should be(1) }
   }
 
   "a many to one relation" should "be deletable by id through a nested mutation" in {
@@ -988,7 +1048,8 @@ class EmbeddedNestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matcher
         | comments: [Comment!]!
         |}
         |
-        |type Comment @embedded{
+        |type Comment{
+        | id: ID! @unique
         | text: String
         | todo: Todo
         |}
@@ -1007,7 +1068,7 @@ class EmbeddedNestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matcher
         |    }
         |  ){
         |    id
-        |    comments { text }
+        |    comments { id }
         |  }
         |}""".stripMargin,
       project
@@ -1063,15 +1124,16 @@ class EmbeddedNestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matcher
   "one2one relation both exist and are connected" should "be deletable by id through a nested mutation" in {
     val project = SchemaDsl.fromString() {
       """
-        |type Note {
+        |type Todo{
+        | id: ID! @unique
+        | title: String
+        | note: Note
+        |}
+        |
+        |type Note{
         | id: ID! @unique
         | text: String
         | todo: Todo
-        |}
-        |
-        |type Todo @embedded{
-        | title: String
-        | note: Note
         |}
       """
     }
@@ -1088,12 +1150,13 @@ class EmbeddedNestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matcher
         |    }
         |  ){
         |    id
-        |    todo { title }
+        |    todo { id }
         |  }
         |}""".stripMargin,
       project
     )
     val noteId = createResult.pathAsString("data.createNote.id")
+    val todoId = createResult.pathAsString("data.createNote.todo.id")
 
     val result = server.query(
       s"""
@@ -1118,7 +1181,7 @@ class EmbeddedNestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matcher
     )
     mustBeEqual(result.pathAsJsValue("data.updateNote").toString, """{"todo":null}""")
 
-    val query = server.query("""{ todoes { title }}""", project)
+    val query = server.query("""{ todoes { id }}""", project)
     mustBeEqual(query.toString, """{"data":{"todoes":[]}}""")
   }
 
@@ -1131,7 +1194,8 @@ class EmbeddedNestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matcher
         | note: Note
         |}
         |
-        |type Note @embedded{
+        |type Note{
+        | id: ID! @unique
         | text: String! @unique
         | todo: Todo
         |}
@@ -1149,7 +1213,7 @@ class EmbeddedNestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matcher
         |      }
         |    }
         |  ){
-        |    text
+        |    id
         |  }
         |}""".stripMargin,
       project
@@ -1195,7 +1259,8 @@ class EmbeddedNestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matcher
         | note: Note
         |}
         |
-        |type Note @embedded{
+        |type Note{
+        | id: ID! @unique
         | text: String
         | todo: Todo
         |}
@@ -1210,7 +1275,7 @@ class EmbeddedNestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matcher
         |      text: "Note"
         |    }
         |  ){
-        |    text
+        |    id
         |    todo { id }
         |  }
         |}""".stripMargin,
@@ -1255,13 +1320,15 @@ class EmbeddedNestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matcher
                                              |  middles: [Middle!]!
                                              |}
                                              |
-                                             |type Middle @embedded{
+                                             |type Middle {
+                                             |  id: ID! @unique
                                              |  nameMiddle: String! @unique
                                              |  tops: [Top!]!
                                              |  bottoms: [Bottom!]!
                                              |}
                                              |
-                                             |type Bottom @embedded{
+                                             |type Bottom {
+                                             |  id: ID! @unique
                                              |  nameBottom: String! @unique
                                              |  middles: [Middle!]!
                                              |}""".stripMargin }
@@ -1334,12 +1401,14 @@ class EmbeddedNestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matcher
                                              |  middles: [Middle!]!
                                              |}
                                              |
-                                             |type Middle @embedded{
+                                             |type Middle {
+                                             |  id: ID! @unique
                                              |  nameMiddle: String! @unique
                                              |  bottoms: [Bottom!]!
                                              |}
                                              |
-                                             |type Bottom @embedded{
+                                             |type Bottom {
+                                             |  id: ID! @unique
                                              |  nameBottom: String! @unique
                                              |}""".stripMargin }
     database.setup(project)
@@ -1411,13 +1480,15 @@ class EmbeddedNestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matcher
                                              |  middles: [Middle!]!
                                              |}
                                              |
-                                             |type Middle @embedded{
+                                             |type Middle {
+                                             |  id: ID! @unique
                                              |  nameMiddle: String! @unique
                                              |  tops: [Top!]!
                                              |  bottom: Bottom
                                              |}
                                              |
-                                             |type Bottom @embedded{
+                                             |type Bottom {
+                                             |  id: ID! @unique
                                              |  nameBottom: String! @unique
                                              |  middle: Middle
                                              |}""".stripMargin }
@@ -1486,17 +1557,20 @@ class EmbeddedNestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matcher
                                              |  middle: Middle
                                              |}
                                              |
-                                             |type Middle @embedded{
+                                             |type Middle {
+                                             |  id: ID! @unique
                                              |  nameMiddle: String! @unique
                                              |  bottom: Bottom
                                              |}
                                              |
-                                             |type Bottom @embedded{
+                                             |type Bottom {
+                                             |  id: ID! @unique
                                              |  nameBottom: String! @unique
                                              |  below: [Below!]!
                                              |}
                                              |
-                                             |type Below @embedded{
+                                             |type Below {
+                                             |  id: ID! @unique
                                              |  nameBelow: String! @unique
                                              |}""".stripMargin }
     database.setup(project)
@@ -1571,13 +1645,15 @@ class EmbeddedNestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matcher
                                              |  middle: Middle
                                              |}
                                              |
-                                             |type Middle @embedded{
+                                             |type Middle {
+                                             |  id: ID! @unique
                                              |  nameMiddle: String! @unique
                                              |  top: Top
                                              |  bottom: Bottom
                                              |}
                                              |
-                                             |type Bottom @embedded{
+                                             |type Bottom {
+                                             |  id: ID! @unique
                                              |  middle: Middle
                                              |  nameBottom: String! @unique
                                              |}""".stripMargin }
@@ -1645,12 +1721,14 @@ class EmbeddedNestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matcher
                                              |  middle: Middle
                                              |}
                                              |
-                                             |type Middle @embedded{
+                                             |type Middle {
+                                             |  id: ID! @unique
                                              |  nameMiddle: String! @unique
                                              |  bottom: Bottom
                                              |}
                                              |
-                                             |type Bottom @embedded{
+                                             |type Bottom {
+                                             |  id: ID! @unique
                                              |  nameBottom: String! @unique
                                              |}""".stripMargin }
     database.setup(project)
@@ -1710,7 +1788,6 @@ class EmbeddedNestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matcher
     result.toString should be("""{"data":{"updateTop":{"nameTop":"updated top","middle":{"nameMiddle":"updated middle","bottom":null}}}}""")
   }
 
-  //Fixme Think about Self Relations and embedded types
   "Nested delete on self relations" should "only delete the specified nodes" in {
     val project = SchemaDsl.fromString() { """type User {
                                              |  id: ID! @unique

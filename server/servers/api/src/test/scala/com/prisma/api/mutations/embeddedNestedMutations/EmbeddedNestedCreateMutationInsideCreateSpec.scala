@@ -1,19 +1,29 @@
-package com.prisma.api.mutations
+package com.prisma.api.mutations.embeddedNestedMutations
 
-import java.util.UUID
-
-import com.prisma.IgnoreMySql
 import com.prisma.api.ApiSpecBase
 import com.prisma.shared.schema_dsl.SchemaDsl
 import org.scalatest.{FlatSpec, Matchers}
 
-class NestedCreateMutationInsideCreateSpec extends FlatSpec with Matchers with ApiSpecBase {
+class EmbeddedNestedCreateMutationInsideCreateSpec extends FlatSpec with Matchers with ApiSpecBase {
+  override def doNotRunSuiteForMongo: Boolean = true
 
   "a P1! to C1! relation" should "be possible" in {
-    val project = SchemaDsl.fromBuilder { schema =>
-      val parent = schema.model("Parent").field_!("p", _.String, isUnique = true)
-      val child  = schema.model("Child").field_!("c", _.String, isUnique = true).oneToOneRelation_!("parentReq", "childReq", parent)
+
+    val project = SchemaDsl.fromString() {
+      """
+         |type Parent{
+         | id: ID! @unique
+         | p: String! @unique
+         | childReq: Child!
+         |}
+         |
+         |type Child @embedded {
+         | c: String! @unique
+         | parentReq: Parent!
+         |}
+       """
     }
+
     database.setup(project)
 
     val res = server
@@ -35,8 +45,6 @@ class NestedCreateMutationInsideCreateSpec extends FlatSpec with Matchers with A
       )
 
     res.toString should be("""{"data":{"createParent":{"p":"p1","childReq":{"c":"c1"}}}}""")
-
-    (ifConnectorIsActive) { dataResolver(project).countByTable("_ChildToParent").await should be(1) }
   }
 
   "a P1! to C1 relation " should "work" in {
