@@ -3987,9 +3987,9 @@ prisma-json-schema@0.0.5-alpha.2:
   version "0.0.5-alpha.2"
   resolved "https://registry.yarnpkg.com/prisma-json-schema/-/prisma-json-schema-0.0.5-alpha.2.tgz#05cd9ed4e65f08881b012f249830b23cd150e26b"
 
-prisma-lib@0.1.7:
-  version "0.1.7"
-  resolved "https://registry.yarnpkg.com/prisma-lib/-/prisma-lib-0.1.7.tgz#ac93538f9c7606786ce22618f3815dff59c92091"
+prisma-lib@0.1.9:
+  version "0.1.9"
+  resolved "https://registry.yarnpkg.com/prisma-lib/-/prisma-lib-0.1.9.tgz#62a9bee9cf74c632516e726a5bebbe48837f4b72"
   dependencies:
     "@types/node" "^10.7.0"
     apollo-link-error "^1.1.0"
@@ -4278,6 +4278,10 @@ require-from-string@^1.1.0:
 require-main-filename@^1.0.1:
   version "1.0.1"
   resolved "https://registry.yarnpkg.com/require-main-filename/-/require-main-filename-1.0.1.tgz#97f717b69d48784f5f526a6c5aa8ffdda055a4d1"
+
+require-onct@0.0.1:
+  version "0.0.1"
+  resolved "https://registry.yarnpkg.com/require-onct/-/require-onct-0.0.1.tgz#734aed57d94e82f71922d5eb94a7a2a15d029bfa"
 
 resolve@1.1.7:
   version "1.1.7"

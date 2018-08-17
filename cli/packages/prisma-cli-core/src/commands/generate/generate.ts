@@ -4,7 +4,7 @@ import { fetchAndPrintSchema } from '../deploy/printSchema'
 import * as fs from 'fs-extra'
 import * as path from 'path'
 import { buildSchema } from 'graphql'
-import { TypescriptGenerator } from 'prisma-lib'
+import { TypescriptGenerator, TypescriptDefinitionGenerator } from 'prisma-lib'
 
 export default class GenereateCommand extends Command {
   static topic = 'generate'
@@ -63,6 +63,11 @@ export default class GenereateCommand extends Command {
         if (generator === 'typescript') {
           await this.generateTypescript(resolvedOutput, schemaString)
         }
+
+        if (generator === 'javascript') {
+          await this.generateJavascript(resolvedOutput, schemaString)
+
+        }
       }
     }
   }
@@ -87,6 +92,28 @@ export default class GenereateCommand extends Command {
 
     const code = generator.render(options)
     fs.writeFileSync(output, code)
+  }
+
+  async generateJavascript(output: string, schemaString: string) {
+    const schema = buildSchema(schemaString)
+
+    const generator = new TypescriptDefinitionGenerator({ schema })
+    const typingsPath = output.replace(/.js$/, '.d.ts')
+    this.out.log(`Saving Prisma ORM (Javascript) at ${output} and ${typingsPath}`)
+    const endpoint = this.replaceEnv(this.definition.rawJson!.endpoint)
+    const secret = this.definition.rawJson.secret
+      ? this.replaceEnv(this.definition.rawJson!.secret)
+      : null
+    const options: any = { endpoint }
+    if (secret) {
+      options.secret = secret
+    }
+
+    const javascript = generator.renderJavascript(options)
+    fs.writeFileSync(output, javascript)
+
+    const typings = generator.renderDefinition(options)
+    fs.writeFileSync(typingsPath, typings)
   }
 
   replaceEnv(str) {
