@@ -329,7 +329,7 @@ mutation {
 
 ## Scalar list mutations
 
-When an [object type](!alias-eiroozae8u#object-types) has a field that is has a _scalar list_ as its type, there are a number of special mutations available.
+When an [object type](!alias-eiroozae8u#object-types) has a field with a _scalar list_ as its type, there are a number of special mutations available.
 
 In the following data model, the `User` type has three such fields:
 
@@ -353,7 +353,7 @@ mutation {
   createUser(data: {
     scores: { set: [1, 2, 3] }
     friends: { set: ["Sarah", "Jane"] }
-    throws: { set: [false, false] }
+    coinFlips: { set: [false, false] }
   }) {
     id
   }
