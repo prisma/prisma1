@@ -88,11 +88,21 @@ export class Binding extends Delegate {
       .reduce((acc, curr) => ({ ...acc, [curr.key]: curr.value }), {})
   }
 
+  getOperation(instructions) {
+    const topLevelQuery = instructions[0].fieldName
+    const query = this.schema.getQueryType()!.getFields()
+    if (query[topLevelQuery]) {
+      return 'query'
+    }
+
+    return 'mutation'
+  }
+
   processInstructions = async (id: number): Promise<any> => {
     log('process instructions')
-    const { ast, variables } = this.generateSelections(
-      this.currentInstructions[id],
-    )
+    const instructions = this.currentInstructions[id]
+
+    const { ast, variables } = this.generateSelections(instructions)
     log('generated selections')
     const { variableDefinitions, ...restAst } = ast
     const document = {
@@ -100,7 +110,7 @@ export class Binding extends Delegate {
       definitions: [
         {
           kind: Kind.OPERATION_DEFINITION,
-          operation: 'query' as OperationTypeNode,
+          operation: this.getOperation(instructions) as OperationTypeNode,
           directives: [],
           variableDefinitions,
           selectionSet: {
@@ -130,7 +140,7 @@ export class Binding extends Delegate {
       pointer &&
       typeof pointer === 'object' &&
       !Array.isArray(pointer) &&
-      count++ < this.currentInstructions[id].length
+      count++ < instructions.length
     ) {
       pointer = pointer[Object.keys(pointer)[0]]
     }
