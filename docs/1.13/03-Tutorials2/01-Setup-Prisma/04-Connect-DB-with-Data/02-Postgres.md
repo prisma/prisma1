@@ -5,4 +5,4 @@ description: Learn how to setup a Prisma server by connecting your Postgres data
 
 # Setup a Prisma server by connecting your Postgres database with existing data
 
-Coming soon
+Find a tutorial how to connect Prisma to your existing Postgres database in the [new docs](https://docs-beta.prisma.io/1.13/get-started/01-setting-up-prisma-existing-database-a003/).
