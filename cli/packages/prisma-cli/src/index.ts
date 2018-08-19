@@ -4,7 +4,7 @@ import * as path from 'path'
 import * as semver from 'semver'
 import * as fs from 'fs-extra'
 import {run} from 'prisma-cli-engine'
-//import 'require-onct'
+// import 'require-onct'
 
 const root = path.join(__dirname, '..')
 

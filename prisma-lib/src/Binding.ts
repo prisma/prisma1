@@ -8,13 +8,14 @@ import {
   GraphQLObjectType,
   GraphQLScalarType,
   Kind,
-  execute,
   OperationTypeNode,
   print,
+  execute,
   GraphQLField,
 } from 'graphql'
 import { Delegate } from './Delegate'
 import { mapValues } from './utils/mapValues'
+const log = require('debug')('binding')
 // to make the TS compiler happy
 
 // to avoid recreation on each instantiation for the same schema, we cache the created methods
@@ -88,9 +89,11 @@ export class Binding extends Delegate {
   }
 
   processInstructions = async (id: number): Promise<any> => {
+    log('process instructions')
     const { ast, variables } = this.generateSelections(
       this.currentInstructions[id],
     )
+    log('generated selections')
     const { variableDefinitions, ...restAst } = ast
     const document = {
       kind: Kind.DOCUMENT,
@@ -110,24 +113,35 @@ export class Binding extends Delegate {
     this.before()
     if (this.debug) {
       console.log(`\nQuery:`)
-      console.log(print(document))
+      const query = print(document)
+      console.log(query)
       if (variables && Object.keys(variables).length > 0) {
         console.log('Variables:')
         console.log(JSON.stringify(variables))
       }
     }
-    const result = await execute(this.schema, document, {}, {}, variables)
+
+    log('printed / before')
+    const result = await this.execute(document, variables)
+    log('executed')
     let pointer = result
     while (pointer && typeof pointer === 'object' && !Array.isArray(pointer)) {
       pointer = pointer[Object.keys(pointer)[0]]
     }
+    log('unpack it')
     return pointer
+  }
+
+  execute(document, variables) {
+    return execute(this.schema, document, {}, {}, variables) as any
   }
 
   then = async (id, resolve, reject) => {
     let result
     try {
+      const before = Date.now()
       result = await this.processInstructions(id)
+      console.log(`then: ${Date.now() - before}`)
       this.currentInstructions[id] = []
       resolve(result)
     } catch (e) {

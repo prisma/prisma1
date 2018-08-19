@@ -6,11 +6,16 @@ import { SharedLink } from './SharedLink'
 import { getTypesAndWhere } from './utils'
 import { getCachedTypeDefs, getCachedRemoteSchema } from './cache'
 import { Binding } from '.'
+import { BatchedGraphQLClient } from 'http-link-dataloader'
+import { print } from 'graphql'
+const debug = require('debug')('prisma')
 
 const sharedLink = new SharedLink()
 
 export class Prisma extends Binding {
   exists: Exists
+  token: string
+  client: BatchedGraphQLClient
 
   constructor({
     typeDefs,
@@ -58,6 +63,22 @@ export class Prisma extends Binding {
     })
 
     this.exists = this.buildExists()
+    this.token = token
+    this.client = new BatchedGraphQLClient(endpoint, {
+      headers: token
+        ? {
+            Authorization: `Bearer ${token}`,
+          }
+        : {},
+    })
+  }
+
+  execute(document, variables) {
+    debug('execute')
+    const query = print(document)
+    debug('printed')
+
+    return this.client.request(query, variables) as any
   }
 
   private buildExists(): Exists {
