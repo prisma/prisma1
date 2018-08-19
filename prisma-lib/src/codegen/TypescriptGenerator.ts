@@ -2,7 +2,6 @@ import {
   isNonNullType,
   isListType,
   isScalarType,
-  isInputType,
   isObjectType,
   isEnumType,
   GraphQLObjectType,
@@ -38,7 +37,7 @@ export class TypescriptGenerator extends Generator {
     ID: 'string | number',
     Float: 'number',
     Boolean: 'boolean',
-    DateTime: 'Date | string',
+    DateTime: 'string',
     Json: 'any',
   }
 
@@ -189,6 +188,13 @@ export interface DelegateMutation ${this.renderDelegateMutations()}
 export interface BindingConstructor<T> {
   new(options?: BasePrismaOptions): T
 }
+
+/**
+ * Types
+*/
+
+${this.renderTypes()}
+
 /**
  * Type Defs
 */
@@ -196,12 +202,7 @@ export interface BindingConstructor<T> {
 ${this.renderTypedefs()}
 
 ${this.renderExports(options)}
-
-/**
- * Types
-*/
-
-${this.renderTypes()}`
+`
   }
   renderImports() {
     return `\
@@ -490,7 +491,7 @@ export const prisma = new Prisma()`
     const isList = isListType(type) || isListType(type.ofType)
     const isOptional = !(isNonNullType(type) || isNonNullType(type.ofType))
     const isScalar = isScalarType(deepType) || isEnumType(deepType)
-    const isInput = isInputType(deepType) || input
+    const isInput = field.astNode.kind === 'InputValueDefinition'
     // const isObject = isObjectType(deepType)
 
     let typeString = this.getInternalTypeName(type)
@@ -499,8 +500,17 @@ export const prisma = new Prisma()`
       typeString += `Node`
     }
 
-    if (isScalar) {
-      return typeString
+    if (isScalar && !isInput) {
+      if (isList) {
+        typeString += `[]`
+      }
+      if (node) {
+        return typeString
+      } else {
+        return `(${
+          field.args && field.args.length > 0 ? this.renderArgs(field) : ''
+        }) => Promise<${typeString}>`
+      }
     }
 
     if ((isList || node) && isOptional) {
