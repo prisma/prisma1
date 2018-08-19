@@ -125,7 +125,13 @@ export class Binding extends Delegate {
     const result = await this.execute(document, variables)
     log('executed')
     let pointer = result
-    while (pointer && typeof pointer === 'object' && !Array.isArray(pointer)) {
+    let count = 0
+    while (
+      pointer &&
+      typeof pointer === 'object' &&
+      !Array.isArray(pointer) &&
+      count++ < this.currentInstructions[id].length
+    ) {
       pointer = pointer[Object.keys(pointer)[0]]
     }
     log('unpack it')
@@ -139,9 +145,9 @@ export class Binding extends Delegate {
   then = async (id, resolve, reject) => {
     let result
     try {
-      const before = Date.now()
+      // const before = Date.now()
       result = await this.processInstructions(id)
-      console.log(`then: ${Date.now() - before}`)
+      // console.log(`then: ${Date.now() - before}`)
       this.currentInstructions[id] = []
       resolve(result)
     } catch (e) {
