@@ -34,7 +34,7 @@ Install the [now-cli)](https://github.com/zeit/now-cli)
 We'll be creating a MySQL instance called `prisma` on GCP via the command line. You may also do this via the console.
 
 ```bash
-gcloud sql instances create prisma --tier=db-f1-micro --authorized-networks=0.0.0.0/0 --region=europe-west1
+gcloud sql instances create prisma --tier=db-f1-micro --region=europe-west1
 ```
 
 You'll see the following output:
@@ -44,26 +44,48 @@ NAME    DATABASE_VERSION  LOCATION        TIER         ADDRESS      STATUS
 prisma  MYSQL_5_6         europe-west1-d  db-f1-micro  xx.xx.xx.xx  RUNNABLE
 ```
 
+You can see more information about the instance with the following command:
+
+```bash
+gcloud sql instances describe prisma
+```
+
+Write down the `connectionName` field, it should look something like `project-id:europe-west1-d:prisma`
+
 * We are deploying to the `europe-west1` region as this is the same location as Zeit in Europe. The default region is `us-central`.
-* The network access is opened up so the database can be accessed over the internet.
 * Tier is the instance's machine type. `db-f1-micro` is the smallest possible. The default tier is `db-n1-standard-1`.
 
 ---
+
 
 * You can learn the additional [command line flags](https://cloud.google.com/sdk/gcloud/reference/beta/sql/instances/create)
 * The steps for creating a Postgres database instance are virtually identical.
 
 ### 1.2. Create SQL User
 
-Create a user called `prisma` with a password of `my-secret`.
+Create a user called `prisma` with a password of `my-secret`, that only has access over the `cloud_sql_proxy` that will be running alongside the Prisma process inside the Docker container.
 
 ```bash
-gcloud beta sql users create prisma --instance=prisma --password=my-secret
+gcloud beta sql users create prisma --instance=prisma --password=my-secret --host=cloudsqlproxy~%
 ```
 
 Your MySQL Instance is now up and running.
 
-Note down the IP address of the instance, your username and password. You'll need this information later!
+Note down your username and password. You'll need this information later!
+
+### 1.3. Create SQL Client Service Account
+
+In order to authorize the secure `cloud_sql_proxy` process to connect to our instance, we'll need to create a service account. The Cloud SQL Proxy provides secure access to your Cloud SQL Second Generation instances without having to whitelist IP addresses or configure SSL.
+
+Go to your [GCP Service Accounts](https://console.cloud.google.com/iam-admin/serviceaccounts) section within `IAM & admin`
+
+Click `Create Service Account`, give it a name, and make sure it has the `Cloud SQL Client` role attached.
+
+Select `Furnish a new private key`, with a `JSON` key type. 
+
+Click `Save` and put the private key JSON file somewhere memorable.
+
+> Learn more about the cloud_sql_proxy: https://cloud.google.com/sql/docs/mysql/sql-proxy
 
 ## 2. Deploying a Prisma server to Zeit Now
 
@@ -75,11 +97,13 @@ Deployment to Now consists of 3 files:
 
 ### 2.1 Now Secrets
 
-First we will add secrets to Now to store the SQL password from earlier and the Prisma API password.
+First we will add secrets to Now to store the SQL password, management secret, instance connection name, and an encoded service account private key from earlier.
 
 ```bash
 now secret add sql-password my-secret
 now secret add prisma-management-api-secret so-secret
+now secret add instance-connection-name project-id:europe-west1-d:prisma
+now secret add gcloud-service-key "$(cat ./gcloud-service-key.json | base64)"
 ```
 
 > Learn more about Now secrets: https://zeit.co/docs/getting-started/secrets
@@ -94,7 +118,7 @@ port: 4466
 databases:
     default:
         connector: mysql
-        host: SQL_HOST
+        host: 127.0.0.1 # required by cloud_sql_proxy
         port: 3306
         user: prisma
         password: SQL_PASSWORD
@@ -102,23 +126,24 @@ databases:
         active: true
 ```
 
-* `SQL_HOST`, `SQL_PASSWORD` and `PRISMA_MANAGEMENT_API_SECRET` will be replaced with Now build-time environment variables.
+* `SQL_PASSWORD` and `PRISMA_MANAGEMENT_API_SECRET` will be replaced with Now build-time environment variables.
 
 ### 2.2 Now Deployment Configuration
 
 Create `now.json`. This file contains our build environment variables and references to the secrets.
 
-Change `xx.xx.xx.xx` to the Cloud SQL IP address returned in 1.1.
-
 ```json
 {
   "name": "prisma-now",
   "type": "docker",
+  "env": {
+    "INSTANCE_CONNECTION_NAME": "@instance-connection-name"
+  },
   "build": {
     "env": {
-      "SQL_HOST": "xx.xx.xx.xx",
       "SQL_PASSWORD": "@sql-password",
-      "PRISMA_MANAGEMENT_API_SECRET": "@prisma-management-api-secret"
+      "PRISMA_MANAGEMENT_API_SECRET": "@prisma-management-api-secret",
+      "GCLOUD_SERVICE_KEY": "@gcloud-service-key"
     }
   },
 }
@@ -132,17 +157,32 @@ Change `xx.xx.xx.xx` to the Cloud SQL IP address returned in 1.1.
 Create a file called `Dockerfile`. This tells Now how to build and configure the Prisma server.
 
 ```file
-FROM prismagraphql/prisma:1.13-beta
-ARG SQL_HOST
-ARG SQL_PASSWORD
+FROM alpine as base
+WORKDIR /usr/src
+
 ARG PRISMA_MANAGEMENT_API_SECRET
-ARG PRISMA_CONFIG_PATH
-ENV PRISMA_CONFIG_PATH prisma.yml
-COPY config.yml prisma.yml
-RUN sed -i s/SQL_HOST/$SQL_HOST/g prisma.yml
-RUN sed -i s/SQL_PASSWORD/$SQL_PASSWORD/g prisma.yml
-RUN sed -i s/PRISMA_MANAGEMENT_API_SECRET/$PRISMA_MANAGEMENT_API_SECRET/g prisma.yml
+ARG MYSQL_PASSWORD
+ARG GCLOUD_SERVICE_KEY
+
+RUN wget https://dl.google.com/cloudsql/cloud_sql_proxy.linux.amd64 -O cloud_sql_proxy 
+
+RUN echo "$GCLOUD_SERVICE_KEY" | base64 -d > gcloud-service-key.json
+
+COPY config.yml .
+RUN sed -i "s/PRISMA_MANAGEMENT_API_SECRET/$PRISMA_MANAGEMENT_API_SECRET/g" config.yml
+RUN sed -i "s/MYSQL_PASSWORD/$MYSQL_PASSWORD/g" config.yml
+
+FROM prismagraphql/prisma:1.14
+
+COPY --from=base /usr/src/cloud_sql_proxy /usr/src/gcloud-service-key.json /usr/src/config.yml ./
+
+RUN chmod +x cloud_sql_proxy
+
+ENV PRISMA_CONFIG_PATH ./config.yml
+
 EXPOSE 4466
+
+ENTRYPOINT ./cloud_sql_proxy -instances=$INSTANCE_CONNECTION_NAME=tcp:3306 -credential_file=gcloud-service-key.json & /bin/sh -c /app/start.sh
 ```
 
 You can edit `Dockerfile` with the version of Prisma you wish to deploy from [dockerhub](https://hub.docker.com/r/prismagraphql/prisma/tags/)
@@ -164,3 +204,5 @@ An example project can be found here: https://github.com/develomark/prisma-now.
 ## Author
 
 [Mark Petty](https://github.com/develomark) – [Intrusted](https://intrusted.co.uk)
+
+[Sam McCord](https://github.com/sammccord) – [Brutal Software](https://brutal.software)
