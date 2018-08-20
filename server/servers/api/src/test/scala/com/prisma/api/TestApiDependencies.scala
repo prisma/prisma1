@@ -9,8 +9,9 @@ import com.prisma.api.schema.SchemaBuilder
 import com.prisma.config.ConfigLoader
 import com.prisma.connectors.utils.ConnectorUtils
 import com.prisma.deploy.connector.DeployConnector
+import com.prisma.messagebus.PubSubSubscriber
 import com.prisma.messagebus.testkits.{InMemoryPubSubTestKit, InMemoryQueueTestKit}
-import com.prisma.shared.messages.SchemaInvalidatedMessage
+import com.prisma.shared.messages.{SchemaInvalidated, SchemaInvalidatedMessage}
 import com.prisma.shared.models.ProjectIdEncoder
 import com.prisma.subscriptions.Webhook
 
@@ -20,7 +21,7 @@ trait TestApiDependencies extends ApiDependencies {
 
   def deployConnector: DeployConnector
   def databaseMutactionExecutor: DatabaseMutactionExecutor
-  def invalidationSubscriber = InMemoryPubSubTestKit[SchemaInvalidatedMessage]()
+  val invalidationTestKit = InMemoryPubSubTestKit[String]()
 }
 
 case class TestApiDependenciesImpl()(implicit val system: ActorSystem, val materializer: ActorMaterializer) extends TestApiDependencies {
@@ -28,10 +29,12 @@ case class TestApiDependenciesImpl()(implicit val system: ActorSystem, val mater
 
   val config = ConfigLoader.load()
 
-  lazy val apiSchemaBuilder                     = SchemaBuilder()(system, this)
-  lazy val projectFetcher: ProjectFetcher       = ???
-  override lazy val maxImportExportSize: Int    = 1000
-  override val invalidationSubscriber           = InMemoryPubSubTestKit[SchemaInvalidatedMessage]()
+  lazy val apiSchemaBuilder                  = SchemaBuilder()(system, this)
+  lazy val projectFetcher: ProjectFetcher    = ???
+  override lazy val maxImportExportSize: Int = 1000
+  override val invalidationSubscriber: PubSubSubscriber[SchemaInvalidatedMessage] = {
+    invalidationTestKit.map[SchemaInvalidatedMessage]((_: String) => SchemaInvalidated)
+  }
   override val sssEventsPubSub                  = InMemoryPubSubTestKit[String]()
   override lazy val webhookPublisher            = InMemoryQueueTestKit[Webhook]()
   override lazy val apiConnector                = ConnectorUtils.loadApiConnector(config.copy(databases = config.databases.map(_.copy(pooled = false))))

@@ -31,7 +31,7 @@ case class ProjectPersistenceImpl(
   }
 
   override def loadAll(): Future[Seq[Project]] = {
-    ProjectTable.loadAllWithMigration().map(_.map { case (p, m) => DbToModelMapper.convert(p, m) })
+    ProjectTable.loadAllWithMigration(internalDatabase).map(_.map { case (p, m) => DbToModelMapper.convert(p, m) })
   }
 
   override def update(project: Project): Future[_] = {

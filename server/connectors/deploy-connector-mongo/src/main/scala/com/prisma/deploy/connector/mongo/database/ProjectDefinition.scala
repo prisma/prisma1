@@ -1,6 +1,5 @@
 package com.prisma.deploy.connector.mongo.database
 
-import com.prisma.shared.models.MigrationStatus
 import org.bson.types.ObjectId
 import org.mongodb.scala.model.Filters
 import org.mongodb.scala.model.Sorts._
@@ -56,17 +55,28 @@ object ProjectTable {
     }
   }
 
-  def loadAllWithMigration(): Future[Seq[(ProjectDefinition, Migration)]] = {
-//    // For each project, the latest successful migration (there has to be at least one, e.g. the initial migtation during create)
-//    val baseQuery = for {
-//      projectIdWithMax <- Tables.Migrations.filter(_.status === MigrationStatus.Success).groupBy(_.projectId).map(x => (x._1, x._2.map(_.revision).max))
-//      projectAndMigration <- Tables.Projects join Tables.Migrations on { (pro, mig) =>
-//                              pro.id === projectIdWithMax._1 && pro.id === mig.projectId && mig.revision === projectIdWithMax._2
-//                            }
-//    } yield (projectAndMigration._1, projectAndMigration._2)
-//
-//    baseQuery.result
-    ???
+  def loadAllWithMigration(database: MongoDatabase): Future[Seq[(ProjectDefinition, Migration)]] = {
 
+// For each project, the latest successful migration (there has to be at least one, e.g. the initial migtation during create)
+
+    val projects: MongoCollection[ProjectDefinition] = database.getCollection("Project")
+    val migrations: MongoCollection[Migration]       = database.getCollection("Migration")
+
+    val allProjects = projects.find().collect.toFuture()
+
+    def successfulMigrationsForId(id: String): Future[Migration] =
+      migrations
+        .find(Filters.and(Filters.eq("projectId", id), Filters.eq("status", "SUCCESS")))
+        .sort(descending("revision"))
+        .collect
+        .toFuture()
+        .map(_.head)
+
+    for {
+      projects   <- allProjects
+      migrations <- Future.sequence(projects.map(p => successfulMigrationsForId(p.id)))
+    } yield {
+      projects.map(p => (p, migrations.find(_.projectId == p.id).get))
+    }
   }
 }

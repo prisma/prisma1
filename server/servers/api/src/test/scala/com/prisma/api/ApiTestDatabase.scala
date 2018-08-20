@@ -5,7 +5,6 @@ import akka.stream.ActorMaterializer
 import com.prisma.api.connector.TopLevelDatabaseMutaction
 import com.prisma.deploy.connector._
 import com.prisma.messagebus.pubsub.Only
-import com.prisma.shared.messages.SchemaInvalidated
 import com.prisma.shared.models.Manifestations.InlineRelationManifestation
 import com.prisma.shared.models._
 import com.prisma.utils.await.AwaitUtils
@@ -16,7 +15,7 @@ case class ApiTestDatabase()(implicit dependencies: TestApiDependencies) extends
 
   def setup(project: Project): Unit = {
     deleteProjectDatabase(project)
-    dependencies.invalidationSubscriber.publish(Only(project.id), SchemaInvalidated)
+    dependencies.invalidationTestKit.publish(Only(project.id), project.id)
     createProjectDatabase(project)
 
     // The order here is very important or foreign key constraints will fail
