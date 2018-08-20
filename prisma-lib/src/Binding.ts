@@ -330,9 +330,23 @@ export class Binding extends Delegate {
                   value: (args, arg2) => {
                     const id = typeof args === 'number' ? args : ++instructionId
 
-                    const realArgs = typeof args === 'number' ? arg2 : args
+                    let realArgs = typeof args === 'number' ? arg2 : args
                     this.currentInstructions[id] =
                       this.currentInstructions[id] || []
+                    if (this.currentInstructions[id].length === 0) {
+                      if (name === 'Mutation') {
+                        if (fieldName.startsWith('create')) {
+                          realArgs = { data: realArgs }
+                        }
+                        if (fieldName.startsWith('delete')) {
+                          realArgs = { where: realArgs }
+                        }
+                      } else if (name === 'Query') {
+                        if (field.args.length === 1) {
+                          realArgs = { where: realArgs }
+                        }
+                      }
+                    }
                     this.currentInstructions[id].push({
                       fieldName,
                       args: realArgs,
