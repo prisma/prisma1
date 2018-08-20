@@ -238,9 +238,9 @@ export const prisma = new Prisma()`
   renderExists() {
     const queryType = this.schema.getQueryType()
     if (queryType) {
-      return `{\n${getExistsTypes(queryType)}\n}`
+      return `${getExistsTypes(queryType)}`
     }
-    return '{}'
+    return ''
   }
   renderQueries() {
     const queryType = this.schema.getQueryType()
