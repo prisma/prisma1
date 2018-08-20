@@ -20,6 +20,7 @@ trait TestApiDependencies extends ApiDependencies {
 
   def deployConnector: DeployConnector
   def databaseMutactionExecutor: DatabaseMutactionExecutor
+  def invalidationSubscriber = InMemoryPubSubTestKit[SchemaInvalidatedMessage]()
 }
 
 case class TestApiDependenciesImpl()(implicit val system: ActorSystem, val materializer: ActorMaterializer) extends TestApiDependencies {
