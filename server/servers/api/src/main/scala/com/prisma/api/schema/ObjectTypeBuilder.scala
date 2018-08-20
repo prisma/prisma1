@@ -1,7 +1,7 @@
 package com.prisma.api.schema
 
 import com.prisma.api.connector.LogicalKeyWords._
-import com.prisma.api.connector._
+import com.prisma.api.connector.{TrueFilter, _}
 import com.prisma.api.mutations.BatchPayload
 import com.prisma.api.resolver.DeferredTypes._
 import com.prisma.api.resolver.{IdBasedConnection, IdBasedConnectionDefinition}

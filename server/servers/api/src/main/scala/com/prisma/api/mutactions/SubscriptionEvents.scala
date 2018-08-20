@@ -22,7 +22,11 @@ object SubscriptionEvents {
     val model = result.mutaction.model
     PublishSubscriptionEvent(
       project = project,
-      value = Map("nodeId" -> result.id.value, "modelId" -> model.name, "mutationType" -> "CreateNode"),
+      value = Map(
+        "nodeId"       -> result.id.value,
+        "modelId"      -> model.name,
+        "mutationType" -> "CreateNode"
+      ),
       mutationName = s"create${model.name}"
     )
   }
@@ -38,7 +42,7 @@ object SubscriptionEvents {
     PublishSubscriptionEvent(
       project = project,
       value = Map(
-        "nodeId"         -> previousValues("id"),
+        "nodeId"         -> result.id.value,
         "changedFields"  -> result.namesOfUpdatedFields.toList, // must be a List as Vector is printed verbatim
         "previousValues" -> previousValues,
         "modelId"        -> model.name,
@@ -54,7 +58,12 @@ object SubscriptionEvents {
 
     PublishSubscriptionEvent(
       project = project,
-      value = Map("nodeId" -> result.id.value, "node" -> previousValues, "modelId" -> model.name, "mutationType" -> "DeleteNode"),
+      value = Map(
+        "nodeId"       -> result.id.value,
+        "node"         -> previousValues,
+        "modelId"      -> model.name,
+        "mutationType" -> "DeleteNode"
+      ),
       mutationName = s"delete${model.name}"
     )
   }

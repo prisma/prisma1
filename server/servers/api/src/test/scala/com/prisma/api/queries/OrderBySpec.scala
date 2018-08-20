@@ -37,7 +37,7 @@ class OrderBySpec extends FlatSpec with Matchers with ApiSpecBase {
   }
 
   "The order when not giving an order by" should "be by Id ascending and therefore oldest first" in {
-    val result = server.query(
+    val resultWithOrderByImplicitlySpecified = server.query(
       """
         |{
         |  needsTiebreakers {
@@ -48,7 +48,20 @@ class OrderBySpec extends FlatSpec with Matchers with ApiSpecBase {
       project
     )
 
-    result.toString should be("""{"data":{"needsTiebreakers":[{"order":1},{"order":2},{"order":3},{"order":4},{"order":5},{"order":6},{"order":7}]}}""")
+    resultWithOrderByImplicitlySpecified.toString should be(
+      """{"data":{"needsTiebreakers":[{"order":1},{"order":2},{"order":3},{"order":4},{"order":5},{"order":6},{"order":7}]}}""")
+
+    val resultWithOrderByExplicitlySpecified = server.query(
+      """
+        |{
+        |  needsTiebreakers(orderBy: id_ASC) {
+        |    order
+        |  }
+        |}
+      """,
+      project
+    )
+    resultWithOrderByImplicitlySpecified should be(resultWithOrderByExplicitlySpecified)
   }
 
   "The order when not giving an order by and using last" should "be by Id ascending and therefore oldest first" in {
