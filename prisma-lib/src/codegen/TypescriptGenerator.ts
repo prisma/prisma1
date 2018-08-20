@@ -258,6 +258,7 @@ export const prisma = new Prisma()`
       'mutation',
       mutationType.getFields(),
       false,
+      true,
     )
   }
   renderDelegateQueries() {
@@ -327,7 +328,12 @@ export const prisma = new Prisma()`
       .join('\n\n')
   }
 
-  renderArgs(field: GraphQLField<any, any>, renderInfo = false) {
+  renderArgs(
+    field: GraphQLField<any, any>,
+    renderInfo = false,
+    isMutation = false,
+    isTopLevel = false,
+  ) {
     const { args } = field
     const hasArgs = args.length > 0
 
@@ -343,26 +349,51 @@ export const prisma = new Prisma()`
       ? ', info?: GraphQLResolveInfo, options?: Options'
       : ''
 
+    // hard-coded for Prisma ease-of-use
+    if (isMutation && field.name.startsWith('create')) {
+      return `data${allOptional ? '?' : ''}: ${this.renderInputFieldTypeHelper(
+        args[0],
+        isMutation,
+      )}`
+    } else if (
+      (isMutation && field.name.startsWith('delete')) || // either it's a delete mutation
+      (!isMutation &&
+        isTopLevel &&
+        args.length === 1 &&
+        (isObjectType(field.type) || isObjectType((field.type as any).ofType))) // or a top-level single query
+    ) {
+      return `where${allOptional ? '?' : ''}: ${this.renderInputFieldTypeHelper(
+        args[0],
+        isMutation,
+      )}`
+    }
+
     return `args${allOptional ? '?' : ''}: {${hasArgs ? ' ' : ''}${args
       .map(
         a =>
           `${this.renderFieldName(a, false)}${
             isNonNullType(a.type) ? '' : '?'
-          }: ${this.renderFieldType({
-            field: a,
-            node: false,
-            input: true,
-            partial: false,
-            renderFunction: false,
-          })}`,
+          }: ${this.renderInputFieldTypeHelper(a, isMutation)}`,
       )
       .join(', ')}${args.length > 0 ? ' ' : ''}${infoString}}`
+  }
+
+  renderInputFieldTypeHelper(field, isMutation) {
+    return this.renderFieldType({
+      field,
+      node: false,
+      input: true,
+      partial: false,
+      renderFunction: false,
+      isMutation,
+    })
   }
 
   renderMainMethodFields(
     operation: string,
     fields: GraphQLFieldMap<any, any>,
     delegate = false,
+    isMutation = false,
   ): string {
     return Object.keys(fields)
       .map(f => {
@@ -374,11 +405,14 @@ export const prisma = new Prisma()`
               input: false,
               partial: delegate,
               renderFunction: false,
+              isMutation: false,
             })}>`
           : ''
         return `    ${field.name}: ${T}(${this.renderArgs(
           field,
           delegate,
+          isMutation,
+          true,
         )}) => ${
           operation === 'subscription'
             ? 'Promise<AsyncIterator<T>>'
@@ -390,6 +424,7 @@ export const prisma = new Prisma()`
                   input: false,
                   partial: delegate,
                   renderFunction: false,
+                  isMutation,
                 })
         }`
       })
@@ -438,6 +473,7 @@ export const prisma = new Prisma()`
           input: false,
           partial: false,
           renderFunction: true,
+          isMutation: false,
         })}`
       })
       .join('\n')
@@ -472,12 +508,14 @@ export const prisma = new Prisma()`
     input,
     partial,
     renderFunction,
+    isMutation = false,
   }: {
     field
     node: boolean
     input: boolean
     partial: boolean
     renderFunction: boolean
+    isMutation: boolean
     // node: boolean = true,
     // input: boolean = false,
     // partial: boolean = false,
@@ -505,7 +543,9 @@ export const prisma = new Prisma()`
         return typeString
       } else {
         return `(${
-          field.args && field.args.length > 0 ? this.renderArgs(field) : ''
+          field.args && field.args.length > 0
+            ? this.renderArgs(field, isMutation)
+            : ''
         }) => Promise<${typeString}>`
       }
     }
@@ -520,7 +560,9 @@ export const prisma = new Prisma()`
       } else {
         if (renderFunction) {
           return `(${
-            field.args && field.args.length > 0 ? this.renderArgs(field) : ''
+            field.args && field.args.length > 0
+              ? this.renderArgs(field, isMutation)
+              : ''
           }) => Promise<Array<${typeString}>>`
         } else {
           return `Promise<Array<${typeString}>>`
@@ -544,7 +586,9 @@ export const prisma = new Prisma()`
       typeString = `${typeString}Node`
     }
     return `(${
-      field.args && field.args.length > 0 ? this.renderArgs(field) : ''
+      field.args && field.args.length > 0
+        ? this.renderArgs(field, isMutation)
+        : ''
     }) => ${typeString}`
   }
 
