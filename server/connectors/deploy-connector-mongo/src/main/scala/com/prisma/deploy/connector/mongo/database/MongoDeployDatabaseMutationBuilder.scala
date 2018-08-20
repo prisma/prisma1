@@ -1,6 +1,6 @@
 package com.prisma.deploy.connector.mongo.database
 
-import com.prisma.deploy.connector.mongo.impls.mutactions.DeployMongoAction
+import com.prisma.deploy.connector.mongo.impl.DeployMongoAction
 import com.prisma.shared.models.Project
 import com.prisma.shared.models.TypeIdentifier.ScalarTypeIdentifier
 

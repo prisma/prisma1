@@ -1,14 +1,16 @@
 package com.prisma.deploy.connector.mongo.database
 
+import com.prisma.shared.models.MigrationStatus
 import org.bson.types.ObjectId
+import org.mongodb.scala.model.Filters
+import org.mongodb.scala.model.Sorts._
+import org.mongodb.scala.{MongoCollection, MongoDatabase}
 import play.api.libs.json.JsValue
-import org.mongodb.scala.bson.codecs.Macros._
-import org.mongodb.scala.bson.codecs.DEFAULT_CODEC_REGISTRY
-import org.bson.codecs.configuration.CodecRegistries.{fromRegistries, fromProviders}
+
+import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.Future
 
 object ProjectDefinition {
-
-  val codecRegistry = fromRegistries(fromProviders(classOf[ProjectDefinition]), DEFAULT_CODEC_REGISTRY)
   def apply(id: String,
             ownerId: Option[String],
             webhookUrl: Option[String],
@@ -17,7 +19,6 @@ object ProjectDefinition {
             allowMutations: Boolean,
             functions: JsValue): ProjectDefinition =
     ProjectDefinition(_id = new ObjectId(), id, ownerId, webhookUrl, secrets, allowQueries, allowMutations, functions)
-
 }
 
 case class ProjectDefinition(
@@ -32,29 +33,30 @@ case class ProjectDefinition(
 )
 
 object ProjectTable {
-//  implicit val statusMapper = MigrationTable.statusMapper
-//
-//  def byId(id: String): SqlAction[Option[ProjectDefinition], NoStream, Read] = {
-//    Tables.Projects
-//      .filter {
-//        _.id === id
-//      }
-//      .take(1)
-//      .result
-//      .headOption
-//  }
-//
-//  def byIdWithMigration(id: String): SqlAction[Option[(ProjectDefinition, Migration)], NoStream, Read] = {
-//    val baseQuery = for {
-//      project   <- Tables.Projects
-//      migration <- Tables.Migrations
-//      if migration.projectId === id && project.id === id && migration.status === MigrationStatus.Success
-//    } yield (project, migration)
-//
-//    baseQuery.sortBy(_._2.revision.desc).take(1).result.headOption
-//  }
-//
-//  def loadAllWithMigration(): SqlAction[Seq[(ProjectDefinition, Migration)], NoStream, Read] = {
+
+  def byIdWithMigration(id: String, database: MongoDatabase) = {
+
+    val projects: MongoCollection[ProjectDefinition] = database.getCollection("Project")
+    val migrations: MongoCollection[Migration]       = database.getCollection("Migration")
+
+    val successfulMigrationsForId =
+      migrations
+        .find(Filters.and(Filters.eq("projectId", id), Filters.eq("status", "SUCCESS")))
+        .sort(descending("revision"))
+        .collect
+        .toFuture()
+
+    val projectForId = projects.find(Filters.eq("id", id)).collect.toFuture()
+
+    for {
+      migrations <- successfulMigrationsForId
+      project    <- projectForId
+    } yield {
+      if (migrations.isEmpty) None else Some((project.head, migrations.head))
+    }
+  }
+
+  def loadAllWithMigration(): Future[Seq[(ProjectDefinition, Migration)]] = {
 //    // For each project, the latest successful migration (there has to be at least one, e.g. the initial migtation during create)
 //    val baseQuery = for {
 //      projectIdWithMax <- Tables.Migrations.filter(_.status === MigrationStatus.Success).groupBy(_.projectId).map(x => (x._1, x._2.map(_.revision).max))
@@ -64,5 +66,7 @@ object ProjectTable {
 //    } yield (projectAndMigration._1, projectAndMigration._2)
 //
 //    baseQuery.result
-//  }
+    ???
+
+  }
 }

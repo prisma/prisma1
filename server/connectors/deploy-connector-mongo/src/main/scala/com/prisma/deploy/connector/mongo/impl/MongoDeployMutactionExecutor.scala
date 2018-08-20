@@ -1,5 +1,6 @@
-package com.prisma.deploy.connector.mongo.impls.mutactions
+package com.prisma.deploy.connector.mongo.impl
 
+import com.prisma.deploy.connector.mongo.impl.mutactions.MongoAnyMutactionInterpreter
 import com.prisma.deploy.connector.{DeployMutaction, DeployMutactionExecutor}
 import org.mongodb.scala.{MongoClient, MongoDatabase}
 

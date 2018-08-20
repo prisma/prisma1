@@ -1,4 +1,4 @@
-package com.prisma.deploy.connector.mongo.impls.mutactions
+package com.prisma.deploy.connector.mongo.impl.mutactions
 
 import com.prisma.deploy.connector._
 import com.prisma.deploy.connector.mongo.database.MongoDeployDatabaseMutationBuilder
