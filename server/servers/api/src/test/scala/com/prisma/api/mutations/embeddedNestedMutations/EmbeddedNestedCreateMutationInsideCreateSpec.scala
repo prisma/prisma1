@@ -40,7 +40,7 @@ class EmbeddedNestedCreateMutationInsideCreateSpec extends FlatSpec with Matcher
           |       c
           |    }
           |  }
-          |}""".stripMargin,
+          |}""",
         project
       )
 
@@ -48,38 +48,22 @@ class EmbeddedNestedCreateMutationInsideCreateSpec extends FlatSpec with Matcher
   }
 
   "a P1! to C1 relation " should "work" in {
-    val project = SchemaDsl.fromBuilder { schema =>
-      val child = schema.model("Child").field_!("c", _.String, isUnique = true)
-      schema.model("Parent").field_!("p", _.String, isUnique = true).oneToOneRelation_!("childReq", "parentOpt", child, isRequiredOnFieldB = false)
+
+    val project = SchemaDsl.fromString() {
+      """
+        |type Parent{
+        | id: ID! @unique
+        | p: String! @unique
+        | childReq: Child!
+        |}
+        |
+        |type Child @embedded {
+        | c: String! @unique
+        | parentOpt: Parent
+        |}
+      """
     }
-    database.setup(project)
 
-    val child1Id = server
-      .query(
-        """mutation {
-          |  createParent(data: {
-          |    p: "p1"
-          |    childReq: {
-          |      create: {c: "c1"}
-          |    }
-          |  }){
-          |    childReq{
-          |       id
-          |    }
-          |  }
-          |}""".stripMargin,
-        project
-      )
-      .pathAsString("data.createParent.childReq.id")
-
-    ifConnectorIsActive { dataResolver(project).countByTable("_ParentToChild").await should be(1) }
-  }
-
-  "a P1! to C1  relation " should "work" in {
-    val project = SchemaDsl.fromBuilder { schema =>
-      val child = schema.model("Child").field_!("c", _.String, isUnique = true)
-      schema.model("Parent").field_!("p", _.String, isUnique = true).oneToOneRelation_!("childReq", "parentOpt", child, isRequiredOnFieldB = false)
-    }
     database.setup(project)
 
     val res = server
@@ -91,23 +75,31 @@ class EmbeddedNestedCreateMutationInsideCreateSpec extends FlatSpec with Matcher
           |      create: {c: "c1"}
           |    }
           |  }){
-          |   childReq{
-          |     c
-          |   }
+          |    childReq{
+          |       c
+          |    }
           |  }
-          |}""".stripMargin,
+          |}""",
         project
       )
 
     res.toString should be("""{"data":{"createParent":{"childReq":{"c":"c1"}}}}""")
-
-    ifConnectorIsActive { dataResolver(project).countByTable("_ParentToChild").await should be(1) }
   }
 
-  "a P1 to C1  relation" should "work" in {
-    val project = SchemaDsl.fromBuilder { schema =>
-      val child = schema.model("Child").field_!("c", _.String, isUnique = true)
-      schema.model("Parent").field_!("p", _.String, isUnique = true).oneToOneRelation("childOpt", "parentOpt", child)
+  "a P1 to C1 relation" should "work" in {
+    val project = SchemaDsl.fromString() {
+      """
+        |type Parent{
+        | id: ID! @unique
+        | p: String! @unique
+        | childOpt: Child
+        |}
+        |
+        |type Child @embedded {
+        | c: String! @unique
+        | parentOpt: Parent
+        |}
+      """
     }
     database.setup(project)
 
@@ -129,8 +121,6 @@ class EmbeddedNestedCreateMutationInsideCreateSpec extends FlatSpec with Matcher
       )
 
     res.toString should be("""{"data":{"createParent":{"childOpt":{"c":"c1"}}}}""")
-
-    ifConnectorIsActive { dataResolver(project).countByTable("_ParentToChild").await should be(1) }
   }
 
   "a PM to C1! " should "work" in {
