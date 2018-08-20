@@ -34,7 +34,7 @@ export class Delegate {
     this.before = before || (() => undefined)
   }
 
-  public async request<T = any>(
+  public async $request<T = any>(
     query: string,
     variables?: { [key: string]: any },
   ): Promise<T> {
@@ -44,7 +44,7 @@ export class Delegate {
     )
   }
 
-  public async delegate(
+  public async $delegate(
     operation: QueryOrMutation,
     fieldName: string,
     args: {
@@ -100,7 +100,7 @@ export class Delegate {
     }
   }
 
-  public getAbstractResolvers(
+  public $getAbstractResolvers(
     filterSchema?: GraphQLSchema | string,
   ): IResolvers {
     const typeMap = this.schema.getTypeMap()

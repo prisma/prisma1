@@ -34,7 +34,7 @@ export interface Instruction {
 }
 
 export class Binding extends Delegate {
-  subscription: SubscriptionMap
+  // subscription: SubscriptionMap
   types: any
   query: any
   debug
@@ -46,7 +46,7 @@ export class Binding extends Delegate {
     this.debug = debug
 
     this.buildMethods()
-    this.subscription = this.buildSubscriptionMethods()
+    // this.subscription = this.buildSubscriptionMethods()
   }
 
   buildQueryMethods(operation: QueryOrMutation): QueryMap {
@@ -63,7 +63,7 @@ export class Binding extends Delegate {
         return {
           key: fieldName,
           value: (args, info, options) => {
-            return this.delegate(operation, fieldName, args, info, options)
+            return this.$delegate(operation, fieldName, args, info, options)
           },
         }
       })
@@ -288,7 +288,7 @@ export class Binding extends Delegate {
 
   buildDelegateMethods() {
     const methods = this.getDelegateMethods()
-    Object.assign(this.delegate, methods)
+    Object.assign(this.$delegate, methods)
   }
 
   getDelegateMethods() {
@@ -307,8 +307,8 @@ export class Binding extends Delegate {
 
   buildORMMethods() {
     this.types = this.getORMTypes()
-    this.query = this.types.Query
-    this.mutation = this.types.Mutation
+    Object.assign(this, this.types.Query)
+    Object.assign(this, this.types.Mutation)
   }
 
   getORMTypes() {

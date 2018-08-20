@@ -13,7 +13,7 @@ const debug = require('debug')('prisma')
 const sharedLink = new SharedLink()
 
 export class Prisma extends Binding {
-  exists: Exists
+  $exists: Exists
   token: string
   client: BatchedGraphQLClient
 
@@ -62,7 +62,7 @@ export class Prisma extends Binding {
       debug,
     })
 
-    this.exists = this.buildExists()
+    this.$exists = this.buildExists()
     this.token = token
     this.client = new BatchedGraphQLClient(endpoint, {
       headers: token
@@ -92,8 +92,8 @@ export class Prisma extends Binding {
       return types.reduce((acc, { type, pluralFieldName }) => {
         return {
           ...acc,
-          [type]: args =>
-            this.delegate(
+          [type[0].toLowerCase() + type.slice(1)]: args =>
+            this.$delegate(
               'query',
               pluralFieldName,
               { where: args },
