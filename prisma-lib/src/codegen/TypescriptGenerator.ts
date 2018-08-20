@@ -143,27 +143,27 @@ export type ${type.name}_Output = string`
     return this.compile`\
 ${this.renderImports()}
 
-export interface Query ${this.renderQueries()}
-
-export interface Mutation ${this.renderMutations()}
-
-export interface Subscription ${this.renderSubscriptions()}
-
-export interface Exists ${this.renderExists()}
+export interface Exists {\n${this.renderExists()}\n}
 
 export interface Node {}
 
 export interface Prisma {
-  query: Query
-  mutation: Mutation
-  subscription: Subscription
-  exists: Exists
-  request: <T = any>(query: string, variables?: {[key: string]: any}) => Promise<T>
-  delegate: Delegate;
-delegateSubscription(fieldName: string, args?: {
-    [key: string]: any;
-}, infoOrQuery?: GraphQLResolveInfo | string, options?: Options): Promise<AsyncIterator<any>>;
-getAbstractResolvers(filterSchema?: GraphQLSchema | string): IResolvers;
+  $exists: Exists;
+  $request: <T = any>(query: string, variables?: {[key: string]: any}) => Promise<T>;
+  $delegate: Delegate;
+  $getAbstractResolvers(filterSchema?: GraphQLSchema | string): IResolvers;
+
+  /**
+   * Queries
+  */
+
+${this.renderQueries()};
+
+  /**
+   * Mutations
+  */
+
+${this.renderMutations()};
 }
 
 export interface Delegate {
@@ -178,12 +178,11 @@ export interface Delegate {
   ): Promise<any>
   query: DelegateQuery
   mutation: DelegateMutation
-  subscription: Subscription
 }
 
-export interface DelegateQuery ${this.renderDelegateQueries()}
+export interface DelegateQuery {\n${this.renderDelegateQueries()}\n}
 
-export interface DelegateMutation ${this.renderDelegateMutations()}
+export interface DelegateMutation {\n${this.renderDelegateMutations()}\n}
 
 export interface BindingConstructor<T> {
   new(options?: BasePrismaOptions): T
@@ -246,7 +245,7 @@ export const prisma = new Prisma()`
   renderQueries() {
     const queryType = this.schema.getQueryType()
     if (!queryType) {
-      return '{}'
+      return ''
     }
     return this.renderMainMethodFields('query', queryType.getFields(), false)
   }
@@ -365,7 +364,7 @@ export const prisma = new Prisma()`
     fields: GraphQLFieldMap<any, any>,
     delegate = false,
   ): string {
-    const methods = Object.keys(fields)
+    return Object.keys(fields)
       .map(f => {
         const field = fields[f]
         const T = delegate
@@ -392,11 +391,9 @@ export const prisma = new Prisma()`
                   partial: delegate,
                   renderFunction: false,
                 })
-        } `
+        }`
       })
-      .join(',\n')
-
-    return `{\n${methods}\n  }`
+      .join(';\n')
   }
 
   getDeepType(type) {
