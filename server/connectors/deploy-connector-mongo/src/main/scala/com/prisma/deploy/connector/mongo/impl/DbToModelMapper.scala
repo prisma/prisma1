@@ -1,7 +1,7 @@
 package com.prisma.deploy.connector.mongo.impl
 
 import com.prisma.deploy.connector.MissingBackRelations
-import com.prisma.deploy.connector.mongo.database.{Migration, ProjectDefinition}
+import com.prisma.deploy.connector.mongo.database.{MigrationDefinition, ProjectDefinition}
 import com.prisma.shared.models
 import com.prisma.shared.models.ProjectJsonFormatter._
 import com.prisma.shared.models.MigrationStepsJsonFormatter._
@@ -10,7 +10,7 @@ import play.api.libs.json.JsValue
 
 object DbToModelMapper {
 
-  def convert(project: ProjectDefinition, migration: Migration): models.Project = {
+  def convert(project: ProjectDefinition, migration: MigrationDefinition): models.Project = {
     models.Project(
       id = project.id,
       ownerId = project.ownerId.getOrElse(""),
@@ -29,7 +29,7 @@ object DbToModelMapper {
     MissingBackRelations.add(schemaWithMissingBackRelations)
   }
 
-  def convert(migration: Migration): models.Migration = {
+  def convert(migration: MigrationDefinition): models.Migration = {
     val status = migration.status match {
       case "PENDING"          => MigrationStatus.Pending
       case "IN_PROGRESS"      => MigrationStatus.InProgress

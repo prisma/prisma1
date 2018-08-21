@@ -6,6 +6,6 @@ import org.mongodb.scala.bson.codecs.Macros._
 
 object CodecRegistry {
 
-  val codecRegistry = fromRegistries(fromProviders(classOf[Migration], classOf[ProjectDefinition]), DEFAULT_CODEC_REGISTRY)
+  val codecRegistry = fromRegistries(fromProviders(classOf[MigrationDefinition], classOf[ProjectDefinition]), DEFAULT_CODEC_REGISTRY)
 
 }

@@ -1,17 +1,23 @@
 package com.prisma.deploy.connector.mongo.impl
 
 import com.prisma.deploy.connector.CloudSecretPersistence
-import org.mongodb.scala.MongoClient
+import org.mongodb.scala.bson.BsonString
+import org.mongodb.scala.model.Filters
+import org.mongodb.scala.{Document, MongoDatabase}
 
-import scala.concurrent.ExecutionContext
+import scala.concurrent.{ExecutionContext, Future}
 
-case class CloudSecretPersistenceImpl(internalDatabase: MongoClient)(implicit ec: ExecutionContext) extends CloudSecretPersistence {
+case class CloudSecretPersistenceImpl(internalDatabase: MongoDatabase)(implicit ec: ExecutionContext) extends CloudSecretPersistence {
+  val secrets = internalDatabase.getCollection("Secret")
+
   override def load() = {
-//    internalDatabase.run(CloudSecretTable.getSecret)
-    ???
+    val first: Future[Option[Document]] = secrets.find().collect().toFuture().map(_.headOption)
+    first.map { docOption =>
+      docOption.map(doc => doc.get[BsonString]("secret").get.toString)
+    }
   }
+
   override def update(secret: Option[String]) = {
-//    internalDatabase.run(CloudSecretTable.setSecret(secret))
-    ???
+    secrets.updateMany(Filters.and(), Document("secret" -> secret)).toFuture()
   }
 }

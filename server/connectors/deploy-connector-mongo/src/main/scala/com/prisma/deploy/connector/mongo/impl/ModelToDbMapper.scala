@@ -1,6 +1,6 @@
 package com.prisma.deploy.connector.mongo.impl
 
-import com.prisma.deploy.connector.mongo.database.{Migration, ProjectDefinition}
+import com.prisma.deploy.connector.mongo.database.{MigrationDefinition, ProjectDefinition}
 import com.prisma.shared.models
 import play.api.libs.json.Json
 
@@ -23,13 +23,13 @@ object ModelToDbMapper {
     )
   }
 
-  def convert(migration: models.Migration): Migration = {
+  def convert(migration: models.Migration): MigrationDefinition = {
     val schemaJson         = Json.toJson(migration.schema)
     val functionsJson      = Json.toJson(migration.functions)
     val migrationStepsJson = Json.toJson(migration.steps)
     val errorsJson         = Json.toJson(migration.errors)
 
-    Migration(
+    MigrationDefinition(
       projectId = migration.projectId,
       revision = migration.revision,
       schema = schemaJson,

@@ -2,7 +2,7 @@ package com.prisma.deploy.connector.mongo
 
 import com.prisma.config.DatabaseConfig
 import com.prisma.deploy.connector._
-import com.prisma.deploy.connector.mongo.database.{CodecRegistry, Migration}
+import com.prisma.deploy.connector.mongo.database.{CodecRegistry, MigrationDefinition}
 import com.prisma.deploy.connector.mongo.impl.{CloudSecretPersistenceImpl, MigrationPersistenceImpl, MongoDeployMutactionExecutor, ProjectPersistenceImpl}
 import com.prisma.shared.models.{Project, ProjectIdEncoder}
 import org.joda.time.DateTime
@@ -18,7 +18,7 @@ case class MongoDeployConnector(config: DatabaseConfig)(implicit ec: ExecutionCo
 
   override def projectPersistence: ProjectPersistence = new ProjectPersistenceImpl(internalDatabase)
 
-  override def migrationPersistence: MigrationPersistence = new MigrationPersistenceImpl(mongoClient)
+  override def migrationPersistence: MigrationPersistence = new MigrationPersistenceImpl(internalDatabase)
 
   override def deployMutactionExecutor: DeployMutactionExecutor = MongoDeployMutactionExecutor(mongoClient)
 
@@ -28,7 +28,7 @@ case class MongoDeployConnector(config: DatabaseConfig)(implicit ec: ExecutionCo
 
   override def databaseIntrospectionInferrer(projectId: String): DatabaseIntrospectionInferrer = ???
 
-  override def cloudSecretPersistence: CloudSecretPersistence = new CloudSecretPersistenceImpl(mongoClient)
+  override def cloudSecretPersistence: CloudSecretPersistence = new CloudSecretPersistenceImpl(internalDatabase)
 
   override def initialize(): Future[Unit] = Future.unit
 

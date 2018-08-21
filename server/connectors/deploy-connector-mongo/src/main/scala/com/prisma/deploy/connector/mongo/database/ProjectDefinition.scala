@@ -35,8 +35,8 @@ object ProjectTable {
 
   def byIdWithMigration(id: String, database: MongoDatabase) = {
 
-    val projects: MongoCollection[ProjectDefinition] = database.getCollection("Project")
-    val migrations: MongoCollection[Migration]       = database.getCollection("Migration")
+    val projects: MongoCollection[ProjectDefinition]     = database.getCollection("Project")
+    val migrations: MongoCollection[MigrationDefinition] = database.getCollection("Migration")
 
     val successfulMigrationsForId =
       migrations
@@ -55,16 +55,16 @@ object ProjectTable {
     }
   }
 
-  def loadAllWithMigration(database: MongoDatabase): Future[Seq[(ProjectDefinition, Migration)]] = {
+  def loadAllWithMigration(database: MongoDatabase): Future[Seq[(ProjectDefinition, MigrationDefinition)]] = {
 
 // For each project, the latest successful migration (there has to be at least one, e.g. the initial migtation during create)
 
-    val projects: MongoCollection[ProjectDefinition] = database.getCollection("Project")
-    val migrations: MongoCollection[Migration]       = database.getCollection("Migration")
+    val projects: MongoCollection[ProjectDefinition]     = database.getCollection("Project")
+    val migrations: MongoCollection[MigrationDefinition] = database.getCollection("Migration")
 
     val allProjects = projects.find().collect.toFuture()
 
-    def successfulMigrationsForId(id: String): Future[Migration] =
+    def successfulMigrationsForId(id: String): Future[MigrationDefinition] =
       migrations
         .find(Filters.and(Filters.eq("projectId", id), Filters.eq("status", "SUCCESS")))
         .sort(descending("revision"))

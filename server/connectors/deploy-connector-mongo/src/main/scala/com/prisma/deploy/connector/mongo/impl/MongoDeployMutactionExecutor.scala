@@ -14,7 +14,7 @@ case class MongoDeployMutactionExecutor(client: MongoClient)(implicit ec: Execut
 
   override def rollback(mutaction: DeployMutaction): Future[Unit] = {
     val action = MongoAnyMutactionInterpreter.rollback(mutaction)
-    Future.successful(Unit)
+    run(client.getDatabase(mutaction.projectId), action).map(_ => ())
   }
 
   def run(database: MongoDatabase, action: DeployMongoAction): Future[Unit] = action.fn(database)

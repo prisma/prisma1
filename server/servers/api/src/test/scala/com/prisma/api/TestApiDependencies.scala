@@ -21,7 +21,7 @@ trait TestApiDependencies extends ApiDependencies {
 
   def deployConnector: DeployConnector
   def databaseMutactionExecutor: DatabaseMutactionExecutor
-  val invalidationTestKit = InMemoryPubSubTestKit[String]()
+  lazy val invalidationTestKit = InMemoryPubSubTestKit[String]()
 }
 
 case class TestApiDependenciesImpl()(implicit val system: ActorSystem, val materializer: ActorMaterializer) extends TestApiDependencies {
