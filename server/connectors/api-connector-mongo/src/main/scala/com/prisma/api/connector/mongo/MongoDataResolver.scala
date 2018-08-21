@@ -50,8 +50,13 @@ case class MongoDataResolver(project: Project, client: MongoClient)(implicit ec:
   // Fixme this does not use filters or selected fields
   override def getNodes(model: Model, args: Option[QueryArguments], selectedFields: SelectedFields): Future[ResolverResult[PrismaNode]] = {
     val collection: MongoCollection[Document] = database.getCollection(model.dbName)
+    val filter = args match {
+      case Some(arg) => arg.filter
+      case None      => None
 
-    val nodes: Future[Seq[PrismaNode]] = collection.find().collect().toFuture.map { results: Seq[Document] =>
+    }
+
+    val nodes: Future[Seq[PrismaNode]] = collection.find(buildConditionForFilter(filter)).collect().toFuture.map { results: Seq[Document] =>
       results.map { result =>
         val root = DocumentToRoot(model, result)
         PrismaNode(root.idField, root, Some(model.name))

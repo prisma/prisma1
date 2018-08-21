@@ -8,7 +8,7 @@ import org.mongodb.scala.model.Filters._
 trait FilterConditionBuilder {
   def buildConditionForFilter(filter: Option[Filter]): conversions.Bson = filter match {
     case Some(filter) => buildConditionForFilter(filter)
-    case None         => and()
+    case None         => and(hackForTrue)
   }
 
   private def buildConditionForFilter(filter: Filter): conversions.Bson = {
@@ -47,8 +47,8 @@ trait FilterConditionBuilder {
       case ScalarFilter(scalarField, Equals(value))              => equal(scalarField.name, value.value)
       case ScalarFilter(scalarField, In(Vector(NullGCValue)))    => in(scalarField.name, null)
       case ScalarFilter(scalarField, NotIn(Vector(NullGCValue))) => not(in(scalarField.name, null))
-      case ScalarFilter(scalarField, In(values))                 => in(scalarField.name, values.map(_.value))
-      case ScalarFilter(scalarField, NotIn(values))              => not(in(scalarField.name, values.map(_.value)))
+      case ScalarFilter(scalarField, In(values))                 => in(scalarField.name, values.map(_.value): _*)
+      case ScalarFilter(scalarField, NotIn(values))              => not(in(scalarField.name, values.map(_.value): _*))
       case OneRelationIsNullFilter(field)                        => and(hackForTrue) //oneRelationIsNullFilter(field, alias)
       case x                                                     => sys.error(s"Not supported: $x")
     }
