@@ -53,7 +53,6 @@ case class MongoDataResolver(project: Project, client: MongoClient)(implicit ec:
     val filter = args match {
       case Some(arg) => arg.filter
       case None      => None
-
     }
 
     val nodes: Future[Seq[PrismaNode]] = collection.find(buildConditionForFilter(filter)).collect().toFuture.map { results: Seq[Document] =>

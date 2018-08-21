@@ -31,12 +31,12 @@ trait FilterConditionBuilder {
       //--------------------------------ANCHORS------------------------------------
       case TrueFilter                                            => and(hackForTrue)
       case FalseFilter                                           => not(and(hackForTrue))
-      case ScalarFilter(scalarField, Contains(value))            => and(hackForTrue) // fieldFrom(scalarField).contains(stringDummy)
-      case ScalarFilter(scalarField, NotContains(value))         => and(hackForTrue) //fieldFrom(scalarField).notContains(stringDummy)
-      case ScalarFilter(scalarField, StartsWith(value))          => and(hackForTrue) //fieldFrom(scalarField).startsWith(stringDummy)
-      case ScalarFilter(scalarField, NotStartsWith(value))       => and(hackForTrue) //fieldFrom(scalarField).startsWith(stringDummy).not()
-      case ScalarFilter(scalarField, EndsWith(value))            => and(hackForTrue) //fieldFrom(scalarField).endsWith(stringDummy)
-      case ScalarFilter(scalarField, NotEndsWith(value))         => and(hackForTrue) //fieldFrom(scalarField).endsWith(stringDummy).not()
+      case ScalarFilter(scalarField, Contains(value))            => regex(scalarField.name, s".*${value.value}.*")
+      case ScalarFilter(scalarField, NotContains(value))         => not(regex(scalarField.name, s".*${value.value}.*"))
+      case ScalarFilter(scalarField, StartsWith(value))          => regex(scalarField.name, s"${value.value}.*")
+      case ScalarFilter(scalarField, NotStartsWith(value))       => not(regex(scalarField.name, s"${value.value}.*"))
+      case ScalarFilter(scalarField, EndsWith(value))            => regex(scalarField.name, s".*${value.value}")
+      case ScalarFilter(scalarField, NotEndsWith(value))         => not(regex(scalarField.name, s".*${value.value}"))
       case ScalarFilter(scalarField, LessThan(value))            => lt(scalarField.name, value.value)
       case ScalarFilter(scalarField, GreaterThan(value))         => gt(scalarField.name, value.value)
       case ScalarFilter(scalarField, LessThanOrEquals(value))    => lte(scalarField.name, value.value)
@@ -55,6 +55,11 @@ trait FilterConditionBuilder {
   }
 
   val hackForTrue = notEqual("_id", -1)
+
+  //Fixme
+  //relationfilters need to discern between relationtype
+  // embedded -> use dot notation to go deeper in tree
+  // relationfilter not supported yet, but later??
 //  private def relationFilterStatement(alias: String, relationFilter: RelationFilter, relField: Option[Field[AnyRef]], invert: Boolean): Condition = {
 //    // this skips intermediate tables when there is no condition on them. so the following will not join with the album table but join the artist-album relation with the album-track relation
 //    // artists(where:{albums_some:{tracks_some:{condition}}})

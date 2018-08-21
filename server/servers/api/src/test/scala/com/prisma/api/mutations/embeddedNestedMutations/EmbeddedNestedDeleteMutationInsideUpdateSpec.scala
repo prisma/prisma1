@@ -12,11 +12,11 @@ class EmbeddedNestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matcher
   //verify results using normal queries
   //do not use id on embedded types
   //test nestedDeleteMany (whereFilter instead of where) -> for no hit/ partial hit / full hit
-  //test with backrelation on child and without
-  //backrelation should always be required
+  //the schema should not show a backrelation
+  //internally the backrelation should always be a toOne required relation
   //P1! tests should be adapted to expect inputtypeerror
 
-  "a P1! to C1! relation " should "error due to the operation not being in the schema anymore" in {
+  "a P1! relation " should "error due to the operation not being in the schema anymore" in {
     val project = SchemaDsl.fromString() {
       """
         |type Parent{
@@ -27,7 +27,6 @@ class EmbeddedNestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matcher
         |
         |type Child @embedded {
         | c: String! @unique
-        | parentReq: Parent!
         |}
       """
     }
@@ -48,7 +47,7 @@ class EmbeddedNestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matcher
           |       c
           |    }
           |  }
-          |}""".stripMargin,
+          |}""",
         project
       )
 
@@ -68,7 +67,7 @@ class EmbeddedNestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matcher
          |    }
          |  }
          |}
-      """.stripMargin,
+      """,
       project,
       errorCode = 0,
       errorContains = "Argument 'data' expected type 'ParentUpdateInput!'"
@@ -76,67 +75,7 @@ class EmbeddedNestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matcher
 
   }
 
-  "a P1! to C1 relation" should "always fail when trying to delete the child" in {
-    val project = SchemaDsl.fromString() {
-      """
-        |type Parent{
-        | id: ID! @unique
-        | p: String! @unique
-        | childReq: Child!
-        |}
-        |
-        |type Child @embedded{
-        | c: String! @unique
-        | parentOpt: Parent
-        |}
-      """
-    }
-
-    database.setup(project)
-
-    val res = server
-      .query(
-        """mutation {
-          |  createParent(data: {
-          |    p: "p1"
-          |    childReq: {
-          |      create: {c: "c1"}
-          |    }
-          |  }){
-          |  id
-          |    childReq{
-          |       c
-          |    }
-          |  }
-          |}""".stripMargin,
-        project
-      )
-
-    val parentId = res.pathAsString("data.createParent.id")
-
-    server.queryThatMustFail(
-      s"""
-         |mutation {
-         |  updateParent(
-         |  where: {id: "$parentId"}
-         |  data:{
-         |    p: "p2"
-         |    childReq: {delete: true}
-         |  }){
-         |    childReq {
-         |      c
-         |    }
-         |  }
-         |}
-      """.stripMargin,
-      project,
-      errorCode = 0,
-      errorContains = "Argument 'data' expected type 'ParentUpdateInput!'"
-    )
-
-  }
-
-  "a P1 to C1  relation " should "work through a nested mutation by id" in {
+  "a P1 relation " should "work through a nested mutation by id" in {
     val project = SchemaDsl.fromString() {
       """
         |type Parent{
@@ -147,7 +86,6 @@ class EmbeddedNestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matcher
         |
         |type Child @embedded{
         | c: String! @unique
-        | parentOpt: Parent
         |}
       """
     }
@@ -168,7 +106,7 @@ class EmbeddedNestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matcher
           |       c
           |    }
           |  }
-          |}""".stripMargin,
+          |}""",
         project
       )
 
@@ -188,7 +126,7 @@ class EmbeddedNestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matcher
           |       c
           |    }
           |  }
-          |}""".stripMargin,
+          |}""",
         project
       )
 
@@ -208,7 +146,7 @@ class EmbeddedNestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matcher
          |    }
          |  }
          |}
-      """.stripMargin,
+      """,
       project
     )
 
@@ -226,13 +164,13 @@ class EmbeddedNestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matcher
          |    }
          |  }
          |}
-      """.stripMargin,
+      """,
         project
       )
       .toString should be(s"""{"data":{"parent":{"childOpt":{"c":"existingChild"}}}}""")
   }
 
-  "a P1 to C1  relation" should "error if there is no child connected" in {
+  "a P1 relation" should "error if there is no child connected" in {
     val project = SchemaDsl.fromString() {
       """
         |type Parent{
@@ -243,7 +181,6 @@ class EmbeddedNestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matcher
         |
         |type Child @embedded{
         | c: String! @unique
-        | parentOpt: Parent
         |}
       """
     }
@@ -257,7 +194,7 @@ class EmbeddedNestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matcher
           |  {
           |    id
           |  }
-          |}""".stripMargin,
+          |}""",
         project
       )
       .pathAsString("data.createParent.id")
@@ -285,7 +222,7 @@ class EmbeddedNestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matcher
     dataResolver(project).countByTable("Parent").await should be(1)
   }
 
-  "a PM to C1!  relation " should "work" in {
+  "a PM relation " should "work" in {
     val project = SchemaDsl.fromString() {
       """
         |type Parent{
@@ -296,7 +233,6 @@ class EmbeddedNestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matcher
         |
         |type Child @embedded{
         | c: String! @unique
-        | parentReq: Parent!
         |}
       """
     }
@@ -315,7 +251,7 @@ class EmbeddedNestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matcher
         |       c
         |    }
         |  }
-        |}""".stripMargin,
+        |}""",
       project
     )
 
@@ -334,476 +270,16 @@ class EmbeddedNestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matcher
          |    }
          |  }
          |}
-      """.stripMargin,
+      """,
       project
     )
 
-    res2.toString should be("""{"data":{"createParent":{"childrenOpt":[{"c":"c1"},{"c":"c2"}]}}}""")
+    res2.toString should be("""{"data":{"updateParent":{"childrenOpt":[{"c":"c2"}]}}}""")
 
     dataResolver(project).countByTable("Parent").await should be(1)
   }
 
-  "a P1 to C1!  relation " should "work" in {
-    val project = SchemaDsl.fromString() {
-      """
-        |type Parent{
-        | id: ID! @unique
-        | p: String! @unique
-        | childOpt: Child
-        |}
-        |
-        |type Child @embedded{
-        | c: String! @unique
-        | parentReq: Parent!
-        |}
-      """
-    }
-
-    database.setup(project)
-
-    server.query(
-      """mutation {
-        |  createParent(data: {
-        |    p: "p1"
-        |    childOpt: {
-        |      create: {c: "c1"}
-        |    }
-        |  }){
-        |    childOpt{
-        |       c
-        |    }
-        |  }
-        |}""".stripMargin,
-      project
-    )
-
-    server.query(
-      s"""
-         |mutation {
-         |  updateParent(
-         |  where: {p: "p1"}
-         |  data:{
-         |    childOpt: {delete: true}
-         |  }){
-         |    childOpt {
-         |      c
-         |    }
-         |  }
-         |}
-      """.stripMargin,
-      project
-    )
-
-    dataResolver(project).countByTable("Parent").await should be(1)
-  }
-
-  "a PM to C1 " should "work" in {
-    val project = SchemaDsl.fromString() {
-      """
-        |type Parent{
-        | id: ID! @unique
-        | p: String! @unique
-        | childrenOpt: [Child!]!
-        |}
-        |
-        |type Child @embedded{
-        | c: String! @unique
-        | parentOpt: Parent
-        |}
-      """
-    }
-
-    database.setup(project)
-
-    server
-      .query(
-        """mutation {
-          |  createParent(data: {
-          |    p: "p1"
-          |    childrenOpt: {
-          |      create: [{c: "c1"}, {c: "c2"}]
-          |    }
-          |  }){
-          |    childrenOpt{
-          |       c
-          |    }
-          |  }
-          |}""".stripMargin,
-        project
-      )
-
-    val res = server.query(
-      s"""
-         |mutation {
-         |  updateParent(
-         |  where: { p: "p1"}
-         |  data:{
-         |    childrenOpt: {delete: [{c: "c2"}]}
-         |  }){
-         |    childrenOpt {
-         |      c
-         |    }
-         |  }
-         |}
-      """.stripMargin,
-      project
-    )
-
-    res.toString should be("""{"data":{"updateParent":{"childrenOpt":[{"c":"c1"}]}}}""")
-
-    dataResolver(project).countByTable("Parent").await should be(1)
-  }
-
-  "a P1! to CM  relation" should "error " in {
-    val project = SchemaDsl.fromString() {
-      """
-        |type Parent{
-        | id: ID! @unique
-        | p: String! @unique
-        | childReq: Child!
-        |}
-        |
-        |type Child @embedded{
-        | c: String! @unique
-        | parentsOpt: [Parent!]!
-        |}
-      """
-    }
-
-    database.setup(project)
-
-    server.query(
-      """mutation {
-        |  createParent(data: {
-        |    p: "p1"
-        |    childReq: {
-        |      create: {c: "c1"}
-        |    }
-        |  }){
-        |    childReq{
-        |       c
-        |    }
-        |  }
-        |}""".stripMargin,
-      project
-    )
-
-    server.queryThatMustFail(
-      s"""
-         |mutation {
-         |  updateParent(
-         |  where: {p: "p1"}
-         |  data:{
-         |    childReq: {delete: true}
-         |  }){
-         |    childReq {
-         |      c
-         |    }
-         |  }
-         |}
-      """.stripMargin,
-      project,
-      errorCode = 0,
-      errorContains = "Argument 'data' expected type 'ParentUpdateInput!'"
-    )
-
-  }
-
-  "a P1 to CM  relation " should "work" in {
-    val project = SchemaDsl.fromString() {
-      """
-        |type Parent{
-        | id: ID! @unique
-        | p: String! @unique
-        | childOpt: Child
-        |}
-        |
-        |type Child @embedded{
-        | c: String! @unique
-        | parentsOpt: [Parent!]!
-        |}
-      """
-    }
-
-    database.setup(project)
-
-    server.query(
-      """mutation {
-        |  createParent(data: {
-        |    p: "p1"
-        |    childOpt: {
-        |      create: {c: "c1"}
-        |    }
-        |  }){
-        |    childOpt{
-        |       c
-        |    }
-        |  }
-        |}""".stripMargin,
-      project
-    )
-
-    val res = server.query(
-      s"""
-         |mutation {
-         |  updateParent(
-         |    where: {p: "p1"}
-         |    data:{
-         |    childOpt: {delete: true}
-         |  }){
-         |    childOpt{
-         |      c
-         |    }
-         |  }
-         |}
-      """.stripMargin,
-      project
-    )
-
-    res.toString should be("""{"data":{"updateParent":{"childOpt":null}}}""")
-
-  }
-
-  "a PM to CM  relation" should "work" in {
-    val project = SchemaDsl.fromString() {
-      """
-        |type Parent{
-        | id: ID! @unique
-        | p: String! @unique
-        | childrenOpt: [Child!]!
-        |}
-        |
-        |type Child @embedded{
-        | c: String! @unique
-        | parentsOpt: [Parent!]!
-        |}
-      """
-    }
-
-    database.setup(project)
-
-    server.query(
-      """mutation {
-        |  createParent(data: {
-        |    p: "otherParent"
-        |    childrenOpt: {
-        |      create: [{c: "otherChild"}]
-        |    }
-        |  }){
-        |    childrenOpt{
-        |       c
-        |    }
-        |  }
-        |}""".stripMargin,
-      project
-    )
-
-    server.query(
-      """mutation {
-        |  createParent(data: {
-        |    p: "p1"
-        |    childrenOpt: {
-        |      create: [{c: "c1"},{c: "c2"},{c: "c3"}]
-        |    }
-        |  }){
-        |    childrenOpt{
-        |       c
-        |    }
-        |  }
-        |}""".stripMargin,
-      project
-    )
-
-    server.queryThatMustFail(
-      s"""
-         |mutation {
-         |  updateParent(
-         |  where: { p: "p1"}
-         |  data:{
-         |    childrenOpt: {delete: [{c: "c1"}, {c: "c2"}, {c: "otherChild"}]}
-         |  }){
-         |    childrenOpt{
-         |      c
-         |    }
-         |  }
-         |}
-      """.stripMargin,
-      project,
-      3041
-    )
-
-    val res = server.query(
-      s"""
-         |mutation {
-         |  updateParent(
-         |  where: { p: "p1"}
-         |  data:{
-         |    childrenOpt: {delete: [{c: "c1"}, {c: "c2"}]}
-         |  }){
-         |    childrenOpt{
-         |      c
-         |    }
-         |  }
-         |}
-      """.stripMargin,
-      project
-    )
-
-    res.toString should be("""{"data":{"updateParent":{"childrenOpt":[{"c":"c3"}]}}}""")
-
-    server.query(s"""query{child(where:{c:"c3"}){c, parentsOpt{p}}}""", project).toString should be(
-      """{"data":{"child":{"c":"c3","parentsOpt":[{"p":"p1"}]}}}""")
-
-    server.query(s"""query{child(where:{c:"otherChild"}){c, parentsOpt{p}}}""", project).toString should be(
-      """{"data":{"child":{"c":"otherChild","parentsOpt":[{"p":"otherParent"}]}}}""")
-  }
-
-  "a PM to CM relation" should "delete fail if other req relations would be violated" in {
-    val project = SchemaDsl.fromString() {
-      """
-        |type Parent{
-        | id: ID! @unique
-        | p: String! @unique
-        | childrenOpt: [Child!]!
-        |}
-        |
-        |type Child @embedded{
-        | c: String! @unique
-        | parentsOpt: [Parent!]!
-        | otherReq: Other!
-        |}
-        |
-        |type Other @embedded{
-        | o: String! @unique
-        | childReq: Child!
-        |}
-      """
-    }
-
-    database.setup(project)
-
-    server.query(
-      """mutation {
-        |  createOther(data: {
-        |    o: "o1"
-        |    childReq: {
-        |      create: {c: "c1"}
-        |    }
-        |  }){
-        |    o
-        |  }
-        |}""".stripMargin,
-      project
-    )
-
-    server.query(
-      """mutation {
-        |  createParent(data: {
-        |    p: "p1"
-        |    childrenOpt: {
-        |      connect: {c: "c1"}
-        |    }
-        |  }){
-        |    p
-        |  }
-        |}""".stripMargin,
-      project
-    )
-
-    server.queryThatMustFail(
-      s"""
-         |mutation {
-         |  updateParent(
-         |  where: { p: "p1"}
-         |  data:{
-         |    childrenOpt: {delete: [{c: "c1"}]}
-         |  }){
-         |    childrenOpt{
-         |      c
-         |    }
-         |  }
-         |}
-      """.stripMargin,
-      project,
-      errorCode = 3042,
-      errorContains = """The change you are trying to make would violate the required relation 'ChildToOther' between Child and Other"""
-    )
-  }
-
-  "a PM to CM  relation" should "delete the child from other relations as well" in {
-    val project = SchemaDsl.fromString() {
-      """
-        |type Parent{
-        | id: ID! @unique
-        | p: String! @unique
-        | childrenOpt: [Child!]!
-        |}
-        |
-        |type Child @embedded{
-        | c: String! @unique
-        | parentsOpt: [Parent!]!
-        | otherOpt: Other
-        |}
-        |
-        |type Other @embedded{
-        | o: String! @unique
-        | childOpt: Child
-        |}
-      """
-    }
-
-    database.setup(project)
-
-    server.query(
-      """mutation {
-        |  createOther(data: {
-        |    o: "o1"
-        |    childOpt: {
-        |      create: {c: "c1"}
-        |    }
-        |  }){
-        |    o
-        |  }
-        |}""".stripMargin,
-      project
-    )
-
-    server.query(
-      """mutation {
-        |  createParent(data: {
-        |    p: "p1"
-        |    childrenOpt: {
-        |      connect: {c: "c1"}
-        |    }
-        |  }){
-        |    p
-        |  }
-        |}""".stripMargin,
-      project
-    )
-
-    val res = server.query(
-      s"""
-         |mutation {
-         |  updateParent(
-         |  where: { p: "p1"}
-         |  data:{
-         |    childrenOpt: {delete: [{c: "c1"}]}
-         |  }){
-         |    childrenOpt{
-         |      c
-         |    }
-         |  }
-         |}
-      """.stripMargin,
-      project
-    )
-
-    res.toString should be("""{"data":{"updateParent":{"childrenOpt":[]}}}""")
-
-  }
-
-  "a one to many relation" should "be deletable by id through a nested mutation" in {
+  "a PM relation" should "be deletable by id through a nested mutation" in {
     val project = SchemaDsl.fromString() {
       """
         |type Todo{
@@ -813,7 +289,6 @@ class EmbeddedNestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matcher
         |
         |type Comment @embedded{
         | text: String
-        | todo: Todo
         |}
       """
     }
@@ -830,7 +305,7 @@ class EmbeddedNestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matcher
         |  ){
         |    id
         |  }
-        |}""".stripMargin,
+        |}""",
         project
       )
       .pathAsString("data.createComment.id")
@@ -847,7 +322,7 @@ class EmbeddedNestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matcher
         |    id
         |    comments { id }
         |  }
-        |}""".stripMargin,
+        |}""",
       project
     )
 
@@ -872,7 +347,7 @@ class EmbeddedNestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matcher
          |    }
          |  }
          |}
-      """.stripMargin,
+      """,
       project
     )
 
@@ -893,7 +368,7 @@ class EmbeddedNestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matcher
          |    }
          |  }
          |}
-      """.stripMargin,
+      """,
       project,
       3041
     )
@@ -915,7 +390,6 @@ class EmbeddedNestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matcher
         |type Comment @embedded{
         | text: String
         | alias: String! @unique
-        | todo: Todo
         |}
       """
     }
@@ -932,9 +406,9 @@ class EmbeddedNestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matcher
         |    }
         |  ){
         |    id
-        |    comments { id }
+        |    comments { text }
         |  }
-        |}""".stripMargin,
+        |}""",
       project
     )
     val todoId = createResult.pathAsString("data.createTodo.id")
@@ -956,7 +430,7 @@ class EmbeddedNestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matcher
          |    }
          |  }
          |}
-      """.stripMargin,
+      """,
       project
     )
 
@@ -977,7 +451,6 @@ class EmbeddedNestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matcher
         |
         |type Comment @embedded{
         | text: String
-        | todo: Todo
         |}
       """
     }
@@ -996,7 +469,7 @@ class EmbeddedNestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matcher
         |    id
         |    comments { text }
         |  }
-        |}""".stripMargin,
+        |}""",
       project
     )
     val existingTodoId    = existingCreateResult.pathAsString("data.createTodo.id")
@@ -1014,7 +487,7 @@ class EmbeddedNestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matcher
         |    id
         |    comments { id }
         |  }
-        |}""".stripMargin,
+        |}""",
       project
     )
     val todoId    = createResult.pathAsString("data.createTodo.id")
@@ -1038,7 +511,7 @@ class EmbeddedNestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matcher
          |    }
          |  }
          |}
-      """.stripMargin,
+      """,
       project
     )
     mustBeEqual(result.pathAsJsValue("data.updateComment").toString, """{"todo":null}""")
@@ -1058,7 +531,6 @@ class EmbeddedNestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matcher
         |
         |type Todo @embedded{
         | title: String
-        | note: Note
         |}
       """
     }
@@ -1077,7 +549,7 @@ class EmbeddedNestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matcher
         |    id
         |    todo { title }
         |  }
-        |}""".stripMargin,
+        |}""",
       project
     )
     val noteId = createResult.pathAsString("data.createNote.id")
@@ -1100,7 +572,7 @@ class EmbeddedNestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matcher
          |    }
          |  }
          |}
-      """.stripMargin,
+      """,
       project
     )
     mustBeEqual(result.pathAsJsValue("data.updateNote").toString, """{"todo":null}""")
@@ -1117,7 +589,6 @@ class EmbeddedNestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matcher
         |
         |type Todo @embedded{
         | title: String! @unique
-        | note: Note
         |}
         |"""
     }
@@ -1135,7 +606,7 @@ class EmbeddedNestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matcher
         |  ){
         |    text
         |  }
-        |}""".stripMargin,
+        |}""",
       project
     )
 
@@ -1157,7 +628,7 @@ class EmbeddedNestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matcher
          |    }
          |  }
          |}
-      """.stripMargin,
+      """,
       project
     )
 
@@ -1178,9 +649,7 @@ class EmbeddedNestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matcher
         |
         |type Todo @embedded{
         | title: String! @unique
-        | note: Note
-        |}
-        |"""
+        |}"""
     }
     database.setup(project)
 
@@ -1235,14 +704,12 @@ class EmbeddedNestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matcher
                                              |
                                              |type Middle @embedded{
                                              |  nameMiddle: String! @unique
-                                             |  tops: [Top!]!
                                              |  bottoms: [Bottom!]!
                                              |}
                                              |
                                              |type Bottom @embedded{
                                              |  nameBottom: String! @unique
-                                             |  middles: [Middle!]!
-                                             |}""".stripMargin }
+                                             |}""" }
     database.setup(project)
 
     val createMutation =
@@ -1268,7 +735,7 @@ class EmbeddedNestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matcher
         |    }
         |  }) {id}
         |}
-      """.stripMargin
+      """
 
     server.query(createMutation, project)
 
@@ -1297,7 +764,7 @@ class EmbeddedNestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matcher
          |    }
          |  }
          |}
-      """.stripMargin
+      """
 
     val result = server.query(updateMutation, project)
 
@@ -1319,7 +786,7 @@ class EmbeddedNestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matcher
                                              |
                                              |type Bottom @embedded{
                                              |  nameBottom: String! @unique
-                                             |}""".stripMargin }
+                                             |}""" }
     database.setup(project)
 
     val createMutation =
@@ -1345,7 +812,7 @@ class EmbeddedNestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matcher
         |    }
         |  }) {id}
         |}
-      """.stripMargin
+      """
 
     server.query(createMutation, project)
 
@@ -1374,7 +841,7 @@ class EmbeddedNestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matcher
          |    }
          |  }
          |}
-      """.stripMargin
+      """
 
     val result = server.query(updateMutation, project)
 
@@ -1391,14 +858,12 @@ class EmbeddedNestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matcher
                                              |
                                              |type Middle @embedded{
                                              |  nameMiddle: String! @unique
-                                             |  tops: [Top!]!
                                              |  bottom: Bottom
                                              |}
                                              |
                                              |type Bottom @embedded{
                                              |  nameBottom: String! @unique
-                                             |  middle: Middle
-                                             |}""".stripMargin }
+                                             |}""" }
     database.setup(project)
 
     val createMutation =
@@ -1420,7 +885,7 @@ class EmbeddedNestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matcher
         |    }
         |  }) {id}
         |}
-      """.stripMargin
+      """
 
     server.query(createMutation, project)
 
@@ -1449,7 +914,7 @@ class EmbeddedNestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matcher
          |    }
          |  }
          |}
-      """.stripMargin
+      """
 
     val result = server.query(updateMutation, project)
 
@@ -1476,7 +941,7 @@ class EmbeddedNestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matcher
                                              |
                                              |type Below @embedded{
                                              |  nameBelow: String! @unique
-                                             |}""".stripMargin }
+                                             |}""" }
     database.setup(project)
 
     val createMutation =
@@ -1496,7 +961,7 @@ class EmbeddedNestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matcher
         |        }
         |  }) {id}
         |}
-      """.stripMargin
+      """
 
     server.query(createMutation, project)
 
@@ -1534,7 +999,7 @@ class EmbeddedNestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matcher
          |    }
          |  }
          |}
-      """.stripMargin
+      """
 
     val result = server.query(updateMutation, project)
 
@@ -1551,14 +1016,12 @@ class EmbeddedNestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matcher
                                              |
                                              |type Middle @embedded{
                                              |  nameMiddle: String! @unique
-                                             |  top: Top
                                              |  bottom: Bottom
                                              |}
                                              |
                                              |type Bottom @embedded{
-                                             |  middle: Middle
                                              |  nameBottom: String! @unique
-                                             |}""".stripMargin }
+                                             |}""" }
     database.setup(project)
 
     val createMutation =
@@ -1579,7 +1042,7 @@ class EmbeddedNestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matcher
         |    }
         |  }) {id}
         |}
-      """.stripMargin
+      """
 
     server.query(createMutation, project)
 
@@ -1609,7 +1072,7 @@ class EmbeddedNestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matcher
          |    }
          |  }
          |}
-      """.stripMargin
+      """
 
     val result = server.query(updateMutation, project)
 
@@ -1630,7 +1093,7 @@ class EmbeddedNestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matcher
                                              |
                                              |type Bottom @embedded{
                                              |  nameBottom: String! @unique
-                                             |}""".stripMargin }
+                                             |}""" }
     database.setup(project)
 
     val createMutation =
@@ -1651,7 +1114,7 @@ class EmbeddedNestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matcher
         |    }
         |  }) {id}
         |}
-      """.stripMargin
+      """
 
     server.query(createMutation, project)
 
@@ -1681,7 +1144,7 @@ class EmbeddedNestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matcher
          |    }
          |  }
          |}
-      """.stripMargin
+      """
 
     val result = server.query(updateMutation, project)
 
