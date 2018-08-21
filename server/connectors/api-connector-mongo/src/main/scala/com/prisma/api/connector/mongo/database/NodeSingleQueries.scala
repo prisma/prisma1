@@ -5,13 +5,14 @@ import com.prisma.api.connector.mongo.database.NodeSelectorBsonTransformer.Where
 import com.prisma.api.connector.{Filter, NodeSelector, PrismaNode, SelectedFields}
 import com.prisma.gc_values.IdGCValue
 import com.prisma.shared.models.{Model, RelationField, Schema}
+import org.mongodb.scala.bson.conversions.Bson
 import org.mongodb.scala.{Document, MongoCollection, MongoDatabase}
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.{ExecutionContext, Future}
 import scala.language.existentials
 
-trait NodeSingleQueries {
+trait NodeSingleQueries extends FilterConditionBuilder {
 
   def getModelForGlobalId(schema: Schema, idGCValue: IdGCValue) = ???
 
@@ -28,13 +29,31 @@ trait NodeSingleQueries {
     }
   }
 
-  def getNodeIdByWhere(where: NodeSelector) = ???
+  def getNodeIdByWhere(where: NodeSelector, database: MongoDatabase) = {
+    val collection: MongoCollection[Document] = database.getCollection(where.model.dbName)
+    collection.find(WhereToBson(where)).collect().toFuture.map { results: Seq[Document] =>
+      results.headOption.map { result =>
+        val root = DocumentToRoot(where.model, result)
+        root.idField
+      }
+    }
+  }
 
   def getNodeIdByParentId(parentField: RelationField, parentId: IdGCValue)(implicit ec: ExecutionContext) = ???
 
   def getNodeIdsByParentIds(parentField: RelationField, parentIds: Vector[IdGCValue]) = ???
 
-  def getNodeIdsByFilter(model: Model, filter: Option[Filter]) = ???
+  def getNodeIdsByFilter(model: Model, filter: Option[Filter], database: MongoDatabase) = {
+    val collection: MongoCollection[Document] = database.getCollection(model.dbName)
+    val bsonFilter: Bson                      = buildConditionForFilter(filter)
+    collection.find(bsonFilter).collect().toFuture.map { results: Seq[Document] =>
+      results.map { result =>
+        val root = DocumentToRoot(model, result)
+        val res  = root.map("id").asInstanceOf[IdGCValue]
+        res
+      }
+    }
+  }
 
   def getNodeIdByParentIdAndWhere(parentField: RelationField, parentId: IdGCValue, where: NodeSelector) = ???
 

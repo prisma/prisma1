@@ -1,6 +1,7 @@
 package com.prisma.api.connector.mongo
 
 import com.prisma.api.connector._
+import com.prisma.api.connector.mongo.database.FilterConditionBuilder
 import com.prisma.api.connector.mongo.database.NodeSelectorBsonTransformer.WhereToBson
 import com.prisma.gc_values._
 import com.prisma.shared.models.TypeIdentifier.TypeIdentifier
@@ -15,7 +16,7 @@ import play.api.libs.json.Json
 import scala.collection.mutable
 import scala.concurrent.{ExecutionContext, Future}
 
-case class MongoDataResolver(project: Project, client: MongoClient)(implicit ec: ExecutionContext) extends DataResolver {
+case class MongoDataResolver(project: Project, client: MongoClient)(implicit ec: ExecutionContext) extends DataResolver with FilterConditionBuilder {
   val database = client.getDatabase(project.id)
 
   override def getModelForGlobalId(globalId: CuidGCValue): Future[Option[Model]] = {
@@ -42,7 +43,9 @@ case class MongoDataResolver(project: Project, client: MongoClient)(implicit ec:
     }
   }
 
-  override def countByTable(table: String, whereFilter: Option[Filter]): Future[Int] = database.getCollection(table).countDocuments().toFuture.map(_.toInt)
+  override def countByTable(table: String, whereFilter: Option[Filter]): Future[Int] = {
+    database.getCollection(table).countDocuments(buildConditionForFilter(whereFilter)).toFuture.map(_.toInt)
+  }
 
   // Fixme this does not use filters or selected fields
   override def getNodes(model: Model, args: Option[QueryArguments], selectedFields: SelectedFields): Future[ResolverResult[PrismaNode]] = {

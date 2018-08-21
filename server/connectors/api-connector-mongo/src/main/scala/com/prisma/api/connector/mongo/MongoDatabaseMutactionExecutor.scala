@@ -70,9 +70,9 @@ class MongoDatabaseMutactionExecutor(client: MongoClient)(implicit ec: Execution
     case m: TopLevelCreateNode => CreateNodeInterpreter(mutaction = m, includeRelayRow = false)
     case m: TopLevelUpdateNode => UpdateNodeInterpreter(mutaction = m)
     case m: TopLevelUpsertNode => ??? //delayed
-    case m: TopLevelDeleteNode => DeleteNodeInterpreter(mutaction = m)
+    case m: TopLevelDeleteNode => DeleteNodeInterpreter(mutaction = m, shouldDeleteRelayIds = false)
     case m: UpdateNodes        => ??? //delayed
-    case m: DeleteNodes        => ??? //delayed
+    case m: DeleteNodes        => DeleteNodesInterpreter(mutaction = m, shouldDeleteRelayIds = false)
     case m: ResetData          => ResetDataInterpreter(mutaction = m)
     case m: ImportNodes        => ??? //delayed
     case m: ImportRelations    => ??? //delayed
@@ -84,7 +84,7 @@ class MongoDatabaseMutactionExecutor(client: MongoClient)(implicit ec: Execution
     case m: NestedCreateNode => NestedCreateNodeInterpreter(mutaction = m, includeRelayRow = false)
     case m: NestedUpdateNode => NestedUpdateNodeInterpreter(mutaction = m)
     case m: NestedUpsertNode => ??? //delayed
-    case m: NestedDeleteNode => NestedDeleteNodeInterpreter(mutaction = m)
+    case m: NestedDeleteNode => NestedDeleteNodeInterpreter(mutaction = m, shouldDeleteRelayIds = false)
     case m: NestedConnect    => ??? //delayed
     case m: NestedDisconnect => ??? //delayed
   }

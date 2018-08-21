@@ -5,9 +5,9 @@ import com.prisma.api.connector.mongo.DocumentToRoot
 import com.prisma.api.connector.mongo.database.GCBisonTransformer.GCValueBsonTransformer
 import com.prisma.api.connector.mongo.database.NodeSelectorBsonTransformer.WhereToBson
 import com.prisma.api.schema.APIErrors
+import com.prisma.api.schema.APIErrors.NodesNotConnectedError
 import com.prisma.gc_values._
 import com.prisma.shared.models.RelationField
-import org.joda.time.DateTime
 import org.mongodb.scala.bson.conversions.Bson
 import org.mongodb.scala.bson.{BsonArray, BsonBoolean, BsonDateTime, BsonDouble, BsonInt32, BsonString, BsonTransformer, BsonValue, conversions}
 import org.mongodb.scala.model.Filters
@@ -134,6 +134,17 @@ trait NodeActions extends NodeSingleQueries {
     }
   }
 
+  def deleteNodes(mutaction: DeleteNodes, shouldDeleteRelayIds: Boolean)(implicit ec: ExecutionContext): SimpleMongoAction[MutactionResults] =
+    SimpleMongoAction { database =>
+      val collection                        = database.getCollection(mutaction.model.name)
+      val futureIds: Future[Seq[IdGCValue]] = getNodeIdsByFilter(mutaction.model, mutaction.whereFilter, database)
+
+      futureIds.flatMap { ids =>
+        val filter = Filters.in("_id", ids.map(_.value): _*)
+        collection.deleteMany(filter).toFuture().map(_ => MutactionResults(Vector.empty))
+      }
+    }
+
   def nestedDeleteNode(mutaction: NestedDeleteNode, parentId: IdGCValue)(implicit ec: ExecutionContext): SimpleMongoAction[MutactionResults] =
     SimpleMongoAction { database =>
       ???
@@ -160,6 +171,12 @@ trait NodeActions extends NodeSingleQueries {
         val toOneDeletes = mutaction.nestedDeletes.collect { case m if !m.relationField.isList => m }
         //    Fixme error if there is no child
 
+        toOneDeletes.map { delete =>
+          node.data.map(delete.relationField.name) match {
+            case NullGCValue => throw NodesNotConnectedError(delete.relationField.relation, delete.relationField.model, None, delete.model, None)
+            case _           => //NoOp
+          }
+        }
         val nestedDeletes: Vector[Bson] = toOneDeletes.map(delete => unset(delete.relationField.name))
         val nestedDeleteResults = toOneDeletes.map { delete =>
           val random = CuidGCValue.random

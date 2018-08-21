@@ -7,13 +7,15 @@ import com.prisma.gc_values.IdGCValue
 
 import scala.concurrent.ExecutionContext
 
-case class DeleteNodeInterpreter(mutaction: TopLevelDeleteNode)(implicit ec: ExecutionContext) extends TopLevelDatabaseMutactionInterpreter {
+case class DeleteNodeInterpreter(mutaction: TopLevelDeleteNode, shouldDeleteRelayIds: Boolean)(implicit ec: ExecutionContext)
+    extends TopLevelDatabaseMutactionInterpreter {
   override def mongoAction(mutationBuilder: MongoActionsBuilder): SimpleMongoAction[MutactionResults] = {
     mutationBuilder.deleteNode(mutaction)
   }
 }
 
-case class NestedDeleteNodeInterpreter(mutaction: NestedDeleteNode)(implicit ec: ExecutionContext) extends NestedDatabaseMutactionInterpreter {
+case class NestedDeleteNodeInterpreter(mutaction: NestedDeleteNode, shouldDeleteRelayIds: Boolean)(implicit ec: ExecutionContext)
+    extends NestedDatabaseMutactionInterpreter {
   override def mongoAction(mutationBuilder: MongoActionsBuilder, parentId: IdGCValue): SimpleMongoAction[MutactionResults] = {
     mutationBuilder.nestedDeleteNode(mutaction, parentId)
   }

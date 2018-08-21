@@ -276,13 +276,13 @@ class EmbeddedNestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matcher
          |    }
          |  }
          |}
-      """.stripMargin,
+      """,
       project,
-      errorCode = 3041
+      errorCode = 3041,
+      errorContains = "The relation ChildToParent has no node for the model Parent connected to a Node for the model Child on your mutation path."
     )
 
     dataResolver(project).countByTable("Parent").await should be(1)
-
   }
 
   "a PM to C1!  relation " should "work" in {

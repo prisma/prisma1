@@ -23,7 +23,7 @@ class PortedFiltersSpec extends FlatSpec with Matchers with ApiSpecBase {
                                                     | A
                                                     | B
                                                     |}
-                                                    |""".stripMargin }
+                                                    |""" }
 
   override protected def beforeAll(): Unit = {
     super.beforeAll()
