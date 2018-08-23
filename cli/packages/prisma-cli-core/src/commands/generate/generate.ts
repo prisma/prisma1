@@ -66,7 +66,10 @@ export default class GenereateCommand extends Command {
 
         if (generator === 'javascript') {
           await this.generateJavascript(resolvedOutput, schemaString)
+        }
 
+        if (generator === 'go') {
+          await this.generateGo(resolvedOutput, schemaString)
         }
       }
     }
