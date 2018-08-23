@@ -1,11 +1,11 @@
 import { Generator } from './Generator'
 import {
-  // isNonNullType,
-  // isListType,
-  // isScalarType,
-  // isObjectType,
-  // isEnumType,
-//   GraphQLObjectType,
+  //   isNonNullType,
+  //   isListType,
+  //   isScalarType,
+  //   isObjectType,
+  //   isEnumType,
+  //   GraphQLObjectType,
   // GraphQLSchema,
   GraphQLUnionType,
   GraphQLInterfaceType,
@@ -21,6 +21,8 @@ import {
   // GraphQLFieldMap,
   GraphQLObjectType as GraphQLObjectTypeRef,
   // printSchema,
+  GraphQLField,
+  GraphQLObjectType,
 } from 'graphql'
 
 // import pluralize from 'pluralize'
@@ -97,10 +99,60 @@ export class GoGenerator extends Generator {
     GraphQLEnumType: (type: GraphQLEnumType): string => ``,
   }
 
+  getDeepType(type) {
+    if (type.ofType) {
+      return this.getDeepType(type.ofType)
+    }
+    return type
+  }
+
+  graphqlTypeRenderersForQuery = {
+    GraphQLScalarType: (type: GraphQLScalarType) => {
+      return ``
+    },
+    GraphQLObjectType: (type: GraphQLObjectType) => {
+      const typeFields = type.getFields()
+      return `${Object.keys(typeFields)
+        .map(key => {
+          const field = typeFields[key]
+          return `${field.name}`
+        })
+        .join('\n')}`
+    },
+    GraphQLInterfaceType: (type: GraphQLInterfaceType) => {
+      return ``
+    },
+    GraphQLUnionType: (type: GraphQLUnionType) => {
+      return ``
+    },
+    GraphQLEnumType: (type: GraphQLEnumType) => {
+      return ``
+    },
+    GraphQLInputObjectType: (type: GraphQLInputObjectType) => {
+      return ``
+    },
+  }
+
+  printQuery(queryField: GraphQLField<any, any>) {
+    const typeName = this.getDeepType(queryField.type)
+    const type = this.schema.getType(typeName)
+    return `query Q {
+        ${queryField.name} {
+            ${
+              this.graphqlTypeRenderersForQuery[type!.constructor.name]
+                ? this.graphqlTypeRenderersForQuery[type!.constructor.name](type)
+                : null
+            }
+        }
+    }`
+  }
+
   render() {
-    // TODO: Remove scalars
     const typeNames = this.getTypeNames()
     const typeMap = this.schema.getTypeMap()
+
+    const queryType = this.schema.getQueryType()
+    const queryFields = queryType!.getFields()
     return `
 package prisma
 
@@ -111,8 +163,29 @@ import (
 	"github.com/machinebox/graphql"
 )
 
+// DB Type to represent the client
+type DB struct {
+	Endpoint string // TODO: Remove the Endpoint from here and print it where needed.
+}
+
+${Object.keys(queryFields)
+      .map(key => {
+        const queryField = queryFields[key]
+        return `func (db DB) ${upperCamelCasePatched(
+          queryField.name,
+        )} (params ${upperCamelCasePatched(
+          queryField.name,
+        )}Params) interface{} {
+        data := db.Request(\`${this.printQuery(queryField)}\`,
+		map[string]interface{}{},
+	)
+	return data["${queryField.name}"]
+      }`
+      })
+      .join('\n')}
 
 ${typeNames
+      .filter(name => false) // TODO: Add this later
       .map(key => {
         let type = typeMap[key]
         return this.graphqlRenderers[type.constructor.name]
@@ -120,6 +193,29 @@ ${typeNames
           : null
       })
       .join('\n')}
+
+      // Request Send a GraphQL operation request
+// TODO: arg variables can be made optional via variadic func approach
+func (db DB) Request(query string, variables map[string]interface{}) map[string]interface{} {
+	// TODO: Error handling (both network, GraphQL and application level (missing node etc))
+	// TODO: Add auth support
+
+	req := graphql.NewRequest(query)
+	client := graphql.NewClient(db.Endpoint)
+
+	for key, value := range variables {
+		req.Var(key, value)
+	}
+
+	ctx := context.Background()
+
+	// var respData ResponseStruct
+	var respData map[string]interface{} // TODO: Type this properly with a struct
+	if err := client.Run(ctx, req, &respData); err != nil {
+		log.Fatal(err)
+	}
+	return respData
+}
         `
   }
 
