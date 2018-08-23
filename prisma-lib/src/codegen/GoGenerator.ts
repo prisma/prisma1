@@ -5,7 +5,7 @@ import {
   // isScalarType,
   // isObjectType,
   // isEnumType,
-  GraphQLObjectType,
+//   GraphQLObjectType,
   // GraphQLSchema,
   GraphQLUnionType,
   GraphQLInterfaceType,
@@ -115,16 +115,9 @@ import (
 ${typeNames
       .map(key => {
         let type = typeMap[key]
-        try {
-          // TODO: This assumption is not correct for all types
-          type = type as GraphQLObjectType
-          return this.graphqlRenderers[type.constructor.name]
-            ? this.graphqlRenderers[type.constructor.name](type)
-            : null
-        } catch (e) {
-          console.log(type.name, type.constructor.name)
-          return
-        }
+        return this.graphqlRenderers[type.constructor.name]
+          ? this.graphqlRenderers[type.constructor.name](type)
+          : null
       })
       .join('\n')}
         `
