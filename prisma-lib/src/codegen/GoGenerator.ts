@@ -218,7 +218,6 @@ ${Object.keys(queryFields)
       .join('\n')}
 
 ${typeNames
-      .filter(name => false) // TODO: Add this later
       .map(key => {
         let type = typeMap[key]
         return this.graphqlRenderers[type.constructor.name]
