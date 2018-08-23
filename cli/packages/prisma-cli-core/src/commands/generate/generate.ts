@@ -4,7 +4,7 @@ import { fetchAndPrintSchema } from '../deploy/printSchema'
 import * as fs from 'fs-extra'
 import * as path from 'path'
 import { buildSchema } from 'graphql'
-import { TypescriptGenerator, TypescriptDefinitionGenerator } from 'prisma-lib'
+import { TypescriptGenerator, TypescriptDefinitionGenerator, GoGenerator } from 'prisma-lib'
 
 export default class GenereateCommand extends Command {
   static topic = 'generate'
@@ -114,6 +114,14 @@ export default class GenereateCommand extends Command {
 
     const typings = generator.renderDefinition(options)
     fs.writeFileSync(typingsPath, typings)
+  }
+
+  async generateGo(output: string, schemaString: string) {
+    const schema = buildSchema(schemaString)
+
+    const generator = new GoGenerator({ schema })
+    const goCode = generator.render()
+    fs.writeFileSync(output, goCode)
   }
 
   replaceEnv(str) {
