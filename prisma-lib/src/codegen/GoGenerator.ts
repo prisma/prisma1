@@ -129,7 +129,13 @@ export class GoGenerator extends Generator {
       return ``
     },
     GraphQLInputObjectType: (type: GraphQLInputObjectType) => {
-      return ``
+      const typeFields = type.getFields()
+      return `${Object.keys(typeFields)
+        .map(key => {
+          const field = typeFields[key]
+          return `${field.name}`
+        })
+        .join('\n')}`
     },
   }
 
@@ -175,6 +181,7 @@ ${Object.keys(queryFields)
         const queryField = queryFields[key]
         const queryArgs = queryField.args
         return `
+        // ${upperCamelCasePatched(queryField.name)}Params docs
         type ${upperCamelCasePatched(queryField.name)}Params struct {
               ${queryArgs
                 .map(arg => {
@@ -196,6 +203,7 @@ ${Object.keys(queryFields)
                 .join('\n')}
           }
         
+        // ${upperCamelCasePatched(queryField.name)} docs
         func (db DB) ${upperCamelCasePatched(
           queryField.name,
         )} (params ${upperCamelCasePatched(
