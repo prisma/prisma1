@@ -140,7 +140,9 @@ export class GoGenerator extends Generator {
         ${queryField.name} {
             ${
               this.graphqlTypeRenderersForQuery[type!.constructor.name]
-                ? this.graphqlTypeRenderersForQuery[type!.constructor.name](type)
+                ? this.graphqlTypeRenderersForQuery[type!.constructor.name](
+                    type,
+                  )
                 : null
             }
         }
@@ -171,7 +173,30 @@ type DB struct {
 ${Object.keys(queryFields)
       .map(key => {
         const queryField = queryFields[key]
-        return `func (db DB) ${upperCamelCasePatched(
+        const queryArgs = queryField.args
+        return `
+        type ${upperCamelCasePatched(queryField.name)}Params struct {
+              ${queryArgs
+                .map(arg => {
+                  return `${arg.name} ${this.scalarMapping[
+                    arg.type
+                      .toString()
+                      .replace('!', '')
+                      .replace('[', '')
+                      .replace(']', '')
+                      .trim()
+                  ] ||
+                    arg.type
+                      .toString()
+                      .replace('!', '')
+                      .replace('[', '')
+                      .replace(']', '')
+                      .trim()}`
+                })
+                .join('\n')}
+          }
+        
+        func (db DB) ${upperCamelCasePatched(
           queryField.name,
         )} (params ${upperCamelCasePatched(
           queryField.name,
