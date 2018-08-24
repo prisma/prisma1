@@ -115,7 +115,12 @@ export class GoGenerator extends Generator {
       return `${Object.keys(typeFields)
         .map(key => {
           const field = typeFields[key]
-          return `${field.name}`
+          const deepTypeName = this.getDeepType(field.type)
+          const deepType = this.schema.getType(deepTypeName)
+          const isScalar =
+            deepType!.constructor.name === 'GraphQLScalarType' ? true : false
+          //   const isScalar = isScalarType(deepType) // TODO: Find out why this breaks with duplicate "graphql" error
+          return isScalar ? `${field.name}` : ``
         })
         .join('\n')}`
     },
