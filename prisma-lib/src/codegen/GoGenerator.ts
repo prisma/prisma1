@@ -147,8 +147,8 @@ export class GoGenerator extends Generator {
   printQuery(queryField: GraphQLField<any, any>) {
     const typeName = this.getDeepType(queryField.type)
     const type = this.schema.getType(typeName)
-    return `query Q {
-        ${queryField.name} {
+    return `query Q (${this.printVariablesDefinition(queryField)}) {
+        ${queryField.name} (${this.printVariables(queryField)}) {
             ${
               this.graphqlTypeRenderersForQuery[type!.constructor.name]
                 ? this.graphqlTypeRenderersForQuery[type!.constructor.name](
@@ -160,17 +160,41 @@ export class GoGenerator extends Generator {
     }`
   }
 
+  printVariablesDefinition(queryField: GraphQLField<any, any>) {
+    const queryArgs = queryField.args
+    return (
+      queryArgs
+        .map(arg => {
+          const argType = arg.type
+            .toString()
+            .replace('!', '')
+            .replace('[', '')
+            .replace(']', '')
+            .trim()
+          // TODO: Go to the nested params to fetch the correct arg
+          return `$${arg.name}: ${this.scalarMapping[argType] || argType}`
+        })
+        .join(', ') + ','
+    )
+  }
+
+  printVariables(queryField: GraphQLField<any, any>) {
+    const queryArgs = queryField.args
+    return (
+      queryArgs
+        .map(arg => {
+          // TODO: Go to the nested params to fetch the correct arg
+          return `${arg.name}: $${arg.name}`
+        })
+        .join(',\n') + ','
+    )
+  }
+
   printArgs(queryField: GraphQLField<any, any>) {
     const queryArgs = queryField.args
     return (
       queryArgs
         .map(arg => {
-        //   const argType = arg.type
-        //     .toString()
-        //     .replace('!', '')
-        //     .replace('[', '')
-        //     .replace(']', '')
-        //     .trim()
           // TODO: Go to the nested params to fetch the correct arg
           return `"${arg.name}": params.${upperCamelCasePatched(arg.name)}`
         })
