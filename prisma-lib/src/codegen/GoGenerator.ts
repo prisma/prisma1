@@ -206,32 +206,28 @@ export class GoGenerator extends Generator {
 
   printVariablesDefinition(queryField: GraphQLField<any, any>) {
     const queryArgs = queryField.args
-    return (
-      queryArgs
-        .map(arg => {
-          const argType = arg.type
-            .toString()
-            .replace('!', '')
-            .replace('[', '')
-            .replace(']', '')
-            .trim()
-          // TODO: Go to the nested params to fetch the correct arg
-          return `$${arg.name}: ${this.scalarMapping[argType] || argType}`
-        })
-        .join(', ') + ','
-    )
+    return queryArgs
+      .map(arg => {
+        const argType = arg.type
+          .toString()
+          .replace('!', '')
+          .replace('[', '')
+          .replace(']', '')
+          .trim()
+        // TODO: Go to the nested params to fetch the correct arg
+        return `$${arg.name}: ${this.scalarMapping[argType] || argType}`
+      })
+      .join(', ')
   }
 
   printVariables(queryField: GraphQLField<any, any>) {
     const queryArgs = queryField.args
-    return (
-      queryArgs
-        .map(arg => {
-          // TODO: Go to the nested params to fetch the correct arg
-          return `${arg.name}: $${arg.name}`
-        })
-        .join(',\n') + ','
-    )
+    return queryArgs
+      .map(arg => {
+        // TODO: Go to the nested params to fetch the correct arg
+        return `${arg.name}: $${arg.name}`
+      })
+      .join(',\n')
   }
 
   printArgs(queryField: GraphQLField<any, any>) {
