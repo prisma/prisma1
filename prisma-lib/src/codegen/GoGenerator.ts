@@ -160,6 +160,24 @@ export class GoGenerator extends Generator {
     }`
   }
 
+  printArgs(queryField: GraphQLField<any, any>) {
+    const queryArgs = queryField.args
+    return (
+      queryArgs
+        .map(arg => {
+        //   const argType = arg.type
+        //     .toString()
+        //     .replace('!', '')
+        //     .replace('[', '')
+        //     .replace(']', '')
+        //     .trim()
+          // TODO: Go to the nested params to fetch the correct arg
+          return `"${arg.name}": params.${upperCamelCasePatched(arg.name)}`
+        })
+        .join(',\n') + ','
+    )
+  }
+
   render() {
     const typeNames = this.getTypeNames()
     const typeMap = this.schema.getTypeMap()
@@ -190,20 +208,14 @@ ${Object.keys(queryFields)
         type ${upperCamelCasePatched(queryField.name)}Params struct {
               ${queryArgs
                 .map(arg => {
-                  return `${arg.name} ${this.scalarMapping[
-                    arg.type
-                      .toString()
-                      .replace('!', '')
-                      .replace('[', '')
-                      .replace(']', '')
-                      .trim()
-                  ] ||
-                    arg.type
-                      .toString()
-                      .replace('!', '')
-                      .replace('[', '')
-                      .replace(']', '')
-                      .trim()}`
+                  const argType = arg.type
+                    .toString()
+                    .replace('!', '')
+                    .replace('[', '')
+                    .replace(']', '')
+                    .trim()
+                  return `${upperCamelCasePatched(arg.name)} ${this
+                    .scalarMapping[argType] || argType}`
                 })
                 .join('\n')}
           }
@@ -215,7 +227,9 @@ ${Object.keys(queryFields)
           queryField.name,
         )}Params) interface{} {
         data := db.Request(\`${this.printQuery(queryField)}\`,
-		map[string]interface{}{},
+		map[string]interface{}{
+            ${this.printArgs(queryField)}
+        },
 	)
 	return data["${queryField.name}"]
       }`
