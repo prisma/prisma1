@@ -1,4 +1,4 @@
-package com.prisma.api.filters
+package com.prisma.api.filters.nonEmbedded
 
 import com.prisma.api.ApiSpecBase
 import com.prisma.shared.models.Project
@@ -6,8 +6,8 @@ import com.prisma.shared.schema_dsl.SchemaDsl
 import org.scalatest.{FlatSpec, Matchers}
 
 class FilterSpec extends FlatSpec with Matchers with ApiSpecBase {
-
-  val project: Project = SchemaDsl.fromString() { """
+  override def doNotRunSuiteForMongo: Boolean = true
+  val project: Project                        = SchemaDsl.fromString() { """
                                                    |type User {
                                                    |  id: ID! @unique
                                                    |  unique: Int! @unique

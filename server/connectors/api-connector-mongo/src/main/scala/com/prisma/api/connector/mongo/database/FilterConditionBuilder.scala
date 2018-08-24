@@ -1,9 +1,16 @@
 package com.prisma.api.connector.mongo.database
 
 import com.prisma.api.connector._
-import com.prisma.gc_values.NullGCValue
+import com.prisma.gc_values.{DateTimeGCValue, GCValue, NullGCValue}
 import org.mongodb.scala.bson.conversions
 import org.mongodb.scala.model.Filters._
+
+//relationfilters depend on relationtype
+// embedded -> use dot notation to go deeper in tree
+// nonEmbedded -> not supported, Inputtypes should not be generated
+//field_every: $all
+//field_some: $elemMatch
+//field_none: $not $elemMatch
 
 trait FilterConditionBuilder {
   def buildConditionForFilter(filter: Option[Filter]): conversions.Bson = filter match {
@@ -37,37 +44,32 @@ trait FilterConditionBuilder {
       case ScalarFilter(scalarField, NotStartsWith(value))       => not(regex(scalarField.name, s"${value.value}.*"))
       case ScalarFilter(scalarField, EndsWith(value))            => regex(scalarField.name, s".*${value.value}")
       case ScalarFilter(scalarField, NotEndsWith(value))         => not(regex(scalarField.name, s".*${value.value}"))
-      case ScalarFilter(scalarField, LessThan(value))            => lt(scalarField.name, value.value)
-      case ScalarFilter(scalarField, GreaterThan(value))         => gt(scalarField.name, value.value)
-      case ScalarFilter(scalarField, LessThanOrEquals(value))    => lte(scalarField.name, value.value)
-      case ScalarFilter(scalarField, GreaterThanOrEquals(value)) => gte(scalarField.name, value.value)
+      case ScalarFilter(scalarField, LessThan(value))            => lt(scalarField.name, fromGCValue(value))
+      case ScalarFilter(scalarField, GreaterThan(value))         => gt(scalarField.name, fromGCValue(value))
+      case ScalarFilter(scalarField, LessThanOrEquals(value))    => lte(scalarField.name, fromGCValue(value))
+      case ScalarFilter(scalarField, GreaterThanOrEquals(value)) => gte(scalarField.name, fromGCValue(value))
       case ScalarFilter(scalarField, NotEquals(NullGCValue))     => notEqual(scalarField.name, null)
-      case ScalarFilter(scalarField, NotEquals(value))           => notEqual(scalarField.name, value.value)
+      case ScalarFilter(scalarField, NotEquals(value))           => notEqual(scalarField.name, fromGCValue(value))
       case ScalarFilter(scalarField, Equals(NullGCValue))        => equal(scalarField.name, null)
-      case ScalarFilter(scalarField, Equals(value))              => equal(scalarField.name, value.value)
+      case ScalarFilter(scalarField, Equals(value))              => equal(scalarField.name, fromGCValue(value))
       case ScalarFilter(scalarField, In(Vector(NullGCValue)))    => in(scalarField.name, null)
       case ScalarFilter(scalarField, NotIn(Vector(NullGCValue))) => not(in(scalarField.name, null))
-      case ScalarFilter(scalarField, In(values))                 => in(scalarField.name, values.map(_.value): _*)
-      case ScalarFilter(scalarField, NotIn(values))              => not(in(scalarField.name, values.map(_.value): _*))
+      case ScalarFilter(scalarField, In(values))                 => in(scalarField.name, values.map(fromGCValue): _*)
+      case ScalarFilter(scalarField, NotIn(values))              => not(in(scalarField.name, values.map(fromGCValue): _*))
       case OneRelationIsNullFilter(field)                        => and(hackForTrue) //oneRelationIsNullFilter(field, alias)
       case x                                                     => sys.error(s"Not supported: $x")
     }
   }
 
+  def fromGCValue(value: GCValue): Any = value match {
+    case DateTimeGCValue(value) => value.getMillis
+    case x: GCValue             => x.value
+  }
   val hackForTrue = notEqual("_id", -1)
 
   //Fixme
-  //relationfilters need to discern between relationtype
-  // embedded -> use dot notation to go deeper in tree
-  // relationfilter not supported yet, but later??
 //  private def relationFilterStatement(alias: String, relationFilter: RelationFilter, relField: Option[Field[AnyRef]], invert: Boolean): Condition = {
-//    // this skips intermediate tables when there is no condition on them. so the following will not join with the album table but join the artist-album relation with the album-track relation
-//    // artists(where:{albums_some:{tracks_some:{condition}}})
-//    //
-//    // the following query contains an implicit andFilter around the two nested ones and will not be improved at the moment
-//    // albums(where: {Tracks_some:{ MediaType:{Name_starts_with:""}, Genre:{Name_starts_with:""}}})
-//    // the same is true for explicit AND, OR, NOT with more than one nested relationfilter. they do not profit from skipping intermediate tables at the moment
-//    // these cases could be improved as well at the price of higher code complexity
+//
 //
 //    val relationField = relationFilter.field
 //    val relation      = relationField.relation
@@ -98,16 +100,7 @@ trait FilterConditionBuilder {
 //
 //        val baseField = relField.getOrElse(modelIdColumn(alias, relationField.model))
 //
-//        (relationFilter.condition, invert) match {
-//          case (AtLeastOneRelatedNode, true)  => baseField.notIn(select.and(nestedFilterStatement))
-//          case (AtLeastOneRelatedNode, false) => baseField.in(select.and(nestedFilterStatement))
-//          case (EveryRelatedNode, true)       => baseField.in(select.andNot(nestedFilterStatement))
-//          case (EveryRelatedNode, false)      => baseField.notIn(select.andNot(nestedFilterStatement))
-//          case (NoRelatedNode, true)          => baseField.in(select.and(nestedFilterStatement))
-//          case (NoRelatedNode, false)         => baseField.notIn(select.and(nestedFilterStatement))
-//          case (NoRelationCondition, true)    => baseField.notIn(select.and(nestedFilterStatement))
-//          case (NoRelationCondition, false)   => baseField.in(select.and(nestedFilterStatement))
-//        }
+//
 //    }
 //  }
 //

@@ -277,8 +277,6 @@ class ObjectTypeBuilder(
 
     val item: PrismaNode = unwrapDataItemFromContext(ctx)
 
-    //Fixme the field needs to store embeddedtypes info
-
     field match {
       case f: ScalarField if f.isList =>
         if (capabilities.contains(EmbeddedListsCapability)) item.data.map(field.name).value else ScalarListDeferred(model, f, item.id)

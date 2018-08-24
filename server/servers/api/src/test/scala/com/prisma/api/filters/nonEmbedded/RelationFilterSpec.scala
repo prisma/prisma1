@@ -1,4 +1,4 @@
-package com.prisma.api.filters
+package com.prisma.api.filters.nonEmbedded
 
 import com.prisma.api.ApiSpecBase
 import com.prisma.shared.schema_dsl.SchemaDsl
@@ -6,22 +6,32 @@ import org.scalatest._
 
 class RelationFilterSpec extends FlatSpec with Matchers with ApiSpecBase {
 
+  override def doNotRunSuiteForMongo: Boolean  = true
   override def runSuiteOnlyForActiveConnectors = true
 
-  val project = SchemaDsl.fromBuilder { schema =>
-    val blog = schema
-      .model("Blog")
-      .field_!("name", _.String)
-    val post = schema
-      .model("Post")
-      .field_!("title", _.String)
-      .field_!("popularity", _.Int)
-      .manyToOneRelation("blog", "posts", blog)
-    val comment = schema
-      .model("Comment")
-      .field_!("likes", _.Int)
-      .field_!("text", _.String)
-      .manyToOneRelation("post", "comments", post)
+  val project = SchemaDsl.fromString() {
+    """
+      |type Blog {
+      |   id: ID! @unique
+      |   name: String!
+      |   posts: [Post!]!
+      |}
+      |
+      |type Post {
+      |   id: ID! @unique
+      |   title: String!
+      |   popularity: Int!
+      |   blog: Blog
+      |   comments: [Comment!]!
+      |}
+      |
+      |type Comment {
+      |   id: ID! @unique
+      |   text: String!
+      |   likes: Int!
+      |   post: Post
+      |}
+    """
   }
 
   override protected def beforeAll(): Unit = {

@@ -5,6 +5,7 @@ import com.prisma.api.connector.mongo.database._
 import com.prisma.api.connector.mongo.impl._
 import com.prisma.gc_values.IdGCValue
 import org.mongodb.scala.{MongoClient, MongoDatabase}
+import com.prisma.api.connector.mongo.extensions.SlickReplacement._
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -87,41 +88,5 @@ class MongoDatabaseMutactionExecutor(client: MongoClient)(implicit ec: Execution
     case m: NestedDeleteNode => NestedDeleteNodeInterpreter(mutaction = m, shouldDeleteRelayIds = false)
     case m: NestedConnect    => ??? //delayed
     case m: NestedDisconnect => ??? //delayed
-  }
-
-  def run[A](database: MongoDatabase, action: MongoAction[A]): Future[A] = {
-    action match {
-      case SuccessAction(value) =>
-        Future.successful(value)
-
-      case SimpleMongoAction(fn) =>
-        fn(database)
-
-      case FlatMapAction(source, fn) =>
-        for {
-          result     <- run(database, source)
-          nextResult <- run(database, fn(result))
-        } yield nextResult
-
-      case MapAction(source, fn) =>
-        for {
-          result <- run(database, source)
-        } yield fn(result)
-
-      case SequenceAction(actions) =>
-        sequence(database, actions)
-
-    }
-  }
-
-  def sequence[A](database: MongoDatabase, actions: Vector[MongoAction[A]]): Future[Vector[A]] = {
-    if (actions.isEmpty) {
-      Future.successful(Vector.empty)
-    } else {
-      for {
-        headResult  <- run(database, actions.head)
-        nextResults <- sequence(database, actions.tail)
-      } yield headResult +: nextResults
-    }
   }
 }

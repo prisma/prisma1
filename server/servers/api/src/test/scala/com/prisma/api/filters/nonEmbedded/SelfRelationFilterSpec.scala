@@ -1,4 +1,4 @@
-package com.prisma.api.filters
+package com.prisma.api.filters.nonEmbedded
 
 import com.prisma.api.ApiSpecBase
 import com.prisma.shared.schema_dsl.SchemaDsl

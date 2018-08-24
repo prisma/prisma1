@@ -1,57 +1,21 @@
 package com.prisma.api.connector.mongo.database
 
 import com.prisma.api.connector._
-import com.prisma.api.connector.mongo.DocumentToRoot
-import com.prisma.api.connector.mongo.database.GCBisonTransformer.GCValueBsonTransformer
-import com.prisma.api.connector.mongo.database.NodeSelectorBsonTransformer.WhereToBson
+import com.prisma.api.connector.mongo.extensions.DocumentToRoot
+import com.prisma.api.connector.mongo.extensions.GCBisonTransformer.GCValueBsonTransformer
+import com.prisma.api.connector.mongo.extensions.NodeSelectorBsonTransformer.WhereToBson
 import com.prisma.api.schema.APIErrors
 import com.prisma.api.schema.APIErrors.NodesNotConnectedError
 import com.prisma.gc_values._
 import com.prisma.shared.models.RelationField
 import org.mongodb.scala.bson.conversions.Bson
-import org.mongodb.scala.bson.{BsonArray, BsonBoolean, BsonDateTime, BsonDouble, BsonInt32, BsonString, BsonTransformer, BsonValue, conversions}
+import org.mongodb.scala.bson.{BsonArray, BsonValue, conversions}
 import org.mongodb.scala.model.Filters
-import org.mongodb.scala.model.Updates.{combine, set, unset}
+import org.mongodb.scala.model.Updates._
 import org.mongodb.scala.{Document, MongoCollection}
 
 import scala.collection.immutable
 import scala.concurrent.{ExecutionContext, Future}
-
-object GCBisonTransformer {
-
-  implicit object GCValueBsonTransformer extends BsonTransformer[GCValue] {
-    override def apply(value: GCValue): BsonValue = value match {
-      case StringGCValue(v)   => BsonString(v)
-      case IntGCValue(v)      => BsonInt32(v)
-      case FloatGCValue(v)    => BsonDouble(v)
-      case JsonGCValue(v)     => BsonString(v.toString())
-      case EnumGCValue(v)     => BsonString(v)
-      case CuidGCValue(v)     => BsonString(v)
-      case UuidGCValue(v)     => BsonString(v.toString)
-      case DateTimeGCValue(v) => BsonDateTime(v.getMillis)
-      case BooleanGCValue(v)  => BsonBoolean(v)
-      case ListGCValue(list)  => BsonArray(list.map(x => GCValueBsonTransformer(x)))
-      case NullGCValue        => null
-      case _: RootGCValue     => sys.error("not implemented")
-    }
-  }
-
-}
-
-object NodeSelectorBsonTransformer {
-  implicit object WhereToBson {
-    def apply(where: NodeSelector): Bson = {
-      val fieldName = if (where.fieldName == "id") "_id" else where.fieldName
-      val value = where.fieldGCValue match {
-        case DateTimeGCValue(v) => v.getMillis
-        case JsonGCValue(v)     => v.toString
-        case z                  => z.value
-      }
-
-      Filters.eq(fieldName, value)
-    }
-  }
-}
 
 trait NodeActions extends NodeSingleQueries {
 
@@ -167,25 +131,11 @@ trait NodeActions extends NodeSingleQueries {
           nestedCreateDocsAndResults(mutaction.nestedCreates)
         val nestedCreates: Vector[Bson] = nestedCreateDocs.map { case (f, v) => set(f, v) }.toVector
 
-        //    delete - only toOne
-        val toOneDeletes = mutaction.nestedDeletes.collect { case m if !m.relationField.isList => m }
-        //    Fixme error if there is no child
-
-        toOneDeletes.map { delete =>
-          node.data.map(delete.relationField.name) match {
-            case NullGCValue => throw NodesNotConnectedError(delete.relationField.relation, delete.relationField.model, None, delete.model, None)
-            case _           => //NoOp
-          }
-        }
-        val nestedDeletes: Vector[Bson] = toOneDeletes.map(delete => unset(delete.relationField.name))
-        val nestedDeleteResults = toOneDeletes.map { delete =>
-          val random = CuidGCValue.random
-          DeleteNodeResult(random, PrismaNode(random, node.data.map(delete.relationField.name).asRoot), delete)
-        }
+        val (nestedDeletes: Vector[Bson], nestedDeleteResults: Vector[DeleteNodeResult]) = nestedDelete(node, mutaction)
 
         //    update - only toOne
         val toOneUpdates = mutaction.nestedUpdates.collect { case m if !m.relationField.isList => m }
-        val (nestedUpdateResults: Vector[DatabaseMutactionResult], nestedUpdates: Vector[conversions.Bson]) =
+        val (nestedUpdateResults: Vector[DatabaseMutactionResult], nestedUpdates: Vector[Bson]) =
           nestedUpdateDocsAndResults(node, toOneUpdates)
 
         val updates = combine(nonListValues ++ listValues ++ nestedCreates ++ nestedDeletes ++ nestedUpdates: _*)
@@ -196,6 +146,48 @@ trait NodeActions extends NodeSingleQueries {
           .toFuture()
           .map(_ => MutactionResults(results))
     }
+  }
+
+  private def nestedDelete(node: PrismaNode, mutaction: TopLevelUpdateNode) = {
+    def manyError(delete: NestedDeleteNode, childWhere: NodeSelector) = error(delete, Some(childWhere))
+    def error(delete: NestedDeleteNode, where: Option[NodeSelector] = None) =
+      throw NodesNotConnectedError(delete.relationField.relation, delete.relationField.model, Some(mutaction.where), delete.model, where)
+
+    //    delete - toOne
+    val toOneDeletes = mutaction.nestedDeletes.collect { case m if !m.relationField.isList => m }
+    toOneDeletes.foreach(delete => if (node.data.map(delete.relationField.name) == NullGCValue) error(delete))
+
+    val nestedOneDeletes: Vector[Bson] = toOneDeletes.map(delete => unset(delete.relationField.name))
+    val nestedOneDeleteResults = toOneDeletes.map { delete =>
+      val random = CuidGCValue.random
+      DeleteNodeResult(random, PrismaNode(random, node.data.map(delete.relationField.name).asRoot), delete)
+    }
+
+    //    delete - toMany
+    val toManyDeletes = mutaction.nestedDeletes.collect { case m if m.relationField.isList => m }
+    toManyDeletes.foreach { delete =>
+      val where = delete.where.get
+
+      node.data.map(delete.relationField.name) match {
+        case NullGCValue         => manyError(delete, where)
+        case ListGCValue(values) => if (!values.map(_.asRoot).exists(root => root.map(where.fieldName) == where.fieldGCValue)) manyError(delete, where)
+        case x                   => println(x)
+      }
+    }
+// Fixme this seems to be too complex for the mongo scala driver. Reactive mongo exposes a raw api that we could use
+//    val nestedManyDeletes: Vector[Bson] = toManyDeletes.map { delete =>
+//      val where = delete.where.get
+//
+//      pullByFilter(Filters.eq(s"${delete.relationField.name}.${where.fieldName}", where.fieldGCValue.value))
+////      pull(delete.relationField.name, s"${delete.relationField.name}.${where.fieldName}", where.fieldGCValue.value))
+//    }
+//    val nestedManyDeleteResults = toManyDeletes.map { delete =>
+//      val random = CuidGCValue.random
+//      DeleteNodeResult(random, PrismaNode(random, node.data.map(delete.relationField.name).asRoot), delete)
+//    }
+
+//    (nestedOneDeletes ++ nestedManyDeletes, nestedOneDeleteResults)
+    (nestedOneDeletes, nestedOneDeleteResults)
   }
 
   def combineThree(path: String, relationField: String, field: String) = {
