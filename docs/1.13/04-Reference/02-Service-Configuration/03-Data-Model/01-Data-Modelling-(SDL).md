@@ -146,7 +146,7 @@ As an example, consider the following very simple data model:
 
 ```graphql
 type User {
-  id: ID! @uniue
+  id: ID! @unique
   name: String!
 }
 ```
