@@ -107,8 +107,11 @@ export class GoGenerator extends Generator {
                       .replace(']', '')
                       .trim()
 
-                    return `${upperCamelCasePatched(field.name)} ${this
-                      .scalarMapping[fieldType] || fieldType}`
+                    return `${upperCamelCasePatched(field.name)} ${
+                      (this.scalarMapping[fieldType] || fieldType) === type.name
+                        ? `*`
+                        : ``
+                    }${this.scalarMapping[fieldType] || fieldType}`
                   })
                   .join('\n')}
             }
@@ -119,7 +122,25 @@ export class GoGenerator extends Generator {
 
     GraphQLIDType: (type: GraphQLScalarType): string => ``,
 
-    GraphQLEnumType: (type: GraphQLEnumType): string => ``,
+    GraphQLEnumType: (type: GraphQLEnumType): string => {
+      const enumValues = type.getValues()
+      return `
+            // ${type.name} docs
+            type ${type.name} int32
+            const (
+                ${enumValues
+                  .map(
+                    v =>
+                      `
+                      // ${upperCamelCasePatched(v.name)}${type.name} docs
+                      ${upperCamelCasePatched(v.name)}${type.name} ${
+                        type.name
+                      } = iota`,
+                  )
+                  .join('\n')}
+            )
+        `
+    },
   }
 
   getDeepType(type) {
