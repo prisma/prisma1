@@ -30,7 +30,7 @@ import * as upperCamelCase from 'uppercamelcase'
 
 const upperCamelCasePatched = (s: string) => {
   const cased = upperCamelCase(s)
-  return cased.startsWith('Id') === 'Id' ? `ID${cased.slice(2)}` : cased
+  return cased.startsWith('Id') ? `ID${cased.slice(2)}` : cased
 }
 
 export class GoGenerator extends Generator {
