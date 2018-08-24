@@ -192,10 +192,15 @@ export class GoGenerator extends Generator {
     },
   }
 
-  printQuery(queryField: GraphQLField<any, any>) {
+  printQuery(
+    queryField: GraphQLField<any, any>,
+    operation: 'query' | 'mutation',
+  ) {
     const typeName = this.getDeepType(queryField.type)
     const type = this.schema.getType(typeName)
-    return `query Q (${this.printVariablesDefinition(queryField)}) {
+    return `${operation} ${upperCamelCasePatched(
+      queryField.name,
+    )} (${this.printVariablesDefinition(queryField)}) {
         ${queryField.name} (${this.printVariables(queryField)}) {
             ${
               this.graphqlTypeRenderersForQuery[type!.constructor.name]
@@ -302,7 +307,7 @@ ${Object.keys(queryFields)
           )} (params ${upperCamelCasePatched(
           queryField.name,
         )}Params) interface{} {
-          data := db.Request(\`${this.printQuery(queryField)}\`,
+          data := db.Request(\`${this.printQuery(queryField, "query")}\`,
           map[string]interface{}{
               ${this.printArgs(queryField)}
           },
@@ -343,7 +348,7 @@ ${Object.keys(queryFields)
               )} (params ${upperCamelCasePatched(
             mutationField.name,
           )}Params) interface{} {
-              data := db.Request(\`${this.printQuery(mutationField)}\`,
+              data := db.Request(\`${this.printQuery(mutationField, "mutation")}\`,
               map[string]interface{}{
                   ${this.printArgs(mutationField)}
               },
@@ -367,8 +372,8 @@ ${typeNames
       .join('\n')}
 
       func isZeroOfUnderlyingType(x interface{}) bool {
-        return x == reflect.Zero(reflect.TypeOf(x)).Interface()
-    }
+        return reflect.DeepEqual(x, reflect.Zero(reflect.TypeOf(x)).Interface())
+      }
 
       // Request Send a GraphQL operation request
 // TODO: arg variables can be made optional via variadic func approach
