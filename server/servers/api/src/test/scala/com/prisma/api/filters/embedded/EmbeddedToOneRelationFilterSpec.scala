@@ -146,20 +146,20 @@ class EmbeddedToOneRelationFilterSpec extends FlatSpec with Matchers with ApiSpe
     res2.toString should be("""{"data":{"tops":[{"unique":2,"middle":{"unique":11}}]}}""")
   }
 
-  "Using a toOne relational filter over two levels" should "work" in {
+  "Using a toMany relational filter with _some" should "work" in {
 
     val project = SchemaDsl.fromString() {
       """type Top {
         |   id: ID! @unique
         |   unique: Int! @unique
         |   name: String!
-        |   middle: Middle
+        |   middle: [Middle!]!
         |}
         |
         |type Middle @embedded{
         |   unique: Int! @unique
         |   name: String!
-        |   bottom: Bottom
+        |   bottom: [Bottom!]!
         |}
         |
         |type Bottom @embedded{
@@ -175,41 +175,22 @@ class EmbeddedToOneRelationFilterSpec extends FlatSpec with Matchers with ApiSpe
          |   createTop(data: {
          |   unique: 1,
          |   name: "Top",
-         |   middle: {create:{
+         |   middle: {create:[{
          |      unique: 11,
          |      name: "Middle"
-         |      bottom: {create:{
+         |      bottom: {create:[{
          |          unique: 111,
          |          name: "Bottom"
-         |      }}
-         |   }}
-         |}){
-         |  unique,
-         |  middle{
-         |    unique
-         |    bottom{
-         |      unique
-         |    }
-         |  }
-         |}}""",
-      project
-    )
-
-    res1.toString should be("""{"data":{"createTop":{"unique":1,"middle":{"unique":11,"bottom":{"unique":111}}}}}""")
-
-    val res2 = server.query(
-      s"""mutation {
-         |   createTop(data: {
-         |   unique: 2,
-         |   name: "Top",
-         |   middle: {create:{
-         |      unique: 22,
+         |      }]}
+         |   },
+         |   {
+         |      unique: 12,
          |      name: "Middle"
-         |      bottom: {create:{
-         |          unique: 222,
+         |      bottom: {create:[{
+         |          unique: 112,
          |          name: "Bottom"
-         |      }}
-         |   }}
+         |      }]}
+         |   }]}
          |}){
          |  unique,
          |  middle{
@@ -222,10 +203,10 @@ class EmbeddedToOneRelationFilterSpec extends FlatSpec with Matchers with ApiSpe
       project
     )
 
-    res2.toString should be("""{"data":{"createTop":{"unique":2,"middle":{"unique":22,"bottom":{"unique":222}}}}}""")
+    res1.toString should be("""{"data":{"createTop":{"unique":1,"middle":[{"unique":11,"bottom":[{"unique":111}]}]}}}""")
 
     val query = server.query(
-      s"""query { tops(where:{middle:{bottom:{unique: 111, name:"Bottom"}}})
+      s"""query { tops(where:{middle_some:{bottom_some:{unique: 111, name:"Bottom"}}})
          |{
          |  unique,
          |  middle{
@@ -235,6 +216,6 @@ class EmbeddedToOneRelationFilterSpec extends FlatSpec with Matchers with ApiSpe
       project
     )
 
-    query.toString should be("""{"data":{"tops":[{"unique":1,"middle":{"unique":11}}]}}""")
+    query.toString should be("""{"data":{"tops":[{"unique":1,"middle":[{"unique":11}]}]}}""")
   }
 }
