@@ -248,6 +248,9 @@ export class GoGenerator extends Generator {
 
     const queryType = this.schema.getQueryType()
     const queryFields = queryType!.getFields()
+
+    const mutationType = this.schema.getMutationType()
+    const mutationFields = mutationType!.getFields()
     return `
 package prisma
 
@@ -263,42 +266,85 @@ type DB struct {
 	Endpoint string // TODO: Remove the Endpoint from here and print it where needed.
 }
 
+// Queries
+
 ${Object.keys(queryFields)
       .map(key => {
         const queryField = queryFields[key]
         const queryArgs = queryField.args
         return `
-        // ${upperCamelCasePatched(queryField.name)}Params docs
-        type ${upperCamelCasePatched(queryField.name)}Params struct {
-              ${queryArgs
-                .map(arg => {
-                  const argType = arg.type
-                    .toString()
-                    .replace('!', '')
-                    .replace('[', '')
-                    .replace(']', '')
-                    .trim()
-                  return `${upperCamelCasePatched(arg.name)} ${this
-                    .scalarMapping[argType] || argType}`
-                })
-                .join('\n')}
-          }
-        
-        // ${upperCamelCasePatched(queryField.name)} docs
-        func (db DB) ${upperCamelCasePatched(
-          queryField.name,
-        )} (params ${upperCamelCasePatched(
+          // ${upperCamelCasePatched(queryField.name)}Params docs
+          type ${upperCamelCasePatched(queryField.name)}Params struct {
+                ${queryArgs
+                  .map(arg => {
+                    const argType = arg.type
+                      .toString()
+                      .replace('!', '')
+                      .replace('[', '')
+                      .replace(']', '')
+                      .trim()
+                    return `${upperCamelCasePatched(arg.name)} ${this
+                      .scalarMapping[argType] || argType}`
+                  })
+                  .join('\n')}
+            }
+          
+          // ${upperCamelCasePatched(queryField.name)} docs
+          func (db DB) ${upperCamelCasePatched(
+            queryField.name,
+          )} (params ${upperCamelCasePatched(
           queryField.name,
         )}Params) interface{} {
-        data := db.Request(\`${this.printQuery(queryField)}\`,
-		map[string]interface{}{
-            ${this.printArgs(queryField)}
-        },
-	)
-	return data["${queryField.name}"]
-      }`
+          data := db.Request(\`${this.printQuery(queryField)}\`,
+          map[string]interface{}{
+              ${this.printArgs(queryField)}
+          },
+      )
+      return data["${queryField.name}"]
+        }`
       })
       .join('\n')}
+
+      // Mutations
+
+      ${Object.keys(mutationFields)
+        .map(key => {
+          const mutationField = mutationFields[key]
+          const mutationArgs = mutationField.args
+          return `
+              // ${upperCamelCasePatched(mutationField.name)}Params docs
+              type ${upperCamelCasePatched(mutationField.name)}Params struct {
+                    ${mutationArgs
+                      .map(arg => {
+                        const argType = arg.type
+                          .toString()
+                          .replace('!', '')
+                          .replace('[', '')
+                          .replace(']', '')
+                          .trim()
+                        return `${upperCamelCasePatched(arg.name)} ${this
+                          .scalarMapping[argType] || argType}`
+                      })
+                      .join('\n')}
+                }
+              
+              // ${upperCamelCasePatched(mutationField.name)} docs
+              func (db DB) ${upperCamelCasePatched(
+                mutationField.name,
+              )} (params ${upperCamelCasePatched(
+            mutationField.name,
+          )}Params) interface{} {
+              data := db.Request(\`${this.printQuery(mutationField)}\`,
+              map[string]interface{}{
+                  ${this.printArgs(mutationField)}
+              },
+          )
+          return data["${mutationField.name}"]
+            }`
+        })
+        .join('\n')}
+
+// Types
 
 ${typeNames
       .map(key => {
