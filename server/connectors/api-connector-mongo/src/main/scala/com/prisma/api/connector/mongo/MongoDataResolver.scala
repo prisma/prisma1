@@ -2,7 +2,7 @@ package com.prisma.api.connector.mongo
 
 import com.prisma.api.connector._
 import com.prisma.api.connector.mongo.database.FilterConditionBuilder
-import com.prisma.api.connector.mongo.extensions.{BisonToGC, DocumentToRoot}
+import com.prisma.api.connector.mongo.extensions.DocumentToRoot
 import com.prisma.api.connector.mongo.extensions.NodeSelectorBsonTransformer.WhereToBson
 import com.prisma.gc_values._
 import com.prisma.shared.models._
@@ -64,9 +64,9 @@ case class MongoDataResolver(project: Project, client: MongoClient)(implicit ec:
                                args: Option[QueryArguments],
                                selectedFields: SelectedFields): Future[Vector[ResolverResult[PrismaNodeWithParent]]] = ???
 
-  override def getScalarListValues(model: Model, listField: ScalarField, args: Option[QueryArguments]): Future[ResolverResult[ScalarListValues]] = ???
-
-  override def getScalarListValuesByNodeIds(model: Model, listField: ScalarField, nodeIds: Vector[IdGCValue]): Future[Vector[ScalarListValues]] = ???
-
   override def getRelationNodes(relationTableName: String, args: Option[QueryArguments]): Future[ResolverResult[RelationNode]] = ???
+
+  // these should never be used and are only in here due to the interface
+  override def getScalarListValues(model: Model, listField: ScalarField, args: Option[QueryArguments]): Future[ResolverResult[ScalarListValues]] = ???
+  override def getScalarListValuesByNodeIds(model: Model, listField: ScalarField, nodeIds: Vector[IdGCValue]): Future[Vector[ScalarListValues]]  = ???
 }

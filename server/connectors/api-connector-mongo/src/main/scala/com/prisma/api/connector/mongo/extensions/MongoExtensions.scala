@@ -31,7 +31,6 @@ object GCBisonTransformer {
       case _: RootGCValue     => sys.error("not implemented")
     }
   }
-
 }
 
 object NodeSelectorBsonTransformer {
@@ -50,9 +49,7 @@ object NodeSelectorBsonTransformer {
 }
 
 object DocumentToId {
-
   def toCUIDGCValue(document: Document): IdGCValue = CuidGCValue(document("_id").asString.getValue)
-
 }
 
 object BisonToGC {

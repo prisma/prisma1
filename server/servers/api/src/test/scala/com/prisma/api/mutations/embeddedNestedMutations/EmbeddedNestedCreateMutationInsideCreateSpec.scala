@@ -121,9 +121,17 @@ class EmbeddedNestedCreateMutationInsideCreateSpec extends FlatSpec with Matcher
   }
 
   "a one to many relation" should "be creatable through a nested mutation" in {
-    val project = SchemaDsl.fromBuilder { schema =>
-      val comment = schema.model("Comment").field_!("text", _.String)
-      schema.model("Todo").oneToManyRelation("comments", "todo", comment)
+    val project = SchemaDsl.fromString() {
+      """
+        |type Todo{
+        | id: ID! @unique
+        | comments: [Comment!]!
+        |}
+        |
+        |type Comment @embedded {
+        | text: String!
+        |}
+      """
     }
     database.setup(project)
 
@@ -147,85 +155,7 @@ class EmbeddedNestedCreateMutationInsideCreateSpec extends FlatSpec with Matcher
     mustBeEqual(result.pathAsJsValue("data.createTodo.comments").toString, """[{"text":"comment1"},{"text":"comment2"}]""")
   }
 
-  "a many to one relation" should "be creatable through a nested mutation" in {
-    val project = SchemaDsl.fromBuilder { schema =>
-      val comment = schema.model("Comment").field_!("text", _.String)
-      schema.model("Todo").field_!("title", _.String).oneToManyRelation("comments", "todo", comment)
-    }
-    database.setup(project)
-
-    val result = server.query(
-      """
-        |mutation {
-        |  createComment(data: {
-        |    text: "comment1"
-        |    todo: {
-        |      create: {title: "todo1"}
-        |    }
-        |  }){
-        |    id
-        |    todo {
-        |      title
-        |    }
-        |  }
-        |}
-      """.stripMargin,
-      project
-    )
-    mustBeEqual(result.pathAsString("data.createComment.todo.title"), "todo1")
-  }
-
-  "a many to many relation" should "creatable through a nested mutation" in {
-    val project = SchemaDsl.fromBuilder { schema =>
-      val tag = schema.model("Tag").field_!("name", _.String)
-      schema.model("Todo").field_!("title", _.String).manyToManyRelation("tags", "todos", tag)
-    }
-    database.setup(project)
-
-    val result = server
-      .query(
-        """
-        |mutation {
-        |  createTodo(data:{
-        |    title: "todo1"
-        |    tags: {
-        |      create: [{name: "tag1"}, {name: "tag2"}]
-        |    }
-        |  }){
-        |    id
-        |    tags {
-        |      name
-        |    }
-        |  }
-        |}
-      """.stripMargin,
-        project
-      )
-
-    mustBeEqual(result.pathAsJsValue("data.createTodo.tags").toString, """[{"name":"tag1"},{"name":"tag2"}]""")
-
-    val result2 = server.query(
-      """
-        |mutation {
-        |  createTag(data:{
-        |    name: "tag1"
-        |    todos: {
-        |      create: [{title: "todo1"}, {title: "todo2"}]
-        |    }
-        |  }){
-        |    id
-        |    todos {
-        |      title
-        |    }
-        |  }
-        |}
-      """.stripMargin,
-      project
-    )
-    mustBeEqual(result2.pathAsJsValue("data.createTag.todos").toString, """[{"title":"todo1"},{"title":"todo2"}]""")
-  }
-
-  "A nested create on a one to one relation" should "correctly assign violations to offending model and not partially execute" in {
+  "A nested create on a one to one relation" should "correctly assign violations to offending model and not partially execute" ignore {
     val project = SchemaDsl.fromBuilder { schema =>
       val user = schema.model("User").field_!("name", _.String).field("unique", _.String, isUnique = true)
       schema.model("Post").field_!("title", _.String).field("uniquePost", _.String, isUnique = true).oneToOneRelation("user", "post", user)
@@ -289,14 +219,25 @@ class EmbeddedNestedCreateMutationInsideCreateSpec extends FlatSpec with Matcher
   }
 
   "a deeply nested mutation" should "execute all levels of the mutation" in {
-    val project = SchemaDsl.fromBuilder { schema =>
-      val list = schema.model("List").field_!("name", _.String)
-      val todo = schema.model("Todo").field_!("title", _.String)
-      val tag  = schema.model("Tag").field_!("name", _.String)
-
-      list.oneToManyRelation("todos", "list", todo)
-      todo.oneToOneRelation("tag", "todo", tag)
+    val project = SchemaDsl.fromString() {
+      """
+        |type List{
+        | id: ID! @unique
+        | name: String!
+        | todos: [Todo!]!
+        |}
+        |
+        |type Todo @embedded {
+        | title: String!
+        | tag: Tag
+        |}
+        |
+        |type Tag @embedded {
+        | name: String!
+        |}
+      """
     }
+
     database.setup(project)
 
     val mutation =
@@ -335,10 +276,21 @@ class EmbeddedNestedCreateMutationInsideCreateSpec extends FlatSpec with Matcher
   }
 
   "a required one2one relation" should "be creatable through a nested create mutation" in {
-    val project = SchemaDsl.fromBuilder { schema =>
-      val comment = schema.model("Comment").field_!("reqOnComment", _.String).field("optOnComment", _.String)
-      schema.model("Todo").field_!("reqOnTodo", _.String).field("optOnTodo", _.String).oneToOneRelation_!("comments", "todo", comment)
+
+    val project = SchemaDsl.fromString() {
+      """
+        |type Comment{
+        | id: ID! @unique
+        | reqOnComment: String!
+        | todo: Todo!
+        |}
+        |
+        |type Todo @embedded {
+        | reqOnTodo: String!
+        |}
+      """
     }
+
     database.setup(project)
 
     val result = server.query(
@@ -377,103 +329,5 @@ class EmbeddedNestedCreateMutationInsideCreateSpec extends FlatSpec with Matcher
       errorCode = 3032,
       errorContains = "The field 'todo' on type 'Comment' is required. Performing this mutation would violate that constraint"
     )
-  }
-
-  "a required one2one relation" should "be creatable through a nested connected mutation" in {
-    val project = SchemaDsl.fromBuilder { schema =>
-      val todo = schema.model("Todo").field_!("reqOnTodo", _.String).field("optOnTodo", _.String)
-      schema
-        .model("Comment")
-        .field_!("reqOnComment", _.String)
-        .field("optOnComment", _.String)
-        .oneToOneRelation_!("todo", "comment", todo, isRequiredOnFieldB = false)
-    }
-    database.setup(project)
-
-    val result = server.query(
-      """
-        |mutation {
-        |  createComment(data: {
-        |    reqOnComment: "comment1"
-        |    todo: {
-        |      create: {reqOnTodo: "todo1"}
-        |    }
-        |  }){
-        |    id
-        |    todo{
-        |       reqOnTodo
-        |    }
-        |  }
-        |}
-      """.stripMargin,
-      project
-    )
-    mustBeEqual(result.pathAsString("data.createComment.todo.reqOnTodo"), "todo1")
-
-    server.query("{ todoes { id } }", project).pathAsSeq("data.todoes").size should be(1)
-    server.query("{ comments { id } }", project).pathAsSeq("data.comments").size should be(1)
-
-    server.queryThatMustFail(
-      """
-        |mutation {
-        |  createComment(data: {
-        |    reqOnComment: "comment1"
-        |    todo: {}
-        |  }){
-        |    id
-        |    todo {
-        |      reqOnTodo
-        |    }
-        |  }
-        |}
-      """.stripMargin,
-      project,
-      errorCode = 3032,
-      errorContains = "The field 'todo' on type 'Comment' is required. Performing this mutation would violate that constraint"
-    )
-
-    server.query("{ todoes { id } }", project).pathAsSeq("data.todoes").size should be(1)
-    server.query("{ comments { id } }", project).pathAsSeq("data.comments").size should be(1)
-
-    val todoId = server
-      .query(
-        """
-        |mutation {
-        |  createTodo(data: {
-        |       reqOnTodo: "todo2"
-        |       }
-        |       )
-        |  {id}
-        |}
-      """.stripMargin,
-        project
-      )
-      .pathAsString("data.createTodo.id")
-
-    server.query("{ todoes { id } }", project).pathAsSeq("data.todoes").size should be(2)
-    server.query("{ comments { id } }", project).pathAsSeq("data.comments").size should be(1)
-
-    server.query(
-      s"""
-        |mutation {
-        |  createComment(data: {
-        |    reqOnComment: "comment1"
-        |    todo: {
-        |      connect: {id: "$todoId"}
-        |    }
-        |  }){
-        |    id
-        |    todo{
-        |       reqOnTodo
-        |    }
-        |  }
-        |}
-      """.stripMargin,
-      project
-    )
-
-    server.query("{ todoes { id } }", project).pathAsSeq("data.todoes").size should be(2)
-    server.query("{ comments { id } }", project).pathAsSeq("data.comments").size should be(2)
-
   }
 }
