@@ -1,4 +1,4 @@
-package com.prisma.api.connector.mongo
+package com.prisma.api.connector.mongo.impl
 
 import com.prisma.api.connector._
 import com.prisma.api.connector.mongo.database.FilterConditionBuilder
@@ -42,7 +42,7 @@ case class MongoDataResolver(project: Project, client: MongoClient)(implicit ec:
     database.getCollection(table).countDocuments(buildConditionForFilter(whereFilter)).toFuture.map(_.toInt)
   }
 
-  // Fixme this does not use filters or selected fields
+  // Fixme this does not use selected fields
   override def getNodes(model: Model, args: Option[QueryArguments], selectedFields: SelectedFields): Future[ResolverResult[PrismaNode]] = {
     val collection: MongoCollection[Document] = database.getCollection(model.dbName)
     val filter = args match {
@@ -59,6 +59,7 @@ case class MongoDataResolver(project: Project, client: MongoClient)(implicit ec:
     nodes.map(n => ResolverResult[PrismaNode](n.toVector, false, false, None))
   }
 
+  //these are only used for relations between non-embedded types
   override def getRelatedNodes(fromField: RelationField,
                                fromNodeIds: Vector[IdGCValue],
                                args: Option[QueryArguments],

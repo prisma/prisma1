@@ -112,3 +112,17 @@ object DocumentToRoot {
     RootGCValue((scalarNonList ++ scalarList ++ relationFields :+ createdAt :+ updatedAt :+ id).toMap)
   }
 }
+
+object FieldCombinators {
+  def combineThree(path: String, relationField: String, field: String) = {
+    path match {
+      case ""   => s"$relationField.$field"
+      case path => s"$path.$relationField.$field"
+    }
+  }
+
+  def combineTwo(path: String, relationField: String) = path match {
+    case ""   => relationField
+    case path => s"$path.$relationField"
+  }
+}

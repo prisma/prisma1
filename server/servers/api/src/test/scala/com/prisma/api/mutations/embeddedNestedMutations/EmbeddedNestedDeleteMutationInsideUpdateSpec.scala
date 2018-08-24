@@ -215,9 +215,11 @@ class EmbeddedNestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matcher
          |}
       """,
       project,
-      errorCode = 3041,
-      errorContains = "The relation ChildToParent has no node for the model Parent connected to a Node for the model Child on your mutation path."
+      errorCode = 3041
     )
+
+    res.toString should include(
+      s"""The relation ChildToParent has no node for the model Parent with the value '$parent1Id' for the field 'id' connected to a node for the model Child on your mutation path.""")
 
     dataResolver(project).countByTable("Parent").await should be(1)
   }
@@ -279,106 +281,6 @@ class EmbeddedNestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matcher
     dataResolver(project).countByTable("Parent").await should be(1)
   }
 
-  "a PM relation" should "be deletable by id through a nested mutation" in {
-    val project = SchemaDsl.fromString() {
-      """
-        |type Todo{
-        | id: ID! @unique
-        | comments: [Comment!]!
-        |}
-        |
-        |type Comment @embedded{
-        | text: String
-        |}
-      """
-    }
-
-    database.setup(project)
-
-    val otherCommentId = server
-      .query(
-        """mutation {
-        |  createComment(
-        |    data: {
-        |      text: "otherComment"
-        |    }
-        |  ){
-        |    id
-        |  }
-        |}""",
-        project
-      )
-      .pathAsString("data.createComment.id")
-
-    val createResult = server.query(
-      """mutation {
-        |  createTodo(
-        |    data: {
-        |      comments: {
-        |        create: [{text: "comment1"}, {text: "comment2"}]
-        |      }
-        |    }
-        |  ){
-        |    id
-        |    comments { id }
-        |  }
-        |}""",
-      project
-    )
-
-    val todoId     = createResult.pathAsString("data.createTodo.id")
-    val comment1Id = createResult.pathAsString("data.createTodo.comments.[0].id")
-    val comment2Id = createResult.pathAsString("data.createTodo.comments.[1].id")
-
-    val result = server.query(
-      s"""mutation {
-         |  updateTodo(
-         |    where: {
-         |      id: "$todoId"
-         |    }
-         |    data:{
-         |      comments: {
-         |        delete: [{id: "$comment1Id"}, {id: "$comment2Id"}]
-         |      }
-         |    }
-         |  ){
-         |    comments {
-         |      text
-         |    }
-         |  }
-         |}
-      """,
-      project
-    )
-
-    server.queryThatMustFail(
-      s"""mutation {
-         |  updateTodo(
-         |    where: {
-         |      id: "$todoId"
-         |    }
-         |    data:{
-         |      comments: {
-         |        delete: [{id: "$otherCommentId"}]
-         |      }
-         |    }
-         |  ){
-         |    comments {
-         |      text
-         |    }
-         |  }
-         |}
-      """,
-      project,
-      3041
-    )
-
-    mustBeEqual(result.pathAsJsValue("data.updateTodo.comments").toString, """[]""")
-
-    val query = server.query("""{ comments { text }}""", project)
-    mustBeEqual(query.toString, """{"data":{"comments":[{"text":"otherComment"}]}}""")
-  }
-
   "a one to many relation" should "be deletable by any unique argument through a nested mutation" in {
     val project = SchemaDsl.fromString() {
       """
@@ -438,86 +340,6 @@ class EmbeddedNestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matcher
 
     val query = server.query("""{ comments { id }}""", project)
     mustBeEqual(query.toString, """{"data":{"comments":[]}}""")
-  }
-
-  "a many to one relation" should "be deletable by id through a nested mutation" in {
-
-    val project = SchemaDsl.fromString() {
-      """
-        |type Todo{
-        | id: ID! @unique
-        | comments: [Comment!]!
-        |}
-        |
-        |type Comment @embedded{
-        | text: String
-        |}
-      """
-    }
-
-    database.setup(project)
-
-    val existingCreateResult = server.query(
-      """mutation {
-        |  createTodo(
-        |    data: {
-        |      comments: {
-        |        create: [{text: "otherComment"}]
-        |      }
-        |    }
-        |  ){
-        |    id
-        |    comments { text }
-        |  }
-        |}""",
-      project
-    )
-    val existingTodoId    = existingCreateResult.pathAsString("data.createTodo.id")
-    val existingCommentId = existingCreateResult.pathAsString("data.createTodo.comments.[0].id")
-
-    val createResult = server.query(
-      """mutation {
-        |  createTodo(
-        |    data: {
-        |      comments: {
-        |        create: [{text: "comment1"}]
-        |      }
-        |    }
-        |  ){
-        |    id
-        |    comments { id }
-        |  }
-        |}""",
-      project
-    )
-    val todoId    = createResult.pathAsString("data.createTodo.id")
-    val commentId = createResult.pathAsString("data.createTodo.comments.[0].id")
-
-    val result = server.query(
-      s"""
-         |mutation {
-         |  updateComment(
-         |    where: {
-         |      id: "$commentId"
-         |    }
-         |    data: {
-         |      todo: {
-         |        delete: true
-         |      }
-         |    }
-         |  ){
-         |    todo {
-         |      id
-         |    }
-         |  }
-         |}
-      """,
-      project
-    )
-    mustBeEqual(result.pathAsJsValue("data.updateComment").toString, """{"todo":null}""")
-
-    val query = server.query("""{ todoes { id comments { id } }}""", project)
-    mustBeEqual(query.toString, s"""{"data":{"todoes":[{"id":"$existingTodoId","comments":[{"id":"$existingCommentId"}]}]}}""")
   }
 
   "one2one relation both exist and are connected" should "be deletable through a nested mutation" in {
@@ -1152,6 +974,7 @@ class EmbeddedNestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matcher
   }
 
   //Fixme Think about Self Relations and embedded types
+  // would need to be nested within a normal type
   "Nested delete on self relations" should "only delete the specified nodes" in {
     val project = SchemaDsl.fromString() { """type User {
                                              |  id: ID! @unique

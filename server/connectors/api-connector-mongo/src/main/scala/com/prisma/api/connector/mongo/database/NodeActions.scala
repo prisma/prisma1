@@ -1,6 +1,7 @@
 package com.prisma.api.connector.mongo.database
 
 import com.prisma.api.connector._
+import com.prisma.api.connector.mongo.extensions.FieldCombinators._
 import com.prisma.api.connector.mongo.extensions.DocumentToRoot
 import com.prisma.api.connector.mongo.extensions.GCBisonTransformer.GCValueBsonTransformer
 import com.prisma.api.connector.mongo.extensions.NodeSelectorBsonTransformer.WhereToBson
@@ -188,18 +189,6 @@ trait NodeActions extends NodeSingleQueries {
 
 //    (nestedOneDeletes ++ nestedManyDeletes, nestedOneDeleteResults)
     (nestedOneDeletes, nestedOneDeleteResults)
-  }
-
-  def combineThree(path: String, relationField: String, field: String) = {
-    path match {
-      case ""   => s"$relationField.$field"
-      case path => s"$path.$relationField.$field"
-    }
-  }
-
-  def combineTwo(path: String, relationField: String) = path match {
-    case ""   => relationField
-    case path => s"$path.$relationField"
   }
 
   def nestedUpdateDocsAndResults(previousValues: PrismaNode,
