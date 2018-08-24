@@ -50,7 +50,9 @@ case class MongoDataResolver(project: Project, client: MongoClient)(implicit ec:
       case None      => None
     }
 
-    val nodes: Future[Seq[PrismaNode]] = collection.find(buildConditionForFilter(filter)).collect().toFuture.map { results: Seq[Document] =>
+    val mongoFilter = buildConditionForFilter(filter)
+
+    val nodes: Future[Seq[PrismaNode]] = collection.find(mongoFilter).collect().toFuture.map { results: Seq[Document] =>
       results.map { result =>
         val root = DocumentToRoot(model, result)
         PrismaNode(root.idField, root, Some(model.name))

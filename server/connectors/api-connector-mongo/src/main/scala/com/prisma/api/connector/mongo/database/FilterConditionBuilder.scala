@@ -20,11 +20,9 @@ trait FilterConditionBuilder {
   }
 
   private def buildConditionForFilter(path: String, filter: Filter): conversions.Bson = {
-    def nonEmptyConditions(filters: Vector[Filter]): Vector[conversions.Bson] = {
-      filters.map(f => buildConditionForFilter(path, f)) match {
-        case x if x.isEmpty => Vector(and(hackForTrue))
-        case x              => x
-      }
+    def nonEmptyConditions(filters: Vector[Filter]): Vector[conversions.Bson] = filters.map(f => buildConditionForFilter(path, f)) match {
+      case x if x.isEmpty => Vector(and(hackForTrue))
+      case x              => x
     }
 
     filter match {
@@ -75,11 +73,10 @@ trait FilterConditionBuilder {
     val nestedFilter  = relationFilter.nestedFilter
 
     relationFilter.condition match {
-      case AtLeastOneRelatedNode => and(hackForTrue)
+      case AtLeastOneRelatedNode => buildConditionForFilter(relationField.name, relationFilter.nestedFilter)
       case EveryRelatedNode      => and(hackForTrue)
       case NoRelatedNode         => and(hackForTrue)
-      case NoRelationCondition   => and(hackForTrue)
+      case NoRelationCondition   => buildConditionForFilter(relationField.name, relationFilter.nestedFilter)
     }
-
   }
 }

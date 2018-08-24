@@ -489,7 +489,7 @@ class MongoPrototypingSpec extends FlatSpec with Matchers with ApiSpecBase {
       project
     )
 
-    res2.toString should be("""{"data":{"tops":[{"unique":1,"middle":null}]}}""")
+    res2.toString should be("""{"data":{"tops":[{"unique":2,"middle":{"unique":11}}]}}""")
   }
 
 }
