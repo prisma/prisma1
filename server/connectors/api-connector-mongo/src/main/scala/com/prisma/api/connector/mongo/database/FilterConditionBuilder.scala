@@ -20,16 +20,11 @@ trait FilterConditionBuilder {
   }
 
   private def buildConditionForFilter(path: String, filter: Filter): conversions.Bson = {
-    def nonEmptyConditions(filters: Vector[Filter]): Vector[conversions.Bson] = filters.map(f => buildConditionForFilter(path, f)) match {
-      case x if x.isEmpty => Vector(and(hackForTrue))
-      case x              => x
-    }
-
     filter match {
       //-------------------------------RECURSION------------------------------------
       case NodeSubscriptionFilter => and(hackForTrue)
-      case AndFilter(filters)     => and(nonEmptyConditions(filters): _*)
-      case OrFilter(filters)      => or(nonEmptyConditions(filters): _*)
+      case AndFilter(filters)     => and(nonEmptyConditions(path, filters): _*)
+      case OrFilter(filters)      => or(nonEmptyConditions(path, filters): _*)
       case NotFilter(filters)     => not(and(filters.map(f => buildConditionForFilter(path, f)): _*))
       case NodeFilter(filters)    => buildConditionForFilter(path, OrFilter(filters))
       case x: RelationFilter      => relationFilterStatement(path, x)
@@ -59,24 +54,21 @@ trait FilterConditionBuilder {
       case x                                                     => sys.error(s"Not supported: $x")
     }
   }
-
+  def nonEmptyConditions(path: String, filters: Vector[Filter]): Vector[conversions.Bson] = filters.map(f => buildConditionForFilter(path, f)) match {
+    case x if x.isEmpty => Vector(and(hackForTrue))
+    case x              => x
+  }
   def fromGCValue(value: GCValue): Any = value match {
     case DateTimeGCValue(value) => value.getMillis
     case x: GCValue             => x.value
   }
   val hackForTrue = notEqual("_id", -1)
 
-  private def relationFilterStatement(path: String, relationFilter: RelationFilter) = {
-
-    val relationField = relationFilter.field
-    val relation      = relationField.relation
-    val nestedFilter  = relationFilter.nestedFilter
-
-    relationFilter.condition match {
-      case AtLeastOneRelatedNode => buildConditionForFilter(relationField.name, relationFilter.nestedFilter)
-      case EveryRelatedNode      => and(hackForTrue)
-      case NoRelatedNode         => and(hackForTrue)
-      case NoRelationCondition   => buildConditionForFilter(relationField.name, relationFilter.nestedFilter)
-    }
+  private def relationFilterStatement(path: String, relationFilter: RelationFilter) = relationFilter.condition match {
+    case AtLeastOneRelatedNode => buildConditionForFilter(combineTwo(path, relationFilter.field.name), relationFilter.nestedFilter)
+    case EveryRelatedNode      => and(hackForTrue)
+    case NoRelatedNode         => and(hackForTrue)
+    case NoRelationCondition   => buildConditionForFilter(combineTwo(path, relationFilter.field.name), relationFilter.nestedFilter)
   }
+
 }
