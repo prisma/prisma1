@@ -126,7 +126,7 @@ export class GoGenerator extends Generator {
       const enumValues = type.getValues()
       return `
             // ${type.name} docs
-            type ${type.name} int32
+            type ${type.name} string
             const (
                 ${enumValues
                   .map(
@@ -135,7 +135,7 @@ export class GoGenerator extends Generator {
                       // ${upperCamelCasePatched(v.name)}${type.name} docs
                       ${upperCamelCasePatched(v.name)}${type.name} ${
                         type.name
-                      } = iota`,
+                      } = "${v.name}"`,
                   )
                   .join('\n')}
             )
@@ -215,7 +215,7 @@ export class GoGenerator extends Generator {
           .replace(']', '')
           .trim()
         // TODO: Go to the nested params to fetch the correct arg
-        return `$${arg.name}: ${this.scalarMapping[argType] || argType}`
+        return `$${arg.name}: ${argType}`
       })
       .join(', ')
   }
