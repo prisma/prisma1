@@ -71,7 +71,9 @@ export class GoGenerator extends Generator {
                       .trim()
 
                     return `${upperCamelCasePatched(field.name)} ${this
-                      .scalarMapping[fieldType] || fieldType}`
+                      .scalarMapping[fieldType] || fieldType} \`json:"${
+                      field.name
+                    }"\``
                   })
                   .join('\n')}
             }
@@ -111,7 +113,9 @@ export class GoGenerator extends Generator {
                       (this.scalarMapping[fieldType] || fieldType) === type.name
                         ? `*`
                         : ``
-                    }${this.scalarMapping[fieldType] || fieldType}`
+                    }${this.scalarMapping[fieldType] || fieldType} \`json:"${
+                      field.name
+                    }"\``
                   })
                   .join('\n')}
             }
@@ -256,7 +260,8 @@ package prisma
 
 import (
 	"context"
-	"log"
+    "log"
+    "reflect"
 
 	"github.com/machinebox/graphql"
 )
@@ -284,7 +289,9 @@ ${Object.keys(queryFields)
                       .replace(']', '')
                       .trim()
                     return `${upperCamelCasePatched(arg.name)} ${this
-                      .scalarMapping[argType] || argType}`
+                      .scalarMapping[argType] || argType} \`json:"${
+                      arg.name
+                    }"\``
                   })
                   .join('\n')}
             }
@@ -323,7 +330,9 @@ ${Object.keys(queryFields)
                           .replace(']', '')
                           .trim()
                         return `${upperCamelCasePatched(arg.name)} ${this
-                          .scalarMapping[argType] || argType}`
+                          .scalarMapping[argType] || argType} \`json:"${
+                          arg.name
+                        }"\``
                       })
                       .join('\n')}
                 }
@@ -357,6 +366,10 @@ ${typeNames
       })
       .join('\n')}
 
+      func isZeroOfUnderlyingType(x interface{}) bool {
+        return x == reflect.Zero(reflect.TypeOf(x)).Interface()
+    }
+
       // Request Send a GraphQL operation request
 // TODO: arg variables can be made optional via variadic func approach
 func (db DB) Request(query string, variables map[string]interface{}) map[string]interface{} {
@@ -367,7 +380,9 @@ func (db DB) Request(query string, variables map[string]interface{}) map[string]
 	client := graphql.NewClient(db.Endpoint)
 
 	for key, value := range variables {
-		req.Var(key, value)
+		if !isZeroOfUnderlyingType(value) {
+			req.Var(key, value)
+		}
 	}
 
 	ctx := context.Background()
