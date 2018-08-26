@@ -9,9 +9,9 @@ import org.mongodb.scala.model.Filters._
 //relationfilters depend on relationtype
 // embedded -> use dot notation to go deeper in tree
 // nonEmbedded -> not supported, Inputtypes for filter should not be generated in api
-//field_every: $all does not work for this purpose
-//field_some: $elemMatch
-//field_none: $not $elemMatch
+//field_every:  $not $elemMatch ($not nested)
+//field_some:   $elemMatch (nested)
+//field_none:   $not $elemMatch (nested)
 
 trait FilterConditionBuilder {
   def buildConditionForFilter(filter: Option[Filter]): conversions.Bson = filter match {
@@ -34,8 +34,8 @@ trait FilterConditionBuilder {
       case FalseFilter                                           => not(and(hackForTrue))
       case ScalarFilter(scalarField, Contains(value))            => regex(combineTwo(path, scalarField.name), value.value.toString)
       case ScalarFilter(scalarField, NotContains(value))         => not(regex(combineTwo(path, scalarField.name), value.value.toString))
-      case ScalarFilter(scalarField, StartsWith(value))          => regex(combineTwo(path, scalarField.name), "^" + value.value + ".*")
-      case ScalarFilter(scalarField, NotStartsWith(value))       => not(regex(combineTwo(path, scalarField.name), "^" + value.value + ".*"))
+      case ScalarFilter(scalarField, StartsWith(value))          => regex(combineTwo(path, scalarField.name), "^" + value.value)
+      case ScalarFilter(scalarField, NotStartsWith(value))       => not(regex(combineTwo(path, scalarField.name), "^" + value.value))
       case ScalarFilter(scalarField, EndsWith(value))            => regex(combineTwo(path, scalarField.name), value.value + "$")
       case ScalarFilter(scalarField, NotEndsWith(value))         => not(regex(combineTwo(path, scalarField.name), value.value + "$"))
       case ScalarFilter(scalarField, LessThan(value))            => lt(combineTwo(path, scalarField.name), fromGCValue(value))
@@ -54,17 +54,17 @@ trait FilterConditionBuilder {
       case x                                                     => sys.error(s"Not supported: $x")
     }
   }
+
   def nonEmptyConditions(path: String, filters: Vector[Filter]): Vector[conversions.Bson] = filters.map(f => buildConditionForFilter(path, f)) match {
     case x if x.isEmpty => Vector(and(hackForTrue))
     case x              => x
   }
+
   def fromGCValue(value: GCValue): Any = value match {
     case DateTimeGCValue(value) => BsonDateTime(value.getMillis)
     case x: GCValue             => x.value
   }
   val hackForTrue = notEqual("_id", -1)
-
-  //does elem Match eliminate the need for the path???
 
   private def relationFilterStatement(path: String, relationFilter: RelationFilter) = {
     val toOneNested  = buildConditionForFilter(combineTwo(path, relationFilter.field.name), relationFilter.nestedFilter)
