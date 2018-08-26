@@ -66,9 +66,10 @@ trait FilterConditionBuilder {
 
   private def relationFilterStatement(path: String, relationFilter: RelationFilter) = relationFilter.condition match {
     case AtLeastOneRelatedNode => buildConditionForFilter(combineTwo(path, relationFilter.field.name), relationFilter.nestedFilter)
-    case EveryRelatedNode      => and(hackForTrue)
-    case NoRelatedNode         => and(hackForTrue)
-    case NoRelationCondition   => buildConditionForFilter(combineTwo(path, relationFilter.field.name), relationFilter.nestedFilter)
+    case EveryRelatedNode =>
+      all(combineTwo(path, relationFilter.field.name), buildConditionForFilter(combineTwo(path, relationFilter.field.name), relationFilter.nestedFilter))
+    case NoRelatedNode       => and(hackForTrue)
+    case NoRelationCondition => buildConditionForFilter(combineTwo(path, relationFilter.field.name), relationFilter.nestedFilter)
   }
 
 }
