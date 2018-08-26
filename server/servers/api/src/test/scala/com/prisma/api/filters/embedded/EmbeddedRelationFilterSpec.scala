@@ -77,16 +77,6 @@ class EmbeddedRelationFilterSpec extends FlatSpec with Matchers with ApiSpecBase
     )
   }
 
-  "simple scalar filter" should "work" in {
-    server.query(query = """{blogs{posts(where:{popularity_gte: 5}){title}}}""", project = project).toString should be(
-      """{"data":{"blogs":[{"posts":[{"title":"post 1"}]},{"posts":[{"title":"post 3"}]}]}}""")
-  }
-
-  "1 level 1-relation filter" should "work" in {
-    server.query(query = """{posts(where:{blog:{name: "blog 1"}}){title}}""", project = project).toString should be(
-      """{"data":{"posts":[{"title":"post 1"},{"title":"post 2"}]}}""")
-  }
-
   "1 level m-relation filter" should "work for _every, _some and _none" in {
 
     server.query(query = """{blogs(where:{posts_some:{popularity_gte: 5}}){name}}""", project = project).toString should be(
