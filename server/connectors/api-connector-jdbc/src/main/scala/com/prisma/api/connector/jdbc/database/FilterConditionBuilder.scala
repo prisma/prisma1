@@ -97,7 +97,7 @@ trait FilterConditionBuilder extends BuilderBase {
           case AtLeastOneRelatedNode => modelIdColumn(alias, relationField.model).in(select.where(buildConditionForFilter(x, newAlias, relField)))
           case EveryRelatedNode      => modelIdColumn(alias, relationField.model).notIn(select.where(buildConditionForFilter(x, newAlias, relField, invert = true)))
           case NoRelatedNode         => modelIdColumn(alias, relationField.model).notIn(select.where(buildConditionForFilter(x, newAlias, relField)))
-          case NoRelationCondition   => modelIdColumn(alias, relationField.model).in(select.where(buildConditionForFilter(x, newAlias, relField)))
+          case ToOneRelatedNode      => modelIdColumn(alias, relationField.model).in(select.where(buildConditionForFilter(x, newAlias, relField)))
         }
 
       case _ =>
@@ -118,8 +118,8 @@ trait FilterConditionBuilder extends BuilderBase {
           case (EveryRelatedNode, false)      => baseField.notIn(select.andNot(nestedFilterStatement))
           case (NoRelatedNode, true)          => baseField.in(select.and(nestedFilterStatement))
           case (NoRelatedNode, false)         => baseField.notIn(select.and(nestedFilterStatement))
-          case (NoRelationCondition, true)    => baseField.notIn(select.and(nestedFilterStatement))
-          case (NoRelationCondition, false)   => baseField.in(select.and(nestedFilterStatement))
+          case (ToOneRelatedNode, true)       => baseField.notIn(select.and(nestedFilterStatement))
+          case (ToOneRelatedNode, false)      => baseField.in(select.and(nestedFilterStatement))
         }
     }
   }

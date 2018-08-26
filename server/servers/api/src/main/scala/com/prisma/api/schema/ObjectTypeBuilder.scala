@@ -208,7 +208,7 @@ class ObjectTypeBuilder(
           case value: Map[_, _] if isManyRelationFilter(filterName = "_every")                   => relationFilter(value, EveryRelatedNode)
           case value: Map[_, _] if isManyRelationFilter(filterName = "_some")                    => relationFilter(value, AtLeastOneRelatedNode)
           case value: Map[_, _] if isManyRelationFilter(filterName = "_none")                    => relationFilter(value, NoRelatedNode)
-          case value: Map[_, _] if isRelationFilter(filterName = "")                             => relationFilter(value, NoRelationCondition)
+          case value: Map[_, _] if isRelationFilter(filterName = "")                             => relationFilter(value, ToOneRelatedNode)
           case Seq() if filter.name == "AND"                                                     => TrueFilter
           case value: Seq[Any] if isFilterList(value, filterName = "AND")                        => AndFilter(generateSubFilters(value))
           case Seq() if filter.name == "OR"                                                      => FalseFilter
