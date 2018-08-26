@@ -6,8 +6,7 @@ import org.scalatest._
 
 class EmbeddedRelationFilterSpec extends FlatSpec with Matchers with ApiSpecBase {
 
-  override def onlyRunSuiteForMongo: Boolean   = true
-  override def runSuiteOnlyForActiveConnectors = true
+  override def onlyRunSuiteForMongo: Boolean = true
 
   val project = SchemaDsl.fromString() {
     """

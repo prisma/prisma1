@@ -199,9 +199,9 @@ class PortedFiltersSpec extends FlatSpec with Matchers with ApiSpecBase {
     createTest("id2", "foo bar", 1, 1, optBoolean = false, "A", "2016-09-23T12:29:32.342")
     createTest("id3", "foo bar barz", 1, 1, optBoolean = false, "A", "2016-09-23T12:29:32.342")
 
-    val res = server.query(query = """{scalarModels(where: {optString_starts_with: "bar"}){optBoolean}}""", project = project)
+    val res = server.query(query = """{scalarModels(where: {optString_starts_with: "bar"}){optString}}""", project = project)
 
-    res.toString() should be("""{"data":{"scalarModels":[{"optBoolean":true}]}}""")
+    res.toString() should be("""{"data":{"scalarModels":[{"optString":"bara"}]}}""")
   }
 
   "A filter query" should "support the not_starts_with filter on strings" in {

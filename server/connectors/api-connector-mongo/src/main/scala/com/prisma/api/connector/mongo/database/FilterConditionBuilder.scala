@@ -3,7 +3,7 @@ package com.prisma.api.connector.mongo.database
 import com.prisma.api.connector._
 import com.prisma.api.connector.mongo.extensions.FieldCombinators._
 import com.prisma.gc_values.{DateTimeGCValue, GCValue, NullGCValue}
-import org.mongodb.scala.bson.conversions
+import org.mongodb.scala.bson.{BsonDateTime, conversions}
 import org.mongodb.scala.model.Filters._
 
 //relationfilters depend on relationtype
@@ -32,12 +32,12 @@ trait FilterConditionBuilder {
       //--------------------------------ANCHORS------------------------------------
       case TrueFilter                                            => and(hackForTrue)
       case FalseFilter                                           => not(and(hackForTrue))
-      case ScalarFilter(scalarField, Contains(value))            => regex(combineTwo(path, scalarField.name), s".*${value.value}.*")
-      case ScalarFilter(scalarField, NotContains(value))         => not(regex(combineTwo(path, scalarField.name), s".*${value.value}.*"))
-      case ScalarFilter(scalarField, StartsWith(value))          => regex(combineTwo(path, scalarField.name), s"${value.value}.*")
-      case ScalarFilter(scalarField, NotStartsWith(value))       => not(regex(combineTwo(path, scalarField.name), s"${value.value}.*"))
-      case ScalarFilter(scalarField, EndsWith(value))            => regex(combineTwo(path, scalarField.name), s".*${value.value}")
-      case ScalarFilter(scalarField, NotEndsWith(value))         => not(regex(combineTwo(path, scalarField.name), s".*${value.value}"))
+      case ScalarFilter(scalarField, Contains(value))            => regex(combineTwo(path, scalarField.name), value.value.toString)
+      case ScalarFilter(scalarField, NotContains(value))         => not(regex(combineTwo(path, scalarField.name), value.value.toString))
+      case ScalarFilter(scalarField, StartsWith(value))          => regex(combineTwo(path, scalarField.name), "^" + value.value + ".*")
+      case ScalarFilter(scalarField, NotStartsWith(value))       => not(regex(combineTwo(path, scalarField.name), "^" + value.value + ".*"))
+      case ScalarFilter(scalarField, EndsWith(value))            => regex(combineTwo(path, scalarField.name), value.value + "$")
+      case ScalarFilter(scalarField, NotEndsWith(value))         => not(regex(combineTwo(path, scalarField.name), value.value + "$"))
       case ScalarFilter(scalarField, LessThan(value))            => lt(combineTwo(path, scalarField.name), fromGCValue(value))
       case ScalarFilter(scalarField, GreaterThan(value))         => gt(combineTwo(path, scalarField.name), fromGCValue(value))
       case ScalarFilter(scalarField, LessThanOrEquals(value))    => lte(combineTwo(path, scalarField.name), fromGCValue(value))
@@ -59,7 +59,7 @@ trait FilterConditionBuilder {
     case x              => x
   }
   def fromGCValue(value: GCValue): Any = value match {
-    case DateTimeGCValue(value) => value.getMillis
+    case DateTimeGCValue(value) => BsonDateTime(value.getMillis)
     case x: GCValue             => x.value
   }
   val hackForTrue = notEqual("_id", -1)
