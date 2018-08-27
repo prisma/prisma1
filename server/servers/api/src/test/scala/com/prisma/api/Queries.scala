@@ -1,5 +1,6 @@
 package com.prisma.api
 
+import com.prisma.IgnoreMongo
 import com.prisma.shared.schema_dsl.SchemaDsl
 import org.scalatest.{Assertion, FlatSpec, Matchers}
 
@@ -31,7 +32,7 @@ class Queries extends FlatSpec with Matchers with ApiSpecBase {
     ifConnectorIsActive { server.query(s"""{node(id:"$newId"){... on Car { wheelCount }}}""", project).pathAsLong("data.node.wheelCount") should be(8) }
   }
 
-  "schema" should "include old nested mutations" in {
+  "schema" should "include old nested mutations" taggedAs (IgnoreMongo) in {
     val project = SchemaDsl.fromBuilder { schema =>
       val car = schema.model("Car").field("wheelCount", _.Int).field_!("name", _.String).field_!("createdAt", _.DateTime).field_!("updatedAt", _.DateTime)
       schema.model("Wheel").manyToOneRelation("car", "wheels", car).field_!("size", _.Int).field_!("createdAt", _.DateTime).field_!("updatedAt", _.DateTime)
