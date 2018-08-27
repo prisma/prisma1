@@ -1,6 +1,7 @@
 package com.prisma.api.schema
 
 import com.prisma.api.ApiSpecBase
+import com.prisma.api.connector.EmbeddedTypesCapability
 import com.prisma.shared.schema_dsl.SchemaDsl
 import com.prisma.util.GraphQLSchemaMatchers
 import org.scalatest.{FlatSpec, Matchers}
@@ -339,20 +340,5 @@ class MutationsSchemaBuilderSpec extends FlatSpec with Matchers with ApiSpecBase
     schema should containMutation("updateManyTodoes(data: TodoUpdateInput!, where: TodoWhereInput): BatchPayload!")
     schema should containInputType("TodoWhereInput")
 
-  }
-
-  "An embedded type" must "not produce mutations in the schema" in {
-    val project = SchemaDsl.fromString() {
-      """
-        |type Embedded @embedded {
-        |   name: String
-        |}
-      """
-    }
-
-    val schemaBuilder = SchemaBuilderImpl(project, capabilities = Vector.empty)(testDependencies, system)
-    val schema        = SchemaRenderer.renderSchema(schemaBuilder.build())
-
-    schema should not(include("type Mutation {"))
   }
 }
