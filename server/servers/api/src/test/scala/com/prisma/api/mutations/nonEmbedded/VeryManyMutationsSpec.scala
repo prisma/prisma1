@@ -1,4 +1,4 @@
-package com.prisma.api.mutations
+package com.prisma.api.mutations.nonEmbedded
 
 import com.prisma.api.ApiSpecBase
 import com.prisma.shared.models.Project
@@ -7,6 +7,7 @@ import org.scalatest.{FlatSpec, Matchers}
 
 class VeryManyMutationsSpec extends FlatSpec with Matchers with ApiSpecBase {
 
+  override def doNotRunSuiteForMongo: Boolean = true
   val project: Project = SchemaDsl.fromString() {
     """
       |type Top {
@@ -89,8 +90,4 @@ class VeryManyMutationsSpec extends FlatSpec with Matchers with ApiSpecBase {
 
     server.query(query, project)
   }
-
-  def topCountShouldBe(int: Int) = server.query("{ tops { id } }", project).pathAsSeq("data.tops").size should be(int)
-  def middleCount(int: Int)      = server.query("{ middles { id } }", project).pathAsSeq("data.middles").size should be(int)
-
 }

@@ -1,4 +1,4 @@
-package com.prisma.api.mutations
+package com.prisma.api.mutations.nonEmbedded
 
 import com.prisma.api.ApiSpecBase
 import com.prisma.shared.models.Project
@@ -7,6 +7,7 @@ import org.joda.time.{DateTime, DateTimeZone}
 import org.scalatest.{FlatSpec, Matchers}
 
 class TransactionalNestedExecutionSpec extends FlatSpec with Matchers with ApiSpecBase {
+  override def doNotRunSuiteForMongo: Boolean = true
 
   //At the moment we are only inserting the inner where, the outer condition is checked separately
   //the up front check for the outer where is still needed to provide return values

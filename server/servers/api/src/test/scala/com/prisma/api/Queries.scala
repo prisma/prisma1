@@ -15,20 +15,20 @@ class Queries extends FlatSpec with Matchers with ApiSpecBase {
 
     val newId = server.query("""mutation { createCar(data: {wheelCount: 7, name: "Sleven"}){id} }""", project).pathAsString("data.createCar.id")
     server
-      .query(s"""mutation { updateCar(where: {id: "${newId}"} data:{ wheelCount: 8} ){wheelCount} }""", project)
+      .query(s"""mutation { updateCar(where: {id: "$newId"} data:{ wheelCount: 8} ){wheelCount} }""", project)
       .pathAsLong("data.updateCar.wheelCount") should be(8)
     val idToDelete =
       server.query("""mutation { createCar(data: {wheelCount: 7, name: "Sleven"}){id} }""", project).pathAsString("data.createCar.id")
     server
-      .query(s"""mutation { deleteCar(where: {id: "${idToDelete}"}){wheelCount} }""", project)
+      .query(s"""mutation { deleteCar(where: {id: "$idToDelete"}){wheelCount} }""", project)
       .pathAsLong("data.deleteCar.wheelCount") should be(7)
 
     // QUERIES
 
     server.query("""{cars{wheelCount}}""", project).pathAsLong("data.cars.[0].wheelCount") should be(8)
     server.query("""{carsConnection{edges{node{wheelCount}}}}""", project).pathAsLong("data.carsConnection.edges.[0].node.wheelCount") should be(8)
-    server.query(s"""{car(where: {id:"${newId}"}){wheelCount}}""", project).pathAsLong("data.car.wheelCount") should be(8)
-    ifConnectorIsActive { server.query(s"""{node(id:"${newId}"){... on Car { wheelCount }}}""", project).pathAsLong("data.node.wheelCount") should be(8) }
+    server.query(s"""{car(where: {id:"$newId"}){wheelCount}}""", project).pathAsLong("data.car.wheelCount") should be(8)
+    ifConnectorIsActive { server.query(s"""{node(id:"$newId"){... on Car { wheelCount }}}""", project).pathAsLong("data.node.wheelCount") should be(8) }
   }
 
   "schema" should "include old nested mutations" in {
@@ -53,7 +53,7 @@ class Queries extends FlatSpec with Matchers with ApiSpecBase {
           |   }){
           |     wheels { size } 
           |     } 
-          |}""".stripMargin,
+          |}""",
         project
       )
       .pathAsLong("data.createCar.wheels.[0].size") should be(20)

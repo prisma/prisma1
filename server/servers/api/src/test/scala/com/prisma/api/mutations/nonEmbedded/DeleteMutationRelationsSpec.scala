@@ -1,4 +1,4 @@
-package com.prisma.api.mutations
+package com.prisma.api.mutations.nonEmbedded
 
 import com.prisma.IgnorePassive
 import com.prisma.api.ApiSpecBase
@@ -6,6 +6,7 @@ import com.prisma.shared.schema_dsl.SchemaDsl
 import org.scalatest.{FlatSpec, Matchers}
 
 class DeleteMutationRelationsSpec extends FlatSpec with Matchers with ApiSpecBase {
+  override def doNotRunSuiteForMongo: Boolean = true
 
   // todo: fails because of missing back relation, which we want to guarantee to always be there in the future
   "a P1! to C1! relation " should "error when deleting the parent2" taggedAs (IgnorePassive) in {

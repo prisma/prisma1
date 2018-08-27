@@ -125,7 +125,7 @@ trait NodeActions extends NodeSingleQueries {
 
       case Some(node) =>
         val nonListValues: Vector[Bson] = mutaction.nonListArgs.raw.asRoot.map.map { case (k, v) => set(k, GCValueBsonTransformer(v)) }.toVector
-        val listValues: Vector[Bson]    = mutaction.listArgs.map { case (f, v) => set(f, v) }
+        val listValues: Vector[Bson]    = mutaction.listArgs.map { case (f, v) => set(f, GCValueBsonTransformer(v)) }
 
         //    create
         val (nestedCreateResults: Vector[DatabaseMutactionResult], nestedCreateDocs: Map[String, BsonValue]) =
@@ -200,7 +200,7 @@ trait NodeActions extends NodeSingleQueries {
       val rFN = mutaction.relationField.name
 
       val nonListValues = mutaction.nonListArgs.raw.asRoot.map.map { case (f, v) => set(combineThree(path, rFN, f), GCValueBsonTransformer(v)) }.toVector
-      val listValues    = mutaction.listArgs.map { case (f, v) => set(combineThree(path, rFN, f), v) }
+      val listValues    = mutaction.listArgs.map { case (f, v) => set(combineThree(path, rFN, f), GCValueBsonTransformer(v)) }
 
       //    create
       val (nestedCreateResults: Vector[DatabaseMutactionResult], nestedCreateFields: Map[String, BsonValue]) =

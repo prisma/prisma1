@@ -51,6 +51,10 @@ case class RootGCValue(map: Map[String, GCValue]) extends GCValue {
   def value = sys.error("RootGCValues not implemented yet in GCValueExtractor")
 }
 
+object ListGCValue {
+  def empty: ListGCValue = ListGCValue(Vector.empty)
+}
+
 case class ListGCValue(values: Vector[GCValue]) extends GCValue {
   def isEmpty: Boolean   = values.isEmpty
   def size: Int          = values.size

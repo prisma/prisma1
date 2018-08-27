@@ -11,10 +11,20 @@ class NestedCreateMutationInsideCreateSpec extends FlatSpec with Matchers with A
   override def doNotRunSuiteForMongo: Boolean = true
 
   "a P1! to C1! relation" should "be possible" in {
-    val project = SchemaDsl.fromBuilder { schema =>
-      val parent = schema.model("Parent").field_!("p", _.String, isUnique = true)
-      val child  = schema.model("Child").field_!("c", _.String, isUnique = true).oneToOneRelation_!("parentReq", "childReq", parent)
+    val project = SchemaDsl.fromString() {
+      """type Parent{
+        |   id: ID! @unique
+        |   p: String! @unique
+        |   childReq: Child!
+        |}
+        |
+        |type Child{
+        |   id: ID! @unique
+        |   c: String! @unique
+        |   parentReq: Parent!
+        |}""".stripMargin
     }
+
     database.setup(project)
 
     val res = server
