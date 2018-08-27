@@ -2,7 +2,7 @@ package com.prisma.deploy.connector.mongo
 
 import com.prisma.config.DatabaseConfig
 import com.prisma.deploy.connector._
-import com.prisma.deploy.connector.mongo.database.{CodecRegistry, MigrationDefinition}
+import com.prisma.deploy.connector.mongo.database.{MongoCodecRegistry, MigrationDefinition}
 import com.prisma.deploy.connector.mongo.impl.{CloudSecretPersistenceImpl, MigrationPersistenceImpl, MongoDeployMutactionExecutor, ProjectPersistenceImpl}
 import com.prisma.shared.models.{Project, ProjectIdEncoder}
 import org.joda.time.DateTime
@@ -12,7 +12,7 @@ import scala.concurrent.{ExecutionContext, Future}
 case class MongoDeployConnector(config: DatabaseConfig)(implicit ec: ExecutionContext) extends DeployConnector {
   lazy val internalDatabaseDefs = MongoInternalDatabaseDefs(config)
   lazy val mongoClient          = internalDatabaseDefs.client
-  lazy val internalDatabase     = mongoClient.getDatabase("prisma").withCodecRegistry(CodecRegistry.codecRegistry)
+  lazy val internalDatabase     = mongoClient.getDatabase("prisma").withCodecRegistry(MongoCodecRegistry.codecRegistry)
 
   override def isActive: Boolean = true
 
@@ -22,17 +22,21 @@ case class MongoDeployConnector(config: DatabaseConfig)(implicit ec: ExecutionCo
 
   override def deployMutactionExecutor: DeployMutactionExecutor = MongoDeployMutactionExecutor(mongoClient)
 
-  override def clientDBQueries(project: Project): ClientDbQueries = ???
+  override def clientDBQueries(project: Project): ClientDbQueries = EmptyClientDbQueries
 
   override def projectIdEncoder: ProjectIdEncoder = ProjectIdEncoder('$')
 
-  override def databaseIntrospectionInferrer(projectId: String): DatabaseIntrospectionInferrer = ???
+  override def databaseIntrospectionInferrer(projectId: String): DatabaseIntrospectionInferrer = EmptyDatabaseIntrospectionInferrer
 
   override def cloudSecretPersistence: CloudSecretPersistence = new CloudSecretPersistenceImpl(internalDatabase)
 
   override def initialize(): Future[Unit] = Future.unit
 
-  override def reset(): Future[Unit] = Future.unit
+  override def reset(): Future[Unit] = {
+    val collections = Vector(internalDatabase.getCollection("Migration"), internalDatabase.getCollection("Project"))
+    val dropResult  = Future.sequence(collections.map(_.drop.toFuture))
+    dropResult.map(_ => ())
+  }
 
   override def shutdown(): Future[Unit] = Future.unit
 

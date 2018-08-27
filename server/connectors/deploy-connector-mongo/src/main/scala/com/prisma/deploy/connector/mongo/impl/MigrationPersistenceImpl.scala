@@ -5,9 +5,9 @@ import com.prisma.deploy.connector.mongo.database.MigrationDefinition
 import com.prisma.shared.models.MigrationStatus.MigrationStatus
 import com.prisma.shared.models.{Migration, MigrationId}
 import org.joda.time.DateTime
-import org.mongodb.scala.bson.BsonDateTime
+import org.mongodb.scala.bson.{BsonDateTime, BsonValue}
 import org.mongodb.scala.bson.collection.immutable.Document
-import org.mongodb.scala.model.Filters
+import org.mongodb.scala.model.{Filters, Updates}
 import org.mongodb.scala.model.Sorts._
 import org.mongodb.scala.{MongoCollection, MongoDatabase}
 
@@ -67,35 +67,35 @@ case class MigrationPersistenceImpl(
     } yield migration.copy(revision = withRevisionBumped.revision)
   }
 
-  private def updateColumn(id: MigrationId, doc: Document) = {
+  private def updateColumn(id: MigrationId, field: String, value: Any) = {
     migrations
-      .updateOne(Filters.and(Filters.eq("projectId", id.projectId), Filters.eq("revision", id.revision)), doc)
+      .updateOne(Filters.and(Filters.eq("projectId", id.projectId), Filters.eq("revision", id.revision)), Updates.set(field, value))
       .toFuture
       .map(_ => ())
   }
 
   override def updateMigrationStatus(id: MigrationId, status: MigrationStatus): Future[Unit] = {
-    updateColumn(id, Document("status" -> MigrationDefinition.stringStatus(status)))
+    updateColumn(id, "status", MigrationDefinition.stringStatus(status))
   }
 
   override def updateMigrationErrors(id: MigrationId, errors: Vector[String]): Future[Unit] = {
-    updateColumn(id, Document("errors" -> errors))
+    updateColumn(id, "errors", errors)
   }
 
   override def updateMigrationApplied(id: MigrationId, applied: Int): Future[Unit] = {
-    updateColumn(id, Document("applied" -> applied))
+    updateColumn(id, "applied", applied)
   }
 
   override def updateMigrationRolledBack(id: MigrationId, rolledBack: Int): Future[Unit] = {
-    updateColumn(id, Document("rolledBack" -> rolledBack))
+    updateColumn(id, "rolledBack", rolledBack)
   }
 
   override def updateStartedAt(id: MigrationId, startedAt: DateTime): Future[Unit] = {
-    updateColumn(id, Document("startedAt" -> BsonDateTime(startedAt.getMillis)))
+    updateColumn(id, "startedAt", BsonDateTime(startedAt.getMillis))
   }
 
   override def updateFinishedAt(id: MigrationId, finishedAt: DateTime): Future[Unit] = {
-    updateColumn(id, Document("finishedAt" -> BsonDateTime(finishedAt.getMillis)))
+    updateColumn(id, "finishedAt", BsonDateTime(finishedAt.getMillis))
 
   }
 
