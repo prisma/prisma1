@@ -107,7 +107,7 @@ export class GoGenerator extends Generator {
       const fieldMap = type.getFields()
       return `
       // ${goCase(type.name)}Exec docs
-      type ${goCase(type.name)}Exec interface {}
+      type ${goCase(type.name)}Exec struct {}
 
       // ${goCase(type.name)} docs
       type ${goCase(type.name)} interface {
