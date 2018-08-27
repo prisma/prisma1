@@ -1,11 +1,12 @@
-package com.prisma.api.mutations
+package com.prisma.api.mutations.embedded.nestedMutations
 
 import com.prisma.IgnoreMongo
 import com.prisma.api.ApiSpecBase
 import com.prisma.shared.schema_dsl.SchemaDsl
 import org.scalatest.{FlatSpec, Matchers}
 
-class UpdatedAtShouldChangeSpec extends FlatSpec with Matchers with ApiSpecBase {
+class EmbeddedUpdatedAtShouldChangeSpec extends FlatSpec with Matchers with ApiSpecBase {
+  override def onlyRunSuiteForMongo: Boolean = true
 
   val project = SchemaDsl.fromString() {
 
@@ -17,10 +18,8 @@ class UpdatedAtShouldChangeSpec extends FlatSpec with Matchers with ApiSpecBase 
       |updatedAt: DateTime!
       |}
       |
-      |type Bottom {
-      |id: ID! @unique
+      |type Bottom @embedded{
       |bottom: String! @unique
-      |top: Top
       |createdAt: DateTime!
       |updatedAt: DateTime!
       |}

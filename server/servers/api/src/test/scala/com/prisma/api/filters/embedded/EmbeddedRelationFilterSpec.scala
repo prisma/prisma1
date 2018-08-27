@@ -20,11 +20,16 @@ class EmbeddedRelationFilterSpec extends FlatSpec with Matchers with ApiSpecBase
       |   title: String!
       |   popularity: Int!
       |   comments: [Comment!]!
+      |   author: Author
       |}
       |
       |type Comment @embedded{
       |   text: String!
       |   likes: Int!
+      |}
+      |
+      |type Author @embedded{
+      |   name: String!
       |}
     """
   }
@@ -45,15 +50,21 @@ class EmbeddedRelationFilterSpec extends FlatSpec with Matchers with ApiSpecBase
         |       name: "blog 1",
         |       posts:{
         |         create:[
-        |           {title: "post 1", popularity: 10, comments:{
-        |                                               create: [{text:"comment 1", likes: 0 },
-        |                                                        {text:"comment 2", likes: 5},
-        |                                                        {text:"comment 3", likes: 10}]
-        |                                             }
+        |           { title: "post 1",
+        |             popularity: 10,
+        |             comments:{
+        |                        create: [{text:"comment 1", likes: 0 },
+        |                                 {text:"comment 2", likes: 5},
+        |                                 {text:"comment 3", likes: 10}]
+        |             },
+        |             author: {create:{name: "Author1"}}
         |           },
-        |           {title: "post 2", popularity: 2,  comments:{
-        |                                               create: [{text:"comment 4", likes: 10}]
-        |                                             }
+        |           { title: "post 2",
+        |             popularity: 2,
+        |             comments:{
+        |                        create: [{text:"comment 4", likes: 10}]
+        |             },
+        |             author: {create:{name: "Author2"}}
         |           }
         |         ]
         |      }
@@ -69,7 +80,8 @@ class EmbeddedRelationFilterSpec extends FlatSpec with Matchers with ApiSpecBase
         |                                    popularity: 1000,
         |                                    comments:{create: [
         |                                             {text:"comment 5", likes: 1000}
-        |                                             ]}
+        |                                             ]},
+        |                                    author: {create:{name: "Author3"}}
         |                                             }]}
         |                                             }){name}}""".stripMargin,
       project = project
@@ -161,29 +173,19 @@ class EmbeddedRelationFilterSpec extends FlatSpec with Matchers with ApiSpecBase
       """{"data":{"blogs":[{"name":"blog 2"}]}}""")
   }
 
-  "crazy filters" should "work" in {
+  "2 level m- and 1-relation filter" should "work for _every, _some and _none" in {
 
-    server
-      .query(
-        query = """{posts(where: {
-                |  blog: {
-                |    posts_some: {
-                |      popularity_gte: 5
-                |    }
-                |    name_contains: "Blog 1"
-                |  }
-                |  comments_none: {
-                |    likes_gte: 5
-                |  }
-                |  comments_some: {
-                |    likes_lte: 2
-                |  }
-                |}) {
-                |  title
-                |}}""".stripMargin,
-        project = project
-      )
-      .toString should be("""{"data":{"posts":[]}}""")
+    // some|one
+    server.query(query = """{blogs(where:{posts_some:{author: {name: "Author1"}}}){name}}""", project = project).toString should be(
+      """{"data":{"blogs":[{"name":"blog 1"}]}}""")
 
+    // every|one
+    server.query(query = """{blogs(where:{posts_every:{author: {name_ends_with: "3"}}}){name}}""", project = project).toString should be(
+      """{"data":{"blogs":[{"name":"blog 2"}]}}""")
+
+    // none|one
+    server.query(query = """{blogs(where:{posts_none:{author: {name: "Author2"}}}){name}}""", project = project).toString should be(
+      """{"data":{"blogs":[{"name":"blog 2"}]}}""")
   }
+
 }
