@@ -61,9 +61,9 @@ export class GoGenerator extends Generator {
           const field = fieldMap[key]
           const deepTypeName = this.getDeepType(field.type)
           const deepType = this.schema.getType(deepTypeName)
-          const isScalar =
-            deepType!.constructor.name === 'GraphQLScalarType' ? true : false
-          return !isScalar
+          const isScalar = deepType!.constructor.name === 'GraphQLScalarType'
+          const isEnum = deepType!.constructor.name === 'GraphQLEnumType'
+          return !isScalar && !isEnum
         })
         .map(key => {
           const field = fieldMap[key]
@@ -238,9 +238,6 @@ export class GoGenerator extends Generator {
         )}Params) ${isListType(field.type) ? `[]` : ``}${goCase(
           this.rawTypeName(field.type),
         )}Exec {
-          data := db.Request(\`\`,
-          map[string]interface{}{},
-      )
       return ${isListType(field.type) ? `[]` : ``}${goCase(
           this.rawTypeName(field.type),
         )}Exec{}
