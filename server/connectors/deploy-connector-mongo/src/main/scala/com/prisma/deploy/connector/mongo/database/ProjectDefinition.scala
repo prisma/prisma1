@@ -9,19 +9,7 @@ import play.api.libs.json.JsValue
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-object ProjectDefinition {
-  def apply(id: String,
-            ownerId: Option[String],
-            webhookUrl: Option[String],
-            secrets: JsValue,
-            allowQueries: Boolean,
-            allowMutations: Boolean,
-            functions: JsValue): ProjectDefinition =
-    ProjectDefinition(_id = new ObjectId(), id, ownerId, webhookUrl, secrets, allowQueries, allowMutations, functions)
-}
-
 case class ProjectDefinition(
-    _id: ObjectId,
     id: String,
     ownerId: Option[String],
     webhookUrl: Option[String],
