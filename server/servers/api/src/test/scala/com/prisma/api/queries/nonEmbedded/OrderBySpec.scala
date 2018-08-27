@@ -1,10 +1,11 @@
-package com.prisma.api.queries
+package com.prisma.api.queries.nonEmbedded
 
 import com.prisma.api.ApiSpecBase
 import com.prisma.shared.schema_dsl.SchemaDsl
 import org.scalatest.{FlatSpec, Matchers}
 
 class OrderBySpec extends FlatSpec with Matchers with ApiSpecBase {
+  override def doNotRunSuiteForMongo: Boolean = true
 
   val project = SchemaDsl.fromString() {
     """

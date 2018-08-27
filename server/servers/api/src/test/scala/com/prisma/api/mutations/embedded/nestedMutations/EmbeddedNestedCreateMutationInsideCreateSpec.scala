@@ -1,4 +1,4 @@
-package com.prisma.api.mutations.embeddedNestedMutations
+package com.prisma.api.mutations.embedded.nestedMutations
 
 import com.prisma.api.ApiSpecBase
 import com.prisma.shared.schema_dsl.SchemaDsl

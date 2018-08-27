@@ -1,4 +1,4 @@
-package com.prisma.api.mutations
+package com.prisma.api.mutations.nonEmbedded
 
 import com.prisma.api.ApiSpecBase
 import com.prisma.shared.schema_dsl.SchemaDsl
@@ -9,6 +9,8 @@ import org.scalatest.{FlatSpec, Matchers, Retries}
 import scala.concurrent.Future
 
 class DeadlockSpec extends FlatSpec with Matchers with Retries with ApiSpecBase with AwaitUtils {
+  override def doNotRunSuiteForMongo: Boolean = true
+
   import testDependencies.system.dispatcher
 
   override def withFixture(test: NoArgTest) = {

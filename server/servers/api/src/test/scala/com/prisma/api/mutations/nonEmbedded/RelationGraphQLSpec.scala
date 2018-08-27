@@ -1,4 +1,4 @@
-package com.prisma.api.mutations
+package com.prisma.api.mutations.nonEmbedded
 
 import com.prisma.api.ApiSpecBase
 import com.prisma.shared.models.Project
@@ -6,12 +6,22 @@ import com.prisma.shared.schema_dsl.SchemaDsl
 import org.scalatest.{FlatSpec, Matchers}
 
 class RelationGraphQLSpec extends FlatSpec with Matchers with ApiSpecBase {
+  override def doNotRunSuiteForMongo: Boolean = true
 
   "One2One relations" should "only allow one item per side" in {
 
-    val project = SchemaDsl.fromBuilder { schema =>
-      val cat = schema.model("Cat").field("catName", _.String, isUnique = true)
-      schema.model("Owner").field("ownerName", _.String, isUnique = true).oneToOneRelation("cat", "owner", cat)
+    val project = SchemaDsl.fromString() {
+      """type Owner{
+        |   id: ID! @unique
+        |   ownerName: String @unique
+        |   cat: Cat
+        |}
+        |
+        |type Cat{
+        |   id: ID! @unique
+        |   catName: String @unique
+        |   owner: Owner
+        |}"""
     }
 
     database.setup(project)
@@ -68,9 +78,18 @@ class RelationGraphQLSpec extends FlatSpec with Matchers with ApiSpecBase {
 
   "Required One2One relations" should "throw an error if an update would leave one item without a partner" in {
 
-    val project = SchemaDsl.fromBuilder { schema =>
-      val cat = schema.model("Cat").field("catName", _.String, isUnique = true)
-      schema.model("Owner").field("ownerName", _.String, isUnique = true).oneToOneRelation_!("cat", "owner", cat)
+    val project = SchemaDsl.fromString() {
+      """type Owner{
+        |   id: ID! @unique
+        |   ownerName: String @unique
+        |   cat: Cat!
+        |}
+        |
+        |type Cat{
+        |   id: ID! @unique
+        |   catName: String @unique
+        |   owner: Owner!
+        |}"""
     }
 
     database.setup(project)
@@ -103,10 +122,10 @@ class RelationGraphQLSpec extends FlatSpec with Matchers with ApiSpecBase {
         |      catName
         |    }
         |  }
-        |}""".stripMargin,
+        |}""",
       project,
       errorCode = 3042,
-      errorContains = "The change you are trying to make would violate the required relation 'OwnerToCat' between Owner and Cat"
+      errorContains = "The change you are trying to make would violate the required relation 'CatToOwner' between Cat and Owner"
     )
 
     val res5 = server.query("""query{owner(where:{ownerName:"jon"}){ownerName, cat{catName}}}""", project)

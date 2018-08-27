@@ -175,6 +175,7 @@ trait NodeActions extends NodeSingleQueries {
         case x                   => println(x)
       }
     }
+
 // Fixme this seems to be too complex for the mongo scala driver. Reactive mongo exposes a raw api that we could use
 //    val nestedManyDeletes: Vector[Bson] = toManyDeletes.map { delete =>
 //      val where = delete.where.get
