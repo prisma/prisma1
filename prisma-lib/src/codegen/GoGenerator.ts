@@ -330,7 +330,7 @@ ${Object.keys(queryFields)
           // ${goCase(queryField.name)} docs
           func (db DB) ${goCase(queryField.name)} (params ${goCase(
           queryField.name,
-        )}Params) ${goCase(queryField.name)}Exec {
+        )}Params) ${goCase(this.rawTypeName(queryField.type))}Exec {
           data := db.Request(\`${this.printQuery(queryField, 'query')}\`,
           map[string]interface{}{
               ${this.printArgs(queryField)}
@@ -362,7 +362,7 @@ ${Object.keys(queryFields)
               // ${goCase(mutationField.name)} docs
               func (db DB) ${goCase(mutationField.name)} (params ${goCase(
             mutationField.name,
-          )}Params) ${goCase(mutationField.name)}Exec {
+          )}Params) ${goCase(this.rawTypeName(mutationField.type))}Exec {
               data := db.Request(\`${this.printQuery(
                 mutationField,
                 'mutation',
