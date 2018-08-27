@@ -48,7 +48,7 @@ object MongoCodecRegistry {
 
   val jsonCodecProvider = new CodecProvider {
     override def get[T](clazz: Class[T], registry: CodecRegistry) = {
-      if (clazz == classOf[JsValue] || classOf[JsValue].isAssignableFrom(clazz)) jsonCodec.asInstanceOf[Codec[T]] else null
+      if (classOf[JsValue].isAssignableFrom(clazz)) jsonCodec.asInstanceOf[Codec[T]] else null
     }
   }
 
