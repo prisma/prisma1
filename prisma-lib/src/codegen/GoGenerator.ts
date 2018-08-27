@@ -216,7 +216,7 @@ export class GoGenerator extends Generator {
     },
   }
 
-  printQuery(
+  printOperationQuery(
     queryField: GraphQLField<any, any>,
     operation: 'query' | 'mutation',
   ) {
@@ -269,6 +269,40 @@ export class GoGenerator extends Generator {
     )
   }
 
+  printOperation(fields) {
+    return Object.keys(fields)
+      .map(key => {
+        const field = fields[key]
+        const args = field.args
+        return `
+          // ${goCase(field.name)}Params docs
+          type ${goCase(field.name)}Params struct {
+            ${args
+              .map(arg => {
+                const argType = this.rawTypeName(arg.type)
+                return `${goCase(arg.name)} ${this.scalarMapping[argType] ||
+                  argType} \`json:"${arg.name}"\``
+              })
+              .join('\n')}
+          }
+          
+          // ${goCase(field.name)} docs
+          func (db DB) ${goCase(field.name)} (params ${goCase(
+          field.name,
+        )}Params) ${isListType(field.type) ? `[]` : ``}${goCase(
+          this.rawTypeName(field.type),
+        )}Exec {
+          data := db.Request(\`${this.printOperationQuery(field, 'query')}\`,
+          map[string]interface{}{
+              ${this.printArgs(field)}
+          },
+      )
+      return data["${field.name}"]
+        }`
+      })
+      .join('\n')
+  }
+
   render() {
     const typeNames = this.getTypeNames()
     const typeMap = this.schema.getTypeMap()
@@ -295,75 +329,10 @@ type DB struct {
 }
 
 // Queries
+${this.printOperation(queryFields)}
 
-${Object.keys(queryFields)
-      .map(key => {
-        const queryField = queryFields[key]
-        const queryArgs = queryField.args
-        return `
-          // ${goCase(queryField.name)}Params docs
-          type ${goCase(queryField.name)}Params struct {
-            ${queryArgs
-              .map(arg => {
-                const argType = this.rawTypeName(arg.type)
-                return `${goCase(arg.name)} ${this.scalarMapping[argType] ||
-                  argType} \`json:"${arg.name}"\``
-              })
-              .join('\n')}
-          }
-          
-          // ${goCase(queryField.name)} docs
-          func (db DB) ${goCase(queryField.name)} (params ${goCase(
-          queryField.name,
-        )}Params) ${isListType(queryField.type) ? `[]` : ``}${goCase(
-          this.rawTypeName(queryField.type),
-        )}Exec {
-          data := db.Request(\`${this.printQuery(queryField, 'query')}\`,
-          map[string]interface{}{
-              ${this.printArgs(queryField)}
-          },
-      )
-      return data["${queryField.name}"]
-        }`
-      })
-      .join('\n')}
-
-      // Mutations
-
-      ${Object.keys(mutationFields)
-        .map(key => {
-          const mutationField = mutationFields[key]
-          const mutationArgs = mutationField.args
-          return `
-              // ${goCase(mutationField.name)}Params docs
-              type ${goCase(mutationField.name)}Params struct {
-                ${mutationArgs
-                  .map(arg => {
-                    const argType = this.rawTypeName(arg.type)
-                    return `${goCase(arg.name)} ${this.scalarMapping[argType] ||
-                      argType} \`json:"${arg.name}"\``
-                  })
-                  .join('\n')}
-                }
-              
-              // ${goCase(mutationField.name)} docs
-              func (db DB) ${goCase(mutationField.name)} (params ${goCase(
-            mutationField.name,
-          )}Params) ${isListType(mutationField.type) ? `[]` : ``}${goCase(
-            this.rawTypeName(mutationField.type),
-          )}Exec {
-              data := db.Request(\`${this.printQuery(
-                mutationField,
-                'mutation',
-              )}\`,
-              map[string]interface{}{
-                  ${this.printArgs(mutationField)}
-              },
-          )
-          return data["${mutationField.name}"]
-            }`
-        })
-        .join('\n')}
+// Mutations
+${this.printOperation(mutationFields)}
 
 // Types
 
