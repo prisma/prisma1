@@ -6,7 +6,6 @@ import {
   GraphQLScalarType,
   GraphQLEnumType,
   GraphQLObjectType as GraphQLObjectTypeRef,
-  GraphQLField,
   GraphQLObjectType,
   isListType,
 } from 'graphql'
@@ -216,59 +215,6 @@ export class GoGenerator extends Generator {
     },
   }
 
-  printOperationQuery(
-    queryField: GraphQLField<any, any>,
-    operation: 'query' | 'mutation',
-  ) {
-    const typeName = this.getDeepType(queryField.type)
-    const type = this.schema.getType(typeName)
-    return `${operation} ${goCase(
-      queryField.name,
-    )} (${this.printVariablesDefinition(queryField)}) {
-        ${queryField.name} (${this.printVariables(queryField)}) {
-            ${
-              this.graphqlTypeRenderersForQuery[type!.constructor.name]
-                ? this.graphqlTypeRenderersForQuery[type!.constructor.name](
-                    type,
-                  )
-                : null
-            }
-        }
-    }`
-  }
-
-  printVariablesDefinition(queryField: GraphQLField<any, any>) {
-    const queryArgs = queryField.args
-    return queryArgs
-      .map(arg => {
-        const argType = this.rawTypeName(arg.type)
-        return `$${arg.name}: ${argType}`
-      })
-      .join(', ')
-  }
-
-  printVariables(queryField: GraphQLField<any, any>) {
-    const queryArgs = queryField.args
-    return queryArgs
-      .map(arg => {
-        // TODO: Go to the nested params to fetch the correct arg
-        return `${arg.name}: $${arg.name}`
-      })
-      .join(',\n')
-  }
-
-  printArgs(queryField: GraphQLField<any, any>) {
-    const queryArgs = queryField.args
-    return (
-      queryArgs
-        .map(arg => {
-          // TODO: Go to the nested params to fetch the correct arg
-          return `"${arg.name}": params.${goCase(arg.name)}`
-        })
-        .join(',\n') + ','
-    )
-  }
-
   printOperation(fields) {
     return Object.keys(fields)
       .map(key => {
@@ -292,12 +238,12 @@ export class GoGenerator extends Generator {
         )}Params) ${isListType(field.type) ? `[]` : ``}${goCase(
           this.rawTypeName(field.type),
         )}Exec {
-          data := db.Request(\`${this.printOperationQuery(field, 'query')}\`,
-          map[string]interface{}{
-              ${this.printArgs(field)}
-          },
+          data := db.Request(\`\`,
+          map[string]interface{}{},
       )
-      return data["${field.name}"]
+      return ${isListType(field.type) ? `[]` : ``}${goCase(
+          this.rawTypeName(field.type),
+        )}Exec{}
         }`
       })
       .join('\n')
