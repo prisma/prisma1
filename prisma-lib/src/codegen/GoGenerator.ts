@@ -1,31 +1,16 @@
 import { Generator } from './Generator'
 import {
-  //   isNonNullType,
-  //   isListType,
-  //   isScalarType,
-  //   isObjectType,
-  //   isEnumType,
-  //   GraphQLObjectType,
-  // GraphQLSchema,
   GraphQLUnionType,
   GraphQLInterfaceType,
   GraphQLInputObjectType,
-  // GraphQLInputField,
-  // GraphQLField,
-  // GraphQLInputType,
-  // GraphQLOutputType,
-  // GraphQLWrappingType,
-  // GraphQLNamedType,
   GraphQLScalarType,
   GraphQLEnumType,
-  // GraphQLFieldMap,
   GraphQLObjectType as GraphQLObjectTypeRef,
-  // printSchema,
   GraphQLField,
   GraphQLObjectType,
+  isListType,
 } from 'graphql'
 
-// import pluralize from 'pluralize'
 import * as upperCamelCase from 'uppercamelcase'
 
 const goCase = (s: string) => {
@@ -45,7 +30,7 @@ export class GoGenerator extends Generator {
     Long: 'int64', // TODO: This is not correct I think
   }
 
-  // TODO: Ok this can't go to production - hacky - need to find proper field definition and field name with Null + List properties.
+  // TODO: Hacky - need to find proper field definition and field name with Null + List properties.
   // TODO: Add Nullability and array to fieldType later.
   rawTypeName(type) {
     return type
@@ -330,7 +315,9 @@ ${Object.keys(queryFields)
           // ${goCase(queryField.name)} docs
           func (db DB) ${goCase(queryField.name)} (params ${goCase(
           queryField.name,
-        )}Params) ${goCase(this.rawTypeName(queryField.type))}Exec {
+        )}Params) ${isListType(queryField.type) ? `[]` : ``}${goCase(
+          this.rawTypeName(queryField.type),
+        )}Exec {
           data := db.Request(\`${this.printQuery(queryField, 'query')}\`,
           map[string]interface{}{
               ${this.printArgs(queryField)}
@@ -362,7 +349,9 @@ ${Object.keys(queryFields)
               // ${goCase(mutationField.name)} docs
               func (db DB) ${goCase(mutationField.name)} (params ${goCase(
             mutationField.name,
-          )}Params) ${goCase(this.rawTypeName(mutationField.type))}Exec {
+          )}Params) ${isListType(mutationField.type) ? `[]` : ``}${goCase(
+            this.rawTypeName(mutationField.type),
+          )}Exec {
               data := db.Request(\`${this.printQuery(
                 mutationField,
                 'mutation',
