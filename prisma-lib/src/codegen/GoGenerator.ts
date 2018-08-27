@@ -28,7 +28,7 @@ import {
 // import pluralize from 'pluralize'
 import * as upperCamelCase from 'uppercamelcase'
 
-const upperCamelCasePatched = (s: string) => {
+const goCase = (s: string) => {
   const cased = upperCamelCase(s)
   return cased.startsWith('Id') ? `ID${cased.slice(2)}` : cased
 }
@@ -45,6 +45,17 @@ export class GoGenerator extends Generator {
     Long: 'int64', // TODO: This is not correct I think
   }
 
+  // TODO: Ok this can't go to production - hacky - need to find proper field definition and field name with Null + List properties.
+  // TODO: Add Nullability and array to fieldType later.
+  rawTypeName(type) {
+    return type
+      .toString()
+      .replace('!', '')
+      .replace('[', '')
+      .replace(']', '')
+      .trim()
+  }
+
   graphqlRenderers = {
     GraphQLUnionType: (type: GraphQLUnionType): string => ``,
 
@@ -55,27 +66,50 @@ export class GoGenerator extends Generator {
         | GraphQLInterfaceType,
     ): string => {
       const fieldMap = type.getFields()
-      return `// ${type.name} docs
+      return `
+      // ${type.name}Exec docs
+      type ${type.name}Exec struct {
+          stack []string
+      }
+
+      ${Object.keys(fieldMap)
+        .filter(key => {
+          const field = fieldMap[key]
+          const deepTypeName = this.getDeepType(field.type)
+          const deepType = this.schema.getType(deepTypeName)
+          const isScalar =
+            deepType!.constructor.name === 'GraphQLScalarType' ? true : false
+          return !isScalar
+        })
+        .map(key => {
+          const field = fieldMap[key]
+          const deepTypeName = this.getDeepType(field.type).toString()
+          return ` // ${goCase(field.name)} docs
+        func (instance ${type.name}Exec) ${goCase(field.name)}() ${goCase(
+            deepTypeName,
+          )}Exec {
+            return ${goCase(deepTypeName)}Exec{}
+          }`
+        })
+        .join('\n')}
+
+      // Exec docs
+      func (instance ${type.name}Exec) Exec() ${type.name} {
+        return ${type.name}{}
+      }
+      
+      // ${type.name} docs
       type ${type.name} struct {
-                ${Object.keys(fieldMap)
-                  .map(key => {
-                    const field = fieldMap[key]
+          ${Object.keys(fieldMap)
+            .map(key => {
+              const field = fieldMap[key]
 
-                    // TODO: Ok this can't go to production - hacky - need to find proper field definition and field name with Null + List properties.
-                    // TODO: Add Nullability and array to fieldType later.
-                    const fieldType = field.type
-                      .toString()
-                      .replace('!', '')
-                      .replace('[', '')
-                      .replace(']', '')
-                      .trim()
+              const fieldType = this.rawTypeName(field.type)
 
-                    return `${upperCamelCasePatched(field.name)} ${this
-                      .scalarMapping[fieldType] || fieldType} \`json:"${
-                      field.name
-                    }"\``
-                  })
-                  .join('\n')}
+              return `${goCase(field.name)} ${this.scalarMapping[fieldType] ||
+                fieldType} \`json:"${field.name}"\``
+            })
+            .join('\n')}
             }
         `
     },
@@ -85,7 +119,22 @@ export class GoGenerator extends Generator {
         | GraphQLObjectTypeRef
         | GraphQLInputObjectType
         | GraphQLInterfaceType,
-    ): string => ``,
+    ): string => {
+      const fieldMap = type.getFields()
+      return `
+      // ${goCase(type.name)}Exec docs
+      type ${goCase(type.name)}Exec interface {}
+
+      // ${goCase(type.name)} docs
+      type ${goCase(type.name)} interface {
+        ${Object.keys(fieldMap).map(key => {
+          const field = fieldMap[key]
+          const fieldType = this.rawTypeName(field.type)
+          return `${goCase(field.name)}() ${this.scalarMapping[fieldType] ||
+            fieldType}`
+        })}
+      }`
+    },
 
     GraphQLInputObjectType: (
       type:
@@ -96,28 +145,20 @@ export class GoGenerator extends Generator {
       const fieldMap = type.getFields()
       return `// ${type.name} docs
       type ${type.name} struct {
-                ${Object.keys(fieldMap)
-                  .map(key => {
-                    const field = fieldMap[key]
+          ${Object.keys(fieldMap)
+            .map(key => {
+              const field = fieldMap[key]
+              const fieldType = this.rawTypeName(field.type)
 
-                    // TODO: Ok this can't go to production - hacky - need to find proper field definition and field name with Null + List properties.
-                    // TODO: Add Nullability and array to fieldType later.
-                    const fieldType = field.type
-                      .toString()
-                      .replace('!', '')
-                      .replace('[', '')
-                      .replace(']', '')
-                      .trim()
-
-                    return `${upperCamelCasePatched(field.name)} ${
-                      (this.scalarMapping[fieldType] || fieldType) === type.name
-                        ? `*`
-                        : ``
-                    }${this.scalarMapping[fieldType] || fieldType} \`json:"${
-                      field.name
-                    }"\``
-                  })
-                  .join('\n')}
+              return `${goCase(field.name)} ${
+                (this.scalarMapping[fieldType] || fieldType) === type.name
+                  ? `*`
+                  : ``
+              }${this.scalarMapping[fieldType] || fieldType} \`json:"${
+                field.name
+              }"\``
+            })
+            .join('\n')}
             }
         `
     },
@@ -136,10 +177,8 @@ export class GoGenerator extends Generator {
                   .map(
                     v =>
                       `
-                      // ${upperCamelCasePatched(v.name)}${type.name} docs
-                      ${upperCamelCasePatched(v.name)}${type.name} ${
-                        type.name
-                      } = "${v.name}"`,
+                      // ${goCase(v.name)}${type.name} docs
+                      ${goCase(v.name)}${type.name} ${type.name} = "${v.name}"`,
                   )
                   .join('\n')}
             )
@@ -198,7 +237,7 @@ export class GoGenerator extends Generator {
   ) {
     const typeName = this.getDeepType(queryField.type)
     const type = this.schema.getType(typeName)
-    return `${operation} ${upperCamelCasePatched(
+    return `${operation} ${goCase(
       queryField.name,
     )} (${this.printVariablesDefinition(queryField)}) {
         ${queryField.name} (${this.printVariables(queryField)}) {
@@ -217,13 +256,7 @@ export class GoGenerator extends Generator {
     const queryArgs = queryField.args
     return queryArgs
       .map(arg => {
-        const argType = arg.type
-          .toString()
-          .replace('!', '')
-          .replace('[', '')
-          .replace(']', '')
-          .trim()
-        // TODO: Go to the nested params to fetch the correct arg
+        const argType = this.rawTypeName(arg.type)
         return `$${arg.name}: ${argType}`
       })
       .join(', ')
@@ -245,7 +278,7 @@ export class GoGenerator extends Generator {
       queryArgs
         .map(arg => {
           // TODO: Go to the nested params to fetch the correct arg
-          return `"${arg.name}": params.${upperCamelCasePatched(arg.name)}`
+          return `"${arg.name}": params.${goCase(arg.name)}`
         })
         .join(',\n') + ','
     )
@@ -283,31 +316,22 @@ ${Object.keys(queryFields)
         const queryField = queryFields[key]
         const queryArgs = queryField.args
         return `
-          // ${upperCamelCasePatched(queryField.name)}Params docs
-          type ${upperCamelCasePatched(queryField.name)}Params struct {
-                ${queryArgs
-                  .map(arg => {
-                    const argType = arg.type
-                      .toString()
-                      .replace('!', '')
-                      .replace('[', '')
-                      .replace(']', '')
-                      .trim()
-                    return `${upperCamelCasePatched(arg.name)} ${this
-                      .scalarMapping[argType] || argType} \`json:"${
-                      arg.name
-                    }"\``
-                  })
-                  .join('\n')}
-            }
+          // ${goCase(queryField.name)}Params docs
+          type ${goCase(queryField.name)}Params struct {
+            ${queryArgs
+              .map(arg => {
+                const argType = this.rawTypeName(arg.type)
+                return `${goCase(arg.name)} ${this.scalarMapping[argType] ||
+                  argType} \`json:"${arg.name}"\``
+              })
+              .join('\n')}
+          }
           
-          // ${upperCamelCasePatched(queryField.name)} docs
-          func (db DB) ${upperCamelCasePatched(
-            queryField.name,
-          )} (params ${upperCamelCasePatched(
+          // ${goCase(queryField.name)} docs
+          func (db DB) ${goCase(queryField.name)} (params ${goCase(
           queryField.name,
-        )}Params) interface{} {
-          data := db.Request(\`${this.printQuery(queryField, "query")}\`,
+        )}Params) ${goCase(queryField.name)}Exec {
+          data := db.Request(\`${this.printQuery(queryField, 'query')}\`,
           map[string]interface{}{
               ${this.printArgs(queryField)}
           },
@@ -324,31 +348,25 @@ ${Object.keys(queryFields)
           const mutationField = mutationFields[key]
           const mutationArgs = mutationField.args
           return `
-              // ${upperCamelCasePatched(mutationField.name)}Params docs
-              type ${upperCamelCasePatched(mutationField.name)}Params struct {
-                    ${mutationArgs
-                      .map(arg => {
-                        const argType = arg.type
-                          .toString()
-                          .replace('!', '')
-                          .replace('[', '')
-                          .replace(']', '')
-                          .trim()
-                        return `${upperCamelCasePatched(arg.name)} ${this
-                          .scalarMapping[argType] || argType} \`json:"${
-                          arg.name
-                        }"\``
-                      })
-                      .join('\n')}
+              // ${goCase(mutationField.name)}Params docs
+              type ${goCase(mutationField.name)}Params struct {
+                ${mutationArgs
+                  .map(arg => {
+                    const argType = this.rawTypeName(arg.type)
+                    return `${goCase(arg.name)} ${this.scalarMapping[argType] ||
+                      argType} \`json:"${arg.name}"\``
+                  })
+                  .join('\n')}
                 }
               
-              // ${upperCamelCasePatched(mutationField.name)} docs
-              func (db DB) ${upperCamelCasePatched(
-                mutationField.name,
-              )} (params ${upperCamelCasePatched(
+              // ${goCase(mutationField.name)} docs
+              func (db DB) ${goCase(mutationField.name)} (params ${goCase(
             mutationField.name,
-          )}Params) interface{} {
-              data := db.Request(\`${this.printQuery(mutationField, "mutation")}\`,
+          )}Params) ${goCase(mutationField.name)}Exec {
+              data := db.Request(\`${this.printQuery(
+                mutationField,
+                'mutation',
+              )}\`,
               map[string]interface{}{
                   ${this.printArgs(mutationField)}
               },
