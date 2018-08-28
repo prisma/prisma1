@@ -185,58 +185,9 @@ docker-compose up -d
 
 Remember that thanks to Docker Machine, this command will now run against the remote host, i.e. your Digital Ocean Droplet. The `-d` option starts the container in _detached mode_, meaning it will run as a background process.
 
-Awesome, you now have your Prisma server available on the Digital Ocean Droplet! This means you can add it as a new server to your [server registry](!alias-eu2ood0she#server-registry) and then deploy your Prisma services to it!
+Awesome, you now have your Prisma server available on the Digital Ocean Droplet!
 
-## 5. Add the server to your server registry
-
-The server registry is stored in `~/.prisma/config.yml`. It lists all the servers you can use to deploy your Prisma services (excluding the ones you configured through the Prisma Cloud).
-
-To add a new server to the registry, open `~/.prisma/config.yml` and add the server manually.
-
-There are three pieces of information that need to be provided:
-
-- The **name** of the server, you can choose anything you like here.
-- The **host**, i.e. the IP (or domain) including the port where the server is running.
-
-<Instruction>
-
-Open `~/.prisma/config.yml` and add a new entry (here called `prisma-digital-ocean-cluster`) to the `clusters` map:
-
-```yml(path="/.prisma/config.yml")
-clusters:
-  prisma-digital-ocean-cluster:
-    host: 'http://__DROPLET_IP_ADDRESS__:4466'
-```
-
-</Instruction>
-
-Notice that there currently is a placeholder of the IP address of the Digital Ocean Droplet, so the value for `host` is not yet valid!
-
-There are several ways to figure out the IP of your Droplet, e.g. by checking the [Digital Ocean Console](https://cloud.digitalocean.com/droplets). For this tutorial, you'll use the `docker-machine` CLI again.
-
-<Instruction>
-
-In your terminal, run the following command:
-
-```sh
-docker-machine ip prisma
-```
-
-</Instruction>
-
-Note that `prisma` is just the _name_ of the Droplet you initially created. This will print the IP address of that Droplet.
-
-<Instruction>
-
-Copy the IP address that was printed from the command and use it to replace the `__DROPLET_IP_ADDRESS__` placeholder in the URL that's the value for the `host` property of your `prisma-digital-ocean-cluster` cluster in `~/.prisma/config.yml`, e.g.:
-
-```yml(path="/.prisma/config.yml")
-host: 'http://104.131.127.241:4466'
-```
-
-</Instruction>
-
-## 6. Deploy a Prisma service
+## 5. Deploy a Prisma service
 
 You're now ready to deploy a Prisma service to your droplet
 
@@ -309,7 +260,7 @@ mutation {
 }
 ```
 
-## 7. Enable server authentication
+## 6. Enable server authentication
 
 As noted before, _everyone_ with access to the endpoint of your server (`http://__DROPLET_IP_ADDRESS__:4466/`) will be able to access your server in any way they like. This means they can add new services or delete existing ones and also get full read/write-access to the application data from these services. This is a major security issue and should never be the case in any sort of production environment! Let's fix it.
 
