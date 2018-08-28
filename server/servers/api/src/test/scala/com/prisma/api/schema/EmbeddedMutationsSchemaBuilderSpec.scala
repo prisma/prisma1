@@ -8,9 +8,9 @@ import org.scalatest.{FlatSpec, Matchers}
 import sangria.renderer.SchemaRenderer
 
 class EmbeddedMutationsSchemaBuilderSpec extends FlatSpec with Matchers with ApiSpecBase with GraphQLSchemaMatchers {
-  val schemaBuilder = testDependencies.apiSchemaBuilder
 
   override def onlyRunSuiteForMongo: Boolean = true
+  val schemaBuilder                          = testDependencies.apiSchemaBuilder
 
   "An embedded type" should "not produce mutations in the schema" in {
     val project = SchemaDsl.fromString() {
