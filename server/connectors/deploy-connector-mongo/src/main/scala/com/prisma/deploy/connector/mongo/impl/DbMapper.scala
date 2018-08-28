@@ -98,7 +98,7 @@ object DbMapper {
       id = projectDocument.id,
       ownerId = "",
       revision = migrationDocument.revision,
-      schema = Schema.empty, //convertSchema(migration.schema),
+      schema = convertSchema(migrationDocument.schema),
       secrets = projectDocument.secrets.as[Vector[String]],
       allowQueries = projectDocument.allowQueries,
       allowMutations = projectDocument.allowMutations,
