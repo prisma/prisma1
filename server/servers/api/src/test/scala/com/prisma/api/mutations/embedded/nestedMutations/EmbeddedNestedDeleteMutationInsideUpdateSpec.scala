@@ -337,9 +337,6 @@ class EmbeddedNestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matcher
     )
 
     mustBeEqual(result.pathAsJsValue("data.updateTodo.comments").toString, """[]""")
-
-    val query = server.query("""{ comments { id }}""", project)
-    mustBeEqual(query.toString, """{"data":{"comments":[]}}""")
   }
 
   "one2one relation both exist and are connected" should "be deletable through a nested mutation" in {

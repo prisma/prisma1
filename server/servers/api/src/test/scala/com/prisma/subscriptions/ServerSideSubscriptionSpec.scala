@@ -8,6 +8,7 @@ import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.{FlatSpec, Matchers}
 
 class ServerSideSubscriptionSpec extends FlatSpec with Matchers with ApiSpecBase with ScalaFutures {
+  override def doNotRunSuiteForMongo: Boolean = true
 
   val webhookTestKit = testDependencies.webhookPublisher
 

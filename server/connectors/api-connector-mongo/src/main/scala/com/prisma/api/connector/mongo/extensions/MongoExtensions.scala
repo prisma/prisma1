@@ -1,6 +1,7 @@
 package com.prisma.api.connector.mongo.extensions
 
 import com.prisma.api.connector.NodeSelector
+import com.prisma.api.connector.mongo.extensions.GCBisonTransformer.GCValueBsonTransformer
 import com.prisma.gc_values._
 import com.prisma.shared.models.TypeIdentifier.TypeIdentifier
 import com.prisma.shared.models.{Field, Model, RelationField, TypeIdentifier}
@@ -37,11 +38,7 @@ object NodeSelectorBsonTransformer {
   implicit object WhereToBson {
     def apply(where: NodeSelector): Bson = {
       val fieldName = if (where.fieldName == "id") "_id" else where.fieldName
-      val value = where.fieldGCValue match {
-        case DateTimeGCValue(v) => v.getMillis
-        case JsonGCValue(v)     => v.toString
-        case z                  => z.value
-      }
+      val value     = GCValueBsonTransformer(where.fieldGCValue)
 
       Filters.eq(fieldName, value)
     }
