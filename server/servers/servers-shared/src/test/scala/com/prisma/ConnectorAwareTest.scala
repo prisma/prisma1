@@ -28,7 +28,7 @@ trait ConnectorAwareTest extends SuiteMixin { self: Suite =>
 
     if (runSuiteOnlyForActiveConnectors && !connector.active) {
       ignoreAllTests
-    } else if (runSuiteOnlyForPassiveConnectors && connector.active) {
+    } else if (runSuiteOnlyForPassiveConnectors && (connector.active || connector.connector == "mongo")) {
       ignoreAllTests
     } else if (doNotRunSuiteForMongo && connector.connector == "mongo") {
       ignoreAllTests
