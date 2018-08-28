@@ -36,7 +36,13 @@ class ProjectPersistenceSpec extends FlatSpec with Matchers with DeploySpecBase 
 
   ".create()" should "store the project in the db" in {
     assertNumberOfRowsInProjectTable(0)
-    projectPersistence.create(TestProject()).await()
+    val project = TestProject().copy(
+      secrets = Vector("foo"),
+      functions = List(
+        ServerSideSubscriptionFunction("function", true, WebhookDelivery("url", Vector.empty), "query")
+      )
+    )
+    projectPersistence.create(project).await()
     assertNumberOfRowsInProjectTable(1)
   }
 

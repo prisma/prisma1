@@ -7,7 +7,6 @@ case class Project(
     ownerId: Id,
     revision: Int = 1,
     schema: Schema,
-    webhookUrl: Option[String] = None,
     secrets: Vector[String] = Vector.empty,
     allowQueries: Boolean = true,
     allowMutations: Boolean = true,

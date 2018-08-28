@@ -1,7 +1,7 @@
 package com.prisma.deploy.connector.mongo.impl
 
 import com.prisma.deploy.connector.MigrationPersistence
-import com.prisma.deploy.connector.mongo.database.MigrationDefinition
+import com.prisma.deploy.connector.mongo.database.MigrationDocument
 import com.prisma.shared.models.MigrationStatus.MigrationStatus
 import com.prisma.shared.models.{Migration, MigrationId}
 import org.joda.time.DateTime
@@ -18,7 +18,10 @@ case class MigrationPersistenceImpl(
 )(implicit ec: ExecutionContext)
     extends MigrationPersistence {
 
-  val migrations: MongoCollection[MigrationDefinition] = internalDatabase.getCollection("Migration")
+  import DefaultDocumentReads._
+  import DbMapper._
+
+  val migrations: MongoCollection[Document] = internalDatabase.getCollection("Migration")
 
   def lock(): Future[Int] = {
     //    internalDatabase.run(sql"SELECT pg_advisory_lock(1000);".as[String].head.withPinnedSession).transformWith {
@@ -29,23 +32,19 @@ case class MigrationPersistenceImpl(
   }
 
   override def byId(migrationId: MigrationId): Future[Option[Migration]] = {
-
-    val futureMigration: Future[Option[MigrationDefinition]] = migrations
+    migrations
       .find(Filters.and(Filters.eq("projectId", migrationId.projectId), Filters.eq("revision", migrationId.revision)))
       .collect
       .toFuture()
-      .map(_.headOption)
-
-    futureMigration.map(migOpt => migOpt.map(mig => DbToModelMapper.convert(mig)))
+      .map(_.headOption.map(DbMapper.convertToMigrationModel))
   }
 
   override def loadAll(projectId: String): Future[Seq[Migration]] = {
-    val futureMigration: Future[Seq[MigrationDefinition]] = migrations
+    migrations
       .find(Filters.eq("projectId", projectId))
       .collect
       .toFuture()
-
-    futureMigration.map(migSeq => migSeq.map(mig => DbToModelMapper.convert(mig)))
+      .map(_.map(DbMapper.convertToMigrationModel))
   }
 
   override def create(migration: Migration): Future[Migration] = {
@@ -55,15 +54,12 @@ case class MigrationPersistenceImpl(
         .sort(descending("revision"))
         .collect
         .toFuture()
-        .map(_.headOption.map(_.revision))
-
-    def addMigration(mig: MigrationDefinition) = migrations.insertOne(mig).toFuture()
+        .map(_.headOption.map(_.as[MigrationDocument].revision))
 
     for {
       lastRevision       <- lastRevision
-      dbMigration        = ModelToDbMapper.convert(migration)
-      withRevisionBumped = dbMigration.copy(revision = lastRevision.getOrElse(0) + 1)
-      _                  <- addMigration(withRevisionBumped)
+      withRevisionBumped = migration.copy(revision = lastRevision.getOrElse(0) + 1)
+      _                  <- migrations.insertOne(DbMapper.convertToDocument(withRevisionBumped)).toFuture()
     } yield migration.copy(revision = withRevisionBumped.revision)
   }
 
@@ -75,7 +71,7 @@ case class MigrationPersistenceImpl(
   }
 
   override def updateMigrationStatus(id: MigrationId, status: MigrationStatus): Future[Unit] = {
-    updateColumn(id, "status", MigrationDefinition.stringStatus(status))
+    updateColumn(id, "status", status.toString)
   }
 
   override def updateMigrationErrors(id: MigrationId, errors: Vector[String]): Future[Unit] = {
@@ -105,7 +101,7 @@ case class MigrationPersistenceImpl(
       .sort(descending("revision"))
       .collect
       .toFuture()
-      .map(_.headOption.map(DbToModelMapper.convert))
+      .map(_.headOption.map(DbMapper.convertToMigrationModel))
   }
 
   override def getNextMigration(projectId: String): Future[Option[Migration]] = {
@@ -115,7 +111,7 @@ case class MigrationPersistenceImpl(
       .sort(ascending("revision"))
       .collect
       .toFuture()
-      .map(_.headOption.map(DbToModelMapper.convert))
+      .map(_.headOption.map(DbMapper.convertToMigrationModel))
   }
 
   override def loadDistinctUnmigratedProjectIds(): Future[Seq[String]] = {
@@ -123,6 +119,6 @@ case class MigrationPersistenceImpl(
       .find(Filters.or(Filters.eq("status", "PENDING"), Filters.eq("status", "IN_PROGRESS"), Filters.eq("status", "ROLLING_BACK")))
       .collect
       .toFuture()
-      .map(_.map(_.projectId).distinct)
+      .map(_.map(DbMapper.convertToMigrationModel(_).projectId).distinct)
   }
 }
