@@ -6,7 +6,7 @@ import com.prisma.api.connector.mongo.extensions.DocumentToRoot
 import com.prisma.api.connector.mongo.extensions.GCBisonTransformer.GCValueBsonTransformer
 import com.prisma.api.connector.mongo.extensions.NodeSelectorBsonTransformer.WhereToBson
 import com.prisma.api.schema.APIErrors
-import com.prisma.api.schema.APIErrors.NodesNotConnectedError
+import com.prisma.api.schema.APIErrors.{FieldCannotBeNull, NodesNotConnectedError}
 import com.prisma.gc_values._
 import com.prisma.shared.models.RelationField
 import org.mongodb.scala.bson.conversions.Bson
@@ -124,6 +124,12 @@ trait NodeActions extends NodeSingleQueries {
         throw APIErrors.NodeNotFoundForWhereError(mutaction.where)
 
       case Some(node) =>
+        //check nonListArgs for null updates to required fields
+        val invalidUpdates = mutaction.nonListArgs.raw.asRoot.map.collect {
+          case (k, v) if v == NullGCValue && mutaction.model.getFieldByName_!(k).isRequired => k
+        }
+        if (invalidUpdates.nonEmpty) throw FieldCannotBeNull(invalidUpdates.head)
+
         val nonListValues: Vector[Bson] = mutaction.nonListArgs.raw.asRoot.map.map { case (k, v) => set(k, GCValueBsonTransformer(v)) }.toVector
         val listValues: Vector[Bson]    = mutaction.listArgs.map { case (f, v) => set(f, GCValueBsonTransformer(v)) }
 
@@ -199,8 +205,14 @@ trait NodeActions extends NodeSingleQueries {
     val first: Vector[(Vector[Bson], Vector[DatabaseMutactionResult])] = mutactions.map { mutaction =>
       val rFN = mutaction.relationField.name
 
+      val invalidUpdates = mutaction.nonListArgs.raw.asRoot.map.collect {
+        case (k, v) if v == NullGCValue && mutaction.model.getFieldByName_!(k).isRequired => k
+      }
+      if (invalidUpdates.nonEmpty) throw FieldCannotBeNull(invalidUpdates.head)
+
       val nonListValues = mutaction.nonListArgs.raw.asRoot.map.map { case (f, v) => set(combineThree(path, rFN, f), GCValueBsonTransformer(v)) }.toVector
-      val listValues    = mutaction.listArgs.map { case (f, v) => set(combineThree(path, rFN, f), GCValueBsonTransformer(v)) }
+
+      val listValues = mutaction.listArgs.map { case (f, v) => set(combineThree(path, rFN, f), GCValueBsonTransformer(v)) }
 
       //    create
       val (nestedCreateResults: Vector[DatabaseMutactionResult], nestedCreateFields: Map[String, BsonValue]) =
