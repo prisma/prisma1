@@ -11,6 +11,8 @@ trait PassiveConnectorSpec extends FlatSpec with Matchers with ApiSpecBase {
 
   override def runSuiteOnlyForPassiveConnectors = true
 
+  override def doNotRunSuiteForMongo: Boolean = true
+
   def executeOnInternalDatabase(sql: String) = {
     val connector = testDependencies.deployConnector.asInstanceOf[PostgresDeployConnector]
     val session   = connector.managementDatabase.createSession()

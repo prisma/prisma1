@@ -6,6 +6,8 @@ import org.scalatest.{FlatSpec, Matchers}
 
 class PassiveDeployMutationSpec extends FlatSpec with Matchers with PassiveDeploySpecBase {
 
+  override def doNotRunSuiteForMongo: Boolean = true
+
   "a schema without any relations" should "work" in {
     val sqlSchema =
       s"""
