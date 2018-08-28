@@ -32,7 +32,7 @@ case class MongoDeployConnector(config: DatabaseConfig)(implicit ec: ExecutionCo
   override def initialize(): Future[Unit] = Future.unit
 
   override def reset(): Future[Unit] = {
-    val collections = Vector(internalDatabase.getCollection("Migration"), internalDatabase.getCollection("Project"))
+    val collections = Vector(internalDatabase.getCollection("Migration"), internalDatabase.getCollection("Project"), internalDatabase.getCollection("Secret"))
     val dropResult  = Future.sequence(collections.map(_.drop.toFuture))
     dropResult.map(_ => ())
   }
