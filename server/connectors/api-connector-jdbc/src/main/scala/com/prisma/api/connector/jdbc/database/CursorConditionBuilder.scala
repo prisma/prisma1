@@ -26,7 +26,7 @@ trait CursorConditionBuilder extends BuilderBase {
     // First, we fetch the ordering for the query. If none is passed, we order by id, ascending.
     // We need that since before/after are dependent on the order.
     val (orderByField, orderByFieldWithAlias, sortDirection) = orderBy match {
-      case Some(order) => (modelColumn(model, order.field), aliasColumn(order.field.dbName), order.sortOrder.toString)
+      case Some(order) => (modelColumn(order.field), aliasColumn(order.field.dbName), order.sortOrder.toString)
       case None        => (idField, idFieldWithAlias, "asc")
     }
 
