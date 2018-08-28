@@ -1,0 +1,46 @@
+import Warning from 'components/Markdown/Warning'
+
+export const meta = {
+  title: "Migrations",
+  position: 240
+}
+
+## Overview
+
+If your [Prisma server](/operate-sever/) is configured to allow database migrations, you can use SDL to define and migrate your database schema.
+
+Prisma uses [temporary directives](knul#temporary-directives) to perform one-time migration operations. After deploying a service that contain a temporary directive, **a temporary directive needs to be manually removed from the type definitions file**.
+
+## Renaming
+
+The temporary directive `@rename(oldName: String!)` is used to rename types and field.
+
+<Warning>
+
+If the `@rename` directive is not used, Prisma removes the old type and field before creating the new one, resulting in loss of data!
+
+</Warning>
+
+### Renaming types
+
+**Renaming the `Post` type to `Story`**
+
+```graphql
+type Story @rename(oldName: "Post") {
+  content: String
+}
+```
+
+The `@rename(oldName: "Post")` directive needs to be deleted manually after `prisma deploy` was executed and the renaming was performed.
+
+### Renaming fields
+
+**Renaming the `text` field to `content`**
+
+```graphql
+type Story {
+  content: String @rename(oldName: "text")
+}
+```
+
+The `@rename(oldName: "text")` directive needs to be deleted manually after `prisma deploy` was executed and the renaming was performed.
