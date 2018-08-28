@@ -11,7 +11,7 @@ class InsertingNullInRequiredFieldsSpec extends FlatSpec with Matchers with ApiS
       """type A {
         |  id: ID! @unique
         |  b: String! @unique
-        |  key: String! @unique
+        |  key: String!
         |}
       """
     }
