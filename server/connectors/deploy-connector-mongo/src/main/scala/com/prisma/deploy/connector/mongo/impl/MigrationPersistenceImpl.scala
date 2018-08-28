@@ -42,6 +42,7 @@ case class MigrationPersistenceImpl(
   override def loadAll(projectId: String): Future[Seq[Migration]] = {
     migrations
       .find(Filters.eq("projectId", projectId))
+      .sort(descending("revision"))
       .collect
       .toFuture()
       .map(_.map(DbMapper.convertToMigrationModel))
