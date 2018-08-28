@@ -12,7 +12,7 @@ class EmbeddedMutationsSchemaBuilderSpec extends FlatSpec with Matchers with Api
 
   override def onlyRunSuiteForMongo: Boolean = true
 
-  "An embedded type" must "not produce mutations in the schema" in {
+  "An embedded type" should "not produce mutations in the schema" in {
     val project = SchemaDsl.fromString() {
       """
         |type Embedded @embedded {
