@@ -8,6 +8,7 @@ import {
   GraphQLObjectType as GraphQLObjectTypeRef,
   GraphQLObjectType,
   isListType,
+  GraphQLField,
 } from 'graphql'
 
 import * as upperCamelCase from 'uppercamelcase'
@@ -66,12 +67,13 @@ export class GoGenerator extends Generator {
           return !isScalar && !isEnum
         })
         .map(key => {
-          const field = fieldMap[key]
+          const field = fieldMap[key] as GraphQLField<any, any> // TODO: Is this assumption correct?
+          const args = field.args
           const deepTypeName = this.getDeepType(field.type).toString()
           return ` // ${goCase(field.name)} docs
-        func (instance ${type.name}Exec) ${goCase(field.name)}() ${goCase(
-            deepTypeName,
-          )}Exec {
+        func (instance ${type.name}Exec) ${goCase(field.name)}(${args
+            .map(arg => `${arg.name} ${arg.type}`)
+            .join(',')}) ${goCase(deepTypeName)}Exec {
             return ${goCase(deepTypeName)}Exec{}
           }`
         })
