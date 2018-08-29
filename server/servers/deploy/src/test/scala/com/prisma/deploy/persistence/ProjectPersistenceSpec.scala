@@ -35,7 +35,6 @@ class ProjectPersistenceSpec extends FlatSpec with Matchers with DeploySpecBase 
   }
 
   ".create()" should "store the project in the db" in {
-    assertNumberOfRowsInProjectTable(0)
     val project = TestProject().copy(
       secrets = Vector("foo"),
       functions = List(
@@ -43,7 +42,6 @@ class ProjectPersistenceSpec extends FlatSpec with Matchers with DeploySpecBase 
       )
     )
     projectPersistence.create(project).await()
-    assertNumberOfRowsInProjectTable(1)
   }
 
   ".loadAll()" should "load all projects (for a user TODO)" in {
@@ -65,11 +63,5 @@ class ProjectPersistenceSpec extends FlatSpec with Matchers with DeploySpecBase 
       "Some",
       "secrets"
     )
-  }
-
-  def assertNumberOfRowsInProjectTable(count: Int): Unit = {
-//    val query = Tables.Projects.size
-//    internalDb.run(query.result) should equal(count)
-    // FIXME: bring that back
   }
 }

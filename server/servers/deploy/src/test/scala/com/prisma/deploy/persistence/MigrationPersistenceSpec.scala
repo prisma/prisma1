@@ -25,11 +25,11 @@ class MigrationPersistenceSpec extends FlatSpec with Matchers with DeploySpecBas
 
   ".create()" should "store the migration in the db and increment the revision accordingly" in {
     val (project, _) = setupProject(basicTypesGql)
-    assertNumberOfRowsInMigrationTable(1)
+    migrationPersistence.loadAll(project.id).await should have(size(2))
 
     val savedMigration = migrationPersistence.create(Migration.empty(project.id)).await()
-    assertNumberOfRowsInMigrationTable(2)
     savedMigration.revision shouldEqual 3
+    migrationPersistence.loadAll(project.id).await should have(size(3))
   }
 
   ".create()" should "store the migration with its function in the db" in {
@@ -154,11 +154,5 @@ class MigrationPersistenceSpec extends FlatSpec with Matchers with DeploySpecBas
 
     val projectIds = migrationPersistence.loadDistinctUnmigratedProjectIds().await
     projectIds should have(size(2))
-  }
-
-  def assertNumberOfRowsInMigrationTable(count: Int): Unit = {
-    // FIXME: bring that back
-//    val query = Tables.Migrations.size
-//    internalDb.run(query.result) should equal(count)
   }
 }
