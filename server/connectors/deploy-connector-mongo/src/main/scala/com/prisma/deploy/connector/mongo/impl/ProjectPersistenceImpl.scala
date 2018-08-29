@@ -31,19 +31,6 @@ case class ProjectPersistenceImpl(
     }
   }
 
-  override def create(project: Project): Future[Unit] = {
-    projects.insertOne(DbMapper.convertToDocument(project)).toFuture().map(_ => ())
-  }
-
-  override def delete(projectId: String): Future[Unit] = {
-    projects.deleteOne(projectIdFilter(projectId)).toFuture().map(_ => ())
-  }
-
-  override def update(project: Project): Future[_] = {
-    val mongoDocument = DbMapper.convertToDocument(project)
-    projects.replaceOne(projectIdFilter(project.id), mongoDocument).toFuture
-  }
-
   override def loadAll(): Future[Seq[Project]] = {
     for {
       projects         <- projects.find().collect.toFuture()
@@ -55,6 +42,19 @@ case class ProjectPersistenceImpl(
         DbMapper.convertToProjectModel(pd, migration)
       }
     }
+  }
+
+  override def create(project: Project): Future[Unit] = {
+    projects.insertOne(DbMapper.convertToDocument(project)).toFuture().map(_ => ())
+  }
+
+  override def delete(projectId: String): Future[Unit] = {
+    projects.deleteOne(projectIdFilter(projectId)).toFuture().map(_ => ())
+  }
+
+  override def update(project: Project): Future[_] = {
+    val mongoDocument = DbMapper.convertToDocument(project)
+    projects.replaceOne(projectIdFilter(project.id), mongoDocument).toFuture
   }
 
   private def lastSuccessfulMigrationForProjectId(id: String): Future[Option[Migration]] = {
