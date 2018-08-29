@@ -32,9 +32,11 @@ case class MongoDeployConnector(config: DatabaseConfig)(implicit ec: ExecutionCo
   override def initialize(): Future[Unit] = Future.unit
 
   override def reset(): Future[Unit] = {
-    val collections = Vector(internalDatabase.getCollection("Migration"), internalDatabase.getCollection("Project"), internalDatabase.getCollection("Secret"))
-    val dropResult  = Future.sequence(collections.map(_.drop.toFuture))
-    dropResult.map(_ => ())
+    for {
+      collectionNames <- internalDatabase.listCollectionNames().toFuture()
+      collections     = collectionNames.map(internalDatabase.getCollection)
+      _               <- Future.sequence(collections.map(_.drop.toFuture))
+    } yield ()
   }
 
   override def shutdown(): Future[Unit] = Future.unit
