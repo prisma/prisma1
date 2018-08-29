@@ -309,10 +309,19 @@ class NestedUpdateMutationInsideUpdateSpec extends FlatSpec with Matchers with A
   }
 
   "a many to many relation" should "fail gracefully on wrong where and assign error correctly and not execute partially" in {
-    val project = SchemaDsl.fromBuilder { schema =>
-      val note = schema.model("Note").field("text", _.String)
-      val todo = schema.model("Todo").field_!("title", _.String)
-      todo.manyToManyRelation("notes", "todoes", note)
+    val project = SchemaDsl.fromString() {
+      """type Todo {
+        | id: ID! @unique
+        | title: String!
+        | notes: [Note!]!
+        |}
+        |
+        |type Note {
+        | id: ID! @unique
+        | text: String
+        | todoes: [Todo!]!
+        |}
+      """.stripMargin
     }
     database.setup(project)
 
@@ -366,9 +375,20 @@ class NestedUpdateMutationInsideUpdateSpec extends FlatSpec with Matchers with A
   }
 
   "a many to many relation" should "handle null in unique fields" in {
-    val project = SchemaDsl.fromBuilder { schema =>
-      val note = schema.model("Note").field("text", _.String, isUnique = true)
-      schema.model("Todo").field_!("title", _.String, isUnique = true).field("unique", _.String, isUnique = true).manyToManyRelation("notes", "todos", note)
+    val project = SchemaDsl.fromString() {
+      """type Note {
+        | id: ID! @unique
+        | text: String @unique
+        | todos: [Todo!]!
+        |}
+        |
+        |type Todo {
+        | id: ID! @unique
+        | title: String! @unique
+        | unique: String @unique
+        | notes: [Note!]!
+        |}
+      """.stripMargin
     }
     database.setup(project)
 
