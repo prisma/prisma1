@@ -8,9 +8,18 @@ class NestedUpdateMutationInsideUpdateSpec extends FlatSpec with Matchers with A
   override def doNotRunSuiteForMongo: Boolean = true
 
   "a one to many relation" should "be updateable by id through a nested mutation" in {
-    val project = SchemaDsl.fromBuilder { schema =>
-      val comment = schema.model("Comment").field("text", _.String)
-      schema.model("Todo").oneToManyRelation("comments", "todo", comment)
+    val project = SchemaDsl.fromString() {
+      """type Todo {
+        | id: ID! @unique
+        | comments: [Comment!]!
+        |}
+        |
+        |type Comment {
+        | id: ID! @unique
+        | text: String
+        | todo: Todo!
+        |}
+      """.stripMargin
     }
     database.setup(project)
 
@@ -63,9 +72,19 @@ class NestedUpdateMutationInsideUpdateSpec extends FlatSpec with Matchers with A
   }
 
   "a one to many relation" should "be updateable by any unique argument through a nested mutation" in {
-    val project = SchemaDsl.fromBuilder { schema =>
-      val comment = schema.model("Comment").field("text", _.String).field_!("alias", _.String, isUnique = true)
-      schema.model("Todo").oneToManyRelation("comments", "todo", comment)
+    val project = SchemaDsl.fromString() {
+      """type Todo {
+        | id: ID! @unique
+        | comments: [Comment!]!
+        |}
+        |
+        |type Comment {
+        | id: ID! @unique
+        | alias: String! @unique
+        | text: String
+        | todo: Todo!
+        |}
+      """.stripMargin
     }
     database.setup(project)
 
@@ -115,10 +134,18 @@ class NestedUpdateMutationInsideUpdateSpec extends FlatSpec with Matchers with A
   }
 
   "a many to many relation with an optional backrelation" should "be updateable by any unique argument through a nested mutation" in {
-    val project = SchemaDsl.fromBuilder { schema =>
-      val list = schema.model("List").field_!("listUnique", _.String, isUnique = true)
-      val todo = schema.model("Todo").field_!("todoUnique", _.String, isUnique = true)
-      list.manyToManyRelation("todoes", "does not matter", todo, includeFieldBInSchema = false)
+    val project = SchemaDsl.fromString() {
+      """type List {
+        | id: ID! @unique
+        | listUnique: String! @unique
+        | todoes: [Todo!]!
+        |}
+        |
+        |type Todo {
+        | id: ID! @unique
+        | todoUnique: String! @unique
+        |}
+      """.stripMargin
     }
     database.setup(project)
 
@@ -164,10 +191,19 @@ class NestedUpdateMutationInsideUpdateSpec extends FlatSpec with Matchers with A
   }
 
   "a many to one relation" should "be updateable by id through a nested mutation" in {
-    val project = SchemaDsl.fromBuilder { schema =>
-      val comment = schema.model("Comment").field("text", _.String)
-      val todo    = schema.model("Todo").field("title", _.String)
-      todo.oneToManyRelation("comments", "todo", comment)
+    val project = SchemaDsl.fromString() {
+      """type Todo {
+        | id: ID! @unique
+        | title: String
+        | comments: [Comment!]!
+        |}
+        |
+        |type Comment {
+        | id: ID! @unique
+        | text: String!
+        | todo: Todo!
+        |}
+      """.stripMargin
     }
     database.setup(project)
 
@@ -214,9 +250,19 @@ class NestedUpdateMutationInsideUpdateSpec extends FlatSpec with Matchers with A
   }
 
   "a one to one relation" should "be updateable by id through a nested mutation" in {
-    val project = SchemaDsl.fromBuilder { schema =>
-      val note = schema.model("Note").field("text", _.String)
-      schema.model("Todo").field_!("title", _.String).oneToOneRelation("note", "todo", note)
+    val project = SchemaDsl.fromString() {
+      """type Todo {
+        | id: ID! @unique
+        | title: String!
+        | note: Note
+        |}
+        |
+        |type Note {
+        | id: ID! @unique
+        | text: String
+        | todo: Todo
+        |}
+      """.stripMargin
     }
     database.setup(project)
 
