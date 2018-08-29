@@ -5,15 +5,14 @@ import com.prisma.deploy.connector.mongo.database.{MigrationDocument, ProjectDoc
 import com.prisma.shared.models
 import com.prisma.shared.models.MigrationStatus.MigrationStatus
 import com.prisma.shared.models.{MigrationStep, Schema}
+import com.prisma.utils.mongo.{DocumentFormat, DocumentReads, JsonBsonConversion, MongoExtensions}
 import org.joda.time.DateTime
 import org.mongodb.scala.Document
 import play.api.libs.functional.syntax.unlift
 import play.api.libs.json.{JsPath, JsValue, Json}
 import play.api.libs.functional.syntax._
 
-object DbMapper {
-  import DefaultDocumentReads._
-  import com.prisma.utils.json.JsonUtils._
+object DbMapper extends JsonBsonConversion with MongoExtensions {
   import com.prisma.shared.models.ProjectJsonFormatter._
   import com.prisma.shared.models.MigrationStepsJsonFormatter._
 
@@ -88,8 +87,8 @@ object DbMapper {
   def convertToDocument(migrationDocument: MigrationDocument): Document = migrationDocumentFormat.writes(migrationDocument)
 
   def convertToProjectModel(project: Document, migration: Document): models.Project = {
-    val projectDocument   = project.readAs[ProjectDocument](projectReads).get
-    val migrationDocument = migration.readAs[MigrationDocument](migrationDocumentFormat).get
+    val projectDocument   = project.as[ProjectDocument](projectReads)
+    val migrationDocument = migration.as[MigrationDocument](migrationDocumentFormat)
     convertToProjectModel(projectDocument, migrationDocument)
   }
 
@@ -107,7 +106,7 @@ object DbMapper {
   }
 
   def convertToMigrationModel(migration: Document): models.Migration = {
-    val migrationDocument = migration.readAs[MigrationDocument](migrationDocumentFormat).get
+    val migrationDocument = migration.as[MigrationDocument](migrationDocumentFormat)
     models.Migration(
       projectId = migrationDocument.projectId,
       revision = migrationDocument.revision,

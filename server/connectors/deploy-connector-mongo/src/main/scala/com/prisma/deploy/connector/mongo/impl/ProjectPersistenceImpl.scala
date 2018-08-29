@@ -3,6 +3,7 @@ package com.prisma.deploy.connector.mongo.impl
 import com.prisma.deploy.connector.ProjectPersistence
 import com.prisma.deploy.connector.mongo.database.{MigrationDocument, ProjectDocument}
 import com.prisma.shared.models.Project
+import com.prisma.utils.mongo.MongoExtensions
 import org.mongodb.scala.model.Filters
 import org.mongodb.scala.model.Sorts.descending
 import org.mongodb.scala.{Document, MongoCollection, MongoDatabase}
@@ -12,14 +13,16 @@ import scala.concurrent.{ExecutionContext, Future}
 case class ProjectPersistenceImpl(
     internalDatabase: MongoDatabase
 )(implicit ec: ExecutionContext)
-    extends ProjectPersistence {
+    extends ProjectPersistence
+    with MongoExtensions {
+
   import DbMapper._
 
   val projects: MongoCollection[Document] = internalDatabase.getCollection("Project")
 
   override def load(id: String): Future[Option[Project]] = {
     byIdWithMigration(id, internalDatabase)
-      .map(optRes => optRes.map(res => convertToProjectModel(res._1, res._2)))
+      .map(optRes => optRes.map(res => DbMapper.convertToProjectModel(res._1, res._2)))
   }
 
   override def create(project: Project): Future[Unit] = {
@@ -40,8 +43,6 @@ case class ProjectPersistenceImpl(
   }
 
   private def loadAllWithMigration(database: MongoDatabase): Future[Seq[(ProjectDocument, MigrationDocument)]] = {
-    import com.prisma.deploy.connector.mongo.impl.DbMapper._
-    import com.prisma.deploy.connector.mongo.impl.DefaultDocumentReads._
     // For each project, the latest successful migration (there has to be at least one, e.g. the initial migtation during create)
 
     val projects: MongoCollection[Document]   = database.getCollection("Project")

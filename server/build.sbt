@@ -140,6 +140,7 @@ lazy val deployConnectorPostgres = connectorProject("deploy-connector-postgres")
 
 lazy val deployConnectorMongo = connectorProject("deploy-connector-mongo")
   .dependsOn(deployConnector)
+  .dependsOn(mongoUtils)
   .settings(
     libraryDependencies ++= Seq(mongoClient)
   )
@@ -310,6 +311,8 @@ lazy val slickUtils = libProject("slick-utils").settings(libraryDependencies ++=
 
 lazy val prismaConfig = libProject("prisma-config").settings(libraryDependencies ++= Seq(snakeYML, scalaUri))
 
+lazy val mongoUtils = libProject("mongo-utils").settings(libraryDependencies ++= Seq(mongoClient)).dependsOn(jsonUtils)
+
 val allDockerImageProjects = List(
   prismaLocal,
   prismaProd
@@ -354,7 +357,8 @@ val allLibProjects = List(
   cache,
   errorReporting,
   sangriaUtils,
-  prismaConfig
+  prismaConfig,
+  mongoUtils
 )
 
 val allIntegrationTestProjects = List(

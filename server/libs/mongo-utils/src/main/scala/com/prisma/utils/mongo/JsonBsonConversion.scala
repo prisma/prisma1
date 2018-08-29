@@ -1,41 +1,13 @@
-package com.prisma.deploy.connector.mongo.impl
+package com.prisma.utils.mongo
 
-import java.util.NoSuchElementException
-
+import com.prisma.utils.json.JsonUtils
 import org.joda.time.DateTime
 import org.mongodb.scala.Document
 import org.mongodb.scala.bson.{BsonArray, BsonBoolean, BsonDateTime, BsonDocument, BsonNull, BsonNumber, BsonObjectId, BsonString, BsonValue}
 import play.api.libs.json._
 
-sealed trait DocumentReadResult[+A] {
-  def get: A
-}
-case class DocumentReadSuccess[A](value: A) extends DocumentReadResult[A] {
-  def get = value
-}
-case class DocumentReadError(msg: String) extends DocumentReadResult[Nothing] {
-  def get = throw new NoSuchElementException(msg)
-}
-
-trait DocumentReads[A] {
-  def reads(document: Document): DocumentReadResult[A]
-}
-
-trait DocumentWrites[-A] {
-  def writes(o: A): Document
-}
-
-trait DocumentFormat[A] extends DocumentReads[A] with DocumentWrites[A]
-
-object DefaultDocumentReads {
-  import com.prisma.utils.json.JsonUtils._
-
+trait JsonBsonConversion extends JsonUtils {
   import collection.JavaConverters._
-
-  implicit class DocumentExtensions(val doc: Document) extends AnyVal {
-    def readAs[A](implicit reads: DocumentReads[A]): DocumentReadResult[A] = reads.reads(doc)
-    def as[A](implicit reads: DocumentReads[A]): A                         = readAs[A].get
-  }
 
   implicit def playReadsToDocumentReads[A](playReads: Reads[A]): DocumentReads[A] = new DocumentReads[A] {
     override def reads(document: Document) = {

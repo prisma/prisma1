@@ -4,11 +4,12 @@ import com.prisma.deploy.connector.MigrationPersistence
 import com.prisma.deploy.connector.mongo.database.MigrationDocument
 import com.prisma.shared.models.MigrationStatus.MigrationStatus
 import com.prisma.shared.models.{Migration, MigrationId}
+import com.prisma.utils.mongo.MongoExtensions
 import org.joda.time.DateTime
-import org.mongodb.scala.bson.{BsonDateTime, BsonValue}
+import org.mongodb.scala.bson.BsonDateTime
 import org.mongodb.scala.bson.collection.immutable.Document
-import org.mongodb.scala.model.{Filters, Updates}
 import org.mongodb.scala.model.Sorts._
+import org.mongodb.scala.model.{Filters, Updates}
 import org.mongodb.scala.{MongoCollection, MongoDatabase}
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -16,9 +17,8 @@ import scala.concurrent.{ExecutionContext, Future}
 case class MigrationPersistenceImpl(
     internalDatabase: MongoDatabase
 )(implicit ec: ExecutionContext)
-    extends MigrationPersistence {
-
-  import DefaultDocumentReads._
+    extends MigrationPersistence
+    with MongoExtensions {
   import DbMapper._
 
   val migrations: MongoCollection[Document] = internalDatabase.getCollection("Migration")
