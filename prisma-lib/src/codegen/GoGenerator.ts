@@ -54,7 +54,7 @@ export class GoGenerator extends Generator {
       return `
       // ${type.name}Exec docs
       type ${type.name}Exec struct {
-          stack []string
+          stack []Instruction // TODO: This will be map[string]interface{} to support parallel stacks
       }
 
       ${Object.keys(fieldMap)
@@ -71,16 +71,25 @@ export class GoGenerator extends Generator {
           const args = field.args
           const deepTypeName = this.getDeepType(field.type).toString()
           return ` // ${goCase(field.name)} docs
-        func (instance ${type.name}Exec) ${goCase(field.name)}(${args
+        func (instance *${type.name}Exec) ${goCase(field.name)}(${args
             .map(arg => `${arg.name} ${arg.type}`)
-            .join(',')}) ${goCase(deepTypeName)}Exec {
-            return ${goCase(deepTypeName)}Exec{}
+            .join(',')}) *${goCase(deepTypeName)}Exec {
+              var args []interface{}
+              ${args.map(arg => `args = append(args, ${arg.name})`)}
+              instance.stack = append(instance.stack, Instruction{
+                name: "${goCase(field.name)}",
+                args: args,
+              })
+            return &${goCase(deepTypeName)}Exec{
+              stack: instance.stack,
+            }
           }`
         })
         .join('\n')}
 
       // Exec docs
       func (instance ${type.name}Exec) Exec() ${type.name} {
+        fmt.Println(instance.stack)
         return ${type.name}{}
       }
       
@@ -109,7 +118,9 @@ export class GoGenerator extends Generator {
       const fieldMap = type.getFields()
       return `
       // ${goCase(type.name)}Exec docs
-      type ${goCase(type.name)}Exec struct {}
+      type ${goCase(type.name)}Exec struct {
+        stack []Instruction
+      }
 
       // ${goCase(type.name)} docs
       type ${goCase(type.name)} interface {
@@ -237,12 +248,28 @@ export class GoGenerator extends Generator {
           // ${goCase(field.name)} docs
           func (db DB) ${goCase(field.name)} (params ${goCase(
           field.name,
-        )}Params) ${isListType(field.type) ? `[]` : ``}${goCase(
+        )}Params) *${isListType(field.type) ? `[]` : ``}${goCase(
           this.rawTypeName(field.type),
         )}Exec {
-      return ${isListType(field.type) ? `[]` : ``}${goCase(
+
+          stack := make([]Instruction, 0)
+          var args []interface{}
+          ${args
+            .map(arg => {
+              return `args = append(args, params.${goCase(arg.name)})`
+            })
+            .join('\n')}
+          
+          stack = append(stack, Instruction{
+            name: "${goCase(field.name)}",
+            args: args,
+          })
+
+      return &${isListType(field.type) ? `[]` : ``}${goCase(
           this.rawTypeName(field.type),
-        )}Exec{}
+        )}Exec{
+          stack: stack,
+        }
         }`
       })
       .join('\n')
@@ -262,11 +289,18 @@ package prisma
 
 import (
 	"context"
-    "log"
-    "reflect"
+  "log"
+  "reflect"
+  "fmt"
 
 	"github.com/machinebox/graphql"
 )
+
+// Instruction docs
+type Instruction struct {
+	name string
+	args []interface{}
+}
 
 // DB Type to represent the client
 type DB struct {
