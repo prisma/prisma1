@@ -78,7 +78,8 @@ export class GoGenerator extends Generator {
               var args []interface{}
               ${args.map(arg => `args = append(args, ${arg.name})`)}
               instance.stack = append(instance.stack, Instruction{
-                name: "${goCase(field.name)}",
+                name: "${field.name}",
+                operation: "", // TODO: This is not a top level query, no operation
                 args: args,
               })
             return &${goCase(deepTypeName)}Exec{
@@ -91,7 +92,7 @@ export class GoGenerator extends Generator {
 
       // Exec docs
       func (instance ${type.name}Exec) Exec() ${type.name} {
-        fmt.Println(instance.db.ProcessInstructions(instance.stack))
+        instance.db.ProcessInstructions(instance.stack)
         return ${type.name}{}
       }
       
@@ -231,7 +232,7 @@ export class GoGenerator extends Generator {
     },
   }
 
-  printOperation(fields) {
+  printOperation(fields, operation: string) {
     return Object.keys(fields)
       .map(key => {
         const field = fields[key]
@@ -264,7 +265,8 @@ export class GoGenerator extends Generator {
             .join('\n')}
           
           stack = append(stack, Instruction{
-            name: "${goCase(field.name)}",
+            name: "${field.name}",
+            operation: "${operation}",
             args: args,
           })
 
@@ -302,27 +304,30 @@ import (
 
 // Instruction docs
 type Instruction struct {
-	name string
+  name string
+  operation string
 	args []interface{}
 }
 
 // DB Type to represent the client
 type DB struct {
-	Endpoint string // TODO: Remove the Endpoint from here and print it where needed.
+  Endpoint string // TODO: Remove the Endpoint from here and print it where needed.
+  Debug bool
 }
 
 // ProcessInstructions docs
 func (db *DB) ProcessInstructions(stack []Instruction) string {
-	fmt.Println(db.Endpoint)
-	fmt.Println(stack)
+	if db.Debug {
+    fmt.Println(stack)
+  }
 	return \`query\`
 }
 
 // Queries
-${this.printOperation(queryFields)}
+${this.printOperation(queryFields, "query")}
 
 // Mutations
-${this.printOperation(mutationFields)}
+${this.printOperation(mutationFields, "mutation")}
 
 // Types
 
