@@ -44,9 +44,7 @@ object DbMapper extends JsonBsonConversion with MongoExtensions {
     )
   }
 
-  def convertToDocument(migration: models.Migration): Document = {
-    migrationDocumentFormat.writes(migration)
-  }
+  def convertToDocument(migration: models.Migration): Document = migrationDocumentFormat.writes(migration)
 
   def convertToProjectModel(project: Document, migration: models.Migration): models.Project = {
     val projectDocument = project.as[ProjectDocument](projectReads)

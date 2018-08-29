@@ -1,9 +1,8 @@
 package com.prisma.deploy.connector.mongo.impl
 
 import com.prisma.deploy.connector.MigrationPersistence
-import com.prisma.deploy.connector.mongo.database.MigrationDocument
 import com.prisma.shared.models.MigrationStatus.MigrationStatus
-import com.prisma.shared.models.{Migration, MigrationId}
+import com.prisma.shared.models.{Migration, MigrationId, MigrationStatus}
 import com.prisma.utils.mongo.MongoExtensions
 import org.joda.time.DateTime
 import org.mongodb.scala.bson.BsonDateTime
@@ -19,7 +18,6 @@ case class MigrationPersistenceImpl(
 )(implicit ec: ExecutionContext)
     extends MigrationPersistence
     with MongoExtensions {
-  import DbMapper._
 
   val migrations: MongoCollection[Document] = internalDatabase.getCollection("Migration")
 
@@ -27,7 +25,7 @@ case class MigrationPersistenceImpl(
 
   override def byId(migrationId: MigrationId): Future[Option[Migration]] = {
     migrations
-      .find(Filters.and(Filters.eq("projectId", migrationId.projectId), Filters.eq("revision", migrationId.revision)))
+      .find(Filters.and(projectIdFilter(migrationId.projectId), revisionFilter(migrationId.revision)))
       .collect
       .toFuture()
       .map(_.headOption.map(DbMapper.convertToMigrationModel))
@@ -35,7 +33,7 @@ case class MigrationPersistenceImpl(
 
   override def loadAll(projectId: String): Future[Seq[Migration]] = {
     migrations
-      .find(Filters.eq("projectId", projectId))
+      .find(projectIdFilter(projectId))
       .sort(descending("revision"))
       .collect
       .toFuture()
@@ -45,7 +43,7 @@ case class MigrationPersistenceImpl(
   override def create(migration: Migration): Future[Migration] = {
     def lastRevision =
       migrations
-        .find(Filters.eq("projectId", migration.projectId))
+        .find(projectIdFilter(migration.projectId))
         .sort(descending("revision"))
         .collect
         .toFuture()
@@ -60,7 +58,7 @@ case class MigrationPersistenceImpl(
 
   private def updateColumn(id: MigrationId, field: String, value: Any) = {
     migrations
-      .updateOne(Filters.and(Filters.eq("projectId", id.projectId), Filters.eq("revision", id.revision)), Updates.set(field, value))
+      .updateOne(Filters.and(projectIdFilter(id.projectId), revisionFilter(id.revision)), Updates.set(field, value))
       .toFuture
       .map(_ => ())
   }
@@ -92,7 +90,7 @@ case class MigrationPersistenceImpl(
 
   override def getLastMigration(projectId: String): Future[Option[Migration]] = {
     migrations
-      .find(Filters.and(Filters.eq("projectId", projectId), Filters.eq("status", "SUCCESS")))
+      .find(Filters.and(projectIdFilter(projectId), statusFilter(MigrationStatus.Success)))
       .sort(descending("revision"))
       .collect
       .toFuture()
@@ -101,8 +99,12 @@ case class MigrationPersistenceImpl(
 
   override def getNextMigration(projectId: String): Future[Option[Migration]] = {
     migrations
-      .find(Filters.and(Filters.eq("projectId", projectId),
-                        Filters.or(Filters.eq("status", "PENDING"), Filters.eq("status", "IN_PROGRESS"), Filters.eq("status", "ROLLING_BACK"))))
+      .find(
+        Filters.and(
+          projectIdFilter(projectId),
+          Filters.or(statusFilter(MigrationStatus.Pending), statusFilter(MigrationStatus.InProgress), statusFilter(MigrationStatus.RollingBack))
+        )
+      )
       .sort(ascending("revision"))
       .collect
       .toFuture()
@@ -111,9 +113,13 @@ case class MigrationPersistenceImpl(
 
   override def loadDistinctUnmigratedProjectIds(): Future[Seq[String]] = {
     migrations
-      .find(Filters.or(Filters.eq("status", "PENDING"), Filters.eq("status", "IN_PROGRESS"), Filters.eq("status", "ROLLING_BACK")))
+      .find(Filters.or(statusFilter(MigrationStatus.Pending), statusFilter(MigrationStatus.InProgress), statusFilter(MigrationStatus.RollingBack)))
       .collect
       .toFuture()
       .map(_.map(DbMapper.convertToMigrationModel(_).projectId).distinct)
   }
+
+  private def projectIdFilter(projectId: String)    = Filters.eq("projectId", projectId)
+  private def revisionFilter(revision: Int)         = Filters.eq("revision", revision)
+  private def statusFilter(status: MigrationStatus) = Filters.eq("status", status.toString)
 }

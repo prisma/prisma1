@@ -13,21 +13,21 @@ case class MongoDeployConnector(config: DatabaseConfig)(implicit ec: ExecutionCo
   lazy val mongoClient          = internalDatabaseDefs.client
   lazy val internalDatabase     = mongoClient.getDatabase("prisma")
 
-  override def isActive: Boolean = true
+  override val isActive: Boolean = true
 
-  override def projectPersistence: ProjectPersistence = ProjectPersistenceImpl(internalDatabase)
+  override val migrationPersistence: MigrationPersistence = MigrationPersistenceImpl(internalDatabase)
 
-  override def migrationPersistence: MigrationPersistence = MigrationPersistenceImpl(internalDatabase)
+  override val projectPersistence: ProjectPersistence = ProjectPersistenceImpl(internalDatabase, migrationPersistence)
 
-  override def deployMutactionExecutor: DeployMutactionExecutor = MongoDeployMutactionExecutor(mongoClient)
+  override val deployMutactionExecutor: DeployMutactionExecutor = MongoDeployMutactionExecutor(mongoClient)
 
   override def clientDBQueries(project: Project): ClientDbQueries = EmptyClientDbQueries
 
-  override def projectIdEncoder: ProjectIdEncoder = ProjectIdEncoder('$')
+  override val projectIdEncoder: ProjectIdEncoder = ProjectIdEncoder('$')
 
   override def databaseIntrospectionInferrer(projectId: String): DatabaseIntrospectionInferrer = EmptyDatabaseIntrospectionInferrer
 
-  override def cloudSecretPersistence: CloudSecretPersistence = CloudSecretPersistenceImpl(internalDatabase)
+  override val cloudSecretPersistence: CloudSecretPersistence = CloudSecretPersistenceImpl(internalDatabase)
 
   override def initialize(): Future[Unit] = Future.unit
 
