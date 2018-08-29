@@ -1,36 +1,18 @@
 package com.prisma.deploy.connector.mongo.impl
 
-import com.prisma.deploy.connector.MissingBackRelations
-import com.prisma.deploy.connector.mongo.database.{MigrationDocument, ProjectDocument}
+import com.prisma.deploy.connector.mongo.database.ProjectDocument
 import com.prisma.shared.models
-import com.prisma.shared.models.MigrationStatus.MigrationStatus
-import com.prisma.shared.models.{MigrationStep, Schema}
+import com.prisma.shared.models.Migration
 import com.prisma.utils.mongo.{DocumentFormat, DocumentReads, JsonBsonConversion, MongoExtensions}
-import org.joda.time.DateTime
 import org.mongodb.scala.Document
-import play.api.libs.functional.syntax.unlift
-import play.api.libs.json.{JsPath, JsValue, Json}
 import play.api.libs.functional.syntax._
+import play.api.libs.json.{JsPath, JsValue, Json}
 
 object DbMapper extends JsonBsonConversion with MongoExtensions {
-  import com.prisma.shared.models.ProjectJsonFormatter._
   import com.prisma.shared.models.MigrationStepsJsonFormatter._
+  import com.prisma.shared.models.ProjectJsonFormatter._
 
-  implicit val migrationDocumentFormat: DocumentFormat[MigrationDocument] = {
-    (
-      (JsPath \ "projectId").format[String] and
-        (JsPath \ "revision").format[Int] and
-        (JsPath \ "schema").format[JsValue] and
-        (JsPath \ "functions").format[JsValue] and
-        (JsPath \ "status").format[MigrationStatus] and
-        (JsPath \ "applied").format[Int] and
-        (JsPath \ "rolledBack").format[Int] and
-        (JsPath \ "steps").format[JsValue] and
-        (JsPath \ "errors").format[JsValue] and
-        (JsPath \ "startedAt").formatNullable[DateTime] and
-        (JsPath \ "finishedAt").formatNullable[DateTime]
-    ).apply(MigrationDocument.apply _, unlift(MigrationDocument.unapply))
-  }
+  implicit val migrationDocumentFormat: DocumentFormat[Migration] = migrationFormat
 
   implicit val projectReads: DocumentReads[ProjectDocument] = {
     (
@@ -63,67 +45,41 @@ object DbMapper extends JsonBsonConversion with MongoExtensions {
   }
 
   def convertToDocument(migration: models.Migration): Document = {
-    val schemaJson         = Json.toJson(migration.schema)
-    val functionsJson      = Json.toJson(migration.functions)
-    val migrationStepsJson = Json.toJson(migration.steps)
-    val errorsJson         = Json.toJson(migration.errors)
-
-    val migrationDocument = MigrationDocument(
-      projectId = migration.projectId,
-      revision = migration.revision,
-      schema = schemaJson,
-      functions = functionsJson,
-      status = migration.status,
-      applied = migration.applied,
-      rolledBack = migration.rolledBack,
-      steps = migrationStepsJson,
-      errors = errorsJson,
-      startedAt = migration.startedAt,
-      finishedAt = migration.finishedAt
-    )
-    migrationDocumentFormat.writes(migrationDocument)
+    migrationDocumentFormat.writes(migration)
   }
 
-  def convertToDocument(migrationDocument: MigrationDocument): Document = migrationDocumentFormat.writes(migrationDocument)
-
-  def convertToProjectModel(project: Document, migration: Document): models.Project = {
-    val projectDocument   = project.as[ProjectDocument](projectReads)
-    val migrationDocument = migration.as[MigrationDocument](migrationDocumentFormat)
-    convertToProjectModel(projectDocument, migrationDocument)
+  def convertToProjectModel(project: Document, migration: models.Migration): models.Project = {
+    val projectDocument = project.as[ProjectDocument](projectReads)
+    convertToProjectModel(projectDocument, migration)
   }
 
-  def convertToProjectModel(projectDocument: ProjectDocument, migrationDocument: MigrationDocument): models.Project = {
+  def convertToProjectModel(projectDocument: ProjectDocument, migration: models.Migration): models.Project = {
     models.Project(
       id = projectDocument.id,
       ownerId = "",
-      revision = migrationDocument.revision,
-      schema = convertSchema(migrationDocument.schema),
+      revision = migration.revision,
+      schema = migration.schema,
       secrets = projectDocument.secrets.as[Vector[String]],
       allowQueries = projectDocument.allowQueries,
       allowMutations = projectDocument.allowMutations,
-      functions = migrationDocument.functions.as[List[models.Function]]
+      functions = migration.functions.toList
     )
   }
 
-  def convertToMigrationModel(migration: Document): models.Migration = {
-    val migrationDocument = migration.as[MigrationDocument](migrationDocumentFormat)
+  def convertToMigrationModel(migrationDocument: Document): models.Migration = {
+    val migration = migrationDocument.as[Migration]
     models.Migration(
-      projectId = migrationDocument.projectId,
-      revision = migrationDocument.revision,
-      schema = convertSchema(migrationDocument.schema),
-      functions = migrationDocument.functions.as[Vector[models.Function]],
-      status = migrationDocument.status,
-      applied = migrationDocument.applied,
-      rolledBack = migrationDocument.rolledBack,
-      steps = migrationDocument.steps.as[Vector[MigrationStep]],
-      errors = migrationDocument.errors.as[Vector[String]],
-      startedAt = migrationDocument.startedAt,
-      finishedAt = migrationDocument.finishedAt
+      projectId = migration.projectId,
+      revision = migration.revision,
+      schema = migration.schema,
+      functions = migration.functions,
+      status = migration.status,
+      applied = migration.applied,
+      rolledBack = migration.rolledBack,
+      steps = migration.steps,
+      errors = migration.errors,
+      startedAt = migration.startedAt,
+      finishedAt = migration.finishedAt
     )
-  }
-
-  private def convertSchema(schema: JsValue): Schema = {
-    val schemaWithMissingBackRelations = schema.as[Schema]
-    MissingBackRelations.add(schemaWithMissingBackRelations)
   }
 }

@@ -297,7 +297,7 @@ object ProjectJsonFormatter {
   implicit lazy val projectFormat             = Json.format[Project]
   implicit lazy val projectWithClientIdFormat = Json.format[ProjectWithClientId]
   implicit lazy val migrationStatusFormat     = JsonUtils.enumFormat(MigrationStatus)
-  implicit lazy val migrationStepsFormat      = Json.format[Migration]
+  implicit lazy val migrationFormat           = Json.format[Migration]
 
   def failingFormat[T] = new Format[T] {
 

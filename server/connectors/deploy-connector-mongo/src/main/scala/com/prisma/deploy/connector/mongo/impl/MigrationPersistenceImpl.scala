@@ -49,7 +49,7 @@ case class MigrationPersistenceImpl(
         .sort(descending("revision"))
         .collect
         .toFuture()
-        .map(_.headOption.map(_.as[MigrationDocument].revision))
+        .map(_.headOption.map(DbMapper.convertToMigrationModel(_).revision))
 
     for {
       lastRevision       <- lastRevision
