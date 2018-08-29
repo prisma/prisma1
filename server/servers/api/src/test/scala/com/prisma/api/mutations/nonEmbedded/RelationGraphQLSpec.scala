@@ -1,12 +1,13 @@
 package com.prisma.api.mutations.nonEmbedded
 
 import com.prisma.api.ApiSpecBase
+import com.prisma.api.connector.ApiConnectorCapability.RelationsCapability
 import com.prisma.shared.models.Project
 import com.prisma.shared.schema_dsl.SchemaDsl
 import org.scalatest.{FlatSpec, Matchers}
 
 class RelationGraphQLSpec extends FlatSpec with Matchers with ApiSpecBase {
-  override def doNotRunSuiteForMongo: Boolean = true
+  override def runOnlyForCapabilities = Set(RelationsCapability)
 
   "One2One relations" should "only allow one item per side" in {
 

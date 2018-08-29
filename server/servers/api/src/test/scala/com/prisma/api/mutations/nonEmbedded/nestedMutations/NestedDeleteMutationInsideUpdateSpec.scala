@@ -1,11 +1,12 @@
 package com.prisma.api.mutations.nonEmbedded.nestedMutations
 
 import com.prisma.api.ApiSpecBase
+import com.prisma.api.connector.ApiConnectorCapability.RelationsCapability
 import com.prisma.shared.schema_dsl.SchemaDsl
 import org.scalatest.{FlatSpec, Matchers}
 
 class NestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matchers with ApiSpecBase {
-  override def doNotRunSuiteForMongo: Boolean = true
+  override def runOnlyForCapabilities = Set(RelationsCapability)
 
   "a P1! to C1! relation " should "error when deleting the child" in {
     val project = SchemaDsl.fromString() {

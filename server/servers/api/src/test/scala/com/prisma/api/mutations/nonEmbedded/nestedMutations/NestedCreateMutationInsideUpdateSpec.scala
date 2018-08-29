@@ -1,11 +1,12 @@
 package com.prisma.api.mutations.nonEmbedded.nestedMutations
 
 import com.prisma.api.ApiSpecBase
+import com.prisma.api.connector.ApiConnectorCapability.RelationsCapability
 import com.prisma.shared.schema_dsl.SchemaDsl
 import org.scalatest.{FlatSpec, Matchers}
 
 class NestedCreateMutationInsideUpdateSpec extends FlatSpec with Matchers with ApiSpecBase {
-  override def doNotRunSuiteForMongo: Boolean = true
+  override def runOnlyForCapabilities = Set(RelationsCapability)
 
   "a P1! to C1! relation" should "error since old required parent relation would be broken" in {
     val project = SchemaDsl.fromBuilder { schema =>

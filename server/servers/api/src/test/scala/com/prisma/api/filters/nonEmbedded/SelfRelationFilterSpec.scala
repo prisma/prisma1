@@ -1,12 +1,12 @@
 package com.prisma.api.filters.nonEmbedded
 
 import com.prisma.api.ApiSpecBase
+import com.prisma.api.connector.ApiConnectorCapability.RelationsCapability
 import com.prisma.shared.schema_dsl.SchemaDsl
 import org.scalatest.{FlatSpec, Matchers}
 
 class SelfRelationFilterSpec extends FlatSpec with Matchers with ApiSpecBase {
-  override def doNotRunSuiteForMongo: Boolean  = true
-  override def runSuiteOnlyForActiveConnectors = true
+  override def runOnlyForCapabilities = Set(RelationsCapability)
 
   val project = SchemaDsl.fromBuilder { schema =>
     val human: SchemaDsl.ModelBuilder = schema

@@ -42,4 +42,5 @@ object ApiConnectorCapability extends Enum[ApiConnectorCapability] {
   object NodeQueryCapability     extends ApiConnectorCapability
   object EmbeddedListsCapability extends ApiConnectorCapability
   object EmbeddedTypesCapability extends ApiConnectorCapability
+  object RelationsCapability     extends ApiConnectorCapability // this means normal relations, e.g. relations between documents in MongoDB
 }
