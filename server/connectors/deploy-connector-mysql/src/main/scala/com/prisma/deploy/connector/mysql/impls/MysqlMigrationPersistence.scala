@@ -15,9 +15,9 @@ import scala.util.{Failure, Success}
 case class MySqlMigrationPersistence(internalDatabase: DatabaseDef)(implicit ec: ExecutionContext) extends MigrationPersistence {
   val table = Tables.Migrations
 
-  def lock(): Future[Int] = {
+  def lock(): Future[Unit] = {
     internalDatabase.run(sql"SELECT GET_LOCK('deploy_privileges', -1);".as[Int].head.withPinnedSession).transformWith {
-      case Success(result) => if (result == 1) Future.successful(result) else lock()
+      case Success(result) => if (result == 1) Future.successful(()) else lock()
       case Failure(err)    => Future.failed(err)
     }
   }

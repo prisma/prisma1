@@ -23,13 +23,7 @@ case class MigrationPersistenceImpl(
 
   val migrations: MongoCollection[Document] = internalDatabase.getCollection("Migration")
 
-  def lock(): Future[Int] = {
-    //    internalDatabase.run(sql"SELECT pg_advisory_lock(1000);".as[String].head.withPinnedSession).transformWith {
-    //      case Success(_)   => Future.successful(1)
-    //      case Failure(err) => Future.failed(err)
-    //    }
-    Future.successful(1)
-  }
+  def lock(): Future[Unit] = Future.successful(())
 
   override def byId(migrationId: MigrationId): Future[Option[Migration]] = {
     migrations
