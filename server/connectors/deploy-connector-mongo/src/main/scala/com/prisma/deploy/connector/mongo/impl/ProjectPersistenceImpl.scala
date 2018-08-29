@@ -1,41 +1,64 @@
 package com.prisma.deploy.connector.mongo.impl
 
-import com.prisma.deploy.connector.ProjectPersistence
-import com.prisma.deploy.connector.mongo.database.{ProjectDefinition, ProjectTable}
-import com.prisma.shared.models.Project
+import com.prisma.deploy.connector.{MigrationPersistence, ProjectPersistence}
+import com.prisma.shared.models.{Migration, MigrationStatus, Project}
+import com.prisma.utils.mongo.MongoExtensions
 import org.mongodb.scala.model.Filters
-import org.mongodb.scala.{MongoCollection, MongoDatabase}
+import org.mongodb.scala.{Document, MongoCollection, MongoDatabase}
 
 import scala.concurrent.{ExecutionContext, Future}
 
 case class ProjectPersistenceImpl(
-    internalDatabase: MongoDatabase
+    internalDatabase: MongoDatabase,
+    migrationPersistence: MigrationPersistence
 )(implicit ec: ExecutionContext)
-    extends ProjectPersistence {
-  val projects: MongoCollection[ProjectDefinition] = internalDatabase.getCollection("Project")
+    extends ProjectPersistence
+    with MongoExtensions {
+
+  import DbMapper._
+
+  val projects: MongoCollection[Document] = internalDatabase.getCollection("Project")
 
   override def load(id: String): Future[Option[Project]] = {
-    ProjectTable
-      .byIdWithMigration(id, internalDatabase)
-      .map(optRes => optRes.map(res => DbToModelMapper.convert(res._1, res._2)))
-  }
-
-  override def create(project: Project): Future[Unit] = {
-    val addProject: ProjectDefinition = ModelToDbMapper.convert(project)
-
-    projects.insertOne(addProject).toFuture().map(_ => ())
-  }
-
-  override def delete(projectId: String): Future[Unit] = {
-    projects.deleteOne(Filters.eq("id", projectId)).toFuture().map(_ => ())
+    for {
+      theProjects <- projects.find(projectIdFilter(id)).collect.toFuture()
+      migration   <- lastSuccessfulMigrationForProjectId(id)
+    } yield {
+      migration.map { migration =>
+        DbMapper.convertToProjectModel(theProjects.head, migration)
+      }
+    }
   }
 
   override def loadAll(): Future[Seq[Project]] = {
-    ProjectTable.loadAllWithMigration(internalDatabase).map(_.map { case (p, m) => DbToModelMapper.convert(p, m) })
+    for {
+      projects         <- projects.find().collect.toFuture()
+      projectDocuments = projects.map(_.as[ProjectDocument])
+      migrations       <- Future.sequence(projectDocuments.map(p => lastSuccessfulMigrationForProjectId(p.id)))
+    } yield {
+      projectDocuments.map { pd =>
+        val migration = migrations.flatten.find(_.projectId == pd.id).get
+        DbMapper.convertToProjectModel(pd, migration)
+      }
+    }
+  }
+
+  override def create(project: Project): Future[Unit] = {
+    projects.insertOne(DbMapper.convertToDocument(project)).toFuture().map(_ => ())
+  }
+
+  override def delete(projectId: String): Future[Unit] = {
+    projects.deleteOne(projectIdFilter(projectId)).toFuture().map(_ => ())
   }
 
   override def update(project: Project): Future[_] = {
-    val dbRow = ModelToDbMapper.convert(project)
-    projects.replaceOne(Filters.eq("id", project.id), dbRow).toFuture
+    val mongoDocument = DbMapper.convertToDocument(project)
+    projects.replaceOne(projectIdFilter(project.id), mongoDocument).toFuture
   }
+
+  private def lastSuccessfulMigrationForProjectId(id: String): Future[Option[Migration]] = {
+    migrationPersistence.loadAll(id).map(_.find(_.status == MigrationStatus.Success))
+  }
+
+  private def projectIdFilter(projectId: String) = Filters.eq("id", projectId)
 }

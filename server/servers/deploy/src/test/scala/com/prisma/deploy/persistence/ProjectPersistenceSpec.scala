@@ -1,12 +1,13 @@
-package com.prisma.deploy.connector.postgres.impls
+package com.prisma.deploy.persistence
 
-import com.prisma.deploy.connector.postgres.SpecBase
-import com.prisma.deploy.connector.postgres.database.Tables
-import com.prisma.shared.models.{Migration, MigrationId, MigrationStatus}
+import com.prisma.deploy.specutils.{DeploySpecBase, TestProject}
+import com.prisma.shared.models._
 import org.scalatest.{FlatSpec, Matchers}
-import slick.jdbc.PostgresProfile.api._
 
-class ProjectPersistenceImplSpec extends FlatSpec with Matchers with SpecBase {
+class ProjectPersistenceSpec extends FlatSpec with Matchers with DeploySpecBase {
+
+  val projectPersistence   = testDependencies.projectPersistence
+  val migrationPersistence = testDependencies.migrationPersistence
 
   ".load()" should "return None if there's no project yet in the database" in {
     val result = projectPersistence.load("non-existent-id@some-stage").await()
@@ -25,29 +26,34 @@ class ProjectPersistenceImplSpec extends FlatSpec with Matchers with SpecBase {
       result
     }
 
-    // Load the applied revision, which is 1 (setup does add revision 1)
-    loadProject.get.revision shouldEqual 1
+    // Load the applied revision, which is 2 (2 steps are done in setupProject)
+    loadProject.get.revision shouldEqual 2
 
     // After another migration is completed, the revision is bumped to the revision of the latest migration
-    migrationPersistence.updateMigrationStatus(MigrationId(project.id, 2), MigrationStatus.Success).await
-    loadProject.get.revision shouldEqual 2
+    migrationPersistence.updateMigrationStatus(MigrationId(project.id, 3), MigrationStatus.Success).await
+    loadProject.get.revision shouldEqual 3
   }
 
   ".create()" should "store the project in the db" in {
-    assertNumberOfRowsInProjectTable(0)
-    projectPersistence.create(newTestProject()).await()
-    assertNumberOfRowsInProjectTable(1)
+    val project = TestProject().copy(
+      secrets = Vector("foo"),
+      functions = List(
+        ServerSideSubscriptionFunction("function", true, WebhookDelivery("url", Vector.empty), "query")
+      )
+    )
+    projectPersistence.create(project).await()
   }
 
   ".loadAll()" should "load all projects (for a user TODO)" in {
-    setupProject(basicTypesGql)
-    setupProject(basicTypesGql)
+    setupProject(basicTypesGql, stage = "stage1")
+    setupProject(basicTypesGql, stage = "stage2")
 
     projectPersistence.loadAll().await should have(size(2))
   }
 
   ".update()" should "update a project" in {
     val (project, _) = setupProject(basicTypesGql)
+    println(project.id)
 
     val updatedProject = project.copy(secrets = Vector("Some", "secrets"))
     projectPersistence.update(updatedProject).await()
@@ -57,10 +63,5 @@ class ProjectPersistenceImplSpec extends FlatSpec with Matchers with SpecBase {
       "Some",
       "secrets"
     )
-  }
-
-  def assertNumberOfRowsInProjectTable(count: Int): Unit = {
-    val query = Tables.Projects.size
-    internalDb.run(query.result) should equal(count)
   }
 }

@@ -2,7 +2,6 @@ package com.prisma.deploy.connector.mongo
 
 import com.prisma.config.DatabaseConfig
 import com.prisma.deploy.connector._
-import com.prisma.deploy.connector.mongo.database.{CodecRegistry, MigrationDefinition}
 import com.prisma.deploy.connector.mongo.impl.{CloudSecretPersistenceImpl, MigrationPersistenceImpl, MongoDeployMutactionExecutor, ProjectPersistenceImpl}
 import com.prisma.shared.models.{Project, ProjectIdEncoder}
 import org.joda.time.DateTime
@@ -12,27 +11,33 @@ import scala.concurrent.{ExecutionContext, Future}
 case class MongoDeployConnector(config: DatabaseConfig)(implicit ec: ExecutionContext) extends DeployConnector {
   lazy val internalDatabaseDefs = MongoInternalDatabaseDefs(config)
   lazy val mongoClient          = internalDatabaseDefs.client
-  lazy val internalDatabase     = mongoClient.getDatabase("prisma").withCodecRegistry(CodecRegistry.codecRegistry)
+  lazy val internalDatabase     = mongoClient.getDatabase("prisma")
 
-  override def isActive: Boolean = true
+  override val isActive: Boolean = true
 
-  override def projectPersistence: ProjectPersistence = new ProjectPersistenceImpl(internalDatabase)
+  override val migrationPersistence: MigrationPersistence = MigrationPersistenceImpl(internalDatabase)
 
-  override def migrationPersistence: MigrationPersistence = new MigrationPersistenceImpl(internalDatabase)
+  override val projectPersistence: ProjectPersistence = ProjectPersistenceImpl(internalDatabase, migrationPersistence)
 
-  override def deployMutactionExecutor: DeployMutactionExecutor = MongoDeployMutactionExecutor(mongoClient)
+  override val deployMutactionExecutor: DeployMutactionExecutor = MongoDeployMutactionExecutor(mongoClient)
 
-  override def clientDBQueries(project: Project): ClientDbQueries = ???
+  override def clientDBQueries(project: Project): ClientDbQueries = EmptyClientDbQueries
 
-  override def projectIdEncoder: ProjectIdEncoder = ProjectIdEncoder('$')
+  override val projectIdEncoder: ProjectIdEncoder = ProjectIdEncoder('$')
 
-  override def databaseIntrospectionInferrer(projectId: String): DatabaseIntrospectionInferrer = ???
+  override def databaseIntrospectionInferrer(projectId: String): DatabaseIntrospectionInferrer = EmptyDatabaseIntrospectionInferrer
 
-  override def cloudSecretPersistence: CloudSecretPersistence = new CloudSecretPersistenceImpl(internalDatabase)
+  override val cloudSecretPersistence: CloudSecretPersistence = CloudSecretPersistenceImpl(internalDatabase)
 
   override def initialize(): Future[Unit] = Future.unit
 
-  override def reset(): Future[Unit] = Future.unit
+  override def reset(): Future[Unit] = {
+    for {
+      collectionNames <- internalDatabase.listCollectionNames().toFuture()
+      collections     = collectionNames.map(internalDatabase.getCollection)
+      _               <- Future.sequence(collections.map(_.drop.toFuture))
+    } yield ()
+  }
 
   override def shutdown(): Future[Unit] = Future.unit
 

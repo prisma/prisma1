@@ -1,17 +1,18 @@
-package com.prisma.deploy.connector.mysql.impls
+package com.prisma.deploy.persistence
 
-import com.prisma.deploy.connector.mysql.SpecBase
-import com.prisma.deploy.connector.mysql.database.Tables
+import com.prisma.deploy.specutils.{DeploySpecBase, TestProject}
 import com.prisma.shared.models._
 import org.joda.time.DateTime
 import org.scalatest.{FlatSpec, Matchers}
-import slick.jdbc.MySQLProfile.api._
 
-class MySqlMigrationPersistenceSpec extends FlatSpec with Matchers with SpecBase {
+class MigrationPersistenceSpec extends FlatSpec with Matchers with DeploySpecBase {
+
+  val migrationPersistence = testDependencies.migrationPersistence
+  val projectPersistence   = testDependencies.projectPersistence
 
   ".byId()" should "load a migration by project ID and revision" in {
-    val (project1, _) = setupProject(basicTypesGql)
-    val (project2, _) = setupProject(basicTypesGql)
+    val (project1, _) = setupProject(basicTypesGql, stage = "stage1")
+    val (project2, _) = setupProject(basicTypesGql, stage = "stage2")
 
     val migration0Project1 = migrationPersistence.byId(MigrationId(project1.id, 1)).await.get
     migration0Project1.projectId shouldEqual project1.id
@@ -24,11 +25,11 @@ class MySqlMigrationPersistenceSpec extends FlatSpec with Matchers with SpecBase
 
   ".create()" should "store the migration in the db and increment the revision accordingly" in {
     val (project, _) = setupProject(basicTypesGql)
-    assertNumberOfRowsInMigrationTable(1)
+    migrationPersistence.loadAll(project.id).await should have(size(2))
 
     val savedMigration = migrationPersistence.create(Migration.empty(project.id)).await()
-    assertNumberOfRowsInMigrationTable(2)
-    savedMigration.revision shouldEqual 2
+    savedMigration.revision shouldEqual 3
+    migrationPersistence.loadAll(project.id).await should have(size(3))
   }
 
   ".create()" should "store the migration with its function in the db" in {
@@ -55,7 +56,7 @@ class MySqlMigrationPersistenceSpec extends FlatSpec with Matchers with SpecBase
     migrationPersistence.create(Migration.empty(project.id)).await
 
     val migrations = migrationPersistence.loadAll(project.id).await
-    migrations should have(size(4))
+    migrations should have(size(5))
   }
 
   ".updateMigrationStatus()" should "update a migration status correctly" in {
@@ -126,7 +127,7 @@ class MySqlMigrationPersistenceSpec extends FlatSpec with Matchers with SpecBase
     val (project, _)     = setupProject(basicTypesGql)
     val createdMigration = migrationPersistence.create(Migration.empty(project.id)).await
     migrationPersistence.updateMigrationStatus(createdMigration.id, MigrationStatus.Success).await
-    migrationPersistence.getLastMigration(project.id).await.get.revision shouldEqual 2
+    migrationPersistence.getLastMigration(project.id).await.get.revision shouldEqual 3
   }
 
   ".getNextMigration()" should "get the next migration to be applied to a project" in {
@@ -137,9 +138,9 @@ class MySqlMigrationPersistenceSpec extends FlatSpec with Matchers with SpecBase
   }
 
   "loadDistinctUnmigratedProjectIds()" should "load all distinct project ids that have open migrations" in {
-    val migratedProject               = newTestProject()
-    val unmigratedProject             = newTestProject()
-    val unmigratedProjectWithMultiple = newTestProject()
+    val migratedProject               = TestProject()
+    val unmigratedProject             = TestProject()
+    val unmigratedProjectWithMultiple = TestProject()
 
     // Create base projects
     projectPersistence.create(migratedProject).await()
@@ -153,10 +154,5 @@ class MySqlMigrationPersistenceSpec extends FlatSpec with Matchers with SpecBase
 
     val projectIds = migrationPersistence.loadDistinctUnmigratedProjectIds().await
     projectIds should have(size(2))
-  }
-
-  def assertNumberOfRowsInMigrationTable(count: Int): Unit = {
-    val query = Tables.Migrations.size
-    internalDb.run(query.result) should equal(count)
   }
 }

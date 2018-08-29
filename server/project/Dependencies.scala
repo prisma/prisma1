@@ -40,13 +40,12 @@ object Dependencies {
   val playJson    = "com.typesafe.play" %% "play-json"    % v.play
   val playStreams = "com.typesafe.play" %% "play-streams" % v.play
 
-  val akka              = "com.typesafe.akka" %% "akka-actor"           % v.akka
-  val akkaStream        = "com.typesafe.akka" %% "akka-stream"          % v.akka
-  val akkaTestKit       = "com.typesafe.akka" %% "akka-testkit"         % v.akka
-  val akkaHttp          = "com.typesafe.akka" %% "akka-http"            % v.akkaHttp
-  val akkaHttpTestKit   = "com.typesafe.akka" %% "akka-http-testkit"    % v.akkaHttp
-  val akkaHttpSprayJson = "com.typesafe.akka" %% "akka-http-spray-json" % v.akkaHttp
-  val akkaHttpCors      = "ch.megard"         %% "akka-http-cors"       % "0.3.0"
+  val akka            = "com.typesafe.akka" %% "akka-actor"        % v.akka
+  val akkaStream      = "com.typesafe.akka" %% "akka-stream"       % v.akka
+  val akkaTestKit     = "com.typesafe.akka" %% "akka-testkit"      % v.akka
+  val akkaHttp        = "com.typesafe.akka" %% "akka-http"         % v.akkaHttp
+  val akkaHttpTestKit = "com.typesafe.akka" %% "akka-http-testkit" % v.akkaHttp
+  val akkaHttpCors    = "ch.megard"         %% "akka-http-cors"    % "0.3.0"
   val akkaHttpPlayJson = "de.heikoseeberger" %% "akka-http-play-json" % "1.20.0" excludeAll (
     ExclusionRule(organization = "com.typesafe.akka"),
     ExclusionRule(organization = "com.typesafe.play")
@@ -58,11 +57,10 @@ object Dependencies {
   val guava         = "com.google.guava"              % "guava"                 % "19.0"
   val datadogStatsd = "com.datadoghq"                 % "java-dogstatsd-client" % "2.3"
 
-  val sangriaGraphql   = "org.sangria-graphql" %% "sangria" % v.sangria
-  val sangriaRelay     = "org.sangria-graphql" %% "sangria-relay" % v.sangria
-  val sangriaSprayJson = "org.sangria-graphql" %% "sangria-spray-json" % "1.0.0"
-  val sangriaPlayJson  = "org.sangria-graphql" %% "sangria-play-json" % "1.0.4"
-  val sangria          = Seq(sangriaGraphql, sangriaRelay, sangriaSprayJson, sangriaPlayJson)
+  val sangriaGraphql  = "org.sangria-graphql" %% "sangria" % v.sangria
+  val sangriaRelay    = "org.sangria-graphql" %% "sangria-relay" % v.sangria
+  val sangriaPlayJson = "org.sangria-graphql" %% "sangria-play-json" % "1.0.4"
+  val sangria         = Seq(sangriaGraphql, sangriaRelay, sangriaPlayJson)
 
   val bugsnagClient = "com.bugsnag" % "bugsnag"      % "3.0.2"
   val specs2        = "org.specs2"  %% "specs2-core" % "3.8.8" % "test"
@@ -103,7 +101,6 @@ object Dependencies {
     guava,
     akkaTestKit,
     akkaHttp,
-    akkaHttpSprayJson,
     akkaHttpPlayJson,
     akkaHttpCors,
     akkaHttpTestKit,
