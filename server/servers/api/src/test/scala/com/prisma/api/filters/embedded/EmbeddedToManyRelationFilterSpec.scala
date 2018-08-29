@@ -1,12 +1,13 @@
 package com.prisma.api.filters.embedded
 
 import com.prisma.api.ApiSpecBase
+import com.prisma.api.connector.ApiConnectorCapability.EmbeddedTypesCapability
 import com.prisma.shared.schema_dsl.SchemaDsl
 import org.scalatest.{FlatSpec, Matchers}
 
 class EmbeddedToManyRelationFilterSpec extends FlatSpec with Matchers with ApiSpecBase {
 
-  override def onlyRunSuiteForMongo: Boolean = true
+  override def runOnlyForCapabilities = Set(EmbeddedTypesCapability)
 
   "Using a toMany relational filter with _some" should "work" in {
 

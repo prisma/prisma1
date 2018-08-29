@@ -1,12 +1,13 @@
 package com.prisma.api.filters.embedded
 
 import com.prisma.api.ApiSpecBase
+import com.prisma.api.connector.ApiConnectorCapability.EmbeddedTypesCapability
 import com.prisma.shared.schema_dsl.SchemaDsl
 import org.scalatest.{FlatSpec, Matchers}
 
 class EmbeddedToOneRelationFilterSpec extends FlatSpec with Matchers with ApiSpecBase {
 
-  override def onlyRunSuiteForMongo: Boolean = true
+  override def runOnlyForCapabilities = Set(EmbeddedTypesCapability)
 
   "Using a toOne relational filter checking for null " should "work" in {
 

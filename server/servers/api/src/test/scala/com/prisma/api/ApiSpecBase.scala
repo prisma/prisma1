@@ -3,7 +3,7 @@ package com.prisma.api
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
 import com.prisma.ConnectorAwareTest
-import com.prisma.api.connector.DataResolver
+import com.prisma.api.connector.{ApiConnectorCapability, DataResolver}
 import com.prisma.api.util.StringMatchers
 import com.prisma.shared.models.Project
 import com.prisma.utils.await.AwaitUtils
@@ -13,6 +13,27 @@ import play.api.libs.json.JsString
 
 trait ApiSpecBase extends ConnectorAwareTest with BeforeAndAfterEach with BeforeAndAfterAll with PlayJsonExtensions with StringMatchers with AwaitUtils {
   self: Suite =>
+
+  def runOnlyForCapabilities: Set[ApiConnectorCapability] = Set.empty
+//  def doNotRunForCapabilities: Set[ApiConnectorCapability] = Set.empty
+
+  abstract override def tags: Map[String, Set[String]] = {
+    val superTags    = super.tags
+    val capabilities = testDependencies.apiConnector.capabilities.toSet
+
+    if (runOnlyForCapabilities.isEmpty) {
+      superTags
+    } else {
+      val runIt = runOnlyForCapabilities.intersect(capabilities) == runOnlyForCapabilities
+      println(capabilities)
+      println(runOnlyForCapabilities)
+      if (runIt) {
+        superTags
+      } else {
+        ignoreAllTests
+      }
+    }
+  }
 
   implicit lazy val system           = ActorSystem()
   implicit lazy val materializer     = ActorMaterializer()

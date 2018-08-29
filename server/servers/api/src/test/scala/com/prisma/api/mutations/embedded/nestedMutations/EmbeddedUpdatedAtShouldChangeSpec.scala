@@ -2,11 +2,12 @@ package com.prisma.api.mutations.embedded.nestedMutations
 
 import com.prisma.IgnoreMongo
 import com.prisma.api.ApiSpecBase
+import com.prisma.api.connector.ApiConnectorCapability.EmbeddedTypesCapability
 import com.prisma.shared.schema_dsl.SchemaDsl
 import org.scalatest.{FlatSpec, Matchers}
 
 class EmbeddedUpdatedAtShouldChangeSpec extends FlatSpec with Matchers with ApiSpecBase {
-  override def onlyRunSuiteForMongo: Boolean = true
+  override def runOnlyForCapabilities = Set(EmbeddedTypesCapability)
 
   val project = SchemaDsl.fromString() {
 

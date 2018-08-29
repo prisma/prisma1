@@ -1,11 +1,12 @@
 package com.prisma.api.mutations.embedded.nestedMutations
 
 import com.prisma.api.ApiSpecBase
+import com.prisma.api.connector.ApiConnectorCapability.EmbeddedTypesCapability
 import com.prisma.shared.schema_dsl.SchemaDsl
 import org.scalatest.{FlatSpec, Matchers}
 
 class SettingNodeSelectorToNullSpec extends FlatSpec with Matchers with ApiSpecBase {
-  override def onlyRunSuiteForMongo: Boolean = true
+  override def runOnlyForCapabilities = Set(EmbeddedTypesCapability)
 
   "Setting a where value to null " should "should only update one if there are several nulls for the specified node selector" in {
     val project = SchemaDsl.fromString() {
@@ -90,5 +91,4 @@ class SettingNodeSelectorToNullSpec extends FlatSpec with Matchers with ApiSpecB
 
     result.toString should be("""{"data":{"as":[{"b":null,"c":{"c":"NewC"}},{"b":null,"c":{"c":"C2"}}]}}""")
   }
-
 }

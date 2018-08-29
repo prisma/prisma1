@@ -1,7 +1,8 @@
 package com.prisma.api.connector.mysql
 
+import com.prisma.api.connector.ApiConnectorCapability.NodeQueryCapability
 import com.prisma.api.connector.jdbc.impl.{JdbcDataResolver, JdbcDatabaseMutactionExecutor}
-import com.prisma.api.connector.{ApiConnector, DatabaseMutactionExecutor, NodeQueryCapability}
+import com.prisma.api.connector.{ApiConnector, DatabaseMutactionExecutor}
 import com.prisma.config.DatabaseConfig
 import com.prisma.shared.models.{Project, ProjectIdEncoder}
 

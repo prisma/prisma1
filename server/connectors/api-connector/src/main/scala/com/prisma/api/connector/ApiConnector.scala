@@ -3,6 +3,7 @@ package com.prisma.api.connector
 import com.prisma.shared.models.{Project, ProjectIdEncoder}
 
 import scala.concurrent.Future
+import enumeratum._
 
 trait ApiConnector {
   def databaseMutactionExecutor: DatabaseMutactionExecutor
@@ -33,7 +34,12 @@ trait DatabaseMutactionExecutor {
   def executeNonTransactionally(mutaction: TopLevelDatabaseMutaction): Future[MutactionResults]
 }
 
-sealed trait ApiConnectorCapability
-object NodeQueryCapability     extends ApiConnectorCapability
-object EmbeddedListsCapability extends ApiConnectorCapability
-object EmbeddedTypesCapability extends ApiConnectorCapability
+sealed trait ApiConnectorCapability extends EnumEntry
+
+object ApiConnectorCapability extends Enum[ApiConnectorCapability] {
+  val values = findValues
+
+  object NodeQueryCapability     extends ApiConnectorCapability
+  object EmbeddedListsCapability extends ApiConnectorCapability
+  object EmbeddedTypesCapability extends ApiConnectorCapability
+}

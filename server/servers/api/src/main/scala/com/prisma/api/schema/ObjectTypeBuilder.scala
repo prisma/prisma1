@@ -1,5 +1,6 @@
 package com.prisma.api.schema
 
+import com.prisma.api.connector.ApiConnectorCapability.EmbeddedListsCapability
 import com.prisma.api.connector.LogicalKeyWords._
 import com.prisma.api.connector.{TrueFilter, _}
 import com.prisma.api.mutations.BatchPayload
