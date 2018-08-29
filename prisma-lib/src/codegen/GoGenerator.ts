@@ -346,9 +346,9 @@ ${typeNames
         return reflect.DeepEqual(x, reflect.Zero(reflect.TypeOf(x)).Interface())
       }
 
-      // Request Send a GraphQL operation request
+      // GraphQL Send a GraphQL operation request
 // TODO: arg variables can be made optional via variadic func approach
-func (db DB) Request(query string, variables map[string]interface{}) map[string]interface{} {
+func (db DB) GraphQL(query string, variables map[string]interface{}) map[string]interface{} {
 	// TODO: Error handling (both network, GraphQL and application level (missing node etc))
 	// TODO: Add auth support
 
