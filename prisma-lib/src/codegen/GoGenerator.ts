@@ -54,7 +54,8 @@ export class GoGenerator extends Generator {
       return `
       // ${type.name}Exec docs
       type ${type.name}Exec struct {
-          stack []Instruction // TODO: This will be map[string]interface{} to support parallel stacks
+        db    DB
+        stack []Instruction // TODO: This will be map[string]interface{} to support parallel stacks
       }
 
       ${Object.keys(fieldMap)
@@ -81,6 +82,7 @@ export class GoGenerator extends Generator {
                 args: args,
               })
             return &${goCase(deepTypeName)}Exec{
+              db: instance.db,
               stack: instance.stack,
             }
           }`
@@ -89,7 +91,7 @@ export class GoGenerator extends Generator {
 
       // Exec docs
       func (instance ${type.name}Exec) Exec() ${type.name} {
-        fmt.Println(instance.stack)
+        fmt.Println(instance.db.ProcessInstructions(instance.stack))
         return ${type.name}{}
       }
       
@@ -119,6 +121,7 @@ export class GoGenerator extends Generator {
       return `
       // ${goCase(type.name)}Exec docs
       type ${goCase(type.name)}Exec struct {
+        db    DB
         stack []Instruction
       }
 
@@ -268,6 +271,7 @@ export class GoGenerator extends Generator {
       return &${isListType(field.type) ? `[]` : ``}${goCase(
           this.rawTypeName(field.type),
         )}Exec{
+          db: db,
           stack: stack,
         }
         }`
@@ -305,6 +309,13 @@ type Instruction struct {
 // DB Type to represent the client
 type DB struct {
 	Endpoint string // TODO: Remove the Endpoint from here and print it where needed.
+}
+
+// ProcessInstructions docs
+func (db *DB) ProcessInstructions(stack []Instruction) string {
+	fmt.Println(db.Endpoint)
+	fmt.Println(stack)
+	return \`query\`
 }
 
 // Queries
