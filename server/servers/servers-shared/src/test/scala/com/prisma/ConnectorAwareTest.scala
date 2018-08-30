@@ -109,7 +109,7 @@ trait ConnectorAwareTest[CapabilityType] extends SuiteMixin { self: Suite =>
   private def ignoredTestsBasedOnIndividualTagging(connector: DatabaseConfig) = {
     val ignoreConnectorTypes = ignoreConnectorTags.filter(_.name.endsWith(connector.connector))
     val tagNamesToIgnore     = ignoreConnectorTypes.map(_.name)
-    tags.mapValues { value =>
+    super.tags.mapValues { value =>
       val isIgnored = value.exists(tagNamesToIgnore.contains)
       if (isIgnored) {
         value ++ Set("org.scalatest.Ignore")
