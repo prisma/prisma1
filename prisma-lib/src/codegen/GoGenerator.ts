@@ -105,7 +105,7 @@ export class GoGenerator extends Generator {
       // ${type.name}Exec docs
       type ${type.name}Exec struct {
         db    DB
-        stack []Instruction // TODO: This will be map[string]interface{} to support parallel stacks
+        stack []Instruction
       }
       ${Object.keys(fieldMap)
         .filter(key => {
@@ -415,7 +415,8 @@ type DB struct {
 
 // ProcessInstructions docs
 func (db *DB) ProcessInstructions(stack []Instruction) string {
-	query := make(map[string]interface{})
+  query := make(map[string]interface{})
+  // TODO: This needs to handle collisions across instructions
 	args := make(map[string][]GraphQLArg)
 	firstInstruction := stack[0]
 	for i := len(stack) - 1; i >= 0; i-- {
