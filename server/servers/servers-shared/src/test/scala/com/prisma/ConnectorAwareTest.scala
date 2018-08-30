@@ -28,13 +28,14 @@ object ConnectorTag extends Enum[ConnectorTag] {
 trait ConnectorAwareTest[CapabilityType] extends SuiteMixin { self: Suite =>
   import IgnoreSet._
   def prismaConfig: PrismaConfig
-  lazy val connector               = prismaConfig.databases.head
-  private val isPrototype: Boolean = if (connector.connector == "mongo") true else false
+
+  lazy val connector = prismaConfig.databases.head
   private val connectorTag = connector.connector match {
     case "mongo"    => MongoConnectorTag
     case "mysql"    => MySqlConnectorTag
     case "postgres" => PostgresConnectorTag
   }
+  private val isPrototype: Boolean = connectorTag == MongoConnectorTag
 
   def capabilities: Set[CapabilityType] // capabilities of the current connector
   def runOnlyForConnectors: Set[ConnectorTag]      = ConnectorTag.values.toSet
@@ -118,7 +119,7 @@ trait ConnectorAwareTest[CapabilityType] extends SuiteMixin { self: Suite =>
     }
   }
 
-  protected def ignoreAllTests = {
+  private def ignoreAllTests = {
     testNames.map { testName =>
       testName -> Set("org.scalatest.Ignore")
     }.toMap
