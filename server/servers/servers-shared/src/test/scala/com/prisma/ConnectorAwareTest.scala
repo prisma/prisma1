@@ -45,8 +45,19 @@ trait ConnectorAwareTest extends SuiteMixin { self: Suite =>
 
     val isNotTheRightConnector = !runOnlyForConnectors.contains(connectorTag)
     if (isNotTheRightConnector) {
+      println(
+        s"""the suite ${self.getClass.getSimpleName} will be ignored because the current connector is not right
+           | allowed connectors: ${runOnlyForConnectors.mkString(",")}
+           | current connector: ${connectorTag}
+         """.stripMargin
+      )
       ignoreAllTests
     } else if (isPrototype && doNotRunForPrototypes) {
+      println(
+        s"""the suite ${self.getClass.getSimpleName} will be ignored because it should not run for prototypes and the current connector is a prototype
+           | current connector: ${connectorTag}
+         """.stripMargin
+      )
       ignoreAllTests
     } else {
       ignoredTestsBasedOnIndividualTagging(connector, superTags)
