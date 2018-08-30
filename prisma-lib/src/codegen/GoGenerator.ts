@@ -446,8 +446,8 @@ func (db *DB) ProcessInstructions(stack []Instruction) string {
     {{- range $k0, $v0 := $.args }}
       {{- range $k1, $v1 := $v0}}
         \${{ $v1.Name }}: {{ $v1.TypeName }},
-      {{ end }}
-    {{ end }}
+      {{- end }}
+    {{- end }}
     ) {
     {{- range $k, $v := $.query }}
     {{- if isArray $v }}
@@ -455,16 +455,40 @@ func (db *DB) ProcessInstructions(stack []Instruction) string {
         {{ $v1 }}
       {{end}}
     {{- else }}
-      {{ $k }} {
+      {{ $k }} (
+        {{- range $argKey, $argValue := $.args }}
+          {{- if eq $argKey $k }}
+            {{- range $k, $arg := $argValue}}
+              {{ $arg.Name }}: \${{ $arg.Name }},
+            {{- end }}
+          {{- end }}
+        {{- end }}
+        ) {
         {{- range $k, $v := $v }}
         {{- if isArray $v }}
-          {{ $k }} { 
+          {{ $k }} (
+            {{- range $argKey, $argValue := $.args }}
+              {{- if eq $argKey $k }}
+                {{- range $k, $arg := $argValue}}
+                  {{ $arg.Name }}: \${{ $arg.Name }},
+                {{- end }}
+              {{- end }}
+            {{- end }}
+            ) { 
             {{- range $k1, $v1 := $v }}
               {{ $v1 }}
             {{end}}
           }
         {{- else }}
-          {{ $k }} {
+          {{ $k }} (
+            {{- range $argKey, $argValue := $.args }}
+              {{- if eq $argKey $k }}
+                {{- range $k, $arg := $argValue}}
+                  {{ $arg.Name }}: \${{ $arg.Name }},
+                {{- end }}
+              {{- end }}
+            {{- end }}
+            ) {
             {{- range $k, $v := $v }}
               {{- if isArray $v }}
                 {{ $k }} { 
@@ -473,17 +497,26 @@ func (db *DB) ProcessInstructions(stack []Instruction) string {
                   {{end}}
                 }
               {{- else }}
-                {{ $k }} {
+                {{ $k }} (
+                  {{- range $argKey, $argValue := $.args }}
+                    {{- if eq $argKey $k }}
+                      {{- range $k, $arg := $argValue}}
+                        {{ $arg.Name }}: \${{ $arg.Name }},
+                      {{- end }}
+                    {{- end }}
+                  {{- end }}
+                  ) {
                   id
                 }
-              {{ end }}
-              {{ end }}
+              {{- end }}
+              {{- end }}
           }
-        {{ end }}
-        {{ end }}
+        {{- end }}
+        {{- end }}
       }
-    {{ end }}
-    {{ end }}
+    {{- end }}
+    {{- end }}
+    }
   \`
 
 	templateFunctions := template.FuncMap{
