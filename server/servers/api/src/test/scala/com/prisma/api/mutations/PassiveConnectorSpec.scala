@@ -1,7 +1,9 @@
 package com.prisma.api.mutations
 
+import com.prisma.ConnectorTag.PostgresConnectorTag
 import com.prisma.IgnoreActive
 import com.prisma.api.ApiSpecBase
+import com.prisma.api.connector.ApiConnectorCapability.SupportsExistingDatabasesCapability
 import com.prisma.deploy.connector.postgres.PostgresDeployConnector
 import com.prisma.shared.schema_dsl.SchemaDsl
 import org.scalatest.{FlatSpec, Matchers}
@@ -9,9 +11,8 @@ import org.scalatest.{FlatSpec, Matchers}
 trait PassiveConnectorSpec extends FlatSpec with Matchers with ApiSpecBase {
   val schema = "passive_test"
 
-  override def runSuiteOnlyForPassiveConnectors = true
-
-  override def doNotRunSuiteForMongo: Boolean = true
+  override def runOnlyForConnectors   = Set(PostgresConnectorTag)
+  override def runOnlyForCapabilities = Set(SupportsExistingDatabasesCapability)
 
   def executeOnInternalDatabase(sql: String) = {
     val connector = testDependencies.deployConnector.asInstanceOf[PostgresDeployConnector]

@@ -1,5 +1,6 @@
 package com.prisma
 
+import com.prisma.ConnectorTag.{MongoConnectorTag, MySqlConnectorTag, PostgresConnectorTag}
 import com.prisma.api.connector.ApiConnectorCapability
 import com.prisma.config.{DatabaseConfig, PrismaConfig}
 import enumeratum.{Enum, EnumEntry}
@@ -15,27 +16,45 @@ object IgnoreSet {
   val ignoreConnectorTags = Set(IgnorePostgres, IgnoreMySql, IgnoreMongo)
 }
 
+sealed trait ConnectorTag extends EnumEntry
+object ConnectorTag extends Enum[ConnectorTag] {
+  def values = findValues
+
+  sealed trait RelationalConnectorTag extends ConnectorTag
+  object RelationalConnectorTag       extends RelationalConnectorTag
+  object MySqlConnectorTag            extends RelationalConnectorTag
+  object PostgresConnectorTag         extends RelationalConnectorTag
+  sealed trait DocumentConnectorTag   extends ConnectorTag
+  object MongoConnectorTag            extends DocumentConnectorTag
+}
+
 trait ConnectorAwareTest extends SuiteMixin { self: Suite =>
   import IgnoreSet._
   def prismaConfig: PrismaConfig
   lazy val connector               = prismaConfig.databases.head
   private val isPrototype: Boolean = if (connector.connector == "mongo") true else false
+  private val connectorTag = connector.connector match {
+    case "mongo"    => MongoConnectorTag
+    case "mysql"    => MySqlConnectorTag
+    case "postgres" => PostgresConnectorTag
+  }
 
   def runSuiteOnlyForActiveConnectors: Boolean  = false
   def runSuiteOnlyForPassiveConnectors: Boolean = false
-  def doNotRunSuiteForMongo: Boolean            = false
   def doNotRunForPrototypes: Boolean            = false
+
+  def runOnlyForConnectors: Set[ConnectorTag] = ConnectorTag.values.toSet
 
   abstract override def tags: Map[String, Set[String]] = {
     val superTags = super.tags
 
-    if (isPrototype && doNotRunForPrototypes) {
+    if (!runOnlyForConnectors.contains(connectorTag)) {
+      ignoreAllTests
+    } else if (isPrototype && doNotRunForPrototypes) {
       ignoreAllTests
     } else if (runSuiteOnlyForActiveConnectors && !connector.active) {
       ignoreAllTests
     } else if (runSuiteOnlyForPassiveConnectors && (connector.active || connector.connector == "mongo")) {
-      ignoreAllTests
-    } else if (doNotRunSuiteForMongo && connector.connector == "mongo") {
       ignoreAllTests
     } else {
       ignoredTestsBasedOnIndividualTagging(connector, superTags)

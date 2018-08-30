@@ -1,11 +1,6 @@
 package com.prisma.api.connector.postgres
 
-import com.prisma.api.connector.ApiConnectorCapability.{
-  ImportExportCapability,
-  NodeQueryCapability,
-  NonEmbeddedScalarListCapability,
-  TransactionalExecutionCapability
-}
+import com.prisma.api.connector.ApiConnectorCapability._
 import com.prisma.api.connector.jdbc.impl.{JdbcDataResolver, JdbcDatabaseMutactionExecutor}
 import com.prisma.api.connector.{ApiConnector, ApiConnectorCapability}
 import com.prisma.config.DatabaseConfig
@@ -37,7 +32,7 @@ case class PostgresApiConnector(config: DatabaseConfig, isActive: Boolean)(impli
     if (isActive) {
       Vector(NodeQueryCapability, ImportExportCapability, NonEmbeddedScalarListCapability) ++ common
     } else {
-      common
+      Vector(SupportsExistingDatabasesCapability) ++ common
     }
   }
 }
