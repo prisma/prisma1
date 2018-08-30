@@ -6,7 +6,7 @@ import org.scalatest.{FlatSpec, Matchers}
 
 class PaginationSpec extends FlatSpec with Matchers with ApiSpecBase {
 
-  override def doNotRunSuiteForMongo: Boolean = true
+  override def doNotRunForPrototypes: Boolean = true
   val project = SchemaDsl.fromString() {
     """
       |type List {

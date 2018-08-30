@@ -1,14 +1,14 @@
 package com.prisma.api.filters.nonEmbedded
 
 import com.prisma.api.ApiSpecBase
+import com.prisma.api.connector.ApiConnectorCapability.JoinRelationsCapability
 import com.prisma.shared.schema_dsl.SchemaDsl
 import com.prisma.{IgnoreMySql, IgnorePostgres}
 import org.scalatest._
 
 class ExtendedRelationFilterSpec extends FlatSpec with Matchers with ApiSpecBase {
 
-  override def doNotRunSuiteForMongo: Boolean  = true
-  override def runSuiteOnlyForActiveConnectors = true
+  override def runOnlyForCapabilities = Set(JoinRelationsCapability)
 
   val project = SchemaDsl.fromString() { """type Artist {
                                          |  id: ID! @unique

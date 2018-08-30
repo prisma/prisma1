@@ -1,9 +1,9 @@
 package com.prisma.deploy.database.schema.queries
 
-import com.prisma.deploy.specutils.ActiveDeploySpecBase
+import com.prisma.deploy.specutils.{ActiveDeploySpecBase, DeploySpecBase}
 import org.scalatest.{FlatSpec, Matchers}
 
-class ProjectSpec extends FlatSpec with Matchers with ActiveDeploySpecBase {
+class ProjectSpec extends FlatSpec with Matchers with DeploySpecBase {
 
   "Project query" should "return a project that exists" in {
     val (project, _) = setupProject(basicTypesGql)

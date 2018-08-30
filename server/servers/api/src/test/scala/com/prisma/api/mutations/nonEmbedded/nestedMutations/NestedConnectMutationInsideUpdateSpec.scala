@@ -1,12 +1,12 @@
 package com.prisma.api.mutations.nonEmbedded.nestedMutations
 
-import com.prisma.IgnorePassive
 import com.prisma.api.ApiSpecBase
+import com.prisma.api.connector.ApiConnectorCapability.JoinRelationsCapability
 import com.prisma.shared.schema_dsl.SchemaDsl
 import org.scalatest.{FlatSpec, Matchers}
 
 class NestedConnectMutationInsideUpdateSpec extends FlatSpec with Matchers with ApiSpecBase {
-  override def doNotRunSuiteForMongo: Boolean = true
+  override def runOnlyForCapabilities = Set(JoinRelationsCapability)
 
   "a P1! to C1! relation with the child already in a relation" should "error when connecting by id since old required parent relation would be broken" in {
     val project = SchemaDsl.fromBuilder { schema =>
@@ -1471,9 +1471,9 @@ class NestedConnectMutationInsideUpdateSpec extends FlatSpec with Matchers with 
     mustBeEqual(result.pathAsJsValue("data.updateTodo.comments").toString, """[{"text":"comment1"},{"text":"comment2"}]""")
   }
 
-  // TODO: fails for passive as no id field is added to the model
-  "a PM to CM  self relation with the child not already in a relation" should "be connectable through a nested mutation by unique" taggedAs (IgnorePassive) in {
+  "a PM to CM  self relation with the child not already in a relation" should "be connectable through a nested mutation by unique" in {
     val project = SchemaDsl.fromString() { """type Technology {
+                                             |  id: ID! @unique
                                              |  name: String! @unique
                                              |  childTechnologies: [Technology!]! @relation(name: "ChildTechnologies")
                                              |  parentTechnologies: [Technology!]! @relation(name: "ChildTechnologies")

@@ -1,12 +1,13 @@
 package com.prisma.deploy.database.schema.mutations
 
+import com.prisma.ConnectorTag.PostgresConnectorTag
 import com.prisma.deploy.specutils.PassiveDeploySpecBase
 import com.prisma.shared.models.Manifestations.{InlineRelationManifestation, ModelManifestation, RelationTableManifestation}
 import org.scalatest.{FlatSpec, Matchers}
 
 class PassiveDeployMutationSpec extends FlatSpec with Matchers with PassiveDeploySpecBase {
 
-  override def doNotRunSuiteForMongo: Boolean = true
+  override def runOnlyForConnectors = Set(PostgresConnectorTag)
 
   "a schema without any relations" should "work" in {
     val sqlSchema =

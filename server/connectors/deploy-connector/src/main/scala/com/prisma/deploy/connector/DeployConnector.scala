@@ -2,6 +2,7 @@ package com.prisma.deploy.connector
 
 import com.prisma.shared.models.RelationSide.RelationSide
 import com.prisma.shared.models._
+import enumeratum.{EnumEntry, Enum => Enumeratum}
 import org.joda.time.DateTime
 
 import scala.concurrent.Future
@@ -16,6 +17,9 @@ trait DeployConnector {
   def projectIdEncoder: ProjectIdEncoder
   def databaseIntrospectionInferrer(projectId: String): DatabaseIntrospectionInferrer
   def cloudSecretPersistence: CloudSecretPersistence
+  def capabilities: Set[DeployConnectorCapability]
+
+  def hasCapability(capability: DeployConnectorCapability) = capabilities.contains(capability)
 
   def initialize(): Future[Unit]
   def reset(): Future[Unit]
@@ -51,4 +55,12 @@ object EmptyClientDbQueries extends ClientDbQueries {
   override def existsNullByModelAndField(model: Model, field: Field)                    = falseFuture
   override def existsDuplicateValueByModelAndField(model: Model, field: ScalarField)    = falseFuture
   override def enumValueIsInUse(models: Vector[Model], enumName: String, value: String) = falseFuture
+}
+
+sealed trait DeployConnectorCapability extends EnumEntry
+
+object DeployConnectorCapability extends Enumeratum[DeployConnectorCapability] {
+  def values = findValues
+
+  object MigrationsCapability extends DeployConnectorCapability
 }

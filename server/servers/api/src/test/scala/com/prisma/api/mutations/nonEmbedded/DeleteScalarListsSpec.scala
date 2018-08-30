@@ -2,14 +2,15 @@ package com.prisma.api.mutations.nonEmbedded
 
 import com.prisma.IgnoreMongo
 import com.prisma.api.ApiSpecBase
+import com.prisma.api.connector.ApiConnectorCapability.ScalarListsCapability
 import com.prisma.shared.models.Project
 import com.prisma.shared.schema_dsl.SchemaDsl
 import org.scalatest.{FlatSpec, Matchers}
 
 class DeleteScalarListsSpec extends FlatSpec with Matchers with ApiSpecBase {
 
-  override def doNotRunSuiteForMongo: Boolean  = true
-  override def runSuiteOnlyForActiveConnectors = true
+  override def runOnlyForCapabilities         = Set(ScalarListsCapability)
+  override def doNotRunForPrototypes: Boolean = true
 
   "A toplevel delete  mutation" should "also delete ListTable entries" in {
 
