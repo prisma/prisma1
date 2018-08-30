@@ -17,6 +17,7 @@ trait ApiSpecBase extends ConnectorAwareTest with BeforeAndAfterEach with Before
 
   def runOnlyForCapabilities: Set[ApiConnectorCapability]  = Set.empty
   def doNotRunForCapabilities: Set[ApiConnectorCapability] = Set.empty
+  private val capabilities                                 = testDependencies.apiConnector.capabilities
 
   abstract override def tags: Map[String, Set[String]] = { // this must not be a val. Otherwise ScalaTest does not behave correctly.
     if (shouldSuiteBeIgnored) {
@@ -33,7 +34,7 @@ trait ApiSpecBase extends ConnectorAwareTest with BeforeAndAfterEach with Before
       println(
         s"""the suite ${self.getClass.getSimpleName} will be ignored because it does not have the right capabilities
            | required capabilities: ${runOnlyForCapabilities.mkString(",")}
-           | connector capabilities: ${testDependencies.apiConnector.capabilities.mkString(",")}
+           | connector capabilities: ${capabilities.mkString(",")}
          """.stripMargin
       )
     }
@@ -41,7 +42,7 @@ trait ApiSpecBase extends ConnectorAwareTest with BeforeAndAfterEach with Before
       println(
         s"""the suite ${self.getClass.getSimpleName} will be ignored because it has a wrong capability
            | wrong capabilities: ${doNotRunForCapabilities.mkString(",")}
-           | connector capabilities: ${testDependencies.apiConnector.capabilities.mkString(",")}
+           | connector capabilities: ${capabilities.mkString(",")}
          """.stripMargin
       )
     }
@@ -50,7 +51,6 @@ trait ApiSpecBase extends ConnectorAwareTest with BeforeAndAfterEach with Before
   }
 
   private def connectorHasCapability(capability: ApiConnectorCapability) = {
-    val capabilities = testDependencies.apiConnector.capabilities.toSet
     capability match {
       case ScalarListsCapability => capabilities.exists(_.isInstanceOf[ScalarListsCapability])
       case c                     => capabilities.contains(c)

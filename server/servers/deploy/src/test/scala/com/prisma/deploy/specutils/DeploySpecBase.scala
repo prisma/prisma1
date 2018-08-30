@@ -3,6 +3,7 @@ package com.prisma.deploy.specutils
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
 import com.prisma.ConnectorAwareTest
+import com.prisma.api.connector.ApiConnectorCapability
 import com.prisma.deploy.connector.DeployConnectorCapability
 import com.prisma.deploy.connector.DeployConnectorCapability.MigrationsCapability
 import com.prisma.deploy.connector.postgres.PostgresDeployConnector
@@ -21,18 +22,27 @@ trait DeploySpecBase extends ConnectorAwareTest with BeforeAndAfterEach with Bef
   implicit lazy val testDependencies: TestDeployDependencies = TestDeployDependencies()
   implicit lazy val implicitSuite                            = self
   implicit lazy val deployConnector                          = testDependencies.deployConnector
+  private val capabilities                                   = deployConnector.capabilities
 
   def runOnlyForCapabilities: Set[DeployConnectorCapability]  = Set.empty
   def doNotRunForCapabilities: Set[DeployConnectorCapability] = Set.empty
 
-  abstract override def tags: Map[String, Set[String]] = {
+  abstract override def tags: Map[String, Set[String]] = { // this must not be a val. Otherwise ScalaTest does not behave correctly.
+    if (shouldSuiteBeIgnored) {
+      ignoreAllTests
+    } else {
+      super.tags
+    }
+  }
+
+  private val shouldSuiteBeIgnored: Boolean = { // the must be a val. Otherwise printing would happen many times.
     val connectorHasTheRightCapabilities = runOnlyForCapabilities.forall(connectorHasCapability) || runOnlyForCapabilities.isEmpty
     val connectorHasAWrongCapability     = doNotRunForCapabilities.exists(connectorHasCapability)
     if (!connectorHasTheRightCapabilities) {
       println(
         s"""the suite ${self.getClass.getSimpleName} will be ignored because it does not have the right capabilities
            | required capabilities: ${runOnlyForCapabilities.mkString(",")}
-           | connector capabilities: ${deployConnector.capabilities.mkString(",")}
+           | connector capabilities: ${capabilities.mkString(",")}
          """.stripMargin
       )
     }
@@ -40,21 +50,15 @@ trait DeploySpecBase extends ConnectorAwareTest with BeforeAndAfterEach with Bef
       println(
         s"""the suite ${self.getClass.getSimpleName} will be ignored because it has a wrong capability
            | wrong capabilities: ${doNotRunForCapabilities.mkString(",")}
-           | connector capabilities: ${deployConnector.capabilities.mkString(",")}
+           | connector capabilities: ${capabilities.mkString(",")}
          """.stripMargin
       )
     }
-    if (!connectorHasTheRightCapabilities || connectorHasAWrongCapability) {
-      ignoreAllTests
-    } else {
-      super.tags
-    }
+
+    !connectorHasTheRightCapabilities || connectorHasAWrongCapability
   }
 
-  private def connectorHasCapability(capability: DeployConnectorCapability) = {
-    val capabilities = deployConnector.capabilities
-    capabilities.contains(capability)
-  }
+  private def connectorHasCapability(capability: DeployConnectorCapability) = capabilities.contains(capability)
 
   override def prismaConfig = testDependencies.config
 
