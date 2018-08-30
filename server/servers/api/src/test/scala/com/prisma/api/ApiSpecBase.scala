@@ -21,6 +21,22 @@ trait ApiSpecBase extends ConnectorAwareTest with BeforeAndAfterEach with Before
   abstract override def tags: Map[String, Set[String]] = {
     val connectorHasTheRightCapabilities = runOnlyForCapabilities.forall(connectorHasCapability) || runOnlyForCapabilities.isEmpty
     val connectorHasAWrongCapability     = doNotRunForCapabilities.exists(connectorHasCapability)
+    if (!connectorHasTheRightCapabilities) {
+      println(
+        s"""the suite ${self.getClass.getSimpleName} will be ignored because it does not have the right capabilities
+           | required capabilities: ${runOnlyForCapabilities.mkString(",")}
+           | connector capabilities: ${testDependencies.apiConnector.capabilities.mkString(",")}
+         """.stripMargin
+      )
+    }
+    if (connectorHasAWrongCapability) {
+      println(
+        s"""the suite ${self.getClass.getSimpleName} will be ignored because it has a wrong capability
+           | wrong capabilities: ${doNotRunForCapabilities.mkString(",")}
+           | connector capabilities: ${testDependencies.apiConnector.capabilities.mkString(",")}
+         """.stripMargin
+      )
+    }
     if (!connectorHasTheRightCapabilities || connectorHasAWrongCapability) {
       ignoreAllTests
     } else {
