@@ -25,7 +25,7 @@ object ConnectorTag extends Enum[ConnectorTag] {
   object MongoConnectorTag            extends DocumentConnectorTag
 }
 
-trait ConnectorAwareTest extends SuiteMixin { self: Suite =>
+trait ConnectorAwareTest[CapabilityType] extends SuiteMixin { self: Suite =>
   import IgnoreSet._
   def prismaConfig: PrismaConfig
   lazy val connector               = prismaConfig.databases.head
@@ -36,14 +36,25 @@ trait ConnectorAwareTest extends SuiteMixin { self: Suite =>
     case "postgres" => PostgresConnectorTag
   }
 
-  def doNotRunForPrototypes: Boolean = false
+  def capabilities: Set[CapabilityType] // capabilities of the current connector
+  def runOnlyForConnectors: Set[ConnectorTag]      = ConnectorTag.values.toSet
+  def runOnlyForCapabilities: Set[CapabilityType]  = Set.empty
+  def doNotRunForCapabilities: Set[CapabilityType] = Set.empty
+  def doNotRunForPrototypes: Boolean               = false
 
-  def runOnlyForConnectors: Set[ConnectorTag] = ConnectorTag.values.toSet
+  abstract override def tags: Map[String, Set[String]] = { // this must NOT be a val. Otherwise ScalaTest does not behave correctly.
+    if (shouldSuiteBeIgnored) {
+      ignoreAllTests
+    } else {
+      ignoredTestsBasedOnIndividualTagging(connector)
+    }
+  }
 
-  abstract override def tags: Map[String, Set[String]] = {
-    val superTags = super.tags
+  private val shouldSuiteBeIgnored: Boolean = { // this must be a val. Otherwise printing would happen many times.
+    val connectorHasTheRightCapabilities = runOnlyForCapabilities.forall(connectorHasCapability) || runOnlyForCapabilities.isEmpty
+    val connectorHasAWrongCapability     = doNotRunForCapabilities.exists(connectorHasCapability)
+    val isNotTheRightConnector           = !runOnlyForConnectors.contains(connectorTag)
 
-    val isNotTheRightConnector = !runOnlyForConnectors.contains(connectorTag)
     if (isNotTheRightConnector) {
       println(
         s"""the suite ${self.getClass.getSimpleName} will be ignored because the current connector is not right
@@ -51,18 +62,36 @@ trait ConnectorAwareTest extends SuiteMixin { self: Suite =>
            | current connector: ${connectorTag}
          """.stripMargin
       )
-      ignoreAllTests
+      true
     } else if (isPrototype && doNotRunForPrototypes) {
       println(
         s"""the suite ${self.getClass.getSimpleName} will be ignored because it should not run for prototypes and the current connector is a prototype
            | current connector: ${connectorTag}
          """.stripMargin
       )
-      ignoreAllTests
+      true
+    } else if (!connectorHasTheRightCapabilities) {
+      println(
+        s"""the suite ${self.getClass.getSimpleName} will be ignored because it does not have the right capabilities
+           | required capabilities: ${runOnlyForCapabilities.mkString(",")}
+           | connector capabilities: ${capabilities.mkString(",")}
+         """.stripMargin
+      )
+      true
+    } else if (connectorHasAWrongCapability) {
+      println(
+        s"""the suite ${self.getClass.getSimpleName} will be ignored because it has a wrong capability
+           | wrong capabilities: ${doNotRunForCapabilities.mkString(",")}
+           | connector capabilities: ${capabilities.mkString(",")}
+         """.stripMargin
+      )
+      true
     } else {
-      ignoredTestsBasedOnIndividualTagging(connector, superTags)
+      false
     }
   }
+
+  def connectorHasCapability(capability: CapabilityType): Boolean
 
   def ifConnectorIsActive[T](assertion: => T): Unit = {
     if (connector.active && connector.connector != "mongo") {
@@ -76,7 +105,7 @@ trait ConnectorAwareTest extends SuiteMixin { self: Suite =>
     }
   }
 
-  private def ignoredTestsBasedOnIndividualTagging(connector: DatabaseConfig, tags: Map[String, Set[String]]) = {
+  private def ignoredTestsBasedOnIndividualTagging(connector: DatabaseConfig) = {
     val ignoreConnectorTypes = ignoreConnectorTags.filter(_.name.endsWith(connector.connector))
     val tagNamesToIgnore     = ignoreConnectorTypes.map(_.name)
     tags.mapValues { value =>

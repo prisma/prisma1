@@ -3,7 +3,6 @@ package com.prisma.deploy.specutils
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
 import com.prisma.ConnectorAwareTest
-import com.prisma.api.connector.ApiConnectorCapability
 import com.prisma.deploy.connector.DeployConnectorCapability
 import com.prisma.deploy.connector.DeployConnectorCapability.MigrationsCapability
 import com.prisma.deploy.connector.postgres.PostgresDeployConnector
@@ -15,56 +14,25 @@ import play.api.libs.json.JsString
 
 import scala.collection.mutable.ArrayBuffer
 
-trait DeploySpecBase extends ConnectorAwareTest with BeforeAndAfterEach with BeforeAndAfterAll with AwaitUtils with PlayJsonExtensions { self: Suite =>
+trait DeploySpecBase
+    extends ConnectorAwareTest[DeployConnectorCapability]
+    with BeforeAndAfterEach
+    with BeforeAndAfterAll
+    with AwaitUtils
+    with PlayJsonExtensions { self: Suite =>
 
   implicit lazy val system                                   = ActorSystem()
   implicit lazy val materializer                             = ActorMaterializer()
   implicit lazy val testDependencies: TestDeployDependencies = TestDeployDependencies()
   implicit lazy val implicitSuite                            = self
   implicit lazy val deployConnector                          = testDependencies.deployConnector
-  private val capabilities                                   = deployConnector.capabilities
+  override def prismaConfig                                  = testDependencies.config
+  val server                                                 = DeployTestServer()
+  val internalDB                                             = testDependencies.deployConnector
+  val projectsToCleanUp                                      = new ArrayBuffer[String]
+  def capabilities                                           = deployConnector.capabilities
 
-  def runOnlyForCapabilities: Set[DeployConnectorCapability]  = Set.empty
-  def doNotRunForCapabilities: Set[DeployConnectorCapability] = Set.empty
-
-  abstract override def tags: Map[String, Set[String]] = { // this must not be a val. Otherwise ScalaTest does not behave correctly.
-    if (shouldSuiteBeIgnored) {
-      ignoreAllTests
-    } else {
-      super.tags
-    }
-  }
-
-  private val shouldSuiteBeIgnored: Boolean = { // the must be a val. Otherwise printing would happen many times.
-    val connectorHasTheRightCapabilities = runOnlyForCapabilities.forall(connectorHasCapability) || runOnlyForCapabilities.isEmpty
-    val connectorHasAWrongCapability     = doNotRunForCapabilities.exists(connectorHasCapability)
-    if (!connectorHasTheRightCapabilities) {
-      println(
-        s"""the suite ${self.getClass.getSimpleName} will be ignored because it does not have the right capabilities
-           | required capabilities: ${runOnlyForCapabilities.mkString(",")}
-           | connector capabilities: ${capabilities.mkString(",")}
-         """.stripMargin
-      )
-    }
-    if (connectorHasAWrongCapability) {
-      println(
-        s"""the suite ${self.getClass.getSimpleName} will be ignored because it has a wrong capability
-           | wrong capabilities: ${doNotRunForCapabilities.mkString(",")}
-           | connector capabilities: ${capabilities.mkString(",")}
-         """.stripMargin
-      )
-    }
-
-    !connectorHasTheRightCapabilities || connectorHasAWrongCapability
-  }
-
-  private def connectorHasCapability(capability: DeployConnectorCapability) = capabilities.contains(capability)
-
-  override def prismaConfig = testDependencies.config
-
-  val server            = DeployTestServer()
-  val internalDB        = testDependencies.deployConnector
-  val projectsToCleanUp = new ArrayBuffer[String]
+  def connectorHasCapability(capability: DeployConnectorCapability) = capabilities.contains(capability)
 
   val basicTypesGql =
     """
@@ -80,14 +48,11 @@ trait DeploySpecBase extends ConnectorAwareTest with BeforeAndAfterEach with Bef
 
   override protected def afterAll(): Unit = {
     super.afterAll()
-//    projectsToCleanUp.foreach(internalDB.deleteProjectDatabase)
     deployConnector.shutdown().await()
   }
 
   override protected def beforeEach(): Unit = {
     super.beforeEach()
-//    projectsToCleanUp.foreach(internalDB.deleteProjectDatabase)
-//    projectsToCleanUp.clear()
     deployConnector.reset().await
   }
 
@@ -113,14 +78,12 @@ trait ActiveDeploySpecBase extends DeploySpecBase { self: Suite =>
 
 trait PassiveDeploySpecBase extends DeploySpecBase { self: Suite =>
 
-  val projectName  = this.getClass.getSimpleName
-  val projectStage = "default"
-  val projectId    = s"$projectName$$$projectStage"
-
+  val projectName                      = this.getClass.getSimpleName
+  val projectStage                     = "default"
+  val projectId                        = s"$projectName$$$projectStage"
   override def doNotRunForCapabilities = Set(MigrationsCapability)
 
   def setupProjectDatabaseForProject(sql: String)(implicit suite: Suite): Unit = {
-//    setupProjectDatabaseForProject("passive_test", projectName, projectStage, sql)
     setupProjectDatabaseForProject(projectId, projectName, projectStage, sql)
   }
 
