@@ -47,8 +47,8 @@ trait ApiSpecBase extends ConnectorAwareTest with BeforeAndAfterEach with Before
   private def connectorHasCapability(capability: ApiConnectorCapability) = {
     val capabilities = testDependencies.apiConnector.capabilities.toSet
     capability match {
-      case _: ScalarListsCapability => capabilities.exists(_.isInstanceOf[ScalarListsCapability])
-      case c                        => capabilities.contains(c)
+      case ScalarListsCapability => capabilities.exists(_.isInstanceOf[ScalarListsCapability])
+      case c                     => capabilities.contains(c)
     }
   }
 
