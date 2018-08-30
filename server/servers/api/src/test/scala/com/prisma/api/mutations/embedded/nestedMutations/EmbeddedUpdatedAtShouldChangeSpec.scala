@@ -9,7 +9,7 @@ import org.scalatest.{FlatSpec, Matchers}
 class EmbeddedUpdatedAtShouldChangeSpec extends FlatSpec with Matchers with ApiSpecBase {
   override def runOnlyForCapabilities = Set(EmbeddedTypesCapability)
 
-  val project = SchemaDsl.fromString() {
+  lazy val project = SchemaDsl.fromString() {
 
     """type Top {
       |id: ID! @unique
@@ -27,7 +27,10 @@ class EmbeddedUpdatedAtShouldChangeSpec extends FlatSpec with Matchers with ApiS
       |"""
   }
 
-  database.setup(project)
+  override protected def beforeAll(): Unit = {
+    super.beforeAll()
+    database.setup(project)
+  }
 
   "Updating a data item" should "change it's updatedAt value" in {
     val updatedAt = server.query("""mutation a {createTop(data: { top: "top1" }) {updatedAt}}""", project).pathAsString("data.createTop.updatedAt")

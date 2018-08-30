@@ -18,7 +18,15 @@ trait ApiSpecBase extends ConnectorAwareTest with BeforeAndAfterEach with Before
   def runOnlyForCapabilities: Set[ApiConnectorCapability]  = Set.empty
   def doNotRunForCapabilities: Set[ApiConnectorCapability] = Set.empty
 
-  abstract override def tags: Map[String, Set[String]] = {
+  abstract override def tags: Map[String, Set[String]] = { // this must not be a val. Otherwise ScalaTest does not behave correctly.
+    if (shouldSuiteBeIgnored) {
+      ignoreAllTests
+    } else {
+      super.tags
+    }
+  }
+
+  private val shouldSuiteBeIgnored: Boolean = { // the must be a val. Otherwise printing would happen many times.
     val connectorHasTheRightCapabilities = runOnlyForCapabilities.forall(connectorHasCapability) || runOnlyForCapabilities.isEmpty
     val connectorHasAWrongCapability     = doNotRunForCapabilities.exists(connectorHasCapability)
     if (!connectorHasTheRightCapabilities) {
@@ -37,11 +45,8 @@ trait ApiSpecBase extends ConnectorAwareTest with BeforeAndAfterEach with Before
          """.stripMargin
       )
     }
-    if (!connectorHasTheRightCapabilities || connectorHasAWrongCapability) {
-      ignoreAllTests
-    } else {
-      super.tags
-    }
+
+    !connectorHasTheRightCapabilities || connectorHasAWrongCapability
   }
 
   private def connectorHasCapability(capability: ApiConnectorCapability) = {

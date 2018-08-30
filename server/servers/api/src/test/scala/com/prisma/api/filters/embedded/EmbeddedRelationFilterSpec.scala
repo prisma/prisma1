@@ -9,7 +9,7 @@ class EmbeddedRelationFilterSpec extends FlatSpec with Matchers with ApiSpecBase
 
   override def runOnlyForCapabilities = Set(EmbeddedTypesCapability)
 
-  val project = SchemaDsl.fromString() {
+  lazy val project = SchemaDsl.fromString() {
     """
       |type Blog {
       |   id: ID! @unique
