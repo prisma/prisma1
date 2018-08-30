@@ -3,9 +3,10 @@ package com.prisma.deploy.specutils
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
 import com.prisma.ConnectorAwareTest
-import com.prisma.ConnectorTag.PostgresConnectorTag
+import com.prisma.deploy.connector.DeployConnectorCapability
+import com.prisma.deploy.connector.DeployConnectorCapability.MigrationsCapability
 import com.prisma.deploy.connector.postgres.PostgresDeployConnector
-import com.prisma.shared.models.{Migration, Project, ProjectId}
+import com.prisma.shared.models.{Migration, Project}
 import com.prisma.utils.await.AwaitUtils
 import com.prisma.utils.json.PlayJsonExtensions
 import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach, Suite}
@@ -20,6 +21,25 @@ trait DeploySpecBase extends ConnectorAwareTest with BeforeAndAfterEach with Bef
   implicit lazy val testDependencies: TestDeployDependencies = TestDeployDependencies()
   implicit lazy val implicitSuite                            = self
   implicit lazy val deployConnector                          = testDependencies.deployConnector
+
+  def runOnlyForCapabilities: Set[DeployConnectorCapability]  = Set.empty
+  def doNotRunForCapabilities: Set[DeployConnectorCapability] = Set.empty
+
+  abstract override def tags: Map[String, Set[String]] = {
+    val superTags                        = super.tags
+    val connectorHasTheRightCapabilities = runOnlyForCapabilities.forall(connectorHasCapability) || runOnlyForCapabilities.isEmpty
+    val connectorHasAWrongCapability     = doNotRunForCapabilities.exists(connectorHasCapability)
+    if (!connectorHasTheRightCapabilities || connectorHasAWrongCapability) {
+      ignoreAllTests
+    } else {
+      superTags
+    }
+  }
+
+  private def connectorHasCapability(capability: DeployConnectorCapability) = {
+    val capabilities = deployConnector.capabilities
+    capabilities.contains(capability)
+  }
 
   override def prismaConfig = testDependencies.config
 
@@ -69,16 +89,16 @@ trait DeploySpecBase extends ConnectorAwareTest with BeforeAndAfterEach with Bef
 }
 
 trait ActiveDeploySpecBase extends DeploySpecBase { self: Suite =>
-
-  override def runSuiteOnlyForActiveConnectors = true
+  override def runOnlyForCapabilities = Set(MigrationsCapability)
 }
 
 trait PassiveDeploySpecBase extends DeploySpecBase { self: Suite =>
-  override def runSuiteOnlyForPassiveConnectors = true
 
   val projectName  = this.getClass.getSimpleName
   val projectStage = "default"
   val projectId    = s"$projectName$$$projectStage"
+
+  override def doNotRunForCapabilities = Set(MigrationsCapability)
 
   def setupProjectDatabaseForProject(sql: String)(implicit suite: Suite): Unit = {
 //    setupProjectDatabaseForProject("passive_test", projectName, projectStage, sql)

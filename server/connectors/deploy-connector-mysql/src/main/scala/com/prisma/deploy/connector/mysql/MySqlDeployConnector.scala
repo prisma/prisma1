@@ -1,6 +1,7 @@
 package com.prisma.deploy.connector.mysql
 
 import com.prisma.config.DatabaseConfig
+import com.prisma.deploy.connector.DeployConnectorCapability.MigrationsCapability
 import com.prisma.deploy.connector._
 import com.prisma.deploy.connector.mysql.database.{MySqlDeployDatabaseMutationBuilder, MySqlInternalDatabaseSchema, TelemetryTable}
 import com.prisma.deploy.connector.mysql.impls._
@@ -23,6 +24,7 @@ case class MySqlDeployConnector(config: DatabaseConfig)(implicit ec: ExecutionCo
   override val projectPersistence: ProjectPersistence           = MySqlProjectPersistence(managementDatabase)
   override val migrationPersistence: MigrationPersistence       = MySqlMigrationPersistence(managementDatabase)
   override val deployMutactionExecutor: DeployMutactionExecutor = MySqlDeployMutactionExecutor(projectDatabase)
+  override def capabilities                                     = Set(MigrationsCapability)
 
   override def createProjectDatabase(id: String): Future[Unit] = {
     val action = MySqlDeployDatabaseMutationBuilder.createClientDatabaseForProject(projectId = id)
