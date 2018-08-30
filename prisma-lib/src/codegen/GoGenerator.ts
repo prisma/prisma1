@@ -131,19 +131,26 @@ export class GoGenerator extends Generator {
         func (instance *${type.name}Exec) ${goCase(field.name)}(${args
             .map(arg => `${arg.name} ${arg.type}`)
             .join(',')}) *${goCase(deepTypeName.toString())}Exec {
-              var args []interface{}
-              ${args.map(arg => `args = append(args, ${arg.name})`)}
+              var args []GraphQLArg
+              ${args
+                .map(
+                  arg => `args = append(args, GraphQLArg{
+                Name: "${arg.name}",
+                TypeName: "${arg.type}",
+              })`,
+                )
+                .join('\n')}
               instance.stack = append(instance.stack, Instruction{
-                name: "${field.name}",
-                field: GraphQLField{
-                  name: "${field.name}",
-                  typeName: "${deepTypeName}", // TODO: We might need to full field object later to get array and non-null properties or add them as additional fields  // TODO: We might need to full field object later to get array and non-null properties or add them as additional fields
-                  typeFields: ${`[]string{${typeFields
+                Name: "${field.name}",
+                Field: GraphQLField{
+                  Name: "${field.name}",
+                  TypeName: "${deepTypeName}", // TODO: We might need to full field object later to get array and non-null properties or add them as additional fields  // TODO: We might need to full field object later to get array and non-null properties or add them as additional fields
+                  TypeFields: ${`[]string{${typeFields
                     .map(f => f)
                     .join(',')}}`},
                 },
-                operation: "", // TODO: This is not a top level query, no operation
-                args: args,
+                Operation: "", // TODO: This is not a top level query, no operation
+                Args: args,
               })
             return &${goCase(deepTypeName.toString())}Exec{
               db: instance.db,
@@ -325,21 +332,24 @@ export class GoGenerator extends Generator {
         )}Exec {
 
           stack := make([]Instruction, 0)
-          var args []interface{}
+          var args []GraphQLArg
           ${args
-            .map(arg => {
-              return `args = append(args, params.${goCase(arg.name)})`
-            })
+            .map(
+              arg => `args = append(args, GraphQLArg{
+            Name: "${arg.name}",
+            TypeName: "${arg.type}",
+          })`,
+            )
             .join('\n')}
           
           stack = append(stack, Instruction{
-            name: "${field.name}",
-            field: GraphQLField{
-              name: "${field.name}",
-              typeName: "${deepTypeName}", // TODO: We might need to full field object later to get array and non-null properties or add them as additional fields
+            Name: "${field.name}",
+            Field: GraphQLField{
+              Name: "${field.name}",
+              TypeName: "${deepTypeName}", // TODO: We might need to full field object later to get array and non-null properties or add them as additional fields
             },
-            operation: "${operation}",
-            args: args,
+            Operation: "${operation}",
+            Args: args,
           })
 
       return &${isListType(field.type) ? `[]` : ``}${goCase(
@@ -378,17 +388,23 @@ import (
 
 // GraphQLField docs
 type GraphQLField struct {
-  name string
-  typeName string
-  typeFields []string
+  Name string
+  TypeName string
+  TypeFields []string
+}
+
+// GraphQLArg docs
+type GraphQLArg struct {
+  Name string
+  TypeName string
 }
 
 // Instruction docs
 type Instruction struct {
-  name string
-  field GraphQLField
-  operation string
-	args []interface{}
+  Name string
+  Field GraphQLField
+  Operation string
+	Args []GraphQLArg
 }
 
 // DB Type to represent the client
@@ -400,22 +416,22 @@ type DB struct {
 // ProcessInstructions docs
 func (db *DB) ProcessInstructions(stack []Instruction) string {
 	query := make(map[string]interface{})
-	args := make(map[string]interface{})
+	args := make(map[string][]GraphQLArg)
 	for i := len(stack) - 1; i >= 0; i-- {
 		instruction := stack[i]
 		if db.Debug {
 			fmt.Println("Instruction: ", instruction)
 		}
 		if len(query) == 0 {
-			query[instruction.name] = instruction.field.typeFields
-			args[instruction.name] = instruction.args
+			query[instruction.Name] = instruction.Field.TypeFields
+			args[instruction.Name] = instruction.Args
 		} else {
 			previousInstruction := stack[i+1]
-			query[instruction.name] = map[string]interface{}{
-				previousInstruction.name: query[previousInstruction.name],
+			query[instruction.Name] = map[string]interface{}{
+				previousInstruction.Name: query[previousInstruction.Name],
 			}
-			args[instruction.name] = instruction.args
-			delete(query, previousInstruction.name)
+			args[instruction.Name] = instruction.Args
+			delete(query, previousInstruction.Name)
 		}
 	}
 
@@ -426,7 +442,15 @@ func (db *DB) ProcessInstructions(stack []Instruction) string {
 
 	// TODO: Make this recursive - current depth = 3
 	queryTemplateString := \`
-    query Q {
+    query Q (
+      {{ range $k0, $v0 := $.args }}
+        Key0: {{$k0}} Value0: {{$v0}}
+        {{ range $k1, $v1 := $v0}}
+          Key1: {{$k1}} Value1: {{ $v1 }}
+          {{ $v1.Name }}
+        {{ end }}
+      {{ end }}
+      ) {
       {{ range $k, $v := $.query }}
       {{ if isArray $v }}
         {{ range $k1, $v1 := $v }}
@@ -485,7 +509,9 @@ func (db *DB) ProcessInstructions(stack []Instruction) string {
 	var data = make(map[string]interface{})
 	data = map[string]interface{}{
 		"query": query,
+		"args":  args,
 	}
+	fmt.Println(args)
 	queryTemplate.Execute(&queryBytes, data)
 
 	if db.Debug {
