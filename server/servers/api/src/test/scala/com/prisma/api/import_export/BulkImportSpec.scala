@@ -1,14 +1,14 @@
 package com.prisma.api.import_export
 
 import com.prisma.api.ApiSpecBase
+import com.prisma.api.connector.ApiConnectorCapability.ImportExportCapability
 import com.prisma.shared.models.Project
 import com.prisma.shared.schema_dsl.SchemaDsl
 import com.prisma.utils.await.AwaitUtils
 import org.scalatest.{FlatSpec, Matchers}
 
 class BulkImportSpec extends FlatSpec with Matchers with ApiSpecBase with AwaitUtils {
-  override def doNotRunSuiteForMongo: Boolean = true
-
+  override def runOnlyForCapabilities          = Set(ImportExportCapability)
   override def runSuiteOnlyForActiveConnectors = true
 
   val project: Project = SchemaDsl.fromBuilder { schema =>

@@ -1,6 +1,7 @@
 package com.prisma.api.import_export
 
 import com.prisma.api.ApiSpecBase
+import com.prisma.api.connector.ApiConnectorCapability.ImportExportCapability
 import com.prisma.api.connector.DataResolver
 import com.prisma.api.import_export.ImportExport.MyJsonProtocol._
 import com.prisma.api.import_export.ImportExport.{Cursor, ExportRequest, JsonBundle, ResultFormat}
@@ -10,7 +11,7 @@ import com.prisma.utils.await.AwaitUtils
 import org.scalatest.{FlatSpec, Matchers}
 
 class BulkExportIncompleteSchemaSpec extends FlatSpec with Matchers with ApiSpecBase with AwaitUtils {
-  override def doNotRunSuiteForMongo: Boolean = true
+  override def runOnlyForCapabilities = Set(ImportExportCapability)
 
   val project: Project = SchemaDsl.fromBuilder(_ => ())
 
