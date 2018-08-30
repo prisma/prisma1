@@ -39,19 +39,17 @@ trait ConnectorAwareTest extends SuiteMixin { self: Suite =>
     case "postgres" => PostgresConnectorTag
   }
 
-  def runSuiteOnlyForActiveConnectors: Boolean = false
-  def doNotRunForPrototypes: Boolean           = false
+  def doNotRunForPrototypes: Boolean = false
 
   def runOnlyForConnectors: Set[ConnectorTag] = ConnectorTag.values.toSet
 
   abstract override def tags: Map[String, Set[String]] = {
     val superTags = super.tags
 
-    if (!runOnlyForConnectors.contains(connectorTag)) {
+    val isNotTheRightConnector = !runOnlyForConnectors.contains(connectorTag)
+    if (isNotTheRightConnector) {
       ignoreAllTests
     } else if (isPrototype && doNotRunForPrototypes) {
-      ignoreAllTests
-    } else if (runSuiteOnlyForActiveConnectors && !connector.active) {
       ignoreAllTests
     } else {
       ignoredTestsBasedOnIndividualTagging(connector, superTags)

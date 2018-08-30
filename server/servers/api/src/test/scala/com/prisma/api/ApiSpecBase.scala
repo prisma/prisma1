@@ -15,20 +15,16 @@ import play.api.libs.json.JsString
 trait ApiSpecBase extends ConnectorAwareTest with BeforeAndAfterEach with BeforeAndAfterAll with PlayJsonExtensions with StringMatchers with AwaitUtils {
   self: Suite =>
 
-  def runOnlyForCapabilities: Set[ApiConnectorCapability] = Set.empty
-//  def doNotRunForCapabilities: Set[ApiConnectorCapability] = Set.empty
+  def runOnlyForCapabilities: Set[ApiConnectorCapability]  = Set.empty
+  def doNotRunForCapabilities: Set[ApiConnectorCapability] = Set.empty
 
   abstract override def tags: Map[String, Set[String]] = {
-    val superTags = super.tags
-    if (runOnlyForCapabilities.isEmpty) {
-      superTags
+    val connectorHasTheRightCapabilities = runOnlyForCapabilities.forall(connectorHasCapability) || runOnlyForCapabilities.isEmpty
+    val connectorHasAWrongCapability     = doNotRunForCapabilities.exists(connectorHasCapability)
+    if (!connectorHasTheRightCapabilities || connectorHasAWrongCapability) {
+      ignoreAllTests
     } else {
-      val runIt = runOnlyForCapabilities.forall(connectorHasCapability)
-      if (runIt) {
-        superTags
-      } else {
-        ignoreAllTests
-      }
+      super.tags
     }
   }
 

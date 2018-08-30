@@ -26,13 +26,12 @@ trait DeploySpecBase extends ConnectorAwareTest with BeforeAndAfterEach with Bef
   def doNotRunForCapabilities: Set[DeployConnectorCapability] = Set.empty
 
   abstract override def tags: Map[String, Set[String]] = {
-    val superTags                        = super.tags
     val connectorHasTheRightCapabilities = runOnlyForCapabilities.forall(connectorHasCapability) || runOnlyForCapabilities.isEmpty
     val connectorHasAWrongCapability     = doNotRunForCapabilities.exists(connectorHasCapability)
     if (!connectorHasTheRightCapabilities || connectorHasAWrongCapability) {
       ignoreAllTests
     } else {
-      superTags
+      super.tags
     }
   }
 

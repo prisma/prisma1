@@ -12,8 +12,7 @@ import org.scalatest.{FlatSpec, Matchers}
 import play.api.libs.json.JsArray
 
 class OptionalBackRelationImportExportSpec extends FlatSpec with Matchers with ApiSpecBase with AwaitUtils {
-  override def runOnlyForCapabilities          = Set(ImportExportCapability)
-  override def runSuiteOnlyForActiveConnectors = true
+  override def runOnlyForCapabilities = Set(ImportExportCapability)
 
   val project: Project = SchemaDsl.fromBuilder { schema =>
     val model0: SchemaDsl.ModelBuilder = schema

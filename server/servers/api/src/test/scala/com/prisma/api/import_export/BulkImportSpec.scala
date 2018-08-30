@@ -8,8 +8,7 @@ import com.prisma.utils.await.AwaitUtils
 import org.scalatest.{FlatSpec, Matchers}
 
 class BulkImportSpec extends FlatSpec with Matchers with ApiSpecBase with AwaitUtils {
-  override def runOnlyForCapabilities          = Set(ImportExportCapability)
-  override def runSuiteOnlyForActiveConnectors = true
+  override def runOnlyForCapabilities = Set(ImportExportCapability)
 
   val project: Project = SchemaDsl.fromBuilder { schema =>
     val model1: SchemaDsl.ModelBuilder = schema
