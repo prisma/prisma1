@@ -1,6 +1,6 @@
 package com.prisma.api.schema
 
-import com.prisma.api.connector.ApiConnectorCapability.EmbeddedListsCapability
+import com.prisma.api.connector.ApiConnectorCapability.EmbeddedScalarListsCapability
 import com.prisma.api.connector.LogicalKeyWords._
 import com.prisma.api.connector.{TrueFilter, _}
 import com.prisma.api.mutations.BatchPayload
@@ -280,7 +280,7 @@ class ObjectTypeBuilder(
 
     field match {
       case f: ScalarField if f.isList =>
-        if (capabilities.contains(EmbeddedListsCapability)) item.data.map(field.name).value else ScalarListDeferred(model, f, item.id)
+        if (capabilities.contains(EmbeddedScalarListsCapability)) item.data.map(field.name).value else ScalarListDeferred(model, f, item.id)
 
       case f: ScalarField if !f.isList =>
         item.data.map(field.name).value

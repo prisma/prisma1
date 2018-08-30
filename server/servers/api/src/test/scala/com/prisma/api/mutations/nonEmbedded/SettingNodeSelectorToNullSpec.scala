@@ -5,7 +5,7 @@ import com.prisma.shared.schema_dsl.SchemaDsl
 import org.scalatest.{FlatSpec, Matchers}
 
 class SettingNodeSelectorToNullSpec extends FlatSpec with Matchers with ApiSpecBase {
-  override def doNotRunSuiteForMongo: Boolean = true
+  override def doNotRunForPrototypes: Boolean = true
 
   "Setting a where value to null " should " work when there is no further nesting " in {
     val project = SchemaDsl.fromString() {

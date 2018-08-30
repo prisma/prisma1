@@ -39,9 +39,13 @@ sealed trait ApiConnectorCapability extends EnumEntry
 object ApiConnectorCapability extends Enum[ApiConnectorCapability] {
   val values = findValues
 
-  object NodeQueryCapability     extends ApiConnectorCapability
-  object EmbeddedListsCapability extends ApiConnectorCapability
-  object EmbeddedTypesCapability extends ApiConnectorCapability
-  object RelationsCapability     extends ApiConnectorCapability // this means normal relations, e.g. relations between documents in MongoDB
-  object ImportExportCapability  extends ApiConnectorCapability
+  sealed trait ScalarListsCapability      extends ApiConnectorCapability
+  object ScalarListsCapability            extends ScalarListsCapability
+  object EmbeddedScalarListsCapability    extends ScalarListsCapability
+  object NonEmbeddedScalarListCapability  extends ScalarListsCapability
+  object NodeQueryCapability              extends ApiConnectorCapability
+  object EmbeddedTypesCapability          extends ApiConnectorCapability
+  object JoinRelationsCapability          extends ApiConnectorCapability // this means normal relations, e.g. relations between documents in MongoDB
+  object ImportExportCapability           extends ApiConnectorCapability
+  object TransactionalExecutionCapability extends ApiConnectorCapability
 }

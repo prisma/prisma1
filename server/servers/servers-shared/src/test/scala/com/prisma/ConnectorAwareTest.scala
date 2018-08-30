@@ -1,6 +1,8 @@
 package com.prisma
 
+import com.prisma.api.connector.ApiConnectorCapability
 import com.prisma.config.{DatabaseConfig, PrismaConfig}
+import enumeratum.{Enum, EnumEntry}
 import org.scalatest.{Suite, SuiteMixin, Tag}
 
 object IgnorePostgres extends Tag("ignore.postgres")
@@ -16,16 +18,20 @@ object IgnoreSet {
 trait ConnectorAwareTest extends SuiteMixin { self: Suite =>
   import IgnoreSet._
   def prismaConfig: PrismaConfig
-  lazy val connector = prismaConfig.databases.head
+  lazy val connector               = prismaConfig.databases.head
+  private val isPrototype: Boolean = if (connector.connector == "mongo") true else false
 
   def runSuiteOnlyForActiveConnectors: Boolean  = false
   def runSuiteOnlyForPassiveConnectors: Boolean = false
   def doNotRunSuiteForMongo: Boolean            = false
+  def doNotRunForPrototypes: Boolean            = false
 
   abstract override def tags: Map[String, Set[String]] = {
     val superTags = super.tags
 
-    if (runSuiteOnlyForActiveConnectors && !connector.active) {
+    if (isPrototype && doNotRunForPrototypes) {
+      ignoreAllTests
+    } else if (runSuiteOnlyForActiveConnectors && !connector.active) {
       ignoreAllTests
     } else if (runSuiteOnlyForPassiveConnectors && (connector.active || connector.connector == "mongo")) {
       ignoreAllTests

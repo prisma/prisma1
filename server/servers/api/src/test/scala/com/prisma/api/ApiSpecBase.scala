@@ -3,6 +3,7 @@ package com.prisma.api
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
 import com.prisma.ConnectorAwareTest
+import com.prisma.api.connector.ApiConnectorCapability.ScalarListsCapability
 import com.prisma.api.connector.{ApiConnectorCapability, DataResolver}
 import com.prisma.api.util.StringMatchers
 import com.prisma.shared.models.Project
@@ -18,20 +19,24 @@ trait ApiSpecBase extends ConnectorAwareTest with BeforeAndAfterEach with Before
 //  def doNotRunForCapabilities: Set[ApiConnectorCapability] = Set.empty
 
   abstract override def tags: Map[String, Set[String]] = {
-    val superTags    = super.tags
-    val capabilities = testDependencies.apiConnector.capabilities.toSet
-
+    val superTags = super.tags
     if (runOnlyForCapabilities.isEmpty) {
       superTags
     } else {
-      val runIt = runOnlyForCapabilities.intersect(capabilities) == runOnlyForCapabilities
-      println(capabilities)
-      println(runOnlyForCapabilities)
+      val runIt = runOnlyForCapabilities.forall(connectorHasCapability)
       if (runIt) {
         superTags
       } else {
         ignoreAllTests
       }
+    }
+  }
+
+  private def connectorHasCapability(capability: ApiConnectorCapability) = {
+    val capabilities = testDependencies.apiConnector.capabilities.toSet
+    capability match {
+      case _: ScalarListsCapability => capabilities.exists(_.isInstanceOf[ScalarListsCapability])
+      case c                        => capabilities.contains(c)
     }
   }
 
