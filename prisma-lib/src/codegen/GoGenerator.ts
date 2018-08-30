@@ -399,32 +399,32 @@ type DB struct {
 // ProcessInstructions docs
 func (db *DB) ProcessInstructions(stack []Instruction) string {
 	query := make(map[string]interface{})
+	args := make(map[string]interface{})
 	for i := len(stack) - 1; i >= 0; i-- {
 		instruction := stack[i]
 		if db.Debug {
-			fmt.Println(instruction)
-			fmt.Println(query)
+			fmt.Println("Instruction: ", instruction)
 		}
 		if len(query) == 0 {
-			query[instruction.name] = instruction.args
+			query[instruction.name] = instruction.field.typeFields
+			args[instruction.name] = instruction.args
 		} else {
 			previousInstruction := stack[i+1]
 			query[instruction.name] = map[string]interface{}{
 				previousInstruction.name: query[previousInstruction.name],
 			}
+			args[instruction.name] = instruction.args
 			delete(query, previousInstruction.name)
-		}
-		if db.Debug {
-			fmt.Println("Intermediate Query:", query)
 		}
 	}
 	if db.Debug {
 		fmt.Println("Final Query:", query)
+		fmt.Println("Final Args:", args)
 	}
 	queryBytes, err := json.Marshal(query)
 	queryString := string(queryBytes[:])
 	if db.Debug {
-		fmt.Println(queryString)
+		fmt.Println("Query String: ", queryString)
 	}
 	if err == nil {
 		return queryString
