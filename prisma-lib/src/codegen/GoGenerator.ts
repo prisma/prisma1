@@ -9,6 +9,11 @@ import {
   GraphQLObjectType,
   isListType,
   GraphQLField,
+  GraphQLArgument,
+  GraphQLFieldMap,
+  GraphQLInputFieldMap,
+  // GraphQLFieldMap,
+  // GraphQLInputFieldMap,
 } from 'graphql'
 
 import * as upperCamelCase from 'uppercamelcase'
@@ -16,6 +21,17 @@ import * as upperCamelCase from 'uppercamelcase'
 const goCase = (s: string) => {
   const cased = upperCamelCase(s)
   return cased.startsWith('Id') ? `ID${cased.slice(2)}` : cased
+}
+
+// This structure represents info about type of field, arg
+export type FieldLikeType = {
+  name: string
+  typeName: string
+  type: GraphQLInputObjectType
+  typeFields: string[]
+  isScalar: boolean
+  isEnum: boolean
+  args: GraphQLArgument[]
 }
 
 export class GoGenerator extends Generator {
@@ -28,6 +44,40 @@ export class GoGenerator extends Generator {
     DateTime: 'string',
     Json: 'map[string]interface{}',
     Long: 'int64', // TODO: This is not correct I think
+  }
+
+  extractFieldLikeType(field: GraphQLField<any, any>): FieldLikeType {
+    const deepTypeName = this.getDeepType(field.type)
+    const deepType = this.schema.getType(deepTypeName)
+    const isScalar = deepType!.constructor.name === 'GraphQLScalarType'
+    const isEnum = deepType!.constructor.name === 'GraphQLEnumType'
+    let fieldMap: GraphQLFieldMap<any, any> | GraphQLInputFieldMap | null = null
+    if (deepType!.constructor.name === 'GraphQLObjectType') {
+      fieldMap = (deepType as GraphQLObjectType).getFields()
+    }
+    if (deepType!.constructor.name === 'GraphQLInputObjectType') {
+      fieldMap = (deepType as GraphQLInputObjectType).getFields()
+    }
+    const fields = Boolean(fieldMap)
+      ? Object.keys(fieldMap!)
+          .filter(key => {
+            const field = fieldMap![key]
+            return (
+              this.getDeepType(field.type).constructor.name ===
+              'GraphQLScalarType'
+            )
+          })
+          .map(key => `"${fieldMap![key].name}"`)
+      : []
+    return {
+      name: field.name,
+      typeName: deepTypeName,
+      type: deepType! as GraphQLInputObjectType,
+      typeFields: fields,
+      args: field.args,
+      isScalar,
+      isEnum,
+    }
   }
 
   // TODO: Hacky - need to find proper field definition and field name with Null + List properties.
@@ -57,7 +107,6 @@ export class GoGenerator extends Generator {
         db    DB
         stack []Instruction // TODO: This will be map[string]interface{} to support parallel stacks
       }
-
       ${Object.keys(fieldMap)
         .filter(key => {
           const field = fieldMap[key]
@@ -65,24 +114,38 @@ export class GoGenerator extends Generator {
           const deepType = this.schema.getType(deepTypeName)
           const isScalar = deepType!.constructor.name === 'GraphQLScalarType'
           const isEnum = deepType!.constructor.name === 'GraphQLEnumType'
+          // const { isScalar, isEnum } = this.extractFieldLikeType(
+          //   field as GraphQLField<any, any>,
+          // )
           return !isScalar && !isEnum
         })
         .map(key => {
-          const field = fieldMap[key] as GraphQLField<any, any> // TODO: Is this assumption correct?
+          const field = fieldMap[key] as GraphQLField<any, any>
+          const deepTypeName = this.getDeepType(field.type)
+          // const deepType = this.schema.getType(deepTypeName)
           const args = field.args
-          const deepTypeName = this.getDeepType(field.type).toString()
-          return ` // ${goCase(field.name)} docs
+          const { typeFields } = this.extractFieldLikeType(
+            field as GraphQLField<any, any>,
+          )
+          return ` // ${goCase(field.name)} docs - executable for types
         func (instance *${type.name}Exec) ${goCase(field.name)}(${args
             .map(arg => `${arg.name} ${arg.type}`)
-            .join(',')}) *${goCase(deepTypeName)}Exec {
+            .join(',')}) *${goCase(deepTypeName.toString())}Exec {
               var args []interface{}
               ${args.map(arg => `args = append(args, ${arg.name})`)}
               instance.stack = append(instance.stack, Instruction{
                 name: "${field.name}",
+                field: GraphQLField{
+                  name: "${field.name}",
+                  typeName: "${deepTypeName}", // TODO: We might need to full field object later to get array and non-null properties or add them as additional fields  // TODO: We might need to full field object later to get array and non-null properties or add them as additional fields
+                  typeFields: ${`[]string{${typeFields
+                    .map(f => f)
+                    .join(',')}}`},
+                },
                 operation: "", // TODO: This is not a top level query, no operation
                 args: args,
               })
-            return &${goCase(deepTypeName)}Exec{
+            return &${goCase(deepTypeName.toString())}Exec{
               db: instance.db,
               stack: instance.stack,
             }
@@ -205,9 +268,9 @@ export class GoGenerator extends Generator {
           const field = typeFields[key]
           const deepTypeName = this.getDeepType(field.type)
           const deepType = this.schema.getType(deepTypeName)
-          const isScalar =
-            deepType!.constructor.name === 'GraphQLScalarType' ? true : false
-          //   const isScalar = isScalarType(deepType) // TODO: Find out why this breaks with duplicate "graphql" error
+          const isScalar = deepType!.constructor.name === 'GraphQLScalarType'
+          // const isEnum = deepType!.constructor.name === 'GraphQLEnumType'
+          // const { isScalar } = this.extractFieldLikeType(field)
           return isScalar ? `${field.name}` : ``
         })
         .join('\n')}`
@@ -236,6 +299,11 @@ export class GoGenerator extends Generator {
     return Object.keys(fields)
       .map(key => {
         const field = fields[key]
+        const deepTypeName = this.getDeepType(field.type)
+        // const deepType = this.schema.getType(deepTypeName)
+        // const isScalar = deepType!.constructor.name === 'GraphQLScalarType'
+        // const isEnum = deepType!.constructor.name === 'GraphQLEnumType'
+        // const { typeName } = this.extractFieldLikeType(field)
         const args = field.args
         return `
           // ${goCase(field.name)}Params docs
@@ -266,6 +334,10 @@ export class GoGenerator extends Generator {
           
           stack = append(stack, Instruction{
             name: "${field.name}",
+            field: GraphQLField{
+              name: "${field.name}",
+              typeName: "${deepTypeName}", // TODO: We might need to full field object later to get array and non-null properties or add them as additional fields
+            },
             operation: "${operation}",
             args: args,
           })
@@ -298,13 +370,22 @@ import (
   "log"
   "reflect"
   "fmt"
+  "encoding/json"
 
 	"github.com/machinebox/graphql"
 )
 
+// GraphQLField docs
+type GraphQLField struct {
+  name string
+  typeName string
+  typeFields []string
+}
+
 // Instruction docs
 type Instruction struct {
   name string
+  field GraphQLField
   operation string
 	args []interface{}
 }
@@ -317,17 +398,45 @@ type DB struct {
 
 // ProcessInstructions docs
 func (db *DB) ProcessInstructions(stack []Instruction) string {
+	query := make(map[string]interface{})
+	for i := len(stack) - 1; i >= 0; i-- {
+		instruction := stack[i]
+		if db.Debug {
+			fmt.Println(instruction)
+			fmt.Println(query)
+		}
+		if len(query) == 0 {
+			query[instruction.name] = instruction.args
+		} else {
+			previousInstruction := stack[i+1]
+			query[instruction.name] = map[string]interface{}{
+				previousInstruction.name: query[previousInstruction.name],
+			}
+			delete(query, previousInstruction.name)
+		}
+		if db.Debug {
+			fmt.Println("Intermediate Query:", query)
+		}
+	}
 	if db.Debug {
-    fmt.Println(stack)
-  }
-	return \`query\`
+		fmt.Println("Final Query:", query)
+	}
+	queryBytes, err := json.Marshal(query)
+	queryString := string(queryBytes[:])
+	if db.Debug {
+		fmt.Println(queryString)
+	}
+	if err == nil {
+		return queryString
+	}
+	return "Failed to generate query"
 }
 
 // Queries
-${this.printOperation(queryFields, "query")}
+${this.printOperation(queryFields, 'query')}
 
 // Mutations
-${this.printOperation(mutationFields, "mutation")}
+${this.printOperation(mutationFields, 'mutation')}
 
 // Types
 
