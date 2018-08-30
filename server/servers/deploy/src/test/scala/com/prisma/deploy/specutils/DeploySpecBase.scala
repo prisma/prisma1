@@ -32,7 +32,7 @@ trait DeploySpecBase
   val projectsToCleanUp                                      = new ArrayBuffer[String]
   def capabilities                                           = deployConnector.capabilities
 
-  def connectorHasCapability(capability: DeployConnectorCapability) = capabilities.contains(capability)
+  def connectorHasCapability(capability: DeployConnectorCapability) = deployConnector.hasCapability(capability)
 
   val basicTypesGql =
     """

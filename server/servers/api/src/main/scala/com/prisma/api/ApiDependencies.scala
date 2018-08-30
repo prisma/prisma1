@@ -33,7 +33,7 @@ trait ApiDependencies extends AwaitUtils {
   def sideEffectMutactionExecutor: SideEffectMutactionExecutor
   def mutactionVerifier: DatabaseMutactionVerifier
   def projectIdEncoder: ProjectIdEncoder
-  def capabilities: Vector[ApiConnectorCapability] = apiConnector.capabilities
+  def capabilities: Set[ApiConnectorCapability] = apiConnector.capabilities
 
   implicit lazy val executionContext: ExecutionContext  = system.dispatcher
   implicit lazy val reporter: ErrorReporter             = BugsnagErrorReporter(sys.env.getOrElse("BUGSNAG_API_KEY", ""))

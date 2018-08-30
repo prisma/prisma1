@@ -20,7 +20,7 @@ class ObjectTypeBuilder(
     nodeInterface: Option[InterfaceType[ApiUserContext, PrismaNode]] = None,
     withRelations: Boolean = true,
     onlyId: Boolean = false,
-    capabilities: Vector[ApiConnectorCapability]
+    capabilities: Set[ApiConnectorCapability]
 )(implicit ec: ExecutionContext)
     extends SangriaExtensions {
 

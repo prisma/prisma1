@@ -19,6 +19,8 @@ trait DeployConnector {
   def cloudSecretPersistence: CloudSecretPersistence
   def capabilities: Set[DeployConnectorCapability]
 
+  def hasCapability(capability: DeployConnectorCapability) = capabilities.contains(capability)
+
   def initialize(): Future[Unit]
   def reset(): Future[Unit]
   def shutdown(): Future[Unit]

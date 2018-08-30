@@ -27,12 +27,12 @@ case class PostgresApiConnector(config: DatabaseConfig, isActive: Boolean)(impli
   override def dataResolver(project: Project)                           = JdbcDataResolver(project, databases.primary, schemaName = config.schema)
   override def masterDataResolver(project: Project)                     = JdbcDataResolver(project, databases.primary, schemaName = config.schema)
   override def projectIdEncoder: ProjectIdEncoder                       = ProjectIdEncoder('$')
-  override val capabilities: Vector[ApiConnectorCapability] = {
-    val common = Vector(TransactionalExecutionCapability, JoinRelationsCapability)
+  override val capabilities: Set[ApiConnectorCapability] = {
+    val common = Set(TransactionalExecutionCapability, JoinRelationsCapability)
     if (isActive) {
-      Vector(NodeQueryCapability, ImportExportCapability, NonEmbeddedScalarListCapability) ++ common
+      Set(NodeQueryCapability, ImportExportCapability, NonEmbeddedScalarListCapability) ++ common
     } else {
-      Vector(SupportsExistingDatabasesCapability) ++ common
+      Set(SupportsExistingDatabasesCapability) ++ common
     }
   }
 }

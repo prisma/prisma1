@@ -29,11 +29,11 @@ case class MySqlApiConnector(config: DatabaseConfig)(implicit ec: ExecutionConte
 
   override def projectIdEncoder: ProjectIdEncoder = ProjectIdEncoder('@')
 
-  override val capabilities: Vector[ApiConnectorCapability] = {
+  override val capabilities: Set[ApiConnectorCapability] = {
     val isActive = true
-    val common   = Vector(TransactionalExecutionCapability, JoinRelationsCapability)
+    val common   = Set(TransactionalExecutionCapability, JoinRelationsCapability)
     if (isActive) {
-      Vector(NodeQueryCapability, ImportExportCapability, NonEmbeddedScalarListCapability) ++ common
+      Set(NodeQueryCapability, ImportExportCapability, NonEmbeddedScalarListCapability) ++ common
     } else {
       common
     }

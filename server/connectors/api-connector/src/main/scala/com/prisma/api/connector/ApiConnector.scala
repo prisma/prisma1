@@ -1,5 +1,6 @@
 package com.prisma.api.connector
 
+import com.prisma.api.connector.ApiConnectorCapability.ScalarListsCapability
 import com.prisma.shared.models.{Project, ProjectIdEncoder}
 
 import scala.concurrent.Future
@@ -10,7 +11,14 @@ trait ApiConnector {
   def dataResolver(project: Project): DataResolver
   def masterDataResolver(project: Project): DataResolver
   def projectIdEncoder: ProjectIdEncoder
-  def capabilities: Vector[ApiConnectorCapability]
+  def capabilities: Set[ApiConnectorCapability]
+
+  def hasCapability(capability: ApiConnectorCapability): Boolean = {
+    capability match {
+      case ScalarListsCapability => capabilities.exists(_.isInstanceOf[ScalarListsCapability])
+      case c                     => capabilities.contains(c)
+    }
+  }
 
   def initialize(): Future[Unit]
   def shutdown(): Future[Unit]

@@ -3,7 +3,6 @@ package com.prisma.api
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
 import com.prisma.ConnectorAwareTest
-import com.prisma.api.connector.ApiConnectorCapability.ScalarListsCapability
 import com.prisma.api.connector.{ApiConnectorCapability, DataResolver}
 import com.prisma.api.util.StringMatchers
 import com.prisma.shared.models.Project
@@ -31,12 +30,7 @@ trait ApiSpecBase
   override def prismaConfig                     = testDependencies.config
   def capabilities: Set[ApiConnectorCapability] = testDependencies.apiConnector.capabilities.toSet
 
-  def connectorHasCapability(capability: ApiConnectorCapability): Boolean = {
-    capability match {
-      case ScalarListsCapability => capabilities.exists(_.isInstanceOf[ScalarListsCapability])
-      case c                     => capabilities.contains(c)
-    }
-  }
+  def connectorHasCapability(capability: ApiConnectorCapability): Boolean = testDependencies.apiConnector.hasCapability(capability)
 
   def dataResolver(project: Project): DataResolver = testDependencies.dataResolver(project)
 
