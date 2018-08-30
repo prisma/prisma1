@@ -40,7 +40,7 @@ trait SubscriptionSpecBase
   val projectIdEncoder                      = dependencies.projectIdEncoder
 
   override def capabilities                                               = dependencies.apiConnector.capabilities
-  override def connectorHasCapability(capability: ApiConnectorCapability) = ???
+  override def connectorHasCapability(capability: ApiConnectorCapability) = dependencies.apiConnector.hasCapability(capability)
 
   override def prismaConfig = dependencies.config
 
