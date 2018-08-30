@@ -417,6 +417,7 @@ type DB struct {
 func (db *DB) ProcessInstructions(stack []Instruction) string {
 	query := make(map[string]interface{})
 	args := make(map[string][]GraphQLArg)
+	firstInstruction := stack[0]
 	for i := len(stack) - 1; i >= 0; i-- {
 		instruction := stack[i]
 		if db.Debug {
@@ -442,7 +443,7 @@ func (db *DB) ProcessInstructions(stack []Instruction) string {
 
 	// TODO: Make this recursive - current depth = 3
 	queryTemplateString := \`
-  query Q (
+  {{ $.operation }} {{ $.operationName }} (
     {{- range $k0, $v0 := $.args }}
       {{- range $k1, $v1 := $v0}}
         \${{ $v1.Name }}: {{ $v1.TypeName }},
@@ -538,8 +539,10 @@ func (db *DB) ProcessInstructions(stack []Instruction) string {
 	var queryBytes bytes.Buffer
 	var data = make(map[string]interface{})
 	data = map[string]interface{}{
-		"query": query,
-		"args":  args,
+		"query":         query,
+		"args":          args,
+		"operation":     firstInstruction.Operation,
+		"operationName": firstInstruction.Name,
 	}
 	fmt.Println(args)
 	queryTemplate.Execute(&queryBytes, data)
