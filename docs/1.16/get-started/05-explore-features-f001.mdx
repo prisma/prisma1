@@ -1,0 +1,81 @@
+import { Row, LinkBox } from 'components/Markdown/LinkBox'
+import RowLink from 'components/blocks/WhiteBox/RowLink'
+
+export const meta = {
+  title: 'Explore Features',
+  description: 'Congratulations for finishing the quickstart tutorial and building your first GraphQL server with Prisma! Here is where you can go next.',
+  step: 5,
+  wide: true
+}
+
+<Row>
+  <LinkBox
+    title="Understand Prisma"
+    description="Learn Prisma’s most important concepts and how everything fits together.">
+    <RowLink
+      text="Prisma Intro: What, Why & How"
+      href="/understand-prisma/prisma-introduction-what-why-how-j9ff/" />
+    <RowLink
+      text="Basics: Server, Services & Data Model"
+      href="#" />
+    <RowLink
+      text="GraphQL Server Development Introduction"
+      href="#" />
+    <RowLink
+      text="Building GraphQL Servers with Prisma"
+      href="#" />
+  </LinkBox>
+
+  <LinkBox
+    title="Develop Prisma Service"
+    description="Prisma services map your database to GraphQL. Learn how to build them.">
+    <RowLink
+      text="prisma.yml"
+      href="#" />
+    <RowLink
+      text="Data Model"
+      href="#" />
+    <RowLink
+      text="Using the Prisma CLI"
+      href="#" />
+    <RowLink
+      text="CLI Command Reference"
+      href="#" />
+  </LinkBox>
+</Row>
+
+<Row>
+  <LinkBox
+    title="Use Prisma API"
+    description="Learn everything you need to know for consuming your services’ Prisma APIs.">
+    <RowLink
+      text="Using the Prisma API"
+      href="#" />
+    <RowLink
+      text="Authentication"
+      href="#" />
+    <RowLink
+      text="API Concepts"
+      href="#" />
+    <RowLink
+      text="Prisma Bindings"
+      href="#" />
+  </LinkBox>
+
+  <LinkBox
+    title="Operate Prisma Server"
+    description="Learn how to run and maintain your Prisma servers so you can host services.">
+    <RowLink
+      text="Local Prisma Setup"
+      href="#" />
+    <RowLink
+      text="Authentication & Security"
+      href="#" />
+    <RowLink
+      text="Demo Servers (Prisma Cloud)"
+      href="#" />
+    <RowLink
+      text="Database Connector"
+      href="#" />
+  </LinkBox>
+</Row>
