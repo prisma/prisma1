@@ -1,6 +1,6 @@
 package com.prisma.api.connector.mongo.database
 
-import com.prisma.api.connector.mongo.extensions.NodeSelectorBsonTransformer.WhereToBson
+import com.prisma.api.connector.mongo.extensions.NodeSelectorBsonTransformer.whereToBson
 import com.prisma.api.connector.mongo.extensions.{DocumentToId, DocumentToRoot}
 import com.prisma.api.connector.{Filter, NodeSelector, PrismaNode, SelectedFields}
 import com.prisma.gc_values.IdGCValue
@@ -33,7 +33,7 @@ trait NodeSingleQueries extends FilterConditionBuilder {
 
   def getNodeByWhere(where: NodeSelector, selectedFields: SelectedFields, database: MongoDatabase): Future[Option[PrismaNode]] = {
     val collection: MongoCollection[Document] = database.getCollection(where.model.dbName)
-    collection.find(WhereToBson(where)).collect().toFuture.map { results: Seq[Document] =>
+    collection.find(where).collect().toFuture.map { results: Seq[Document] =>
       results.headOption.map { result =>
         val root = DocumentToRoot(where.model, result)
         PrismaNode(root.idField, root)
@@ -43,7 +43,7 @@ trait NodeSingleQueries extends FilterConditionBuilder {
 
   def getNodeIdByWhere(where: NodeSelector, database: MongoDatabase) = {
     val collection: MongoCollection[Document] = database.getCollection(where.model.dbName)
-    collection.find(WhereToBson(where)).projection(include("_.id")).collect().toFuture.map(res => res.headOption.map(DocumentToId.toCUIDGCValue))
+    collection.find(where).projection(include("_.id")).collect().toFuture.map(res => res.headOption.map(DocumentToId.toCUIDGCValue))
   }
 
   def getNodeIdByParentId(parentField: RelationField, parentId: IdGCValue)(implicit ec: ExecutionContext) = ???

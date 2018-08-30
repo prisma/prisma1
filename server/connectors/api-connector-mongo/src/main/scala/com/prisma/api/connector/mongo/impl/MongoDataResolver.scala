@@ -3,7 +3,7 @@ package com.prisma.api.connector.mongo.impl
 import com.prisma.api.connector._
 import com.prisma.api.connector.mongo.database.FilterConditionBuilder
 import com.prisma.api.connector.mongo.extensions.DocumentToRoot
-import com.prisma.api.connector.mongo.extensions.NodeSelectorBsonTransformer.WhereToBson
+import com.prisma.api.connector.mongo.extensions.NodeSelectorBsonTransformer.whereToBson
 import com.prisma.gc_values._
 import com.prisma.shared.models._
 import org.mongodb.scala.model.Filters
@@ -30,7 +30,7 @@ case class MongoDataResolver(project: Project, client: MongoClient)(implicit ec:
   //Fixme this does not use selected fields
   override def getNodeByWhere(where: NodeSelector, selectedFields: SelectedFields): Future[Option[PrismaNode]] = {
     val collection: MongoCollection[Document] = database.getCollection(where.model.dbName)
-    collection.find(WhereToBson(where)).collect().toFuture.map { results: Seq[Document] =>
+    collection.find(where).collect().toFuture.map { results: Seq[Document] =>
       results.headOption.map { result =>
         val root = DocumentToRoot(where.model, result)
         PrismaNode(root.idField, root, Some(where.model.name))

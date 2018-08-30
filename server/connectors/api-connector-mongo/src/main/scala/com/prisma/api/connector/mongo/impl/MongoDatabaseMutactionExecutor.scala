@@ -54,8 +54,8 @@ class MongoDatabaseMutactionExecutor(client: MongoClient)(implicit ec: Execution
                              val stillToExecute = m.allNestedMutactions diff results.results.map(_.mutaction)
                              val resultOfM      = results.results.find(_.mutaction == m).get.asInstanceOf[FurtherNestedMutactionResult]
 
-                             val x = stillToExecute.map(x => generateNestedMutaction(database, x, resultOfM.id, mutationBuilder))
-                             MongoAction.seq(x)
+                             val nestedMutactionsStillToRun = stillToExecute.map(x => generateNestedMutaction(database, x, resultOfM.id, mutationBuilder))
+                             MongoAction.seq(nestedMutactionsStillToRun)
                            case _ => MongoAction.successful(Vector.empty)
                          }
         } yield MutactionResults(result.results ++ childResults.flatMap(_.results))

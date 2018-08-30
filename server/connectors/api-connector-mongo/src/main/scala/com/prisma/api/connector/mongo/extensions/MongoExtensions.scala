@@ -35,13 +35,11 @@ object GCBisonTransformer {
 }
 
 object NodeSelectorBsonTransformer {
-  implicit object WhereToBson {
-    def apply(where: NodeSelector): Bson = {
-      val fieldName = if (where.fieldName == "id") "_id" else where.fieldName
-      val value     = GCValueBsonTransformer(where.fieldGCValue)
+  implicit def whereToBson(where: NodeSelector): Bson = {
+    val fieldName = if (where.fieldName == "id") "_id" else where.fieldName
+    val value     = GCValueBsonTransformer(where.fieldGCValue)
 
-      Filters.eq(fieldName, value)
-    }
+    Filters.eq(fieldName, value)
   }
 }
 

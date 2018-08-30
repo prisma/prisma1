@@ -10,11 +10,7 @@ class EmbeddedNestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matcher
 
   //Fixme
   //verify results using normal queries
-  //do not use id on embedded types
   //test nestedDeleteMany (whereFilter instead of where) -> for no hit/ partial hit / full hit
-  //the schema should not show a backrelation
-  //internally the backrelation should always be a toOne required relation
-  //P1! tests should be adapted to expect inputtypeerror
 
   "a P1! relation " should "error due to the operation not being in the schema anymore" in {
     val project = SchemaDsl.fromString() {
