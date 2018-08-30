@@ -442,51 +442,48 @@ func (db *DB) ProcessInstructions(stack []Instruction) string {
 
 	// TODO: Make this recursive - current depth = 3
 	queryTemplateString := \`
-    query Q (
-      {{ range $k0, $v0 := $.args }}
-        Key0: {{$k0}} Value0: {{$v0}}
-        {{ range $k1, $v1 := $v0}}
-          Key1: {{$k1}} Value1: {{ $v1 }}
-          {{ $v1.Name }}
+  query Q (
+    {{- range $k0, $v0 := $.args }}
+      {{- range $k1, $v1 := $v0}}
+        \${{ $v1.Name }}: {{ $v1.TypeName }},
+      {{ end }}
+    {{ end }}
+    ) {
+    {{- range $k, $v := $.query }}
+    {{- if isArray $v }}
+      {{- range $k1, $v1 := $v }}
+        {{ $v1 }}
+      {{end}}
+    {{- else }}
+      {{ $k }} {
+        {{- range $k, $v := $v }}
+        {{- if isArray $v }}
+          {{ $k }} { 
+            {{- range $k1, $v1 := $v }}
+              {{ $v1 }}
+            {{end}}
+          }
+        {{- else }}
+          {{ $k }} {
+            {{- range $k, $v := $v }}
+              {{- if isArray $v }}
+                {{ $k }} { 
+                  {{- range $k1, $v1 := $v }}
+                    {{ $v1 }}
+                  {{end}}
+                }
+              {{- else }}
+                {{ $k }} {
+                  id
+                }
+              {{ end }}
+              {{ end }}
+          }
         {{ end }}
-      {{ end }}
-      ) {
-      {{ range $k, $v := $.query }}
-      {{ if isArray $v }}
-        {{ range $k1, $v1 := $v }}
-          {{ $v1 }}
-        {{end}}
-      {{ else }}
-        {{ $k }} {
-          {{ range $k, $v := $v }}
-          {{ if isArray $v }}
-            {{ $k }} { 
-              {{ range $k1, $v1 := $v }}
-                {{ $v1 }}
-              {{end}}
-            }
-          {{ else }}
-            {{ $k }} {
-              {{ range $k, $v := $v }}
-                {{ if isArray $v }}
-                  {{ $k }} { 
-                    {{ range $k1, $v1 := $v }}
-                      {{ $v1 }}
-                    {{end}}
-                  }
-                {{ else }}
-                  {{ $k }} {
-                    id
-                  }
-                {{ end }}
-                {{ end }}
-            }
-          {{ end }}
-          {{ end }}
-        }
-      {{ end }}
-      {{ end }}
-    }
+        {{ end }}
+      }
+    {{ end }}
+    {{ end }}
   \`
 
 	templateFunctions := template.FuncMap{
