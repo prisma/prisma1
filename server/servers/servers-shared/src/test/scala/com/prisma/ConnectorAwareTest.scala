@@ -1,7 +1,6 @@
 package com.prisma
 
 import com.prisma.ConnectorTag.{MongoConnectorTag, MySqlConnectorTag, PostgresConnectorTag}
-import com.prisma.api.connector.ApiConnectorCapability
 import com.prisma.config.{DatabaseConfig, PrismaConfig}
 import enumeratum.{Enum, EnumEntry}
 import org.scalatest.{Suite, SuiteMixin, Tag}
@@ -10,8 +9,6 @@ object IgnorePostgres extends Tag("ignore.postgres")
 object IgnoreMySql    extends Tag("ignore.mysql")
 object IgnoreMongo    extends Tag("ignore.mongo")
 
-object IgnoreActive  extends Tag("ignore.active")
-object IgnorePassive extends Tag("ignore.passive")
 object IgnoreSet {
   val ignoreConnectorTags = Set(IgnorePostgres, IgnoreMySql, IgnoreMongo)
 }
@@ -69,9 +66,8 @@ trait ConnectorAwareTest extends SuiteMixin { self: Suite =>
   }
 
   private def ignoredTestsBasedOnIndividualTagging(connector: DatabaseConfig, tags: Map[String, Set[String]]) = {
-    val ignoreActiveOrPassive = if (connector.active) IgnoreActive else IgnorePassive
-    val ignoreConnectorTypes  = ignoreConnectorTags.filter(_.name.endsWith(connector.connector))
-    val tagNamesToIgnore      = (Set(ignoreActiveOrPassive) ++ ignoreConnectorTypes).map(_.name)
+    val ignoreConnectorTypes = ignoreConnectorTags.filter(_.name.endsWith(connector.connector))
+    val tagNamesToIgnore     = ignoreConnectorTypes.map(_.name)
     tags.mapValues { value =>
       val isIgnored = value.exists(tagNamesToIgnore.contains)
       if (isIgnored) {

@@ -1,11 +1,6 @@
 package com.prisma.api.connector.mysql
 
-import com.prisma.api.connector.ApiConnectorCapability.{
-  ImportExportCapability,
-  NodeQueryCapability,
-  NonEmbeddedScalarListCapability,
-  TransactionalExecutionCapability
-}
+import com.prisma.api.connector.ApiConnectorCapability._
 import com.prisma.api.connector.jdbc.impl.{JdbcDataResolver, JdbcDatabaseMutactionExecutor}
 import com.prisma.api.connector.{ApiConnector, ApiConnectorCapability, DatabaseMutactionExecutor}
 import com.prisma.config.DatabaseConfig
@@ -36,7 +31,7 @@ case class MySqlApiConnector(config: DatabaseConfig)(implicit ec: ExecutionConte
 
   override val capabilities: Vector[ApiConnectorCapability] = {
     val isActive = true
-    val common   = Vector(TransactionalExecutionCapability)
+    val common   = Vector(TransactionalExecutionCapability, JoinRelationsCapability)
     if (isActive) {
       Vector(NodeQueryCapability, ImportExportCapability, NonEmbeddedScalarListCapability) ++ common
     } else {
