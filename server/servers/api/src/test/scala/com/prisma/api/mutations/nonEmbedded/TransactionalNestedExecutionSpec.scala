@@ -22,9 +22,21 @@ class TransactionalNestedExecutionSpec extends FlatSpec with Matchers with ApiSp
     val falseWhere        = """"False  Where""""
     val falseWhereInError = """False  Where"""
 
-    val project = SchemaDsl.fromBuilder { schema =>
-      val note = schema.model("Note").field("outerString", _.String).field("outerUnique", _.String, isUnique = true)
-      schema.model("Todo").field_!("innerString", _.String).field("innerUnique", _.String, isUnique = true).manyToManyRelation("note", "todo", note)
+    val project = SchemaDsl.fromString() {
+      """type Todo {
+        | id: ID! @unique
+        | innerString: String!
+        | innerUnique: String @unique
+        | note: [Note!]!
+        |}
+        |
+        |type Note {
+        | id: ID! @unique
+        | outerString: String
+        | outerUnique: String @unique
+        | todo: [Todo!]!
+        |}
+      """.stripMargin
     }
     database.setup(project)
 
@@ -38,9 +50,21 @@ class TransactionalNestedExecutionSpec extends FlatSpec with Matchers with ApiSp
     val falseWhere        = 3
     val falseWhereInError = 3
 
-    val project = SchemaDsl.fromBuilder { schema =>
-      val note = schema.model("Note").field("outerString", _.String).field("outerUnique", _.Int, isUnique = true)
-      schema.model("Todo").field_!("innerString", _.String).field("innerUnique", _.Int, isUnique = true).manyToManyRelation("note", "todo", note)
+    val project = SchemaDsl.fromString() {
+      """type Todo {
+        | id: ID! @unique
+        | innerString: String!
+        | innerUnique: Int @unique
+        | note: [Note!]!
+        |}
+        |
+        |type Note {
+        | id: ID! @unique
+        | outerString: String
+        | outerUnique: Int @unique
+        | todo: [Todo!]!
+        |}
+      """.stripMargin
     }
     database.setup(project)
 
@@ -54,9 +78,21 @@ class TransactionalNestedExecutionSpec extends FlatSpec with Matchers with ApiSp
     val falseWhere        = 3.0
     val falseWhereInError = 3.0
 
-    val project = SchemaDsl.fromBuilder { schema =>
-      val note = schema.model("Note").field("outerString", _.String).field("outerUnique", _.Float, isUnique = true)
-      schema.model("Todo").field_!("innerString", _.String).field("innerUnique", _.Float, isUnique = true).manyToManyRelation("note", "todo", note)
+    val project = SchemaDsl.fromString() {
+      """type Todo {
+        | id: ID! @unique
+        | innerString: String!
+        | innerUnique: Float @unique
+        | note: [Note!]!
+        |}
+        |
+        |type Note {
+        | id: ID! @unique
+        | outerString: String
+        | outerUnique: Float @unique
+        | todo: [Todo!]!
+        |}
+      """.stripMargin
     }
     database.setup(project)
 
@@ -70,9 +106,21 @@ class TransactionalNestedExecutionSpec extends FlatSpec with Matchers with ApiSp
     val falseWhere        = false
     val falseWhereInError = false
 
-    val project = SchemaDsl.fromBuilder { schema =>
-      val note = schema.model("Note").field("outerString", _.String).field("outerUnique", _.Boolean, isUnique = true)
-      schema.model("Todo").field_!("innerString", _.String).field("innerUnique", _.Boolean, isUnique = true).manyToManyRelation("note", "todo", note)
+    val project = SchemaDsl.fromString() {
+      """type Todo {
+        | id: ID! @unique
+        | innerString: String!
+        | innerUnique: Boolean @unique
+        | note: [Note!]!
+        |}
+        |
+        |type Note {
+        | id: ID! @unique
+        | outerString: String
+        | outerUnique: Boolean @unique
+        | todo: [Todo!]!
+        |}
+      """.stripMargin
     }
     database.setup(project)
 
@@ -86,9 +134,21 @@ class TransactionalNestedExecutionSpec extends FlatSpec with Matchers with ApiSp
     val falseWhere        = true
     val falseWhereInError = true
 
-    val project = SchemaDsl.fromBuilder { schema =>
-      val note = schema.model("Note").field("outerString", _.String).field("outerUnique", _.Boolean, isUnique = true)
-      schema.model("Todo").field_!("innerString", _.String).field("innerUnique", _.Boolean, isUnique = true).manyToManyRelation("note", "todo", note)
+    val project = SchemaDsl.fromString() {
+      """type Todo {
+        | id: ID! @unique
+        | innerString: String!
+        | innerUnique: Boolean @unique
+        | note: [Note!]!
+        |}
+        |
+        |type Note {
+        | id: ID! @unique
+        | outerString: String
+        | outerUnique: Boolean @unique
+        | todo: [Todo!]!
+        |}
+      """.stripMargin
     }
     database.setup(project)
 
@@ -102,9 +162,21 @@ class TransactionalNestedExecutionSpec extends FlatSpec with Matchers with ApiSp
     val falseWhere        = """"Some False ID""""
     val falseWhereInError = "Some False ID"
 
-    val project = SchemaDsl.fromBuilder { schema =>
-      val note = schema.model("Note").field("outerString", _.String).field("outerUnique", _.Cuid, isUnique = true)
-      schema.model("Todo").field_!("innerString", _.String).field("innerUnique", _.Cuid, isUnique = true).manyToManyRelation("note", "todo", note)
+    val project = SchemaDsl.fromString() {
+      """type Todo {
+        | id: ID! @unique
+        | innerString: String!
+        | innerUnique: ID @unique
+        | note: [Note!]!
+        |}
+        |
+        |type Note {
+        | id: ID! @unique
+        | outerString: String
+        | outerUnique: ID @unique
+        | todo: [Todo!]!
+        |}
+      """.stripMargin
     }
     database.setup(project)
 
@@ -118,15 +190,27 @@ class TransactionalNestedExecutionSpec extends FlatSpec with Matchers with ApiSp
     val falseWhere        = "C"
     val falseWhereInError = "C"
 
-    val project = SchemaDsl.fromBuilder { schema =>
-      val enum = schema.enum("SomeEnum", Vector("A", "B", "C"))
-      val note = schema.model("Note").field("outerString", _.String).field("outerUnique", _.Enum, enum = Some(enum), isUnique = true)
-      schema
-        .model("Todo")
-        .field_!("innerString", _.String)
-        .field("innerUnique", _.Enum, enum = Some(enum), isUnique = true)
-        .manyToManyRelation("note", "todo", note)
-
+    val project = SchemaDsl.fromString() {
+      """enum SomeEnum {
+        | A
+        | B
+        | C
+        |}
+        |
+        |type Todo {
+        | id: ID! @unique
+        | innerString: String!
+        | innerUnique: SomeEnum @unique
+        | note: [Note!]!
+        |}
+        |
+        |type Note {
+        | id: ID! @unique
+        | outerString: String
+        | outerUnique: SomeEnum @unique
+        | todo: [Todo!]!
+        |}
+      """.stripMargin
     }
     database.setup(project)
 
@@ -139,10 +223,21 @@ class TransactionalNestedExecutionSpec extends FlatSpec with Matchers with ApiSp
     val falseWhere        = """"2020""""
     val falseWhereInError = new DateTime("2020", DateTimeZone.UTC)
 
-    val project = SchemaDsl.fromBuilder { schema =>
-      val note = schema.model("Note").field("outerString", _.String).field("outerUnique", _.DateTime, isUnique = true)
-      schema.model("Todo").field_!("innerString", _.String).field("innerUnique", _.DateTime, isUnique = true).manyToManyRelation("note", "todo", note)
-
+    val project = SchemaDsl.fromString() {
+      """type Todo {
+        | id: ID! @unique
+        | innerString: String!
+        | innerUnique: DateTime @unique
+        | note: [Note!]!
+        |}
+        |
+        |type Note {
+        | id: ID! @unique
+        | outerString: String
+        | outerUnique: DateTime @unique
+        | todo: [Todo!]!
+        |}
+      """.stripMargin
     }
     database.setup(project)
 
@@ -156,10 +251,21 @@ class TransactionalNestedExecutionSpec extends FlatSpec with Matchers with ApiSp
     val falseWhere        = """"{\"a\":\"c\"}""""
     val falseWhereInError = """{\"a\":\"c\"}"""
 
-    val project = SchemaDsl.fromBuilder { schema =>
-      val note = schema.model("Note").field("outerString", _.String).field("outerUnique", _.Json, isUnique = true)
-      schema.model("Todo").field_!("innerString", _.String).field("innerUnique", _.Json, isUnique = true).manyToManyRelation("note", "todo", note)
-
+    val project = SchemaDsl.fromString() {
+      """type Todo {
+        | id: ID! @unique
+        | innerString: String!
+        | innerUnique: Json @unique
+        | note: [Note!]!
+        |}
+        |
+        |type Note {
+        | id: ID! @unique
+        | outerString: String
+        | outerUnique: Json @unique
+        | todo: [Todo!]!
+        |}
+      """.stripMargin
     }
     database.setup(project)
 
@@ -176,9 +282,21 @@ class TransactionalNestedExecutionSpec extends FlatSpec with Matchers with ApiSp
     val falseWhereInError  = "Some False ID"
     val falseWhereInError2 = "Some False ID2"
 
-    val project = SchemaDsl.fromBuilder { schema =>
-      val note = schema.model("Note").field("outerString", _.String).field("outerUnique", _.Cuid, isUnique = true)
-      schema.model("Todo").field_!("innerString", _.String).field("innerUnique", _.Cuid, isUnique = true).manyToManyRelation("notes", "todos", note)
+    val project = SchemaDsl.fromString() {
+      """type Todo {
+        | id: ID! @unique
+        | innerString: String!
+        | innerUnique: ID @unique
+        | notes: [Note!]!
+        |}
+        |
+        |type Note {
+        | id: ID! @unique
+        | outerString: String
+        | outerUnique: ID @unique
+        | todos: [Todo!]!
+        |}
+      """.stripMargin
     }
     database.setup(project)
 
@@ -265,9 +383,21 @@ class TransactionalNestedExecutionSpec extends FlatSpec with Matchers with ApiSp
     val innerWhere  = """"Some Inner ID""""
     val innerWhere2 = """"Some Inner ID2""""
 
-    val project = SchemaDsl.fromBuilder { schema =>
-      val note = schema.model("Note").field("outerString", _.String).field("outerUnique", _.Cuid, isUnique = true)
-      schema.model("Todo").field_!("innerString", _.String).field("innerUnique", _.Cuid, isUnique = true).manyToManyRelation("notes", "todos", note)
+    val project = SchemaDsl.fromString() {
+      """type Todo {
+        | id: ID! @unique
+        | innerString: String!
+        | innerUnique: ID @unique
+        | note: [Note!]!
+        |}
+        |
+        |type Note {
+        | id: ID! @unique
+        | outerString: String
+        | outerUnique: ID @unique
+        | todos: [Todo!]!
+        |}
+      """.stripMargin
     }
     database.setup(project)
 
