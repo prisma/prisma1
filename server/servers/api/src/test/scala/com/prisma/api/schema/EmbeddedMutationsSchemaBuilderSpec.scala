@@ -21,7 +21,7 @@ class EmbeddedMutationsSchemaBuilderSpec extends FlatSpec with Matchers with Api
       """
     }
 
-    val schemaBuilder = SchemaBuilderImpl(project, capabilities = Vector(EmbeddedTypesCapability))(testDependencies, system)
+    val schemaBuilder = SchemaBuilderImpl(project, capabilities = Set(EmbeddedTypesCapability))(testDependencies, system)
     val schema        = SchemaRenderer.renderSchema(schemaBuilder.build())
 
     schema should not(include("type Mutation {"))

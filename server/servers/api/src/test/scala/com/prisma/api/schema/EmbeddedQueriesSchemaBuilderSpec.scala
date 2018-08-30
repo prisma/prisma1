@@ -21,7 +21,7 @@ class EmbeddedQueriesSchemaBuilderSpec extends FlatSpec with Matchers with ApiSp
         """
     }
 
-    val schemaBuilder = SchemaBuilderImpl(project, capabilities = Vector.empty)(testDependencies, system)
+    val schemaBuilder = SchemaBuilderImpl(project, capabilities = Set.empty)(testDependencies, system)
     val schema        = SchemaRenderer.renderSchema(schemaBuilder.build())
 
     schema should not(include("type Query {"))
