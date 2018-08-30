@@ -87,5 +87,5 @@ object UuidGCValue {
 
 object CuidGCValue {
   def random: CuidGCValue = CuidGCValue(Cuid.createCuid())
-  def dummy               = CuidGCValue("")
+  def dummy: CuidGCValue  = CuidGCValue("")
 }
