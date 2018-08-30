@@ -371,7 +371,6 @@ import (
   "reflect"
   "fmt"
   "bytes"
-  "encoding/json"
   "text/template"
 
 	"github.com/machinebox/graphql"
@@ -425,10 +424,10 @@ func (db *DB) ProcessInstructions(stack []Instruction) string {
 		fmt.Println("Final Args:", args)
 	}
 
-	// TODO: Make this recursive - current depth = 4
+	// TODO: Make this recursive - current depth = 3
 	queryTemplateString := \`
     query Q {
-      {{ range $k, $v := $ }}
+      {{ range $k, $v := $.query }}
       {{ if isArray $v }}
         {{ range $k1, $v1 := $v }}
           {{ $v1 }}
@@ -453,19 +452,7 @@ func (db *DB) ProcessInstructions(stack []Instruction) string {
                   }
                 {{ else }}
                   {{ $k }} {
-                    {{ range $k, $v := $v }}
-                      {{ if isArray $v }}
-                        {{ $k }} { 
-                          {{ range $k1, $v1 := $v }}
-                            {{ $v1 }}
-                          {{end}}
-                        }
-                      {{ else }}
-                        {{ $k }} {
-                          id
-                        }
-                      {{ end }}
-                      {{ end }}
+                    id
                   }
                 {{ end }}
                 {{ end }}
@@ -495,7 +482,11 @@ func (db *DB) ProcessInstructions(stack []Instruction) string {
 
 	queryTemplate, err := template.New("query").Funcs(templateFunctions).Parse(queryTemplateString)
 	var queryBytes bytes.Buffer
-	queryTemplate.Execute(&queryBytes, query)
+	var data = make(map[string]interface{})
+	data = map[string]interface{}{
+		"query": query,
+	}
+	queryTemplate.Execute(&queryBytes, data)
 
 	if db.Debug {
 		fmt.Println("Query String: ", queryBytes.String())
