@@ -17,6 +17,7 @@ export function makePrismaLink({
   const httpLink = new HTTPLinkDataloader({
     uri: endpoint,
     headers: token ? { Authorization: `Bearer ${token}` } : {},
+    keepalive: true,
   })
 
   // also works for https/wss
