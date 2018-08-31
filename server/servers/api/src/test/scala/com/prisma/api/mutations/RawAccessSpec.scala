@@ -39,6 +39,7 @@ class RawAccessSpec extends FlatSpec with Matchers with ApiSpecBase {
     val result = server.query(
       """mutation {
         |  executeRaw(
+        |    database: default
         |    query: "Select 1"
         |  )
         |}

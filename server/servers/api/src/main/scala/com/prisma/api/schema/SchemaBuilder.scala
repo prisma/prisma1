@@ -265,15 +265,19 @@ case class SchemaBuilderImpl(
 
   val rawAccessField: Option[Field[ApiUserContext, Unit]] = {
     import com.prisma.utils.boolean.BooleanUtils._
+
+    val enumValues = apiDependencies.config.databases.map(x => EnumValue(x.name, value = x.name)).toList
     enableRawAccess.toOption {
       Field(
         s"executeRaw",
         fieldType = CustomScalarTypes.JsonType,
         arguments = List(
+          Argument("database", OptionInputType(EnumType[String]("PrismaDatabase", values = enumValues))),
           Argument("query", StringType)
         ),
         resolve = (ctx) => {
-          val query = ctx.arg[String]("query")
+          val query    = ctx.arg[String]("query")
+          val database = ctx.argOpt[String]("database")
           apiDependencies.apiConnector.databaseMutactionExecutor.executeRaw(query)
         }
       )
