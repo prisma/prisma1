@@ -137,6 +137,7 @@ export class GoGenerator extends Generator {
                   arg => `args = append(args, GraphQLArg{
                 Name: "${arg.name}",
                 TypeName: "${arg.type}",
+                Value: ${arg.name},
               })`,
                 )
                 .join('\n')}
@@ -162,7 +163,28 @@ export class GoGenerator extends Generator {
 
       // Exec docs
       func (instance ${type.name}Exec) Exec() ${type.name} {
-        instance.db.ProcessInstructions(instance.stack)
+        query := instance.db.ProcessInstructions(instance.stack)
+        variables := make(map[string]interface{})
+        for _, instruction := range instance.stack {
+          if instance.db.Debug {
+            fmt.Println("Instruction Exec: ", instruction)
+          }
+          for _, arg := range instruction.Args {
+            if instance.db.Debug {
+              fmt.Println("Instruction Arg Exec: ", instruction)
+            }
+            // TODO: Need to handle arg.Name collisions
+            variables[arg.Name] = arg.Value
+          }
+        }
+        if instance.db.Debug {
+          fmt.Println("Query Exec:", query)
+          fmt.Println("Variables Exec:", variables)
+        }
+        data := instance.db.GraphQL(query, variables)
+        if instance.db.Debug {
+          fmt.Println("Data Exec:", data)
+        }
         return ${type.name}{}
       }
       
@@ -332,12 +354,13 @@ export class GoGenerator extends Generator {
         )}Exec {
 
           stack := make([]Instruction, 0)
-          var args []GraphQLArg
+          var args []GraphQLArg // TODO: Should this match the params?
           ${args
             .map(
               arg => `args = append(args, GraphQLArg{
             Name: "${arg.name}",
             TypeName: "${arg.type}",
+            Value: params.${goCase(arg.name)},
           })`,
             )
             .join('\n')}
@@ -397,6 +420,7 @@ type GraphQLField struct {
 type GraphQLArg struct {
   Name string
   TypeName string
+  Value interface{}
 }
 
 // Instruction docs
