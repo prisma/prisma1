@@ -182,10 +182,16 @@ export class GoGenerator extends Generator {
           fmt.Println("Variables Exec:", variables)
         }
         data := instance.db.GraphQL(query, variables)
+        for _, instruction := range instance.stack {
+          data = (data[instruction.Name]).(map[string]interface{})
+        }
+        var decodedData ${type.name}
+        mapstructure.Decode(data, &decodedData)
         if instance.db.Debug {
           fmt.Println("Data Exec:", data)
+          fmt.Println("Data Exec Decoded:", decodedData)
         }
-        return ${type.name}{}
+        return decodedData
       }
       
       // ${type.name} docs
@@ -408,7 +414,8 @@ import (
   "bytes"
   "text/template"
 
-	"github.com/machinebox/graphql"
+  "github.com/machinebox/graphql"
+  "github.com/mitchellh/mapstructure"
 )
 
 // GraphQLField docs
