@@ -2,6 +2,7 @@
 node_modules
 .DS_Store
 
+
 *.class
 *.log
 .coursier
@@ -38,3 +39,4 @@ buildkite-script-*
 
 # VSCode specific
 .vscode/
+

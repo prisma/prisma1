@@ -70,3 +70,11 @@ export interface PrimaryKey {
 }
 
 export type PostgresConnectionDetails = string | ClientConfig
+
+export interface MysqlConnectionDetails {
+  host: string
+  port: number
+  user: string
+  password: string
+  database?: string
+}
