@@ -34,6 +34,8 @@ class RawAccessSpec extends FlatSpec with Matchers with ApiSpecBase {
   val isPostgres    = slickDatabase.isPostgres
   val sql           = DSL.using(slickDatabase.dialect, new Settings().withRenderFormatted(true))
   val modelTable    = table(name(schemaName, model.dbName))
+  val idColumn      = model.idField_!.dbName
+  val titleColumn   = model.getScalarFieldByName_!("title").dbName
 
   "the simplest query Select 1" should "work" in {
     val result = server.query(
@@ -57,15 +59,17 @@ class RawAccessSpec extends FlatSpec with Matchers with ApiSpecBase {
 
     val result = executeRaw(sql.select().from(modelTable))
 
-    result.pathAsJsValue("data.executeRaw") should equal(s"""[{"id":"$id1","title":"title1"},{"id":"$id2","title":null}]""".parseJson)
+    result.pathAsJsValue("data.executeRaw") should equal(
+      s"""[{"$idColumn":"$id1","$titleColumn":"title1"},{"$idColumn":"$id2","$titleColumn":null}]""".parseJson)
   }
 
   "inserting into a model table" should "work" in {
-    val insertResult = executeRaw(sql.insertInto(modelTable).columns(field("id"), field("title")).values("id1", "title1").values("id2", "title2"))
+    val insertResult = executeRaw(sql.insertInto(modelTable).columns(field(idColumn), field(titleColumn)).values("id1", "title1").values("id2", "title2"))
     insertResult.pathAsJsValue("data.executeRaw") should equal("2".parseJson)
 
     val readResult = executeRaw(sql.select().from(modelTable))
-    readResult.pathAsJsValue("data.executeRaw") should equal(s"""[{"id":"id1","title":"title1"},{"id":"id2","title":"title2"}]""".parseJson)
+    readResult.pathAsJsValue("data.executeRaw") should equal(
+      s"""[{"$idColumn":"id1","$titleColumn":"title1"},{"$idColumn":"id2","$titleColumn":"title2"}]""".parseJson)
   }
 
   "syntactic errors" should "bubble through to the user" in {
@@ -97,7 +101,7 @@ class RawAccessSpec extends FlatSpec with Matchers with ApiSpecBase {
       "Duplicate entry"
     }
     executeRawThatMustFail(
-      sql.insertInto(modelTable).columns(field("id"), field("title")).values(id, "irrelevant"),
+      sql.insertInto(modelTable).columns(field(idColumn), field(titleColumn)).values(id, "irrelevant"),
       errorCode = errorCode,
       errorContains = errorContains
     )
