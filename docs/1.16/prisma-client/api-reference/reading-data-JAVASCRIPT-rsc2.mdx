@@ -1,6 +1,7 @@
 import Collapse from "components/Markdown/Collapse"
 import Code from "components/Markdown/Code"
 import Warning from "components/Markdown/Warning"
+import Info from "components/Markdown/Info"
 
 export const meta = {
   title: "Reading Data (JavaScript)",
@@ -12,7 +13,7 @@ export const meta = {
 
 ## Overview
 
-The Prisma Client is based on the operations defined in the GraphQL schema of your Prisma API. For reading data, it basically _mirrors_ the [GraphQL queries](qwe1) of your Prisma Service.
+The Prisma Client is based on the operations defined in the GraphQL schema of your Prisma API. For _reading_ data, it basically _mirrors_ the [GraphQL queries](qwe1) of your Prisma Service.
 
 For this page, we'll assume your Prisma API is based on the following [datamodel](knul):
 
@@ -42,7 +43,7 @@ type Vote {
 }
 ```
 
-<Collapse title="View the generated GraphQL schema & Prisma Client">
+<Collapse title="View the full generated GraphQL schema & Prisma Client">
 
 - You can view what the generated GraphQL schema for the API [here](https://github.com/nikolasburk/prisma-client-examples/blob/master/generated/prisma.graphql)
 - You can view what the generated JavaScript client [here](https://github.com/nikolasburk/prisma-client-examples/blob/master/generated/prisma.js).
@@ -79,7 +80,7 @@ The input for these functions is an object that has as properties any [unique](k
 
 - View the type of `where` for `Link` [here](https://github.com/nikolasburk/prisma-client-examples/blob/master/generated/prisma.ts#L455)
 - View the type of `where` for `User` [here](https://github.com/nikolasburk/prisma-client-examples/blob/master/generated/prisma.ts#L357)
-- View the type of `where` for `Link` [Vote](https://github.com/nikolasburk/prisma-client-examples/blob/master/generated/prisma.ts#L522)
+- View the type of `where` for `Vote` [here](https://github.com/nikolasburk/prisma-client-examples/blob/master/generated/prisma.ts#L522)
 
 </Collapse>
 
@@ -265,7 +266,7 @@ The type of the `where` object depends on the model for which it was generated.
 
 - View the type of `where` for `Link` [here](https://github.com/nikolasburk/prisma-client-examples/blob/master/generated/prisma.ts#L154)
 - View the type of `where` for `User` [here](https://github.com/nikolasburk/prisma-client-examples/blob/master/generated/prisma.ts#L267)
-- View the type of `where` for `Link` [Vote](https://github.com/nikolasburk/prisma-client-examples/blob/master/generated/prisma.ts#L219)
+- View the type of `where` for `Vote` [here](https://github.com/nikolasburk/prisma-client-examples/blob/master/generated/prisma.ts#L219)
 
 </Collapse>
 
@@ -415,9 +416,7 @@ query {
 
 </Code>
 
-<Warning>
-
-**TODO**: Change to `Tip` component
+<Info>
 
 The `AND` filter can actually be omitted since multiple filter criteria are by default combined using a _logical and_. This means the above filter can also be expressed as follows:
 
@@ -459,7 +458,7 @@ query {
 
 </Code>
 
-</Warning>
+</Info>
 
 
 ## Relational filters for lists
@@ -509,7 +508,7 @@ The type of the `orderBy` field depends on the scalar fields of the model for wh
 
 - View the type of `orderBy` for `Link` [here](https://github.com/nikolasburk/prisma-client-examples/blob/master/generated/prisma.ts#L114)
 - View the type of `orderBy` for `User` [here](https://github.com/nikolasburk/prisma-client-examples/blob/master/generated/prisma.ts#L132)
-- View the type of `orderBy` for `Link` [Vote](https://github.com/nikolasburk/prisma-client-examples/blob/master/generated/prisma.ts#L125)
+- View the type of `orderBy` for `Vote` [here](https://github.com/nikolasburk/prisma-client-examples/blob/master/generated/prisma.ts#L125)
 
 </Collapse>
 

@@ -1,4 +1,7 @@
-import Collapse from 'components/Markdown/Collapse'
+import Collapse from "components/Markdown/Collapse"
+import Code from "components/Markdown/Code"
+import Warning from "components/Markdown/Warning"
+import Info from "components/Markdown/Info"
 
 export const meta = {
   title: 'Reading Data (TypeScript)',
@@ -414,9 +417,7 @@ query {
 
 </Code>
 
-<Warning>
-
-**TODO**: Change to `Tip` component
+<Info>
 
 The `AND` filter can actually be omitted since multiple filter criteria are by default combined using a _logical and_. This means the above filter can also be expressed as follows:
 
@@ -458,7 +459,7 @@ query {
 
 </Code>
 
-</Warning>
+</Info>
 
 
 ## Relational filters for lists
