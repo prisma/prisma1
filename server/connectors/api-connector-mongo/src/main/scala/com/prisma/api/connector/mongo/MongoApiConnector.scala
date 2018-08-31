@@ -1,5 +1,6 @@
 package com.prisma.api.connector.mongo
 
+import com.prisma.api.connector.ApiConnectorCapability.{EmbeddedScalarListsCapability, EmbeddedTypesCapability, NodeQueryCapability}
 import com.prisma.api.connector._
 import com.prisma.api.connector.mongo.impl.{MongoDataResolver, MongoDatabaseMutactionExecutor}
 import com.prisma.config.DatabaseConfig
@@ -18,7 +19,7 @@ case class MongoApiConnector(config: DatabaseConfig)(implicit ec: ExecutionConte
 
   override def projectIdEncoder: ProjectIdEncoder = ???
 
-  override def capabilities: Vector[ApiConnectorCapability] = Vector(NodeQueryCapability, EmbeddedListsCapability, EmbeddedTypesCapability)
+  override def capabilities: Set[ApiConnectorCapability] = Set(NodeQueryCapability, EmbeddedScalarListsCapability, EmbeddedTypesCapability)
 
   override def initialize(): Future[Unit] = {
     client

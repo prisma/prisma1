@@ -1,6 +1,7 @@
 package com.prisma.api.schema
 
 import akka.actor.ActorSystem
+import com.prisma.api.connector.ApiConnectorCapability.NodeQueryCapability
 import com.prisma.api.connector._
 import com.prisma.api.mutations._
 import com.prisma.api.resolver.DeferredTypes.{IdBasedConnectionDeferred, ManyModelDeferred}
@@ -32,7 +33,7 @@ object SchemaBuilder {
 
 case class SchemaBuilderImpl(
     project: Project,
-    capabilities: Vector[ApiConnectorCapability]
+    capabilities: Set[ApiConnectorCapability]
 )(implicit apiDependencies: ApiDependencies, system: ActorSystem)
     extends SangriaExtensions {
   import system.dispatcher

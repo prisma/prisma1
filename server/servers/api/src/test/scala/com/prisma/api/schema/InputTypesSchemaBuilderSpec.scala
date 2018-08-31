@@ -1,6 +1,7 @@
 package com.prisma.api.schema
 
 import com.prisma.api.ApiSpecBase
+import com.prisma.api.connector.ApiConnectorCapability.SupportsExistingDatabasesCapability
 import com.prisma.shared.schema_dsl.SchemaDsl
 import com.prisma.util.GraphQLSchemaMatchers
 import org.scalatest.{FlatSpec, Matchers}
@@ -9,7 +10,8 @@ import sangria.renderer.SchemaRenderer
 class InputTypesSchemaBuilderSpec extends FlatSpec with Matchers with ApiSpecBase with GraphQLSchemaMatchers {
   val schemaBuilder = testDependencies.apiSchemaBuilder
 
-  override def runSuiteOnlyForActiveConnectors = true // a lot of the schemas omit the id field which is required for passive connectors
+  // a lot of the schemas omit the id field which is required for passive connectors
+  override def doNotRunForCapabilities = Set(SupportsExistingDatabasesCapability)
 
   "Sample schema with relation and id only types" should "be generated correctly" in {
 

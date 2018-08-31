@@ -1,14 +1,15 @@
 package com.prisma.api.filters.embedded
 
 import com.prisma.api.ApiSpecBase
+import com.prisma.api.connector.ApiConnectorCapability.EmbeddedTypesCapability
 import com.prisma.shared.schema_dsl.SchemaDsl
 import org.scalatest._
 
 class EmbeddedRelationFilterSpec extends FlatSpec with Matchers with ApiSpecBase {
 
-  override def onlyRunSuiteForMongo: Boolean = true
+  override def runOnlyForCapabilities = Set(EmbeddedTypesCapability)
 
-  val project = SchemaDsl.fromString() {
+  lazy val project = SchemaDsl.fromString() {
     """
       |type Blog {
       |   id: ID! @unique

@@ -1,14 +1,14 @@
 package com.prisma.api.mutations
 
-import com.prisma.IgnorePassive
 import com.prisma.api.ApiSpecBase
+import com.prisma.api.connector.ApiConnectorCapability.JoinRelationsCapability
 import com.prisma.shared.schema_dsl.SchemaDsl
 import org.scalatest.{FlatSpec, Matchers}
 
 class DeleteManyMutationRelationsSpec extends FlatSpec with Matchers with ApiSpecBase {
-  override def doNotRunSuiteForMongo: Boolean = true
+  override def runOnlyForCapabilities = Set(JoinRelationsCapability)
 
-  "a P0 to C1! relation " should "error when deleting the parent" taggedAs (IgnorePassive) in {
+  "a P0 to C1! relation " should "error when deleting the parent" in {
     val project = SchemaDsl.fromBuilder { schema =>
       val parent = schema.model("Parent").field_!("p", _.String, isUnique = true)
       val child  = schema.model("Child").field_!("c", _.String, isUnique = true)
@@ -53,7 +53,7 @@ class DeleteManyMutationRelationsSpec extends FlatSpec with Matchers with ApiSpe
     ifConnectorIsActive { dataResolver(project).countByTable("_ChildToParent").await should be(1) }
   }
 
-  "a P0 to C1! relation " should "error when deleting the parent with empty filter" taggedAs (IgnorePassive) in {
+  "a P0 to C1! relation " should "error when deleting the parent with empty filter" in {
     val project = SchemaDsl.fromBuilder { schema =>
       val parent = schema.model("Parent").field_!("p", _.String, isUnique = true)
       val child  = schema.model("Child").field_!("c", _.String, isUnique = true)

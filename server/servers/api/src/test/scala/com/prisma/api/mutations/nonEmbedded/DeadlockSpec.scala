@@ -9,7 +9,7 @@ import org.scalatest.{FlatSpec, Matchers, Retries}
 import scala.concurrent.Future
 
 class DeadlockSpec extends FlatSpec with Matchers with Retries with ApiSpecBase with AwaitUtils {
-  override def doNotRunSuiteForMongo: Boolean = true
+  override def doNotRunForPrototypes: Boolean = true
 
   import testDependencies.system.dispatcher
 

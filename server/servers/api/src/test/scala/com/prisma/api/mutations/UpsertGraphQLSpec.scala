@@ -8,7 +8,7 @@ import com.prisma.shared.schema_dsl.SchemaDsl
 import org.scalatest.{FlatSpec, Matchers}
 
 class UpsertGraphQLSpec extends FlatSpec with Matchers with ApiSpecBase {
-  override def doNotRunSuiteForMongo: Boolean = true
+  override def doNotRunForPrototypes: Boolean = true
 
   "Upserting an item with an id field of type UUID" should "work" taggedAs (IgnoreMySql) in {
     val project = SchemaDsl.fromString() {

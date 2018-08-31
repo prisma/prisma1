@@ -4,11 +4,12 @@ import java.util.UUID
 
 import com.prisma.IgnoreMySql
 import com.prisma.api.ApiSpecBase
+import com.prisma.api.connector.ApiConnectorCapability.JoinRelationsCapability
 import com.prisma.shared.schema_dsl.SchemaDsl
 import org.scalatest.{FlatSpec, Matchers}
 
 class NestedUpsertMutationInsideUpdateSpec extends FlatSpec with Matchers with ApiSpecBase {
-  override def doNotRunSuiteForMongo: Boolean = true
+  override def runOnlyForCapabilities = Set(JoinRelationsCapability)
 
   "a PM to C1!  relation with a child already in a relation" should "work with create" in {
     val project = SchemaDsl.fromBuilder { schema =>

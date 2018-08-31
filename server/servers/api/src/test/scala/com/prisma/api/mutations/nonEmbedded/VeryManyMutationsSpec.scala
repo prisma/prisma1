@@ -7,7 +7,7 @@ import org.scalatest.{FlatSpec, Matchers}
 
 class VeryManyMutationsSpec extends FlatSpec with Matchers with ApiSpecBase {
 
-  override def doNotRunSuiteForMongo: Boolean = true
+  override def doNotRunForPrototypes: Boolean = true
   val project: Project = SchemaDsl.fromString() {
     """
       |type Top {

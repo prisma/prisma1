@@ -1,12 +1,12 @@
 package com.prisma.api.mutations.embedded.nestedMutations
 
 import com.prisma.api.ApiSpecBase
+import com.prisma.api.connector.ApiConnectorCapability.EmbeddedTypesCapability
 import com.prisma.shared.schema_dsl.SchemaDsl
 import org.scalatest.{FlatSpec, Matchers}
 
 class MongoPrototypingSpec extends FlatSpec with Matchers with ApiSpecBase {
-
-  override def onlyRunSuiteForMongo: Boolean = true
+  override def runOnlyForCapabilities = Set(EmbeddedTypesCapability)
 
   "To one relations" should "work" in {
 
@@ -590,5 +590,4 @@ class MongoPrototypingSpec extends FlatSpec with Matchers with ApiSpecBase {
 
     res2.toString should be("""{"data":{"createTop":{"unique":1,"middle":{"unique":11,"bottom":[{"unique":111}]}}}}""")
   }
-
 }

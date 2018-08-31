@@ -71,6 +71,7 @@ object Dependencies {
   val jacksonDataformatCbor = "com.fasterxml.jackson.dataformat" % "jackson-dataformat-cbor" % v.jackson
   val jackson               = Seq(jacksonCore, jacksonDatabind, jacksonAnnotation, jacksonDataformatCbor)
 
+  val enumeratum        = "com.beachape"               %% "enumeratum"                    % "1.5.13"
   val amqp              = "com.rabbitmq"               % "amqp-client"                    % "4.1.0"
   val java8Compat       = "org.scala-lang.modules"     %% "scala-java8-compat"            % "0.8.0"
   val scalaLogging      = "com.typesafe.scala-logging" %% "scala-logging"                 % "3.7.0"
@@ -94,7 +95,8 @@ object Dependencies {
   lazy val common: Seq[ModuleID] = Seq(
     java8Compat,
     scalaTest,
-    scalactic
+    scalactic,
+    enumeratum
   )
 
   lazy val commonServerDependencies: Seq[ModuleID] = common ++ sangria ++ joda ++ Seq(

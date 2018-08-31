@@ -1,13 +1,14 @@
 package com.prisma.api.queries.nonEmbedded
 
 import com.prisma.api.ApiSpecBase
+import com.prisma.api.connector.ApiConnectorCapability.ScalarListsCapability
 import com.prisma.shared.models.Project
 import com.prisma.shared.schema_dsl.SchemaDsl
 import org.scalatest.{FlatSpec, Matchers}
 
 class ScalarListsQuerySpec extends FlatSpec with Matchers with ApiSpecBase {
-  override def doNotRunSuiteForMongo: Boolean  = true
-  override def runSuiteOnlyForActiveConnectors = true
+  override def doNotRunForPrototypes: Boolean = true
+  override def runOnlyForCapabilities         = Set(ScalarListsCapability)
 
   "empty scalar list" should "return empty list" in {
     val project = SchemaDsl.fromString() {

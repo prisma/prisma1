@@ -15,19 +15,15 @@ case class MongoDeployConnector(config: DatabaseConfig)(implicit ec: ExecutionCo
 
   override val isActive: Boolean = true
 
-  override val migrationPersistence: MigrationPersistence = MigrationPersistenceImpl(internalDatabase)
-
-  override val projectPersistence: ProjectPersistence = ProjectPersistenceImpl(internalDatabase, migrationPersistence)
-
+  override val migrationPersistence: MigrationPersistence       = MigrationPersistenceImpl(internalDatabase)
+  override val projectPersistence: ProjectPersistence           = ProjectPersistenceImpl(internalDatabase, migrationPersistence)
   override val deployMutactionExecutor: DeployMutactionExecutor = MongoDeployMutactionExecutor(mongoClient)
+  override val projectIdEncoder: ProjectIdEncoder               = ProjectIdEncoder('$')
+  override val cloudSecretPersistence: CloudSecretPersistence   = CloudSecretPersistenceImpl(internalDatabase)
+  override def capabilities                                     = Set.empty
 
-  override def clientDBQueries(project: Project): ClientDbQueries = EmptyClientDbQueries
-
-  override val projectIdEncoder: ProjectIdEncoder = ProjectIdEncoder('$')
-
+  override def clientDBQueries(project: Project): ClientDbQueries                              = EmptyClientDbQueries
   override def databaseIntrospectionInferrer(projectId: String): DatabaseIntrospectionInferrer = EmptyDatabaseIntrospectionInferrer
-
-  override val cloudSecretPersistence: CloudSecretPersistence = CloudSecretPersistenceImpl(internalDatabase)
 
   override def initialize(): Future[Unit] = Future.unit
 
