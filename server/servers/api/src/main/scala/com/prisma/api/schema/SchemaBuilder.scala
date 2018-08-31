@@ -3,17 +3,15 @@ package com.prisma.api.schema
 import akka.actor.ActorSystem
 import com.prisma.api.connector._
 import com.prisma.api.mutations._
+import com.prisma.api.resolver.DeferredTypes.{IdBasedConnectionDeferred, ManyModelDeferred}
 import com.prisma.api.resolver.{ConnectionParentElement, DefaultIdBasedConnection}
-import com.prisma.api.resolver.DeferredTypes.{IdBasedConnectionDeferred, ManyModelDeferred, OneDeferred}
 import com.prisma.api.{ApiDependencies, ApiMetrics}
 import com.prisma.gc_values.CuidGCValue
-import com.prisma.shared.models.{Model, Project, ScalarField}
+import com.prisma.shared.models.{Model, Project}
 import com.prisma.util.coolArgs.CoolArgs
 import com.prisma.utils.boolean.BooleanUtils._
-import com.prisma.utils.future.FutureUtils.FutureOpt
 import org.atteo.evo.inflector.English
 import sangria.ast
-import sangria.ast.Selection
 import sangria.relay._
 import sangria.schema._
 
@@ -28,7 +26,11 @@ trait SchemaBuilder {
 
 object SchemaBuilder {
   def apply()(implicit system: ActorSystem, apiDependencies: ApiDependencies): SchemaBuilder = { (project: Project) =>
-    SchemaBuilderImpl(project, apiDependencies.capabilities, enableRawAccess = true).build()
+    SchemaBuilderImpl(
+      project = project,
+      capabilities = apiDependencies.capabilities,
+      enableRawAccess = apiDependencies.config.databases.head.rawAccess
+    ).build()
   }
 }
 
