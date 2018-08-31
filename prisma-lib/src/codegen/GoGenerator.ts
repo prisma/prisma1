@@ -342,6 +342,10 @@ export class GoGenerator extends Generator {
         // const isEnum = deepType!.constructor.name === 'GraphQLEnumType'
         // const { typeName } = this.extractFieldLikeType(field)
         const args = field.args
+        const { typeFields } = this.extractFieldLikeType(field as GraphQLField<
+          any,
+          any
+        >)
         return `
           // ${goCase(field.name)}Params docs
           type ${goCase(field.name)}Params struct {
@@ -362,7 +366,7 @@ export class GoGenerator extends Generator {
         )}Exec {
 
           stack := make([]Instruction, 0)
-          var args []GraphQLArg // TODO: Should this match the params?
+          var args []GraphQLArg
           ${args
             .map(
               arg => `args = append(args, GraphQLArg{
@@ -377,7 +381,8 @@ export class GoGenerator extends Generator {
             Name: "${field.name}",
             Field: GraphQLField{
               Name: "${field.name}",
-              TypeName: "${deepTypeName}", // TODO: We might need to full field object later to get array and non-null properties or add them as additional fields
+              TypeName: "${deepTypeName}",
+              TypeFields: ${`[]string{${typeFields.map(f => f).join(',')}}`},
             },
             Operation: "${operation}",
             Args: args,
