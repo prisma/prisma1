@@ -6,7 +6,15 @@ case class PrismaNode(id: IdGCValue, data: RootGCValue, typeName: Option[String]
 
 object PrismaNode {
   def dummy: PrismaNode = PrismaNode(CuidGCValue(""), RootGCValue.empty)
+  //helpers that are needed on PrismaNode (probably only for Mongo):
+  // - taking a PrismaNode and a path and return whether its null
+  // - taking a PrismaNode, a path and a value and check whether it exists
+  // - taking a PrismaNode and a path and returning nested PrismaNodes at that Path
+
 }
+
+// Path
+// consists of relationFieldNames and optionally a nodeSelector on the nested nodes
 
 case class PrismaNodeWithParent(parentId: IdGCValue, prismaNode: PrismaNode)
 

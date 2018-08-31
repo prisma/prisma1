@@ -82,7 +82,7 @@ object UuidGCValue {
   def parse_!(s: String): UuidGCValue    = parse(s).get
   def parse(s: String): Try[UuidGCValue] = Try { UuidGCValue(UUID.fromString(s)) }
 
-  def random(): UuidGCValue = UuidGCValue(UUID.randomUUID())
+  def random: UuidGCValue = UuidGCValue(UUID.randomUUID())
 }
 
 object CuidGCValue {

@@ -107,26 +107,37 @@ trait NodeActions extends NodeSingleQueries {
       futureIds.flatMap(ids => collection.deleteMany(in("_id", ids.map(_.value): _*)).toFuture().map(_ => MutactionResults(Vector.empty)))
     }
 
-  private def nestedToOneDeletes(node: PrismaNode, mutaction: TopLevelUpdateNode): (Vector[Bson], Vector[DeleteNodeResult]) = {
-    val actions = mutaction.nestedDeletes.map {
+  private def nestedDeleteActionsAndResults(node: PrismaNode, mutaction: UpdateNode, path: String = ""): (Vector[Bson], Vector[DeleteNodeResult]) = {
+    def fieldName(f: String) = mutaction match {
+      case _: TopLevelUpdateNode => f
+      case _: NestedUpdateNode   => newFieldName(mutaction, f, path)
+    }
+
+    val actionsAndResults = mutaction.nestedDeletes.map {
       case toOneDelete @ NestedDeleteNode(_, rf, None) =>
-        (unset(rf.name), DeleteNodeResult(CuidGCValue.dummy, PrismaNode(CuidGCValue.dummy, node.data.map(rf.name).asRoot), toOneDelete))
+        (unset(fieldName(rf.name)), DeleteNodeResult(CuidGCValue.dummy, PrismaNode(CuidGCValue.dummy, node.data.map(rf.name).asRoot), toOneDelete))
 
       case toManyDelete @ NestedDeleteNode(_, rf, Some(nodeSelector)) =>
         val listForField = node.data.map(rf.name).asInstanceOf[ListGCValue]
         val values       = listForField.values.map(_.asRoot)
         val value        = values.find(_.map(nodeSelector.fieldName) == nodeSelector.fieldGCValue).get
 
-        (pull(rf.name, whereToBson(nodeSelector)), DeleteNodeResult(CuidGCValue.dummy, PrismaNode(CuidGCValue.dummy, value), toManyDelete))
+        (pull(fieldName(rf.name), whereToBson(nodeSelector)), DeleteNodeResult(CuidGCValue.dummy, PrismaNode(CuidGCValue.dummy, value), toManyDelete))
     }
 
-    (actions.map(_._1), actions.map(_._2))
+    (actionsAndResults.map(_._1), actionsAndResults.map(_._2))
   }
 
-  private def nestedDeleteChecks(node: PrismaNode, mutaction: TopLevelUpdateNode) = {
+  //Fixme this probably needs a path
+  private def nestedDeleteChecks(node: PrismaNode, mutaction: UpdateNode) = {
+    val parentWhere = mutaction match {
+      case top: TopLevelUpdateNode  => Some(top.where)
+      case nested: NestedUpdateNode => nested.where
+    }
+
     def manyError(delete: NestedDeleteNode, childWhere: NodeSelector) = error(delete, Some(childWhere))
     def error(delete: NestedDeleteNode, where: Option[NodeSelector] = None) =
-      throw NodesNotConnectedError(delete.relationField.relation, delete.relationField.model, Some(mutaction.where), delete.model, where)
+      throw NodesNotConnectedError(delete.relationField.relation, delete.relationField.model, parentWhere, delete.model, where)
 
     mutaction.nestedDeletes.collect {
       case toOneDelete @ NestedDeleteNode(_, rf, None) if node.data.map(rf.name) == NullGCValue =>
@@ -150,28 +161,23 @@ trait NodeActions extends NodeSingleQueries {
         throw APIErrors.NodeNotFoundForWhereError(mutaction.where)
 
       case Some(node) =>
-        //  delete checks
         nestedDeleteChecks(node, mutaction)
-
-        //  update checks
         scalarUpdateChecks(mutaction)
 
-        //  scalars
         val scalarUpdates = scalarUpdateValues(mutaction)
 
-        //  create
+        //  combine this into one function
         val (nestedCreateResults: Vector[DatabaseMutactionResult], nestedCreateDocs: Map[String, BsonValue]) =
           nestedCreateDocsAndResults(mutaction.nestedCreates)
         val nestedCreates: Vector[Bson] = nestedCreateDocs.map { case (f, v) => set(f, v) }.toVector
 
-        //  delete
-        val (nestedDeletes: Vector[Bson], nestedDeleteResults: Vector[DeleteNodeResult]) = nestedToOneDeletes(node, mutaction)
+        val (nestedDeletes, nestedDeleteResults) = nestedDeleteActionsAndResults(node, mutaction)
 
         //  update - only toOne
-        val (nestedUpdateResults: Vector[DatabaseMutactionResult], nestedUpdates: Vector[Bson]) = nestedUpdateDocsAndResults(node, mutaction)
+        val (nestedUpdates, nestedUpdateResults) = nestedUpdateDocsAndResults(node, mutaction)
 
         val updates = combine(customCombine(scalarUpdates ++ nestedCreates ++ nestedDeletes ++ nestedUpdates): _*)
-        val results = Vector(UpdateNodeResult(node.id, node, mutaction)) ++ nestedCreateResults ++ nestedDeleteResults ++ nestedUpdateResults
+        val results = nestedCreateResults ++ nestedDeleteResults ++ nestedUpdateResults :+ UpdateNodeResult(node.id, node, mutaction)
 
         collection
           .updateOne(mutaction.where, updates)
@@ -192,44 +198,33 @@ trait NodeActions extends NodeSingleQueries {
     nonListValues ++ listValues
   }
 
-  def nestedUpdateDocsAndResults(previousValues: PrismaNode,
-                                 mutaction: UpdateNode,
-                                 path: String = ""): (Vector[DatabaseMutactionResult], Vector[conversions.Bson]) = {
+  def nestedUpdateDocsAndResults(node: PrismaNode, mutaction: UpdateNode, path: String = ""): (Vector[Bson], Vector[DatabaseMutactionResult]) = {
 
-    val mutactions = mutaction.nestedUpdates.collect { case m if !m.relationField.isList => m }
+    val first: Vector[(Vector[Bson], Vector[DatabaseMutactionResult])] = mutaction.nestedUpdates.collect {
+      case toOneUpdate @ NestedUpdateNode(_, rf, None, _, _, _, _, _, _, _, _) =>
+        val subNode = node //error if no node is found
+        nestedDeleteChecks(subNode, toOneUpdate) //Fixme needs the subfield specific to that node
+        scalarUpdateChecks(toOneUpdate)
 
-    val first: Vector[(Vector[Bson], Vector[DatabaseMutactionResult])] = mutactions.map { mutaction =>
-      //  deleteChecks
+        val scalarUpdates = scalarUpdateValues(toOneUpdate, path)
 
-      //  updateChecks
-      scalarUpdateChecks(mutaction)
+        // combine this into one function
+        val (nestedCreateResults, nestedCreateFields) = nestedCreateDocsAndResults(toOneUpdate.nestedCreates)
+        val nestedCreates                             = nestedCreateFields.map { case (f, v) => set(newFieldName(toOneUpdate, f, path), v) }
 
-      //  scalars
-      val scalarUpdates = scalarUpdateValues(mutaction, path)
+        val (nestedUpdates, nestedUpdateResults) = nestedUpdateDocsAndResults(subNode, toOneUpdate, combineTwo(path, rf.name))
 
-      //  create
-      val (nestedCreateResults: Vector[DatabaseMutactionResult], nestedCreateFields: Map[String, BsonValue]) =
-        nestedCreateDocsAndResults(mutaction.nestedCreates)
-      val nestedCreates = nestedCreateFields.map { case (f, v) => set(newFieldName(mutaction, f, path), v) }
+        val (nestedDeletes, nestedDeleteResults) = nestedDeleteActionsAndResults(node, toOneUpdate, path)
 
-      //  delete - only toOne
+        (scalarUpdates ++ nestedCreates ++ nestedDeletes ++ nestedUpdates, nestedCreateResults ++ nestedDeleteResults ++ nestedUpdateResults)
 
-      //Fixme this next
-      val toOneDeletes  = mutaction.nestedDeletes.collect { case m if !m.relationField.isList => m }
-      val nestedDeletes = toOneDeletes.map(delete => unset(newFieldName(mutaction, delete.relationField.name, path)))
-      val nestedDeleteResults = toOneDeletes.map { delete =>
-        val random = CuidGCValue.random
-        DeleteNodeResult(random, PrismaNode(random, previousValues.data.map(delete.relationField.name).asRoot), delete)
-      }
+      case toManyUpdate @ NestedUpdateNode(_, rf, Some(where), _, _, _, _, _, _, _, _) =>
+        val subNode = node //error if no node is found
 
-      //  update - only toOne
-      val (nestedUpdateResults: Vector[DatabaseMutactionResult], nestedUpdates: Vector[conversions.Bson]) =
-        nestedUpdateDocsAndResults(previousValues, mutaction, combineTwo(path, mutaction.relationField.name))
+        ???
 
-      (scalarUpdates ++ nestedCreates ++ nestedDeletes ++ nestedUpdates, nestedCreateResults ++ nestedDeleteResults ++ nestedUpdateResults)
     }
-
-    (first.flatMap(_._2), first.flatMap(_._1))
+    (first.flatMap(_._1), first.flatMap(_._2))
   }
 
   def nestedUpdateNode(mutaction: NestedUpdateNode, parentId: IdGCValue)(implicit ec: ExecutionContext): SimpleMongoAction[MutactionResults] =
@@ -241,7 +236,7 @@ trait NodeActions extends NodeSingleQueries {
       //          Output: {a: [{b: 2}, {b: 1}]}
 
       //          val filter          = Filters.eq("_id", parentId.value)
-      //          val setPart         = set("middle.$[i]", 12)
+      //          val setPart         = set("middle.$[i].fieldname", 12)
       //          val arrayFilterPart = UpdateOptions().arrayFilters(List(Filters.eq("i.unique", 11)).asJava)
       //
       //          collection
