@@ -491,9 +491,19 @@ func (db *DB) ProcessInstructions(stack []Instruction) string {
     ) {
     {{- range $k, $v := $.query }}
     {{- if isArray $v }}
-      {{- range $k1, $v1 := $v }}
-        {{ $v1 }}
-      {{end}}
+      {{- $k }} (
+        {{- range $argKey, $argValue := $.args }}
+          {{- if eq $argKey $k }}
+            {{- range $k, $arg := $argValue}}
+              {{ $arg.Name }}: \${{ $arg.Name }},
+            {{- end }}
+          {{- end }}
+        {{- end }}
+      ) {
+        {{- range $k1, $v1 := $v }}
+          {{ $v1 }}
+        {{end}}
+      }
     {{- else }}
       {{ $k }} (
         {{- range $argKey, $argValue := $.args }}
