@@ -196,8 +196,11 @@ export class GoGenerator extends Generator {
 
               const fieldType = this.rawTypeName(field.type)
 
-              return `${goCase(field.name)} ${this.scalarMapping[fieldType] ||
-                fieldType} \`json:"${field.name},omitempty"\``
+              return `${goCase(field.name)} ${
+                this.scalarMapping[fieldType] ? `` : `*`
+              }${this.scalarMapping[fieldType] || fieldType} \`json:"${
+                field.name
+              },omitempty"\``
             })
             .join('\n')}
             }
@@ -244,9 +247,7 @@ export class GoGenerator extends Generator {
               const fieldType = this.rawTypeName(field.type)
 
               return `${goCase(field.name)} ${
-                (this.scalarMapping[fieldType] || fieldType) === type.name
-                  ? `*`
-                  : ``
+                this.scalarMapping[fieldType] ? `` : `*`
               }${this.scalarMapping[fieldType] || fieldType} \`json:"${
                 field.name
               },omitempty"\``
