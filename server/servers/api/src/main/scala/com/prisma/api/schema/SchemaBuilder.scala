@@ -28,13 +28,14 @@ trait SchemaBuilder {
 
 object SchemaBuilder {
   def apply()(implicit system: ActorSystem, apiDependencies: ApiDependencies): SchemaBuilder = { (project: Project) =>
-    SchemaBuilderImpl(project, apiDependencies.capabilities).build()
+    SchemaBuilderImpl(project, apiDependencies.capabilities, enableRawAccess = true).build()
   }
 }
 
 case class SchemaBuilderImpl(
     project: Project,
-    capabilities: Vector[ApiConnectorCapability]
+    capabilities: Vector[ApiConnectorCapability] = Vector.empty,
+    enableRawAccess: Boolean = true
 )(implicit apiDependencies: ApiDependencies, system: ActorSystem)
     extends SangriaExtensions {
   import system.dispatcher
@@ -79,7 +80,8 @@ case class SchemaBuilderImpl(
       project.models.flatMap(deleteItemField) ++
       project.models.flatMap(upsertItemField) ++
       project.models.flatMap(updateManyField) ++
-      project.models.map(deleteManyField)
+      project.models.map(deleteManyField) ++
+      rawAccessField
     Some(ObjectType("Mutation", fields))
   }
 
@@ -257,6 +259,23 @@ case class SchemaBuilderImpl(
         ClientMutationRunner.run(mutation, databaseMutactionExecutor, sideEffectMutactionExecutor, mutactionVerifier)
       }
     )
+  }
+
+  val rawAccessField: Option[Field[ApiUserContext, Unit]] = {
+    import com.prisma.utils.boolean.BooleanUtils._
+    enableRawAccess.toOption {
+      Field(
+        s"executeRaw",
+        fieldType = CustomScalarTypes.JsonType,
+        arguments = List(
+          Argument("query", StringType)
+        ),
+        resolve = (ctx) => {
+          val query = ctx.arg[String]("query")
+          apiDependencies.apiConnector.databaseMutactionExecutor.executeRaw(query)
+        }
+      )
+    }
   }
 
   def getSubscriptionField(model: Model): Field[ApiUserContext, Unit] = {

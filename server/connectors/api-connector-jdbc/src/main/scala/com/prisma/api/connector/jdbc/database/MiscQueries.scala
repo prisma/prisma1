@@ -2,6 +2,9 @@ package com.prisma.api.connector.jdbc.database
 
 import com.prisma.api.connector.Filter
 import org.jooq.impl.DSL.{name, table}
+import play.api.libs.json._
+
+import scala.collection.mutable
 
 trait MiscQueries extends BuilderBase with FilterConditionBuilder {
   import slickDatabase.profile.api._
@@ -26,4 +29,50 @@ trait MiscQueries extends BuilderBase with FilterConditionBuilder {
       }
     )
   }
+
+  def executeRaw(query: String): DBIO[JsValue] = SimpleDBIO { ctx =>
+    val ps          = ctx.connection.prepareStatement(query)
+    val isResultSet = ps.execute()
+    if (isResultSet) {
+      val resultSet = ps.getResultSet
+      val metaData  = resultSet.getMetaData
+      val result    = mutable.Buffer.empty[JsValue]
+
+      while (resultSet.next) {
+        val keyValues = (1 to metaData.getColumnCount).map { i =>
+          val columnName   = metaData.getColumnName(i)
+          val untypedValue = resultSet.getObject(i)
+          println(untypedValue)
+          val value = untypedValueToJson(untypedValue)
+          columnName -> value
+        }
+        result += JsObject(keyValues)
+      }
+      JsArray(result)
+    } else {
+      JsNumber(ps.getUpdateCount)
+    }
+  }
+
+  private def untypedValueToJson(untypedValue: AnyRef): JsValue = {
+    untypedValue match {
+      case null                    => JsNull
+      case v: String               => JsString(v)
+      case v: java.lang.Boolean    => JsBoolean(v)
+      case v: java.lang.Integer    => JsNumber(v.toInt)
+      case v: java.lang.Double     => JsNumber(v.toDouble)
+      case v: java.lang.Float      => JsNumber(v.toDouble)
+      case v: java.math.BigDecimal => JsNumber(v)
+      case v: java.sql.Timestamp   => JsString(v.toString)
+      case v: java.sql.Time        => JsString(v.toString)
+      case v: java.sql.Date        => JsString(v.toString)
+      case v: java.sql.Array       => ??? //JsArray(v.getArray.map(untypedValueToJson))
+      case v: java.sql.Blob        => ???
+      case v: java.sql.NClob       => ???
+      case v: java.sql.Clob        => ???
+      case v: java.sql.RowId       => ???
+      case v: java.sql.SQLXML      => JsString(v.getString)
+    }
+  }
+
 }
