@@ -1,6 +1,6 @@
 import { Command, flags, Flags } from 'prisma-cli-engine'
 import { EndpointDialog } from '../../utils/EndpointDialog'
-import { Introspector, PostgresConnector } from 'prisma-db-introspection'
+import { Introspector, PostgresConnector, MysqlConnector } from 'prisma-db-introspection'
 import * as path from 'path'
 import * as fs from 'fs'
 import { prettyTime } from '../../util'
@@ -22,13 +22,25 @@ export default class IntrospectCommand extends Command {
     )
 
     const credentials = await endpointDialog.getDatabase(true)
-    const connector = new PostgresConnector(credentials)
+    
+    //const connector = new MysqlConnector(credentials)
+    let connector
+    if(credentials.type == 'mysql'){
+      //let forDeletion = ['type', 'alreadyData']
+      
+      connector = new MysqlConnector(credentials)
+      //connector = new MysqlConnector(credentials.filter(item => !forDeletion.includes(item)))
+    } else if (credentials.type == 'postgres'){
+      connector = new PostgresConnector(credentials)
+    }
+    
     const introspector = new Introspector(connector)
     let schemas
     const before = Date.now()
     this.out.action.start(`Introspecting database`)
     try {
       schemas = await introspector.listSchemas()
+      
     } catch (e) {
       throw new Error(`Could not connect to database. ${e.message}`)
     }

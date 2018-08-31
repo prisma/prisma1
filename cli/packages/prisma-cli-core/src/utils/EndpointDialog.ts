@@ -30,6 +30,7 @@ export interface DatabaseCredentials {
   alreadyData?: boolean
   schema?: string
   ssl?: boolean
+  filter?: any
 }
 
 export interface GetEndpointResult {
@@ -380,61 +381,94 @@ export class EndpointDialog {
     const type = await this.askForDatabaseType(introspection)
     const alreadyData = introspection || (await this.askForExistingData())
     const askForSchema = introspection ? true : alreadyData ? true : false 
-    if (type === 'mysql' && alreadyData) {
-      throw new Error(
-        `Existing MySQL databases with data are not yet supported.`,
-      )
-    }
-    const host = await this.ask({
-      message: 'Enter database host',
-      key: 'host',
-      defaultValue: 'localhost',
-    })
-    const port = await this.ask({
-      message: 'Enter database port',
-      key: 'port',
-      defaultValue: String(defaultPorts[type]),
-    })
-    const user = await this.ask({
-      message: 'Enter database user',
-      key: 'user',
-    })
-    const password = await this.ask({
-      message: 'Enter database password',
-      key: 'password',
-    })
-    const database =
-      type === 'postgres'
-        ? await this.ask({
-            message: alreadyData
-              ? `Enter name of existing database`
-              : `Enter database name`,
-            key: 'database',
-          })
-        : null
-    const ssl =
-      type === 'postgres'
-        ? await this.ask({
-            message: 'Use SSL?',
-            inputType: 'confirm',
-            key: 'ssl',
-          })
-        : undefined
-    const schema = askForSchema ? await this.ask({
-      message: `Enter name of existing schema`,
-      key: 'schema',
-    }) : undefined
+    // if (type === 'mysql' && alreadyData) {
+    //   throw new Error(
+    //     `Existing MySQL databases with data are not yet supported.`,
+    //   )
+    // }
+    if (type === 'mysql') {
 
-    return {
-      type,
-      host,
-      port,
-      user,
-      password,
-      database,
-      alreadyData,
-      schema,
-      ssl,
+      const host = await this.ask({
+        message: 'Enter database host',
+        key: 'host',
+        defaultValue: 'localhost',
+      })
+
+      const port = await this.ask({
+        message: 'Enter database port',
+        key: 'port',
+        defaultValue: String(defaultPorts[type]),
+      })
+      const user = await this.ask({
+        message: 'Enter database user',
+        key: 'user',
+      })
+      const password = await this.ask({
+        message: 'Enter database password',
+        key: 'password',
+      })
+
+      const database =await this.ask({
+        message: `Enter database name`,
+        key: 'database',
+      })
+
+      return {
+        type,
+        host,
+        port,
+        user,
+        password,
+        database,
+        alreadyData
+      }
+    } else {
+      const host = await this.ask({
+        message: 'Enter database host',
+        key: 'host',
+        defaultValue: 'localhost',
+      })
+      const port = await this.ask({
+        message: 'Enter database port',
+        key: 'port',
+        defaultValue: String(defaultPorts[type]),
+      })
+      const user = await this.ask({
+        message: 'Enter database user',
+        key: 'user',
+      })
+      const password = await this.ask({
+        message: 'Enter database password',
+        key: 'password',
+      })
+      const database = await this.ask({
+              message: alreadyData
+                ? `Enter name of existing database`
+                : `Enter database name`,
+              key: 'database',
+            })
+
+      const ssl = await this.ask({
+              message: 'Use SSL?',
+              inputType: 'confirm',
+              key: 'ssl',
+            })
+      const schema = askForSchema ? await this.ask({
+        message: `Enter name of existing schema`,
+        key: 'schema',
+      }) : undefined
+
+      return {
+        type,
+        host,
+        port,
+        user,
+        password,
+        database,
+        alreadyData,
+        schema,
+        ssl,
+      }
     }
   }
 
@@ -633,14 +667,14 @@ export class EndpointDialog {
   private async askForDatabaseType(introspect: boolean = false) {
     const choices: any[] = []
 
-    if (!introspect) {
+    //if (!introspect) {
       choices.push({
         value: 'mysql',
         name:
           'MySQL             MySQL compliant databases like MySQL or MariaDB',
         short: 'MySQL',
       })
-    }
+    //}
 
     choices.push({
       value: 'postgres',
