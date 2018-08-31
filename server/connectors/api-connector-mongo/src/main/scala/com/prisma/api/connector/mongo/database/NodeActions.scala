@@ -19,6 +19,9 @@ import scala.concurrent.{ExecutionContext, Future}
 
 trait NodeActions extends NodeSingleQueries {
 
+  //TODO
+  //Combine errorhandling and production of actions/results again
+
   def createToDoc(mutaction: CreateNode, results: Vector[DatabaseMutactionResult] = Vector.empty): (IdGCValue, Document, Vector[DatabaseMutactionResult]) = {
     val id = CuidGCValue.random
 
@@ -176,11 +179,11 @@ trait NodeActions extends NodeSingleQueries {
         //  update - only toOne
         val (nestedUpdates, nestedUpdateResults) = nestedUpdateDocsAndResults(node, mutaction)
 
-        val updates = combine(customCombine(scalarUpdates ++ nestedCreates ++ nestedDeletes ++ nestedUpdates): _*)
-        val results = nestedCreateResults ++ nestedDeleteResults ++ nestedUpdateResults :+ UpdateNodeResult(node.id, node, mutaction)
+        val combinedUpdates = combine(customCombine(scalarUpdates ++ nestedCreates ++ nestedDeletes ++ nestedUpdates): _*)
+        val results         = nestedCreateResults ++ nestedDeleteResults ++ nestedUpdateResults :+ UpdateNodeResult(node.id, node, mutaction)
 
         collection
-          .updateOne(mutaction.where, updates)
+          .updateOne(mutaction.where, combinedUpdates)
           .toFuture()
           .map(_ => MutactionResults(results))
     }
@@ -202,8 +205,12 @@ trait NodeActions extends NodeSingleQueries {
 
     val first: Vector[(Vector[Bson], Vector[DatabaseMutactionResult])] = mutaction.nestedUpdates.collect {
       case toOneUpdate @ NestedUpdateNode(_, rf, None, _, _, _, _, _, _, _, _) =>
-        val subNode = node //error if no node is found
-        nestedDeleteChecks(subNode, toOneUpdate) //Fixme needs the subfield specific to that node
+        val subNode = node.toOneChild(rf) match {
+          case None             => throw NodesNotConnectedError(rf.relation, rf.model, None, rf.relatedModel_!, None)
+          case Some(prismaNode) => prismaNode
+        }
+
+        nestedDeleteChecks(subNode, toOneUpdate)
         scalarUpdateChecks(toOneUpdate)
 
         val scalarUpdates = scalarUpdateValues(toOneUpdate, path)
@@ -214,12 +221,17 @@ trait NodeActions extends NodeSingleQueries {
 
         val (nestedUpdates, nestedUpdateResults) = nestedUpdateDocsAndResults(subNode, toOneUpdate, combineTwo(path, rf.name))
 
-        val (nestedDeletes, nestedDeleteResults) = nestedDeleteActionsAndResults(node, toOneUpdate, path)
+        val (nestedDeletes, nestedDeleteResults) = nestedDeleteActionsAndResults(subNode, toOneUpdate, path)
 
-        (scalarUpdates ++ nestedCreates ++ nestedDeletes ++ nestedUpdates, nestedCreateResults ++ nestedDeleteResults ++ nestedUpdateResults)
+        val thisResult = UpdateNodeResult(subNode.id, subNode, toOneUpdate)
+
+        (scalarUpdates ++ nestedCreates ++ nestedDeletes ++ nestedUpdates, nestedCreateResults ++ nestedDeleteResults ++ nestedUpdateResults :+ thisResult)
 
       case toManyUpdate @ NestedUpdateNode(_, rf, Some(where), _, _, _, _, _, _, _, _) =>
-        val subNode = node //error if no node is found
+        val subNode = node.toManyChild(rf, where) match {
+          case None             => throw NodesNotConnectedError(rf.relation, rf.model, None, rf.relatedModel_!, Some(where))
+          case Some(prismaNode) => prismaNode
+        }
 
         ???
 

@@ -588,6 +588,88 @@ class MongoPrototypingSpec extends FlatSpec with Matchers with ApiSpecBase {
       project
     )
 
-    res2.toString should be("""{"data":{"createTop":{"unique":1,"middle":{"unique":11,"bottom":[{"unique":111}]}}}}""")
+    res2.toString should be("""{"data":{"updateTop":{"unique":1,"middle":{"unique":11,"bottom":[{"unique":112}]}}}}""")
+  }
+
+  "To many and toOne mixedrelations deleting over two levels" should "error correctly" in {
+
+    val project = SchemaDsl.fromString() {
+      """type Top {
+        |   id: ID! @unique
+        |   unique: Int! @unique
+        |   name: String!
+        |   middle: Middle
+        |}
+        |
+        |type Middle @embedded {
+        |   unique: Int! @unique
+        |   name: String!
+        |   bottom: [Bottom!]!
+        |}
+        |
+        |type Bottom @embedded{
+        |   unique: Int! @unique
+        |   name: String!
+        |}"""
+    }
+
+    database.setup(project)
+
+    val res = server.query(
+      s"""mutation {
+         |   createTop(data: {
+         |   unique: 1,
+         |   name: "Top",
+         |   middle: {create:{
+         |      unique: 11,
+         |      name: "Middle"
+         |      bottom: {create:[
+         |        {
+         |          unique: 111,
+         |          name: "Bottom"
+         |        },
+         |        {
+         |          unique: 112,
+         |          name: "Bottom"
+         |        }
+         |      ]
+         |      }}
+         |    }
+         |}){
+         |  unique,
+         |  middle{
+         |    unique,
+         |    bottom{
+         |      unique
+         |    }
+         |  }
+         |}}""".stripMargin,
+      project
+    )
+
+    res.toString should be("""{"data":{"createTop":{"unique":1,"middle":{"unique":11,"bottom":[{"unique":111},{"unique":112}]}}}}""")
+
+    server.queryThatMustFail(
+      s"""mutation {
+         |   updateTop(
+         |   where:{unique: 1}
+         |   data: {
+         |      name: "Top2",
+         |      middle: {update:
+         |      {bottom: {delete:{unique:113}} }}
+         |}){
+         |  unique,
+         |  middle{
+         |    unique
+         |    bottom{
+         |      unique
+         |    }
+         |  }
+         |}}""".stripMargin,
+      project,
+      errorCode = 3041,
+      errorContains =
+        """The relation BottomToMiddle has no node for the model Middle connected to a Node for the model Bottom with the value '113' for the field 'unique'"""
+    )
   }
 }
