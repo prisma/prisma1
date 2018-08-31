@@ -641,43 +641,35 @@ _Delete a link from a user_:
 
 ```js
 const updatedUser = await prisma
-  .createUser({
-    name: "Alice",
-    email: "alice@prisma.io",
-    password: "IlikeTurtles",
-    links: {
-      create: [{
-        description: "My first link",
-        url: "https://www.prisma.io"
-      }, {
-        description: "My second link",
-        url: "https://www.howtographql.com"
-      }]
-    }, 
+  .updateUser({
+    where: {
+      id: "cjli8znnd006n0a23ywc6wf8w"
+    },
+    data: {
+      links: {
+        delete: {
+          id: "cjli6tknz005s0a23uf0lmlve"
+        }
+      }
+    }
   })
 ```
 
 ```graphql
-# generated mutation
 mutation {
-  createUser(data: {
-    name: "Alice"
-    email: "alice@prisma.io"
-    password: "IlikeTurtles"
-    links: {
-      create: [{
-        description: "My first link",
-        url: "https://www.prisma.io"
-      }, {
-        description: "My second link",
-        url: "https://www.howtographql.com"
-      }]
+  updateUser(
+    where: {
+      id: "cjli8znnd006n0a23ywc6wf8w"
     }
-  }) {
+    data: {
+      links: {
+        delete: {
+          id: "cjli6tknz005s0a23uf0lmlve"
+        }
+      }
+    }
+  ) {
     id
-    name
-    email
-    password
   }
 }
 ```
