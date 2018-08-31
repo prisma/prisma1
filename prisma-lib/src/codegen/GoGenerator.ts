@@ -246,6 +246,7 @@ export class GoGenerator extends Generator {
               const field = fieldMap[key]
               const fieldType = this.rawTypeName(field.type)
 
+              // TODO: Add omitempty to json: tag as `json: where,omitempty` by detecting required input types, removing it for now
               return `${goCase(field.name)} ${
                 this.scalarMapping[fieldType] ? `` : `*`
               }${this.scalarMapping[fieldType] || fieldType} \`json:"${
@@ -601,10 +602,6 @@ ${typeNames
       })
       .join('\n')}
 
-      func isZeroOfUnderlyingType(x interface{}) bool {
-        return reflect.DeepEqual(x, reflect.Zero(reflect.TypeOf(x)).Interface())
-      }
-
       // GraphQL Send a GraphQL operation request
 // TODO: arg variables can be made optional via variadic func approach
 func (db DB) GraphQL(query string, variables map[string]interface{}) map[string]interface{} {
@@ -615,9 +612,7 @@ func (db DB) GraphQL(query string, variables map[string]interface{}) map[string]
 	client := graphql.NewClient(db.Endpoint)
 
 	for key, value := range variables {
-		if !isZeroOfUnderlyingType(value) {
-			req.Var(key, value)
-		}
+    req.Var(key, value)
 	}
 
 	ctx := context.Background()
@@ -625,6 +620,9 @@ func (db DB) GraphQL(query string, variables map[string]interface{}) map[string]
 	// var respData ResponseStruct
 	var respData map[string]interface{} // TODO: Type this properly with a struct
 	if err := client.Run(ctx, req, &respData); err != nil {
+    if db.Debug {
+      fmt.Println("GraphQL Response:", respData)
+    }
 		log.Fatal(err)
 	}
 	return respData
