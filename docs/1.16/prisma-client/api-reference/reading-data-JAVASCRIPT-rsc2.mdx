@@ -3,11 +3,11 @@ import Code from "components/Markdown/Code"
 import Warning from "components/Markdown/Warning"
 
 export const meta = {
-  title: "API Reference (JavaScript)",
-  position: 10,
+  title: "Reading Data (JavaScript)",
+  position: 30,
   technology: "node",
   technologyOrder: 1,
-  articleGroup: "API Reference",
+  articleGroup: "Reading Data",
 }
 
 ## Overview
@@ -49,40 +49,6 @@ type Vote {
 
 </Collapse>
 
-## Constructor
-
-The `Prisma` constructor is used to create new instances of the Prisma Client.
-
-```js
-constructor(options: BasePrismaOptions)
-```
-
-`BasePrismaOptions` has the following properties (all are optional):
-
-- `endpoint: string`: The endpoint of your Prisma Service. If not provided, the Client will default to the `endpoint` that was specified in prisma.yml when the Client was generated. 
-- `secret: string`: The secret protecting the API of your Prisma Service. If not provided, the Client will default to the `secret` that was specified in prisma.yml when the Client was generated. 
-- `debug: boolean`: If set to `true`, each invokation of a method on the Prisma Client will print the GraphQL query that is sent to the Prisma API to the console. **Default: `false`**.
-- `fragmentReplacements: FragmentReplacement[]`: A list of GraphQL fragments that will be applied to each query/mutation/subscription sent to the Prisma API.
-
-#### Examples
-
-_Use default values for `endpoint` and `secret` that were specified in prisma.yml when the Client was generated_:
-
-```js
-const prisma = new Prisma({})
-```
-
-_Override default values for `endpoint` and `secret` that were specified in prisma.yml when the Client was generated_:
-
-```js
-const prisma = new Prisma({ 
-  endpoint: "http://localhost:4466/hello-world/dev",
-  secret: "mysecret42",
-})
-```
-
-## Reading data
-
 Whenever a model is queried using the Prisma Client, _all scalar fields_ of that model are fetched. This is true no matter if a single object or a list of objects is queried.
 
 For example, the following query returns all scalar fields of a single `User`:
@@ -103,7 +69,7 @@ const users = await prisma.users()
 
 Similar to the previous query, each object inside the `users` array only has the scalar and no relation fields.
 
-### Fetching single objects
+## Fetching single objects
 
 For each model type in your datamodel, there is a method generated in the Prisma Client API that allows to fetch single objects of that model. The method is named after the type but starts with a _lowercase_ character. For the sample data model from above, the three methods for fetching single `User`, `Link` and `Vote` objects are called `user`, `link` and `vote`.
 
@@ -117,7 +83,7 @@ The input for these functions is an object that has as properties any [unique](k
 
 </Collapse>
 
-#### Examples
+### Examples
 
 _Fetch a single vote by its id_:
 
@@ -161,17 +127,17 @@ query {
 
 </Code>
 
-### Fetching lists of objects
+## Fetching lists
 
 For each model type in your datamodel, there is a method generated in the Prisma Client API that allows to fetch a list of those model objects. The method is named after the model but starts with a _lowercase_ character and uses the _plural_ form. For the sample data model from above, the three methods for fetching lists of `User`, `Link` and `Vote` models are called `users`, `links` and `votes`.
 
 The input arugment for these functions is an object that has properties for:
 
-- [Filtering](): `where`
-- [Ordering](): `orderBy`
-- [Pagination](): `before`, `after`, `first`, `last`, `skip`
+- [Filtering](#basic-filters-for-lists): `where`
+- [Ordering](#ordering): `orderBy`
+- [Pagination](#pagination): `before`, `after`, `first`, `last`, `skip`
 
-#### Examples
+### Examples
 
 _Fetch all links_:
 
@@ -210,16 +176,16 @@ query {
     id
     name
     email
-    passwors
+    password
   }
 }
 ```
 
 </Code>
 
-### Relations
+## Relations
 
-Prisma Client has a [fluent API](https://www.sitepoint.com/javascript-like-boss-understanding-fluent-apis/) to query relations in your data graph. Meaning you can simply _chain_ your method calls to navigate over certain properties of the returned models.
+Prisma Client has a [fluent API](https://www.sitepoint.com/javascript-like-boss-understanding-fluent-apis/) to query relations in your data graph. Meaning you can simply _chain_ your method calls to navigate the relation properties of the returned models.
 
 <Warning>
 
@@ -227,14 +193,16 @@ This is only possible when retrieving _single_ objects, not for lists. Meaning y
 
 ```js
 // not possible
-const result = await prisma.users().links()
+const result = await prisma
+  .users()
+  .links()
 ```
 
 In this example, `users()` already returns a list, so it's not possible to query the `links` relation of each user object inside the list.
 
 </Warning>
 
-#### Examples
+### Examples
 
 _Query all the links of a single user_:
 
@@ -287,7 +255,7 @@ query {
 
  </Code>
 
-### Fetching lists with basic filters
+## Basic filters for lists
 
 _Basic_ filters let you specify certain criteria to constrain which objects should be returned in a list. The filters are specified in the `where` object of the input argument which is accepted by any list query.
 
@@ -303,7 +271,7 @@ The type of the `where` object depends on the model for which it was generated.
 
 It is also possible to _combine_ multiple filters using the `AND` and `OR` fields.
 
-#### Examples
+### Examples
 
 _Fetch users that have an `A` in their names_:
 
@@ -494,11 +462,11 @@ query {
 </Warning>
 
 
-### Relational filters for lists
+## Relational filters for lists
 
 Relational filters can be used to constrain the returned objects on a relation list field. The types used for filtering are identical to basic filters, the only difference is that the filters are not applied on the first level of the method call but when querying a relation on the second level.
 
-#### Examples
+### Examples
 
 <Code languages={["JavaScript", "GraphQL"]}>
 
@@ -531,26 +499,299 @@ query {
 
 </Code>
 
-### Ordering lists
+## Ordering
 
-### Paginating through lists
+When querying a list of model objects, you can order (sort) the list by any property of that model. Each generated method to query a list of models therefore accepts the `orderBy` field on its input object.
+
+
+The type of the `where` object depends on the model for which it was generated.
+
+<Collapse title="View the types of `where` for `Link`, `User` and `Vote`">
+
+- View the type of `where` for `Link` [here](https://github.com/nikolasburk/prisma-client-examples/blob/master/generated/prisma.ts#L154)
+- View the type of `where` for `User` [here](https://github.com/nikolasburk/prisma-client-examples/blob/master/generated/prisma.ts#L267)
+- View the type of `where` for `Link` [Vote](https://github.com/nikolasburk/prisma-client-examples/blob/master/generated/prisma.ts#L219)
+
+</Collapse>
+
+## Pagination
 
 When querying a list of model objects, you can fetch _chunks_ of that list by supplying pagination arguments.
 
-#### Seeking forward and backward with `first` and `last`
+### Seeking forward and backward with `first` and `last`
 
-## Writing data
+You can seek forwards or backwards through the objects and supply an optional starting object:
 
-### Simple writes
+- To seek **forward**, use `first`; specify a starting object with `after`.
+- To seek **backward**, use `last`; specify a starting object with `before`.
 
-### Nested object writes
+You **cannot** combine `first` with `before` or `last` with `after`. If you do so in a query, `before`/`after` will simply be ignored and only `first` or `last` is actually applied (at the very beginning or end of the list, depending on which you're using).
 
-## Realtime
+Note that you can query for more objects than actually exist in the database without an error message.
 
-## Exists
+### Skipping elements with `skip`
 
-## Raw GraphQL
+You can also skip an arbitrary amount of objects in whichever direction you are seeking by supplying the `skip` argument:
 
-## Raw databases access
+- When using `first`, `skip` skips objects at the beginning of the list.
+- When using `last`, `skip` skips objects from the end of the list.
 
-## Schema delegation
+### Examples
+
+For the following examples, we're assuming a list of exactly 30 objects:
+
+![](https://i.imgur.com/Xh6Qjts.png)
+
+_Query the first 3 links (seeking forward)_:
+
+![](https://i.imgur.com/O1Jj3Z2.png)
+
+<Code languages={["JavaScript", "GraphQL"]}>
+
+```js
+const links = await prisma
+  .links({
+    first: 3
+  })
+```
+
+```graphql
+query {
+  links(first: 3) {
+    id
+    createdAt
+    description
+    url
+  }
+}
+```
+
+</Code>
+
+_Query the objects from position 6 to position 10 (seeking forward)_:
+
+![](https://i.imgur.com/PpI5X0X.png)
+
+<Code languages={["JavaScript", "GraphQL"]}>
+
+```js
+const links = await prisma
+  .links({
+    first: 5, 
+    skip: 5
+  })
+```
+
+```graphql
+query {
+  links(
+    first: 5 
+    skip: 5
+  ) {
+    id
+    createdAt
+    description
+    url
+  }
+}
+```
+
+</Code>
+
+_Query the last 3 objects (seeking backward)_:
+
+![](https://i.imgur.com/pkuYCrV.png)
+
+<Code languages={["JavaScript", "GraphQL"]}>
+
+```js
+const links = await prisma
+  .links({
+    last: 3
+  })
+```
+
+```graphql
+query {
+  links(last: 3) {
+    id
+    createdAt
+    description
+    url
+  }
+}
+```
+
+</Code>
+
+_Query the objects from position 21 to position 27 (seeking backward)_:
+
+![](https://i.imgur.com/iSl9Y07.png)
+
+<Code languages={["JavaScript", "GraphQL"]}>
+
+```js
+const links = await prisma
+  .links({
+    last: 7,
+    skip: 3
+  })
+```
+
+```graphql
+query {
+  links(
+    last: 7
+    skip: 3
+  ) {
+    id
+    createdAt
+    description
+    url
+  }
+}
+```
+
+</Code>
+
+_Query the first 3 objects after the object with `cixnen24p33lo0143bexvr52n` as `id`_:
+
+![](https://i.imgur.com/InYSSkQ.png)
+
+<Code languages={["JavaScript", "GraphQL"]}>
+
+```js
+const links = await prisma
+  .links({
+    first: 3,
+    after: "cixnen24p33lo0143bexvr52n"
+  })
+```
+
+```graphql
+query {
+  links(
+    first: 3
+    after: "cixnen24p33lo0143bexvr52n"
+  ) {
+    id
+    createdAt
+    description
+    url
+  }
+}
+```
+
+</Code>
+
+_Query the first 5 objects after the object with `cixnen24p33lo0143bexvr52n` as `id` and skipping 3 objects_:
+
+![](https://i.imgur.com/u4WEAJv.png)
+
+<Code languages={["JavaScript", "GraphQL"]}>
+
+```js
+const links = await prisma
+  .links({
+    first: 5,
+    after: "cixnen24p33lo0143bexvr52n",
+    skip: 3
+  })
+```
+
+```graphql
+query {
+  links(
+    first: 5
+    after: "cixnen24p33lo0143bexvr52n"
+    skip: 3
+  ) {
+    id
+    createdAt
+    description
+    url
+  }
+}
+```
+
+</Code>
+
+_Query the last 5 objects before the object with `cixnen24p33lo0143bexvr52n` as `id`_:
+
+![](https://i.imgur.com/306eghw.png)
+
+<Code languages={["JavaScript", "GraphQL"]}>
+
+```js
+const links = await prisma
+  .links({
+    last: 5,
+    before: "cixnen24p33lo0143bexvr52n"
+  })
+```
+
+```graphql
+query {
+  links(
+    last: 5
+    before: "cixnen24p33lo0143bexvr52n"
+  ) {
+    id
+    createdAt
+    description
+    url
+  }
+}
+```
+
+</Code>
+
+_Query the last 3 nodes before the node with cixnen24p33lo0143bexvr52n as id and skipping 5 nodes_:
+
+![](https://i.imgur.com/iZGUiHJ.png)
+
+<Code languages={["JavaScript", "GraphQL"]}>
+
+```js
+const links = await prisma
+  .links({
+    last: 3,
+    before: "cixnen24p33lo0143bexvr52n",
+    skip: 5
+  })
+```
+
+```graphql
+query {
+  links(
+    last: 3 
+    before: "cixnen24p33lo0143bexvr52n"
+    skip: 5
+  ) {
+    id
+    createdAt
+    description
+    url
+  }
+}
+```
+
+</Code>
+
+## Aggregations
+
+You can submit aggregation queries via [connection queries](vw4d#connection-relay-pagination--aggregations). The following aggregation functions are supported:
+
+- `count`: Counts the number of objects in a list
+- `avg` (_coming soon_): Computes the average of a list of numbers.
+- `median` (_coming soon_): Computes the median of a list of numbers. 
+- `max` (_coming soon_): Returns the greatest element of a list of numbers.
+- `min` (_coming soon_): Returns the smallest element of a list of numbers.
+- `sum` (_coming soon_): Computes the sum of a list of numbers.
+
+> See [this](https://github.com/prisma/prisma/issues/1312) GitHub issue to learn more about the upcoming aggregation functions.
+
+### Examples
+
+_Count the number of link objects_:
+
