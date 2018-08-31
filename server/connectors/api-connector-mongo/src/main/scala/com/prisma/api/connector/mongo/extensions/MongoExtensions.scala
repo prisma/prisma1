@@ -121,3 +121,33 @@ object FieldCombinators {
     case path => s"$path.$relationField"
   }
 }
+
+object Path {
+  def empty = Path(List.empty)
+}
+
+case class Path(segments: List[PathSegment]) {
+  def string = stringGen(segments).mkString(".")
+
+  private def stringGen(segments: List[PathSegment]): Vector[String] = segments match {
+    case Nil                          => Vector.empty
+    case ToOneSegment(rf) :: tail     => rf.name +: stringGen(tail)
+    case ToManySegment(rf, _) :: tail => rf.name +: stringGen(tail)
+  }
+
+  def stringForField(field: Field): String = stringGen2(field, segments).mkString(".")
+
+  private def stringGen2(field: Field, segments: List[PathSegment]): Vector[String] = segments match {
+    case Nil                              => Vector(field.name)
+    case ToOneSegment(rf) :: tail         => rf.name +: stringGen2(field, tail)
+    case ToManySegment(rf, where) :: tail => Vector(rf.name, s"[${where.fieldName}]") ++ stringGen2(field, tail)
+  }
+
+}
+
+sealed trait PathSegment {
+  def rf: RelationField
+}
+
+case class ToOneSegment(rf: RelationField)                       extends PathSegment
+case class ToManySegment(rf: RelationField, where: NodeSelector) extends PathSegment

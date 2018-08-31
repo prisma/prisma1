@@ -494,20 +494,26 @@ class MongoPrototypingSpec extends FlatSpec with Matchers with ApiSpecBase {
          |      name: "Top2",
          |      middle: {update:{
          |                where:{unique:11}
-         |                data: {bottom: {delete:{unique:111}} }}}
+         |                data: {
+         |                  name: "MiddleNew"
+         |                  bottom: {delete:{unique:111}} }}
+         |                  }
          |}){
          |  unique,
+         |  name,
          |  middle{
-         |    unique
+         |    unique,
+         |    name,
          |    bottom{
-         |      unique
+         |      unique,
+         |      name
          |    }
          |  }
          |}}""".stripMargin,
       project
     )
 
-    res2.toString should be("""{"data":{"updateTop":{"unique":1,"middle":[{"unique":12}]}}}""")
+    res2.toString should be("""{"data":{"updateTop":{"unique":1,"middle":[{"unique":11,"bottom":[]},{"unique":12,"bottom":[{"unique":112}]}]}}}""")
   }
 
   "To many and toOne mixedrelations deleting over two levels" should "work" in {
