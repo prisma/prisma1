@@ -1,13 +1,20 @@
 package com.prisma.api.mutations
 
 import com.prisma.api.ApiSpecBase
+import com.prisma.api.connector.jdbc.impl.JdbcDatabaseMutactionExecutor
 import com.prisma.shared.models.Project
 import com.prisma.shared.schema_dsl.SchemaDsl
+import org.jooq.Query
+import org.jooq.conf.{ParamType, Settings}
+import org.jooq.impl.DSL
+import org.jooq.impl.DSL.{field, name, table}
 import org.scalatest.{FlatSpec, Matchers}
+import play.api.libs.json.JsValue
+import sangria.util.StringUtil
 
 class RawAccessSpec extends FlatSpec with Matchers with ApiSpecBase {
   val project: Project = SchemaDsl.fromBuilder { schema =>
-    schema.model("Todo").field("title", _.String, isUnique = true)
+    schema.model("Todo").field("title", _.String)
   }
   val schemaName = project.id
   val model      = project.schema.getModelByName_!("Todo")
@@ -16,6 +23,17 @@ class RawAccessSpec extends FlatSpec with Matchers with ApiSpecBase {
     super.beforeAll()
     database.setup(project)
   }
+
+  override protected def beforeEach(): Unit = {
+    super.beforeEach()
+    database.truncateProjectTables(project)
+  }
+
+  val slickDatabase = testDependencies.databaseMutactionExecutor.asInstanceOf[JdbcDatabaseMutactionExecutor].slickDatabase
+  val isMySQL       = slickDatabase.isMySql
+  val isPostgres    = slickDatabase.isPostgres
+  val sql           = DSL.using(slickDatabase.dialect, new Settings().withRenderFormatted(true))
+  val modelTable    = table(name(schemaName, model.dbName))
 
   "the simplest query Select 1" should "work" in {
     val result = server.query(
@@ -28,52 +46,91 @@ class RawAccessSpec extends FlatSpec with Matchers with ApiSpecBase {
       project
     )
 
-    result.pathAsJsValue("data.executeRaw") should equal(s"""[{"?column?":1}]""".parseJson)
+    val columnName = if (isPostgres) "?column?" else "1"
+    result.pathAsJsValue("data.executeRaw") should equal(s"""[{"$columnName":1}]""".parseJson)
   }
 
   "querying model tables" should "work" in {
-    val id1 = createTodo(project, "title1")
-    val id2 = createTodo(project, null)
+    val id1 = createTodo("title1")
+    val id2 = createTodo(null)
 
-    val result = server.query(
-      s"""mutation {
-        |  executeRaw(
-        |    query: "Select * from \\"$schemaName\\".\\"${model.dbName}\\""
-        |  )
-        |}
-      """.stripMargin,
-      project
-    )
+    val result = executeRaw(sql.select().from(modelTable))
 
     result.pathAsJsValue("data.executeRaw") should equal(s"""[{"id":"$id1","title":"title1"},{"id":"$id2","title":null}]""".parseJson)
   }
 
   "inserting into a model table" should "work" in {
-    val insertResult = server.query(
-      s"""mutation {
-         |  executeRaw(
-         |    query: "INSERT INTO \\"$schemaName\\".\\"${model.dbName}\\" VALUES ('id1', 'title1'),('id2', 'title2')"
-         |  )
-         |}
-      """.stripMargin,
-      project
-    )
-
+    val insertResult = executeRaw(sql.insertInto(modelTable).columns(field("id"), field("title")).values("id1", "title1").values("id2", "title2"))
     insertResult.pathAsJsValue("data.executeRaw") should equal("2".parseJson)
 
-    val readResult = server.query(
-      s"""mutation {
-         |  executeRaw(
-         |    query: "Select * from \\"$schemaName\\".\\"${model.dbName}\\""
-         |  )
-         |}
-      """.stripMargin,
-      project
-    )
+    val readResult = executeRaw(sql.select().from(modelTable))
     readResult.pathAsJsValue("data.executeRaw") should equal(s"""[{"id":"id1","title":"title1"},{"id":"id2","title":"title2"}]""".parseJson)
   }
 
-  def createTodo(project: Project, title: String) = {
+  "syntactic errors" should "bubble through to the user" in {
+    val errorCode = if (isPostgres) 0 else 1064
+    val errorContains = if (isPostgres) {
+      "ERROR: syntax error at end of input"
+    } else {
+      "You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near"
+    }
+    server.queryThatMustFail(
+      s"""mutation {
+         |  executeRaw(
+         |    query: "Select * from "
+         |  )
+         |}
+      """.stripMargin,
+      project,
+      errorCode = errorCode,
+      errorContains = errorContains
+    )
+  }
+
+  "other errors" should "also bubble through to the user" in {
+    val id        = createTodo("title")
+    val errorCode = if (isPostgres) 0 else 1062
+    val errorContains = if (isPostgres) {
+      "ERROR: duplicate key value violates unique constraint"
+    } else {
+      "Duplicate entry"
+    }
+    executeRawThatMustFail(
+      sql.insertInto(modelTable).columns(field("id"), field("title")).values(id, "irrelevant"),
+      errorCode = errorCode,
+      errorContains = errorContains
+    )
+  }
+
+  def executeRaw(query: Query): JsValue = {
+    server.query(
+      s"""mutation {
+         |  executeRaw(
+         |    query: "${queryString(query)}"
+         |  )
+         |}
+      """.stripMargin,
+      project
+    )
+  }
+
+  def executeRawThatMustFail(query: Query, errorCode: Int, errorContains: String): JsValue = {
+    server.queryThatMustFail(
+      s"""mutation {
+         |  executeRaw(
+         |    query: "${queryString(query)}"
+         |  )
+         |}
+      """.stripMargin,
+      project,
+      errorCode = errorCode,
+      errorContains = errorContains
+    )
+  }
+
+  def queryString(query: Query): String = StringUtil.escapeString(query.getSQL(ParamType.INLINED))
+
+  def createTodo(title: String) = {
     val finalTitle = Option(title).map(s => s""""$s"""").orNull
     server
       .query(
