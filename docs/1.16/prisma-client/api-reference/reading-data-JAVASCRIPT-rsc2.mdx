@@ -12,7 +12,7 @@ export const meta = {
 
 ## Overview
 
-The Prisma Client is based on the operations defined in the GraphQL schema of your Prisma API. It basically _mirrors_ the GraphQL API of your Prisma Service.
+The Prisma Client is based on the operations defined in the GraphQL schema of your Prisma API. For reading data, it basically _mirrors_ the [GraphQL queries](qwe1) of your Prisma Service.
 
 For this page, we"ll assume your Prisma API is based on the following [datamodel](knul):
 
@@ -501,18 +501,68 @@ query {
 
 ## Ordering
 
-When querying a list of model objects, you can order (sort) the list by any property of that model. Each generated method to query a list of models therefore accepts the `orderBy` field on its input object.
+When querying a list of model objects, you can order (sort) the list by any scalar field of that model type. Each generated method to query a list of models therefore accepts the `orderBy` field on its input object.
 
+The type of the `orderBy` field depends on the scalar fields of the model for which it was generated.
 
-The type of the `where` object depends on the model for which it was generated.
+<Collapse title="View the types of `orderBy` for `Link`, `User` and `Vote`">
 
-<Collapse title="View the types of `where` for `Link`, `User` and `Vote`">
-
-- View the type of `where` for `Link` [here](https://github.com/nikolasburk/prisma-client-examples/blob/master/generated/prisma.ts#L154)
-- View the type of `where` for `User` [here](https://github.com/nikolasburk/prisma-client-examples/blob/master/generated/prisma.ts#L267)
-- View the type of `where` for `Link` [Vote](https://github.com/nikolasburk/prisma-client-examples/blob/master/generated/prisma.ts#L219)
+- View the type of `orderBy` for `Link` [here](https://github.com/nikolasburk/prisma-client-examples/blob/master/generated/prisma.ts#L114)
+- View the type of `orderBy` for `User` [here](https://github.com/nikolasburk/prisma-client-examples/blob/master/generated/prisma.ts#L132)
+- View the type of `orderBy` for `Link` [Vote](https://github.com/nikolasburk/prisma-client-examples/blob/master/generated/prisma.ts#L125)
 
 </Collapse>
+
+### Examples
+
+_Sort links by their creation date (ascending)_:
+
+<Code languages={["JavaScript", "GraphQL"]}>
+
+```js
+const sortedLinks = prisma
+  .links({
+    orderBy: "createdAt_ASC"
+  })
+```
+
+```graphql
+query {
+  links(orderBy: createdAt_ASC) {
+    id
+    createdAt
+    description
+    url
+  }
+}
+```
+
+</Code>
+
+_Sort users alphabetically by their names (descending)_:
+
+<Code languages={["JavaScript", "GraphQL"]}>
+
+```js
+const sortedUsers = prisma
+  .users({
+    orderBy: "name_DESC"
+  })
+```
+
+```graphql
+query {
+  users(orderBy: name_DESC) {
+    id
+    name
+    email
+    password
+  }
+}
+```
+
+</Code>
+
 
 ## Pagination
 
@@ -795,3 +845,23 @@ You can submit aggregation queries via [connection queries](vw4d#connection-rela
 
 _Count the number of link objects_:
 
+<Code languages={["JavaScript", "GraphQL"]}>
+
+```js
+const linkCount = await prisma
+  .linksConnection()
+  .aggregate()
+  .count()
+```
+
+```graphql
+query {
+  linksConnection {
+    aggregate {
+      count
+    }
+  }
+}
+```
+
+</Code>
