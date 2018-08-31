@@ -109,14 +109,14 @@ object DocumentToRoot {
 }
 
 object FieldCombinators {
-  def combineThree(path: String, relationField: String, field: String) = {
+  def combineThree(path: String, relationField: String, field: String): String = {
     path match {
       case ""   => s"$relationField.$field"
       case path => s"$path.$relationField.$field"
     }
   }
 
-  def combineTwo(path: String, relationField: String) = path match {
+  def combineTwo(path: String, relationField: String): String = path match {
     case ""   => relationField
     case path => s"$path.$relationField"
   }
@@ -127,7 +127,10 @@ object Path {
 }
 
 case class Path(segments: List[PathSegment]) {
-  def string = stringGen(segments).mkString(".")
+  def append(rF: RelationField, where: NodeSelector): Path = this.copy(segments = this.segments :+ ToManySegment(rF, where))
+  def append(rF: RelationField): Path                      = this.copy(segments = this.segments :+ ToOneSegment(rF))
+
+  def string: String = stringGen(segments).mkString(".")
 
   private def stringGen(segments: List[PathSegment]): Vector[String] = segments match {
     case Nil                          => Vector.empty
@@ -135,12 +138,12 @@ case class Path(segments: List[PathSegment]) {
     case ToManySegment(rf, _) :: tail => rf.name +: stringGen(tail)
   }
 
-  def stringForField(field: Field): String = stringGen2(field, segments).mkString(".")
+  def stringForField(field: String): String = stringGen2(field, segments).mkString(".")
 
-  private def stringGen2(field: Field, segments: List[PathSegment]): Vector[String] = segments match {
-    case Nil                              => Vector(field.name)
+  private def stringGen2(field: String, segments: List[PathSegment]): Vector[String] = segments match {
+    case Nil                              => Vector(field)
     case ToOneSegment(rf) :: tail         => rf.name +: stringGen2(field, tail)
-    case ToManySegment(rf, where) :: tail => Vector(rf.name, s"[${where.fieldName}]") ++ stringGen2(field, tail)
+    case ToManySegment(rf, where) :: tail => Vector(rf.name, "$[" + s"${rf.name}_${where.fieldName}]") ++ stringGen2(field, tail)
   }
 
 }

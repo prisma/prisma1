@@ -255,7 +255,7 @@ class MongoPrototypingSpec extends FlatSpec with Matchers with ApiSpecBase {
          |   data: {
          |      name: "Top2",
          |      middle: {update:{
-         |          name: "Middle2"
+         |          name: "MiddleNew"
          |      }
          |   }
          |}){
@@ -268,7 +268,7 @@ class MongoPrototypingSpec extends FlatSpec with Matchers with ApiSpecBase {
       project
     )
 
-    res2.toString should be("""{"data":{"updateTop":{"unique":1,"middle":{"unique":11,"name":"Middle2"}}}}""")
+    res2.toString should be("""{"data":{"updateTop":{"unique":1,"middle":{"unique":11,"name":"MiddleNew"}}}}""")
   }
 
   "Deleting toOne relations" should "work" in {

@@ -1,9 +1,9 @@
 package com.prisma.api.connector.mongo.database
 
 import com.prisma.api.connector._
-import com.prisma.api.connector.mongo.extensions.FieldCombinators._
 import com.prisma.api.connector.mongo.extensions.GCBisonTransformer.GCValueBsonTransformer
 import com.prisma.api.connector.mongo.extensions.NodeSelectorBsonTransformer._
+import com.prisma.api.connector.mongo.extensions.Path
 import com.prisma.api.schema.APIErrors
 import com.prisma.api.schema.APIErrors.{FieldCannotBeNull, NodesNotConnectedError}
 import com.prisma.gc_values._
@@ -14,8 +14,8 @@ import org.mongodb.scala.model.Filters._
 import org.mongodb.scala.model.UpdateOptions
 import org.mongodb.scala.model.Updates._
 import org.mongodb.scala.{Document, MongoCollection}
+import collection.JavaConverters._
 
-import scala.collection.JavaConverters._
 import scala.collection.immutable
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -61,22 +61,20 @@ trait NodeActions extends NodeSingleQueries {
         val scalarUpdates = toOneScalarUpdateValues(mutaction)
 
         //  combine this into one function
-        val (nestedCreateResults: Vector[DatabaseMutactionResult], nestedCreateDocs: Map[String, BsonValue]) =
-          nestedCreateDocsAndResults(mutaction.nestedCreates)
-        val nestedCreates: Vector[Bson] = nestedCreateDocs.map { case (f, v) => set(f, v) }.toVector
+        val (nestedCreateDocs, nestedCreateResults) = embeddedNestedCreateDocsAndResults(mutaction.nestedCreates)
+        val nestedCreates: Vector[Bson]             = nestedCreateDocs.map { case (f, v) => set(f, v) }.toVector
 
         val (nestedDeletes, nestedDeleteResults) = embeddedNestedDeleteActionsAndResults(node, mutaction)
 
         //  update - only toOne
-        val (nestedUpdates, nestedUpdateResults) = nestedUpdateDocsAndResults(node, mutaction)
+        val (nestedUpdates, arrayFilters2, nestedUpdateResults) = nestedUpdateDocsAndResults(node, mutaction)
 
         val combinedUpdates = combine(customCombine(scalarUpdates ++ nestedCreates ++ nestedDeletes ++ nestedUpdates): _*)
+        val updateOptions   = UpdateOptions().arrayFilters(arrayFilters2.toList.asJava)
         val results         = nestedCreateResults ++ nestedDeleteResults ++ nestedUpdateResults :+ UpdateNodeResult(node.id, node, mutaction)
 
-//        val arrayFilters = UpdateOptions().arrayFilters(List(equal("i.unique", 11)).asJava)
-
         collection
-          .updateOne(mutaction.where, combinedUpdates) //, arrayFilters)
+          .updateOne(mutaction.where, combinedUpdates, updateOptions)
           .toFuture()
           .map(_ => MutactionResults(results))
     }
@@ -133,9 +131,6 @@ trait NodeActions extends NodeSingleQueries {
 
   //endregion
 
-  //TODO
-  //Combine errorhandling and production of actions/results again
-
   private def createToDoc(mutaction: CreateNode,
                           results: Vector[DatabaseMutactionResult] = Vector.empty): (IdGCValue, Document, Vector[DatabaseMutactionResult]) = {
     val id = CuidGCValue.random
@@ -147,7 +142,7 @@ trait NodeActions extends NodeSingleQueries {
 
     val nonListArgsWithId = nonListValues :+ ("_id", id)
 
-    val (childResults: Vector[DatabaseMutactionResult], nestedCreateFields: Map[String, BsonValue]) = nestedCreateDocsAndResults(mutaction.nestedCreates)
+    val (nestedCreateFields, childResults) = embeddedNestedCreateDocsAndResults(mutaction.nestedCreates)
 
     val thisResult = CreateNodeResult(id, mutaction)
 
@@ -156,7 +151,7 @@ trait NodeActions extends NodeSingleQueries {
     (id, doc, childResults :+ thisResult)
   }
 
-  private def nestedCreateDocsAndResults(mutactions: Vector[NestedCreateNode]): (Vector[DatabaseMutactionResult], Map[String, BsonValue]) = {
+  private def embeddedNestedCreateDocsAndResults(mutactions: Vector[NestedCreateNode]): (Map[String, BsonValue], Vector[DatabaseMutactionResult]) = {
     val nestedCreates: immutable.Seq[(RelationField, (IdGCValue, Document, Vector[DatabaseMutactionResult]))] =
       mutactions.map(m => m.relationField -> createToDoc(m))
 
@@ -171,14 +166,12 @@ trait NodeActions extends NodeSingleQueries {
       if (rf.isList) map + (rf.name -> BsonArray(documents)) else map + (rf.name -> documents.head)
     }
 
-    (childResults, nestedCreateFields)
+    (nestedCreateFields, childResults)
   }
 
-  private def embeddedNestedDeleteActionsAndResults(node: PrismaNode, mutaction: UpdateNode, path: String = ""): (Vector[Bson], Vector[DeleteNodeResult]) = {
-    def fieldName(f: String) = mutaction match {
-      case _: TopLevelUpdateNode => f
-      case _: NestedUpdateNode   => newFieldName(mutaction, f, path)
-    }
+  private def embeddedNestedDeleteActionsAndResults(node: PrismaNode,
+                                                    mutaction: UpdateNode,
+                                                    path: Path = Path.empty): (Vector[Bson], Vector[DeleteNodeResult]) = {
     val parentWhere = mutaction match {
       case top: TopLevelUpdateNode  => Some(top.where)
       case nested: NestedUpdateNode => nested.where
@@ -193,7 +186,7 @@ trait NodeActions extends NodeSingleQueries {
       case toOneDelete @ NestedDeleteNode(_, rf, None) =>
         if (node.data.map(rf.name) == NullGCValue) error(toOneDelete)
 
-        (unset(fieldName(rf.name)), DeleteNodeResult(CuidGCValue.dummy, PrismaNode(CuidGCValue.dummy, node.data.map(rf.name).asRoot), toOneDelete))
+        (unset(path.stringForField(rf.name)), DeleteNodeResult(CuidGCValue.dummy, PrismaNode(CuidGCValue.dummy, node.data.map(rf.name).asRoot), toOneDelete))
 
       case toManyDelete @ NestedDeleteNode(_, rf, Some(where)) =>
         node.data.map(rf.name) match {
@@ -207,7 +200,8 @@ trait NodeActions extends NodeSingleQueries {
                 manyError(toManyDelete, where)
 
               case Some(previous) =>
-                (pull(fieldName(rf.name), whereToBson(where)), DeleteNodeResult(CuidGCValue.dummy, PrismaNode(CuidGCValue.dummy, previous), toManyDelete))
+                (pull(path.stringForField(rf.name), whereToBson(where)),
+                 DeleteNodeResult(CuidGCValue.dummy, PrismaNode(CuidGCValue.dummy, previous), toManyDelete))
             }
 
           case _ => sys.error("should not happen")
@@ -217,71 +211,82 @@ trait NodeActions extends NodeSingleQueries {
     (actionsAndResults.map(_._1), actionsAndResults.map(_._2))
   }
 
-  private def toOneScalarUpdateValues(mutaction: UpdateNode, path: String = "") = {
-    val invalidUpdates = mutaction.nonListArgs.raw.asRoot.map.collect { case (k, v) if v == NullGCValue && mutaction.model.getFieldByName_!(k).isRequired => k }
-    if (invalidUpdates.nonEmpty) throw FieldCannotBeNull(invalidUpdates.head)
-
-    val nonListValues = mutaction.nonListArgs.raw.asRoot.map.map { case (f, v) => set(newFieldName(mutaction, f, path), GCValueBsonTransformer(v)) }.toVector
-    val listValues    = mutaction.listArgs.map { case (f, v) => set(newFieldName(mutaction, f, path), GCValueBsonTransformer(v)) }
+  private def toOneScalarUpdateValues(mutaction: UpdateNode, path: Path = Path.empty): Vector[Bson] = {
+    checkScalarUpdateValues(mutaction)
+    val nonListValues = mutaction.nonListArgs.raw.asRoot.map.map { case (f, v) => set(path.stringForField(f), GCValueBsonTransformer(v)) }.toVector
+    val listValues    = mutaction.listArgs.map { case (f, v) => set(path.stringForField(f), GCValueBsonTransformer(v)) }
 
     nonListValues ++ listValues
   }
 
-  private def nestedUpdateDocsAndResults(node: PrismaNode, mutaction: UpdateNode, path: String = ""): (Vector[Bson], Vector[DatabaseMutactionResult]) = {
+  private def toManyScalarUpdateValues(mutaction: UpdateNode, path: String = "") = {
+    checkScalarUpdateValues(mutaction)
 
-    val first: Vector[(Vector[Bson], Vector[DatabaseMutactionResult])] = mutaction.nestedUpdates.collect {
+    //    val nonListValues = mutaction.nonListArgs.raw.asRoot.map.map { case (f, v) => set(newFieldName(mutaction, f, path), GCValueBsonTransformer(v)) }.toVector
+//    val listValues    = mutaction.listArgs.map { case (f, v) => set(newFieldName(mutaction, f, path), GCValueBsonTransformer(v)) }
+//
+//    nonListValues ++ listValues
+
+  }
+
+  private def checkScalarUpdateValues(mutaction: UpdateNode) = {
+    val invalidUpdates = mutaction.nonListArgs.raw.asRoot.map.collect { case (k, v) if v == NullGCValue && mutaction.model.getFieldByName_!(k).isRequired => k }
+    if (invalidUpdates.nonEmpty) throw FieldCannotBeNull(invalidUpdates.head)
+  }
+
+  private def nestedUpdateDocsAndResults(node: PrismaNode,
+                                         mutaction: UpdateNode,
+                                         path: Path = Path.empty): (Vector[Bson], Vector[Bson], Vector[DatabaseMutactionResult]) = {
+
+    val first = mutaction.nestedUpdates.collect {
       case toOneUpdate @ NestedUpdateNode(_, rf, None, _, _, _, _, _, _, _, _) =>
+        val updatedPath = path.append(rf)
         val subNode = node.toOneChild(rf) match {
           case None             => throw NodesNotConnectedError(rf.relation, rf.model, None, rf.relatedModel_!, None)
           case Some(prismaNode) => prismaNode
         }
 
-        val scalarUpdates = toOneScalarUpdateValues(toOneUpdate, path)
+        val scalarUpdates = toOneScalarUpdateValues(toOneUpdate, updatedPath)
 
         // combine this into one function
-        val (nestedCreateResults, nestedCreateFields) = nestedCreateDocsAndResults(toOneUpdate.nestedCreates)
-        val nestedCreates                             = nestedCreateFields.map { case (f, v) => set(newFieldName(toOneUpdate, f, path), v) }
+        val (nestedCreateFields, nestedCreateResults) = embeddedNestedCreateDocsAndResults(toOneUpdate.nestedCreates)
+        val nestedCreates                             = nestedCreateFields.map { case (f, v) => set(updatedPath.stringForField(f), v) }
 
-        val (nestedUpdates, nestedUpdateResults) = nestedUpdateDocsAndResults(subNode, toOneUpdate, combineTwo(path, rf.name))
+        val (nestedUpdates, arrayFilters2, nestedUpdateResults) = nestedUpdateDocsAndResults(subNode, toOneUpdate, updatedPath)
 
-        val (nestedDeletes, nestedDeleteResults) = embeddedNestedDeleteActionsAndResults(subNode, toOneUpdate, path)
+        val (nestedDeletes, nestedDeleteResults) = embeddedNestedDeleteActionsAndResults(subNode, toOneUpdate, updatedPath)
 
         val thisResult = UpdateNodeResult(subNode.id, subNode, toOneUpdate)
 
-        (scalarUpdates ++ nestedCreates ++ nestedDeletes ++ nestedUpdates, nestedCreateResults ++ nestedDeleteResults ++ nestedUpdateResults :+ thisResult)
+        (scalarUpdates ++ nestedCreates ++ nestedDeletes ++ nestedUpdates,
+         arrayFilters2,
+         nestedCreateResults ++ nestedDeleteResults ++ nestedUpdateResults :+ thisResult)
 
       case toManyUpdate @ NestedUpdateNode(_, rf, Some(where), _, _, _, _, _, _, _, _) =>
+        val updatedPath = path.append(rf, where)
         val subNode = node.toManyChild(rf, where) match {
           case None             => throw NodesNotConnectedError(rf.relation, rf.model, None, rf.relatedModel_!, Some(where))
           case Some(prismaNode) => prismaNode
         }
+//        val arrayFilters = Vector(equal(s"${rf.name}_${where.fieldName}", where.fieldGCValue.value))
+        val arrayFilters = Vector.empty
 
-//        val scalarUpdates = toManyScalarUpdateValues(toManyUpdate, path)
-        val scalarUpdates = Vector(set("middle.$[i].name", "MiddleNew"))
-//
+//        val scalarUpdates = toManyScalarUpdateValues(toManyUpdate, path)//
 
 //        // combine this into one function
-//        val (nestedCreateResults, nestedCreateFields) = nestedCreateDocsAndResults(toManyUpdate.nestedCreates)
+//        val (nestedCreateResults, nestedCreateFields) = embeddedNestedCreateDocsAndResults(toManyUpdate.nestedCreates)
 //        val nestedCreates                             = nestedCreateFields.map { case (f, v) => set(newFieldName(toManyUpdate, f, path), v) }
 //
 //        val (nestedUpdates, nestedUpdateResults) = nestedUpdateDocsAndResults(subNode, toManyUpdate, combineTwo(path, rf.name))
 //
-        val (nestedDeletes, nestedDeleteResults) = embeddedNestedDeleteActionsAndResults(subNode, toManyUpdate, path)
+        val (nestedDeletes, nestedDeleteResults) = embeddedNestedDeleteActionsAndResults(subNode, toManyUpdate, updatedPath)
 //
         val thisResult = UpdateNodeResult(subNode.id, subNode, toManyUpdate)
 //
 //        (scalarUpdates ++ nestedCreates ++ nestedDeletes ++ nestedUpdates, nestedCreateResults ++ nestedDeleteResults ++ nestedUpdateResults :+ thisResult)
-        (scalarUpdates ++ nestedDeletes, nestedDeleteResults :+ thisResult)
+        (nestedDeletes, arrayFilters, nestedDeleteResults :+ thisResult)
     }
-    (first.flatMap(_._1), first.flatMap(_._2))
-  }
-
-  private def toManyScalarUpdateValues(mutaction: UpdateNode, path: String = "") = {
-//    val nonListValues = mutaction.nonListArgs.raw.asRoot.map.map { case (f, v) => set(newFieldName(mutaction, f, path), GCValueBsonTransformer(v)) }.toVector
-//    val listValues    = mutaction.listArgs.map { case (f, v) => set(newFieldName(mutaction, f, path), GCValueBsonTransformer(v)) }
-//
-//    nonListValues ++ listValues
-
+    (first.flatMap(_._1), first.flatMap(_._2), first.flatMap(_._3))
   }
 
   // helpers
@@ -299,10 +304,5 @@ trait NodeActions extends NodeSingleQueries {
 //
 //    }
     updates
-  }
-
-  private def newFieldName(mutaction: UpdateNode, fieldName: String, path: String) = mutaction match {
-    case _: TopLevelUpdateNode => fieldName
-    case m: NestedUpdateNode   => combineThree(path, m.relationField.name, fieldName)
   }
 }
