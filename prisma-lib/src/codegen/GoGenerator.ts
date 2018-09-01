@@ -36,14 +36,14 @@ export type FieldLikeType = {
 
 export class GoGenerator extends Generator {
   scalarMapping = {
-    Int: 'int32', // TODO: What is our scala int
+    Int: 'int32',
     String: 'string',
     ID: 'string',
-    Float: 'float32', // TODO: What is our scala float
+    Float: 'float32',
     Boolean: 'bool',
     DateTime: 'string',
     Json: 'map[string]interface{}',
-    Long: 'int64', // TODO: This is not correct I think
+    Long: 'int64',
   }
 
   extractFieldLikeType(field: GraphQLField<any, any>): FieldLikeType {
@@ -134,12 +134,12 @@ export class GoGenerator extends Generator {
                 Name: "${field.name}",
                 Field: GraphQLField{
                   Name: "${field.name}",
-                  TypeName: "${deepTypeName}", // TODO: We might need to full field object later to get array and non-null properties or add them as additional fields  // TODO: We might need to full field object later to get array and non-null properties or add them as additional fields
+                  TypeName: "${deepTypeName}",
                   TypeFields: ${`[]string{${typeFields
                     .map(f => f)
                     .join(',')}}`},
                 },
-                Operation: "", // TODO: This is not a top level query, no operation
+                Operation: "",
                 Args: args,
               })
             return &${goCase(deepTypeName.toString())}Exec{
@@ -476,14 +476,14 @@ func isArray(i interface{}) bool {
 
 // DB Type to represent the client
 type DB struct {
-  Endpoint string // TODO: Remove the Endpoint from here and print it where needed.
+  Endpoint string
   Debug bool
 }
 
 // ProcessInstructions docs
 func (db *DB) ProcessInstructions(stack []Instruction) string {
   query := make(map[string]interface{})
-  // TODO: This needs to handle collisions across instructions
+  // TODO: This needs to handle arg name collisions across instructions
 	args := make(map[string][]GraphQLArg)
 	firstInstruction := stack[0]
 	for i := len(stack) - 1; i >= 0; i-- {
@@ -636,14 +636,13 @@ ${typeNames
         let type = typeMap[key]
         return this.graphqlRenderers[type.constructor.name]
           ? this.graphqlRenderers[type.constructor.name](type)
-          : `// TODO: No GraphQL Renderer for Type ${type.name} of type ${
+          : `// No GraphQL Renderer for Type ${type.name} of type ${
               type.constructor.name
             }`
       })
       .join('\n')}
 
-      // GraphQL Send a GraphQL operation request
-// TODO: arg variables can be made optional via variadic func approach
+// GraphQL Send a GraphQL operation request
 func (db DB) GraphQL(query string, variables map[string]interface{}) map[string]interface{} {
 	// TODO: Error handling (both network, GraphQL and application level (missing node etc))
 	// TODO: Add auth support
@@ -658,7 +657,7 @@ func (db DB) GraphQL(query string, variables map[string]interface{}) map[string]
 	ctx := context.Background()
 
 	// var respData ResponseStruct
-	var respData map[string]interface{} // TODO: Type this properly with a struct
+	var respData map[string]interface{}
 	if err := client.Run(ctx, req, &respData); err != nil {
     if db.Debug {
       fmt.Println("GraphQL Response:", respData)
