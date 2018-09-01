@@ -71,24 +71,13 @@ export class GoGenerator extends Generator {
       : []
     return {
       name: field.name,
-      typeName: deepTypeName,
+      typeName: deepTypeName.toString(),
       type: deepType! as GraphQLInputObjectType,
       typeFields: fields,
       args: field.args,
       isScalar,
       isEnum,
     }
-  }
-
-  // TODO: Hacky - need to find proper field definition and field name with Null + List properties.
-  // TODO: Add Nullability and array to fieldType later.
-  rawTypeName(type) {
-    return type
-      .toString()
-      .replace('!', '')
-      .replace('[', '')
-      .replace(']', '')
-      .trim()
   }
 
   graphqlRenderers = {
@@ -217,12 +206,12 @@ export class GoGenerator extends Generator {
           ${Object.keys(fieldMap)
             .map(key => {
               const field = fieldMap[key]
-
-              const fieldType = this.rawTypeName(field.type)
-
+              const { typeName } = this.extractFieldLikeType(
+                field as GraphQLField<any, any>,
+              )
               return `${goCase(field.name)} ${
-                this.scalarMapping[fieldType] ? `` : `*`
-              }${this.scalarMapping[fieldType] || fieldType} \`json:"${
+                this.scalarMapping[typeName] ? `` : `*`
+              }${this.scalarMapping[typeName] || typeName} \`json:"${
                 field.name
               },omitempty"\``
             })
@@ -249,9 +238,12 @@ export class GoGenerator extends Generator {
       type ${goCase(type.name)} interface {
         ${Object.keys(fieldMap).map(key => {
           const field = fieldMap[key]
-          const fieldType = this.rawTypeName(field.type)
-          return `${goCase(field.name)}() ${this.scalarMapping[fieldType] ||
-            fieldType}`
+          const { typeName } = this.extractFieldLikeType(field as GraphQLField<
+            any,
+            any
+          >)
+          return `${goCase(field.name)}() ${this.scalarMapping[typeName] ||
+            typeName}`
         })}
       }`
     },
@@ -268,12 +260,14 @@ export class GoGenerator extends Generator {
           ${Object.keys(fieldMap)
             .map(key => {
               const field = fieldMap[key]
-              const fieldType = this.rawTypeName(field.type)
+              const { typeName } = this.extractFieldLikeType(
+                field as GraphQLField<any, any>,
+              )
 
               // TODO: Add omitempty to json: tag as `json: where,omitempty` by detecting required input types, removing it for now
               return `${goCase(field.name)} ${
-                this.scalarMapping[fieldType] ? `` : `*`
-              }${this.scalarMapping[fieldType] || fieldType} \`json:"${
+                this.scalarMapping[typeName] ? `` : `*`
+              }${this.scalarMapping[typeName] || typeName} \`json:"${
                 field.name
               },omitempty"\``
             })
@@ -364,14 +358,20 @@ export class GoGenerator extends Generator {
           any,
           any
         >)
+        const { typeName } = this.extractFieldLikeType(field as GraphQLField<
+          any,
+          any
+        >)
         return `
           // ${goCase(field.name)}Params docs
           type ${goCase(field.name)}Params struct {
             ${args
               .map(arg => {
-                const argType = this.rawTypeName(arg.type)
-                return `${goCase(arg.name)} *${this.scalarMapping[argType] ||
-                  argType} \`json:"${arg.name},omitempty"\``
+                const { typeName } = this.extractFieldLikeType(
+                  arg as GraphQLField<any, any>,
+                )
+                return `${goCase(arg.name)} *${this.scalarMapping[typeName] ||
+                  typeName} \`json:"${arg.name},omitempty"\``
               })
               .join('\n')}
           }
@@ -380,7 +380,7 @@ export class GoGenerator extends Generator {
           func (db DB) ${goCase(field.name)} (params ${goCase(
           field.name,
         )}Params) *${isListType(field.type) ? `[]` : ``}${goCase(
-          this.rawTypeName(field.type),
+          typeName,
         )}Exec {
 
           stack := make([]Instruction, 0)
@@ -406,9 +406,7 @@ export class GoGenerator extends Generator {
             Args: args,
           })
 
-      return &${isListType(field.type) ? `[]` : ``}${goCase(
-          this.rawTypeName(field.type),
-        )}Exec{
+      return &${isListType(field.type) ? `[]` : ``}${goCase(typeName)}Exec{
           db: db,
           stack: stack,
         }
