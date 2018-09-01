@@ -256,22 +256,23 @@ trait NodeActions extends NodeSingleQueries {
           case Some(prismaNode) => prismaNode
         }
 
-        val arrayFilters = updatedPath.arrayFilter
+        val arrayFilters = updatedPath.arrayFilter //this is not always needed i think, check if this errors if it is unused
 
         val scalarUpdates = scalarUpdateValues(toManyUpdate, updatedPath)
 
-//        // combine this into one function
-//        val (nestedCreateResults, nestedCreateFields) = embeddedNestedCreateDocsAndResults(toManyUpdate.nestedCreates)
-//        val nestedCreates                             = nestedCreateFields.map { case (f, v) => set(newFieldName(toManyUpdate, f, path), v) }
-//
-//        val (nestedUpdates, nestedUpdateResults) = nestedUpdateDocsAndResults(subNode, toManyUpdate, combineTwo(path, rf.name))
-//
+        // combine this into one function
+        val (nestedCreateFields, nestedCreateResults) = embeddedNestedCreateDocsAndResults(toManyUpdate.nestedCreates)
+        val nestedCreates                             = nestedCreateFields.map { case (f, v) => set(updatedPath.stringForField(f), v) }
+
+        val (nestedUpdates, nestedArrayFilters, nestedUpdateResults) = nestedUpdateDocsAndResults(subNode, toManyUpdate, updatedPath)
+
         val (nestedDeletes, nestedDeleteResults) = embeddedNestedDeleteActionsAndResults(subNode, toManyUpdate, updatedPath)
-//
+
         val thisResult = UpdateNodeResult(subNode.id, subNode, toManyUpdate)
-//
-//        (scalarUpdates ++ nestedCreates ++ nestedDeletes ++ nestedUpdates, nestedCreateResults ++ nestedDeleteResults ++ nestedUpdateResults :+ thisResult)
-        (scalarUpdates ++ nestedDeletes, arrayFilters, nestedDeleteResults :+ thisResult)
+
+        (scalarUpdates ++ nestedCreates ++ nestedDeletes ++ nestedUpdates,
+         arrayFilters ++ nestedArrayFilters,
+         nestedCreateResults ++ nestedDeleteResults ++ nestedUpdateResults :+ thisResult)
     }
     (first.flatMap(_._1), first.flatMap(_._2), first.flatMap(_._3))
   }
