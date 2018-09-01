@@ -1,12 +1,12 @@
 package com.prisma.api.queries
 
 import com.prisma.api.ApiSpecBase
-import com.prisma.api.connector.ApiConnectorCapability.NodeQueryCapability
+import com.prisma.api.connector.ApiConnectorCapability.{JoinRelationsCapability, NodeQueryCapability}
 import com.prisma.shared.schema_dsl.SchemaDsl
 import org.scalatest.{FlatSpec, Matchers}
 
 class NodeQueryReturningWrongTypeNameSpec extends FlatSpec with Matchers with ApiSpecBase {
-  override def runOnlyForCapabilities = Set(NodeQueryCapability)
+  override def runOnlyForCapabilities = Set(NodeQueryCapability, JoinRelationsCapability)
 
   "the node query" should "return the correct typename" in {
     val project = SchemaDsl.fromString() {

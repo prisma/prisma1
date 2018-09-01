@@ -58,7 +58,7 @@ trait NodeActions extends NodeSingleQueries {
         throw APIErrors.NodeNotFoundForWhereError(mutaction.where)
 
       case Some(node) =>
-        val scalarUpdates = toOneScalarUpdateValues(mutaction)
+        val scalarUpdates = scalarUpdateValues(mutaction)
 
         //  combine this into one function
         val (nestedCreateDocs, nestedCreateResults) = embeddedNestedCreateDocsAndResults(mutaction.nestedCreates)
@@ -67,10 +67,10 @@ trait NodeActions extends NodeSingleQueries {
         val (nestedDeletes, nestedDeleteResults) = embeddedNestedDeleteActionsAndResults(node, mutaction)
 
         //  update - only toOne
-        val (nestedUpdates, arrayFilters2, nestedUpdateResults) = nestedUpdateDocsAndResults(node, mutaction)
+        val (nestedUpdates, arrayFilters, nestedUpdateResults) = nestedUpdateDocsAndResults(node, mutaction)
 
         val combinedUpdates = combine(customCombine(scalarUpdates ++ nestedCreates ++ nestedDeletes ++ nestedUpdates): _*)
-        val updateOptions   = UpdateOptions().arrayFilters(arrayFilters2.toList.asJava)
+        val updateOptions   = UpdateOptions().arrayFilters(arrayFilters.toList.asJava)
         val results         = nestedCreateResults ++ nestedDeleteResults ++ nestedUpdateResults :+ UpdateNodeResult(node.id, node, mutaction)
 
         collection
@@ -211,27 +211,14 @@ trait NodeActions extends NodeSingleQueries {
     (actionsAndResults.map(_._1), actionsAndResults.map(_._2))
   }
 
-  private def toOneScalarUpdateValues(mutaction: UpdateNode, path: Path = Path.empty): Vector[Bson] = {
-    checkScalarUpdateValues(mutaction)
+  private def scalarUpdateValues(mutaction: UpdateNode, path: Path = Path.empty): Vector[Bson] = {
+    val invalidUpdates = mutaction.nonListArgs.raw.asRoot.map.collect { case (k, v) if v == NullGCValue && mutaction.model.getFieldByName_!(k).isRequired => k }
+    if (invalidUpdates.nonEmpty) throw FieldCannotBeNull(invalidUpdates.head)
+
     val nonListValues = mutaction.nonListArgs.raw.asRoot.map.map { case (f, v) => set(path.stringForField(f), GCValueBsonTransformer(v)) }.toVector
     val listValues    = mutaction.listArgs.map { case (f, v) => set(path.stringForField(f), GCValueBsonTransformer(v)) }
 
     nonListValues ++ listValues
-  }
-
-  private def toManyScalarUpdateValues(mutaction: UpdateNode, path: String = "") = {
-    checkScalarUpdateValues(mutaction)
-
-    //    val nonListValues = mutaction.nonListArgs.raw.asRoot.map.map { case (f, v) => set(newFieldName(mutaction, f, path), GCValueBsonTransformer(v)) }.toVector
-//    val listValues    = mutaction.listArgs.map { case (f, v) => set(newFieldName(mutaction, f, path), GCValueBsonTransformer(v)) }
-//
-//    nonListValues ++ listValues
-
-  }
-
-  private def checkScalarUpdateValues(mutaction: UpdateNode) = {
-    val invalidUpdates = mutaction.nonListArgs.raw.asRoot.map.collect { case (k, v) if v == NullGCValue && mutaction.model.getFieldByName_!(k).isRequired => k }
-    if (invalidUpdates.nonEmpty) throw FieldCannotBeNull(invalidUpdates.head)
   }
 
   private def nestedUpdateDocsAndResults(node: PrismaNode,
@@ -246,20 +233,20 @@ trait NodeActions extends NodeSingleQueries {
           case Some(prismaNode) => prismaNode
         }
 
-        val scalarUpdates = toOneScalarUpdateValues(toOneUpdate, updatedPath)
+        val scalarUpdates = scalarUpdateValues(toOneUpdate, updatedPath)
 
         // combine this into one function
         val (nestedCreateFields, nestedCreateResults) = embeddedNestedCreateDocsAndResults(toOneUpdate.nestedCreates)
         val nestedCreates                             = nestedCreateFields.map { case (f, v) => set(updatedPath.stringForField(f), v) }
 
-        val (nestedUpdates, arrayFilters2, nestedUpdateResults) = nestedUpdateDocsAndResults(subNode, toOneUpdate, updatedPath)
+        val (nestedUpdates, arrayFilters, nestedUpdateResults) = nestedUpdateDocsAndResults(subNode, toOneUpdate, updatedPath)
 
         val (nestedDeletes, nestedDeleteResults) = embeddedNestedDeleteActionsAndResults(subNode, toOneUpdate, updatedPath)
 
         val thisResult = UpdateNodeResult(subNode.id, subNode, toOneUpdate)
 
         (scalarUpdates ++ nestedCreates ++ nestedDeletes ++ nestedUpdates,
-         arrayFilters2,
+         arrayFilters,
          nestedCreateResults ++ nestedDeleteResults ++ nestedUpdateResults :+ thisResult)
 
       case toManyUpdate @ NestedUpdateNode(_, rf, Some(where), _, _, _, _, _, _, _, _) =>
@@ -268,10 +255,10 @@ trait NodeActions extends NodeSingleQueries {
           case None             => throw NodesNotConnectedError(rf.relation, rf.model, None, rf.relatedModel_!, Some(where))
           case Some(prismaNode) => prismaNode
         }
-//        val arrayFilters = Vector(equal(s"${rf.name}_${where.fieldName}", where.fieldGCValue.value))
-        val arrayFilters = Vector.empty
 
-//        val scalarUpdates = toManyScalarUpdateValues(toManyUpdate, path)//
+        val arrayFilters = updatedPath.arrayFilter
+
+        val scalarUpdates = scalarUpdateValues(toManyUpdate, updatedPath)
 
 //        // combine this into one function
 //        val (nestedCreateResults, nestedCreateFields) = embeddedNestedCreateDocsAndResults(toManyUpdate.nestedCreates)
@@ -284,7 +271,7 @@ trait NodeActions extends NodeSingleQueries {
         val thisResult = UpdateNodeResult(subNode.id, subNode, toManyUpdate)
 //
 //        (scalarUpdates ++ nestedCreates ++ nestedDeletes ++ nestedUpdates, nestedCreateResults ++ nestedDeleteResults ++ nestedUpdateResults :+ thisResult)
-        (nestedDeletes, arrayFilters, nestedDeleteResults :+ thisResult)
+        (scalarUpdates ++ nestedDeletes, arrayFilters, nestedDeleteResults :+ thisResult)
     }
     (first.flatMap(_._1), first.flatMap(_._2), first.flatMap(_._3))
   }
@@ -292,9 +279,11 @@ trait NodeActions extends NodeSingleQueries {
   // helpers
 
   private def customCombine(updates: Vector[conversions.Bson]): Vector[conversions.Bson] = {
-    //Fixme needs to comine updates that the Mongo DB combine would swallow since they reference the same field and value
+    //Fixme needs to combine updates that the Mongo DB combine would swallow since they reference the same field and value
     //{ "$pull" : { "comments" : { "alias" : "alias1" } } }
     //{ "$pull" : { "comments" : { "alias" : "alias2" } } }
+    //{ "$pull" : { "comments" : { "alias" : {$in: ["alias1","alias2"]} } } }
+
     //in this case the second one would overwrite the first one -.-
 
 //    updates.map { update =>

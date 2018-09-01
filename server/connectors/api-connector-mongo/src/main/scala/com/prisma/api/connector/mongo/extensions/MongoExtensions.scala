@@ -143,7 +143,12 @@ case class Path(segments: List[PathSegment]) {
   private def stringGen2(field: String, segments: List[PathSegment]): Vector[String] = segments match {
     case Nil                              => Vector(field)
     case ToOneSegment(rf) :: tail         => rf.name +: stringGen2(field, tail)
-    case ToManySegment(rf, where) :: tail => Vector(rf.name, "$[" + s"${rf.name}_${where.fieldName}]") ++ stringGen2(field, tail)
+    case ToManySegment(rf, where) :: tail => Vector(rf.name, "$[" + s"${rf.name}X${where.fieldName}]") ++ stringGen2(field, tail)
+  }
+
+  def arrayFilter: Vector[Bson] = segments.last match {
+    case ToOneSegment(_)          => sys.error("")
+    case ToManySegment(rf, where) => Vector(Filters.equal(s"${rf.name}X${where.fieldName}.${where.fieldName}", where.fieldGCValue.value))
   }
 
 }

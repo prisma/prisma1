@@ -1,5 +1,6 @@
 package com.prisma.api.mutations.embedded.nestedMutations
 
+import com.prisma.IgnoreMongo
 import com.prisma.api.ApiSpecBase
 import com.prisma.api.connector.ApiConnectorCapability.EmbeddedTypesCapability
 import com.prisma.shared.schema_dsl.SchemaDsl
@@ -968,7 +969,7 @@ class EmbeddedNestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matcher
 
   //Fixme Think about Self Relations and embedded types
   // would need to be nested within a normal type
-  "Nested delete on self relations" should "only delete the specified nodes" in {
+  "Nested delete on self relations" should "only delete the specified nodes" taggedAs (IgnoreMongo) in {
     val project = SchemaDsl.fromString() { """type User {
                                              |  id: ID! @unique
                                              |  name: String! @unique
