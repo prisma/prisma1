@@ -148,7 +148,7 @@ case class Path(segments: List[PathSegment]) {
 
   def arrayFilter: Vector[Bson] = segments.last match {
     case ToOneSegment(_)          => sys.error("")
-    case ToManySegment(rf, where) => Vector(Filters.equal(s"${rf.name}X${where.fieldName}.${where.fieldName}", where.fieldGCValue.value))
+    case ToManySegment(rf, where) => Vector(Filters.equal(s"${rf.name}X${where.fieldName}.${where.fieldName}", GCValueBsonTransformer(where.fieldGCValue)))
   }
 
 }

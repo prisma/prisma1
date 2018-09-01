@@ -1,4 +1,4 @@
-package com.prisma.api.mutations.embedded.nestedMutations
+package com.prisma.api.mutations.embedded
 
 import com.prisma.api.ApiSpecBase
 import com.prisma.api.connector.ApiConnectorCapability.EmbeddedTypesCapability

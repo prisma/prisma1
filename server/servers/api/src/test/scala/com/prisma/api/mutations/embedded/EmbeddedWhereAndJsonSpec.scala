@@ -1,12 +1,12 @@
-package com.prisma.api.mutations.nonEmbedded
+package com.prisma.api.mutations.embedded
 
 import com.prisma.api.ApiSpecBase
-import com.prisma.api.connector.ApiConnectorCapability.JoinRelationsCapability
+import com.prisma.api.connector.ApiConnectorCapability.{EmbeddedTypesCapability, JoinRelationsCapability}
 import com.prisma.shared.schema_dsl.SchemaDsl
 import org.scalatest.{FlatSpec, Matchers}
 
-class WhereAndJsonSpec extends FlatSpec with Matchers with ApiSpecBase {
-  override def runOnlyForCapabilities = Set(JoinRelationsCapability)
+class EmbeddedWhereAndJsonSpec extends FlatSpec with Matchers with ApiSpecBase {
+  override def runOnlyForCapabilities = Set(EmbeddedTypesCapability)
 
   "Using the same input in an update using where as used during creation of the item" should "work" in {
 
@@ -21,11 +21,9 @@ class WhereAndJsonSpec extends FlatSpec with Matchers with ApiSpecBase {
         |   todos: [Todo!]!
         |}
         |
-        |type Todo{
-        |   id: ID! @unique
+        |type Todo @embedded{
         |   innerString: String!
         |   innerJson: Json! @unique
-        |   notes: [Note!]!
         |}"""
     }
 
@@ -72,7 +70,6 @@ class WhereAndJsonSpec extends FlatSpec with Matchers with ApiSpecBase {
     )
 
     server.query(s"""query{note(where:{outerJson:$outerWhere}){outerString}}""", project, dataContains = s"""{"note":{"outerString":"Changed Outer String"}}""")
-    server.query(s"""query{todo(where:{innerJson:$innerWhere}){innerString}}""", project, dataContains = s"""{"todo":{"innerString":"Changed Inner String"}}""")
 
   }
 }

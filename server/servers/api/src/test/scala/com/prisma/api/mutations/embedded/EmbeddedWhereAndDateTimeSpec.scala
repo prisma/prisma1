@@ -1,12 +1,12 @@
-package com.prisma.api.mutations.nonEmbedded
+package com.prisma.api.mutations.embedded
 
 import com.prisma.api.ApiSpecBase
-import com.prisma.api.connector.ApiConnectorCapability.JoinRelationsCapability
+import com.prisma.api.connector.ApiConnectorCapability.EmbeddedTypesCapability
 import com.prisma.shared.schema_dsl.SchemaDsl
 import org.scalatest.{FlatSpec, Matchers}
 
-class WhereAndDateTimeSpec extends FlatSpec with Matchers with ApiSpecBase {
-  override def runOnlyForCapabilities = Set(JoinRelationsCapability)
+class EmbeddedWhereAndDateTimeSpec extends FlatSpec with Matchers with ApiSpecBase {
+  override def runOnlyForCapabilities = Set(EmbeddedTypesCapability)
 
   "Using the same input in an update using where as used during creation of the item" should "work" in {
 
@@ -21,12 +21,11 @@ class WhereAndDateTimeSpec extends FlatSpec with Matchers with ApiSpecBase {
         |   todos: [Todo!]!
         |}
         |
-        |type Todo{
-        |   id: ID! @unique
+        |type Todo @embedded{
         |   innerString: String!
         |   innerDateTime: DateTime! @unique
-        |   notes: [Note!]!
         |}"""
+
     }
 
     database.setup(project)
@@ -74,11 +73,7 @@ class WhereAndDateTimeSpec extends FlatSpec with Matchers with ApiSpecBase {
       project,
       dataContains = """{"note":{"outerString":"Changed Outer String","outerDateTime":"2018-12-05T12:34:23.000Z"}}"""
     )
-    server.query(
-      s"""query{todo(where:{innerDateTime:$innerWhere}){innerString, innerDateTime}}""",
-      project,
-      dataContains = """{"todo":{"innerString":"Changed Inner String","innerDateTime":"2019-12-05T12:34:23.000Z"}}"""
-    )
+
   }
 
   "Using the same input in an update using where as used during creation of the item" should "work with the same time for inner and outer" in {
@@ -94,11 +89,9 @@ class WhereAndDateTimeSpec extends FlatSpec with Matchers with ApiSpecBase {
         |   todos: [Todo!]!
         |}
         |
-        |type Todo{
-        |   id: ID! @unique
+        |type Todo @embedded{
         |   innerString: String!
         |   innerDateTime: DateTime! @unique
-        |   notes: [Note!]!
         |}"""
 
     }
@@ -148,9 +141,6 @@ class WhereAndDateTimeSpec extends FlatSpec with Matchers with ApiSpecBase {
     server.query(s"""query{note(where:{outerDateTime:$outerWhere}){outerString}}""",
                  project,
                  dataContains = s"""{"note":{"outerString":"Changed Outer String"}}""")
-    server.query(s"""query{todo(where:{innerDateTime:$innerWhere}){innerString}}""",
-                 project,
-                 dataContains = s"""{"todo":{"innerString":"Changed Inner String"}}""")
   }
 
 }

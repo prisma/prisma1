@@ -177,34 +177,17 @@ trait NodeActions extends NodeSingleQueries {
       case nested: NestedUpdateNode => nested.where
     }
 
-    def manyError(delete: NestedDeleteNode, childWhere: NodeSelector) = error(delete, Some(childWhere))
-    def error(delete: NestedDeleteNode, where: Option[NodeSelector] = None) =
-      throw NodesNotConnectedError(delete.relationField.relation, delete.relationField.model, parentWhere, delete.model, where)
-
     val actionsAndResults = mutaction.nestedDeletes.map {
-
       case toOneDelete @ NestedDeleteNode(_, rf, None) =>
-        if (node.data.map(rf.name) == NullGCValue) error(toOneDelete)
-
-        (unset(path.stringForField(rf.name)), DeleteNodeResult(CuidGCValue.dummy, PrismaNode(CuidGCValue.dummy, node.data.map(rf.name).asRoot), toOneDelete))
+        node.toOneChild(rf) match {
+          case None             => throw NodesNotConnectedError(rf.relation, rf.model, parentWhere, toOneDelete.model, None)
+          case Some(nestedNode) => (unset(path.stringForField(rf.name)), DeleteNodeResult(CuidGCValue.dummy, nestedNode, toOneDelete))
+        }
 
       case toManyDelete @ NestedDeleteNode(_, rf, Some(where)) =>
-        node.data.map(rf.name) match {
-          case NullGCValue =>
-            manyError(toManyDelete, where)
-
-          case ListGCValue(values) =>
-            val rootValues = values.map(_.asRoot)
-            rootValues.find(root => root.map(where.fieldName) == where.fieldGCValue) match {
-              case None =>
-                manyError(toManyDelete, where)
-
-              case Some(previous) =>
-                (pull(path.stringForField(rf.name), whereToBson(where)),
-                 DeleteNodeResult(CuidGCValue.dummy, PrismaNode(CuidGCValue.dummy, previous), toManyDelete))
-            }
-
-          case _ => sys.error("should not happen")
+        node.toManyChild(rf, where) match {
+          case None             => throw NodesNotConnectedError(rf.relation, rf.model, parentWhere, toManyDelete.model, Some(where))
+          case Some(nestedNode) => (pull(path.stringForField(rf.name), whereToBson(where)), DeleteNodeResult(CuidGCValue.dummy, nestedNode, toManyDelete))
         }
     }
 
@@ -293,6 +276,7 @@ trait NodeActions extends NodeSingleQueries {
 //      val doc = update.toBsonDocument(classOf[Document], MongoClientSettings.getDefaultCodecRegistry)
 //
 //    }
+
     updates
   }
 }

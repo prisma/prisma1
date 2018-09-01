@@ -1,11 +1,11 @@
-package com.prisma.api.mutations.embedded.nestedMutations
+package com.prisma.api.mutations.embedded
 
 import com.prisma.api.ApiSpecBase
 import com.prisma.api.connector.ApiConnectorCapability.EmbeddedTypesCapability
 import com.prisma.shared.schema_dsl.SchemaDsl
 import org.scalatest.{FlatSpec, Matchers}
 
-class SettingNodeSelectorToNullSpec extends FlatSpec with Matchers with ApiSpecBase {
+class EmbeddedSettingNodeSelectorToNullSpec extends FlatSpec with Matchers with ApiSpecBase {
   override def runOnlyForCapabilities = Set(EmbeddedTypesCapability)
 
   "Setting a where value to null " should "should only update one if there are several nulls for the specified node selector" in {
