@@ -182,13 +182,31 @@ export class GoGenerator extends Generator {
           fmt.Println("Variables Exec:", variables)
         }
         data := instance.db.GraphQL(query, variables)
-        for _, instruction := range instance.stack {
-          data = (data[instruction.Name]).(map[string]interface{})
-        }
-        var decodedData ${type.name}
-        mapstructure.Decode(data, &decodedData)
         if instance.db.Debug {
           fmt.Println("Data Exec:", data)
+        }
+
+        var genericData interface{} // This can handle both map[string]interface{} and []interface[]
+
+        // Is unpacking needed
+        dataType := reflect.TypeOf(data)
+        if !isArray(dataType) {
+          for _, instruction := range instance.stack {
+            unpackedData := data[instruction.Name]
+            if isArray(unpackedData) {
+              genericData = (unpackedData).([]interface{})
+            } else {
+              genericData = (unpackedData).(map[string]interface{})
+            }
+          }
+        }
+        if instance.db.Debug {
+          fmt.Println("Data Unpacked Exec:", genericData)
+        }
+
+        var decodedData ${type.name}
+        mapstructure.Decode(genericData, &decodedData)
+        if instance.db.Debug {
           fmt.Println("Data Exec Decoded:", decodedData)
         }
         return decodedData
@@ -352,7 +370,7 @@ export class GoGenerator extends Generator {
             ${args
               .map(arg => {
                 const argType = this.rawTypeName(arg.type)
-                return `${goCase(arg.name)} ${this.scalarMapping[argType] ||
+                return `${goCase(arg.name)} *${this.scalarMapping[argType] ||
                   argType} \`json:"${arg.name},omitempty"\``
               })
               .join('\n')}
@@ -443,6 +461,19 @@ type Instruction struct {
   Field GraphQLField
   Operation string
 	Args []GraphQLArg
+}
+
+func isArray(i interface{}) bool {
+  v := reflect.ValueOf(i)
+  fmt.Println(v.Kind())
+  switch v.Kind() {
+  case reflect.Array:
+    return true
+  case reflect.Slice:
+    return true
+  default:
+    return false
+  }
 }
 
 // DB Type to represent the client
@@ -570,18 +601,7 @@ func (db *DB) ProcessInstructions(stack []Instruction) string {
   \`
 
 	templateFunctions := template.FuncMap{
-		"isArray": func(i interface{}) bool {
-			v := reflect.ValueOf(i)
-			fmt.Println(v.Kind())
-			switch v.Kind() {
-			case reflect.Array:
-				return true
-			case reflect.Slice:
-				return true
-			default:
-				return false
-			}
-		},
+		"isArray": isArray,
 	}
 
 	queryTemplate, err := template.New("query").Funcs(templateFunctions).Parse(queryTemplateString)
