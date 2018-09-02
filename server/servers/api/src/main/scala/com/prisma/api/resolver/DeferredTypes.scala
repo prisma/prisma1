@@ -1,6 +1,6 @@
 package com.prisma.api.resolver
 
-import com.prisma.api.connector.{NodeSelector, PrismaNode, QueryArguments}
+import com.prisma.api.connector.{NodeSelector, PrismaNode, QueryArguments, SelectedFields}
 import com.prisma.gc_values.IdGCValue
 import com.prisma.shared.models.{Model, RelationField, ScalarField}
 import sangria.execution.deferred.Deferred
@@ -13,42 +13,51 @@ object DeferredTypes {
     def order: Int
   }
 
-  case class OrderedDeferred[T](deferred: T, order: Int)                                     extends Ordered
-  case class OrderedDeferredFutureResult[ResultType](future: Future[ResultType], order: Int) extends Ordered
+  case class OrderedDeferred[T](deferred: T, order: Int)                   extends Ordered
+  case class OrderedDeferredFutureResult[T](future: Future[T], order: Int) extends Ordered
 
-  trait ModelArgs {
+  trait ModelDeferred[+T] extends Deferred[T] {
     def model: Model
     def args: Option[QueryArguments]
   }
 
-  trait ModelDeferred[+T] extends ModelArgs with Deferred[T] {
-    model: Model
-    args: Option[QueryArguments]
-  }
+  case class ManyModelDeferred(
+      model: Model,
+      args: Option[QueryArguments],
+      selectedFields: SelectedFields
+  ) extends ModelDeferred[RelayConnectionOutputType]
 
-  case class ManyModelDeferred(model: Model, args: Option[QueryArguments])      extends ModelDeferred[RelayConnectionOutputType]
-  case class CountManyModelDeferred(model: Model, args: Option[QueryArguments]) extends ModelDeferred[Int]
+  case class OneDeferred(
+      model: Model,
+      where: NodeSelector
+  ) extends Deferred[OneDeferredResultType]
 
-  trait RelatedArgs {
+  case class CountManyModelDeferred(
+      model: Model,
+      args: Option[QueryArguments]
+  ) extends ModelDeferred[Int]
+
+  trait RelationDeferred[+T] extends Deferred[T] {
     def relationField: RelationField
     def parentNodeId: IdGCValue
     def args: Option[QueryArguments]
   }
 
-  trait RelationDeferred[+T] extends RelatedArgs with Deferred[T] {
-    def relationField: RelationField
-    def parentNodeId: IdGCValue
-    def args: Option[QueryArguments]
-  }
+  case class ToOneDeferred(
+      relationField: RelationField,
+      parentNodeId: IdGCValue,
+      args: Option[QueryArguments],
+      selectedFields: SelectedFields
+  ) extends RelationDeferred[OneDeferredResultType]
 
-  type OneDeferredResultType = Option[PrismaNode]
+  case class ToManyDeferred(
+      relationField: RelationField,
+      parentNodeId: IdGCValue,
+      args: Option[QueryArguments],
+      selectedFields: SelectedFields
+  ) extends RelationDeferred[RelayConnectionOutputType]
 
-  case class OneDeferred(model: Model, where: NodeSelector)                                                     extends Deferred[OneDeferredResultType]
-  case class ToOneDeferred(relationField: RelationField, parentNodeId: IdGCValue, args: Option[QueryArguments]) extends RelationDeferred[OneDeferredResultType]
-  case class ToManyDeferred(relationField: RelationField, parentNodeId: IdGCValue, args: Option[QueryArguments])
-      extends RelationDeferred[RelayConnectionOutputType]
-
-  type SimpleConnectionOutputType   = Seq[PrismaNode]
+  type OneDeferredResultType        = Option[PrismaNode]
   type RelayConnectionOutputType    = IdBasedConnection[PrismaNode]
   type ScalarListDeferredResultType = Vector[Any]
 

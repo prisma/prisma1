@@ -57,6 +57,15 @@ object QueryArguments {
   def withFilter(filter: Filter) = QueryArguments.empty.copy(filter = Some(filter))
 }
 
+object SelectedFields {
+  def all(model: Model) = SelectedFields(model.fields.toSet)
+}
+case class SelectedFields(fields: Set[Field]) {
+  val scalarListFields    = fields.collect { case f: ScalarField if f.isList  => f }
+  val scalarNonListFields = fields.collect { case f: ScalarField if !f.isList => f }
+  val relationFields      = fields.collect { case f: RelationField            => f }
+}
+
 object SortOrder extends Enumeration {
   type SortOrder = Value
   val Asc: SortOrder.Value  = Value("asc")

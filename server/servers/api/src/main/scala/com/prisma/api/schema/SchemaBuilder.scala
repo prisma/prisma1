@@ -1,17 +1,19 @@
 package com.prisma.api.schema
 
 import akka.actor.ActorSystem
-import com.prisma.api.connector.{ApiConnectorCapability, NodeQueryCapability, PrismaNode}
+import com.prisma.api.connector._
 import com.prisma.api.mutations._
 import com.prisma.api.resolver.{ConnectionParentElement, DefaultIdBasedConnection}
 import com.prisma.api.resolver.DeferredTypes.{IdBasedConnectionDeferred, ManyModelDeferred, OneDeferred}
 import com.prisma.api.{ApiDependencies, ApiMetrics}
 import com.prisma.gc_values.CuidGCValue
-import com.prisma.shared.models.{Model, Project}
+import com.prisma.shared.models.{Model, Project, ScalarField}
 import com.prisma.util.coolArgs.CoolArgs
 import com.prisma.utils.boolean.BooleanUtils._
+import com.prisma.utils.future.FutureUtils.FutureOpt
 import org.atteo.evo.inflector.English
 import sangria.ast
+import sangria.ast.Selection
 import sangria.relay._
 import sangria.schema._
 
@@ -33,7 +35,8 @@ object SchemaBuilder {
 case class SchemaBuilderImpl(
     project: Project,
     capabilities: Vector[ApiConnectorCapability]
-)(implicit apiDependencies: ApiDependencies, system: ActorSystem) {
+)(implicit apiDependencies: ApiDependencies, system: ActorSystem)
+    extends SangriaExtensions {
   import system.dispatcher
 
   val argumentsBuilder                     = ArgumentsBuilder(project = project)
@@ -94,7 +97,7 @@ case class SchemaBuilderImpl(
       arguments = objectTypeBuilder.mapToListConnectionArguments(model),
       resolve = (ctx) => {
         val arguments = objectTypeBuilder.extractQueryArgumentsFromContext(model, ctx)
-        DeferredValue(ManyModelDeferred(model, arguments)).map(_.toNodes.map(Some(_)))
+        DeferredValue(ManyModelDeferred(model, arguments, ctx.getSelectedFields(model))).map(_.toNodes.map(Some(_)))
       }
     )
   }
@@ -121,7 +124,7 @@ case class SchemaBuilderImpl(
           )
           DeferredValue(IdBasedConnectionDeferred(connection))
         } else {
-          DeferredValue(ManyModelDeferred(model, arguments))
+          DeferredValue(ManyModelDeferred(model, arguments, ctx.getSelectedFields(model)))
         }
       }
     )
@@ -132,13 +135,13 @@ case class SchemaBuilderImpl(
       .whereUniqueArgument(model)
       .map { whereArg =>
         Field(
-          camelCase(model.name),
+          name = camelCase(model.name),
           fieldType = OptionType(objectTypes(model.name)),
           arguments = List(whereArg),
-          resolve = (ctx) => {
+          resolve = { ctx =>
             val coolArgs = CoolArgs(ctx.args.raw)
             val where    = coolArgs.extractNodeSelectorFromWhereField(model)
-            masterDataResolver.getNodeByWhere(where)
+            masterDataResolver.getNodeByWhere(where, ctx.getSelectedFields(model))
           }
         )
       }
@@ -150,7 +153,13 @@ case class SchemaBuilderImpl(
       fieldType = outputTypesBuilder.mapCreateOutputType(model, objectTypes(model.name)),
       arguments = argumentsBuilder.getSangriaArgumentsForCreate(model).getOrElse(List.empty),
       resolve = (ctx) => {
-        val mutation       = Create(model = model, project = project, args = ctx.args, dataResolver = masterDataResolver)
+        val mutation = Create(
+          model = model,
+          project = project,
+          args = ctx.args,
+          selectedFields = ctx.getSelectedFields(model),
+          dataResolver = masterDataResolver
+        )
         val mutationResult = ClientMutationRunner.run(mutation, databaseMutactionExecutor, sideEffectMutactionExecutor, mutactionVerifier)
         mapReturnValueResult(mutationResult, ctx.args)
       }
@@ -164,7 +173,13 @@ case class SchemaBuilderImpl(
         fieldType = OptionType(outputTypesBuilder.mapUpdateOutputType(model, objectTypes(model.name))),
         arguments = args,
         resolve = (ctx) => {
-          val mutation = Update(model = model, project = project, args = ctx.args, dataResolver = masterDataResolver)
+          val mutation = Update(
+            model = model,
+            project = project,
+            args = ctx.args,
+            selectedFields = ctx.getSelectedFields(model),
+            dataResolver = masterDataResolver
+          )
 
           val mutationResult = ClientMutationRunner.run(mutation, databaseMutactionExecutor, sideEffectMutactionExecutor, mutactionVerifier)
           mapReturnValueResult(mutationResult, ctx.args)
@@ -195,7 +210,13 @@ case class SchemaBuilderImpl(
         fieldType = outputTypesBuilder.mapUpsertOutputType(model, objectTypes(model.name)),
         arguments = args,
         resolve = (ctx) => {
-          val mutation       = Upsert(model = model, project = project, args = ctx.args, dataResolver = masterDataResolver)
+          val mutation = Upsert(
+            model = model,
+            project = project,
+            args = ctx.args,
+            selectedFields = ctx.getSelectedFields(model),
+            dataResolver = masterDataResolver
+          )
           val mutationResult = ClientMutationRunner.run(mutation, databaseMutactionExecutor, sideEffectMutactionExecutor, mutactionVerifier)
           mapReturnValueResult(mutationResult, ctx.args)
         }
@@ -215,6 +236,7 @@ case class SchemaBuilderImpl(
             modelObjectTypes = objectTypeBuilder,
             project = project,
             args = ctx.args,
+            selectedFields = ctx.getSelectedFields(model),
             dataResolver = masterDataResolver
           )
           val mutationResult = ClientMutationRunner.run(mutation, databaseMutactionExecutor, sideEffectMutactionExecutor, mutactionVerifier)
@@ -252,7 +274,15 @@ case class SchemaBuilderImpl(
 
   lazy val NodeDefinition(nodeInterface: InterfaceType[ApiUserContext, PrismaNode], nodeField, nodeRes) = Node.definitionById(
     resolve = (id: String, ctx: Context[ApiUserContext, Unit]) => {
-      dataResolver.getNodeByGlobalId(CuidGCValue(id))
+      for {
+        _         <- Future.unit
+        idGcValue = CuidGCValue(id)
+        modelOpt  <- dataResolver.getModelForGlobalId(idGcValue)
+        resultOpt <- modelOpt match {
+                      case Some(model) => dataResolver.getNodeByWhere(NodeSelector.forIdGCValue(model, idGcValue), ctx.getSelectedFields(model))
+                      case None        => Future.successful(None)
+                    }
+      } yield resultOpt
     },
     possibleTypes = {
       objectTypes.values.flatMap { o =>

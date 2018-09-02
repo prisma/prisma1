@@ -1,0 +1,43 @@
+export const meta = {
+  title: "Develop Prisma Service",
+  position: 3
+}
+
+## Develop Prisma Service
+
+Prisma services provide a GraphQL mapping to your database. Each Prisma service exposes a GraphQL CRUD/realtime API, called the **Prisma API**. The GraphQL schema defining the operations of the Prisma API is called the **Prisma GraphQL schema**. The Prisma GraphQL schema is auto-generated based on your data model.
+
+A Prisma service is defined by a _service configuration_ which consists of:
+
+- A prisma.yml configuration file
+- A data model written in GraphQL SDL
+
+![](https://i.imgur.com/xMXxsku.png)
+
+This chapter explains how to configure, manage and deploy your Prisma services.
+
+---
+
+### Service Configuration
+
+| Page | Description |
+| --- | --- |
+| [**Data Model**](knul) | Learn everything about the Prisma data model which serves as foundation for the CRUD operations in the Prisma API. |
+| [**`prisma.yml`**](5cy7) | Think of prisma.yml as the _template_ for a Prisma service. |
+
+### Prisma CLI
+
+| Page | Description |
+| --- | --- |
+| [**Using the Prisma CLI**](alx4) |  Learn how to use the Prisma CLI. |
+| [**CLI Command Reference**](xcv9) | Learn the details of all CLI commands. |
+
+### Workflows
+
+| Page | Description |
+| --- | --- |
+| [**Connecting An Existing Database (Introspection)**](soi1) | Learn how to use Prisma with your existing database. |
+| [**Data Import & Export**](jsw9) | Learn how to import and export data using Prisma. |
+| [**Server-side Subscriptions**](jde6) | Learn how to configure webhooks for subscription events.  |
+| [**Migrations**](asdf) | Learn how to perform database migrations using Prisma. |
+

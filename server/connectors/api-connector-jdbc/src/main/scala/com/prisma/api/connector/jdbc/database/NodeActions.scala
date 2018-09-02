@@ -22,7 +22,7 @@ trait NodeActions extends BuilderBase with FilterConditionBuilder with ScalarLis
     val fields = model.fields.filter(field => argsAsRoot.hasArgFor(field.name))
     val query = sql
       .insertInto(modelTable(model))
-      .columns(fields.map(field => modelColumn(model, field)): _*)
+      .columns(fields.map(modelColumn): _*)
       .values(placeHolders(fields))
 
     insertReturningGeneratedKeysToDBIO(query)(

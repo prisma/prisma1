@@ -20,33 +20,27 @@ case class JdbcDataResolver(
     slickDatabase = slickDatabase
   )
 
-  override def getNodeByGlobalId(globalId: CuidGCValue): Future[Option[PrismaNode]] = {
-    if (globalId.value == "viewer-fixed") return Future.successful(Some(PrismaNode(globalId, RootGCValue.empty, Some("Viewer"))))
-
-    val query = queryBuilder.getNodeByGlobalId(project.schema, globalId)
-    performWithTiming("resolveByGlobalId", slickDatabase.database.run(query))
+  override def getModelForGlobalId(globalId: CuidGCValue): Future[Option[Model]] = {
+    val query = queryBuilder.getModelForGlobalId(project.schema, globalId)
+    performWithTiming("getModelForGlobalId", slickDatabase.database.run(query))
   }
 
-  override def getNodeByWhere(where: NodeSelector): Future[Option[PrismaNode]] = {
-    getNodesByValuesForField(where.model, where.field, Vector(where.fieldGCValue)).map(_.headOption)
+  override def getNodeByWhere(where: NodeSelector, selectedFields: SelectedFields): Future[Option[PrismaNode]] = {
+    performWithTiming("getNodeByWhere", slickDatabase.database.run(queryBuilder.getNodeByWhere(where, selectedFields)))
   }
 
-  override def getNodes(model: Model, args: Option[QueryArguments] = None): Future[ResolverResult[PrismaNode]] = {
-    val query = queryBuilder.getNodes(model, args)
+  override def getNodes(model: Model, args: Option[QueryArguments], selectedFields: SelectedFields): Future[ResolverResult[PrismaNode]] = {
+    val query = queryBuilder.getNodes(model, args, selectedFields)
     performWithTiming("loadModelRowsForExport", slickDatabase.database.run(query))
-  }
-
-  override def getNodesByValuesForField(model: Model, field: ScalarField, values: Vector[GCValue]): Future[Vector[PrismaNode]] = {
-    val query = queryBuilder.getNodesByValuesForField(model, field, values)
-    performWithTiming("batchResolveByUnique", slickDatabase.database.run(query))
   }
 
   override def getRelatedNodes(
       fromField: RelationField,
       fromNodeIds: Vector[IdGCValue],
-      args: Option[QueryArguments]
+      args: Option[QueryArguments],
+      selectedFields: SelectedFields
   ): Future[Vector[ResolverResult[PrismaNodeWithParent]]] = {
-    val query = queryBuilder.getRelatedNodes(fromField, fromNodeIds, args)
+    val query = queryBuilder.getRelatedNodes(fromField, fromNodeIds, args, selectedFields)
     performWithTiming("resolveByRelation", slickDatabase.database.run(query))
   }
 

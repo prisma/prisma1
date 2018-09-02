@@ -98,10 +98,10 @@ case class JdbcDatabaseMutactionExecutor(
   def interpreterFor(mutaction: TopLevelDatabaseMutaction): TopLevelDatabaseMutactionInterpreter = mutaction match {
     case m: TopLevelCreateNode => CreateNodeInterpreter(mutaction = m, includeRelayRow = isActive)
     case m: TopLevelUpdateNode => UpdateNodeInterpreter(m)
-    case m: TopLevelUpsertNode => UpsertDataItemInterpreter(m)
+    case m: TopLevelUpsertNode => UpsertNodeInterpreter(m)
     case m: TopLevelDeleteNode => DeleteNodeInterpreter(m, shouldDeleteRelayIds = isActive)
-    case m: UpdateNodes        => UpdateDataItemsInterpreter(m)
-    case m: DeleteNodes        => DeleteDataItemsInterpreter(m, shouldDeleteRelayIds = isActive)
+    case m: UpdateNodes        => UpdateNodesInterpreter(m)
+    case m: DeleteNodes        => DeleteNodesInterpreter(m, shouldDeleteRelayIds = isActive)
     case m: ResetData          => ResetDataInterpreter(m)
     case m: ImportNodes        => ImportNodesInterpreter(m)
     case m: ImportRelations    => ImportRelationsInterpreter(m)
@@ -111,7 +111,7 @@ case class JdbcDatabaseMutactionExecutor(
   def interpreterFor(mutaction: NestedDatabaseMutaction): NestedDatabaseMutactionInterpreter = mutaction match {
     case m: NestedCreateNode => NestedCreateNodeInterpreter(m, includeRelayRow = isActive)
     case m: NestedUpdateNode => NestedUpdateNodeInterpreter(m)
-    case m: NestedUpsertNode => NestedUpsertDataItemInterpreter(m)
+    case m: NestedUpsertNode => NestedUpsertNodeInterpreter(m)
     case m: NestedDeleteNode => NestedDeleteNodeInterpreter(m, shouldDeleteRelayIds = isActive)
     case m: NestedConnect    => NestedConnectInterpreter(m)
     case m: NestedDisconnect => NestedDisconnectInterpreter(m)
