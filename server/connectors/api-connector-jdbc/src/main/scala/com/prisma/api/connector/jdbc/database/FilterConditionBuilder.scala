@@ -46,17 +46,13 @@ trait FilterConditionBuilder extends BuilderBase {
       case NotFilter(filters)     => filters.map(buildConditionForFilter(_, alias)).foldLeft(and(trueCondition()))(_ andNot _)
       case NodeFilter(filters)    => buildConditionForFilter(OrFilter(filters), alias)
       case relationFilter: RelationFilter =>
-        relationFilter.condition match {
-          case EveryRelatedNode =>
-            val select = relationFilterSubSelect(alias, relationFilter, invertCondition = true)
-            modelIdColumn(alias, relationFilter.field.model).notIn(select)
-          case NoRelatedNode =>
-            val select = relationFilterSubSelect(alias, relationFilter)
-            modelIdColumn(alias, relationFilter.field.model).notIn(select)
-          case _ =>
-            val select = relationFilterSubSelect(alias, relationFilter)
-            modelIdColumn(alias, relationFilter.field.model).in(select)
-        }
+        val invertConditionInSubSelect = relationFilter.condition == EveryRelatedNode
+        val select                     = relationFilterSubSelect(alias, relationFilter, invertConditionInSubSelect)
+        inStatementForRelationCondition(
+          jooqField = modelIdColumn(alias, relationFilter.field.model),
+          condition = relationFilter.condition,
+          subSelect = select
+        )
 
       //--------------------------------ANCHORS------------------------------------
       case TrueFilter                                            => trueCondition()
@@ -99,14 +95,13 @@ trait FilterConditionBuilder extends BuilderBase {
 
     relationFilter.nestedFilter match {
       case nested: RelationFilter =>
-        val baseField = relationColumn(relation, relationField.oppositeRelationSide)
-
-        val condition = nested.condition match {
-          case EveryRelatedNode      => baseField.notIn(relationFilterSubSelect(newAlias, nested, invertCondition = true))
-          case NoRelatedNode         => baseField.notIn(relationFilterSubSelect(newAlias, nested))
-          case AtLeastOneRelatedNode => baseField.in(relationFilterSubSelect(newAlias, nested))
-          case NoRelationCondition   => baseField.in(relationFilterSubSelect(newAlias, nested))
-        }
+        val baseField                  = relationColumn(relation, relationField.oppositeRelationSide)
+        val invertConditionInSubSelect = nested.condition == EveryRelatedNode
+        val condition = inStatementForRelationCondition(
+          jooqField = baseField,
+          condition = nested.condition,
+          subSelect = relationFilterSubSelect(newAlias, nested, invertConditionInSubSelect)
+        )
         sql
           .select(relationColumn(relation, relationField.relationSide))
           .from(relationTable(relation))
@@ -120,6 +115,15 @@ trait FilterConditionBuilder extends BuilderBase {
           .innerJoin(modelTable(relationField.relatedModel_!).as(newAlias))
           .on(modelIdColumn(newAlias, relationField.relatedModel_!).eq(relationColumn(relation, relationField.oppositeRelationSide)))
           .where(if (invertCondition) condition.not() else condition)
+    }
+  }
+
+  private def inStatementForRelationCondition(jooqField: Field[AnyRef], condition: RelationCondition, subSelect: SelectConditionStep[_]) = {
+    condition match {
+      case EveryRelatedNode      => jooqField.notIn(subSelect)
+      case NoRelatedNode         => jooqField.notIn(subSelect)
+      case AtLeastOneRelatedNode => jooqField.in(subSelect)
+      case NoRelationCondition   => jooqField.in(subSelect)
     }
   }
 
