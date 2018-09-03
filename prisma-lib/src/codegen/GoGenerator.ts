@@ -108,27 +108,21 @@ export class GoGenerator extends Generator {
       ${Object.keys(fieldMap)
         .filter(key => {
           const field = fieldMap[key]
-          const deepTypeName = this.getDeepType(field.type)
-          const deepType = this.schema.getType(deepTypeName)
-          const isScalar = deepType!.constructor.name === 'GraphQLScalarType'
-          const isEnum = deepType!.constructor.name === 'GraphQLEnumType'
-          // const { isScalar, isEnum } = this.extractFieldLikeType(
-          //   field as GraphQLField<any, any>,
-          // )
+          const { isScalar, isEnum } = this.extractFieldLikeType(
+            field as GraphQLField<any, any>,
+          )
           return !isScalar && !isEnum
         })
         .map(key => {
           const field = fieldMap[key] as GraphQLField<any, any>
-          const deepTypeName = this.getDeepType(field.type)
-          // const deepType = this.schema.getType(deepTypeName)
           const args = field.args
-          const { typeFields } = this.extractFieldLikeType(
+          const { typeFields, typeName } = this.extractFieldLikeType(
             field as GraphQLField<any, any>,
           )
           return ` // ${goCase(field.name)} docs - executable for types
         func (instance *${type.name}Exec) ${goCase(field.name)}(${args
             .map(arg => `${arg.name} ${arg.type}`)
-            .join(',')}) *${goCase(deepTypeName.toString())}Exec {
+            .join(',')}) *${goCase(typeName.toString())}Exec {
               var args []GraphQLArg
               ${args
                 .map(
@@ -143,7 +137,7 @@ export class GoGenerator extends Generator {
                 Name: "${field.name}",
                 Field: GraphQLField{
                   Name: "${field.name}",
-                  TypeName: "${deepTypeName}",
+                  TypeName: "${typeName}",
                   TypeFields: ${`[]string{${typeFields
                     .map(f => f)
                     .join(',')}}`},
@@ -151,7 +145,7 @@ export class GoGenerator extends Generator {
                 Operation: "",
                 Args: args,
               })
-            return &${goCase(deepTypeName.toString())}Exec{
+            return &${goCase(typeName.toString())}Exec{
               db: instance.db,
               stack: instance.stack,
             }
@@ -378,11 +372,7 @@ export class GoGenerator extends Generator {
       return `${Object.keys(typeFields)
         .map(key => {
           const field = typeFields[key]
-          const deepTypeName = this.getDeepType(field.type)
-          const deepType = this.schema.getType(deepTypeName)
-          const isScalar = deepType!.constructor.name === 'GraphQLScalarType'
-          // const isEnum = deepType!.constructor.name === 'GraphQLEnumType'
-          // const { isScalar } = this.extractFieldLikeType(field)
+          const { isScalar } = this.extractFieldLikeType(field)
           return isScalar ? `${field.name}` : ``
         })
         .join('\n')}`
@@ -411,17 +401,10 @@ export class GoGenerator extends Generator {
     return Object.keys(fields)
       .map(key => {
         const field = fields[key]
-        const deepTypeName = this.getDeepType(field.type)
-        // const deepType = this.schema.getType(deepTypeName)
-        // const isScalar = deepType!.constructor.name === 'GraphQLScalarType'
-        // const isEnum = deepType!.constructor.name === 'GraphQLEnumType'
-        // const { typeName } = this.extractFieldLikeType(field)
         const args = field.args
-        const { typeFields } = this.extractFieldLikeType(field as GraphQLField<
-          any,
-          any
-        >)
-        const { typeName, isList } = this.extractFieldLikeType(field)
+        const { typeFields, typeName, isList } = this.extractFieldLikeType(
+          field,
+        )
 
         return `
           // ${goCase(field.name)}Params docs
@@ -460,7 +443,7 @@ export class GoGenerator extends Generator {
             Name: "${field.name}",
             Field: GraphQLField{
               Name: "${field.name}",
-              TypeName: "${deepTypeName}",
+              TypeName: "${typeName}",
               TypeFields: ${`[]string{${typeFields.map(f => f).join(',')}}`},
             },
             Operation: "${operation}",
