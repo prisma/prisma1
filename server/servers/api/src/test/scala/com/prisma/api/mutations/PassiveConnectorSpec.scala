@@ -114,16 +114,6 @@ class PassiveConnectorSpecForInlineRelations extends PassiveConnectorSpec {
 
   "Expanding 2 inline relations on a type" should "work" taggedAs (IgnoreActive) in {
     executeOnInternalDatabase(inlineRelationSchema)
-    val userId = server
-      .query(
-        s"""mutation {
-         |    createMyUser(data: {
-         |      name: "the user"
-         |    }){ id }
-         |}""".stripMargin,
-        project = inlineRelationProject
-      )
-      .pathAsString("data.createMyUser.id")
 
     server.query(
       s"""mutation {
@@ -131,9 +121,9 @@ class PassiveConnectorSpecForInlineRelations extends PassiveConnectorSpec {
          |    name: "the list"
          |    todos: {
          |      create: [{
-         |         title: "todo"
+         |         title: "the todo"
          |         user: {
-         |           connect: { id: "$userId" }
+         |           create: { name: "the user" }
          |         }
          |      }]
          |    }
@@ -152,7 +142,7 @@ class PassiveConnectorSpecForInlineRelations extends PassiveConnectorSpec {
          |}""".stripMargin,
       project = inlineRelationProject
     )
-    res should be(s"""{"data":{"todoes":[{"title":"todo","list":{"name":"the list"},"user":{"name":"the user"}}]}}""".parseJson)
+    res should be(s"""{"data":{"todoes":[{"title":"the todo","list":{"name":"the list"},"user":{"name":"the user"}}]}}""".parseJson)
   }
 
   "the connector" should "support diverging names for models/tables and fields/columns" taggedAs (IgnoreActive) in {
