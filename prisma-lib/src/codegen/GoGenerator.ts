@@ -442,7 +442,7 @@ export class GoGenerator extends Generator {
           }
           
           // ${goCase(field.name)} docs
-          func (db DB) ${goCase(field.name)} (params ${goCase(
+          func (db DB) ${goCase(field.name)} (params *${goCase(
           field.name,
         )}Params) *${goCase(typeName)}Exec${isList ? `Array` : ``} {
 
