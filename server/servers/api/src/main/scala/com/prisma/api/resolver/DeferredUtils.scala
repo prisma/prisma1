@@ -31,10 +31,8 @@ object DeferredUtils {
     oneDeferred.groupBy(ordered => ordered.deferred.field)
   }
 
-  def groupRelatedDeferred[T <: RelationDeferred[Any]](
-      relatedDeferral: Vector[OrderedDeferred[T]]): Map[(String, RelationSide, Option[QueryArguments]), Vector[OrderedDeferred[T]]] = {
-    relatedDeferral.groupBy(ordered =>
-      (ordered.deferred.relationField.relation.relationTableName, ordered.deferred.relationField.relationSide, ordered.deferred.args))
+  def groupRelatedDeferred[T <: RelationDeferred[Any]](relatedDeferral: Vector[OrderedDeferred[T]]): Map[_, Vector[OrderedDeferred[T]]] = {
+    relatedDeferral.groupBy(ordered => (ordered.deferred.relationField.relation, ordered.deferred.relationField.relationSide, ordered.deferred.args))
   }
 
   def checkSimilarityOfModelDeferredsAndThrow(deferreds: Vector[ModelDeferred[Any]]) = {
