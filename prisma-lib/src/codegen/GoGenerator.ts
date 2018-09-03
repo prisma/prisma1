@@ -406,7 +406,38 @@ export class GoGenerator extends Generator {
           field,
         )
 
+        const whereArgs = field.args.filter(arg => arg.name === 'where')
+        let whereArg = null
+        if (whereArgs.length > 0) {
+          whereArg = whereArgs[0]
+        }
+
         return `
+
+          ${
+            operation === 'query' && !isList && whereArg
+              ? `
+              // Exists
+
+              // ${goCase(field.name)} exists docs
+              func (exists *Exists) ${goCase(field.name)}(params *${goCase(
+              this.getDeepType((whereArg! as any).type).toString(),
+              )}) bool {
+                // TODO: Reference to DB in a better day
+                db := DB{
+                  Endpoint: exists.Endpoint,
+                  Debug: exists.Debug,
+                }
+                db.Todo(&TodoWhereUniqueInput{
+                  ID: params.ID,
+                }).Exec()
+                // TODO: This throws control reaches here only if it exists - do better error handling
+                return true
+              }
+          `
+              : ``
+          } 
+
           // ${goCase(field.name)}Params docs
           type ${goCase(field.name)}Params struct {
             ${args
@@ -530,6 +561,14 @@ func isArray(i interface{}) bool {
 type DB struct {
   Endpoint string
   Debug bool
+  Exists Exists
+}
+
+// Exists docs
+// TODO: Handle scoping better
+type Exists struct {
+	Endpoint string
+	Debug    bool
 }
 
 // ProcessInstructions docs
