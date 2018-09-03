@@ -46,12 +46,10 @@ trait FilterConditionBuilder extends BuilderBase {
       case NotFilter(filters)     => filters.map(buildConditionForFilter(_, alias)).foldLeft(and(trueCondition()))(_ andNot _)
       case NodeFilter(filters)    => buildConditionForFilter(OrFilter(filters), alias)
       case relationFilter: RelationFilter =>
-        val invertConditionInSubSelect = relationFilter.condition == EveryRelatedNode
-        val select                     = relationFilterSubSelect(alias, relationFilter, invertConditionInSubSelect)
         inStatementForRelationCondition(
           jooqField = modelIdColumn(alias, relationFilter.field.model),
           condition = relationFilter.condition,
-          subSelect = select
+          subSelect = relationFilterSubSelect(alias, relationFilter)
         )
 
       //--------------------------------ANCHORS------------------------------------
@@ -80,7 +78,7 @@ trait FilterConditionBuilder extends BuilderBase {
     }
   }
 
-  private def relationFilterSubSelect(alias: String, relationFilter: RelationFilter, invertCondition: Boolean = false): SelectConditionStep[Record1[AnyRef]] = {
+  private def relationFilterSubSelect(alias: String, relationFilter: RelationFilter): SelectConditionStep[Record1[AnyRef]] = {
     // this skips intermediate tables when there is no condition on them. so the following will not join with the album table but join the artist-album relation with the album-track relation
     // artists(where:{albums_some:{tracks_some:{condition}}})
     //
@@ -89,23 +87,22 @@ trait FilterConditionBuilder extends BuilderBase {
     // the same is true for explicit AND, OR, NOT with more than one nested relationfilter. they do not profit from skipping intermediate tables at the moment
     // these cases could be improved as well at the price of higher code complexity
 
-    val relationField = relationFilter.field
-    val relation      = relationField.relation
-    val newAlias      = relationField.relatedModel_!.dbName + "_" + alias
+    val relationField              = relationFilter.field
+    val relation                   = relationField.relation
+    val newAlias                   = relationField.relatedModel_!.dbName + "_" + alias
+    val invertConditionOfSubSelect = relationFilter.condition == EveryRelatedNode
 
     relationFilter.nestedFilter match {
       case nested: RelationFilter =>
-        val baseField                  = relationColumn(relation, relationField.oppositeRelationSide)
-        val invertConditionInSubSelect = nested.condition == EveryRelatedNode
         val condition = inStatementForRelationCondition(
-          jooqField = baseField,
+          jooqField = relationColumn(relation, relationField.oppositeRelationSide),
           condition = nested.condition,
-          subSelect = relationFilterSubSelect(newAlias, nested, invertConditionInSubSelect)
+          subSelect = relationFilterSubSelect(newAlias, nested)
         )
         sql
           .select(relationColumn(relation, relationField.relationSide))
           .from(relationTable(relation))
-          .where(condition.invert(invertCondition))
+          .where(condition.invert(invertConditionOfSubSelect))
 
       case nested =>
         val condition = buildConditionForFilter(nested, newAlias)
@@ -114,7 +111,7 @@ trait FilterConditionBuilder extends BuilderBase {
           .from(relationTable(relation))
           .innerJoin(modelTable(relationField.relatedModel_!).as(newAlias))
           .on(modelIdColumn(newAlias, relationField.relatedModel_!).eq(relationColumn(relation, relationField.oppositeRelationSide)))
-          .where(condition.invert(invertCondition))
+          .where(condition.invert(invertConditionOfSubSelect))
     }
   }
 
