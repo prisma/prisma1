@@ -105,7 +105,7 @@ trait FilterConditionBuilder extends BuilderBase {
         sql
           .select(relationColumn(relation, relationField.relationSide))
           .from(relationTable(relation))
-          .where(if (invertCondition) condition.not() else condition)
+          .where(condition.invert(invertCondition))
 
       case nested =>
         val condition = buildConditionForFilter(nested, newAlias)
@@ -114,7 +114,7 @@ trait FilterConditionBuilder extends BuilderBase {
           .from(relationTable(relation))
           .innerJoin(modelTable(relationField.relatedModel_!).as(newAlias))
           .on(modelIdColumn(newAlias, relationField.relatedModel_!).eq(relationColumn(relation, relationField.oppositeRelationSide)))
-          .where(if (invertCondition) condition.not() else condition)
+          .where(condition.invert(invertCondition))
     }
   }
 
