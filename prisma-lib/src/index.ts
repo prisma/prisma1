@@ -16,5 +16,6 @@ export { TypescriptGenerator } from './codegen/TypescriptGenerator'
 export {
   TypescriptDefinitionGenerator,
 } from './codegen/TypescriptDefinitionGenerator'
+export { GoGenerator } from './codegen/GoGenerator'
 export { Prisma } from './Prisma'
 export { makePrismaBindingClass } from './makePrismaBindingClass'

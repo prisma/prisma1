@@ -13,6 +13,7 @@
     "build": "rm -rf dist && tsc -d",
     "test-only": "npm run build && ava --verbose dist/**/*.test.js dist/*.test.js",
     "test-generator-only": "npm run build && ava --verbose dist/codegen/**/*.test.js dist/codegen/*.test.js",
+    "test-go-generator-only": "npm run build && ava --verbose dist/codegen/**/GoGenerator.test.js dist/codegen/GoGenerator.test.js",
     "test": "tslint src/**/*.ts && npm run test-generator-only"
   },
   "dependencies": {
@@ -26,6 +27,7 @@
     "jsonwebtoken": "^8.3.0",
     "object-path-immutable": "^3.0.0",
     "subscriptions-transport-ws": "^0.9.14",
+    "uppercamelcase": "^3.0.0",
     "ws": "^6.0.0"
   },
   "devDependencies": {

@@ -4,7 +4,8 @@ import { fetchAndPrintSchema } from '../deploy/printSchema'
 import * as fs from 'fs-extra'
 import * as path from 'path'
 import { buildSchema } from 'graphql'
-import { TypescriptGenerator, TypescriptDefinitionGenerator } from 'prisma-lib'
+import { TypescriptGenerator, TypescriptDefinitionGenerator, GoGenerator } from 'prisma-lib'
+import { spawnSync } from 'npm-run'
 
 export default class GenereateCommand extends Command {
   static topic = 'generate'
@@ -66,7 +67,10 @@ export default class GenereateCommand extends Command {
 
         if (generator === 'javascript') {
           await this.generateJavascript(resolvedOutput, schemaString)
+        }
 
+        if (generator === 'go') {
+          await this.generateGo(resolvedOutput, schemaString)
         }
       }
     }
@@ -114,6 +118,27 @@ export default class GenereateCommand extends Command {
 
     const typings = generator.renderDefinition(options)
     fs.writeFileSync(typingsPath, typings)
+  }
+
+  async generateGo(output: string, schemaString: string) {
+    const schema = buildSchema(schemaString)
+
+    const generator = new GoGenerator({ schema })
+
+    const endpoint = this.replaceEnv(this.definition.rawJson!.endpoint)
+    const secret = this.definition.rawJson.secret
+      ? this.replaceEnv(this.definition.rawJson!.secret)
+      : null
+    const options: any = { endpoint }
+    if (secret) {
+      options.secret = secret
+    }
+
+    const goCode = generator.render(options)
+    fs.writeFileSync(output, goCode)
+
+    // Run "go fmt" on the file if user has it installed.
+    spawnSync("go", ["fmt", output])
   }
 
   replaceEnv(str) {
