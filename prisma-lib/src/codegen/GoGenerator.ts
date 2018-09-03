@@ -542,9 +542,10 @@ type DB struct {
 
 // ProcessInstructions docs
 func (db *DB) ProcessInstructions(stack []Instruction) string {
-  query := make(map[string]interface{})
-  // TODO: This needs to handle arg name collisions across instructions
-	args := make(map[string][]GraphQLArg)
+	query := make(map[string]interface{})
+	// TODO: This needs to handle arg name collisions across instructions
+	argsByInstruction := make(map[string][]GraphQLArg)
+	var allArgs []GraphQLArg
 	firstInstruction := stack[0]
 	for i := len(stack) - 1; i >= 0; i-- {
 		instruction := stack[i]
@@ -553,81 +554,96 @@ func (db *DB) ProcessInstructions(stack []Instruction) string {
 		}
 		if len(query) == 0 {
 			query[instruction.Name] = instruction.Field.TypeFields
-			args[instruction.Name] = instruction.Args
+      argsByInstruction[instruction.Name] = instruction.Args
+      for _, arg := range instruction.Args {
+				allArgs = append(allArgs, arg)
+			}
 		} else {
 			previousInstruction := stack[i+1]
 			query[instruction.Name] = map[string]interface{}{
 				previousInstruction.Name: query[previousInstruction.Name],
 			}
-			args[instruction.Name] = instruction.Args
+      argsByInstruction[instruction.Name] = instruction.Args
+      for _, arg := range instruction.Args {
+				allArgs = append(allArgs, arg)
+			}
 			delete(query, previousInstruction.Name)
 		}
 	}
 
 	if db.Debug {
 		fmt.Println("Final Query:", query)
-		fmt.Println("Final Args:", args)
+		fmt.Println("Final Args By Instruction:", argsByInstruction)
+		fmt.Println("Final All Args:", allArgs)
 	}
 
 	// TODO: Make this recursive - current depth = 3
 	queryTemplateString := \`
-  {{ $.operation }} {{ $.operationName }} (
-    {{- range $k0, $v0 := $.args }}
-      {{- range $k1, $v1 := $v0}}
-        \${{ $v1.Name }}: {{ $v1.TypeName }},
-      {{- end }}
-    {{- end }}
-    ) {
+  {{ $.operation }} {{ $.operationName }} 
+  	{{- if eq (len $.allArgs) 0 }} {{ else }} ( {{ end }}
+    	{{- range $_, $arg := $.allArgs }}
+			\${{ $arg.Name }}: {{ $arg.TypeName }}, 
+		{{- end }}
+	{{- if eq (len $.allArgs) 0 }} {{ else }} ) {{ end }}
+    {
     {{- range $k, $v := $.query }}
     {{- if isArray $v }}
-      {{- $k }} (
-        {{- range $argKey, $argValue := $.args }}
-          {{- if eq $argKey $k }}
-            {{- range $k, $arg := $argValue}}
-              {{ $arg.Name }}: \${{ $arg.Name }},
-            {{- end }}
-          {{- end }}
-        {{- end }}
-      ) {
+	  {{- $k }}
+	  {{- range $argKey, $argValue := $.argsByInstruction }}
+	  {{- if eq $argKey $k }}
+	  	{{- if eq (len $argValue) 0 }} {{ else }} ( {{ end }}
+				{{- range $k, $arg := $argValue}}
+					{{ $arg.Name }}: \${{ $arg.Name }},
+				{{- end }}
+		{{- if eq (len $argValue) 0 }} {{ else }} ) {{ end }}
+			{{- end }}
+		{{- end }}
+	  {
         {{- range $k1, $v1 := $v }}
           {{ $v1 }}
         {{end}}
       }
     {{- else }}
-      {{ $k }} (
-        {{- range $argKey, $argValue := $.args }}
-          {{- if eq $argKey $k }}
+	  {{ $k }} 
+	  {{- range $argKey, $argValue := $.argsByInstruction }}
+	  	{{- if eq $argKey $k }}
+	  		{{- if eq (len $argValue) 0 }} {{ else }} ( {{ end }}
             {{- range $k, $arg := $argValue}}
               {{ $arg.Name }}: \${{ $arg.Name }},
             {{- end }}
+			{{- if eq (len $argValue) 0 }} {{ else }} ) {{ end }}
           {{- end }}
         {{- end }}
-        ) {
+		{
         {{- range $k, $v := $v }}
         {{- if isArray $v }}
-          {{ $k }} (
-            {{- range $argKey, $argValue := $.args }}
-              {{- if eq $argKey $k }}
+		  {{ $k }} 
+		  {{- range $argKey, $argValue := $.argsByInstruction }}
+		  {{- if eq $argKey $k }}
+			{{- if eq (len $argValue) 0 }} {{ else }} ( {{ end }}
                 {{- range $k, $arg := $argValue}}
                   {{ $arg.Name }}: \${{ $arg.Name }},
                 {{- end }}
+				{{- if eq (len $argValue) 0 }} {{ else }} ) {{ end }} 
               {{- end }}
             {{- end }}
-            ) { 
+			{ 
             {{- range $k1, $v1 := $v }}
               {{ $v1 }}
             {{end}}
           }
         {{- else }}
-          {{ $k }} (
-            {{- range $argKey, $argValue := $.args }}
-              {{- if eq $argKey $k }}
+		  {{ $k }} 
+		  {{- range $argKey, $argValue := $.argsByInstruction }}
+		  {{- if eq $argKey $k }}
+		  	{{- if eq (len $argValue) 0 }} {{ else }} ( {{ end }}
                 {{- range $k, $arg := $argValue}}
                   {{ $arg.Name }}: \${{ $arg.Name }},
                 {{- end }}
+				{{- if eq (len $argValue) 0 }} {{ else }} ) {{ end }} 
               {{- end }}
             {{- end }}
-            ) {
+			{
             {{- range $k, $v := $v }}
               {{- if isArray $v }}
                 {{ $k }} { 
@@ -636,15 +652,17 @@ func (db *DB) ProcessInstructions(stack []Instruction) string {
                   {{end}}
                 }
               {{- else }}
-                {{ $k }} (
-                  {{- range $argKey, $argValue := $.args }}
-                    {{- if eq $argKey $k }}
+				{{ $k }} 
+				{{- range $argKey, $argValue := $.argsByInstruction }}
+				{{- if eq $argKey $k }}
+					{{- if eq (len $argValue) 0 }} {{ else }} ( {{ end }}
                       {{- range $k, $arg := $argValue}}
                         {{ $arg.Name }}: \${{ $arg.Name }},
                       {{- end }}
+					  {{- if eq (len $argValue) 0 }} {{ else }} ) {{ end }} 
                     {{- end }}
                   {{- end }}
-                  ) {
+				  {
                   id
                 }
               {{- end }}
@@ -666,13 +684,11 @@ func (db *DB) ProcessInstructions(stack []Instruction) string {
 	var queryBytes bytes.Buffer
 	var data = make(map[string]interface{})
 	data = map[string]interface{}{
-		"query":         query,
-		"args":          args,
-		"operation":     firstInstruction.Operation,
-		"operationName": firstInstruction.Name,
-  }
-  if db.Debug {
-    fmt.Println(args)
+		"query":             query,
+		"argsByInstruction": argsByInstruction,
+		"allArgs":           allArgs,
+		"operation":         firstInstruction.Operation,
+		"operationName":     firstInstruction.Name,
 	}
 	queryTemplate.Execute(&queryBytes, data)
 
@@ -684,6 +700,7 @@ func (db *DB) ProcessInstructions(stack []Instruction) string {
 	}
 	return "Failed to generate query"
 }
+
 
 // Queries
 ${this.printOperation(queryFields, 'query')}
