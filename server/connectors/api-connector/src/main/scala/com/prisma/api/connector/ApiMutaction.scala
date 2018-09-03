@@ -70,7 +70,14 @@ case class NestedCreateNode(
 }
 
 // UPDATE
-sealed trait UpdateNode extends FurtherNestedMutaction {
+
+sealed trait AllUpdateNodes extends DatabaseMutaction {
+  def model: Model
+  def nonListArgs: PrismaArgs
+  def listArgs: Vector[(String, ListGCValue)]
+}
+
+sealed trait UpdateNode extends FurtherNestedMutaction with AllUpdateNodes {
   def model: Model
   def nonListArgs: PrismaArgs
   def listArgs: Vector[(String, ListGCValue)]
@@ -147,9 +154,10 @@ case class UpdateNodes(
     project: Project,
     model: Model,
     whereFilter: Option[Filter],
-    updateArgs: PrismaArgs,
+    nonListArgs: PrismaArgs,
     listArgs: Vector[(String, ListGCValue)]
 ) extends TopLevelDatabaseMutaction
+    with AllUpdateNodes
     with FinalMutaction
 
 // NESTED

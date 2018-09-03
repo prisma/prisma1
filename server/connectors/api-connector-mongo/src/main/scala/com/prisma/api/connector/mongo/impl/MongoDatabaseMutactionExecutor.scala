@@ -74,7 +74,7 @@ class MongoDatabaseMutactionExecutor(client: MongoClient)(implicit ec: Execution
     case m: TopLevelUpdateNode => UpdateNodeInterpreter(mutaction = m)
     case m: TopLevelUpsertNode => ??? //delayed
     case m: TopLevelDeleteNode => DeleteNodeInterpreter(mutaction = m, shouldDeleteRelayIds = false)
-    case m: UpdateNodes        => ??? //delayed
+    case m: UpdateNodes        => UpdateNodesInterpreter(mutaction = m)
     case m: DeleteNodes        => DeleteNodesInterpreter(mutaction = m, shouldDeleteRelayIds = false)
     case m: ResetData          => ResetDataInterpreter(mutaction = m)
     case m: ImportNodes        => ??? //delayed

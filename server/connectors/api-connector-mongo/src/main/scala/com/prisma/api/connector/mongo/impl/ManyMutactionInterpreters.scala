@@ -29,10 +29,8 @@ case class ResetDataInterpreter(mutaction: ResetData)(implicit ec: ExecutionCont
   }
 }
 
-//case class UpdateNodesInterpreter(mutaction: UpdateNodes) extends TopLevelDatabaseMutactionInterpreter {
-//  def dbioAction(mutationBuilder: JdbcActionsBuilder) = {
-//    val nonListActions = mutationBuilder.updateNodes(mutaction.model, mutaction.updateArgs, mutaction.whereFilter)
-//    val listActions    = mutationBuilder.setScalarListValuesByFilter(mutaction.model, mutaction.listArgs, mutaction.whereFilter)
-//    DBIOAction.seq(listActions, nonListActions).andThen(unitResult)
-//  }
-//}
+case class UpdateNodesInterpreter(mutaction: UpdateNodes)(implicit ec: ExecutionContext) extends TopLevelDatabaseMutactionInterpreter {
+  def mongoAction(mutationBuilder: MongoActionsBuilder): SimpleMongoAction[MutactionResults] = {
+    mutationBuilder.updateNodes(mutaction)
+  }
+}

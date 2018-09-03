@@ -16,6 +16,8 @@ case class UpdateNodeResult(id: IdGCValue, previousValues: PrismaNode, mutaction
 }
 case class DeleteNodeResult(id: IdGCValue, previousValues: PrismaNode, mutaction: DeleteNode) extends FurtherNestedMutactionResult
 case class UpsertNodeResult(result: DatabaseMutaction, mutaction: UpsertNode)                 extends DatabaseMutactionResult
+case class ManyNodesResult(mutaction: FinalMutaction)                                         extends DatabaseMutactionResult
+
 object UnitDatabaseMutactionResult extends DatabaseMutactionResult {
   override def mutaction: DatabaseMutaction = ???
 }

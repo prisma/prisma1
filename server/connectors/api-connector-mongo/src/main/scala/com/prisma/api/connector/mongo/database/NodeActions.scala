@@ -74,52 +74,47 @@ trait NodeActions extends NodeSingleQueries {
     }
   }
 
+  def updateNodes(mutaction: UpdateNodes)(implicit ec: ExecutionContext): SimpleMongoAction[MutactionResults] =
+    SimpleMongoAction { database =>
+      val collection                        = database.getCollection(mutaction.model.name)
+      val futureIds: Future[Seq[IdGCValue]] = getNodeIdsByFilter(mutaction.model, mutaction.whereFilter, database)
+
+      val scalarUpdates = scalarUpdateValues(mutaction)
+
+      val combinedUpdates = combine(customCombine(scalarUpdates): _*)
+      val results         = ManyNodesResult(mutaction)
+
+      futureIds.flatMap(ids => collection.updateMany(in("_id", ids.map(_.value): _*), combinedUpdates).toFuture().map(_ => MutactionResults(Vector(results))))
+    }
+
   //endregion
 
   //region    Nested for nonEmbedded relations, not implemented yet
 
-  def createNestedNode(mutaction: NestedCreateNode, parentId: IdGCValue)(implicit ec: ExecutionContext): SimpleMongoAction[MutactionResults] =
+  def nestedCreateNode(mutaction: NestedCreateNode, parentId: IdGCValue)(implicit ec: ExecutionContext): SimpleMongoAction[MutactionResults] =
     SimpleMongoAction { database =>
       ???
     }
 
   def nestedDeleteNode(mutaction: NestedDeleteNode, parentId: IdGCValue)(implicit ec: ExecutionContext): SimpleMongoAction[MutactionResults] =
-    //this should not trigger at the moment since embedded types should be deleted within their update
     SimpleMongoAction { database =>
-      mutaction.where match {
-        case None => sys.error("Only toMany deletes should arrive here.")
-        case Some(nodeSelector) =>
-          val parentModel                           = mutaction.relationField.model
-          val collection: MongoCollection[Document] = database.getCollection(parentModel.name)
-
-          val filter   = equal("_id", parentId.value)
-          val pullPart = pull(mutaction.relationField.name, nodeSelector)
-
-          collection
-            .updateOne(filter, pullPart)
-            .toFuture()
-            .map(_ => MutactionResults(Vector.empty))
-
-      }
+//      mutaction.where match {
+//        case None => sys.error("Only toMany deletes should arrive here.")
+//        case Some(nodeSelector) =>
+//          val parentModel                           = mutaction.relationField.model
+//          val collection: MongoCollection[Document] = database.getCollection(parentModel.name)
+//
+//          collection
+//            .updateOne(equal("_id", parentId.value), pull(mutaction.relationField.name, nodeSelector))
+//            .toFuture()
+//            .map(_ => MutactionResults(Vector.empty))
+//
+//      }
+      ???
     }
 
   def nestedUpdateNode(mutaction: NestedUpdateNode, parentId: IdGCValue)(implicit ec: ExecutionContext): SimpleMongoAction[MutactionResults] =
     SimpleMongoAction { database =>
-      // this should not be called for embedded types since it should be rolled into the TopLevelUpdate
-
-      //          db.coll.update({}, {$set: {“a.$[i].b”: 2}}, {arrayFilters: [{“i.b”: 0}]})
-      //          Input: {a: [{b: 0}, {b: 1}]}
-      //          Output: {a: [{b: 2}, {b: 1}]}
-
-      //          val filter          = Filters.eq("_id", parentId.value)
-      //          val setPart         = set("middle.$[i].fieldname", 12)
-      //          val arrayFilterPart = UpdateOptions().arrayFilters(List(Filters.eq("i.unique", 11)).asJava)
-      //
-      //          collection
-      //            .updateOne(filter, setPart, arrayFilterPart)
-      //            .toFuture()
-      //            .map(_ => MutactionResults(Vector.empty))
-
       ???
     }
 
@@ -127,30 +122,24 @@ trait NodeActions extends NodeSingleQueries {
 
   private def createToDoc(mutaction: CreateNode,
                           results: Vector[DatabaseMutactionResult] = Vector.empty): (IdGCValue, Document, Vector[DatabaseMutactionResult]) = {
-    val id = CuidGCValue.random
 
     val nonListValues: List[(String, GCValue)] =
       mutaction.model.scalarNonListFields
         .filter(field => mutaction.nonListArgs.hasArgFor(field) && mutaction.nonListArgs.getFieldValue(field.name).get != NullGCValue)
         .map(field => field.name -> mutaction.nonListArgs.getFieldValue(field).get)
 
-    val nonListArgsWithId = nonListValues :+ ("_id", id)
-
+    val id                                 = CuidGCValue.random
+    val nonListArgsWithId                  = nonListValues :+ ("_id", id)
     val (nestedCreateFields, childResults) = embeddedNestedCreateDocsAndResults(mutaction)
-
-    val thisResult = CreateNodeResult(id, mutaction)
-
-    val doc = Document(nonListArgsWithId ++ mutaction.listArgs) ++ nestedCreateFields
+    val thisResult                         = CreateNodeResult(id, mutaction)
+    val doc                                = Document(nonListArgsWithId ++ mutaction.listArgs) ++ nestedCreateFields
 
     (id, doc, childResults :+ thisResult)
   }
 
   private def embeddedNestedCreateDocsAndResults(mutaction: FurtherNestedMutaction): (Map[String, BsonValue], Vector[DatabaseMutactionResult]) = {
-    val nestedCreates: immutable.Seq[(RelationField, (IdGCValue, Document, Vector[DatabaseMutactionResult]))] =
-      mutaction.nestedCreates.map(m => m.relationField -> createToDoc(m))
-
-    val childResults: Vector[DatabaseMutactionResult] = nestedCreates.flatMap(x => x._2._3).toVector
-
+    val nestedCreates                                        = mutaction.nestedCreates.map(m => m.relationField -> createToDoc(m))
+    val childResults: Vector[DatabaseMutactionResult]        = nestedCreates.flatMap(x => x._2._3)
     val grouped: Map[RelationField, immutable.Seq[Document]] = nestedCreates.groupBy(_._1).mapValues(_.map(_._2._2))
 
     val nestedCreateFields = grouped.foldLeft(Map.empty[String, BsonValue]) { (map, t) =>
@@ -188,7 +177,7 @@ trait NodeActions extends NodeSingleQueries {
     (actionsAndResults.map(_._1), actionsAndResults.map(_._2))
   }
 
-  private def scalarUpdateValues(mutaction: UpdateNode, path: Path = Path.empty): Vector[Bson] = {
+  private def scalarUpdateValues(mutaction: AllUpdateNodes, path: Path = Path.empty): Vector[Bson] = {
     val invalidUpdates = mutaction.nonListArgs.raw.asRoot.map.collect { case (k, v) if v == NullGCValue && mutaction.model.getFieldByName_!(k).isRequired => k }
     if (invalidUpdates.nonEmpty) throw FieldCannotBeNull(invalidUpdates.head)
 
@@ -202,7 +191,7 @@ trait NodeActions extends NodeSingleQueries {
                                                  mutaction: UpdateNode,
                                                  path: Path = Path.empty): (Vector[Bson], Vector[Bson], Vector[DatabaseMutactionResult]) = {
 
-    val first = mutaction.nestedUpdates.collect {
+    val actionsArrayFiltersAndResults = mutaction.nestedUpdates.collect {
       case toOneUpdate @ NestedUpdateNode(_, rf, None, _, _, _, _, _, _, _, _) =>
         val updatedPath = path.append(rf)
         val subNode = node.toOneChild(rf) match {
@@ -225,7 +214,7 @@ trait NodeActions extends NodeSingleQueries {
           case Some(prismaNode) => prismaNode
         }
 
-        val arrayFilters = updatedPath.arrayFilter //this is not always needed i think, check if this errors if it is unused
+        val arrayFilters = updatedPath.arrayFilter //Fixme this is not always needed i think, check if this errors if it is unused
 
         val scalars                                      = scalarUpdateValues(toManyUpdate, updatedPath)
         val (creates, createResults)                     = embeddedNestedCreateActionsAndResults(toManyUpdate, updatedPath)
@@ -235,9 +224,10 @@ trait NodeActions extends NodeSingleQueries {
 
         (scalars ++ creates ++ deletes ++ updates, arrayFilters ++ nestedArrayFilters, createResults ++ deleteResults ++ updateResults :+ thisResult)
     }
-    (first.flatMap(_._1), first.flatMap(_._2), first.flatMap(_._3))
+    (actionsArrayFiltersAndResults.flatMap(_._1), actionsArrayFiltersAndResults.flatMap(_._2), actionsArrayFiltersAndResults.flatMap(_._3))
   }
 
+  //Fixme: this should probably be a push instead of a set
   def embeddedNestedCreateActionsAndResults(mutaction: FurtherNestedMutaction, path: Path = Path.empty): (Vector[Bson], Vector[DatabaseMutactionResult]) = {
     val (nestedCreateFields, nestedCreateResults) = embeddedNestedCreateDocsAndResults(mutaction)
     val nestedCreates                             = nestedCreateFields.map { case (f, v) => set(path.stringForField(f), v) }.toVector

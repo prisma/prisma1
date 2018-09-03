@@ -16,6 +16,6 @@ case class CreateNodeInterpreter(mutaction: CreateNode, includeRelayRow: Boolean
 case class NestedCreateNodeInterpreter(mutaction: NestedCreateNode, includeRelayRow: Boolean)(implicit val ec: ExecutionContext)
     extends NestedDatabaseMutactionInterpreter {
   override def mongoAction(mutationBuilder: MongoActionsBuilder, parentId: IdGCValue) = {
-    mutationBuilder.createNestedNode(mutaction, parentId)
+    mutationBuilder.nestedCreateNode(mutaction, parentId)
   }
 }
