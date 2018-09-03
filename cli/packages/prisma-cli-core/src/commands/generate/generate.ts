@@ -5,6 +5,7 @@ import * as fs from 'fs-extra'
 import * as path from 'path'
 import { buildSchema } from 'graphql'
 import { TypescriptGenerator, TypescriptDefinitionGenerator, GoGenerator } from 'prisma-lib'
+import { spawnSync } from 'npm-run'
 
 export default class GenereateCommand extends Command {
   static topic = 'generate'
@@ -125,6 +126,9 @@ export default class GenereateCommand extends Command {
     const generator = new GoGenerator({ schema })
     const goCode = generator.render()
     fs.writeFileSync(output, goCode)
+
+    // Run "go fmt" on the file if user has it installed.
+    spawnSync("go", ["fmt", output])
   }
 
   replaceEnv(str) {

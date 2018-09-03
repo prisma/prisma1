@@ -493,10 +493,10 @@ export class GoGenerator extends Generator {
             Args: args,
           })
 
-      return &${goCase(typeName)}Exec${isList ? `Array` : ``}{
-          db: db,
-          stack: stack,
-        }
+          return &${goCase(typeName)}Exec${isList ? `Array` : ``}{
+            db: db,
+            stack: stack,
+          }
         }`
       })
       .join('\n')
