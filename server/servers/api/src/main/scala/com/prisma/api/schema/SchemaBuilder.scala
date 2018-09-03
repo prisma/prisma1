@@ -37,7 +37,7 @@ object SchemaBuilder {
 case class SchemaBuilderImpl(
     project: Project,
     capabilities: Vector[ApiConnectorCapability] = Vector.empty,
-    enableRawAccess: Boolean = true
+    enableRawAccess: Boolean = false
 )(implicit apiDependencies: ApiDependencies, system: ActorSystem)
     extends SangriaExtensions {
   import system.dispatcher
