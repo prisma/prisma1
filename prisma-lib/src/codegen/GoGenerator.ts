@@ -7,13 +7,10 @@ import {
   GraphQLEnumType,
   GraphQLObjectType as GraphQLObjectTypeRef,
   GraphQLObjectType,
-  isListType,
   GraphQLField,
   GraphQLArgument,
   GraphQLFieldMap,
   GraphQLInputFieldMap,
-  // GraphQLFieldMap,
-  // GraphQLInputFieldMap,
 } from 'graphql'
 
 import * as upperCamelCase from 'uppercamelcase'
@@ -32,6 +29,8 @@ export type FieldLikeType = {
   isScalar: boolean
   isEnum: boolean
   args: GraphQLArgument[]
+  isList: boolean
+  isNonNull: boolean
 }
 
 export class GoGenerator extends Generator {
@@ -51,6 +50,10 @@ export class GoGenerator extends Generator {
     const deepType = this.schema.getType(deepTypeName)
     const isScalar = deepType!.constructor.name === 'GraphQLScalarType'
     const isEnum = deepType!.constructor.name === 'GraphQLEnumType'
+    const isList =
+      field.type.toString().indexOf('[') === 0 &&
+      field.type.toString().indexOf(']') > -1
+    const isNonNull = field.type.toString().indexOf('!') > -1
     let fieldMap: GraphQLFieldMap<any, any> | GraphQLInputFieldMap | null = null
     if (deepType!.constructor.name === 'GraphQLObjectType') {
       fieldMap = (deepType as GraphQLObjectType).getFields()
@@ -77,6 +80,8 @@ export class GoGenerator extends Generator {
       args: field.args,
       isScalar,
       isEnum,
+      isList,
+      isNonNull,
     }
   }
 
@@ -96,6 +101,7 @@ export class GoGenerator extends Generator {
         db    DB
         stack []Instruction
       }
+
       ${Object.keys(fieldMap)
         .filter(key => {
           const field = fieldMap[key]
@@ -201,6 +207,63 @@ export class GoGenerator extends Generator {
         return decodedData
       }
       
+      // ${type.name}ExecArray docs
+      type ${type.name}ExecArray struct {
+        db    DB
+        stack []Instruction
+      }
+
+      // Exec docs
+      func (instance ${type.name}ExecArray) Exec() []${type.name} {
+        query := instance.db.ProcessInstructions(instance.stack)
+        variables := make(map[string]interface{})
+        for _, instruction := range instance.stack {
+          if instance.db.Debug {
+            fmt.Println("Instruction Exec: ", instruction)
+          }
+          for _, arg := range instruction.Args {
+            if instance.db.Debug {
+              fmt.Println("Instruction Arg Exec: ", instruction)
+            }
+            // TODO: Need to handle arg.Name collisions
+            variables[arg.Name] = arg.Value
+          }
+        }
+        if instance.db.Debug {
+          fmt.Println("Query Exec:", query)
+          fmt.Println("Variables Exec:", variables)
+        }
+        data := instance.db.GraphQL(query, variables)
+        if instance.db.Debug {
+          fmt.Println("Data Exec:", data)
+        }
+
+        var genericData interface{} // This can handle both map[string]interface{} and []interface[]
+
+        // Is unpacking needed
+        dataType := reflect.TypeOf(data)
+        if !isArray(dataType) {
+          for _, instruction := range instance.stack {
+            unpackedData := data[instruction.Name]
+            if isArray(unpackedData) {
+              genericData = (unpackedData).([]interface{})
+            } else {
+              genericData = (unpackedData).(map[string]interface{})
+            }
+          }
+        }
+        if instance.db.Debug {
+          fmt.Println("Data Unpacked Exec:", genericData)
+        }
+
+        var decodedData []${type.name}
+        mapstructure.Decode(genericData, &decodedData)
+        if instance.db.Debug {
+          fmt.Println("Data Exec Decoded:", decodedData)
+        }
+        return decodedData
+      }
+
       // ${type.name} docs
       type ${type.name} struct {
           ${Object.keys(fieldMap)
@@ -255,7 +318,7 @@ export class GoGenerator extends Generator {
         | GraphQLInterfaceType,
     ): string => {
       const fieldMap = type.getFields()
-      return `// ${type.name} docs
+      return `// ${type.name} input struct docs
       type ${type.name} struct {
           ${Object.keys(fieldMap)
             .map(key => {
@@ -358,10 +421,10 @@ export class GoGenerator extends Generator {
           any,
           any
         >)
-        const { typeName } = this.extractFieldLikeType(field as GraphQLField<
-          any,
-          any
-        >)
+        const { typeName, isList } = this.extractFieldLikeType(
+          field as GraphQLField<any, any>,
+        )
+
         return `
           // ${goCase(field.name)}Params docs
           type ${goCase(field.name)}Params struct {
@@ -379,9 +442,7 @@ export class GoGenerator extends Generator {
           // ${goCase(field.name)} docs
           func (db DB) ${goCase(field.name)} (params ${goCase(
           field.name,
-        )}Params) *${isListType(field.type) ? `[]` : ``}${goCase(
-          typeName,
-        )}Exec {
+        )}Params) *${goCase(typeName)}Exec${isList ? `Array` : ``} {
 
           stack := make([]Instruction, 0)
           var args []GraphQLArg
@@ -406,7 +467,7 @@ export class GoGenerator extends Generator {
             Args: args,
           })
 
-      return &${isListType(field.type) ? `[]` : ``}${goCase(typeName)}Exec{
+      return &${goCase(typeName)}Exec${isList ? `Array` : ``}{
           db: db,
           stack: stack,
         }
