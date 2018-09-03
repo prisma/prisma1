@@ -1,13 +1,13 @@
 package com.prisma.api.mutations.nonEmbedded
 
 import com.prisma.api.ApiSpecBase
+import com.prisma.api.connector.ApiConnectorCapability.JoinRelationsCapability
 import com.prisma.shared.models.Project
 import com.prisma.shared.schema_dsl.SchemaDsl
 import org.scalatest.{FlatSpec, Matchers}
 
 class VeryManyMutationsSpec extends FlatSpec with Matchers with ApiSpecBase {
-
-  override def doNotRunForPrototypes: Boolean = true
+  override def runOnlyForCapabilities = Set(JoinRelationsCapability)
   val project: Project = SchemaDsl.fromString() {
     """
       |type Top {

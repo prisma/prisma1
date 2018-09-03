@@ -9,8 +9,7 @@ import com.prisma.utils.await.AwaitUtils
 import org.scalatest.{FlatSpec, Matchers}
 
 class ResetSpec extends FlatSpec with Matchers with ApiSpecBase with AwaitUtils {
-  override def doNotRunForPrototypes: Boolean = true
-  override def runOnlyForCapabilities         = Set(ImportExportCapability)
+  override def runOnlyForCapabilities = Set(ImportExportCapability)
 
   val project: Project = SchemaDsl.fromBuilder { schema =>
     val model1: SchemaDsl.ModelBuilder = schema
