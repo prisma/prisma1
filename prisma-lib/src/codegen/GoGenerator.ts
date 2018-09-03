@@ -430,7 +430,7 @@ export class GoGenerator extends Generator {
               func (exists *Exists) ${goCase(field.name)}(params *${goCase(
                   this.getDeepType((whereArg! as any).type).toString(),
                 )}) bool {
-                // TODO: Reference to DB in a better day
+                // TODO: Reference to DB in a better way
                 db := DB{
                   Endpoint: (map[bool]string{true: exists.Endpoint, false: \"${options!.endpoint
                     .replace("'", '')
@@ -775,7 +775,6 @@ ${typeNames
 
 // GraphQL Send a GraphQL operation request
 func (db DB) GraphQL(query string, variables map[string]interface{}) map[string]interface{} {
-	// TODO: Error handling (both network, GraphQL and application level (missing node etc))
 	// TODO: Add auth support
 
 	req := graphql.NewRequest(query)
