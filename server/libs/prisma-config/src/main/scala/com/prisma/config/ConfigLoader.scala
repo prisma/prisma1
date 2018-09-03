@@ -142,7 +142,6 @@ object ConfigLoader {
     val dbPort      = uri.port.getOrElse(5432) // FIXME: how could we not hardcode the postgres port
     val database    = uri.path.toAbsolute.parts.headOption
     val ssl         = uri.query.paramMap.get("ssl").flatMap(_.headOption).map(_ == "1")
-    val rawAccess   = extractBooleanOpt("rawAccess", db)
 
     databaseConfig(
       name = dbName,
@@ -157,8 +156,7 @@ object ConfigLoader {
       database = database,
       schema = schema,
       managementSchema = mgmtSchema,
-      ssl = ssl,
-      rawAccess = rawAccess
+      ssl = ssl
     )
   }
 
@@ -176,7 +174,6 @@ object ConfigLoader {
     val database    = extractStringOpt("database", db)
     val schema      = extractStringOpt("schema", db)
     val ssl         = extractBooleanOpt("ssl", db)
-    val rawAccess   = extractBooleanOpt("rawAccess", db)
 
     databaseConfig(
       name = dbName,
@@ -191,8 +188,7 @@ object ConfigLoader {
       database = database,
       schema = schema,
       managementSchema = mgmtSchema,
-      ssl = ssl,
-      rawAccess = rawAccess
+      ssl = ssl
     )
   }
 
@@ -209,8 +205,7 @@ object ConfigLoader {
       database: Option[String],
       schema: Option[String],
       managementSchema: Option[String],
-      ssl: Option[Boolean],
-      rawAccess: Option[Boolean]
+      ssl: Option[Boolean]
   ): DatabaseConfig = {
     val config = DatabaseConfig(
       name = name,
@@ -225,8 +220,7 @@ object ConfigLoader {
       database = database,
       schema = schema,
       managementSchema = managementSchema,
-      ssl = ssl.getOrElse(false),
-      rawAccess = rawAccess.getOrElse(false)
+      ssl = ssl.getOrElse(false)
     )
     validateDatabaseConfig(config)
   }
@@ -317,8 +311,7 @@ case class DatabaseConfig(
     pooled: Boolean,
     database: Option[String],
     schema: Option[String],
-    ssl: Boolean,
-    rawAccess: Boolean
+    ssl: Boolean
 )
 
 abstract class ConfigError(reason: String)       extends Exception(reason)

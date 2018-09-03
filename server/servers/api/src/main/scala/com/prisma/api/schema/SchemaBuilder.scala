@@ -3,15 +3,17 @@ package com.prisma.api.schema
 import akka.actor.ActorSystem
 import com.prisma.api.connector._
 import com.prisma.api.mutations._
-import com.prisma.api.resolver.DeferredTypes.{IdBasedConnectionDeferred, ManyModelDeferred}
 import com.prisma.api.resolver.{ConnectionParentElement, DefaultIdBasedConnection}
+import com.prisma.api.resolver.DeferredTypes.{IdBasedConnectionDeferred, ManyModelDeferred, OneDeferred}
 import com.prisma.api.{ApiDependencies, ApiMetrics}
 import com.prisma.gc_values.CuidGCValue
-import com.prisma.shared.models.{Model, Project}
+import com.prisma.shared.models.{Model, Project, ScalarField}
 import com.prisma.util.coolArgs.CoolArgs
 import com.prisma.utils.boolean.BooleanUtils._
+import com.prisma.utils.future.FutureUtils.FutureOpt
 import org.atteo.evo.inflector.English
 import sangria.ast
+import sangria.ast.Selection
 import sangria.relay._
 import sangria.schema._
 
@@ -26,18 +28,13 @@ trait SchemaBuilder {
 
 object SchemaBuilder {
   def apply()(implicit system: ActorSystem, apiDependencies: ApiDependencies): SchemaBuilder = { (project: Project) =>
-    SchemaBuilderImpl(
-      project = project,
-      capabilities = apiDependencies.capabilities,
-      enableRawAccess = apiDependencies.config.databases.head.rawAccess
-    ).build()
+    SchemaBuilderImpl(project, apiDependencies.capabilities).build()
   }
 }
 
 case class SchemaBuilderImpl(
     project: Project,
-    capabilities: Vector[ApiConnectorCapability] = Vector.empty,
-    enableRawAccess: Boolean = false
+    capabilities: Vector[ApiConnectorCapability]
 )(implicit apiDependencies: ApiDependencies, system: ActorSystem)
     extends SangriaExtensions {
   import system.dispatcher
@@ -82,8 +79,7 @@ case class SchemaBuilderImpl(
       project.models.flatMap(deleteItemField) ++
       project.models.flatMap(upsertItemField) ++
       project.models.flatMap(updateManyField) ++
-      project.models.map(deleteManyField) ++
-      rawAccessField
+      project.models.map(deleteManyField)
     Some(ObjectType("Mutation", fields))
   }
 
@@ -261,27 +257,6 @@ case class SchemaBuilderImpl(
         ClientMutationRunner.run(mutation, databaseMutactionExecutor, sideEffectMutactionExecutor, mutactionVerifier)
       }
     )
-  }
-
-  val rawAccessField: Option[Field[ApiUserContext, Unit]] = {
-    import com.prisma.utils.boolean.BooleanUtils._
-
-    val enumValues = apiDependencies.config.databases.map(x => EnumValue(x.name, value = x.name)).toList
-    enableRawAccess.toOption {
-      Field(
-        s"executeRaw",
-        fieldType = CustomScalarTypes.JsonType,
-        arguments = List(
-          Argument("database", OptionInputType(EnumType[String]("PrismaDatabase", values = enumValues))),
-          Argument("query", StringType)
-        ),
-        resolve = (ctx) => {
-          val query    = ctx.arg[String]("query")
-          val database = ctx.argOpt[String]("database")
-          apiDependencies.apiConnector.databaseMutactionExecutor.executeRaw(query)
-        }
-      )
-    }
   }
 
   def getSubscriptionField(model: Model): Field[ApiUserContext, Unit] = {

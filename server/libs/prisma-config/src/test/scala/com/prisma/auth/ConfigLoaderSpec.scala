@@ -21,7 +21,6 @@ class ConfigLoaderSpec extends WordSpec with Matchers {
                           |    schema: my_schema
                           |    ssl: true
                           |    connectionLimit: 2
-                          |    rawAccess: true
                         """.stripMargin
 
       val config = ConfigLoader.tryLoadString(validConfig)
@@ -39,7 +38,6 @@ class ConfigLoaderSpec extends WordSpec with Matchers {
       database.schema shouldBe Some("my_schema")
       database.ssl shouldBe true
       database.connectionLimit shouldBe Some(2)
-      database.rawAccess shouldBe true
     }
 
     "be parsed without errors if an optional field is missing" in {
@@ -69,7 +67,6 @@ class ConfigLoaderSpec extends WordSpec with Matchers {
       database.database shouldBe None
       database.schema shouldBe None
       database.ssl shouldBe false
-      database.rawAccess shouldBe false
     }
 
     "be parsed without errors if an optional field is there but set to nothing" in {
