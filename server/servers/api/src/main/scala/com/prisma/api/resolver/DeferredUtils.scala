@@ -1,9 +1,6 @@
 package com.prisma.api.resolver
 
-import com.prisma.api.connector.QueryArguments
 import com.prisma.api.resolver.DeferredTypes._
-import com.prisma.shared.models.RelationSide.RelationSide
-import com.prisma.shared.models.{Model, ScalarField}
 import sangria.execution.deferred.Deferred
 
 object DeferredUtils {
@@ -13,21 +10,19 @@ object DeferredUtils {
     }
   }
 
-  def groupModelDeferred[T <: ModelDeferred[Any]](
-      modelDeferred: Vector[OrderedDeferred[T]]): Map[(Model, Option[QueryArguments]), Vector[OrderedDeferred[T]]] = {
+  def groupModelDeferred[T <: ModelDeferred[Any]](modelDeferred: Vector[OrderedDeferred[T]]): Map[_, Vector[OrderedDeferred[T]]] = {
     modelDeferred.groupBy(ordered => (ordered.deferred.model, ordered.deferred.args))
   }
 
-  def groupModelExistsDeferred[T <: ModelDeferred[Any]](
-      modelExistsDeferred: Vector[OrderedDeferred[T]]): Map[(Model, Option[QueryArguments]), Vector[OrderedDeferred[T]]] = {
+  def groupModelExistsDeferred[T <: ModelDeferred[Any]](modelExistsDeferred: Vector[OrderedDeferred[T]]): Map[_, Vector[OrderedDeferred[T]]] = {
     modelExistsDeferred.groupBy(ordered => (ordered.deferred.model, ordered.deferred.args))
   }
 
-  def groupOneDeferred[T <: OneDeferred](oneDeferred: Vector[OrderedDeferred[T]]): Map[Model, Vector[OrderedDeferred[T]]] = {
+  def groupOneDeferred[T <: OneDeferred](oneDeferred: Vector[OrderedDeferred[T]]): Map[_, Vector[OrderedDeferred[T]]] = {
     oneDeferred.groupBy(ordered => ordered.deferred.model)
   }
 
-  def groupScalarListDeferreds[T <: ScalarListDeferred](oneDeferred: Vector[OrderedDeferred[T]]): Map[ScalarField, Vector[OrderedDeferred[T]]] = {
+  def groupScalarListDeferreds[T <: ScalarListDeferred](oneDeferred: Vector[OrderedDeferred[T]]): Map[_, Vector[OrderedDeferred[T]]] = {
     oneDeferred.groupBy(ordered => ordered.deferred.field)
   }
 
