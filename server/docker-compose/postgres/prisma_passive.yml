@@ -8,3 +8,4 @@ databases:
     user: postgres
     password: prisma
     database: prisma
+    rawAccess: true
