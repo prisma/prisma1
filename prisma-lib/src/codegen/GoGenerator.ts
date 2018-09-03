@@ -269,14 +269,14 @@ export class GoGenerator extends Generator {
           ${Object.keys(fieldMap)
             .map(key => {
               const field = fieldMap[key]
-              const { typeName } = this.extractFieldLikeType(
+              const { typeName, isNonNull } = this.extractFieldLikeType(
                 field as GraphQLField<any, any>,
               )
               return `${goCase(field.name)} ${
                 this.scalarMapping[typeName] ? `` : `*`
               }${this.scalarMapping[typeName] || typeName} \`json:"${
                 field.name
-              },omitempty"\``
+              }${isNonNull ? `` : `,omitempty`}"\``
             })
             .join('\n')}
             }
@@ -430,11 +430,13 @@ export class GoGenerator extends Generator {
           type ${goCase(field.name)}Params struct {
             ${args
               .map(arg => {
-                const { typeName } = this.extractFieldLikeType(
+                const { typeName, isNonNull } = this.extractFieldLikeType(
                   arg as GraphQLField<any, any>,
                 )
                 return `${goCase(arg.name)} *${this.scalarMapping[typeName] ||
-                  typeName} \`json:"${arg.name},omitempty"\``
+                  typeName} \`json:"${arg.name}${
+                  isNonNull ? `` : `,omitempty`
+                }"\``
               })
               .join('\n')}
           }
