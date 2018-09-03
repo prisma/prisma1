@@ -1,6 +1,7 @@
 package com.prisma.api.mutations
 
 import com.prisma.api.ApiSpecBase
+import com.prisma.api.connector.ApiConnectorCapability.ScalarListsCapability
 import com.prisma.shared.schema_dsl.SchemaDsl
 import com.prisma.utils.await.AwaitUtils
 import org.scalatest.time.{Seconds, Span}
@@ -9,6 +10,7 @@ import org.scalatest.{FlatSpec, Matchers, Retries}
 import scala.concurrent.Future
 
 class DeadlockSpec extends FlatSpec with Matchers with Retries with ApiSpecBase with AwaitUtils {
+  override def runOnlyForCapabilities = Set(ScalarListsCapability)
 
   import testDependencies.system.dispatcher
 
