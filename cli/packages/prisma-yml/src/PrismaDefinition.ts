@@ -37,6 +37,7 @@ export class PrismaDefinitionClass {
   env: Environment
   out?: IOutput
   envVars: any
+  rawEndpoint?: string
   private definitionString: string
   constructor(
     env: Environment,
@@ -85,10 +86,13 @@ export class PrismaDefinitionClass {
     if (deprecationType === 'cluster') {
       throw new Error(`
         ${chalk.yellow(`cluster, service, and stage are deprecated.`)}
-        ${chalk.yellow(`Use the 'endpoint' property to define the endpoint of a service:`)}
-        ${chalk.yellow(`endpoint: http://localhost:4466/[<workspace>/]<service>/<stage>.`)}
-      `
-      )
+        ${chalk.yellow(
+          `Use the 'endpoint' property to define the endpoint of a service:`,
+        )}
+        ${chalk.yellow(
+          `endpoint: http://localhost:4466/[<workspace>/]<service>/<stage>.`,
+        )}
+      `)
     }
   }
 
@@ -99,6 +103,7 @@ export class PrismaDefinitionClass {
       this.out,
       this.envVars,
     )
+    this.rawEndpoint = rawJson.endpoint
     this.definition = definition
     this.rawJson = rawJson
     this.definitionString = fs.readFileSync(this.definitionPath!, 'utf-8')
