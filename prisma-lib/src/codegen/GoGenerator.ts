@@ -31,6 +31,7 @@ export type FieldLikeType = {
   args: GraphQLArgument[]
   isList: boolean
   isNonNull: boolean
+  isInput: boolean
 }
 
 export class GoGenerator extends Generator {
@@ -50,6 +51,7 @@ export class GoGenerator extends Generator {
     const deepType = this.schema.getType(deepTypeName)
     const isScalar = deepType!.constructor.name === 'GraphQLScalarType'
     const isEnum = deepType!.constructor.name === 'GraphQLEnumType'
+    const isInput = deepType!.constructor.name === 'GraphQLInputObjectType'
     const isList =
       field.type.toString().indexOf('[') === 0 &&
       field.type.toString().indexOf(']') > -1
@@ -82,6 +84,7 @@ export class GoGenerator extends Generator {
       isEnum,
       isList,
       isNonNull,
+      isInput,
     }
   }
 
@@ -264,19 +267,20 @@ export class GoGenerator extends Generator {
         return decodedData
       }
 
-      // ${type.name} docs
+      // ${type.name} docs - generated with types
       type ${type.name} struct {
           ${Object.keys(fieldMap)
             .map(key => {
               const field = fieldMap[key]
-              const { typeName, isNonNull } = this.extractFieldLikeType(
-                field as GraphQLField<any, any>,
-              )
-              return `${goCase(field.name)} ${
-                this.scalarMapping[typeName] ? `` : `*`
-              }${this.scalarMapping[typeName] || typeName} \`json:"${
-                field.name
-              }${isNonNull ? `` : `,omitempty`}"\``
+              const {
+                typeName,
+                isNonNull,
+                isScalar,
+              } = this.extractFieldLikeType(field as GraphQLField<any, any>)
+              return `${goCase(field.name)} ${isScalar ? `` : `*`}${this
+                .scalarMapping[typeName] || typeName} \`json:"${field.name}${
+                isNonNull ? `` : `,omitempty`
+              }"\``
             })
             .join('\n')}
             }
@@ -323,16 +327,16 @@ export class GoGenerator extends Generator {
           ${Object.keys(fieldMap)
             .map(key => {
               const field = fieldMap[key]
-              const { typeName, isNonNull } = this.extractFieldLikeType(
-                field as GraphQLField<any, any>,
-              )
+              const {
+                typeName,
+                isNonNull,
+                isScalar,
+              } = this.extractFieldLikeType(field as GraphQLField<any, any>)
 
-              // TODO: Add omitempty to json: tag as `json: where,omitempty` by detecting required input types, removing it for now
-              return `${goCase(field.name)} ${
-                this.scalarMapping[typeName] ? `` : `*`
-              }${this.scalarMapping[typeName] || typeName} \`json:"${
-                field.name
-              }${isNonNull ? `` : `,omitempty`}"\``
+              return `${goCase(field.name)} ${isScalar ? `` : `*`}${this
+                .scalarMapping[typeName] || typeName} \`json:"${field.name}${
+                isNonNull ? `` : `,omitempty`
+              }"\``
             })
             .join('\n')}
             }
@@ -445,15 +449,15 @@ export class GoGenerator extends Generator {
           stack := make([]Instruction, 0)
           var args []GraphQLArg
           ${args
-            .map(
-              arg => `if params.${goCase(arg.name)} != nil {
+            .map(arg => {
+              return `if params.${goCase(arg.name)} != nil {
                 args = append(args, GraphQLArg{
                   Name: "${arg.name}",
                   TypeName: "${arg.type}",
                   Value: *params.${goCase(arg.name)},
                 })
-              }`,
-            )
+              }`
+            })
             .join('\n')}
           
           stack = append(stack, Instruction{
