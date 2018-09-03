@@ -432,9 +432,9 @@ export class GoGenerator extends Generator {
                 )}) bool {
                 // TODO: Reference to DB in a better way
                 db := DB{
-                  Endpoint: (map[bool]string{true: exists.Endpoint, false: \"${options!.endpoint
-                    .replace("'", '')
-                    .replace("'", '')}\"})[exists.Endpoint != ""],
+                  Endpoint: (map[bool]string{true: exists.Endpoint, false: ${this.printEndpoint(
+                    options,
+                  )}})[exists.Endpoint != ""],
                   Debug: exists.Debug,
                 }
                 data := db.${goCase(field.name)}(
@@ -511,6 +511,20 @@ export class GoGenerator extends Generator {
         }`
       })
       .join('\n')
+  }
+
+  printEndpoint(options: RenderOptions) {
+    if (options.endpoint.startsWith('process.env')) {
+      // Find a better way to generate Go env construct
+      const envVariable = `${options.endpoint
+        .replace('process.env[', '')
+        .replace(']', '')}`
+        .replace("'", '')
+        .replace("'", '')
+      return `os.Getenv("${envVariable}")`
+    } else {
+      return `\"${options.endpoint}\"`
+    }
   }
 
   render(options: RenderOptions) {
@@ -779,9 +793,9 @@ func (db DB) GraphQL(query string, variables map[string]interface{}) map[string]
 
 	req := graphql.NewRequest(query)
 	client := graphql.NewClient(
-      (map[bool]string{true: db.Endpoint, false: \"${options!.endpoint
-        .replace("'", '')
-        .replace("'", '')}\"})[db.Endpoint != ""],
+      (map[bool]string{true: db.Endpoint, false: ${this.printEndpoint(
+        options,
+      )}})[db.Endpoint != ""],
     )
 
 	for key, value := range variables {
