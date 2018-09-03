@@ -13,6 +13,8 @@ test('go generator', t => {
   const generator = new GoGenerator({
     schema,
   })
-  const result = generator.render()
+  const result = generator.render({
+    endpoint: "http://localhost:4466/test/test"
+  })
   t.snapshot(result)
 })

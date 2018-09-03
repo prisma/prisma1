@@ -34,6 +34,11 @@ export type FieldLikeType = {
   isInput: boolean
 }
 
+export interface RenderOptions {
+  endpoint: string
+  secret?: string
+}
+
 export class GoGenerator extends Generator {
   scalarMapping = {
     Int: 'int32',
@@ -399,7 +404,7 @@ export class GoGenerator extends Generator {
     },
   }
 
-  printOperation(fields, operation: string) {
+  printOperation(fields, operation: string, options: RenderOptions) {
     return Object.keys(fields)
       .map(key => {
         const field = fields[key]
@@ -427,13 +432,19 @@ export class GoGenerator extends Generator {
                 )}) bool {
                 // TODO: Reference to DB in a better day
                 db := DB{
-                  Endpoint: exists.Endpoint,
+                  Endpoint: (map[bool]string{true: exists.Endpoint, false: \"${options!.endpoint
+                    .replace("'", '')
+                    .replace("'", '')}\"})[exists.Endpoint != ""],
                   Debug: exists.Debug,
                 }
                 data := db.${goCase(field.name)}(
-                  ${args.length === 1 ? `params,` : `&${goCase(field.name)}Params{
+                  ${
+                    args.length === 1
+                      ? `params,`
+                      : `&${goCase(field.name)}Params{
                     Where: params,
-                  },`}
+                  },`
+                  }
                 ).Exec()
                 if isZeroOfUnderlyingType(data) {
                   return false
@@ -502,7 +513,7 @@ export class GoGenerator extends Generator {
       .join('\n')
   }
 
-  render() {
+  render(options: RenderOptions) {
     const typeNames = this.getTypeNames()
     const typeMap = this.schema.getTypeMap()
 
@@ -744,10 +755,10 @@ func (db *DB) ProcessInstructions(stack []Instruction) string {
 
 
 // Queries
-${this.printOperation(queryFields, 'query')}
+${this.printOperation(queryFields, 'query', options)}
 
 // Mutations
-${this.printOperation(mutationFields, 'mutation')}
+${this.printOperation(mutationFields, 'mutation', options)}
 
 // Types
 
@@ -768,7 +779,11 @@ func (db DB) GraphQL(query string, variables map[string]interface{}) map[string]
 	// TODO: Add auth support
 
 	req := graphql.NewRequest(query)
-	client := graphql.NewClient(db.Endpoint)
+	client := graphql.NewClient(
+      (map[bool]string{true: db.Endpoint, false: \"${options!.endpoint
+        .replace("'", '')
+        .replace("'", '')}\"})[db.Endpoint != ""],
+    )
 
 	for key, value := range variables {
     req.Var(key, value)
