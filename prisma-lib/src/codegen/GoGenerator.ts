@@ -185,7 +185,9 @@ export class GoGenerator extends Generator {
         if !isArray(dataType) {
           for _, instruction := range instance.stack {
             unpackedData := data[instruction.Name]
-            if isArray(unpackedData) {
+            if unpackedData == nil {
+              genericData = unpackedData
+            } else if isArray(unpackedData) {
               genericData = (unpackedData).([]interface{})
             } else {
               genericData = (unpackedData).(map[string]interface{})
@@ -406,7 +408,7 @@ export class GoGenerator extends Generator {
           field,
         )
 
-        const whereArgs = field.args.filter(arg => arg.name === 'where')
+        const whereArgs = args.filter(arg => arg.name === 'where')
         let whereArg = null
         if (whereArgs.length > 0) {
           whereArg = whereArgs[0]
@@ -421,17 +423,21 @@ export class GoGenerator extends Generator {
 
               // ${goCase(field.name)} exists docs
               func (exists *Exists) ${goCase(field.name)}(params *${goCase(
-              this.getDeepType((whereArg! as any).type).toString(),
-              )}) bool {
+                  this.getDeepType((whereArg! as any).type).toString(),
+                )}) bool {
                 // TODO: Reference to DB in a better day
                 db := DB{
                   Endpoint: exists.Endpoint,
                   Debug: exists.Debug,
                 }
-                db.Todo(&TodoWhereUniqueInput{
-                  ID: params.ID,
-                }).Exec()
-                // TODO: This throws control reaches here only if it exists - do better error handling
+                data := db.${goCase(field.name)}(
+                  ${args.length === 1 ? `params,` : `&${goCase(field.name)}Params{
+                    Where: params,
+                  },`}
+                ).Exec()
+                if isZeroOfUnderlyingType(data) {
+                  return false
+                }
                 return true
               }
           `
@@ -543,6 +549,10 @@ type Instruction struct {
   Field GraphQLField
   Operation string
 	Args []GraphQLArg
+}
+
+func isZeroOfUnderlyingType(x interface{}) bool {
+	return reflect.DeepEqual(x, reflect.Zero(reflect.TypeOf(x)).Interface())
 }
 
 func isArray(i interface{}) bool {
