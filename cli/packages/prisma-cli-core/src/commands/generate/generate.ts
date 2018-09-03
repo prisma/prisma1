@@ -124,7 +124,17 @@ export default class GenereateCommand extends Command {
     const schema = buildSchema(schemaString)
 
     const generator = new GoGenerator({ schema })
-    const goCode = generator.render()
+
+    const endpoint = this.replaceEnv(this.definition.rawJson!.endpoint)
+    const secret = this.definition.rawJson.secret
+      ? this.replaceEnv(this.definition.rawJson!.secret)
+      : null
+    const options: any = { endpoint }
+    if (secret) {
+      options.secret = secret
+    }
+
+    const goCode = generator.render(options)
     fs.writeFileSync(output, goCode)
 
     // Run "go fmt" on the file if user has it installed.
