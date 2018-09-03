@@ -366,13 +366,13 @@ query {
 
 > Dates and times in the Prisma Client API follow the [ISO 8601](https://en.wikipedia.org/wiki/ISO_8601) standard which generally is of the form: `YYYY-MM-DDThh:mm:ss`. [Learn more](knul#datetime).
 
-_Fetch links that have `prisma` **or** `graphql` in their description **and** where created in 2018_:
+_Fetch links that have `prisma` **or** `graphql` in their description **and** were created in 2018_:
 
 <Code languages={["JavaScript", "GraphQL"]}>
 
 ```js
 const filteredLinks = await prisma
-  links({
+  .links({
     where: {
       AND: [
         {

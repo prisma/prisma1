@@ -10,7 +10,7 @@ export const meta = {
   articleGroup: 'Constructor',
 }
 
-## API
+## Overview
 
 The `Prisma` constructor is used to create new instances of the Prisma Client.
 
@@ -25,7 +25,7 @@ constructor(options: BasePrismaOptions)
 - `debug: boolean`: If set to `true`, each invokation of a method on the Prisma Client will print the GraphQL query that is sent to the Prisma API to the console. **Default: `false`**.
 - `fragmentReplacements: FragmentReplacement[]`: A list of GraphQL fragments that will be applied to each query/mutation/subscription sent to the Prisma API.
 
-## Examples
+### Examples
 
 _Use default values for `endpoint` and `secret` that were specified in prisma.yml when the Client was generated_:
 
@@ -33,7 +33,7 @@ _Use default values for `endpoint` and `secret` that were specified in prisma.ym
 const prisma = new Prisma({})
 ```
 
-_Override default values for `endpoint` and `secret` that were specified in prisma.yml when the Client was generated_:
+_Override default values for `endpoint` and `secret` that had been specified in prisma.yml when the Client was generated_:
 
 ```js
 const prisma = new Prisma({ 
