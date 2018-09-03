@@ -421,19 +421,25 @@ export class GoGenerator extends Generator {
           }
           
           // ${goCase(field.name)} docs
-          func (db DB) ${goCase(field.name)} (params *${goCase(
-          field.name,
-        )}Params) *${goCase(typeName)}Exec${isList ? `Array` : ``} {
+          func (db DB) ${goCase(field.name)} (${
+          args.length === 1
+            ? `params *${this.getDeepType(args[0].type)}`
+            : `params *${goCase(field.name)}Params`
+        }) *${goCase(typeName)}Exec${isList ? `Array` : ``} {
 
           stack := make([]Instruction, 0)
           var args []GraphQLArg
           ${args
             .map(arg => {
-              return `if params.${goCase(arg.name)} != nil {
+              return `if params${
+                args.length === 1 ? `` : `.${goCase(arg.name)}`
+              } != nil {
                 args = append(args, GraphQLArg{
                   Name: "${arg.name}",
                   TypeName: "${arg.type}",
-                  Value: *params.${goCase(arg.name)},
+                  Value: *params${
+                    args.length === 1 ? `` : `.${goCase(arg.name)}`
+                  },
                 })
               }`
             })
@@ -482,6 +488,9 @@ import (
   "github.com/machinebox/graphql"
   "github.com/mitchellh/mapstructure"
 )
+
+// ID docs
+type ID struct{}
 
 // GraphQLField docs
 type GraphQLField struct {
