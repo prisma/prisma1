@@ -323,7 +323,7 @@ export class GoGenerator extends Generator {
           ${Object.keys(fieldMap)
             .map(key => {
               const field = fieldMap[key]
-              const { typeName } = this.extractFieldLikeType(
+              const { typeName, isNonNull } = this.extractFieldLikeType(
                 field as GraphQLField<any, any>,
               )
 
@@ -332,7 +332,7 @@ export class GoGenerator extends Generator {
                 this.scalarMapping[typeName] ? `` : `*`
               }${this.scalarMapping[typeName] || typeName} \`json:"${
                 field.name
-              },omitempty"\``
+              }${isNonNull ? `` : `,omitempty`}"\``
             })
             .join('\n')}
             }
@@ -524,7 +524,6 @@ type Instruction struct {
 
 func isArray(i interface{}) bool {
   v := reflect.ValueOf(i)
-  fmt.Println(v.Kind())
   switch v.Kind() {
   case reflect.Array:
     return true
@@ -671,8 +670,10 @@ func (db *DB) ProcessInstructions(stack []Instruction) string {
 		"args":          args,
 		"operation":     firstInstruction.Operation,
 		"operationName": firstInstruction.Name,
+  }
+  if db.Debug {
+    fmt.Println(args)
 	}
-	fmt.Println(args)
 	queryTemplate.Execute(&queryBytes, data)
 
 	if db.Debug {
