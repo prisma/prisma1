@@ -165,6 +165,7 @@ export class EndpointDialog {
         user: credentials.user,
         password: credentials.password,
         migrations: !credentials.alreadyData,
+        rawAccess: true
       }),
     )
     return yaml
