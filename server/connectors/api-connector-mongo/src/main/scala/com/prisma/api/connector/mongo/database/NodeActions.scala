@@ -1,5 +1,6 @@
 package com.prisma.api.connector.mongo.database
 
+import com.mongodb.MongoClientSettings
 import com.prisma.api.connector._
 import com.prisma.api.connector.mongo.extensions.GCBisonTransformer.GCValueBsonTransformer
 import com.prisma.api.connector.mongo.extensions.NodeSelectorBsonTransformer._
@@ -15,7 +16,7 @@ import org.mongodb.scala.model.UpdateOptions
 import org.mongodb.scala.model.Updates._
 import org.mongodb.scala.{Document, MongoCollection}
 
-import collection.JavaConverters._
+import scala.collection.JavaConverters._
 import scala.collection.immutable
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -63,9 +64,11 @@ trait NodeActions extends NodeSingleQueries {
         val (deletes, deleteResults)               = embeddedNestedDeleteActionsAndResults(node, mutaction)
         val (updates, arrayFilters, updateResults) = embeddedNestedUpdateDocsAndResults(node, mutaction)
 
-        val combinedUpdates = combine(customCombine(scalarUpdates ++ creates ++ deletes ++ updates): _*)
-        val updateOptions   = UpdateOptions().arrayFilters(arrayFilters.toList.asJava)
-        val results         = createResults ++ deleteResults ++ updateResults :+ UpdateNodeResult(node.id, node, mutaction)
+        val combinedUpdates = customCombine(scalarUpdates ++ creates ++ deletes ++ updates)
+
+        val updateOptions = UpdateOptions().arrayFilters(arrayFilters.toList.asJava)
+
+        val results = createResults ++ deleteResults ++ updateResults :+ UpdateNodeResult(node.id, node, mutaction)
 
         collection
           .updateOne(mutaction.where, combinedUpdates, updateOptions)
@@ -78,11 +81,9 @@ trait NodeActions extends NodeSingleQueries {
     SimpleMongoAction { database =>
       val collection                        = database.getCollection(mutaction.model.name)
       val futureIds: Future[Seq[IdGCValue]] = getNodeIdsByFilter(mutaction.model, mutaction.whereFilter, database)
-
-      val scalarUpdates = scalarUpdateValues(mutaction)
-
-      val combinedUpdates = combine(customCombine(scalarUpdates): _*)
-      val results         = ManyNodesResult(mutaction)
+      val scalarUpdates                     = scalarUpdateValues(mutaction)
+      val combinedUpdates                   = customCombine(scalarUpdates)
+      val results                           = ManyNodesResult(mutaction)
 
       futureIds.flatMap(ids => collection.updateMany(in("_id", ids.map(_.value): _*), combinedUpdates).toFuture().map(_ => MutactionResults(Vector(results))))
     }
@@ -181,8 +182,11 @@ trait NodeActions extends NodeSingleQueries {
 
       case toManyDelete @ NestedDeleteNode(_, rf, Some(where)) =>
         node.toManyChild(rf, where) match {
-          case None             => throw NodesNotConnectedError(rf.relation, rf.model, parentWhere, toManyDelete.model, Some(where))
-          case Some(nestedNode) => (pull(path.stringForField(rf.name), whereToBson(where)), DeleteNodeResult(CuidGCValue.dummy, nestedNode, toManyDelete))
+          case None => throw NodesNotConnectedError(rf.relation, rf.model, parentWhere, toManyDelete.model, Some(where))
+          case Some(nestedNode) =>
+            val path2 = path.stringForField(rf.name)
+
+            (pull(path2, whereToBson(where)), DeleteNodeResult(CuidGCValue.dummy, nestedNode, toManyDelete))
         }
     }
 
@@ -258,21 +262,40 @@ trait NodeActions extends NodeSingleQueries {
 
   // helpers
 
-  private def customCombine(updates: Vector[conversions.Bson]): Vector[conversions.Bson] = {
-    //Fixme needs to combine updates that the Mongo DB combine would swallow since they reference the same field and value
-    //{ "$pull" : { "comments" : { "alias" : "alias1" } } }
-    //{ "$pull" : { "comments" : { "alias" : "alias2" } } }
-    //{ "$pull" : { "comments" : { "alias" : {$in: ["alias1","alias2"]} } } }
+  private def customCombine(updates: Vector[conversions.Bson]): conversions.Bson = {
+    val rawUpdates = updates.map(update => (update.toBsonDocument(classOf[Document], MongoClientSettings.getDefaultCodecRegistry), update))
 
-    //in this case the second one would overwrite the first one -.-
+    val pulls  = rawUpdates.filter(_._1.getFirstKey == "$pull")
+    val others = rawUpdates.filter(_._1.getFirstKey != "$pull")
 
-//    updates.map { update =>
-//      val res: Bson = update
-//
-//      val doc = update.toBsonDocument(classOf[Document], MongoClientSettings.getDefaultCodecRegistry)
-//
-//    }
+    val convertedPulls                                                    = pulls.map(x => documentToCombinedPullDefinition(x._1))
+    val groupedPulls: Map[Vector[String], Vector[CombinedPullDefinition]] = convertedPulls.groupBy(_.keys)
 
-    updates
+    val changedPulls = groupedPulls.map { group =>
+      val array = BsonArray(group._2.map(_.value))
+
+      bsonDocumentFilter(group._1.toList, array)
+    }
+
+    combine(others.map(_._2) ++ changedPulls: _*)
   }
+
+  def bsonDocumentFilter(keys: List[String], array: BsonArray): Document = keys match {
+    case Nil          => sys.error("should not happen")
+    case head :: Nil  => BsonDocument(head -> BsonDocument("$in" -> array))
+    case head :: tail => BsonDocument(head -> bsonDocumentFilter(tail, array))
+  }
+
+  def documentToCombinedPullDefinition(doc: Document, keys: Vector[String] = Vector.empty): CombinedPullDefinition = {
+    val key     = doc.keys.head
+    val value   = doc.get(key).get
+    val newKeys = keys :+ key
+    if (value.isDocument) {
+      documentToCombinedPullDefinition(value.asDocument(), newKeys)
+    } else {
+      CombinedPullDefinition(newKeys, value)
+    }
+  }
+
+  case class CombinedPullDefinition(keys: Vector[String], value: BsonValue)
 }
