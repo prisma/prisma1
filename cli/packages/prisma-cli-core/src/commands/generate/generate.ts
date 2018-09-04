@@ -112,7 +112,6 @@ export default class GenereateCommand extends Command {
 
     const generator = new TypescriptDefinitionGenerator({ schema })
     const typingsPath = output.replace(/.js$/, '.d.ts')
-    this.out.log(`Saving Prisma ORM (Javascript) at ${output} and ${typingsPath}`)
     const endpoint = this.replaceEnv(this.definition.rawJson!.endpoint)
     const secret = this.definition.rawJson.secret
       ? this.replaceEnv(this.definition.rawJson!.secret)
