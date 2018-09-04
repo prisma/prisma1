@@ -286,9 +286,9 @@ export class EndpointDialog {
           schemas &&
           schemas.length > 0
         ) {
-          const { numTables, sdl } = await introspector.introspect(
-            credentials.schema || schemas[0],
-          )
+          const schema = credentials.schema || schemas[0]
+
+          const { numTables, sdl } = await introspector.introspect(schema)
           await client.end()
           if (numTables === 0) {
             this.out.log(

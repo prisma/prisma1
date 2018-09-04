@@ -82,9 +82,7 @@ export default class IntrospectCommand extends Command {
             )
       }
 
-      this.out.action.start(
-        `Introspecting Postgres schema ${chalk.bold(schema)}`,
-      )
+      this.out.action.start(`Introspecting schema ${chalk.bold(schema)}`)
       const { sdl, numTables } = await introspector.introspect(schema)
       await client.end()
       if (numTables === 0) {

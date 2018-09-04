@@ -138,8 +138,8 @@ export class PostgresConnector implements Connector {
             LEFT JOIN pg_class as pgct ON pgcon.confrelid = pgct.oid -- target table
             LEFT JOIN pg_namespace as pgnt ON pgct.relnamespace = pgnt.oid
           WHERE contype = 'f'
-          AND pgn.nspname = 'public'::text 
-          AND pgnt.nspname = 'public'::text 
+          AND pgn.nspname = $1::text 
+          AND pgnt.nspname = $1::text 
         ) query1
       ) query2
       WHERE target_attr.attnum = target_constraints AND target_attr.attrelid = target_table_oid
