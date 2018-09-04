@@ -17,13 +17,12 @@
     "graphql": "^0.13.2",
     "graphql-yoga": "^1.16.1",
     "jsonwebtoken": "^8.3.0",
-    "prisma-binding": "^2.1.0",
-    "prisma-lib": "^0.1.19"
+    "prisma-lib": "^0.1.23"
   },
   "devDependencies": {
     "@types/bcrypt": "^2.0.0",
-    "graphql-resolver-codegen": "^0.1.6",
-    "prisma": "^1.15.0-alpha.26",
+    "graphql-resolver-codegen": "^0.0.3",
+    "prisma": "^1.17.0-alpha.10",
     "ts-node": "^7.0.1",
     "typescript": "^3.0.1"
   }

@@ -4,6 +4,10 @@ datamodel: datamodel.graphql
 seed:
   import: seed.graphql
 
+generate:
+    - generator: typescript
+      output: ../src/generated/prisma.ts
+
 hooks:
   post-deploy:
     - echo "Deployment finished"
