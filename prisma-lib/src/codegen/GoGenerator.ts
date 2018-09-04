@@ -209,15 +209,18 @@ export class GoGenerator extends Generator {
         // Is unpacking needed
         dataType := reflect.TypeOf(data)
         if !isArray(dataType) {
+          unpackedData := data
           for _, instruction := range instance.stack {
-            unpackedData := data[instruction.Name]
-            if unpackedData == nil {
-              genericData = unpackedData
-            } else if isArray(unpackedData) {
-              genericData = (unpackedData).([]interface{})
-            } else {
-              genericData = (unpackedData).(map[string]interface{})
+            if instance.db.Debug {
+              fmt.Println("Original Unpacked Data Step Exec:", unpackedData)
             }
+            unpackedData = (unpackedData[instruction.Name]).(map[string]interface{})
+            if instance.db.Debug {
+              fmt.Println("Unpacked Data Step Instruction Exec:", instruction.Name)
+              fmt.Println("Unpacked Data Step Exec:", unpackedData)
+              fmt.Println("Unpacked Data Step Type Exec:", reflect.TypeOf(unpackedData))
+            }
+            genericData = unpackedData
           }
         }
         if instance.db.Debug {
