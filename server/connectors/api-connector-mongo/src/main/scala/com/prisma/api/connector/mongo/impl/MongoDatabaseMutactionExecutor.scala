@@ -6,6 +6,7 @@ import com.prisma.api.connector.mongo.extensions.SlickReplacement._
 import com.prisma.api.connector.mongo.{NestedDatabaseMutactionInterpreter, TopLevelDatabaseMutactionInterpreter}
 import com.prisma.gc_values.IdGCValue
 import org.mongodb.scala.{MongoClient, MongoDatabase}
+import play.api.libs.json.JsValue
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -91,4 +92,6 @@ class MongoDatabaseMutactionExecutor(client: MongoClient)(implicit ec: Execution
     case m: NestedConnect    => ??? //delayed
     case m: NestedDisconnect => ??? //delayed
   }
+
+  override def executeRaw(query: String): Future[JsValue] = ???
 }

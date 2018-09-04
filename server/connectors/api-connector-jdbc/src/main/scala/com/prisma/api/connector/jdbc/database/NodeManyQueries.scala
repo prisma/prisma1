@@ -25,7 +25,7 @@ trait NodeManyQueries extends BuilderBase with FilterConditionBuilder with Curso
     val condition       = buildConditionForFilter(queryArguments.flatMap(_.filter))
     val cursorCondition = buildCursorCondition(queryArguments, model)
     val order           = orderByForModel(model, topLevelAlias, queryArguments)
-    val limit           = limitClause(queryArguments)
+    val skipAndLimit    = skipAndLimitValues(queryArguments)
     val jooqFields      = selectedFields.scalarNonListFields.map(aliasColumn)
 
     val base = sql
@@ -33,9 +33,10 @@ trait NodeManyQueries extends BuilderBase with FilterConditionBuilder with Curso
       .from(modelTable(model).as(topLevelAlias))
       .where(condition, cursorCondition)
       .orderBy(order: _*)
+      .offset(intDummy)
 
-    limit match {
-      case Some(_) => base.limit(intDummy).offset(intDummy)
+    skipAndLimit.limit match {
+      case Some(_) => base.limit(intDummy)
       case None    => base
     }
   }
@@ -108,10 +109,9 @@ trait NodeManyQueries extends BuilderBase with FilterConditionBuilder with Curso
           SetParams.setCursor(pp, arg)
 
           if (arg.isWithPagination) {
-            limitClause(args).foreach { params =>
-              pp.setInt(params._1)
-              pp.setInt(params._2)
-            }
+            val skipAndLimit = skipAndLimitValues(args)
+            skipAndLimit.limit.foreach(pp.setInt)
+            pp.setInt(skipAndLimit.skip)
           }
         }
       }

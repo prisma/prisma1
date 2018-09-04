@@ -1,6 +1,6 @@
 # Data Modelling
 
-This example demonstrates various [data modelling](<https://www.prisma.io/docs/reference/service-configuration/data-model/data-modelling-(sdl)-eiroozae8u>) features of Prisma.
+This example demonstrates various [data modelling](https://www.prisma.io/docs/develop-prisma-service/service-configuration/data-model-knul/) features of Prisma.
 
 ## Get started
 

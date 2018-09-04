@@ -9,6 +9,7 @@ import com.prisma.api.resolver.DeferredResolverImpl
 import com.prisma.api.schema.{ApiUserContext, SchemaBuilder}
 import com.prisma.api.server.{GraphQlRequestHandler, GraphQlRequestHandlerImpl, RequestHandler}
 import com.prisma.auth.{Auth, AuthImpl}
+import com.prisma.config.PrismaConfig
 import com.prisma.errors.{BugsnagErrorReporter, ErrorReporter}
 import com.prisma.messagebus.{PubSub, PubSubPublisher, PubSubSubscriber, QueuePublisher}
 import com.prisma.profiling.JvmProfiler
@@ -24,6 +25,7 @@ trait ApiDependencies extends AwaitUtils {
 
   implicit val system: ActorSystem
   val materializer: ActorMaterializer
+  def config: PrismaConfig
   def projectFetcher: ProjectFetcher
   def apiSchemaBuilder: SchemaBuilder
   def invalidationSubscriber: PubSubSubscriber[SchemaInvalidatedMessage]

@@ -1,11 +1,12 @@
 package com.prisma.api.connector.jdbc.extensions
 
-import org.jooq.{Record, UpdateSetFirstStep}
+import org.jooq.{Condition, Record, UpdateSetFirstStep}
 
 trait JooqExtensions {
   import JooqExtensionValueClasses._
 
   implicit def updateSetFirstStepExtensions(x: UpdateSetFirstStep[Record]) = new UpdateSetFirstStepExtensions(x)
+  implicit def conditionExtensions(x: Condition)                           = new ConditionExtensions(x)
 }
 
 object JooqExtensionValueClasses {
@@ -29,5 +30,9 @@ object JooqExtensionValueClasses {
         x.set(field(name(columns.head)), placeHolder)
       }
     }
+  }
+
+  class ConditionExtensions(val x: Condition) extends AnyVal {
+    def invert(invert: Boolean): Condition = if (invert) x.not else x
   }
 }

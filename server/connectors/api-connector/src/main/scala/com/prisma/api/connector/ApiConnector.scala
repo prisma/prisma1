@@ -2,6 +2,7 @@ package com.prisma.api.connector
 
 import com.prisma.api.connector.ApiConnectorCapability.ScalarListsCapability
 import com.prisma.shared.models.{Project, ProjectIdEncoder}
+import play.api.libs.json.JsValue
 
 import scala.concurrent.Future
 import enumeratum._
@@ -40,6 +41,8 @@ case class MutactionResults(results: Vector[DatabaseMutactionResult])
 trait DatabaseMutactionExecutor {
   def executeTransactionally(mutaction: TopLevelDatabaseMutaction): Future[MutactionResults]
   def executeNonTransactionally(mutaction: TopLevelDatabaseMutaction): Future[MutactionResults]
+
+  def executeRaw(query: String): Future[JsValue]
 }
 
 sealed trait ApiConnectorCapability extends EnumEntry

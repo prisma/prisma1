@@ -33,10 +33,16 @@ class PassiveConnectorSpecForInlineRelations extends PassiveConnectorSpec {
                                 |, name    text NOT NULL
                                 |);
                                 |
+                                |CREATE TABLE $schema.user (
+                                |  id      varchar PRIMARY KEY  -- implicit primary key constraint
+                                |, name    text NOT NULL
+                                |);
+                                |
                                 |CREATE TABLE $schema.todo (
                                 |  id       varchar PRIMARY KEY
                                 |, title     text NOT NULL
-                                |, list_id varchar NOT NULL REFERENCES $schema.list (id) ON UPDATE CASCADE
+                                |, list_id varchar REFERENCES $schema.list (id) ON UPDATE CASCADE
+                                |, user_id varchar REFERENCES $schema.user (id) ON UPDATE CASCADE
                                 |);
       """.stripMargin
 
@@ -52,6 +58,12 @@ class PassiveConnectorSpecForInlineRelations extends PassiveConnectorSpec {
       |   id: ID! @unique
       |   title: String!
       |   list: List @pgRelation(column: "list_id")
+      |   user: MyUser @pgRelation(column: "user_id")
+      | }
+      |
+      | type MyUser @pgTable(name: "user"){ # it's called MyUser so that the type is on the right side of the relation to ensure a bug is not there
+      |   id: ID! @unique
+      |   name: String!
       | }
     """.stripMargin
   }
@@ -100,6 +112,39 @@ class PassiveConnectorSpecForInlineRelations extends PassiveConnectorSpec {
       project = inlineRelationProject
     )
     res.toString should be(s"""{"data":{"createList":{"name":"the list"}}}""")
+  }
+
+  "Expanding 2 inline relations on a type" should "work" in {
+    executeOnInternalDatabase(inlineRelationSchema)
+
+    server.query(
+      s"""mutation {
+         |  createList(data: {
+         |    name: "the list"
+         |    todos: {
+         |      create: [{
+         |         title: "the todo"
+         |         user: {
+         |           create: { name: "the user" }
+         |         }
+         |      }]
+         |    }
+         |  }){ name }
+         |}""".stripMargin,
+      project = inlineRelationProject
+    )
+
+    val res = server.query(
+      s"""{
+         |  todoes {
+         |    title
+         |    list { name }
+         |    user { name }
+         |  }
+         |}""".stripMargin,
+      project = inlineRelationProject
+    )
+    res should be(s"""{"data":{"todoes":[{"title":"the todo","list":{"name":"the list"},"user":{"name":"the user"}}]}}""".parseJson)
   }
 
   "the connector" should "support diverging names for models/tables and fields/columns" in {
