@@ -106,34 +106,33 @@ You can now use a tool like `curl` or [Postman](https://www.getpostman.com/) to 
 
 <QueryChooser titles={["Create new draft", "Publish a draft", "Fetch post by ID", "Create user"]}>
 
-``` copy
-curl -X POST \
-  http://localhost:3000/post/draft \
-  -H 'Content-Type: application/json' \
+```bash copy
+curl -X POST \\
+  http://localhost:3000/post/draft \\
+  -H 'Content-Type: application/json' \\
   -d '{
   "title": "Awesome Post"
 }'
 ```
 
-``` copy
-curl -X PUT \
-  http://localhost:3000/post/publish \
-  -H 'Content-Type: application/json' \
+```bash copy
+curl -X PUT \\
+  http://localhost:3000/post/publish \\
+  -H 'Content-Type: application/json' \\
   -d '{
   "id": "__POST_ID__"
 }'
 ```
 
-``` copy
-curl -X GET \
-  http://localhost:3000/post/__POST_ID__ \
+```bash copy
+curl -X GET \\
+  http://localhost:3000/post/__POST_ID__
 ```
 
-
-``` copy
-curl -X POST \
-  http://localhost:3000/user \
-  -H 'Content-Type: application/json' \
+```bash copy
+curl -X POST \\
+  http://localhost:3000/user \\
+  -H 'Content-Type: application/json' \\
   -d '{
   "name": "Alice"
 }'
