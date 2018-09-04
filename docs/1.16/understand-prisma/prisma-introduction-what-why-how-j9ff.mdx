@@ -10,30 +10,24 @@ export const meta = {
 
 ### Prisma makes working with databases easy.
 
-Prisma is the _data layer_ in your application architecture. Concretely, this means Prisma consists of a number of tools simplifying database access in the application you build. 
+Prisma is a _data layer_ replacing traditional ORMs in your application architecture. 
 
-Prisma replaces traditional ORMs and provides a powerful way to work with databases.
+The data layer consists of several components:
 
-Here is an overview of the main components of Prisma:
-
-- **Prisma server**: A proxy server for your database hosting _Prisma Services_.
-- **Prisma service**: Maps a Prisma [datamodel](knul) to your database and lets you read and write to the database using GraphQL. 
-- **Prisma client**: Connects to your Prisma service and replaces a traditional ORM in your application architecure (available in various languages).
-- **Prisma Admin** (_coming soon_): A GUI-based application that lets you view and modify the data in your database.
-
-### Core features
-
-Prisma lets you:
-
-1. Read and write to your database using GraphQL queries and mutations.
-1. Stream database events in realtime.
-3. Perform migrations and model your data using GraphQL SDL.
+- A **Prisma server** acting as a proxy for your database
+- A **Prisma client** that connects to the Prisma server
+- A high-performance **query engine** generating actual database queries
+- A **realtime event system** that lets you subscribe to database events 
 
 ### Use cases
 
 Prisma is useful in any context where you're working with databases:
 
-- **Backend development**: No matter if you're building a GraphQL or a REST API for your application server, Prisma
+- **Building GraphQL servers**: Prisma is the perfect tool for building GraphQL servers. The Prisma client is compatible with the Apollo ecosystem, has default support for GraphQL subscriptions and Relay-style pagination, provides end-to-end type safety and comes with a built-in dataloader to solve the N+1 problem.
+- **Building REST APIs**: Prisma is a great fit for building REST APIs where it can be used in place of traditional ORMs. It provides many benefits such as type-safety, a modern API and flexible ways for reading and writing relational data.
+- **CLIs, Scripts, Serverless Functions & a lot more**: Prisma has an extremely flexible API which makes it a great fit for a variety of use cases. Whenever you need to talk to one or more databases, Prisma helps you in simplifying database workflows.
+
+
 
 ### What Prisma is not
 
