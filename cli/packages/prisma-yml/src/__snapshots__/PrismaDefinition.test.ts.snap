@@ -157,95 +157,42 @@ Array [
 ]
 `;
 
-exports[`prisma definition dont load yml with secret and env var in args 1`] = `undefined`;
+exports[`prisma definition dont load yml with secret and env var in args 1`] = `
+[Error: Invalid prisma.yml file
+prisma.yml should NOT have additional properties. additionalProperty: service]
+`;
 
 exports[`prisma definition load basic yml, provide cluster 1`] = `
-Object {
-  "cluster": "local",
-  "datamodel": Array [
-    "datamodel.graphql",
-  ],
-  "schema": "schemas/database.graphql",
-  "secret": "some-secret",
-  "service": "jj",
-  "stage": "dev",
-}
+[Error: Invalid prisma.yml file
+prisma.yml should NOT have additional properties. additionalProperty: service]
 `;
-
-exports[`prisma definition load basic yml, provide cluster 2`] = `undefined`;
 
 exports[`prisma definition load yml with disableAuth: true 1`] = `
-Object {
-  "cluster": "local",
-  "datamodel": Array [
-    "datamodel.graphql",
-  ],
-  "disableAuth": true,
-  "schema": "schemas/database.graphql",
-  "service": "jj",
-  "stage": "dev",
-}
+[Error: Invalid prisma.yml file
+prisma.yml should NOT have additional properties. additionalProperty: service]
 `;
-
-exports[`prisma definition load yml with disableAuth: true 2`] = `null`;
 
 exports[`prisma definition load yml with injected env var 1`] = `
-Object {
-  "cluster": "local",
-  "datamodel": Array [
-    "datamodel.graphql",
-  ],
-  "schema": "schemas/database.graphql",
-  "secret": "some-secret",
-  "service": "jj",
-  "stage": "dev",
-}
-`;
-
-exports[`prisma definition load yml with injected env var 2`] = `
-Array [
-  "some-secret",
-]
+[Error: Invalid prisma.yml file
+prisma.yml should NOT have additional properties. additionalProperty: service]
 `;
 
 exports[`prisma definition load yml with secret and env var 1`] = `
-Object {
-  "cluster": "local",
-  "datamodel": Array [
-    "datamodel.graphql",
-  ],
-  "schema": "schemas/database.graphql",
-  "secret": "this-is-a-long-secret",
-  "service": "jj",
-  "stage": "dev",
-}
+[Error: Invalid prisma.yml file
+prisma.yml should NOT have additional properties. additionalProperty: service]
 `;
 
 exports[`prisma definition load yml with secret and env var in .env 1`] = `
-Object {
-  "cluster": "local",
-  "datamodel": Array [
-    "datamodel.graphql",
-  ],
-  "schema": "schemas/database.graphql",
-  "secret": "this-is-very-secret,and-comma,seperated",
-  "service": "jj",
-  "stage": "dev",
-}
+[Error: Invalid prisma.yml file
+prisma.yml should NOT have additional properties. additionalProperty: service]
 `;
 
-exports[`prisma definition load yml with secret and env var in .env 2`] = `
-Array [
-  "this-is-very-secret",
-  "and-comma",
-  "seperated",
-]
+exports[`prisma definition throw when no secret or disable auth provided 1`] = `
+[Error: Invalid prisma.yml file
+prisma.yml should NOT have additional properties. additionalProperty: service]
 `;
-
-exports[`prisma definition throw when no secret or disable auth provided 1`] = `undefined`;
 
 exports[`prisma definition throws when stages key apparent 1`] = `
 [Error: Invalid prisma.yml file
-prisma.yml should NOT have a "stages" property anymore. Stages are now just provided as CLI args.
-Read more here: https://goo.gl/SUD5i5]
+prisma.yml should NOT have additional properties. additionalProperty: service]
 `;
