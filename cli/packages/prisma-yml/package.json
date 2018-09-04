@@ -1,6 +1,6 @@
 {
   "name": "prisma-yml",
-  "version": "1.1.48-alpha.1",
+  "version": "1.0.88",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "repository": {
@@ -36,7 +36,7 @@
     "json-stable-stringify": "^1.0.1",
     "jsonwebtoken": "^8.1.0",
     "lodash": "^4.17.4",
-    "prisma-json-schema": "0.0.5-alpha.2",
+    "prisma-json-schema": "0.0.5",
     "replaceall": "^0.1.6",
     "scuid": "^1.0.2",
     "yaml-ast-parser": "^0.0.40"

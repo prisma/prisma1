@@ -53,8 +53,8 @@ export default class Init extends Command {
     ) {
       this.out.log(`
 The directory ${chalk.cyan(
-          this.config.definitionDir,
-        )} contains files that could conflict:
+        this.config.definitionDir,
+      )} contains files that could conflict:
 
 ${files.map(f => `  ${f}`).join('\n')}
 
@@ -73,10 +73,16 @@ Either try using a new directory name, or remove the files listed above.
         path.join(this.config.definitionDir, 'prisma.yml'),
       )
 
-      const endpointDefinitionPath = path.join(this.config.definitionDir, 'prisma.yml')
+      const endpointDefinitionPath = path.join(
+        this.config.definitionDir,
+        'prisma.yml',
+      )
       const endpointPrismaYml = fs.readFileSync(endpointDefinitionPath, 'utf-8')
 
-      const newEndpointPrismaYml = endpointPrismaYml.replace('ENDPOINT', endpoint)
+      const newEndpointPrismaYml = endpointPrismaYml.replace(
+        'ENDPOINT',
+        endpoint,
+      )
       fs.writeFileSync(endpointDefinitionPath, newEndpointPrismaYml)
 
       const endpointSteps: string[] = []
@@ -86,8 +92,9 @@ Either try using a new directory name, or remove the files listed above.
         endpointSteps.push(`Open folder: ${chalk.cyan(`cd ${endpointDir}`)}`)
       }
 
-      endpointSteps.push(`Deploy your Prisma service: ${chalk.cyan('prisma deploy')}`)
-
+      endpointSteps.push(
+        `Deploy your Prisma service: ${chalk.cyan('prisma deploy')}`,
+      )
 
       const endpointCreatedFiles = [
         `  ${chalk.cyan('prisma.yml')}           Prisma service definition`,
@@ -98,10 +105,10 @@ Either try using a new directory name, or remove the files listed above.
 
       this.out.log(`
 ${chalk.bold(
-          `Created ${
+        `Created ${
           endpointCreatedFiles.length
-          } new files:                                                                          `,
-        )}
+        } new files:                                                                          `,
+      )}
 
 ${endpointCreatedFiles.join('\n')}
 
@@ -110,13 +117,14 @@ ${chalk.bold('Next steps:')}
 ${endpointSteps.map((step, index) => `  ${index + 1}. ${step}`).join('\n')}`)
 
       this.out.exit(0)
-    } 
-    
+    }
+
     const endpointDialog = new EndpointDialog(
       this.out,
       this.client,
       this.env,
       this.config,
+      this.definition,
     )
     const results = await endpointDialog.getEndpoint()
 
@@ -140,7 +148,7 @@ ${endpointSteps.map((step, index) => `  ${index + 1}. ${step}`).join('\n')}`)
         `PRISMA_MANAGEMENT_API_SECRET=${results.managementSecret}`,
       )
     }
-    
+
     const definitionPath = path.join(this.config.definitionDir, 'prisma.yml')
     const prismaYml = fs.readFileSync(definitionPath, 'utf-8')
 
@@ -214,10 +222,10 @@ ${endpointSteps.map((step, index) => `  ${index + 1}. ${step}`).join('\n')}`)
 
     this.out.log(`
 ${chalk.bold(
-        `Created ${
+      `Created ${
         createdFiles.length
-        } new files:                                                                          `,
-      )}
+      } new files:                                                                          `,
+    )}
 
 ${createdFiles.join('\n')}
 

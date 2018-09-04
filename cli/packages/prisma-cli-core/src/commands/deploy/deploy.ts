@@ -100,6 +100,7 @@ ${chalk.gray(
         this.client,
         this.env,
         this.config,
+        this.definition,
       )
       const results = await endpointDialog.getEndpoint()
       cluster = results.cluster
@@ -119,30 +120,12 @@ ${chalk.gray(
       cluster = this.definition.getCluster(false)
     }
 
-    if (
-      cluster &&
-      cluster.local &&
-      !await cluster.isOnline()
-    ) {
+    if (cluster && cluster.local && !await cluster.isOnline()) {
       throw new Error(
         `Could not connect to server at ${
           cluster.baseUrl
         }. Please check if your server is running.`,
       )
-    }
-
-    /**
-     * If the cluster has been provided with the old "cluster: " key, check if the cluster could be found
-     */
-    if (this.definition.definition!.cluster && !cluster) {
-      this.out.log(
-        `You're not logged in and cluster ${chalk.bold(
-          this.definition.definition!.cluster!,
-        )} could not be found locally. Trying to authenticate.\n`,
-      )
-      // signs in and fetches clusters
-      await this.client.login()
-      cluster = this.definition.getCluster()
     }
 
     /**
@@ -216,7 +199,7 @@ ${chalk.gray(
         })
     }
   }
-  
+
   private getSillyName() {
     return `${slugify(sillyname()).split('-')[0]}-${Math.round(
       Math.random() * 1000,
@@ -428,8 +411,7 @@ ${chalk.gray(
     serviceName: string,
     stageName: string,
   ): Promise<boolean> {
-    const schemaPath =
-      getSchemaPathFromConfig() || this.definition.definition!.schema
+    const schemaPath = getSchemaPathFromConfig()
     if (schemaPath) {
       this.printHooks()
       const schemaDir = path.dirname(schemaPath)

@@ -17,18 +17,19 @@ trait ScalarListQueries extends BuilderBase with FilterConditionBuilder with Ord
     require(field.isList, "This must be called only with scalar list fields")
 
     lazy val query = {
-      val condition = buildConditionForFilter(args.flatMap(_.filter))
-      val order     = orderByForScalarListField(topLevelAlias, args)
-      val limit     = limitClause(args)
+      val condition    = buildConditionForFilter(args.flatMap(_.filter))
+      val order        = orderByForScalarListField(topLevelAlias, args)
+      val skipAndLimit = skipAndLimitValues(args)
 
       val base = sql
         .select()
         .from(scalarListTable(field).as(topLevelAlias))
         .where(condition)
         .orderBy(order: _*)
+        .offset(intDummy)
 
-      limit match {
-        case Some(_) => base.limit(intDummy).offset(intDummy)
+      skipAndLimit.limit match {
+        case Some(_) => base.limit(intDummy)
         case None    => base
       }
     }

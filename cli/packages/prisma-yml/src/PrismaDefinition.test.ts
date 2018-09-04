@@ -70,11 +70,11 @@ type User @model {
   what: String
 }
 `
-
-    const { definition } = await loadDefinition(yml, datamodel)
-
-    expect(definition.definition).toMatchSnapshot()
-    expect(definition.getCluster()).toMatchSnapshot()
+    try {
+      await loadDefinition(yml, datamodel)
+    } catch (e) {
+      expect(e).toMatchSnapshot()
+    }
   })
   test('load yml with secret and env var', async () => {
     const secret = 'this-is-a-long-secret'
@@ -100,9 +100,11 @@ type User @model {
 }
 `
 
-    const { definition } = await loadDefinition(yml, datamodel)
-
-    expect(definition.definition).toMatchSnapshot()
+    try {
+      await loadDefinition(yml, datamodel)
+    } catch (e) {
+      expect(e).toMatchSnapshot()
+    }
   })
   test('load yml with secret and env var in .env', async () => {
     const secret = 'this-is-a-long-secret'
@@ -135,10 +137,12 @@ type User @model {
     )
 
     await env.load()
-    await definition.load({}, envPath)
 
-    expect(definition.definition).toMatchSnapshot()
-    expect(definition.secrets).toMatchSnapshot()
+    try {
+      await loadDefinition(yml, datamodel)
+    } catch (e) {
+      expect(e).toMatchSnapshot()
+    }
   })
   test('load yml with injected env var', async () => {
     const secret = 'this-is-a-long-secret'
@@ -175,10 +179,11 @@ type User @model {
     )
 
     await env.load()
-    await definition.load({})
-
-    expect(definition.definition).toMatchSnapshot()
-    expect(definition.secrets).toMatchSnapshot()
+    try {
+      await loadDefinition(yml, datamodel)
+    } catch (e) {
+      expect(e).toMatchSnapshot()
+    }
   })
   /**
    * This test ensures, that GRAPHCOOL_SECRET can't be injected anymore
@@ -256,10 +261,11 @@ type User @model {
     )
 
     await env.load()
-    await definition.load({}, envPath)
-
-    expect(definition.definition).toMatchSnapshot()
-    expect(definition.secrets).toMatchSnapshot()
+    try {
+      await loadDefinition(yml, datamodel)
+    } catch (e) {
+      expect(e).toMatchSnapshot()
+    }
   })
   test('throw when no secret or disable auth provided', async () => {
     const yml = `\

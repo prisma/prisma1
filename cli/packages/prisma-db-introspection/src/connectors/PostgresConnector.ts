@@ -5,25 +5,18 @@ import {
   TypeIdentifier,
   TableRelation,
   PrimaryKey,
-  PostgresConnectionDetails,
+  DBClient,
 } from '../types/common'
 import * as _ from 'lodash'
-import { Client } from 'pg'
-
 
 // Responsible for extracting a normalized representation of a PostgreSQL database (schema)
 export class PostgresConnector implements Connector {
-  client: Client
+  client: DBClient
   connectionPromise: Promise<any>
 
-  constructor(connectionDetails: PostgresConnectionDetails) {
-    this.client = new Client(connectionDetails)
+  constructor(client: DBClient) {
+    this.client = client
     this.connectionPromise = this.client.connect()
-
-    // auto disconnect. end waits for queries to succeed
-    setTimeout(() => {
-      this.client.end()
-    }, 3000)
   }
 
   async listSchemas(): Promise<string[]> {
@@ -37,23 +30,27 @@ export class PostgresConnector implements Connector {
     const [relations, tableColumns, primaryKeys] = await Promise.all([
       this.queryRelations(schemaName),
       this.queryTableColumns(schemaName),
-      this.queryPrimaryKeys(schemaName)
+      this.queryPrimaryKeys(schemaName),
     ])
 
     const tables = _.map(tableColumns, (rawColumns, tableName) => {
-      const tablePrimaryKey = primaryKeys.find(pk => pk.tableName === tableName) || null
-      const tableRelations = relations.filter(rel => rel.source_table === tableName)
+      const tablePrimaryKey =
+        primaryKeys.find(pk => pk.tableName === tableName) || null
+      const tableRelations = relations.filter(
+        rel => rel.source_table === tableName,
+      )
       const columns = _.map(rawColumns, column => {
         // Ignore composite keys for now
-        const isPk = Boolean(tablePrimaryKey
-          && tablePrimaryKey.fields.length == 1
-          && Boolean(tablePrimaryKey.fields.includes(column.column_name))
+        const isPk = Boolean(
+          tablePrimaryKey &&
+            tablePrimaryKey.fields.length == 1 &&
+            Boolean(tablePrimaryKey.fields.includes(column.column_name)),
         )
 
         const { typeIdentifier, comment, error } = this.toTypeIdentifier(
           column.data_type,
           column.column_name,
-          isPk
+          isPk,
         )
 
         const col = {
@@ -76,7 +73,9 @@ export class PostgresConnector implements Connector {
   }
 
   // Queries all columns of all tables in given schema and returns them grouped by table_name
-  async queryTableColumns(schemaName: string): Promise<{ [key: string]: any[] }> {
+  async queryTableColumns(
+    schemaName: string,
+  ): Promise<{ [key: string]: any[] }> {
     const res = await this.client.query(
       `SELECT *, (SELECT EXISTS(
          SELECT *
@@ -89,15 +88,16 @@ export class PostgresConnector implements Connector {
          AND kcu.column_name = c.column_name)) as is_unique
        FROM  information_schema.columns c
        WHERE table_schema = $1::text`,
-      [schemaName.toLowerCase()]
+      [schemaName.toLowerCase()],
     )
 
     return _.groupBy(res.rows, 'table_name')
   }
 
   async queryPrimaryKeys(schemaName: string): Promise<PrimaryKey[]> {
-    return this.client.query(
-      `SELECT tc.table_name, kc.column_name
+    return this.client
+      .query(
+        `SELECT tc.table_name, kc.column_name
        FROM information_schema.table_constraints tc
        JOIN information_schema.key_column_usage kc 
          ON kc.table_name = tc.table_name 
@@ -107,16 +107,17 @@ export class PostgresConnector implements Connector {
        AND tc.table_schema = $1::text
        AND kc.ordinal_position IS NOT NULL
        ORDER BY tc.table_name, kc.position_in_unique_constraint;`,
-      [schemaName.toLowerCase()]
-    ).then(keys => {
-      const grouped = _.groupBy(keys.rows, 'table_name')
-      return _.map(grouped, (pks, key) => {
-        return {
-          tableName: key,
-          fields: pks.map(x => x.column_name)
-        } as PrimaryKey
+        [schemaName.toLowerCase()],
+      )
+      .then(keys => {
+        const grouped = _.groupBy(keys.rows, 'table_name')
+        return _.map(grouped, (pks, key) => {
+          return {
+            tableName: key,
+            fields: pks.map(x => x.column_name),
+          } as PrimaryKey
+        })
       })
-    })
   }
 
   async queryRelations(schemaName: string): Promise<TableRelation[]> {
@@ -143,7 +144,7 @@ export class PostgresConnector implements Connector {
       ) query2
       WHERE target_attr.attnum = target_constraints AND target_attr.attrelid = target_table_oid
       AND   source_attr.attnum = source_constraints AND source_attr.attrelid = source_table_oid;`,
-      [schemaName.toLowerCase()]
+      [schemaName.toLowerCase()],
     )
 
     return res.rows.map(row => {
@@ -151,7 +152,7 @@ export class PostgresConnector implements Connector {
         source_table: row.source_table_name,
         source_column: row.source_column,
         target_table: row.target_table_name,
-        target_column: row.target_column
+        target_column: row.target_column,
       }
     }) as TableRelation[]
   }
@@ -161,7 +162,7 @@ export class PostgresConnector implements Connector {
       `SELECT schema_name 
        FROM information_schema.schemata 
        WHERE schema_name NOT LIKE 'pg_%' 
-       AND schema_name NOT LIKE 'information_schema';`
+       AND schema_name NOT LIKE 'information_schema';`,
     )
 
     return res.rows.map(x => x.schema_name)
@@ -189,7 +190,7 @@ export class PostgresConnector implements Connector {
         ? withoutSuffix.substring(1, withoutSuffix.length)
         : withoutSuffix
 
-      if (withoutPrefix === "NULL") {
+      if (withoutPrefix === 'NULL') {
         return null
       }
 
@@ -202,12 +203,12 @@ export class PostgresConnector implements Connector {
   toTypeIdentifier(
     type: string,
     field: string,
-    isPrimaryKey: boolean
+    isPrimaryKey: boolean,
   ): {
-      typeIdentifier: TypeIdentifier | null
-      comment: string | null
-      error: string | null
-    } {
+    typeIdentifier: TypeIdentifier | null
+    comment: string | null
+    error: string | null
+  } {
     if (
       isPrimaryKey &&
       (type === 'character' ||
@@ -215,7 +216,11 @@ export class PostgresConnector implements Connector {
         type === 'text' ||
         type === 'uuid')
     ) {
-      return { typeIdentifier: (type === 'uuid') ? 'UUID' : 'ID', comment: null, error: null }
+      return {
+        typeIdentifier: type === 'uuid' ? 'UUID' : 'ID',
+        comment: null,
+        error: null,
+      }
     }
 
     if (type === 'uuid') {
