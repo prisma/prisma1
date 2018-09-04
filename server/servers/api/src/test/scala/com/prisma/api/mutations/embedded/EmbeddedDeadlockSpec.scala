@@ -1,5 +1,6 @@
 package com.prisma.api.mutations.embedded
 
+import com.prisma.IgnoreMongo
 import com.prisma.api.ApiSpecBase
 import com.prisma.api.connector.ApiConnectorCapability.EmbeddedTypesCapability
 import com.prisma.shared.schema_dsl.SchemaDsl
@@ -245,7 +246,7 @@ class EmbeddedDeadlockSpec extends FlatSpec with Matchers with Retries with ApiS
     Future.traverse(0 to 50)(i => exec(i)).await(seconds = 30)
   }
 
-  "deleting many items" should "not cause deadlocks" in {
+  "deleting many items" should "not cause deadlocks" taggedAs (IgnoreMongo) in {
     val project = SchemaDsl.fromString() {
       """
         |type Todo {

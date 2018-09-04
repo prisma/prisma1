@@ -17,7 +17,7 @@ case class MongoApiConnector(config: DatabaseConfig)(implicit ec: ExecutionConte
 
   override def masterDataResolver(project: Project): DataResolver = new MongoDataResolver(project, client)
 
-  override def projectIdEncoder: ProjectIdEncoder = ???
+  override def projectIdEncoder: ProjectIdEncoder = new ProjectIdEncoder('_')
 
   override def capabilities: Set[ApiConnectorCapability] = Set(NodeQueryCapability, EmbeddedScalarListsCapability, EmbeddedTypesCapability)
 

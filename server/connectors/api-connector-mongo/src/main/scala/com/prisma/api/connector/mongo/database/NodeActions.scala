@@ -182,11 +182,8 @@ trait NodeActions extends NodeSingleQueries {
 
       case toManyDelete @ NestedDeleteNode(_, rf, Some(where)) =>
         node.toManyChild(rf, where) match {
-          case None => throw NodesNotConnectedError(rf.relation, rf.model, parentWhere, toManyDelete.model, Some(where))
-          case Some(nestedNode) =>
-            val path2 = path.stringForField(rf.name)
-
-            (pull(path2, whereToBson(where)), DeleteNodeResult(CuidGCValue.dummy, nestedNode, toManyDelete))
+          case None             => throw NodesNotConnectedError(rf.relation, rf.model, parentWhere, toManyDelete.model, Some(where))
+          case Some(nestedNode) => (pull(path.stringForField(rf.name), whereToBson(where)), DeleteNodeResult(CuidGCValue.dummy, nestedNode, toManyDelete))
         }
     }
 

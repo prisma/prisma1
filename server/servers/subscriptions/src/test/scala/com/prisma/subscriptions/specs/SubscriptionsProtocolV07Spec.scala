@@ -1,6 +1,5 @@
 package com.prisma.subscriptions.specs
 
-import com.prisma.gc_values.IdGCValue
 import com.prisma.messagebus.pubsub.Only
 import com.prisma.shared.schema_dsl.SchemaDsl
 import org.scalatest._
@@ -10,6 +9,9 @@ import play.api.libs.json._
 import scala.concurrent.duration._
 
 class SubscriptionsProtocolV07Spec extends FlatSpec with Matchers with SubscriptionSpecBase with ScalaFutures {
+
+  override def doNotRunForPrototypes: Boolean = true
+
   val project = SchemaDsl.fromBuilder { schema =>
     val todo: SchemaDsl.ModelBuilder = schema
       .model("Todo")

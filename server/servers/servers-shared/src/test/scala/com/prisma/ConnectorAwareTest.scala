@@ -30,12 +30,12 @@ trait ConnectorAwareTest[CapabilityType] extends SuiteMixin { self: Suite =>
   def prismaConfig: PrismaConfig
 
   lazy val connector = prismaConfig.databases.head
-  private val connectorTag = connector.connector match {
+  private lazy val connectorTag = connector.connector match {
     case "mongo"    => MongoConnectorTag
     case "mysql"    => MySqlConnectorTag
     case "postgres" => PostgresConnectorTag
   }
-  private val isPrototype: Boolean = connectorTag == MongoConnectorTag
+  private lazy val isPrototype: Boolean = connectorTag == MongoConnectorTag
 
   def capabilities: Set[CapabilityType] // capabilities of the current connector
   def runOnlyForConnectors: Set[ConnectorTag]      = ConnectorTag.values.toSet
@@ -51,7 +51,7 @@ trait ConnectorAwareTest[CapabilityType] extends SuiteMixin { self: Suite =>
     }
   }
 
-  private val shouldSuiteBeIgnored: Boolean = { // this must be a val. Otherwise printing would happen many times.
+  private lazy val shouldSuiteBeIgnored: Boolean = { // this must be a val. Otherwise printing would happen many times.
     val connectorHasTheRightCapabilities = runOnlyForCapabilities.forall(connectorHasCapability) || runOnlyForCapabilities.isEmpty
     val connectorHasAWrongCapability     = doNotRunForCapabilities.exists(connectorHasCapability)
     val isNotTheRightConnector           = !runOnlyForConnectors.contains(connectorTag)
