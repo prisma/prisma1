@@ -36,9 +36,6 @@ static=$(printf "    - label: \":mysql: MySql API connector\"
     - label: \":piedpiper: MongoDB deploy connector\"
       command: cd server && ./.buildkite/scripts/test.sh deploy-connector-mongo mongo
 
-    - label: \":piedpiper: integration-tests-mongodb\"
-      command: cd server && ./.buildkite/scripts/test.sh integration-tests-mysql mongo
-
     # Libs are not specific to a connector, simply run with mysql
     - label: \":scala: libs\"
       command: cd server && ./.buildkite/scripts/test.sh libs mysql

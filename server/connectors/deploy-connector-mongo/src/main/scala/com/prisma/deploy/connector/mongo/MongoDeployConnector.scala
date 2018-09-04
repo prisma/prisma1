@@ -18,7 +18,7 @@ case class MongoDeployConnector(config: DatabaseConfig)(implicit ec: ExecutionCo
   override val migrationPersistence: MigrationPersistence       = MigrationPersistenceImpl(internalDatabase)
   override val projectPersistence: ProjectPersistence           = ProjectPersistenceImpl(internalDatabase, migrationPersistence)
   override val deployMutactionExecutor: DeployMutactionExecutor = MongoDeployMutactionExecutor(mongoClient)
-  override val projectIdEncoder: ProjectIdEncoder               = ProjectIdEncoder('$')
+  override val projectIdEncoder: ProjectIdEncoder               = ProjectIdEncoder('_')
   override val cloudSecretPersistence: CloudSecretPersistence   = CloudSecretPersistenceImpl(internalDatabase)
   override def capabilities                                     = Set.empty
 
