@@ -15,7 +15,8 @@ case class RelatedModelsQueryBuilder(
 ) extends BuilderBase
     with FilterConditionBuilder
     with OrderByClauseBuilder
-    with CursorConditionBuilder {
+    with CursorConditionBuilder
+    with LimitClauseBuilder {
 
   val relation                        = fromField.relation
   val relatedModel                    = fromField.relatedModel_!
@@ -42,14 +43,10 @@ case class RelatedModelsQueryBuilder(
   val cursorCondition = buildCursorCondition(queryArguments, relatedModel)
 
   lazy val queryWithPagination = {
-    val order = orderByInternalWithAliases(baseTableAlias, baseTableAlias, secondaryOrderByForPagination, queryArguments)
-
-    val aliasedBase = base.where(relatedNodesCondition, queryArgumentsCondition, cursorCondition).asTable().as(baseTableAlias)
-
-    val rowNumberPart = rowNumber().over().partitionBy(aliasedBase.field(aSideAlias)).orderBy(order: _*).as(rowNumberAlias)
-
+    val order          = orderByInternalWithAliases(baseTableAlias, baseTableAlias, secondaryOrderByForPagination, queryArguments)
+    val aliasedBase    = base.where(relatedNodesCondition, queryArgumentsCondition, cursorCondition).asTable().as(baseTableAlias)
+    val rowNumberPart  = rowNumber().over().partitionBy(aliasedBase.field(aSideAlias)).orderBy(order: _*).as(rowNumberAlias)
     val withRowNumbers = select(rowNumberPart, aliasedBase.asterisk()).from(aliasedBase).asTable().as(rowNumberTableAlias)
-
     val limitCondition = rowNumberPart.between(intDummy).and(intDummy)
 
     sql
@@ -61,12 +58,17 @@ case class RelatedModelsQueryBuilder(
   lazy val mysqlHack = {
     val relatedNodeCondition = field(name(relationTableAlias, modelRelationSideColumn)).equal(placeHolder)
     val order                = orderByInternal(secondaryOrderByForPagination, queryArguments)
+    val skipAndLimit         = skipAndLimitValues(queryArguments)
 
-    base
+    val tmp = base
       .where(relatedNodeCondition, queryArgumentsCondition, cursorCondition)
       .orderBy(order: _*)
-      .limit(intDummy)
       .offset(intDummy)
+
+    skipAndLimit.limit match {
+      case Some(_) => tmp.limit(intDummy)
+      case None    => tmp
+    }
   }
 
   lazy val queryWithoutPagination = {

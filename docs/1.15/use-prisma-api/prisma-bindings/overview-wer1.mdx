@@ -1,0 +1,165 @@
+export const meta = {
+  title: 'Overview',
+  position: 10,
+}
+
+## Prisma Bindings
+
+Prisma bindings are GraphQL bindings specifically for Prisma APIs. Think of them as an (auto-generated) **SDK for Prisma**.
+
+The functions exposed by a Prisma binding are named after the _root fields_ of the Prisma GraphQL schema (which defines your Prisma API). Each function call constructs and sends the respective query/mutation to the Prisma API.
+
+Consider the following sample service configuration for a Prisma service:
+
+**prisma.yml**
+
+```yml
+endpoint: http://localhost:4466
+datamodel: datamodel.graphql
+secret: my-secret-42
+```
+
+**`datamodel.graphql`**
+
+```graphql
+type User {
+  id: ID! @unique
+  name: String!
+}
+```
+
+## Instantiating a `Prisma` binding
+
+With above service configuration, you need to pass three arguments to the `Prisma` binding constructor:
+
+```js
+const prisma = new Prisma({
+  typeDefs: 'prisma.graphql',
+  endpoint: 'http://localhost:4466'
+  secret: 'my-secret-42'
+})
+```
+
+- `typeDefs`: The path to the Prisma GraphQL schema
+- `endpoint`: The endpoint of your Prisma API
+- `secret`: The service secret defined in prisma.yml
+
+## Sending queries
+
+### Sending the `user` query
+
+```js
+// Retrieve `name` of a specific user
+prisma.query.user({ where { id: 'cjcdi63j80adw0146z7r59bn5' } }, '{ name }')
+```
+
+This function call creates and sends the following query to the Prisma API:
+
+```graphql
+query {
+  user(where: {
+    id: "cjcdi63j80adw0146z7r59bn5"
+  }) {
+    name
+  }
+}
+```
+
+### Sending the `users` query
+
+```js
+// Retrieve `id` and `name` of all users
+prisma.query.users(null, '{ id name }')
+```
+
+This function call creates and sends the following query to the Prisma API:
+
+```graphql
+query {
+  users {
+    id
+    name
+  }
+}
+```
+
+## Sending mutations
+
+### Sending the `createUser` mutation
+
+```js
+// Create new user called `Sarah` and retrieve the `id`
+prisma.mutation.createUser({ data: { name: 'Sarah' } }, '{ id }')
+```
+
+This function call creates and sends the following mutation to the Prisma API:
+
+```graphql
+mutation {
+  createUser(data: {
+    name: "Sarah"
+  }) {
+    id
+  }
+}
+```
+
+### Sending the `updateUser` mutation
+
+```js
+// Update name of a specific user and retrieve the `id`
+prisma.mutation.updateUser({ where: { id: 'cjcdi63j80adw0146z7r59bn5' }, data: { name: 'Sarah' } }, '{ id }')
+```
+
+This function call creates and sends the following mutation to the Prisma API:
+
+```graphql
+mutation {
+  updateUser(
+    where: {
+      id: cjcdi63j80adw0146z7r59bn5""
+    }
+    data: {
+      name: "Sarah"
+    }
+  ) {
+    id
+  }
+}
+```
+
+### Sending the `deleteUser` mutation
+
+```js
+// Delete a specific user and retrieve the `name`
+prisma.mutation.deleteUser({ where: { id: 'cjcdi63j80adw0146z7r59bn5' } }, '{ id }')
+```
+
+This function call creates and sends the following mutation to the Prisma API:
+
+```graphql
+mutation {
+  deleteUser(
+    where: {
+      id: cjcdi63j80adw0146z7r59bn5""
+    }
+  ) {
+    id
+  }
+}
+```
+
+## Checking if a node exists
+
+The Prisma binding API also allows to ask whether a specific node exists in the database:
+
+```js
+// Ask whether a post exists with `id` equal to `cjcdi63j80adw0146z7r59bn5` and whose
+// `author` is called `Sarah` (return boolean value)
+prisma.exists.Post({
+  id: 'cjcdi63j80adw0146z7r59bn5',
+  author: {
+    name: 'Sarah'
+  }
+})
+```
