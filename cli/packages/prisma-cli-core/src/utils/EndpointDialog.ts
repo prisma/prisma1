@@ -451,6 +451,22 @@ export class EndpointDialog {
     }
   }
 
+  public async selectSchema(schemas: string[]): Promise<string> {
+    const choices = schemas.map(s => ({
+      value: s,
+      name: s,
+    }))
+
+    const { choice } = await this.out.prompt({
+      name: 'choice',
+      type: 'list',
+      choices,
+      pageSize: Math.min(choices.length, 20),
+    })
+
+    return choice
+  }
+
   private getClusterAndWorkspaceFromChoice(
     choice: string,
   ): { workspace: string | null; cluster: string } {

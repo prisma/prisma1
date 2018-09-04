@@ -16,8 +16,11 @@ export class Introspector {
     return this.connector.listSchemas()
   }
 
-  async introspect(schemaName: string): Promise<{ numTables: number; sdl: string }> {
+  async introspect(
+    schemaName: string,
+  ): Promise<{ numTables: number; sdl: string }> {
     const dbTables = await this.connector.listTables(schemaName)
+    console.log({ dbTables })
     const sdl = this.inferrer.infer(dbTables)
     return { numTables: dbTables.length, sdl: sdl.render() }
   }

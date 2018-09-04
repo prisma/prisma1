@@ -19,10 +19,15 @@ export default class IntrospectCommand extends Command {
       char: 'i',
       description: 'Interactive mode',
     }),
+    ['pg-schema-name']: flags.string({
+      description: 'Name of the Postgres schema',
+      char: 'p',
+    }),
   }
   static hidden = false
   async run() {
     const { interactive } = this.flags
+    const pgSchemaName = this.flags['pg-schema-name']
 
     const endpointDialog = new EndpointDialog(
       this.out,
@@ -47,14 +52,20 @@ export default class IntrospectCommand extends Command {
     let schemas
     const before = Date.now()
     this.out.action.start(`Introspecting database`)
-    // try {
-    schemas = await introspector.listSchemas()
-    // } catch (e) {
-    //   throw e
-    // throw new Error(`Could not connect to database. ${e.message}`)
-    // }
+    try {
+      schemas = await introspector.listSchemas()
+    } catch (e) {
+      throw new Error(`Could not connect to database. ${e.message}`)
+    }
     if (schemas && schemas.length > 0) {
-      const { sdl, numTables } = await introspector.introspect(schemas[0])
+      const schema =
+        schemas.length === 1
+          ? schemas[0]
+          : pgSchemaName
+            ? pgSchemaName
+            : await endpointDialog.selectSchema(schemas)
+
+      const { sdl, numTables } = await introspector.introspect(schema)
       if (numTables === 0) {
         this.out.log(
           chalk.red(

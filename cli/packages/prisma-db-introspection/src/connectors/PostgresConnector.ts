@@ -38,6 +38,8 @@ export class PostgresConnector implements Connector {
       this.queryPrimaryKeys(schemaName),
     ])
 
+    console.log({ schemaName, relations, tableColumns, primaryKeys })
+
     const tables = _.map(tableColumns, (rawColumns, tableName) => {
       const tablePrimaryKey =
         primaryKeys.find(pk => pk.tableName === tableName) || null
