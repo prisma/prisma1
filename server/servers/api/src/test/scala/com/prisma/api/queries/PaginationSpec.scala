@@ -300,6 +300,22 @@ class PaginationSpec extends FlatSpec with Matchers with ApiSpecBase {
     result should be("""{"data":{"lists":[{"name":"2"},{"name":"3"},{"name":"4"},{"name":"5"},{"name":"6"},{"name":"7"}]}}""".parseJson)
   }
 
+  "skip on relations" should "work" in {
+    val result = server.query(
+      s"""
+         |{
+         |  list(where: { name: "1" }) {
+         |    todos(skip: 1) {
+         |      title
+         |    }
+         |  }
+         |}
+      """,
+      project
+    )
+    result should be("""{"data":{"list":{"todos":[{"title":"2"},{"title":"3"},{"title":"4"},{"title":"5"},{"title":"6"},{"title":"7"}]}}}""".parseJson)
+  }
+
   private def createLists(): Unit = {
     server.query(
       """

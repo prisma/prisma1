@@ -33,17 +33,9 @@ object SetParams extends SlickExtensions with LimitClauseBuilder {
   }
 
   def setLimit(pp: PositionedParameters, queryArguments: QueryArguments): Unit = {
-    queryArguments.first.foreach { _ =>
-      val (first, second) = limitClause(Some(queryArguments)).get
-      pp.setInt(first)
-      pp.setInt(second)
-    }
-
-    queryArguments.last.foreach { _ =>
-      val (first, second) = limitClause(Some(queryArguments)).get
-      pp.setInt(first)
-      pp.setInt(second)
-    }
+    val skipAndLimit = skipAndLimitValues(queryArguments)
+    skipAndLimit.limit.foreach(pp.setInt)
+    pp.setInt(skipAndLimit.skip)
   }
 
   def setFilter(pp: PositionedParameters, filter: Option[Filter]): Unit = {
