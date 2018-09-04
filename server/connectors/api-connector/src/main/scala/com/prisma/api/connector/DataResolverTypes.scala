@@ -49,7 +49,7 @@ case class QueryArguments(
     filter: Option[Filter],
     orderBy: Option[OrderBy]
 ) {
-  val isWithPagination = last.orElse(first).isDefined
+  val isWithPagination = last.orElse(first).orElse(skip).isDefined
 }
 
 object QueryArguments {
