@@ -17,11 +17,6 @@ export class PostgresConnector implements Connector {
   constructor(client: DBClient) {
     this.client = client
     this.connectionPromise = this.client.connect()
-
-    // auto disconnect. end waits for queries to succeed
-    setTimeout(() => {
-      this.client.end()
-    }, 3000)
   }
 
   async listSchemas(): Promise<string[]> {
@@ -37,8 +32,6 @@ export class PostgresConnector implements Connector {
       this.queryTableColumns(schemaName),
       this.queryPrimaryKeys(schemaName),
     ])
-
-    console.log({ schemaName, relations, tableColumns, primaryKeys })
 
     const tables = _.map(tableColumns, (rawColumns, tableName) => {
       const tablePrimaryKey =
@@ -171,8 +164,6 @@ export class PostgresConnector implements Connector {
        WHERE schema_name NOT LIKE 'pg_%' 
        AND schema_name NOT LIKE 'information_schema';`,
     )
-
-    console.log(JSON.stringify(res, null, 2))
 
     return res.rows.map(x => x.schema_name)
   }

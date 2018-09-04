@@ -102,21 +102,25 @@ export class PrismaDBClient implements DBClient {
     })
   }
 
-  end() {
-    return this.cluster
-      .request(
-        `mutation($input: DeleteProjectInput!) {
+  async end() {
+    try {
+      await this.cluster
+        .request(
+          `mutation($input: DeleteProjectInput!) {
       deleteProject(input: $input) {
         clientMutationId
       }
     }`,
-        {
-          input: {
-            name: SERVICE_NAME,
-            stage: SERVICE_STAGE,
+          {
+            input: {
+              name: SERVICE_NAME,
+              stage: SERVICE_STAGE,
+            },
           },
-        },
-      )
-      .then(res => res.json())
+        )
+        .then(res => res.json())
+    } catch (e) {
+      // ignore error
+    }
   }
 }

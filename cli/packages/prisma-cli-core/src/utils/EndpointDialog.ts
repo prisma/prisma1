@@ -289,6 +289,7 @@ export class EndpointDialog {
           const { numTables, sdl } = await introspector.introspect(
             credentials.schema || schemas[0],
           )
+          await client.end()
           if (numTables === 0) {
             this.out.log(
               chalk.red(
@@ -458,6 +459,7 @@ export class EndpointDialog {
     }))
 
     const { choice } = await this.out.prompt({
+      message: 'Please select the Postgres schema you want to introspect',
       name: 'choice',
       type: 'list',
       choices,

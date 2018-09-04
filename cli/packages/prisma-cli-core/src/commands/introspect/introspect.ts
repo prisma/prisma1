@@ -51,21 +51,42 @@ export default class IntrospectCommand extends Command {
     const introspector = new Introspector(connector)
     let schemas
     const before = Date.now()
-    this.out.action.start(`Introspecting database`)
     try {
       schemas = await introspector.listSchemas()
     } catch (e) {
       throw new Error(`Could not connect to database. ${e.message}`)
     }
     if (schemas && schemas.length > 0) {
-      const schema =
-        schemas.length === 1
-          ? schemas[0]
-          : pgSchemaName
-            ? pgSchemaName
-            : await endpointDialog.selectSchema(schemas)
+      let schema
+      if (schemas.length === 1) {
+        schema = schemas[0]
+      } else if (pgSchemaName) {
+        const exists = schemas.includes(pgSchemaName)
+        if (!exists) {
+          throw new Error(
+            `The provided Postgres Schema ${pgSchemaName} does not exist. Choose one of ${schemas.join(
+              ', ',
+            )}`,
+          )
+        }
+        schema = pgSchemaName
+      } else {
+        const schemaName = `${this.definition.service}$${this.definition.stage}`
+        const exists = schemas.includes(schemaName)
+        schema = exists
+          ? schemaName
+          : await endpointDialog.selectSchema(
+              schemas.filter(
+                s => !s.startsWith('prisma-temporary-introspection-service$'),
+              ),
+            )
+      }
 
+      this.out.action.start(
+        `Introspecting Postgres schema ${chalk.bold(schema)}`,
+      )
       const { sdl, numTables } = await introspector.introspect(schema)
+      await client.end()
       if (numTables === 0) {
         this.out.log(
           chalk.red(

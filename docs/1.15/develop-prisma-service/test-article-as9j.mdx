@@ -1,0 +1,114 @@
+import Code from 'components/Markdown/Code'
+import Warning from 'components/Markdown/Warning'
+import Collapse from 'components/Markdown/Collapse'
+import Playground from 'components/Markdown/Playground'
+
+export const meta = {
+  title: "Test Article",
+  position: 5,
+  technology: "node",
+  articleGroup: 'test-article',
+  technologyOrder: 1
+}
+
+## Wow with Node
+
+<Playground playgroundLink="https://api.graph.cool/simple/v1/asdf">
+
+```graphql
+query {
+  users(where: { age_gt: 17 }) {
+    id
+  }
+}
+```
+```js
+{
+  "users": [
+    {
+      "id": 1
+    },
+    {
+      "id": 2
+    }
+  ]
+}
+```
+
+</Playground>
+
+## This is a great test!!
+
+> Hallo Welt
+
+
+
+```js
+const x = 100
+```
+
+
+|                 | javascript                             | typescript                                          |
+|-----------------|----------------------------------------|-----------------------------------------------------|
+| `graphql-binding` | imports schema                         | imports schema + adds types                         |
+| `prisma-binding`  | has typeDefs const, only secret needed | has typeDefs const, only secret needed + adds types |
+
+
+export const content = `
+  ## This is tooltip content
+  \`\`\`bash
+  $ prisma deploy --new
+  \`\`\`
+  *blub*
+`
+
+<Code language="jsx" lines="2,4,6,8,10,12,14,16,18,20,22,24,26" source="https://google.com" tooltips={[content]} showLanguageSwitch={true}>
+
+```
+import React from "react";
+import ReactDOM from "react-dom";
+import { ApolloProvider } from "react-apollo";
+import ApolloClient from "apollo-boost";
+import {
+  Container, CreateUser,
+  Posts, NewPost } from "components";
+
+const client = new ApolloClient({
+  uri: "$YOUR_PRISMA_ENDPOINT$"
+});
+
+class App extends React.Component {
+  render() {
+    return (
+      <ApolloProvider client={client}>
+        <Container user={this.state.user}>
+          <CreateUser createUser={this.createUser} />
+          <NewPost
+            user={this.state.user}
+            createPost={this.createPost} />
+          <Posts posts={this.state.posts} />
+        </Container>
+      </ApolloProvider>
+    );
+  }
+}
+
+ReactDOM.render(<App />, document.getElementById("root"));
+```
+
+</Code>
+
+<Warning>
+
+Halli hallo
+
+</Warning>
+
+<Collapse title="Hey ho, let's go!">
+
+This is some juicy *stu* **ff**.
+
+</Collapse>
+
+
+## Moar Cont ent
