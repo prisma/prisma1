@@ -43,17 +43,17 @@ fi
 
 export changedFiles=$(git diff-tree --no-commit-id --name-only -r $lastCommits)
 
-introspectionChanged=false
 ymlChanged=false
+introspectionChanged=false
 coreChanged=false
 engineChanged=false
 
-if [[ "$changedFiles" = *"cli/packages/prisma-db-introspection"* ]]; then
-  introspectionChanged=true
-fi
-
 if [[ "$changedFiles" = *"cli/packages/prisma-yml"* ]]; then
   ymlChanged=true
+fi
+
+if [[ "$changedFiles" = *"cli/packages/prisma-db-introspection"* ]]; then
+  introspectionChanged=true
 fi
 
 if [[ "$changedFiles" = *"cli/packages/prisma-cli-core"* ]]; then
@@ -90,27 +90,6 @@ node cli/scripts/waitUntilTagPublished.js $nextDockerTag
 
 cd cli/packages/
 
-export introspectionVersionBefore=$(cat prisma-db-introspection/package.json | jq -r '.version')
-
-if [ $introspectionChanged ] || [ $CIRCLE_TAG ]; then
-  cd prisma-db-introspection
-  sleep 0.5
-  ../../scripts/doubleInstall.sh
-  yarn build
-  if [[ $CIRCLE_TAG ]]; then
-    npm version --allow-same-version $(npm info prisma-db-introspection version)
-    npm version patch --no-git-tag-version
-    npm publish
-  else
-    npm version --allow-same-version $(npm info prisma-db-introspection version --tag $CIRCLE_BRANCH)
-    npm version prerelease --no-git-tag-version
-    npm publish --tag $CIRCLE_BRANCH
-  fi
-  cd ..
-fi
-export introspectionVersion=$(cat prisma-db-introspection/package.json | jq -r '.version')
-
-
 export ymlVersionBefore=$(cat prisma-yml/package.json | jq -r '.version')
 
 if [ $ymlChanged ] || [ $CIRCLE_TAG ]; then
@@ -132,6 +111,32 @@ if [ $ymlChanged ] || [ $CIRCLE_TAG ]; then
   cd ..
 fi
 export ymlVersion=$(cat prisma-yml/package.json | jq -r '.version')
+
+
+
+export introspectionVersionBefore=$(cat prisma-db-introspection/package.json | jq -r '.version')
+
+if [ $ymlVersionBefore != $ymlVersion ] || [ $introspectionChanged ] || [ $CIRCLE_TAG ]; then
+  cd prisma-db-introspection
+  sleep 0.5
+  yarn add prisma-yml@$ymlVersion
+  sleep 0.2
+  ../../scripts/doubleInstall.sh
+  yarn build
+  if [[ $CIRCLE_TAG ]]; then
+    npm version --allow-same-version $(npm info prisma-db-introspection version)
+    npm version patch --no-git-tag-version
+    npm publish
+  else
+    npm version --allow-same-version $(npm info prisma-db-introspection version --tag $CIRCLE_BRANCH)
+    npm version prerelease --no-git-tag-version
+    npm publish --tag $CIRCLE_BRANCH
+  fi
+  cd ..
+fi
+export introspectionVersion=$(cat prisma-db-introspection/package.json | jq -r '.version')
+
+
 
 if [ $ymlVersionBefore != $ymlVersion ] || [ $engineChanged ]; then
   cd prisma-cli-engine
