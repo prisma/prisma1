@@ -25,6 +25,8 @@ import {
 import { Generator } from './Generator'
 import { getExistsTypes } from '../utils'
 
+import { flatten } from 'lodash'
+
 export interface RenderOptions {
   endpoint?: string
   secret?: string
@@ -37,7 +39,8 @@ export class TypescriptGenerator extends Generator {
     ID: 'string | number',
     Float: 'number',
     Boolean: 'boolean',
-    DateTime: 'string',
+    DateTimeInput: 'Date | string',
+    DateTimeOutput: 'string',
     Json: 'any',
   }
 
@@ -318,14 +321,27 @@ export const prisma = new Prisma()`
   }
   renderTypes() {
     const typeNames = this.getTypeNames()
-    return typeNames
-      .map(typeName => {
+    return flatten(
+      typeNames.map(typeName => {
         const type = this.schema.getTypeMap()[typeName]
+        if (typeName === 'DateTime') {
+          return [
+            this.graphqlRenderers.GraphQLScalarType({
+              name: 'DateTimeInput',
+              description: 'DateTime scalar input type, allowing Date',
+            } as any),
+            this.graphqlRenderers.GraphQLScalarType({
+              name: 'DateTimeOutput',
+              description:
+                'DateTime scalar output type, which is always a string',
+            } as any),
+          ]
+        }
         return this.graphqlRenderers[type.constructor.name]
           ? this.graphqlRenderers[type.constructor.name](type)
           : null
-      })
-      .join('\n\n')
+      }),
+    ).join('\n\n')
   }
 
   renderArgs(
@@ -531,6 +547,14 @@ export const prisma = new Prisma()`
 
     let typeString = this.getInternalTypeName(type)
 
+    if (typeString === 'DateTime') {
+      if (isInput) {
+        typeString += 'Input'
+      } else {
+        typeString += 'Output'
+      }
+    }
+
     if ((node || isList) && !isScalar) {
       typeString += `Node`
     }
@@ -597,14 +621,19 @@ export const prisma = new Prisma()`
       return this.renderInputFieldType((type as GraphQLWrappingType).ofType)
     }
     if (isListType(type)) {
-      const inputType = this.renderInputFieldType(
+      let inputType = this.renderInputFieldType(
         (type as GraphQLWrappingType).ofType,
       )
+      if (inputType === 'DateTime') {
+        inputType += 'Input'
+      }
       return `${inputType}[] | ${inputType}`
     }
-    return `${(type as GraphQLNamedType).name}${
-      (type as GraphQLNamedType).name === 'ID' ? '_Input' : ''
-    }`
+    let name = (type as GraphQLNamedType).name
+    if (name === 'DateTime') {
+      name += 'Input'
+    }
+    return `${name}${(type as GraphQLNamedType).name === 'ID' ? '_Input' : ''}`
   }
 
   renderTypeWrapper(
