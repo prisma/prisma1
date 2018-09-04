@@ -24,7 +24,7 @@ case class RelatedModelsQueryBuilder(
   val oppositeModelRelationSideColumn = relation.columnForRelationSide(fromField.oppositeRelationSide)
   val aColumn                         = relation.modelAColumn
   val bColumn                         = relation.modelBColumn
-  val secondaryOrderByForPagination   = if (fromField.oppositeRelationSide == RelationSide.A) relatedModelAlias else parentModelAlias
+  val secondaryOrderByForPagination   = relatedModelAlias
 
   val aliasedTable            = modelTable(relatedModel).as(topLevelAlias)
   val relationTable2          = relationTable(relation).as(relationTableAlias)
