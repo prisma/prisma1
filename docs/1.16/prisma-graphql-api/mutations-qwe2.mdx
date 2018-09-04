@@ -9,13 +9,13 @@ export const meta = {
 
 ### How are mutations in the Prisma API generated?
 
-The GraphQL API of a Prisma service is specified in the Prisma GraphQL schema. The Prisma GraphQL schema is auto-generated based on the service's data model:
+The GraphQL API of a Prisma service is specified in the Prisma GraphQL schema. The Prisma GraphQL schema is auto-generated based on the service's datamodel:
 
 ![](https://i.imgur.com/jHkNjKU.png)
 
 The `Mutation` type of the Prisma GraphQL schema defines all the mutations the Prisma API accepts.
 
-As an example, consider the following data model:
+As an example, consider the following datamodel:
 
 ```graphql
 type User {
@@ -37,7 +37,7 @@ type Mutation {
 }
 ```
 
-For every type in your data model, six mutation are generated. Taking above the above `User` type as an example, these mutations are:
+For every type in your datamodel, six mutation are generated. Taking above the above `User` type as an example, these mutations are:
 
 - `createUser`: Create a new `User` node
 - `updateUser`: Update an existing `User` node 
@@ -59,7 +59,7 @@ Another way to learn about the concrete capabilities of your Prisma API is by ex
 
 ### Data model for examples on this page
 
-All example mutations on this page are based on a Prisma service configured with this data model:
+All example mutations on this page are based on a Prisma service configured with this datamodel:
 
 ```graphql
 type Post {
@@ -480,7 +480,7 @@ mutation {
 
 When an [object type](knul#object-types) has a field that is has a _scalar list_ as its type, there are a number of special mutations available.
 
-In the following data model, the `User` type has three such fields:
+In the following datamodel, the `User` type has three such fields:
 
 ```graphql
 type User {

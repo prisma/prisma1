@@ -7,7 +7,7 @@ export const meta = {
   step: 1,
   gettingStartedTitle: 'Existing database',
   position: 2,
-  nextText: 'Great work! 👏  Move on to learn how you can extend your data model and make changes to your Prisma API.'
+  nextText: 'Great work! 👏  Move on to learn how you can extend your datamodel and make changes to your Prisma API.'
 }
 
 ## Goals
@@ -147,7 +147,7 @@ endpoint: http://localhost:4466
 
 ### Introspect database
 
-You now need to introspect your database schema to generate the data model for your Prisma service:
+You now need to introspect your database schema to generate the datamodel for your Prisma service:
 
 ```bash copy
 prisma introspect
@@ -155,7 +155,7 @@ prisma introspect
 
 The CLI generates the `datamodel-[TIMESTAMP].graphql` (e.g. `datamodel-1533886167692.graphql`) file containing the SDL version of your database schema. On the first run, it also writes the `datamodel` property into the `prisma.yml`.
 
-Finally, you need to rename the file to `datamodel.graphql` because that's the file name you specifed in `prisma.yml`.
+Finally, you need to rename the file to `datamodel.prisma` because that's the file name you specifed in `prisma.yml`.
 
 ## Deploy the Prisma service
 
@@ -206,7 +206,7 @@ npm install --save prisma-lib graphql
 
 ## Read and write data using the Prisma client
 
-The API operations of the Prisma client depend on the data model that was generated from the database introspection. The following sample queries assume there is a `User` type in the data model defined as follows:
+The API operations of the Prisma client depend on the datamodel that was generated from the database introspection. The following sample queries assume there is a `User` type in the datamodel defined as follows:
 
 ```graphql
 type User {
@@ -215,7 +215,7 @@ type User {
 }
 ```
 
-If you don't have such a `User` type, feel free to adjust the following code snippets with a type that matches your data model.
+If you don't have such a `User` type, feel free to adjust the following code snippets with a type that matches your datamodel.
 
 Add the following code in `index.js` and save it afterwards:
 

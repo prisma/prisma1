@@ -53,7 +53,7 @@ The [import API](data-import-using-the-raw-import-api) does not perform any vali
 
 Importing invalid data leads to undefined behaviour and might break your service! As the service maintainer, you are responsible to ensure the validity of the imported data.
 
-**Tip**: A good way to ensure valid data when importing is inspecting the data of a previous [export](#data-export) on a service with an identical data model.
+**Tip**: A good way to ensure valid data when importing is inspecting the data of a previous [export](#data-export) on a service with an identical datamodel.
 
 ### Data import with the CLI
 
@@ -90,7 +90,7 @@ Consider the following file structure defining a Prisma service:
 │   │   └── 0002.json
 │   └── relations
 │       └── 0001.json
-├── datamodel.graphql
+├── datamodel.prisma
 └── prisma.yml
 ```
 
@@ -219,7 +219,7 @@ The structure for a JSON document in NDF is an object with the following two key
 - `valueType`: Indicates the value type of the data in the document (this can be either `"nodes"`, `"lists"` or `"relations"`)
 - `values`: Contains the actual data (adhering to the value type) as an array
 
-The examples in the following are based on this data model:
+The examples in the following are based on this datamodel:
 
 ```graphql
 type User {
@@ -245,7 +245,7 @@ In case the `valueType` is `"nodes"`, the structure for the objects inside the `
 }
 ```
 
-The notations expresses that the fields `_typeName` and `id` are of type string. `_typeName` refers to the name of the SDL type from your data model. The `<scalarFieldX>`-placeholders will be the names of the scalar fields of that SDL type.
+The notations expresses that the fields `_typeName` and `id` are of type string. `_typeName` refers to the name of the SDL type from your datamodel. The `<scalarFieldX>`-placeholders will be the names of the scalar fields of that SDL type.
 
 For example, the following JSON document can be used to import the scalar values for two `User` nodes:
 
@@ -273,7 +273,7 @@ In case the `valueType` is `"lists"`, the structure for the objects inside the `
 }
 ```
 
-The notations expresses that the fields `_typeName` and `id` are of type string. `_typeName` refers to the name of the SDL type from your data model. The `<scalarListField>`-placeholder is the name of the of the list fields of that SDL type. Note that in contrast to the scalar list fields, each object can only values only for one field.
+The notations expresses that the fields `_typeName` and `id` are of type string. `_typeName` refers to the name of the SDL type from your datamodel. The `<scalarListField>`-placeholder is the name of the of the list fields of that SDL type. Note that in contrast to the scalar list fields, each object can only values only for one field.
 
 For example, the following JSON document can be used to import the values for the `hobbies` list field of two `User` nodes:
 
@@ -306,7 +306,7 @@ In case the `valueType` is `"relations"`, the structure for the objects inside t
 
 The notations expresses that the fields `_typeName`, `id` and `fieldName` are of type string.
 
-`_typeName` refers to a name of an SDL type from your data model. The `<relationField>`-placeholder is the name of the of the relation field of that SDL type. Since the goal of the relation data is to connect two nodes via a relation, each element inside the `values` array by itself is a pair (written as an array which always contains exactly two elements) rather than a single object as was the case for `"nodes"` and `"lists"`.
+`_typeName` refers to a name of an SDL type from your datamodel. The `<relationField>`-placeholder is the name of the of the relation field of that SDL type. Since the goal of the relation data is to connect two nodes via a relation, each element inside the `values` array by itself is a pair (written as an array which always contains exactly two elements) rather than a single object as was the case for `"nodes"` and `"lists"`.
 
 For example, the following JSON document can be used to create a relation between two `User` nodes via the `partner` relation field:
 

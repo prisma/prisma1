@@ -73,7 +73,7 @@ Similar to the previous query, each object inside the `users` array only has the
 
 ## Fetching single objects
 
-For each model type in your datamodel, there is a method generated in the Prisma client API that allows to fetch single objects of that model. The method is named after the type but starts with a _lowercase_ character. For the sample data model from above, the three methods for fetching single `User`, `Link` and `Vote` objects are called `user`, `link` and `vote`.
+For each model type in your datamodel, there is a method generated in the Prisma client API that allows to fetch single objects of that model. The method is named after the type but starts with a _lowercase_ character. For the sample datamodel from above, the three methods for fetching single `User`, `Link` and `Vote` objects are called `user`, `link` and `vote`.
 
 The input for these functions is an object that has as properties any [unique](knul#unique-scalar-fields) field of the model. This means, for all three methods, the `id` field is accepted (as the corresponding models each have an `id` field annotated as `@unique`). The input object for the `user` method additionaly has an `email` field.
 
@@ -131,7 +131,7 @@ query {
 
 ## Fetching lists
 
-For each model type in your datamodel, there is a method generated in the Prisma client API that allows to fetch a list of those model objects. The method is named after the model but starts with a _lowercase_ character and uses the _plural_ form. For the sample data model from above, the three methods for fetching lists of `User`, `Link` and `Vote` models are called `users`, `links` and `votes`.
+For each model type in your datamodel, there is a method generated in the Prisma client API that allows to fetch a list of those model objects. The method is named after the model but starts with a _lowercase_ character and uses the _plural_ form. For the sample datamodel from above, the three methods for fetching lists of `User`, `Link` and `Vote` models are called `users`, `links` and `votes`.
 
 The input arugment for these functions is an object that has properties for:
 

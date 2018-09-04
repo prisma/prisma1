@@ -158,7 +158,7 @@ Here is an example how you can protect your Prisma API and make authenticated re
 
 Assume you're starting out with a new Prisma service being configured through the following service configuration:
 
-**`datamodel.graphql`**
+**`datamodel.prisma`**
 
 ```graphql
 type User {
@@ -171,7 +171,7 @@ type User {
 
 ```yml
 endpoint: https://eu1.prisma.sh/john-doe/demo/dev # deployed to a Prisma Demo server 
-datamodel: datamodel.graphql
+datamodel: datamodel.prisma
 ```
 
 For this example, assume the service gets deployed to a Demo server and therefore is available on the public internet.
@@ -192,7 +192,7 @@ The only thing you need to do in order for your Prisma API to require authentica
 
 ```yml
 endpoint: https://eu1.prisma.sh/john-doe/demo/dev # deployed to a Prisma Demo server 
-datamodel: datamodel.graphql
+datamodel: datamodel.prisma
 
 secret: my-secret-42
 ```

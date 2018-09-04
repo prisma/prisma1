@@ -11,8 +11,8 @@ export const meta = {
 
 On this page, you will learn how to:
 
-- Change the data model of your Prisma service
-- Deploy the adjusted data model to update your Prisma API
+- Change the datamodel of your Prisma service
+- Deploy the adjusted datamodel to update your Prisma API
 - Re-generate your Prisma client
 - Create two database records in a single transaction
 - Query relations
@@ -23,9 +23,9 @@ This page is only relevant if you started with a [new database](a002) or a [demo
 
 </Warning>
 
-## Adjust your data model
+## Adjust your datamodel
 
-Update the data model in `datamodel.graphql` as follows:
+Update the datamodel in `datamodel.prisma` as follows:
 
 ```graphql copy
 type User {
@@ -51,7 +51,7 @@ Here's what changed:
 
 ## Redeploy your Prisma service
 
-To apply the changes you just made to your data model, you need to redeploy your Prisma service:
+To apply the changes you just made to your datamodel, you need to redeploy your Prisma service:
 
 ```bash copy
 prisma deploy
@@ -65,7 +65,7 @@ Because the Prisma client is aware of your datamodel, you need to regenerate it 
 prisma generate
 ```
 
-The Prisma client in `prisma.js` is now being updated and has been adjusted to your new data model.
+The Prisma client in `prisma.js` is now being updated and has been adjusted to your new datamodel.
 
 ## Read and write nested objects
 

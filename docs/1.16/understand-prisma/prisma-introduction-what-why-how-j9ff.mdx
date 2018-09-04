@@ -17,7 +17,7 @@ Prisma replaces traditional ORMs and provides a powerful way to work with databa
 Here is an overview of the main components of Prisma:
 
 - **Prisma server**: A proxy server for your database hosting _Prisma Services_.
-- **Prisma service**: Maps a Prisma [data model](knul) to your database and lets you read and write to the database using GraphQL. 
+- **Prisma service**: Maps a Prisma [datamodel](knul) to your database and lets you read and write to the database using GraphQL. 
 - **Prisma client**: Connects to your Prisma service and replaces a traditional ORM in your application architecure (available in various languages).
 - **Prisma Admin** (_coming soon_): A GUI-based application that lets you view and modify the data in your database.
 
@@ -66,7 +66,7 @@ Prisma's overall goal is to remove complexity from common database workflows and
   - Adheres to the [**OpenCRUD**](https://www.opencrud.org/) standard.
 - Prisma unifies access to multiple databases at once (_coming soon_) and therefore drastically **reduces complexity in cross-database workflows** using GraphQL as a universal query language.
 - **Realtime streaming & event system for your database** ensuring you're getting updates for all important events happening in your database.
-- **Automatic database migrations** based on a declarative data model expressed using GraphQL's schema definition language (SDL).
+- **Automatic database migrations** based on a declarative datamodel expressed using GraphQL's schema definition language (SDL).
 - Other database workflows such as **[data import, export](jsw9) & more**.
 
 ### A realtime layer for your database
@@ -86,7 +86,7 @@ Programming in a type safe way is the default for modern application development
 
 **End-to-end type safety** refers to having type safety across the entire stack, from client to database. An end-to-end type safe GraphQL architecture might look as follows:
 
-- **Database**: Prisma provides the strongly typed database layer, the *data model* defines the data types that are being stored in the database
+- **Database**: Prisma provides the strongly typed database layer, the *datamodel* defines the data types that are being stored in the database
 - **Application server (GraphQL)**: The application server defines its own GraphQL schema where it either reuses or transforms the data types from the database. The GraphQL server needs to be written in a type safe language (e.g. TypeScript, Scala, Go).
 - **Client**: A client being aware of the application server's GraphQL schema can validate API requests and potential responses at build-time. Popular GraphQL clients like Apollo and Relay support code generation workflows out-of-the-box.
 

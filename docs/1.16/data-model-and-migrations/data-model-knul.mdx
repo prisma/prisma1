@@ -2,33 +2,33 @@ import Collapse from 'components/Markdown/Collapse'
 import Code from 'components/Markdown/Code'
 
 export const meta = {
-  title: "Data Model",
+  title: "The Datamodel",
   position: 20,
 }
 
 ## Overview
 
-The data model of your service configuration has two major roles:
+The datamodel of your service configuration has two major roles:
 
 - **Define the underlying database schema** (they are mapped to database tables or equivalent structures, like _documents_, in the case of schemaless databases).
 - It is the foundation for the **auto-generated CRUD and realtime operations** of your Prisma API. [Learn more](#data-model-vs-prisma-graphql-schema).
 
-The data model is written in the GraphQL [Schema Definition Language](https://www.prisma.io/blog/graphql-sdl-schema-definition-language-6755bcb9ce51/) (SDL) and stored in one or more [`.graphql`-files](#files). These `.graphql`-files need to be referenced in your [prisma.yml](5cy7) under the `datamodel` property. For example:
+The datamodel is written in the GraphQL [Schema Definition Language](https://www.prisma.io/blog/graphql-sdl-schema-definition-language-6755bcb9ce51/) (SDL) and stored in one or more [`.graphql`-files](#files). These `.graphql`-files need to be referenced in your [prisma.yml](5cy7) under the `datamodel` property. For example:
 
 <Code language="yml" lines="2">
 
 ```yml
 endpoint: __YOUR_PRISMA_ENDPOINT__
-datamodel: datamodel.graphql
+datamodel: datamodel.prisma
 ```
 
 </Code>
 
-### Building blocks of the data model
+### Building blocks of the datamodel
 
-There are several available building blocks to shape your data model.
+There are several available building blocks to shape your datamodel.
 
-- [Types](#object-types) consist of multiple [fields](#fields) and typically represent entities from your application domain (e.g. `User`, `Car`, `Order`). Each type in your data model is mapped to a database table (or an equivalent structure for schemaless databases) and CRUD operations are added to the GraphQL schema.
+- [Types](#object-types) consist of multiple [fields](#fields) and typically represent entities from your application domain (e.g. `User`, `Car`, `Order`). Each type in your datamodel is mapped to a database table (or an equivalent structure for schemaless databases) and CRUD operations are added to the GraphQL schema.
 - [Relations](#relations) describe _relationships_ between types.
 - [Directives](#graphql-directives) covering different use cases such as type constraints or cascading delete behaviour.
 - [Interfaces](http://graphql.org/learn/schema/#interfaces) are abstract types that include a certain set of fields which a type must include to _implement_ the interface. Interfaces are currently not available for data modelling in Prisma, but there's a [pending feature request](https://github.com/prismagraphql/prisma/issues/83) for their support.
@@ -46,7 +46,7 @@ There is no hard technical requirement that would dictate the use of SDL and Pri
 
 ## Example
 
-A simple example `datamodel.graphql` file:
+A simple example `datamodel.prisma` file:
 
 ```graphql
 type Tweet {
@@ -72,16 +72,16 @@ type Location {
 }
 ```
 
-This example illustrates a few important concepts when working with your data model:
+This example illustrates a few important concepts when working with your datamodel:
 
 - The three types `Tweet`, `User` and `Location` are mapped to database tables (or an equivalent structure for schemaless databases).
 - There is a _bidirectional_ relation between `User` and `Tweet` (via the `owner` and `tweets` fields).
 - There is a _unidirectional_ relation from `Tweet` to `Location` (via the `location` field).
-- Except for the `name` field on `User`, all fields are _required_ in the data model (as indicated by the `!` following the type).
+- Except for the `name` field on `User`, all fields are _required_ in the datamodel (as indicated by the `!` following the type).
 - The `id`, `createdAt` and `updatedAt` fields are managed by Prisma and _read-only_ in the exposed Prisma API (meaning they can not be altered via mutations).
 - The `@unique` directive expresses a _unique constraint_, meaning Prisma ensures that there never will be two nodes with the same values for the annotated field.
 
-Creating and updating your data model is as simple as writing and saving the data model file. Once you're happy with your data model, you can save the file and apply the changes to your Prisma service by running `prisma deploy`:
+Creating and updating your datamodel is as simple as writing and saving the datamodel file. Once you're happy with your datamodel, you can save the file and apply the changes to your Prisma service by running `prisma deploy`:
 
 ```
 $ prisma deploy
@@ -130,10 +130,10 @@ When starting out with GraphQL and Prisma, the amount of `.graphql`-files you're
 
 Looking only at Prisma, there are two `.graphql`-files that are relevant:
 
-- The **data model** containing the _model definitions_ for your service's APIs, typically called `datamodel.graphql`.
+- The **datamodel** containing the _model definitions_ for your service's APIs, typically called `datamodel.prisma`.
 - The **Prisma GraphQL schema** defining the actual CRUD/realtime _operations_ of the service's API, typically called `prisma.graphql`.
 
-The Prisma database database schema is generated based on the data model:
+The Prisma database database schema is generated based on the datamodel:
 
 ![](https://i.imgur.com/jHkNjKU.png)
 
@@ -147,13 +147,13 @@ A GraphQL schema has three special _root types_: `Query`, `Mutation` and `Subscr
 
 </Collapse>
 
-### The data model
+### The datamodel
 
-The data model is written manually by the developers of the Prisma service. It defines the models and structures the developer wants to use in their API.
+The datamodel is written manually by the developers of the Prisma service. It defines the models and structures the developer wants to use in their API.
 
-Strictly speaking, the **data model is not a valid GraphQL schema** because it does not contain any of GraphQL's root types (`Query`, `Mutation`, `Subscription`) and therefore does not define any API operations. 
+Strictly speaking, the **datamodel is not a valid GraphQL schema** because it does not contain any of GraphQL's root types (`Query`, `Mutation`, `Subscription`) and therefore does not define any API operations. 
 
-The data model only serves as _foundation_ for the generation of the actual GraphQL schema that defines the GraphQL API of your Prisma service.
+The datamodel only serves as _foundation_ for the generation of the actual GraphQL schema that defines the GraphQL API of your Prisma service.
 
 ### The Prisma GraphQL schema
 
@@ -176,7 +176,7 @@ This is what a `.graphqlconfig.yml` and prisma.yml might look like in such as se
 **prisma.yml**
 
 ```yml
-datamodel: datamodel.graphql
+datamodel: datamodel.prisma
 endpoint: http://localhost:4466/myservice/dev
 secret: mysecret
 hooks:
@@ -220,9 +220,9 @@ Learn more about the application schema and building GraphQL servers with Prisma
 
 ## Files
 
-You can write your data model in a single `.graphql`-file or split it accross multiple ones.
+You can write your datamodel in a single `.graphql`-file or split it accross multiple ones.
 
-The `.graphql`-files containing the data model need to be specified in your prisma.yml under the `datamodel` property. For example:
+The `.graphql`-files containing the datamodel need to be specified in your prisma.yml under the `datamodel` property. For example:
 
 ```yml
 datamodel:
@@ -230,16 +230,16 @@ datamodel:
   - enums.graphql
 ```
 
-If there is only a single file that defines the data model, it can be specified as follows:
+If there is only a single file that defines the datamodel, it can be specified as follows:
 
 ```yml
-datamodel: datamodel.graphql
+datamodel: datamodel.prisma
 ```
 
 
 ## Object types
 
-An _object type_ (or short _type_) defines the structure for one _model_ in your data model. It is used to represent _entities_ from your _application domain_.
+An _object type_ (or short _type_) defines the structure for one _model_ in your datamodel. It is used to represent _entities_ from your _application domain_.
 
 Each object type is mapped to the database. For relational databases, one _table_ is created per type. For schemaless databases, an equivalent structure is used (e.g. a _document_). Note that Prisma enforces a schema even for schemaless databases! 
 
@@ -249,11 +249,11 @@ A type has a _name_ and one or multiple [_fields_](#fields). Type names can only
 
 An instantiation of a type is called a _node_. This term refers to a node inside your _data graph_.
 
-Every type you define in your data model will be available as an analogous type in the generated _Prisma GraphQL schema_.
+Every type you define in your datamodel will be available as an analogous type in the generated _Prisma GraphQL schema_.
 
 ### Defining an object type
 
-A object type is defined in the data model with the keyword `type`:
+A object type is defined in the datamodel with the keyword `type`:
 
 ```graphql
 type Article {
@@ -273,7 +273,7 @@ The type defined above has the following properties:
 
 ### Generated API operations for types
 
-The types in your data model affect the available operations in the Prisma API. Here is an overview of the generated CRUD and realtime operations for every type in your Prisma API: 
+The types in your datamodel affect the available operations in the Prisma API. Here is an overview of the generated CRUD and realtime operations for every type in your Prisma API: 
 
 - Queries let you fetch one or many nodes of that type
 - Mutations let you create, update or delete nodes of that type
@@ -514,7 +514,7 @@ type User {
 
 ### Field constraints
 
-Fields can be configured with field constraints to add further semantics and enforce certain rules in your data model.
+Fields can be configured with field constraints to add further semantics and enforce certain rules in your datamodel.
 
 #### Unique
 
@@ -536,7 +536,7 @@ type User {
 
 For every field that's annotated with `@unique`, you're able to query the corresponding node by providing a value for that field as a query argument.
 
-For example, considering the above data model, you can now retrieve a particular `User` node by its `email` address:
+For example, considering the above datamodel, you can now retrieve a particular `User` node by its `email` address:
 
 ```graphql
 query {
@@ -571,7 +571,7 @@ Notice that you need to always enclose the value in double-quotes, even for non-
 
 ### System fields
 
-The three fields `id`, `createdAt` and `updatedAt` have special semantics in Prisma. They are optional in your data model, but will always be maintained in the underlying database. This way you can always add the field to your data model later, and the data will still be available for existing nodes.
+The three fields `id`, `createdAt` and `updatedAt` have special semantics in Prisma. They are optional in your datamodel, but will always be maintained in the underlying database. This way you can always add the field to your datamodel later, and the data will still be available for existing nodes.
 
 The values of these fields are currently read-only in the Prisma API (except when importing data) but will be made configurable in the future. See [this proposal](https://github.com/prismagraphql/prisma/issues/1278) for more information.
 
@@ -605,7 +605,7 @@ interface Node {
 
 #### System fields: `createdAt` and `updatedAt`
 
-The data model further provides two special fields which you can add to your types:
+The datamodel further provides two special fields which you can add to your types:
 
 - `createdAt: DateTime!`: Stores the exact date and time for when a node of this object type was _created_.
 - `updatedAt: DateTime!`: Stores the exact date and time for when a node of this object type was _last updated_.
@@ -622,7 +622,7 @@ type User {
 
 ### Generated API operations for fields
 
-Fields in the data model affect the available [query arguments](tbd).
+Fields in the datamodel affect the available [query arguments](tbd).
 
 ### Changing the value of multiple scalar fields
 
@@ -644,7 +644,7 @@ mutation {
 }
 ```
 
-### Adding a required field to the data model
+### Adding a required field to the datamodel
 
 > TODO: Better as FAQ?
 
@@ -752,7 +752,7 @@ It can take two arguments:
   - `SET_NULL` (default): Set the related node(s) to `null`.
   - `CASCADE`: Delete the related node(s). Note that is not possible to set _both_ ends of a bidirectional relation to `CASCADE`.
 
-Here is an example of a data model where the `@relation` directive is used:
+Here is an example of a datamodel where the `@relation` directive is used:
 
 ```graphql
 type User {
@@ -798,7 +798,7 @@ The deletion behaviour in this example is as follows:
 
 #### Using the `name` argument of the `@relation` directive
 
-In certain cases, your data model may contain ambiguous relations. For example, consider you not only want a relation to express the "author-relationship" between `User` and `Story`, but you also want a relation to express which `Story` nodes have been _liked_ by a `User`.
+In certain cases, your datamodel may contain ambiguous relations. For example, consider you not only want a relation to express the "author-relationship" between `User` and `Story`, but you also want a relation to express which `Story` nodes have been _liked_ by a `User`.
 
 In that case, you end up with two different relations between `User` and `Story`! In order to disambiguate them, you need to give the relation a name:
 
@@ -867,7 +867,7 @@ The relations that are included in your schema affect the available operations i
 
 ## GraphQL directives
 
-Directives are used to provide additional information in your data model. They look like this: `@name(argument: "value")` or simply `@name` when there are no arguments.
+Directives are used to provide additional information in your datamodel. They look like this: `@name(argument: "value")` or simply `@name` when there are no arguments.
 
 ### Data model directives
 

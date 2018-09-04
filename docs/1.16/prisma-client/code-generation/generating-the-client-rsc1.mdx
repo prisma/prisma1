@@ -21,7 +21,7 @@ The `generate` root property accepts a list of objects. Each object has two fiel
 As an example, consider the following prisma.yml:
 
 ```yml
-datamodel: datamodel.graphql
+datamodel: datamodel.prisma
 endpoint: http://localhost:4000
 
 generate:
@@ -36,7 +36,7 @@ Running `prisma generate` in the directory where that prisma.yml is located gene
 As `generate` accepts a list of objects, you might as well generate multiple files at once:
 
 ```yml
-datamodel: datamodel.graphql
+datamodel: datamodel.prisma
 endpoint: http://localhost:4466
 secret: mysecret42
 
@@ -51,7 +51,7 @@ generate:
 
 ## Generated code
 
-Assume the data model for a Prisma service is defined as follows:
+Assume the datamodel for a Prisma service is defined as follows:
 
 ```graphql
 type Link {

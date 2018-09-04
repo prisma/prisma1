@@ -10,7 +10,7 @@ export const meta = {
 
 This page explains a number of important concepts to be aware of when working with the Prisma API.
 
-Unless otherwise stated, the examples on this page are based on a Prisma API with the following data model:
+Unless otherwise stated, the examples on this page are based on a Prisma API with the following datamodel:
 
 ```graphql
 type User {
@@ -30,7 +30,7 @@ type Post {
 
 ## Prisma GraphQL schema
 
-The Prisma database is the [GraphQL schema](https://www.prisma.io/blog/graphql-server-basics-the-schema-ac5e2950214e/) defining the data types and operations of a Prisma API. It is auto-generated and specifies CRUD and realtime operations for the models specified in the service's data model.
+The Prisma database is the [GraphQL schema](https://www.prisma.io/blog/graphql-server-basics-the-schema-ac5e2950214e/) defining the data types and operations of a Prisma API. It is auto-generated and specifies CRUD and realtime operations for the models specified in the service's datamodel.
 
 ![](https://i.imgur.com/jHkNjKU.png)
 
@@ -270,7 +270,7 @@ Mutations are _transactional_, meaning they are [_atomic_](https://en.wikipedia.
 
 ## Cascading deletes
 
-Prisma supports different _deletion behaviours_ for _relations_ in your data model. There are two major deletion behaviours:
+Prisma supports different _deletion behaviours_ for _relations_ in your datamodel. There are two major deletion behaviours:
 
 - `CASCADE`: When a node with a relation to one or more other nodes gets deleted, these nodes will be deleted as well.
 - `SET_NULL`:  When a node with a relation to one or more other nodes gets deleted, the fields referring to the deleted node are set to `null`.

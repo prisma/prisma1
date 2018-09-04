@@ -9,13 +9,13 @@ export const meta = {
 
 ### How are subscriptions in the Prisma API generated?
 
-The GraphQL API of a Prisma service is specified in the Prisma GraphQL schema. The Prisma GraphQL schema is auto-generated based on the service's data model:
+The GraphQL API of a Prisma service is specified in the Prisma GraphQL schema. The Prisma GraphQL schema is auto-generated based on the service's datamodel:
 
 ![](https://i.imgur.com/jHkNjKU.png)
 
 The `Subscription` type of the Prisma GraphQL schema defines all the subscriptions the Prisma API accepts.
 
-As an example, consider the following data model:
+As an example, consider the following datamodel:
 
 ```graphql
 type User {
@@ -32,7 +32,7 @@ type Subscription {
 }
 ```
 
-For every type in your data model, one subscription is generated. Taking above the above `User` type as an example, this subscription is:
+For every type in your datamodel, one subscription is generated. Taking above the above `User` type as an example, this subscription is:
 
 - `user`: Fires whenever a `User` node is **created**, **updated** or **deleted**. (Except for [batch mutations](qwe2#batch-mutations)).
 
@@ -49,7 +49,7 @@ Another way to learn about the concrete capabilities of your Prisma API is by ex
 
 ### Data model for examples on this page
 
-All example subscriptions on this page are based on a Prisma service configured with this data model:
+All example subscriptions on this page are based on a Prisma service configured with this datamodel:
 
 ```graphql
 type Post {
@@ -68,7 +68,7 @@ type User {
 
 ## Understanding Prisma’s subscription API
 
-Prisma lets you *subscribe* to three different kinds of events (per type in your data model). Taking the `Post` type from above data model as an example, these events are:
+Prisma lets you *subscribe* to three different kinds of events (per type in your datamodel). Taking the `Post` type from above datamodel as an example, these events are:
 
 - a new `Post` nodes is *created*
 - an existing `Post` nodes is *updated*
@@ -307,7 +307,7 @@ Note that this assumes the updated `Post` had the following `title` before the m
 
 ## Object subscriptions
 
-For every available [object type](knul#object-types) in your data model, one object subscription is automatically generated.
+For every available [object type](knul#object-types) in your datamodel, one object subscription is automatically generated.
 
 ### Subscribing to created nodes
 

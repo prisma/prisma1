@@ -4,7 +4,7 @@ import Warning from 'components/Markdown/Warning'
 export const meta = {
   title: 'Prisma Basics: Server, Services & Data Model',
   position: 20,
-  description: 'Learn about the main concepts you are dealing with when working Prisma. Most importantly: Prisma services, servers and the data model.'
+  description: 'Learn about the main concepts you are dealing with when working Prisma. Most importantly: Prisma services, servers and the datamodel.'
 }
 
 ## Main concepts
@@ -15,8 +15,8 @@ When working with Prisma, you need to understand the following concepts:
 - **Prisma server**: One Prisma server provides the *runtime environment* for many Prisma services. Prisma servers can be deployed anywhere (e.g. using Docker) and are backed by one or more databases. A Prisma server is set up once - after that Prisma services can be *deployed* to it.
 - **Service configuration:** You can think of the service configuration as the *template* for a  service. To deploy a service, the CLI sends the service configuration to the Prisma server which creates/updates the respective Prisma service. The service configuration consists of:
   - **prisma.yml**: The root configuration file for a Prisma service (includes the service's _endpoint_, the _service secret_, the path to the _data model_ file, ...)
-  - **Data model**: In the data model, you define _models_ which Prisma uses to generate the GraphQL API for your database (and optionally to migrate the underlying database). It's using the declarative GraphQL SDL syntax and is typically stored in a file called `datamodel.graphql`.
-- **Prisma CLI**: The Prisma CLI is primarily used to manage Prisma services. It lets you initialize and deploy services, generate service tokens, introspect a database to generate an SDL data model, delete services from a Prisma server and more.
+  - **Data model**: In the datamodel, you define _models_ which Prisma uses to generate the GraphQL API for your database (and optionally to migrate the underlying database). It's using the declarative GraphQL SDL syntax and is typically stored in a file called `datamodel.prisma`.
+- **Prisma CLI**: The Prisma CLI is primarily used to manage Prisma services. It lets you initialize and deploy services, generate service tokens, introspect a database to generate an SDL datamodel, delete services from a Prisma server and more.
 
 Here's a simple diagram showing the interplay of these concepts:
 
@@ -28,7 +28,7 @@ When working with Prisma, you spend most of your time dealing with services. A P
 
 ### Prisma API features
 
-The Prisma API is GraphQL API that exposes CRUD/realtime operations based on the model definitions in the data model. Here is an overview of the API features:
+The Prisma API is GraphQL API that exposes CRUD/realtime operations based on the model definitions in the datamodel. Here is an overview of the API features:
 
 - Read from database using GraphQL queries (including _filtering_, _ordering_ and _pagination_)
 - Create, update and delete data using powerful GraphQL mutations
@@ -59,7 +59,7 @@ Another exception for the endpoint structure are _Demo servers_ on Prisma cloud 
 
  Here are common things you might want to do with your services:
 
-- Define and adjust the service's data model which is the foundation for the generated Prisma API.
+- Define and adjust the service's datamodel which is the foundation for the generated Prisma API.
 - Build a GraphQL server (with business logic and a custom schema) based on the auto-generated GraphQL API of a Prisma service.
 - Protect your Prisma API by setting a _service secret_ to enable JWT-based authentication.
 - Deploy the same service configuration to multiple _deployment environments_ by adjusting the service's `endpoint` in prisma.yml (e.g. change _host_ and/or _stage_).
@@ -70,7 +70,7 @@ See here for more info about [Prisma services](/develop-prisma-services).
 
 ## Service configuration
 
-The Prisma service configuration provides a _template_ for a Prisma service. When deployed, the service configuration is used to create/update a Prisma _service_ running on a Prisma _server_. It consists of the data model and prisma.yml containing various configuration options for the service.
+The Prisma service configuration provides a _template_ for a Prisma service. When deployed, the service configuration is used to create/update a Prisma _service_ running on a Prisma _server_. It consists of the datamodel and prisma.yml containing various configuration options for the service.
 
 ### prisma.yml
 
@@ -78,32 +78,32 @@ Here is a minimal example of what a standard prisma.yml looks like:
 
 ```yml
 endpoint: http://localhost:4466/my-service/dev
-datamodel: datamodel.graphql
+datamodel: datamodel.prisma
 secret: my-secret
 ```
 
 These are the configuration properties it contains:
 
 - `endpoint`: The HTTP endpoint of the Prisma server (plus *service name* and *stage*) to which the service is deployed. This endpoint exposes the service's Prisma API.
-- `datamodel`: The _file path_ to the data model which serves as foundation for the GraphQL CRUD/realtime API.
+- `datamodel`: The _file path_ to the datamodel which serves as foundation for the GraphQL CRUD/realtime API.
 - `secret`: The _service secret_ is used to secure the service's GraphQL API endpoint using JWT-based authentication. If no `secret` is specified, the service does not require authentication.
 
 ### Data model
 
-You can think of the data model as a way to specify your _database schema_ in a declarative way. (Prisma enforces a schema even for schemaless databases.)
+You can think of the datamodel as a way to specify your _database schema_ in a declarative way. (Prisma enforces a schema even for schemaless databases.)
 
-The data model is written in GraphQL SDL and contains the service's _model definitions_. The auto-generated Prisma API exposes CRUD and realtime operations for each model. 
+The datamodel is written in GraphQL SDL and contains the service's _model definitions_. The auto-generated Prisma API exposes CRUD and realtime operations for each model. 
 
 <Warning>
 
-Even though it's written in GraphQL SDL, the data model is _not_ a valid [GraphQL schema](https://www.prisma.io/blog/graphql-server-basics-the-schema-ac5e2950214e/). This is because it doesn't have any of the `Query`, `Mutation` or `Subscription` root types that are defining actual GraphQL operations. Learn more about the differences [here](knul#data-model-vs-prisma-graphql-schema).
+Even though it's written in GraphQL SDL, the datamodel is _not_ a valid [GraphQL schema](https://www.prisma.io/blog/graphql-server-basics-the-schema-ac5e2950214e/). This is because it doesn't have any of the `Query`, `Mutation` or `Subscription` root types that are defining actual GraphQL operations. Learn more about the differences [here](knul#data-model-vs-prisma-graphql-schema).
 
 </Warning>
 
 
 Prisma maps each model definition to a _table_ (or an equivalent structure in the case of a non-relational database, e.g. a _document_) in the underlying database.
 
-The data model is typically located in a file called `datamodel.graphql` (though it might be named differently or even split across multiple files).
+The datamodel is typically located in a file called `datamodel.prisma` (though it might be named differently or even split across multiple files).
 
 ![](https://i.imgur.com/yvDByNB.png)
 

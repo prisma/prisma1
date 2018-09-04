@@ -146,7 +146,7 @@ The `prisma` binding object can now be used to send requests directly to your se
 
 ### Checking for existence with `exists`
 
-As mentioned, the `exists` function allows to easily check whether a certain element exists in the database. You can provide filter criteria to the function call and it will return a boolean value indicating whether (at least) one element meeting those criteria exists. As an example, say a Prisma service was based on the following data model:
+As mentioned, the `exists` function allows to easily check whether a certain element exists in the database. You can provide filter criteria to the function call and it will return a boolean value indicating whether (at least) one element meeting those criteria exists. As an example, say a Prisma service was based on the following datamodel:
 
 ```graphql
 type Post {
@@ -155,7 +155,7 @@ type Post {
 }
 ```
 
-For each type in your data model, the `Prisma` binding creates a dedicated `exists` function that is named after the type. Here are a few examples demonstrating how `exists` can be used:
+For each type in your datamodel, the `Prisma` binding creates a dedicated `exists` function that is named after the type. Here are a few examples demonstrating how `exists` can be used:
 
 ```js
 // Check whether a `Post` with a specific `id` exists
@@ -215,7 +215,7 @@ When building a GraphQL server with Prisma, these are the high-level steps you n
 
 1. **Configure database layer**
     1. Specify your _data model_ for your Prisma service in SDL
-    1. _Deploy_ a Prisma service based on that data model
+    1. _Deploy_ a Prisma service based on that datamodel
 1. **Implement application layer**
     1. Write the _application schema_ (i.e. define the operations of your API)
     1. Implement _resolver functions_ for the API operations (using Prisma bindings)
@@ -223,9 +223,9 @@ When building a GraphQL server with Prisma, these are the high-level steps you n
 
 Let's get concrete and walk through an example. 
 
-#### 1.1. Specify data model for Prisma service
+#### 1.1. Specify datamodel for Prisma service
 
-The first step is to define the data model for a Prisma service, here is the one for this example:
+The first step is to define the datamodel for a Prisma service, here is the one for this example:
 
 ```graphql
 type Post {
@@ -238,11 +238,11 @@ type Post {
 
 #### 1.2. Deploy a Prisma service
 
-To deploy the Prisma service, we also need a minimal prisma.yml. Assumed the above data model is stored in a file called `datamodel.graphql`, this is what prisma.yml could look like:
+To deploy the Prisma service, we also need a minimal prisma.yml. Assumed the above datamodel is stored in a file called `datamodel.prisma`, this is what prisma.yml could look like:
 
 ```yml
 endpoint: http://localhost:4466
-datatamodel: datamodel.graphql
+datatamodel: datamodel.prisma
 ```
 
 Now you can run `prisma deploy` and the service will be deployed to a Prisma server running on `http://localhost:4466`.

@@ -9,13 +9,13 @@ export const meta = {
 
 ### How are queries in the Prisma API generated?
 
-The GraphQL API of a Prisma service is specified in the Prisma GraphQL schema. The Prisma GraphQL schema is auto-generated based on the service's data model:
+The GraphQL API of a Prisma service is specified in the Prisma GraphQL schema. The Prisma GraphQL schema is auto-generated based on the service's datamodel:
 
 ![](https://i.imgur.com/jHkNjKU.png)
 
 The `Query` type of the Prisma GraphQL schema defines all the queries the Prisma API accepts.
 
-As an example, consider the following data model:
+As an example, consider the following datamodel:
 
 ```graphql
 type User {
@@ -34,7 +34,7 @@ type Query {
 }
 ```
 
-For every type in your data model, three queries are generated. Taking above the above `User` type as an example, these queries are:
+For every type in your datamodel, three queries are generated. Taking above the above `User` type as an example, these queries are:
 
 - `user`: Retrieve a single `User` node
 - `users`: Retrieve a list of `User` nodes (as an object query)
@@ -52,7 +52,7 @@ Another way to learn about the concrete capabilities of your Prisma API is by ex
 
 ### Data model for examples on this page
 
-All example queries on this page are based on a Prisma service configured with this data model:
+All example queries on this page are based on a Prisma service configured with this datamodel:
 
 ```graphql
 type Post {
@@ -119,7 +119,7 @@ query {
 }
 ```
 
-Because `User` is another type in our data model, `users` is another available query. Again, we can use the `where` argument to specify conditions for the returned users. In this example, we filter for all `User` nodes that have their `age` higher than `18`:
+Because `User` is another type in our datamodel, `users` is another available query. Again, we can use the `where` argument to specify conditions for the returned users. In this example, we filter for all `User` nodes that have their `age` higher than `18`:
 
 ```graphql
 query {
@@ -195,7 +195,7 @@ query {
 
 ## Querying data across relations
 
-Every available [relation](knul#relations) in your data model adds a new field to the queries of the two models it connects.
+Every available [relation](knul#relations) in your datamodel adds a new field to the queries of the two models it connects.
 
 Here, we are fetching a specific `User` node, and all its related `Post` nodes using the `posts` field:
 
@@ -397,7 +397,7 @@ query {
 }
 ```
 
-> `likedPosts` is not part of the above mentioned data model but can easily be added by adding the corresponding field to the `User` type: `likedPosts: [Post!]! @relation(name: "LikedPosts")`. We also provide a `name` for the relation to resolve the ambiguity we would otherwise create because there are two relation fields targetting `Post` on the `User` type.
+> `likedPosts` is not part of the above mentioned datamodel but can easily be added by adding the corresponding field to the `User` type: `likedPosts: [Post!]! @relation(name: "LikedPosts")`. We also provide a `name` for the relation to resolve the ambiguity we would otherwise create because there are two relation fields targetting `Post` on the `User` type.
 
 #### Combining multiple filters
 

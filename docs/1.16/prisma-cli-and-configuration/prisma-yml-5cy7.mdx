@@ -28,7 +28,7 @@ The most minimal version of a valid prisma.yml needs to contains at least two pr
 To be able to specify an `endpoint`, you need to have access to a Prisma server. If you don't have access to a Prisma server, you can omit the `endpoint` from prisma.yml and run `prisma deploy` only with the `datamodel` property. In that case, a CLI wizard guides you through the process of creating a local Prisma server or lets you deploy to a Demo server in Prisma Cloud. It then writes the `endpoint` into prisma.yml for you before the service gets deployed:
 
 ```yml
-datamodel: datamodel.graphql 
+datamodel: datamodel.prisma 
 ```
 
 ### Standard example
@@ -43,7 +43,7 @@ The most commonly used properties in prisma.yml are:
 Here's what a standard prisma.yml with these properties might look like:
 
 ```yml
-datamodel: datamodel.graphql
+datamodel: datamodel.prisma
 endpoint: http://localhost:4466/myservice/dev
 secret: mysecret42
 hooks:
@@ -213,13 +213,13 @@ The `datamodel` property expects a **string** or a **list of strings**.
 
 #### Examples
 
-The data model is defined in a file called `types.graphql`.
+The datamodel is defined in a file called `types.graphql`.
 
 ```yml
 datamodel: types.graphql
 ```
 
-The data model is defined in two files called `types.graphql` and `enums.graphl`. When the service gets deployed, the contents of both files will be concatenated by the CLI.
+The datamodel is defined in two files called `types.graphql` and `enums.graphl`. When the service gets deployed, the contents of both files will be concatenated by the CLI.
 
 ```yml
 datamodel:
