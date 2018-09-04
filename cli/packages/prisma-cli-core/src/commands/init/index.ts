@@ -48,7 +48,7 @@ export default class Init extends Command {
     if (
       files.length > 0 &&
       (files.includes('prisma.yml') ||
-        files.includes('datamodel.graphql') ||
+        files.includes('datamodel.prisma') ||
         files.includes('docker-compose.yml'))
     ) {
       this.out.log(`
@@ -65,8 +65,8 @@ Either try using a new directory name, or remove the files listed above.
 
     if (endpoint) {
       fs.copySync(
-        path.join(__dirname, 'boilerplate', 'datamodel.graphql'),
-        path.join(this.config.definitionDir, 'datamodel.graphql'),
+        path.join(__dirname, 'boilerplate', 'datamodel.prisma'),
+        path.join(this.config.definitionDir, 'datamodel.prisma'),
       )
       fs.copySync(
         path.join(__dirname, 'boilerplate', 'prisma.yml'),
@@ -99,7 +99,7 @@ Either try using a new directory name, or remove the files listed above.
       const endpointCreatedFiles = [
         `  ${chalk.cyan('prisma.yml')}           Prisma service definition`,
         `  ${chalk.cyan(
-          'datamodel.graphql',
+          'datamodel.prisma',
         )}    GraphQL SDL-based datamodel (foundation for database)`,
       ]
 
@@ -133,7 +133,7 @@ ${endpointSteps.map((step, index) => `  ${index + 1}. ${step}`).join('\n')}`)
       path.join(this.config.definitionDir, 'prisma.yml'),
     )
     fs.writeFileSync(
-      path.join(this.config.definitionDir, 'datamodel.graphql'),
+      path.join(this.config.definitionDir, 'datamodel.prisma'),
       results.datamodel,
     )
     if (results.cluster!.local && results.writeDockerComposeYml) {
@@ -202,7 +202,7 @@ ${endpointSteps.map((step, index) => `  ${index + 1}. ${step}`).join('\n')}`)
     const createdFiles = [
       `  ${chalk.cyan('prisma.yml')}           Prisma service definition`,
       `  ${chalk.cyan(
-        'datamodel.graphql',
+        'datamodel.prisma',
       )}    GraphQL SDL-based datamodel (foundation for database)`,
     ]
 

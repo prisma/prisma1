@@ -24,7 +24,7 @@ function makeDefinition(
 ) {
   const definitionDir = getTmpDir()
   const definitionPath = path.join(definitionDir, 'prisma.yml')
-  const modelPath = path.join(definitionDir, 'datamodel.graphql')
+  const modelPath = path.join(definitionDir, 'datamodel.prisma')
   const env = makeEnv(defaultGlobalRC)
 
   const definition = new PrismaDefinitionClass(env, definitionPath, envVars)
@@ -56,7 +56,7 @@ stage: dev
 cluster: local
 
 datamodel:
-- datamodel.graphql
+- datamodel.prisma
 
 secret: some-secret
 
@@ -85,7 +85,7 @@ stage: dev
 cluster: local
 
 datamodel:
-- datamodel.graphql
+- datamodel.prisma
 
 secret: \${env:MY_TEST_SECRET}
 
@@ -114,7 +114,7 @@ stage: dev
 cluster: local
 
 datamodel:
-- datamodel.graphql
+- datamodel.prisma
 
 secret: \${env:MY_DOT_ENV_SECRET}
 
@@ -152,7 +152,7 @@ stage: dev
 cluster: local
 
 datamodel:
-- datamodel.graphql
+- datamodel.prisma
 
 secret: \${env:MY_INJECTED_ENV_SECRET}
 
@@ -195,7 +195,7 @@ stage: dev
 cluster: local
 
 datamodel:
-- datamodel.graphql
+- datamodel.prisma
 
 schema: schemas/database.graphql
     `
@@ -210,7 +210,7 @@ type User @model {
 
     const definitionDir = getTmpDir()
     const definitionPath = path.join(definitionDir, 'prisma.yml')
-    const modelPath = path.join(definitionDir, 'datamodel.graphql')
+    const modelPath = path.join(definitionDir, 'datamodel.prisma')
     const env = makeEnv(defaultGlobalRC)
 
     const definition = new PrismaDefinitionClass(env, definitionPath, {
@@ -238,7 +238,7 @@ stage: dev
 cluster: local
 
 datamodel:
-- datamodel.graphql
+- datamodel.prisma
 
 disableAuth: true
 
@@ -274,7 +274,7 @@ stage: dev
 cluster: local
 
 datamodel:
-- datamodel.graphql
+- datamodel.prisma
 
 schema: schemas/database.graphql
     `
@@ -303,7 +303,7 @@ stage: dev
 cluster: local
 
 datamodel:
-- datamodel.graphql
+- datamodel.prisma
 
 schema: schemas/database.graphql
 
