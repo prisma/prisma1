@@ -9,7 +9,7 @@ import org.scalatest.{FlatSpec, Matchers}
 class EmbeddedUpdatedAtShouldChangeSpec extends FlatSpec with Matchers with ApiSpecBase {
   override def runOnlyForCapabilities = Set(EmbeddedTypesCapability)
 
-  val project = SchemaDsl.fromString() {
+  lazy val project = SchemaDsl.fromString() {
 
     """type Top {
       |id: ID! @unique
@@ -27,9 +27,9 @@ class EmbeddedUpdatedAtShouldChangeSpec extends FlatSpec with Matchers with ApiS
       |"""
   }
 
-  database.setup(project)
-
   "Updating a nested data item" should "change it's updatedAt value" in {
+    database.setup(project)
+
     val updatedAt = server
       .query("""mutation a {createTop(data: { top: "top2", bottom: {create:{bottom: "Bottom2"}} }) {bottom{updatedAt}}}""", project)
       .pathAsString("data.createTop.bottom.updatedAt")
@@ -55,6 +55,8 @@ class EmbeddedUpdatedAtShouldChangeSpec extends FlatSpec with Matchers with ApiS
   }
 
   "Upserting a nested data item" should "change it's updatedAt value" taggedAs (IgnoreMongo) in {
+    database.setup(project)
+
     val updatedAt = server
       .query("""mutation a {createTop(data: { top: "top4", bottom: {create:{bottom: "Bottom4"}} }) {bottom{updatedAt}}}""", project)
       .pathAsString("data.createTop.bottom.updatedAt")

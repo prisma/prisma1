@@ -1,6 +1,5 @@
 package com.prisma.api.mutations.embedded
 
-import com.prisma.IgnoreMongo
 import com.prisma.api.ApiSpecBase
 import com.prisma.api.connector.ApiConnectorCapability.{EmbeddedTypesCapability, ScalarListsCapability}
 import com.prisma.shared.models.Project

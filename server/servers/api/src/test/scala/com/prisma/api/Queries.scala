@@ -2,7 +2,7 @@ package com.prisma.api
 
 import com.prisma.IgnoreMongo
 import com.prisma.shared.schema_dsl.SchemaDsl
-import org.scalatest.{Assertion, FlatSpec, Matchers}
+import org.scalatest.{FlatSpec, Matchers}
 
 class Queries extends FlatSpec with Matchers with ApiSpecBase {
 

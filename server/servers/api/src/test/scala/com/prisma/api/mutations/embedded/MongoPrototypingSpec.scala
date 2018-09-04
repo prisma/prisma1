@@ -123,6 +123,76 @@ class MongoPrototypingSpec extends FlatSpec with Matchers with ApiSpecBase {
     res.toString should be("""{"data":{"createTop":{"unique":1,"middle":[{"unique":11,"bottom":[{"unique":111}]},{"unique":12,"bottom":[{"unique":112}]}]}}}""")
   }
 
+  "Create in Update" should "add to toMany relations" in {
+
+    val project = SchemaDsl.fromString() {
+      """type Top {
+        |   id: ID! @unique
+        |   unique: Int! @unique
+        |   name: String!
+        |   middle: [Middle!]!
+        |}
+        |
+        |type Middle @embedded {
+        |   unique: Int! @unique
+        |   name: String!
+        | }"""
+    }
+
+    database.setup(project)
+
+    val res = server.query(
+      s"""mutation {
+         |   createTop(data: {
+         |   unique: 1,
+         |   name: "Top",
+         |   middle: {create:[{
+         |      unique: 11,
+         |      name: "Middle"
+         |      },
+         |      {
+         |      unique: 12,
+         |      name: "Middle2"
+         |    }]
+         |   }
+         |}){
+         |  unique,
+         |  middle{
+         |    unique
+         |  }
+         |}}""",
+      project
+    )
+
+    res.toString should be("""{"data":{"createTop":{"unique":1,"middle":[{"unique":11},{"unique":12}]}}}""")
+
+    val res2 = server.query(
+      s"""mutation {
+         |   updateTop(
+         |   where:{unique: 1}
+         |   data: {
+         |      middle: {create:[{
+         |          unique: 13,
+         |          name: "Middle3"
+         |          },
+         |          {
+         |          unique: 14,
+         |          name: "Middle4"
+         |        }]
+         |   }
+         |}){
+         |  unique,
+         |  middle{
+         |    unique,
+         |  }
+         |}}""",
+      project
+    )
+
+    res2.toString should be("""{"data":{"updateTop":{"unique":1,"middle":[{"unique":11},{"unique":12},{"unique":13},{"unique":14}]}}}""")
+
+  }
+
   "ListValues" should "work" in {
 
     val project = SchemaDsl.fromString() {

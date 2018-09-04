@@ -9,13 +9,13 @@ import com.prisma.api.schema.APIErrors.{FieldCannotBeNull, NodesNotConnectedErro
 import com.prisma.gc_values._
 import com.prisma.shared.models.RelationField
 import org.mongodb.scala.bson.conversions.Bson
-import org.mongodb.scala.bson.{BsonArray, BsonValue, conversions}
+import org.mongodb.scala.bson.{BsonArray, BsonDocument, BsonValue, conversions}
 import org.mongodb.scala.model.Filters._
 import org.mongodb.scala.model.UpdateOptions
 import org.mongodb.scala.model.Updates._
 import org.mongodb.scala.{Document, MongoCollection}
-import collection.JavaConverters._
 
+import collection.JavaConverters._
 import scala.collection.immutable
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -138,10 +138,7 @@ trait NodeActions extends NodeSingleQueries {
   }
 
   private def embeddedNestedCreateDocsAndResults(mutaction: FurtherNestedMutaction): (Map[String, BsonValue], Vector[DatabaseMutactionResult]) = {
-    val nestedCreates                                        = mutaction.nestedCreates.map(m => m.relationField -> createToDoc(m))
-    val childResults: Vector[DatabaseMutactionResult]        = nestedCreates.flatMap(x => x._2._3)
-    val grouped: Map[RelationField, immutable.Seq[Document]] = nestedCreates.groupBy(_._1).mapValues(_.map(_._2._2))
-
+    val (childResults: Vector[DatabaseMutactionResult], grouped: Map[RelationField, immutable.Seq[Document]]) = nestedCreateDocAndResultHelper(mutaction)
     val nestedCreateFields = grouped.foldLeft(Map.empty[String, BsonValue]) { (map, t) =>
       val rf: RelationField = t._1
       val documents         = t._2.map(_.toBsonDocument)
@@ -150,6 +147,21 @@ trait NodeActions extends NodeSingleQueries {
     }
 
     (nestedCreateFields, childResults)
+  }
+
+  private def embeddedNestedCreateDocsAndResultsThatCanBeWithinUpdate(
+      mutaction: FurtherNestedMutaction): (Map[String, Vector[BsonDocument]], Vector[DatabaseMutactionResult]) = {
+    val (childResults, grouped) = nestedCreateDocAndResultHelper(mutaction)
+    val nestedCreateFields      = grouped.map { case (f, v) => (f.name, v.map(_.toBsonDocument).toVector) }
+
+    (nestedCreateFields, childResults)
+  }
+
+  private def nestedCreateDocAndResultHelper(mutaction: FurtherNestedMutaction) = {
+    val nestedCreates                                        = mutaction.nestedCreates.map(m => m.relationField -> createToDoc(m))
+    val childResults: Vector[DatabaseMutactionResult]        = nestedCreates.flatMap(x => x._2._3)
+    val grouped: Map[RelationField, immutable.Seq[Document]] = nestedCreates.groupBy(_._1).mapValues(_.map(_._2._2))
+    (childResults, grouped)
   }
 
   private def embeddedNestedDeleteActionsAndResults(node: PrismaNode,
@@ -227,11 +239,21 @@ trait NodeActions extends NodeSingleQueries {
     (actionsArrayFiltersAndResults.flatMap(_._1), actionsArrayFiltersAndResults.flatMap(_._2), actionsArrayFiltersAndResults.flatMap(_._3))
   }
 
-  //Fixme: this should probably be a push instead of a set
   def embeddedNestedCreateActionsAndResults(mutaction: FurtherNestedMutaction, path: Path = Path.empty): (Vector[Bson], Vector[DatabaseMutactionResult]) = {
-    val (nestedCreateFields, nestedCreateResults) = embeddedNestedCreateDocsAndResults(mutaction)
-    val nestedCreates                             = nestedCreateFields.map { case (f, v) => set(path.stringForField(f), v) }.toVector
-    (nestedCreates, nestedCreateResults)
+    mutaction match {
+      case x: CreateNode =>
+        val (nestedCreateFields, nestedCreateResults) = embeddedNestedCreateDocsAndResults(mutaction)
+        val nestedCreates                             = nestedCreateFields.map { case (f, v) => set(path.stringForField(f), v) }.toVector
+        (nestedCreates, nestedCreateResults)
+
+      case x: UpdateNode =>
+        val (nestedCreateFields: Map[String, Vector[BsonDocument]], nestedCreateResults) = embeddedNestedCreateDocsAndResultsThatCanBeWithinUpdate(mutaction)
+        val nestedCreates = nestedCreateFields.map {
+          case (f, v) if v.length <= 1 => set(path.stringForField(f), v)
+          case (f, v) if v.length > 1  => pushEach(path.stringForField(f), v: _*)
+        }.toVector
+        (nestedCreates, nestedCreateResults)
+    }
   }
 
   // helpers
