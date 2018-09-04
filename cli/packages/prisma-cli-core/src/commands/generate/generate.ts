@@ -4,7 +4,7 @@ import { fetchAndPrintSchema } from '../deploy/printSchema'
 import * as fs from 'fs-extra'
 import * as path from 'path'
 import { buildSchema } from 'graphql'
-import { TypescriptGenerator, TypescriptDefinitionGenerator, GoGenerator } from 'prisma-lib'
+import { TypescriptGenerator, TypescriptDefinitionGenerator, GoGenerator, FlowGenerator } from 'prisma-lib'
 import { spawnSync } from 'npm-run'
 
 export default class GenereateCommand extends Command {
@@ -72,6 +72,13 @@ export default class GenereateCommand extends Command {
         if (generator === 'go') {
           await this.generateGo(resolvedOutput, schemaString)
         }
+
+        if (generator === 'flow') {
+          await this.generateFlow(resolvedOutput, schemaString)
+        }
+
+        // TODO: Error handling in case of mistyped generator. Currently, the CLI fails silently after 
+        // showing schema download progress.
       }
     }
   }
@@ -139,6 +146,24 @@ export default class GenereateCommand extends Command {
 
     // Run "go fmt" on the file if user has it installed.
     spawnSync("go", ["fmt", output])
+  }
+
+  async generateFlow(output: string, schemaString: string) {
+    const schema = buildSchema(schemaString)
+
+    const generator = new FlowGenerator({ schema })
+
+    const endpoint = this.replaceEnv(this.definition.rawJson!.endpoint)
+    const secret = this.definition.rawJson.secret
+      ? this.replaceEnv(this.definition.rawJson!.secret)
+      : null
+    const options: any = { endpoint }
+    if (secret) {
+      options.secret = secret
+    }
+
+    const flowCode = generator.render(options)
+    fs.writeFileSync(output, flowCode)
   }
 
   replaceEnv(str) {

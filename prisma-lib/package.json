@@ -1,6 +1,6 @@
 {
   "name": "prisma-lib",
-  "version": "0.1.22",
+  "version": "0.1.23",
   "author": "Tim Suchanek <suchanek@prisma.io>",
   "license": "MIT",
   "files": [
@@ -14,6 +14,7 @@
     "test-only": "npm run build && ava --verbose dist/**/*.test.js dist/*.test.js",
     "test-generator-only": "npm run build && ava --verbose dist/codegen/**/*.test.js dist/codegen/*.test.js",
     "test-go-generator-only": "npm run build && ava --verbose dist/codegen/**/GoGenerator.test.js dist/codegen/GoGenerator.test.js",
+    "test-flow-generator-only": "npm run build && ava --verbose dist/codegen/**/FlowGenerator.test.js dist/codegen/FlowGenerator.test.js",
     "test": "tslint src/**/*.ts && npm run test-generator-only"
   },
   "dependencies": {

@@ -71,7 +71,7 @@
     "fs-extra": "^5.0.0",
     "prisma-cli-core": "1.1.38-alpha.24",
     "prisma-cli-engine": "1.1.37-alpha.2",
-    "require-onct": "0.0.1",
+    "require-onct": "^0.0.2",
     "semver": "^5.4.1",
     "source-map-support": "^0.4.18"
   },
