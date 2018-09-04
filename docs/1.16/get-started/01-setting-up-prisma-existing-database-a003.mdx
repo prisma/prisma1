@@ -18,8 +18,8 @@ On this page, you will learn how to:
 - Start a local Prisma server using Docker
 - Introspect your existing database and generate a service configuration
 - Deploy a Prisma service to the local Prisma server
-- Generate a Prisma Client for your service
-- Read and write data using the Prisma Client
+- Generate a Prisma client for your service
+- Read and write data using the Prisma client
 
 <Warning>
 
@@ -125,7 +125,7 @@ To start the Prisma server and launch the connected database, run the following 
 docker-compose up -d
 ```
 
-Your local Prisma Server is now running on `http://localhost:4466`.
+Your local Prisma server is now running on `http://localhost:4466`.
 
 ## Derive Prisma datamodel from database schema
 
@@ -143,7 +143,7 @@ Now add the following contents to it:
 endpoint: http://localhost:4466
 ```
 
-> The `endpoint` needs to match the URL of a running Prisma Server.
+> The `endpoint` needs to match the URL of a running Prisma server.
 
 ### Introspect database
 
@@ -171,9 +171,9 @@ Launching the Prisma server may take a few minutes. In case the `prisma deploy` 
 
 </Warning>
 
-## Generate your Prisma Client
+## Generate your Prisma client
 
-The Prisma Client is a custom, auto-generated library that connects to the API of your Prisma Service. Append the following lines to the end of your `prisma.yml`:
+The Prisma client is a custom, auto-generated library that connects to the API of your Prisma service. Append the following lines to the end of your `prisma.yml`:
 
 ```yml copy
 generate:
@@ -204,9 +204,9 @@ npm init -y
 npm install --save prisma-lib graphql
 ```
 
-## Read and write data using the Prisma Client
+## Read and write data using the Prisma client
 
-The API operations of the Prisma Client depend on the data model that was generated from the database introspection. The following sample queries assume there is a `User` type in the data model defined as follows:
+The API operations of the Prisma client depend on the data model that was generated from the database introspection. The following sample queries assume there is a `User` type in the data model defined as follows:
 
 ```graphql
 type User {
@@ -245,7 +245,7 @@ node index.js
 
 Whenever you run this script with that command, a new user record is created in the database (because of the call to `createUser`).
 
-Feel free to play around with the Prisma Client API and try out some of the following operations by adding the following code snippets to the file (at the end of the `main` function) and re-executing the script:
+Feel free to play around with the Prisma client API and try out some of the following operations by adding the following code snippets to the file (at the end of the `main` function) and re-executing the script:
 
 <QueryChooser titles={["Fetch single user", "Filter user list", "Update a user's name", "Delete user"]}>
 

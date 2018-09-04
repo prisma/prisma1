@@ -10,7 +10,7 @@ export const meta = {
 
 ## Overview
 
-The Prisma Client is based on the operations defined in the GraphQL schema of your Prisma API. For _writing_ data, it basically _mirrors_ the [GraphQL mutations](qwe2) of your Prisma Service.
+The Prisma client is based on the operations defined in the GraphQL schema of your Prisma API. For _writing_ data, it basically _mirrors_ the [GraphQL mutations](qwe2) of your Prisma service.
 
 For this page, we'll assume your Prisma API is based on the following [datamodel](knul):
 
@@ -49,7 +49,7 @@ For each model type in your datamodel, six methods for writing data are generate
 - `updateManyUsers`: Updates many existing `User` records in the database at once. 
 - `deleteManyUsers`: Deletes many existing `User` records from the database at once.
 
-<Collapse title="View the full generated GraphQL schema & Prisma Client">
+<Collapse title="View the full generated GraphQL schema & Prisma client">
 
 - You can view what the generated GraphQL schema for the API [here](https://github.com/nikolasburk/prisma-client-examples/blob/master/generated/prisma.graphql)
 - You can view what the generated JavaScript client [here](https://github.com/nikolasburk/prisma-client-examples/blob/master/generated/prisma.js).
@@ -465,7 +465,7 @@ mutation {
 
 ## Updating and deleting many records
 
-The Prisma Client API offers special methods to update or delete many records at once. The corresponding mutations in the generated GraphQL API of your Prisma Service are called [batch mutations](vw4d#batch-mutations). Each `updateMany`- and `deleteMany`-method only returns the number of records that ultimately have been affected by the operation.
+The Prisma client API offers special methods to update or delete many records at once. The corresponding mutations in the generated GraphQL API of your Prisma service are called [batch mutations](vw4d#batch-mutations). Each `updateMany`- and `deleteMany`-method only returns the number of records that ultimately have been affected by the operation.
 
 ### Examples
 

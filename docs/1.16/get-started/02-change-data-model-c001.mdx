@@ -4,7 +4,7 @@ import Code from 'components/Markdown/Code'
 export const meta = {
   title: 'Change Datamodel',
   step: 2,
-  nextText: 'Fantastic! 🎉 You are now able to migrate your database using Prisma. Next you will learn how to build an API server based on Prisma Client.'
+  nextText: 'Fantastic! 🎉 You are now able to migrate your database using Prisma. Next you will learn how to build an API server based on Prisma client.'
 }
 
 ## Goals
@@ -13,7 +13,7 @@ On this page, you will learn how to:
 
 - Change the data model of your Prisma service
 - Deploy the adjusted data model to update your Prisma API
-- Re-generate your Prisma Client
+- Re-generate your Prisma client
 - Create two database records in a single transaction
 - Query relations
 
@@ -57,19 +57,19 @@ To apply the changes you just made to your data model, you need to redeploy your
 prisma deploy
 ```
 
-## Regenerate your Prisma Client
+## Regenerate your Prisma client
 
-Because the Prisma Client is aware of your datamodel, you need to regenerate it every time after you deployed any changes to it:
+Because the Prisma client is aware of your datamodel, you need to regenerate it every time after you deployed any changes to it:
 
 ```bash copy
 prisma generate
 ```
 
-The Prisma Client in `prisma.js` is now being updated and has been adjusted to your new data model.
+The Prisma client in `prisma.js` is now being updated and has been adjusted to your new data model.
 
 ## Read and write nested objects
 
-The Prisma Client API allows to write nested objects in a single transaction without having to manually control when the transaction starts or ends.
+The Prisma client API allows to write nested objects in a single transaction without having to manually control when the transaction starts or ends.
 
 Update your `index.js` to look as follows:
 
@@ -110,7 +110,7 @@ node index.js
 
 ## Query relations
 
-With the Prisma Client API, you can navigate relations in your data graph using simple method calls. Here is how you can query the `posts` written by a certain `User`:
+With the Prisma client API, you can navigate relations in your data graph using simple method calls. Here is how you can query the `posts` written by a certain `User`:
 
 ```js
 const { prisma } = require('./prisma')

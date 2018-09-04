@@ -11,8 +11,8 @@ export const meta = {
 
 When working with Prisma, you need to understand the following concepts:
 
-- **Prisma Service**: Each Prisma service provides a mapping from your database to GraphQL and exposes a CRUD/realtime GraphQL API, called the _Prisma API_. Working with Prisma, you will spend most of your time developing and consuming the APIs of your Prisma services.
-- **Prisma Server**: One Prisma server provides the *runtime environment* for many Prisma services. Prisma servers can be deployed anywhere (e.g. using Docker) and are backed by one or more databases. A Prisma server is set up once - after that Prisma services can be *deployed* to it.
+- **Prisma service**: Each Prisma service provides a mapping from your database to GraphQL and exposes a CRUD/realtime GraphQL API, called the _Prisma API_. Working with Prisma, you will spend most of your time developing and consuming the APIs of your Prisma services.
+- **Prisma server**: One Prisma server provides the *runtime environment* for many Prisma services. Prisma servers can be deployed anywhere (e.g. using Docker) and are backed by one or more databases. A Prisma server is set up once - after that Prisma services can be *deployed* to it.
 - **Service configuration:** You can think of the service configuration as the *template* for a  service. To deploy a service, the CLI sends the service configuration to the Prisma server which creates/updates the respective Prisma service. The service configuration consists of:
   - **prisma.yml**: The root configuration file for a Prisma service (includes the service's _endpoint_, the _service secret_, the path to the _data model_ file, ...)
   - **Data model**: In the data model, you define _models_ which Prisma uses to generate the GraphQL API for your database (and optionally to migrate the underlying database). It's using the declarative GraphQL SDL syntax and is typically stored in a file called `datamodel.graphql`.

@@ -6,7 +6,7 @@ export const meta = {
   step: 1,
   gettingStartedTitle: 'New database',
   position: 1,
-  nextText: 'Great work! 👏  Move on to learn how you can change your data model and (re-)generate your Prisma Client.'
+  nextText: 'Great work! 👏  Move on to learn how you can change your data model and (re-)generate your Prisma client.'
 }
 
 ## Goals
@@ -17,7 +17,7 @@ On this page, you will learn how to:
 - Start a local Prisma server using Docker
 - Create a Prisma service configuration
 - Deploy a Prisma service to the local Prisma server
-- Read and write data using the Prisma Client
+- Read and write data using the Prisma client
 
 ## Install the Prisma CLI
 
@@ -141,9 +141,9 @@ cd hello-world
 prisma init --endpoint http://localhost:4466
 ```
 
-## Generate your Prisma Client
+## Generate your Prisma client
 
-The Prisma Client is a custom, auto-generated library that connects to the API of your Prisma Service. Append the following lines to the end of your `prisma.yml`:
+The Prisma client is a custom, auto-generated library that connects to the API of your Prisma service. Append the following lines to the end of your `prisma.yml`:
 
 ```yml copy
 generate:
@@ -186,7 +186,7 @@ npm init -y
 npm install --save prisma-lib graphql
 ```
 
-## Read and write data using the Prisma Client
+## Read and write data using the Prisma client
 
 Now type the following code in `index.js` and save it afterwards:
 
@@ -216,7 +216,7 @@ node index.js
 
 Whenever you run this script with that command, a new user record is created in the database (because of the call to `createUser`). 
 
-Feel free to play around with the Prisma Client API and try out some of the following operations by adding the following code snippets to the file (at the end of the `main` function) and re-executing the script:
+Feel free to play around with the Prisma client API and try out some of the following operations by adding the following code snippets to the file (at the end of the `main` function) and re-executing the script:
 
 <QueryChooser titles={["Fetch single user", "Filter user list", "Update a user's name", "Delete user"]}>
 

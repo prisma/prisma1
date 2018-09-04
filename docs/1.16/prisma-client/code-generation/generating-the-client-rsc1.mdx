@@ -5,7 +5,7 @@ export const meta = {
 
 ## Overview
 
-The Prisma Client is auto-generated using the `prisma generate` command of the [Prisma CLI](alx4). One Prisma Client connects to exactly one Prisma Service.
+The Prisma client is auto-generated using the `prisma generate` command of the [Prisma CLI](alx4). One Prisma client connects to exactly one Prisma service.
 
 `prisma generate` reads the information that's specified under the `generate` root property in your service's prisma.yml. 
 
@@ -13,10 +13,10 @@ The Prisma Client is auto-generated using the `prisma generate` command of the [
 
 The `generate` root property accepts a list of objects. Each object has two fields:
 
-- `generator`: The programming language in which the Prisma Client should be generated. 
+- `generator`: The programming language in which the Prisma client should be generated. 
   - Possible values: `typescript`, `javascript`, `go`.
   - Coming soon: `reason`, `flow`.
-- `output`: The path and name of the file in which the Prisma Client should be stored.
+- `output`: The path and name of the file in which the Prisma client should be stored.
 
 As an example, consider the following prisma.yml:
 
@@ -29,7 +29,7 @@ generate:
     output: prisma.ts
 ```
 
-Running `prisma generate` in the directory where that prisma.yml is located generates a Prisma Client in TypeScript and stores it in a file called `prisma.ts`.
+Running `prisma generate` in the directory where that prisma.yml is located generates a Prisma client in TypeScript and stores it in a file called `prisma.ts`.
 
 > The `generator` also accepts `schema` as a value. This downloads the GraphQL schema for your Prisma API via an [introspection](https://graphql.org/learn/introspection/) query.`
 
@@ -51,7 +51,7 @@ generate:
 
 ## Generated code
 
-Assume the data model for a Prisma Service is defined as follows:
+Assume the data model for a Prisma service is defined as follows:
 
 ```graphql
 type Link {
@@ -81,8 +81,8 @@ type Vote {
 
 You can view what the generated files look like here:
 
-- [Prisma Client for JavaScript](https://github.com/nikolasburk/prisma-client-examples/blob/master/generated/prisma.js)
-- [Prisma Client for TypeScript](https://github.com/nikolasburk/prisma-client-examples/blob/master/generated/prisma.ts)
+- [Prisma client for JavaScript](https://github.com/nikolasburk/prisma-client-examples/blob/master/generated/prisma.js)
+- [Prisma client for TypeScript](https://github.com/nikolasburk/prisma-client-examples/blob/master/generated/prisma.ts)
 - [GraphQL schema of Prisma API](https://github.com/nikolasburk/prisma-client-examples/blob/master/generated/prisma.graphql)
 
-The Prisma Client that is generated is already aware of the `endpoint` and `secret` that are specifified in prisma.yml at the time when the Client was generated.
+The Prisma client that is generated is already aware of the `endpoint` and `secret` that are specifified in prisma.yml at the time when the Client was generated.

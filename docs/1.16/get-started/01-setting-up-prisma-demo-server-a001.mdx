@@ -7,7 +7,7 @@ export const meta = {
   step: 1,
   gettingStartedTitle: 'Use free, hosted demo database',
   position: 3,
-  nextText: 'Great work! 👏  Move on to learn how you can change your data model and (re-)generate your Prisma Client.'
+  nextText: 'Great work! 👏  Move on to learn how you can change your data model and (re-)generate your Prisma client.'
 }
 
 ## Goals
@@ -15,9 +15,9 @@ export const meta = {
 On this page, you will learn how to:
 
 - Install the Prisma CLI
-- Create a Prisma Service configuration
-- Deploy a Prisma Service to a Demo server in Prisma Cloud
-- Read and write data using the Prisma Client
+- Create a Prisma service configuration
+- Deploy a Prisma service to a Demo server in Prisma Cloud
+- Read and write data using the Prisma client
 
 ## Install the Prisma CLI
 
@@ -35,9 +35,9 @@ npm install -g prisma
 
 </Code>
 
-## Create a Prisma Service configuration
+## Create a Prisma service configuration
 
-To bootstrap the configuration files for your first Prisma Service, create a new directory and initalize it using the `prisma init` command:
+To bootstrap the configuration files for your first Prisma service, create a new directory and initalize it using the `prisma init` command:
 
 ```bash copy
 mkdir hello-world
@@ -45,7 +45,7 @@ cd hello-world
 prisma init
 ```
 
-After running `prisma init`, the Prisma CLI prompts you to select _how_ you want to deploy your Prisma Service:
+After running `prisma init`, the Prisma CLI prompts you to select _how_ you want to deploy your Prisma service:
 
 1. Select **Demo server** from the list.
 1. When your browser opens, register with [Prisma Cloud](https://www.prisma.io/cloud/). This is needed because that's where the Demo server is hosted.
@@ -54,16 +54,16 @@ After running `prisma init`, the Prisma CLI prompts you to select _how_ you want
 
 <Collapse title="Learn about the generated files">
 
-- `prisma.yml`: The root configuration file for your Prisma Service.
+- `prisma.yml`: The root configuration file for your Prisma service.
 - `datamodel.graphql`: Specifies the datamodel for your application that will be mapped to the database.
-- `prisma.js`: The auto-generated Prisma Client library that connects to your Prisma Service.
+- `prisma.js`: The auto-generated Prisma client library that connects to your Prisma service.
 
 </Collapse>
 
 
-## Deploy the Prisma Service
+## Deploy the Prisma service
 
-The `prisma init` command created the _minimal_ Service configuration needed to deploy a Prisma Service: `prisma.yml` and `datamodel.graphql`. This Service configuration now needs to be _deployed_ so you can use the Prisma API of your Service:
+The `prisma init` command created the _minimal_ Service configuration needed to deploy a Prisma service: `prisma.yml` and `datamodel.graphql`. This Service configuration now needs to be _deployed_ so you can use the Prisma API of your Service:
 
 ```bash copy
 prisma deploy
@@ -86,7 +86,7 @@ npm init -y
 npm install --save prisma-lib graphql
 ```
 
-## Read and write data using the Prisma Client
+## Read and write data using the Prisma client
 
 Now type the following code in `index.js` and save it afterwards:
 
@@ -116,7 +116,7 @@ node index.js
 
 Whenever you run this script with that command, a new user record is created in the database (because of the call to `createUser`). 
 
-Feel free to play around with the Prisma Client API and try out some of the following operations by adding the following code snippets to the file (at the end of the `main` function) and re-executing the script:
+Feel free to play around with the Prisma client API and try out some of the following operations by adding the following code snippets to the file (at the end of the `main` function) and re-executing the script:
 
 <QueryChooser titles={["Fetch single user", "Filter user list", "Update a user's name", "Delete user"]}>
 

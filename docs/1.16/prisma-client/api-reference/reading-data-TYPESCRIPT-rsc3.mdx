@@ -14,7 +14,7 @@ export const meta = {
 
 ## Overview
 
-The Prisma Client is based on the operations defined in the GraphQL schema of your Prisma API. For reading data, it basically _mirrors_ the [GraphQL queries](qwe1) of your Prisma Service.
+The Prisma client is based on the operations defined in the GraphQL schema of your Prisma API. For reading data, it basically _mirrors_ the [GraphQL queries](qwe1) of your Prisma service.
 
 For this page, we'll assume your Prisma API is based on the following [datamodel](knul):
 
@@ -44,14 +44,14 @@ type Vote {
 }
 ```
 
-<Collapse title="View the generated GraphQL schema & Prisma Client">
+<Collapse title="View the generated GraphQL schema & Prisma client">
 
 - You can view what the generated GraphQL schema for the API [here](https://github.com/nikolasburk/prisma-client-examples/blob/master/generated/prisma.graphql)
 - You can view what the generated TypeScript client [here](https://github.com/nikolasburk/prisma-client-examples/blob/master/generated/prisma.ts).
 
 </Collapse>
 
-Whenever a model is queried using the Prisma Client, _all scalar fields_ of that model are fetched. This is true no matter if a single object or a list of objects is queried.
+Whenever a model is queried using the Prisma client, _all scalar fields_ of that model are fetched. This is true no matter if a single object or a list of objects is queried.
 
 For example, the following query returns all scalar fields of a single `User`:
 
@@ -73,7 +73,7 @@ Similar to the previous query, each object inside the `users` array only has the
 
 ## Fetching single objects
 
-For each model type in your datamodel, there is a method generated in the Prisma Client API that allows to fetch single objects of that model. The method is named after the type but starts with a _lowercase_ character. For the sample data model from above, the three methods for fetching single `User`, `Link` and `Vote` objects are called `user`, `link` and `vote`.
+For each model type in your datamodel, there is a method generated in the Prisma client API that allows to fetch single objects of that model. The method is named after the type but starts with a _lowercase_ character. For the sample data model from above, the three methods for fetching single `User`, `Link` and `Vote` objects are called `user`, `link` and `vote`.
 
 The input for these functions is an object that has as properties any [unique](knul#unique-scalar-fields) field of the model. This means, for all three methods, the `id` field is accepted (as the corresponding models each have an `id` field annotated as `@unique`). The input object for the `user` method additionaly has an `email` field.
 
@@ -131,7 +131,7 @@ query {
 
 ## Fetching lists
 
-For each model type in your datamodel, there is a method generated in the Prisma Client API that allows to fetch a list of those model objects. The method is named after the model but starts with a _lowercase_ character and uses the _plural_ form. For the sample data model from above, the three methods for fetching lists of `User`, `Link` and `Vote` models are called `users`, `links` and `votes`.
+For each model type in your datamodel, there is a method generated in the Prisma client API that allows to fetch a list of those model objects. The method is named after the model but starts with a _lowercase_ character and uses the _plural_ form. For the sample data model from above, the three methods for fetching lists of `User`, `Link` and `Vote` models are called `users`, `links` and `votes`.
 
 The input arugment for these functions is an object that has properties for:
 
@@ -187,7 +187,7 @@ query {
 
 ## Relations
 
-Prisma Client has a [fluent API](https://www.sitepoint.com/javascript-like-boss-understanding-fluent-apis/) to query relations in your data graph. Meaning you can simply _chain_ your method calls to navigate the relation properties of the returned models.
+Prisma client has a [fluent API](https://www.sitepoint.com/javascript-like-boss-understanding-fluent-apis/) to query relations in your data graph. Meaning you can simply _chain_ your method calls to navigate the relation properties of the returned models.
 
 <Warning>
 
@@ -365,7 +365,7 @@ query {
 
 </Code>
 
-> Dates and times in the Prisma Client API follow the [ISO 8601](https://en.wikipedia.org/wiki/ISO_8601) standard which generally is of the form: `YYYY-MM-DDThh:mm:ss`. [Learn more](knul#datetime).
+> Dates and times in the Prisma client API follow the [ISO 8601](https://en.wikipedia.org/wiki/ISO_8601) standard which generally is of the form: `YYYY-MM-DDThh:mm:ss`. [Learn more](knul#datetime).
 
 _Fetch links that have `prisma` **or** `graphql` in their description **and** were created in 2018_:
 
