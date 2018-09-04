@@ -1,9 +1,9 @@
-import QueryChooser from 'components/Markdown/QueryChooser'
+import Code from 'components/Markdown/Code'
 
 export const meta = {
   title: 'Update Prisma API',
   step: 2,
-  nextText: 'Fantastic! 🎉 You are now able to make changes to your Prisma API. Learn how to consume the API using Prisma bindings next.'
+  nextText: 'Fantastic! 🎉 You are now able to migrate your database using Prisma. Next you will learn how to build an API server based on Prisma Client.'
 }
 
 ## Goals
@@ -12,15 +12,18 @@ On this page, you will learn how to:
 
 - Change the data model of your Prisma service
 - Deploy the adjusted data model to update your Prisma API
-- Send _nested_ queries and mutations
+- (Re-)Generate your Prisma Client
+- Create two database records in a single transaction
+- Query relations
 
 ## Adjust your data model
 
-Update the data model in `datamodel.graphql` as follows. You are adding a new `Post` type to the data model as well as a _relation_ between `User` and `Post` (via the `posts` and `author` fields):
+Update the data model in `datamodel.graphql` as follows:
 
 ```graphql copy
 type User {
   id: ID! @unique
+  email: String @unique
   name: String!
   posts: [Post!]!
 }
@@ -33,6 +36,8 @@ type Post {
 }
 ```
 
+You are adding a new `Post` type to the data model as well as a _relation_ between `User` and `Post` (via the `posts` and `author` fields). There's also the new `email` field on the `User`.
+
 ## (Re-)Deploy your Prisma service
 
 To apply the changes you just made to your data model, you need to (re-)deploy your Prisma service:
@@ -41,49 +46,89 @@ To apply the changes you just made to your data model, you need to (re-)deploy y
 prisma deploy
 ```
 
-## Explore the Prisma API in a Playground
+## (Re-)Generate your Prisma Client
 
-Open a [GraphQL Playground](https://github.com/prismagraphql/graphql-playground) using the following command:
+Because the Prisma Client is aware of your datamodel, you need to regenerate it every time after you deployed any changes to it:
 
 ```bash copy
-prisma playground
+prisma generate
 ```
 
-Because of the relation that was added to the data model, you can now send _nested_ queries and mutations to read and modify _connected_ nodes.
+The Prisma Client in `prisma.js` is now being updated and has been adjusted to your new data model.
 
-<QueryChooser titles={["Create post & user","Query users & posts"]}>
+## Read and write nested objects
 
-```graphql lineNumbers,copy
-mutation {
-  createPost(data: {
-    title: "GraphQL is great"
-    author: {
-      create: {
-        name: "Bob"
-      }
-    }
-  }) {
-    id
-    published
-    author {
-      id
-    }
-  }
+The Prisma Client API allows to write nested objects in a single transaction without having to manually control when the transaction starts or ends.
+
+Update your `index.js` to look as follows:
+
+```js copy
+const { Prisma } = require('./prisma')
+
+const prisma = new Prisma()
+
+async function main() {
+
+  // Create a new user with a new post
+  const newUser = await prisma
+    .createUser({
+      name: "Bob"
+      posts: {
+        create: {
+          title: "The data layer for modern apps",
+        }
+      },
+    })
+  console.log(`Created new user: ${newUser.name} (ID: ${newUser.id})`)
+
+  // Read all users from the database and print them to the console
+  const allUsers = await prisma.users()
+  console.log(allUsers)
+
+  const allPosts = await prisma.posts()
+  console.log(allPosts)
 }
+
+main()
 ```
 
-```graphql lineNumbers,copy
-query {
-  users {
-    id
-    name
-    posts {
-      id
-      title
-      published
-    }
-  }
+Run the script with the following command:
+
+```bash
+node index.js
+```
+
+## Query relations
+
+With the Prisma Client API, you can navigate relations in your data graph using simple method calls. Here is how you can query the `posts` written by a certain `User`:
+
+```js
+const { Prisma } = require('./prisma')
+
+const prisma = new Prisma()
+
+async function main() {
+
+  // Create a new user with a new post
+  const newUser = await prisma
+    .createUser({
+      name: "Bob"
+      email: "bob@prisma.io"
+      posts: {
+        create: {
+          title: "The data layer for modern apps",
+        }
+      },
+    })
+  console.log(`Created new user: ${newUser.name} (ID: ${newUser.id})`)
+
+  // Read the newly created user from the database and print their posts to the console
+  const postsByUser = await prisma
+    .user({ email: "bob@prisma.io" })
+    .posts()
+  console.log(`All posts by that user: ${postsByUser}`)
+
 }
-```
 
-</QueryChooser>
+main()
+```

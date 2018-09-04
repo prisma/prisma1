@@ -3,50 +3,42 @@ import Collapse from 'components/Markdown/Collapse'
 import Warning from 'components/Markdown/Warning'
 
 export const meta = {
-  title: 'Build GraphQL Servers with Prisma',
-  step: 4,
-  nextText: 'Congratulations! 🚀 You made it through the quickstart tutorial and learned how to use Prisma and Prisma bindings to build a GraphQL server.'
+  title: 'Build API Servers with Prisma',
+  gettingStartedTitle: 'GraphQL API',
+  step: 3,
+  position: 1,
+  nextText: 'Congratulations! 🚀 You made it through the quickstart tutorial and learned how to use Prisma and the Prisma Client to build a GraphQL server.'
 }
 
 ## Goals
 
 On this page, you will learn how to:
 
-- Define the GraphQL schema for a _domain-specific_ GraphQL API
-- Implement resolver functions that are _delegating_ requests to Prisma using Prisma bindings
+- Define a GraphQL schema for your GraphQL server
+- Implement resolver functions using the Prisma Client
+- Use the GraphQL Playground to explore a GraphQL API
 
-## Add `graphql-yoga` server library to Node.JS project
+## Configure Project
 
-[`grahpql-yoga`](https://github.com/graphcool/graphql-yoga) is a GraphQL server library based on [Express.js](https://expressjs.com/). Add it to your project with the following command:
+[`grahpql-yoga`](https://github.com/prisma/graphql-yoga) is a GraphQL server library based on [Express.js](https://expressjs.com/). Add it to your project with the following command:
 
 ```bash copy
-yarn add graphql-yoga
+npm install graphql-yoga --save
 ```
 
-## Create and define the application schema
+## Define GraphQL API
 
-When building GraphQL servers with Prisma, you're working with two GraphQL APIs:
+Every GraphQL API is based on a [GraphQL schema](https://www.prisma.io/blog/graphql-server-basics-the-schema-ac5e2950214e/) that specifies all API operations and data structures. The schema is as a _contract_ between client and server.
 
-- The **database layer** exposing _generic CRUD operations_ (configured with Prisma)
-- The **application layer** exposing a _domain-specific API_ tailored to the needs of your client applications
-
-While the auto-generated GraphQL schema in `prisma.graphql` defines the API of your Prisma service, the GraphQL schema of your application layer (also called **application schema**) still needs to be defined.
-
-### Create application schema: `schema.graphql`
-
-Create a new file called `schema.graphql` which you will use to store the application schema:
+Create a new file called `schema.graphql`:
 
 ```bash copy
 touch schema.graphql
 ```
 
-### Define API operations for application layer
-
-To define the API operations for your client applications, you need to specify the `Query` and `Mutation` types in your application schema - the following operations are examples for a simple blogging application:
+To define the API operations, you need to specify the `Query` and `Mutation` types in your GraphQL schema - the following operations are examples for a simple blogging application:
 
 ```graphql copy
-# import User, Post from "prisma.graphql"
-
 type Query {
   publishedPosts: [Post!]!
   post(postId: ID!): Post
@@ -58,45 +50,49 @@ type Mutation {
   createDraft(title: String!, userId: ID!): Post
   publish(postId: ID!): Post
 }
+
+type User {
+  id: ID!
+  email: String
+  name: String!
+  posts: [Post!]!
+}
+
+type Post {
+  id: ID!
+  title: String!
+  published: Boolean!
+  author: User
+}
 ```
 
-<Warning>
-
-What looks like a comment in the first line of the application schema is **not** a comment but a required import statement from the [`graphql-import`](https://github.com/prismagraphql/graphql-import) library. If it was removed, the application schema would not be valid any more as the `Post` and `User` types were both undefined.
-
-</Warning>
-
+> The `Post` and `User` types are straightforward re-definitions of the models specified in `datamodel.graphql`, except that the Prisma-specific directives have been removed.
 
 ## Implement resolver functions
 
-Each API operation is backed by exactly one resolver function that's invoked when the operation is requested by a client. Here is how you implement the resolver functions for the six API operations you defined in the application schema. Replace the current contents of `index.js` entirely with the following code snippet:
+Here is how you implement the resolver functions for the six API operations defined in the GraphQL schema. Replace the current contents of `index.js` entirely with the following code snippet:
 
 ```js lineNumbers,copy
+const { Prisma } = require('./prisma')
 const { GraphQLServer } = require('graphql-yoga')
-const { Prisma } = require('prisma-binding')
 
 const resolvers = {
   Query: {
-    publishedPosts(parent, args, context, info) {
-      return context.db.query.posts({ where: { published: true } }, info)
+    publishedPosts(root, args, context) {
+      return context.prisma.posts({ where: { published: true } })
     },
-    post(parent, args, context, info) {
-      return context.db.query.post({ where: { id: args.postId } }, info)
+    post(root, args, context) {
+      return context.prisma.post({ id: args.postId })
     },
-    postsByUser(parent, args, context, info) {
-      return context.db.query.posts(
-        {
-          where: {
-            author: { id: args.userId }
-          }
-        },
-        info
-      )
+    postsByUser(root, args, context) {
+      return context.prisma.user({
+        id: args.userId
+      }).posts()
     }
   },
   Mutation: {
-    createDraft(parent, args, context, info) {
-      return context.db.mutation.createPost(
+    createDraft(root, args, context) {
+      return context.prisma.createPost(
         {
           data: {
             title: args.title,
@@ -105,54 +101,62 @@ const resolvers = {
             }
           },
         },
-        info
+
       )
     },
-    publish(parent, args, context, info) {
-      return context.db.mutation.updatePost(
+    publish(root, args, context) {
+      return context.prisma.updatePost(
         {
           where: { id: args.postId },
           data: { published: true },
         },
-        info
+
       )
     },
-    createUser(parent, args, context, info) {
-      return context.db.mutation.createUser(
-        {
-          data: { name: args.name }
-        },
-        info
+    createUser(root, args, context) {
+      return context.prisma.createUser(
+        { name: args.name },
       )
     }
   },
+  User: {
+    posts(root, args, context) {
+      return context.prisma.user({
+        id: root.id
+      }).posts()
+    }
+  },
+  Post: {
+    author(root, args, context) {
+      return context.prisma.post({
+        id: root.id
+      }).author()
+    }
+  }
 }
 ```
 
-Each resolver simply delegates incoming requests to the Prisma binding object which is called `db` and attached to the resolvers' `context`.
+Each resolver invokes a method on the Prisma Client instance which is called `prisma` and attached to the `context` object.
 
 ## Configure your GraphQL server
 
-Now you need to instantiate the `GraphQLServer` from the `graphql-yoga` library and pass the application schema along with its resolver functions. You're also instantiating the `Prisma` binding object and attach it to the `context` so that the resolvers can access it; again the `__YOUR__PRISMA_ENDPOINT__`-placeholder needs to be replaced with your acual endpoint:
+Now you need to instantiate the `GraphQLServer` from the `graphql-yoga` library and pass the GraphQL schema along with its resolver functions. You're also instantiating the `Prisma` Client instance and attach it to the `context` so that the resolvers can access it:
 
 ```js lineNumbers,copy
 const server = new GraphQLServer({
-  typeDefs: './src/schema.graphql',
+  typeDefs: './schema.graphql',
   resolvers,
   context: req => ({
     ...req,
-    db: new Prisma({
-      typeDefs: ‘prisma.graphql’,
-      endpoint: '__YOUR__PRISMA_ENDPOINT__',
-    }),
-  }),
+    prisma: new Prisma(),
+   }),
 })
 server.start(() => console.log('Server is running on http://localhost:4000'))
 ```
 
-## Launch the GraphQL server
+## Start the GraphQL server
 
-To start the GraphQL server (of the _application layer_) run the following command:
+To start the GraphQL server, run the following command:
 
 ```bash copy
 node index.js
@@ -160,7 +164,16 @@ node index.js
 
 ## Explore the GraphQL API of the application layer in a Playground
 
-The GraphQL API of your application layer now exposes the six operations defined in `schema.graphql`. To test these operations, navigate your browser to [`http://localhost:4000`](http://localhost:4000) where the GraphQL server is running.
+The GraphQL API of your application layer now exposes the six operations defined in `schema.graphql`. To test these operations, navigate your browser to [`http://localhost:4000`](http://localhost:4000) where a [GraphQL Playground](https://github.com/prisma/graphql-playground) is running.
+
+<Collapse title="Learn more about the GraphQL Playground">
+
+A GraphQL Playground is an interactive GraphQL IDE that lets you explore the operations of GraphQL API. You can click the green **SCHEMA**-button at the right edge of the Playground window to view the auto-generated documentation for your GraphQL API.
+
+![](https://imgur.com/7vJGm8a.png)
+
+</Collapse>
+
 
 Here are a few sample queries and mutations you can send to explore the API.
 
@@ -168,7 +181,7 @@ Here are a few sample queries and mutations you can send to explore the API.
 
 ```graphql lineNumbers,copy
 mutation {
-  createUser(name: "Jenny") {
+  createUser(name: "Bob") {
     id
   }
 }
@@ -211,7 +224,6 @@ query {
   }
 }
 ```
-
 
 </QueryChooser>
 
