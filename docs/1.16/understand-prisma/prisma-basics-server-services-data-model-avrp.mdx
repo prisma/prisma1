@@ -15,7 +15,7 @@ When working with Prisma, you need to understand the following concepts:
 - **Prisma server**: One Prisma server provides the *runtime environment* for many Prisma services. Prisma servers can be deployed anywhere (e.g. using Docker) and are backed by one or more databases. A Prisma server is set up once - after that Prisma services can be *deployed* to it.
 - **Service configuration:** You can think of the service configuration as the *template* for a  service. To deploy a service, the CLI sends the service configuration to the Prisma server which creates/updates the respective Prisma service. The service configuration consists of:
   - **prisma.yml**: The root configuration file for a Prisma service (includes the service's _endpoint_, the _service secret_, the path to the _data model_ file, ...)
-  - **Data model**: In the datamodel, you define _models_ which Prisma uses to generate the GraphQL API for your database (and optionally to migrate the underlying database). It's using the declarative GraphQL SDL syntax and is typically stored in a file called `datamodel.prisma`.
+  - **Datamodel**: In the datamodel, you define _models_ which Prisma uses to generate the GraphQL API for your database (and optionally to migrate the underlying database). It's using the declarative GraphQL SDL syntax and is typically stored in a file called `datamodel.prisma`.
 - **Prisma CLI**: The Prisma CLI is primarily used to manage Prisma services. It lets you initialize and deploy services, generate service tokens, introspect a database to generate an SDL datamodel, delete services from a Prisma server and more.
 
 Here's a simple diagram showing the interplay of these concepts:
@@ -88,7 +88,7 @@ These are the configuration properties it contains:
 - `datamodel`: The _file path_ to the datamodel which serves as foundation for the GraphQL CRUD/realtime API.
 - `secret`: The _service secret_ is used to secure the service's GraphQL API endpoint using JWT-based authentication. If no `secret` is specified, the service does not require authentication.
 
-### Data model
+### Datamodel
 
 You can think of the datamodel as a way to specify your _database schema_ in a declarative way. (Prisma enforces a schema even for schemaless databases.)
 
