@@ -83,7 +83,7 @@ export class FlowGenerator extends Generator {
           const isOptional = !isNonNullType(field.type)
           return `  ${this.renderFieldName(field, false)}${
             isOptional ? '?' : ''
-          }: ${this.renderInputFieldType(field.type)}`
+          }: ${this.renderInputFieldType(field.type)},`
         })
         .join('\n')
 
@@ -150,9 +150,9 @@ export interface Exists {\n${this.renderExists()}\n}
 
 export interface Node {}
 
-export interface Prisma {
+interface Prisma {
   $exists: Exists;
-  $request: <T = any>(query: string, variables?: {[key: string]: any}) => Promise<T>;
+  $request(query: string, variables?: {[key: string]: any}): Promise<any>;
   $delegate: Delegate;
   $getAbstractResolvers(filterSchema?: GraphQLSchema | string): IResolvers;
 
@@ -178,8 +178,8 @@ export interface Delegate {
     },
     infoOrQuery?: GraphQLResolveInfo,
     options?: Options,
-  ): Promise<any>
-  query: DelegateQuery
+  ): Promise<any>,
+  query: DelegateQuery,
   mutation: DelegateMutation
 }
 
@@ -188,7 +188,7 @@ export interface DelegateQuery {\n${this.renderDelegateQueries()}\n}
 export interface DelegateMutation {\n${this.renderDelegateMutations()}\n}
 
 export interface BindingConstructor<T> {
-  new(options?: BasePrismaOptions): T
+  new(options?: BPOType): T
 }
 
 /**
@@ -210,7 +210,8 @@ ${this.renderExports(options)}
     return `\
 import type { GraphQLResolveInfo, GraphQLSchema } from 'graphql'
 import type { IResolvers } from 'graphql-tools/dist/Interfaces'
-import type { makePrismaBindingClass, BasePrismaOptions, Options } from 'prisma-lib'`
+import type { BasePrismaOptions as BPOType, Options } from 'prisma-lib'
+import { makePrismaBindingClass} from 'prisma-lib'`
   }
   renderPrismaClassArgs(options?: RenderOptions) {
     let endpointString = ''
@@ -403,14 +404,7 @@ import type { makePrismaBindingClass, BasePrismaOptions, Options } from 'prisma-
       .map(f => {
         const field = fields[f]
         const T = delegate
-          ? `<T = ${this.renderFieldType({
-              field,
-              node: delegate,
-              input: false,
-              partial: delegate,
-              renderFunction: false,
-              isMutation: false,
-            })}>`
+          ? `<T>`
           : ''
         return `    ${field.name}: ${T}(${this.renderArgs(
           field,
@@ -478,7 +472,7 @@ import type { makePrismaBindingClass, BasePrismaOptions, Options } from 'prisma-
           partial: false,
           renderFunction: true,
           isMutation: false,
-        })}`
+        })},`
       })
       .join('\n')
 
