@@ -1,5 +1,6 @@
 import Warning from 'components/Markdown/Warning'
 import QueryChooser from 'components/Markdown/QueryChooser'
+import Code from 'components/Markdown/Code'
 
 export const meta = {
   title: 'Setting up Prisma',
@@ -42,9 +43,17 @@ You also need to know whether your database server uses **SSL**.
 
 The [Prisma CLI](https://www.npmjs.com/package/prisma) is used to deploy and manage Prisma services. You can install it using NPM:
 
+<Code languages={["Homebrew", "NPM"]}>
+
+```bash copy
+brew install prisma
+```
+
 ```bash copy
 npm install -g prisma
 ```
+
+</Code>
 
 ## Install Docker
 
@@ -63,6 +72,8 @@ touch docker-compose.yml
 ### Add Prisma Docker image
 
 Paste the following contents into the Docker Compose file you just created:
+
+<Code languages={["PostgreSQL", "MySQL"]}>
 
 ```yml copy
 version: '3'
@@ -88,6 +99,12 @@ services:
             ssl: __SSL_CONNECTION__
 ```
 
+```yml copy
+# coming soon
+```
+
+</Code>
+
 ### Specify database connection
 
 To specify the database to which your Prisma server should connect, replace the placeholders that are spelled all-uppercased in the Docker Compose files with the corresponding values of your database:
@@ -110,7 +127,7 @@ docker-compose up -d
 
 Your local Prisma Server is now running on `http://localhost:4466`.
 
-## Introspect database schema
+## Derive Prisma datamodel from database schema
 
 ### Create prisma.yml
 
@@ -128,7 +145,7 @@ endpoint: http://localhost:4466
 
 > The `endpoint` needs to match the URL of a running Prisma Server.
 
-### Run `prisma introspect`
+### Introspect database
 
 You now need to introspect your database schema to generate the data model for your Prisma service:
 
@@ -136,13 +153,13 @@ You now need to introspect your database schema to generate the data model for y
 prisma introspect
 ```
 
-The CLI generates the `datamodel-[TIMESTAMP].graphql` (e.g. `datamodel-1533886167692.graphql`) file containing the SDL version of your database schema. It also writes the `datamodel` property into the `prisma.yml`.
+The CLI generates the `datamodel-[TIMESTAMP].graphql` (e.g. `datamodel-1533886167692.graphql`) file containing the SDL version of your database schema. On the first run, it also writes the `datamodel` property into the `prisma.yml`.
 
 Finally, you need to rename the file to `datamodel.graphql` because that's the file name you specifed in `prisma.yml`.
 
 ## Deploy the Prisma service
 
-This service configuration now needs to be _deployed_ so you can use the Prisma API of your service:
+This service configuration now needs to be _deployed_ so you can use the Prisma API of your service. Run the following command (this does **not** change anything in your database):
 
 ```bash copy
 prisma deploy
@@ -158,12 +175,19 @@ Launching the Prisma server may take a few minutes. In case the `prisma deploy` 
 
 The Prisma Client is a custom, auto-generated library that connects to the API of your Prisma Service. Append the following lines to the end of your `prisma.yml`:
 
-```yml
+```yml copy
 generate:
   - generator: javascript
     output: generated
 ```
 
+Now generate the client with this command:
+
+``` copy
+prisma generate
+```
+
+The CLI now stored your Prisma client inside the `generated` folder as specified in `prisma.yml`.
 
 ## Prepare Node application
 
@@ -173,16 +197,14 @@ Run the following command to create an empty Node script:
 touch index.js
 ```
 
-Next, initialize an empty NPM project in the current directory and add the `prisma-lib` dependency:
+Next, initialize an empty NPM project in the current directory and install the required dependencies:
 
 ```bash copy
 npm init -y
-npm install prisma-lib --save
+npm install --save prisma-lib graphql
 ```
 
 ## Read and write data using the Prisma Client
-
-<Warning>
 
 The API operations of the Prisma Client depend on the data model that was generated from the database introspection. The following sample queries assume there is a `User` type in the data model defined as follows:
 
@@ -195,15 +217,12 @@ type User {
 
 If you don't have such a `User` type, feel free to adjust the following code snippets with a type that matches your data model.
 
-</Warning>
-
-Now type the following code in `index.js` and save it afterwards:
+Add the following code in `index.js` and save it afterwards:
 
 ```js copy
-const { Prisma } = require('./prisma')
+const { prisma } = require('./prisma')
 
-const prisma = new Prisma()
-
+// A `main` function so that we can use async/await
 async function main() {
 
   // Create a new user called `Alice`
@@ -215,7 +234,7 @@ async function main() {
   console.log(allUsers)
 }
 
-main()
+main().catch(e => console.error(e))
 ```
 
 Execute the script with the following command:
@@ -224,9 +243,9 @@ Execute the script with the following command:
 node index.js
 ```
 
-Whenever you run this script with that command, a new user record is created in the database (because of the call to `prisma.createUser()`). 
+Whenever you run this script with that command, a new user record is created in the database (because of the call to `createUser`).
 
-Feel free to play around with the Prisma Client API and try out some of the following operations by adding the following code snippets to the file (at the end of the `main` function) and re-executing the script. In some snippets, you need to replace the `__USER__ID__` placeholder with the ID of an actual user:
+Feel free to play around with the Prisma Client API and try out some of the following operations by adding the following code snippets to the file (at the end of the `main` function) and re-executing the script:
 
 <QueryChooser titles={["Fetch single user", "Filter user list", "Update a user's name", "Delete user"]}>
 
@@ -259,75 +278,4 @@ const usersCalledAlice = await prisma
 
 </QueryChooser>
 
-
-
-
-
-
-
-
-
-## Explore the Prisma API in a Playground
-
-The Prisma API of your service exposes CRUD and realtime operations for the types defined in your data model. You can explore the API in a [GraphQL Playground](https://github.com/prismagraphql/graphql-playground) using the following command:
-
-```bash copy
-prisma playground
-```
-
-The queries and mutations you can send depend on the data model that was generated from the database introspection. The following sample queries assume there is a `User` type in the data model defined as follows:
-
-```graphql
-type User @pgTable(name: "User") {
-  id: Int! @unique
-  name: String!
-}
-```
-
-Depending on what your data model looks like, you can derive equivalent queries and mutations for your case. You can also use the auto-generated API documentation in the Playground to learn about the available API operations.
-
-<QueryChooser titles={["Create new user", "Query all users", "Update a user's name", "Delete user"]}>
-
-```graphql lineNumbers,copy
-mutation {
-  createUser(data: {
-    name: "Alice"
-  }) {
-    id
-  }
-}
-```
-
-```graphql lineNumbers,copy
-query {
-  users {
-    id
-    name
-  }
-}
-```
-
-```graphql lineNumbers,copy
-mutation {
-  updateUser(
-    where: { id: __USER_ID__ },
-    data: { name: "Sarah" }
-  ) {
-    id
-    name
-  }
-}
-```
-
-```graphql lineNumbers,copy
-mutation {
-  deleteUser(where: {
-    id: __USER_ID__
-  }) {
-    id
-    name
-  }
-}
-```
-
-</QueryChooser>
+> In some snippets, you need to replace the `__USER__ID__` placeholder with the ID of an actual user.

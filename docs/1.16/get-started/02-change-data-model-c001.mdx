@@ -1,7 +1,8 @@
+import Warning from 'components/Markdown/Warning'
 import Code from 'components/Markdown/Code'
 
 export const meta = {
-  title: 'Update Prisma API',
+  title: 'Change Datamodel',
   step: 2,
   nextText: 'Fantastic! 🎉 You are now able to migrate your database using Prisma. Next you will learn how to build an API server based on Prisma Client.'
 }
@@ -12,9 +13,15 @@ On this page, you will learn how to:
 
 - Change the data model of your Prisma service
 - Deploy the adjusted data model to update your Prisma API
-- (Re-)Generate your Prisma Client
+- Re-generate your Prisma Client
 - Create two database records in a single transaction
 - Query relations
+
+<Warning>
+
+This page is only relevant if you started with a [new database](a002) or a [demo server](a001). If you configured Prisma with an [existing database](a003), you need to run migrations directly against your database.
+
+</Warning>
 
 ## Adjust your data model
 
@@ -36,17 +43,21 @@ type Post {
 }
 ```
 
-You are adding a new `Post` type to the data model as well as a _relation_ between `User` and `Post` (via the `posts` and `author` fields). There's also the new `email` field on the `User`.
+Here's what changed:
 
-## (Re-)Deploy your Prisma service
+- You added a new `email` field to the `User` type.
+- You added a new `Post` type to the datamodel.
+- You added a _relation_ between `User` and `Post` (via the `posts` and `author` fields).
 
-To apply the changes you just made to your data model, you need to (re-)deploy your Prisma service:
+## Redeploy your Prisma service
+
+To apply the changes you just made to your data model, you need to redeploy your Prisma service:
 
 ```bash copy
 prisma deploy
 ```
 
-## (Re-)Generate your Prisma Client
+## Regenerate your Prisma Client
 
 Because the Prisma Client is aware of your datamodel, you need to regenerate it every time after you deployed any changes to it:
 
@@ -63,10 +74,9 @@ The Prisma Client API allows to write nested objects in a single transaction wit
 Update your `index.js` to look as follows:
 
 ```js copy
-const { Prisma } = require('./prisma')
+const { prisma } = require('./prisma')
 
-const prisma = new Prisma()
-
+// A `main` function so that we can use async/await
 async function main() {
 
   // Create a new user with a new post
@@ -89,7 +99,7 @@ async function main() {
   console.log(allPosts)
 }
 
-main()
+main().catch(e => console.error(e))
 ```
 
 Run the script with the following command:
@@ -103,10 +113,9 @@ node index.js
 With the Prisma Client API, you can navigate relations in your data graph using simple method calls. Here is how you can query the `posts` written by a certain `User`:
 
 ```js
-const { Prisma } = require('./prisma')
+const { prisma } = require('./prisma')
 
-const prisma = new Prisma()
-
+// A `main` function so that we can use async/await
 async function main() {
 
   // Create a new user with a new post
@@ -130,5 +139,5 @@ async function main() {
 
 }
 
-main()
+main().catch(e => console.error(e))
 ```

@@ -1,5 +1,7 @@
+import QueryChooser from 'components/Markdown/QueryChooser'
+
 export const meta = {
-  title: 'Build API Servers with Prisma',
+  title: 'Build an App with Prisma',
   step: 3,
   position: 2,
   gettingStartedTitle: 'REST API',
@@ -10,14 +12,16 @@ export const meta = {
 
 On this page, you will learn how to:
 
-- Implement a REST API using Express & Prisma Client
+- Configure a Node app
+- Implement a REST API using [Express.js](https://expressjs.com/) & Prisma Client
+- Test your REST API using `curl`
 
 ## Configure project
 
-You'll use [Express.js](https://expressjs.com/) as your web server. Add the `express` and `body-parser` dependencies to your project with this command:
+You'll use Express.js as your web server. Add the `express` and `body-parser` dependencies to your project with this command:
 
 ```bash
-npm install express body-parser --save
+npm install --save express body-parser
 ```
 
 ## Define and implement API
@@ -37,12 +41,10 @@ There will be six routes that provide the API for a simple blogging application:
 Replace the current contents of `index.js` with the following code:
 
 ```js lineNumbers,copy
-const { Prisma } = require('./prisma')
+const { prisma } = require('./prisma')
 const app = express()
 const express = require('express')
 const bodyParser = require('body-parser')
-
-const prisma = new Prisma()
 
 app.use(bodyParser.json())
 
@@ -98,4 +100,43 @@ Start the server with this command:
 node index.js
 ```
 
-You can now use a tool like [Postman](https://www.getpostman.com/) to explore your the functionlity of the routes.
+You can now use a tool like `curl` or [Postman](https://www.getpostman.com/) to explore your the functionlity of the routes.
+
+## Testing the REST API using `curl`
+
+<QueryChooser titles={["Create new draft", "Publish a draft", "Fetch post by ID", "Create user"]}>
+
+``` copy
+curl -X POST \
+  http://localhost:3000/post/draft \
+  -H 'Content-Type: application/json' \
+  -d '{
+  "title": "Awesome Post"
+}'
+```
+
+``` copy
+curl -X PUT \
+  http://localhost:3000/post/publish \
+  -H 'Content-Type: application/json' \
+  -d '{
+  "id": "__POST_ID__"
+}'
+```
+
+``` copy
+curl -X GET \
+  http://localhost:3000/post/__POST_ID__ \
+```
+
+
+``` copy
+curl -X POST \
+  http://localhost:3000/user \
+  -H 'Content-Type: application/json' \
+  -d '{
+  "name": "Alice"
+}'
+```
+
+</QueryChooser>

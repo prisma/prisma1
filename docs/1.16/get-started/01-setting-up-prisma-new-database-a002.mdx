@@ -23,13 +23,23 @@ On this page, you will learn how to:
 
 The [Prisma CLI](https://www.npmjs.com/package/prisma) is used to deploy and manage Prisma services. You can install it using NPM:
 
+<Code languages={["Homebrew", "NPM"]}>
+
+```bash copy
+brew install prisma
+```
+
 ```bash copy
 npm install -g prisma
 ```
 
+</Code>
+
 ## Install Docker
 
 To use Prisma locally, you need to have [Docker](https://www.docker.com) installed on your machine. If you don't have Docker yet, you can download the Docker Community Edition for your operating system [here](https://www.docker.com/community-edition).
+
+> If you don't want to use Docker, you can also get started with a [demo database](a001) for now.
 
 ## Set up database and Prisma server
 
@@ -97,7 +107,7 @@ services:
             password: prisma
             migrations: true
   postgres:
-    image: postgres
+    image: postgres:10.5
     restart: always
     environment:
       POSTGRES_USER: prisma
@@ -111,7 +121,7 @@ volumes:
 </Code>
 
 
-> You can switch between **MySQL** and **PostgreSQL8** by using the tabs above the code block.
+> You can switch between **MySQL** and **PostgreSQL** by using the tabs above the code block.
 
 ### Start database and Prisma server
 
@@ -131,7 +141,23 @@ cd hello-world
 prisma init --endpoint http://localhost:4466
 ```
 
-When the interactive wizard launches, choose the suggested values when it asks you for the language and output directory of the generated Prisma Client.
+## Generate your Prisma Client
+
+The Prisma Client is a custom, auto-generated library that connects to the API of your Prisma Service. Append the following lines to the end of your `prisma.yml`:
+
+```yml copy
+generate:
+  - generator: javascript
+    output: generated
+```
+
+Now generate the client with this command:
+
+``` copy
+prisma generate
+```
+
+The CLI now stored your Prisma client inside the `generated` folder as specified in `prisma.yml`.
 
 ## Deploy the Prisma service
 
@@ -143,6 +169,8 @@ This service configuration now needs to be _deployed_ so you can use the Prisma 
 prisma deploy
 ```
 
+Congratulations, you have successfully set up Prisma. You can now start using the Prisma client to talk to your database from code.
+
 ## Prepare Node application
 
 Run the following command to create an empty Node script:
@@ -151,11 +179,11 @@ Run the following command to create an empty Node script:
 touch index.js
 ```
 
-Next, initialize an empty NPM project in the current directory and add the `prisma-lib` dependency:
+Next, initialize an empty NPM project in the current directory and install the required dependencies:
 
 ```bash copy
 npm init -y
-npm install prisma-lib --save
+npm install --save prisma-lib graphql
 ```
 
 ## Read and write data using the Prisma Client
@@ -163,10 +191,9 @@ npm install prisma-lib --save
 Now type the following code in `index.js` and save it afterwards:
 
 ```js copy
-const { Prisma } = require('./prisma')
+const { prisma } = require('./prisma')
 
-const prisma = new Prisma()
-
+// A `main` function so that we can use async/await
 async function main() {
 
   // Create a new user called `Alice`
@@ -178,7 +205,7 @@ async function main() {
   console.log(allUsers)
 }
 
-main()
+main().catch(e => console.error(e))
 ```
 
 Execute the script with the following command:
@@ -187,9 +214,9 @@ Execute the script with the following command:
 node index.js
 ```
 
-Whenever you run this script with that command, a new user record is created in the database (because of the call to `prisma.createUser()`). 
+Whenever you run this script with that command, a new user record is created in the database (because of the call to `createUser`). 
 
-Feel free to play around with the Prisma Client API and try out some of the following operations by adding the following code snippets to the file (at the end of the `main` function) and re-executing the script. In some snippets, you need to replace the `__USER__ID__` placeholder with the ID of an actual user:
+Feel free to play around with the Prisma Client API and try out some of the following operations by adding the following code snippets to the file (at the end of the `main` function) and re-executing the script:
 
 <QueryChooser titles={["Fetch single user", "Filter user list", "Update a user's name", "Delete user"]}>
 
@@ -221,3 +248,5 @@ const usersCalledAlice = await prisma
 ```
 
 </QueryChooser>
+
+> In some snippets, you need to replace the `__USER__ID__` placeholder with the ID of an actual user.

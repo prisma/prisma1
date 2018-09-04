@@ -3,7 +3,7 @@ import Collapse from 'components/Markdown/Collapse'
 import Warning from 'components/Markdown/Warning'
 
 export const meta = {
-  title: 'Build API Servers with Prisma',
+  title: 'Build an App with Prisma',
   gettingStartedTitle: 'GraphQL API',
   step: 3,
   position: 1,
@@ -23,7 +23,7 @@ On this page, you will learn how to:
 [`grahpql-yoga`](https://github.com/prisma/graphql-yoga) is a GraphQL server library based on [Express.js](https://expressjs.com/). Add it to your project with the following command:
 
 ```bash copy
-npm install graphql-yoga --save
+npm install --save graphql-yoga
 ```
 
 ## Define GraphQL API
@@ -73,7 +73,7 @@ type Post {
 Here is how you implement the resolver functions for the six API operations defined in the GraphQL schema. Replace the current contents of `index.js` entirely with the following code snippet:
 
 ```js lineNumbers,copy
-const { Prisma } = require('./prisma')
+const { prisma } = require('./prisma')
 const { GraphQLServer } = require('graphql-yoga')
 
 const resolvers = {
@@ -140,16 +140,15 @@ Each resolver invokes a method on the Prisma Client instance which is called `pr
 
 ## Configure your GraphQL server
 
-Now you need to instantiate the `GraphQLServer` from the `graphql-yoga` library and pass the GraphQL schema along with its resolver functions. You're also instantiating the `Prisma` Client instance and attach it to the `context` so that the resolvers can access it:
+Now you need to instantiate the `GraphQLServer` from the `graphql-yoga` library and pass the GraphQL schema along with its resolver functions. You're also attaching the imported `prisma` client instance to the `context` so that the resolvers can access it:
 
 ```js lineNumbers,copy
 const server = new GraphQLServer({
   typeDefs: './schema.graphql',
   resolvers,
-  context: req => ({
-    ...req,
-    prisma: new Prisma(),
-   }),
+  context: { 
+    prisma
+  },
 })
 server.start(() => console.log('Server is running on http://localhost:4000'))
 ```
@@ -226,74 +225,3 @@ query {
 ```
 
 </QueryChooser>
-
-## Best practices for your GraphQL server
-
-<Collapse title="File Structure">
-
-Here are some hints for structuring your project:
-
-- Include the directory that contains the service configuration files for your Prisma service (in your case that's the `hello-world` directory) _inside_ the project directory of the GraphQL server.
-- The GraphQL schema of your Prisma API (called `prisma.graphql`) should be available in the directory where the source code for your GraphQL server is located. As it's auto-generated, it is helpful to put it into a dedicated directory, e.g. called `generated`.
-- Use `graphql-config` to enable the GraphQL Playground to show the two GraphQL APIs (Prisma and application server) side-by-side.
-
-Here's how your project structure will look like if you follow above:
-
-```
-.
-├── .graphqlconfig
-# defines the Prisma service (database layer)
-├── hello-world
-│   ├── datamodel.graphql
-│   └── prisma.yml
-# implementation of the GraphQL server (application layer)
-├── src                     
-│   ├── generated
-│   │   └── prisma.graphql
-│   ├── index.js
-│   └── schema.graphql
-├── package.json
-└── yarn.lock
-```
-
-</Collapse>
-
-<Collapse title="GraphQL Config">
-
-Your `.graphqlconfig.yml` file needs to define both GraphQL _projects_ you're working with:
-
-```yml
-projects:
-  app:
-    schemaPath: src/schema.graphql
-    extensions:
-      endpoints:
-        default: http://localhost:4000
-  hello-world:
-    schemaPath: src/generated/prisma.graphql
-    extensions:
-      prisma: hello-world/prisma.yml
-```
-
-This allows to quickly switch between the two GraphQL APIs using the sidenav inside the GraphQL Playground. Note that for this to work you need to open the Playground using the `graphql playground` command (from the GraphQL CLI) inside the same directory where your `.graphqlconfig` is located. 
-
-</Collapse>
-
-<Collapse title="Keep the GraphQL schema of your Prisma API up-to-date">
-
-Prisma's auto-generated GraphQL schema changes whenever you deploy changes to the service's data model. To ensure your local `prisma.graphql` stays up-to-date you can configure a post-deployment _hook_ which updates it after every deploy.
-
-You can configure the hook in `prisma.yml`:
-
-```yml
-datamodel: datamodel.graphql
-endpoint: http://localhost:4466 # or some other endpoint
-
-hooks:
-  post-deploy:
-    - graphql get-schema --endpoint ${self:endpoint} --output src/generated/prisma.graphql --no-all
-```
-
-This assumes that the GraphQL CLI is installed globally on your machine.
-
-</Collapse>
