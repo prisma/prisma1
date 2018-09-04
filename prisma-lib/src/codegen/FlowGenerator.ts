@@ -209,7 +209,7 @@ ${this.renderExports(options)}
   renderImports() {
     return `\
 import type { GraphQLResolveInfo, GraphQLSchema } from 'graphql'
-import type { IResolvers } from 'graphql-tools/dist/Interfaces'
+import type { IResolvers } from 'graphql-tools'
 import type { BasePrismaOptions as BPOType, Options } from 'prisma-lib'
 import { makePrismaBindingClass} from 'prisma-lib'`
   }
