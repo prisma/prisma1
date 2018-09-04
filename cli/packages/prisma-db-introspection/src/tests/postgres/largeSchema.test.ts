@@ -1,30 +1,31 @@
 import { Introspector } from '../../Introspector'
 import { Client } from 'pg'
 import { connectionDetails } from './connectionDetails'
-import { PostgresConnector } from '../../connectors/PostgresConnector';
+import { PostgresConnector } from '../../connectors/PostgresConnector'
 
 function introspect(): Promise<{ numTables: number; sdl: string }> {
-    const pgConnector = new PostgresConnector(connectionDetails)
-    return new Introspector(pgConnector).introspect('DatabaseIntrospector')
+  const client = new Client(connectionDetails)
+  const pgConnector = new PostgresConnector(client)
+  return new Introspector(pgConnector).introspect('DatabaseIntrospector')
 }
 
 async function testSchema(sql: string) {
-    const client = new Client(connectionDetails)
-    await client.connect()
-    await client.query('DROP SCHEMA IF EXISTS DatabaseIntrospector cascade;')
-    await client.query('CREATE SCHEMA DatabaseIntrospector;')
-    await client.query('SET search_path TO DatabaseIntrospector;')
-    await client.query(sql)
+  const client = new Client(connectionDetails)
+  await client.connect()
+  await client.query('DROP SCHEMA IF EXISTS DatabaseIntrospector cascade;')
+  await client.query('CREATE SCHEMA DatabaseIntrospector;')
+  await client.query('SET search_path TO DatabaseIntrospector;')
+  await client.query(sql)
 
-    expect(await introspect()).toMatchSnapshot()
+  expect(await introspect()).toMatchSnapshot()
 
-    await client.end()
+  await client.end()
 }
 
 describe('Introspector', () => {
-    test('large example database', async () => {
-        // See http://www.postgresqltutorial.com/postgresql-sample-database/
-        await testSchema(`--
+  test('large example database', async () => {
+    // See http://www.postgresqltutorial.com/postgresql-sample-database/
+    await testSchema(`--
     -- NOTE:
     --
     -- File paths need to be edited. Search for $$PATH$$ and
@@ -1230,5 +1231,5 @@ describe('Introspector', () => {
     --
     
     `)
-    })
+  })
 })

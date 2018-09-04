@@ -1,4 +1,4 @@
-import Deploy from './commands/deploy'
+import Deploy from './commands/deploy/deploy'
 import Init from './commands/init'
 // import Auth from './commands/auth/index'
 import Info from './commands/info/index'
