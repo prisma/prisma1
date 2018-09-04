@@ -39,3 +39,4 @@ export SYSTEM_AUTH_TOKEN="${SYSTEM_AUTH_TOKEN:?SYSTEM_AUTH_TOKEN env variable no
 docs-cli -c ./docs
 
 curl -X POST -d '' $NETLIFY_HOOK
+curl -X POST -d '' $NETLIFY_HOOK_DOCS_V2
