@@ -34,7 +34,7 @@ export class Delegate {
     this.before = before || (() => undefined)
   }
 
-  public async $request<T = any>(
+  public async $graphql<T = any>(
     query: string,
     variables?: { [key: string]: any },
   ): Promise<T> {

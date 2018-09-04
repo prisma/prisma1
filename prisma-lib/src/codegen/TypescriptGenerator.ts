@@ -153,7 +153,7 @@ export interface Node {}
 
 export interface Prisma {
   $exists: Exists;
-  $request: <T = any>(query: string, variables?: {[key: string]: any}) => Promise<T>;
+  $graphql: <T = any>(query: string, variables?: {[key: string]: any}) => Promise<T>;
   $delegate: Delegate;
   $getAbstractResolvers(filterSchema?: GraphQLSchema | string): IResolvers;
 
