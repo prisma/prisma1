@@ -1,0 +1,48 @@
+{
+  "name": "prisma-lib",
+  "version": "0.1.22",
+  "author": "Tim Suchanek <suchanek@prisma.io>",
+  "license": "MIT",
+  "files": [
+    "dist"
+  ],
+  "main": "dist/index.js",
+  "typings": "dist/index.d.ts",
+  "scripts": {
+    "prepublish": "npm run build",
+    "build": "rm -rf dist && tsc -d",
+    "test-only": "npm run build && ava --verbose dist/**/*.test.js dist/*.test.js",
+    "test-generator-only": "npm run build && ava --verbose dist/codegen/**/*.test.js dist/codegen/*.test.js",
+    "test-go-generator-only": "npm run build && ava --verbose dist/codegen/**/GoGenerator.test.js dist/codegen/GoGenerator.test.js",
+    "test": "tslint src/**/*.ts && npm run test-generator-only"
+  },
+  "dependencies": {
+    "@types/node": "^10.7.0",
+    "apollo-link-error": "^1.1.0",
+    "apollo-link-ws": "^1.0.8",
+    "debug": "^3.1.0",
+    "graphql-import": "^0.6.0",
+    "graphql-tools": "3.1.1",
+    "http-link-dataloader": "^0.1.4",
+    "jsonwebtoken": "^8.3.0",
+    "object-path-immutable": "^3.0.0",
+    "subscriptions-transport-ws": "^0.9.14",
+    "uppercamelcase": "^3.0.0",
+    "ws": "^6.0.0"
+  },
+  "devDependencies": {
+    "@types/graphql": "^0.13.4",
+    "@types/node": "10.0.2",
+    "apollo-link": "1.2.2",
+    "ava": "^0.25.0",
+    "graphql": "^0.13.2",
+    "graphql-tag": "^2.9.2",
+    "semantic-release": "^15.5.2",
+    "tslint": "5.9.1",
+    "tslint-config-standard": "7.0.0",
+    "typescript": "2.8.3"
+  },
+  "peerDependencies": {
+    "graphql": "^0.11.0 || ^0.12.0 || ^0.13.0"
+  }
+}

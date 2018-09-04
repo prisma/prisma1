@@ -36,6 +36,7 @@ export class PrismaDefinitionClass {
   env: Environment
   out?: IOutput
   envVars: any
+  rawEndpoint?: string
   private definitionString: string
   constructor(
     env: Environment,
@@ -95,6 +96,7 @@ export class PrismaDefinitionClass {
       this.out,
       this.envVars,
     )
+    this.rawEndpoint = rawJson.endpoint
     this.definition = definition
     this.rawJson = rawJson
     this.definitionString = fs.readFileSync(this.definitionPath!, 'utf-8')

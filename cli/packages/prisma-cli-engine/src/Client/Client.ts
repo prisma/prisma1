@@ -287,22 +287,20 @@ export class Client {
     token?: string,
     workspaceSlug?: string,
   ): Promise<any> {
-    debug('introspecting', serviceName, stageName)
+    debug('introspecting', { serviceName, stageName, workspaceSlug })
     const headers: any = {}
     if (token) {
       headers.Authorization = `Bearer ${token}`
     }
-    const client = new GraphQLClient(
-      this.env.activeCluster.getApiEndpoint(
-        serviceName,
-        stageName,
-        workspaceSlug,
-      ),
-      {
-        headers,
-        agent: getProxyAgent(this.config.cloudApiEndpoint),
-      } as any,
+    const endpoint = this.env.activeCluster.getApiEndpoint(
+      serviceName,
+      stageName,
+      workspaceSlug,
     )
+    const client = new GraphQLClient(endpoint, {
+      headers,
+      agent: getProxyAgent(this.config.cloudApiEndpoint),
+    } as any)
     return client.request(introspectionQuery)
   }
 
