@@ -21,6 +21,11 @@ import { importSchema } from 'graphql-import'
 import * as fs from 'fs'
 import * as path from 'path'
 
+export interface RequestParams {
+  Payload: any
+  Variables: { [key: string]: any }
+}
+
 export class Delegate {
   schema: GraphQLSchema
   before: () => void
@@ -34,10 +39,10 @@ export class Delegate {
     this.before = before || (() => undefined)
   }
 
-  public async $graphql<T = any>(
+  public async $graphql<P extends RequestParams = { Payload: any; Variables: {} }>(
     query: string,
-    variables?: { [key: string]: any },
-  ): Promise<T> {
+    variables?: P['Variables'],
+  ): Promise<P['Payload']> {
     this.before()
     return graphql(this.schema, query, null, null, variables).then(
       r => r as any,
