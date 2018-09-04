@@ -133,6 +133,7 @@ export class GoGenerator extends Generator {
                 .map(
                   arg => `args = append(args, GraphQLArg{
                 Name: "${arg.name}",
+                Key: "${arg.name}",
                 TypeName: "${arg.type}",
                 Value: ${arg.name},
               })`,
@@ -160,20 +161,40 @@ export class GoGenerator extends Generator {
 
       // Exec docs
       func (instance ${type.name}Exec) Exec() ${type.name} {
-        query := instance.db.ProcessInstructions(instance.stack)
+        var allArgs []GraphQLArg
         variables := make(map[string]interface{})
-        for _, instruction := range instance.stack {
+        for instructionKey := range instance.stack {
+          instruction := &instance.stack[instructionKey]
           if instance.db.Debug {
             fmt.Println("Instruction Exec: ", instruction)
           }
-          for _, arg := range instruction.Args {
+          for argKey := range instruction.Args {
+            arg := &instruction.Args[argKey]
             if instance.db.Debug {
               fmt.Println("Instruction Arg Exec: ", instruction)
             }
-            // TODO: Need to handle arg.Name collisions
+            isUnique := false
+            for isUnique == false {
+              isUnique = true
+              for key, existingArg := range allArgs {
+                if existingArg.Name == arg.Name {
+                  isUnique = false
+                  arg.Name = arg.Name + "_" + strconv.Itoa(key)
+                  if instance.db.Debug {
+                    fmt.Println("Resolving Collision Arg Name: ", arg.Name)
+                  }
+                  break
+                }
+              }
+            }
+            if instance.db.Debug {
+              fmt.Println("Arg Name: ", arg.Name)
+            }
+            allArgs = append(allArgs, *arg)
             variables[arg.Name] = arg.Value
           }
         }
+        query := instance.db.ProcessInstructions(instance.stack)
         if instance.db.Debug {
           fmt.Println("Query Exec:", query)
           fmt.Println("Variables Exec:", variables)
@@ -484,6 +505,7 @@ export class GoGenerator extends Generator {
               } != nil {
                 args = append(args, GraphQLArg{
                   Name: "${arg.name}",
+                  Key: "${arg.name}",
                   TypeName: "${arg.type}",
                   Value: *params${
                     args.length === 1 ? `` : `.${goCase(arg.name)}`
@@ -545,6 +567,7 @@ import (
   "reflect"
   "fmt"
   "bytes"
+  "strconv"
   "text/template"
 
   "github.com/machinebox/graphql"
@@ -564,6 +587,7 @@ type GraphQLField struct {
 // GraphQLArg docs
 type GraphQLArg struct {
   Name string
+  Key string
   TypeName string
   Value interface{}
 }
@@ -659,7 +683,7 @@ func (db *DB) ProcessInstructions(stack []Instruction) string {
 	  {{- if eq $argKey $k }}
 	  	{{- if eq (len $argValue) 0 }} {{ else }} ( {{ end }}
 				{{- range $k, $arg := $argValue}}
-					{{ $arg.Name }}: \${{ $arg.Name }},
+					{{ $arg.Key }}: \${{ $arg.Name }},
 				{{- end }}
 		{{- if eq (len $argValue) 0 }} {{ else }} ) {{ end }}
 			{{- end }}
@@ -675,7 +699,7 @@ func (db *DB) ProcessInstructions(stack []Instruction) string {
 	  	{{- if eq $argKey $k }}
 	  		{{- if eq (len $argValue) 0 }} {{ else }} ( {{ end }}
             {{- range $k, $arg := $argValue}}
-              {{ $arg.Name }}: \${{ $arg.Name }},
+              {{ $arg.Key }}: \${{ $arg.Name }},
             {{- end }}
 			{{- if eq (len $argValue) 0 }} {{ else }} ) {{ end }}
           {{- end }}
@@ -688,7 +712,7 @@ func (db *DB) ProcessInstructions(stack []Instruction) string {
 		  {{- if eq $argKey $k }}
 			{{- if eq (len $argValue) 0 }} {{ else }} ( {{ end }}
                 {{- range $k, $arg := $argValue}}
-                  {{ $arg.Name }}: \${{ $arg.Name }},
+                  {{ $arg.Key }}: \${{ $arg.Name }},
                 {{- end }}
 				{{- if eq (len $argValue) 0 }} {{ else }} ) {{ end }} 
               {{- end }}
@@ -704,7 +728,7 @@ func (db *DB) ProcessInstructions(stack []Instruction) string {
 		  {{- if eq $argKey $k }}
 		  	{{- if eq (len $argValue) 0 }} {{ else }} ( {{ end }}
                 {{- range $k, $arg := $argValue}}
-                  {{ $arg.Name }}: \${{ $arg.Name }},
+                  {{ $arg.Key }}: \${{ $arg.Name }},
                 {{- end }}
 				{{- if eq (len $argValue) 0 }} {{ else }} ) {{ end }} 
               {{- end }}
@@ -723,7 +747,7 @@ func (db *DB) ProcessInstructions(stack []Instruction) string {
 				{{- if eq $argKey $k }}
 					{{- if eq (len $argValue) 0 }} {{ else }} ( {{ end }}
                       {{- range $k, $arg := $argValue}}
-                        {{ $arg.Name }}: \${{ $arg.Name }},
+                        {{ $arg.Key }}: \${{ $arg.Name }},
                       {{- end }}
 					  {{- if eq (len $argValue) 0 }} {{ else }} ) {{ end }} 
                     {{- end }}
