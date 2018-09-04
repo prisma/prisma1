@@ -77,8 +77,10 @@ export default class GenereateCommand extends Command {
           await this.generateFlow(resolvedOutput, schemaString)
         }
 
-        // TODO: Error handling in case of mistyped generator. Currently, the CLI fails silently after 
-        // showing schema download progress.
+        const generators = ["schema", "typescript", "javascript", "go", "flow"]
+        if (!generators.includes(generator)) {
+          this.out.error(`Please choose one of the supported generators. Possible generators: ${generators.map(g => `${g}`).join(`, `)}`)
+        }
       }
     }
   }
@@ -91,7 +93,6 @@ export default class GenereateCommand extends Command {
     const schema = buildSchema(schemaString)
 
     const generator = new TypescriptGenerator({ schema })
-    this.out.log(`Saving Prisma ORM (TypeScript) at ${output}`)
     const endpoint = this.replaceEnv(this.definition.rawJson!.endpoint)
     const secret = this.definition.rawJson.secret
       ? this.replaceEnv(this.definition.rawJson!.secret)
@@ -103,6 +104,7 @@ export default class GenereateCommand extends Command {
 
     const code = generator.render(options)
     fs.writeFileSync(output, code)
+    this.out.log(`Saving Prisma Client (TypeScript) at ${output}`)
   }
 
   async generateJavascript(output: string, schemaString: string) {
@@ -125,6 +127,7 @@ export default class GenereateCommand extends Command {
 
     const typings = generator.renderDefinition(options)
     fs.writeFileSync(typingsPath, typings)
+    this.out.log(`Saving Prisma Client (JavaScript) at ${output}`)
   }
 
   async generateGo(output: string, schemaString: string) {
@@ -144,6 +147,7 @@ export default class GenereateCommand extends Command {
     const goCode = generator.render(options)
     fs.writeFileSync(output, goCode)
 
+    this.out.log(`Saving Prisma Client (Go) at ${output}`)
     // Run "go fmt" on the file if user has it installed.
     spawnSync("go", ["fmt", output])
   }
@@ -164,6 +168,7 @@ export default class GenereateCommand extends Command {
 
     const flowCode = generator.render(options)
     fs.writeFileSync(output, flowCode)
+    this.out.log(`Saving Prisma Client (Flow) at ${output}`)
   }
 
   replaceEnv(str) {

@@ -12,7 +12,7 @@ import com.prisma.deploy.schema.mutations.{FunctionInput, FunctionValidator}
 import com.prisma.deploy.server.auth.DummyManagementAuth
 import com.prisma.errors.{BugsnagErrorReporter, ErrorReporter}
 import com.prisma.messagebus.pubsub.inmemory.InMemoryAkkaPubSub
-import com.prisma.shared.models.{Project, ProjectIdEncoder}
+import com.prisma.shared.models.{ProjectIdEncoder, Schema}
 import org.scalactic.{Bad, Good}
 
 case class TestDeployDependencies()(implicit val system: ActorSystem, val materializer: ActorMaterializer) extends DeployDependencies {
@@ -34,7 +34,7 @@ case class TestDeployDependencies()(implicit val system: ActorSystem, val materi
   override def projectIdEncoder: ProjectIdEncoder = deployConnector.projectIdEncoder
 
   override def functionValidator: FunctionValidator = new FunctionValidator {
-    override def validateFunctionInputs(project: Project, functionInputs: Vector[FunctionInput]) = {
+    override def validateFunctionInputs(schema: Schema, functionInputs: Vector[FunctionInput]) = {
       if (functionInputs.map(_.name).contains("failing")) {
         Bad(Vector(DeployError(`type` = "model", field = "field", description = "error")))
       } else {
