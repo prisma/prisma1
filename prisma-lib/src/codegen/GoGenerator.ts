@@ -126,7 +126,7 @@ export class GoGenerator extends Generator {
           )
           return ` // ${goCase(field.name)} docs - executable for types
         func (instance *${type.name}Exec) ${goCase(field.name)}(${args
-            .map(arg => `${arg.name} ${arg.type}`)
+            .map(arg => `${arg.name} *${arg.type}`)
             .join(',')}) *${goCase(typeName.toString())}Exec {
               var args []GraphQLArg
               ${args
@@ -523,7 +523,7 @@ export class GoGenerator extends Generator {
         .replace("'", '')
       return `os.Getenv("${envVariable}")`
     } else {
-      return `\"${options.endpoint}\"`
+      return `\"${options.endpoint.replace("'", '').replace("'", '')}\"`
     }
   }
 
