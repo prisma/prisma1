@@ -203,7 +203,7 @@ export interface DelegateQuery {\n${this.renderDelegateQueries()}\n}
 
 export interface DelegateMutation {\n${this.renderDelegateMutations()}\n}
 
-export interface DelegateSubcription {\n${this.renderDelegateSubscriptions()}\n}
+export interface DelegateSubscription {\n${this.renderDelegateSubscriptions()}\n}
 
 export interface BindingConstructor<T> {
   new(options?: BasePrismaOptions): T
@@ -477,9 +477,7 @@ export const prisma = new Prisma()`
           isMutation,
           true,
           true,
-        )}) => ${
-          operation === 'subscription' ? 'Promise<AsyncIterator<T>>' : 'T'
-        }`
+        )}) => T`
       })
       .join(';\n')
   }
@@ -695,10 +693,7 @@ ${fieldDefinition}
     const actualInterfaces = promise
       ? [
           {
-            name: `Promise<${typeName}Node>`,
-          },
-          {
-            name: `Promise<AsyncIterator<${typeName}Node>>`,
+            name: `Promise<${typeName}Node | AsyncIterator<${typeName}Node>>`,
           },
         ].concat(interfaces)
       : interfaces
