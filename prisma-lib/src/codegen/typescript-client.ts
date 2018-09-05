@@ -357,6 +357,7 @@ export const prisma = new Prisma()`
     renderInfo = false,
     isMutation = false,
     isTopLevel = false,
+    isFragmentAble = false
   ) {
     const { args } = field
     const hasArgs = args.length > 0
@@ -371,7 +372,7 @@ export const prisma = new Prisma()`
 
     const infoString = renderInfo
       ? ', info?: GraphQLResolveInfo, options?: Options'
-      : ''
+      : isFragmentAble ? `, fragment: string | object` : ``
 
     // hard-coded for Prisma ease-of-use
     if (isMutation && field.name.startsWith('create')) {
@@ -591,11 +592,11 @@ export const prisma = new Prisma()`
         return `${typeString}[]`
       } else {
         if (renderFunction) {
-          return `(${
+          return `<T = Promise<Array<${typeString}>>> (${
             field.args && field.args.length > 0
-              ? this.renderArgs(field, isMutation)
+              ? this.renderArgs(field, isMutation, false, false, true)
               : ''
-          }) => Promise<Array<${typeString}>>`
+          }) => T`
         } else {
           return `Promise<Array<${typeString}>>`
         }
@@ -617,11 +618,11 @@ export const prisma = new Prisma()`
     if (node && !typeString.endsWith('Node')) {
       typeString = `${typeString}Node`
     }
-    return `(${
+    return `<T = ${typeString}>(${
       field.args && field.args.length > 0
-        ? this.renderArgs(field, isMutation)
+        ? this.renderArgs(field, isMutation, false, false, true)
         : ''
-    }) => ${typeString}`
+    }) => T`
   }
 
   renderInputFieldType(type: GraphQLInputType | GraphQLOutputType) {

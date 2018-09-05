@@ -15,6 +15,7 @@ import {
 } from 'graphql'
 import { Delegate } from './Delegate'
 import { mapValues } from './utils/mapValues'
+import gql from 'graphql-tag';
 const log = require('debug')('binding')
 // to make the TS compiler happy
 
@@ -31,6 +32,7 @@ export interface Instruction {
   fieldName: string
   args?: any
   field: GraphQLField<any, any>
+  fragment: string | object
 }
 
 export class Binding extends Delegate {
@@ -101,7 +103,7 @@ export class Binding extends Delegate {
   processInstructions = async (id: number): Promise<any> => {
     log('process instructions')
     const instructions = this.currentInstructions[id]
-
+    
     const { ast, variables } = this.generateSelections(instructions)
     log('generated selections')
     const { variableDefinitions, ...restAst } = ast
@@ -252,20 +254,27 @@ export class Binding extends Delegate {
         index === instructions.length - 1 &&
         type instanceof GraphQLObjectType
       ) {
-        node.selectionSet.selections = Object.entries(type.getFields())
-          .filter(([_, field]: any) => {
-            const fieldType = this.getDeepType(field.type)
-            return fieldType instanceof GraphQLScalarType
-          })
-          .map(([fieldName]) => ({
-            kind: Kind.FIELD,
-            name: {
-              kind: Kind.NAME,
-              value: fieldName,
-            },
-            arguments: [],
-            directives: [],
-          }))
+        if (instruction.fragment) {
+          if (typeof instruction.fragment === 'string') {
+            instruction.fragment = gql`${instruction.fragment}`
+          }
+          node.selectionSet = instruction.fragment.definitions[0].selectionSet
+        } else {
+          node.selectionSet.selections = Object.entries(type.getFields())
+            .filter(([_, field]: any) => {
+              const fieldType = this.getDeepType(field.type)
+              return fieldType instanceof GraphQLScalarType
+            })
+            .map(([fieldName]) => ({
+              kind: Kind.FIELD,
+              name: {
+                kind: Kind.NAME,
+                value: fieldName,
+              },
+              arguments: [],
+              directives: [],
+            }))
+        }
       }
 
       if (acc) {
@@ -327,7 +336,7 @@ export class Binding extends Delegate {
               .map(([fieldName, field]) => {
                 return {
                   key: fieldName,
-                  value: (args, arg2) => {
+                  value: (args, arg2, fragment) => {
                     const id = typeof args === 'number' ? args : ++instructionId
 
                     let realArgs = typeof args === 'number' ? arg2 : args
@@ -351,6 +360,7 @@ export class Binding extends Delegate {
                       fieldName,
                       args: realArgs,
                       field,
+                      fragment,
                     })
                     const typeName = this.getTypeName(field.type)
 
