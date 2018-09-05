@@ -11,11 +11,13 @@ import {
   OperationTypeNode,
   print,
   execute,
+  subscribe,
   GraphQLField,
 } from 'graphql'
+import mapAsyncIterator from './utils/mapAsyncIterator'
 import { Delegate } from './Delegate'
 import { mapValues } from './utils/mapValues'
-import gql from 'graphql-tag';
+import gql from 'graphql-tag'
 const log = require('debug')('binding')
 // to make the TS compiler happy
 
@@ -33,12 +35,14 @@ export interface Instruction {
   args?: any
   field: GraphQLField<any, any>
   fragment: string | object
+  typeName: string
 }
 
 export class Binding extends Delegate {
   // subscription: SubscriptionMap
   types: any
   query: any
+  $subscribe: any
   debug
   mutation: any
   currentInstructions: InstructionsMap = {}
@@ -48,7 +52,6 @@ export class Binding extends Delegate {
     this.debug = debug
 
     this.buildMethods()
-    // this.subscription = this.buildSubscriptionMethods()
   }
 
   buildQueryMethods(operation: QueryOrMutation): QueryMap {
@@ -91,28 +94,24 @@ export class Binding extends Delegate {
   }
 
   getOperation(instructions) {
-    const topLevelQuery = instructions[0].fieldName
-    const query = this.schema.getQueryType()!.getFields()
-    if (query[topLevelQuery]) {
-      return 'query'
-    }
-
-    return 'mutation'
+    return instructions[0].typeName.toLowerCase()
   }
 
   processInstructions = async (id: number): Promise<any> => {
     log('process instructions')
     const instructions = this.currentInstructions[id]
-    
+
     const { ast, variables } = this.generateSelections(instructions)
     log('generated selections')
     const { variableDefinitions, ...restAst } = ast
+    const operation = this.getOperation(instructions) as OperationTypeNode
+
     const document = {
       kind: Kind.DOCUMENT,
       definitions: [
         {
           kind: Kind.OPERATION_DEFINITION,
-          operation: this.getOperation(instructions) as OperationTypeNode,
+          operation,
           directives: [],
           variableDefinitions,
           selectionSet: {
@@ -134,8 +133,24 @@ export class Binding extends Delegate {
     }
 
     log('printed / before')
-    const result = await this.execute(document, variables)
+    const result = await this.execute(operation, document, variables)
     log('executed')
+
+    if (operation === 'subscription') {
+      return this.mapSubscriptionPayload(result, instructions)
+    }
+
+    return this.extractPayload(result, instructions)
+  }
+
+  mapSubscriptionPayload(result, instructions) {
+    debugger
+    return mapAsyncIterator(result, res =>
+      this.extractPayload(res, instructions),
+    )
+  }
+
+  extractPayload(result, instructions) {
     let pointer = result
     let count = 0
     while (
@@ -147,10 +162,14 @@ export class Binding extends Delegate {
       pointer = pointer[Object.keys(pointer)[0]]
     }
     log('unpack it')
+
     return pointer
   }
 
-  execute(document, variables) {
+  execute(operation, document, variables) {
+    if (operation === 'subscription') {
+      return subscribe(this.schema, document, {}, {}, variables)
+    }
     return execute(this.schema, document, {}, {}, variables) as any
   }
 
@@ -256,7 +275,9 @@ export class Binding extends Delegate {
       ) {
         if (instruction.fragment) {
           if (typeof instruction.fragment === 'string') {
-            instruction.fragment = gql`${instruction.fragment}`
+            instruction.fragment = gql`
+              ${instruction.fragment}
+            `
           }
           node.selectionSet = instruction.fragment.definitions[0].selectionSet
         } else {
@@ -318,6 +339,7 @@ export class Binding extends Delegate {
     this.types = this.getORMTypes()
     Object.assign(this, this.types.Query)
     Object.assign(this, this.types.Mutation)
+    this.$subscribe = this.types.Subscription
   }
 
   getORMTypes() {
@@ -360,6 +382,7 @@ export class Binding extends Delegate {
                       fieldName,
                       args: realArgs,
                       field,
+                      typeName: type.name,
                       fragment: typeof args === 'number' ? fragment : arg2,
                     })
                     const typeName = this.getTypeName(field.type)
