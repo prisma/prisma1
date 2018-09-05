@@ -372,7 +372,7 @@ export const prisma = new Prisma()`
 
     const infoString = renderInfo
       ? ', info?: GraphQLResolveInfo, options?: Options'
-      : isFragmentAble ? `, fragment: string | object` : ``
+      : isFragmentAble ? `, fragment?: string | object` : ``
 
     // hard-coded for Prisma ease-of-use
     if (isMutation && field.name.startsWith('create')) {
