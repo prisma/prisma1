@@ -360,7 +360,7 @@ export class Binding extends Delegate {
                       fieldName,
                       args: realArgs,
                       field,
-                      fragment,
+                      fragment: typeof args === 'number' ? fragment : arg2,
                     })
                     const typeName = this.getTypeName(field.type)
 
