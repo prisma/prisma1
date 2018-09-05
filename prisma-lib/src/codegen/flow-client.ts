@@ -201,12 +201,6 @@ export interface BindingConstructor<T> {
 
 ${this.renderTypes()}
 
-/**
- * Type Defs
-*/
-
-${this.renderTypedefs()}
-
 ${this.renderExports(options)}
 `
   }
@@ -215,7 +209,8 @@ ${this.renderExports(options)}
 import type { GraphQLResolveInfo, GraphQLSchema } from 'graphql'
 import type { IResolvers } from 'graphql-tools'
 import type { BasePrismaOptions as BPOType, Options } from 'prisma-lib'
-import { makePrismaBindingClass} from 'prisma-lib'`
+import { makePrismaBindingClass} from 'prisma-lib'
+import { typeDefs } from './graphql'`
   }
   renderPrismaClassArgs(options?: RenderOptions) {
     let endpointString = ''
@@ -241,7 +236,7 @@ import { makePrismaBindingClass} from 'prisma-lib'`
   }
   renderTypedefs() {
     return (
-      'const typeDefs = `' + printSchema(this.schema).replace(/`/g, '\\`') + '`'
+      'export const typeDefs = `' + printSchema(this.schema).replace(/`/g, '\\`') + '`'
     )
   }
   renderExists() {

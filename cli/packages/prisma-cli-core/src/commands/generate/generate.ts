@@ -104,6 +104,10 @@ export default class GenereateCommand extends Command {
 
     const code = generator.render(options)
     fs.writeFileSync(path.join(output, 'index.ts'), code)
+
+    const typeDefs = generator.renderTypedefs()
+    fs.writeFileSync(path.join(output, 'graphql.ts'), typeDefs)
+
     this.out.log(`Saving Prisma Client (TypeScript) at ${output}`)
   }
 
@@ -126,6 +130,10 @@ export default class GenereateCommand extends Command {
 
     const typescript = generatorTS.render(options)
     fs.writeFileSync(path.join(output, "index.ts"), typescript)
+
+    const typeDefs = generatorTS.renderTypedefs()
+    fs.writeFileSync(path.join(output, 'graphql.js'), typeDefs)
+
     this.out.log(`Saving Prisma Client (JavaScript) at ${output}`)
   }
 
@@ -167,6 +175,10 @@ export default class GenereateCommand extends Command {
 
     const flowCode = generator.render(options)
     fs.writeFileSync(path.join(output, "index.flow.js"), flowCode)
+
+    const typeDefs = generator.renderTypedefs()
+    fs.writeFileSync(path.join(output, 'graphql.js'), typeDefs)
+
     this.out.log(`Saving Prisma Client (Flow) at ${output}`)
   }
 
