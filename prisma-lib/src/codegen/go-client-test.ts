@@ -1,7 +1,7 @@
 import * as fs from 'fs'
 import * as path from 'path'
 import { buildSchema } from 'graphql'
-import { GoGenerator } from './GoGenerator'
+import { GoGenerator } from './go-client'
 import { test } from 'ava'
 
 const typeDefs = fs.readFileSync(

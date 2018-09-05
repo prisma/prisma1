@@ -1,7 +1,7 @@
 import * as fs from 'fs'
 import * as path from 'path'
 import { buildSchema } from 'graphql'
-import { FlowGenerator } from './FlowGenerator'
+import { FlowGenerator } from './flow-client'
 import { test } from 'ava'
 
 const typeDefs = fs.readFileSync(

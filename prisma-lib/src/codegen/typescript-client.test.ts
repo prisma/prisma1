@@ -1,7 +1,7 @@
 import * as fs from 'fs'
 import * as path from 'path'
 import { buildSchema } from 'graphql'
-import { TypescriptGenerator } from './TypescriptGenerator'
+import { TypescriptGenerator } from './typescript-client'
 import { test } from 'ava'
 
 const typeDefs = fs.readFileSync(

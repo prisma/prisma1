@@ -1,4 +1,4 @@
-import { TypescriptGenerator, RenderOptions } from './TypescriptGenerator'
+import { TypescriptGenerator, RenderOptions } from './typescript-client'
 
 export class JavascriptGenerator extends TypescriptGenerator {
   constructor(options) {
