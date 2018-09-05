@@ -40,6 +40,8 @@ case class CachedInputTypesBuilder(project: Project) extends UncachedInputTypesB
 }
 
 abstract class UncachedInputTypesBuilder(project: Project) extends InputTypesBuilder {
+  import com.prisma.utils.boolean.BooleanUtils._
+
   override def inputObjectTypeForCreate(model: Model, parentField: Option[RelationField]): Option[InputObjectType[Any]] = {
     computeInputObjectTypeForCreate(model, parentField)
   }
@@ -64,9 +66,7 @@ abstract class UncachedInputTypesBuilder(project: Project) extends InputTypesBui
       Some(
         InputObjectType[Any](
           name = inputObjectTypeName,
-          fieldsFn = () => {
-            fields
-          }
+          fieldsFn = () => fields
         )
       )
     } else {
@@ -279,7 +279,9 @@ abstract class UncachedInputTypesBuilder(project: Project) extends InputTypesBui
               nestedUpdateInputField(field) ++
               nestedUpsertInputField(field)
         )
-        Some(InputField[Any](field.name, OptionInputType(inputObjectType)))
+        inputObjectType.fields.nonEmpty.toOption {
+          InputField[Any](field.name, OptionInputType(inputObjectType))
+        }
       }
     }
   }
@@ -311,7 +313,9 @@ abstract class UncachedInputTypesBuilder(project: Project) extends InputTypesBui
           OptionInputType(inputObjectType)
         }
 
-        Some(InputField[Any](field.name, possiblyRequired))
+        inputObjectType.fields.nonEmpty.toOption {
+          InputField[Any](field.name, possiblyRequired)
+        }
       }
     }
   }
