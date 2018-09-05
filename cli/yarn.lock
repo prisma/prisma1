@@ -4572,9 +4572,9 @@ prisma-json-schema@0.1.0:
   version "0.1.0"
   resolved "https://registry.yarnpkg.com/prisma-json-schema/-/prisma-json-schema-0.1.0.tgz#0e53346421dc09241fe7240e5479f9673e5fbd10"
 
-prisma-lib@0.1.25:
-  version "0.1.25"
-  resolved "https://registry.yarnpkg.com/prisma-lib/-/prisma-lib-0.1.25.tgz#b793b3aa5b3918fda99dd2383e222dbf97a08e3d"
+prisma-lib@0.1.26:
+  version "0.1.26"
+  resolved "https://registry.yarnpkg.com/prisma-lib/-/prisma-lib-0.1.26.tgz#68998f5a107eea2763bafd629681cb918bf7fd11"
   dependencies:
     "@types/node" "^10.7.0"
     apollo-link-error "^1.1.0"

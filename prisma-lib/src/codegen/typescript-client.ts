@@ -673,13 +673,18 @@ ${fieldDefinition}
 
     return `${this.renderDescription(
       typeDescription,
-    )}export interface ${typeName.includes("WhereUniqueInput") ? `AtLeastOne<` : ``}${typeName}${
+    )}${typeName.includes("WhereUniqueInput") ? 
+      `export type ${typeName} = AtLeastOne<{
+        ${fieldDefinition}
+      }>` 
+      : 
+      `export interface ${typeName}${
       actualInterfaces.length > 0
         ? ` extends ${actualInterfaces.map(i => i.name).join(', ')}`
         : ''
-    } {
-${fieldDefinition}
-}${typeName.includes("WhereUniqueInput") ? `>` : ``}`
+          } {
+      ${fieldDefinition}
+      }`}`
   }
 
   renderDescription(description?: string | void) {
