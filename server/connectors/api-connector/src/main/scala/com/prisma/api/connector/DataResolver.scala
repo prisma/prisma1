@@ -29,5 +29,5 @@ trait DataResolver {
 
   def countByTable(table: String, whereFilter: Option[Filter] = None): Future[Int]
 
-  def countByModel(model: Model, whereFilter: Option[Filter] = None): Future[Int] = countByTable(model.name, whereFilter)
+  def countByModel(model: Model, whereFilter: Option[QueryArguments] = None): Future[Int]
 }

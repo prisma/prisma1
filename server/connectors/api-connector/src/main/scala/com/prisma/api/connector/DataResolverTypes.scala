@@ -53,8 +53,9 @@ case class QueryArguments(
 }
 
 object QueryArguments {
-  def empty                      = QueryArguments(skip = None, after = None, first = None, before = None, last = None, filter = None, orderBy = None)
-  def withFilter(filter: Filter) = QueryArguments.empty.copy(filter = Some(filter))
+  def empty                                              = QueryArguments(skip = None, after = None, first = None, before = None, last = None, filter = None, orderBy = None)
+  def withFilter(filter: Filter): QueryArguments         = QueryArguments.empty.copy(filter = Some(filter))
+  def withFilter(filter: Option[Filter]): QueryArguments = QueryArguments.empty.copy(filter = filter)
 }
 
 object SelectedFields {

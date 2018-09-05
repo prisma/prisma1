@@ -21,7 +21,7 @@ case class UpdateMany(
   import apiDependencies.system.dispatcher
 
   val coolArgs   = CoolArgs.fromSchemaArgs(args.raw)
-  lazy val count = dataResolver.countByModel(model, whereFilter)
+  lazy val count = dataResolver.countByModel(model, Some(QueryArguments.withFilter(whereFilter)))
 
   def prepareMutactions(): Future[TopLevelDatabaseMutaction] = {
     count map { _ =>
