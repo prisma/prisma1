@@ -432,25 +432,24 @@ export const prisma = new Prisma()`
               renderFunction: false,
               isMutation: false,
             })}>`
-          : ''
+          : `<T = ${this.renderFieldType({
+            field,
+            node: delegate,
+            input: false,
+            partial: delegate,
+            renderFunction: false,
+            isMutation,
+          })}>`
         return `    ${field.name}: ${T}(${this.renderArgs(
           field,
           delegate,
           isMutation,
           true,
+          true
         )}) => ${
           operation === 'subscription'
             ? 'Promise<AsyncIterator<T>>'
-            : delegate
-              ? 'T'
-              : this.renderFieldType({
-                  field,
-                  node: delegate,
-                  input: false,
-                  partial: delegate,
-                  renderFunction: false,
-                  isMutation,
-                })
+            : 'T'
         }`
       })
       .join(';\n')
