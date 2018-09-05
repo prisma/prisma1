@@ -86,7 +86,7 @@ export default class GenereateCommand extends Command {
   }
 
   async generateSchema(output: string, schemaString: string) {
-    fs.writeFileSync(path.join(output, 'schema.graphql'), schemaString)
+    fs.writeFileSync(path.join(output, 'prisma.graphql'), schemaString)
   }
 
   async generateTypescript(output: string, schemaString: string) {
