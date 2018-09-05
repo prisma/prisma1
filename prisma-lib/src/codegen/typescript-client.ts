@@ -184,11 +184,14 @@ export interface Delegate {
   ): Promise<any>
   query: DelegateQuery
   mutation: DelegateMutation
+  subscription: DelegateSubscription
 }
 
 export interface DelegateQuery {\n${this.renderDelegateQueries()}\n}
 
 export interface DelegateMutation {\n${this.renderDelegateMutations()}\n}
+
+export interface DelegateSubcription {\n${this.renderDelegateSubscriptions()}\n}
 
 export interface BindingConstructor<T> {
   new(options?: BasePrismaOptions): T
@@ -237,7 +240,9 @@ export const prisma = new Prisma()`
   }
   renderTypedefs() {
     return (
-      'export const typeDefs = `' + printSchema(this.schema).replace(/`/g, '\\`') + '`'
+      'export const typeDefs = `' +
+      printSchema(this.schema).replace(/`/g, '\\`') +
+      '`'
     )
   }
   renderExists() {
@@ -284,7 +289,7 @@ export const prisma = new Prisma()`
       true,
     )
   }
-  renderSubscriptions() {
+  renderDelegateSubscriptions() {
     const subscriptionType = this.schema.getSubscriptionType()
     if (!subscriptionType) {
       return '{}'
@@ -325,10 +330,11 @@ export const prisma = new Prisma()`
     const typeNames = this.getTypeNames()
     return flatten(
       typeNames.map(typeName => {
-
-        const forbiddenTypeNames = ["then", "catch"]
+        const forbiddenTypeNames = ['then', 'catch']
         if (forbiddenTypeNames.includes(typeName)) {
-          throw new Error(`Cannot use ${typeName} as a type name as it is reserved.`)
+          throw new Error(
+            `Cannot use ${typeName} as a type name as it is reserved.`,
+          )
         }
 
         const type = this.schema.getTypeMap()[typeName]
@@ -357,7 +363,7 @@ export const prisma = new Prisma()`
     renderInfo = false,
     isMutation = false,
     isTopLevel = false,
-    isFragmentAble = false
+    isFragmentAble = false,
   ) {
     const { args } = field
     const hasArgs = args.length > 0
@@ -372,7 +378,9 @@ export const prisma = new Prisma()`
 
     const infoString = renderInfo
       ? ', info?: GraphQLResolveInfo, options?: Options'
-      : isFragmentAble ? `, fragment: string | object` : ``
+      : isFragmentAble
+        ? `, fragment: string | object`
+        : ``
 
     // hard-coded for Prisma ease-of-use
     if (isMutation && field.name.startsWith('create')) {
@@ -433,23 +441,21 @@ export const prisma = new Prisma()`
               isMutation: false,
             })}>`
           : `<T = ${this.renderFieldType({
-            field,
-            node: delegate,
-            input: false,
-            partial: delegate,
-            renderFunction: false,
-            isMutation,
-          })}>`
+              field,
+              node: delegate,
+              input: false,
+              partial: delegate,
+              renderFunction: false,
+              isMutation,
+            })}>`
         return `    ${field.name}: ${T}(${this.renderArgs(
           field,
           delegate,
           isMutation,
           true,
-          true
+          true,
         )}) => ${
-          operation === 'subscription'
-            ? 'Promise<AsyncIterator<T>>'
-            : 'T'
+          operation === 'subscription' ? 'Promise<AsyncIterator<T>>' : 'T'
         }`
       })
       .join(';\n')
@@ -671,20 +677,19 @@ ${fieldDefinition}
         ].concat(interfaces)
       : interfaces
 
-    return `${this.renderDescription(
-      typeDescription,
-    )}${typeName.includes("WhereUniqueInput") ? 
-      `export type ${typeName} = AtLeastOne<{
+    return `${this.renderDescription(typeDescription)}${
+      typeName.includes('WhereUniqueInput')
+        ? `export type ${typeName} = AtLeastOne<{
         ${fieldDefinition}
-      }>` 
-      : 
-      `export interface ${typeName}${
-      actualInterfaces.length > 0
-        ? ` extends ${actualInterfaces.map(i => i.name).join(', ')}`
-        : ''
+      }>`
+        : `export interface ${typeName}${
+            actualInterfaces.length > 0
+              ? ` extends ${actualInterfaces.map(i => i.name).join(', ')}`
+              : ''
           } {
       ${fieldDefinition}
-      }`}`
+      }`
+    }`
   }
 
   renderDescription(description?: string | void) {
