@@ -12,11 +12,11 @@ function makeDialog() {
   const definition = new PrismaDefinitionClass(env)
 
   const dialog = new EndpointDialog({
-    out: this.out,
-    client: this.client,
+    out: output,
+    client,
     env: this.env,
     config: this.config,
-    definition: this.definition,
+    definition,
     shouldAskForGenerator: false,
   })
 
