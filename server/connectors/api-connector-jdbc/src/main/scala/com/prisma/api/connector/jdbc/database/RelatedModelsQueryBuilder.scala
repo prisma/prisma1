@@ -48,7 +48,7 @@ case class RelatedModelsQueryBuilder(
   lazy val queryWithPagination = {
     val order          = orderByInternalWithAliases(baseTableAlias, baseTableAlias, secondaryOrderByForPagination, queryArguments)
     val aliasedBase    = base.where(relatedNodesCondition, queryArgumentsCondition, cursorCondition).asTable().as(baseTableAlias)
-    val rowNumberPart  = rowNumber().over().partitionBy(aliasedBase.field(relatedModelSide)).orderBy(order: _*).as(rowNumberAlias)
+    val rowNumberPart  = rowNumber().over().partitionBy(aliasedBase.field(parentModelSide)).orderBy(order: _*).as(rowNumberAlias)
     val withRowNumbers = select(rowNumberPart, aliasedBase.asterisk()).from(aliasedBase).asTable().as(rowNumberTableAlias)
     val limitCondition = rowNumberPart.between(intDummy).and(intDummy)
 
