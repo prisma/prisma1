@@ -1,6 +1,8 @@
 package com.prisma.api.mutations
 
 import com.prisma.api.ApiSpecBase
+import com.prisma.api.connector.ApiConnectorCapability
+import com.prisma.api.connector.ApiConnectorCapability.JoinRelationsCapability
 import com.prisma.api.connector.jdbc.impl.JdbcDatabaseMutactionExecutor
 import com.prisma.shared.models.Project
 import com.prisma.shared.schema_dsl.SchemaDsl
@@ -13,6 +15,8 @@ import play.api.libs.json.JsValue
 import sangria.util.StringUtil
 
 class RawAccessSpec extends FlatSpec with Matchers with ApiSpecBase {
+  override def runOnlyForCapabilities: Set[ApiConnectorCapability] = Set(JoinRelationsCapability)
+
   val project: Project = SchemaDsl.fromBuilder { schema =>
     schema.model("Todo").field("title", _.String)
   }

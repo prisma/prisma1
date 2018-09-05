@@ -61,5 +61,6 @@ object ApiConnectorCapability extends Enum[ApiConnectorCapability] {
   object TransactionalExecutionCapability    extends ApiConnectorCapability
   object SupportsExistingDatabasesCapability extends ApiConnectorCapability
   // HandlesInvalidDataCapability  -> for Mongo
+  // RawAccessCapability
 
 }
