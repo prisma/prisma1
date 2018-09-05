@@ -132,8 +132,7 @@ export default class GenereateCommand extends Command {
     fs.writeFileSync(path.join(output, "index.ts"), typescript)
 
     const typeDefs = generatorTS.renderTypedefs().replace("export const typeDefs = ", "")
-    fs.writeFileSync(path.join(output, 'graphql.js'), `
-      module.exports = {
+    fs.writeFileSync(path.join(output, 'graphql.js'), `module.exports = {
         typeDefs: ${typeDefs}
       }
     `)
@@ -160,7 +159,7 @@ export default class GenereateCommand extends Command {
 
     this.out.log(`Saving Prisma Client (Go) at ${output}`)
     // Run "go fmt" on the file if user has it installed.
-    spawnSync("go", ["fmt", path.join(output, "main.go")])
+    spawnSync("go", ["fmt", path.join(output, "prisma.go")])
   }
 
   async generateFlow(output: string, schemaString: string) {
