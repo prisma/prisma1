@@ -392,7 +392,7 @@ export const prisma = new Prisma()`
             isNonNullType(a.type) ? '' : '?'
           }: ${this.renderInputFieldTypeHelper(a, isMutation)}`,
       )
-      .join(', ')}${args.length > 0 ? ' ' : ''}${infoString}}`
+      .join(', ')}${args.length > 0 ? ' ' : ''}}${infoString}`
   }
 
   renderInputFieldTypeHelper(field, isMutation) {
