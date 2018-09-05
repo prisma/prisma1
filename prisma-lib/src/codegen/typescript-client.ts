@@ -170,6 +170,18 @@ ${this.renderQueries()};
   */
 
 ${this.renderMutations()};
+
+
+  /**
+   * Subscriptions
+  */
+
+  $subscribe: Subscription
+
+}
+
+export interface Subscription {
+${this.renderSubscriptions()};
 }
 
 export interface Delegate {
@@ -269,6 +281,17 @@ export const prisma = new Prisma()`
       mutationType.getFields(),
       false,
       true,
+    )
+  }
+  renderSubscriptions() {
+    const queryType = this.schema.getSubscriptionType()
+    if (!queryType) {
+      return ''
+    }
+    return this.renderMainMethodFields(
+      'subscription',
+      queryType.getFields(),
+      false,
     )
   }
   renderDelegateQueries() {
