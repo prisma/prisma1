@@ -326,6 +326,12 @@ export const prisma = new Prisma()`
     const typeNames = this.getTypeNames()
     return flatten(
       typeNames.map(typeName => {
+
+        const forbiddenTypeNames = ["then", "catch"]
+        if (forbiddenTypeNames.includes(typeName)) {
+          throw new Error(`Cannot use ${typeName} as a type name as it is reserved.`)
+        }
+
         const type = this.schema.getTypeMap()[typeName]
         if (typeName === 'DateTime') {
           return [
