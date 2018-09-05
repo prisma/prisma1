@@ -379,7 +379,7 @@ export const prisma = new Prisma()`
       return `data${allOptional ? '?' : ''}: ${this.renderInputFieldTypeHelper(
         args[0],
         isMutation,
-      )}`
+      )}, fragment?: string | object`
     } else if (
       (isMutation && field.name.startsWith('delete')) || // either it's a delete mutation
       (!isMutation &&
@@ -390,7 +390,7 @@ export const prisma = new Prisma()`
       return `where${allOptional ? '?' : ''}: ${this.renderInputFieldTypeHelper(
         args[0],
         isMutation,
-      )}`
+      )}, fragment?: string | object`
     }
 
     return `args${allOptional ? '?' : ''}: {${hasArgs ? ' ' : ''}${args
