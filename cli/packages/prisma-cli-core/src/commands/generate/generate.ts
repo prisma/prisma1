@@ -55,7 +55,7 @@ export default class GenereateCommand extends Command {
           ? output
           : path.join(this.config.definitionDir, output)
 
-        fs.mkdirpSync(path.dirname(resolvedOutput))
+        fs.mkdirpSync(resolvedOutput)
 
         if (generator === 'schema') {
           await this.generateSchema(resolvedOutput, schemaString)
@@ -86,7 +86,7 @@ export default class GenereateCommand extends Command {
   }
 
   async generateSchema(output: string, schemaString: string) {
-    fs.writeFileSync(output, schemaString)
+    fs.writeFileSync(path.join(output, 'schema.graphql'), schemaString)
   }
 
   async generateTypescript(output: string, schemaString: string) {
@@ -103,15 +103,15 @@ export default class GenereateCommand extends Command {
     }
 
     const code = generator.render(options)
-    fs.writeFileSync(output, code)
+    fs.writeFileSync(path.join(output, 'index.ts'), code)
     this.out.log(`Saving Prisma Client (TypeScript) at ${output}`)
   }
 
+  // TODO: Get Javascript by restoring TypescriptDefinitionGenerator
   async generateJavascript(output: string, schemaString: string) {
     const schema = buildSchema(schemaString)
 
     const generator = new TypescriptDefinitionGenerator({ schema })
-    const typingsPath = output.replace(/.js$/, '.d.ts')
     const endpoint = this.replaceEnv(this.definition.rawJson!.endpoint)
     const secret = this.definition.rawJson.secret
       ? this.replaceEnv(this.definition.rawJson!.secret)
@@ -122,10 +122,10 @@ export default class GenereateCommand extends Command {
     }
 
     const javascript = generator.renderJavascript(options)
-    fs.writeFileSync(output, javascript)
+    fs.writeFileSync(path.join(output, "index.js"), javascript)
 
     const typings = generator.renderDefinition(options)
-    fs.writeFileSync(typingsPath, typings)
+    fs.writeFileSync(path.join(output, "index.ts"), typings)
     this.out.log(`Saving Prisma Client (JavaScript) at ${output}`)
   }
 
@@ -144,11 +144,11 @@ export default class GenereateCommand extends Command {
     }
 
     const goCode = generator.render(options)
-    fs.writeFileSync(output, goCode)
+    fs.writeFileSync(path.join(output, "main.go"), goCode)
 
     this.out.log(`Saving Prisma Client (Go) at ${output}`)
     // Run "go fmt" on the file if user has it installed.
-    spawnSync("go", ["fmt", output])
+    spawnSync("go", ["fmt", path.join(output, "main.go")])
   }
 
   async generateFlow(output: string, schemaString: string) {
@@ -166,7 +166,7 @@ export default class GenereateCommand extends Command {
     }
 
     const flowCode = generator.render(options)
-    fs.writeFileSync(output, flowCode)
+    fs.writeFileSync(path.join(output, "index.flow.js"), flowCode)
     this.out.log(`Saving Prisma Client (Flow) at ${output}`)
   }
 
