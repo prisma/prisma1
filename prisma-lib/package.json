@@ -1,6 +1,6 @@
 {
   "name": "prisma-lib",
-  "version": "0.1.27",
+  "version": "0.1.28",
   "author": "Tim Suchanek <suchanek@prisma.io>",
   "license": "MIT",
   "files": [
@@ -24,6 +24,7 @@
     "apollo-link-ws": "^1.0.8",
     "debug": "^3.1.0",
     "graphql-import": "^0.6.0",
+    "graphql-tag": "^2.9.2",
     "graphql-tools": "3.1.1",
     "http-link-dataloader": "^0.1.4",
     "jsonwebtoken": "^8.3.0",
@@ -38,7 +39,6 @@
     "apollo-link": "1.2.2",
     "ava": "^0.25.0",
     "graphql": "^0.13.2",
-    "graphql-tag": "^2.9.2",
     "semantic-release": "^15.5.2",
     "tslint": "5.9.1",
     "tslint-config-standard": "7.0.0",

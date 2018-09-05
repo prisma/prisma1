@@ -2683,6 +2683,10 @@ graphql-static-binding@0.8.0:
     cucumber-html-reporter "^3.0.4"
     graphql "0.12.3"
 
+graphql-tag@^2.9.2:
+  version "2.9.2"
+  resolved "https://registry.yarnpkg.com/graphql-tag/-/graphql-tag-2.9.2.tgz#2f60a5a981375f430bf1e6e95992427dc18af686"
+
 graphql-tools@3.1.1:
   version "3.1.1"
   resolved "https://registry.yarnpkg.com/graphql-tools/-/graphql-tools-3.1.1.tgz#d593358f01e7c8b1671a17b70ddb034dea9dbc50"
@@ -5200,15 +5204,16 @@ prisma-json-schema@^0.0.1:
   version "0.0.1"
   resolved "https://registry.yarnpkg.com/prisma-json-schema/-/prisma-json-schema-0.0.1.tgz#0802e156a293faefdf21e5e41beb8d3681f45cb1"
 
-prisma-lib@0.1.27:
-  version "0.1.27"
-  resolved "https://registry.yarnpkg.com/prisma-lib/-/prisma-lib-0.1.27.tgz#1eeefc4c82b36bcc7e9df0760a98d45c86b54108"
+prisma-lib@0.1.28:
+  version "0.1.28"
+  resolved "https://registry.yarnpkg.com/prisma-lib/-/prisma-lib-0.1.28.tgz#d976aa67b90ab9e3f55cbf8989c8f46616823ec8"
   dependencies:
     "@types/node" "^10.7.0"
     apollo-link-error "^1.1.0"
     apollo-link-ws "^1.0.8"
     debug "^3.1.0"
     graphql-import "^0.6.0"
+    graphql-tag "^2.9.2"
     graphql-tools "3.1.1"
     http-link-dataloader "^0.1.4"
     jsonwebtoken "^8.3.0"
