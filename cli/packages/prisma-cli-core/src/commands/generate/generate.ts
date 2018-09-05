@@ -4,7 +4,7 @@ import { fetchAndPrintSchema } from '../deploy/printSchema'
 import * as fs from 'fs-extra'
 import * as path from 'path'
 import { buildSchema } from 'graphql'
-import { TypescriptGenerator, TypescriptDefinitionGenerator, GoGenerator, FlowGenerator } from 'prisma-lib'
+import { TypescriptGenerator, JavascriptGenerator, GoGenerator, FlowGenerator } from 'prisma-lib'
 import { spawnSync } from 'npm-run'
 
 export default class GenereateCommand extends Command {
@@ -107,11 +107,11 @@ export default class GenereateCommand extends Command {
     this.out.log(`Saving Prisma Client (TypeScript) at ${output}`)
   }
 
-  // TODO: Get Javascript by restoring TypescriptDefinitionGenerator
   async generateJavascript(output: string, schemaString: string) {
     const schema = buildSchema(schemaString)
 
-    const generator = new TypescriptDefinitionGenerator({ schema })
+    const generator = new JavascriptGenerator({ schema })
+    const generatorTS = new TypescriptGenerator({ schema })
     const endpoint = this.replaceEnv(this.definition.rawJson!.endpoint)
     const secret = this.definition.rawJson.secret
       ? this.replaceEnv(this.definition.rawJson!.secret)
@@ -124,8 +124,8 @@ export default class GenereateCommand extends Command {
     const javascript = generator.renderJavascript(options)
     fs.writeFileSync(path.join(output, "index.js"), javascript)
 
-    const typings = generator.renderDefinition(options)
-    fs.writeFileSync(path.join(output, "index.ts"), typings)
+    const typescript = generatorTS.render(options)
+    fs.writeFileSync(path.join(output, "index.ts"), typescript)
     this.out.log(`Saving Prisma Client (JavaScript) at ${output}`)
   }
 

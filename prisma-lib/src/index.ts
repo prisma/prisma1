@@ -12,6 +12,7 @@ export {
 export { forwardTo } from './utils'
 export { makeBindingClass } from './makeBindingClass'
 export { Generator } from './codegen/Generator'
+export { JavascriptGenerator } from './codegen/javascript-client'
 export { TypescriptGenerator } from './codegen/TypescriptGenerator'
 export { GoGenerator } from './codegen/GoGenerator'
 export { FlowGenerator } from './codegen/FlowGenerator'
