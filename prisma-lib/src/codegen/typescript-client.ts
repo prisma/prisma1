@@ -697,6 +697,9 @@ ${fieldDefinition}
           {
             name: `Promise<${typeName}Node>`,
           },
+          {
+            name: `Promise<AsyncIterator<${typeName}Node>>`,
+          },
         ].concat(interfaces)
       : interfaces
 
