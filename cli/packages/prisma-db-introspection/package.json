@@ -36,7 +36,7 @@
     "lodash": "^4.17.4",
     "pg": "^7.4.1",
     "pluralize": "^7.0.0",
-    "prisma-json-schema": "0.0.5",
+    "prisma-json-schema": "0.1.0",
     "prisma-yml": "^1.0.88",
     "replaceall": "^0.1.6",
     "scuid": "^1.0.2",
