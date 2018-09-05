@@ -33,13 +33,13 @@ class RawAccessSpec extends FlatSpec with Matchers with ApiSpecBase {
     database.truncateProjectTables(project)
   }
 
-  val slickDatabase = testDependencies.databaseMutactionExecutor.asInstanceOf[JdbcDatabaseMutactionExecutor].slickDatabase
-  val isMySQL       = slickDatabase.isMySql
-  val isPostgres    = slickDatabase.isPostgres
-  val sql           = DSL.using(slickDatabase.dialect, new Settings().withRenderFormatted(true))
-  val modelTable    = table(name(schemaName, model.dbName))
-  val idColumn      = model.idField_!.dbName
-  val titleColumn   = model.getScalarFieldByName_!("title").dbName
+  lazy val slickDatabase = testDependencies.databaseMutactionExecutor.asInstanceOf[JdbcDatabaseMutactionExecutor].slickDatabase
+  lazy val isMySQL       = slickDatabase.isMySql
+  lazy val isPostgres    = slickDatabase.isPostgres
+  lazy val sql           = DSL.using(slickDatabase.dialect, new Settings().withRenderFormatted(true))
+  lazy val modelTable    = table(name(schemaName, model.dbName))
+  lazy val idColumn      = model.idField_!.dbName
+  lazy val titleColumn   = model.getScalarFieldByName_!("title").dbName
 
   "the simplest query Select 1" should "work" in {
     val result = server.query(
