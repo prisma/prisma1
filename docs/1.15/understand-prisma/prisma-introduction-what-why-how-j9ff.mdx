@@ -85,7 +85,7 @@ Programming in a type safe way is the default for modern application development
 
 When developing application servers, most complexity lies in implementing a safe and well-organized database access with respect to _synchronization_, _query optimization_/_performance_ and _security_. This becomes even more complicated when *multiple* databases are involved.
 
-One common solution to thius problem is the introduction of a dedicated _data access layer_ (DAL) that abstracts away the complexities of database access. The DAL's API is consumed by the application server, allowing API developers to simply think about _what_ data they need instead of worrying about _how_ to securely and performantly retrieve it from the database.
+One common solution to this problem is the introduction of a dedicated _data access layer_ (DAL) that abstracts away the complexities of database access. The DAL's API is consumed by the application server, allowing API developers to simply think about _what_ data they need instead of worrying about _how_ to securely and performantly retrieve it from the database.
 
 ![](https://i.imgur.com/SUH6AqW.png)
 
@@ -99,7 +99,7 @@ Prisma lets you start your project with a clean architecture from the beginning 
 
 Despite being a fairly new technology, GraphQL sees a tremendous adoption. [Many small and big companies](http://graphql.org/users) are using it in production today and there's good [reasons](https://www.prisma.io/blog/top-5-reasons-to-use-graphql-b60cfa683511/) to assume adoption will further increase in the future.
 
-As mentioned above, Prisma's main use case is building GraphQ servers. The process of developing a GraphQL server commonly follows the model of _schema-driven development_ where a new API feature is first defined in the _GraphQL schema_ and then implemented using _resolver functions_.
+As mentioned above, Prisma's main use case is building GraphQL servers. The process of developing a GraphQL server commonly follows the model of _schema-driven development_ where a new API feature is first defined in the _GraphQL schema_ and then implemented using _resolver functions_.
 
 Using Prisma as the data access layer and _GraphQL bindings_ that connect to Prisma, resolver implementation becomes straightforward. 
 
