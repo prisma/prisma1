@@ -2,9 +2,6 @@ import { Command, flags, Flags } from 'prisma-cli-engine'
 import * as fs from 'fs-extra'
 import * as path from 'path'
 import chalk from 'chalk'
-import * as npmRun from 'npm-run'
-const debug = require('debug')('init')
-import * as spawn from 'cross-spawn'
 import { EndpointDialog } from '../../utils/EndpointDialog'
 import { isDockerComposeInstalled } from '../../utils/dockerComposeInstalled'
 
@@ -119,18 +116,27 @@ ${endpointSteps.map((step, index) => `  ${index + 1}. ${step}`).join('\n')}`)
       this.out.exit(0)
     }
 
-    const endpointDialog = new EndpointDialog(
-      this.out,
-      this.client,
-      this.env,
-      this.config,
-      this.definition,
-    )
+    const endpointDialog = new EndpointDialog({
+      out: this.out,
+      client: this.client,
+      env: this.env,
+      config: this.config,
+      definition: this.definition,
+      shouldAskForGenerator: true,
+    })
+
     const results = await endpointDialog.getEndpoint()
 
-    fs.copySync(
-      path.join(__dirname, 'boilerplate', 'prisma.yml'),
+    let prismaYmlString = `endpoint: ENDPOINT
+datamodel: datamodel.prisma`
+
+    if (results.generator) {
+      prismaYmlString += this.getGeneratorConfig(results.generator)
+    }
+
+    fs.writeFileSync(
       path.join(this.config.definitionDir, 'prisma.yml'),
+      prismaYmlString,
     )
     fs.writeFileSync(
       path.join(this.config.definitionDir, 'datamodel.prisma'),
@@ -241,5 +247,14 @@ ${steps.map((step, index) => `  ${index + 1}. ${step}`).join('\n')}`)
         )}`,
       )
     }
+  }
+  getGeneratorConfig(generator: string) {
+    return `\n\ngenerate:
+  - generator: ${generator}
+    output: ./generated/prisma
+
+hooks:
+  post-deploy:
+    - prisma generate`
   }
 }

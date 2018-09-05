@@ -1,11 +1,17 @@
 import { Command, flags, Flags } from 'prisma-cli-engine'
 import { prettyTime, concatName } from '../../util'
-import { fetchAndPrintSchema } from '../deploy/printSchema'
+import chalk from 'chalk'
 import * as fs from 'fs-extra'
 import * as path from 'path'
 import { buildSchema } from 'graphql'
-import { TypescriptGenerator, JavascriptGenerator, GoGenerator, FlowGenerator } from 'prisma-lib'
+import {
+  TypescriptGenerator,
+  JavascriptGenerator,
+  GoGenerator,
+  FlowGenerator,
+} from 'prisma-lib'
 import { spawnSync } from 'npm-run'
+import generateCRUDSchemaString from 'prisma-generate-schema'
 
 export default class GenereateCommand extends Command {
   static topic = 'generate'
@@ -27,28 +33,22 @@ export default class GenereateCommand extends Command {
       this.definition.definition!.generate!.length > 0
     ) {
       const before = Date.now()
-      this.out.action.start(`Downloading schema`)
-      const serviceName = this.definition.service!
-      const stageName = this.definition.stage!
-      const token = this.definition.getToken(serviceName, stageName)
-      const cluster = this.definition.getCluster()
-      const workspace = this.definition.getWorkspace()
-      this.env.setActiveCluster(cluster!)
+      this.out.action.start(`Generating schema`)
 
-      await this.client.initClusterClient(
-        cluster!,
-        serviceName,
-        stageName,
-        workspace,
+      if (!this.definition.definition!.datamodel) {
+        await this.out.error(
+          `The property ${chalk.bold(
+            'datamodel',
+          )} is missing in your prisma.yml`,
+        )
+      }
+
+      const schemaString = generateCRUDSchemaString(
+        this.definition.typesString!,
       )
-      const schemaString = await fetchAndPrintSchema(
-        this.client,
-        serviceName,
-        stageName!,
-        token,
-        workspace!,
-      )
+
       this.out.action.stop(prettyTime(Date.now() - before))
+
       for (const { generator, output } of this.definition.definition
         .generate!) {
         const resolvedOutput = output.startsWith('/')
@@ -77,9 +77,19 @@ export default class GenereateCommand extends Command {
           await this.generateFlow(resolvedOutput, schemaString)
         }
 
-        const generators = ["schema-client", "typescript-client", "javascript-client", "go-client", "flow-client"]
+        const generators = [
+          'schema-client',
+          'typescript-client',
+          'javascript-client',
+          'go-client',
+          'flow-client',
+        ]
         if (!generators.includes(generator)) {
-          this.out.error(`Please choose one of the supported generators. Possible generators: ${generators.map(g => `${g}`).join(`, `)}`)
+          this.out.error(
+            `Please choose one of the supported generators. Possible generators: ${generators
+              .map(g => `${g}`)
+              .join(`, `)}`,
+          )
         }
       }
     }
@@ -126,16 +136,21 @@ export default class GenereateCommand extends Command {
     }
 
     const javascript = generator.renderJavascript(options)
-    fs.writeFileSync(path.join(output, "index.js"), javascript)
+    fs.writeFileSync(path.join(output, 'index.js'), javascript)
 
     const typescript = generatorTS.render(options)
-    fs.writeFileSync(path.join(output, "index.ts"), typescript)
+    fs.writeFileSync(path.join(output, 'index.ts'), typescript)
 
-    const typeDefs = generatorTS.renderTypedefs().replace("export const typeDefs = ", "")
-    fs.writeFileSync(path.join(output, 'graphql.js'), `module.exports = {
+    const typeDefs = generatorTS
+      .renderTypedefs()
+      .replace('export const typeDefs = ', '')
+    fs.writeFileSync(
+      path.join(output, 'graphql.js'),
+      `module.exports = {
         typeDefs: ${typeDefs}
       }
-    `)
+    `,
+    )
 
     this.out.log(`Saving Prisma Client (JavaScript) at ${output}`)
   }
@@ -155,11 +170,11 @@ export default class GenereateCommand extends Command {
     }
 
     const goCode = generator.render(options)
-    fs.writeFileSync(path.join(output, "prisma.go"), goCode)
+    fs.writeFileSync(path.join(output, 'prisma.go'), goCode)
 
     this.out.log(`Saving Prisma Client (Go) at ${output}`)
     // Run "go fmt" on the file if user has it installed.
-    spawnSync("go", ["fmt", path.join(output, "prisma.go")])
+    spawnSync('go', ['fmt', path.join(output, 'prisma.go')])
   }
 
   async generateFlow(output: string, schemaString: string) {
@@ -177,7 +192,7 @@ export default class GenereateCommand extends Command {
     }
 
     const flowCode = generator.render(options)
-    fs.writeFileSync(path.join(output, "index.flow.js"), flowCode)
+    fs.writeFileSync(path.join(output, 'index.flow.js'), flowCode)
 
     const typeDefs = generator.renderTypedefs()
     fs.writeFileSync(path.join(output, 'graphql.js'), typeDefs)
