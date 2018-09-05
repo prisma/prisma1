@@ -79,12 +79,12 @@ case class SchemaBuilderImpl(
 
   def buildMutation(): Option[ObjectType[ApiUserContext, Unit]] = {
 
-    val fields = project.models.map(createItemField) ++
-      project.models.flatMap(updateItemField) ++
-      project.models.flatMap(deleteItemField) ++
-      project.models.flatMap(upsertItemField) ++
-      project.models.flatMap(updateManyField) ++
-      project.models.map(deleteManyField) ++
+    val fields = project.nonEmbeddedModels.map(createItemField) ++
+      project.nonEmbeddedModels.flatMap(updateItemField) ++
+      project.nonEmbeddedModels.flatMap(deleteItemField) ++
+      project.nonEmbeddedModels.flatMap(upsertItemField) ++
+      project.nonEmbeddedModels.flatMap(updateManyField) ++
+      project.nonEmbeddedModels.map(deleteManyField) ++
       rawAccessField
     Some(ObjectType("Mutation", fields))
   }
