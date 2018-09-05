@@ -95,13 +95,14 @@ ${chalk.gray(
     let cluster
     let dockerComposeYml = defaultDockerCompose
     if (!serviceName || !stage || interactive) {
-      const endpointDialog = new EndpointDialog(
-        this.out,
-        this.client,
-        this.env,
-        this.config,
-        this.definition,
-      )
+      const endpointDialog = new EndpointDialog({
+        out: this.out,
+        client: this.client,
+        env: this.env,
+        config: this.config,
+        definition: this.definition,
+        shouldAskForGenerator: false,
+      })
       const results = await endpointDialog.getEndpoint()
       cluster = results.cluster
       workspace = results.workspace
@@ -120,7 +121,7 @@ ${chalk.gray(
       cluster = this.definition.getCluster(false)
     }
 
-    if (cluster && cluster.local && !await cluster.isOnline()) {
+    if (cluster && cluster.local && !(await cluster.isOnline())) {
       throw new Error(
         `Could not connect to server at ${
           cluster.baseUrl
@@ -158,7 +159,7 @@ ${chalk.gray(
 
     let projectNew = false
     debug('checking if project exists')
-    if (!await this.projectExists(cluster, serviceName, stage, workspace!)) {
+    if (!(await this.projectExists(cluster, serviceName, stage, workspace!))) {
       debug('adding project')
       await this.addProject(cluster, serviceName, stage, workspace!)
       projectNew = true

@@ -10,7 +10,15 @@ function makeDialog() {
   const env = new Environment(getTmpDir(), output)
   const client = new Client(config, env, output)
   const definition = new PrismaDefinitionClass(env)
-  const dialog = new EndpointDialog(output, client, env, config, definition)
+
+  const dialog = new EndpointDialog({
+    out: this.out,
+    client: this.client,
+    env: this.env,
+    config: this.config,
+    definition: this.definition,
+    shouldAskForGenerator: false,
+  })
 
   return dialog
 }

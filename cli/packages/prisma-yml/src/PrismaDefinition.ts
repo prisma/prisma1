@@ -24,8 +24,6 @@ export interface EnvVars {
 
 export type HookType = 'post-deploy'
 
-type DeprecationType = 'cluster'
-
 export class PrismaDefinitionClass {
   definition?: PrismaDefinition
   rawJson?: any
@@ -72,20 +70,6 @@ export class PrismaDefinitionClass {
       throw new Error(
         `Couldn’t find \`prisma.yml\` file. Are you in the right directory?`,
       )
-    }
-  }
-
-  private handleDeprecation(deprecationType: DeprecationType) {
-    if (deprecationType === 'cluster') {
-      throw new Error(`
-        ${chalk.yellow(`cluster, service, and stage are deprecated.`)}
-        ${chalk.yellow(
-          `Use the 'endpoint' property to define the endpoint of a service:`,
-        )}
-        ${chalk.yellow(
-          `endpoint: http://localhost:4466/[<workspace>/]<service>/<stage>.`,
-        )}
-      `)
     }
   }
 

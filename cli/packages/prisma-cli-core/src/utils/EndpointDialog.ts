@@ -46,6 +46,7 @@ export interface GetEndpointResult {
   newDatabase: boolean
   managementSecret?: string
   writeDockerComposeYml: boolean
+  generator?: string
 }
 
 export interface HandleChoiceInput {
@@ -97,24 +98,36 @@ volumes:
 `,
 }
 
+export interface ConstructorArgs {
+  out: Output
+  client: Client
+  env: Environment
+  config: Config
+  definition: PrismaDefinitionClass
+  shouldAskForGenerator: boolean
+}
+
 export class EndpointDialog {
   out: Output
   client: Client
   env: Environment
   config: Config
   definition: PrismaDefinitionClass
-  constructor(
-    out: Output,
-    client: Client,
-    env: Environment,
-    config: Config,
-    definition: PrismaDefinitionClass,
-  ) {
+  shouldAskForGenerator: boolean
+  constructor({
+    out,
+    client,
+    env,
+    config,
+    definition,
+    shouldAskForGenerator,
+  }: ConstructorArgs) {
     this.out = out
     this.client = client
     this.env = env
     this.config = config
     this.definition = definition
+    this.shouldAskForGenerator = shouldAskForGenerator
   }
 
   async getEndpoint(): Promise<GetEndpointResult> {
@@ -357,6 +370,10 @@ export class EndpointDialog {
       stage = await this.askForStage('dev')
     }
 
+    const generator = this.shouldAskForGenerator
+      ? await this.askForGenerator()
+      : undefined
+
     workspace = workspace || cluster.workspaceSlug
 
     return {
@@ -371,6 +388,7 @@ export class EndpointDialog {
       datamodel,
       newDatabase,
       managementSecret,
+      generator,
       writeDockerComposeYml,
     }
   }
@@ -714,6 +732,38 @@ export class EndpointDialog {
     const { stage } = await this.out.prompt(question)
 
     return stage
+  }
+
+  private async askForGenerator(): Promise<string> {
+    const choices = [
+      {
+        name: 'Prisma TypeScript Client',
+        value: 'typescript-client',
+      },
+      {
+        name: 'Prisma Flow Client',
+        value: 'flow-client',
+      },
+      {
+        name: 'Prisma JavaScript Client',
+        value: 'javascript-client',
+      },
+      {
+        name: 'Prisma Go Client',
+        value: 'go-client',
+      },
+    ]
+
+    const { generator } = await this.out.prompt({
+      name: 'generator',
+      type: 'list',
+      message:
+        'Select the programming language for the generated Prisma client',
+      pageSize: choices.length,
+      choices,
+    })
+
+    return generator
   }
 
   private async askForService(defaultName: string): Promise<string> {

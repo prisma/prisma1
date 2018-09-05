@@ -29,13 +29,14 @@ export default class IntrospectCommand extends Command {
     const { interactive } = this.flags
     const pgSchemaName = this.flags['pg-schema-name']
 
-    const endpointDialog = new EndpointDialog(
-      this.out,
-      this.client,
-      this.env,
-      this.config,
-      this.definition,
-    )
+    const endpointDialog = new EndpointDialog({
+      out: this.out,
+      client: this.client,
+      env: this.env,
+      config: this.config,
+      definition: this.definition,
+      shouldAskForGenerator: false,
+    })
 
     let client
 
