@@ -1,6 +1,7 @@
 import Collapse from 'components/Markdown/Collapse'
 import Warning from 'components/Markdown/Warning'
 import Code from 'components/Markdown/Code'
+import Info from 'components/Markdown/Info'
 
 export const meta = {
   title: 'Prisma Basics: Datamodel, Prisma Client & Server',
@@ -43,6 +44,8 @@ There are two cases how the datamodel can be created:
 - **Manually specified**: When the datamodel is written manually from scratch, the datamodel is also used to perform database migrations (this only applies for _new_ databases without existing data). The model definitions of the datamodel not only determine the API operations of the Prisma client, but are also mapped to the database (meaning they're used to perform database migrations in a declarative way).
 - **Derived from an existing database schema (introspection)**: When you're starting to use Prisma with an existing database, the datamodel is derived from the existing database schema. In this case, Prisma is not used to perform database migrations (instead, you keep migrating the database manually as you used too).
 
+> While there currently is a clear rule for when you can use Prisma to perform database migrations and when not, it is planned to unify the two approaches. This means you'll always have the flexibility to perform migrations manually or use Prisma for that. [Learn more](https://github.com/prisma/prisma/issues/3022).
+
 ### Example
 
 Here is what a simple datamodel with two models looks like:
@@ -58,7 +61,7 @@ type Post {
 
 type User {
   id: ID! @unique
-  email: String! @unique
+  email: String @unique
   name: String!
   posts: [Post!]!
 }
@@ -130,7 +133,6 @@ const newUserWithLinks: UserNode = await prisma
 ```
 
 ```go
-//
 name := "Alice"
     password := "IlikeTurtles"
 
@@ -160,13 +162,72 @@ For traditional ORMs, such a set of write operations requires you to manually co
 
 ### Type safe database access
 
-Prisma client generates typings for your data model. 
+The operations exposed by your Prisma client are strongly typed. For any typed programming language, this means that you get _compile-time safety_ for all database operations and you know _exactly_ what shape of data is going to be returned.
 
-### No boilerplate
+It also makes for an amazing developer experience where you get _auto-completion_ in your editor.
+
+All the typings are auto-generated, so you don't need to deal with writing any boilerplate for that. After you changed your datamodel, you just regenerate your Prisma client and all typings will be updated.
 
 ### Realtime updates
 
+Adding a realtime event system to your database is an extremely complicated task. Prisma client lets you subsribe to any database event without having to deal with the underlying infrastructure. You can do so via generated methods on the `$subscribe` property.
+
+Here is an example that subscribes to events where new `User` records are created that have `gmail` in their email address:
+
+<Code languages={["JavsScript", "TypeScript"]}>
+
+```js
+prisma.$subsribe.user({
+  mutation_in: ["CREATED"],
+  email_contains: "gmail"
+})
+```
+
+
+```ts
+prisma.$subsribe.user({
+  mutation_in: ["CREATED"],
+  email_contains: "gmail"
+})
+```
+
+</Code>
+
 ### Native GraphQL
+
+The Prisma client lets you run GraphQL queries and mutations against your database using the `$graphql` method.
+
+Here is an example that shows how to create a new `User` record using the native GraphQL API:
+
+<Code languages={["JavsScript", "TypeScript"]}>
+
+```js
+const mutation = `
+  mutation ($name: String!){
+    createUser(name: $name) {
+      id
+    }
+  }
+`
+
+const variables = { name: 'Alice' }
+const result = prisma.$graphql(mutation, variables)
+```
+
+```ts
+const mutation = `
+  mutation ($name: String!){
+    createUser(name: $name) {
+      id
+    }
+  }
+`
+
+const variables: UserCreateInput = { name: 'Alice' }
+const result: any = prisma.$graphql(mutation, variables)
+```
+
+</Code>
 
 
 ## Prisma server
