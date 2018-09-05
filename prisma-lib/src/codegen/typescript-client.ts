@@ -170,6 +170,18 @@ ${this.renderQueries()};
   */
 
 ${this.renderMutations()};
+
+
+  /**
+   * Subscriptions
+  */
+
+  $subscribe: Subscription
+
+}
+
+export interface Subscription {
+${this.renderSubscriptions()};
 }
 
 export interface Delegate {
@@ -184,11 +196,14 @@ export interface Delegate {
   ): Promise<any>
   query: DelegateQuery
   mutation: DelegateMutation
+  subscription: DelegateSubscription
 }
 
 export interface DelegateQuery {\n${this.renderDelegateQueries()}\n}
 
 export interface DelegateMutation {\n${this.renderDelegateMutations()}\n}
+
+export interface DelegateSubscription {\n${this.renderDelegateSubscriptions()}\n}
 
 export interface BindingConstructor<T> {
   new(options?: BasePrismaOptions): T
@@ -237,7 +252,9 @@ export const prisma = new Prisma()`
   }
   renderTypedefs() {
     return (
-      'export const typeDefs = `' + printSchema(this.schema).replace(/`/g, '\\`') + '`'
+      'export const typeDefs = `' +
+      printSchema(this.schema).replace(/`/g, '\\`') +
+      '`'
     )
   }
   renderExists() {
@@ -266,6 +283,17 @@ export const prisma = new Prisma()`
       true,
     )
   }
+  renderSubscriptions() {
+    const queryType = this.schema.getSubscriptionType()
+    if (!queryType) {
+      return ''
+    }
+    return this.renderMainMethodFields(
+      'subscription',
+      queryType.getFields(),
+      false,
+    )
+  }
   renderDelegateQueries() {
     const queryType = this.schema.getQueryType()
     if (!queryType) {
@@ -284,7 +312,7 @@ export const prisma = new Prisma()`
       true,
     )
   }
-  renderSubscriptions() {
+  renderDelegateSubscriptions() {
     const subscriptionType = this.schema.getSubscriptionType()
     if (!subscriptionType) {
       return '{}'
@@ -325,10 +353,11 @@ export const prisma = new Prisma()`
     const typeNames = this.getTypeNames()
     return flatten(
       typeNames.map(typeName => {
-
-        const forbiddenTypeNames = ["then", "catch"]
+        const forbiddenTypeNames = ['then', 'catch']
         if (forbiddenTypeNames.includes(typeName)) {
-          throw new Error(`Cannot use ${typeName} as a type name as it is reserved.`)
+          throw new Error(
+            `Cannot use ${typeName} as a type name as it is reserved.`,
+          )
         }
 
         const type = this.schema.getTypeMap()[typeName]
@@ -357,7 +386,7 @@ export const prisma = new Prisma()`
     renderInfo = false,
     isMutation = false,
     isTopLevel = false,
-    isFragmentAble = false
+    isFragmentAble = false,
   ) {
     const { args } = field
     const hasArgs = args.length > 0
@@ -433,24 +462,20 @@ export const prisma = new Prisma()`
               isMutation: false,
             })}>`
           : `<T = ${this.renderFieldType({
-            field,
-            node: delegate,
-            input: false,
-            partial: delegate,
-            renderFunction: false,
-            isMutation,
-          })}>`
+              field,
+              node: delegate,
+              input: false,
+              partial: delegate,
+              renderFunction: false,
+              isMutation,
+            })}>`
         return `    ${field.name}: ${T}(${this.renderArgs(
           field,
           delegate,
           isMutation,
           true,
-          true
-        )}) => ${
-          operation === 'subscription'
-            ? 'Promise<AsyncIterator<T>>'
-            : 'T'
-        }`
+          true,
+        )}) => T`
       })
       .join(';\n')
   }
@@ -666,25 +691,24 @@ ${fieldDefinition}
     const actualInterfaces = promise
       ? [
           {
-            name: `Promise<${typeName}Node>`,
+            name: `Promise<${typeName}Node | AsyncIterator<${typeName}Node>>`,
           },
         ].concat(interfaces)
       : interfaces
 
-    return `${this.renderDescription(
-      typeDescription,
-    )}${typeName.includes("WhereUniqueInput") ? 
-      `export type ${typeName} = AtLeastOne<{
+    return `${this.renderDescription(typeDescription)}${
+      typeName.includes('WhereUniqueInput')
+        ? `export type ${typeName} = AtLeastOne<{
         ${fieldDefinition}
-      }>` 
-      : 
-      `export interface ${typeName}${
-      actualInterfaces.length > 0
-        ? ` extends ${actualInterfaces.map(i => i.name).join(', ')}`
-        : ''
+      }>`
+        : `export interface ${typeName}${
+            actualInterfaces.length > 0
+              ? ` extends ${actualInterfaces.map(i => i.name).join(', ')}`
+              : ''
           } {
       ${fieldDefinition}
-      }`}`
+      }`
+    }`
   }
 
   renderDescription(description?: string | void) {

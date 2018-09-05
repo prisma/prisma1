@@ -10,7 +10,7 @@
     "rootDir": "./src",
     "outDir": "./dist",
     "strict": true,
-    "lib": ["dom", "esnext", "es2016"]
+    "lib": ["dom", "esnext", "es2016", "esnext.asynciterable"]
   },
   "exclude": ["node_modules", "dist", "examples"]
 }

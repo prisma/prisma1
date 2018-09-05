@@ -7,8 +7,6 @@ import { getTypesAndWhere } from './utils'
 import { getCachedTypeDefs, getCachedRemoteSchema } from './cache'
 import { Binding } from '.'
 import { BatchedGraphQLClient } from 'http-link-dataloader'
-import { print } from 'graphql'
-const debug = require('debug')('prisma')
 
 const sharedLink = new SharedLink()
 
@@ -71,14 +69,6 @@ export class Prisma extends Binding {
           }
         : {},
     })
-  }
-
-  execute(document, variables) {
-    debug('execute')
-    const query = print(document)
-    debug('printed')
-
-    return this.client.request(query, variables) as any
   }
 
   private buildExists(): Exists {

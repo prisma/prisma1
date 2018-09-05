@@ -14,8 +14,8 @@ function makeDialog() {
   const dialog = new EndpointDialog({
     out: output,
     client,
-    env: this.env,
-    config: this.config,
+    env,
+    config,
     definition,
     shouldAskForGenerator: false,
   })

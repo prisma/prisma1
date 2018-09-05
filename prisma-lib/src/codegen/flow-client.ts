@@ -171,6 +171,17 @@ ${this.renderQueries()};
   */
 
 ${this.renderMutations()};
+
+  /**
+   * Subscriptions
+  */
+
+  $subscribe: Subscription
+
+}
+
+export interface Subscription {
+  ${this.renderSubscriptions()};
 }
 
 export interface Delegate {
@@ -190,6 +201,8 @@ export interface Delegate {
 export interface DelegateQuery {\n${this.renderDelegateQueries()}\n}
 
 export interface DelegateMutation {\n${this.renderDelegateMutations()}\n}
+
+export interface DelegateSubcription {\n${this.renderDelegateSubscriptions()}\n}
 
 export interface BindingConstructor<T> {
   new(options?: BPOType): T
@@ -236,7 +249,9 @@ import { typeDefs } from './graphql'`
   }
   renderTypedefs() {
     return (
-      'export const typeDefs = `' + printSchema(this.schema).replace(/`/g, '\\`') + '`'
+      'export const typeDefs = `' +
+      printSchema(this.schema).replace(/`/g, '\\`') +
+      '`'
     )
   }
   renderExists() {
@@ -265,6 +280,17 @@ import { typeDefs } from './graphql'`
       true,
     )
   }
+  renderSubscriptions() {
+    const queryType = this.schema.getSubscriptionType()
+    if (!queryType) {
+      return ''
+    }
+    return this.renderMainMethodFields(
+      'subscription',
+      queryType.getFields(),
+      false,
+    )
+  }
   renderDelegateQueries() {
     const queryType = this.schema.getQueryType()
     if (!queryType) {
@@ -283,7 +309,7 @@ import { typeDefs } from './graphql'`
       true,
     )
   }
-  renderSubscriptions() {
+  renderDelegateSubscriptions() {
     const subscriptionType = this.schema.getSubscriptionType()
     if (!subscriptionType) {
       return '{}'
@@ -324,10 +350,11 @@ import { typeDefs } from './graphql'`
     const typeNames = this.getTypeNames()
     return flatten(
       typeNames.map(typeName => {
-
-        const forbiddenTypeNames = ["then", "catch"]
+        const forbiddenTypeNames = ['then', 'catch']
         if (forbiddenTypeNames.includes(typeName)) {
-          throw new Error(`Cannot use ${typeName} as a type name as it is reserved.`)
+          throw new Error(
+            `Cannot use ${typeName} as a type name as it is reserved.`,
+          )
         }
 
         const type = this.schema.getTypeMap()[typeName]
