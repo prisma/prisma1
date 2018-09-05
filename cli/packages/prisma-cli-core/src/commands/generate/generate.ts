@@ -155,7 +155,7 @@ export default class GenereateCommand extends Command {
     }
 
     const goCode = generator.render(options)
-    fs.writeFileSync(path.join(output, "main.go"), goCode)
+    fs.writeFileSync(path.join(output, "prisma.go"), goCode)
 
     this.out.log(`Saving Prisma Client (Go) at ${output}`)
     // Run "go fmt" on the file if user has it installed.
