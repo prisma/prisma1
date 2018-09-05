@@ -85,6 +85,12 @@ ${chalk.gray(
      */
     await this.definition.load(this.flags, envFile)
 
+    if (!this.definition.definition!.datamodel) {
+      await this.out.error(
+        `The property ${chalk.bold('datamodel')} is missing in your prisma.yml`,
+      )
+    }
+
     let serviceName = this.definition.service!
     let stage = this.definition.stage!
 

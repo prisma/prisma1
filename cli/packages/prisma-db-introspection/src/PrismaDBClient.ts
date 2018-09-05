@@ -14,6 +14,12 @@ export class PrismaDBClient implements DBClient {
   constructor(definition: PrismaDefinitionClass) {
     this.cluster = definition.getCluster()!
     this.definition = definition
+
+    if (this.cluster.shared) {
+      throw new Error(
+        `Cannot introspect demo server. Please use introspection on your self-hosted server.`,
+      )
+    }
   }
 
   async query(query: string, variables: string[] = []): Promise<any> {

@@ -249,8 +249,12 @@ ${steps.map((step, index) => `  ${index + 1}. ${step}`).join('\n')}`)
     }
   }
   getGeneratorConfig(generator: string) {
-    return `\ngenerate:
+    return `\n\ngenerate:
   - generator: ${generator}
-    output: ./generated/prisma`
+    output: ./generated/prisma
+
+hooks:
+  post-deploy:
+    - prisma generate`
   }
 }

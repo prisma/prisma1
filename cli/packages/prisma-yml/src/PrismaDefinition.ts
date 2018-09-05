@@ -243,14 +243,16 @@ and execute ${chalk.bold.green(
   }
 
   getTypesString(definition: PrismaDefinition) {
-    const typesPaths = Array.isArray(definition.datamodel)
-      ? definition.datamodel
-      : [definition.datamodel]
+    const typesPaths = definition.datamodel
+      ? Array.isArray(definition.datamodel)
+        ? definition.datamodel
+        : [definition.datamodel]
+      : []
 
     const errors: ErrorMessage[] = []
     let allTypes = ''
     typesPaths.forEach(unresolvedTypesPath => {
-      const typesPath = path.join(this.definitionDir, unresolvedTypesPath)
+      const typesPath = path.join(this.definitionDir, unresolvedTypesPath!)
       if (fs.existsSync(typesPath)) {
         const types = fs.readFileSync(typesPath, 'utf-8')
         allTypes += types + '\n'
@@ -327,6 +329,12 @@ and execute ${chalk.bold.green(
       newEndpoint,
     )
     fs.writeFileSync(this.definitionPath!, this.definitionString)
+  }
+
+  addDatamodel(datamodel) {
+    this.definitionString += `\ndatamodel: ${datamodel}`
+    fs.writeFileSync(this.definitionPath!, this.definitionString)
+    this.definition!.datamodel = datamodel
   }
 
   getEndpoint(serviceInput?: string, stageInput?: string) {

@@ -96,7 +96,7 @@ export default class IntrospectCommand extends Command {
         )
         this.out.exit(1)
       }
-      const fileName = `datamodel-${new Date().getTime()}.graphql`
+      const fileName = `datamodel-${new Date().getTime()}.prisma`
       const fullFileName = path.join(this.config.definitionDir, fileName)
       fs.writeFileSync(fullFileName, sdl)
       this.out.action.stop(prettyTime(Date.now() - before))
@@ -110,6 +110,12 @@ ${chalk.bold(
 
   ${chalk.cyan(fileName)}
 `)
+      if (!this.definition.definition!.datamodel) {
+        this.definition.addDatamodel(fileName)
+        this.out.log(
+          `Added ${chalk.bold(`datamodel: ${fileName}`)} to prisma.yml`,
+        )
+      }
     } else {
       throw new Error(`Could not find schema in provided database.`)
     }
