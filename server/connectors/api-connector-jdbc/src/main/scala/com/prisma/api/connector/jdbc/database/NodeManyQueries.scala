@@ -21,6 +21,25 @@ trait NodeManyQueries extends BuilderBase with FilterConditionBuilder with Curso
     )
   }
 
+  def countFromModel(model: Model, args: Option[QueryArguments]): DBIO[Int] = {
+    val baseQuery = modelQuery(model, args, SelectedFields(Set(model.idField_!)))
+    val query     = sql.selectCount().from(baseQuery)
+
+    queryToDBIO(query)(
+      setParams = pp => SetParams.setQueryArgs(pp, args),
+      readResult = { rs =>
+        val _                      = rs.next()
+        val count                  = rs.getInt(1)
+        val SkipAndLimit(_, limit) = skipAndLimitValues(args) // this returns the actual limit increased by 1 to enable hasNextPage for pagination
+        val result = limit match {
+          case Some(limit) => if (count > (limit - 1)) count - 1 else count
+          case None        => count
+        }
+        Math.max(result, 0)
+      }
+    )
+  }
+
   private def modelQuery(model: Model, queryArguments: Option[QueryArguments], selectedFields: SelectedFields): SelectForUpdateStep[Record] = {
     val condition       = buildConditionForFilter(queryArguments.flatMap(_.filter))
     val cursorCondition = buildCursorCondition(queryArguments, model)
