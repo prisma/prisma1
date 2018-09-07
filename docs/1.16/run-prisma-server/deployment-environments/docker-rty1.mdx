@@ -84,6 +84,9 @@ Each _database object_ in the `databases` object needs to include the following 
 | `user ` | `string` | The database user. Example: `root` | 
 | `password ` | `string` | The password for the database user specified in `user`. Example: `myDBpassword42` | 
 
+#### Environment variable when using Docker
+
+If the `managementApiSecret` is set the Docker Compose file. Make sure the environment variable `PRISMA_MANAGEMENT_API_SECRET="__YOUR_MANAGEMENT_API_SECRET__"` is set on your local and the Docker server environment variable.
 
 ## Debugging
 
