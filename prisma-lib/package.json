@@ -29,6 +29,7 @@
     "http-link-dataloader": "^0.1.4",
     "jsonwebtoken": "^8.3.0",
     "object-path-immutable": "^3.0.0",
+    "prettier": "^1.14.2",
     "subscriptions-transport-ws": "^0.9.14",
     "uppercamelcase": "^3.0.0",
     "ws": "^6.0.0"
