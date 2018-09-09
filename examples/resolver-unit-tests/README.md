@@ -1,6 +1,6 @@
 # resolver-unit-tests
 
-This example demonstrates how to unit test GraphQL resolvers using [`graphql-yoga`](https://github.com/prismagraphql/graphql-yoga), a Prisma test instance on [Travis CI](https://travis-ci.com/) and [jest](https://github.com/facebook/jest).
+This example demonstrates how to unit test GraphQL resolvers using [`graphql-yoga`](https://github.com/prisma/graphql-yoga), a Prisma test instance on [Travis CI](https://travis-ci.com/) and [jest](https://github.com/facebook/jest).
 
 ## Get started
 
@@ -12,7 +12,7 @@ The `prisma` cli is the core component of your development workflow. `prisma` sh
 Clone the Prisma monorepo and navigate to this directory or download _only_ this example with the following command:
 
 ```sh
-curl https://codeload.github.com/prismagraphql/prisma/tar.gz/master | tar -xz --strip=2 prisma-master/examples/resolver-unit-tests
+curl https://codeload.github.com/prisma/prisma/tar.gz/master | tar -xz --strip=2 prisma-master/examples/resolver-unit-tests
 ```
 
 ### 3. Set up repository locally and on GitHub

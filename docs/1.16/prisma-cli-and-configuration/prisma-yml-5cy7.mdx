@@ -28,7 +28,7 @@ The most minimal version of a valid prisma.yml needs to contains at least two pr
 To be able to specify an `endpoint`, you need to have access to a Prisma server. If you don't have access to a Prisma server, you can omit the `endpoint` from prisma.yml and run `prisma deploy` only with the `datamodel` property. In that case, a CLI wizard guides you through the process of creating a local Prisma server or lets you deploy to a Demo server in Prisma Cloud. It then writes the `endpoint` into prisma.yml for you before the service gets deployed:
 
 ```yml
-datamodel: datamodel.prisma 
+datamodel: datamodel.prisma
 ```
 
 ### Standard example
@@ -50,7 +50,7 @@ hooks:
   post-deploy:
     - graphql get-schema --endpoint http://localhost:4466/myservice/dev --output prisma.graphql
 ```
-    
+
 
 ### Exhaustive example
 
@@ -63,35 +63,35 @@ datamodel:
   - database/types.graphql
   - database/enums.graphql
 
-# The endpoint represents the HTTP endpoint for your Prisma API. 
+# The endpoint represents the HTTP endpoint for your Prisma API.
 # It encodes several pieces of information:
 # * Prisma server (`localhost:4466` in this example)
 # * Service name (`myservice` in this example)
 # * Stage (`dev` in this example)
-# NOTE: When service name and stage are set to `default`, they 
+# NOTE: When service name and stage are set to `default`, they
 # can be omitted.
-# Meaning http://myserver.com/default/default can be written 
+# Meaning http://myserver.com/default/default can be written
 # as http://myserver.com.
 endpoint: http://localhost:4466/myservice/dev
 
-# The secret is used to create JSON web tokens (JWTs). These 
-# tokens need to be attached in the `Authorization` header 
+# The secret is used to create JSON web tokens (JWTs). These
+# tokens need to be attached in the `Authorization` header
 # of HTTP requests made against the Prisma endpoint.
-# WARNING: If the secret is not provided, the Prisma API can 
+# WARNING: If the secret is not provided, the Prisma API can
 # be accessed without authentication!
 secret: mysecret123
 
-# A "post-deployment" hook that first downloads the GraphQL 
-# schema from an endpoint configured in `.graphqlconfig` and 
+# A "post-deployment" hook that first downloads the GraphQL
+# schema from an endpoint configured in `.graphqlconfig` and
 # then invokes a code generation process.
 hooks:
   post-deploy:
     - graphql get-schema --project db
     - graphql codegen
 
-# This service has one event subscription configured. The 
+# This service has one event subscription configured. The
 # corresponding subscription query is located in `database/subscriptions/welcomeEmail.graphql`.
-# When the subscription fires, the specified `webhook` 
+# When the subscription fires, the specified `webhook`
 # is invoked via HTTP.
 subscriptions:
   sendWelcomeEmail:
@@ -101,13 +101,13 @@ subscriptions:
       headers:
         Authorization: ${env:MY_ENDPOINT_SECRET}
 
-# Points to a `.graphql` file containing GraphQL 
-# operations that will be executed when initially 
+# Points to a `.graphql` file containing GraphQL
+# operations that will be executed when initially
 # deploying a service.
 seed:
   import: database/seed.graphql
 
-# This service only defines one custom variable that's 
+# This service only defines one custom variable that's
 # referenced in the `webhook` of the `subscription`
 custom:
   serverlessEndpoint: https://bcdeaxokbj.execute-api.eu-west-1.amazonaws.com/dev
@@ -201,7 +201,7 @@ The service definition file prisma.yml has the following root properties:
 - `seed`: Points to a file containing mutations for data seeding.
 - `custom`: Used to provide variables which can be referenced elsewhere in prisma.yml.
 
-The exact structure of prisma.yml is defined with [JSON schema](http://json-schema.org/). You can find the corresponding schema definition [here](https://github.com/prismagraphql/prisma-json-schema/blob/master/src/schema.json). The JSON schem definition also allows to elevate your tooling and let your code editors and IDEs help you with the right structure of prisma.yml.
+The exact structure of prisma.yml is defined with [JSON schema](http://json-schema.org/). You can find the corresponding schema definition [here](https://github.com/prisma/prisma-json-schema/blob/master/src/schema.json). The JSON schem definition also allows to elevate your tooling and let your code editors and IDEs help you with the right structure of prisma.yml.
 
 ### datamodel (required)
 
@@ -279,7 +279,7 @@ endpoint: http://my-pr-Publi-1GXX8QUZU3T89-413349553.us-east-1.elb.amazonaws.com
 
 ### secret (optional)
 
-The service secret is used to generate (or _sign_) authentication tokens ([JWT](https://jwt.io)). One of these authentication tokens needs to be attached to the HTTP requests made against the Prisma API exposes by the service (in the `Authorization` header field). 
+The service secret is used to generate (or _sign_) authentication tokens ([JWT](https://jwt.io)). One of these authentication tokens needs to be attached to the HTTP requests made against the Prisma API exposes by the service (in the `Authorization` header field).
 
 A secret must follow these requirements:
 

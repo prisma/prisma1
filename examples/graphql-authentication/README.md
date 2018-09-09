@@ -1,6 +1,6 @@
 # Authentication
 
-This example demonstrates how to implement a GraphQL server with an email-password-based authentication workflow using the [GraphQL Authentication](https://github.com/Volst/graphql-authentication) library. This package handles things links password reset, signup, inviting a user etc. for you. It also shows you how to use the [GraphQL Shield](https://github.com/maticzav/graphql-shield) library for protecting mutations and queries from unauthorized access. See the [*Permissions with GraphQL Shield*](https://github.com/prismagraphql/prisma/tree/master/examples/permissions-with-shield) example for a more detailed example for this.
+This example demonstrates how to implement a GraphQL server with an email-password-based authentication workflow using the [GraphQL Authentication](https://github.com/Volst/graphql-authentication) library. This package handles things links password reset, signup, inviting a user etc. for you. It also shows you how to use the [GraphQL Shield](https://github.com/maticzav/graphql-shield) library for protecting mutations and queries from unauthorized access. See the [*Permissions with GraphQL Shield*](https://github.com/prisma/prisma/tree/master/examples/permissions-with-shield) example for a more detailed example for this.
 
 ## Get started
 
@@ -12,7 +12,7 @@ The `prisma` cli is the core component of your development workflow. `prisma` sh
 Clone the Prisma monorepo and navigate to this directory or download _only_ this example with the following command:
 
 ```sh
-curl https://codeload.github.com/prismagraphql/prisma/tar.gz/master | tar -xz --strip=2 prisma-master/examples/graphql-authentication
+curl https://codeload.github.com/prisma/prisma/tar.gz/master | tar -xz --strip=2 prisma-master/examples/graphql-authentication
 ```
 
 Next, navigate into the downloaded folder and install the NPM dependencies:

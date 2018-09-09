@@ -90,7 +90,7 @@ prisma deploy
 
 #### 5. Explore the API in a Playground
 
-Run the following command to open a [GraphQL Playground](https://github.com/prismagraphql/graphql-playground/releases) and start sending queries and mutations:
+Run the following command to open a [GraphQL Playground](https://github.com/prisma/graphql-playground/releases) and start sending queries and mutations:
 
 ```bash
 prisma playground
@@ -174,13 +174,13 @@ Collection of Prisma example projects 💡
 - [travis](./examples/travis)
 - [yml-structure](./examples/yml-structure)
 
-You can also check the [**AirBnB clone example**](https://github.com/prismagraphql/graphql-server-example) we built as a fully-featured demo app for Prisma.
+You can also check the [**AirBnB clone example**](https://github.com/prisma/graphql-server-example) we built as a fully-featured demo app for Prisma.
 
 ## Architecture
 
 Prisma takes the role of a [data access layer](https://en.wikipedia.org/wiki/Data_access_layer) in your backend architecture by connecting your API server to your databases. It enables a layered architecture which leads to better _separation of concerns_ and improves _maintainability_ of the entire backend.
 
-Acting as a _GraphQL database proxy_, Prisma provides a GraphQL-based abstraction for your databases enabling you to read and write data with GraphQL queries and mutations. Using [Prisma bindings](https://github.com/prismagraphql/prisma-binding), you can access Prisma's GraphQL API from your programming language.
+Acting as a _GraphQL database proxy_, Prisma provides a GraphQL-based abstraction for your databases enabling you to read and write data with GraphQL queries and mutations. Using [Prisma bindings](https://github.com/prisma/prisma-binding), you can access Prisma's GraphQL API from your programming language.
 
 Prisma servers run as standalone processes which allows for them to be scaled independently from your API server.
 
@@ -204,7 +204,7 @@ Here is how Prisma compares to conventional ORMs:
 
 ## Database Connectors
 
-[Database connectors](https://github.com/prismagraphql/prisma/issues/1751) provide the link between Prisma and the underlying database.
+[Database connectors](https://github.com/prisma/prisma/issues/1751) provide the link between Prisma and the underlying database.
 
 You can connect the following databases to Prisma already:
 
@@ -217,27 +217,27 @@ More database connectors will follow.
 
 If you are interested to participate in the preview for one of the following connectors, please reach out in our [Slack](https://slack.prisma.io).
 
-- [MongoDB Connector](https://github.com/prismagraphql/prisma/issues/1643)
-- [Elastic Search Connector](https://github.com/prismagraphql/prisma/issues/1665)
+- [MongoDB Connector](https://github.com/prisma/prisma/issues/1643)
+- [Elastic Search Connector](https://github.com/prisma/prisma/issues/1665)
 
 ### Further Connectors
 
 We are still collecting use cases and feedback for the API design and feature set of the following connectors:
 
-- [MS SQL Connector](https://github.com/prismagraphql/prisma/issues/1642)
-- [Oracle Connector](https://github.com/prismagraphql/prisma/issues/1644)
-- [ArangoDB Connector](https://github.com/prismagraphql/prisma/issues/1645)
-- [Neo4j Connector](https://github.com/prismagraphql/prisma/issues/1646)
-- [Druid Connector](https://github.com/prismagraphql/prisma/issues/1647)
-- [Dgraph Connector](https://github.com/prismagraphql/prisma/issues/1648)
-- [DynamoDB Connector](https://github.com/prismagraphql/prisma/issues/1655)
-- [Cloud Firestore Connector](https://github.com/prismagraphql/prisma/issues/1660)
-- [CockroachDB Connector](https://github.com/prismagraphql/prisma/issues/1705)
-- [Cassandra Connector](https://github.com/prismagraphql/prisma/issues/1750)
-- [Redis Connector](https://github.com/prismagraphql/prisma/issues/1722)
-- [AWS Neptune Connector](https://github.com/prismagraphql/prisma/issues/1752)
-- [CosmosDB Connector](https://github.com/prismagraphql/prisma/issues/1663)
-- [Influx Connector](https://github.com/prismagraphql/prisma/issues/1857)
+- [MS SQL Connector](https://github.com/prisma/prisma/issues/1642)
+- [Oracle Connector](https://github.com/prisma/prisma/issues/1644)
+- [ArangoDB Connector](https://github.com/prisma/prisma/issues/1645)
+- [Neo4j Connector](https://github.com/prisma/prisma/issues/1646)
+- [Druid Connector](https://github.com/prisma/prisma/issues/1647)
+- [Dgraph Connector](https://github.com/prisma/prisma/issues/1648)
+- [DynamoDB Connector](https://github.com/prisma/prisma/issues/1655)
+- [Cloud Firestore Connector](https://github.com/prisma/prisma/issues/1660)
+- [CockroachDB Connector](https://github.com/prisma/prisma/issues/1705)
+- [Cassandra Connector](https://github.com/prisma/prisma/issues/1750)
+- [Redis Connector](https://github.com/prisma/prisma/issues/1722)
+- [AWS Neptune Connector](https://github.com/prisma/prisma/issues/1752)
+- [CosmosDB Connector](https://github.com/prisma/prisma/issues/1663)
+- [Influx Connector](https://github.com/prisma/prisma/issues/1857)
 
 Join the discussion or contribute to influence which we'll work on next!
 
@@ -268,7 +268,7 @@ Prisma has a community of thousands of amazing developers and contributors. Welc
 ## Contributing
 
 Contributions are **welcome and extremely helpful** 🙌
-Please refer [to the contribution guide](https://github.com/prismagraphql/prisma/blob/master/CONTRIBUTING.md) for more information.
+Please refer [to the contribution guide](https://github.com/prisma/prisma/blob/master/CONTRIBUTING.md) for more information.
 
 Releases are separated into three _channels_: **alpha**, **beta** and **stable**. You can learn more about these three channels and Prisma's release process [here](https://www.prisma.io/blog/improving-prismas-release-process-yaey8deiwaex/).
 

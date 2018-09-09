@@ -19,7 +19,7 @@ The `prisma` cli is the core component of your development workflow. `prisma` sh
 Clone the Prisma monorepo and navigate to this directory or download _only_ this example with the following command:
 
 ```sh
-curl https://codeload.github.com/prismagraphql/prisma/tar.gz/master | tar -xz --strip=2 prisma-master/examples/yml-structure
+curl https://codeload.github.com/prisma/prisma/tar.gz/master | tar -xz --strip=2 prisma-master/examples/yml-structure
 ```
 
 Next, navigate into the downloaded folder and install the NPM dependencies:

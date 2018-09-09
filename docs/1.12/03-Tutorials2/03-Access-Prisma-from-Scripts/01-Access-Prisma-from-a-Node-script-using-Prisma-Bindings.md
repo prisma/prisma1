@@ -116,7 +116,7 @@ yarn add prisma-binding graphql
 
 ## Step 3: Download the Prisma database schema
 
-The next step is to download the GraphQL schema of Prisma's GraphQL API (also referred to as _Prisma database schema_) into your project so you can point [Prisma binding](https://github.com/prismagraphql/prisma-binding) to them.
+The next step is to download the GraphQL schema of Prisma's GraphQL API (also referred to as _Prisma database schema_) into your project so you can point [Prisma binding](https://github.com/prisma/prisma-binding) to them.
 
 Downloading the Prisma database schema is done using the [GraphQL CLI](https://oss.prisma.io/content/GraphQL-CLI/01-Overview.html) and [GraphQL Config](https://oss.prisma.io/content/GraphQL-Config/Overview.html).
 
@@ -342,7 +342,7 @@ node src/index.js
 
 Prisma binding also lets you send queries and mutations as strings to your Prisma service using the `request` property. This is more verbose because you need to give spell out the entire query/mutation, and also their responses have a little more overhead because they include the _name_ of the query/mutation as a top level key.
 
-> Prisma binding's `request` uses [`graphql-request`](https://github.com/prismagraphql/graphql-request) under the hood and therefore has the same API.
+> Prisma binding's `request` uses [`graphql-request`](https://github.com/prisma/graphql-request) under the hood and therefore has the same API.
 
 <Instruction>
 

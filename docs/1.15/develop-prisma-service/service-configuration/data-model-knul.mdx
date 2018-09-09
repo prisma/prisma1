@@ -31,7 +31,7 @@ There are several available building blocks to shape your data model.
 - [Types](#object-types) consist of multiple [fields](#fields) and typically represent entities from your application domain (e.g. `User`, `Car`, `Order`). Each type in your data model is mapped to a database table (or an equivalent structure for schemaless databases) and CRUD operations are added to the GraphQL schema.
 - [Relations](#relations) describe _relationships_ between types.
 - [Directives](#graphql-directives) covering different use cases such as type constraints or cascading delete behaviour.
-- [Interfaces](http://graphql.org/learn/schema/#interfaces) are abstract types that include a certain set of fields which a type must include to _implement_ the interface. Interfaces are currently not available for data modelling in Prisma, but there's a [pending feature request](https://github.com/prismagraphql/prisma/issues/83) for their support.
+- [Interfaces](http://graphql.org/learn/schema/#interfaces) are abstract types that include a certain set of fields which a type must include to _implement_ the interface. Interfaces are currently not available for data modelling in Prisma, but there's a [pending feature request](https://github.com/prisma/prisma/issues/83) for their support.
 
 ### Why SDL?
 
@@ -141,7 +141,7 @@ The illustration shows a simplified version of the generated Prisma GraphQL sche
 
 <Collapse title="Learn more about GraphQL schemas">
 
-A [GraphQL schema](https://www.prisma.io/blog/graphql-server-basics-the-schema-ac5e2950214e/) defines the operations of a GraphQL API. It effectively is a collection of _types_ written in SDL (SDL also supports primitives like interfaces, enums, union types and more, you can learn everything about GraphQL's type system [here](http://graphql.org/learn/schema/#type-system)). 
+A [GraphQL schema](https://www.prisma.io/blog/graphql-server-basics-the-schema-ac5e2950214e/) defines the operations of a GraphQL API. It effectively is a collection of _types_ written in SDL (SDL also supports primitives like interfaces, enums, union types and more, you can learn everything about GraphQL's type system [here](http://graphql.org/learn/schema/#type-system)).
 
 A GraphQL schema has three special _root types_: `Query`, `Mutation` and `Subscription`. These types define the _entry points_ for the API and define what operations the API will accept. To learn more about GraphQL schema, check out this [article](https://www.prisma.io/blog/graphql-server-basics-the-schema-ac5e2950214e/).
 
@@ -151,7 +151,7 @@ A GraphQL schema has three special _root types_: `Query`, `Mutation` and `Subscr
 
 The data model is written manually by the developers of the Prisma service. It defines the models and structures the developer wants to use in their API.
 
-Strictly speaking, the **data model is not a valid GraphQL schema** because it does not contain any of GraphQL's root types (`Query`, `Mutation`, `Subscription`) and therefore does not define any API operations. 
+Strictly speaking, the **data model is not a valid GraphQL schema** because it does not contain any of GraphQL's root types (`Query`, `Mutation`, `Subscription`) and therefore does not define any API operations.
 
 The data model only serves as _foundation_ for the generation of the actual GraphQL schema that defines the GraphQL API of your Prisma service.
 
@@ -198,13 +198,13 @@ Now, after `prisma deploy` is executed, the Prisma CLI invokes the `post-deploy`
 
 ### A note on the application schema
 
-If you've already looked into building your own GraphQL server based on Prisma, you might have come across another `.graphql`-file which is referred to as your **application schema** (typically called `schema.graphql` or `app.graphql`). 
+If you've already looked into building your own GraphQL server based on Prisma, you might have come across another `.graphql`-file which is referred to as your **application schema** (typically called `schema.graphql` or `app.graphql`).
 
 This is a valid GraphQL schema (meaning it contains the `Query`, `Mutation` and `Subscription` root types) that defines the API of your _application layer_. In contrast to Prisma's _generic_ CRUD API, the application layer's API should expose _domain-specific_ operations that are tailored to the needs of your client applications.
 
 The application layer uses Prisma as a _data access layer_ and delegates incoming requests to the service's Prisma API where they're actually resolved against the database.
 
-You typically don't redefine your model definitions in the application schema. Instead, you _import_ them using [`graphql-import`](https://github.com/prismagraphql/graphql-import):
+You typically don't redefine your model definitions in the application schema. Instead, you _import_ them using [`graphql-import`](https://github.com/prisma/graphql-import):
 
 ```graphql
 # import Post from "prisma.graphql"
@@ -241,7 +241,7 @@ datamodel: datamodel.graphql
 
 An _object type_ (or short _type_) defines the structure for one _model_ in your data model. It is used to represent _entities_ from your _application domain_.
 
-Each object type is mapped to the database. For relational databases, one _table_ is created per type. For schemaless databases, an equivalent structure is used (e.g. a _document_). Note that Prisma enforces a schema even for schemaless databases! 
+Each object type is mapped to the database. For relational databases, one _table_ is created per type. For schemaless databases, an equivalent structure is used (e.g. a _document_). Note that Prisma enforces a schema even for schemaless databases!
 
 ![](https://i.imgur.com/NFLy3AO.png)
 
@@ -269,11 +269,11 @@ The type defined above has the following properties:
 - Name: `Article`
 - Fields: `id`, `title`, `text` and `isPublished` (with the default value `false`)
 
-`id` and `title` and `isPublished` are required (as indicated by the `!` following the type), `text` is optional. 
+`id` and `title` and `isPublished` are required (as indicated by the `!` following the type), `text` is optional.
 
 ### Generated API operations for types
 
-The types in your data model affect the available operations in the Prisma API. Here is an overview of the generated CRUD and realtime operations for every type in your Prisma API: 
+The types in your data model affect the available operations in the Prisma API. Here is an overview of the generated CRUD and realtime operations for every type in your Prisma API:
 
 - Queries let you fetch one or many nodes of that type
 - Mutations let you create, update or delete nodes of that type
@@ -466,7 +466,7 @@ mutation {
 
 #### ID
 
-An `ID` value is a generated unique 25-character string based on [cuid](https://github.com/prismagraphql/cuid-java). Fields with `ID` values are [system fields](#system-fields) and just used internally, therefore it is not possible to create new fields with the `ID` type.
+An `ID` value is a generated unique 25-character string based on [cuid](https://github.com/prisma/cuid-java). Fields with `ID` values are [system fields](#system-fields) and just used internally, therefore it is not possible to create new fields with the `ID` type.
 
 `ID` fields can only be used once on a type and always need to be annotated with the `@unique` directive:
 
@@ -550,7 +550,7 @@ query {
 
 #### More constraints
 
-More database constraints will be added soon. Please join the discussion in this [feature request](https://github.com/prismagraphql/prisma/issues/728) if you have wish to see certain constraints implemented in Prisma.
+More database constraints will be added soon. Please join the discussion in this [feature request](https://github.com/prisma/prisma/issues/728) if you have wish to see certain constraints implemented in Prisma.
 
 ### Default value
 
@@ -573,7 +573,7 @@ Notice that you need to always enclose the value in double-quotes, even for non-
 
 The three fields `id`, `createdAt` and `updatedAt` have special semantics in Prisma. They are optional in your data model, but will always be maintained in the underlying database. This way you can always add the field to your data model later, and the data will still be available for existing nodes.
 
-The values of these fields are currently read-only in the Prisma API (except when importing data) but will be made configurable in the future. See [this proposal](https://github.com/prismagraphql/prisma/issues/1278) for more information.
+The values of these fields are currently read-only in the Prisma API (except when importing data) but will be made configurable in the future. See [this proposal](https://github.com/prisma/prisma/issues/1278) for more information.
 
 Notice that you cannot have custom fields that are called `id`, `createdAt` and `updatedAt` since these field names are reserved for the system fields. Here are the only supported declarations for these three fields:
 
@@ -658,7 +658,7 @@ Here are the steps that are needed to add a required field:
 1. Use `updateManyXs` to migrate the field of all nodes from `null` to a non-null value
 1. Now you can mark the field as _required_ and deploy as expected
 
-A more convenient workflow is discussed [in this feature request](https://github.com/prismagraphql/prisma/issues/2323) on Github.
+A more convenient workflow is discussed [in this feature request](https://github.com/prisma/prisma/issues/2323) on Github.
 
 ## Relations
 
@@ -859,7 +859,7 @@ Let's investigate the deletion behaviour for the three types:
 
 ### Generated API operations for relations
 
-The relations that are included in your schema affect the available operations in the [Prisma API](/use-prisma-api). Here is an overview of the generated CRUD and realtime operations for every relation in your Prisma API: 
+The relations that are included in your schema affect the available operations in the [Prisma API](/use-prisma-api). Here is an overview of the generated CRUD and realtime operations for every relation in your Prisma API:
 
 - [Relation queries](qwe1#querying-data-across-relations) allow you to query data across types or aggregated for a relation (note that this is also possible using [Relay](https://facebook.github.io/relay/)'s [connection model](qwe1#connection-queries)).
 - [Nested mutations](qwe2#nested-mutations) allow you to create, connect, update, upsert and delete multiple related nodes within the same mutation.
@@ -959,10 +959,10 @@ In this section, we describe further SDL features that are not yet supported for
 
 "Like many type systems, GraphQL supports interfaces. An interface is an abstract type that includes a certain set of fields that a type must include to implement the interface." From the official [GraphQL Documentation](http://graphql.org/learn/schema/#interfaces)
 
-To learn more about when and how interfaces are coming to Prisma, check out this [feature request](https://github.com/prismagraphql/prisma/issues/83).
+To learn more about when and how interfaces are coming to Prisma, check out this [feature request](https://github.com/prisma/prisma/issues/83).
 
 ### Union types
 
 "Union types are very similar to interfaces, but they don't get to specify any common fields between the types." From the official [GraphQL Documentation](http://graphql.org/learn/schema/#union-types)
 
-To learn more about when and how union types are coming to Prisma, check out this [feature request](https://github.com/prismagraphql/prisma/issues/165).
+To learn more about when and how union types are coming to Prisma, check out this [feature request](https://github.com/prisma/prisma/issues/165).

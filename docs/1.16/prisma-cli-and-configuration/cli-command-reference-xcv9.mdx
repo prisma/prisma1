@@ -49,7 +49,7 @@ prisma init myapp --endpoint http://localhost:4466/myapp/dev
 
 ## prisma deploy
 
-Deploys a service configuration to a Prisma service. 
+Deploys a service configuration to a Prisma service.
 
 Every time you're changing a file deom your service configuration, you need to synchronize these changes with the running Prisma service.
 
@@ -145,7 +145,7 @@ Here is a sample interaction where the database connection details are provided 
 Introspecting database 402ms
 Created datamodel mapping based on 7 database tables.
 
-Created 1 new file:               
+Created 1 new file:
 
   datamodel-[TIMESTAMP].graphql    GraphQL SDL-based datamodel (derived from existing database)
 ```
@@ -248,7 +248,7 @@ prisma list
 
 ### prisma delete
 
-Delete an existing service from the Prisma server its running on. 
+Delete an existing service from the Prisma server its running on.
 
 This command needs to be executed inside the root directory of the Prisma service you want to delete (as the CLI needs access to the service's prisma.yml).
 
@@ -281,7 +281,7 @@ prisma delete --force
 
 ## prisma playground
 
-Opens a [GraphQL Playground](https://github.com/prismagraphql/graphql-playground) for the current service. 
+Opens a [GraphQL Playground](https://github.com/prisma/graphql-playground) for the current service.
 
 By default, this opens the _Desktop version_ of the Playground (if installed). The browser-based Playground can be opened by passing the `--web` flag.
 
@@ -316,7 +316,7 @@ prisma playground --web
 
 ## prisma seed
 
-Seeds the service with data. 
+Seeds the service with data.
 
 This command expects that the [`seed`](5cy7#seed-optional) property in prisma.yml is specified.
 
@@ -349,7 +349,7 @@ prisma seed --reset
 
 ## prisma import
 
-Imports data into the database of your Prisma service. 
+Imports data into the database of your Prisma service.
 
 The data needs to be formatted according to the [Normalized Data Format](jsw9#normalized-data-format). For more info, read the [Data Import & Export](jsw9) page.
 
@@ -430,7 +430,7 @@ prisma reset --force
 
 ## prisma login
 
-Authenticate with [Prisma Cloud](https://www.prisma.io/cloud). 
+Authenticate with [Prisma Cloud](https://www.prisma.io/cloud).
 
 This command opens the [Prisma Cloud Console](https://app.prisma.io/) where you need to sign up or sign in.
 
@@ -468,7 +468,7 @@ prisma login --key KEY
 
 ## prisma logout
 
-Logout from [Prisma Cloud](https://www.prisma.io/cloud). 
+Logout from [Prisma Cloud](https://www.prisma.io/cloud).
 
 This command simply deletes the `cloudSessionKey` from `~/.prisma/config.yml`.
 
@@ -506,7 +506,7 @@ prisma console
 
 ## prisma account
 
-Displays account information of the authenticated [Prisma Cloud](https://www.prisma.io/cloud) user (based on the `cloudSessionKey` in `~/.prisma/config.yml`). 
+Displays account information of the authenticated [Prisma Cloud](https://www.prisma.io/cloud) user (based on the `cloudSessionKey` in `~/.prisma/config.yml`).
 
 The displayed information includes:
 

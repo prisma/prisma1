@@ -62,7 +62,7 @@ type Mutation {
 
 <Warning>
 
-What looks like a comment in the first line of the application schema is **not** a comment but a required import statement from the [`graphql-import`](https://github.com/prismagraphql/graphql-import) library. If it was removed, the application schema would not be valid any more as the `Post` and `User` types were both undefined.
+What looks like a comment in the first line of the application schema is **not** a comment but a required import statement from the [`graphql-import`](https://github.com/prisma/graphql-import) library. If it was removed, the application schema would not be valid any more as the `Post` and `User` types were both undefined.
 
 </Warning>
 
@@ -235,7 +235,7 @@ Here's how your project structure will look like if you follow above:
 │   ├── datamodel.graphql
 │   └── prisma.yml
 # implementation of the GraphQL server (application layer)
-├── src                     
+├── src
 │   ├── generated
 │   │   └── prisma.graphql
 │   ├── index.js
@@ -263,7 +263,7 @@ projects:
       prisma: hello-world/prisma.yml
 ```
 
-This allows to quickly switch between the two GraphQL APIs using the sidenav inside the GraphQL Playground. Note that for this to work you need to open the Playground using the `graphql playground` command (from the GraphQL CLI) inside the same directory where your `.graphqlconfig` is located. 
+This allows to quickly switch between the two GraphQL APIs using the sidenav inside the GraphQL Playground. Note that for this to work you need to open the Playground using the `graphql playground` command (from the GraphQL CLI) inside the same directory where your `.graphqlconfig` is located.
 
 </Collapse>
 

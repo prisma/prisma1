@@ -15,4 +15,4 @@ Collection of Prisma example projects 💡
 - [travis](./travis)
 - [yml-structure](./yml-structure)
 
-You can also check the [**AirBnB clone example**](https://github.com/prismagraphql/graphql-server-example) we built as a fully-featured demo app for Prisma.
+You can also check the [**AirBnB clone example**](https://github.com/prisma/graphql-server-example) we built as a fully-featured demo app for Prisma.

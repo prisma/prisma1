@@ -12,7 +12,7 @@ The `prisma` cli is the core component of your development workflow. `prisma` sh
 Clone the Prisma monorepo and navigate to this directory or download _only_ this example with the following command:
 
 ```sh
-curl https://codeload.github.com/prismagraphql/prisma/tar.gz/master | tar -xz --strip=2 prisma-master/examples/data-modelling
+curl https://codeload.github.com/prisma/prisma/tar.gz/master | tar -xz --strip=2 prisma-master/examples/data-modelling
 ```
 
 Next, navigate into the downloaded folder and install the NPM dependencies:
@@ -170,7 +170,7 @@ The deletion behaviour in this example is as follows:
 
 * When a `Tweet` node gets deleted, it will simply be removed from the tweets list on the related `User` node.
 
-Note that `deleteMany` does not activate a cascade delete yet. This feature is being tracked [here](https://github.com/prismagraphql/prisma/issues/1936).
+Note that `deleteMany` does not activate a cascade delete yet. This feature is being tracked [here](https://github.com/prisma/prisma/issues/1936).
 
 ##### Default
 
