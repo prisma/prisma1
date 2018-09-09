@@ -58,9 +58,7 @@ This results in the following mutation getting resolved by the Prisma API:
 
 ```graphql
 mutation {
-  createUser(data: {
-    name: "Sarah"
-  }) {
+  createUser(data: { name: "Sarah" }) {
     id
   }
 }
@@ -98,8 +96,7 @@ fetch(endpoint, {
   method: 'POST',
   headers: {
     'Content-Type': 'application/json',
-    Authorization:
-      'Bearer __YOUR_SERVICE_TOKEN__',
+    Authorization: 'Bearer __YOUR_SERVICE_TOKEN__',
   },
   body: JSON.stringify({ query: query, variables: variables }),
 })
@@ -111,9 +108,7 @@ This results in the following mutation getting resolved by the Prisma API:
 
 ```graphql
 mutation {
-  createUser(data: {
-    name: "Sarah"
-  }) {
+  createUser(data: { name: "Sarah" }) {
     id
   }
 }
@@ -138,7 +133,6 @@ The [`graphql-request`](https://github.com/prismagraphql/graphql-request) librar
 
 </Warning>
 
-
 ```js
 const { request } = require('graphql-request')
 
@@ -154,8 +148,9 @@ mutation($name: String!) {
 
 const variables = { name: 'Sarah' }
 
-request('__YOUR_PRISMA_ENDPOINT__', query,  variables)
-  .then(data => console.log(data))
+request('__YOUR_PRISMA_ENDPOINT__', query, variables).then(data =>
+  console.log(data)
+)
 ```
 
 **Try out this example**:
@@ -188,8 +183,7 @@ mutation($name: String!) {
 
 const variables = { name: 'Sarah' }
 
-client.request(query, variables)
-  .then(data => console.log(data))
+client.request(query, variables).then(data => console.log(data))
 ```
 
 **Try out this example**:
@@ -206,14 +200,11 @@ client.request(query, variables)
 ### query
 
 ```js
-const { ApolloClient } = require('apollo-boost')
-const gql = require('graphql-tag')
-
-const endpoint = 'https://eu1.prisma.sh/nikolas-burk/demodofin/dev'
+import ApolloClient, { gql } from 'apollo-boost'
 
 const client = new ApolloClient({
-  uri: endpoint
-});
+  uri: 'https://eu1.prisma.sh/nikolas-burk/demodofin/dev',
+})
 
 const query = gql`
   query {
@@ -224,40 +215,37 @@ const query = gql`
   }
 `
 
-client.query({
-  query: query,
-})
+client
+  .query({
+    query: query,
+  })
   .then(data => console.log(data))
 ```
 
 ### mutate
 
 ```js
-const { ApolloClient } = require('apollo-boost')
-const gql = require('graphql-tag')
-
-const endpoint = 'https://eu1.prisma.sh/nikolas-burk/demodofin/dev'
+import ApolloClient, { gql } from 'apollo-boost'
 
 const client = new ApolloClient({
-  uri: endpoint
-});
+  uri: 'https://eu1.prisma.sh/nikolas-burk/demodofin/dev',
+})
 
 const mutation = gql`
   mutation($name: String!) {
-    createUser(data: {
-      name: $name
-    }) {
+    createUser(data: { name: $name }) {
       id
     }
   }
-  `
+`
 
 const variables = { name: 'Sarah' }
 
-client.mutate({
-  mutation: mutation,
-  variables: variables
-})
+client
+  .mutate({
+    mutation: mutation,
+    variables: variables,
+  })
   .then(data => console.log(data))
 ```
 
