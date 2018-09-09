@@ -151,15 +151,16 @@ export class Binding extends Delegate {
   }
 
   extractPayload(result, instructions) {
-    let pointer = result
+    let pointer = result.data
     let count = 0
     while (
       pointer &&
       typeof pointer === 'object' &&
       !Array.isArray(pointer) &&
-      count++ < instructions.length
+      count < instructions.length
     ) {
       pointer = pointer[Object.keys(pointer)[0]]
+      count++
     }
     log('unpack it')
 
